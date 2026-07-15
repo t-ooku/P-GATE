@@ -33,6 +33,44 @@ var MarketplaceEngine = (function () {
     return Utility.ensureSheet(Config.getSpreadsheet(), VALIDATION_SHEET_NAME, VALIDATION_HEADERS);
   }
 
+  function configureSheet(sheet) {
+    sheet = sheet || ensureSheet();
+    var dataRows = 1000;
+    var marketplaceRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(Object.keys(MARKETPLACES), true).setAllowInvalid(false)
+      .setHelpText('AMAZON_JP、RAKUTEN_JP、YAHOO_JPから選択してください。').build();
+    var priceRule = SpreadsheetApp.newDataValidation()
+      .requireNumberGreaterThan(0).setAllowInvalid(false)
+      .setHelpText('販売価格を0より大きい数値で入力してください。').build();
+    var nonNegativeRule = SpreadsheetApp.newDataValidation()
+      .requireNumberGreaterThanOrEqualTo(0).setAllowInvalid(false)
+      .setHelpText('0以上の数値で入力してください。').build();
+    var currencyRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(['JPY'], true).setAllowInvalid(false).build();
+    var stockRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(Object.keys(STOCK_STATUSES), true).setAllowInvalid(false)
+      .setHelpText('在庫あり、在庫切れ、不明のいずれかを選択してください。').build();
+    var approvedRule = SpreadsheetApp.newDataValidation().requireCheckbox().build();
+
+    sheet.setFrozenRows(1);
+    sheet.setFrozenColumns(3);
+    sheet.getRange(2, 4, dataRows, 1).setDataValidation(marketplaceRule);
+    sheet.getRange(2, 7, dataRows, 1).setDataValidation(priceRule).setNumberFormat('#,##0');
+    sheet.getRange(2, 8, dataRows, 1).setDataValidation(nonNegativeRule).setNumberFormat('#,##0');
+    sheet.getRange(2, 9, dataRows, 1).setDataValidation(currencyRule);
+    sheet.getRange(2, 10, dataRows, 1).setDataValidation(stockRule);
+    sheet.getRange(2, 11, dataRows, 1).setDataValidation(nonNegativeRule).setNumberFormat('0');
+    sheet.getRange(2, 13, dataRows, 1).setDataValidation(approvedRule);
+    sheet.getRange(1, 1, 1, HEADERS.length).setNotes([[
+      '自動生成または任意の一意ID', '商品マスターと同じtenant', '英数字10文字',
+      'プルダウンから選択', 'EC側の商品ID（公開しない）', '許可ECのHTTPS URL',
+      '0より大きい販売価格', '0以上の送料', 'JPY', '在庫状態',
+      '配送目安日数。未確認は0', '内部管理用（公開しない）',
+      '担当者確認後のみチェック', '最終確認日時'
+    ]]);
+    return sheet;
+  }
+
   function isTrue(value) {
     return value === true || String(value || '').toUpperCase() === 'TRUE';
   }
@@ -203,7 +241,7 @@ var MarketplaceEngine = (function () {
   }
 
   function createLegacyAmazonDrafts() {
-    var sheet = ensureSheet();
+    var sheet = configureSheet(ensureSheet());
     var existing = sheet.getLastRow() > 1
       ? sheet.getRange(2, 1, sheet.getLastRow() - 1, HEADERS.length).getValues() : [];
     var records = DatabaseEngine.getAllRecords();
@@ -271,6 +309,7 @@ var MarketplaceEngine = (function () {
     MAX_OFFERS_PER_PRODUCT: MAX_OFFERS_PER_PRODUCT,
     ensureSheet: ensureSheet,
     ensureValidationSheet: ensureValidationSheet,
+    configureSheet: configureSheet,
     validateUrl: validateUrl,
     normalizeOffer: normalizeOffer,
     rankOffers: rankOffers,

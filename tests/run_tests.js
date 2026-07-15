@@ -488,6 +488,17 @@ test('offer validation separates invalid approved rows from incomplete drafts', 
   assert.strictEqual(result.rows[2][6], 'DRAFT_INCOMPLETE');
 });
 
+test('Marketplace offer sheet configuration prevents common manual input mistakes', () => {
+  const source = fs.readFileSync(path.join(gasDir, 'MarketplaceEngine.gs'), 'utf8');
+  const configuration = source.slice(source.indexOf('function configureSheet'), source.indexOf('function isTrue'));
+  assert.match(configuration, /requireValueInList\(Object\.keys\(MARKETPLACES\)/);
+  assert.match(configuration, /requireNumberGreaterThan\(0\)/);
+  assert.match(configuration, /requireNumberGreaterThanOrEqualTo\(0\)/);
+  assert.match(configuration, /requireCheckbox\(\)/);
+  assert.match(configuration, /setFrozenRows\(1\)/);
+  assert.match(configuration, /setNotes/);
+});
+
 test('Knowledge search returns evidence-backed Japanese matches only', () => {
   const records = [
     { tenant: 'itg', asin: 'B000000001', sku: 'S1', product_name: 'アメリカで人気の朝食シリアル チョコ味', manufacturer: 'Maker A', stock: 10, image: 'img', amazon_jp_url: 'url', marketplace_offers: [{ marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item', total_cost: 1200 }], row_hash: 'hash-1', imported_at: '2026-07-14' },

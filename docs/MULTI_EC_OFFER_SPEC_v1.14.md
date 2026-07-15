@@ -62,6 +62,8 @@ HTTPS以外、認証情報を含むURL、類似ドメインは拒否する。
 6. `runProjectGatePreflight()`で承認済み購入先件数を確認する。
 7. LINE/PWA実機試験で送客とKPI記録を確認する。
 
+シートには入力規則を自動設定する。Marketplace、Currency、Stock_Statusはプルダウン、Priceは0より大きい数値、Shipping_FeeとDelivery_Daysは0以上、Approvedはチェックボックスとする。入力規則は誤操作の予防であり、公開時にはサーバー側でも同じ内容を再検証する。
+
 価格・在庫を自動取得する外部API連携はMVP後の追加範囲とし、v1.14では承認済みデータだけを使う。
 
 ## Marketplace別KPI
