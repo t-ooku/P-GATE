@@ -20,6 +20,7 @@ const order = [
   'DatabaseEngine.gs',
   'OpportunityEngine.gs',
   'MeasurementEngine.gs',
+  'MarketplaceMeasurementEngine.gs',
   'ContractPolicyEngine.gs',
   'BenchmarkEngine.gs',
   'MarketplaceEngine.gs',

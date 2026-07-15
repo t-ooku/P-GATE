@@ -63,3 +63,9 @@ HTTPS以外、認証情報を含むURL、類似ドメインは拒否する。
 7. LINE/PWA実機試験で送客とKPI記録を確認する。
 
 価格・在庫を自動取得する外部API連携はMVP後の追加範囲とし、v1.14では承認済みデータだけを使う。
+
+## Marketplace別KPI
+
+`Marketplace_KPI_Event_Log`は署名付きURL経由のCLICK／OUTBOUNDだけを記録する。`Marketplace_KPI_Summary`は日付・契約アカウント・LINE/PWA・Marketplace別に、クリック数、送客数、匿名セッション数、対象商品数、クリック選択シェアを出力する。既存の`KPI_Event_Log`は変更しないため、稼働中データとの互換性を維持する。
+
+購入完了は各ECの注文データ連携が必要なため、v1.14のMarketplace別KPIは「選ばれた購入先」の測定であり、Marketplace別売上を断定しない。

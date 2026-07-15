@@ -198,12 +198,13 @@ var LineIntegration = (function () {
     }
     channel = Utility.trim(channel || 'LINE').toUpperCase();
     var contract = findConfiguredContract(channel);
+    var marketplaceEvents = [];
     var normalized = events.map(function (event) {
       var eventType = Utility.trim(event.event_type).toUpperCase();
       if (TRACK_EVENT_TYPES.indexOf(eventType) < 0) {
         throw Utility.createError('LINE_TRACK_TYPE_INVALID', '未対応のLINE計測種別です: ' + eventType);
       }
-      return {
+      var normalizedEvent = {
         event_id: Utility.trim(event.event_id), occurred_at: event.occurred_at || Utility.nowIso(),
         tenant: contract.tenant, account_type: contract.account_type,
         account_id: contract.account_id, session_id: Utility.trim(event.user_hash),
@@ -211,8 +212,22 @@ var LineIntegration = (function () {
         experiment_variant: 'P_GATE', asin: Utility.trim(event.asin), event_type: eventType,
         consent: true, source: channel
       };
+      var marketplace = Utility.trim(event.marketplace).toUpperCase();
+      if (marketplace) {
+        marketplaceEvents.push({
+          event_id: normalizedEvent.event_id, occurred_at: normalizedEvent.occurred_at,
+          tenant: contract.tenant, account_type: contract.account_type, account_id: contract.account_id,
+          session_id: normalizedEvent.session_id, recommendation_id: normalizedEvent.recommendation_id,
+          asin: normalizedEvent.asin, marketplace: marketplace, event_type: eventType,
+          channel: channel, consent: true
+        });
+      }
+      return normalizedEvent;
     });
-    return MeasurementEngine.record(normalized);
+    marketplaceEvents.forEach(function (event) { MarketplaceMeasurementEngine.normalizeEvent(event, Utility.nowIso()); });
+    var measurement = MeasurementEngine.record(normalized);
+    var marketplaceMeasurement = MarketplaceMeasurementEngine.record(marketplaceEvents);
+    return { measurement: measurement, marketplace: marketplaceMeasurement };
   }
 
   function handleBridge(payload) {

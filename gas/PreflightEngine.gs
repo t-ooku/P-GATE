@@ -9,7 +9,8 @@ var PreflightEngine = (function () {
   var HEADERS = ['Component', 'Check', 'Status', 'Details', 'Checked_At'];
   var CORE_SHEETS = [
     'Config', 'Import_Log', 'System_Log', 'Master_Database', 'Opportunity',
-    'KPI_Event_Log', 'Client_Contracts', 'Anonymous_Benchmark', 'Marketplace_Offers',
+    'KPI_Event_Log', 'Marketplace_KPI_Event_Log', 'Marketplace_KPI_Summary',
+    'Client_Contracts', 'Anonymous_Benchmark', 'Marketplace_Offers',
     'Marketplace_Offer_Validation', 'Knowledge_Query_Log',
     'Search_Alias', 'Localized_Content', 'Product_Identifiers',
     'Identifier_Coverage', 'Identifier_Conflicts'

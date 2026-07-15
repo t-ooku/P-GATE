@@ -13,7 +13,7 @@ const files = [
   'Utility.gs', 'Config.gs', 'Logger.gs', 'DriveService.gs', 'ImportLog.gs',
   'ZipEngine.gs', 'ImportEngine.gs', 'MappingEngine.gs', 'NormalizeEngine.gs',
   'ValidationEngine.gs', 'HashEngine.gs', 'DatabaseEngine.gs',
-  'OpportunityEngine.gs', 'MeasurementEngine.gs', 'ContractPolicyEngine.gs',
+  'OpportunityEngine.gs', 'MeasurementEngine.gs', 'MarketplaceMeasurementEngine.gs', 'ContractPolicyEngine.gs',
   'BenchmarkEngine.gs', 'MarketplaceEngine.gs',
   'MultilingualSeoEngine.gs', 'ProductIdentifierEngine.gs', 'KnowledgeEngine.gs', 'LineIntegration.gs', 'PreflightEngine.gs', 'Main.gs'
 ];
@@ -251,6 +251,33 @@ test('KPI uplift compares CONTROL and P_GATE without mixing accounts', () => {
   assert.strictEqual(ctr[7], 0.12);
   assert.ok(Math.abs(ctr[9] - 0.2) < 1e-10);
   assert.strictEqual(uplift.some((row) => row[3] === 's2'), false);
+});
+
+test('Marketplace KPI validates destination and pseudonymous session', () => {
+  const event = context.MarketplaceMeasurementEngine.normalizeEvent({
+    event_id: 'market-event-1', occurred_at: '2026-07-14T01:00:00.000Z',
+    tenant: 'itg', account_type: 'SELLER', account_id: 'seller-a', session_id: 'hashed-session',
+    recommendation_id: 'rec-1', asin: 'B000000001', marketplace: 'RAKUTEN_JP',
+    event_type: 'CLICK', channel: 'PWA', consent: true
+  }, 'recorded');
+  assert.strictEqual(event.marketplace, 'RAKUTEN_JP');
+  assert.throws(() => context.MarketplaceMeasurementEngine.normalizeEvent({ ...event, marketplace: 'EVIL' }, 'recorded'));
+  assert.throws(() => context.MarketplaceMeasurementEngine.normalizeEvent({ ...event, session_id: 'person@example.com' }, 'recorded'));
+});
+
+test('Marketplace KPI calculates click selection share by channel', () => {
+  const base = { date_jst: '2026-07-14', tenant: 'itg', account_type: 'SELLER', account_id: 'seller-a', channel: 'PWA' };
+  const events = [
+    { ...base, marketplace: 'AMAZON_JP', event_type: 'CLICK', session_id: 's1', asin: 'B000000001' },
+    { ...base, marketplace: 'AMAZON_JP', event_type: 'OUTBOUND', session_id: 's1', asin: 'B000000001' },
+    { ...base, marketplace: 'RAKUTEN_JP', event_type: 'CLICK', session_id: 's2', asin: 'B000000002' },
+    { ...base, marketplace: 'RAKUTEN_JP', event_type: 'CLICK', session_id: 's3', asin: 'B000000003' }
+  ];
+  const rows = Array.from(context.MarketplaceMeasurementEngine.summarize(events, 'updated'), row => Array.from(row));
+  const amazon = rows.find((row) => row[5] === 'AMAZON_JP');
+  const rakuten = rows.find((row) => row[5] === 'RAKUTEN_JP');
+  assert.deepStrictEqual(amazon.slice(6, 11), [1, 1, 1, 1, 0.3333]);
+  assert.deepStrictEqual(rakuten.slice(6, 11), [2, 0, 2, 2, 0.6667]);
 });
 
 function makeContract(overrides = {}) {

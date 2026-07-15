@@ -89,6 +89,16 @@ export function candidateDestination(candidate) {
   return { url: isAllowedDestination(legacyUrl) ? legacyUrl : '', offer: null };
 }
 
+export function marketplaceForDestination(destination) {
+  try {
+    const host = new URL(destination).hostname.toLowerCase().replace(/\.$/, '');
+    if (host === 'amazon.co.jp' || host.endsWith('.amazon.co.jp') || host === 'amazon.com' || host.endsWith('.amazon.com')) return 'AMAZON_JP';
+    if (host === 'rakuten.co.jp' || host.endsWith('.rakuten.co.jp')) return 'RAKUTEN_JP';
+    if (host === 'shopping.yahoo.co.jp' || host.endsWith('.shopping.yahoo.co.jp') || host === 'store.shopping.yahoo.co.jp' || host.endsWith('.store.shopping.yahoo.co.jp')) return 'YAHOO_JP';
+  } catch {}
+  return '';
+}
+
 function offerSummary(offer) {
   if (!offer) return '';
   const labels = { AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
@@ -184,7 +194,8 @@ export async function buildReplyMessages(result, origin, env, event) {
       const token = await createTrackToken({
         u: userHash, r: result.query_id || event.webhookEventId, a: candidate.asin,
         d: destination, exp: Math.floor(Date.now() / 1000) + 86400 * 7,
-        j: `${event.webhookEventId}:${candidate.asin}`, c: 'LINE'
+        j: `${event.webhookEventId}:${candidate.asin}`, c: 'LINE',
+        m: selected.offer?.marketplace || marketplaceForDestination(destination)
       }, env.LINK_SIGNING_SECRET);
       trackingUrl = `${origin}/go?token=${encodeURIComponent(token)}`;
     }
@@ -245,7 +256,8 @@ async function handleRedirect(request, env, ctx) {
     const occurredAt = new Date().toISOString();
     const events = ['CLICK', 'OUTBOUND'].map((eventType) => ({
       event_id: `${payload.j}:${eventType}`, occurred_at: occurredAt, user_hash: payload.u,
-      recommendation_id: payload.r, asin: payload.a, event_type: eventType
+      recommendation_id: payload.r, asin: payload.a, event_type: eventType,
+      marketplace: payload.m || marketplaceForDestination(payload.d)
     }));
     const channel = payload.c === 'PWA' ? 'PWA' : 'LINE';
     ctx.waitUntil(callGas(env, 'TRACK', { events, channel }));
@@ -270,7 +282,8 @@ async function decoratePwaResult(result, request, env, sessionHash) {
       const offerToken = await createTrackToken({
         u: sessionHash, r: seed, a: candidate.asin, d: offer.product_url,
         exp: Math.floor(Date.now() / 1000) + 86400 * 7,
-        j: `${seed}:${candidate.asin}:${offer.marketplace || offerIndex}`, c: 'PWA'
+        j: `${seed}:${candidate.asin}:${offer.marketplace || offerIndex}`, c: 'PWA',
+        m: offer.marketplace || marketplaceForDestination(offer.product_url)
       }, env.LINK_SIGNING_SECRET);
       publicOffer.tracking_url = `${origin}/go?token=${encodeURIComponent(offerToken)}`;
       copy.offers.push(publicOffer);
@@ -283,7 +296,8 @@ async function decoratePwaResult(result, request, env, sessionHash) {
       const token = await createTrackToken({
         u: sessionHash, r: seed, a: candidate.asin, d: destination,
         exp: Math.floor(Date.now() / 1000) + 86400 * 7,
-        j: `${seed}:${candidate.asin}`, c: 'PWA'
+        j: `${seed}:${candidate.asin}`, c: 'PWA',
+        m: selected.offer?.marketplace || marketplaceForDestination(destination)
       }, env.LINK_SIGNING_SECRET);
       copy.tracking_url = `${origin}/go?token=${encodeURIComponent(token)}`;
     }

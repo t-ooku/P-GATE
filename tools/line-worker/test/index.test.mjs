@@ -10,7 +10,7 @@ globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 const workerModule = await import('../src/index.mjs');
 const {
   verifyLineSignature, createTrackToken, verifyTrackToken,
-  isAllowedDestination, candidateDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
+  isAllowedDestination, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
   getEnvironmentReadiness
 } = workerModule;
 
@@ -55,6 +55,13 @@ test('承認済み複数EC購入先を従来Amazon URLより優先する', () =>
   });
   assert.equal(selected.offer.marketplace, 'RAKUTEN_JP');
   assert.equal(selected.url, 'https://item.rakuten.co.jp/shop/item-1');
+});
+
+test('許可URLからMarketplace計測値を決定する', () => {
+  assert.equal(marketplaceForDestination('https://amazon.co.jp/dp/B000000001'), 'AMAZON_JP');
+  assert.equal(marketplaceForDestination('https://item.rakuten.co.jp/shop/item'), 'RAKUTEN_JP');
+  assert.equal(marketplaceForDestination('https://store.shopping.yahoo.co.jp/shop/item'), 'YAHOO_JP');
+  assert.equal(marketplaceForDestination('https://evil.example/item'), '');
 });
 
 test('LINE返信は説明1件と商品最大3件', async () => {
@@ -134,6 +141,8 @@ test('PWAは最大3購入先を個別の署名付きURLへ変換し元URLを返�
     assert.match(offer.tracking_url, /^https:\/\/p-gate\.example\/go\?token=/);
     assert.equal('product_url' in offer, false);
   });
+  const firstToken = new URL(decorated.candidates[0].offers[0].tracking_url).searchParams.get('token');
+  assert.equal((await verifyTrackToken(firstToken, env.LINK_SIGNING_SECRET)).m, 'AMAZON_JP');
 });
 
 test('PWA公開設定はSite Keyだけを返し、無効な質問をAPI境界で拒否する', async () => {
