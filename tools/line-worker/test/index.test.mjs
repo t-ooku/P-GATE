@@ -94,6 +94,8 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   const app = fs.readFileSync(new URL('app.js', publicDir), 'utf8');
   assert.equal(/innerHTML/.test(app), false);
   ['JA', 'EN', 'ZH', 'KO'].forEach((language) => assert.match(app, new RegExp(`${language}:`)));
+  ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
+  assert.match(app, /candidate\.selected_offer/);
 });
 
 test('PWA公開回答は内部SKU・在庫数・元URL・取込証跡を除外する', () => {

@@ -4,7 +4,8 @@ const copy = {
     title: '何を探していますか？', placeholder: '例：アメリカのシリアルが食べたい',
     consent: '質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。',
     submit: '候補を見つける', results: 'P-GATEからの提案', loading: '商品情報を確認しています…',
-    buy: '販売ページで確認', error: '現在検索できません。入力内容を確認して、もう一度お試しください。',
+    buy: '販売ページで確認', total: '合計', shipping: '送料', delivery: '配送目安', days: '日',
+    error: '現在検索できません。入力内容を確認して、もう一度お試しください。',
     examples: ['朝食に合うシリアル', '日本で買えるアメリカのお菓子', 'プレゼント向けの商品']
   },
   EN: {
@@ -12,7 +13,8 @@ const copy = {
     title: 'What are you looking for?', placeholder: 'Example: I want an American breakfast cereal',
     consent: 'I consent to processing my question and anonymous usage measurement. The raw question is not stored in server logs.',
     submit: 'Find products', results: 'Suggestions from P-GATE', loading: 'Checking product information…',
-    buy: 'View product page', error: 'Search is unavailable. Check your input and try again.',
+    buy: 'View product page', total: 'Total', shipping: 'Shipping', delivery: 'Delivery estimate', days: 'days',
+    error: 'Search is unavailable. Check your input and try again.',
     examples: ['breakfast cereal', 'American snacks available in Japan', 'a product for a gift']
   },
   ZH: {
@@ -20,7 +22,8 @@ const copy = {
     title: '您在找什么？', placeholder: '例如：我想找美国早餐麦片',
     consent: '我同意处理问题及匿名使用情况统计。服务器日志不会保存问题原文。',
     submit: '查找商品', results: 'P-GATE的建议', loading: '正在确认商品信息…',
-    buy: '查看销售页面', error: '目前无法搜索。请确认输入后重试。',
+    buy: '查看销售页面', total: '合计', shipping: '运费', delivery: '预计配送', days: '天',
+    error: '目前无法搜索。请确认输入后重试。',
     examples: ['早餐麦片', '在日本可以买到的美国零食', '适合作为礼物的商品']
   },
   KO: {
@@ -28,7 +31,8 @@ const copy = {
     title: '어떤 상품을 찾고 있나요?', placeholder: '예: 미국 아침 시리얼을 찾고 있어요',
     consent: '질문 처리와 익명 이용 측정에 동의합니다. 질문 원문은 서버 로그에 저장하지 않습니다.',
     submit: '상품 찾기', results: 'P-GATE 추천', loading: '상품 정보를 확인하고 있습니다…',
-    buy: '판매 페이지 확인', error: '현재 검색할 수 없습니다. 입력 내용을 확인하고 다시 시도해 주세요.',
+    buy: '판매 페이지 확인', total: '합계', shipping: '배송비', delivery: '배송 예상', days: '일',
+    error: '현재 검색할 수 없습니다. 입력 내용을 확인하고 다시 시도해 주세요.',
     examples: ['아침 시리얼', '일본에서 살 수 있는 미국 과자', '선물용 상품']
   }
 };
@@ -88,6 +92,38 @@ function textElement(tag, className, text) {
   return node;
 }
 
+function marketplaceLabel(value) {
+  return {
+    AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング'
+  }[value] || String(value || '');
+}
+
+function formatMoney(value, currency, language) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number) || number <= 0) return '';
+  try {
+    const locale = { JA: 'ja-JP', EN: 'en-US', ZH: 'zh-CN', KO: 'ko-KR' }[language] || 'ja-JP';
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: currency || 'JPY', maximumFractionDigits: 0 }).format(number);
+  } catch {
+    return `${currency || 'JPY'} ${Math.round(number).toLocaleString()}`;
+  }
+}
+
+function offerDetail(offer, selected, language) {
+  if (!offer) return '';
+  const total = formatMoney(offer.total_cost, offer.currency, language);
+  const shipping = Number(offer.shipping_fee || 0) > 0
+    ? formatMoney(offer.shipping_fee, offer.currency, language) : '';
+  const delivery = Number(offer.delivery_days || 0) > 0
+    ? `${selected.delivery} ${Number(offer.delivery_days)}${selected.days}` : '';
+  return [
+    marketplaceLabel(offer.marketplace),
+    total ? `${selected.total} ${total}` : '',
+    shipping ? `${selected.shipping} ${shipping}` : '',
+    delivery
+  ].filter(Boolean).join(' · ');
+}
+
 function renderResults(result) {
   const selected = copy[elements.language.value] || copy.JA;
   elements.results.classList.remove('hidden');
@@ -104,6 +140,9 @@ function renderResults(result) {
     if (candidate.description) card.append(textElement('p', '', candidate.description));
     const terms = candidate.evidence?.matched_terms || [];
     if (terms.length) card.append(textElement('div', 'evidence', `Match: ${terms.slice(0, 4).join(' / ')}`));
+    const selectedOffer = candidate.selected_offer || candidate.offers?.[0] || null;
+    const offerText = offerDetail(selectedOffer, selected, elements.language.value);
+    if (offerText) card.append(textElement('div', 'offer-detail', offerText));
     if (candidate.tracking_url) {
       const link = document.createElement('a'); link.className = 'buy-link';
       link.href = candidate.tracking_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
