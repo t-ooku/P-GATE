@@ -1,0 +1,10 @@
+{
+  "name": "project-gate",
+  "private": true,
+  "version": "1.12.0",
+  "scripts": {
+    "test": "npm run build && node tests/run_tests.js && node --test tests/release_config.test.mjs && npm test --prefix tools/line-worker && npm test --prefix tools/chrome-extension",
+    "build": "node tools/build_bundle.js",
+    "release": "node tools/release.js"
+  }
+}

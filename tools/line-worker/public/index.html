@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e83267">
+  <meta name="description" content="欲しい商品を日本語・英語・中国語・韓国語・ローマ字で相談できるP-GATE">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="/styles.css">
+  <title>P-GATE｜欲しい商品への近道</title>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="P-GATE ホーム">
+      <img src="/icons/icon.svg" width="40" height="40" alt="">
+      <span>P-GATE</span>
+    </a>
+    <button id="installButton" class="secondary hidden" type="button">ホーム画面に追加</button>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="heroTitle">
+      <p class="eyebrow">MULTILINGUAL PRODUCT KNOWLEDGE</p>
+      <h1 id="heroTitle">欲しいものを、<br><span>探す前に相談。</span></h1>
+      <p id="heroLead">日本語の商品情報から、あなたの言葉に合う候補を根拠付きで提案します。</p>
+    </section>
+
+    <section class="search-panel" aria-labelledby="searchTitle">
+      <div class="panel-heading">
+        <div>
+          <p class="step">01</p>
+          <h2 id="searchTitle">何を探していますか？</h2>
+        </div>
+        <label class="language-label" for="languageSelect">
+          <span>表示言語</span>
+          <select id="languageSelect">
+            <option value="JA">日本語</option>
+            <option value="EN">English</option>
+            <option value="ZH">中文</option>
+            <option value="KO">한국어</option>
+          </select>
+        </label>
+      </div>
+
+      <form id="knowledgeForm">
+        <label class="visually-hidden" id="queryLabel" for="query">商品について質問</label>
+        <textarea id="query" name="query" minlength="2" maxlength="200" required
+          placeholder="例：アメリカのシリアルが食べたい"></textarea>
+        <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
+        <label class="consent">
+          <input id="consent" type="checkbox" required>
+          <span id="consentText">質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。</span>
+        </label>
+        <div id="turnstileContainer" class="turnstile-container"></div>
+        <button id="submitButton" class="primary" type="submit">
+          <span id="submitText">候補を見つける</span><span aria-hidden="true">→</span>
+        </button>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle">
+      <div class="section-title">
+        <p class="step">02</p>
+        <h2 id="resultsTitle">P-GATEからの提案</h2>
+      </div>
+      <p id="resultMessage" class="result-message"></p>
+      <div id="resultCards" class="result-grid"></div>
+    </section>
+
+    <section class="trust" aria-label="P-GATEの方針">
+      <div><strong>日本語が正本</strong><span>在庫・価格を言語別に複製しません</span></div>
+      <div><strong>最大3候補</strong><span>根拠不足の商品は推薦しません</span></div>
+      <div><strong>多言語対応</strong><span>日・英・中・韓・ローマ字を同一商品へ接続</span></div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© P-GATE</span>
+    <span><a href="/privacy.html">プライバシー方針</a> ｜ 商品情報は購入前に販売ページで確認してください。</span>
+  </footer>
+
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

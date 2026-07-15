@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "project-gate-line-bridge",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-07-14",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/webhook", "/go", "/health"]
+  }
+}

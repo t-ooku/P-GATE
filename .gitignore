@@ -1,0 +1,11 @@
+.DS_Store
+node_modules/
+*.log
+.clasp.json
+.dev.vars
+**/.dev.vars
+.wrangler/
+outputs/*.pptx
+outputs/*.inspect.ndjson
+outputs/*.zip
+outputs/RELEASE_MANIFEST_*.json

@@ -1,0 +1,12 @@
+:root { font-family: Inter, "Noto Sans JP", system-ui, sans-serif; color: #18202b; background: #f7f7f9; }
+* { box-sizing: border-box; }
+main { width: min(100% - 32px, 620px); margin: 64px auto; padding: 38px; border: 1px solid #e7e8ec; border-radius: 24px; background: white; box-shadow: 0 18px 50px rgba(25,32,43,.07); }
+.eyebrow { margin: 16px 0 8px; color: #e83267; font-size: 11px; font-weight: 900; letter-spacing: .15em; }
+h1 { margin: 0; font-size: 34px; letter-spacing: -.04em; }
+p { color: #687180; line-height: 1.8; }
+form { display: grid; gap: 10px; margin-top: 28px; }
+label { font-size: 12px; font-weight: 900; }
+input { height: 50px; padding: 0 14px; border: 2px solid #e7e8ec; border-radius: 12px; font: inherit; }
+input:focus { border-color: #e83267; outline: none; box-shadow: 0 0 0 4px #fff0f5; }
+button { height: 50px; border: 0; border-radius: 12px; color: white; background: #e83267; font: inherit; font-weight: 900; cursor: pointer; }
+#status { min-height: 22px; margin: 0; font-size: 12px; }

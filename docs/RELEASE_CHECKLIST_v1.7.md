@@ -1,0 +1,21 @@
+# v1.7 リリースチェックリスト
+
+- [x] PWA画面と4言語UI
+- [x] manifestと192px／512pxアイコン
+- [x] Service Workerは静的シェルだけをキャッシュ
+- [x] Turnstileサーバー側検証
+- [x] 公開質問の入力・同意・匿名セッション検証
+- [x] 公開回答から内部項目を除外
+- [x] PWA送客リンク署名とAmazonドメイン制限
+- [x] `PWA_PILOT` KPI連携
+- [x] GAS／Worker／PWA JavaScriptの構文テスト
+- [ ] GAS v1.7をテスト環境へ反映
+- [ ] GAS Web Appをデプロイ
+- [ ] Turnstileを作成
+- [ ] Worker Secretsを設定
+- [ ] Workerをデプロイ
+- [ ] iPhone／Android実機試験
+- [ ] 5言語検索とKPIを確認
+- [ ] 正式な運営者情報・利用規約・プライバシー方針を確定
+- [ ] Cloudflareレート制限／費用アラートを設定
+- [ ] GitHubの一意なcommitへ保存
