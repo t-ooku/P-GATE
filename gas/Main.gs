@@ -214,6 +214,7 @@ function setupProjectGate() {
   MeasurementEngine.ensureSheets();
   ContractPolicyEngine.ensureSheets();
   BenchmarkEngine.ensureSheet();
+  MarketplaceEngine.ensureSheet();
   MultilingualSeoEngine.ensureSheets();
   ProductIdentifierEngine.ensureSheets();
   KnowledgeEngine.ensureSheet();

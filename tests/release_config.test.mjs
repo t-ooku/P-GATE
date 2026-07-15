@@ -12,10 +12,12 @@ test('release version has one source of truth', () => {
   const build = fs.readFileSync(path.join(root, 'tools', 'build_bundle.js'), 'utf8');
   const release = fs.readFileSync(path.join(root, 'tools', 'release.js'), 'utf8');
   const config = fs.readFileSync(path.join(root, 'gas', 'Config.gs'), 'utf8');
+  const worker = fs.readFileSync(path.join(root, 'tools', 'line-worker', 'src', 'index.mjs'), 'utf8');
   assert.match(build, /require\(path\.join\(root, 'package\.json'\)\)/);
   assert.match(release, /require\(path\.join\(root, 'package\.json'\)\)/);
   assert.ok(/^\d+\.\d+\.\d+$/.test(pkg.version));
   assert.match(config, new RegExp(`CURRENT_SYSTEM_VERSION = '${pkg.version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`));
+  assert.match(worker, new RegExp(`RELEASE = '${pkg.version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`));
   assert.ok(fs.existsSync(path.join(root, 'dist', `Project_GATE_Complete_v${minorVersion}.gs`)));
 });
 

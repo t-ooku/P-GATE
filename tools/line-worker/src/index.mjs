@@ -1,6 +1,9 @@
 const encoder = new TextEncoder();
-const AMAZON_HOSTS = new Set(['amazon.co.jp', 'www.amazon.co.jp', 'amazon.com', 'www.amazon.com']);
-const RELEASE = '1.11.0';
+const ALLOWED_DESTINATION_DOMAINS = [
+  'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
+  'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp'
+];
+const RELEASE = '1.14.0';
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
   'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'
@@ -70,10 +73,31 @@ export async function verifyTrackToken(token, secret, nowSeconds = Math.floor(Da
 export function isAllowedDestination(destination) {
   try {
     const url = new URL(destination);
-    return url.protocol === 'https:' && AMAZON_HOSTS.has(url.hostname.toLowerCase());
+    const host = url.hostname.toLowerCase().replace(/\.$/, '');
+    return url.protocol === 'https:' && !url.username && !url.password
+      && ALLOWED_DESTINATION_DOMAINS.some((domain) => host === domain || host.endsWith(`.${domain}`));
   } catch {
     return false;
   }
+}
+
+export function candidateDestination(candidate) {
+  const approvedOffer = (Array.isArray(candidate?.offers) ? candidate.offers : [])
+    .find((offer) => offer?.stock_status !== 'OUT_OF_STOCK' && isAllowedDestination(offer?.product_url));
+  if (approvedOffer) return { url: approvedOffer.product_url, offer: approvedOffer };
+  const legacyUrl = candidate?.amazon_jp_url || candidate?.amazon_us_url || '';
+  return { url: isAllowedDestination(legacyUrl) ? legacyUrl : '', offer: null };
+}
+
+function offerSummary(offer) {
+  if (!offer) return '';
+  const labels = { AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
+  const marketplace = labels[offer.marketplace] || offer.marketplace || '';
+  const total = Number(offer.total_cost ?? (Number(offer.price || 0) + Number(offer.shipping_fee || 0)));
+  const price = Number.isFinite(total) && total > 0
+    ? `${offer.currency || 'JPY'} ${Math.round(total).toLocaleString('ja-JP')}` : '';
+  const delivery = Number(offer.delivery_days || 0) > 0 ? `配送目安 ${Number(offer.delivery_days)}日` : '';
+  return [marketplace, price, delivery].filter(Boolean).join(' / ');
 }
 
 export function validateKnowledgeRequest(payload) {
@@ -153,7 +177,8 @@ export async function buildReplyMessages(result, origin, env, event) {
   const userId = event.source?.userId || event.source?.groupId || event.source?.roomId || '';
   const userHash = await hashUser(userId || event.webhookEventId);
   for (const candidate of candidates) {
-    const destination = candidate.amazon_jp_url || candidate.amazon_us_url || '';
+    const selected = candidateDestination(candidate);
+    const destination = selected.url;
     let trackingUrl = '';
     if (isAllowedDestination(destination)) {
       const token = await createTrackToken({
@@ -165,7 +190,7 @@ export async function buildReplyMessages(result, origin, env, event) {
     }
     const lines = [
       `${candidate.rank || messages.length}. ${candidate.display_name || candidate.product_name || candidate.asin}`,
-      candidate.description || '', trackingUrl
+      candidate.description || '', offerSummary(selected.offer), trackingUrl
     ].filter(Boolean);
     messages.push({ type: 'text', text: lines.join('\n').slice(0, 5000) });
   }
@@ -236,7 +261,9 @@ async function decoratePwaResult(result, request, env, sessionHash) {
   const candidates = [];
   for (const candidate of (result.candidates || []).slice(0, 3)) {
     const copy = sanitizePublicCandidate(candidate);
-    const destination = candidate.amazon_jp_url || candidate.amazon_us_url || '';
+    const selected = candidateDestination(candidate);
+    const destination = selected.url;
+    copy.selected_offer = selected.offer ? sanitizePublicOffer(selected.offer) : null;
     copy.tracking_url = '';
     if (isAllowedDestination(destination)) {
       const token = await createTrackToken({
@@ -258,6 +285,7 @@ export function sanitizePublicCandidate(candidate) {
   delete copy.stock;
   delete copy.amazon_jp_url;
   delete copy.amazon_us_url;
+  copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 3).map(sanitizePublicOffer);
   copy.tracking_url = '';
   if (copy.evidence) {
     copy.evidence = {
@@ -266,6 +294,18 @@ export function sanitizePublicCandidate(candidate) {
     };
   }
   return copy;
+}
+
+function sanitizePublicOffer(offer) {
+  return {
+    marketplace: String(offer?.marketplace || ''),
+    price: Number(offer?.price || 0),
+    shipping_fee: Number(offer?.shipping_fee || 0),
+    total_cost: Number(offer?.total_cost ?? (Number(offer?.price || 0) + Number(offer?.shipping_fee || 0))),
+    currency: String(offer?.currency || 'JPY'),
+    stock_status: String(offer?.stock_status || 'UNKNOWN'),
+    delivery_days: Number(offer?.delivery_days || 0)
+  };
 }
 
 async function handleKnowledgeApi(request, env, ctx) {

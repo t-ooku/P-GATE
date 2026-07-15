@@ -14,7 +14,7 @@ const files = [
   'ZipEngine.gs', 'ImportEngine.gs', 'MappingEngine.gs', 'NormalizeEngine.gs',
   'ValidationEngine.gs', 'HashEngine.gs', 'DatabaseEngine.gs',
   'OpportunityEngine.gs', 'MeasurementEngine.gs', 'ContractPolicyEngine.gs',
-  'BenchmarkEngine.gs',
+  'BenchmarkEngine.gs', 'MarketplaceEngine.gs',
   'MultilingualSeoEngine.gs', 'ProductIdentifierEngine.gs', 'KnowledgeEngine.gs', 'LineIntegration.gs', 'PreflightEngine.gs', 'Main.gs'
 ];
 
@@ -384,9 +384,60 @@ test('anonymous benchmark suppresses small cohorts and conflicting consent', () 
   assert.strictEqual(context.BenchmarkEngine.generate(rows, contracts, 5, 'generated').length, 0);
 });
 
+test('multi-EC offer validates marketplace domains and rejects lookalikes', () => {
+  assert.strictEqual(context.MarketplaceEngine.validateUrl('AMAZON_JP', 'https://www.amazon.co.jp/dp/B000000001'), true);
+  assert.strictEqual(context.MarketplaceEngine.validateUrl('RAKUTEN_JP', 'https://item.rakuten.co.jp/shop/item-1'), true);
+  assert.strictEqual(context.MarketplaceEngine.validateUrl('YAHOO_JP', 'https://store.shopping.yahoo.co.jp/shop/item-1.html'), true);
+  assert.strictEqual(context.MarketplaceEngine.validateUrl('RAKUTEN_JP', 'https://rakuten.co.jp.evil.example/item'), false);
+  assert.strictEqual(context.MarketplaceEngine.validateUrl('AMAZON_JP', 'http://amazon.co.jp/item'), false);
+  assert.throws(() => context.MarketplaceEngine.normalizeOffer({
+    tenant: 'itg', asin: 'B000000001', marketplace: 'AMAZON_JP',
+    product_url: 'https://amazon.co.jp/dp/B000000001', price: 0,
+    shipping_fee: 0, stock_status: 'IN_STOCK', approved: true
+  }), /PRICE/);
+});
+
+test('multi-EC offer ranking uses availability, customer total cost, and delivery only', () => {
+  const base = {
+    tenant: 'itg', asin: 'B000000001', currency: 'JPY', approved: true,
+    stock_status: 'IN_STOCK', delivery_days: 3
+  };
+  const offers = [
+    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'high-profit', marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000001', price: 1500, shipping_fee: 0, seller_profit: 999999 }),
+    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'customer-low', marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item', price: 1000, shipping_fee: 200, seller_profit: 1 }),
+    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'out', marketplace: 'YAHOO_JP', product_url: 'https://shopping.yahoo.co.jp/products/item', price: 500, shipping_fee: 0, stock_status: 'OUT_OF_STOCK' })
+  ];
+  const ranked = Array.from(context.MarketplaceEngine.rankOffers(offers));
+  assert.strictEqual(ranked[0].offer_id, 'customer-low');
+  assert.strictEqual(ranked[2].offer_id, 'out');
+  const source = fs.readFileSync(path.join(gasDir, 'MarketplaceEngine.gs'), 'utf8');
+  const rankingSource = source.slice(source.indexOf('function rankOffers'), source.indexOf('function loadApprovedOffers'));
+  assert.strictEqual(/profit/i.test(rankingSource), false);
+});
+
+test('multi-EC offers are isolated by tenant and attached without seller internals', () => {
+  const normalized = context.MarketplaceEngine.normalizeOffer({
+    offer_id: 'offer-1', tenant: 'itg', asin: 'B000000001', marketplace: 'RAKUTEN_JP',
+    product_url: 'https://item.rakuten.co.jp/shop/item', price: 1000, shipping_fee: 100,
+    currency: 'JPY', stock_status: 'IN_STOCK', delivery_days: 2,
+    seller_name: 'Internal Seller', external_product_id: 'secret-id', approved: true
+  });
+  const map = { 'itg|B000000001': [normalized] };
+  const records = [
+    { tenant: 'itg', asin: 'B000000001' },
+    { tenant: 'mc2', asin: 'B000000001' }
+  ];
+  const attached = Array.from(context.MarketplaceEngine.attachOffers(records, map));
+  assert.strictEqual(attached[0].marketplace_offers.length, 1);
+  assert.strictEqual(attached[1].marketplace_offers.length, 0);
+  assert.strictEqual(attached[0].marketplace_offers[0].total_cost, 1100);
+  assert.strictEqual('seller_name' in attached[0].marketplace_offers[0], false);
+  assert.strictEqual('external_product_id' in attached[0].marketplace_offers[0], false);
+});
+
 test('Knowledge search returns evidence-backed Japanese matches only', () => {
   const records = [
-    { tenant: 'itg', asin: 'B000000001', sku: 'S1', product_name: 'アメリカで人気の朝食シリアル チョコ味', manufacturer: 'Maker A', stock: 10, image: 'img', amazon_jp_url: 'url', row_hash: 'hash-1', imported_at: '2026-07-14' },
+    { tenant: 'itg', asin: 'B000000001', sku: 'S1', product_name: 'アメリカで人気の朝食シリアル チョコ味', manufacturer: 'Maker A', stock: 10, image: 'img', amazon_jp_url: 'url', marketplace_offers: [{ marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item', total_cost: 1200 }], row_hash: 'hash-1', imported_at: '2026-07-14' },
     { tenant: 'itg', asin: 'B000000002', sku: 'S2', product_name: '敏感肌向け化粧水', manufacturer: 'Maker B', stock: 10, image: 'img', amazon_jp_url: 'url', row_hash: 'hash-2', imported_at: '2026-07-14' }
   ];
   const result = Array.from(context.KnowledgeEngine.search('アメリカのシリアルが食べたい', records), item => item);
@@ -394,6 +445,7 @@ test('Knowledge search returns evidence-backed Japanese matches only', () => {
   assert.strictEqual(result[0].asin, 'B000000001');
   assert.ok(result[0].evidence.matched_terms.length > 0);
   assert.strictEqual(result[0].evidence.source_hash, 'hash-1');
+  assert.strictEqual(result[0].offers[0].marketplace, 'RAKUTEN_JP');
 });
 
 test('Knowledge ranking never uses seller profit', () => {

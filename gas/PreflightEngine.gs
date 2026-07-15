@@ -9,7 +9,7 @@ var PreflightEngine = (function () {
   var HEADERS = ['Component', 'Check', 'Status', 'Details', 'Checked_At'];
   var CORE_SHEETS = [
     'Config', 'Import_Log', 'System_Log', 'Master_Database', 'Opportunity',
-    'KPI_Event_Log', 'Client_Contracts', 'Anonymous_Benchmark', 'Knowledge_Query_Log',
+    'KPI_Event_Log', 'Client_Contracts', 'Anonymous_Benchmark', 'Marketplace_Offers', 'Knowledge_Query_Log',
     'Search_Alias', 'Localized_Content', 'Product_Identifiers',
     'Identifier_Coverage', 'Identifier_Conflicts'
   ];
@@ -110,6 +110,12 @@ var PreflightEngine = (function () {
     rows.push(row(
       'MULTILINGUAL', '承認済み検索別名', aliasCount > 0 ? 'PASS' : 'WARN',
       aliasCount + '件', checkedAt
+    ));
+
+    var offerCount = countApproved(spreadsheet.getSheetByName('Marketplace_Offers'), 13);
+    rows.push(row(
+      'MULTI_EC', '承認済み購入先', offerCount > 0 ? 'PASS' : 'WARN',
+      offerCount + '件 / Amazon・楽天・Yahoo!ショッピング', checkedAt
     ));
 
     var identifierCount = countApproved(spreadsheet.getSheetByName('Product_Identifiers'), 6);

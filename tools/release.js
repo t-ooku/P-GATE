@@ -66,7 +66,7 @@ try {
     artifacts: [sourceZip, workerZip, chromeZip].map(fileRecord),
     external_actions_remaining: [
       'GitHubへ一意なcommitとして保存',
-      `GAS v${version}を反映してsetupProjectGateと公開前チェックを実行`,
+      `GAS v${version}を反映してsetupProjectGate、Marketplace_Offers登録、公開前チェックを実行`,
       'Cloudflare WorkerとTurnstileを設定してデプロイ',
       'LINE Developersを設定して実機試験',
       'PWAとChrome拡張を実機試験',

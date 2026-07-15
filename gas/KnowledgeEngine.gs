@@ -62,7 +62,7 @@ var KnowledgeEngine = (function () {
     if (Utility.trim(record.product_name)) { score += 30; }
     if (Utility.trim(record.manufacturer)) { score += 20; }
     if (Utility.trim(record.image)) { score += 20; }
-    if (Utility.trim(record.amazon_jp_url) || Utility.trim(record.amazon_us_url)) { score += 20; }
+    if ((record.marketplace_offers || []).length > 0 || Utility.trim(record.amazon_jp_url) || Utility.trim(record.amazon_us_url)) { score += 20; }
     if (Number(record.stock || 0) > 0) { score += 10; }
     return score;
   }
@@ -137,6 +137,7 @@ var KnowledgeEngine = (function () {
         stock: Number(item.record.stock || 0),
         amazon_jp_url: item.record.amazon_jp_url || '',
         amazon_us_url: item.record.amazon_us_url || '',
+        offers: (item.record.marketplace_offers || []).slice(0, MarketplaceEngine.MAX_OFFERS_PER_PRODUCT),
         match_score: item.match_score,
         confidence: item.confidence,
         evidence: {
@@ -185,6 +186,9 @@ var KnowledgeEngine = (function () {
     var contract = findContract(Utility.trim(request.contract_id));
     var allRecords = DatabaseEngine.getAllRecords();
     var tenantRecords = filterRecordsByTenant(allRecords, contract.tenant);
+    var offerSheet = MarketplaceEngine.ensureSheet();
+    var offerMap = MarketplaceEngine.loadApprovedOffers(offerSheet, contract.tenant);
+    tenantRecords = MarketplaceEngine.attachOffers(tenantRecords, offerMap);
     var aliasSheets = MultilingualSeoEngine.ensureSheets();
     var aliasMap = MultilingualSeoEngine.loadApprovedAliases(aliasSheets.aliases, contract.tenant);
     tenantRecords = MultilingualSeoEngine.attachAliases(tenantRecords, aliasMap);
