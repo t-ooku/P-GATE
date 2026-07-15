@@ -5,7 +5,7 @@
 ## 現在の実装範囲
 
 - 対象100商品
-- OneDrive → Power Automate → Google DriveへのZIP配置
+- OneDrive → Windows Bridge → Google Driveへの安全なZIP配置
 - GASによるZIP検出、tenant抽出、解凍、CP932 CSV読込
 - Mapping / Normalize / Validationの責務分離
 - SHA-256による差分更新
