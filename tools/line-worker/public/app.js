@@ -124,6 +124,20 @@ function offerDetail(offer, selected, language) {
   ].filter(Boolean).join(' · ');
 }
 
+function renderOfferOptions(candidate, selected, language) {
+  const offers = (candidate.offers || []).filter((offer) => offer.tracking_url).slice(0, 3);
+  if (!offers.length) return null;
+  const list = document.createElement('div'); list.className = 'offer-list';
+  offers.forEach((offer) => {
+    const link = document.createElement('a'); link.className = 'offer-link';
+    link.href = offer.tracking_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.append(textElement('strong', '', marketplaceLabel(offer.marketplace)));
+    link.append(textElement('span', '', offerDetail(offer, selected, language).replace(`${marketplaceLabel(offer.marketplace)} · `, '')));
+    list.append(link);
+  });
+  return list;
+}
+
 function renderResults(result) {
   const selected = copy[elements.language.value] || copy.JA;
   elements.results.classList.remove('hidden');
@@ -141,9 +155,14 @@ function renderResults(result) {
     const terms = candidate.evidence?.matched_terms || [];
     if (terms.length) card.append(textElement('div', 'evidence', `Match: ${terms.slice(0, 4).join(' / ')}`));
     const selectedOffer = candidate.selected_offer || candidate.offers?.[0] || null;
-    const offerText = offerDetail(selectedOffer, selected, elements.language.value);
-    if (offerText) card.append(textElement('div', 'offer-detail', offerText));
-    if (candidate.tracking_url) {
+    const offerOptions = renderOfferOptions(candidate, selected, elements.language.value);
+    if (offerOptions) {
+      card.append(offerOptions);
+    } else {
+      const offerText = offerDetail(selectedOffer, selected, elements.language.value);
+      if (offerText) card.append(textElement('div', 'offer-detail', offerText));
+    }
+    if (!offerOptions && candidate.tracking_url) {
       const link = document.createElement('a'); link.className = 'buy-link';
       link.href = candidate.tracking_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
       link.textContent = selected.buy; card.append(link);

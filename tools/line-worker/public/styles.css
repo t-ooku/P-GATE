@@ -60,6 +60,11 @@ textarea:focus { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink-sof
 .product-card p { flex: 1; margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.6; }
 .evidence { margin-bottom: 14px; color: var(--muted); font-size: 11px; }
 .offer-detail { margin: 0 0 12px; padding: 10px; border: 1px solid #ffd1df; border-radius: 12px; color: var(--pink-dark); background: var(--pink-soft); font-size: 12px; font-weight: 750; line-height: 1.55; }
+.offer-list { display: grid; gap: 8px; }
+.offer-link { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: #fff; text-decoration: none; }
+.offer-link:hover { border-color: var(--pink); background: var(--pink-soft); }
+.offer-link strong { font-size: 12px; }
+.offer-link span { color: var(--muted); font-size: 11px; line-height: 1.45; }
 .buy-link { display: block; padding: 12px; border-radius: 12px; color: white; background: var(--ink); text-align: center; text-decoration: none; font-weight: 800; }
 
 .trust { margin: 24px 0 64px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--line); }

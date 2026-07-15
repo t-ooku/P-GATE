@@ -263,7 +263,21 @@ async function decoratePwaResult(result, request, env, sessionHash) {
     const copy = sanitizePublicCandidate(candidate);
     const selected = candidateDestination(candidate);
     const destination = selected.url;
-    copy.selected_offer = selected.offer ? sanitizePublicOffer(selected.offer) : null;
+    copy.offers = [];
+    for (const [offerIndex, offer] of (Array.isArray(candidate.offers) ? candidate.offers : []).slice(0, 3).entries()) {
+      if (!isAllowedDestination(offer?.product_url)) continue;
+      const publicOffer = sanitizePublicOffer(offer);
+      const offerToken = await createTrackToken({
+        u: sessionHash, r: seed, a: candidate.asin, d: offer.product_url,
+        exp: Math.floor(Date.now() / 1000) + 86400 * 7,
+        j: `${seed}:${candidate.asin}:${offer.marketplace || offerIndex}`, c: 'PWA'
+      }, env.LINK_SIGNING_SECRET);
+      publicOffer.tracking_url = `${origin}/go?token=${encodeURIComponent(offerToken)}`;
+      copy.offers.push(publicOffer);
+    }
+    copy.selected_offer = selected.offer
+      ? copy.offers.find((offer) => offer.marketplace === selected.offer.marketplace) || sanitizePublicOffer(selected.offer)
+      : null;
     copy.tracking_url = '';
     if (isAllowedDestination(destination)) {
       const token = await createTrackToken({
@@ -277,6 +291,8 @@ async function decoratePwaResult(result, request, env, sessionHash) {
   }
   return { ...result, candidates };
 }
+
+export const decoratePwaResultForTest = decoratePwaResult;
 
 export function sanitizePublicCandidate(candidate) {
   const copy = { ...(candidate || {}) };

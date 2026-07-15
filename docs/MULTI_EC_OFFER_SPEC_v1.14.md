@@ -48,7 +48,7 @@ HTTPS以外、認証情報を含むURL、類似ドメインは拒否する。
 
 ## 公開情報と非公開情報
 
-公開可能: Marketplace、価格、送料、合計、通貨、在庫状態、配送目安。
+公開可能: Marketplace、価格、送料、合計、通貨、在庫状態、配送目安、P-GATE署名付き送客URL。PWAでは最大3購入先を個別に選択できる。
 
 非公開: 元URL、Seller_Name、External_Product_ID、内部SKU、取込ハッシュ。元URLは署名付きP-GATE送客URLの内部だけで使用する。
 
