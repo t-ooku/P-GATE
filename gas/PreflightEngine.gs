@@ -9,7 +9,7 @@ var PreflightEngine = (function () {
   var HEADERS = ['Component', 'Check', 'Status', 'Details', 'Checked_At'];
   var CORE_SHEETS = [
     'Config', 'Import_Log', 'System_Log', 'Master_Database', 'Opportunity',
-    'KPI_Event_Log', 'Client_Contracts', 'Knowledge_Query_Log',
+    'KPI_Event_Log', 'Client_Contracts', 'Anonymous_Benchmark', 'Knowledge_Query_Log',
     'Search_Alias', 'Localized_Content', 'Product_Identifiers',
     'Identifier_Coverage', 'Identifier_Conflicts'
   ];
@@ -129,6 +129,11 @@ var PreflightEngine = (function () {
     rows.push(row(
       'CONTRACT', '登録契約', contractCount > 0 ? 'PASS' : 'FAIL',
       contractCount + '件', checkedAt
+    ));
+    var benchmarkConsentCount = countApproved(contractsSheet, 12);
+    rows.push(row(
+      'BENCHMARK', '匿名比較の明示同意', benchmarkConsentCount >= BenchmarkEngine.MINIMUM_COHORT ? 'PASS' : 'WARN',
+      benchmarkConsentCount + '件 / 生成最低' + BenchmarkEngine.MINIMUM_COHORT + '件', checkedAt
     ));
 
     var sheet = ensureSheet();

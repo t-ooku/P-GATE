@@ -21,6 +21,7 @@ const order = [
   'OpportunityEngine.gs',
   'MeasurementEngine.gs',
   'ContractPolicyEngine.gs',
+  'BenchmarkEngine.gs',
   'MultilingualSeoEngine.gs',
   'ProductIdentifierEngine.gs',
   'KnowledgeEngine.gs',

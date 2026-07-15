@@ -18,6 +18,7 @@
 - 入力なし時の不要ログ抑制
 - 顧客別KPI計測（表示・クリック・送客・購入）
 - Control対P-GATEの効果比較と売上・粗利連動
+- 同意済み5社以上に限定した匿名ベンチマーク
 - 競合双方の同意、回答独占、カテゴリ独占の推薦ポリシー
 - 契約別の推薦可否と監査ログ
 - 日本語質問から根拠付きで最大3商品を返すKnowledge基盤
@@ -65,7 +66,7 @@ node --test tools/line-worker/test/*.test.mjs
 node --test tools/chrome-extension/test/*.test.mjs
 ```
 
-現在版は`v1.12.0`です。導入開始点は[`docs/START_HERE_Project_GATE_v1.12.md`](docs/START_HERE_Project_GATE_v1.12.md)、公開前診断は[`docs/PREFLIGHT_SPEC_v1.10.md`](docs/PREFLIGHT_SPEC_v1.10.md)、商品識別子仕様は[`docs/PRODUCT_IDENTIFIER_SPEC_v1.9.md`](docs/PRODUCT_IDENTIFIER_SPEC_v1.9.md)、Chrome拡張仕様は[`docs/CHROME_EXTENSION_SPEC_v1.8.md`](docs/CHROME_EXTENSION_SPEC_v1.8.md)、PWA仕様は[`docs/PWA_SPEC_v1.7.md`](docs/PWA_SPEC_v1.7.md)を参照してください。
+現在版は`v1.13.0`です。導入開始点は[`docs/START_HERE_Project_GATE_v1.13.md`](docs/START_HERE_Project_GATE_v1.13.md)、匿名比較仕様は[`docs/ANONYMOUS_BENCHMARK_SPEC_v1.13.md`](docs/ANONYMOUS_BENCHMARK_SPEC_v1.13.md)、公開前診断は[`docs/PREFLIGHT_SPEC_v1.10.md`](docs/PREFLIGHT_SPEC_v1.10.md)、商品識別子仕様は[`docs/PRODUCT_IDENTIFIER_SPEC_v1.9.md`](docs/PRODUCT_IDENTIFIER_SPEC_v1.9.md)、Chrome拡張仕様は[`docs/CHROME_EXTENSION_SPEC_v1.8.md`](docs/CHROME_EXTENSION_SPEC_v1.8.md)を参照してください。
 
 PWAとChrome拡張は実装済み・未デプロイです。ネイティブiOS／Androidは[`docs/CHANNEL_EXPANSION_ROADMAP_v1.7.md`](docs/CHANNEL_EXPANSION_ROADMAP_v1.7.md)の判定条件を満たした後に追加します。
 

@@ -14,6 +14,7 @@ const files = [
   'ZipEngine.gs', 'ImportEngine.gs', 'MappingEngine.gs', 'NormalizeEngine.gs',
   'ValidationEngine.gs', 'HashEngine.gs', 'DatabaseEngine.gs',
   'OpportunityEngine.gs', 'MeasurementEngine.gs', 'ContractPolicyEngine.gs',
+  'BenchmarkEngine.gs',
   'MultilingualSeoEngine.gs', 'ProductIdentifierEngine.gs', 'KnowledgeEngine.gs', 'LineIntegration.gs', 'PreflightEngine.gs', 'Main.gs'
 ];
 
@@ -343,6 +344,44 @@ test('recommendation decisions store only answer signature, not answer payload',
   const decisionRow = source.slice(source.indexOf('var row = ['), source.indexOf('sheets.decisions.getRange'));
   assert.strictEqual(/answer_payload/.test(decisionRow), false);
   assert.strictEqual(/result\.answer_signature/.test(decisionRow), true);
+});
+
+test('anonymous benchmark requires consent and at least five distinct accounts', () => {
+  const contracts = Array.from({ length: 6 }, (_, index) => makeContract({
+    contract_id: `contract-${index}`,
+    account_id: `seller-${index}`,
+    competitor_group: `group-${index}`,
+    benchmark_consent: index < 5
+  }));
+  const rows = Array.from({ length: 6 }, (_, index) => [
+    '2026-07-14', 'itg', 'SELLER', `seller-${index}`, 'campaign-1', 'P_GATE',
+    1000, 100 + index * 10, 80, 8, 0.1 + index * 0.01, 0.08, 0.1,
+    100000 + index * 10000, 10000 + index * 1000, 'now'
+  ]);
+  const result = Array.from(context.BenchmarkEngine.generate(rows, contracts, 5, 'generated'), row => Array.from(row));
+  assert.strictEqual(result.length, 5);
+  const ctr = result.find((row) => row[3] === 'CTR');
+  assert.deepStrictEqual(ctr.slice(0, 4), ['2026-07-14', 'SELLER', 'campaign-1', 'CTR']);
+  assert.strictEqual(ctr[4], 0.12);
+  assert.strictEqual(ctr[7], 5);
+  assert.strictEqual(result.some((row) => row.includes('seller-0')), false);
+  assert.strictEqual(result.some((row) => row.includes('itg')), false);
+});
+
+test('anonymous benchmark suppresses small cohorts and conflicting consent', () => {
+  const contracts = Array.from({ length: 5 }, (_, index) => makeContract({
+    contract_id: `contract-${index}`,
+    account_id: `seller-${index}`,
+    benchmark_consent: true
+  }));
+  contracts.push(makeContract({
+    contract_id: 'contract-refusal', account_id: 'seller-0', benchmark_consent: false
+  }));
+  const rows = Array.from({ length: 5 }, (_, index) => [
+    '2026-07-14', 'itg', 'SELLER', `seller-${index}`, 'campaign-1', 'P_GATE',
+    1000, 100, 80, 8, 0.1, 0.08, 0.1, 100000, 10000, 'now'
+  ]);
+  assert.strictEqual(context.BenchmarkEngine.generate(rows, contracts, 5, 'generated').length, 0);
 });
 
 test('Knowledge search returns evidence-backed Japanese matches only', () => {
