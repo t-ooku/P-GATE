@@ -13,11 +13,13 @@
 
 1. `dist/Project_GATE_Complete_v1.14.gs`をApps Scriptへ反映する。
 2. `setupProjectGate()`を実行する。
-3. `Marketplace_Offers`へテスト商品の購入先を各EC1件ずつ登録する。
-4. 確認済み行の`Approved`を`TRUE`にする。
-5. `runProjectGatePreflight()`を実行し、FAILを0件にする。
-6. Worker v1.14をデプロイし、`/health`のreleaseが`1.14.0`であることを確認する。
-7. LINEまたはPWAから質問し、署名付きURLが正しいECへ遷移することを確認する。
+3. メニュー「複数EC購入先を準備・検証」を実行し、既存Amazon URLの下書きを自動作成する。
+4. `Marketplace_Offers`の下書きへ価格・送料・配送日数を補い、楽天・Yahoo!の購入先を追加する。
+5. 確認済み行の`Approved`を`TRUE`にする。
+6. 再度「複数EC購入先を準備・検証」を実行し、`Marketplace_Offer_Validation`のFAILを0件にする。
+7. `runProjectGatePreflight()`を実行し、FAILを0件にする。
+8. Worker v1.14をデプロイし、`/health`のreleaseが`1.14.0`であることを確認する。
+9. LINEまたはPWAから質問し、署名付きURLが正しいECへ遷移することを確認する。
 
 ## MVP完成までに人が確認する項目
 

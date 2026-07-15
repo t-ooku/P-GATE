@@ -9,7 +9,8 @@ var PreflightEngine = (function () {
   var HEADERS = ['Component', 'Check', 'Status', 'Details', 'Checked_At'];
   var CORE_SHEETS = [
     'Config', 'Import_Log', 'System_Log', 'Master_Database', 'Opportunity',
-    'KPI_Event_Log', 'Client_Contracts', 'Anonymous_Benchmark', 'Marketplace_Offers', 'Knowledge_Query_Log',
+    'KPI_Event_Log', 'Client_Contracts', 'Anonymous_Benchmark', 'Marketplace_Offers',
+    'Marketplace_Offer_Validation', 'Knowledge_Query_Log',
     'Search_Alias', 'Localized_Content', 'Product_Identifiers',
     'Identifier_Coverage', 'Identifier_Conflicts'
   ];
@@ -112,10 +113,11 @@ var PreflightEngine = (function () {
       aliasCount + '件', checkedAt
     ));
 
-    var offerCount = countApproved(spreadsheet.getSheetByName('Marketplace_Offers'), 13);
+    var offerValidation = MarketplaceEngine.validateSheet(spreadsheet.getSheetByName('Marketplace_Offers'));
+    var offerCount = offerValidation.summary.approved_valid;
     rows.push(row(
-      'MULTI_EC', '承認済み購入先', offerCount > 0 ? 'PASS' : 'WARN',
-      offerCount + '件 / Amazon・楽天・Yahoo!ショッピング', checkedAt
+      'MULTI_EC', '承認済み購入先', offerValidation.summary.approved_invalid > 0 ? 'FAIL' : (offerCount > 0 ? 'PASS' : 'WARN'),
+      '有効' + offerCount + '件 / エラー' + offerValidation.summary.approved_invalid + '件 / 未完成下書き' + offerValidation.summary.draft_incomplete + '件', checkedAt
     ));
 
     var identifierCount = countApproved(spreadsheet.getSheetByName('Product_Identifiers'), 6);

@@ -215,6 +215,7 @@ function setupProjectGate() {
   ContractPolicyEngine.ensureSheets();
   BenchmarkEngine.ensureSheet();
   MarketplaceEngine.ensureSheet();
+  MarketplaceEngine.ensureValidationSheet();
   MultilingualSeoEngine.ensureSheets();
   ProductIdentifierEngine.ensureSheets();
   KnowledgeEngine.ensureSheet();
@@ -256,6 +257,7 @@ function onOpen() {
     .addItem('今すぐ実行', 'runProjectGate')
     .addItem('KPI集計を更新', 'refreshProjectGateKpiSummary')
     .addItem('匿名ベンチマークを更新', 'refreshProjectGateAnonymousBenchmark')
+    .addItem('複数EC購入先を準備・検証', 'refreshProjectGateMarketplaceOffers')
     .addItem('多言語SEOを更新', 'refreshProjectGateMultilingualSeo')
     .addItem('商品コード整備状況を更新', 'refreshProjectGateIdentifierCoverage')
     .addItem('公開前チェック', 'runProjectGatePreflight')

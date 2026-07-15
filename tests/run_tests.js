@@ -391,7 +391,7 @@ test('multi-EC offer validates marketplace domains and rejects lookalikes', () =
   assert.strictEqual(context.MarketplaceEngine.validateUrl('RAKUTEN_JP', 'https://rakuten.co.jp.evil.example/item'), false);
   assert.strictEqual(context.MarketplaceEngine.validateUrl('AMAZON_JP', 'http://amazon.co.jp/item'), false);
   assert.throws(() => context.MarketplaceEngine.normalizeOffer({
-    tenant: 'itg', asin: 'B000000001', marketplace: 'AMAZON_JP',
+    offer_id: 'offer-zero', tenant: 'itg', asin: 'B000000001', marketplace: 'AMAZON_JP',
     product_url: 'https://amazon.co.jp/dp/B000000001', price: 0,
     shipping_fee: 0, stock_status: 'IN_STOCK', approved: true
   }), /PRICE/);
@@ -433,6 +433,32 @@ test('multi-EC offers are isolated by tenant and attached without seller interna
   assert.strictEqual(attached[0].marketplace_offers[0].total_cost, 1100);
   assert.strictEqual('seller_name' in attached[0].marketplace_offers[0], false);
   assert.strictEqual('external_product_id' in attached[0].marketplace_offers[0], false);
+});
+
+test('legacy Amazon URLs become unapproved drafts without duplicating existing offers', () => {
+  const records = [
+    { tenant: 'itg', asin: 'B000000001', amazon_jp_url: 'https://www.amazon.co.jp/dp/B000000001', sale_price: 1980, shipping: 500, stock: 3, updated_at: 'now' },
+    { tenant: 'itg', asin: 'B000000002', amazon_jp_url: 'https://www.amazon.co.jp/dp/B000000002', sale_price: 1200, stock: 0 },
+    { tenant: 'itg', asin: 'B000000003', amazon_jp_url: 'https://evil.example/item', sale_price: 1000 }
+  ];
+  const existing = [['existing', 'itg', 'B000000002', 'AMAZON_JP']];
+  const drafts = Array.from(context.MarketplaceEngine.buildLegacyAmazonDraftRows(records, existing, 'generated'));
+  assert.strictEqual(drafts.length, 1);
+  assert.deepStrictEqual(Array.from(drafts[0].slice(1, 10)), ['itg', 'B000000001', 'AMAZON_JP', 'B000000001', 'https://www.amazon.co.jp/dp/B000000001', 1980, 500, 'JPY', 'IN_STOCK']);
+  assert.strictEqual(drafts[0][12], false);
+});
+
+test('offer validation separates invalid approved rows from incomplete drafts', () => {
+  const valid = ['offer-1', 'itg', 'B000000001', 'AMAZON_JP', 'B000000001', 'https://amazon.co.jp/dp/B000000001', 1000, 0, 'JPY', 'IN_STOCK', 2, '', true, 'now'];
+  const invalidApproved = ['offer-2', 'itg', 'B000000002', 'RAKUTEN_JP', '', 'https://evil.example/item', 1000, 0, 'JPY', 'IN_STOCK', 2, '', true, 'now'];
+  const incompleteDraft = ['offer-3', 'itg', 'B000000003', 'YAHOO_JP', '', 'https://shopping.yahoo.co.jp/products/item', '', 0, 'JPY', 'UNKNOWN', '', '', false, 'now'];
+  const result = context.MarketplaceEngine.validateRows([valid, invalidApproved, incompleteDraft], 'checked');
+  assert.strictEqual(result.summary.approved_valid, 1);
+  assert.strictEqual(result.summary.approved_invalid, 1);
+  assert.strictEqual(result.summary.draft_valid, 0);
+  assert.strictEqual(result.summary.draft_incomplete, 1);
+  assert.strictEqual(result.rows[1][6], 'FAIL');
+  assert.strictEqual(result.rows[2][6], 'DRAFT_INCOMPLETE');
 });
 
 test('Knowledge search returns evidence-backed Japanese matches only', () => {

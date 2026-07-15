@@ -55,9 +55,11 @@ HTTPS以外、認証情報を含むURL、類似ドメインは拒否する。
 ## 運用
 
 1. `setupProjectGate()`で`Marketplace_Offers`を作成する。
-2. 購入先を入力し、担当者がURL・価格・在庫を確認する。
-3. 確認済み行だけ`Approved=TRUE`にする。
-4. `runProjectGatePreflight()`で承認済み購入先件数を確認する。
-5. LINE/PWA実機試験で送客とKPI記録を確認する。
+2. メニュー「複数EC購入先を準備・検証」で、Master Databaseの既存Amazon URLを未承認下書きへ変換する。同じTenant・ASIN・Marketplaceは重複作成しない。
+3. 購入先を入力し、担当者がURL・価格・在庫を確認する。
+4. 確認済み行だけ`Approved=TRUE`にする。
+5. 同メニューを再実行し、`Marketplace_Offer_Validation`の承認済みエラーを0件にする。
+6. `runProjectGatePreflight()`で承認済み購入先件数を確認する。
+7. LINE/PWA実機試験で送客とKPI記録を確認する。
 
 価格・在庫を自動取得する外部API連携はMVP後の追加範囲とし、v1.14では承認済みデータだけを使う。

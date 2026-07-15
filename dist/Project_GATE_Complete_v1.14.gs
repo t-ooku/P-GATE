@@ -2069,6 +2069,7 @@ var MarketplaceEngine = (function () {
   'use strict';
 
   var SHEET_NAME = 'Marketplace_Offers';
+  var VALIDATION_SHEET_NAME = 'Marketplace_Offer_Validation';
   var HEADERS = [
     'Offer_ID', 'Tenant', 'ASIN', 'Marketplace', 'External_Product_ID', 'Product_URL',
     'Price', 'Shipping_Fee', 'Currency', 'Stock_Status', 'Delivery_Days',
@@ -2081,9 +2082,17 @@ var MarketplaceEngine = (function () {
   };
   var STOCK_STATUSES = { IN_STOCK: true, OUT_OF_STOCK: true, UNKNOWN: true };
   var MAX_OFFERS_PER_PRODUCT = 3;
+  var VALIDATION_HEADERS = [
+    'Row_Number', 'Offer_ID', 'Tenant', 'ASIN', 'Marketplace',
+    'Approved', 'Status', 'Error_Code', 'Details', 'Checked_At'
+  ];
 
   function ensureSheet() {
     return Utility.ensureSheet(Config.getSpreadsheet(), SHEET_NAME, HEADERS);
+  }
+
+  function ensureValidationSheet() {
+    return Utility.ensureSheet(Config.getSpreadsheet(), VALIDATION_SHEET_NAME, VALIDATION_HEADERS);
   }
 
   function isTrue(value) {
@@ -2123,6 +2132,12 @@ var MarketplaceEngine = (function () {
     var asin = Utility.trim(input.asin).toUpperCase();
     var productUrl = Utility.trim(input.product_url);
     var stockStatus = Utility.trim(input.stock_status || 'UNKNOWN').toUpperCase();
+    if (!Utility.trim(input.offer_id)) {
+      throw Utility.createError('MARKETPLACE_OFFER_ID_REQUIRED', 'Offer_IDは必須です。');
+    }
+    if (!Utility.trim(input.tenant)) {
+      throw Utility.createError('MARKETPLACE_TENANT_REQUIRED', 'Tenantは必須です。');
+    }
     if (!MARKETPLACES[marketplace]) {
       throw Utility.createError('MARKETPLACE_UNSUPPORTED', '未対応のMarketplaceです: ' + marketplace);
     }
@@ -2219,19 +2234,131 @@ var MarketplaceEngine = (function () {
     });
   }
 
+  function existingKeys(rows) {
+    var keys = {};
+    (rows || []).forEach(function (row) {
+      var key = Utility.trim(row[1]).toLowerCase() + '|' + Utility.trim(row[2]).toUpperCase() + '|' + Utility.trim(row[3]).toUpperCase();
+      if (key !== '||') { keys[key] = true; }
+    });
+    return keys;
+  }
+
+  function buildLegacyAmazonDraftRows(records, existingRows, nowIso) {
+    var keys = existingKeys(existingRows);
+    var drafts = [];
+    (records || []).forEach(function (record) {
+      var tenant = Utility.trim(record.tenant).toLowerCase();
+      var asin = Utility.trim(record.asin).toUpperCase();
+      var url = Utility.trim(record.amazon_jp_url);
+      var key = tenant + '|' + asin + '|AMAZON_JP';
+      if (!tenant || !/^[A-Z0-9]{10}$/.test(asin) || !validateUrl('AMAZON_JP', url) || keys[key]) { return; }
+      var price = Number(record.sale_price || record.jp_lowest || record.price_lowest || 0);
+      var shipping = Math.max(0, Number(record.shipping || 0));
+      drafts.push([
+        'LEGACY-AMAZON-' + tenant + '-' + asin, tenant, asin, 'AMAZON_JP', asin, url,
+        price > 0 ? price : '', shipping, 'JPY', Number(record.stock || 0) > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK',
+        '', '', false, Utility.trim(record.updated_at || record.imported_at || nowIso)
+      ]);
+      keys[key] = true;
+    });
+    return drafts;
+  }
+
+  function createLegacyAmazonDrafts() {
+    var sheet = ensureSheet();
+    var existing = sheet.getLastRow() > 1
+      ? sheet.getRange(2, 1, sheet.getLastRow() - 1, HEADERS.length).getValues() : [];
+    var records = DatabaseEngine.getAllRecords();
+    var drafts = buildLegacyAmazonDraftRows(records, existing, Utility.nowIso());
+    if (drafts.length > 0) {
+      sheet.getRange(sheet.getLastRow() + 1, 1, drafts.length, HEADERS.length).setValues(drafts);
+    }
+    return { added: drafts.length, skipped: records.length - drafts.length };
+  }
+
+  function validateRows(rows, checkedAt) {
+    var reportRows = [];
+    var summary = { approved_valid: 0, approved_invalid: 0, draft_valid: 0, draft_incomplete: 0 };
+    (rows || []).forEach(function (row, index) {
+      var approved = isTrue(row[12]);
+      var status = approved ? 'PASS' : 'DRAFT_READY';
+      var code = '';
+      var details = approved ? '公開可能' : 'ApprovedをTRUEにすると公開可能';
+      try {
+        fromRow(row);
+        if (approved) { summary.approved_valid += 1; } else { summary.draft_valid += 1; }
+      } catch (error) {
+        code = error.code || 'MARKETPLACE_INVALID';
+        details = error.message || String(error);
+        if (approved) {
+          status = 'FAIL';
+          summary.approved_invalid += 1;
+        } else {
+          status = 'DRAFT_INCOMPLETE';
+          summary.draft_incomplete += 1;
+        }
+      }
+      reportRows.push([
+        index + 2, row[0], row[1], row[2], row[3], approved, status, code, details, checkedAt
+      ]);
+    });
+    return { rows: reportRows, summary: summary };
+  }
+
+  function validateSheet(sheet) {
+    sheet = sheet || ensureSheet();
+    var rows = sheet.getLastRow() > 1
+      ? sheet.getRange(2, 1, sheet.getLastRow() - 1, HEADERS.length).getValues() : [];
+    return validateRows(rows, Utility.nowIso());
+  }
+
+  function refreshValidation() {
+    var result = validateSheet(ensureSheet());
+    var validationSheet = ensureValidationSheet();
+    if (validationSheet.getLastRow() > 1) {
+      validationSheet.getRange(2, 1, validationSheet.getLastRow() - 1, VALIDATION_HEADERS.length).clearContent();
+    }
+    if (result.rows.length > 0) {
+      validationSheet.getRange(2, 1, result.rows.length, VALIDATION_HEADERS.length).setValues(result.rows);
+    }
+    return result.summary;
+  }
+
   return {
     SHEET_NAME: SHEET_NAME,
+    VALIDATION_SHEET_NAME: VALIDATION_SHEET_NAME,
     HEADERS: HEADERS.slice(),
+    VALIDATION_HEADERS: VALIDATION_HEADERS.slice(),
     MARKETPLACES: MARKETPLACES,
     MAX_OFFERS_PER_PRODUCT: MAX_OFFERS_PER_PRODUCT,
     ensureSheet: ensureSheet,
+    ensureValidationSheet: ensureValidationSheet,
     validateUrl: validateUrl,
     normalizeOffer: normalizeOffer,
     rankOffers: rankOffers,
     loadApprovedOffers: loadApprovedOffers,
-    attachOffers: attachOffers
+    attachOffers: attachOffers,
+    buildLegacyAmazonDraftRows: buildLegacyAmazonDraftRows,
+    createLegacyAmazonDrafts: createLegacyAmazonDrafts,
+    validateRows: validateRows,
+    validateSheet: validateSheet,
+    refreshValidation: refreshValidation
   };
 }());
+
+function refreshProjectGateMarketplaceOffers() {
+  'use strict';
+  var drafts = MarketplaceEngine.createLegacyAmazonDrafts();
+  var validation = MarketplaceEngine.refreshValidation();
+  SpreadsheetApp.getUi().alert(
+    '購入先の下書き作成・検証が完了しました。\n' +
+    '追加: ' + drafts.added + '件\n' +
+    '承認済み有効: ' + validation.approved_valid + '件\n' +
+    '承認済みエラー: ' + validation.approved_invalid + '件\n' +
+    '未完成下書き: ' + validation.draft_incomplete + '件'
+  );
+  return { drafts: drafts, validation: validation };
+}
 
 /**
  * Project GATE - MultilingualSeoEngine.gs
@@ -3288,7 +3415,8 @@ var PreflightEngine = (function () {
   var HEADERS = ['Component', 'Check', 'Status', 'Details', 'Checked_At'];
   var CORE_SHEETS = [
     'Config', 'Import_Log', 'System_Log', 'Master_Database', 'Opportunity',
-    'KPI_Event_Log', 'Client_Contracts', 'Anonymous_Benchmark', 'Marketplace_Offers', 'Knowledge_Query_Log',
+    'KPI_Event_Log', 'Client_Contracts', 'Anonymous_Benchmark', 'Marketplace_Offers',
+    'Marketplace_Offer_Validation', 'Knowledge_Query_Log',
     'Search_Alias', 'Localized_Content', 'Product_Identifiers',
     'Identifier_Coverage', 'Identifier_Conflicts'
   ];
@@ -3391,10 +3519,11 @@ var PreflightEngine = (function () {
       aliasCount + '件', checkedAt
     ));
 
-    var offerCount = countApproved(spreadsheet.getSheetByName('Marketplace_Offers'), 13);
+    var offerValidation = MarketplaceEngine.validateSheet(spreadsheet.getSheetByName('Marketplace_Offers'));
+    var offerCount = offerValidation.summary.approved_valid;
     rows.push(row(
-      'MULTI_EC', '承認済み購入先', offerCount > 0 ? 'PASS' : 'WARN',
-      offerCount + '件 / Amazon・楽天・Yahoo!ショッピング', checkedAt
+      'MULTI_EC', '承認済み購入先', offerValidation.summary.approved_invalid > 0 ? 'FAIL' : (offerCount > 0 ? 'PASS' : 'WARN'),
+      '有効' + offerCount + '件 / エラー' + offerValidation.summary.approved_invalid + '件 / 未完成下書き' + offerValidation.summary.draft_incomplete + '件', checkedAt
     ));
 
     var identifierCount = countApproved(spreadsheet.getSheetByName('Product_Identifiers'), 6);
@@ -3668,6 +3797,7 @@ function setupProjectGate() {
   ContractPolicyEngine.ensureSheets();
   BenchmarkEngine.ensureSheet();
   MarketplaceEngine.ensureSheet();
+  MarketplaceEngine.ensureValidationSheet();
   MultilingualSeoEngine.ensureSheets();
   ProductIdentifierEngine.ensureSheets();
   KnowledgeEngine.ensureSheet();
@@ -3709,6 +3839,7 @@ function onOpen() {
     .addItem('今すぐ実行', 'runProjectGate')
     .addItem('KPI集計を更新', 'refreshProjectGateKpiSummary')
     .addItem('匿名ベンチマークを更新', 'refreshProjectGateAnonymousBenchmark')
+    .addItem('複数EC購入先を準備・検証', 'refreshProjectGateMarketplaceOffers')
     .addItem('多言語SEOを更新', 'refreshProjectGateMultilingualSeo')
     .addItem('商品コード整備状況を更新', 'refreshProjectGateIdentifierCoverage')
     .addItem('公開前チェック', 'runProjectGatePreflight')
