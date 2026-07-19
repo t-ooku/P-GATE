@@ -1,20 +1,18 @@
-/**
- * Project GATE - Main.gs
- * トリガーの入口とパイプライン制御だけを担当する。
- */
-var PROJECT_GATE_MAX_FILES_PER_RUN = 1;
+var PROJECT_GATE_MAX_FILES_PER_RUN = 3;
 
 function runProjectGate() {
   'use strict';
-
   var lock = LockService.getScriptLock();
-  if (!lock.tryLock(5000)) {
-    return;
-  }
+  if (!lock.tryLock(5000)) return;
 
   try {
     Config.validate();
     var recoveredCount = ImportLog.recoverStaleStarted(30);
     if (recoveredCount > 0) {
       AppLogger.startBatch('SYSTEM');
-      AppLogger.warn('STALE_EXECUTION_RECOVERED', '未完了の取込ログを失敗として確定しました。',
+      AppLogger.warn('STALE_EXECUTION_RECOVERED', '未完了の取込ログを失敗として確定しました。', { recovered: recoveredCount });
+      AppLogger.flush();
+    }
+
+    var files = DriveService.listInputZipFiles();
+    if (Config.is
