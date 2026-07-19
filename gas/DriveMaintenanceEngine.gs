@@ -237,3 +237,37 @@ if (!dryRun) {
   };
 
 })();
+/**
+ * Drive Maintenance 安全テスト
+ * 初期値はDRY RUNのため、ファイルを削除しない。
+ */
+function runDriveMaintenanceDryRun() {
+  var batchId = 'drive-maintenance-dry-run-' + Utilities.getUuid();
+
+  AppLogger.startBatch(batchId);
+
+  try {
+    AppLogger.info(
+      'DRIVE_MAINTENANCE_DRY_RUN_START',
+      'Drive MaintenanceのDRY RUNを開始します。',
+      { batchId: batchId }
+    );
+
+    DriveMaintenanceEngine.executeWithConfig();
+
+    AppLogger.info(
+      'DRIVE_MAINTENANCE_DRY_RUN_SUCCESS',
+      'Drive MaintenanceのDRY RUNが完了しました。',
+      { batchId: batchId }
+    );
+  } catch (error) {
+    AppLogger.error(
+      'DRIVE_MAINTENANCE_DRY_RUN_ERROR',
+      'Drive MaintenanceのDRY RUNでエラーが発生しました。',
+      error
+    );
+    throw error;
+  } finally {
+    AppLogger.flush();
+  }
+}
