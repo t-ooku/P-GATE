@@ -15,4 +15,12 @@ function runProjectGate() {
   try {
     Config.validate();
     var recoveredCount = ImportLog.recoverStaleStarted(30);
-    if (recoveredCount
+    if (recoveredCount > 0) {
+      AppLogger.startBatch('SYSTEM');
+      AppLogger.warn('STALE_EXECUTION_RECOVERED', '未完了の取込ログを失敗として確定しました。', {
+        recovered: recoveredCount
+      });
+      AppLogger.flush();
+    }
+
+    var files =
