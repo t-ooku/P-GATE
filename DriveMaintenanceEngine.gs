@@ -11,4 +11,11 @@
  * - 1回の処理件数をMAX_MAINTENANCE_FILESで制限する
  * - ScriptLockで同時実行を防止する
  */
-var DriveMaintenance
+var DriveMaintenanceEngine = (function () {
+  'use strict';
+
+  var DEFAULTS = {
+    DRIVE_DRY_RUN: true,
+    INPUT_KEEP_FILES: 3,
+    CSV_RETENTION_DAYS: 1,
+   
