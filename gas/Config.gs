@@ -6,7 +6,7 @@ var Config = (function () {
   'use strict';
 
   var SHEET_NAME = 'Config';
-  var CURRENT_SYSTEM_VERSION = '1.14.0';
+  var CURRENT_SYSTEM_VERSION = '1.15.0';
   var HEADERS = ['Key', 'Value', 'Description'];
   var REQUIRED_KEYS = [
     'ENV',
@@ -18,6 +18,16 @@ var Config = (function () {
     'SPREADSHEET_ID',
     'SYSTEM_VERSION'
   ];
+  var OPTIONAL_KEYS = [
+    'ENABLE_AUTO_CLEANUP',
+    'ARCHIVE_RETENTION_DAYS',
+    'ERROR_RETENTION_DAYS',
+    'LOG_RETENTION_DAYS',
+    'EXTRACT_KEEP_FILES',
+    'ENABLE_DUPLICATE_CHECK',
+    'PROCESS_LATEST_PER_ACCOUNT'
+  ];
+  var TEMPLATE_KEYS = REQUIRED_KEYS.concat(OPTIONAL_KEYS);
   var DESCRIPTIONS = {
     ENV: '実行環境。PROD / TEST',
     INPUT_FOLDER_ID: '01_Input_Zip のGoogle DriveフォルダID',
@@ -26,7 +36,14 @@ var Config = (function () {
     ERROR_FOLDER_ID: '04_Error のGoogle DriveフォルダID',
     LOG_FOLDER_ID: '05_Log のGoogle DriveフォルダID',
     SPREADSHEET_ID: 'Project GATEのSpreadsheet ID',
-    SYSTEM_VERSION: 'システムバージョン'
+    SYSTEM_VERSION: 'システムバージョン',
+    ENABLE_AUTO_CLEANUP: '自動クリーンアップを有効化。TRUE / FALSE',
+    ARCHIVE_RETENTION_DAYS: '03_Archiveの保持日数',
+    ERROR_RETENTION_DAYS: '04_Errorの保持日数',
+    LOG_RETENTION_DAYS: '05_Logの保持日数',
+    EXTRACT_KEEP_FILES: '02_Extracted_CSVに残す最新ファイル数',
+    ENABLE_DUPLICATE_CHECK: 'ZIP内容のSHA-256重複判定を有効化。TRUE / FALSE',
+    PROCESS_LATEST_PER_ACCOUNT: 'ACCESSアカウント別に最新ZIPだけを処理。TRUE / FALSE'
   };
   var cache = null;
 
@@ -85,6 +102,11 @@ var Config = (function () {
     return value;
   }
 
+  function isEnabled(key, defaultValue) {
+    var value = String(get(key, defaultValue ? 'TRUE' : 'FALSE')).toUpperCase();
+    return value !== 'FALSE' && value !== '0' && value !== 'NO' && value !== 'OFF';
+  }
+
   function validate() {
     var missing = [];
     for (var i = 0; i < REQUIRED_KEYS.length; i += 1) {
@@ -126,11 +148,18 @@ var Config = (function () {
       ERROR_FOLDER_ID: '',
       LOG_FOLDER_ID: '',
       SPREADSHEET_ID: spreadsheet.getId(),
-      SYSTEM_VERSION: CURRENT_SYSTEM_VERSION
+      SYSTEM_VERSION: CURRENT_SYSTEM_VERSION,
+      ENABLE_AUTO_CLEANUP: 'TRUE',
+      ARCHIVE_RETENTION_DAYS: '7',
+      ERROR_RETENTION_DAYS: '30',
+      LOG_RETENTION_DAYS: '30',
+      EXTRACT_KEEP_FILES: '1',
+      ENABLE_DUPLICATE_CHECK: 'TRUE',
+      PROCESS_LATEST_PER_ACCOUNT: 'TRUE'
     };
     var rows = [];
-    for (var j = 0; j < REQUIRED_KEYS.length; j += 1) {
-      var key = REQUIRED_KEYS[j];
+    for (var j = 0; j < TEMPLATE_KEYS.length; j += 1) {
+      var key = TEMPLATE_KEYS[j];
       rows.push([
         key,
         key === 'SYSTEM_VERSION' ? CURRENT_SYSTEM_VERSION : (existing[key] ? existing[key][1] : defaults[key]),
@@ -151,9 +180,11 @@ var Config = (function () {
     SHEET_NAME: SHEET_NAME,
     CURRENT_SYSTEM_VERSION: CURRENT_SYSTEM_VERSION,
     REQUIRED_KEYS: REQUIRED_KEYS.slice(),
+    OPTIONAL_KEYS: OPTIONAL_KEYS.slice(),
     getSpreadsheet: getSpreadsheet,
     get: get,
     getRequired: getRequired,
+    isEnabled: isEnabled,
     validate: validate,
     resetCache: resetCache,
     ensureTemplate: ensureTemplate
