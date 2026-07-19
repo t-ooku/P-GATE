@@ -7,11 +7,22 @@ var DuplicateEngine = (function () {
 
   var PROPERTY_PREFIX = 'PROCESSED_ZIP_SHA256_';
 
+  function bytesToHex_(bytes) {
+    return bytes.map(function (value) {
+      var normalized = value < 0 ? value + 256 : value;
+      return ('0' + normalized.toString(16)).slice(-2);
+    }).join('');
+  }
+
   function calculateFileHash(file) {
     if (!file) {
       throw Utility.createError('DUPLICATE_FILE_MISSING', '重複判定対象のZIPがありません。');
     }
-    return Utility.sha256(file.getBlob().getBytes());
+    var digest = Utilities.computeDigest(
+      Utilities.DigestAlgorithm.SHA_256,
+      file.getBlob().getBytes()
+    );
+    return bytesToHex_(digest);
   }
 
   function propertyKey_(hash) {
