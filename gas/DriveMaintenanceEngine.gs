@@ -130,10 +130,15 @@ var DriveMaintenanceEngine = (function () {
 
       try {
 
-        file.setTrashed(true);
+var dryRun =
+  String(Config.get('DRIVE_MAINTENANCE_DRY_RUN', 'TRUE')).toUpperCase() !== 'FALSE';
+
+if (!dryRun) {
+  file.setTrashed(true);
+}
 
         AppLogger.info(
-          'FILE_DELETED',
+          dryRun ? 'FILE_DELETE_DRY_RUN' : 'FILE_DELETED',
           file.getName(),
           {
             folder: category,
