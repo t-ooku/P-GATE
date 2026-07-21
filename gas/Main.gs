@@ -223,9 +223,12 @@ function setupProjectGate() {
   LineIntegration.ensureSheet();
   PreflightEngine.ensureSheet();
   Utility.ensureSheet(Config.getSpreadsheet(), 'MVP_Target', ['ASIN', 'Enabled', 'Note']);
-  SpreadsheetApp.getUi().alert(
-    '初期シートを作成しました。Configシートの5つのFolder IDを入力してから、runProjectGateを実行してください。'
-  );
+  var setupMessage = '初期シートを作成しました。Configシートの5つのFolder IDを入力してから、runProjectGateを実行してください。';
+  var spreadsheet = Config.getSpreadsheet();
+  if (spreadsheet && typeof spreadsheet.toast === 'function') {
+    spreadsheet.toast(setupMessage, 'MYGATE / Project GATE', 10);
+  }
+  Logger.log(setupMessage);
 }
 
 /**
