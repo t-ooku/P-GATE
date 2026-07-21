@@ -711,6 +711,12 @@ test('Windows bridge uses safe ZIP handoff and hash idempotency', () => {
   assert.strictEqual(/password|client_secret|access_token/i.test(bridge), false);
 });
 
+test('setup notification is non-blocking', () => {
+  const source = fs.readFileSync(path.join(gasDir, 'Main.gs'), 'utf8');
+  assert.strictEqual(/getUi\(\)\.alert\s*\(/.test(source), false);
+  assert.strictEqual(/spreadsheet\.toast\s*\(/.test(source), true);
+});
+
 if (process.env.PROJECT_GATE_SAMPLE_CSV) {
   test('provided CP932 sample first 100 rows after UTF-8 conversion', () => {
     const lines = fs.readFileSync(process.env.PROJECT_GATE_SAMPLE_CSV, 'utf8')
