@@ -34,7 +34,7 @@ Version 2026-07-22  |  2026-07-22  |  AUDIT REQUIRED
 
 # 1. 結論
 
-STATUS  Phase0のZIP取込パイプラインは実動ログと画面報告がある。一方、GitHub版、GASデプロイ版、Power Automateフロー、LINE/PWA/拡張の現物はこのワークスペースで未確認。再開時は監査から始める。
+STATUS  Phase0のZIP取込パイプラインは、ITGの3アカウント連続取得、Bridge転送、GAS取込、03_Archive移動、PADの件数増加検知、正常終了まで実環境で確認済み。GitHub PR #2のCI #48も成功。毎朝5:00のTask Scheduler起動は設定済みで、初回定時実行の確認待ち。LINE/PWA/Chrome拡張は未公開・未検証。
 
 | 領域 | 総合判定 | 意味 |
 
@@ -44,9 +44,9 @@ STATUS  Phase0のZIP取込パイプラインは実動ログと画面報告があ
 
 | Phase0データ取込 | PARTIAL CONFIRMED | 実行ログ・画面あり、現物再監査が必要 |
 
-| GitHub/GAS版整合 | CONTRADICTED | 会話内でv1.14と旧結合版の混乱 |
+| GitHub/GAS版整合 | PARTIAL CONFIRMED | PR #2でsource/bundle同期・CI成功。実環境反映済み、マージ待ち |
 
-| PAD自動取得 | PARTIAL CONFIRMED | 3ZIP取得・スケジュール成功の報告あり |
+| PAD自動取得 | CONFIRMED | 3アカウント連続完走を実環境で確認 |
 
 | LINE/PWA/Chrome | UNVERIFIED | 実装済みとの主張はあるが現物未確認 |
 
@@ -124,7 +124,7 @@ STATUS  Phase0のZIP取込パイプラインは実動ログと画面報告があ
 
 ## 4.3 3アカウント
 
-参照会話では3アカウント分のZIPがGoogle Driveへ保存され、Task Schedulerの完了コード0、Import_Logの成功・重複スキップが確認されたと報告されている。アカウント名・ファイル名・スケジュール詳細は現物で再確認する。
+2026-07-22、PADフロー `Project_GATE_Access_Auto_Download` がITGの3アカウントを順番に処理し、各ZIPについて Bridge転送→Google Drive→GAS取込→`03_Archive`移動→Archive件数増加検知→次アカウント移行を完走した。ファイル名の途中に連番が入るため、Archive監視フィルターは `*customer_support-*.zip` とした。Task Schedulerは毎日5:00、繰り返しなしで設定済み。初回定時実行は2026-07-23 5:00に確認する。
 
 # 5. 既存アーキテクチャ（報告ベース）
 
@@ -134,17 +134,17 @@ STATUS  Phase0のZIP取込パイプラインは実動ログと画面報告があ
 
 | Access Web | 3アカウント切替・出品リスト・全件まとめて・CSV出力 | PARTIAL | 規約、UI、認証 |
 
-| Power Automate Desktop | Chromeを自動操作しZIPを取得 | PARTIAL | フローエクスポート |
+| Power Automate Desktop | Chromeを自動操作し3アカウントのZIPを取得 | CONFIRMED | フローエクスポート・秘密情報除去 |
 
-| Task Scheduler | 毎日10:00起動 | PARTIAL | XML・実行履歴 |
+| Task Scheduler | 毎日5:00起動、繰り返しなし | PARTIAL CONFIRMED | 2026-07-23初回定時実行、XML・履歴 |
 
 | Google Drive | 01_Input_Zip等へ保存 | PARTIAL | ID・権限・容量 |
 
 | GAS | ZIP→CSV→DB→Opportunity→Archive/Error→Log | PARTIAL | ソース・デプロイ |
 
-| Trigger | runProjectGate 5分、cleanup日次 | PARTIAL | 重複・TZ |
+| Trigger | runProjectGate 5分、Archive 30日清掃を日次実行 | CONFIRMED | 継続監視 |
 
-| GitHub | Project GATEコード | CONTRADICTED | 版・タグ・実体 |
+| GitHub | PR #2 `agent/mygate-v5-itg-phase0`、CI #48成功 | PARTIAL CONFIRMED | PRレビュー・マージ |
 
 # 6. 会話内の矛盾と注意
 
@@ -262,9 +262,9 @@ STATUS  Phase0のZIP取込パイプラインは実動ログと画面報告があ
 
 | --- | --- | --- |
 
-| GitHub/GAS版確定 | OPEN | ソース・デプロイ・コミット一致 |
+| GitHub/GAS版確定 | IN PROGRESS | PR #2 CI成功。レビュー・マージと最終ハッシュ記録 |
 
-| Phase0安定化 | OPEN | 3アカウント5営業日＋異常系 |
+| Phase0安定化 | IN PROGRESS | 3アカウント単発完走済み。5営業日定時実行＋異常系 |
 
 | 知財・ITG PoC | BLOCKED | 会社・専門家との書面整理 |
 
