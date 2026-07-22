@@ -29,7 +29,8 @@ const order = [
   'KnowledgeEngine.gs',
   'LineIntegration.gs',
   'PreflightEngine.gs',
-  'Main.gs'
+  'Main.gs',
+  'DriveMaintenanceEngine.gs'
 ];
 
 const output = order
