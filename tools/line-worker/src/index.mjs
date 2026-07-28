@@ -551,8 +551,38 @@ export function buildRakutenSearchDestination(query) {
   if (!keywords) return '';
   return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keywords)}/`;
 }
+const QOO10_QUERY_ALIASES = [
+  [/\biphone\b/iu, ['iPhoneケース']],
+  [/\bgalaxy\b/iu, ['Galaxy ケース']],
+  [/\bpixel\b/iu, ['Google Pixel ケース']],
+  [/\bcasetify\b|スマホ(?:ケース|カバー)|携帯(?:ケース|カバー)/iu, ['スマホケース']],
+];
+
+export function buildQoo10SearchKeywords(query) {
+  const cleaned = redactSearchPersonalData(query)
+    .replace(/\bB[A-Z0-9]{9}\b/giu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!cleaned) return '';
+  const semanticTerms = semanticSearchGroups(cleaned)
+    .flatMap((group) => group.terms || [])
+    .map((term) => String(term).toLowerCase().trim())
+    .filter(Boolean);
+  const directTerms = cleaned
+    .toLowerCase()
+    .match(/[a-z][a-z0-9-]{2,}/g) || [];
+  const localizedTerms = QOO10_QUERY_ALIASES
+    .filter(([pattern]) => pattern.test(cleaned))
+    .flatMap(([, terms]) => terms);
+  if (localizedTerms.length) return localizedTerms[0];
+  const optimized = [...new Set([...semanticTerms, ...directTerms])]
+    .filter((term) => !['with', 'from', 'that', 'this', 'type', 'size'].includes(term))
+    .slice(0, 4);
+  return optimized.length ? optimized.join(' ') : cleaned;
+}
+
 export function buildQoo10SearchDestination(query) {
-  const keywords = buildAmazonSearchKeywords(query);
+  const keywords = buildQoo10SearchKeywords(query);
   if (!keywords) return '';
   const url = new URL('https://www.qoo10.jp/s/');
   url.searchParams.set('keyword', keywords);
@@ -665,17 +695,6 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
       }, env.LINK_SIGNING_SECRET);
       copy.tracking_url = `${origin}/go?token=${encodeURIComponent(token)}`;
     }
-    const candidateQuery = [candidate.display_name || candidate.product_name, candidate.asin]
-      .filter(Boolean).join(' ');
-    const candidateCategory = semanticSearchGroups(
-      candidate.display_name || candidate.product_name || query
-    ).map((group) => group.category)
-      .find((category) => category && category !== 'color') || 'unclassified';
-    copy.marketplace_search_links = await signedMarketplaceSearchLinks(candidateQuery, {
-      env, origin, sessionHash, seed, asin: candidate.asin || '', category: candidateCategory
-    });
-    copy.amazon_search_url = copy.marketplace_search_links
-      .find((link) => link.marketplace === 'AMAZON_JP')?.url || '';
     candidates.push(copy);
   }
   const demandCategory = semanticSearchGroups(query)
@@ -705,6 +724,8 @@ export function sanitizePublicCandidate(candidate) {
   delete copy.stock;
   delete copy.amazon_jp_url;
   delete copy.amazon_us_url;
+  delete copy.marketplace_search_links;
+  delete copy.amazon_search_url;
   copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 3).map(sanitizePublicOffer);
   copy.tracking_url = '';
   if (copy.evidence) {

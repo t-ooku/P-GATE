@@ -12,7 +12,7 @@ const {
   verifyLineSignature, createTrackToken, verifyTrackToken,
   isAllowedDestination, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
   getEnvironmentReadiness, buildAmazonSearchDestination, buildRakutenSearchDestination,
-  buildQoo10SearchDestination, buildSheinSearchDestination,
+  buildQoo10SearchDestination, buildQoo10SearchKeywords, buildSheinSearchDestination,
   buildAmazonSearchKeywords, trackingEventsForPayload, rankSellerOffers
 } = workerModule;
 
@@ -286,26 +286,28 @@ test('PWAはAmazon検索フォールバックを署名付きURLで返す', async
   assert.match(decorated.amazon_search_keywords, /humidifier/);
 });
 
-test('承認済み購入先がない各候補にもAmazon商品検索リンクを付ける', async () => {
+test('商品カードには実出品でないモール検索ボタンを付けない', async () => {
   const env = { LINK_SIGNING_SECRET: 'secret' };
   const decorated = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-candidate-fallback', candidates: [{
       asin: 'B000000001',
-      product_name: 'DC Icons Black Adam Action Figure'
+      product_name: 'DC Icons Black Adam Action Figure',
+      marketplace_search_links: [{ marketplace: 'QOO10_JP', url: 'https://example.invalid' }],
+      amazon_search_url: 'https://example.invalid'
     }] },
     new Request('https://p-gate.example/api/knowledge'),
     env,
     'session-hash',
     '黒いフィギュア'
   );
-  assert.match(decorated.candidates[0].amazon_search_url, /^https:\/\/p-gate\.example\/go\?token=/);
-  const token = new URL(decorated.candidates[0].amazon_search_url).searchParams.get('token');
-  const payload = await verifyTrackToken(token, env.LINK_SIGNING_SECRET);
-  assert.equal(payload.t, 'SEARCH_FALLBACK');
-  assert.match(payload.d, /amazon\.co\.jp\/s\?k=/);
-  assert.match(new URL(payload.d).searchParams.get('k'), /B000000001/i);
-});
+  const candidate = decorated.candidates[0];
+  assert.equal('marketplace_search_links' in candidate, false);
+  assert.equal('amazon_search_url' in candidate, false);
+  assert.equal(candidate.offers.length, 0);
 
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(appSource, /candidate\.marketplace_search_links|candidate\.amazon_search_url/);
+});
 test('PWA公開設定はSite Keyだけを返し、無効な質問をAPI境界で拒否する', async () => {
   const ctx = { waitUntil() {} };
   const configResponse = await workerModule.default.fetch(
@@ -367,4 +369,13 @@ test('公開設定はTurnstile Site Key未設定時に503を返す', async () =>
   );
   assert.equal(response.status, 503);
   assert.deepEqual(await response.json(), { turnstile_site_key: '', line_login_configured: false, email_login_configured: false, sms_login_configured: false });
+});
+
+test('Qoo10の商品検索はASINと末尾ノイズを除き短い商品条件へ整える', () => {
+  const keywords = buildQoo10SearchKeywords(
+    'B09NKLIJ57 black casetify iphone arson banana'
+  );
+  assert.equal(keywords, 'iPhoneケース');
+  assert.doesNotMatch(keywords, /B09NKLIJ57|arson|banana/i);
+  assert.ok(keywords.split(/\s+/).length <= 4);
 });
