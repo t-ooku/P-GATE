@@ -70,6 +70,21 @@ export async function attachSpApiOffers(env, tenant, rows = []) {
   return rows.map((row) => ({ ...row, offers: byAsin.get(row.asin) || row.offers || [] }));
 }
 
+export async function attachMarketplaceOffers(env, tenant, rows = []) {
+  if (!env.PRODUCT_DB || !rows.length) return rows;
+  const asins = [...new Set(rows.map(row => String(row?.asin || '').trim().toUpperCase()).filter(Boolean))];
+  const keys = [...new Set(rows.map(row => String(row?.record_key || '').trim()).filter(Boolean))];
+  if (!asins.length && !keys.length) return rows;
+  const values = [...asins, ...keys];
+  const placeholders = values.map((_, index) => `?${index + 2}`).join(',');
+  let result;
+  try {
+    result = await env.PRODUCT_DB.prepare(`SELECT * FROM marketplace_offers WHERE tenant=?1 AND active=1 AND stock_status<>'OUT_OF_STOCK' AND (asin IN (${placeholders}) OR record_key IN (${placeholders}))`)
+      .bind(cleanTenant(tenant), ...values).all();
+  } catch { return rows; }
+  return rows.map(row => ({ ...row, offers: [...(row.offers || []), ...(result.results || []).filter(offer => (offer.asin && offer.asin === row.asin) || (offer.record_key && offer.record_key === row.record_key))] }));
+}
+
 export async function searchProductsV2(env, tenant, query, limit = 10) {
   if (!env.PRODUCT_DB) return null;
   const match = intelligentFtsQuery(query);
@@ -89,7 +104,8 @@ export async function searchProductsV2(env, tenant, query, limit = 10) {
         .bind(relaxed, cleanTenant(tenant), Math.min(Math.max(Number(limit) || 10, 1), 100)).all();
     }
   }
-  return attachSpApiOffers(env, cleanTenant(tenant), result.results || []);
+  const amazonAttached = await attachSpApiOffers(env, cleanTenant(tenant), result.results || []);
+  return attachMarketplaceOffers(env, cleanTenant(tenant), amazonAttached);
 }
 
 export async function searchProductsWithDecision(env, tenant, query, limit = 10) {
