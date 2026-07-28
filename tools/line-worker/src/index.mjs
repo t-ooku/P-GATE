@@ -516,10 +516,34 @@ const AMAZON_JP_QUERY_ALIASES = [
   [/(?:折叠|折疊|접이식|foldable|folding)/iu, ['折りたたみ']]
 ];
 
+function structuredMarketplaceTerms(query) {
+  const segments = String(query || '')
+    .split(/\s*(?:\/|／|\||｜)\s*/u)
+    .map((segment) => segment.replace(/^[\s,、。・]+|[\s,、。・]+$/gu, '').trim())
+    .filter((segment) => segment.length >= 2 && segment.length <= 80);
+  if (segments.length < 2) return [];
+  return [...new Set(segments)].slice(0, 6);
+}
 export function buildAmazonSearchKeywords(query) {
   const asinTerms = String(query || '').toUpperCase().match(/\bB[A-Z0-9]{9}\b/g) || [];
   const cleaned = redactSearchPersonalData(query);
   if (!cleaned) return '';
+const structuredTerms = structuredMarketplaceTerms(cleaned);
+  if (structuredTerms.length) {
+    const structuredSemanticTerms = semanticSearchGroups(cleaned)
+      .flatMap((group) => group.terms || [])
+      .map((term) => String(term).toLowerCase().trim())
+      .filter(Boolean);
+    const structuredLocalizedTerms = AMAZON_JP_QUERY_ALIASES
+      .filter(([pattern]) => pattern.test(cleaned))
+      .flatMap(([, terms]) => terms);
+    return [...new Set([
+      ...asinTerms.map((term) => term.toLowerCase()),
+      ...structuredTerms,
+      ...structuredLocalizedTerms,
+      ...structuredSemanticTerms
+    ])].slice(0, 12).join(' ');
+  }
   const semanticTerms = semanticSearchGroups(cleaned)
     .flatMap((group) => group.terms || [])
     .map((term) => String(term).toLowerCase().trim())
@@ -564,6 +588,8 @@ export function buildQoo10SearchKeywords(query) {
     .replace(/\s+/g, ' ')
     .trim();
   if (!cleaned) return '';
+  const structuredTerms = structuredMarketplaceTerms(cleaned);
+  if (structuredTerms.length) return structuredTerms.join(' ');
   const semanticTerms = semanticSearchGroups(cleaned)
     .flatMap((group) => group.terms || [])
     .map((term) => String(term).toLowerCase().trim())

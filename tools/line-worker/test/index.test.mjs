@@ -379,3 +379,15 @@ test('Qoo10の商品検索はASINと末尾ノイズを除き短い商品条件�
   assert.doesNotMatch(keywords, /B09NKLIJ57|arson|banana/i);
   assert.ok(keywords.split(/\s+/).length <= 4);
 });
+test('横断検索語はスラッシュで追加した日本語条件をすべて保持する', () => {
+  const query = '推し活で使える小さな写真プリンター / 写真を撮る / 手のひらサイズ / アクションカメラ';
+  const amazonKeywords = buildAmazonSearchKeywords(query);
+  const qoo10Keywords = buildQoo10SearchKeywords(query);
+  for (const keywords of [amazonKeywords, qoo10Keywords]) {
+    assert.match(keywords, /写真プリンター/);
+    assert.match(keywords, /写真を撮る/);
+    assert.match(keywords, /手のひらサイズ/);
+    assert.match(keywords, /アクションカメラ/);
+    assert.notEqual(keywords, 'camera');
+  }
+});
