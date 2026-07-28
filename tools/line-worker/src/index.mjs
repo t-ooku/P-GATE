@@ -5,7 +5,7 @@ import { syncProducts } from './product-index-v2.mjs';
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
 import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
-import { syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
+import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
@@ -926,6 +926,7 @@ export default {
     }
     if (request.method === 'POST' && url.pathname === '/api/internal/products/sync') return syncProducts(request, env);
     if (request.method === 'POST' && url.pathname === '/api/internal/marketplace-offers/sync') return syncMarketplaceOffers(request, env);
+    if (request.method === 'GET' && url.pathname === '/api/internal/marketplace-offers/stats') return marketplaceOfferStats(request, env);
     const unmetDemandResponse = await handleUnmetDemandRoutes(request, env);
     if (unmetDemandResponse) return unmetDemandResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
