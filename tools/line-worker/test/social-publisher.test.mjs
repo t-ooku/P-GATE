@@ -6,6 +6,12 @@ import {
   socialPublisherReadiness
 } from '../src/social-publisher.mjs';
 
+test('Instagram投稿はコメント誘導と若者向け必須ハッシュタグを公開前に補完する', () => {
+  const post = normalizeSocialPost({ platform: 'INSTAGRAM', caption: '名前が分からなくても探せる', media_url: 'https://hoshilu.app/social/post.png', status: 'APPROVED' });
+  assert.match(post.caption, /コメントで教えて/);
+  for (const tag of ['#ホシル', '#あいまい検索', '#4モール横断', '#ほしっトク']) assert.match(post.caption, new RegExp(tag));
+});
+
 test('affiliate social posts always include disclosure', () => {
   const post = normalizeSocialPost({
     platform: 'X',

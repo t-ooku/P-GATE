@@ -11,8 +11,14 @@ const clean = (value, max = 2000) => String(value || '')
 export function normalizeSocialPost(input = {}) {
   const platform = clean(input.platform, 20).toUpperCase();
   if (!PLATFORMS.has(platform)) throw new Error('SOCIAL_PLATFORM_INVALID');
-  const caption = clean(input.caption, platform === 'X' ? 240 : 1800);
+  let caption = clean(input.caption, platform === 'X' ? 240 : 1800);
   if (caption.length < 5) throw new Error('SOCIAL_CAPTION_INVALID');
+  if (platform === 'INSTAGRAM') {
+    if (!/コメント/.test(caption)) caption += ' 気になった商品をコメントで教えてね。';
+    const requiredTags = ['#ホシル', '#あいまい検索', '#4モール横断', '#ほしっトク'];
+    const missingTags = requiredTags.filter(tag => !caption.includes(tag));
+    if (missingTags.length) caption += ` ${missingTags.join(' ')}`;
+  }
   let link = clean(input.link, 1000);
   if (link) {
     const url = new URL(link);
