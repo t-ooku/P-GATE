@@ -64,6 +64,10 @@ export function normalizeCreatorsItems(payload = {}) {
     image_url: imageFor(item),
     stock: 1,
     amazon_jp_url: String(item.detailPageURL || ''),
+    offers: item.detailPageURL ? [{
+      marketplace: 'AMAZON_JP', product_url: String(item.detailPageURL),
+      stock_status: 'IN_STOCK', source: 'amazon_creators_api'
+    }] : [],
     marketplace_source: 'AMAZON_CREATORS_API',
     evidence: { matched_terms: [], information_score: Number(item.score || 0) }
   })).filter((item) => item.asin && item.product_name);

@@ -4,6 +4,7 @@ import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
+import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
@@ -18,7 +19,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
   'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp',
   'qoo10.jp', 'shein.com'
 ];
-const RELEASE = '1.14.0';
+const RELEASE = '1.15.0';
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
   'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'
@@ -237,7 +238,9 @@ export function getEnvironmentReadiness(env = {}) {
       sp_api_partial: spApiClientId !== spApiClientSecret ||
         (spApiRefreshConfigured.length > 0 && !(spApiClientId && spApiClientSecret)),
       sp_api_configured_tenants: spApiTenants,
-      sp_api_configured_tenant_count: spApiTenants.length
+      sp_api_configured_tenant_count: spApiTenants.length,
+      amazon_creators_configured: creatorsApiConfigured(env),
+      rakuten_marketplace_configured: rakutenApiConfigured(env)
     }
   };
 }
@@ -825,22 +828,25 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(gasResult.candidates, result.candidates)
       };
     }
-    if (creatorsApiConfigured(env) && (String(input.query).includes(' / ') || !(result?.candidates || []).length)) {
-      try {
-        const amazonCandidates = filterCategoryMismatches(input.query,
-          await searchAmazonCreators(env, buildAmazonSearchKeywords(input.query)));
-        const existing = new Set((result?.candidates || []).map((candidate) => candidate.asin));
-        result = {
-          ...(result || {}),
-          candidates: [
-            ...(result?.candidates || []),
-            ...amazonCandidates.filter((candidate) => !existing.has(candidate.asin))
-          ].slice(0, 10),
-          amazon_catalog_connected: true
-        };
-      } catch {
-        result = { ...(result || {}), amazon_catalog_connected: false };
-      }
+    const shouldSearchMarketplaces = String(input.query).includes(' / ') || !(result?.candidates || []).length;
+    if (shouldSearchMarketplaces) {
+      const marketplaceSearches = [];
+      if (creatorsApiConfigured(env)) marketplaceSearches.push({
+        key: 'amazon_catalog_connected',
+        run: searchAmazonCreators(env, buildAmazonSearchKeywords(input.query))
+      });
+      if (rakutenApiConfigured(env)) marketplaceSearches.push({
+        key: 'rakuten_catalog_connected',
+        run: searchRakutenMarketplace(env, buildAmazonSearchKeywords(input.query))
+      });
+      const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
+      outcomes.forEach((outcome, index) => {
+        const source = marketplaceSearches[index];
+        result = { ...(result || {}), [source.key]: outcome.status === 'fulfilled' };
+        if (outcome.status !== 'fulfilled') return;
+        const candidates = filterCategoryMismatches(input.query, outcome.value);
+        result.candidates = rankMerchantCandidates(result.candidates || [], candidates).slice(0, 10);
+      });
     }
     const sessionHash = await hashUser(input.session_id);
     const decorated = await decoratePwaResult(

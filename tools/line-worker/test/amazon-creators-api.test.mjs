@@ -29,6 +29,8 @@ test('normalizes Amazon catalog items into HOSHILU candidates', () => {
   assert.equal(result[0].asin, 'B012345678');
   assert.equal(result[0].product_name, 'LEDで光るスマホケース');
   assert.equal(result[0].marketplace_source, 'AMAZON_CREATORS_API');
+  assert.equal(result[0].offers[0].marketplace, 'AMAZON_JP');
+  assert.match(result[0].offers[0].product_url, /amazon\.co\.jp\/dp\/B012345678/);
 });
 
 test('fetches and reuses a Creators API OAuth token', async () => {

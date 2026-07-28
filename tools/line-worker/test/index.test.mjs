@@ -343,11 +343,18 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     UNMET_DEMAND_SYNC_SECRET: 'u'.repeat(32),
     SPAPI_LWA_CLIENT_ID: 'client',
     SPAPI_LWA_CLIENT_SECRET: 'secret',
-    SPAPI_REFRESH_TOKEN_ITG: 'refresh'
+    SPAPI_REFRESH_TOKEN_ITG: 'refresh',
+    AMAZON_CREATORS_CREDENTIAL_ID: 'amazon-id',
+    AMAZON_CREATORS_CREDENTIAL_SECRET: 'amazon-secret',
+    AMAZON_ASSOCIATE_TAG: 'hoshilu-22',
+    RAKUTEN_APPLICATION_ID: 'rakuten-app',
+    RAKUTEN_ACCESS_KEY: 'rakuten-key'
   });
   assert.equal(optional.checks.mywatch_configured, true);
   assert.equal(optional.checks.unmet_demand_sync_configured, true);
   assert.deepEqual(optional.checks.sp_api_configured_tenants, ['itg']);
+  assert.equal(optional.checks.amazon_creators_configured, true);
+  assert.equal(optional.checks.rakuten_marketplace_configured, true);
   assert.equal(JSON.stringify(optional.checks).includes('refresh'), false);
 
   const ctx = { waitUntil() {} };
@@ -357,7 +364,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const payload = await response.json();
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
-  assert.equal(payload.release, '1.14.0');
+  assert.equal(payload.release, '1.15.0');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
   assert.equal(JSON.stringify(payload).includes(base.GAS_BRIDGE_SECRET), false);
   assert.equal(JSON.stringify(payload).includes(base.TURNSTILE_SECRET_KEY), false);
