@@ -132,6 +132,26 @@ HOSHILUは、商品名や検索語が分からない「欲しい」を、見た�
 - Instagram Webがキャプション編集を保存せず、画像内に匿名集計告知はあるがcaptionは空の可能性が高い。
 - PNGはローカル保存。Worker assetとしての再deployは未実施。
 
+### 検索精度・追加キーワード改善（ローカル完了、未deploy）
+
+対象:
+
+- `tools/line-worker/src/search-intelligence.mjs`
+- `tools/line-worker/src/knowledge-search.mjs`
+- `tools/line-worker/src/index.mjs`
+- `tools/line-worker/test/search-intelligence.test.mjs`
+
+状態:
+
+- 「靴下→靴」の原因だった部分一致を修正。複合語の具体カテゴリを一般カテゴリより優先。
+- ノートPC/ノート、自転車チェーン/ネックレス、ペットのマウス/PCマウス、傘立て/傘、リップケア/口紅、カメラバッグ/カメラ、扇風機用品/扇風機も境界修正。
+- Tシャツ、トップス、パンツ、スカート、ワンピース、バッグ、帽子など若者向けFashionカテゴリを追加。
+- 韓国語を含むトナー、美容液、保湿、日焼け止め、パック、クレンジング、クッションファンデ、アイメイク、ネイル、ヘアケアを追加。
+- 明示カテゴリでは一般用途質問を飛ばし、丈・素材・肌質・成分・仕上がり等のカテゴリ固有候補を10件提示。
+- GAS/D1/外部API候補のうち、明示カテゴリと明確に矛盾する候補だけを表示前に除外。未知カテゴリは保持。
+- 外部検索語確認: `靴下 → sock socks hosiery`。
+- `npm.cmd test`全件PASS。Worker 159/159、release 4/4、Chrome 6/6、root/GAS全PASS。
+- 既存の大規模dirty treeと同じ未追跡module/大幅変更中の`index.mjs`に重なるため、検索コード単独commit・本番deployは未実施。
 ### 大規模ローカル実装
 
 検索、会員、SP-API、seller、MYWATCH、SNS、多言語、Chrome実装が大量に未コミット。個別の過去テストは合格だが、現在のdirty tree全体で2026-07-28に統合テストを実行し、全件PASS。
@@ -398,3 +418,16 @@ Desktop側には大量の未commit実装があります。引継ぎ書の「同�
 ## 26. 今回の保存範囲
 
 大量の既存dirty treeを完成版扱いせず、本引継ぎ書のみを独立保存候補とする。`gh` CLIは未導入。Git pushは既存Git認証で確認する。
+
+### 4モール横断検索（ローカル完了、未deploy）
+
+- 検索結果全体と各提案商品に `Amazonで探す` / `楽天で探す` / `Qoo10で探す` / `SHEINで探す` を追加した。
+- HOSHILUが整理した検索ワードを4モールへ同条件で引き継ぐ。公式検索先は Amazon Japan、楽天市場、Qoo10 Japan、SHEIN Japan。
+- 全リンクは `/go?token=` の署名付きリダイレクトを通し、許可ドメインを Amazon / Rakuten / Qoo10 / SHEIN に限定。モール別クリック計測値も保持する。
+- Amazon互換フィールドは残し、新APIフィールド `marketplace_search_links` と `search_keywords` を追加した。
+- Qoo10・SHEINの価格・画像・在庫付き商品カードは、公式API/商品フィード、承認済みアフィリエイトフィード、または加入セラー提供データが確認できた商品から表示する。規約確認前のスクレイピングは行わない。
+- 公式URL確認: 楽天市場 `https://search.rakuten.co.jp/search/mall/<keyword>/`、SHEIN Japan `https://jp.shein.com/pdsearch/<keyword>/`。Qoo10 Japanは `https://www.qoo10.jp/s/?keyword=<keyword>` を利用する。
+- 対象: `tools/line-worker/src/index.mjs`, `public/app.js`, `public/index.html`, `public/styles.css`, `test/index.test.mjs`, `test/discovery-collage.test.mjs`。
+- 検証: Worker 160/160、リポジトリ全体テスト、release 4/4、Chrome 6/6すべて成功。
+- 未deploy理由: 同じ主要ファイルに既存の大規模な未コミット変更が重なっており、今回分だけを安全に分離して本番反映できない。既存変更の所有範囲を確定後、統合コミットとdry-runを行う。
+- Web版編集可否: 上記対象ファイルはデスクトップ版が統合保存・deployを完了するまで同時編集禁止。

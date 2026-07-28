@@ -3,10 +3,36 @@
   "name": "project-gate-line-bridge",
   "main": "src/index.mjs",
   "compatibility_date": "2026-07-14",
+  "routes": [
+    {
+      "pattern": "hoshilu.app",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/webhook", "/go", "/health"]
-  }
+    "run_worker_first": ["/api/*", "/webhook", "/go", "/health", "/seller*", "/og/*"]
+  },
+  "vars": {
+    "AMAZON_ASSOCIATE_TAG": "hoshilu-22",
+    "AMAZON_CREATORS_CREDENTIAL_VERSION": "2.3",
+    "INSTAGRAM_ACCOUNT_ID": "17841441143206766",
+    "MEMBER_EMAIL_FROM": "login@auth.hoshilu.app",
+    "SELLER_ACCOUNT_NAME": "ITG GROUP",
+    "SELLER_ALLOWED_TENANTS": "itg,itt,mc2",
+    "SELLER_PLAN": "PARTNER"
+  },
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "PRODUCT_DB",
+      "database_name": "hoshilu-products",
+      "database_id": "17629324-b771-4348-982c-c25da48c29b2",
+      "migrations_dir": "migrations"
+    }
+  ]
 }

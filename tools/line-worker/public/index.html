@@ -3,86 +3,138 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#e83267">
-  <meta name="description" content="欲しい商品を日本語・英語・中国語・韓国語・ローマ字で相談できるP-GATE">
-  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#7357ff">
+  <meta name="description" content="ホシルは、曖昧な欲しいを精度の高い商品検索へ変え、見つけた商品の購入ページまで案内するAI探索アプリです。">
+  <meta name="keywords" content="アメリカ商品,並行輸入,海外限定,Amazon輸入,米国フィギュア,海外家電,車パーツ,在日外国人,商品検索AI">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ホシル｜HOSHILU">
+  <meta property="og:title" content="ホシル｜欲しいを、ちゃんと見つける。">
+  <meta property="og:description" content="曖昧な記憶や希望を検索条件へ変換。商品が見つかれば、その購入ページまで案内します。">
+  <meta property="og:image" content="https://hoshilu.app/og/hoshilu-x-v3.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ホシル｜欲しいを、ちゃんと見つける。">
+  <meta name="twitter:description" content="曖昧な記憶や希望を検索条件へ変換。商品が見つかれば、その購入ページまで案内します。">
+  <meta name="twitter:image" content="https://hoshilu.app/og/hoshilu-x-v3.png">
+  <meta name="twitter:image:alt" content="HOSHILU ホシル｜欲しいを、ちゃんと見つける。">
+  <link rel="canonical" href="https://hoshilu.app/">
+  <link rel="manifest" href="/manifest-v2.webmanifest">
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/hoshilu-v2-180.png">
   <link rel="stylesheet" href="/styles.css">
-  <title>P-GATE｜欲しい商品への近道</title>
+  <link rel="stylesheet" href="/wish-carousel.css">
+  <link rel="stylesheet" href="/mywatch.css">
+  <link rel="stylesheet" href="/hero-fixes.css">
+  <link rel="stylesheet" href="/hero-collage-overlay.css">
+  <link rel="stylesheet" href="/discovery.css">
+  <link rel="stylesheet" href="/sticky-nav.css">
+  <link rel="stylesheet" href="/speech-input.css">
+  <link rel="stylesheet" href="/install.css">
+  <title>ホシル｜欲しいを、ちゃんと見つける。</title>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"ホシル","alternateName":"HOSHILU","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"AI shopping companion for finding products from natural-language descriptions and saving what you want.","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}}</script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="P-GATE ホーム">
-      <img src="/icons/icon.svg" width="40" height="40" alt="">
-      <span>P-GATE</span>
+    <a class="brand" href="#top" aria-label="ホシル ホーム">
+      <img src="/icons/icon.svg" width="42" height="42" alt="">
+      <span>HOSHILU<small>ホシル</small></span><em>BETA</em>
     </a>
-    <button id="installButton" class="secondary hidden" type="button">ホーム画面に追加</button>
+    <label class="language-label header-language" for="languageSelect"><span id="languageLabel" class="visually-hidden">表示言語</span>
+      <select id="languageSelect" data-language-select aria-label="Language"><option value="JA">🇯🇵 日本語</option><option value="EN">🇺🇸 English</option><option value="ZH">🇨🇳 中文</option><option value="KO">🇰🇷 한국어</option></select>
+    </label>
+    <nav class="account-nav" aria-label="Account"><a id="memberLink" href="/login.html">マイページ</a><button id="memberLogout" class="account-logout hidden" type="button" data-i18n="nav.logout">ログアウト</button><a class="business-link" href="/seller" data-i18n="nav.business">メーカー＆セラー専用</a></nav>
+    <button id="installButton" class="secondary" type="button" aria-haspopup="dialog" aria-controls="installDialog" data-i18n="nav.install">アプリとして使う</button>
   </header>
 
-  <main>
-    <section class="hero" aria-labelledby="heroTitle">
-      <p class="eyebrow">MULTILINGUAL PRODUCT KNOWLEDGE</p>
-      <h1 id="heroTitle">欲しいものを、<br><span>探す前に相談。</span></h1>
-      <p id="heroLead">日本語の商品情報から、あなたの言葉に合う候補を根拠付きで提案します。</p>
-    </section>
+  <dialog id="installDialog" class="install-dialog" aria-labelledby="installDialogTitle">
+    <div class="install-dialog-card">
+      <button id="installDialogClose" class="install-dialog-close" type="button" aria-label="Close">&times;</button>
+      <img src="/icons/icon.svg" width="64" height="64" alt="">
+      <p class="step">HOSHILU APP</p>
+      <h2 id="installDialogTitle" data-i18n="install.title">ホシルをアプリとして使う</h2>
+      <div id="installInstructions" class="install-instructions"></div>
+      <button id="installDialogDone" class="primary" type="button" data-i18n="common.close">閉じる</button>
+    </div>
+  </dialog>
 
-    <section class="search-panel" aria-labelledby="searchTitle">
-      <div class="panel-heading">
-        <div>
-          <p class="step">01</p>
-          <h2 id="searchTitle">何を探していますか？</h2>
+  <nav class="feature-pills" aria-label="ホシルの機能">
+          <button id="goSearch" type="button">ホシル</button><button id="goWish" type="button">ほしっトク</button>
+        </nav>
+
+  <main id="top">
+    <div id="userView">
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-copy">
+          <p id="heroEyebrow" class="eyebrow">欲しいを、ちゃんと見つける。</p>
+          <h1 id="heroTitle">今日は、<span>何が欲しい？</span></h1>
         </div>
-        <label class="language-label" for="languageSelect">
-          <span>表示言語</span>
-          <select id="languageSelect">
-            <option value="JA">日本語</option>
-            <option value="EN">English</option>
-            <option value="ZH">中文</option>
-            <option value="KO">한국어</option>
-          </select>
-        </label>
-      </div>
+        <div class="hero-visual" aria-hidden="true"></div>
+      </section>
 
-      <form id="knowledgeForm">
-        <label class="visually-hidden" id="queryLabel" for="query">商品について質問</label>
-        <textarea id="query" name="query" minlength="2" maxlength="200" required
-          placeholder="例：アメリカのシリアルが食べたい"></textarea>
-        <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
-        <label class="consent">
-          <input id="consent" type="checkbox" required>
-          <span id="consentText">質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。</span>
-        </label>
-        <div id="turnstileContainer" class="turnstile-container"></div>
-        <button id="submitButton" class="primary" type="submit">
-          <span id="submitText">候補を見つける</span><span aria-hidden="true">→</span>
-        </button>
-        <p id="status" class="status" role="status" aria-live="polite"></p>
-      </form>
-    </section>
+      <section class="search-journey" aria-labelledby="journeyTitle">
+        <div class="journey-heading">
+          <p class="step">HOSHILU SEARCH AGENT</p>
+          <h2 id="journeyTitle"><span>検索する前に、</span><span>ホシルに話す。</span></h2>
+          <p id="journeyLead"><span>曖昧な「欲しい」を、</span><span>見つかる検索へ変換します。</span></p>
+        </div>
+        <ol class="journey-steps">
+          <li><span>1</span><div><strong id="journeyStep1Title">思い出せるまま話す</strong><p id="journeyStep1Body">名前が分からなくても、見た目・用途・見た場所だけで大丈夫。</p></div></li>
+          <li><span>2</span><div><strong id="journeyStep2Title">検索条件を精密化</strong><p id="journeyStep2Body">ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。</p></div></li>
+          <li><span>3</span><div><strong id="journeyStep3Title">購入先まで案内</strong><p id="journeyStep3Body">商品が見つかれば直接商品ページへ。なければ4つのモールへ条件を引き継ぎます。</p></div></li>
+        </ol>
+      </section>
 
-    <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle">
-      <div class="section-title">
-        <p class="step">02</p>
-        <h2 id="resultsTitle">P-GATEからの提案</h2>
-      </div>
-      <p id="resultMessage" class="result-message"></p>
-      <div id="resultCards" class="result-grid"></div>
-    </section>
+      <section id="hoshiluSearch" class="search-panel" aria-labelledby="searchTitle">
+        <div class="panel-heading">
+          <div><p id="searchStep" class="step">ホシル</p><h2 id="searchTitle"><span>商品名が分からなくても、うまく説明できなくても大丈夫。</span><span>見た目、見た場所、使い方。覚えていることから話してください。</span></h2></div>
+        </div>
+        <form id="knowledgeForm">
+          <label class="visually-hidden" for="query">欲しいものについて話す</label>
+          <div class="query-field"><textarea id="query" name="query" minlength="2" maxlength="200" required placeholder="例：昔見た、iPhoneの後ろにつける丸い磁石みたいな充電器"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
+          <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
+          <label class="consent"><input id="consent" type="checkbox" required><span id="consentText">質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。</span></label>
+          <div id="turnstileContainer" class="turnstile-container"></div>
+          <button id="submitButton" class="primary" type="submit"><span id="submitText">一緒に見つける</span><span aria-hidden="true">→</span></button>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
 
-    <section class="trust" aria-label="P-GATEの方針">
-      <div><strong>日本語が正本</strong><span>在庫・価格を言語別に複製しません</span></div>
-      <div><strong>最大3候補</strong><span>根拠不足の商品は推薦しません</span></div>
-      <div><strong>多言語対応</strong><span>日・英・中・韓・ローマ字を同一商品へ接続</span></div>
-    </section>
-  </main>
+      <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle">
+        <div class="section-title"><div><p class="step">MATCHES</p><h2 id="resultsTitle">ホシルからの提案</h2></div></div>
+        <p id="resultMessage" class="result-message"></p>
+        <p class="affiliate-link-note">広告：Amazonへのリンクにはアフィリエイトリンクが含まれます。購入価格や検索順位には影響しません。</p>
+        <div id="resultCards" class="result-grid"></div>
+      </section>
 
-  <footer>
-    <span>© P-GATE</span>
-    <span><a href="/privacy.html">プライバシー方針</a> ｜ 商品情報は購入前に販売ページで確認してください。</span>
-  </footer>
+      <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle">
+        <p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">保存した「欲しい」を振り返る。</h2>
+        <p id="insightSummary">ほしっトクした内容と、選んだ通知条件をまとめて確認できます。</p>
+        <div id="mywish" class="insight-wishes">
+          <div class="wish-toolbar"><h3 id="wishTitle">ほしっトクしたキーワード</h3><label class="wish-filter"><span class="visually-hidden">保存したキーワードを検索</span><input id="wishFilter" type="search" autocomplete="off" placeholder="保存した「欲しい」を検索"></label></div>
+          <p id="wishDescription" class="visually-hidden"><span>探しているものを端末に記憶。</span><span>次にホシルを開いた時も、続きから探せます。</span></p>
+          <div id="wishList" class="wish-list" aria-label="更新が新しい順のほしっトクキーワード"><p class="empty">ほしっトクしたものはまだありません。</p></div>
+        </div>
+        <div id="mywatch" class="mywatch-hub" aria-labelledby="mywatchTitle">
+          <div class="mywatch-heading"><h3 id="mywatchTitle">ホシっといて通知</h3><button id="refreshNotifications" type="button">更新</button></div>
+          <div id="notificationList" class="notification-list" aria-live="polite"><p class="empty">無料会員でログインすると通知を確認できます。</p></div>
+        </div>
+      </section>
 
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-  <script type="module" src="/app.js"></script>
+      <section class="discovery-collage" aria-labelledby="discoveryTitle">
+        <picture class="discovery-collage-media" aria-hidden="true">
+          <source media="(max-width: 760px)" srcset="/hoshilu-discovery-collage-mobile.webp" type="image/webp">
+          <img src="/hoshilu-discovery-collage.webp" alt="" width="1536" height="864" loading="lazy" decoding="async">
+        </picture>
+        <div class="discovery-collage-copy">
+          <p class="step">HOSHILU DISCOVERY</p>
+          <h2 id="discoveryTitle"><span>名前が分からなくても、</span><span>記憶から探せる。</span></h2>
+          <p id="discoveryBody">見た目、見た場所、使い方。覚えていることから話してください。</p>
+          <button id="discoveryExample" class="discovery-example" type="button">SNSで見た、ピンクの小さいカメラみたいなもの</button>
+        </div>
+      </section>
+    </div></main>
+  <footer><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。</span><span><a href="/privacy.html">プライバシー</a> ・ <a href="/terms.html">利用上の注意</a></span></footer>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script><script src="/site-i18n.js"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/app.js"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>

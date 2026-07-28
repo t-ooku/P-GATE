@@ -1,0 +1,19 @@
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const index = fs.readFileSync('tools/line-worker/public/index.html', 'utf8');
+const css = fs.readFileSync('tools/line-worker/public/sticky-nav.css', 'utf8');
+const serviceWorker = fs.readFileSync('tools/line-worker/public/service-worker.js', 'utf8');
+const app = fs.readFileSync('tools/line-worker/public/app.js', 'utf8');
+
+assert.match(index, /<nav class="feature-pills"/);
+assert.equal((index.match(/id="goSearch"/g) || []).length, 1);
+assert.match(css, /position:\s*sticky/);
+assert.match(css, /\.topbar\s*\{[\s\S]*position:\s*sticky/);
+assert.match(css, /top:\s*var\(--topbar-height/);
+assert.match(app, /syncTopbarHeight/);
+assert.match(app, /window\.scrollTo\(\{top:0,behavior:'smooth'\}\)/);
+assert.match(css, /grid-template-columns:\s*repeat\(2/);
+assert.match(css, /\.hero\s*\{[\s\S]*padding:\s*26px/);
+assert.match(serviceWorker, /hoshilu-shell-v61/);
+assert.match(serviceWorker, /\/sticky-nav\.css/);
+console.log('PASS HOSHILU compact sticky navigation');

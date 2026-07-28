@@ -2,44 +2,51 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#e83267">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#7357ff">
   <link rel="stylesheet" href="/styles.css">
-  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
-  <title>プライバシー方針｜P-GATE</title>
+  <link rel="icon" href="/icons/icon.svg">
+  <title>プライバシー｜ホシル</title>
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="/"><img src="/icons/icon.svg" width="40" height="40" alt=""><span>P-GATE</span></a>
-  </header>
+  <header class="topbar"><a class="brand" href="/"><img src="/icons/icon.svg" width="40" height="40" alt=""><span>HOSHILU</span></a></header>
   <main class="legal">
     <p class="eyebrow">PRIVACY</p>
     <h1>プライバシー方針</h1>
-    <p>この文書はP-GATEパイロット版の技術上の取扱方針です。正式公開前に、運営者情報、問い合わせ先、適用法令を確認した正式版へ更新します。</p>
+    <p>本ページはホシル ベータ版における情報の取扱方針です。</p>
 
     <h2>処理する情報</h2>
     <ul>
       <li>利用者が入力した商品に関する質問</li>
-      <li>端末内で生成したランダムな匿名セッションID</li>
+      <li>端末内で生成するランダムな匿名セッションID</li>
       <li>候補商品の表示、商品リンクのクリック、販売ページへの移動</li>
+      <li>無料会員の仮名化された会員ID、保存した検索条件、通知条件</li>
+      <li>通知の配信、既読、非表示に関する監査記録</li>
       <li>不正利用防止に必要なCloudflare Turnstileの検証情報</li>
     </ul>
 
-    <h2>保存しない情報</h2>
-    <p>質問本文は商品検索のために処理しますが、P-GATEのスプレッドシートおよびアプリケーションログには保存しません。監査用には質問のSHA-256ハッシュを保存します。</p>
+    <h2>質問と保存した条件</h2>
+    <p>質問本文は候補検索のために処理します。アプリケーションログには質問本文を保存せず、分析にはハッシュ化・集計された情報を使用します。ゲストの「ほしっトク」はブラウザ内に保持されます。無料会員としてログインした場合、端末間同期と通知のため、保存した検索条件と通知設定を会員IDに紐づけて保存します。</p>
+
+    <h2>ログイン情報</h2>
+    <p>LINE Loginの識別子はそのまま公開せず、サービス内の仮名化会員IDとして扱います。メール認証を利用できる環境では、メールアドレス原文を会員データベースへ保存せず、認証用ハッシュと有効期限付きコードを使用します。認証情報やSecretを画面・ログへ表示しません。</p>
+
+    <h2>通知と削除</h2>
+    <p>無料会員は通知種別と頻度を変更し、通知を既読または非表示にできます。保存した「ほしっトク」を削除した場合、その条件に紐づく会員通知も削除します。匿名化された削除件数など、個人や質問本文を含まない集計情報は品質改善のため保持する場合があります。</p>
 
     <h2>利用目的</h2>
     <ul>
-      <li>質問に関連する商品候補と根拠を表示するため</li>
-      <li>回答品質、クリック率、送客率を匿名で改善するため</li>
-      <li>不正アクセス、改ざん、重複計測を防止するため</li>
+      <li>商品候補と判断根拠の提示</li>
+      <li>保存条件の同期と選択された通知の提供</li>
+      <li>匿名の品質・利用状況分析</li>
+      <li>不正アクセスや改ざんの防止</li>
     </ul>
 
     <h2>外部サービス</h2>
-    <p>配信と不正利用防止にCloudflare、商品データ処理にGoogle Apps Script／Google Sheets、商品ページへの移動にAmazon等の販売サイトを利用します。販売サイトへ移動後は各社の方針が適用されます。</p>
+    <p>配信と不正利用防止にCloudflare、商品データ処理にGoogle Apps Script・Google Sheets、ログインに利用者が選んだ認証サービス、販売ページへの移動にAmazon・楽天市場・Yahoo!ショッピング等を利用します。外部サイトへ移動後は各社の方針が適用されます。</p>
 
-    <h2>注意</h2>
-    <p>P-GATEの候補は購入判断を補助するものです。価格、在庫、送料、成分、適法性等は購入前に販売ページで確認してください。</p>
+    <h2>入力しない情報</h2>
+    <p>質問欄へ氏名、住所、電話番号、メールアドレス、健康情報、決済情報、パスワード、認証コードを入力しないでください。価格・在庫・仕様は必ず販売ページで確認してください。</p>
   </main>
 </body>
 </html>

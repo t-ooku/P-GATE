@@ -15,6 +15,8 @@ test('release version has one source of truth', () => {
   const worker = fs.readFileSync(path.join(root, 'tools', 'line-worker', 'src', 'index.mjs'), 'utf8');
   assert.match(build, /require\(path\.join\(root, 'package\.json'\)\)/);
   assert.match(release, /require\(path\.join\(root, 'package\.json'\)\)/);
+  assert.match(release, /'npm\.cmd test'/);
+  assert.match(release, /tar\.exe/);
   assert.ok(/^\d+\.\d+\.\d+$/.test(pkg.version));
   assert.match(config, new RegExp(`CURRENT_SYSTEM_VERSION = '${pkg.version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`));
   assert.match(worker, new RegExp(`RELEASE = '${pkg.version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`));
@@ -34,4 +36,11 @@ test('stable GAS bundle exists after build', () => {
   const stable = path.join(root, 'dist', 'Project_GATE_Complete.gs');
   assert.ok(fs.existsSync(stable));
   assert.ok(fs.statSync(stable).size > 1000);
+});
+
+test('release archives include Worker migrations and Chrome localization', () => {
+  const source = fs.readFileSync(path.resolve(root, 'tools/release.js'), 'utf8');
+  assert.match(source, /'migrations'/);
+  assert.match(source, /'_locales'/);
+  assert.match(source, /'i18n\.mjs'/);
 });

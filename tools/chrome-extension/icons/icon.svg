@@ -1,5 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="P-GATE">
-  <rect width="512" height="512" rx="112" fill="#e83267"/>
-  <path d="M144 112h137c83 0 139 45 139 119 0 77-56 122-145 122h-51v72h-80V112zm80 68v105h49c42 0 65-18 65-53 0-34-23-52-64-52h-50z" fill="#fff"/>
-  <circle cx="388" cy="390" r="30" fill="#18202b"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="HOSHILU">
+  <defs><linearGradient id="g" x1="45" y1="45" x2="467" y2="467" gradientUnits="userSpaceOnUse"><stop stop-color="#F238B5"/><stop offset=".5" stop-color="#8A4CF4"/><stop offset="1" stop-color="#258CFF"/></linearGradient></defs>
+  <rect width="512" height="512" rx="118" fill="#FBFAFF"/><rect x="47" y="47" width="418" height="418" rx="100" fill="url(#g)"/>
+  <path d="M143 139Q143 123 159 123H190Q206 123 206 139V225H306V139Q306 123 322 123H353Q369 123 369 139V376Q369 394 353 385L338 376L322 385Q306 394 306 376V288H206V374Q206 390 190 390H159Q143 390 143 374Z" fill="#fff"/>
+  <path d="M379 86C383 107 395 119 416 123C395 127 383 139 379 160C375 139 363 127 342 123C363 119 375 107 379 86Z" fill="#fff"/>
 </svg>

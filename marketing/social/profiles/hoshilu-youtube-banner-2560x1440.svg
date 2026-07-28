@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440">
+  <defs><linearGradient id="g" x1="300" y1="160" x2="2260" y2="1320"><stop stop-color="#f238b5"/><stop offset=".48" stop-color="#8a4cf4"/><stop offset="1" stop-color="#258cff"/></linearGradient></defs>
+  <rect width="2560" height="1440" fill="#f7f5ff"/>
+  <circle cx="320" cy="190" r="520" fill="#f238b5" opacity=".08"/><circle cx="2310" cy="1290" r="650" fill="#258cff" opacity=".09"/>
+  <rect x="507" y="508" width="1546" height="424" rx="76" fill="#fff"/>
+  <rect x="600" y="582" width="278" height="278" rx="68" fill="#fff"/>
+  <g transform="translate(618 584) scale(.132)" fill="none" stroke="url(#g)" stroke-width="250" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M535 555V1490"/><path d="M1513 555V1490"/><path d="M535 988H782C864 988 917 1028 1024 1150C1131 1028 1184 988 1266 988H1513"/>
+  </g>
+  <text x="990" y="682" font-family="Arial,'Noto Sans JP',sans-serif" font-size="96" font-weight="900" fill="#111c4e" letter-spacing="7">HOSHILU</text>
+  <text x="992" y="754" font-family="Arial,'Noto Sans JP',sans-serif" font-size="36" font-weight="800" fill="#8a4cf4">ホシル</text>
+  <text x="992" y="837" font-family="Arial,'Noto Sans JP',sans-serif" font-size="47" font-weight="800" fill="#111c4e">欲しいを、ちゃんと見つける。</text>
+</svg>

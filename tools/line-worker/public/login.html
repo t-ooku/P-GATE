@@ -1,0 +1,12 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#7357ff"><link rel="icon" href="/icons/icon.svg"><link rel="stylesheet" href="/auth.css"><title>無料会員 | HOSHILU</title></head><body>
+<header class="auth-top"><a class="auth-brand" href="/"><img src="/icons/icon.svg" width="42" height="42" alt=""><span>HOSHILU</span></a><a class="back-link" href="/">検索へ戻る</a></header>
+<main class="auth-main"><section class="auth-card"><p class="eyebrow">FREE MEMBER</p><h1>無料会員</h1>
+<p>検索は登録なしでも使えます。無料会員になると、ほしっトクの端末間同期、検索履歴、値下げ・再入荷などの通知を利用できます。</p>
+<div class="member-grid">
+<div class="member-option"><strong>LINEで続ける</strong><span>LINEを利用している方は、パスワードなしですぐ登録できます。</span><a id="memberLineLogin" class="ghost-button member-login-link disabled" href="#" aria-disabled="true">LINE設定を確認中</a></div>
+<div class="member-option"><strong>メールアドレスで続ける</strong><span>メールで届く6桁コードを使います。メールアドレス自体は会員データベースに保存しません。</span>
+<form id="emailRequestForm" class="auth-form"><label>メールアドレス<input id="memberEmail" type="email" autocomplete="email" required></label><button id="emailRequestButton" class="auth-button" type="submit">認証コードを送る</button></form>
+<form id="emailVerifyForm" class="auth-form hidden"><label>6桁の認証コード<input id="memberEmailCode" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label><button class="auth-button" type="submit">無料会員として登録</button></form><p id="emailAuthStatus" class="auth-status" role="status"></p></div>
+<div class="member-option"><strong>電話番号で続ける</strong><span>SMS認証にも対応予定です。国ごとの配信品質と不正利用対策を確認してから有効にします。</span><button class="ghost-button member-login-link disabled" type="button" disabled>SMS認証は準備中</button></div>
+<div class="member-option"><strong>登録せずに使う</strong><span>この端末だけで検索と保存を利用できます。</span><a href="/">ゲストで使う →</a></div>
+</div></section></main><script src="/member-login.js"></script></body></html>

@@ -11,7 +11,9 @@ const workerModule = await import('../src/index.mjs');
 const {
   verifyLineSignature, createTrackToken, verifyTrackToken,
   isAllowedDestination, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
-  getEnvironmentReadiness
+  getEnvironmentReadiness, buildAmazonSearchDestination, buildRakutenSearchDestination,
+  buildQoo10SearchDestination, buildSheinSearchDestination,
+  buildAmazonSearchKeywords, trackingEventsForPayload, rankSellerOffers
 } = workerModule;
 
 async function lineSignature(body, secret) {
@@ -40,6 +42,8 @@ test('送客先は許可した複数ECのHTTPSドメインだけ', () => {
   assert.equal(isAllowedDestination('https://amazon.com/dp/B000000001'), true);
   assert.equal(isAllowedDestination('https://item.rakuten.co.jp/shop/item-1'), true);
   assert.equal(isAllowedDestination('https://store.shopping.yahoo.co.jp/shop/item-1.html'), true);
+  assert.equal(isAllowedDestination('https://www.qoo10.jp/s/?keyword=socks'), true);
+  assert.equal(isAllowedDestination('https://jp.shein.com/pdsearch/socks/'), true);
   assert.equal(isAllowedDestination('http://amazon.co.jp/dp/B000000001'), false);
   assert.equal(isAllowedDestination('https://amazon.co.jp.evil.example/item'), false);
   assert.equal(isAllowedDestination('https://rakuten.co.jp.evil.example/item'), false);
@@ -57,18 +61,134 @@ test('承認済み複数EC購入先を従来Amazon URLより優先する', () =>
   assert.equal(selected.url, 'https://item.rakuten.co.jp/shop/item-1');
 });
 
+test('未承認の従来Amazon URLへは送客しない', () => {
+  const selected = candidateDestination({ amazon_jp_url: 'https://www.amazon.co.jp/dp/B000000001' });
+  assert.equal(selected.url, '');
+  assert.equal(selected.offer, null);
+});
+
+test('重複ASINの出品先はプラン順、同一プランは先登録順にする', () => {
+  const offers = rankSellerOffers([
+    { seller_id: 'lite-first', plan: 'lite', registered_at: '2026-01-01T00:00:00Z', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=lite' },
+    { seller_id: 'pro-later', plan: 'pro', registered_at: '2026-02-01T00:00:00Z', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=pro2' },
+    { seller_id: 'partner', plan: 'partner', registered_at: '2026-03-01T00:00:00Z', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=partner' },
+    { seller_id: 'pro-first', plan: 'pro', registered_at: '2026-01-15T00:00:00Z', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=pro1' },
+    { seller_id: 'growth', plan: 'growth', registered_at: '2025-12-01T00:00:00Z', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=growth' }
+  ]);
+  assert.deepEqual(offers.map((offer) => offer.seller_id), [
+    'partner', 'pro-first', 'pro-later', 'growth', 'lite-first'
+  ]);
+});
+
+test('優先セラーが出品停止または在庫切れなら次順位へ自動繰り上げする', () => {
+  const selected = candidateDestination({
+    asin: 'B000000001',
+    offers: [
+      { seller_id: 'partner', plan: 'partner', status: 'INACTIVE', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=partner' },
+      { seller_id: 'pro', plan: 'pro', stock_status: 'OUT_OF_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=pro' },
+      { seller_id: 'growth', plan: 'growth', active: true, stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=growth' },
+      { seller_id: 'lite', plan: 'lite', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=lite' }
+    ]
+  });
+  assert.equal(selected.offer.seller_id, 'growth');
+});
+
 test('許可URLからMarketplace計測値を決定する', () => {
   assert.equal(marketplaceForDestination('https://amazon.co.jp/dp/B000000001'), 'AMAZON_JP');
   assert.equal(marketplaceForDestination('https://item.rakuten.co.jp/shop/item'), 'RAKUTEN_JP');
   assert.equal(marketplaceForDestination('https://store.shopping.yahoo.co.jp/shop/item'), 'YAHOO_JP');
+  assert.equal(marketplaceForDestination('https://www.qoo10.jp/s/?keyword=socks'), 'QOO10_JP');
+  assert.equal(marketplaceForDestination('https://jp.shein.com/pdsearch/socks/'), 'SHEIN_JP');
   assert.equal(marketplaceForDestination('https://evil.example/item'), '');
+});
+
+test('Amazon検索フォールバックは個人情報を除いて検索URLを作る', () => {
+  const destination = buildAmazonSearchDestination(
+    '青い 小型 加湿器 user@example.com 090-1234-5678'
+  );
+  const url = new URL(destination);
+  assert.equal(url.origin, 'https://www.amazon.co.jp');
+  assert.equal(url.pathname, '/s');
+  assert.match(url.searchParams.get('k'), /humidifier/);
+  assert.match(url.searchParams.get('k'), /blue/);
+  assert.doesNotMatch(url.searchParams.get('k'), /example|090|5678/);
+});
+
+test('楽天・Qoo10・SHEINの公式検索URLへ同じ整理済み条件を渡す', () => {
+  const query = '韓国っぽい靴下';
+  const rakuten = new URL(buildRakutenSearchDestination(query));
+  const qoo10 = new URL(buildQoo10SearchDestination(query));
+  const shein = new URL(buildSheinSearchDestination(query));
+  assert.equal(rakuten.origin, 'https://search.rakuten.co.jp');
+  assert.match(decodeURIComponent(rakuten.pathname), /sock/);
+  assert.equal(qoo10.origin, 'https://www.qoo10.jp');
+  assert.match(qoo10.searchParams.get('keyword'), /sock/);
+  assert.equal(shein.origin, 'https://jp.shein.com');
+  assert.match(decodeURIComponent(shein.pathname), /sock/);
+});
+test('Amazon検索フォールバックに承認済みアソシエイトIDを付ける', () => {
+  const destination = buildAmazonSearchDestination('光るスマホケース', 'hoshilu-22');
+  const url = new URL(destination);
+  assert.equal(url.searchParams.get('tag'), 'hoshilu-22');
+  assert.match(url.searchParams.get('k'), /phone/);
+});
+
+test('AmazonへはHOSHILUが整理した商品条件を引き継ぐ', () => {
+  const keywords = buildAmazonSearchKeywords(
+    'SNSで見た blue の小さい table lamp'
+  );
+  assert.match(keywords, /lamp/);
+  assert.match(keywords, /light/);
+  assert.match(keywords, /blue/);
+  assert.doesNotMatch(keywords, /SNSで見た/);
+});
+
+test('カメラの手がかりは用途を追加してもAmazon検索語から落とさない', () => {
+  const keywords = buildAmazonSearchKeywords(
+    'SNSで見た、ピンクの小さいカメラみたいなもの / 遊び・趣味に使う'
+  );
+  assert.match(keywords, /camera/);
+  assert.match(keywords, /pink/);
+  assert.match(keywords, /toy/);
+});
+
+test('中国語と韓国語をAmazon.co.jpで探しやすい商品語へ変換する', () => {
+  const chinese = buildAmazonSearchKeywords('想找可以放进包里的轻量折叠雨伞');
+  assert.match(chinese, /折りたたみ傘/);
+  assert.match(chinese, /軽量/);
+  assert.match(chinese, /umbrella/);
+
+  const korean = buildAmazonSearchKeywords('틱톡에서 본 투명하고 빛나는 휴대폰 케이스');
+  assert.match(korean, /スマホケース/);
+  assert.match(korean, /透明/);
+  assert.match(korean, /LED/);
+  assert.match(korean, /phone/);
+});
+
+test('Amazon検索流出は未充足需要として契約成果と分離する', () => {
+  const events = trackingEventsForPayload({
+    j: 'q1:AMAZON_SEARCH',
+    u: 'anonymous-hash',
+    r: 'q1',
+    a: '',
+    d: 'https://www.amazon.co.jp/s?k=humidifier',
+    m: 'AMAZON_JP',
+    t: 'SEARCH_FALLBACK'
+  }, '2026-07-24T00:00:00.000Z');
+  assert.equal(events.length, 2);
+  events.forEach((event) => {
+    assert.equal(event.asin, 'SEARCHFALL');
+    assert.equal(event.destination_type, 'AMAZON_SEARCH_FALLBACK');
+    assert.equal(event.contract_match, false);
+    assert.equal(event.demand_status, 'UNMET');
+  });
 });
 
 test('LINE返信は説明1件と商品最大3件', async () => {
   const candidates = Array.from({ length: 6 }, (_, index) => ({
     rank: index + 1, asin: `B00000000${index + 1}`,
     display_name: `商品${index + 1}`,
-    amazon_jp_url: `https://www.amazon.co.jp/dp/B00000000${index + 1}`
+    offers: [{ marketplace: 'AMAZON_JP', product_url: `https://www.amazon.co.jp/dp/B00000000${index + 1}`, stock_status: 'IN_STOCK' }]
   }));
   const messages = await buildReplyMessages(
     { message: '候補です', query_id: 'q1', candidates }, 'https://line.example',
@@ -145,6 +265,47 @@ test('PWAは最大3購入先を個別の署名付きURLへ変換し元URLを返�
   assert.equal((await verifyTrackToken(firstToken, env.LINK_SIGNING_SECRET)).m, 'AMAZON_JP');
 });
 
+test('PWAはAmazon検索フォールバックを署名付きURLで返す', async () => {
+  const env = { LINK_SIGNING_SECRET: 'secret' };
+  const decorated = await workerModule.decoratePwaResultForTest(
+    { query_id: 'q-fallback', candidates: [] },
+    new Request('https://p-gate.example/api/knowledge'),
+    env,
+    'session-hash',
+    '青い 小型 加湿器'
+  );
+  assert.match(
+    decorated.amazon_search_url,
+    /^https:\/\/p-gate\.example\/go\?token=/
+  );
+  const token = new URL(decorated.amazon_search_url).searchParams.get('token');
+  const payload = await verifyTrackToken(token, env.LINK_SIGNING_SECRET);
+  assert.equal(payload.t, 'SEARCH_FALLBACK');
+  assert.equal(payload.m, 'AMAZON_JP');
+  assert.match(payload.d, /^https:\/\/www\.amazon\.co\.jp\/s\?k=/);
+  assert.match(decorated.amazon_search_keywords, /humidifier/);
+});
+
+test('承認済み購入先がない各候補にもAmazon商品検索リンクを付ける', async () => {
+  const env = { LINK_SIGNING_SECRET: 'secret' };
+  const decorated = await workerModule.decoratePwaResultForTest(
+    { query_id: 'q-candidate-fallback', candidates: [{
+      asin: 'B000000001',
+      product_name: 'DC Icons Black Adam Action Figure'
+    }] },
+    new Request('https://p-gate.example/api/knowledge'),
+    env,
+    'session-hash',
+    '黒いフィギュア'
+  );
+  assert.match(decorated.candidates[0].amazon_search_url, /^https:\/\/p-gate\.example\/go\?token=/);
+  const token = new URL(decorated.candidates[0].amazon_search_url).searchParams.get('token');
+  const payload = await verifyTrackToken(token, env.LINK_SIGNING_SECRET);
+  assert.equal(payload.t, 'SEARCH_FALLBACK');
+  assert.match(payload.d, /amazon\.co\.jp\/s\?k=/);
+  assert.match(new URL(payload.d).searchParams.get('k'), /B000000001/i);
+});
+
 test('PWA公開設定はSite Keyだけを返し、無効な質問をAPI境界で拒否する', async () => {
   const ctx = { waitUntil() {} };
   const configResponse = await workerModule.default.fetch(
@@ -152,7 +313,7 @@ test('PWA公開設定はSite Keyだけを返し、無効な質問をAPI境界で
     { TURNSTILE_SITE_KEY: 'public-site-key', TURNSTILE_SECRET_KEY: 'must-not-leak' }, ctx
   );
   const config = await configResponse.json();
-  assert.deepEqual(config, { turnstile_site_key: 'public-site-key' });
+  assert.deepEqual(config, { turnstile_site_key: 'public-site-key', line_login_configured: false, email_login_configured: false, sms_login_configured: false });
   assert.equal(JSON.stringify(config).includes('must-not-leak'), false);
 
   const invalidResponse = await workerModule.default.fetch(
@@ -174,6 +335,18 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(getEnvironmentReadiness({ ...base, GAS_BACKEND_URL: 'http://example.com' }).ready, false);
   assert.deepEqual(getEnvironmentReadiness({ ...base, LINK_SIGNING_SECRET: 'short' }).weak, ['LINK_SIGNING_SECRET']);
   assert.equal(getEnvironmentReadiness({ ...base, LINE_CHANNEL_SECRET: 'only-one-side' }).checks.line_partial, true);
+  const optional = getEnvironmentReadiness({
+    ...base,
+    MYWATCH_CRON_SECRET: 'm'.repeat(32),
+    UNMET_DEMAND_SYNC_SECRET: 'u'.repeat(32),
+    SPAPI_LWA_CLIENT_ID: 'client',
+    SPAPI_LWA_CLIENT_SECRET: 'secret',
+    SPAPI_REFRESH_TOKEN_ITG: 'refresh'
+  });
+  assert.equal(optional.checks.mywatch_configured, true);
+  assert.equal(optional.checks.unmet_demand_sync_configured, true);
+  assert.deepEqual(optional.checks.sp_api_configured_tenants, ['itg']);
+  assert.equal(JSON.stringify(optional.checks).includes('refresh'), false);
 
   const ctx = { waitUntil() {} };
   const response = await workerModule.default.fetch(
@@ -183,6 +356,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
   assert.equal(payload.release, '1.14.0');
+  assert.equal(payload.checks.database_features.mywatch_notifications, false);
   assert.equal(JSON.stringify(payload).includes(base.GAS_BRIDGE_SECRET), false);
   assert.equal(JSON.stringify(payload).includes(base.TURNSTILE_SECRET_KEY), false);
 });
@@ -192,5 +366,5 @@ test('公開設定はTurnstile Site Key未設定時に503を返す', async () =>
     new Request('https://p-gate.example/api/config'), {}, { waitUntil() {} }
   );
   assert.equal(response.status, 503);
-  assert.deepEqual(await response.json(), { turnstile_site_key: '' });
+  assert.deepEqual(await response.json(), { turnstile_site_key: '', line_login_configured: false, email_login_configured: false, sms_login_configured: false });
 });

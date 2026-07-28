@@ -11,7 +11,8 @@ var MarketplaceEngine = (function () {
   var HEADERS = [
     'Offer_ID', 'Tenant', 'ASIN', 'Marketplace', 'External_Product_ID', 'Product_URL',
     'Price', 'Shipping_Fee', 'Currency', 'Stock_Status', 'Delivery_Days',
-    'Seller_Name', 'Approved', 'Updated_At'
+    'Seller_Name', 'Approved', 'Updated_At', 'Merchant_ID', 'Seller_SKU', 'Offer_Listing_ID',
+    'Seller_Plan', 'Registered_At', 'Listing_Status'
   ];
   var MARKETPLACES = {
     AMAZON_JP: ['amazon.co.jp'],
@@ -19,6 +20,8 @@ var MarketplaceEngine = (function () {
     YAHOO_JP: ['shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp']
   };
   var STOCK_STATUSES = { IN_STOCK: true, OUT_OF_STOCK: true, UNKNOWN: true };
+  var SELLER_PLANS = { PARTNER: 0, PRO: 1, GROWTH: 2, LITE: 3 };
+  var LISTING_STATUSES = { ACTIVE: true, INACTIVE: true, SUSPENDED: true, REMOVED: true };
   var MAX_OFFERS_PER_PRODUCT = 3;
   var VALIDATION_HEADERS = [
     'Row_Number', 'Offer_ID', 'Tenant', 'ASIN', 'Marketplace',
@@ -51,7 +54,12 @@ var MarketplaceEngine = (function () {
       .requireValueInList(Object.keys(STOCK_STATUSES), true).setAllowInvalid(false)
       .setHelpText('在庫あり、在庫切れ、不明のいずれかを選択してください。').build();
     var approvedRule = SpreadsheetApp.newDataValidation().requireCheckbox().build();
+    var planRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(Object.keys(SELLER_PLANS), true).setAllowInvalid(false).build();
+    var listingRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(Object.keys(LISTING_STATUSES), true).setAllowInvalid(false).build();
 
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     sheet.setFrozenRows(1);
     sheet.setFrozenColumns(3);
     sheet.getRange(2, 4, dataRows, 1).setDataValidation(marketplaceRule);
@@ -61,12 +69,18 @@ var MarketplaceEngine = (function () {
     sheet.getRange(2, 10, dataRows, 1).setDataValidation(stockRule);
     sheet.getRange(2, 11, dataRows, 1).setDataValidation(nonNegativeRule).setNumberFormat('0');
     sheet.getRange(2, 13, dataRows, 1).setDataValidation(approvedRule);
+    sheet.getRange(2, 18, dataRows, 1).setDataValidation(planRule);
+    sheet.getRange(2, 20, dataRows, 1).setDataValidation(listingRule);
     sheet.getRange(1, 1, 1, HEADERS.length).setNotes([[
       '自動生成または任意の一意ID', '商品マスターと同じtenant', '英数字10文字',
       'プルダウンから選択', 'EC側の商品ID（公開しない）', '許可ECのHTTPS URL',
       '0より大きい販売価格', '0以上の送料', 'JPY', '在庫状態',
       '配送目安日数。未確認は0', '内部管理用（公開しない）',
-      '担当者確認後のみチェック', '最終確認日時'
+      '担当者確認後のみチェック', '最終確認日時',
+      '契約時に登録するEC側マーチャントID（内部管理用）', 'セラー側SKU（内部管理用）',
+      'Amazon等のオファー識別子。直接送客URL生成に必要な場合のみ登録',
+      'PARTNER、PRO、GROWTH、LITEのいずれか', '契約後の初回登録日時。運営管理値',
+      'ACTIVE、INACTIVE、SUSPENDED、REMOVEDのいずれか'
     ]]);
     return sheet;
   }
@@ -108,6 +122,8 @@ var MarketplaceEngine = (function () {
     var asin = Utility.trim(input.asin).toUpperCase();
     var productUrl = Utility.trim(input.product_url);
     var stockStatus = Utility.trim(input.stock_status || 'UNKNOWN').toUpperCase();
+    var sellerPlan = Utility.trim(input.seller_plan || 'LITE').toUpperCase();
+    var listingStatus = Utility.trim(input.listing_status || 'ACTIVE').toUpperCase();
     if (!Utility.trim(input.offer_id)) {
       throw Utility.createError('MARKETPLACE_OFFER_ID_REQUIRED', 'Offer_IDは必須です。');
     }
@@ -125,6 +141,12 @@ var MarketplaceEngine = (function () {
     }
     if (!STOCK_STATUSES[stockStatus]) {
       throw Utility.createError('MARKETPLACE_STOCK_INVALID', 'Stock_StatusはIN_STOCK、OUT_OF_STOCK、UNKNOWNのいずれかです。');
+    }
+    if (SELLER_PLANS[sellerPlan] == null) {
+      throw Utility.createError('MARKETPLACE_SELLER_PLAN_INVALID', 'Seller_PlanはPARTNER、PRO、GROWTH、LITEのいずれかです。');
+    }
+    if (!LISTING_STATUSES[listingStatus]) {
+      throw Utility.createError('MARKETPLACE_LISTING_STATUS_INVALID', 'Listing_Statusが不正です。');
     }
     var price = nonNegativeNumber(input.price, 'PRICE');
     if (price <= 0) {
@@ -145,6 +167,12 @@ var MarketplaceEngine = (function () {
       stock_status: stockStatus,
       delivery_days: nonNegativeNumber(input.delivery_days, 'DELIVERY_DAYS'),
       seller_name: Utility.trim(input.seller_name),
+      merchant_id: Utility.trim(input.merchant_id),
+      seller_sku: Utility.trim(input.seller_sku),
+      offer_listing_id: Utility.trim(input.offer_listing_id),
+      seller_plan: sellerPlan,
+      registered_at: Utility.trim(input.registered_at),
+      listing_status: listingStatus,
       approved: isTrue(input.approved),
       updated_at: Utility.trim(input.updated_at)
     };
@@ -155,32 +183,40 @@ var MarketplaceEngine = (function () {
       offer_id: row[0], tenant: row[1], asin: row[2], marketplace: row[3],
       external_product_id: row[4], product_url: row[5], price: row[6],
       shipping_fee: row[7], currency: row[8], stock_status: row[9],
-      delivery_days: row[10], seller_name: row[11], approved: row[12], updated_at: row[13]
+      delivery_days: row[10], seller_name: row[11], approved: row[12], updated_at: row[13],
+      merchant_id: row[14], seller_sku: row[15], offer_listing_id: row[16],
+      seller_plan: row[17], registered_at: row[18], listing_status: row[19]
     });
   }
 
   function rankOffers(offers) {
-    return offers.slice().sort(function (left, right) {
+    return offers.filter(function (offer) {
+      return offer.listing_status === 'ACTIVE' && offer.stock_status !== 'OUT_OF_STOCK';
+    }).sort(function (left, right) {
       var leftAvailable = left.stock_status === 'OUT_OF_STOCK' ? 1 : 0;
       var rightAvailable = right.stock_status === 'OUT_OF_STOCK' ? 1 : 0;
       if (leftAvailable !== rightAvailable) { return leftAvailable - rightAvailable; }
-      if (left.total_cost !== right.total_cost) { return left.total_cost - right.total_cost; }
-      if (left.delivery_days !== right.delivery_days) { return left.delivery_days - right.delivery_days; }
-      if (left.marketplace !== right.marketplace) { return left.marketplace.localeCompare(right.marketplace); }
+      var planDifference = SELLER_PLANS[left.seller_plan] - SELLER_PLANS[right.seller_plan];
+      if (planDifference !== 0) { return planDifference; }
+      var leftRegistered = Date.parse(left.registered_at) || Number.MAX_SAFE_INTEGER;
+      var rightRegistered = Date.parse(right.registered_at) || Number.MAX_SAFE_INTEGER;
+      if (leftRegistered !== rightRegistered) { return leftRegistered - rightRegistered; }
       return left.offer_id.localeCompare(right.offer_id);
     }).slice(0, MAX_OFFERS_PER_PRODUCT);
   }
 
-  function loadApprovedOffers(sheet, tenant) {
+  function loadApprovedOffers(sheet) {
     if (!sheet || sheet.getLastRow() < 2) { return {}; }
-    var normalizedTenant = Utility.trim(tenant).toLowerCase();
     var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, HEADERS.length).getValues();
     var map = {};
+    var seenOfferIds = {};
     rows.forEach(function (row) {
       try {
         var offer = fromRow(row);
-        if (!offer.approved || offer.tenant !== normalizedTenant) { return; }
-        var key = offer.tenant + '|' + offer.asin;
+        var uniqueOfferKey = offer.tenant + '|' + offer.offer_id;
+        if (!offer.approved || seenOfferIds[uniqueOfferKey]) { return; }
+        seenOfferIds[uniqueOfferKey] = true;
+        var key = offer.asin;
         map[key] = map[key] || [];
         map[key].push(offer);
       } catch (ignoreInvalidOffer) {}
@@ -193,7 +229,7 @@ var MarketplaceEngine = (function () {
     return records.map(function (record) {
       var copy = {};
       Object.keys(record).forEach(function (key) { copy[key] = record[key]; });
-      var key = Utility.trim(record.tenant).toLowerCase() + '|' + Utility.trim(record.asin).toUpperCase();
+      var key = Utility.trim(record.asin).toUpperCase();
       copy.marketplace_offers = (offerMap[key] || []).map(function (offer) {
         return {
           marketplace: offer.marketplace,
@@ -203,7 +239,12 @@ var MarketplaceEngine = (function () {
           total_cost: offer.total_cost,
           currency: offer.currency,
           stock_status: offer.stock_status,
-          delivery_days: offer.delivery_days
+          delivery_days: offer.delivery_days,
+          seller_plan: offer.seller_plan,
+          registered_at: offer.registered_at,
+          listing_status: offer.listing_status,
+          merchant_id: offer.merchant_id,
+          offer_listing_id: offer.offer_listing_id
         };
       });
       return copy;
@@ -233,7 +274,8 @@ var MarketplaceEngine = (function () {
       drafts.push([
         'LEGACY-AMAZON-' + tenant + '-' + asin, tenant, asin, 'AMAZON_JP', asin, url,
         price > 0 ? price : '', shipping, 'JPY', Number(record.stock || 0) > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK',
-        '', '', false, Utility.trim(record.updated_at || record.imported_at || nowIso)
+        '', '', false, Utility.trim(record.updated_at || record.imported_at || nowIso), '', '', '',
+        'LITE', Utility.trim(record.registered_at || nowIso), 'INACTIVE'
       ]);
       keys[key] = true;
     });

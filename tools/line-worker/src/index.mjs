@@ -1,7 +1,22 @@
+import { handleSellerRoutes } from './seller-auth.mjs';
+import { handleMemberRoutes, lineLoginConfigured } from './member-auth.mjs';
+import { emailLoginConfigured } from './member-email-auth.mjs';
+import { syncProducts } from './product-index-v2.mjs';
+import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
+import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
+import { handleMemberWishRoutes } from './member-wish-v2.mjs';
+import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
+import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
+import {
+  runSpApiScheduledSync, spApiConfiguredTenants
+} from './sp-api-d1-repository.mjs';
+import { semanticSearchGroups } from './search-intelligence.mjs';
+import { handleSocialAdminRoutes, runDueSocialPosts } from './social-publisher.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
-  'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp'
+  'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp',
+  'qoo10.jp', 'shein.com'
 ];
 const RELEASE = '1.14.0';
 const REQUIRED_ENV = [
@@ -81,12 +96,41 @@ export function isAllowedDestination(destination) {
   }
 }
 
+const SELLER_PLAN_PRIORITY = Object.freeze({
+  PARTNER: 0,
+  PRO: 1,
+  GROWTH: 2,
+  LITE: 3
+});
+
+function offerIsActive(offer) {
+  const state = String(
+    offer?.listing_status || offer?.status || offer?.seller_status || ''
+  ).toUpperCase();
+  return offer?.active !== false
+    && !['INACTIVE','REMOVED','DELETED','SUSPENDED','CLOSED'].includes(state)
+    && String(offer?.stock_status || 'UNKNOWN').toUpperCase() !== 'OUT_OF_STOCK'
+    && isAllowedDestination(offer?.product_url);
+}
+
+export function rankSellerOffers(offers = []) {
+  return (Array.isArray(offers) ? offers : [])
+    .map((offer, index) => ({ offer, index }))
+    .filter(({ offer }) => offerIsActive(offer))
+    .sort((left, right) => {
+      const leftPlan = SELLER_PLAN_PRIORITY[String(left.offer?.seller_plan || left.offer?.plan || 'LITE').toUpperCase()] ?? SELLER_PLAN_PRIORITY.LITE;
+      const rightPlan = SELLER_PLAN_PRIORITY[String(right.offer?.seller_plan || right.offer?.plan || 'LITE').toUpperCase()] ?? SELLER_PLAN_PRIORITY.LITE;
+      const leftTime = Date.parse(left.offer?.registered_at || left.offer?.created_at || '') || Number.MAX_SAFE_INTEGER;
+      const rightTime = Date.parse(right.offer?.registered_at || right.offer?.created_at || '') || Number.MAX_SAFE_INTEGER;
+      return leftPlan - rightPlan || leftTime - rightTime || left.index - right.index;
+    })
+    .map(({ offer }) => offer);
+}
+
 export function candidateDestination(candidate) {
-  const approvedOffer = (Array.isArray(candidate?.offers) ? candidate.offers : [])
-    .find((offer) => offer?.stock_status !== 'OUT_OF_STOCK' && isAllowedDestination(offer?.product_url));
+  const approvedOffer = rankSellerOffers(candidate?.offers)[0];
   if (approvedOffer) return { url: approvedOffer.product_url, offer: approvedOffer };
-  const legacyUrl = candidate?.amazon_jp_url || candidate?.amazon_us_url || '';
-  return { url: isAllowedDestination(legacyUrl) ? legacyUrl : '', offer: null };
+  return { url: '', offer: null };
 }
 
 export function marketplaceForDestination(destination) {
@@ -94,6 +138,8 @@ export function marketplaceForDestination(destination) {
     const host = new URL(destination).hostname.toLowerCase().replace(/\.$/, '');
     if (host === 'amazon.co.jp' || host.endsWith('.amazon.co.jp') || host === 'amazon.com' || host.endsWith('.amazon.com')) return 'AMAZON_JP';
     if (host === 'rakuten.co.jp' || host.endsWith('.rakuten.co.jp')) return 'RAKUTEN_JP';
+    if (host === 'qoo10.jp' || host.endsWith('.qoo10.jp')) return 'QOO10_JP';
+    if (host === 'shein.com' || host.endsWith('.shein.com')) return 'SHEIN_JP';
     if (host === 'shopping.yahoo.co.jp' || host.endsWith('.shopping.yahoo.co.jp') || host === 'store.shopping.yahoo.co.jp' || host.endsWith('.store.shopping.yahoo.co.jp')) return 'YAHOO_JP';
   } catch {}
   return '';
@@ -119,7 +165,8 @@ export function validateKnowledgeRequest(payload) {
   if (query.length < 2 || query.length > 200) throw new Error('QUERY_LENGTH_INVALID');
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
   if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
-  return { query, session_id: sessionId, turnstile_token: turnstileToken, consent: true };
+  const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
+  return { query, session_id: sessionId, turnstile_token: turnstileToken, language, consent: true };
 }
 
 export function getEnvironmentReadiness(env = {}) {
@@ -137,6 +184,13 @@ export function getEnvironmentReadiness(env = {}) {
   const lineToken = Boolean(String(env.LINE_CHANNEL_ACCESS_TOKEN || '').trim());
   const lineConfigured = lineSecret && lineToken;
   const linePartial = lineSecret !== lineToken;
+  const mywatchSecret = String(env.MYWATCH_CRON_SECRET || '');
+  const unmetDemandSecret = String(env.UNMET_DEMAND_SYNC_SECRET || '');
+  const spApiClientId = Boolean(String(env.SPAPI_LWA_CLIENT_ID || '').trim());
+  const spApiClientSecret = Boolean(String(env.SPAPI_LWA_CLIENT_SECRET || '').trim());
+  const spApiTenants = spApiConfiguredTenants(env);
+  const spApiRefreshConfigured = ['ITG','ITT','MC2'].filter((tenant) =>
+    Boolean(String(env[`SPAPI_REFRESH_TOKEN_${tenant}`] || '').trim()));
   const ready = missing.length === 0 && weak.length === 0 && backendUrlValid && !linePartial;
   return {
     ready,
@@ -147,7 +201,16 @@ export function getEnvironmentReadiness(env = {}) {
       gas_backend_https: backendUrlValid,
       pwa_configured: missing.length === 0 && weak.length === 0 && backendUrlValid,
       line_configured: lineConfigured,
-      line_partial: linePartial
+      line_partial: linePartial,
+      mywatch_configured: mywatchSecret.length >= 32,
+      mywatch_weak: Boolean(mywatchSecret) && mywatchSecret.length < 32,
+      unmet_demand_sync_configured: unmetDemandSecret.length >= 32,
+      unmet_demand_sync_weak: Boolean(unmetDemandSecret) && unmetDemandSecret.length < 32,
+      sp_api_base_configured: spApiClientId && spApiClientSecret,
+      sp_api_partial: spApiClientId !== spApiClientSecret ||
+        (spApiRefreshConfigured.length > 0 && !(spApiClientId && spApiClientSecret)),
+      sp_api_configured_tenants: spApiTenants,
+      sp_api_configured_tenant_count: spApiTenants.length
     }
   };
 }
@@ -170,10 +233,12 @@ async function hashUser(value) {
 }
 
 async function callGas(env, action, body) {
+  const timeoutMs = action === 'KNOWLEDGE' ? 2200 : action === 'EVENT' ? 3000 : 5000;
   const response = await fetch(env.GAS_BACKEND_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ bridge_secret: env.GAS_BRIDGE_SECRET, action, ...body })
+    body: JSON.stringify({ bridge_secret: env.GAS_BRIDGE_SECRET, action, ...body }),
+    signal: AbortSignal.timeout(timeoutMs)
   });
   if (!response.ok) throw new Error(`GAS_HTTP_${response.status}`);
   const payload = await response.json();
@@ -220,6 +285,168 @@ async function replyToLine(replyToken, messages, env) {
   if (!response.ok) throw new Error(`LINE_REPLY_${response.status}`);
 }
 
+async function pushToLine(userId, messages, env) {
+  if (!userId || !messages.length) return;
+  const response = await fetch('https://api.line.me/v2/bot/message/push', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.LINE_CHANNEL_ACCESS_TOKEN}`,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ to: userId, messages: messages.slice(0, 5) })
+  });
+  if (!response.ok) throw new Error(`LINE_PUSH_${response.status}`);
+}
+
+async function buildLineProductCards(result, origin, env, event) {
+  const candidates = Array.isArray(result?.candidates) ? result.candidates.slice(0, 3) : [];
+  if (!candidates.length) return [];
+  const userId = event.source?.userId || '';
+  const userHash = await hashUser(userId || event.webhookEventId);
+  const bubbles = [];
+  for (const candidate of candidates) {
+    const selected = candidateDestination(candidate);
+    if (!isAllowedDestination(selected.url)) continue;
+    const token = await createTrackToken({
+      u: userHash, r: result.query_id || event.webhookEventId, a: candidate.asin,
+      d: selected.url, exp: Math.floor(Date.now() / 1000) + 86400 * 7,
+      j: `${event.webhookEventId}:${candidate.asin}:PUSH`, c: 'LINE',
+      m: selected.offer?.marketplace || marketplaceForDestination(selected.url)
+    }, env.LINK_SIGNING_SECRET);
+    const trackingUrl = `${origin}/go?token=${encodeURIComponent(token)}`;
+    const bubble = {
+      type: 'bubble',
+      body: {
+        type: 'box', layout: 'vertical', spacing: 'md',
+        contents: [
+          { type: 'text', text: String(candidate.display_name || candidate.product_name || candidate.asin), weight: 'bold', wrap: true, size: 'md' },
+          { type: 'text', text: String(candidate.description || offerSummary(selected.offer) || '候補の商品です。'), wrap: true, size: 'sm', color: '#666666', maxLines: 3 }
+        ]
+      },
+      footer: {
+        type: 'box', layout: 'vertical',
+        contents: [{ type: 'button', style: 'primary', color: '#6C4CFF', action: { type: 'uri', label: '商品を見る', uri: trackingUrl } }]
+      }
+    };
+    const imageUrl = String(candidate.image_url || candidate.image || '').trim();
+    if (/^https:\/\//i.test(imageUrl)) {
+      bubble.hero = { type: 'image', url: imageUrl, size: 'full', aspectRatio: '1:1', aspectMode: 'cover' };
+    }
+    bubbles.push(bubble);
+  }
+  if (!bubbles.length) return [];
+  return [
+    { type: 'text', text: '商品候補が見つかりました。近いものを選んで確認できます。' },
+    { type: 'flex', altText: 'HOSHILUの商品候補', contents: { type: 'carousel', contents: bubbles } }
+  ];
+}
+
+const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function pushCompletedLineSearch(event, origin, env) {
+  const userId = event.source?.userId;
+  if (!userId) return;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await delay(attempt === 0 ? 2500 : 3500);
+    try {
+      const result = await callGas(env, 'EVENT', { event });
+      if (result?.status === 'PROCESSING') continue;
+      const messages = await buildLineProductCards(result, origin, env, event);
+      if (messages.length) await pushToLine(userId, messages, env);
+      return;
+    } catch (error) {
+      console.error('LINE_ASYNC_SEARCH_FAILED', String(error?.message || error));
+    }
+  }
+}
+
+async function buildLineFallbackMessages(event, origin, env) {
+  const query = String(event?.message?.text || '').trim().slice(0, 200);
+  if (!query) {
+    return [{ type: 'text', text: '探しているものを文章で送ってください。見た目・用途・見た場所など、覚えていることだけで大丈夫です。' }];
+  }
+  const isLightUpCase = /(?:スマホ|phone|iphone|携帯).*(?:ケース|case)|(?:ケース|case).*(?:スマホ|phone|iphone|携帯)/iu.test(query)
+    && /(?:光|led|発光|蓄光|ネオン|luminous|glow)/iu.test(query);
+  const directions = isLightUpCase
+    ? [
+        { label: 'LEDで光るケース', query: `${query} LED 電源式 発光` },
+        { label: 'iPhone対応を探す', query: `${query} iPhone MagSafe 対応機種` },
+        { label: '蓄光・ネオン系', query: `${query} 蓄光 夜光 ネオン glow in the dark` }
+      ]
+    : [
+        { label: '条件に近い商品', query },
+        { label: '特徴を重視して探す', query: `${query} 特徴` },
+        { label: '似た商品まで広げる', query: `${query} 類似商品` }
+      ];
+  const bubbles = [];
+  for (let index = 0; index < directions.length; index += 1) {
+    const direction = directions[index];
+    const destination = buildAmazonSearchDestination(direction.query, env.AMAZON_ASSOCIATE_TAG);
+    let url = destination;
+    try {
+      const token = await signTrackToken({
+        d: destination, m: 'AMAZON_SEARCH', s: 'LINE_FALLBACK',
+        q: `${String(event.webhookEventId || crypto.randomUUID()).slice(0, 90)}:${index + 1}`,
+        exp: Math.floor(Date.now() / 1000) + 60 * 30
+      }, env.LINK_SIGNING_SECRET);
+      url = `${origin}/go?token=${encodeURIComponent(token)}`;
+    } catch {}
+    bubbles.push({
+      type: 'bubble',
+      body: {
+        type: 'box', layout: 'vertical', spacing: 'md',
+        contents: [
+          { type: 'text', text: `候補 ${index + 1}`, size: 'xs', color: '#6C4CFF', weight: 'bold' },
+          { type: 'text', text: direction.label, size: 'md', weight: 'bold', wrap: true },
+          { type: 'text', text: buildAmazonSearchKeywords(direction.query), size: 'xs', color: '#777777', wrap: true, maxLines: 3 }
+        ]
+      },
+      footer: {
+        type: 'box', layout: 'vertical',
+        contents: [{ type: 'button', style: 'primary', color: '#6C4CFF', action: { type: 'uri', label: 'Amazonで商品を見る', uri: url } }]
+      }
+    });
+  }
+  return [
+    { type: 'text', text: `「${query}」から、近い商品を探せる3候補を作りました。横にスライドして選べます。`.slice(0, 5000) },
+    { type: 'flex', altText: `「${query}」の商品検索候補3件`, contents: { type: 'carousel', contents: bubbles } },
+    {
+      type: 'text',
+      text: 'さらに近づけるキーワードを選べます。覚えているものをタップしてください。',
+      quickReply: {
+        items: suggestedKeywordOptions(query, 'JA').map((keyword) => ({
+          type: 'action',
+          action: {
+            type: 'message',
+            label: String(keyword).slice(0, 20),
+            text: `${query} / ${keyword}`.slice(0, 300)
+          }
+        }))
+      }
+    }
+  ];
+}
+
+async function processLineEvent(event, origin, env, ctx) {
+  try {
+    const result = await callGas(env, 'EVENT', { event });
+    if (result.status === 'PROCESSING') {
+      await replyToLine(event.replyToken, await buildLineFallbackMessages(event, origin, env), env);
+      await pushCompletedLineSearch(event, origin, env);
+      return;
+    }
+    const messages = await buildReplyMessages(result, origin, env, event);
+    await replyToLine(event.replyToken, messages, env);
+    const userId = event.source?.userId || event.source?.groupId || event.source?.roomId || '';
+    const events = impressionEvents(result, event, await hashUser(userId || event.webhookEventId));
+    if (events.length) ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'LINE' }));
+  } catch (error) {
+    console.error('LINE_EVENT_FAILED', String(error?.message || error));
+    await replyToLine(event.replyToken, await buildLineFallbackMessages(event, origin, env), env);
+    await pushCompletedLineSearch(event, origin, env);
+  }
+}
+
 function impressionEvents(result, event, userHash) {
   return (result.candidates || []).slice(0, 3).map((candidate) => ({
     event_id: `${event.webhookEventId}:IMPRESSION:${candidate.asin}`,
@@ -236,15 +463,10 @@ async function handleWebhook(request, env, ctx) {
   const payload = JSON.parse(rawBody);
   if (!Array.isArray(payload.events) || payload.events.length === 0) return new Response('ok');
   const origin = new URL(request.url).origin;
-  for (const event of payload.events) {
-    const result = await callGas(env, 'EVENT', { event });
-    if (!event.replyToken || result.status === 'PROCESSING') continue;
-    const messages = await buildReplyMessages(result, origin, env, event);
-    await replyToLine(event.replyToken, messages, env);
-    const userId = event.source?.userId || event.source?.groupId || event.source?.roomId || '';
-    const events = impressionEvents(result, event, await hashUser(userId || event.webhookEventId));
-    if (events.length) ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'LINE' }));
-  }
+  const tasks = payload.events
+    .filter((event) => event.replyToken)
+    .map((event) => processLineEvent(event, origin, env, ctx));
+  if (tasks.length) ctx.waitUntil(Promise.allSettled(tasks));
   return new Response('ok');
 }
 
@@ -254,12 +476,11 @@ async function handleRedirect(request, env, ctx) {
     const payload = await verifyTrackToken(token, env.LINK_SIGNING_SECRET);
     if (!isAllowedDestination(payload.d)) return new Response('destination not allowed', { status: 400 });
     const occurredAt = new Date().toISOString();
-    const events = ['CLICK', 'OUTBOUND'].map((eventType) => ({
-      event_id: `${payload.j}:${eventType}`, occurred_at: occurredAt, user_hash: payload.u,
-      recommendation_id: payload.r, asin: payload.a, event_type: eventType,
-      marketplace: payload.m || marketplaceForDestination(payload.d)
-    }));
+    const events = trackingEventsForPayload(payload, occurredAt);
     const channel = payload.c === 'PWA' ? 'PWA' : 'LINE';
+    if (payload.t === 'SEARCH_FALLBACK') {
+      ctx.waitUntil(recordUnmetDemandEvent(env, payload, occurredAt, channel));
+    }
     ctx.waitUntil(callGas(env, 'TRACK', { events, channel }));
     return Response.redirect(payload.d, 302);
   } catch (error) {
@@ -267,17 +488,162 @@ async function handleRedirect(request, env, ctx) {
   }
 }
 
-async function decoratePwaResult(result, request, env, sessionHash) {
+function redactSearchPersonalData(query) {
+  return String(query || '')
+    .normalize('NFKC')
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/giu, ' ')
+    .replace(/(?:\+?81[-\s]?)?0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4}/gu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim()
+    .slice(0, 200);
+}
+
+const AMAZON_JP_QUERY_ALIASES = [
+  [/(?:手机壳|手機殼|휴대폰 케이스|스마트폰 케이스)/iu, ['スマホケース','phone','case']],
+  [/(?:耳机|耳機|이어폰|헤드폰)/iu, ['イヤホン','earphones']],
+  [/(?:充电器|充電器|充电宝|充電寶|충전기|보조 배터리)/iu, ['充電器','charger']],
+  [/(?:水杯|水瓶|保温杯|保溫杯|물병|텀블러)/iu, ['水筒','bottle']],
+  [/(?:雨伞|雨傘|折叠伞|折疊傘|우산|양산)/iu, ['折りたたみ傘','umbrella']],
+  [/(?:风扇|風扇|선풍기|휴대용 팬)/iu, ['携帯扇風機','fan']],
+  [/(?:灯|燈|조명|램프)/iu, ['ライト','lamp']],
+  [/(?:发光|發光|会亮|會亮|빛나는|발광|light[- ]?up|glowing)/iu, ['LED','光る']],
+  [/(?:蓄光|夜光|glow[- ]?in[- ]?the[- ]?dark)/iu, ['蓄光','夜光','glow in the dark']],
+  [/(?:ネオン|neon)/iu, ['ネオン','neon']],
+  [/(?:対応機種|機種対応|compatible)/iu, ['対応機種','compatible']],
+  [/(?:透明|투명|clear|transparent)/iu, ['透明']],
+  [/(?:小巧|小型|작은|소형|small|mini)/iu, ['小型']],
+  [/(?:轻量|輕量|가벼운|경량|lightweight)/iu, ['軽量']],
+  [/(?:折叠|折疊|접이식|foldable|folding)/iu, ['折りたたみ']]
+];
+
+export function buildAmazonSearchKeywords(query) {
+  const asinTerms = String(query || '').toUpperCase().match(/\bB[A-Z0-9]{9}\b/g) || [];
+  const cleaned = redactSearchPersonalData(query);
+  if (!cleaned) return '';
+  const semanticTerms = semanticSearchGroups(cleaned)
+    .flatMap((group) => group.terms || [])
+    .map((term) => String(term).toLowerCase().trim())
+    .filter(Boolean);
+  const directTerms = cleaned
+    .toLowerCase()
+    .match(/[a-z][a-z0-9-]{2,}/g) || [];
+  const localizedTerms = AMAZON_JP_QUERY_ALIASES
+    .filter(([pattern]) => pattern.test(cleaned))
+    .flatMap(([, terms]) => terms);
+  const optimized = [...new Set([...asinTerms.map((term) => term.toLowerCase()), ...localizedTerms, ...semanticTerms, ...directTerms])]
+    .filter((term) => !['with', 'from', 'that', 'this', 'type', 'size'].includes(term))
+    .slice(0, 12);
+  return optimized.length ? optimized.join(' ') : cleaned;
+}
+
+export function buildAmazonSearchDestination(query, associateTag = '') {
+  const keywords = buildAmazonSearchKeywords(query);
+  if (!keywords) return '';
+  const url = new URL('https://www.amazon.co.jp/s');
+  url.searchParams.set('k', keywords);
+  const tag = String(associateTag || '').trim();
+  if (/^[a-z0-9][a-z0-9-]{1,49}$/i.test(tag)) url.searchParams.set('tag', tag);
+  return url.toString();
+}
+
+export function buildRakutenSearchDestination(query) {
+  const keywords = buildAmazonSearchKeywords(query);
+  if (!keywords) return '';
+  return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keywords)}/`;
+}
+export function buildQoo10SearchDestination(query) {
+  const keywords = buildAmazonSearchKeywords(query);
+  if (!keywords) return '';
+  const url = new URL('https://www.qoo10.jp/s/');
+  url.searchParams.set('keyword', keywords);
+  return url.toString();
+}
+
+export function buildSheinSearchDestination(query) {
+  const keywords = buildAmazonSearchKeywords(query);
+  if (!keywords) return '';
+  return `https://jp.shein.com/pdsearch/${encodeURIComponent(keywords)}/`;
+}
+
+function marketplaceSearchDestinations(query, env = {}) {
+  return [
+    { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: buildAmazonSearchDestination(query, env.AMAZON_ASSOCIATE_TAG) },
+    { marketplace: 'RAKUTEN_JP', label: '楽天で探す', destination: buildRakutenSearchDestination(query) },
+    { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: buildQoo10SearchDestination(query) },
+    { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: buildSheinSearchDestination(query) }
+  ];
+}
+
+async function signedMarketplaceSearchLinks(query, context) {
+  const links = [];
+  for (const item of marketplaceSearchDestinations(query, context.env)) {
+    if (!isAllowedDestination(item.destination)) continue;
+    const token = await createTrackToken({
+      u: context.sessionHash, r: context.seed, a: context.asin || '', d: item.destination,
+      exp: Math.floor(Date.now() / 1000) + 86400 * 7,
+      j: `${context.seed}:${context.asin || 'QUERY'}:${item.marketplace}_SEARCH`,
+      c: 'PWA', m: item.marketplace, t: 'SEARCH_FALLBACK', g: context.category
+    }, context.env.LINK_SIGNING_SECRET);
+    links.push({ marketplace: item.marketplace, label: item.label, url: `${context.origin}/go?token=${encodeURIComponent(token)}` });
+  }
+  return links;
+}
+export async function recordUnmetDemandEvent(
+  env,
+  payload,
+  occurredAt,
+  channel = 'PWA'
+) {
+  if (!env?.PRODUCT_DB || payload?.t !== 'SEARCH_FALLBACK') return false;
+  const category = String(payload.g || 'unclassified')
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, '')
+    .slice(0, 64) || 'unclassified';
+  const demandHash = await hashUser(String(payload.d || ''));
+  await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO unmet_demand_events
+    (event_id,occurred_at,user_hash,demand_hash,category,marketplace,
+     destination_type,contract_match,demand_status,channel)
+    VALUES(?1,?2,?3,?4,?5,?6,?7,0,'UNMET',?8)`)
+    .bind(
+      String(payload.j || ''),
+      occurredAt,
+      String(payload.u || ''),
+      demandHash,
+      category,
+      String(payload.m || 'AMAZON_JP'),
+      'AMAZON_SEARCH_FALLBACK',
+      channel
+    )
+    .run();
+  return true;
+}
+
+export function trackingEventsForPayload(payload, occurredAt) {
+  const searchFallback = payload?.t === 'SEARCH_FALLBACK';
+  return ['CLICK', 'OUTBOUND'].map((eventType) => ({
+    event_id: `${payload.j}:${eventType}`,
+    occurred_at: occurredAt,
+    user_hash: payload.u,
+    recommendation_id: payload.r,
+    asin: searchFallback ? 'SEARCHFALL' : payload.a,
+    event_type: eventType,
+    marketplace: payload.m || marketplaceForDestination(payload.d),
+    destination_type: searchFallback ? 'AMAZON_SEARCH_FALLBACK' : 'PRODUCT_DETAIL',
+    contract_match: searchFallback ? false : payload.cm !== false,
+    demand_status: searchFallback ? 'UNMET' : 'MATCHED'
+  }));
+}
+
+async function decoratePwaResult(result, request, env, sessionHash, query = '') {
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
   const candidates = [];
-  for (const candidate of (result.candidates || []).slice(0, 3)) {
+  for (const candidate of (result.candidates || []).slice(0, 10)) {
     const copy = sanitizePublicCandidate(candidate);
     const selected = candidateDestination(candidate);
     const destination = selected.url;
     copy.offers = [];
-    for (const [offerIndex, offer] of (Array.isArray(candidate.offers) ? candidate.offers : []).slice(0, 3).entries()) {
-      if (!isAllowedDestination(offer?.product_url)) continue;
+    for (const [offerIndex, offer] of rankSellerOffers(candidate.offers).slice(0, 3).entries()) {
       const publicOffer = sanitizePublicOffer(offer);
       const offerToken = await createTrackToken({
         u: sessionHash, r: seed, a: candidate.asin, d: offer.product_url,
@@ -288,9 +654,7 @@ async function decoratePwaResult(result, request, env, sessionHash) {
       publicOffer.tracking_url = `${origin}/go?token=${encodeURIComponent(offerToken)}`;
       copy.offers.push(publicOffer);
     }
-    copy.selected_offer = selected.offer
-      ? copy.offers.find((offer) => offer.marketplace === selected.offer.marketplace) || sanitizePublicOffer(selected.offer)
-      : null;
+    copy.selected_offer = selected.offer ? copy.offers[0] || sanitizePublicOffer(selected.offer) : null;
     copy.tracking_url = '';
     if (isAllowedDestination(destination)) {
       const token = await createTrackToken({
@@ -301,9 +665,35 @@ async function decoratePwaResult(result, request, env, sessionHash) {
       }, env.LINK_SIGNING_SECRET);
       copy.tracking_url = `${origin}/go?token=${encodeURIComponent(token)}`;
     }
+    const candidateQuery = [candidate.display_name || candidate.product_name, candidate.asin]
+      .filter(Boolean).join(' ');
+    const candidateCategory = semanticSearchGroups(
+      candidate.display_name || candidate.product_name || query
+    ).map((group) => group.category)
+      .find((category) => category && category !== 'color') || 'unclassified';
+    copy.marketplace_search_links = await signedMarketplaceSearchLinks(candidateQuery, {
+      env, origin, sessionHash, seed, asin: candidate.asin || '', category: candidateCategory
+    });
+    copy.amazon_search_url = copy.marketplace_search_links
+      .find((link) => link.marketplace === 'AMAZON_JP')?.url || '';
     candidates.push(copy);
   }
-  return { ...result, candidates };
+  const demandCategory = semanticSearchGroups(query)
+    .map((group) => group.category)
+    .find((category) => category && category !== 'color') || 'unclassified';
+  const marketplaceSearchLinks = await signedMarketplaceSearchLinks(query, {
+    env, origin, sessionHash, seed, category: demandCategory
+  });
+  const amazonSearchUrl = marketplaceSearchLinks
+    .find((link) => link.marketplace === 'AMAZON_JP')?.url || '';
+  return {
+    ...result,
+    candidates,
+    amazon_search_url: amazonSearchUrl,
+    amazon_search_keywords: buildAmazonSearchKeywords(query),
+    search_keywords: buildAmazonSearchKeywords(query),
+    marketplace_search_links: marketplaceSearchLinks
+  };
 }
 
 export const decoratePwaResultForTest = decoratePwaResult;
@@ -347,9 +737,44 @@ async function handleKnowledgeApi(request, env, ctx) {
     if (length > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
     const input = validateKnowledgeRequest(await request.json());
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    const result = await callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } });
+    const [gasOutcome, indexedOutcome] = await Promise.allSettled([
+      callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } }),
+      applyIndexedSearchPolicy({ candidates: [] }, env, input.query, input.language)
+    ]);
+    const gasResult = gasOutcome.status === 'fulfilled' ? gasOutcome.value : { candidates: [], message: '' };
+    let result = indexedOutcome.status === 'fulfilled' ? indexedOutcome.value : gasResult;
+    if (indexedOutcome.status === 'fulfilled' && (gasResult?.candidates || []).length) {
+      result = {
+        ...gasResult,
+        ...result,
+        candidates: rankMerchantCandidates(gasResult.candidates, result.candidates)
+      };
+    }
+    if (creatorsApiConfigured(env) && (String(input.query).includes(' / ') || !(result?.candidates || []).length)) {
+      try {
+        const amazonCandidates = filterCategoryMismatches(input.query,
+          await searchAmazonCreators(env, buildAmazonSearchKeywords(input.query)));
+        const existing = new Set((result?.candidates || []).map((candidate) => candidate.asin));
+        result = {
+          ...(result || {}),
+          candidates: [
+            ...(result?.candidates || []),
+            ...amazonCandidates.filter((candidate) => !existing.has(candidate.asin))
+          ].slice(0, 10),
+          amazon_catalog_connected: true
+        };
+      } catch {
+        result = { ...(result || {}), amazon_catalog_connected: false };
+      }
+    }
     const sessionHash = await hashUser(input.session_id);
-    const decorated = await decoratePwaResult(result, request, env, sessionHash);
+    const decorated = await decoratePwaResult(
+      result,
+      request,
+      env,
+      sessionHash,
+      input.query
+    );
     const events = (decorated.candidates || []).map((candidate) => ({
       event_id: `${decorated.query_id}:IMPRESSION:${candidate.asin}`,
       occurred_at: new Date().toISOString(), user_hash: sessionHash,
@@ -371,20 +796,40 @@ async function handleKnowledgeApi(request, env, ctx) {
 
 function handlePublicConfig(env) {
   const siteKey = String(env.TURNSTILE_SITE_KEY || '');
-  return Response.json({ turnstile_site_key: siteKey }, {
+  return Response.json({ turnstile_site_key: siteKey, line_login_configured: lineLoginConfigured(env), email_login_configured: emailLoginConfigured(env), sms_login_configured: false }, {
     status: siteKey ? 200 : 503,
     headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
   });
 }
 
-function handleHealth(env) {
+async function databaseFeatureChecks(env) {
+  const expected = [
+    'mywatch_notifications', 'import_restriction_knowledge',
+    'sp_api_listings', 'sp_api_sync_audit'
+  ];
+  if (!env.PRODUCT_DB) return Object.fromEntries(expected.map((name) => [name, false]));
+  try {
+    const result = await env.PRODUCT_DB.prepare(
+      `SELECT name FROM sqlite_master WHERE type='table'
+      AND name IN ('mywatch_notifications','import_restriction_knowledge',
+      'sp_api_listings','sp_api_sync_audit')`
+    ).all();
+    const found = new Set((result?.results || []).map((row) => row.name));
+    return Object.fromEntries(expected.map((name) => [name, found.has(name)]));
+  } catch {
+    return Object.fromEntries(expected.map((name) => [name, false]));
+  }
+}
+
+async function handleHealth(env) {
   const readiness = getEnvironmentReadiness(env);
+  const databaseFeatures = await databaseFeatureChecks(env);
   return Response.json({
     ok: readiness.ready,
     release: readiness.release,
     missing: readiness.missing,
     weak: readiness.weak,
-    checks: readiness.checks
+    checks: { ...readiness.checks, database_features: databaseFeatures }
   }, {
     status: readiness.ready ? 200 : 503,
     headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
@@ -394,6 +839,22 @@ function handleHealth(env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (request.method === 'GET' && url.pathname === '/og/hoshilu-x-v3.png' && env.ASSETS) {
+      return env.ASSETS.fetch(new Request(new URL('/og-hoshilu.png', request.url), request));
+    }
+    if (request.method === 'POST' && url.pathname === '/api/internal/products/sync') return syncProducts(request, env);
+    const unmetDemandResponse = await handleUnmetDemandRoutes(request, env);
+    if (unmetDemandResponse) return unmetDemandResponse;
+    const socialResponse = await handleSocialAdminRoutes(request, env);
+    if (socialResponse) return socialResponse;
+    const wishResponse = await handleMemberWishRoutes(request, env);
+    if (wishResponse) return wishResponse;
+    const mywatchResponse = await handleMywatchRoutes(request, env);
+    if (mywatchResponse) return mywatchResponse;
+    const memberResponse = await handleMemberRoutes(request, env);
+    if (memberResponse) return memberResponse;
+    const sellerResponse = await handleSellerRoutes(request, env);
+    if (sellerResponse) return sellerResponse;
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
@@ -401,5 +862,13 @@ export default {
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return new Response('not found', { status: 404 });
+  },
+  async scheduled(controller, env, ctx) {
+    const scheduledAt = new Date(controller.scheduledTime);
+    ctx.waitUntil(Promise.allSettled([
+      runDueSocialPosts(env, scheduledAt),
+      deliverDueWebNotifications(env, scheduledAt),
+      runSpApiScheduledSync(env, scheduledAt)
+    ]));
   }
 };

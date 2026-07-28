@@ -1,0 +1,44 @@
+.hoshilu-collage-with-question {
+  position: relative;
+  isolation: isolate;
+}
+
+.hoshilu-collage-question {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: max-content;
+  max-width: 68%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  color: #15152d;
+  font-family: inherit;
+  font-size: clamp(1rem, 2vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-align: center;
+  text-wrap: balance;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.98),
+    0 0 12px rgba(255, 255, 255, 0.94),
+    0 0 26px rgba(255, 255, 255, 0.88);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .hoshilu-collage-question {
+    max-width: 58%;
+    font-size: clamp(0.88rem, 4vw, 1.1rem);
+    letter-spacing: 0.02em;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .hoshilu-collage-question {
+    text-shadow:
+      0 1px 0 #fff,
+      0 0 8px #fff;
+  }
+}

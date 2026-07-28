@@ -12,7 +12,7 @@ const bridgePath = path.join(root, 'tools', 'windows-bridge', 'Project_GATE_Brid
 const files = [
   'Utility.gs', 'Config.gs', 'Logger.gs', 'DriveService.gs', 'ImportLog.gs',
   'ZipEngine.gs', 'ImportEngine.gs', 'MappingEngine.gs', 'NormalizeEngine.gs',
-  'ValidationEngine.gs', 'HashEngine.gs', 'DatabaseEngine.gs',
+  'ValidationEngine.gs', 'HashEngine.gs', 'DatabaseEngine.gs', 'ProductIndexSyncEngine.gs', 'UnmetDemandEngine.gs', 'SocialKnowledgeEngine.gs',
   'OpportunityEngine.gs', 'MeasurementEngine.gs', 'MarketplaceMeasurementEngine.gs', 'ContractPolicyEngine.gs',
   'BenchmarkEngine.gs', 'MarketplaceEngine.gs',
   'MultilingualSeoEngine.gs', 'ProductIdentifierEngine.gs', 'KnowledgeEngine.gs', 'LineIntegration.gs', 'PreflightEngine.gs', 'Main.gs'
@@ -424,39 +424,39 @@ test('multi-EC offer validates marketplace domains and rejects lookalikes', () =
   }), /PRICE/);
 });
 
-test('multi-EC offer ranking uses availability, customer total cost, and delivery only', () => {
+test('multi-EC offer ranking uses plan then first registration and skips inactive offers', () => {
   const base = {
     tenant: 'itg', asin: 'B000000001', currency: 'JPY', approved: true,
     stock_status: 'IN_STOCK', delivery_days: 3
   };
   const offers = [
-    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'high-profit', marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000001', price: 1500, shipping_fee: 0, seller_profit: 999999 }),
-    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'customer-low', marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item', price: 1000, shipping_fee: 200, seller_profit: 1 }),
-    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'out', marketplace: 'YAHOO_JP', product_url: 'https://shopping.yahoo.co.jp/products/item', price: 500, shipping_fee: 0, stock_status: 'OUT_OF_STOCK' })
+    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'pro-later', seller_plan: 'PRO', registered_at: '2026-02-01', marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000001', price: 1500, shipping_fee: 0 }),
+    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'partner', seller_plan: 'PARTNER', registered_at: '2026-03-01', marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item', price: 1800, shipping_fee: 200 }),
+    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'pro-first', seller_plan: 'PRO', registered_at: '2026-01-01', marketplace: 'YAHOO_JP', product_url: 'https://shopping.yahoo.co.jp/products/item', price: 500, shipping_fee: 0 }),
+    context.MarketplaceEngine.normalizeOffer({ ...base, offer_id: 'inactive', seller_plan: 'PARTNER', listing_status: 'INACTIVE', marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000001?inactive=1', price: 100, shipping_fee: 0 })
   ];
   const ranked = Array.from(context.MarketplaceEngine.rankOffers(offers));
-  assert.strictEqual(ranked[0].offer_id, 'customer-low');
-  assert.strictEqual(ranked[2].offer_id, 'out');
+  assert.deepStrictEqual(ranked.map((offer) => offer.offer_id), ['partner', 'pro-first', 'pro-later']);
   const source = fs.readFileSync(path.join(gasDir, 'MarketplaceEngine.gs'), 'utf8');
   const rankingSource = source.slice(source.indexOf('function rankOffers'), source.indexOf('function loadApprovedOffers'));
   assert.strictEqual(/profit/i.test(rankingSource), false);
 });
 
-test('multi-EC offers are isolated by tenant and attached without seller internals', () => {
+test('approved multi-EC offers pool globally by ASIN without exposing seller display internals', () => {
   const normalized = context.MarketplaceEngine.normalizeOffer({
     offer_id: 'offer-1', tenant: 'itg', asin: 'B000000001', marketplace: 'RAKUTEN_JP',
     product_url: 'https://item.rakuten.co.jp/shop/item', price: 1000, shipping_fee: 100,
     currency: 'JPY', stock_status: 'IN_STOCK', delivery_days: 2,
     seller_name: 'Internal Seller', external_product_id: 'secret-id', approved: true
   });
-  const map = { 'itg|B000000001': [normalized] };
+  const map = { 'B000000001': [normalized] };
   const records = [
     { tenant: 'itg', asin: 'B000000001' },
     { tenant: 'mc2', asin: 'B000000001' }
   ];
   const attached = Array.from(context.MarketplaceEngine.attachOffers(records, map));
   assert.strictEqual(attached[0].marketplace_offers.length, 1);
-  assert.strictEqual(attached[1].marketplace_offers.length, 0);
+  assert.strictEqual(attached[1].marketplace_offers.length, 1);
   assert.strictEqual(attached[0].marketplace_offers[0].total_cost, 1100);
   assert.strictEqual('seller_name' in attached[0].marketplace_offers[0], false);
   assert.strictEqual('external_product_id' in attached[0].marketplace_offers[0], false);
@@ -534,6 +534,17 @@ test('Knowledge search refuses unsupported answers and limits results to three',
   assert.strictEqual(context.KnowledgeEngine.search('シリアル', many).length, 3);
 });
 
+test('Knowledge search rejects unrelated products that only share a short Japanese fragment', () => {
+  const records = [
+    { asin: 'B000000001', product_name: '朝食用オーガニックシリアル', manufacturer: 'Food Maker', stock: 1 },
+    { asin: 'B000000002', product_name: 'マテリアルハンドラー クレーン組み立てセット', manufacturer: 'Toy Maker', stock: 1 },
+    { asin: 'B000000003', product_name: 'リアルワックスLEDキャンドル', manufacturer: 'Light Maker', stock: 1 }
+  ];
+  const result = Array.from(context.KnowledgeEngine.search('朝食に合うシリアル', records));
+  assert.strictEqual(result.length, 1);
+  assert.strictEqual(result[0].asin, 'B000000001');
+  assert.ok(result[0].evidence.matched_terms.every((term) => term.length >= 3));
+});
 test('Knowledge data is isolated by tenant and raw query is not logged', () => {
   const records = [
     { tenant: 'itg', asin: 'B000000001' },
@@ -739,3 +750,60 @@ if (process.env.PROJECT_GATE_SAMPLE_CSV) {
 if (!process.exitCode) {
   process.stdout.write('ALL TESTS PASSED\n');
 }
+
+
+test('D1 product index sync uses bounded batches and never sends profit', () => {
+  assert.strictEqual(context.ProductIndexSyncEngine.MAX_RECORDS_PER_REQUEST, 200);
+  const source = context.ProductIndexSyncEngine.publicRecord({ record_key: 'itg:a', asin: 'B000000001', product_name: '商品', profit: 999, row_hash: 'h' });
+  assert.strictEqual(source.profit, undefined);
+  assert.strictEqual(source.asin, 'B000000001');
+});
+
+test('unmet demand classifies import restrictions without retaining raw order data', () => {
+  assert.strictEqual(context.UnmetDemandEngine.classify('リチウム電池のため空輸不可').restriction_class, 'LITHIUM_BATTERY');
+  assert.strictEqual(context.UnmetDemandEngine.classify('液体 100ml').restriction_class, 'LIQUID');
+  const record = context.UnmetDemandEngine.buildRecord({ tenant: 'ITG', order_id: 'ORDER-SECRET-1', asin: 'b000000001', import_restriction: '危険物', occurred_at: '2026-07-23' });
+  assert.strictEqual(record.source_order_hash.length, 64);
+  assert.strictEqual(JSON.stringify(record).includes('ORDER-SECRET-1'), false);
+  assert.strictEqual(record.verification_level, 'HUMAN_REQUIRED');
+});
+
+test('high-risk domestic alternatives require human verification', () => {
+  const record = context.UnmetDemandEngine.buildRecord({ tenant: 'ITG', order_id: '2', asin: 'B000000002', import_restriction: '液体' });
+  assert.strictEqual(record.domestic_alternative_status, 'UNRESOLVED');
+  assert.strictEqual(record.verification_level, 'HUMAN_REQUIRED');
+  assert.ok(context.UnmetDemandEngine.alternativeSearchTerms(record, 'Cleaner').includes('国内販売'));
+});
+
+test('unmet demand sync exports only privacy-safe fields in bounded batches', () => {
+  assert.strictEqual(context.UnmetDemandEngine.MAX_RECORDS_PER_REQUEST, 200);
+  const safe = context.UnmetDemandEngine.syncRecord({
+    tenant: 'ITG',
+    source_order_hash: 'a'.repeat(64),
+    source_product_id: 'B000000001',
+    restriction_class: 'LIQUID',
+    occurred_month: '2026-07',
+    order_id: 'RAW-ORDER',
+    customer_name: 'PRIVATE'
+  });
+  assert.strictEqual(safe.order_id, undefined);
+  assert.strictEqual(safe.customer_name, undefined);
+  assert.strictEqual(safe.source_order_hash.length, 64);
+});
+
+test('social knowledge extracts and deduplicates multilingual hashtags', () => {
+  const tags = context.SocialKnowledgeEngine.extractHashtags(
+    '#ホシル #これ何て検索する #HOSHILU #ホシル'
+  );
+  assert.deepStrictEqual(Array.from(tags), ['ホシル', 'これ何て検索する', 'hoshilu']);
+});
+
+test('social knowledge bundle includes privacy-safe hashtag aggregates', () => {
+  assert.strictEqual(
+    context.SocialKnowledgeEngine.HASHTAG_AGGREGATE_SHEET_NAME,
+    'Social_Hashtag_Aggregates'
+  );
+  const source = fs.readFileSync(path.join(gasDir, 'SocialKnowledgeEngine.gs'), 'utf8');
+  assert.strictEqual(source.includes('author_platform_id'), true);
+  assert.strictEqual(source.includes('Author_Name'), false);
+});
