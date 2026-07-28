@@ -43,3 +43,12 @@ test('商品URLの確認日時はISO形式へ正規化し、不正値と未来�
  assert.throws(()=>validateMarketplaceOfferFeed({...base,records:[{...base.records[0],observed_at:'not-a-date'}]}),/OBSERVED_AT_INVALID/);
  assert.throws(()=>validateMarketplaceOfferFeed({...base,records:[{...base.records[0],observed_at:new Date(Date.now()+60*60*1000).toISOString()}]}),/OBSERVED_AT_FUTURE/);
 });
+
+test('商品詳細URLには外部商品IDとHOSHILU照合キーまたは正しいASINが必要',()=>{
+ const record={marketplace:'QOO10_JP',product_url:'https://www.qoo10.jp/gmkt.inc/Goods/Goods.aspx?goodscode=123456789'};
+ assert.throws(()=>validateMarketplaceOfferFeed({tenant:'itg',batch_id:'offers-key-20260729',records:[record]}),/EXTERNAL_PRODUCT_ID_REQUIRED/);
+ assert.throws(()=>validateMarketplaceOfferFeed({tenant:'itg',batch_id:'offers-key-20260730',records:[{...record,external_product_id:'123'}]}),/MATCH_KEY_REQUIRED/);
+ assert.throws(()=>validateMarketplaceOfferFeed({tenant:'itg',batch_id:'offers-key-20260731',records:[{...record,external_product_id:'123',asin:'INVALID'}]}),/MATCH_KEY_REQUIRED/);
+ const result=validateMarketplaceOfferFeed({tenant:'itg',batch_id:'offers-key-20260801',records:[{...record,external_product_id:'123',asin:'B000000001'}]});
+ assert.equal(result.records[0].asin,'B000000001');
+});
