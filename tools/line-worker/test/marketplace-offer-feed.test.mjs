@@ -32,3 +32,11 @@ test('marketplace offer stats requires the existing sync secret',async()=>{
  const response=await marketplaceOfferStats(new Request('https://hoshilu.app/api/internal/marketplace-offers/stats'),env);
  assert.equal(response.status,401);
 });
+
+test('商品URLの確認日時はISO形式へ正規化し、不正値と未来日時を拒否する',()=>{
+ const base={tenant:'itg',batch_id:'offers-time-20260729',records:[{record_key:'r1',marketplace:'RAKUTEN_JP',external_product_id:'shop:item',product_url:'https://item.rakuten.co.jp/shop/item/',observed_at:'2026-07-29T01:02:03+09:00'}]};
+ const result=validateMarketplaceOfferFeed(base);
+ assert.equal(result.records[0].observed_at,'2026-07-28T16:02:03.000Z');
+ assert.throws(()=>validateMarketplaceOfferFeed({...base,records:[{...base.records[0],observed_at:'not-a-date'}]}),/OBSERVED_AT_INVALID/);
+ assert.throws(()=>validateMarketplaceOfferFeed({...base,records:[{...base.records[0],observed_at:new Date(Date.now()+60*60*1000).toISOString()}]}),/OBSERVED_AT_FUTURE/);
+});
