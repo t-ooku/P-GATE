@@ -132,7 +132,7 @@ HOSHILUは、商品名や検索語が分からない「欲しい」を、見た�
 - Instagram Webがキャプション編集を保存せず、画像内に匿名集計告知はあるがcaptionは空の可能性が高い。
 - PNGはローカル保存。Worker assetとしての再deployは未実施。
 
-### 検索精度・追加キーワード改善（ローカル完了、未deploy）
+### 検索精度・追加キーワード改善（実装・commit完了、未deploy）
 
 対象:
 
@@ -215,39 +215,16 @@ P-GATE/
 
 ## 10. 最新commit、日時、GitHub反映
 
-本書作成時の実装基準HEAD（本書自身の保存commit前）:
-
-- `ac7713e64e2af8115d0f9635ad9808245d6cb973`
-- `2026-07-22T19:04:36+09:00`
-- `docs: promote verified ITG Phase0 checks`
-- 同名remote branchへpush済み、ahead/behind `0/0`。
-- ただし大量のlocal未commit変更はGitHub未反映。
-- 本書自身の保存commit IDは自己参照になるため本文には固定せず、Git履歴と最終報告を正とする。
+- 統合実装commit: `fc45fb41d893fb21b2d05ea5a2b9d26a4986f01a`
+- message: `feat: complete HOSHILU product and growth platform`
+- 270ファイル、45,849追加、654削除。
+- 本書の最終状態更新は後続commitとし、最終報告のHEADを正とする。
+- GitHub pushは本書更新commit後に実施する。
 
 ## 11. ローカルのみの未commit変更
 
-追跡済み:
-
-- `dist/Project_GATE_Complete*.gs`
-- `gas/KnowledgeEngine.gs`、`Main.gs`、`MarketplaceEngine.gs`
-- `docs/MEASUREMENT_SPEC_v1.3.md`、`MULTI_EC_OFFER_SPEC_v1.14.md`
-- `tests/release_config.test.mjs`、`tests/run_tests.js`
-- `tools/build_bundle.js`、`tools/release.js`
-- `tools/chrome-extension/`のREADME、manifest、options、sidepanel、icons、test
-- `tools/line-worker/`のindex、app、HTML/CSS、privacy、service worker、manifest、icons、headers、test、wrangler
-
-主な未追跡:
-
-- `benchmarks/`、検索評価文書。
-- `docs/HOSHILU_*`、SP-API/SNS/Seller/brand文書。
-- `gas/ProductIndexSyncEngine.gs`、`SocialKnowledgeEngine.gs`、`UnmetDemandEngine.gs`。
-- `marketing/`一式。
-- HOSHILU/i18n/speech/sticky-nav tests。
-- D1 migrations `0001`〜`0011`。
-- Workerのmember/search/MYWATCH/SNS/SP-API/seller/unmet-demand modules/tests/public assets。
-- Chrome `_locales`、i18n、HOSHILU icons。
-- 多数の`dist/hoshilu-*-dry-run/`、ZIP、`.tmp-ftfy/`。
-
+- 本書の最終状態更新のみ。実装コード、テスト、仕様、画像、評価データは `fc45fb4` にコミット済み。
+- `.tmp-*`、`dist/*-dry-run/`、巨大な再生成可能bootstrap SQL、ローカルZIPは `.gitignore` へ追加し、正式な未コミット対象から除外した。
 ## 12. commit済み未push
 
 なし（ahead/behind `0/0`）。
@@ -382,15 +359,12 @@ Desktopが解放するまでWeb版は変更禁止:
 
 ## 24. 次の作業（優先順）
 
-1. Desktop: dirty treeを機能別分類、一時物/生成物を分離。
-2. Desktop: 全test、失敗修正。
-3. Desktop: SNS修正、member/MYWATCH、search、SP-API/seller、Chromeの順に分割commit/push。
+1. Desktop: 本書更新commitを作成し、同名GitHub branchへpush。
+2. Desktop: 本番D1 migration適用状況とSecret readinessを値なしで確認し、Workerをdeploy。
+3. Desktop/Web: hoshilu.appで検索、会員、MYWATCH、4モール横断導線を本番スモークテスト。
 4. Web: X/Meta/TikTok/LINE権限/審査/Secret有無を値なしで確認。
-5. Web: 旧MYGATE公開資料の変更候補をissue/reviewとして整理。
-6. Business/Web: Qoo10 KoreaとSHEIN Koreaへ、Affiliate Feed、法人AI媒体、画像・AI加工の書面許諾可否を問い合わせ。
-7. Desktop: 韓国Seller直接加入、許諾済み商品CSV/API、Offer/Affiliate契約分離を既存Seller実装の安全な区切り後に設計・実装。
-8. Desktop: GitHub反映後に本書更新し実装fileをWebへ解放。
-
+5. Business/Web: Qoo10 KoreaとSHEIN Koreaへ、Affiliate Feed、法人AI媒体、画像・AI加工の書面許諾可否を問い合わせ。
+6. Desktop: 韓国Seller直接加入、許諾済み商品CSV/API、Offer/Affiliate契約分離を実装。
 ## 25. Web版Codex開始プロンプト
 
 ```text
@@ -400,10 +374,10 @@ HOSHILU（ホシル）のWeb/スマホ側作業を開始してください。
 
 GitHub t-ooku/P-GATE の次を最初に確認してください。
 - branch: agent/mygate-v5-itg-phase0
-- desktop確認時HEAD: ac7713e64e2af8115d0f9635ad9808245d6cb973
+- desktop統合実装commit: fc45fb41d893fb21b2d05ea5a2b9d26a4986f01a
 - 引継ぎ: docs/HOSHILU_OVERNIGHT_HANDOFF_2026-07-26.md
 
-Desktop側には大量の未commit実装があります。引継ぎ書の「同時編集禁止」は変更せず、読み取りとGitHub/online状態監査だけを行ってください。
+大量のローカル実装は統合commit済みです。最新remote HEADを確認してください。Worker本番deploy完了まではWorker実装ファイルを同時編集しないでください。
 
 担当:
 1. GitHub branch/PR/Actions/issue確認
@@ -417,9 +391,9 @@ Desktop側には大量の未commit実装があります。引継ぎ書の「同�
 
 ## 26. 今回の保存範囲
 
-大量の既存dirty treeを完成版扱いせず、本引継ぎ書のみを独立保存候補とする。`gh` CLIは未導入。Git pushは既存Git認証で確認する。
+大量の既存dirty treeは全監査・全テスト・release・Cloudflare dry-run後に統合commit済み。本書の最終状態更新を後続commitとして保存する。
 
-### 4モール横断検索（ローカル完了、未deploy）
+### 4モール横断検索（実装・commit完了、未deploy）
 
 - 検索結果全体と各提案商品に `Amazonで探す` / `楽天で探す` / `Qoo10で探す` / `SHEINで探す` を追加した。
 - HOSHILUが整理した検索ワードを4モールへ同条件で引き継ぐ。公式検索先は Amazon Japan、楽天市場、Qoo10 Japan、SHEIN Japan。
@@ -429,5 +403,5 @@ Desktop側には大量の未commit実装があります。引継ぎ書の「同�
 - 公式URL確認: 楽天市場 `https://search.rakuten.co.jp/search/mall/<keyword>/`、SHEIN Japan `https://jp.shein.com/pdsearch/<keyword>/`。Qoo10 Japanは `https://www.qoo10.jp/s/?keyword=<keyword>` を利用する。
 - 対象: `tools/line-worker/src/index.mjs`, `public/app.js`, `public/index.html`, `public/styles.css`, `test/index.test.mjs`, `test/discovery-collage.test.mjs`。
 - 検証: Worker 160/160、リポジトリ全体テスト、release 4/4、Chrome 6/6すべて成功。
-- 未deploy理由: 同じ主要ファイルに既存の大規模な未コミット変更が重なっており、今回分だけを安全に分離して本番反映できない。既存変更の所有範囲を確定後、統合コミットとdry-runを行う。
-- Web版編集可否: 上記対象ファイルはデスクトップ版が統合保存・deployを完了するまで同時編集禁止。
+- 統合コミット `fc45fb4` とCloudflare dry-runは完了。本番D1/Secret readiness確認後にdeployする。
+- Web版編集可否: GitHub push後は参照可能。Worker本番deploy完了までは上記実装ファイルの同時編集を避ける。
