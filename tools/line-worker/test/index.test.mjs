@@ -412,5 +412,7 @@ test('商品カードは4モールの実在商品ページを1モール1件だ�
   assert.equal(decorated.candidates[0].offers.length, 4);
   decorated.candidates[0].offers.forEach((offer) => assert.equal(offer.tracking_url.startsWith('https://p-gate.example/go?token='), true));
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.equal(appSource.includes('marketplaceLabel(offer.marketplace)}で購入'), true);
+  assert.equal(appSource.includes('marketplaceLabel(offer.marketplace)}で見る'), true);
+  assert.equal(appSource.includes("JA:'全部のモールで探す'"), true);
+  assert.equal(appSource.includes("document.querySelector('.marketplace-fallback')?.scrollIntoView"), true);
 });

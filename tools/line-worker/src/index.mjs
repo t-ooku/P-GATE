@@ -723,10 +723,11 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
   const candidates = [];
   for (const candidate of (result.candidates || []).slice(0, 10)) {
     const copy = sanitizePublicCandidate(candidate);
-    const selected = candidateDestination(candidate);
+    const productOffers = productMarketplaceOffers(candidate.offers);
+    const selected = productOffers.length ? { url: productOffers[0].product_url, offer: productOffers[0] } : { url: '', offer: null };
     const destination = selected.url;
     copy.offers = [];
-    for (const [offerIndex, offer] of productMarketplaceOffers(candidate.offers).entries()) {
+    for (const [offerIndex, offer] of productOffers.entries()) {
       const publicOffer = sanitizePublicOffer(offer);
       const offerToken = await createTrackToken({
         u: sessionHash, r: seed, a: candidate.asin, d: offer.product_url,

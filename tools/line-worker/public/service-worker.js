@@ -1,4 +1,4 @@
-const CACHE = 'hoshilu-shell-v64';
+const CACHE = 'hoshilu-shell-v65';
 const SHELL = ['/', '/privacy.html', '/terms.html', '/styles.css', '/wish-carousel.css', '/mywatch.css', '/hero-fixes.css', '/hero-collage-overlay.css', '/hero-collage-overlay.mjs', '/discovery.css', '/hoshilu-discovery-collage.webp', '/hoshilu-discovery-collage-mobile.webp', '/sticky-nav.css', '/speech-input.css', '/speech-input.js', '/social-share-targets.js', '/install.css', '/app.js', '/campaign-attribution.mjs', '/manifest-v2.webmanifest', '/og-hoshilu.png', '/icons/icon.svg', '/icons/hoshilu-v2-180.png', '/icons/hoshilu-v2-192.png', '/icons/hoshilu-v2-512.png', '/auth.css', '/site-i18n.js', '/member-login.js', '/login.html', '/seller-login.html', '/seller-login.js'];
 
 self.addEventListener('install', (event) => {
