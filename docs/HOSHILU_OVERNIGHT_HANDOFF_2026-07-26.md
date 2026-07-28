@@ -303,6 +303,14 @@ SNS:
 - HOSHILU OGP、share targets、campaign attribution、X intent、Instagram copy導線あり。
 - Web/PWA/ChromeはJA/EN/ZH/KO。LINE 4言語実機は未確認。
 
+韓国向け外部EC連携:
+
+- 2026-07-28にQoo10 Korea / SHEIN Koreaの公式連携可否を一次情報で調査。
+- 両社ともHOSHILU用途の公式Affiliate商品Feed/APIは確認できず、MVP実装は見送り。
+- Qoo10 Japan QAPIとSHEIN Open PlatformはSeller向けで、Affiliate商品取得APIではない。
+- 両社の規約上、商品ページScrapingは採用しない。公式回答・書面許諾を得た場合のみ再判定。
+- 詳細: docs/HOSHILU_QOO10_SHEIN_KOREA_FEASIBILITY_2026-07-28.md
+
 ## 19. Web版がPCなしで進められる作業
 
 - GitHub branch/PR/Actions/issue確認。
@@ -357,7 +365,8 @@ Desktopが解放するまでWeb版は変更禁止:
 3. Desktop: SNS修正、member/MYWATCH、search、SP-API/seller、Chromeの順に分割commit/push。
 4. Web: X/Meta/TikTok/LINE権限/審査/Secret有無を値なしで確認。
 5. Web: 旧MYGATE公開資料の変更候補をissue/reviewとして整理。
-6. Desktop: GitHub反映後に本書更新し実装fileをWebへ解放。
+6. Business/Web: Qoo10 KoreaとSHEIN Koreaへ、Affiliate Feed、法人AI媒体、画像・AI加工の書面許諾可否を問い合わせ。
+7. Desktop: GitHub反映後に本書更新し実装fileをWebへ解放。
 
 ## 25. Web版Codex開始プロンプト
 
