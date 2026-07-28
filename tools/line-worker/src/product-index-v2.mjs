@@ -79,7 +79,7 @@ export async function attachMarketplaceOffers(env, tenant, rows = []) {
   const placeholders = values.map((_, index) => `?${index + 2}`).join(',');
   let result;
   try {
-    result = await env.PRODUCT_DB.prepare(`SELECT * FROM marketplace_offers WHERE tenant=?1 AND active=1 AND stock_status<>'OUT_OF_STOCK' AND (asin IN (${placeholders}) OR record_key IN (${placeholders}))`)
+    result = await env.PRODUCT_DB.prepare(`SELECT * FROM marketplace_offers WHERE tenant=?1 AND active=1 AND stock_status NOT IN ('OUT_OF_STOCK','UNAVAILABLE') AND datetime(observed_at)>=datetime('now','-7 days') AND (asin IN (${placeholders}) OR record_key IN (${placeholders}))`)
       .bind(cleanTenant(tenant), ...values).all();
   } catch { return rows; }
   return rows.map(row => ({ ...row, offers: [...(row.offers || []), ...(result.results || []).filter(offer => (offer.asin && offer.asin === row.asin) || (offer.record_key && offer.record_key === row.record_key))] }));
