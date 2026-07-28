@@ -10,7 +10,7 @@ globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 const workerModule = await import('../src/index.mjs');
 const {
   verifyLineSignature, createTrackToken, verifyTrackToken,
-  isAllowedDestination, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
+  isAllowedDestination, isProductDetailDestination, productMarketplaceOffers, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
   getEnvironmentReadiness, buildAmazonSearchDestination, buildRakutenSearchDestination,
   buildQoo10SearchDestination, buildQoo10SearchKeywords, buildSheinSearchDestination,
   buildAmazonSearchKeywords, trackingEventsForPayload, rankSellerOffers
@@ -244,14 +244,14 @@ test('PWA公開回答は内部SKU・在庫数・元URL・取込証跡を除外�
   assert.equal('source_hash' in result.evidence, false);
 });
 
-test('PWAは最大3購入先を個別の署名付きURLへ変換し元URLを返さない', async () => {
+test('PWAは実在する複数モール購入先を個別の署名付きURLへ変換し元URLを返さない', async () => {
   const env = { LINK_SIGNING_SECRET: 'secret' };
   const gasResult = {
     query_id: 'q-multi', candidates: [{
       asin: 'B000000001', offers: [
         { marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000001', price: 1200, total_cost: 1200, currency: 'JPY', stock_status: 'IN_STOCK' },
         { marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item', price: 1000, shipping_fee: 200, total_cost: 1200, currency: 'JPY', stock_status: 'IN_STOCK' },
-        { marketplace: 'YAHOO_JP', product_url: 'https://shopping.yahoo.co.jp/products/item', price: 1100, shipping_fee: 100, total_cost: 1200, currency: 'JPY', stock_status: 'IN_STOCK' }
+        { marketplace: 'QOO10_JP', product_url: 'https://www.qoo10.jp/gmkt.inc/Goods/Goods.aspx?goodscode=987654321', price: 1100, shipping_fee: 100, total_cost: 1200, currency: 'JPY', stock_status: 'IN_STOCK' }
       ]
     }]
   };
@@ -390,4 +390,27 @@ test('横断検索語はスラッシュで追加した日本語条件をすべ�
     assert.match(keywords, /アクションカメラ/);
     assert.notEqual(keywords, 'camera');
   }
+});
+
+test('商品カードは4モールの実在商品ページを1モール1件だけ購入先にする', async () => {
+  const env = { LINK_SIGNING_SECRET: 'secret' };
+  const offers = [
+    { marketplace: 'AMAZON_JP', product_url: 'https://www.amazon.co.jp/dp/B000000001', stock_status: 'IN_STOCK' },
+    { marketplace: 'AMAZON_JP', product_url: 'https://www.amazon.co.jp/dp/B000000002', stock_status: 'IN_STOCK' },
+    { marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item-1/', stock_status: 'IN_STOCK' },
+    { marketplace: 'QOO10_JP', product_url: 'https://www.qoo10.jp/gmkt.inc/Goods/Goods.aspx?goodscode=123456789', stock_status: 'IN_STOCK' },
+    { marketplace: 'SHEIN_JP', product_url: 'https://jp.shein.com/example-p-12345678.html', stock_status: 'IN_STOCK' },
+    { marketplace: 'QOO10_JP', product_url: 'https://www.qoo10.jp/s/?keyword=camera', stock_status: 'IN_STOCK' }
+  ];
+  assert.equal(isProductDetailDestination(offers[5].product_url), false);
+  assert.equal(isProductDetailDestination('https://www.qoo10.jp/item/sample-product/123456789'), true);
+  assert.deepEqual(productMarketplaceOffers(offers).map((offer) => offer.marketplace), ['AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP']);
+  const decorated = await workerModule.decoratePwaResultForTest(
+    { query_id: 'q-four-marketplaces', candidates: [{ asin: 'B000000001', offers }] },
+    new Request('https://p-gate.example/api/knowledge'), env, 'session-hash'
+  );
+  assert.equal(decorated.candidates[0].offers.length, 4);
+  decorated.candidates[0].offers.forEach((offer) => assert.equal(offer.tracking_url.startsWith('https://p-gate.example/go?token='), true));
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.equal(appSource.includes('marketplaceLabel(offer.marketplace)}で購入'), true);
 });

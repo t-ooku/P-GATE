@@ -145,6 +145,33 @@ export function marketplaceForDestination(destination) {
   return '';
 }
 
+const PRODUCT_MARKETPLACES = new Set(['AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP']);
+
+export function isProductDetailDestination(destination) {
+  if (!isAllowedDestination(destination)) return false;
+  try {
+    const url = new URL(destination);
+    const marketplace = marketplaceForDestination(destination);
+    if (!PRODUCT_MARKETPLACES.has(marketplace)) return false;
+    const path = url.pathname.toLowerCase();
+    if (marketplace === 'AMAZON_JP') return /\/(?:dp|gp\/product)\/[a-z0-9]{10}(?:[/?]|$)/i.test(url.pathname);
+    if (marketplace === 'RAKUTEN_JP') return ((url.hostname.toLowerCase() === 'item.rakuten.co.jp' || url.hostname.toLowerCase() === 'product.rakuten.co.jp') && path.split('/').filter(Boolean).length >= 2);
+    if (marketplace === 'QOO10_JP') return (/\/gmkt\.inc\/goods\/goods\.aspx$/i.test(path) && /^\d+$/.test(url.searchParams.get('goodscode') || '')) || (/^\/item\//i.test(path) && /\/\d+(?:\/)?$/.test(path));
+    if (marketplace === 'SHEIN_JP') return /-p-\d+\.html$/i.test(path);
+  } catch {}
+  return false;
+}
+
+export function productMarketplaceOffers(offers = []) {
+  const seen = new Set();
+  return rankSellerOffers(offers).filter((offer) => {
+    const marketplace = offer?.marketplace || marketplaceForDestination(offer?.product_url);
+    if (!PRODUCT_MARKETPLACES.has(marketplace) || seen.has(marketplace) || !isProductDetailDestination(offer?.product_url)) return false;
+    seen.add(marketplace);
+    return true;
+  }).map((offer) => ({ ...offer, marketplace: offer.marketplace || marketplaceForDestination(offer.product_url) })).slice(0, 4);
+}
+
 function offerSummary(offer) {
   if (!offer) return '';
   const labels = { AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
@@ -699,7 +726,7 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
     const selected = candidateDestination(candidate);
     const destination = selected.url;
     copy.offers = [];
-    for (const [offerIndex, offer] of rankSellerOffers(candidate.offers).slice(0, 3).entries()) {
+    for (const [offerIndex, offer] of productMarketplaceOffers(candidate.offers).entries()) {
       const publicOffer = sanitizePublicOffer(offer);
       const offerToken = await createTrackToken({
         u: sessionHash, r: seed, a: candidate.asin, d: offer.product_url,
@@ -752,7 +779,7 @@ export function sanitizePublicCandidate(candidate) {
   delete copy.amazon_us_url;
   delete copy.marketplace_search_links;
   delete copy.amazon_search_url;
-  copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 3).map(sanitizePublicOffer);
+  copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 4).map(sanitizePublicOffer);
   copy.tracking_url = '';
   if (copy.evidence) {
     copy.evidence = {
