@@ -121,10 +121,28 @@ async function publishInstagram(post, env, fetchImpl) {
   if (!post.media_url) throw new Error('INSTAGRAM_MEDIA_REQUIRED');
   const account = encodeURIComponent(env.INSTAGRAM_ACCOUNT_ID);
   const headers = { authorization: `Bearer ${env.INSTAGRAM_ACCESS_TOKEN}`, 'content-type': 'application/json' };
+  let mediaPath = '';
+  try {
+    mediaPath = new URL(post.media_url).pathname.toLowerCase();
+  } catch {
+    throw new Error('INSTAGRAM_MEDIA_URL_INVALID');
+  }
+  const isReel = /\.(?:mp4|mov|m4v)$/.test(mediaPath);
+  const mediaPayload = isReel
+    ? {
+        media_type: 'REELS',
+        video_url: post.media_url,
+        caption: [post.caption, post.link].filter(Boolean).join('\n'),
+        share_to_feed: true
+      }
+    : {
+        image_url: post.media_url,
+        caption: [post.caption, post.link].filter(Boolean).join('\n')
+      };
   const create = await fetchImpl(`https://graph.instagram.com/v24.0/${account}/media`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ image_url: post.media_url, caption: [post.caption, post.link].filter(Boolean).join('\n') })
+    body: JSON.stringify(mediaPayload)
   });
   if (!create.ok) {
     const detail = clean(await create.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');

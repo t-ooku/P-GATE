@@ -144,3 +144,32 @@ test('Instagram publisher waits for media processing before publishing', async (
   assert.equal(requests.filter(value => value.includes('status_code')).length, 2);
   assert.match(requests.at(-1), /media_publish$/);
 });
+
+test('Instagram publisher creates a Reels container for an MP4 media URL', async () => {
+  let createPayload;
+  const id = await publishSocialPost({
+    platform: 'INSTAGRAM',
+    caption: 'HOSHILU reel post',
+    link: 'https://hoshilu.app/',
+    media_url: 'https://hoshilu.app/social/cross-market-reel.mp4?version=1',
+    status: 'APPROVED'
+  }, {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0
+  }, async (url, options = {}) => {
+    if (url.endsWith('/123/media')) {
+      createPayload = JSON.parse(options.body);
+      return Response.json({ id: 'reel-container-1' });
+    }
+    if (url.includes('/reel-container-1?fields=status_code')) return Response.json({ status_code: 'FINISHED' });
+    if (url.endsWith('/123/media_publish')) return Response.json({ id: 'ig-reel-1' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'ig-reel-1');
+  assert.equal(createPayload.media_type, 'REELS');
+  assert.equal(createPayload.video_url, 'https://hoshilu.app/social/cross-market-reel.mp4?version=1');
+  assert.equal(createPayload.share_to_feed, true);
+  assert.equal('image_url' in createPayload, false);
+  assert.match(createPayload.caption, /#4/);
+});
