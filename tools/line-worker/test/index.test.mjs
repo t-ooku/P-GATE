@@ -8,6 +8,7 @@ globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
 globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 
 const workerModule = await import('../src/index.mjs');
+const { rankMerchantCandidates: rankMerchantCandidatesForTest } = await import('../src/knowledge-search.mjs');
 const {
   verifyLineSignature, createTrackToken, verifyTrackToken,
   isAllowedDestination, isProductDetailDestination, productMarketplaceOffers, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
@@ -423,4 +424,13 @@ test('商品カードは4モールの実在商品ページを1モール1件だ�
   assert.equal(appSource.includes('marketplaceLabel(offer.marketplace)}で見る'), true);
   assert.equal(appSource.includes("JA:'全部のモールで探す'"), true);
   assert.equal(appSource.includes("document.querySelector('.marketplace-fallback')?.scrollIntoView"), true);
+});
+
+
+test('indexed knowledge candidates remain ahead of unverified GAS fallbacks', () => {
+  const ranked = rankMerchantCandidatesForTest(
+    [{ asin: 'B000CAMERA', product_name: 'Pink Camera' }],
+    [{ asin: 'B000SOCIAL', product_name: 'SNS Sensor' }]
+  );
+  assert.deepEqual(ranked.map((candidate) => candidate.asin), ['B000CAMERA', 'B000SOCIAL']);
 });

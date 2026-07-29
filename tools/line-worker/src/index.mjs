@@ -826,7 +826,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       result = {
         ...gasResult,
         ...result,
-        candidates: rankMerchantCandidates(gasResult.candidates, result.candidates)
+        candidates: rankMerchantCandidates(result.candidates, gasResult.candidates)
       };
     }
     const shouldSearchMarketplaces = String(input.query).includes(' / ') || !(result?.candidates || []).length;
