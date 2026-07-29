@@ -178,6 +178,7 @@ test('公開検索APIが失敗しても4モールへの検索導線を表示す�
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(appSource, /function emergencyMarketplaceFallback\(query\)/);
   assert.match(appSource, /Amazonで探す/);
+  assert.match(appSource, /tag=hoshilu-22/);
   assert.match(appSource, /楽天市場で探す/);
   assert.match(appSource, /Qoo10で探す/);
   assert.match(appSource, /SHEINで探す/);
