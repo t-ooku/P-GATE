@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   normalizeSocialPost,
   publishSocialPost,
+  runDueSocialPosts,
   socialPublisherReadiness
 } from '../src/social-publisher.mjs';
 
@@ -28,6 +29,46 @@ test('unapproved posts can never be published', async () => {
     caption: 'TikTokで見た光るスマホケースを探してみた。',
     status: 'REVIEW_REQUIRED'
   }, { X_USER_ACCESS_TOKEN: 'token' }), /NOT_APPROVED/);
+});
+
+test('1件の公開失敗が同時刻の次の承認済み投稿を止めない', async () => {
+  const rows = [
+    { post_id: 'post-fails', platform: 'X', caption: 'first approved post', status: 'APPROVED', scheduled_at: '2026-07-30T02:00:00.000Z' },
+    { post_id: 'post-succeeds', platform: 'X', caption: 'second approved post', status: 'APPROVED', scheduled_at: '2026-07-30T02:00:00.000Z' }
+  ];
+  const updates = [];
+  const env = {
+    X_USER_ACCESS_TOKEN: 'token',
+    PRODUCT_DB: {
+      prepare(sql) {
+        return {
+          bind(...values) {
+            if (sql.includes('SELECT * FROM social_post_queue')) {
+              return { all: async () => ({ results: rows }) };
+            }
+            return {
+              run: async () => {
+                updates.push({ sql, values });
+                return { meta: { changes: sql.includes("status='PUBLISHING'") ? 1 : 0 } };
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+  let publishes = 0;
+  const result = await runDueSocialPosts(env, new Date('2026-07-30T02:00:00.000Z'), async () => {
+    publishes += 1;
+    return publishes === 1
+      ? Response.json({ title: 'Unauthorized' }, { status: 401 })
+      : Response.json({ data: { id: 'published-second' } }, { status: 201 });
+  });
+
+  assert.deepEqual(result, { checked: 2, published: 1 });
+  assert.equal(publishes, 2);
+  assert.ok(updates.some((item) => item.sql.includes("status='FAILED'") && item.values[0] === 'post-fails'));
+  assert.ok(updates.some((item) => item.sql.includes("status='PUBLISHED'") && item.values[0] === 'post-succeeds'));
 });
 
 test('publisher readiness requires platform credentials and TikTok audit', () => {
