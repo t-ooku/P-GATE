@@ -111,7 +111,7 @@ function offerIsActive(offer) {
   ).toUpperCase();
   return offer?.active !== false
     && !['INACTIVE','REMOVED','DELETED','SUSPENDED','CLOSED'].includes(state)
-    && String(offer?.stock_status || 'UNKNOWN').toUpperCase() !== 'OUT_OF_STOCK'
+    && !['OUT_OF_STOCK','UNAVAILABLE'].includes(String(offer?.stock_status || 'UNKNOWN').toUpperCase())
     && isAllowedDestination(offer?.product_url);
 }
 

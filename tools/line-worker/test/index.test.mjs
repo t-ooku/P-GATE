@@ -86,6 +86,7 @@ test('優先セラーが出品停止または在庫切れなら次順位へ自�
     offers: [
       { seller_id: 'partner', plan: 'partner', status: 'INACTIVE', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=partner' },
       { seller_id: 'pro', plan: 'pro', stock_status: 'OUT_OF_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=pro' },
+      { seller_id: 'unavailable', plan: 'pro', stock_status: 'UNAVAILABLE', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=unavailable' },
       { seller_id: 'growth', plan: 'growth', active: true, stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=growth' },
       { seller_id: 'lite', plan: 'lite', stock_status: 'IN_STOCK', product_url: 'https://www.amazon.co.jp/dp/B000000001?m=lite' }
     ]
