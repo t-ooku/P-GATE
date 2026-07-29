@@ -559,15 +559,22 @@ export function buildAmazonSearchKeywords(query) {
   const asinTerms = String(query || '').toUpperCase().match(/\bB[A-Z0-9]{9}\b/g) || [];
   const cleaned = redactSearchPersonalData(query);
   if (!cleaned) return '';
-const structuredTerms = structuredMarketplaceTerms(cleaned);
+  const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) {
+    const hasJapaneseTerms = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(cleaned);
+    const isJapanesePortableUmbrella = hasJapaneseTerms &&
+      /(?:日傘|折りたたみ(?:傘)?|晴雨兼用|携帯(?:用)?(?:傘)?)/u.test(cleaned);
     const structuredSemanticTerms = semanticSearchGroups(cleaned)
       .flatMap((group) => group.terms || [])
       .map((term) => String(term).toLowerCase().trim())
-      .filter(Boolean);
+      .filter((term) => term && !isJapanesePortableUmbrella);
     const structuredLocalizedTerms = AMAZON_JP_QUERY_ALIASES
       .filter(([pattern]) => pattern.test(cleaned))
-      .flatMap(([, terms]) => terms);
+      .flatMap(([, terms]) => terms)
+      .filter((term) =>
+        !isJapanesePortableUmbrella ||
+        /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(String(term))
+      );
     return [...new Set([
       ...asinTerms.map((term) => term.toLowerCase()),
       ...structuredTerms,
@@ -601,8 +608,24 @@ export function buildAmazonSearchDestination(query, associateTag = '') {
   return url.toString();
 }
 
+export function buildRakutenSearchKeywords(query) {
+  let cleaned = redactSearchPersonalData(query)
+    .replace(/\bB[A-Z0-9]{9}\b/giu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
+  if (!cleaned) return '';
+  if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(cleaned)) {
+    cleaned = cleaned
+      .replace(/\b[a-z][a-z-]{2,}\b/g, ' ')
+      .replace(/\s+/gu, ' ')
+      .trim();
+  }
+  const structuredTerms = structuredMarketplaceTerms(cleaned);
+  return structuredTerms.length ? structuredTerms.join(' ') : cleaned;
+}
+
 export function buildRakutenSearchDestination(query) {
-  const keywords = buildAmazonSearchKeywords(query);
+  const keywords = buildRakutenSearchKeywords(query);
   if (!keywords) return '';
   return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keywords)}/`;
 }
@@ -725,7 +748,8 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
   const candidates = [];
-  for (const candidate of (result.candidates || []).slice(0, 10)) {
+  const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, 10);
+  for (const candidate of displayCandidates) {
     const copy = sanitizePublicCandidate(candidate);
     const productOffers = productMarketplaceOffers(candidate.offers);
     const selected = productOffers.length ? { url: productOffers[0].product_url, offer: productOffers[0] } : { url: '', offer: null };
@@ -838,7 +862,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       });
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_connected',
-        run: searchRakutenMarketplace(env, buildAmazonSearchKeywords(input.query))
+        run: searchRakutenMarketplace(env, buildRakutenSearchKeywords(input.query))
       });
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
       outcomes.forEach((outcome, index) => {
@@ -849,6 +873,10 @@ async function handleKnowledgeApi(request, env, ctx) {
         result.candidates = rankMerchantCandidates(result.candidates || [], candidates).slice(0, 10);
       });
     }
+    result = {
+      ...(result || {}),
+      candidates: filterCategoryMismatches(input.query, result?.candidates || []).slice(0, 10)
+    };
     const sessionHash = await hashUser(input.session_id);
     const decorated = await decoratePwaResult(
       result,

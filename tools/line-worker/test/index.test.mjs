@@ -14,8 +14,53 @@ const {
   isAllowedDestination, isProductDetailDestination, productMarketplaceOffers, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
   getEnvironmentReadiness, buildAmazonSearchDestination, buildRakutenSearchDestination,
   buildQoo10SearchDestination, buildQoo10SearchKeywords, buildSheinSearchDestination,
-  buildAmazonSearchKeywords, trackingEventsForPayload, rankSellerOffers
+  buildAmazonSearchKeywords, buildRakutenSearchKeywords, trackingEventsForPayload, rankSellerOffers
 } = workerModule;
+
+test('Rakuten search keeps Japanese conditions separate from Amazon aliases', () => {
+  const query = '折りたたみ日傘 / 軽量 / 晴雨兼用';
+  const keywords = buildRakutenSearchKeywords(query);
+  assert.equal(keywords, '折りたたみ日傘 軽量 晴雨兼用');
+  assert.doesNotMatch(keywords, /\bumbrella\b/i);
+  assert.equal(
+    decodeURIComponent(new URL(buildRakutenSearchDestination(query)).pathname),
+    '/search/mall/折りたたみ日傘 軽量 晴雨兼用/'
+  );
+  assert.equal(
+    buildRakutenSearchKeywords(`${query} umbrella folding`),
+    '折りたたみ日傘 軽量 晴雨兼用'
+  );
+  assert.equal(
+    buildRakutenSearchKeywords('iPhone 16 / 透明ケース'),
+    'iPhone 16 透明ケース'
+  );
+});
+
+test('Amazon structured Japanese search does not add broad English aliases', () => {
+  const keywords = buildAmazonSearchKeywords('折りたたみ日傘 / 軽量 / 晴雨兼用 / 完全遮光');
+  assert.match(keywords, /折りたたみ日傘/);
+  assert.match(keywords, /軽量/);
+  assert.match(keywords, /晴雨兼用/);
+  assert.match(keywords, /完全遮光/);
+  assert.doesNotMatch(keywords, /\b(?:umbrella|folding)\b/i);
+});
+
+test('PWA response never exposes patio umbrellas for a portable parasol query', async () => {
+  const decorated = await workerModule.decoratePwaResultForTest(
+    {
+      query_id: 'portable-parasol',
+      candidates: [
+        { asin: 'PATIO0001', product_name: 'California Market Patio Umbrella Sunbrella Navy' },
+        { asin: 'PORTABLE1', product_name: '超軽量 折りたたみ日傘 晴雨兼用' }
+      ]
+    },
+    new Request('https://p-gate.example/api/knowledge'),
+    { LINK_SIGNING_SECRET: 'secret' },
+    'session-hash',
+    '折りたたみ日傘 / 軽量 / 晴雨兼用'
+  );
+  assert.deepEqual(decorated.candidates.map((item) => item.asin), ['PORTABLE1']);
+});
 
 async function lineSignature(body, secret) {
   return cryptoModule.createHmac('sha256', secret).update(body).digest('base64');
@@ -122,7 +167,7 @@ test('楽天・Qoo10・SHEINの公式検索URLへ同じ整理済み条件を渡�
   const qoo10 = new URL(buildQoo10SearchDestination(query));
   const shein = new URL(buildSheinSearchDestination(query));
   assert.equal(rakuten.origin, 'https://search.rakuten.co.jp');
-  assert.match(decodeURIComponent(rakuten.pathname), /sock/);
+  assert.match(decodeURIComponent(rakuten.pathname), /靴下/);
   assert.equal(qoo10.origin, 'https://www.qoo10.jp');
   assert.match(qoo10.searchParams.get('keyword'), /sock/);
   assert.equal(shein.origin, 'https://jp.shein.com');

@@ -277,12 +277,29 @@ const CATEGORY_MODIFIERS = new Set([
   'kitchen-use','beauty-use','electronics-use','home-use','vehicle-tool-use','hobby-use','light-up','color'
 ]);
 
+function isPortableUmbrellaIntent(query) {
+  return /(?:日傘|折りたたみ(?:傘)?|晴雨兼用|軽量|携帯(?:用)?(?:傘)?|compact umbrella|folding umbrella|lightweight umbrella)/iu
+    .test(String(query || '').normalize('NFKC'));
+}
+
+function isPortableUmbrellaMismatch(candidate) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  const hasUmbrellaProduct = /(?:umbrella|parasol|日傘|雨傘|折りたたみ傘|折畳傘|晴雨兼用傘)/u.test(text);
+  const isLargeOrFixed = /(?:patio|market umbrella|beach umbrella|cantilever|offset umbrella|garden umbrella|outdoor table|replacement canopy|umbrella base|umbrella stand|umbrella holder|umbrella bag holder|golf umbrella|golf bag|drizzle sti(?:k|ck))/u
+    .test(text);
+  return !hasUmbrellaProduct || isLargeOrFixed;
+}
+
 export function filterCategoryMismatches(query, candidates = []) {
   const requested = new Set(semanticSearchGroups(query)
     .map((group) => group.category)
     .filter((category) => !CATEGORY_MODIFIERS.has(category)));
   if (!requested.size) return candidates;
+  const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   return candidates.filter((candidate) => {
+    if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     const category = inferCandidateCategory(candidate);
     return category === 'other' || requested.has(category);
   });

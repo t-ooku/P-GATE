@@ -87,6 +87,18 @@ test('明示カテゴリと矛盾する外部候補だけを表示前に除外�
   assert.deepEqual(candidates.map((item) => item.asin), ['B000SOCK01', 'B000OTHER1']);
 });
 
+test('portable parasol search excludes patio umbrellas and umbrella accessories', () => {
+  const candidates = filterCategoryMismatches('折りたたみ日傘 / 軽量 / 晴雨兼用', [
+    { asin: 'PORTABLE1', product_name: '超軽量 折りたたみ日傘 晴雨兼用' },
+    { asin: 'PATIO0001', product_name: 'California 9 Foot Market Patio Umbrella Sunbrella Navy' },
+    { asin: 'BEACH0001', product_name: 'All-In-One Beach Umbrella System with Base' },
+    { asin: 'HOLDER001', product_name: 'Wet Umbrella Bag Holder Satin Aluminum' },
+    { asin: 'GOLF00001', product_name: 'ProActive Drizzle Stik Flex Umbrellas Red/White' },
+    { asin: 'KNIFE0001', product_name: 'Filework Folding Hunter' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['PORTABLE1']);
+});
+
 test('low-information and divergent queries request one clarification instead of asserting', () => {
   const low = analyzeSearchDecision('SNSで見た青いやつ', [{ product_name: 'Blue Lamp' }]);
   assert.equal(low.needs_clarification, true);
