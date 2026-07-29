@@ -348,17 +348,20 @@ export async function applyIndexedSearchPolicy(baseResult, env, query, language 
     env,
     ['itg', 'itt', 'mc2'],
     query,
-    10
+    20
   );
   const decision = indexed.decision;
   const baseCandidates = filterCategoryMismatches(query, Array.isArray(baseResult?.candidates)
     ? baseResult.candidates
     : []);
-  const indexedCandidates = indexed.candidates.map(indexedCandidate);
+  const indexedCandidates = filterCategoryMismatches(
+    query,
+    indexed.candidates.map(indexedCandidate)
+  );
   const displayCandidates = rankMerchantCandidates(
     baseCandidates,
     indexedCandidates
-  );
+  ).slice(0, 10);
   const copy = COPY[language] || COPY.JA;
   const baseQuestion = decision.reason === 'CATEGORY_DIVERGENCE' ? copy.category
     : decision.reason === 'NO_CANDIDATES' || decision.candidate_categories.length === 0 ? copy.use : copy.detail;

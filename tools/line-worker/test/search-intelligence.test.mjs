@@ -164,6 +164,45 @@ test('public knowledge policy can show a backend product when D1 has no match', 
   assert.equal(result.mywish.suggested, true);
 });
 
+test('カテゴリ不一致を除外した後も商品カードを10件まで補充する', async () => {
+  const rows = [
+    { asin: 'SHOE000001', record_key: 'shoe-1', product_name: 'Running Shoes', display_name: 'Running Shoes', stock: 1, text_rank: 0 },
+    ...Array.from({ length: 10 }, (_, index) => ({
+      asin: `CAMERA${String(index + 1).padStart(4, '0')}`,
+      record_key: `camera-${index + 1}`,
+      product_name: `Action Camera ${index + 1}`,
+      display_name: `Action Camera ${index + 1}`,
+      stock: 1,
+      text_rank: index + 1
+    }))
+  ];
+  const env = {
+    PRODUCT_DB: {
+      prepare(sql) {
+        return {
+          bind(...values) {
+            return {
+              all: async () => ({
+                results: sql.includes('FROM product_search')
+                  ? rows.slice(0, Number(values[2] || 10))
+                  : []
+              })
+            };
+          }
+        };
+      }
+    }
+  };
+  const result = await applyIndexedSearchPolicy(
+    { query_id: 'camera-backfill', candidates: [] },
+    env,
+    '推し活で使える小さな写真プリンター / 写真を撮る / 手のひらサイズ / アクションカメラ',
+    'JA'
+  );
+  assert.equal(result.candidates.length, 10);
+  assert.equal(result.candidates.some((candidate) => candidate.asin === 'SHOE000001'), false);
+});
+
 test('camera memory produces ten camera-related use suggestions', async () => {
   const env = { PRODUCT_DB: { prepare() { return { bind() { return { all: async () => ({ results: [] }) }; } }; } } };
   const result = await applyIndexedSearchPolicy(
