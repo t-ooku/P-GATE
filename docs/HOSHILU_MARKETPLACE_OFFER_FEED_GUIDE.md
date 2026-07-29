@@ -25,6 +25,13 @@ SecretはCloudflare Workersへ登録し、ファイル、ログ、チャット�
 
 完全な例は [hoshilu-marketplace-offers.sample.json](examples/hoshilu-marketplace-offers.sample.json) を参照してください。
 
+送信前にローカル検査できます。成功時はURL本文を表示せず、テナント・バッチID・モール別件数だけを出力します。
+
+```powershell
+Set-Location tools\line-worker
+npm.cmd run validate:marketplace-offers -- ..\..\docs\examples\hoshilu-marketplace-offers.sample.json
+```
+
 ## URL条件
 
 - 楽天市場: `item.rakuten.co.jp` または `product.rakuten.co.jp` の商品詳細
