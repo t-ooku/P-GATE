@@ -27,11 +27,20 @@ export function intelligentFtsQuery(value) {
   }).join(' AND ');
 }
 
+const RELAXED_CONTEXT_GROUPS = new Set([
+  'color','kitchen-use','beauty-use','electronics-use','home-use',
+  'vehicle-tool-use','hobby-use','light-up'
+]);
+
 export function relaxedFtsQuery(value) {
   const normalized = normalizeSearchQuery(value);
-  const terms = semanticSearchGroups(normalized)
-    .flatMap((group) => group.terms)
-    .concat(normalized.match(/[a-z][a-z0-9-]{2,}/g) || [])
+  const groups = semanticSearchGroups(normalized);
+  const productTerms = groups
+    .filter((group) => !RELAXED_CONTEXT_GROUPS.has(group.category))
+    .flatMap((group) => group.terms);
+  const fallbackTerms = groups.flatMap((group) => group.terms)
+    .concat(normalized.match(/[a-z][a-z0-9-]{2,}/g) || []);
+  const terms = (productTerms.length ? productTerms : fallbackTerms)
     .map((term) => String(term).toLowerCase())
     .filter((term) => term && !STOPWORDS.has(term) && !/^\d+$/.test(term));
   return [...new Set(terms)].slice(0, 16).map(quote).join(' OR ');

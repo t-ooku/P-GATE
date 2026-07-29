@@ -181,7 +181,7 @@ test('camera memory produces ten camera-related use suggestions', async () => {
 test('second search can relax strict terms into a broad product query', () => {
   const query = relaxedFtsQuery('ピンクの小さいカメラ / 推し活で使う');
   assert.match(query, /"camera"\*/);
-  assert.match(query, / OR /);
+  assert.doesNotMatch(query, /"pink"\*/i);
 });
 
 test('光るスマホケースをAmazon商品語へ変換する', () => {
@@ -379,4 +379,5 @@ test('social media context does not outrank the remembered product category', ()
   assert.match(relaxedFtsQuery(memory), /"camera"\*/);
   assert.doesNotMatch(intelligentFtsQuery(memory), /"sns"\*/i);
   assert.doesNotMatch(relaxedFtsQuery(memory), /"sns"\*/i);
+  assert.doesNotMatch(relaxedFtsQuery(memory), /"pink"\*/i);
 });
