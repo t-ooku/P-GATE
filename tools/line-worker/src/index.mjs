@@ -22,7 +22,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
   'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp',
   'qoo10.jp', 'shein.com'
 ];
-const RELEASE = '1.15.1';
+const RELEASE = '1.15.0';
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
   'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'
