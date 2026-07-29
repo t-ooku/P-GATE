@@ -393,6 +393,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     SPAPI_REFRESH_TOKEN_ITG: 'refresh',
     AMAZON_CREATORS_CREDENTIAL_ID: 'amazon-id',
     AMAZON_CREATORS_CREDENTIAL_SECRET: 'amazon-secret',
+    AMAZON_CREATORS_CREDENTIAL_VERSION: '2.3',
     AMAZON_ASSOCIATE_TAG: 'hoshilu-22',
     RAKUTEN_APPLICATION_ID: 'rakuten-app',
     RAKUTEN_ACCESS_KEY: 'rakuten-key'
