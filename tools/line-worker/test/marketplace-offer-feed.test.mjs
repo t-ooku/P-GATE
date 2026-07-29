@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { marketplaceOfferStats, validateMarketplaceOfferFeed } from '../src/marketplace-offer-feed.mjs';
+
+test('公開サンプルは3モールの商品詳細URLフィードとして検証できる', async () => {
+ const sampleUrl = new URL('../../../docs/examples/hoshilu-marketplace-offers.sample.json', import.meta.url);
+ const sample = JSON.parse(await readFile(sampleUrl, 'utf8'));
+ const result = validateMarketplaceOfferFeed(sample);
+ assert.deepEqual(result.records.map(row => row.marketplace), ['RAKUTEN_JP','QOO10_JP','SHEIN_JP']);
+});
 
 test('Qoo10・SHEIN・楽天の商品詳細URLだけをフィードとして受け入れる',()=>{
  const result=validateMarketplaceOfferFeed({tenant:'itg',batch_id:'offers-20260729-01',records:[
