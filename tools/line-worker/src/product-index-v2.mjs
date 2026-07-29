@@ -106,14 +106,20 @@ export async function searchProductsV2(env, tenant, query, limit = 10) {
     WHERE product_search MATCH ?1 AND p.tenant=?2
     ORDER BY text_rank ASC,p.stock DESC LIMIT ?3`)
     .bind(match, cleanTenant(tenant), Math.min(Math.max(Number(limit) || 10, 1), 100)).all();
-  if (!(result.results || []).length && String(query || '').includes(' / ')) {
+  if ((result.results || []).length < limit && String(query || '').includes(' / ')) {
     const relaxed = relaxedFtsQuery(query);
     if (relaxed) {
-      result = await env.PRODUCT_DB.prepare(`SELECT p.*,bm25(product_search,10.0,4.0,2.0) AS text_rank
+      const relaxedResult = await env.PRODUCT_DB.prepare(`SELECT p.*,bm25(product_search,10.0,4.0,2.0) AS text_rank
         FROM product_search JOIN products p ON p.rowid=product_search.rowid
         WHERE product_search MATCH ?1 AND p.tenant=?2
         ORDER BY text_rank ASC,p.stock DESC LIMIT ?3`)
         .bind(relaxed, cleanTenant(tenant), Math.min(Math.max(Number(limit) || 10, 1), 100)).all();
+      const merged = new Map();
+      for (const row of [...(result.results || []), ...(relaxedResult.results || [])]) {
+        const key = String(row?.asin || row?.record_key || '').trim();
+        if (key && !merged.has(key)) merged.set(key, row);
+      }
+      result = { ...result, results: [...merged.values()].slice(0, limit) };
     }
   }
   const amazonAttached = await attachSpApiOffers(env, cleanTenant(tenant), result.results || []);

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { analyzeSearchDecision, semanticSearchGroups } from '../src/search-intelligence.mjs';
 import {
-  intelligentFtsQuery, relaxedFtsQuery, searchProductsAcrossTenantsWithDecision
+  intelligentFtsQuery, relaxedFtsQuery, searchProductsAcrossTenantsWithDecision,
+  searchProductsV2
 } from '../src/product-index-v2.mjs';
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates } from '../src/knowledge-search.mjs';
 
@@ -233,6 +234,41 @@ test('second search can relax strict terms into a broad product query', () => {
   const query = relaxedFtsQuery('ピンクの小さいカメラ / 推し活で使う');
   assert.match(query, /"camera"\*/);
   assert.doesNotMatch(query, /"pink"\*/i);
+});
+
+test('条件付き検索は厳密候補が不足した場合だけ緩和候補で補充する', async () => {
+  let productSearches = 0;
+  const strictRows = [{ asin: 'CAMERA0001', record_key: 'camera-1', product_name: 'Pink Action Camera' }];
+  const relaxedRows = [
+    strictRows[0],
+    { asin: 'CAMERA0002', record_key: 'camera-2', product_name: 'Mini Action Camera' },
+    { asin: 'CAMERA0003', record_key: 'camera-3', product_name: 'Pocket Camera' }
+  ];
+  const env = {
+    PRODUCT_DB: {
+      prepare(sql) {
+        return {
+          bind() {
+            return {
+              all: async () => {
+                if (!sql.includes('FROM product_search')) return { results: [] };
+                productSearches += 1;
+                return { results: productSearches === 1 ? strictRows : relaxedRows };
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+  const rows = await searchProductsV2(
+    env,
+    'itg',
+    '推し活で使える小さな写真プリンター / 写真を撮る / 手のひらサイズ / アクションカメラ',
+    10
+  );
+  assert.equal(productSearches, 2);
+  assert.deepEqual(rows.map((row) => row.asin), ['CAMERA0001', 'CAMERA0002', 'CAMERA0003']);
 });
 
 test('光るスマホケースをAmazon商品語へ変換する', () => {
