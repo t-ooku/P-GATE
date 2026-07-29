@@ -46,6 +46,9 @@ SecretはCloudflare Workersへ登録し、ファイル、ログ、チャット�
 - `GET /api/internal/marketplace-offers/stats`
 - URLやSecretそのものはレスポンスへ含まれません
 - `missing_marketplaces` が空になれば3モールの新鮮なURLがあります
+- `matched_fresh_available` は7日以内に確認され、HOSHILUの商品カードへ照合できるURL件数です
+- `unmatched_fresh_available` が残る場合は `record_key` または `asin` の照合を修正します
+- `missing_marketplaces` はURLが存在しても、商品カードへ照合できる新鮮なURLが0件なら不足として扱います
 
 ## 運用手順
 
@@ -55,4 +58,3 @@ SecretはCloudflare Workersへ登録し、ファイル、ログ、チャット�
 4. 診断APIで `fresh_available` を確認する。
 5. 商品カードから該当モールの「○○で見る」が商品詳細へ遷移することを確認する。
 6. 24時間以内の定期更新を設定し、7日を超える停止を監視する。
-

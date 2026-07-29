@@ -25,19 +25,21 @@ test('検索結果URLや未許可ドメインを商品URLとして受け入れ�
  assert.throws(()=>validateMarketplaceOfferFeed({tenant:'itg',batch_id:'offers-20260729-03',records:[{marketplace:'SHEIN_JP',external_product_id:'x',product_url:'https://evil.example/item-p-123.html'}]}),/PRODUCT_URL_INVALID/);
 });
 
-test('marketplace offer stats reports safe counts without exposing product URLs',async()=>{
- const rows=[{marketplace:'QOO10_JP',total:12,available:9,fresh_available:7,stale_available:2,oldest_observed_at:'2026-07-28T00:00:00Z',newest_observed_at:'2026-07-29T00:00:00Z',tenants:2}];
+test('marketplace offer stats reports safe attachment counts without exposing product URLs',async()=>{
+ const rows=[{marketplace:'QOO10_JP',total:12,available:9,fresh_available:7,stale_available:2,matched_fresh_available:5,oldest_observed_at:'2026-07-28T00:00:00Z',newest_observed_at:'2026-07-29T00:00:00Z',tenants:2}];
  let sql='';
  const env={MARKETPLACE_OFFER_SYNC_SECRET:'x'.repeat(32),PRODUCT_DB:{prepare:(value)=>{sql=value;return{all:async()=>({results:rows})}}}};
  const response=await marketplaceOfferStats(new Request('https://hoshilu.app/api/internal/marketplace-offers/stats',{headers:{authorization:`Bearer ${'x'.repeat(32)}`}}),env);
  assert.equal(response.status,200);
  const body=await response.json();
- assert.deepEqual(body.offers,[{marketplace:'QOO10_JP',total:12,available:9,fresh_available:7,stale_available:2,oldest_observed_at:'2026-07-28T00:00:00Z',newest_observed_at:'2026-07-29T00:00:00Z',tenants:2}]);
+ assert.deepEqual(body.offers,[{marketplace:'QOO10_JP',total:12,available:9,fresh_available:7,stale_available:2,matched_fresh_available:5,unmatched_fresh_available:2,oldest_observed_at:'2026-07-28T00:00:00Z',newest_observed_at:'2026-07-29T00:00:00Z',tenants:2}]);
  assert.equal(JSON.stringify(body).includes('product_url'),false);
  assert.deepEqual(body.missing_marketplaces,['RAKUTEN_JP','SHEIN_JP']);
  assert.equal(body.feed_required,true);
  assert.match(sql,/AS fresh_available/);
  assert.match(sql,/AS stale_available/);
+ assert.match(sql,/AS matched_fresh_available/);
+ assert.match(sql,/EXISTS\(SELECT 1 FROM products/);
 });
 
 test('marketplace offer stats requires the existing sync secret',async()=>{
