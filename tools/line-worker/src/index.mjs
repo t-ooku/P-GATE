@@ -630,6 +630,7 @@ export function buildRakutenSearchDestination(query) {
   return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keywords)}/`;
 }
 const QOO10_QUERY_ALIASES = [
+  [/(?=.*\biphone\b)(?=.*(?:充電器|充電台|チャージャー|charger|charging))/isu, ['iPhone 充電器']],
   [/\biphone\b/iu, ['iPhoneケース']],
   [/\bgalaxy\b/iu, ['Galaxy ケース']],
   [/\bpixel\b/iu, ['Google Pixel ケース']],
