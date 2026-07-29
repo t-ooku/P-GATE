@@ -2,7 +2,10 @@ export { normalizeSearchQuery, validateSyncPayload, syncProducts } from './produ
 import { normalizeSearchQuery } from './product-index.mjs';
 import { analyzeSearchDecision, semanticSearchGroups } from './search-intelligence.mjs';
 
-const STOPWORDS = new Set(['with','from','that','this','the','for','and','type','size','like','edition','set']);
+const STOPWORDS = new Set([
+  'with','from','that','this','the','for','and','type','size','like','edition','set',
+  'sns','tiktok','instagram','twitter','youtube'
+]);
 const quote = (token) => `"${String(token).replaceAll('"','""')}"*`;
 const cleanTenant = (value) => String(value || '').normalize('NFKC').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
 

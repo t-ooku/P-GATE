@@ -371,3 +371,12 @@ test('公開検索はITG・ITT・MC2を横断し同一ASINを統合する', asyn
   assert.equal(result.candidates.length, 2);
   assert.deepEqual(result.search.tenants, ['itg', 'itt', 'mc2']);
 });
+
+
+test('social media context does not outrank the remembered product category', () => {
+  const memory = 'SNSで見たピンクの小さいレトロカメラ / 手のひらサイズ / 写真を撮る';
+  assert.match(intelligentFtsQuery(memory), /"camera"\*/);
+  assert.match(relaxedFtsQuery(memory), /"camera"\*/);
+  assert.doesNotMatch(intelligentFtsQuery(memory), /"sns"\*/i);
+  assert.doesNotMatch(relaxedFtsQuery(memory), /"sns"\*/i);
+});
