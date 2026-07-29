@@ -630,8 +630,13 @@ export function buildRakutenSearchDestination(query) {
   return `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keywords)}/`;
 }
 const QOO10_QUERY_ALIASES = [
-  [/(?=.*\biphone\b)(?=.*(?:充電器|充電台|チャージャー|charger|charging))/isu, ['iPhone 充電器']],
-  [/\biphone\b/iu, ['iPhoneケース']],
+  [/(?=.*\biphone\b)(?=.*(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+(?:battery|charger)|充电宝|充電寶|移动电源|行動電源|보조\s*배터리))/isu, ['iPhone モバイルバッテリー']],
+  [/(?=.*\biphone\b)(?=.*(?:充電ケーブル|充電コード|ライトニングケーブル|lightning\s*(?:cable|cord)|usb[- ]?c\s*(?:cable|cord)|charging\s*(?:cable|cord)|数据线|數據線|充电线|充電線|충전\s*케이블|라이트닝\s*케이블))/isu, ['iPhone ケーブル']],
+  [/(?=.*\biphone\b)(?=.*(?:イヤホン|ヘッドホン|earphones?|earbuds?|headphones?|耳机|耳機|이어폰|헤드폰))/isu, ['iPhone イヤホン']],
+  [/(?=.*\biphone\b)(?=.*(?:充電器|充電台|チャージャー|充電アダプター|acアダプター|charger|charging\s*station|power\s*adapter|充电器|充電器|充电座|充電座|충전기|충전\s*어댑터))/isu, ['iPhone 充電器']],
+  [/(?=.*\biphone\b)(?=.*(?:保護フィルム|画面フィルム|ガラスフィルム|screen\s*protector|protective\s*film|tempered\s*glass|保护膜|保護膜|钢化膜|鋼化膜|보호\s*필름|강화\s*유리))/isu, ['iPhone 保護フィルム']],
+  [/(?=.*\biphone\b)(?=.*(?:スマホスタンド|携帯スタンド|phone\s*stand|mobile\s*stand|phone\s*holder|支架|手机架|手機架|거치대|스탠드))/isu, ['iPhone スタンド']],
+  [/(?=.*\biphone\b)(?=.*(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버))/isu, ['iPhoneケース']],
   [/\bgalaxy\b/iu, ['Galaxy ケース']],
   [/\bpixel\b/iu, ['Google Pixel ケース']],
   [/\bcasetify\b|スマホ(?:ケース|カバー)|携帯(?:ケース|カバー)/iu, ['スマホケース']],

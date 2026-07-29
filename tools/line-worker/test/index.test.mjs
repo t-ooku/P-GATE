@@ -451,6 +451,22 @@ test('Qoo10の商品検索はiPhoneの充電器をケースへ誤変換しない
   );
   assert.equal(keywords, 'iPhone 充電器');
 });
+test('Qoo10はiPhoneより明示された商品種別を優先し多言語でもケースへ誤変換しない', () => {
+  const cases = [
+    ['iPhone用のUSB-C充電ケーブルが欲しい', 'iPhone ケーブル'],
+    ['iPhone compatible wireless earbuds', 'iPhone イヤホン'],
+    ['iPhone用の急速充電器', 'iPhone 充電器'],
+    ['iPhone 15 tempered glass screen protector', 'iPhone 保護フィルム'],
+    ['iPhone用スマホスタンド', 'iPhone スタンド'],
+    ['iPhone portable charger power bank', 'iPhone モバイルバッテリー'],
+    ['iPhone 15 Pro対応ケース', 'iPhoneケース'],
+    ['iPhone用充电线 케이블', 'iPhone ケーブル'],
+    ['iPhone', 'iphone'],
+  ];
+  for (const [query, expected] of cases) {
+    assert.equal(buildQoo10SearchKeywords(query), expected, query);
+  }
+});
 test('横断検索語はスラッシュで追加した日本語条件をすべて保持する', () => {
   const query = '推し活で使える小さな写真プリンター / 写真を撮る / 手のひらサイズ / アクションカメラ';
   const amazonKeywords = buildAmazonSearchKeywords(query);
