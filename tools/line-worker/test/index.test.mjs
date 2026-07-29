@@ -173,6 +173,16 @@ test('楽天・Qoo10・SHEINの公式検索URLへ同じ整理済み条件を渡�
   assert.equal(shein.origin, 'https://jp.shein.com');
   assert.match(decodeURIComponent(shein.pathname), /sock/);
 });
+
+test('公開検索APIが失敗しても4モールへの検索導線を表示する', async () => {
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(appSource, /function emergencyMarketplaceFallback\(query\)/);
+  assert.match(appSource, /Amazonで探す/);
+  assert.match(appSource, /楽天市場で探す/);
+  assert.match(appSource, /Qoo10で探す/);
+  assert.match(appSource, /SHEINで探す/);
+  assert.match(appSource, /renderResults\(emergencyMarketplaceFallback\(elements\.query\.value\)\)/);
+});
 test('Amazon検索フォールバックに承認済みアソシエイトIDを付ける', () => {
   const destination = buildAmazonSearchDestination('光るスマホケース', 'hoshilu-22');
   const url = new URL(destination);

@@ -678,7 +678,7 @@ export function buildSheinSearchDestination(query) {
 function marketplaceSearchDestinations(query, env = {}) {
   return [
     { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: buildAmazonSearchDestination(query, env.AMAZON_ASSOCIATE_TAG) },
-    { marketplace: 'RAKUTEN_JP', label: '楽天で探す', destination: buildRakutenSearchDestination(query) },
+    { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: buildRakutenSearchDestination(query) },
     { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: buildQoo10SearchDestination(query) },
     { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: buildSheinSearchDestination(query) }
   ];
