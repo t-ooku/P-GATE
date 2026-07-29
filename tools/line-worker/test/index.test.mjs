@@ -423,8 +423,13 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const payload = await response.json();
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
-  assert.equal(payload.release, '1.15.0');
+  assert.equal(payload.release, '1.15.1');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
+  assert.deepEqual(payload.checks.social_publishers, {
+    X: false,
+    INSTAGRAM: false,
+    TIKTOK: false
+  });
   assert.equal(JSON.stringify(payload).includes(base.GAS_BRIDGE_SECRET), false);
   assert.equal(JSON.stringify(payload).includes(base.TURNSTILE_SECRET_KEY), false);
 });

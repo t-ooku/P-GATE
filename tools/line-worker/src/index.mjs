@@ -13,14 +13,16 @@ import {
   runSpApiScheduledSync, spApiConfiguredTenants
 } from './sp-api-d1-repository.mjs';
 import { semanticSearchGroups } from './search-intelligence.mjs';
-import { handleSocialAdminRoutes, runDueSocialPosts } from './social-publisher.mjs';
+import {
+  handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
+} from './social-publisher.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
   'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp',
   'qoo10.jp', 'shein.com'
 ];
-const RELEASE = '1.15.0';
+const RELEASE = '1.15.1';
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
   'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'
@@ -945,7 +947,11 @@ async function handleHealth(env) {
     release: readiness.release,
     missing: readiness.missing,
     weak: readiness.weak,
-    checks: { ...readiness.checks, database_features: databaseFeatures }
+    checks: {
+      ...readiness.checks,
+      database_features: databaseFeatures,
+      social_publishers: socialPublisherReadiness(env)
+    }
   }, {
     status: readiness.ready ? 200 : 503,
     headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
