@@ -445,6 +445,12 @@ test('Qoo10の商品検索はASINと末尾ノイズを除き短い商品条件�
   assert.doesNotMatch(keywords, /B09NKLIJ57|arson|banana/i);
   assert.ok(keywords.split(/\s+/).length <= 4);
 });
+test('Qoo10の商品検索はiPhoneの充電器をケースへ誤変換しない', () => {
+  const keywords = buildQoo10SearchKeywords(
+    'iPhoneで使える急速充電器を探して charger charging'
+  );
+  assert.equal(keywords, 'iPhone 充電器');
+});
 test('横断検索語はスラッシュで追加した日本語条件をすべて保持する', () => {
   const query = '推し活で使える小さな写真プリンター / 写真を撮る / 手のひらサイズ / アクションカメラ';
   const amazonKeywords = buildAmazonSearchKeywords(query);
