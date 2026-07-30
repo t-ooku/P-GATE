@@ -278,6 +278,20 @@ test('光るスマホケースをAmazon商品語へ変換する', () => {
   assert.deepEqual(byCategory.get('light-up'), ['led','light','glow','luminous']);
 });
 
+test('iPhoneケース検索から充電ケーブル候補を除外する', () => {
+  const query = 'TikTokで見た光るiPhoneケース';
+  const groups = semanticSearchGroups(query);
+  assert.ok(groups.some((group) => group.category === 'phone-case'));
+  const candidates = [
+    { asin: 'CABLE0001', product_name: 'iPhone充電ケーブル ライトニングケーブル 充電コード' },
+    { asin: 'CASE00001', product_name: 'iPhone ケース LEDで光る スマホカバー' }
+  ];
+  assert.deepEqual(
+    filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+    ['CASE00001']
+  );
+});
+
 test('スマホケースは初回から対応機種と光り方を提案する', async () => {
   const result = await applyIndexedSearchPolicy(
     { query_id: 'phone-case-q', candidates: [] },

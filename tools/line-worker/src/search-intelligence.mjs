@@ -14,7 +14,7 @@ const RULES = [
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
   ['charger',/(充電器|充電台|チャージャー|charger)/iu,['charger','charging']],
-  ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|phone case|smartphone case|iphone case|手机壳|手机保护壳|휴대폰 케이스|스마트폰 케이스)/iu,['phone','case','cover','iphone','smartphone']],
+  ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|iphone\s*ケース|phone case|smartphone case|iphone case|手机壳|手机保护壳|휴대폰 케이스|스마트폰 케이스)/iu,['phone','case','cover','iphone','smartphone']],
   ['light-up',/(光る|発光|LED|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
   ['camera-bag',/(カメラ(?:用)?(?:バッグ|ケース|ポーチ)|camera bag|camera case)/iu,['camera bag','camera case']],
   ['camera',/(カメラ(?!用?(?:バッグ|ケース|ポーチ))|camera(?! bag| case))/iu,['camera']],
