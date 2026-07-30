@@ -9,7 +9,7 @@ globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 
 const workerModule = await import('../src/index.mjs');
 const { rankMerchantCandidates: rankMerchantCandidatesForTest } = await import('../src/knowledge-search.mjs');
-const { buildDeviceAccessorySearchKeywords } = await import('../public/marketplace-search-keywords.mjs');
+const { buildDeviceAccessorySearchKeywords } = await import('../public/marketplace-search-keywords-v2.mjs');
 const {
   verifyLineSignature, createTrackToken, verifyTrackToken,
   isAllowedDestination, isProductDetailDestination, productMarketplaceOffers, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,

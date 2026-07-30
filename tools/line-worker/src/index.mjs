@@ -4,7 +4,7 @@ import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
-import { buildDeviceAccessorySearchKeywords } from '../public/marketplace-search-keywords.mjs';
+import { buildDeviceAccessorySearchKeywords } from '../public/marketplace-search-keywords-v2.mjs';
 import {
   rakutenApiConfigured,
   searchRakutenMarketplaceWithFallback
