@@ -158,7 +158,7 @@ async function publishInstagram(post, env, fetchImpl) {
   const creationId = (await create.json())?.id;
   if (!creationId) throw new Error('INSTAGRAM_CREATION_ID_MISSING');
   let statusCode = '';
-  for (let attempt = 0; attempt < 10; attempt += 1) {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
     const status = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(creationId)}?fields=status_code`, { headers });
     if (!status.ok) {
       const detail = clean(await status.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
@@ -167,7 +167,7 @@ async function publishInstagram(post, env, fetchImpl) {
     statusCode = String((await status.json())?.status_code || '').toUpperCase();
     if (statusCode === 'FINISHED') break;
     if (statusCode === 'ERROR' || statusCode === 'EXPIRED') throw new Error(`INSTAGRAM_CONTAINER_${statusCode}`);
-    const delay = Math.max(0, Number(env.INSTAGRAM_POLL_DELAY_MS ?? 1000));
+    const delay = Math.max(0, Number(env.INSTAGRAM_POLL_DELAY_MS ?? 2000));
     if (delay) await new Promise(resolve => setTimeout(resolve, delay));
   }
   if (statusCode !== 'FINISHED') throw new Error(`INSTAGRAM_CONTAINER_${statusCode || 'TIMEOUT'}`);

@@ -186,6 +186,30 @@ test('Instagram publisher waits for media processing before publishing', async (
   assert.match(requests.at(-1), /media_publish$/);
 });
 
+test('Instagramリールの処理が10回を超えても完了まで待機する', async () => {
+  let checks = 0;
+  const id = await publishSocialPost({
+    platform: 'INSTAGRAM',
+    caption: 'HOSHILU reel retry',
+    media_url: 'https://hoshilu.app/social/cross-market-reel.mp4',
+    status: 'APPROVED'
+  }, {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0
+  }, async (url) => {
+    if (url.endsWith('/123/media')) return Response.json({ id: 'slow-reel-container' });
+    if (url.includes('/slow-reel-container?fields=status_code')) {
+      checks += 1;
+      return Response.json({ status_code: checks < 12 ? 'IN_PROGRESS' : 'FINISHED' });
+    }
+    if (url.endsWith('/123/media_publish')) return Response.json({ id: 'slow-ig-reel' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'slow-ig-reel');
+  assert.equal(checks, 12);
+});
+
 test('Instagram publisher creates a Reels container for an MP4 media URL', async () => {
   let createPayload;
   const id = await publishSocialPost({
