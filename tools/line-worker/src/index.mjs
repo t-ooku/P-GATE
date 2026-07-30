@@ -9,6 +9,7 @@ import {
   rakutenApiConfigured,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
+import { isRakutenProductUrl } from './rakuten-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -163,7 +164,7 @@ export function isProductDetailDestination(destination) {
     if (!PRODUCT_MARKETPLACES.has(marketplace)) return false;
     const path = url.pathname.toLowerCase();
     if (marketplace === 'AMAZON_JP') return /\/(?:dp|gp\/product)\/[a-z0-9]{10}(?:[/?]|$)/i.test(url.pathname);
-    if (marketplace === 'RAKUTEN_JP') return ((url.hostname.toLowerCase() === 'item.rakuten.co.jp' || url.hostname.toLowerCase() === 'product.rakuten.co.jp') && path.split('/').filter(Boolean).length >= 2);
+    if (marketplace === 'RAKUTEN_JP') return isRakutenProductUrl(destination);
     if (marketplace === 'QOO10_JP') return (/\/gmkt\.inc\/goods\/goods\.aspx$/i.test(path) && /^\d+$/.test(url.searchParams.get('goodscode') || '')) || (/^\/item\//i.test(path) && /\/\d+(?:\/)?$/.test(path));
     if (marketplace === 'SHEIN_JP') return /-p-\d+\.html$/i.test(path);
   } catch {}
