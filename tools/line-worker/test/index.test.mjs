@@ -503,6 +503,7 @@ test('Qoo10はAndroid系端末と型番・容量・サイズ・規格を短い�
   const cases = [
     ['Galaxy S24 Ultra USB-C 2m 60W charging cable', 'Galaxy S24 Ultra ケーブル USB-C 2m 60W'],
     ['Pixel 9 Pro 10000mAh power bank', 'Pixel 9 Pro モバイルバッテリー 10000mAh'],
+    ['iPhone 10000mAh モバイルバッテリー', 'iPhone モバイルバッテリー 10000mAh'],
     ['Android Qi2 充電器', 'Android 充電器 Qi2'],
     ['Galaxy S23 6.1インチ 保護フィルム', 'Galaxy S23 保護フィルム 6.1インチ'],
     ['Pixel 8 phone stand', 'Pixel 8 スタンド'],
