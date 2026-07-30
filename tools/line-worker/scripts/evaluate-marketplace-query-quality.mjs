@@ -1,4 +1,5 @@
 import {
+  buildEnglishChineseStressCorpus,
   buildMarketplaceQueryCorpus,
   evaluateMarketplaceQueryCorpus,
   MARKETPLACE_QUERY_NEGATIVE_CASES,
@@ -9,6 +10,7 @@ import {
 
 const cases = [
   ...buildMarketplaceQueryCorpus(),
+  ...buildEnglishChineseStressCorpus(),
   ...MARKETPLACE_QUERY_NEGATIVE_CASES,
 ];
 const report = evaluateMarketplaceQueryCorpus(

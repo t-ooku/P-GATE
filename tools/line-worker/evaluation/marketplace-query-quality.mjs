@@ -46,6 +46,75 @@ const CONTEXTS = {
   ],
 };
 
+const EN_ZH_STRESS_PRODUCTS = [
+  { id: "shampoo", expected: "シャンプー", en: "shampoo", zh: ["洗发水", "洗髮精"] },
+  { id: "keyboard", expected: "キーボード", en: "keyboard", zh: ["键盘", "鍵盤"] },
+  { id: "candle", expected: "キャンドル", en: "candle", zh: ["蜡烛", "蠟燭"] },
+  { id: "adapter", expected: "変換アダプター", en: "adapter", zh: ["转接器", "轉接器"] },
+  { id: "socks", expected: "靴下 socks", en: "socks", zh: ["袜子", "襪子"] },
+  { id: "hat", expected: "帽子", en: "hat", zh: ["帽子", "帽子"] },
+  { id: "figure", expected: "フィギュア", en: "collectible figure", zh: ["手办", "手辦"] },
+  { id: "bottle", expected: "水筒", en: "water bottle", zh: ["水杯", "保溫杯"] },
+  { id: "fan", expected: "携帯扇風機", en: "handheld fan", zh: ["手持风扇", "手持風扇"] },
+  { id: "camera", expected: "カメラ", en: "camera", zh: ["相机", "相機"] },
+];
+
+const EN_ZH_STRESS_ATTRIBUTES = [
+  { id: "clear", expected: "透明", en: "transparent", zh: "透明" },
+  { id: "black", expected: "黒", en: "black", zh: "黑色" },
+  { id: "pink", expected: "ピンク", en: "pink", zh: "粉色" },
+  { id: "purple", expected: "紫", en: "purple", zh: "紫色" },
+  { id: "waterproof", expected: "防水", en: "waterproof", zh: "防水" },
+];
+
+const EN_STRESS_CONTEXTS = [
+  (phrase) => `Can you find a ${phrase}?`,
+  (phrase) => `saw this on TikTok: ${phrase}`,
+  (phrase) => `I don't know the product name, ${phrase}`,
+  (phrase) => `need a ${phrase} for travel`,
+];
+
+const ZH_STRESS_CONTEXTS = [
+  (phrase) => `想买 ${phrase}`,
+  (phrase) => `在小红书看到的 ${phrase}`,
+  (phrase) => `不知道名字的 ${phrase}`,
+  (phrase) => `请帮我找 ${phrase}`,
+];
+
+export function buildEnglishChineseStressCorpus() {
+  const cases = [];
+  for (const product of EN_ZH_STRESS_PRODUCTS) {
+    for (const attribute of EN_ZH_STRESS_ATTRIBUTES) {
+      const englishPhrase = `${attribute.en} ${product.en}`;
+      EN_STRESS_CONTEXTS.forEach((wrap, contextIndex) => {
+        cases.push({
+          case_id: `en-stress-${product.id}-${attribute.id}-${contextIndex + 1}`,
+          locale: "en",
+          category: product.id,
+          input: wrap(englishPhrase),
+          required_tokens: [product.expected, attribute.expected],
+          forbidden_tokens: [],
+          max_length: 48,
+        });
+      });
+      product.zh.forEach((productPhrase, scriptIndex) => {
+        ZH_STRESS_CONTEXTS.forEach((wrap, contextIndex) => {
+          cases.push({
+            case_id: `zh-stress-${product.id}-${attribute.id}-${scriptIndex + 1}-${contextIndex + 1}`,
+            locale: "zh",
+            category: product.id,
+            input: wrap(`${attribute.zh} ${productPhrase}`),
+            required_tokens: [product.expected, attribute.expected],
+            forbidden_tokens: [],
+            max_length: 48,
+          });
+        });
+      });
+    }
+  }
+  return cases;
+}
+
 export function buildMarketplaceQueryCorpus() {
   const cases = [];
   for (const locale of SUPPORTED_LOCALES) {
@@ -104,6 +173,51 @@ export const MARKETPLACE_QUERY_NEGATIVE_CASES = [
     input: "TikTokで見た机の下につける白い引き出しが欲しい",
     required_tokens: ["机の下につける白い引き出し"],
     forbidden_tokens: ["TikTok", "欲しい"],
+    max_length: 48,
+  },
+  {
+    case_id: "en-iphone-charger-not-case",
+    locale: "en",
+    category: "charger",
+    input: "looking for an iPhone 15 USB-C charger, not a case",
+    required_tokens: ["iPhone 15", "充電器", "USB-C"],
+    forbidden_tokens: ["ケース"],
+    max_length: 48,
+  },
+  {
+    case_id: "zh-iphone-charger-not-case",
+    locale: "zh",
+    category: "charger",
+    input: "想找 iPhone 15 USB-C 充电器，不是手机壳",
+    required_tokens: ["iPhone 15", "充電器", "USB-C"],
+    forbidden_tokens: ["ケース"],
+    max_length: 48,
+  },
+  {
+    case_id: "zh-wired-earphones",
+    locale: "zh",
+    category: "earphones",
+    input: "黑色有线耳机",
+    required_tokens: ["黒", "イヤホン"],
+    forbidden_tokens: ["ワイヤレス", "完全ワイヤレス"],
+    max_length: 48,
+  },
+  {
+    case_id: "en-mixed-language-earbuds",
+    locale: "en",
+    category: "earphones",
+    input: "韓国っぽい transparent true wireless earbuds",
+    required_tokens: ["透明", "完全ワイヤレス", "イヤホン"],
+    forbidden_tokens: [],
+    max_length: 48,
+  },
+  {
+    case_id: "zh-traditional-sheet-mask",
+    locale: "zh",
+    category: "sheet_mask",
+    input: "在日本想買粉色面膜",
+    required_tokens: ["ピンク", "シートマスク"],
+    forbidden_tokens: [],
     max_length: 48,
   },
 ];

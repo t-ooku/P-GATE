@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  buildEnglishChineseStressCorpus,
   buildMarketplaceQueryCorpus,
   evaluateMarketplaceQueryCorpus,
   MARKETPLACE_QUERY_NEGATIVE_CASES,
@@ -15,6 +16,14 @@ test("日英中韓640件の検索語コーパスを決定論的に生成する",
   const corpus = buildMarketplaceQueryCorpus();
   assert.equal(corpus.length, 640);
   assert.deepEqual(new Set(corpus.map((item) => item.locale)), new Set(["ja", "en", "zh", "ko"]));
+  assert.equal(new Set(corpus.map((item) => item.case_id)).size, corpus.length);
+});
+
+test("英語200件・中国語400件の重点コーパスを追加する", () => {
+  const corpus = buildEnglishChineseStressCorpus();
+  assert.equal(corpus.length, 600);
+  assert.equal(corpus.filter((item) => item.locale === "en").length, 200);
+  assert.equal(corpus.filter((item) => item.locale === "zh").length, 400);
   assert.equal(new Set(corpus.map((item) => item.case_id)).size, corpus.length);
 });
 
@@ -38,13 +47,14 @@ test("検索語評価は必須条件の欠落・禁止条件・空・長すぎ�
 test("Qoo10向け検索語は640件と重要な負例で必須条件を保持する", () => {
   const cases = [
     ...buildMarketplaceQueryCorpus(),
+    ...buildEnglishChineseStressCorpus(),
     ...MARKETPLACE_QUERY_NEGATIVE_CASES,
   ];
   const report = evaluateMarketplaceQueryCorpus(
     cases,
     (input) => buildQoo10SearchKeywords(input),
   );
-  assert.equal(report.overall.cases, 644);
+  assert.equal(report.overall.cases, 1249);
   assert.equal(report.overall.pass_rate, 1, JSON.stringify(report.failures.slice(0, 10), null, 2));
   assert.equal(report.overall.empty_rate, 0);
   assert.equal(report.overall.required_token_violation_rate, 0);
