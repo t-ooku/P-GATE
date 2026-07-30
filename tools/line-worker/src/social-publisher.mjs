@@ -35,6 +35,7 @@ export function normalizeSocialPost(input = {}) {
     : caption;
   return {
     post_id: clean(input.post_id, 100),
+    content_id: clean(input.content_id, 100),
     platform,
     caption: disclosedCaption,
     link,
@@ -128,7 +129,13 @@ async function publishInstagram(post, env, fetchImpl) {
     throw new Error('INSTAGRAM_MEDIA_URL_INVALID');
   }
   const isReel = /\.(?:mp4|mov|m4v)$/.test(mediaPath);
-  const mediaPayload = isReel
+  const isStory = /(?:^|[-_])story(?:$|[-_])/i.test(post.content_id);
+  const mediaPayload = isStory
+    ? {
+        media_type: 'STORIES',
+        ...(isReel ? { video_url: post.media_url } : { image_url: post.media_url })
+      }
+    : isReel
     ? {
         media_type: 'REELS',
         video_url: post.media_url,

@@ -214,3 +214,31 @@ test('Instagram publisher creates a Reels container for an MP4 media URL', async
   assert.equal('image_url' in createPayload, false);
   assert.match(createPayload.caption, /#4/);
 });
+
+test('Instagram publisher creates a Stories container when content id is marked as a story', async () => {
+  let createPayload;
+  const id = await publishSocialPost({
+    platform: 'INSTAGRAM',
+    content_id: 'daily_story_poll',
+    caption: '今日の検索クイズです',
+    media_url: 'https://hoshilu.app/social/instagram-want-poll-v1.png',
+    status: 'APPROVED'
+  }, {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0
+  }, async (url, options = {}) => {
+    if (url.endsWith('/123/media')) {
+      createPayload = JSON.parse(options.body);
+      return Response.json({ id: 'story-container-1' });
+    }
+    if (url.includes('/story-container-1?fields=status_code')) return Response.json({ status_code: 'FINISHED' });
+    if (url.endsWith('/123/media_publish')) return Response.json({ id: 'ig-story-1' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'ig-story-1');
+  assert.deepEqual(createPayload, {
+    media_type: 'STORIES',
+    image_url: 'https://hoshilu.app/social/instagram-want-poll-v1.png'
+  });
+});
