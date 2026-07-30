@@ -1,10 +1,12 @@
+import { isRakutenProductUrl } from './rakuten-url-policy.mjs';
+
 const MARKETPLACES = new Set(['RAKUTEN_JP','QOO10_JP','SHEIN_JP']);
 const clean=(value,max=500)=>String(value??'').normalize('NFKC').replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,max);
 function normalizeObservedAt(value){const timestamp=Date.parse(clean(value||new Date().toISOString(),40));if(!Number.isFinite(timestamp))throw new Error('OFFER_FEED_OBSERVED_AT_INVALID');if(timestamp>Date.now()+15*60*1000)throw new Error('OFFER_FEED_OBSERVED_AT_FUTURE');return new Date(timestamp).toISOString();}
 
 function validProductUrl(marketplace,value){
   try{const url=new URL(value),host=url.hostname.toLowerCase(),path=url.pathname.toLowerCase();if(url.protocol!=='https:')return false;
-    if(marketplace==='RAKUTEN_JP')return (host==='item.rakuten.co.jp'||host==='product.rakuten.co.jp')&&path.split('/').filter(Boolean).length>=2;
+    if(marketplace==='RAKUTEN_JP')return isRakutenProductUrl(value);
     if(marketplace==='QOO10_JP')return (/\/gmkt\.inc\/goods\/goods\.aspx$/i.test(path)&&/^\d+$/.test(url.searchParams.get('goodscode')||''))||(/^\/item\//.test(path)&&/\/\d+\/?$/.test(path));
     if(marketplace==='SHEIN_JP')return (host==='shein.com'||host.endsWith('.shein.com'))&&/-p-\d+\.html$/.test(path);
   }catch{}return false;

@@ -459,6 +459,15 @@ test('Qoo10の商品検索はiPhoneの充電器をケースへ誤変換しない
   assert.equal(keywords, 'iPhone 充電器');
 });
 
+test('楽天公式アフィリエイトURLは実商品ページを内包する場合だけ許可する', () => {
+  const valid = 'https://hb.afl.rakuten.co.jp/hgc/abc123/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fshop%2Fitem-1%2F';
+  const externalTarget = 'https://hb.afl.rakuten.co.jp/hgc/abc123/?pc=https%3A%2F%2Fevil.example%2Fitem';
+  const searchTarget = 'https://hb.afl.rakuten.co.jp/hgc/abc123/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2Fcamera%2F';
+  assert.equal(isProductDetailDestination(valid), true);
+  assert.equal(isProductDetailDestination(externalTarget), false);
+  assert.equal(isProductDetailDestination(searchTarget), false);
+});
+
 test('楽天API検索は複合条件と主要商品語の順で候補を作る', () => {
   assert.deepEqual(
     buildRakutenSearchKeywordCandidates(

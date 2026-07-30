@@ -1,3 +1,8 @@
+import {
+  isRakutenAffiliateProductUrl,
+  isRakutenDirectProductUrl
+} from './rakuten-url-policy.mjs';
+
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 
 export function rakutenApiConfigured(env = {}) {
@@ -12,7 +17,11 @@ export function normalizeRakutenItems(payload = {}) {
   const values = payload.items || payload.Items || [];
   return values.slice(0, 10).map((value, index) => {
     const item = unwrapItem(value);
-    const productUrl = String(item.itemUrl || item.itemUrlPC || item.affiliateUrl || '').trim();
+    const affiliateUrl = String(item.affiliateUrl || '').trim();
+    const regularUrl = String(item.itemUrl || item.itemUrlPC || '').trim();
+    const productUrl = isRakutenAffiliateProductUrl(affiliateUrl)
+      ? affiliateUrl
+      : (isRakutenDirectProductUrl(regularUrl) ? regularUrl : '');
     const image = String(item.mediumImageUrls?.[0]?.imageUrl || item.mediumImageUrls?.[0] || item.smallImageUrls?.[0]?.imageUrl || item.smallImageUrls?.[0] || '').trim();
     const itemCode = String(item.itemCode || item.productId || '').trim();
     const name = String(item.itemName || item.productName || '').trim();

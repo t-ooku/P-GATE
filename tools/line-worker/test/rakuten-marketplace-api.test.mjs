@@ -26,6 +26,32 @@ test('楽天市場の商品詳細URLをHOSHILUの出品情報へ正規化する'
   assert.equal(candidates[0].offers[0].stock_status, 'IN_STOCK');
 });
 
+test('楽天公式affiliateUrlを通常商品URLより優先する', () => {
+  const affiliateUrl = 'https://hb.afl.rakuten.co.jp/hgc/abc123/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fshop%2Fitem-1%2F&m=https%3A%2F%2Fm.rakuten.co.jp%2Fshop%2Fi%2F1';
+  const candidates = normalizeRakutenItems({ items: [{
+    itemName: 'スマホ対応ミニフォトプリンター',
+    itemCode: 'shop:item-1',
+    itemPrice: 5980,
+    itemUrl: 'https://item.rakuten.co.jp/shop/item-1/',
+    affiliateUrl,
+    availability: 1
+  }] });
+  assert.equal(candidates[0].offers[0].product_url, affiliateUrl);
+});
+
+test('不正なaffiliateUrlは捨てて通常商品URLへ戻す', () => {
+  const candidates = normalizeRakutenItems({ items: [{
+    itemName: 'スマホ対応ミニフォトプリンター',
+    itemCode: 'shop:item-1',
+    itemUrl: 'https://item.rakuten.co.jp/shop/item-1/',
+    affiliateUrl: 'https://hb.afl.rakuten.co.jp/hgc/abc123/?pc=https%3A%2F%2Fevil.example%2Fsteal'
+  }] });
+  assert.equal(
+    candidates[0].offers[0].product_url,
+    'https://item.rakuten.co.jp/shop/item-1/'
+  );
+});
+
 test('楽天市場APIへ整理済み検索語とサーバー側認証情報を渡す', async () => {
   let requested;
   const candidates = await searchRakutenMarketplace(env, '小型 写真プリンター', async (url, options) => {
