@@ -295,14 +295,30 @@ function isPortableUmbrellaMismatch(candidate) {
   return !hasUmbrellaProduct || isLargeOrFixed;
 }
 
+function isTrueWirelessEarphonesIntent(query) {
+  return /(?:完全ワイヤレス|フルワイヤレス|左右独立|コードレス|true\s*wireless|\btws\b|wire[- ]?free\s*ear(?:buds?|phones?))/iu
+    .test(String(query || '').normalize('NFKC'));
+}
+
+function isTrueWirelessEarphonesMismatch(candidate) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  const explicitlyWired = /(?:有線|コード付き|ケーブル付き|\bwired\b|3[.]5\s*mm|audio cable|lightning connector|usb-c connector)/u.test(text);
+  const explicitlyWireless = /(?:完全ワイヤレス|フルワイヤレス|左右独立|コードレス|ワイヤレス|bluetooth|true\s*wireless|\btws\b|wire[- ]?free)/u.test(text);
+  return explicitlyWired || !explicitlyWireless;
+}
+
 export function filterCategoryMismatches(query, candidates = []) {
   const requested = new Set(semanticSearchGroups(query)
     .map((group) => group.category)
     .filter((category) => !CATEGORY_MODIFIERS.has(category)));
   if (!requested.size) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
+  const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   return candidates.filter((candidate) => {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
+    if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     const category = inferCandidateCategory(candidate);
     return category === 'other' || requested.has(category);
   });

@@ -100,6 +100,17 @@ test('portable parasol search excludes patio umbrellas and umbrella accessories'
   assert.deepEqual(candidates.map((item) => item.asin), ['PORTABLE1']);
 });
 
+test('完全ワイヤレス検索では有線イヤホンと無線根拠のない候補を除外する', () => {
+  const candidates = filterCategoryMismatches('韓国っぽい透明のワイヤレスイヤホン / 完全ワイヤレス', [
+    { asin: 'TWS000001', product_name: '透明ケース Bluetooth 5.3 完全ワイヤレスイヤホン' },
+    { asin: 'WIRELESS2', product_name: 'Clear TWS True Wireless Earbuds' },
+    { asin: 'WIRED0001', product_name: '透明 有線イヤホン 3.5mm コード付き' },
+    { asin: 'WIRED0002', product_name: 'Clear Wired Earphones with Audio Cable' },
+    { asin: 'UNKNOWN01', product_name: 'Clear In-Ear Earphones' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['TWS000001', 'WIRELESS2']);
+});
+
 test('low-information and divergent queries request one clarification instead of asserting', () => {
   const low = analyzeSearchDecision('SNSで見た青いやつ', [{ product_name: 'Blue Lamp' }]);
   assert.equal(low.needs_clarification, true);
