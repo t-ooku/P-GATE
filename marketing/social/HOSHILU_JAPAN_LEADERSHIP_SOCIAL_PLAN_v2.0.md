@@ -146,3 +146,8 @@ HOSHILU全体のブランドとしては扱わない。
 - 7日・30日再訪
 
 14日ごとに、投稿数ではなく検索完了と保存へ寄与したシリーズを増やす。
+
+ジャンル別の比較方法と販促配分ルールは
+`docs/HOSHILU_SOCIAL_CATEGORY_PERFORMANCE_FRAMEWORK.md` に従う。
+実績は `marketing/social/HOSHILU_SOCIAL_CATEGORY_KPI_LOG.csv` へ
+投稿後24時間・72時間・7日の3回記録する。
