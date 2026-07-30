@@ -13,7 +13,7 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/webhook", "/go", "/health", "/seller*", "/og/*", "/ja/*", "/en/*"]
+    "run_worker_first": true
   },
   "vars": {
     "AMAZON_ASSOCIATE_TAG": "hoshilu-22",

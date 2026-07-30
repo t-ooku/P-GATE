@@ -2,9 +2,10 @@ const params = new URLSearchParams(location.search);
 const attribution = {
   source: params.get('utm_source') || '',
   medium: params.get('utm_medium') || '',
-  campaign: params.get('utm_campaign') || '',
+  campaign: params.get('utm_campaign') || params.get('campaign') || '',
   content: params.get('utm_content') || ''
 };
+window.HoshiluGrowthAttribution = Object.freeze({ ...attribution });
 const locale = () => String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
 const send = (event_type, extra = {}) => {
   const body = JSON.stringify({ event_type, locale: locale(), ...attribution, ...extra });

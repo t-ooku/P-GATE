@@ -4,30 +4,37 @@ import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
-import { buildDeviceAccessorySearchKeywords } from '../public/marketplace-search-keywords-v2.mjs';
+import {
+  buildDeviceAccessorySearchKeywords,
+  buildMarketplaceSearchKeywords
+} from '../public/marketplace-search-keywords-v2.mjs';
 import {
   rakutenApiConfigured,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
 import { isRakutenProductUrl } from './rakuten-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
+import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import {
   runSpApiScheduledSync, spApiConfiguredTenants
 } from './sp-api-d1-repository.mjs';
+import { handleSpApiAdminRoutes } from './sp-api-admin-routes.mjs';
+import { handleSpApiSellerRoutes } from './sp-api-seller-routes.mjs';
 import { semanticSearchGroups } from './search-intelligence.mjs';
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
 } from './social-publisher.mjs';
 import { renderSeoPage } from './seo-pages.mjs';
-import { handleGrowthEvent } from './growth-events.mjs';
+import { classifyGrowthTraffic, handleGrowthEvent } from './growth-events.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
   'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp',
-  'qoo10.jp', 'shein.com'
+  'qoo10.jp', 'shein.com', 'zozo.jp', 'shop-list.com',
+  'musinsa.com', 'buyma.com'
 ];
 const RELEASE = '1.15.0';
 const REQUIRED_ENV = [
@@ -204,7 +211,19 @@ export function validateKnowledgeRequest(payload) {
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
   if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
   const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
-  return { query, session_id: sessionId, turnstile_token: turnstileToken, language, consent: true };
+  const cleanAttribution = (value) => String(value || '').trim()
+    .replace(/[^\p{L}\p{N}_.-]/gu, '').slice(0, 80);
+  const attribution = {
+    source: cleanAttribution(payload.source),
+    medium: cleanAttribution(payload.medium),
+    campaign: cleanAttribution(payload.campaign),
+    content: cleanAttribution(payload.content)
+  };
+  return {
+    query, session_id: sessionId, turnstile_token: turnstileToken, language,
+    consent: true, attribution,
+    traffic_class: classifyGrowthTraffic(attribution)
+  };
 }
 
 export function getEnvironmentReadiness(env = {}) {
@@ -667,6 +686,8 @@ export function buildQoo10SearchKeywords(query) {
   if (!cleaned) return '';
   const deviceAccessoryTerms = buildDeviceAccessorySearchKeywords(cleaned);
   if (deviceAccessoryTerms) return deviceAccessoryTerms;
+  const compactTerms = buildMarketplaceSearchKeywords(cleaned, 'QOO10_JP');
+  if (compactTerms !== cleaned) return compactTerms;
   const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) return structuredTerms.join(' ');
   const semanticTerms = semanticSearchGroups(cleaned)
@@ -706,7 +727,7 @@ function marketplaceSearchDestinations(query, env = {}) {
     { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: buildRakutenSearchDestination(query) },
     { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: buildQoo10SearchDestination(query) },
     { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: buildSheinSearchDestination(query) }
-  ];
+  ].concat(buildApparelMarketplaceDestinations(query));
 }
 
 async function signedMarketplaceSearchLinks(query, context) {
@@ -717,7 +738,8 @@ async function signedMarketplaceSearchLinks(query, context) {
       u: context.sessionHash, r: context.seed, a: context.asin || '', d: item.destination,
       exp: Math.floor(Date.now() / 1000) + 86400 * 7,
       j: `${context.seed}:${context.asin || 'QUERY'}:${item.marketplace}_SEARCH`,
-      c: 'PWA', m: item.marketplace, t: 'SEARCH_FALLBACK', g: context.category
+      c: 'PWA', m: item.marketplace, t: 'SEARCH_FALLBACK', g: context.category,
+      x: context.trafficClass
     }, context.env.LINK_SIGNING_SECRET);
     links.push({ marketplace: item.marketplace, label: item.label, url: `${context.origin}/go?token=${encodeURIComponent(token)}` });
   }
@@ -737,8 +759,8 @@ export async function recordUnmetDemandEvent(
   const demandHash = await hashUser(String(payload.d || ''));
   await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO unmet_demand_events
     (event_id,occurred_at,user_hash,demand_hash,category,marketplace,
-     destination_type,contract_match,demand_status,channel)
-    VALUES(?1,?2,?3,?4,?5,?6,?7,0,'UNMET',?8)`)
+     destination_type,contract_match,demand_status,channel,traffic_class)
+    VALUES(?1,?2,?3,?4,?5,?6,?7,0,'UNMET',?8,?9)`)
     .bind(
       String(payload.j || ''),
       occurredAt,
@@ -747,7 +769,8 @@ export async function recordUnmetDemandEvent(
       category,
       String(payload.m || 'AMAZON_JP'),
       'AMAZON_SEARCH_FALLBACK',
-      channel
+      channel,
+      ['QA', 'ATTRIBUTED', 'UNATTRIBUTED'].includes(payload.x) ? payload.x : 'UNATTRIBUTED'
     )
     .run();
   return true;
@@ -808,7 +831,8 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
     .map((group) => group.category)
     .find((category) => category && category !== 'color') || 'unclassified';
   const marketplaceSearchLinks = await signedMarketplaceSearchLinks(query, {
-    env, origin, sessionHash, seed, category: demandCategory
+    env, origin, sessionHash, seed, category: demandCategory,
+    trafficClass: result.traffic_class || 'UNATTRIBUTED'
   });
   const amazonSearchUrl = marketplaceSearchLinks
     .find((link) => link.marketplace === 'AMAZON_JP')?.url || '';
@@ -903,6 +927,7 @@ async function handleKnowledgeApi(request, env, ctx) {
     }
     result = {
       ...(result || {}),
+      traffic_class: input.traffic_class,
       candidates: filterCategoryMismatches(input.query, result?.candidates || []).slice(0, 10)
     };
     const sessionHash = await hashUser(input.session_id);
@@ -993,6 +1018,10 @@ export default {
     if (unmetDemandResponse) return unmetDemandResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
+    const spApiAdminResponse = await handleSpApiAdminRoutes(request, env);
+    if (spApiAdminResponse) return spApiAdminResponse;
+    const spApiSellerResponse = await handleSpApiSellerRoutes(request, env);
+    if (spApiSellerResponse) return spApiSellerResponse;
     const wishResponse = await handleMemberWishRoutes(request, env);
     if (wishResponse) return wishResponse;
     const mywatchResponse = await handleMywatchRoutes(request, env);

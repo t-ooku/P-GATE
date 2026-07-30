@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeGrowthEvent } from '../src/growth-events.mjs';
+import { classifyGrowthTraffic, normalizeGrowthEvent } from '../src/growth-events.mjs';
 
 test('accepts only anonymous allowlisted growth dimensions', () => {
   assert.deepEqual(normalizeGrowthEvent({
@@ -26,4 +26,18 @@ test('accepts only anonymous allowlisted growth dimensions', () => {
 test('rejects unknown event types and marketplace values', () => {
   assert.throws(() => normalizeGrowthEvent({ event_type: 'raw_query_saved' }), /GROWTH_EVENT_INVALID/);
   assert.equal(normalizeGrowthEvent({ event_type: 'landing_view', marketplace: 'unknown' }).marketplace, '');
+});
+
+test('separates QA, attributed, and unattributed growth traffic', () => {
+  assert.equal(classifyGrowthTraffic({
+    source: 'codex_acceptance',
+    medium: 'qa',
+    campaign: 'growth_events_v1'
+  }), 'QA');
+  assert.equal(classifyGrowthTraffic({
+    source: 'instagram',
+    medium: 'organic_social',
+    campaign: 'itg_brand_reel'
+  }), 'ATTRIBUTED');
+  assert.equal(classifyGrowthTraffic({}), 'UNATTRIBUTED');
 });

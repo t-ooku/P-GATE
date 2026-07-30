@@ -1,4 +1,5 @@
 import { sellerPageResponse } from './seller-page.mjs';
+import { spApiSellerPageResponse } from './sp-api-seller-page.mjs';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -121,6 +122,11 @@ export async function handleSellerRoutes(request, env) {
     const seller = await readSellerSession(request, env);
     if (!seller) return Response.redirect(`${url.origin}/seller-login.html`, 302);
     return sellerPageResponse(env, seller);
+  }
+  if (request.method === 'GET' && url.pathname === '/seller/sp-api') {
+    const seller = await readSellerSession(request, env);
+    if (!seller) return Response.redirect(`${url.origin}/seller-login.html`, 302);
+    return spApiSellerPageResponse(seller);
   }
   if (url.pathname.startsWith('/seller-shell')) return new Response('not found', { status: 404 });
   return null;
