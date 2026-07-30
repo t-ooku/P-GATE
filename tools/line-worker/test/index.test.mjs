@@ -9,6 +9,7 @@ globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 
 const workerModule = await import('../src/index.mjs');
 const { rankMerchantCandidates: rankMerchantCandidatesForTest } = await import('../src/knowledge-search.mjs');
+const { buildDeviceAccessorySearchKeywords } = await import('../public/marketplace-search-keywords.mjs');
 const {
   verifyLineSignature, createTrackToken, verifyTrackToken,
   isAllowedDestination, isProductDetailDestination, productMarketplaceOffers, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
@@ -475,18 +476,44 @@ test('楽天API検索は複合条件と主要商品語の順で候補を作る',
 });
 test('Qoo10はiPhoneより明示された商品種別を優先し多言語でもケースへ誤変換しない', () => {
   const cases = [
-    ['iPhone用のUSB-C充電ケーブルが欲しい', 'iPhone ケーブル'],
+    ['iPhone用のUSB-C充電ケーブルが欲しい', 'iPhone ケーブル USB-C'],
     ['iPhone compatible wireless earbuds', 'iPhone イヤホン'],
     ['iPhone用の急速充電器', 'iPhone 充電器'],
-    ['iPhone 15 tempered glass screen protector', 'iPhone 保護フィルム'],
+    ['iPhone 15 tempered glass screen protector', 'iPhone 15 保護フィルム'],
     ['iPhone用スマホスタンド', 'iPhone スタンド'],
     ['iPhone portable charger power bank', 'iPhone モバイルバッテリー'],
-    ['iPhone 15 Pro対応ケース', 'iPhoneケース'],
+    ['iPhone 15 Pro対応ケース', 'iPhone 15 Proケース'],
     ['iPhone用充电线 케이블', 'iPhone ケーブル'],
     ['iPhone', 'iphone'],
   ];
   for (const [query, expected] of cases) {
     assert.equal(buildQoo10SearchKeywords(query), expected, query);
+  }
+});
+test('Qoo10はAndroid系端末と型番・容量・サイズ・規格を短い商品語へ統一する', () => {
+  const cases = [
+    ['Galaxy S24 Ultra USB-C 2m 60W charging cable', 'Galaxy S24 Ultra ケーブル USB-C 2m 60W'],
+    ['Pixel 9 Pro 10000mAh power bank', 'Pixel 9 Pro モバイルバッテリー 10000mAh'],
+    ['Android Qi2 充電器', 'Android 充電器 Qi2'],
+    ['Galaxy S23 6.1インチ 保護フィルム', 'Galaxy S23 保護フィルム 6.1インチ'],
+    ['Pixel 8 phone stand', 'Pixel 8 スタンド'],
+    ['安卓 手机壳', 'Android ケース'],
+    ['갤럭시 S24 이어폰', 'Galaxy S24 イヤホン'],
+    ['苹果手机 15 充电器', 'iPhone 15 充電器'],
+  ];
+  for (const [query, expected] of cases) {
+    assert.equal(buildQoo10SearchKeywords(query), expected, query);
+  }
+});
+test('Qoo10のAPI成功時とブラウザ緊急フォールバックは同じ商品検索語を使う', () => {
+  const queries = [
+    'iPhone 15 Pro USB-C 2m 60W 充電ケーブル',
+    'Galaxy S24 Ultra 10000mAh power bank',
+    'Pixel 9 Pro tempered glass screen protector',
+    '안드로이드 Qi2 충전기',
+  ];
+  for (const query of queries) {
+    assert.equal(buildQoo10SearchKeywords(query), buildDeviceAccessorySearchKeywords(query));
   }
 });
 test('横断検索語はスラッシュで追加した日本語条件をすべて保持する', () => {

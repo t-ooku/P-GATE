@@ -4,6 +4,7 @@ import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
+import { buildDeviceAccessorySearchKeywords } from '../public/marketplace-search-keywords.mjs';
 import {
   rakutenApiConfigured,
   searchRakutenMarketplaceWithFallback
@@ -661,6 +662,8 @@ export function buildQoo10SearchKeywords(query) {
     .replace(/\s+/g, ' ')
     .trim();
   if (!cleaned) return '';
+  const deviceAccessoryTerms = buildDeviceAccessorySearchKeywords(cleaned);
+  if (deviceAccessoryTerms) return deviceAccessoryTerms;
   const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) return structuredTerms.join(' ');
   const semanticTerms = semanticSearchGroups(cleaned)
