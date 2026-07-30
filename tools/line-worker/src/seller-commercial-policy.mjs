@@ -1,39 +1,45 @@
 export const SELLER_COMMERCIAL_PLANS = Object.freeze({
   LAUNCH_PERFORMANCE: Object.freeze({
     monthlyFeeJpy: 0,
-    performanceFeeRate: 0.06,
+    qualifiedReferralMultiplier: 1,
+    treasureMapDelayHours: 168,
+    insightDepth: "FULL_KPI_PILOT",
     catalogLimit: 50_000,
-    attributedGmvLimitJpy: Infinity,
   }),
   STARTER: Object.freeze({
     monthlyFeeJpy: 9_800,
-    performanceFeeRate: 0.03,
+    qualifiedReferralMultiplier: 1,
+    treasureMapDelayHours: 72,
+    insightDepth: "CATEGORY",
     catalogLimit: 500,
-    attributedGmvLimitJpy: 300_000,
   }),
   GROWTH: Object.freeze({
     monthlyFeeJpy: 29_800,
-    performanceFeeRate: 0.02,
+    qualifiedReferralMultiplier: 0.85,
+    treasureMapDelayHours: 24,
+    insightDepth: "QUERY_CLUSTER",
     catalogLimit: 5_000,
-    attributedGmvLimitJpy: 3_000_000,
   }),
   SCALE: Object.freeze({
     monthlyFeeJpy: 79_800,
-    performanceFeeRate: 0.01,
+    qualifiedReferralMultiplier: 0.7,
+    treasureMapDelayHours: 0,
+    insightDepth: "PRODUCT_REALTIME",
     catalogLimit: 50_000,
-    attributedGmvLimitJpy: 10_000_000,
   }),
   ENTERPRISE: Object.freeze({
     monthlyFeeJpy: null,
-    performanceFeeRate: null,
+    qualifiedReferralMultiplier: null,
+    treasureMapDelayHours: 0,
+    insightDepth: "API_CUSTOM",
     catalogLimit: Infinity,
-    attributedGmvLimitJpy: Infinity,
   }),
   PERFORMANCE_ONLY: Object.freeze({
     monthlyFeeJpy: 0,
-    performanceFeeRate: 0.1,
+    qualifiedReferralMultiplier: 1.5,
+    treasureMapDelayHours: 168,
+    insightDepth: "MONTHLY_SUMMARY",
     catalogLimit: 50_000,
-    attributedGmvLimitJpy: Infinity,
   }),
 });
 
@@ -62,26 +68,15 @@ export function sellerLifecycleMonth(startedAt, now = new Date()) {
 export function recommendedSellerPlan({
   lifecycleMonth,
   catalogCount = 0,
-  attributedGmvJpy = 0,
   requiresEnterpriseIntegration = false,
 } = {}) {
   if (nonNegativeNumber(lifecycleMonth) <= 3) return "LAUNCH_PERFORMANCE";
   if (requiresEnterpriseIntegration) return "ENTERPRISE";
 
   const catalog = nonNegativeNumber(catalogCount);
-  const gmv = nonNegativeNumber(attributedGmvJpy);
-  if (
-    catalog <= SELLER_COMMERCIAL_PLANS.STARTER.catalogLimit &&
-    gmv < SELLER_COMMERCIAL_PLANS.STARTER.attributedGmvLimitJpy
-  ) return "STARTER";
-  if (
-    catalog <= SELLER_COMMERCIAL_PLANS.GROWTH.catalogLimit &&
-    gmv < SELLER_COMMERCIAL_PLANS.GROWTH.attributedGmvLimitJpy
-  ) return "GROWTH";
-  if (
-    catalog <= SELLER_COMMERCIAL_PLANS.SCALE.catalogLimit &&
-    gmv < SELLER_COMMERCIAL_PLANS.SCALE.attributedGmvLimitJpy
-  ) return "SCALE";
+  if (catalog <= SELLER_COMMERCIAL_PLANS.STARTER.catalogLimit) return "STARTER";
+  if (catalog <= SELLER_COMMERCIAL_PLANS.GROWTH.catalogLimit) return "GROWTH";
+  if (catalog <= SELLER_COMMERCIAL_PLANS.SCALE.catalogLimit) return "SCALE";
   return "ENTERPRISE";
 }
 
@@ -90,21 +85,4 @@ export function commercialTerms(planName) {
   const plan = SELLER_COMMERCIAL_PLANS[name];
   if (!plan) throw new Error("unknown seller commercial plan");
   return { name, ...plan };
-}
-
-export function attributedFeeBase({
-  itemSubtotalJpy = 0,
-  taxJpy = 0,
-  shippingJpy = 0,
-  refundedItemSubtotalJpy = 0,
-} = {}) {
-  void taxJpy;
-  void shippingJpy;
-  return Math.max(
-    0,
-    Math.round(
-      nonNegativeNumber(itemSubtotalJpy) -
-      nonNegativeNumber(refundedItemSubtotalJpy),
-    ),
-  );
 }
