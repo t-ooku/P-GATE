@@ -21,6 +21,7 @@ import { semanticSearchGroups } from './search-intelligence.mjs';
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
 } from './social-publisher.mjs';
+import { renderSeoPage } from './seo-pages.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -1002,6 +1003,16 @@ export default {
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
+    if (request.method === 'GET') {
+      const seoPage = renderSeoPage(url.pathname);
+      if (seoPage) return new Response(seoPage, {
+        headers: {
+          'content-type': 'text/html; charset=utf-8',
+          'cache-control': 'public, max-age=300',
+          'x-content-type-options': 'nosniff'
+        }
+      });
+    }
     if (env.ASSETS) return env.ASSETS.fetch(request);
     return new Response('not found', { status: 404 });
   },
