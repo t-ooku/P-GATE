@@ -57,3 +57,20 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch) {
   if (!response.ok) throw new Error('RAKUTEN_MARKETPLACE_SEARCH_FAILED');
   return normalizeRakutenItems(await response.json());
 }
+
+export async function searchRakutenMarketplaceWithFallback(
+  env,
+  keywordCandidates,
+  fetcher = fetch
+) {
+  const candidates = [...new Set(
+    (Array.isArray(keywordCandidates) ? keywordCandidates : [keywordCandidates])
+      .map((value) => String(value || '').normalize('NFKC').trim())
+      .filter(Boolean)
+  )].slice(0, 2);
+  for (const keywords of candidates) {
+    const results = await searchRakutenMarketplace(env, keywords, fetcher);
+    if (results.length) return results;
+  }
+  return [];
+}

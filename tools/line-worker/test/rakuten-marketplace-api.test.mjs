@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeRakutenItems, rakutenApiConfigured, searchRakutenMarketplace } from '../src/rakuten-marketplace-api.mjs';
+import {
+  normalizeRakutenItems,
+  rakutenApiConfigured,
+  searchRakutenMarketplace,
+  searchRakutenMarketplaceWithFallback
+} from '../src/rakuten-marketplace-api.mjs';
 
 const env = { RAKUTEN_APPLICATION_ID: 'app-id', RAKUTEN_ACCESS_KEY: 'access-key', RAKUTEN_AFFILIATE_ID: 'affiliate-id' };
 
@@ -33,4 +38,38 @@ test('楽天市場APIへ整理済み検索語とサーバー側認証情報を�
   assert.equal(requested.url.searchParams.get('affiliateId'), 'affiliate-id');
   assert.equal(requested.url.searchParams.get('keyword'), '小型 写真プリンター');
   assert.equal(candidates.length, 1);
+});
+
+test('複合条件が0件なら主要商品語で一度だけ再検索する', async () => {
+  const requestedKeywords = [];
+  const candidates = await searchRakutenMarketplaceWithFallback(
+    env,
+    ['小型 写真プリンター 手のひら スマホ対応', '小型 写真プリンター'],
+    async (url) => {
+      const keyword = new URL(url).searchParams.get('keyword');
+      requestedKeywords.push(keyword);
+      return {
+        ok: true,
+        async json() {
+          if (keyword !== '小型 写真プリンター') return { items: [] };
+          return {
+            items: [{
+              itemName: 'スマホ対応 ミニフォトプリンター',
+              itemCode: 'shop:printer-1',
+              itemPrice: 8980,
+              itemUrl: 'https://item.rakuten.co.jp/shop/printer-1/',
+              availability: 1
+            }]
+          };
+        }
+      };
+    }
+  );
+
+  assert.deepEqual(requestedKeywords, [
+    '小型 写真プリンター 手のひら スマホ対応',
+    '小型 写真プリンター'
+  ]);
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].offers[0].marketplace, 'RAKUTEN_JP');
 });

@@ -14,7 +14,8 @@ const {
   isAllowedDestination, isProductDetailDestination, productMarketplaceOffers, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
   getEnvironmentReadiness, buildAmazonSearchDestination, buildRakutenSearchDestination,
   buildQoo10SearchDestination, buildQoo10SearchKeywords, buildSheinSearchDestination,
-  buildAmazonSearchKeywords, buildRakutenSearchKeywords, trackingEventsForPayload, rankSellerOffers
+  buildAmazonSearchKeywords, buildRakutenSearchKeywords,
+  buildRakutenSearchKeywordCandidates, trackingEventsForPayload, rankSellerOffers
 } = workerModule;
 
 test('Rakuten search keeps Japanese conditions separate from Amazon aliases', () => {
@@ -455,6 +456,22 @@ test('Qoo10の商品検索はiPhoneの充電器をケースへ誤変換しない
     'iPhoneで使える急速充電器を探して charger charging'
   );
   assert.equal(keywords, 'iPhone 充電器');
+});
+
+test('楽天API検索は複合条件と主要商品語の順で候補を作る', () => {
+  assert.deepEqual(
+    buildRakutenSearchKeywordCandidates(
+      '推し活で使える小さな写真プリンター / 写真を撮る / 手のひらサイズ / スマホ対応'
+    ),
+    [
+      '推し活で使える小さな写真プリンター 写真を撮る 手のひらサイズ スマホ対応',
+      '推し活で使える小さな写真プリンター'
+    ]
+  );
+  assert.deepEqual(
+    buildRakutenSearchKeywordCandidates('透明なワイヤレスイヤホン'),
+    ['透明なワイヤレスイヤホン']
+  );
 });
 test('Qoo10はiPhoneより明示された商品種別を優先し多言語でもケースへ誤変換しない', () => {
   const cases = [

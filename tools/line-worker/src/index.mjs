@@ -4,7 +4,10 @@ import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
-import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
+import {
+  rakutenApiConfigured,
+  searchRakutenMarketplaceWithFallback
+} from './rakuten-marketplace-api.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -626,6 +629,14 @@ export function buildRakutenSearchKeywords(query) {
   return structuredTerms.length ? structuredTerms.join(' ') : cleaned;
 }
 
+export function buildRakutenSearchKeywordCandidates(query) {
+  const primary = buildRakutenSearchKeywords(query);
+  const rememberedProduct = buildRakutenSearchKeywords(
+    String(query || '').split('/')[0]
+  );
+  return [...new Set([primary, rememberedProduct].filter(Boolean))].slice(0, 2);
+}
+
 export function buildRakutenSearchDestination(query) {
   const keywords = buildRakutenSearchKeywords(query);
   if (!keywords) return '';
@@ -870,7 +881,10 @@ async function handleKnowledgeApi(request, env, ctx) {
       });
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_connected',
-        run: searchRakutenMarketplace(env, buildRakutenSearchKeywords(input.query))
+        run: searchRakutenMarketplaceWithFallback(
+          env,
+          buildRakutenSearchKeywordCandidates(input.query)
+        )
       });
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
       outcomes.forEach((outcome, index) => {
