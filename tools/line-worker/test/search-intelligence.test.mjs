@@ -230,6 +230,21 @@ test('camera memory produces ten camera-related use suggestions', async () => {
   ]);
 });
 
+test('写真プリンターをカメラ用途へ誤分類しない', async () => {
+  const env = { PRODUCT_DB: { prepare() { return { bind() { return { all: async () => ({ results: [] }) }; } }; } } };
+  const groups = semanticSearchGroups('推し活で使える小さな写真プリンター');
+  assert.ok(groups.some((group) => group.category === 'photo-printer'));
+  assert.equal(groups.some((group) => group.category === 'camera'), false);
+  const result = await applyIndexedSearchPolicy(
+    { query_id: 'photo-printer-q', candidates: [] },
+    env,
+    '推し活で使える小さな写真プリンター',
+    'JA'
+  );
+  assert.equal(result.clarification.options.some((item) => item.label === '写真を撮る'), false);
+  assert.ok(result.clarification.options.some((item) => item.label === 'スマホ写真を印刷する'));
+});
+
 test('second search can relax strict terms into a broad product query', () => {
   const query = relaxedFtsQuery('ピンクの小さいカメラ / 推し活で使う');
   assert.match(query, /"camera"\*/);

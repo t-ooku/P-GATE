@@ -43,6 +43,7 @@ const OPTION_SETS = {
 };
 
 const CONTEXTUAL_USE_OPTIONS_JA = {
+  photoPrinter: ['スマホ写真を印刷する','推し活カードを作る','チェキ風写真を作る','シール写真を作る','手帳・アルバムに貼る','イベントで配る','旅行写真をその場で印刷する','プレゼントを作る','名札・ラベルを作る','持ち歩いて使う'],
   camera: ['写真を撮る','動画を撮る','旅行で使う','Vlog・SNS投稿に使う','子どもが遊ぶ','推し活で使う','チェキ風に楽しむ','防犯・見守りに使う','車や自転車で撮影する','水中・アウトドアで使う'],
   figure: ['飾って楽しむ','コレクションする','子どもが遊ぶ','プレゼントにする','推し活で使う','撮影小物にする','ゲーム・アニメ関連','映画・アメコミ関連','組み立てて遊ぶ','限定品を探している'],
   electronics: ['スマホと一緒に使う','音楽を聴く','写真・動画に使う','充電する','仕事・勉強で使う','ゲームで使う','家で使う','旅行で使う','車で使う','持ち歩いて使う'],
@@ -54,6 +55,7 @@ const CONTEXTUAL_USE_OPTIONS_JA = {
 };
 
 const CONTEXTUAL_DETAIL_OPTIONS_JA = {
+  photoPrinter: ['スマホ対応','Bluetooth対応','手のひらサイズ','充電式','シール紙対応','チェキ風サイズ','カラー印刷','モノクロ印刷','インク不要','専用アプリ対応'],
   phoneCase: ['LEDで光るケース','通知で光るケース','背面が光るケース','蓄光タイプ','透明ケース','iPhone用','Android用','充電式','電源不要','ストラップ付き'],
   earphones: ['完全ワイヤレス','耳をふさがない','カナル型','インナーイヤー型','ノイズキャンセリング','マイク付き','Bluetooth対応','有線タイプ','防水・スポーツ用','透明・クリア'],
   charger: ['MagSafe対応','置くだけ充電','USB-C対応','急速充電','複数台同時充電','モバイルバッテリー型','車載用','折りたたみ式','ケーブル一体型','海外対応'],
@@ -160,7 +162,7 @@ const SEMANTIC_THEME = {
   'hair-treatment':'hair-treatment', 'camera-bag':'camera-bag', 'fan-accessory':'fan-accessory',
   't-shirt':'t-shirt', tops:'tops', pants:'pants', skirt:'skirt', dress:'dress', bag:'bag', hat:'hat',
   watch:'watch', bottle:'bottle', organizer:'organizer', umbrella:'umbrella', fan:'fan', humidifier:'humidifier',
-  camera:'camera', figure:'figure'
+  camera:'camera', 'photo-printer':'photoPrinter', figure:'figure'
 };
 
 function queryTheme(query) {
@@ -178,6 +180,7 @@ function queryTheme(query) {
   if (/(?:fan|风扇|風扇|선풍기|휴대용 팬)/u.test(value)) return 'fan';
   if (/(?:狗|猫|貓|宠物|寵物|강아지|고양이|반려동물)/u.test(value)) return 'pet';
   return /スマホケース|携帯ケース|phone case|smartphone case|iphone case/.test(value) ? 'phoneCase'
+    : /写真プリンター|フォトプリンター|スマホプリンター|photo printer|portable printer/.test(value) ? 'photoPrinter'
     : /カメラ|camera|撮影|写真|動画/.test(value) ? 'camera'
     : /フィギュア|figure|人形|キャラクター|アニメ/.test(value) ? 'figure'
     : /イヤホン|スマホ|充電|電池|usb|電気|デジタル|ガジェット/.test(value) ? 'electronics'
