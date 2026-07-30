@@ -100,6 +100,33 @@ export function resumeAfterConfirmedPayment({
   });
 }
 
+const REFUND_EXCEPTION_REASONS = new Set([
+  "DUPLICATE_CHARGE",
+  "INCORRECT_CHARGE",
+  "PROVIDER_MATERIAL_BREACH",
+  "REQUIRED_BY_LAW",
+  "REQUIRED_BY_PAYMENT_NETWORK",
+]);
+
+export function sellerRefundDecision({
+  reason,
+  operatorApprovals = 0,
+  legalOrNetworkMandateVerified = false,
+} = {}) {
+  const normalizedReason = String(reason || "").trim().toUpperCase();
+  const exception = REFUND_EXCEPTION_REASONS.has(normalizedReason);
+  const mandated = normalizedReason === "REQUIRED_BY_LAW" ||
+    normalizedReason === "REQUIRED_BY_PAYMENT_NETWORK";
+  const approved =
+    exception &&
+    (mandated ? legalOrNetworkMandateVerified : Number(operatorApprovals) >= 2);
+  return {
+    refundable: approved,
+    reason: approved ? normalizedReason : "NON_REFUNDABLE",
+    manualReviewRequired: exception && !approved,
+  };
+}
+
 export const prepaidBillingStatuses = Object.freeze({
   ACTIVE,
   SUSPENDED_UNPAID,

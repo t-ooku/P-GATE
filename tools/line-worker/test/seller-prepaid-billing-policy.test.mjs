@@ -4,6 +4,7 @@ import {
   consumePerformanceCredit,
   prepaidBillingState,
   resumeAfterConfirmedPayment,
+  sellerRefundDecision,
 } from "../src/seller-prepaid-billing-policy.mjs";
 
 test("翌利用期間の開始時に未払いなら契約直リンクと機能を停止する", () => {
@@ -67,4 +68,51 @@ test("署名確認済みの支払イベントだけで再開する", () => {
   });
   assert.equal(verified.status, "ACTIVE");
   assert.equal(verified.sellerDirectLinksEnabled, true);
+});
+
+test("途中解約・未使用・成果不満は返金しない", () => {
+  for (const reason of [
+    "CANCELLATION",
+    "UNUSED_BALANCE",
+    "LOW_PERFORMANCE",
+  ]) {
+    assert.deepEqual(sellerRefundDecision({
+      reason,
+      operatorApprovals: 2,
+    }), {
+      refundable: false,
+      reason: "NON_REFUNDABLE",
+      manualReviewRequired: false,
+    });
+  }
+});
+
+test("二重課金と誤課金は二者承認した場合だけ例外返金する", () => {
+  assert.deepEqual(sellerRefundDecision({
+    reason: "DUPLICATE_CHARGE",
+    operatorApprovals: 1,
+  }), {
+    refundable: false,
+    reason: "NON_REFUNDABLE",
+    manualReviewRequired: true,
+  });
+  assert.deepEqual(sellerRefundDecision({
+    reason: "DUPLICATE_CHARGE",
+    operatorApprovals: 2,
+  }), {
+    refundable: true,
+    reason: "DUPLICATE_CHARGE",
+    manualReviewRequired: false,
+  });
+});
+
+test("法令・決済ネットワーク上の必須返金は確認後に処理する", () => {
+  assert.equal(sellerRefundDecision({
+    reason: "REQUIRED_BY_LAW",
+    legalOrNetworkMandateVerified: false,
+  }).refundable, false);
+  assert.equal(sellerRefundDecision({
+    reason: "REQUIRED_BY_LAW",
+    legalOrNetworkMandateVerified: true,
+  }).refundable, true);
 });

@@ -21,3 +21,4 @@ SELLER-019,4,P1,Migration,"移行14日前の通知と選択",TODO,"SELLER-006|SE
 SELLER-020,5,P1,Dashboard,"セラー別KPI・請求明細",TODO,"SELLER-012|SELLER-018",NO,"他テナントを見せず自社成果と請求根拠を表示する"
 SELLER-021,5,P1,Ranking,"契約直リンク・プラン別購入先優先",PARTIAL,"検索本体への統合",NO,"関連性基準内で上位サブスクから表示し成果報酬のみを下位にする"
 SELLER-022,5,P1,Identity,"商品ID・バリエーションID別の商品判定",PARTIAL,"検索本体への統合",NO,"異なるモール商品IDまたはバリエーションIDを別商品として扱う"
+SELLER-023,3,P0,Billing,"原則返金不可・例外二者承認",PARTIAL,"SELLER-010|正式規約の法務確認",YES,"途中解約・未使用・成果不満は返金せず二重課金・誤課金・法令上必要な場合だけ管理処理する"
