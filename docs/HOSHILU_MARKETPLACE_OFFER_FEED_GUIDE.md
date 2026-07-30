@@ -25,7 +25,7 @@ SecretはCloudflare Workersへ登録し、ファイル、ログ、チャット�
 
 完全な例は [hoshilu-marketplace-offers.sample.json](examples/hoshilu-marketplace-offers.sample.json) を参照してください。
 
-送信前にローカル検査できます。成功時はURL本文を表示せず、テナント・バッチID・モール別件数だけを出力します。
+送信前にローカル検査できます。成功時はURL本文を表示せず、テナント・バッチID・モール別件数・不足モール・7日超の再確認対象件数だけを出力します。
 
 ```powershell
 Set-Location tools\line-worker
@@ -56,6 +56,15 @@ npm.cmd run validate:marketplace-offers -- ..\..\docs\examples\hoshilu-marketpla
 - `matched_fresh_available` は7日以内に確認され、HOSHILUの商品カードへ照合できるURL件数です
 - `unmatched_fresh_available` が残る場合は `record_key` または `asin` の照合を修正します
 - `missing_marketplaces` はURLが存在しても、商品カードへ照合できる新鮮なURLが0件なら不足として扱います
+
+`diagnostics.marketplaces` はモール別に次の状態と推奨アクションを返します。
+
+| 状態 | 意味 | 推奨アクション |
+|---|---|---|
+| `HEALTHY` | 照合済みで7日以内の商品URLがあり、再確認対象もない | `NONE` |
+| `FEED_REQUIRED` | 商品カードへ接続できる新鮮なURLが0件 | `IMPORT_VERIFIED_PRODUCT_URLS` |
+| `REFRESH_REQUIRED` | 7日を超えた購入可能URLが残っている | `REVERIFY_STALE_PRODUCT_URLS` |
+| `MATCHING_REQUIRED` | 新鮮なURLはあるがHOSHILU商品へ照合できない | `ADD_RECORD_KEY_OR_ASIN_MATCH` |
 
 ## 運用手順
 

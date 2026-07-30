@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { marketplaceOfferStats, validateMarketplaceOfferFeed } from '../src/marketplace-offer-feed.mjs';
+import {
+ buildMarketplaceOfferDiagnostics, marketplaceOfferStats, validateMarketplaceOfferFeed
+} from '../src/marketplace-offer-feed.mjs';
 
 test('公開サンプルは3モールの商品詳細URLフィードとして検証できる', async () => {
  const sampleUrl = new URL('../../../docs/examples/hoshilu-marketplace-offers.sample.json', import.meta.url);
@@ -48,10 +50,34 @@ test('marketplace offer stats reports safe attachment counts without exposing pr
  assert.equal(JSON.stringify(body).includes('product_url'),false);
  assert.deepEqual(body.missing_marketplaces,['RAKUTEN_JP','SHEIN_JP']);
  assert.equal(body.feed_required,true);
+ assert.equal(body.diagnostics.healthy,false);
+ assert.equal(body.diagnostics.feed_required,true);
+ assert.deepEqual(body.diagnostics.marketplaces.map(row=>[row.marketplace,row.status]),[
+  ['RAKUTEN_JP','FEED_REQUIRED'],
+  ['QOO10_JP','REFRESH_REQUIRED'],
+  ['SHEIN_JP','FEED_REQUIRED']
+ ]);
  assert.match(sql,/AS fresh_available/);
  assert.match(sql,/AS stale_available/);
  assert.match(sql,/AS matched_fresh_available/);
- assert.match(sql,/EXISTS\(SELECT 1 FROM products/);
+ assert.match(sql,/EXISTS\(\s*SELECT 1 FROM products/);
+});
+
+test('商品URL診断は取込・再確認・照合の次アクションをモール別に返す',()=>{
+ const diagnostics=buildMarketplaceOfferDiagnostics([
+  {marketplace:'RAKUTEN_JP',matched_fresh_available:4,unmatched_fresh_available:0,stale_available:0},
+  {marketplace:'QOO10_JP',matched_fresh_available:2,unmatched_fresh_available:1,stale_available:0},
+  {marketplace:'SHEIN_JP',matched_fresh_available:3,unmatched_fresh_available:0,stale_available:2}
+ ]);
+ assert.equal(diagnostics.healthy,false);
+ assert.equal(diagnostics.feed_required,false);
+ assert.equal(diagnostics.matching_required,true);
+ assert.equal(diagnostics.refresh_required,true);
+ assert.deepEqual(diagnostics.marketplaces.map(row=>[row.marketplace,row.status,row.recommended_action]),[
+  ['RAKUTEN_JP','HEALTHY','NONE'],
+  ['QOO10_JP','MATCHING_REQUIRED','ADD_RECORD_KEY_OR_ASIN_MATCH'],
+  ['SHEIN_JP','REFRESH_REQUIRED','REVERIFY_STALE_PRODUCT_URLS']
+ ]);
 });
 
 test('marketplace offer stats requires the existing sync secret',async()=>{
