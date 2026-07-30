@@ -5,9 +5,9 @@ import { readFile, stat } from 'node:fs/promises';
 const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
 test('discovery collage is lightweight, localized, accessible, and cached', async () => {
-  const [html, app, css, wishCss, sw, desktop, mobile] = await Promise.all([
+  const [html, app, css, wishCss, sw, i18n, desktop, mobile] = await Promise.all([
     read('index.html'), read('app.js'), read('discovery.css'), read('wish-carousel.css'),
-    read('service-worker.js'),
+    read('service-worker.js'), read('site-i18n.js'),
     stat(new URL('../public/hoshilu-discovery-collage.webp', import.meta.url)),
     stat(new URL('../public/hoshilu-discovery-collage-mobile.webp', import.meta.url)),
   ]);
@@ -28,7 +28,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v70/);
+  assert.match(sw, /hoshilu-shell-v71/);
   assert.match(sw, /marketplace-search-keywords-v2\.mjs/);
   assert.match(app, /buildDeviceAccessorySearchKeywords/);
   assert.match(sw, /if \(response\.ok\)/);
@@ -76,8 +76,15 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /features:\['找商品','已收藏'\]/);
   assert.match(app, /features:\['호시루 검색','저장'\]/);
   assert.match(html, /class="language-label header-language"/);
-  assert.match(html, /Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。/);
-  assert.match(html, /広告：Amazonへのリンクにはアフィリエイトリンクが含まれます。/);
+  assert.match(html, /HOSHILUはAmazonアソシエイトおよび楽天アフィリエイトのリンクを通じて収入を得る場合があります。/);
+  assert.match(html, /広告：Amazon・楽天市場へのリンクにはアフィリエイトリンクが含まれる場合があります。/);
+  assert.match(html, /data-i18n="affiliate\.searchNotice"/);
+  assert.match(html, /data-i18n="affiliate\.footerDisclosure"/);
+  assert.match(i18n, /affiliate\.searchNotice/);
+  assert.match(i18n, /affiliate\.footerDisclosure/);
+  assert.match(i18n, /Amazon and Rakuten may be affiliate links/);
+  assert.match(i18n, /乐天市场/);
+  assert.match(i18n, /라쿠텐 시장/);
   assert.match(html, /social-share-targets\.js/);
   assert.match(html, /og\/hoshilu-x-v3\.png/);
   assert.match(html, /twitter:image:alt/);
