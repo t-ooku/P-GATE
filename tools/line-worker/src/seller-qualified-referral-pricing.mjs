@@ -1,15 +1,15 @@
 export const QUALIFIED_REFERRAL_PRICE_RULES = Object.freeze({
-  FASHION: Object.freeze({ rate: 0.0015, minimumJpy: 8, maximumJpy: 40 }),
-  COSMETICS: Object.freeze({ rate: 0.0025, minimumJpy: 8, maximumJpy: 35 }),
-  GADGET: Object.freeze({ rate: 0.0012, minimumJpy: 10, maximumJpy: 60 }),
-  LIFESTYLE: Object.freeze({ rate: 0.0018, minimumJpy: 8, maximumJpy: 40 }),
-  FOOD: Object.freeze({ rate: 0.0025, minimumJpy: 5, maximumJpy: 25 }),
-  HOBBY: Object.freeze({ rate: 0.0018, minimumJpy: 8, maximumJpy: 45 }),
-  BABY: Object.freeze({ rate: 0.002, minimumJpy: 8, maximumJpy: 40 }),
-  PET: Object.freeze({ rate: 0.0022, minimumJpy: 8, maximumJpy: 35 }),
-  SPORTS: Object.freeze({ rate: 0.0015, minimumJpy: 10, maximumJpy: 60 }),
-  AUTOMOTIVE: Object.freeze({ rate: 0.001, minimumJpy: 15, maximumJpy: 100 }),
-  OTHER: Object.freeze({ rate: 0.0015, minimumJpy: 8, maximumJpy: 45 }),
+  FASHION: Object.freeze({ rate: 0.0008 }),
+  COSMETICS: Object.freeze({ rate: 0.0012 }),
+  GADGET: Object.freeze({ rate: 0.0006 }),
+  LIFESTYLE: Object.freeze({ rate: 0.0008 }),
+  FOOD: Object.freeze({ rate: 0.001 }),
+  HOBBY: Object.freeze({ rate: 0.0008 }),
+  BABY: Object.freeze({ rate: 0.0008 }),
+  PET: Object.freeze({ rate: 0.0008 }),
+  SPORTS: Object.freeze({ rate: 0.0006 }),
+  AUTOMOTIVE: Object.freeze({ rate: 0.0004 }),
+  OTHER: Object.freeze({ rate: 0.0007 }),
 });
 
 const PLAN_MULTIPLIER = Object.freeze({
@@ -37,7 +37,7 @@ export function qualifiedReferralUnitPriceJpy({
     if (!Number.isFinite(custom) || custom <= 0) {
       throw new Error("enterpriseUnitPriceJpy is required");
     }
-    return Math.ceil(custom);
+    return custom;
   }
 
   const displayedPrice = Number(displayedProductPriceJpy);
@@ -50,11 +50,16 @@ export function qualifiedReferralUnitPriceJpy({
   const rule = QUALIFIED_REFERRAL_PRICE_RULES[
     normalizedReferralCategory(category)
   ];
-  const categoryPrice = Math.min(
-    rule.maximumJpy,
-    Math.max(rule.minimumJpy, displayedPrice * rule.rate),
-  );
-  return Math.ceil(categoryPrice * multiplier);
+  const charge = displayedPrice * rule.rate * multiplier;
+  return Math.round(charge * 1_000_000) / 1_000_000;
+}
+
+export function settledQualifiedReferralChargeJpy(charges = []) {
+  const total = charges.reduce((sum, charge) => {
+    const value = Number(charge);
+    return Number.isFinite(value) && value > 0 ? sum + value : sum;
+  }, 0);
+  return Math.round(total);
 }
 
 export function isBillableQualifiedReferral({

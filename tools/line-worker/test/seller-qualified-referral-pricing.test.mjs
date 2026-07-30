@@ -4,19 +4,20 @@ import {
   isBillableQualifiedReferral,
   normalizedReferralCategory,
   qualifiedReferralUnitPriceJpy,
+  settledQualifiedReferralChargeJpy,
 } from "../src/seller-qualified-referral-pricing.mjs";
 
-test("表示商品価格へジャンル料率・上下限・プラン倍率を適用する", () => {
+test("表示商品価格へジャンル固定料率とプラン倍率だけを適用する", () => {
   assert.equal(qualifiedReferralUnitPriceJpy({
     category: "FASHION",
     plan: "STARTER",
     displayedProductPriceJpy: 8_000,
-  }), 12);
+  }), 6.4);
   assert.equal(qualifiedReferralUnitPriceJpy({
     category: "FASHION",
     plan: "GROWTH",
     displayedProductPriceJpy: 8_000,
-  }), 11);
+  }), 5.44);
   assert.equal(qualifiedReferralUnitPriceJpy({
     category: "GADGET",
     plan: "SCALE",
@@ -26,15 +27,11 @@ test("表示商品価格へジャンル料率・上下限・プラン倍率を�
     category: "FOOD",
     plan: "PERFORMANCE_ONLY",
     displayedProductPriceJpy: 500,
-  }), 8);
+  }), 0.75);
 });
 
-test("価格上限により高額商品の過大課金を防ぐ", () => {
-  assert.equal(qualifiedReferralUnitPriceJpy({
-    category: "AUTOMOTIVE",
-    plan: "STARTER",
-    displayedProductPriceJpy: 500_000,
-  }), 100);
+test("クリック単位で丸めず合計時に一度だけ円へ丸める", () => {
+  assert.equal(settledQualifiedReferralChargeJpy([0.75, 0.75, 6.4]), 8);
 });
 
 test("ジャンル判定不能はOTHERを使用する", () => {
@@ -43,7 +40,7 @@ test("ジャンル判定不能はOTHERを使用する", () => {
     category: "unknown",
     plan: "STARTER",
     displayedProductPriceJpy: 6_000,
-  }), 9);
+  }), 4.2);
 });
 
 test("表示価格なしでは料率課金しない", () => {
@@ -68,7 +65,7 @@ test("Enterpriseは契約単価を必須にする", () => {
     category: "FOOD",
     plan: "ENTERPRISE",
     enterpriseUnitPriceJpy: 17.2,
-  }), 18);
+  }), 17.2);
 });
 
 test("出品セラーを固定・照合できた送客だけ課金する", () => {
