@@ -42,10 +42,27 @@ test("scores Top-1, Top-3, category, MRR and nDCG", () => {
   });
   assert.equal(score.top1, true);
   assert.equal(score.top3, true);
+  assert.equal(score.top10, true);
   assert.equal(score.category_match, true);
   assert.equal(score.reciprocal_rank, 1);
   assert.equal(score.ndcg_at_10, 1);
   assert.equal(score.wrong_answer, false);
+});
+
+test("Top-10と重大な条件違反を検出する", () => {
+  const results = Array.from({ length: 10 }, (_, index) => ({
+    product_id: index === 8 ? "B000REAL01" : `OTHER-${index}`,
+    category_id: "humidifier",
+    product_name: index === 0 ? "Wired USB humidifier" : `Candidate ${index}`,
+  }));
+  const score = scoreCase(
+    { ...gold, forbidden_result_patterns: ["\\bwired\\b"] },
+    { results },
+  );
+  assert.equal(score.top3, false);
+  assert.equal(score.top10, true);
+  assert.equal(score.critical_constraint_violation, true);
+  assert.equal(score.critical_violations[0].rank, 1);
 });
 
 test("aggregates dimensions and compares reports", async () => {

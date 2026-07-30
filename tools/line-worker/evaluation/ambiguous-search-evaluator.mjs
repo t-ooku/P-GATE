@@ -31,6 +31,15 @@ function categoryId(result) {
   );
 }
 
+function resultText(result) {
+  return [
+    result?.product_name,
+    result?.productName,
+    result?.title,
+    result?.manufacturer,
+  ].filter(Boolean).join(" ").normalize("NFKC").toLocaleLowerCase();
+}
+
 function relevance(result, goldProducts, goldCategories) {
   if (goldProducts.has(productId(result))) return 2;
   if (goldCategories.has(categoryId(result))) return 1;
@@ -110,10 +119,24 @@ export function scoreCase(testCase, searchResponse, k = DEFAULT_K) {
   const goldCategories = asSet(testCase.acceptable_category_ids);
   const firstId = results.length ? productId(results[0]) : "";
   const top3 = results.slice(0, 3).some((result) => goldProducts.has(productId(result)));
+  const top10 = results.slice(0, 10).some((result) => goldProducts.has(productId(result)));
   const hasCorrect = results.some((result) => goldProducts.has(productId(result)));
   const noAnswer =
     searchResponse?.no_answer === true ||
     (!results.length && !searchResponse?.clarification_question);
+
+  const forbiddenPatterns = (testCase.forbidden_result_patterns || [])
+    .map((pattern) => new RegExp(pattern, "iu"));
+  const criticalViolations = results.slice(0, 10).flatMap((result, index) => {
+    const text = resultText(result);
+    return forbiddenPatterns
+      .filter((pattern) => pattern.test(text))
+      .map((pattern) => ({
+        rank: index + 1,
+        product_id: productId(result),
+        pattern: pattern.source,
+      }));
+  });
 
   return {
     case_id: testCase.case_id,
@@ -122,11 +145,14 @@ export function scoreCase(testCase, searchResponse, k = DEFAULT_K) {
     query_types: [...testCase.query_types],
     top1: goldProducts.has(firstId),
     top3,
+    top10,
     category_match: categoryMatch(results, goldCategories),
     reciprocal_rank: reciprocalRank(results, goldProducts),
     ndcg_at_10: ndcgAt(results, goldProducts, goldCategories, k),
     no_answer: noAnswer,
     wrong_answer: Boolean(results.length && !hasCorrect),
+    critical_constraint_violation: criticalViolations.length > 0,
+    critical_violations: criticalViolations,
     clarification_asked: Boolean(searchResponse?.clarification_question),
     wish_suggested: searchResponse?.wish_suggested === true,
     result_count: results.length,
@@ -141,6 +167,7 @@ function summarizeScores(scores) {
     cases: scores.length,
     top1: percent(scores.filter((score) => score.top1).length, scores.length),
     top3: percent(scores.filter((score) => score.top3).length, scores.length),
+    top10: percent(scores.filter((score) => score.top10).length, scores.length),
     category_match: percent(
       categoryScores.filter(Boolean).length,
       categoryScores.length,
@@ -153,6 +180,10 @@ function summarizeScores(scores) {
     ),
     wrong_answer_rate: percent(
       scores.filter((score) => score.wrong_answer).length,
+      scores.length,
+    ),
+    critical_constraint_violation_rate: percent(
+      scores.filter((score) => score.critical_constraint_violation).length,
       scores.length,
     ),
     clarification_rate: percent(
@@ -225,11 +256,13 @@ export function compareReports(baseline, candidate) {
   const metrics = [
     "top1",
     "top3",
+    "top10",
     "category_match",
     "mrr",
     "ndcg_at_10",
     "no_answer_rate",
     "wrong_answer_rate",
+    "critical_constraint_violation_rate",
   ];
   return Object.fromEntries(
     metrics.map((metric) => [

@@ -21,13 +21,29 @@ function sqlText(item) {
 
 const resultMap = new Map();
 const searchable = cases.filter((item) => item.match);
+const sleep = (milliseconds) =>
+  new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
+
+async function executeD1(sql, attempts = 4) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return execFileSync(process.execPath, [npxCli,
+        '--yes', 'wrangler@4.113.0', 'd1', 'execute', 'hoshilu-products',
+        '--remote', '--config', 'wrangler.jsonc',
+        '--command', sql.replace(/\s+/g, ' '), '--json'
+      ], { cwd: worker, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) await sleep(750 * 2 ** (attempt - 1));
+    }
+  }
+  throw lastError;
+}
+
 for (let offset = 0; offset < searchable.length; offset += 1) {
   const batch = searchable.slice(offset, offset + 1);
-  const output = execFileSync(process.execPath, [npxCli,
-    '--yes', 'wrangler@4.113.0', 'd1', 'execute', 'hoshilu-products',
-    '--remote', '--config', 'wrangler.jsonc',
-    '--command', sqlText(batch[0]).replace(/\s+/g, ' '), '--json'
-  ], { cwd: worker, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+  const output = await executeD1(sqlText(batch[0]));
   const parsed = JSON.parse(output.slice(output.indexOf('[')));
   const rows = parsed[0]?.results || [];
   batch.forEach((item) => resultMap.set(item.variant.case_id, rows.filter((row) => row.case_id === item.variant.case_id)));
@@ -61,8 +77,10 @@ const evaluations = cases.map(({ target, variant, match }) => {
     rank,
     top1: rank === 1,
     top3: rank > 0 && rank <= 3,
+    top10: rank > 0 && rank <= 10,
     reciprocal_rank: rank ? 1 / rank : 0,
     ndcg_at_3: rank > 0 && rank <= 3 ? 1 / Math.log2(rank + 1) : 0,
+    ndcg_at_10: rank > 0 && rank <= 10 ? 1 / Math.log2(rank + 1) : 0,
     category_match: results.slice(0, 3).some((row) => lexicalCategoryMatch(target, row)),
     no_answer: results.length === 0,
     asserted_answer: !decision.needs_clarification,
@@ -85,9 +103,11 @@ function metrics(items) {
     cases: items.length,
     top1: average(items, 'top1'),
     top3: average(items, 'top3'),
+    top10: average(items, 'top10'),
     category_match: average(items, 'category_match'),
     mrr: average(items, 'reciprocal_rank'),
     ndcg_at_3: average(items, 'ndcg_at_3'),
+    ndcg_at_10: average(items, 'ndcg_at_10'),
     no_answer_rate: average(items, 'no_answer'),
     wrong_answer_rate: average(items, 'wrong_answer'),
     clarification_rate: average(items, 'clarification_required'),
@@ -114,14 +134,14 @@ mkdirSync(resultsDir, { recursive: true });
 const jsonPath = resolve(resultsDir, `itg-gold-${label}.json`);
 writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 const pct = (value) => `${(value * 100).toFixed(1)}%`;
-const metricRow = (name, value) => `| ${name} | ${value.cases} | ${pct(value.top1)} | ${pct(value.top3)} | ${pct(value.category_match)} | ${value.mrr.toFixed(3)} | ${value.ndcg_at_3.toFixed(3)} | ${pct(value.no_answer_rate)} | ${pct(value.wrong_answer_rate)} |`;
+const metricRow = (name, value) => `| ${name} | ${value.cases} | ${pct(value.top1)} | ${pct(value.top3)} | ${pct(value.top10)} | ${pct(value.category_match)} | ${value.mrr.toFixed(3)} | ${value.ndcg_at_3.toFixed(3)} | ${value.ndcg_at_10.toFixed(3)} | ${pct(value.no_answer_rate)} | ${pct(value.wrong_answer_rate)} |`;
 const markdown = [
   `# HOSHILU ITG曖昧検索評価 — ${label}`,
   '',
   `生成日時: ${report.generated_at}`,
   '',
-  '| 区分 | 件数 | Top-1 | Top-3 | カテゴリ一致 | MRR | nDCG@3 | 無回答率 | 誤答率 |',
-  '|---|---:|---:|---:|---:|---:|---:|---:|---:|',
+  '| 区分 | 件数 | Top-1 | Top-3 | Top-10 | カテゴリ一致 | MRR | nDCG@3 | nDCG@10 | 無回答率 | 誤答率 |',
+  '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
   metricRow('全体', report.overall),
   '',
   '',

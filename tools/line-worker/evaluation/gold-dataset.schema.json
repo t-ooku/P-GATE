@@ -63,6 +63,11 @@
       "expected_behavior": {
         "enum": ["answer", "clarify", "save_to_wish"]
       },
+      "forbidden_result_patterns": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 },
+        "uniqueItems": true
+      },
       "contains_personal_data": { "const": false },
       "label_source": {
         "enum": ["itg_catalog", "verified_order_history", "manual_verified"]
