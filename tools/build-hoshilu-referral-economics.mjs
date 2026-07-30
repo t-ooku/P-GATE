@@ -8,6 +8,7 @@ const wb = Workbook.create();
 const dashboard = wb.worksheets.add("Dashboard");
 const assumptions = wb.worksheets.add("Assumptions");
 const scenarios = wb.worksheets.add("Scenario Matrix");
+const costModel = wb.worksheets.add("HOSHILU Cost Model");
 const checks = wb.worksheets.add("Checks & Sources");
 
 const navy = "#172554";
@@ -190,6 +191,82 @@ chart.hasLegend = true;
 chart.yAxis = { numberFormatCode: "¥#,##0" };
 chart.setPosition("J10", "Q26");
 
+costModel.getRange("A1:F1").merge();
+costModel.getRange("A1").values = [["HOSHILU 初年度経費・利益モデル（人件費・外注費・広告費を除外）"]];
+costModel.getRange("A3:D3").values = [["年間シナリオ", "控えめ", "基準", "成功"]];
+costModel.getRange("A4:D15").values = [
+  ["HOSHILU売上", 5_527_060, 22_751_269, 93_580_700],
+  ["カード決済比率", 0, 0.25, 0.4],
+  ["銀行振込比率", 1, 0.75, 0.6],
+  ["カード+Billing料率", 0.043, 0.043, 0.043],
+  ["銀行振込+Billing料率", 0.022, 0.022, 0.022],
+  ["Cloudflare Workers・D1", 12_000, 12_000, 24_000],
+  ["ドメイン", 6_000, 6_000, 6_000],
+  ["Resendメール", 0, 36_000, 108_000],
+  ["LINE", 0, 60_000, 180_000],
+  ["X APIクレジット", 30_000, 100_000, 300_000],
+  ["監視・追加SaaS", 0, 12_000, 24_000],
+  ["会計ソフト追加分", 0, 36_000, 36_000],
+];
+costModel.getRange("A17:D17").values = [["計算結果", "控えめ", "基準", "成功"]];
+costModel.getRange("A18:A23").values = [
+  ["Stripe決済費"],
+  ["固定・準固定費"],
+  ["人件費以外の経費合計"],
+  ["人件費・税引前利益"],
+  ["経費率"],
+  ["利益率"],
+];
+for (const col of ["B", "C", "D"]) {
+  costModel.getRange(`${col}18`).formulas = [[
+    `=${col}4*(${col}5*${col}7+${col}6*${col}8)`,
+  ]];
+  costModel.getRange(`${col}19`).formulas = [[`=SUM(${col}9:${col}15)`]];
+  costModel.getRange(`${col}20`).formulas = [[`=SUM(${col}18:${col}19)`]];
+  costModel.getRange(`${col}21`).formulas = [[`=${col}4-${col}20`]];
+  costModel.getRange(`${col}22`).formulas = [[`=IFERROR(${col}20/${col}4,0)`]];
+  costModel.getRange(`${col}23`).formulas = [[`=IFERROR(${col}21/${col}4,0)`]];
+}
+costModel.getRange("F3:J3").values = [[
+  "費目", "分類", "根拠", "料金根拠URL", "課金開始条件",
+]];
+costModel.getRange("F4:J13").values = [
+  ["Cloudflare Workers・D1", "必須固定", "Paid最低$5/月。大半は基本枠内", "https://developers.cloudflare.com/workers/platform/pricing/", "常時"],
+  ["ドメイン", "必須固定", "hoshilu.app更新費の仮定", "契約中レジストラの請求明細", "年次更新"],
+  ["Stripeカード", "売上連動", "国内カード3.6% + Billing 0.7%", "https://stripe.com/jp/pricing", "カード決済成功時"],
+  ["Stripe銀行振込", "売上連動", "銀行振込1.5% + Billing 0.7%", "https://stripe.com/jp/pricing", "銀行振込処理時"],
+  ["Resend", "段階課金", "月3,000通まで無料、Pro $20/月", "https://resend.com/pricing", "無料枠超過時"],
+  ["LINE", "段階課金", "月200通無料、ライト5,000円/月", "https://developers.line.biz/ja/docs/messaging-api/pricing/", "プッシュ通知増加時"],
+  ["X API", "任意・従量", "実際の購入クレジットだけ", "X Developer Console請求画面", "残高購入時"],
+  ["監視・追加SaaS", "任意", "Cloudflare標準機能で開始可能", "各契約サービス請求明細", "追加契約時"],
+  ["会計ソフト追加分", "任意", "既存契約で賄える場合は0円", "利用中サービス請求明細", "追加契約時"],
+  ["生成AI API", "現在0円", "本番検索コードに外部生成AI呼出しなし", "HOSHILU実装確認 2026-07-30", "将来導入時のみ"],
+];
+costModel.getRange("A25:D27").merge();
+costModel.getRange("A25").values = [[
+  "除外：役員報酬、従業員給与、社会保険、人的外注、広告出稿、法人税。黄色セルは予算入力であり、実際の請求書・利用量へ置き換えて更新します。",
+]];
+costModel.getRange("A29:D29").merge();
+costModel.getRange("A29").values = [["モデルチェック"]];
+costModel.getRange("A30:A32").values = [["決済構成比"], ["利益計算一致"], ["経費率＋利益率"]];
+costModel.getRange("B30:D32").formulas = [
+  [
+    "=IF(ABS(B5+B6-1)<0.0001,\"OK\",\"ERROR\")",
+    "=IF(ABS(C5+C6-1)<0.0001,\"OK\",\"ERROR\")",
+    "=IF(ABS(D5+D6-1)<0.0001,\"OK\",\"ERROR\")",
+  ],
+  [
+    "=IF(ABS(B21-(B4-B20))<0.01,\"OK\",\"ERROR\")",
+    "=IF(ABS(C21-(C4-C20))<0.01,\"OK\",\"ERROR\")",
+    "=IF(ABS(D21-(D4-D20))<0.01,\"OK\",\"ERROR\")",
+  ],
+  [
+    "=IF(ABS(B22+B23-1)<0.0001,\"OK\",\"ERROR\")",
+    "=IF(ABS(C22+C23-1)<0.0001,\"OK\",\"ERROR\")",
+    "=IF(ABS(D22+D23-1)<0.0001,\"OK\",\"ERROR\")",
+  ],
+];
+
 checks.getRange("A1:E1").merge();
 checks.getRange("A1").values = [["検算・出典"]];
 checks.getRange("A3:B8").values = [
@@ -211,7 +288,7 @@ checks.getRange("A10:D15").values = [
   ["注意", "カテゴリ別AOV・CVR等は編集可能な仮説", "HOSHILU内部試算", "実績30/60/90日で更新"],
 ];
 
-for (const sheet of [dashboard, assumptions, scenarios, checks]) {
+for (const sheet of [dashboard, assumptions, scenarios, costModel, checks]) {
   sheet.showGridLines = false;
   sheet.freezePanes.freezeRows(sheet === scenarios ? 3 : 2);
   const used = sheet.getUsedRange();
@@ -220,7 +297,7 @@ for (const sheet of [dashboard, assumptions, scenarios, checks]) {
   used.format.borders = { preset: "all", style: "thin", color: border };
   used.format.autofitRows();
 }
-for (const sheet of [dashboard, assumptions, scenarios, checks]) {
+for (const sheet of [dashboard, assumptions, scenarios, costModel, checks]) {
   sheet.getRange("A1:Q2").format.fill = navy;
   sheet.getRange("A1:Q2").format.font = { name: "Yu Gothic", size: 15, bold: true, color: "#FFFFFF" };
 }
@@ -234,6 +311,13 @@ dashboard.getRange("D4:E4").format = { fill: cyan, font: { bold: true, color: "#
 dashboard.getRange("G4:H4").format = { fill: cyan, font: { bold: true, color: "#FFFFFF" } };
 dashboard.getRange("A18:H20").format = { fill: pale, font: { bold: true, color: navy }, wrapText: true };
 scenarios.getRange("A3:Q3").format = { fill: violet, font: { bold: true, color: "#FFFFFF" } };
+costModel.getRange("A3:D3").format = { fill: violet, font: { bold: true, color: "#FFFFFF" } };
+costModel.getRange("A17:D17").format = { fill: cyan, font: { bold: true, color: "#FFFFFF" } };
+costModel.getRange("F3:J3").format = { fill: violet, font: { bold: true, color: "#FFFFFF" } };
+costModel.getRange("B4:D15").format.fill = inputFill;
+costModel.getRange("A25:D27").format = { fill: pale, font: { bold: true, color: navy }, wrapText: true };
+costModel.getRange("A29:D29").format = { fill: navy, font: { bold: true, color: "#FFFFFF" } };
+costModel.getRange("B30:D32").format = { fill: "#DCFCE7", font: { color: "#166534", bold: true } };
 checks.getRange("A3:B3").format = { fill: violet, font: { bold: true, color: "#FFFFFF" } };
 checks.getRange("A10:D10").format = { fill: violet, font: { bold: true, color: "#FFFFFF" } };
 
@@ -259,6 +343,11 @@ scenarios.getRange(`F4:F${3 + scenarioKeys.length}`).format.numberFormat = "0.0"
 scenarios.getRange(`G4:M${3 + scenarioKeys.length}`).format.numberFormat = "¥#,##0;[Red]-¥#,##0";
 scenarios.getRange(`N4:N${3 + scenarioKeys.length}`).format.numberFormat = "0.0%";
 scenarios.getRange(`O4:P${3 + scenarioKeys.length}`).format.numberFormat = "¥#,##0;[Red]-¥#,##0";
+costModel.getRange("B4:D4").format.numberFormat = "¥#,##0;[Red]-¥#,##0";
+costModel.getRange("B5:D8").format.numberFormat = "0.0%";
+costModel.getRange("B9:D15").format.numberFormat = "¥#,##0;[Red]-¥#,##0";
+costModel.getRange("B18:D21").format.numberFormat = "¥#,##0;[Red]-¥#,##0";
+costModel.getRange("B22:D23").format.numberFormat = "0.0%";
 
 dashboard.getRange("A:A").format.columnWidth = 24;
 dashboard.getRange("B:B").format.columnWidth = 24;
@@ -272,6 +361,13 @@ assumptions.getRange("C:K").format.columnWidth = 16;
 assumptions.getRange("M:S").format.columnWidth = 18;
 scenarios.getRange("A:B").format.columnWidth = 22;
 scenarios.getRange("C:Q").format.columnWidth = 15;
+costModel.getRange("A:A").format.columnWidth = 28;
+costModel.getRange("B:D").format.columnWidth = 18;
+costModel.getRange("F:F").format.columnWidth = 24;
+costModel.getRange("G:G").format.columnWidth = 16;
+costModel.getRange("H:H").format.columnWidth = 38;
+costModel.getRange("I:I").format.columnWidth = 48;
+costModel.getRange("J:J").format.columnWidth = 22;
 checks.getRange("A:A").format.columnWidth = 30;
 checks.getRange("B:B").format.columnWidth = 32;
 checks.getRange("C:C").format.columnWidth = 42;
@@ -286,7 +382,7 @@ const inspection = await wb.inspect({
 });
 await fs.writeFile(`${outputDir}/economics-inspection.txt`, inspection.ndjson ?? String(inspection));
 
-for (const sheetName of ["Dashboard", "Assumptions", "Scenario Matrix", "Checks & Sources"]) {
+for (const sheetName of ["Dashboard", "Assumptions", "Scenario Matrix", "HOSHILU Cost Model", "Checks & Sources"]) {
   const preview = await wb.render({ sheetName, autoCrop: "all", scale: 1, format: "png" });
   const safeName = sheetName.replaceAll(" ", "-").replaceAll("&", "and");
   await fs.writeFile(`${outputDir}/${safeName}.png`, new Uint8Array(await preview.arrayBuffer()));
