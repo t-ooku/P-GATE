@@ -67,17 +67,20 @@
 
 - Stripe CustomerをHOSHILUの事業者IDへ関連付け
 - 月額はCheckout／Subscriptionで前払い
-- 成果報酬は月末締めでInvoiceへ加算
+- 成果報酬は前払い残高から帰属確定時に消化
 - 法人はStripe Invoicingまたは銀行振込を選択可能
 - カード情報はHOSHILUで保持しない
 - Webhook署名検証とイベントIDの重複排除
-- 支払い失敗、猶予期間、督促、利用停止を状態遷移で管理
+- 翌利用期間の開始時点で未払いなら契約直リンクとセラー機能を停止
+- 支払確認後に自動再開
+- 未払い期間へサービスを提供せず、売掛債権を原則作らない
 - 返金・解約・プラン変更・請求先変更を管理
 
 完了条件:
 
 - 同じWebhookを複数回受けても二重請求しない
-- 支払い失敗で即座に商品を消さず、契約どおりの猶予を適用
+- 支払い済み期間の途中では即時停止せず、次期開始時に未払いなら停止
+- 停止後の支払確認で重複なく再開
 - 請求額の根拠を事業者と運営が確認できる
 
 ## Phase 4: 3か月から4か月目への移行
@@ -119,4 +122,3 @@
 - `docs/HOSHILU_SELLER_GROWTH_AND_BILLING_SPEC_v0.2.md`
 - `docs/HOSHILU_SELLER_PRICING_SPEC_v0.1.md`
 - `marketing/HOSHILU_SELLER_COMMERCIALIZATION_BACKLOG.csv`
-
