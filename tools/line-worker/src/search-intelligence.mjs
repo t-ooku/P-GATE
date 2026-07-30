@@ -9,7 +9,7 @@ const RULES = [
   ['screwdriver',/(ドライバー|ねじ回し|螺子回し|screwdriver|細長い.*工具)/iu,['screwdriver','driver']],
   ['building-block',/(レゴ|lego|ブロック.*おもちゃ|building block)/iu,['lego','brick','building']],
   ['candle',/(キャンドル|ろうそく|蝋燭|candle|火をつける.*匂い)/iu,['candle','soy']],
-  ['earphones',/(イヤホン|イヤーバッド|earbud|headphone|耳に入れる.*音)/iu,['earbud','headphone']],
+  ['earphones',/(イヤホン|イヤーバッド|earbuds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','headphone']],
   ['backpack',/(リュック|バックパック|backpack|背負う)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],

@@ -89,9 +89,13 @@ const GENERIC_PRODUCTS = [
 
 const GENERIC_ATTRIBUTES = [
   ['透明', /(?:透明|クリア|clear|transparent|투명)/iu],
-  ['完全ワイヤレス', /(?:完全ワイヤレス|フルワイヤレス|左右独立|コードレス|true\s*wireless|\btws\b)/iu],
-  ['ワイヤレス', /(?:ワイヤレス|wireless|bluetooth|블루투스|无线|無線)/iu],
+  ['完全ワイヤレス', /(?:完全ワイヤレス|フルワイヤレス|左右独立|左右分離|コードレス|コードなし|ケーブルなし|true\s*wireless|\btws\b|wire[- ]?free|真无线|真無線|完全无线|完全無線|완전\s*무선|코드\s*없는)/iu],
+  ['ワイヤレス', /(?:ワイヤレス|wireless|bluetooth|蓝牙|藍牙|블루투스|무선|无线|無線)/iu],
   ['ノイズキャンセリング', /(?:ノイズキャンセリング|noise\s*cancell?ing|\banc\b)/iu],
+  ['スマホ対応', /(?:スマホ対応|スマートフォン対応|携帯対応|phone\s*compatible|smartphone\s*compatible|手机兼容|手機相容|스마트폰\s*호환)/iu],
+  ['急速充電', /(?:急速充電|高速充電|fast\s*charg(?:e|ing)|quick\s*charg(?:e|ing)|快充|고속\s*충전)/iu],
+  ['自動', /(?:自動|automatic|auto\b|自动|自動|자동)/iu],
+  ['静音', /(?:静音|音が静か|quiet|silent|低噪音|저소음)/iu],
   ['小型', /(?:小さい|小さな|小型|手のひら|コンパクト|ミニ|small|mini|compact|小巧|소형|작은)/iu],
   ['軽量', /(?:軽い|軽量|lightweight|轻量|輕量|경량|가벼운)/iu],
   ['防水', /(?:防水|waterproof|防水型|방수)/iu],
@@ -130,19 +134,25 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (!normalized) return '';
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
-  const product = GENERIC_PRODUCTS.find(([, pattern]) => pattern.test(normalized));
-  if (!product) return compactUnknownSearchPhrase(normalized);
-  const isEarphone = product[0] === 'イヤホン';
-  if (!isEarphone && /(?:\/|／|\||｜)/u.test(normalized)) return normalized;
+  const products = GENERIC_PRODUCTS
+    .filter(([, pattern]) => pattern.test(normalized))
+    .map(([label]) => label)
+    .filter((label, index, values) => values.indexOf(label) === index);
+  if (!products.length) return compactUnknownSearchPhrase(normalized);
   const attributes = GENERIC_ATTRIBUTES
     .filter(([, pattern]) => pattern.test(normalized))
     .map(([label]) => label)
     .filter((label, index, values) =>
       (label !== 'ワイヤレス' || !values.includes('完全ワイヤレス'))
-      && !product[0].includes(label)
+      && !products.some((product) => product.includes(label))
     );
-  const limit = marketplace === 'QOO10_JP' ? 3 : 5;
-  return [...new Set([...attributes.slice(0, limit - 1), product[0]])].join(' ');
+  const limit = marketplace === 'QOO10_JP' ? 3 : 6;
+  const productLimit = Math.min(products.length, 2);
+  const attributeLimit = Math.max(0, limit - productLimit);
+  return [...new Set([
+    ...attributes.slice(0, attributeLimit),
+    ...products.slice(0, productLimit),
+  ])].join(' ');
 }
 
 export function buildQoo10SearchKeywords(query) {

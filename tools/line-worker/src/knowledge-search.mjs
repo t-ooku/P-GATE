@@ -296,16 +296,21 @@ function isPortableUmbrellaMismatch(candidate) {
 }
 
 function isTrueWirelessEarphonesIntent(query) {
-  return /(?:完全ワイヤレス|フルワイヤレス|左右独立|コードレス|true\s*wireless|\btws\b|wire[- ]?free\s*ear(?:buds?|phones?))/iu
-    .test(String(query || '').normalize('NFKC'));
+  const text = String(query || '').normalize('NFKC');
+  const explicitTrueWireless = /(?:完全ワイヤレス|フルワイヤレス|左右独立|左右分離|コードレス|コードなし|ケーブルなし|true\s*wireless|\btws\b|wire[- ]?free|真无线|真無線|完全无线|完全無線|완전\s*무선|코드\s*없는)/iu.test(text);
+  const earphone = /(?:イヤホン|イヤーバッド|earbuds?|earphones?|耳机|耳機|이어폰)/iu;
+  const wireless = /(?:ワイヤレス|wireless|bluetooth|蓝牙|藍牙|无线|無線|블루투스|무선)/iu;
+  return explicitTrueWireless || (
+    earphone.test(text) && wireless.test(text)
+  );
 }
 
 function isTrueWirelessEarphonesMismatch(candidate) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
     .toLowerCase();
-  const explicitlyWired = /(?:有線|コード付き|ケーブル付き|\bwired\b|3[.]5\s*mm|audio cable|lightning connector|usb-c connector)/u.test(text);
-  const explicitlyWireless = /(?:完全ワイヤレス|フルワイヤレス|左右独立|コードレス|ワイヤレス|bluetooth|true\s*wireless|\btws\b|wire[- ]?free)/u.test(text);
+  const explicitlyWired = /(?:有線|コード付き|ケーブル付き|\bwired\b|3[.]5\s*mm|audio cable|lightning connector|usb-c connector|有线|有線|线控|線控|유선|케이블형)/u.test(text);
+  const explicitlyWireless = /(?:完全ワイヤレス|フルワイヤレス|左右独立|左右分離|コードレス|コードなし|ケーブルなし|ワイヤレス|bluetooth|true\s*wireless|\btws\b|wire[- ]?free|真无线|真無線|无线|無線|蓝牙|藍牙|완전\s*무선|블루투스|무선)/u.test(text);
   return explicitlyWired || !explicitlyWireless;
 }
 

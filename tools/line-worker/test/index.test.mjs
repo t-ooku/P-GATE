@@ -9,7 +9,11 @@ globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 
 const workerModule = await import('../src/index.mjs');
 const { rankMerchantCandidates: rankMerchantCandidatesForTest } = await import('../src/knowledge-search.mjs');
-const { buildDeviceAccessorySearchKeywords } = await import('../public/marketplace-search-keywords-v2.mjs');
+const {
+  buildDeviceAccessorySearchKeywords,
+  buildQoo10SearchKeywords: buildBrowserQoo10SearchKeywords,
+  buildMarketplaceSearchKeywords
+} = await import('../public/marketplace-search-keywords-v2.mjs');
 const {
   verifyLineSignature, createTrackToken, verifyTrackToken,
   isAllowedDestination, isProductDetailDestination, productMarketplaceOffers, candidateDestination, marketplaceForDestination, buildReplyMessages, validateKnowledgeRequest, sanitizePublicCandidate,
@@ -193,6 +197,23 @@ test('Amazon検索フォールバックに承認済みアソシエイトIDを付
   assert.match(url.searchParams.get('k'), /phone/);
 });
 
+test('アパレル検索では主力4モールに専門4モールを追加する', async () => {
+  const decorated = await workerModule.decoratePwaResultForTest(
+    { query_id: 'q-apparel', candidates: [] },
+    new Request('https://hoshilu.app/api/knowledge'),
+    { LINK_SIGNING_SECRET: 'test-secret', AMAZON_ASSOCIATE_TAG: 'hoshilu-22' },
+    'session-hash',
+    'Korean street black cropped top'
+  );
+  assert.deepEqual(
+    decorated.marketplace_search_links.map((item) => item.marketplace),
+    [
+      'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP',
+      'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP'
+    ]
+  );
+});
+
 test('AmazonへはHOSHILUが整理した商品条件を引き継ぐ', () => {
   const keywords = buildAmazonSearchKeywords(
     'SNSで見た blue の小さい table lamp'
@@ -266,6 +287,17 @@ test('PWA公開質問は同意・文字数・匿名セッション・Turnstile�
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token'
   });
   assert.equal(valid.query, 'breakfast cereal');
+  assert.equal(valid.traffic_class, 'UNATTRIBUTED');
+  assert.equal(validateKnowledgeRequest({
+    query: 'breakfast cereal', consent: true,
+    session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token',
+    source: 'codex_acceptance', medium: 'qa', campaign: 'search_test'
+  }).traffic_class, 'QA');
+  assert.equal(validateKnowledgeRequest({
+    query: 'breakfast cereal', consent: true,
+    session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token',
+    source: 'instagram', medium: 'organic_social', campaign: 'itg_brand_reel'
+  }).traffic_class, 'ATTRIBUTED');
   assert.throws(() => validateKnowledgeRequest({ ...valid, consent: false }), /CONSENT_REQUIRED/);
   assert.throws(() => validateKnowledgeRequest({ ...valid, query: 'x' }), /QUERY_LENGTH_INVALID/);
   assert.throws(() => validateKnowledgeRequest({ ...valid, session_id: 'email@example.com' }), /SESSION_ID_INVALID/);
@@ -459,6 +491,52 @@ test('Qoo10の商品検索はiPhoneの充電器をケースへ誤変換しない
   assert.equal(keywords, 'iPhone 充電器');
 });
 
+test('Qoo10は曖昧な説明を短い商品語と必須属性へ自動変換する', () => {
+  const query = '韓国っぽい透明のワイヤレスイヤホン / 完全ワイヤレス';
+  assert.equal(buildQoo10SearchKeywords(query), '透明 完全ワイヤレス イヤホン');
+  assert.equal(buildQoo10SearchKeywords(query), buildBrowserQoo10SearchKeywords(query));
+});
+
+test('モール検索は他カテゴリの曖昧な文章も商品語と重要属性へ短縮する', () => {
+  const cases = [
+    ['推し活で使える手のひらサイズの小さな写真プリンター', '小型 写真プリンター'],
+    ['雨の日も使える軽い折りたたみ日傘', '軽量 折りたたみ傘'],
+    ['韓国っぽい黒いミニバッグ', '小型 黒 韓国風 バッグ'],
+    ['白くて小さい防水アクションカメラ', '小型 防水 白 カメラ'],
+    ['TikTokで見たピンクの携帯扇風機', 'ピンク 携帯扇風機'],
+    ['韓国で買った紫のサツマイモチップス 料理・食事に使う', '紫 さつまいもチップス']
+  ];
+  for (const [query, expected] of cases) {
+    assert.equal(buildMarketplaceSearchKeywords(query, 'AMAZON_JP'), expected, query);
+  }
+});
+
+test('美容・生活・家電・ペット・ファッションも説明文を商品検索語へ変換する', () => {
+  const cases = [
+    ['SNSで見た韓国の透明な加湿器が欲しい', '透明 韓国風 加湿器'],
+    ['旅行で使える折り畳める軽い水筒', '軽量 折りたたみ 水筒'],
+    ['インスタで見たピンクのシートマスクを探している', 'ピンク シートマスク'],
+    ['犬が水を飲む白い自動の給水器', '自動 白 ペット給水器'],
+    ['通勤で使う黒い軽量ノートパソコン', '軽量 黒 ノートパソコン'],
+    ['海外で見たゴールドのネックレスが欲しい', 'ゴールド ネックレス'],
+    ['料理に使う小型の黒いエアフライヤー', '小型 黒 調理家電']
+  ];
+  for (const [query, expected] of cases) {
+    assert.equal(buildMarketplaceSearchKeywords(query, 'QOO10_JP'), expected, query);
+  }
+});
+
+test('未知商品でも購入文脈とSNS文脈を除き商品手掛かりを保持する', () => {
+  assert.equal(
+    buildMarketplaceSearchKeywords('TikTokで見た机の下につける白い引き出しが欲しい', 'QOO10_JP'),
+    '机の下につける白い引き出し'
+  );
+  assert.equal(
+    buildMarketplaceSearchKeywords('韓国で買った星形のキーホルダーを探したい', 'QOO10_JP'),
+    '星形のキーホルダー'
+  );
+});
+
 test('楽天公式アフィリエイトURLは実商品ページを内包する場合だけ許可する', () => {
   const valid = 'https://hb.afl.rakuten.co.jp/hgc/abc123/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fshop%2Fitem-1%2F';
   const externalTarget = 'https://hb.afl.rakuten.co.jp/hgc/abc123/?pc=https%3A%2F%2Fevil.example%2Fitem';
@@ -526,16 +604,29 @@ test('Qoo10のAPI成功時とブラウザ緊急フォールバックは同じ商
     assert.equal(buildQoo10SearchKeywords(query), buildDeviceAccessorySearchKeywords(query));
   }
 });
-test('横断検索語はスラッシュで追加した日本語条件をすべて保持する', () => {
+test('横断検索語はスラッシュ付き長文も主要商品と必須属性へ短縮する', () => {
   const query = '推し活で使える小さな写真プリンター / 写真を撮る / 手のひらサイズ / アクションカメラ';
   const amazonKeywords = buildAmazonSearchKeywords(query);
   const qoo10Keywords = buildQoo10SearchKeywords(query);
-  for (const keywords of [amazonKeywords, qoo10Keywords]) {
-    assert.match(keywords, /写真プリンター/);
-    assert.match(keywords, /写真を撮る/);
-    assert.match(keywords, /手のひらサイズ/);
-    assert.match(keywords, /アクションカメラ/);
-    assert.notEqual(keywords, 'camera');
+  assert.match(amazonKeywords, /写真プリンター/);
+  assert.notEqual(amazonKeywords, 'camera');
+  assert.equal(qoo10Keywords, '小型 写真プリンター カメラ');
+  assert.doesNotMatch(qoo10Keywords, /推し活|写真を撮る|手のひらサイズ|\//);
+});
+
+test('日英中韓のコードなしイヤホンを完全ワイヤレス検索へ統一する', () => {
+  const cases = [
+    '透明でコードなしのイヤホン',
+    'transparent wire-free earbuds',
+    '透明真无线耳机',
+    '투명 완전 무선 이어폰',
+  ];
+  for (const query of cases) {
+    const keywords = buildQoo10SearchKeywords(query);
+    assert.match(keywords, /透明/);
+    assert.match(keywords, /完全ワイヤレス/);
+    assert.match(keywords, /イヤホン/);
+    assert.doesNotMatch(keywords, /有線|wired|유선|有线/);
   }
 });
 

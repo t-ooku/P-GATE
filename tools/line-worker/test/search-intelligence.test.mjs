@@ -111,6 +111,26 @@ test('完全ワイヤレス検索では有線イヤホンと無線根拠のな�
   assert.deepEqual(candidates.map((item) => item.asin), ['TWS000001', 'WIRELESS2']);
 });
 
+test('日英中韓のワイヤレスイヤホン検索でも有線候補を除外する', () => {
+  const candidates = [
+    { asin: 'WIRELESS01', product_name: '透明 Bluetooth ワイヤレスイヤホン' },
+    { asin: 'WIRED00002', product_name: '透明 有線イヤホン 3.5mm コード付き' },
+    { asin: 'UNKNOWN003', product_name: '透明 イヤホン' },
+  ];
+  for (const query of [
+    '透明なワイヤレスイヤホン',
+    'transparent bluetooth earbuds',
+    '透明蓝牙耳机',
+    '투명 무선 이어폰',
+  ]) {
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['WIRELESS01'],
+      query
+    );
+  }
+});
+
 test('low-information and divergent queries request one clarification instead of asserting', () => {
   const low = analyzeSearchDecision('SNSで見た青いやつ', [{ product_name: 'Blue Lamp' }]);
   assert.equal(low.needs_clarification, true);
