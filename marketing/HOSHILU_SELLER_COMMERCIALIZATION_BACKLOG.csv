@@ -22,3 +22,5 @@ SELLER-020,5,P1,Dashboard,"セラー別KPI・請求明細",TODO,"SELLER-012|SELL
 SELLER-021,5,P1,Ranking,"契約直リンク・プラン別購入先優先",PARTIAL,"検索本体への統合",NO,"関連性基準内で上位サブスクから表示し成果報酬のみを下位にする"
 SELLER-022,5,P1,Identity,"商品ID・バリエーションID別の商品判定",PARTIAL,"検索本体への統合",NO,"異なるモール商品IDまたはバリエーションIDを別商品として扱う"
 SELLER-023,3,P0,Billing,"原則返金不可・例外二者承認",PARTIAL,"SELLER-010|正式規約の法務確認",YES,"途中解約・未使用・成果不満は返金せず二重課金・誤課金・法令上必要な場合だけ管理処理する"
+SELLER-024,4,P0,Attribution,"確定注文・モール成果・アシストの三段階判定",PARTIAL,"セラー注文Webhook|モール公式レポート",NO,"証明できた注文だけ成果報酬対象にし直接再訪を推測請求しない"
+SELLER-025,4,P0,Attribution,"同一注文の二重報酬・二重請求防止",PARTIAL,SELLER-024,NO,"同一注文明細を一つの収益区分だけへ冪等登録する"
