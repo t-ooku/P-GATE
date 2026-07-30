@@ -22,6 +22,7 @@ import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
 } from './social-publisher.mjs';
 import { renderSeoPage } from './seo-pages.mjs';
+import { handleGrowthEvent } from './growth-events.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -985,6 +986,8 @@ export default {
     }
     if (request.method === 'POST' && url.pathname === '/api/internal/products/sync') return syncProducts(request, env);
     if (request.method === 'POST' && url.pathname === '/api/internal/marketplace-offers/sync') return syncMarketplaceOffers(request, env);
+    const growthEventResponse = await handleGrowthEvent(request, env);
+    if (growthEventResponse) return growthEventResponse;
     if (request.method === 'GET' && url.pathname === '/api/internal/marketplace-offers/stats') return marketplaceOfferStats(request, env);
     const unmetDemandResponse = await handleUnmetDemandRoutes(request, env);
     if (unmetDemandResponse) return unmetDemandResponse;

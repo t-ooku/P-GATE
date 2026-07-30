@@ -1,0 +1,29 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { normalizeGrowthEvent } from '../src/growth-events.mjs';
+
+test('accepts only anonymous allowlisted growth dimensions', () => {
+  assert.deepEqual(normalizeGrowthEvent({
+    event_type: 'marketplace_click',
+    locale: 'en',
+    source: 'instagram',
+    medium: 'organic_social',
+    campaign: 'ambiguous search',
+    content: 'reel_01',
+    marketplace: 'qoo10_jp',
+    query: 'must not be stored'
+  }), {
+    event_type: 'marketplace_click',
+    locale: 'EN',
+    source: 'instagram',
+    medium: 'organic_social',
+    campaign: 'ambiguoussearch',
+    content: 'reel_01',
+    marketplace: 'QOO10_JP'
+  });
+});
+
+test('rejects unknown event types and marketplace values', () => {
+  assert.throws(() => normalizeGrowthEvent({ event_type: 'raw_query_saved' }), /GROWTH_EVENT_INVALID/);
+  assert.equal(normalizeGrowthEvent({ event_type: 'landing_view', marketplace: 'unknown' }).marketplace, '');
+});
