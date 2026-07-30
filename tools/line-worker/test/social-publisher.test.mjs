@@ -210,6 +210,33 @@ test('Instagramリールの処理が10回を超えても完了まで待機する
   assert.equal(checks, 12);
 });
 
+test('Instagram再試行は保存済みコンテナを再利用して重複作成しない', async () => {
+  let creates = 0;
+  const id = await publishSocialPost({
+    platform: 'INSTAGRAM',
+    caption: 'HOSHILU reel resume',
+    media_url: 'https://hoshilu.app/social/cross-market-reel.mp4',
+    platform_job_id: 'existing-container',
+    status: 'APPROVED'
+  }, {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0
+  }, async (url) => {
+    if (url.endsWith('/123/media')) {
+      creates += 1;
+      return Response.json({ id: 'unexpected-container' });
+    }
+    if (url.includes('/existing-container?fields=status_code')) {
+      return Response.json({ status_code: 'FINISHED' });
+    }
+    if (url.endsWith('/123/media_publish')) return Response.json({ id: 'resumed-reel' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'resumed-reel');
+  assert.equal(creates, 0);
+});
+
 test('Instagram publisher creates a Reels container for an MP4 media URL', async () => {
   let createPayload;
   const id = await publishSocialPost({

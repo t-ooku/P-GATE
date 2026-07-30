@@ -40,6 +40,7 @@ export function normalizeSocialPost(input = {}) {
     caption: disclosedCaption,
     link,
     media_url: clean(input.media_url, 1000),
+    platform_job_id: clean(input.platform_job_id, 120),
     scheduled_at: clean(input.scheduled_at, 40),
     status: clean(input.status || 'REVIEW_REQUIRED', 30).toUpperCase(),
     affiliate
@@ -118,7 +119,7 @@ async function publishX(post, env, fetchImpl) {
   return (await response.json())?.data?.id || '';
 }
 
-async function publishInstagram(post, env, fetchImpl) {
+async function publishInstagram(post, env, fetchImpl, hooks = {}) {
   if (!post.media_url) throw new Error('INSTAGRAM_MEDIA_REQUIRED');
   const account = encodeURIComponent(env.INSTAGRAM_ACCOUNT_ID);
   const headers = { authorization: `Bearer ${env.INSTAGRAM_ACCESS_TOKEN}`, 'content-type': 'application/json' };
@@ -146,17 +147,21 @@ async function publishInstagram(post, env, fetchImpl) {
         image_url: post.media_url,
         caption: [post.caption, post.link].filter(Boolean).join('\n')
       };
-  const create = await fetchImpl(`https://graph.instagram.com/v24.0/${account}/media`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(mediaPayload)
-  });
-  if (!create.ok) {
-    const detail = clean(await create.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
-    throw new Error(`INSTAGRAM_CREATE_${create.status}${detail ? `_${detail}` : ''}`);
+  let creationId = clean(post.platform_job_id, 120);
+  if (!creationId) {
+    const create = await fetchImpl(`https://graph.instagram.com/v24.0/${account}/media`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(mediaPayload)
+    });
+    if (!create.ok) {
+      const detail = clean(await create.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
+      throw new Error(`INSTAGRAM_CREATE_${create.status}${detail ? `_${detail}` : ''}`);
+    }
+    creationId = clean((await create.json())?.id, 120);
+    if (!creationId) throw new Error('INSTAGRAM_CREATION_ID_MISSING');
+    await hooks.onJobCreated?.(creationId);
   }
-  const creationId = (await create.json())?.id;
-  if (!creationId) throw new Error('INSTAGRAM_CREATION_ID_MISSING');
   let statusCode = '';
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const status = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(creationId)}?fields=status_code`, { headers });
@@ -220,12 +225,12 @@ async function publishTikTok(post, env, fetchImpl) {
   return payload?.data?.publish_id || '';
 }
 
-export async function publishSocialPost(post, env, fetchImpl = fetch) {
+export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}) {
   const normalized = normalizeSocialPost(post);
   if (normalized.status !== 'APPROVED') throw new Error('SOCIAL_POST_NOT_APPROVED');
   if (!socialPublisherReadiness(env)[normalized.platform]) throw new Error(`SOCIAL_${normalized.platform}_NOT_CONFIGURED`);
   if (normalized.platform === 'X') return publishX(normalized, env, fetchImpl);
-  if (normalized.platform === 'INSTAGRAM') return publishInstagram(normalized, env, fetchImpl);
+  if (normalized.platform === 'INSTAGRAM') return publishInstagram(normalized, env, fetchImpl, hooks);
   return publishTikTok(normalized, env, fetchImpl);
 }
 
@@ -244,9 +249,14 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
       const claim = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='PUBLISHING',updated_at=?2
         WHERE post_id=?1 AND status='APPROVED'`).bind(row.post_id, now.toISOString()).run();
       if (Number(claim?.meta?.changes || 0) !== 1) continue;
-      const externalId = await publishSocialPost(row, env, fetchImpl);
+      const externalId = await publishSocialPost(row, env, fetchImpl, {
+        onJobCreated: async (jobId) => {
+          await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET platform_job_id=?2,updated_at=?3
+            WHERE post_id=?1 AND status='PUBLISHING'`).bind(row.post_id, jobId, now.toISOString()).run();
+        }
+      });
       await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='PUBLISHED',external_post_id=?2,
-        published_at=?3,updated_at=?3,last_error='' WHERE post_id=?1`)
+        published_at=?3,updated_at=?3,last_error='',platform_job_id='' WHERE post_id=?1`)
         .bind(row.post_id, externalId, now.toISOString()).run();
       published += 1;
     } catch (error) {
