@@ -29,6 +29,9 @@ import {
 } from './social-publisher.mjs';
 import { renderSeoPage } from './seo-pages.mjs';
 import { classifyGrowthTraffic, handleGrowthEvent } from './growth-events.mjs';
+import {
+  enqueueSaleNotifications, handleMarketplaceSaleRoutes
+} from './marketplace-sales.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -968,14 +971,16 @@ function handlePublicConfig(env) {
 async function databaseFeatureChecks(env) {
   const expected = [
     'mywatch_notifications', 'import_restriction_knowledge',
-    'sp_api_listings', 'sp_api_sync_audit'
+    'sp_api_listings', 'sp_api_sync_audit', 'marketplace_sale_events',
+    'member_sale_preferences'
   ];
   if (!env.PRODUCT_DB) return Object.fromEntries(expected.map((name) => [name, false]));
   try {
     const result = await env.PRODUCT_DB.prepare(
       `SELECT name FROM sqlite_master WHERE type='table'
       AND name IN ('mywatch_notifications','import_restriction_knowledge',
-      'sp_api_listings','sp_api_sync_audit')`
+      'sp_api_listings','sp_api_sync_audit','marketplace_sale_events',
+      'member_sale_preferences')`
     ).all();
     const found = new Set((result?.results || []).map((row) => row.name));
     return Object.fromEntries(expected.map((name) => [name, found.has(name)]));
@@ -1024,6 +1029,8 @@ export default {
     if (spApiSellerResponse) return spApiSellerResponse;
     const wishResponse = await handleMemberWishRoutes(request, env);
     if (wishResponse) return wishResponse;
+    const saleResponse = await handleMarketplaceSaleRoutes(request, env);
+    if (saleResponse) return saleResponse;
     const mywatchResponse = await handleMywatchRoutes(request, env);
     if (mywatchResponse) return mywatchResponse;
     const memberResponse = await handleMemberRoutes(request, env);
@@ -1053,6 +1060,7 @@ export default {
     ctx.waitUntil(Promise.allSettled([
       runDueSocialPosts(env, scheduledAt),
       deliverDueWebNotifications(env, scheduledAt),
+      enqueueSaleNotifications(env, scheduledAt),
       runSpApiScheduledSync(env, scheduledAt)
     ]));
   }
