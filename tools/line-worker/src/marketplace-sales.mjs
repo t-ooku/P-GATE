@@ -60,7 +60,8 @@ function safeSale(row) {
     starts_at: row.starts_at,
     ends_at: row.ends_at,
     source_url: row.source_url,
-    image_url: row.image_rights_status === 'APPROVED' ? row.image_url : ''
+    image_url: row.image_rights_status === 'APPROVED' ? row.image_url : '',
+    video_url: row.video_rights_status === 'APPROVED' ? row.video_url : ''
   };
 }
 
@@ -68,7 +69,7 @@ export async function listPublicSales(env, now = new Date()) {
   if (!env.PRODUCT_DB) return [];
   const at = now.toISOString();
   const result = await env.PRODUCT_DB.prepare(
-    `SELECT sale_id,marketplace,info_type,title,summary,starts_at,ends_at,source_url,image_url,image_rights_status
+    `SELECT sale_id,marketplace,info_type,title,summary,starts_at,ends_at,source_url,image_url,image_rights_status,video_url,video_rights_status
      FROM marketplace_sale_events
      WHERE status='APPROVED' AND ends_at>=?1
      ORDER BY starts_at ASC LIMIT 40`
@@ -165,21 +166,24 @@ async function upsertSale(request, env) {
   const saleId = String(input.sale_id || crypto.randomUUID()).slice(0, 80);
   const approved = input.status === 'APPROVED' ? 'APPROVED' : 'DRAFT';
   const rights = input.image_rights_status === 'APPROVED' ? 'APPROVED' : 'NONE';
+  const videoRights = input.video_rights_status === 'APPROVED' ? 'APPROVED' : 'NONE';
   await env.PRODUCT_DB.prepare(
     `INSERT INTO marketplace_sale_events
-     (sale_id,marketplace,info_type,title,summary,starts_at,ends_at,announced_at,source_url,image_url,image_rights_status,status,created_at,updated_at)
-     VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?13)
+     (sale_id,marketplace,info_type,title,summary,starts_at,ends_at,announced_at,source_url,image_url,image_rights_status,video_url,video_rights_status,status,created_at,updated_at)
+     VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?15)
      ON CONFLICT(sale_id) DO UPDATE SET marketplace=excluded.marketplace,info_type=excluded.info_type,title=excluded.title,
        summary=excluded.summary,starts_at=excluded.starts_at,ends_at=excluded.ends_at,
        announced_at=excluded.announced_at,source_url=excluded.source_url,
        image_url=excluded.image_url,image_rights_status=excluded.image_rights_status,
+       video_url=excluded.video_url,video_rights_status=excluded.video_rights_status,
        status=excluded.status,updated_at=excluded.updated_at`
   ).bind(
     saleId, marketplace, infoType, String(input.title || '').trim().slice(0, 140),
     String(input.summary || '').trim().slice(0, 500), startsAt.toISOString(),
     endsAt.toISOString(), new Date(input.announced_at || now).toISOString(),
     source.toString(), rights === 'APPROVED' ? String(input.image_url || '') : '',
-    rights, approved, now
+    rights, videoRights === 'APPROVED' ? String(input.video_url || '') : '',
+    videoRights, approved, now
   ).run();
   return Response.json({ ok: true, sale_id: saleId, status: approved });
 }
