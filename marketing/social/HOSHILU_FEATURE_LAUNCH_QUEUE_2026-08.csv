@@ -3,7 +3,7 @@ hoshilu_feature_001,1,X,TEXT,FASHION_9,"ファッション検索は、SNKRDUNK�
 hoshilu_feature_002,2,INSTAGRAM,CAROUSEL,FASHION_9,"欲しい服、探す場所は最大9モール。","ブランド名が分からなくても、色・形・系統をそのままホシルへ。ファッション検索ならSNKRDUNKを含む専門5モールも追加して探せます。","プロフィールから検索","白 厚底 レトロ スニーカー","9モール名と検索体験だけを使う自社制作カルーセル",false,REVIEW_REQUIRED
 hoshilu_feature_003,3,X,TEXT,SALE_NOTIFICATION,"セール日を、毎回見に行かなくていい。","無料会員のセール通知は最初からON。確認済みの割引セールだけを事前または開始時に知らせ、その他の新着・記事通知は自分でONにできます。","通知設定を確認","セール通知","自社テキストのみ",false,REVIEW_REQUIRED
 hoshilu_feature_004,4,INSTAGRAM,REEL,SALE_NOTIFICATION,"届くのは、まずセールだけ。","Amazon・楽天市場・Qoo10・SHEINなど、掲載モールの確認済みセールを横断。開始前に気づいて、ホシルで買える場所を探せます。","無料登録して通知設定","セール通知","通知設定画面の本番実機録画。個人情報は映さない",false,REVIEW_REQUIRED
-hoshilu_feature_005,5,X,TEXT,FOOD_DELIVERY,"「ピザ食べたい」も、ホシルから。","食事の検索ではUber Eats・出前館・menu・Rocket Nowの公式サービスへ案内。店舗・価格・配達可否は住所設定後に各サービスで確認できます。","食べたいものを入力","今日 ピザ デリバリー","自社テキストのみ",false,REVIEW_REQUIRED
-hoshilu_feature_006,6,INSTAGRAM,CAROUSEL,FOOD_DELIVERY,"デリバリーアプリ、どこから見る？","ホシルで食べたいものを入力すると、主要デリバリー4サービスの公式導線をまとめて表示。現在は各サービスへの案内で、料理価格の横断比較ではありません。","食事検索を試す","ランチ カレー デリバリー","公式ロゴ・画面を無断使用しない自社制作文字カード",false,REVIEW_REQUIRED
+hoshilu_feature_005,5,X,TEXT,FOOD_DELIVERY,"「ピザ食べたい」も、ホシルから。","食事の検索ではUber Eats・出前館・menu・Rocket Nowの公式サービスへ案内。店舗・価格・配達可否は住所設定後に各サービスで確認できます。","食べたいものを入力","今日 ピザ デリバリー","採用見送り。公開・再利用禁止",false,CANCELLED
+hoshilu_feature_006,6,INSTAGRAM,CAROUSEL,FOOD_DELIVERY,"デリバリーアプリ、どこから見る？","ホシルで食べたいものを入力すると、主要デリバリー4サービスの公式導線をまとめて表示。現在は各サービスへの案内で、料理価格の横断比較ではありません。","食事検索を試す","ランチ カレー デリバリー","採用見送り。公開・再利用禁止",false,CANCELLED
 hoshilu_feature_007,7,X,TEXT,AMBIGUOUS_SEARCH,"検索語が分からないなら、説明でいい。","「SNSで見た」「丸くて光る」「韓国っぽい」――断片的な記憶を、モールで探しやすい商品条件へ整えます。","覚えている特徴を入力","SNSで見た 丸く光る 部屋のライト","自社テキストのみ",false,REVIEW_REQUIRED
 hoshilu_feature_008,8,INSTAGRAM,CAROUSEL,HOSHITTOKU,"今日見つからなくても、検索を終わらせない。","曖昧な検索をほしっトクして、あとから再検索。無料会員ならセール通知の設定もまとめて管理できます。","ほしっトクを使う","バッグにつける 小さい ぬいぐるみ","自社制作の検索・保存フロー図",false,REVIEW_REQUIRED
