@@ -67,6 +67,43 @@
     </div>
   </dialog>
 
+  <dialog id="notificationSettingsDialog" class="notification-settings-dialog" aria-labelledby="notificationSettingsTitle">
+    <form id="notificationSettingsForm" class="notification-settings-card" method="dialog">
+      <div class="settings-header">
+        <div><p class="step">NOTIFICATION SETTINGS</p><h2 id="notificationSettingsTitle">通知設定</h2></div>
+        <button id="notificationSettingsClose" class="settings-close" type="button" aria-label="閉じる">&times;</button>
+      </div>
+      <p id="notificationSettingsLead" class="settings-lead">セールだけ最初からON。必要な情報だけ後から追加できます。</p>
+
+      <fieldset>
+        <legend id="settingsInfoLegend">受け取る情報</legend>
+        <div id="settingsInfoTypes" class="settings-grid"></div>
+      </fieldset>
+      <fieldset>
+        <legend id="settingsMallLegend">対象モール</legend>
+        <div id="settingsMarketplaces" class="settings-grid settings-malls"></div>
+      </fieldset>
+      <div class="settings-row">
+        <label><span id="settingsFrequencyLabel">通知頻度</span><select id="settingsFrequency"><option value="INSTANT">その都度</option><option value="DAILY">1日1回まとめて</option><option value="WEEKLY">週1回まとめて</option></select></label>
+        <label><span id="settingsLanguageLabel">通知言語</span><select id="settingsLanguage"><option value="JA">日本語</option><option value="EN">English</option><option value="ZH">中文</option><option value="KO">한국어</option></select></label>
+      </div>
+      <fieldset>
+        <legend id="settingsTimingLegend">通知する時間</legend>
+        <label class="settings-switch"><input id="settingsAdvance" type="checkbox" checked><span id="settingsAdvanceLabel">セール開始前にも知らせる</span></label>
+        <div class="settings-row quiet-hours">
+          <label><span id="settingsQuietStartLabel">おやすみ開始</span><input id="settingsQuietStart" type="time" value="21:00"></label>
+          <label><span id="settingsQuietEndLabel">おやすみ終了</span><input id="settingsQuietEnd" type="time" value="08:00"></label>
+        </div>
+      </fieldset>
+      <p class="settings-privacy"><span id="settingsPrivacyText">通知設定は会員IDに紐づけて保存します。</span> <a href="/privacy.html">プライバシー</a></p>
+      <p id="notificationSettingsStatus" class="settings-status" role="status" aria-live="polite"></p>
+      <div class="settings-actions">
+        <button id="settingsReset" class="secondary" type="button">初期設定に戻す</button>
+        <button id="settingsSave" class="primary" type="submit">設定を保存</button>
+      </div>
+    </form>
+  </dialog>
+
   <nav class="feature-pills" aria-label="ホシルの機能">
           <button id="goSearch" type="button">ホシル</button><button id="goWish" type="button">ほしっトク</button>
         </nav>
@@ -119,6 +156,7 @@
             <p id="saleNoticeBody">おすすめ記事や一般ニュースは通知しません。割引セールの開始前と開始時だけをお知らせします。</p>
             <label class="sale-preference"><input id="saleOnlyToggle" type="checkbox" checked><span id="saleToggleLabel">全モールのセール通知を受け取る</span></label>
             <small id="salePreferenceStatus" class="sale-preference-status" aria-live="polite">ログインすると設定を保存できます。</small>
+            <button id="openNotificationSettings" class="sale-settings-button" type="button">通知設定を開く</button>
           </aside>
         </div>
         <div id="saleRail" class="sale-rail" aria-label="掲載モールの最新セール情報">

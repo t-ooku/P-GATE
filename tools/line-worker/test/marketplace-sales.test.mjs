@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
-  SALE_MARKETPLACES, handleMarketplaceSaleRoutes
+  MARKETPLACE_INFO_TYPES, SALE_MARKETPLACES, handleMarketplaceSaleRoutes,
+  nextMarketplaceNotificationAt
 } from '../src/marketplace-sales.mjs';
 
 test('セール通知は掲載8モールだけを対象にする', () => {
@@ -10,6 +11,29 @@ test('セール通知は掲載8モールだけを対象にする', () => {
     'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP',
     'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA'
   ]);
+});
+
+test('セールだけが初期ONで他の情報ジャンルは明示選択式', () => {
+  assert.deepEqual(MARKETPLACE_INFO_TYPES, [
+    'SALE', 'COUPON', 'NEW_ARRIVAL', 'LIMITED', 'RESTOCK', 'EDITORIAL'
+  ]);
+});
+
+test('通知頻度とおやすみ時間をJSTで尊重する', () => {
+  assert.equal(
+    nextMarketplaceNotificationAt(
+      { frequency: 'INSTANT', quiet_start: '21:00', quiet_end: '08:00' },
+      new Date('2026-07-31T13:00:00.000Z')
+    ),
+    '2026-07-31T23:00:00.000Z'
+  );
+  assert.equal(
+    nextMarketplaceNotificationAt(
+      { frequency: 'DAILY', quiet_start: '21:00', quiet_end: '08:00' },
+      new Date('2026-07-31T03:00:00.000Z')
+    ),
+    '2026-08-01T00:00:00.000Z'
+  );
 });
 
 test('公開セールAPIは未接続時も安全な空配列を返す', async () => {
@@ -42,12 +66,15 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   ]);
   assert.match(html, /HOSHILU SALE RADAR/);
   assert.match(html, /セール専用通知/);
+  assert.match(html, /id="notificationSettingsDialog"/);
+  assert.match(html, /id="settingsInfoTypes"/);
+  assert.match(html, /id="settingsMarketplaces"/);
   assert.match(html, /SearchAction/);
   assert.match(html, /hreflang="x-default"/);
   assert.match(css, /scroll-snap-type:x mandatory/);
   const client = await readFile(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
   assert.match(client, /data-language-select.*addEventListener\('change'/s);
-  assert.match(sw, /hoshilu-shell-v79/);
+  assert.match(sw, /hoshilu-shell-v80/);
   assert.match(sw, /sale-center\.mjs/);
   assert.match(sw, /hero-slides\.mjs/);
 });
