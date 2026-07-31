@@ -1,7 +1,7 @@
 # HOSHILU Reels Audio Direction v1.0
 
-Updated: 2026-07-31  
-Owner: HOSHILU SNS運用  
+Updated: 2026-07-31
+Owner: HOSHILU SNS運用
 Status: APPROVED
 
 ## 方針
