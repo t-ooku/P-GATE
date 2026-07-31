@@ -8,10 +8,7 @@ if (coverage && journey && search) {
 
 for (const selector of [
   '#marketplaceCoverageLead',
-  '#marketplaceCoverageNote',
-  '#journeyLead',
-  '.sale-center-lead',
-  '.lp-benefits article p'
+  '#marketplaceCoverageNote'
 ]) {
   document.querySelectorAll(selector).forEach((element) => element.classList.add('lp-compact-copy'));
 }
