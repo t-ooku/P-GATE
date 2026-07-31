@@ -38,6 +38,7 @@ const officialUpdates=[
   {marketplace_label:'SHOPLIST',title:'公式ファッション情報',summary:'SHOPLIST公式のセール、クーポン、新着情報を確認できます。',source_url:'https://shop-list.com/',official:true},
   {marketplace_label:'MUSINSA',title:'公式ファッション情報',summary:'MUSINSA公式のセール、新着、ブランド情報を確認できます。',source_url:'https://global.musinsa.com/jp/',official:true},
   {marketplace_label:'BUYMA',title:'公式ファッション情報',summary:'BUYMA公式の特集、新着、ブランド情報を確認できます。',source_url:'https://www.buyma.com/',official:true}
+  ,{marketplace_label:'SNKRDUNK',title:'公式スニーカー・ファッション情報',summary:'SNKRDUNK公式の新着、発売情報、鑑定付き商品を確認できます。',source_url:'https://snkrdunk.com/information/',official:true}
 ];
 const officialCopy={
   JA:{title:'公式セール・最新情報',summary:'公式サイトのセール、キャンペーン、新着情報を確認できます。',status:'公式情報を常時掲載'},

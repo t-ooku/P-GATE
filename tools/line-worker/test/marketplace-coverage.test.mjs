@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = name => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
-test('トップ画面で主要4モールとファッション追加4モールを区別して表示する', async () => {
+test('トップ画面で主要4モールとファッション追加5モールを区別して表示する', async () => {
   const [html, css, module, layout, serviceWorker] = await Promise.all([
     read('index.html'),
     read('marketplace-coverage.css'),
@@ -16,10 +16,10 @@ test('トップ画面で主要4モールとファッション追加4モールを
   assert.match(html, /MARKETPLACE COVERAGE/);
   assert.match(html, /すべてのジャンル/);
   assert.match(html, /ファッション検索で追加/);
-  for (const mall of ['Amazon', '楽天市場', 'Qoo10', 'SHEIN', 'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA']) {
+  for (const mall of ['Amazon', '楽天市場', 'Qoo10', 'SHEIN', 'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA', 'SNKRDUNK']) {
     assert.match(html, new RegExp(`>${mall}<`));
   }
-  assert.match(html, /最大8モール対応/);
+  assert.match(html, /最大9モール対応/);
   assert.match(html, /出品を確認できた商品は商品ページへ/);
   assert.doesNotMatch(html, /すべてのジャンルで8モール/);
 
@@ -38,11 +38,11 @@ test('トップ画面で主要4モールとファッション追加4モールを
     assert.match(module, new RegExp(`${language}: \\{`));
   }
   assert.match(module, /hoshilu:languagechange/);
-  assert.match(module, /Up to 8 marketplaces/);
-  assert.match(module, /最多支持8个商城/);
-  assert.match(module, /최대 8개 쇼핑몰/);
+  assert.match(module, /Up to 9 marketplaces/);
+  assert.match(module, /最多支持9个商城/);
+  assert.match(module, /최대 9개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v82/);
+  assert.match(serviceWorker, /hoshilu-shell-v83/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
   assert.match(serviceWorker, /marketplace-coverage\.mjs/);
 });

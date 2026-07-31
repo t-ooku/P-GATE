@@ -36,6 +36,11 @@ export function buildApparelMarketplaceDestinations(query) {
       marketplace: 'BUYMA_JP',
       label: 'BUYMAで探す',
       destination: `https://www.buyma.com/r/${encodeURIComponent(keywords)}/`
+    },
+    {
+      marketplace: 'SNKRDUNK_JP',
+      label: 'SNKRDUNKで探す',
+      destination: `https://snkrdunk.com/search/?keywords=${encodeURIComponent(keywords)}`
     }
   ];
 }

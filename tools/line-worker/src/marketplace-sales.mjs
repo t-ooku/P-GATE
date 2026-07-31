@@ -2,7 +2,7 @@ import { readMemberSession } from './member-auth.mjs';
 
 export const SALE_MARKETPLACES = Object.freeze([
   'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP',
-  'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA'
+  'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA', 'SNKRDUNK'
 ]);
 
 export const MARKETPLACE_INFO_TYPES = Object.freeze([
@@ -46,7 +46,7 @@ export function nextMarketplaceNotificationAt(preference, now = new Date()) {
 const MARKETPLACE_LABELS = Object.freeze({
   AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', QOO10_JP: 'Qoo10',
   SHEIN_JP: 'SHEIN', ZOZOTOWN: 'ZOZOTOWN', SHOPLIST: 'SHOPLIST',
-  MUSINSA: 'MUSINSA', BUYMA: 'BUYMA'
+  MUSINSA: 'MUSINSA', BUYMA: 'BUYMA', SNKRDUNK: 'SNKRDUNK'
 });
 
 function safeSale(row) {

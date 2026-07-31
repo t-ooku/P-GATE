@@ -128,6 +128,10 @@
   color: #5140ba;
 }
 
+.marketplace-group-fashion ul {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .marketplace-coverage-note {
   margin: 12px 0 0;
   color: var(--muted);
@@ -197,6 +201,10 @@
     min-height: 24px;
     padding: 2px;
     font-size: clamp(8px, 2.35vw, 10px);
+  }
+
+  .marketplace-group-fashion ul {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .marketplace-coverage-note {

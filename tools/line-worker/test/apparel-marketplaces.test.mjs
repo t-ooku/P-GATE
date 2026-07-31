@@ -15,7 +15,7 @@ test('主力4アパレルモールへ全文を安全に引き継ぐ', () => {
   const query = '韓国っぽい 黒 クロップド丈 トップス';
   const links = buildApparelMarketplaceDestinations(query);
   assert.deepEqual(links.map((item) => item.marketplace), [
-    'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP'
+    'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
   ]);
   for (const link of links) {
     assert.equal(new URL(link.destination).protocol, 'https:');

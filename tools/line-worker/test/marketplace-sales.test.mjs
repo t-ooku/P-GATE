@@ -6,10 +6,10 @@ import {
   nextMarketplaceNotificationAt
 } from '../src/marketplace-sales.mjs';
 
-test('セール通知は掲載8モールだけを対象にする', () => {
+test('セール通知は掲載9モールだけを対象にする', () => {
   assert.deepEqual(SALE_MARKETPLACES, [
     'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP',
-    'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA'
+    'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA', 'SNKRDUNK'
   ]);
 });
 
@@ -77,7 +77,7 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.match(client, /const officialUpdates=\[/);
   assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*SHOPLIST.*MUSINSA.*BUYMA/s);
   assert.match(client, /Official updates always available/);
-  assert.match(sw, /hoshilu-shell-v82/);
+  assert.match(sw, /hoshilu-shell-v83/);
   assert.match(sw, /sale-center\.mjs/);
   assert.match(sw, /hero-slides\.mjs/);
   assert.match(sw, /hoshilu-fashion-collage-v1\.png/);

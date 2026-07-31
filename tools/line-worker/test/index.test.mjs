@@ -209,7 +209,7 @@ test('アパレル検索では主力4モールに専門4モールを追加する
     decorated.marketplace_search_links.map((item) => item.marketplace),
     [
       'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP',
-      'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP'
+      'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
     ]
   );
 });

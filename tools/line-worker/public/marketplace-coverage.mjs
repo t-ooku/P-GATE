@@ -1,42 +1,42 @@
 const COPY = {
   JA: {
     title: '探せるモールが、ひと目で分かる。',
-    lead: '商品・家電・コスメなどは主要4モール。ファッション検索では4モールを追加して横断します。',
-    count: '最大8モール対応',
+    lead: '商品・家電・コスメなどは主要4モール。ファッション検索では5モールを追加して横断します。',
+    count: '最大9モール対応',
     core: 'すべてのジャンル',
     coreAria: '主要4モール',
     fashion: 'ファッション検索で追加',
-    fashionAria: 'ファッション追加4モール',
+    fashionAria: 'ファッション追加5モール',
     note: '出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内します。'
   },
   EN: {
     title: 'See where HOSHILU can search.',
-    lead: 'Search four core marketplaces for every category, with four more added for fashion searches.',
-    count: 'Up to 8 marketplaces',
+    lead: 'Search four core marketplaces for every category, with five more added for fashion searches.',
+    count: 'Up to 9 marketplaces',
     core: 'All categories',
     coreAria: 'Four core marketplaces',
     fashion: 'Added for fashion searches',
-    fashionAria: 'Four additional fashion marketplaces',
+    fashionAria: 'Five additional fashion marketplaces',
     note: 'Verified listings open the product page. Otherwise, HOSHILU opens the marketplace search results.'
   },
   ZH: {
     title: '一眼看懂可搜索的商城。',
-    lead: '所有品类可搜索四个主要商城；搜索时尚商品时，再增加四个商城进行跨平台查找。',
-    count: '最多支持8个商城',
+    lead: '所有品类可搜索四个主要商城；搜索时尚商品时，再增加五个商城进行跨平台查找。',
+    count: '最多支持9个商城',
     core: '所有品类',
     coreAria: '四个主要商城',
     fashion: '时尚搜索时追加',
-    fashionAria: '四个时尚类追加商城',
+    fashionAria: '五个时尚类追加商城',
     note: '已确认在售的商品会直接打开商品页；尚未确认时，会打开各商城的搜索结果。'
   },
   KO: {
     title: '검색 가능한 쇼핑몰을 한눈에.',
-    lead: '모든 카테고리는 주요 4개 쇼핑몰, 패션 검색은 4개를 더해 함께 찾습니다.',
-    count: '최대 8개 쇼핑몰',
+    lead: '모든 카테고리는 주요 4개 쇼핑몰, 패션 검색은 5개를 더해 함께 찾습니다.',
+    count: '최대 9개 쇼핑몰',
     core: '모든 카테고리',
     coreAria: '주요 4개 쇼핑몰',
     fashion: '패션 검색 시 추가',
-    fashionAria: '패션 추가 4개 쇼핑몰',
+    fashionAria: '패션 추가 5개 쇼핑몰',
     note: '판매가 확인된 상품은 상품 페이지로, 미확인 상품은 각 쇼핑몰 검색 결과로 안내합니다.'
   }
 };
