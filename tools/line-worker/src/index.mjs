@@ -15,7 +15,6 @@ import {
 import { isRakutenProductUrl } from './rakuten-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
-import { buildFoodDeliveryDestinations } from './food-delivery-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
@@ -38,8 +37,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
   'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp',
   'qoo10.jp', 'shein.com', 'zozo.jp', 'shop-list.com',
-  'musinsa.com', 'buyma.com', 'snkrdunk.com', 'ubereats.com',
-  'demae-can.com', 'menu.jp', 'rocketnow.co.jp'
+  'musinsa.com', 'buyma.com', 'snkrdunk.com'
 ];
 const RELEASE = '1.15.0';
 const REQUIRED_ENV = [
@@ -732,7 +730,7 @@ function marketplaceSearchDestinations(query, env = {}) {
     { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: buildRakutenSearchDestination(query) },
     { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: buildQoo10SearchDestination(query) },
     { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: buildSheinSearchDestination(query) }
-  ].concat(buildApparelMarketplaceDestinations(query), buildFoodDeliveryDestinations(query));
+  ].concat(buildApparelMarketplaceDestinations(query));
 }
 
 async function signedMarketplaceSearchLinks(query, context) {

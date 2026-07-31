@@ -229,4 +229,18 @@
   .marketplace-group-fashion ul {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
+
+  .marketplace-group-fashion li {
+    gap: 2px;
+    font-size: clamp(7px, 1.9vw, 9px);
+    letter-spacing: -.035em;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .marketplace-group-fashion li::before {
+    width: 4px;
+    height: 4px;
+    flex-basis: 4px;
+  }
 }

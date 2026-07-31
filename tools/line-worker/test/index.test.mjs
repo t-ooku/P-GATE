@@ -197,7 +197,7 @@ test('Amazon検索フォールバックに承認済みアソシエイトIDを付
   assert.match(url.searchParams.get('k'), /phone/);
 });
 
-test('アパレル検索では主力4モールに専門4モールを追加する', async () => {
+test('アパレル検索では主力4モールに専門5モールを追加する', async () => {
   const decorated = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-apparel', candidates: [] },
     new Request('https://hoshilu.app/api/knowledge'),
