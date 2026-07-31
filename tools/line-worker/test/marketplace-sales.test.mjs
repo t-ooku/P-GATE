@@ -45,7 +45,9 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.match(html, /SearchAction/);
   assert.match(html, /hreflang="x-default"/);
   assert.match(css, /scroll-snap-type:x mandatory/);
-  assert.match(sw, /hoshilu-shell-v78/);
+  const client = await readFile(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
+  assert.match(client, /data-language-select.*addEventListener\('change'/s);
+  assert.match(sw, /hoshilu-shell-v79/);
   assert.match(sw, /sale-center\.mjs/);
   assert.match(sw, /hero-slides\.mjs/);
 });

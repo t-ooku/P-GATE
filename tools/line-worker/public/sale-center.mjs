@@ -39,6 +39,7 @@ let sales=[];
 renderCopy();
 fetch('/api/sales').then(r=>r.ok?r.json():{sales:[]}).then(data=>{sales=data.sales||[];render(sales);}).catch(()=>render([]));
 window.addEventListener('hoshilu:languagechange',()=>{renderCopy();render(sales);});
+document.querySelector('[data-language-select]')?.addEventListener('change',()=>{renderCopy();render(sales);});
 fetch('/api/member/sale-preferences',{cache:'no-store'}).then(async response=>{
   if(response.status===401){toggle.disabled=true;return;}
   const data=await response.json();toggle.checked=Boolean(data.preference?.enabled);
