@@ -16,10 +16,10 @@ const actionCopy = {
 };
 
 const navigationCopy = {
-  JA:{eyebrow:'欲しいを、ちゃんと見つける。',features:['ホシル','ほしっトク'],account:'マイページ',candidateAmazon:'Amazonでこの商品を探す'},
-  EN:{eyebrow:'Find what you really want.',features:['Ask HOSHILU','Saved'],account:'My page',candidateAmazon:'Find this product on Amazon'},
-  ZH:{eyebrow:'找到真正想要的商品。',features:['找商品','已收藏'],account:'我的页面',candidateAmazon:'在 Amazon 查找此商品'},
-  KO:{eyebrow:'원하는 것을 제대로 찾기.',features:['호시루 검색','저장'],account:'마이페이지',candidateAmazon:'Amazon에서 이 상품 찾기'}
+  JA:{eyebrow:'欲しいを、ちゃんと見つける。',features:['ホシル検索','ほしっトク'],account:'マイページ',candidateAmazon:'Amazonでこの商品を探す'},
+  EN:{eyebrow:'Find what you really want.',features:['HOSHILU Search','Saved'],account:'My page',candidateAmazon:'Find this product on Amazon'},
+  ZH:{eyebrow:'找到真正想要的商品。',features:['HOSHILU 搜索','已收藏'],account:'我的页面',candidateAmazon:'在 Amazon 查找此商品'},
+  KO:{eyebrow:'원하는 것을 제대로 찾기.',features:['HOSHILU 검색','저장'],account:'마이페이지',candidateAmazon:'Amazon에서 이 상품 찾기'}
 };
 const wishSearchCopy={JA:'保存した「欲しい」を検索',EN:'Search saved wants',ZH:'搜索已保存的心愿',KO:'저장한 원하는 것 검색'};
 const shareCopy={

@@ -29,14 +29,32 @@ const settingsCopy={
   KO:{open:'알림 설정',title:'알림 설정',lead:'세일만 기본 ON입니다. 필요한 정보만 추가하세요.',info:'받을 정보',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
 };
 
+const officialUpdates=[
+  {marketplace_label:'Amazon',title:'公式セール・キャンペーン情報',summary:'Amazon公式のセール、タイムセール、キャンペーンを確認できます。',source_url:'https://www.amazon.co.jp/deals',official:true},
+  {marketplace_label:'楽天市場',title:'公式キャンペーン情報',summary:'楽天市場公式のお得なキャンペーンやポイント情報を確認できます。',source_url:'https://event.rakuten.co.jp/incentive/client/',official:true},
+  {marketplace_label:'Qoo10',title:'公式セール・特集情報',summary:'Qoo10公式のセール、クーポン、特集を確認できます。',source_url:'https://www.qoo10.jp/gmkt.inc/Events/Promotion.aspx',official:true},
+  {marketplace_label:'SHEIN',title:'公式セール・新着情報',summary:'SHEIN公式のセール、新着商品、特集を確認できます。',source_url:'https://jp.shein.com/',official:true},
+  {marketplace_label:'ZOZOTOWN',title:'公式ファッション情報',summary:'ZOZOTOWN公式のセール、新着、ショップ情報を確認できます。',source_url:'https://zozo.jp/',official:true},
+  {marketplace_label:'SHOPLIST',title:'公式ファッション情報',summary:'SHOPLIST公式のセール、クーポン、新着情報を確認できます。',source_url:'https://shop-list.com/',official:true},
+  {marketplace_label:'MUSINSA',title:'公式ファッション情報',summary:'MUSINSA公式のセール、新着、ブランド情報を確認できます。',source_url:'https://global.musinsa.com/jp/',official:true},
+  {marketplace_label:'BUYMA',title:'公式ファッション情報',summary:'BUYMA公式の特集、新着、ブランド情報を確認できます。',source_url:'https://www.buyma.com/',official:true}
+];
+const officialCopy={
+  JA:{title:'公式セール・最新情報',summary:'公式サイトのセール、キャンペーン、新着情報を確認できます。',status:'公式情報を常時掲載'},
+  EN:{title:'Official sales & updates',summary:'See sales, campaigns and new arrivals on the official marketplace site.',status:'Official updates always available'},
+  ZH:{title:'官方促销与最新信息',summary:'查看商城官方网站的促销、活动和新品信息。',status:'持续显示官方信息'},
+  KO:{title:'공식 세일·최신 정보',summary:'쇼핑몰 공식 사이트의 세일, 캠페인, 신상품 정보를 확인하세요.',status:'공식 정보를 항상 표시'}
+};
+
 function language(){return document.querySelector('[data-language-select]')?.value||'JA';}
 function date(value){return new Intl.DateTimeFormat(language()==='JA'?'ja-JP':language()==='KO'?'ko-KR':language()==='ZH'?'zh-CN':'en-US',{month:'short',day:'numeric'}).format(new Date(value));}
 
 function render(sales=[]){
   const rail=document.querySelector('#saleRail'); if(!rail)return;
   const t=copy[language()]||copy.JA;
-  if(!sales.length){rail.innerHTML=`<p class="sale-empty">${t.empty}</p>`;return;}
-  rail.replaceChildren(...sales.map(sale=>{
+  const officialText=officialCopy[language()]||officialCopy.JA;
+  const items=[...sales,...officialUpdates];
+  rail.replaceChildren(...items.map(sale=>{
     const card=document.createElement('article');card.className='sale-card';
     if(sale.video_url){
       const video=document.createElement('video');video.className='sale-media';video.src=sale.video_url;video.muted=true;video.loop=true;video.autoplay=true;video.playsInline=true;video.preload='metadata';card.append(video);
@@ -44,10 +62,11 @@ function render(sales=[]){
       const image=document.createElement('img');image.className='sale-media';image.src=sale.image_url;image.alt='';image.loading='lazy';image.decoding='async';card.append(image);
     }
     const mall=document.createElement('span');mall.className='mall';mall.textContent=sale.marketplace_label;
-    const title=document.createElement('h3');title.textContent=sale.title;
-    const body=document.createElement('p');body.textContent=sale.summary;
-    const period=document.createElement('time');period.textContent=`${t.starts} ${date(sale.starts_at)} · ${t.ends} ${date(sale.ends_at)}`;
+    const title=document.createElement('h3');title.textContent=sale.official?officialText.title:sale.title;
+    const body=document.createElement('p');body.textContent=sale.official?officialText.summary:sale.summary;
+    const period=document.createElement('time');period.textContent=sale.official?officialText.status:`${t.starts} ${date(sale.starts_at)} · ${t.ends} ${date(sale.ends_at)}`;
     const link=document.createElement('a');link.href=sale.source_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=t.detail;
+    if(sale.official)card.classList.add('official-update');
     card.append(mall,title,body,period,link);return card;
   }));
 }

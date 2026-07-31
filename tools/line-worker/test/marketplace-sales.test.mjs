@@ -74,9 +74,14 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.match(css, /scroll-snap-type:x mandatory/);
   const client = await readFile(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
   assert.match(client, /data-language-select.*addEventListener\('change'/s);
-  assert.match(sw, /hoshilu-shell-v81/);
+  assert.match(client, /const officialUpdates=\[/);
+  assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*SHOPLIST.*MUSINSA.*BUYMA/s);
+  assert.match(client, /Official updates always available/);
+  assert.match(sw, /hoshilu-shell-v82/);
   assert.match(sw, /sale-center\.mjs/);
   assert.match(sw, /hero-slides\.mjs/);
+  assert.match(sw, /hoshilu-fashion-collage-v1\.png/);
+  assert.match(sw, /hoshilu-electronics-collage-v1\.png/);
 });
 
 test('商品画像はAPPROVEDになるまで公開しない契約を持つ', async () => {

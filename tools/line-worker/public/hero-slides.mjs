@@ -2,6 +2,8 @@ const root=document.querySelector('.hero-visual');
 if(root){
   const sources=[
     '/hoshilu-search-agent-products-v1.webp',
+    '/hoshilu-fashion-collage-v1.png',
+    '/hoshilu-electronics-collage-v1.png',
     '/hoshilu-discovery-collage.webp',
     '/seo/hoshilu-category-guide-v1.png'
   ];
@@ -19,4 +21,3 @@ if(root){
     setInterval(()=>{slides[active].classList.remove('is-active');marks[active].classList.remove('is-active');active=(active+1)%slides.length;slides[active].classList.add('is-active');marks[active].classList.add('is-active');},5200);
   }
 }
-

@@ -60,7 +60,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 10px;
 }
 
 .marketplace-group {
@@ -70,7 +70,8 @@
 }
 
 .marketplace-group > p {
-  margin: 0 0 10px;
+  display: none;
+  margin: 0;
   color: #4f37c8;
   font-size: 12px;
   font-weight: 900;
@@ -102,6 +103,16 @@
   font-weight: 900;
   text-align: center;
   overflow-wrap: anywhere;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background .18s ease, color .18s ease;
+}
+
+.marketplace-group li:hover,
+.marketplace-group li:focus-visible {
+  color: #4f37c8;
+  background: #f2efff;
+  outline: none;
 }
 
 .marketplace-group li::before {
@@ -134,9 +145,9 @@
 
 @media (max-width: 760px) {
   .marketplace-coverage {
-    margin-bottom: 16px;
-    padding: 14px;
-    border-radius: 20px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 16px;
   }
 
   .marketplace-coverage-heading {
@@ -165,13 +176,12 @@
 
   .marketplace-groups {
     grid-template-columns: 1fr;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 0;
+    margin-top: 6px;
   }
 
   .marketplace-group {
-    padding: 10px;
-    border-radius: 14px;
+    padding: 5px 0 2px;
   }
 
   .marketplace-group > p {
@@ -180,17 +190,17 @@
   }
 
   .marketplace-group ul {
-    gap: 5px;
+    gap: 3px;
   }
 
   .marketplace-group li {
-    min-height: 32px;
-    padding: 5px 3px;
+    min-height: 24px;
+    padding: 2px;
     font-size: clamp(8px, 2.35vw, 10px);
   }
 
   .marketplace-coverage-note {
-    margin-top: 9px;
+    margin-top: 5px;
     font-size: 9px;
   }
 }
@@ -205,6 +215,6 @@
   }
 
   .marketplace-group ul {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
