@@ -29,6 +29,7 @@ test('トップ画面で主要4モールとファッション追加5モールを
   assert.match(css, /grid-template-columns: 1fr/);
   assert.match(css, /\.marketplace-group > p \{\s*display: none/s);
   assert.match(css, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(max-width: 390px\)[\s\S]*\.marketplace-group-fashion ul \{\s*grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(layout, /item\.setAttribute\('role', 'button'\)/);
   assert.match(layout, /scrollIntoView\(\{ behavior: 'smooth'/);
   assert.match(layout, /insight\.after\(saleRadar, benefits\)/);
@@ -42,7 +43,7 @@ test('トップ画面で主要4モールとファッション追加5モールを
   assert.match(module, /最多支持9个商城/);
   assert.match(module, /최대 9개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v83/);
+  assert.match(serviceWorker, /hoshilu-shell-v84/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
   assert.match(serviceWorker, /marketplace-coverage\.mjs/);
 });
