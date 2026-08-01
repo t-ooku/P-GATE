@@ -28,7 +28,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v106/);
+  assert.match(sw, /hoshilu-shell-v107/);
   assert.match(sw, /marketplace-search-keywords-v2\.mjs/);
   assert.match(app, /buildMarketplaceSearchKeywords/);
   assert.match(sw, /if \(response\.ok\)/);
@@ -61,8 +61,10 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /include\.checked&&raw/);
   assert.match(app, /share-copy-button/);
   assert.match(app, /function marketplaceFallbackCard/);
-  assert.match(app, /4つのモールとSNSを横断して探す/);
+  assert.match(app, /9つのモールとSNSを横断して探す/);
   assert.match(app, /Instagram.*X.*TikTok.*YouTube/s);
+  assert.match(app, /site:instagram\.com/);
+  assert.match(app, /site:tiktok\.com/);
   assert.match(app, /https:\/\/www\.swippitt\.net\//);
   assert.match(app, /function swippittDiscoveryMatch/);
   assert.match(app, /これですか？↓/);
