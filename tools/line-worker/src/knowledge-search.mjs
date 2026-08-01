@@ -1121,6 +1121,30 @@ function isFdm3dPrinterMismatch(candidate, requested) {
   return false;
 }
 
+function robotLawnMowerConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    mower: /(?:ロボット芝刈り機|robot(?:ic)?\s*lawn\s*mower|割草机器人|割草機器人|로봇\s*잔디깎이)/iu.test(text),
+    rtk: /\bRTK\b/iu.test(text),
+    area: text.match(/\b(\d{3,5})\s*(?:㎡|m(?:2|²)|sq\.?\s*m|平方米|平方公尺|제곱미터)/iu)?.[1] || '',
+    obstacle: /(?:障害物検知|obstacle\s*(?:detection|avoidance)|障碍物检测|障礙物偵測|장애물\s*(?:감지|회피))/iu.test(text),
+    wireFree: /(?:境界ワイヤー不要|boundary\s*wire\s*free|wire[\s-]*free|无需边界线|無需邊界線|경계선\s*불필요)/iu.test(text),
+    wrongProduct: /(?:replacement\s*(?:blade|knife)|替刃|更换刀片|更換刀片|교체용\s*칼날|charging\s*station|充電ステーション|充电站|充電座|충전\s*스테이션|mower\s*garage|芝刈り機ガレージ|割草机车库|割草機車庫|잔디깎이\s*차고|boundary\s*(?:wire\s*(?:kit|spool|stakes)|stakes)|境界ワイヤー(?:キット|杭|ロール)|边界线套件|邊界線套件|경계선\s*(?:와이어\s*키트|말뚝)|replacement\s*battery|交換バッテリー|替换电池|替換電池|교체용\s*배터리)/iu.test(text)
+  };
+}
+
+function isRobotLawnMowerMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = robotLawnMowerConstraints(text);
+  if (!evidence.mower || evidence.wrongProduct) return true;
+  if (requested.area && evidence.area !== requested.area) return true;
+  for (const field of ['rtk', 'obstacle', 'wireFree']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1997,6 +2021,10 @@ export function filterCategoryMismatches(query, candidates = []) {
   const fdm3dPrinterIntent = fdm3dPrinter.printer && fdm3dPrinter.corexy
     && Boolean(fdm3dPrinter.volume && fdm3dPrinter.speed && fdm3dPrinter.autoLeveling && fdm3dPrinter.enclosed)
     && !fdm3dPrinter.wrongProduct;
+  const robotLawnMower = robotLawnMowerConstraints(normalizedQuery);
+  const robotLawnMowerIntent = robotLawnMower.mower && robotLawnMower.rtk
+    && Boolean(robotLawnMower.area && robotLawnMower.obstacle && robotLawnMower.wireFree)
+    && !robotLawnMower.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2008,7 +2036,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
-    && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent) return candidates;
+    && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
+    && !robotLawnMowerIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2086,6 +2115,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (nasIntent) return !isNasMismatch(candidate, nas);
     if (wifi7MeshRouterIntent) return !isWifi7MeshRouterMismatch(candidate, wifi7MeshRouter);
     if (fdm3dPrinterIntent) return !isFdm3dPrinterMismatch(candidate, fdm3dPrinter);
+    if (robotLawnMowerIntent) return !isRobotLawnMowerMismatch(candidate, robotLawnMower);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

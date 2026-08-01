@@ -460,6 +460,17 @@ function buildFdm3dPrinterSearchKeywords(query) {
   return ['FDM 3Dプリンター', 'CoreXY', `${volume[1]}×${volume[2]}×${volume[3]}mm`, `${speed}mm/s`, '自動レベリング', '密閉型'].join(' ');
 }
 
+function buildRobotLawnMowerSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const mower = /(?:ロボット芝刈り機|robot(?:ic)?\s*lawn\s*mower|割草机器人|割草機器人|로봇\s*잔디깎이)/iu.test(normalized);
+  const rtk = /\bRTK\b/iu.test(normalized);
+  const area = normalized.match(/\b(\d{3,5})\s*(?:㎡|m(?:2|²)|sq\.?\s*m|平方米|平方公尺|제곱미터)/iu)?.[1];
+  const obstacle = /(?:障害物検知|obstacle\s*(?:detection|avoidance)|障碍物检测|障礙物偵測|장애물\s*(?:감지|회피))/iu.test(normalized);
+  const wireFree = /(?:境界ワイヤー不要|boundary\s*wire\s*free|wire[\s-]*free|无需边界线|無需邊界線|경계선\s*불필요)/iu.test(normalized);
+  if (!mower || !rtk || !area || !obstacle || !wireFree) return '';
+  return ['ロボット芝刈り機', 'RTK', `${area}㎡`, '障害物検知', '境界ワイヤー不要'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1273,6 +1284,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawWifi7MeshRouter) return rawWifi7MeshRouter;
   const rawFdm3dPrinter = buildFdm3dPrinterSearchKeywords(rawNormalized);
   if (rawFdm3dPrinter) return rawFdm3dPrinter;
+  const rawRobotLawnMower = buildRobotLawnMowerSearchKeywords(rawNormalized);
+  if (rawRobotLawnMower) return rawRobotLawnMower;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

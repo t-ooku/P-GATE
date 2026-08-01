@@ -536,6 +536,21 @@ test('FDM 3Dプリンターは方式・造形サイズ・速度・調整・筐�
   }
 });
 
+test('ロボット芝刈り機は測位・面積・検知・境界条件を4言語で保持する', () => {
+  const queries = [
+    'RTK ロボット芝刈り機 1000㎡ 障害物検知 境界ワイヤー不要',
+    'RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire free',
+    'RTK 割草机器人 1000平方米 障碍物检测 无需边界线',
+    'RTK 로봇 잔디깎이 1000제곱미터 장애물 감지 경계선 불필요',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ロボット芝刈り機 RTK 1000㎡ 障害物検知 境界ワイヤー不要', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

@@ -29,7 +29,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v194/);
+  assert.match(sw, /hoshilu-shell-v195/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);

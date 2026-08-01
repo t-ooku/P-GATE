@@ -1684,6 +1684,30 @@ test('FDM 3Dプリンターは4言語で方式・造形サイズ・速度・調�
   }
 });
 
+test('ロボット芝刈り機は4言語で測位・面積・検知・境界条件が一致する本体だけを提示する', () => {
+  const queries = [
+    'RTK ロボット芝刈り機 1000㎡ 障害物検知 境界ワイヤー不要',
+    'RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire free',
+    'RTK 割草机器人 1000平方米 障碍物检测 无需边界线',
+    'RTK 로봇 잔디깎이 1000제곱미터 장애물 감지 경계선 불필요',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire free' },
+    { asin: 'NORTK', product_name: 'GPS robotic lawn mower 1000 m2 obstacle avoidance boundary wire free' },
+    { asin: 'AREA', product_name: 'RTK robotic lawn mower 500 m2 obstacle avoidance boundary wire free' },
+    { asin: 'BLIND', product_name: 'RTK robotic lawn mower 1000 m2 boundary wire free' },
+    { asin: 'WIRED', product_name: 'RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire required' },
+    { asin: 'BLADE', product_name: 'Replacement blade for RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire free' },
+    { asin: 'DOCK', product_name: 'Charging station for RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire free' },
+    { asin: 'GARAGE', product_name: 'Mower garage for RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire free' },
+    { asin: 'WIRE', product_name: 'Boundary wire stakes for RTK robotic lawn mower 1000 m2 obstacle avoidance wire-free' },
+    { asin: 'BATTERY', product_name: 'Replacement battery for RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire free' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
