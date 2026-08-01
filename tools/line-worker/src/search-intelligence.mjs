@@ -60,6 +60,9 @@ const RULES = [
   ['printer',/(?:プリンター|printer|打印机|打印機|프린터)/iu,['printer','inkjet printer']],
   ['electric-toothbrush-head',/(?:(?:oral[- ]?b|オーラルB|ブラウン|欧乐B|歐樂B|오랄비|sonicare|ソニッケアー?|philips|飞利浦|飛利浦|소닉케어|doltz|ドルツ|panasonic|松下|파나소닉|電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔).{0,45}(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모)|(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모).{0,45}(?:oral[- ]?b|オーラルB|ブラウン|欧乐B|歐樂B|오랄비|sonicare|ソニッケアー?|philips|飞利浦|飛利浦|소닉케어|doltz|ドルツ|panasonic|松下|파나소닉|電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔))/iu,['electric toothbrush replacement heads','brush heads']],
   ['electric-toothbrush',/(?:電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔)/iu,['electric toothbrush']],
+  ['shaver-cleaning-cartridge',/(?:(?:braun|ブラウン|博朗|브라운|clean\s*&\s*renew).{0,40}(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액)|(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액).{0,40}(?:braun|ブラウン|博朗|브라운|clean\s*&\s*renew))/iu,['shaver cleaning cartridges','clean and renew']],
+  ['shaver-replacement-blade',/(?:(?:braun|ブラウン|博朗|브라운|philips|フィリップス|飞利浦|飛利浦|필립스|panasonic|松下|파나소닉|lamdash|ラムダッシュ|シェーバー|shaver|剃须刀|電鬚刨|면도기).{0,45}(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날)|(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날).{0,45}(?:braun|ブラウン|博朗|브라운|philips|フィリップス|飞利浦|飛利浦|필립스|panasonic|松下|파나소닉|lamdash|ラムダッシュ|シェーバー|shaver|剃须刀|電鬚刨|면도기))/iu,['electric shaver replacement head','replacement foil blade']],
+  ['electric-shaver',/(?:電気シェーバー|シェーバー|electric\s*shaver|剃须刀|電鬚刨|전기\s*면도기)/iu,['electric shaver']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
@@ -302,6 +305,7 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('water-filter-cartridge')) groups = groups.filter((group) => group.category !== 'water-purifier');
   if (specificCategories.has('printer-ink')) groups = groups.filter((group) => !['printer','photo-printer'].includes(group.category));
   if (specificCategories.has('electric-toothbrush-head')) groups = groups.filter((group) => group.category !== 'electric-toothbrush');
+  if (specificCategories.has('shaver-replacement-blade') || specificCategories.has('shaver-cleaning-cartridge')) groups = groups.filter((group) => group.category !== 'electric-shaver');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
   if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
@@ -362,7 +366,8 @@ export function semanticSearchGroups(value) {
     groups.unshift({ category: 'kitchen-appliance', terms: ['blender','mixer','toaster','kettle','coffee','juicer','chopper','cooktop','oven','grill','waffle','processor','cooker','fryer'] });
   }
   const specificIntent = groups.some((group) => [
-    'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light'
+    'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light',
+    'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES
     .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))

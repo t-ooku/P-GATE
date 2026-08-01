@@ -575,6 +575,43 @@ function isToothbrushHeadMismatch(candidate, query) {
   return !/(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모)/iu.test(text);
 }
 
+function shaverFamily(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:braun|ブラウン|博朗|브라운).{0,20}(?:clean\s*&\s*renew|クリーン\s*&\s*リニュー)/u.test(value)) return 'braun-clean-renew';
+  const braun = value.match(/(?:braun|ブラウン|博朗|브라운).{0,20}(?:series|シリーズ)\s*(\d+)/u);
+  if (braun) return `braun-series-${braun[1]}`;
+  const philips = value.match(/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,20}\b(s\d{4})\b/u);
+  if (philips) return `philips-${philips[1]}`;
+  const panasonic = value.match(/\bes[- ]?lv(\d[a-z])\b/u);
+  if (panasonic) return `panasonic-es-lv${panasonic[1]}`;
+  return '';
+}
+
+function shaverPartNumber(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/(?:\b(94m|wes9600|ccr6)\b|\b(sh91\/51)(?!\d))/u)?.slice(1).find(Boolean) || '';
+}
+
+function shaverBladeCount(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+)\s*(?:枚刃|blades?|刀头|刀頭|중날|날)/iu)?.[1] || 0);
+}
+
+function isShaverReplacementMismatch(candidate, requested, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (shaverFamily(query) && shaverFamily(text) !== shaverFamily(query)) return true;
+  if (shaverPartNumber(query) && shaverPartNumber(text) !== shaverPartNumber(query)) return true;
+  if (shaverBladeCount(query) && shaverBladeCount(text) !== shaverBladeCount(query)) return true;
+  const cleaning = /(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액)/iu;
+  const blade = /(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날)/iu;
+  if (requested.has('shaver-cleaning-cartridge')) {
+    const count = requestedPackageCount(query);
+    return !cleaning.test(text) || (count && requestedPackageCount(text) !== count);
+  }
+  if (/(?:本体|シェーバー本体|shaver\s*(?:unit|handle)|剃须刀整机|면도기\s*본체|充電器|charger)/iu.test(text)) return true;
+  return !blade.test(text) || cleaning.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -701,6 +738,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const waterFilterCartridge = requested.has('water-filter-cartridge');
   const printerInk = requested.has('printer-ink');
   const toothbrushHead = requested.has('electric-toothbrush-head');
+  const shaverReplacement = requested.has('shaver-replacement-blade') || requested.has('shaver-cleaning-cartridge');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -739,6 +777,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (waterFilterCartridge) return !isWaterFilterCartridgeMismatch(candidate, query);
     if (printerInk) return !isPrinterInkMismatch(candidate, query);
     if (toothbrushHead) return !isToothbrushHeadMismatch(candidate, query);
+    if (shaverReplacement) return !isShaverReplacementMismatch(candidate, requested, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

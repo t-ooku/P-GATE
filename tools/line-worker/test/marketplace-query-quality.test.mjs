@@ -133,6 +133,20 @@ test('電動歯ブラシの替えブラシを4言語で本体から分離し種�
   }
 });
 
+test('シェーバーの替刃と洗浄液を4言語で本体から分離し品番を保つ', () => {
+  const cases = [
+    ['Braun Series 9 Pro用 替刃 94M', 'Braun Series 9 Pro 替刃 94M'],
+    ['replacement shaving heads SH91/51 for Philips S9000', 'Philips S9000 替刃 SH91/51'],
+    ['适用于松下Lamdash ES-LV9W的WES9600替换刀头 5枚刃', 'Panasonic Lamdash ES-LV9W 替刃 WES9600 5枚刃'],
+    ['브라운 Clean & Renew CCR6 세정액 카트리지 6개', 'Braun Clean & Renew 洗浄液カートリッジ CCR6 6個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);

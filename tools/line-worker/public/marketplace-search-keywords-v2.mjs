@@ -247,6 +247,36 @@ function buildToothbrushHeadSearchKeywords(query) {
   return [identity, '替えブラシ', style, soft, count ? `${count}本セット` : ''].filter(Boolean).join(' ');
 }
 
+function shaverIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  if (/(?:braun|ブラウン|博朗|브라운).{0,20}(?:clean\s*&\s*renew|クリーン\s*&\s*リニュー)/iu.test(value)) return 'Braun Clean & Renew';
+  const braun = value.match(/(?:braun|ブラウン|博朗|브라운).{0,20}(?:series|シリーズ)\s*(\d+)(?:\s*pro)?/iu);
+  if (braun) return `Braun Series ${braun[1]}${/\bpro\b/iu.test(braun[0]) ? ' Pro' : ''}`;
+  const philips = value.match(/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,20}\b(S\d{4})\b/iu);
+  if (philips) return `Philips ${philips[1].toUpperCase()}`;
+  const panasonic = value.match(/\b(ES[- ]?LV\d[A-Z])\b/iu);
+  if (panasonic) return `Panasonic Lamdash ${panasonic[1].toUpperCase().replace('ES LV', 'ES-LV')}`;
+  return '';
+}
+
+function shaverPartNumber(query) {
+  return String(query || '').normalize('NFKC').match(/(?:\b(94M|WES9600|CCR6)\b|\b(SH91\/51)(?!\d))/iu)?.slice(1).find(Boolean)?.toUpperCase() || '';
+}
+
+function buildShaverReplacementSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const cleaning = /(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액)/iu.test(normalized);
+  const blade = /(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날)/iu.test(normalized);
+  if (!(cleaning || blade)) return '';
+  const identity = shaverIdentity(normalized);
+  const partNumber = shaverPartNumber(normalized);
+  if (!(identity && partNumber)) return '';
+  const bladeCount = normalized.match(/(\d+)\s*(?:枚刃|blades?|刀头|刀頭|중날|날)/iu)?.[1];
+  const packageCount = normalized.match(/(\d+)\s*(?:個|本|pack|packs|count|pcs|pieces|个|個|개|개입)/iu)?.[1];
+  return [identity, cleaning ? '洗浄液カートリッジ' : '替刃', partNumber,
+    bladeCount ? `${bladeCount}枚刃` : '', packageCount ? `${packageCount}個セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -542,7 +572,10 @@ function compactUnknownSearchPhrase(normalized) {
 }
 
 export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') {
-  const normalized = stripSearchBudget(query).replace(/\s+/g, ' ').trim();
+  const rawNormalized = String(query || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
+  const rawShaverReplacement = buildShaverReplacementSearchKeywords(rawNormalized);
+  if (rawShaverReplacement) return rawShaverReplacement;
+  const normalized = stripSearchBudget(rawNormalized).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);
   if (portHub) return portHub;
@@ -556,6 +589,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (printerInk) return printerInk;
   const toothbrushHead = buildToothbrushHeadSearchKeywords(normalized);
   if (toothbrushHead) return toothbrushHead;
+  const shaverReplacement = buildShaverReplacementSearchKeywords(normalized);
+  if (shaverReplacement) return shaverReplacement;
   const robotVacuumConsumable = buildRobotVacuumConsumableSearchKeywords(normalized);
   if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);

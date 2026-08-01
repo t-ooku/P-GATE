@@ -1784,3 +1784,27 @@ test('電動歯ブラシ替えブラシはシリーズ・種類・硬さ・本�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['electric-toothbrush-head'], query);
   }
 });
+
+test('シェーバー交換品は本体・別シリーズ・別品番・刃数個数違いを除外する', () => {
+  const candidates = [
+    { asin: 'BRAUN', product_name: 'Braun Series 9 94M 交換用 替刃' },
+    { asin: 'BRAUN_WRONG', product_name: 'Braun Series 8 94M 交換用 替刃' },
+    { asin: 'BRAUN_BODY', product_name: 'Braun Series 9 Pro シェーバー本体 94M付属' },
+    { asin: 'PHILIPS', product_name: 'Philips S9000 SH91/51 replacement shaving heads' },
+    { asin: 'PHILIPS_WRONG', product_name: 'Philips S9000 SH90/51 replacement shaving heads' },
+    { asin: 'PANASONIC', product_name: 'Panasonic Lamdash ES-LV9W WES9600 替刃 5枚刃' },
+    { asin: 'PANASONIC_3', product_name: 'Panasonic Lamdash ES-LV9W WES9600 替刃 3枚刃' },
+    { asin: 'CLEAN6', product_name: 'Braun Clean & Renew CCR6 세정액 카트리지 6개' },
+    { asin: 'CLEAN3', product_name: 'Braun Clean & Renew CCR6 세정액 카트리지 3개' },
+  ];
+  const cases = [
+    ['Braun Series 9 Pro用 替刃 94M', ['BRAUN'], 'shaver-replacement-blade'],
+    ['replacement shaving heads SH91/51 for Philips S9000', ['PHILIPS'], 'shaver-replacement-blade'],
+    ['适用于松下Lamdash ES-LV9W的WES9600替换刀头 5枚刃', ['PANASONIC'], 'shaver-replacement-blade'],
+    ['브라운 Clean & Renew CCR6 세정액 카트리지 6개', ['CLEAN6'], 'shaver-cleaning-cartridge'],
+  ];
+  for (const [query, expected, category] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), [category], query);
+  }
+});
