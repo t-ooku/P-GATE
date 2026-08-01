@@ -1153,7 +1153,7 @@ function isRobotLawnMowerMismatch(candidate, requested) {
 function foldingElectricBikeConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   return {
-    bike: /(?:折りたたみ電動アシスト自転車|folding\s*(?:electric\s*bike|e-bike)|折叠电动自行车|折疊電動自行車|접이식\s*전기\s*자전거)/iu.test(text),
+    bike: /(?:折りたたみ電動アシスト自転車|folding\s*(?:electric\s*bike|e-bike)|折叠电动自行车|折疊電動自行車|접이식\s*전기\s*자전거|車に積め.{0,12}坂道.{0,12}楽に走り.{0,12}長距離移動|fits\s*in\s*the\s*car.{0,16}climbs\s*hills\s*easily.{0,16}travels\s*far|放进汽车后备箱.{0,12}轻松爬坡.{0,12}长距离骑行|차에\s*싣고.{0,12}언덕.{0,12}쉽게\s*오르며.{0,12}장거리\s*이동)/iu.test(text),
     wheel: text.match(/\b(\d{2})\s*(?:インチ|inch(?:es)?|英寸|인치)/iu)?.[1] || '',
     motor: text.match(/\b(\d{3,4})\s*W\b/iu)?.[1] || '',
     voltage: text.match(/\b(\d{2,3})\s*V\b/iu)?.[1] || '',

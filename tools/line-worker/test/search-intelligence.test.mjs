@@ -1784,6 +1784,10 @@ test('折りたたみ電動アシスト自転車は4言語で車輪・出力・�
     '20 inch folding electric bike 500W 48V 15Ah 80km range',
     '20英寸 折叠电动自行车 500W 48V 15Ah 续航80km',
     '20인치 접이식 전기 자전거 500W 48V 15Ah 주행거리 80km',
+    '車に積めて坂道も楽に走り長距離移動したい 20インチ 500W 48V 15Ah 航続80km',
+    'want something that fits in the car, climbs hills easily, and travels far 20 inch 500W 48V 15Ah 80km range',
+    '想放进汽车后备箱并轻松爬坡长距离骑行 20英寸 500W 48V 15Ah 续航80km',
+    '차에 싣고 언덕도 쉽게 오르며 장거리 이동하고 싶어 20인치 500W 48V 15Ah 주행거리 80km',
   ];
   const candidates = [
     { asin: 'MATCH', product_name: '20 inch folding electric bike 500W 48V 15Ah 80km range' },
