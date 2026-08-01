@@ -1807,6 +1807,31 @@ test('電動昇降デスクは4言語で天板サイズ・モーター・メモ�
   }
 });
 
+test('オフィスチェアは4言語で支持機能・肘掛け・素材・耐荷重が一致する本体だけを提示する', () => {
+  const queries = [
+    'エルゴノミクスオフィスチェア ヘッドレスト 腰サポート 4D肘掛け メッシュ 耐荷重150kg',
+    'ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 150kg',
+    '人体工学办公椅 头枕 腰部支撑 4D扶手 网布 承重150kg',
+    '인체공학 사무용 의자 헤드레스트 요추 지지 4D 팔걸이 메쉬 하중 150kg',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 150kg' },
+    { asin: 'NOHEAD', product_name: 'Ergonomic office chair lumbar support 4D armrests mesh weight capacity 150kg' },
+    { asin: 'NOLUMBAR', product_name: 'Ergonomic office chair headrest 4D armrests mesh weight capacity 150kg' },
+    { asin: 'ARMS', product_name: 'Ergonomic office chair headrest lumbar support 2D armrests mesh weight capacity 150kg' },
+    { asin: 'LEATHER', product_name: 'Ergonomic office chair headrest lumbar support 4D armrests leather weight capacity 150kg' },
+    { asin: 'LOAD', product_name: 'Ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 120kg' },
+    { asin: 'COVER', product_name: 'Chair cover for ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 150kg' },
+    { asin: 'CASTER', product_name: 'Replacement casters for ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 150kg' },
+    { asin: 'CYLINDER', product_name: 'Gas cylinder for ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 150kg' },
+    { asin: 'CUSHION', product_name: 'Seat cushion for ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 150kg' },
+    { asin: 'ARMREST', product_name: 'Replacement armrests for ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 150kg' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

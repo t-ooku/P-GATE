@@ -1250,6 +1250,33 @@ function isElectricStandingDeskMismatch(candidate, requested) {
   return false;
 }
 
+function ergonomicOfficeChairConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    chair: /(?:エルゴノミクスオフィスチェア|ergonomic\s*office\s*chair|人体工学办公椅|人體工學辦公椅|인체공학\s*사무용\s*의자)/iu.test(text),
+    headrest: /(?:ヘッドレスト|headrest|头枕|頭枕|헤드레스트)/iu.test(text),
+    lumbar: /(?:腰サポート|lumbar\s*support|腰部支撑|腰部支撐|요추\s*지지)/iu.test(text),
+    armrests: text.match(/\b(\d)D\s*(?:肘掛け|armrests?|扶手|팔걸이)/iu)?.[1] || '',
+    mesh: /(?:メッシュ|mesh|网布|網布|메쉬)/iu.test(text),
+    load: text.match(/(?:耐荷重|weight\s*capacity|承重|하중)\s*(\d{2,3})\s*kg\b/iu)?.[1] || '',
+    wrongProduct: /(?:chair\s*cover|椅子カバー|椅套|의자\s*커버|replacement\s*casters?|交換キャスター|替换脚轮|替換腳輪|교체용\s*캐스터|gas\s*cylinder|ガスシリンダー|气压杆|氣壓桿|가스\s*실린더|seat\s*cushion|座布団|坐垫|坐墊|방석|replacement\s*armrests?|交換肘掛け|替换扶手|替換扶手|교체용\s*팔걸이)/iu.test(text)
+  };
+}
+
+function isErgonomicOfficeChairMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = ergonomicOfficeChairConstraints(text);
+  if (!evidence.chair || evidence.wrongProduct) return true;
+  for (const field of ['armrests', 'load']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const field of ['headrest', 'lumbar', 'mesh']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2149,6 +2176,11 @@ export function filterCategoryMismatches(query, candidates = []) {
   const electricStandingDeskIntent = electricStandingDesk.desk && electricStandingDesk.dualMotor
     && Boolean(electricStandingDesk.size && electricStandingDesk.memory && electricStandingDesk.antiCollision)
     && !electricStandingDesk.wrongProduct;
+  const ergonomicOfficeChair = ergonomicOfficeChairConstraints(normalizedQuery);
+  const ergonomicOfficeChairIntent = ergonomicOfficeChair.chair && ergonomicOfficeChair.headrest
+    && Boolean(ergonomicOfficeChair.lumbar && ergonomicOfficeChair.armrests
+      && ergonomicOfficeChair.mesh && ergonomicOfficeChair.load)
+    && !ergonomicOfficeChair.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2162,7 +2194,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
-    && !compressorDehumidifierIntent && !electricStandingDeskIntent) return candidates;
+    && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2245,6 +2277,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (portablePowerStationIntent) return !isPortablePowerStationMismatch(candidate, portablePowerStation);
     if (compressorDehumidifierIntent) return !isCompressorDehumidifierMismatch(candidate, compressorDehumidifier);
     if (electricStandingDeskIntent) return !isElectricStandingDeskMismatch(candidate, electricStandingDesk);
+    if (ergonomicOfficeChairIntent) return !isErgonomicOfficeChairMismatch(candidate, ergonomicOfficeChair);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

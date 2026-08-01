@@ -518,6 +518,18 @@ function buildElectricStandingDeskSearchKeywords(query) {
   return ['電動昇降デスク', `${size[1]}×${size[2]}cm`, 'デュアルモーター', `${memory}メモリ`, '衝突防止'].join(' ');
 }
 
+function buildErgonomicOfficeChairSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const chair = /(?:エルゴノミクスオフィスチェア|ergonomic\s*office\s*chair|人体工学办公椅|人體工學辦公椅|인체공학\s*사무용\s*의자)/iu.test(normalized);
+  const headrest = /(?:ヘッドレスト|headrest|头枕|頭枕|헤드레스트)/iu.test(normalized);
+  const lumbar = /(?:腰サポート|lumbar\s*support|腰部支撑|腰部支撐|요추\s*지지)/iu.test(normalized);
+  const armrests = normalized.match(/\b(\d)D\s*(?:肘掛け|armrests?|扶手|팔걸이)/iu)?.[1];
+  const mesh = /(?:メッシュ|mesh|网布|網布|메쉬)/iu.test(normalized);
+  const load = normalized.match(/(?:耐荷重|weight\s*capacity|承重|하중)\s*(\d{2,3})\s*kg\b/iu)?.[1];
+  if (!chair || !headrest || !lumbar || !armrests || !mesh || !load) return '';
+  return ['エルゴノミクスオフィスチェア', 'ヘッドレスト', '腰サポート', `${armrests}D肘掛け`, 'メッシュ', `耐荷重${load}kg`].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1341,6 +1353,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawCompressorDehumidifier) return rawCompressorDehumidifier;
   const rawElectricStandingDesk = buildElectricStandingDeskSearchKeywords(rawNormalized);
   if (rawElectricStandingDesk) return rawElectricStandingDesk;
+  const rawErgonomicOfficeChair = buildErgonomicOfficeChairSearchKeywords(rawNormalized);
+  if (rawErgonomicOfficeChair) return rawErgonomicOfficeChair;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
