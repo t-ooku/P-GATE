@@ -9,6 +9,26 @@ export const MARKETPLACE_INFO_TYPES = Object.freeze([
   'SALE', 'COUPON', 'NEW_ARRIVAL', 'LIMITED', 'RESTOCK', 'EDITORIAL'
 ]);
 
+const OFFICIAL_SOURCE_DOMAINS = Object.freeze({
+  AMAZON_JP: ['amazon.co.jp'], RAKUTEN_JP: ['rakuten.co.jp'], YAHOO_JP: ['shopping.yahoo.co.jp'],
+  QOO10_JP: ['qoo10.jp'], SHEIN_JP: ['shein.com'], ZOZOTOWN: ['zozo.jp'],
+  SHOPLIST: ['shop-list.com'], MUSINSA: ['musinsa.com'], BUYMA: ['buyma.com'], SNKRDUNK: ['snkrdunk.com']
+});
+
+function safeHttpsUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return url.protocol === 'https:' && !url.username && !url.password ? url : null;
+  } catch { return null; }
+}
+
+export function isOfficialMarketplaceSource(marketplace, value) {
+  const url = safeHttpsUrl(value);
+  if (!url) return false;
+  return (OFFICIAL_SOURCE_DOMAINS[marketplace] || [])
+    .some((domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`));
+}
+
 function jstParts(date) {
   const shifted = new Date(date.getTime() + 9 * 3600000);
   return {
@@ -154,8 +174,8 @@ async function upsertSale(request, env) {
   if (!MARKETPLACE_INFO_TYPES.includes(infoType)) {
     return Response.json({ ok: false, error: 'MARKETPLACE_INFO_TYPE_INVALID' }, { status: 400 });
   }
-  const source = new URL(String(input.source_url || ''));
-  if (source.protocol !== 'https:') {
+  const source = safeHttpsUrl(input.source_url);
+  if (!source || !isOfficialMarketplaceSource(marketplace, source.toString())) {
     return Response.json({ ok: false, error: 'SALE_SOURCE_INVALID' }, { status: 400 });
   }
   const startsAt = new Date(input.starts_at);
@@ -168,6 +188,11 @@ async function upsertSale(request, env) {
   const approved = input.status === 'APPROVED' ? 'APPROVED' : 'DRAFT';
   const rights = input.image_rights_status === 'APPROVED' ? 'APPROVED' : 'NONE';
   const videoRights = input.video_rights_status === 'APPROVED' ? 'APPROVED' : 'NONE';
+  const imageUrl = rights === 'APPROVED' ? safeHttpsUrl(input.image_url) : null;
+  const videoUrl = videoRights === 'APPROVED' ? safeHttpsUrl(input.video_url) : null;
+  if ((rights === 'APPROVED' && !imageUrl) || (videoRights === 'APPROVED' && !videoUrl)) {
+    return Response.json({ ok: false, error: 'SALE_MEDIA_URL_INVALID' }, { status: 400 });
+  }
   await env.PRODUCT_DB.prepare(
     `INSERT INTO marketplace_sale_events
      (sale_id,marketplace,info_type,title,summary,starts_at,ends_at,announced_at,source_url,image_url,image_rights_status,video_url,video_rights_status,status,created_at,updated_at)
@@ -182,8 +207,8 @@ async function upsertSale(request, env) {
     saleId, marketplace, infoType, String(input.title || '').trim().slice(0, 140),
     String(input.summary || '').trim().slice(0, 500), startsAt.toISOString(),
     endsAt.toISOString(), new Date(input.announced_at || now).toISOString(),
-    source.toString(), rights === 'APPROVED' ? String(input.image_url || '') : '',
-    rights, videoRights === 'APPROVED' ? String(input.video_url || '') : '',
+    source.toString(), imageUrl?.toString() || '',
+    rights, videoUrl?.toString() || '',
     videoRights, approved, now
   ).run();
   return Response.json({ ok: true, sale_id: saleId, status: approved });
