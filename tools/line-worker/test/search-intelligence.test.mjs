@@ -1609,6 +1609,31 @@ test('ゲーミングノートPCは4言語で画面・GPU・メモリ・SSD・Hz
   }
 });
 
+test('NASは4言語でベイ数・通信速度・メモリ・キャッシュ・ディスク条件が一致する本体だけを提示する', () => {
+  const queries = [
+    '4ベイ NAS 2.5GbE 8GBメモリ NVMeキャッシュ ディスクレス',
+    '4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless',
+    '4盘位 NAS 2.5GbE 8GB内存 NVMe缓存 无盘',
+    '4베이 NAS 2.5GbE 8GB 램 NVMe 캐시 디스크리스',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless' },
+    { asin: 'BAYS', product_name: '2-bay NAS 2.5GbE 8GB RAM NVMe cache diskless' },
+    { asin: 'NETWORK', product_name: '4-bay NAS 1GbE 8GB RAM NVMe cache diskless' },
+    { asin: 'RAM', product_name: '4-bay NAS 2.5GbE 4GB RAM NVMe cache diskless' },
+    { asin: 'NOCACHE', product_name: '4-bay NAS 2.5GbE 8GB RAM diskless' },
+    { asin: 'WITHDISKS', product_name: '4-bay NAS 2.5GbE 8GB RAM NVMe cache with drives' },
+    { asin: 'HDD', product_name: 'NAS HDD for 4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless' },
+    { asin: 'CASE', product_name: 'NAS enclosure for 4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless' },
+    { asin: 'ROUTER', product_name: 'Wi-Fi router for 4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless' },
+    { asin: 'USB', product_name: 'USB external storage for 4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless' },
+    { asin: 'MEMORY', product_name: 'RAM upgrade for 4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

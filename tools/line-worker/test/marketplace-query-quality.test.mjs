@@ -491,6 +491,21 @@ test('ゲーミングノートPCは画面・GPU・メモリ・SSD・Hzを4言語
   }
 });
 
+test('NAS本体はベイ数・通信速度・メモリ・キャッシュ・ディスク条件を4言語で保持する', () => {
+  const queries = [
+    '4ベイ NAS 2.5GbE 8GBメモリ NVMeキャッシュ ディスクレス',
+    '4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless',
+    '4盘位 NAS 2.5GbE 8GB内存 NVMe缓存 无盘',
+    '4베이 NAS 2.5GbE 8GB 램 NVMe 캐시 디스크리스',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'NAS本体 4ベイ 2.5GbE 8GB RAM NVMeキャッシュ ディスクレス', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

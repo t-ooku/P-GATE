@@ -1039,6 +1039,33 @@ function isGamingLaptopMismatch(candidate, requested) {
   return false;
 }
 
+function nasConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    nas: /(?:\bNAS\b|network\s*attached\s*storage|网络附加存储|網路附加儲存|네트워크\s*결합\s*스토리지)/iu.test(text),
+    bays: text.match(/\b(\d{1,2})[\s-]*(?:ベイ|bay(?:s)?|盘位|盤位|베이)/iu)?.[1] || '',
+    network: text.match(/\b(\d(?:\.\d)?)\s*GbE\b/iu)?.[1] || '',
+    ram: text.match(/\b(\d{1,3})\s*GB\s*(?:RAM|メモリ|内存|記憶體|램)/iu)?.[1] || '',
+    nvmeCache: /(?:NVMe\s*(?:キャッシュ|cache|缓存|快取|캐시)|(?:キャッシュ|cache|缓存|快取|캐시)\s*NVMe)/iu.test(text),
+    diskless: /(?:ディスクレス|diskless|无盘|無碟|디스크리스)/iu.test(text),
+    wrongProduct: /(?:NAS\s*(?:HDD|hard\s*drive)|NAS用HDD|NAS硬盘|NAS硬碟|NAS용\s*HDD|NAS\s*(?:enclosure|case)|NAS用ケース|NAS外壳|NAS外殼|NAS\s*인클로저|Wi-?Fi\s*router|無線LANルーター|无线路由器|無線路由器|와이파이\s*공유기|USB\s*(?:external\s*)?(?:drive|storage|DAS)|USB外付けストレージ|USB外置存储|USB外接儲存|USB\s*외장\s*스토리지|RAM\s*(?:module|upgrade)|増設メモリ|内存条|記憶體模組|메모리\s*모듈)/iu.test(text)
+  };
+}
+
+function isNasMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = nasConstraints(text);
+  if (!evidence.nas || evidence.wrongProduct) return true;
+  for (const field of ['bays', 'network', 'ram']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const field of ['nvmeCache', 'diskless']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1904,6 +1931,9 @@ export function filterCategoryMismatches(query, candidates = []) {
   const gamingLaptop = gamingLaptopConstraints(normalizedQuery);
   const gamingLaptopIntent = gamingLaptop.laptop && Boolean(gamingLaptop.gpu && gamingLaptop.ram && gamingLaptop.ssd)
     && !gamingLaptop.wrongProduct;
+  const nas = nasConstraints(normalizedQuery);
+  const nasIntent = nas.nas && Boolean(nas.bays && nas.network && nas.ram && nas.nvmeCache && nas.diskless)
+    && !nas.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1915,7 +1945,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
-    && !gamingLaptopIntent) return candidates;
+    && !gamingLaptopIntent && !nasIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1990,6 +2020,7 @@ export function filterCategoryMismatches(query, candidates = []) {
       return !isFullFrameMirrorlessCameraMismatch(candidate, fullFrameMirrorlessCamera);
     }
     if (gamingLaptopIntent) return !isGamingLaptopMismatch(candidate, gamingLaptop);
+    if (nasIntent) return !isNasMismatch(candidate, nas);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

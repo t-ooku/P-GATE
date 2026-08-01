@@ -424,6 +424,18 @@ function buildGamingLaptopSearchKeywords(query) {
   return ['ゲーミングノートPC', `${size}型`, `RTX ${gpu}`, `${ram}GB RAM`, `${ssd}TB SSD`, `${refresh}Hz`].join(' ');
 }
 
+function buildNasSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:\bNAS\b|network\s*attached\s*storage|网络附加存储|網路附加儲存|네트워크\s*결합\s*스토리지)/iu.test(normalized)) return '';
+  const bays = normalized.match(/\b(\d{1,2})[\s-]*(?:ベイ|bay(?:s)?|盘位|盤位|베이)/iu)?.[1];
+  const network = normalized.match(/\b(\d(?:\.\d)?)\s*GbE\b/iu)?.[1];
+  const ram = normalized.match(/\b(\d{1,3})\s*GB\s*(?:RAM|メモリ|内存|記憶體|램)/iu)?.[1];
+  const nvmeCache = /(?:NVMe\s*(?:キャッシュ|cache|缓存|快取|캐시)|(?:キャッシュ|cache|缓存|快取|캐시)\s*NVMe)/iu.test(normalized);
+  const diskless = /(?:ディスクレス|diskless|无盘|無碟|디스크리스)/iu.test(normalized);
+  if (!bays || !network || !ram || !nvmeCache || !diskless) return '';
+  return ['NAS本体', `${bays}ベイ`, `${network}GbE`, `${ram}GB RAM`, 'NVMeキャッシュ', 'ディスクレス'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1231,6 +1243,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawFullFrameMirrorlessCamera) return rawFullFrameMirrorlessCamera;
   const rawGamingLaptop = buildGamingLaptopSearchKeywords(rawNormalized);
   if (rawGamingLaptop) return rawGamingLaptop;
+  const rawNas = buildNasSearchKeywords(rawNormalized);
+  if (rawNas) return rawNas;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
