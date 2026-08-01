@@ -1854,3 +1854,27 @@ test('カメラ交換バッテリーは本体・充電器・別型番・純正�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['camera-battery'], query);
   }
 });
+
+test('電動工具バッテリーは本体・充電器・別型番・電圧容量個数違いを除外する', () => {
+  const candidates = [
+    { asin: 'MAKITA', product_name: 'Makita BL1860B 純正 電動工具バッテリー 18V 6.0Ah 2個' },
+    { asin: 'MAKITA_ONE', product_name: 'Makita BL1860B 純正 電動工具バッテリー 18V 6.0Ah 1個' },
+    { asin: 'MAKITA_COMPAT', product_name: 'Makita BL1860B 互換 電動工具バッテリー 18V 6.0Ah 2個' },
+    { asin: 'DEWALT', product_name: 'DeWalt DCB184 18V 5Ah replacement power tool battery 2 pack' },
+    { asin: 'DEWALT_4AH', product_name: 'DeWalt DCB184 18V 4Ah replacement power tool battery 2 pack' },
+    { asin: 'BOSCH', product_name: 'Bosch GBA 18V 5.0Ah 原装电动工具电池 1块' },
+    { asin: 'BOSCH_CHARGER', product_name: 'Bosch GBA 18V 5.0Ah 电池充电器 1块' },
+    { asin: 'MILWAUKEE', product_name: 'Milwaukee M18 B5 18V 5.0Ah 정품 공구 배터리 2개' },
+    { asin: 'MILWAUKEE_BODY', product_name: 'Milwaukee M18 B5 18V 5.0Ah 전동 공구 본체 키트 2개' },
+  ];
+  const cases = [
+    ['マキタ 純正 18V 6.0Ah 電動工具バッテリー BL1860B 2個', ['MAKITA']],
+    ['DeWalt DCB184 18V 5Ah replacement power tool battery 2 pack', ['DEWALT']],
+    ['博世 GBA 18V 5.0Ah 原装电动工具电池 1块', ['BOSCH']],
+    ['밀워키 M18 B5 18V 5.0Ah 정품 공구 배터리 2개', ['MILWAUKEE']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['tool-battery'], query);
+  }
+});

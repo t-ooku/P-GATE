@@ -311,6 +311,30 @@ function buildCameraBatterySearchKeywords(query) {
   return [brand, part, 'カメラバッテリー', genuine, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
 }
 
+function toolBatteryModel(query) {
+  const value = String(query || '').normalize('NFKC');
+  const compact = value.match(/\b(BL1860B|DCB184)\b/iu)?.[1];
+  if (compact) return compact.toUpperCase();
+  if (/\bGBA\s*18V\s*5(?:\.0)?\s*AH\b/iu.test(value)) return 'GBA 18V 5Ah';
+  if (/\bM18\s*B5\b/iu.test(value)) return 'M18 B5';
+  return '';
+}
+
+function buildToolBatterySearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리|전동\s*공구\s*배터리)/iu.test(normalized)) return '';
+  const model = toolBatteryModel(normalized);
+  if (!model) return '';
+  const brand = model === 'BL1860B' ? 'Makita' : model === 'DCB184' ? 'DeWalt' : model.startsWith('GBA') ? 'Bosch' : 'Milwaukee';
+  const voltage = normalized.match(/(\d+(?:\.\d+)?)\s*V\b/iu)?.[1];
+  const capacity = normalized.match(/(\d+(?:\.\d+)?)\s*Ah\b/iu)?.[1];
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu.test(normalized) ? '純正' : '';
+  const count = normalized.match(/(\d+)\s*(?:個|本|pack|packs|count|pcs|pieces|块|塊|개|개입)/iu)?.[1];
+  const normalizedCapacity = capacity ? Number(capacity).toString() : '';
+  return [brand, model, '電動工具バッテリー', voltage ? `${voltage}V` : '', normalizedCapacity ? `${normalizedCapacity}Ah` : '', genuine,
+    count ? `${count}個セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -613,6 +637,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawCoffeeCapsule) return rawCoffeeCapsule;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
+  const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
+  if (rawToolBattery) return rawToolBattery;
   const normalized = stripSearchBudget(rawNormalized).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);

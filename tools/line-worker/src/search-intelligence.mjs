@@ -67,6 +67,8 @@ const RULES = [
   ['capsule-coffee-maker',/(?:カプセル式?コーヒーメーカー|capsule\s*coffee\s*(?:maker|machine)|胶囊咖啡机|膠囊咖啡機|캡슐\s*커피\s*머신)/iu,['capsule coffee machine']],
   ['camera-battery-charger',/(?:(?:カメラ|camera|相机|相機|카메라).{0,30}(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기)|(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기).{0,30}(?:カメラ|camera|相机|相機|카메라))/iu,['camera battery charger']],
   ['camera-battery',/(?:(?:sony|ソニー|索尼|소니|canon|キヤノン|佳能|캐논|nikon|ニコン|尼康|니콘|カメラ|camera|相机|相機|카메라).{0,45}(?:バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|배터리)|(?:バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|배터리).{0,45}(?:sony|ソニー|索尼|소니|canon|キヤノン|佳能|캐논|nikon|ニコン|尼康|니콘|カメラ|camera|相机|相機|카메라))/iu,['camera battery','replacement battery']],
+  ['tool-battery-charger',/(?:(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구).{0,40}(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기)|(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기).{0,40}(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구))/iu,['power tool battery charger']],
+  ['tool-battery',/(?:(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구).{0,45}(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리)|(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리).{0,45}(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구))/iu,['power tool battery','replacement tool battery']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
@@ -373,7 +375,7 @@ export function semanticSearchGroups(value) {
   const specificIntent = groups.some((group) => [
     'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light',
     'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver','coffee-capsule','capsule-coffee-maker',
-    'camera-battery','camera-battery-charger'
+    'camera-battery','camera-battery-charger','tool-battery','tool-battery-charger'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES
     .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))

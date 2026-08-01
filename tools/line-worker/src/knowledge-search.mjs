@@ -654,6 +654,37 @@ function isCameraBatteryMismatch(candidate, query) {
   return !/(?:カメラ用?(?:交換)?バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|카메라\s*배터리|battery\s*pack|電池|배터리)/iu.test(text);
 }
 
+function toolBatteryModel(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const compact = value.match(/\b(bl1860b|dcb184)\b/u)?.[1];
+  if (compact) return compact;
+  if (/\bgba\s*18v\s*5(?:\.0)?\s*ah\b/u.test(value)) return 'gba-18v-5ah';
+  if (/\bm18\s*b5\b/u.test(value)) return 'm18-b5';
+  return '';
+}
+
+function batteryVoltage(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+(?:\.\d+)?)\s*v\b/iu)?.[1] || 0);
+}
+
+function batteryCapacity(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+(?:\.\d+)?)\s*ah\b/iu)?.[1] || 0);
+}
+
+function isToolBatteryMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (toolBatteryModel(query) && toolBatteryModel(text) !== toolBatteryModel(query)) return true;
+  if (batteryVoltage(query) && batteryVoltage(text) !== batteryVoltage(query)) return true;
+  if (batteryCapacity(query) && batteryCapacity(text) !== batteryCapacity(query)) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (/(?:本体|工具本体|power\s*tool\s*(?:body|kit)|电动工具主机|電動工具主機|전동\s*공구\s*본체|充電器|charger|充电器|充電器|충전기)/iu.test(text)) return true;
+  return !/(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리|battery\s*pack)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -783,6 +814,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const shaverReplacement = requested.has('shaver-replacement-blade') || requested.has('shaver-cleaning-cartridge');
   const coffeeCapsule = requested.has('coffee-capsule');
   const cameraBattery = requested.has('camera-battery');
+  const toolBattery = requested.has('tool-battery');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -824,6 +856,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (shaverReplacement) return !isShaverReplacementMismatch(candidate, requested, query);
     if (coffeeCapsule) return !isCoffeeCapsuleMismatch(candidate, query);
     if (cameraBattery) return !isCameraBatteryMismatch(candidate, query);
+    if (toolBattery) return !isToolBatteryMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

@@ -175,6 +175,20 @@ test('カメラ交換バッテリーを4言語で本体と充電器から分離�
   }
 });
 
+test('電動工具バッテリーを4言語で本体と充電器から分離し電圧容量を保つ', () => {
+  const cases = [
+    ['マキタ 純正 18V 6.0Ah 電動工具バッテリー BL1860B 2個', 'Makita BL1860B 電動工具バッテリー 18V 6Ah 純正 2個セット'],
+    ['DeWalt DCB184 18V 5Ah replacement power tool battery 2 pack', 'DeWalt DCB184 電動工具バッテリー 18V 5Ah 2個セット'],
+    ['博世 GBA 18V 5.0Ah 原装电动工具电池 1块', 'Bosch GBA 18V 5Ah 電動工具バッテリー 18V 5Ah 純正 1個セット'],
+    ['밀워키 M18 B5 18V 5.0Ah 정품 공구 배터리 2개', 'Milwaukee M18 B5 電動工具バッテリー 18V 5Ah 純正 2個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);
