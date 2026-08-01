@@ -340,3 +340,22 @@ test("4言語の小数重量は9モール検索語でも完全な値だけを保
     }
   }
 });
+
+test("iPhoneとGalaxyの現地語端末名を9モール向け互換型番へ統一する", () => {
+  const cases = [
+    ['アイフォン15 Proの透明ケース', 'iPhone 15 Proケース'],
+    ['iPhone 15 Pro clear case', 'iPhone 15 Proケース'],
+    ['苹果手机15 Pro透明手机壳', 'iPhone 15 Proケース'],
+    ['아이폰15 Pro 투명 케이스', 'iPhone 15 Proケース'],
+    ['ギャラクシーS24 Ultraのケース', 'Galaxy S24 Ultra ケース'],
+    ['Galaxy S24 Ultra case', 'Galaxy S24 Ultra ケース'],
+    ['三星S24 Ultra手机壳', 'Galaxy S24 Ultra ケース'],
+    ['갤럭시S24 Ultra 케이스', 'Galaxy S24 Ultra ケース'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes(expected), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});

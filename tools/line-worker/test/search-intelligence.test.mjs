@@ -1021,3 +1021,21 @@ test('4言語の小数重量は末尾の整数を別仕様として混入させ�
     assert.doesNotMatch(query, /"2\.5kg"\*|"5kg"\*/i, input);
   }
 });
+
+test('iPhoneとGalaxyの現地語端末名でもケース意図と型番を保持する', () => {
+  const cases = [
+    'アイフォン15 Proの透明ケース',
+    'iPhone 15 Pro clear case',
+    '苹果手机15 Pro透明手机壳',
+    '아이폰15 Pro 투명 케이스',
+    'ギャラクシーS24 Ultraのケース',
+    'Galaxy S24 Ultra case',
+    '三星S24 Ultra手机壳',
+    '갤럭시S24 Ultra 케이스',
+  ];
+  for (const input of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"phone"\*|"case"\*/, input);
+    assert.match(query, /"15"\*|"s24"\*/, input);
+  }
+});
