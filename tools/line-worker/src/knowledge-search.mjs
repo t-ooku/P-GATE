@@ -393,7 +393,19 @@ function isPowerBankMismatch(candidate, query) {
   const pdWatts = pdMatches
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
   const requestedWatts = pdWatts?.[1] || pdWatts?.[2] || '';
-  if (requestedWatts && !new RegExp(`(?:^|\\D)(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?(?:\\D|$)`, 'iu').test(text)) return true;
+  const minimumPdOutput = requestedWatts && (
+    new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?`, 'iu').test(normalizedQuery)
+    || new RegExp(`(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalizedQuery)
+  );
+  const maximumPdOutput = requestedWatts && (
+    new RegExp(`(?:at\\s+most|maximum(?:\\s+of)?|up\\s+to|不超过|最多)\\s*(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?`, 'iu').test(normalizedQuery)
+    || new RegExp(`(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?\\s*(?:以下|or\\s+less|or\\s+under|이하)`, 'iu').test(normalizedQuery)
+  );
+  const candidatePdWatts = powerDeliveryWatts(text);
+  if (minimumPdOutput && candidatePdWatts < Number(requestedWatts)) return true;
+  if (maximumPdOutput && (!candidatePdWatts || candidatePdWatts > Number(requestedWatts))) return true;
+  if (requestedWatts && !minimumPdOutput && !maximumPdOutput
+    && !new RegExp(`(?:^|\\D)(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?(?:\\D|$)`, 'iu').test(text)) return true;
   const rejectedWatts = pdMatches
     .filter((match) => isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))
     .map((match) => match[1] || match[2]);
