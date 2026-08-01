@@ -262,8 +262,11 @@ test('Instagram publisher creates a Reels container for an MP4 media URL', async
   assert.equal(createPayload.media_type, 'REELS');
   assert.equal(createPayload.video_url, 'https://hoshilu.app/social/cross-market-reel.mp4?version=1');
   assert.equal(createPayload.share_to_feed, true);
+  assert.equal(createPayload.hide_like_and_view_counts, true);
   assert.equal('image_url' in createPayload, false);
   assert.match(createPayload.caption, /#10モール横断/);
+  assert.match(createPayload.caption, /@hoshilu\.app のプロフィールリンクから/);
+  assert.doesNotMatch(createPayload.caption, /utm_source=/);
 });
 
 test('Instagram publisher creates a Stories container when content id is marked as a story', async () => {

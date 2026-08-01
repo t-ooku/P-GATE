@@ -131,6 +131,10 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
   }
   const isReel = /\.(?:mp4|mov|m4v)$/.test(mediaPath);
   const isStory = /(?:^|[-_])story(?:$|[-_])/i.test(post.content_id);
+  const profileCta = '続きは @hoshilu.app のプロフィールリンクから。';
+  const instagramCaption = post.caption.includes('@hoshilu.app')
+    ? post.caption
+    : `${post.caption}\n${profileCta}`;
   const mediaPayload = isStory
     ? {
         media_type: 'STORIES',
@@ -140,12 +144,14 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
     ? {
         media_type: 'REELS',
         video_url: post.media_url,
-        caption: [post.caption, post.link].filter(Boolean).join('\n'),
-        share_to_feed: true
+        caption: instagramCaption,
+        share_to_feed: true,
+        hide_like_and_view_counts: true
       }
     : {
         image_url: post.media_url,
-        caption: [post.caption, post.link].filter(Boolean).join('\n')
+        caption: instagramCaption,
+        hide_like_and_view_counts: true
       };
   let creationId = clean(post.platform_job_id, 120);
   if (!creationId) {
