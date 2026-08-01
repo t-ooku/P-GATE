@@ -237,6 +237,18 @@ function buildNoiseCancellingHeadphonesSearchKeywords(query) {
     `${battery}時間再生`, usbC].filter(Boolean).join(' ');
 }
 
+function buildRobotVacuumBodySearchKeywords(query) {
+  if (!/(?:robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기)/iu.test(query)) return '';
+  if (/(?:交換|replacement|配件|更换|更換|교체|フィルター|filter|ブラシ|brush|紙パック|dust\s*bag)/iu.test(query)) return '';
+  const lidar = /\blidar\b|レーザー(?:ナビ|マッピング)|激光导航|激光導航|라이다/iu.test(query) ? 'LiDAR' : '';
+  const suction = String(query || '').match(/\b(\d{3,5})\s*pa\b/iu)?.[1];
+  const selfEmpty = /自動(?:ゴミ収集|集塵)|self[- ]?emptying|auto[- ]?empty|自动集尘|自動集塵|자동\s*(?:먼지\s*)?비움/iu.test(query)
+    ? '自動ゴミ収集' : '';
+  const mopping = /水拭き|mopping|vacuum\s*and\s*mop|拖地|물걸레/iu.test(query) ? '水拭き' : '';
+  if (!lidar || !suction || !selfEmpty) return '';
+  return ['ロボット掃除機', lidar, `${suction}Pa`, selfEmpty, mopping].filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1084,6 +1096,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (mechanicalKeyboard) return mechanicalKeyboard;
   const noiseCancellingHeadphones = buildNoiseCancellingHeadphonesSearchKeywords(normalized);
   if (noiseCancellingHeadphones) return noiseCancellingHeadphones;
+  const robotVacuumBody = buildRobotVacuumBodySearchKeywords(normalized);
+  if (robotVacuumBody) return robotVacuumBody;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

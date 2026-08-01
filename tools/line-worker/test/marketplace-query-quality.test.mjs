@@ -281,6 +281,21 @@ test('ノイズキャンセリングヘッドホンは形状・Bluetooth・接�
   }
 });
 
+test('ロボット掃除機本体は測距・吸引力・集塵・水拭き条件を4言語で保持する', () => {
+  const queries = [
+    'LiDAR 5000Pa 自動ゴミ収集 水拭き対応ロボット掃除機',
+    'robot vacuum with LiDAR 5000Pa self-emptying and mopping',
+    'LiDAR 5000Pa 自动集尘拖地扫地机器人',
+    'LiDAR 5000Pa 자동 먼지 비움 물걸레 로봇 청소기',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ロボット掃除機 LiDAR 5000Pa 自動ゴミ収集 水拭き', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

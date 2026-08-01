@@ -1264,6 +1264,29 @@ test('ノイズキャンセリングヘッドホンは4言語で形状・接続�
   }
 });
 
+test('ロボット掃除機本体は4言語で測距・吸引力・集塵・水拭きが一致する候補だけを提示する', () => {
+  const queries = [
+    'LiDAR 5000Pa 自動ゴミ収集 水拭き対応ロボット掃除機',
+    'robot vacuum with LiDAR 5000Pa self-emptying and mopping',
+    'LiDAR 5000Pa 自动集尘拖地扫地机器人',
+    'LiDAR 5000Pa 자동 먼지 비움 물걸레 로봇 청소기',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'LiDAR Robot Vacuum and Mop 5000Pa Self-emptying' },
+    { asin: 'NOLIDAR', product_name: 'Robot Vacuum and Mop 5000Pa Self-emptying' },
+    { asin: 'WEAK', product_name: 'LiDAR Robot Vacuum and Mop 3000Pa Self-emptying' },
+    { asin: 'NOEMPTY', product_name: 'LiDAR Robot Vacuum and Mop 5000Pa' },
+    { asin: 'NOMOP', product_name: 'LiDAR Robot Vacuum 5000Pa Self-emptying' },
+    { asin: 'FILTER', product_name: 'LiDAR Robot Vacuum Replacement Filter 5000Pa Self-emptying Mopping' },
+    { asin: 'BRUSH', product_name: 'LiDAR Robot Vacuum Replacement Brush 5000Pa Self-emptying Mopping' },
+    { asin: 'DOCK', product_name: 'LiDAR Robot Vacuum Dock Only 5000Pa Self-emptying Mopping' },
+    { asin: 'STICK', product_name: 'LiDAR Stick Vacuum 5000Pa Self-emptying Mopping' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

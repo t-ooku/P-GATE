@@ -677,6 +677,30 @@ function isNoiseCancellingHeadphonesMismatch(candidate, requested) {
   return false;
 }
 
+function robotVacuumBodyConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    robotVacuum: /(?:robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기)/iu.test(text),
+    lidar: /\blidar\b|レーザー(?:ナビ|マッピング)|激光导航|激光導航|라이다/iu.test(text),
+    suction: text.match(/\b(\d{3,5})\s*pa\b/iu)?.[1] || '',
+    selfEmpty: /自動(?:ゴミ収集|集塵)|self[- ]?emptying|auto[- ]?empty|自动集尘|自動集塵|자동\s*(?:먼지\s*)?비움/iu.test(text),
+    mopping: /水拭き|mopping|vacuum\s*and\s*mop|拖地|물걸레/iu.test(text),
+    wrongProduct: /(?:交換|replacement|配件|更换|更換|교체|フィルター|filter|ブラシ|brush|紙パック|dust\s*bag|充電台\s*単体|dock\s*only|station\s*only|基站单独|基站單獨|도크\s*단품|stick\s*vacuum|スティック掃除機|手持吸尘器|手持吸塵器|스틱\s*청소기)/iu.test(text)
+  };
+}
+
+function isRobotVacuumBodyMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = robotVacuumBodyConstraints(text);
+  if (!evidence.robotVacuum || evidence.wrongProduct) return true;
+  if (requested.suction && evidence.suction !== requested.suction) return true;
+  for (const feature of ['lidar', 'selfEmpty', 'mopping']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1496,13 +1520,16 @@ export function filterCategoryMismatches(query, candidates = []) {
   const noiseCancellingHeadphones = noiseCancellingHeadphonesConstraints(normalizedQuery);
   const noiseCancellingHeadphonesIntent = noiseCancellingHeadphones.headphones && noiseCancellingHeadphones.anc
     && Boolean(noiseCancellingHeadphones.bluetooth);
+  const robotVacuumBody = robotVacuumBodyConstraints(normalizedQuery);
+  const robotVacuumBodyIntent = robotVacuumBody.robotVacuum && Boolean(robotVacuumBody.suction)
+    && !robotVacuumBody.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
     && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent
-    && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent) return candidates;
+    && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent && !robotVacuumBodyIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1559,6 +1586,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (noiseCancellingHeadphonesIntent) {
       return !isNoiseCancellingHeadphonesMismatch(candidate, noiseCancellingHeadphones);
     }
+    if (robotVacuumBodyIntent) return !isRobotVacuumBodyMismatch(candidate, robotVacuumBody);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
