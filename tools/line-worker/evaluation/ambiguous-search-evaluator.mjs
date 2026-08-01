@@ -31,6 +31,14 @@ function categoryId(result) {
   );
 }
 
+function localeId(testCase) {
+  const locale = String(testCase?.locale || "ja").trim().toLowerCase();
+  if (locale.startsWith("en")) return "en";
+  if (locale.startsWith("zh")) return "zh";
+  if (locale.startsWith("ko")) return "ko";
+  return "ja";
+}
+
 function resultText(result) {
   return [
     result?.product_name,
@@ -100,6 +108,9 @@ export function validateGoldCase(testCase) {
   if (!Array.isArray(testCase?.query_types) || !testCase.query_types.length) {
     errors.push("query_types must contain at least one type");
   }
+  if (testCase?.locale && !/^(?:ja|en|zh|ko)(?:[-_][a-z0-9]+)?$/iu.test(testCase.locale)) {
+    errors.push("locale must be Japanese, English, Chinese, or Korean");
+  }
   if (testCase?.contains_personal_data === true) {
     errors.push("personal data is forbidden");
   }
@@ -137,10 +148,19 @@ export function scoreCase(testCase, searchResponse, k = DEFAULT_K) {
         pattern: pattern.source,
       }));
   });
+  const expectedBehavior = testCase.expected_behavior || "answer";
+  const clarificationAsked = Boolean(searchResponse?.clarification_question);
+  const wishSuggested = searchResponse?.wish_suggested === true;
+  const expectedBehaviorMatch = expectedBehavior === "clarify"
+    ? clarificationAsked
+    : expectedBehavior === "save_to_wish"
+      ? wishSuggested
+      : top3 && !clarificationAsked;
 
   return {
     case_id: testCase.case_id,
     target_id: testCase.target_id,
+    locale: localeId(testCase),
     information_level: testCase.information_level,
     query_types: [...testCase.query_types],
     top1: goldProducts.has(firstId),
@@ -153,8 +173,10 @@ export function scoreCase(testCase, searchResponse, k = DEFAULT_K) {
     wrong_answer: Boolean(results.length && !hasCorrect),
     critical_constraint_violation: criticalViolations.length > 0,
     critical_violations: criticalViolations,
-    clarification_asked: Boolean(searchResponse?.clarification_question),
-    wish_suggested: searchResponse?.wish_suggested === true,
+    clarification_asked: clarificationAsked,
+    wish_suggested: wishSuggested,
+    expected_behavior: expectedBehavior,
+    expected_behavior_match: expectedBehaviorMatch,
     result_count: results.length,
   };
 }
@@ -192,6 +214,10 @@ function summarizeScores(scores) {
     ),
     wish_suggestion_rate: percent(
       scores.filter((score) => score.wish_suggested).length,
+      scores.length,
+    ),
+    expected_behavior_accuracy: percent(
+      scores.filter((score) => score.expected_behavior_match).length,
       scores.length,
     ),
   };
@@ -246,6 +272,7 @@ export async function evaluateGoldDataset({
     generated_at: new Date().toISOString(),
     k,
     overall: summarizeScores(scores),
+    by_locale: breakdown(scores, "locale"),
     by_information_level: breakdown(scores, "information_level"),
     by_query_type: breakdown(scores, "query_types", true),
     cases: scores,
@@ -263,6 +290,7 @@ export function compareReports(baseline, candidate) {
     "no_answer_rate",
     "wrong_answer_rate",
     "critical_constraint_violation_rate",
+    "expected_behavior_accuracy",
   ];
   return Object.fromEntries(
     metrics.map((metric) => [

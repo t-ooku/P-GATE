@@ -45,6 +45,33 @@ test('複合語は広いカテゴリへ誤分類しない', () => {
   assert.doesNotMatch(intelligentFtsQuery('靴下'), /"shoe"\*|"sneaker"\*/);
 });
 
+test('英単語の部分一致で帽子やトップスを混入しない', () => {
+  assert.equal(semanticSearchGroups('small wired earbuds that fit inside the ear').some((group) => group.category === 'hat'), false);
+  assert.equal(semanticSearchGroups('a compact USB-C hub for a laptop').some((group) => group.category === 'tops'), false);
+});
+
+test('自然文の文脈語を必須ANDにせず、ノートPC用アダプターをPC本体にしない', () => {
+  const earbuds = intelligentFtsQuery('small wired earbuds that fit inside the ear');
+  assert.equal(earbuds, '"earbud"* OR "headphone"*');
+  const adapter = intelligentFtsQuery('a compact USB-C hub with multiple ports for a laptop');
+  assert.match(adapter, /"adapter"\*|"usb"\*/);
+  assert.doesNotMatch(adapter, /"laptop"\*|"compact"\*|"ports"\*/);
+});
+
+test('中国語・韓国語のキャンドル・財布・収納用品を共通商品語へ展開する', () => {
+  for (const query of ['玻璃罐装的大豆蜡烛', '유리병에 담긴 소이 캔들']) {
+    assert.equal(semanticSearchGroups(query).some((group) => group.category === 'candle'), true);
+  }
+  for (const query of ['超薄黑色钱包', '아주 얇은 검정 지갑']) {
+    assert.equal(semanticSearchGroups(query).some((group) => group.category === 'wallet'), true);
+  }
+  for (const query of ['冰箱用透明收纳盒', '냉장고용 투명 수납함']) {
+    const groups = semanticSearchGroups(query);
+    assert.equal(groups.some((group) => group.category === 'organizer'), true);
+    assert.equal(groups.some((group) => group.category === 'home-use'), false);
+  }
+});
+
 test('韓国美容語を商品カテゴリへ正規化する', () => {
   const cases = [
     ['진정 세럼', 'serum'],

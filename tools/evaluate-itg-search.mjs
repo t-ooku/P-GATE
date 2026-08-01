@@ -8,8 +8,11 @@ const root = resolve(import.meta.dirname, '..');
 const worker = resolve(root, 'tools', 'line-worker');
 const gold = JSON.parse(readFileSync(resolve(root, 'benchmarks', 'itg-ambiguous-search-gold-v1.json'), 'utf8'));
 const label = String(process.argv[2] || 'current').replace(/[^a-z0-9_-]/gi, '').toLowerCase();
+const multilingualOnly = process.argv.includes('--multilingual');
 const npxCli = resolve(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
-const cases = gold.targets.flatMap((target) => target.variants.map((variant) => ({ target, variant, match: ftsQuery(variant.query) })));
+const cases = gold.targets
+  .flatMap((target) => target.variants.map((variant) => ({ target, variant, match: ftsQuery(variant.query) })))
+  .filter((item) => !multilingualOnly || item.variant.locale !== 'ja');
 
 function sqlText(item) {
   const literal = (value) => String(value).replaceAll("'", "''");
@@ -69,6 +72,7 @@ const evaluations = cases.map(({ target, variant, match }) => {
   return {
     case_id: variant.case_id,
     target_id: target.target_id,
+    locale: variant.locale || 'ja',
     information_level: variant.information_level,
     query_types: variant.query_types,
     query: variant.query,
@@ -116,6 +120,8 @@ function metrics(items) {
   };
 }
 const byInformationLevel = Object.fromEntries(['rich','ambiguous','ultra_ambiguous'].map((level) => [level, metrics(evaluations.filter((item) => item.information_level === level))]));
+const locales = ['ja','en','zh','ko'];
+const byLocale = Object.fromEntries(locales.map((locale) => [locale, metrics(evaluations.filter((item) => item.locale === locale))]));
 const queryTypes = [...new Set(evaluations.flatMap((item) => item.query_types))].sort();
 const byQueryType = Object.fromEntries(queryTypes.map((type) => [type, metrics(evaluations.filter((item) => item.query_types.includes(type)))]));
 const report = {
@@ -124,6 +130,7 @@ const report = {
   generated_at: new Date().toISOString(),
   dataset: { targets: gold.targets.length, cases: evaluations.length, tenant: 'itg' },
   overall: metrics(evaluations),
+  by_locale: byLocale,
   by_information_level: byInformationLevel,
   by_query_type: byQueryType,
   evaluations
@@ -143,6 +150,8 @@ const markdown = [
   '| 区分 | 件数 | Top-1 | Top-3 | Top-10 | カテゴリ一致 | MRR | nDCG@3 | nDCG@10 | 無回答率 | 誤答率 |',
   '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
   metricRow('全体', report.overall),
+  '',
+  ...Object.entries(byLocale).map(([name, value]) => metricRow(`言語:${name}`, value)),
   '',
   '',
   ...Object.entries(byInformationLevel).map(([name, value]) => metricRow(`情報量:${name}`, value)),

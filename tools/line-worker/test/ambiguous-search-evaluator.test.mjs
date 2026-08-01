@@ -65,6 +65,28 @@ test("Top-10と重大な条件違反を検出する", () => {
   assert.equal(score.critical_violations[0].rank, 1);
 });
 
+test("4言語を正規化し期待挙動の正解率を集計する", async () => {
+  const localizedCases = [
+    { ...gold, case_id: "ja-answer", locale: "ja-JP", expected_behavior: "answer" },
+    { ...gold, case_id: "en-clarify", locale: "en", expected_behavior: "clarify" },
+    { ...gold, case_id: "zh-wish", locale: "zh-CN", expected_behavior: "save_to_wish" },
+    { ...gold, case_id: "ko-answer", locale: "ko-KR", expected_behavior: "answer" },
+  ];
+  const report = await evaluateGoldDataset({
+    cases: localizedCases,
+    search: async (_query, testCase) => {
+      if (testCase.expected_behavior === "clarify") return { clarification_question: "Which type?", results: [] };
+      if (testCase.expected_behavior === "save_to_wish") return { wish_suggested: true, results: [] };
+      return { results: [{ product_id: "B000REAL01", category_id: "humidifier" }] };
+    },
+  });
+  assert.deepEqual(Object.keys(report.by_locale), ["en", "ja", "ko", "zh"]);
+  assert.equal(report.overall.expected_behavior_accuracy, 1);
+  for (const locale of ["ja", "en", "zh", "ko"]) {
+    assert.equal(report.by_locale[locale].expected_behavior_accuracy, 1);
+  }
+});
+
 test("aggregates dimensions and compares reports", async () => {
   const report = await evaluateGoldDataset({
     cases: [gold],

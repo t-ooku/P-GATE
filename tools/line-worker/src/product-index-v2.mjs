@@ -19,7 +19,11 @@ export function intelligentFtsQuery(value) {
     .filter((token) => !STOPWORDS.has(token) && !/^\d+$/.test(token)))]
     .slice(0, 6);
   const groups = [...semantic];
-  if (direct.length) groups.push(direct);
+  // Free-form descriptions contain many context words that are absent from a
+  // catalog title. Requiring one of them as another AND group suppresses valid
+  // products. Keep direct tokens strict only when the query carries a concrete
+  // model/size/quantity clue; semantic product groups handle ordinary prose.
+  if (direct.length && /\d/u.test(normalized)) groups.push(direct);
   if (!groups.length) return '';
   return groups.slice(0, 5).map((group) => {
     const expression = group.map(quote).join(' OR ');

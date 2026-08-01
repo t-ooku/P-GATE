@@ -8,7 +8,7 @@ const RULES = [
   ['hobby-use',/(遊び・趣味|玩具|toys or hobbies|玩具或兴趣|놀이·취미)/iu,['toy','hobby']],
   ['screwdriver',/(ドライバー|ねじ回し|螺子回し|screwdriver|細長い.*工具)/iu,['screwdriver','driver']],
   ['building-block',/(レゴ|lego|ブロック.*おもちゃ|building block)/iu,['lego','brick','building']],
-  ['candle',/(キャンドル|ろうそく|蝋燭|candle|火をつける.*匂い)/iu,['candle','soy']],
+  ['candle',/(キャンドル|ろうそく|蝋燭|candle|soy candle|火をつける.*匂い|蜡烛|蠟燭|大豆蜡烛|大豆蠟燭|캔들|소이 캔들)/iu,['candle','soy']],
   ['earphones',/(イヤホン|イヤーバッド|earbuds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','headphone']],
   ['backpack',/(リュック|バックパック|backpack|背負う)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
@@ -31,7 +31,7 @@ const RULES = [
   ['body-powder',/(香り.*粉|ボディパウダー|ダスティングパウダー|dusting powder)/iu,['powder','perfumed']],
   ['figure',/(フィギュア|胸像|上半身.*置物|figure|bust|collectible)/iu,['figure','bust','collectible']],
   ['puzzle',/(パズル|puzzle|ピース.*遊)/iu,['puzzle']],
-  ['wallet',/(財布|wallet|ポケット.*薄)/iu,['wallet']],
+  ['wallet',/(財布|\bwallet\b|ポケット.*薄|钱包|錢包|지갑)/iu,['wallet']],
   ['bicycle-chain',/(?:自転車|バイク).{0,6}チェーン|チェーン.{0,6}(?:自転車|バイク)|bicycle chain|bike chain/iu,['bicycle chain','bike chain']],
   ['necklace',/(ネックレス|首.{0,8}(?:金色|チェーン)|necklace)/iu,['necklace','jewelry chain']],
   ['fitness-ring',/(運動用.*リング|エクササイズリング|stamina ring|輪っか.*運動)/iu,['ring','stamina']],
@@ -42,7 +42,7 @@ const RULES = [
   ['cable',/(ケーブル|USB.*線|つなぐ.*線|cable)/iu,['cable','usb']],
   ['pillow',/(クッション|枕|腰枕|pillow|ソファ.*ふわふわ)/iu,['pillow','cushion']],
   ['knife',/(ナイフ|刃物|knife|折りたた.*刃)/iu,['knife','folding']],
-  ['organizer',/(収納ケース|整理ボックス|収納.*箱|organizer|storage container)/iu,['organizer','storage','container']],
+  ['organizer',/(収納ケース|整理ボックス|収納.*箱|\borganizer\b|storage container|收纳盒|收納盒|수납함)/iu,['organizer','storage','container']],
   ['adapter',/(アダプター|変換.*端子|端子.*増やす|adapter|USB-C)/iu,['adapter','usb']],
   ['bath-light',/(浴室.*照明|洗面所.*鏡.*光|バスライト|bath light)/iu,['bath','light']],
   ['humidifier',/(加湿器|humidifier)/iu,['humidifier']],
@@ -75,12 +75,12 @@ const RULES = [
   ['lip-care',/(リップ(?:クリーム|バーム|ケア)|lip balm|lip care)/iu,['lip balm','lip care']],
   ['lip-color',/(リップ(?!クリーム|バーム|ケア)|口紅|ティント|lip tint|lipstick|립 틴트|립스틱|틴트|唇釉|口红|口紅)/iu,['lip','tint','lipstick']],
   ['t-shirt',/(Tシャツ|ティーシャツ|tee ?shirt|t-shirt)/iu,['t-shirt','tee']],
-  ['tops',/(トップス|ブラウス|シャツ|カットソー|blouse|tops?)/iu,['top','blouse','shirt']],
+  ['tops',/(トップス|ブラウス|シャツ|カットソー|\bblouse\b|\btops?\b)/iu,['top','blouse','shirt']],
   ['pants',/(パンツ|ズボン|デニム|ジーンズ|trousers|pants|jeans)/iu,['pants','trousers','jeans']],
   ['skirt',/(スカート|skirt)/iu,['skirt']],
   ['dress',/(ワンピース|ドレス|dress)/iu,['dress']],
   ['bag',/(バッグ|かばん|鞄|トート|ショルダーバッグ|handbag|tote bag|shoulder bag)/iu,['bag','handbag','tote']],
-  ['hat',/(帽子|キャップ|ハット|cap|hat)/iu,['hat','cap']]
+  ['hat',/(帽子|キャップ|ハット|\bcap\b|\bhat\b)/iu,['hat','cap']]
 ];
 
 const COLOR_RULES = [
@@ -143,6 +143,14 @@ export function semanticSearchGroups(value) {
   const specificCategories = new Set(groups.map((group) => group.category));
   if (specificCategories.has('camera-bag')) groups = groups.filter((group) => group.category !== 'bag');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
+  if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');
+  if (
+    groups.some((group) => group.category === 'adapter')
+    && groups.some((group) => group.category === 'laptop')
+    && /(?:for\s+(?:a\s+)?laptop|laptop\s+(?:adapter|hub)|笔记本电脑用|筆記型電腦用|노트북(?:에|용))/iu.test(text)
+  ) {
+    groups = groups.filter((group) => group.category !== 'laptop');
+  }
   // Natural descriptions often omit the formal product name. Recognize
   // combinations of an object/location and its head noun before falling back
   // to generic usage suggestions.

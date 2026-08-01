@@ -21,7 +21,11 @@
       "case_id": { "type": "string", "minLength": 1 },
       "target_id": { "type": "string", "minLength": 1 },
       "query": { "type": "string", "minLength": 1 },
-      "locale": { "type": "string", "default": "ja-JP" },
+      "locale": {
+        "type": "string",
+        "pattern": "^(ja|en|zh|ko)([-_][A-Za-z0-9]+)?$",
+        "default": "ja-JP"
+      },
       "information_level": {
         "enum": ["rich", "ambiguous", "ultra_ambiguous"]
       },

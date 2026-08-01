@@ -69,6 +69,33 @@ const definitions = [
 ];
 
 const levels = ['rich','ambiguous','ultra_ambiguous'];
+const multilingualQueries = {
+  T03: {
+    en: 'a lavender scented soy candle in a glass jar',
+    zh: '玻璃罐装的薰衣草香味大豆蜡烛',
+    ko: '유리병에 담긴 라벤더 향 소이 캔들'
+  },
+  T04: {
+    en: 'small wired earbuds that fit inside the ear',
+    zh: '小巧的有线入耳式耳机',
+    ko: '귀에 넣는 작은 유선 이어폰'
+  },
+  T19: {
+    en: 'a very slim jet black wallet that fits in a pocket',
+    zh: '能放进口袋的超薄黑色钱包',
+    ko: '주머니에 들어가는 아주 얇은 검정 지갑'
+  },
+  T28: {
+    en: 'a clear narrow organizer bin for the refrigerator',
+    zh: '冰箱里用的透明细长收纳盒',
+    ko: '냉장고에 쓰는 투명하고 긴 수납함'
+  },
+  T29: {
+    en: 'a compact USB-C hub with multiple ports for a laptop',
+    zh: '笔记本电脑用的小型多接口USB-C转接器',
+    ko: '노트북에 연결하는 포트가 여러 개인 소형 USB-C 어댑터'
+  }
+};
 const targets = definitions.map(([targetId, asin, allowedCategories, synonyms, queries, queryTypes]) => {
   const product = products.get(asin);
   if (!product) throw new Error(`ASIN_NOT_IN_ITG_CANDIDATES:${asin}`);
@@ -81,12 +108,22 @@ const targets = definitions.map(([targetId, asin, allowedCategories, synonyms, q
     manufacturer: product.manufacturer,
     allowed_categories: allowedCategories,
     synonyms,
-    variants: levels.map((informationLevel, index) => ({
+    variants: [
+      ...levels.map((informationLevel, index) => ({
       case_id: `${targetId}-${index + 1}`,
+      locale: 'ja',
       information_level: informationLevel,
       query: queries[index],
       query_types: queryTypes
-    }))
+      })),
+      ...Object.entries(multilingualQueries[targetId] || {}).map(([locale, query]) => ({
+        case_id: `${targetId}-${locale}-1`,
+        locale,
+        information_level: 'ambiguous',
+        query,
+        query_types: queryTypes
+      }))
+    ]
   };
 });
 
