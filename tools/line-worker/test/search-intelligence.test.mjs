@@ -1033,6 +1033,27 @@ test('単焦点レンズは4言語でマウント・焦点距離・F値が一致
   }
 });
 
+test('充電ケーブルは4言語で端子・長さ・W数・編み込みが一致する候補だけを提示する', () => {
+  const queries = [
+    '2m 60Wの編み込みUSB-C to USB-C充電ケーブル',
+    '2m 60W braided USB-C to USB-C charging cable',
+    '2米60W编织USB-C转USB-C充电线',
+    '2m 60W 패브릭 USB-C to USB-C 충전 케이블',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'USB-C to USB-C 2m 60W Braided Charging Cable' },
+    { asin: 'LIGHTNING', product_name: 'USB-C to Lightning 2m 60W Braided Charging Cable' },
+    { asin: 'WRONGLENGTH', product_name: 'USB-C to USB-C 1m 60W Braided Charging Cable' },
+    { asin: 'WRONGPOWER', product_name: 'USB-C to USB-C 2m 100W Braided Charging Cable' },
+    { asin: 'NOTBRAIDED', product_name: 'USB-C to USB-C 2m 60W Silicone Charging Cable' },
+    { asin: 'ADAPTER', product_name: 'USB-C to USB-C 2m 60W Braided Charging Cable Adapter' },
+    { asin: 'CHARGER', product_name: 'USB-C 60W Charger with 2m USB-C Charging Cable' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

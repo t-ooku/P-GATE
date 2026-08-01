@@ -122,6 +122,30 @@ test('単焦点レンズはマウント・焦点距離・F値を4言語で保持
   }
 });
 
+test('充電ケーブルは端子組み合わせ・長さ・W数・編み込みを4言語で保持する', () => {
+  const cases = [
+    ['USB-C to USB-C 2m 60W 編み込み 充電ケーブル', [
+      '2m 60Wの編み込みUSB-C to USB-C充電ケーブル',
+      '2m 60W braided USB-C to USB-C charging cable',
+      '2米60W编织USB-C转USB-C充电线',
+      '2m 60W 패브릭 USB-C to USB-C 충전 케이블',
+    ]],
+    ['USB-C to Lightning 1m 20W 充電ケーブル', [
+      '1m 20WのUSB-C to Lightning充電ケーブル',
+      '1m 20W USB-C to Lightning charging cable',
+      '1米20W USB-C转Lightning充电线',
+      '1m 20W USB-C to Lightning 충전 케이블',
+    ]],
+  ];
+  for (const [expected, queries] of cases) {
+    for (const query of queries) {
+      for (const marketplace of SEARCH_MARKETPLACES) {
+        assert.equal(buildMarketplaceSearchKeywords(query, marketplace), expected, `${marketplace}: ${query}`);
+      }
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

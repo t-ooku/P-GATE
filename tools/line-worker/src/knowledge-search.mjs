@@ -396,6 +396,32 @@ function isCameraPrimeLensMismatch(candidate, requested) {
   return false;
 }
 
+function chargingCableConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  const usbCCount = [...text.matchAll(/usb\s*[- ]?c/giu)].length;
+  const lightning = /lightning|ライトニング|闪电|閃電|라이트닝/iu.test(text);
+  const connector = lightning && usbCCount ? 'usb-c-lightning'
+    : usbCCount >= 2 ? 'usb-c-usb-c' : '';
+  const length = text.match(/\b(\d(?:\.\d)?)\s*(?:m\b|メートル|米)/iu)?.[1] || '';
+  const watts = text.match(/\b(\d{2,3})\s*w\b/iu)?.[1] || '';
+  const braided = /(?:編み込み|編組|braided|编织|編織|패브릭|브레이드)/iu.test(text);
+  const cable = /(?:充電ケーブル|充電コード|charging\s*(?:cable|cord)|充电线|充電線|충전\s*케이블)/iu.test(text);
+  const otherProduct = /(?:adapter|アダプター|转接器|轉接器|어댑터|hub|ハブ|charger|充電器|充电器|충전기|power\s*bank|モバイルバッテリー|充电宝|보조\s*배터리)/iu.test(text);
+  return { connector, length, watts, braided, cable, otherProduct };
+}
+
+function isChargingCableMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = chargingCableConstraints(text);
+  if (!evidence.cable || evidence.otherProduct) return true;
+  if (requested.connector && evidence.connector !== requested.connector) return true;
+  if (requested.length && evidence.length !== requested.length) return true;
+  if (requested.watts && evidence.watts !== requested.watts) return true;
+  if (requested.braided && !evidence.braided) return true;
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1192,10 +1218,12 @@ export function filterCategoryMismatches(query, candidates = []) {
   const phoneScreenProtectorIntent = phoneScreenProtector.protector && Boolean(phoneScreenProtector.model);
   const cameraPrimeLens = cameraPrimeLensConstraints(normalizedQuery);
   const cameraPrimeLensIntent = cameraPrimeLens.primeLens && Boolean(cameraPrimeLens.mount);
+  const chargingCable = chargingCableConstraints(normalizedQuery);
+  const chargingCableIntent = chargingCable.cable && Boolean(chargingCable.connector);
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
-    && !cameraPrimeLensIntent) return candidates;
+    && !cameraPrimeLensIntent && !chargingCableIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1240,6 +1268,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (smartWatchBandIntent) return !isSmartWatchBandMismatch(candidate, smartWatchBand);
     if (phoneScreenProtectorIntent) return !isPhoneScreenProtectorMismatch(candidate, phoneScreenProtector);
     if (cameraPrimeLensIntent) return !isCameraPrimeLensMismatch(candidate, cameraPrimeLens);
+    if (chargingCableIntent) return !isChargingCableMismatch(candidate, chargingCable);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

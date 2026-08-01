@@ -99,6 +99,20 @@ function buildCameraPrimeLensSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildChargingCableSearchKeywords(query) {
+  if (!/(?:充電ケーブル|充電コード|charging\s*(?:cable|cord)|充电线|充電線|충전\s*케이블)/iu.test(query)) return '';
+  const usbCCount = [...String(query || '').matchAll(/usb\s*[- ]?c/giu)].length;
+  const lightning = /lightning|ライトニング|闪电|閃電|라이트닝/iu.test(query);
+  const connector = lightning && usbCCount ? 'USB-C to Lightning'
+    : usbCCount >= 2 ? 'USB-C to USB-C' : '';
+  if (!connector) return '';
+  const length = String(query || '').match(/\b(\d(?:\.\d)?)\s*(?:m\b|メートル|米)/iu)?.[1];
+  const watts = String(query || '').match(/\b(\d{2,3})\s*w\b/iu)?.[1];
+  const braided = /(?:編み込み|編組|braided|编织|編織|패브릭|브레이드)/iu.test(query) ? '編み込み' : '';
+  return [connector, length ? `${length}m` : '', watts ? `${watts}W` : '', braided, '充電ケーブル']
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -926,6 +940,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (smartWatchBand) return smartWatchBand;
   const cameraPrimeLens = buildCameraPrimeLensSearchKeywords(normalized);
   if (cameraPrimeLens) return cameraPrimeLens;
+  const chargingCable = buildChargingCableSearchKeywords(normalized);
+  if (chargingCable) return chargingCable;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS
