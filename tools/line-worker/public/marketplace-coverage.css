@@ -197,10 +197,33 @@
     gap: 3px;
   }
 
+  .marketplace-group-core ul {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1px;
+  }
+
   .marketplace-group li {
     min-height: 24px;
     padding: 2px;
     font-size: clamp(8px, 2.35vw, 10px);
+  }
+
+  .marketplace-group-core li {
+    gap: 4px;
+    justify-content: center;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .marketplace-group-core li::before {
+    width: 5px;
+    height: 5px;
+    flex-basis: 5px;
+  }
+
+  .marketplace-yahoo span {
+    line-height: 1.2;
+    text-align: center;
   }
 
   .marketplace-group-fashion ul {
@@ -224,6 +247,16 @@
 
   .marketplace-group ul {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .marketplace-group-core ul {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .marketplace-group-core li {
+    gap: 2px;
+    font-size: clamp(7px, 2.15vw, 9px);
+    letter-spacing: -.025em;
   }
 
   .marketplace-group-fashion ul {

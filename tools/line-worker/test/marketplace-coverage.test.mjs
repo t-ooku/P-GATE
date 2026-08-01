@@ -20,7 +20,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
     assert.match(html, new RegExp(`>${mall}<`));
   }
   assert.match(html, /最大10モール対応/);
-  assert.match(html, />Yahoo!ショッピング</);
+  assert.match(html, /class="marketplace-yahoo"><span>Yahoo!<br>ショッピング<\/span>/);
   assert.match(html, /出品を確認できた商品は商品ページへ/);
   assert.doesNotMatch(html, /すべてのジャンルで8モール/);
 
