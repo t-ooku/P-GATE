@@ -1,6 +1,11 @@
 export { normalizeSearchQuery, validateSyncPayload, syncProducts } from './product-index.mjs';
 import { normalizeSearchQuery } from './product-index.mjs';
-import { analyzeSearchDecision, semanticSearchGroups, stripSearchBudget } from './search-intelligence.mjs';
+import {
+  analyzeSearchDecision,
+  isNegatedSearchOccurrence,
+  semanticSearchGroups,
+  stripSearchBudget,
+} from './search-intelligence.mjs';
 
 const STOPWORDS = new Set([
   'with','from','that','this','the','for','and','type','size','like','edition','set',
@@ -21,11 +26,25 @@ export function intelligentFtsQuery(value) {
     .map((group) => [...new Set(group.terms.map((term) => term.toLowerCase()))])
     .filter((group) => group.length)
     .slice(0, 4);
-  const evidenceTokens = [
-    ...(normalized.match(/\b\d{2,}\b/g) || []),
-    ...(normalized.match(/\b\d+[a-z-][a-z0-9-]*\b/g) || []).map((token) =>
-      token.replace(/^(\d+)(?:mm|cm|inch|inches|oz)$/u, '$1')),
+  const evidenceMatches = [
+    ...normalized.matchAll(/\b\d{2,}\b/g),
+    ...normalized.matchAll(/\b\d+[a-z-][a-z0-9-]*\b/g),
+    ...normalized.matchAll(/\d+\s*(?:個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개\s*세트)/gu),
   ];
+  const evidenceTokens = evidenceMatches
+    .filter((match) => !evidenceMatches.some((other) =>
+      other !== match
+      && other.index === match.index
+      && other[0].length > match[0].length
+      && /(?:pack|count|pcs|pieces|個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개\s*세트)/iu.test(other[0])))
+    .filter((match) => !isNegatedSearchOccurrence(
+      normalized,
+      match.index,
+      match.index + match[0].length,
+    ))
+    .map((match) => match[0]
+      .replace(/\s+/gu, '')
+      .replace(/^(\d+)(?:mm|cm|inch|inches|oz|[-]?(?:pack|count|pcs|pieces)|個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개세트)$/iu, '$1'));
   const groups = [...semantic];
   const modelTokens = source.match(/\b[A-Za-z][A-Za-z0-9-]*\d[A-Za-z0-9-]*\b/g) || [];
   const namedTokens = source.match(/\b[A-Z][A-Za-z]{3,}\b/g) || [];

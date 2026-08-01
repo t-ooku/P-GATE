@@ -9,7 +9,7 @@ const RULES = [
   ['screwdriver',/(ドライバー|ねじ回し|螺子回し|screwdriver|細長い.*工具)/iu,['screwdriver','driver']],
   ['building-block',/(レゴ|lego|ブロック.*おもちゃ|building block)/iu,['lego','brick','building']],
   ['steam-engine-model',/(蒸気機関車|steam\s+(?:engine|locomotive)|蒸汽机车|蒸汽機車|증기\s*기관차)/iu,['steam engine','locomotive']],
-  ['candle',/(キャンドル|ろうそく|蝋燭|candle|soy candle|(?:火をつける.*匂い|匂い.{0,16}火をつける)|蜡烛|蠟燭|大豆蜡烛|大豆蠟燭|(?:香味.{0,12}点火|香味.{0,12}點火)|캔들|소이 캔들|향기.{0,12}불을\s*붙)/iu,['candle','soy']],
+  ['candle',/(キャンドル|ろうそく|蝋燭|candle|soy candle|(?:火をつける.*匂い|匂い.{0,16}火をつける)|蜡烛|蠟燭|大豆蜡烛|大豆蠟燭|(?:香味.{0,12}点火|香味.{0,12}點火)|캔들|향초|소이 캔들|향기.{0,12}불을\s*붙)/iu,['candle','soy']],
   ['earphones',/(イヤホン|イヤーバッド|ヘッドホン|ear\s*buds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','ear','bud','headphone']],
   ['backpack',/(リュック|バックパック|backpack|rucksack|背負う|背包|双肩包|雙肩包|백팩|배낭)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
@@ -138,7 +138,7 @@ const NEGATED_CATEGORY_TERMS = new Map([
   ['wallet', /(?:財布|wallet|钱包|錢包|지갑)/iu],
 ]);
 
-function isNegatedOccurrence(text, start, end) {
+export function isNegatedSearchOccurrence(text, start, end) {
   const before = text.slice(Math.max(0, start - 24), start);
   const after = text.slice(end, end + 18);
   return /(?:not\s+(?:a|an|the)?|no|without|anything\s+but|不要|不是|不想要)\s*$/iu.test(before)
@@ -150,7 +150,7 @@ function isOnlyNegated(text, pattern) {
   const matcher = new RegExp(pattern.source, flags);
   let foundNegated = false;
   for (const match of text.matchAll(matcher)) {
-    if (!isNegatedOccurrence(text, match.index, match.index + match[0].length)) return false;
+    if (!isNegatedSearchOccurrence(text, match.index, match.index + match[0].length)) return false;
     foundNegated = true;
   }
   return foundNegated;

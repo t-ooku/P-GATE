@@ -189,6 +189,31 @@ test('4言語の年齢・レビュー件数を型番や仕様値としてFTS必�
   }
 });
 
+test('4言語のセット数量は保持し否定された数量はFTS必須条件から除外する', () => {
+  for (const query of [
+    '12個入りセットの香り付きキャンドル',
+    'a 12-pack of scented candles',
+    '12件套香薰蜡烛',
+    '12개 세트 향초',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /"candle"\*/);
+    assert.match(expression, /"12"\*/);
+  }
+
+  for (const query of [
+    '12個セットではなく6個セットのキャンドル',
+    'not a 12-pack, but a 6-pack of candles',
+    '不要12件套，要6件套蜡烛',
+    '12개 세트 말고 6개 세트 캔들',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /"candle"\*/);
+    assert.match(expression, /"6"\*/);
+    assert.doesNotMatch(expression, /"12"\*/);
+  }
+});
+
 test('Japanese memory fragments expand into category and color FTS groups', () => {
   const query = intelligentFtsQuery('茶色い革ベルトと金属ケースの男性用腕時計');
   assert.match(query, /"watch"\*/);

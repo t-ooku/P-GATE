@@ -206,3 +206,23 @@ test("4言語の年齢はキッズ用途へ変換しレビュー件数は9モー
     }
   }
 });
+
+test("4言語のセット数量を9モール向けに統一し否定数量を除外する", () => {
+  const cases = [
+    ['12個入りセットの香り付きキャンドル', ['12個セット', 'キャンドル'], []],
+    ['a 12-pack of scented candles', ['12個セット', 'キャンドル'], []],
+    ['12件套香薰蜡烛', ['12個セット', 'キャンドル'], []],
+    ['12개 세트 향초 캔들', ['12個セット', 'キャンドル'], []],
+    ['12個セットではなく6個セットのキャンドル', ['6個セット', 'キャンドル'], ['12個セット']],
+    ['not a 12-pack, but a 6-pack of candles', ['6個セット', 'キャンドル'], ['12個セット']],
+    ['不要12件套，要6件套蜡烛', ['6個セット', 'キャンドル'], ['12個セット']],
+    ['12개 세트 말고 6개 세트 캔들', ['6個セット', 'キャンドル'], ['12個セット']],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, required, forbidden] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      for (const token of required) assert.ok(keywords.includes(token), `${marketplace}: ${input} -> ${keywords}`);
+      for (const token of forbidden) assert.ok(!keywords.includes(token), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});

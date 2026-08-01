@@ -27,14 +27,20 @@ function deviceName(query) {
 
 function specificationTokens(query) {
   const matches = query.match(
-    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}\s*(?:mm|cm|m|インチ|inch)|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|インチ|inch|リットル|オンス|升|毫升|리터|온스))/giu
+    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}\s*(?:mm|cm|m|インチ|inch)|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|インチ|inch|リットル|オンス|升|毫升|리터|온스)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
   ) || [];
-  return [...new Set(matches.map((value) => value.replace(/\s+/g, '')
+  return [...new Set(matches
+    .filter((value) => {
+      const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return !isNegatedAttribute(query, new RegExp(escaped, 'iu'));
+    })
+    .map((value) => value.replace(/\s+/g, '')
     .replace(/[×]/gu, 'x')
     .replace(/^usb-c$/iu, 'USB-C')
     .replace(/リットル|升|리터$/u, 'L')
     .replace(/オンス|온스$/u, 'oz')
-    .replace(/毫升$/u, 'ml')))].slice(0, 4);
+    .replace(/毫升$/u, 'ml')
+    .replace(/^(\d+)(?:個(?:入り)?セット|本セット|枚セット|[-]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개세트)$/iu, '$1個セット')))].slice(0, 4);
 }
 
 export function buildDeviceAccessorySearchKeywords(query) {
@@ -90,7 +96,7 @@ const GENERIC_PRODUCTS = [
   ['キーボード', /(?:キーボード|keyboard|键盘|鍵盤|키보드)/iu],
   ['マウス', /(?:パソコン|PC|computer).{0,10}マウス|computer\s*mouse|trackball|电脑鼠标|電腦滑鼠|컴퓨터\s*마우스/iu],
   ['ノートパソコン', /(?:ノートパソコン|ノートPC|ラップトップ|laptop|notebook\s*computer|笔记本电脑|筆記型電腦|노트북)/iu],
-  ['キャンドル', /(?:キャンドル|ろうそく|candle|蜡烛|蠟燭|캔들)/iu],
+  ['キャンドル', /(?:キャンドル|ろうそく|candle|蜡烛|蠟燭|캔들|향초)/iu],
   ['デュアル充電器', /(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|두\s*대|듀얼).{0,12}충전/iu],
   ['PTZ ネットワークカメラ', /(?:首振り|PTZ|パンチルト).{0,12}(?:ネットワーク|監視)?カメラ|(?:ネットワーク|監視)カメラ.{0,12}(?:首振り|PTZ|ドーム)|(?:ptz|pan\s+and\s+tilt).{0,20}(?:network|security)?\s*camera|(?:network|security)\s*camera.{0,24}(?:ptz|dome|pan\s+and\s+tilt)|云台.{0,12}(?:网络|網絡|监控|監控)摄像|(?:网络|網絡|监控|監控)摄像.{0,12}(?:云台|雲台|球形)|(?:PTZ|회전).{0,20}(?:네트워크|보안)\s*카메라|(?:네트워크|보안)\s*카메라.{0,20}(?:PTZ|회전|돔)/iu],
   ['タオルウォーマー', /(?:タオルウォーマー|towel\s*warmer|毛巾加热器|毛巾加熱器|타월\s*워머)/iu],
