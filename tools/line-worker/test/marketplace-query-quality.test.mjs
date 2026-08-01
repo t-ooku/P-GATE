@@ -1332,3 +1332,33 @@ test('spoken power-bank ranges infer the omitted first capacity unit in four lan
     }
   }
 });
+
+test('separate power-bank lower and upper bounds become one range in four languages', () => {
+  const queries = [
+    '5000mAh以上、10000mAh以下のモバイルバッテリー',
+    'a power bank with at least 5000mAh and at most 10000mAh',
+    '至少5000mAh且不超过10000mAh的充电宝',
+    '5000mAh 이상 10000mAh 이하 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '5000mAh-10000mAh モバイルバッテリー', `${marketplace}: ${query}`);
+    }
+  }
+});
+
+test('contradictory power-bank bounds are not silently reordered in four languages', () => {
+  const queries = [
+    '10000mAh以上、5000mAh以下のモバイルバッテリー',
+    'a power bank with at least 10000mAh and at most 5000mAh',
+    '至少10000mAh且不超过5000mAh的充电宝',
+    '10000mAh 이상 5000mAh 이하 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh以上 5000mAh以下 モバイルバッテリー', `${marketplace}: ${query}`);
+    }
+  }
+});

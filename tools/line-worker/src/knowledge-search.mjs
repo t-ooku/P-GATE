@@ -341,25 +341,26 @@ function isPowerBankMismatch(candidate, query) {
   const capacity = positiveCapacityMatches[0]?.[1];
   const secondCapacity = positiveCapacityMatches[1]?.[1];
   const spokenCapacityRange = normalizedQuery.match(/(?:between\s+)?(\d{4,6})\s*(?:m\s*ah\s*)?(?:から|〜|~|-|to|and|到|至|에서)\s*(\d{4,6})\s*m\s*ah/iu);
-  const rangeStart = spokenCapacityRange?.[1] || capacity;
-  const rangeEnd = spokenCapacityRange?.[2] || secondCapacity;
-  const capacityRange = Boolean(spokenCapacityRange || (capacity && secondCapacity
+  const minimumCapacityMatch = normalizedQuery.match(/(?:(?:at\s+least|minimum(?:\s+of)?|至少|不少于)\s*(\d{4,6})\s*m\s*ah|(\d{4,6})\s*m\s*ah\s*(?:以上|or\s+more|and\s+up|이상))/iu);
+  const maximumCapacityMatch = normalizedQuery.match(/(?:(?:at\s+most|maximum(?:\s+of)?|up\s+to|不超过|最多)\s*(\d{4,6})\s*m\s*ah|(\d{4,6})\s*m\s*ah\s*(?:以下|or\s+less|or\s+under|이하))/iu);
+  const minimumCapacityValue = minimumCapacityMatch?.[1] || minimumCapacityMatch?.[2] || '';
+  const maximumCapacityValue = maximumCapacityMatch?.[1] || maximumCapacityMatch?.[2] || '';
+  const boundedCapacityRange = Boolean(minimumCapacityValue && maximumCapacityValue);
+  const rangeStart = spokenCapacityRange?.[1] || (boundedCapacityRange ? minimumCapacityValue : capacity);
+  const rangeEnd = spokenCapacityRange?.[2] || (boundedCapacityRange ? maximumCapacityValue : secondCapacity);
+  const capacityRange = Boolean(spokenCapacityRange || boundedCapacityRange || (capacity && secondCapacity
     && new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:から|〜|~|-|to|and|到|至|에서)\\s*${secondCapacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)));
-  const minimumCapacity = capacity && (
-    new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)
-    || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalizedQuery)
-  );
-  const maximumCapacity = capacity && (
-    new RegExp(`(?:at\\s+most|maximum(?:\\s+of)?|up\\s+to|不超过|最多)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)
-    || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以下|or\\s+less|or\\s+under|이하)`, 'iu').test(normalizedQuery)
-  );
+  const minimumCapacity = Boolean(minimumCapacityValue);
+  const maximumCapacity = Boolean(maximumCapacityValue);
   const candidateCapacity = text.match(/(?:^|\D)(\d{4,6})\s*m\s*ah(?:\D|$)/iu)?.[1];
-  const rangeMinimum = capacityRange ? Math.min(Number(rangeStart), Number(rangeEnd)) : 0;
-  const rangeMaximum = capacityRange ? Math.max(Number(rangeStart), Number(rangeEnd)) : 0;
+  const rangeMinimum = capacityRange
+    ? boundedCapacityRange ? Number(minimumCapacityValue) : Math.min(Number(rangeStart), Number(rangeEnd)) : 0;
+  const rangeMaximum = capacityRange
+    ? boundedCapacityRange ? Number(maximumCapacityValue) : Math.max(Number(rangeStart), Number(rangeEnd)) : 0;
   if (capacityRange && (!candidateCapacity
     || Number(candidateCapacity) < rangeMinimum || Number(candidateCapacity) > rangeMaximum)) return true;
-  if (!capacityRange && minimumCapacity && (!candidateCapacity || Number(candidateCapacity) < Number(capacity))) return true;
-  if (!capacityRange && maximumCapacity && (!candidateCapacity || Number(candidateCapacity) > Number(capacity))) return true;
+  if (!capacityRange && minimumCapacity && (!candidateCapacity || Number(candidateCapacity) < Number(minimumCapacityValue))) return true;
+  if (!capacityRange && maximumCapacity && (!candidateCapacity || Number(candidateCapacity) > Number(maximumCapacityValue))) return true;
   if (capacity && !capacityRange && !minimumCapacity && !maximumCapacity
     && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
   const rejectedCapacities = capacityMatches

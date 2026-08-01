@@ -2385,3 +2385,43 @@ test('spoken power-bank ranges apply the omitted first capacity unit to candidat
       ['POWER5000', 'POWER7500', 'POWER10000'], query);
   }
 });
+
+test('separate power-bank lower and upper bounds filter candidates together in four languages', () => {
+  const queries = [
+    '5000mAh以上、10000mAh以下のモバイルバッテリー',
+    'a power bank with at least 5000mAh and at most 10000mAh',
+    '至少5000mAh且不超过10000mAh的充电宝',
+    '5000mAh 이상 10000mAh 이하 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWER3000', product_name: '3000mAh Power Bank USB-C' },
+    { asin: 'POWER5000', product_name: '5000mAh Power Bank USB-C' },
+    { asin: 'POWER7500', product_name: '7500mAh Power Bank USB-C' },
+    { asin: 'POWER10000', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'POWER20000', product_name: '20000mAh Power Bank USB-C' },
+    { asin: 'POWERUNKNOWN', product_name: 'Power Bank USB-C' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWER5000', 'POWER7500', 'POWER10000'], query);
+  }
+});
+
+test('contradictory power-bank bounds return no misleading candidates in four languages', () => {
+  const queries = [
+    '10000mAh以上、5000mAh以下のモバイルバッテリー',
+    'a power bank with at least 10000mAh and at most 5000mAh',
+    '至少10000mAh且不超过5000mAh的充电宝',
+    '10000mAh 이상 5000mAh 이하 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWER3000', product_name: '3000mAh Power Bank USB-C' },
+    { asin: 'POWER5000', product_name: '5000mAh Power Bank USB-C' },
+    { asin: 'POWER7500', product_name: '7500mAh Power Bank USB-C' },
+    { asin: 'POWER10000', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'POWER20000', product_name: '20000mAh Power Bank USB-C' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates), [], query);
+  }
+});
