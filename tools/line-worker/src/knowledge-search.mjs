@@ -359,10 +359,16 @@ function isPowerBankMismatch(candidate, query) {
   const candidateIsMagnetic = /(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text);
   if (wantsMagnetic && !candidateIsMagnetic) return true;
   if (!wantsMagnetic && rejectsMagnetic && candidateIsMagnetic) return true;
-  const pdWatts = [...normalizedQuery.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)]
+  const pdMatches = [...normalizedQuery.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)];
+  const pdWatts = pdMatches
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
   const requestedWatts = pdWatts?.[1] || pdWatts?.[2] || '';
   if (requestedWatts && !new RegExp(`(?:^|\\D)(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?(?:\\D|$)`, 'iu').test(text)) return true;
+  const rejectedWatts = pdMatches
+    .filter((match) => isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))
+    .map((match) => match[1] || match[2]);
+  if (rejectedWatts.some((watts) =>
+    new RegExp(`(?:^|\\D)(?:pd\\s*)?${watts}\\s*w(?:\\s*pd)?(?:\\D|$)`, 'iu').test(text))) return true;
   return false;
 }
 

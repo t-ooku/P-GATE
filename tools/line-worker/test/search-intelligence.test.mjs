@@ -2248,3 +2248,21 @@ test('negated built-in cable requirements exclude integrated-cable power banks i
       ['POWERPLAIN'], query);
   }
 });
+
+test('negated PD output requirements exclude only that output in four languages', () => {
+  const queries = [
+    'PD20Wじゃない10000mAhモバイルバッテリー',
+    'a 10000mAh power bank without PD20W',
+    '不要PD20W的10000mAh充电宝',
+    'PD20W 아닌 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWERNOPD', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'POWERPD20', product_name: '10000mAh Power Bank USB-C PD20W' },
+    { asin: 'POWERPD30', product_name: '10000mAh Power Bank USB-C PD30W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWERNOPD', 'POWERPD30'], query);
+  }
+});
