@@ -180,6 +180,25 @@ test('楽天・Qoo10・SHEINの公式検索URLへ同じ整理済み条件を渡�
   assert.match(decodeURIComponent(shein.pathname), /sock/);
 });
 
+test('説明だけの商品検索も主力4モールへカテゴリ語を引き継ぐ', () => {
+  const cases = [
+    ['a black charging dock that holds two devices at once', /dual charger/i, 'デュアル充電器'],
+    ['회전할 수 있는 흰색 돔형 네트워크 카메라', /network camera/i, 'PTZ ネットワークカメラ'],
+    ['浴室墙上会发热的金属杆', /towel/i, 'タオルウォーマー'],
+    ['the nice-smelling powder my mother used', /perfumed/i, '香り付きボディパウダー'],
+    ['입으로 불어서 연주하는 은색 작은 악기', /harmonica/i, 'ハーモニカ'],
+    ['something soft and wintry to put on a sofa', /decorative pillow/i, '冬 クッション'],
+    ['浴室镜子上方的银色横向六灯照明', /6-light/i, '浴室 6灯 照明'],
+  ];
+  for (const [query, amazonCategory, compactCategory] of cases) {
+    assert.match(buildAmazonSearchKeywords(query), amazonCategory, query);
+    assert.match(buildRakutenSearchKeywords(query), new RegExp(compactCategory), query);
+    assert.match(buildQoo10SearchKeywords(query), new RegExp(compactCategory), query);
+    const sheinKeywords = decodeURIComponent(new URL(buildSheinSearchDestination(query)).pathname);
+    assert.match(sheinKeywords, new RegExp(compactCategory), query);
+  }
+});
+
 test('公開検索APIが失敗しても4モールへの検索導線を表示する', async () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(appSource, /function emergencyMarketplaceFallback\(query\)/);
@@ -553,12 +572,12 @@ test('楽天API検索は複合条件と主要商品語の順で候補を作る',
     ),
     [
       '推し活で使える小さな写真プリンター 写真を撮る 手のひらサイズ スマホ対応',
-      '推し活で使える小さな写真プリンター'
+      '小型 写真プリンター'
     ]
   );
   assert.deepEqual(
     buildRakutenSearchKeywordCandidates('透明なワイヤレスイヤホン'),
-    ['透明なワイヤレスイヤホン']
+    ['透明 ワイヤレス イヤホン']
   );
 });
 test('Qoo10はiPhoneより明示された商品種別を優先し多言語でもケースへ誤変換しない', () => {

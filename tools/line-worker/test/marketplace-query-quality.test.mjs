@@ -90,3 +90,36 @@ test("4言語の検索条件を全検索対応モール向けに欠落なく変�
     assert.equal(report.by_marketplace[marketplace].pass_rate, 1);
   }
 });
+
+test("商品名を省いた4言語の説明検索を9モール向け商品語へ変換する", () => {
+  const cases = [
+    ['a black charging dock that holds two devices at once', 'デュアル充電器'],
+    ['可以同时放两台设备的黑色双充电座', 'デュアル充電器'],
+    ['기기 두 대를 동시에 올리는 검은색 듀얼 충전 거치대', 'デュアル充電器'],
+    ['a white dome network camera that can pan and tilt', 'PTZ ネットワークカメラ'],
+    ['可以云台转动的白色球形网络摄像头', 'PTZ ネットワークカメラ'],
+    ['회전할 수 있는 흰색 돔형 네트워크 카메라', 'PTZ ネットワークカメラ'],
+    ['the warm metal bars mounted on a bathroom wall', 'タオルウォーマー'],
+    ['浴室墙上会发热的金属杆', 'タオルウォーマー'],
+    ['욕실 벽에 달린 따뜻해지는 금속 막대', 'タオルウォーマー'],
+    ['the nice-smelling powder my mother used', '香り付きボディパウダー'],
+    ['妈妈以前用的有香味的粉', '香り付きボディパウダー'],
+    ['엄마가 쓰던 향기 좋은 파우더', '香り付きボディパウダー'],
+    ['a small silver instrument you play by blowing with your mouth', 'ハーモニカ'],
+    ['用嘴吹奏的银色小乐器', 'ハーモニカ'],
+    ['입으로 불어서 연주하는 은색 작은 악기', 'ハーモニカ'],
+    ['something soft and wintry to put on a sofa', '冬 クッション'],
+    ['放在沙发上的冬季柔软装饰', '冬 クッション'],
+    ['소파에 놓는 겨울 느낌의 푹신한 것', '冬 クッション'],
+    ['a silver horizontal six-light fixture above a bathroom mirror', '浴室 6灯 照明'],
+    ['浴室镜子上方的银色横向六灯照明', '浴室 6灯 照明'],
+    ['욕실 거울 위의 은색 가로형 6등 조명', '浴室 6灯 照明'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, required] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.match(keywords, new RegExp(required), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.length <= 48, `${marketplace}: ${keywords}`);
+    }
+  }
+});

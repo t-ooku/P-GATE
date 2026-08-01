@@ -643,7 +643,8 @@ export function buildRakutenSearchKeywords(query) {
       .trim();
   }
   const structuredTerms = structuredMarketplaceTerms(cleaned);
-  return structuredTerms.length ? structuredTerms.join(' ') : cleaned;
+  if (structuredTerms.length) return structuredTerms.join(' ');
+  return buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP') || cleaned;
 }
 
 export function buildRakutenSearchKeywordCandidates(query) {
@@ -710,7 +711,11 @@ export function buildQoo10SearchDestination(query) {
 }
 
 export function buildSheinSearchDestination(query) {
-  const keywords = buildAmazonSearchKeywords(query);
+  const cleaned = redactSearchPersonalData(query)
+    .replace(/\bB[A-Z0-9]{9}\b/giu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
+  const keywords = buildMarketplaceSearchKeywords(cleaned, 'SHEIN_JP');
   if (!keywords) return '';
   return `https://jp.shein.com/pdsearch/${encodeURIComponent(keywords)}/`;
 }
