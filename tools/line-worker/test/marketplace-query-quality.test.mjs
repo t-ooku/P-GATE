@@ -221,6 +221,21 @@ test('ポータブルSSDは容量・USB世代・速度・耐久条件を4言語�
   }
 });
 
+test('カメラ用SDカードは容量・UHS・速度クラス・読込速度を4言語で保持する', () => {
+  const queries = [
+    '4Kと8K動画撮影用 SDカード 256GB UHS-II V90 読込300MB/s',
+    'SD card 256GB UHS-II V90 read 300MB/s for 4K and 8K video',
+    '用于4K和8K视频的SD卡 256GB UHS-II V90 读取300MB/s',
+    '4K 8K 영상용 SD 카드 256GB UHS-II V90 읽기 300MB/s',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'SDカード 256GB UHS-II V90 読込 300MB/s 4K動画 8K動画', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

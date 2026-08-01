@@ -1168,6 +1168,30 @@ test('ポータブルSSDは4言語で容量・速度・接続世代・耐久条�
   }
 });
 
+test('カメラ用SDカードは4言語で容量・UHS・Vクラス・速度が一致する候補だけを提示する', () => {
+  const queries = [
+    '4Kと8K動画撮影用 SDカード 256GB UHS-II V90 読込300MB/s',
+    'SD card 256GB UHS-II V90 read 300MB/s for 4K and 8K video',
+    '用于4K和8K视频的SD卡 256GB UHS-II V90 读取300MB/s',
+    '4K 8K 영상용 SD 카드 256GB UHS-II V90 읽기 300MB/s',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'SDXC Card 256GB UHS-II V90 Read 300MB/s 4K 8K Video' },
+    { asin: 'WRONGCAPACITY', product_name: 'SDXC Card 128GB UHS-II V90 Read 300MB/s 4K 8K Video' },
+    { asin: 'UHSI', product_name: 'SDXC Card 256GB UHS-I V90 Read 300MB/s 4K 8K Video' },
+    { asin: 'V60', product_name: 'SDXC Card 256GB UHS-II V60 Read 300MB/s 4K 8K Video' },
+    { asin: 'SLOW', product_name: 'SDXC Card 256GB UHS-II V90 Read 280MB/s 4K 8K Video' },
+    { asin: 'NO8K', product_name: 'SDXC Card 256GB UHS-II V90 Read 300MB/s 4K Video' },
+    { asin: 'MICROSD', product_name: 'microSD Card 256GB UHS-II V90 Read 300MB/s 4K 8K Video' },
+    { asin: 'CFEXPRESS', product_name: 'CFexpress Card 256GB UHS-II V90 Read 300MB/s 4K 8K Video' },
+    { asin: 'READER', product_name: 'SD Card Reader 256GB UHS-II V90 Read 300MB/s 4K 8K Video' },
+    { asin: 'ADAPTER', product_name: 'SD Card Adapter 256GB UHS-II V90 Read 300MB/s 4K 8K Video' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

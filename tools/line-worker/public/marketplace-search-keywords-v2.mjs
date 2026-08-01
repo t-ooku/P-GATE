@@ -181,6 +181,21 @@ function buildPortableSsdSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildSdMemoryCardSearchKeywords(query) {
+  if (!/(?:\bsd(?:xc|hc)?\s*(?:カード|card)|sd卡|sd\s*카드)/iu.test(query)
+    || /(?:micro\s*sd|microsd|カードリーダー|card\s*reader|读卡器|讀卡器|카드\s*리더)/iu.test(query)) return '';
+  const capacity = String(query || '').match(/\b(\d{2,4})\s*(gb|tb)\b/iu);
+  const uhs = String(query || '').match(/\buhs[- ]?(ii|i|2|1)\b/iu)?.[1]?.toLowerCase();
+  const videoClass = String(query || '').match(/\bv\s*(30|60|90)\b/iu)?.[1];
+  const speed = String(query || '').match(/\b(\d{2,3})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/iu)?.[1];
+  const fourK = /\b4\s*k\b/iu.test(query) ? '4K動画' : '';
+  const eightK = /\b8\s*k\b/iu.test(query) ? '8K動画' : '';
+  if (!capacity || !uhs || !videoClass) return '';
+  const uhsLabel = uhs === 'ii' || uhs === '2' ? 'UHS-II' : 'UHS-I';
+  return ['SDカード', `${capacity[1]}${capacity[2].toUpperCase()}`, uhsLabel, `V${videoClass}`,
+    speed ? `読込 ${speed}MB/s` : '', fourK, eightK].filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1020,6 +1035,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (displayPortCable) return displayPortCable;
   const portableSsd = buildPortableSsdSearchKeywords(normalized);
   if (portableSsd) return portableSsd;
+  const sdMemoryCard = buildSdMemoryCardSearchKeywords(normalized);
+  if (sdMemoryCard) return sdMemoryCard;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS
