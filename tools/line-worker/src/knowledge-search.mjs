@@ -1102,7 +1102,7 @@ function fdm3dPrinterConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   const volume = text.match(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*[x×]\s*(\d{2,3})\s*mm\b/iu);
   return {
-    printer: /(?:3Dプリンター|3D\s*printer|3D打印机|3D打印機|3D\s*프린터)/iu.test(text),
+    printer: /(?:3Dプリンター|3D\s*printer|3D打印机|3D打印機|3D\s*프린터|設計した部品.{0,12}高速.{0,12}反り.{0,12}抑え.{0,12}造形|print\s*designed\s*parts.{0,12}fast.{0,12}less\s*warping|高速打印设计零件.{0,12}减少翘曲|설계한\s*부품.{0,12}빠르고.{0,12}뒤틀림\s*적게.{0,12}출력)/iu.test(text),
     corexy: /CoreXY/iu.test(text),
     volume: volume ? `${volume[1]}x${volume[2]}x${volume[3]}` : '',
     speed: text.match(/\b(\d{2,4})\s*mm\s*\/\s*s\b/iu)?.[1] || '',

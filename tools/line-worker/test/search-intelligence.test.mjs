@@ -1727,6 +1727,10 @@ test('FDM 3Dプリンターは4言語で方式・造形サイズ・速度・調�
     'CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed',
     'CoreXY 3D打印机 256×256×256mm 600mm/s 自动调平 封闭式',
     'CoreXY 3D 프린터 256×256×256mm 600mm/s 자동 레벨링 밀폐형',
+    '設計した部品を高速で反りを抑えて造形したい CoreXY 256×256×256mm 600mm/s 自動レベリング 密閉型',
+    'want to print designed parts fast with less warping CoreXY 256x256x256 mm 600 mm/s automatic bed leveling enclosed',
+    '想高速打印设计零件并减少翘曲 CoreXY 256×256×256mm 600mm/s 自动调平 封闭式',
+    '설계한 부품을 빠르고 뒤틀림 적게 출력하고 싶어 CoreXY 256×256×256mm 600mm/s 자동 레벨링 밀폐형',
   ];
   const candidates = [
     { asin: 'MATCH', product_name: 'CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed' },
