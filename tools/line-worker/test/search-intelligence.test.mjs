@@ -963,6 +963,26 @@ test('SNSで見た光るケースは初回から機種・発光・MagSafeが一�
   }
 });
 
+test('光るケースの機種訂正は4言語で最後に指定したiPhoneだけを提示する', () => {
+  const queries = [
+    '光るiPhone 15 Proケース、やっぱりiPhone 15 Pro Max用',
+    'light-up case for iPhone 15 Pro, actually for iPhone 15 Pro Max',
+    'iPhone 15 Pro发光手机壳，改成iPhone 15 Pro Max用',
+    '빛나는 iPhone 15 Pro 케이스, 아니 iPhone 15 Pro Max용',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 15 Pro Max Light-up LED Phone Case' },
+    { asin: 'OLD', product_name: 'iPhone 15 Pro Light-up LED Phone Case' },
+    { asin: 'PLAIN', product_name: 'iPhone 15 Pro Max Clear Phone Case' },
+    { asin: 'GENERIC', product_name: 'iPhone Light-up LED Phone Case' },
+    { asin: 'LIGHT', product_name: 'LED Ring Light for iPhone 15 Pro Max' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('通常のスマホケースも4言語で機種・MagSafe・透明条件が一致する候補だけを提示する', () => {
   const queries = [
     'iPhone 15 Pro用の透明なMagSafeケース',

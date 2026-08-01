@@ -66,6 +66,21 @@ test('SNSで見た光るケースは機種とMagSafe条件を4言語で保持す
   }
 });
 
+test('光るケースの機種訂正は4言語で最後のiPhone指定だけを保持する', () => {
+  const queries = [
+    '光るiPhone 15 Proケース、やっぱりiPhone 15 Pro Max用',
+    'light-up case for iPhone 15 Pro, actually for iPhone 15 Pro Max',
+    'iPhone 15 Pro发光手机壳，改成iPhone 15 Pro Max用',
+    '빛나는 iPhone 15 Pro 케이스, 아니 iPhone 15 Pro Max용',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 15 Pro Maxケース 光る', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('通常ケースも機種・MagSafe・透明条件を4言語で保持する', () => {
   const queries = [
     'iPhone 15 Pro用の透明なMagSafeケース',

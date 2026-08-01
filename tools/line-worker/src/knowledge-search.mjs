@@ -316,7 +316,18 @@ function isTrueWirelessEarphonesMismatch(candidate) {
 
 function phoneCaseDeviceModel(value) {
   const text = String(value || '').normalize('NFKC');
-  const match = text.match(/\biphone\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2}/iu)
+  const iphoneMatches = [...text.matchAll(/\biphone\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2}/giu)];
+  let iphoneMatch = iphoneMatches[0] || null;
+  for (let index = iphoneMatches.length - 1; index > 0; index -= 1) {
+    const previous = iphoneMatches[index - 1];
+    const current = iphoneMatches[index];
+    const bridge = text.slice(previous.index + previous[0].length, current.index);
+    if (/(?:やっぱり|訂正|ではなく|じゃなく|actually(?:\s+for)?|rather(?:\s+for)?|change(?:d)?\s+to|改成|换成|換成|改为|改為|아니|정정|말고)/iu.test(bridge)) {
+      iphoneMatch = current;
+      break;
+    }
+  }
+  const match = iphoneMatch
     || text.match(/\bgalaxy\s*[a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?/iu)
     || text.match(/\bpixel\s*\d{1,2}(?!\d)(?:\s*(?:pro\s*fold|pro|fold|a))?/iu);
   return match ? match[0].toLowerCase().replace(/\s+/gu, '') : '';

@@ -10,6 +10,18 @@ const PRODUCT_TYPES = [
   ['ケース', /(?:casetify|ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu],
 ];
 
+function correctedIphoneMatch(query) {
+  const matches = [...String(query || '').matchAll(/\biphone(?:\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2})?/giu)];
+  if (!matches.length) return null;
+  for (let index = matches.length - 1; index > 0; index -= 1) {
+    const previous = matches[index - 1];
+    const current = matches[index];
+    const bridge = String(query).slice(previous.index + previous[0].length, current.index);
+    if (/(?:やっぱり|訂正|ではなく|じゃなく|actually(?:\s+for)?|rather(?:\s+for)?|change(?:d)?\s+to|改成|换成|換成|改为|改為|아니|정정|말고)/iu.test(bridge)) return current;
+  }
+  return matches[0];
+}
+
 function deviceName(query) {
   const ipad = query.match(/\bipad(?:\s*(?:air|pro|mini))?(?:\s*(?:m[1-9]|\d+(?:st|nd|rd|th)?\s*(?:generation|gen)))?/iu);
   if (ipad) return ipad[0].replace(/^ipad/iu, 'iPad').replace(/\s+/gu, ' ').trim();
@@ -21,7 +33,7 @@ function deviceName(query) {
       : model === 'mini' ? 'mini' : '';
     return `iPad${canonicalModel ? ` ${canonicalModel}` : ''}`;
   }
-  const iphone = query.match(/\biphone(?:\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2})?/iu);
+  const iphone = correctedIphoneMatch(query);
   if (iphone) return iphone[0].replace(/^iphone/iu, 'iPhone').trim();
   const localizedIphone = query.match(/(?:アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)(?:\s*(\d{1,2}(?!\d)(?:\s*(?:pro|max|plus|mini))*))?/iu);
   if (localizedIphone) return localizedIphone[1] ? `iPhone ${localizedIphone[1].trim()}` : 'iPhone';
