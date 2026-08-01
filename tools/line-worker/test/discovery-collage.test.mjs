@@ -5,6 +5,7 @@ import { readFile, stat } from 'node:fs/promises';
 const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
 test('discovery collage is lightweight, localized, accessible, and cached', async () => {
+  const styles = await read('styles.css');
   const [html, app, css, wishCss, sw, i18n, desktop, mobile] = await Promise.all([
     read('index.html'), read('app.js'), read('discovery.css'), read('wish-carousel.css'),
     read('service-worker.js'), read('site-i18n.js'),
@@ -28,7 +29,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v107/);
+  assert.match(sw, /hoshilu-shell-v110/);
   assert.match(sw, /marketplace-search-keywords-v2\.mjs/);
   assert.match(app, /buildMarketplaceSearchKeywords/);
   assert.match(sw, /if \(response\.ok\)/);
@@ -65,6 +66,9 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /Instagram.*X.*TikTok.*YouTube/s);
   assert.match(app, /site:instagram\.com/);
   assert.match(app, /site:tiktok\.com/);
+  assert.match(app, /String\(elements\.query\.value\|\|result\?\.search_keywords/);
+  assert.match(app, /replace\(\/\(\?:で探す\|で検索\)\$\/u/);
+  assert.match(styles, /@media\(max-width:760px\)\{\.marketplace-links\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(app, /https:\/\/www\.swippitt\.net\//);
   assert.match(app, /function swippittDiscoveryMatch/);
   assert.match(app, /これですか？↓/);

@@ -43,7 +43,10 @@ const RULES = [
   ['necklace',/(ネックレス|首.{0,8}(?:金色|チェーン)|フィガロ.{0,8}チェーン|figaro.{0,8}chain|费加罗链|費加羅鍊|피가로.{0,8}체인|necklace|项链|項鍊|목걸이)/iu,['necklace','jewelry chain']],
   ['fitness-ring',/(運動用.*リング|エクササイズリング|stamina ring|輪っか.*運動)/iu,['ring','stamina']],
   ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|\d{2,3}\s*mm.{0,24}(?:カラー|色付き|グラデーション).*フィルター|color filters?|camera.{0,24}filters?|lens.{0,24}filters?|filters?.{0,24}(?:camera|lens)|相机.{0,20}滤镜|相機.{0,20}濾鏡|镜头.{0,20}滤镜|鏡頭.{0,20}濾鏡|카메라.{0,24}필터|렌즈.{0,24}필터)/iu,['filter','color']],
-  ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer)/iu,['laptop','notebook computer']],
+  ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
+  ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
+  ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
+  ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer|笔记本电脑|筆記型電腦|노트북)/iu,['laptop','notebook computer']],
   ['notebook',/(ノート(?!パソコン|PC)|手帳|罫線|notebook(?! computer)|文房具.*四角)/iu,['notebook','ruled']],
   ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기)/iu,['harmonica']],
   ['harmonica-c-minor',/(?:C|シー)[\s-]*(?:マイナー|minor)/iu,['c minor']],
@@ -248,6 +251,9 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
+  if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
+  if (specificCategories.has('laptop-stand')) groups = groups.filter((group) => group.category !== 'laptop');
+  if (specificCategories.has('laptop-charger')) groups = groups.filter((group) => !['laptop','charger','adapter'].includes(group.category));
   if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');
   if (specificCategories.has('seasonal-pillow') && !specificCategories.has('pillow')) {
     groups.unshift({ category: 'pillow', terms: ['pillow','cushion'] });
