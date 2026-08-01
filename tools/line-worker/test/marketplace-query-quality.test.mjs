@@ -35,6 +35,10 @@ test('光るスマホケースの口語的な言い換えを4言語で商品語�
     'the thing from TikTok where the phone back lights up for notifications',
     '抖音看到的手机来通知时背面会亮的那个',
     '틱톡에서 본 스마트폰 알림 때 뒷면에 불이 들어오는 것',
+    '通知が来るとスマホの裏全体が光るTikTokのあれ',
+    'notifications make the back of the phone glow, saw it on TikTok',
+    '通知一来手机背面就发光，抖音看到的那个',
+    '알림이 오면 스마트폰 뒷면이 빛나는 틱톡에서 본 그거',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {
