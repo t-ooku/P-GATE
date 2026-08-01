@@ -2343,3 +2343,24 @@ test('power-bank capacity ranges accept both boundaries and intermediate values 
       ['POWER5000', 'POWER7500', 'POWER10000'], query);
   }
 });
+
+test('compound power-bank requirements reject each mismatching dimension in four languages', () => {
+  const queries = [
+    '5000mAhから10000mAhでPD20W、Lightningケーブル内蔵、MagSafeじゃないモバイルバッテリー',
+    'a power bank between 5000mAh and 10000mAh with PD20W and a built-in Lightning cable, not MagSafe',
+    '5000mAh到10000mAh、PD20W、自带Lightning线、不要MagSafe的充电宝',
+    '5000mAh에서 10000mAh, PD20W, Lightning 케이블 내장, MagSafe 아닌 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '7500mAh Power Bank Built-in Lightning Cable PD20W' },
+    { asin: 'TOOLOW', product_name: '3000mAh Power Bank Built-in Lightning Cable PD20W' },
+    { asin: 'TOOHIGH', product_name: '20000mAh Power Bank Built-in Lightning Cable PD20W' },
+    { asin: 'WRONGOUTPUT', product_name: '7500mAh Power Bank Built-in Lightning Cable PD30W' },
+    { asin: 'WRONGCONNECTOR', product_name: '7500mAh Power Bank Built-in USB-C Cable PD20W' },
+    { asin: 'MAGNETIC', product_name: '7500mAh MagSafe Power Bank Built-in Lightning Cable PD20W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});

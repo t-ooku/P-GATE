@@ -1302,3 +1302,18 @@ test('洗剤ポッドの洗濯機タイプ・素材・柔軟剤条件を4言語�
     }
   }
 });
+
+test('power-bank ranges retain output, connector, and exclusions together in four languages', () => {
+  const queries = [
+    '5000mAhから10000mAhでPD20W、Lightningケーブル内蔵、MagSafeじゃないモバイルバッテリー',
+    'a power bank between 5000mAh and 10000mAh with PD20W and a built-in Lightning cable, not MagSafe',
+    '5000mAh到10000mAh、PD20W、自带Lightning线、不要MagSafe的充电宝',
+    '5000mAh에서 10000mAh, PD20W, Lightning 케이블 내장, MagSafe 아닌 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '5000mAh-10000mAh モバイルバッテリー Lightningケーブル内蔵 PD20W', `${marketplace}: ${query}`);
+    }
+  }
+});
