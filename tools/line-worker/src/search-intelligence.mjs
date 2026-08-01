@@ -28,6 +28,7 @@ const RULES = [
   ['mouse',/(マウス(?!パッド|マット|.{0,8}(?:ケージ|飼育))|trackball|computer mouse|mouse(?! cage| habitat| for pet)|パソコンで動かす|(?:电脑|電腦).{0,8}(?:鼠标|滑鼠)|(?:游戏|遊戲)(?:鼠标|滑鼠)|컴퓨터.{0,8}마우스|게이밍 마우스)/iu,['mouse','trackball']],
   ['bottle',/(水筒|ボトル|bottle|飲み物.*容器)/iu,['bottle']],
   ['lamp',/(テーブルランプ|卓上.*ライト|table lamp|布.*傘.*ライト)/iu,['lamp','light']],
+  ['table-lamp-details',/(?:ガラス|glass|玻璃|유리).{0,16}(?:布.{0,4}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓)|(?:布.{0,4}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓).{0,16}(?:ガラス|glass|玻璃|유리)/iu,['table lamp','glass','fabric shade']],
   ['towel-warmer',/(タオルウォーマー|温める.*タオル|(?:浴室|お風呂).{0,12}(?:壁|棒|ラック).{0,8}温か|heated towel|towel warmer|浴室.{0,10}加热毛巾架|浴室.{0,10}加熱毛巾架|욕실.{0,10}온열\s*수건걸이)/iu,['towel','warmer','heated']],
   ['shampoo',/(シャンプー|髪.*洗|shampoo|샴푸|洗发(?:水)?|洗髮(?:精)?)/iu,['shampoo','hair wash']],
   ['hair-treatment',/(トリートメント|ヘアマスク|ヘアオイル|洗い流さない|hair treatment|hair mask|hair oil|트리트먼트|헤어팩|헤어 오일|护发|護髮)/iu,['hair treatment','hair mask','hair oil']],
@@ -47,6 +48,7 @@ const RULES = [
   ['harmonica-c-minor',/(?:C|シー)[\s-]*(?:マイナー|minor)/iu,['c minor']],
   ['cable',/(ケーブル|USB.*線|つなぐ.*線|cable)/iu,['cable','usb']],
   ['pillow',/(クッション|枕|腰枕|pillow|ソファ.*ふわふわ)/iu,['pillow','cushion']],
+  ['seasonal-pillow',/(?=.*(?:ソファ|sofa|沙发|沙發|소파))(?=.*(?:冬|クリスマス|winter|christmas|冬季|圣诞|聖誕|겨울|크리스마스)).*/iu,['christmas','winter','decorative pillow']],
   ['knife',/(ナイフ|刃物|knife|折りたた.*刃|折叠.{0,8}刀|折疊.{0,8}刀|접이식.{0,8}나이프|락백.{0,8}나이프)/iu,['knife','folding']],
   ['organizer',/(収納ケース|整理ボックス|収納.*箱|\borganizer\b|storage container|收纳盒|收納盒|수납함)/iu,['organizer','storage','container']],
   ['adapter',/(アダプター|変換.*端子|端子.*増やす|adapter|USB-C)/iu,['adapter','usb']],
@@ -214,12 +216,15 @@ export function analyzeSearchDecision(query, candidates = []) {
   const hasModel = /(?:[A-Z]{2,}[- ]?\d{2,}|\d+(?:mm|cm|inch|インチ|オンス|oz|L|枚|個|灯))/iu.test(text);
   const distinctiveLatin = (text.match(/[A-Za-z][A-Za-z0-9-]{3,}/g) || []).filter((token) => !/^(with|from|this|that|type|size)$/i.test(token)).length > 0;
   const hasGuidedSelection = /\s\/\s/u.test(text);
+  const inferredSeasonalPillow = groups.some((group) => group.category === 'seasonal-pillow')
+    && !/(?:クッション|枕|pillow|cushion|抱枕|쿠션|베개)/iu.test(text);
   const categories = [...new Set(candidates.slice(0, 3).map(inferCandidateCategory).filter((value) => value !== 'other'))];
   const score = Math.min(10, groups.length * 2 + Number(groups.some((group) => group.category === 'kitchen-appliance')) * 2 + Number(hasFunction) + Number(hasShape) + Number(hasColor) + Number(hasModel) * 3 + Number(distinctiveLatin) * 3 + Number(hasGuidedSelection) * 2);
   const divergent = categories.length >= 2;
   const evidenceMismatch = candidates.length > 0 && candidateEvidenceMismatch(text, candidates);
   const vagueDescription = !hasModel && !distinctiveLatin && !hasGuidedSelection
     && (hasContext || /(?:やつ|もの|物)$/u.test(text.trim())
+      || inferredSeasonalPillow
       || /口.*音.*楽器|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text));
   const lowConfidence = candidates.length === 0 || score < 5 || divergent || evidenceMismatch || vagueDescription;
   const contextOnly = (hasContext || hasColor) && groups.length === 0 && !hasFunction;

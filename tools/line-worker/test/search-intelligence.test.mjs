@@ -209,6 +209,36 @@ test('説明順や比喩表現から安全に推定できる商品種別を4言�
   }
 });
 
+test('卓上ランプの素材構成と季節柄クッションを4言語の商品属性へ変換する', () => {
+  const lampQueries = [
+    '水色のガラス土台と布の傘がある卓上ライト',
+    'table lamp with aqua glass base and fabric shade',
+    '水蓝色玻璃底座和布艺灯罩的台灯',
+    '아쿠아 유리 받침과 패브릭 갓이 있는 탁상 조명',
+  ];
+  for (const query of lampQueries) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /\"table lamp\"\*/);
+    assert.match(expression, /\"glass\"\*/);
+    assert.match(expression, /\"fabric shade\"\*/);
+  }
+  const pillowQueries = [
+    'ソファに置く冬っぽいふわふわ',
+    'winter decorative pillow for a sofa',
+    '沙发上用的冬季抱枕',
+    '소파에 놓는 겨울 쿠션',
+  ];
+  for (const query of pillowQueries) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /\"christmas\"\*/);
+    assert.match(expression, /\"decorative pillow\"\*/);
+  }
+  assert.equal(analyzeSearchDecision(
+    'ソファに置く冬っぽいふわふわ',
+    [{ asin: 'B000000001', product_name: 'Christmas Decorative Pillow', manufacturer: 'Example' }],
+  ).needs_clarification, true);
+});
+
 test('韓国美容語を商品カテゴリへ正規化する', () => {
   const cases = [
     ['진정 세럼', 'serum'],
