@@ -14,14 +14,14 @@ const RULES = [
   ['backpack',/(リュック|バックパック|backpack|背負う)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
-  ['charger',/(充電器|充電台|チャージャー|charger)/iu,['charger','charging']],
-  ['dual-charger',/(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,8}(?:充電台|充電器)|dual\s+charg(?:er|ing)|双设备充电|雙設備充電|2대.{0,8}충전/iu,['dual charger','dual charging']],
+  ['charger',/(充電器|充電台|チャージャー|charg(?:er|ing\s+dock)|充电座|充電座|충전\s*(?:거치대|도크))/iu,['charger','charging']],
+  ['dual-charger',/(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|듀얼).{0,12}충전/iu,['dual charger','dual charging']],
   ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|iphone\s*ケース|phone case|smartphone case|iphone case|手机壳|手机保护壳|휴대폰 케이스|스마트폰 케이스)/iu,['phone','case','cover','iphone','smartphone']],
   ['light-up',/(光る|発光|\bLED\b|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
   ['camera-bag',/(カメラ(?:用)?(?:バッグ|ケース|ポーチ)|camera bag|camera case)/iu,['camera bag','camera case']],
   ['photo-printer',/(写真プリンター|フォトプリンター|スマホプリンター|photo printer|portable photo printer)/iu,['photo printer','portable printer']],
   ['camera',/(カメラ(?!用?(?:バッグ|ケース|ポーチ))|camera(?! bag| case))/iu,['camera']],
-  ['ptz-network-camera',/(?:首振り|PTZ|パンチルト).{0,12}(?:ネットワーク|監視)?カメラ|(?:ネットワーク|監視)カメラ.{0,12}(?:首振り|PTZ|ドーム)|ptz.{0,12}(?:network|security)?\s*camera|(?:network|security)\s*camera.{0,12}(?:ptz|dome)|云台.{0,8}(?:网络|網絡|监控|監控)摄像|(?:网络|網絡|监控|監控)摄像.{0,8}(?:云台|雲台|球形)|(?:PTZ|회전).{0,8}(?:네트워크|보안)\s*카메라|(?:네트워크|보안)\s*카메라.{0,8}(?:PTZ|회전|돔)/iu,['network camera','ptz','security camera']],
+  ['ptz-network-camera',/(?:首振り|PTZ|パンチルト).{0,12}(?:ネットワーク|監視)?カメラ|(?:ネットワーク|監視)カメラ.{0,12}(?:首振り|PTZ|ドーム)|(?:ptz|pan\s+and\s+tilt).{0,20}(?:network|security)?\s*camera|(?:network|security)\s*camera.{0,24}(?:ptz|dome|pan\s+and\s+tilt)|云台.{0,12}(?:网络|網絡|监控|監控)摄像|(?:网络|網絡|监控|監控)摄像.{0,12}(?:云台|雲台|球形)|(?:PTZ|회전).{0,20}(?:네트워크|보안)\s*카메라|(?:네트워크|보안)\s*카메라.{0,20}(?:PTZ|회전|돔)/iu,['network camera','ptz','security camera']],
   ['keyboard',/(キーボード|keyboard|入力する板)/iu,['keyboard']],
   ['mouse-pad',/(マウスパッド|マウスマット|mouse pad|mouse mat)/iu,['mouse pad','mouse mat']],
   ['rodent-supplies',/(?:ペット|飼育|小動物).{0,8}マウス|マウス.{0,8}(?:ケージ|飼育|小動物)/iu,['pet mouse','rodent','cage']],
@@ -29,10 +29,10 @@ const RULES = [
   ['bottle',/(水筒|ボトル|bottle|飲み物.*容器)/iu,['bottle']],
   ['lamp',/(テーブルランプ|卓上.*ライト|table lamp|布.*傘.*ライト)/iu,['lamp','light']],
   ['table-lamp-details',/(?:ガラス|glass|玻璃|유리).{0,16}(?:布.{0,4}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓)|(?:布.{0,4}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓).{0,16}(?:ガラス|glass|玻璃|유리)/iu,['table lamp','glass','fabric shade']],
-  ['towel-warmer',/(タオルウォーマー|温める.*タオル|(?:浴室|お風呂).{0,12}(?:壁|棒|ラック).{0,8}温か|heated towel|towel warmer|浴室.{0,10}加热毛巾架|浴室.{0,10}加熱毛巾架|욕실.{0,10}온열\s*수건걸이)/iu,['towel','warmer','heated']],
+  ['towel-warmer',/(タオルウォーマー|温める.*タオル|(?:浴室|お風呂).{0,12}(?:壁|棒|ラック).{0,8}温か|heated towel|towel warmer|(?:warm|heated).{0,12}(?:metal\s+)?bars?.{0,20}bathroom|bathroom.{0,20}(?:warm|heated).{0,12}bars?|浴室.{0,16}(?:加热毛巾架|加熱毛巾架|发热.{0,6}金属杆|發熱.{0,6}金屬桿)|욕실.{0,16}(?:온열\s*수건걸이|따뜻.{0,8}(?:금속\s*)?막대))/iu,['towel','warmer','heated']],
   ['shampoo',/(シャンプー|髪.*洗|shampoo|샴푸|洗发(?:水)?|洗髮(?:精)?)/iu,['shampoo','hair wash']],
   ['hair-treatment',/(トリートメント|ヘアマスク|ヘアオイル|洗い流さない|hair treatment|hair mask|hair oil|트리트먼트|헤어팩|헤어 오일|护发|護髮)/iu,['hair treatment','hair mask','hair oil']],
-  ['body-powder',/(香り.*粉|いい匂い.{0,8}粉|ボディパウダー|ダスティングパウダー|dusting powder|perfumed powder|香味.{0,8}(?:粉|爽身粉)|향기.{0,8}(?:파우더|분말))/iu,['powder','perfumed']],
+  ['body-powder',/(香り.*粉|いい匂い.{0,8}粉|ボディパウダー|ダスティングパウダー|dusting powder|perfumed powder|(?:nice[- ]smelling|scented|fragrant).{0,8}powder|香味.{0,8}(?:粉|爽身粉)|향기.{0,8}(?:파우더|분말))/iu,['powder','perfumed']],
   ['figure',/(フィギュア|胸像|上半身.*置物|figure|bust|collectible)/iu,['figure','bust','collectible']],
   ['indiana-jones',/(インディ[・ー\s]*ジョーンズ|indiana\s+jones)/iu,['インディ','ジョーンズ','indiana','jones']],
   ['one-sixth-scale',/(?:1\s*[:/]\s*6|6分の1|one[- ]sixth).{0,12}(?:スケール|scale|胸像|bust|模型|모형|模型)/iu,['1:6','1/6','1 6 scale']],
@@ -44,16 +44,16 @@ const RULES = [
   ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|color filters?|camera.{0,24}filters?|lens.{0,24}filters?|filters?.{0,24}(?:camera|lens)|相机.{0,20}滤镜|相機.{0,20}濾鏡|镜头.{0,20}滤镜|鏡頭.{0,20}濾鏡|카메라.{0,24}필터|렌즈.{0,24}필터)/iu,['filter','color']],
   ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer)/iu,['laptop','notebook computer']],
   ['notebook',/(ノート(?!パソコン|PC)|手帳|罫線|notebook(?! computer)|文房具.*四角)/iu,['notebook','ruled']],
-  ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기)/iu,['harmonica']],
+  ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기)/iu,['harmonica']],
   ['harmonica-c-minor',/(?:C|シー)[\s-]*(?:マイナー|minor)/iu,['c minor']],
   ['cable',/(ケーブル|USB.*線|つなぐ.*線|cable)/iu,['cable','usb']],
   ['pillow',/(クッション|枕|腰枕|pillow|ソファ.*ふわふわ)/iu,['pillow','cushion']],
-  ['seasonal-pillow',/(?=.*(?:ソファ|sofa|沙发|沙發|소파))(?=.*(?:冬|クリスマス|winter|christmas|冬季|圣诞|聖誕|겨울|크리스마스)).*/iu,['christmas','winter','decorative pillow']],
+  ['seasonal-pillow',/(?=.*(?:ソファ|sofa|沙发|沙發|소파))(?=.*(?:冬|クリスマス|wint(?:er|ry)|christmas|冬季|圣诞|聖誕|겨울|크리스마스)).*/iu,['christmas','winter','decorative pillow']],
   ['knife',/(ナイフ|刃物|knife|折りたた.*刃|折叠.{0,8}刀|折疊.{0,8}刀|접이식.{0,8}나이프|락백.{0,8}나이프)/iu,['knife','folding']],
   ['organizer',/(収納ケース|整理ボックス|収納.*箱|\borganizer\b|storage container|收纳盒|收納盒|수납함)/iu,['organizer','storage','container']],
   ['adapter',/(アダプター|変換.*端子|端子.*増やす|adapter|USB-C)/iu,['adapter','usb']],
   ['bath-light',/(浴室.*照明|洗面所.*鏡.*光|バスライト|bath light)/iu,['bath','light']],
-  ['bath-six-light',/(?:6|六)(?:個|灯|燈)?.{0,8}(?:浴室|洗面).{0,8}(?:ライト|照明)|(?:浴室|洗面).{0,12}(?:6|六)(?:個|灯|燈)|6[- ]?light.{0,8}(?:bath|vanity)|(?:bath|vanity).{0,8}6[- ]?light|六灯.{0,8}(?:浴室|盥洗)|(?:浴室|盥洗).{0,8}六灯|6등.{0,8}(?:욕실|세면)|(?:욕실|세면).{0,8}6등/iu,['6-light','six light','vanity light']],
+  ['bath-six-light',/(?:6|六)(?:個|灯|燈)?.{0,8}(?:浴室|洗面).{0,8}(?:ライト|照明)|(?:浴室|洗面).{0,12}(?:6|六)(?:個|灯|燈)|(?:6|six)[- ]?light.{0,20}(?:bath|vanity)|(?:bath|vanity).{0,20}(?:6|six)[- ]?light|六灯.{0,12}(?:浴室|盥洗)|(?:浴室|盥洗).{0,12}六灯|6등.{0,20}(?:욕실|세면)|(?:욕실|세면).{0,24}6등/iu,['6-light','six light','vanity light']],
   ['humidifier',/(加湿器|humidifier)/iu,['humidifier']],
   ['umbrella-stand',/(傘立て|傘スタンド|umbrella stand|umbrella holder)/iu,['umbrella stand','umbrella holder']],
   ['umbrella',/(折りたたみ傘|傘(?!立て|スタンド|掛け|カバー|ケース)|umbrella(?! stand| holder| cover| case))/iu,['umbrella','folding']],
@@ -155,6 +155,9 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');
+  if (specificCategories.has('seasonal-pillow') && !specificCategories.has('pillow')) {
+    groups.unshift({ category: 'pillow', terms: ['pillow','cushion'] });
+  }
   if (specificCategories.has('lamp') && /布.{0,6}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓/iu.test(text)) {
     groups = groups.filter((group) => group.category !== 'umbrella');
   }
@@ -195,7 +198,7 @@ export function semanticSearchGroups(value) {
   }
   const specificIntent = groups.some((group) => [
     'steam-engine-model','dual-charger','ptz-network-camera','bath-six-light'
-  ].includes(group.category)) || /口.*音.*楽器|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
+  ].includes(group.category)) || /口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES.filter(([pattern]) => pattern.test(text)).flatMap(([, terms]) => terms);
   if (colors.length) groups.push({ category: 'color', terms: [...new Set(colors)] });
   return groups;

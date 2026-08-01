@@ -17,6 +17,40 @@ const emptyDb = () => ({
   }
 });
 
+test('multilingual descriptive queries map to stable product-category terms', () => {
+  const cases = [
+    ['a black charging dock that holds two devices at once', 'dual charger'],
+    ['可以同时放两台设备的黑色双充电座', 'dual charger'],
+    ['기기 두 대를 동시에 올리는 검은색 듀얼 충전 거치대', 'dual charger'],
+    ['a white dome network camera that can pan and tilt', 'network camera'],
+    ['可以云台转动的白色球形网络摄像头', 'network camera'],
+    ['회전할 수 있는 흰색 돔형 네트워크 카메라', 'network camera'],
+    ['the warm metal bars mounted on a bathroom wall', 'warmer'],
+    ['浴室墙上会发热的金属杆', 'warmer'],
+    ['욕실 벽에 달린 따뜻해지는 금속 막대', 'warmer'],
+    ['the nice-smelling powder my mother used', 'perfumed'],
+    ['妈妈以前用的有香味的粉', 'perfumed'],
+    ['엄마가 쓰던 향기 좋은 파우더', 'perfumed'],
+    ['a small silver instrument you play by blowing with your mouth', 'harmonica'],
+    ['用嘴吹奏的银色小乐器', 'harmonica'],
+    ['입으로 불어서 연주하는 은색 작은 악기', 'harmonica'],
+    ['something soft and wintry to put on a sofa', 'pillow'],
+    ['放在沙发上的冬季柔软装饰', 'pillow'],
+    ['소파에 놓는 겨울 느낌의 푹신한 것', 'pillow'],
+    ['a silver horizontal six-light fixture above a bathroom mirror', '6-light'],
+    ['浴室镜子上方的银色横向六灯照明', '6-light'],
+    ['욕실 거울 위의 은색 가로형 6등 조명', '6-light'],
+  ];
+  for (const [query, required] of cases) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.ok(expression.includes(`\"${required}\"*`), `${query}: ${expression}`);
+  }
+  assert.doesNotMatch(
+    intelligentFtsQuery('a small silver instrument you play by blowing with your mouth'),
+    /\"silver\"\*/,
+  );
+});
+
 test('Japanese memory fragments expand into category and color FTS groups', () => {
   const query = intelligentFtsQuery('茶色い革ベルトと金属ケースの男性用腕時計');
   assert.match(query, /"watch"\*/);
