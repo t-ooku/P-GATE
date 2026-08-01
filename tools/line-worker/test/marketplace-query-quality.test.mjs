@@ -2232,7 +2232,11 @@ test('カメラ付き自動給餌器は容量・画質・通信・音声条件�
     '留守中に猫へ自動でご飯を出す 5L 1080pカメラ Wi-Fi 双方向音声',
     'feeds my cat automatically while I am away 5L 1080p camera Wi-Fi two-way audio',
     '出门时自动给猫喂食 5L 1080p摄像头 Wi-Fi 双向语音',
-    '집을 비울 때 고양이에게 자동으로 밥 주는 5L 1080p 카메라 Wi-Fi 양방향 음성'
+    '집을 비울 때 고양이에게 자동으로 밥 주는 5L 1080p 카메라 Wi-Fi 양방향 음성',
+    '留守中の猫に決まった時間にごはんを出して映像を見ながら話しかけたい 5L 1080pカメラ Wi-Fi 双方向音声',
+    'want to schedule meals and see and talk to my cat while away 5L 1080p camera Wi-Fi two-way audio',
+    '出门时想定时给猫喂食并看着它和它说话 5L 1080p摄像头 Wi-Fi 双向语音',
+    '외출 중 고양이에게 정해진 시간에 밥을 주고 보며 말하고 싶어 5L 1080p 카메라 Wi-Fi 양방향 음성'
   ];
   for (const input of inputs) {
     for (const marketplace of SEARCH_MARKETPLACES) {
