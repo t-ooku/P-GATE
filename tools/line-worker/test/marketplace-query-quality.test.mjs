@@ -43,6 +43,21 @@ test('光るスマホケースの口語的な言い換えを4言語で商品語�
   }
 });
 
+test('SNSで見た光るケースは機種とMagSafe条件を4言語で保持する', () => {
+  const queries = [
+    'TikTokで見た光るiPhone 15 ProケースでMagSafe対応',
+    'a glowing MagSafe iPhone 15 Pro case seen on TikTok',
+    'TikTok看到的发光磁吸iPhone 15 Pro手机壳',
+    '틱톡에서 본 빛나는 맥세이프 iPhone 15 Pro 케이스',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 15 Proケース 光る MagSafe対応', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('モバイルバッテリーの容量と内蔵ケーブルを4言語で保持する', () => {
   const queries = [
     '旅行用のUSB-Cケーブル内蔵10000mAhモバイルバッテリー',

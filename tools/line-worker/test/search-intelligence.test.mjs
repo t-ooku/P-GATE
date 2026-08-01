@@ -932,6 +932,27 @@ test('光るスマホケースは初回提示から一般ケース・LED照明�
   }
 });
 
+test('SNSで見た光るケースは初回から機種・発光・MagSafeが一致する候補だけを提示する', () => {
+  const queries = [
+    'TikTokで見た光るiPhone 15 ProケースでMagSafe対応',
+    'a glowing MagSafe iPhone 15 Pro case seen on TikTok',
+    'TikTok看到的发光磁吸iPhone 15 Pro手机壳',
+    '틱톡에서 본 빛나는 맥세이프 iPhone 15 Pro 케이스',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 15 Pro MagSafe Light-up LED Phone Case' },
+    { asin: 'WRONGMODEL', product_name: 'iPhone 15 Pro Max MagSafe Light-up LED Phone Case' },
+    { asin: 'GENERIC', product_name: 'iPhone MagSafe Light-up LED Phone Case' },
+    { asin: 'NOTLIGHT', product_name: 'iPhone 15 Pro MagSafe Clear Phone Case' },
+    { asin: 'NOTMAGSAFE', product_name: 'iPhone 15 Pro Light-up LED Phone Case' },
+    { asin: 'LIGHT', product_name: 'MagSafe LED Ring Light for iPhone 15 Pro' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('モバイルバッテリーは容量と内蔵端子が一致する候補だけを提示する', () => {
   const queries = [
     '旅行用のUSB-Cケーブル内蔵10000mAhモバイルバッテリー',

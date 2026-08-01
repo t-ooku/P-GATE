@@ -314,13 +314,27 @@ function isTrueWirelessEarphonesMismatch(candidate) {
   return explicitlyWired || !explicitlyWireless;
 }
 
-function isLightUpPhoneCaseMismatch(candidate) {
+function phoneCaseDeviceModel(value) {
+  const match = String(value || '').normalize('NFKC')
+    .match(/\biphone\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2}/iu);
+  return match ? match[0].toLowerCase().replace(/\s+/gu, '') : '';
+}
+
+function isLightUpPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
     .toLowerCase();
   const category = inferCandidateCategory(candidate);
   const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
-  return category !== 'phone-case' || !hasLightUpEvidence;
+  if (category !== 'phone-case' || !hasLightUpEvidence) return true;
+  const requestedDevice = phoneCaseDeviceModel(query);
+  if (requestedDevice && phoneCaseDeviceModel(text) !== requestedDevice) return true;
+  const normalizedQuery = String(query || '').normalize('NFKC');
+  const magneticMatches = [...normalizedQuery.matchAll(/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/giu)];
+  const wantsMagSafe = magneticMatches.some((match) =>
+    !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
+  if (wantsMagSafe && !/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text)) return true;
+  return false;
 }
 
 function isNegatedPowerBankRequirement(text, start, end) {
@@ -1125,7 +1139,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   return candidates.filter((candidate) => {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
-    if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate)) return false;
+    if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate, query)) return false;
     if (powerBank && isPowerBankMismatch(candidate, query)) return false;
     if (laptopHub && isLaptopHubMismatch(candidate)) return false;
     if (thunderboltDock && isThunderboltDockMismatch(candidate, thunderboltVersion(query))) return false;

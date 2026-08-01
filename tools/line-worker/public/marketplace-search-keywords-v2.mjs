@@ -605,13 +605,17 @@ export function buildDeviceAccessorySearchKeywords(query) {
   const base = label === 'ケース' && device.startsWith('iPhone')
     ? `${device}ケース`
     : `${device} ${label}`;
+  const caseMagSafePattern = /(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu;
+  const caseMagSafe = label === 'ケース' && caseMagSafePattern.test(normalized)
+    && !isNegatedAttribute(normalized, caseMagSafePattern) ? 'MagSafe対応' : '';
   const specifications = specificationTokens(normalized)
-    .filter((token) => !base.toLowerCase().includes(token.toLowerCase()));
+    .filter((token) => !base.toLowerCase().includes(token.toLowerCase())
+      && !(caseMagSafe && token.toLowerCase() === 'magsafe'));
   const materials = matchedMaterials(normalized)
     .filter((token) => !(label === '保護フィルム' && token === 'ガラス'));
   const attributes = matchedAttributes(normalized)
-    .filter((token) => token === '透明' && !materials.includes(token));
-  const conditions = [...new Set([...specifications, ...materials, ...attributes])].slice(0, 3);
+    .filter((token) => ['透明', '光る'].includes(token) && !materials.includes(token));
+  const conditions = [...new Set([...specifications, ...materials, ...attributes, caseMagSafe].filter(Boolean))].slice(0, 3);
   return [base, ...conditions].join(' ');
 }
 
