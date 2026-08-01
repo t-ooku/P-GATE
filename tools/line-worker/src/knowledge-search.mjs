@@ -1066,6 +1066,33 @@ function isNasMismatch(candidate, requested) {
   return false;
 }
 
+function wifi7MeshRouterConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    meshRouter: /(?:メッシュ(?:Wi-?Fi)?ルーター|mesh\s*(?:Wi-?Fi\s*)?router|Mesh路由器|메시\s*(?:와이파이\s*)?공유기)/iu.test(text),
+    wifi7: /Wi-?Fi\s*7/iu.test(text),
+    speed: text.match(/\b(BE\d{4,5})\b/iu)?.[1]?.toUpperCase() || '',
+    triBand: /(?:トライバンド|tri[\s-]*band|三频|三頻|트라이밴드)/iu.test(text),
+    pack: text.match(/\b(\d)[\s-]*(?:台セット|台組|pack|只装|只裝|개\s*세트)/iu)?.[1] || '',
+    ethernet: text.match(/\b(\d(?:\.\d)?)\s*GbE\b/iu)?.[1] || '',
+    wrongProduct: /(?:Wi-?Fi\s*(?:extender|repeater)|Wi-?Fi中継機|无线扩展器|無線延伸器|와이파이\s*확장기|USB\s*Wi-?Fi\s*(?:adapter|dongle)|USB無線LAN子機|USB无线网卡|USB無線網卡|USB\s*와이파이\s*어댑터|cable\s*modem|ケーブルモデム|有线调制解调器|纜線數據機|케이블\s*모뎀|network\s*switch|ネットワークスイッチ|网络交换机|網路交換器|네트워크\s*스위치|standalone\s*access\s*point|単体アクセスポイント|独立无线接入点|獨立無線基地台|단독\s*액세스\s*포인트)/iu.test(text)
+  };
+}
+
+function isWifi7MeshRouterMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = wifi7MeshRouterConstraints(text);
+  if (!evidence.meshRouter || evidence.wrongProduct) return true;
+  for (const field of ['speed', 'pack', 'ethernet']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const field of ['wifi7', 'triBand']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1934,6 +1961,10 @@ export function filterCategoryMismatches(query, candidates = []) {
   const nas = nasConstraints(normalizedQuery);
   const nasIntent = nas.nas && Boolean(nas.bays && nas.network && nas.ram && nas.nvmeCache && nas.diskless)
     && !nas.wrongProduct;
+  const wifi7MeshRouter = wifi7MeshRouterConstraints(normalizedQuery);
+  const wifi7MeshRouterIntent = wifi7MeshRouter.meshRouter && wifi7MeshRouter.wifi7
+    && Boolean(wifi7MeshRouter.speed && wifi7MeshRouter.triBand && wifi7MeshRouter.pack && wifi7MeshRouter.ethernet)
+    && !wifi7MeshRouter.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1945,7 +1976,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
-    && !gamingLaptopIntent && !nasIntent) return candidates;
+    && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2021,6 +2052,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     }
     if (gamingLaptopIntent) return !isGamingLaptopMismatch(candidate, gamingLaptop);
     if (nasIntent) return !isNasMismatch(candidate, nas);
+    if (wifi7MeshRouterIntent) return !isWifi7MeshRouterMismatch(candidate, wifi7MeshRouter);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

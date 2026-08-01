@@ -436,6 +436,18 @@ function buildNasSearchKeywords(query) {
   return ['NAS本体', `${bays}ベイ`, `${network}GbE`, `${ram}GB RAM`, 'NVMeキャッシュ', 'ディスクレス'].join(' ');
 }
 
+function buildWifi7MeshRouterSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const meshRouter = /(?:メッシュ(?:Wi-?Fi)?ルーター|mesh\s*(?:Wi-?Fi\s*)?router|Mesh路由器|메시\s*(?:와이파이\s*)?공유기)/iu.test(normalized);
+  const wifi7 = /Wi-?Fi\s*7/iu.test(normalized);
+  const speed = normalized.match(/\b(BE\d{4,5})\b/iu)?.[1]?.toUpperCase();
+  const triBand = /(?:トライバンド|tri[\s-]*band|三频|三頻|트라이밴드)/iu.test(normalized);
+  const pack = normalized.match(/\b(\d)[\s-]*(?:台セット|台組|pack|只装|只裝|개\s*세트)/iu)?.[1];
+  const ethernet = normalized.match(/\b(\d(?:\.\d)?)\s*GbE\b/iu)?.[1];
+  if (!meshRouter || !wifi7 || !speed || !triBand || !pack || !ethernet) return '';
+  return ['Wi-Fi 7 メッシュルーター', speed, 'トライバンド', `${pack}台セット`, `${ethernet}GbE`].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1245,6 +1257,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawGamingLaptop) return rawGamingLaptop;
   const rawNas = buildNasSearchKeywords(rawNormalized);
   if (rawNas) return rawNas;
+  const rawWifi7MeshRouter = buildWifi7MeshRouterSearchKeywords(rawNormalized);
+  if (rawWifi7MeshRouter) return rawWifi7MeshRouter;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

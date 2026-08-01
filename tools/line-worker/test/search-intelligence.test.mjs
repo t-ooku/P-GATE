@@ -1634,6 +1634,31 @@ test('NASは4言語でベイ数・通信速度・メモリ・キャッシュ・�
   }
 });
 
+test('Wi-Fi 7メッシュルーターは4言語で速度・帯域・台数・有線条件が一致する本体だけを提示する', () => {
+  const queries = [
+    'Wi-Fi 7 メッシュルーター BE11000 トライバンド 2台セット 2.5GbE',
+    'WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE',
+    'WiFi 7 Mesh路由器 BE11000 三频 2只装 2.5GbE',
+    'WiFi 7 메시 와이파이 공유기 BE11000 트라이밴드 2개 세트 2.5GbE',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE' },
+    { asin: 'WIFI6', product_name: 'WiFi 6 mesh router BE11000 tri-band 2-pack 2.5GbE' },
+    { asin: 'SPEED', product_name: 'WiFi 7 mesh router BE9300 tri-band 2-pack 2.5GbE' },
+    { asin: 'DUAL', product_name: 'WiFi 7 mesh router BE11000 dual-band 2-pack 2.5GbE' },
+    { asin: 'ONE', product_name: 'WiFi 7 mesh router BE11000 tri-band 1-pack 2.5GbE' },
+    { asin: 'PORT', product_name: 'WiFi 7 mesh router BE11000 tri-band 2-pack 1GbE' },
+    { asin: 'EXTENDER', product_name: 'WiFi extender for WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE' },
+    { asin: 'ADAPTER', product_name: 'USB WiFi adapter for WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE' },
+    { asin: 'MODEM', product_name: 'Cable modem with WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE' },
+    { asin: 'SWITCH', product_name: 'Network switch for WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE' },
+    { asin: 'AP', product_name: 'Standalone access point WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

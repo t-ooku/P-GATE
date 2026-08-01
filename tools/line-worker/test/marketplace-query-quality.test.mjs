@@ -506,6 +506,21 @@ test('NAS本体はベイ数・通信速度・メモリ・キャッシュ・デ�
   }
 });
 
+test('Wi-Fi 7メッシュルーターは速度・帯域・台数・有線条件を4言語で保持する', () => {
+  const queries = [
+    'Wi-Fi 7 メッシュルーター BE11000 トライバンド 2台セット 2.5GbE',
+    'WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE',
+    'WiFi 7 Mesh路由器 BE11000 三频 2只装 2.5GbE',
+    'WiFi 7 메시 와이파이 공유기 BE11000 트라이밴드 2개 세트 2.5GbE',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Wi-Fi 7 メッシュルーター BE11000 トライバンド 2台セット 2.5GbE', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [
