@@ -344,6 +344,29 @@ test('USB-Aハブは4言語でUSB-C専用品とノートPC本体を除外する'
   }
 });
 
+test('USB4ドックは4言語で映像端子・2画面・OS互換性が一致する候補だけを表示する', () => {
+  const cases = [
+    ['MacBook用 USB4 ドック DisplayPort 1.4 デュアルモニター対応 100W', 'mac'],
+    ['USB4 dock with DisplayPort 1.4 dual monitors and 100W PD for Windows laptop', 'windows'],
+    ['支持双显示器和DisplayPort 1.4的Windows笔记本USB4扩展坞', 'windows'],
+    ['맥북용 USB4 도킹 스테이션 DisplayPort 1.4 듀얼 모니터 100W', 'mac'],
+  ];
+  for (const [query, platform] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: `USB4 Dock DisplayPort 1.4 Dual Monitor 100W ${platform === 'mac' ? 'MacBook' : 'Windows'}` },
+      { asin: 'WRONGDP', product_name: `USB4 Dock DisplayPort 1.2 Dual Monitor ${platform === 'mac' ? 'MacBook' : 'Windows'}` },
+      { asin: 'SINGLE', product_name: `USB4 Dock DisplayPort 1.4 Single Monitor ${platform === 'mac' ? 'MacBook' : 'Windows'}` },
+      { asin: 'WRONGOS', product_name: `USB4 Dock DisplayPort 1.4 Dual Monitor ${platform === 'mac' ? 'Windows' : 'MacBook'}` },
+      { asin: 'THUNDERBOLT', product_name: 'Thunderbolt 4 Dock DisplayPort 1.4 Dual Monitor' },
+      { asin: 'PC', product_name: 'USB4 Laptop Computer DisplayPort 1.4' },
+    ];
+    const categories = semanticSearchGroups(query).map((group) => group.category);
+    assert.ok(categories.includes('usb4-dock'), query);
+    assert.equal(categories.includes('laptop'), false, query);
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
+
 test('中国語・韓国語のキャンドル・財布・収納用品を共通商品語へ展開する', () => {
   for (const query of ['玻璃罐装的大豆蜡烛', '유리병에 담긴 소이 캔들']) {
     assert.equal(semanticSearchGroups(query).some((group) => group.category === 'candle'), true);

@@ -46,7 +46,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v118/);
+  assert.match(serviceWorker, /hoshilu-shell-v119/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
   assert.match(serviceWorker, /marketplace-coverage\.mjs/);
 });

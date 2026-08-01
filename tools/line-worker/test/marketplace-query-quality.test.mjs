@@ -632,6 +632,26 @@ test("USB-Aハブを4言語でUSB-CハブやPC本体へ誤変換しない", () =
   }
 });
 
+test("USB4ドックのDisplayPort・2画面・OS・給電条件を4言語から9モールへ保持する", () => {
+  const cases = [
+    ['MacBook用 USB4 ドック DisplayPort 1.4 デュアルモニター対応 100W', 'Mac対応'],
+    ['USB4 dock with DisplayPort 1.4 dual monitors and 100W PD for Windows laptop', 'Windows対応'],
+    ['支持双显示器和DisplayPort 1.4的Windows笔记本USB4扩展坞 100W', 'Windows対応'],
+    ['맥북용 USB4 도킹 스테이션 DisplayPort 1.4 듀얼 모니터 100W', 'Mac対応'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, platform] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.match(keywords, /^USB4 ドック/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /DisplayPort 1\.4/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /デュアルモニター/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /100W/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, new RegExp(platform, 'u'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.doesNotMatch(keywords, /ノートパソコン|Thunderbolt/u, `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
 test("4言語のタブレット本体は小数インチ・容量を保持して9モール変換する", () => {
   const cases = [
     '10.9インチ256GBのタブレット',

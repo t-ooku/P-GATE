@@ -357,6 +357,30 @@ function isUsbAHubMismatch(candidate) {
   return !(hasUsbA && hasHub);
 }
 
+function displayPortVersion(text) {
+  return String(text || '').normalize('NFKC')
+    .match(/display\s*port\s*(\d(?:\.\d)?)/iu)?.[1] || '';
+}
+
+function requestedComputerPlatform(text) {
+  const value = String(text || '').normalize('NFKC');
+  if (/(?:macbook|macos|mac\s*用|맥북|苹果电脑|蘋果電腦)/iu.test(value)) return 'mac';
+  if (/(?:windows|win\s*11|윈도우)/iu.test(value)) return 'windows';
+  return '';
+}
+
+function isUsb4DockMismatch(candidate, constraints = {}) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  if (!/usb\s*4/iu.test(text) || !/(?:dock(?:ing\s*station)?|ドック|ドッキングステーション|扩展坞|擴充塢|도킹\s*스테이션)/iu.test(text)) return true;
+  if (constraints.displayPort && displayPortVersion(text) !== constraints.displayPort) return true;
+  if (constraints.dualMonitor && !/(?:dual\s*(?:display|monitor)|2\s*(?:display|monitor)|デュアルモニター|2画面|双显示器|雙顯示器|듀얼\s*모니터|모니터\s*2대)/iu.test(text)) return true;
+  const candidatePlatform = requestedComputerPlatform(text);
+  if (constraints.platform && candidatePlatform && candidatePlatform !== constraints.platform) return true;
+  return false;
+}
+
 function tabletModel(text) {
   const value = String(text || '').normalize('NFKC').toLowerCase();
   const latin = value.match(/\bipad\s*(air|pro|mini)\b/u);
@@ -448,6 +472,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const laptopHub = requested.has('laptop-hub');
   const thunderboltDock = requested.has('thunderbolt-dock');
   const usbAHub = requested.has('usb-a-hub');
+  const usb4Dock = requested.has('usb4-dock');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -468,6 +493,11 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (laptopHub && isLaptopHubMismatch(candidate)) return false;
     if (thunderboltDock && isThunderboltDockMismatch(candidate, thunderboltVersion(query))) return false;
     if (usbAHub && isUsbAHubMismatch(candidate)) return false;
+    if (usb4Dock && isUsb4DockMismatch(candidate, {
+      displayPort: displayPortVersion(query),
+      dualMonitor: /(?:dual\s*(?:display|monitor)|2\s*(?:display|monitor)|デュアルモニター|2画面|双显示器|雙顯示器|듀얼\s*모니터|모니터\s*2대)/iu.test(String(query || '')),
+      platform: requestedComputerPlatform(query)
+    })) return false;
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

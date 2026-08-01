@@ -68,6 +68,12 @@ function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
   if (power) features.push(`${power[1]}W`);
+  const displayPort = query.match(/display\s*port\s*(\d(?:\.\d)?)/iu);
+  if (displayPort) features.push(`DisplayPort ${displayPort[1]}`);
+  else if (/display\s*port/iu.test(query)) features.push('DisplayPort');
+  if (/(?:dual\s*(?:display|monitor)|2\s*(?:display|monitor)|デュアルモニター|2画面|双显示器|雙顯示器|듀얼\s*모니터|모니터\s*2대)/iu.test(query)) features.push('デュアルモニター');
+  if (/(?:macbook|macos|mac\s*用|맥북|苹果电脑|蘋果電腦)/iu.test(query)) features.push('Mac対応');
+  else if (/(?:windows|win\s*11|윈도우)/iu.test(query)) features.push('Windows対応');
   const hdmi = query.match(/hdmi(?:\s*|[- ]?)(\d(?:\.\d)?)/iu);
   if (hdmi) features.push(`HDMI ${hdmi[1]}`);
   else if (/\bhdmi\b/iu.test(query)) features.push('HDMI');
@@ -82,10 +88,11 @@ function buildPortHubSearchKeywords(query, marketplace) {
   const thunderbolt = query.match(/(?:thunderbolt|サンダーボルト|雷电|雷電|썬더볼트)\s*([34])?/iu);
   const dock = /(?:ドック|ドッキングステーション|dock(?:ing\s*station)?|扩展坞|擴充塢|도킹\s*스테이션)/iu.test(query);
   let product = '';
-  if (thunderbolt && dock) product = `Thunderbolt${thunderbolt[1] ? ` ${thunderbolt[1]}` : ''} ドック`;
+  if (/usb\s*4/iu.test(query) && dock) product = 'USB4 ドック';
+  else if (thunderbolt && dock) product = `Thunderbolt${thunderbolt[1] ? ` ${thunderbolt[1]}` : ''} ドック`;
   else if (/usb[- ]?a/iu.test(query) && /(?:ハブ|hub|集线器|集線器|허브)/iu.test(query)) product = 'USB-Aハブ';
   if (!product) return '';
-  const limit = marketplace === 'QOO10_JP' ? 2 : 5;
+  const limit = marketplace === 'QOO10_JP' ? 4 : 6;
   return [product, ...portHubFeatures(query).slice(0, limit)].join(' ');
 }
 
