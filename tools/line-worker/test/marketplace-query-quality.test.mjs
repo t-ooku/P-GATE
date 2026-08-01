@@ -378,3 +378,36 @@ test("XperiaとAQUOSの4言語表記を9モール向け互換型番へ統一す�
     }
   }
 });
+
+test("4言語の衣類サイズは訂正後のサイズだけを9モール検索語へ保持する", () => {
+  const cases = [
+    'MではなくLサイズの黒いワンピース',
+    'a black dress in size L, not size M',
+    '不要M码，要L码黑色连衣裙',
+    'M사이즈 말고 L사이즈 검정 원피스',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('サイズL'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!keywords.includes('サイズM'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('ワンピース'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("4言語のフリーサイズを9モール向け共通表記へ統一する", () => {
+  const cases = [
+    'フリーサイズの黒い帽子',
+    'a black hat in free size',
+    '均码黑色帽子',
+    '프리사이즈 검정 모자',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('FREEサイズ'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('帽子'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});

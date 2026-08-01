@@ -87,7 +87,7 @@ const RULES = [
   ['tops',/(トップス|ブラウス|シャツ|カットソー|\bblouse\b|\btops?\b)/iu,['top','blouse','shirt']],
   ['pants',/(パンツ|ズボン|デニム|ジーンズ|trousers|pants|jeans)/iu,['pants','trousers','jeans']],
   ['skirt',/(スカート|skirt)/iu,['skirt']],
-  ['dress',/(ワンピース|ドレス|dress)/iu,['dress']],
+  ['dress',/(ワンピース|ドレス|dress|连衣裙|連衣裙|원피스)/iu,['dress']],
   ['bag',/(バッグ|かばん|鞄|トート|ショルダーバッグ|handbag|tote bag|shoulder bag)/iu,['bag','handbag','tote']],
   ['hat',/(帽子|キャップ|ハット|\bcap\b|\bhat\b)/iu,['hat','cap']]
 ];

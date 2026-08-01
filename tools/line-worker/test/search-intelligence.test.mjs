@@ -1057,3 +1057,17 @@ test('XperiaとAQUOSの4言語ケース検索でもカテゴリと端末識別�
     assert.match(query, new RegExp(`"${brand}"\\*`, 'i'), input);
   }
 });
+
+test('4言語のワンピース検索はサイズ表現に左右されず商品カテゴリを保持する', () => {
+  const cases = [
+    'MではなくLサイズの黒いワンピース',
+    'a black dress in size L, not M',
+    '不要M码，要L码黑色连衣裙',
+    'M사이즈 말고 L사이즈 검정 원피스',
+  ];
+  for (const input of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"dress"\*/, input);
+    assert.match(query, /"black"\*/, input);
+  }
+});

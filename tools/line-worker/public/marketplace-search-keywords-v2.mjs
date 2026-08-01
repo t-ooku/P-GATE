@@ -193,6 +193,28 @@ const GENERIC_MATERIALS = [
   ['シリコン', /(?:シリコン|\bsilicone\b|硅胶|矽膠|실리콘)/iu],
 ];
 
+const APPAREL_PRODUCTS = new Set([
+  '靴下 socks', '帽子', 'バッグ', 'スニーカー', 'ワンピース', 'トップス',
+]);
+
+function apparelSizeTokens(query) {
+  const matches = [
+    ...query.matchAll(/(?:サイズ\s*|size\s+|in\s+size\s+|尺码\s*|尺碼\s*|사이즈\s*)(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL)/giu),
+    ...query.matchAll(/(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL)\s*(?:サイズ|码|碼|사이즈)/giu),
+    ...query.matchAll(/(フリー\s*サイズ|free\s*size|均码|均碼|프리\s*사이즈)/giu),
+  ];
+  const tokens = matches
+    .filter((match) => {
+      const escaped = match[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return !isNegatedAttribute(query, new RegExp(escaped, 'iu'));
+    })
+    .map((match) => /フリー|free|均码|均碼|프리/iu.test(match[0])
+      ? 'FREEサイズ'
+      : `サイズ${String(match[1] || '').toUpperCase()}`)
+    .filter((value) => value !== 'サイズ');
+  return [...new Set(tokens)];
+}
+
 function isNegatedAttribute(query, pattern) {
   const flags = [...new Set(`${pattern.flags}g`.split(''))].join('');
   const matcher = new RegExp(pattern.source, flags);
@@ -254,11 +276,15 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const attributes = matchedAttributes(normalized)
     .filter((label) => !products.some((product) => product.includes(label)));
   const specifications = specificationTokens(normalized);
+  const sizes = products.some((product) => APPAREL_PRODUCTS.has(product))
+    ? apparelSizeTokens(normalized)
+    : [];
   const limit = marketplace === 'QOO10_JP' ? 3 : 6;
   const productLimit = Math.min(products.length, 2);
   const attributeLimit = Math.max(0, limit - productLimit);
   const conditions = [...new Set([
     ...specifications,
+    ...sizes,
     ...materials,
     ...attributes,
   ])].slice(0, attributeLimit);
