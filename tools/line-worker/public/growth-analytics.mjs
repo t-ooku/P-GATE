@@ -1,10 +1,22 @@
 const params = new URLSearchParams(location.search);
-const attribution = {
+const ATTRIBUTION_KEY = 'hoshilu_growth_attribution_v1';
+const VISIT_KEY = 'hoshilu_growth_last_visit_v1';
+const freshAttribution = {
   source: params.get('utm_source') || '',
   medium: params.get('utm_medium') || '',
   campaign: params.get('utm_campaign') || params.get('campaign') || '',
   content: params.get('utm_content') || ''
 };
+const hasFreshAttribution = Object.values(freshAttribution).some(Boolean);
+let storedAttribution = {};
+try { storedAttribution = JSON.parse(sessionStorage.getItem(ATTRIBUTION_KEY) || '{}'); } catch {}
+const attribution = hasFreshAttribution ? freshAttribution : {
+  source: storedAttribution.source || '', medium: storedAttribution.medium || '',
+  campaign: storedAttribution.campaign || '', content: storedAttribution.content || ''
+};
+if (hasFreshAttribution) {
+  try { sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(freshAttribution)); } catch {}
+}
 window.HoshiluGrowthAttribution = Object.freeze({ ...attribution });
 const locale = () => String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
 const send = (event_type, extra = {}) => {
@@ -15,11 +27,18 @@ const send = (event_type, extra = {}) => {
   }
   fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
 };
+window.HoshiluTrackGrowth = send;
 
 send('landing_view');
+try {
+  const previous = Number(localStorage.getItem(VISIT_KEY) || 0);
+  const now = Date.now();
+  if (previous && now - previous >= 30 * 60 * 1000) send('return_visit');
+  localStorage.setItem(VISIT_KEY, String(now));
+} catch {}
 
 document.addEventListener('submit', event => {
-  if (event.target?.id === 'knowledgeForm') send('search_started');
+  if (event.target?.matches?.('#knowledgeForm,[data-growth-search]')) send('search_started');
 });
 
 document.addEventListener('click', event => {

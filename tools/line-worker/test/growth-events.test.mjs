@@ -28,6 +28,12 @@ test('rejects unknown event types and marketplace values', () => {
   assert.equal(normalizeGrowthEvent({ event_type: 'landing_view', marketplace: 'unknown' }).marketplace, '');
 });
 
+test('accepts acquisition funnel events without personal data', () => {
+  for (const event_type of ['registration_started', 'registration_completed', 'return_visit', 'pwa_install_prompted', 'pwa_install_completed']) {
+    assert.equal(normalizeGrowthEvent({ event_type, content: 'email' }).event_type, event_type);
+  }
+});
+
 test('separates QA, attributed, and unattributed growth traffic', () => {
   assert.equal(classifyGrowthTraffic({
     source: 'codex_acceptance',

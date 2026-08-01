@@ -2,6 +2,11 @@ const EVENTS = new Set([
   'landing_view',
   'search_started',
   'search_completed',
+  'registration_started',
+  'registration_completed',
+  'return_visit',
+  'pwa_install_prompted',
+  'pwa_install_completed',
   'wish_saved',
   'marketplace_click',
   'share_started'

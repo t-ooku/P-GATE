@@ -49,10 +49,12 @@ export function renderSeoPage(pathname) {
 <title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${canonical}"><link rel="alternate" hreflang="${locale}" href="${canonical}">
 <link rel="alternate" hreflang="${alternate}" href="${ORIGIN}/${alternate}/${slug}"><link rel="alternate" hreflang="x-default" href="${ORIGIN}/en/${slug}">
+<meta property="og:type" content="website"><meta property="og:title" content="${esc(title)} | HOSHILU"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}">
+<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage', name: title, description, url: canonical, isPartOf: { '@type': 'WebSite', name: 'HOSHILU', url: `${ORIGIN}/` } }).replace(/</g, '\\u003c')}</script>
 <link rel="stylesheet" href="/styles.css"></head>
 <body><main class="shell"><section class="hero"><p class="eyebrow">HOSHILU</p><h1>${esc(title)}</h1><p>${esc(description)}</p>
-<form action="/" method="get"><label for="seo-search">${esc(searchLabel)}</label><textarea id="seo-search" name="q" required maxlength="500"></textarea><button type="submit">${esc(submit)}</button></form>
+<form action="/" method="get" data-growth-search><label for="seo-search">${esc(searchLabel)}</label><textarea id="seo-search" name="q" required maxlength="200"></textarea><button type="submit">${esc(submit)}</button></form>
 </section><section><h2>${esc(faqTitle)}</h2><p>${esc(body)}</p><details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>
-<p><a href="/">${locale === 'ja' ? 'HOSHILUの検索画面へ' : 'Open HOSHILU search'}</a> · <a href="/login.html">MYWISH</a></p></section></main></body></html>`;
+<p><a href="/">${locale === 'ja' ? 'HOSHILUの検索画面へ' : 'Open HOSHILU search'}</a> · <a href="/login.html">${locale === 'ja' ? '無料会員になる' : 'Create a free account'}</a></p></section></main><script type="module" src="/growth-analytics.mjs"></script></body></html>`;
 }
 
