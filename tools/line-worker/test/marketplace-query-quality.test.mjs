@@ -341,6 +341,21 @@ test('エアフライヤー本体は容量・温度・バスケット・洗浄�
   }
 });
 
+test('全自動エスプレッソマシンは圧力・容量・内蔵機能を4言語で保持する', () => {
+  const queries = [
+    '15bar 1.5L 内蔵グラインダー ミルクフォーマー 全自動エスプレッソマシン',
+    'fully automatic espresso machine 15bar 1.5L built-in grinder milk frother',
+    '15bar 1.5L 内置磨豆机 奶泡器 全自动意式咖啡机',
+    '15bar 1.5L 내장 그라인더 우유 거품기 전자동 에스프레소 머신',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '全自動エスプレッソマシン 15bar 1.5L 内蔵グラインダー ミルクフォーマー', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

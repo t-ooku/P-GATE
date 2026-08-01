@@ -1358,6 +1358,30 @@ test('エアフライヤー本体は4言語で容量・温度・バスケット�
   }
 });
 
+test('全自動エスプレッソマシンは4言語で抽出条件が一致する本体だけを提示する', () => {
+  const queries = [
+    '15bar 1.5L 内蔵グラインダー ミルクフォーマー 全自動エスプレッソマシン',
+    'fully automatic espresso machine 15bar 1.5L built-in grinder milk frother',
+    '15bar 1.5L 内置磨豆机 奶泡器 全自动意式咖啡机',
+    '15bar 1.5L 내장 그라인더 우유 거품기 전자동 에스프레소 머신',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Fully Automatic Espresso Machine 15bar 1.5L Built-in Grinder Milk Frother' },
+    { asin: 'LOWPRESSURE', product_name: 'Fully Automatic Espresso Machine 9bar 1.5L Built-in Grinder Milk Frother' },
+    { asin: 'SMALL', product_name: 'Fully Automatic Espresso Machine 15bar 1.0L Built-in Grinder Milk Frother' },
+    { asin: 'NOGRINDER', product_name: 'Fully Automatic Espresso Machine 15bar 1.5L Milk Frother' },
+    { asin: 'NOFROTHER', product_name: 'Fully Automatic Espresso Machine 15bar 1.5L Built-in Grinder' },
+    { asin: 'CAPSULE', product_name: 'Fully Automatic Capsule Espresso Machine 15bar 1.5L Built-in Grinder Milk Frother' },
+    { asin: 'DRIP', product_name: 'Fully Automatic Drip Coffee Machine 15bar 1.5L Built-in Grinder Milk Frother' },
+    { asin: 'GRINDER', product_name: 'Grinder Only for Fully Automatic Espresso Machine 15bar 1.5L Milk Frother' },
+    { asin: 'CLEANER', product_name: 'Cleaning Tablets for Fully Automatic Espresso Machine 15bar 1.5L Built-in Grinder Milk Frother' },
+    { asin: 'PART', product_name: 'Replacement Parts for Fully Automatic Espresso Machine 15bar 1.5L Built-in Grinder Milk Frother' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

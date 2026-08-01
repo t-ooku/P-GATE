@@ -287,6 +287,21 @@ function buildAirFryerBodySearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildAutomaticEspressoMachineSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const machine = /(?:全自動.{0,16}エスプレッソマシン|fully[- ]?automatic.{0,16}espresso\s*machine|全自动.{0,16}意式咖啡机|全自動.{0,16}義式咖啡機|전자동.{0,16}에스프레소\s*머신)/iu.test(normalized);
+  if (!machine) return '';
+  if (/(?:カプセル|capsules?|pods?|胶囊|膠囊|캡슐|ドリップ|drip|滴漏|드립)/iu.test(normalized)) return '';
+  const pressure = normalized.match(/\b(\d{1,2})\s*bar\b/iu)?.[1];
+  const capacity = normalized.match(/\b(\d(?:\.\d)?)\s*l\b/iu)?.[1];
+  const grinder = /(?:内蔵|built[- ]?in|内置|내장).{0,12}(?:グラインダー|grinder|磨豆机|磨豆機|그라인더)/iu.test(normalized)
+    ? '内蔵グラインダー' : '';
+  const frother = /(?:ミルクフォーマー|milk\s*frother|奶泡器|우유\s*거품기)/iu.test(normalized)
+    ? 'ミルクフォーマー' : '';
+  if (!pressure || !capacity || !grinder || !frother) return '';
+  return ['全自動エスプレッソマシン', `${pressure}bar`, `${capacity}L`, grinder, frother].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1074,6 +1089,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawShaverReplacement) return rawShaverReplacement;
   const rawCoffeeCapsule = buildCoffeeCapsuleSearchKeywords(rawNormalized);
   if (rawCoffeeCapsule) return rawCoffeeCapsule;
+  const rawAutomaticEspressoMachine = buildAutomaticEspressoMachineSearchKeywords(rawNormalized);
+  if (rawAutomaticEspressoMachine) return rawAutomaticEspressoMachine;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
