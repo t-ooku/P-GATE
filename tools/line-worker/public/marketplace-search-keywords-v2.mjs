@@ -186,6 +186,30 @@ function refrigeratorWaterFilterIdentity(query) {
   return '';
 }
 
+function detergentPodIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  if (/(?:finish|フィニッシュ|亮碟|피니시)/iu.test(value)) return 'Finish';
+  if (/(?:cascade|カスケード|캐스케이드)/iu.test(value)) return /platinum\s*plus/iu.test(value) ? 'Cascade Platinum Plus' : 'Cascade';
+  if (/(?:joy|ジョイ)/iu.test(value)) return 'Joy';
+  if (/(?:ariel|アリエール|碧浪|아리엘)/iu.test(value)) return 'Ariel';
+  if (/(?:tide|汰渍|汰漬|타이드)/iu.test(value)) return 'Tide PODS';
+  if (/(?:bold|ボールド|볼드)/iu.test(value)) return 'Bold';
+  return '';
+}
+
+function buildDetergentPodSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const dishwasher = /(?:食洗機|食器洗い機|dishwasher|洗碗机|洗碗機|식기세척기)/iu.test(normalized)
+    && /(?:洗剤|detergent|タブレット|tabs?|tablets?|pods?|凝珠|세제|타블렛|캡슐)/iu.test(normalized);
+  const laundry = /(?:洗濯|laundry|洗衣|세탁)/iu.test(normalized)
+    && /(?:洗剤|detergent|ジェルボール|pods?|capsules?|凝珠|세제|젤볼|캡슐)/iu.test(normalized);
+  if (!dishwasher && !laundry) return '';
+  const identity = detergentPodIdentity(normalized);
+  if (!identity) return '';
+  const count = normalized.match(/(\d+)\s*(?:個|錠|粒|tabs?|tablets?|pods?|capsules?|count|pcs|pieces|颗|顆|개|정|캡슐)/iu)?.[1];
+  return [identity, dishwasher ? '食洗機用洗剤タブレット' : '洗濯用洗剤ジェルボール', count ? `${count}個入り` : ''].filter(Boolean).join(' ');
+}
+
 function buildRefrigeratorWaterFilterSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const filter = /(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터)/iu.test(normalized);
@@ -748,6 +772,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (dysonVacuumAccessory) return dysonVacuumAccessory;
   const airPurifierFilter = buildAirPurifierFilterSearchKeywords(normalized);
   if (airPurifierFilter) return airPurifierFilter;
+  const detergentPod = buildDetergentPodSearchKeywords(normalized);
+  if (detergentPod) return detergentPod;
   const refrigeratorWaterFilter = buildRefrigeratorWaterFilterSearchKeywords(normalized);
   if (refrigeratorWaterFilter) return refrigeratorWaterFilter;
   const waterFilterCartridge = buildWaterFilterCartridgeSearchKeywords(normalized);

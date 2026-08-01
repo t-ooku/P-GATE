@@ -1019,3 +1019,17 @@ test('冷蔵庫給水フィルターは4言語の型番・純正・個数を全�
     }
   }
 });
+
+test('食洗機タブレットと洗濯ジェルボールを4言語で分離して個数を保持する', () => {
+  const cases = [
+    ['フィニッシュ オールインワン 食洗機用洗剤 タブレット 60個', 'Finish 食洗機用洗剤タブレット 60個入り'],
+    ['Cascade Platinum Plus dishwasher detergent pods 52 count', 'Cascade Platinum Plus 食洗機用洗剤タブレット 52個入り'],
+    ['汰渍 Tide PODS 洗衣凝珠 42颗', 'Tide PODS 洗濯用洗剤ジェルボール 42個入り'],
+    ['아리엘 젤볼 세탁세제 92개', 'Ariel 洗濯用洗剤ジェルボール 92個入り'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});

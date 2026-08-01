@@ -1759,6 +1759,30 @@ test('冷蔵庫給水フィルターは本体・別型番・互換品・個数�
   }
 });
 
+test('食洗機タブレットと洗濯ジェルボールは用途・ブランド・個数違いを除外する', () => {
+  const candidates = [
+    { asin: 'FINISH60', product_name: 'Finish 食洗機用洗剤 タブレット 60個' },
+    { asin: 'FINISH30', product_name: 'Finish 食洗機用洗剤 タブレット 30個' },
+    { asin: 'CASCADE52', product_name: 'Cascade Platinum Plus dishwasher detergent pods 52 count' },
+    { asin: 'CASCADE_BASIC', product_name: 'Cascade Complete dishwasher detergent pods 52 count' },
+    { asin: 'TIDE42', product_name: 'Tide PODS 洗衣凝珠 42颗' },
+    { asin: 'TIDE_DISH', product_name: 'Tide dishwasher detergent pods 42 count' },
+    { asin: 'ARIEL92', product_name: '아리엘 젤볼 세탁세제 92개' },
+    { asin: 'ARIEL_DISH', product_name: '아리엘 식기세척기 세제 캡슐 92개' },
+    { asin: 'POWDER', product_name: 'Ariel 粉末洗濯洗剤 92回分' },
+  ];
+  const cases = [
+    ['フィニッシュ オールインワン 食洗機用洗剤 タブレット 60個', ['FINISH60'], 'dishwasher-detergent-tablet'],
+    ['Cascade Platinum Plus dishwasher detergent pods 52 count', ['CASCADE52'], 'dishwasher-detergent-tablet'],
+    ['汰渍 Tide PODS 洗衣凝珠 42颗', ['TIDE42'], 'laundry-detergent-pod'],
+    ['아리엘 젤볼 세탁세제 92개', ['ARIEL92'], 'laundry-detergent-pod'],
+  ];
+  for (const [query, expected, category] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), [category], query);
+  }
+});
+
 test('プリンターインクは本体・別型番・別品番・純正互換・色数違いを除外する', () => {
   const candidates = [
     { asin: 'CANON', product_name: 'Canon PIXUS TS8730 純正インク BCI-331+330 6色セット' },

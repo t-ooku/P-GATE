@@ -54,6 +54,8 @@ const RULES = [
   ['cordless-vacuum',/(?:dyson|ダイソン|戴森|다이슨).{0,20}(?:コードレス(?:掃除機)?|vacuum|吸尘器|吸塵器|무선\s*청소기)/iu,['dyson cordless vacuum','vacuum cleaner']],
   ['air-purifier-filter',/(?:(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성).{0,40}(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터)|(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터).{0,40}(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성))/iu,['air purifier replacement filter','hepa filter']],
   ['air-purifier',/(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기)/iu,['air purifier','air cleaner']],
+  ['dishwasher-detergent-tablet',/(?:(?:finish|フィニッシュ|亮碟|피니시|cascade|カスケード|캐스케이드|joy|ジョイ).{0,45}(?:食洗機|食器洗い機|dishwasher|洗碗机|洗碗機|식기세척기).{0,25}(?:タブレット|tabs?|tablets?|pods?|凝珠|세제|타블렛|캡슐)|(?:食洗機|食器洗い機|dishwasher|洗碗机|洗碗機|식기세척기).{0,25}(?:洗剤|detergent|タブレット|tabs?|tablets?|pods?|凝珠|세제|타블렛|캡슐))/iu,['dishwasher detergent tablets','dishwasher pods']],
+  ['laundry-detergent-pod',/(?:(?:ariel|アリエール|碧浪|아리엘|tide|汰渍|汰漬|타이드|bold|ボールド|볼드).{0,45}(?:洗濯|laundry|洗衣|세탁).{0,25}(?:ジェルボール|pods?|capsules?|凝珠|세제|젤볼|캡슐)|(?:洗濯|laundry|洗衣|세탁).{0,25}(?:ジェルボール|pods?|capsules?|凝珠|세제|젤볼|캡슐))/iu,['laundry detergent pods','laundry capsules']],
   ['refrigerator-water-filter',/(?:(?:samsung|三星|삼성|\bLG\b|엘지|\bGE\b|通用电气|通用電氣|whirlpool|ワールプール|惠而浦|월풀|HAF[- ]?QIN|LT1000P|RPWFE|EDR1RXD1).{0,50}(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터)|(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터).{0,50}(?:samsung|三星|삼성|\bLG\b|엘지|\bGE\b|通用电气|通用電氣|whirlpool|ワールプール|惠而浦|월풀|HAF[- ]?QIN|LT1000P|RPWFE|EDR1RXD1))/iu,['refrigerator water filter','fridge filter']],
   ['water-filter-cartridge',/(?:(?:brita|ブリタ|toray|東レ|东丽|東麗|cleansui|クリンスイ|可菱水|panasonic|パナソニック|松下|파나소닉|浄水器|water\s*(?:filter|purifier)|净水器|淨水器|정수기).{0,40}(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)|(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지).{0,40}(?:brita|ブリタ|toray|東レ|东丽|東麗|cleansui|クリンスイ|可菱水|panasonic|パナソニック|松下|파나소닉|浄水器|water\s*(?:filter|purifier)|净水器|淨水器|정수기))/iu,['water filter replacement cartridge','purifier cartridge']],
   ['water-purifier',/(?:浄水器|water\s*purifier|净水器|淨水器|정수기)/iu,['water purifier','water filter system']],
@@ -317,6 +319,8 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('air-purifier-filter')) groups = groups.filter((group) => group.category !== 'air-purifier');
   if (specificCategories.has('water-filter-cartridge')) groups = groups.filter((group) => group.category !== 'water-purifier');
   if (specificCategories.has('refrigerator-water-filter')) groups = groups.filter((group) => !['air-purifier-filter','air-purifier','water-filter-cartridge','water-purifier'].includes(group.category));
+  if (specificCategories.has('dishwasher-detergent-tablet')) groups = groups.filter((group) => !['laundry-detergent-pod','home-use','tablet'].includes(group.category));
+  if (specificCategories.has('laundry-detergent-pod')) groups = groups.filter((group) => !['dishwasher-detergent-tablet','home-use'].includes(group.category));
   if (specificCategories.has('printer-ink')) groups = groups.filter((group) => !['printer','photo-printer'].includes(group.category));
   if (specificCategories.has('electric-toothbrush-head')) groups = groups.filter((group) => group.category !== 'electric-toothbrush');
   if (specificCategories.has('shaver-replacement-blade') || specificCategories.has('shaver-cleaning-cartridge')) groups = groups.filter((group) => group.category !== 'electric-shaver');
@@ -386,7 +390,7 @@ export function semanticSearchGroups(value) {
     'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light',
     'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver','coffee-capsule','capsule-coffee-maker',
     'camera-battery','camera-battery-charger','tool-battery','tool-battery-charger','label-tape','label-maker',
-    'air-fryer-liner','air-fryer','vacuum-dust-bag','vacuum-cleaner'
+    'air-fryer-liner','air-fryer','vacuum-dust-bag','vacuum-cleaner','dishwasher-detergent-tablet','laundry-detergent-pod'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES
     .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))
