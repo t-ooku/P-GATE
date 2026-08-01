@@ -2,6 +2,9 @@ import { isMarketplaceProductUrl, PRODUCT_MARKETPLACES } from './marketplace-pro
 
 const MARKETPLACES = PRODUCT_MARKETPLACES;
 const MARKETPLACE_SET = new Set(MARKETPLACES);
+const RIGHTS_GATED_MARKETPLACES = new Set([
+  'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+]);
 const clean = (value, max = 500) => String(value ?? '').normalize('NFKC')
   .replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
 
@@ -35,6 +38,17 @@ export function validateMarketplaceOfferFeed(payload = {}) {
       const asin = clean(record.asin, 20).toUpperCase();
       const externalProductId = clean(record.external_product_id, 160);
       if (!externalProductId) throw new Error('OFFER_FEED_EXTERNAL_PRODUCT_ID_REQUIRED');
+      const dataRightsStatus = clean(record.data_rights_status, 24).toUpperCase();
+      const rightsReference = clean(record.rights_reference, 500);
+      if (RIGHTS_GATED_MARKETPLACES.has(marketplace)) {
+        if (dataRightsStatus !== 'APPROVED') throw new Error('OFFER_FEED_DATA_RIGHTS_NOT_APPROVED');
+        try {
+          const reference = new URL(rightsReference);
+          if (reference.protocol !== 'https:' || reference.username || reference.password) throw new Error();
+        } catch {
+          throw new Error('OFFER_FEED_RIGHTS_REFERENCE_INVALID');
+        }
+      }
       if (!recordKey && !/^[A-Z0-9]{10}$/.test(asin)) throw new Error('OFFER_FEED_MATCH_KEY_REQUIRED');
       if (asin && !/^[A-Z0-9]{10}$/.test(asin)) throw new Error('OFFER_FEED_ASIN_INVALID');
       return {
@@ -49,7 +63,9 @@ export function validateMarketplaceOfferFeed(payload = {}) {
         stock_status: clean(record.stock_status || 'UNKNOWN', 24).toUpperCase(),
         active: record.active === false ? 0 : 1,
         observed_at: normalizeObservedAt(record.observed_at),
-        source: clean(record.source || 'partner_feed', 80)
+        source: clean(record.source || 'partner_feed', 80),
+        data_rights_status: dataRightsStatus || 'UNSPECIFIED',
+        rights_reference: rightsReference
       };
     })
   };
@@ -151,15 +167,17 @@ export async function syncMarketplaceOffers(request, env) {
   if (!authorized(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
   try {
     const input = validateMarketplaceOfferFeed(await request.json());
-    const sql = `INSERT INTO marketplace_offers(tenant,record_key,asin,marketplace,external_product_id,seller_id,product_url,price,currency,stock_status,active,observed_at,source)
-      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)
+    const sql = `INSERT INTO marketplace_offers(tenant,record_key,asin,marketplace,external_product_id,seller_id,product_url,price,currency,stock_status,active,observed_at,source,data_rights_status,rights_reference)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)
       ON CONFLICT(tenant,marketplace,external_product_id,seller_id) DO UPDATE SET
       record_key=excluded.record_key,asin=excluded.asin,product_url=excluded.product_url,price=excluded.price,currency=excluded.currency,
-      stock_status=excluded.stock_status,active=excluded.active,observed_at=excluded.observed_at,source=excluded.source`;
+      stock_status=excluded.stock_status,active=excluded.active,observed_at=excluded.observed_at,source=excluded.source,
+      data_rights_status=excluded.data_rights_status,rights_reference=excluded.rights_reference`;
     const statement = env.PRODUCT_DB.prepare(sql);
     const results = await env.PRODUCT_DB.batch(input.records.map((row) => statement.bind(
       input.tenant, row.record_key, row.asin, row.marketplace, row.external_product_id, row.seller_id,
-      row.product_url, row.price, row.currency, row.stock_status, row.active, row.observed_at, row.source
+      row.product_url, row.price, row.currency, row.stock_status, row.active, row.observed_at, row.source,
+      row.data_rights_status, row.rights_reference
     )));
     return Response.json({
       ok: true,

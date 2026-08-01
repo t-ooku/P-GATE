@@ -69,6 +69,18 @@ test('marketplace offer stats reports safe attachment counts without exposing pr
  assert.match(sql,/EXISTS\(\s*SELECT 1 FROM products/);
 });
 
+test('追加5モールは商品データ利用承認とHTTPS根拠を必須にする',()=>{
+ const base={tenant:'itg',batch_id:'rights-gated-20260801',records:[{
+  record_key:'fashion-1',marketplace:'SNKRDUNK_JP',external_product_id:'123456',
+  product_url:'https://snkrdunk.com/products/123456',source:'authorized_partner_feed'
+ }]};
+ assert.throws(()=>validateMarketplaceOfferFeed(base),/DATA_RIGHTS_NOT_APPROVED/);
+ assert.throws(()=>validateMarketplaceOfferFeed({...base,records:[{...base.records[0],data_rights_status:'APPROVED',rights_reference:'internal-note'}]}),/RIGHTS_REFERENCE_INVALID/);
+ const result=validateMarketplaceOfferFeed({...base,records:[{...base.records[0],data_rights_status:'APPROVED',rights_reference:'https://partner.example/approval/123'}]});
+ assert.equal(result.records[0].data_rights_status,'APPROVED');
+ assert.equal(result.records[0].rights_reference,'https://partner.example/approval/123');
+});
+
 test('商品URL診断は取込・再確認・照合の次アクションをモール別に返す',()=>{
  const diagnostics=buildMarketplaceOfferDiagnostics([
   {marketplace:'RAKUTEN_JP',matched_fresh_available:4,unmatched_fresh_available:0,stale_available:0},
@@ -90,6 +102,22 @@ test('marketplace offer stats requires the existing sync secret',async()=>{
  const env={MARKETPLACE_OFFER_SYNC_SECRET:'x'.repeat(32),PRODUCT_DB:{prepare:()=>{throw new Error('must not query')}}};
  const response=await marketplaceOfferStats(new Request('https://hoshilu.app/api/internal/marketplace-offers/stats'),env);
  assert.equal(response.status,401);
+});
+
+test('商品データ権利の承認状態と根拠を監査用に保存する契約を持つ',async()=>{
+ let sql=''; let values=[];
+ const env={MARKETPLACE_OFFER_SYNC_SECRET:'x'.repeat(32),PRODUCT_DB:{
+  prepare:(value)=>{sql=value;return{bind:(...input)=>{values=input;return{};}}},
+  batch:async(statements)=>statements.map(()=>({meta:{changes:1}}))
+ }};
+ const response=await (await import('../src/marketplace-offer-feed.mjs')).syncMarketplaceOffers(new Request('https://hoshilu.app/api/internal/marketplace-offers/sync',{
+  method:'POST',headers:{authorization:`Bearer ${'x'.repeat(32)}`,'content-type':'application/json'},body:JSON.stringify({
+   tenant:'itg',batch_id:'rights-audit-20260801',records:[{record_key:'fashion-1',marketplace:'BUYMA_JP',external_product_id:'123456789',product_url:'https://www.buyma.com/item/123456789/',data_rights_status:'APPROVED',rights_reference:'https://partner.example/approval/456'}]
+  })
+ }),env);
+ assert.equal(response.status,200);
+ assert.match(sql,/data_rights_status,rights_reference/);
+ assert.deepEqual(values.slice(-2),['APPROVED','https://partner.example/approval/456']);
 });
 
 test('商品URLの確認日時はISO形式へ正規化し、不正値と未来日時を拒否する',()=>{

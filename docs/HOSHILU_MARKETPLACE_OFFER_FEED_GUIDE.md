@@ -25,6 +25,8 @@ SecretはCloudflare Workersへ登録し、ファイル、ログ、チャット�
 
 完全な例は [hoshilu-marketplace-offers.sample.json](examples/hoshilu-marketplace-offers.sample.json) を参照してください。
 
+ZOZOTOWN、SHOPLIST、MUSINSA、BUYMA、SNKRDUNKは、URLが正しいだけでは取り込めません。各レコードに `data_rights_status: "APPROVED"` と、契約・媒体承認・正式フィード仕様などを確認できるHTTPSの `rights_reference` が必要です。未申請・審査中・口頭確認だけのデータは取り込みません。
+
 送信前にローカル検査できます。成功時はURL本文を表示せず、テナント・バッチID・モール別件数・不足モール・7日超の再確認対象件数だけを出力します。
 
 ```powershell

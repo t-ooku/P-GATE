@@ -34,6 +34,7 @@ Amazon、楽天市場、Qoo10、SHEIN、ZOZOTOWN、SHOPLIST、MUSINSA、BUYMA、
 - `observed_at` はISO 8601で保存し、未来日時を拒否する。
 - 在庫切れ・停止・7日超のURLを公開候補から除外する。
 - 未承認の追跡パラメータや推測したアフィリエイトIDを付与しない。
+- 追加5モールは `data_rights_status: APPROVED` とHTTPSの `rights_reference` がないレコードを拒否する。
 
 ## 診断状態
 
