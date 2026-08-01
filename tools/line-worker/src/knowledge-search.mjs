@@ -1093,6 +1093,34 @@ function isWifi7MeshRouterMismatch(candidate, requested) {
   return false;
 }
 
+function fdm3dPrinterConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  const volume = text.match(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*[x×]\s*(\d{2,3})\s*mm\b/iu);
+  return {
+    printer: /(?:3Dプリンター|3D\s*printer|3D打印机|3D打印機|3D\s*프린터)/iu.test(text),
+    corexy: /CoreXY/iu.test(text),
+    volume: volume ? `${volume[1]}x${volume[2]}x${volume[3]}` : '',
+    speed: text.match(/\b(\d{2,4})\s*mm\s*\/\s*s\b/iu)?.[1] || '',
+    autoLeveling: /(?:自動レベリング|auto(?:matic)?\s*(?:bed\s*)?leveling|自动调平|自動調平|자동\s*레벨링)/iu.test(text),
+    enclosed: /(?:密閉(?:型|筐体)?|enclosed|封闭式|封閉式|밀폐형)/iu.test(text),
+    wrongProduct: /(?:3D\s*printer\s*filament|3Dプリンター用フィラメント|3D打印耗材|3D列印線材|3D\s*프린터\s*필라멘트|replacement\s*nozzle|交換ノズル|替换喷嘴|替換噴嘴|교체용\s*노즐|filament\s*dryer|フィラメント乾燥機|耗材烘干机|線材乾燥機|필라멘트\s*건조기|UV\s*resin|光造形レジン|光敏树脂|光敏樹脂|광경화\s*레진|3D\s*printed\s*(?:model|figure)|3Dプリント完成品|3D打印成品|3D列印成品|3D\s*프린팅\s*완성품)/iu.test(text)
+  };
+}
+
+function isFdm3dPrinterMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = fdm3dPrinterConstraints(text);
+  if (!evidence.printer || evidence.wrongProduct) return true;
+  for (const field of ['volume', 'speed']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const field of ['corexy', 'autoLeveling', 'enclosed']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1965,6 +1993,10 @@ export function filterCategoryMismatches(query, candidates = []) {
   const wifi7MeshRouterIntent = wifi7MeshRouter.meshRouter && wifi7MeshRouter.wifi7
     && Boolean(wifi7MeshRouter.speed && wifi7MeshRouter.triBand && wifi7MeshRouter.pack && wifi7MeshRouter.ethernet)
     && !wifi7MeshRouter.wrongProduct;
+  const fdm3dPrinter = fdm3dPrinterConstraints(normalizedQuery);
+  const fdm3dPrinterIntent = fdm3dPrinter.printer && fdm3dPrinter.corexy
+    && Boolean(fdm3dPrinter.volume && fdm3dPrinter.speed && fdm3dPrinter.autoLeveling && fdm3dPrinter.enclosed)
+    && !fdm3dPrinter.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1976,7 +2008,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
-    && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent) return candidates;
+    && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2053,6 +2085,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (gamingLaptopIntent) return !isGamingLaptopMismatch(candidate, gamingLaptop);
     if (nasIntent) return !isNasMismatch(candidate, nas);
     if (wifi7MeshRouterIntent) return !isWifi7MeshRouterMismatch(candidate, wifi7MeshRouter);
+    if (fdm3dPrinterIntent) return !isFdm3dPrinterMismatch(candidate, fdm3dPrinter);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

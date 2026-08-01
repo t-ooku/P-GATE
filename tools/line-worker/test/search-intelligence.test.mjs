@@ -1659,6 +1659,31 @@ test('Wi-Fi 7メッシュルーターは4言語で速度・帯域・台数・有
   }
 });
 
+test('FDM 3Dプリンターは4言語で方式・造形サイズ・速度・調整・筐体条件が一致する本体だけを提示する', () => {
+  const queries = [
+    'CoreXY 3Dプリンター 256×256×256mm 600mm/s 自動レベリング 密閉型',
+    'CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed',
+    'CoreXY 3D打印机 256×256×256mm 600mm/s 自动调平 封闭式',
+    'CoreXY 3D 프린터 256×256×256mm 600mm/s 자동 레벨링 밀폐형',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed' },
+    { asin: 'BED', product_name: 'CoreXY 3D printer 220x220x250 mm 600 mm/s automatic bed leveling enclosed' },
+    { asin: 'SLOW', product_name: 'CoreXY 3D printer 256x256x256 mm 300 mm/s automatic bed leveling enclosed' },
+    { asin: 'MANUAL', product_name: 'CoreXY 3D printer 256x256x256 mm 600 mm/s manual leveling enclosed' },
+    { asin: 'OPEN', product_name: 'CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling open frame' },
+    { asin: 'CARTESIAN', product_name: 'Cartesian 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed' },
+    { asin: 'FILAMENT', product_name: '3D printer filament for CoreXY 256x256x256 mm 600 mm/s automatic bed leveling enclosed' },
+    { asin: 'NOZZLE', product_name: 'Replacement nozzle for CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed' },
+    { asin: 'DRYER', product_name: 'Filament dryer for CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed' },
+    { asin: 'RESIN', product_name: 'UV resin for CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed' },
+    { asin: 'MODEL', product_name: '3D printed model made by CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

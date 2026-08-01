@@ -448,6 +448,18 @@ function buildWifi7MeshRouterSearchKeywords(query) {
   return ['Wi-Fi 7 メッシュルーター', speed, 'トライバンド', `${pack}台セット`, `${ethernet}GbE`].join(' ');
 }
 
+function buildFdm3dPrinterSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const printer = /(?:3Dプリンター|3D\s*printer|3D打印机|3D打印機|3D\s*프린터)/iu.test(normalized);
+  const corexy = /CoreXY/iu.test(normalized);
+  const volume = normalized.match(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*[x×]\s*(\d{2,3})\s*mm\b/iu);
+  const speed = normalized.match(/\b(\d{2,4})\s*mm\s*\/\s*s\b/iu)?.[1];
+  const autoLeveling = /(?:自動レベリング|auto(?:matic)?\s*(?:bed\s*)?leveling|自动调平|自動調平|자동\s*레벨링)/iu.test(normalized);
+  const enclosed = /(?:密閉(?:型|筐体)?|enclosed|封闭式|封閉式|밀폐형)/iu.test(normalized);
+  if (!printer || !corexy || !volume || !speed || !autoLeveling || !enclosed) return '';
+  return ['FDM 3Dプリンター', 'CoreXY', `${volume[1]}×${volume[2]}×${volume[3]}mm`, `${speed}mm/s`, '自動レベリング', '密閉型'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1259,6 +1271,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawNas) return rawNas;
   const rawWifi7MeshRouter = buildWifi7MeshRouterSearchKeywords(rawNormalized);
   if (rawWifi7MeshRouter) return rawWifi7MeshRouter;
+  const rawFdm3dPrinter = buildFdm3dPrinterSearchKeywords(rawNormalized);
+  if (rawFdm3dPrinter) return rawFdm3dPrinter;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

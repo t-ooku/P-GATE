@@ -521,6 +521,21 @@ test('Wi-Fi 7メッシュルーターは速度・帯域・台数・有線条件�
   }
 });
 
+test('FDM 3Dプリンターは方式・造形サイズ・速度・調整・筐体条件を4言語で保持する', () => {
+  const queries = [
+    'CoreXY 3Dプリンター 256×256×256mm 600mm/s 自動レベリング 密閉型',
+    'CoreXY 3D printer 256x256x256 mm 600 mm/s automatic bed leveling enclosed',
+    'CoreXY 3D打印机 256×256×256mm 600mm/s 自动调平 封闭式',
+    'CoreXY 3D 프린터 256×256×256mm 600mm/s 자동 레벨링 밀폐형',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'FDM 3Dプリンター CoreXY 256×256×256mm 600mm/s 自動レベリング 密閉型', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [
