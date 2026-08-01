@@ -754,6 +754,32 @@ function isCordlessStickVacuumMismatch(candidate, requested) {
   return false;
 }
 
+function airFryerBodyConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    airFryer: /(?:エアフライヤー|air\s*fryer|空气炸锅|空氣炸鍋|에어프라이어)/iu.test(text),
+    capacity: text.match(/\b(\d(?:\.\d)?)\s*l\b/iu)?.[1] || '',
+    temperature: text.match(/\b(\d{3})\s*(?:℃|°\s*c|celsius|度)/iu)?.[1] || '',
+    dualBasket: /dual[- ]?basket|デュアルバスケット|双篮|雙籃|듀얼\s*바스켓/iu.test(text),
+    dishwasher: /食洗機対応|dishwasher[- ]?safe|可放洗碗机|可放洗碗機|식기세척기\s*(?:사용|세척)\s*가능/iu.test(text),
+    wrongProduct: /(?:ライナー|liners?|纸垫|紙墊|라이너|交換バスケット|replacement\s*basket|替换炸篮|替換炸籃|교체용\s*바스켓|air\s*fryer\s*oven|エアフライヤーオーブン|空气炸烤箱|空氣炸烤箱|에어프라이어\s*오븐|toaster|トースター|烤面包机|烤麵包機|토스터)/iu.test(text)
+  };
+}
+
+function isAirFryerBodyMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = airFryerBodyConstraints(text);
+  if (!evidence.airFryer || evidence.wrongProduct) return true;
+  for (const field of ['capacity', 'temperature']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const feature of ['dualBasket', 'dishwasher']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1582,6 +1608,9 @@ export function filterCategoryMismatches(query, candidates = []) {
   const cordlessStickVacuum = cordlessStickVacuumConstraints(normalizedQuery);
   const cordlessStickVacuumIntent = cordlessStickVacuum.stickVacuum
     && Boolean(cordlessStickVacuum.suction && cordlessStickVacuum.runtime);
+  const airFryerBody = airFryerBodyConstraints(normalizedQuery);
+  const airFryerBodyIntent = airFryerBody.airFryer && Boolean(airFryerBody.capacity && airFryerBody.temperature)
+    && !airFryerBody.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1589,7 +1618,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
     && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent
     && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent && !robotVacuumBodyIntent
-    && !airPurifierBodyIntent && !cordlessStickVacuumIntent) return candidates;
+    && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1649,6 +1678,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (robotVacuumBodyIntent) return !isRobotVacuumBodyMismatch(candidate, robotVacuumBody);
     if (airPurifierBodyIntent) return !isAirPurifierBodyMismatch(candidate, airPurifierBody);
     if (cordlessStickVacuumIntent) return !isCordlessStickVacuumMismatch(candidate, cordlessStickVacuum);
+    if (airFryerBodyIntent) return !isAirFryerBodyMismatch(candidate, airFryerBody);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

@@ -273,6 +273,20 @@ function buildCordlessStickVacuumSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildAirFryerBodySearchKeywords(query) {
+  if (!/(?:エアフライヤー|air\s*fryer|空气炸锅|空氣炸鍋|에어프라이어)/iu.test(query)) return '';
+  if (/(?:ライナー|liners?|纸垫|紙墊|라이너|交換バスケット|replacement\s*basket)/iu.test(query)) return '';
+  const capacity = String(query || '').match(/\b(\d(?:\.\d)?)\s*l\b/iu)?.[1];
+  const temperature = String(query || '').match(/\b(\d{3})\s*(?:℃|°\s*c|celsius|度)/iu)?.[1];
+  const dualBasket = /dual[- ]?basket|デュアルバスケット|双篮|雙籃|듀얼\s*바스켓/iu.test(query)
+    ? 'デュアルバスケット' : '';
+  const dishwasher = /食洗機対応|dishwasher[- ]?safe|可放洗碗机|可放洗碗機|식기세척기\s*(?:사용|세척)\s*가능/iu.test(query)
+    ? '食洗機対応' : '';
+  if (!capacity || !temperature || !dualBasket) return '';
+  return ['エアフライヤー', `${capacity}L`, `${temperature}℃`, dualBasket, dishwasher]
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1126,6 +1140,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (airPurifierBody) return airPurifierBody;
   const cordlessStickVacuum = buildCordlessStickVacuumSearchKeywords(normalized);
   if (cordlessStickVacuum) return cordlessStickVacuum;
+  const airFryerBody = buildAirFryerBodySearchKeywords(normalized);
+  if (airFryerBody) return airFryerBody;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

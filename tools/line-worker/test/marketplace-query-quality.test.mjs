@@ -326,6 +326,21 @@ test('コードレススティック掃除機は吸引力・稼働時間・集�
   }
 });
 
+test('エアフライヤー本体は容量・温度・バスケット・洗浄条件を4言語で保持する', () => {
+  const queries = [
+    '6L 200℃ デュアルバスケット 食洗機対応 エアフライヤー',
+    '6L dual-basket air fryer 200°C dishwasher-safe',
+    '6L 200度 双篮 可放洗碗机 空气炸锅',
+    '6L 200℃ 듀얼 바스켓 식기세척기 세척 가능 에어프라이어',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'エアフライヤー 6L 200℃ デュアルバスケット 食洗機対応', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

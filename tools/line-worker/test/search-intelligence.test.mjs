@@ -1335,6 +1335,29 @@ test('コードレススティック掃除機は4言語で吸引力・稼働時�
   }
 });
 
+test('エアフライヤー本体は4言語で容量・温度・バスケット・洗浄条件が一致する候補だけを提示する', () => {
+  const queries = [
+    '6L 200℃ デュアルバスケット 食洗機対応 エアフライヤー',
+    '6L dual-basket air fryer 200°C dishwasher-safe',
+    '6L 200度 双篮 可放洗碗机 空气炸锅',
+    '6L 200℃ 듀얼 바스켓 식기세척기 세척 가능 에어프라이어',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '6L Dual-basket Air Fryer 200°C Dishwasher-safe' },
+    { asin: 'SMALL', product_name: '4L Dual-basket Air Fryer 200°C Dishwasher-safe' },
+    { asin: 'COOL', product_name: '6L Dual-basket Air Fryer 180°C Dishwasher-safe' },
+    { asin: 'SINGLE', product_name: '6L Single-basket Air Fryer 200°C Dishwasher-safe' },
+    { asin: 'NODISHWASHER', product_name: '6L Dual-basket Air Fryer 200°C' },
+    { asin: 'LINER', product_name: '6L Dual-basket Air Fryer Liners 200°C Dishwasher-safe' },
+    { asin: 'BASKET', product_name: '6L Replacement Basket for Dual-basket Air Fryer 200°C Dishwasher-safe' },
+    { asin: 'OVEN', product_name: '6L Dual-basket Air Fryer Oven 200°C Dishwasher-safe' },
+    { asin: 'TOASTER', product_name: '6L Dual-basket Air Fryer Toaster 200°C Dishwasher-safe' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
