@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
   MARKETPLACE_INFO_TYPES, SALE_MARKETPLACES, handleMarketplaceSaleRoutes,
-  nextMarketplaceNotificationAt
+  nextMarketplaceNotificationAt, runMarketplaceContentCycle
 } from '../src/marketplace-sales.mjs';
 
 test('セール通知は掲載9モールだけを対象にする', () => {
@@ -90,4 +90,27 @@ test('商品画像はAPPROVEDになるまで公開しない契約を持つ', asy
   const source = await readFile(new URL('../src/marketplace-sales.mjs', import.meta.url), 'utf8');
   assert.match(source, /image_rights_status === 'APPROVED'/);
   assert.match(source, /status='APPROVED'/);
+});
+
+test('9 marketplace content and notification runs are recorded for monitoring', async () => {
+  const writes=[];
+  const env={PRODUCT_DB:{
+    prepare(sql){
+      return{
+        bind(...values){
+          return{
+            all:async()=>({results:[]}),
+            first:async()=>({approved_active_events:3,covered_marketplaces:2}),
+            run:async()=>{writes.push({sql,values});return{meta:{changes:1}};}
+          };
+        },
+        all:async()=>({results:[]})
+      };
+    }
+  }};
+  const result=await runMarketplaceContentCycle(env,new Date('2026-08-01T00:00:00.000Z'));
+  assert.deepEqual(result,{status:'SUCCESS',queued:0,approved_active_events:3,covered_marketplaces:2});
+  assert.equal(writes.length,1);
+  assert.match(writes[0].sql,/marketplace_content_run_audit/);
+  assert.deepEqual(writes[0].values.slice(1),['2026-08-01T00:00:00.000Z',3,2,0]);
 });

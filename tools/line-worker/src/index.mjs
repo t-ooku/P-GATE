@@ -30,7 +30,7 @@ import {
 import { renderSeoPage } from './seo-pages.mjs';
 import { classifyGrowthTraffic, handleGrowthEvent } from './growth-events.mjs';
 import {
-  enqueueSaleNotifications, handleMarketplaceSaleRoutes
+  runMarketplaceContentCycle, handleMarketplaceSaleRoutes
 } from './marketplace-sales.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
@@ -1051,7 +1051,7 @@ export default {
     ctx.waitUntil(Promise.allSettled([
       runDueSocialPosts(env, scheduledAt),
       deliverDueWebNotifications(env, scheduledAt),
-      enqueueSaleNotifications(env, scheduledAt),
+      runMarketplaceContentCycle(env, scheduledAt),
       runSpApiScheduledSync(env, scheduledAt)
     ]));
   }

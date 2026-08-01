@@ -243,6 +243,38 @@ export async function enqueueSaleNotifications(env, now = new Date()) {
   return { queued };
 }
 
+export async function runMarketplaceContentCycle(env, now = new Date()) {
+  if (!env.PRODUCT_DB) return { status: 'SKIPPED', queued: 0, approved_active_events: 0, covered_marketplaces: 0 };
+  const checkedAt = now.toISOString();
+  const runId = crypto.randomUUID();
+  try {
+    const result = await enqueueSaleNotifications(env, now);
+    const coverage = await env.PRODUCT_DB.prepare(
+      `SELECT COUNT(*) AS approved_active_events,COUNT(DISTINCT marketplace) AS covered_marketplaces
+       FROM marketplace_sale_events
+       WHERE status='APPROVED' AND ends_at>=?1`
+    ).bind(checkedAt).first();
+    const approvedActiveEvents = Number(coverage?.approved_active_events || 0);
+    const coveredMarketplaces = Number(coverage?.covered_marketplaces || 0);
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO marketplace_content_run_audit
+       (run_id,checked_at,status,approved_active_events,covered_marketplaces,queued_notifications,error_code)
+       VALUES(?1,?2,'SUCCESS',?3,?4,?5,'')`
+    ).bind(runId, checkedAt, approvedActiveEvents, coveredMarketplaces, result.queued).run();
+    return { status: 'SUCCESS', queued: result.queued, approved_active_events: approvedActiveEvents, covered_marketplaces: coveredMarketplaces };
+  } catch (error) {
+    const errorCode = String(error?.message || 'MARKETPLACE_CONTENT_CYCLE_FAILED').slice(0, 80);
+    try {
+      await env.PRODUCT_DB.prepare(
+        `INSERT INTO marketplace_content_run_audit
+         (run_id,checked_at,status,approved_active_events,covered_marketplaces,queued_notifications,error_code)
+         VALUES(?1,?2,'FAILED',0,0,0,?3)`
+      ).bind(runId, checkedAt, errorCode).run();
+    } catch {}
+    throw error;
+  }
+}
+
 export async function handleMarketplaceSaleRoutes(request, env) {
   const url = new URL(request.url);
   if (request.method === 'GET' && url.pathname === '/api/sales') return publicList(env);
