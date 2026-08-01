@@ -1,5 +1,5 @@
 const lineButton=document.querySelector('#memberLineLogin'),requestForm=document.querySelector('#emailRequestForm'),verifyForm=document.querySelector('#emailVerifyForm'),status=document.querySelector('#emailAuthStatus');
-const track=(event,extra={})=>window.HoshiluTrackGrowth?.(event,extra);
+const track=(event,extra={})=>{const attributionContent=String(window.HoshiluGrowthAttribution?.content||'');const payload=event.startsWith('registration_')&&attributionContent?{...extra,content:attributionContent}:extra;window.HoshiluTrackGrowth?.(event,payload);};
 let emailEnabled=false;
 fetch('/api/config',{cache:'no-store'}).then(response=>response.json()).then(config=>{
   if(config.line_login_configured){lineButton.href='/api/member/line/start';lineButton.removeAttribute('aria-disabled');lineButton.classList.remove('disabled');lineButton.textContent='LINEで無料会員登録';}else lineButton.textContent='LINE登録は準備中';
