@@ -307,7 +307,7 @@ function buildAutomaticEspressoMachineSearchKeywords(query) {
 
 function buildSteamMicrowaveOvenSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const oven = /(?:スチーム.{0,12}オーブンレンジ|steam.{0,12}(?:convection\s*)?microwave\s*oven|蒸汽.{0,12}(?:烤箱微波炉|烤箱微波爐|微波烤箱)|스팀.{0,12}오븐.{0,12}전자레인지)/iu.test(normalized);
+  const oven = /(?:スチーム.{0,12}オーブンレンジ|steam.{0,12}(?:convection\s*)?microwave\s*oven|蒸汽.{0,12}(?:烤箱微波炉|烤箱微波爐|微波烤箱)|스팀.{0,12}오븐.{0,12}전자레인지|温め.{0,12}蒸し料理.{0,12}一台|reheat.{0,12}(?:and|plus).{0,8}steam.{0,16}(?:one|single)\s+appliance|一台(?:机器|機器).{0,16}(?:完成|搞定).{0,12}加热.{0,8}(?:和|与|與).{0,8}蒸|한\s*대로.{0,16}데우기.{0,8}(?:와|과).{0,8}찜)/iu.test(normalized);
   if (!oven) return '';
   if (/(?:トースター|toaster|烤面包机|烤麵包機|토스터|業務用|commercial|商用|업소용)/iu.test(normalized)) return '';
   const capacity = normalized.match(/\b(\d{2})\s*l\b/iu)?.[1];

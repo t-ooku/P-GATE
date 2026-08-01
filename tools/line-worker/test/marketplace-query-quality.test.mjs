@@ -382,6 +382,10 @@ test('スチームオーブンレンジは容量・出力・庫内・センサ�
     '30L 1000W flat-bed steam convection microwave oven infrared sensor',
     '30L 1000W 平板内腔 红外传感器 蒸汽烤箱微波炉',
     '30L 1000W 플랫 내부 적외선 센서 스팀 오븐 전자레인지',
+    '温めと蒸し料理を一台で済ませたい 30L 1000W フラット庫内 赤外線センサー',
+    'reheat and steam food in one appliance 30L 1000W flat-bed infrared sensor',
+    '想用一台机器完成加热和蒸菜 30L 1000W 平板内腔 红外传感器',
+    '한 대로 데우기와 찜 요리를 하고 싶어 30L 1000W 플랫 내부 적외선 센서',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

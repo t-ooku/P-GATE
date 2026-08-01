@@ -810,9 +810,10 @@ function isAutomaticEspressoMachineMismatch(candidate, requested) {
 
 function steamMicrowaveOvenConstraints(value) {
   const text = String(value || '').normalize('NFKC');
+  const oneApplianceIntent = /(?:温め.{0,12}蒸し料理.{0,12}一台|reheat.{0,12}(?:and|plus).{0,8}steam.{0,16}(?:one|single)\s+appliance|一台(?:机器|機器).{0,16}(?:完成|搞定).{0,12}加热.{0,8}(?:和|与|與).{0,8}蒸|한\s*대로.{0,16}데우기.{0,8}(?:와|과).{0,8}찜)/iu.test(text);
   return {
-    oven: /(?:オーブンレンジ|(?:convection\s*)?microwave\s*oven|烤箱微波炉|烤箱微波爐|微波烤箱|오븐.{0,12}전자레인지)/iu.test(text),
-    steam: /(?:スチーム|steam|蒸汽|스팀)/iu.test(text),
+    oven: /(?:オーブンレンジ|(?:convection\s*)?microwave\s*oven|烤箱微波炉|烤箱微波爐|微波烤箱|오븐.{0,12}전자레인지)/iu.test(text) || oneApplianceIntent,
+    steam: /(?:スチーム|steam|蒸汽|스팀)/iu.test(text) || oneApplianceIntent,
     capacity: text.match(/\b(\d{2})\s*l\b/iu)?.[1] || '',
     power: text.match(/\b(\d{3,4})\s*w\b/iu)?.[1] || '',
     flat: /(?:フラット庫内|flat[- ]?bed|flat\s*interior|平板内腔|平板內腔|플랫\s*내부)/iu.test(text),
