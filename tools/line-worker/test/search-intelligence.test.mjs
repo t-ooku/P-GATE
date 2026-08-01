@@ -996,3 +996,28 @@ test('4言語の重量条件を商品仕様として保持し訂正前の重量�
     assert.doesNotMatch(query, /"3kg"\*/i, input);
   }
 });
+
+test('4言語の小数重量は末尾の整数を別仕様として混入させない', () => {
+  const positiveCases = [
+    '1.5kg以下のバックパック',
+    'a 1.5kg backpack',
+    '不超过1.5kg的背包',
+    '1.5kg 이하 백팩',
+  ];
+  for (const input of positiveCases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"1\.5kg"\*/i, input);
+    assert.doesNotMatch(query, /"5kg"\*/i, input);
+  }
+  const correctedCases = [
+    '2.5kgではなく1.5kgのバックパック',
+    'not 2.5kg but a 1.5kg backpack',
+    '不要2.5kg，要1.5kg的背包',
+    '2.5kg 말고 1.5kg 백팩',
+  ];
+  for (const input of correctedCases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"1\.5kg"\*/i, input);
+    assert.doesNotMatch(query, /"2\.5kg"\*|"5kg"\*/i, input);
+  }
+});

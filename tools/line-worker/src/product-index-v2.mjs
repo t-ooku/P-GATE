@@ -42,9 +42,9 @@ export function intelligentFtsQuery(value) {
   const evidenceTokens = evidenceMatches
     .filter((match) => !evidenceMatches.some((other) =>
       other !== match
-      && other.index === match.index
-      && other[0].length > match[0].length
-      && /(?:pack|count|pcs|pieces|kg|kgs|g|kilograms?|kilogrammes?|grams?|キロ(?:グラム)?|グラム|公斤|千克|킬로그램|키로|그램|個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개\s*세트)/iu.test(other[0])))
+      && other.index <= match.index
+      && other.index + other[0].length >= match.index + match[0].length
+      && other[0].length > match[0].length))
     .filter((match) => !isNegatedSearchOccurrence(
       normalized,
       match.index,

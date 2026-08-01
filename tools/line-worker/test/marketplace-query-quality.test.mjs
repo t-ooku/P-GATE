@@ -323,3 +323,20 @@ test("4言語の訂正重量は旧条件を除外し最終重量だけを9モー
     }
   }
 });
+
+test("4言語の小数重量は9モール検索語でも完全な値だけを保持する", () => {
+  const cases = [
+    '2.5kgではなく1.5kgのバックパック',
+    'not 2.5kg but a 1.5kg backpack',
+    '不要2.5kg，要1.5kg的背包',
+    '2.5kg 말고 1.5kg 백팩',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('1.5kg'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!keywords.includes('2.5kg'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!/(?:^|\s)5kg(?:\s|$)/u.test(keywords), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
