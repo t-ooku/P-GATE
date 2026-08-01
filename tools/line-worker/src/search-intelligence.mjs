@@ -16,7 +16,7 @@ const RULES = [
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
   ['charger',/(充電器|充電台|チャージャー|charg(?:er|ing\s+dock)|充电座|充電座|충전\s*(?:거치대|도크))/iu,['charger','charging']],
   ['dual-charger',/(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|듀얼).{0,12}충전/iu,['dual charger','dual charging']],
-  ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|iphone\s*ケース|phone case|smartphone case|iphone case|手机壳|手机保护壳|휴대폰 케이스|스마트폰 케이스)/iu,['phone','case','cover','iphone','smartphone']],
+  ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|(?:iphone|smartphone|phone).{0,16}(?:case|ケース)|手机壳|手机保护壳|(?:iPhone|手机|手機).{0,16}(?:壳|殼|保护壳|保護殼)|휴대폰 케이스|스마트폰 케이스|(?:iPhone|휴대폰|스마트폰).{0,16}케이스)/iu,['phone','case','cover','iphone','smartphone']],
   ['light-up',/(光る|発光|\bLED\b|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
   ['camera-bag',/(カメラ(?:用)?(?:バッグ|ケース|ポーチ)|camera bag|camera case)/iu,['camera bag','camera case']],
   ['photo-printer',/(写真プリンター|フォトプリンター|スマホプリンター|photo printer|portable photo printer)/iu,['photo printer','portable printer']],
@@ -93,7 +93,7 @@ const RULES = [
 ];
 
 const COLOR_RULES = [
-  [/(黒|ブラック|black|黑色|검정|블랙)/iu,['black']],
+  [/(黒|ブラック|black|黑色|검정|검은색|블랙)/iu,['black']],
   [/(白|ホワイト|white)/iu,['white']],
   [/(緑|グリーン|green)/iu,['green']],
   [/(青|水色|ブルー|アクア|blue|aqua)/iu,['blue','aqua']],
@@ -102,9 +102,39 @@ const COLOR_RULES = [
   [/(金色|ゴールド|gold|包金|금색|골드)/iu,['gold']],
   [/(茶色|ブラウン|brown)/iu,['brown']],
   [/(黄色|イエロー|yellow)/iu,['yellow']],
+  [/(赤(?:色)?|レッド|\bred\b|红色|紅色|빨간색|레드)/iu,['red']],
+  [/(紫(?:色)?|パープル|\bpurple\b|보라색|퍼플)/iu,['purple']],
+  [/(オレンジ|\borange\b|橙色|주황색)/iu,['orange']],
   [/(グレー|灰色|gray|grey)/iu,['gray']],
   [/(透明|クリア|clear|transparent|透明色|투명)/iu,['clear','transparent']]
 ];
+
+const NEGATED_CATEGORY_TERMS = new Map([
+  ['charger', /(?:充電器|チャージャー|charger|充电器|充電器|충전기)/iu],
+  ['phone-case', /(?:スマホケース|携帯ケース|phone\s*case|iphone.{0,12}case|手机壳|手機殼|휴대폰\s*케이스|스마트폰\s*케이스)/iu],
+  ['laptop', /(?:ノートPC|ノートパソコン|laptop|笔记本电脑|筆記型電腦|노트북)/iu],
+  ['umbrella', /(?:傘|umbrella|雨伞|雨傘|우산)/iu],
+  ['camera', /(?:カメラ|camera|相机|相機|카메라)/iu],
+  ['wallet', /(?:財布|wallet|钱包|錢包|지갑)/iu],
+]);
+
+function isNegatedOccurrence(text, start, end) {
+  const before = text.slice(Math.max(0, start - 24), start);
+  const after = text.slice(end, end + 18);
+  return /(?:not\s+(?:a|an|the)?|no|without|anything\s+but|不要|不是|不想要)\s*$/iu.test(before)
+    || /^\s*(?:ではなく|じゃなく|ではない|以外|は不要|を除く|而不是|不要|말고|아니고|아닌|제외)/iu.test(after);
+}
+
+function isOnlyNegated(text, pattern) {
+  const flags = [...new Set(`${pattern.flags}g`.split(''))].join('');
+  const matcher = new RegExp(pattern.source, flags);
+  let foundNegated = false;
+  for (const match of text.matchAll(matcher)) {
+    if (!isNegatedOccurrence(text, match.index, match.index + match[0].length)) return false;
+    foundNegated = true;
+  }
+  return foundNegated;
+}
 
 const CONTEXT_RE = /(TikTok|Instagram|インスタ|Twitter|SNS|動画|配信|スーパー|空港|免税店|コンビニ|文房具屋|友達|同僚|母|昔|子供の頃|どこかで見た)/iu;
 const FUNCTION_RE = /(使う|洗う|温める|守る|つなぐ|増やす|入れる|収納|光る|音|充電|撮る|運動|飲む|背負う|折りたた)/u;
@@ -150,6 +180,10 @@ function candidateEvidenceMismatch(text, candidates) {
 export function semanticSearchGroups(value) {
   const text = String(value || '').normalize('NFKC');
   let groups = RULES.filter(([, pattern]) => pattern.test(text)).map(([category,, terms]) => ({ category, terms }));
+  groups = groups.filter((group) => {
+    const terms = NEGATED_CATEGORY_TERMS.get(group.category);
+    return !terms || !isOnlyNegated(text, terms);
+  });
   const specificCategories = new Set(groups.map((group) => group.category));
   if (specificCategories.has('camera-bag')) groups = groups.filter((group) => group.category !== 'bag');
   if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');
@@ -199,7 +233,9 @@ export function semanticSearchGroups(value) {
   const specificIntent = groups.some((group) => [
     'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
-  const colors = specificIntent ? [] : COLOR_RULES.filter(([pattern]) => pattern.test(text)).flatMap(([, terms]) => terms);
+  const colors = specificIntent ? [] : COLOR_RULES
+    .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))
+    .flatMap(([, terms]) => terms);
   if (colors.length) groups.push({ category: 'color', terms: [...new Set(colors)] });
   return groups;
 }

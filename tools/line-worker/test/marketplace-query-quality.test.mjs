@@ -123,3 +123,24 @@ test("商品名を省いた4言語の説明検索を9モール向け商品語へ
     }
   }
 });
+
+test("否定した商品種別と色を9モール検索語から除外する", () => {
+  const cases = [
+    ['充電器ではなくiPhone 15用の透明ケース', ['iPhone 15ケース'], ['充電器']],
+    ['an iPhone 15 clear case, not a charger', ['iPhone 15ケース'], ['充電器']],
+    ['不要充电器，想要iPhone 15透明手机壳', ['iPhone 15ケース'], ['充電器']],
+    ['충전기 말고 iPhone 15용 투명 케이스', ['iPhone 15ケース'], ['充電器']],
+    ['赤ではなく黒い財布', ['黒', '財布'], ['赤']],
+    ['a black wallet, not red', ['黒', '財布'], ['赤']],
+    ['不要红色，要黑色钱包', ['黒', '財布'], ['赤']],
+    ['빨간색 말고 검은색 지갑', ['黒', '財布'], ['赤', 'シルバー']],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, required, forbidden] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      for (const token of required) assert.match(keywords, new RegExp(token), `${marketplace}: ${input}`);
+      for (const token of forbidden) assert.doesNotMatch(keywords, new RegExp(token), `${marketplace}: ${input}`);
+    }
+  }
+  assert.match(buildMarketplaceSearchKeywords('은색 지갑', 'QOO10_JP'), /シルバー 財布/);
+});

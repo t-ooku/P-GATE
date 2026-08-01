@@ -37,7 +37,8 @@ export function buildDeviceAccessorySearchKeywords(query) {
   if (!normalized) return '';
   const device = deviceName(normalized);
   if (!device) return '';
-  const product = PRODUCT_TYPES.find(([, pattern]) => pattern.test(normalized));
+  const product = PRODUCT_TYPES.find(([, pattern]) =>
+    pattern.test(normalized) && !isNegatedAttribute(normalized, pattern));
   if (!product) return '';
   const label = product[0];
   const base = label === 'ケース' && device.startsWith('iPhone')
@@ -106,7 +107,7 @@ const GENERIC_ATTRIBUTES = [
   ['小型', /(?:小さい|小さな|小型|手のひら|コンパクト|ミニ|small|mini|compact|小巧|소형|작은)/iu],
   ['軽量', /(?:軽い|軽量|lightweight|轻量|輕量|경량|가벼운)/iu],
   ['防水', /(?:防水|waterproof|防水型|방수)/iu],
-  ['黒', /(?:黒|ブラック|\bblack\b|黑色|검정|블랙)/iu],
+  ['黒', /(?:黒|ブラック|\bblack\b|黑色|검정|검은색|블랙)/iu],
   ['白', /(?:白|ホワイト|\bwhite\b|白色|흰색|화이트)/iu],
   ['ピンク', /(?:ピンク|\bpink\b|粉色|분홍|핑크)/iu],
   ['紫', /(?:紫|パープル|\bpurple\b|紫色|보라|퍼플)/iu],
@@ -114,7 +115,7 @@ const GENERIC_ATTRIBUTES = [
   ['緑', /(?:緑|グリーン|\bgreen\b|绿色|綠色|초록|그린)/iu],
   ['黄', /(?:黄色|イエロー|\byellow\b|黄色|노랑|옐로)/iu],
   ['グレー', /(?:グレー|灰色|gr[ae]y|灰色|회색|그레이)/iu],
-  ['シルバー', /(?:銀色|シルバー|\bsilver\b|银色|銀色|은색|실버)/iu],
+  ['シルバー', /(?:銀色|シルバー|\bsilver\b|银色|銀色|(?<!검)은색|실버)/iu],
   ['ゴールド', /(?:金色|ゴールド|\bgold\b|金色|금색|골드)/iu],
   ['赤', /(?:赤(?:色)?|レッド|\bred\b|红色|紅色|빨간색|레드)/iu],
   ['オレンジ', /(?:オレンジ|\borange\b|橙色|橘色|주황색|오렌지)/iu],
@@ -130,8 +131,8 @@ function isNegatedAttribute(query, pattern) {
   if (!match || match.index == null) return false;
   const before = query.slice(Math.max(0, match.index - 18), match.index);
   const after = query.slice(match.index + match[0].length, match.index + match[0].length + 14);
-  const negatedBefore = /(?:not|no|without|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
-  const negatedAfter = /^\s*(?:以外|ではない|じゃない|でない|なし|を除く|を避ける?|말고|아닌|아니고|제외)/iu.test(after);
+  const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
+  const negatedAfter = /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける?|而不是|말고|아닌|아니고|제외)/iu.test(after);
   return negatedBefore || negatedAfter;
 }
 
@@ -156,7 +157,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   const products = GENERIC_PRODUCTS
-    .filter(([, pattern]) => pattern.test(normalized))
+    .filter(([, pattern]) => pattern.test(normalized) && !isNegatedAttribute(normalized, pattern))
     .map(([label]) => label)
     .filter((label, index, values) => values.indexOf(label) === index);
   if (!products.length) return compactUnknownSearchPhrase(normalized);

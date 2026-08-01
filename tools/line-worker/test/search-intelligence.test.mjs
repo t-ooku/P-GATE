@@ -75,6 +75,39 @@ test('日本語の語順と複合語から商品カテゴリを補い不要な�
   assert.doesNotMatch(adapter, /\"laptop\"\*/);
 });
 
+test('日英中韓の否定カテゴリと否定色をFTS必須条件へ混入させない', () => {
+  for (const query of [
+    '充電器ではなくiPhone 15用の透明ケース',
+    'an iPhone 15 clear case, not a charger',
+    '不要充电器，想要iPhone 15透明手机壳',
+    '충전기 말고 iPhone 15용 투명 케이스',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /\"phone\"\*/);
+    assert.match(expression, /\"clear\"\*/);
+    assert.match(expression, /\"15\"\*/);
+    assert.doesNotMatch(expression, /\"charger\"\*/);
+  }
+
+  for (const query of [
+    '赤ではなく黒い財布',
+    'a black wallet, not red',
+    '不要红色，要黑色钱包',
+    '빨간색 말고 검은색 지갑',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /\"wallet\"\*/);
+    assert.match(expression, /\"black\"\*/);
+    assert.doesNotMatch(expression, /\"red\"\*/);
+  }
+
+  assert.match(intelligentFtsQuery('red wallet'), /\"red\"\*/);
+  const material = intelligentFtsQuery('ガラス土台と布シェードのランプ、金属製ではない');
+  assert.match(material, /\"table lamp\"\*/);
+  assert.match(material, /\"glass\"\*/);
+  assert.match(material, /\"fabric shade\"\*/);
+});
+
 test('Japanese memory fragments expand into category and color FTS groups', () => {
   const query = intelligentFtsQuery('茶色い革ベルトと金属ケースの男性用腕時計');
   assert.match(query, /"watch"\*/);
