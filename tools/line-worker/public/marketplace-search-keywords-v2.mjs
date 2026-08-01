@@ -373,6 +373,18 @@ function buildOledTelevisionSearchKeywords(query) {
   return ['有機ELテレビ', `${size}型`, resolution, `${refresh}Hz`, `HDMI ${hdmi}`, dolbyVision].join(' ');
 }
 
+function buildLaserProjectorSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:プロジェクター|projector|投影仪|投影機|프로젝터)/iu.test(normalized)) return '';
+  const resolution = /\b4\s*k\b/iu.test(normalized) ? '4K' : '';
+  const brightness = normalized.match(/\b(\d{3,4})\s*(?:ansi\s*)?(?:ルーメン|lumens?|流明|루멘)/iu)?.[1];
+  const ratio = normalized.match(/(?:投写比|throw\s*ratio|投射比|투사비)\s*(\d(?:\.\d+)?:1)/iu)?.[1];
+  const laser = /(?:レーザー|laser|激光|레이저)/iu.test(normalized) ? 'レーザー' : '';
+  const androidTv = /android\s*tv/iu.test(normalized) ? 'Android TV' : '';
+  if (!resolution || !brightness || !ratio || !laser || !androidTv) return '';
+  return ['レーザープロジェクター', resolution, `${brightness} ANSIルーメン`, `投写比${ratio}`, androidTv].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1172,6 +1184,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawBuiltInDishwasher) return rawBuiltInDishwasher;
   const rawOledTelevision = buildOledTelevisionSearchKeywords(rawNormalized);
   if (rawOledTelevision) return rawOledTelevision;
+  const rawLaserProjector = buildLaserProjectorSearchKeywords(rawNormalized);
+  if (rawLaserProjector) return rawLaserProjector;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

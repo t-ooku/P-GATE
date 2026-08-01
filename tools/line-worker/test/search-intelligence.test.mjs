@@ -1505,6 +1505,32 @@ test('有機ELテレビは4言語で画面・解像度・Hz・端子・映像規
   }
 });
 
+test('レーザープロジェクターは4言語で解像度・明るさ・投写比・OSが一致する本体だけを提示する', () => {
+  const queries = [
+    '4K 3000 ANSIルーメン 投写比1.2:1 レーザー Android TV プロジェクター',
+    '4K laser projector 3000 ANSI lumens throw ratio 1.2:1 Android TV',
+    '4K 3000 ANSI流明 投射比1.2:1 激光 Android TV 投影仪',
+    '4K 3000 ANSI 루멘 투사비 1.2:1 레이저 Android TV 프로젝터',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '4K Laser Projector 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'HD', product_name: 'Full HD Laser Projector 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'DIM', product_name: '4K Laser Projector 2000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'RATIO', product_name: '4K Laser Projector 3000 ANSI Lumens Throw Ratio 1.5:1 Android TV' },
+    { asin: 'LAMP', product_name: '4K Lamp Projector 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'NOOS', product_name: '4K Laser Projector 3000 ANSI Lumens Throw Ratio 1.2:1' },
+    { asin: 'MINI', product_name: '4K Mini Projector Laser 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'SCREEN', product_name: 'Projector Screen for 4K Laser Projector 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'REPLACEMENT', product_name: 'Replacement Lamp for 4K Laser Projector 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'MOUNT', product_name: 'Ceiling Mount for 4K Laser Projector 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'REMOTE', product_name: 'Remote Control for 4K Laser Projector 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+    { asin: 'TV', product_name: '4K Laser Projector TV 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

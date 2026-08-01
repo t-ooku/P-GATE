@@ -431,6 +431,21 @@ test('有機ELテレビは画面・解像度・Hz・端子・映像規格を4言
   }
 });
 
+test('レーザープロジェクターは解像度・明るさ・投写比・OSを4言語で保持する', () => {
+  const queries = [
+    '4K 3000 ANSIルーメン 投写比1.2:1 レーザー Android TV プロジェクター',
+    '4K laser projector 3000 ANSI lumens throw ratio 1.2:1 Android TV',
+    '4K 3000 ANSI流明 投射比1.2:1 激光 Android TV 投影仪',
+    '4K 3000 ANSI 루멘 투사비 1.2:1 레이저 Android TV 프로젝터',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'レーザープロジェクター 4K 3000 ANSIルーメン 投写比1.2:1 Android TV', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [
