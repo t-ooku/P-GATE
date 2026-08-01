@@ -551,6 +551,21 @@ test('ロボット芝刈り機は測位・面積・検知・境界条件を4言�
   }
 });
 
+test('折りたたみ電動アシスト自転車は車輪・出力・電池・航続条件を4言語で保持する', () => {
+  const queries = [
+    '20インチ 折りたたみ電動アシスト自転車 500W 48V 15Ah 航続80km',
+    '20 inch folding electric bike 500W 48V 15Ah 80km range',
+    '20英寸 折叠电动自行车 500W 48V 15Ah 续航80km',
+    '20인치 접이식 전기 자전거 500W 48V 15Ah 주행거리 80km',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '折りたたみ電動アシスト自転車 20インチ 500W 48V 15Ah 航続80km', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

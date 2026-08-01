@@ -1145,6 +1145,30 @@ function isRobotLawnMowerMismatch(candidate, requested) {
   return false;
 }
 
+function foldingElectricBikeConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    bike: /(?:折りたたみ電動アシスト自転車|folding\s*(?:electric\s*bike|e-bike)|折叠电动自行车|折疊電動自行車|접이식\s*전기\s*자전거)/iu.test(text),
+    wheel: text.match(/\b(\d{2})\s*(?:インチ|inch(?:es)?|英寸|인치)/iu)?.[1] || '',
+    motor: text.match(/\b(\d{3,4})\s*W\b/iu)?.[1] || '',
+    voltage: text.match(/\b(\d{2,3})\s*V\b/iu)?.[1] || '',
+    capacity: text.match(/\b(\d{1,2}(?:\.\d)?)\s*Ah\b/iu)?.[1] || '',
+    range: text.match(/\b(?:航続)?(\d{2,3})\s*km\b/iu)?.[1] || '',
+    wrongProduct: /(?:replacement\s*battery|交換バッテリー|替换电池|替換電池|교체용\s*배터리|e-bike\s*charger|電動自転車用充電器|电动自行车充电器|電動自行車充電器|전기\s*자전거\s*충전기|replacement\s*(?:tire|tyre)|交換タイヤ|更换轮胎|更換輪胎|교체용\s*타이어|bike\s*cover|自転車カバー|自行车罩|自行車罩|자전거\s*커버|bike\s*helmet|自転車ヘルメット|自行车头盔|自行車安全帽|자전거\s*헬멧)/iu.test(text)
+  };
+}
+
+function isFoldingElectricBikeMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = foldingElectricBikeConstraints(text);
+  if (!evidence.bike || evidence.wrongProduct) return true;
+  for (const field of ['wheel', 'motor', 'voltage', 'capacity', 'range']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2025,6 +2049,11 @@ export function filterCategoryMismatches(query, candidates = []) {
   const robotLawnMowerIntent = robotLawnMower.mower && robotLawnMower.rtk
     && Boolean(robotLawnMower.area && robotLawnMower.obstacle && robotLawnMower.wireFree)
     && !robotLawnMower.wrongProduct;
+  const foldingElectricBike = foldingElectricBikeConstraints(normalizedQuery);
+  const foldingElectricBikeIntent = foldingElectricBike.bike
+    && Boolean(foldingElectricBike.wheel && foldingElectricBike.motor && foldingElectricBike.voltage
+      && foldingElectricBike.capacity && foldingElectricBike.range)
+    && !foldingElectricBike.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2037,7 +2066,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
-    && !robotLawnMowerIntent) return candidates;
+    && !robotLawnMowerIntent && !foldingElectricBikeIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2116,6 +2145,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (wifi7MeshRouterIntent) return !isWifi7MeshRouterMismatch(candidate, wifi7MeshRouter);
     if (fdm3dPrinterIntent) return !isFdm3dPrinterMismatch(candidate, fdm3dPrinter);
     if (robotLawnMowerIntent) return !isRobotLawnMowerMismatch(candidate, robotLawnMower);
+    if (foldingElectricBikeIntent) return !isFoldingElectricBikeMismatch(candidate, foldingElectricBike);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

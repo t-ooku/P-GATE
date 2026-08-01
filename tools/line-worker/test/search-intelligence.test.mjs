@@ -1708,6 +1708,31 @@ test('ロボット芝刈り機は4言語で測位・面積・検知・境界条�
   }
 });
 
+test('折りたたみ電動アシスト自転車は4言語で車輪・出力・電池・航続条件が一致する本体だけを提示する', () => {
+  const queries = [
+    '20インチ 折りたたみ電動アシスト自転車 500W 48V 15Ah 航続80km',
+    '20 inch folding electric bike 500W 48V 15Ah 80km range',
+    '20英寸 折叠电动自行车 500W 48V 15Ah 续航80km',
+    '20인치 접이식 전기 자전거 500W 48V 15Ah 주행거리 80km',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '20 inch folding electric bike 500W 48V 15Ah 80km range' },
+    { asin: 'WHEEL', product_name: '16 inch folding electric bike 500W 48V 15Ah 80km range' },
+    { asin: 'MOTOR', product_name: '20 inch folding electric bike 350W 48V 15Ah 80km range' },
+    { asin: 'VOLT', product_name: '20 inch folding electric bike 500W 36V 15Ah 80km range' },
+    { asin: 'CAPACITY', product_name: '20 inch folding electric bike 500W 48V 10Ah 80km range' },
+    { asin: 'RANGE', product_name: '20 inch folding electric bike 500W 48V 15Ah 50km range' },
+    { asin: 'BATTERY', product_name: 'Replacement battery for 20 inch folding electric bike 500W 48V 15Ah 80km range' },
+    { asin: 'CHARGER', product_name: 'E-bike charger for 20 inch folding electric bike 500W 48V 15Ah 80km range' },
+    { asin: 'TIRE', product_name: 'Replacement tire for 20 inch folding electric bike 500W 48V 15Ah 80km range' },
+    { asin: 'COVER', product_name: 'Bike cover for 20 inch folding electric bike 500W 48V 15Ah 80km range' },
+    { asin: 'HELMET', product_name: 'Bike helmet for 20 inch folding electric bike 500W 48V 15Ah 80km range' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

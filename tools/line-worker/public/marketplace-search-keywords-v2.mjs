@@ -471,6 +471,18 @@ function buildRobotLawnMowerSearchKeywords(query) {
   return ['ロボット芝刈り機', 'RTK', `${area}㎡`, '障害物検知', '境界ワイヤー不要'].join(' ');
 }
 
+function buildFoldingElectricBikeSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const bike = /(?:折りたたみ電動アシスト自転車|folding\s*(?:electric\s*bike|e-bike)|折叠电动自行车|折疊電動自行車|접이식\s*전기\s*자전거)/iu.test(normalized);
+  const wheel = normalized.match(/\b(\d{2})\s*(?:インチ|inch(?:es)?|英寸|인치)/iu)?.[1];
+  const motor = normalized.match(/\b(\d{3,4})\s*W\b/iu)?.[1];
+  const voltage = normalized.match(/\b(\d{2,3})\s*V\b/iu)?.[1];
+  const capacity = normalized.match(/\b(\d{1,2}(?:\.\d)?)\s*Ah\b/iu)?.[1];
+  const range = normalized.match(/\b(\d{2,3})\s*km\b/iu)?.[1];
+  if (!bike || !wheel || !motor || !voltage || !capacity || !range) return '';
+  return ['折りたたみ電動アシスト自転車', `${wheel}インチ`, `${motor}W`, `${voltage}V`, `${capacity}Ah`, `航続${range}km`].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1286,6 +1298,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawFdm3dPrinter) return rawFdm3dPrinter;
   const rawRobotLawnMower = buildRobotLawnMowerSearchKeywords(rawNormalized);
   if (rawRobotLawnMower) return rawRobotLawnMower;
+  const rawFoldingElectricBike = buildFoldingElectricBikeSearchKeywords(rawNormalized);
+  if (rawFoldingElectricBike) return rawFoldingElectricBike;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
