@@ -28,7 +28,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v107/);
+  assert.match(sw, /hoshilu-shell-v108/);
   assert.match(sw, /marketplace-search-keywords-v2\.mjs/);
   assert.match(app, /buildMarketplaceSearchKeywords/);
   assert.match(sw, /if \(response\.ok\)/);
@@ -65,6 +65,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /Instagram.*X.*TikTok.*YouTube/s);
   assert.match(app, /site:instagram\.com/);
   assert.match(app, /site:tiktok\.com/);
+  assert.match(app, /String\(elements\.query\.value\|\|result\?\.search_keywords/);
   assert.match(app, /https:\/\/www\.swippitt\.net\//);
   assert.match(app, /function swippittDiscoveryMatch/);
   assert.match(app, /これですか？↓/);
