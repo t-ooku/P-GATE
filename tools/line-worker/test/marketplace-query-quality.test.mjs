@@ -191,6 +191,21 @@ test('HDMIケーブルは版・長さ・解像度・Hz・認証を4言語で保�
   }
 });
 
+test('DisplayPortケーブルは版・長さ・解像度・Hz・伝送機能を4言語で保持する', () => {
+  const queries = [
+    'DisplayPort 1.4 2m 8K60Hz 4K144Hz HBR3 DSC対応ケーブル',
+    'DisplayPort 1.4 cable 2m with 8K60Hz 4K144Hz HBR3 and DSC',
+    'DisplayPort 1.4 2米 8K60Hz 4K144Hz HBR3 DSC连接线',
+    'DisplayPort 1.4 2m 8K60Hz 4K144Hz HBR3 DSC 케이블',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'DisplayPort 1.4 2m 8K60Hz 4K144Hz HBR3 DSC ケーブル', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

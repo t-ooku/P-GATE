@@ -1120,6 +1120,30 @@ test('HDMIケーブルは4言語で版・長さ・解像度・Hz・認証が一�
   }
 });
 
+test('DisplayPortケーブルは4言語で版・長さ・帯域機能が一致する候補だけを提示する', () => {
+  const queries = [
+    'DisplayPort 1.4 2m 8K60Hz 4K144Hz HBR3 DSC対応ケーブル',
+    'DisplayPort 1.4 cable 2m with 8K60Hz 4K144Hz HBR3 and DSC',
+    'DisplayPort 1.4 2米 8K60Hz 4K144Hz HBR3 DSC连接线',
+    'DisplayPort 1.4 2m 8K60Hz 4K144Hz HBR3 DSC 케이블',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'DisplayPort 1.4 Cable 2m HBR3 DSC 8K60Hz 4K144Hz' },
+    { asin: 'OLDVERSION', product_name: 'DisplayPort 1.2 Cable 2m HBR3 DSC 8K60Hz 4K144Hz' },
+    { asin: 'WRONGLENGTH', product_name: 'DisplayPort 1.4 Cable 3m HBR3 DSC 8K60Hz 4K144Hz' },
+    { asin: 'NO8K', product_name: 'DisplayPort 1.4 Cable 2m HBR3 DSC 4K144Hz' },
+    { asin: 'NO144HZ', product_name: 'DisplayPort 1.4 Cable 2m HBR3 DSC 8K60Hz 4K60Hz' },
+    { asin: 'NOHBR3', product_name: 'DisplayPort 1.4 Cable 2m DSC 8K60Hz 4K144Hz' },
+    { asin: 'NODSC', product_name: 'DisplayPort 1.4 Cable 2m HBR3 8K60Hz 4K144Hz' },
+    { asin: 'USBC', product_name: 'USB-C to DisplayPort 1.4 Cable 2m HBR3 DSC 8K60Hz 4K144Hz' },
+    { asin: 'HDMI', product_name: 'HDMI to DisplayPort 1.4 Cable 2m HBR3 DSC 8K60Hz 4K144Hz' },
+    { asin: 'ADAPTER', product_name: 'DisplayPort 1.4 Cable Adapter 2m HBR3 DSC 8K60Hz 4K144Hz' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

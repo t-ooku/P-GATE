@@ -154,6 +154,19 @@ function buildHdmiCableSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildDisplayPortCableSearchKeywords(query) {
+  if (!/(?:display\s*port|\bdp\b).{0,100}(?:ケーブル|cable|连接线|連接線|线缆|線纜|케이블)|(?:ケーブル|cable|连接线|連接線|线缆|線纜|케이블).{0,100}(?:display\s*port|\bdp\b)/iu.test(query)) return '';
+  const version = String(query || '').match(/(?:display\s*port|\bdp\b)\s*(2\.1|2\.0|1\.4|1\.2)\b/iu)?.[1];
+  const length = String(query || '').match(/\b(\d(?:\.\d)?)\s*(?:m\b|メートル|米)/iu)?.[1];
+  const eightK = /\b8\s*k\s*60\s*hz\b/iu.test(query) ? '8K60Hz' : '';
+  const fourK = /\b4\s*k\s*144\s*hz\b/iu.test(query) ? '4K144Hz' : '';
+  const hbr3 = /\bhbr\s*3\b/iu.test(query) ? 'HBR3' : '';
+  const dsc = /\bdsc\b|display\s*stream\s*compression/iu.test(query) ? 'DSC' : '';
+  if (!version) return '';
+  return [`DisplayPort ${version}`, length ? `${length}m` : '', eightK, fourK, hbr3, dsc, 'ケーブル']
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -989,6 +1002,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (wirelessChargingStation) return wirelessChargingStation;
   const hdmiCable = buildHdmiCableSearchKeywords(normalized);
   if (hdmiCable) return hdmiCable;
+  const displayPortCable = buildDisplayPortCableSearchKeywords(normalized);
+  if (displayPortCable) return displayPortCable;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS
