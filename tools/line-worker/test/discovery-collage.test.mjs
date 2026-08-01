@@ -29,7 +29,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v138/);
+  assert.match(sw, /hoshilu-shell-v140/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
@@ -78,7 +78,8 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /include\.checked&&raw/);
   assert.match(app, /share-copy-button/);
   assert.match(app, /function marketplaceFallbackCard/);
-  assert.match(app, /9つのモールとSNSを横断して探す/);
+  assert.match(app, /10モールとSNSを横断して探す/);
+  assert.match(app, /Yahoo!ショッピング/);
   assert.match(app, /Instagram.*X.*TikTok.*YouTube/s);
   assert.match(discoveryActions, /site:instagram\.com/);
   assert.match(discoveryActions, /site:tiktok\.com/);
@@ -99,7 +100,6 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(html, /商品ページへ直接リンク。主要5モール、ファッション含めて最大10モールで探せます。/);
   assert.match(html, /id="journeyStep3Body" hidden><\/p>/);
   assert.doesNotMatch(html, /確認済み商品ページへ直接案内/);
-  assert.match(app, /actionCopy\[language\]\.journey\[7\]=''/);
   assert.match(app, /Talk to HOSHILU before you search/);
   assert.match(app, /elements\.journey\.forEach/);
   assert.match(app, /copySearchKeywords/);

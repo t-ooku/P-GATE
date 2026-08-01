@@ -1,7 +1,7 @@
-const MARKETPLACE_MESSAGE = 'Amazon・楽天市場・Qoo10・SHEIN・ZOZOTOWN・SHOPLIST・MUSINSA・BUYMA・SNKRDUNKの9つに対応。';
+const MARKETPLACE_MESSAGE = '主要5モール（Amazon・楽天市場・Yahoo!ショッピング・Qoo10・SHEIN）に対応。ファッション検索ではZOZOTOWN・SHOPLIST・MUSINSA・BUYMA・SNKRDUNKを追加し、最大10モールから探せます。';
 
 const THEMES = Object.freeze([
-  { id: 'cross_market_phone_case', pillar: 'CROSS_MARKET', format: 'CAROUSEL', memory: 'TikTokで見た、光るスマホケース', refined: 'TikTokで見た光るiPhoneケース', hook: 'その「どこで売ってる？」を9つのショッピングモールから探そう。' },
+  { id: 'cross_market_phone_case', pillar: 'CROSS_MARKET', format: 'CAROUSEL', memory: 'TikTokで見た、光るスマホケース', refined: 'TikTokで見た光るiPhoneケース', hook: 'その「どこで売ってる？」を主要5モールから探そう。' },
   { id: 'trend_camera_reel', pillar: 'AMBIGUOUS_TREND', format: 'REEL', memory: 'ピンクで小さい、レトロなカメラみたいなもの', refined: 'SNSで見たピンクの小さいレトロカメラ', hook: '名前は知らない。でも見た目は覚えてる。' },
   { id: 'qoo10_kbeauty_reel', pillar: 'CROSS_MARKET', format: 'REEL', marketplace_focus: 'QOO10_JP', memory: '韓国っぽい、つやつやになるリップ', refined: '韓国コスメ ツヤ リップ ティント', hook: 'Qoo10で見かけた韓国コスメ、名前が曖昧でも探せる。' },
   { id: 'popular_wish_charm', pillar: 'POPULAR_WISH', format: 'STATIC', memory: 'バッグにつける小さなぬいぐるみみたいなもの', refined: 'バッグにつける小さいぬいぐるみチャーム', hook: '「ほしっとく」で人気の欲しい、あなたも気になる？' },
@@ -43,7 +43,7 @@ function reelScript(theme) {
     scenes: [
       `0-2秒：${theme.hook}`,
       `2-5秒：検索欄へ「${theme.memory}」と入力`,
-      `5-9秒：候補と9つのショッピングモール名をテンポよく表示`,
+      `5-9秒：主要5モールと、ファッション検索時は最大10モールになることを表示`,
       `9-12秒：「名前が分からなくても、ホシル。」＋保存・コメントCTA`
     ],
     cover_text: focus ? `${focus === FOCUS_COPY.QOO10_JP ? 'Qoo10' : 'SHEIN'}で見た、あれ何？` : '名前不明でも探せる',
@@ -71,7 +71,7 @@ export function buildYouthSearchPost(index, platform = 'X') {
     campaign_pillar: theme.pillar,
     marketplace_focus: theme.marketplace_focus || 'ALL',
     content_format: theme.format,
-    caption: `${platformHook}\n${PILLAR_COPY[theme.pillar]}${focusMessage}\n${commentCta}\n${MARKETPLACE_MESSAGE}\n#ホシル #あいまい検索 #9モール横断 #ほしっとく${focusHashtags}`,
+    caption: `${platformHook}\n${PILLAR_COPY[theme.pillar]}${focusMessage}\n${commentCta}\n${MARKETPLACE_MESSAGE}\n#ホシル #あいまい検索 #10モール横断 #ほしっとく${focusHashtags}`,
     link: `https://hoshilu.app/?q=${encodeURIComponent(theme.refined)}&utm_source=${source}&utm_medium=organic_social&utm_campaign=${campaign}&utm_content=${theme.id}`,
     prefill_query: theme.refined,
     reel_script: reelScript(theme),

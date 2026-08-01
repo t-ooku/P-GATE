@@ -490,6 +490,43 @@ function refrigeratorWaterFilterIdentity(text) {
   return '';
 }
 
+function detergentPodIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:finish|フィニッシュ|亮碟|피니시)/u.test(value)) return 'finish';
+  if (/(?:cascade|カスケード|캐스케이드)/u.test(value)) return /platinum\s*plus/u.test(value) ? 'cascade-platinum-plus' : 'cascade';
+  if (/(?:joy|ジョイ)/u.test(value)) return 'joy';
+  if (/(?:ariel|アリエール|碧浪|아리엘)/u.test(value)) return 'ariel';
+  if (/(?:tide|汰渍|汰漬|타이드)/u.test(value)) return 'tide';
+  if (/(?:bold|ボールド|볼드)/u.test(value)) return 'bold';
+  return '';
+}
+
+function isDetergentPodMismatch(candidate, query, requestedCategory) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedIdentity = detergentPodIdentity(query);
+  if (requestedIdentity && detergentPodIdentity(text) !== requestedIdentity) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const dishwasher = /(?:食洗機|食器洗い機|dishwasher|洗碗机|洗碗機|식기세척기)/iu.test(text);
+  const laundry = /(?:洗濯|laundry|洗衣|세탁)/iu.test(text);
+  const pod = /(?:タブレット|ジェルボール|tabs?|tablets?|pods?|capsules?|凝珠|젤볼|타블렛|캡슐)/iu.test(text);
+  if (!pod || /(?:粉末|powder|粉剂|粉劑|분말|液体|liquid|洗衣液|액체)/iu.test(text)) return true;
+  const requestedScent = /(?:無香料|無香|unscented|fragrance[- ]?free|无香|무향)/iu.test(query) ? 'unscented'
+    : /(?:レモン|lemon|柠檬|檸檬|레몬)/iu.test(query) ? 'lemon'
+    : /(?:ラベンダー|lavender|薰衣草|라벤더)/iu.test(query) ? 'lavender' : '';
+  const scentPatterns = {
+    unscented: /(?:無香料|無香|unscented|fragrance[- ]?free|无香|무향)/iu,
+    lemon: /(?:レモン|lemon|柠檬|檸檬|레몬)/iu,
+    lavender: /(?:ラベンダー|lavender|薰衣草|라벤더)/iu
+  };
+  if (requestedScent && !scentPatterns[requestedScent].test(text)) return true;
+  if (/(?:詰め替え|つめかえ|refill|补充装|補充裝|리필)/iu.test(query)
+    && !/(?:詰め替え|つめかえ|refill|补充装|補充裝|리필)/iu.test(text)) return true;
+  if (requestedCategory === 'dishwasher-detergent-tablet') return !dishwasher || laundry;
+  return !laundry || dishwasher;
+}
+
 function refrigeratorWaterFilterPart(text) {
   return String(text || '').normalize('NFKC').toLowerCase()
     .match(/\b(da97[- ]?17376b|adq74793501|edr1rxd1)\b/u)?.[1]?.replace('da97 ', 'da97-') || '';
@@ -516,7 +553,7 @@ function waterFilterPartNumber(text) {
 
 function requestedPackageCount(text) {
   return Number(String(text || '').normalize('NFKC')
-    .match(/(\d+)\s*(?:個|本|枚|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|块|塊|盒|卷|巻|张|張|개|개입|장|세트)/iu)?.[1] || 0);
+    .match(/(?<![\p{L}\p{N}])(\d+)\s*(?:個|本|枚|錠|粒|個入り|pack|packs|count|pcs|pieces|tabs?|tablets?|pods?|capsules?|件套|个装|個裝|块|塊|盒|卷|巻|张|張|颗|顆|개|개입|장|정|캡슐|세트)/iu)?.[1] || 0);
 }
 
 function isWaterFilterCartridgeMismatch(candidate, query) {
@@ -929,6 +966,8 @@ export function filterCategoryMismatches(query, candidates = []) {
   const airPurifierFilter = requested.has('air-purifier-filter');
   const waterFilterCartridge = requested.has('water-filter-cartridge');
   const refrigeratorWaterFilter = requested.has('refrigerator-water-filter');
+  const detergentPod = requested.has('dishwasher-detergent-tablet') ? 'dishwasher-detergent-tablet'
+    : requested.has('laundry-detergent-pod') ? 'laundry-detergent-pod' : '';
   const printerInk = requested.has('printer-ink');
   const toothbrushHead = requested.has('electric-toothbrush-head');
   const shaverReplacement = requested.has('shaver-replacement-blade') || requested.has('shaver-cleaning-cartridge');
@@ -974,6 +1013,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (dysonVacuumAccessory) return !isDysonVacuumAccessoryMismatch(candidate, requested, query);
     if (airPurifierFilter) return !isAirPurifierFilterMismatch(candidate, query);
     if (refrigeratorWaterFilter) return !isRefrigeratorWaterFilterMismatch(candidate, query);
+    if (detergentPod) return !isDetergentPodMismatch(candidate, query, detergentPod);
     if (waterFilterCartridge) return !isWaterFilterCartridgeMismatch(candidate, query);
     if (printerInk) return !isPrinterInkMismatch(candidate, query);
     if (toothbrushHead) return !isToothbrushHeadMismatch(candidate, query);

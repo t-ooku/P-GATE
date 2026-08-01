@@ -8,7 +8,7 @@ test('若者向け投稿は12種類の検索テーマを提供する', () => {
   assert.equal(new Set(youthSearchThemes.map((theme) => theme.id)).size, 12);
 });
 
-test('投稿は9モール対応、コメント誘導、自然なハッシュタグを含む', () => {
+test('投稿は主要5・ファッション最大10モール対応、コメント誘導、自然なハッシュタグを含む', () => {
   for (let index = 0; index < youthSearchThemes.length; index += 1) {
     const post = buildYouthSearchPost(index, ['X', 'INSTAGRAM', 'TIKTOK'][index % 3]);
     const url = new URL(post.link);
@@ -23,7 +23,9 @@ test('投稿は9モール対応、コメント誘導、自然なハッシュタ�
     assert.match(post.caption, /SNKRDUNK/);
     assert.match(post.caption, /コメント/);
     assert.match(post.caption, /#ホシル/);
-    assert.match(post.caption, /#9モール横断/);
+    assert.match(post.caption, /主要5モール/);
+    assert.match(post.caption, /最大10モール/);
+    assert.match(post.caption, /#10モール横断/);
   }
 });
 

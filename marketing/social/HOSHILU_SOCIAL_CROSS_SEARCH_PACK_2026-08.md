@@ -5,7 +5,7 @@
 
 ## 表現ルール
 
-- 正確な価値: 「曖昧な記憶を検索語に整え、9/10モールとInstagram・X・TikTok・YouTubeへ同じ条件で探しに行ける」
+- 正確な価値: 「曖昧な記憶を検索語に整え、主要5モール（ファッション検索は最大10モール）とInstagram・X・TikTok・YouTubeへ同じ条件で探しに行ける」
 - SNSボタンの遷移先で、各サービスの動画・画像・投稿を楽しめる。
 - HOSHILUがSNS投稿を収集、保有、直接一覧表示するとは表現しない。
 - 全SNS投稿を網羅するとは表現しない。
@@ -17,7 +17,7 @@
 投稿ID: `hoshilu_social_cross_search_x_01`
 
 > 「動画で見た、名前が分からないあれ」を、そのまま入力。
-> HOSHILUが曖昧な記憶を検索語に整え、9/10モールとInstagram・X・TikTok・YouTubeへ同じ条件で探しに行けます。リンク先で動画・画像・投稿を楽しもう。
+> HOSHILUが曖昧な記憶を検索語に整え、主要5モール（ファッション検索は最大10モール）とInstagram・X・TikTok・YouTubeへ同じ条件で探しに行けます。リンク先で動画・画像・投稿を楽しもう。
 > #ホシル #あいまい検索 #SNS検索
 
 CTA: `覚えている特徴から探す`
@@ -32,13 +32,13 @@ CTA: `覚えている特徴から探す`
 1. フック: 「動画で見た、あれ。名前が分からない。」
 2. 入力例: 「透明・光る・スマホケース」
 3. 整理: 「HOSHILUが曖昧な記憶を検索語に整える」
-4. 横断導線: 「9/10モール＋Instagram・X・TikTok・YouTubeへ同じ条件で探しに行ける」
+4. 横断導線: 「主要5モール（ファッション検索は最大10モール）＋Instagram・X・TikTok・YouTubeへ同じ条件で探しに行ける」
 5. CTA: 「リンク先で動画・画像・投稿を楽しもう」
 
 キャプション:
 
-> 名前を忘れても、見た目や使い方は覚えてる。HOSHILUに記憶の断片を入れると検索語に整理。9/10モールとInstagram・X・TikTok・YouTubeへ、同じ条件で探しに行けます。各SNSのリンク先で動画・画像・投稿を楽しんでね。
-> #ホシル #あいまい検索 #SNS検索 #Instagram検索 #TikTok検索 #YouTube検索 #X検索 #9モール横断
+> 名前を忘れても、見た目や使い方は覚えてる。HOSHILUに記憶の断片を入れると検索語に整理。主要5モール（ファッション検索は最大10モール）とInstagram・X・TikTok・YouTubeへ、同じ条件で探しに行けます。各SNSのリンク先で動画・画像・投稿を楽しんでね。
+> #ホシル #あいまい検索 #SNS検索 #Instagram検索 #TikTok検索 #YouTube検索 #X検索 #10モール横断
 
 CTA: `プロフィールのリンクから試す`
 計測URL: `https://hoshilu.app/?q=透明%20光る%20スマホケース&utm_source=instagram&utm_medium=organic_social&utm_campaign=social_cross_search_2026_08&utm_content=ig_carousel_01`
@@ -53,7 +53,7 @@ CTA: `プロフィールのリンクから試す`
 
 - 0–2秒: 「この前、動画で見たあれ…名前なんだっけ？」
 - 2–5秒: 記憶の断片を入力。「透明 / 光る / スマホケース」
-- 5–8秒: 整理された同じ検索語と、9/10モールへの導線を表示。
+- 5–8秒: 整理された同じ検索語と、主要5モール（ファッション検索は最大10モール）への導線を表示。
 - 8–10秒: Instagram・X・TikTok・YouTubeの外部検索ボタンを順に表示。
 - 10–12秒: 「リンク先で動画・画像・投稿を楽しもう」＋HOSHILU CTA。
 
@@ -62,8 +62,8 @@ CTA: `プロフィールのリンクから試す`
 
 キャプション:
 
-> 名前が分からない「動画で見たあれ」も、覚えている特徴から。HOSHILUが曖昧な記憶を検索語に整え、9/10モールとInstagram・X・TikTok・YouTubeへ同じ条件で探しに行けます。リンク先で動画・画像・投稿をチェック。
-> #ホシル #あいまい検索 #SNS検索 #TikTok検索 #Instagram検索 #YouTube検索 #9モール横断
+> 名前が分からない「動画で見たあれ」も、覚えている特徴から。HOSHILUが曖昧な記憶を検索語に整え、主要5モール（ファッション検索は最大10モール）とInstagram・X・TikTok・YouTubeへ同じ条件で探しに行けます。リンク先で動画・画像・投稿をチェック。
+> #ホシル #あいまい検索 #SNS検索 #TikTok検索 #Instagram検索 #YouTube検索 #10モール横断
 
 CTA: `HOSHILUで検索語をつくる`
 TikTok計測URL: `https://hoshilu.app/?q=透明%20光る%20スマホケース&utm_source=tiktok&utm_medium=organic_social&utm_campaign=social_cross_search_2026_08&utm_content=video_01`

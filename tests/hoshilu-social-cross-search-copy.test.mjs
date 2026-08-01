@@ -14,7 +14,8 @@ test('social cross-search copy stays review-only and uses accurate external-navi
   ]);
   const combined = `${pack}\n${queue}\n${migration}`;
 
-  assert.match(combined, /9\/10モール/);
+  assert.match(combined, /主要5モール/);
+  assert.match(combined, /最大10モール/);
   assert.match(combined, /Instagram・X・TikTok・YouTube/);
   assert.match(combined, /リンク先で動画・画像・投稿/);
   assert.doesNotMatch(combined, /全SNS投稿を網羅(?!するとは表現しない)/);
