@@ -14,14 +14,18 @@ HOSHILU is a web and PWA product-discovery service that lets people start a sear
 ## 確認済み事実 / Verified facts
 
 - サービス名 / Name: HOSHILU（ホシル）
+- 所有・運営 / Owner and operator: オオクツタカノリ個人（英字表記は本人確認後に記載）
 - 本番URL / Live URL: https://hoshilu.app/
 - 提供形態 / Format: Web / installable PWA
 - ゲスト利用 / Guest access: 商品検索は登録なしで開始可能。保存・会員機能は別導線。
 - 入力言語 / Interface languages: 日本語、英語、中国語、韓国語。
 - 検索方法 / Search input: 商品名または、色・形・用途・大きさ・素材・見た場所などの説明。
-- 購入先 / Destinations: 確認済みの商品ページがある場合はそのページへ、ない場合は対応モールの検索結果へ案内する。
+- 購入先 / Destinations: 通常はAmazon、楽天市場、Yahoo!ショッピング、Qoo10、SHEINの主要5モール。ファッション検索時のみZOZOTOWN、SHOPLIST、MUSINSA、BUYMA、SNKRDUNKを加え、最大10モールを扱う。
+- 商品候補 / Product candidates: 確認済みの商品詳細URLを1モール1件、最大10件まで署名付きで提示する。未確認リンクを収益リンクとして扱わない。
 - 価格・在庫 / Price and availability: HOSHILUは最新性を保証しない。購入前にリンク先モールで確認が必要。
 - 会員 / Membership: 無料会員導線あり。MYWISHへ検索を保存して後から再検索できる。
+- 収益主体 / Affiliate proceeds: HOSHILUのアフィリエイト収入は運営者個人に帰属する。
+- 主体の分離 / Entity separation: Amazon.co.jpのwith care、Find fun、Tomorrow's smileはITGグループ株式会社が所有・運営する販売店舗であり、HOSHILUの所有主体ではない。
 - 計測 / Measurement: 匿名の許可済みイベントだけを保存し、`traffic_class='QA'` を成果から分離する。
 
 ## What HOSHILU does not claim
@@ -30,6 +34,7 @@ HOSHILU is a web and PWA product-discovery service that lets people start a sear
 - It does not present unverified user counts, sales results, rankings, or “No. 1” claims.
 - Marketplace prices, stock, safety information, import restrictions, and delivery terms must be confirmed on the destination page.
 - Users should not enter names, addresses, contact details, or other personal information into product descriptions.
+- HOSHILU does not treat an unverified marketplace link as an affiliate or revenue-generating link.
 
 ## 記事向け短文 / Short media copy
 
@@ -37,7 +42,7 @@ HOSHILU is a web and PWA product-discovery service that lets people start a sear
 HOSHILUは、名前を思い出せない商品でも、色・形・用途などの特徴から探し始められるWeb/PWAサービスです。登録なしで検索を試し、複数モールの購入候補や検索結果を確認できます。価格・在庫は各モールでの確認が必要です。
 
 **EN**  
-HOSHILU helps people search for products they can describe but cannot name. Visitors can try the search without registering and review available product destinations or marketplace search results. Current prices, availability, and delivery terms must be confirmed on each marketplace.
+HOSHILU helps people search for products they can describe but cannot name. Visitors can try the search without registering and review destinations across five core marketplaces, with five additional destinations available only for fashion searches. Current prices, availability, and delivery terms must be confirmed on each marketplace.
 
 ## 取材で確認してほしいポイント / Suggested review points
 
@@ -46,6 +51,12 @@ HOSHILU helps people search for products they can describe but cannot name. Visi
 3. ゲスト検索から無料会員、MYWISH、モール送客までの導線が理解できるか。
 4. 未確認の商品・価格・在庫を断定していないか。
 5. 改善してほしい説明入力、検索結果、モバイル表示は何か。
+
+## 公開前の主体・API確認 / Ownership and API gate
+
+- 運営者表記、規約、プライバシー、媒体申請ではHOSHILUをITGグループ株式会社の所有サービスとして記載しない。
+- Amazonが現在のITG/privateプロフィールとの整合性を回答する前に、SP-API認証情報の取得、店舗認可、本番同期を行わない。
+- 取材・掲載時も、HOSHILUの運営主体とITGグループ株式会社のAmazon販売3店舗を混同しない。
 
 ## 素材 / Owned assets
 
