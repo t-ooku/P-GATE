@@ -1,12 +1,12 @@
 queue_id,priority,platform,format,pillar,hook,body,cta,prefill_query,asset_requirement,affiliate,status
-hoshilu_feature_001,1,X,TEXT,FASHION_9,"ファッション検索は、SNKRDUNKまで。","ホシルは通常の主要4モールに加えて、ファッション検索時だけZOZOTOWN・SHOPLIST・MUSINSA・BUYMA・SNKRDUNKも案内。名前が曖昧でも、覚えている特徴から探せます。","ファッションの特徴を入力","韓国っぽい 黒 短丈 スニーカー","自社テキストのみ。2026-08-01 18:30 JST",false,APPROVED
-hoshilu_feature_002,2,INSTAGRAM,CAROUSEL,FASHION_9,"欲しい服、探す場所は最大9モール。","ブランド名が分からなくても、色・形・系統をそのままホシルへ。ファッション検索ならSNKRDUNKを含む専門5モールも追加して探せます。","プロフィールから検索","白 厚底 レトロ スニーカー","本文承認済み。9モール名と検索体験だけを使う自社制作カルーセル待ち",false,ASSET_REQUIRED
+hoshilu_feature_001,1,X,TEXT,MARKETPLACE_9,"9つのショッピングモールに対応。","Amazon・楽天市場・Qoo10・SHEIN・ZOZOTOWN・SHOPLIST・MUSINSA・BUYMA・SNKRDUNK。名前が曖昧でも、覚えている特徴から探せます。","覚えている特徴を入力","韓国っぽい 黒 短丈 スニーカー","自社テキストのみ。2026-08-01 18:30 JST",false,APPROVED
+hoshilu_feature_002,2,INSTAGRAM,CAROUSEL,MARKETPLACE_9,"欲しい商品を、9つのショッピングモールから。","ブランド名が分からなくても、色・形・系統など覚えている特徴をそのままホシルへ。9つのショッピングモールに対応しています。","プロフィールから検索","白 厚底 レトロ スニーカー","本文承認済み。9モール名と検索体験だけを使う自社制作カルーセル待ち",false,ASSET_REQUIRED
 hoshilu_feature_003,3,X,TEXT,SALE_NOTIFICATION,"セール日を、毎回見に行かなくていい。","無料会員のセール通知は最初からON。確認済みの割引セールだけを事前または開始時に知らせ、その他の新着・記事通知は自分でONにできます。","通知設定を確認","セール通知","自社テキストのみ。2026-08-03 12:15 JST",false,APPROVED
 hoshilu_feature_004,4,INSTAGRAM,REEL,SALE_NOTIFICATION,"届くのは、まずセールだけ。","Amazon・楽天市場・Qoo10・SHEINなど、掲載モールの確認済みセールを横断。開始前に気づいて、ホシルで買える場所を探せます。","無料登録して通知設定","セール通知","本文承認済み。通知設定画面の本番実機録画待ち。個人情報は映さない",false,ASSET_REQUIRED
 hoshilu_feature_005,5,X,TEXT,FOOD_DELIVERY,"「ピザ食べたい」も、ホシルから。","食事の検索ではUber Eats・出前館・menu・Rocket Nowの公式サービスへ案内。店舗・価格・配達可否は住所設定後に各サービスで確認できます。","食べたいものを入力","今日 ピザ デリバリー","採用見送り。公開・再利用禁止",false,CANCELLED
 hoshilu_feature_006,6,INSTAGRAM,CAROUSEL,FOOD_DELIVERY,"デリバリーアプリ、どこから見る？","ホシルで食べたいものを入力すると、主要デリバリー4サービスの公式導線をまとめて表示。現在は各サービスへの案内で、料理価格の横断比較ではありません。","食事検索を試す","ランチ カレー デリバリー","採用見送り。公開・再利用禁止",false,CANCELLED
 hoshilu_feature_007,7,X,TEXT,AMBIGUOUS_SEARCH,"検索語が分からないなら、説明でいい。","「SNSで見た」「丸くて光る」「韓国っぽい」――断片的な記憶を、モールで探しやすい商品条件へ整えます。","覚えている特徴を入力","SNSで見た 丸く光る 部屋のライト","自社テキストのみ。2026-08-07 12:15 JST",false,APPROVED
 hoshilu_feature_008,8,INSTAGRAM,CAROUSEL,HOSHITTOKU,"今日見つからなくても、検索を終わらせない。","曖昧な検索をほしっトクして、あとから再検索。無料会員ならセール通知の設定もまとめて管理できます。","ほしっトクを使う","バッグにつける 小さい ぬいぐるみ","本文承認済み。自社制作の検索・保存フロー図待ち",false,ASSET_REQUIRED
-hoshilu_feature_009,9,X,TEXT,FASHION_9,"ファッション検索は最大9モール。","通常の主要4モールに専門5モールを追加。色・形・系統など、覚えている特徴から探せます。","9モールで探す","白 厚底 レトロ スニーカー","自社テキストのみ。全9モールのハッシュタグ。2026-08-02 18:30 JST",false,APPROVED
+hoshilu_feature_009,9,X,TEXT,MARKETPLACE_9,"9つのショッピングモールから探せる。","商品名が分からなくても、色・形・系統など、覚えている特徴をホシルへ。対応する9つのショッピングモールへ案内します。","9モールで探す","白 厚底 レトロ スニーカー","自社テキストのみ。全9モールのハッシュタグ。2026-08-02 18:30 JST",false,APPROVED
 hoshilu_feature_010,10,X,TEXT,SALE_NOTIFICATION,"各モールのセールを、まとめて見逃さない。","無料会員は確認済みセール通知が最初からON。開始前または開始時に知らせ、その他の情報通知は自分で選べます。","セール通知を確認","セール通知","自社テキストのみ。全9モールのハッシュタグ。2026-08-04 18:30 JST",false,APPROVED
-hoshilu_feature_011,11,X,TEXT,MARKETPLACE_GUIDE,"通常は主要4モール、ファッションは最大9モール。","Amazon・楽天市場・Qoo10・SHEINを基本に、ファッションではZOZOTOWN・SHOPLIST・MUSINSA・BUYMA・SNKRDUNKも案内します。","特徴から検索","韓国ストリート 黒 スニーカー","自社テキストのみ。全9モールのハッシュタグ。2026-08-06 18:30 JST",false,APPROVED
+hoshilu_feature_011,11,X,TEXT,MARKETPLACE_GUIDE,"対応するショッピングモールは9つ。","Amazon・楽天市場・Qoo10・SHEIN・ZOZOTOWN・SHOPLIST・MUSINSA・BUYMA・SNKRDUNKから、欲しい商品を探せます。","特徴から検索","韓国ストリート 黒 スニーカー","自社テキストのみ。全9モールのハッシュタグ。2026-08-06 18:30 JST",false,APPROVED
