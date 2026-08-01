@@ -369,13 +369,28 @@ function requestedComputerPlatform(text) {
   return '';
 }
 
+function displayResolution(text) {
+  return Number(String(text || '').normalize('NFKC').match(/\b([48])\s*k\b/iu)?.[1] || 0);
+}
+
+function refreshRate(text) {
+  return Number(String(text || '').normalize('NFKC').match(/\b(\d{2,3})\s*hz\b/iu)?.[1] || 0);
+}
+
+function hasDualMonitorEvidence(text) {
+  return /(?:dual.{0,16}(?:display|monitor)|2.{0,12}(?:display|monitor)|デュアル.{0,12}モニター|2画面|双.{0,12}显示器|雙.{0,12}顯示器|듀얼(?:.{0,12}모니터)?|모니터\s*2대)/iu.test(String(text || ''));
+}
+
 function isUsb4DockMismatch(candidate, constraints = {}) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
     .toLowerCase();
   if (!/usb\s*4/iu.test(text) || !/(?:dock(?:ing\s*station)?|ドック|ドッキングステーション|扩展坞|擴充塢|도킹\s*스테이션)/iu.test(text)) return true;
   if (constraints.displayPort && displayPortVersion(text) !== constraints.displayPort) return true;
-  if (constraints.dualMonitor && !/(?:dual\s*(?:display|monitor)|2\s*(?:display|monitor)|デュアルモニター|2画面|双显示器|雙顯示器|듀얼\s*모니터|모니터\s*2대)/iu.test(text)) return true;
+  if (constraints.dualMonitor && !hasDualMonitorEvidence(text)) return true;
+  if (constraints.resolution && displayResolution(text) < constraints.resolution) return true;
+  if (constraints.refreshRate && refreshRate(text) < constraints.refreshRate) return true;
+  if (constraints.displayLink && !/display\s*link/iu.test(text)) return true;
   const candidatePlatform = requestedComputerPlatform(text);
   if (constraints.platform && candidatePlatform && candidatePlatform !== constraints.platform) return true;
   return false;
@@ -495,7 +510,10 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (usbAHub && isUsbAHubMismatch(candidate)) return false;
     if (usb4Dock && isUsb4DockMismatch(candidate, {
       displayPort: displayPortVersion(query),
-      dualMonitor: /(?:dual\s*(?:display|monitor)|2\s*(?:display|monitor)|デュアルモニター|2画面|双显示器|雙顯示器|듀얼\s*모니터|모니터\s*2대)/iu.test(String(query || '')),
+      dualMonitor: hasDualMonitorEvidence(query),
+      resolution: displayResolution(query),
+      refreshRate: refreshRate(query),
+      displayLink: /display\s*link/iu.test(String(query || '')),
       platform: requestedComputerPlatform(query)
     })) return false;
     if (tabletAccessory) {

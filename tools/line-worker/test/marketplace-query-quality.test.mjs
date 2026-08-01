@@ -652,6 +652,24 @@ test("USB4ドックのDisplayPort・2画面・OS・給電条件を4言語から9
   }
 });
 
+test("USB4ドックの4K・Hz・DisplayLink条件を4言語から9モールへ保持する", () => {
+  const cases = [
+    'MacBook用 DisplayLink対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 dock with DisplayLink dual 4K 60Hz monitors for MacBook',
+    '支持DisplayLink双4K 60Hz显示器的MacBook USB4扩展坞',
+    '맥북용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.match(keywords, /^USB4 ドック/u, `${marketplace}: ${input} -> ${keywords}`);
+      for (const condition of ['4K', '60Hz', 'DisplayLink', 'デュアルモニター', 'Mac対応']) {
+        assert.match(keywords, new RegExp(condition, 'u'), `${marketplace}: ${input} -> ${keywords}`);
+      }
+    }
+  }
+});
+
 test("4言語のタブレット本体は小数インチ・容量を保持して9モール変換する", () => {
   const cases = [
     '10.9インチ256GBのタブレット',
