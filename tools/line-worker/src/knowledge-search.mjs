@@ -945,7 +945,7 @@ function isOledTelevisionMismatch(candidate, requested) {
 function laserProjectorConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   return {
-    projector: /(?:プロジェクター|projector|投影仪|投影機|프로젝터)/iu.test(text),
+    projector: /(?:プロジェクター|projector|投影仪|投影機|프로젝터|壁いっぱい.{0,12}大画面.{0,12}映画|movies?.{0,16}filling.{0,16}whole\s*wall.{0,16}huge\s*screen|电影画面.{0,12}铺满.{0,12}整面墙|영화\s*화면.{0,12}벽\s*가득.{0,12}크게)/iu.test(text),
     resolution: /\b4\s*k\b/iu.test(text),
     brightness: text.match(/\b(\d{3,4})\s*(?:ansi\s*)?(?:ルーメン|lumens?|流明|루멘)/iu)?.[1] || '',
     ratio: text.match(/(?:投写比|throw\s*ratio|投射比|투사비)\s*(\d(?:\.\d+)?:1)/iu)?.[1] || '',

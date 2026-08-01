@@ -1549,6 +1549,10 @@ test('レーザープロジェクターは4言語で解像度・明るさ・投�
     '4K laser projector 3000 ANSI lumens throw ratio 1.2:1 Android TV',
     '4K 3000 ANSI流明 投射比1.2:1 激光 Android TV 投影仪',
     '4K 3000 ANSI 루멘 투사비 1.2:1 레이저 Android TV 프로젝터',
+    '壁いっぱいの大画面で映画を見たい 4K 3000 ANSIルーメン 投写比1.2:1 レーザー Android TV',
+    'want movies filling the whole wall on a huge screen 4K laser 3000 ANSI lumens throw ratio 1.2:1 Android TV',
+    '想让电影画面铺满整面墙 4K 激光 3000 ANSI流明 投射比1.2:1 Android TV',
+    '영화 화면을 벽 가득 크게 보고 싶어 4K 레이저 3000 ANSI 루멘 투사비 1.2:1 Android TV',
   ];
   const candidates = [
     { asin: 'MATCH', product_name: '4K Laser Projector 3000 ANSI Lumens Throw Ratio 1.2:1 Android TV' },
