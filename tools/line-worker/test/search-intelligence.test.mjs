@@ -1709,3 +1709,26 @@ test('空気清浄機フィルターは本体・別型番・別種別・別交�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['air-purifier-filter'], query);
   }
 });
+
+test('浄水器カートリッジは本体・別型番・別品番・本数違いを除外する', () => {
+  const candidates = [
+    { asin: 'BRITA3', product_name: 'BRITA MAXTRA PRO 交換カートリッジ 3個パック' },
+    { asin: 'BRITA1', product_name: 'BRITA MAXTRA PRO 交換カートリッジ 1個' },
+    { asin: 'BRITA_BODY', product_name: 'BRITA 浄水ポット 本体 MAXTRA PROカートリッジ付き' },
+    { asin: 'TORAY', product_name: 'Toray MKC.MX2J 交換用 浄水カートリッジ 2 pack' },
+    { asin: 'TORAY_WRONG', product_name: 'Toray MKC.XJ 交換用 浄水カートリッジ 2 pack' },
+    { asin: 'CLEANSUI', product_name: 'Cleansui HGC9S 交換カートリッジ' },
+    { asin: 'PANASONIC', product_name: 'Panasonic TK-CJ24対応 交換カートリッジ TK-CJ24C1' },
+    { asin: 'PANASONIC_WRONG', product_name: 'Panasonic TK-CJ24対応 交換カートリッジ TK-CJ24C2' },
+  ];
+  const cases = [
+    ['BRITA MAXTRA PRO 交換カートリッジ 3個', ['BRITA3']],
+    ['replacement cartridge for Toray MKC.MX2J 2 pack', ['TORAY']],
+    ['三菱丽阳可菱水HGC9S替换滤芯', ['CLEANSUI']],
+    ['파나소닉 TK-CJ24용 교체 카트리지 TK-CJ24C1', ['PANASONIC']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['water-filter-cartridge'], query);
+  }
+});

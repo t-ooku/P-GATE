@@ -471,6 +471,38 @@ function isAirPurifierFilterMismatch(candidate, query) {
   return false;
 }
 
+function waterFilterIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:brita|ブリタ)/u.test(value) && /maxtra\s*pro/u.test(value)) return 'brita-maxtra-pro';
+  const toray = value.match(/\b(mkc[.]?mx2j)\b/u);
+  if (toray) return 'toray-mkc.mx2j';
+  if (/\bhgc9s\b/u.test(value)) return 'cleansui-hgc9s';
+  if (/\btk[- ]?cj24(?!c)/u.test(value)) return 'panasonic-tk-cj24';
+  return '';
+}
+
+function waterFilterPartNumber(text) {
+  return String(text || '').normalize('NFKC').toLowerCase().match(/\b(tk[- ]?cj24c1)\b/u)?.[1]?.replace('tk cj', 'tk-cj') || '';
+}
+
+function requestedPackageCount(text) {
+  return Number(String(text || '').normalize('NFKC')
+    .match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|개|개입|세트)/iu)?.[1] || 0);
+}
+
+function isWaterFilterCartridgeMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedIdentity = waterFilterIdentity(query);
+  if (requestedIdentity && waterFilterIdentity(text) !== requestedIdentity) return true;
+  const requestedPart = waterFilterPartNumber(query);
+  if (requestedPart && waterFilterPartNumber(text) !== requestedPart) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  if (/(?:本体|本体セット|water\s*purifier\s*(?:unit|system)|整机|整機|본체)/iu.test(text)) return true;
+  return !/(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -594,6 +626,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const dysonVacuumAccessory = ['cordless-vacuum-filter', 'cordless-vacuum-battery', 'cordless-vacuum-charger']
     .some((category) => requested.has(category));
   const airPurifierFilter = requested.has('air-purifier-filter');
+  const waterFilterCartridge = requested.has('water-filter-cartridge');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -629,6 +662,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (robotVacuumConsumable && isRobotVacuumConsumableMismatch(candidate, requested, query)) return false;
     if (dysonVacuumAccessory) return !isDysonVacuumAccessoryMismatch(candidate, requested, query);
     if (airPurifierFilter) return !isAirPurifierFilterMismatch(candidate, query);
+    if (waterFilterCartridge) return !isWaterFilterCartridgeMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

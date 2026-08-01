@@ -163,6 +163,29 @@ function buildAirPurifierFilterSearchKeywords(query) {
   return [identity, type, partNumber].filter(Boolean).join(' ');
 }
 
+function waterFilterIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  if (/(?:brita|ブリタ)/iu.test(value) && /maxtra\s*pro/iu.test(value)) return 'BRITA MAXTRA PRO';
+  const toray = value.match(/\b(MKC[.]?MX2J)\b/iu);
+  if (toray) return `Toray ${toray[1].toUpperCase().replace('MKCMX', 'MKC.MX')}`;
+  const cleansui = value.match(/\b(HGC9S)\b/iu);
+  if (cleansui) return `Cleansui ${cleansui[1].toUpperCase()}`;
+  const panasonic = value.match(/\b(TK[- ]?CJ24)(?!C)/iu);
+  if (panasonic) return 'Panasonic TK-CJ24';
+  return '';
+}
+
+function buildWaterFilterCartridgeSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const cartridge = /(?:交換|替え|replacement|替换|替換|교체)?\s*(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)/iu.test(normalized);
+  if (!cartridge) return '';
+  const identity = waterFilterIdentity(normalized);
+  if (!identity) return '';
+  const partNumber = normalized.match(/\b(TK[- ]?CJ24C1)\b/iu)?.[1]?.toUpperCase().replace('TK CJ', 'TK-CJ') || '';
+  const count = normalized.match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|개|개입|세트)/iu)?.[1];
+  return [identity, '交換カートリッジ', partNumber, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -466,6 +489,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (dysonVacuumAccessory) return dysonVacuumAccessory;
   const airPurifierFilter = buildAirPurifierFilterSearchKeywords(normalized);
   if (airPurifierFilter) return airPurifierFilter;
+  const waterFilterCartridge = buildWaterFilterCartridgeSearchKeywords(normalized);
+  if (waterFilterCartridge) return waterFilterCartridge;
   const robotVacuumConsumable = buildRobotVacuumConsumableSearchKeywords(normalized);
   if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);

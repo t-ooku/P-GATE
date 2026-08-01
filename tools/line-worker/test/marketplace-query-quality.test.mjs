@@ -91,6 +91,20 @@ test('空気清浄機の交換フィルターを4ブランド・4言語で本体
   }
 });
 
+test('浄水器の交換カートリッジを4ブランド・4言語で本体から分離する', () => {
+  const cases = [
+    ['BRITA MAXTRA PRO 交換カートリッジ 3個', 'BRITA MAXTRA PRO 交換カートリッジ 3個セット'],
+    ['replacement cartridge for Toray MKC.MX2J 2 pack', 'Toray MKC.MX2J 交換カートリッジ 2個セット'],
+    ['三菱丽阳可菱水HGC9S替换滤芯', 'Cleansui HGC9S 交換カートリッジ'],
+    ['파나소닉 TK-CJ24용 교체 카트리지 TK-CJ24C1', 'Panasonic TK-CJ24 交換カートリッジ TK-CJ24C1'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);
