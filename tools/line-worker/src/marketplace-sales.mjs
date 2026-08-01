@@ -275,9 +275,61 @@ export async function runMarketplaceContentCycle(env, now = new Date()) {
   }
 }
 
+export async function marketplaceContentHealth(request, env, now = new Date()) {
+  if (!internalAuthorized(request, env)) {
+    return Response.json({ ok: false, error: 'SALE_ADMIN_UNAUTHORIZED' }, { status: 401 });
+  }
+  if (!env.PRODUCT_DB) {
+    return Response.json({ ok: false, error: 'PRODUCT_DB_NOT_CONFIGURED' }, { status: 503 });
+  }
+  try {
+    const [latest, success, failure] = await Promise.all([
+      env.PRODUCT_DB.prepare(
+        `SELECT checked_at,status,approved_active_events,covered_marketplaces,queued_notifications,error_code
+         FROM marketplace_content_run_audit ORDER BY checked_at DESC LIMIT 1`
+      ).first(),
+      env.PRODUCT_DB.prepare(
+        `SELECT checked_at FROM marketplace_content_run_audit WHERE status='SUCCESS' ORDER BY checked_at DESC LIMIT 1`
+      ).first(),
+      env.PRODUCT_DB.prepare(
+        `SELECT checked_at,error_code FROM marketplace_content_run_audit WHERE status='FAILED' ORDER BY checked_at DESC LIMIT 1`
+      ).first()
+    ]);
+    const lastSuccessAt = String(success?.checked_at || '');
+    const successTime = Date.parse(lastSuccessAt);
+    const minutesSinceSuccess = Number.isFinite(successTime)
+      ? Math.max(0, Math.floor((now.getTime() - successTime) / 60000)) : null;
+    const status = !latest ? 'NEVER_RUN'
+      : latest.status === 'FAILED' ? 'FAILED'
+      : minutesSinceSuccess === null || minutesSinceSuccess > 30 ? 'STALE' : 'HEALTHY';
+    return Response.json({
+      ok: status === 'HEALTHY',
+      status,
+      expected_marketplaces: SALE_MARKETPLACES.length,
+      latest: latest ? {
+        checked_at: String(latest.checked_at || ''),
+        status: String(latest.status || ''),
+        approved_active_events: Number(latest.approved_active_events || 0),
+        covered_marketplaces: Number(latest.covered_marketplaces || 0),
+        queued_notifications: Number(latest.queued_notifications || 0),
+        error_code: String(latest.error_code || '')
+      } : null,
+      last_success_at: lastSuccessAt,
+      last_failure_at: String(failure?.checked_at || ''),
+      last_failure_code: String(failure?.error_code || ''),
+      minutes_since_success: minutesSinceSuccess
+    }, { headers: { 'cache-control': 'no-store' } });
+  } catch {
+    return Response.json({ ok: false, error: 'MARKETPLACE_CONTENT_HEALTH_FAILED' }, { status: 500 });
+  }
+}
+
 export async function handleMarketplaceSaleRoutes(request, env) {
   const url = new URL(request.url);
   if (request.method === 'GET' && url.pathname === '/api/sales') return publicList(env);
+  if (request.method === 'GET' && url.pathname === '/api/internal/marketplace-content/health') {
+    return marketplaceContentHealth(request, env);
+  }
   if (request.method === 'POST' && url.pathname === '/api/internal/sales') return upsertSale(request, env);
   if (url.pathname !== '/api/member/sale-preferences') return null;
   const member = await readMemberSession(request, env);
