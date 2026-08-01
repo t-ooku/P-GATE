@@ -488,6 +488,10 @@ test('Dolby Atmosサウンドバーはチャンネル・端子・低音構成を
     '5.1.2ch Dolby Atmos soundbar HDMI eARC wireless subwoofer',
     '5.1.2声道 Dolby Atmos HDMI eARC 无线低音炮 回音壁',
     '5.1.2채널 Dolby Atmos HDMI eARC 무선 서브우퍼 사운드바',
+    'テレビの音を頭上から包まれるようにして低音も迫力を出したい 5.1.2ch Dolby Atmos HDMI eARC ワイヤレスサブウーファー',
+    'want TV audio to surround me from overhead with powerful bass 5.1.2ch Dolby Atmos HDMI eARC wireless subwoofer',
+    '想让电视声音从头顶环绕并带来震撼低音 5.1.2声道 Dolby Atmos HDMI eARC 无线低音炮',
+    'TV 소리가 머리 위에서 감싸고 저음도 웅장했으면 좋겠어 5.1.2채널 Dolby Atmos HDMI eARC 무선 서브우퍼',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

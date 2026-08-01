@@ -971,8 +971,10 @@ function isLaserProjectorMismatch(candidate, requested) {
 
 function dolbyAtmosSoundbarConstraints(value) {
   const text = String(value || '').normalize('NFKC');
+  const implicitSoundbar = /(?:テレビ.{0,12}音.{0,12}頭上.{0,12}包.{0,20}低音.{0,12}迫力|tv\s*audio.{0,20}surround.{0,12}overhead.{0,20}powerful\s*bass|电视声音.{0,12}头顶.{0,12}环绕.{0,16}(?:震撼|强劲)低音|tv\s*소리.{0,12}머리\s*위.{0,12}감싸.{0,16}저음.{0,12}(?:웅장|강력))/iu.test(text);
   return {
-    soundbar: /(?:サウンドバー|soundbar|回音壁|사운드바)/iu.test(text),
+    soundbar: /(?:サウンドバー|soundbar|回音壁|사운드바)/iu.test(text) || implicitSoundbar,
+    implicitSoundbar,
     channels: text.match(/\b(\d\.\d\.\d)\s*(?:ch|チャンネル|声道|聲道|채널)/iu)?.[1] || '',
     atmos: /dolby\s*atmos/iu.test(text),
     earc: /hdmi\s*e-?arc|\bearc\b/iu.test(text),
@@ -2262,7 +2264,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !laserProjector.wrongProduct;
   const dolbyAtmosSoundbar = dolbyAtmosSoundbarConstraints(normalizedQuery);
   const dolbyAtmosSoundbarIntent = dolbyAtmosSoundbar.soundbar && Boolean(dolbyAtmosSoundbar.channels)
-    && dolbyAtmosSoundbar.atmos && !dolbyAtmosSoundbar.wrongProduct;
+    && dolbyAtmosSoundbar.atmos && (!dolbyAtmosSoundbar.wrongProduct || dolbyAtmosSoundbar.implicitSoundbar);
   const fullFrameMirrorlessCamera = fullFrameMirrorlessCameraConstraints(normalizedQuery);
   const fullFrameMirrorlessCameraIntent = fullFrameMirrorlessCamera.camera
     && Boolean(fullFrameMirrorlessCamera.pixels && fullFrameMirrorlessCamera.video)

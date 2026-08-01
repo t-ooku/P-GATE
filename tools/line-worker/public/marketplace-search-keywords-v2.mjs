@@ -391,7 +391,7 @@ function buildLaserProjectorSearchKeywords(query) {
 
 function buildDolbyAtmosSoundbarSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  if (!/(?:サウンドバー|soundbar|回音壁|사운드바)/iu.test(normalized)) return '';
+  if (!/(?:サウンドバー|soundbar|回音壁|사운드바|テレビ.{0,12}音.{0,12}頭上.{0,12}包.{0,20}低音.{0,12}迫力|tv\s*audio.{0,20}surround.{0,12}overhead.{0,20}powerful\s*bass|电视声音.{0,12}头顶.{0,12}环绕.{0,16}(?:震撼|强劲)低音|tv\s*소리.{0,12}머리\s*위.{0,12}감싸.{0,16}저음.{0,12}(?:웅장|강력))/iu.test(normalized)) return '';
   const channels = normalized.match(/\b(\d\.\d\.\d)\s*(?:ch|チャンネル|声道|聲道|채널)/iu)?.[1];
   const atmos = /dolby\s*atmos/iu.test(normalized) ? 'Dolby Atmos' : '';
   const earc = /hdmi\s*e-?arc|\bearc\b/iu.test(normalized) ? 'HDMI eARC' : '';
