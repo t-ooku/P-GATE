@@ -264,7 +264,8 @@ function buildAirPurifierBodySearchKeywords(query) {
 }
 
 function buildCordlessStickVacuumSearchKeywords(query) {
-  if (!/(?:コードレス.{0,16}スティック掃除機|cordless\s*stick\s*vacuum|无线杆式吸尘器|無線桿式吸塵器|무선\s*스틱\s*청소기)/iu.test(query)) return '';
+  const cordlessFloorCleaningIntent = /(?:コードレス.{0,16}スティック掃除機|cordless\s*stick\s*vacuum|无线杆式吸尘器|無線桿式吸塵器|무선\s*스틱\s*청소기|コード.{0,8}(?:気にせず|なし).{0,16}床.{0,16}(?:髪|ほこり).{0,16}(?:吸|掃除)|(?:clean|vacuum).{0,20}(?:hair|dust).{0,16}(?:from\s+the\s+)?floor.{0,20}without\s+(?:a\s+)?cord|不用(?:电线|電線).{0,20}(?:吸走|清理).{0,16}(?:地板).{0,16}(?:毛发|毛髮|灰尘|灰塵)|전선\s*없이.{0,20}바닥.{0,16}(?:머리카락|먼지).{0,20}(?:청소|흡입))/iu;
+  if (!cordlessFloorCleaningIntent.test(query)) return '';
   const suction = String(query || '').match(/\b(\d{2,3})\s*aw\b/iu)?.[1];
   const runtime = String(query || '').match(/\b(\d{2,3})\s*(?:分|minutes?|mins?|分钟|分鐘|분)/iu)?.[1];
   const hepa = /\bhepa\b|ヘパ|헤파/iu.test(query) ? 'HEPA' : '';

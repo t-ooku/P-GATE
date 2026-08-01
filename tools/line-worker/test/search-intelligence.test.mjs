@@ -1327,6 +1327,10 @@ test('コードレススティック掃除機は4言語で吸引力・稼働時�
     'cordless stick vacuum 240AW 60 minutes HEPA laser light',
     '无线杆式吸尘器 240AW 60分钟 HEPA 激光照明',
     '무선 스틱 청소기 240AW 60분 HEPA 레이저 조명',
+    'コードを気にせず床の髪の毛をさっと吸いたい 240AW 60分 HEPA レーザー照明',
+    'clean hair from the floor without a cord 240AW 60 minutes HEPA laser light',
+    '不用电线快速吸走地板毛发 240AW 60分钟 HEPA 激光照明',
+    '전선 없이 바닥 머리카락을 빠르게 청소하고 싶어 240AW 60분 HEPA 레이저 조명',
   ];
   const candidates = [
     { asin: 'MATCH', product_name: 'Cordless Stick Vacuum 240AW 60 Minutes HEPA Laser Light' },
