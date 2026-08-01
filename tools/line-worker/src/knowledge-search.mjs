@@ -408,6 +408,25 @@ function isUsb4DockMismatch(candidate, constraints = {}) {
   return false;
 }
 
+function robotVacuumModel(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/\b(?:roomba\s*)?([jis]\d{1,2}(?:\+)?)(?![a-z0-9])/iu)?.[1] || '';
+}
+
+function isRobotVacuumConsumableMismatch(candidate, requested, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedModel = robotVacuumModel(query);
+  if (requestedModel && robotVacuumModel(text) !== requestedModel) return true;
+  const isFilter = /(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(text);
+  const isBrush = /(?:サイド|side|边刷|邊刷|사이드)?\s*(?:ブラシ|brush(?:es)?|刷子|브러시)/iu.test(text);
+  const isBag = /(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)/iu.test(text);
+  if (requested.has('robot-vacuum-filter')) return !isFilter || isBrush || isBag;
+  if (requested.has('robot-vacuum-brush')) return !isBrush || isFilter || isBag;
+  if (requested.has('robot-vacuum-bag')) return !isBag || isFilter || isBrush;
+  return false;
+}
+
 function tabletModel(text) {
   const value = String(text || '').normalize('NFKC').toLowerCase();
   const latin = value.match(/\bipad\s*(air|pro|mini)\b/u);
@@ -500,6 +519,8 @@ export function filterCategoryMismatches(query, candidates = []) {
   const thunderboltDock = requested.has('thunderbolt-dock');
   const usbAHub = requested.has('usb-a-hub');
   const usb4Dock = requested.has('usb4-dock');
+  const robotVacuumConsumable = ['robot-vacuum-filter', 'robot-vacuum-brush', 'robot-vacuum-bag']
+    .some((category) => requested.has(category));
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -532,6 +553,7 @@ export function filterCategoryMismatches(query, candidates = []) {
       appleSilicon: appleSiliconGeneration(query),
       platform: requestedComputerPlatform(query)
     })) return false;
+    if (robotVacuumConsumable && isRobotVacuumConsumableMismatch(candidate, requested, query)) return false;
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

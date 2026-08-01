@@ -1617,3 +1617,23 @@ test('iPad世代指定ケースは4言語で一致世代だけを表示する', 
     );
   }
 });
+
+test('ロボット掃除機の交換部品は本体・異種部品・別型番を候補から除外する', () => {
+  const candidates = [
+    { asin: 'FILTER', product_name: 'Roomba j7 交換用 HEPAフィルター 3個セット' },
+    { asin: 'BODY', product_name: 'iRobot Roomba j7 ロボット掃除機 本体' },
+    { asin: 'BRUSH', product_name: 'Roomba j7 交換サイドブラシ 3個セット' },
+    { asin: 'OTHER_MODEL', product_name: 'Roomba i7 交換用フィルター 3個セット' },
+    { asin: 'BAG', product_name: 'Roomba j7+ 交換紙パック 6枚' },
+  ];
+  const queries = [
+    'ルンバ j7用 交換フィルター 3個セット',
+    'replacement filters for Roomba j7 3 pack',
+    '适用于Roomba j7的替换滤网3件套',
+    '룸바 j7용 교체 필터 3개 세트',
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['FILTER'], query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['robot-vacuum-filter'], query);
+  }
+});

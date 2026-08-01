@@ -105,6 +105,30 @@ function buildPortHubSearchKeywords(query, marketplace) {
   return [product, ...portHubFeatures(query).slice(0, limit)].join(' ');
 }
 
+function robotVacuumModel(query) {
+  const match = String(query || '').normalize('NFKC')
+    .match(/\b(?:roomba\s*)?([jis]\d{1,2}(?:\+)?)(?![a-z0-9])/iu);
+  return match ? `Roomba ${match[1].toLowerCase()}` : '';
+}
+
+function buildRobotVacuumConsumableSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
+  if (!robotVacuum) return '';
+  let product = '';
+  if (/(?:交換|替え|replacement|替换|替換|교체)?\s*(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(normalized)) {
+    product = '交換フィルター';
+  } else if (/(?:交換|替え|replacement|替换|替換|교체)?\s*(?:サイド|side|边刷|邊刷|사이드)?\s*(?:ブラシ|brush(?:es)?|刷子|브러시)/iu.test(normalized)) {
+    product = '交換サイドブラシ';
+  } else if (/(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)/iu.test(normalized)) {
+    product = '交換紙パック';
+  }
+  if (!product) return '';
+  const model = robotVacuumModel(normalized);
+  const count = normalized.match(/(\d+)\s*(?:個|枚|本|セット|個セット|pack|packs|pcs|pieces|件套|个装|個裝|개|매|세트)/iu)?.[1];
+  return [model || 'ロボット掃除機', product, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
+}
+
 function specificationTokens(query) {
   const matches = query.match(
     /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}[-\s]*(?:mm|cm|m|インチ|inch|英寸|인치|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)|\d+(?:\.\d+)?[-\s]*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|kg|kgs|g|kilograms?|kilogrammes?|grams?|インチ|inch|英寸|인치|リットル|オンス|升|毫升|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|キロ(?:グラム)?|グラム|公斤|千克|리터|온스|센티미터|밀리미터|킬로그램|키로|그램)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
@@ -376,6 +400,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);
   if (portHub) return portHub;
+  const robotVacuumConsumable = buildRobotVacuumConsumableSearchKeywords(normalized);
+  if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);
   if (applePencil) return applePencil;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);

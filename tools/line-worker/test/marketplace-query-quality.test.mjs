@@ -25,6 +25,22 @@ test("日英中韓640件の検索語コーパスを決定論的に生成する",
   assert.equal(new Set(corpus.map((item) => item.case_id)).size, corpus.length);
 });
 
+test('ロボット掃除機の交換部品を4言語で本体から分離し型番と個数を保つ', () => {
+  const cases = [
+    ['ルンバ j7用 交換フィルター 3個セット', 'Roomba j7 交換フィルター 3個セット'],
+    ['replacement filters for Roomba j7 3 pack', 'Roomba j7 交換フィルター 3個セット'],
+    ['适用于Roomba j7的替换滤网3件套', 'Roomba j7 交換フィルター 3個セット'],
+    ['룸바 j7용 교체 필터 3개 세트', 'Roomba j7 交換フィルター 3個セット'],
+    ['Roomba i7+ replacement side brushes 2 pack', 'Roomba i7+ 交換サイドブラシ 2個セット'],
+    ['ルンバ s9+用 交換紙パック 6枚', 'Roomba s9+ 交換紙パック 6個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);
