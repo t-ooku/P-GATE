@@ -344,6 +344,10 @@ test('エアフライヤー本体は容量・温度・バスケット・洗浄�
     '6L dual-basket air fryer 200°C dishwasher-safe',
     '6L 200度 双篮 可放洗碗机 空气炸锅',
     '6L 200℃ 듀얼 바스켓 식기세척기 세척 가능 에어프라이어',
+    '油をほとんど使わず揚げ物を2種類同時に作りたい 6L 200℃ デュアルバスケット 食洗機対応',
+    'cook two fried foods at once with little oil 6L 200°C dual-basket dishwasher-safe',
+    '想少油同时做两种炸物 6L 200度 双篮 可放洗碗机',
+    '기름을 적게 쓰고 튀김 두 가지를 동시에 만들고 싶어 6L 200℃ 듀얼 바스켓 식기세척기 세척 가능',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

@@ -276,7 +276,8 @@ function buildCordlessStickVacuumSearchKeywords(query) {
 }
 
 function buildAirFryerBodySearchKeywords(query) {
-  if (!/(?:エアフライヤー|air\s*fryer|空气炸锅|空氣炸鍋|에어프라이어)/iu.test(query)) return '';
+  const lowOilFryingIntent = /(?:エアフライヤー|air\s*fryer|空气炸锅|空氣炸鍋|에어프라이어|油.{0,12}(?:使わず|少な|減ら).{0,16}(?:揚げ物|フライ).{0,12}(?:2種類|二種類).{0,8}同時|(?:two|2).{0,20}fried\s+foods?.{0,20}(?:at\s+once|simultaneously).{0,20}(?:little|less|without)\s+oil|少油.{0,12}(?:同时|同時).{0,12}(?:做|制作|製作).{0,8}(?:两种|兩種).{0,8}(?:炸物|油炸)|기름.{0,12}(?:적게|없이).{0,20}튀김.{0,12}(?:두\s*가지|2가지).{0,12}동시에)/iu;
+  if (!lowOilFryingIntent.test(query)) return '';
   if (/(?:ライナー|liners?|纸垫|紙墊|라이너|交換バスケット|replacement\s*basket)/iu.test(query)) return '';
   const capacity = String(query || '').match(/\b(\d(?:\.\d)?)\s*l\b/iu)?.[1];
   const temperature = String(query || '').match(/\b(\d{3})\s*(?:℃|°\s*c|celsius|度)/iu)?.[1];
