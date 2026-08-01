@@ -363,6 +363,10 @@ test('全自動エスプレッソマシンは圧力・容量・内蔵機能を4�
     'fully automatic espresso machine 15bar 1.5L built-in grinder milk frother',
     '15bar 1.5L 内置磨豆机 奶泡器 全自动意式咖啡机',
     '15bar 1.5L 내장 그라인더 우유 거품기 전자동 에스프레소 머신',
+    '豆を入れるだけでカプチーノまで一台で作りたい 15bar 1.5L 内蔵グラインダー ミルクフォーマー',
+    'make cappuccino from whole beans at the touch of a button 15bar 1.5L built-in grinder milk frother',
+    '放入咖啡豆就能一键做卡布奇诺 15bar 1.5L 内置磨豆机 奶泡器',
+    '원두만 넣고 버튼 한 번으로 카푸치노를 만들고 싶어 15bar 1.5L 내장 그라인더 우유 거품기',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

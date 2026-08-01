@@ -292,7 +292,7 @@ function buildAirFryerBodySearchKeywords(query) {
 
 function buildAutomaticEspressoMachineSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const machine = /(?:全自動.{0,16}エスプレッソマシン|fully[- ]?automatic.{0,16}espresso\s*machine|全自动.{0,16}意式咖啡机|全自動.{0,16}義式咖啡機|전자동.{0,16}에스프레소\s*머신)/iu.test(normalized);
+  const machine = /(?:全自動.{0,16}エスプレッソマシン|fully[- ]?automatic.{0,16}espresso\s*machine|全自动.{0,16}意式咖啡机|全自動.{0,16}義式咖啡機|전자동.{0,16}에스프레소\s*머신|豆.{0,12}入れるだけ.{0,20}カプチーノ.{0,16}(?:一台|作り)|(?:make|brew).{0,12}cappuccino.{0,20}(?:whole\s+)?beans.{0,20}(?:touch|button)|放入咖啡豆.{0,12}(?:一键|一鍵).{0,12}(?:做|制作|製作).{0,8}(?:卡布奇诺|卡布奇諾)|원두.{0,12}넣고.{0,20}버튼.{0,12}(?:한\s*번|한번).{0,20}카푸치노)/iu.test(normalized);
   if (!machine) return '';
   if (/(?:カプセル|capsules?|pods?|胶囊|膠囊|캡슐|ドリップ|drip|滴漏|드립)/iu.test(normalized)) return '';
   const pressure = normalized.match(/\b(\d{1,2})\s*bar\b/iu)?.[1];
