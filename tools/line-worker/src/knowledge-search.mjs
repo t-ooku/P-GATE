@@ -487,7 +487,7 @@ function waterFilterPartNumber(text) {
 
 function requestedPackageCount(text) {
   return Number(String(text || '').normalize('NFKC')
-    .match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|개|개입|세트)/iu)?.[1] || 0);
+    .match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|块|塊|개|개입|세트)/iu)?.[1] || 0);
 }
 
 function isWaterFilterCartridgeMismatch(candidate, query) {
@@ -635,6 +635,25 @@ function isCoffeeCapsuleMismatch(candidate, query) {
   return !/(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐)/iu.test(text);
 }
 
+function cameraBatteryPart(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/\b(np[- ]?fz100|np[- ]?fw50|lp[- ]?e6nh|en[- ]?el15c)\b/u)?.[1]
+    ?.replace(/^(np|lp|en) /u, '$1-') || '';
+}
+
+function isCameraBatteryMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedPart = cameraBatteryPart(query);
+  if (requestedPart && cameraBatteryPart(text) !== requestedPart) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (/(?:本体|camera\s*body|相机机身|相機機身|카메라\s*본체|充電器|charger|充电器|充電器|충전기)/iu.test(text)) return true;
+  return !/(?:カメラ用?(?:交換)?バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|카메라\s*배터리|battery\s*pack|電池|배터리)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -763,6 +782,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const toothbrushHead = requested.has('electric-toothbrush-head');
   const shaverReplacement = requested.has('shaver-replacement-blade') || requested.has('shaver-cleaning-cartridge');
   const coffeeCapsule = requested.has('coffee-capsule');
+  const cameraBattery = requested.has('camera-battery');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -803,6 +823,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (toothbrushHead) return !isToothbrushHeadMismatch(candidate, query);
     if (shaverReplacement) return !isShaverReplacementMismatch(candidate, requested, query);
     if (coffeeCapsule) return !isCoffeeCapsuleMismatch(candidate, query);
+    if (cameraBattery) return !isCameraBatteryMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

@@ -65,6 +65,8 @@ const RULES = [
   ['electric-shaver',/(?:電気シェーバー|シェーバー|electric\s*shaver|剃须刀|電鬚刨|전기\s*면도기)/iu,['electric shaver']],
   ['coffee-capsule',/(?:(?:nespresso|ネスプレッソ|奈斯派索|네스프레소|dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토).{0,45}(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐)|(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐).{0,45}(?:nespresso|ネスプレッソ|奈斯派索|네스프레소|dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토))/iu,['coffee capsules','coffee pods']],
   ['capsule-coffee-maker',/(?:カプセル式?コーヒーメーカー|capsule\s*coffee\s*(?:maker|machine)|胶囊咖啡机|膠囊咖啡機|캡슐\s*커피\s*머신)/iu,['capsule coffee machine']],
+  ['camera-battery-charger',/(?:(?:カメラ|camera|相机|相機|카메라).{0,30}(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기)|(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기).{0,30}(?:カメラ|camera|相机|相機|카메라))/iu,['camera battery charger']],
+  ['camera-battery',/(?:(?:sony|ソニー|索尼|소니|canon|キヤノン|佳能|캐논|nikon|ニコン|尼康|니콘|カメラ|camera|相机|相機|카메라).{0,45}(?:バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|배터리)|(?:バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|배터리).{0,45}(?:sony|ソニー|索尼|소니|canon|キヤノン|佳能|캐논|nikon|ニコン|尼康|니콘|カメラ|camera|相机|相機|카메라))/iu,['camera battery','replacement battery']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
@@ -308,6 +310,7 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('printer-ink')) groups = groups.filter((group) => !['printer','photo-printer'].includes(group.category));
   if (specificCategories.has('electric-toothbrush-head')) groups = groups.filter((group) => group.category !== 'electric-toothbrush');
   if (specificCategories.has('shaver-replacement-blade') || specificCategories.has('shaver-cleaning-cartridge')) groups = groups.filter((group) => group.category !== 'electric-shaver');
+  if (specificCategories.has('camera-battery') || specificCategories.has('camera-battery-charger')) groups = groups.filter((group) => group.category !== 'camera');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
   if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
@@ -369,7 +372,8 @@ export function semanticSearchGroups(value) {
   }
   const specificIntent = groups.some((group) => [
     'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light',
-    'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver','coffee-capsule','capsule-coffee-maker'
+    'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver','coffee-capsule','capsule-coffee-maker',
+    'camera-battery','camera-battery-charger'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES
     .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))

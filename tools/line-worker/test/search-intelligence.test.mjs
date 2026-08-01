@@ -1830,3 +1830,27 @@ test('コーヒーカプセルは本体・別規格・再利用品・個数違�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['coffee-capsule'], query);
   }
 });
+
+test('カメラ交換バッテリーは本体・充電器・別型番・純正条件・個数違いを除外する', () => {
+  const candidates = [
+    { asin: 'FZ2', product_name: 'Sony 純正 カメラバッテリー NP-FZ100 2個' },
+    { asin: 'FZ1', product_name: 'Sony 純正 カメラバッテリー NP-FZ100 1個' },
+    { asin: 'FZ_COMPAT', product_name: 'Sony NP-FZ100 互換 カメラバッテリー 2個' },
+    { asin: 'FW2', product_name: 'Sony NP-FW50 camera replacement battery 2 pack' },
+    { asin: 'FW_CHARGER', product_name: 'Sony NP-FW50 camera battery charger 2 slot' },
+    { asin: 'CANON', product_name: 'Canon 原装相机电池 LP-E6NH 1块' },
+    { asin: 'CANON_BODY', product_name: 'Canon EOS R6 Mark II 相机机身 LP-E6NH 1块套装' },
+    { asin: 'NIKON', product_name: 'Nikon EN-EL15C 정품 카메라 배터리 2개' },
+    { asin: 'NIKON_WRONG', product_name: 'Nikon EN-EL15B 정품 카메라 배터리 2개' },
+  ];
+  const cases = [
+    ['Sony α7 IV用 純正カメラバッテリー NP-FZ100 2個', ['FZ2']],
+    ['replacement camera battery NP-FW50 for Sony a6400 2 pack', ['FW2']],
+    ['佳能 EOS R6 Mark II 原装相机电池 LP-E6NH 1块', ['CANON']],
+    ['니콘 Z6 II 정품 카메라 배터리 EN-EL15c 2개', ['NIKON']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['camera-battery'], query);
+  }
+});

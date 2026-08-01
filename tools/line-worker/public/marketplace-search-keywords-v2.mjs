@@ -294,6 +294,23 @@ function buildCoffeeCapsuleSearchKeywords(query) {
   return [system, 'コーヒーカプセル', count ? `${count}個セット` : ''].filter(Boolean).join(' ');
 }
 
+function cameraBatteryPart(query) {
+  return String(query || '').normalize('NFKC')
+    .match(/\b(NP[- ]?FZ100|NP[- ]?FW50|LP[- ]?E6NH|EN[- ]?EL15C)\b/iu)?.[1]
+    ?.toUpperCase().replace(/^(NP|LP|EN) /u, '$1-') || '';
+}
+
+function buildCameraBatterySearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:カメラ用?(?:交換)?バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|카메라\s*배터리)/iu.test(normalized)) return '';
+  const part = cameraBatteryPart(normalized);
+  if (!part) return '';
+  const brand = part.startsWith('NP-') ? 'Sony' : part.startsWith('LP-') ? 'Canon' : 'Nikon';
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu.test(normalized) ? '純正' : '';
+  const count = normalized.match(/(\d+)\s*(?:個|本|pack|packs|count|pcs|pieces|块|塊|개|개입)/iu)?.[1];
+  return [brand, part, 'カメラバッテリー', genuine, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -594,6 +611,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawShaverReplacement) return rawShaverReplacement;
   const rawCoffeeCapsule = buildCoffeeCapsuleSearchKeywords(rawNormalized);
   if (rawCoffeeCapsule) return rawCoffeeCapsule;
+  const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
+  if (rawCameraBattery) return rawCameraBattery;
   const normalized = stripSearchBudget(rawNormalized).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);

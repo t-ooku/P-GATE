@@ -161,6 +161,20 @@ test('コーヒーカプセルを4言語で本体から分離し規格と個数�
   }
 });
 
+test('カメラ交換バッテリーを4言語で本体と充電器から分離し型番を保つ', () => {
+  const cases = [
+    ['Sony α7 IV用 純正カメラバッテリー NP-FZ100 2個', 'Sony NP-FZ100 カメラバッテリー 純正 2個セット'],
+    ['replacement camera battery NP-FW50 for Sony a6400 2 pack', 'Sony NP-FW50 カメラバッテリー 2個セット'],
+    ['佳能 EOS R6 Mark II 原装相机电池 LP-E6NH 1块', 'Canon LP-E6NH カメラバッテリー 純正 1個セット'],
+    ['니콘 Z6 II 정품 카메라 배터리 EN-EL15c 2개', 'Nikon EN-EL15C カメラバッテリー 純正 2個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);
