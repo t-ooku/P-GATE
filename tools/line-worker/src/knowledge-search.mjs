@@ -345,8 +345,14 @@ function isPowerBankMismatch(candidate, query) {
   if (builtIn && /(?:usb[- ]?c|type[- ]?c)/iu.test(connector) && !/(?:usb[- ]?c|type[- ]?c)/iu.test(text)) return true;
   if (builtIn && /(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu.test(connector)
     && !/(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu.test(text)) return true;
-  if (/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(String(query || ''))
-    && !/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text)) return true;
+  const magneticMatches = [...normalizedQuery.matchAll(/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/giu)];
+  const wantsMagnetic = magneticMatches.some((match) =>
+    !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
+  const rejectsMagnetic = magneticMatches.some((match) =>
+    isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
+  const candidateIsMagnetic = /(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text);
+  if (wantsMagnetic && !candidateIsMagnetic) return true;
+  if (!wantsMagnetic && rejectsMagnetic && candidateIsMagnetic) return true;
   const pdWatts = [...normalizedQuery.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)]
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
   const requestedWatts = pdWatts?.[1] || pdWatts?.[2] || '';

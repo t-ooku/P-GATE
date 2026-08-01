@@ -535,7 +535,8 @@ function buildPowerBankSearchKeywords(query) {
   const connector = usbCConnector.test(normalized) && !isNegatedAttribute(normalized, usbCConnector) ? 'USB-C'
     : lightningConnector.test(normalized) && !isNegatedAttribute(normalized, lightningConnector) ? 'Lightning' : '';
   const cable = builtIn ? `${connector ? `${connector}` : ''}ケーブル内蔵` : '';
-  const magnetic = /(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(normalized) ? 'MagSafe対応' : '';
+  const magneticPattern = /(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu;
+  const magnetic = magneticPattern.test(normalized) && !isNegatedAttribute(normalized, magneticPattern) ? 'MagSafe対応' : '';
   const pdWatts = [...normalized.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)]
     .find((match) => {
       const escaped = match[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

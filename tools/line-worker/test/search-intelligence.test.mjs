@@ -2214,3 +2214,20 @@ test('power-bank built-in connector corrections discard the negated connector in
       ['POWERLIGHTNING'], query);
   }
 });
+
+test('negated MagSafe requirements exclude magnetic power banks in four languages', () => {
+  const queries = [
+    'MagSafeじゃなく普通の10000mAhモバイルバッテリー',
+    'not MagSafe, I want a regular 10000mAh power bank',
+    '不要MagSafe，要普通的10000mAh充电宝',
+    'MagSafe 말고 일반 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWERREGULAR', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'POWERMAGSAFE', product_name: '10000mAh MagSafe Magnetic Power Bank' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWERREGULAR'], query);
+  }
+});

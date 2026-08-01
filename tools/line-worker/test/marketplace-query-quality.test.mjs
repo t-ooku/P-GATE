@@ -1114,6 +1114,21 @@ test('power-bank built-in connector corrections keep only the final connector in
   }
 });
 
+test('negated MagSafe requirements are removed from power-bank keywords in four languages', () => {
+  const queries = [
+    'MagSafeじゃなく普通の10000mAhモバイルバッテリー',
+    'not MagSafe, I want a regular 10000mAh power bank',
+    '不要MagSafe，要普通的10000mAh充电宝',
+    'MagSafe 말고 일반 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('冷蔵庫給水フィルターは4言語の型番・純正・個数を全モール向けに保持する', () => {
   const cases = [
     ['Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個', 'Samsung HAF-QIN DA97-17376B 冷蔵庫給水フィルター 純正 2個セット'],
