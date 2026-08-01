@@ -43,9 +43,25 @@ const RULES = [
   ['necklace',/(ネックレス|首.{0,8}(?:金色|チェーン)|フィガロ.{0,8}チェーン|figaro.{0,8}chain|费加罗链|費加羅鍊|피가로.{0,8}체인|necklace|项链|項鍊|목걸이)/iu,['necklace','jewelry chain']],
   ['fitness-ring',/(運動用.*リング|エクササイズリング|stamina ring|輪っか.*運動)/iu,['ring','stamina']],
   ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|\d{2,3}\s*mm.{0,24}(?:カラー|色付き|グラデーション).*フィルター|color filters?|camera.{0,24}filters?|lens.{0,24}filters?|filters?.{0,24}(?:camera|lens)|相机.{0,20}滤镜|相機.{0,20}濾鏡|镜头.{0,20}滤镜|鏡頭.{0,20}濾鏡|카메라.{0,24}필터|렌즈.{0,24}필터)/iu,['filter','color']],
+  ['robot-vacuum-parts-kit',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,40}(?:交換\s*(?:パーツ|部品)\s*セット|replacement\s*parts?\s*(?:kit|set)|accessor(?:y|ies)\s*(?:kit|set)|配件套装|配件套組|교체\s*부품\s*세트|액세서리\s*세트)|(?:交換\s*(?:パーツ|部品)\s*セット|replacement\s*parts?\s*(?:kit|set)|accessor(?:y|ies)\s*(?:kit|set)|配件套装|配件套組|교체\s*부품\s*세트|액세서리\s*세트).{0,40}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum replacement parts kit','filter side brush roller']],
+  ['robot-vacuum-filter',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,30}(?:フィルター|filters?|滤网|濾網|필터)|(?:フィルター|filters?|滤网|濾網|필터).{0,30}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum replacement filter','roomba filter']],
+  ['robot-vacuum-brush',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,30}(?:ブラシ|brush(?:es)?|刷子|브러시)|(?:ブラシ|brush(?:es)?|刷子|브러시).{0,30}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum side brush','roomba replacement brush']],
+  ['robot-vacuum-bag',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,30}(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)|(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백).{0,30}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum dust bag','roomba replacement bag']],
+  ['robot-vacuum',/(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu,['robot vacuum','roomba']],
+  ['cordless-vacuum-filter',/(?:(?:dyson|ダイソン|戴森|다이슨).{0,30}(?:フィルター|filters?|滤网|濾網|필터)|(?:フィルター|filters?|滤网|濾網|필터).{0,30}(?:dyson|ダイソン|戴森|다이슨))/iu,['dyson replacement hepa filter','cordless vacuum filter']],
+  ['cordless-vacuum-battery',/(?:(?:dyson|ダイソン|戴森|다이슨).{0,30}(?:バッテリー|battery|电池|電池|배터리)|(?:バッテリー|battery|电池|電池|배터리).{0,30}(?:dyson|ダイソン|戴森|다이슨))/iu,['dyson replacement battery','cordless vacuum battery']],
+  ['cordless-vacuum-charger',/(?:(?:dyson|ダイソン|戴森|다이슨).{0,30}(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|충전기)|(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|충전기).{0,30}(?:dyson|ダイソン|戴森|다이슨))/iu,['dyson vacuum charger','charging adapter']],
+  ['cordless-vacuum',/(?:dyson|ダイソン|戴森|다이슨).{0,20}(?:コードレス(?:掃除機)?|vacuum|吸尘器|吸塵器|무선\s*청소기)/iu,['dyson cordless vacuum','vacuum cleaner']],
+  ['air-purifier-filter',/(?:(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성).{0,40}(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터)|(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터).{0,40}(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성))/iu,['air purifier replacement filter','hepa filter']],
+  ['air-purifier',/(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기)/iu,['air purifier','air cleaner']],
+  ['water-filter-cartridge',/(?:(?:brita|ブリタ|toray|東レ|东丽|東麗|cleansui|クリンスイ|可菱水|panasonic|パナソニック|松下|파나소닉|浄水器|water\s*(?:filter|purifier)|净水器|淨水器|정수기).{0,40}(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)|(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지).{0,40}(?:brita|ブリタ|toray|東レ|东丽|東麗|cleansui|クリンスイ|可菱水|panasonic|パナソニック|松下|파나소닉|浄水器|water\s*(?:filter|purifier)|净水器|淨水器|정수기))/iu,['water filter replacement cartridge','purifier cartridge']],
+  ['water-purifier',/(?:浄水器|water\s*purifier|净水器|淨水器|정수기)/iu,['water purifier','water filter system']],
+  ['printer-ink',/(?:(?:canon|キヤノン|キャノン|epson|エプソン|brother|ブラザー|hp|プリンター|printer|打印机|打印機|프린터).{0,45}(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)|(?:インク|ink\s*cartridges?|墨盒|墨水|잉크).{0,45}(?:canon|キヤノン|キャノン|epson|エプソン|brother|ブラザー|hp|プリンター|printer|打印机|打印機|프린터))/iu,['printer ink cartridge','replacement ink']],
+  ['printer',/(?:プリンター|printer|打印机|打印機|프린터)/iu,['printer','inkjet printer']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
+  ['usb4-dock',/(?:(?:usb\s*4).{0,24}(?:ドック|ドッキングステーション|dock(?:ing\s*station)?|扩展坞|擴充塢|도킹\s*스테이션)|(?:ドック|ドッキングステーション|dock(?:ing\s*station)?|扩展坞|擴充塢|도킹\s*스테이션).{0,24}(?:usb\s*4))/iu,['usb4 dock','usb 4 docking station']],
   ['thunderbolt-dock',/(?:(?:thunderbolt|サンダーボルト|雷电|雷電|썬더볼트)\s*[34]?.{0,24}(?:ドック|ドッキングステーション|dock(?:ing\s*station)?|扩展坞|擴充塢|도킹\s*스테이션)|(?:ドック|ドッキングステーション|dock(?:ing\s*station)?|扩展坞|擴充塢|도킹\s*스테이션).{0,24}(?:thunderbolt|サンダーボルト|雷电|雷電|썬더볼트)\s*[34]?)/iu,['thunderbolt dock','thunderbolt 4','thunderbolt 3']],
   ['usb-a-hub',/(?:(?:usb[- ]?a).{0,20}(?:ハブ|hub|集线器|集線器|허브)|(?:ハブ|hub|集线器|集線器|허브).{0,20}(?:usb[- ]?a))/iu,['usb-a hub','usb hub']],
   ['laptop-hub',/(?:(?:usb[- ]?c|type[- ]?c).{0,24}(?:ハブ|ドッキングステーション|hub|dock(?:ing\s*station)?|multi[- ]?(?:port\s*)?adapter|扩展坞|擴充塢|集线器|集線器|허브|도킹\s*스테이션)|(?:ハブ|ドッキングステーション|hub|dock(?:ing\s*station)?|multi[- ]?(?:port\s*)?adapter|扩展坞|擴充塢|集线器|集線器|허브|도킹\s*스테이션).{0,24}(?:usb[- ]?c|type[- ]?c))/iu,['usb-c hub','usb type-c','docking station','multiport adapter','multi adapter']],
@@ -245,6 +261,16 @@ function candidateEvidenceMismatch(text, candidates) {
 export function semanticSearchGroups(value) {
   const text = String(value || '').normalize('NFKC');
   let groups = RULES.filter(([, pattern]) => pattern.test(text)).map(([category,, terms]) => ({ category, terms }));
+  const robotVacuumMentioned = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(text);
+  const robotVacuumPartCount = [
+    /(?:フィルター|filters?|滤网|濾網|필터)/iu,
+    /(?:サイド\s*ブラシ|side\s*brush(?:es)?|边刷|邊刷|사이드\s*브러시)/iu,
+    /(?:メイン\s*ブラシ|ローラー\s*ブラシ|main\s*brush|roller\s*brush|滚刷|滾刷|메인\s*브러시|롤러\s*브러시)/iu,
+    /(?:紙パック|ダストバッグ|dust\s*bags?|集尘袋|集塵袋|먼지\s*봉투)/iu
+  ].filter((pattern) => pattern.test(text)).length;
+  if (robotVacuumMentioned && robotVacuumPartCount >= 2 && !groups.some((group) => group.category === 'robot-vacuum-parts-kit')) {
+    groups.unshift({ category: 'robot-vacuum-parts-kit', terms: ['robot vacuum replacement parts kit','filter side brush roller'] });
+  }
   groups = groups.filter((group) => {
     const terms = NEGATED_CATEGORY_TERMS.get(group.category);
     return !terms || !isOnlyNegated(text, terms);
@@ -261,11 +287,24 @@ export function semanticSearchGroups(value) {
   const specificCategories = new Set(groups.map((group) => group.category));
   if (specificCategories.has('camera-bag')) groups = groups.filter((group) => group.category !== 'bag');
   if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');
+  if ([...specificCategories].some((category) => category.startsWith('robot-vacuum-'))) {
+    groups = groups.filter((group) => group.category !== 'robot-vacuum');
+  }
+  if (specificCategories.has('robot-vacuum-parts-kit')) {
+    groups = groups.filter((group) => !['robot-vacuum-filter','robot-vacuum-brush','robot-vacuum-bag'].includes(group.category));
+  }
+  if ([...specificCategories].some((category) => category.startsWith('cordless-vacuum-'))) {
+    groups = groups.filter((group) => !['cordless-vacuum','charger'].includes(group.category));
+  }
+  if (specificCategories.has('air-purifier-filter')) groups = groups.filter((group) => group.category !== 'air-purifier');
+  if (specificCategories.has('water-filter-cartridge')) groups = groups.filter((group) => group.category !== 'water-purifier');
+  if (specificCategories.has('printer-ink')) groups = groups.filter((group) => !['printer','photo-printer'].includes(group.category));
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
   if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
   if (specificCategories.has('laptop-stand')) groups = groups.filter((group) => group.category !== 'laptop');
   if (specificCategories.has('laptop-charger')) groups = groups.filter((group) => !['laptop','charger','adapter'].includes(group.category));
+  if (specificCategories.has('usb4-dock')) groups = groups.filter((group) => !['laptop','adapter'].includes(group.category));
   if (specificCategories.has('thunderbolt-dock')) groups = groups.filter((group) => !['laptop','adapter'].includes(group.category));
   if (specificCategories.has('usb-a-hub')) groups = groups.filter((group) => !['laptop','adapter'].includes(group.category));
   if (specificCategories.has('laptop-hub')) groups = groups.filter((group) => !['laptop','adapter'].includes(group.category));

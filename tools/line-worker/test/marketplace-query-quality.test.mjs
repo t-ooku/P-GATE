@@ -25,6 +25,100 @@ test("日英中韓640件の検索語コーパスを決定論的に生成する",
   assert.equal(new Set(corpus.map((item) => item.case_id)).size, corpus.length);
 });
 
+test('ロボット掃除機の交換部品を4言語で本体から分離し型番と個数を保つ', () => {
+  const cases = [
+    ['ルンバ j7用 交換フィルター 3個セット', 'Roomba j7 交換フィルター 3個セット'],
+    ['replacement filters for Roomba j7 3 pack', 'Roomba j7 交換フィルター 3個セット'],
+    ['适用于Roomba j7的替换滤网3件套', 'Roomba j7 交換フィルター 3個セット'],
+    ['룸바 j7용 교체 필터 3개 세트', 'Roomba j7 交換フィルター 3個セット'],
+    ['Roomba i7+ replacement side brushes 2 pack', 'Roomba i7+ 交換サイドブラシ 2個セット'],
+    ['ルンバ s9+用 交換紙パック 6枚', 'Roomba s9+ 交換紙パック 6個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('ロボット掃除機の複数交換パーツセットを4言語で単品から分離する', () => {
+  const cases = [
+    'ルンバ j7用 交換パーツセット フィルター サイドブラシ メインブラシ',
+    'replacement parts kit for Roomba j7 with filter side brushes and roller brush',
+    '适用于Roomba j7的配件套装 滤网 边刷 滚刷',
+    '룸바 j7용 교체 부품 세트 필터 사이드 브러시 롤러 브러시',
+    'ルンバ j7用 フィルターとサイドブラシとメインブラシ',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      assert.equal(
+        buildMarketplaceSearchKeywords(input, marketplace),
+        'Roomba j7 交換パーツセット フィルター サイドブラシ メインブラシ',
+        `${marketplace}: ${input}`
+      );
+    }
+  }
+});
+
+test('Dyson掃除機のフィルター・バッテリー・充電器を4言語で本体から分離する', () => {
+  const cases = [
+    ['Dyson V15用 交換HEPAフィルター 2個セット', 'Dyson V15 交換HEPAフィルター 2個セット'],
+    ['replacement HEPA filters for Dyson V15 2 pack', 'Dyson V15 交換HEPAフィルター 2個セット'],
+    ['戴森V15替换HEPA滤网2件套', 'Dyson V15 交換HEPAフィルター 2個セット'],
+    ['다이슨 V15용 교체 HEPA 필터 2개 세트', 'Dyson V15 交換HEPAフィルター 2個セット'],
+    ['replacement battery for Dyson V11 5000mAh', 'Dyson V11 交換バッテリー 5000mAh'],
+    ['다이슨 V10용 교체 배터리 4000mAh', 'Dyson V10 交換バッテリー 4000mAh'],
+    ['Dyson V12 充電器', 'Dyson V12 充電器'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('空気清浄機の交換フィルターを4ブランド・4言語で本体から分離する', () => {
+  const cases = [
+    ['シャープ KC-R50用 集じんフィルター FZ-D50HF', 'Sharp KC-R50 交換集じんフィルター FZ-D50HF'],
+    ['replacement HEPA filter for Levoit Core 300', 'Levoit Core 300 交換HEPAフィルター'],
+    ['适用于小米空气净化器4 Lite的替换滤芯', 'Xiaomi Air Purifier 4 Lite 交換フィルター'],
+    ['삼성 AX60R5080WD 교체 헤파 필터', 'Samsung AX60R5080WD 交換HEPAフィルター'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('浄水器の交換カートリッジを4ブランド・4言語で本体から分離する', () => {
+  const cases = [
+    ['BRITA MAXTRA PRO 交換カートリッジ 3個', 'BRITA MAXTRA PRO 交換カートリッジ 3個セット'],
+    ['replacement cartridge for Toray MKC.MX2J 2 pack', 'Toray MKC.MX2J 交換カートリッジ 2個セット'],
+    ['三菱丽阳可菱水HGC9S替换滤芯', 'Cleansui HGC9S 交換カートリッジ'],
+    ['파나소닉 TK-CJ24용 교체 카트리지 TK-CJ24C1', 'Panasonic TK-CJ24 交換カートリッジ TK-CJ24C1'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('プリンターのインクを4ブランド・4言語で本体から分離し品番と種別を保つ', () => {
+  const cases = [
+    ['Canon PIXUS TS8730用 純正インク BCI-331+330 6色', 'Canon PIXUS TS8730 純正インクカートリッジ BCI-331+330 6色'],
+    ['compatible ink cartridges for Epson EP-881A KAM-6CL-L 6 color', 'Epson EP-881A 互換インクカートリッジ KAM-6CL-L 6色'],
+    ['适用于Brother DCP-J928N的LC411-4PK原装墨盒', 'Brother DCP-J928N 純正インクカートリッジ LC411-4PK'],
+    ['HP DeskJet 2720 67XL 정품 잉크 검정 컬러', 'HP DeskJet 2720 純正インクカートリッジ 67XL 黒 カラー'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);
@@ -628,6 +722,74 @@ test("USB-Aハブを4言語でUSB-CハブやPC本体へ誤変換しない", () =
       assert.match(keywords, /^USB-Aハブ/u, `${marketplace}: ${input} -> ${keywords}`);
       assert.match(keywords, /4ポート/u, `${marketplace}: ${input} -> ${keywords}`);
       assert.doesNotMatch(keywords, /USB-Cハブ|ノートパソコン/u, `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("USB4ドックのDisplayPort・2画面・OS・給電条件を4言語から9モールへ保持する", () => {
+  const cases = [
+    ['MacBook用 USB4 ドック DisplayPort 1.4 デュアルモニター対応 100W', 'Mac対応'],
+    ['USB4 dock with DisplayPort 1.4 dual monitors and 100W PD for Windows laptop', 'Windows対応'],
+    ['支持双显示器和DisplayPort 1.4的Windows笔记本USB4扩展坞 100W', 'Windows対応'],
+    ['맥북용 USB4 도킹 스테이션 DisplayPort 1.4 듀얼 모니터 100W', 'Mac対応'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, platform] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.match(keywords, /^USB4 ドック/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /DisplayPort 1\.4/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /デュアルモニター/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /100W/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, new RegExp(platform, 'u'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.doesNotMatch(keywords, /ノートパソコン|Thunderbolt/u, `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("USB4ドックの4K・Hz・DisplayLink条件を4言語から9モールへ保持する", () => {
+  const cases = [
+    'MacBook用 DisplayLink対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 dock with DisplayLink dual 4K 60Hz monitors for MacBook',
+    '支持DisplayLink双4K 60Hz显示器的MacBook USB4扩展坞',
+    '맥북용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.match(keywords, /^USB4 ドック/u, `${marketplace}: ${input} -> ${keywords}`);
+      for (const condition of ['4K', '60Hz', 'DisplayLink', 'デュアルモニター', 'Mac対応']) {
+        assert.match(keywords, new RegExp(condition, 'u'), `${marketplace}: ${input} -> ${keywords}`);
+      }
+    }
+  }
+});
+
+test("USB4ドックのApple Silicon世代・HDR・MST条件を4言語から9モールへ保持する", () => {
+  const displayLinkCases = [
+    'MacBook M2用 DisplayLink HDR対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 DisplayLink dock with dual 4K 60Hz HDR monitors for MacBook M2',
+    '支持MacBook M2双4K 60Hz HDR显示器的DisplayLink USB4扩展坞',
+    '맥북 M2용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz HDR',
+  ];
+  const mstCases = [
+    'Windows用 MST対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 dock with MST dual 4K 60Hz monitors for Windows',
+    '支持Windows双4K 60Hz显示器的MST USB4扩展坞',
+    '윈도우용 MST USB4 도킹 스테이션 듀얼 4K 60Hz',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of displayLinkCases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      for (const condition of ['M2対応', 'HDR', 'DisplayLink', 'Mac対応']) {
+        assert.match(keywords, new RegExp(condition, 'u'), `${marketplace}: ${input} -> ${keywords}`);
+      }
+      assert.doesNotMatch(keywords, /MST/u, `${marketplace}: ${input} -> ${keywords}`);
+    }
+    for (const input of mstCases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.match(keywords, /MST/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /Windows対応/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.doesNotMatch(keywords, /DisplayLink/u, `${marketplace}: ${input} -> ${keywords}`);
     }
   }
 });

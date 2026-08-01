@@ -6,6 +6,8 @@ const privacy = readFileSync(new URL('../public/privacy.html', import.meta.url),
 const terms = readFileSync(new URL('../public/terms.html', import.meta.url), 'utf8');
 const login = readFileSync(new URL('../public/login.html', import.meta.url), 'utf8');
 const sellerLogin = readFileSync(new URL('../public/seller-login.html', import.meta.url), 'utf8');
+const seller = readFileSync(new URL('../public/seller.html', import.meta.url), 'utf8');
+const sellerShell = readFileSync(new URL('../public/seller-shell.html', import.meta.url), 'utf8');
 const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
 
 test('会員同期とMYWATCHの実装内容をプライバシー方針へ明記する', () => {
@@ -30,5 +32,7 @@ test('公開文書とログイン画面に適切なSEOメタ情報を設定す�
   assert.match(terms, /<meta name="description" content="[^"]+">/);
   assert.match(login, /<meta name="robots" content="noindex,nofollow">/);
   assert.match(sellerLogin, /<meta name="robots" content="noindex,nofollow">/);
+  assert.match(seller, /<meta name="robots" content="noindex,nofollow">/);
+  assert.match(sellerShell, /<meta name="robots" content="noindex,nofollow">/);
   assert.doesNotMatch(sitemap, /login/i);
 });

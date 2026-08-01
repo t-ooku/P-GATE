@@ -36,3 +36,16 @@ test('HTML and sitemap agree on the Japanese x-default URL', async () => {
     assert.ok(sitemapEntry.includes(`hreflang="x-default" href="${expected}"`));
   }
 });
+
+test('legal sitemap entries use their redirect-free canonical URLs', async () => {
+  const [sitemap, privacy, terms] = await Promise.all([
+    readFile(new URL('../public/sitemap.xml', import.meta.url), 'utf8'),
+    readFile(new URL('../public/privacy.html', import.meta.url), 'utf8'),
+    readFile(new URL('../public/terms.html', import.meta.url), 'utf8'),
+  ]);
+  for (const [path, html] of [['/privacy', privacy], ['/terms', terms]]) {
+    assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
+    assert.ok(html.includes(`<link rel="canonical" href="https://hoshilu.app${path}">`));
+  }
+  assert.doesNotMatch(sitemap, /https:\/\/hoshilu\.app\/(?:privacy|terms)\.html/);
+});

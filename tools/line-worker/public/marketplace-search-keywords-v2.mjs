@@ -68,6 +68,21 @@ function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
   if (power) features.push(`${power[1]}W`);
+  const resolution = query.match(/\b([48])\s*k\b/iu);
+  if (resolution) features.push(`${resolution[1]}K`);
+  const refreshRate = query.match(/\b(\d{2,3})\s*hz\b/iu);
+  if (refreshRate) features.push(`${refreshRate[1]}Hz`);
+  if (/display\s*link/iu.test(query)) features.push('DisplayLink');
+  const appleSilicon = query.match(/\b(m[1-4])\b/iu);
+  if (appleSilicon) features.push(`${appleSilicon[1].toUpperCase()}対応`);
+  if (/\bhdr\b/iu.test(query)) features.push('HDR');
+  if (/\bmst\b/iu.test(query)) features.push('MST');
+  const displayPort = query.match(/display\s*port\s*(\d(?:\.\d)?)/iu);
+  if (displayPort) features.push(`DisplayPort ${displayPort[1]}`);
+  else if (/display\s*port/iu.test(query)) features.push('DisplayPort');
+  if (/(?:dual.{0,16}(?:display|monitor)|2.{0,12}(?:display|monitor)|デュアル.{0,12}モニター|2画面|双.{0,12}显示器|雙.{0,12}顯示器|듀얼(?:.{0,12}모니터)?|모니터\s*2대)/iu.test(query)) features.push('デュアルモニター');
+  if (/(?:macbook|macos|mac\s*用|맥북|苹果电脑|蘋果電腦)/iu.test(query)) features.push('Mac対応');
+  else if (/(?:windows|win\s*11|윈도우)/iu.test(query)) features.push('Windows対応');
   const hdmi = query.match(/hdmi(?:\s*|[- ]?)(\d(?:\.\d)?)/iu);
   if (hdmi) features.push(`HDMI ${hdmi[1]}`);
   else if (/\bhdmi\b/iu.test(query)) features.push('HDMI');
@@ -82,11 +97,155 @@ function buildPortHubSearchKeywords(query, marketplace) {
   const thunderbolt = query.match(/(?:thunderbolt|サンダーボルト|雷电|雷電|썬더볼트)\s*([34])?/iu);
   const dock = /(?:ドック|ドッキングステーション|dock(?:ing\s*station)?|扩展坞|擴充塢|도킹\s*스테이션)/iu.test(query);
   let product = '';
-  if (thunderbolt && dock) product = `Thunderbolt${thunderbolt[1] ? ` ${thunderbolt[1]}` : ''} ドック`;
+  if (/usb\s*4/iu.test(query) && dock) product = 'USB4 ドック';
+  else if (thunderbolt && dock) product = `Thunderbolt${thunderbolt[1] ? ` ${thunderbolt[1]}` : ''} ドック`;
   else if (/usb[- ]?a/iu.test(query) && /(?:ハブ|hub|集线器|集線器|허브)/iu.test(query)) product = 'USB-Aハブ';
   if (!product) return '';
-  const limit = marketplace === 'QOO10_JP' ? 2 : 5;
+  const limit = 8;
   return [product, ...portHubFeatures(query).slice(0, limit)].join(' ');
+}
+
+function robotVacuumModel(query) {
+  const match = String(query || '').normalize('NFKC')
+    .match(/\b(?:roomba\s*)?([jis]\d{1,2}(?:\+)?)(?![a-z0-9])/iu);
+  return match ? `Roomba ${match[1].toLowerCase()}` : '';
+}
+
+function dysonVacuumModel(query) {
+  const match = String(query || '').normalize('NFKC').match(/\bv\s*(8|10|11|12|15)\b/iu);
+  return match ? `Dyson V${match[1]}` : '';
+}
+
+function buildDysonVacuumAccessorySearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:dyson|ダイソン|戴森|다이슨)/iu.test(normalized)) return '';
+  let product = '';
+  if (/(?:交換|替え|replacement|替换|替換|교체)?\s*(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(normalized)) {
+    product = '交換HEPAフィルター';
+  } else if (/(?:交換|替え|replacement|替换|替換|교체)?\s*(?:バッテリー|battery|电池|電池|배터리)/iu.test(normalized)) {
+    product = '交換バッテリー';
+  } else if (/(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|충전기)/iu.test(normalized)) {
+    product = '充電器';
+  }
+  if (!product) return '';
+  const model = dysonVacuumModel(normalized);
+  const capacity = normalized.match(/(\d{3,5})\s*mah/iu)?.[1];
+  const count = normalized.match(/(\d+)\s*(?:個|枚|本|セット|個セット|pack|packs|pcs|pieces|件套|个装|個裝|개|매|세트)/iu)?.[1];
+  return [model || 'Dyson コードレス掃除機', product, capacity ? `${capacity}mAh` : '', count ? `${count}個セット` : '']
+    .filter(Boolean).join(' ');
+}
+
+function airPurifierIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  const sharp = value.match(/\bKC[- ]?([A-Z]\d{2,3})\b/iu);
+  if (sharp) return `Sharp KC-${sharp[1].toUpperCase()}`;
+  const levoit = value.match(/\bcore\s*(\d{3}[a-z]?)\b/iu);
+  if (levoit) return `Levoit Core ${levoit[1].toUpperCase()}`;
+  const samsung = value.match(/\b(AX\d{2}[A-Z0-9]{4,})\b/iu);
+  if (samsung) return `Samsung ${samsung[1].toUpperCase()}`;
+  const xiaomi = value.match(/(?:xiaomi|小米).{0,20}(?:air\s*purifier|空气净化器|空氣淨化器)?\s*(4\s*(?:lite|pro)?)/iu);
+  if (xiaomi) return `Xiaomi Air Purifier ${xiaomi[1].replace(/\s+/gu, ' ').replace(/lite/iu, 'Lite').replace(/pro/iu, 'Pro').trim()}`;
+  return '';
+}
+
+function buildAirPurifierFilterSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const purifier = /(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성)/iu.test(normalized);
+  const filter = /(?:フィルター|filter|滤芯|濾芯|滤网|濾網|필터)/iu.test(normalized);
+  if (!(purifier && filter)) return '';
+  const identity = airPurifierIdentity(normalized);
+  if (!identity) return '';
+  const type = /(?:集じん|集塵|dust\s*collection)/iu.test(normalized) ? '交換集じんフィルター'
+    : /(?:脱臭|deodori[sz]ing|活性炭|탈취)/iu.test(normalized) ? '交換脱臭フィルター'
+    : /(?:hepa|ヘパ|헤파)/iu.test(normalized) ? '交換HEPAフィルター'
+    : '交換フィルター';
+  const partNumber = normalized.match(/\b(FZ-[A-Z0-9]{4,})\b/iu)?.[1]?.toUpperCase() || '';
+  return [identity, type, partNumber].filter(Boolean).join(' ');
+}
+
+function waterFilterIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  if (/(?:brita|ブリタ)/iu.test(value) && /maxtra\s*pro/iu.test(value)) return 'BRITA MAXTRA PRO';
+  const toray = value.match(/\b(MKC[.]?MX2J)\b/iu);
+  if (toray) return `Toray ${toray[1].toUpperCase().replace('MKCMX', 'MKC.MX')}`;
+  const cleansui = value.match(/\b(HGC9S)\b/iu);
+  if (cleansui) return `Cleansui ${cleansui[1].toUpperCase()}`;
+  const panasonic = value.match(/\b(TK[- ]?CJ24)(?!C)/iu);
+  if (panasonic) return 'Panasonic TK-CJ24';
+  return '';
+}
+
+function buildWaterFilterCartridgeSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const cartridge = /(?:交換|替え|replacement|替换|替換|교체)?\s*(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)/iu.test(normalized);
+  if (!cartridge) return '';
+  const identity = waterFilterIdentity(normalized);
+  if (!identity) return '';
+  const partNumber = normalized.match(/\b(TK[- ]?CJ24C1)\b/iu)?.[1]?.toUpperCase().replace('TK CJ', 'TK-CJ') || '';
+  const count = normalized.match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|개|개입|세트)/iu)?.[1];
+  return [identity, '交換カートリッジ', partNumber, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
+}
+
+function printerIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  const canon = value.match(/\b(TS\d{4})\b/iu);
+  if (canon) return `Canon PIXUS ${canon[1].toUpperCase()}`;
+  const epson = value.match(/\b(EP[- ]?\d{3}[A-Z])\b/iu);
+  if (epson) return `Epson ${epson[1].toUpperCase().replace('EP ', 'EP-')}`;
+  const brother = value.match(/\b(DCP[- ]?J\d{3}[A-Z])\b/iu);
+  if (brother) return `Brother ${brother[1].toUpperCase().replace('DCP J', 'DCP-J')}`;
+  const hp = value.match(/(?:deskjet\s*)?(2720)\b/iu);
+  if (hp && /(?:hp|deskjet)/iu.test(value)) return `HP DeskJet ${hp[1]}`;
+  return '';
+}
+
+function printerInkPartNumber(query) {
+  const value = String(query || '').normalize('NFKC');
+  return value.match(/\b(BCI[- ]?331\+330|KAM[- ]?6CL[- ]?L|LC411[- ]?4PK|67XL)\b/iu)?.[1]
+    ?.toUpperCase().replace('BCI ', 'BCI-').replace('KAM ', 'KAM-').replace('6CL L', '6CL-L').replace('LC411 ', 'LC411-') || '';
+}
+
+function buildPrinterInkSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)/iu.test(normalized)) return '';
+  const identity = printerIdentity(normalized);
+  const partNumber = printerInkPartNumber(normalized);
+  if (!(identity && partNumber)) return '';
+  const kind = /(?:互換|compatible|兼容|호환)/iu.test(normalized) ? '互換インクカートリッジ'
+    : /(?:純正|genuine|original|原装|原裝|정품)/iu.test(normalized) ? '純正インクカートリッジ'
+    : 'インクカートリッジ';
+  const colors = normalized.match(/(\d+)\s*(?:色|colors?|色套装|色套裝|색)/iu)?.[1];
+  const black = /(?:ブラック|黒|black|黑色|黑|검정|블랙)/iu.test(normalized) ? '黒' : '';
+  const color = !colors && /(?:カラー|color(?!s)|彩色|컬러)/iu.test(normalized) ? 'カラー' : '';
+  return [identity, kind, partNumber, colors ? `${colors}色` : '', black, color].filter(Boolean).join(' ');
+}
+
+function buildRobotVacuumConsumableSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
+  if (!robotVacuum) return '';
+  const filter = /(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(normalized);
+  const sideBrush = /(?:サイド\s*ブラシ|side\s*brush(?:es)?|边刷|邊刷|사이드\s*브러시)/iu.test(normalized);
+  const mainBrush = /(?:メイン\s*ブラシ|ローラー\s*ブラシ|main\s*brush|roller\s*brush|滚刷|滾刷|메인\s*브러시|롤러\s*브러시)/iu.test(normalized);
+  const kit = /(?:交換\s*パーツ\s*セット|交換\s*部品\s*セット|replacement\s*parts?\s*(?:kit|set)|accessor(?:y|ies)\s*(?:kit|set)|配件套装|配件套組|교체\s*부품\s*세트|액세서리\s*세트)/iu.test(normalized)
+    || [filter, sideBrush, mainBrush].filter(Boolean).length >= 2;
+  if (kit) {
+    const model = robotVacuumModel(normalized);
+    const parts = [filter ? 'フィルター' : '', sideBrush ? 'サイドブラシ' : '', mainBrush ? 'メインブラシ' : ''].filter(Boolean);
+    return [model || 'ロボット掃除機', '交換パーツセット', ...parts].join(' ');
+  }
+  let product = '';
+  if (filter) {
+    product = '交換フィルター';
+  } else if (sideBrush || /(?:交換|替え|replacement|替换|替換|교체)?\s*(?:ブラシ|brush(?:es)?|刷子|브러시)/iu.test(normalized)) {
+    product = '交換サイドブラシ';
+  } else if (/(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)/iu.test(normalized)) {
+    product = '交換紙パック';
+  }
+  if (!product) return '';
+  const model = robotVacuumModel(normalized);
+  const count = normalized.match(/(\d+)\s*(?:個|枚|本|セット|個セット|pack|packs|pcs|pieces|件套|个装|個裝|개|매|세트)/iu)?.[1];
+  return [model || 'ロボット掃除機', product, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
 }
 
 function specificationTokens(query) {
@@ -360,6 +519,16 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);
   if (portHub) return portHub;
+  const dysonVacuumAccessory = buildDysonVacuumAccessorySearchKeywords(normalized);
+  if (dysonVacuumAccessory) return dysonVacuumAccessory;
+  const airPurifierFilter = buildAirPurifierFilterSearchKeywords(normalized);
+  if (airPurifierFilter) return airPurifierFilter;
+  const waterFilterCartridge = buildWaterFilterCartridgeSearchKeywords(normalized);
+  if (waterFilterCartridge) return waterFilterCartridge;
+  const printerInk = buildPrinterInkSearchKeywords(normalized);
+  if (printerInk) return printerInk;
+  const robotVacuumConsumable = buildRobotVacuumConsumableSearchKeywords(normalized);
+  if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);
   if (applePencil) return applePencil;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);

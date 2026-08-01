@@ -344,6 +344,89 @@ test('USB-Aハブは4言語でUSB-C専用品とノートPC本体を除外する'
   }
 });
 
+test('USB4ドックは4言語で映像端子・2画面・OS互換性が一致する候補だけを表示する', () => {
+  const cases = [
+    ['MacBook用 USB4 ドック DisplayPort 1.4 デュアルモニター対応 100W', 'mac'],
+    ['USB4 dock with DisplayPort 1.4 dual monitors and 100W PD for Windows laptop', 'windows'],
+    ['支持双显示器和DisplayPort 1.4的Windows笔记本USB4扩展坞', 'windows'],
+    ['맥북용 USB4 도킹 스테이션 DisplayPort 1.4 듀얼 모니터 100W', 'mac'],
+  ];
+  for (const [query, platform] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: `USB4 Dock DisplayPort 1.4 Dual Monitor 100W ${platform === 'mac' ? 'MacBook' : 'Windows'}` },
+      { asin: 'WRONGDP', product_name: `USB4 Dock DisplayPort 1.2 Dual Monitor ${platform === 'mac' ? 'MacBook' : 'Windows'}` },
+      { asin: 'SINGLE', product_name: `USB4 Dock DisplayPort 1.4 Single Monitor ${platform === 'mac' ? 'MacBook' : 'Windows'}` },
+      { asin: 'WRONGOS', product_name: `USB4 Dock DisplayPort 1.4 Dual Monitor ${platform === 'mac' ? 'Windows' : 'MacBook'}` },
+      { asin: 'THUNDERBOLT', product_name: 'Thunderbolt 4 Dock DisplayPort 1.4 Dual Monitor' },
+      { asin: 'PC', product_name: 'USB4 Laptop Computer DisplayPort 1.4' },
+    ];
+    const categories = semanticSearchGroups(query).map((group) => group.category);
+    assert.ok(categories.includes('usb4-dock'), query);
+    assert.equal(categories.includes('laptop'), false, query);
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
+
+test('USB4ドックは4言語で解像度・Hz・DisplayLink要件を満たす候補だけを表示する', () => {
+  const queries = [
+    'MacBook用 DisplayLink対応 USB4 ドック 4K 60Hz 2画面 100W',
+    'USB4 dock with DisplayLink dual 4K 60Hz monitors and 100W PD for MacBook',
+    '支持DisplayLink双4K 60Hz显示器和100W供电的MacBook USB4扩展坞',
+    '맥북용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz 100W',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 60Hz 100W' },
+    { asin: 'BETTER', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 8K 120Hz 140W' },
+    { asin: 'LOWRES', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 1080p 60Hz 100W' },
+    { asin: 'LOWHZ', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 30Hz 100W' },
+    { asin: 'NODISPLAYLINK', product_name: 'MacBook USB4 Dock Dual Monitor 4K 60Hz 100W' },
+    { asin: 'SINGLE', product_name: 'MacBook USB4 Dock DisplayLink Single Monitor 4K 60Hz 100W' },
+    { asin: 'LOWPOWER', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 60Hz 60W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['MATCH', 'BETTER'],
+      query
+    );
+  }
+});
+
+test('MacBook用USB4ドックは4言語でApple Silicon世代とHDR対応を照合する', () => {
+  const queries = [
+    'MacBook M2用 DisplayLink HDR対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 DisplayLink dock with dual 4K 60Hz HDR monitors for MacBook M2',
+    '支持MacBook M2双4K 60Hz HDR显示器的DisplayLink USB4扩展坞',
+    '맥북 M2용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz HDR',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'MacBook M2 USB4 Dock DisplayLink Dual Monitor 4K 60Hz HDR' },
+    { asin: 'M1', product_name: 'MacBook M1 USB4 Dock DisplayLink Dual Monitor 4K 60Hz HDR' },
+    { asin: 'NOCHIP', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 60Hz HDR' },
+    { asin: 'NOHDR', product_name: 'MacBook M2 USB4 Dock DisplayLink Dual Monitor 4K 60Hz' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
+
+test('Windows用USB4ドックは4言語でMST明示候補だけを表示する', () => {
+  const queries = [
+    'Windows用 MST対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 dock with MST dual 4K 60Hz monitors for Windows',
+    '支持Windows双4K 60Hz显示器的MST USB4扩展坞',
+    '윈도우용 MST USB4 도킹 스테이션 듀얼 4K 60Hz',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Windows USB4 Dock MST Dual Monitor 4K 60Hz' },
+    { asin: 'NOMST', product_name: 'Windows USB4 Dock Dual Monitor 4K 60Hz' },
+    { asin: 'DISPLAYLINK', product_name: 'Windows USB4 Dock DisplayLink Dual Monitor 4K 60Hz' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
+
 test('中国語・韓国語のキャンドル・財布・収納用品を共通商品語へ展開する', () => {
   for (const query of ['玻璃罐装的大豆蜡烛', '유리병에 담긴 소이 캔들']) {
     assert.equal(semanticSearchGroups(query).some((group) => group.category === 'candle'), true);
@@ -1530,6 +1613,149 @@ test('iPad世代指定ケースは4言語で一致世代だけを表示する', 
     assert.deepEqual(
       filterCategoryMismatches(query, candidates).map((item) => item.asin),
       ['MATCH'],
+      query
+    );
+  }
+});
+
+test('ロボット掃除機の交換部品は本体・異種部品・別型番を候補から除外する', () => {
+  const candidates = [
+    { asin: 'FILTER', product_name: 'Roomba j7 交換用 HEPAフィルター 3個セット' },
+    { asin: 'BODY', product_name: 'iRobot Roomba j7 ロボット掃除機 本体' },
+    { asin: 'BRUSH', product_name: 'Roomba j7 交換サイドブラシ 3個セット' },
+    { asin: 'OTHER_MODEL', product_name: 'Roomba i7 交換用フィルター 3個セット' },
+    { asin: 'BAG', product_name: 'Roomba j7+ 交換紙パック 6枚' },
+  ];
+  const queries = [
+    'ルンバ j7用 交換フィルター 3個セット',
+    'replacement filters for Roomba j7 3 pack',
+    '适用于Roomba j7的替换滤网3件套',
+    '룸바 j7용 교체 필터 3개 세트',
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['FILTER'], query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['robot-vacuum-filter'], query);
+  }
+});
+
+test('ロボット掃除機の交換パーツセットは指定部品が揃う同型番候補だけを表示する', () => {
+  const candidates = [
+    { asin: 'KIT', product_name: 'Roomba j7 交換パーツセット HEPAフィルター サイドブラシ メインローラーブラシ' },
+    { asin: 'FILTER_ONLY', product_name: 'Roomba j7 交換フィルター 3個セット' },
+    { asin: 'PARTIAL', product_name: 'Roomba j7 フィルター サイドブラシ セット' },
+    { asin: 'BODY', product_name: 'iRobot Roomba j7 ロボット掃除機 本体' },
+    { asin: 'WRONG_MODEL', product_name: 'Roomba i7 交換パーツキット フィルター サイドブラシ メインブラシ' },
+  ];
+  const queries = [
+    'ルンバ j7用 交換パーツセット フィルター サイドブラシ メインブラシ',
+    'replacement parts kit for Roomba j7 with filter side brushes and roller brush',
+    '适用于Roomba j7的配件套装 滤网 边刷 滚刷',
+    '룸바 j7용 교체 부품 세트 필터 사이드 브러시 롤러 브러시',
+    'ルンバ j7用 フィルターとサイドブラシとメインブラシ',
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['KIT'], query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['robot-vacuum-parts-kit'], query);
+  }
+});
+
+test('Dyson交換品は種類・V型番・バッテリー容量が一致する候補だけを表示する', () => {
+  const candidates = [
+    { asin: 'FILTER', product_name: 'Dyson V15 交換用 HEPAフィルター 2個セット' },
+    { asin: 'BATTERY', product_name: 'Dyson V11 交換バッテリー 5000mAh' },
+    { asin: 'LOW_BATTERY', product_name: 'Dyson V11 交換バッテリー 3000mAh' },
+    { asin: 'CHARGER', product_name: 'Dyson V11 充電器 ACアダプター' },
+    { asin: 'BODY', product_name: 'Dyson V15 Detect コードレス掃除機 本体' },
+    { asin: 'WRONG_MODEL', product_name: 'Dyson V10 交換用 HEPAフィルター 2個セット' },
+  ];
+  const filterQueries = [
+    'Dyson V15用 交換HEPAフィルター 2個セット',
+    'replacement HEPA filters for Dyson V15 2 pack',
+    '戴森V15替换HEPA滤网2件套',
+    '다이슨 V15용 교체 HEPA 필터 2개 세트',
+  ];
+  for (const query of filterQueries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['FILTER'], query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['cordless-vacuum-filter'], query);
+  }
+  assert.deepEqual(
+    filterCategoryMismatches('replacement battery for Dyson V11 5000mAh', candidates).map((item) => item.asin),
+    ['BATTERY']
+  );
+  assert.deepEqual(
+    filterCategoryMismatches('Dyson V11 充電器', candidates).map((item) => item.asin),
+    ['CHARGER']
+  );
+});
+
+test('空気清浄機フィルターは本体・別型番・別種別・別交換品番を除外する', () => {
+  const candidates = [
+    { asin: 'SHARP_FILTER', product_name: 'Sharp KC-R50対応 交換用 集じんフィルター FZ-D50HF' },
+    { asin: 'SHARP_BODY', product_name: 'Sharp KC-R50 空気清浄機 本体 HEPA搭載' },
+    { asin: 'SHARP_DEODOR', product_name: 'Sharp KC-R50対応 交換用 脱臭フィルター FZ-D50DF' },
+    { asin: 'SHARP_WRONG', product_name: 'Sharp KC-S50対応 交換用 集じんフィルター FZ-D50HF' },
+    { asin: 'LEVOIT', product_name: 'Levoit Core 300 Replacement True HEPA Filter' },
+    { asin: 'XIAOMI', product_name: 'Xiaomi Air Purifier 4 Lite 交換フィルター' },
+    { asin: 'SAMSUNG', product_name: 'Samsung AX60R5080WD 교체 HEPA 필터' },
+  ];
+  const cases = [
+    ['シャープ KC-R50用 集じんフィルター FZ-D50HF', ['SHARP_FILTER']],
+    ['replacement HEPA filter for Levoit Core 300', ['LEVOIT']],
+    ['适用于小米空气净化器4 Lite的替换滤芯', ['XIAOMI']],
+    ['삼성 AX60R5080WD 교체 헤파 필터', ['SAMSUNG']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['air-purifier-filter'], query);
+  }
+});
+
+test('浄水器カートリッジは本体・別型番・別品番・本数違いを除外する', () => {
+  const candidates = [
+    { asin: 'BRITA3', product_name: 'BRITA MAXTRA PRO 交換カートリッジ 3個パック' },
+    { asin: 'BRITA1', product_name: 'BRITA MAXTRA PRO 交換カートリッジ 1個' },
+    { asin: 'BRITA_BODY', product_name: 'BRITA 浄水ポット 本体 MAXTRA PROカートリッジ付き' },
+    { asin: 'TORAY', product_name: 'Toray MKC.MX2J 交換用 浄水カートリッジ 2 pack' },
+    { asin: 'TORAY_WRONG', product_name: 'Toray MKC.XJ 交換用 浄水カートリッジ 2 pack' },
+    { asin: 'CLEANSUI', product_name: 'Cleansui HGC9S 交換カートリッジ' },
+    { asin: 'PANASONIC', product_name: 'Panasonic TK-CJ24対応 交換カートリッジ TK-CJ24C1' },
+    { asin: 'PANASONIC_WRONG', product_name: 'Panasonic TK-CJ24対応 交換カートリッジ TK-CJ24C2' },
+  ];
+  const cases = [
+    ['BRITA MAXTRA PRO 交換カートリッジ 3個', ['BRITA3']],
+    ['replacement cartridge for Toray MKC.MX2J 2 pack', ['TORAY']],
+    ['三菱丽阳可菱水HGC9S替换滤芯', ['CLEANSUI']],
+    ['파나소닉 TK-CJ24용 교체 카트리지 TK-CJ24C1', ['PANASONIC']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['water-filter-cartridge'], query);
+  }
+});
+
+test('プリンターインクは本体・別型番・別品番・純正互換・色数違いを除外する', () => {
+  const candidates = [
+    { asin: 'CANON', product_name: 'Canon PIXUS TS8730 純正インク BCI-331+330 6色セット' },
+    { asin: 'CANON_COMPAT', product_name: 'Canon PIXUS TS8730 互換インク BCI-331+330 6色セット' },
+    { asin: 'CANON_BODY', product_name: 'Canon PIXUS TS8730 プリンター本体 BCI-331インク付属' },
+    { asin: 'EPSON', product_name: 'Epson EP-881A compatible ink cartridges KAM-6CL-L 6 colors' },
+    { asin: 'EPSON_4', product_name: 'Epson EP-881A compatible ink cartridges KAM-6CL-L 4 colors' },
+    { asin: 'BROTHER', product_name: 'Brother DCP-J928N LC411-4PK original ink cartridges' },
+    { asin: 'BROTHER_WRONG', product_name: 'Brother DCP-J926N LC411-4PK original ink cartridges' },
+    { asin: 'HP', product_name: 'HP DeskJet 2720 67XL 정품 잉크 검정 컬러' },
+    { asin: 'HP_WRONG', product_name: 'HP DeskJet 2720 65XL 정품 잉크 검정 컬러' },
+  ];
+  const cases = [
+    ['Canon PIXUS TS8730用 純正インク BCI-331+330 6色', ['CANON']],
+    ['compatible ink cartridges for Epson EP-881A KAM-6CL-L 6 color', ['EPSON']],
+    ['适用于Brother DCP-J928N的LC411-4PK原装墨盒', ['BROTHER']],
+    ['HP DeskJet 2720 67XL 정품 잉크 검정 컬러', ['HP']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(
+      semanticSearchGroups(query).map((group) => group.category).filter((category) => category !== 'color'),
+      ['printer-ink'],
       query
     );
   }
