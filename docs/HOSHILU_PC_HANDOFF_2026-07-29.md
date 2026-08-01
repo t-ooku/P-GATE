@@ -43,7 +43,7 @@
 - ITG/ITT/MC2を横断するD1商品索引、重複ASIN統合、FTS検索。
 - Amazon、楽天市場、Qoo10、SHEINへの安全な送客経路。
 - 承認済み商品URL、署名付き送客URL、キャンペーン計測。
-- ほしっトク（旧MYWISH）と会員同期。
+- ほしっとく（旧MYWISH）と会員同期。
 - ホシっといて（旧MYWATCH）の通知条件、スケジュール、リトライ、監査ロジック。
 - LINE Login、セラー認証、テナント境界、プラン境界。
 - LINE Messaging API用署名検証・Webhook処理コード。
@@ -372,7 +372,7 @@ https://hoshilu.app/health
 
 - 正式公開名は`HOSHILU`、日本語表示は`ホシル`。
 - ブランドラインは「欲しいを、ちゃんと見つける。」
-- 習慣ラインは「気になったら、ほしっトク。」
+- 習慣ラインは「気になったら、ほしっとく。」
 - 公開UIで旧名MYGATEを新規使用しない。
 - Pink `#F238B5`、Violet `#8A4CF4`、Blue `#258CFF`のgradientを維持。
 - ロゴを伸縮、別色化、第三者モールロゴと合成しない。
@@ -438,7 +438,7 @@ https://hoshilu.app/health
 2. **Cloudflare/D1のバックアップ、migration、Secret readiness確認**  
    Web/API/会員/商品検索の中核であり、誤deployの影響が最大。
 3. **HOSHILU本番スモークテスト**  
-   検索、会員、ほしっトク、ホシっといて、セラー、4モール送客を確認する。
+   検索、会員、ほしっとく、ホシっといて、セラー、4モール送客を確認する。
 4. **GAS/Drive/Spreadsheet本番確認**  
    取込、Archive、Error、Log、triggerの運用継続性を確保する。
 5. **LINE Messaging API本番完了**  

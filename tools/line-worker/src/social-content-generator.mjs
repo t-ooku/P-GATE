@@ -4,7 +4,7 @@ const THEMES = Object.freeze([
   { id: 'cross_market_phone_case', pillar: 'CROSS_MARKET', format: 'CAROUSEL', memory: 'TikTokで見た、光るスマホケース', refined: 'TikTokで見た光るiPhoneケース', hook: 'その「どこで売ってる？」を9つのショッピングモールから探そう。' },
   { id: 'trend_camera_reel', pillar: 'AMBIGUOUS_TREND', format: 'REEL', memory: 'ピンクで小さい、レトロなカメラみたいなもの', refined: 'SNSで見たピンクの小さいレトロカメラ', hook: '名前は知らない。でも見た目は覚えてる。' },
   { id: 'qoo10_kbeauty_reel', pillar: 'CROSS_MARKET', format: 'REEL', marketplace_focus: 'QOO10_JP', memory: '韓国っぽい、つやつやになるリップ', refined: '韓国コスメ ツヤ リップ ティント', hook: 'Qoo10で見かけた韓国コスメ、名前が曖昧でも探せる。' },
-  { id: 'popular_wish_charm', pillar: 'POPULAR_WISH', format: 'STATIC', memory: 'バッグにつける小さなぬいぐるみみたいなもの', refined: 'バッグにつける小さいぬいぐるみチャーム', hook: '「ほしっトク」で人気の欲しい、あなたも気になる？' },
+  { id: 'popular_wish_charm', pillar: 'POPULAR_WISH', format: 'STATIC', memory: 'バッグにつける小さなぬいぐるみみたいなもの', refined: 'バッグにつける小さいぬいぐるみチャーム', hook: '「ほしっとく」で人気の欲しい、あなたも気になる？' },
   { id: 'shein_trend_accessory', pillar: 'CROSS_MARKET', format: 'CAROUSEL', marketplace_focus: 'SHEIN_JP', memory: '海外ガールっぽい、シルバーのじゃらじゃらアクセ', refined: 'Y2K シルバー チャーム ネックレス', hook: 'SHEINで見たトレンド小物、見た目の記憶からもう一度。' },
   { id: 'cross_market_earphones', pillar: 'CROSS_MARKET', format: 'CAROUSEL', memory: '耳をふさがない、アクセみたいなイヤホン', refined: '耳をふさがないオープンイヤー型イヤホン', hook: 'Amazonだけで見つからないなら、横断して探せばいい。' },
   { id: 'trend_sunset_lamp', pillar: 'AMBIGUOUS_TREND', format: 'STATIC', memory: '部屋が夕焼けみたいになる丸いライト', refined: '夕焼け色が壁に映る丸いライト', hook: 'SNSで流行ってる「あのライト」、名前なしで探せる。' },
@@ -12,13 +12,13 @@ const THEMES = Object.freeze([
   { id: 'ambiguous_search_reel', pillar: 'AMBIGUOUS_TREND', format: 'REEL', memory: '歩くと靴底が光るスニーカーみたいな靴', refined: '歩くとソールがLEDで光るスニーカー', hook: '検索語0点でも、記憶の断片なら100点。' },
   { id: 'shein_fashion_reel', pillar: 'CROSS_MARKET', format: 'REEL', marketplace_focus: 'SHEIN_JP', memory: '韓国っぽい、透ける素材の夏バッグ', refined: '韓国風 シアー メッシュ ミニバッグ', hook: 'SHEINで流行ってる「あのバッグ」、説明だけで探してみる。' },
   { id: 'trend_pet_fountain', pillar: 'AMBIGUOUS_TREND', format: 'CAROUSEL', memory: '猫がひとりでも水を飲める流れている器', refined: '留守番中の猫が使える自動給水器', hook: '用途しか分からなくても、商品候補までたどり着ける。' },
-  { id: 'popular_wish_charger', pillar: 'POPULAR_WISH', format: 'STATIC', memory: 'スマホの後ろにくっつく薄い充電器', refined: 'スマホ背面に磁石で付く薄型モバイルバッテリー', hook: '今週の「ほしっトク」人気、買えるモールまで探せます。' }
+  { id: 'popular_wish_charger', pillar: 'POPULAR_WISH', format: 'STATIC', memory: 'スマホの後ろにくっつく薄い充電器', refined: 'スマホ背面に磁石で付く薄型モバイルバッテリー', hook: '今週の「ほしっとく」人気、買えるモールまで探せます。' }
 ]);
 
 const PILLAR_COPY = Object.freeze({
   CROSS_MARKET: MARKETPLACE_MESSAGE,
   AMBIGUOUS_TREND: 'SNSで流行っている商品も、見た目・用途・見た場所からあいまい検索。',
-  POPULAR_WISH: '「ほしっトク」で人気の商品を見つけて、買える場所まで探せます。'
+  POPULAR_WISH: '「ほしっとく」で人気の商品を見つけて、買える場所まで探せます。'
 });
 
 const FOCUS_COPY = Object.freeze({
@@ -71,7 +71,7 @@ export function buildYouthSearchPost(index, platform = 'X') {
     campaign_pillar: theme.pillar,
     marketplace_focus: theme.marketplace_focus || 'ALL',
     content_format: theme.format,
-    caption: `${platformHook}\n${PILLAR_COPY[theme.pillar]}${focusMessage}\n${commentCta}\n${MARKETPLACE_MESSAGE}\n#ホシル #あいまい検索 #9モール横断 #ほしっトク${focusHashtags}`,
+    caption: `${platformHook}\n${PILLAR_COPY[theme.pillar]}${focusMessage}\n${commentCta}\n${MARKETPLACE_MESSAGE}\n#ホシル #あいまい検索 #9モール横断 #ほしっとく${focusHashtags}`,
     link: `https://hoshilu.app/?q=${encodeURIComponent(theme.refined)}&utm_source=${source}&utm_medium=organic_social&utm_campaign=${campaign}&utm_content=${theme.id}`,
     prefill_query: theme.refined,
     reel_script: reelScript(theme),

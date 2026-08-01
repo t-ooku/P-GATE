@@ -6,7 +6,7 @@
 - Latin display name: `HOSHILU`
 - Reading: ホシル
 - Brand line: `欲しいを、ちゃんと見つける。`
-- Habit line: `気になったら、ほしっトク。`
+- Habit line: `気になったら、ほしっとく。`
 - Conversational prompt: `これ、ホシっといて。`
 
 `HOSHILU` is the public brand. `Project GATE` remains the internal project name until
@@ -17,7 +17,7 @@ repository, contracts, infrastructure, and integrations are deliberately migrate
 | Existing/internal name | Public label | Meaning |
 |---|---|---|
 | MYCONCIERGE | ホシル | Describe an unclear need and find candidates together |
-| MYWISH | ほしっトク | Save a want on the device and continue later |
+| MYWISH | ほしっとく | Save a want on the device and continue later |
 | MYWATCH | ホシっといて | Ask HOSHILU to watch availability, price, coupon, and restock changes |
 | MYTREASURE | HOSHILU INSIGHT | Seller-side aggregated demand and opportunity analysis |
 
@@ -54,7 +54,7 @@ stretch the mark, add third-party marketplace logos, or place detailed photograp
 ## Voice
 
 - Short, conversational, and encouraging.
-- Say `ホシる`, `ほしっトク`, and `ホシっといて` where the action is clear.
+- Say `ホシる`, `ほしっとく`, and `ホシっといて` where the action is clear.
 - Avoid claiming that a product is definitely correct, safe, compatible, cheapest, or in stock.
 - Use `販売ページで確認` before purchase.
 
@@ -76,7 +76,7 @@ Primary: `#ホシル`
 
 Campaign and interaction:
 
-- `#ほしっトク`
+- `#ほしっとく`
 - `#ホシった`
 - `#今日のホシル`
 - `#これホシっといて`

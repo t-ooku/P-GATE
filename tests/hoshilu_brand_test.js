@@ -12,7 +12,7 @@ const extension = JSON.parse(read('tools/chrome-extension/manifest.json'));
 const serviceWorker = read('tools/line-worker/public/service-worker.js');
 
 assert.match(index, /ホシル｜欲しいを、ちゃんと見つける。/);
-assert.match(index, /ほしっトク/);
+assert.match(index, /ほしっとく/);
 assert.match(index, /ホシっといて/);
 assert.match(index, /HOSHILU INSIGHT/);
 assert.match(index, /og-hoshilu/);
@@ -29,7 +29,7 @@ assert.match(extensionJa.extensionName.message, /^ホシル/);
 assert.equal(extension.version, '0.4.0');
 
 assert.match(app, /ホシルからの提案/);
-assert.match(app, /ほしっトクしました/);
+assert.match(app, /ほしっとくしました/);
 assert.match(app, /Suggestions from HOSHILU/);
 assert.match(serviceWorker, /hoshilu-shell-v\d+/);
 

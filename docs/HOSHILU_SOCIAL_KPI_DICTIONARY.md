@@ -10,7 +10,7 @@
 | product_outbound | EC商品ページへ移動した回数 | query_id/marketplace |
 | amazon_fallback | 最適化検索語でAmazon検索へ移動した回数 | query_id |
 | keyword_copy | 生成検索語をコピーした回数 | query_id |
-| wish_saved | ほしっトク保存 | anonymous/member |
+| wish_saved | ほしっとく保存 | anonymous/member |
 | watch_saved | 通知条件保存 | member/wish |
 | social_response_approved | 人手承認済みコメント・投票 | response_id |
 | hashtag_demand | 承認済み回答内ハッシュタグ集計 | hashtag |

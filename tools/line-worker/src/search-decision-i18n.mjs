@@ -9,9 +9,9 @@ export const SEARCH_DECISION_LOCALES = Object.freeze(["ja", "en", "zh", "ko"]);
 const COPY = Object.freeze({
   ja: {
     save_insufficient:
-      "今の記憶だけでは商品を特定できません。ほしっトクに保存して、商品追加時にもう一度照合します。",
+      "今の記憶だけでは商品を特定できません。ほしっとくに保存して、商品追加時にもう一度照合します。",
     save_context:
-      "色や見た場所だけでは断定できません。ほしっトクに保存して、後日もう一度照合します。",
+      "色や見た場所だけでは断定できません。ほしっとくに保存して、後日もう一度照合します。",
     questions: {
       category_branch: "どちらに近いですか？",
       category_confirm: "この種類に近いですか？",

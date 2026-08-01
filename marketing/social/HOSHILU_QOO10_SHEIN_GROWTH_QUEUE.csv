@@ -5,5 +5,5 @@ day,campaign_id,content_id,channel,format,marketplace_focus,hook,prefill_query,c
 4,youth_shein_discovery,shein_fashion_reel,INSTAGRAM_REELS,REEL,SHEIN_JP,"SHEINで流行ってる、透ける夏バッグ。","韓国風 シアー メッシュ ミニバッグ","見つけたいSHEIN商品をコメントして",REVIEW_REQUIRED
 5,youth_qoo10_discovery,qoo10_search_howto,TIKTOK,REEL,QOO10_JP,"Qoo10で0件でも、検索語を整えると見つかるかも。","TikTokで見た光るiPhoneケース","検索してほしい曖昧ワードをコメントして",REVIEW_REQUIRED
 6,youth_shein_discovery,shein_room_items,INSTAGRAM,CAROUSEL,SHEIN_JP,"服だけじゃない。SHEINで見た部屋アイテムも探せる。","部屋が夕焼けみたいになる丸いライト","気になる部屋アイテムをコメントして",REVIEW_REQUIRED
-7,youth_qoo10_discovery,qoo10_wish_rank,X,STATIC,QOO10_JP,"ほしっトクで人気の韓国トレンドをQoo10でも。","今週人気の韓国風スマホアクセサリー","欲しいものを返信で教えて",REVIEW_REQUIRED
+7,youth_qoo10_discovery,qoo10_wish_rank,X,STATIC,QOO10_JP,"ほしっとくで人気の韓国トレンドをQoo10でも。","今週人気の韓国風スマホアクセサリー","欲しいものを返信で教えて",REVIEW_REQUIRED
 8,youth_shein_discovery,shein_cross_market_reel,INSTAGRAM_REELS,REEL,SHEIN_JP,"SHEINで見た。でも他のモールにもある？","バッグにつける小さいぬいぐるみチャーム","4モール比較したい商品をコメントして",REVIEW_REQUIRED

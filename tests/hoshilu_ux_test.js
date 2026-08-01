@@ -8,7 +8,7 @@ for (const id of ['goSearch', 'goWish', 'clearQuery', 'mywish']) {
   assert.match(index, new RegExp(`id="${id}"`));
 }
 assert.doesNotMatch(index, /id="goWatch"|id="goInsight"|id="goAccount"/);
-assert.match(app, /features:\['ホシル','ほしっトク'\]/);
+assert.match(app, /features:\['ホシル','ほしっとく'\]/);
 assert.match(app, /account:'マイページ'/);
 assert.doesNotMatch(app, /elements\.goWatch|elements\.goInsight|elements\.goAccount/);
 assert.match(app, /function focusSearch\(\)/);

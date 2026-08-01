@@ -49,7 +49,7 @@
 
 - search_starts: 検索開始
 - search_completions: 検索完了
-- wish_saves: ほしっトク保存
+- wish_saves: ほしっとく保存
 - marketplace_clicks: モール遷移
 - return_7d: 7日以内の再訪
 
@@ -64,7 +64,7 @@
 - 保存率 = saves / reach
 - クリック率 = link_clicks / reach
 - 検索完了率 = search_completions / link_clicks
-- ほしっトク率 = wish_saves / search_completions
+- ほしっとく率 = wish_saves / search_completions
 - モール遷移率 = marketplace_clicks / search_completions
 - 1,000リーチ当たり検索完了 = search_completions / reach * 1000
 
@@ -77,7 +77,7 @@
 | 指標 | 重み |
 |---|---:|
 | 1,000リーチ当たり検索完了 | 30% |
-| ほしっトク率 | 20% |
+| ほしっとく率 | 20% |
 | モール遷移率 | 20% |
 | 保存率 | 10% |
 | 共有率 | 10% |
@@ -114,7 +114,7 @@ InstagramリールとXテキストを直接比較せず、まず同じ形式内�
 1. ジャンル別の投稿数と総リーチ
 2. 同形式内の正規化ランキング
 3. 閲覧上位と検索完了上位の差
-4. ほしっトク上位とモール遷移上位の差
+4. ほしっとく上位とモール遷移上位の差
 5. 次期14日間の投稿比率
 6. 継続・改善・停止する企画
 7. URL精度や検索品質側で直す課題

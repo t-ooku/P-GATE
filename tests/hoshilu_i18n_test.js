@@ -22,7 +22,7 @@ assert.match(sellerLogin, /data-i18n="seller\.title"/);
 assert.match(sellerPage, /data-i18n="seller\.consoleTitle"/);
 assert.match(index, /data-i18n="nav\.business"/);
 for (const message of [
-  '一致するほしっトクはありません。',
+  '一致するほしっとくはありません。',
   'No saved items match your search.',
   '没有符合搜索条件的已保存商品。',
   '검색과 일치하는 저장 항목이 없습니다.'

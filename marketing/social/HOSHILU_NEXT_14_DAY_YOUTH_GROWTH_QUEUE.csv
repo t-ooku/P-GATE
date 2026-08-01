@@ -2,14 +2,14 @@ day,campaign_id,content_id,channel,format,pillar,hook,prefill_query,cta,status
 1,youth_growth_01,cross_market_intro,INSTAGRAM,CAROUSEL,CROSS_MARKET,"Amazon・楽天市場・Qoo10・SHEIN、4つまとめて探せる。","SNSで見た韓国っぽいスマホケース","4モールで探す",REVIEW_REQUIRED
 2,youth_growth_01,trend_camera_reel,INSTAGRAM_REELS,REEL,AMBIGUOUS_TREND,"名前は知らない。でも見た目は覚えてる。","ピンクで小さいレトロなカメラみたいなもの","あいまいなまま検索",REVIEW_REQUIRED
 3,youth_growth_01,qoo10_search_demo,X,STATIC,CROSS_MARKET,"Qoo10で0件？ ホシルがモール向けの言葉に整える。","TikTokで見た光るiPhoneケース","Qoo10でも探す",REVIEW_REQUIRED
-4,youth_growth_01,popular_wish_01,INSTAGRAM,CAROUSEL,POPULAR_WISH,"今週みんなが、ほしっトクしたもの。","バッグにつける小さいぬいぐるみチャーム","人気の欲しいを見る",REVIEW_REQUIRED
+4,youth_growth_01,popular_wish_01,INSTAGRAM,CAROUSEL,POPULAR_WISH,"今週みんなが、ほしっとくしたもの。","バッグにつける小さいぬいぐるみチャーム","人気の欲しいを見る",REVIEW_REQUIRED
 5,youth_growth_01,four_market_reel,TIKTOK,REEL,CROSS_MARKET,"同じ欲しいを4モールで横断したら？","韓国風 透明ケース ワイヤレスイヤホン","結果を見比べる",REVIEW_REQUIRED
 6,youth_growth_01,trend_lamp,X,STATIC,AMBIGUOUS_TREND,"SNSで流行ってるあのライト、名前なしで探せる。","部屋が夕焼けみたいになる丸いライト","記憶から探す",REVIEW_REQUIRED
 7,youth_growth_01,rakuten_bridge,INSTAGRAM,CAROUSEL,CROSS_MARKET,"Amazonになくても、楽天・Qoo10・SHEINまで一気に探す。","首にかける羽根なしの涼しいやつ","4モールを横断",REVIEW_REQUIRED
-8,youth_growth_02,popular_wish_02,X,STATIC,POPULAR_WISH,"みんなの『ほしっとく』、次に流行るのはどれ？","今週SNSで人気の保存商品","ほしっトクを見る",REVIEW_REQUIRED
+8,youth_growth_02,popular_wish_02,X,STATIC,POPULAR_WISH,"みんなの『ほしっとく』、次に流行るのはどれ？","今週SNSで人気の保存商品","ほしっとくを見る",REVIEW_REQUIRED
 9,youth_growth_02,ambiguous_reel,INSTAGRAM_REELS,REEL,AMBIGUOUS_TREND,"検索語0点でも、記憶の断片なら100点。","歩くと靴底が光るスニーカーみたいな靴","あいまい検索を試す",REVIEW_REQUIRED
 10,youth_growth_02,shein_fashion,TIKTOK,STATIC,CROSS_MARKET,"SHEINもQoo10も楽天もAmazonも、欲しいから横断。","バッグにつける小さなチャーム 韓国風","買える場所を探す",REVIEW_REQUIRED
 11,youth_growth_02,trend_pet,INSTAGRAM,CAROUSEL,AMBIGUOUS_TREND,"用途しか分からなくても、候補までたどり着く。","留守番中の猫が使える流れる水の器","用途から探す",REVIEW_REQUIRED
-12,youth_growth_02,popular_wish_03,X,STATIC,POPULAR_WISH,"ほしっトク人気TOP3。保存から買える場所まで。","今週みんなが保存した暑さ対策商品","人気商品を探す",REVIEW_REQUIRED
-13,youth_growth_02,popular_reel,TIKTOK,REEL,POPULAR_WISH,"今週のほしっトク人気、3秒で見せます。","今週SNSで人気の保存商品","保存してあとで探す",REVIEW_REQUIRED
+12,youth_growth_02,popular_wish_03,X,STATIC,POPULAR_WISH,"ほしっとく人気TOP3。保存から買える場所まで。","今週みんなが保存した暑さ対策商品","人気商品を探す",REVIEW_REQUIRED
+13,youth_growth_02,popular_reel,TIKTOK,REEL,POPULAR_WISH,"今週のほしっとく人気、3秒で見せます。","今週SNSで人気の保存商品","保存してあとで探す",REVIEW_REQUIRED
 14,youth_growth_02,cross_market_final,INSTAGRAM,CAROUSEL,CROSS_MARKET,"欲しいは1つ。探す場所は4つ。","スマホの後ろにくっつく薄い充電器","Amazon・楽天市場・Qoo10・SHEINで探す",REVIEW_REQUIRED

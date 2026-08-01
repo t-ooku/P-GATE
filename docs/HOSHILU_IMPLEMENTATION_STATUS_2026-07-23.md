@@ -8,7 +8,7 @@ Public brand: ホシル / HOSHILU
 
 - Approved public naming architecture:
   - search: ホシル
-  - save: ほしっトク
+  - save: ほしっとく
   - watch: ホシっといて
   - seller analytics: HOSHILU INSIGHT
 - Retained the existing pink-violet-blue portrait palette.
