@@ -1637,3 +1637,24 @@ test('ロボット掃除機の交換部品は本体・異種部品・別型番�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['robot-vacuum-filter'], query);
   }
 });
+
+test('ロボット掃除機の交換パーツセットは指定部品が揃う同型番候補だけを表示する', () => {
+  const candidates = [
+    { asin: 'KIT', product_name: 'Roomba j7 交換パーツセット HEPAフィルター サイドブラシ メインローラーブラシ' },
+    { asin: 'FILTER_ONLY', product_name: 'Roomba j7 交換フィルター 3個セット' },
+    { asin: 'PARTIAL', product_name: 'Roomba j7 フィルター サイドブラシ セット' },
+    { asin: 'BODY', product_name: 'iRobot Roomba j7 ロボット掃除機 本体' },
+    { asin: 'WRONG_MODEL', product_name: 'Roomba i7 交換パーツキット フィルター サイドブラシ メインブラシ' },
+  ];
+  const queries = [
+    'ルンバ j7用 交換パーツセット フィルター サイドブラシ メインブラシ',
+    'replacement parts kit for Roomba j7 with filter side brushes and roller brush',
+    '适用于Roomba j7的配件套装 滤网 边刷 滚刷',
+    '룸바 j7용 교체 부품 세트 필터 사이드 브러시 롤러 브러시',
+    'ルンバ j7用 フィルターとサイドブラシとメインブラシ',
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['KIT'], query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['robot-vacuum-parts-kit'], query);
+  }
+});

@@ -115,10 +115,20 @@ function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
   if (!robotVacuum) return '';
+  const filter = /(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(normalized);
+  const sideBrush = /(?:サイド\s*ブラシ|side\s*brush(?:es)?|边刷|邊刷|사이드\s*브러시)/iu.test(normalized);
+  const mainBrush = /(?:メイン\s*ブラシ|ローラー\s*ブラシ|main\s*brush|roller\s*brush|滚刷|滾刷|메인\s*브러시|롤러\s*브러시)/iu.test(normalized);
+  const kit = /(?:交換\s*パーツ\s*セット|交換\s*部品\s*セット|replacement\s*parts?\s*(?:kit|set)|accessor(?:y|ies)\s*(?:kit|set)|配件套装|配件套組|교체\s*부품\s*세트|액세서리\s*세트)/iu.test(normalized)
+    || [filter, sideBrush, mainBrush].filter(Boolean).length >= 2;
+  if (kit) {
+    const model = robotVacuumModel(normalized);
+    const parts = [filter ? 'フィルター' : '', sideBrush ? 'サイドブラシ' : '', mainBrush ? 'メインブラシ' : ''].filter(Boolean);
+    return [model || 'ロボット掃除機', '交換パーツセット', ...parts].join(' ');
+  }
   let product = '';
-  if (/(?:交換|替え|replacement|替换|替換|교체)?\s*(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(normalized)) {
+  if (filter) {
     product = '交換フィルター';
-  } else if (/(?:交換|替え|replacement|替换|替換|교체)?\s*(?:サイド|side|边刷|邊刷|사이드)?\s*(?:ブラシ|brush(?:es)?|刷子|브러시)/iu.test(normalized)) {
+  } else if (sideBrush || /(?:交換|替え|replacement|替换|替換|교체)?\s*(?:ブラシ|brush(?:es)?|刷子|브러시)/iu.test(normalized)) {
     product = '交換サイドブラシ';
   } else if (/(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)/iu.test(normalized)) {
     product = '交換紙パック';

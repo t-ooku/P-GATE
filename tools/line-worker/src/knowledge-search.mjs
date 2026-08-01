@@ -421,6 +421,18 @@ function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const isFilter = /(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(text);
   const isBrush = /(?:サイド|side|边刷|邊刷|사이드)?\s*(?:ブラシ|brush(?:es)?|刷子|브러시)/iu.test(text);
   const isBag = /(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)/iu.test(text);
+  const hasMainBrush = /(?:メイン\s*ブラシ|ローラー\s*ブラシ|main\s*brush|roller\s*brush|滚刷|滾刷|메인\s*브러시|롤러\s*브러시)/iu.test(text);
+  if (requested.has('robot-vacuum-parts-kit')) {
+    const queryParts = {
+      filter: /(?:フィルター|filters?|滤网|濾網|필터)/iu.test(query),
+      sideBrush: /(?:サイド\s*ブラシ|side\s*brush(?:es)?|边刷|邊刷|사이드\s*브러시)/iu.test(query),
+      mainBrush: /(?:メイン\s*ブラシ|ローラー\s*ブラシ|main\s*brush|roller\s*brush|滚刷|滾刷|메인\s*브러시|롤러\s*브러시)/iu.test(query)
+    };
+    if (queryParts.filter && !isFilter) return true;
+    if (queryParts.sideBrush && !isBrush) return true;
+    if (queryParts.mainBrush && !hasMainBrush) return true;
+    return [isFilter, isBrush, hasMainBrush, isBag].filter(Boolean).length < 2;
+  }
   if (requested.has('robot-vacuum-filter')) return !isFilter || isBrush || isBag;
   if (requested.has('robot-vacuum-brush')) return !isBrush || isFilter || isBag;
   if (requested.has('robot-vacuum-bag')) return !isBag || isFilter || isBrush;
@@ -519,7 +531,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const thunderboltDock = requested.has('thunderbolt-dock');
   const usbAHub = requested.has('usb-a-hub');
   const usb4Dock = requested.has('usb4-dock');
-  const robotVacuumConsumable = ['robot-vacuum-filter', 'robot-vacuum-brush', 'robot-vacuum-bag']
+  const robotVacuumConsumable = ['robot-vacuum-parts-kit', 'robot-vacuum-filter', 'robot-vacuum-brush', 'robot-vacuum-bag']
     .some((category) => requested.has(category));
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',

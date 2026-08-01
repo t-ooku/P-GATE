@@ -43,6 +43,7 @@ const RULES = [
   ['necklace',/(ネックレス|首.{0,8}(?:金色|チェーン)|フィガロ.{0,8}チェーン|figaro.{0,8}chain|费加罗链|費加羅鍊|피가로.{0,8}체인|necklace|项链|項鍊|목걸이)/iu,['necklace','jewelry chain']],
   ['fitness-ring',/(運動用.*リング|エクササイズリング|stamina ring|輪っか.*運動)/iu,['ring','stamina']],
   ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|\d{2,3}\s*mm.{0,24}(?:カラー|色付き|グラデーション).*フィルター|color filters?|camera.{0,24}filters?|lens.{0,24}filters?|filters?.{0,24}(?:camera|lens)|相机.{0,20}滤镜|相機.{0,20}濾鏡|镜头.{0,20}滤镜|鏡頭.{0,20}濾鏡|카메라.{0,24}필터|렌즈.{0,24}필터)/iu,['filter','color']],
+  ['robot-vacuum-parts-kit',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,40}(?:交換\s*(?:パーツ|部品)\s*セット|replacement\s*parts?\s*(?:kit|set)|accessor(?:y|ies)\s*(?:kit|set)|配件套装|配件套組|교체\s*부품\s*세트|액세서리\s*세트)|(?:交換\s*(?:パーツ|部品)\s*セット|replacement\s*parts?\s*(?:kit|set)|accessor(?:y|ies)\s*(?:kit|set)|配件套装|配件套組|교체\s*부품\s*세트|액세서리\s*세트).{0,40}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum replacement parts kit','filter side brush roller']],
   ['robot-vacuum-filter',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,30}(?:フィルター|filters?|滤网|濾網|필터)|(?:フィルター|filters?|滤网|濾網|필터).{0,30}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum replacement filter','roomba filter']],
   ['robot-vacuum-brush',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,30}(?:ブラシ|brush(?:es)?|刷子|브러시)|(?:ブラシ|brush(?:es)?|刷子|브러시).{0,30}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum side brush','roomba replacement brush']],
   ['robot-vacuum-bag',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,30}(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)|(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백).{0,30}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum dust bag','roomba replacement bag']],
@@ -250,6 +251,16 @@ function candidateEvidenceMismatch(text, candidates) {
 export function semanticSearchGroups(value) {
   const text = String(value || '').normalize('NFKC');
   let groups = RULES.filter(([, pattern]) => pattern.test(text)).map(([category,, terms]) => ({ category, terms }));
+  const robotVacuumMentioned = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(text);
+  const robotVacuumPartCount = [
+    /(?:フィルター|filters?|滤网|濾網|필터)/iu,
+    /(?:サイド\s*ブラシ|side\s*brush(?:es)?|边刷|邊刷|사이드\s*브러시)/iu,
+    /(?:メイン\s*ブラシ|ローラー\s*ブラシ|main\s*brush|roller\s*brush|滚刷|滾刷|메인\s*브러시|롤러\s*브러시)/iu,
+    /(?:紙パック|ダストバッグ|dust\s*bags?|集尘袋|集塵袋|먼지\s*봉투)/iu
+  ].filter((pattern) => pattern.test(text)).length;
+  if (robotVacuumMentioned && robotVacuumPartCount >= 2 && !groups.some((group) => group.category === 'robot-vacuum-parts-kit')) {
+    groups.unshift({ category: 'robot-vacuum-parts-kit', terms: ['robot vacuum replacement parts kit','filter side brush roller'] });
+  }
   groups = groups.filter((group) => {
     const terms = NEGATED_CATEGORY_TERMS.get(group.category);
     return !terms || !isOnlyNegated(text, terms);
@@ -268,6 +279,9 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');
   if ([...specificCategories].some((category) => category.startsWith('robot-vacuum-'))) {
     groups = groups.filter((group) => group.category !== 'robot-vacuum');
+  }
+  if (specificCategories.has('robot-vacuum-parts-kit')) {
+    groups = groups.filter((group) => !['robot-vacuum-filter','robot-vacuum-brush','robot-vacuum-bag'].includes(group.category));
   }
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
