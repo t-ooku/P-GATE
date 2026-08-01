@@ -442,7 +442,7 @@ function buildNasSearchKeywords(query) {
 
 function buildWifi7MeshRouterSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const meshRouter = /(?:メッシュ(?:Wi-?Fi)?ルーター|mesh\s*(?:Wi-?Fi\s*)?router|Mesh路由器|메시\s*(?:와이파이\s*)?공유기)/iu.test(normalized);
+  const meshRouter = /(?:メッシュ(?:Wi-?Fi)?ルーター|mesh\s*(?:Wi-?Fi\s*)?router|Mesh路由器|메시\s*(?:와이파이\s*)?공유기|家の端.{0,12}別の階.{0,16}電波.{0,12}途切れ.{0,16}高速通信|fast\s*wifi.{0,16}without\s*dropouts.{0,20}far\s*end.{0,24}every\s*floor|家里角落.{0,12}每层楼.{0,12}不断线.{0,12}高速上网|집\s*끝.{0,12}다른\s*층.{0,16}끊김\s*없이.{0,12}빠른\s*와이파이)/iu.test(normalized);
   const wifi7 = /Wi-?Fi\s*7/iu.test(normalized);
   const speed = normalized.match(/\b(BE\d{4,5})\b/iu)?.[1]?.toUpperCase();
   const triBand = /(?:トライバンド|tri[\s-]*band|三频|三頻|트라이밴드)/iu.test(normalized);

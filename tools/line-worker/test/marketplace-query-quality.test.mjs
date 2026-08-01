@@ -568,6 +568,10 @@ test('Wi-Fi 7メッシュルーターは速度・帯域・台数・有線条件�
     'WiFi 7 mesh router BE11000 tri-band 2-pack 2.5GbE',
     'WiFi 7 Mesh路由器 BE11000 三频 2只装 2.5GbE',
     'WiFi 7 메시 와이파이 공유기 BE11000 트라이밴드 2개 세트 2.5GbE',
+    '家の端や別の階でも電波を途切れさせず高速通信したい Wi-Fi 7 BE11000 トライバンド 2台セット 2.5GbE',
+    'want fast WiFi without dropouts at the far end of the house and on every floor WiFi 7 BE11000 tri-band 2-pack 2.5GbE',
+    '想让家里角落和每层楼都不断线高速上网 WiFi 7 BE11000 三频 2只装 2.5GbE',
+    '집 끝과 다른 층에서도 끊김 없이 빠른 와이파이를 쓰고 싶어 WiFi 7 BE11000 트라이밴드 2개 세트 2.5GbE',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {
