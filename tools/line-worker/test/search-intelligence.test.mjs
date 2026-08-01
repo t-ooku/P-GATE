@@ -3560,7 +3560,11 @@ test('ドライブレコーダーは4言語で前後構成・画質・駐車監�
     '前後2カメラ 4K 駐車監視 GPS Wi-Fi ドライブレコーダー',
     '4K front and rear dash cam with parking monitoring GPS Wi-Fi',
     '4K 前后双摄 停车监控 GPS Wi-Fi 行车记录仪',
-    '4K 전후방 2채널 주차 감시 GPS Wi-Fi 블랙박스'
+    '4K 전후방 2채널 주차 감시 GPS Wi-Fi 블랙박스',
+    'あおり運転対策で前も後ろも録画できる 4K 駐車中も監視 GPS Wi-Fi',
+    'records both front and rear for road incidents 4K parking monitoring GPS Wi-Fi',
+    '防碰瓷前后都能录像 4K 停车监控 GPS Wi-Fi',
+    '사고 대비 전후방을 모두 녹화하는 4K 주차 감시 GPS Wi-Fi'
   ];
   const candidates = [
     { asin: 'MATCH', product_name: 'ドライブレコーダー 前後2カメラ 4K 駐車監視 GPS Wi-Fi' },

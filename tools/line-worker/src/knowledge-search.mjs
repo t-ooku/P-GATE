@@ -1327,10 +1327,10 @@ function isPressureIhRiceCookerMismatch(candidate, requested) {
 function dualDashCamConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   return {
-    dashCam: /(?:ドライブレコーダー|dash[\s-]*cam(?:era)?|行车记录仪|行車記錄器|블랙박스)/iu.test(text),
-    dual: /(?:前後\s*2\s*カメラ|front\s*(?:and|&)\s*rear|dual[\s-]*camera|前后双摄|前後雙鏡|전후방\s*2?\s*채널)/iu.test(text),
+    dashCam: /(?:ドライブレコーダー|dash[\s-]*cam(?:era)?|行车记录仪|行車記錄器|블랙박스|(?:あおり|煽り)運転.{0,24}前.{0,12}後ろ.{0,16}録画|records?.{0,16}(?:both\s*)?front.{0,12}(?:and|&).{0,12}rear.{0,24}(?:road|driving|incident|accident)|(?:防碰瓷|事故取证).{0,20}前后.{0,12}(?:录像|錄像)|(?:사고|보복운전).{0,16}대비.{0,20}전후방.{0,16}녹화)/iu.test(text),
+    dual: /(?:前後\s*2\s*カメラ|前.{0,8}後ろ.{0,12}録画|front\s*(?:and|&)\s*rear|records?.{0,16}(?:both\s*)?front.{0,12}(?:and|&).{0,12}rear|dual[\s-]*camera|前后双摄|前后.{0,8}(?:录像|錄像)|前後雙鏡|전후방\s*2?\s*채널|전후방.{0,12}녹화)/iu.test(text),
     resolution: text.match(/\b([248])\s*K\b/iu)?.[1] || '',
-    parking: /(?:駐車監視|parking\s*(?:monitoring|mode)|停车监控|停車監控|주차\s*감시)/iu.test(text),
+    parking: /(?:駐車(?:中も?)?監視|parking\s*(?:monitoring|mode)|停车监控|停車監控|주차\s*감시)/iu.test(text),
     gps: /\bGPS\b/iu.test(text),
     wifi: /\bWi[\s-]*Fi\b/iu.test(text),
     wrongProduct: /(?:micro\s*SD|SDカード|存储卡|記憶卡|메모리\s*카드|hardwire\s*kit|電源(?:直結)?ケーブル|降压线|降壓線|상시\s*전원\s*케이블|rear\s*camera\s*only|後方カメラ単体|后摄像头单独|後鏡頭單獨|후방\s*카메라\s*단품|mount(?:ing)?\s*(?:bracket)?|取付マウント|安装支架|安裝支架|장착\s*브래킷)/iu.test(text)
