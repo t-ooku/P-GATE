@@ -45,6 +45,25 @@ function deviceName(query) {
   return '';
 }
 
+function applePencilGeneration(query) {
+  const match = String(query || '').match(/(?:第\s*([123])\s*世代|([123])(?:st|nd|rd|th)?\s*(?:generation|gen)|第\s*([123])\s*代|([123])\s*세대)/iu);
+  const generation = match?.[1] || match?.[2] || match?.[3] || match?.[4];
+  return generation ? `第${generation}世代` : '';
+}
+
+function buildApplePencilSearchKeywords(query) {
+  if (!/(?:Apple\s*Pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬)/iu.test(query)) return '';
+  const device = deviceName(query);
+  const generation = applePencilGeneration(query);
+  const product = /(?:交換\s*ペン先|替え芯|replacement\s*(?:tips?|nibs?)|替换笔尖|替換筆尖|교체\s*펜촉|펜촉)/iu.test(query)
+    ? 'Apple Pencil 交換ペン先'
+    : /(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|充电转接器|充電轉接器|충전기|충전\s*어댑터)/iu.test(query)
+      ? 'Apple Pencil 充電アダプター'
+      : 'Apple Pencil';
+  const usbC = /usb[- ]?c/iu.test(query) ? 'USB-C' : '';
+  return [device, product, generation, usbC].filter(Boolean).join(' ');
+}
+
 function specificationTokens(query) {
   const matches = query.match(
     /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}[-\s]*(?:mm|cm|m|インチ|inch|英寸|인치|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)|\d+(?:\.\d+)?[-\s]*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|kg|kgs|g|kilograms?|kilogrammes?|grams?|インチ|inch|英寸|인치|リットル|オンス|升|毫升|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|キロ(?:グラム)?|グラム|公斤|千克|리터|온스|센티미터|밀리미터|킬로그램|키로|그램)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
@@ -310,6 +329,8 @@ function compactUnknownSearchPhrase(normalized) {
 export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') {
   const normalized = stripSearchBudget(query).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
+  const applePencil = buildApplePencilSearchKeywords(normalized);
+  if (applePencil) return applePencil;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

@@ -1363,3 +1363,31 @@ test('iPad Air・Proのアクセサリー意図と画面サイズを4言語で�
     assert.doesNotMatch(query, /^"tablet"\*|\("tablet"\*\)/, input);
   }
 });
+
+test('Apple Pencil本体・交換ペン先・充電用品を4言語で分離する', () => {
+  const cases = [
+    ['Apple Pencil 第2世代 iPad Pro用', 'tablet-stylus', 'apple pencil'],
+    ['2nd generation Apple Pencil for iPad Pro', 'tablet-stylus', 'apple pencil'],
+    ['iPad Pro用Apple Pencil交換ペン先', 'tablet-stylus-tip', 'apple pencil tips'],
+    ['iPad Pro Apple Pencil替换笔尖', 'tablet-stylus-tip', 'apple pencil tips'],
+    ['아이패드 프로 애플펜슬 교체 펜촉', 'tablet-stylus-tip', 'apple pencil tips'],
+    ['USB-C Apple Pencil charging adapter', 'tablet-stylus-charger', 'apple pencil charger'],
+  ];
+  for (const [input, category, productTerm] of cases) {
+    assert.deepEqual(semanticSearchGroups(input).map((group) => group.category), [category], input);
+    assert.match(intelligentFtsQuery(input), new RegExp(`"${productTerm}"\\*`), input);
+  }
+});
+
+test('Apple Pencil検索は商品種別が異なる候補を初回表示から除外する', () => {
+  const candidates = [
+    { asin: 'PENCIL', product_name: 'Apple Pencil 第2世代 iPad Pro対応 スタイラス' },
+    { asin: 'TIPS', product_name: 'Apple Pencil 交換ペン先 Replacement Tips 4個' },
+    { asin: 'CHARGER', product_name: 'Apple Pencil USB-C 充電アダプター' },
+    { asin: 'GENERIC', product_name: 'タブレット用 汎用スタイラスペン' },
+    { asin: 'IPAD', product_name: 'Apple iPad Pro 11インチ 本体' },
+  ];
+  assert.deepEqual(filterCategoryMismatches('Apple Pencil 第2世代 iPad Pro用', candidates).map((item) => item.asin), ['PENCIL']);
+  assert.deepEqual(filterCategoryMismatches('iPad Pro用Apple Pencil交換ペン先', candidates).map((item) => item.asin), ['TIPS']);
+  assert.deepEqual(filterCategoryMismatches('USB-C Apple Pencil charging adapter', candidates).map((item) => item.asin), ['CHARGER']);
+});

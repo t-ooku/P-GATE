@@ -652,3 +652,19 @@ test('iPad Air・Proのモデルと画面サイズを4言語のモール検索�
     }
   }
 });
+
+test('Apple Pencilの世代・交換ペン先・充電用品を全モール向けに分離する', () => {
+  const cases = [
+    ['Apple Pencil 第2世代 iPad Pro用', 'iPad Pro Apple Pencil 第2世代'],
+    ['2nd generation Apple Pencil for iPad Pro', 'iPad Pro Apple Pencil 第2世代'],
+    ['iPad Pro用Apple Pencil交換ペン先', 'iPad Pro Apple Pencil 交換ペン先'],
+    ['iPad Pro Apple Pencil替换笔尖', 'iPad Pro Apple Pencil 交換ペン先'],
+    ['아이패드 프로 애플펜슬 교체 펜촉', 'iPad Pro Apple Pencil 交換ペン先'],
+    ['USB-C Apple Pencil charging adapter', 'Apple Pencil 充電アダプター USB-C'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});

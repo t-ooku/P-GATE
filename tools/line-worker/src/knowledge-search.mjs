@@ -331,12 +331,22 @@ function tabletAccessoryEvidence(candidate) {
     compatible: /(?:tablet|ipad|タブレット|アイパッド|平板(?:电脑|電腦)?|태블릿|아이패드)/u.test(text),
     keyboard: /(?:keyboard|キーボード|键盘|鍵盤|키보드)/u.test(text),
     screenProtector: /(?:screen\s*protector|protective\s*film|tempered\s*glass|保護フィルム|保护膜|保護膜|钢化膜|鋼化膜|보호\s*필름|강화\s*유리)/u.test(text),
-    charger: /(?:charger|power\s*adapter|充電器|充电器|電源適配器|电源适配器|충전기|충전\s*어댑터)/u.test(text)
+    charger: /(?:charger|power\s*adapter|charging\s*adapter|充電器|充电器|充電アダプター|充电转接器|充電轉接器|電源適配器|电源适配器|충전기|충전\s*어댑터)/u.test(text),
+    stylus: /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬|stylus|スタイラス|触控笔|觸控筆|스타일러스)/u.test(text),
+    stylusTip: /(?:replacement\s*(?:tips?|nibs?)|交換\s*ペン先|替え芯|替换笔尖|替換筆尖|교체\s*펜촉|펜촉)/u.test(text),
+    applePencil: /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬)/u.test(text)
   };
 }
 
-function isTabletAccessoryMismatch(candidate, requested) {
+function isTabletAccessoryMismatch(candidate, requested, applePencilIntent = false) {
   const evidence = tabletAccessoryEvidence(candidate);
+  if (requested.has('tablet-stylus-tip')) return !(evidence.applePencil && evidence.stylusTip);
+  if (requested.has('tablet-stylus-charger')) return !(evidence.applePencil && evidence.charger);
+  if (requested.has('tablet-stylus')) {
+    if (evidence.stylusTip || (evidence.applePencil && evidence.charger)) return true;
+    return !evidence.stylus || !(evidence.compatible || evidence.applePencil) ||
+      (applePencilIntent && !evidence.applePencil);
+  }
   if (!evidence.compatible) return true;
   if (requested.has('tablet-keyboard')) return !evidence.keyboard;
   if (requested.has('tablet-screen-protector')) return !evidence.screenProtector;
@@ -353,13 +363,18 @@ export function filterCategoryMismatches(query, candidates = []) {
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = requested.has('phone-case') && groups.some((group) => group.category === 'light-up');
-  const tabletAccessory = ['tablet-keyboard', 'tablet-screen-protector', 'tablet-charger']
+  const tabletAccessory = [
+    'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
+    'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
+  ]
     .some((category) => requested.has(category));
+  const applePencilIntent = /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬)/iu
+    .test(String(query || '').normalize('NFKC'));
   return candidates.filter((candidate) => {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate)) return false;
-    if (tabletAccessory) return !isTabletAccessoryMismatch(candidate, requested);
+    if (tabletAccessory) return !isTabletAccessoryMismatch(candidate, requested, applePencilIntent);
     const category = inferCandidateCategory(candidate);
     return category === 'other' || requested.has(category);
   });
