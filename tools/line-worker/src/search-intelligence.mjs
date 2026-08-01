@@ -54,6 +54,7 @@ const RULES = [
   ['cordless-vacuum',/(?:dyson|ダイソン|戴森|다이슨).{0,20}(?:コードレス(?:掃除機)?|vacuum|吸尘器|吸塵器|무선\s*청소기)/iu,['dyson cordless vacuum','vacuum cleaner']],
   ['air-purifier-filter',/(?:(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성).{0,40}(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터)|(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터).{0,40}(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성))/iu,['air purifier replacement filter','hepa filter']],
   ['air-purifier',/(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기)/iu,['air purifier','air cleaner']],
+  ['refrigerator-water-filter',/(?:(?:samsung|三星|삼성|\bLG\b|엘지|\bGE\b|通用电气|通用電氣|whirlpool|ワールプール|惠而浦|월풀|HAF[- ]?QIN|LT1000P|RPWFE|EDR1RXD1).{0,50}(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터)|(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터).{0,50}(?:samsung|三星|삼성|\bLG\b|엘지|\bGE\b|通用电气|通用電氣|whirlpool|ワールプール|惠而浦|월풀|HAF[- ]?QIN|LT1000P|RPWFE|EDR1RXD1))/iu,['refrigerator water filter','fridge filter']],
   ['water-filter-cartridge',/(?:(?:brita|ブリタ|toray|東レ|东丽|東麗|cleansui|クリンスイ|可菱水|panasonic|パナソニック|松下|파나소닉|浄水器|water\s*(?:filter|purifier)|净水器|淨水器|정수기).{0,40}(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)|(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지).{0,40}(?:brita|ブリタ|toray|東レ|东丽|東麗|cleansui|クリンスイ|可菱水|panasonic|パナソニック|松下|파나소닉|浄水器|water\s*(?:filter|purifier)|净水器|淨水器|정수기))/iu,['water filter replacement cartridge','purifier cartridge']],
   ['water-purifier',/(?:浄水器|water\s*purifier|净水器|淨水器|정수기)/iu,['water purifier','water filter system']],
   ['printer-ink',/(?:(?:canon|キヤノン|キャノン|epson|エプソン|brother|ブラザー|hp|プリンター|printer|打印机|打印機|프린터).{0,45}(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)|(?:インク|ink\s*cartridges?|墨盒|墨水|잉크).{0,45}(?:canon|キヤノン|キャノン|epson|エプソン|brother|ブラザー|hp|プリンター|printer|打印机|打印機|프린터))/iu,['printer ink cartridge','replacement ink']],
@@ -315,6 +316,7 @@ export function semanticSearchGroups(value) {
   }
   if (specificCategories.has('air-purifier-filter')) groups = groups.filter((group) => group.category !== 'air-purifier');
   if (specificCategories.has('water-filter-cartridge')) groups = groups.filter((group) => group.category !== 'water-purifier');
+  if (specificCategories.has('refrigerator-water-filter')) groups = groups.filter((group) => !['air-purifier-filter','air-purifier','water-filter-cartridge','water-purifier'].includes(group.category));
   if (specificCategories.has('printer-ink')) groups = groups.filter((group) => !['printer','photo-printer'].includes(group.category));
   if (specificCategories.has('electric-toothbrush-head')) groups = groups.filter((group) => group.category !== 'electric-toothbrush');
   if (specificCategories.has('shaver-replacement-blade') || specificCategories.has('shaver-cleaning-cartridge')) groups = groups.filter((group) => group.category !== 'electric-shaver');

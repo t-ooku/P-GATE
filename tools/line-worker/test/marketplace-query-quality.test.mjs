@@ -1005,3 +1005,17 @@ test('Apple Pencilの世代・交換ペン先・充電用品を全モール向�
     }
   }
 });
+
+test('冷蔵庫給水フィルターは4言語の型番・純正・個数を全モール向けに保持する', () => {
+  const cases = [
+    ['Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個', 'Samsung HAF-QIN DA97-17376B 冷蔵庫給水フィルター 純正 2個セット'],
+    ['LG LT1000P ADQ74793501 genuine refrigerator water filter 2 pack', 'LG LT1000P ADQ74793501 冷蔵庫給水フィルター 純正 2個セット'],
+    ['GE RPWFE 原装冰箱净水滤芯 2个', 'GE RPWFE 冷蔵庫給水フィルター 純正 2個セット'],
+    ['월풀 EveryDrop Filter 1 EDR1RXD1 정품 냉장고 정수 필터 2개', 'Whirlpool EveryDrop Filter 1 EDR1RXD1 冷蔵庫給水フィルター 純正 2個セット'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});

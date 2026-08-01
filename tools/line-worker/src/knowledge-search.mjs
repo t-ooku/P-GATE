@@ -481,6 +481,35 @@ function waterFilterIdentity(text) {
   return '';
 }
 
+function refrigeratorWaterFilterIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:samsung|三星|삼성)/u.test(value) && /haf[- ]?qin/u.test(value)) return 'samsung-haf-qin';
+  if (/(?:\blg\b|엘지)/u.test(value) && /lt1000p/u.test(value)) return 'lg-lt1000p';
+  if (/(?:\bge\b|通用电气|通用電氣)/u.test(value) && /rpwfe/u.test(value)) return 'ge-rpwfe';
+  if (/(?:whirlpool|ワールプール|惠而浦|월풀)/u.test(value) && /everydrop\s*(?:filter\s*)?1/u.test(value)) return 'whirlpool-everydrop-1';
+  return '';
+}
+
+function refrigeratorWaterFilterPart(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/\b(da97[- ]?17376b|adq74793501|edr1rxd1)\b/u)?.[1]?.replace('da97 ', 'da97-') || '';
+}
+
+function isRefrigeratorWaterFilterMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedIdentity = refrigeratorWaterFilterIdentity(query);
+  if (requestedIdentity && refrigeratorWaterFilterIdentity(text) !== requestedIdentity) return true;
+  const requestedPart = refrigeratorWaterFilterPart(query);
+  if (requestedPart && refrigeratorWaterFilterPart(text) !== requestedPart) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  if (/(?:純正|正規品|genuine|original|原装|原裝|정품)/iu.test(query)
+    && /(?:互換|互換品|compatible|replacement\s+for|兼容|호환)/iu.test(text)) return true;
+  if (/(?:冷蔵庫本体|refrigerator\s*(?:unit|appliance)|冰箱(?:主机|主機)|냉장고\s*본체)/iu.test(text)) return true;
+  return !/(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터)/iu.test(text);
+}
+
 function waterFilterPartNumber(text) {
   return String(text || '').normalize('NFKC').toLowerCase().match(/\b(tk[- ]?cj24c1)\b/u)?.[1]?.replace('tk cj', 'tk-cj') || '';
 }
@@ -899,6 +928,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     .some((category) => requested.has(category));
   const airPurifierFilter = requested.has('air-purifier-filter');
   const waterFilterCartridge = requested.has('water-filter-cartridge');
+  const refrigeratorWaterFilter = requested.has('refrigerator-water-filter');
   const printerInk = requested.has('printer-ink');
   const toothbrushHead = requested.has('electric-toothbrush-head');
   const shaverReplacement = requested.has('shaver-replacement-blade') || requested.has('shaver-cleaning-cartridge');
@@ -943,6 +973,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (robotVacuumConsumable && isRobotVacuumConsumableMismatch(candidate, requested, query)) return false;
     if (dysonVacuumAccessory) return !isDysonVacuumAccessoryMismatch(candidate, requested, query);
     if (airPurifierFilter) return !isAirPurifierFilterMismatch(candidate, query);
+    if (refrigeratorWaterFilter) return !isRefrigeratorWaterFilterMismatch(candidate, query);
     if (waterFilterCartridge) return !isWaterFilterCartridgeMismatch(candidate, query);
     if (printerInk) return !isPrinterInkMismatch(candidate, query);
     if (toothbrushHead) return !isToothbrushHeadMismatch(candidate, query);

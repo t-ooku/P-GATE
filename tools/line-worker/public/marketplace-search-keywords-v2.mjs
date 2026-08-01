@@ -175,6 +175,30 @@ function waterFilterIdentity(query) {
   return '';
 }
 
+function refrigeratorWaterFilterIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  if (/(?:samsung|三星|삼성)/iu.test(value) && /HAF[- ]?QIN/iu.test(value)) return 'Samsung HAF-QIN';
+  if (/(?:\bLG\b|엘지)/iu.test(value) && /LT1000P/iu.test(value)) return 'LG LT1000P';
+  if (/(?:\bGE\b|通用电气|通用電氣)/iu.test(value) && /RPWFE/iu.test(value)) return 'GE RPWFE';
+  if (/(?:whirlpool|ワールプール|惠而浦|월풀)/iu.test(value) && /everydrop\s*(?:filter\s*)?1/iu.test(value)) {
+    return 'Whirlpool EveryDrop Filter 1';
+  }
+  return '';
+}
+
+function buildRefrigeratorWaterFilterSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const filter = /(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터)/iu.test(normalized);
+  if (!filter) return '';
+  const identity = refrigeratorWaterFilterIdentity(normalized);
+  if (!identity) return '';
+  const part = normalized.match(/\b(DA97[- ]?17376B|ADQ74793501|EDR1RXD1)\b/iu)?.[1]
+    ?.toUpperCase().replace('DA97 ', 'DA97-') || '';
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu.test(normalized) ? '純正' : '';
+  const count = normalized.match(/(\d+)\s*(?:個|本|pack|packs|count|pcs|pieces|件套|个装|個裝|个|個|개|개입|세트)/iu)?.[1];
+  return [identity, part, '冷蔵庫給水フィルター', genuine, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildWaterFilterCartridgeSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const cartridge = /(?:交換|替え|replacement|替换|替換|교체)?\s*(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)/iu.test(normalized);
@@ -724,6 +748,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (dysonVacuumAccessory) return dysonVacuumAccessory;
   const airPurifierFilter = buildAirPurifierFilterSearchKeywords(normalized);
   if (airPurifierFilter) return airPurifierFilter;
+  const refrigeratorWaterFilter = buildRefrigeratorWaterFilterSearchKeywords(normalized);
+  if (refrigeratorWaterFilter) return refrigeratorWaterFilter;
   const waterFilterCartridge = buildWaterFilterCartridgeSearchKeywords(normalized);
   if (waterFilterCartridge) return waterFilterCartridge;
   const printerInk = buildPrinterInkSearchKeywords(normalized);

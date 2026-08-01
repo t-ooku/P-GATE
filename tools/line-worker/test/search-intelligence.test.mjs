@@ -1733,6 +1733,32 @@ test('浄水器カートリッジは本体・別型番・別品番・本数違�
   }
 });
 
+test('冷蔵庫給水フィルターは本体・別型番・互換品・個数違い・浄水器用品を除外する', () => {
+  const candidates = [
+    { asin: 'SAMSUNG', product_name: 'Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個' },
+    { asin: 'SAMSUNG_COMPAT', product_name: 'Samsung HAF-QIN DA97-17376B 互換 冷蔵庫給水フィルター 2個' },
+    { asin: 'SAMSUNG_WRONG', product_name: 'Samsung HAF-CIN DA29-00020B 純正 冷蔵庫給水フィルター 2個' },
+    { asin: 'SAMSUNG_ONE', product_name: 'Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 1個' },
+    { asin: 'LG', product_name: 'LG LT1000P ADQ74793501 genuine refrigerator water filter 2 pack' },
+    { asin: 'LG_WRONG', product_name: 'LG LT700P ADQ36006101 genuine refrigerator water filter 2 pack' },
+    { asin: 'GE', product_name: 'GE RPWFE original refrigerator water filter 2 pack' },
+    { asin: 'GE_BODY', product_name: 'GE refrigerator appliance RPWFE filter included' },
+    { asin: 'WHIRLPOOL', product_name: 'Whirlpool EveryDrop Filter 1 EDR1RXD1 genuine refrigerator water filter 2 pack' },
+    { asin: 'WHIRLPOOL_WRONG', product_name: 'Whirlpool EveryDrop Filter 2 EDR2RXD1 genuine refrigerator water filter 2 pack' },
+    { asin: 'PURIFIER', product_name: 'BRITA MAXTRA PRO 浄水器 交換カートリッジ 2個' },
+  ];
+  const cases = [
+    ['Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個', ['SAMSUNG']],
+    ['LG LT1000P ADQ74793501 genuine refrigerator water filter 2 pack', ['LG']],
+    ['GE RPWFE 原装冰箱净水滤芯 2个', ['GE']],
+    ['월풀 EveryDrop Filter 1 EDR1RXD1 정품 냉장고 정수 필터 2개', ['WHIRLPOOL']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['refrigerator-water-filter'], query);
+  }
+});
+
 test('プリンターインクは本体・別型番・別品番・純正互換・色数違いを除外する', () => {
   const candidates = [
     { asin: 'CANON', product_name: 'Canon PIXUS TS8730 純正インク BCI-331+330 6色セット' },
