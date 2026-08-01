@@ -3571,3 +3571,25 @@ test('ドライブレコーダーは4言語で前後構成・画質・駐車監�
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
   }
 });
+test('カメラ付き自動給餌器は4言語で容量・画質・通信・音声条件が一致する本体だけを提示する', () => {
+  const queries = [
+    '5L 1080pカメラ Wi-Fi 双方向音声 ペット自動給餌器',
+    '5L automatic pet feeder with 1080p camera Wi-Fi two-way audio',
+    '5L 1080p摄像头 Wi-Fi 双向语音 自动喂食器',
+    '5L 1080p 카메라 Wi-Fi 양방향 음성 자동 급식기'
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'ペット自動給餌器 5L 1080pカメラ Wi-Fi 双方向音声' },
+    { asin: 'SMALL', product_name: 'ペット自動給餌器 3L 1080pカメラ Wi-Fi 双方向音声' },
+    { asin: 'NOCAM', product_name: 'ペット自動給餌器 5L Wi-Fi 双方向音声' },
+    { asin: 'NOWIFI', product_name: 'ペット自動給餌器 5L 1080pカメラ 双方向音声' },
+    { asin: 'NOAUDIO', product_name: 'ペット自動給餌器 5L 1080pカメラ Wi-Fi' },
+    { asin: 'BOWL', product_name: 'ペット自動給餌器用 給餌皿 5L 1080pカメラ Wi-Fi 双方向音声' },
+    { asin: 'DRY', product_name: 'automatic pet feeder 5L desiccant 1080p camera Wi-Fi two-way audio' },
+    { asin: 'CAMERA', product_name: 'ペット見守りカメラ単体 1080p Wi-Fi 双方向音声' },
+    { asin: 'FOUNTAIN', product_name: 'ペット自動給水器 5L 1080pカメラ Wi-Fi 双方向音声' }
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
+  }
+});

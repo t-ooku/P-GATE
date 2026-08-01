@@ -2123,3 +2123,17 @@ test('ドライブレコーダーは前後構成・解像度・駐車監視・�
     }
   }
 });
+test('カメラ付き自動給餌器は容量・画質・通信・音声条件を4言語で保持する', () => {
+  const inputs = [
+    '5L 1080pカメラ Wi-Fi 双方向音声 ペット自動給餌器',
+    '5L automatic pet feeder with 1080p camera Wi-Fi two-way audio',
+    '5L 1080p摄像头 Wi-Fi 双向语音 自动喂食器',
+    '5L 1080p 카메라 Wi-Fi 양방향 음성 자동 급식기'
+  ];
+  for (const input of inputs) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace),
+        'ペット自動給餌器 5L 1080pカメラ Wi-Fi 双方向音声', `${marketplace}: ${input}`);
+    }
+  }
+});

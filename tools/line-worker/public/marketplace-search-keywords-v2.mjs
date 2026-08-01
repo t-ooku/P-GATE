@@ -564,6 +564,17 @@ function buildDualDashCamSearchKeywords(query) {
   return ['ドライブレコーダー', '前後2カメラ', `${resolution}K`, '駐車監視', 'GPS', 'Wi-Fi'].join(' ');
 }
 
+function buildCameraPetFeederSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const feeder = /(?:ペット(?:用)?自動給餌器|自動給餌器|automatic\s*(?:pet\s*)?feeder|自动喂食器|自動餵食器|자동\s*급식기)/iu.test(normalized);
+  const capacity = normalized.match(/\b(\d(?:\.\d)?)\s*L\b/iu)?.[1];
+  const camera = /(?:1080p.{0,16}(?:カメラ|camera|摄像头|鏡頭|카메라)|(?:カメラ|camera|摄像头|鏡頭|카메라).{0,16}1080p)/iu.test(normalized);
+  const wifi = /\bWi[\s-]*Fi\b/iu.test(normalized);
+  const twoWayAudio = /(?:双方向音声|two[\s-]*way\s*audio|双向语音|雙向語音|양방향\s*음성)/iu.test(normalized);
+  if (!feeder || !capacity || !camera || !wifi || !twoWayAudio) return '';
+  return ['ペット自動給餌器', `${capacity}L`, '1080pカメラ', 'Wi-Fi', '双方向音声'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1395,6 +1406,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawPressureIhRiceCooker) return rawPressureIhRiceCooker;
   const rawDualDashCam = buildDualDashCamSearchKeywords(rawNormalized);
   if (rawDualDashCam) return rawDualDashCam;
+  const rawCameraPetFeeder = buildCameraPetFeederSearchKeywords(rawNormalized);
+  if (rawCameraPetFeeder) return rawCameraPetFeeder;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

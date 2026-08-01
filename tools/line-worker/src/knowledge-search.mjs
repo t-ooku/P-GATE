@@ -1349,6 +1349,30 @@ function isDualDashCamMismatch(candidate, requested) {
   return false;
 }
 
+function cameraPetFeederConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    feeder: /(?:ペット(?:用)?自動給餌器|自動給餌器|automatic\s*(?:pet\s*)?feeder|自动喂食器|自動餵食器|자동\s*급식기)/iu.test(text),
+    capacity: text.match(/\b(\d(?:\.\d)?)\s*L\b/iu)?.[1] || '',
+    camera: /(?:1080p.{0,16}(?:カメラ|camera|摄像头|鏡頭|카메라)|(?:カメラ|camera|摄像头|鏡頭|카메라).{0,16}1080p)/iu.test(text),
+    wifi: /\bWi[\s-]*Fi\b/iu.test(text),
+    twoWayAudio: /(?:双方向音声|two[\s-]*way\s*audio|双向语音|雙向語音|양방향\s*음성)/iu.test(text),
+    wrongProduct: /(?:給餌(?:用)?皿|pet\s*(?:food\s*)?bowl|宠物食盆|寵物食碗|반려동물\s*식기|乾燥剤|desiccant|干燥剂|乾燥劑|건조제|replacement\s*(?:power\s*)?(?:cable|adapter)|交換用電源(?:ケーブル|アダプター)|替换电源|替換電源|교체용\s*전원|pet\s*camera\s*only|見守りカメラ単体|宠物摄像头单独|寵物攝影機單獨|펫캠\s*단품|water\s*fountain|自動給水器|宠物饮水机|寵物飲水機|자동\s*급수기)/iu.test(text)
+  };
+}
+
+function isCameraPetFeederMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = cameraPetFeederConstraints(text);
+  if (!evidence.feeder || evidence.wrongProduct) return true;
+  if (requested.capacity && evidence.capacity !== requested.capacity) return true;
+  for (const field of ['camera', 'wifi', 'twoWayAudio']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2267,6 +2291,11 @@ export function filterCategoryMismatches(query, candidates = []) {
   const dualDashCamIntent = dualDashCam.dashCam && dualDashCam.dual
     && Boolean(dualDashCam.resolution && dualDashCam.parking && dualDashCam.gps && dualDashCam.wifi)
     && !dualDashCam.wrongProduct;
+  const cameraPetFeeder = cameraPetFeederConstraints(normalizedQuery);
+  const cameraPetFeederIntent = cameraPetFeeder.feeder
+    && Boolean(cameraPetFeeder.capacity && cameraPetFeeder.camera
+      && cameraPetFeeder.wifi && cameraPetFeeder.twoWayAudio)
+    && !cameraPetFeeder.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2281,7 +2310,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
     && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent
-    && !retrofitSmartLockIntent && !pressureIhRiceCookerIntent && !dualDashCamIntent) return candidates;
+    && !retrofitSmartLockIntent && !pressureIhRiceCookerIntent && !dualDashCamIntent
+    && !cameraPetFeederIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2368,6 +2398,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (retrofitSmartLockIntent) return !isRetrofitSmartLockMismatch(candidate, retrofitSmartLock);
     if (pressureIhRiceCookerIntent) return !isPressureIhRiceCookerMismatch(candidate, pressureIhRiceCooker);
     if (dualDashCamIntent) return !isDualDashCamMismatch(candidate, dualDashCam);
+    if (cameraPetFeederIntent) return !isCameraPetFeederMismatch(candidate, cameraPetFeeder);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
