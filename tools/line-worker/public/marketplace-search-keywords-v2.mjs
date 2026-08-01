@@ -85,6 +85,20 @@ function buildSmartWatchBandSearchKeywords(query) {
   return [model, size ? `${size}mm` : '', 'バンド', material].filter(Boolean).join(' ');
 }
 
+function buildCameraPrimeLensSearchKeywords(query) {
+  const lensPattern = /(?:単焦点(?:レンズ)?|prime\s+lens|定焦(?:镜头|鏡頭)|단렌즈|단초점\s*렌즈)/iu;
+  if (!lensPattern.test(query)) return '';
+  const sony = /(?:sony|ソニー|索尼|소니)/iu.test(query);
+  const canon = /(?:canon|キヤノン|キャノン|佳能|캐논)/iu.test(query);
+  const mount = sony && /(?:\be\s*[- ]?mount\b|Eマウント|E卡口|E마운트)/iu.test(query) ? 'Sony Eマウント'
+    : canon && /(?:\brf\s*[- ]?mount\b|RFマウント|RF卡口|RF마운트)/iu.test(query) ? 'Canon RFマウント' : '';
+  if (!mount) return '';
+  const focalLength = String(query || '').match(/\b(\d{2,3})\s*mm\b/iu)?.[1];
+  const aperture = String(query || '').match(/\bf\s*\/?\s*(\d(?:\.\d)?)\b/iu)?.[1];
+  return [mount, focalLength ? `${focalLength}mm` : '', aperture ? `F${aperture}` : '', '単焦点レンズ']
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -910,6 +924,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (applePencil) return applePencil;
   const smartWatchBand = buildSmartWatchBandSearchKeywords(normalized);
   if (smartWatchBand) return smartWatchBand;
+  const cameraPrimeLens = buildCameraPrimeLensSearchKeywords(normalized);
+  if (cameraPrimeLens) return cameraPrimeLens;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

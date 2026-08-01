@@ -370,6 +370,32 @@ function isPhoneScreenProtectorMismatch(candidate, requested) {
   return false;
 }
 
+function cameraPrimeLensConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  const sony = /(?:sony|ソニー|索尼|소니)/iu.test(text);
+  const canon = /(?:canon|キヤノン|キャノン|佳能|캐논)/iu.test(text);
+  const mount = sony && /(?:\be\s*[- ]?mount\b|Eマウント|E卡口|E마운트)/iu.test(text) ? 'sony-e'
+    : canon && /(?:\brf\s*[- ]?mount\b|RFマウント|RF卡口|RF마운트)/iu.test(text) ? 'canon-rf' : '';
+  const focalLength = text.match(/\b(\d{2,3})\s*mm\b/iu)?.[1] || '';
+  const aperture = text.match(/\bf\s*\/?\s*(\d(?:\.\d)?)\b/iu)?.[1] || '';
+  const primeLens = /(?:単焦点(?:レンズ)?|prime\s+lens|定焦(?:镜头|鏡頭)|단렌즈|단초점\s*렌즈)/iu.test(text);
+  const lens = primeLens || /(?:camera\s+lens|交換レンズ|镜头|鏡頭|렌즈)/iu.test(text);
+  const accessory = /(?:adapter|アダプター|转接环|轉接環|어댑터|cap|キャップ|镜头盖|鏡頭蓋|렌즈캡|filter|フィルター|滤镜|濾鏡|필터)/iu.test(text);
+  const zoom = /\b\d{2,3}\s*[-–〜~]\s*\d{2,3}\s*mm\b/iu.test(text) || /(?:zoom|ズーム|变焦|變焦|줌)/iu.test(text);
+  return { mount, focalLength, aperture, primeLens, lens, accessory, zoom };
+}
+
+function isCameraPrimeLensMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = cameraPrimeLensConstraints(text);
+  if (!evidence.lens || evidence.accessory || evidence.zoom) return true;
+  if (requested.mount && evidence.mount !== requested.mount) return true;
+  if (requested.focalLength && evidence.focalLength !== requested.focalLength) return true;
+  if (requested.aperture && evidence.aperture !== requested.aperture) return true;
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1164,9 +1190,12 @@ export function filterCategoryMismatches(query, candidates = []) {
   const smartWatchBandIntent = smartWatchBand.band && Boolean(smartWatchBand.model);
   const phoneScreenProtector = phoneScreenProtectorConstraints(normalizedQuery);
   const phoneScreenProtectorIntent = phoneScreenProtector.protector && Boolean(phoneScreenProtector.model);
+  const cameraPrimeLens = cameraPrimeLensConstraints(normalizedQuery);
+  const cameraPrimeLensIntent = cameraPrimeLens.primeLens && Boolean(cameraPrimeLens.mount);
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
-  if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent) return candidates;
+  if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
+    && !cameraPrimeLensIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1210,6 +1239,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   return candidates.filter((candidate) => {
     if (smartWatchBandIntent) return !isSmartWatchBandMismatch(candidate, smartWatchBand);
     if (phoneScreenProtectorIntent) return !isPhoneScreenProtectorMismatch(candidate, phoneScreenProtector);
+    if (cameraPrimeLensIntent) return !isCameraPrimeLensMismatch(candidate, cameraPrimeLens);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

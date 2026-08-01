@@ -98,6 +98,30 @@ test('スマホ保護フィルムは機種・強化ガラス・覗き見防止�
   }
 });
 
+test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
+  const cases = [
+    ['Sony Eマウント 35mm F1.8 単焦点レンズ', [
+      'Sony Eマウント 35mm F1.8の単焦点レンズ',
+      'Sony E-mount 35mm F1.8 prime lens',
+      '索尼E卡口35mm F1.8定焦镜头',
+      '소니 E마운트 35mm F1.8 단렌즈',
+    ]],
+    ['Canon RFマウント 50mm F1.8 単焦点レンズ', [
+      'Canon RFマウント 50mm F1.8の単焦点レンズ',
+      'Canon RF-mount 50mm F1.8 prime lens',
+      '佳能RF卡口50mm F1.8定焦镜头',
+      '캐논 RF마운트 50mm F1.8 단렌즈',
+    ]],
+  ];
+  for (const [expected, queries] of cases) {
+    for (const query of queries) {
+      for (const marketplace of SEARCH_MARKETPLACES) {
+        assert.equal(buildMarketplaceSearchKeywords(query, marketplace), expected, `${marketplace}: ${query}`);
+      }
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

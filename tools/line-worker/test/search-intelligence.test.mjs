@@ -1006,6 +1006,33 @@ test('スマホ保護フィルムは4言語で機種・ガラス・覗き見防�
   }
 });
 
+test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
+  const cases = [
+    [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',
+      '索尼E卡口35mm F1.8定焦镜头', '소니 E마운트 35mm F1.8 단렌즈'],
+    'Sony E-mount 35mm F1.8 Prime Lens', 'Canon RF-mount 35mm F1.8 Prime Lens'],
+    [['Canon RFマウント 50mm F1.8の単焦点レンズ', 'Canon RF-mount 50mm F1.8 prime lens',
+      '佳能RF卡口50mm F1.8定焦镜头', '캐논 RF마운트 50mm F1.8 단렌즈'],
+    'Canon RF-mount 50mm F1.8 Prime Lens', 'Sony E-mount 50mm F1.8 Prime Lens'],
+  ];
+  for (const [queries, matchName, wrongMountName] of cases) {
+    const focal = matchName.match(/(\d{2,3})mm/u)[1];
+    const candidates = [
+      { asin: 'MATCH', product_name: matchName },
+      { asin: 'WRONGMOUNT', product_name: wrongMountName },
+      { asin: 'WRONGFOCAL', product_name: matchName.replace(`${focal}mm`, `${Number(focal) + 15}mm`) },
+      { asin: 'WRONGAPERTURE', product_name: matchName.replace('F1.8', 'F2.8') },
+      { asin: 'ZOOM', product_name: matchName.replace(`${focal}mm F1.8 Prime`, '24-70mm F2.8 Zoom') },
+      { asin: 'ADAPTER', product_name: `${matchName} Mount Adapter` },
+      { asin: 'CAP', product_name: `${matchName} Lens Cap` },
+      { asin: 'CAMERA', product_name: `${matchName.split(' ')[0]} Mirrorless Camera Body` },
+    ];
+    for (const query of queries) {
+      assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+    }
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
