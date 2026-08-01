@@ -79,7 +79,7 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.match(client, /掲載10モール/);
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Official updates always available/);
-  assert.match(sw, /hoshilu-shell-v197/);
+  assert.match(sw, /hoshilu-shell-v198/);
   assert.match(sw, /sale-center\.mjs/);
   assert.match(sw, /hero-slides\.mjs/);
   assert.match(sw, /hoshilu-fashion-collage-v1\.png/);

@@ -1758,6 +1758,31 @@ test('ポータブル電源は4言語で電池種・容量・出力・UPS・ソ�
   }
 });
 
+test('除湿機は4言語で方式・能力・タンク・衣類乾燥・排水条件が一致する本体だけを提示する', () => {
+  const queries = [
+    'コンプレッサー式 除湿機 20L/日 タンク4L 衣類乾燥 連続排水',
+    'compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage',
+    '压缩机式 除湿机 20L每天 水箱4L 衣物干燥 连续排水',
+    '컴프레서식 제습기 20L/일 물통4L 의류 건조 연속 배수',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'DESICCANT', product_name: 'desiccant dehumidifier 20L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'DAILY', product_name: 'compressor dehumidifier 12L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'TANK', product_name: 'compressor dehumidifier 20L/day tank 2L laundry drying continuous drainage' },
+    { asin: 'NOLAUNDRY', product_name: 'compressor dehumidifier 20L/day tank 4L continuous drainage' },
+    { asin: 'NODRAIN', product_name: 'compressor dehumidifier 20L/day tank 4L laundry drying' },
+    { asin: 'HUMIDIFIER', product_name: 'Humidifier with compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'PURIFIER', product_name: 'Air purifier with compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'FILTER', product_name: 'Replacement filter for compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'HOSE', product_name: 'Drain hose for compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'ABSORBER', product_name: 'Moisture absorber for compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

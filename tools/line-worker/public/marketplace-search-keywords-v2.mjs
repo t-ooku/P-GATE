@@ -495,6 +495,18 @@ function buildPortablePowerStationSearchKeywords(query) {
   return ['ポータブル電源', 'LiFePO4', `${capacity}Wh`, `定格出力${output}W`, 'UPS', `ソーラー入力${solar}W`].join(' ');
 }
 
+function buildCompressorDehumidifierSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const dehumidifier = /(?:除湿機|dehumidifier|除湿机|除濕機|제습기)/iu.test(normalized);
+  const compressor = /(?:コンプレッサー式|compressor|压缩机式|壓縮機式|컴프레서식)/iu.test(normalized);
+  const daily = normalized.match(/\b(\d{1,2}(?:\.\d)?)\s*L\s*(?:\/\s*(?:日|day)|per\s*day|每天|每日|\/\s*일)/iu)?.[1];
+  const tank = normalized.match(/(?:タンク|tank|水箱|물통)\s*(\d(?:\.\d)?)\s*L\b/iu)?.[1];
+  const laundry = /(?:衣類乾燥|laundry\s*drying|衣物干燥|衣物乾燥|의류\s*건조)/iu.test(normalized);
+  const drainage = /(?:連続排水|continuous\s*drain(?:age)?|连续排水|連續排水|연속\s*배수)/iu.test(normalized);
+  if (!dehumidifier || !compressor || !daily || !tank || !laundry || !drainage) return '';
+  return ['コンプレッサー式除湿機', `${daily}L/日`, `タンク${tank}L`, '衣類乾燥', '連続排水'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1314,6 +1326,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawFoldingElectricBike) return rawFoldingElectricBike;
   const rawPortablePowerStation = buildPortablePowerStationSearchKeywords(rawNormalized);
   if (rawPortablePowerStation) return rawPortablePowerStation;
+  const rawCompressorDehumidifier = buildCompressorDehumidifierSearchKeywords(rawNormalized);
+  if (rawCompressorDehumidifier) return rawCompressorDehumidifier;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

@@ -1196,6 +1196,33 @@ function isPortablePowerStationMismatch(candidate, requested) {
   return false;
 }
 
+function compressorDehumidifierConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    dehumidifier: /(?:除湿機|dehumidifier|除湿机|除濕機|제습기)/iu.test(text),
+    compressor: /(?:コンプレッサー式|compressor|压缩机式|壓縮機式|컴프레서식)/iu.test(text),
+    daily: text.match(/\b(\d{1,2}(?:\.\d)?)\s*L\s*(?:\/\s*(?:日|day)|per\s*day|每天|每日|\/\s*일)/iu)?.[1] || '',
+    tank: text.match(/(?:タンク|tank|水箱|물통)\s*(\d(?:\.\d)?)\s*L\b/iu)?.[1] || '',
+    laundry: /(?:衣類乾燥|laundry\s*drying|衣物干燥|衣物乾燥|의류\s*건조)/iu.test(text),
+    drainage: /(?:連続排水|continuous\s*drain(?:age)?|连续排水|連續排水|연속\s*배수)/iu.test(text),
+    wrongProduct: /(?:\bhumidifier\b|加湿器|加湿机|加濕器|가습기|air\s*purifier|空気清浄機|空气净化器|空氣清淨機|공기청정기|replacement\s*filter|交換フィルター|更换滤网|更換濾網|교체용\s*필터|drain\s*hose|排水ホース|排水管|배수\s*호스|moisture\s*absorber|除湿剤|除湿盒|除濕盒|제습제)/iu.test(text)
+  };
+}
+
+function isCompressorDehumidifierMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = compressorDehumidifierConstraints(text);
+  if (!evidence.dehumidifier || evidence.wrongProduct) return true;
+  for (const field of ['daily', 'tank']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const field of ['compressor', 'laundry', 'drainage']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2086,6 +2113,11 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(portablePowerStation.capacity && portablePowerStation.output
       && portablePowerStation.ups && portablePowerStation.solar)
     && !portablePowerStation.wrongProduct;
+  const compressorDehumidifier = compressorDehumidifierConstraints(normalizedQuery);
+  const compressorDehumidifierIntent = compressorDehumidifier.dehumidifier && compressorDehumidifier.compressor
+    && Boolean(compressorDehumidifier.daily && compressorDehumidifier.tank
+      && compressorDehumidifier.laundry && compressorDehumidifier.drainage)
+    && !compressorDehumidifier.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2098,7 +2130,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
-    && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent) return candidates;
+    && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
+    && !compressorDehumidifierIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2179,6 +2212,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (robotLawnMowerIntent) return !isRobotLawnMowerMismatch(candidate, robotLawnMower);
     if (foldingElectricBikeIntent) return !isFoldingElectricBikeMismatch(candidate, foldingElectricBike);
     if (portablePowerStationIntent) return !isPortablePowerStationMismatch(candidate, portablePowerStation);
+    if (compressorDehumidifierIntent) return !isCompressorDehumidifierMismatch(candidate, compressorDehumidifier);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

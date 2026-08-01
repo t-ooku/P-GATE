@@ -581,6 +581,21 @@ test('ポータブル電源は電池種・容量・出力・UPS・ソーラー�
   }
 });
 
+test('除湿機は方式・能力・タンク・衣類乾燥・排水条件を4言語で保持する', () => {
+  const queries = [
+    'コンプレッサー式 除湿機 20L/日 タンク4L 衣類乾燥 連続排水',
+    'compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage',
+    '压缩机式 除湿机 20L每天 水箱4L 衣物干燥 连续排水',
+    '컴프레서식 제습기 20L/일 물통4L 의류 건조 연속 배수',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'コンプレッサー式除湿機 20L/日 タンク4L 衣類乾燥 連続排水', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [
