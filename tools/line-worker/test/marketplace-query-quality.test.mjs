@@ -151,6 +151,21 @@ test('光るケースを取り消した4言語検索は覗き見防止ガラス�
   }
 });
 
+test('端末と商品種別を同時訂正した4言語検索は最後の保護フィルム指定だけを保持する', () => {
+  const queries = [
+    '光るiPhone 15 ProケースじゃなくてPixel 9 Proの覗き見防止強化ガラスフィルム',
+    'not a light-up iPhone 15 Pro case; use a privacy tempered glass screen protector for Pixel 9 Pro',
+    '不要iPhone 15 Pro发光手机壳，改成Pixel 9 Pro防窥钢化玻璃保护膜',
+    '빛나는 iPhone 15 Pro 케이스 말고 Pixel 9 Pro 사생활 보호 강화유리 필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Pixel 9 Pro 保護フィルム 強化ガラス 覗き見防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [

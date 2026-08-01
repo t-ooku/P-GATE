@@ -23,6 +23,10 @@ function correctedIphoneMatch(query) {
 }
 
 function deviceName(query) {
+  const correctedTail = String(query || '').match(/(?:じゃなくて|ではなく(?:て)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|改成|换成|換成|改为|改為|말고|아니)\s*([\s\S]+)$/iu)?.[1] || '';
+  if (correctedTail && /(?:\b(?:iphone|ipad|galaxy|pixel|xperia|aquos)\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰|ギャラクシー|三星|갤럭시|픽셀|エクスペリア|엑스페리아|アクオス|아쿠오스)/iu.test(correctedTail)) {
+    return deviceName(correctedTail);
+  }
   const ipad = query.match(/\bipad(?:\s*(?:air|pro|mini))?(?:\s*(?:m[1-9]|\d+(?:st|nd|rd|th)?\s*(?:generation|gen)))?/iu);
   if (ipad) return ipad[0].replace(/^ipad/iu, 'iPad').replace(/\s+/gu, ' ').trim();
   const localizedIpad = query.match(/(?:アイパッド|苹果平板|蘋果平板|아이패드)(?:\s*(air|pro|mini|エア|プロ|에어|프로))?/iu);
