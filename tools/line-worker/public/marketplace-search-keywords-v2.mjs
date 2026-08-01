@@ -357,6 +357,31 @@ function buildLabelTapeSearchKeywords(query) {
     count ? `${count}個セット` : ''].filter(Boolean).join(' ');
 }
 
+function airFryerLinerIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  if (/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,20}\bNA230\b/iu.test(value)) return 'Philips NA230';
+  if (/(?:ninja|ニンジャ|忍者|닌자).{0,20}\bAF400\b/iu.test(value)) return 'Ninja AF400';
+  if (/(?:cosori|コソリ|科西|코소리).{0,20}\bCP158\b/iu.test(value)) return 'Cosori CP158';
+  if (/(?:instant\s*vortex|インスタント\s*ボルテックス|即时涡流|即時渦流|인스턴트\s*볼텍스)/iu.test(value)) return 'Instant Vortex';
+  return '';
+}
+
+function buildAirFryerLinerSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:エアフライヤー用?(?:紙|シリコン)?ライナー|air\s*fryer\s*(?:paper|silicone)?\s*liners?|空气炸锅(?:纸|硅胶)?垫|空氣炸鍋(?:紙|矽膠)?墊|에어프라이어\s*(?:종이|실리콘)?\s*라이너)/iu.test(normalized)) return '';
+  const identity = airFryerLinerIdentity(normalized);
+  if (!identity) return '';
+  const capacity = normalized.match(/(\d+(?:\.\d+)?)\s*L\b/iu)?.[1];
+  const material = /(?:シリコン|silicone|硅胶|矽膠|실리콘)/iu.test(normalized) ? 'シリコン'
+    : /(?:紙|paper|纸|紙|종이)/iu.test(normalized) ? '紙' : '';
+  const shape = /(?:デュアルバスケット|dual\s*basket|双篮|雙籃|듀얼\s*바스켓)/iu.test(normalized) ? 'デュアルバスケット'
+    : /(?:角型|square|方形|사각)/iu.test(normalized) ? '角型'
+      : /(?:丸型|round|圆形|圓形|원형)/iu.test(normalized) ? '丸型' : '';
+  const count = normalized.match(/(\d+)\s*(?:枚|個|pack|packs|count|pcs|pieces|张|張|개|장)/iu)?.[1];
+  return [identity, 'エアフライヤーライナー', capacity ? `${capacity}L` : '', material, shape,
+    count ? `${count}枚セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -663,6 +688,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawToolBattery) return rawToolBattery;
   const rawLabelTape = buildLabelTapeSearchKeywords(rawNormalized);
   if (rawLabelTape) return rawLabelTape;
+  const rawAirFryerLiner = buildAirFryerLinerSearchKeywords(rawNormalized);
+  if (rawAirFryerLiner) return rawAirFryerLiner;
   const normalized = stripSearchBudget(rawNormalized).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);

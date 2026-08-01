@@ -203,6 +203,20 @@ test('ラベルライターテープを4言語で本体から分離し品番幅�
   }
 });
 
+test('エアフライヤーライナーを4言語で本体から分離し容量素材形状枚数を保つ', () => {
+  const cases = [
+    ['Philips NA230用 6.2L 紙 エアフライヤーライナー 丸型 100枚', 'Philips NA230 エアフライヤーライナー 6.2L 紙 丸型 100枚セット'],
+    ['Ninja AF400 9.5L dual basket paper air fryer liners 100 pack', 'Ninja AF400 エアフライヤーライナー 9.5L 紙 デュアルバスケット 100枚セット'],
+    ['科西 Cosori CP158 5.5L 方形空气炸锅纸垫 100张', 'Cosori CP158 エアフライヤーライナー 5.5L 紙 角型 100枚セット'],
+    ['인스턴트 볼텍스 5.7L 원형 실리콘 에어프라이어 라이너 2개', 'Instant Vortex エアフライヤーライナー 5.7L シリコン 丸型 2枚セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);

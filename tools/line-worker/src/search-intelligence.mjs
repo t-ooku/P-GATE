@@ -71,6 +71,8 @@ const RULES = [
   ['tool-battery',/(?:(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구).{0,45}(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리)|(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리).{0,45}(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구))/iu,['power tool battery','replacement tool battery']],
   ['label-tape',/(?:(?:brother|ブラザー|兄弟|브라더|p[- ]?touch|dymo|ダイモ|casio|カシオ|卡西欧|卡西歐|카시오|tepra|テプラ|锦宫|錦宮|킹짐).{0,45}(?:ラベル(?:ライター用)?テープ|label\s*tape|labeling\s*tape|标签带|標籤帶|라벨\s*테이프)|(?:ラベル(?:ライター用)?テープ|label\s*tape|labeling\s*tape|标签带|標籤帶|라벨\s*테이프).{0,45}(?:brother|ブラザー|兄弟|브라더|p[- ]?touch|dymo|ダイモ|casio|カシオ|卡西欧|卡西歐|카시오|tepra|テプラ|锦宫|錦宮|킹짐))/iu,['label tape cartridge','label maker tape']],
   ['label-maker',/(?:ラベルライター(?:本体)?|label\s*(?:maker|printer)|标签打印机|標籤打印機|라벨\s*프린터)/iu,['label maker','label printer']],
+  ['air-fryer-liner',/(?:(?:air\s*fryer|エアフライヤー|空气炸锅|空氣炸鍋|에어프라이어).{0,35}(?:ライナー|liners?|纸垫|紙墊|라이너)|(?:ライナー|liners?|纸垫|紙墊|라이너).{0,35}(?:air\s*fryer|エアフライヤー|空气炸锅|空氣炸鍋|에어프라이어))/iu,['air fryer liner','air fryer basket liner']],
+  ['air-fryer',/(?:エアフライヤー(?:本体)?|air\s*fryer(?:\s*(?:unit|appliance))?|空气炸锅|空氣炸鍋|에어프라이어(?:\s*본체)?)/iu,['air fryer']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
@@ -315,6 +317,7 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('electric-toothbrush-head')) groups = groups.filter((group) => group.category !== 'electric-toothbrush');
   if (specificCategories.has('shaver-replacement-blade') || specificCategories.has('shaver-cleaning-cartridge')) groups = groups.filter((group) => group.category !== 'electric-shaver');
   if (specificCategories.has('camera-battery') || specificCategories.has('camera-battery-charger')) groups = groups.filter((group) => group.category !== 'camera');
+  if (specificCategories.has('air-fryer-liner')) groups = groups.filter((group) => group.category !== 'air-fryer');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
   if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
@@ -377,7 +380,8 @@ export function semanticSearchGroups(value) {
   const specificIntent = groups.some((group) => [
     'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light',
     'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver','coffee-capsule','capsule-coffee-maker',
-    'camera-battery','camera-battery-charger','tool-battery','tool-battery-charger','label-tape','label-maker'
+    'camera-battery','camera-battery-charger','tool-battery','tool-battery-charger','label-tape','label-maker',
+    'air-fryer-liner','air-fryer'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES
     .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))

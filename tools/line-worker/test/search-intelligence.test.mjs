@@ -1903,3 +1903,28 @@ test('ラベルテープは本体・別品番・幅個数違い・互換品を�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['label-tape'], query);
   }
 });
+
+test('エアフライヤーライナーは本体・別機種・容量素材形状枚数違いを除外する', () => {
+  const candidates = [
+    { asin: 'PHILIPS', product_name: 'Philips NA230 6.2L 紙 エアフライヤーライナー 丸型 100枚' },
+    { asin: 'PHILIPS50', product_name: 'Philips NA230 6.2L 紙 エアフライヤーライナー 丸型 50枚' },
+    { asin: 'PHILIPS_SILICONE', product_name: 'Philips NA230 6.2L シリコン エアフライヤーライナー 丸型 100枚' },
+    { asin: 'NINJA', product_name: 'Ninja AF400 9.5L dual basket paper air fryer liners 100 pack' },
+    { asin: 'NINJA_SINGLE', product_name: 'Ninja AF400 9.5L single basket paper air fryer liners 100 pack' },
+    { asin: 'COSORI', product_name: 'Cosori CP158 5.5L 方形空气炸锅纸垫 100张' },
+    { asin: 'COSORI_ROUND', product_name: 'Cosori CP158 5.5L 圆形空气炸锅纸垫 100张' },
+    { asin: 'INSTANT', product_name: 'Instant Vortex 5.7L 원형 실리콘 에어프라이어 라이너 2개' },
+    { asin: 'INSTANT_PAPER', product_name: 'Instant Vortex 5.7L 원형 종이 에어프라이어 라이너 2개' },
+    { asin: 'BODY', product_name: 'Instant Vortex 5.7L 에어프라이어 본체 실리콘 라이너 2개 포함' },
+  ];
+  const cases = [
+    ['Philips NA230用 6.2L 紙 エアフライヤーライナー 丸型 100枚', ['PHILIPS']],
+    ['Ninja AF400 9.5L dual basket paper air fryer liners 100 pack', ['NINJA']],
+    ['科西 Cosori CP158 5.5L 方形空气炸锅纸垫 100张', ['COSORI']],
+    ['인스턴트 볼텍스 5.7L 원형 실리콘 에어프라이어 라이너 2개', ['INSTANT']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['air-fryer-liner'], query);
+  }
+});

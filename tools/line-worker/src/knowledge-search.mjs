@@ -487,7 +487,7 @@ function waterFilterPartNumber(text) {
 
 function requestedPackageCount(text) {
   return Number(String(text || '').normalize('NFKC')
-    .match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|块|塊|盒|卷|巻|개|개입|세트)/iu)?.[1] || 0);
+    .match(/(\d+)\s*(?:個|本|枚|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|块|塊|盒|卷|巻|张|張|개|개입|장|세트)/iu)?.[1] || 0);
 }
 
 function isWaterFilterCartridgeMismatch(candidate, query) {
@@ -708,6 +708,47 @@ function isLabelTapeMismatch(candidate, query) {
   return !/(?:ラベル(?:ライター用)?テープ|label\s*tape|labeling\s*tape|标签带|標籤帶|라벨\s*테이프|tape\s*cartridge)/iu.test(text);
 }
 
+function airFryerLinerIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,20}\bna230\b/u.test(value)) return 'philips-na230';
+  if (/(?:ninja|ニンジャ|忍者|닌자).{0,20}\baf400\b/u.test(value)) return 'ninja-af400';
+  if (/(?:cosori|コソリ|科西|코소리).{0,20}\bcp158\b/u.test(value)) return 'cosori-cp158';
+  if (/(?:instant\s*vortex|インスタント\s*ボルテックス|即时涡流|即時渦流|인스턴트\s*볼텍스)/u.test(value)) return 'instant-vortex';
+  return '';
+}
+
+function airFryerCapacity(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+(?:\.\d+)?)\s*l\b/iu)?.[1] || 0);
+}
+
+function airFryerLinerMaterial(text) {
+  const value = String(text || '').normalize('NFKC');
+  if (/(?:シリコン|silicone|硅胶|矽膠|실리콘)/iu.test(value)) return 'silicone';
+  if (/(?:紙|paper|纸|紙|종이)/iu.test(value)) return 'paper';
+  return '';
+}
+
+function airFryerLinerShape(text) {
+  const value = String(text || '').normalize('NFKC');
+  if (/(?:デュアルバスケット|dual\s*basket|双篮|雙籃|듀얼\s*바스켓)/iu.test(value)) return 'dual';
+  if (/(?:角型|square|方形|사각)/iu.test(value)) return 'square';
+  if (/(?:丸型|round|圆形|圓形|원형)/iu.test(value)) return 'round';
+  return '';
+}
+
+function isAirFryerLinerMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (airFryerLinerIdentity(query) && airFryerLinerIdentity(text) !== airFryerLinerIdentity(query)) return true;
+  if (airFryerCapacity(query) && airFryerCapacity(text) !== airFryerCapacity(query)) return true;
+  if (airFryerLinerMaterial(query) && airFryerLinerMaterial(text) !== airFryerLinerMaterial(query)) return true;
+  if (airFryerLinerShape(query) && airFryerLinerShape(text) !== airFryerLinerShape(query)) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  if (/(?:本体|air\s*fryer\s*(?:unit|appliance)|空气炸锅主机|空氣炸鍋主機|에어프라이어\s*본체|交換バスケット|replacement\s*basket)/iu.test(text)) return true;
+  return !/(?:ライナー|liners?|纸垫|紙墊|라이너)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -839,6 +880,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const cameraBattery = requested.has('camera-battery');
   const toolBattery = requested.has('tool-battery');
   const labelTape = requested.has('label-tape');
+  const airFryerLiner = requested.has('air-fryer-liner');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -882,6 +924,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (cameraBattery) return !isCameraBatteryMismatch(candidate, query);
     if (toolBattery) return !isToolBatteryMismatch(candidate, query);
     if (labelTape) return !isLabelTapeMismatch(candidate, query);
+    if (airFryerLiner) return !isAirFryerLinerMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,
