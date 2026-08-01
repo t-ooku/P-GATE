@@ -64,6 +64,31 @@ function buildApplePencilSearchKeywords(query) {
   return [device, product, generation, usbC].filter(Boolean).join(' ');
 }
 
+function portHubFeatures(query) {
+  const features = [];
+  const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
+  if (power) features.push(`${power[1]}W`);
+  const hdmi = query.match(/hdmi(?:\s*|[- ]?)(\d(?:\.\d)?)/iu);
+  if (hdmi) features.push(`HDMI ${hdmi[1]}`);
+  else if (/\bhdmi\b/iu.test(query)) features.push('HDMI');
+  if (/(?:有線LAN|ethernet|rj[- ]?45|以太网|乙太網|유선\s*랜|이더넷)/iu.test(query)) features.push('有線LAN');
+  if (/(?:SD\s*カード|SD\s*card|读卡器|讀卡器|SD卡|SD\s*카드|카드\s*리더)/iu.test(query)) features.push('SDカード');
+  const ports = query.match(/(?:([2-9])\s*(?:ポート|ports?|口|포트)|(?:four|四|네)\s*(?:ports?|ポート|口|포트))/iu);
+  if (ports) features.push(`${ports[1] || '4'}ポート`);
+  return [...new Set(features)];
+}
+
+function buildPortHubSearchKeywords(query, marketplace) {
+  const thunderbolt = query.match(/(?:thunderbolt|サンダーボルト|雷电|雷電|썬더볼트)\s*([34])?/iu);
+  const dock = /(?:ドック|ドッキングステーション|dock(?:ing\s*station)?|扩展坞|擴充塢|도킹\s*스테이션)/iu.test(query);
+  let product = '';
+  if (thunderbolt && dock) product = `Thunderbolt${thunderbolt[1] ? ` ${thunderbolt[1]}` : ''} ドック`;
+  else if (/usb[- ]?a/iu.test(query) && /(?:ハブ|hub|集线器|集線器|허브)/iu.test(query)) product = 'USB-Aハブ';
+  if (!product) return '';
+  const limit = marketplace === 'QOO10_JP' ? 2 : 5;
+  return [product, ...portHubFeatures(query).slice(0, limit)].join(' ');
+}
+
 function specificationTokens(query) {
   const matches = query.match(
     /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}[-\s]*(?:mm|cm|m|インチ|inch|英寸|인치|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)|\d+(?:\.\d+)?[-\s]*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|kg|kgs|g|kilograms?|kilogrammes?|grams?|インチ|inch|英寸|인치|リットル|オンス|升|毫升|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|キロ(?:グラム)?|グラム|公斤|千克|리터|온스|센티미터|밀리미터|킬로그램|키로|그램)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
@@ -333,6 +358,8 @@ function compactUnknownSearchPhrase(normalized) {
 export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') {
   const normalized = stripSearchBudget(query).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
+  const portHub = buildPortHubSearchKeywords(normalized, marketplace);
+  if (portHub) return portHub;
   const applePencil = buildApplePencilSearchKeywords(normalized);
   if (applePencil) return applePencil;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);

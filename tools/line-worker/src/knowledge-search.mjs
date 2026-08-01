@@ -332,6 +332,31 @@ function isLaptopHubMismatch(candidate) {
   return !(hasHub && hasUsbC);
 }
 
+function thunderboltVersion(text) {
+  return String(text || '').normalize('NFKC')
+    .match(/(?:thunderbolt|サンダーボルト|雷电|雷電|썬더볼트)\s*([34])/iu)?.[1] || '';
+}
+
+function isThunderboltDockMismatch(candidate, requestedVersion = '') {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  const hasThunderbolt = /(?:thunderbolt|サンダーボルト|雷电|雷電|썬더볼트)/iu.test(text);
+  const hasDock = /(?:dock(?:ing\s*station)?|ドック|ドッキングステーション|扩展坞|擴充塢|도킹\s*스테이션)/iu.test(text);
+  if (!(hasThunderbolt && hasDock)) return true;
+  const candidateVersion = thunderboltVersion(text);
+  return Boolean(requestedVersion && candidateVersion !== requestedVersion);
+}
+
+function isUsbAHubMismatch(candidate) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  const hasUsbA = /usb[- ]?a/iu.test(text);
+  const hasHub = /(?:hub|ハブ|集线器|集線器|허브)/iu.test(text);
+  return !(hasUsbA && hasHub);
+}
+
 function tabletModel(text) {
   const value = String(text || '').normalize('NFKC').toLowerCase();
   const latin = value.match(/\bipad\s*(air|pro|mini)\b/u);
@@ -421,6 +446,8 @@ export function filterCategoryMismatches(query, candidates = []) {
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = requested.has('phone-case') && groups.some((group) => group.category === 'light-up');
   const laptopHub = requested.has('laptop-hub');
+  const thunderboltDock = requested.has('thunderbolt-dock');
+  const usbAHub = requested.has('usb-a-hub');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -439,6 +466,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate)) return false;
     if (laptopHub && isLaptopHubMismatch(candidate)) return false;
+    if (thunderboltDock && isThunderboltDockMismatch(candidate, thunderboltVersion(query))) return false;
+    if (usbAHub && isUsbAHubMismatch(candidate)) return false;
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,
