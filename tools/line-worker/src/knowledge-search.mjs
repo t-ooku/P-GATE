@@ -890,12 +890,13 @@ function isFrenchDoorRefrigeratorMismatch(candidate, requested) {
 
 function builtInDishwasherConstraints(value) {
   const text = String(value || '').normalize('NFKC');
+  const handsFreeDishwashing = /(?:食後.{0,20}\d{1,2}人分.{0,20}手洗いせず.{0,20}乾か.{0,16}扉.{0,12}自動.{0,8}開|wash.{0,8}(?:and\s+)?dry.{0,16}\d{1,2}\s*place\s*settings?.{0,30}without\s+hand\s+washing.{0,30}open.{0,12}door.{0,12}automatically|(?:饭后|飯後).{0,16}不用手洗.{0,12}\d{1,2}套(?:餐具)?.{0,16}烘干.{0,12}(?:自动|自動)开门|식후.{0,12}\d{1,2}인용.{0,16}손설거지\s*없이.{0,20}(?:씻고|세척).{0,12}말린.{0,16}문.{0,12}자동)/iu.test(text);
   return {
-    machine: /(?:ビルトイン.{0,12}(?:食器洗い乾燥機|食洗機)|built[- ]?in\s*dishwasher|嵌入式洗碗机|嵌入式洗碗機|빌트인\s*식기세척기)/iu.test(text),
+    machine: /(?:ビルトイン.{0,12}(?:食器洗い乾燥機|食洗機)|built[- ]?in\s*dishwasher|嵌入式洗碗机|嵌入式洗碗機|빌트인\s*식기세척기)/iu.test(text) || handsFreeDishwashing,
     settings: text.match(/(\d{1,2})\s*(?:人分|place\s*settings?|套(?:餐具)?|인용)/iu)?.[1] || '',
     width: text.match(/(?:幅\s*)?(\d{2})\s*cm/iu)?.[1] || '',
     inverter: /(?:インバーター|inverter|变频|變頻|인버터)/iu.test(text),
-    autoOpen: /(?:自動ドアオープン|auto(?:matic)?[- ]?open\s*door|自动开门|自動開門|자동\s*문열림)/iu.test(text),
+    autoOpen: /(?:自動ドアオープン|auto(?:matic)?[- ]?open\s*door|自动开门|自動開門|자동\s*문열림)/iu.test(text) || handsFreeDishwashing,
     wrongProduct: /(?:卓上(?:型)?食洗機|countertop\s*dishwasher|台式洗碗机|台式洗碗機|탁상형\s*식기세척기|食洗機用洗剤|dishwasher\s*detergent|洗碗机洗涤剂|洗碗機洗滌劑|식기세척기\s*세제|replacement\s*(?:rack|basket|parts?)|交換(?:ラック|かご|部品)|替换(?:碗篮|零件)|替換(?:碗籃|零件)|교체용\s*(?:랙|바스켓|부품)|inlet\s*hose|drain\s*hose|給水ホース|排水ホース|进水管|進水管|排水管|급수\s*호스|배수\s*호스)/iu.test(text)
   };
 }

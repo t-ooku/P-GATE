@@ -435,6 +435,10 @@ test('ビルトイン食器洗い乾燥機は収納人数・幅・運転機能�
     'built-in dishwasher 12 place settings 45cm inverter auto-open door',
     '嵌入式洗碗机 12套餐具 45cm 变频 自动开门',
     '빌트인 식기세척기 12인용 45cm 인버터 자동 문열림',
+    '食後の12人分の皿を手洗いせず乾かして扉も自動で開いてほしい 幅45cm インバーター',
+    'wash and dry 12 place settings after dinner without hand washing and open the door automatically 45cm inverter',
+    '饭后不用手洗12套餐具，洗完烘干并自动开门 45cm 变频',
+    '식후 12인용 식기를 손설거지 없이 씻고 말린 뒤 문도 자동으로 열어줘 45cm 인버터',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

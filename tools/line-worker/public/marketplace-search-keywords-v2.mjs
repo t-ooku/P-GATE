@@ -352,13 +352,14 @@ function buildFrenchDoorRefrigeratorSearchKeywords(query) {
 
 function buildBuiltInDishwasherSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const machine = /(?:ビルトイン.{0,12}(?:食器洗い乾燥機|食洗機)|built[- ]?in\s*dishwasher|嵌入式洗碗机|嵌入式洗碗機|빌트인\s*식기세척기)/iu.test(normalized);
+  const handsFreeDishwashing = /(?:食後.{0,20}\d{1,2}人分.{0,20}手洗いせず.{0,20}乾か.{0,16}扉.{0,12}自動.{0,8}開|wash.{0,8}(?:and\s+)?dry.{0,16}\d{1,2}\s*place\s*settings?.{0,30}without\s+hand\s+washing.{0,30}open.{0,12}door.{0,12}automatically|(?:饭后|飯後).{0,16}不用手洗.{0,12}\d{1,2}套(?:餐具)?.{0,16}烘干.{0,12}(?:自动|自動)开门|식후.{0,12}\d{1,2}인용.{0,16}손설거지\s*없이.{0,20}(?:씻고|세척).{0,12}말린.{0,16}문.{0,12}자동)/iu.test(normalized);
+  const machine = /(?:ビルトイン.{0,12}(?:食器洗い乾燥機|食洗機)|built[- ]?in\s*dishwasher|嵌入式洗碗机|嵌入式洗碗機|빌트인\s*식기세척기)/iu.test(normalized) || handsFreeDishwashing;
   if (!machine) return '';
   if (/(?:洗剤|detergent|세제|交換|replacement|替换|替換|교체)/iu.test(normalized)) return '';
   const settings = normalized.match(/(\d{1,2})\s*(?:人分|place\s*settings?|套(?:餐具)?|인용)/iu)?.[1];
   const width = normalized.match(/(?:幅\s*)?(\d{2})\s*cm/iu)?.[1];
   const inverter = /(?:インバーター|inverter|变频|變頻|인버터)/iu.test(normalized) ? 'インバーター' : '';
-  const autoOpen = /(?:自動ドアオープン|auto(?:matic)?[- ]?open\s*door|自动开门|自動開門|자동\s*문열림)/iu.test(normalized)
+  const autoOpen = /(?:自動ドアオープン|auto(?:matic)?[- ]?open\s*door|自动开门|自動開門|자동\s*문열림)/iu.test(normalized) || handsFreeDishwashing
     ? '自動ドアオープン' : '';
   if (!settings || !width || !inverter || !autoOpen) return '';
   return ['ビルトイン食器洗い乾燥機', `${settings}人分`, `幅${width}cm`, inverter, autoOpen].join(' ');
