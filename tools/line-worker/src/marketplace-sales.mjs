@@ -1,7 +1,7 @@
 import { readMemberSession } from './member-auth.mjs';
 
 export const SALE_MARKETPLACES = Object.freeze([
-  'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP',
+  'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
   'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA', 'SNKRDUNK'
 ]);
 
@@ -53,7 +53,7 @@ function safeSale(row) {
   return {
     sale_id: row.sale_id,
     marketplace: row.marketplace,
-    marketplace_label: MARKETPLACE_LABELS[row.marketplace] || row.marketplace,
+    marketplace_label: row.marketplace === 'YAHOO_JP' ? 'Yahoo!ショッピング' : (MARKETPLACE_LABELS[row.marketplace] || row.marketplace),
     info_type: row.info_type || 'SALE',
     title: row.title,
     summary: row.summary,

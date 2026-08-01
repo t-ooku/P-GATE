@@ -181,7 +181,7 @@ export function productMarketplaceOffers(offers = []) {
     if (!PRODUCT_MARKETPLACES.has(marketplace) || seen.has(marketplace) || !isProductDetailDestination(offer?.product_url)) return false;
     seen.add(marketplace);
     return true;
-  }).map((offer) => ({ ...offer, marketplace: offer.marketplace || marketplaceForDestination(offer.product_url) })).slice(0, 9);
+  }).map((offer) => ({ ...offer, marketplace: offer.marketplace || marketplaceForDestination(offer.product_url) })).slice(0, 10);
 }
 
 function offerSummary(offer) {
@@ -720,10 +720,19 @@ export function buildSheinSearchDestination(query) {
   return `https://jp.shein.com/pdsearch/${encodeURIComponent(keywords)}/`;
 }
 
+export function buildYahooShoppingSearchDestination(query) {
+  const keywords = buildMarketplaceSearchKeywords(redactSearchPersonalData(query), 'YAHOO_JP');
+  if (!keywords) return '';
+  const url = new URL('https://shopping.yahoo.co.jp/search');
+  url.searchParams.set('p', keywords);
+  return url.toString();
+}
+
 function marketplaceSearchDestinations(query, env = {}) {
   return [
     { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: buildAmazonSearchDestination(query, env.AMAZON_ASSOCIATE_TAG) },
     { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: buildRakutenSearchDestination(query) },
+    { marketplace: 'YAHOO_JP', label: 'Yahoo!ショッピングで探す', destination: buildYahooShoppingSearchDestination(query) },
     { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: buildQoo10SearchDestination(query) },
     { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: buildSheinSearchDestination(query) }
   ].concat(buildApparelMarketplaceDestinations(query));

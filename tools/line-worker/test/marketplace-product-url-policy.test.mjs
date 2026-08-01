@@ -7,6 +7,7 @@ import {
 const PRODUCTS = [
   ['AMAZON_JP', 'https://www.amazon.co.jp/dp/B000000001'],
   ['RAKUTEN_JP', 'https://item.rakuten.co.jp/shop/item-code/'],
+  ['YAHOO_JP', 'https://store.shopping.yahoo.co.jp/shop/item-code.html'],
   ['QOO10_JP', 'https://www.qoo10.jp/gmkt.inc/Goods/Goods.aspx?goodscode=123456789'],
   ['SHEIN_JP', 'https://jp.shein.com/example-p-456789.html'],
   ['ZOZOTOWN_JP', 'https://zozo.jp/shop/example/goods/12345678/'],
@@ -16,8 +17,8 @@ const PRODUCTS = [
   ['SNKRDUNK_JP', 'https://snkrdunk.com/products/123456']
 ];
 
-test('nine marketplace product detail URLs are recognized', () => {
-  assert.equal(PRODUCT_MARKETPLACES.length, 9);
+test('ten marketplace product detail URLs are recognized', () => {
+  assert.equal(PRODUCT_MARKETPLACES.length, 10);
   for (const [marketplace, url] of PRODUCTS) {
     assert.equal(marketplaceForProductUrl(url), marketplace);
     assert.equal(isMarketplaceProductUrl(marketplace, url), true);

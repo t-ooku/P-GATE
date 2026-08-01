@@ -119,6 +119,9 @@ const GENERIC_PRODUCTS = [
   ['タブレットケース', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:ケース|カバー|スリーブ|case|cover|sleeve|保护套|保護套|케이스|커버))/iu],
   ['タブレットスタンド', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu],
   ['タブレット用ペン', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,16}(?:スタイラス|ペン|stylus|触控笔|觸控筆|스타일러스\s*펜)|(?:スタイラス|stylus|触控笔|觸控筆|스타일러스\s*펜).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu],
+  ['タブレット用キーボード', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:キーボード|keyboard|键盘|鍵盤|키보드)|(?:キーボード|keyboard|键盘|鍵盤|키보드).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu],
+  ['タブレット保護フィルム', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:保護フィルム|画面フィルム|ガラスフィルム|screen\s*protector|protective\s*film|tempered\s*glass|保护膜|保護膜|钢化膜|鋼化膜|액정\s*보호\s*필름|보호\s*필름|강화\s*유리))/iu],
+  ['タブレット充電器', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:充電器|充電アダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|충전\s*어댑터)|(?:充電器|充電アダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|충전\s*어댑터).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu],
   ['タブレット', /(?:タブレット|\btablet\b|平板电脑|平板電腦|태블릿)/iu],
   ['キャンドル', /(?:キャンドル|ろうそく|candle|蜡烛|蠟燭|캔들|향초)/iu],
   ['デュアル充電器', /(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|두\s*대|듀얼).{0,12}충전/iu],
@@ -177,7 +180,7 @@ const GENERIC_ATTRIBUTES = [
   ['白', /(?:白|ホワイト|\bwhite\b|白色|흰색|화이트)/iu],
   ['ピンク', /(?:ピンク|\bpink\b|粉色|분홍|핑크)/iu],
   ['紫', /(?:紫|パープル|\bpurple\b|紫色|보라|퍼플)/iu],
-  ['青', /(?:青|水色|ブルー|\bblue\b|蓝色|藍色|파랑|블루)/iu],
+  ['青', /(?:青|水色|ブルー(?!トゥース)|\bblue\b|蓝色|藍色|파랑|블루(?!투스))/iu],
   ['緑', /(?:緑|グリーン|\bgreen\b|绿色|綠色|초록|그린)/iu],
   ['黄', /(?:黄色|イエロー|\byellow\b|黄色|노랑|노란색|옐로)/iu],
   ['グレー', /(?:グレー|灰色|gr[ae]y|灰色|회색|그레이)/iu],
@@ -305,7 +308,9 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (products.includes('Tシャツ')) products = products.filter((label) => label !== 'トップス');
   if (products.includes('ライフジャケット')) products = products.filter((label) => label !== 'ジャケット');
   if (products.some((label) => label.startsWith('ノートPC'))) products = products.filter((label) => label !== 'ノートパソコン');
-  if (products.some((label) => label.startsWith('タブレット') && label !== 'タブレット')) products = products.filter((label) => label !== 'タブレット');
+  if (products.some((label) => label.startsWith('タブレット') && label !== 'タブレット')) {
+    products = products.filter((label) => !['タブレット','キーボード'].includes(label));
+  }
   if (!products.length) return compactUnknownSearchPhrase(normalized);
   const materials = matchedMaterials(normalized);
   const attributes = matchedAttributes(normalized)

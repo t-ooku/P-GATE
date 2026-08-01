@@ -610,3 +610,29 @@ test("タブレットケース・スタンド・ペンを4言語で本体から�
     }
   }
 });
+
+test("タブレット用キーボード・保護フィルム・充電器を4言語で専用商品語へ変換する", () => {
+  const cases = [
+    ['タブレット用Bluetoothキーボード', 'タブレット用キーボード', 'ワイヤレス'],
+    ['Bluetooth keyboard for tablet', 'タブレット用キーボード', 'ワイヤレス'],
+    ['平板电脑蓝牙键盘', 'タブレット用キーボード', 'ワイヤレス'],
+    ['태블릿용 블루투스 키보드', 'タブレット用キーボード', 'ワイヤレス'],
+    ['10.9インチタブレット保護フィルム', 'タブレット保護フィルム', '10.9インチ'],
+    ['10.9-inch tablet screen protector', 'タブレット保護フィルム', '10.9インチ'],
+    ['10.9英寸平板电脑钢化膜', 'タブレット保護フィルム', '10.9インチ'],
+    ['10.9인치 태블릿 액정보호필름', 'タブレット保護フィルム', '10.9インチ'],
+    ['USB-Cタブレット充電器', 'タブレット充電器', 'USB-C'],
+    ['USB-C charger for tablet', 'タブレット充電器', 'USB-C'],
+    ['USB-C平板电脑充电器', 'タブレット充電器', 'USB-C'],
+    ['USB-C 태블릿 충전기', 'タブレット充電器', 'USB-C'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, product, condition] of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes(product), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes(condition), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('タブレット'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('青'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});

@@ -50,6 +50,9 @@ const RULES = [
   ['tablet-case',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:ケース|カバー|スリーブ|case|cover|sleeve|保护套|保護套|케이스|커버))/iu,['tablet case','tablet cover']],
   ['tablet-stand',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['tablet stand']],
   ['tablet-stylus',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,16}(?:スタイラス|ペン|stylus|触控笔|觸控筆|스타일러스\s*펜)|(?:スタイラス|stylus|触控笔|觸控筆|스타일러스\s*펜).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet stylus','stylus pen']],
+  ['tablet-keyboard',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:キーボード|keyboard|键盘|鍵盤|키보드)|(?:キーボード|keyboard|键盘|鍵盤|키보드).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet keyboard','bluetooth keyboard','wireless keyboard']],
+  ['tablet-screen-protector',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:保護フィルム|画面フィルム|ガラスフィルム|screen\s*protector|protective\s*film|tempered\s*glass|保护膜|保護膜|钢化膜|鋼化膜|액정\s*보호\s*필름|보호\s*필름|강화\s*유리))/iu,['tablet screen protector','tempered glass']],
+  ['tablet-charger',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:充電器|充電アダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|충전\s*어댑터)|(?:充電器|充電アダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|충전\s*어댑터).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet charger','power adapter','usb-c']],
   ['tablet',/(?:タブレット|\btablet\b|平板电脑|平板電腦|태블릿)/iu,['tablet']],
   ['notebook',/(ノート(?!パソコン|PC)|手帳|罫線|notebook(?! computer)|文房具.*四角)/iu,['notebook','ruled']],
   ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기)/iu,['harmonica']],
@@ -108,7 +111,7 @@ const COLOR_RULES = [
   [/(黒|ブラック|black|黑色|검정|검은색|블랙)/iu,['black']],
   [/(白|ホワイト|white|白色|흰색|하얀색|화이트)/iu,['white']],
   [/(緑|グリーン|green|绿色|綠色|초록색|녹색|그린)/iu,['green']],
-  [/(青|水色|ブルー|アクア|blue|aqua|蓝色|藍色|파란색|블루)/iu,['blue','aqua']],
+  [/(青|水色|ブルー(?!トゥース)|アクア|\bblue\b|\baqua\b|蓝色|藍色|파란색|블루(?!투스))/iu,['blue','aqua']],
   [/(ピンク|pink|粉色|粉红色|粉紅色|핑크)/iu,['pink']],
   [/(銀|シルバー|silver|银色|銀色|은색|실버)/iu,['silver']],
   [/(金色|ゴールド|gold|包金|금색|골드)/iu,['gold']],
@@ -261,6 +264,9 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('tablet-case')) groups = groups.filter((group) => group.category !== 'tablet');
   if (specificCategories.has('tablet-stand')) groups = groups.filter((group) => group.category !== 'tablet');
   if (specificCategories.has('tablet-stylus')) groups = groups.filter((group) => group.category !== 'tablet');
+  if (specificCategories.has('tablet-keyboard')) groups = groups.filter((group) => !['tablet','keyboard'].includes(group.category));
+  if (specificCategories.has('tablet-screen-protector')) groups = groups.filter((group) => group.category !== 'tablet');
+  if (specificCategories.has('tablet-charger')) groups = groups.filter((group) => !['tablet','charger','adapter'].includes(group.category));
   if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');
   if (specificCategories.has('seasonal-pillow') && !specificCategories.has('pillow')) {
     groups.unshift({ category: 'pillow', terms: ['pillow','cushion'] });
