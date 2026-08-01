@@ -2364,3 +2364,24 @@ test('compound power-bank requirements reject each mismatching dimension in four
       ['MATCH'], query);
   }
 });
+
+test('spoken power-bank ranges apply the omitted first capacity unit to candidate filtering', () => {
+  const queries = [
+    '5000から10000mAhのモバイルバッテリー',
+    'a power bank between 5000 and 10000mAh',
+    '5000到10000mAh的充电宝',
+    '5000에서 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWER3000', product_name: '3000mAh Power Bank USB-C' },
+    { asin: 'POWER5000', product_name: '5000mAh Power Bank USB-C' },
+    { asin: 'POWER7500', product_name: '7500mAh Power Bank USB-C' },
+    { asin: 'POWER10000', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'POWER20000', product_name: '20000mAh Power Bank USB-C' },
+    { asin: 'POWERUNKNOWN', product_name: 'Power Bank USB-C' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWER5000', 'POWER7500', 'POWER10000'], query);
+  }
+});

@@ -531,8 +531,11 @@ function buildPowerBankSearchKeywords(query) {
     .filter((match) => !isNegatedAttribute(normalized, new RegExp(`${match[1]}\\s*m\\s*ah`, 'iu')));
   const capacity = capacityMatches[0]?.[1];
   const secondCapacity = capacityMatches[1]?.[1];
-  const capacityRange = capacity && secondCapacity
-    && new RegExp(`(?:between\\s+)?${capacity}\\s*m\\s*ah\\s*(?:から|〜|~|-|to|and|到|至|에서)\\s*${secondCapacity}\\s*m\\s*ah`, 'iu').test(normalized);
+  const spokenCapacityRange = normalized.match(/(?:between\s+)?(\d{4,6})\s*(?:m\s*ah\s*)?(?:から|〜|~|-|to|and|到|至|에서)\s*(\d{4,6})\s*m\s*ah/iu);
+  const rangeStart = spokenCapacityRange?.[1] || capacity;
+  const rangeEnd = spokenCapacityRange?.[2] || secondCapacity;
+  const capacityRange = Boolean(spokenCapacityRange || (capacity && secondCapacity
+    && new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:から|〜|~|-|to|and|到|至|에서)\\s*${secondCapacity}\\s*m\\s*ah`, 'iu').test(normalized)));
   const minimumCapacity = capacity && (
     new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalized)
     || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalized)
@@ -556,8 +559,8 @@ function buildPowerBankSearchKeywords(query) {
       return !isNegatedAttribute(normalized, new RegExp(escaped, 'iu'));
     });
   const powerDelivery = pdWatts ? `PD${pdWatts[1] || pdWatts[2]}W` : '';
-  const rangeMinimum = capacityRange ? Math.min(Number(capacity), Number(secondCapacity)) : 0;
-  const rangeMaximum = capacityRange ? Math.max(Number(capacity), Number(secondCapacity)) : 0;
+  const rangeMinimum = capacityRange ? Math.min(Number(rangeStart), Number(rangeEnd)) : 0;
+  const rangeMaximum = capacityRange ? Math.max(Number(rangeStart), Number(rangeEnd)) : 0;
   const capacityToken = capacityRange ? `${rangeMinimum}mAh-${rangeMaximum}mAh`
     : capacity ? `${capacity}mAh${minimumCapacity ? '以上' : maximumCapacity ? '以下' : ''}` : '';
   return [capacityToken, 'モバイルバッテリー', cable, magnetic, powerDelivery].filter(Boolean).join(' ');

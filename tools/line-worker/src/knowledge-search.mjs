@@ -340,8 +340,11 @@ function isPowerBankMismatch(candidate, query) {
     .filter((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
   const capacity = positiveCapacityMatches[0]?.[1];
   const secondCapacity = positiveCapacityMatches[1]?.[1];
-  const capacityRange = capacity && secondCapacity
-    && new RegExp(`(?:between\\s+)?${capacity}\\s*m\\s*ah\\s*(?:から|〜|~|-|to|and|到|至|에서)\\s*${secondCapacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery);
+  const spokenCapacityRange = normalizedQuery.match(/(?:between\s+)?(\d{4,6})\s*(?:m\s*ah\s*)?(?:から|〜|~|-|to|and|到|至|에서)\s*(\d{4,6})\s*m\s*ah/iu);
+  const rangeStart = spokenCapacityRange?.[1] || capacity;
+  const rangeEnd = spokenCapacityRange?.[2] || secondCapacity;
+  const capacityRange = Boolean(spokenCapacityRange || (capacity && secondCapacity
+    && new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:から|〜|~|-|to|and|到|至|에서)\\s*${secondCapacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)));
   const minimumCapacity = capacity && (
     new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)
     || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalizedQuery)
@@ -351,8 +354,8 @@ function isPowerBankMismatch(candidate, query) {
     || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以下|or\\s+less|or\\s+under|이하)`, 'iu').test(normalizedQuery)
   );
   const candidateCapacity = text.match(/(?:^|\D)(\d{4,6})\s*m\s*ah(?:\D|$)/iu)?.[1];
-  const rangeMinimum = capacityRange ? Math.min(Number(capacity), Number(secondCapacity)) : 0;
-  const rangeMaximum = capacityRange ? Math.max(Number(capacity), Number(secondCapacity)) : 0;
+  const rangeMinimum = capacityRange ? Math.min(Number(rangeStart), Number(rangeEnd)) : 0;
+  const rangeMaximum = capacityRange ? Math.max(Number(rangeStart), Number(rangeEnd)) : 0;
   if (capacityRange && (!candidateCapacity
     || Number(candidateCapacity) < rangeMinimum || Number(candidateCapacity) > rangeMaximum)) return true;
   if (!capacityRange && minimumCapacity && (!candidateCapacity || Number(candidateCapacity) < Number(capacity))) return true;

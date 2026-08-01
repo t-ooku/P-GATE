@@ -1317,3 +1317,18 @@ test('power-bank ranges retain output, connector, and exclusions together in fou
     }
   }
 });
+
+test('spoken power-bank ranges infer the omitted first capacity unit in four languages', () => {
+  const queries = [
+    '5000から10000mAhのモバイルバッテリー',
+    'a power bank between 5000 and 10000mAh',
+    '5000到10000mAh的充电宝',
+    '5000에서 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '5000mAh-10000mAh モバイルバッテリー', `${marketplace}: ${query}`);
+    }
+  }
+});
