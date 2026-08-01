@@ -301,6 +301,7 @@ export function scoreMarketplaceQueryCase(testCase, output) {
     case_id: testCase.case_id,
     locale: testCase.locale,
     category: testCase.category,
+    marketplace: testCase.marketplace || "",
     output: normalized,
     empty: normalized.length === 0,
     overlong: normalized.length > (testCase.max_length || 80),
@@ -358,6 +359,7 @@ export function evaluateMarketplaceQueryCorpus(cases, transform) {
     generated_at: new Date().toISOString(),
     overall: summarize(scores),
     by_locale: breakdown(scores, "locale"),
+    by_marketplace: breakdown(scores, "marketplace"),
     by_category: breakdown(scores, "category"),
     failures: scores.filter((score) => !score.passed),
   };

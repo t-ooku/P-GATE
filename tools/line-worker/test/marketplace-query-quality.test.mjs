@@ -9,8 +9,14 @@ import {
   scoreMarketplaceQueryCase,
 } from "../evaluation/marketplace-query-quality.mjs";
 import {
+  buildMarketplaceSearchKeywords,
   buildQoo10SearchKeywords,
 } from "../public/marketplace-search-keywords-v2.mjs";
+
+const SEARCH_MARKETPLACES = [
+  "AMAZON_JP", "RAKUTEN_JP", "QOO10_JP", "SHEIN_JP",
+  "ZOZOTOWN_JP", "SHOPLIST_JP", "MUSINSA_JP", "BUYMA_JP", "SNKRDUNK_JP",
+];
 
 test("日英中韓640件の検索語コーパスを決定論的に生成する", () => {
   const corpus = buildMarketplaceQueryCorpus();
@@ -61,5 +67,26 @@ test("Qoo10向け検索語は640件と重要な負例で必須条件を保持す
   assert.equal(report.overall.forbidden_token_leak_rate, 0);
   for (const locale of ["ja", "en", "zh", "ko"]) {
     assert.equal(report.by_locale[locale].pass_rate, 1);
+  }
+});
+
+test("4言語の検索条件を全検索対応モール向けに欠落なく変換する", () => {
+  const baseCases = [
+    ...buildMarketplaceQueryCorpus(),
+    ...buildEnglishChineseStressCorpus(),
+    ...MARKETPLACE_QUERY_NEGATIVE_CASES,
+  ];
+  const cases = SEARCH_MARKETPLACES.flatMap((marketplace) =>
+    baseCases.map((item) => ({ ...item, marketplace })),
+  );
+  const report = evaluateMarketplaceQueryCorpus(
+    cases,
+    (input, testCase) => buildMarketplaceSearchKeywords(input, testCase.marketplace),
+  );
+  assert.equal(report.overall.cases, 11304);
+  assert.equal(report.overall.pass_rate, 1, JSON.stringify(report.failures.slice(0, 10), null, 2));
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    assert.equal(report.by_marketplace[marketplace].cases, 1256);
+    assert.equal(report.by_marketplace[marketplace].pass_rate, 1);
   }
 });
