@@ -27,7 +27,7 @@ function deviceName(query) {
   if (correctedTail && /(?:\b(?:iphone|ipad|galaxy|pixel|xperia|aquos)\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰|ギャラクシー|三星|갤럭시|픽셀|エクスペリア|엑스페리아|アクオス|아쿠오스)/iu.test(correctedTail)) {
     return deviceName(correctedTail);
   }
-  const correctedGalaxyModel = correctedTail.match(/\b([a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)\b/iu)?.[1] || '';
+  const correctedGalaxyModel = correctedTail.match(/\b([a-z][\s-]*\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)\b/iu)?.[1] || '';
   if (correctedGalaxyModel && /(?:\bgalaxy\b|ギャラクシー|三星|갤럭시)/iu.test(query)) {
     return deviceName(`Galaxy ${correctedGalaxyModel}`);
   }
@@ -53,10 +53,12 @@ function deviceName(query) {
   if (iphone) return iphone[0].replace(/^iphone/iu, 'iPhone').trim();
   const localizedIphone = query.match(/(?:アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)(?:\s*(\d{1,2}(?!\d)(?:\s*(?:pro|max|plus|mini))*))?/iu);
   if (localizedIphone) return localizedIphone[1] ? `iPhone ${localizedIphone[1].trim()}` : 'iPhone';
-  const galaxy = query.match(/\bgalaxy(?:\s*[a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)?/iu);
-  if (galaxy) return galaxy[0].replace(/^galaxy/iu, 'Galaxy').trim();
-  const localizedGalaxy = query.match(/(?:ギャラクシー|三星(?:手机|手機)?|갤럭시)\s*([a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)/iu);
-  if (localizedGalaxy) return `Galaxy ${localizedGalaxy[1].trim()}`;
+  const galaxy = query.match(/\bgalaxy(?:\s*([a-z])[\s-]*(\d{1,3})(?:\s*(ultra|plus|\+|fe))?)?/iu);
+  if (galaxy) return galaxy[1]
+    ? `Galaxy ${galaxy[1].toUpperCase()}${galaxy[2]}${galaxy[3] ? ` ${galaxy[3]}` : ''}`
+    : 'Galaxy';
+  const localizedGalaxy = query.match(/(?:ギャラクシー|三星(?:手机|手機)?|갤럭시)\s*([a-z])[\s-]*(\d{1,3})(?:\s*(ultra|plus|\+|fe))?/iu);
+  if (localizedGalaxy) return `Galaxy ${localizedGalaxy[1].toUpperCase()}${localizedGalaxy[2]}${localizedGalaxy[3] ? ` ${localizedGalaxy[3]}` : ''}`;
   const pixel = query.match(/\bpixel(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro|fold|a))?)?/iu);
   if (pixel) return pixel[0].replace(/^pixel/iu, 'Pixel').trim();
   const localizedPixel = query.match(/픽셀(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro|fold|a))?)?/iu);

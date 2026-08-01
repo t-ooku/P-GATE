@@ -320,9 +320,9 @@ function phoneCaseDeviceModel(value) {
   if (correctedTail && /\b(?:iphone|galaxy|pixel)\b/iu.test(correctedTail)) {
     return phoneCaseDeviceModel(correctedTail);
   }
-  const correctedGalaxyModel = correctedTail.match(/\b([a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)\b/iu)?.[1] || '';
+  const correctedGalaxyModel = correctedTail.match(/\b([a-z][\s-]*\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)\b/iu)?.[1] || '';
   if (correctedGalaxyModel && /(?:\bgalaxy\b|ギャラクシー|三星|갤럭시)/iu.test(text)) {
-    return `galaxy${correctedGalaxyModel.toLowerCase().replace(/\s+/gu, '')}`;
+    return `galaxy${correctedGalaxyModel.toLowerCase().replace(/[\s-]+/gu, '')}`;
   }
   const correctedIphoneModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2})\b/iu)?.[1] || '';
   if (correctedIphoneModel && /(?:\biphone\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)/iu.test(text)) {
@@ -344,9 +344,9 @@ function phoneCaseDeviceModel(value) {
     }
   }
   const match = iphoneMatch
-    || text.match(/\bgalaxy\s*[a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?/iu)
+    || text.match(/\bgalaxy\s*[a-z][\s-]*\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?/iu)
     || text.match(/\bpixel\s*\d{1,2}(?!\d)(?:\s*(?:pro\s*fold|pro|fold|a))?/iu);
-  return match ? match[0].toLowerCase().replace(/\s+/gu, '') : '';
+  return match ? match[0].toLowerCase().replace(/[\s-]+/gu, '') : '';
 }
 
 function smartWatchBandConstraints(value) {

@@ -1189,6 +1189,25 @@ test('ブランドを省略した型番の言い直しも4言語で訂正後のi
   }
 });
 
+test('音声認識で分割されたGalaxy型番も4言語で一致モデルだけを提示する', () => {
+  const queries = [
+    'Galaxy S 25 Ultra用の覗き見防止強化ガラスフィルム',
+    'privacy tempered glass screen protector for Galaxy S 25 Ultra',
+    'Galaxy S 25 Ultra 防窥钢化玻璃保护膜',
+    'Galaxy S 25 Ultra 사생활 보호 강화유리 필름',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Galaxy S25 Ultra Privacy Tempered Glass Screen Protector' },
+    { asin: 'BASE', product_name: 'Galaxy S25 Privacy Tempered Glass Screen Protector' },
+    { asin: 'PLUS', product_name: 'Galaxy S25 Plus Privacy Tempered Glass Screen Protector' },
+    { asin: 'CLEAR', product_name: 'Galaxy S25 Ultra Clear Tempered Glass Screen Protector' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
   const cases = [
     [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',
