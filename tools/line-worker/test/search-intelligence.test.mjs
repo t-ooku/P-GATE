@@ -392,6 +392,41 @@ test('USB4ドックは4言語で解像度・Hz・DisplayLink要件を満たす�
   }
 });
 
+test('MacBook用USB4ドックは4言語でApple Silicon世代とHDR対応を照合する', () => {
+  const queries = [
+    'MacBook M2用 DisplayLink HDR対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 DisplayLink dock with dual 4K 60Hz HDR monitors for MacBook M2',
+    '支持MacBook M2双4K 60Hz HDR显示器的DisplayLink USB4扩展坞',
+    '맥북 M2용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz HDR',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'MacBook M2 USB4 Dock DisplayLink Dual Monitor 4K 60Hz HDR' },
+    { asin: 'M1', product_name: 'MacBook M1 USB4 Dock DisplayLink Dual Monitor 4K 60Hz HDR' },
+    { asin: 'NOCHIP', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 60Hz HDR' },
+    { asin: 'NOHDR', product_name: 'MacBook M2 USB4 Dock DisplayLink Dual Monitor 4K 60Hz' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
+
+test('Windows用USB4ドックは4言語でMST明示候補だけを表示する', () => {
+  const queries = [
+    'Windows用 MST対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 dock with MST dual 4K 60Hz monitors for Windows',
+    '支持Windows双4K 60Hz显示器的MST USB4扩展坞',
+    '윈도우용 MST USB4 도킹 스테이션 듀얼 4K 60Hz',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Windows USB4 Dock MST Dual Monitor 4K 60Hz' },
+    { asin: 'NOMST', product_name: 'Windows USB4 Dock Dual Monitor 4K 60Hz' },
+    { asin: 'DISPLAYLINK', product_name: 'Windows USB4 Dock DisplayLink Dual Monitor 4K 60Hz' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
+
 test('中国語・韓国語のキャンドル・財布・収納用品を共通商品語へ展開する', () => {
   for (const query of ['玻璃罐装的大豆蜡烛', '유리병에 담긴 소이 캔들']) {
     assert.equal(semanticSearchGroups(query).some((group) => group.category === 'candle'), true);

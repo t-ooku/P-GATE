@@ -381,6 +381,10 @@ function powerDeliveryWatts(text) {
   return Number(String(text || '').normalize('NFKC').match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu)?.[1] || 0);
 }
 
+function appleSiliconGeneration(text) {
+  return String(text || '').normalize('NFKC').match(/\b(m[1-4])\b/iu)?.[1]?.toUpperCase() || '';
+}
+
 function hasDualMonitorEvidence(text) {
   return /(?:dual.{0,16}(?:display|monitor)|2.{0,12}(?:display|monitor)|デュアル.{0,12}モニター|2画面|双.{0,12}显示器|雙.{0,12}顯示器|듀얼(?:.{0,12}모니터)?|모니터\s*2대)/iu.test(String(text || ''));
 }
@@ -396,6 +400,9 @@ function isUsb4DockMismatch(candidate, constraints = {}) {
   if (constraints.refreshRate && refreshRate(text) < constraints.refreshRate) return true;
   if (constraints.powerDelivery && powerDeliveryWatts(text) < constraints.powerDelivery) return true;
   if (constraints.displayLink && !/display\s*link/iu.test(text)) return true;
+  if (constraints.hdr && !/\bhdr\b/iu.test(text)) return true;
+  if (constraints.mst && !/\bmst\b/iu.test(text)) return true;
+  if (constraints.appleSilicon && appleSiliconGeneration(text) !== constraints.appleSilicon) return true;
   const candidatePlatform = requestedComputerPlatform(text);
   if (constraints.platform && candidatePlatform && candidatePlatform !== constraints.platform) return true;
   return false;
@@ -520,6 +527,9 @@ export function filterCategoryMismatches(query, candidates = []) {
       refreshRate: refreshRate(query),
       powerDelivery: powerDeliveryWatts(query),
       displayLink: /display\s*link/iu.test(String(query || '')),
+      hdr: /\bhdr\b/iu.test(String(query || '')),
+      mst: /\bmst\b/iu.test(String(query || '')),
+      appleSilicon: appleSiliconGeneration(query),
       platform: requestedComputerPlatform(query)
     })) return false;
     if (tabletAccessory) {

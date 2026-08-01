@@ -670,6 +670,36 @@ test("USB4ドックの4K・Hz・DisplayLink条件を4言語から9モールへ�
   }
 });
 
+test("USB4ドックのApple Silicon世代・HDR・MST条件を4言語から9モールへ保持する", () => {
+  const displayLinkCases = [
+    'MacBook M2用 DisplayLink HDR対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 DisplayLink dock with dual 4K 60Hz HDR monitors for MacBook M2',
+    '支持MacBook M2双4K 60Hz HDR显示器的DisplayLink USB4扩展坞',
+    '맥북 M2용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz HDR',
+  ];
+  const mstCases = [
+    'Windows用 MST対応 USB4 ドック 4K 60Hz 2画面',
+    'USB4 dock with MST dual 4K 60Hz monitors for Windows',
+    '支持Windows双4K 60Hz显示器的MST USB4扩展坞',
+    '윈도우용 MST USB4 도킹 스테이션 듀얼 4K 60Hz',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of displayLinkCases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      for (const condition of ['M2対応', 'HDR', 'DisplayLink', 'Mac対応']) {
+        assert.match(keywords, new RegExp(condition, 'u'), `${marketplace}: ${input} -> ${keywords}`);
+      }
+      assert.doesNotMatch(keywords, /MST/u, `${marketplace}: ${input} -> ${keywords}`);
+    }
+    for (const input of mstCases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.match(keywords, /MST/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /Windows対応/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.doesNotMatch(keywords, /DisplayLink/u, `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
 test("4言語のタブレット本体は小数インチ・容量を保持して9モール変換する", () => {
   const cases = [
     '10.9インチ256GBのタブレット',

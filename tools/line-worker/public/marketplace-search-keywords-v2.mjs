@@ -73,6 +73,10 @@ function portHubFeatures(query) {
   const refreshRate = query.match(/\b(\d{2,3})\s*hz\b/iu);
   if (refreshRate) features.push(`${refreshRate[1]}Hz`);
   if (/display\s*link/iu.test(query)) features.push('DisplayLink');
+  const appleSilicon = query.match(/\b(m[1-4])\b/iu);
+  if (appleSilicon) features.push(`${appleSilicon[1].toUpperCase()}対応`);
+  if (/\bhdr\b/iu.test(query)) features.push('HDR');
+  if (/\bmst\b/iu.test(query)) features.push('MST');
   const displayPort = query.match(/display\s*port\s*(\d(?:\.\d)?)/iu);
   if (displayPort) features.push(`DisplayPort ${displayPort[1]}`);
   else if (/display\s*port/iu.test(query)) features.push('DisplayPort');
@@ -97,7 +101,7 @@ function buildPortHubSearchKeywords(query, marketplace) {
   else if (thunderbolt && dock) product = `Thunderbolt${thunderbolt[1] ? ` ${thunderbolt[1]}` : ''} ドック`;
   else if (/usb[- ]?a/iu.test(query) && /(?:ハブ|hub|集线器|集線器|허브)/iu.test(query)) product = 'USB-Aハブ';
   if (!product) return '';
-  const limit = marketplace === 'QOO10_JP' ? 6 : 8;
+  const limit = 8;
   return [product, ...portHubFeatures(query).slice(0, limit)].join(' ');
 }
 
