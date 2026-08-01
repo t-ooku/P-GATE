@@ -56,6 +56,16 @@ test('each SEO page links to every other guide in the same language', () => {
   }
 });
 
+test('each SEO page visibly links to its reciprocal language version', () => {
+  for (const path of seoPagePaths) {
+    const html = renderSeoPage(path);
+    const [, locale, slug] = path.split('/');
+    const alternate = locale === 'ja' ? 'en' : 'ja';
+    const label = locale === 'ja' ? 'English' : '日本語';
+    assert.ok(html.includes(`<a class="language-switch" href="/${alternate}/${slug}" hreflang="${alternate}" lang="${alternate}">${label}</a>`));
+  }
+});
+
 test('未定義SEOパスは通常ルーティングへ戻す', () => {
   assert.equal(renderSeoPage('/ja/not-defined'), null);
   assert.equal(renderSeoPage('/api/config'), null);
