@@ -393,25 +393,27 @@ function isPowerBankMismatch(candidate, query) {
   const pdWatts = pdMatches
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
   const pdOutputRangeMatch = normalizedQuery.match(/(?:between\s+)?(?:pd\s*)?(\d{1,3})\s*w\s*(?:から|〜|~|-|to|and|到|至|에서)\s*(?:pd\s*)?(\d{1,3})\s*w(?:\s*pd)?/iu);
-  const pdOutputRange = Boolean(pdOutputRangeMatch && /pd/iu.test(pdOutputRangeMatch[0]));
-  const pdRangeMinimum = pdOutputRange
-    ? Math.min(Number(pdOutputRangeMatch[1]), Number(pdOutputRangeMatch[2])) : 0;
-  const pdRangeMaximum = pdOutputRange
-    ? Math.max(Number(pdOutputRangeMatch[1]), Number(pdOutputRangeMatch[2])) : 0;
+  const spokenPdOutputRange = Boolean(pdOutputRangeMatch && /pd/iu.test(pdOutputRangeMatch[0]));
+  const minimumPdOutputMatch = normalizedQuery.match(/(?:(?:at\s+least|minimum(?:\s+of)?|至少|不少于)\s*(?:pd\s*)?(\d{1,3})\s*w(?:\s*pd)?|(?:pd\s*)?(\d{1,3})\s*w(?:\s*pd)?\s*(?:以上|or\s+more|and\s+up|이상))/iu);
+  const maximumPdOutputMatch = normalizedQuery.match(/(?:(?:at\s+most|maximum(?:\s+of)?|up\s+to|不超过|最多)\s*(?:pd\s*)?(\d{1,3})\s*w(?:\s*pd)?|(?:pd\s*)?(\d{1,3})\s*w(?:\s*pd)?\s*(?:以下|or\s+less|or\s+under|이하))/iu);
+  const minimumPdOutputValue = minimumPdOutputMatch?.[1] || minimumPdOutputMatch?.[2] || '';
+  const maximumPdOutputValue = maximumPdOutputMatch?.[1] || maximumPdOutputMatch?.[2] || '';
+  const boundedPdOutputRange = Boolean(minimumPdOutputValue && maximumPdOutputValue);
+  const pdOutputRange = Boolean(spokenPdOutputRange || boundedPdOutputRange);
+  const pdRangeMinimum = spokenPdOutputRange
+    ? Math.min(Number(pdOutputRangeMatch[1]), Number(pdOutputRangeMatch[2]))
+    : boundedPdOutputRange ? Number(minimumPdOutputValue) : 0;
+  const pdRangeMaximum = spokenPdOutputRange
+    ? Math.max(Number(pdOutputRangeMatch[1]), Number(pdOutputRangeMatch[2]))
+    : boundedPdOutputRange ? Number(maximumPdOutputValue) : 0;
   const requestedWatts = pdWatts?.[1] || pdWatts?.[2] || '';
-  const minimumPdOutput = requestedWatts && (
-    new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?`, 'iu').test(normalizedQuery)
-    || new RegExp(`(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalizedQuery)
-  );
-  const maximumPdOutput = requestedWatts && (
-    new RegExp(`(?:at\\s+most|maximum(?:\\s+of)?|up\\s+to|不超过|最多)\\s*(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?`, 'iu').test(normalizedQuery)
-    || new RegExp(`(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?\\s*(?:以下|or\\s+less|or\\s+under|이하)`, 'iu').test(normalizedQuery)
-  );
+  const minimumPdOutput = Boolean(minimumPdOutputValue);
+  const maximumPdOutput = Boolean(maximumPdOutputValue);
   const candidatePdWatts = powerDeliveryWatts(text);
   if (pdOutputRange && (!candidatePdWatts
     || candidatePdWatts < pdRangeMinimum || candidatePdWatts > pdRangeMaximum)) return true;
-  if (!pdOutputRange && minimumPdOutput && candidatePdWatts < Number(requestedWatts)) return true;
-  if (!pdOutputRange && maximumPdOutput && (!candidatePdWatts || candidatePdWatts > Number(requestedWatts))) return true;
+  if (!pdOutputRange && minimumPdOutput && candidatePdWatts < Number(minimumPdOutputValue)) return true;
+  if (!pdOutputRange && maximumPdOutput && (!candidatePdWatts || candidatePdWatts > Number(maximumPdOutputValue))) return true;
   if (requestedWatts && !pdOutputRange && !minimumPdOutput && !maximumPdOutput
     && !new RegExp(`(?:^|\\D)(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?(?:\\D|$)`, 'iu').test(text)) return true;
   const rejectedWatts = pdMatches

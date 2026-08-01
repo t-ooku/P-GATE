@@ -2484,3 +2484,42 @@ test('power-bank PD output ranges accept boundaries and intermediate output in f
       ['PD20', 'PD25', 'PD30'], query);
   }
 });
+
+test('separate power-bank PD output bounds filter candidates together in four languages', () => {
+  const queries = [
+    'PD20W以上、PD30W以下の10000mAhモバイルバッテリー',
+    'a 10000mAh power bank with at least 20W PD and at most 30W PD',
+    '至少PD20W且不超过PD30W的10000mAh充电宝',
+    'PD20W 이상 PD30W 이하 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'NOPD', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'PD18', product_name: '10000mAh Power Bank USB-C PD18W' },
+    { asin: 'PD20', product_name: '10000mAh Power Bank USB-C PD20W' },
+    { asin: 'PD25', product_name: '10000mAh Power Bank USB-C PD25W' },
+    { asin: 'PD30', product_name: '10000mAh Power Bank USB-C PD30W' },
+    { asin: 'PD45', product_name: '10000mAh Power Bank USB-C PD45W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['PD20', 'PD25', 'PD30'], query);
+  }
+});
+
+test('contradictory power-bank PD output bounds return no misleading candidates in four languages', () => {
+  const queries = [
+    'PD30W以上、PD20W以下の10000mAhモバイルバッテリー',
+    'a 10000mAh power bank with at least 30W PD and at most 20W PD',
+    '至少PD30W且不超过PD20W的10000mAh充电宝',
+    'PD30W 이상 PD20W 이하 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'PD18', product_name: '10000mAh Power Bank USB-C PD18W' },
+    { asin: 'PD20', product_name: '10000mAh Power Bank USB-C PD20W' },
+    { asin: 'PD30', product_name: '10000mAh Power Bank USB-C PD30W' },
+    { asin: 'PD45', product_name: '10000mAh Power Bank USB-C PD45W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates), [], query);
+  }
+});

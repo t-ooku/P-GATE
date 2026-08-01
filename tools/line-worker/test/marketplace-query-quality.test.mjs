@@ -1407,3 +1407,33 @@ test('power-bank PD output ranges preserve both inclusive bounds in four languag
     }
   }
 });
+
+test('separate power-bank PD output bounds become one range in four languages', () => {
+  const queries = [
+    'PD20W以上、PD30W以下の10000mAhモバイルバッテリー',
+    'a 10000mAh power bank with at least 20W PD and at most 30W PD',
+    '至少PD20W且不超过PD30W的10000mAh充电宝',
+    'PD20W 이상 PD30W 이하 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー PD20W-PD30W', `${marketplace}: ${query}`);
+    }
+  }
+});
+
+test('contradictory power-bank PD output bounds are not silently reordered in four languages', () => {
+  const queries = [
+    'PD30W以上、PD20W以下の10000mAhモバイルバッテリー',
+    'a 10000mAh power bank with at least 30W PD and at most 20W PD',
+    '至少PD30W且不超过PD20W的10000mAh充电宝',
+    'PD30W 이상 PD20W 이하 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー PD30W以上 PD20W以下', `${marketplace}: ${query}`);
+    }
+  }
+});
