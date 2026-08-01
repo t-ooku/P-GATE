@@ -83,10 +83,10 @@ const RULES = [
   ['shoes',/(光る靴|靴(?!下|箱|べら|紐|ひも|磨き|クリーム|ラック)|シューズ|スニーカー|shoes?(?!\s*(?:box|horn|lace|cream|rack|care))|sneakers?|trainers?|运动鞋|運動鞋|鞋(?!盒|带|帶|油|架)|운동화|신발(?!장|끈))/iu,['shoe','sneaker']],
   ['lip-care',/(リップ(?:クリーム|バーム|ケア)|lip balm|lip care)/iu,['lip balm','lip care']],
   ['lip-color',/(リップ(?!クリーム|バーム|ケア)|口紅|ティント|lip tint|lipstick|립 틴트|립스틱|틴트|唇釉|口红|口紅)/iu,['lip','tint','lipstick']],
-  ['t-shirt',/(Tシャツ|ティーシャツ|tee ?shirt|t-shirt)/iu,['t-shirt','tee']],
+  ['t-shirt',/(Tシャツ|ティーシャツ|tee ?shirt|t-shirt|T恤|티셔츠)/iu,['t-shirt','tee']],
   ['tops',/(トップス|ブラウス|シャツ|カットソー|\bblouse\b|\btops?\b)/iu,['top','blouse','shirt']],
-  ['pants',/(パンツ|ズボン|デニム|ジーンズ|trousers|pants|jeans)/iu,['pants','trousers','jeans']],
-  ['skirt',/(スカート|skirt)/iu,['skirt']],
+  ['pants',/(パンツ|ズボン|デニム|ジーンズ|trousers?|pants|jeans|牛仔裤|牛仔褲|裤子|褲子|청바지|바지)/iu,['pants','trousers','jeans']],
+  ['skirt',/(スカート|skirts?|半身裙|裙子|치마)/iu,['skirt']],
   ['dress',/(ワンピース|ドレス|dress|连衣裙|連衣裙|원피스)/iu,['dress']],
   ['bag',/(バッグ|かばん|鞄|トート|ショルダーバッグ|handbag|tote bag|shoulder bag)/iu,['bag','handbag','tote']],
   ['hat',/(帽子|キャップ|ハット|\bcap\b|\bhat\b)/iu,['hat','cap']]
@@ -94,18 +94,18 @@ const RULES = [
 
 const COLOR_RULES = [
   [/(黒|ブラック|black|黑色|검정|검은색|블랙)/iu,['black']],
-  [/(白|ホワイト|white)/iu,['white']],
-  [/(緑|グリーン|green)/iu,['green']],
-  [/(青|水色|ブルー|アクア|blue|aqua)/iu,['blue','aqua']],
-  [/(ピンク|pink)/iu,['pink']],
-  [/(銀|シルバー|silver)/iu,['silver']],
+  [/(白|ホワイト|white|白色|흰색|하얀색|화이트)/iu,['white']],
+  [/(緑|グリーン|green|绿色|綠色|초록색|녹색|그린)/iu,['green']],
+  [/(青|水色|ブルー|アクア|blue|aqua|蓝色|藍色|파란색|블루)/iu,['blue','aqua']],
+  [/(ピンク|pink|粉色|粉红色|粉紅色|핑크)/iu,['pink']],
+  [/(銀|シルバー|silver|银色|銀色|은색|실버)/iu,['silver']],
   [/(金色|ゴールド|gold|包金|금색|골드)/iu,['gold']],
-  [/(茶色|ブラウン|brown)/iu,['brown']],
-  [/(黄色|イエロー|yellow)/iu,['yellow']],
+  [/(茶色|ブラウン|brown|棕色|褐色|갈색|브라운)/iu,['brown']],
+  [/(黄色|イエロー|yellow|黃色|노란색|옐로)/iu,['yellow']],
   [/(赤(?:色)?|レッド|\bred\b|红色|紅色|빨간색|레드)/iu,['red']],
   [/(紫(?:色)?|パープル|\bpurple\b|보라색|퍼플)/iu,['purple']],
   [/(オレンジ|\borange\b|橙色|주황색)/iu,['orange']],
-  [/(グレー|灰色|gray|grey)/iu,['gray']],
+  [/(グレー|灰色|gray|grey|회색|그레이)/iu,['gray']],
   [/(透明|クリア|clear|transparent|透明色|투명)/iu,['clear','transparent']]
 ];
 
@@ -136,6 +136,9 @@ const NEGATED_CATEGORY_TERMS = new Map([
   ['umbrella', /(?:傘|umbrella|雨伞|雨傘|우산)/iu],
   ['camera', /(?:カメラ|camera|相机|相機|카메라)/iu],
   ['wallet', /(?:財布|wallet|钱包|錢包|지갑)/iu],
+  ['pants', /(?:パンツ|ズボン|デニム|ジーンズ|trousers?|pants|jeans|牛仔裤|牛仔褲|裤子|褲子|청바지|바지)/iu],
+  ['skirt', /(?:スカート|skirts?|半身裙|裙子|치마)/iu],
+  ['t-shirt', /(?:Tシャツ|ティーシャツ|tee ?shirt|t-shirt|T恤|티셔츠)/iu],
 ]);
 
 export function isNegatedSearchOccurrence(text, start, end) {

@@ -138,6 +138,9 @@ const GENERIC_PRODUCTS = [
   ['バッグ', /(?:バッグ|かばん|bag|pouch|包包|背包|手提包|單肩包|单肩包|가방)/iu],
   ['スニーカー', /(?:スニーカー|運動靴|シューズ|sneakers?|trainers?|shoes?(?!\s*(?:box|horn|lace|cream|rack|care))|运动鞋|運動鞋|鞋(?!盒|带|帶|油|架)|운동화|신발(?!장|끈))/iu],
   ['ワンピース', /(?:ワンピース|dress|连衣裙|連衣裙|원피스)/iu],
+  ['パンツ', /(?:パンツ|ズボン|デニム|ジーンズ|trousers?|pants|jeans|牛仔裤|牛仔褲|裤子|褲子|청바지|바지)/iu],
+  ['スカート', /(?:スカート|skirts?|半身裙|裙子|치마)/iu],
+  ['Tシャツ', /(?:Tシャツ|ティーシャツ|t[- ]?shirts?|tee\s*shirts?|T恤|티셔츠)/iu],
   ['トップス', /(?:トップス|シャツ|ブラウス|tops?|shirts?|blouse|上衣|셔츠|블라우스)/iu],
   ['リップ', /(?:リップ|口紅|lipstick|lip\s*tint|唇膏|립스틱|립틴트)/iu],
   ['水筒', /(?:水筒|タンブラー|ボトル|water\s*bottle|tumbler|水杯|保温杯|保溫杯|텀블러)/iu],
@@ -194,7 +197,7 @@ const GENERIC_MATERIALS = [
 ];
 
 const APPAREL_PRODUCTS = new Set([
-  '靴下 socks', '帽子', 'バッグ', 'スニーカー', 'ワンピース', 'トップス',
+  '靴下 socks', '帽子', 'バッグ', 'スニーカー', 'ワンピース', 'パンツ', 'スカート', 'Tシャツ', 'トップス',
 ]);
 
 function shoeSizeTokens(query) {
@@ -286,6 +289,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
     .map(([label]) => label)
     .filter((label, index, values) => values.indexOf(label) === index);
   if (products.includes('バックパック')) products = products.filter((label) => label !== 'バッグ');
+  if (products.includes('Tシャツ')) products = products.filter((label) => label !== 'トップス');
   if (!products.length) return compactUnknownSearchPhrase(normalized);
   const materials = matchedMaterials(normalized);
   const attributes = matchedAttributes(normalized)

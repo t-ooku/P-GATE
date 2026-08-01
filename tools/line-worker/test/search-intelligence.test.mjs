@@ -1094,3 +1094,45 @@ test('4言語の靴用品を靴本体のFTSカテゴリへ誤分類しない', (
     assert.doesNotMatch(intelligentFtsQuery(input), /"shoe"\*|"sneaker"\*/, input);
   }
 });
+
+test('パンツ・スカート・Tシャツを4言語から共通FTSカテゴリへ変換する', () => {
+  const cases = [
+    ['黒のデニムパンツ', /"pants"\*/, /"black"\*/], ['blue jeans', /"pants"\*/, /"blue"\*/],
+    ['黑色牛仔裤', /"pants"\*/, /"black"\*/], ['검정 청바지', /"pants"\*/, /"black"\*/],
+    ['黒いスカート', /"skirt"\*/, /"black"\*/], ['black skirt', /"skirt"\*/, /"black"\*/],
+    ['黑色半身裙', /"skirt"\*/, /"black"\*/], ['검정 치마', /"skirt"\*/, /"black"\*/],
+    ['白いTシャツ', /"t-shirt"\*/, /"white"\*/], ['white t-shirt', /"t-shirt"\*/, /"white"\*/],
+    ['白色T恤', /"t-shirt"\*/, /"white"\*/], ['흰색 티셔츠', /"t-shirt"\*/, /"white"\*/],
+  ];
+  for (const [input, product, color] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, product, input);
+    assert.match(query, color, input);
+  }
+});
+
+test('4言語のカテゴリ訂正は否定したパンツを除きスカートだけをFTSへ保持する', () => {
+  for (const input of [
+    'パンツではなく黒いスカート', 'not pants but a black skirt',
+    '不要裤子，要黑色半身裙', '바지 말고 검정 치마',
+  ]) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"skirt"\*/, input);
+    assert.doesNotMatch(query, /"pants"\*|"trousers"\*|"jeans"\*/, input);
+  }
+});
+
+test('中国語・韓国語の主要色をFTS共通色へ正規化する', () => {
+  const cases = [
+    ['绿色T恤', 'green'], ['초록색 티셔츠', 'green'],
+    ['蓝色裙子', 'blue'], ['파란색 치마', 'blue'],
+    ['粉色T恤', 'pink'], ['핑크 티셔츠', 'pink'],
+    ['银色裙子', 'silver'], ['은색 치마', 'silver'],
+    ['棕色T恤', 'brown'], ['갈색 티셔츠', 'brown'],
+    ['黄色裙子', 'yellow'], ['노란색 치마', 'yellow'],
+    ['灰色T恤', 'gray'], ['회색 티셔츠', 'gray'],
+  ];
+  for (const [input, color] of cases) {
+    assert.match(intelligentFtsQuery(input), new RegExp(`"${color}"\\*`), input);
+  }
+});

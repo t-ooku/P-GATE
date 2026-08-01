@@ -441,3 +441,35 @@ test("4言語の靴用品をスニーカー本体の検索語へ誤変換しな�
     }
   }
 });
+
+test("パンツ・スカート・Tシャツを4言語から9モール向け共通商品語へ変換する", () => {
+  const cases = [
+    ['黒のデニムパンツ', 'パンツ', '黒'], ['blue jeans', 'パンツ', '青'],
+    ['黑色牛仔裤', 'パンツ', '黒'], ['검정 청바지', 'パンツ', '黒'],
+    ['黒いスカート', 'スカート', '黒'], ['black skirt', 'スカート', '黒'],
+    ['黑色半身裙', 'スカート', '黒'], ['검정 치마', 'スカート', '黒'],
+    ['白いTシャツ', 'Tシャツ', '白'], ['white t-shirt', 'Tシャツ', '白'],
+    ['白色T恤', 'Tシャツ', '白'], ['흰색 티셔츠', 'Tシャツ', '白'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, product, color] of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes(product), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes(color), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
+
+test("4言語のカテゴリ訂正は否定したパンツを除きスカートだけを9モールへ渡す", () => {
+  const cases = [
+    'パンツではなく黒いスカート', 'not pants but a black skirt',
+    '不要裤子，要黑色半身裙', '바지 말고 검정 치마',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('スカート'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('パンツ'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
