@@ -11,12 +11,12 @@ const PRODUCT_TYPES = [
 function deviceName(query) {
   const iphone = query.match(/\biphone(?:\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2})?/iu);
   if (iphone) return iphone[0].replace(/^iphone/iu, 'iPhone').trim();
-  const localizedIphone = query.match(/(?:苹果手机|蘋果手機|아이폰)(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro|max|plus|mini))*)?/iu);
-  if (localizedIphone) return localizedIphone[0].replace(/^(?:苹果手机|蘋果手機|아이폰)/iu, 'iPhone').trim();
+  const localizedIphone = query.match(/(?:アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)(?:\s*(\d{1,2}(?!\d)(?:\s*(?:pro|max|plus|mini))*))?/iu);
+  if (localizedIphone) return localizedIphone[1] ? `iPhone ${localizedIphone[1].trim()}` : 'iPhone';
   const galaxy = query.match(/\bgalaxy(?:\s*[a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)?/iu);
   if (galaxy) return galaxy[0].replace(/^galaxy/iu, 'Galaxy').trim();
-  const localizedGalaxy = query.match(/갤럭시(?:\s*[a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)?/iu);
-  if (localizedGalaxy) return localizedGalaxy[0].replace(/^갤럭시/iu, 'Galaxy').trim();
+  const localizedGalaxy = query.match(/(?:ギャラクシー|三星(?:手机|手機)?|갤럭시)\s*([a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)/iu);
+  if (localizedGalaxy) return `Galaxy ${localizedGalaxy[1].trim()}`;
   const pixel = query.match(/\bpixel(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro|fold|a))?)?/iu);
   if (pixel) return pixel[0].replace(/^pixel/iu, 'Pixel').trim();
   const localizedPixel = query.match(/픽셀(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro|fold|a))?)?/iu);
