@@ -349,6 +349,27 @@ function isSmartWatchBandMismatch(candidate, requested) {
   return false;
 }
 
+function phoneScreenProtectorConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    model: phoneCaseDeviceModel(text),
+    protector: /(?:保護フィルム|ガラスフィルム|保護膜|screen\s*protector|protective\s*film|钢化膜|鋼化膜|保护膜|保護膜|필름|보호필름)/iu.test(text),
+    glass: /(?:強化ガラス|ガラスフィルム|tempered\s*glass|钢化玻璃|鋼化玻璃|강화유리)/iu.test(text),
+    privacy: /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu.test(text)
+  };
+}
+
+function isPhoneScreenProtectorMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = phoneScreenProtectorConstraints(text);
+  if (!evidence.protector || !evidence.model) return true;
+  if (requested.model && evidence.model !== requested.model) return true;
+  if (requested.glass && !evidence.glass) return true;
+  if (requested.privacy && !evidence.privacy) return true;
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1141,9 +1162,11 @@ export function filterCategoryMismatches(query, candidates = []) {
   const normalizedQuery = String(query || '').normalize('NFKC');
   const smartWatchBand = smartWatchBandConstraints(normalizedQuery);
   const smartWatchBandIntent = smartWatchBand.band && Boolean(smartWatchBand.model);
+  const phoneScreenProtector = phoneScreenProtectorConstraints(normalizedQuery);
+  const phoneScreenProtectorIntent = phoneScreenProtector.protector && Boolean(phoneScreenProtector.model);
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
-  if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent) return candidates;
+  if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1186,6 +1209,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   };
   return candidates.filter((candidate) => {
     if (smartWatchBandIntent) return !isSmartWatchBandMismatch(candidate, smartWatchBand);
+    if (phoneScreenProtectorIntent) return !isPhoneScreenProtectorMismatch(candidate, phoneScreenProtector);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

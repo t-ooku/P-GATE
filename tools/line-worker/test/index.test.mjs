@@ -335,7 +335,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v165/);
+  assert.match(serviceWorker, /hoshilu-shell-v166/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -658,7 +658,7 @@ test('Qoo10はiPhoneより明示された商品種別を優先し多言語でも
     ['iPhone用のUSB-C充電ケーブルが欲しい', 'iPhone ケーブル USB-C'],
     ['iPhone compatible wireless earbuds', 'iPhone イヤホン'],
     ['iPhone用の急速充電器', 'iPhone 充電器'],
-    ['iPhone 15 tempered glass screen protector', 'iPhone 15 保護フィルム'],
+      ['iPhone 15 tempered glass screen protector', 'iPhone 15 保護フィルム 強化ガラス'],
     ['iPhone用スマホスタンド', 'iPhone スタンド'],
     ['iPhone portable charger power bank', 'iPhone モバイルバッテリー'],
     ['iPhone 15 Pro対応ケース', 'iPhone 15 Proケース'],

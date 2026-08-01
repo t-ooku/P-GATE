@@ -975,6 +975,37 @@ test('通常のスマホケースも4言語で機種・MagSafe・透明条件が
   }
 });
 
+test('スマホ保護フィルムは4言語で機種・ガラス・覗き見防止が一致する候補だけを提示する', () => {
+  const cases = [
+    ['iPhone 15 Pro', [
+      'iPhone 15 Pro用の覗き見防止ガラスフィルム',
+      'privacy tempered glass screen protector for iPhone 15 Pro',
+      'iPhone 15 Pro 防窥钢化玻璃保护膜',
+      'iPhone 15 Pro 사생활 보호 강화유리 필름',
+    ], 'iPhone 15 Pro Max'],
+    ['Galaxy S24 Ultra', [
+      'Galaxy S24 Ultra用の覗き見防止ガラスフィルム',
+      'privacy tempered glass screen protector for Galaxy S24 Ultra',
+      'Galaxy S24 Ultra 防窥钢化玻璃保护膜',
+      'Galaxy S24 Ultra 사생활 보호 강화유리 필름',
+    ], 'Galaxy S24 Plus'],
+  ];
+  for (const [device, queries, wrongDevice] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: `${device} Privacy Tempered Glass Screen Protector` },
+      { asin: 'WRONGMODEL', product_name: `${wrongDevice} Privacy Tempered Glass Screen Protector` },
+      { asin: 'GENERIC', product_name: 'Smartphone Privacy Tempered Glass Screen Protector' },
+      { asin: 'NOTPRIVACY', product_name: `${device} Clear Tempered Glass Screen Protector` },
+      { asin: 'NOTGLASS', product_name: `${device} Privacy PET Protective Film` },
+      { asin: 'CASE', product_name: `${device} Privacy Clear Phone Case` },
+    ];
+    for (const query of queries) {
+      assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+        ['MATCH'], query);
+    }
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

@@ -73,6 +73,31 @@ test('通常ケースも機種・MagSafe・透明条件を4言語で保持する
   }
 });
 
+test('スマホ保護フィルムは機種・強化ガラス・覗き見防止を4言語で保持する', () => {
+  const devices = [
+    ['iPhone 15 Pro', [
+      'iPhone 15 Pro用の覗き見防止ガラスフィルム',
+      'privacy tempered glass screen protector for iPhone 15 Pro',
+      'iPhone 15 Pro 防窥钢化玻璃保护膜',
+      'iPhone 15 Pro 사생활 보호 강화유리 필름',
+    ]],
+    ['Galaxy S24 Ultra', [
+      'Galaxy S24 Ultra用の覗き見防止ガラスフィルム',
+      'privacy tempered glass screen protector for Galaxy S24 Ultra',
+      'Galaxy S24 Ultra 防窥钢化玻璃保护膜',
+      'Galaxy S24 Ultra 사생활 보호 강화유리 필름',
+    ]],
+  ];
+  for (const [device, queries] of devices) {
+    for (const query of queries) {
+      for (const marketplace of SEARCH_MARKETPLACES) {
+        assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+          `${device} 保護フィルム 強化ガラス 覗き見防止`, `${marketplace}: ${query}`);
+      }
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [
