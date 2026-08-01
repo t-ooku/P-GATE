@@ -27,9 +27,14 @@ function deviceName(query) {
 
 function specificationTokens(query) {
   const matches = query.match(
-    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|m|インチ|inch))/giu
+    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}\s*(?:mm|cm|m|インチ|inch)|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|インチ|inch|リットル|オンス|升|毫升|리터|온스))/giu
   ) || [];
-  return [...new Set(matches.map((value) => value.replace(/\s+/g, '').replace(/^usb-c$/iu, 'USB-C')))].slice(0, 4);
+  return [...new Set(matches.map((value) => value.replace(/\s+/g, '')
+    .replace(/[×]/gu, 'x')
+    .replace(/^usb-c$/iu, 'USB-C')
+    .replace(/リットル|升|리터$/u, 'L')
+    .replace(/オンス|온스$/u, 'oz')
+    .replace(/毫升$/u, 'ml')))].slice(0, 4);
 }
 
 export function buildDeviceAccessorySearchKeywords(query) {
@@ -46,10 +51,17 @@ export function buildDeviceAccessorySearchKeywords(query) {
     : `${device} ${label}`;
   const specifications = specificationTokens(normalized)
     .filter((token) => !base.toLowerCase().includes(token.toLowerCase()));
-  return [base, ...specifications].join(' ');
+  const materials = matchedMaterials(normalized)
+    .filter((token) => !(label === '保護フィルム' && token === 'ガラス'));
+  const attributes = matchedAttributes(normalized)
+    .filter((token) => token === '透明' && !materials.includes(token));
+  const conditions = [...new Set([...specifications, ...materials, ...attributes])].slice(0, 3);
+  return [base, ...conditions].join(' ');
 }
 
 const GENERIC_PRODUCTS = [
+  ['バックパック', /(?:リュック|バックパック|backpack|rucksack|背包|双肩包|雙肩包|백팩|배낭)/iu],
+  ['カメラフィルター', /(?:カメラ|レンズ|camera|lens|相机|相機|镜头|鏡頭|카메라|렌즈).{0,16}(?:フィルター|filters?|滤镜|濾鏡|필터)/iu],
   ['収納ボックス', /(?:収納(?:ボックス|ケース|箱)|整理(?:ボックス|ケース)|storage\s*(?:box|container)|organizer|收纳盒|收納盒|수납함)/iu],
   ['ペット給水器', /(?:ペット|犬|猫).{0,10}(?:給水|水飲み)|pet\s*(?:water\s*)?fountain|반려동물\s*급수기|宠物饮水机|寵物飲水機/iu],
   ['加湿器', /(?:加湿器|humidifier|加湿机|加濕器|가습기)/iu],
@@ -126,6 +138,16 @@ const GENERIC_ATTRIBUTES = [
   ['韓国風', /(?:韓国っぽい|韓国風|韓国系|韓国の|korean\s*(?:style|look)|韩系|韓系|한국풍|한국\s*스타일)/iu],
 ];
 
+const GENERIC_MATERIALS = [
+  ['革', /(?:革|レザー|\bleather\b|皮革|真皮|가죽)/iu],
+  ['ナイロン', /(?:ナイロン|\bnylon\b|尼龙|尼龍|나일론)/iu],
+  ['ガラス', /(?:ガラス|\bglass\b|玻璃|유리)/iu],
+  ['布', /(?:布(?=製|地|の)|生地|ファブリック|\bfabric\b|\bcloth\b|布艺|布藝|패브릭|천)/iu],
+  ['金属', /(?:金属|メタル|スチール|\bmetal\b|\bsteel\b|金属|金屬|금속|메탈)/iu],
+  ['木製', /(?:木製|木目|\bwood(?:en)?\b|木质|木質|원목|나무)/iu],
+  ['シリコン', /(?:シリコン|\bsilicone\b|硅胶|矽膠|실리콘)/iu],
+];
+
 function isNegatedAttribute(query, pattern) {
   const match = query.match(pattern);
   if (!match || match.index == null) return false;
@@ -134,6 +156,22 @@ function isNegatedAttribute(query, pattern) {
   const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
   const negatedAfter = /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける?|而不是|말고|아닌|아니고|제외)/iu.test(after);
   return negatedBefore || negatedAfter;
+}
+
+function matchedMaterials(query) {
+  return GENERIC_MATERIALS
+    .filter(([, pattern]) => pattern.test(query) && !isNegatedAttribute(query, pattern))
+    .map(([label]) => label);
+}
+
+function matchedAttributes(query) {
+  return GENERIC_ATTRIBUTES
+    .filter(([, pattern]) => pattern.test(query) && !isNegatedAttribute(query, pattern))
+    .map(([label]) => label)
+    .filter((label, index, values) =>
+      (label !== 'ワイヤレス' || !values.includes('完全ワイヤレス'))
+      && values.indexOf(label) === index
+    );
 }
 
 function compactUnknownSearchPhrase(normalized) {
@@ -156,23 +194,26 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (!normalized) return '';
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
-  const products = GENERIC_PRODUCTS
+  let products = GENERIC_PRODUCTS
     .filter(([, pattern]) => pattern.test(normalized) && !isNegatedAttribute(normalized, pattern))
     .map(([label]) => label)
     .filter((label, index, values) => values.indexOf(label) === index);
+  if (products.includes('バックパック')) products = products.filter((label) => label !== 'バッグ');
   if (!products.length) return compactUnknownSearchPhrase(normalized);
-  const attributes = GENERIC_ATTRIBUTES
-    .filter(([, pattern]) => pattern.test(normalized) && !isNegatedAttribute(normalized, pattern))
-    .map(([label]) => label)
-    .filter((label, index, values) =>
-      (label !== 'ワイヤレス' || !values.includes('完全ワイヤレス'))
-      && !products.some((product) => product.includes(label))
-    );
+  const materials = matchedMaterials(normalized);
+  const attributes = matchedAttributes(normalized)
+    .filter((label) => !products.some((product) => product.includes(label)));
+  const specifications = specificationTokens(normalized);
   const limit = marketplace === 'QOO10_JP' ? 3 : 6;
   const productLimit = Math.min(products.length, 2);
   const attributeLimit = Math.max(0, limit - productLimit);
+  const conditions = [...new Set([
+    ...specifications,
+    ...materials,
+    ...attributes,
+  ])].slice(0, attributeLimit);
   return [...new Set([
-    ...attributes.slice(0, attributeLimit),
+    ...conditions,
     ...products.slice(0, productLimit),
   ])].join(' ');
 }

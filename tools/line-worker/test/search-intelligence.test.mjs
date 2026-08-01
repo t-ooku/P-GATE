@@ -108,6 +108,44 @@ test('日英中韓の否定カテゴリと否定色をFTS必須条件へ混入�
   assert.match(material, /\"fabric shade\"\*/);
 });
 
+test('4言語の素材・互換機種・容量寸法を商品カテゴリと同時に保持する', () => {
+  for (const query of [
+    '黒い20Lのナイロン製自転車バックパック、革ではない',
+    'a black 20 L nylon cycling backpack, not leather',
+    '黑色20升尼龙骑行背包，不要皮革',
+    '검은색 20리터 나일론 자전거 백팩, 가죽 말고',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /\"backpack\"\*/);
+    assert.match(expression, /\"nylon\"\*/);
+    assert.match(expression, /\"20(?:l)?\"\*/);
+    assert.doesNotMatch(expression, /\"leather\"\*/);
+  }
+
+  for (const query of [
+    'iPhone 15用の透明シリコンケース、革ではない',
+    'a clear silicone case for iPhone 15, not leather',
+    'iPhone 15透明硅胶手机壳，不要皮革',
+    '가죽 말고 iPhone 15용 투명 실리콘 케이스',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /\"phone\"\*/);
+    assert.match(expression, /\"silicone\"\*/);
+    assert.match(expression, /\"clear\"\*/);
+    assert.match(expression, /\"15\"\*/);
+    assert.doesNotMatch(expression, /\"leather\"\*/);
+  }
+
+  const filter = intelligentFtsQuery('52mmのガラス製カメラフィルター');
+  assert.match(filter, /\"filter\"\*/);
+  assert.match(filter, /\"glass\"\*/);
+  assert.match(filter, /\"52\"\*/);
+
+  const organizer = intelligentFtsQuery('10×5×6インチの木製収納ボックス');
+  assert.match(organizer, /\"storage\"\*/);
+  assert.match(organizer, /\"wood\"\*/);
+});
+
 test('Japanese memory fragments expand into category and color FTS groups', () => {
   const query = intelligentFtsQuery('茶色い革ベルトと金属ケースの男性用腕時計');
   assert.match(query, /"watch"\*/);

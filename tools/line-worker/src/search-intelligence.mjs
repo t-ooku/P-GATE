@@ -11,12 +11,12 @@ const RULES = [
   ['steam-engine-model',/(蒸気機関車|steam\s+(?:engine|locomotive)|蒸汽机车|蒸汽機車|증기\s*기관차)/iu,['steam engine','locomotive']],
   ['candle',/(キャンドル|ろうそく|蝋燭|candle|soy candle|(?:火をつける.*匂い|匂い.{0,16}火をつける)|蜡烛|蠟燭|大豆蜡烛|大豆蠟燭|(?:香味.{0,12}点火|香味.{0,12}點火)|캔들|소이 캔들|향기.{0,12}불을\s*붙)/iu,['candle','soy']],
   ['earphones',/(イヤホン|イヤーバッド|ヘッドホン|ear\s*buds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','ear','bud','headphone']],
-  ['backpack',/(リュック|バックパック|backpack|背負う)/iu,['backpack','rucksack']],
+  ['backpack',/(リュック|バックパック|backpack|rucksack|背負う|背包|双肩包|雙肩包|백팩|배낭)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
   ['charger',/(充電器|充電台|チャージャー|charg(?:er|ing\s+dock)|充电座|充電座|충전\s*(?:거치대|도크))/iu,['charger','charging']],
   ['dual-charger',/(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|듀얼).{0,12}충전/iu,['dual charger','dual charging']],
-  ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|(?:iphone|smartphone|phone).{0,16}(?:case|ケース)|手机壳|手机保护壳|(?:iPhone|手机|手機).{0,16}(?:壳|殼|保护壳|保護殼)|휴대폰 케이스|스마트폰 케이스|(?:iPhone|휴대폰|스마트폰).{0,16}케이스)/iu,['phone','case','cover','iphone','smartphone']],
+  ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|(?:iphone|smartphone|phone).{0,16}(?:case|ケース)|(?:case|ケース).{0,16}(?:iphone|smartphone|phone)|手机壳|手机保护壳|(?:iPhone|手机|手機).{0,16}(?:壳|殼|保护壳|保護殼)|(?:壳|殼|保护壳|保護殼).{0,16}(?:iPhone|手机|手機)|휴대폰 케이스|스마트폰 케이스|(?:iPhone|휴대폰|스마트폰).{0,16}케이스|케이스.{0,16}(?:iPhone|휴대폰|스마트폰))/iu,['phone','case','cover','iphone','smartphone']],
   ['light-up',/(光る|発光|\bLED\b|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
   ['camera-bag',/(カメラ(?:用)?(?:バッグ|ケース|ポーチ)|camera bag|camera case)/iu,['camera bag','camera case']],
   ['photo-printer',/(写真プリンター|フォトプリンター|スマホプリンター|photo printer|portable photo printer)/iu,['photo printer','portable printer']],
@@ -109,6 +109,26 @@ const COLOR_RULES = [
   [/(透明|クリア|clear|transparent|透明色|투명)/iu,['clear','transparent']]
 ];
 
+const MATERIAL_RULES = [
+  ['material-leather', /(?:革|レザー|\bleather\b|皮革|真皮|가죽)/iu, ['leather']],
+  ['material-nylon', /(?:ナイロン|\bnylon\b|尼龙|尼龍|나일론)/iu, ['nylon']],
+  ['material-glass', /(?:ガラス|\bglass\b|玻璃|유리)/iu, ['glass']],
+  ['material-fabric', /(?:布(?=製|地|の)|生地|ファブリック|\bfabric\b|\bcloth\b|布艺|布藝|패브릭|천)/iu, ['fabric','cloth']],
+  ['material-metal', /(?:金属|メタル|スチール|\bmetal\b|\bsteel\b|金屬|금속|메탈)/iu, ['metal','steel']],
+  ['material-wood', /(?:木製|木目|\bwood(?:en)?\b|木质|木質|원목|나무)/iu, ['wood','wooden']],
+  ['material-silicone', /(?:シリコン|\bsilicone\b|硅胶|矽膠|실리콘)/iu, ['silicone']],
+];
+
+const MATERIAL_CATEGORY_ALLOWLIST = new Map([
+  ['material-leather', new Set(['wallet', 'watch', 'backpack', 'bag'])],
+  ['material-nylon', new Set(['backpack', 'bag'])],
+  ['material-glass', new Set(['camera-filter'])],
+  ['material-fabric', new Set()],
+  ['material-metal', new Set()],
+  ['material-wood', new Set(['organizer', 'home-use'])],
+  ['material-silicone', new Set(['phone-case'])],
+]);
+
 const NEGATED_CATEGORY_TERMS = new Map([
   ['charger', /(?:充電器|チャージャー|charger|充电器|充電器|충전기)/iu],
   ['phone-case', /(?:スマホケース|携帯ケース|phone\s*case|iphone.{0,12}case|手机壳|手機殼|휴대폰\s*케이스|스마트폰\s*케이스)/iu],
@@ -184,6 +204,15 @@ export function semanticSearchGroups(value) {
     const terms = NEGATED_CATEGORY_TERMS.get(group.category);
     return !terms || !isOnlyNegated(text, terms);
   });
+  const productCategories = new Set(groups.map((group) => group.category));
+  groups.push(...MATERIAL_RULES
+    .filter(([category, pattern]) => {
+      const allowedCategories = MATERIAL_CATEGORY_ALLOWLIST.get(category);
+      return pattern.test(text)
+        && !isOnlyNegated(text, pattern)
+        && [...allowedCategories].some((allowed) => productCategories.has(allowed));
+    })
+    .map(([category,, terms]) => ({ category, terms })));
   const specificCategories = new Set(groups.map((group) => group.category));
   if (specificCategories.has('camera-bag')) groups = groups.filter((group) => group.category !== 'bag');
   if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');

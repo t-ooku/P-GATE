@@ -144,3 +144,25 @@ test("否定した商品種別と色を9モール検索語から除外する", (
   }
   assert.match(buildMarketplaceSearchKeywords('은색 지갑', 'QOO10_JP'), /シルバー 財布/);
 });
+
+test("4言語の素材・互換機種・容量寸法を9モールの検索語に保持する", () => {
+  const cases = [
+    ['黒い20Lのナイロン製自転車バックパック、革ではない', ['20L', 'ナイロン', 'バックパック'], ['革']],
+    ['a black 20 L nylon cycling backpack, not leather', ['20L', 'ナイロン', 'バックパック'], ['革']],
+    ['黑色20升尼龙骑行背包，不要皮革', ['20L', 'ナイロン', 'バックパック'], ['革']],
+    ['검은색 20리터 나일론 자전거 백팩, 가죽 말고', ['20L', 'ナイロン', 'バックパック'], ['革']],
+    ['iPhone 15用の透明シリコンケース、革ではない', ['シリコン', '透明', 'iPhone 15ケース'], ['革']],
+    ['a clear silicone case for iPhone 15, not leather', ['シリコン', '透明', 'iPhone 15ケース'], ['革']],
+    ['iPhone 15透明硅胶手机壳，不要皮革', ['シリコン', '透明', 'iPhone 15ケース'], ['革']],
+    ['가죽 말고 iPhone 15용 투명 실리콘 케이스', ['シリコン', '透明', 'iPhone 15ケース'], ['革']],
+    ['52mmのガラス製カメラフィルター', ['52mm', 'ガラス', 'カメラフィルター'], []],
+    ['10×5×6インチの木製収納ボックス', ['10x5x6インチ', '木製', '収納ボックス'], []],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, required, forbidden] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      for (const token of required) assert.ok(keywords.includes(token), `${marketplace}: ${input} -> ${keywords}`);
+      for (const token of forbidden) assert.ok(!keywords.includes(token), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
