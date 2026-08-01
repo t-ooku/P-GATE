@@ -1047,7 +1047,7 @@ function isGamingLaptopMismatch(candidate, requested) {
 function nasConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   return {
-    nas: /(?:\bNAS\b|network\s*attached\s*storage|网络附加存储|網路附加儲存|네트워크\s*결합\s*스토리지)/iu.test(text),
+    nas: /(?:\bNAS\b|network\s*attached\s*storage|网络附加存储|網路附加儲存|네트워크\s*결합\s*스토리지|家族.{0,8}写真.{0,8}動画.{0,20}安全に保存.{0,20}複数端末.{0,16}高速|safe\s*place.{0,12}family\s*photos.{0,8}videos.{0,24}fast\s*access.{0,24}multiple\s*devices|全家照片视频.{0,16}集中安全保存.{0,20}多台设备.{0,16}高速访问|가족\s*사진.{0,8}영상.{0,20}안전하게\s*저장.{0,20}여러\s*기기.{0,16}빠르게)/iu.test(text),
     bays: text.match(/\b(\d{1,2})[\s-]*(?:ベイ|bay(?:s)?|盘位|盤位|베이)/iu)?.[1] || '',
     network: text.match(/\b(\d(?:\.\d)?)\s*GbE\b/iu)?.[1] || '',
     ram: text.match(/\b(\d{1,3})\s*GB\s*(?:RAM|メモリ|内存|記憶體|램)/iu)?.[1] || '',

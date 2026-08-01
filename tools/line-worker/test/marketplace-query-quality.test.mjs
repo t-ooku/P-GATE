@@ -549,6 +549,10 @@ test('NAS本体はベイ数・通信速度・メモリ・キャッシュ・デ�
     '4-bay NAS 2.5GbE 8GB RAM NVMe cache diskless',
     '4盘位 NAS 2.5GbE 8GB内存 NVMe缓存 无盘',
     '4베이 NAS 2.5GbE 8GB 램 NVMe 캐시 디스크리스',
+    '家族の写真や動画をまとめて安全に保存し複数端末から高速で使いたい 4ベイ 2.5GbE 8GBメモリ NVMeキャッシュ ディスクレス',
+    'want one safe place for family photos and videos with fast access from multiple devices 4-bay 2.5GbE 8GB RAM NVMe cache diskless',
+    '想把全家照片视频集中安全保存并从多台设备高速访问 4盘位 2.5GbE 8GB内存 NVMe缓存 无盘',
+    '가족 사진과 영상을 한곳에 안전하게 저장하고 여러 기기에서 빠르게 쓰고 싶어 4베이 2.5GbE 8GB 램 NVMe 캐시 디스크리스',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {
