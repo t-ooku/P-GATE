@@ -768,6 +768,31 @@ test('光るスマホケースは初回提示から一般ケース・LED照明�
   }
 });
 
+test('タブレット専用アクセサリーは4言語で汎用品や別端末向け商品を除外する', () => {
+  const cases = [
+    ['タブレット用Bluetoothキーボード', 'KEYBOARD'],
+    ['tablet screen protector', 'PROTECTOR'],
+    ['平板电脑充电器', 'CHARGER'],
+    ['태블릿용 블루투스 키보드', 'KEYBOARD'],
+  ];
+  const candidates = [
+    { asin: 'KEYBOARD', product_name: 'iPad Tablet Bluetooth Keyboard' },
+    { asin: 'PROTECTOR', product_name: 'タブレット用 強化ガラス 保護フィルム' },
+    { asin: 'CHARGER', product_name: '平板电脑 USB-C 充电器 Power Adapter' },
+    { asin: 'GENERICKEY', product_name: 'Bluetooth Wireless Keyboard for Windows PC' },
+    { asin: 'PHONEFILM', product_name: 'iPhone Tempered Glass Screen Protector' },
+    { asin: 'LAPTOPAC', product_name: 'USB-C Laptop Charger Power Adapter' },
+    { asin: 'TABLETCASE', product_name: 'Tablet Protective Case Cover' },
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      [expected],
+      query
+    );
+  }
+});
+
 test('スマホケースは初回から対応機種と光り方を提案する', async () => {
   const result = await applyIndexedSearchPolicy(
     { query_id: 'phone-case-q', candidates: [
@@ -1318,5 +1343,120 @@ test('タブレット保護フィルム・充電器を4言語で本体FTSカテ�
     assert.match(query, new RegExp(`"${category}"\\*`), input);
     assert.match(query, new RegExp(`"${condition.replace('.', '\\.') }"\\*`), input);
     assert.doesNotMatch(query, /^"tablet"\*|\("tablet"\*\)/, input);
+  }
+});
+
+test('iPad Air・Proのアクセサリー意図と画面サイズを4言語で保持する', () => {
+  const cases = [
+    ['iPad Air 11インチ用キーボードケース', 'tablet-keyboard', 'tablet keyboard', '11'],
+    ['keyboard case for iPad Pro 13-inch', 'tablet-keyboard', 'tablet keyboard', '13'],
+    ['iPad Air 11英寸键盘保护套', 'tablet-keyboard', 'tablet keyboard', '11'],
+    ['아이패드 프로 13인치 키보드 케이스', 'tablet-keyboard', 'tablet keyboard', '13'],
+    ['iPad Air 11インチ用保護フィルム', 'tablet-screen-protector', 'tablet screen protector', '11'],
+    ['USB-C charger for iPad Pro', 'tablet-charger', 'tablet charger', 'usb-c'],
+  ];
+  for (const [input, category, productTerm, condition] of cases) {
+    assert.deepEqual(semanticSearchGroups(input).map((group) => group.category), [category], input);
+    const query = intelligentFtsQuery(input);
+    assert.match(query, new RegExp(`"${productTerm}"\\*`), input);
+    assert.match(query, new RegExp(`"${condition}"\\*`, 'i'), input);
+    assert.doesNotMatch(query, /^"tablet"\*|\("tablet"\*\)/, input);
+  }
+});
+
+test('Apple Pencil本体・交換ペン先・充電用品を4言語で分離する', () => {
+  const cases = [
+    ['Apple Pencil 第2世代 iPad Pro用', 'tablet-stylus', 'apple pencil'],
+    ['2nd generation Apple Pencil for iPad Pro', 'tablet-stylus', 'apple pencil'],
+    ['iPad Pro用Apple Pencil交換ペン先', 'tablet-stylus-tip', 'apple pencil tips'],
+    ['iPad Pro Apple Pencil替换笔尖', 'tablet-stylus-tip', 'apple pencil tips'],
+    ['아이패드 프로 애플펜슬 교체 펜촉', 'tablet-stylus-tip', 'apple pencil tips'],
+    ['USB-C Apple Pencil charging adapter', 'tablet-stylus-charger', 'apple pencil charger'],
+  ];
+  for (const [input, category, productTerm] of cases) {
+    assert.deepEqual(semanticSearchGroups(input).map((group) => group.category), [category], input);
+    assert.match(intelligentFtsQuery(input), new RegExp(`"${productTerm}"\\*`), input);
+  }
+});
+
+test('Apple Pencil検索は商品種別が異なる候補を初回表示から除外する', () => {
+  const candidates = [
+    { asin: 'PENCIL', product_name: 'Apple Pencil 第2世代 iPad Pro対応 スタイラス' },
+    { asin: 'TIPS', product_name: 'Apple Pencil 交換ペン先 Replacement Tips 4個' },
+    { asin: 'CHARGER', product_name: 'Apple Pencil USB-C 充電アダプター' },
+    { asin: 'GENERIC', product_name: 'タブレット用 汎用スタイラスペン' },
+    { asin: 'IPAD', product_name: 'Apple iPad Pro 11インチ 本体' },
+  ];
+  assert.deepEqual(filterCategoryMismatches('Apple Pencil 第2世代 iPad Pro用', candidates).map((item) => item.asin), ['PENCIL']);
+  assert.deepEqual(filterCategoryMismatches('iPad Pro用Apple Pencil交換ペン先', candidates).map((item) => item.asin), ['TIPS']);
+  assert.deepEqual(filterCategoryMismatches('USB-C Apple Pencil charging adapter', candidates).map((item) => item.asin), ['CHARGER']);
+});
+
+test('Apple Pencilの世代指定は4言語で一致する候補だけを表示する', () => {
+  const cases = [
+    ['Apple Pencil 第2世代 iPad Pro用', 'Apple Pencil 第2世代 iPad Pro対応'],
+    ['2nd generation Apple Pencil for iPad Pro', 'Apple Pencil 2nd generation for iPad Pro'],
+    ['iPad Pro Apple Pencil 第2代', 'iPad Pro Apple Pencil 第2代'],
+    ['아이패드 프로 애플펜슬 2세대', '아이패드 프로 애플펜슬 2세대'],
+  ];
+  for (const [query, matchingName] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: matchingName },
+      { asin: 'GEN1', product_name: 'Apple Pencil 第1世代 iPad対応' },
+      { asin: 'GEN3', product_name: 'Apple Pencil 第3世代 iPad対応' },
+      { asin: 'UNKNOWN', product_name: 'Apple Pencil iPad対応 スタイラス' },
+      { asin: 'GENERIC', product_name: 'タブレット用 第2世代 汎用スタイラス' },
+    ];
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['MATCH'],
+      query
+    );
+  }
+});
+
+test('iPadアクセサリーはモデルと画面サイズが一致する候補だけを表示する', () => {
+  const cases = [
+    ['iPad Air 11インチ用キーボードケース', 'iPad Air 11インチ キーボードケース'],
+    ['iPad Pro 13-inch screen protector', 'iPad Pro 13-inch screen protector'],
+    ['iPad Air 11英寸键盘保护套', 'iPad Air 11英寸键盘保护套'],
+    ['아이패드 프로 13인치 액정 보호 필름', '아이패드 프로 13인치 액정 보호 필름'],
+  ];
+  for (const [query, matchingName] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: matchingName },
+      { asin: 'WRONGMODEL', product_name: 'iPad Pro 11インチ キーボードケース 保護フィルム' },
+      { asin: 'WRONGSIZE', product_name: 'iPad Air 13インチ キーボードケース 保護フィルム' },
+      { asin: 'GENERIC', product_name: 'iPad用 キーボードケース 保護フィルム' },
+      { asin: 'PHONE', product_name: 'iPhone 11インチ風 ケース 保護フィルム' },
+    ];
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['MATCH'],
+      query
+    );
+  }
+});
+
+test('iPad世代指定ケースは4言語で一致世代だけを表示する', () => {
+  const cases = [
+    ['iPad 第10世代 ケース', 'iPad 第10世代 ケース'],
+    ['iPad 10th generation case', 'iPad 10th generation case'],
+    ['iPad 第10代保护套', 'iPad 第10代保护套'],
+    ['아이패드 10세대 케이스', '아이패드 10세대 케이스'],
+  ];
+  for (const [query, matchingName] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: matchingName },
+      { asin: 'GEN9', product_name: 'iPad 第9世代 ケース' },
+      { asin: 'GEN11', product_name: 'iPad 第11世代 ケース' },
+      { asin: 'UNKNOWN', product_name: 'iPad ケース' },
+      { asin: 'TABLET', product_name: '10世代 タブレット 汎用ケース' },
+    ];
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['MATCH'],
+      query
+    );
   }
 });

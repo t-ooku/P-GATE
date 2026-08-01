@@ -323,6 +323,85 @@ function isLightUpPhoneCaseMismatch(candidate) {
   return category !== 'phone-case' || !hasLightUpEvidence;
 }
 
+function tabletModel(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const latin = value.match(/\bipad\s*(air|pro|mini)\b/u);
+  if (latin) return latin[1];
+  const localized = value.match(/(?:アイパッド|아이패드)\s*(エア|プロ|에어|프로|미니)/u);
+  if (!localized) return '';
+  if (/(?:エア|에어)/u.test(localized[1])) return 'air';
+  if (/(?:プロ|프로)/u.test(localized[1])) return 'pro';
+  return 'mini';
+}
+
+function tabletScreenSize(text) {
+  return String(text || '').normalize('NFKC')
+    .match(/(\d{1,2}(?:\.\d+)?)[-\s]*(?:インチ|inch(?:es)?|英寸|인치)/iu)?.[1] || '';
+}
+
+function tabletGeneration(text) {
+  const match = String(text || '').normalize('NFKC')
+    .match(/(?:第\s*(\d{1,2})\s*世代|(\d{1,2})(?:st|nd|rd|th)?\s*(?:generation|gen)|第\s*(\d{1,2})\s*代|(\d{1,2})\s*세대)/iu);
+  return match?.[1] || match?.[2] || match?.[3] || match?.[4] || '';
+}
+
+function tabletAccessoryEvidence(candidate) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  return {
+    compatible: /(?:tablet|ipad|タブレット|アイパッド|平板(?:电脑|電腦)?|태블릿|아이패드)/u.test(text),
+    case: /(?:case|cover|ケース|カバー|保护套|保護套|케이스|커버)/u.test(text),
+    keyboard: /(?:keyboard|キーボード|键盘|鍵盤|키보드)/u.test(text),
+    screenProtector: /(?:screen\s*protector|protective\s*film|tempered\s*glass|保護フィルム|保护膜|保護膜|钢化膜|鋼化膜|보호\s*필름|강화\s*유리)/u.test(text),
+    charger: /(?:charger|power\s*adapter|charging\s*adapter|充電器|充电器|充電アダプター|充电转接器|充電轉接器|電源適配器|电源适配器|충전기|충전\s*어댑터)/u.test(text),
+    stylus: /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬|stylus|スタイラス|触控笔|觸控筆|스타일러스)/u.test(text),
+    stylusTip: /(?:replacement\s*(?:tips?|nibs?)|交換\s*ペン先|替え芯|替换笔尖|替換筆尖|교체\s*펜촉|펜촉)/u.test(text),
+    applePencil: /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬)/u.test(text),
+    pencilGeneration: applePencilGeneration(text),
+    tabletModel: tabletModel(text),
+    tabletScreenSize: tabletScreenSize(text),
+    tabletGeneration: tabletGeneration(text)
+  };
+}
+
+function applePencilGeneration(text) {
+  const match = String(text || '').normalize('NFKC')
+    .match(/(?:第\s*([123])\s*世代|([123])(?:st|nd|rd|th)?\s*(?:generation|gen)|第\s*([123])\s*代|([123])\s*세대)/iu);
+  return match?.[1] || match?.[2] || match?.[3] || match?.[4] || '';
+}
+
+function isTabletAccessoryMismatch(
+  candidate,
+  requested,
+  applePencilIntent = false,
+  requestedGeneration = '',
+  tabletConstraints = {}
+) {
+  const evidence = tabletAccessoryEvidence(candidate);
+  if (requestedGeneration && evidence.pencilGeneration !== requestedGeneration) return true;
+  if (requested.has('tablet-stylus-tip')) return !(evidence.applePencil && evidence.stylusTip);
+  if (requested.has('tablet-stylus-charger')) return !(evidence.applePencil && evidence.charger);
+  if (requested.has('tablet-stylus')) {
+    if (evidence.stylusTip || (evidence.applePencil && evidence.charger)) return true;
+    return !evidence.stylus || !(evidence.compatible || evidence.applePencil) ||
+      (applePencilIntent && !evidence.applePencil);
+  }
+  if (!evidence.compatible) return true;
+  const deviceSpecific = ['tablet-case', 'tablet-keyboard', 'tablet-screen-protector']
+    .some((category) => requested.has(category));
+  if (deviceSpecific) {
+    if (tabletConstraints.model && evidence.tabletModel !== tabletConstraints.model) return true;
+    if (tabletConstraints.screenSize && evidence.tabletScreenSize !== tabletConstraints.screenSize) return true;
+    if (tabletConstraints.generation && evidence.tabletGeneration !== tabletConstraints.generation) return true;
+  }
+  if (requested.has('tablet-case')) return !evidence.case;
+  if (requested.has('tablet-keyboard')) return !evidence.keyboard;
+  if (requested.has('tablet-screen-protector')) return !evidence.screenProtector;
+  if (requested.has('tablet-charger')) return !evidence.charger;
+  return false;
+}
+
 export function filterCategoryMismatches(query, candidates = []) {
   const groups = semanticSearchGroups(query);
   const requested = new Set(groups
@@ -332,10 +411,32 @@ export function filterCategoryMismatches(query, candidates = []) {
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = requested.has('phone-case') && groups.some((group) => group.category === 'light-up');
+  const tabletAccessory = [
+    'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
+    'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
+  ]
+    .some((category) => requested.has(category));
+  const applePencilIntent = /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬)/iu
+    .test(String(query || '').normalize('NFKC'));
+  const requestedGeneration = applePencilGeneration(query);
+  const tabletConstraints = {
+    model: tabletModel(query),
+    screenSize: tabletScreenSize(query),
+    generation: tabletGeneration(query)
+  };
   return candidates.filter((candidate) => {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate)) return false;
+    if (tabletAccessory) {
+      return !isTabletAccessoryMismatch(
+        candidate,
+        requested,
+        applePencilIntent,
+        requestedGeneration,
+        tabletConstraints
+      );
+    }
     const category = inferCandidateCategory(candidate);
     return category === 'other' || requested.has(category);
   });

@@ -7,8 +7,8 @@ const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), '
 test('discovery collage is lightweight, localized, accessible, and cached', async () => {
   const styles = await read('styles.css');
   const [html, app, discoveryActions, css, wishCss, sw, i18n, desktop, mobile] = await Promise.all([
-    read('index.html'), read('app.js'), read('discovery-actions.mjs'), read('discovery.css'), read('wish-carousel.css'),
-    read('service-worker.js'), read('site-i18n.js'),
+    read('index.html'), read('app.js'), read('discovery-actions.mjs'), read('discovery.css'),
+    read('wish-carousel.css'), read('service-worker.js'), read('site-i18n.js'),
     stat(new URL('../public/hoshilu-discovery-collage.webp', import.meta.url)),
     stat(new URL('../public/hoshilu-discovery-collage-mobile.webp', import.meta.url)),
   ]);
@@ -29,7 +29,8 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v113/);
+  assert.match(sw, /hoshilu-shell-v116/);
+  assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
   assert.match(html, /href="https:\/\/x\.com\/iCHMR81Lv4VYJYG"/);
@@ -40,7 +41,6 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(i18n, /HOSHILU 官方账号/);
   assert.match(i18n, /HOSHILU 공식 계정/);
   assert.match(sw, /marketplace-search-keywords-v2\.mjs/);
-  assert.match(sw, /discovery-actions\.mjs/);
   assert.match(app, /buildMarketplaceSearchKeywords/);
   assert.match(sw, /if \(response\.ok\)/);
   assert.match(sw, /url\.pathname\.startsWith\('\/api\/'\)/);
@@ -85,7 +85,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /String\(elements\.query\.value\|\|result\?\.search_keywords/);
   assert.match(app, /replace\(\/\(\?:で探す\|で検索\)\$\/u/);
   assert.match(styles, /@media\(max-width:760px\)\{\.marketplace-links\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(discoveryActions, /https:\/\/www\.swippitt\.net\//);
+  assert.match(discoveryActions, /https:\/\/(?:www\.)?swippitt\.net\//);
   assert.match(discoveryActions, /function swippittDiscoveryMatch/);
   assert.match(app, /これですか？↓/);
   assert.match(discoveryActions, /static\.wixstatic\.com\/media\/494321_/);
@@ -96,7 +96,10 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /font-size: clamp\(44px, 5vw, 68px\)/);
   assert.match(sw, /hoshilu-discovery-collage\.webp/);
   assert.match(html, /id="journeyTitle"><span>検索する前に、<\/span><span>ホシルに話す。<\/span>/);
-  assert.match(html, /確認済み商品ページへ直接案内。通常は主要5モール、ファッションは最大10モールで探せます。/);
+  assert.match(html, /商品ページへ直接リンク。主要5モール、ファッション含めて最大10モールで探せます。/);
+  assert.match(html, /id="journeyStep3Body" hidden><\/p>/);
+  assert.doesNotMatch(html, /確認済み商品ページへ直接案内/);
+  assert.match(app, /actionCopy\[language\]\.journey\[7\]=''/);
   assert.match(app, /Talk to HOSHILU before you search/);
   assert.match(app, /elements\.journey\.forEach/);
   assert.match(app, /copySearchKeywords/);

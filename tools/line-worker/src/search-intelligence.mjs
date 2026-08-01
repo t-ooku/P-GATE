@@ -47,13 +47,15 @@ const RULES = [
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
   ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer|笔记本电脑|筆記型電腦|노트북)/iu,['laptop','notebook computer']],
-  ['tablet-case',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:ケース|カバー|スリーブ|case|cover|sleeve|保护套|保護套|케이스|커버))/iu,['tablet case','tablet cover']],
+  ['tablet-case',/(?:(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿).{0,24}(?:ケース|カバー|スリーブ|case|cover|sleeve|保护套|保護套|케이스|커버))/iu,['tablet case','tablet cover']],
   ['tablet-stand',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['tablet stand']],
-  ['tablet-stylus',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,16}(?:スタイラス|ペン|stylus|触控笔|觸控筆|스타일러스\s*펜)|(?:スタイラス|stylus|触控笔|觸控筆|스타일러스\s*펜).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet stylus','stylus pen']],
-  ['tablet-keyboard',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:キーボード|keyboard|键盘|鍵盤|키보드)|(?:キーボード|keyboard|键盘|鍵盤|키보드).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet keyboard','bluetooth keyboard','wireless keyboard']],
-  ['tablet-screen-protector',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:保護フィルム|画面フィルム|ガラスフィルム|screen\s*protector|protective\s*film|tempered\s*glass|保护膜|保護膜|钢化膜|鋼化膜|액정\s*보호\s*필름|보호\s*필름|강화\s*유리))/iu,['tablet screen protector','tempered glass']],
-  ['tablet-charger',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,18}(?:充電器|充電アダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|충전\s*어댑터)|(?:充電器|充電アダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|충전\s*어댑터).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet charger','power adapter','usb-c']],
-  ['tablet',/(?:タブレット|\btablet\b|平板电脑|平板電腦|태블릿)/iu,['tablet']],
+  ['tablet-stylus-tip',/(?:(?:Apple\s*Pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬).{0,20}(?:交換\s*ペン先|替え芯|replacement\s*(?:tips?|nibs?)|替换笔尖|替換筆尖|교체\s*펜촉|펜촉)|(?:交換\s*ペン先|替え芯|replacement\s*(?:tips?|nibs?)|替换笔尖|替換筆尖|교체\s*펜촉|펜촉).{0,20}(?:Apple\s*Pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬))/iu,['apple pencil tips','replacement nibs']],
+  ['tablet-stylus-charger',/(?:(?:Apple\s*Pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬).{0,24}(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|充电转接器|充電轉接器|충전기|충전\s*어댑터)|(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|充电转接器|充電轉接器|충전기|충전\s*어댑터).{0,24}(?:Apple\s*Pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬))/iu,['apple pencil charger','charging adapter']],
+  ['tablet-stylus',/(?:(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿).{0,30}(?:Apple\s*Pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬|スタイラス|ペン|stylus|触控笔|觸控筆|스타일러스\s*펜)|(?:Apple\s*Pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬|スタイラス|stylus|触控笔|觸控筆|스타일러스\s*펜).{0,30}(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿)|(?:Apple\s*Pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬))/iu,['tablet stylus','apple pencil','stylus pen']],
+  ['tablet-keyboard',/(?:(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿).{0,30}(?:キーボード|keyboard|键盘|鍵盤|키보드)|(?:キーボード|keyboard|键盘|鍵盤|키보드).{0,30}(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet keyboard','bluetooth keyboard','wireless keyboard']],
+  ['tablet-screen-protector',/(?:(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿).{0,30}(?:保護フィルム|画面フィルム|ガラスフィルム|screen\s*protector|protective\s*film|tempered\s*glass|保护膜|保護膜|钢化膜|鋼化膜|액정\s*보호\s*필름|보호\s*필름|강화\s*유리))/iu,['tablet screen protector','tempered glass']],
+  ['tablet-charger',/(?:(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿).{0,30}(?:充電器|充電アダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|충전\s*어댑터)|(?:充電器|充電アダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|충전\s*어댑터).{0,30}(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet charger','power adapter','usb-c']],
+  ['tablet',/(?:タブレット|\bipad\b|アイパッド|苹果平板|蘋果平板|아이패드|\btablet\b|平板电脑|平板電腦|태블릿)/iu,['tablet']],
   ['notebook',/(ノート(?!パソコン|PC)|手帳|罫線|notebook(?! computer)|文房具.*四角)/iu,['notebook','ruled']],
   ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기)/iu,['harmonica']],
   ['harmonica-c-minor',/(?:C|シー)[\s-]*(?:マイナー|minor)/iu,['c minor']],
@@ -263,8 +265,10 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('laptop-charger')) groups = groups.filter((group) => !['laptop','charger','adapter'].includes(group.category));
   if (specificCategories.has('tablet-case')) groups = groups.filter((group) => group.category !== 'tablet');
   if (specificCategories.has('tablet-stand')) groups = groups.filter((group) => group.category !== 'tablet');
+  if (specificCategories.has('tablet-stylus-tip')) groups = groups.filter((group) => !['tablet','tablet-stylus'].includes(group.category));
+  if (specificCategories.has('tablet-stylus-charger')) groups = groups.filter((group) => !['tablet','tablet-stylus','charger','adapter'].includes(group.category));
   if (specificCategories.has('tablet-stylus')) groups = groups.filter((group) => group.category !== 'tablet');
-  if (specificCategories.has('tablet-keyboard')) groups = groups.filter((group) => !['tablet','keyboard'].includes(group.category));
+  if (specificCategories.has('tablet-keyboard')) groups = groups.filter((group) => !['tablet','tablet-case','keyboard'].includes(group.category));
   if (specificCategories.has('tablet-screen-protector')) groups = groups.filter((group) => group.category !== 'tablet');
   if (specificCategories.has('tablet-charger')) groups = groups.filter((group) => !['tablet','charger','adapter'].includes(group.category));
   if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');

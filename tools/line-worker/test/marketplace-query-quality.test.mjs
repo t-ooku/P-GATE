@@ -636,3 +636,35 @@ test("タブレット用キーボード・保護フィルム・充電器を4言�
     }
   }
 });
+
+test('iPad Air・Proのモデルと画面サイズを4言語のモール検索語に保持する', () => {
+  const cases = [
+    ['iPad Air 11インチ用キーボードケース', /iPad Air キーボードケース 11インチ/],
+    ['keyboard case for iPad Pro 13-inch', /iPad Pro キーボードケース 13インチ/],
+    ['iPad Air 11英寸键盘保护套', /iPad Air キーボードケース 11インチ/],
+    ['아이패드 프로 13인치 키보드 케이스', /iPad Pro キーボードケース 13インチ/],
+    ['iPad Air 11インチ用保護フィルム', /iPad Air 保護フィルム 11インチ/],
+    ['USB-C charger for iPad Pro', /iPad Pro 充電器 USB-C/],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.match(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('Apple Pencilの世代・交換ペン先・充電用品を全モール向けに分離する', () => {
+  const cases = [
+    ['Apple Pencil 第2世代 iPad Pro用', 'iPad Pro Apple Pencil 第2世代'],
+    ['2nd generation Apple Pencil for iPad Pro', 'iPad Pro Apple Pencil 第2世代'],
+    ['iPad Pro用Apple Pencil交換ペン先', 'iPad Pro Apple Pencil 交換ペン先'],
+    ['iPad Pro Apple Pencil替换笔尖', 'iPad Pro Apple Pencil 交換ペン先'],
+    ['아이패드 프로 애플펜슬 교체 펜촉', 'iPad Pro Apple Pencil 交換ペン先'],
+    ['USB-C Apple Pencil charging adapter', 'Apple Pencil 充電アダプター USB-C'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});

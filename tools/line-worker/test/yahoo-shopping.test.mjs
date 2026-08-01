@@ -38,6 +38,8 @@ test('LP・検索フォールバック・SALE RADARを10モール表記へ統一
   assert.match(app, /marketplace:'YAHOO_JP'.+shopping\.yahoo\.co\.jp\/search/);
   assert.match(coverage, /Up to 10 marketplaces/);
   assert.match(sales, /掲載10モール/);
+  assert.match(sales, /\['YAHOO_JP','Yahoo!ショッピング'\]/);
+  assert.match(sales, /preference\.marketplaces==='ALL'\?marketplaces\.map/);
   assert.equal(SALE_MARKETPLACES.length, 10);
   assert.equal(SALE_MARKETPLACES.includes('YAHOO_JP'), true);
 });
