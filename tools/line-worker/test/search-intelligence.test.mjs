@@ -1807,6 +1807,29 @@ test('洗剤ポッドは香り・無香料・詰め替え・剤形が一致す�
   }
 });
 
+test('洗剤ポッドは敏感肌・抗菌・すすぎ条件が明記された候補だけを提示する', () => {
+  const candidates = [
+    { asin: 'ARIEL_SENSITIVE', product_name: 'Ariel 敏感肌向け すすぎ1回 洗濯ジェルボール 40個' },
+    { asin: 'ARIEL_NORMAL', product_name: 'Ariel すすぎ1回 洗濯ジェルボール 40個' },
+    { asin: 'ARIEL_TWO_RINSE', product_name: 'Ariel 敏感肌向け すすぎ2回 洗濯ジェルボール 40個' },
+    { asin: 'FINISH_ANTIBACTERIAL', product_name: 'Finish antibacterial dishwasher detergent tablets 60 count' },
+    { asin: 'FINISH_NORMAL', product_name: 'Finish dishwasher detergent tablets 60 count' },
+    { asin: 'TIDE_GENTLE', product_name: 'Tide PODS 温和洗衣凝珠 漂洗1次 42颗' },
+    { asin: 'TIDE_NORMAL', product_name: 'Tide PODS 洗衣凝珠 漂洗1次 42颗' },
+    { asin: 'ARIEL_ANTIBACTERIAL', product_name: '아리엘 항균 세탁 젤볼 헹굼 1회 92개' },
+    { asin: 'ARIEL_NO_RINSE', product_name: '아리엘 항균 세탁 젤볼 92개' },
+  ];
+  const cases = [
+    ['アリエール 敏感肌向け すすぎ1回 洗濯ジェルボール 40個', ['ARIEL_SENSITIVE']],
+    ['Finish antibacterial dishwasher detergent tablets 60 count', ['FINISH_ANTIBACTERIAL']],
+    ['汰渍 Tide PODS 温和洗衣凝珠 漂洗1次 42颗', ['TIDE_GENTLE']],
+    ['아리엘 항균 세탁 젤볼 헹굼 1회 92개', ['ARIEL_ANTIBACTERIAL']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+  }
+});
+
 test('プリンターインクは本体・別型番・別品番・純正互換・色数違いを除外する', () => {
   const candidates = [
     { asin: 'CANON', product_name: 'Canon PIXUS TS8730 純正インク BCI-331+330 6色セット' },

@@ -1047,3 +1047,17 @@ test('洗剤ポッドの香り・無香料・詰め替え条件を4言語で保�
     }
   }
 });
+
+test('洗剤ポッドの敏感肌・抗菌・すすぎ条件を4言語で保持する', () => {
+  const cases = [
+    ['アリエール 敏感肌向け すすぎ1回 洗濯ジェルボール 40個', 'Ariel 洗濯用洗剤ジェルボール 敏感肌向け すすぎ1回 40個入り'],
+    ['Finish antibacterial dishwasher detergent tablets 60 count', 'Finish 食洗機用洗剤タブレット 抗菌 60個入り'],
+    ['汰渍 Tide PODS 温和洗衣凝珠 漂洗1次 42颗', 'Tide PODS 洗濯用洗剤ジェルボール 敏感肌向け すすぎ1回 42個入り'],
+    ['아리엘 항균 세탁 젤볼 헹굼 1회 92개', 'Ariel 洗濯用洗剤ジェルボール 抗菌 すすぎ1回 92個入り'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});

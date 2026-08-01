@@ -523,6 +523,12 @@ function isDetergentPodMismatch(candidate, query, requestedCategory) {
   if (requestedScent && !scentPatterns[requestedScent].test(text)) return true;
   if (/(?:詰め替え|つめかえ|refill|补充装|補充裝|리필)/iu.test(query)
     && !/(?:詰め替え|つめかえ|refill|补充装|補充裝|리필)/iu.test(text)) return true;
+  if (/(?:敏感肌(?:向け)?|低刺激|for\s+sensitive\s+skin|hypoallergenic|温和|溫和|민감성\s*피부|저자극)/iu.test(query)
+    && !/(?:敏感肌(?:向け)?|低刺激|for\s+sensitive\s+skin|hypoallergenic|温和|溫和|민감성\s*피부|저자극)/iu.test(text)) return true;
+  if (/(?:抗菌|除菌|antibacterial|antimicrobial|杀菌|殺菌|항균)/iu.test(query)
+    && !/(?:抗菌|除菌|antibacterial|antimicrobial|杀菌|殺菌|항균)/iu.test(text)) return true;
+  if (/(?:すすぎ\s*1\s*回|one[- ]?rinse|single[- ]?rinse|漂洗\s*(?:1\s*次|一次)|헹굼\s*1\s*회)/iu.test(query)
+    && !/(?:すすぎ\s*1\s*回|one[- ]?rinse|single[- ]?rinse|漂洗\s*(?:1\s*次|一次)|헹굼\s*1\s*회)/iu.test(text)) return true;
   if (requestedCategory === 'dishwasher-detergent-tablet') return !dishwasher || laundry;
   return !laundry || dishwasher;
 }
