@@ -58,6 +58,21 @@ test('SNSで見た光るケースは機種とMagSafe条件を4言語で保持す
   }
 });
 
+test('通常ケースも機種・MagSafe・透明条件を4言語で保持する', () => {
+  const queries = [
+    'iPhone 15 Pro用の透明なMagSafeケース',
+    'a clear MagSafe case for iPhone 15 Pro',
+    'iPhone 15 Pro透明磁吸手机壳',
+    'iPhone 15 Pro 투명 맥세이프 케이스',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 15 Proケース 透明 MagSafe対応', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

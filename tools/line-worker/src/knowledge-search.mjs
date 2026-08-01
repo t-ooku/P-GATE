@@ -349,15 +349,14 @@ function isSmartWatchBandMismatch(candidate, requested) {
   return false;
 }
 
-function isLightUpPhoneCaseMismatch(candidate, query) {
+function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
     .toLowerCase();
   const category = inferCandidateCategory(candidate);
-  const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
   const hasDeviceCaseEvidence = phoneCaseDeviceModel(text)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(text);
-  if ((category !== 'phone-case' && !hasDeviceCaseEvidence) || !hasLightUpEvidence) return true;
+  if (category !== 'phone-case' && !hasDeviceCaseEvidence) return true;
   const requestedDevice = phoneCaseDeviceModel(query);
   if (requestedDevice && phoneCaseDeviceModel(text) !== requestedDevice) return true;
   const normalizedQuery = String(query || '').normalize('NFKC');
@@ -365,6 +364,18 @@ function isLightUpPhoneCaseMismatch(candidate, query) {
   const wantsMagSafe = magneticMatches.some((match) =>
     !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
   if (wantsMagSafe && !/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text)) return true;
+  if (/(?:透明|\bclear\b|transparent|투명)/iu.test(normalizedQuery)
+    && !/(?:透明|\bclear\b|transparent|투명)/iu.test(text)) return true;
+  return false;
+}
+
+function isLightUpPhoneCaseMismatch(candidate, query) {
+  if (isDeviceSpecificPhoneCaseMismatch(candidate, query)) return true;
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
+  if (!hasLightUpEvidence) return true;
   return false;
 }
 
@@ -1178,6 +1189,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
+    if (deviceSpecificCase) return !isDeviceSpecificPhoneCaseMismatch(candidate, query);
     if (powerBank && isPowerBankMismatch(candidate, query)) return false;
     if (laptopHub && isLaptopHubMismatch(candidate)) return false;
     if (thunderboltDock && isThunderboltDockMismatch(candidate, thunderboltVersion(query))) return false;

@@ -953,6 +953,28 @@ test('SNSで見た光るケースは初回から機種・発光・MagSafeが一�
   }
 });
 
+test('通常のスマホケースも4言語で機種・MagSafe・透明条件が一致する候補だけを提示する', () => {
+  const queries = [
+    'iPhone 15 Pro用の透明なMagSafeケース',
+    'a clear MagSafe case for iPhone 15 Pro',
+    'iPhone 15 Pro透明磁吸手机壳',
+    'iPhone 15 Pro 투명 맥세이프 케이스',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 15 Pro Clear MagSafe Phone Case' },
+    { asin: 'BASE', product_name: 'iPhone 15 Clear MagSafe Phone Case' },
+    { asin: 'MAX', product_name: 'iPhone 15 Pro Max Clear MagSafe Phone Case' },
+    { asin: 'GENERIC', product_name: 'iPhone Clear MagSafe Phone Case' },
+    { asin: 'OPAQUE', product_name: 'iPhone 15 Pro Black MagSafe Phone Case' },
+    { asin: 'NONMAGNETIC', product_name: 'iPhone 15 Pro Clear Phone Case' },
+    { asin: 'CHARGER', product_name: 'iPhone 15 Pro Clear MagSafe Charger Stand' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
