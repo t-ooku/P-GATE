@@ -972,3 +972,27 @@ test('4言語の比較寸法を予算と誤認せず否定された寸法だけ�
     assert.doesNotMatch(query, /"50"\*/, input);
   }
 });
+
+test('4言語の重量条件を商品仕様として保持し訂正前の重量を除外する', () => {
+  const positiveCases = [
+    '2キロ以下のバックパック',
+    'a backpack under 2 kilograms',
+    '不超过2公斤的背包',
+    '2킬로그램 이하 백팩',
+  ];
+  for (const input of positiveCases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"2kg"\*/i, input);
+  }
+  const correctedCases = [
+    '3キロではなく2キロ以下のバックパック',
+    'not 3 kg but a backpack under 2 kilograms',
+    '不要3公斤，要2公斤的背包',
+    '3킬로그램 말고 2킬로그램 이하 백팩',
+  ];
+  for (const input of correctedCases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"2kg"\*/i, input);
+    assert.doesNotMatch(query, /"3kg"\*/i, input);
+  }
+});

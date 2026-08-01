@@ -291,3 +291,35 @@ test("4言語の否定寸法は除外し訂正寸法だけを9モール検索語
     }
   }
 });
+
+test("4言語の重量条件を9モール向け共通単位へ変換する", () => {
+  const cases = [
+    '2キロ以下のバックパック',
+    'a backpack under 2 kilograms',
+    '不超过2公斤的背包',
+    '2킬로그램 이하 백팩',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('2kg'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('バックパック'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("4言語の訂正重量は旧条件を除外し最終重量だけを9モール検索語へ保持する", () => {
+  const cases = [
+    '3キロではなく2キロ以下のバックパック',
+    'not 3 kg but a backpack under 2 kilograms',
+    '不要3公斤，要2公斤的背包',
+    '3킬로그램 말고 2킬로그램 이하 백팩',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('2kg'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!keywords.includes('3kg'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});

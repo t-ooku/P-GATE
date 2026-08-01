@@ -22,7 +22,7 @@ const cleanTenant = (value) => String(value || '').normalize('NFKC').toLowerCase
 function evidenceMatchEnd(text, match) {
   const end = match.index + match[0].length;
   if (!/^\d+(?:\.\d+)?$/u.test(match[0])) return end;
-  const unit = text.slice(end).match(/^\s*(?:(?:w|mah|gb|tb|mb|mm|cm|ml|l|oz|m|inch|inches)\b|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)/iu);
+  const unit = text.slice(end).match(/^\s*(?:(?:w|mah|gb|tb|mb|mm|cm|ml|l|oz|m|inch|inches|kg|kgs|g|kilograms?|kilogrammes?|grams?)\b|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|キロ(?:グラム)?|グラム|公斤|千克|센티미터|밀리미터|킬로그램|키로|그램)/iu);
   return end + (unit?.[0].length || 0);
 }
 
@@ -36,6 +36,7 @@ export function intelligentFtsQuery(value) {
   const evidenceMatches = [
     ...normalized.matchAll(/\b\d{2,}\b/g),
     ...normalized.matchAll(/\b\d+[a-z-][a-z0-9-]*\b/g),
+    ...normalized.matchAll(/\d+(?:\.\d+)?\s*(?:(?:kg|kgs|g|kilograms?|kilogrammes?|grams?)\b|キロ(?:グラム)?|グラム|公斤|千克|킬로그램|키로|그램)/giu),
     ...normalized.matchAll(/\d+\s*(?:個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개\s*세트)/gu),
   ];
   const evidenceTokens = evidenceMatches
@@ -43,7 +44,7 @@ export function intelligentFtsQuery(value) {
       other !== match
       && other.index === match.index
       && other[0].length > match[0].length
-      && /(?:pack|count|pcs|pieces|個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개\s*세트)/iu.test(other[0])))
+      && /(?:pack|count|pcs|pieces|kg|kgs|g|kilograms?|kilogrammes?|grams?|キロ(?:グラム)?|グラム|公斤|千克|킬로그램|키로|그램|個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개\s*세트)/iu.test(other[0])))
     .filter((match) => !isNegatedSearchOccurrence(
       normalized,
       match.index,
@@ -51,6 +52,10 @@ export function intelligentFtsQuery(value) {
     ))
     .map((match) => match[0]
       .replace(/\s+/gu, '')
+      .replace(/キロ(?:グラム)?|公斤|千克|킬로그램|키로$/u, 'kg')
+      .replace(/グラム|그램$/u, 'g')
+      .replace(/kilogrammes?|kilograms?|kgs?$/iu, 'kg')
+      .replace(/grams?$/iu, 'g')
       .replace(/^(\d+)(?:mm|cm|inch|inches|oz|[-]?(?:pack|count|pcs|pieces)|個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개세트)$/iu, '$1'));
   const groups = [...semantic];
   const modelTokens = source.match(/\b[A-Za-z][A-Za-z0-9-]*\d[A-Za-z0-9-]*\b/g) || [];
