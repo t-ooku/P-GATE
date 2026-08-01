@@ -6,9 +6,9 @@ import {
   nextMarketplaceNotificationAt, runMarketplaceContentCycle
 } from '../src/marketplace-sales.mjs';
 
-test('セール通知は掲載9モールだけを対象にする', () => {
+test('セール通知は掲載10モールだけを対象にする', () => {
   assert.deepEqual(SALE_MARKETPLACES, [
-    'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP',
+    'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
     'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA', 'SNKRDUNK'
   ]);
 });
@@ -76,7 +76,7 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.match(client, /data-language-select.*addEventListener\('change'/s);
   assert.match(client, /const officialUpdates=\[/);
   assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*SHOPLIST.*MUSINSA.*BUYMA.*SNKRDUNK/s);
-  assert.match(client, /掲載9モール/);
+  assert.match(client, /掲載10モール/);
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Official updates always available/);
   assert.match(sw, /hoshilu-shell-v113/);
@@ -92,7 +92,7 @@ test('商品画像はAPPROVEDになるまで公開しない契約を持つ', asy
   assert.match(source, /status='APPROVED'/);
 });
 
-test('9 marketplace content and notification runs are recorded for monitoring', async () => {
+test('10 marketplace content and notification runs are recorded for monitoring', async () => {
   const writes=[];
   const env={PRODUCT_DB:{
     prepare(sql){

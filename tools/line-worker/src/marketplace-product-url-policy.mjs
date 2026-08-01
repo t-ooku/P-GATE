@@ -1,7 +1,7 @@
 import { isRakutenProductUrl } from './rakuten-url-policy.mjs';
 
 export const PRODUCT_MARKETPLACES = Object.freeze([
-  'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP',
+  'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
   'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
 ]);
 
@@ -17,6 +17,7 @@ export function marketplaceForProductUrl(value) {
     if ((hostMatches(host, 'amazon.co.jp') || hostMatches(host, 'amazon.com'))
       && /\/(?:dp|gp\/product)\/[a-z0-9]{10}(?:[/?]|$)/i.test(path)) return 'AMAZON_JP';
     if (hostMatches(host, 'rakuten.co.jp') && isRakutenProductUrl(value)) return 'RAKUTEN_JP';
+    if (hostMatches(host, 'store.shopping.yahoo.co.jp') && /^\/[^/]+\/[^/]+\.html$/i.test(lowerPath)) return 'YAHOO_JP';
     if (hostMatches(host, 'qoo10.jp') && ((/\/gmkt\.inc\/goods\/goods\.aspx$/i.test(lowerPath)
       && /^\d+$/.test(url.searchParams.get('goodscode') || ''))
       || (/^\/item\//i.test(lowerPath) && /\/\d+\/?$/.test(lowerPath)))) return 'QOO10_JP';

@@ -95,7 +95,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /font-size: clamp\(44px, 5vw, 68px\)/);
   assert.match(sw, /hoshilu-discovery-collage\.webp/);
   assert.match(html, /id="journeyTitle"><span>検索する前に、<\/span><span>ホシルに話す。<\/span>/);
-  assert.match(html, /確認済み商品ページへ直接案内。通常は主要4モール、ファッションは最大9モールで探せます。/);
+  assert.match(html, /確認済み商品ページへ直接案内。通常は主要5モール、ファッションは最大10モールで探せます。/);
   assert.match(app, /Talk to HOSHILU before you search/);
   assert.match(app, /elements\.journey\.forEach/);
   assert.match(app, /copySearchKeywords/);
