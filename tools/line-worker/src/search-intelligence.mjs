@@ -15,14 +15,14 @@ const RULES = [
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
   ['charger',/(充電器|充電台|チャージャー|charger)/iu,['charger','charging']],
   ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|iphone\s*ケース|phone case|smartphone case|iphone case|手机壳|手机保护壳|휴대폰 케이스|스마트폰 케이스)/iu,['phone','case','cover','iphone','smartphone']],
-  ['light-up',/(光る|発光|LED|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
+  ['light-up',/(光る|発光|\bLED\b|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
   ['camera-bag',/(カメラ(?:用)?(?:バッグ|ケース|ポーチ)|camera bag|camera case)/iu,['camera bag','camera case']],
   ['photo-printer',/(写真プリンター|フォトプリンター|スマホプリンター|photo printer|portable photo printer)/iu,['photo printer','portable printer']],
   ['camera',/(カメラ(?!用?(?:バッグ|ケース|ポーチ))|camera(?! bag| case))/iu,['camera']],
   ['keyboard',/(キーボード|keyboard|入力する板)/iu,['keyboard']],
   ['mouse-pad',/(マウスパッド|マウスマット|mouse pad|mouse mat)/iu,['mouse pad','mouse mat']],
   ['rodent-supplies',/(?:ペット|飼育|小動物).{0,8}マウス|マウス.{0,8}(?:ケージ|飼育|小動物)/iu,['pet mouse','rodent','cage']],
-  ['mouse',/(マウス(?!パッド|マット|.{0,8}(?:ケージ|飼育))|trackball|computer mouse|mouse(?! cage| habitat| for pet)|パソコンで動かす)/iu,['mouse','trackball']],
+  ['mouse',/(マウス(?!パッド|マット|.{0,8}(?:ケージ|飼育))|trackball|computer mouse|mouse(?! cage| habitat| for pet)|パソコンで動かす|(?:电脑|電腦).{0,8}(?:鼠标|滑鼠)|(?:游戏|遊戲)(?:鼠标|滑鼠)|컴퓨터.{0,8}마우스|게이밍 마우스)/iu,['mouse','trackball']],
   ['bottle',/(水筒|ボトル|bottle|飲み物.*容器)/iu,['bottle']],
   ['lamp',/(テーブルランプ|卓上.*ライト|table lamp|布.*傘.*ライト)/iu,['lamp','light']],
   ['towel-warmer',/(タオルウォーマー|温める.*タオル|heated towel|towel warmer)/iu,['towel','warmer','heated']],
@@ -33,15 +33,15 @@ const RULES = [
   ['puzzle',/(パズル|puzzle|ピース.*遊)/iu,['puzzle']],
   ['wallet',/(財布|\bwallet\b|ポケット.*薄|钱包|錢包|지갑)/iu,['wallet']],
   ['bicycle-chain',/(?:自転車|バイク).{0,6}チェーン|チェーン.{0,6}(?:自転車|バイク)|bicycle chain|bike chain/iu,['bicycle chain','bike chain']],
-  ['necklace',/(ネックレス|首.{0,8}(?:金色|チェーン)|necklace)/iu,['necklace','jewelry chain']],
+  ['necklace',/(ネックレス|首.{0,8}(?:金色|チェーン)|necklace|项链|項鍊|목걸이)/iu,['necklace','jewelry chain']],
   ['fitness-ring',/(運動用.*リング|エクササイズリング|stamina ring|輪っか.*運動)/iu,['ring','stamina']],
-  ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|color filter)/iu,['filter','color']],
+  ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|color filters?|camera.{0,24}filters?|lens.{0,24}filters?|filters?.{0,24}(?:camera|lens)|相机.{0,20}滤镜|相機.{0,20}濾鏡|镜头.{0,20}滤镜|鏡頭.{0,20}濾鏡|카메라.{0,24}필터|렌즈.{0,24}필터)/iu,['filter','color']],
   ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer)/iu,['laptop','notebook computer']],
   ['notebook',/(ノート(?!パソコン|PC)|手帳|罫線|notebook(?! computer)|文房具.*四角)/iu,['notebook','ruled']],
   ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica)/iu,['harmonica']],
   ['cable',/(ケーブル|USB.*線|つなぐ.*線|cable)/iu,['cable','usb']],
   ['pillow',/(クッション|枕|腰枕|pillow|ソファ.*ふわふわ)/iu,['pillow','cushion']],
-  ['knife',/(ナイフ|刃物|knife|折りたた.*刃)/iu,['knife','folding']],
+  ['knife',/(ナイフ|刃物|knife|折りたた.*刃|折叠.{0,8}刀|折疊.{0,8}刀|접이식.{0,8}나이프|락백.{0,8}나이프)/iu,['knife','folding']],
   ['organizer',/(収納ケース|整理ボックス|収納.*箱|\borganizer\b|storage container|收纳盒|收納盒|수납함)/iu,['organizer','storage','container']],
   ['adapter',/(アダプター|変換.*端子|端子.*増やす|adapter|USB-C)/iu,['adapter','usb']],
   ['bath-light',/(浴室.*照明|洗面所.*鏡.*光|バスライト|bath light)/iu,['bath','light']],
@@ -84,13 +84,13 @@ const RULES = [
 ];
 
 const COLOR_RULES = [
-  [/(黒|ブラック|black)/iu,['black']],
+  [/(黒|ブラック|black|黑色|검정|블랙)/iu,['black']],
   [/(白|ホワイト|white)/iu,['white']],
   [/(緑|グリーン|green)/iu,['green']],
   [/(青|水色|ブルー|アクア|blue|aqua)/iu,['blue','aqua']],
   [/(ピンク|pink)/iu,['pink']],
   [/(銀|シルバー|silver)/iu,['silver']],
-  [/(金色|ゴールド|gold)/iu,['gold']],
+  [/(金色|ゴールド|gold|包金|금색|골드)/iu,['gold']],
   [/(茶色|ブラウン|brown)/iu,['brown']],
   [/(黄色|イエロー|yellow)/iu,['yellow']],
   [/(グレー|灰色|gray|grey)/iu,['gray']],
@@ -143,8 +143,10 @@ export function semanticSearchGroups(value) {
   let groups = RULES.filter(([, pattern]) => pattern.test(text)).map(([category,, terms]) => ({ category, terms }));
   const specificCategories = new Set(groups.map((group) => group.category));
   if (specificCategories.has('camera-bag')) groups = groups.filter((group) => group.category !== 'bag');
+  if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');
+  if (specificCategories.has('shampoo')) groups = groups.filter((group) => !['bottle','hair-treatment'].includes(group.category));
   if (
     groups.some((group) => group.category === 'adapter')
     && groups.some((group) => group.category === 'laptop')
@@ -157,6 +159,12 @@ export function semanticSearchGroups(value) {
     && /(?:冷蔵庫|冷凍庫|refrigerator|freezer|pantry|冰箱|冷藏|냉장고|냉동고)/iu.test(text)
   ) {
     groups.push({ category: 'organizer-location', terms: ['refrigerator','freezer','pantry'] });
+  }
+  if (
+    groups.some((group) => group.category === 'shampoo')
+    && /(?:3\s*-?\s*in\s*-?\s*1|三合一|3合1|3\s*인\s*1)/iu.test(text)
+  ) {
+    groups.push({ category: 'shampoo-3-in-1', terms: ['3-in-1','conditioner','body wash'] });
   }
   // Natural descriptions often omit the formal product name. Recognize
   // combinations of an object/location and its head noun before falling back

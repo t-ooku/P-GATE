@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-08-01T04:10:15.532Z",
+  "generated_at": "2026-08-01T04:34:41.046Z",
   "source": {
     "tenant": "itg",
     "database": "hoshilu-products",
@@ -264,6 +264,16 @@
           ]
         },
         {
+          "case_id": "T04-en-2",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "wired earbuds, not wireless ones",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
           "case_id": "T04-zh-1",
           "locale": "zh",
           "information_level": "ambiguous",
@@ -274,10 +284,30 @@
           ]
         },
         {
+          "case_id": "T04-zh-2",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "想找有线耳机，不要无线的",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
           "case_id": "T04-ko-1",
           "locale": "ko",
           "information_level": "ambiguous",
           "query": "귀에 넣는 작은 유선 이어폰",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T04-ko-2",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "무선 말고 유선 이어폰을 찾아줘",
           "query_types": [
             "shape_function",
             "category_branch"
@@ -660,6 +690,36 @@
             "shape_function",
             "usage_scene"
           ]
+        },
+        {
+          "case_id": "T11-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "a very lightweight black wireless gaming mouse for a computer",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T11-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "电脑用的超轻黑色无线游戏鼠标",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T11-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "컴퓨터용 초경량 검정 무선 게이밍 마우스",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
         }
       ]
     },
@@ -872,6 +932,36 @@
           "locale": "ja",
           "information_level": "ultra_ambiguous",
           "query": "お風呂で使う男性用の液体",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T15-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "men’s 3-in-1 shampoo conditioner and body wash, two large bottles",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T15-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "男士三合一洗发水护发素沐浴露大瓶两件装",
+          "query_types": [
+            "category_branch",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T15-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "남성용 샴푸 컨디셔너 바디워시 3-in-1 대용량 두 병 세트",
           "query_types": [
             "category_branch",
             "usage_scene"
@@ -1176,6 +1266,36 @@
             "shape_function",
             "category_branch"
           ]
+        },
+        {
+          "case_id": "T20-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "24 inch 14K gold filled Figaro chain necklace, 4 mm wide",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T20-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "24英寸宽4毫米的14K包金费加罗链项链",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
+        },
+        {
+          "case_id": "T20-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "24인치 폭 4mm 14K 골드필드 피가로 체인 목걸이",
+          "query_types": [
+            "shape_function",
+            "category_branch"
+          ]
         }
       ]
     },
@@ -1280,6 +1400,36 @@
           "locale": "ja",
           "information_level": "ultra_ambiguous",
           "query": "写真の色を変える丸い板",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T22-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "six 52 mm colored round filters for a camera lens",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T22-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "相机镜头用的52毫米六片彩色圆形滤镜",
+          "query_types": [
+            "compatibility",
+            "shape_function"
+          ]
+        },
+        {
+          "case_id": "T22-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "카메라 렌즈용 52mm 원형 컬러 필터 6개 세트",
           "query_types": [
             "compatibility",
             "shape_function"
@@ -1550,6 +1700,36 @@
           "locale": "ja",
           "information_level": "ultra_ambiguous",
           "query": "キャンプで使う折りたためる刃物",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T27-en-1",
+          "locale": "en",
+          "information_level": "ambiguous",
+          "query": "a folding lock-back knife for camping",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T27-zh-1",
+          "locale": "zh",
+          "information_level": "ambiguous",
+          "query": "露营用的折叠锁背刀",
+          "query_types": [
+            "shape_function",
+            "usage_scene"
+          ]
+        },
+        {
+          "case_id": "T27-ko-1",
+          "locale": "ko",
+          "information_level": "ambiguous",
+          "query": "캠핑용 접이식 락백 나이프",
           "query_types": [
             "shape_function",
             "usage_scene"

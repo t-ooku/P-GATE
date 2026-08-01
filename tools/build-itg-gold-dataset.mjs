@@ -76,9 +76,18 @@ const multilingualQueries = {
     ko: '유리병에 담긴 라벤더 향 소이 캔들'
   },
   T04: {
-    en: 'small wired earbuds that fit inside the ear',
-    zh: '小巧的有线入耳式耳机',
-    ko: '귀에 넣는 작은 유선 이어폰'
+    en: [
+      'small wired earbuds that fit inside the ear',
+      'wired earbuds, not wireless ones'
+    ],
+    zh: [
+      '小巧的有线入耳式耳机',
+      '想找有线耳机，不要无线的'
+    ],
+    ko: [
+      '귀에 넣는 작은 유선 이어폰',
+      '무선 말고 유선 이어폰을 찾아줘'
+    ]
   },
   T19: {
     en: 'a very slim jet black wallet that fits in a pocket',
@@ -94,6 +103,31 @@ const multilingualQueries = {
     en: 'a compact USB-C hub with multiple ports for a laptop',
     zh: '笔记本电脑用的小型多接口USB-C转接器',
     ko: '노트북에 연결하는 포트가 여러 개인 소형 USB-C 어댑터'
+  },
+  T11: {
+    en: 'a very lightweight black wireless gaming mouse for a computer',
+    zh: '电脑用的超轻黑色无线游戏鼠标',
+    ko: '컴퓨터용 초경량 검정 무선 게이밍 마우스'
+  },
+  T15: {
+    en: 'men’s 3-in-1 shampoo conditioner and body wash, two large bottles',
+    zh: '男士三合一洗发水护发素沐浴露大瓶两件装',
+    ko: '남성용 샴푸 컨디셔너 바디워시 3-in-1 대용량 두 병 세트'
+  },
+  T20: {
+    en: '24 inch 14K gold filled Figaro chain necklace, 4 mm wide',
+    zh: '24英寸宽4毫米的14K包金费加罗链项链',
+    ko: '24인치 폭 4mm 14K 골드필드 피가로 체인 목걸이'
+  },
+  T22: {
+    en: 'six 52 mm colored round filters for a camera lens',
+    zh: '相机镜头用的52毫米六片彩色圆形滤镜',
+    ko: '카메라 렌즈용 52mm 원형 컬러 필터 6개 세트'
+  },
+  T27: {
+    en: 'a folding lock-back knife for camping',
+    zh: '露营用的折叠锁背刀',
+    ko: '캠핑용 접이식 락백 나이프'
   }
 };
 const targets = definitions.map(([targetId, asin, allowedCategories, synonyms, queries, queryTypes]) => {
@@ -116,13 +150,14 @@ const targets = definitions.map(([targetId, asin, allowedCategories, synonyms, q
       query: queries[index],
       query_types: queryTypes
       })),
-      ...Object.entries(multilingualQueries[targetId] || {}).map(([locale, query]) => ({
-        case_id: `${targetId}-${locale}-1`,
-        locale,
-        information_level: 'ambiguous',
-        query,
-        query_types: queryTypes
-      }))
+      ...Object.entries(multilingualQueries[targetId] || {}).flatMap(([locale, queries]) =>
+        (Array.isArray(queries) ? queries : [queries]).map((query, index) => ({
+          case_id: `${targetId}-${locale}-${index + 1}`,
+          locale,
+          information_level: 'ambiguous',
+          query,
+          query_types: queryTypes
+        })))
     ]
   };
 });

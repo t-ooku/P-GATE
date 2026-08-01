@@ -15,15 +15,17 @@ export function intelligentFtsQuery(value) {
     .map((group) => [...new Set(group.terms.map((term) => term.toLowerCase()))])
     .filter((group) => group.length)
     .slice(0, 4);
-  const direct = [...new Set((normalized.match(/[a-z][a-z0-9-]{2,}/g) || [])
-    .filter((token) => !STOPWORDS.has(token) && !/^\d+$/.test(token)))]
-    .slice(0, 6);
+  const evidenceTokens = [
+    ...(normalized.match(/\b\d{2,}\b/g) || []),
+    ...(normalized.match(/\b\d+[a-z-][a-z0-9-]*\b/g) || []).map((token) =>
+      token.replace(/^(\d+)(?:mm|cm|inch|inches|oz)$/u, '$1')),
+  ];
   const groups = [...semantic];
   // Free-form descriptions contain many context words that are absent from a
   // catalog title. Requiring one of them as another AND group suppresses valid
   // products. Keep direct tokens strict only when the query carries a concrete
   // model/size/quantity clue; semantic product groups handle ordinary prose.
-  if (direct.length && /\d/u.test(normalized)) groups.push(direct);
+  if (evidenceTokens.length) groups.push([...new Set(evidenceTokens)].slice(0, 6));
   if (!groups.length) return '';
   return groups.slice(0, 5).map((group) => {
     const expression = group.map(quote).join(' OR ');

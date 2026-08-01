@@ -87,6 +87,43 @@ test('ear bud表記揺れと冷蔵庫用透明収納の条件をFTSへ保持す�
   }
 });
 
+test('美容・家電・装身具・互換品・刃物の英中韓表現を商品カテゴリへ統一する', () => {
+  const cases = [
+    ['电脑用的超轻黑色无线游戏鼠标', 'mouse'],
+    ['컴퓨터용 초경량 검정 무선 게이밍 마우스', 'mouse'],
+    ['24英寸宽4毫米的14K包金费加罗链项链', 'necklace'],
+    ['24인치 폭 4mm 14K 골드필드 피가로 체인 목걸이', 'necklace'],
+    ['相机镜头用的52毫米六片彩色圆形滤镜', 'camera-filter'],
+    ['카메라 렌즈용 52mm 원형 컬러 필터 6개 세트', 'camera-filter'],
+    ['露营用的折叠锁背刀', 'knife'],
+    ['캠핑용 접이식 락백 나이프', 'knife'],
+  ];
+  for (const [query, category] of cases) {
+    assert.equal(semanticSearchGroups(query).some((group) => group.category === category), true, query);
+  }
+});
+
+test('filledをLEDと誤認せず、複合シャンプーとカメラフィルターを過剰ANDしない', () => {
+  const necklaceGroups = semanticSearchGroups('14K gold filled Figaro chain necklace');
+  assert.equal(necklaceGroups.some((group) => group.category === 'light-up'), false);
+  const shampooGroups = semanticSearchGroups('3-in-1 shampoo conditioner and body wash, two large bottles');
+  assert.equal(shampooGroups.some((group) => group.category === 'shampoo'), true);
+  assert.equal(shampooGroups.some((group) => ['bottle','hair-treatment'].includes(group.category)), false);
+  const filterGroups = semanticSearchGroups('six colored round filters for a camera lens');
+  assert.equal(filterGroups.some((group) => group.category === 'camera-filter'), true);
+  assert.equal(filterGroups.some((group) => group.category === 'camera'), false);
+});
+
+test('寸法は証拠値だけをANDにし、三合一シャンプーを構成用途へ展開する', () => {
+  const filterQuery = intelligentFtsQuery('six 52 mm colored round filters for a camera lens');
+  assert.match(filterQuery, /\("filter"\* OR "color"\*\) AND \("52"\*\)/);
+  assert.doesNotMatch(filterQuery, /colored|pencil/);
+  const shampooQuery = intelligentFtsQuery('男士三合一洗发水护发素沐浴露大瓶两件装');
+  assert.match(shampooQuery, /"3-in-1"\*/);
+  assert.match(shampooQuery, /"conditioner"\*/);
+  assert.match(shampooQuery, /"body wash"\*/);
+});
+
 test('韓国美容語を商品カテゴリへ正規化する', () => {
   const cases = [
     ['진정 세럼', 'serum'],
