@@ -912,6 +912,33 @@ function isBuiltInDishwasherMismatch(candidate, requested) {
   return false;
 }
 
+function oledTelevisionConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    television: /(?:有機EL.{0,8}(?:テレビ|TV)|OLED.{0,8}(?:TV|television|电视|電視|텔레비전))/iu.test(text),
+    size: text.match(/\b(\d{2,3})\s*(?:型|インチ|inch(?:es)?|英寸|인치)/iu)?.[1] || '',
+    resolution: /\b4\s*k\b/iu.test(text),
+    refresh: text.match(/\b(\d{2,3})\s*hz\b/iu)?.[1] || '',
+    hdmi: text.match(/hdmi\s*(2\.1)/iu)?.[1] || '',
+    dolbyVision: /dolby\s*vision/iu.test(text),
+    wrongProduct: /(?:PC\s*モニター|gaming\s*monitor|computer\s*monitor|电脑显示器|電腦顯示器|게이밍\s*모니터|projector|プロジェクター|投影仪|投影機|프로젝터|テレビ台|TV\s*stand|电视柜|電視櫃|TV\s*스탠드|壁掛け金具|wall\s*mount|壁挂架|壁掛架|벽걸이\s*브라켓|remote\s*control|リモコン|遥控器|遙控器|리모컨|replacement\s*(?:panel|screen)|交換パネル|交換画面|替换屏幕|替換螢幕|교체용\s*패널)/iu.test(text)
+  };
+}
+
+function isOledTelevisionMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = oledTelevisionConstraints(text);
+  if (!evidence.television || evidence.wrongProduct) return true;
+  for (const field of ['size', 'refresh', 'hdmi']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const feature of ['resolution', 'dolbyVision']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1760,6 +1787,9 @@ export function filterCategoryMismatches(query, candidates = []) {
   const builtInDishwasher = builtInDishwasherConstraints(normalizedQuery);
   const builtInDishwasherIntent = builtInDishwasher.machine
     && Boolean(builtInDishwasher.settings && builtInDishwasher.width) && !builtInDishwasher.wrongProduct;
+  const oledTelevision = oledTelevisionConstraints(normalizedQuery);
+  const oledTelevisionIntent = oledTelevision.television
+    && Boolean(oledTelevision.size && oledTelevision.refresh && oledTelevision.hdmi) && !oledTelevision.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1769,7 +1799,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent && !robotVacuumBodyIntent
     && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
-    && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent) return candidates;
+    && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1837,6 +1867,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (frontLoadWasherDryerIntent) return !isFrontLoadWasherDryerMismatch(candidate, frontLoadWasherDryer);
     if (frenchDoorRefrigeratorIntent) return !isFrenchDoorRefrigeratorMismatch(candidate, frenchDoorRefrigerator);
     if (builtInDishwasherIntent) return !isBuiltInDishwasherMismatch(candidate, builtInDishwasher);
+    if (oledTelevisionIntent) return !isOledTelevisionMismatch(candidate, oledTelevision);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

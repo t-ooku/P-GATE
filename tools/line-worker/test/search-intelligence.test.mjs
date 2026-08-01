@@ -1479,6 +1479,32 @@ test('ビルトイン食器洗い乾燥機は4言語で収納人数・幅・運�
   }
 });
 
+test('有機ELテレビは4言語で画面・解像度・Hz・端子・映像規格が一致する本体だけを提示する', () => {
+  const queries = [
+    '65型 4K 120Hz HDMI 2.1 Dolby Vision 有機ELテレビ',
+    '65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV',
+    '65英寸 4K 120Hz HDMI 2.1 Dolby Vision OLED电视',
+    '65인치 4K 120Hz HDMI 2.1 Dolby Vision OLED 텔레비전',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV' },
+    { asin: 'SMALL', product_name: '55 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV' },
+    { asin: 'HD', product_name: '65 inch Full HD 120Hz HDMI 2.1 Dolby Vision OLED TV' },
+    { asin: 'SLOW', product_name: '65 inch 4K 60Hz HDMI 2.1 Dolby Vision OLED TV' },
+    { asin: 'OLDHDMI', product_name: '65 inch 4K 120Hz HDMI 2.0 Dolby Vision OLED TV' },
+    { asin: 'NODOLBY', product_name: '65 inch 4K 120Hz HDMI 2.1 HDR OLED TV' },
+    { asin: 'MONITOR', product_name: '65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED Gaming Monitor TV' },
+    { asin: 'PROJECTOR', product_name: '65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV Projector' },
+    { asin: 'STAND', product_name: 'TV Stand for 65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV' },
+    { asin: 'MOUNT', product_name: 'Wall Mount for 65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV' },
+    { asin: 'REMOTE', product_name: 'Remote Control for 65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV' },
+    { asin: 'PANEL', product_name: 'Replacement Panel for 65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

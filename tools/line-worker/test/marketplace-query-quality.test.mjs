@@ -416,6 +416,21 @@ test('ビルトイン食器洗い乾燥機は収納人数・幅・運転機能�
   }
 });
 
+test('有機ELテレビは画面・解像度・Hz・端子・映像規格を4言語で保持する', () => {
+  const queries = [
+    '65型 4K 120Hz HDMI 2.1 Dolby Vision 有機ELテレビ',
+    '65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV',
+    '65英寸 4K 120Hz HDMI 2.1 Dolby Vision OLED电视',
+    '65인치 4K 120Hz HDMI 2.1 Dolby Vision OLED 텔레비전',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '有機ELテレビ 65型 4K 120Hz HDMI 2.1 Dolby Vision', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

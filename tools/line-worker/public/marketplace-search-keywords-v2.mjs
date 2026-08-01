@@ -361,6 +361,18 @@ function buildBuiltInDishwasherSearchKeywords(query) {
   return ['ビルトイン食器洗い乾燥機', `${settings}人分`, `幅${width}cm`, inverter, autoOpen].join(' ');
 }
 
+function buildOledTelevisionSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:有機EL.{0,8}(?:テレビ|TV)|OLED.{0,8}(?:TV|television|电视|電視|텔레비전))/iu.test(normalized)) return '';
+  const size = normalized.match(/\b(\d{2,3})\s*(?:型|インチ|inch(?:es)?|英寸|인치)/iu)?.[1];
+  const resolution = /\b4\s*k\b/iu.test(normalized) ? '4K' : '';
+  const refresh = normalized.match(/\b(\d{2,3})\s*hz\b/iu)?.[1];
+  const hdmi = normalized.match(/hdmi\s*(2\.1)/iu)?.[1];
+  const dolbyVision = /dolby\s*vision/iu.test(normalized) ? 'Dolby Vision' : '';
+  if (!size || !resolution || !refresh || !hdmi || !dolbyVision) return '';
+  return ['有機ELテレビ', `${size}型`, resolution, `${refresh}Hz`, `HDMI ${hdmi}`, dolbyVision].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1158,6 +1170,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawFrenchDoorRefrigerator) return rawFrenchDoorRefrigerator;
   const rawBuiltInDishwasher = buildBuiltInDishwasherSearchKeywords(rawNormalized);
   if (rawBuiltInDishwasher) return rawBuiltInDishwasher;
+  const rawOledTelevision = buildOledTelevisionSearchKeywords(rawNormalized);
+  if (rawOledTelevision) return rawOledTelevision;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
