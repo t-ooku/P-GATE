@@ -323,6 +323,27 @@ function isLightUpPhoneCaseMismatch(candidate) {
   return category !== 'phone-case' || !hasLightUpEvidence;
 }
 
+function tabletAccessoryEvidence(candidate) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  return {
+    compatible: /(?:tablet|ipad|タブレット|アイパッド|平板(?:电脑|電腦)?|태블릿|아이패드)/u.test(text),
+    keyboard: /(?:keyboard|キーボード|键盘|鍵盤|키보드)/u.test(text),
+    screenProtector: /(?:screen\s*protector|protective\s*film|tempered\s*glass|保護フィルム|保护膜|保護膜|钢化膜|鋼化膜|보호\s*필름|강화\s*유리)/u.test(text),
+    charger: /(?:charger|power\s*adapter|充電器|充电器|電源適配器|电源适配器|충전기|충전\s*어댑터)/u.test(text)
+  };
+}
+
+function isTabletAccessoryMismatch(candidate, requested) {
+  const evidence = tabletAccessoryEvidence(candidate);
+  if (!evidence.compatible) return true;
+  if (requested.has('tablet-keyboard')) return !evidence.keyboard;
+  if (requested.has('tablet-screen-protector')) return !evidence.screenProtector;
+  if (requested.has('tablet-charger')) return !evidence.charger;
+  return false;
+}
+
 export function filterCategoryMismatches(query, candidates = []) {
   const groups = semanticSearchGroups(query);
   const requested = new Set(groups
@@ -332,10 +353,13 @@ export function filterCategoryMismatches(query, candidates = []) {
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = requested.has('phone-case') && groups.some((group) => group.category === 'light-up');
+  const tabletAccessory = ['tablet-keyboard', 'tablet-screen-protector', 'tablet-charger']
+    .some((category) => requested.has(category));
   return candidates.filter((candidate) => {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate)) return false;
+    if (tabletAccessory) return !isTabletAccessoryMismatch(candidate, requested);
     const category = inferCandidateCategory(candidate);
     return category === 'other' || requested.has(category);
   });

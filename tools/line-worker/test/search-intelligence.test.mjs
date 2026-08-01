@@ -768,6 +768,31 @@ test('光るスマホケースは初回提示から一般ケース・LED照明�
   }
 });
 
+test('タブレット専用アクセサリーは4言語で汎用品や別端末向け商品を除外する', () => {
+  const cases = [
+    ['タブレット用Bluetoothキーボード', 'KEYBOARD'],
+    ['tablet screen protector', 'PROTECTOR'],
+    ['平板电脑充电器', 'CHARGER'],
+    ['태블릿용 블루투스 키보드', 'KEYBOARD'],
+  ];
+  const candidates = [
+    { asin: 'KEYBOARD', product_name: 'iPad Tablet Bluetooth Keyboard' },
+    { asin: 'PROTECTOR', product_name: 'タブレット用 強化ガラス 保護フィルム' },
+    { asin: 'CHARGER', product_name: '平板电脑 USB-C 充电器 Power Adapter' },
+    { asin: 'GENERICKEY', product_name: 'Bluetooth Wireless Keyboard for Windows PC' },
+    { asin: 'PHONEFILM', product_name: 'iPhone Tempered Glass Screen Protector' },
+    { asin: 'LAPTOPAC', product_name: 'USB-C Laptop Charger Power Adapter' },
+    { asin: 'TABLETCASE', product_name: 'Tablet Protective Case Cover' },
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      [expected],
+      query
+    );
+  }
+});
+
 test('スマホケースは初回から対応機種と光り方を提案する', async () => {
   const result = await applyIndexedSearchPolicy(
     { query_id: 'phone-case-q', candidates: [
