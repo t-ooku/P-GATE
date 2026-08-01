@@ -16,8 +16,8 @@ const RULES = [
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
   ['charger',/(充電器|充電台|チャージャー|charg(?:er|ing\s+dock)|充电座|充電座|충전\s*(?:거치대|도크))/iu,['charger','charging']],
   ['dual-charger',/(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|듀얼).{0,12}충전/iu,['dual charger','dual charging']],
-  ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|ギャラクシー.{0,16}ケース|エクスペリア.{0,16}ケース|アクオス.{0,16}ケース|(?:iphone|galaxy|xperia|aquos|smartphone|phone).{0,16}(?:case|ケース)|(?:case|ケース).{0,16}(?:iphone|galaxy|xperia|aquos|smartphone|phone)|手机壳|手机保护壳|(?:iPhone|Xperia|AQUOS|手机|手機|三星).{0,16}(?:壳|殼|保护壳|保護殼)|(?:壳|殼|保护壳|保護殼).{0,16}(?:iPhone|Xperia|AQUOS|手机|手機|三星)|휴대폰 케이스|스마트폰 케이스|(?:iPhone|Xperia|AQUOS|아이폰|휴대폰|스마트폰|갤럭시|엑스페리아|아쿠오스).{0,16}케이스|케이스.{0,16}(?:iPhone|Xperia|AQUOS|아이폰|휴대폰|스마트폰|갤럭시|엑스페리아|아쿠오스))/iu,['phone','case','cover','iphone','smartphone']],
-  ['light-up',/(光る|発光|\bLED\b|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
+  ['phone-case',/(スマホケース|携帯(?:ケース|カバー)|スマートフォン.*(?:ケース|カバー)|アイフォ(?:ン|ーン).*ケース|ギャラクシー.{0,16}ケース|エクスペリア.{0,16}ケース|アクオス.{0,16}ケース|(?:iphone|galaxy|xperia|aquos|smartphone|mobile|phone).{0,16}(?:case|cover|ケース)|(?:case|cover|ケース).{0,16}(?:iphone|galaxy|xperia|aquos|smartphone|mobile|phone)|手机壳|手机保护壳|(?:iPhone|Xperia|AQUOS|手机|手機|三星).{0,16}(?:壳|殼|保护壳|保護殼)|(?:壳|殼|保护壳|保護殼).{0,16}(?:iPhone|Xperia|AQUOS|手机|手機|三星)|휴대폰\s*(?:케이스|커버)|스마트폰\s*(?:케이스|커버)|(?:iPhone|Xperia|AQUOS|아이폰|휴대폰|스마트폰|갤럭시|엑스페리아|아쿠오스).{0,16}(?:케이스|커버)|(?:케이스|커버).{0,16}(?:iPhone|Xperia|AQUOS|아이폰|휴대폰|스마트폰|갤럭시|엑스페리아|아쿠오스))/iu,['phone','case','cover','iphone','smartphone']],
+  ['light-up',/(光る|発光|ピカピカ|\bLED\b|ライトアップ|light[- ]?up|glowing|luminous|发光|灯光|亮闪闪|빛나는|발광|불빛\s*나는)/iu,['led','light','glow','luminous']],
   ['waterproof',/(防水|waterproof|防水型|방수)/iu,['waterproof']],
   ['camera-bag',/(カメラ(?:用)?(?:バッグ|ケース|ポーチ)|camera bag|camera case)/iu,['camera bag','camera case']],
   ['photo-printer',/(写真プリンター|フォトプリンター|スマホプリンター|photo printer|portable photo printer)/iu,['photo printer','portable printer']],
@@ -188,7 +188,7 @@ const MATERIAL_CATEGORY_ALLOWLIST = new Map([
 
 const NEGATED_CATEGORY_TERMS = new Map([
   ['charger', /(?:充電器|チャージャー|charger|充电器|充電器|충전기)/iu],
-  ['phone-case', /(?:スマホケース|携帯ケース|アイフォ(?:ン|ーン).{0,12}ケース|ギャラクシー.{0,12}ケース|エクスペリア.{0,12}ケース|アクオス.{0,12}ケース|phone\s*case|iphone.{0,12}case|galaxy.{0,12}case|xperia.{0,12}case|aquos.{0,12}case|手机壳|手機殼|三星.{0,12}(?:壳|殼)|아이폰.{0,12}케이스|휴대폰\s*케이스|스마트폰\s*케이스|갤럭시.{0,12}케이스|엑스페리아.{0,12}케이스|아쿠오스.{0,12}케이스)/iu],
+  ['phone-case', /(?:スマホケース|携帯(?:ケース|カバー)|アイフォ(?:ン|ーン).{0,12}ケース|ギャラクシー.{0,12}ケース|エクスペリア.{0,12}ケース|アクオス.{0,12}ケース|(?:phone|mobile)\s*(?:case|cover)|iphone.{0,12}case|galaxy.{0,12}case|xperia.{0,12}case|aquos.{0,12}case|手机壳|手機殼|三星.{0,12}(?:壳|殼)|아이폰.{0,12}케이스|휴대폰\s*(?:케이스|커버)|스마트폰\s*(?:케이스|커버)|갤럭시.{0,12}케이스|엑스페리아.{0,12}케이스|아쿠오스.{0,12}케이스)/iu],
   ['laptop', /(?:ノートPC|ノートパソコン|laptop|笔记本电脑|筆記型電腦|노트북)/iu],
   ['umbrella', /(?:傘|umbrella|雨伞|雨傘|우산)/iu],
   ['camera', /(?:カメラ|camera|相机|相機|카메라)/iu],
@@ -320,7 +320,7 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('water-filter-cartridge')) groups = groups.filter((group) => group.category !== 'water-purifier');
   if (specificCategories.has('refrigerator-water-filter')) groups = groups.filter((group) => !['air-purifier-filter','air-purifier','water-filter-cartridge','water-purifier'].includes(group.category));
   if (specificCategories.has('dishwasher-detergent-tablet')) groups = groups.filter((group) => !['laundry-detergent-pod','home-use','tablet'].includes(group.category));
-  if (specificCategories.has('laundry-detergent-pod')) groups = groups.filter((group) => !['dishwasher-detergent-tablet','home-use'].includes(group.category));
+  if (specificCategories.has('laundry-detergent-pod')) groups = groups.filter((group) => !['dishwasher-detergent-tablet','home-use','softener'].includes(group.category));
   if (specificCategories.has('printer-ink')) groups = groups.filter((group) => !['printer','photo-printer'].includes(group.category));
   if (specificCategories.has('electric-toothbrush-head')) groups = groups.filter((group) => group.category !== 'electric-toothbrush');
   if (specificCategories.has('shaver-replacement-blade') || specificCategories.has('shaver-cleaning-cartridge')) groups = groups.filter((group) => group.category !== 'electric-shaver');

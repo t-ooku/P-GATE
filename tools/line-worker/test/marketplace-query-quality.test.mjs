@@ -25,6 +25,24 @@ test("日英中韓640件の検索語コーパスを決定論的に生成する",
   assert.equal(new Set(corpus.map((item) => item.case_id)).size, corpus.length);
 });
 
+test('光るスマホケースの口語的な言い換えを4言語で商品語へ統一する', () => {
+  const queries = [
+    'TikTokで見たピカピカする携帯カバー',
+    'viral glowing mobile cover from TikTok',
+    '抖音看到的会发光的手机保护壳',
+    '틱톡에서 본 불빛 나는 휴대폰 커버',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(
+        buildMarketplaceSearchKeywords(query, marketplace),
+        '光る スマホケース',
+        `${marketplace}: ${query}`,
+      );
+    }
+  }
+});
+
 test('ロボット掃除機の交換部品を4言語で本体から分離し型番と個数を保つ', () => {
   const cases = [
     ['ルンバ j7用 交換フィルター 3個セット', 'Roomba j7 交換フィルター 3個セット'],
@@ -1068,6 +1086,20 @@ test('洗剤ポッドの赤ちゃん衣類・部屋干し・防臭・増白剤�
     ['Tide PODS indoor drying odor control laundry detergent 42 count', 'Tide PODS 洗濯用洗剤ジェルボール 部屋干し 防臭 42個入り'],
     ['汰渍 Tide PODS 婴儿衣物无荧光增白剂洗衣凝珠42颗', 'Tide PODS 洗濯用洗剤ジェルボール 赤ちゃん衣類対応 蛍光増白剤不使用 42個入り'],
     ['아리엘 실내 건조 냄새 제거 세탁 젤볼 92개', 'Ariel 洗濯用洗剤ジェルボール 部屋干し 防臭 92個入り'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('洗剤ポッドの洗濯機タイプ・素材・柔軟剤条件を4言語で保持する', () => {
+  const cases = [
+    ['アリエール ドラム式対応 柔軟剤不使用 洗濯ジェルボール 40個', 'Ariel 洗濯用洗剤ジェルボール ドラム式対応 柔軟剤不使用 40個入り'],
+    ['Tide PODS top-load with fabric softener laundry detergent 42 count', 'Tide PODS 洗濯用洗剤ジェルボール 縦型対応 柔軟剤入り 42個入り'],
+    ['汰渍 Tide PODS 滚筒洗衣机适用不含柔顺剂洗衣凝珠42颗', 'Tide PODS 洗濯用洗剤ジェルボール ドラム式対応 柔軟剤不使用 42個入り'],
+    ['아리엘 울 의류용 유연제 무첨가 세탁 젤볼 92개', 'Ariel 洗濯用洗剤ジェルボール ウール対応 柔軟剤不使用 92個入り'],
   ];
   for (const [input, expected] of cases) {
     for (const marketplace of SEARCH_MARKETPLACES) {

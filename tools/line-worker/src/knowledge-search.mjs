@@ -537,6 +537,22 @@ function isDetergentPodMismatch(candidate, query, requestedCategory) {
     && !/(?:防臭|消臭|odor\s*control|deodori[sz]ing|除臭|냄새\s*제거|탈취)/iu.test(text)) return true;
   if (/(?:蛍光(?:増白)?剤不使用|no\s*optical\s*brighteners?|optical\s*brightener[- ]?free|无荧光增白剂|無螢光增白劑|형광증백제\s*무첨가)/iu.test(query)
     && !/(?:蛍光(?:増白)?剤不使用|no\s*optical\s*brighteners?|optical\s*brightener[- ]?free|无荧光增白剂|無螢光增白劑|형광증백제\s*무첨가)/iu.test(text)) return true;
+  const requestedWasher = /(?:ドラム式(?:対応|用)?|front[- ]?load(?:er)?|滚筒洗衣机|滾筒洗衣機|드럼\s*세탁기)/iu.test(query) ? 'front'
+    : /(?:縦型(?:対応|用)?|top[- ]?load(?:er)?|波轮洗衣机|波輪洗衣機|통돌이\s*세탁기)/iu.test(query) ? 'top' : '';
+  const washerPatterns = {
+    front: /(?:ドラム式(?:対応|用)?|front[- ]?load(?:er)?|滚筒洗衣机|滾筒洗衣機|드럼\s*세탁기)/iu,
+    top: /(?:縦型(?:対応|用)?|top[- ]?load(?:er)?|波轮洗衣机|波輪洗衣機|통돌이\s*세탁기)/iu
+  };
+  if (requestedWasher && !washerPatterns[requestedWasher].test(text)) return true;
+  if (/(?:ウール|wool|羊毛|울\s*(?:의류)?)/iu.test(query)
+    && !/(?:ウール|wool|羊毛|울\s*(?:의류)?)/iu.test(text)) return true;
+  const requestedSoftener = /(?:柔軟剤不使用|without\s+fabric\s+softener|no\s+fabric\s+softener|不含柔顺剂|不含柔順劑|유연제\s*무첨가)/iu.test(query) ? 'free'
+    : /(?:柔軟剤入り|with\s+fabric\s+softener|含柔顺剂|含柔順劑|유연제\s*함유)/iu.test(query) ? 'included' : '';
+  const softenerPatterns = {
+    free: /(?:柔軟剤不使用|without\s+fabric\s+softener|no\s+fabric\s+softener|不含柔顺剂|不含柔順劑|유연제\s*무첨가)/iu,
+    included: /(?:柔軟剤入り|with\s+fabric\s+softener|含柔顺剂|含柔順劑|유연제\s*함유)/iu
+  };
+  if (requestedSoftener && !softenerPatterns[requestedSoftener].test(text)) return true;
   if (requestedCategory === 'dishwasher-detergent-tablet') return !dishwasher || laundry;
   return !laundry || dishwasher;
 }

@@ -907,19 +907,26 @@ test('光るスマホケースは初回提示から一般ケース・LED照明�
     'light-up phone case seen on TikTok',
     '在TikTok看到的发光手机壳',
     'TikTok에서 본 빛나는 스마트폰 케이스',
+    'TikTokで見たピカピカする携帯カバー',
+    'viral glowing mobile cover from TikTok',
+    '抖音看到的会发光的手机保护壳',
+    '틱톡에서 본 불빛 나는 휴대폰 커버',
   ];
   const candidates = [
     { asin: 'VALIDJA001', product_name: 'LEDで光るスマホケース 通知発光カバー' },
     { asin: 'VALIDEN001', product_name: 'Light-up LED Smartphone Phone Case Cover' },
+    { asin: 'VALIDEN002', product_name: 'Luminous Mobile Cover with LED Glow' },
+    { asin: 'VALIDKO001', product_name: '불빛 나는 휴대폰 커버 LED 발광' },
     { asin: 'PLAIN00001', product_name: '透明 スマホケース シリコンカバー' },
     { asin: 'LIGHT00001', product_name: 'LED リングライト スマホ撮影用' },
     { asin: 'CABLE00001', product_name: 'iPhone LED ライトニング充電ケーブル' },
+    { asin: 'CHARM00001', product_name: 'Glowing Mobile Phone Charm Accessory' },
     { asin: 'OTHER00001', product_name: 'TikTok Viral Luminous Accessory Gift' },
   ];
   for (const query of queries) {
     assert.deepEqual(
       filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
-      ['VALIDJA001', 'VALIDEN001'],
+      ['VALIDJA001', 'VALIDEN001', 'VALIDEN002', 'VALIDKO001'],
       query
     );
   }
@@ -1848,6 +1855,29 @@ test('洗剤ポッドは赤ちゃん衣類・部屋干し・防臭・増白剤�
     ['Tide PODS indoor drying odor control laundry detergent 42 count', ['TIDE_INDOOR_ODOR']],
     ['汰渍 Tide PODS 婴儿衣物无荧光增白剂洗衣凝珠42颗', ['TIDE_BABY_FREE']],
     ['아리엘 실내 건조 냄새 제거 세탁 젤볼 92개', ['ARIEL_KO_INDOOR_ODOR']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+  }
+});
+
+test('洗剤ポッドは洗濯機タイプ・素材・柔軟剤条件が一致する候補だけを提示する', () => {
+  const candidates = [
+    { asin: 'ARIEL_FRONT_FREE', product_name: 'Ariel ドラム式対応 柔軟剤不使用 洗濯ジェルボール 40個' },
+    { asin: 'ARIEL_TOP_FREE', product_name: 'Ariel 縦型対応 柔軟剤不使用 洗濯ジェルボール 40個' },
+    { asin: 'ARIEL_FRONT_SOFT', product_name: 'Ariel ドラム式対応 柔軟剤入り 洗濯ジェルボール 40個' },
+    { asin: 'TIDE_TOP_SOFT', product_name: 'Tide PODS top-load with fabric softener laundry detergent 42 count' },
+    { asin: 'TIDE_FRONT_SOFT', product_name: 'Tide PODS front-load with fabric softener laundry detergent 42 count' },
+    { asin: 'TIDE_FRONT_FREE', product_name: 'Tide PODS 滚筒洗衣机适用不含柔顺剂洗衣凝珠42颗' },
+    { asin: 'TIDE_FRONT_INCLUDED', product_name: 'Tide PODS 滚筒洗衣机适用含柔顺剂洗衣凝珠42颗' },
+    { asin: 'ARIEL_WOOL_FREE', product_name: '아리엘 울 의류용 유연제 무첨가 세탁 젤볼 92개' },
+    { asin: 'ARIEL_COTTON_FREE', product_name: '아리엘 면 의류용 유연제 무첨가 세탁 젤볼 92개' },
+  ];
+  const cases = [
+    ['アリエール ドラム式対応 柔軟剤不使用 洗濯ジェルボール 40個', ['ARIEL_FRONT_FREE']],
+    ['Tide PODS top-load with fabric softener laundry detergent 42 count', ['TIDE_TOP_SOFT']],
+    ['汰渍 Tide PODS 滚筒洗衣机适用不含柔顺剂洗衣凝珠42颗', ['TIDE_FRONT_FREE']],
+    ['아리엘 울 의류용 유연제 무첨가 세탁 젤볼 92개', ['ARIEL_WOOL_FREE']],
   ];
   for (const [query, expected] of cases) {
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);

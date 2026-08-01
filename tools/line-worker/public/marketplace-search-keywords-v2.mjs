@@ -218,7 +218,12 @@ function buildDetergentPodSearchKeywords(query) {
   const indoorDrying = /(?:部屋干し|室内干し|indoor\s*drying|室内晾晒|室內晾曬|실내\s*건조)/iu.test(normalized) ? '部屋干し' : '';
   const deodorizing = /(?:防臭|消臭|odor\s*control|deodori[sz]ing|除臭|냄새\s*제거|탈취)/iu.test(normalized) ? '防臭' : '';
   const noBrightener = /(?:蛍光(?:増白)?剤不使用|no\s*optical\s*brighteners?|optical\s*brightener[- ]?free|无荧光增白剂|無螢光增白劑|형광증백제\s*무첨가)/iu.test(normalized) ? '蛍光増白剤不使用' : '';
-  return [identity, dishwasher ? '食洗機用洗剤タブレット' : '洗濯用洗剤ジェルボール', scent, refill, sensitive, antibacterial, oneRinse, babyClothes, indoorDrying, deodorizing, noBrightener, count ? `${count}個入り` : ''].filter(Boolean).join(' ');
+  const washerType = /(?:ドラム式(?:対応|用)?|front[- ]?load(?:er)?|滚筒洗衣机|滾筒洗衣機|드럼\s*세탁기)/iu.test(normalized) ? 'ドラム式対応'
+    : /(?:縦型(?:対応|用)?|top[- ]?load(?:er)?|波轮洗衣机|波輪洗衣機|통돌이\s*세탁기)/iu.test(normalized) ? '縦型対応' : '';
+  const wool = /(?:ウール|wool|羊毛|울\s*(?:의류)?)/iu.test(normalized) ? 'ウール対応' : '';
+  const softener = /(?:柔軟剤不使用|without\s+fabric\s+softener|no\s+fabric\s+softener|不含柔顺剂|不含柔順劑|유연제\s*무첨가)/iu.test(normalized) ? '柔軟剤不使用'
+    : /(?:柔軟剤入り|with\s+fabric\s+softener|含柔顺剂|含柔順劑|유연제\s*함유)/iu.test(normalized) ? '柔軟剤入り' : '';
+  return [identity, dishwasher ? '食洗機用洗剤タブレット' : '洗濯用洗剤ジェルボール', scent, refill, sensitive, antibacterial, oneRinse, babyClothes, indoorDrying, deodorizing, noBrightener, washerType, wool, softener, count ? `${count}個入り` : ''].filter(Boolean).join(' ');
 }
 
 function buildRefrigeratorWaterFilterSearchKeywords(query) {
@@ -605,7 +610,7 @@ const GENERIC_PRODUCTS = [
   ['シリアル', /(?:シリアル|グラノーラ|cereal|granola|시리얼|麦片|麥片)/iu],
   ['写真プリンター', /(?:写真プリンター|フォトプリンター|photo\s*printer|照片打印机|照片打印機|포토\s*프린터)/iu],
   ['イヤホン', /(?:イヤホン|イヤーバッド|earphones?|earbuds?|耳机|耳機|이어폰)/iu],
-  ['スマホケース', /(?:スマホケース|携帯ケース|phone\s*case|手机壳|手機殼|휴대폰\s*케이스)/iu],
+  ['スマホケース', /(?:スマホケース|携帯(?:ケース|カバー)|(?:phone|mobile)\s*(?:case|cover)|手机壳|手機殼|手机保护壳|手機保護殼|휴대폰\s*(?:케이스|커버)|스마트폰\s*(?:케이스|커버))/iu],
   ['折りたたみ傘', /(?:折りたたみ(?:傘|日傘)|folding\s*(?:umbrella|parasol)|折叠伞|折疊傘|접이식\s*(?:우산|양산))/iu],
   ['カメラ', /(?:アクションカメラ|デジタルカメラ|camera|相机|相機|카메라)/iu],
   ['バッグ', /(?:バッグ|かばん|bag|pouch|包包|背包|手提包|單肩包|单肩包|가방)/iu],
@@ -655,7 +660,7 @@ const GENERIC_ATTRIBUTES = [
   ['ベージュ', /(?:ベージュ|\bbeige\b|米色|베이지)/iu],
   ['茶', /(?:茶色|ブラウン|\bbrown\b|棕色|褐色|갈색|브라운)/iu],
   ['折りたたみ', /(?:折りたたみ|折り畳み|折り畳める|foldable|folding|折叠|折疊|접이식)/iu],
-  ['光る', /(?:光る|発光|LED|ライトアップ|light[- ]?up|glowing|发光|發光|빛나는|발광)/iu],
+  ['光る', /(?:光る|発光|ピカピカ|LED|ライトアップ|light[- ]?up|glowing|luminous|发光|發光|灯光|亮闪闪|빛나는|발광|불빛\s*나는)/iu],
   ['韓国風', /(?:韓国っぽい|韓国風|韓国系|韓国の|korean\s*(?:style|look)|韩系|韓系|한국풍|한국\s*스타일)/iu],
   ['メンズ', /(?:男性用|メンズ|\b(?:for\s+men|men'?s)\b|男士(?:用|款)?|남성용|남자용)/iu],
   ['レディース', /(?:女性用|レディース|\b(?:for\s+women|women'?s)\b|女士(?:用|款)?|여성용|여자용)/iu],
