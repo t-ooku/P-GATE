@@ -6,7 +6,7 @@ const COPY = {
     category: '上位候補が別カテゴリに分かれています。どちらの用途に近いですか？',
     use: 'それは何に使うものですか？',
     detail: '色・大きさ・素材のうち、もう一つ覚えている特徴はありますか？',
-    wish: '今は特定できないため、ほしっトクへ保存して後日もう一度照合できます。'
+    wish: '今は特定できないため、ほしっとくへ保存して後日もう一度照合できます。'
   },
   EN: {
     category: 'The leading matches split into different categories. Which use is closer?',
@@ -749,6 +749,32 @@ function isAirFryerLinerMismatch(candidate, query) {
   return !/(?:ライナー|liners?|纸垫|紙墊|라이너)/iu.test(text);
 }
 
+function vacuumBagIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const miele = value.match(/(?:miele|ミーレ|美诺|美諾|밀레).{0,25}(?:hyclean\s*pure\s*)?(gn|fjm)\b/u);
+  if (miele) return `miele-${miele[1]}`;
+  if (/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,25}s[- ]?bag/u.test(value)) return 'philips-s-bag';
+  if (/(?:bosch|ボッシュ|博世|보쉬).{0,25}(?:type\s*g\s*all|タイプ\s*g)/u.test(value)) return 'bosch-type-g-all';
+  return '';
+}
+
+function vacuumBagPart(text) {
+  return String(text || '').normalize('NFKC').toLowerCase().match(/\b(fc8021\/03|bbz41fgall)\b/u)?.[1] || '';
+}
+
+function isVacuumBagMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (vacuumBagIdentity(query) && vacuumBagIdentity(text) !== vacuumBagIdentity(query)) return true;
+  if (vacuumBagPart(query) && vacuumBagPart(text) !== vacuumBagPart(query)) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (/(?:本体|vacuum\s*cleaner\s*(?:unit|body)|吸尘器主机|吸塵器主機|진공청소기\s*본체|フィルター|filters?|滤芯|濾芯|필터)/iu.test(text)) return true;
+  return !/(?:紙パック|ダストバッグ|dust\s*bags?|集尘袋|集塵袋|먼지\s*봉투)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -881,6 +907,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const toolBattery = requested.has('tool-battery');
   const labelTape = requested.has('label-tape');
   const airFryerLiner = requested.has('air-fryer-liner');
+  const vacuumBag = requested.has('vacuum-dust-bag');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -925,6 +952,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (toolBattery) return !isToolBatteryMismatch(candidate, query);
     if (labelTape) return !isLabelTapeMismatch(candidate, query);
     if (airFryerLiner) return !isAirFryerLinerMismatch(candidate, query);
+    if (vacuumBag) return !isVacuumBagMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

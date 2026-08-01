@@ -382,6 +382,30 @@ function buildAirFryerLinerSearchKeywords(query) {
     count ? `${count}枚セット` : ''].filter(Boolean).join(' ');
 }
 
+function vacuumBagIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  const miele = value.match(/(?:miele|ミーレ|美诺|美諾|밀레).{0,25}(?:hyclean\s*pure\s*)?(GN|FJM)\b/iu);
+  if (miele) return `Miele HyClean Pure ${miele[1].toUpperCase()}`;
+  if (/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,25}s[- ]?bag/iu.test(value)) return 'Philips s-bag';
+  if (/(?:bosch|ボッシュ|博世|보쉬).{0,25}(?:type\s*g\s*all|タイプ\s*G)/iu.test(value)) return 'Bosch Type G ALL';
+  return '';
+}
+
+function vacuumBagPart(query) {
+  return String(query || '').normalize('NFKC').match(/\b(FC8021\/03|BBZ41FGALL)\b/iu)?.[1]?.toUpperCase() || '';
+}
+
+function buildVacuumBagSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:掃除機用?(?:紙パック|ダストバッグ)|vacuum\s*(?:cleaner\s*)?(?:dust\s*)?bags?|吸尘器集尘袋|吸塵器集塵袋|진공청소기\s*먼지\s*봉투)/iu.test(normalized)) return '';
+  const identity = vacuumBagIdentity(normalized);
+  if (!identity) return '';
+  const part = vacuumBagPart(normalized);
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu.test(normalized) ? '純正' : '';
+  const count = normalized.match(/(\d+)\s*(?:枚|個|pack|packs|count|pcs|pieces|个|個|개|개입|장)/iu)?.[1];
+  return [identity, part, '掃除機紙パック', genuine, count ? `${count}枚セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -690,6 +714,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawLabelTape) return rawLabelTape;
   const rawAirFryerLiner = buildAirFryerLinerSearchKeywords(rawNormalized);
   if (rawAirFryerLiner) return rawAirFryerLiner;
+  const rawVacuumBag = buildVacuumBagSearchKeywords(rawNormalized);
+  if (rawVacuumBag) return rawVacuumBag;
   const normalized = stripSearchBudget(rawNormalized).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);

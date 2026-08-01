@@ -1928,3 +1928,27 @@ test('エアフライヤーライナーは本体・別機種・容量素材形�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['air-fryer-liner'], query);
   }
 });
+
+test('掃除機紙パックは本体・フィルター・別規格品番・枚数違い・互換品を除外する', () => {
+  const candidates = [
+    { asin: 'FJM', product_name: 'Miele HyClean Pure FJM 純正 掃除機紙パック 4枚' },
+    { asin: 'FJM2', product_name: 'Miele HyClean Pure FJM 純正 掃除機紙パック 2枚' },
+    { asin: 'FJM_COMPAT', product_name: 'Miele HyClean Pure FJM 互換 掃除機紙パック 4枚' },
+    { asin: 'GN', product_name: 'Miele HyClean Pure GN vacuum dust bags 4 pack' },
+    { asin: 'GN_FILTER', product_name: 'Miele HyClean Pure GN vacuum filter 4 pack' },
+    { asin: 'PHILIPS', product_name: 'Philips s-bag FC8021/03 原装吸尘器集尘袋 4个' },
+    { asin: 'PHILIPS_WRONG', product_name: 'Philips s-bag FC8022/04 原装吸尘器集尘袋 4个' },
+    { asin: 'BOSCH', product_name: 'Bosch Type G ALL BBZ41FGALL 정품 진공청소기 먼지봉투 4개' },
+    { asin: 'BOSCH_BODY', product_name: 'Bosch Type G ALL BBZ41FGALL 진공청소기 본체 먼지봉투 4개 포함' },
+  ];
+  const cases = [
+    ['ミーレ HyClean Pure FJM 純正 掃除機紙パック 4枚', ['FJM']],
+    ['Miele HyClean Pure GN vacuum dust bags 4 pack', ['GN']],
+    ['飞利浦 s-bag FC8021/03 原装吸尘器集尘袋 4个', ['PHILIPS']],
+    ['보쉬 Type G ALL BBZ41FGALL 정품 진공청소기 먼지봉투 4개', ['BOSCH']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['vacuum-dust-bag'], query);
+  }
+});

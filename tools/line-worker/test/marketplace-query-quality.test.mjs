@@ -217,6 +217,20 @@ test('エアフライヤーライナーを4言語で本体から分離し容量�
   }
 });
 
+test('掃除機紙パックを4言語で本体とフィルターから分離し規格品番枚数を保つ', () => {
+  const cases = [
+    ['ミーレ HyClean Pure FJM 純正 掃除機紙パック 4枚', 'Miele HyClean Pure FJM 掃除機紙パック 純正 4枚セット'],
+    ['Miele HyClean Pure GN vacuum dust bags 4 pack', 'Miele HyClean Pure GN 掃除機紙パック 4枚セット'],
+    ['飞利浦 s-bag FC8021/03 原装吸尘器集尘袋 4个', 'Philips s-bag FC8021/03 掃除機紙パック 純正 4枚セット'],
+    ['보쉬 Type G ALL BBZ41FGALL 정품 진공청소기 먼지봉투 4개', 'Bosch Type G ALL BBZ41FGALL 掃除機紙パック 純正 4枚セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);
