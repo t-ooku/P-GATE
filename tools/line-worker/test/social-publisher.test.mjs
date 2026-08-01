@@ -23,6 +23,23 @@ test('affiliate social posts always include disclosure', () => {
   assert.match(post.caption, /アフィリエイト広告/);
 });
 
+test('HOSHILUとITG Amazon店舗の所有主体を混同する投稿を拒否する', () => {
+  assert.throws(() => normalizeSocialPost({
+    platform: 'X',
+    caption: 'ITGグループ株式会社が運営するHOSHILUです。'
+  }), /SOCIAL_ENTITY_CLAIM_INVALID/);
+  assert.throws(() => normalizeSocialPost({
+    platform: 'X',
+    caption: 'HOSHILUはITGグループ株式会社が所有しています。'
+  }), /SOCIAL_ENTITY_CLAIM_INVALID/);
+
+  const valid = normalizeSocialPost({
+    platform: 'X',
+    caption: 'with care・Find fun・Tomorrow\'s smileはITGグループ株式会社が運営するAmazon.co.jp店舗です。HOSHILUで商品を探せます。'
+  });
+  assert.match(valid.caption, /ITGグループ株式会社/);
+});
+
 test('unapproved posts can never be published', async () => {
   await assert.rejects(() => publishSocialPost({
     platform: 'X',

@@ -1,5 +1,6 @@
 const PLATFORMS = new Set(['X', 'INSTAGRAM', 'TIKTOK']);
 const DISCLOSURE = '※リンク先にはアフィリエイト広告を含む場合があります。';
+const INVALID_HOSHILU_OWNER_CLAIM = /(?:ITG(?:グループ株式会社)?[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}(?:HOSHILU|ホシル)|(?:HOSHILU|ホシル)[^。\n]{0,20}(?:所有|運営))|(?:HOSHILU|ホシル)[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}ITG(?:グループ株式会社)?|ITG(?:グループ株式会社)?[^。\n]{0,20}(?:所有|運営)))/i;
 
 const clean = (value, max = 2000) => String(value || '')
   .normalize('NFKC')
@@ -13,6 +14,7 @@ export function normalizeSocialPost(input = {}) {
   if (!PLATFORMS.has(platform)) throw new Error('SOCIAL_PLATFORM_INVALID');
   let caption = clean(input.caption, platform === 'X' ? 240 : 1800);
   if (caption.length < 5) throw new Error('SOCIAL_CAPTION_INVALID');
+  if (INVALID_HOSHILU_OWNER_CLAIM.test(caption)) throw new Error('SOCIAL_ENTITY_CLAIM_INVALID');
   if (platform === 'INSTAGRAM') {
     if (!/コメント/.test(caption)) caption += ' 気になった商品をコメントで教えてね。';
     const requiredTags = ['#ホシル', '#あいまい検索', '#10モール横断', '#ほしっとく'];
