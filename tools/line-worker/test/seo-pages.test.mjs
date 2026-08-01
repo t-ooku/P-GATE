@@ -29,15 +29,20 @@ test('日英SEO必須10ページを別URLで提供する', () => {
 });
 
 test('FAQ structured data matches the visible question and answer', () => {
+  const questionsByLocale = { ja: new Set(), en: new Set() };
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     const json = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)?.[1];
     const data = JSON.parse(json);
     const faq = data['@graph'].find((entry) => entry['@type'] === 'FAQPage');
     const entity = faq.mainEntity[0];
+    const locale = path.split('/')[1];
+    questionsByLocale[locale].add(entity.name);
     assert.ok(html.includes(`<summary>${entity.name}</summary>`));
     assert.ok(html.includes(`<p>${entity.acceptedAnswer.text}</p>`));
   }
+  assert.equal(questionsByLocale.ja.size, 5);
+  assert.equal(questionsByLocale.en.size, 5);
 });
 
 test('each SEO page links to every other guide in the same language', () => {

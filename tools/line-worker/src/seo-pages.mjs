@@ -23,6 +23,29 @@ const pages = {
   }
 };
 
+const faqs = {
+  'american-products-in-japan': {
+    ja: ['英語の商品名しか分からなくても探せますか？', 'はい。英語の商品名や、色・形・用途など覚えている特徴を入力して検索できます。各モールで購入できるかは、表示された商品ページで確認してください。'],
+    en: ['Can I search using only an English product name?', 'Yes. Enter the English product name or describe details such as its color, shape, and purpose. Confirm current availability on the linked marketplace page.']
+  },
+  'find-product-without-name': {
+    ja: ['商品名が分からなくても検索できますか？', 'はい。色、形、用途、見た場所など、覚えている特徴をそのまま入力できます。個人情報は入力しないでください。'],
+    en: ['Can I search without knowing the product name?', 'Yes. Enter any clues you remember, such as color, shape, purpose, or where you saw it. Do not include personal information.']
+  },
+  'how-to-search-by-description': {
+    ja: ['どのような特徴を入力すると探しやすいですか？', '色、形、大きさ、素材、用途、使う場所などを組み合わせてください。確実でない特徴は、断定せず「たぶん」などを添えて入力できます。'],
+    en: ['Which details make a description search more useful?', 'Combine details such as color, shape, size, material, purpose, and where it is used. You can mark uncertain clues as approximate instead of presenting them as certain.']
+  },
+  'shopping-in-japan': {
+    ja: ['日本語の商品名が分からなくても探せますか？', 'はい。英語や覚えている特徴から検索できます。価格、在庫、配送条件は変わるため、購入前に各モールの商品ページで確認してください。'],
+    en: ['Do I need to know the Japanese product name?', 'No. You can search in English or describe the product. Prices, availability, and delivery terms can change, so confirm them on the marketplace page before purchasing.']
+  },
+  'product-requests': {
+    ja: ['見つからない検索をあとで確認できますか？', '無料会員は検索内容をMYWISHへ保存して、あとから再検索できます。氏名、住所、連絡先などの個人情報は入力しないでください。'],
+    en: ['Can I return to an unresolved search later?', 'Free members can save the search to MYWISH and try it again later. Do not enter personal information such as names, addresses, or contact details.']
+  }
+};
+
 const esc = (value) => String(value).replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 }[character]));
@@ -39,10 +62,7 @@ export function renderSeoPage(pathname) {
   const searchLabel = locale === 'ja' ? '覚えている特徴を入力' : 'Describe what you remember';
   const submit = locale === 'ja' ? 'HOSHILUで探す' : 'Search with HOSHILU';
   const faqTitle = locale === 'ja' ? 'よくある質問' : 'Frequently asked questions';
-  const question = locale === 'ja' ? '商品名が分からなくても検索できますか？' : 'Can I search without knowing the product name?';
-  const answer = locale === 'ja'
-    ? 'はい。色、形、用途、見た場所など、覚えている特徴をそのまま入力できます。'
-    : 'Yes. Enter any clues you remember, such as color, shape, purpose, or where you saw it.';
+  const [question, answer] = faqs[slug][locale];
   const canonical = `${ORIGIN}/${locale}/${slug}`;
   const shareImage = `${ORIGIN}/og/hoshilu-x-v3.png`;
   const ogLocale = locale === 'ja' ? 'ja_JP' : 'en_US';
