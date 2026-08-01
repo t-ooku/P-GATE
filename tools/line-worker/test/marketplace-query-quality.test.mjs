@@ -236,6 +236,21 @@ test('カメラ用SDカードは容量・UHS・速度クラス・読込速度を
   }
 });
 
+test('ゲーミングモニターは画面・解像度・Hz・パネル・端子を4言語で保持する', () => {
+  const queries = [
+    '27インチ 4K 144Hz IPS HDMI 2.1 HDR対応ゲーミングモニター',
+    '27 inch 4K 144Hz IPS gaming monitor with HDMI 2.1 and HDR',
+    '27英寸 4K 144Hz IPS 游戏显示器 支持HDMI 2.1和HDR',
+    '27인치 4K 144Hz IPS 게이밍 모니터 HDMI 2.1 HDR 지원',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ゲーミングモニター 27インチ 4K 144Hz IPS HDMI 2.1 HDR', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

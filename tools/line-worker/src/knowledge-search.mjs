@@ -592,6 +592,34 @@ function isSdMemoryCardMismatch(candidate, requested) {
   return false;
 }
 
+function gamingMonitorConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    monitor: /(?:モニター|monitor|显示器|顯示器|모니터)/iu.test(text),
+    size: text.match(/\b(\d{2}(?:\.\d)?)\s*(?:インチ|inch(?:es)?|英寸|인치)/iu)?.[1] || '',
+    fourK: /\b4\s*k\b/iu.test(text),
+    refreshRate: text.match(/\b(\d{2,3})\s*hz\b/iu)?.[1] || '',
+    ips: /\bips\b/iu.test(text),
+    hdmi: text.match(/\bhdmi\s*(2\.1|2\.0)\b/iu)?.[1] || '',
+    hdr: /\bhdr\b/iu.test(text),
+    wrongProduct: /(?:テレビ|\btv\b|电视|電視|텔레비전|モニター\s*アーム|monitor\s*arm|显示器支架|顯示器支架|모니터\s*암|projector|プロジェクター|投影仪|投影機|프로젝터|portable.{0,24}monitor|モバイル.{0,16}モニター|便携.{0,16}显示器|便攜.{0,16}顯示器|휴대용.{0,16}모니터)/iu.test(text)
+  };
+}
+
+function isGamingMonitorMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = gamingMonitorConstraints(text);
+  if (!evidence.monitor || evidence.wrongProduct) return true;
+  for (const field of ['size', 'refreshRate', 'hdmi']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const feature of ['fourK', 'ips', 'hdr']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1403,12 +1431,14 @@ export function filterCategoryMismatches(query, candidates = []) {
   const portableSsdIntent = portableSsd.ssd && portableSsd.portable && Boolean(portableSsd.capacity);
   const sdMemoryCard = sdMemoryCardConstraints(normalizedQuery);
   const sdMemoryCardIntent = sdMemoryCard.sdCard && Boolean(sdMemoryCard.capacity && sdMemoryCard.uhs);
+  const gamingMonitor = gamingMonitorConstraints(normalizedQuery);
+  const gamingMonitorIntent = gamingMonitor.monitor && Boolean(gamingMonitor.size && gamingMonitor.refreshRate);
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
-    && !portableSsdIntent && !sdMemoryCardIntent) return candidates;
+    && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1460,6 +1490,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (displayPortCableIntent) return !isDisplayPortCableMismatch(candidate, displayPortCable);
     if (portableSsdIntent) return !isPortableSsdMismatch(candidate, portableSsd);
     if (sdMemoryCardIntent) return !isSdMemoryCardMismatch(candidate, sdMemoryCard);
+    if (gamingMonitorIntent) return !isGamingMonitorMismatch(candidate, gamingMonitor);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

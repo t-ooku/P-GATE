@@ -1192,6 +1192,30 @@ test('カメラ用SDカードは4言語で容量・UHS・Vクラス・速度が�
   }
 });
 
+test('ゲーミングモニターは4言語で画面・解像度・Hz・パネル・端子が一致する候補だけを提示する', () => {
+  const queries = [
+    '27インチ 4K 144Hz IPS HDMI 2.1 HDR対応ゲーミングモニター',
+    '27 inch 4K 144Hz IPS gaming monitor with HDMI 2.1 and HDR',
+    '27英寸 4K 144Hz IPS 游戏显示器 支持HDMI 2.1和HDR',
+    '27인치 4K 144Hz IPS 게이밍 모니터 HDMI 2.1 HDR 지원',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Gaming Monitor 27 inch 4K 144Hz IPS HDMI 2.1 HDR' },
+    { asin: 'WRONGSIZE', product_name: 'Gaming Monitor 32 inch 4K 144Hz IPS HDMI 2.1 HDR' },
+    { asin: 'QHD', product_name: 'Gaming Monitor 27 inch QHD 144Hz IPS HDMI 2.1 HDR' },
+    { asin: 'SLOW', product_name: 'Gaming Monitor 27 inch 4K 60Hz IPS HDMI 2.1 HDR' },
+    { asin: 'VA', product_name: 'Gaming Monitor 27 inch 4K 144Hz VA HDMI 2.1 HDR' },
+    { asin: 'OLDHDMI', product_name: 'Gaming Monitor 27 inch 4K 144Hz IPS HDMI 2.0 HDR' },
+    { asin: 'NOHDR', product_name: 'Gaming Monitor 27 inch 4K 144Hz IPS HDMI 2.1' },
+    { asin: 'TV', product_name: 'Gaming TV Monitor 27 inch 4K 144Hz IPS HDMI 2.1 HDR' },
+    { asin: 'ARM', product_name: 'Gaming Monitor Arm 27 inch 4K 144Hz IPS HDMI 2.1 HDR' },
+    { asin: 'PORTABLE', product_name: 'Portable Gaming Monitor 27 inch 4K 144Hz IPS HDMI 2.1 HDR' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

@@ -196,6 +196,19 @@ function buildSdMemoryCardSearchKeywords(query) {
     speed ? `読込 ${speed}MB/s` : '', fourK, eightK].filter(Boolean).join(' ');
 }
 
+function buildGamingMonitorSearchKeywords(query) {
+  if (!/(?:ゲーミング\s*モニター|gaming\s*monitor|游戏\s*显示器|遊戲\s*顯示器|게이밍\s*모니터)/iu.test(query)) return '';
+  const size = String(query || '').match(/\b(\d{2}(?:\.\d)?)\s*(?:インチ|inch(?:es)?|英寸|인치)/iu)?.[1];
+  const resolution = /\b4\s*k\b/iu.test(query) ? '4K' : '';
+  const refreshRate = String(query || '').match(/\b(\d{2,3})\s*hz\b/iu)?.[1];
+  const panel = /\bips\b/iu.test(query) ? 'IPS' : '';
+  const hdmi = String(query || '').match(/\bhdmi\s*(2\.1|2\.0)\b/iu)?.[1];
+  const hdr = /\bhdr\b/iu.test(query) ? 'HDR' : '';
+  if (!size || !resolution || !refreshRate) return '';
+  return ['ゲーミングモニター', `${size}インチ`, resolution, `${refreshRate}Hz`, panel,
+    hdmi ? `HDMI ${hdmi}` : '', hdr].filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1037,6 +1050,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (portableSsd) return portableSsd;
   const sdMemoryCard = buildSdMemoryCardSearchKeywords(normalized);
   if (sdMemoryCard) return sdMemoryCard;
+  const gamingMonitor = buildGamingMonitorSearchKeywords(normalized);
+  if (gamingMonitor) return gamingMonitor;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS
