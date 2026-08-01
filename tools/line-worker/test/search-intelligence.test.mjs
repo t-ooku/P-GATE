@@ -2463,3 +2463,24 @@ test('maximum power-bank PD output accepts the boundary and lower declared outpu
       ['PD18', 'PD20'], query);
   }
 });
+
+test('power-bank PD output ranges accept boundaries and intermediate output in four languages', () => {
+  const queries = [
+    'PD20Wから30Wの10000mAhモバイルバッテリー',
+    'a 10000mAh power bank between 20W and 30W PD',
+    'PD20W到30W的10000mAh充电宝',
+    'PD20W에서 30W 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'NOPD', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'PD18', product_name: '10000mAh Power Bank USB-C PD18W' },
+    { asin: 'PD20', product_name: '10000mAh Power Bank USB-C PD20W' },
+    { asin: 'PD25', product_name: '10000mAh Power Bank USB-C PD25W' },
+    { asin: 'PD30', product_name: '10000mAh Power Bank USB-C PD30W' },
+    { asin: 'PD45', product_name: '10000mAh Power Bank USB-C PD45W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['PD20', 'PD25', 'PD30'], query);
+  }
+});

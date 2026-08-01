@@ -1392,3 +1392,18 @@ test('maximum power-bank PD output remains an upper bound in four languages', ()
     }
   }
 });
+
+test('power-bank PD output ranges preserve both inclusive bounds in four languages', () => {
+  const queries = [
+    'PD20Wから30Wの10000mAhモバイルバッテリー',
+    'a 10000mAh power bank between 20W and 30W PD',
+    'PD20W到30W的10000mAh充电宝',
+    'PD20W에서 30W 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー PD20W-PD30W', `${marketplace}: ${query}`);
+    }
+  }
+});

@@ -557,6 +557,12 @@ function buildPowerBankSearchKeywords(query) {
       const escaped = match[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       return !isNegatedAttribute(normalized, new RegExp(escaped, 'iu'));
     });
+  const pdOutputRangeMatch = normalized.match(/(?:between\s+)?(?:pd\s*)?(\d{1,3})\s*w\s*(?:から|〜|~|-|to|and|到|至|에서)\s*(?:pd\s*)?(\d{1,3})\s*w(?:\s*pd)?/iu);
+  const pdOutputRange = Boolean(pdOutputRangeMatch && /pd/iu.test(pdOutputRangeMatch[0]));
+  const pdRangeMinimum = pdOutputRange
+    ? Math.min(Number(pdOutputRangeMatch[1]), Number(pdOutputRangeMatch[2])) : 0;
+  const pdRangeMaximum = pdOutputRange
+    ? Math.max(Number(pdOutputRangeMatch[1]), Number(pdOutputRangeMatch[2])) : 0;
   const requestedWatts = pdWatts?.[1] || pdWatts?.[2] || '';
   const minimumPdOutput = requestedWatts && (
     new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?`, 'iu').test(normalized)
@@ -566,8 +572,8 @@ function buildPowerBankSearchKeywords(query) {
     new RegExp(`(?:at\\s+most|maximum(?:\\s+of)?|up\\s+to|不超过|最多)\\s*(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?`, 'iu').test(normalized)
     || new RegExp(`(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?\\s*(?:以下|or\\s+less|or\\s+under|이하)`, 'iu').test(normalized)
   );
-  const powerDelivery = requestedWatts
-    ? `PD${requestedWatts}W${minimumPdOutput ? '以上' : maximumPdOutput ? '以下' : ''}` : '';
+  const powerDelivery = pdOutputRange ? `PD${pdRangeMinimum}W-PD${pdRangeMaximum}W`
+    : requestedWatts ? `PD${requestedWatts}W${minimumPdOutput ? '以上' : maximumPdOutput ? '以下' : ''}` : '';
   const rangeMinimum = capacityRange
     ? boundedCapacityRange ? Number(minimumCapacityValue) : Math.min(Number(rangeStart), Number(rangeEnd)) : 0;
   const rangeMaximum = capacityRange

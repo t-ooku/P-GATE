@@ -392,6 +392,12 @@ function isPowerBankMismatch(candidate, query) {
   const pdMatches = [...normalizedQuery.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)];
   const pdWatts = pdMatches
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
+  const pdOutputRangeMatch = normalizedQuery.match(/(?:between\s+)?(?:pd\s*)?(\d{1,3})\s*w\s*(?:から|〜|~|-|to|and|到|至|에서)\s*(?:pd\s*)?(\d{1,3})\s*w(?:\s*pd)?/iu);
+  const pdOutputRange = Boolean(pdOutputRangeMatch && /pd/iu.test(pdOutputRangeMatch[0]));
+  const pdRangeMinimum = pdOutputRange
+    ? Math.min(Number(pdOutputRangeMatch[1]), Number(pdOutputRangeMatch[2])) : 0;
+  const pdRangeMaximum = pdOutputRange
+    ? Math.max(Number(pdOutputRangeMatch[1]), Number(pdOutputRangeMatch[2])) : 0;
   const requestedWatts = pdWatts?.[1] || pdWatts?.[2] || '';
   const minimumPdOutput = requestedWatts && (
     new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?`, 'iu').test(normalizedQuery)
@@ -402,9 +408,11 @@ function isPowerBankMismatch(candidate, query) {
     || new RegExp(`(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?\\s*(?:以下|or\\s+less|or\\s+under|이하)`, 'iu').test(normalizedQuery)
   );
   const candidatePdWatts = powerDeliveryWatts(text);
-  if (minimumPdOutput && candidatePdWatts < Number(requestedWatts)) return true;
-  if (maximumPdOutput && (!candidatePdWatts || candidatePdWatts > Number(requestedWatts))) return true;
-  if (requestedWatts && !minimumPdOutput && !maximumPdOutput
+  if (pdOutputRange && (!candidatePdWatts
+    || candidatePdWatts < pdRangeMinimum || candidatePdWatts > pdRangeMaximum)) return true;
+  if (!pdOutputRange && minimumPdOutput && candidatePdWatts < Number(requestedWatts)) return true;
+  if (!pdOutputRange && maximumPdOutput && (!candidatePdWatts || candidatePdWatts > Number(requestedWatts))) return true;
+  if (requestedWatts && !pdOutputRange && !minimumPdOutput && !maximumPdOutput
     && !new RegExp(`(?:^|\\D)(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?(?:\\D|$)`, 'iu').test(text)) return true;
   const rejectedWatts = pdMatches
     .filter((match) => isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))
