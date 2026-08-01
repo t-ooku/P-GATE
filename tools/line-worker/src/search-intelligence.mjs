@@ -80,7 +80,7 @@ const RULES = [
   ['radio',/(ラジオ|radio)/iu,['radio']],
   ['socks',/(靴下|ソックス|socks?|양말|袜子|襪子)/iu,['sock','socks','hosiery']],
   ['shoe-accessory',/(靴(?:箱|べら|紐|ひも|磨き|クリーム|ラック)|shoe (?:box|horn|lace|cream|rack))/iu,['shoe accessory','shoe care']],
-  ['shoes',/(光る靴|靴(?!下|箱|べら|紐|ひも|磨き|クリーム|ラック)|シューズ|スニーカー|shoes?|sneakers?)/iu,['shoe','sneaker']],
+  ['shoes',/(光る靴|靴(?!下|箱|べら|紐|ひも|磨き|クリーム|ラック)|シューズ|スニーカー|shoes?(?!\s*(?:box|horn|lace|cream|rack|care))|sneakers?|trainers?|运动鞋|運動鞋|鞋(?!盒|带|帶|油|架)|운동화|신발(?!장|끈))/iu,['shoe','sneaker']],
   ['lip-care',/(リップ(?:クリーム|バーム|ケア)|lip balm|lip care)/iu,['lip balm','lip care']],
   ['lip-color',/(リップ(?!クリーム|バーム|ケア)|口紅|ティント|lip tint|lipstick|립 틴트|립스틱|틴트|唇釉|口红|口紅)/iu,['lip','tint','lipstick']],
   ['t-shirt',/(Tシャツ|ティーシャツ|tee ?shirt|t-shirt)/iu,['t-shirt','tee']],

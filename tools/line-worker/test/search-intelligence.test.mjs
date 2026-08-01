@@ -1071,3 +1071,26 @@ test('4言語のワンピース検索はサイズ表現に左右されず商品�
     assert.match(query, /"black"\*/, input);
   }
 });
+
+test('4言語と地域別の靴サイズは商品カテゴリと訂正後のサイズだけをFTSへ保持する', () => {
+  const cases = [
+    ['24cmではなく24.5cmの白いスニーカー', /"24\.5"\*/, /"24"\*/],
+    ['white sneakers in US size 9, not US size 8', /"us 9"\*/, /"us 8"\*/],
+    ['不要38码，要39码白色运动鞋', /"eu 39"\*/, /"eu 38"\*/],
+    ['255mm 말고 260mm 흰색 운동화', /"260"\*/, /"255"\*/],
+    ['EU 38ではなくEU 39の黒いスニーカー', /"eu 39"\*/, /"eu 38"\*/],
+    ['black trainers in UK size 6', /"uk 6"\*/, /"uk 5"\*/],
+  ];
+  for (const [input, expected, forbidden] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"shoe"\*.*"sneaker"\*/, input);
+    assert.match(query, expected, input);
+    assert.doesNotMatch(query, forbidden, input);
+  }
+});
+
+test('4言語の靴用品を靴本体のFTSカテゴリへ誤分類しない', () => {
+  for (const input of ['靴箱', 'shoe lace', '鞋盒', '신발장']) {
+    assert.doesNotMatch(intelligentFtsQuery(input), /"shoe"\*|"sneaker"\*/, input);
+  }
+});

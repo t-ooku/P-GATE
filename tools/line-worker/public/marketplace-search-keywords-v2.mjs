@@ -136,7 +136,7 @@ const GENERIC_PRODUCTS = [
   ['折りたたみ傘', /(?:折りたたみ(?:傘|日傘)|folding\s*(?:umbrella|parasol)|折叠伞|折疊傘|접이식\s*(?:우산|양산))/iu],
   ['カメラ', /(?:アクションカメラ|デジタルカメラ|camera|相机|相機|카메라)/iu],
   ['バッグ', /(?:バッグ|かばん|bag|pouch|包包|背包|手提包|單肩包|单肩包|가방)/iu],
-  ['スニーカー', /(?:スニーカー|運動靴|sneakers?|运动鞋|運動鞋|운동화)/iu],
+  ['スニーカー', /(?:スニーカー|運動靴|シューズ|sneakers?|trainers?|shoes?(?!\s*(?:box|horn|lace|cream|rack|care))|运动鞋|運動鞋|鞋(?!盒|带|帶|油|架)|운동화|신발(?!장|끈))/iu],
   ['ワンピース', /(?:ワンピース|dress|连衣裙|連衣裙|원피스)/iu],
   ['トップス', /(?:トップス|シャツ|ブラウス|tops?|shirts?|blouse|上衣|셔츠|블라우스)/iu],
   ['リップ', /(?:リップ|口紅|lipstick|lip\s*tint|唇膏|립스틱|립틴트)/iu],
@@ -196,6 +196,21 @@ const GENERIC_MATERIALS = [
 const APPAREL_PRODUCTS = new Set([
   '靴下 socks', '帽子', 'バッグ', 'スニーカー', 'ワンピース', 'トップス',
 ]);
+
+function shoeSizeTokens(query) {
+  const matches = [
+    ...query.matchAll(/\b(US|EU|UK)\s*(?:サイズ|size|尺码|尺碼|사이즈)?\s*(\d{1,2}(?:\.5)?)/giu),
+    ...query.matchAll(/(\d{2}(?:\.5)?)\s*(码|碼)/giu),
+  ];
+  return [...new Set(matches
+    .filter((match) => {
+      const escaped = match[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return !isNegatedAttribute(query, new RegExp(escaped, 'iu'));
+    })
+    .map((match) => /码|碼/u.test(match[2])
+      ? `EU${match[1]}`
+      : `${String(match[1]).toUpperCase()}${match[2]}`))];
+}
 
 function apparelSizeTokens(query) {
   const matches = [
@@ -279,11 +294,13 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const sizes = products.some((product) => APPAREL_PRODUCTS.has(product))
     ? apparelSizeTokens(normalized)
     : [];
+  const shoeSizes = products.includes('スニーカー') ? shoeSizeTokens(normalized) : [];
   const limit = marketplace === 'QOO10_JP' ? 3 : 6;
   const productLimit = Math.min(products.length, 2);
   const attributeLimit = Math.max(0, limit - productLimit);
   const conditions = [...new Set([
     ...specifications,
+    ...shoeSizes,
     ...sizes,
     ...materials,
     ...attributes,

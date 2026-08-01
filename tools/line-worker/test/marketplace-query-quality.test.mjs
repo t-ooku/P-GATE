@@ -411,3 +411,33 @@ test("4言語のフリーサイズを9モール向け共通表記へ統一する
     }
   }
 });
+
+test("4言語とUS・EU・UKの靴サイズは訂正後の条件だけを9モールへ保持する", () => {
+  const cases = [
+    ['24cmではなく24.5cmの白いスニーカー', '24.5cm', '24cm'],
+    ['white sneakers in US size 9, not US size 8', 'US9', 'US8'],
+    ['不要38码，要39码白色运动鞋', 'EU39', 'EU38'],
+    ['255mm 말고 260mm 흰색 운동화', '260mm', '255mm'],
+    ['EU 38ではなくEU 39の黒いスニーカー', 'EU39', 'EU38'],
+    ['black trainers in UK size 6', 'UK6', 'UK5'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected, forbidden] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      const tokens = keywords.split(/\s+/u);
+      assert.ok(tokens.includes(expected), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!tokens.includes(forbidden), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(tokens.includes('スニーカー'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("4言語の靴用品をスニーカー本体の検索語へ誤変換しない", () => {
+  const cases = ['靴箱', 'shoe lace', '鞋盒', '신발장'];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(!keywords.split(/\s+/u).includes('スニーカー'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
