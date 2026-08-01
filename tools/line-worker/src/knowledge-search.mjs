@@ -1324,6 +1324,31 @@ function isPressureIhRiceCookerMismatch(candidate, requested) {
   return false;
 }
 
+function dualDashCamConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    dashCam: /(?:ドライブレコーダー|dash[\s-]*cam(?:era)?|行车记录仪|行車記錄器|블랙박스)/iu.test(text),
+    dual: /(?:前後\s*2\s*カメラ|front\s*(?:and|&)\s*rear|dual[\s-]*camera|前后双摄|前後雙鏡|전후방\s*2?\s*채널)/iu.test(text),
+    resolution: text.match(/\b([248])\s*K\b/iu)?.[1] || '',
+    parking: /(?:駐車監視|parking\s*(?:monitoring|mode)|停车监控|停車監控|주차\s*감시)/iu.test(text),
+    gps: /\bGPS\b/iu.test(text),
+    wifi: /\bWi[\s-]*Fi\b/iu.test(text),
+    wrongProduct: /(?:micro\s*SD|SDカード|存储卡|記憶卡|메모리\s*카드|hardwire\s*kit|電源(?:直結)?ケーブル|降压线|降壓線|상시\s*전원\s*케이블|rear\s*camera\s*only|後方カメラ単体|后摄像头单独|後鏡頭單獨|후방\s*카메라\s*단품|mount(?:ing)?\s*(?:bracket)?|取付マウント|安装支架|安裝支架|장착\s*브래킷)/iu.test(text)
+  };
+}
+
+function isDualDashCamMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = dualDashCamConstraints(text);
+  if (!evidence.dashCam || evidence.wrongProduct) return true;
+  if (requested.resolution && evidence.resolution !== requested.resolution) return true;
+  for (const field of ['dual', 'parking', 'gps', 'wifi']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2238,6 +2263,10 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(pressureIhRiceCooker.capacity && pressureIhRiceCooker.steamCut
       && pressureIhRiceCooker.keepWarm)
     && !pressureIhRiceCooker.wrongProduct;
+  const dualDashCam = dualDashCamConstraints(normalizedQuery);
+  const dualDashCamIntent = dualDashCam.dashCam && dualDashCam.dual
+    && Boolean(dualDashCam.resolution && dualDashCam.parking && dualDashCam.gps && dualDashCam.wifi)
+    && !dualDashCam.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2252,7 +2281,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
     && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent
-    && !retrofitSmartLockIntent && !pressureIhRiceCookerIntent) return candidates;
+    && !retrofitSmartLockIntent && !pressureIhRiceCookerIntent && !dualDashCamIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2338,6 +2367,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (ergonomicOfficeChairIntent) return !isErgonomicOfficeChairMismatch(candidate, ergonomicOfficeChair);
     if (retrofitSmartLockIntent) return !isRetrofitSmartLockMismatch(candidate, retrofitSmartLock);
     if (pressureIhRiceCookerIntent) return !isPressureIhRiceCookerMismatch(candidate, pressureIhRiceCooker);
+    if (dualDashCamIntent) return !isDualDashCamMismatch(candidate, dualDashCam);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

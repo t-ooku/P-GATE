@@ -2109,3 +2109,17 @@ test('圧力IH炊飯器は容量・蒸気カット・保温時間を4言語で�
     }
   }
 });
+test('ドライブレコーダーは前後構成・解像度・駐車監視・通信条件を4言語で保持する', () => {
+  const inputs = [
+    '前後2カメラ 4K 駐車監視 GPS Wi-Fi ドライブレコーダー',
+    '4K front and rear dash cam with parking monitoring GPS Wi-Fi',
+    '4K 前后双摄 停车监控 GPS Wi-Fi 行车记录仪',
+    '4K 전후방 2채널 주차 감시 GPS Wi-Fi 블랙박스'
+  ];
+  for (const input of inputs) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace),
+        'ドライブレコーダー 前後2カメラ 4K 駐車監視 GPS Wi-Fi', `${marketplace}: ${input}`);
+    }
+  }
+});

@@ -552,6 +552,18 @@ function buildPressureIhRiceCookerSearchKeywords(query) {
   return ['圧力IH炊飯器', `${capacity}合`, '蒸気カット', `保温${keepWarm}時間`].join(' ');
 }
 
+function buildDualDashCamSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const dashCam = /(?:ドライブレコーダー|dash[\s-]*cam(?:era)?|行车记录仪|行車記錄器|블랙박스)/iu.test(normalized);
+  const dual = /(?:前後\s*2\s*カメラ|front\s*(?:and|&)\s*rear|dual[\s-]*camera|前后双摄|前後雙鏡|전후방\s*2?\s*채널)/iu.test(normalized);
+  const resolution = normalized.match(/\b([248])\s*K\b/iu)?.[1];
+  const parking = /(?:駐車監視|parking\s*(?:monitoring|mode)|停车监控|停車監控|주차\s*감시)/iu.test(normalized);
+  const gps = /\bGPS\b/iu.test(normalized);
+  const wifi = /\bWi[\s-]*Fi\b/iu.test(normalized);
+  if (!dashCam || !dual || !resolution || !parking || !gps || !wifi) return '';
+  return ['ドライブレコーダー', '前後2カメラ', `${resolution}K`, '駐車監視', 'GPS', 'Wi-Fi'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1381,6 +1393,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawRetrofitSmartLock) return rawRetrofitSmartLock;
   const rawPressureIhRiceCooker = buildPressureIhRiceCookerSearchKeywords(rawNormalized);
   if (rawPressureIhRiceCooker) return rawPressureIhRiceCooker;
+  const rawDualDashCam = buildDualDashCamSearchKeywords(rawNormalized);
+  if (rawDualDashCam) return rawDualDashCam;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

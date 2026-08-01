@@ -3549,3 +3549,25 @@ test('圧力IH炊飯器は4言語で容量・蒸気・保温条件が一致す�
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
   }
 });
+test('ドライブレコーダーは4言語で前後構成・画質・駐車監視・通信条件が一致する本体だけを提示する', () => {
+  const queries = [
+    '前後2カメラ 4K 駐車監視 GPS Wi-Fi ドライブレコーダー',
+    '4K front and rear dash cam with parking monitoring GPS Wi-Fi',
+    '4K 前后双摄 停车监控 GPS Wi-Fi 行车记录仪',
+    '4K 전후방 2채널 주차 감시 GPS Wi-Fi 블랙박스'
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'ドライブレコーダー 前後2カメラ 4K 駐車監視 GPS Wi-Fi' },
+    { asin: 'FRONT', product_name: 'ドライブレコーダー フロントカメラ 4K 駐車監視 GPS Wi-Fi' },
+    { asin: '2K', product_name: 'ドライブレコーダー 前後2カメラ 2K 駐車監視 GPS Wi-Fi' },
+    { asin: 'NOPARK', product_name: 'ドライブレコーダー 前後2カメラ 4K GPS Wi-Fi' },
+    { asin: 'NOGPS', product_name: 'ドライブレコーダー 前後2カメラ 4K 駐車監視 Wi-Fi' },
+    { asin: 'NOWIFI', product_name: 'ドライブレコーダー 前後2カメラ 4K 駐車監視 GPS' },
+    { asin: 'CARD', product_name: 'ドライブレコーダー用 microSDカード 4K 駐車監視 GPS Wi-Fi' },
+    { asin: 'CABLE', product_name: 'dash cam 4K front and rear hardwire kit parking monitoring GPS Wi-Fi' },
+    { asin: 'REAR', product_name: 'ドライブレコーダー 後方カメラ単体 4K 駐車監視 GPS Wi-Fi' }
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
+  }
+});
