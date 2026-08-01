@@ -1391,3 +1391,26 @@ test('Apple Pencil検索は商品種別が異なる候補を初回表示から�
   assert.deepEqual(filterCategoryMismatches('iPad Pro用Apple Pencil交換ペン先', candidates).map((item) => item.asin), ['TIPS']);
   assert.deepEqual(filterCategoryMismatches('USB-C Apple Pencil charging adapter', candidates).map((item) => item.asin), ['CHARGER']);
 });
+
+test('Apple Pencilの世代指定は4言語で一致する候補だけを表示する', () => {
+  const cases = [
+    ['Apple Pencil 第2世代 iPad Pro用', 'Apple Pencil 第2世代 iPad Pro対応'],
+    ['2nd generation Apple Pencil for iPad Pro', 'Apple Pencil 2nd generation for iPad Pro'],
+    ['iPad Pro Apple Pencil 第2代', 'iPad Pro Apple Pencil 第2代'],
+    ['아이패드 프로 애플펜슬 2세대', '아이패드 프로 애플펜슬 2세대'],
+  ];
+  for (const [query, matchingName] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: matchingName },
+      { asin: 'GEN1', product_name: 'Apple Pencil 第1世代 iPad対応' },
+      { asin: 'GEN3', product_name: 'Apple Pencil 第3世代 iPad対応' },
+      { asin: 'UNKNOWN', product_name: 'Apple Pencil iPad対応 スタイラス' },
+      { asin: 'GENERIC', product_name: 'タブレット用 第2世代 汎用スタイラス' },
+    ];
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['MATCH'],
+      query
+    );
+  }
+});

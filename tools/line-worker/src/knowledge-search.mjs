@@ -334,12 +334,20 @@ function tabletAccessoryEvidence(candidate) {
     charger: /(?:charger|power\s*adapter|charging\s*adapter|充電器|充电器|充電アダプター|充电转接器|充電轉接器|電源適配器|电源适配器|충전기|충전\s*어댑터)/u.test(text),
     stylus: /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬|stylus|スタイラス|触控笔|觸控筆|스타일러스)/u.test(text),
     stylusTip: /(?:replacement\s*(?:tips?|nibs?)|交換\s*ペン先|替え芯|替换笔尖|替換筆尖|교체\s*펜촉|펜촉)/u.test(text),
-    applePencil: /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬)/u.test(text)
+    applePencil: /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬)/u.test(text),
+    pencilGeneration: applePencilGeneration(text)
   };
 }
 
-function isTabletAccessoryMismatch(candidate, requested, applePencilIntent = false) {
+function applePencilGeneration(text) {
+  const match = String(text || '').normalize('NFKC')
+    .match(/(?:第\s*([123])\s*世代|([123])(?:st|nd|rd|th)?\s*(?:generation|gen)|第\s*([123])\s*代|([123])\s*세대)/iu);
+  return match?.[1] || match?.[2] || match?.[3] || match?.[4] || '';
+}
+
+function isTabletAccessoryMismatch(candidate, requested, applePencilIntent = false, requestedGeneration = '') {
   const evidence = tabletAccessoryEvidence(candidate);
+  if (requestedGeneration && evidence.pencilGeneration !== requestedGeneration) return true;
   if (requested.has('tablet-stylus-tip')) return !(evidence.applePencil && evidence.stylusTip);
   if (requested.has('tablet-stylus-charger')) return !(evidence.applePencil && evidence.charger);
   if (requested.has('tablet-stylus')) {
@@ -370,11 +378,14 @@ export function filterCategoryMismatches(query, candidates = []) {
     .some((category) => requested.has(category));
   const applePencilIntent = /(?:apple\s*pencil|アップルペンシル|苹果笔|蘋果筆|애플\s*펜슬)/iu
     .test(String(query || '').normalize('NFKC'));
+  const requestedGeneration = applePencilGeneration(query);
   return candidates.filter((candidate) => {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate)) return false;
-    if (tabletAccessory) return !isTabletAccessoryMismatch(candidate, requested, applePencilIntent);
+    if (tabletAccessory) {
+      return !isTabletAccessoryMismatch(candidate, requested, applePencilIntent, requestedGeneration);
+    }
     const category = inferCandidateCategory(candidate);
     return category === 'other' || requested.has(category);
   });
