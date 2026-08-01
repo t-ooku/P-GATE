@@ -1352,7 +1352,7 @@ function isDualDashCamMismatch(candidate, requested) {
 function cameraPetFeederConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   return {
-    feeder: /(?:ペット(?:用)?自動給餌器|自動給餌器|automatic\s*(?:pet\s*)?feeder|自动喂食器|自動餵食器|자동\s*급식기)/iu.test(text),
+    feeder: /(?:ペット(?:用)?自動給餌器|自動給餌器|automatic\s*(?:pet\s*)?feeder|自动喂食器|自動餵食器|자동\s*급식기|留守中.{0,20}(?:猫|犬|ペット).{0,20}(?:自動.{0,8}(?:ご飯|餌)|(?:ご飯|餌).{0,8}自動)|feeds?.{0,12}(?:cat|dog|pet).{0,20}automatically.{0,24}(?:away|not\s*home)|出门时.{0,20}自动.{0,8}(?:给)?(?:猫|狗|宠物)喂食|外出時.{0,20}自動.{0,8}(?:給)?(?:貓|狗|寵物)餵食|집을\s*비울\s*때.{0,20}(?:고양이|강아지|반려동물).{0,20}자동으로.{0,8}밥)/iu.test(text),
     capacity: text.match(/\b(\d(?:\.\d)?)\s*L\b/iu)?.[1] || '',
     camera: /(?:1080p.{0,16}(?:カメラ|camera|摄像头|鏡頭|카메라)|(?:カメラ|camera|摄像头|鏡頭|카메라).{0,16}1080p)/iu.test(text),
     wifi: /\bWi[\s-]*Fi\b/iu.test(text),

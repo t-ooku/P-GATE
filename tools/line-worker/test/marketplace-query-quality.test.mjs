@@ -2128,7 +2128,11 @@ test('カメラ付き自動給餌器は容量・画質・通信・音声条件�
     '5L 1080pカメラ Wi-Fi 双方向音声 ペット自動給餌器',
     '5L automatic pet feeder with 1080p camera Wi-Fi two-way audio',
     '5L 1080p摄像头 Wi-Fi 双向语音 自动喂食器',
-    '5L 1080p 카메라 Wi-Fi 양방향 음성 자동 급식기'
+    '5L 1080p 카메라 Wi-Fi 양방향 음성 자동 급식기',
+    '留守中に猫へ自動でご飯を出す 5L 1080pカメラ Wi-Fi 双方向音声',
+    'feeds my cat automatically while I am away 5L 1080p camera Wi-Fi two-way audio',
+    '出门时自动给猫喂食 5L 1080p摄像头 Wi-Fi 双向语音',
+    '집을 비울 때 고양이에게 자동으로 밥 주는 5L 1080p 카메라 Wi-Fi 양방향 음성'
   ];
   for (const input of inputs) {
     for (const marketplace of SEARCH_MARKETPLACES) {
