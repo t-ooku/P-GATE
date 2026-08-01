@@ -334,6 +334,17 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['JA', 'EN', 'ZH', 'KO'].forEach((language) => assert.match(app, new RegExp(`${language}:`)));
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
+  const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
+  const shellDeclarations = [
+    serviceWorker.match(/const SHELL = \[([^\]]+)\]/)?.[1] ?? '',
+    serviceWorker.match(/SHELL\.push\(([^)]+)\)/)?.[1] ?? '',
+  ].join(',');
+  const shellPaths = [...shellDeclarations.matchAll(/'([^']+)'/g)].map((match) => match[1]);
+  assert.ok(shellPaths.length > 0);
+  for (const shellPath of shellPaths) {
+    const asset = shellPath === '/' ? 'index.html' : shellPath.slice(1);
+    assert.equal(fs.existsSync(new URL(asset, publicDir)), true, `offline shell asset is missing: ${shellPath}`);
+  }
 });
 
 test('PWA公開回答は内部SKU・在庫数・元URL・取込証跡を除外する', () => {

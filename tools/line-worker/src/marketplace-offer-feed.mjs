@@ -5,6 +5,7 @@ const MARKETPLACE_SET = new Set(MARKETPLACES);
 const RIGHTS_GATED_MARKETPLACES = new Set([
   'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
 ]);
+const STOCK_STATUSES = new Set(['IN_STOCK', 'OUT_OF_STOCK', 'LIMITED', 'PREORDER', 'UNAVAILABLE', 'UNKNOWN']);
 const clean = (value, max = 500) => String(value ?? '').normalize('NFKC')
   .replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
 
@@ -51,6 +52,12 @@ export function validateMarketplaceOfferFeed(payload = {}) {
       }
       if (!recordKey && !/^[A-Z0-9]{10}$/.test(asin)) throw new Error('OFFER_FEED_MATCH_KEY_REQUIRED');
       if (asin && !/^[A-Z0-9]{10}$/.test(asin)) throw new Error('OFFER_FEED_ASIN_INVALID');
+      const price = Number(record.price ?? 0);
+      if (!Number.isFinite(price) || price < 0) throw new Error('OFFER_FEED_PRICE_INVALID');
+      const currency = clean(record.currency || 'JPY', 8).toUpperCase();
+      if (!/^[A-Z]{3}$/.test(currency)) throw new Error('OFFER_FEED_CURRENCY_INVALID');
+      const stockStatus = clean(record.stock_status || 'UNKNOWN', 24).toUpperCase();
+      if (!STOCK_STATUSES.has(stockStatus)) throw new Error('OFFER_FEED_STOCK_STATUS_INVALID');
       return {
         record_key: recordKey,
         asin,
@@ -58,9 +65,9 @@ export function validateMarketplaceOfferFeed(payload = {}) {
         external_product_id: externalProductId,
         seller_id: clean(record.seller_id, 160),
         product_url: productUrl,
-        price: Math.max(0, Number(record.price || 0)),
-        currency: clean(record.currency || 'JPY', 8),
-        stock_status: clean(record.stock_status || 'UNKNOWN', 24).toUpperCase(),
+        price,
+        currency,
+        stock_status: stockStatus,
         active: record.active === false ? 0 : 1,
         observed_at: normalizeObservedAt(record.observed_at),
         source: clean(record.source || 'partner_feed', 80),

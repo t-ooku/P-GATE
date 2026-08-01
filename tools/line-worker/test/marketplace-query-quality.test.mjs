@@ -569,6 +569,69 @@ test("ノートPCケース・スタンド・充電器を4言語で本体から�
   }
 });
 
+test("USB-Cハブを4言語でPC本体から分離し接続条件を9モールへ保持する", () => {
+  const cases = [
+    'ノートPCの端子を増やすUSB-Cハブ HDMI 有線LAN SDカード付き',
+    'USB-C hub with HDMI Ethernet and SD card ports for a laptop',
+    '带HDMI、以太网和SD卡接口的笔记本电脑USB-C扩展坞',
+    'HDMI 유선 랜 SD 카드 포트가 있는 노트북용 USB-C 허브',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('USB-Cハブ'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes('USB-C'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes('HDMI'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('ノートパソコン'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('変換アダプター'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      if (marketplace !== 'QOO10_JP') {
+        assert.ok(tokens.includes('有線LAN'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        assert.ok(tokens.includes('SDカード'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      }
+    }
+  }
+});
+
+test("Thunderbolt 4ドックの世代・給電・端子条件を4言語から9モールへ保持する", () => {
+  const cases = [
+    'PD 100W対応 Thunderbolt 4 ドック HDMI 2.1 有線LAN SDカード',
+    'Thunderbolt 4 dock with 100W PD HDMI 2.1 Ethernet and SD card',
+    '支持100W PD、HDMI 2.1、以太网和SD卡的雷电4扩展坞',
+    '100W PD HDMI 2.1 이더넷 SD 카드 지원 썬더볼트 4 도킹 스테이션',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.match(tokens.join(' '), /^Thunderbolt 4 ドック/iu, `${marketplace}: ${input}`);
+      assert.ok(tokens.includes('100W'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.match(tokens.join(' '), /HDMI 2\.1/iu, `${marketplace}: ${input}`);
+      assert.ok(!tokens.includes('USB-Cハブ'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('ノートパソコン'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      if (marketplace !== 'QOO10_JP') {
+        assert.ok(tokens.includes('有線LAN'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        assert.ok(tokens.includes('SDカード'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      }
+    }
+  }
+});
+
+test("USB-Aハブを4言語でUSB-CハブやPC本体へ誤変換しない", () => {
+  const cases = [
+    'ノートPC用の4ポートUSB-Aハブ',
+    'USB-A hub with four ports for a laptop',
+    '笔记本电脑用四口USB-A集线器',
+    '노트북용 4포트 USB-A 허브',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.match(keywords, /^USB-Aハブ/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.match(keywords, /4ポート/u, `${marketplace}: ${input} -> ${keywords}`);
+      assert.doesNotMatch(keywords, /USB-Cハブ|ノートパソコン/u, `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
 test("4言語のタブレット本体は小数インチ・容量を保持して9モール変換する", () => {
   const cases = [
     '10.9インチ256GBのタブレット',

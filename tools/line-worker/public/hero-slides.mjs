@@ -4,8 +4,7 @@ if(root){
     '/hoshilu-search-agent-products-v1.webp',
     '/hoshilu-fashion-collage-v1.png',
     '/hoshilu-electronics-collage-v1.png',
-    '/hoshilu-discovery-collage.webp',
-    '/seo/hoshilu-category-guide-v1.png'
+    '/hoshilu-discovery-collage.webp'
   ];
   const slides=sources.map((source,index)=>{
     const item=document.createElement('div');

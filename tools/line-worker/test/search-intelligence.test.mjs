@@ -266,8 +266,82 @@ test('自然文の文脈語を必須ANDにせず、ノートPC用アダプター
   const earbuds = intelligentFtsQuery('small wired earbuds that fit inside the ear');
   assert.match(earbuds, /"earbud"\*.*"ear"\*.*"bud"\*.*"headphone"\*/);
   const adapter = intelligentFtsQuery('a compact USB-C hub with multiple ports for a laptop');
-  assert.match(adapter, /"adapter"\*|"usb"\*/);
+  assert.match(adapter, /"usb-c hub"\*.*"usb type-c"\*.*"docking station"\*.*"multiport adapter"\*.*"multi adapter"\*/);
   assert.doesNotMatch(adapter, /"laptop"\*|"compact"\*|"ports"\*/);
+});
+
+test('USB-Cハブを4言語でノートPC本体や単機能アダプターから分離する', () => {
+  const queries = [
+    'ノートPCの端子を増やすUSB-Cハブ HDMI付き',
+    'USB-C hub with HDMI and multiple ports for a laptop',
+    '带HDMI接口的笔记本电脑USB-C扩展坞',
+    'HDMI 포트가 있는 노트북용 USB-C 허브',
+  ];
+  const candidates = [
+    { asin: 'HUB', product_name: 'USB-C Hub 7-in-1 HDMI Multiport Adapter' },
+    { asin: 'MULTI', product_name: 'USB Type-C Multi-Adapter JCA374' },
+    { asin: 'LAPTOP', product_name: 'USB-C対応 ノートパソコン 13インチ' },
+    { asin: 'CHARGER', product_name: 'USB-C Laptop Charger Power Adapter' },
+    { asin: 'HDMI', product_name: 'USB-C to HDMI 単機能変換アダプター' },
+    { asin: 'GENERIC', product_name: 'Laptop accessories set' },
+  ];
+  for (const query of queries) {
+    const categories = semanticSearchGroups(query).map((group) => group.category);
+    assert.ok(categories.includes('laptop-hub'), query);
+    assert.equal(categories.includes('laptop'), false, query);
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['HUB', 'MULTI'],
+      query
+    );
+  }
+  assert.equal(
+    semanticSearchGroups('ノートPCのポートを複数増やすもの').some((group) => group.category === 'laptop-hub'),
+    false
+  );
+});
+
+test('Thunderbolt 4ドックは4言語で世代違い・USB-Cハブ・PC本体を除外する', () => {
+  const queries = [
+    'PD 100W対応 Thunderbolt 4 ドック HDMI 2.1 有線LAN',
+    'Thunderbolt 4 dock with 100W PD HDMI 2.1 and Ethernet',
+    '支持100W PD和HDMI 2.1的雷电4扩展坞',
+    '100W PD HDMI 2.1 이더넷 지원 썬더볼트 4 도킹 스테이션',
+  ];
+  const candidates = [
+    { asin: 'TB4', product_name: 'Thunderbolt 4 Dock 100W HDMI 2.1 Ethernet' },
+    { asin: 'TB3', product_name: 'Thunderbolt 3 Dock 85W HDMI Ethernet' },
+    { asin: 'USBC', product_name: 'USB-C Hub 7-in-1 HDMI Ethernet' },
+    { asin: 'PC', product_name: 'Thunderbolt 4 Laptop Computer' },
+    { asin: 'GENERIC', product_name: 'Laptop Docking Station' },
+  ];
+  for (const query of queries) {
+    const categories = semanticSearchGroups(query).map((group) => group.category);
+    assert.ok(categories.includes('thunderbolt-dock'), query);
+    assert.equal(categories.includes('laptop'), false, query);
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['TB4'], query);
+  }
+});
+
+test('USB-Aハブは4言語でUSB-C専用品とノートPC本体を除外する', () => {
+  const queries = [
+    'ノートPC用の4ポートUSB-Aハブ',
+    'USB-A hub with four ports for a laptop',
+    '笔记本电脑用四口USB-A集线器',
+    '노트북용 4포트 USB-A 허브',
+  ];
+  const candidates = [
+    { asin: 'USBA', product_name: 'USB-A Hub 4 Port for Laptop' },
+    { asin: 'USBC', product_name: 'USB-C Hub 4 Port for Laptop' },
+    { asin: 'PC', product_name: 'USB-A Laptop Computer' },
+    { asin: 'GENERIC', product_name: '4 Port Hub' },
+  ];
+  for (const query of queries) {
+    const categories = semanticSearchGroups(query).map((group) => group.category);
+    assert.ok(categories.includes('usb-a-hub'), query);
+    assert.equal(categories.includes('laptop'), false, query);
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['USBA'], query);
+  }
 });
 
 test('中国語・韓国語のキャンドル・財布・収納用品を共通商品語へ展開する', () => {
