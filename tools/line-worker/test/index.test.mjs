@@ -630,7 +630,7 @@ test('日英中韓のコードなしイヤホンを完全ワイヤレス検索�
   }
 });
 
-test('商品カードは4モールの実在商品ページを1モール1件だけ購入先にする', async () => {
+test('商品カードは9モールの実在商品ページを1モール1件だけ購入先にする', async () => {
   const env = { LINK_SIGNING_SECRET: 'secret' };
   const offers = [
     { marketplace: 'AMAZON_JP', product_url: 'https://www.amazon.co.jp/dp/B000000001', stock_status: 'IN_STOCK' },
@@ -638,16 +638,21 @@ test('商品カードは4モールの実在商品ページを1モール1件だ�
     { marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item-1/', stock_status: 'IN_STOCK' },
     { marketplace: 'QOO10_JP', product_url: 'https://www.qoo10.jp/gmkt.inc/Goods/Goods.aspx?goodscode=123456789', stock_status: 'IN_STOCK' },
     { marketplace: 'SHEIN_JP', product_url: 'https://jp.shein.com/example-p-12345678.html', stock_status: 'IN_STOCK' },
+    { marketplace: 'ZOZOTOWN_JP', product_url: 'https://zozo.jp/shop/example/goods/12345678/', stock_status: 'IN_STOCK' },
+    { marketplace: 'SHOPLIST_JP', product_url: 'https://www.shop-list.com/women/example/item-code/', stock_status: 'IN_STOCK' },
+    { marketplace: 'MUSINSA_JP', product_url: 'https://global.musinsa.com/jp/goods/1234567', stock_status: 'IN_STOCK' },
+    { marketplace: 'BUYMA_JP', product_url: 'https://www.buyma.com/item/123456789/', stock_status: 'IN_STOCK' },
+    { marketplace: 'SNKRDUNK_JP', product_url: 'https://snkrdunk.com/products/123456', stock_status: 'IN_STOCK' },
     { marketplace: 'QOO10_JP', product_url: 'https://www.qoo10.jp/s/?keyword=camera', stock_status: 'IN_STOCK' }
   ];
-  assert.equal(isProductDetailDestination(offers[5].product_url), false);
+  assert.equal(isProductDetailDestination(offers[10].product_url), false);
   assert.equal(isProductDetailDestination('https://www.qoo10.jp/item/sample-product/123456789'), true);
-  assert.deepEqual(productMarketplaceOffers(offers).map((offer) => offer.marketplace), ['AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP']);
+  assert.deepEqual(productMarketplaceOffers(offers).map((offer) => offer.marketplace), ['AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP', 'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP']);
   const decorated = await workerModule.decoratePwaResultForTest(
-    { query_id: 'q-four-marketplaces', candidates: [{ asin: 'B000000001', offers }] },
+    { query_id: 'q-nine-marketplaces', candidates: [{ asin: 'B000000001', offers }] },
     new Request('https://p-gate.example/api/knowledge'), env, 'session-hash'
   );
-  assert.equal(decorated.candidates[0].offers.length, 4);
+  assert.equal(decorated.candidates[0].offers.length, 9);
   decorated.candidates[0].offers.forEach((offer) => assert.equal(offer.tracking_url.startsWith('https://p-gate.example/go?token='), true));
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.equal(appSource.includes('marketplaceLabel(offer.marketplace)}で見る'), true);

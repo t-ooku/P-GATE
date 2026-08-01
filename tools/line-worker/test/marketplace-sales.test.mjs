@@ -77,7 +77,7 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.match(client, /const officialUpdates=\[/);
   assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*SHOPLIST.*MUSINSA.*BUYMA/s);
   assert.match(client, /Official updates always available/);
-  assert.match(sw, /hoshilu-shell-v85/);
+  assert.match(sw, /hoshilu-shell-v86/);
   assert.match(sw, /sale-center\.mjs/);
   assert.match(sw, /hero-slides\.mjs/);
   assert.match(sw, /hoshilu-fashion-collage-v1\.png/);

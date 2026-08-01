@@ -48,14 +48,20 @@ test('marketplace offer stats reports safe attachment counts without exposing pr
  const body=await response.json();
  assert.deepEqual(body.offers,[{marketplace:'QOO10_JP',total:12,available:9,fresh_available:7,stale_available:2,matched_fresh_available:5,unmatched_fresh_available:2,oldest_observed_at:'2026-07-28T00:00:00Z',newest_observed_at:'2026-07-29T00:00:00Z',tenants:2}]);
  assert.equal(JSON.stringify(body).includes('product_url'),false);
- assert.deepEqual(body.missing_marketplaces,['RAKUTEN_JP','SHEIN_JP']);
+ assert.deepEqual(body.missing_marketplaces,['AMAZON_JP','RAKUTEN_JP','SHEIN_JP','ZOZOTOWN_JP','SHOPLIST_JP','MUSINSA_JP','BUYMA_JP','SNKRDUNK_JP']);
  assert.equal(body.feed_required,true);
  assert.equal(body.diagnostics.healthy,false);
  assert.equal(body.diagnostics.feed_required,true);
  assert.deepEqual(body.diagnostics.marketplaces.map(row=>[row.marketplace,row.status]),[
+  ['AMAZON_JP','FEED_REQUIRED'],
   ['RAKUTEN_JP','FEED_REQUIRED'],
   ['QOO10_JP','REFRESH_REQUIRED'],
-  ['SHEIN_JP','FEED_REQUIRED']
+  ['SHEIN_JP','FEED_REQUIRED'],
+  ['ZOZOTOWN_JP','FEED_REQUIRED'],
+  ['SHOPLIST_JP','FEED_REQUIRED'],
+  ['MUSINSA_JP','FEED_REQUIRED'],
+  ['BUYMA_JP','FEED_REQUIRED'],
+  ['SNKRDUNK_JP','FEED_REQUIRED']
  ]);
  assert.match(sql,/AS fresh_available/);
  assert.match(sql,/AS stale_available/);
@@ -70,10 +76,10 @@ test('商品URL診断は取込・再確認・照合の次アクションをモ�
   {marketplace:'SHEIN_JP',matched_fresh_available:3,unmatched_fresh_available:0,stale_available:2}
  ]);
  assert.equal(diagnostics.healthy,false);
- assert.equal(diagnostics.feed_required,false);
+ assert.equal(diagnostics.feed_required,true);
  assert.equal(diagnostics.matching_required,true);
  assert.equal(diagnostics.refresh_required,true);
- assert.deepEqual(diagnostics.marketplaces.map(row=>[row.marketplace,row.status,row.recommended_action]),[
+ assert.deepEqual(diagnostics.marketplaces.filter(row=>['RAKUTEN_JP','QOO10_JP','SHEIN_JP'].includes(row.marketplace)).map(row=>[row.marketplace,row.status,row.recommended_action]),[
   ['RAKUTEN_JP','HEALTHY','NONE'],
   ['QOO10_JP','MATCHING_REQUIRED','ADD_RECORD_KEY_OR_ASIN_MATCH'],
   ['SHEIN_JP','REFRESH_REQUIRED','REVERIFY_STALE_PRODUCT_URLS']
@@ -103,11 +109,11 @@ test('商品詳細URLには外部商品IDとHOSHILU照合キーまたは正し�
  assert.equal(result.records[0].asin,'B000000001');
 });
 
-test('URL未取込時は不足している3モールを明示する',async()=>{
+test('URL未取込時は不足している9モールを明示する',async()=>{
  const env={MARKETPLACE_OFFER_SYNC_SECRET:'x'.repeat(32),PRODUCT_DB:{prepare:()=>({all:async()=>({results:[]})})}};
  const response=await marketplaceOfferStats(new Request('https://hoshilu.app/api/internal/marketplace-offers/stats',{headers:{authorization:`Bearer ${'x'.repeat(32)}`}}),env);
  const body=await response.json();
  assert.deepEqual(body.offers,[]);
- assert.deepEqual(body.missing_marketplaces,['RAKUTEN_JP','QOO10_JP','SHEIN_JP']);
+ assert.deepEqual(body.missing_marketplaces,['AMAZON_JP','RAKUTEN_JP','QOO10_JP','SHEIN_JP','ZOZOTOWN_JP','SHOPLIST_JP','MUSINSA_JP','BUYMA_JP','SNKRDUNK_JP']);
  assert.equal(body.feed_required,true);
 });

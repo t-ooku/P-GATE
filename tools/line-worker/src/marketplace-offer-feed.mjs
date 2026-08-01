@@ -1,6 +1,6 @@
-import { isRakutenProductUrl } from './rakuten-url-policy.mjs';
+import { isMarketplaceProductUrl, PRODUCT_MARKETPLACES } from './marketplace-product-url-policy.mjs';
 
-const MARKETPLACES = Object.freeze(['RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP']);
+const MARKETPLACES = PRODUCT_MARKETPLACES;
 const MARKETPLACE_SET = new Set(MARKETPLACES);
 const clean = (value, max = 500) => String(value ?? '').normalize('NFKC')
   .replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max);
@@ -13,21 +13,7 @@ function normalizeObservedAt(value) {
 }
 
 function validProductUrl(marketplace, value) {
-  try {
-    const url = new URL(value);
-    const host = url.hostname.toLowerCase();
-    const path = url.pathname.toLowerCase();
-    if (url.protocol !== 'https:') return false;
-    if (marketplace === 'RAKUTEN_JP') return isRakutenProductUrl(value);
-    if (marketplace === 'QOO10_JP') {
-      return (/\/gmkt\.inc\/goods\/goods\.aspx$/i.test(path) && /^\d+$/.test(url.searchParams.get('goodscode') || ''))
-        || (/^\/item\//.test(path) && /\/\d+\/?$/.test(path));
-    }
-    if (marketplace === 'SHEIN_JP') {
-      return (host === 'shein.com' || host.endsWith('.shein.com')) && /-p-\d+\.html$/.test(path);
-    }
-  } catch {}
-  return false;
+  return isMarketplaceProductUrl(marketplace, value);
 }
 
 export function validateMarketplaceOfferFeed(payload = {}) {

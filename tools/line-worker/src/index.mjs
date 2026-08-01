@@ -12,7 +12,7 @@ import {
   rakutenApiConfigured,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
-import { isRakutenProductUrl } from './rakuten-url-policy.mjs';
+import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
@@ -155,6 +155,8 @@ export function candidateDestination(candidate) {
 }
 
 export function marketplaceForDestination(destination) {
+  const productMarketplace = marketplaceForProductUrl(destination);
+  if (productMarketplace) return productMarketplace;
   try {
     const host = new URL(destination).hostname.toLowerCase().replace(/\.$/, '');
     if (host === 'amazon.co.jp' || host.endsWith('.amazon.co.jp') || host === 'amazon.com' || host.endsWith('.amazon.com')) return 'AMAZON_JP';
@@ -166,21 +168,10 @@ export function marketplaceForDestination(destination) {
   return '';
 }
 
-const PRODUCT_MARKETPLACES = new Set(['AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP']);
+const PRODUCT_MARKETPLACES = new Set(PRODUCT_MARKETPLACE_LIST);
 
 export function isProductDetailDestination(destination) {
-  if (!isAllowedDestination(destination)) return false;
-  try {
-    const url = new URL(destination);
-    const marketplace = marketplaceForDestination(destination);
-    if (!PRODUCT_MARKETPLACES.has(marketplace)) return false;
-    const path = url.pathname.toLowerCase();
-    if (marketplace === 'AMAZON_JP') return /\/(?:dp|gp\/product)\/[a-z0-9]{10}(?:[/?]|$)/i.test(url.pathname);
-    if (marketplace === 'RAKUTEN_JP') return isRakutenProductUrl(destination);
-    if (marketplace === 'QOO10_JP') return (/\/gmkt\.inc\/goods\/goods\.aspx$/i.test(path) && /^\d+$/.test(url.searchParams.get('goodscode') || '')) || (/^\/item\//i.test(path) && /\/\d+(?:\/)?$/.test(path));
-    if (marketplace === 'SHEIN_JP') return /-p-\d+\.html$/i.test(path);
-  } catch {}
-  return false;
+  return isAllowedDestination(destination) && Boolean(marketplaceForProductUrl(destination));
 }
 
 export function productMarketplaceOffers(offers = []) {
@@ -190,7 +181,7 @@ export function productMarketplaceOffers(offers = []) {
     if (!PRODUCT_MARKETPLACES.has(marketplace) || seen.has(marketplace) || !isProductDetailDestination(offer?.product_url)) return false;
     seen.add(marketplace);
     return true;
-  }).map((offer) => ({ ...offer, marketplace: offer.marketplace || marketplaceForDestination(offer.product_url) })).slice(0, 4);
+  }).map((offer) => ({ ...offer, marketplace: offer.marketplace || marketplaceForDestination(offer.product_url) })).slice(0, 9);
 }
 
 function offerSummary(offer) {
@@ -860,7 +851,7 @@ export function sanitizePublicCandidate(candidate) {
   delete copy.amazon_us_url;
   delete copy.marketplace_search_links;
   delete copy.amazon_search_url;
-  copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 4).map(sanitizePublicOffer);
+  copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 9).map(sanitizePublicOffer);
   copy.tracking_url = '';
   if (copy.evidence) {
     copy.evidence = {
