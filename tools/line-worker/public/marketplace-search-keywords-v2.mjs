@@ -466,7 +466,7 @@ function buildFdm3dPrinterSearchKeywords(query) {
 
 function buildRobotLawnMowerSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const mower = /(?:ロボット芝刈り機|robot(?:ic)?\s*lawn\s*mower|割草机器人|割草機器人|로봇\s*잔디깎이)/iu.test(normalized);
+  const mower = /(?:ロボット芝刈り機|robot(?:ic)?\s*lawn\s*mower|割草机器人|割草機器人|로봇\s*잔디깎이|境界線.{0,12}埋めず.{0,12}広い庭.{0,12}自動で刈り.{0,12}障害物.{0,12}避け|large\s*yard.{0,12}cut\s*automatically.{0,20}without\s*burying\s*boundary\s*wire.{0,20}avoiding\s*obstacles|不埋边界线.{0,12}自动修剪大草坪.{0,12}避开障碍物|경계선.{0,12}묻지\s*않고.{0,12}넓은\s*잔디.{0,12}자동으로\s*깎고.{0,12}장애물.{0,12}피)/iu.test(normalized);
   const rtk = /\bRTK\b/iu.test(normalized);
   const area = normalized.match(/\b(\d{3,5})\s*(?:㎡|m(?:2|²)|sq\.?\s*m|平方米|平方公尺|제곱미터)/iu)?.[1];
   const obstacle = /(?:障害物検知|obstacle\s*(?:detection|avoidance)|障碍物检测|障礙物偵測|장애물\s*(?:감지|회피))/iu.test(normalized);

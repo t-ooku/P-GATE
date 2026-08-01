@@ -606,6 +606,10 @@ test('ロボット芝刈り機は測位・面積・検知・境界条件を4言�
     'RTK robotic lawn mower 1000 m2 obstacle avoidance boundary wire free',
     'RTK 割草机器人 1000平方米 障碍物检测 无需边界线',
     'RTK 로봇 잔디깎이 1000제곱미터 장애물 감지 경계선 불필요',
+    '境界線を埋めずに広い庭を自動で刈り障害物も避けてほしい RTK 1000㎡ 障害物検知 境界ワイヤー不要',
+    'want the large yard cut automatically without burying boundary wire and avoiding obstacles RTK 1000 m2 obstacle avoidance boundary wire free',
+    '想不埋边界线就自动修剪大草坪并避开障碍物 RTK 1000平方米 障碍物检测 无需边界线',
+    '경계선을 묻지 않고 넓은 잔디를 자동으로 깎고 장애물도 피했으면 해 RTK 1000제곱미터 장애물 감지 경계선 불필요',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {
