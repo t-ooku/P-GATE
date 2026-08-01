@@ -281,6 +281,21 @@ test('強化ガラスを取り消した4言語検索はPET保護フィルムへ�
   }
 });
 
+test('光沢を取り消した4言語検索は反射防止フィルムへ切り替える', () => {
+  const queries = [
+    'iPhone 16 Pro用の光沢じゃなくて反射防止保護フィルム',
+    'not glossy, anti-glare screen protector for iPhone 16 Pro',
+    'iPhone 16 Pro不要高光，改成防眩光保护膜',
+    'iPhone 16 Pro 유광 말고 저반사 보호필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 16 Pro 保護フィルム 反射防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [
