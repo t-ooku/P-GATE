@@ -266,8 +266,39 @@ test('自然文の文脈語を必須ANDにせず、ノートPC用アダプター
   const earbuds = intelligentFtsQuery('small wired earbuds that fit inside the ear');
   assert.match(earbuds, /"earbud"\*.*"ear"\*.*"bud"\*.*"headphone"\*/);
   const adapter = intelligentFtsQuery('a compact USB-C hub with multiple ports for a laptop');
-  assert.match(adapter, /"adapter"\*|"usb"\*/);
+  assert.match(adapter, /"usb-c hub"\*.*"usb type-c"\*.*"docking station"\*.*"multiport adapter"\*.*"multi adapter"\*/);
   assert.doesNotMatch(adapter, /"laptop"\*|"compact"\*|"ports"\*/);
+});
+
+test('USB-Cハブを4言語でノートPC本体や単機能アダプターから分離する', () => {
+  const queries = [
+    'ノートPCの端子を増やすUSB-Cハブ HDMI付き',
+    'USB-C hub with HDMI and multiple ports for a laptop',
+    '带HDMI接口的笔记本电脑USB-C扩展坞',
+    'HDMI 포트가 있는 노트북용 USB-C 허브',
+  ];
+  const candidates = [
+    { asin: 'HUB', product_name: 'USB-C Hub 7-in-1 HDMI Multiport Adapter' },
+    { asin: 'MULTI', product_name: 'USB Type-C Multi-Adapter JCA374' },
+    { asin: 'LAPTOP', product_name: 'USB-C対応 ノートパソコン 13インチ' },
+    { asin: 'CHARGER', product_name: 'USB-C Laptop Charger Power Adapter' },
+    { asin: 'HDMI', product_name: 'USB-C to HDMI 単機能変換アダプター' },
+    { asin: 'GENERIC', product_name: 'Laptop accessories set' },
+  ];
+  for (const query of queries) {
+    const categories = semanticSearchGroups(query).map((group) => group.category);
+    assert.ok(categories.includes('laptop-hub'), query);
+    assert.equal(categories.includes('laptop'), false, query);
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['HUB', 'MULTI'],
+      query
+    );
+  }
+  assert.equal(
+    semanticSearchGroups('ノートPCのポートを複数増やすもの').some((group) => group.category === 'laptop-hub'),
+    false
+  );
 });
 
 test('中国語・韓国語のキャンドル・財布・収納用品を共通商品語へ展開する', () => {

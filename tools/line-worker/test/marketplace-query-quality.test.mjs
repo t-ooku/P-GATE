@@ -569,6 +569,29 @@ test("ノートPCケース・スタンド・充電器を4言語で本体から�
   }
 });
 
+test("USB-Cハブを4言語でPC本体から分離し接続条件を9モールへ保持する", () => {
+  const cases = [
+    'ノートPCの端子を増やすUSB-Cハブ HDMI 有線LAN SDカード付き',
+    'USB-C hub with HDMI Ethernet and SD card ports for a laptop',
+    '带HDMI、以太网和SD卡接口的笔记本电脑USB-C扩展坞',
+    'HDMI 유선 랜 SD 카드 포트가 있는 노트북용 USB-C 허브',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('USB-Cハブ'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes('USB-C'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes('HDMI'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('ノートパソコン'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('変換アダプター'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      if (marketplace !== 'QOO10_JP') {
+        assert.ok(tokens.includes('有線LAN'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        assert.ok(tokens.includes('SDカード'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      }
+    }
+  }
+});
+
 test("4言語のタブレット本体は小数インチ・容量を保持して9モール変換する", () => {
   const cases = [
     '10.9インチ256GBのタブレット',

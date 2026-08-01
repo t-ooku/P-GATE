@@ -323,6 +323,15 @@ function isLightUpPhoneCaseMismatch(candidate) {
   return category !== 'phone-case' || !hasLightUpEvidence;
 }
 
+function isLaptopHubMismatch(candidate) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  const hasHub = /(?:usb[- ]?c\s*(?:hub|dock)|type[- ]?c\s*(?:hub|dock)|ハブ|ドッキングステーション|扩展坞|擴充塢|集线器|集線器|허브|도킹\s*스테이션|multi[- ]?(?:port\s*)?adapter)/iu.test(text);
+  const hasUsbC = /(?:usb[- ]?c|type[- ]?c)/iu.test(text);
+  return !(hasHub && hasUsbC);
+}
+
 function tabletModel(text) {
   const value = String(text || '').normalize('NFKC').toLowerCase();
   const latin = value.match(/\bipad\s*(air|pro|mini)\b/u);
@@ -411,6 +420,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = requested.has('phone-case') && groups.some((group) => group.category === 'light-up');
+  const laptopHub = requested.has('laptop-hub');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -428,6 +438,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate)) return false;
+    if (laptopHub && isLaptopHubMismatch(candidate)) return false;
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

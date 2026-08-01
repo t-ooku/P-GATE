@@ -146,6 +146,7 @@ const GENERIC_PRODUCTS = [
   ['ノートPCケース', /(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu],
   ['ノートPCスタンド', /(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu],
   ['ノートPC充電器', /(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu],
+  ['USB-Cハブ', /(?:(?:usb[- ]?c|type[- ]?c).{0,24}(?:ハブ|ドッキングステーション|hub|dock(?:ing\s*station)?|multi[- ]?(?:port\s*)?adapter|扩展坞|擴充塢|集线器|集線器|허브|도킹\s*스테이션)|(?:ハブ|ドッキングステーション|hub|dock(?:ing\s*station)?|multi[- ]?(?:port\s*)?adapter|扩展坞|擴充塢|集线器|集線器|허브|도킹\s*스테이션).{0,24}(?:usb[- ]?c|type[- ]?c))/iu],
   ['ノートパソコン', /(?:ノートパソコン|ノートPC|ラップトップ|laptop|notebook\s*computer|笔记本电脑|筆記型電腦|노트북)/iu],
   ['タブレットケース', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:ケース|カバー|スリーブ|case|cover|sleeve|保护套|保護套|케이스|커버))/iu],
   ['タブレットスタンド', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu],
@@ -202,6 +203,9 @@ const GENERIC_ATTRIBUTES = [
   ['ノイズキャンセリング', /(?:ノイズキャンセリング|noise\s*cancell?ing|\banc\b)/iu],
   ['スマホ対応', /(?:スマホ対応|スマートフォン対応|携帯対応|phone\s*compatible|smartphone\s*compatible|手机兼容|手機相容|스마트폰\s*호환)/iu],
   ['急速充電', /(?:急速充電|高速充電|fast\s*charg(?:e|ing)|quick\s*charg(?:e|ing)|快充|고속\s*충전)/iu],
+  ['HDMI', /\bhdmi\b/iu],
+  ['有線LAN', /(?:有線LAN|ethernet|rj[- ]?45|以太网|乙太網|유선\s*랜|이더넷)/iu],
+  ['SDカード', /(?:SD\s*カード|SD\s*card|读卡器|讀卡器|SD卡|SD\s*카드|카드\s*리더)/iu],
   ['自動', /(?:自動|automatic|auto\b|自动|自動|자동)/iu],
   ['静音', /(?:静音|音が静か|quiet|silent|低噪音|저소음)/iu],
   ['小型', /(?:小さい|小さな|小型|手のひら|コンパクト|ミニ|small|mini|compact|小巧|소형|작은)/iu],
@@ -341,6 +345,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (products.includes('Tシャツ')) products = products.filter((label) => label !== 'トップス');
   if (products.includes('ライフジャケット')) products = products.filter((label) => label !== 'ジャケット');
   if (products.some((label) => label.startsWith('ノートPC'))) products = products.filter((label) => label !== 'ノートパソコン');
+  if (products.includes('USB-Cハブ')) products = products.filter((label) => !['ノートパソコン','変換アダプター'].includes(label));
   if (products.some((label) => label.startsWith('タブレット') && label !== 'タブレット')) {
     products = products.filter((label) => !['タブレット','キーボード'].includes(label));
   }

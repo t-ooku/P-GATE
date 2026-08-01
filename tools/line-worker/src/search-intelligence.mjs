@@ -46,6 +46,7 @@ const RULES = [
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
+  ['laptop-hub',/(?:(?:usb[- ]?c|type[- ]?c).{0,24}(?:ハブ|ドッキングステーション|hub|dock(?:ing\s*station)?|multi[- ]?(?:port\s*)?adapter|扩展坞|擴充塢|集线器|集線器|허브|도킹\s*스테이션)|(?:ハブ|ドッキングステーション|hub|dock(?:ing\s*station)?|multi[- ]?(?:port\s*)?adapter|扩展坞|擴充塢|集线器|集線器|허브|도킹\s*스테이션).{0,24}(?:usb[- ]?c|type[- ]?c))/iu,['usb-c hub','usb type-c','docking station','multiport adapter','multi adapter']],
   ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer|笔记本电脑|筆記型電腦|노트북)/iu,['laptop','notebook computer']],
   ['tablet-case',/(?:(?:タブレット|iPad|アイパッド|苹果平板|蘋果平板|아이패드|tablet|平板电脑|平板電腦|태블릿).{0,24}(?:ケース|カバー|スリーブ|case|cover|sleeve|保护套|保護套|케이스|커버))/iu,['tablet case','tablet cover']],
   ['tablet-stand',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['tablet stand']],
@@ -263,6 +264,7 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
   if (specificCategories.has('laptop-stand')) groups = groups.filter((group) => group.category !== 'laptop');
   if (specificCategories.has('laptop-charger')) groups = groups.filter((group) => !['laptop','charger','adapter'].includes(group.category));
+  if (specificCategories.has('laptop-hub')) groups = groups.filter((group) => !['laptop','adapter'].includes(group.category));
   if (specificCategories.has('tablet-case')) groups = groups.filter((group) => group.category !== 'tablet');
   if (specificCategories.has('tablet-stand')) groups = groups.filter((group) => group.category !== 'tablet');
   if (specificCategories.has('tablet-stylus-tip')) groups = groups.filter((group) => !['tablet','tablet-stylus'].includes(group.category));
