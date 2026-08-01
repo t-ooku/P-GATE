@@ -1039,6 +1039,11 @@ export default {
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
     if (request.method === 'GET') {
+      if (url.pathname.endsWith('/') && renderSeoPage(url.pathname.slice(0, -1))) {
+        const canonicalUrl = new URL(url);
+        canonicalUrl.pathname = url.pathname.slice(0, -1);
+        return Response.redirect(canonicalUrl.toString(), 308);
+      }
       const seoPage = renderSeoPage(url.pathname);
       if (seoPage) return new Response(seoPage, {
         headers: {
