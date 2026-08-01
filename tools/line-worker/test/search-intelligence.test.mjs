@@ -1265,6 +1265,25 @@ test('光沢を取り消した4言語検索は反射防止フィルムだけを�
   }
 });
 
+test('反射防止を取り消した4言語検索はブルーライトカット品だけを提示する', () => {
+  const queries = [
+    'iPhone 16 Pro用の反射防止じゃなくてブルーライトカット保護フィルム',
+    'not anti-glare, blue light filtering screen protector for iPhone 16 Pro',
+    'iPhone 16 Pro不要防眩光，改成防蓝光保护膜',
+    'iPhone 16 Pro 저반사 말고 블루라이트 차단 보호필름',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 16 Pro Blue Light Filtering Screen Protector' },
+    { asin: 'ANTIGLARE', product_name: 'iPhone 16 Pro Anti-Glare Matte Screen Protector' },
+    { asin: 'BOTH', product_name: 'iPhone 16 Pro Anti-Glare Blue Light Filtering Screen Protector' },
+    { asin: 'WRONG', product_name: 'iPhone 16 Pro Max Blue Light Filtering Screen Protector' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
   const cases = [
     [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',

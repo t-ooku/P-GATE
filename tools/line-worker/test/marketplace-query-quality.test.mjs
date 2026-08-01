@@ -296,6 +296,21 @@ test('光沢を取り消した4言語検索は反射防止フィルムへ切り�
   }
 });
 
+test('反射防止を取り消した4言語検索はブルーライトカットへ切り替える', () => {
+  const queries = [
+    'iPhone 16 Pro用の反射防止じゃなくてブルーライトカット保護フィルム',
+    'not anti-glare, blue light filtering screen protector for iPhone 16 Pro',
+    'iPhone 16 Pro不要防眩光，改成防蓝光保护膜',
+    'iPhone 16 Pro 저반사 말고 블루라이트 차단 보호필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 16 Pro 保護フィルム ブルーライトカット', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [

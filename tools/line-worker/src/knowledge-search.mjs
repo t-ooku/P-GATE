@@ -393,23 +393,28 @@ function phoneScreenProtectorConstraints(value) {
   const privacyPattern = /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu;
   const glassPattern = /(?:強化ガラス|ガラスフィルム|tempered\s*glass|钢化玻璃|鋼化玻璃|강화유리)/iu;
   const glossyPattern = /(?:光沢|glossy|高光|亮面|유광)/iu;
+  const antiGlarePattern = /(?:反射防止|アンチグレア|anti[- ]?glare|matte|防眩光|防眩|저반사|무광)/iu;
   const privacy = privacyPattern.test(text);
   const glass = glassPattern.test(text);
   const glossy = glossyPattern.test(text);
+  const antiGlare = antiGlarePattern.test(text);
   const rejectPrivacy = privacy && isNegatedPhoneAttribute(text, privacyPattern);
   const rejectGlass = glass && isNegatedPhoneAttribute(text, glassPattern);
   const rejectGlossy = glossy && isNegatedPhoneAttribute(text, glossyPattern);
+  const rejectAntiGlare = antiGlare && isNegatedPhoneAttribute(text, antiGlarePattern);
   return {
     model: phoneCaseDeviceModel(text),
     protector: /(?:保護フィルム|ガラスフィルム|保護膜|screen\s*protector|protective\s*film|钢化膜|鋼化膜|保护膜|保護膜|필름|보호필름)/iu.test(text),
     glass: glass && !rejectGlass,
     pet: /\bpet\b/iu.test(text),
-    antiGlare: /(?:反射防止|アンチグレア|anti[- ]?glare|matte|防眩光|防眩|저반사|무광)/iu.test(text),
+    antiGlare: antiGlare && !rejectAntiGlare,
+    blueLight: /(?:ブルーライト(?:カット|軽減)|blue[- ]?light\s*(?:filter(?:ing)?|blocking|reduction)|防蓝光|防藍光|블루라이트\s*(?:차단|필터))/iu.test(text),
     glossy: glossy && !rejectGlossy,
     privacy: privacy && !rejectPrivacy,
     rejectPrivacy,
     rejectGlass,
-    rejectGlossy
+    rejectGlossy,
+    rejectAntiGlare
   };
 }
 
@@ -422,10 +427,12 @@ function isPhoneScreenProtectorMismatch(candidate, requested) {
   if (requested.glass && !evidence.glass) return true;
   if (requested.pet && !evidence.pet) return true;
   if (requested.antiGlare && !evidence.antiGlare) return true;
+  if (requested.blueLight && !evidence.blueLight) return true;
   if (requested.privacy && !evidence.privacy) return true;
   if (requested.rejectPrivacy && evidence.privacy) return true;
   if (requested.rejectGlass && evidence.glass) return true;
   if (requested.rejectGlossy && evidence.glossy) return true;
+  if (requested.rejectAntiGlare && evidence.antiGlare) return true;
   return false;
 }
 
