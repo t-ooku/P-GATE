@@ -2583,3 +2583,45 @@ test('contradictory power-bank PD output bounds return no misleading candidates 
     assert.deepEqual(filterCategoryMismatches(query, candidates), [], query);
   }
 });
+
+test('smartwatch band results require the requested model, case size, and material in four languages', () => {
+  const cases = [
+    {
+      queries: [
+        'Apple Watch Ultra 2用49mmのチタンバンド',
+        'a 49mm titanium band for Apple Watch Ultra 2',
+        'Apple Watch Ultra 2 49mm 钛金属表带',
+        'Apple Watch Ultra 2 49mm 티타늄 스트랩',
+      ],
+      candidates: [
+        { asin: 'MATCH', product_name: 'Apple Watch Ultra 2 49mm Titanium Band' },
+        { asin: 'WRONGMODEL', product_name: 'Apple Watch Ultra 49mm Titanium Band' },
+        { asin: 'WRONGSIZE', product_name: 'Apple Watch Ultra 2 45mm Titanium Band' },
+        { asin: 'WRONGMATERIAL', product_name: 'Apple Watch Ultra 2 49mm Silicone Band' },
+        { asin: 'WATCH', product_name: 'Apple Watch Ultra 2 49mm Titanium Case Smartwatch' },
+        { asin: 'CHARGER', product_name: 'Apple Watch Ultra 2 Magnetic Charger' },
+      ],
+    },
+    {
+      queries: [
+        'Galaxy Watch6 Classic用47mmのステンレスベルト',
+        'a 47mm stainless steel strap for Galaxy Watch6 Classic',
+        'Galaxy Watch6 Classic 47mm 不锈钢表带',
+        'Galaxy Watch6 Classic 47mm 스테인리스 스트랩',
+      ],
+      candidates: [
+        { asin: 'MATCH', product_name: 'Galaxy Watch6 Classic 47mm Stainless Steel Strap' },
+        { asin: 'WRONGMODEL', product_name: 'Galaxy Watch6 47mm Stainless Steel Strap' },
+        { asin: 'WRONGSIZE', product_name: 'Galaxy Watch6 Classic 43mm Stainless Steel Strap' },
+        { asin: 'WRONGMATERIAL', product_name: 'Galaxy Watch6 Classic 47mm Leather Strap' },
+        { asin: 'WATCH', product_name: 'Galaxy Watch6 Classic 47mm Stainless Steel Smartwatch' },
+        { asin: 'CHARGER', product_name: 'Galaxy Watch6 Classic Fast Charger' },
+      ],
+    },
+  ];
+  for (const { queries, candidates } of cases) {
+    for (const query of queries) {
+      assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+    }
+  }
+});

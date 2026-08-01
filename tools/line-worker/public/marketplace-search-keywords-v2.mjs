@@ -64,6 +64,27 @@ function buildApplePencilSearchKeywords(query) {
   return [device, product, generation, usbC].filter(Boolean).join(' ');
 }
 
+function smartWatchBandModel(query) {
+  const apple = String(query || '').match(/\bapple\s*watch\s*(ultra(?:\s*[12])?|series\s*\d{1,2}|se(?:\s*[23])?)/iu);
+  if (apple) return apple[0].replace(/apple\s*watch/iu, 'Apple Watch').replace(/\s+/gu, ' ').trim();
+  const galaxy = String(query || '').match(/\bgalaxy\s*watch\s*(\d{1,2})(?:\s*(classic|pro))?/iu);
+  if (galaxy) return `Galaxy Watch${galaxy[1]}${galaxy[2] ? ` ${galaxy[2][0].toUpperCase()}${galaxy[2].slice(1).toLowerCase()}` : ''}`;
+  return '';
+}
+
+function buildSmartWatchBandSearchKeywords(query) {
+  const bandPattern = /(?:バンド|ベルト|交換ベルト|\b(?:band|strap)\b|表带|錶帶|腕带|腕帶|스트랩|밴드|시계줄)/iu;
+  if (!bandPattern.test(query)) return '';
+  const model = smartWatchBandModel(query);
+  if (!model) return '';
+  const size = String(query || '').match(/\b(4[0-9])\s*mm\b/iu)?.[1];
+  const material = /(?:チタン|titanium|钛(?:金属)?|鈦(?:金屬)?|티타늄)/iu.test(query) ? 'チタン'
+    : /(?:ステンレス|stainless(?:\s*steel)?|不锈钢|不鏽鋼|스테인리스)/iu.test(query) ? 'ステンレス'
+      : /(?:レザー|本革|革|leather|皮革|真皮|가죽)/iu.test(query) ? 'レザー'
+        : /(?:シリコン|silicone|硅胶|矽膠|실리콘)/iu.test(query) ? 'シリコン' : '';
+  return [model, size ? `${size}mm` : '', 'バンド', material].filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -879,6 +900,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);
   if (applePencil) return applePencil;
+  const smartWatchBand = buildSmartWatchBandSearchKeywords(normalized);
+  if (smartWatchBand) return smartWatchBand;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

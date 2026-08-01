@@ -322,6 +322,33 @@ function phoneCaseDeviceModel(value) {
   return match ? match[0].toLowerCase().replace(/\s+/gu, '') : '';
 }
 
+function smartWatchBandConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  const apple = text.match(/\bapple\s*watch\s*(ultra(?:\s*[12])?|series\s*\d{1,2}|se(?:\s*[23])?)/iu);
+  const galaxy = text.match(/\bgalaxy\s*watch\s*(\d{1,2})(?:\s*(classic|pro))?/iu);
+  const model = apple
+    ? apple[0].toLowerCase().replace(/\s+/gu, '')
+    : galaxy ? `galaxywatch${galaxy[1]}${galaxy[2] ? galaxy[2].toLowerCase() : ''}` : '';
+  const size = text.match(/\b(4[0-9])\s*mm\b/iu)?.[1] || '';
+  const material = /(?:チタン|titanium|钛(?:金属)?|鈦(?:金屬)?|티타늄)/iu.test(text) ? 'titanium'
+    : /(?:ステンレス|stainless(?:\s*steel)?|不锈钢|不鏽鋼|스테인리스)/iu.test(text) ? 'stainless'
+      : /(?:レザー|本革|革|leather|皮革|真皮|가죽)/iu.test(text) ? 'leather'
+        : /(?:シリコン|silicone|硅胶|矽膠|실리콘)/iu.test(text) ? 'silicone' : '';
+  const band = /(?:バンド|ベルト|交換ベルト|\b(?:band|strap)\b|表带|錶帶|腕带|腕帶|스트랩|밴드|시계줄)/iu.test(text);
+  return { model, size, material, band };
+}
+
+function isSmartWatchBandMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = smartWatchBandConstraints(text);
+  if (!evidence.band || !evidence.model) return true;
+  if (requested.model && evidence.model !== requested.model) return true;
+  if (requested.size && evidence.size !== requested.size) return true;
+  if (requested.material && evidence.material !== requested.material) return true;
+  return false;
+}
+
 function isLightUpPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1101,9 +1128,11 @@ export function filterCategoryMismatches(query, candidates = []) {
     .map((group) => group.category)
     .filter((category) => !CATEGORY_MODIFIERS.has(category)));
   const normalizedQuery = String(query || '').normalize('NFKC');
+  const smartWatchBand = smartWatchBandConstraints(normalizedQuery);
+  const smartWatchBandIntent = smartWatchBand.band && Boolean(smartWatchBand.model);
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
-  if (!requested.size && !deviceSpecificCase) return candidates;
+  if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1145,6 +1174,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     generation: tabletGeneration(query)
   };
   return candidates.filter((candidate) => {
+    if (smartWatchBandIntent) return !isSmartWatchBandMismatch(candidate, smartWatchBand);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

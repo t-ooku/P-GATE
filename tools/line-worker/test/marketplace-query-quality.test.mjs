@@ -1482,3 +1482,33 @@ test('contradictory power-bank PD output bounds are not silently reordered in fo
     }
   }
 });
+
+test('smartwatch replacement bands retain model, case size, and material in four languages', () => {
+  const cases = [
+    {
+      expected: 'Apple Watch Ultra 2 49mm バンド チタン',
+      queries: [
+        'Apple Watch Ultra 2用49mmのチタンバンド',
+        'a 49mm titanium band for Apple Watch Ultra 2',
+        'Apple Watch Ultra 2 49mm 钛金属表带',
+        'Apple Watch Ultra 2 49mm 티타늄 스트랩',
+      ],
+    },
+    {
+      expected: 'Galaxy Watch6 Classic 47mm バンド ステンレス',
+      queries: [
+        'Galaxy Watch6 Classic用47mmのステンレスベルト',
+        'a 47mm stainless steel strap for Galaxy Watch6 Classic',
+        'Galaxy Watch6 Classic 47mm 不锈钢表带',
+        'Galaxy Watch6 Classic 47mm 스테인리스 스트랩',
+      ],
+    },
+  ];
+  for (const { expected, queries } of cases) {
+    for (const query of queries) {
+      for (const marketplace of SEARCH_MARKETPLACES) {
+        assert.equal(buildMarketplaceSearchKeywords(query, marketplace), expected, `${marketplace}: ${query}`);
+      }
+    }
+  }
+});
