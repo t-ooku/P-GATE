@@ -140,6 +140,20 @@ function buildWirelessChargingStationSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildHdmiCableSearchKeywords(query) {
+  if (!/(?:hdmi).{0,100}(?:ケーブル|cable|连接线|連接線|线缆|線纜|케이블)|(?:ケーブル|cable|连接线|連接線|线缆|線纜|케이블).{0,100}(?:hdmi)|(?:hdmi).{0,100}(?:认证|認證)\s*(?:线|線)(?:$|\s)/iu.test(query)) return '';
+  const version = String(query || '').match(/\bhdmi\s*(2\.1|2\.0|1\.4)\b/iu)?.[1];
+  const length = String(query || '').match(/\b(\d(?:\.\d)?)\s*(?:m\b|メートル|米)/iu)?.[1];
+  const eightK = /\b8\s*k\s*60\s*hz\b/iu.test(query) ? '8K60Hz' : '';
+  const fourK = /\b4\s*k\s*120\s*hz\b/iu.test(query) ? '4K120Hz' : '';
+  const ultraHighSpeed = /ultra\s*high\s*speed|ウルトラハイスピード|超高速|초고속/iu.test(query)
+    ? 'Ultra High Speed' : '';
+  const certified = /(?:認証|certified|认证|認證|인증)/iu.test(query) ? '認証' : '';
+  if (!version) return '';
+  return [`HDMI ${version}`, length ? `${length}m` : '', eightK, fourK, ultraHighSpeed, certified, 'ケーブル']
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -973,6 +987,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (wallCharger) return wallCharger;
   const wirelessChargingStation = buildWirelessChargingStationSearchKeywords(normalized);
   if (wirelessChargingStation) return wirelessChargingStation;
+  const hdmiCable = buildHdmiCableSearchKeywords(normalized);
+  if (hdmiCable) return hdmiCable;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

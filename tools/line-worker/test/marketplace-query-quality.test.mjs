@@ -176,6 +176,21 @@ test('Qi2 3-in-1充電スタンドは出力と対応機器を4言語で保持す
   }
 });
 
+test('HDMIケーブルは版・長さ・解像度・Hz・認証を4言語で保持する', () => {
+  const queries = [
+    'HDMI 2.1 2m 8K60Hz 4K120Hz Ultra High Speed認証ケーブル',
+    'certified Ultra High Speed HDMI 2.1 cable 2m for 8K60Hz and 4K120Hz',
+    'HDMI 2.1 2米 8K60Hz 4K120Hz 超高速认证线',
+    'HDMI 2.1 2m 8K60Hz 4K120Hz 초고속 인증 케이블',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'HDMI 2.1 2m 8K60Hz 4K120Hz Ultra High Speed 認証 ケーブル', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

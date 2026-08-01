@@ -1098,6 +1098,28 @@ test('Qi2 3-in-1充電スタンドは4言語で出力と3機器対応が一致�
   }
 });
 
+test('HDMIケーブルは4言語で版・長さ・解像度・Hz・認証が一致する候補だけを提示する', () => {
+  const queries = [
+    'HDMI 2.1 2m 8K60Hz 4K120Hz Ultra High Speed認証ケーブル',
+    'certified Ultra High Speed HDMI 2.1 cable 2m for 8K60Hz and 4K120Hz',
+    'HDMI 2.1 2米 8K60Hz 4K120Hz 超高速认证线',
+    'HDMI 2.1 2m 8K60Hz 4K120Hz 초고속 인증 케이블',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Certified Ultra High Speed HDMI 2.1 Cable 2m 8K60Hz 4K120Hz' },
+    { asin: 'OLDVERSION', product_name: 'Certified Ultra High Speed HDMI 2.0 Cable 2m 8K60Hz 4K120Hz' },
+    { asin: 'WRONGLENGTH', product_name: 'Certified Ultra High Speed HDMI 2.1 Cable 3m 8K60Hz 4K120Hz' },
+    { asin: 'NO8K', product_name: 'Certified Ultra High Speed HDMI 2.1 Cable 2m 4K120Hz' },
+    { asin: 'NO4K120', product_name: 'Certified Ultra High Speed HDMI 2.1 Cable 2m 8K60Hz 4K60Hz' },
+    { asin: 'NOTCERTIFIED', product_name: 'Ultra High Speed HDMI 2.1 Cable 2m 8K60Hz 4K120Hz' },
+    { asin: 'ADAPTER', product_name: 'Certified Ultra High Speed HDMI 2.1 Cable Adapter 2m 8K60Hz 4K120Hz' },
+    { asin: 'SPLITTER', product_name: 'Certified Ultra High Speed HDMI 2.1 Cable Splitter 2m 8K60Hz 4K120Hz' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
