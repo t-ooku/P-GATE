@@ -511,6 +511,10 @@ test('フルサイズミラーレスカメラは画素・動画・手ぶれ補�
     '24MP full-frame mirrorless camera 4K60p in-body image stabilization dual card slots',
     '2400万像素 4K60p 机身防抖 双卡槽 全画幅无反相机',
     '2400만 화소 4K60p 바디 손떨림 보정 듀얼 카드 슬롯 풀프레임 미러리스 카메라',
+    '暗い場所でも手ぶれを抑えて高画質な動画を撮りたい 2400万画素 4K60p ボディ内手ぶれ補正 デュアルカードスロット',
+    'want steady high-quality video even in low light 24MP 4K60p in-body image stabilization dual card slots',
+    '想在暗光环境也拍出稳定的高画质视频 2400万像素 4K60p 机身防抖 双卡槽',
+    '어두운 곳에서도 흔들림 없이 고화질 영상을 찍고 싶어 2400만 화소 4K60p 바디 손떨림 보정 듀얼 카드 슬롯',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

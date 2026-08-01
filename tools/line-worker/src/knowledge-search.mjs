@@ -999,7 +999,7 @@ function fullFrameMirrorlessCameraConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   const megapixels = text.match(/(?:(\d{2})\s*mp|((?:2[0-9]|3[0-9])00)\s*(?:万画素|万像素|萬像素|만\s*화소))/iu);
   return {
-    camera: /(?:フルサイズ.{0,12}ミラーレス(?:カメラ)?|full[- ]?frame.{0,12}mirrorless\s*camera|全画幅.{0,12}无反相机|全片幅.{0,12}無反相機|풀프레임.{0,12}미러리스\s*카메라)/iu.test(text),
+    camera: /(?:フルサイズ.{0,12}ミラーレス(?:カメラ)?|full[- ]?frame.{0,12}mirrorless\s*camera|全画幅.{0,12}无反相机|全片幅.{0,12}無反相機|풀프레임.{0,12}미러리스\s*카메라|暗い場所.{0,16}手ぶれ.{0,16}高画質.{0,12}動画.{0,12}撮|steady.{0,8}high[- ]quality\s*video.{0,16}low\s*light|暗光环境.{0,12}稳定.{0,12}高画质视频|어두운\s*곳.{0,12}흔들림\s*없이.{0,12}고화질\s*영상.{0,12}찍)/iu.test(text),
     pixels: megapixels?.[1] ? `${megapixels[1]}00` : megapixels?.[2] || '',
     video: /4\s*k\s*60\s*p/iu.test(text),
     ibis: /(?:ボディ内手ぶれ補正|in[- ]?body\s*image\s*stabili[sz]ation|\bibis\b|机身防抖|機身防震|바디\s*손떨림\s*보정)/iu.test(text),
