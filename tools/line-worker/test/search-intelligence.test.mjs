@@ -1116,6 +1116,26 @@ test('音声入力風の端末訂正も4言語で最後の保護フィルムだ�
   }
 });
 
+test('会話的な言い直しも4言語で訂正後の端末用保護フィルムだけを提示する', () => {
+  const queries = [
+    'iPhone 15 Pro用、訂正、Galaxy S25 Ultraの覗き見防止強化ガラスフィルム',
+    'iPhone 15 Pro privacy glass, I mean Galaxy S25 Ultra privacy tempered glass screen protector',
+    'iPhone 15 Pro防窥膜，我是说Galaxy S25 Ultra防窥钢化玻璃保护膜',
+    'iPhone 15 Pro 사생활 보호 필름, 정정 Galaxy S25 Ultra 사생활 보호 강화유리 필름',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Galaxy S25 Ultra Privacy Tempered Glass Screen Protector' },
+    { asin: 'OLD', product_name: 'iPhone 15 Pro Privacy Tempered Glass Screen Protector' },
+    { asin: 'BASE', product_name: 'Galaxy S25 Privacy Tempered Glass Screen Protector' },
+    { asin: 'CLEAR', product_name: 'Galaxy S25 Ultra Clear Tempered Glass Screen Protector' },
+    { asin: 'PET', product_name: 'Galaxy S25 Ultra Privacy PET Protective Film' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
   const cases = [
     [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',

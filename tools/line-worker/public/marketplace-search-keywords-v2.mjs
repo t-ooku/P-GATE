@@ -23,7 +23,7 @@ function correctedIphoneMatch(query) {
 }
 
 function deviceName(query) {
-  const correctedTail = String(query || '').match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|换成|換成|改为|改為|不对|不對|말고|아니고|아니)\s*([\s\S]+)$/iu)?.[1] || '';
+  const correctedTail = String(query || '').match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
   if (correctedTail && /(?:\b(?:iphone|ipad|galaxy|pixel|xperia|aquos)\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰|ギャラクシー|三星|갤럭시|픽셀|エクスペリア|엑스페리아|アクオス|아쿠오스)/iu.test(correctedTail)) {
     return deviceName(correctedTail);
   }

@@ -181,6 +181,21 @@ test('音声入力風の端末訂正も4言語で最後の保護フィルム指�
   }
 });
 
+test('会話的な言い直しも4言語で訂正後の端末だけを保持する', () => {
+  const queries = [
+    'iPhone 15 Pro用、訂正、Galaxy S25 Ultraの覗き見防止強化ガラスフィルム',
+    'iPhone 15 Pro privacy glass, I mean Galaxy S25 Ultra privacy tempered glass screen protector',
+    'iPhone 15 Pro防窥膜，我是说Galaxy S25 Ultra防窥钢化玻璃保护膜',
+    'iPhone 15 Pro 사생활 보호 필름, 정정 Galaxy S25 Ultra 사생활 보호 강화유리 필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Galaxy S25 Ultra 保護フィルム 強化ガラス 覗き見防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [
