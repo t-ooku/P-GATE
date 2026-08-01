@@ -31,6 +31,10 @@ test('光るスマホケースの口語的な言い換えを4言語で商品語�
     'viral glowing mobile cover from TikTok',
     '抖音看到的会发光的手机保护壳',
     '틱톡에서 본 불빛 나는 휴대폰 커버',
+    'TikTokで見たスマホの通知で背面がピカッとするやつ',
+    'the thing from TikTok where the phone back lights up for notifications',
+    '抖音看到的手机来通知时背面会亮的那个',
+    '틱톡에서 본 스마트폰 알림 때 뒷면에 불이 들어오는 것',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

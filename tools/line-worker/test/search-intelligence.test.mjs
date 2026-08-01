@@ -911,6 +911,10 @@ test('光るスマホケースは初回提示から一般ケース・LED照明�
     'viral glowing mobile cover from TikTok',
     '抖音看到的会发光的手机保护壳',
     '틱톡에서 본 불빛 나는 휴대폰 커버',
+    'TikTokで見たスマホの通知で背面がピカッとするやつ',
+    'the thing from TikTok where the phone back lights up for notifications',
+    '抖音看到的手机来通知时背面会亮的那个',
+    '틱톡에서 본 스마트폰 알림 때 뒷면에 불이 들어오는 것',
   ];
   const candidates = [
     { asin: 'VALIDJA001', product_name: 'LEDで光るスマホケース 通知発光カバー' },
@@ -921,6 +925,8 @@ test('光るスマホケースは初回提示から一般ケース・LED照明�
     { asin: 'LIGHT00001', product_name: 'LED リングライト スマホ撮影用' },
     { asin: 'CABLE00001', product_name: 'iPhone LED ライトニング充電ケーブル' },
     { asin: 'CHARM00001', product_name: 'Glowing Mobile Phone Charm Accessory' },
+    { asin: 'STAND0001', product_name: 'Light-up LED Smartphone Stand for Notifications' },
+    { asin: 'INSERT001', product_name: 'スマホケース用 LED発光パーツ 通知ライトモジュール' },
     { asin: 'OTHER00001', product_name: 'TikTok Viral Luminous Accessory Gift' },
   ];
   for (const query of queries) {

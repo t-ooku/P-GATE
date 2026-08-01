@@ -1428,6 +1428,7 @@ function isLightUpPhoneCaseMismatch(candidate, query) {
     .toLowerCase();
   const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
   if (!hasLightUpEvidence) return true;
+  if (/(?:リングライト|ring\s*light|补光灯|補光燈|링\s*라이트|スマホスタンド|phone\s*stand|手机支架|手機支架|스마트폰\s*거치대|ケース用.{0,12}(?:発光|LED|ライト)(?:パーツ|部品|モジュール)|(?:phone|mobile)\s*case.{0,12}(?:light\s*insert|LED\s*module)|手机壳用.{0,12}(?:发光配件|LED模块)|手機殼用.{0,12}(?:發光配件|LED模組)|케이스용.{0,12}(?:발광\s*부품|LED\s*모듈))/iu.test(text)) return true;
   return false;
 }
 
@@ -2329,8 +2330,10 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(iplHairRemoval.flashes && iplHairRemoval.cooling
       && iplHairRemoval.levels && iplHairRemoval.skinSensor)
     && !iplHairRemoval.wrongProduct;
-  const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
-    && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
+  const implicitLightUpPhoneCase = /(?:スマホ.{0,20}(?:着信|通知).{0,20}(?:背面|裏).{0,12}(?:光|ピカ)|phone.{0,20}(?:back|rear).{0,16}lights?\s*up.{0,16}notifications?|手机.{0,20}(?:通知|来电).{0,20}背面.{0,12}(?:会亮|发光)|스마트폰.{0,20}(?:알림|전화).{0,20}뒷면.{0,12}(?:불이\s*들어오|빛나))/iu.test(normalizedQuery);
+  const deviceSpecificCase = (phoneCaseDeviceModel(normalizedQuery)
+    && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery)
+    ) || implicitLightUpPhoneCase;
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
@@ -2347,8 +2350,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !cameraPetFeederIntent && !iplHairRemovalIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
-  const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
-    && (requested.has('phone-case') || deviceSpecificCase);
+  const lightUpPhoneCase = (groups.some((group) => group.category === 'light-up')
+    && (requested.has('phone-case') || deviceSpecificCase)) || implicitLightUpPhoneCase;
   const powerBank = requested.has('power-bank');
   const laptopHub = requested.has('laptop-hub');
   const thunderboltDock = requested.has('thunderbolt-dock');

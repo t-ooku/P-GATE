@@ -1215,7 +1215,7 @@ const GENERIC_PRODUCTS = [
   ['シリアル', /(?:シリアル|グラノーラ|cereal|granola|시리얼|麦片|麥片)/iu],
   ['写真プリンター', /(?:写真プリンター|フォトプリンター|photo\s*printer|照片打印机|照片打印機|포토\s*프린터)/iu],
   ['イヤホン', /(?:イヤホン|イヤーバッド|earphones?|earbuds?|耳机|耳機|이어폰)/iu],
-  ['スマホケース', /(?:スマホケース|携帯(?:ケース|カバー)|(?:phone|mobile)\s*(?:case|cover)|手机壳|手機殼|手机保护壳|手機保護殼|휴대폰\s*(?:케이스|커버)|스마트폰\s*(?:케이스|커버))/iu],
+  ['スマホケース', /(?:スマホケース|携帯(?:ケース|カバー)|(?:phone|mobile)\s*(?:case|cover)|手机壳|手機殼|手机保护壳|手機保護殼|휴대폰\s*(?:케이스|커버)|스마트폰\s*(?:케이스|커버)|スマホ.{0,20}(?:着信|通知).{0,20}(?:背面|裏).{0,12}(?:光|ピカ)|phone.{0,20}(?:back|rear).{0,16}lights?\s*up.{0,16}notifications?|手机.{0,20}(?:通知|来电).{0,20}背面.{0,12}(?:会亮|发光)|스마트폰.{0,20}(?:알림|전화).{0,20}뒷면.{0,12}(?:불이\s*들어오|빛나))/iu],
   ['折りたたみ傘', /(?:折りたたみ(?:傘|日傘)|folding\s*(?:umbrella|parasol)|折叠伞|折疊傘|접이식\s*(?:우산|양산))/iu],
   ['カメラ', /(?:アクションカメラ|デジタルカメラ|camera|相机|相機|카메라)/iu],
   ['バッグ', /(?:バッグ|かばん|bag|pouch|包包|背包|手提包|單肩包|单肩包|가방)/iu],
@@ -1265,7 +1265,7 @@ const GENERIC_ATTRIBUTES = [
   ['ベージュ', /(?:ベージュ|\bbeige\b|米色|베이지)/iu],
   ['茶', /(?:茶色|ブラウン|\bbrown\b|棕色|褐色|갈색|브라운)/iu],
   ['折りたたみ', /(?:折りたたみ|折り畳み|折り畳める|foldable|folding|折叠|折疊|접이식)/iu],
-  ['光る', /(?:光る|発光|ピカピカ|LED|ライトアップ|light[- ]?up|glowing|luminous|发光|發光|灯光|亮闪闪|빛나는|발광|불빛\s*나는)/iu],
+  ['光る', /(?:光る|発光|ピカピカ|ピカッ|LED|ライトアップ|lights?\s*up|light[- ]?up|glowing|luminous|发光|發光|灯光|会亮|會亮|亮闪闪|빛나는|발광|불빛\s*나는|불이\s*들어오)/iu],
   ['韓国風', /(?:韓国っぽい|韓国風|韓国系|韓国の|korean\s*(?:style|look)|韩系|韓系|한국풍|한국\s*스타일)/iu],
   ['メンズ', /(?:男性用|メンズ|\b(?:for\s+men|men'?s)\b|男士(?:用|款)?|남성용|남자용)/iu],
   ['レディース', /(?:女性用|レディース|\b(?:for\s+women|women'?s)\b|女士(?:用|款)?|여성용|여자용)/iu],
@@ -1500,6 +1500,10 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (products.includes('バックパック')) products = products.filter((label) => label !== 'バッグ');
   if (products.includes('Tシャツ')) products = products.filter((label) => label !== 'トップス');
   if (products.includes('ライフジャケット')) products = products.filter((label) => label !== 'ジャケット');
+  if (products.includes('スマホケース')
+    && /(?:光る|発光|ピカピカ|ピカッ|LED|ライトアップ|lights?\s*up|light[- ]?up|glowing|luminous|发光|發光|会亮|會亮|빛나는|발광|불빛\s*나는|불이\s*들어오)/iu.test(normalized)) {
+    products = products.filter((label) => label !== 'ライト');
+  }
   if (products.some((label) => label.startsWith('ノートPC'))) products = products.filter((label) => label !== 'ノートパソコン');
   if (products.includes('USB-Cハブ')) products = products.filter((label) => !['ノートパソコン','変換アダプター'].includes(label));
   if (products.some((label) => label.startsWith('タブレット') && label !== 'タブレット')) {
