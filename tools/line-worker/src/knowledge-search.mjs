@@ -834,6 +834,34 @@ function isSteamMicrowaveOvenMismatch(candidate, requested) {
   return false;
 }
 
+function frontLoadWasherDryerConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    machine: /(?:ドラム式.{0,12}洗濯乾燥機|front[- ]?load.{0,12}washer[- ]?dryer|washer[- ]?dryer\s*combo|滚筒洗烘一体机|滾筒洗烘一體機|드럼.{0,12}세탁건조기)/iu.test(text),
+    wash: text.match(/(\d{1,2})\s*kg\s*wash(?:ing)?/iu)?.[1]
+      || text.match(/(?:洗濯|洗涤|洗滌|세탁)\s*(\d{1,2})\s*kg/iu)?.[1] || '',
+    dry: text.match(/(\d{1,2})\s*kg\s*dry(?:ing)?/iu)?.[1]
+      || text.match(/(?:乾燥|烘干|烘乾|건조)\s*(\d{1,2})\s*kg/iu)?.[1] || '',
+    heatPump: /(?:ヒートポンプ|heat[- ]?pump|热泵|熱泵|히트펌프)/iu.test(text),
+    autoDose: /(?:洗剤自動投入|automatic\s*detergent\s*dispens(?:er|ing)|自动投放洗衣液|自動投放洗衣液|세제\s*자동\s*투입)/iu.test(text),
+    wrongProduct: /(?:縦型洗濯機|top[- ]?load\s*washer|波轮洗衣机|波輪洗衣機|통돌이\s*세탁기|tumble\s*dryer|衣類乾燥機|烘干机|烘乾機|건조기\s*단품|洗濯洗剤|laundry\s*detergent|세탁\s*세제|糸くずフィルター|lint\s*filter|线屑过滤器|線屑過濾器|보풀\s*필터|installation\s*(?:kit|hose)|設置部品|給水ホース|安装套件|安裝套件|설치\s*키트)/iu.test(text)
+  };
+}
+
+function isFrontLoadWasherDryerMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = frontLoadWasherDryerConstraints(text);
+  if (!evidence.machine || evidence.wrongProduct) return true;
+  for (const field of ['wash', 'dry']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const feature of ['heatPump', 'autoDose']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1672,6 +1700,9 @@ export function filterCategoryMismatches(query, candidates = []) {
   const steamMicrowaveOven = steamMicrowaveOvenConstraints(normalizedQuery);
   const steamMicrowaveOvenIntent = steamMicrowaveOven.oven && steamMicrowaveOven.steam
     && Boolean(steamMicrowaveOven.capacity && steamMicrowaveOven.power) && !steamMicrowaveOven.wrongProduct;
+  const frontLoadWasherDryer = frontLoadWasherDryerConstraints(normalizedQuery);
+  const frontLoadWasherDryerIntent = frontLoadWasherDryer.machine
+    && Boolean(frontLoadWasherDryer.wash && frontLoadWasherDryer.dry) && !frontLoadWasherDryer.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1680,7 +1711,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent
     && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent && !robotVacuumBodyIntent
     && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent
-    && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent) return candidates;
+    && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1745,6 +1776,7 @@ export function filterCategoryMismatches(query, candidates = []) {
       return !isAutomaticEspressoMachineMismatch(candidate, automaticEspressoMachine);
     }
     if (steamMicrowaveOvenIntent) return !isSteamMicrowaveOvenMismatch(candidate, steamMicrowaveOven);
+    if (frontLoadWasherDryerIntent) return !isFrontLoadWasherDryerMismatch(candidate, frontLoadWasherDryer);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

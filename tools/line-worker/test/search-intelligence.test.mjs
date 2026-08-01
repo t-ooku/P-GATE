@@ -1406,6 +1406,30 @@ test('スチームオーブンレンジは4言語で容量・出力・庫内・�
   }
 });
 
+test('ドラム式洗濯乾燥機は4言語で容量と省力機能が一致する本体だけを提示する', () => {
+  const queries = [
+    '洗濯12kg 乾燥6kg ヒートポンプ 洗剤自動投入 ドラム式洗濯乾燥機',
+    'front-load washer-dryer 12kg washing 6kg drying heat-pump automatic detergent dispenser',
+    '洗涤12kg 烘干6kg 热泵 自动投放洗衣液 滚筒洗烘一体机',
+    '세탁 12kg 건조 6kg 히트펌프 세제 자동 투입 드럼 세탁건조기',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Front-load Washer-dryer 12kg Washing 6kg Drying Heat-pump Automatic Detergent Dispenser' },
+    { asin: 'SMALLWASH', product_name: 'Front-load Washer-dryer 10kg Washing 6kg Drying Heat-pump Automatic Detergent Dispenser' },
+    { asin: 'SMALLDRY', product_name: 'Front-load Washer-dryer 12kg Washing 5kg Drying Heat-pump Automatic Detergent Dispenser' },
+    { asin: 'NOHEATPUMP', product_name: 'Front-load Washer-dryer 12kg Washing 6kg Drying Automatic Detergent Dispenser' },
+    { asin: 'NOAUTODOSE', product_name: 'Front-load Washer-dryer 12kg Washing 6kg Drying Heat-pump' },
+    { asin: 'TOPLOAD', product_name: 'Top-load Washer 12kg Washing 6kg Drying Heat-pump Automatic Detergent Dispenser' },
+    { asin: 'DRYER', product_name: 'Tumble Dryer 12kg Washing 6kg Drying Heat-pump Automatic Detergent Dispenser' },
+    { asin: 'DETERGENT', product_name: 'Laundry Detergent for Front-load Washer-dryer 12kg Washing 6kg Drying Heat-pump Automatic Detergent Dispenser' },
+    { asin: 'FILTER', product_name: 'Lint Filter for Front-load Washer-dryer 12kg Washing 6kg Drying Heat-pump Automatic Detergent Dispenser' },
+    { asin: 'INSTALL', product_name: 'Installation Kit for Front-load Washer-dryer 12kg Washing 6kg Drying Heat-pump Automatic Detergent Dispenser' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

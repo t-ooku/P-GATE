@@ -371,6 +371,21 @@ test('スチームオーブンレンジは容量・出力・庫内・センサ�
   }
 });
 
+test('ドラム式洗濯乾燥機は洗濯乾燥容量と省力機能を4言語で保持する', () => {
+  const queries = [
+    '洗濯12kg 乾燥6kg ヒートポンプ 洗剤自動投入 ドラム式洗濯乾燥機',
+    'front-load washer-dryer 12kg washing 6kg drying heat-pump automatic detergent dispenser',
+    '洗涤12kg 烘干6kg 热泵 自动投放洗衣液 滚筒洗烘一体机',
+    '세탁 12kg 건조 6kg 히트펌프 세제 자동 투입 드럼 세탁건조기',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ドラム式洗濯乾燥機 洗濯12kg 乾燥6kg ヒートポンプ 洗剤自動投入', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

@@ -317,6 +317,22 @@ function buildSteamMicrowaveOvenSearchKeywords(query) {
   return ['スチームオーブンレンジ', `${capacity}L`, `${power}W`, flat, sensor].join(' ');
 }
 
+function buildFrontLoadWasherDryerSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const machine = /(?:ドラム式.{0,12}洗濯乾燥機|front[- ]?load.{0,12}washer[- ]?dryer|washer[- ]?dryer\s*combo|滚筒洗烘一体机|滾筒洗烘一體機|드럼.{0,12}세탁건조기)/iu.test(normalized);
+  if (!machine) return '';
+  if (/(?:交換|replacement|替换|替換|교체)/iu.test(normalized)) return '';
+  const wash = normalized.match(/(\d{1,2})\s*kg\s*wash(?:ing)?/iu)?.[1]
+    || normalized.match(/(?:洗濯|洗涤|洗滌|세탁)\s*(\d{1,2})\s*kg/iu)?.[1];
+  const dry = normalized.match(/(\d{1,2})\s*kg\s*dry(?:ing)?/iu)?.[1]
+    || normalized.match(/(?:乾燥|烘干|烘乾|건조)\s*(\d{1,2})\s*kg/iu)?.[1];
+  const heatPump = /(?:ヒートポンプ|heat[- ]?pump|热泵|熱泵|히트펌프)/iu.test(normalized) ? 'ヒートポンプ' : '';
+  const autoDose = /(?:洗剤自動投入|automatic\s*detergent\s*dispens(?:er|ing)|自动投放洗衣液|自動投放洗衣液|세제\s*자동\s*투입)/iu.test(normalized)
+    ? '洗剤自動投入' : '';
+  if (!wash || !dry || !heatPump || !autoDose) return '';
+  return ['ドラム式洗濯乾燥機', `洗濯${wash}kg`, `乾燥${dry}kg`, heatPump, autoDose].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1108,6 +1124,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawAutomaticEspressoMachine) return rawAutomaticEspressoMachine;
   const rawSteamMicrowaveOven = buildSteamMicrowaveOvenSearchKeywords(rawNormalized);
   if (rawSteamMicrowaveOven) return rawSteamMicrowaveOven;
+  const rawFrontLoadWasherDryer = buildFrontLoadWasherDryerSearchKeywords(rawNormalized);
+  if (rawFrontLoadWasherDryer) return rawFrontLoadWasherDryer;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
