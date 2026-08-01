@@ -243,3 +243,19 @@ test("4言語の空白付き容量でも希望容量だけを9モール検索語
     }
   }
 });
+
+test("4言語の自己訂正では否定後に言い直した属性を9モール検索語へ保持する", () => {
+  const cases = [
+    '最初は黒を避けたかったが、やっぱり黒い財布',
+    'not black at first, but actually a black wallet',
+    '一开始不要黑色，后来决定要黑色钱包',
+    '처음에는 검정 말고 생각했지만 결국 검정 지갑',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('黒'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('財布'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});

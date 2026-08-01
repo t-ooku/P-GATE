@@ -179,13 +179,18 @@ const GENERIC_MATERIALS = [
 ];
 
 function isNegatedAttribute(query, pattern) {
-  const match = query.match(pattern);
-  if (!match || match.index == null) return false;
-  const before = query.slice(Math.max(0, match.index - 18), match.index);
-  const after = query.slice(match.index + match[0].length, match.index + match[0].length + 14);
-  const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
-  const negatedAfter = /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける?|而不是|말고|아닌|아니고|제외)/iu.test(after);
-  return negatedBefore || negatedAfter;
+  const flags = [...new Set(`${pattern.flags}g`.split(''))].join('');
+  const matcher = new RegExp(pattern.source, flags);
+  let foundNegated = false;
+  for (const match of query.matchAll(matcher)) {
+    const before = query.slice(Math.max(0, match.index - 18), match.index);
+    const after = query.slice(match.index + match[0].length, match.index + match[0].length + 14);
+    const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
+    const negatedAfter = /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける?|而不是|말고|아닌|아니고|제외)/iu.test(after);
+    if (!negatedBefore && !negatedAfter) return false;
+    foundNegated = true;
+  }
+  return foundNegated;
 }
 
 function matchedMaterials(query) {

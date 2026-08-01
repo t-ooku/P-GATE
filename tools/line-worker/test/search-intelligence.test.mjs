@@ -934,3 +934,17 @@ test('social media context does not outrank the remembered product category', ()
   assert.doesNotMatch(relaxedFtsQuery(memory), /"sns"\*/i);
   assert.doesNotMatch(relaxedFtsQuery(memory), /"pink"\*/i);
 });
+
+test('4言語の自己訂正では否定後に言い直した商品属性を検索条件へ残す', () => {
+  const cases = [
+    '最初は黒を避けたかったが、やっぱり黒い財布',
+    'not black at first, but actually a black wallet',
+    '一开始不要黑色，后来决定要黑色钱包',
+    '처음에는 검정 말고 생각했지만 결국 검정 지갑',
+  ];
+  for (const input of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"wallet"\*/i, input);
+    assert.match(query, /"black"\*/i, input);
+  }
+});
