@@ -540,6 +540,41 @@ function isPrinterInkMismatch(candidate, query) {
   return !/(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)/iu.test(text);
 }
 
+function toothbrushFamily(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:oral[- ]?b|オーラルb|ブラウン|欧乐b|歐樂b|오랄비).{0,20}\bio\b/u.test(value)) return 'oral-b-io';
+  if (/(?:oral[- ]?b|オーラルb|ブラウン|欧乐b|歐樂b|오랄비).{0,20}\bpro\b/u.test(value)) return 'oral-b-pro';
+  const sonicare = value.match(/\bhx(\d{4})\b/u);
+  if (sonicare) return `sonicare-hx${sonicare[1]}`;
+  const doltz = value.match(/\bew[- ]?dp(\d{2})\b/u);
+  if (doltz) return `doltz-ew-dp${doltz[1]}`;
+  return '';
+}
+
+function toothbrushHeadStyle(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:ultimate\s*clean|アルティメイトクリーン)/u.test(value)) return 'ultimate-clean';
+  if (/c3\s*premium\s*plaque\s*control/u.test(value)) return 'c3-premium-plaque-control';
+  if (/(?:cross\s*action|クロスアクション|크로스액션)/u.test(value)) return 'crossaction';
+  return value.match(/\bwew(\d{4})\b/u)?.[0] || '';
+}
+
+function toothbrushHeadCount(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+)\s*(?:本|個|pack|packs|count|pcs|pieces|支|个|個|개|개입)/iu)?.[1] || 0);
+}
+
+function isToothbrushHeadMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (toothbrushFamily(query) && toothbrushFamily(text) !== toothbrushFamily(query)) return true;
+  if (toothbrushHeadStyle(query) && toothbrushHeadStyle(text) !== toothbrushHeadStyle(query)) return true;
+  const count = toothbrushHeadCount(query);
+  if (count && toothbrushHeadCount(text) !== count) return true;
+  if (/(?:やわらか|soft|软毛|軟毛|부드러운|소프트)/iu.test(query) && !/(?:やわらか|soft|软毛|軟毛|부드러운|소프트)/iu.test(text)) return true;
+  if (/(?:本体|ハンドル|充電器|charger|toothbrush\s*handle|牙刷手柄|칫솔\s*본체)/iu.test(text)) return true;
+  return !/(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -665,6 +700,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const airPurifierFilter = requested.has('air-purifier-filter');
   const waterFilterCartridge = requested.has('water-filter-cartridge');
   const printerInk = requested.has('printer-ink');
+  const toothbrushHead = requested.has('electric-toothbrush-head');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -702,6 +738,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (airPurifierFilter) return !isAirPurifierFilterMismatch(candidate, query);
     if (waterFilterCartridge) return !isWaterFilterCartridgeMismatch(candidate, query);
     if (printerInk) return !isPrinterInkMismatch(candidate, query);
+    if (toothbrushHead) return !isToothbrushHeadMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

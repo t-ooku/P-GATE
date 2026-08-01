@@ -1760,3 +1760,27 @@ test('プリンターインクは本体・別型番・別品番・純正互換�
     );
   }
 });
+
+test('電動歯ブラシ替えブラシはシリーズ・種類・硬さ・本数違いと本体を除外する', () => {
+  const candidates = [
+    { asin: 'IO', product_name: 'Oral-B iO対応 Ultimate Clean 替えブラシ 4本' },
+    { asin: 'IO_WRONG', product_name: 'Oral-B iO対応 Gentle Care 替えブラシ 4本' },
+    { asin: 'IO_BODY', product_name: 'Oral-B iO Series 6 電動歯ブラシ 本体 替えブラシ付属' },
+    { asin: 'SONICARE', product_name: 'Philips Sonicare HX9911 C3 Premium Plaque Control replacement brush heads 4 pack' },
+    { asin: 'SONICARE_2', product_name: 'Philips Sonicare HX9911 C3 Premium Plaque Control replacement brush heads 2 pack' },
+    { asin: 'DOLTZ', product_name: 'Panasonic Doltz EW-DP57対応 WEW0917 替えブラシ 2本' },
+    { asin: 'DOLTZ_WRONG', product_name: 'Panasonic Doltz EW-DP57対応 WEW0915 替えブラシ 2本' },
+    { asin: 'PRO', product_name: 'Oral-B Pro対応 CrossAction 부드러운 교체 칫솔모 4개' },
+    { asin: 'PRO_HARD', product_name: 'Oral-B Pro対応 CrossAction 교체 칫솔모 4개' },
+  ];
+  const cases = [
+    ['Oral-B iO Series 6用 アルティメイトクリーン 替えブラシ 4本', ['IO']],
+    ['replacement brush heads for Philips Sonicare HX9911 C3 Premium Plaque Control 4 pack', ['SONICARE']],
+    ['适用于松下Doltz EW-DP57的WEW0917替换刷头2支', ['DOLTZ']],
+    ['오랄비 Pro 3용 크로스액션 부드러운 교체 칫솔모 4개', ['PRO']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['electric-toothbrush-head'], query);
+  }
+});

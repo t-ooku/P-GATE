@@ -220,6 +220,33 @@ function buildPrinterInkSearchKeywords(query) {
   return [identity, kind, partNumber, colors ? `${colors}色` : '', black, color].filter(Boolean).join(' ');
 }
 
+function toothbrushIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  const io = value.match(/(?:oral[- ]?b|オーラルB|ブラウン|欧乐B|歐樂B|오랄비).{0,20}\bio\s*(?:series\s*)?(\d+)?/iu);
+  if (io) return `Oral-B iO${io[1] ? ` Series ${io[1]}` : ''}`;
+  const pro = value.match(/(?:oral[- ]?b|オーラルB|ブラウン|欧乐B|歐樂B|오랄비).{0,20}\bpro\s*(\d+)?/iu);
+  if (pro) return `Oral-B Pro${pro[1] ? ` ${pro[1]}` : ''}`;
+  const sonicare = value.match(/\b(HX\d{4})\b/iu);
+  if (sonicare && /(?:sonicare|ソニッケアー?|飞利浦|飛利浦|소닉케어|philips)/iu.test(value)) return `Philips Sonicare ${sonicare[1].toUpperCase()}`;
+  const doltz = value.match(/\b(EW[- ]?DP\d{2})\b/iu);
+  if (doltz) return `Panasonic Doltz ${doltz[1].toUpperCase().replace('EW DP', 'EW-DP')}`;
+  return '';
+}
+
+function buildToothbrushHeadSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모)/iu.test(normalized)) return '';
+  const identity = toothbrushIdentity(normalized);
+  if (!identity) return '';
+  const style = /(?:ultimate\s*clean|アルティメイトクリーン)/iu.test(normalized) ? 'Ultimate Clean'
+    : /(?:c3\s*premium\s*plaque\s*control)/iu.test(normalized) ? 'C3 Premium Plaque Control'
+    : /(?:cross\s*action|クロスアクション|크로스액션)/iu.test(normalized) ? 'CrossAction'
+    : normalized.match(/\b(WEW\d{4})\b/iu)?.[1]?.toUpperCase() || '';
+  const soft = /(?:やわらか|soft|软毛|軟毛|부드러운|소프트)/iu.test(normalized) ? 'やわらかめ' : '';
+  const count = normalized.match(/(\d+)\s*(?:本|個|pack|packs|count|pcs|pieces|支|个|個|개|개입)/iu)?.[1];
+  return [identity, '替えブラシ', style, soft, count ? `${count}本セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -527,6 +554,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (waterFilterCartridge) return waterFilterCartridge;
   const printerInk = buildPrinterInkSearchKeywords(normalized);
   if (printerInk) return printerInk;
+  const toothbrushHead = buildToothbrushHeadSearchKeywords(normalized);
+  if (toothbrushHead) return toothbrushHead;
   const robotVacuumConsumable = buildRobotVacuumConsumableSearchKeywords(normalized);
   if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);

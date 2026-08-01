@@ -119,6 +119,20 @@ test('プリンターのインクを4ブランド・4言語で本体から分離
   }
 });
 
+test('電動歯ブラシの替えブラシを4言語で本体から分離し種類と本数を保つ', () => {
+  const cases = [
+    ['Oral-B iO Series 6用 アルティメイトクリーン 替えブラシ 4本', 'Oral-B iO Series 6 替えブラシ Ultimate Clean 4本セット'],
+    ['replacement brush heads for Philips Sonicare HX9911 C3 Premium Plaque Control 4 pack', 'Philips Sonicare HX9911 替えブラシ C3 Premium Plaque Control 4本セット'],
+    ['适用于松下Doltz EW-DP57的WEW0917替换刷头2支', 'Panasonic Doltz EW-DP57 替えブラシ WEW0917 2本セット'],
+    ['오랄비 Pro 3용 크로스액션 부드러운 교체 칫솔모 4개', 'Oral-B Pro 3 替えブラシ CrossAction やわらかめ 4本セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);

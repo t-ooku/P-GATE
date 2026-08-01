@@ -58,6 +58,8 @@ const RULES = [
   ['water-purifier',/(?:浄水器|water\s*purifier|净水器|淨水器|정수기)/iu,['water purifier','water filter system']],
   ['printer-ink',/(?:(?:canon|キヤノン|キャノン|epson|エプソン|brother|ブラザー|hp|プリンター|printer|打印机|打印機|프린터).{0,45}(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)|(?:インク|ink\s*cartridges?|墨盒|墨水|잉크).{0,45}(?:canon|キヤノン|キャノン|epson|エプソン|brother|ブラザー|hp|プリンター|printer|打印机|打印機|프린터))/iu,['printer ink cartridge','replacement ink']],
   ['printer',/(?:プリンター|printer|打印机|打印機|프린터)/iu,['printer','inkjet printer']],
+  ['electric-toothbrush-head',/(?:(?:oral[- ]?b|オーラルB|ブラウン|欧乐B|歐樂B|오랄비|sonicare|ソニッケアー?|philips|飞利浦|飛利浦|소닉케어|doltz|ドルツ|panasonic|松下|파나소닉|電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔).{0,45}(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모)|(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모).{0,45}(?:oral[- ]?b|オーラルB|ブラウン|欧乐B|歐樂B|오랄비|sonicare|ソニッケアー?|philips|飞利浦|飛利浦|소닉케어|doltz|ドルツ|panasonic|松下|파나소닉|電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔))/iu,['electric toothbrush replacement heads','brush heads']],
+  ['electric-toothbrush',/(?:電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔)/iu,['electric toothbrush']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
@@ -299,6 +301,7 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('air-purifier-filter')) groups = groups.filter((group) => group.category !== 'air-purifier');
   if (specificCategories.has('water-filter-cartridge')) groups = groups.filter((group) => group.category !== 'water-purifier');
   if (specificCategories.has('printer-ink')) groups = groups.filter((group) => !['printer','photo-printer'].includes(group.category));
+  if (specificCategories.has('electric-toothbrush-head')) groups = groups.filter((group) => group.category !== 'electric-toothbrush');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
   if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
