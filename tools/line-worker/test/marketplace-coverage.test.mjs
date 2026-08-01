@@ -41,10 +41,11 @@ test('トップ画面で主要4モールとファッション追加5モールを
   }
   assert.match(module, /hoshilu:languagechange/);
   assert.match(module, /Up to 9 marketplaces/);
+  assert.match(module, /Instagram, X, TikTok, and YouTube/);
   assert.match(module, /最多支持9个商城/);
   assert.match(module, /최대 9개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v104/);
+  assert.match(serviceWorker, /hoshilu-shell-v105/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
   assert.match(serviceWorker, /marketplace-coverage\.mjs/);
 });
