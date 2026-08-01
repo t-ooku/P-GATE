@@ -262,6 +262,17 @@ function buildAirPurifierBodySearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildCordlessStickVacuumSearchKeywords(query) {
+  if (!/(?:コードレス.{0,16}スティック掃除機|cordless\s*stick\s*vacuum|无线杆式吸尘器|無線桿式吸塵器|무선\s*스틱\s*청소기)/iu.test(query)) return '';
+  const suction = String(query || '').match(/\b(\d{2,3})\s*aw\b/iu)?.[1];
+  const runtime = String(query || '').match(/\b(\d{2,3})\s*(?:分|minutes?|mins?|分钟|分鐘|분)/iu)?.[1];
+  const hepa = /\bhepa\b|ヘパ|헤파/iu.test(query) ? 'HEPA' : '';
+  const laser = /レーザー|laser|激光|레이저/iu.test(query) ? 'レーザー照明' : '';
+  if (!suction || !runtime || !hepa) return '';
+  return ['コードレススティック掃除機', `${suction}AW`, `${runtime}分`, hepa, laser]
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1113,6 +1124,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (robotVacuumBody) return robotVacuumBody;
   const airPurifierBody = buildAirPurifierBodySearchKeywords(normalized);
   if (airPurifierBody) return airPurifierBody;
+  const cordlessStickVacuum = buildCordlessStickVacuumSearchKeywords(normalized);
+  if (cordlessStickVacuum) return cordlessStickVacuum;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

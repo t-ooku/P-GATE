@@ -311,6 +311,21 @@ test('空気清浄機本体は適用面積・HEPA等級・CADR・センサーを
   }
 });
 
+test('コードレススティック掃除機は吸引力・稼働時間・集塵・照明を4言語で保持する', () => {
+  const queries = [
+    '240AW 60分 HEPA レーザー照明 コードレススティック掃除機',
+    'cordless stick vacuum 240AW 60 minutes HEPA laser light',
+    '无线杆式吸尘器 240AW 60分钟 HEPA 激光照明',
+    '무선 스틱 청소기 240AW 60분 HEPA 레이저 조명',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'コードレススティック掃除機 240AW 60分 HEPA レーザー照明', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

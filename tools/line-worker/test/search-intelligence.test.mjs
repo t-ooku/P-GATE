@@ -1311,6 +1311,30 @@ test('空気清浄機本体は4言語で面積・HEPA・CADR・センサー・�
   }
 });
 
+test('コードレススティック掃除機は4言語で吸引力・稼働時間・HEPA・照明が一致する候補だけを提示する', () => {
+  const queries = [
+    '240AW 60分 HEPA レーザー照明 コードレススティック掃除機',
+    'cordless stick vacuum 240AW 60 minutes HEPA laser light',
+    '无线杆式吸尘器 240AW 60分钟 HEPA 激光照明',
+    '무선 스틱 청소기 240AW 60분 HEPA 레이저 조명',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Cordless Stick Vacuum 240AW 60 Minutes HEPA Laser Light' },
+    { asin: 'WEAK', product_name: 'Cordless Stick Vacuum 180AW 60 Minutes HEPA Laser Light' },
+    { asin: 'SHORT', product_name: 'Cordless Stick Vacuum 240AW 40 Minutes HEPA Laser Light' },
+    { asin: 'NOHEPA', product_name: 'Cordless Stick Vacuum 240AW 60 Minutes Laser Light' },
+    { asin: 'NOLASER', product_name: 'Cordless Stick Vacuum 240AW 60 Minutes HEPA' },
+    { asin: 'ROBOT', product_name: 'Robot Vacuum 240AW 60 Minutes HEPA Laser Light' },
+    { asin: 'HANDHELD', product_name: 'Handheld Vacuum 240AW 60 Minutes HEPA Laser Light' },
+    { asin: 'BATTERY', product_name: 'Replacement Battery for Cordless Stick Vacuum 240AW 60 Minutes HEPA Laser Light' },
+    { asin: 'FILTER', product_name: 'Replacement Filter for Cordless Stick Vacuum 240AW 60 Minutes HEPA Laser Light' },
+    { asin: 'CHARGER', product_name: 'Charger Only for Cordless Stick Vacuum 240AW 60 Minutes HEPA Laser Light' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
