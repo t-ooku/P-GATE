@@ -17,6 +17,7 @@ test('日英SEO必須12ページを別URLで提供する', () => {
     assert.match(html, /hreflang="x-default"/);
     assert.match(html, /<form action="\/" method="get"[^>]*>/);
     assert.match(html, /<details>/);
+    assert.match(html, /<ol><li>[^<]+<\/li><li>[^<]+<\/li><li>[^<]+<\/li><\/ol>/);
     assert.match(html, /data-growth-search/);
     assert.match(html, /application\/ld\+json/);
     assert.match(html, /BreadcrumbList/);
@@ -25,6 +26,15 @@ test('日英SEO必須12ページを別URLで提供する', () => {
     assert.match(html, /aria-labelledby="related-guides"/);
     assert.match(html, /growth-analytics\.mjs/);
     assert.doesNotMatch(html, /Amazon公式|楽天公式|Qoo10公式|SHEIN公式/);
+  }
+});
+
+test('each guide provides three localized, actionable search steps', () => {
+  for (const path of seoPagePaths) {
+    const html = renderSeoPage(path);
+    const list = html.match(/<ol>([\s\S]*?)<\/ol>/)?.[1] ?? '';
+    assert.equal(list.match(/<li>/g)?.length, 3, path);
+    assert.match(html, path.startsWith('/ja/') ? /探すときの3ステップ/ : /Three steps to search/);
   }
 });
 

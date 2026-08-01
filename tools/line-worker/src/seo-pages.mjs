@@ -54,6 +54,33 @@ const faqs = {
   }
 };
 
+const guideSteps = {
+  'american-products-in-japan': {
+    ja: ['英語名が分かればそのまま入力し、分からなければ用途を入力する', '色・形・サイズ・素材など、確かな特徴を1〜3個加える', '表示された候補の価格・在庫・配送条件を各モールで確認する'],
+    en: ['Enter the English name when known, or start with what the product is used for', 'Add one to three reliable details such as color, shape, size, or material', 'Check the current price, availability, and delivery terms on the marketplace page']
+  },
+  'find-product-without-name': {
+    ja: ['見た場所や使われ方を思い出す', '色・形・大きさなど、覚えている外見を加える', '候補が広すぎる場合は、違う点や除外したい特徴を追加する'],
+    en: ['Start with where you saw the item or how it was used', 'Add remembered visual details such as color, shape, or size', 'If the results are too broad, add what looked different or what should be excluded']
+  },
+  'how-to-search-by-description': {
+    ja: ['商品カテゴリまたは用途を短く書く', '色・形・素材・サイズから重要な特徴を加える', '確実でない内容には「たぶん」「〜のような」と添える'],
+    en: ['Write a short product category or purpose', 'Add the most useful details from color, shape, material, and size', 'Mark uncertain clues with words such as “maybe” or “similar to”']
+  },
+  'shopping-in-japan': {
+    ja: ['英語名、日本語名、または商品の用途を入力する', '日本で使うために必要なサイズ・電圧・規格などを加える', '購入前に配送地域、送料、返品条件を販売ページで確認する'],
+    en: ['Enter the English name, Japanese name, or the product purpose', 'Add requirements for use in Japan, such as size, voltage, or standard', 'Confirm delivery area, shipping cost, and return terms before purchasing']
+  },
+  'product-requests': {
+    ja: ['覚えている特徴だけで、まず横断検索する', '候補が足りなければ検索内容をMYWISHへ保存する', 'あとで再検索し、購入条件は各モールで確認する'],
+    en: ['Run a cross-marketplace search with the clues you remember', 'If the candidates are not enough, save the search to MYWISH', 'Search again later and confirm purchase terms on the marketplace page']
+  },
+  'find-product-seen-online': {
+    ja: ['動画・記事・店頭など、見た媒体や場所を書く', '色・形・素材・使われ方など、画面や現場で確認できた特徴を加える', '人物名や連絡先などの個人情報を除き、文章で検索する'],
+    en: ['Write where you saw it, such as a video, article, shop, or public place', 'Add details you could observe, such as color, shape, material, or how it was used', 'Remove names, contact details, and other personal information before searching']
+  }
+};
+
 const esc = (value) => String(value).replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 }[character]));
@@ -71,6 +98,8 @@ export function renderSeoPage(pathname) {
   const submit = locale === 'ja' ? 'HOSHILUで探す' : 'Search with HOSHILU';
   const faqTitle = locale === 'ja' ? 'よくある質問' : 'Frequently asked questions';
   const [question, answer] = faqs[slug][locale];
+  const steps = guideSteps[slug][locale];
+  const stepsTitle = locale === 'ja' ? '探すときの3ステップ' : 'Three steps to search';
   const canonical = `${ORIGIN}/${locale}/${slug}`;
   const shareImage = `${ORIGIN}/og/hoshilu-x-v3.png`;
   const ogLocale = locale === 'ja' ? 'ja_JP' : 'en_US';
@@ -110,7 +139,7 @@ export function renderSeoPage(pathname) {
 <link rel="stylesheet" href="/styles.css"></head>
 <body data-growth-content="seo_${slug.replaceAll('-', '_')}"><main class="shell"><nav aria-label="${esc(guideLabel)}"><a href="/">${esc(homeLabel)}</a><span aria-hidden="true"> / </span><span aria-current="page">${esc(title)}</span><span aria-hidden="true"> · </span><a class="language-switch" href="/${alternate}/${slug}" hreflang="${alternate}" lang="${alternate}">${esc(languageLabel)}</a></nav><section class="hero"><p class="eyebrow">HOSHILU</p><h1>${esc(title)}</h1><p>${esc(description)}</p>
 <form action="/" method="get" data-growth-search><label for="seo-search">${esc(searchLabel)}</label><textarea id="seo-search" name="q" required maxlength="200"></textarea><button type="submit">${esc(submit)}</button></form>
-</section><section><h2>${esc(faqTitle)}</h2><p>${esc(body)}</p><details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>
+</section><section><h2>${esc(stepsTitle)}</h2><p>${esc(body)}</p><ol>${steps.map((step) => `<li>${esc(step)}</li>`).join('')}</ol><h2>${esc(faqTitle)}</h2><details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>
 <p><a href="/">${locale === 'ja' ? 'HOSHILUの検索画面へ' : 'Open HOSHILU search'}</a> · <a href="/login.html">${locale === 'ja' ? '無料会員になる' : 'Create a free account'}</a></p></section><aside aria-labelledby="related-guides"><h2 id="related-guides">${esc(relatedTitle)}</h2><ul>${relatedLinks}</ul></aside></main><script type="module" src="/growth-analytics.mjs"></script></body></html>`;
 }
 
