@@ -596,6 +596,21 @@ test('除湿機は方式・能力・タンク・衣類乾燥・排水条件を4�
   }
 });
 
+test('電動昇降デスクは天板サイズ・モーター・メモリ・安全条件を4言語で保持する', () => {
+  const queries = [
+    '天板140×70cm デュアルモーター 電動昇降デスク 4メモリ 衝突防止',
+    '140x70 cm dual-motor electric standing desk 4 memory presets anti-collision',
+    '140×70cm 双电机 电动升降桌 4档记忆 防碰撞',
+    '140×70cm 듀얼 모터 전동 스탠딩 데스크 4메모리 충돌 방지',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '電動昇降デスク 140×70cm デュアルモーター 4メモリ 衝突防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

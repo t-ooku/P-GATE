@@ -1223,6 +1223,33 @@ function isCompressorDehumidifierMismatch(candidate, requested) {
   return false;
 }
 
+function electricStandingDeskConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  const size = text.match(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*cm\b/iu);
+  return {
+    desk: /(?:電動昇降デスク|electric\s*(?:height\s*adjustable\s*|standing\s*)desk|电动升降桌|電動升降桌|전동\s*스탠딩\s*데스크)/iu.test(text),
+    size: size ? `${size[1]}x${size[2]}` : '',
+    dualMotor: /(?:デュアルモーター|dual[\s-]*motor|双电机|雙馬達|듀얼\s*모터)/iu.test(text),
+    memory: text.match(/\b(\d)\s*(?:メモリ|memory\s*preset(?:s)?|档记忆|檔記憶|메모리)/iu)?.[1] || '',
+    antiCollision: /(?:衝突防止|anti[\s-]*collision|防碰撞|충돌\s*방지)/iu.test(text),
+    wrongProduct: /(?:desk\s*frame\s*only|脚フレーム単体|升降桌架|升降桌腳架|책상\s*프레임\s*단품|tabletop\s*only|天板単体|桌面板|桌板單品|상판\s*단품|desk\s*mat|デスクマット|桌垫|桌墊|데스크\s*매트|cable\s*tray|配線トレー|理线架|理線架|케이블\s*트레이|replacement\s*controller|交換コントローラー|替换控制器|替換控制器|교체용\s*컨트롤러)/iu.test(text)
+  };
+}
+
+function isElectricStandingDeskMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = electricStandingDeskConstraints(text);
+  if (!evidence.desk || evidence.wrongProduct) return true;
+  for (const field of ['size', 'memory']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const field of ['dualMotor', 'antiCollision']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2118,6 +2145,10 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(compressorDehumidifier.daily && compressorDehumidifier.tank
       && compressorDehumidifier.laundry && compressorDehumidifier.drainage)
     && !compressorDehumidifier.wrongProduct;
+  const electricStandingDesk = electricStandingDeskConstraints(normalizedQuery);
+  const electricStandingDeskIntent = electricStandingDesk.desk && electricStandingDesk.dualMotor
+    && Boolean(electricStandingDesk.size && electricStandingDesk.memory && electricStandingDesk.antiCollision)
+    && !electricStandingDesk.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2131,7 +2162,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
-    && !compressorDehumidifierIntent) return candidates;
+    && !compressorDehumidifierIntent && !electricStandingDeskIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2213,6 +2244,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (foldingElectricBikeIntent) return !isFoldingElectricBikeMismatch(candidate, foldingElectricBike);
     if (portablePowerStationIntent) return !isPortablePowerStationMismatch(candidate, portablePowerStation);
     if (compressorDehumidifierIntent) return !isCompressorDehumidifierMismatch(candidate, compressorDehumidifier);
+    if (electricStandingDeskIntent) return !isElectricStandingDeskMismatch(candidate, electricStandingDesk);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

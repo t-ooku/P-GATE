@@ -507,6 +507,17 @@ function buildCompressorDehumidifierSearchKeywords(query) {
   return ['コンプレッサー式除湿機', `${daily}L/日`, `タンク${tank}L`, '衣類乾燥', '連続排水'].join(' ');
 }
 
+function buildElectricStandingDeskSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const desk = /(?:電動昇降デスク|electric\s*(?:height\s*adjustable\s*|standing\s*)desk|电动升降桌|電動升降桌|전동\s*스탠딩\s*데스크)/iu.test(normalized);
+  const size = normalized.match(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*cm\b/iu);
+  const dualMotor = /(?:デュアルモーター|dual[\s-]*motor|双电机|雙馬達|듀얼\s*모터)/iu.test(normalized);
+  const memory = normalized.match(/\b(\d)\s*(?:メモリ|memory\s*preset(?:s)?|档记忆|檔記憶|메모리)/iu)?.[1];
+  const antiCollision = /(?:衝突防止|anti[\s-]*collision|防碰撞|충돌\s*방지)/iu.test(normalized);
+  if (!desk || !size || !dualMotor || !memory || !antiCollision) return '';
+  return ['電動昇降デスク', `${size[1]}×${size[2]}cm`, 'デュアルモーター', `${memory}メモリ`, '衝突防止'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1328,6 +1339,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawPortablePowerStation) return rawPortablePowerStation;
   const rawCompressorDehumidifier = buildCompressorDehumidifierSearchKeywords(rawNormalized);
   if (rawCompressorDehumidifier) return rawCompressorDehumidifier;
+  const rawElectricStandingDesk = buildElectricStandingDeskSearchKeywords(rawNormalized);
+  if (rawElectricStandingDesk) return rawElectricStandingDesk;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

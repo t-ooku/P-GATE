@@ -1783,6 +1783,30 @@ test('除湿機は4言語で方式・能力・タンク・衣類乾燥・排水�
   }
 });
 
+test('電動昇降デスクは4言語で天板サイズ・モーター・メモリ・安全条件が一致する本体だけを提示する', () => {
+  const queries = [
+    '天板140×70cm デュアルモーター 電動昇降デスク 4メモリ 衝突防止',
+    '140x70 cm dual-motor electric standing desk 4 memory presets anti-collision',
+    '140×70cm 双电机 电动升降桌 4档记忆 防碰撞',
+    '140×70cm 듀얼 모터 전동 스탠딩 데스크 4메모리 충돌 방지',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '140x70 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'SIZE', product_name: '120x60 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'SINGLE', product_name: '140x70 cm single-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'MEMORY', product_name: '140x70 cm dual-motor electric standing desk 2 memory presets anti-collision' },
+    { asin: 'NOCOLLISION', product_name: '140x70 cm dual-motor electric standing desk 4 memory presets' },
+    { asin: 'FRAME', product_name: 'Desk frame only for 140x70 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'TOP', product_name: 'Tabletop only for 140x70 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'MAT', product_name: 'Desk mat for 140x70 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'TRAY', product_name: 'Cable tray for 140x70 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'CONTROL', product_name: 'Replacement controller for 140x70 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
