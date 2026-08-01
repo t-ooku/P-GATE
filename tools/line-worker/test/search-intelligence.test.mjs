@@ -1144,6 +1144,30 @@ test('DisplayPortケーブルは4言語で版・長さ・帯域機能が一致�
   }
 });
 
+test('ポータブルSSDは4言語で容量・速度・接続世代・耐久条件が一致する候補だけを提示する', () => {
+  const queries = [
+    '耐衝撃のポータブルSSD 1TB USB 3.2 Gen 2 NVMe 読込1050MB/s',
+    'shockproof portable SSD 1TB USB 3.2 Gen 2 NVMe read 1050MB/s',
+    '耐冲击便携SSD 1TB USB 3.2 Gen 2 NVMe 读取1050MB/s',
+    '충격 방지 휴대용 SSD 1TB USB 3.2 Gen 2 NVMe 읽기 1050MB/s',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Shockproof Portable SSD 1TB USB 3.2 Gen 2 NVMe Read 1050MB/s' },
+    { asin: 'WRONGCAPACITY', product_name: 'Shockproof Portable SSD 2TB USB 3.2 Gen 2 NVMe Read 1050MB/s' },
+    { asin: 'OLDUSB', product_name: 'Shockproof Portable SSD 1TB USB 3.2 Gen 1 NVMe Read 1050MB/s' },
+    { asin: 'SLOW', product_name: 'Shockproof Portable SSD 1TB USB 3.2 Gen 2 NVMe Read 550MB/s' },
+    { asin: 'NONVME', product_name: 'Shockproof Portable SSD 1TB USB 3.2 Gen 2 Read 1050MB/s' },
+    { asin: 'NOSHOCK', product_name: 'Portable SSD 1TB USB 3.2 Gen 2 NVMe Read 1050MB/s' },
+    { asin: 'HDD', product_name: 'Shockproof Portable HDD 1TB USB 3.2 Gen 2 Read 1050MB/s' },
+    { asin: 'FLASH', product_name: 'Portable USB Flash Drive SSD 1TB USB 3.2 Gen 2 NVMe Read 1050MB/s Shockproof' },
+    { asin: 'ENCLOSURE', product_name: 'Portable NVMe SSD Enclosure 1TB USB 3.2 Gen 2 Read 1050MB/s Shockproof' },
+    { asin: 'INTERNAL', product_name: 'Internal NVMe SSD 1TB USB 3.2 Gen 2 Read 1050MB/s Shockproof' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

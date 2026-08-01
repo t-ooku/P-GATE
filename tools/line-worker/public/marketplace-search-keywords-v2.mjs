@@ -167,6 +167,20 @@ function buildDisplayPortCableSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildPortableSsdSearchKeywords(query) {
+  const portable = /(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용).{0,32}ssd|ssd.{0,32}(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용)/iu.test(query);
+  if (!portable) return '';
+  const capacity = String(query || '').match(/\b(\d(?:\.\d)?)\s*(tb|gb)\b/iu);
+  const usbGen = String(query || '').match(/usb\s*3\.2\s*gen\s*([12](?:x[12])?)/iu)?.[1];
+  const speed = String(query || '').match(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/iu)?.[1];
+  const nvme = /\bnvme\b/iu.test(query) ? 'NVMe' : '';
+  const shockproof = /耐衝撃|耐冲击|耐衝擊|抗震|shock[- ]?proof|충격\s*(?:방지|보호)/iu.test(query) ? '耐衝撃' : '';
+  if (!capacity) return '';
+  return ['ポータブルSSD', `${capacity[1]}${capacity[2].toUpperCase()}`,
+    usbGen ? `USB 3.2 Gen ${usbGen}` : '', speed ? `読込 ${speed}MB/s` : '', nvme, shockproof]
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1004,6 +1018,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (hdmiCable) return hdmiCable;
   const displayPortCable = buildDisplayPortCableSearchKeywords(normalized);
   if (displayPortCable) return displayPortCable;
+  const portableSsd = buildPortableSsdSearchKeywords(normalized);
+  if (portableSsd) return portableSsd;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

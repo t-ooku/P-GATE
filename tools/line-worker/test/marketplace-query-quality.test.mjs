@@ -206,6 +206,21 @@ test('DisplayPortケーブルは版・長さ・解像度・Hz・伝送機能を4
   }
 });
 
+test('ポータブルSSDは容量・USB世代・速度・耐久条件を4言語で保持する', () => {
+  const queries = [
+    '耐衝撃のポータブルSSD 1TB USB 3.2 Gen 2 NVMe 読込1050MB/s',
+    'shockproof portable SSD 1TB USB 3.2 Gen 2 NVMe read 1050MB/s',
+    '耐冲击便携SSD 1TB USB 3.2 Gen 2 NVMe 读取1050MB/s',
+    '충격 방지 휴대용 SSD 1TB USB 3.2 Gen 2 NVMe 읽기 1050MB/s',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ポータブルSSD 1TB USB 3.2 Gen 2 読込 1050MB/s NVMe 耐衝撃', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

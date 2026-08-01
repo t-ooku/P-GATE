@@ -533,6 +533,35 @@ function isDisplayPortCableMismatch(candidate, requested) {
   return false;
 }
 
+function portableSsdConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  const capacity = text.match(/\b(\d(?:\.\d)?)\s*(tb|gb)\b/iu);
+  return {
+    ssd: /\bssd\b/iu.test(text),
+    portable: /(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용).{0,32}ssd|ssd.{0,32}(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용)/iu.test(text),
+    capacity: capacity ? `${capacity[1]}${capacity[2].toUpperCase()}` : '',
+    usbGen: text.match(/usb\s*3\.2\s*gen\s*([12](?:x[12])?)/iu)?.[1]?.toLowerCase() || '',
+    readSpeed: text.match(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/iu)?.[1] || '',
+    nvme: /\bnvme\b/iu.test(text),
+    shockproof: /耐衝撃|耐冲击|耐衝擊|抗震|shock[- ]?proof|충격\s*(?:방지|보호)/iu.test(text),
+    wrongProduct: /(?:enclosure|ケース(?:のみ|単体)|外付けケース|硬盘盒|硬碟盒|케이스\s*(?:단품|전용)|hdd|hard\s*drive|ハードディスク|机械硬盘|機械硬碟|하드\s*디스크|usb\s*(?:flash|memory)|flash\s*drive|memory\s*stick|usbメモリ|u盘|隨身碟|usb\s*메모리|内蔵|internal|内置|內置|내장)/iu.test(text)
+  };
+}
+
+function isPortableSsdMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = portableSsdConstraints(text);
+  if (!evidence.ssd || !evidence.portable || evidence.wrongProduct) return true;
+  for (const field of ['capacity', 'usbGen', 'readSpeed']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const feature of ['nvme', 'shockproof']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1340,11 +1369,14 @@ export function filterCategoryMismatches(query, candidates = []) {
   const hdmiCableIntent = hdmiCable.cable && Boolean(hdmiCable.version);
   const displayPortCable = displayPortCableConstraints(normalizedQuery);
   const displayPortCableIntent = displayPortCable.cable && Boolean(displayPortCable.version);
+  const portableSsd = portableSsdConstraints(normalizedQuery);
+  const portableSsdIntent = portableSsd.ssd && portableSsd.portable && Boolean(portableSsd.capacity);
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
-    && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent) return candidates;
+    && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
+    && !portableSsdIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1394,6 +1426,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (wirelessChargingStationIntent) return !isWirelessChargingStationMismatch(candidate, wirelessChargingStation);
     if (hdmiCableIntent) return !isHdmiCableMismatch(candidate, hdmiCable);
     if (displayPortCableIntent) return !isDisplayPortCableMismatch(candidate, displayPortCable);
+    if (portableSsdIntent) return !isPortableSsdMismatch(candidate, portableSsd);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
