@@ -146,6 +146,21 @@ test('充電ケーブルは端子組み合わせ・長さ・W数・編み込み�
   }
 });
 
+test('GaN充電器は出力・ポート数・PD・PPS・USB-Cを4言語で保持する', () => {
+  const queries = [
+    '65W 3ポート GaN PD PPS USB-C充電器',
+    '65W 3-port GaN PD PPS USB-C wall charger',
+    '65W 3口 GaN PD PPS USB-C充电器',
+    '65W 3포트 GaN PD PPS USB-C 충전기',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '65W 3ポート GaN PD PPS USB-C 充電器', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

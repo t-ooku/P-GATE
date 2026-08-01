@@ -1054,6 +1054,28 @@ test('充電ケーブルは4言語で端子・長さ・W数・編み込みが一
   }
 });
 
+test('GaN充電器は4言語で出力・ポート数・PD・PPS・USB-Cが一致する候補だけを提示する', () => {
+  const queries = [
+    '65W 3ポート GaN PD PPS USB-C充電器',
+    '65W 3-port GaN PD PPS USB-C wall charger',
+    '65W 3口 GaN PD PPS USB-C充电器',
+    '65W 3포트 GaN PD PPS USB-C 충전기',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '65W 3-Port GaN USB-C PD PPS Wall Charger' },
+    { asin: 'WRONGPOWER', product_name: '100W 3-Port GaN USB-C PD PPS Wall Charger' },
+    { asin: 'WRONGPORTS', product_name: '65W 2-Port GaN USB-C PD PPS Wall Charger' },
+    { asin: 'NOTGAN', product_name: '65W 3-Port USB-C PD PPS Wall Charger' },
+    { asin: 'NOPPS', product_name: '65W 3-Port GaN USB-C PD Wall Charger' },
+    { asin: 'USB-A', product_name: '65W 3-Port GaN USB-A PD PPS Wall Charger' },
+    { asin: 'CABLE', product_name: '65W 3-Port GaN USB-C PD PPS Charging Cable' },
+    { asin: 'POWERBANK', product_name: '65W 3-Port GaN USB-C PD PPS Power Bank Charger' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

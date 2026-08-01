@@ -113,6 +113,20 @@ function buildChargingCableSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildWallChargerSearchKeywords(query) {
+  if (!/(?:充電器|ACアダプター|wall\s*charger|power\s*adapter|充电器|充電器|충전기)/iu.test(query)) return '';
+  const watts = String(query || '').match(/\b(\d{2,3})\s*w\b/iu)?.[1];
+  const ports = String(query || '').match(/(?:\b([2-9])\s*[- ]?\s*(?:ポート|ports?|口|포트)|(?:dual|デュアル|双|雙|듀얼)\s*[- ]?\s*(?:ポート|ports?|口|포트))/iu);
+  const portCount = ports?.[1] || (ports ? '2' : '');
+  const usbC = /usb\s*[- ]?c/iu.test(query) ? 'USB-C' : '';
+  const gan = /\bgan\b|窒化ガリウム|氮化镓|氮化鎵|질화갈륨/iu.test(query) ? 'GaN' : '';
+  const pd = /(?:\bpd\b|power\s*delivery)/iu.test(query) ? 'PD' : '';
+  const pps = /\bpps\b/iu.test(query) ? 'PPS' : '';
+  if (!watts || !usbC) return '';
+  return [watts ? `${watts}W` : '', portCount ? `${portCount}ポート` : '', gan, pd, pps, usbC, '充電器']
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -942,6 +956,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (cameraPrimeLens) return cameraPrimeLens;
   const chargingCable = buildChargingCableSearchKeywords(normalized);
   if (chargingCable) return chargingCable;
+  const wallCharger = buildWallChargerSearchKeywords(normalized);
+  if (wallCharger) return wallCharger;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS
