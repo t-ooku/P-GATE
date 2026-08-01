@@ -1180,6 +1180,12 @@ export function buildDeviceAccessorySearchKeywords(query) {
   const protectorBlueLight = label === '保護フィルム'
     && /(?:ブルーライト(?:カット|軽減)|blue[- ]?light\s*(?:filter(?:ing)?|blocking|reduction)|防蓝光|防藍光|블루라이트\s*(?:차단|필터))/iu.test(normalized)
     ? 'ブルーライトカット' : '';
+  const protectorFingerprint = label === '保護フィルム'
+    && /(?:指紋防止|耐指紋|anti[- ]?fingerprint|fingerprint[- ]?resistant|oleophobic|防指纹|防指紋|지문\s*방지)/iu.test(normalized)
+    ? '指紋防止' : '';
+  const protectorShatter = label === '保護フィルム'
+    && /(?:飛散防止|shatterproof|anti[- ]?shatter|防爆|방비산|비산\s*방지)/iu.test(normalized)
+    ? '飛散防止' : '';
   const protectorPrivacyPattern = /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu;
   const protectorPrivacy = label === '保護フィルム'
     && protectorPrivacyPattern.test(normalized)
@@ -1196,7 +1202,7 @@ export function buildDeviceAccessorySearchKeywords(query) {
       && !(token === '光る' && rejectsLightUpCase));
   const conditions = [...new Set([
     ...specifications, ...materials, ...attributes, caseMagSafe, protectorGlass, protectorPrivacy, protectorPet,
-    protectorAntiGlare, protectorBlueLight
+    protectorAntiGlare, protectorBlueLight, protectorFingerprint, protectorShatter
   ].filter(Boolean))].slice(0, 3);
   return [base, ...conditions].join(' ');
 }

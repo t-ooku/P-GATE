@@ -409,6 +409,8 @@ function phoneScreenProtectorConstraints(value) {
     pet: /\bpet\b/iu.test(text),
     antiGlare: antiGlare && !rejectAntiGlare,
     blueLight: /(?:ブルーライト(?:カット|軽減)|blue[- ]?light\s*(?:filter(?:ing)?|blocking|reduction)|防蓝光|防藍光|블루라이트\s*(?:차단|필터))/iu.test(text),
+    fingerprint: /(?:指紋防止|耐指紋|anti[- ]?fingerprint|fingerprint[- ]?resistant|oleophobic|防指纹|防指紋|지문\s*방지)/iu.test(text),
+    shatter: /(?:飛散防止|shatterproof|anti[- ]?shatter|防爆|방비산|비산\s*방지)/iu.test(text),
     glossy: glossy && !rejectGlossy,
     privacy: privacy && !rejectPrivacy,
     rejectPrivacy,
@@ -428,6 +430,8 @@ function isPhoneScreenProtectorMismatch(candidate, requested) {
   if (requested.pet && !evidence.pet) return true;
   if (requested.antiGlare && !evidence.antiGlare) return true;
   if (requested.blueLight && !evidence.blueLight) return true;
+  if (requested.fingerprint && !evidence.fingerprint) return true;
+  if (requested.shatter && !evidence.shatter) return true;
   if (requested.privacy && !evidence.privacy) return true;
   if (requested.rejectPrivacy && evidence.privacy) return true;
   if (requested.rejectGlass && evidence.glass) return true;

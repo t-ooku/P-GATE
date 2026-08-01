@@ -1284,6 +1284,25 @@ test('反射防止を取り消した4言語検索はブルーライトカット�
   }
 });
 
+test('指紋防止と飛散防止を求める4言語検索は両仕様を持つ商品だけを提示する', () => {
+  const queries = [
+    'iPhone 16 Pro用の指紋防止で飛散防止の保護フィルム',
+    'anti-fingerprint and shatterproof screen protector for iPhone 16 Pro',
+    'iPhone 16 Pro防指纹防爆保护膜',
+    'iPhone 16 Pro 지문 방지 비산 방지 보호필름',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 16 Pro Anti-Fingerprint Shatterproof Screen Protector' },
+    { asin: 'FINGERPRINT', product_name: 'iPhone 16 Pro Anti-Fingerprint Screen Protector' },
+    { asin: 'SHATTER', product_name: 'iPhone 16 Pro Shatterproof Screen Protector' },
+    { asin: 'WRONG', product_name: 'iPhone 16 Pro Max Anti-Fingerprint Shatterproof Screen Protector' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
   const cases = [
     [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',
