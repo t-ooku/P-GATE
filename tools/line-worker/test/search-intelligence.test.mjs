@@ -1240,6 +1240,30 @@ test('メカニカルキーボードは4言語で配列・サイズ・軸・接�
   }
 });
 
+test('ノイズキャンセリングヘッドホンは4言語で形状・接続・再生時間が一致する候補だけを提示する', () => {
+  const queries = [
+    'オーバーイヤー ノイズキャンセリングヘッドホン Bluetooth 5.3 マルチポイント 40時間 USB-C',
+    'over-ear noise-cancelling headphones Bluetooth 5.3 multipoint 40 hours USB-C',
+    '头戴式主动降噪耳机 Bluetooth 5.3 多点连接 40小时 USB-C',
+    '오버이어 노이즈 캔슬링 헤드폰 Bluetooth 5.3 멀티포인트 40시간 USB-C',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Over-ear ANC Noise Cancelling Headphones Bluetooth 5.3 Multipoint 40 Hours USB-C Wireless' },
+    { asin: 'ONEAR', product_name: 'On-ear ANC Noise Cancelling Headphones Bluetooth 5.3 Multipoint 40 Hours USB-C Wireless' },
+    { asin: 'OLDBT', product_name: 'Over-ear ANC Noise Cancelling Headphones Bluetooth 5.0 Multipoint 40 Hours USB-C Wireless' },
+    { asin: 'NOMULTI', product_name: 'Over-ear ANC Noise Cancelling Headphones Bluetooth 5.3 40 Hours USB-C Wireless' },
+    { asin: 'SHORT', product_name: 'Over-ear ANC Noise Cancelling Headphones Bluetooth 5.3 Multipoint 30 Hours USB-C Wireless' },
+    { asin: 'NOUSBC', product_name: 'Over-ear ANC Noise Cancelling Headphones Bluetooth 5.3 Multipoint 40 Hours Wireless' },
+    { asin: 'WIRED', product_name: 'Over-ear ANC Noise Cancelling Headphones 40 Hours USB-C Wired' },
+    { asin: 'EARBUDS', product_name: 'Over-ear ANC Noise Cancelling Earbuds Bluetooth 5.3 Multipoint 40 Hours USB-C Wireless' },
+    { asin: 'PADS', product_name: 'Ear Pads for Over-ear ANC Noise Cancelling Headphones Bluetooth 5.3 Multipoint 40 Hours USB-C Wireless' },
+    { asin: 'CASE', product_name: 'Carrying Case for Over-ear ANC Noise Cancelling Headphones Bluetooth 5.3 Multipoint 40 Hours USB-C Wireless' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

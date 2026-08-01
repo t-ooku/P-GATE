@@ -266,6 +266,21 @@ test('メカニカルキーボードは配列・サイズ・軸・接続条件�
   }
 });
 
+test('ノイズキャンセリングヘッドホンは形状・Bluetooth・接続・再生時間を4言語で保持する', () => {
+  const queries = [
+    'オーバーイヤー ノイズキャンセリングヘッドホン Bluetooth 5.3 マルチポイント 40時間 USB-C',
+    'over-ear noise-cancelling headphones Bluetooth 5.3 multipoint 40 hours USB-C',
+    '头戴式主动降噪耳机 Bluetooth 5.3 多点连接 40小时 USB-C',
+    '오버이어 노이즈 캔슬링 헤드폰 Bluetooth 5.3 멀티포인트 40시간 USB-C',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ノイズキャンセリングヘッドホン オーバーイヤー Bluetooth 5.3 マルチポイント 40時間再生 USB-C', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

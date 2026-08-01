@@ -223,6 +223,20 @@ function buildMechanicalKeyboardSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildNoiseCancellingHeadphonesSearchKeywords(query) {
+  const headphones = /(?:ヘッドホン|headphones?|头戴式.{0,16}耳机|頭戴式.{0,16}耳機|헤드폰)/iu.test(query);
+  const anc = /ノイズキャンセリング|noise[- ]?cancell?ing|\banc\b|主动降噪|主動降噪|노이즈\s*캔슬링/iu.test(query);
+  if (!headphones || !anc) return '';
+  const overEar = /オーバーイヤー|over[- ]?ear|头戴式|頭戴式|오버이어/iu.test(query) ? 'オーバーイヤー' : '';
+  const bluetooth = String(query || '').match(/bluetooth\s*(5\.\d)/iu)?.[1];
+  const multipoint = /multi[- ]?point|マルチポイント|多点连接|多點連接|멀티포인트/iu.test(query) ? 'マルチポイント' : '';
+  const battery = String(query || '').match(/\b(\d{2,3})\s*(?:時間|hours?|hrs?|小时|小時|시간)/iu)?.[1];
+  const usbC = /usb[- ]?c|type[- ]?c/iu.test(query) ? 'USB-C' : '';
+  if (!overEar || !bluetooth || !battery) return '';
+  return ['ノイズキャンセリングヘッドホン', overEar, `Bluetooth ${bluetooth}`, multipoint,
+    `${battery}時間再生`, usbC].filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1068,6 +1082,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (gamingMonitor) return gamingMonitor;
   const mechanicalKeyboard = buildMechanicalKeyboardSearchKeywords(normalized);
   if (mechanicalKeyboard) return mechanicalKeyboard;
+  const noiseCancellingHeadphones = buildNoiseCancellingHeadphonesSearchKeywords(normalized);
+  if (noiseCancellingHeadphones) return noiseCancellingHeadphones;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

@@ -648,6 +648,35 @@ function isMechanicalKeyboardMismatch(candidate, requested) {
   return false;
 }
 
+function noiseCancellingHeadphonesConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    headphones: /(?:ヘッドホン|headphones?|头戴式.{0,16}耳机|頭戴式.{0,16}耳機|헤드폰)/iu.test(text),
+    anc: /ノイズキャンセリング|noise[- ]?cancell?ing|\banc\b|主动降噪|主動降噪|노이즈\s*캔슬링/iu.test(text),
+    overEar: /オーバーイヤー|over[- ]?ear|头戴式|頭戴式|오버이어/iu.test(text),
+    bluetooth: text.match(/bluetooth\s*(5\.\d)/iu)?.[1] || '',
+    multipoint: /multi[- ]?point|マルチポイント|多点连接|多點連接|멀티포인트/iu.test(text),
+    batteryHours: text.match(/\b(\d{2,3})\s*(?:時間|hours?|hrs?|小时|小時|시간)/iu)?.[1] || '',
+    usbC: /usb[- ]?c|type[- ]?c/iu.test(text),
+    wireless: /wireless|ワイヤレス|無線|无线|無線|무선|bluetooth/iu.test(text),
+    wrongProduct: /(?:earbuds?|earphones?|イヤホン|耳塞|入耳|이어폰|イヤーパッド|ear\s*(?:pads?|cushions?)|耳罩\s*(?:替换|替換)|이어패드|収納ケース|carrying\s*case|storage\s*case|收纳盒|收納盒|보관\s*케이스|transmitter|送信機|发射器|發射器|송신기)/iu.test(text)
+  };
+}
+
+function isNoiseCancellingHeadphonesMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = noiseCancellingHeadphonesConstraints(text);
+  if (!evidence.headphones || !evidence.anc || !evidence.wireless || evidence.wrongProduct) return true;
+  for (const field of ['bluetooth', 'batteryHours']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const feature of ['overEar', 'multipoint', 'usbC']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1464,13 +1493,16 @@ export function filterCategoryMismatches(query, candidates = []) {
   const mechanicalKeyboard = mechanicalKeyboardConstraints(normalizedQuery);
   const mechanicalKeyboardIntent = mechanicalKeyboard.keyboard && mechanicalKeyboard.mechanical
     && Boolean(mechanicalKeyboard.layoutSize);
+  const noiseCancellingHeadphones = noiseCancellingHeadphonesConstraints(normalizedQuery);
+  const noiseCancellingHeadphonesIntent = noiseCancellingHeadphones.headphones && noiseCancellingHeadphones.anc
+    && Boolean(noiseCancellingHeadphones.bluetooth);
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
     && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent
-    && !mechanicalKeyboardIntent) return candidates;
+    && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1524,6 +1556,9 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (sdMemoryCardIntent) return !isSdMemoryCardMismatch(candidate, sdMemoryCard);
     if (gamingMonitorIntent) return !isGamingMonitorMismatch(candidate, gamingMonitor);
     if (mechanicalKeyboardIntent) return !isMechanicalKeyboardMismatch(candidate, mechanicalKeyboard);
+    if (noiseCancellingHeadphonesIntent) {
+      return !isNoiseCancellingHeadphonesMismatch(candidate, noiseCancellingHeadphones);
+    }
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
