@@ -867,7 +867,7 @@ function isFrontLoadWasherDryerMismatch(candidate, requested) {
 function frenchDoorRefrigeratorConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   return {
-    refrigerator: /(?:冷蔵庫|refrigerator|fridge|冰箱|냉장고)/iu.test(text),
+    refrigerator: /(?:冷蔵庫|refrigerator|fridge|冰箱|냉장고|まとめ買い.{0,20}保存.{0,16}氷.{0,12}自動|store.{0,20}week.{0,20}groceries.{0,20}(?:make\s+ice|ice).{0,12}automatically|存.{0,16}一周.{0,16}(?:采购|採購).{0,16}(?:自动|自動)制冰|일주일.{0,16}장본.{0,20}보관.{0,16}얼음.{0,12}자동)/iu.test(text),
     capacity: text.match(/\b(\d{3})\s*l\b/iu)?.[1] || '',
     frenchDoor: /(?:観音開き|フレンチドア|french[- ]?door|对开门|對開門|프렌치도어)/iu.test(text),
     inverter: /(?:インバーター|inverter|变频|變頻|인버터)/iu.test(text),

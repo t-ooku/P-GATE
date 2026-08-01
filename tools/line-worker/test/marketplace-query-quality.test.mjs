@@ -416,6 +416,10 @@ test('大型冷蔵庫は容量・扉・省電力・製氷条件を4言語で保�
     '500L French-door refrigerator inverter automatic ice maker',
     '500L 对开门 变频 自动制冰 冰箱',
     '500L 프렌치도어 인버터 자동 제빙 냉장고',
+    '週末のまとめ買いをたっぷり保存して氷も自動で作りたい 500L 観音開き インバーター 自動製氷',
+    "store a week's groceries and make ice automatically 500L French-door inverter automatic ice maker",
+    '想存一周采购的食物并自动制冰 500L 对开门 变频',
+    '일주일 장본 것을 넉넉히 보관하고 얼음도 자동으로 만들고 싶어 500L 프렌치도어 인버터 자동 제빙',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {
