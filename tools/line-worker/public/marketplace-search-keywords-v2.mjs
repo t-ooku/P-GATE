@@ -418,7 +418,7 @@ function buildFullFrameMirrorlessCameraSearchKeywords(query) {
 
 function buildGamingLaptopSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  if (!/(?:ゲーミングノート(?:PC)?|gaming\s*laptop|游戏本|遊戲筆電|게이밍\s*노트북)/iu.test(normalized)) return '';
+  if (!/(?:ゲーミングノート(?:PC)?|gaming\s*laptop|游戏本|遊戲筆電|게이밍\s*노트북|外出先.{0,12}最新ゲーム.{0,12}高\s*fps.{0,12}滑らか|latest\s*games?.{0,16}smoothly.{0,16}high\s*fps.{0,16}on\s*the\s*go|外出时.{0,12}高帧.{0,12}流畅.{0,12}最新游戏|밖에서도.{0,12}최신\s*게임.{0,12}높은\s*fps.{0,12}부드럽게)/iu.test(normalized)) return '';
   const size = normalized.match(/\b(\d{2}(?:\.\d)?)\s*(?:型|インチ|inch(?:es)?|英寸|인치)/iu)?.[1];
   const gpu = normalized.match(/\brtx\s*(\d{4})\b/iu)?.[1];
   const ram = normalized.match(/\b(\d{2,3})\s*gb\s*(?:ram|メモリ|内存|記憶體|램)/iu)?.[1];

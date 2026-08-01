@@ -530,6 +530,10 @@ test('ゲーミングノートPCは画面・GPU・メモリ・SSD・Hzを4言語
     '16 inch RTX 4070 gaming laptop 32GB RAM 1TB SSD 240Hz',
     '16英寸 RTX 4070 32GB内存 1TB SSD 240Hz 游戏本',
     '16인치 RTX 4070 32GB 램 1TB SSD 240Hz 게이밍 노트북',
+    '外出先でも最新ゲームを高FPSで滑らかに遊びたい 16型 RTX 4070 32GBメモリ 1TB SSD 240Hz',
+    'want to play the latest games smoothly at high FPS on the go 16 inch RTX 4070 32GB RAM 1TB SSD 240Hz',
+    '想在外出时也高帧流畅玩最新游戏 16英寸 RTX 4070 32GB内存 1TB SSD 240Hz',
+    '밖에서도 최신 게임을 높은 FPS로 부드럽게 하고 싶어 16인치 RTX 4070 32GB 램 1TB SSD 240Hz',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {
