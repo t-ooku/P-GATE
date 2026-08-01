@@ -401,6 +401,21 @@ test('大型冷蔵庫は容量・扉・省電力・製氷条件を4言語で保�
   }
 });
 
+test('ビルトイン食器洗い乾燥機は収納人数・幅・運転機能を4言語で保持する', () => {
+  const queries = [
+    '12人分 幅45cm インバーター 自動ドアオープン ビルトイン食器洗い乾燥機',
+    'built-in dishwasher 12 place settings 45cm inverter auto-open door',
+    '嵌入式洗碗机 12套餐具 45cm 变频 自动开门',
+    '빌트인 식기세척기 12인용 45cm 인버터 자동 문열림',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ビルトイン食器洗い乾燥機 12人分 幅45cm インバーター 自動ドアオープン', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

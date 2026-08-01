@@ -1455,6 +1455,30 @@ test('大型冷蔵庫は4言語で容量・扉・省電力・製氷が一致す�
   }
 });
 
+test('ビルトイン食器洗い乾燥機は4言語で収納人数・幅・運転機能が一致する本体だけを提示する', () => {
+  const queries = [
+    '12人分 幅45cm インバーター 自動ドアオープン ビルトイン食器洗い乾燥機',
+    'built-in dishwasher 12 place settings 45cm inverter auto-open door',
+    '嵌入式洗碗机 12套餐具 45cm 变频 自动开门',
+    '빌트인 식기세척기 12인용 45cm 인버터 자동 문열림',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Built-in Dishwasher 12 Place Settings 45cm Inverter Auto-open Door' },
+    { asin: 'SMALL', product_name: 'Built-in Dishwasher 8 Place Settings 45cm Inverter Auto-open Door' },
+    { asin: 'WIDE', product_name: 'Built-in Dishwasher 12 Place Settings 60cm Inverter Auto-open Door' },
+    { asin: 'NOINVERTER', product_name: 'Built-in Dishwasher 12 Place Settings 45cm Auto-open Door' },
+    { asin: 'NOAUTOOPEN', product_name: 'Built-in Dishwasher 12 Place Settings 45cm Inverter' },
+    { asin: 'COUNTER', product_name: 'Countertop Dishwasher 12 Place Settings 45cm Inverter Auto-open Door' },
+    { asin: 'DETERGENT', product_name: 'Dishwasher Detergent for Built-in Dishwasher 12 Place Settings 45cm Inverter Auto-open Door' },
+    { asin: 'RACK', product_name: 'Replacement Rack for Built-in Dishwasher 12 Place Settings 45cm Inverter Auto-open Door' },
+    { asin: 'INLET', product_name: 'Inlet Hose for Built-in Dishwasher 12 Place Settings 45cm Inverter Auto-open Door' },
+    { asin: 'DRAIN', product_name: 'Drain Hose for Built-in Dishwasher 12 Place Settings 45cm Inverter Auto-open Door' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

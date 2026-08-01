@@ -347,6 +347,20 @@ function buildFrenchDoorRefrigeratorSearchKeywords(query) {
   return ['冷蔵庫', `${capacity}L`, frenchDoor, inverter, iceMaker].join(' ');
 }
 
+function buildBuiltInDishwasherSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const machine = /(?:ビルトイン.{0,12}(?:食器洗い乾燥機|食洗機)|built[- ]?in\s*dishwasher|嵌入式洗碗机|嵌入式洗碗機|빌트인\s*식기세척기)/iu.test(normalized);
+  if (!machine) return '';
+  if (/(?:洗剤|detergent|세제|交換|replacement|替换|替換|교체)/iu.test(normalized)) return '';
+  const settings = normalized.match(/(\d{1,2})\s*(?:人分|place\s*settings?|套(?:餐具)?|인용)/iu)?.[1];
+  const width = normalized.match(/(?:幅\s*)?(\d{2})\s*cm/iu)?.[1];
+  const inverter = /(?:インバーター|inverter|变频|變頻|인버터)/iu.test(normalized) ? 'インバーター' : '';
+  const autoOpen = /(?:自動ドアオープン|auto(?:matic)?[- ]?open\s*door|自动开门|自動開門|자동\s*문열림)/iu.test(normalized)
+    ? '自動ドアオープン' : '';
+  if (!settings || !width || !inverter || !autoOpen) return '';
+  return ['ビルトイン食器洗い乾燥機', `${settings}人分`, `幅${width}cm`, inverter, autoOpen].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1142,6 +1156,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawFrontLoadWasherDryer) return rawFrontLoadWasherDryer;
   const rawFrenchDoorRefrigerator = buildFrenchDoorRefrigeratorSearchKeywords(rawNormalized);
   if (rawFrenchDoorRefrigerator) return rawFrenchDoorRefrigerator;
+  const rawBuiltInDishwasher = buildBuiltInDishwasherSearchKeywords(rawNormalized);
+  if (rawBuiltInDishwasher) return rawBuiltInDishwasher;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

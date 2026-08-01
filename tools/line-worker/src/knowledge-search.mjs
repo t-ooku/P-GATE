@@ -886,6 +886,32 @@ function isFrenchDoorRefrigeratorMismatch(candidate, requested) {
   return false;
 }
 
+function builtInDishwasherConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    machine: /(?:ビルトイン.{0,12}(?:食器洗い乾燥機|食洗機)|built[- ]?in\s*dishwasher|嵌入式洗碗机|嵌入式洗碗機|빌트인\s*식기세척기)/iu.test(text),
+    settings: text.match(/(\d{1,2})\s*(?:人分|place\s*settings?|套(?:餐具)?|인용)/iu)?.[1] || '',
+    width: text.match(/(?:幅\s*)?(\d{2})\s*cm/iu)?.[1] || '',
+    inverter: /(?:インバーター|inverter|变频|變頻|인버터)/iu.test(text),
+    autoOpen: /(?:自動ドアオープン|auto(?:matic)?[- ]?open\s*door|自动开门|自動開門|자동\s*문열림)/iu.test(text),
+    wrongProduct: /(?:卓上(?:型)?食洗機|countertop\s*dishwasher|台式洗碗机|台式洗碗機|탁상형\s*식기세척기|食洗機用洗剤|dishwasher\s*detergent|洗碗机洗涤剂|洗碗機洗滌劑|식기세척기\s*세제|replacement\s*(?:rack|basket|parts?)|交換(?:ラック|かご|部品)|替换(?:碗篮|零件)|替換(?:碗籃|零件)|교체용\s*(?:랙|바스켓|부품)|inlet\s*hose|drain\s*hose|給水ホース|排水ホース|进水管|進水管|排水管|급수\s*호스|배수\s*호스)/iu.test(text)
+  };
+}
+
+function isBuiltInDishwasherMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = builtInDishwasherConstraints(text);
+  if (!evidence.machine || evidence.wrongProduct) return true;
+  for (const field of ['settings', 'width']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const feature of ['inverter', 'autoOpen']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1731,6 +1757,9 @@ export function filterCategoryMismatches(query, candidates = []) {
   const frenchDoorRefrigeratorIntent = frenchDoorRefrigerator.refrigerator
     && Boolean(frenchDoorRefrigerator.capacity && frenchDoorRefrigerator.frenchDoor)
     && !frenchDoorRefrigerator.wrongProduct;
+  const builtInDishwasher = builtInDishwasherConstraints(normalizedQuery);
+  const builtInDishwasherIntent = builtInDishwasher.machine
+    && Boolean(builtInDishwasher.settings && builtInDishwasher.width) && !builtInDishwasher.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1740,7 +1769,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent && !robotVacuumBodyIntent
     && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
-    && !frenchDoorRefrigeratorIntent) return candidates;
+    && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1807,6 +1836,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (steamMicrowaveOvenIntent) return !isSteamMicrowaveOvenMismatch(candidate, steamMicrowaveOven);
     if (frontLoadWasherDryerIntent) return !isFrontLoadWasherDryerMismatch(candidate, frontLoadWasherDryer);
     if (frenchDoorRefrigeratorIntent) return !isFrenchDoorRefrigeratorMismatch(candidate, frenchDoorRefrigerator);
+    if (builtInDishwasherIntent) return !isBuiltInDishwasherMismatch(candidate, builtInDishwasher);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
