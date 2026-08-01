@@ -1,7 +1,7 @@
 # HOSHILU モール横断・アフィリエイト確認状況
 
-更新日: 2026-07-31
-最終一次情報確認: 2026-07-31
+更新日: 2026-08-01
+最終一次情報確認: 2026-08-01
 
 ## 実装方針
 
@@ -9,6 +9,8 @@
 - アパレル検索に限り、ZOZOTOWN、SHOPLIST、MUSINSA、BUYMA、SNKRDUNKの検索導線を追加する。
 - 食事・デリバリー検索は、住所・時刻依存と商品データ契約の複雑さに対してHOSHILUの商品検索体験から外れるため、2026-07-31に採用を見送った。
 - 商品カードの「○○で見る」は、確認済みの商品詳細URLがあるモールだけ表示する。
+- 2026-08-01に9モール共通の商品URL検証・フィード取込・7日鮮度診断・署名付き商品提示を実装した。
+- 追加5モールは技術的に商品提示可能だが、正式フィードまたは個別許諾を受領するまで実商品データを自動取得しない。
 - 検索結果ページへ送る導線は「出品確認済み」と扱わず、横断検索枠だけに表示する。
 - アフィリエイトURLは、各プログラムの承認とリンク利用条件を確認できたものだけ採用する。
 
@@ -20,11 +22,11 @@
 | 楽天市場 | 稼働中 | 楽天API・フィード対応 | `affiliateUrl` 優先処理を実装済み | 法人利用条件と成果レポートを継続確認 |
 | Qoo10 | 稼働中 | 商品フィード対応 | 公式キュレーター制度あり、未接続 | HOSHILU媒体登録・商品リンク発行条件を確認 |
 | SHEIN | 稼働中 | 商品フィード対応 | 公式Affiliate Programあり、未接続 | 日本向け媒体審査とディープリンク条件を確認 |
-| ZOZOTOWN | アパレル検索のみ稼働中 | 未接続 | 公開公式ページでは確認できず | ASP管理画面またはZOZOへ提携可否を照会 |
-| SHOPLIST | アパレル検索のみ稼働中 | 未接続 | 公開公式ページでは確認できず | ASP管理画面またはSHOPLISTへ提携可否を照会 |
-| MUSINSA | アパレル検索のみ稼働中 | 未接続 | 韓国向け公式「MUSINSA Curator」は商品リンク共有と最大10%を案内 | 日本向けHOSHILU Web媒体・日本送客・精算対象か確認 |
-| BUYMA | アパレル検索のみ稼働中 | 未接続 | 公開公式ページではメディア向け制度の確証不足 | BUYMAまたはASPへメディア提携を照会 |
-| SNKRDUNK | アパレル検索のみ稼働中 | 未接続 | HOSHILU向け承認なし | Web媒体提携、検索ディープリンク、商品画像・価格データ条件を公式窓口へ確認 |
+| ZOZOTOWN | アパレル検索のみ稼働中 | 取込・検証基盤対応、データ未接続 | 公開公式ページでは確認できず | 商品フィード、画像・価格利用、更新頻度、媒体提携可否を公式またはASPへ照会 |
+| SHOPLIST | アパレル検索のみ稼働中 | 取込・検証基盤対応、データ未接続 | 公開公式ページでは確認できず | 商品URL実例を含む正式フィードとWeb媒体提携可否を公式またはASPへ照会 |
+| MUSINSA | アパレル検索のみ稼働中 | 取込・検証基盤対応、データ未接続 | 韓国向け公式「MUSINSA Curator」は商品リンク共有と最大10%を案内 | 日本向けWeb媒体・日本送客・商品データ・精算対象か確認 |
+| BUYMA | アパレル検索のみ稼働中 | 取込・検証基盤対応、データ未接続 | Personal Shopper APIは出品者自身の商品・注文管理向け。市場横断の公開商品検索APIではない | メディア提携または許諾済み商品フィードをBUYMAへ照会 |
+| SNKRDUNK | アパレル検索のみ稼働中 | 取込・検証基盤対応、データ未接続 | HOSHILU向け承認なし | Web媒体提携、商品URLフィード、画像・価格・在庫条件を公式窓口へ確認 |
 | Uber Eats | 採用見送り | 未接続 | 公式Affiliate Programあり、未申請・未承認 | HOSHILUへ掲載・収益リンク化しない |
 | 出前館 | 採用見送り | 未接続 | HOSHILU向け承認なし | HOSHILUへ掲載しない |
 | menu | 採用見送り | 未接続 | 公開公式情報で確証なし | HOSHILUへ掲載しない |
@@ -42,6 +44,8 @@
 - ZOZOTOWN: https://zozo.jp/
 - SHOPLIST: https://shop-list.com/
 - BUYMA: https://www.buyma.com/
+- BUYMA Personal Shopper API: https://specification.personal-shopper-api.buyma.com/en/
+- BUYMA Product API: https://specification.personal-shopper-api.buyma.com/en/api/products_json/
 - SNKRDUNK検索: https://snkrdunk.com/search/
 - SNKRDUNKカテゴリ: https://snkrdunk.com/categories
 - Uber Affiliate Program: https://www.uber.com/jp/ja/affiliate-program/
