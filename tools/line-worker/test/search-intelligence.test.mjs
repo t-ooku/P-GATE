@@ -2266,3 +2266,21 @@ test('negated PD output requirements exclude only that output in four languages'
       ['POWERNOPD', 'POWERPD30'], query);
   }
 });
+
+test('negated capacity requirements exclude only that capacity in four languages', () => {
+  const queries = [
+    '10000mAhじゃないモバイルバッテリー',
+    'a power bank that is not 10000mAh',
+    '不要10000mAh的充电宝',
+    '10000mAh 아닌 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWER5000', product_name: '5000mAh Power Bank USB-C' },
+    { asin: 'POWER10000', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'POWER20000', product_name: '20000mAh Power Bank USB-C' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWER5000', 'POWER20000'], query);
+  }
+});

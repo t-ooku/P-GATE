@@ -335,9 +335,15 @@ function isPowerBankMismatch(candidate, query) {
     .normalize('NFKC').toLowerCase();
   if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(text)) return true;
   const normalizedQuery = String(query || '').normalize('NFKC');
-  const capacity = [...normalizedQuery.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
+  const capacityMatches = [...normalizedQuery.matchAll(/(\d{4,6})\s*m\s*ah/giu)];
+  const capacity = capacityMatches
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))?.[1];
   if (capacity && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
+  const rejectedCapacities = capacityMatches
+    .filter((match) => isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))
+    .map((match) => match[1]);
+  if (rejectedCapacities.some((value) =>
+    new RegExp(`(?:^|\\D)${value}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text))) return true;
   const builtInMatches = [...normalizedQuery.matchAll(/(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/giu)];
   const builtIn = builtInMatches.some((match) =>
     !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));

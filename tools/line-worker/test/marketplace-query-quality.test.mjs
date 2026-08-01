@@ -1159,6 +1159,21 @@ test('negated PD output requirements are removed from power-bank keywords in fou
   }
 });
 
+test('negated capacity requirements are removed from power-bank keywords in four languages', () => {
+  const queries = [
+    '10000mAhじゃないモバイルバッテリー',
+    'a power bank that is not 10000mAh',
+    '不要10000mAh的充电宝',
+    '10000mAh 아닌 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'モバイルバッテリー', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('冷蔵庫給水フィルターは4言語の型番・純正・個数を全モール向けに保持する', () => {
   const cases = [
     ['Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個', 'Samsung HAF-QIN DA97-17376B 冷蔵庫給水フィルター 純正 2個セット'],
