@@ -473,3 +473,55 @@ test("4言語のカテゴリ訂正は否定したパンツを除きスカート�
     }
   }
 });
+
+test("ジャケット・コート・パーカーを4言語から属性付き9モール検索語へ変換する", () => {
+  const cases = [
+    ['黒い防水ジャケット', 'ジャケット', '黒', '防水'],
+    ['black waterproof jacket', 'ジャケット', '黒', '防水'],
+    ['黑色防水夹克', 'ジャケット', '黒', '防水'],
+    ['검정 방수 재킷', 'ジャケット', '黒', '防水'],
+    ['ベージュのトレンチコート', 'コート', 'ベージュ'],
+    ['beige trench coat', 'コート', 'ベージュ'],
+    ['米色风衣', 'コート', 'ベージュ'],
+    ['베이지 트렌치코트', 'コート', 'ベージュ'],
+    ['グレーのパーカー', 'パーカー', 'グレー'],
+    ['gray hoodie', 'パーカー', 'グレー'],
+    ['灰色连帽衫', 'パーカー', 'グレー'],
+    ['회색 후드티', 'パーカー', 'グレー'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, ...expected] of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      for (const token of expected) assert.ok(tokens.includes(token), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
+
+test("4言語のアウター訂正は否定したジャケットを除きコートだけを9モールへ渡す", () => {
+  const cases = [
+    'ジャケットではなく黒いコート', 'not a jacket but a black coat',
+    '不要夹克，要黑色外套', '재킷 말고 검정 코트',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('コート'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('ジャケット'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
+
+test("ライフジャケットをファッション用ジャケットと分離して4言語変換する", () => {
+  const cases = [
+    ['オレンジのライフジャケット', 'オレンジ'], ['orange life jacket', 'オレンジ'],
+    ['黄色救生衣', '黄'], ['노란색 구명조끼', '黄'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, color] of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('ライフジャケット'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes(color), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('ジャケット'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});

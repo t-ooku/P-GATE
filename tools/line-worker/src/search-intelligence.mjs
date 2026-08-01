@@ -18,6 +18,7 @@ const RULES = [
   ['dual-charger',/(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|듀얼).{0,12}충전/iu,['dual charger','dual charging']],
   ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|ギャラクシー.{0,16}ケース|エクスペリア.{0,16}ケース|アクオス.{0,16}ケース|(?:iphone|galaxy|xperia|aquos|smartphone|phone).{0,16}(?:case|ケース)|(?:case|ケース).{0,16}(?:iphone|galaxy|xperia|aquos|smartphone|phone)|手机壳|手机保护壳|(?:iPhone|Xperia|AQUOS|手机|手機|三星).{0,16}(?:壳|殼|保护壳|保護殼)|(?:壳|殼|保护壳|保護殼).{0,16}(?:iPhone|Xperia|AQUOS|手机|手機|三星)|휴대폰 케이스|스마트폰 케이스|(?:iPhone|Xperia|AQUOS|아이폰|휴대폰|스마트폰|갤럭시|엑스페리아|아쿠오스).{0,16}케이스|케이스.{0,16}(?:iPhone|Xperia|AQUOS|아이폰|휴대폰|스마트폰|갤럭시|엑스페리아|아쿠오스))/iu,['phone','case','cover','iphone','smartphone']],
   ['light-up',/(光る|発光|\bLED\b|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
+  ['waterproof',/(防水|waterproof|防水型|방수)/iu,['waterproof']],
   ['camera-bag',/(カメラ(?:用)?(?:バッグ|ケース|ポーチ)|camera bag|camera case)/iu,['camera bag','camera case']],
   ['photo-printer',/(写真プリンター|フォトプリンター|スマホプリンター|photo printer|portable photo printer)/iu,['photo printer','portable printer']],
   ['camera',/(カメラ(?!用?(?:バッグ|ケース|ポーチ))|camera(?! bag| case))/iu,['camera']],
@@ -84,6 +85,10 @@ const RULES = [
   ['lip-care',/(リップ(?:クリーム|バーム|ケア)|lip balm|lip care)/iu,['lip balm','lip care']],
   ['lip-color',/(リップ(?!クリーム|バーム|ケア)|口紅|ティント|lip tint|lipstick|립 틴트|립스틱|틴트|唇釉|口红|口紅)/iu,['lip','tint','lipstick']],
   ['t-shirt',/(Tシャツ|ティーシャツ|tee ?shirt|t-shirt|T恤|티셔츠)/iu,['t-shirt','tee']],
+  ['life-jacket',/(ライフジャケット|救命胴衣|life\s*jackets?|personal\s+flotation\s+devices?|救生衣|구명조끼)/iu,['life jacket','personal flotation device']],
+  ['jacket',/(ジャケット|(?<!life\s)jackets?|夹克|夾克|재킷)/iu,['jacket']],
+  ['coat',/(トレンチコート|コート|\b(?:trench\s+)?coats?\b|风衣|風衣|外套|트렌치\s*코트|트렌치코트|코트)/iu,['coat','trench coat']],
+  ['hoodie',/(パーカー|hoodies?|hooded\s+sweatshirts?|连帽衫|連帽衫|후드티|후디)/iu,['hoodie','hooded sweatshirt']],
   ['tops',/(トップス|ブラウス|シャツ|カットソー|\bblouse\b|\btops?\b)/iu,['top','blouse','shirt']],
   ['pants',/(パンツ|ズボン|デニム|ジーンズ|trousers?|pants|jeans|牛仔裤|牛仔褲|裤子|褲子|청바지|바지)/iu,['pants','trousers','jeans']],
   ['skirt',/(スカート|skirts?|半身裙|裙子|치마)/iu,['skirt']],
@@ -105,6 +110,7 @@ const COLOR_RULES = [
   [/(赤(?:色)?|レッド|\bred\b|红色|紅色|빨간색|레드)/iu,['red']],
   [/(紫(?:色)?|パープル|\bpurple\b|보라색|퍼플)/iu,['purple']],
   [/(オレンジ|\borange\b|橙色|주황색)/iu,['orange']],
+  [/(ベージュ|\bbeige\b|米色|베이지)/iu,['beige']],
   [/(グレー|灰色|gray|grey|회색|그레이)/iu,['gray']],
   [/(透明|クリア|clear|transparent|透明色|투명)/iu,['clear','transparent']]
 ];
@@ -139,6 +145,9 @@ const NEGATED_CATEGORY_TERMS = new Map([
   ['pants', /(?:パンツ|ズボン|デニム|ジーンズ|trousers?|pants|jeans|牛仔裤|牛仔褲|裤子|褲子|청바지|바지)/iu],
   ['skirt', /(?:スカート|skirts?|半身裙|裙子|치마)/iu],
   ['t-shirt', /(?:Tシャツ|ティーシャツ|tee ?shirt|t-shirt|T恤|티셔츠)/iu],
+  ['jacket', /(?:ジャケット|(?<!life\s)jackets?|夹克|夾克|재킷)/iu],
+  ['coat', /(?:トレンチコート|コート|\b(?:trench\s+)?coats?\b|风衣|風衣|外套|트렌치\s*코트|트렌치코트|코트)/iu],
+  ['hoodie', /(?:パーカー|hoodies?|hooded\s+sweatshirts?|连帽衫|連帽衫|후드티|후디)/iu],
 ]);
 
 export function isNegatedSearchOccurrence(text, start, end) {
@@ -238,6 +247,7 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('camera-bag')) groups = groups.filter((group) => group.category !== 'bag');
   if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
+  if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
   if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');
   if (specificCategories.has('seasonal-pillow') && !specificCategories.has('pillow')) {
     groups.unshift({ category: 'pillow', terms: ['pillow','cushion'] });

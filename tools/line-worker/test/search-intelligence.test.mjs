@@ -1136,3 +1136,48 @@ test('中国語・韓国語の主要色をFTS共通色へ正規化する', () =>
     assert.match(intelligentFtsQuery(input), new RegExp(`"${color}"\\*`), input);
   }
 });
+
+test('ジャケット・コート・パーカーを4言語から属性付きFTSカテゴリへ変換する', () => {
+  const cases = [
+    ['黒い防水ジャケット', 'jacket', 'black', 'waterproof'],
+    ['black waterproof jacket', 'jacket', 'black', 'waterproof'],
+    ['黑色防水夹克', 'jacket', 'black', 'waterproof'],
+    ['검정 방수 재킷', 'jacket', 'black', 'waterproof'],
+    ['ベージュのトレンチコート', 'coat', 'beige'],
+    ['beige trench coat', 'coat', 'beige'],
+    ['米色风衣', 'coat', 'beige'],
+    ['베이지 트렌치코트', 'coat', 'beige'],
+    ['グレーのパーカー', 'hoodie', 'gray'],
+    ['gray hoodie', 'hoodie', 'gray'],
+    ['灰色连帽衫', 'hoodie', 'gray'],
+    ['회색 후드티', 'hoodie', 'gray'],
+  ];
+  for (const [input, ...expected] of cases) {
+    const query = intelligentFtsQuery(input);
+    for (const token of expected) assert.match(query, new RegExp(`"${token}"\\*`), input);
+  }
+});
+
+test('4言語のアウター訂正は否定したジャケットを除きコートだけをFTSへ保持する', () => {
+  for (const input of [
+    'ジャケットではなく黒いコート', 'not a jacket but a black coat',
+    '不要夹克，要黑色外套', '재킷 말고 검정 코트',
+  ]) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"coat"\*/, input);
+    assert.doesNotMatch(query, /"jacket"\*/, input);
+  }
+});
+
+test('4言語のライフジャケットをファッション用ジャケットと分離する', () => {
+  const cases = [
+    ['オレンジのライフジャケット', 'orange'], ['orange life jacket', 'orange'],
+    ['黄色救生衣', 'yellow'], ['노란색 구명조끼', 'yellow'],
+  ];
+  for (const [input, color] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"life jacket"\*/, input);
+    assert.match(query, new RegExp(`"${color}"\\*`), input);
+    assert.doesNotMatch(query, /\("jacket"\*\)/, input);
+  }
+});
