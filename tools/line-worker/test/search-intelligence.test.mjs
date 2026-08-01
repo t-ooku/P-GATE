@@ -1071,3 +1071,68 @@ test('4言語のワンピース検索はサイズ表現に左右されず商品�
     assert.match(query, /"black"\*/, input);
   }
 });
+
+test('4言語と地域別の靴サイズは商品カテゴリと訂正後のサイズだけをFTSへ保持する', () => {
+  const cases = [
+    ['24cmではなく24.5cmの白いスニーカー', /"24\.5"\*/, /"24"\*/],
+    ['white sneakers in US size 9, not US size 8', /"us 9"\*/, /"us 8"\*/],
+    ['不要38码，要39码白色运动鞋', /"eu 39"\*/, /"eu 38"\*/],
+    ['255mm 말고 260mm 흰색 운동화', /"260"\*/, /"255"\*/],
+    ['EU 38ではなくEU 39の黒いスニーカー', /"eu 39"\*/, /"eu 38"\*/],
+    ['black trainers in UK size 6', /"uk 6"\*/, /"uk 5"\*/],
+  ];
+  for (const [input, expected, forbidden] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"shoe"\*.*"sneaker"\*/, input);
+    assert.match(query, expected, input);
+    assert.doesNotMatch(query, forbidden, input);
+  }
+});
+
+test('4言語の靴用品を靴本体のFTSカテゴリへ誤分類しない', () => {
+  for (const input of ['靴箱', 'shoe lace', '鞋盒', '신발장']) {
+    assert.doesNotMatch(intelligentFtsQuery(input), /"shoe"\*|"sneaker"\*/, input);
+  }
+});
+
+test('パンツ・スカート・Tシャツを4言語から共通FTSカテゴリへ変換する', () => {
+  const cases = [
+    ['黒のデニムパンツ', /"pants"\*/, /"black"\*/], ['blue jeans', /"pants"\*/, /"blue"\*/],
+    ['黑色牛仔裤', /"pants"\*/, /"black"\*/], ['검정 청바지', /"pants"\*/, /"black"\*/],
+    ['黒いスカート', /"skirt"\*/, /"black"\*/], ['black skirt', /"skirt"\*/, /"black"\*/],
+    ['黑色半身裙', /"skirt"\*/, /"black"\*/], ['검정 치마', /"skirt"\*/, /"black"\*/],
+    ['白いTシャツ', /"t-shirt"\*/, /"white"\*/], ['white t-shirt', /"t-shirt"\*/, /"white"\*/],
+    ['白色T恤', /"t-shirt"\*/, /"white"\*/], ['흰색 티셔츠', /"t-shirt"\*/, /"white"\*/],
+  ];
+  for (const [input, product, color] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, product, input);
+    assert.match(query, color, input);
+  }
+});
+
+test('4言語のカテゴリ訂正は否定したパンツを除きスカートだけをFTSへ保持する', () => {
+  for (const input of [
+    'パンツではなく黒いスカート', 'not pants but a black skirt',
+    '不要裤子，要黑色半身裙', '바지 말고 검정 치마',
+  ]) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"skirt"\*/, input);
+    assert.doesNotMatch(query, /"pants"\*|"trousers"\*|"jeans"\*/, input);
+  }
+});
+
+test('中国語・韓国語の主要色をFTS共通色へ正規化する', () => {
+  const cases = [
+    ['绿色T恤', 'green'], ['초록색 티셔츠', 'green'],
+    ['蓝色裙子', 'blue'], ['파란색 치마', 'blue'],
+    ['粉色T恤', 'pink'], ['핑크 티셔츠', 'pink'],
+    ['银色裙子', 'silver'], ['은색 치마', 'silver'],
+    ['棕色T恤', 'brown'], ['갈색 티셔츠', 'brown'],
+    ['黄色裙子', 'yellow'], ['노란색 치마', 'yellow'],
+    ['灰色T恤', 'gray'], ['회색 티셔츠', 'gray'],
+  ];
+  for (const [input, color] of cases) {
+    assert.match(intelligentFtsQuery(input), new RegExp(`"${color}"\\*`), input);
+  }
+});

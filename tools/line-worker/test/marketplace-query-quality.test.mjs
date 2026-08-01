@@ -411,3 +411,65 @@ test("4言語のフリーサイズを9モール向け共通表記へ統一する
     }
   }
 });
+
+test("4言語とUS・EU・UKの靴サイズは訂正後の条件だけを9モールへ保持する", () => {
+  const cases = [
+    ['24cmではなく24.5cmの白いスニーカー', '24.5cm', '24cm'],
+    ['white sneakers in US size 9, not US size 8', 'US9', 'US8'],
+    ['不要38码，要39码白色运动鞋', 'EU39', 'EU38'],
+    ['255mm 말고 260mm 흰색 운동화', '260mm', '255mm'],
+    ['EU 38ではなくEU 39の黒いスニーカー', 'EU39', 'EU38'],
+    ['black trainers in UK size 6', 'UK6', 'UK5'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected, forbidden] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      const tokens = keywords.split(/\s+/u);
+      assert.ok(tokens.includes(expected), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!tokens.includes(forbidden), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(tokens.includes('スニーカー'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("4言語の靴用品をスニーカー本体の検索語へ誤変換しない", () => {
+  const cases = ['靴箱', 'shoe lace', '鞋盒', '신발장'];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(!keywords.split(/\s+/u).includes('スニーカー'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("パンツ・スカート・Tシャツを4言語から9モール向け共通商品語へ変換する", () => {
+  const cases = [
+    ['黒のデニムパンツ', 'パンツ', '黒'], ['blue jeans', 'パンツ', '青'],
+    ['黑色牛仔裤', 'パンツ', '黒'], ['검정 청바지', 'パンツ', '黒'],
+    ['黒いスカート', 'スカート', '黒'], ['black skirt', 'スカート', '黒'],
+    ['黑色半身裙', 'スカート', '黒'], ['검정 치마', 'スカート', '黒'],
+    ['白いTシャツ', 'Tシャツ', '白'], ['white t-shirt', 'Tシャツ', '白'],
+    ['白色T恤', 'Tシャツ', '白'], ['흰색 티셔츠', 'Tシャツ', '白'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, product, color] of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes(product), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes(color), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
+
+test("4言語のカテゴリ訂正は否定したパンツを除きスカートだけを9モールへ渡す", () => {
+  const cases = [
+    'パンツではなく黒いスカート', 'not pants but a black skirt',
+    '不要裤子，要黑色半身裙', '바지 말고 검정 치마',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('スカート'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('パンツ'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
