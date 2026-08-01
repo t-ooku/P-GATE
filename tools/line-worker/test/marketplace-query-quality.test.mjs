@@ -166,6 +166,21 @@ test('端末と商品種別を同時訂正した4言語検索は最後の保護�
   }
 });
 
+test('音声入力風の端末訂正も4言語で最後の保護フィルム指定だけを保持する', () => {
+  const queries = [
+    'iPhone 15 Proじゃない Pixel 9 Proの覗き見防止強化ガラスフィルム',
+    'iPhone 15 Pro no sorry Pixel 9 Pro privacy tempered glass screen protector',
+    'iPhone 15 Pro不对 Pixel 9 Pro防窥钢化玻璃保护膜',
+    'iPhone 15 Pro 아니고 Pixel 9 Pro 사생활 보호 강화유리 필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Pixel 9 Pro 保護フィルム 強化ガラス 覗き見防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [

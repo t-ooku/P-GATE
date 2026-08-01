@@ -1096,6 +1096,26 @@ test('端末と商品種別を同時訂正した4言語検索は最後の保護�
   }
 });
 
+test('音声入力風の端末訂正も4言語で最後の保護フィルムだけを提示する', () => {
+  const queries = [
+    'iPhone 15 Proじゃない Pixel 9 Proの覗き見防止強化ガラスフィルム',
+    'iPhone 15 Pro no sorry Pixel 9 Pro privacy tempered glass screen protector',
+    'iPhone 15 Pro不对 Pixel 9 Pro防窥钢化玻璃保护膜',
+    'iPhone 15 Pro 아니고 Pixel 9 Pro 사생활 보호 강화유리 필름',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Pixel 9 Pro Privacy Tempered Glass Screen Protector' },
+    { asin: 'OLD', product_name: 'iPhone 15 Pro Privacy Tempered Glass Screen Protector' },
+    { asin: 'CLEAR', product_name: 'Pixel 9 Pro Clear Tempered Glass Screen Protector' },
+    { asin: 'PET', product_name: 'Pixel 9 Pro Privacy PET Protective Film' },
+    { asin: 'FOLD', product_name: 'Pixel 9 Pro Fold Privacy Tempered Glass Screen Protector' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
   const cases = [
     [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',
