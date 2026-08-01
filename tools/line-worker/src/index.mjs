@@ -1048,6 +1048,7 @@ export default {
       if (seoPage) return new Response(seoPage, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
+          'content-language': url.pathname.startsWith('/ja/') ? 'ja' : 'en',
           'cache-control': 'public, max-age=300',
           'x-content-type-options': 'nosniff'
         }

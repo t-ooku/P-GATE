@@ -27,4 +27,13 @@ test('trailing slash SEO URLs permanently redirect to one canonical URL', async 
     { waitUntil() {} }
   );
   assert.equal(canonical.status, 200);
+  assert.equal(canonical.headers.get('content-language'), 'en');
+
+  const japanese = await worker.fetch(
+    new Request('https://hoshilu.app/ja/find-product-without-name'),
+    {},
+    { waitUntil() {} }
+  );
+  assert.equal(japanese.status, 200);
+  assert.equal(japanese.headers.get('content-language'), 'ja');
 });
