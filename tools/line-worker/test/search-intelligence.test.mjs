@@ -146,6 +146,23 @@ test('4言語の素材・互換機種・容量寸法を商品カテゴリと同�
   assert.match(organizer, /\"wood\"\*/);
 });
 
+test('4言語の予算額を型番や寸法としてFTS必須条件へ混入させない', () => {
+  const cases = [
+    ['5000円以下の黒い財布', '5000'],
+    ["a black wallet under $50", '50'],
+    ['预算300元以内的黑色钱包', '300'],
+    ['예산 5만원 이하 검은색 지갑', '5'],
+  ];
+  for (const [query, budget] of cases) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /"wallet"\*/);
+    assert.match(expression, /"black"\*/);
+    assert.doesNotMatch(expression, new RegExp(`"${budget}"\\*`));
+  }
+  assert.match(intelligentFtsQuery('20Lのバックパック'), /"20(?:l)?"\*/i);
+  assert.match(intelligentFtsQuery('iPhone 15用ケース'), /"15"\*/);
+});
+
 test('Japanese memory fragments expand into category and color FTS groups', () => {
   const query = intelligentFtsQuery('茶色い革ベルトと金属ケースの男性用腕時計');
   assert.match(query, /"watch"\*/);

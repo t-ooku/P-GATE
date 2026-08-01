@@ -59,6 +59,17 @@ export function buildDeviceAccessorySearchKeywords(query) {
   return [base, ...conditions].join(' ');
 }
 
+function stripSearchBudget(value) {
+  return String(value || '').normalize('NFKC')
+    .replace(/(?:予算(?:は|が|で)?\s*)?(?:¥|￥)?\s*\d[\d,]*(?:\.\d+)?\s*円\s*(?:以下|未満|以内|まで|くらい|程度|前後)?/giu, ' ')
+    .replace(/(?:budget(?:\s+is|\s+of|\s*:)?|under|below|less\s+than|up\s+to|within)\s*(?:US\$|USD|\$)?\s*\d[\d,]*(?:\.\d+)?(?:\s*(?:dollars?|USD))?/giu, ' ')
+    .replace(/(?:US\$|USD|\$)\s*\d[\d,]*(?:\.\d+)?|\d[\d,]*(?:\.\d+)?\s*dollars?/giu, ' ')
+    .replace(/(?:预算|預算)?\s*(?:不超过|不超過|低于|低於|少于|少於|最多)?\s*[¥￥]?\s*\d[\d,]*(?:\.\d+)?\s*(?:元|人民币|人民幣)\s*(?:以下|以内|以內)?/giu, ' ')
+    .replace(/(?:예산(?:은|이|으로|:)?\s*)?(?:₩\s*)?\d[\d,]*(?:\.\d+)?\s*(?:만\s*)?원\s*(?:이하|미만|이내|까지|정도)?/giu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
+}
+
 const GENERIC_PRODUCTS = [
   ['バックパック', /(?:リュック|バックパック|backpack|rucksack|背包|双肩包|雙肩包|백팩|배낭)/iu],
   ['カメラフィルター', /(?:カメラ|レンズ|camera|lens|相机|相機|镜头|鏡頭|카메라|렌즈).{0,16}(?:フィルター|filters?|滤镜|濾鏡|필터)/iu],
@@ -104,7 +115,7 @@ const GENERIC_PRODUCTS = [
   ['リップ', /(?:リップ|口紅|lipstick|lip\s*tint|唇膏|립스틱|립틴트)/iu],
   ['水筒', /(?:水筒|タンブラー|ボトル|water\s*bottle|tumbler|水杯|保温杯|保溫杯|텀블러)/iu],
   ['携帯扇風機', /(?:携帯扇風機|ハンディファン|portable\s*fan|handheld\s*fan|手持风扇|手持風扇|휴대용\s*선풍기)/iu],
-  ['ライト', /(?:ライト|照明|ランプ|light|lamp|灯|燈|조명|램프)/iu],
+  ['ライト', /(?:ライト|照明|ランプ|\blights?\b|\blamps?\b|灯|燈|조명|램프)/iu],
 ];
 
 const GENERIC_ATTRIBUTES = [
@@ -136,6 +147,13 @@ const GENERIC_ATTRIBUTES = [
   ['折りたたみ', /(?:折りたたみ|折り畳み|折り畳める|foldable|folding|折叠|折疊|접이식)/iu],
   ['光る', /(?:光る|発光|LED|ライトアップ|light[- ]?up|glowing|发光|發光|빛나는|발광)/iu],
   ['韓国風', /(?:韓国っぽい|韓国風|韓国系|韓国の|korean\s*(?:style|look)|韩系|韓系|한국풍|한국\s*스타일)/iu],
+  ['メンズ', /(?:男性用|メンズ|\b(?:for\s+men|men'?s)\b|男士(?:用|款)?|남성용|남자용)/iu],
+  ['レディース', /(?:女性用|レディース|\b(?:for\s+women|women'?s)\b|女士(?:用|款)?|여성용|여자용)/iu],
+  ['キッズ', /(?:子供用|子ども用|キッズ|\b(?:for\s+kids|kids?'|children'?s)\b|儿童(?:用|款)?|兒童(?:用|款)?|아동용|어린이용)/iu],
+  ['通勤', /(?:通勤用|通勤向け|通勤に|\bfor\s+commut(?:ing|ers?)\b|通勤用|출퇴근용)/iu],
+  ['アウトドア', /(?:アウトドア用|屋外用|\bfor\s+(?:outdoor|camping|hiking)\b|户外用|戶外用|야외용|캠핑용)/iu],
+  ['浴室用', /(?:浴室用|お風呂用|\bfor\s+(?:the\s+)?bathroom\b|浴室用|욕실용)/iu],
+  ['キッチン用', /(?:キッチン用|台所用|\bfor\s+(?:the\s+)?kitchen\b|厨房用|廚房用|주방용)/iu],
 ];
 
 const GENERIC_MATERIALS = [
@@ -190,7 +208,7 @@ function compactUnknownSearchPhrase(normalized) {
 }
 
 export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') {
-  const normalized = String(query || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
+  const normalized = stripSearchBudget(query).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;

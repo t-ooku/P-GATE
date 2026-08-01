@@ -1,6 +1,6 @@
 export { normalizeSearchQuery, validateSyncPayload, syncProducts } from './product-index.mjs';
 import { normalizeSearchQuery } from './product-index.mjs';
-import { analyzeSearchDecision, semanticSearchGroups } from './search-intelligence.mjs';
+import { analyzeSearchDecision, semanticSearchGroups, stripSearchBudget } from './search-intelligence.mjs';
 
 const STOPWORDS = new Set([
   'with','from','that','this','the','for','and','type','size','like','edition','set',
@@ -15,8 +15,8 @@ const quote = (token) => `"${String(token).replaceAll('"','""')}"*`;
 const cleanTenant = (value) => String(value || '').normalize('NFKC').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
 
 export function intelligentFtsQuery(value) {
-  const source = String(value || '').normalize('NFKC');
-  const normalized = normalizeSearchQuery(value);
+  const source = stripSearchBudget(value);
+  const normalized = normalizeSearchQuery(source);
   const semantic = semanticSearchGroups(normalized)
     .map((group) => [...new Set(group.terms.map((term) => term.toLowerCase()))])
     .filter((group) => group.length)

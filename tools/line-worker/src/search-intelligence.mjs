@@ -164,6 +164,17 @@ const EVIDENCE_STOPWORDS = new Set([
   'silver', 'blue', 'green', 'yellow', 'minor', 'major'
 ]);
 
+export function stripSearchBudget(value) {
+  return String(value || '').normalize('NFKC')
+    .replace(/(?:予算(?:は|が|で)?\s*)?(?:¥|￥)?\s*\d[\d,]*(?:\.\d+)?\s*円\s*(?:以下|未満|以内|まで|くらい|程度|前後)?/giu, ' ')
+    .replace(/(?:budget(?:\s+is|\s+of|\s*:)?|under|below|less\s+than|up\s+to|within)\s*(?:US\$|USD|\$)?\s*\d[\d,]*(?:\.\d+)?(?:\s*(?:dollars?|USD))?/giu, ' ')
+    .replace(/(?:US\$|USD|\$)\s*\d[\d,]*(?:\.\d+)?|\d[\d,]*(?:\.\d+)?\s*dollars?/giu, ' ')
+    .replace(/(?:预算|預算)?\s*(?:不超过|不超過|低于|低於|少于|少於|最多)?\s*[¥￥]?\s*\d[\d,]*(?:\.\d+)?\s*(?:元|人民币|人民幣)\s*(?:以下|以内|以內)?/giu, ' ')
+    .replace(/(?:예산(?:은|이|으로|:)?\s*)?(?:₩\s*)?\d[\d,]*(?:\.\d+)?\s*(?:만\s*)?원\s*(?:이하|미만|이내|까지|정도)?/giu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
+}
+
 function queryEvidenceTokens(text) {
   return [...new Set([
     ...(text.match(/[A-Za-z][A-Za-z0-9-]{3,}/g) || []),
@@ -275,7 +286,7 @@ export function inferCandidateCategory(candidate) {
 }
 
 export function analyzeSearchDecision(query, candidates = []) {
-  const text = String(query || '').normalize('NFKC');
+  const text = stripSearchBudget(query);
   const groups = semanticSearchGroups(text).filter((group) => group.category !== 'color');
   const hasColor = COLOR_RULES.some(([pattern]) => pattern.test(text));
   const hasContext = CONTEXT_RE.test(text);

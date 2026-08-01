@@ -166,3 +166,23 @@ test("4言語の素材・互換機種・容量寸法を9モールの検索語に
     }
   }
 });
+
+test("4言語の予算を除外し対象者・利用場面を9モールの商品語へ保持する", () => {
+  const cases = [
+    ['5000円以下の男性用防水バックパック', ['メンズ', '防水', 'バックパック'], ['5000', '円']],
+    ["a waterproof men's backpack under $50", ['メンズ', '防水', 'バックパック'], ['50', '$']],
+    ['预算300元以内的男士用防水背包', ['メンズ', '防水', 'バックパック'], ['300', '元']],
+    ['예산 5만원 이하 남성용 방수 백팩', ['メンズ', '防水', 'バックパック'], ['5', '만원']],
+    ['通勤用の軽量バックパック', ['通勤', '軽量', 'バックパック'], []],
+    ['a lightweight backpack for commuting', ['通勤', '軽量', 'バックパック'], []],
+    ['通勤用轻量背包', ['通勤', '軽量', 'バックパック'], []],
+    ['출퇴근용 경량 백팩', ['通勤', '軽量', 'バックパック'], []],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, required, forbidden] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      for (const token of required) assert.ok(keywords.includes(token), `${marketplace}: ${input} -> ${keywords}`);
+      for (const token of forbidden) assert.ok(!keywords.includes(token), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
