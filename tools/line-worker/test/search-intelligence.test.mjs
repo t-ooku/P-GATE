@@ -1783,6 +1783,30 @@ test('食洗機タブレットと洗濯ジェルボールは用途・ブラン�
   }
 });
 
+test('洗剤ポッドは香り・無香料・詰め替え・剤形が一致する候補だけを提示する', () => {
+  const candidates = [
+    { asin: 'FINISH_REFILL', product_name: 'Finish レモン 食洗機用洗剤タブレット 詰め替え 60個' },
+    { asin: 'FINISH_BOX', product_name: 'Finish レモン 食洗機用洗剤タブレット ボックス 60個' },
+    { asin: 'FINISH_LIQUID', product_name: 'Finish レモン 食洗機用 液体洗剤 詰め替え 60回分' },
+    { asin: 'CASCADE_FREE', product_name: 'Cascade Platinum Plus fragrance-free dishwasher detergent pods 52 count' },
+    { asin: 'CASCADE_LEMON', product_name: 'Cascade Platinum Plus lemon dishwasher detergent pods 52 count' },
+    { asin: 'TIDE_LAVENDER_REFILL', product_name: 'Tide PODS 薰衣草洗衣凝珠补充装42颗' },
+    { asin: 'TIDE_FREE_REFILL', product_name: 'Tide PODS 无香洗衣凝珠补充装42颗' },
+    { asin: 'TIDE_POWDER', product_name: 'Tide 薰衣草洗衣粉补充装42次' },
+    { asin: 'ARIEL_FREE', product_name: '아리엘 무향 젤볼 세탁세제 92개' },
+    { asin: 'ARIEL_LAVENDER', product_name: '아리엘 라벤더 젤볼 세탁세제 92개' },
+  ];
+  const cases = [
+    ['フィニッシュ レモン 食洗機用洗剤タブレット 詰め替え 60個', ['FINISH_REFILL']],
+    ['Cascade Platinum Plus fragrance-free dishwasher detergent pods 52 count', ['CASCADE_FREE']],
+    ['汰渍 Tide PODS 薰衣草洗衣凝珠补充装42颗', ['TIDE_LAVENDER_REFILL']],
+    ['아리엘 무향 젤볼 세탁세제 92개', ['ARIEL_FREE']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+  }
+});
+
 test('プリンターインクは本体・別型番・別品番・純正互換・色数違いを除外する', () => {
   const candidates = [
     { asin: 'CANON', product_name: 'Canon PIXUS TS8730 純正インク BCI-331+330 6色セット' },

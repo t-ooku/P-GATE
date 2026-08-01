@@ -207,7 +207,11 @@ function buildDetergentPodSearchKeywords(query) {
   const identity = detergentPodIdentity(normalized);
   if (!identity) return '';
   const count = normalized.match(/(\d+)\s*(?:個|錠|粒|tabs?|tablets?|pods?|capsules?|count|pcs|pieces|颗|顆|개|정|캡슐)/iu)?.[1];
-  return [identity, dishwasher ? '食洗機用洗剤タブレット' : '洗濯用洗剤ジェルボール', count ? `${count}個入り` : ''].filter(Boolean).join(' ');
+  const scent = /(?:無香料|無香|unscented|fragrance[- ]?free|无香|무향)/iu.test(normalized) ? '無香料'
+    : /(?:レモン|lemon|柠檬|檸檬|레몬)/iu.test(normalized) ? 'レモン'
+    : /(?:ラベンダー|lavender|薰衣草|라벤더)/iu.test(normalized) ? 'ラベンダー' : '';
+  const refill = /(?:詰め替え|つめかえ|refill|补充装|補充裝|리필)/iu.test(normalized) ? '詰め替え' : '';
+  return [identity, dishwasher ? '食洗機用洗剤タブレット' : '洗濯用洗剤ジェルボール', scent, refill, count ? `${count}個入り` : ''].filter(Boolean).join(' ');
 }
 
 function buildRefrigeratorWaterFilterSearchKeywords(query) {

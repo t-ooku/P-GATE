@@ -1033,3 +1033,17 @@ test('食洗機タブレットと洗濯ジェルボールを4言語で分離し�
     }
   }
 });
+
+test('洗剤ポッドの香り・無香料・詰め替え条件を4言語で保持する', () => {
+  const cases = [
+    ['フィニッシュ レモン 食洗機用洗剤タブレット 詰め替え 60個', 'Finish 食洗機用洗剤タブレット レモン 詰め替え 60個入り'],
+    ['Cascade Platinum Plus fragrance-free dishwasher detergent pods 52 count', 'Cascade Platinum Plus 食洗機用洗剤タブレット 無香料 52個入り'],
+    ['汰渍 Tide PODS 薰衣草洗衣凝珠补充装42颗', 'Tide PODS 洗濯用洗剤ジェルボール ラベンダー 詰め替え 42個入り'],
+    ['아리엘 무향 젤볼 세탁세제 92개', 'Ariel 洗濯用洗剤ジェルボール 無香料 92個入り'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});

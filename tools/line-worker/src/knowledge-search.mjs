@@ -510,6 +510,19 @@ function isDetergentPodMismatch(candidate, query, requestedCategory) {
   if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
   const dishwasher = /(?:食洗機|食器洗い機|dishwasher|洗碗机|洗碗機|식기세척기)/iu.test(text);
   const laundry = /(?:洗濯|laundry|洗衣|세탁)/iu.test(text);
+  const pod = /(?:タブレット|ジェルボール|tabs?|tablets?|pods?|capsules?|凝珠|젤볼|타블렛|캡슐)/iu.test(text);
+  if (!pod || /(?:粉末|powder|粉剂|粉劑|분말|液体|liquid|洗衣液|액체)/iu.test(text)) return true;
+  const requestedScent = /(?:無香料|無香|unscented|fragrance[- ]?free|无香|무향)/iu.test(query) ? 'unscented'
+    : /(?:レモン|lemon|柠檬|檸檬|레몬)/iu.test(query) ? 'lemon'
+    : /(?:ラベンダー|lavender|薰衣草|라벤더)/iu.test(query) ? 'lavender' : '';
+  const scentPatterns = {
+    unscented: /(?:無香料|無香|unscented|fragrance[- ]?free|无香|무향)/iu,
+    lemon: /(?:レモン|lemon|柠檬|檸檬|레몬)/iu,
+    lavender: /(?:ラベンダー|lavender|薰衣草|라벤더)/iu
+  };
+  if (requestedScent && !scentPatterns[requestedScent].test(text)) return true;
+  if (/(?:詰め替え|つめかえ|refill|补充装|補充裝|리필)/iu.test(query)
+    && !/(?:詰め替え|つめかえ|refill|补充装|補充裝|리필)/iu.test(text)) return true;
   if (requestedCategory === 'dishwasher-detergent-tablet') return !dishwasher || laundry;
   return !laundry || dishwasher;
 }
