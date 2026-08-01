@@ -636,6 +636,10 @@ test('スマートロックは認証・通信・施錠・非常解錠条件を4�
     'retrofit smart lock fingerprint keypad Matter auto-lock emergency key',
     '后装智能门锁 指纹 密码 Matter 自动上锁 应急钥匙',
     '설치형 스마트 도어락 지문 비밀번호 Matter 자동 잠금 비상 키',
+    '鍵を交換せず玄関を指紋と暗証番号で開けたい Matter オートロック 非常用キー',
+    'unlock my door with fingerprint and keypad without replacing the lock Matter auto-lock emergency key',
+    '不换门锁用指纹和密码开门 Matter 自动上锁 应急钥匙',
+    '자물쇠 교체 없이 지문과 비밀번호로 문 열기 Matter 자동 잠금 비상 키',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

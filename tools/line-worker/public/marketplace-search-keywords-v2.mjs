@@ -532,7 +532,7 @@ function buildErgonomicOfficeChairSearchKeywords(query) {
 
 function buildRetrofitSmartLockSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const lock = /(?:後付けスマートロック|retrofit\s*smart\s*lock|后装智能门锁|後裝智能門鎖|설치형\s*스마트\s*도어락)/iu.test(normalized);
+  const lock = /(?:後付けスマートロック|retrofit\s*smart\s*lock|后装智能门锁|後裝智能門鎖|설치형\s*스마트\s*도어락|鍵を交換せず.{0,20}(?:玄関|ドア).{0,20}(?:指紋|暗証番号)|unlock.{0,16}door.{0,20}fingerprint.{0,16}keypad.{0,32}without\s*replacing.{0,8}lock|不换门锁.{0,20}指纹.{0,12}密码.{0,12}开门|자물쇠\s*교체\s*없이.{0,20}지문.{0,12}비밀번호.{0,16}문\s*열)/iu.test(normalized);
   const fingerprint = /(?:指紋|fingerprint|指纹|지문)/iu.test(normalized);
   const keypad = /(?:暗証番号|keypad|密码|密碼|비밀번호)/iu.test(normalized);
   const matter = /\bMatter\b/iu.test(normalized);
