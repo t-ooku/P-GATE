@@ -1225,3 +1225,34 @@ test('ノートPCケース・スタンド・充電器を4言語で本体FTSカ�
     assert.doesNotMatch(query, /\("laptop"\* OR "notebook computer"\*\)/, input);
   }
 });
+
+test('4言語のタブレット本体は小数インチ・容量と共通FTSカテゴリを保持する', () => {
+  for (const input of [
+    '10.9インチ256GBのタブレット',
+    '10.9-inch tablet with 256GB storage',
+    '10.9英寸256GB平板电脑',
+    '10.9인치 256GB 태블릿',
+  ]) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"tablet"\*/, input);
+    assert.match(query, /"10\.9"\*/, input);
+    assert.match(query, /"256gb"\*/, input);
+    assert.doesNotMatch(query, /"storage"\*|"10"\*|"9-inch"\*/, input);
+  }
+});
+
+test('タブレットケース・スタンド・ペンを4言語で本体FTSカテゴリから分離する', () => {
+  const cases = [
+    ['10.9インチのタブレットケース', 'tablet case'], ['10.9-inch tablet case', 'tablet case'],
+    ['10.9英寸平板电脑保护套', 'tablet case'], ['10.9인치 태블릿 케이스', 'tablet case'],
+    ['折りたたみタブレットスタンド', 'tablet stand'], ['foldable tablet stand', 'tablet stand'],
+    ['可折叠平板电脑支架', 'tablet stand'], ['접이식 태블릿 거치대', 'tablet stand'],
+    ['タブレット用スタイラスペン', 'tablet stylus'], ['stylus pen for tablet', 'tablet stylus'],
+    ['平板电脑触控笔', 'tablet stylus'], ['태블릿 스타일러스 펜', 'tablet stylus'],
+  ];
+  for (const [input, category] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, new RegExp(`"${category}"\\*`), input);
+    assert.doesNotMatch(query, /^"tablet"\*|\("tablet"\*\)/, input);
+  }
+});

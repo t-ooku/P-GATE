@@ -39,6 +39,7 @@ export function intelligentFtsQuery(value) {
     ...normalized.matchAll(/\b\d+[a-z-][a-z0-9-]*\b/g),
     ...normalized.matchAll(/\d+(?:\.\d+)?\s*(?:(?:kg|kgs|g|kilograms?|kilogrammes?|grams?)\b|キロ(?:グラム)?|グラム|公斤|千克|킬로그램|키로|그램)/giu),
     ...normalized.matchAll(/\d+\s*(?:個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개\s*세트)/gu),
+    ...normalized.matchAll(/\d+(?:\.\d+)?[-\s]*(?:mm|cm|inch(?:es)?|インチ|英寸|인치)/giu),
     ...(hasShoeIntent ? normalized.matchAll(/\d+(?:\.\d+)?\s*(?:mm|cm)\b/giu) : []),
     ...(hasShoeIntent ? normalized.matchAll(/\b(?:us|eu|uk)\s*(?:size\s*)?\d{1,2}(?:\.5)?\b/giu) : []),
     ...(hasShoeIntent ? normalized.matchAll(/\d{2}(?:\.5)?\s*(?:码|碼)/giu) : []),
@@ -60,7 +61,7 @@ export function intelligentFtsQuery(value) {
       .replace(/グラム|그램$/u, 'g')
       .replace(/kilogrammes?|kilograms?|kgs?$/iu, 'kg')
       .replace(/grams?$/iu, 'g')
-      .replace(/^(\d+(?:\.\d+)?)(?:mm|cm|inch|inches|oz|[-]?(?:pack|count|pcs|pieces)|個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개세트)$/iu, '$1')
+      .replace(/^(\d+(?:\.\d+)?)-?(?:mm|cm|inch|inches|インチ|英寸|인치|oz|[-]?(?:pack|count|pcs|pieces)|個(?:入り)?セット|本セット|枚セット|件套|个装|個裝|개입|개세트)$/iu, '$1')
       .replace(/^(us|eu|uk)size(\d)/iu, '$1 $2')
       .replace(/^(us|eu|uk)(\d)/iu, '$1 $2')
       .replace(/^(\d{2}(?:\.5)?)(?:码|碼)$/u, 'eu $1'));

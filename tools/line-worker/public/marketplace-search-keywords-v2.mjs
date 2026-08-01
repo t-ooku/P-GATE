@@ -116,6 +116,10 @@ const GENERIC_PRODUCTS = [
   ['ノートPCスタンド', /(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu],
   ['ノートPC充電器', /(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu],
   ['ノートパソコン', /(?:ノートパソコン|ノートPC|ラップトップ|laptop|notebook\s*computer|笔记本电脑|筆記型電腦|노트북)/iu],
+  ['タブレットケース', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:ケース|カバー|スリーブ|case|cover|sleeve|保护套|保護套|케이스|커버))/iu],
+  ['タブレットスタンド', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu],
+  ['タブレット用ペン', /(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,16}(?:スタイラス|ペン|stylus|触控笔|觸控筆|스타일러스\s*펜)|(?:スタイラス|stylus|触控笔|觸控筆|스타일러스\s*펜).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu],
+  ['タブレット', /(?:タブレット|\btablet\b|平板电脑|平板電腦|태블릿)/iu],
   ['キャンドル', /(?:キャンドル|ろうそく|candle|蜡烛|蠟燭|캔들|향초)/iu],
   ['デュアル充電器', /(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|두\s*대|듀얼).{0,12}충전/iu],
   ['PTZ ネットワークカメラ', /(?:首振り|PTZ|パンチルト).{0,12}(?:ネットワーク|監視)?カメラ|(?:ネットワーク|監視)カメラ.{0,12}(?:首振り|PTZ|ドーム)|(?:ptz|pan\s+and\s+tilt).{0,20}(?:network|security)?\s*camera|(?:network|security)\s*camera.{0,24}(?:ptz|dome|pan\s+and\s+tilt)|云台.{0,12}(?:网络|網絡|监控|監控)摄像|(?:网络|網絡|监控|監控)摄像.{0,12}(?:云台|雲台|球形)|(?:PTZ|회전).{0,20}(?:네트워크|보안)\s*카메라|(?:네트워크|보안)\s*카메라.{0,20}(?:PTZ|회전|돔)/iu],
@@ -301,6 +305,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (products.includes('Tシャツ')) products = products.filter((label) => label !== 'トップス');
   if (products.includes('ライフジャケット')) products = products.filter((label) => label !== 'ジャケット');
   if (products.some((label) => label.startsWith('ノートPC'))) products = products.filter((label) => label !== 'ノートパソコン');
+  if (products.some((label) => label.startsWith('タブレット') && label !== 'タブレット')) products = products.filter((label) => label !== 'タブレット');
   if (!products.length) return compactUnknownSearchPhrase(normalized);
   const materials = matchedMaterials(normalized);
   const attributes = matchedAttributes(normalized)
