@@ -1286,3 +1286,37 @@ test('タブレットケース・スタンド・ペンを4言語で本体FTSカ�
     assert.doesNotMatch(query, /^"tablet"\*|\("tablet"\*\)/, input);
   }
 });
+
+test('Bluetoothを青色と誤認せずタブレット用キーボードを4言語で専用FTSへ変換する', () => {
+  for (const input of [
+    'タブレット用Bluetoothキーボード',
+    'Bluetooth keyboard for tablet',
+    '平板电脑蓝牙键盘',
+    '태블릿용 블루투스 키보드',
+  ]) {
+    const groups = semanticSearchGroups(input);
+    assert.deepEqual(groups.map((group) => group.category), ['tablet-keyboard'], input);
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"tablet keyboard"\*|"bluetooth keyboard"\*|"wireless keyboard"\*/, input);
+    assert.doesNotMatch(query, /"blue"\*|"aqua"\*/, input);
+  }
+});
+
+test('タブレット保護フィルム・充電器を4言語で本体FTSカテゴリから分離する', () => {
+  const cases = [
+    ['10.9インチタブレット保護フィルム', 'tablet screen protector', '10.9'],
+    ['10.9-inch tablet screen protector', 'tablet screen protector', '10.9'],
+    ['10.9英寸平板电脑钢化膜', 'tablet screen protector', '10.9'],
+    ['10.9인치 태블릿 액정보호필름', 'tablet screen protector', '10.9'],
+    ['USB-Cタブレット充電器', 'tablet charger', 'usb-c'],
+    ['USB-C charger for tablet', 'tablet charger', 'usb-c'],
+    ['USB-C平板电脑充电器', 'tablet charger', 'usb-c'],
+    ['USB-C 태블릿 충전기', 'tablet charger', 'usb-c'],
+  ];
+  for (const [input, category, condition] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, new RegExp(`"${category}"\\*`), input);
+    assert.match(query, new RegExp(`"${condition.replace('.', '\\.') }"\\*`), input);
+    assert.doesNotMatch(query, /^"tablet"\*|\("tablet"\*\)/, input);
+  }
+});
