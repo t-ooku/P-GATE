@@ -186,6 +186,40 @@ function buildWaterFilterCartridgeSearchKeywords(query) {
   return [identity, '交換カートリッジ', partNumber, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
 }
 
+function printerIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  const canon = value.match(/\b(TS\d{4})\b/iu);
+  if (canon) return `Canon PIXUS ${canon[1].toUpperCase()}`;
+  const epson = value.match(/\b(EP[- ]?\d{3}[A-Z])\b/iu);
+  if (epson) return `Epson ${epson[1].toUpperCase().replace('EP ', 'EP-')}`;
+  const brother = value.match(/\b(DCP[- ]?J\d{3}[A-Z])\b/iu);
+  if (brother) return `Brother ${brother[1].toUpperCase().replace('DCP J', 'DCP-J')}`;
+  const hp = value.match(/(?:deskjet\s*)?(2720)\b/iu);
+  if (hp && /(?:hp|deskjet)/iu.test(value)) return `HP DeskJet ${hp[1]}`;
+  return '';
+}
+
+function printerInkPartNumber(query) {
+  const value = String(query || '').normalize('NFKC');
+  return value.match(/\b(BCI[- ]?331\+330|KAM[- ]?6CL[- ]?L|LC411[- ]?4PK|67XL)\b/iu)?.[1]
+    ?.toUpperCase().replace('BCI ', 'BCI-').replace('KAM ', 'KAM-').replace('6CL L', '6CL-L').replace('LC411 ', 'LC411-') || '';
+}
+
+function buildPrinterInkSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)/iu.test(normalized)) return '';
+  const identity = printerIdentity(normalized);
+  const partNumber = printerInkPartNumber(normalized);
+  if (!(identity && partNumber)) return '';
+  const kind = /(?:互換|compatible|兼容|호환)/iu.test(normalized) ? '互換インクカートリッジ'
+    : /(?:純正|genuine|original|原装|原裝|정품)/iu.test(normalized) ? '純正インクカートリッジ'
+    : 'インクカートリッジ';
+  const colors = normalized.match(/(\d+)\s*(?:色|colors?|色套装|色套裝|색)/iu)?.[1];
+  const black = /(?:ブラック|黒|black|黑色|黑|검정|블랙)/iu.test(normalized) ? '黒' : '';
+  const color = !colors && /(?:カラー|color(?!s)|彩色|컬러)/iu.test(normalized) ? 'カラー' : '';
+  return [identity, kind, partNumber, colors ? `${colors}色` : '', black, color].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -491,6 +525,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (airPurifierFilter) return airPurifierFilter;
   const waterFilterCartridge = buildWaterFilterCartridgeSearchKeywords(normalized);
   if (waterFilterCartridge) return waterFilterCartridge;
+  const printerInk = buildPrinterInkSearchKeywords(normalized);
+  if (printerInk) return printerInk;
   const robotVacuumConsumable = buildRobotVacuumConsumableSearchKeywords(normalized);
   if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);

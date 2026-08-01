@@ -503,6 +503,43 @@ function isWaterFilterCartridgeMismatch(candidate, query) {
   return !/(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)/iu.test(text);
 }
 
+function printerIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const canon = value.match(/\b(ts\d{4})\b/u);
+  if (canon) return `canon-${canon[1]}`;
+  const epson = value.match(/\b(ep[- ]?\d{3}[a-z])\b/u);
+  if (epson) return `epson-${epson[1].replace('ep ', 'ep-')}`;
+  const brother = value.match(/\b(dcp[- ]?j\d{3}[a-z])\b/u);
+  if (brother) return `brother-${brother[1].replace('dcp j', 'dcp-j')}`;
+  if (/(?:hp|deskjet)/u.test(value) && /\b2720\b/u.test(value)) return 'hp-deskjet-2720';
+  return '';
+}
+
+function printerInkPartNumber(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/\b(bci[- ]?331\+330|kam[- ]?6cl[- ]?l|lc411[- ]?4pk|67xl)\b/u)?.[1]
+    ?.replace('bci ', 'bci-').replace('kam ', 'kam-').replace('6cl l', '6cl-l').replace('lc411 ', 'lc411-') || '';
+}
+
+function printerInkColorCount(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+)\s*(?:色|colors?|色套装|色套裝|색)/iu)?.[1] || 0);
+}
+
+function isPrinterInkMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (printerIdentity(query) && printerIdentity(text) !== printerIdentity(query)) return true;
+  if (printerInkPartNumber(query) && printerInkPartNumber(text) !== printerInkPartNumber(query)) return true;
+  const requestedColors = printerInkColorCount(query);
+  if (requestedColors && printerInkColorCount(text) !== requestedColors) return true;
+  const genuine = /(?:純正|genuine|original|原装|原裝|정품)/iu;
+  const compatible = /(?:互換|compatible|兼容|호환)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (compatible.test(query) && !compatible.test(text)) return true;
+  if (/(?:本体|printer\s*(?:unit|machine)|打印机整机|打印機整機|프린터\s*본체)/iu.test(text)) return true;
+  return !/(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -627,6 +664,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     .some((category) => requested.has(category));
   const airPurifierFilter = requested.has('air-purifier-filter');
   const waterFilterCartridge = requested.has('water-filter-cartridge');
+  const printerInk = requested.has('printer-ink');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -663,6 +701,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (dysonVacuumAccessory) return !isDysonVacuumAccessoryMismatch(candidate, requested, query);
     if (airPurifierFilter) return !isAirPurifierFilterMismatch(candidate, query);
     if (waterFilterCartridge) return !isWaterFilterCartridgeMismatch(candidate, query);
+    if (printerInk) return !isPrinterInkMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

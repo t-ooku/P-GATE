@@ -105,6 +105,20 @@ test('浄水器の交換カートリッジを4ブランド・4言語で本体か
   }
 });
 
+test('プリンターのインクを4ブランド・4言語で本体から分離し品番と種別を保つ', () => {
+  const cases = [
+    ['Canon PIXUS TS8730用 純正インク BCI-331+330 6色', 'Canon PIXUS TS8730 純正インクカートリッジ BCI-331+330 6色'],
+    ['compatible ink cartridges for Epson EP-881A KAM-6CL-L 6 color', 'Epson EP-881A 互換インクカートリッジ KAM-6CL-L 6色'],
+    ['适用于Brother DCP-J928N的LC411-4PK原装墨盒', 'Brother DCP-J928N 純正インクカートリッジ LC411-4PK'],
+    ['HP DeskJet 2720 67XL 정품 잉크 검정 컬러', 'HP DeskJet 2720 純正インクカートリッジ 67XL 黒 カラー'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);

@@ -1732,3 +1732,31 @@ test('浄水器カートリッジは本体・別型番・別品番・本数違�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['water-filter-cartridge'], query);
   }
 });
+
+test('プリンターインクは本体・別型番・別品番・純正互換・色数違いを除外する', () => {
+  const candidates = [
+    { asin: 'CANON', product_name: 'Canon PIXUS TS8730 純正インク BCI-331+330 6色セット' },
+    { asin: 'CANON_COMPAT', product_name: 'Canon PIXUS TS8730 互換インク BCI-331+330 6色セット' },
+    { asin: 'CANON_BODY', product_name: 'Canon PIXUS TS8730 プリンター本体 BCI-331インク付属' },
+    { asin: 'EPSON', product_name: 'Epson EP-881A compatible ink cartridges KAM-6CL-L 6 colors' },
+    { asin: 'EPSON_4', product_name: 'Epson EP-881A compatible ink cartridges KAM-6CL-L 4 colors' },
+    { asin: 'BROTHER', product_name: 'Brother DCP-J928N LC411-4PK original ink cartridges' },
+    { asin: 'BROTHER_WRONG', product_name: 'Brother DCP-J926N LC411-4PK original ink cartridges' },
+    { asin: 'HP', product_name: 'HP DeskJet 2720 67XL 정품 잉크 검정 컬러' },
+    { asin: 'HP_WRONG', product_name: 'HP DeskJet 2720 65XL 정품 잉크 검정 컬러' },
+  ];
+  const cases = [
+    ['Canon PIXUS TS8730用 純正インク BCI-331+330 6色', ['CANON']],
+    ['compatible ink cartridges for Epson EP-881A KAM-6CL-L 6 color', ['EPSON']],
+    ['适用于Brother DCP-J928N的LC411-4PK原装墨盒', ['BROTHER']],
+    ['HP DeskJet 2720 67XL 정품 잉크 검정 컬러', ['HP']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(
+      semanticSearchGroups(query).map((group) => group.category).filter((category) => category !== 'color'),
+      ['printer-ink'],
+      query
+    );
+  }
+});
