@@ -497,11 +497,11 @@ function buildPortablePowerStationSearchKeywords(query) {
 
 function buildCompressorDehumidifierSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const dehumidifier = /(?:除湿機|dehumidifier|除湿机|除濕機|제습기)/iu.test(normalized);
+  const dehumidifier = /(?:除湿機|dehumidifier|除湿机|除濕機|제습기|部屋干し.{0,12}(?:早く|速く).{0,8}乾|dry\s*laundry\s*indoors?.{0,12}faster|室内晾衣.{0,8}(?:更快干|快速干)|실내\s*빨래.{0,12}빨리\s*말리)/iu.test(normalized);
   const compressor = /(?:コンプレッサー式|compressor|压缩机式|壓縮機式|컴프레서식)/iu.test(normalized);
   const daily = normalized.match(/\b(\d{1,2}(?:\.\d)?)\s*L\s*(?:\/\s*(?:日|day)|per\s*day|每天|每日|\/\s*일)/iu)?.[1];
   const tank = normalized.match(/(?:タンク|tank|水箱|물통)\s*(\d(?:\.\d)?)\s*L\b/iu)?.[1];
-  const laundry = /(?:衣類乾燥|laundry\s*drying|衣物干燥|衣物乾燥|의류\s*건조)/iu.test(normalized);
+  const laundry = /(?:衣類乾燥|部屋干し.{0,16}乾|laundry\s*drying|dry\s*laundry\s*indoors?|衣物干燥|衣物乾燥|室内晾衣.{0,12}干|의류\s*건조|실내\s*빨래.{0,16}말리)/iu.test(normalized);
   const drainage = /(?:連続排水|continuous\s*drain(?:age)?|连续排水|連續排水|연속\s*배수)/iu.test(normalized);
   if (!dehumidifier || !compressor || !daily || !tank || !laundry || !drainage) return '';
   return ['コンプレッサー式除湿機', `${daily}L/日`, `タンク${tank}L`, '衣類乾燥', '連続排水'].join(' ');

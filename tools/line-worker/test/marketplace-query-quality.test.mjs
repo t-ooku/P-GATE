@@ -591,6 +591,10 @@ test('除湿機は方式・能力・タンク・衣類乾燥・排水条件を4�
     'compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage',
     '压缩机式 除湿机 20L每天 水箱4L 衣物干燥 连续排水',
     '컴프레서식 제습기 20L/일 물통4L 의류 건조 연속 배수',
+    '部屋干しを早く乾かしたい コンプレッサー式 20L/日 タンク4L 連続排水',
+    'dry laundry indoors faster with a compressor 20L/day tank 4L continuous drainage',
+    '室内晾衣更快干 压缩机式 20L每天 水箱4L 连续排水',
+    '실내 빨래를 빨리 말리는 컴프레서식 20L/일 물통4L 연속 배수',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

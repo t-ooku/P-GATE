@@ -1199,11 +1199,11 @@ function isPortablePowerStationMismatch(candidate, requested) {
 function compressorDehumidifierConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   return {
-    dehumidifier: /(?:除湿機|dehumidifier|除湿机|除濕機|제습기)/iu.test(text),
+    dehumidifier: /(?:除湿機|dehumidifier|除湿机|除濕機|제습기|部屋干し.{0,12}(?:早く|速く).{0,8}乾|dry\s*laundry\s*indoors?.{0,12}faster|室内晾衣.{0,8}(?:更快干|快速干)|실내\s*빨래.{0,12}빨리\s*말리)/iu.test(text),
     compressor: /(?:コンプレッサー式|compressor|压缩机式|壓縮機式|컴프레서식)/iu.test(text),
     daily: text.match(/\b(\d{1,2}(?:\.\d)?)\s*L\s*(?:\/\s*(?:日|day)|per\s*day|每天|每日|\/\s*일)/iu)?.[1] || '',
     tank: text.match(/(?:タンク|tank|水箱|물통)\s*(\d(?:\.\d)?)\s*L\b/iu)?.[1] || '',
-    laundry: /(?:衣類乾燥|laundry\s*drying|衣物干燥|衣物乾燥|의류\s*건조)/iu.test(text),
+    laundry: /(?:衣類乾燥|部屋干し.{0,16}乾|laundry\s*drying|dry\s*laundry\s*indoors?|衣物干燥|衣物乾燥|室内晾衣.{0,12}干|의류\s*건조|실내\s*빨래.{0,16}말리)/iu.test(text),
     drainage: /(?:連続排水|continuous\s*drain(?:age)?|连续排水|連續排水|연속\s*배수)/iu.test(text),
     wrongProduct: /(?:\bhumidifier\b|加湿器|加湿机|加濕器|가습기|air\s*purifier|空気清浄機|空气净化器|空氣清淨機|공기청정기|replacement\s*filter|交換フィルター|更换滤网|更換濾網|교체용\s*필터|drain\s*hose|排水ホース|排水管|배수\s*호스|moisture\s*absorber|除湿剤|除湿盒|除濕盒|제습제)/iu.test(text)
   };
