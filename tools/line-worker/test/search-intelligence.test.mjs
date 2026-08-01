@@ -124,6 +124,32 @@ test('寸法は証拠値だけをANDにし、三合一シャンプーを構成�
   assert.match(shampooQuery, /"body wash"\*/);
 });
 
+test('固有ブランド・型番をカテゴリと組み合わせてrich検索を絞る', () => {
+  const cases = [
+    ['Logitech G105 Call of Duty MW3 Editionのゲーミングキーボード', 'keyboard', ['g105', 'mw3']],
+    ['Hohner PentaHarp Cマイナーのハーモニカ', 'harmonica', ['hohner', 'pentaharp']],
+    ['Master Cables製 Sony VMCUAM2交換用USBアダプターケーブル', 'cable', ['vmcuam2']],
+    ['Pillow Perfectの冬柄グレー装飾腰枕', 'pillow', ['pillow']],
+  ];
+  for (const [query, categoryToken, identifiers] of cases) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, new RegExp(categoryToken));
+    assert.ok(identifiers.some((token) => expression.includes(`\"${token}\"*`)), expression);
+  }
+  assert.doesNotMatch(
+    intelligentFtsQuery('ゲーム用の黒いLogitechキーボード'),
+    /"logitech"\*/i,
+  );
+  assert.match(
+    intelligentFtsQuery('Diamond Select Toysのインディ・ジョーンズ胸像'),
+    /"インディ"\* OR "ジョーンズ"\* OR "indiana"\* OR "jones"\*/i,
+  );
+  assert.match(
+    intelligentFtsQuery('Hohner PentaHarp Cマイナーのハーモニカ'),
+    /"c minor"\*/i,
+  );
+});
+
 test('韓国美容語を商品カテゴリへ正規化する', () => {
   const cases = [
     ['진정 세럼', 'serum'],

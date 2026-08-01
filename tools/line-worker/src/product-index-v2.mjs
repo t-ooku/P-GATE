@@ -6,10 +6,16 @@ const STOPWORDS = new Set([
   'with','from','that','this','the','for','and','type','size','like','edition','set',
   'sns','tiktok','instagram','twitter','youtube'
 ]);
+const IDENTIFIER_STOPWORDS = new Set([
+  ...STOPWORDS,
+  'amazon','black','blue','brown','call','camera','cables','color','duty','gaming',
+  'gold','green','inch','keyboard','orange','red','usb','white','yellow'
+]);
 const quote = (token) => `"${String(token).replaceAll('"','""')}"*`;
 const cleanTenant = (value) => String(value || '').normalize('NFKC').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
 
 export function intelligentFtsQuery(value) {
+  const source = String(value || '').normalize('NFKC');
   const normalized = normalizeSearchQuery(value);
   const semantic = semanticSearchGroups(normalized)
     .map((group) => [...new Set(group.terms.map((term) => term.toLowerCase()))])
@@ -21,6 +27,13 @@ export function intelligentFtsQuery(value) {
       token.replace(/^(\d+)(?:mm|cm|inch|inches|oz)$/u, '$1')),
   ];
   const groups = [...semantic];
+  const modelTokens = source.match(/\b[A-Za-z][A-Za-z0-9-]*\d[A-Za-z0-9-]*\b/g) || [];
+  const namedTokens = source.match(/\b[A-Z][A-Za-z]{3,}\b/g) || [];
+  const identifiers = [...new Set([...modelTokens, ...namedTokens]
+    .map((token) => token.toLowerCase())
+    .filter((token) => !IDENTIFIER_STOPWORDS.has(token)))]
+    .slice(0, 6);
+  if (modelTokens.length || identifiers.length >= 2) groups.push(identifiers);
   // Free-form descriptions contain many context words that are absent from a
   // catalog title. Requiring one of them as another AND group suppresses valid
   // products. Keep direct tokens strict only when the query carries a concrete
