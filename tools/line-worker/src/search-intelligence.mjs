@@ -9,8 +9,8 @@ const RULES = [
   ['screwdriver',/(ドライバー|ねじ回し|螺子回し|screwdriver|細長い.*工具)/iu,['screwdriver','driver']],
   ['building-block',/(レゴ|lego|ブロック.*おもちゃ|building block)/iu,['lego','brick','building']],
   ['steam-engine-model',/(蒸気機関車|steam\s+(?:engine|locomotive)|蒸汽机车|蒸汽機車|증기\s*기관차)/iu,['steam engine','locomotive']],
-  ['candle',/(キャンドル|ろうそく|蝋燭|candle|soy candle|火をつける.*匂い|蜡烛|蠟燭|大豆蜡烛|大豆蠟燭|캔들|소이 캔들)/iu,['candle','soy']],
-  ['earphones',/(イヤホン|イヤーバッド|ear\s*buds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','ear','bud','headphone']],
+  ['candle',/(キャンドル|ろうそく|蝋燭|candle|soy candle|(?:火をつける.*匂い|匂い.{0,16}火をつける)|蜡烛|蠟燭|大豆蜡烛|大豆蠟燭|(?:香味.{0,12}点火|香味.{0,12}點火)|캔들|소이 캔들|향기.{0,12}불을\s*붙)/iu,['candle','soy']],
+  ['earphones',/(イヤホン|イヤーバッド|ヘッドホン|ear\s*buds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','ear','bud','headphone']],
   ['backpack',/(リュック|バックパック|backpack|背負う)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
@@ -28,12 +28,13 @@ const RULES = [
   ['mouse',/(マウス(?!パッド|マット|.{0,8}(?:ケージ|飼育))|trackball|computer mouse|mouse(?! cage| habitat| for pet)|パソコンで動かす|(?:电脑|電腦).{0,8}(?:鼠标|滑鼠)|(?:游戏|遊戲)(?:鼠标|滑鼠)|컴퓨터.{0,8}마우스|게이밍 마우스)/iu,['mouse','trackball']],
   ['bottle',/(水筒|ボトル|bottle|飲み物.*容器)/iu,['bottle']],
   ['lamp',/(テーブルランプ|卓上.*ライト|table lamp|布.*傘.*ライト)/iu,['lamp','light']],
-  ['towel-warmer',/(タオルウォーマー|温める.*タオル|heated towel|towel warmer)/iu,['towel','warmer','heated']],
+  ['towel-warmer',/(タオルウォーマー|温める.*タオル|(?:浴室|お風呂).{0,12}(?:壁|棒|ラック).{0,8}温か|heated towel|towel warmer|浴室.{0,10}加热毛巾架|浴室.{0,10}加熱毛巾架|욕실.{0,10}온열\s*수건걸이)/iu,['towel','warmer','heated']],
   ['shampoo',/(シャンプー|髪.*洗|shampoo|샴푸|洗发(?:水)?|洗髮(?:精)?)/iu,['shampoo','hair wash']],
   ['hair-treatment',/(トリートメント|ヘアマスク|ヘアオイル|洗い流さない|hair treatment|hair mask|hair oil|트리트먼트|헤어팩|헤어 오일|护发|護髮)/iu,['hair treatment','hair mask','hair oil']],
-  ['body-powder',/(香り.*粉|ボディパウダー|ダスティングパウダー|dusting powder)/iu,['powder','perfumed']],
+  ['body-powder',/(香り.*粉|いい匂い.{0,8}粉|ボディパウダー|ダスティングパウダー|dusting powder|perfumed powder|香味.{0,8}(?:粉|爽身粉)|향기.{0,8}(?:파우더|분말))/iu,['powder','perfumed']],
   ['figure',/(フィギュア|胸像|上半身.*置物|figure|bust|collectible)/iu,['figure','bust','collectible']],
   ['indiana-jones',/(インディ[・ー\s]*ジョーンズ|indiana\s+jones)/iu,['インディ','ジョーンズ','indiana','jones']],
+  ['one-sixth-scale',/(?:1\s*[:/]\s*6|6分の1|one[- ]sixth).{0,12}(?:スケール|scale|胸像|bust|模型|모형|模型)/iu,['1:6','1/6','1 6 scale']],
   ['puzzle',/(パズル|puzzle|ピース.*遊)/iu,['puzzle']],
   ['wallet',/(財布|\bwallet\b|ポケット.*薄|钱包|錢包|지갑)/iu,['wallet']],
   ['bicycle-chain',/(?:自転車|バイク).{0,6}チェーン|チェーン.{0,6}(?:自転車|バイク)|bicycle chain|bike chain/iu,['bicycle chain','bike chain']],
@@ -42,7 +43,7 @@ const RULES = [
   ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|color filters?|camera.{0,24}filters?|lens.{0,24}filters?|filters?.{0,24}(?:camera|lens)|相机.{0,20}滤镜|相機.{0,20}濾鏡|镜头.{0,20}滤镜|鏡頭.{0,20}濾鏡|카메라.{0,24}필터|렌즈.{0,24}필터)/iu,['filter','color']],
   ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer)/iu,['laptop','notebook computer']],
   ['notebook',/(ノート(?!パソコン|PC)|手帳|罫線|notebook(?! computer)|文房具.*四角)/iu,['notebook','ruled']],
-  ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica)/iu,['harmonica']],
+  ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기)/iu,['harmonica']],
   ['harmonica-c-minor',/(?:C|シー)[\s-]*(?:マイナー|minor)/iu,['c minor']],
   ['cable',/(ケーブル|USB.*線|つなぐ.*線|cable)/iu,['cable','usb']],
   ['pillow',/(クッション|枕|腰枕|pillow|ソファ.*ふわふわ)/iu,['pillow','cushion']],
@@ -152,6 +153,9 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('camera-filter')) groups = groups.filter((group) => group.category !== 'camera');
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');
+  if (specificCategories.has('lamp') && /布.{0,6}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓/iu.test(text)) {
+    groups = groups.filter((group) => group.category !== 'umbrella');
+  }
   if (specificCategories.has('shampoo')) groups = groups.filter((group) => !['bottle','hair-treatment'].includes(group.category));
   if (
     groups.some((group) => group.category === 'adapter')
@@ -189,7 +193,7 @@ export function semanticSearchGroups(value) {
   }
   const specificIntent = groups.some((group) => [
     'steam-engine-model','dual-charger','ptz-network-camera','bath-six-light'
-  ].includes(group.category));
+  ].includes(group.category)) || /口.*音.*楽器|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES.filter(([pattern]) => pattern.test(text)).flatMap(([, terms]) => terms);
   if (colors.length) groups.push({ category: 'color', terms: [...new Set(colors)] });
   return groups;
@@ -215,7 +219,8 @@ export function analyzeSearchDecision(query, candidates = []) {
   const divergent = categories.length >= 2;
   const evidenceMismatch = candidates.length > 0 && candidateEvidenceMismatch(text, candidates);
   const vagueDescription = !hasModel && !distinctiveLatin && !hasGuidedSelection
-    && (hasContext || /(?:やつ|もの|物)$/u.test(text.trim()));
+    && (hasContext || /(?:やつ|もの|物)$/u.test(text.trim())
+      || /口.*音.*楽器|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text));
   const lowConfidence = candidates.length === 0 || score < 5 || divergent || evidenceMismatch || vagueDescription;
   const contextOnly = (hasContext || hasColor) && groups.length === 0 && !hasFunction;
   let clarificationQuestion = '';

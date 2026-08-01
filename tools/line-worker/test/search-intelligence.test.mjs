@@ -178,6 +178,37 @@ test('具体機能を4言語の商品語へ変換し商品名にない色を必�
   }
 });
 
+test('説明順や比喩表現から安全に推定できる商品種別を4言語で補う', () => {
+  const cases = [
+    ['いい匂いの容器に入った火をつけるやつ', 'candle'],
+    ['香味容器里可以点火的东西', 'candle'],
+    ['향기가 나고 불을 붙이는 용기', 'candle'],
+    ['小さくて耳に入れる有線ヘッドホン', 'headphone'],
+    ['お風呂場の壁にある温かくなる棒', 'warmer'],
+    ['母が使っていたいい匂いの粉', 'perfumed'],
+    ['Diamond Select Toysのインディ・ジョーンズ、1:6スケール胸像', '1:6'],
+  ];
+  for (const [query, required] of cases) {
+    assert.ok(intelligentFtsQuery(query).toLowerCase().includes(`\"${required}\"*`), query);
+  }
+  const lamp = intelligentFtsQuery('水色のガラス土台と布の傘がある卓上ライト');
+  assert.match(lamp, /\"lamp\"\*/);
+  assert.doesNotMatch(lamp, /\"umbrella\"\*/);
+  for (const query of [
+    '口で音を出す銀色の小さい楽器',
+    '用嘴吹奏的银色小乐器',
+    '입으로 소리 내는 은색 작은 악기',
+  ]) {
+    const expression = intelligentFtsQuery(query);
+    assert.match(expression, /\"harmonica\"\*/);
+    assert.doesNotMatch(expression, /\"silver\"\*/);
+    const decision = analyzeSearchDecision(query, [
+      { asin: 'B000000001', product_name: 'Generic Harmonica in C', manufacturer: 'Example' },
+    ]);
+    assert.equal(decision.needs_clarification, true);
+  }
+});
+
 test('韓国美容語を商品カテゴリへ正規化する', () => {
   const cases = [
     ['진정 세럼', 'serum'],
