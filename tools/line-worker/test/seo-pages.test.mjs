@@ -14,8 +14,22 @@ test('日英SEO必須10ページを別URLで提供する', () => {
     assert.match(html, /<details>/);
     assert.match(html, /data-growth-search/);
     assert.match(html, /application\/ld\+json/);
+    assert.match(html, /BreadcrumbList/);
+    assert.match(html, /aria-current="page"/);
+    assert.match(html, /aria-labelledby="related-guides"/);
     assert.match(html, /growth-analytics\.mjs/);
     assert.doesNotMatch(html, /Amazon公式|楽天公式|Qoo10公式|SHEIN公式/);
+  }
+});
+
+test('each SEO page links to every other guide in the same language', () => {
+  for (const path of seoPagePaths) {
+    const html = renderSeoPage(path);
+    const [locale] = path.slice(1).split('/');
+    const siblingPaths = seoPagePaths.filter((candidate) => candidate.startsWith(`/${locale}/`) && candidate !== path);
+    assert.equal(siblingPaths.length, 4);
+    for (const siblingPath of siblingPaths) assert.match(html, new RegExp(`href="${siblingPath}"`));
+    assert.doesNotMatch(html, new RegExp(`href="${path}"`));
   }
 });
 

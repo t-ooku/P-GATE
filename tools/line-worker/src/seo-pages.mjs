@@ -44,17 +44,34 @@ export function renderSeoPage(pathname) {
     ? 'はい。色、形、用途、見た場所など、覚えている特徴をそのまま入力できます。'
     : 'Yes. Enter any clues you remember, such as color, shape, purpose, or where you saw it.';
   const canonical = `${ORIGIN}/${locale}/${slug}`;
+  const homeLabel = locale === 'ja' ? 'ホーム' : 'Home';
+  const guideLabel = locale === 'ja' ? '商品検索ガイド' : 'Product search guides';
+  const relatedTitle = locale === 'ja' ? '関連する探し方' : 'Related search guides';
+  const relatedLinks = Object.entries(pages)
+    .filter(([relatedSlug]) => relatedSlug !== slug)
+    .map(([relatedSlug, translations]) => `<li><a href="/${locale}/${relatedSlug}">${esc(translations[locale][0])}</a></li>`)
+    .join('');
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      { '@type': 'WebPage', name: title, description, url: canonical, isPartOf: { '@type': 'WebSite', name: 'HOSHILU', url: `${ORIGIN}/` } },
+      { '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: homeLabel, item: `${ORIGIN}/` },
+        { '@type': 'ListItem', position: 2, name: title, item: canonical }
+      ] }
+    ]
+  };
   return `<!doctype html>
 <html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)} | HOSHILU</title><meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${canonical}"><link rel="alternate" hreflang="${locale}" href="${canonical}">
 <link rel="alternate" hreflang="${alternate}" href="${ORIGIN}/${alternate}/${slug}"><link rel="alternate" hreflang="x-default" href="${ORIGIN}/en/${slug}">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)} | HOSHILU"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}">
-<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage', name: title, description, url: canonical, isPartOf: { '@type': 'WebSite', name: 'HOSHILU', url: `${ORIGIN}/` } }).replace(/</g, '\\u003c')}</script>
+<script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>
 <link rel="stylesheet" href="/styles.css"></head>
-<body><main class="shell"><section class="hero"><p class="eyebrow">HOSHILU</p><h1>${esc(title)}</h1><p>${esc(description)}</p>
+<body><main class="shell"><nav aria-label="${esc(guideLabel)}"><a href="/">${esc(homeLabel)}</a><span aria-hidden="true"> / </span><span aria-current="page">${esc(title)}</span></nav><section class="hero"><p class="eyebrow">HOSHILU</p><h1>${esc(title)}</h1><p>${esc(description)}</p>
 <form action="/" method="get" data-growth-search><label for="seo-search">${esc(searchLabel)}</label><textarea id="seo-search" name="q" required maxlength="200"></textarea><button type="submit">${esc(submit)}</button></form>
 </section><section><h2>${esc(faqTitle)}</h2><p>${esc(body)}</p><details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>
-<p><a href="/">${locale === 'ja' ? 'HOSHILUの検索画面へ' : 'Open HOSHILU search'}</a> · <a href="/login.html">${locale === 'ja' ? '無料会員になる' : 'Create a free account'}</a></p></section></main><script type="module" src="/growth-analytics.mjs"></script></body></html>`;
+<p><a href="/">${locale === 'ja' ? 'HOSHILUの検索画面へ' : 'Open HOSHILU search'}</a> · <a href="/login.html">${locale === 'ja' ? '無料会員になる' : 'Create a free account'}</a></p></section><aside aria-labelledby="related-guides"><h2 id="related-guides">${esc(relatedTitle)}</h2><ul>${relatedLinks}</ul></aside></main><script type="module" src="/growth-analytics.mjs"></script></body></html>`;
 }
 
