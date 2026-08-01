@@ -73,6 +73,21 @@ test('磁気吸着モバイルバッテリーを4言語でMagSafe商品語へ統
   }
 });
 
+test('モバイルバッテリーのPD出力を4言語で保持する', () => {
+  const queries = [
+    'PD20W急速充電10000mAhモバイルバッテリー',
+    '10000mAh power bank with 20W USB-C PD fast charging',
+    '支持20W PD快充的10000mAh充电宝',
+    'PD 20W 고속충전 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー PD20W', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('ロボット掃除機の交換部品を4言語で本体から分離し型番と個数を保つ', () => {
   const cases = [
     ['ルンバ j7用 交換フィルター 3個セット', 'Roomba j7 交換フィルター 3個セット'],

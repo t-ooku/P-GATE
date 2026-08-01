@@ -972,6 +972,26 @@ test('MagSafeモバイルバッテリーは磁気吸着と容量が一致する�
   }
 });
 
+test('PDモバイルバッテリーは容量と出力が一致する候補だけを提示する', () => {
+  const queries = [
+    'PD20W急速充電10000mAhモバイルバッテリー',
+    '10000mAh power bank with 20W USB-C PD fast charging',
+    '支持20W PD快充的10000mAh充电宝',
+    'PD 20W 고속충전 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'PD20', product_name: '10000mAh Power Bank USB-C PD 20W Fast Charging' },
+    { asin: 'PD18', product_name: '10000mAh Power Bank USB-C PD 18W Fast Charging' },
+    { asin: 'PD30', product_name: '10000mAh Power Bank USB-C PD 30W Fast Charging' },
+    { asin: 'NOPD', product_name: '10000mAh Power Bank Fast Charging' },
+    { asin: 'WALL20', product_name: 'USB-C PD 20W Wall Charger' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['PD20'], query);
+  }
+});
+
 test('タブレット専用アクセサリーは4言語で汎用品や別端末向け商品を除外する', () => {
   const cases = [
     ['タブレット用Bluetoothキーボード', 'KEYBOARD'],

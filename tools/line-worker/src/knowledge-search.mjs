@@ -334,6 +334,9 @@ function isPowerBankMismatch(candidate, query) {
   if (builtIn && /(?:usb[- ]?c|type[- ]?c)/iu.test(String(query || '')) && !/(?:usb[- ]?c|type[- ]?c)/iu.test(text)) return true;
   if (/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(String(query || ''))
     && !/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text)) return true;
+  const pdWatts = String(query || '').match(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/iu);
+  const requestedWatts = pdWatts?.[1] || pdWatts?.[2] || '';
+  if (requestedWatts && !new RegExp(`(?:^|\\D)(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?(?:\\D|$)`, 'iu').test(text)) return true;
   return false;
 }
 
