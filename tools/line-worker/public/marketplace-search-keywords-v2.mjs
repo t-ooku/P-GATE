@@ -529,6 +529,10 @@ function buildPowerBankSearchKeywords(query) {
   if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(normalized)) return '';
   const capacity = [...normalized.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
     .find((match) => !isNegatedAttribute(normalized, new RegExp(`${match[1]}\\s*m\\s*ah`, 'iu')))?.[1];
+  const minimumCapacity = capacity && (
+    new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalized)
+    || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalized)
+  );
   const builtInPattern = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu;
   const builtIn = builtInPattern.test(normalized) && !isNegatedAttribute(normalized, builtInPattern);
   const usbCConnector = /(?:usb[- ]?c|type[- ]?c)/iu;
@@ -544,7 +548,7 @@ function buildPowerBankSearchKeywords(query) {
       return !isNegatedAttribute(normalized, new RegExp(escaped, 'iu'));
     });
   const powerDelivery = pdWatts ? `PD${pdWatts[1] || pdWatts[2]}W` : '';
-  return [capacity ? `${capacity}mAh` : '', 'モバイルバッテリー', cable, magnetic, powerDelivery].filter(Boolean).join(' ');
+  return [capacity ? `${capacity}mAh${minimumCapacity ? '以上' : ''}` : '', 'モバイルバッテリー', cable, magnetic, powerDelivery].filter(Boolean).join(' ');
 }
 
 export function buildDeviceAccessorySearchKeywords(query) {

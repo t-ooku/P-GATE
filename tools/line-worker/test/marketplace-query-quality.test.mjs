@@ -1174,6 +1174,21 @@ test('negated capacity requirements are removed from power-bank keywords in four
   }
 });
 
+test('minimum power-bank capacity is preserved as a lower bound in four languages', () => {
+  const queries = [
+    '10000mAh以上のモバイルバッテリー',
+    'a power bank with at least 10000mAh',
+    '至少10000mAh的充电宝',
+    '10000mAh 이상 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh以上 モバイルバッテリー', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('冷蔵庫給水フィルターは4言語の型番・純正・個数を全モール向けに保持する', () => {
   const cases = [
     ['Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個', 'Samsung HAF-QIN DA97-17376B 冷蔵庫給水フィルター 純正 2個セット'],

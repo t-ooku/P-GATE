@@ -338,7 +338,13 @@ function isPowerBankMismatch(candidate, query) {
   const capacityMatches = [...normalizedQuery.matchAll(/(\d{4,6})\s*m\s*ah/giu)];
   const capacity = capacityMatches
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))?.[1];
-  if (capacity && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
+  const minimumCapacity = capacity && (
+    new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)
+    || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalizedQuery)
+  );
+  const candidateCapacity = text.match(/(?:^|\D)(\d{4,6})\s*m\s*ah(?:\D|$)/iu)?.[1];
+  if (minimumCapacity && (!candidateCapacity || Number(candidateCapacity) < Number(capacity))) return true;
+  if (capacity && !minimumCapacity && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
   const rejectedCapacities = capacityMatches
     .filter((match) => isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))
     .map((match) => match[1]);
