@@ -214,7 +214,11 @@ function buildDetergentPodSearchKeywords(query) {
   const sensitive = /(?:敏感肌(?:向け)?|低刺激|for\s+sensitive\s+skin|hypoallergenic|温和|溫和|민감성\s*피부|저자극)/iu.test(normalized) ? '敏感肌向け' : '';
   const antibacterial = /(?:抗菌|除菌|antibacterial|antimicrobial|杀菌|殺菌|항균)/iu.test(normalized) ? '抗菌' : '';
   const oneRinse = /(?:すすぎ\s*1\s*回|one[- ]?rinse|single[- ]?rinse|漂洗\s*(?:1\s*次|一次)|헹굼\s*1\s*회)/iu.test(normalized) ? 'すすぎ1回' : '';
-  return [identity, dishwasher ? '食洗機用洗剤タブレット' : '洗濯用洗剤ジェルボール', scent, refill, sensitive, antibacterial, oneRinse, count ? `${count}個入り` : ''].filter(Boolean).join(' ');
+  const babyClothes = /(?:赤ちゃん|ベビー)(?:用|の)?衣類|baby\s*clothes|婴儿衣物|嬰兒衣物|아기\s*옷/iu.test(normalized) ? '赤ちゃん衣類対応' : '';
+  const indoorDrying = /(?:部屋干し|室内干し|indoor\s*drying|室内晾晒|室內晾曬|실내\s*건조)/iu.test(normalized) ? '部屋干し' : '';
+  const deodorizing = /(?:防臭|消臭|odor\s*control|deodori[sz]ing|除臭|냄새\s*제거|탈취)/iu.test(normalized) ? '防臭' : '';
+  const noBrightener = /(?:蛍光(?:増白)?剤不使用|no\s*optical\s*brighteners?|optical\s*brightener[- ]?free|无荧光增白剂|無螢光增白劑|형광증백제\s*무첨가)/iu.test(normalized) ? '蛍光増白剤不使用' : '';
+  return [identity, dishwasher ? '食洗機用洗剤タブレット' : '洗濯用洗剤ジェルボール', scent, refill, sensitive, antibacterial, oneRinse, babyClothes, indoorDrying, deodorizing, noBrightener, count ? `${count}個入り` : ''].filter(Boolean).join(' ');
 }
 
 function buildRefrigeratorWaterFilterSearchKeywords(query) {

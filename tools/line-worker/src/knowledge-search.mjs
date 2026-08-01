@@ -529,6 +529,14 @@ function isDetergentPodMismatch(candidate, query, requestedCategory) {
     && !/(?:抗菌|除菌|antibacterial|antimicrobial|杀菌|殺菌|항균)/iu.test(text)) return true;
   if (/(?:すすぎ\s*1\s*回|one[- ]?rinse|single[- ]?rinse|漂洗\s*(?:1\s*次|一次)|헹굼\s*1\s*회)/iu.test(query)
     && !/(?:すすぎ\s*1\s*回|one[- ]?rinse|single[- ]?rinse|漂洗\s*(?:1\s*次|一次)|헹굼\s*1\s*회)/iu.test(text)) return true;
+  if (/(?:赤ちゃん|ベビー)(?:用|の)?衣類|baby\s*clothes|婴儿衣物|嬰兒衣物|아기\s*옷/iu.test(query)
+    && !/(?:赤ちゃん|ベビー)(?:用|の)?衣類|baby\s*clothes|婴儿衣物|嬰兒衣物|아기\s*옷/iu.test(text)) return true;
+  if (/(?:部屋干し|室内干し|indoor\s*drying|室内晾晒|室內晾曬|실내\s*건조)/iu.test(query)
+    && !/(?:部屋干し|室内干し|indoor\s*drying|室内晾晒|室內晾曬|실내\s*건조)/iu.test(text)) return true;
+  if (/(?:防臭|消臭|odor\s*control|deodori[sz]ing|除臭|냄새\s*제거|탈취)/iu.test(query)
+    && !/(?:防臭|消臭|odor\s*control|deodori[sz]ing|除臭|냄새\s*제거|탈취)/iu.test(text)) return true;
+  if (/(?:蛍光(?:増白)?剤不使用|no\s*optical\s*brighteners?|optical\s*brightener[- ]?free|无荧光增白剂|無螢光增白劑|형광증백제\s*무첨가)/iu.test(query)
+    && !/(?:蛍光(?:増白)?剤不使用|no\s*optical\s*brighteners?|optical\s*brightener[- ]?free|无荧光增白剂|無螢光增白劑|형광증백제\s*무첨가)/iu.test(text)) return true;
   if (requestedCategory === 'dishwasher-detergent-tablet') return !dishwasher || laundry;
   return !laundry || dishwasher;
 }

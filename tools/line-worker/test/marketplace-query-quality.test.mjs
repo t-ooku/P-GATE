@@ -1061,3 +1061,17 @@ test('洗剤ポッドの敏感肌・抗菌・すすぎ条件を4言語で保持�
     }
   }
 });
+
+test('洗剤ポッドの赤ちゃん衣類・部屋干し・防臭・増白剤条件を4言語で保持する', () => {
+  const cases = [
+    ['アリエール 赤ちゃん衣類対応 蛍光増白剤不使用 洗濯ジェルボール 40個', 'Ariel 洗濯用洗剤ジェルボール 赤ちゃん衣類対応 蛍光増白剤不使用 40個入り'],
+    ['Tide PODS indoor drying odor control laundry detergent 42 count', 'Tide PODS 洗濯用洗剤ジェルボール 部屋干し 防臭 42個入り'],
+    ['汰渍 Tide PODS 婴儿衣物无荧光增白剂洗衣凝珠42颗', 'Tide PODS 洗濯用洗剤ジェルボール 赤ちゃん衣類対応 蛍光増白剤不使用 42個入り'],
+    ['아리엘 실내 건조 냄새 제거 세탁 젤볼 92개', 'Ariel 洗濯用洗剤ジェルボール 部屋干し 防臭 92個入り'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});

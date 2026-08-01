@@ -1830,6 +1830,30 @@ test('洗剤ポッドは敏感肌・抗菌・すすぎ条件が明記された�
   }
 });
 
+test('洗剤ポッドは赤ちゃん衣類・部屋干し・防臭・増白剤条件が一致する候補だけを提示する', () => {
+  const candidates = [
+    { asin: 'ARIEL_BABY_FREE', product_name: 'Ariel 赤ちゃん衣類対応 蛍光増白剤不使用 洗濯ジェルボール 40個' },
+    { asin: 'ARIEL_BABY', product_name: 'Ariel 赤ちゃん衣類対応 洗濯ジェルボール 40個' },
+    { asin: 'ARIEL_FREE', product_name: 'Ariel 蛍光増白剤不使用 洗濯ジェルボール 40個' },
+    { asin: 'TIDE_INDOOR_ODOR', product_name: 'Tide PODS indoor drying odor control laundry detergent 42 count' },
+    { asin: 'TIDE_INDOOR', product_name: 'Tide PODS indoor drying laundry detergent 42 count' },
+    { asin: 'TIDE_ODOR', product_name: 'Tide PODS odor control laundry detergent 42 count' },
+    { asin: 'TIDE_BABY_FREE', product_name: 'Tide PODS 婴儿衣物无荧光增白剂洗衣凝珠42颗' },
+    { asin: 'TIDE_NORMAL', product_name: 'Tide PODS 洗衣凝珠42颗' },
+    { asin: 'ARIEL_KO_INDOOR_ODOR', product_name: '아리엘 실내 건조 냄새 제거 세탁 젤볼 92개' },
+    { asin: 'ARIEL_KO_INDOOR', product_name: '아리엘 실내 건조 세탁 젤볼 92개' },
+  ];
+  const cases = [
+    ['アリエール 赤ちゃん衣類対応 蛍光増白剤不使用 洗濯ジェルボール 40個', ['ARIEL_BABY_FREE']],
+    ['Tide PODS indoor drying odor control laundry detergent 42 count', ['TIDE_INDOOR_ODOR']],
+    ['汰渍 Tide PODS 婴儿衣物无荧光增白剂洗衣凝珠42颗', ['TIDE_BABY_FREE']],
+    ['아리엘 실내 건조 냄새 제거 세탁 젤볼 92개', ['ARIEL_KO_INDOOR_ODOR']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+  }
+});
+
 test('プリンターインクは本体・別型番・別品番・純正互換・色数違いを除外する', () => {
   const candidates = [
     { asin: 'CANON', product_name: 'Canon PIXUS TS8730 純正インク BCI-331+330 6色セット' },
