@@ -3529,3 +3529,23 @@ test('smartwatch band results require the requested model, case size, and materi
     }
   }
 });
+test('圧力IH炊飯器は4言語で容量・蒸気・保温条件が一致する本体だけを提示する', () => {
+  const queries = [
+    '圧力IH炊飯器 5.5合 蒸気カット 保温40時間',
+    'pressure IH rice cooker 5.5 go steam reduction keep warm 40 hours',
+    '压力IH电饭煲 5.5合 蒸汽减少 保温40小时',
+    '압력 IH 밥솥 5.5合 증기 절감 보온 40시간'
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '圧力IH炊飯器 5.5合 蒸気カット 保温40時間' },
+    { asin: 'SMALL', product_name: '圧力IH炊飯器 3合 蒸気カット 保温40時間' },
+    { asin: 'NOSTEAM', product_name: '圧力IH炊飯器 5.5合 保温40時間' },
+    { asin: 'SHORT', product_name: '圧力IH炊飯器 5.5合 蒸気カット 保温24時間' },
+    { asin: 'POT', product_name: '圧力IH炊飯器 5.5合 交換用 内釜 蒸気カット 保温40時間' },
+    { asin: 'LID', product_name: 'pressure IH rice cooker 5.5 go replacement lid steam reduction keep warm 40 hours' },
+    { asin: 'WARMER', product_name: '保温専用 炊飯ジャー 5.5合 保温40時間' }
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
+  }
+});

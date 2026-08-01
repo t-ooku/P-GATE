@@ -2095,3 +2095,17 @@ test('smartwatch replacement bands retain model, case size, and material in four
     }
   }
 });
+test('圧力IH炊飯器は容量・蒸気カット・保温時間を4言語で保持する', () => {
+  const inputs = [
+    '圧力IH炊飯器 5.5合 蒸気カット 保温40時間',
+    'pressure IH rice cooker 5.5 go steam reduction keep warm 40 hours',
+    '压力IH电饭煲 5.5合 蒸汽减少 保温40小时',
+    '압력 IH 밥솥 5.5合 증기 절감 보온 40시간'
+  ];
+  for (const input of inputs) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace),
+        '圧力IH炊飯器 5.5合 蒸気カット 保温40時間', `${marketplace}: ${input}`);
+    }
+  }
+});

@@ -1301,6 +1301,29 @@ function isRetrofitSmartLockMismatch(candidate, requested) {
   return false;
 }
 
+function pressureIhRiceCookerConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    cooker: /(?:圧力\s*IH\s*炊飯器|pressure\s*(?:IH|induction)\s*rice\s*cooker|压力\s*IH\s*电饭煲|壓力\s*IH\s*電子鍋|압력\s*IH\s*밥솥)/iu.test(text),
+    capacity: text.match(/\b(\d(?:\.\d)?)\s*(?:合|go\b)/iu)?.[1] || '',
+    steamCut: /(?:蒸気(?:カット|セーブ|低減)|steam[\s-]*(?:cut|reduction|save)|蒸汽(?:减少|减量)|蒸氣(?:減少|減量)|증기\s*(?:절감|감소))/iu.test(text),
+    keepWarm: text.match(/(?:保温|keep[\s-]*warm|保溫|보온)\s*(\d{1,2})\s*(?:時間|hours?|小时|小時|시간)/iu)?.[1] || '',
+    wrongProduct: /(?:内釜|inner\s*pot|内胆|內鍋|내솥|交換(?:用)?ふた|replacement\s*lid|替换盖|替換蓋|교체\s*뚜껑|パッキン|gasket|密封圈|패킹|保温専用|rice\s*warmer|保温锅|保溫鍋|보온\s*전용)/iu.test(text)
+  };
+}
+
+function isPressureIhRiceCookerMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = pressureIhRiceCookerConstraints(text);
+  if (!evidence.cooker || evidence.wrongProduct) return true;
+  for (const field of ['capacity', 'keepWarm']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  if (requested.steamCut && !evidence.steamCut) return true;
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2210,6 +2233,11 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(retrofitSmartLock.keypad && retrofitSmartLock.matter
       && retrofitSmartLock.autoLock && retrofitSmartLock.emergencyKey)
     && !retrofitSmartLock.wrongProduct;
+  const pressureIhRiceCooker = pressureIhRiceCookerConstraints(normalizedQuery);
+  const pressureIhRiceCookerIntent = pressureIhRiceCooker.cooker
+    && Boolean(pressureIhRiceCooker.capacity && pressureIhRiceCooker.steamCut
+      && pressureIhRiceCooker.keepWarm)
+    && !pressureIhRiceCooker.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2224,7 +2252,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
     && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent
-    && !retrofitSmartLockIntent) return candidates;
+    && !retrofitSmartLockIntent && !pressureIhRiceCookerIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2309,6 +2337,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (electricStandingDeskIntent) return !isElectricStandingDeskMismatch(candidate, electricStandingDesk);
     if (ergonomicOfficeChairIntent) return !isErgonomicOfficeChairMismatch(candidate, ergonomicOfficeChair);
     if (retrofitSmartLockIntent) return !isRetrofitSmartLockMismatch(candidate, retrofitSmartLock);
+    if (pressureIhRiceCookerIntent) return !isPressureIhRiceCookerMismatch(candidate, pressureIhRiceCooker);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

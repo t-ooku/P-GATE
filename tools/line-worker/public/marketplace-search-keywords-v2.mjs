@@ -542,6 +542,16 @@ function buildRetrofitSmartLockSearchKeywords(query) {
   return ['後付けスマートロック', '指紋', '暗証番号', 'Matter', 'オートロック', '非常用キー'].join(' ');
 }
 
+function buildPressureIhRiceCookerSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const cooker = /(?:圧力\s*IH\s*炊飯器|pressure\s*(?:IH|induction)\s*rice\s*cooker|压力\s*IH\s*电饭煲|壓力\s*IH\s*電子鍋|압력\s*IH\s*밥솥)/iu.test(normalized);
+  const capacity = normalized.match(/\b(\d(?:\.\d)?)\s*(?:合|go\b)/iu)?.[1];
+  const steamCut = /(?:蒸気(?:カット|セーブ|低減)|steam[\s-]*(?:cut|reduction|save)|蒸汽(?:减少|减量)|蒸氣(?:減少|減量)|증기\s*(?:절감|감소))/iu.test(normalized);
+  const keepWarm = normalized.match(/(?:保温|keep[\s-]*warm|保溫|보온)\s*(\d{1,2})\s*(?:時間|hours?|小时|小時|시간)/iu)?.[1];
+  if (!cooker || !capacity || !steamCut || !keepWarm) return '';
+  return ['圧力IH炊飯器', `${capacity}合`, '蒸気カット', `保温${keepWarm}時間`].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1369,6 +1379,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawErgonomicOfficeChair) return rawErgonomicOfficeChair;
   const rawRetrofitSmartLock = buildRetrofitSmartLockSearchKeywords(rawNormalized);
   if (rawRetrofitSmartLock) return rawRetrofitSmartLock;
+  const rawPressureIhRiceCooker = buildPressureIhRiceCookerSearchKeywords(rawNormalized);
+  if (rawPressureIhRiceCooker) return rawPressureIhRiceCooker;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
