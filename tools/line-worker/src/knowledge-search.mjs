@@ -376,13 +376,28 @@ function isSmartWatchBandMismatch(candidate, requested) {
   return false;
 }
 
+function isNegatedPhonePrivacy(text) {
+  const pattern = /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/giu;
+  for (const match of text.matchAll(pattern)) {
+    const before = text.slice(Math.max(0, match.index - 18), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 14);
+    const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without(?:\s+(?:a|an|the))?|不要|不是|不想要)\s*$/iu.test(before);
+    const negatedAfter = /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|而不是|말고|아닌|아니고|제외)/iu.test(after);
+    if (negatedBefore || negatedAfter) return true;
+  }
+  return false;
+}
+
 function phoneScreenProtectorConstraints(value) {
   const text = String(value || '').normalize('NFKC');
+  const privacy = /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu.test(text);
+  const rejectPrivacy = privacy && isNegatedPhonePrivacy(text);
   return {
     model: phoneCaseDeviceModel(text),
     protector: /(?:保護フィルム|ガラスフィルム|保護膜|screen\s*protector|protective\s*film|钢化膜|鋼化膜|保护膜|保護膜|필름|보호필름)/iu.test(text),
     glass: /(?:強化ガラス|ガラスフィルム|tempered\s*glass|钢化玻璃|鋼化玻璃|강화유리)/iu.test(text),
-    privacy: /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu.test(text)
+    privacy: privacy && !rejectPrivacy,
+    rejectPrivacy
   };
 }
 
@@ -394,6 +409,7 @@ function isPhoneScreenProtectorMismatch(candidate, requested) {
   if (requested.model && evidence.model !== requested.model) return true;
   if (requested.glass && !evidence.glass) return true;
   if (requested.privacy && !evidence.privacy) return true;
+  if (requested.rejectPrivacy && evidence.privacy) return true;
   return false;
 }
 

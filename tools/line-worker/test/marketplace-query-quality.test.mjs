@@ -251,6 +251,21 @@ test('音声認識で分割されたGalaxy型番も4言語で正規化して保�
   }
 });
 
+test('覗き見防止を取り消した4言語検索は透明な強化ガラスへ切り替える', () => {
+  const queries = [
+    'iPhone 16 Pro用の覗き見防止じゃなくて透明な強化ガラスフィルム',
+    'not privacy, clear tempered glass screen protector for iPhone 16 Pro',
+    'iPhone 16 Pro不要防窥，改成透明钢化玻璃保护膜',
+    'iPhone 16 Pro 사생활 보호 말고 투명 강화유리 필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 16 Pro 保護フィルム 透明 強化ガラス', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [

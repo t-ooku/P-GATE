@@ -1169,8 +1169,10 @@ export function buildDeviceAccessorySearchKeywords(query) {
   const protectorGlass = label === '保護フィルム'
     && /(?:強化ガラス|ガラスフィルム|tempered\s*glass|钢化玻璃|鋼化玻璃|강화유리)/iu.test(normalized)
     ? '強化ガラス' : '';
+  const protectorPrivacyPattern = /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu;
   const protectorPrivacy = label === '保護フィルム'
-    && /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu.test(normalized)
+    && protectorPrivacyPattern.test(normalized)
+    && !isNegatedAttribute(normalized, protectorPrivacyPattern)
     ? '覗き見防止' : '';
   const rejectsLightUpCase = /(?:(?:光る|発光|ピカピカ|ライトアップ).{0,32}(?:ケース|カバー).{0,10}(?:じゃなく|ではなく)|not\s+(?:a\s+|an\s+|the\s+)?(?:glow(?:ing)?|light[- ]?up|luminous).{0,32}(?:case|cover)|(?:不要|不是|不想要).{0,24}(?:发光|發光|会亮|會亮).{0,24}(?:手机壳|手機殼)|(?:빛나는|발광|불빛\s*나는).{0,32}(?:케이스|커버).{0,10}(?:말고|아닌|아니고))/iu.test(normalized);
   const specifications = specificationTokens(normalized)
