@@ -377,6 +377,10 @@ function refreshRate(text) {
   return Number(String(text || '').normalize('NFKC').match(/\b(\d{2,3})\s*hz\b/iu)?.[1] || 0);
 }
 
+function powerDeliveryWatts(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu)?.[1] || 0);
+}
+
 function hasDualMonitorEvidence(text) {
   return /(?:dual.{0,16}(?:display|monitor)|2.{0,12}(?:display|monitor)|デュアル.{0,12}モニター|2画面|双.{0,12}显示器|雙.{0,12}顯示器|듀얼(?:.{0,12}모니터)?|모니터\s*2대)/iu.test(String(text || ''));
 }
@@ -390,6 +394,7 @@ function isUsb4DockMismatch(candidate, constraints = {}) {
   if (constraints.dualMonitor && !hasDualMonitorEvidence(text)) return true;
   if (constraints.resolution && displayResolution(text) < constraints.resolution) return true;
   if (constraints.refreshRate && refreshRate(text) < constraints.refreshRate) return true;
+  if (constraints.powerDelivery && powerDeliveryWatts(text) < constraints.powerDelivery) return true;
   if (constraints.displayLink && !/display\s*link/iu.test(text)) return true;
   const candidatePlatform = requestedComputerPlatform(text);
   if (constraints.platform && candidatePlatform && candidatePlatform !== constraints.platform) return true;
@@ -513,6 +518,7 @@ export function filterCategoryMismatches(query, candidates = []) {
       dualMonitor: hasDualMonitorEvidence(query),
       resolution: displayResolution(query),
       refreshRate: refreshRate(query),
+      powerDelivery: powerDeliveryWatts(query),
       displayLink: /display\s*link/iu.test(String(query || '')),
       platform: requestedComputerPlatform(query)
     })) return false;

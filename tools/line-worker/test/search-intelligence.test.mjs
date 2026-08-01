@@ -369,18 +369,19 @@ test('USB4ドックは4言語で映像端子・2画面・OS互換性が一致す
 
 test('USB4ドックは4言語で解像度・Hz・DisplayLink要件を満たす候補だけを表示する', () => {
   const queries = [
-    'MacBook用 DisplayLink対応 USB4 ドック 4K 60Hz 2画面',
-    'USB4 dock with DisplayLink dual 4K 60Hz monitors for MacBook',
-    '支持DisplayLink双4K 60Hz显示器的MacBook USB4扩展坞',
-    '맥북용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz',
+    'MacBook用 DisplayLink対応 USB4 ドック 4K 60Hz 2画面 100W',
+    'USB4 dock with DisplayLink dual 4K 60Hz monitors and 100W PD for MacBook',
+    '支持DisplayLink双4K 60Hz显示器和100W供电的MacBook USB4扩展坞',
+    '맥북용 DisplayLink USB4 도킹 스테이션 듀얼 4K 60Hz 100W',
   ];
   const candidates = [
-    { asin: 'MATCH', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 60Hz' },
-    { asin: 'BETTER', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 8K 120Hz' },
-    { asin: 'LOWRES', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 1080p 60Hz' },
-    { asin: 'LOWHZ', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 30Hz' },
-    { asin: 'NODISPLAYLINK', product_name: 'MacBook USB4 Dock Dual Monitor 4K 60Hz' },
-    { asin: 'SINGLE', product_name: 'MacBook USB4 Dock DisplayLink Single Monitor 4K 60Hz' },
+    { asin: 'MATCH', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 60Hz 100W' },
+    { asin: 'BETTER', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 8K 120Hz 140W' },
+    { asin: 'LOWRES', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 1080p 60Hz 100W' },
+    { asin: 'LOWHZ', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 30Hz 100W' },
+    { asin: 'NODISPLAYLINK', product_name: 'MacBook USB4 Dock Dual Monitor 4K 60Hz 100W' },
+    { asin: 'SINGLE', product_name: 'MacBook USB4 Dock DisplayLink Single Monitor 4K 60Hz 100W' },
+    { asin: 'LOWPOWER', product_name: 'MacBook USB4 Dock DisplayLink Dual Monitor 4K 60Hz 60W' },
   ];
   for (const query of queries) {
     assert.deepEqual(
