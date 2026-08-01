@@ -160,7 +160,7 @@ var Config = (function () {
   'use strict';
 
   var SHEET_NAME = 'Config';
-  var CURRENT_SYSTEM_VERSION = '1.15.0';
+  var CURRENT_SYSTEM_VERSION = '1.18.0';
   var HEADERS = ['Key', 'Value', 'Description'];
   var REQUIRED_KEYS = [
     'ENV',
