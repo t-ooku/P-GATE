@@ -701,6 +701,10 @@ test('オフィスチェアは支持機能・肘掛け・素材・耐荷重を4�
     'ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity 150kg',
     '人体工学办公椅 头枕 腰部支撑 4D扶手 网布 承重150kg',
     '인체공학 사무용 의자 헤드레스트 요추 지지 4D 팔걸이 메쉬 하중 150kg',
+    '長時間座っても腰と首がつらくならず肘位置も細かく合わせたい ヘッドレスト 腰サポート 4D肘掛け メッシュ 耐荷重150kg',
+    'want my back and neck comfortable during long sitting with precisely adjustable arms headrest lumbar support 4D armrests mesh weight capacity 150kg',
+    '想长时间坐着腰和脖子也舒服并精细调节扶手 头枕 腰部支撑 4D扶手 网布 承重150kg',
+    '오래 앉아도 허리와 목이 편하고 팔걸이 위치를 세밀하게 맞추고 싶어 헤드레스트 요추 지지 4D 팔걸이 메쉬 하중 150kg',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

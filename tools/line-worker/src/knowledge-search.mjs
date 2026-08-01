@@ -1258,7 +1258,7 @@ function isElectricStandingDeskMismatch(candidate, requested) {
 function ergonomicOfficeChairConstraints(value) {
   const text = String(value || '').normalize('NFKC');
   return {
-    chair: /(?:エルゴノミクスオフィスチェア|ergonomic\s*office\s*chair|人体工学办公椅|人體工學辦公椅|인체공학\s*사무용\s*의자)/iu.test(text),
+    chair: /(?:エルゴノミクスオフィスチェア|ergonomic\s*office\s*chair|人体工学办公椅|人體工學辦公椅|인체공학\s*사무용\s*의자|長時間座って.{0,12}腰.{0,8}首.{0,12}つらくならず.{0,16}肘位置.{0,12}細かく|back.{0,8}neck\s*comfortable.{0,16}long\s*sitting.{0,20}precisely\s*adjustable\s*arms|长时间坐着.{0,12}腰.{0,8}脖子.{0,12}舒服.{0,16}精细调节扶手|오래\s*앉아도.{0,12}허리.{0,8}목.{0,12}편하고.{0,16}팔걸이\s*위치.{0,12}세밀하게)/iu.test(text),
     headrest: /(?:ヘッドレスト|headrest|头枕|頭枕|헤드레스트)/iu.test(text),
     lumbar: /(?:腰サポート|lumbar\s*support|腰部支撑|腰部支撐|요추\s*지지)/iu.test(text),
     armrests: text.match(/\b(\d)D\s*(?:肘掛け|armrests?|扶手|팔걸이)/iu)?.[1] || '',
