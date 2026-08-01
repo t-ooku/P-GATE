@@ -449,6 +449,34 @@ function isWallChargerMismatch(candidate, requested) {
   return false;
 }
 
+function wirelessChargingStationConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    wireless: /(?:wireless\s*charg(?:er|ing)|ワイヤレス充電|无线充电|無線充電|무선\s*충전)/iu.test(text),
+    station: /(?:station|stand|スタンド|充電台|充电站|充電站|충전독|충전\s*스탠드)/iu.test(text),
+    qi2: /\bqi\s*2\b/iu.test(text),
+    watts: text.match(/\b(\d{1,2})\s*w\b/iu)?.[1] || '',
+    threeInOne: /(?:3\s*[- ]?in\s*[- ]?1|3台同時|3台用|三合一|3合1|3合一|3개\s*동시)/iu.test(text),
+    iphone: /\biphone\b|アイフォン|苹果手机|蘋果手機|아이폰/iu.test(text),
+    watch: /apple\s*watch|アップルウォッチ|苹果手表|蘋果手錶|애플워치/iu.test(text),
+    airpods: /airpods|エアポッズ|苹果耳机|蘋果耳機|에어팟/iu.test(text),
+    wrongProduct: /(?:power\s*bank|モバイルバッテリー|充电宝|보조\s*배터리|charging\s*cable|充電ケーブル|充电线|충전\s*케이블)/iu.test(text)
+  };
+}
+
+function isWirelessChargingStationMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = wirelessChargingStationConstraints(text);
+  if (!evidence.wireless || !evidence.station || evidence.wrongProduct) return true;
+  if (requested.qi2 && !evidence.qi2) return true;
+  if (requested.watts && evidence.watts !== requested.watts) return true;
+  for (const feature of ['threeInOne', 'iphone', 'watch', 'airpods']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1249,10 +1277,14 @@ export function filterCategoryMismatches(query, candidates = []) {
   const chargingCableIntent = chargingCable.cable && Boolean(chargingCable.connector);
   const wallCharger = wallChargerConstraints(normalizedQuery);
   const wallChargerIntent = wallCharger.charger && Boolean(wallCharger.watts && wallCharger.usbC);
+  const wirelessChargingStation = wirelessChargingStationConstraints(normalizedQuery);
+  const wirelessChargingStationIntent = wirelessChargingStation.wireless && wirelessChargingStation.qi2
+    && wirelessChargingStation.threeInOne;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
-    && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent) return candidates;
+    && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
+    && !wirelessChargingStationIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1299,6 +1331,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (cameraPrimeLensIntent) return !isCameraPrimeLensMismatch(candidate, cameraPrimeLens);
     if (chargingCableIntent) return !isChargingCableMismatch(candidate, chargingCable);
     if (wallChargerIntent) return !isWallChargerMismatch(candidate, wallCharger);
+    if (wirelessChargingStationIntent) return !isWirelessChargingStationMismatch(candidate, wirelessChargingStation);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

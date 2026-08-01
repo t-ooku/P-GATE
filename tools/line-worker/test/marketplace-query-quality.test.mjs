@@ -161,6 +161,21 @@ test('GaN充電器は出力・ポート数・PD・PPS・USB-Cを4言語で保持
   }
 });
 
+test('Qi2 3-in-1充電スタンドは出力と対応機器を4言語で保持する', () => {
+  const queries = [
+    'Qi2 15WでiPhone・Apple Watch・AirPodsを3台同時充電できるワイヤレス充電スタンド',
+    'Qi2 15W 3-in-1 wireless charging station for iPhone Apple Watch and AirPods',
+    'Qi2 15W 三合一无线充电站，支持iPhone Apple Watch和AirPods',
+    'Qi2 15W iPhone Apple Watch AirPods 3개 동시 무선 충전 스탠드',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Qi2 15W 3-in-1 iPhone Apple Watch AirPods ワイヤレス充電スタンド', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

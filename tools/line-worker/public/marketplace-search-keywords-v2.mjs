@@ -127,6 +127,19 @@ function buildWallChargerSearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function buildWirelessChargingStationSearchKeywords(query) {
+  if (!/(?:wireless\s*charg(?:er|ing)|ワイヤレス充電|无线充电|無線充電|무선\s*충전)/iu.test(query)) return '';
+  const qi2 = /\bqi\s*2\b/iu.test(query) ? 'Qi2' : '';
+  const watts = String(query || '').match(/\b(\d{1,2})\s*w\b/iu)?.[1];
+  const threeInOne = /(?:3\s*[- ]?in\s*[- ]?1|3台同時|3台用|三合一|3合1|3合一|3개\s*동시|3-in-1)/iu.test(query);
+  const iphone = /\biphone\b|アイフォン|苹果手机|蘋果手機|아이폰/iu.test(query);
+  const watch = /apple\s*watch|アップルウォッチ|苹果手表|蘋果手錶|애플워치/iu.test(query);
+  const airpods = /airpods|エアポッズ|苹果耳机|蘋果耳機|에어팟/iu.test(query);
+  if (!qi2 || !threeInOne || !(iphone && watch && airpods)) return '';
+  return [qi2, watts ? `${watts}W` : '', '3-in-1', 'iPhone', 'Apple Watch', 'AirPods', 'ワイヤレス充電スタンド']
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -958,6 +971,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (chargingCable) return chargingCable;
   const wallCharger = buildWallChargerSearchKeywords(normalized);
   if (wallCharger) return wallCharger;
+  const wirelessChargingStation = buildWirelessChargingStationSearchKeywords(normalized);
+  if (wirelessChargingStation) return wirelessChargingStation;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

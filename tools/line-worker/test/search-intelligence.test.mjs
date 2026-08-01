@@ -1076,6 +1076,28 @@ test('GaN充電器は4言語で出力・ポート数・PD・PPS・USB-Cが一致
   }
 });
 
+test('Qi2 3-in-1充電スタンドは4言語で出力と3機器対応が一致する候補だけを提示する', () => {
+  const queries = [
+    'Qi2 15WでiPhone・Apple Watch・AirPodsを3台同時充電できるワイヤレス充電スタンド',
+    'Qi2 15W 3-in-1 wireless charging station for iPhone Apple Watch and AirPods',
+    'Qi2 15W 三合一无线充电站，支持iPhone Apple Watch和AirPods',
+    'Qi2 15W iPhone Apple Watch AirPods 3개 동시 무선 충전 스탠드',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Qi2 15W 3-in-1 Wireless Charging Station for iPhone Apple Watch AirPods' },
+    { asin: 'OLDQI', product_name: 'Qi 15W 3-in-1 Wireless Charging Station for iPhone Apple Watch AirPods' },
+    { asin: 'WRONGPOWER', product_name: 'Qi2 10W 3-in-1 Wireless Charging Station for iPhone Apple Watch AirPods' },
+    { asin: 'TWOINONE', product_name: 'Qi2 15W 2-in-1 Wireless Charging Station for iPhone Apple Watch' },
+    { asin: 'NOWATCH', product_name: 'Qi2 15W 3-in-1 Wireless Charging Station for iPhone AirPods' },
+    { asin: 'NOAIRPODS', product_name: 'Qi2 15W 3-in-1 Wireless Charging Station for iPhone Apple Watch' },
+    { asin: 'PAD', product_name: 'Qi2 15W Wireless Charging Pad for iPhone' },
+    { asin: 'POWERBANK', product_name: 'Qi2 15W 3-in-1 Wireless Power Bank for iPhone Apple Watch AirPods' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
