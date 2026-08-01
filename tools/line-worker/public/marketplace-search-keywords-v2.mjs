@@ -1,4 +1,6 @@
 const PRODUCT_TYPES = [
+  ['キーボードケース', /(?:キーボード\s*ケース|keyboard\s*case|键盘\s*保护套|鍵盤\s*保護套|키보드\s*케이스)/iu],
+  ['キーボード', /(?:キーボード|keyboard|键盘|鍵盤|키보드)/iu],
   ['モバイルバッテリー', /(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+(?:battery|charger)|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu],
   ['ケーブル', /(?:充電ケーブル|充電コード|ライトニングケーブル|lightning\s*(?:cable|cord)|usb[- ]?c\s*(?:cable|cord)|charging\s*(?:cable|cord)|数据线|數據線|充电线|充電線|충전\s*케이블|라이트ニング\s*케이블)/iu],
   ['イヤホン', /(?:イヤホン|ヘッドホン|earphones?|earbuds?|headphones?|耳机|耳機|이어폰|헤드폰)/iu],
@@ -9,6 +11,16 @@ const PRODUCT_TYPES = [
 ];
 
 function deviceName(query) {
+  const ipad = query.match(/\bipad(?:\s*(?:air|pro|mini))?(?:\s*(?:m[1-9]|\d+(?:st|nd|rd|th)?\s*(?:generation|gen)))?/iu);
+  if (ipad) return ipad[0].replace(/^ipad/iu, 'iPad').replace(/\s+/gu, ' ').trim();
+  const localizedIpad = query.match(/(?:アイパッド|苹果平板|蘋果平板|아이패드)(?:\s*(air|pro|mini|エア|プロ|에어|프로))?/iu);
+  if (localizedIpad) {
+    const model = String(localizedIpad[1] || '').toLowerCase();
+    const canonicalModel = /(?:air|エア|에어)/u.test(model) ? 'Air'
+      : /(?:pro|プロ|프로)/u.test(model) ? 'Pro'
+      : model === 'mini' ? 'mini' : '';
+    return `iPad${canonicalModel ? ` ${canonicalModel}` : ''}`;
+  }
   const iphone = query.match(/\biphone(?:\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2})?/iu);
   if (iphone) return iphone[0].replace(/^iphone/iu, 'iPhone').trim();
   const localizedIphone = query.match(/(?:アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)(?:\s*(\d{1,2}(?!\d)(?:\s*(?:pro|max|plus|mini))*))?/iu);

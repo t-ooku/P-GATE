@@ -1345,3 +1345,21 @@ test('タブレット保護フィルム・充電器を4言語で本体FTSカテ�
     assert.doesNotMatch(query, /^"tablet"\*|\("tablet"\*\)/, input);
   }
 });
+
+test('iPad Air・Proのアクセサリー意図と画面サイズを4言語で保持する', () => {
+  const cases = [
+    ['iPad Air 11インチ用キーボードケース', 'tablet-keyboard', 'tablet keyboard', '11'],
+    ['keyboard case for iPad Pro 13-inch', 'tablet-keyboard', 'tablet keyboard', '13'],
+    ['iPad Air 11英寸键盘保护套', 'tablet-keyboard', 'tablet keyboard', '11'],
+    ['아이패드 프로 13인치 키보드 케이스', 'tablet-keyboard', 'tablet keyboard', '13'],
+    ['iPad Air 11インチ用保護フィルム', 'tablet-screen-protector', 'tablet screen protector', '11'],
+    ['USB-C charger for iPad Pro', 'tablet-charger', 'tablet charger', 'usb-c'],
+  ];
+  for (const [input, category, productTerm, condition] of cases) {
+    assert.deepEqual(semanticSearchGroups(input).map((group) => group.category), [category], input);
+    const query = intelligentFtsQuery(input);
+    assert.match(query, new RegExp(`"${productTerm}"\\*`), input);
+    assert.match(query, new RegExp(`"${condition}"\\*`, 'i'), input);
+    assert.doesNotMatch(query, /^"tablet"\*|\("tablet"\*\)/, input);
+  }
+});
