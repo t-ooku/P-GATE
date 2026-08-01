@@ -527,8 +527,12 @@ function specificationTokens(query) {
 function buildPowerBankSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
   if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(normalized)) return '';
-  const capacity = [...normalized.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
-    .find((match) => !isNegatedAttribute(normalized, new RegExp(`${match[1]}\\s*m\\s*ah`, 'iu')))?.[1];
+  const capacityMatches = [...normalized.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
+    .filter((match) => !isNegatedAttribute(normalized, new RegExp(`${match[1]}\\s*m\\s*ah`, 'iu')));
+  const capacity = capacityMatches[0]?.[1];
+  const secondCapacity = capacityMatches[1]?.[1];
+  const capacityRange = capacity && secondCapacity
+    && new RegExp(`(?:between\\s+)?${capacity}\\s*m\\s*ah\\s*(?:から|〜|~|-|to|and|到|至|에서)\\s*${secondCapacity}\\s*m\\s*ah`, 'iu').test(normalized);
   const minimumCapacity = capacity && (
     new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalized)
     || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalized)
@@ -552,7 +556,10 @@ function buildPowerBankSearchKeywords(query) {
       return !isNegatedAttribute(normalized, new RegExp(escaped, 'iu'));
     });
   const powerDelivery = pdWatts ? `PD${pdWatts[1] || pdWatts[2]}W` : '';
-  const capacityToken = capacity ? `${capacity}mAh${minimumCapacity ? '以上' : maximumCapacity ? '以下' : ''}` : '';
+  const rangeMinimum = capacityRange ? Math.min(Number(capacity), Number(secondCapacity)) : 0;
+  const rangeMaximum = capacityRange ? Math.max(Number(capacity), Number(secondCapacity)) : 0;
+  const capacityToken = capacityRange ? `${rangeMinimum}mAh-${rangeMaximum}mAh`
+    : capacity ? `${capacity}mAh${minimumCapacity ? '以上' : maximumCapacity ? '以下' : ''}` : '';
   return [capacityToken, 'モバイルバッテリー', cable, magnetic, powerDelivery].filter(Boolean).join(' ');
 }
 

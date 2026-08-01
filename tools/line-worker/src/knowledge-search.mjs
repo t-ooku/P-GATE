@@ -336,8 +336,12 @@ function isPowerBankMismatch(candidate, query) {
   if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(text)) return true;
   const normalizedQuery = String(query || '').normalize('NFKC');
   const capacityMatches = [...normalizedQuery.matchAll(/(\d{4,6})\s*m\s*ah/giu)];
-  const capacity = capacityMatches
-    .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))?.[1];
+  const positiveCapacityMatches = capacityMatches
+    .filter((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
+  const capacity = positiveCapacityMatches[0]?.[1];
+  const secondCapacity = positiveCapacityMatches[1]?.[1];
+  const capacityRange = capacity && secondCapacity
+    && new RegExp(`(?:between\\s+)?${capacity}\\s*m\\s*ah\\s*(?:から|〜|~|-|to|and|到|至|에서)\\s*${secondCapacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery);
   const minimumCapacity = capacity && (
     new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)
     || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalizedQuery)
@@ -347,9 +351,13 @@ function isPowerBankMismatch(candidate, query) {
     || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以下|or\\s+less|or\\s+under|이하)`, 'iu').test(normalizedQuery)
   );
   const candidateCapacity = text.match(/(?:^|\D)(\d{4,6})\s*m\s*ah(?:\D|$)/iu)?.[1];
-  if (minimumCapacity && (!candidateCapacity || Number(candidateCapacity) < Number(capacity))) return true;
-  if (maximumCapacity && (!candidateCapacity || Number(candidateCapacity) > Number(capacity))) return true;
-  if (capacity && !minimumCapacity && !maximumCapacity
+  const rangeMinimum = capacityRange ? Math.min(Number(capacity), Number(secondCapacity)) : 0;
+  const rangeMaximum = capacityRange ? Math.max(Number(capacity), Number(secondCapacity)) : 0;
+  if (capacityRange && (!candidateCapacity
+    || Number(candidateCapacity) < rangeMinimum || Number(candidateCapacity) > rangeMaximum)) return true;
+  if (!capacityRange && minimumCapacity && (!candidateCapacity || Number(candidateCapacity) < Number(capacity))) return true;
+  if (!capacityRange && maximumCapacity && (!candidateCapacity || Number(candidateCapacity) > Number(capacity))) return true;
+  if (capacity && !capacityRange && !minimumCapacity && !maximumCapacity
     && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
   const rejectedCapacities = capacityMatches
     .filter((match) => isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))
