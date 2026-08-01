@@ -9,6 +9,7 @@ import {
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const SELLER_COOKIE = '__Host-hoshilu_seller_session';
+const LEGACY_SELLER_COOKIE = 'hoshilu_seller_session';
 const unsafeExampleValue = (value) =>
   /replace[-_ ]?with|change[-_ ]?me|changeme|placeholder/i.test(String(value || ''));
 const configuredSellerTenants = (env) => [...new Set(
@@ -30,6 +31,16 @@ const sellerJson = (value, init = {}) => {
   headers.set('cache-control', 'no-store');
   headers.set('x-content-type-options', 'nosniff');
   return Response.json(value, { ...init, headers });
+};
+const sellerSessionHeaders = (session = '') => {
+  const headers = new Headers();
+  headers.append('set-cookie',
+    `${SELLER_COOKIE}=${session}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${session ? 43200 : 0}`
+  );
+  headers.append('set-cookie',
+    `${LEGACY_SELLER_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`
+  );
+  return headers;
 };
 const noStoreRedirect = (location) => new Response(null, {
   status: 302,
@@ -178,9 +189,7 @@ async function handleLogin(request, env) {
     return sellerJson({ ok: false, error: 'SELLER_LOGIN_GUARD_UNAVAILABLE' }, { status: 503 });
   }
   const session = await createSellerSession(env);
-  return sellerJson({ ok: true }, { headers: {
-    'set-cookie': `${SELLER_COOKIE}=${session}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=43200`
-  } });
+  return sellerJson({ ok: true }, { headers: sellerSessionHeaders(session) });
 }
 export async function handleSellerRoutes(request, env) {
   const url = new URL(request.url);
@@ -201,9 +210,7 @@ export async function handleSellerRoutes(request, env) {
         // Logout must still invalidate the browser cookie if audit storage fails.
       }
     }
-    return sellerJson({ ok: true }, { headers: {
-      'set-cookie': `${SELLER_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`
-    } });
+    return sellerJson({ ok: true }, { headers: sellerSessionHeaders() });
   }
   if (request.method === 'GET' && (url.pathname === '/seller' || url.pathname === '/seller.html')) {
     const seller = await readSellerSession(request, env);

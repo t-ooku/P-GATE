@@ -31,6 +31,11 @@ const env = {
   PRODUCT_DB: authDb,
   ASSETS: { fetch: async () => new Response('seller console') }
 };
+const setCookies = (response) => typeof response.headers.getSetCookie === 'function'
+  ? response.headers.getSetCookie()
+  : [response.headers.get('set-cookie')];
+const hasCookie = (cookies, name, pattern) => cookies.some((value) =>
+  value.startsWith(`${name}=`) && pattern.test(value));
 
 test('未認証ではセラー画面をログインへ転送する', async () => {
   const response = await handleSellerRoutes(new Request('https://hoshilu.app/seller'), env);
@@ -139,6 +144,8 @@ test('正しい認証はHttpOnlyセッションを発行する', async () => {
   assert.match(cookie, /SameSite=Strict/);
   assert.match(cookie, /^__Host-hoshilu_seller_session=/);
   assert.doesNotMatch(cookie, /Domain=/i);
+  assert.equal(hasCookie(setCookies(response), 'hoshilu_seller_session',
+    /Path=\/; HttpOnly; Secure; SameSite=Strict; Max-Age=0/), true);
   const token = cookie.match(/__Host-hoshilu_seller_session=([^;]+)/)[1];
   assert.equal(await verifySellerSession(new Request('https://hoshilu.app/seller', {
     headers: { cookie: `__Host-hoshilu_seller_session=${token}` }
@@ -163,6 +170,10 @@ test('セラーログアウトは同一オリジンだけ許可する', async ()
   assert.equal(response.status, 200);
   assert.match(response.headers.get('set-cookie'), /^__Host-hoshilu_seller_session=/);
   assert.match(response.headers.get('set-cookie'), /Max-Age=0/);
+  const cookies = setCookies(response);
+  assert.equal(hasCookie(cookies, '__Host-hoshilu_seller_session', /Max-Age=0/), true);
+  assert.equal(hasCookie(cookies, 'hoshilu_seller_session',
+    /Path=\/; HttpOnly; Secure; SameSite=Strict; Max-Age=0/), true);
 });
 
 test('セラーログインは5回失敗後に15分停止する', async () => {

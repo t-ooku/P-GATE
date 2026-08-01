@@ -19,7 +19,8 @@ npm.cmd test
 
 ## 2. 本番preflight
 
-0027を先、0028を後に適用します。移行番号の欠番は別リリースとの分離による意図した状態です。
+本番では0027、0028がこの順で適用済みです。移行番号の欠番は別リリースとの分離による
+意図した状態です。再適用はせず、履歴と認証用テーブル・索引の存在を読み取り確認します。
 
 ```powershell
 npx.cmd --yes wrangler@4.113.0 d1 migrations list hoshilu-products --remote
@@ -28,7 +29,7 @@ npx.cmd --yes wrangler@4.113.0 d1 export hoshilu-products --remote --output ..\.
 
 次をすべて満たさない場合はdeployしません。
 
-- 未適用一覧に0027、0028がこの順であり、想定外の移行が混在しない。
+- migration履歴に0027、0028がこの順で記録され、未適用一覧へ再出現していない。
 - 退避SQLが空でない。
 - `PRODUCT_DB` が `hoshilu-products` に接続されている。
 - 次の値が本番Secret／設定に存在し、すべて相互に異なる。
@@ -49,10 +50,9 @@ SELLER_ALLOWED_TENANTS（許可店舗だけをカンマ区切り）
 
 ## 3. 移行と公開
 
-preflight合格後だけ実行します。
+preflight合格後だけWorkerを公開します。0027、0028は適用済みのため再適用しません。
 
 ```powershell
-npx.cmd --yes wrangler@4.113.0 d1 migrations apply hoshilu-products --remote
 npx.cmd --yes wrangler@4.113.0 deploy
 ```
 
