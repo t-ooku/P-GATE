@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { seoPagePaths } from '../src/seo-pages.mjs';
+import { renderSeoPage, seoPagePaths } from '../src/seo-pages.mjs';
 
 test('sitemap stays synchronized with every rendered SEO page', async () => {
   const sitemap = await readFile(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
@@ -22,5 +22,17 @@ test('each localized sitemap entry declares ja, en, and x-default alternates', a
     assert.match(body, /hreflang="ja"/);
     assert.match(body, /hreflang="en"/);
     assert.match(body, /hreflang="x-default"/);
+  }
+});
+
+test('HTML and sitemap agree on the Japanese x-default URL', async () => {
+  const sitemap = await readFile(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
+  for (const path of seoPagePaths) {
+    const slug = path.split('/').pop();
+    const expected = `https://hoshilu.app/ja/${slug}`;
+    const html = renderSeoPage(path);
+    assert.ok(html.includes(`<link rel="alternate" hreflang="x-default" href="${expected}">`));
+    const sitemapEntry = sitemap.match(new RegExp(`<url>\\s*<loc>https://hoshilu\\.app${path}</loc>([\\s\\S]*?)</url>`))?.[1] ?? '';
+    assert.ok(sitemapEntry.includes(`hreflang="x-default" href="${expected}"`));
   }
 });
