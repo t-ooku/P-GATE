@@ -934,3 +934,41 @@ test('social media context does not outrank the remembered product category', ()
   assert.doesNotMatch(relaxedFtsQuery(memory), /"sns"\*/i);
   assert.doesNotMatch(relaxedFtsQuery(memory), /"pink"\*/i);
 });
+
+test('4言語の自己訂正では否定後に言い直した商品属性を検索条件へ残す', () => {
+  const cases = [
+    '最初は黒を避けたかったが、やっぱり黒い財布',
+    'not black at first, but actually a black wallet',
+    '一开始不要黑色，后来决定要黑色钱包',
+    '처음에는 검정 말고 생각했지만 결국 검정 지갑',
+  ];
+  for (const input of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"wallet"\*/i, input);
+    assert.match(query, /"black"\*/i, input);
+  }
+});
+
+test('4言語の比較寸法を予算と誤認せず否定された寸法だけを除外する', () => {
+  const positiveCases = [
+    '幅50センチ以下の収納ボックス',
+    'a storage box under 50 cm wide',
+    '宽度不超过50厘米的收纳盒',
+    '너비 50센티미터 이하 수납함',
+  ];
+  for (const input of positiveCases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"50"\*/, input);
+  }
+  const correctedCases = [
+    '50センチではなく40センチの収納ボックス',
+    'not 50 cm but a 40 cm storage box',
+    '不要50厘米，要40厘米的收纳盒',
+    '50센티미터 말고 40센티미터 수납함',
+  ];
+  for (const input of correctedCases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"40"\*/, input);
+    assert.doesNotMatch(query, /"50"\*/, input);
+  }
+});
