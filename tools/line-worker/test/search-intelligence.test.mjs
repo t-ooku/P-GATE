@@ -1227,6 +1227,25 @@ test('覗き見防止を取り消した4言語検索は透明な強化ガラス�
   }
 });
 
+test('強化ガラスを取り消した4言語検索はPET保護フィルムだけを提示する', () => {
+  const queries = [
+    'iPhone 16 Pro用の強化ガラスじゃなくてPET保護フィルム',
+    'not tempered glass, PET protective film for iPhone 16 Pro',
+    'iPhone 16 Pro不要钢化玻璃，改成PET保护膜',
+    'iPhone 16 Pro 강화유리 말고 PET 보호필름',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 16 Pro PET Protective Film Screen Protector' },
+    { asin: 'GLASS', product_name: 'iPhone 16 Pro Tempered Glass Screen Protector' },
+    { asin: 'PRIVACY', product_name: 'iPhone 16 Pro Privacy Tempered Glass Screen Protector' },
+    { asin: 'WRONG', product_name: 'iPhone 16 Pro Max PET Protective Film Screen Protector' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
   const cases = [
     [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',

@@ -376,9 +376,9 @@ function isSmartWatchBandMismatch(candidate, requested) {
   return false;
 }
 
-function isNegatedPhonePrivacy(text) {
-  const pattern = /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/giu;
-  for (const match of text.matchAll(pattern)) {
+function isNegatedPhoneAttribute(text, pattern) {
+  const flags = [...new Set(`${pattern.flags}g`.split(''))].join('');
+  for (const match of text.matchAll(new RegExp(pattern.source, flags))) {
     const before = text.slice(Math.max(0, match.index - 18), match.index);
     const after = text.slice(match.index + match[0].length, match.index + match[0].length + 14);
     const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without(?:\s+(?:a|an|the))?|不要|不是|不想要)\s*$/iu.test(before);
@@ -390,14 +390,20 @@ function isNegatedPhonePrivacy(text) {
 
 function phoneScreenProtectorConstraints(value) {
   const text = String(value || '').normalize('NFKC');
-  const privacy = /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu.test(text);
-  const rejectPrivacy = privacy && isNegatedPhonePrivacy(text);
+  const privacyPattern = /(?:覗き見防止|のぞき見防止|privacy|anti[- ]?spy|防窥|防窺|사생활\s*보호|프라이버시)/iu;
+  const glassPattern = /(?:強化ガラス|ガラスフィルム|tempered\s*glass|钢化玻璃|鋼化玻璃|강화유리)/iu;
+  const privacy = privacyPattern.test(text);
+  const glass = glassPattern.test(text);
+  const rejectPrivacy = privacy && isNegatedPhoneAttribute(text, privacyPattern);
+  const rejectGlass = glass && isNegatedPhoneAttribute(text, glassPattern);
   return {
     model: phoneCaseDeviceModel(text),
     protector: /(?:保護フィルム|ガラスフィルム|保護膜|screen\s*protector|protective\s*film|钢化膜|鋼化膜|保护膜|保護膜|필름|보호필름)/iu.test(text),
-    glass: /(?:強化ガラス|ガラスフィルム|tempered\s*glass|钢化玻璃|鋼化玻璃|강화유리)/iu.test(text),
+    glass: glass && !rejectGlass,
+    pet: /\bpet\b/iu.test(text),
     privacy: privacy && !rejectPrivacy,
-    rejectPrivacy
+    rejectPrivacy,
+    rejectGlass
   };
 }
 
@@ -408,8 +414,10 @@ function isPhoneScreenProtectorMismatch(candidate, requested) {
   if (!evidence.protector || !evidence.model) return true;
   if (requested.model && evidence.model !== requested.model) return true;
   if (requested.glass && !evidence.glass) return true;
+  if (requested.pet && !evidence.pet) return true;
   if (requested.privacy && !evidence.privacy) return true;
   if (requested.rejectPrivacy && evidence.privacy) return true;
+  if (requested.rejectGlass && evidence.glass) return true;
   return false;
 }
 
