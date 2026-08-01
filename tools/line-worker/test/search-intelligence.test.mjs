@@ -1832,6 +1832,31 @@ test('オフィスチェアは4言語で支持機能・肘掛け・素材・耐�
   }
 });
 
+test('スマートロックは4言語で認証・通信・施錠・非常解錠条件が一致する本体だけを提示する', () => {
+  const queries = [
+    '後付けスマートロック 指紋 暗証番号 Matter オートロック 非常用キー',
+    'retrofit smart lock fingerprint keypad Matter auto-lock emergency key',
+    '后装智能门锁 指纹 密码 Matter 自动上锁 应急钥匙',
+    '설치형 스마트 도어락 지문 비밀번호 Matter 자동 잠금 비상 키',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Retrofit smart lock fingerprint keypad Matter auto-lock emergency key' },
+    { asin: 'NOFINGER', product_name: 'Retrofit smart lock keypad Matter auto-lock emergency key' },
+    { asin: 'NOKEYPAD', product_name: 'Retrofit smart lock fingerprint Matter auto-lock emergency key' },
+    { asin: 'NOMATTER', product_name: 'Retrofit smart lock fingerprint keypad Bluetooth auto-lock emergency key' },
+    { asin: 'NOAUTO', product_name: 'Retrofit smart lock fingerprint keypad Matter emergency key' },
+    { asin: 'NOKEY', product_name: 'Retrofit smart lock fingerprint keypad Matter auto-lock' },
+    { asin: 'DOORBELL', product_name: 'Video doorbell with retrofit smart lock fingerprint keypad Matter auto-lock emergency key' },
+    { asin: 'KEYPAD', product_name: 'Keypad only for retrofit smart lock fingerprint Matter auto-lock emergency key' },
+    { asin: 'BRIDGE', product_name: 'Smart lock bridge for retrofit smart lock fingerprint keypad Matter auto-lock emergency key' },
+    { asin: 'BATTERY', product_name: 'Replacement batteries for retrofit smart lock fingerprint keypad Matter auto-lock emergency key' },
+    { asin: 'CYLINDER', product_name: 'Lock cylinder for retrofit smart lock fingerprint keypad Matter auto-lock emergency key' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

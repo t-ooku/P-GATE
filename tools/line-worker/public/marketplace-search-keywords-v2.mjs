@@ -530,6 +530,18 @@ function buildErgonomicOfficeChairSearchKeywords(query) {
   return ['エルゴノミクスオフィスチェア', 'ヘッドレスト', '腰サポート', `${armrests}D肘掛け`, 'メッシュ', `耐荷重${load}kg`].join(' ');
 }
 
+function buildRetrofitSmartLockSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const lock = /(?:後付けスマートロック|retrofit\s*smart\s*lock|后装智能门锁|後裝智能門鎖|설치형\s*스마트\s*도어락)/iu.test(normalized);
+  const fingerprint = /(?:指紋|fingerprint|指纹|지문)/iu.test(normalized);
+  const keypad = /(?:暗証番号|keypad|密码|密碼|비밀번호)/iu.test(normalized);
+  const matter = /\bMatter\b/iu.test(normalized);
+  const autoLock = /(?:オートロック|auto[\s-]*lock|自动上锁|自動上鎖|자동\s*잠금)/iu.test(normalized);
+  const emergencyKey = /(?:非常用キー|emergency\s*key|应急钥匙|緊急鑰匙|비상\s*키)/iu.test(normalized);
+  if (!lock || !fingerprint || !keypad || !matter || !autoLock || !emergencyKey) return '';
+  return ['後付けスマートロック', '指紋', '暗証番号', 'Matter', 'オートロック', '非常用キー'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1355,6 +1367,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawElectricStandingDesk) return rawElectricStandingDesk;
   const rawErgonomicOfficeChair = buildErgonomicOfficeChairSearchKeywords(rawNormalized);
   if (rawErgonomicOfficeChair) return rawErgonomicOfficeChair;
+  const rawRetrofitSmartLock = buildRetrofitSmartLockSearchKeywords(rawNormalized);
+  if (rawRetrofitSmartLock) return rawRetrofitSmartLock;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

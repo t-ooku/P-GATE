@@ -1277,6 +1277,30 @@ function isErgonomicOfficeChairMismatch(candidate, requested) {
   return false;
 }
 
+function retrofitSmartLockConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    lock: /(?:後付けスマートロック|retrofit\s*smart\s*lock|后装智能门锁|後裝智能門鎖|설치형\s*스마트\s*도어락)/iu.test(text),
+    fingerprint: /(?:指紋|fingerprint|指纹|지문)/iu.test(text),
+    keypad: /(?:暗証番号|keypad|密码|密碼|비밀번호)/iu.test(text),
+    matter: /\bMatter\b/iu.test(text),
+    autoLock: /(?:オートロック|auto[\s-]*lock|自动上锁|自動上鎖|자동\s*잠금)/iu.test(text),
+    emergencyKey: /(?:非常用キー|emergency\s*key|应急钥匙|緊急鑰匙|비상\s*키)/iu.test(text),
+    wrongProduct: /(?:video\s*doorbell|ビデオドアベル|可视门铃|視訊門鈴|비디오\s*도어벨|keypad\s*only|キーパッド単体|密码键盘单品|密碼鍵盤單品|키패드\s*단품|smart\s*lock\s*(?:bridge|hub)|通信ブリッジ|智能锁网关|智慧鎖網關|스마트락\s*브리지|replacement\s*batter(?:y|ies)|交換電池|替换电池|替換電池|교체용\s*배터리|lock\s*cylinder|錠前シリンダー|锁芯|鎖芯|도어락\s*실린더)/iu.test(text)
+  };
+}
+
+function isRetrofitSmartLockMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = retrofitSmartLockConstraints(text);
+  if (!evidence.lock || evidence.wrongProduct) return true;
+  for (const field of ['fingerprint', 'keypad', 'matter', 'autoLock', 'emergencyKey']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2181,6 +2205,11 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(ergonomicOfficeChair.lumbar && ergonomicOfficeChair.armrests
       && ergonomicOfficeChair.mesh && ergonomicOfficeChair.load)
     && !ergonomicOfficeChair.wrongProduct;
+  const retrofitSmartLock = retrofitSmartLockConstraints(normalizedQuery);
+  const retrofitSmartLockIntent = retrofitSmartLock.lock && retrofitSmartLock.fingerprint
+    && Boolean(retrofitSmartLock.keypad && retrofitSmartLock.matter
+      && retrofitSmartLock.autoLock && retrofitSmartLock.emergencyKey)
+    && !retrofitSmartLock.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2194,7 +2223,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
-    && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent) return candidates;
+    && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent
+    && !retrofitSmartLockIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2278,6 +2308,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (compressorDehumidifierIntent) return !isCompressorDehumidifierMismatch(candidate, compressorDehumidifier);
     if (electricStandingDeskIntent) return !isElectricStandingDeskMismatch(candidate, electricStandingDesk);
     if (ergonomicOfficeChairIntent) return !isErgonomicOfficeChairMismatch(candidate, ergonomicOfficeChair);
+    if (retrofitSmartLockIntent) return !isRetrofitSmartLockMismatch(candidate, retrofitSmartLock);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

@@ -626,6 +626,21 @@ test('オフィスチェアは支持機能・肘掛け・素材・耐荷重を4�
   }
 });
 
+test('スマートロックは認証・通信・施錠・非常解錠条件を4言語で保持する', () => {
+  const queries = [
+    '後付けスマートロック 指紋 暗証番号 Matter オートロック 非常用キー',
+    'retrofit smart lock fingerprint keypad Matter auto-lock emergency key',
+    '后装智能门锁 指纹 密码 Matter 自动上锁 应急钥匙',
+    '설치형 스마트 도어락 지문 비밀번호 Matter 자동 잠금 비상 키',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '後付けスマートロック 指紋 暗証番号 Matter オートロック 非常用キー', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [
