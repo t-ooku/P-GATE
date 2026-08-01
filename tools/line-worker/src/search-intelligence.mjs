@@ -29,7 +29,7 @@ const RULES = [
   ['bottle',/(水筒|ボトル|bottle|飲み物.*容器)/iu,['bottle']],
   ['lamp',/(テーブルランプ|卓上.*ライト|table lamp|布.*傘.*ライト)/iu,['lamp','light']],
   ['table-lamp-details',/(?:ガラス|glass|玻璃|유리).{0,16}(?:布.{0,4}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓)|(?:布.{0,4}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓).{0,16}(?:ガラス|glass|玻璃|유리)/iu,['table lamp','glass','fabric shade']],
-  ['towel-warmer',/(タオルウォーマー|温める.*タオル|(?:浴室|お風呂).{0,12}(?:壁|棒|ラック).{0,8}温か|heated towel|towel warmer|(?:warm|heated).{0,12}(?:metal\s+)?bars?.{0,20}bathroom|bathroom.{0,20}(?:warm|heated).{0,12}bars?|浴室.{0,16}(?:加热毛巾架|加熱毛巾架|发热.{0,6}金属杆|發熱.{0,6}金屬桿)|욕실.{0,16}(?:온열\s*수건걸이|따뜻.{0,8}(?:금속\s*)?막대))/iu,['towel','warmer','heated']],
+  ['towel-warmer',/(タオルウォーマー|温める.*タオル|(?:浴室|お風呂).{0,16}(?:タオル.{0,8}温め|温め.{0,8}タオル)|(?:浴室|お風呂).{0,12}(?:壁|棒|ラック).{0,8}温か|heated towel|towel warmer|(?:warm|heated).{0,12}(?:metal\s+)?bars?.{0,20}bathroom|bathroom.{0,20}(?:warm|heated).{0,12}bars?|浴室.{0,16}(?:加热毛巾架|加熱毛巾架|发热.{0,6}金属杆|發熱.{0,6}金屬桿)|욕실.{0,16}(?:온열\s*수건걸이|따뜻.{0,8}(?:금속\s*)?막대))/iu,['towel','warmer','heated']],
   ['shampoo',/(シャンプー|髪.*洗|shampoo|샴푸|洗发(?:水)?|洗髮(?:精)?)/iu,['shampoo','hair wash']],
   ['hair-treatment',/(トリートメント|ヘアマスク|ヘアオイル|洗い流さない|hair treatment|hair mask|hair oil|트리트먼트|헤어팩|헤어 오일|护发|護髮)/iu,['hair treatment','hair mask','hair oil']],
   ['body-powder',/(香り.*粉|いい匂い.{0,8}粉|ボディパウダー|ダスティングパウダー|dusting powder|perfumed powder|(?:nice[- ]smelling|scented|fragrant).{0,8}powder|香味.{0,8}(?:粉|爽身粉)|향기.{0,8}(?:파우더|분말))/iu,['powder','perfumed']],
@@ -39,9 +39,9 @@ const RULES = [
   ['puzzle',/(パズル|puzzle|ピース.*遊)/iu,['puzzle']],
   ['wallet',/(財布|\bwallet\b|ポケット.*薄|钱包|錢包|지갑)/iu,['wallet']],
   ['bicycle-chain',/(?:自転車|バイク).{0,6}チェーン|チェーン.{0,6}(?:自転車|バイク)|bicycle chain|bike chain/iu,['bicycle chain','bike chain']],
-  ['necklace',/(ネックレス|首.{0,8}(?:金色|チェーン)|necklace|项链|項鍊|목걸이)/iu,['necklace','jewelry chain']],
+  ['necklace',/(ネックレス|首.{0,8}(?:金色|チェーン)|フィガロ.{0,8}チェーン|figaro.{0,8}chain|费加罗链|費加羅鍊|피가로.{0,8}체인|necklace|项链|項鍊|목걸이)/iu,['necklace','jewelry chain']],
   ['fitness-ring',/(運動用.*リング|エクササイズリング|stamina ring|輪っか.*運動)/iu,['ring','stamina']],
-  ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|color filters?|camera.{0,24}filters?|lens.{0,24}filters?|filters?.{0,24}(?:camera|lens)|相机.{0,20}滤镜|相機.{0,20}濾鏡|镜头.{0,20}滤镜|鏡頭.{0,20}濾鏡|카메라.{0,24}필터|렌즈.{0,24}필터)/iu,['filter','color']],
+  ['camera-filter',/(カメラ.*フィルター|レンズフィルター|写真.*色.*丸|\d{2,3}\s*mm.{0,24}(?:カラー|色付き|グラデーション).*フィルター|color filters?|camera.{0,24}filters?|lens.{0,24}filters?|filters?.{0,24}(?:camera|lens)|相机.{0,20}滤镜|相機.{0,20}濾鏡|镜头.{0,20}滤镜|鏡頭.{0,20}濾鏡|카메라.{0,24}필터|렌즈.{0,24}필터)/iu,['filter','color']],
   ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer)/iu,['laptop','notebook computer']],
   ['notebook',/(ノート(?!パソコン|PC)|手帳|罫線|notebook(?! computer)|文房具.*四角)/iu,['notebook','ruled']],
   ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기)/iu,['harmonica']],
@@ -51,7 +51,7 @@ const RULES = [
   ['seasonal-pillow',/(?=.*(?:ソファ|sofa|沙发|沙發|소파))(?=.*(?:冬|クリスマス|wint(?:er|ry)|christmas|冬季|圣诞|聖誕|겨울|크리스마스)).*/iu,['christmas','winter','decorative pillow']],
   ['knife',/(ナイフ|刃物|knife|折りたた.*刃|折叠.{0,8}刀|折疊.{0,8}刀|접이식.{0,8}나이프|락백.{0,8}나이프)/iu,['knife','folding']],
   ['organizer',/(収納ケース|整理ボックス|収納.*箱|\borganizer\b|storage container|收纳盒|收納盒|수납함)/iu,['organizer','storage','container']],
-  ['adapter',/(アダプター|変換.*端子|端子.*増やす|adapter|USB-C)/iu,['adapter','usb']],
+  ['adapter',/(アダプター|変換.*端子|端子.*増やす|(?:ノート(?:PC|パソコン)).{0,16}(?:端子|ポート).{0,8}(?:たくさん|複数)|adapter|USB-C)/iu,['adapter','usb']],
   ['bath-light',/(浴室.*照明|洗面所.*鏡.*光|バスライト|bath light)/iu,['bath','light']],
   ['bath-six-light',/(?:6|六)(?:個|灯|燈)?.{0,8}(?:浴室|洗面).{0,8}(?:ライト|照明)|(?:浴室|洗面).{0,12}(?:6|六)(?:個|灯|燈)|(?:6|six)[- ]?light.{0,20}(?:bath|vanity)|(?:bath|vanity).{0,20}(?:6|six)[- ]?light|六灯.{0,12}(?:浴室|盥洗)|(?:浴室|盥洗).{0,12}六灯|6등.{0,20}(?:욕실|세면)|(?:욕실|세면).{0,24}6등/iu,['6-light','six light','vanity light']],
   ['humidifier',/(加湿器|humidifier)/iu,['humidifier']],
@@ -165,7 +165,7 @@ export function semanticSearchGroups(value) {
   if (
     groups.some((group) => group.category === 'adapter')
     && groups.some((group) => group.category === 'laptop')
-    && /(?:for\s+(?:a\s+)?laptop|laptop\s+(?:adapter|hub)|笔记本电脑用|筆記型電腦用|노트북(?:에|용))/iu.test(text)
+    && /(?:for\s+(?:a\s+)?laptop|laptop\s+(?:adapter|hub)|ノート(?:PC|パソコン).{0,16}(?:端子|ポート)|笔记本电脑用|筆記型電腦用|노트북(?:에|용))/iu.test(text)
   ) {
     groups = groups.filter((group) => group.category !== 'laptop');
   }
@@ -197,8 +197,8 @@ export function semanticSearchGroups(value) {
     groups.unshift({ category: 'kitchen-appliance', terms: ['blender','mixer','toaster','kettle','coffee','juicer','chopper','cooktop','oven','grill','waffle','processor','cooker','fryer'] });
   }
   const specificIntent = groups.some((group) => [
-    'steam-engine-model','dual-charger','ptz-network-camera','bath-six-light'
-  ].includes(group.category)) || /口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
+    'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light'
+  ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES.filter(([pattern]) => pattern.test(text)).flatMap(([, terms]) => terms);
   if (colors.length) groups.push({ category: 'color', terms: [...new Set(colors)] });
   return groups;

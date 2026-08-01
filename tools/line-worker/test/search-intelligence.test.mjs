@@ -51,6 +51,30 @@ test('multilingual descriptive queries map to stable product-category terms', ()
   );
 });
 
+test('日本語の語順と複合語から商品カテゴリを補い不要な色制約を外す', () => {
+  const screwdriver = intelligentFtsQuery('黄色と黒の持ち手で長い軸のマイナスドライバー');
+  assert.match(screwdriver, /\"screwdriver\"\*/);
+  assert.doesNotMatch(screwdriver, /\"(?:black|yellow)\"\*/);
+
+  const warmer = intelligentFtsQuery('浴室でタオルを掛けて温める銀色のラック');
+  assert.match(warmer, /\"warmer\"\*/);
+  assert.doesNotMatch(warmer, /\"silver\"\*/);
+
+  assert.match(
+    intelligentFtsQuery('金色で太め、フィガロ型の長いチェーン'),
+    /\"necklace\"\*/,
+  );
+  const cameraFilter = intelligentFtsQuery(
+    'Vivitar 52mm、赤・黄・青・オレンジ・グレー・紫の回転グラデーションカラーフィルター6点セット',
+  );
+  assert.match(cameraFilter, /\"filter\"\*/);
+  assert.doesNotMatch(cameraFilter, /\"(?:blue|aqua|gray)\"\*/);
+
+  const adapter = intelligentFtsQuery('ノートPCにつなぐ端子がたくさんあるやつ');
+  assert.match(adapter, /\"adapter\"\*/);
+  assert.doesNotMatch(adapter, /\"laptop\"\*/);
+});
+
 test('Japanese memory fragments expand into category and color FTS groups', () => {
   const query = intelligentFtsQuery('茶色い革ベルトと金属ケースの男性用腕時計');
   assert.match(query, /"watch"\*/);
