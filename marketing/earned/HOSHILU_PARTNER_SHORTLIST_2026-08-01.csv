@@ -1,0 +1,9 @@
+Priority,Candidate,Type,Audience fit,Proposal,Cost hypothesis,Evidence,Gate,Status
+P0,FIND FUN,ITG-owned retailer,High,商品詳細または同梱カードから特徴検索へ案内,Internal coordination plus printing,Repository ITG store assets,Store owner approval,READY_FOR_APPROVAL
+P0,TOMORROW'S SMILE,ITG-owned retailer,High,商品詳細または同梱カードから特徴検索へ案内,Internal coordination plus printing,Repository ITG store assets,Store owner approval,READY_FOR_APPROVAL
+P0,WITH CARE,ITG-owned retailer,High,商品詳細または同梱カードから特徴検索へ案内,Internal coordination plus printing,Repository ITG store assets,Store owner approval,READY_FOR_APPROVAL
+P1,Tokyo Cheapo,Japan travel and resident media,Medium,Name-unknown shopping guide or clearly labeled native placement,Custom paid proposal; quote required,https://media.tokyocheapo.com/,Sales contact and price approval,READY_FOR_APPROVAL
+P1,Jobs in Japan / How to Japan,International resident media,Medium-low,Editorial usefulness test for daily-life product search; do not buy job listings,Custom banner or editorial; quote required,https://jobsinjapan.com/about-us/,Editorial or advertising contact approval,READY_FOR_APPROVAL
+P1,Microsoft Edge Add-ons,Browser marketplace,High for extension discovery,Submit Chromium-compatible HOSHILU extension,No developer registration fee per current official documentation,https://learn.microsoft.com/en-us/microsoft-edge/extensions-chromium/publish/create-dev-account,Developer account and review submission approval,READY_FOR_APPROVAL
+P1,Chrome Web Store,Browser marketplace,High for extension discovery,Submit prepared HOSHILU extension listing,Registration or listing cost must be checked at submission,https://developer.chrome.com/docs/webstore/publish,Developer account and review submission approval,READY_FOR_APPROVAL
+P2,Authorized retail events,Offline community,High when shopping-focused,A6 QR card at staffed booth,Printing and venue fee quote required,Venue-specific written permission required,Venue and budget approval,RESEARCH_PER_VENUE

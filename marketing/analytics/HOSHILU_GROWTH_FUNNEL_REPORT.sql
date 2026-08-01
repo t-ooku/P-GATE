@@ -57,3 +57,26 @@ WHERE occurred_at >= '2026-08-01T00:00:00Z'
   AND traffic_class = 'QA'
 GROUP BY event_date_utc, source, medium, campaign, event_type
 ORDER BY event_date_utc DESC, source, campaign, event_type;
+
+-- A/Bテストは露出を分母にし、非QAだけをバリアント別に比較する。
+SELECT
+  experiment,
+  variant,
+  SUM(CASE WHEN event_type = 'experiment_exposure' THEN 1 ELSE 0 END) AS exposures,
+  SUM(CASE WHEN event_type = 'search_started' THEN 1 ELSE 0 END) AS searches_started,
+  SUM(CASE WHEN event_type = 'search_completed' THEN 1 ELSE 0 END) AS searches_completed,
+  SUM(CASE WHEN event_type = 'registration_completed' THEN 1 ELSE 0 END) AS registrations_completed,
+  SUM(CASE WHEN event_type = 'marketplace_click' THEN 1 ELSE 0 END) AS marketplace_clicks,
+  ROUND(
+    100.0 * SUM(CASE WHEN event_type = 'search_started' THEN 1 ELSE 0 END)
+    / NULLIF(SUM(CASE WHEN event_type = 'experiment_exposure' THEN 1 ELSE 0 END), 0),
+    2
+  ) AS exposure_to_search_pct
+FROM growth_events
+WHERE occurred_at >= '2026-08-01T00:00:00Z'
+  AND occurred_at <  '2026-09-01T00:00:00Z'
+  AND traffic_class <> 'QA'
+  AND experiment <> ''
+  AND variant <> ''
+GROUP BY experiment, variant
+ORDER BY experiment, variant;

@@ -11,6 +11,7 @@ test('SNS外ファネルSQLはQAを実績から分離して率を計算する', 
   db.exec(read('migrations/0004_unmet_demand_events.sql'));
   db.exec(read('migrations/0012_growth_events.sql'));
   db.exec(read('migrations/0013_growth_event_traffic_class.sql'));
+  db.exec(read('migrations/0024_growth_experiments.sql'));
   const insert = db.prepare(`INSERT INTO growth_events
     (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
     VALUES(?,?,?,?,?,?,?,?,?,?)`);
@@ -25,6 +26,10 @@ test('SNS外ファネルSQLはQAを実績から分離して率を計算する', 
   add('registration', 'registration_completed');
   add('marketplace', 'marketplace_click');
   add('qa-landing', 'landing_view', 'QA');
+  add('exposure', 'experiment_exposure');
+  db.exec(`UPDATE growth_events
+    SET experiment='lp_search_cta_v1', variant='benefit'
+    WHERE traffic_class <> 'QA'`);
 
   const statements = read('../../marketing/analytics/HOSHILU_GROWTH_FUNNEL_REPORT.sql')
     .split(';').map((value) => value.trim()).filter(Boolean);
@@ -38,4 +43,11 @@ test('SNS外ファネルSQLはQAを実績から分離して率を計算する', 
   const qaRows = db.prepare(statements[1]).all();
   assert.equal(qaRows.length, 1);
   assert.equal(qaRows[0].qa_events, 1);
+
+  const experimentRows = db.prepare(statements[2]).all();
+  assert.equal(experimentRows.length, 1);
+  assert.equal(experimentRows[0].experiment, 'lp_search_cta_v1');
+  assert.equal(experimentRows[0].variant, 'benefit');
+  assert.equal(experimentRows[0].exposures, 1);
+  assert.equal(experimentRows[0].exposure_to_search_pct, 100);
 });

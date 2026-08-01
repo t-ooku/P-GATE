@@ -1,5 +1,6 @@
 const EVENTS = new Set([
   'landing_view',
+  'experiment_exposure',
   'search_started',
   'search_completed',
   'registration_started',
@@ -45,6 +46,8 @@ export function normalizeGrowthEvent(input = {}) {
     medium: clean(input.medium),
     campaign: clean(input.campaign),
     content: clean(input.content),
+    experiment: clean(input.experiment),
+    variant: clean(input.variant),
     marketplace: MARKETPLACES.has(marketplace) ? marketplace : ''
   };
 }
@@ -62,11 +65,12 @@ export async function handleGrowthEvent(request, env) {
   const trafficClass = classifyGrowthTraffic(event);
   await env.PRODUCT_DB.prepare(
     `INSERT INTO growth_events
-    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
-    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,experiment,variant)
+    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
   ).bind(
     crypto.randomUUID(), event.event_type, event.locale, event.source, event.medium,
-    event.campaign, event.content, event.marketplace, new Date().toISOString(), trafficClass
+    event.campaign, event.content, event.marketplace, new Date().toISOString(), trafficClass,
+    event.experiment, event.variant
   ).run();
   return Response.json({ ok: true }, {
     status: 202,

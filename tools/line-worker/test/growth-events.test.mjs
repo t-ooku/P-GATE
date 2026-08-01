@@ -10,6 +10,8 @@ test('accepts only anonymous allowlisted growth dimensions', () => {
     medium: 'organic_social',
     campaign: 'ambiguous search',
     content: 'reel_01',
+    experiment: 'lp_search_cta_v1',
+    variant: 'benefit',
     marketplace: 'qoo10_jp',
     query: 'must not be stored'
   }), {
@@ -19,6 +21,8 @@ test('accepts only anonymous allowlisted growth dimensions', () => {
     medium: 'organic_social',
     campaign: 'ambiguoussearch',
     content: 'reel_01',
+    experiment: 'lp_search_cta_v1',
+    variant: 'benefit',
     marketplace: 'QOO10_JP'
   });
 });
@@ -32,6 +36,14 @@ test('accepts acquisition funnel events without personal data', () => {
   for (const event_type of ['registration_started', 'registration_completed', 'return_visit', 'pwa_install_prompted', 'pwa_install_completed']) {
     assert.equal(normalizeGrowthEvent({ event_type, content: 'email' }).event_type, event_type);
   }
+});
+
+test('accepts anonymous experiment exposure dimensions', () => {
+  const event = normalizeGrowthEvent({
+    event_type: 'experiment_exposure', experiment: 'lp_search_cta_v1', variant: 'benefit'
+  });
+  assert.equal(event.experiment, 'lp_search_cta_v1');
+  assert.equal(event.variant, 'benefit');
 });
 
 test('separates QA, attributed, and unattributed growth traffic', () => {

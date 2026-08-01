@@ -20,7 +20,8 @@ if (hasFreshAttribution) {
 window.HoshiluGrowthAttribution = Object.freeze({ ...attribution });
 const locale = () => String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
 const send = (event_type, extra = {}) => {
-  const body = JSON.stringify({ event_type, locale: locale(), ...attribution, ...extra });
+  const experiment = window.HoshiluGrowthExperiment || {};
+  const body = JSON.stringify({ event_type, locale: locale(), ...attribution, ...experiment, ...extra });
   if (navigator.sendBeacon) {
     navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' }));
     return;
