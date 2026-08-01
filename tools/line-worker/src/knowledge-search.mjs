@@ -440,6 +440,37 @@ function isDysonVacuumAccessoryMismatch(candidate, requested, query) {
   return false;
 }
 
+function airPurifierIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const sharp = value.match(/\bkc[- ]?([a-z]\d{2,3})\b/u);
+  if (sharp) return `sharp-kc-${sharp[1]}`;
+  const levoit = value.match(/\bcore\s*(\d{3}[a-z]?)\b/u);
+  if (levoit) return `levoit-core-${levoit[1]}`;
+  const samsung = value.match(/\b(ax\d{2}[a-z0-9]{4,})\b/u);
+  if (samsung) return `samsung-${samsung[1]}`;
+  const xiaomi = value.match(/(?:xiaomi|小米).{0,20}(?:air\s*purifier|空气净化器|空氣淨化器)?\s*(4\s*(?:lite|pro)?)/u);
+  return xiaomi ? `xiaomi-air-purifier-${xiaomi[1].replace(/\s+/gu, '-')}` : '';
+}
+
+function airPurifierPartNumber(text) {
+  return String(text || '').normalize('NFKC').toLowerCase().match(/\b(fz-[a-z0-9]{4,})\b/u)?.[1] || '';
+}
+
+function isAirPurifierFilterMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedIdentity = airPurifierIdentity(query);
+  if (requestedIdentity && airPurifierIdentity(text) !== requestedIdentity) return true;
+  const requestedPart = airPurifierPartNumber(query);
+  if (requestedPart && airPurifierPartNumber(text) !== requestedPart) return true;
+  if (/(?:本体|air\s*purifier\s*(?:unit|machine)|整机|整機|본체)/iu.test(text)) return true;
+  if (!/(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터)/iu.test(text)) return true;
+  if (/(?:集じん|集塵|dust\s*collection)/iu.test(query) && !/(?:集じん|集塵|dust\s*collection)/iu.test(text)) return true;
+  if (/(?:脱臭|deodori[sz]ing|活性炭|탈취)/iu.test(query) && !/(?:脱臭|deodori[sz]ing|活性炭|탈취)/iu.test(text)) return true;
+  if (/(?:hepa|ヘパ|헤파)/iu.test(query) && !/(?:hepa|ヘパ|헤파)/iu.test(text)) return true;
+  return false;
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -562,6 +593,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     .some((category) => requested.has(category));
   const dysonVacuumAccessory = ['cordless-vacuum-filter', 'cordless-vacuum-battery', 'cordless-vacuum-charger']
     .some((category) => requested.has(category));
+  const airPurifierFilter = requested.has('air-purifier-filter');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -596,6 +628,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     })) return false;
     if (robotVacuumConsumable && isRobotVacuumConsumableMismatch(candidate, requested, query)) return false;
     if (dysonVacuumAccessory) return !isDysonVacuumAccessoryMismatch(candidate, requested, query);
+    if (airPurifierFilter) return !isAirPurifierFilterMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

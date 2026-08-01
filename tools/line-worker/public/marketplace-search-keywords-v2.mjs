@@ -135,6 +135,34 @@ function buildDysonVacuumAccessorySearchKeywords(query) {
     .filter(Boolean).join(' ');
 }
 
+function airPurifierIdentity(query) {
+  const value = String(query || '').normalize('NFKC');
+  const sharp = value.match(/\bKC[- ]?([A-Z]\d{2,3})\b/iu);
+  if (sharp) return `Sharp KC-${sharp[1].toUpperCase()}`;
+  const levoit = value.match(/\bcore\s*(\d{3}[a-z]?)\b/iu);
+  if (levoit) return `Levoit Core ${levoit[1].toUpperCase()}`;
+  const samsung = value.match(/\b(AX\d{2}[A-Z0-9]{4,})\b/iu);
+  if (samsung) return `Samsung ${samsung[1].toUpperCase()}`;
+  const xiaomi = value.match(/(?:xiaomi|小米).{0,20}(?:air\s*purifier|空气净化器|空氣淨化器)?\s*(4\s*(?:lite|pro)?)/iu);
+  if (xiaomi) return `Xiaomi Air Purifier ${xiaomi[1].replace(/\s+/gu, ' ').replace(/lite/iu, 'Lite').replace(/pro/iu, 'Pro').trim()}`;
+  return '';
+}
+
+function buildAirPurifierFilterSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const purifier = /(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성)/iu.test(normalized);
+  const filter = /(?:フィルター|filter|滤芯|濾芯|滤网|濾網|필터)/iu.test(normalized);
+  if (!(purifier && filter)) return '';
+  const identity = airPurifierIdentity(normalized);
+  if (!identity) return '';
+  const type = /(?:集じん|集塵|dust\s*collection)/iu.test(normalized) ? '交換集じんフィルター'
+    : /(?:脱臭|deodori[sz]ing|活性炭|탈취)/iu.test(normalized) ? '交換脱臭フィルター'
+    : /(?:hepa|ヘパ|헤파)/iu.test(normalized) ? '交換HEPAフィルター'
+    : '交換フィルター';
+  const partNumber = normalized.match(/\b(FZ-[A-Z0-9]{4,})\b/iu)?.[1]?.toUpperCase() || '';
+  return [identity, type, partNumber].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -436,6 +464,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (portHub) return portHub;
   const dysonVacuumAccessory = buildDysonVacuumAccessorySearchKeywords(normalized);
   if (dysonVacuumAccessory) return dysonVacuumAccessory;
+  const airPurifierFilter = buildAirPurifierFilterSearchKeywords(normalized);
+  if (airPurifierFilter) return airPurifierFilter;
   const robotVacuumConsumable = buildRobotVacuumConsumableSearchKeywords(normalized);
   if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);

@@ -1687,3 +1687,25 @@ test('Dyson交換品は種類・V型番・バッテリー容量が一致する�
     ['CHARGER']
   );
 });
+
+test('空気清浄機フィルターは本体・別型番・別種別・別交換品番を除外する', () => {
+  const candidates = [
+    { asin: 'SHARP_FILTER', product_name: 'Sharp KC-R50対応 交換用 集じんフィルター FZ-D50HF' },
+    { asin: 'SHARP_BODY', product_name: 'Sharp KC-R50 空気清浄機 本体 HEPA搭載' },
+    { asin: 'SHARP_DEODOR', product_name: 'Sharp KC-R50対応 交換用 脱臭フィルター FZ-D50DF' },
+    { asin: 'SHARP_WRONG', product_name: 'Sharp KC-S50対応 交換用 集じんフィルター FZ-D50HF' },
+    { asin: 'LEVOIT', product_name: 'Levoit Core 300 Replacement True HEPA Filter' },
+    { asin: 'XIAOMI', product_name: 'Xiaomi Air Purifier 4 Lite 交換フィルター' },
+    { asin: 'SAMSUNG', product_name: 'Samsung AX60R5080WD 교체 HEPA 필터' },
+  ];
+  const cases = [
+    ['シャープ KC-R50用 集じんフィルター FZ-D50HF', ['SHARP_FILTER']],
+    ['replacement HEPA filter for Levoit Core 300', ['LEVOIT']],
+    ['适用于小米空气净化器4 Lite的替换滤芯', ['XIAOMI']],
+    ['삼성 AX60R5080WD 교체 헤파 필터', ['SAMSUNG']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['air-purifier-filter'], query);
+  }
+});

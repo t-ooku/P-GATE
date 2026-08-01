@@ -77,6 +77,20 @@ test('Dyson掃除機のフィルター・バッテリー・充電器を4言語�
   }
 });
 
+test('空気清浄機の交換フィルターを4ブランド・4言語で本体から分離する', () => {
+  const cases = [
+    ['シャープ KC-R50用 集じんフィルター FZ-D50HF', 'Sharp KC-R50 交換集じんフィルター FZ-D50HF'],
+    ['replacement HEPA filter for Levoit Core 300', 'Levoit Core 300 交換HEPAフィルター'],
+    ['适用于小米空气净化器4 Lite的替换滤芯', 'Xiaomi Air Purifier 4 Lite 交換フィルター'],
+    ['삼성 AX60R5080WD 교체 헤파 필터', 'Samsung AX60R5080WD 交換HEPAフィルター'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);
