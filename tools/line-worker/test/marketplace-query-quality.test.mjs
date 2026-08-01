@@ -306,6 +306,10 @@ test('空気清浄機本体は適用面積・HEPA等級・CADR・センサーを
     'air purifier for 50m² with HEPA H13 CADR 400m³/h PM2.5 sensor and Wi-Fi',
     '50㎡ HEPA H13 CADR 400m³/h PM2.5传感器 Wi-Fi 空气净化器',
     '50㎡ HEPA H13 CADR 400m³/h PM2.5 센서 Wi-Fi 공기청정기',
+    '花粉とPM2.5を減らして部屋の空気をきれいにしたい 50㎡ HEPA H13 CADR 400m³/h PM2.5センサー Wi-Fi',
+    'clean pollen and PM2.5 from the room air 50m² HEPA H13 CADR 400m³/h PM2.5 sensor Wi-Fi',
+    '想过滤房间里的花粉和PM2.5 50㎡ HEPA H13 CADR 400m³/h PM2.5传感器 Wi-Fi',
+    '방 안의 꽃가루와 PM2.5를 걸러내고 싶어 50㎡ HEPA H13 CADR 400m³/h PM2.5 센서 Wi-Fi',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {

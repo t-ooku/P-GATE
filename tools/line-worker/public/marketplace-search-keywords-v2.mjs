@@ -250,7 +250,8 @@ function buildRobotVacuumBodySearchKeywords(query) {
 }
 
 function buildAirPurifierBodySearchKeywords(query) {
-  if (!/(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기)/iu.test(query)) return '';
+  const airPurifierIntent = /(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|(?:花粉|pm\s*2\.5).{0,24}(?:減ら|除去|取り除).{0,24}(?:部屋|室内).{0,12}空気.{0,12}(?:きれい|清浄)|(?:clean|remove|filter).{0,20}(?:pollen|pm\s*2\.5).{0,30}(?:room|indoor)\s*air|(?:过滤|過濾|去除).{0,24}(?:(?:花粉|pm\s*2\.5).{0,24}(?:房间|房間|室内|室內).{0,8}(?:空气|空氣)|(?:房间|房間|室内|室內).{0,16}(?:花粉|pm\s*2\.5))|(?:방\s*안|실내).{0,24}(?:꽃가루|pm\s*2\.5).{0,20}(?:걸러|제거))/iu;
+  if (!airPurifierIntent.test(query)) return '';
   if (/(?:交換|replacement|替换|替換|교체).{0,16}(?:フィルター|filter|滤芯|濾芯|필터)/iu.test(query)) return '';
   const area = String(query || '').match(/\b(\d{2,3})\s*(?:m(?:2|²)|㎡|平方メートル|平方米|平方公尺|평방미터)/iu)?.[1];
   const hepa = String(query || '').match(/\bhepa\s*h?\s*(1[1-4])\b/iu)?.[1];
