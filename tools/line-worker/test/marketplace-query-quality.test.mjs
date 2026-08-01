@@ -60,6 +60,23 @@ test('ロボット掃除機の複数交換パーツセットを4言語で単品�
   }
 });
 
+test('Dyson掃除機のフィルター・バッテリー・充電器を4言語で本体から分離する', () => {
+  const cases = [
+    ['Dyson V15用 交換HEPAフィルター 2個セット', 'Dyson V15 交換HEPAフィルター 2個セット'],
+    ['replacement HEPA filters for Dyson V15 2 pack', 'Dyson V15 交換HEPAフィルター 2個セット'],
+    ['戴森V15替换HEPA滤网2件套', 'Dyson V15 交換HEPAフィルター 2個セット'],
+    ['다이슨 V15용 교체 HEPA 필터 2개 세트', 'Dyson V15 交換HEPAフィルター 2個セット'],
+    ['replacement battery for Dyson V11 5000mAh', 'Dyson V11 交換バッテリー 5000mAh'],
+    ['다이슨 V10용 교체 배터리 4000mAh', 'Dyson V10 交換バッテリー 4000mAh'],
+    ['Dyson V12 充電器', 'Dyson V12 充電器'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);

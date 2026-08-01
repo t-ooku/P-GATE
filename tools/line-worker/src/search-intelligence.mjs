@@ -48,6 +48,10 @@ const RULES = [
   ['robot-vacuum-brush',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,30}(?:ブラシ|brush(?:es)?|刷子|브러시)|(?:ブラシ|brush(?:es)?|刷子|브러시).{0,30}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum side brush','roomba replacement brush']],
   ['robot-vacuum-bag',/(?:(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바).{0,30}(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)|(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백).{0,30}(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바))/iu,['robot vacuum dust bag','roomba replacement bag']],
   ['robot-vacuum',/(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu,['robot vacuum','roomba']],
+  ['cordless-vacuum-filter',/(?:(?:dyson|ダイソン|戴森|다이슨).{0,30}(?:フィルター|filters?|滤网|濾網|필터)|(?:フィルター|filters?|滤网|濾網|필터).{0,30}(?:dyson|ダイソン|戴森|다이슨))/iu,['dyson replacement hepa filter','cordless vacuum filter']],
+  ['cordless-vacuum-battery',/(?:(?:dyson|ダイソン|戴森|다이슨).{0,30}(?:バッテリー|battery|电池|電池|배터리)|(?:バッテリー|battery|电池|電池|배터리).{0,30}(?:dyson|ダイソン|戴森|다이슨))/iu,['dyson replacement battery','cordless vacuum battery']],
+  ['cordless-vacuum-charger',/(?:(?:dyson|ダイソン|戴森|다이슨).{0,30}(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|충전기)|(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|충전기).{0,30}(?:dyson|ダイソン|戴森|다이슨))/iu,['dyson vacuum charger','charging adapter']],
+  ['cordless-vacuum',/(?:dyson|ダイソン|戴森|다이슨).{0,20}(?:コードレス(?:掃除機)?|vacuum|吸尘器|吸塵器|무선\s*청소기)/iu,['dyson cordless vacuum','vacuum cleaner']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
@@ -282,6 +286,9 @@ export function semanticSearchGroups(value) {
   }
   if (specificCategories.has('robot-vacuum-parts-kit')) {
     groups = groups.filter((group) => !['robot-vacuum-filter','robot-vacuum-brush','robot-vacuum-bag'].includes(group.category));
+  }
+  if ([...specificCategories].some((category) => category.startsWith('cordless-vacuum-'))) {
+    groups = groups.filter((group) => !['cordless-vacuum','charger'].includes(group.category));
   }
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');

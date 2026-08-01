@@ -111,6 +111,30 @@ function robotVacuumModel(query) {
   return match ? `Roomba ${match[1].toLowerCase()}` : '';
 }
 
+function dysonVacuumModel(query) {
+  const match = String(query || '').normalize('NFKC').match(/\bv\s*(8|10|11|12|15)\b/iu);
+  return match ? `Dyson V${match[1]}` : '';
+}
+
+function buildDysonVacuumAccessorySearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:dyson|ダイソン|戴森|다이슨)/iu.test(normalized)) return '';
+  let product = '';
+  if (/(?:交換|替え|replacement|替换|替換|교체)?\s*(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(normalized)) {
+    product = '交換HEPAフィルター';
+  } else if (/(?:交換|替え|replacement|替换|替換|교체)?\s*(?:バッテリー|battery|电池|電池|배터리)/iu.test(normalized)) {
+    product = '交換バッテリー';
+  } else if (/(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|충전기)/iu.test(normalized)) {
+    product = '充電器';
+  }
+  if (!product) return '';
+  const model = dysonVacuumModel(normalized);
+  const capacity = normalized.match(/(\d{3,5})\s*mah/iu)?.[1];
+  const count = normalized.match(/(\d+)\s*(?:個|枚|本|セット|個セット|pack|packs|pcs|pieces|件套|个装|個裝|개|매|세트)/iu)?.[1];
+  return [model || 'Dyson コードレス掃除機', product, capacity ? `${capacity}mAh` : '', count ? `${count}個セット` : '']
+    .filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -410,6 +434,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);
   if (portHub) return portHub;
+  const dysonVacuumAccessory = buildDysonVacuumAccessorySearchKeywords(normalized);
+  if (dysonVacuumAccessory) return dysonVacuumAccessory;
   const robotVacuumConsumable = buildRobotVacuumConsumableSearchKeywords(normalized);
   if (robotVacuumConsumable) return robotVacuumConsumable;
   const applePencil = buildApplePencilSearchKeywords(normalized);

@@ -413,6 +413,33 @@ function robotVacuumModel(text) {
     .match(/\b(?:roomba\s*)?([jis]\d{1,2}(?:\+)?)(?![a-z0-9])/iu)?.[1] || '';
 }
 
+function dysonVacuumModel(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/\bv\s*(8|10|11|12|15)\b/iu)?.[1] || '';
+}
+
+function batteryCapacityMah(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d{3,5})\s*mah/iu)?.[1] || 0);
+}
+
+function isDysonVacuumAccessoryMismatch(candidate, requested, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (!/(?:dyson|ダイソン|戴森|다이슨)/iu.test(text)) return true;
+  const requestedModel = dysonVacuumModel(query);
+  if (requestedModel && dysonVacuumModel(text) !== requestedModel) return true;
+  const filter = /(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(text);
+  const battery = /(?:バッテリー|battery|电池|電池|배터리)/iu.test(text);
+  const charger = /(?:充電器|充電アダプター|charger|charging\s*adapter|充电器|充電器|충전기)/iu.test(text);
+  if (requested.has('cordless-vacuum-filter')) return !filter || battery || charger;
+  if (requested.has('cordless-vacuum-battery')) {
+    const minimumCapacity = batteryCapacityMah(query);
+    return !battery || charger || (minimumCapacity > 0 && batteryCapacityMah(text) < minimumCapacity);
+  }
+  if (requested.has('cordless-vacuum-charger')) return !charger || battery;
+  return false;
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -533,6 +560,8 @@ export function filterCategoryMismatches(query, candidates = []) {
   const usb4Dock = requested.has('usb4-dock');
   const robotVacuumConsumable = ['robot-vacuum-parts-kit', 'robot-vacuum-filter', 'robot-vacuum-brush', 'robot-vacuum-bag']
     .some((category) => requested.has(category));
+  const dysonVacuumAccessory = ['cordless-vacuum-filter', 'cordless-vacuum-battery', 'cordless-vacuum-charger']
+    .some((category) => requested.has(category));
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -566,6 +595,7 @@ export function filterCategoryMismatches(query, candidates = []) {
       platform: requestedComputerPlatform(query)
     })) return false;
     if (robotVacuumConsumable && isRobotVacuumConsumableMismatch(candidate, requested, query)) return false;
+    if (dysonVacuumAccessory) return !isDysonVacuumAccessoryMismatch(candidate, requested, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

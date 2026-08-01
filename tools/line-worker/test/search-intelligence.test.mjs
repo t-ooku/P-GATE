@@ -1658,3 +1658,32 @@ test('ロボット掃除機の交換パーツセットは指定部品が揃う�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['robot-vacuum-parts-kit'], query);
   }
 });
+
+test('Dyson交換品は種類・V型番・バッテリー容量が一致する候補だけを表示する', () => {
+  const candidates = [
+    { asin: 'FILTER', product_name: 'Dyson V15 交換用 HEPAフィルター 2個セット' },
+    { asin: 'BATTERY', product_name: 'Dyson V11 交換バッテリー 5000mAh' },
+    { asin: 'LOW_BATTERY', product_name: 'Dyson V11 交換バッテリー 3000mAh' },
+    { asin: 'CHARGER', product_name: 'Dyson V11 充電器 ACアダプター' },
+    { asin: 'BODY', product_name: 'Dyson V15 Detect コードレス掃除機 本体' },
+    { asin: 'WRONG_MODEL', product_name: 'Dyson V10 交換用 HEPAフィルター 2個セット' },
+  ];
+  const filterQueries = [
+    'Dyson V15用 交換HEPAフィルター 2個セット',
+    'replacement HEPA filters for Dyson V15 2 pack',
+    '戴森V15替换HEPA滤网2件套',
+    '다이슨 V15용 교체 HEPA 필터 2개 세트',
+  ];
+  for (const query of filterQueries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['FILTER'], query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['cordless-vacuum-filter'], query);
+  }
+  assert.deepEqual(
+    filterCategoryMismatches('replacement battery for Dyson V11 5000mAh', candidates).map((item) => item.asin),
+    ['BATTERY']
+  );
+  assert.deepEqual(
+    filterCategoryMismatches('Dyson V11 充電器', candidates).map((item) => item.asin),
+    ['CHARGER']
+  );
+});
