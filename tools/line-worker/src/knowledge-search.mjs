@@ -332,6 +332,8 @@ function isPowerBankMismatch(candidate, query) {
   const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(String(query || ''));
   if (builtIn && !/(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(text)) return true;
   if (builtIn && /(?:usb[- ]?c|type[- ]?c)/iu.test(String(query || '')) && !/(?:usb[- ]?c|type[- ]?c)/iu.test(text)) return true;
+  if (/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(String(query || ''))
+    && !/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text)) return true;
   return false;
 }
 

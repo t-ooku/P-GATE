@@ -532,7 +532,8 @@ function buildPowerBankSearchKeywords(query) {
   const connector = /(?:usb[- ]?c|type[- ]?c)/iu.test(normalized) ? 'USB-C'
     : /(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu.test(normalized) ? 'Lightning' : '';
   const cable = builtIn ? `${connector ? `${connector}` : ''}ケーブル内蔵` : '';
-  return [capacity ? `${capacity}mAh` : '', 'モバイルバッテリー', cable].filter(Boolean).join(' ');
+  const magnetic = /(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(normalized) ? 'MagSafe対応' : '';
+  return [capacity ? `${capacity}mAh` : '', 'モバイルバッテリー', cable, magnetic].filter(Boolean).join(' ');
 }
 
 export function buildDeviceAccessorySearchKeywords(query) {

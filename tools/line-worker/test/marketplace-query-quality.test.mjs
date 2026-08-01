@@ -58,6 +58,21 @@ test('モバイルバッテリーの容量と内蔵ケーブルを4言語で保�
   }
 });
 
+test('磁気吸着モバイルバッテリーを4言語でMagSafe商品語へ統一する', () => {
+  const queries = [
+    'iPhone用MagSafe対応5000mAhモバイルバッテリー',
+    '5000mAh magnetic MagSafe power bank for iPhone',
+    '苹果手机用5000mAh磁吸充电宝',
+    '아이폰용 맥세이프 자석 5000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '5000mAh モバイルバッテリー MagSafe対応', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('ロボット掃除機の交換部品を4言語で本体から分離し型番と個数を保つ', () => {
   const cases = [
     ['ルンバ j7用 交換フィルター 3個セット', 'Roomba j7 交換フィルター 3個セット'],

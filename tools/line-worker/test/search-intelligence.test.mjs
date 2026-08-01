@@ -953,6 +953,25 @@ test('モバイルバッテリーは容量と内蔵端子が一致する候補�
   }
 });
 
+test('MagSafeモバイルバッテリーは磁気吸着と容量が一致する候補だけを提示する', () => {
+  const queries = [
+    'iPhone用MagSafe対応5000mAhモバイルバッテリー',
+    '5000mAh magnetic MagSafe power bank for iPhone',
+    '苹果手机用5000mAh磁吸充电宝',
+    '아이폰용 맥세이프 자석 5000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'MAG5000', product_name: 'MagSafe Magnetic Power Bank 5000mAh' },
+    { asin: 'PLAIN5000', product_name: 'Power Bank 5000mAh USB-C' },
+    { asin: 'MAG10000', product_name: 'MagSafe Magnetic Power Bank 10000mAh' },
+    { asin: 'PAD5000', product_name: 'MagSafe Wireless Charging Pad 5000mAh Compatible' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MAG5000'], query);
+  }
+});
+
 test('タブレット専用アクセサリーは4言語で汎用品や別端末向け商品を除外する', () => {
   const cases = [
     ['タブレット用Bluetoothキーボード', 'KEYBOARD'],
