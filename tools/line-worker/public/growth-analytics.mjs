@@ -32,7 +32,8 @@ const send = (event_type, extra = {}) => {
 };
 window.HoshiluTrackGrowth = send;
 
-send('landing_view');
+const landingContent = pageContent || (attribution.content.startsWith('seo_') ? '' : attribution.content);
+send('landing_view', { content: landingContent });
 try {
   const previous = Number(localStorage.getItem(VISIT_KEY) || 0);
   const now = Date.now();
