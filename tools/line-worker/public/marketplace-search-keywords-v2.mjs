@@ -331,7 +331,8 @@ function buildToolBatterySearchKeywords(query) {
   const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu.test(normalized) ? '純正' : '';
   const count = normalized.match(/(\d+)\s*(?:個|本|pack|packs|count|pcs|pieces|块|塊|개|개입)/iu)?.[1];
   const normalizedCapacity = capacity ? Number(capacity).toString() : '';
-  return [brand, model, '電動工具バッテリー', voltage ? `${voltage}V` : '', normalizedCapacity ? `${normalizedCapacity}Ah` : '', genuine,
+  const displayModel = model.startsWith('GBA ') ? 'GBA' : model;
+  return [brand, displayModel, '電動工具バッテリー', voltage ? `${voltage}V` : '', normalizedCapacity ? `${normalizedCapacity}Ah` : '', genuine,
     count ? `${count}個セット` : ''].filter(Boolean).join(' ');
 }
 
