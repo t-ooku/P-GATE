@@ -1799,6 +1799,10 @@ test('電動昇降デスクは4言語で天板サイズ・モーター・メモ�
     '140x70 cm dual-motor electric standing desk 4 memory presets anti-collision',
     '140×70cm 双电机 电动升降桌 4档记忆 防碰撞',
     '140×70cm 듀얼 모터 전동 스탠딩 데스크 4메모리 충돌 방지',
+    '座りっぱなしを減らして立って仕事したい 140×70cm デュアルモーター 4メモリ 衝突防止',
+    'alternate between sitting and standing while working 140x70cm dual-motor 4 memory presets anti-collision',
+    '工作时坐站交替 140×70cm 双电机 4档记忆 防碰撞',
+    '일할 때 앉았다 서서 일하는 140×70cm 듀얼 모터 4메모리 충돌 방지',
   ];
   const candidates = [
     { asin: 'MATCH', product_name: '140x70 cm dual-motor electric standing desk 4 memory presets anti-collision' },
