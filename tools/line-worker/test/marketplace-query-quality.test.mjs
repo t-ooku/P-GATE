@@ -58,6 +58,36 @@ test('SNSで見た光るケースは機種とMagSafe条件を4言語で保持す
   }
 });
 
+test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
+  const cases = [
+    [
+      [
+        'TikTokで見た光るGalaxy S24 UltraケースでMagSafe対応',
+        'a glowing MagSafe Galaxy S24 Ultra case seen on TikTok',
+        'TikTok看到的发光磁吸Galaxy S24 Ultra手机壳',
+        '틱톡에서 본 빛나는 맥세이프 Galaxy S24 Ultra 케이스',
+      ],
+      'Galaxy S24 Ultra ケース 光る MagSafe対応',
+    ],
+    [
+      [
+        'TikTokで見た光るPixel 9 ProケースでMagSafe対応',
+        'a glowing MagSafe Pixel 9 Pro case seen on TikTok',
+        'TikTok看到的发光磁吸Pixel 9 Pro手机壳',
+        '틱톡에서 본 빛나는 맥세이프 Pixel 9 Pro 케이스',
+      ],
+      'Pixel 9 Pro ケース 光る MagSafe対応',
+    ],
+  ];
+  for (const [queries, expected] of cases) {
+    for (const query of queries) {
+      for (const marketplace of SEARCH_MARKETPLACES) {
+        assert.equal(buildMarketplaceSearchKeywords(query, marketplace), expected, `${marketplace}: ${query}`);
+      }
+    }
+  }
+});
+
 test('モバイルバッテリーの容量と内蔵ケーブルを4言語で保持する', () => {
   const queries = [
     '旅行用のUSB-Cケーブル内蔵10000mAhモバイルバッテリー',

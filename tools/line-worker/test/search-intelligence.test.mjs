@@ -953,6 +953,45 @@ test('SNSで見た光るケースは初回から機種・発光・MagSafeが一�
   }
 });
 
+test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
+  const cases = [
+    {
+      queries: [
+        'TikTokで見た光るGalaxy S24 UltraケースでMagSafe対応',
+        'a glowing MagSafe Galaxy S24 Ultra case seen on TikTok',
+        'TikTok看到的发光磁吸Galaxy S24 Ultra手机壳',
+        '틱톡에서 본 빛나는 맥세이프 Galaxy S24 Ultra 케이스',
+      ],
+      candidates: [
+        { asin: 'MATCH', product_name: 'Galaxy S24 Ultra MagSafe Light-up LED Phone Case' },
+        { asin: 'BASE', product_name: 'Galaxy S24 MagSafe Light-up LED Phone Case' },
+        { asin: 'PLUS', product_name: 'Galaxy S24 Plus MagSafe Light-up LED Phone Case' },
+        { asin: 'GENERIC', product_name: 'Galaxy MagSafe Light-up LED Phone Case' },
+      ],
+    },
+    {
+      queries: [
+        'TikTokで見た光るPixel 9 ProケースでMagSafe対応',
+        'a glowing MagSafe Pixel 9 Pro case seen on TikTok',
+        'TikTok看到的发光磁吸Pixel 9 Pro手机壳',
+        '틱톡에서 본 빛나는 맥세이프 Pixel 9 Pro 케이스',
+      ],
+      candidates: [
+        { asin: 'MATCH', product_name: 'Pixel 9 Pro MagSafe Light-up LED Phone Case' },
+        { asin: 'BASE', product_name: 'Pixel 9 MagSafe Light-up LED Phone Case' },
+        { asin: 'FOLD', product_name: 'Pixel 9 Pro Fold MagSafe Light-up LED Phone Case' },
+        { asin: 'GENERIC', product_name: 'Pixel MagSafe Light-up LED Phone Case' },
+      ],
+    },
+  ];
+  for (const { queries, candidates } of cases) {
+    for (const query of queries) {
+      assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+        ['MATCH'], query);
+    }
+  }
+});
+
 test('モバイルバッテリーは容量と内蔵端子が一致する候補だけを提示する', () => {
   const queries = [
     '旅行用のUSB-Cケーブル内蔵10000mAhモバイルバッテリー',

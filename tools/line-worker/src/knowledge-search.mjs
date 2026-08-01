@@ -315,8 +315,10 @@ function isTrueWirelessEarphonesMismatch(candidate) {
 }
 
 function phoneCaseDeviceModel(value) {
-  const match = String(value || '').normalize('NFKC')
-    .match(/\biphone\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2}/iu);
+  const text = String(value || '').normalize('NFKC');
+  const match = text.match(/\biphone\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2}/iu)
+    || text.match(/\bgalaxy\s*[a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?/iu)
+    || text.match(/\bpixel\s*\d{1,2}(?!\d)(?:\s*(?:pro\s*fold|pro|fold|a))?/iu);
   return match ? match[0].toLowerCase().replace(/\s+/gu, '') : '';
 }
 
@@ -326,7 +328,9 @@ function isLightUpPhoneCaseMismatch(candidate, query) {
     .toLowerCase();
   const category = inferCandidateCategory(candidate);
   const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
-  if (category !== 'phone-case' || !hasLightUpEvidence) return true;
+  const hasDeviceCaseEvidence = phoneCaseDeviceModel(text)
+    && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(text);
+  if ((category !== 'phone-case' && !hasDeviceCaseEvidence) || !hasLightUpEvidence) return true;
   const requestedDevice = phoneCaseDeviceModel(query);
   if (requestedDevice && phoneCaseDeviceModel(text) !== requestedDevice) return true;
   const normalizedQuery = String(query || '').normalize('NFKC');
@@ -1096,10 +1100,14 @@ export function filterCategoryMismatches(query, candidates = []) {
   const requested = new Set(groups
     .map((group) => group.category)
     .filter((category) => !CATEGORY_MODIFIERS.has(category)));
-  if (!requested.size) return candidates;
+  const normalizedQuery = String(query || '').normalize('NFKC');
+  const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
+    && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
+  if (!requested.size && !deviceSpecificCase) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
-  const lightUpPhoneCase = requested.has('phone-case') && groups.some((group) => group.category === 'light-up');
+  const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
+    && (requested.has('phone-case') || deviceSpecificCase);
   const powerBank = requested.has('power-bank');
   const laptopHub = requested.has('laptop-hub');
   const thunderboltDock = requested.has('thunderbolt-dock');
@@ -1139,7 +1147,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   return candidates.filter((candidate) => {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
-    if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate, query)) return false;
+    if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
     if (powerBank && isPowerBankMismatch(candidate, query)) return false;
     if (laptopHub && isLaptopHubMismatch(candidate)) return false;
     if (thunderboltDock && isThunderboltDockMismatch(candidate, thunderboltVersion(query))) return false;
