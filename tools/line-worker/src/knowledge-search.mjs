@@ -323,11 +323,20 @@ function isLightUpPhoneCaseMismatch(candidate) {
   return category !== 'phone-case' || !hasLightUpEvidence;
 }
 
+function isNegatedPowerBankCapacity(text, start, end) {
+  const before = String(text || '').slice(Math.max(0, start - 24), start);
+  const after = String(text || '').slice(end, end + 18);
+  return /(?:not\s+(?:a\s+|an\s+|the\s+)?|no\s+|without\s+|anything\s+but\s+|不要\s*|不是\s*|不想要\s*)$/iu.test(before)
+    || /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける|而不是|除外|말고|아닌|아니고|제외)/iu.test(after);
+}
+
 function isPowerBankMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
   if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(text)) return true;
-  const capacity = String(query || '').match(/(\d{4,6})\s*m\s*ah/iu)?.[1];
+  const normalizedQuery = String(query || '').normalize('NFKC');
+  const capacity = [...normalizedQuery.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
+    .find((match) => !isNegatedPowerBankCapacity(normalizedQuery, match.index, match.index + match[0].length))?.[1];
   if (capacity && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
   const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(String(query || ''));
   if (builtIn && !/(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(text)) return true;

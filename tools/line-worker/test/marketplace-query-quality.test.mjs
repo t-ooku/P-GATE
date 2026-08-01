@@ -88,6 +88,21 @@ test('モバイルバッテリーのPD出力を4言語で保持する', () => {
   }
 });
 
+test('モバイルバッテリーの容量訂正は4言語で最終条件だけを保持する', () => {
+  const queries = [
+    '20000mAhじゃなく10000mAhのPD20Wモバイルバッテリー',
+    'not 20000mAh, I want a 10000mAh PD20W power bank',
+    '不要20000mAh，要10000mAh的PD20W充电宝',
+    '20000mAh 말고 10000mAh PD20W 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー PD20W', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('ロボット掃除機の交換部品を4言語で本体から分離し型番と個数を保つ', () => {
   const cases = [
     ['ルンバ j7用 交換フィルター 3個セット', 'Roomba j7 交換フィルター 3個セット'],

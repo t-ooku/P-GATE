@@ -992,6 +992,23 @@ test('PDモバイルバッテリーは容量と出力が一致する候補だけ
   }
 });
 
+test('モバイルバッテリーの容量訂正は否定容量を候補照合へ残さない', () => {
+  const queries = [
+    '20000mAhじゃなく10000mAhのPD20Wモバイルバッテリー',
+    'not 20000mAh, I want a 10000mAh PD20W power bank',
+    '不要20000mAh，要10000mAh的PD20W充电宝',
+    '20000mAh 말고 10000mAh PD20W 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWER10000', product_name: '10000mAh Power Bank USB-C PD20W' },
+    { asin: 'POWER20000', product_name: '20000mAh Power Bank USB-C PD20W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWER10000'], query);
+  }
+});
+
 test('タブレット専用アクセサリーは4言語で汎用品や別端末向け商品を除外する', () => {
   const cases = [
     ['タブレット用Bluetoothキーボード', 'KEYBOARD'],
