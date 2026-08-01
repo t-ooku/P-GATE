@@ -1084,6 +1084,21 @@ test('Apple Pencilの世代・交換ペン先・充電用品を全モール向�
   }
 });
 
+test('power-bank PD output corrections keep only the final requirement in four languages', () => {
+  const queries = [
+    'PD30WじゃなくPD20Wの10000mAhモバイルバッテリー',
+    'not PD30W, I want a PD20W 10000mAh power bank',
+    '不要PD30W，要PD20W的10000mAh充电宝',
+    'PD30W 말고 PD20W 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー PD20W', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('冷蔵庫給水フィルターは4言語の型番・純正・個数を全モール向けに保持する', () => {
   const cases = [
     ['Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個', 'Samsung HAF-QIN DA97-17376B 冷蔵庫給水フィルター 純正 2個セット'],

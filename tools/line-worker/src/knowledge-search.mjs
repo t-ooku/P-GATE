@@ -323,7 +323,7 @@ function isLightUpPhoneCaseMismatch(candidate) {
   return category !== 'phone-case' || !hasLightUpEvidence;
 }
 
-function isNegatedPowerBankCapacity(text, start, end) {
+function isNegatedPowerBankRequirement(text, start, end) {
   const before = String(text || '').slice(Math.max(0, start - 24), start);
   const after = String(text || '').slice(end, end + 18);
   return /(?:not\s+(?:a\s+|an\s+|the\s+)?|no\s+|without\s+|anything\s+but\s+|不要\s*|不是\s*|不想要\s*)$/iu.test(before)
@@ -336,14 +336,15 @@ function isPowerBankMismatch(candidate, query) {
   if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(text)) return true;
   const normalizedQuery = String(query || '').normalize('NFKC');
   const capacity = [...normalizedQuery.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
-    .find((match) => !isNegatedPowerBankCapacity(normalizedQuery, match.index, match.index + match[0].length))?.[1];
+    .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))?.[1];
   if (capacity && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
   const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(String(query || ''));
   if (builtIn && !/(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(text)) return true;
   if (builtIn && /(?:usb[- ]?c|type[- ]?c)/iu.test(String(query || '')) && !/(?:usb[- ]?c|type[- ]?c)/iu.test(text)) return true;
   if (/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(String(query || ''))
     && !/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text)) return true;
-  const pdWatts = String(query || '').match(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/iu);
+  const pdWatts = [...normalizedQuery.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)]
+    .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
   const requestedWatts = pdWatts?.[1] || pdWatts?.[2] || '';
   if (requestedWatts && !new RegExp(`(?:^|\\D)(?:pd\\s*)?${requestedWatts}\\s*w(?:\\s*pd)?(?:\\D|$)`, 'iu').test(text)) return true;
   return false;

@@ -2180,3 +2180,20 @@ test('掃除機紙パックは本体・フィルター・別規格品番・枚�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['vacuum-dust-bag'], query);
   }
 });
+
+test('power-bank PD output corrections discard the negated output in four languages', () => {
+  const queries = [
+    'PD30WじゃなくPD20Wの10000mAhモバイルバッテリー',
+    'not PD30W, I want a PD20W 10000mAh power bank',
+    '不要PD30W，要PD20W的10000mAh充电宝',
+    'PD30W 말고 PD20W 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWERPD20', product_name: '10000mAh Power Bank USB-C PD20W' },
+    { asin: 'POWERPD30', product_name: '10000mAh Power Bank USB-C PD30W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWERPD20'], query);
+  }
+});

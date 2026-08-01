@@ -534,7 +534,11 @@ function buildPowerBankSearchKeywords(query) {
     : /(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu.test(normalized) ? 'Lightning' : '';
   const cable = builtIn ? `${connector ? `${connector}` : ''}ケーブル内蔵` : '';
   const magnetic = /(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(normalized) ? 'MagSafe対応' : '';
-  const pdWatts = normalized.match(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/iu);
+  const pdWatts = [...normalized.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)]
+    .find((match) => {
+      const escaped = match[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return !isNegatedAttribute(normalized, new RegExp(escaped, 'iu'));
+    });
   const powerDelivery = pdWatts ? `PD${pdWatts[1] || pdWatts[2]}W` : '';
   return [capacity ? `${capacity}mAh` : '', 'モバイルバッテリー', cable, magnetic, powerDelivery].filter(Boolean).join(' ');
 }
