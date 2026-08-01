@@ -612,6 +612,29 @@ function isShaverReplacementMismatch(candidate, requested, query) {
   return !blade.test(text) || cleaning.test(text);
 }
 
+function coffeeCapsuleSystem(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토)/u.test(value)) return 'dolce-gusto';
+  if (/(?:nespresso|ネスプレッソ|奈斯派索|네스프레소).{0,24}(?:vertuo|ヴァーチュオ|馥旋|버츄오)/u.test(value)) return 'nespresso-vertuo';
+  if (/(?:nespresso|ネスプレッソ|奈斯派索|네스프레소).{0,24}(?:original(?:\s*line)?|オリジナル|经典|經典|오리지널)/u.test(value)) return 'nespresso-original';
+  return '';
+}
+
+function coffeeCapsuleCount(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+)\s*(?:個|杯分|capsules?|pods?|粒|颗|顆|개|개입)/iu)?.[1] || 0);
+}
+
+function isCoffeeCapsuleMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedSystem = coffeeCapsuleSystem(query);
+  if (requestedSystem && coffeeCapsuleSystem(text) !== requestedSystem) return true;
+  const requestedCount = coffeeCapsuleCount(query);
+  if (requestedCount && coffeeCapsuleCount(text) !== requestedCount) return true;
+  if (/(?:本体|コーヒーメーカー|coffee\s*(?:maker|machine)|咖啡机|咖啡機|커피\s*머신|再利用|詰め替え|reusable|refillable|可重复使用|可重複使用|재사용)/iu.test(text)) return true;
+  return !/(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -739,6 +762,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const printerInk = requested.has('printer-ink');
   const toothbrushHead = requested.has('electric-toothbrush-head');
   const shaverReplacement = requested.has('shaver-replacement-blade') || requested.has('shaver-cleaning-cartridge');
+  const coffeeCapsule = requested.has('coffee-capsule');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -778,6 +802,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (printerInk) return !isPrinterInkMismatch(candidate, query);
     if (toothbrushHead) return !isToothbrushHeadMismatch(candidate, query);
     if (shaverReplacement) return !isShaverReplacementMismatch(candidate, requested, query);
+    if (coffeeCapsule) return !isCoffeeCapsuleMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

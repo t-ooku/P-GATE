@@ -1808,3 +1808,25 @@ test('シェーバー交換品は本体・別シリーズ・別品番・刃数�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), [category], query);
   }
 });
+
+test('コーヒーカプセルは本体・別規格・再利用品・個数違いを除外する', () => {
+  const candidates = [
+    { asin: 'ORIGINAL50', product_name: 'Nespresso Original coffee capsules 50 pods' },
+    { asin: 'ORIGINAL30', product_name: 'Nespresso Original coffee capsules 30 pods' },
+    { asin: 'VERTUO30', product_name: 'Nespresso Vertuo coffee capsules 30 pods' },
+    { asin: 'VERTUO_MACHINE', product_name: 'Nespresso Vertuo coffee machine 本体 30 capsules trial set' },
+    { asin: 'VERTUO_REUSE', product_name: 'Nespresso Vertuo reusable refillable coffee capsule 30 uses' },
+    { asin: 'DOLCE16', product_name: 'Nescafe Dolce Gusto 咖啡胶囊 16粒' },
+    { asin: 'DOLCE48', product_name: 'Nescafe Dolce Gusto 咖啡胶囊 48粒' },
+  ];
+  const cases = [
+    ['ネスプレッソ オリジナル コーヒーカプセル 50個', ['ORIGINAL50']],
+    ['Nespresso Vertuo coffee capsules 30 pods', ['VERTUO30']],
+    ['雀巢 Dolce Gusto 咖啡胶囊 16粒', ['DOLCE16']],
+    ['네스프레소 오리지널 커피 캡슐 50개', ['ORIGINAL50']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['coffee-capsule'], query);
+  }
+});

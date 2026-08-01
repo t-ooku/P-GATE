@@ -147,6 +147,20 @@ test('シェーバーの替刃と洗浄液を4言語で本体から分離し品�
   }
 });
 
+test('コーヒーカプセルを4言語で本体から分離し規格と個数を保つ', () => {
+  const cases = [
+    ['ネスプレッソ オリジナル コーヒーカプセル 50個', 'Nespresso Original コーヒーカプセル 50個セット'],
+    ['Nespresso Vertuo coffee capsules 30 pods', 'Nespresso Vertuo コーヒーカプセル 30個セット'],
+    ['雀巢 Dolce Gusto 咖啡胶囊 16粒', 'Nescafe Dolce Gusto コーヒーカプセル 16個セット'],
+    ['네스프레소 오리지널 커피 캡슐 50개', 'Nespresso Original コーヒーカプセル 50個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);

@@ -277,6 +277,23 @@ function buildShaverReplacementSearchKeywords(query) {
     bladeCount ? `${bladeCount}枚刃` : '', packageCount ? `${packageCount}個セット` : ''].filter(Boolean).join(' ');
 }
 
+function coffeeCapsuleSystem(query) {
+  const value = String(query || '').normalize('NFKC');
+  if (/(?:dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토)/iu.test(value)) return 'Nescafe Dolce Gusto';
+  if (/(?:nespresso|ネスプレッソ|奈斯派索|네스프레소).{0,24}(?:vertuo|ヴァーチュオ|馥旋|버츄오)/iu.test(value)) return 'Nespresso Vertuo';
+  if (/(?:nespresso|ネスプレッソ|奈斯派索|네스프레소).{0,24}(?:original(?:\s*line)?|オリジナル|经典|經典|오리지널)/iu.test(value)) return 'Nespresso Original';
+  return '';
+}
+
+function buildCoffeeCapsuleSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐)/iu.test(normalized)) return '';
+  const system = coffeeCapsuleSystem(normalized);
+  if (!system) return '';
+  const count = normalized.match(/(\d+)\s*(?:個|杯分|capsules?|pods?|粒|颗|顆|개|개입)/iu)?.[1];
+  return [system, 'コーヒーカプセル', count ? `${count}個セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -575,6 +592,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const rawNormalized = String(query || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
   const rawShaverReplacement = buildShaverReplacementSearchKeywords(rawNormalized);
   if (rawShaverReplacement) return rawShaverReplacement;
+  const rawCoffeeCapsule = buildCoffeeCapsuleSearchKeywords(rawNormalized);
+  if (rawCoffeeCapsule) return rawCoffeeCapsule;
   const normalized = stripSearchBudget(rawNormalized).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);

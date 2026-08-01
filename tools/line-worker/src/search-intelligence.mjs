@@ -63,6 +63,8 @@ const RULES = [
   ['shaver-cleaning-cartridge',/(?:(?:braun|ブラウン|博朗|브라운|clean\s*&\s*renew).{0,40}(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액)|(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액).{0,40}(?:braun|ブラウン|博朗|브라운|clean\s*&\s*renew))/iu,['shaver cleaning cartridges','clean and renew']],
   ['shaver-replacement-blade',/(?:(?:braun|ブラウン|博朗|브라운|philips|フィリップス|飞利浦|飛利浦|필립스|panasonic|松下|파나소닉|lamdash|ラムダッシュ|シェーバー|shaver|剃须刀|電鬚刨|면도기).{0,45}(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날)|(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날).{0,45}(?:braun|ブラウン|博朗|브라운|philips|フィリップス|飞利浦|飛利浦|필립스|panasonic|松下|파나소닉|lamdash|ラムダッシュ|シェーバー|shaver|剃须刀|電鬚刨|면도기))/iu,['electric shaver replacement head','replacement foil blade']],
   ['electric-shaver',/(?:電気シェーバー|シェーバー|electric\s*shaver|剃须刀|電鬚刨|전기\s*면도기)/iu,['electric shaver']],
+  ['coffee-capsule',/(?:(?:nespresso|ネスプレッソ|奈斯派索|네스프레소|dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토).{0,45}(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐)|(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐).{0,45}(?:nespresso|ネスプレッソ|奈斯派索|네스프레소|dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토))/iu,['coffee capsules','coffee pods']],
+  ['capsule-coffee-maker',/(?:カプセル式?コーヒーメーカー|capsule\s*coffee\s*(?:maker|machine)|胶囊咖啡机|膠囊咖啡機|캡슐\s*커피\s*머신)/iu,['capsule coffee machine']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
@@ -367,7 +369,7 @@ export function semanticSearchGroups(value) {
   }
   const specificIntent = groups.some((group) => [
     'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light',
-    'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver'
+    'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver','coffee-capsule','capsule-coffee-maker'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES
     .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))
