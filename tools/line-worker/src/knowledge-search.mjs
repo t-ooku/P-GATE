@@ -862,6 +862,30 @@ function isFrontLoadWasherDryerMismatch(candidate, requested) {
   return false;
 }
 
+function frenchDoorRefrigeratorConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    refrigerator: /(?:冷蔵庫|refrigerator|fridge|冰箱|냉장고)/iu.test(text),
+    capacity: text.match(/\b(\d{3})\s*l\b/iu)?.[1] || '',
+    frenchDoor: /(?:観音開き|フレンチドア|french[- ]?door|对开门|對開門|프렌치도어)/iu.test(text),
+    inverter: /(?:インバーター|inverter|变频|變頻|인버터)/iu.test(text),
+    iceMaker: /(?:自動製氷|automatic\s*ice\s*maker|自动制冰|自動製冰|자동\s*제빙)/iu.test(text),
+    wrongProduct: /(?:ミニ冷蔵庫|mini\s*(?:fridge|refrigerator)|小型冰箱|미니\s*냉장고|ワインセラー|wine\s*(?:cooler|fridge)|酒柜|酒櫃|와인\s*냉장고|冷凍庫単体|standalone\s*freezer|冰柜|冰櫃|냉동고\s*단품|給水フィルター|water\s*filter|净水滤芯|淨水濾芯|정수\s*필터|製氷皿|ice\s*tray|制冰盒|製冰盒|얼음\s*트레이|replacement\s*(?:parts?|shelf|door)|交換部品|交換棚|替换零件|替換零件|교체\s*부품)/iu.test(text)
+  };
+}
+
+function isFrenchDoorRefrigeratorMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = frenchDoorRefrigeratorConstraints(text);
+  if (!evidence.refrigerator || evidence.wrongProduct) return true;
+  if (requested.capacity && evidence.capacity !== requested.capacity) return true;
+  for (const feature of ['frenchDoor', 'inverter', 'iceMaker']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1703,6 +1727,10 @@ export function filterCategoryMismatches(query, candidates = []) {
   const frontLoadWasherDryer = frontLoadWasherDryerConstraints(normalizedQuery);
   const frontLoadWasherDryerIntent = frontLoadWasherDryer.machine
     && Boolean(frontLoadWasherDryer.wash && frontLoadWasherDryer.dry) && !frontLoadWasherDryer.wrongProduct;
+  const frenchDoorRefrigerator = frenchDoorRefrigeratorConstraints(normalizedQuery);
+  const frenchDoorRefrigeratorIntent = frenchDoorRefrigerator.refrigerator
+    && Boolean(frenchDoorRefrigerator.capacity && frenchDoorRefrigerator.frenchDoor)
+    && !frenchDoorRefrigerator.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1711,7 +1739,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent
     && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent && !robotVacuumBodyIntent
     && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent
-    && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent) return candidates;
+    && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
+    && !frenchDoorRefrigeratorIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1777,6 +1806,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     }
     if (steamMicrowaveOvenIntent) return !isSteamMicrowaveOvenMismatch(candidate, steamMicrowaveOven);
     if (frontLoadWasherDryerIntent) return !isFrontLoadWasherDryerMismatch(candidate, frontLoadWasherDryer);
+    if (frenchDoorRefrigeratorIntent) return !isFrenchDoorRefrigeratorMismatch(candidate, frenchDoorRefrigerator);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

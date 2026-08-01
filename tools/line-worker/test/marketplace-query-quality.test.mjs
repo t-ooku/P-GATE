@@ -386,6 +386,21 @@ test('ドラム式洗濯乾燥機は洗濯乾燥容量と省力機能を4言語�
   }
 });
 
+test('大型冷蔵庫は容量・扉・省電力・製氷条件を4言語で保持する', () => {
+  const queries = [
+    '500L 観音開き インバーター 自動製氷 冷蔵庫',
+    '500L French-door refrigerator inverter automatic ice maker',
+    '500L 对开门 变频 自动制冰 冰箱',
+    '500L 프렌치도어 인버터 자동 제빙 냉장고',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '冷蔵庫 500L 観音開き インバーター 自動製氷', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

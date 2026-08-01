@@ -1430,6 +1430,31 @@ test('ドラム式洗濯乾燥機は4言語で容量と省力機能が一致す�
   }
 });
 
+test('大型冷蔵庫は4言語で容量・扉・省電力・製氷が一致する本体だけを提示する', () => {
+  const queries = [
+    '500L 観音開き インバーター 自動製氷 冷蔵庫',
+    '500L French-door refrigerator inverter automatic ice maker',
+    '500L 对开门 变频 自动制冰 冰箱',
+    '500L 프렌치도어 인버터 자동 제빙 냉장고',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '500L French-door Refrigerator Inverter Automatic Ice Maker' },
+    { asin: 'SMALL', product_name: '400L French-door Refrigerator Inverter Automatic Ice Maker' },
+    { asin: 'SINGLEDOOR', product_name: '500L Single-door Refrigerator Inverter Automatic Ice Maker' },
+    { asin: 'NOINVERTER', product_name: '500L French-door Refrigerator Automatic Ice Maker' },
+    { asin: 'NOICE', product_name: '500L French-door Refrigerator Inverter' },
+    { asin: 'MINI', product_name: '500L Mini Fridge French-door Inverter Automatic Ice Maker' },
+    { asin: 'WINE', product_name: '500L French-door Wine Cooler Refrigerator Inverter Automatic Ice Maker' },
+    { asin: 'FREEZER', product_name: '500L Standalone Freezer French-door Inverter Automatic Ice Maker' },
+    { asin: 'FILTER', product_name: 'Water Filter for 500L French-door Refrigerator Inverter Automatic Ice Maker' },
+    { asin: 'TRAY', product_name: 'Ice Tray for 500L French-door Refrigerator Inverter Automatic Ice Maker' },
+    { asin: 'PART', product_name: 'Replacement Door for 500L French-door Refrigerator Inverter Automatic Ice Maker' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
