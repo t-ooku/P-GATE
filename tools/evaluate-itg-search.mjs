@@ -44,9 +44,11 @@ async function executeD1(sql, attempts = 4) {
   throw lastError;
 }
 
-for (let offset = 0; offset < searchable.length; offset += 1) {
-  const batch = searchable.slice(offset, offset + 1);
-  const output = await executeD1(sqlText(batch[0]));
+const batchSize = 5;
+for (let offset = 0; offset < searchable.length; offset += batchSize) {
+  const batch = searchable.slice(offset, offset + batchSize);
+  const batchSql = batch.map((item) => `SELECT * FROM (${sqlText(item)})`).join(' UNION ALL ');
+  const output = await executeD1(batchSql);
   const parsed = JSON.parse(output.slice(output.indexOf('[')));
   const rows = parsed[0]?.results || [];
   batch.forEach((item) => resultMap.set(item.variant.case_id, rows.filter((row) => row.case_id === item.variant.case_id)));

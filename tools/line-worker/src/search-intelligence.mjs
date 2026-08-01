@@ -9,7 +9,7 @@ const RULES = [
   ['screwdriver',/(ドライバー|ねじ回し|螺子回し|screwdriver|細長い.*工具)/iu,['screwdriver','driver']],
   ['building-block',/(レゴ|lego|ブロック.*おもちゃ|building block)/iu,['lego','brick','building']],
   ['candle',/(キャンドル|ろうそく|蝋燭|candle|soy candle|火をつける.*匂い|蜡烛|蠟燭|大豆蜡烛|大豆蠟燭|캔들|소이 캔들)/iu,['candle','soy']],
-  ['earphones',/(イヤホン|イヤーバッド|earbuds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','headphone']],
+  ['earphones',/(イヤホン|イヤーバッド|ear\s*buds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','ear','bud','headphone']],
   ['backpack',/(リュック|バックパック|backpack|背負う)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
@@ -93,7 +93,8 @@ const COLOR_RULES = [
   [/(金色|ゴールド|gold)/iu,['gold']],
   [/(茶色|ブラウン|brown)/iu,['brown']],
   [/(黄色|イエロー|yellow)/iu,['yellow']],
-  [/(グレー|灰色|gray|grey)/iu,['gray']]
+  [/(グレー|灰色|gray|grey)/iu,['gray']],
+  [/(透明|クリア|clear|transparent|透明色|투명)/iu,['clear','transparent']]
 ];
 
 const CONTEXT_RE = /(TikTok|Instagram|インスタ|Twitter|SNS|動画|配信|スーパー|空港|免税店|コンビニ|文房具屋|友達|同僚|母|昔|子供の頃|どこかで見た)/iu;
@@ -150,6 +151,12 @@ export function semanticSearchGroups(value) {
     && /(?:for\s+(?:a\s+)?laptop|laptop\s+(?:adapter|hub)|笔记本电脑用|筆記型電腦用|노트북(?:에|용))/iu.test(text)
   ) {
     groups = groups.filter((group) => group.category !== 'laptop');
+  }
+  if (
+    groups.some((group) => group.category === 'organizer')
+    && /(?:冷蔵庫|冷凍庫|refrigerator|freezer|pantry|冰箱|冷藏|냉장고|냉동고)/iu.test(text)
+  ) {
+    groups.push({ category: 'organizer-location', terms: ['refrigerator','freezer','pantry'] });
   }
   // Natural descriptions often omit the formal product name. Recognize
   // combinations of an object/location and its head noun before falling back

@@ -52,7 +52,7 @@ test('英単語の部分一致で帽子やトップスを混入しない', () =>
 
 test('自然文の文脈語を必須ANDにせず、ノートPC用アダプターをPC本体にしない', () => {
   const earbuds = intelligentFtsQuery('small wired earbuds that fit inside the ear');
-  assert.equal(earbuds, '"earbud"* OR "headphone"*');
+  assert.match(earbuds, /"earbud"\*.*"ear"\*.*"bud"\*.*"headphone"\*/);
   const adapter = intelligentFtsQuery('a compact USB-C hub with multiple ports for a laptop');
   assert.match(adapter, /"adapter"\*|"usb"\*/);
   assert.doesNotMatch(adapter, /"laptop"\*|"compact"\*|"ports"\*/);
@@ -69,6 +69,21 @@ test('中国語・韓国語のキャンドル・財布・収納用品を共通�
     const groups = semanticSearchGroups(query);
     assert.equal(groups.some((group) => group.category === 'organizer'), true);
     assert.equal(groups.some((group) => group.category === 'home-use'), false);
+  }
+});
+
+test('ear bud表記揺れと冷蔵庫用透明収納の条件をFTSへ保持する', () => {
+  const earbuds = intelligentFtsQuery('small wired earbuds that fit inside the ear');
+  assert.match(earbuds, /"ear"\*.*"bud"\*/);
+  for (const query of [
+    'a clear narrow organizer bin for the refrigerator',
+    '冰箱里用的透明细长收纳盒',
+    '냉장고에 쓰는 투명하고 긴 수납함',
+  ]) {
+    const fts = intelligentFtsQuery(query);
+    assert.match(fts, /"organizer"\*/);
+    assert.match(fts, /"refrigerator"\*/);
+    assert.match(fts, /"clear"\*/);
   }
 });
 
