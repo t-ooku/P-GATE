@@ -1015,6 +1015,30 @@ function isFullFrameMirrorlessCameraMismatch(candidate, requested) {
   return false;
 }
 
+function gamingLaptopConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    laptop: /(?:ゲーミングノート(?:PC)?|gaming\s*laptop|游戏本|遊戲筆電|게이밍\s*노트북)/iu.test(text),
+    size: text.match(/\b(\d{2}(?:\.\d)?)\s*(?:型|インチ|inch(?:es)?|英寸|인치)/iu)?.[1] || '',
+    gpu: text.match(/\brtx\s*(\d{4})\b/iu)?.[1] || '',
+    ram: text.match(/\b(\d{2,3})\s*gb\s*(?:ram|メモリ|内存|記憶體|램)/iu)?.[1] || '',
+    ssd: text.match(/\b(\d(?:\.\d)?)\s*tb\s*ssd\b/iu)?.[1] || '',
+    refresh: text.match(/\b(\d{2,3})\s*hz\b/iu)?.[1] || '',
+    wrongProduct: /(?:gaming\s*desktop|ゲーミングデスクトップ|游戏台式机|遊戲桌機|게이밍\s*데스크톱|graphics\s*card|GPU単体|显卡|顯示卡|그래픽카드\s*단품|laptop\s*bag|ノートPCバッグ|笔记本电脑包|筆電包|노트북\s*가방|cooling\s*pad|冷却台|散热垫|散熱墊|쿨링\s*패드|laptop\s*charger|ノートPC充電器|笔记本充电器|筆電充電器|노트북\s*충전기|replacement\s*(?:keyboard|screen|battery)|交換(?:キーボード|画面|バッテリー)|替换(?:键盘|屏幕|电池)|替換(?:鍵盤|螢幕|電池)|교체용\s*(?:키보드|화면|배터리))/iu.test(text)
+  };
+}
+
+function isGamingLaptopMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = gamingLaptopConstraints(text);
+  if (!evidence.laptop || evidence.wrongProduct) return true;
+  for (const field of ['size', 'gpu', 'ram', 'ssd', 'refresh']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1877,6 +1901,9 @@ export function filterCategoryMismatches(query, candidates = []) {
   const fullFrameMirrorlessCameraIntent = fullFrameMirrorlessCamera.camera
     && Boolean(fullFrameMirrorlessCamera.pixels && fullFrameMirrorlessCamera.video)
     && !fullFrameMirrorlessCamera.wrongProduct;
+  const gamingLaptop = gamingLaptopConstraints(normalizedQuery);
+  const gamingLaptopIntent = gamingLaptop.laptop && Boolean(gamingLaptop.gpu && gamingLaptop.ram && gamingLaptop.ssd)
+    && !gamingLaptop.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1887,7 +1914,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
-    && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent) return candidates;
+    && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
+    && !gamingLaptopIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1961,6 +1989,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (fullFrameMirrorlessCameraIntent) {
       return !isFullFrameMirrorlessCameraMismatch(candidate, fullFrameMirrorlessCamera);
     }
+    if (gamingLaptopIntent) return !isGamingLaptopMismatch(candidate, gamingLaptop);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

@@ -412,6 +412,18 @@ function buildFullFrameMirrorlessCameraSearchKeywords(query) {
   return ['フルサイズミラーレスカメラ', `${pixels}万画素`, video, ibis, dualSlot].join(' ');
 }
 
+function buildGamingLaptopSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:ゲーミングノート(?:PC)?|gaming\s*laptop|游戏本|遊戲筆電|게이밍\s*노트북)/iu.test(normalized)) return '';
+  const size = normalized.match(/\b(\d{2}(?:\.\d)?)\s*(?:型|インチ|inch(?:es)?|英寸|인치)/iu)?.[1];
+  const gpu = normalized.match(/\brtx\s*(\d{4})\b/iu)?.[1];
+  const ram = normalized.match(/\b(\d{2,3})\s*gb\s*(?:ram|メモリ|内存|記憶體|램)/iu)?.[1];
+  const ssd = normalized.match(/\b(\d(?:\.\d)?)\s*tb\s*ssd\b/iu)?.[1];
+  const refresh = normalized.match(/\b(\d{2,3})\s*hz\b/iu)?.[1];
+  if (!size || !gpu || !ram || !ssd || !refresh) return '';
+  return ['ゲーミングノートPC', `${size}型`, `RTX ${gpu}`, `${ram}GB RAM`, `${ssd}TB SSD`, `${refresh}Hz`].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1217,6 +1229,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawDolbyAtmosSoundbar) return rawDolbyAtmosSoundbar;
   const rawFullFrameMirrorlessCamera = buildFullFrameMirrorlessCameraSearchKeywords(rawNormalized);
   if (rawFullFrameMirrorlessCamera) return rawFullFrameMirrorlessCamera;
+  const rawGamingLaptop = buildGamingLaptopSearchKeywords(rawNormalized);
+  if (rawGamingLaptop) return rawGamingLaptop;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

@@ -1583,6 +1583,32 @@ test('フルサイズミラーレスカメラは4言語で画素・動画・手�
   }
 });
 
+test('ゲーミングノートPCは4言語で画面・GPU・メモリ・SSD・Hzが一致する本体だけを提示する', () => {
+  const queries = [
+    '16型 RTX 4070 32GBメモリ 1TB SSD 240Hz ゲーミングノートPC',
+    '16 inch RTX 4070 gaming laptop 32GB RAM 1TB SSD 240Hz',
+    '16英寸 RTX 4070 32GB内存 1TB SSD 240Hz 游戏本',
+    '16인치 RTX 4070 32GB 램 1TB SSD 240Hz 게이밍 노트북',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '16 inch RTX 4070 Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+    { asin: 'SMALL', product_name: '14 inch RTX 4070 Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+    { asin: 'GPU', product_name: '16 inch RTX 4060 Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+    { asin: 'RAM', product_name: '16 inch RTX 4070 Gaming Laptop 16GB RAM 1TB SSD 240Hz' },
+    { asin: 'SSD', product_name: '16 inch RTX 4070 Gaming Laptop 32GB RAM 2TB SSD 240Hz' },
+    { asin: 'SLOW', product_name: '16 inch RTX 4070 Gaming Laptop 32GB RAM 1TB SSD 165Hz' },
+    { asin: 'DESKTOP', product_name: 'Gaming Desktop for 16 inch RTX 4070 Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+    { asin: 'CARD', product_name: 'Graphics Card RTX 4070 for 16 inch Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+    { asin: 'BAG', product_name: 'Laptop Bag for 16 inch RTX 4070 Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+    { asin: 'COOLER', product_name: 'Cooling Pad for 16 inch RTX 4070 Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+    { asin: 'CHARGER', product_name: 'Laptop Charger for 16 inch RTX 4070 Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+    { asin: 'BATTERY', product_name: 'Replacement Battery for 16 inch RTX 4070 Gaming Laptop 32GB RAM 1TB SSD 240Hz' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

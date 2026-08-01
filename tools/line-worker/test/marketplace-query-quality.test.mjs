@@ -476,6 +476,21 @@ test('フルサイズミラーレスカメラは画素・動画・手ぶれ補�
   }
 });
 
+test('ゲーミングノートPCは画面・GPU・メモリ・SSD・Hzを4言語で保持する', () => {
+  const queries = [
+    '16型 RTX 4070 32GBメモリ 1TB SSD 240Hz ゲーミングノートPC',
+    '16 inch RTX 4070 gaming laptop 32GB RAM 1TB SSD 240Hz',
+    '16英寸 RTX 4070 32GB内存 1TB SSD 240Hz 游戏本',
+    '16인치 RTX 4070 32GB 램 1TB SSD 240Hz 게이밍 노트북',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ゲーミングノートPC 16型 RTX 4070 32GB RAM 1TB SSD 240Hz', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [
