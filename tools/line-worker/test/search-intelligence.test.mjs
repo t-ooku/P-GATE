@@ -1414,3 +1414,49 @@ test('Apple Pencilの世代指定は4言語で一致する候補だけを表示�
     );
   }
 });
+
+test('iPadアクセサリーはモデルと画面サイズが一致する候補だけを表示する', () => {
+  const cases = [
+    ['iPad Air 11インチ用キーボードケース', 'iPad Air 11インチ キーボードケース'],
+    ['iPad Pro 13-inch screen protector', 'iPad Pro 13-inch screen protector'],
+    ['iPad Air 11英寸键盘保护套', 'iPad Air 11英寸键盘保护套'],
+    ['아이패드 프로 13인치 액정 보호 필름', '아이패드 프로 13인치 액정 보호 필름'],
+  ];
+  for (const [query, matchingName] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: matchingName },
+      { asin: 'WRONGMODEL', product_name: 'iPad Pro 11インチ キーボードケース 保護フィルム' },
+      { asin: 'WRONGSIZE', product_name: 'iPad Air 13インチ キーボードケース 保護フィルム' },
+      { asin: 'GENERIC', product_name: 'iPad用 キーボードケース 保護フィルム' },
+      { asin: 'PHONE', product_name: 'iPhone 11インチ風 ケース 保護フィルム' },
+    ];
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['MATCH'],
+      query
+    );
+  }
+});
+
+test('iPad世代指定ケースは4言語で一致世代だけを表示する', () => {
+  const cases = [
+    ['iPad 第10世代 ケース', 'iPad 第10世代 ケース'],
+    ['iPad 10th generation case', 'iPad 10th generation case'],
+    ['iPad 第10代保护套', 'iPad 第10代保护套'],
+    ['아이패드 10세대 케이스', '아이패드 10세대 케이스'],
+  ];
+  for (const [query, matchingName] of cases) {
+    const candidates = [
+      { asin: 'MATCH', product_name: matchingName },
+      { asin: 'GEN9', product_name: 'iPad 第9世代 ケース' },
+      { asin: 'GEN11', product_name: 'iPad 第11世代 ケース' },
+      { asin: 'UNKNOWN', product_name: 'iPad ケース' },
+      { asin: 'TABLET', product_name: '10世代 タブレット 汎用ケース' },
+    ];
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((item) => item.asin),
+      ['MATCH'],
+      query
+    );
+  }
+});
