@@ -251,6 +251,21 @@ test('ゲーミングモニターは画面・解像度・Hz・パネル・端子
   }
 });
 
+test('メカニカルキーボードは配列・サイズ・軸・接続条件を4言語で保持する', () => {
+  const queries = [
+    '75% JIS日本語配列 赤軸 ホットスワップ Bluetooth 2.4GHz USB-C メカニカルキーボード',
+    '75% JIS Japanese red switch hot-swappable mechanical keyboard Bluetooth 2.4GHz USB-C',
+    '75% JIS日文配列 红轴 热插拔 机械键盘 蓝牙 2.4GHz USB-C',
+    '75% JIS 일본어 배열 적축 핫스왑 기계식 키보드 블루투스 2.4GHz USB-C',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'メカニカルキーボード 75% JIS 日本語配列 赤軸 ホットスワップ Bluetooth 2.4GHz USB-C', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

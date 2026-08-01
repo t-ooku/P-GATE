@@ -1216,6 +1216,30 @@ test('ゲーミングモニターは4言語で画面・解像度・Hz・パネ�
   }
 });
 
+test('メカニカルキーボードは4言語で配列・サイズ・軸・接続条件が一致する候補だけを提示する', () => {
+  const queries = [
+    '75% JIS日本語配列 赤軸 ホットスワップ Bluetooth 2.4GHz USB-C メカニカルキーボード',
+    '75% JIS Japanese red switch hot-swappable mechanical keyboard Bluetooth 2.4GHz USB-C',
+    '75% JIS日文配列 红轴 热插拔 机械键盘 蓝牙 2.4GHz USB-C',
+    '75% JIS 일본어 배열 적축 핫스왑 기계식 키보드 블루투스 2.4GHz USB-C',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '75% JIS 日本語配列 赤軸 Hot-swappable Mechanical Keyboard Bluetooth 2.4GHz USB-C' },
+    { asin: 'WRONGSIZE', product_name: '65% JIS 日本語配列 赤軸 Hot-swappable Mechanical Keyboard Bluetooth 2.4GHz USB-C' },
+    { asin: 'ANSI', product_name: '75% ANSI US Layout Red Switch Hot-swappable Mechanical Keyboard Bluetooth 2.4GHz USB-C' },
+    { asin: 'BLUESWITCH', product_name: '75% JIS 日本語配列 青軸 Hot-swappable Mechanical Keyboard Bluetooth 2.4GHz USB-C' },
+    { asin: 'NOHOTSWAP', product_name: '75% JIS 日本語配列 赤軸 Mechanical Keyboard Bluetooth 2.4GHz USB-C' },
+    { asin: 'NOBT', product_name: '75% JIS 日本語配列 赤軸 Hot-swappable Mechanical Keyboard 2.4GHz USB-C' },
+    { asin: 'NO24', product_name: '75% JIS 日本語配列 赤軸 Hot-swappable Mechanical Keyboard Bluetooth USB-C' },
+    { asin: 'KEYCAPS', product_name: '75% JIS 日本語配列 Keycaps for Red Switch Hot-swappable Mechanical Keyboard Bluetooth 2.4GHz USB-C' },
+    { asin: 'SWITCHES', product_name: '75% JIS 日本語配列 Red Switch Set for Hot-swappable Mechanical Keyboard Bluetooth 2.4GHz USB-C' },
+    { asin: 'COMBO', product_name: '75% JIS 日本語配列 赤軸 Hot-swappable Mechanical Keyboard Mouse Combo Bluetooth 2.4GHz USB-C' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

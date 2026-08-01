@@ -209,6 +209,20 @@ function buildGamingMonitorSearchKeywords(query) {
     hdmi ? `HDMI ${hdmi}` : '', hdr].filter(Boolean).join(' ');
 }
 
+function buildMechanicalKeyboardSearchKeywords(query) {
+  if (!/(?:メカニカル\s*キーボード|mechanical\s*keyboard|机械\s*键盘|機械\s*鍵盤|기계식\s*키보드)/iu.test(query)) return '';
+  const layoutSize = String(query || '').match(/\b(60|65|75|80|100)\s*%/u)?.[1];
+  const jis = /\bjis\b|日本語配列|日文配列|日语配列|日語配列|일본어\s*배열/iu.test(query) ? 'JIS 日本語配列' : '';
+  const redSwitch = /赤軸|red\s*switch|红轴|紅軸|적축/iu.test(query) ? '赤軸' : '';
+  const hotSwap = /hot[- ]?swapp?able|hot[- ]?swap|ホットスワップ|热插拔|熱插拔|핫스왑/iu.test(query) ? 'ホットスワップ' : '';
+  const bluetooth = /bluetooth|ブルートゥース|蓝牙|藍牙|블루투스/iu.test(query) ? 'Bluetooth' : '';
+  const wireless24 = /\b2\.4\s*ghz\b/iu.test(query) ? '2.4GHz' : '';
+  const usbC = /usb[- ]?c|type[- ]?c/iu.test(query) ? 'USB-C' : '';
+  if (!layoutSize || !jis || !redSwitch) return '';
+  return ['メカニカルキーボード', `${layoutSize}%`, jis, redSwitch, hotSwap, bluetooth, wireless24, usbC]
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1052,6 +1066,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (sdMemoryCard) return sdMemoryCard;
   const gamingMonitor = buildGamingMonitorSearchKeywords(normalized);
   if (gamingMonitor) return gamingMonitor;
+  const mechanicalKeyboard = buildMechanicalKeyboardSearchKeywords(normalized);
+  if (mechanicalKeyboard) return mechanicalKeyboard;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

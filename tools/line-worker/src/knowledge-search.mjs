@@ -620,6 +620,34 @@ function isGamingMonitorMismatch(candidate, requested) {
   return false;
 }
 
+function mechanicalKeyboardConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    keyboard: /(?:キーボード|keyboard|键盘|鍵盤|키보드)/iu.test(text),
+    mechanical: /(?:メカニカル|mechanical|机械|機械|기계식)/iu.test(text),
+    layoutSize: text.match(/\b(60|65|75|80|100)\s*%/u)?.[1] || '',
+    jis: /\bjis\b|日本語配列|日文配列|日语配列|日語配列|일본어\s*배열/iu.test(text),
+    redSwitch: /赤軸|red\s*switch|红轴|紅軸|적축/iu.test(text),
+    hotSwap: /hot[- ]?swapp?able|hot[- ]?swap|ホットスワップ|热插拔|熱插拔|핫스왑/iu.test(text),
+    bluetooth: /bluetooth|ブルートゥース|蓝牙|藍牙|블루투스/iu.test(text),
+    wireless24: /\b2\.4\s*ghz\b/iu.test(text),
+    usbC: /usb[- ]?c|type[- ]?c/iu.test(text),
+    wrongProduct: /(?:keycaps?|キーキャップ|键帽|鍵帽|키캡|switch(?:es)?\s*(?:set|pack)|軸\s*(?:セット|単体)|轴体|軸體|스위치\s*(?:세트|단품)|membrane|メンブレン|薄膜键盘|薄膜鍵盤|멤브레인|mouse|マウス|鼠标|滑鼠|마우스|ansi|us\s*layout|英語配列|英文配列|英文键盘|英文鍵盤|영문\s*배열)/iu.test(text)
+  };
+}
+
+function isMechanicalKeyboardMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = mechanicalKeyboardConstraints(text);
+  if (!evidence.keyboard || !evidence.mechanical || evidence.wrongProduct) return true;
+  if (requested.layoutSize && evidence.layoutSize !== requested.layoutSize) return true;
+  for (const feature of ['jis', 'redSwitch', 'hotSwap', 'bluetooth', 'wireless24', 'usbC']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1433,12 +1461,16 @@ export function filterCategoryMismatches(query, candidates = []) {
   const sdMemoryCardIntent = sdMemoryCard.sdCard && Boolean(sdMemoryCard.capacity && sdMemoryCard.uhs);
   const gamingMonitor = gamingMonitorConstraints(normalizedQuery);
   const gamingMonitorIntent = gamingMonitor.monitor && Boolean(gamingMonitor.size && gamingMonitor.refreshRate);
+  const mechanicalKeyboard = mechanicalKeyboardConstraints(normalizedQuery);
+  const mechanicalKeyboardIntent = mechanicalKeyboard.keyboard && mechanicalKeyboard.mechanical
+    && Boolean(mechanicalKeyboard.layoutSize);
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
-    && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent) return candidates;
+    && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent
+    && !mechanicalKeyboardIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1491,6 +1523,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (portableSsdIntent) return !isPortableSsdMismatch(candidate, portableSsd);
     if (sdMemoryCardIntent) return !isSdMemoryCardMismatch(candidate, sdMemoryCard);
     if (gamingMonitorIntent) return !isGamingMonitorMismatch(candidate, gamingMonitor);
+    if (mechanicalKeyboardIntent) return !isMechanicalKeyboardMismatch(candidate, mechanicalKeyboard);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
