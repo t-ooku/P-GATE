@@ -326,7 +326,7 @@ function isLightUpPhoneCaseMismatch(candidate) {
 function isNegatedPowerBankRequirement(text, start, end) {
   const before = String(text || '').slice(Math.max(0, start - 24), start);
   const after = String(text || '').slice(end, end + 18);
-  return /(?:not\s+(?:a\s+|an\s+|the\s+)?|no\s+|without\s+|anything\s+but\s+|不要\s*|不是\s*|不想要\s*)$/iu.test(before)
+  return /(?:not\s+(?:a\s+|an\s+|the\s+)?|no\s+|without\s+(?:(?:a|an|the)\s+)?|anything\s+but\s+|不要\s*|不是\s*|不想要\s*)$/iu.test(before)
     || /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける|而不是|除外|말고|아닌|아니고|제외)/iu.test(after);
 }
 
@@ -338,8 +338,14 @@ function isPowerBankMismatch(candidate, query) {
   const capacity = [...normalizedQuery.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))?.[1];
   if (capacity && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
-  const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu.test(String(query || ''));
-  if (builtIn && !/(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu.test(text)) return true;
+  const builtInMatches = [...normalizedQuery.matchAll(/(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/giu)];
+  const builtIn = builtInMatches.some((match) =>
+    !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
+  const rejectsBuiltIn = builtInMatches.some((match) =>
+    isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length));
+  const candidateHasBuiltIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu.test(text);
+  if (builtIn && !candidateHasBuiltIn) return true;
+  if (!builtIn && rejectsBuiltIn && candidateHasBuiltIn) return true;
   const connector = [...normalizedQuery.matchAll(/(?:usb[- ]?c|type[- ]?c|lightning|ライトニング|闪电|閃電|라이트닝)/giu)]
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))?.[0] || '';
   if (builtIn && /(?:usb[- ]?c|type[- ]?c)/iu.test(connector) && !/(?:usb[- ]?c|type[- ]?c)/iu.test(text)) return true;

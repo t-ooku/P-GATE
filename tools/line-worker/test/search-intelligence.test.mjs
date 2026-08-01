@@ -2231,3 +2231,20 @@ test('negated MagSafe requirements exclude magnetic power banks in four language
       ['POWERREGULAR'], query);
   }
 });
+
+test('negated built-in cable requirements exclude integrated-cable power banks in four languages', () => {
+  const queries = [
+    'ケーブル内蔵じゃない10000mAhモバイルバッテリー',
+    'a 10000mAh power bank without a built-in cable',
+    '不要自带线的10000mAh充电宝',
+    '케이블 내장 말고 일반 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWERPLAIN', product_name: '10000mAh Power Bank USB-C' },
+    { asin: 'POWERBUILTIN', product_name: '10000mAh Power Bank Built-in USB-C Cable' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWERPLAIN'], query);
+  }
+});

@@ -529,7 +529,8 @@ function buildPowerBankSearchKeywords(query) {
   if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(normalized)) return '';
   const capacity = [...normalized.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
     .find((match) => !isNegatedAttribute(normalized, new RegExp(`${match[1]}\\s*m\\s*ah`, 'iu')))?.[1];
-  const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu.test(normalized);
+  const builtInPattern = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu;
+  const builtIn = builtInPattern.test(normalized) && !isNegatedAttribute(normalized, builtInPattern);
   const usbCConnector = /(?:usb[- ]?c|type[- ]?c)/iu;
   const lightningConnector = /(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu;
   const connector = usbCConnector.test(normalized) && !isNegatedAttribute(normalized, usbCConnector) ? 'USB-C'
@@ -747,7 +748,7 @@ function isNegatedAttribute(query, pattern) {
   for (const match of query.matchAll(matcher)) {
     const before = query.slice(Math.max(0, match.index - 18), match.index);
     const after = query.slice(match.index + match[0].length, match.index + match[0].length + 14);
-    const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
+    const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without(?:\s+(?:a|an|the))?|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
     const negatedAfter = /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける?|而不是|말고|아닌|아니고|제외)/iu.test(after);
     if (!negatedBefore && !negatedAfter) return false;
     foundNegated = true;
