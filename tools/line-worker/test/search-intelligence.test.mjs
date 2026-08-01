@@ -1181,3 +1181,47 @@ test('4言語のライフジャケットをファッション用ジャケット�
     assert.doesNotMatch(query, /\("jacket"\*\)/, input);
   }
 });
+
+test('4言語のノートPC本体はRAM・SSD条件と共通カテゴリを保持する', () => {
+  for (const input of [
+    '16GB RAM 512GB SSDの軽いノートPC',
+    'lightweight laptop with 16GB RAM and 512GB SSD',
+    '16GB内存512GB固态硬盘的轻薄笔记本电脑',
+    '16GB RAM 512GB SSD 가벼운 노트북',
+  ]) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"laptop"\*/, input);
+    assert.match(query, /"16gb"\*/, input);
+    assert.match(query, /"512gb"\*/, input);
+  }
+});
+
+test('4言語の軽量表現を商品名必須条件にせずゲーミングマウス候補を維持する', () => {
+  for (const input of [
+    'すごく軽い黒い無線ゲーミングマウス',
+    'a very lightweight black wireless gaming mouse for a computer',
+    '轻量黑色无线电脑鼠标',
+    '컴퓨터용 초경량 검정 무선 게이밍 마우스',
+  ]) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"mouse"\*/, input);
+    assert.match(query, /"black"\*/, input);
+    assert.doesNotMatch(query, /"lightweight"\*|"ultralight"\*/, input);
+  }
+});
+
+test('ノートPCケース・スタンド・充電器を4言語で本体FTSカテゴリから分離する', () => {
+  const cases = [
+    ['13インチのノートPCケース', 'laptop case'], ['13-inch laptop sleeve', 'laptop case'],
+    ['13英寸笔记本电脑包', 'laptop case'], ['13인치 노트북 파우치', 'laptop case'],
+    ['折りたたみノートPCスタンド', 'laptop stand'], ['foldable laptop stand', 'laptop stand'],
+    ['可折叠笔记本电脑支架', 'laptop stand'], ['접이식 노트북 거치대', 'laptop stand'],
+    ['USB-CノートPC充電器', 'laptop charger'], ['USB-C laptop charger', 'laptop charger'],
+    ['USB-C笔记本电脑充电器', 'laptop charger'], ['USB-C 노트북 충전기', 'laptop charger'],
+  ];
+  for (const [input, category] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, new RegExp(`"${category}"\\*`), input);
+    assert.doesNotMatch(query, /\("laptop"\* OR "notebook computer"\*\)/, input);
+  }
+});

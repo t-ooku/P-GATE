@@ -35,7 +35,7 @@ function deviceName(query) {
 
 function specificationTokens(query) {
   const matches = query.match(
-    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}\s*(?:mm|cm|m|インチ|inch|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|kg|kgs|g|kilograms?|kilogrammes?|grams?|インチ|inch|リットル|オンス|升|毫升|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|キロ(?:グラム)?|グラム|公斤|千克|리터|온스|센티미터|밀리미터|킬로그램|키로|그램)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
+    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}[-\s]*(?:mm|cm|m|インチ|inch|英寸|인치|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)|\d+(?:\.\d+)?[-\s]*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|kg|kgs|g|kilograms?|kilogrammes?|grams?|インチ|inch|英寸|인치|リットル|オンス|升|毫升|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|キロ(?:グラム)?|グラム|公斤|千克|리터|온스|센티미터|밀리미터|킬로그램|키로|그램)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
   ) || [];
   return [...new Set(matches
     .filter((value) => {
@@ -47,6 +47,8 @@ function specificationTokens(query) {
     .replace(/^usb-c$/iu, 'USB-C')
     .replace(/毫米|ミリ(?:メートル)?|밀리미터$/u, 'mm')
     .replace(/厘米|センチ(?:メートル)?|센티미터$/u, 'cm')
+    .replace(/英寸|인치$/u, 'インチ')
+    .replace(/-?inch(?:es)?$/iu, 'インチ')
     .replace(/キロ(?:グラム)?|公斤|千克|킬로그램|키로$/u, 'kg')
     .replace(/グラム|그램$/u, 'g')
     .replace(/kilogrammes?|kilograms?|kgs?$/iu, 'kg')
@@ -110,6 +112,9 @@ const GENERIC_PRODUCTS = [
   ['財布', /(?:財布|ウォレット|wallet|钱包|錢包|지갑)/iu],
   ['キーボード', /(?:キーボード|keyboard|键盘|鍵盤|키보드)/iu],
   ['マウス', /(?:パソコン|PC|computer).{0,10}マウス|computer\s*mouse|trackball|电脑鼠标|電腦滑鼠|컴퓨터\s*마우스/iu],
+  ['ノートPCケース', /(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu],
+  ['ノートPCスタンド', /(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu],
+  ['ノートPC充電器', /(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu],
   ['ノートパソコン', /(?:ノートパソコン|ノートPC|ラップトップ|laptop|notebook\s*computer|笔记本电脑|筆記型電腦|노트북)/iu],
   ['キャンドル', /(?:キャンドル|ろうそく|candle|蜡烛|蠟燭|캔들|향초)/iu],
   ['デュアル充電器', /(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|두\s*대|듀얼).{0,12}충전/iu],
@@ -145,7 +150,7 @@ const GENERIC_PRODUCTS = [
   ['ジャケット', /(?:ジャケット|(?<!life\s)jackets?|夹克|夾克|재킷)/iu],
   ['コート', /(?:トレンチコート|コート|\b(?:trench\s+)?coats?\b|风衣|風衣|外套|트렌치\s*코트|트렌치코트|코트)/iu],
   ['パーカー', /(?:パーカー|hoodies?|hooded\s+sweatshirts?|连帽衫|連帽衫|후드티|후디)/iu],
-  ['トップス', /(?:トップス|シャツ|ブラウス|tops?|shirts?|blouse|上衣|셔츠|블라우스)/iu],
+  ['トップス', /(?:トップス|シャツ|ブラウス|\btops?\b|\bshirts?\b|\bblouse\b|上衣|셔츠|블라우스)/iu],
   ['リップ', /(?:リップ|口紅|lipstick|lip\s*tint|唇膏|립스틱|립틴트)/iu],
   ['水筒', /(?:水筒|タンブラー|ボトル|water\s*bottle|tumbler|水杯|保温杯|保溫杯|텀블러)/iu],
   ['携帯扇風機', /(?:携帯扇風機|ハンディファン|portable\s*fan|handheld\s*fan|手持风扇|手持風扇|휴대용\s*선풍기)/iu],
@@ -162,7 +167,7 @@ const GENERIC_ATTRIBUTES = [
   ['自動', /(?:自動|automatic|auto\b|自动|自動|자동)/iu],
   ['静音', /(?:静音|音が静か|quiet|silent|低噪音|저소음)/iu],
   ['小型', /(?:小さい|小さな|小型|手のひら|コンパクト|ミニ|small|mini|compact|小巧|소형|작은)/iu],
-  ['軽量', /(?:軽い|軽量|lightweight|轻量|輕量|경량|가벼운)/iu],
+  ['軽量', /(?:軽い|軽量|lightweight|ultralight|轻量|輕量|轻薄|輕薄|경량|가벼운)/iu],
   ['防水', /(?:防水|waterproof|防水型|방수)/iu],
   ['黒', /(?:黒|ブラック|\bblack\b|黑色|검정|검은색|블랙)/iu],
   ['白', /(?:白|ホワイト|\bwhite\b|白色|흰색|화이트)/iu],
@@ -295,6 +300,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (products.includes('バックパック')) products = products.filter((label) => label !== 'バッグ');
   if (products.includes('Tシャツ')) products = products.filter((label) => label !== 'トップス');
   if (products.includes('ライフジャケット')) products = products.filter((label) => label !== 'ジャケット');
+  if (products.some((label) => label.startsWith('ノートPC'))) products = products.filter((label) => label !== 'ノートパソコン');
   if (!products.length) return compactUnknownSearchPhrase(normalized);
   const materials = matchedMaterials(normalized);
   const attributes = matchedAttributes(normalized)

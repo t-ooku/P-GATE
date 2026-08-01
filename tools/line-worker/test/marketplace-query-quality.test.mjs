@@ -525,3 +525,46 @@ test("ライフジャケットをファッション用ジャケットと分離�
     }
   }
 });
+
+test("4言語のノートPC本体はRAM・SSDを保持しトップスへ誤変換しない", () => {
+  const cases = [
+    '16GB RAM 512GB SSDの軽いノートPC',
+    'lightweight laptop with 16GB RAM and 512GB SSD',
+    '16GB内存512GB固态硬盘的轻薄笔记本电脑',
+    '16GB RAM 512GB SSD 가벼운 노트북',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('ノートパソコン'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes('16GB'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes('512GB'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('トップス'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
+
+test("ノートPCケース・スタンド・充電器を4言語で本体から分離して9モール変換する", () => {
+  const cases = [
+    ['13インチのノートPCケース', 'ノートPCケース', '13インチ'],
+    ['13-inch laptop sleeve', 'ノートPCケース', '13インチ'],
+    ['13英寸笔记本电脑包', 'ノートPCケース', '13インチ'],
+    ['13인치 노트북 파우치', 'ノートPCケース', '13インチ'],
+    ['折りたたみノートPCスタンド', 'ノートPCスタンド', '折りたたみ'],
+    ['foldable laptop stand', 'ノートPCスタンド', '折りたたみ'],
+    ['可折叠笔记本电脑支架', 'ノートPCスタンド', '折りたたみ'],
+    ['접이식 노트북 거치대', 'ノートPCスタンド', '折りたたみ'],
+    ['USB-CノートPC充電器', 'ノートPC充電器', 'USB-C'],
+    ['USB-C laptop charger', 'ノートPC充電器', 'USB-C'],
+    ['USB-C笔记本电脑充电器', 'ノートPC充電器', 'USB-C'],
+    ['USB-C 노트북 충전기', 'ノートPC充電器', 'USB-C'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, product, condition] of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes(product), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes(condition), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('ノートパソコン'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
