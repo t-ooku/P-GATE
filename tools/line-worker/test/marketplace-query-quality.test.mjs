@@ -226,3 +226,20 @@ test("4言語のセット数量を9モール向けに統一し否定数量を除
     }
   }
 });
+
+test("4言語の空白付き容量でも希望容量だけを9モール検索語へ保持する", () => {
+  const cases = [
+    '64 GBではなく128 GBのiPhone 15ケース',
+    'not 64 GB but 128 GB iPhone 15 case',
+    '不要64 GB，要128 GB的iPhone 15手机壳',
+    '64 GB 말고 128 GB iPhone 15 케이스',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('iPhone 15ケース'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('128GB'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!keywords.includes('64GB'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
