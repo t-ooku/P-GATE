@@ -109,10 +109,24 @@ const GENERIC_ATTRIBUTES = [
   ['グレー', /(?:グレー|灰色|gr[ae]y|灰色|회색|그레이)/iu],
   ['シルバー', /(?:銀色|シルバー|\bsilver\b|银色|銀色|은색|실버)/iu],
   ['ゴールド', /(?:金色|ゴールド|\bgold\b|金色|금색|골드)/iu],
+  ['赤', /(?:赤(?:色)?|レッド|\bred\b|红色|紅色|빨간색|레드)/iu],
+  ['オレンジ', /(?:オレンジ|\borange\b|橙色|橘色|주황색|오렌지)/iu],
+  ['ベージュ', /(?:ベージュ|\bbeige\b|米色|베이지)/iu],
+  ['茶', /(?:茶色|ブラウン|\bbrown\b|棕色|褐色|갈색|브라운)/iu],
   ['折りたたみ', /(?:折りたたみ|折り畳み|折り畳める|foldable|folding|折叠|折疊|접이식)/iu],
   ['光る', /(?:光る|発光|LED|ライトアップ|light[- ]?up|glowing|发光|發光|빛나는|발광)/iu],
   ['韓国風', /(?:韓国っぽい|韓国風|韓国系|韓国の|korean\s*(?:style|look)|韩系|韓系|한국풍|한국\s*스타일)/iu],
 ];
+
+function isNegatedAttribute(query, pattern) {
+  const match = query.match(pattern);
+  if (!match || match.index == null) return false;
+  const before = query.slice(Math.max(0, match.index - 18), match.index);
+  const after = query.slice(match.index + match[0].length, match.index + match[0].length + 14);
+  const negatedBefore = /(?:not|no|without|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
+  const negatedAfter = /^\s*(?:以外|ではない|じゃない|でない|なし|を除く|を避ける?|말고|아닌|아니고|제외)/iu.test(after);
+  return negatedBefore || negatedAfter;
+}
 
 function compactUnknownSearchPhrase(normalized) {
   if (/(?:\/|／|\||｜)/u.test(normalized)) return normalized;
@@ -140,7 +154,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
     .filter((label, index, values) => values.indexOf(label) === index);
   if (!products.length) return compactUnknownSearchPhrase(normalized);
   const attributes = GENERIC_ATTRIBUTES
-    .filter(([, pattern]) => pattern.test(normalized))
+    .filter(([, pattern]) => pattern.test(normalized) && !isNegatedAttribute(normalized, pattern))
     .map(([label]) => label)
     .filter((label, index, values) =>
       (label !== 'ワイヤレス' || !values.includes('完全ワイヤレス'))

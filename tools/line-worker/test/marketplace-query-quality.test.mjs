@@ -54,7 +54,7 @@ test("Qoo10向け検索語は640件と重要な負例で必須条件を保持す
     cases,
     (input) => buildQoo10SearchKeywords(input),
   );
-  assert.equal(report.overall.cases, 1249);
+  assert.equal(report.overall.cases, 1256);
   assert.equal(report.overall.pass_rate, 1, JSON.stringify(report.failures.slice(0, 10), null, 2));
   assert.equal(report.overall.empty_rate, 0);
   assert.equal(report.overall.required_token_violation_rate, 0);
