@@ -1557,6 +1557,32 @@ test('Dolby Atmosサウンドバーは4言語でチャンネル・端子・低�
   }
 });
 
+test('フルサイズミラーレスカメラは4言語で画素・動画・手ぶれ補正・記録構成が一致する本体だけを提示する', () => {
+  const queries = [
+    '2400万画素 4K60p ボディ内手ぶれ補正 デュアルカードスロット フルサイズミラーレスカメラ',
+    '24MP full-frame mirrorless camera 4K60p in-body image stabilization dual card slots',
+    '2400万像素 4K60p 机身防抖 双卡槽 全画幅无反相机',
+    '2400만 화소 4K60p 바디 손떨림 보정 듀얼 카드 슬롯 풀프레임 미러리스 카메라',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'HIGHMP', product_name: '33MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'SLOWVIDEO', product_name: '24MP Full-frame Mirrorless Camera 4K30p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'NOIBIS', product_name: '24MP Full-frame Mirrorless Camera 4K60p Dual Card Slots' },
+    { asin: 'SINGLESLOT', product_name: '24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Single Card Slot' },
+    { asin: 'LENS', product_name: 'Camera Lens for 24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'COMPACT', product_name: 'Compact Camera 24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'CAMCORDER', product_name: 'Camcorder 24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'BATTERY', product_name: 'Replacement Battery for 24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'CHARGER', product_name: 'Battery Charger for 24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'CAGE', product_name: 'Camera Cage for 24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+    { asin: 'BAG', product_name: 'Camera Bag for 24MP Full-frame Mirrorless Camera 4K60p In-body Image Stabilization Dual Card Slots' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

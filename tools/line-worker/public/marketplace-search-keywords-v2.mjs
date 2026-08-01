@@ -397,6 +397,21 @@ function buildDolbyAtmosSoundbarSearchKeywords(query) {
   return ['サウンドバー', `${channels}ch`, atmos, earc, subwoofer].join(' ');
 }
 
+function buildFullFrameMirrorlessCameraSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const camera = /(?:フルサイズ.{0,12}ミラーレス(?:カメラ)?|full[- ]?frame.{0,12}mirrorless\s*camera|全画幅.{0,12}无反相机|全片幅.{0,12}無反相機|풀프레임.{0,12}미러리스\s*카메라)/iu.test(normalized);
+  if (!camera) return '';
+  const megapixels = normalized.match(/(?:(\d{2})\s*mp|((?:2[0-9]|3[0-9])00)\s*(?:万画素|万像素|萬像素|만\s*화소))/iu);
+  const pixels = megapixels?.[1] ? `${megapixels[1]}00` : megapixels?.[2];
+  const video = /4\s*k\s*60\s*p/iu.test(normalized) ? '4K60p' : '';
+  const ibis = /(?:ボディ内手ぶれ補正|in[- ]?body\s*image\s*stabili[sz]ation|\bibis\b|机身防抖|機身防震|바디\s*손떨림\s*보정)/iu.test(normalized)
+    ? 'ボディ内手ぶれ補正' : '';
+  const dualSlot = /(?:デュアルカードスロット|dual\s*card\s*slots?|双卡槽|雙卡槽|듀얼\s*카드\s*슬롯)/iu.test(normalized)
+    ? 'デュアルカードスロット' : '';
+  if (!pixels || !video || !ibis || !dualSlot) return '';
+  return ['フルサイズミラーレスカメラ', `${pixels}万画素`, video, ibis, dualSlot].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1200,6 +1215,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawLaserProjector) return rawLaserProjector;
   const rawDolbyAtmosSoundbar = buildDolbyAtmosSoundbarSearchKeywords(rawNormalized);
   if (rawDolbyAtmosSoundbar) return rawDolbyAtmosSoundbar;
+  const rawFullFrameMirrorlessCamera = buildFullFrameMirrorlessCameraSearchKeywords(rawNormalized);
+  if (rawFullFrameMirrorlessCamera) return rawFullFrameMirrorlessCamera;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

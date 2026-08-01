@@ -461,6 +461,21 @@ test('Dolby Atmosサウンドバーはチャンネル・端子・低音構成を
   }
 });
 
+test('フルサイズミラーレスカメラは画素・動画・手ぶれ補正・記録構成を4言語で保持する', () => {
+  const queries = [
+    '2400万画素 4K60p ボディ内手ぶれ補正 デュアルカードスロット フルサイズミラーレスカメラ',
+    '24MP full-frame mirrorless camera 4K60p in-body image stabilization dual card slots',
+    '2400万像素 4K60p 机身防抖 双卡槽 全画幅无反相机',
+    '2400만 화소 4K60p 바디 손떨림 보정 듀얼 카드 슬롯 풀프레임 미러리스 카메라',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'フルサイズミラーレスカメラ 2400万画素 4K60p ボディ内手ぶれ補正 デュアルカードスロット', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

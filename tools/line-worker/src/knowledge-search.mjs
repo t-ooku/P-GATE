@@ -990,6 +990,31 @@ function isDolbyAtmosSoundbarMismatch(candidate, requested) {
   return false;
 }
 
+function fullFrameMirrorlessCameraConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  const megapixels = text.match(/(?:(\d{2})\s*mp|((?:2[0-9]|3[0-9])00)\s*(?:万画素|万像素|萬像素|만\s*화소))/iu);
+  return {
+    camera: /(?:フルサイズ.{0,12}ミラーレス(?:カメラ)?|full[- ]?frame.{0,12}mirrorless\s*camera|全画幅.{0,12}无反相机|全片幅.{0,12}無反相機|풀프레임.{0,12}미러리스\s*카메라)/iu.test(text),
+    pixels: megapixels?.[1] ? `${megapixels[1]}00` : megapixels?.[2] || '',
+    video: /4\s*k\s*60\s*p/iu.test(text),
+    ibis: /(?:ボディ内手ぶれ補正|in[- ]?body\s*image\s*stabili[sz]ation|\bibis\b|机身防抖|機身防震|바디\s*손떨림\s*보정)/iu.test(text),
+    dualSlot: /(?:デュアルカードスロット|dual\s*card\s*slots?|双卡槽|雙卡槽|듀얼\s*카드\s*슬롯)/iu.test(text),
+    wrongProduct: /(?:交換レンズ|camera\s*lens|镜头|鏡頭|교환\s*렌즈|コンパクトデジタルカメラ|compact\s*camera|卡片机|卡片機|콤팩트\s*카메라|ビデオカメラ|camcorder|摄像机|攝影機|캠코더|replacement\s*battery|交換バッテリー|替换电池|替換電池|교체용\s*배터리|battery\s*charger|充電器|充电器|充電器|충전기|camera\s*cage|カメラケージ|相机兔笼|相機兔籠|카메라\s*케이지|camera\s*bag|カメラバッグ|相机包|相機包|카메라\s*가방)/iu.test(text)
+  };
+}
+
+function isFullFrameMirrorlessCameraMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = fullFrameMirrorlessCameraConstraints(text);
+  if (!evidence.camera || evidence.wrongProduct) return true;
+  if (requested.pixels && evidence.pixels !== requested.pixels) return true;
+  for (const feature of ['video', 'ibis', 'dualSlot']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1848,6 +1873,10 @@ export function filterCategoryMismatches(query, candidates = []) {
   const dolbyAtmosSoundbar = dolbyAtmosSoundbarConstraints(normalizedQuery);
   const dolbyAtmosSoundbarIntent = dolbyAtmosSoundbar.soundbar && Boolean(dolbyAtmosSoundbar.channels)
     && dolbyAtmosSoundbar.atmos && !dolbyAtmosSoundbar.wrongProduct;
+  const fullFrameMirrorlessCamera = fullFrameMirrorlessCameraConstraints(normalizedQuery);
+  const fullFrameMirrorlessCameraIntent = fullFrameMirrorlessCamera.camera
+    && Boolean(fullFrameMirrorlessCamera.pixels && fullFrameMirrorlessCamera.video)
+    && !fullFrameMirrorlessCamera.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1858,7 +1887,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
-    && !laserProjectorIntent && !dolbyAtmosSoundbarIntent) return candidates;
+    && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1929,6 +1958,9 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (oledTelevisionIntent) return !isOledTelevisionMismatch(candidate, oledTelevision);
     if (laserProjectorIntent) return !isLaserProjectorMismatch(candidate, laserProjector);
     if (dolbyAtmosSoundbarIntent) return !isDolbyAtmosSoundbarMismatch(candidate, dolbyAtmosSoundbar);
+    if (fullFrameMirrorlessCameraIntent) {
+      return !isFullFrameMirrorlessCameraMismatch(candidate, fullFrameMirrorlessCamera);
+    }
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);
