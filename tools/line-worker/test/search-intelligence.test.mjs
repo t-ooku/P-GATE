@@ -214,6 +214,21 @@ test('4言語のセット数量は保持し否定された数量はFTS必須条�
   }
 });
 
+test('4言語の空白付き容量でも否定容量を除外し希望容量を保持する', () => {
+  for (const query of [
+    '64 GBではなく128 GBのiPhone 15ケース',
+    'not 64 GB but 128 GB iPhone 15 case',
+    '不要64 GB，要128 GB的iPhone 15手机壳',
+    '64 GB 말고 128 GB iPhone 15 케이스',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /"phone"\*/);
+    assert.match(expression, /"128"\*/);
+    assert.match(expression, /"15"\*/);
+    assert.doesNotMatch(expression, /"64"\*/);
+  }
+});
+
 test('Japanese memory fragments expand into category and color FTS groups', () => {
   const query = intelligentFtsQuery('茶色い革ベルトと金属ケースの男性用腕時計');
   assert.match(query, /"watch"\*/);

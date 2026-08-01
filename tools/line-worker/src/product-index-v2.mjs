@@ -19,6 +19,13 @@ const IDENTIFIER_STOPWORDS = new Set([
 const quote = (token) => `"${String(token).replaceAll('"','""')}"*`;
 const cleanTenant = (value) => String(value || '').normalize('NFKC').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
 
+function evidenceMatchEnd(text, match) {
+  const end = match.index + match[0].length;
+  if (!/^\d+(?:\.\d+)?$/u.test(match[0])) return end;
+  const unit = text.slice(end).match(/^\s*(?:w|mah|gb|tb|mb|mm|cm|ml|l|oz|m|inch|inches)\b/iu);
+  return end + (unit?.[0].length || 0);
+}
+
 export function intelligentFtsQuery(value) {
   const source = stripSearchBudget(value);
   const normalized = normalizeSearchQuery(source);
@@ -40,7 +47,7 @@ export function intelligentFtsQuery(value) {
     .filter((match) => !isNegatedSearchOccurrence(
       normalized,
       match.index,
-      match.index + match[0].length,
+      evidenceMatchEnd(normalized, match),
     ))
     .map((match) => match[0]
       .replace(/\s+/gu, '')
