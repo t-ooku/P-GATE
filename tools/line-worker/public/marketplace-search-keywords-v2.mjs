@@ -489,7 +489,7 @@ function buildFoldingElectricBikeSearchKeywords(query) {
 
 function buildPortablePowerStationSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const station = /(?:ポータブル電源|portable\s*power\s*station|便携式储能电源|便攜式儲能電源|휴대용\s*파워뱅크)/iu.test(normalized);
+  const station = /(?:ポータブル電源|portable\s*power\s*station|便携式储能电源|便攜式儲能電源|휴대용\s*파워뱅크|停電時.{0,12}冷蔵庫.{0,12}動かし.{0,16}ソーラー.{0,12}充電|refrigerator\s*running.{0,16}outages.{0,20}recharge\s*by\s*solar|停电时.{0,12}带动冰箱.{0,16}太阳能充电|정전\s*때.{0,12}냉장고.{0,12}돌리고.{0,16}태양광.{0,12}충전)/iu.test(normalized);
   const lifepo4 = /(?:LiFePO4|リン酸鉄|磷酸铁|磷酸鐵|리튬인산철)/iu.test(normalized);
   const capacity = normalized.match(/\b(\d{3,5})\s*Wh\b/iu)?.[1];
   const output = normalized.match(/(?:定格出力|rated\s*output|额定功率|額定功率|정격\s*출력)\s*(\d{3,5})\s*W\b/iu)?.[1];

@@ -644,6 +644,10 @@ test('ポータブル電源は電池種・容量・出力・UPS・ソーラー�
     'LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W',
     '磷酸铁 便携式储能电源 1536Wh 额定功率2000W UPS 太阳能输入500W',
     '리튬인산철 휴대용 파워뱅크 1536Wh 정격 출력 2000W UPS 태양광 입력 500W',
+    '停電時に冷蔵庫を動かし普段はソーラーで充電したい リン酸鉄 1536Wh 定格出力2000W UPS ソーラー入力500W',
+    'want to keep the refrigerator running during outages and recharge by solar normally LiFePO4 1536Wh rated output 2000W UPS solar input 500W',
+    '想在停电时带动冰箱平时用太阳能充电 磷酸铁 1536Wh 额定功率2000W UPS 太阳能输入500W',
+    '정전 때 냉장고를 돌리고 평소에는 태양광으로 충전하고 싶어 리튬인산철 1536Wh 정격 출력 2000W UPS 태양광 입력 500W',
   ];
   for (const query of queries) {
     for (const marketplace of SEARCH_MARKETPLACES) {
