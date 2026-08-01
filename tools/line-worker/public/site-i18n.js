@@ -20,6 +20,10 @@ Object.assign(messages.KO,{
   'affiliate.searchNotice':'광고 안내: Amazon 및 라쿠텐 시장 링크에는 제휴 링크가 포함될 수 있습니다. 구매 가격이나 검색 순위에는 영향을 주지 않습니다.',
   'affiliate.footerDisclosure':'HOSHILU는 Amazon Associates 및 라쿠텐 제휴 링크를 통해 수수료를 받을 수 있습니다.'
 });
+Object.assign(messages.JA,{'social.officialTitle':'ホシル公式アカウント','social.officialLead':'新機能やお得な情報を、公式アカウントからお届けします。','social.line':'LINE公式','social.instagram':'Instagram公式','social.x':'X公式'});
+Object.assign(messages.EN,{'social.officialTitle':'Official HOSHILU accounts','social.officialLead':'Follow our official accounts for new features and useful updates.','social.line':'Official LINE','social.instagram':'Official Instagram','social.x':'Official X'});
+Object.assign(messages.ZH,{'social.officialTitle':'HOSHILU 官方账号','social.officialLead':'通过官方账号获取新功能和实用资讯。','social.line':'官方 LINE','social.instagram':'官方 Instagram','social.x':'官方 X'});
+Object.assign(messages.KO,{'social.officialTitle':'HOSHILU 공식 계정','social.officialLead':'새로운 기능과 유용한 소식을 공식 계정에서 전해 드립니다.','social.line':'공식 LINE','social.instagram':'공식 Instagram','social.x':'공식 X'});
 function detect(){const saved=localStorage.getItem('mygate_language');if(LANGUAGES[saved])return saved;const value=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();return value.startsWith('en')?'EN':value.startsWith('zh')?'ZH':value.startsWith('ko')?'KO':'JA';}
 function t(key,language=detect()){return messages[language]?.[key]||messages.JA[key]||key;}
 function apply(language=detect()){const selected=LANGUAGES[language]?language:'JA';localStorage.setItem('mygate_language',selected);document.documentElement.lang=LANGUAGES[selected];document.querySelectorAll('[data-i18n]').forEach(node=>{node.textContent=t(node.dataset.i18n,selected);});document.querySelectorAll('[data-language-select]').forEach(select=>{select.value=selected;});return selected;}
