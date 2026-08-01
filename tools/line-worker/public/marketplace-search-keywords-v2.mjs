@@ -336,6 +336,27 @@ function buildToolBatterySearchKeywords(query) {
     count ? `${count}個セット` : ''].filter(Boolean).join(' ');
 }
 
+function labelTapePart(query) {
+  const value = String(query || '').normalize('NFKC');
+  const part = value.match(/\b(TZE[- ]?231|45013|XR[- ]?12WE|SS12K)\b/iu)?.[1];
+  if (!part) return '';
+  return part.toUpperCase().replace(/^TZE /u, 'TZE-').replace(/^XR /u, 'XR-');
+}
+
+function buildLabelTapeSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:ラベル(?:ライター用)?テープ|label\s*tape|labeling\s*tape|标签带|標籤帶|라벨\s*테이프)/iu.test(normalized)) return '';
+  const part = labelTapePart(normalized);
+  if (!part) return '';
+  const brand = part === 'TZE-231' ? 'Brother P-touch' : part === '45013' ? 'DYMO D1' : part === 'XR-12WE' ? 'CASIO' : 'King Jim Tepra';
+  const width = normalized.match(/(\d+(?:\.\d+)?)\s*(?:mm|毫米|밀리미터)/iu)?.[1];
+  const blackOnWhite = /(?:黒文字.{0,8}白|black\s*(?:print|text)?\s*on\s*white|黑字白底|黑色字.{0,6}白色底|검정\s*(?:글씨|문자).{0,8}흰색)/iu.test(normalized) ? '黒文字 白' : '';
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu.test(normalized) ? '純正' : '';
+  const count = normalized.match(/(\d+)\s*(?:個|本|pack|packs|count|pcs|pieces|盒|卷|巻|개|개입)/iu)?.[1];
+  return [brand, part, 'ラベルテープ', width ? `${width}mm` : '', blackOnWhite, genuine,
+    count ? `${count}個セット` : ''].filter(Boolean).join(' ');
+}
+
 function buildRobotVacuumConsumableSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const robotVacuum = /(?:roomba|ルンバ|robot\s*vacuum|ロボット掃除機|扫地机器人|掃地機器人|로봇\s*청소기|룸바)/iu.test(normalized);
@@ -640,6 +661,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
   if (rawToolBattery) return rawToolBattery;
+  const rawLabelTape = buildLabelTapeSearchKeywords(rawNormalized);
+  if (rawLabelTape) return rawLabelTape;
   const normalized = stripSearchBudget(rawNormalized).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);

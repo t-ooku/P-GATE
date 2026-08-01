@@ -189,6 +189,20 @@ test('電動工具バッテリーを4言語で本体と充電器から分離し�
   }
 });
 
+test('ラベルライターテープを4言語で本体から分離し品番幅色を保つ', () => {
+  const cases = [
+    ['ブラザー P-touch 純正ラベルテープ TZe-231 12mm 黒文字 白 2個', 'Brother P-touch TZE-231 ラベルテープ 12mm 黒文字 白 純正 2個セット'],
+    ['DYMO D1 45013 12mm black on white genuine label tape 2 pack', 'DYMO D1 45013 ラベルテープ 12mm 黒文字 白 純正 2個セット'],
+    ['卡西欧 XR-12WE 12毫米 黑字白底 原装标签带 2盒', 'CASIO XR-12WE ラベルテープ 12mm 黒文字 白 純正 2個セット'],
+    ['킹짐 Tepra SS12K 12mm 검정 글씨 흰색 정품 라벨 테이프 2개', 'King Jim Tepra SS12K ラベルテープ 12mm 黒文字 白 純正 2個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);

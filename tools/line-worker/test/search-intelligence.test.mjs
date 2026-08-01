@@ -1878,3 +1878,28 @@ test('電動工具バッテリーは本体・充電器・別型番・電圧容�
     assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['tool-battery'], query);
   }
 });
+
+test('ラベルテープは本体・別品番・幅個数違い・互換品を除外する', () => {
+  const candidates = [
+    { asin: 'BROTHER', product_name: 'Brother P-touch TZe-231 純正 ラベルテープ 12mm 黒文字 白 2個' },
+    { asin: 'BROTHER_ONE', product_name: 'Brother P-touch TZe-231 純正 ラベルテープ 12mm 黒文字 白 1個' },
+    { asin: 'BROTHER_COMPAT', product_name: 'Brother P-touch TZe-231 互換 ラベルテープ 12mm 黒文字 白 2個' },
+    { asin: 'BROTHER_RED', product_name: 'Brother P-touch TZe-232 純正 ラベルテープ 12mm 赤文字 白 2個' },
+    { asin: 'DYMO', product_name: 'DYMO D1 45013 12mm black on white genuine label tape 2 pack' },
+    { asin: 'DYMO_9', product_name: 'DYMO D1 45013 9mm black on white genuine label tape 2 pack' },
+    { asin: 'CASIO', product_name: 'CASIO XR-12WE 12毫米 黑字白底 原装标签带 2盒' },
+    { asin: 'CASIO_BODY', product_name: 'CASIO 标签打印机 本体 XR-12WE 12毫米 2盒套装' },
+    { asin: 'TEPRA', product_name: 'King Jim Tepra SS12K 12mm 검정 글씨 흰색 정품 라벨 테이프 2개' },
+    { asin: 'TEPRA_WRONG', product_name: 'King Jim Tepra SS18K 18mm 검정 글씨 흰색 정품 라벨 테이프 2개' },
+  ];
+  const cases = [
+    ['ブラザー P-touch 純正ラベルテープ TZe-231 12mm 黒文字 白 2個', ['BROTHER']],
+    ['DYMO D1 45013 12mm black on white genuine label tape 2 pack', ['DYMO']],
+    ['卡西欧 XR-12WE 12毫米 黑字白底 原装标签带 2盒', ['CASIO']],
+    ['킹짐 Tepra SS12K 12mm 검정 글씨 흰색 정품 라벨 테이프 2개', ['TEPRA']],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), expected, query);
+    assert.deepEqual(semanticSearchGroups(query).map((group) => group.category), ['label-tape'], query);
+  }
+});

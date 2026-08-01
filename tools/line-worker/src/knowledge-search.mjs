@@ -487,7 +487,7 @@ function waterFilterPartNumber(text) {
 
 function requestedPackageCount(text) {
   return Number(String(text || '').normalize('NFKC')
-    .match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|块|塊|개|개입|세트)/iu)?.[1] || 0);
+    .match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|块|塊|盒|卷|巻|개|개입|세트)/iu)?.[1] || 0);
 }
 
 function isWaterFilterCartridgeMismatch(candidate, query) {
@@ -685,6 +685,29 @@ function isToolBatteryMismatch(candidate, query) {
   return !/(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리|battery\s*pack)/iu.test(text);
 }
 
+function labelTapePart(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const part = value.match(/\b(tze[- ]?231|45013|xr[- ]?12we|ss12k)\b/u)?.[1];
+  return part?.replace(/^tze /u, 'tze-').replace(/^xr /u, 'xr-') || '';
+}
+
+function labelTapeWidth(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+(?:\.\d+)?)\s*(?:mm|毫米|밀리미터)/iu)?.[1] || 0);
+}
+
+function isLabelTapeMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (labelTapePart(query) && labelTapePart(text) !== labelTapePart(query)) return true;
+  if (labelTapeWidth(query) && labelTapeWidth(text) !== labelTapeWidth(query)) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (/(?:本体|ラベルライター|label\s*(?:maker|printer)|标签打印机|標籤打印機|라벨\s*프린터|空カートリッジ|empty\s*cartridge)/iu.test(text)) return true;
+  return !/(?:ラベル(?:ライター用)?テープ|label\s*tape|labeling\s*tape|标签带|標籤帶|라벨\s*테이프|tape\s*cartridge)/iu.test(text);
+}
+
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC').toLowerCase();
@@ -815,6 +838,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const coffeeCapsule = requested.has('coffee-capsule');
   const cameraBattery = requested.has('camera-battery');
   const toolBattery = requested.has('tool-battery');
+  const labelTape = requested.has('label-tape');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -857,6 +881,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (coffeeCapsule) return !isCoffeeCapsuleMismatch(candidate, query);
     if (cameraBattery) return !isCameraBatteryMismatch(candidate, query);
     if (toolBattery) return !isToolBatteryMismatch(candidate, query);
+    if (labelTape) return !isLabelTapeMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,
