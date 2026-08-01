@@ -141,6 +141,10 @@ const GENERIC_PRODUCTS = [
   ['パンツ', /(?:パンツ|ズボン|デニム|ジーンズ|trousers?|pants|jeans|牛仔裤|牛仔褲|裤子|褲子|청바지|바지)/iu],
   ['スカート', /(?:スカート|skirts?|半身裙|裙子|치마)/iu],
   ['Tシャツ', /(?:Tシャツ|ティーシャツ|t[- ]?shirts?|tee\s*shirts?|T恤|티셔츠)/iu],
+  ['ライフジャケット', /(?:ライフジャケット|救命胴衣|life\s*jackets?|personal\s+flotation\s+devices?|救生衣|구명조끼)/iu],
+  ['ジャケット', /(?:ジャケット|(?<!life\s)jackets?|夹克|夾克|재킷)/iu],
+  ['コート', /(?:トレンチコート|コート|\b(?:trench\s+)?coats?\b|风衣|風衣|外套|트렌치\s*코트|트렌치코트|코트)/iu],
+  ['パーカー', /(?:パーカー|hoodies?|hooded\s+sweatshirts?|连帽衫|連帽衫|후드티|후디)/iu],
   ['トップス', /(?:トップス|シャツ|ブラウス|tops?|shirts?|blouse|上衣|셔츠|블라우스)/iu],
   ['リップ', /(?:リップ|口紅|lipstick|lip\s*tint|唇膏|립스틱|립틴트)/iu],
   ['水筒', /(?:水筒|タンブラー|ボトル|water\s*bottle|tumbler|水杯|保温杯|保溫杯|텀블러)/iu],
@@ -166,7 +170,7 @@ const GENERIC_ATTRIBUTES = [
   ['紫', /(?:紫|パープル|\bpurple\b|紫色|보라|퍼플)/iu],
   ['青', /(?:青|水色|ブルー|\bblue\b|蓝色|藍色|파랑|블루)/iu],
   ['緑', /(?:緑|グリーン|\bgreen\b|绿色|綠色|초록|그린)/iu],
-  ['黄', /(?:黄色|イエロー|\byellow\b|黄色|노랑|옐로)/iu],
+  ['黄', /(?:黄色|イエロー|\byellow\b|黄色|노랑|노란색|옐로)/iu],
   ['グレー', /(?:グレー|灰色|gr[ae]y|灰色|회색|그레이)/iu],
   ['シルバー', /(?:銀色|シルバー|\bsilver\b|银色|銀色|(?<!검)은색|실버)/iu],
   ['ゴールド', /(?:金色|ゴールド|\bgold\b|金色|금색|골드)/iu],
@@ -197,7 +201,7 @@ const GENERIC_MATERIALS = [
 ];
 
 const APPAREL_PRODUCTS = new Set([
-  '靴下 socks', '帽子', 'バッグ', 'スニーカー', 'ワンピース', 'パンツ', 'スカート', 'Tシャツ', 'トップス',
+  '靴下 socks', '帽子', 'バッグ', 'スニーカー', 'ワンピース', 'パンツ', 'スカート', 'Tシャツ', 'ジャケット', 'コート', 'パーカー', 'トップス',
 ]);
 
 function shoeSizeTokens(query) {
@@ -290,6 +294,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
     .filter((label, index, values) => values.indexOf(label) === index);
   if (products.includes('バックパック')) products = products.filter((label) => label !== 'バッグ');
   if (products.includes('Tシャツ')) products = products.filter((label) => label !== 'トップス');
+  if (products.includes('ライフジャケット')) products = products.filter((label) => label !== 'ジャケット');
   if (!products.length) return compactUnknownSearchPhrase(normalized);
   const materials = matchedMaterials(normalized);
   const attributes = matchedAttributes(normalized)
