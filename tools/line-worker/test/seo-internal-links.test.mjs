@@ -33,5 +33,5 @@ test('SEO guide styles are loaded and available offline', async () => {
   assert.match(css, /\.seo-guides-grid/);
   assert.match(css, /:focus-visible/);
   assert.match(serviceWorker, /'\/seo-guides\.css'/);
-  assert.match(serviceWorker, /hoshilu-shell-v110/);
+  assert.match(serviceWorker, /hoshilu-shell-v111/);
 });

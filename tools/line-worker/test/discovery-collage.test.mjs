@@ -29,7 +29,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v110/);
+  assert.match(sw, /hoshilu-shell-v111/);
   assert.match(sw, /marketplace-search-keywords-v2\.mjs/);
   assert.match(app, /buildMarketplaceSearchKeywords/);
   assert.match(sw, /if \(response\.ok\)/);
@@ -41,6 +41,12 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /function personalizedDiscoveryExample/);
   assert.match(app, /rememberMemberSearch\(elements\.query\.value\)/);
   assert.match(app, /if\(!memberSession\)return''/);
+  assert.match(app, /function personalizedQuickExamples/);
+  assert.match(app, /if\(!memberSession\)return\[\]/);
+  assert.match(app, /new Set\(\[\.\.\.matched,\.\.\.related\]\)\]\.slice\(0,3\)/);
+  assert.match(app, /無料会員登録で、あなた向けの検索例を表示/);
+  assert.match(app, /renderMemberState\(\).*renderQuickExamples/s);
+  assert.match(app, /baseSetLanguage\(language\);renderQuickExamples\(language\)/);
   assert.match(sw, /wish-carousel\.css/);
   assert.ok(
     html.indexOf('id="insightSummary"') < html.indexOf('id="wishList"'),

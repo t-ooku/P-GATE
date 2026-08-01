@@ -3,7 +3,7 @@ const RULES = [
   ['kitchen-use',/(キッチン|台所|食卓|調理|kitchen|dining|cooking|厨房|餐桌|주방|식탁)/iu,['kitchen','cooking']],
   ['beauty-use',/(美容|身だしなみ|コスメ|beauty|personal care|cosmetic|美容或个人护理|뷰티|개인 관리)/iu,['beauty','cosmetic']],
   ['electronics-use',/(家電|電化製品|電気製品|小型電化|小型家電|デジタル|electronics?|appliances?|digital|数码|가전|디지털)/iu,['appliance','electric','electronic']],
-  ['home-use',/(収納|掃除|storage|cleaning|收纳|清洁|수납|청소)/iu,['storage','cleaning']],
+  ['home-use',/(収納|掃除|storage\s+(?:box|container|organizer|shelf|rack|bin)|cleaning|收纳|清洁|수납|청소)/iu,['storage','cleaning']],
   ['vehicle-tool-use',/(車・工具|自動車|car or tools|汽车或工具|자동차·공구)/iu,['car','tool']],
   ['hobby-use',/(遊び・趣味|玩具|toys or hobbies|玩具或兴趣|놀이·취미)/iu,['toy','hobby']],
   ['screwdriver',/(ドライバー|ねじ回し|螺子回し|screwdriver|細長い.*工具)/iu,['screwdriver','driver']],
@@ -47,6 +47,10 @@ const RULES = [
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
   ['laptop',/(ノート(?:パソコン|PC)|ラップトップ|laptop|notebook computer|笔记本电脑|筆記型電腦|노트북)/iu,['laptop','notebook computer']],
+  ['tablet-case',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:ケース|カバー|スリーブ|case|cover|sleeve|保护套|保護套|케이스|커버))/iu,['tablet case','tablet cover']],
+  ['tablet-stand',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['tablet stand']],
+  ['tablet-stylus',/(?:(?:タブレット|tablet|平板电脑|平板電腦|태블릿).{0,16}(?:スタイラス|ペン|stylus|触控笔|觸控筆|스타일러스\s*펜)|(?:スタイラス|stylus|触控笔|觸控筆|스타일러스\s*펜).{0,20}(?:タブレット|tablet|平板电脑|平板電腦|태블릿))/iu,['tablet stylus','stylus pen']],
+  ['tablet',/(?:タブレット|\btablet\b|平板电脑|平板電腦|태블릿)/iu,['tablet']],
   ['notebook',/(ノート(?!パソコン|PC)|手帳|罫線|notebook(?! computer)|文房具.*四角)/iu,['notebook','ruled']],
   ['harmonica',/(ハーモニカ|口.*音.*楽器|harmonica|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기)/iu,['harmonica']],
   ['harmonica-c-minor',/(?:C|シー)[\s-]*(?:マイナー|minor)/iu,['c minor']],
@@ -254,6 +258,9 @@ export function semanticSearchGroups(value) {
   if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
   if (specificCategories.has('laptop-stand')) groups = groups.filter((group) => group.category !== 'laptop');
   if (specificCategories.has('laptop-charger')) groups = groups.filter((group) => !['laptop','charger','adapter'].includes(group.category));
+  if (specificCategories.has('tablet-case')) groups = groups.filter((group) => group.category !== 'tablet');
+  if (specificCategories.has('tablet-stand')) groups = groups.filter((group) => group.category !== 'tablet');
+  if (specificCategories.has('tablet-stylus')) groups = groups.filter((group) => group.category !== 'tablet');
   if (specificCategories.has('organizer')) groups = groups.filter((group) => group.category !== 'home-use');
   if (specificCategories.has('seasonal-pillow') && !specificCategories.has('pillow')) {
     groups.unshift({ category: 'pillow', terms: ['pillow','cushion'] });

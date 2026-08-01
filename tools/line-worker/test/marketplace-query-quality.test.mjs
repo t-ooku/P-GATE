@@ -568,3 +568,45 @@ test("ノートPCケース・スタンド・充電器を4言語で本体から�
     }
   }
 });
+
+test("4言語のタブレット本体は小数インチ・容量を保持して9モール変換する", () => {
+  const cases = [
+    '10.9インチ256GBのタブレット',
+    '10.9-inch tablet with 256GB storage',
+    '10.9英寸256GB平板电脑',
+    '10.9인치 256GB 태블릿',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('タブレット'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes('10.9インチ'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(tokens.includes('256GB'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
+
+test("タブレットケース・スタンド・ペンを4言語で本体から分離して9モール変換する", () => {
+  const cases = [
+    ['10.9インチのタブレットケース', 'タブレットケース', '10.9インチ'],
+    ['10.9-inch tablet case', 'タブレットケース', '10.9インチ'],
+    ['10.9英寸平板电脑保护套', 'タブレットケース', '10.9インチ'],
+    ['10.9인치 태블릿 케이스', 'タブレットケース', '10.9インチ'],
+    ['折りたたみタブレットスタンド', 'タブレットスタンド', '折りたたみ'],
+    ['foldable tablet stand', 'タブレットスタンド', '折りたたみ'],
+    ['可折叠平板电脑支架', 'タブレットスタンド', '折りたたみ'],
+    ['접이식 태블릿 거치대', 'タブレットスタンド', '折りたたみ'],
+    ['タブレット用スタイラスペン', 'タブレット用ペン', null],
+    ['stylus pen for tablet', 'タブレット用ペン', null],
+    ['平板电脑触控笔', 'タブレット用ペン', null],
+    ['태블릿 스타일러스 펜', 'タブレット用ペン', null],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, product, condition] of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes(product), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      if (condition) assert.ok(tokens.includes(condition), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('タブレット'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
