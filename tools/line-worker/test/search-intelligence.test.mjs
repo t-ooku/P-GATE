@@ -3540,7 +3540,11 @@ test('圧力IH炊飯器は4言語で容量・蒸気・保温条件が一致す�
     '圧力IH炊飯器 5.5合 蒸気カット 保温40時間',
     'pressure IH rice cooker 5.5 go steam reduction keep warm 40 hours',
     '压力IH电饭煲 5.5合 蒸汽减少 保温40小时',
-    '압력 IH 밥솥 5.5合 증기 절감 보온 40시간'
+    '압력 IH 밥솥 5.5合 증기 절감 보온 40시간',
+    '圧力とIHで5.5合炊けて蒸気を抑え保温40時間',
+    'cooks 5.5 go rice with pressure induction steam reduction keep warm 40 hours',
+    '压力IH煮5.5合米饭 蒸汽减少 保温40小时',
+    '압력 IH로 5.5合 밥 짓고 증기 절감 보온 40시간'
   ];
   const candidates = [
     { asin: 'MATCH', product_name: '圧力IH炊飯器 5.5合 蒸気カット 保温40時間' },
