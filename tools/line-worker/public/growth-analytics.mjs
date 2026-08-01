@@ -1,11 +1,13 @@
 const params = new URLSearchParams(location.search);
 const ATTRIBUTION_KEY = 'hoshilu_growth_attribution_v1';
 const VISIT_KEY = 'hoshilu_growth_last_visit_v1';
+const pageContentCandidate = String(document.body?.dataset?.growthContent || '');
+const pageContent = /^[a-z0-9_]{1,64}$/.test(pageContentCandidate) ? pageContentCandidate : '';
 const freshAttribution = {
   source: params.get('utm_source') || '',
   medium: params.get('utm_medium') || '',
   campaign: params.get('utm_campaign') || params.get('campaign') || '',
-  content: params.get('utm_content') || ''
+  content: params.get('utm_content') || pageContent
 };
 const hasFreshAttribution = Object.values(freshAttribution).some(Boolean);
 let storedAttribution = {};
