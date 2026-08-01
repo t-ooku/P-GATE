@@ -1,11 +1,7 @@
 import { createSpApiD1Repository, spApiConfiguredTenants } from './sp-api-d1-repository.mjs';
 import { SP_API_SELLERS, synchronizeSeller } from './sp-api-sync.mjs';
-
-function authorized(request, env) {
-  const expected = String(env.SOCIAL_ADMIN_SECRET || '');
-  const received = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  return expected.length >= 32 && received === expected;
-}
+import { authorizeAdminRequest } from './admin-auth.mjs';
+import { readBoundedJson } from './bounded-json.mjs';
 
 function noStoreJson(value, init = {}) {
   const headers = new Headers(init.headers);
@@ -39,12 +35,41 @@ async function status(env) {
   const audits = await env.PRODUCT_DB.prepare(`SELECT type,tenant,seller_id,result,pages,items,
     from_at,to_at,error_code,completed_at
     FROM sp_api_sync_audit ORDER BY completed_at DESC LIMIT 30`).all();
+  const authCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  let adminAuthSummary = { results: [] };
+  let sellerAuthSummary = { results: [] };
+  try {
+    adminAuthSummary = await env.PRODUCT_DB.prepare(`SELECT event_type,
+      COUNT(*) AS total,MAX(occurred_at) AS last_at FROM admin_auth_audit
+      WHERE occurred_at>=?1 GROUP BY event_type ORDER BY event_type`)
+      .bind(authCutoff).all();
+  } catch {
+    // Status remains available while migration 0027 is pending.
+  }
+  try {
+    sellerAuthSummary = await env.PRODUCT_DB.prepare(`SELECT event_type,
+      COUNT(*) AS total,MAX(occurred_at) AS last_at FROM seller_auth_audit
+      WHERE occurred_at>=?1 GROUP BY event_type ORDER BY event_type`)
+      .bind(authCutoff).all();
+  } catch {
+    // Status remains available while migration 0028 is pending.
+  }
   return {
     ok: true,
     configured,
     listings: listings.results || [],
     integrity: integrity.results || [],
-    audits: audits.results || []
+    audits: audits.results || [],
+    admin_auth_summary: (adminAuthSummary.results || []).map((item) => ({
+      event_type: item.event_type,
+      total: Math.max(0, Number(item.total || 0)),
+      last_at: item.last_at || ''
+    })),
+    seller_auth_summary: (sellerAuthSummary.results || []).map((item) => ({
+      event_type: item.event_type,
+      total: Math.max(0, Number(item.total || 0)),
+      last_at: item.last_at || ''
+    }))
   };
 }
 
@@ -55,7 +80,7 @@ export async function handleSpApiAdminRoutes(
 ) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/internal/sp-api/')) return null;
-  if (!authorized(request, env)) {
+  if (!await authorizeAdminRequest(request, env)) {
     return noStoreJson({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
   }
   if (!env.PRODUCT_DB) {
@@ -65,15 +90,11 @@ export async function handleSpApiAdminRoutes(
     return noStoreJson(await status(env));
   }
   if (request.method === 'POST' && url.pathname === '/api/internal/sp-api/sync') {
-    if (Number(request.headers.get('content-length') || 0) > 1000) {
-      return noStoreJson({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
-    }
-    let input;
-    try {
-      input = await request.json();
-    } catch {
-      return noStoreJson({ ok: false, error: 'INVALID_JSON' }, { status: 400 });
-    }
+    const parsed = await readBoundedJson(request, 1000);
+    if (!parsed.ok) return noStoreJson({ ok: false, error: parsed.error }, {
+      status: parsed.error === 'REQUEST_TOO_LARGE' ? 413 : 400
+    });
+    const input = parsed.value;
     const tenant = String(input.tenant || '').trim().toLowerCase();
     if (!SP_API_SELLERS[tenant]) {
       return noStoreJson({ ok: false, error: 'UNKNOWN_TENANT' }, { status: 400 });
@@ -99,8 +120,8 @@ export async function handleSpApiAdminRoutes(
       });
     } catch (error) {
       return noStoreJson({
-        ok: false,
-        error: String(error?.message || 'SP_API_SYNC_FAILED').slice(0, 120)
+        ok: false, error: error?.message === 'SP_API_SYNC_IN_PROGRESS'
+          ? 'SP_API_SYNC_IN_PROGRESS' : 'SP_API_SYNC_FAILED'
       }, { status: 502 });
     }
   }

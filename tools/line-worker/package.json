@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.mjs",
+    "check:auth-release": "node scripts/check-auth-release.mjs",
     "evaluate:marketplace-query": "node scripts/evaluate-marketplace-query-quality.mjs",
     "validate:marketplace-offers": "node scripts/validate-marketplace-offer-feed.mjs"
   }

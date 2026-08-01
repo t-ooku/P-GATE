@@ -446,11 +446,70 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const base = {
     GAS_BACKEND_URL: 'https://script.google.com/macros/s/example/exec',
     GAS_BRIDGE_SECRET: 'g'.repeat(32), LINK_SIGNING_SECRET: 'l'.repeat(32),
-    TURNSTILE_SITE_KEY: 'site-key', TURNSTILE_SECRET_KEY: 'turnstile-secret'
+    TURNSTILE_SITE_KEY: 'site-key', TURNSTILE_SECRET_KEY: 'turnstile-secret',
+    ADMIN_AUTH_ID: 'operator', ADMIN_AUTH_PASSWORD: 'admin-password-12345',
+    ADMIN_SESSION_SECRET: 'a'.repeat(64),
+    SELLER_AUTH_ID: 'seller-admin',
+    SELLER_AUTH_PASSWORD: 'seller-password-123',
+    AUTH_SESSION_SECRET: 's'.repeat(64),
+    SELLER_ALLOWED_TENANTS: 'itg'
   };
   assert.equal(getEnvironmentReadiness(base).ready, true);
   assert.equal(getEnvironmentReadiness({ ...base, GAS_BACKEND_URL: 'http://example.com' }).ready, false);
   assert.deepEqual(getEnvironmentReadiness({ ...base, LINK_SIGNING_SECRET: 'short' }).weak, ['LINK_SIGNING_SECRET']);
+  assert.equal(getEnvironmentReadiness({ ...base, ADMIN_AUTH_PASSWORD: 'short' }).ready, false);
+  assert.equal(getEnvironmentReadiness({ ...base, ADMIN_AUTH_PASSWORD: 'short' }).checks.admin_auth_weak, true);
+  const placeholders = getEnvironmentReadiness({
+    ...base,
+    GAS_BACKEND_URL: 'https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec',
+    ADMIN_AUTH_PASSWORD: 'replace-with-password-at-least-16-characters',
+    ADMIN_SESSION_SECRET: 'replace-with-secret-at-least-64-characters-xxxxxxxxxxxxxxxxxxxxxxxx'
+  });
+  assert.equal(placeholders.ready, false);
+  assert.equal(placeholders.checks.gas_backend_https, false);
+  assert.ok(placeholders.weak.includes('ADMIN_AUTH_PASSWORD'));
+  assert.ok(placeholders.weak.includes('ADMIN_SESSION_SECRET'));
+  assert.equal(getEnvironmentReadiness({
+    ...base, ADMIN_SESSION_SECRET: base.LINK_SIGNING_SECRET
+  }).checks.admin_credentials_distinct, false);
+  assert.equal(getEnvironmentReadiness(base).checks.admin_auth_configured, true);
+  assert.equal(getEnvironmentReadiness(base).checks.admin_credentials_distinct, true);
+  assert.equal(getEnvironmentReadiness(base).checks.seller_auth_configured, true);
+  assert.equal(getEnvironmentReadiness(base).checks.seller_auth_partial, false);
+  const {
+    SELLER_AUTH_ID: omittedSellerId,
+    SELLER_AUTH_PASSWORD: omittedSellerPassword,
+    AUTH_SESSION_SECRET: omittedSellerSecret,
+    SELLER_ALLOWED_TENANTS: omittedSellerTenants,
+    ...withoutSeller
+  } = base;
+  assert.equal(getEnvironmentReadiness(withoutSeller).ready, false);
+  assert.equal(getEnvironmentReadiness(withoutSeller).checks.seller_auth_configured, false);
+  const sellerConfigured = getEnvironmentReadiness({
+    ...withoutSeller,
+    SELLER_AUTH_ID: 'seller-admin',
+    SELLER_AUTH_PASSWORD: 'seller-password-123',
+    AUTH_SESSION_SECRET: 's'.repeat(64),
+    SELLER_ALLOWED_TENANTS: 'itg'
+  });
+  assert.equal(sellerConfigured.ready, true);
+  assert.equal(sellerConfigured.checks.seller_auth_configured, true);
+  assert.equal(sellerConfigured.checks.seller_auth_weak, false);
+  const sellerPartial = getEnvironmentReadiness({ ...withoutSeller, SELLER_AUTH_ID: 'seller-admin' });
+  assert.equal(sellerPartial.ready, false);
+  assert.equal(sellerPartial.checks.seller_auth_partial, true);
+  const sellerWeak = getEnvironmentReadiness({
+    ...withoutSeller,
+    SELLER_AUTH_ID: 'replace-with-seller-id',
+    SELLER_AUTH_PASSWORD: 'seller-password-123',
+    AUTH_SESSION_SECRET: 'short',
+    SELLER_ALLOWED_TENANTS: '***'
+  });
+  assert.equal(sellerWeak.ready, false);
+  assert.equal(sellerWeak.checks.seller_auth_weak, true);
+  assert.ok(sellerWeak.weak.includes('SELLER_AUTH_ID'));
+  assert.ok(sellerWeak.weak.includes('AUTH_SESSION_SECRET'));
+  assert.ok(sellerWeak.weak.includes('SELLER_ALLOWED_TENANTS'));
   assert.equal(getEnvironmentReadiness({ ...base, LINE_CHANNEL_SECRET: 'only-one-side' }).checks.line_partial, true);
   const optional = getEnvironmentReadiness({
     ...base,
@@ -480,7 +539,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const payload = await response.json();
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
-  assert.equal(payload.release, '1.15.0');
+  assert.equal(payload.release, '1.18.0');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
   assert.deepEqual(payload.checks.social_publishers, {
     X: false,
@@ -489,6 +548,16 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   });
   assert.equal(JSON.stringify(payload).includes(base.GAS_BRIDGE_SECRET), false);
   assert.equal(JSON.stringify(payload).includes(base.TURNSTILE_SECRET_KEY), false);
+
+  const missingSellerResponse = await workerModule.default.fetch(
+    new Request('https://p-gate.example/health'), withoutSeller, ctx
+  );
+  const missingSellerPayload = await missingSellerResponse.json();
+  assert.equal(missingSellerResponse.status, 503);
+  assert.equal(missingSellerPayload.ok, false);
+  assert.equal(missingSellerPayload.checks.seller_auth_configured, false);
+  assert.ok(missingSellerPayload.missing.includes('SELLER_AUTH_ID'));
+  assert.ok(missingSellerPayload.missing.includes('SELLER_ALLOWED_TENANTS'));
 });
 
 test('公開設定はTurnstile Site Key未設定時に503を返す', async () => {

@@ -1,4 +1,7 @@
 import { handleSellerRoutes } from './seller-auth.mjs';
+import { handleAdminAuthRoutes } from './admin-auth.mjs';
+import { purgeAdminAuthRecords } from './admin-login-guard.mjs';
+import { purgeSellerAuthRecords } from './seller-login-guard.mjs';
 import { handleMemberRoutes, lineLoginConfigured } from './member-auth.mjs';
 import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
@@ -39,11 +42,16 @@ const ALLOWED_DESTINATION_DOMAINS = [
   'qoo10.jp', 'shein.com', 'zozo.jp', 'shop-list.com',
   'musinsa.com', 'buyma.com', 'snkrdunk.com'
 ];
-const RELEASE = '1.15.0';
+const RELEASE = '1.18.0';
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
-  'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'
+  'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY',
+  'ADMIN_AUTH_ID', 'ADMIN_AUTH_PASSWORD', 'ADMIN_SESSION_SECRET',
+  'SELLER_AUTH_ID', 'SELLER_AUTH_PASSWORD', 'AUTH_SESSION_SECRET',
+  'SELLER_ALLOWED_TENANTS'
 ];
+const unsafeExampleValue = (value) =>
+  /replace[-_ ]?with|change[-_ ]?me|changeme|placeholder/i.test(String(value || ''));
 
 function bytesToBase64(bytes) {
   let binary = '';
@@ -226,10 +234,36 @@ export function getEnvironmentReadiness(env = {}) {
     const value = String(env[name] || '');
     return value && value.length < 32;
   });
+  if (env.ADMIN_AUTH_ID && String(env.ADMIN_AUTH_ID).length < 3) weak.push('ADMIN_AUTH_ID');
+  if (env.ADMIN_AUTH_PASSWORD && String(env.ADMIN_AUTH_PASSWORD).length < 16) {
+    weak.push('ADMIN_AUTH_PASSWORD');
+  }
+  if (env.ADMIN_SESSION_SECRET && String(env.ADMIN_SESSION_SECRET).length < 64) {
+    weak.push('ADMIN_SESSION_SECRET');
+  }
+  if (env.SELLER_AUTH_ID && String(env.SELLER_AUTH_ID).length < 3) weak.push('SELLER_AUTH_ID');
+  if (env.SELLER_AUTH_PASSWORD && String(env.SELLER_AUTH_PASSWORD).length < 12) {
+    weak.push('SELLER_AUTH_PASSWORD');
+  }
+  if (env.AUTH_SESSION_SECRET && String(env.AUTH_SESSION_SECRET).length < 64) {
+    weak.push('AUTH_SESSION_SECRET');
+  }
+  const sellerTenantValue = String(env.SELLER_ALLOWED_TENANTS || env.SELLER_TENANT || '').trim();
+  const sellerTenantsValid = sellerTenantValue
+    .split(',').map((value) => value.trim().toLowerCase()).filter(Boolean)
+    .every((value) => /^[a-z0-9_-]{1,32}$/.test(value));
+  if (sellerTenantValue && !sellerTenantsValid) weak.push('SELLER_ALLOWED_TENANTS');
+  for (const name of REQUIRED_ENV) {
+    if (env[name] && unsafeExampleValue(env[name]) && !weak.includes(name)) weak.push(name);
+  }
+  for (const name of ['SELLER_AUTH_ID', 'SELLER_AUTH_PASSWORD', 'AUTH_SESSION_SECRET']) {
+    if (env[name] && unsafeExampleValue(env[name]) && !weak.includes(name)) weak.push(name);
+  }
   let backendUrlValid = false;
   try {
     const url = new URL(String(env.GAS_BACKEND_URL || ''));
-    backendUrlValid = url.protocol === 'https:' && !url.username && !url.password;
+    backendUrlValid = url.protocol === 'https:' && !url.username && !url.password &&
+      !unsafeExampleValue(url.href);
   } catch {}
   const lineSecret = Boolean(String(env.LINE_CHANNEL_SECRET || '').trim());
   const lineToken = Boolean(String(env.LINE_CHANNEL_ACCESS_TOKEN || '').trim());
@@ -242,7 +276,23 @@ export function getEnvironmentReadiness(env = {}) {
   const spApiTenants = spApiConfiguredTenants(env);
   const spApiRefreshConfigured = ['ITG','ITT','MC2'].filter((tenant) =>
     Boolean(String(env[`SPAPI_REFRESH_TOKEN_${tenant}`] || '').trim()));
-  const ready = missing.length === 0 && weak.length === 0 && backendUrlValid && !linePartial;
+  const adminConfigured = ['ADMIN_AUTH_ID', 'ADMIN_AUTH_PASSWORD', 'ADMIN_SESSION_SECRET']
+    .every((name) => Boolean(String(env[name] || '').trim()));
+  const sellerAuthNames = ['SELLER_AUTH_ID', 'SELLER_AUTH_PASSWORD', 'AUTH_SESSION_SECRET'];
+  const sellerAuthValuesPresent = sellerAuthNames.filter((name) => Boolean(String(env[name] || '').trim()));
+  const sellerAuthConfigured = sellerAuthValuesPresent.length === sellerAuthNames.length &&
+    Boolean(sellerTenantValue) && sellerTenantsValid;
+  const sellerAuthPartial = (sellerAuthValuesPresent.length > 0 || Boolean(sellerTenantValue)) &&
+    !sellerAuthConfigured;
+  const adminValues = [
+    env.ADMIN_AUTH_ID, env.ADMIN_AUTH_PASSWORD, env.ADMIN_SESSION_SECRET,
+    env.SELLER_AUTH_ID, env.SELLER_AUTH_PASSWORD, env.AUTH_SESSION_SECRET,
+    env.SOCIAL_ADMIN_SECRET, env.GAS_BRIDGE_SECRET, env.LINK_SIGNING_SECRET
+  ].filter((value) => Boolean(String(value || ''))).map(String);
+  const adminCredentialsDistinct = adminConfigured &&
+    new Set(adminValues).size === adminValues.length;
+  const ready = missing.length === 0 && weak.length === 0 && backendUrlValid &&
+    !linePartial && !sellerAuthPartial && adminCredentialsDistinct;
   return {
     ready,
     release: RELEASE,
@@ -262,6 +312,13 @@ export function getEnvironmentReadiness(env = {}) {
         (spApiRefreshConfigured.length > 0 && !(spApiClientId && spApiClientSecret)),
       sp_api_configured_tenants: spApiTenants,
       sp_api_configured_tenant_count: spApiTenants.length,
+      admin_auth_configured: adminConfigured,
+      admin_auth_weak: weak.some((name) => name.startsWith('ADMIN_')),
+      admin_credentials_distinct: adminCredentialsDistinct,
+      seller_auth_configured: sellerAuthConfigured,
+      seller_auth_partial: sellerAuthPartial,
+      seller_auth_weak: weak.some((name) =>
+        sellerAuthNames.includes(name) || name === 'SELLER_ALLOWED_TENANTS'),
       amazon_creators_configured: creatorsApiConfigured(env),
       rakuten_marketplace_configured: rakutenApiConfigured(env)
     }
@@ -1028,6 +1085,8 @@ export default {
     if (unmetDemandResponse) return unmetDemandResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
+    const adminAuthResponse = await handleAdminAuthRoutes(request, env);
+    if (adminAuthResponse) return adminAuthResponse;
     const spApiAdminResponse = await handleSpApiAdminRoutes(request, env);
     if (spApiAdminResponse) return spApiAdminResponse;
     const spApiSellerResponse = await handleSpApiSellerRoutes(request, env);
@@ -1066,7 +1125,9 @@ export default {
       runDueSocialPosts(env, scheduledAt),
       deliverDueWebNotifications(env, scheduledAt),
       runMarketplaceContentCycle(env, scheduledAt),
-      runSpApiScheduledSync(env, scheduledAt)
+      runSpApiScheduledSync(env, scheduledAt),
+      purgeAdminAuthRecords(env, scheduledAt),
+      purgeSellerAuthRecords(env, scheduledAt)
     ]));
   }
 };

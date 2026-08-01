@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import cryptoModule from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
@@ -9,10 +11,19 @@ globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 const { handleSellerRoutes } = await import('../src/seller-auth.mjs');
 const { handleSpApiSellerRoutes } = await import('../src/sp-api-seller-routes.mjs');
 const { spApiSellerPageResponse } = await import('../src/sp-api-seller-page.mjs');
+const authSqlite = new DatabaseSync(':memory:');
+authSqlite.exec(readFileSync(new URL('../migrations/0028_seller_login_guard.sql', import.meta.url), 'utf8'));
 
 function database() {
   return {
     prepare(sql) {
+      if (sql.includes('seller_login_guard') || sql.includes('seller_auth_audit')) {
+        const statement = authSqlite.prepare(sql);
+        return { bind(...values) { return {
+          run: async () => { const result = statement.run(...values); return { meta: { changes: Number(result.changes || 0) } }; },
+          first: async () => statement.get(...values) || null
+        }; } };
+      }
       return {
         bind() {
           return {
@@ -24,7 +35,8 @@ function database() {
           };
         }
       };
-    }
+    },
+    async batch(statements) { return Promise.all(statements.map((statement) => statement.run())); }
   };
 }
 

@@ -8,6 +8,19 @@ TURNSTILE_SITE_KEY=replace-with-public-site-key
 GAS_BRIDGE_SECRET=replace-with-random-secret-at-least-32-characters
 TRACKING_SIGNING_SECRET=replace-with-another-random-secret-at-least-32-characters
 
+# Operator console: all three values are required and must not be reused elsewhere.
+ADMIN_AUTH_ID=replace-with-operator-id
+ADMIN_AUTH_PASSWORD=replace-with-unique-password-at-least-16-characters
+ADMIN_SESSION_SECRET=replace-with-independent-random-secret-at-least-64-characters
+
+# Seller console: use credentials and a signing secret independent from operator values.
+SELLER_AUTH_ID=replace-with-seller-id
+SELLER_AUTH_PASSWORD=replace-with-unique-password-at-least-12-characters
+AUTH_SESSION_SECRET=replace-with-independent-random-secret-at-least-64-characters
+SELLER_ACCOUNT_NAME=Seller
+SELLER_ALLOWED_TENANTS=itg
+SELLER_PLAN=LITE
+
 # LINE Messaging API: leave both empty until the official account is ready.
 LINE_CHANNEL_SECRET=
 LINE_CHANNEL_ACCESS_TOKEN=
