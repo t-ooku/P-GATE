@@ -314,16 +314,28 @@ function isTrueWirelessEarphonesMismatch(candidate) {
   return explicitlyWired || !explicitlyWireless;
 }
 
+function isLightUpPhoneCaseMismatch(candidate) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC')
+    .toLowerCase();
+  const category = inferCandidateCategory(candidate);
+  const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
+  return category !== 'phone-case' || !hasLightUpEvidence;
+}
+
 export function filterCategoryMismatches(query, candidates = []) {
-  const requested = new Set(semanticSearchGroups(query)
+  const groups = semanticSearchGroups(query);
+  const requested = new Set(groups
     .map((group) => group.category)
     .filter((category) => !CATEGORY_MODIFIERS.has(category)));
   if (!requested.size) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
+  const lightUpPhoneCase = requested.has('phone-case') && groups.some((group) => group.category === 'light-up');
   return candidates.filter((candidate) => {
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
+    if (lightUpPhoneCase && isLightUpPhoneCaseMismatch(candidate)) return false;
     const category = inferCandidateCategory(candidate);
     return category === 'other' || requested.has(category);
   });
