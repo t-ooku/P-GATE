@@ -136,6 +136,21 @@ test('スマホ保護フィルムは機種・強化ガラス・覗き見防止�
   }
 });
 
+test('光るケースを取り消した4言語検索は覗き見防止ガラスフィルムへ切り替える', () => {
+  const queries = [
+    '光るiPhone 15 Proケースじゃなくて覗き見防止の強化ガラスフィルム',
+    'not a light-up case for iPhone 15 Pro, a privacy tempered glass screen protector',
+    '不要iPhone 15 Pro发光手机壳，要防窥钢化玻璃保护膜',
+    'iPhone 15 Pro 빛나는 케이스 말고 사생활 보호 강화유리 필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 15 Pro 保護フィルム 強化ガラス 覗き見防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [

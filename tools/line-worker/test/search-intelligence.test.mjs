@@ -1056,6 +1056,26 @@ test('スマホ保護フィルムは4言語で機種・ガラス・覗き見防�
   }
 });
 
+test('光るケースを取り消した4言語検索は覗き見防止ガラスフィルムだけを提示する', () => {
+  const queries = [
+    '光るiPhone 15 Proケースじゃなくて覗き見防止の強化ガラスフィルム',
+    'not a light-up case for iPhone 15 Pro, a privacy tempered glass screen protector',
+    '不要iPhone 15 Pro发光手机壳，要防窥钢化玻璃保护膜',
+    'iPhone 15 Pro 빛나는 케이스 말고 사생활 보호 강화유리 필름',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 15 Pro Privacy Tempered Glass Screen Protector' },
+    { asin: 'CASE', product_name: 'iPhone 15 Pro Light-up LED Phone Case' },
+    { asin: 'CLEAR', product_name: 'iPhone 15 Pro Clear Tempered Glass Screen Protector' },
+    { asin: 'PET', product_name: 'iPhone 15 Pro Privacy PET Protective Film' },
+    { asin: 'MAX', product_name: 'iPhone 15 Pro Max Privacy Tempered Glass Screen Protector' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
   const cases = [
     [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',
