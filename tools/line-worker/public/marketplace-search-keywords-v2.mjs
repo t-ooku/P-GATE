@@ -27,7 +27,7 @@ function deviceName(query) {
 
 function specificationTokens(query) {
   const matches = query.match(
-    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}\s*(?:mm|cm|m|インチ|inch|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|インチ|inch|リットル|オンス|升|毫升|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|리터|온스|센티미터|밀리미터)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
+    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}\s*(?:mm|cm|m|インチ|inch|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|kg|kgs|g|kilograms?|kilogrammes?|grams?|インチ|inch|リットル|オンス|升|毫升|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|キロ(?:グラム)?|グラム|公斤|千克|리터|온스|센티미터|밀리미터|킬로그램|키로|그램)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
   ) || [];
   return [...new Set(matches
     .filter((value) => {
@@ -39,6 +39,10 @@ function specificationTokens(query) {
     .replace(/^usb-c$/iu, 'USB-C')
     .replace(/毫米|ミリ(?:メートル)?|밀리미터$/u, 'mm')
     .replace(/厘米|センチ(?:メートル)?|센티미터$/u, 'cm')
+    .replace(/キロ(?:グラム)?|公斤|千克|킬로그램|키로$/u, 'kg')
+    .replace(/グラム|그램$/u, 'g')
+    .replace(/kilogrammes?|kilograms?|kgs?$/iu, 'kg')
+    .replace(/grams?$/iu, 'g')
     .replace(/リットル|升|리터$/u, 'L')
     .replace(/オンス|온스$/u, 'oz')
     .replace(/毫升$/u, 'ml')
