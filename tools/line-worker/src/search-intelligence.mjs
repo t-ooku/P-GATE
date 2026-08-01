@@ -14,6 +14,7 @@ const RULES = [
   ['backpack',/(リュック|バックパック|backpack|rucksack|背負う|背包|双肩包|雙肩包|백팩|배낭)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
+  ['power-bank',/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu,['power bank','portable battery','battery pack']],
   ['charger',/(充電器|充電台|チャージャー|charg(?:er|ing\s+dock)|充电座|充電座|충전\s*(?:거치대|도크))/iu,['charger','charging']],
   ['dual-charger',/(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,12}(?:充電台|充電器)|(?:two\s+devices?.{0,16}charg|charg(?:er|ing\s+dock).{0,28}two\s+devices?|dual\s+charg)|双充电|雙充電|双设备充电|雙設備充電|(?:2대|듀얼).{0,12}충전/iu,['dual charger','dual charging']],
   ['phone-case',/(スマホケース|携帯(?:ケース|カバー)|スマートフォン.*(?:ケース|カバー)|アイフォ(?:ン|ーン).*ケース|ギャラクシー.{0,16}ケース|エクスペリア.{0,16}ケース|アクオス.{0,16}ケース|(?:iphone|galaxy|xperia|aquos|smartphone|mobile|phone).{0,16}(?:case|cover|ケース)|(?:case|cover|ケース).{0,16}(?:iphone|galaxy|xperia|aquos|smartphone|mobile|phone)|手机壳|手机保护壳|(?:iPhone|Xperia|AQUOS|手机|手機|三星).{0,16}(?:壳|殼|保护壳|保護殼)|(?:壳|殼|保护壳|保護殼).{0,16}(?:iPhone|Xperia|AQUOS|手机|手機|三星)|휴대폰\s*(?:케이스|커버)|스마트폰\s*(?:케이스|커버)|(?:iPhone|Xperia|AQUOS|아이폰|휴대폰|스마트폰|갤럭시|엑스페리아|아쿠오스).{0,16}(?:케이스|커버)|(?:케이스|커버).{0,16}(?:iPhone|Xperia|AQUOS|아이폰|휴대폰|스마트폰|갤럭시|엑스페리아|아쿠오스))/iu,['phone','case','cover','iphone','smartphone']],

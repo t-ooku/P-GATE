@@ -43,6 +43,21 @@ test('光るスマホケースの口語的な言い換えを4言語で商品語�
   }
 });
 
+test('モバイルバッテリーの容量と内蔵ケーブルを4言語で保持する', () => {
+  const queries = [
+    '旅行用のUSB-Cケーブル内蔵10000mAhモバイルバッテリー',
+    '10000mAh power bank with built-in USB-C cable for travel',
+    '旅行用自带USB-C线的10000mAh充电宝',
+    '여행용 USB-C 케이블 내장 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー USB-Cケーブル内蔵', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('ロボット掃除機の交換部品を4言語で本体から分離し型番と個数を保つ', () => {
   const cases = [
     ['ルンバ j7用 交換フィルター 3個セット', 'Roomba j7 交換フィルター 3個セット'],

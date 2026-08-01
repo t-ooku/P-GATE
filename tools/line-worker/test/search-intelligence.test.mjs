@@ -932,6 +932,27 @@ test('光るスマホケースは初回提示から一般ケース・LED照明�
   }
 });
 
+test('モバイルバッテリーは容量と内蔵端子が一致する候補だけを提示する', () => {
+  const queries = [
+    '旅行用のUSB-Cケーブル内蔵10000mAhモバイルバッテリー',
+    '10000mAh power bank with built-in USB-C cable for travel',
+    '旅行用自带USB-C线的10000mAh充电宝',
+    '여행용 USB-C 케이블 내장 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWER10000C', product_name: '10000mAh Power Bank Built-in USB-C Cable' },
+    { asin: 'POWER20000C', product_name: '20000mAh Power Bank Built-in USB-C Cable' },
+    { asin: 'POWER10000L', product_name: '10000mAh Power Bank Built-in Lightning Cable' },
+    { asin: 'POWER10000N', product_name: '10000mAh Power Bank USB-C Port' },
+    { asin: 'WALL10000C', product_name: 'USB-C Wall Charger 10000mAh Fast Charging' },
+    { asin: 'CABLE10000C', product_name: 'USB-C Charging Cable 10000mAh Compatible' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWER10000C'], query);
+  }
+});
+
 test('タブレット専用アクセサリーは4言語で汎用品や別端末向け商品を除外する', () => {
   const cases = [
     ['タブレット用Bluetoothキーボード', 'KEYBOARD'],

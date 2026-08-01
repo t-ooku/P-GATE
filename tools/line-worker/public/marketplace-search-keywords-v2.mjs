@@ -524,6 +524,17 @@ function specificationTokens(query) {
     .replace(/^(\d+)(?:個(?:入り)?セット|本セット|枚セット|[-]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개세트)$/iu, '$1個セット')))].slice(0, 4);
 }
 
+function buildPowerBankSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
+  if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(normalized)) return '';
+  const capacity = normalized.match(/(\d{4,6})\s*m\s*ah/iu)?.[1];
+  const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(normalized);
+  const connector = /(?:usb[- ]?c|type[- ]?c)/iu.test(normalized) ? 'USB-C'
+    : /(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu.test(normalized) ? 'Lightning' : '';
+  const cable = builtIn ? `${connector ? `${connector}` : ''}ケーブル内蔵` : '';
+  return [capacity ? `${capacity}mAh` : '', 'モバイルバッテリー', cable].filter(Boolean).join(' ');
+}
+
 export function buildDeviceAccessorySearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
@@ -780,6 +791,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawAirFryerLiner) return rawAirFryerLiner;
   const rawVacuumBag = buildVacuumBagSearchKeywords(rawNormalized);
   if (rawVacuumBag) return rawVacuumBag;
+  const rawPowerBank = buildPowerBankSearchKeywords(rawNormalized);
+  if (rawPowerBank) return rawPowerBank;
   const normalized = stripSearchBudget(rawNormalized).replace(/\s+/g, ' ').trim();
   if (!normalized) return '';
   const portHub = buildPortHubSearchKeywords(normalized, marketplace);
