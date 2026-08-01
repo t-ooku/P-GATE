@@ -1039,3 +1039,35 @@ test('iPhoneとGalaxyの現地語端末名でもケース意図と型番を保�
     assert.match(query, /"15"\*|"s24"\*/, input);
   }
 });
+
+test('XperiaとAQUOSの4言語ケース検索でもカテゴリと端末識別子を保持する', () => {
+  const cases = [
+    ['エクスペリア 1 VIの透明ケース', 'xperia'],
+    ['clear case for Xperia 1 VI', 'xperia'],
+    ['Xperia 1 VI透明手机壳', 'xperia'],
+    ['엑스페리아 1 VI 투명 케이스', 'xperia'],
+    ['アクオス sense8のケース', 'aquos'],
+    ['AQUOS sense8 case', 'aquos'],
+    ['AQUOS sense8手机壳', 'aquos'],
+    ['아쿠오스 sense8 케이스', 'aquos'],
+  ];
+  for (const [input, brand] of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"phone"\*|"case"\*/, input);
+    assert.match(query, new RegExp(`"${brand}"\\*`, 'i'), input);
+  }
+});
+
+test('4言語のワンピース検索はサイズ表現に左右されず商品カテゴリを保持する', () => {
+  const cases = [
+    'MではなくLサイズの黒いワンピース',
+    'a black dress in size L, not M',
+    '不要M码，要L码黑色连衣裙',
+    'M사이즈 말고 L사이즈 검정 원피스',
+  ];
+  for (const input of cases) {
+    const query = intelligentFtsQuery(input);
+    assert.match(query, /"dress"\*/, input);
+    assert.match(query, /"black"\*/, input);
+  }
+});

@@ -359,3 +359,55 @@ test("iPhoneとGalaxyの現地語端末名を9モール向け互換型番へ統�
     }
   }
 });
+
+test("XperiaとAQUOSの4言語表記を9モール向け互換型番へ統一する", () => {
+  const cases = [
+    ['エクスペリア 1 VIの透明ケース', 'Xperia 1 VI ケース'],
+    ['clear case for Xperia 1 VI', 'Xperia 1 VI ケース'],
+    ['Xperia 1 VI透明手机壳', 'Xperia 1 VI ケース'],
+    ['엑스페리아 1 VI 투명 케이스', 'Xperia 1 VI ケース'],
+    ['アクオス sense8のケース', 'AQUOS sense8 ケース'],
+    ['AQUOS sense8 case', 'AQUOS sense8 ケース'],
+    ['AQUOS sense8手机壳', 'AQUOS sense8 ケース'],
+    ['아쿠오스 sense8 케이스', 'AQUOS sense8 ケース'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes(expected), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("4言語の衣類サイズは訂正後のサイズだけを9モール検索語へ保持する", () => {
+  const cases = [
+    'MではなくLサイズの黒いワンピース',
+    'a black dress in size L, not size M',
+    '不要M码，要L码黑色连衣裙',
+    'M사이즈 말고 L사이즈 검정 원피스',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('サイズL'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!keywords.includes('サイズM'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('ワンピース'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("4言語のフリーサイズを9モール向け共通表記へ統一する", () => {
+  const cases = [
+    'フリーサイズの黒い帽子',
+    'a black hat in free size',
+    '均码黑色帽子',
+    '프리사이즈 검정 모자',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('FREEサイズ'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('帽子'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
