@@ -6,9 +6,9 @@ const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), '
 
 test('discovery collage is lightweight, localized, accessible, and cached', async () => {
   const styles = await read('styles.css');
-  const [html, app, css, wishCss, sw, i18n, desktop, mobile] = await Promise.all([
-    read('index.html'), read('app.js'), read('discovery.css'), read('wish-carousel.css'),
-    read('service-worker.js'), read('site-i18n.js'),
+  const [html, app, discoveryActions, css, wishCss, sw, i18n, desktop, mobile] = await Promise.all([
+    read('index.html'), read('app.js'), read('discovery-actions.mjs'), read('discovery.css'),
+    read('wish-carousel.css'), read('service-worker.js'), read('site-i18n.js'),
     stat(new URL('../public/hoshilu-discovery-collage.webp', import.meta.url)),
     stat(new URL('../public/hoshilu-discovery-collage-mobile.webp', import.meta.url)),
   ]);
@@ -30,6 +30,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
   assert.match(sw, /hoshilu-shell-v115/);
+  assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
   assert.match(html, /href="https:\/\/x\.com\/iCHMR81Lv4VYJYG"/);
@@ -79,15 +80,15 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /function marketplaceFallbackCard/);
   assert.match(app, /9つのモールとSNSを横断して探す/);
   assert.match(app, /Instagram.*X.*TikTok.*YouTube/s);
-  assert.match(app, /site:instagram\.com/);
-  assert.match(app, /site:tiktok\.com/);
+  assert.match(discoveryActions, /site:instagram\.com/);
+  assert.match(discoveryActions, /site:tiktok\.com/);
   assert.match(app, /String\(elements\.query\.value\|\|result\?\.search_keywords/);
   assert.match(app, /replace\(\/\(\?:で探す\|で検索\)\$\/u/);
   assert.match(styles, /@media\(max-width:760px\)\{\.marketplace-links\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(app, /https:\/\/www\.swippitt\.net\//);
-  assert.match(app, /function swippittDiscoveryMatch/);
+  assert.match(discoveryActions, /https:\/\/(?:www\.)?swippitt\.net\//);
+  assert.match(discoveryActions, /function swippittDiscoveryMatch/);
   assert.match(app, /これですか？↓/);
-  assert.match(app, /static\.wixstatic\.com\/media\/494321_/);
+  assert.match(discoveryActions, /static\.wixstatic\.com\/media\/494321_/);
   assert.match(html, /id="journeyStep4Title">見つからなければSNSでも探す/);
   assert.match(html, /Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます/);
   assert.match(css, /font-size: clamp\(28px, 7\.4vw, 34px\)/);
