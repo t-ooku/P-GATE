@@ -2154,7 +2154,11 @@ test('IPL光美容器は照射回数・冷却・出力段階・肌色検知を4�
     'IPL光美容器 50万回 冷却機能 5段階 肌色センサー',
     'IPL hair removal device 500000 flashes cooling 5 levels skin tone sensor',
     'IPL脱毛仪 50万发 冰感冷却 5档 肤色传感器',
-    'IPL 제모기 50만회 냉각 5단계 피부톤 센서'
+    'IPL 제모기 50만회 냉각 5단계 피부톤 센서',
+    '家でムダ毛ケアしたい 50万回 冷却機能 5段階 肌色センサー',
+    'remove body hair at home with 500000 flashes cooling 5 levels skin tone sensor',
+    '在家脱毛 50万发 冰感冷却 5档 肤色传感器',
+    '집에서 제모하는 50만회 냉각 5단계 피부톤 센서'
   ];
   for (const input of inputs) {
     for (const marketplace of SEARCH_MARKETPLACES) {

@@ -577,7 +577,7 @@ function buildCameraPetFeederSearchKeywords(query) {
 
 function buildIplHairRemovalSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  const device = /(?:IPL\s*光美容器|IPL\s*(?:hair\s*removal\s*)?device|IPL\s*脱毛仪|IPL\s*脫毛儀|IPL\s*제모기)/iu.test(normalized);
+  const device = /(?:IPL\s*光美容器|IPL\s*(?:hair\s*removal\s*)?device|IPL\s*脱毛仪|IPL\s*脫毛儀|IPL\s*제모기|(?:家|自宅).{0,16}(?:ムダ毛|脱毛).{0,12}(?:ケア|処理)|(?:remove|reduce).{0,12}(?:body\s*)?hair.{0,16}(?:at\s*home|home)|在家.{0,12}(?:脱毛|除毛)|집에서.{0,12}(?:제모|털\s*제거))/iu.test(normalized);
   const tenThousands = normalized.match(/(\d{1,3})\s*(?:万\s*(?:回|発|发|次)?|만\s*회)/iu)?.[1];
   const rawFlashes = normalized.match(/\b(\d{5,7})\s*flashes?\b/iu)?.[1];
   const flashes = tenThousands ? String(Number(tenThousands) * 10000) : rawFlashes || '';
