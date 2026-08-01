@@ -163,6 +163,32 @@ test('4言語の予算額を型番や寸法としてFTS必須条件へ混入さ�
   assert.match(intelligentFtsQuery('iPhone 15用ケース'), /"15"\*/);
 });
 
+test('4言語の年齢・レビュー件数を型番や仕様値としてFTS必須条件へ混入させない', () => {
+  const ageCases = [
+    ['12歳の子供用防水バックパック', '12'],
+    ['a waterproof backpack for a 12-year-old', '12'],
+    ['适合12岁儿童的防水背包', '12'],
+    ['12세 아이용 방수 백팩', '12'],
+  ];
+  for (const [query, age] of ageCases) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /"backpack"\*/);
+    assert.doesNotMatch(expression, new RegExp(`"${age}"\\*`));
+  }
+
+  for (const query of [
+    '口コミ1000件以上の黒い財布',
+    'a black wallet with over 1000 reviews',
+    '有1000条以上评价的黑色钱包',
+    '리뷰 1000개 이상인 검은색 지갑',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /"wallet"\*/);
+    assert.match(expression, /"black"\*/);
+    assert.doesNotMatch(expression, /"1000"\*/);
+  }
+});
+
 test('Japanese memory fragments expand into category and color FTS groups', () => {
   const query = intelligentFtsQuery('茶色い革ベルトと金属ケースの男性用腕時計');
   assert.match(query, /"watch"\*/);

@@ -186,3 +186,23 @@ test("4言語の予算を除外し対象者・利用場面を9モールの商品
     }
   }
 });
+
+test("4言語の年齢はキッズ用途へ変換しレビュー件数は9モール検索語から除外する", () => {
+  const cases = [
+    ['12歳の子供用防水バックパック', ['キッズ', '防水', 'バックパック'], ['12']],
+    ['a waterproof backpack for a 12-year-old', ['キッズ', '防水', 'バックパック'], ['12']],
+    ['适合12岁儿童的防水背包', ['キッズ', '防水', 'バックパック'], ['12']],
+    ['12세 아이용 방수 백팩', ['キッズ', '防水', 'バックパック'], ['12']],
+    ['口コミ1000件以上の黒い財布', ['黒', '財布'], ['1000']],
+    ['a black wallet with over 1000 reviews', ['黒', '財布'], ['1000']],
+    ['有1000条以上评价的黑色钱包', ['黒', '財布'], ['1000']],
+    ['리뷰 1000개 이상인 검은색 지갑', ['黒', '財布'], ['1000']],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, required, forbidden] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      for (const token of required) assert.ok(keywords.includes(token), `${marketplace}: ${input} -> ${keywords}`);
+      for (const token of forbidden) assert.ok(!keywords.includes(token), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
