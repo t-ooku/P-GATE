@@ -6,7 +6,7 @@ const copy = {
 };
 
 const marketplaces=[
-  ['AMAZON_JP','Amazon'],['RAKUTEN_JP','楽天市場'],['QOO10_JP','Qoo10'],['SHEIN_JP','SHEIN'],
+  ['AMAZON_JP','Amazon'],['RAKUTEN_JP','楽天市場'],['YAHOO_JP','Yahoo!ショッピング'],['QOO10_JP','Qoo10'],['SHEIN_JP','SHEIN'],
   ['ZOZOTOWN','ZOZOTOWN'],['SHOPLIST','SHOPLIST'],['MUSINSA','MUSINSA'],['BUYMA','BUYMA'],['SNKRDUNK','SNKRDUNK']
 ];
 const infoTypes=[
