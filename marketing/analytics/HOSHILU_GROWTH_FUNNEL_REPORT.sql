@@ -80,3 +80,30 @@ WHERE occurred_at >= '2026-08-01T00:00:00Z'
   AND variant <> ''
 GROUP BY experiment, variant
 ORDER BY experiment, variant;
+
+-- SEO LP別ファネル。固定content次元だけを対象にし、QAを実績へ混ぜない。
+SELECT
+  locale,
+  content AS seo_landing,
+  SUM(CASE WHEN event_type = 'landing_view' THEN 1 ELSE 0 END) AS landing_views,
+  SUM(CASE WHEN event_type = 'search_started' THEN 1 ELSE 0 END) AS searches_started,
+  SUM(CASE WHEN event_type = 'search_completed' THEN 1 ELSE 0 END) AS searches_completed,
+  SUM(CASE WHEN event_type = 'registration_completed' THEN 1 ELSE 0 END) AS registrations_completed,
+  SUM(CASE WHEN event_type = 'marketplace_click' THEN 1 ELSE 0 END) AS marketplace_clicks,
+  ROUND(
+    100.0 * SUM(CASE WHEN event_type = 'search_started' THEN 1 ELSE 0 END)
+    / NULLIF(SUM(CASE WHEN event_type = 'landing_view' THEN 1 ELSE 0 END), 0),
+    2
+  ) AS landing_to_search_pct,
+  ROUND(
+    100.0 * SUM(CASE WHEN event_type = 'search_completed' THEN 1 ELSE 0 END)
+    / NULLIF(SUM(CASE WHEN event_type = 'search_started' THEN 1 ELSE 0 END), 0),
+    2
+  ) AS search_completion_pct
+FROM growth_events
+WHERE occurred_at >= '2026-08-01T00:00:00Z'
+  AND occurred_at <  '2026-09-01T00:00:00Z'
+  AND traffic_class <> 'QA'
+  AND content LIKE 'seo_%'
+GROUP BY locale, content
+ORDER BY landing_views DESC, locale, content;
