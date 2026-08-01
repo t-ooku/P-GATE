@@ -359,3 +359,22 @@ test("iPhoneとGalaxyの現地語端末名を9モール向け互換型番へ統�
     }
   }
 });
+
+test("XperiaとAQUOSの4言語表記を9モール向け互換型番へ統一する", () => {
+  const cases = [
+    ['エクスペリア 1 VIの透明ケース', 'Xperia 1 VI ケース'],
+    ['clear case for Xperia 1 VI', 'Xperia 1 VI ケース'],
+    ['Xperia 1 VI透明手机壳', 'Xperia 1 VI ケース'],
+    ['엑스페리아 1 VI 투명 케이스', 'Xperia 1 VI ケース'],
+    ['アクオス sense8のケース', 'AQUOS sense8 ケース'],
+    ['AQUOS sense8 case', 'AQUOS sense8 ケース'],
+    ['AQUOS sense8手机壳', 'AQUOS sense8 ケース'],
+    ['아쿠오스 sense8 케이스', 'AQUOS sense8 ケース'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes(expected), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});

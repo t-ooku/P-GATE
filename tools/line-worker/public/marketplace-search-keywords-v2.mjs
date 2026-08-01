@@ -21,6 +21,14 @@ function deviceName(query) {
   if (pixel) return pixel[0].replace(/^pixel/iu, 'Pixel').trim();
   const localizedPixel = query.match(/픽셀(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro|fold|a))?)?/iu);
   if (localizedPixel) return localizedPixel[0].replace(/^픽셀/iu, 'Pixel').trim();
+  const xperia = query.match(/\bxperia\s*((?:1|5|10)\s*(?:vi|v|iv|iii|ii)?)/iu);
+  if (xperia) return `Xperia ${xperia[1].trim()}`;
+  const localizedXperia = query.match(/(?:エクスペリア|엑스페리아)\s*((?:1|5|10)\s*(?:vi|v|iv|iii|ii)?)/iu);
+  if (localizedXperia) return `Xperia ${localizedXperia[1].trim()}`;
+  const aquos = query.match(/\baquos\s*((?:sense|wish|r)\s*\d{1,2})/iu);
+  if (aquos) return `AQUOS ${aquos[1].replace(/\s+/gu, '')}`;
+  const localizedAquos = query.match(/(?:アクオス|아쿠오스)\s*((?:sense|wish|r)\s*\d{1,2})/iu);
+  if (localizedAquos) return `AQUOS ${localizedAquos[1].replace(/\s+/gu, '')}`;
   if (/(?:\bandroid\b|安卓|안드로이드)/iu.test(query)) return 'Android';
   return '';
 }

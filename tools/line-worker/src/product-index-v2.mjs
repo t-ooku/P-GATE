@@ -60,11 +60,15 @@ export function intelligentFtsQuery(value) {
   const groups = [...semantic];
   const modelTokens = source.match(/\b[A-Za-z][A-Za-z0-9-]*\d[A-Za-z0-9-]*\b/g) || [];
   const namedTokens = source.match(/\b[A-Z][A-Za-z]{3,}\b/g) || [];
-  const identifiers = [...new Set([...modelTokens, ...namedTokens]
+  const localizedDeviceTokens = [
+    /(?:\bxperia\b|エクスペリア|엑스페리아)/iu.test(source) ? 'xperia' : '',
+    /(?:\baquos\b|アクオス|아쿠오스)/iu.test(source) ? 'aquos' : '',
+  ].filter(Boolean);
+  const identifiers = [...new Set([...modelTokens, ...namedTokens, ...localizedDeviceTokens]
     .map((token) => token.toLowerCase())
     .filter((token) => !IDENTIFIER_STOPWORDS.has(token)))]
     .slice(0, 6);
-  if (modelTokens.length || identifiers.length >= 2) groups.push(identifiers);
+  if (modelTokens.length || localizedDeviceTokens.length || identifiers.length >= 2) groups.push(identifiers);
   // Free-form descriptions contain many context words that are absent from a
   // catalog title. Requiring one of them as another AND group suppresses valid
   // products. Keep direct tokens strict only when the query carries a concrete
