@@ -324,6 +324,14 @@ function phoneCaseDeviceModel(value) {
   if (correctedGalaxyModel && /(?:\bgalaxy\b|ギャラクシー|三星|갤럭시)/iu.test(text)) {
     return `galaxy${correctedGalaxyModel.toLowerCase().replace(/\s+/gu, '')}`;
   }
+  const correctedIphoneModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2})\b/iu)?.[1] || '';
+  if (correctedIphoneModel && /(?:\biphone\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)/iu.test(text)) {
+    return `iphone${correctedIphoneModel.toLowerCase().replace(/\s+/gu, '')}`;
+  }
+  const correctedPixelModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro\s*fold|pro|fold|a))?)\b/iu)?.[1] || '';
+  if (correctedPixelModel && /(?:\bpixel\b|ピクセル|픽셀)/iu.test(text)) {
+    return `pixel${correctedPixelModel.toLowerCase().replace(/\s+/gu, '')}`;
+  }
   const iphoneMatches = [...text.matchAll(/\biphone\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2}/giu)];
   let iphoneMatch = iphoneMatches[0] || null;
   for (let index = iphoneMatches.length - 1; index > 0; index -= 1) {

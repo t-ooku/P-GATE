@@ -1156,6 +1156,39 @@ test('ブランドを省略した型番の言い直しも4言語で訂正後のG
   }
 });
 
+test('ブランドを省略した型番の言い直しも4言語で訂正後のiPhoneとPixel用だけを提示する', () => {
+  const cases = [
+    [[
+      'iPhone 16 Pro用、訂正、16 Pro Maxの覗き見防止強化ガラスフィルム',
+      'iPhone 16 Pro privacy glass, I mean 16 Pro Max privacy tempered glass screen protector',
+      'iPhone 16 Pro防窥膜，我是说16 Pro Max防窥钢化玻璃保护膜',
+      'iPhone 16 Pro 사생활 보호 필름, 정정 16 Pro Max 사생활 보호 강화유리 필름',
+    ], [
+      { asin: 'MATCH', product_name: 'iPhone 16 Pro Max Privacy Tempered Glass Screen Protector' },
+      { asin: 'OLD', product_name: 'iPhone 16 Pro Privacy Tempered Glass Screen Protector' },
+      { asin: 'BASE', product_name: 'iPhone 16 Privacy Tempered Glass Screen Protector' },
+      { asin: 'CLEAR', product_name: 'iPhone 16 Pro Max Clear Tempered Glass Screen Protector' },
+    ]],
+    [[
+      'Pixel 9用、訂正、9 Proの覗き見防止強化ガラスフィルム',
+      'Pixel 9 privacy glass, I mean 9 Pro privacy tempered glass screen protector',
+      'Pixel 9防窥膜，我是说9 Pro防窥钢化玻璃保护膜',
+      'Pixel 9 사생활 보호 필름, 정정 9 Pro 사생활 보호 강화유리 필름',
+    ], [
+      { asin: 'MATCH', product_name: 'Pixel 9 Pro Privacy Tempered Glass Screen Protector' },
+      { asin: 'OLD', product_name: 'Pixel 9 Privacy Tempered Glass Screen Protector' },
+      { asin: 'FOLD', product_name: 'Pixel 9 Pro Fold Privacy Tempered Glass Screen Protector' },
+      { asin: 'CLEAR', product_name: 'Pixel 9 Pro Clear Tempered Glass Screen Protector' },
+    ]],
+  ];
+  for (const [queries, candidates] of cases) {
+    for (const query of queries) {
+      assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+        ['MATCH'], query);
+    }
+  }
+});
+
 test('単焦点レンズは4言語でマウント・焦点距離・F値が一致する候補だけを提示する', () => {
   const cases = [
     [['Sony Eマウント 35mm F1.8の単焦点レンズ', 'Sony E-mount 35mm F1.8 prime lens',

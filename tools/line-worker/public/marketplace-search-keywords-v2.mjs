@@ -31,6 +31,14 @@ function deviceName(query) {
   if (correctedGalaxyModel && /(?:\bgalaxy\b|ギャラクシー|三星|갤럭시)/iu.test(query)) {
     return deviceName(`Galaxy ${correctedGalaxyModel}`);
   }
+  const correctedIphoneModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2})\b/iu)?.[1] || '';
+  if (correctedIphoneModel && /(?:\biphone\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)/iu.test(query)) {
+    return deviceName(`iPhone ${correctedIphoneModel}`);
+  }
+  const correctedPixelModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro\s*fold|pro|fold|a))?)\b/iu)?.[1] || '';
+  if (correctedPixelModel && /(?:\bpixel\b|ピクセル|픽셀)/iu.test(query)) {
+    return deviceName(`Pixel ${correctedPixelModel}`);
+  }
   const ipad = query.match(/\bipad(?:\s*(?:air|pro|mini))?(?:\s*(?:m[1-9]|\d+(?:st|nd|rd|th)?\s*(?:generation|gen)))?/iu);
   if (ipad) return ipad[0].replace(/^ipad/iu, 'iPad').replace(/\s+/gu, ' ').trim();
   const localizedIpad = query.match(/(?:アイパッド|苹果平板|蘋果平板|아이패드)(?:\s*(air|pro|mini|エア|プロ|에어|프로))?/iu);

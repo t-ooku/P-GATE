@@ -211,6 +211,31 @@ test('ブランドを省略した型番の言い直しも4言語で訂正後のG
   }
 });
 
+test('ブランドを省略した型番の言い直しも4言語で訂正後のiPhoneとPixelだけを保持する', () => {
+  const cases = [
+    ['iPhone 16 Pro Max', [
+      'iPhone 16 Pro用、訂正、16 Pro Maxの覗き見防止強化ガラスフィルム',
+      'iPhone 16 Pro privacy glass, I mean 16 Pro Max privacy tempered glass screen protector',
+      'iPhone 16 Pro防窥膜，我是说16 Pro Max防窥钢化玻璃保护膜',
+      'iPhone 16 Pro 사생활 보호 필름, 정정 16 Pro Max 사생활 보호 강화유리 필름',
+    ]],
+    ['Pixel 9 Pro', [
+      'Pixel 9用、訂正、9 Proの覗き見防止強化ガラスフィルム',
+      'Pixel 9 privacy glass, I mean 9 Pro privacy tempered glass screen protector',
+      'Pixel 9防窥膜，我是说9 Pro防窥钢化玻璃保护膜',
+      'Pixel 9 사생활 보호 필름, 정정 9 Pro 사생활 보호 강화유리 필름',
+    ]],
+  ];
+  for (const [device, queries] of cases) {
+    for (const query of queries) {
+      for (const marketplace of SEARCH_MARKETPLACES) {
+        assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+          `${device} 保護フィルム 強化ガラス 覗き見防止`, `${marketplace}: ${query}`);
+      }
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [
