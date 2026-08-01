@@ -1733,6 +1733,31 @@ test('折りたたみ電動アシスト自転車は4言語で車輪・出力・�
   }
 });
 
+test('ポータブル電源は4言語で電池種・容量・出力・UPS・ソーラー条件が一致する本体だけを提示する', () => {
+  const queries = [
+    'リン酸鉄 ポータブル電源 1536Wh 定格出力2000W UPS ソーラー入力500W',
+    'LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W',
+    '磷酸铁 便携式储能电源 1536Wh 额定功率2000W UPS 太阳能输入500W',
+    '리튬인산철 휴대용 파워뱅크 1536Wh 정격 출력 2000W UPS 태양광 입력 500W',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W' },
+    { asin: 'CHEMISTRY', product_name: 'NMC portable power station 1536Wh rated output 2000W UPS solar input 500W' },
+    { asin: 'CAPACITY', product_name: 'LiFePO4 portable power station 1024Wh rated output 2000W UPS solar input 500W' },
+    { asin: 'OUTPUT', product_name: 'LiFePO4 portable power station 1536Wh rated output 1500W UPS solar input 500W' },
+    { asin: 'NOUPS', product_name: 'LiFePO4 portable power station 1536Wh rated output 2000W solar input 500W' },
+    { asin: 'SOLAR', product_name: 'LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 300W' },
+    { asin: 'PANEL', product_name: 'Solar panel for LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W' },
+    { asin: 'BATTERY', product_name: 'Expansion battery for LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W' },
+    { asin: 'CABLE', product_name: 'Charging cable for LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W' },
+    { asin: 'CASE', product_name: 'Carrying case for LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W' },
+    { asin: 'INVERTER', product_name: 'Car inverter with LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {

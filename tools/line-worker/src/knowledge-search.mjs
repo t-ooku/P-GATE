@@ -1169,6 +1169,33 @@ function isFoldingElectricBikeMismatch(candidate, requested) {
   return false;
 }
 
+function portablePowerStationConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    station: /(?:ポータブル電源|portable\s*power\s*station|便携式储能电源|便攜式儲能電源|휴대용\s*파워뱅크)/iu.test(text),
+    lifepo4: /(?:LiFePO4|リン酸鉄|磷酸铁|磷酸鐵|리튬인산철)/iu.test(text),
+    capacity: text.match(/\b(\d{3,5})\s*Wh\b/iu)?.[1] || '',
+    output: text.match(/(?:定格出力|rated\s*output|额定功率|額定功率|정격\s*출력)\s*(\d{3,5})\s*W\b/iu)?.[1] || '',
+    ups: /\bUPS\b/iu.test(text),
+    solar: text.match(/(?:ソーラー入力|solar\s*input|太阳能输入|太陽能輸入|태양광\s*입력)\s*(\d{2,4})\s*W\b/iu)?.[1] || '',
+    wrongProduct: /(?:solar\s*panel|ソーラーパネル|太阳能板|太陽能板|태양광\s*패널|expansion\s*battery|拡張バッテリー|扩展电池|擴充電池|확장\s*배터리|charging\s*cable|充電ケーブル|充电线|充電線|충전\s*케이블|carrying\s*case|収納ケース|收纳包|收納包|보관\s*케이스|car\s*inverter|車載インバーター|车载逆变器|車用逆變器|차량용\s*인버터)/iu.test(text)
+  };
+}
+
+function isPortablePowerStationMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = portablePowerStationConstraints(text);
+  if (!evidence.station || evidence.wrongProduct) return true;
+  for (const field of ['capacity', 'output', 'solar']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const field of ['lifepo4', 'ups']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2054,6 +2081,11 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(foldingElectricBike.wheel && foldingElectricBike.motor && foldingElectricBike.voltage
       && foldingElectricBike.capacity && foldingElectricBike.range)
     && !foldingElectricBike.wrongProduct;
+  const portablePowerStation = portablePowerStationConstraints(normalizedQuery);
+  const portablePowerStationIntent = portablePowerStation.station && portablePowerStation.lifepo4
+    && Boolean(portablePowerStation.capacity && portablePowerStation.output
+      && portablePowerStation.ups && portablePowerStation.solar)
+    && !portablePowerStation.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2066,7 +2098,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
     && !laserProjectorIntent && !dolbyAtmosSoundbarIntent && !fullFrameMirrorlessCameraIntent
     && !gamingLaptopIntent && !nasIntent && !wifi7MeshRouterIntent && !fdm3dPrinterIntent
-    && !robotLawnMowerIntent && !foldingElectricBikeIntent) return candidates;
+    && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2146,6 +2178,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (fdm3dPrinterIntent) return !isFdm3dPrinterMismatch(candidate, fdm3dPrinter);
     if (robotLawnMowerIntent) return !isRobotLawnMowerMismatch(candidate, robotLawnMower);
     if (foldingElectricBikeIntent) return !isFoldingElectricBikeMismatch(candidate, foldingElectricBike);
+    if (portablePowerStationIntent) return !isPortablePowerStationMismatch(candidate, portablePowerStation);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

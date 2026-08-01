@@ -483,6 +483,18 @@ function buildFoldingElectricBikeSearchKeywords(query) {
   return ['折りたたみ電動アシスト自転車', `${wheel}インチ`, `${motor}W`, `${voltage}V`, `${capacity}Ah`, `航続${range}km`].join(' ');
 }
 
+function buildPortablePowerStationSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const station = /(?:ポータブル電源|portable\s*power\s*station|便携式储能电源|便攜式儲能電源|휴대용\s*파워뱅크)/iu.test(normalized);
+  const lifepo4 = /(?:LiFePO4|リン酸鉄|磷酸铁|磷酸鐵|리튬인산철)/iu.test(normalized);
+  const capacity = normalized.match(/\b(\d{3,5})\s*Wh\b/iu)?.[1];
+  const output = normalized.match(/(?:定格出力|rated\s*output|额定功率|額定功率|정격\s*출력)\s*(\d{3,5})\s*W\b/iu)?.[1];
+  const ups = /\bUPS\b/iu.test(normalized);
+  const solar = normalized.match(/(?:ソーラー入力|solar\s*input|太阳能输入|太陽能輸入|태양광\s*입력)\s*(\d{2,4})\s*W\b/iu)?.[1];
+  if (!station || !lifepo4 || !capacity || !output || !ups || !solar) return '';
+  return ['ポータブル電源', 'LiFePO4', `${capacity}Wh`, `定格出力${output}W`, 'UPS', `ソーラー入力${solar}W`].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1300,6 +1312,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawRobotLawnMower) return rawRobotLawnMower;
   const rawFoldingElectricBike = buildFoldingElectricBikeSearchKeywords(rawNormalized);
   if (rawFoldingElectricBike) return rawFoldingElectricBike;
+  const rawPortablePowerStation = buildPortablePowerStationSearchKeywords(rawNormalized);
+  if (rawPortablePowerStation) return rawPortablePowerStation;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

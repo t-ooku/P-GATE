@@ -566,6 +566,21 @@ test('折りたたみ電動アシスト自転車は車輪・出力・電池・�
   }
 });
 
+test('ポータブル電源は電池種・容量・出力・UPS・ソーラー条件を4言語で保持する', () => {
+  const queries = [
+    'リン酸鉄 ポータブル電源 1536Wh 定格出力2000W UPS ソーラー入力500W',
+    'LiFePO4 portable power station 1536Wh rated output 2000W UPS solar input 500W',
+    '磷酸铁 便携式储能电源 1536Wh 额定功率2000W UPS 太阳能输入500W',
+    '리튬인산철 휴대용 파워뱅크 1536Wh 정격 출력 2000W UPS 태양광 입력 500W',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ポータブル電源 LiFePO4 1536Wh 定格出力2000W UPS ソーラー入力500W', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [
