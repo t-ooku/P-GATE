@@ -342,9 +342,15 @@ function isPowerBankMismatch(candidate, query) {
     new RegExp(`(?:at\\s+least|minimum(?:\\s+of)?|至少|不少于)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)
     || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以上|or\\s+more|and\\s+up|이상)`, 'iu').test(normalizedQuery)
   );
+  const maximumCapacity = capacity && (
+    new RegExp(`(?:at\\s+most|maximum(?:\\s+of)?|up\\s+to|不超过|最多)\\s*${capacity}\\s*m\\s*ah`, 'iu').test(normalizedQuery)
+    || new RegExp(`${capacity}\\s*m\\s*ah\\s*(?:以下|or\\s+less|or\\s+under|이하)`, 'iu').test(normalizedQuery)
+  );
   const candidateCapacity = text.match(/(?:^|\D)(\d{4,6})\s*m\s*ah(?:\D|$)/iu)?.[1];
   if (minimumCapacity && (!candidateCapacity || Number(candidateCapacity) < Number(capacity))) return true;
-  if (capacity && !minimumCapacity && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
+  if (maximumCapacity && (!candidateCapacity || Number(candidateCapacity) > Number(capacity))) return true;
+  if (capacity && !minimumCapacity && !maximumCapacity
+    && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
   const rejectedCapacities = capacityMatches
     .filter((match) => isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))
     .map((match) => match[1]);
