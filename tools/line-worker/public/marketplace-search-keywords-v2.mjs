@@ -385,6 +385,18 @@ function buildLaserProjectorSearchKeywords(query) {
   return ['レーザープロジェクター', resolution, `${brightness} ANSIルーメン`, `投写比${ratio}`, androidTv].join(' ');
 }
 
+function buildDolbyAtmosSoundbarSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  if (!/(?:サウンドバー|soundbar|回音壁|사운드바)/iu.test(normalized)) return '';
+  const channels = normalized.match(/\b(\d\.\d\.\d)\s*(?:ch|チャンネル|声道|聲道|채널)/iu)?.[1];
+  const atmos = /dolby\s*atmos/iu.test(normalized) ? 'Dolby Atmos' : '';
+  const earc = /hdmi\s*e-?arc|\bearc\b/iu.test(normalized) ? 'HDMI eARC' : '';
+  const subwoofer = /(?:ワイヤレスサブウーファー|wireless\s*subwoofer|无线低音炮|無線低音炮|무선\s*서브우퍼)/iu.test(normalized)
+    ? 'ワイヤレスサブウーファー' : '';
+  if (!channels || !atmos || !earc || !subwoofer) return '';
+  return ['サウンドバー', `${channels}ch`, atmos, earc, subwoofer].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1186,6 +1198,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawOledTelevision) return rawOledTelevision;
   const rawLaserProjector = buildLaserProjectorSearchKeywords(rawNormalized);
   if (rawLaserProjector) return rawLaserProjector;
+  const rawDolbyAtmosSoundbar = buildDolbyAtmosSoundbarSearchKeywords(rawNormalized);
+  if (rawDolbyAtmosSoundbar) return rawDolbyAtmosSoundbar;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

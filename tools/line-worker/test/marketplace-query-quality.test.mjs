@@ -446,6 +446,21 @@ test('レーザープロジェクターは解像度・明るさ・投写比・OS
   }
 });
 
+test('Dolby Atmosサウンドバーはチャンネル・端子・低音構成を4言語で保持する', () => {
+  const queries = [
+    '5.1.2ch Dolby Atmos HDMI eARC ワイヤレスサブウーファー サウンドバー',
+    '5.1.2ch Dolby Atmos soundbar HDMI eARC wireless subwoofer',
+    '5.1.2声道 Dolby Atmos HDMI eARC 无线低音炮 回音壁',
+    '5.1.2채널 Dolby Atmos HDMI eARC 무선 서브우퍼 사운드바',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'サウンドバー 5.1.2ch Dolby Atmos HDMI eARC ワイヤレスサブウーファー', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

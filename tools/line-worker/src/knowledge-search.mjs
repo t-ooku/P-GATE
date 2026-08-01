@@ -966,6 +966,30 @@ function isLaserProjectorMismatch(candidate, requested) {
   return false;
 }
 
+function dolbyAtmosSoundbarConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    soundbar: /(?:サウンドバー|soundbar|回音壁|사운드바)/iu.test(text),
+    channels: text.match(/\b(\d\.\d\.\d)\s*(?:ch|チャンネル|声道|聲道|채널)/iu)?.[1] || '',
+    atmos: /dolby\s*atmos/iu.test(text),
+    earc: /hdmi\s*e-?arc|\bearc\b/iu.test(text),
+    subwoofer: /(?:ワイヤレスサブウーファー|wireless\s*subwoofer|无线低音炮|無線低音炮|무선\s*서브우퍼)/iu.test(text),
+    wrongProduct: /(?:単体スピーカー|standalone\s*speaker|单独音箱|單獨音箱|스피커\s*단품|AVアンプ|av\s*receiver|功放|앰프|headphones?|ヘッドホン|耳机|耳機|헤드폰|テレビ|\btv\b|电视|電視|텔레비전|wall\s*mount|壁掛け金具|壁挂支架|壁掛支架|벽걸이\s*브라켓|replacement\s*remote|交換リモコン|替换遥控器|替換遙控器|교체용\s*리모컨|hdmi\s*cable|HDMIケーブル|HDMI线|HDMI線|HDMI\s*케이블)/iu.test(text)
+  };
+}
+
+function isDolbyAtmosSoundbarMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = dolbyAtmosSoundbarConstraints(text);
+  if (!evidence.soundbar || evidence.wrongProduct) return true;
+  if (requested.channels && evidence.channels !== requested.channels) return true;
+  for (const feature of ['atmos', 'earc', 'subwoofer']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1821,6 +1845,9 @@ export function filterCategoryMismatches(query, candidates = []) {
   const laserProjectorIntent = laserProjector.projector
     && Boolean(laserProjector.brightness && laserProjector.ratio && laserProjector.laser)
     && !laserProjector.wrongProduct;
+  const dolbyAtmosSoundbar = dolbyAtmosSoundbarConstraints(normalizedQuery);
+  const dolbyAtmosSoundbarIntent = dolbyAtmosSoundbar.soundbar && Boolean(dolbyAtmosSoundbar.channels)
+    && dolbyAtmosSoundbar.atmos && !dolbyAtmosSoundbar.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1831,7 +1858,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent
     && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent && !frontLoadWasherDryerIntent
     && !frenchDoorRefrigeratorIntent && !builtInDishwasherIntent && !oledTelevisionIntent
-    && !laserProjectorIntent) return candidates;
+    && !laserProjectorIntent && !dolbyAtmosSoundbarIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1901,6 +1928,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (builtInDishwasherIntent) return !isBuiltInDishwasherMismatch(candidate, builtInDishwasher);
     if (oledTelevisionIntent) return !isOledTelevisionMismatch(candidate, oledTelevision);
     if (laserProjectorIntent) return !isLaserProjectorMismatch(candidate, laserProjector);
+    if (dolbyAtmosSoundbarIntent) return !isDolbyAtmosSoundbarMismatch(candidate, dolbyAtmosSoundbar);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

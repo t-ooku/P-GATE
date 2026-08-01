@@ -1531,6 +1531,32 @@ test('レーザープロジェクターは4言語で解像度・明るさ・投�
   }
 });
 
+test('Dolby Atmosサウンドバーは4言語でチャンネル・端子・低音構成が一致する本体だけを提示する', () => {
+  const queries = [
+    '5.1.2ch Dolby Atmos HDMI eARC ワイヤレスサブウーファー サウンドバー',
+    '5.1.2ch Dolby Atmos soundbar HDMI eARC wireless subwoofer',
+    '5.1.2声道 Dolby Atmos HDMI eARC 无线低音炮 回音壁',
+    '5.1.2채널 Dolby Atmos HDMI eARC 무선 서브우퍼 사운드바',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '5.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'CHANNELS', product_name: '3.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'NOATMOS', product_name: '5.1.2ch Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'NOEARC', product_name: '5.1.2ch Dolby Atmos Soundbar HDMI ARC Wireless Subwoofer' },
+    { asin: 'NOSUB', product_name: '5.1.2ch Dolby Atmos Soundbar HDMI eARC' },
+    { asin: 'SPEAKER', product_name: 'Standalone Speaker for 5.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'RECEIVER', product_name: 'AV Receiver for 5.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'HEADPHONES', product_name: 'Headphones 5.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'TV', product_name: 'TV with 5.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'MOUNT', product_name: 'Wall Mount for 5.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'REMOTE', product_name: 'Replacement Remote for 5.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+    { asin: 'CABLE', product_name: 'HDMI Cable for 5.1.2ch Dolby Atmos Soundbar HDMI eARC Wireless Subwoofer' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
