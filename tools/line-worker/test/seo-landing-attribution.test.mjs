@@ -12,7 +12,7 @@ test('each SEO landing page exposes one safe anonymous content dimension', () =>
     assert.match(value, /^seo_[a-z0-9_]{1,59}$/);
     values.add(value);
   }
-  assert.equal(values.size, 5);
+  assert.equal(values.size, 6);
 });
 
 test('growth analytics accepts only bounded page content and preserves explicit UTM content', async () => {

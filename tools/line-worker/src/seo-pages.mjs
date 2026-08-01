@@ -20,6 +20,10 @@ const pages = {
   'product-requests': {
     ja: ['探してほしい商品をリクエスト', '見つからない商品をMYWISHへ保存し、あとから再検索できます。', '特徴や見た場所を入力して検索し、候補が足りない場合はMYWISHへ保存してください。個人情報は入力しないでください。'],
     en: ['Request help finding a product', 'Save an unresolved search to MYWISH and return when new candidates are available.', 'Describe the product and search first. If the result is not enough, save it to MYWISH. Do not include personal information.']
+  },
+  'find-product-seen-online': {
+    ja: ['動画や記事で見た商品を探す方法', '動画、記事、店頭や街中で見た商品の名前が分からなくても、見た場所や色・形・用途などの手がかりから検索できます。', '見た媒体や場所、色、形、大きさ、素材、使われ方など、確かな手がかりから入力してください。画像そのものを検索する機能ではありません。'],
+    en: ['How to find a product you saw online or in person', 'Find a product seen in a video, article, shop, or public place by describing where you saw it and the details you remember.', 'Start with reliable clues such as the source or place, color, shape, size, material, and how the item was used. HOSHILU does not perform image search.']
   }
 };
 
@@ -43,6 +47,10 @@ const faqs = {
   'product-requests': {
     ja: ['見つからない検索をあとで確認できますか？', '無料会員は検索内容をMYWISHへ保存して、あとから再検索できます。氏名、住所、連絡先などの個人情報は入力しないでください。'],
     en: ['Can I return to an unresolved search later?', 'Free members can save the search to MYWISH and try it again later. Do not enter personal information such as names, addresses, or contact details.']
+  },
+  'find-product-seen-online': {
+    ja: ['画像をアップロードして検索できますか？', '現在は画像検索ではありません。見た場所、色、形、用途などを文章で入力してください。個人情報は入力しないでください。'],
+    en: ['Can I upload an image to search?', 'HOSHILU currently uses text descriptions rather than image search. Describe where you saw the item and the details you remember, and do not include personal information.']
   }
 };
 

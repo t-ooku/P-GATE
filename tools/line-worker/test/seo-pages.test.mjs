@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderSeoPage, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('日英SEO必須10ページを別URLで提供する', () => {
-  assert.equal(seoPagePaths.length, 10);
+test('日英SEO必須12ページを別URLで提供する', () => {
+  assert.equal(seoPagePaths.length, 12);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\//);
@@ -28,6 +28,11 @@ test('日英SEO必須10ページを別URLで提供する', () => {
   }
 });
 
+test('seen-product guides accurately explain text search limitations', () => {
+  assert.match(renderSeoPage('/ja/find-product-seen-online'), /画像そのものを検索する機能ではありません/);
+  assert.match(renderSeoPage('/en/find-product-seen-online'), /does not perform image search/);
+});
+
 test('FAQ structured data matches the visible question and answer', () => {
   const questionsByLocale = { ja: new Set(), en: new Set() };
   for (const path of seoPagePaths) {
@@ -41,8 +46,8 @@ test('FAQ structured data matches the visible question and answer', () => {
     assert.ok(html.includes(`<summary>${entity.name}</summary>`));
     assert.ok(html.includes(`<p>${entity.acceptedAnswer.text}</p>`));
   }
-  assert.equal(questionsByLocale.ja.size, 5);
-  assert.equal(questionsByLocale.en.size, 5);
+  assert.equal(questionsByLocale.ja.size, 6);
+  assert.equal(questionsByLocale.en.size, 6);
 });
 
 test('each SEO page links to every other guide in the same language', () => {
@@ -50,7 +55,7 @@ test('each SEO page links to every other guide in the same language', () => {
     const html = renderSeoPage(path);
     const [locale] = path.slice(1).split('/');
     const siblingPaths = seoPagePaths.filter((candidate) => candidate.startsWith(`/${locale}/`) && candidate !== path);
-    assert.equal(siblingPaths.length, 4);
+    assert.equal(siblingPaths.length, 5);
     for (const siblingPath of siblingPaths) assert.match(html, new RegExp(`href="${siblingPath}"`));
     assert.doesNotMatch(html, new RegExp(`href="${path}"`));
   }

@@ -9,6 +9,7 @@ const paths = [
   'shopping-in-japan',
   'american-products-in-japan',
   'product-requests',
+  'find-product-seen-online',
 ];
 
 test('homepage links directly to every Japanese and English SEO guide', async () => {
