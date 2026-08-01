@@ -59,6 +59,7 @@ function safeSale(row) {
     summary: row.summary,
     starts_at: row.starts_at,
     ends_at: row.ends_at,
+    updated_at: row.updated_at,
     source_url: row.source_url,
     image_url: row.image_rights_status === 'APPROVED' ? row.image_url : '',
     video_url: row.video_rights_status === 'APPROVED' ? row.video_url : ''
@@ -69,7 +70,7 @@ export async function listPublicSales(env, now = new Date()) {
   if (!env.PRODUCT_DB) return [];
   const at = now.toISOString();
   const result = await env.PRODUCT_DB.prepare(
-    `SELECT sale_id,marketplace,info_type,title,summary,starts_at,ends_at,source_url,image_url,image_rights_status,video_url,video_rights_status
+    `SELECT sale_id,marketplace,info_type,title,summary,starts_at,ends_at,updated_at,source_url,image_url,image_rights_status,video_url,video_rights_status
      FROM marketplace_sale_events
      WHERE status='APPROVED' AND ends_at>=?1
      ORDER BY starts_at ASC LIMIT 40`
