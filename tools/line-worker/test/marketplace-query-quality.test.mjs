@@ -356,6 +356,21 @@ test('全自動エスプレッソマシンは圧力・容量・内蔵機能を4�
   }
 });
 
+test('スチームオーブンレンジは容量・出力・庫内・センサーを4言語で保持する', () => {
+  const queries = [
+    '30L 1000W フラット庫内 赤外線センサー スチームオーブンレンジ',
+    '30L 1000W flat-bed steam convection microwave oven infrared sensor',
+    '30L 1000W 平板内腔 红外传感器 蒸汽烤箱微波炉',
+    '30L 1000W 플랫 내부 적외선 센서 스팀 오븐 전자레인지',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'スチームオーブンレンジ 30L 1000W フラット庫内 赤外線センサー', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

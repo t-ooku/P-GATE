@@ -302,6 +302,21 @@ function buildAutomaticEspressoMachineSearchKeywords(query) {
   return ['全自動エスプレッソマシン', `${pressure}bar`, `${capacity}L`, grinder, frother].join(' ');
 }
 
+function buildSteamMicrowaveOvenSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const oven = /(?:スチーム.{0,12}オーブンレンジ|steam.{0,12}(?:convection\s*)?microwave\s*oven|蒸汽.{0,12}(?:烤箱微波炉|烤箱微波爐|微波烤箱)|스팀.{0,12}오븐.{0,12}전자레인지)/iu.test(normalized);
+  if (!oven) return '';
+  if (/(?:トースター|toaster|烤面包机|烤麵包機|토스터|業務用|commercial|商用|업소용)/iu.test(normalized)) return '';
+  const capacity = normalized.match(/\b(\d{2})\s*l\b/iu)?.[1];
+  const power = normalized.match(/\b(\d{3,4})\s*w\b/iu)?.[1];
+  const flat = /(?:フラット庫内|flat[- ]?bed|flat\s*interior|平板内腔|平板內腔|플랫\s*내부)/iu.test(normalized)
+    ? 'フラット庫内' : '';
+  const sensor = /(?:赤外線センサー|infrared\s*sensor|红外传感器|紅外感測器|적외선\s*센서)/iu.test(normalized)
+    ? '赤外線センサー' : '';
+  if (!capacity || !power || !flat || !sensor) return '';
+  return ['スチームオーブンレンジ', `${capacity}L`, `${power}W`, flat, sensor].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1091,6 +1106,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawCoffeeCapsule) return rawCoffeeCapsule;
   const rawAutomaticEspressoMachine = buildAutomaticEspressoMachineSearchKeywords(rawNormalized);
   if (rawAutomaticEspressoMachine) return rawAutomaticEspressoMachine;
+  const rawSteamMicrowaveOven = buildSteamMicrowaveOvenSearchKeywords(rawNormalized);
+  if (rawSteamMicrowaveOven) return rawSteamMicrowaveOven;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);

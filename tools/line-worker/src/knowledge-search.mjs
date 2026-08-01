@@ -807,6 +807,33 @@ function isAutomaticEspressoMachineMismatch(candidate, requested) {
   return false;
 }
 
+function steamMicrowaveOvenConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  return {
+    oven: /(?:オーブンレンジ|(?:convection\s*)?microwave\s*oven|烤箱微波炉|烤箱微波爐|微波烤箱|오븐.{0,12}전자레인지)/iu.test(text),
+    steam: /(?:スチーム|steam|蒸汽|스팀)/iu.test(text),
+    capacity: text.match(/\b(\d{2})\s*l\b/iu)?.[1] || '',
+    power: text.match(/\b(\d{3,4})\s*w\b/iu)?.[1] || '',
+    flat: /(?:フラット庫内|flat[- ]?bed|flat\s*interior|平板内腔|平板內腔|플랫\s*내부)/iu.test(text),
+    sensor: /(?:赤外線センサー|infrared\s*sensor|红外传感器|紅外感測器|적외선\s*센서)/iu.test(text),
+    wrongProduct: /(?:トースター|toaster|烤面包机|烤麵包機|토스터|業務用|commercial|商用|업소용|microwave\s*(?:cookware|container|cover)|電子レンジ.{0,12}(?:容器|カバー)|微波炉.{0,12}(?:容器|盖)|微波爐.{0,12}(?:容器|蓋)|전자레인지.{0,12}(?:용기|커버)|replacement\s*(?:parts?|tray|plate)|交換部品|交換皿|替换零件|替換零件|교체\s*부품)/iu.test(text)
+  };
+}
+
+function isSteamMicrowaveOvenMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = steamMicrowaveOvenConstraints(text);
+  if (!evidence.oven || !evidence.steam || evidence.wrongProduct) return true;
+  for (const field of ['capacity', 'power']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const feature of ['flat', 'sensor']) {
+    if (requested[feature] && !evidence[feature]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1642,6 +1669,9 @@ export function filterCategoryMismatches(query, candidates = []) {
   const automaticEspressoMachineIntent = automaticEspressoMachine.machine && automaticEspressoMachine.fullyAutomatic
     && Boolean(automaticEspressoMachine.pressure && automaticEspressoMachine.capacity)
     && !automaticEspressoMachine.wrongProduct;
+  const steamMicrowaveOven = steamMicrowaveOvenConstraints(normalizedQuery);
+  const steamMicrowaveOvenIntent = steamMicrowaveOven.oven && steamMicrowaveOven.steam
+    && Boolean(steamMicrowaveOven.capacity && steamMicrowaveOven.power) && !steamMicrowaveOven.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -1650,7 +1680,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent
     && !mechanicalKeyboardIntent && !noiseCancellingHeadphonesIntent && !robotVacuumBodyIntent
     && !airPurifierBodyIntent && !cordlessStickVacuumIntent && !airFryerBodyIntent
-    && !automaticEspressoMachineIntent) return candidates;
+    && !automaticEspressoMachineIntent && !steamMicrowaveOvenIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -1714,6 +1744,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (automaticEspressoMachineIntent) {
       return !isAutomaticEspressoMachineMismatch(candidate, automaticEspressoMachine);
     }
+    if (steamMicrowaveOvenIntent) return !isSteamMicrowaveOvenMismatch(candidate, steamMicrowaveOven);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

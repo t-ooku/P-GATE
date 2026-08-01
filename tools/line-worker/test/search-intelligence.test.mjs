@@ -1382,6 +1382,30 @@ test('全自動エスプレッソマシンは4言語で抽出条件が一致す�
   }
 });
 
+test('スチームオーブンレンジは4言語で容量・出力・庫内・センサーが一致する本体だけを提示する', () => {
+  const queries = [
+    '30L 1000W フラット庫内 赤外線センサー スチームオーブンレンジ',
+    '30L 1000W flat-bed steam convection microwave oven infrared sensor',
+    '30L 1000W 平板内腔 红外传感器 蒸汽烤箱微波炉',
+    '30L 1000W 플랫 내부 적외선 센서 스팀 오븐 전자레인지',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '30L 1000W Flat-bed Steam Convection Microwave Oven Infrared Sensor' },
+    { asin: 'SMALL', product_name: '25L 1000W Flat-bed Steam Convection Microwave Oven Infrared Sensor' },
+    { asin: 'LOWPOWER', product_name: '30L 800W Flat-bed Steam Convection Microwave Oven Infrared Sensor' },
+    { asin: 'TURN', product_name: '30L 1000W Turntable Steam Convection Microwave Oven Infrared Sensor' },
+    { asin: 'NOSENSOR', product_name: '30L 1000W Flat-bed Steam Convection Microwave Oven' },
+    { asin: 'NOSTEAM', product_name: '30L 1000W Flat-bed Convection Microwave Oven Infrared Sensor' },
+    { asin: 'TOASTER', product_name: '30L 1000W Flat-bed Steam Toaster Oven Infrared Sensor' },
+    { asin: 'COMMERCIAL', product_name: '30L 1000W Commercial Flat-bed Steam Convection Microwave Oven Infrared Sensor' },
+    { asin: 'COOKWARE', product_name: '30L Microwave Cookware Container for 1000W Flat-bed Steam Convection Microwave Oven Infrared Sensor' },
+    { asin: 'PART', product_name: 'Replacement Tray for 30L 1000W Flat-bed Steam Convection Microwave Oven Infrared Sensor' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
