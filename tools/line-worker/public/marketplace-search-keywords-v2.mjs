@@ -27,7 +27,7 @@ function deviceName(query) {
 
 function specificationTokens(query) {
   const matches = query.match(
-    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}\s*(?:mm|cm|m|インチ|inch)|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|インチ|inch|リットル|オンス|升|毫升|리터|온스)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
+    /(?:usb[- ]?c|lightning|magsafe|qi2?|pd\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?(?:\s*[x×]\s*\d+(?:\.\d+)?){1,2}\s*(?:mm|cm|m|インチ|inch|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)|\d+(?:\.\d+)?\s*(?:w|mah|gb|tb|mm|cm|ml|l|oz|m|インチ|inch|リットル|オンス|升|毫升|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|리터|온스|센티미터|밀리미터)|\d+\s*(?:個(?:入り)?セット|本セット|枚セット|[- ]?(?:pack|count|pcs|pieces)|件套|个装|個裝|개입|개\s*세트))/giu
   ) || [];
   return [...new Set(matches
     .filter((value) => {
@@ -37,6 +37,8 @@ function specificationTokens(query) {
     .map((value) => value.replace(/\s+/g, '')
     .replace(/[×]/gu, 'x')
     .replace(/^usb-c$/iu, 'USB-C')
+    .replace(/毫米|ミリ(?:メートル)?|밀리미터$/u, 'mm')
+    .replace(/厘米|センチ(?:メートル)?|센티미터$/u, 'cm')
     .replace(/リットル|升|리터$/u, 'L')
     .replace(/オンス|온스$/u, 'oz')
     .replace(/毫升$/u, 'ml')
@@ -68,7 +70,8 @@ export function buildDeviceAccessorySearchKeywords(query) {
 function stripSearchBudget(value) {
   return String(value || '').normalize('NFKC')
     .replace(/(?:予算(?:は|が|で)?\s*)?(?:¥|￥)?\s*\d[\d,]*(?:\.\d+)?\s*円\s*(?:以下|未満|以内|まで|くらい|程度|前後)?/giu, ' ')
-    .replace(/(?:budget(?:\s+is|\s+of|\s*:)?|under|below|less\s+than|up\s+to|within)\s*(?:US\$|USD|\$)?\s*\d[\d,]*(?:\.\d+)?(?:\s*(?:dollars?|USD))?/giu, ' ')
+    .replace(/budget(?:\s+is|\s+of|\s*:)?\s*(?:under|below|less\s+than|up\s+to|within)?\s*(?:US\$|USD|\$)?\s*\d[\d,]*(?:\.\d+)?(?:\s*(?:dollars?|USD))?/giu, ' ')
+    .replace(/(?:under|below|less\s+than|up\s+to|within)\s*(?:(?:US\$|USD|\$)\s*\d[\d,]*(?:\.\d+)?(?:\s*(?:dollars?|USD))?|\d[\d,]*(?:\.\d+)?\s*(?:dollars?|USD))/giu, ' ')
     .replace(/(?:US\$|USD|\$)\s*\d[\d,]*(?:\.\d+)?|\d[\d,]*(?:\.\d+)?\s*dollars?/giu, ' ')
     .replace(/(?:预算|預算)?\s*(?:不超过|不超過|低于|低於|少于|少於|最多)?\s*[¥￥]?\s*\d[\d,]*(?:\.\d+)?\s*(?:元|人民币|人民幣)\s*(?:以下|以内|以內)?/giu, ' ')
     .replace(/(?:예산(?:은|이|으로|:)?\s*)?(?:₩\s*)?\d[\d,]*(?:\.\d+)?\s*(?:만\s*)?원\s*(?:이하|미만|이내|까지|정도)?/giu, ' ')

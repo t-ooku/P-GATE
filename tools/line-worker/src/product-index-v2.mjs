@@ -22,7 +22,7 @@ const cleanTenant = (value) => String(value || '').normalize('NFKC').toLowerCase
 function evidenceMatchEnd(text, match) {
   const end = match.index + match[0].length;
   if (!/^\d+(?:\.\d+)?$/u.test(match[0])) return end;
-  const unit = text.slice(end).match(/^\s*(?:w|mah|gb|tb|mb|mm|cm|ml|l|oz|m|inch|inches)\b/iu);
+  const unit = text.slice(end).match(/^\s*(?:(?:w|mah|gb|tb|mb|mm|cm|ml|l|oz|m|inch|inches)\b|毫米|厘米|センチ(?:メートル)?|ミリ(?:メートル)?|센티미터|밀리미터)/iu);
   return end + (unit?.[0].length || 0);
 }
 

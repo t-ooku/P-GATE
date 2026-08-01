@@ -259,3 +259,35 @@ test("4言語の自己訂正では否定後に言い直した属性を9モール
     }
   }
 });
+
+test("4言語の比較寸法を予算と誤認せず9モール向け共通単位へ変換する", () => {
+  const cases = [
+    '幅50センチ以下の収納ボックス',
+    'a storage box under 50 cm wide',
+    '宽度不超过50厘米的收纳盒',
+    '너비 50센티미터 이하 수납함',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('50cm'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('収納ボックス'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
+test("4言語の否定寸法は除外し訂正寸法だけを9モール検索語へ保持する", () => {
+  const cases = [
+    '50センチではなく40センチの収納ボックス',
+    'not 50 cm but a 40 cm storage box',
+    '不要50厘米，要40厘米的收纳盒',
+    '50센티미터 말고 40센티미터 수납함',
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes('40cm'), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(!keywords.includes('50cm'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
