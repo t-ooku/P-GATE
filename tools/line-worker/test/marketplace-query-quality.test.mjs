@@ -1099,6 +1099,21 @@ test('power-bank PD output corrections keep only the final requirement in four l
   }
 });
 
+test('power-bank built-in connector corrections keep only the final connector in four languages', () => {
+  const queries = [
+    'USB-CじゃなくLightningケーブル内蔵10000mAhモバイルバッテリー',
+    'not USB-C, I want a 10000mAh power bank with a built-in Lightning cable',
+    '不要USB-C，要自带Lightning线的10000mAh充电宝',
+    'USB-C 말고 Lightning 케이블 내장 10000mAh 보조배터리',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '10000mAh モバイルバッテリー Lightningケーブル内蔵', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('冷蔵庫給水フィルターは4言語の型番・純正・個数を全モール向けに保持する', () => {
   const cases = [
     ['Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個', 'Samsung HAF-QIN DA97-17376B 冷蔵庫給水フィルター 純正 2個セット'],

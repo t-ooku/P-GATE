@@ -2197,3 +2197,20 @@ test('power-bank PD output corrections discard the negated output in four langua
       ['POWERPD20'], query);
   }
 });
+
+test('power-bank built-in connector corrections discard the negated connector in four languages', () => {
+  const queries = [
+    'USB-CじゃなくLightningケーブル内蔵10000mAhモバイルバッテリー',
+    'not USB-C, I want a 10000mAh power bank with a built-in Lightning cable',
+    '不要USB-C，要自带Lightning线的10000mAh充电宝',
+    'USB-C 말고 Lightning 케이블 내장 10000mAh 보조배터리',
+  ];
+  const candidates = [
+    { asin: 'POWERLIGHTNING', product_name: '10000mAh Power Bank Built-in Lightning Cable' },
+    { asin: 'POWERUSBC', product_name: '10000mAh Power Bank Built-in USB-C Cable' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['POWERLIGHTNING'], query);
+  }
+});

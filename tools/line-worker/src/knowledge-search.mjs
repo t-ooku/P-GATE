@@ -338,9 +338,13 @@ function isPowerBankMismatch(candidate, query) {
   const capacity = [...normalizedQuery.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
     .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))?.[1];
   if (capacity && !new RegExp(`(?:^|\\D)${capacity}\\s*m\\s*ah(?:\\D|$)`, 'iu').test(text)) return true;
-  const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(String(query || ''));
-  if (builtIn && !/(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(text)) return true;
-  if (builtIn && /(?:usb[- ]?c|type[- ]?c)/iu.test(String(query || '')) && !/(?:usb[- ]?c|type[- ]?c)/iu.test(text)) return true;
+  const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu.test(String(query || ''));
+  if (builtIn && !/(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu.test(text)) return true;
+  const connector = [...normalizedQuery.matchAll(/(?:usb[- ]?c|type[- ]?c|lightning|ライトニング|闪电|閃電|라이트닝)/giu)]
+    .find((match) => !isNegatedPowerBankRequirement(normalizedQuery, match.index, match.index + match[0].length))?.[0] || '';
+  if (builtIn && /(?:usb[- ]?c|type[- ]?c)/iu.test(connector) && !/(?:usb[- ]?c|type[- ]?c)/iu.test(text)) return true;
+  if (builtIn && /(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu.test(connector)
+    && !/(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu.test(text)) return true;
   if (/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(String(query || ''))
     && !/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text)) return true;
   const pdWatts = [...normalizedQuery.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)]

@@ -529,9 +529,11 @@ function buildPowerBankSearchKeywords(query) {
   if (!/(?:モバイルバッテリー|携帯バッテリー|power\s*bank|portable\s+battery|battery\s*pack|充电宝|充電寶|移动电源|行動電源|보조\s*배터리)/iu.test(normalized)) return '';
   const capacity = [...normalized.matchAll(/(\d{4,6})\s*m\s*ah/giu)]
     .find((match) => !isNegatedAttribute(normalized, new RegExp(`${match[1]}\\s*m\\s*ah`, 'iu')))?.[1];
-  const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:USB[- ]?C|线)|自帶(?:USB[- ]?C|線)|케이블\s*(?:내장|일체형))/iu.test(normalized);
-  const connector = /(?:usb[- ]?c|type[- ]?c)/iu.test(normalized) ? 'USB-C'
-    : /(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu.test(normalized) ? 'Lightning' : '';
+  const builtIn = /(?:ケーブル(?:内蔵|一体型|付き)|built[- ]?in\s+(?:usb[- ]?c|lightning)?\s*cable|integrated\s+cable|自带(?:(?:USB[- ]?C|Lightning)?线)|自帶(?:(?:USB[- ]?C|Lightning)?線)|케이블\s*(?:내장|일체형))/iu.test(normalized);
+  const usbCConnector = /(?:usb[- ]?c|type[- ]?c)/iu;
+  const lightningConnector = /(?:lightning|ライトニング|闪电|閃電|라이트닝)/iu;
+  const connector = usbCConnector.test(normalized) && !isNegatedAttribute(normalized, usbCConnector) ? 'USB-C'
+    : lightningConnector.test(normalized) && !isNegatedAttribute(normalized, lightningConnector) ? 'Lightning' : '';
   const cable = builtIn ? `${connector ? `${connector}` : ''}ケーブル内蔵` : '';
   const magnetic = /(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(normalized) ? 'MagSafe対応' : '';
   const pdWatts = [...normalized.matchAll(/(?:\bpd\s*(\d{1,3})\s*w\b|\b(\d{1,3})\s*w(?:\s*(?:usb[- ]?c|type[- ]?c))?\s*pd\b)/giu)]
