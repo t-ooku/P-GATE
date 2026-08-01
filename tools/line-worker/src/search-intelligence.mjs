@@ -8,17 +8,20 @@ const RULES = [
   ['hobby-use',/(遊び・趣味|玩具|toys or hobbies|玩具或兴趣|놀이·취미)/iu,['toy','hobby']],
   ['screwdriver',/(ドライバー|ねじ回し|螺子回し|screwdriver|細長い.*工具)/iu,['screwdriver','driver']],
   ['building-block',/(レゴ|lego|ブロック.*おもちゃ|building block)/iu,['lego','brick','building']],
+  ['steam-engine-model',/(蒸気機関車|steam\s+(?:engine|locomotive)|蒸汽机车|蒸汽機車|증기\s*기관차)/iu,['steam engine','locomotive']],
   ['candle',/(キャンドル|ろうそく|蝋燭|candle|soy candle|火をつける.*匂い|蜡烛|蠟燭|大豆蜡烛|大豆蠟燭|캔들|소이 캔들)/iu,['candle','soy']],
   ['earphones',/(イヤホン|イヤーバッド|ear\s*buds?|earphones?|headphones?|耳に入れる.*音|耳机|耳機|이어폰|헤드폰)/iu,['earbud','ear','bud','headphone']],
   ['backpack',/(リュック|バックパック|backpack|背負う)/iu,['backpack','rucksack']],
   ['watch',/(腕時計|wristwatch|watch|革ベルト.*時計)/iu,['watch','wristwatch']],
   ['gloves',/(手袋|グローブ|ニトリル|nitrile glove|gloves)/iu,['glove','nitrile']],
   ['charger',/(充電器|充電台|チャージャー|charger)/iu,['charger','charging']],
+  ['dual-charger',/(?:2|二|両|两|兩)[台個]?(?:を|の)?(?:置ける|同時)?.{0,8}(?:充電台|充電器)|dual\s+charg(?:er|ing)|双设备充电|雙設備充電|2대.{0,8}충전/iu,['dual charger','dual charging']],
   ['phone-case',/(スマホケース|携帯ケース|スマートフォン.*ケース|アイフォ(?:ン|ーン).*ケース|iphone\s*ケース|phone case|smartphone case|iphone case|手机壳|手机保护壳|휴대폰 케이스|스마트폰 케이스)/iu,['phone','case','cover','iphone','smartphone']],
   ['light-up',/(光る|発光|\bLED\b|ライトアップ|light[- ]?up|glowing|发光|灯光|빛나는|발광)/iu,['led','light','glow','luminous']],
   ['camera-bag',/(カメラ(?:用)?(?:バッグ|ケース|ポーチ)|camera bag|camera case)/iu,['camera bag','camera case']],
   ['photo-printer',/(写真プリンター|フォトプリンター|スマホプリンター|photo printer|portable photo printer)/iu,['photo printer','portable printer']],
   ['camera',/(カメラ(?!用?(?:バッグ|ケース|ポーチ))|camera(?! bag| case))/iu,['camera']],
+  ['ptz-network-camera',/(?:首振り|PTZ|パンチルト).{0,12}(?:ネットワーク|監視)?カメラ|(?:ネットワーク|監視)カメラ.{0,12}(?:首振り|PTZ|ドーム)|ptz.{0,12}(?:network|security)?\s*camera|(?:network|security)\s*camera.{0,12}(?:ptz|dome)|云台.{0,8}(?:网络|網絡|监控|監控)摄像|(?:网络|網絡|监控|監控)摄像.{0,8}(?:云台|雲台|球形)|(?:PTZ|회전).{0,8}(?:네트워크|보안)\s*카메라|(?:네트워크|보안)\s*카메라.{0,8}(?:PTZ|회전|돔)/iu,['network camera','ptz','security camera']],
   ['keyboard',/(キーボード|keyboard|入力する板)/iu,['keyboard']],
   ['mouse-pad',/(マウスパッド|マウスマット|mouse pad|mouse mat)/iu,['mouse pad','mouse mat']],
   ['rodent-supplies',/(?:ペット|飼育|小動物).{0,8}マウス|マウス.{0,8}(?:ケージ|飼育|小動物)/iu,['pet mouse','rodent','cage']],
@@ -26,7 +29,7 @@ const RULES = [
   ['bottle',/(水筒|ボトル|bottle|飲み物.*容器)/iu,['bottle']],
   ['lamp',/(テーブルランプ|卓上.*ライト|table lamp|布.*傘.*ライト)/iu,['lamp','light']],
   ['towel-warmer',/(タオルウォーマー|温める.*タオル|heated towel|towel warmer)/iu,['towel','warmer','heated']],
-  ['shampoo',/(シャンプー|髪.*洗|shampoo|샴푸|洗发水|洗髮精)/iu,['shampoo','hair wash']],
+  ['shampoo',/(シャンプー|髪.*洗|shampoo|샴푸|洗发(?:水)?|洗髮(?:精)?)/iu,['shampoo','hair wash']],
   ['hair-treatment',/(トリートメント|ヘアマスク|ヘアオイル|洗い流さない|hair treatment|hair mask|hair oil|트리트먼트|헤어팩|헤어 오일|护发|護髮)/iu,['hair treatment','hair mask','hair oil']],
   ['body-powder',/(香り.*粉|ボディパウダー|ダスティングパウダー|dusting powder)/iu,['powder','perfumed']],
   ['figure',/(フィギュア|胸像|上半身.*置物|figure|bust|collectible)/iu,['figure','bust','collectible']],
@@ -47,6 +50,7 @@ const RULES = [
   ['organizer',/(収納ケース|整理ボックス|収納.*箱|\borganizer\b|storage container|收纳盒|收納盒|수납함)/iu,['organizer','storage','container']],
   ['adapter',/(アダプター|変換.*端子|端子.*増やす|adapter|USB-C)/iu,['adapter','usb']],
   ['bath-light',/(浴室.*照明|洗面所.*鏡.*光|バスライト|bath light)/iu,['bath','light']],
+  ['bath-six-light',/(?:6|六)(?:個|灯|燈)?.{0,8}(?:浴室|洗面).{0,8}(?:ライト|照明)|(?:浴室|洗面).{0,12}(?:6|六)(?:個|灯|燈)|6[- ]?light.{0,8}(?:bath|vanity)|(?:bath|vanity).{0,8}6[- ]?light|六灯.{0,8}(?:浴室|盥洗)|(?:浴室|盥洗).{0,8}六灯|6등.{0,8}(?:욕실|세면)|(?:욕실|세면).{0,8}6등/iu,['6-light','six light','vanity light']],
   ['humidifier',/(加湿器|humidifier)/iu,['humidifier']],
   ['umbrella-stand',/(傘立て|傘スタンド|umbrella stand|umbrella holder)/iu,['umbrella stand','umbrella holder']],
   ['umbrella',/(折りたたみ傘|傘(?!立て|スタンド|掛け|カバー|ケース)|umbrella(?! stand| holder| cover| case))/iu,['umbrella','folding']],
@@ -164,7 +168,7 @@ export function semanticSearchGroups(value) {
   }
   if (
     groups.some((group) => group.category === 'shampoo')
-    && /(?:3\s*-?\s*in\s*-?\s*1|三合一|3合1|3\s*인\s*1)/iu.test(text)
+    && /(?:3\s*-?\s*in\s*-?\s*1|three\s*-?\s*in\s*-?\s*one|hair.{0,12}body.{0,12}(?:one|single)\s+bottle|三合一|3合1|3\s*인\s*1|髪.{0,10}体.{0,10}(?:一本|1本).{0,6}洗|洗发.{0,10}(?:护发|護髮).{0,10}(?:沐浴|身体)|머리.{0,10}몸.{0,10}(?:하나|한\s*병))/iu.test(text)
   ) {
     groups.push({ category: 'shampoo-3-in-1', terms: ['3-in-1','conditioner','body wash'] });
   }
@@ -183,7 +187,10 @@ export function semanticSearchGroups(value) {
     groups = groups.filter((group) => !['kitchen-use','electronics-use'].includes(group.category));
     groups.unshift({ category: 'kitchen-appliance', terms: ['blender','mixer','toaster','kettle','coffee','juicer','chopper','cooktop','oven','grill','waffle','processor','cooker','fryer'] });
   }
-  const colors = COLOR_RULES.filter(([pattern]) => pattern.test(text)).flatMap(([, terms]) => terms);
+  const specificIntent = groups.some((group) => [
+    'steam-engine-model','dual-charger','ptz-network-camera','bath-six-light'
+  ].includes(group.category));
+  const colors = specificIntent ? [] : COLOR_RULES.filter(([pattern]) => pattern.test(text)).flatMap(([, terms]) => terms);
   if (colors.length) groups.push({ category: 'color', terms: [...new Set(colors)] });
   return groups;
 }

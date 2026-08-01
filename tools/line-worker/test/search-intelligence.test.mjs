@@ -150,6 +150,34 @@ test('固有ブランド・型番をカテゴリと組み合わせてrich検索�
   );
 });
 
+test('具体機能を4言語の商品語へ変換し商品名にない色を必須化しない', () => {
+  const cases = [
+    ['黒い蒸気機関車を組み立てる限定レゴ', 'steam engine'],
+    ['black LEGO steam locomotive model', 'steam engine'],
+    ['黑色乐高蒸汽机车模型', 'steam engine'],
+    ['검은색 레고 증기 기관차 모델', 'steam engine'],
+    ['機器を2台置ける黒い充電台', 'dual charger'],
+    ['white PTZ network camera with a dome', 'network camera'],
+    ['白色云台网络摄像头', 'network camera'],
+    ['흰색 회전 네트워크 카메라', 'network camera'],
+    ['銀色の横長バーにライトが6個付いた浴室用照明', '6-light'],
+  ];
+  for (const [query, required] of cases) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.ok(expression.includes(`\"${required}\"*`), expression);
+    assert.doesNotMatch(expression, /\"(?:black|white|silver)\"\*/);
+  }
+  for (const query of [
+    '男性用で髪と体を一本で洗える大きなボトル2本',
+    'shampoo that washes hair and body in one bottle',
+    '洗发护发沐浴三合一',
+    '머리와 몸을 하나로 씻는 샴푸',
+  ]) {
+    const expression = intelligentFtsQuery(query).toLowerCase();
+    assert.match(expression, /\"3-in-1\"\*/);
+  }
+});
+
 test('韓国美容語を商品カテゴリへ正規化する', () => {
   const cases = [
     ['진정 세럼', 'serum'],
