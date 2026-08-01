@@ -865,7 +865,7 @@ export function sanitizePublicCandidate(candidate) {
   delete copy.amazon_us_url;
   delete copy.marketplace_search_links;
   delete copy.amazon_search_url;
-  copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 9).map(sanitizePublicOffer);
+  copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 10).map(sanitizePublicOffer);
   copy.tracking_url = '';
   if (copy.evidence) {
     copy.evidence = {
