@@ -15,10 +15,23 @@ test('日英SEO必須10ページを別URLで提供する', () => {
     assert.match(html, /data-growth-search/);
     assert.match(html, /application\/ld\+json/);
     assert.match(html, /BreadcrumbList/);
+    assert.match(html, /FAQPage/);
     assert.match(html, /aria-current="page"/);
     assert.match(html, /aria-labelledby="related-guides"/);
     assert.match(html, /growth-analytics\.mjs/);
     assert.doesNotMatch(html, /Amazon公式|楽天公式|Qoo10公式|SHEIN公式/);
+  }
+});
+
+test('FAQ structured data matches the visible question and answer', () => {
+  for (const path of seoPagePaths) {
+    const html = renderSeoPage(path);
+    const json = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)?.[1];
+    const data = JSON.parse(json);
+    const faq = data['@graph'].find((entry) => entry['@type'] === 'FAQPage');
+    const entity = faq.mainEntity[0];
+    assert.ok(html.includes(`<summary>${entity.name}</summary>`));
+    assert.ok(html.includes(`<p>${entity.acceptedAnswer.text}</p>`));
   }
 });
 

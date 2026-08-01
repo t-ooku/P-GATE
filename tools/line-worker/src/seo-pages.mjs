@@ -58,7 +58,12 @@ export function renderSeoPage(pathname) {
       { '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: homeLabel, item: `${ORIGIN}/` },
         { '@type': 'ListItem', position: 2, name: title, item: canonical }
-      ] }
+      ] },
+      { '@type': 'FAQPage', mainEntity: [{
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer }
+      }] }
     ]
   };
   return `<!doctype html>
