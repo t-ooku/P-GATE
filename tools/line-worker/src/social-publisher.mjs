@@ -15,7 +15,7 @@ export function normalizeSocialPost(input = {}) {
   if (caption.length < 5) throw new Error('SOCIAL_CAPTION_INVALID');
   if (platform === 'INSTAGRAM') {
     if (!/コメント/.test(caption)) caption += ' 気になった商品をコメントで教えてね。';
-    const requiredTags = ['#ホシル', '#あいまい検索', '#4モール横断', '#ほしっトク'];
+    const requiredTags = ['#ホシル', '#あいまい検索', '#9モール横断', '#ほしっトク'];
     const missingTags = requiredTags.filter(tag => !caption.includes(tag));
     if (missingTags.length) caption += ` ${missingTags.join(' ')}`;
   }
