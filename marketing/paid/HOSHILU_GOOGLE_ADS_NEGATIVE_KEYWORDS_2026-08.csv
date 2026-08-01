@@ -1,0 +1,9 @@
+Campaign,Negative keyword,Match type,Reason
+HOSHILU_Search_202608,求人,Broad,採用意図を除外
+HOSHILU_Search_202608,転職,Broad,採用意図を除外
+HOSHILU_Search_202608,買取,Broad,売却意図を除外
+HOSHILU_Search_202608,偽物,Broad,不適切商品意図を除外
+HOSHILU_Search_202608,コピー品,Broad,不適切商品意図を除外
+HOSHILU_Search_202608,違法,Broad,不適切意図を除外
+HOSHILU_Search_202608,無料配布,Phrase,無料商品の入手意図を除外
+HOSHILU_Search_202608,使い方,Broad,既存商品の操作説明意図を除外
