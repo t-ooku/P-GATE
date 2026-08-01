@@ -196,6 +196,21 @@ test('会話的な言い直しも4言語で訂正後の端末だけを保持す�
   }
 });
 
+test('ブランドを省略した型番の言い直しも4言語で訂正後のGalaxyだけを保持する', () => {
+  const queries = [
+    'Galaxy S25用、訂正、S25 Ultraの覗き見防止強化ガラスフィルム',
+    'Galaxy S25 privacy glass, I mean S25 Ultra privacy tempered glass screen protector',
+    'Galaxy S25防窥膜，我是说S25 Ultra防窥钢化玻璃保护膜',
+    'Galaxy S25 사생활 보호 필름, 정정 S25 Ultra 사생활 보호 강화유리 필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Galaxy S25 Ultra 保護フィルム 強化ガラス 覗き見防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [

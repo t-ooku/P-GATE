@@ -320,6 +320,10 @@ function phoneCaseDeviceModel(value) {
   if (correctedTail && /\b(?:iphone|galaxy|pixel)\b/iu.test(correctedTail)) {
     return phoneCaseDeviceModel(correctedTail);
   }
+  const correctedGalaxyModel = correctedTail.match(/\b([a-z]\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?)\b/iu)?.[1] || '';
+  if (correctedGalaxyModel && /(?:\bgalaxy\b|ギャラクシー|三星|갤럭시)/iu.test(text)) {
+    return `galaxy${correctedGalaxyModel.toLowerCase().replace(/\s+/gu, '')}`;
+  }
   const iphoneMatches = [...text.matchAll(/\biphone\s*(\d{1,2})(?!\d)(?:\s*(?:pro|max|plus|mini)){0,2}/giu)];
   let iphoneMatch = iphoneMatches[0] || null;
   for (let index = iphoneMatches.length - 1; index > 0; index -= 1) {
