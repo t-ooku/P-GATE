@@ -249,6 +249,19 @@ function buildRobotVacuumBodySearchKeywords(query) {
   return ['ロボット掃除機', lidar, `${suction}Pa`, selfEmpty, mopping].filter(Boolean).join(' ');
 }
 
+function buildAirPurifierBodySearchKeywords(query) {
+  if (!/(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기)/iu.test(query)) return '';
+  if (/(?:交換|replacement|替换|替換|교체).{0,16}(?:フィルター|filter|滤芯|濾芯|필터)/iu.test(query)) return '';
+  const area = String(query || '').match(/\b(\d{2,3})\s*(?:m(?:2|²)|㎡|平方メートル|平方米|平方公尺|평방미터)/iu)?.[1];
+  const hepa = String(query || '').match(/\bhepa\s*h?\s*(1[1-4])\b/iu)?.[1];
+  const cadr = String(query || '').match(/\bcadr\s*(\d{3,4})\s*(?:m(?:3|³)\s*\/\s*h|m³\/h)/iu)?.[1];
+  const pm25 = /pm\s*2\.5.{0,12}(?:センサー|sensor|传感器|傳感器|센서)/iu.test(query) ? 'PM2.5センサー' : '';
+  const wifi = /wi[- ]?fi|wifi|無線LAN|无线网络|無線網路|와이파이/iu.test(query) ? 'Wi-Fi' : '';
+  if (!area || !hepa || !cadr) return '';
+  return ['空気清浄機', `${area}m²`, `HEPA H${hepa}`, `CADR ${cadr}m³/h`, pm25, wifi]
+    .filter(Boolean).join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1098,6 +1111,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (noiseCancellingHeadphones) return noiseCancellingHeadphones;
   const robotVacuumBody = buildRobotVacuumBodySearchKeywords(normalized);
   if (robotVacuumBody) return robotVacuumBody;
+  const airPurifierBody = buildAirPurifierBodySearchKeywords(normalized);
+  if (airPurifierBody) return airPurifierBody;
   const deviceAccessory = buildDeviceAccessorySearchKeywords(normalized);
   if (deviceAccessory) return deviceAccessory;
   let products = GENERIC_PRODUCTS

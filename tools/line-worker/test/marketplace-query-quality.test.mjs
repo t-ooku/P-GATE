@@ -296,6 +296,21 @@ test('ロボット掃除機本体は測距・吸引力・集塵・水拭き条�
   }
 });
 
+test('空気清浄機本体は適用面積・HEPA等級・CADR・センサーを4言語で保持する', () => {
+  const queries = [
+    '50㎡ HEPA H13 CADR 400m³/h PM2.5センサー Wi-Fi対応 空気清浄機',
+    'air purifier for 50m² with HEPA H13 CADR 400m³/h PM2.5 sensor and Wi-Fi',
+    '50㎡ HEPA H13 CADR 400m³/h PM2.5传感器 Wi-Fi 空气净化器',
+    '50㎡ HEPA H13 CADR 400m³/h PM2.5 센서 Wi-Fi 공기청정기',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '空気清浄機 50m² HEPA H13 CADR 400m³/h PM2.5センサー Wi-Fi', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('SNSで見たAndroid光るケースもGalaxyとPixelの機種条件を4言語で保持する', () => {
   const cases = [
     [

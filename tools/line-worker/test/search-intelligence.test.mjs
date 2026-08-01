@@ -1287,6 +1287,30 @@ test('ロボット掃除機本体は4言語で測距・吸引力・集塵・水�
   }
 });
 
+test('空気清浄機本体は4言語で面積・HEPA・CADR・センサー・通信が一致する候補だけを提示する', () => {
+  const queries = [
+    '50㎡ HEPA H13 CADR 400m³/h PM2.5センサー Wi-Fi対応 空気清浄機',
+    'air purifier for 50m² with HEPA H13 CADR 400m³/h PM2.5 sensor and Wi-Fi',
+    '50㎡ HEPA H13 CADR 400m³/h PM2.5传感器 Wi-Fi 空气净化器',
+    '50㎡ HEPA H13 CADR 400m³/h PM2.5 센서 Wi-Fi 공기청정기',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Air Purifier 50m² HEPA H13 CADR 400m³/h PM2.5 Sensor Wi-Fi' },
+    { asin: 'SMALL', product_name: 'Air Purifier 30m² HEPA H13 CADR 400m³/h PM2.5 Sensor Wi-Fi' },
+    { asin: 'H12', product_name: 'Air Purifier 50m² HEPA H12 CADR 400m³/h PM2.5 Sensor Wi-Fi' },
+    { asin: 'LOWCADR', product_name: 'Air Purifier 50m² HEPA H13 CADR 300m³/h PM2.5 Sensor Wi-Fi' },
+    { asin: 'NOSENSOR', product_name: 'Air Purifier 50m² HEPA H13 CADR 400m³/h Wi-Fi' },
+    { asin: 'NOWIFI', product_name: 'Air Purifier 50m² HEPA H13 CADR 400m³/h PM2.5 Sensor' },
+    { asin: 'FILTER', product_name: 'Replacement Filter for Air Purifier 50m² HEPA H13 CADR 400m³/h PM2.5 Sensor Wi-Fi' },
+    { asin: 'HUMIDIFIER', product_name: 'Air Purifier Humidifier 50m² HEPA H13 CADR 400m³/h PM2.5 Sensor Wi-Fi' },
+    { asin: 'DEHUMIDIFIER', product_name: 'Air Purifier Dehumidifier 50m² HEPA H13 CADR 400m³/h PM2.5 Sensor Wi-Fi' },
+    { asin: 'FAN', product_name: 'Air Purifier Fan 50m² HEPA H13 CADR 400m³/h PM2.5 Sensor Wi-Fi' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('Androidの光るケースもGalaxyとPixelの完全一致候補だけを初回提示する', () => {
   const cases = [
     {
