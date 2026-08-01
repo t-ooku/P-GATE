@@ -3593,3 +3593,25 @@ test('カメラ付き自動給餌器は4言語で容量・画質・通信・音�
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
   }
 });
+test('IPL光美容器は4言語で照射回数・冷却・出力段階・肌色検知が一致する本体だけを提示する', () => {
+  const queries = [
+    'IPL光美容器 50万回 冷却機能 5段階 肌色センサー',
+    'IPL hair removal device 500000 flashes cooling 5 levels skin tone sensor',
+    'IPL脱毛仪 50万发 冰感冷却 5档 肤色传感器',
+    'IPL 제모기 50만회 냉각 5단계 피부톤 센서'
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'IPL光美容器 50万回 冷却機能 5段階 肌色センサー' },
+    { asin: 'FEWER', product_name: 'IPL光美容器 30万回 冷却機能 5段階 肌色センサー' },
+    { asin: 'NOCOOL', product_name: 'IPL光美容器 50万回 5段階 肌色センサー' },
+    { asin: 'LEVEL3', product_name: 'IPL光美容器 50万回 冷却機能 3段階 肌色センサー' },
+    { asin: 'NOSENSOR', product_name: 'IPL光美容器 50万回 冷却機能 5段階' },
+    { asin: 'GLASSES', product_name: 'IPL光美容器用 保護メガネ 50万回 冷却機能 5段階 肌色センサー' },
+    { asin: 'HEAD', product_name: 'IPL hair removal device replacement head 500000 flashes cooling 5 levels skin tone sensor' },
+    { asin: 'SHAVER', product_name: '電気シェーバー IPL光美容器 50万回 冷却機能 5段階 肌色センサー' },
+    { asin: 'WAX', product_name: '脱毛ワックス IPL光美容器 50万回 冷却機能 5段階 肌色センサー' }
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
+  }
+});

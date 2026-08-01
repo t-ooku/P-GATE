@@ -1373,6 +1373,34 @@ function isCameraPetFeederMismatch(candidate, requested) {
   return false;
 }
 
+function iplHairRemovalConstraints(value) {
+  const text = String(value || '').normalize('NFKC');
+  const tenThousands = text.match(/(\d{1,3})\s*(?:万\s*(?:回|発|发|次)?|만\s*회)/iu)?.[1];
+  const rawFlashes = text.match(/\b(\d{5,7})\s*flashes?\b/iu)?.[1];
+  return {
+    device: /(?:IPL\s*光美容器|IPL\s*(?:hair\s*removal\s*)?device|IPL\s*脱毛仪|IPL\s*脫毛儀|IPL\s*제모기)/iu.test(text),
+    flashes: tenThousands ? String(Number(tenThousands) * 10000) : rawFlashes || '',
+    cooling: /(?:冷却(?:機能)?|cooling|冰感冷却|冷感|냉각)/iu.test(text),
+    levels: text.match(/(\d{1,2})\s*(?:段階|levels?|档|檔|단계)/iu)?.[1] || '',
+    skinSensor: /(?:肌色センサー|skin[\s-]*tone\s*sensor|肤色传感器|膚色感測器|피부톤\s*센서)/iu.test(text),
+    wrongProduct: /(?:保護メガネ|protective\s*(?:glasses|goggles)|防护眼镜|防護眼鏡|보호\s*안경|交換(?:用)?(?:カートリッジ|ヘッド)|replacement\s*(?:cartridge|head)|替换(?:灯头|头)|替換(?:燈頭|頭)|교체용\s*(?:카트리지|헤드)|電気シェーバー|electric\s*shaver|电动剃须刀|電動刮鬍刀|전기\s*면도기|脱毛ワックス|hair\s*removal\s*wax|脱毛蜡|脫毛蠟|제모\s*왁스)/iu.test(text)
+  };
+}
+
+function isIplHairRemovalMismatch(candidate, requested) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC');
+  const evidence = iplHairRemovalConstraints(text);
+  if (!evidence.device || evidence.wrongProduct) return true;
+  for (const field of ['flashes', 'levels']) {
+    if (requested[field] && evidence[field] !== requested[field]) return true;
+  }
+  for (const field of ['cooling', 'skinSensor']) {
+    if (requested[field] && !evidence[field]) return true;
+  }
+  return false;
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -2296,6 +2324,11 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(cameraPetFeeder.capacity && cameraPetFeeder.camera
       && cameraPetFeeder.wifi && cameraPetFeeder.twoWayAudio)
     && !cameraPetFeeder.wrongProduct;
+  const iplHairRemoval = iplHairRemovalConstraints(normalizedQuery);
+  const iplHairRemovalIntent = iplHairRemoval.device
+    && Boolean(iplHairRemoval.flashes && iplHairRemoval.cooling
+      && iplHairRemoval.levels && iplHairRemoval.skinSensor)
+    && !iplHairRemoval.wrongProduct;
   const deviceSpecificCase = phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery);
   if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
@@ -2311,7 +2344,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
     && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent
     && !retrofitSmartLockIntent && !pressureIhRiceCookerIntent && !dualDashCamIntent
-    && !cameraPetFeederIntent) return candidates;
+    && !cameraPetFeederIntent && !iplHairRemovalIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = groups.some((group) => group.category === 'light-up')
@@ -2399,6 +2432,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (pressureIhRiceCookerIntent) return !isPressureIhRiceCookerMismatch(candidate, pressureIhRiceCooker);
     if (dualDashCamIntent) return !isDualDashCamMismatch(candidate, dualDashCam);
     if (cameraPetFeederIntent) return !isCameraPetFeederMismatch(candidate, cameraPetFeeder);
+    if (iplHairRemovalIntent) return !isIplHairRemovalMismatch(candidate, iplHairRemoval);
     if (portableUmbrella && isPortableUmbrellaMismatch(candidate)) return false;
     if (trueWirelessEarphones && isTrueWirelessEarphonesMismatch(candidate)) return false;
     if (lightUpPhoneCase) return !isLightUpPhoneCaseMismatch(candidate, query);

@@ -575,6 +575,19 @@ function buildCameraPetFeederSearchKeywords(query) {
   return ['ペット自動給餌器', `${capacity}L`, '1080pカメラ', 'Wi-Fi', '双方向音声'].join(' ');
 }
 
+function buildIplHairRemovalSearchKeywords(query) {
+  const normalized = String(query || '').normalize('NFKC');
+  const device = /(?:IPL\s*光美容器|IPL\s*(?:hair\s*removal\s*)?device|IPL\s*脱毛仪|IPL\s*脫毛儀|IPL\s*제모기)/iu.test(normalized);
+  const tenThousands = normalized.match(/(\d{1,3})\s*(?:万\s*(?:回|発|发|次)?|만\s*회)/iu)?.[1];
+  const rawFlashes = normalized.match(/\b(\d{5,7})\s*flashes?\b/iu)?.[1];
+  const flashes = tenThousands ? String(Number(tenThousands) * 10000) : rawFlashes || '';
+  const cooling = /(?:冷却(?:機能)?|cooling|冰感冷却|冷感|냉각)/iu.test(normalized);
+  const levels = normalized.match(/(\d{1,2})\s*(?:段階|levels?|档|檔|단계)/iu)?.[1];
+  const skinSensor = /(?:肌色センサー|skin[\s-]*tone\s*sensor|肤色传感器|膚色感測器|피부톤\s*센서)/iu.test(normalized);
+  if (!device || !flashes || !cooling || !levels || !skinSensor) return '';
+  return ['IPL光美容器', `${Number(flashes) / 10000}万回`, '冷却機能', `${levels}段階`, '肌色センサー'].join(' ');
+}
+
 function portHubFeatures(query) {
   const features = [];
   const power = query.match(/(?:pd\s*)?(\d{2,3})\s*w(?:\s*pd)?/iu);
@@ -1408,6 +1421,8 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   if (rawDualDashCam) return rawDualDashCam;
   const rawCameraPetFeeder = buildCameraPetFeederSearchKeywords(rawNormalized);
   if (rawCameraPetFeeder) return rawCameraPetFeeder;
+  const rawIplHairRemoval = buildIplHairRemovalSearchKeywords(rawNormalized);
+  if (rawIplHairRemoval) return rawIplHairRemoval;
   const rawCameraBattery = buildCameraBatterySearchKeywords(rawNormalized);
   if (rawCameraBattery) return rawCameraBattery;
   const rawToolBattery = buildToolBatterySearchKeywords(rawNormalized);
