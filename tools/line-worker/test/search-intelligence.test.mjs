@@ -744,9 +744,38 @@ test('iPhoneケース検索から充電ケーブル候補を除外する', () =>
   );
 });
 
+test('光るスマホケースは初回提示から一般ケース・LED照明・カテゴリ不明商品を除外する', () => {
+  const queries = [
+    'TikTokで見た光るスマホケース',
+    'light-up phone case seen on TikTok',
+    '在TikTok看到的发光手机壳',
+    'TikTok에서 본 빛나는 스마트폰 케이스',
+  ];
+  const candidates = [
+    { asin: 'VALIDJA001', product_name: 'LEDで光るスマホケース 通知発光カバー' },
+    { asin: 'VALIDEN001', product_name: 'Light-up LED Smartphone Phone Case Cover' },
+    { asin: 'PLAIN00001', product_name: '透明 スマホケース シリコンカバー' },
+    { asin: 'LIGHT00001', product_name: 'LED リングライト スマホ撮影用' },
+    { asin: 'CABLE00001', product_name: 'iPhone LED ライトニング充電ケーブル' },
+    { asin: 'OTHER00001', product_name: 'TikTok Viral Luminous Accessory Gift' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(
+      filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['VALIDJA001', 'VALIDEN001'],
+      query
+    );
+  }
+});
+
 test('スマホケースは初回から対応機種と光り方を提案する', async () => {
   const result = await applyIndexedSearchPolicy(
-    { query_id: 'phone-case-q', candidates: [] },
+    { query_id: 'phone-case-q', candidates: [
+      { asin: 'CASE00001', product_name: 'LEDで光るスマホケース 通知発光カバー' },
+      { asin: 'PLAIN00001', product_name: '透明スマホケース' },
+      { asin: 'LIGHT00001', product_name: 'スマホ撮影用LEDリングライト' },
+      { asin: 'OTHER00001', product_name: 'TikTokで人気のアクセサリー' },
+    ] },
     { PRODUCT_DB: emptyDb() },
     'TikTokで見た光るスマホケース',
     'JA'
@@ -756,6 +785,7 @@ test('スマホケースは初回から対応機種と光り方を提案する',
     'LEDで光るケース', '通知で光るケース', '背面が光るケース', '蓄光タイプ'
   ]);
   assert.doesNotMatch(result.clarification.options.map((item) => item.label).join(' '), /キッチン/);
+  assert.deepEqual(result.candidates.map((candidate) => candidate.asin), ['CASE00001']);
 });
 
 test('さまざまな商品文でカテゴリ固有の候補を10件提示する', async () => {
