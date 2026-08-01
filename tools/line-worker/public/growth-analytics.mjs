@@ -42,7 +42,8 @@ try {
 } catch {}
 
 document.addEventListener('submit', event => {
-  if (event.target?.matches?.('#knowledgeForm,[data-growth-search]')) send('search_started');
+  if (event.target?.matches?.('[data-growth-cta]')) send('lp_search_cta');
+  if (event.target?.matches?.('#knowledgeForm')) send('search_started');
 });
 
 document.addEventListener('click', event => {

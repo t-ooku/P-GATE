@@ -18,7 +18,7 @@ test('日英SEO必須12ページを別URLで提供する', () => {
     assert.match(html, /<form action="\/" method="get"[^>]*>/);
     assert.match(html, /<details>/);
     assert.match(html, /<ol><li>[^<]+<\/li><li>[^<]+<\/li><li>[^<]+<\/li><\/ol>/);
-    assert.match(html, /data-growth-search/);
+    assert.match(html, /data-growth-cta/);
     assert.match(html, /application\/ld\+json/);
     assert.match(html, /BreadcrumbList/);
     assert.match(html, /FAQPage/);

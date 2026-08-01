@@ -5,7 +5,7 @@ day,campaign_id,content_id,channel,series,hook,prefill_query,cta,disclosure,stat
 4,launch_01,search_demo,YOUTUBE,#今日のホシル,"曖昧な一言が検索ワードになるまで。","推し活で使える小さな写真プリンター","同じ条件で探す",NONE,READY
 5,launch_01,want_poll,INSTAGRAM,参加型質問,"今いちばん探したいものは？","最近SNSで見て気になったもの","コメントで教えて","回答は匿名集計しサービス改善に利用します",READY
 6,launch_01,earphone_demo,TIKTOK,#今日のホシル,"韓国っぽい透明のイヤホン、で探せる？","韓国っぽい透明のワイヤレスイヤホン","条件を引き継いで探す",NONE,READY
-7,launch_01,save_habit,X,#ほしっトク,"今日見つからなくても、検索を終わらせない。","夏フェスで使える小さい扇風機","今の検索をほしっトク",NONE,READY
+7,launch_01,save_habit,X,#ほしっとく,"今日見つからなくても、検索を終わらせない。","夏フェスで使える小さい扇風機","今の検索をほしっとく",NONE,READY
 8,launch_02,desk_light_quiz,INSTAGRAM,#これ何て検索する,"机の端につける、丸く光るライト。","机の端につける丸く光るライト","何て検索するかコメント","回答は匿名集計しサービス改善に利用します",READY
 9,launch_02,amazon_bridge,TIKTOK,検索支援,"ホシルで整えて、Amazonでそのまま探す。","一人暮らしの部屋に置ける静かな加湿器","検索ワードをコピー",NONE,READY
 10,launch_02,watch_habit,YOUTUBE,#これホシっといて,"値下げまで、毎日検索しなくていい。","旅行用の軽いモバイルバッテリー","通知条件を保存",NONE,READY

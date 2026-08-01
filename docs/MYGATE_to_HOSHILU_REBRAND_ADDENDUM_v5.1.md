@@ -23,7 +23,7 @@ requirements in v5.0 remain in force.
 |---|---|
 | MYGATE | ホシル / HOSHILU |
 | MYCONCIERGE | ホシル |
-| MYWISH | ほしっトク |
+| MYWISH | ほしっとく |
 | MYWATCH | ホシっといて |
 | MYTREASURE | HOSHILU INSIGHT |
 
@@ -35,7 +35,7 @@ Brand line:
 
 Habit line:
 
-> 気になったら、ほしっトク。
+> 気になったら、ほしっとく。
 
 Conversational request:
 

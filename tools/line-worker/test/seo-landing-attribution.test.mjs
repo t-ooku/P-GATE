@@ -21,6 +21,9 @@ test('growth analytics accepts only bounded page content and preserves explicit 
   assert.match(analytics, /params\.get\('utm_content'\) \|\| pageContent/);
   assert.match(analytics, /pageContent \|\| \(attribution\.content\.startsWith\('seo_'\) \? '' : attribution\.content\)/);
   assert.match(analytics, /send\('landing_view', \{ content: landingContent \}\)/);
+  assert.match(analytics, /matches\?\.\('\[data-growth-cta\]'\)\) send\('lp_search_cta'\)/);
+  assert.match(analytics, /matches\?\.\('#knowledgeForm'\)\) send\('search_started'\)/);
+  assert.doesNotMatch(analytics, /#knowledgeForm,\[data-growth-search\]/);
 });
 
 test('downstream pages do not inflate SEO landing views', async () => {

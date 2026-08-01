@@ -56,7 +56,7 @@ test('投稿ローテーションは横断・あいまい検索・人気商品�
     assert.equal(post.reel_script.scenes.length, 4);
     assert.match(post.reel_script.asset_policy, /権利確認済み/);
   });
-  assert.ok(posts.some((post) => /ほしっトク/.test(post.caption)));
+  assert.ok(posts.some((post) => /ほしっとく/.test(post.caption)));
   assert.ok(posts.some((post) => /あいまい検索/.test(post.caption)));
 });
 

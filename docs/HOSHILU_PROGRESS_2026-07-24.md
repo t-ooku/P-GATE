@@ -102,7 +102,7 @@ The approved Master Spec remains authoritative, with the HOSHILU rebrand addendu
 - 表示順位を防御的にNO.1始まりへ統一。
 - 候補末尾へ「条件を追加して再検索」を追加。元の検索文を残したまま検索窓へ戻り、色・大きさ・電源・使用場所などを追記可能。
 - 契約・承認済みMarketplace_OffersのProduct_URLを従来Amazon URLより優先する方針を維持。契約登録項目へMerchant_ID、Seller_SKU、Offer_Listing_IDを追加し、検証済みProduct_URLを送客先SSoTとした。
-- 未承認の従来Amazon一般商品URLへのフォールバックを停止。承認済みProduct_URLが無い候補は商品表示・ほしっトクのみとし、販売ボタンは出さない。
+- 未承認の従来Amazon一般商品URLへのフォールバックを停止。承認済みProduct_URLが無い候補は商品表示・ほしっとくのみとし、販売ボタンは出さない。
 - Workerテスト40件、GAS主要テストすべて合格。本番D1実商品で電圧根拠付きキッチン家電候補を確認。
 - PWAキャッシュ: hoshilu-shell-v32。
 

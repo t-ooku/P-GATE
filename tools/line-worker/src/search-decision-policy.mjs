@@ -153,7 +153,7 @@ export function decideSearchResponse({
         action: "save_to_wish",
         reason: "insufficient_evidence",
         message:
-          "今の記憶だけでは商品を特定できません。ほしっトクに保存して、商品追加時にもう一度照合します。",
+          "今の記憶だけでは商品を特定できません。ほしっとくに保存して、商品追加時にもう一度照合します。",
         candidates: [],
       };
     }
@@ -196,7 +196,7 @@ export function decideSearchResponse({
       action: "save_to_wish",
       reason: "context_only_low_confidence",
       message:
-        "色や見た場所だけでは断定できません。ほしっトクに保存して、後日もう一度照合します。",
+        "色や見た場所だけでは断定できません。ほしっとくに保存して、後日もう一度照合します。",
       candidates: ranked.slice(0, 3),
     };
   }

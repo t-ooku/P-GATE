@@ -6,7 +6,7 @@ const COPY = {
     category: '上位候補が別カテゴリに分かれています。どちらの用途に近いですか？',
     use: 'それは何に使うものですか？',
     detail: '色・大きさ・素材のうち、もう一つ覚えている特徴はありますか？',
-    wish: '今は特定できないため、ほしっトクへ保存して後日もう一度照合できます。'
+    wish: '今は特定できないため、ほしっとくへ保存して後日もう一度照合できます。'
   },
   EN: {
     category: 'The leading matches split into different categories. Which use is closer?',
@@ -481,13 +481,42 @@ function waterFilterIdentity(text) {
   return '';
 }
 
+function refrigeratorWaterFilterIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:samsung|三星|삼성)/u.test(value) && /haf[- ]?qin/u.test(value)) return 'samsung-haf-qin';
+  if (/(?:\blg\b|엘지)/u.test(value) && /lt1000p/u.test(value)) return 'lg-lt1000p';
+  if (/(?:\bge\b|通用电气|通用電氣)/u.test(value) && /rpwfe/u.test(value)) return 'ge-rpwfe';
+  if (/(?:whirlpool|ワールプール|惠而浦|월풀)/u.test(value) && /everydrop\s*(?:filter\s*)?1/u.test(value)) return 'whirlpool-everydrop-1';
+  return '';
+}
+
+function refrigeratorWaterFilterPart(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/\b(da97[- ]?17376b|adq74793501|edr1rxd1)\b/u)?.[1]?.replace('da97 ', 'da97-') || '';
+}
+
+function isRefrigeratorWaterFilterMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedIdentity = refrigeratorWaterFilterIdentity(query);
+  if (requestedIdentity && refrigeratorWaterFilterIdentity(text) !== requestedIdentity) return true;
+  const requestedPart = refrigeratorWaterFilterPart(query);
+  if (requestedPart && refrigeratorWaterFilterPart(text) !== requestedPart) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  if (/(?:純正|正規品|genuine|original|原装|原裝|정품)/iu.test(query)
+    && /(?:互換|互換品|compatible|replacement\s+for|兼容|호환)/iu.test(text)) return true;
+  if (/(?:冷蔵庫本体|refrigerator\s*(?:unit|appliance)|冰箱(?:主机|主機)|냉장고\s*본체)/iu.test(text)) return true;
+  return !/(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터)/iu.test(text);
+}
+
 function waterFilterPartNumber(text) {
   return String(text || '').normalize('NFKC').toLowerCase().match(/\b(tk[- ]?cj24c1)\b/u)?.[1]?.replace('tk cj', 'tk-cj') || '';
 }
 
 function requestedPackageCount(text) {
   return Number(String(text || '').normalize('NFKC')
-    .match(/(\d+)\s*(?:個|本|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|개|개입|세트)/iu)?.[1] || 0);
+    .match(/(\d+)\s*(?:個|本|枚|個入り|pack|packs|count|pcs|pieces|件套|个装|個裝|块|塊|盒|卷|巻|张|張|개|개입|장|세트)/iu)?.[1] || 0);
 }
 
 function isWaterFilterCartridgeMismatch(candidate, query) {
@@ -538,6 +567,241 @@ function isPrinterInkMismatch(candidate, query) {
   if (compatible.test(query) && !compatible.test(text)) return true;
   if (/(?:本体|printer\s*(?:unit|machine)|打印机整机|打印機整機|프린터\s*본체)/iu.test(text)) return true;
   return !/(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)/iu.test(text);
+}
+
+function toothbrushFamily(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:oral[- ]?b|オーラルb|ブラウン|欧乐b|歐樂b|오랄비).{0,20}\bio\b/u.test(value)) return 'oral-b-io';
+  if (/(?:oral[- ]?b|オーラルb|ブラウン|欧乐b|歐樂b|오랄비).{0,20}\bpro\b/u.test(value)) return 'oral-b-pro';
+  const sonicare = value.match(/\bhx(\d{4})\b/u);
+  if (sonicare) return `sonicare-hx${sonicare[1]}`;
+  const doltz = value.match(/\bew[- ]?dp(\d{2})\b/u);
+  if (doltz) return `doltz-ew-dp${doltz[1]}`;
+  return '';
+}
+
+function toothbrushHeadStyle(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:ultimate\s*clean|アルティメイトクリーン)/u.test(value)) return 'ultimate-clean';
+  if (/c3\s*premium\s*plaque\s*control/u.test(value)) return 'c3-premium-plaque-control';
+  if (/(?:cross\s*action|クロスアクション|크로스액션)/u.test(value)) return 'crossaction';
+  return value.match(/\bwew(\d{4})\b/u)?.[0] || '';
+}
+
+function toothbrushHeadCount(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+)\s*(?:本|個|pack|packs|count|pcs|pieces|支|个|個|개|개입)/iu)?.[1] || 0);
+}
+
+function isToothbrushHeadMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (toothbrushFamily(query) && toothbrushFamily(text) !== toothbrushFamily(query)) return true;
+  if (toothbrushHeadStyle(query) && toothbrushHeadStyle(text) !== toothbrushHeadStyle(query)) return true;
+  const count = toothbrushHeadCount(query);
+  if (count && toothbrushHeadCount(text) !== count) return true;
+  if (/(?:やわらか|soft|软毛|軟毛|부드러운|소프트)/iu.test(query) && !/(?:やわらか|soft|软毛|軟毛|부드러운|소프트)/iu.test(text)) return true;
+  if (/(?:本体|ハンドル|充電器|charger|toothbrush\s*handle|牙刷手柄|칫솔\s*본체)/iu.test(text)) return true;
+  return !/(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모)/iu.test(text);
+}
+
+function shaverFamily(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:braun|ブラウン|博朗|브라운).{0,20}(?:clean\s*&\s*renew|クリーン\s*&\s*リニュー)/u.test(value)) return 'braun-clean-renew';
+  const braun = value.match(/(?:braun|ブラウン|博朗|브라운).{0,20}(?:series|シリーズ)\s*(\d+)/u);
+  if (braun) return `braun-series-${braun[1]}`;
+  const philips = value.match(/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,20}\b(s\d{4})\b/u);
+  if (philips) return `philips-${philips[1]}`;
+  const panasonic = value.match(/\bes[- ]?lv(\d[a-z])\b/u);
+  if (panasonic) return `panasonic-es-lv${panasonic[1]}`;
+  return '';
+}
+
+function shaverPartNumber(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/(?:\b(94m|wes9600|ccr6)\b|\b(sh91\/51)(?!\d))/u)?.slice(1).find(Boolean) || '';
+}
+
+function shaverBladeCount(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+)\s*(?:枚刃|blades?|刀头|刀頭|중날|날)/iu)?.[1] || 0);
+}
+
+function isShaverReplacementMismatch(candidate, requested, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (shaverFamily(query) && shaverFamily(text) !== shaverFamily(query)) return true;
+  if (shaverPartNumber(query) && shaverPartNumber(text) !== shaverPartNumber(query)) return true;
+  if (shaverBladeCount(query) && shaverBladeCount(text) !== shaverBladeCount(query)) return true;
+  const cleaning = /(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액)/iu;
+  const blade = /(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날)/iu;
+  if (requested.has('shaver-cleaning-cartridge')) {
+    const count = requestedPackageCount(query);
+    return !cleaning.test(text) || (count && requestedPackageCount(text) !== count);
+  }
+  if (/(?:本体|シェーバー本体|shaver\s*(?:unit|handle)|剃须刀整机|면도기\s*본체|充電器|charger)/iu.test(text)) return true;
+  return !blade.test(text) || cleaning.test(text);
+}
+
+function coffeeCapsuleSystem(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토)/u.test(value)) return 'dolce-gusto';
+  if (/(?:nespresso|ネスプレッソ|奈斯派索|네스프레소).{0,24}(?:vertuo|ヴァーチュオ|馥旋|버츄오)/u.test(value)) return 'nespresso-vertuo';
+  if (/(?:nespresso|ネスプレッソ|奈斯派索|네스프레소).{0,24}(?:original(?:\s*line)?|オリジナル|经典|經典|오리지널)/u.test(value)) return 'nespresso-original';
+  return '';
+}
+
+function coffeeCapsuleCount(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+)\s*(?:個|杯分|capsules?|pods?|粒|颗|顆|개|개입)/iu)?.[1] || 0);
+}
+
+function isCoffeeCapsuleMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedSystem = coffeeCapsuleSystem(query);
+  if (requestedSystem && coffeeCapsuleSystem(text) !== requestedSystem) return true;
+  const requestedCount = coffeeCapsuleCount(query);
+  if (requestedCount && coffeeCapsuleCount(text) !== requestedCount) return true;
+  if (/(?:本体|コーヒーメーカー|coffee\s*(?:maker|machine)|咖啡机|咖啡機|커피\s*머신|再利用|詰め替え|reusable|refillable|可重复使用|可重複使用|재사용)/iu.test(text)) return true;
+  return !/(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐)/iu.test(text);
+}
+
+function cameraBatteryPart(text) {
+  return String(text || '').normalize('NFKC').toLowerCase()
+    .match(/\b(np[- ]?fz100|np[- ]?fw50|lp[- ]?e6nh|en[- ]?el15c)\b/u)?.[1]
+    ?.replace(/^(np|lp|en) /u, '$1-') || '';
+}
+
+function isCameraBatteryMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const requestedPart = cameraBatteryPart(query);
+  if (requestedPart && cameraBatteryPart(text) !== requestedPart) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (/(?:本体|camera\s*body|相机机身|相機機身|카메라\s*본체|充電器|charger|充电器|充電器|충전기)/iu.test(text)) return true;
+  return !/(?:カメラ用?(?:交換)?バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|카메라\s*배터리|battery\s*pack|電池|배터리)/iu.test(text);
+}
+
+function toolBatteryModel(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const compact = value.match(/\b(bl1860b|dcb184)\b/u)?.[1];
+  if (compact) return compact;
+  if (/\bgba\s*18v\s*5(?:\.0)?\s*ah\b/u.test(value)) return 'gba-18v-5ah';
+  if (/\bm18\s*b5\b/u.test(value)) return 'm18-b5';
+  return '';
+}
+
+function batteryVoltage(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+(?:\.\d+)?)\s*v\b/iu)?.[1] || 0);
+}
+
+function batteryCapacity(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+(?:\.\d+)?)\s*ah\b/iu)?.[1] || 0);
+}
+
+function isToolBatteryMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (toolBatteryModel(query) && toolBatteryModel(text) !== toolBatteryModel(query)) return true;
+  if (batteryVoltage(query) && batteryVoltage(text) !== batteryVoltage(query)) return true;
+  if (batteryCapacity(query) && batteryCapacity(text) !== batteryCapacity(query)) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (/(?:本体|工具本体|power\s*tool\s*(?:body|kit)|电动工具主机|電動工具主機|전동\s*공구\s*본체|充電器|charger|充电器|充電器|충전기)/iu.test(text)) return true;
+  return !/(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리|battery\s*pack)/iu.test(text);
+}
+
+function labelTapePart(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const part = value.match(/\b(tze[- ]?231|45013|xr[- ]?12we|ss12k)\b/u)?.[1];
+  return part?.replace(/^tze /u, 'tze-').replace(/^xr /u, 'xr-') || '';
+}
+
+function labelTapeWidth(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+(?:\.\d+)?)\s*(?:mm|毫米|밀리미터)/iu)?.[1] || 0);
+}
+
+function isLabelTapeMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (labelTapePart(query) && labelTapePart(text) !== labelTapePart(query)) return true;
+  if (labelTapeWidth(query) && labelTapeWidth(text) !== labelTapeWidth(query)) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (/(?:本体|ラベルライター|label\s*(?:maker|printer)|标签打印机|標籤打印機|라벨\s*프린터|空カートリッジ|empty\s*cartridge)/iu.test(text)) return true;
+  return !/(?:ラベル(?:ライター用)?テープ|label\s*tape|labeling\s*tape|标签带|標籤帶|라벨\s*테이프|tape\s*cartridge)/iu.test(text);
+}
+
+function airFryerLinerIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  if (/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,20}\bna230\b/u.test(value)) return 'philips-na230';
+  if (/(?:ninja|ニンジャ|忍者|닌자).{0,20}\baf400\b/u.test(value)) return 'ninja-af400';
+  if (/(?:cosori|コソリ|科西|코소리).{0,20}\bcp158\b/u.test(value)) return 'cosori-cp158';
+  if (/(?:instant\s*vortex|インスタント\s*ボルテックス|即时涡流|即時渦流|인스턴트\s*볼텍스)/u.test(value)) return 'instant-vortex';
+  return '';
+}
+
+function airFryerCapacity(text) {
+  return Number(String(text || '').normalize('NFKC').match(/(\d+(?:\.\d+)?)\s*l\b/iu)?.[1] || 0);
+}
+
+function airFryerLinerMaterial(text) {
+  const value = String(text || '').normalize('NFKC');
+  if (/(?:シリコン|silicone|硅胶|矽膠|실리콘)/iu.test(value)) return 'silicone';
+  if (/(?:紙|paper|纸|紙|종이)/iu.test(value)) return 'paper';
+  return '';
+}
+
+function airFryerLinerShape(text) {
+  const value = String(text || '').normalize('NFKC');
+  if (/(?:デュアルバスケット|dual\s*basket|双篮|雙籃|듀얼\s*바스켓)/iu.test(value)) return 'dual';
+  if (/(?:角型|square|方形|사각)/iu.test(value)) return 'square';
+  if (/(?:丸型|round|圆形|圓形|원형)/iu.test(value)) return 'round';
+  return '';
+}
+
+function isAirFryerLinerMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (airFryerLinerIdentity(query) && airFryerLinerIdentity(text) !== airFryerLinerIdentity(query)) return true;
+  if (airFryerCapacity(query) && airFryerCapacity(text) !== airFryerCapacity(query)) return true;
+  if (airFryerLinerMaterial(query) && airFryerLinerMaterial(text) !== airFryerLinerMaterial(query)) return true;
+  if (airFryerLinerShape(query) && airFryerLinerShape(text) !== airFryerLinerShape(query)) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  if (/(?:本体|air\s*fryer\s*(?:unit|appliance)|空气炸锅主机|空氣炸鍋主機|에어프라이어\s*본체|交換バスケット|replacement\s*basket)/iu.test(text)) return true;
+  return !/(?:ライナー|liners?|纸垫|紙墊|라이너)/iu.test(text);
+}
+
+function vacuumBagIdentity(text) {
+  const value = String(text || '').normalize('NFKC').toLowerCase();
+  const miele = value.match(/(?:miele|ミーレ|美诺|美諾|밀레).{0,25}(?:hyclean\s*pure\s*)?(gn|fjm)\b/u);
+  if (miele) return `miele-${miele[1]}`;
+  if (/(?:philips|フィリップス|飞利浦|飛利浦|필립스).{0,25}s[- ]?bag/u.test(value)) return 'philips-s-bag';
+  if (/(?:bosch|ボッシュ|博世|보쉬).{0,25}(?:type\s*g\s*all|タイプ\s*g)/u.test(value)) return 'bosch-type-g-all';
+  return '';
+}
+
+function vacuumBagPart(text) {
+  return String(text || '').normalize('NFKC').toLowerCase().match(/\b(fc8021\/03|bbz41fgall)\b/u)?.[1] || '';
+}
+
+function isVacuumBagMismatch(candidate, query) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (vacuumBagIdentity(query) && vacuumBagIdentity(text) !== vacuumBagIdentity(query)) return true;
+  if (vacuumBagPart(query) && vacuumBagPart(text) !== vacuumBagPart(query)) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
+  const genuine = /(?:純正|正規品|genuine|original|原装|原裝|정품)/iu;
+  if (genuine.test(query) && !genuine.test(text)) return true;
+  if (/(?:本体|vacuum\s*cleaner\s*(?:unit|body)|吸尘器主机|吸塵器主機|진공청소기\s*본체|フィルター|filters?|滤芯|濾芯|필터)/iu.test(text)) return true;
+  return !/(?:紙パック|ダストバッグ|dust\s*bags?|集尘袋|集塵袋|먼지\s*봉투)/iu.test(text);
 }
 
 function isRobotVacuumConsumableMismatch(candidate, requested, query) {
@@ -664,7 +928,16 @@ export function filterCategoryMismatches(query, candidates = []) {
     .some((category) => requested.has(category));
   const airPurifierFilter = requested.has('air-purifier-filter');
   const waterFilterCartridge = requested.has('water-filter-cartridge');
+  const refrigeratorWaterFilter = requested.has('refrigerator-water-filter');
   const printerInk = requested.has('printer-ink');
+  const toothbrushHead = requested.has('electric-toothbrush-head');
+  const shaverReplacement = requested.has('shaver-replacement-blade') || requested.has('shaver-cleaning-cartridge');
+  const coffeeCapsule = requested.has('coffee-capsule');
+  const cameraBattery = requested.has('camera-battery');
+  const toolBattery = requested.has('tool-battery');
+  const labelTape = requested.has('label-tape');
+  const airFryerLiner = requested.has('air-fryer-liner');
+  const vacuumBag = requested.has('vacuum-dust-bag');
   const tabletAccessory = [
     'tablet-case', 'tablet-keyboard', 'tablet-screen-protector', 'tablet-charger',
     'tablet-stylus', 'tablet-stylus-tip', 'tablet-stylus-charger'
@@ -700,8 +973,17 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (robotVacuumConsumable && isRobotVacuumConsumableMismatch(candidate, requested, query)) return false;
     if (dysonVacuumAccessory) return !isDysonVacuumAccessoryMismatch(candidate, requested, query);
     if (airPurifierFilter) return !isAirPurifierFilterMismatch(candidate, query);
+    if (refrigeratorWaterFilter) return !isRefrigeratorWaterFilterMismatch(candidate, query);
     if (waterFilterCartridge) return !isWaterFilterCartridgeMismatch(candidate, query);
     if (printerInk) return !isPrinterInkMismatch(candidate, query);
+    if (toothbrushHead) return !isToothbrushHeadMismatch(candidate, query);
+    if (shaverReplacement) return !isShaverReplacementMismatch(candidate, requested, query);
+    if (coffeeCapsule) return !isCoffeeCapsuleMismatch(candidate, query);
+    if (cameraBattery) return !isCameraBatteryMismatch(candidate, query);
+    if (toolBattery) return !isToolBatteryMismatch(candidate, query);
+    if (labelTape) return !isLabelTapeMismatch(candidate, query);
+    if (airFryerLiner) return !isAirFryerLinerMismatch(candidate, query);
+    if (vacuumBag) return !isVacuumBagMismatch(candidate, query);
     if (tabletAccessory) {
       return !isTabletAccessoryMismatch(
         candidate,

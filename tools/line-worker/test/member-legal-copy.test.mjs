@@ -13,7 +13,7 @@ const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 
 test('会員同期とMYWATCHの実装内容をプライバシー方針へ明記する', () => {
   assert.match(privacy, /仮名化された会員ID/);
   assert.match(privacy, /通知の配信、既読、非表示/);
-  assert.match(privacy, /ほしっトク.*削除.*会員通知も削除/s);
+  assert.match(privacy, /ほしっとく.*削除.*会員通知も削除/s);
   assert.match(privacy, /質問欄へ氏名、住所、電話番号/);
   assert.doesNotMatch(privacy, /正式提供時.*更新/);
 });

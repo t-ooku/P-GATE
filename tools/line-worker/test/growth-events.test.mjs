@@ -33,7 +33,7 @@ test('rejects unknown event types and marketplace values', () => {
 });
 
 test('accepts acquisition funnel events without personal data', () => {
-  for (const event_type of ['registration_started', 'registration_completed', 'return_visit', 'pwa_install_prompted', 'pwa_install_completed']) {
+  for (const event_type of ['lp_search_cta', 'registration_started', 'registration_completed', 'return_visit', 'pwa_install_prompted', 'pwa_install_completed']) {
     assert.equal(normalizeGrowthEvent({ event_type, content: 'email' }).event_type, event_type);
   }
 });

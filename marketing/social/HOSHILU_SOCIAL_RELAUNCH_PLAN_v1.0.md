@@ -5,7 +5,7 @@
 Make `ホシる` a recognizable action among younger users:
 
 - `これ、ホシルで探して`
-- `気になったから、ほしっトク`
+- `気になったから、ほしっとく`
 - `値下げしたらホシっといて`
 
 The first 30 days optimize for participation and repeat use, not follower count alone.
@@ -29,7 +29,7 @@ and audit history remain intact. Keep screenshots of the old profile and record 
 |---:|---|---|
 | 35% | 名前が分からないクイズ | `これ、なんて検索する？` |
 | 25% | ホシル体験 | vague description → three candidates |
-| 20% | ほしっトク習慣 | save now, continue later |
+| 20% | ほしっとく習慣 | save now, continue later |
 | 10% | ホシっといて | price drop, restock, launch alerts |
 | 10% | Partner stories | permitted seller/product stories |
 
@@ -37,7 +37,7 @@ and audit history remain intact. Keep screenshots of the old profile and record 
 
 1. `#これ何て検索する`
 2. `#今日のホシル`
-3. `#ほしっトク`
+3. `#ほしっとく`
 4. `#ホシった`
 5. `#これホシっといて`
 
@@ -48,7 +48,7 @@ and audit history remain intact. Keep screenshots of the old profile and record 
 > MYGATEは、ホシルへ。
 > 名前が分からない「欲しい」を、もっと自然に話せる名前になりました。
 > 欲しいを、ちゃんと見つける。
-> 気になったら、ほしっトク。
+> 気になったら、ほしっとく。
 > #ホシル
 
 ### Post 2 — How it works
@@ -60,7 +60,7 @@ and audit history remain intact. Keep screenshots of the old profile and record 
 ### Post 3 — Habit
 
 > 今すぐ買わなくてもいい。
-> 気になったら、ほしっトク。
+> 気になったら、ほしっとく。
 > 値下げや再入荷は「ホシっといて」。
 
 ## 30-day KPI
@@ -68,7 +68,7 @@ and audit history remain intact. Keep screenshots of the old profile and record 
 - Profile-to-site click rate
 - Query started
 - Search completed
-- `ほしっトク` save rate
+- `ほしっとく` save rate
 - Seven-day return rate
 - Share rate and comment participation
 - Seller-page click-through

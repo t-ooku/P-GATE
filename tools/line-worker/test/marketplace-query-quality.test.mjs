@@ -119,6 +119,118 @@ test('プリンターのインクを4ブランド・4言語で本体から分離
   }
 });
 
+test('電動歯ブラシの替えブラシを4言語で本体から分離し種類と本数を保つ', () => {
+  const cases = [
+    ['Oral-B iO Series 6用 アルティメイトクリーン 替えブラシ 4本', 'Oral-B iO Series 6 替えブラシ Ultimate Clean 4本セット'],
+    ['replacement brush heads for Philips Sonicare HX9911 C3 Premium Plaque Control 4 pack', 'Philips Sonicare HX9911 替えブラシ C3 Premium Plaque Control 4本セット'],
+    ['适用于松下Doltz EW-DP57的WEW0917替换刷头2支', 'Panasonic Doltz EW-DP57 替えブラシ WEW0917 2本セット'],
+    ['오랄비 Pro 3용 크로스액션 부드러운 교체 칫솔모 4개', 'Oral-B Pro 3 替えブラシ CrossAction やわらかめ 4本セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('シェーバーの替刃と洗浄液を4言語で本体から分離し品番を保つ', () => {
+  const cases = [
+    ['Braun Series 9 Pro用 替刃 94M', 'Braun Series 9 Pro 替刃 94M'],
+    ['replacement shaving heads SH91/51 for Philips S9000', 'Philips S9000 替刃 SH91/51'],
+    ['适用于松下Lamdash ES-LV9W的WES9600替换刀头 5枚刃', 'Panasonic Lamdash ES-LV9W 替刃 WES9600 5枚刃'],
+    ['브라운 Clean & Renew CCR6 세정액 카트리지 6개', 'Braun Clean & Renew 洗浄液カートリッジ CCR6 6個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('コーヒーカプセルを4言語で本体から分離し規格と個数を保つ', () => {
+  const cases = [
+    ['ネスプレッソ オリジナル コーヒーカプセル 50個', 'Nespresso Original コーヒーカプセル 50個セット'],
+    ['Nespresso Vertuo coffee capsules 30 pods', 'Nespresso Vertuo コーヒーカプセル 30個セット'],
+    ['雀巢 Dolce Gusto 咖啡胶囊 16粒', 'Nescafe Dolce Gusto コーヒーカプセル 16個セット'],
+    ['네스프레소 오리지널 커피 캡슐 50개', 'Nespresso Original コーヒーカプセル 50個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('カメラ交換バッテリーを4言語で本体と充電器から分離し型番を保つ', () => {
+  const cases = [
+    ['Sony α7 IV用 純正カメラバッテリー NP-FZ100 2個', 'Sony NP-FZ100 カメラバッテリー 純正 2個セット'],
+    ['replacement camera battery NP-FW50 for Sony a6400 2 pack', 'Sony NP-FW50 カメラバッテリー 2個セット'],
+    ['佳能 EOS R6 Mark II 原装相机电池 LP-E6NH 1块', 'Canon LP-E6NH カメラバッテリー 純正 1個セット'],
+    ['니콘 Z6 II 정품 카메라 배터리 EN-EL15c 2개', 'Nikon EN-EL15C カメラバッテリー 純正 2個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('電動工具バッテリーを4言語で本体と充電器から分離し電圧容量を保つ', () => {
+  const cases = [
+    ['マキタ 純正 18V 6.0Ah 電動工具バッテリー BL1860B 2個', 'Makita BL1860B 電動工具バッテリー 18V 6Ah 純正 2個セット'],
+    ['DeWalt DCB184 18V 5Ah replacement power tool battery 2 pack', 'DeWalt DCB184 電動工具バッテリー 18V 5Ah 2個セット'],
+    ['博世 GBA 18V 5.0Ah 原装电动工具电池 1块', 'Bosch GBA 電動工具バッテリー 18V 5Ah 純正 1個セット'],
+    ['밀워키 M18 B5 18V 5.0Ah 정품 공구 배터리 2개', 'Milwaukee M18 B5 電動工具バッテリー 18V 5Ah 純正 2個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('ラベルライターテープを4言語で本体から分離し品番幅色を保つ', () => {
+  const cases = [
+    ['ブラザー P-touch 純正ラベルテープ TZe-231 12mm 黒文字 白 2個', 'Brother P-touch TZE-231 ラベルテープ 12mm 黒文字 白 純正 2個セット'],
+    ['DYMO D1 45013 12mm black on white genuine label tape 2 pack', 'DYMO D1 45013 ラベルテープ 12mm 黒文字 白 純正 2個セット'],
+    ['卡西欧 XR-12WE 12毫米 黑字白底 原装标签带 2盒', 'CASIO XR-12WE ラベルテープ 12mm 黒文字 白 純正 2個セット'],
+    ['킹짐 Tepra SS12K 12mm 검정 글씨 흰색 정품 라벨 테이프 2개', 'King Jim Tepra SS12K ラベルテープ 12mm 黒文字 白 純正 2個セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('エアフライヤーライナーを4言語で本体から分離し容量素材形状枚数を保つ', () => {
+  const cases = [
+    ['Philips NA230用 6.2L 紙 エアフライヤーライナー 丸型 100枚', 'Philips NA230 エアフライヤーライナー 6.2L 紙 丸型 100枚セット'],
+    ['Ninja AF400 9.5L dual basket paper air fryer liners 100 pack', 'Ninja AF400 エアフライヤーライナー 9.5L 紙 デュアルバスケット 100枚セット'],
+    ['科西 Cosori CP158 5.5L 方形空气炸锅纸垫 100张', 'Cosori CP158 エアフライヤーライナー 5.5L 紙 角型 100枚セット'],
+    ['인스턴트 볼텍스 5.7L 원형 실리콘 에어프라이어 라이너 2개', 'Instant Vortex エアフライヤーライナー 5.7L シリコン 丸型 2枚セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('掃除機紙パックを4言語で本体とフィルターから分離し規格品番枚数を保つ', () => {
+  const cases = [
+    ['ミーレ HyClean Pure FJM 純正 掃除機紙パック 4枚', 'Miele HyClean Pure FJM 掃除機紙パック 純正 4枚セット'],
+    ['Miele HyClean Pure GN vacuum dust bags 4 pack', 'Miele HyClean Pure GN 掃除機紙パック 4枚セット'],
+    ['飞利浦 s-bag FC8021/03 原装吸尘器集尘袋 4个', 'Philips s-bag FC8021/03 掃除機紙パック 純正 4枚セット'],
+    ['보쉬 Type G ALL BBZ41FGALL 정품 진공청소기 먼지봉투 4개', 'Bosch Type G ALL BBZ41FGALL 掃除機紙パック 純正 4枚セット'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
 test("英語200件・中国語400件の重点コーパスを追加する", () => {
   const corpus = buildEnglishChineseStressCorpus();
   assert.equal(corpus.length, 600);
@@ -886,6 +998,20 @@ test('Apple Pencilの世代・交換ペン先・充電用品を全モール向�
     ['iPad Pro Apple Pencil替换笔尖', 'iPad Pro Apple Pencil 交換ペン先'],
     ['아이패드 프로 애플펜슬 교체 펜촉', 'iPad Pro Apple Pencil 交換ペン先'],
     ['USB-C Apple Pencil charging adapter', 'Apple Pencil 充電アダプター USB-C'],
+  ];
+  for (const [input, expected] of cases) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace), expected, `${marketplace}: ${input}`);
+    }
+  }
+});
+
+test('冷蔵庫給水フィルターは4言語の型番・純正・個数を全モール向けに保持する', () => {
+  const cases = [
+    ['Samsung HAF-QIN DA97-17376B 純正 冷蔵庫給水フィルター 2個', 'Samsung HAF-QIN DA97-17376B 冷蔵庫給水フィルター 純正 2個セット'],
+    ['LG LT1000P ADQ74793501 genuine refrigerator water filter 2 pack', 'LG LT1000P ADQ74793501 冷蔵庫給水フィルター 純正 2個セット'],
+    ['GE RPWFE 原装冰箱净水滤芯 2个', 'GE RPWFE 冷蔵庫給水フィルター 純正 2個セット'],
+    ['월풀 EveryDrop Filter 1 EDR1RXD1 정품 냉장고 정수 필터 2개', 'Whirlpool EveryDrop Filter 1 EDR1RXD1 冷蔵庫給水フィルター 純正 2個セット'],
   ];
   for (const [input, expected] of cases) {
     for (const marketplace of SEARCH_MARKETPLACES) {

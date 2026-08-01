@@ -138,7 +138,7 @@ export function renderSeoPage(pathname) {
 <script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>
 <link rel="stylesheet" href="/styles.css"></head>
 <body data-growth-content="seo_${slug.replaceAll('-', '_')}"><main class="shell"><nav aria-label="${esc(guideLabel)}"><a href="/">${esc(homeLabel)}</a><span aria-hidden="true"> / </span><span aria-current="page">${esc(title)}</span><span aria-hidden="true"> · </span><a class="language-switch" href="/${alternate}/${slug}" hreflang="${alternate}" lang="${alternate}">${esc(languageLabel)}</a></nav><section class="hero"><p class="eyebrow">HOSHILU</p><h1>${esc(title)}</h1><p>${esc(description)}</p>
-<form action="/" method="get" data-growth-search><label for="seo-search">${esc(searchLabel)}</label><textarea id="seo-search" name="q" required maxlength="200"></textarea><button type="submit">${esc(submit)}</button></form>
+<form action="/" method="get" data-growth-cta><label for="seo-search">${esc(searchLabel)}</label><textarea id="seo-search" name="q" required maxlength="200"></textarea><button type="submit">${esc(submit)}</button></form>
 </section><section><h2>${esc(stepsTitle)}</h2><p>${esc(body)}</p><ol>${steps.map((step) => `<li>${esc(step)}</li>`).join('')}</ol><h2>${esc(faqTitle)}</h2><details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>
 <p><a href="/">${locale === 'ja' ? 'HOSHILUの検索画面へ' : 'Open HOSHILU search'}</a> · <a href="/login.html">${locale === 'ja' ? '無料会員になる' : 'Create a free account'}</a></p></section><aside aria-labelledby="related-guides"><h2 id="related-guides">${esc(relatedTitle)}</h2><ul>${relatedLinks}</ul></aside></main><script type="module" src="/growth-analytics.mjs"></script></body></html>`;
 }

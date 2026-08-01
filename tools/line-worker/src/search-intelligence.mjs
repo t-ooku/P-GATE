@@ -54,10 +54,28 @@ const RULES = [
   ['cordless-vacuum',/(?:dyson|ダイソン|戴森|다이슨).{0,20}(?:コードレス(?:掃除機)?|vacuum|吸尘器|吸塵器|무선\s*청소기)/iu,['dyson cordless vacuum','vacuum cleaner']],
   ['air-purifier-filter',/(?:(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성).{0,40}(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터)|(?:フィルター|filters?|滤芯|濾芯|滤网|濾網|필터).{0,40}(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기|sharp|シャープ|levoit|xiaomi|小米|samsung|三星|삼성))/iu,['air purifier replacement filter','hepa filter']],
   ['air-purifier',/(?:空気清浄機|air\s*purifier|空气净化器|空氣淨化器|공기\s*청정기)/iu,['air purifier','air cleaner']],
+  ['refrigerator-water-filter',/(?:(?:samsung|三星|삼성|\bLG\b|엘지|\bGE\b|通用电气|通用電氣|whirlpool|ワールプール|惠而浦|월풀|HAF[- ]?QIN|LT1000P|RPWFE|EDR1RXD1).{0,50}(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터)|(?:冷蔵庫(?:用)?(?:給水|浄水)?フィルター|refrigerator\s*water\s*filter|冰箱(?:净水|淨水)?(?:滤芯|濾芯)|냉장고\s*(?:정수\s*)?필터).{0,50}(?:samsung|三星|삼성|\bLG\b|엘지|\bGE\b|通用电气|通用電氣|whirlpool|ワールプール|惠而浦|월풀|HAF[- ]?QIN|LT1000P|RPWFE|EDR1RXD1))/iu,['refrigerator water filter','fridge filter']],
   ['water-filter-cartridge',/(?:(?:brita|ブリタ|toray|東レ|东丽|東麗|cleansui|クリンスイ|可菱水|panasonic|パナソニック|松下|파나소닉|浄水器|water\s*(?:filter|purifier)|净水器|淨水器|정수기).{0,40}(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지)|(?:カートリッジ|cartridges?|滤芯|濾芯|필터\s*카트리지|카트리지).{0,40}(?:brita|ブリタ|toray|東レ|东丽|東麗|cleansui|クリンスイ|可菱水|panasonic|パナソニック|松下|파나소닉|浄水器|water\s*(?:filter|purifier)|净水器|淨水器|정수기))/iu,['water filter replacement cartridge','purifier cartridge']],
   ['water-purifier',/(?:浄水器|water\s*purifier|净水器|淨水器|정수기)/iu,['water purifier','water filter system']],
   ['printer-ink',/(?:(?:canon|キヤノン|キャノン|epson|エプソン|brother|ブラザー|hp|プリンター|printer|打印机|打印機|프린터).{0,45}(?:インク|ink\s*cartridges?|墨盒|墨水|잉크)|(?:インク|ink\s*cartridges?|墨盒|墨水|잉크).{0,45}(?:canon|キヤノン|キャノン|epson|エプソン|brother|ブラザー|hp|プリンター|printer|打印机|打印機|프린터))/iu,['printer ink cartridge','replacement ink']],
   ['printer',/(?:プリンター|printer|打印机|打印機|프린터)/iu,['printer','inkjet printer']],
+  ['electric-toothbrush-head',/(?:(?:oral[- ]?b|オーラルB|ブラウン|欧乐B|歐樂B|오랄비|sonicare|ソニッケアー?|philips|飞利浦|飛利浦|소닉케어|doltz|ドルツ|panasonic|松下|파나소닉|電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔).{0,45}(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모)|(?:替えブラシ|交換ブラシ|brush\s*heads?|替换刷头|替換刷頭|교체\s*칫솔모|칫솔모).{0,45}(?:oral[- ]?b|オーラルB|ブラウン|欧乐B|歐樂B|오랄비|sonicare|ソニッケアー?|philips|飞利浦|飛利浦|소닉케어|doltz|ドルツ|panasonic|松下|파나소닉|電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔))/iu,['electric toothbrush replacement heads','brush heads']],
+  ['electric-toothbrush',/(?:電動歯ブラシ|electric\s*toothbrush|电动牙刷|電動牙刷|전동\s*칫솔)/iu,['electric toothbrush']],
+  ['shaver-cleaning-cartridge',/(?:(?:braun|ブラウン|博朗|브라운|clean\s*&\s*renew).{0,40}(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액)|(?:洗浄液|洗浄カートリッジ|cleaning\s*(?:solution|cartridges?)|清洁液|清潔液|清洗液|세정액|세척액).{0,40}(?:braun|ブラウン|博朗|브라운|clean\s*&\s*renew))/iu,['shaver cleaning cartridges','clean and renew']],
+  ['shaver-replacement-blade',/(?:(?:braun|ブラウン|博朗|브라운|philips|フィリップス|飞利浦|飛利浦|필립스|panasonic|松下|파나소닉|lamdash|ラムダッシュ|シェーバー|shaver|剃须刀|電鬚刨|면도기).{0,45}(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날)|(?:替刃|交換刃|shaving\s*heads?|replacement\s*(?:heads?|blades?)|替换刀头|替換刀頭|교체\s*면도날|면도날).{0,45}(?:braun|ブラウン|博朗|브라운|philips|フィリップス|飞利浦|飛利浦|필립스|panasonic|松下|파나소닉|lamdash|ラムダッシュ|シェーバー|shaver|剃须刀|電鬚刨|면도기))/iu,['electric shaver replacement head','replacement foil blade']],
+  ['electric-shaver',/(?:電気シェーバー|シェーバー|electric\s*shaver|剃须刀|電鬚刨|전기\s*면도기)/iu,['electric shaver']],
+  ['coffee-capsule',/(?:(?:nespresso|ネスプレッソ|奈斯派索|네스프레소|dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토).{0,45}(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐)|(?:コーヒー?カプセル|coffee\s*(?:capsules?|pods?)|咖啡胶囊|咖啡膠囊|커피\s*캡슐).{0,45}(?:nespresso|ネスプレッソ|奈斯派索|네스프레소|dolce\s*gusto|ドルチェ\s*グスト|多趣酷思|돌체\s*구스토))/iu,['coffee capsules','coffee pods']],
+  ['capsule-coffee-maker',/(?:カプセル式?コーヒーメーカー|capsule\s*coffee\s*(?:maker|machine)|胶囊咖啡机|膠囊咖啡機|캡슐\s*커피\s*머신)/iu,['capsule coffee machine']],
+  ['camera-battery-charger',/(?:(?:カメラ|camera|相机|相機|카메라).{0,30}(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기)|(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기).{0,30}(?:カメラ|camera|相机|相機|카메라))/iu,['camera battery charger']],
+  ['camera-battery',/(?:(?:sony|ソニー|索尼|소니|canon|キヤノン|佳能|캐논|nikon|ニコン|尼康|니콘|カメラ|camera|相机|相機|카메라).{0,45}(?:バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|배터리)|(?:バッテリー|camera\s*(?:replacement\s*)?battery|相机电池|相機電池|배터리).{0,45}(?:sony|ソニー|索尼|소니|canon|キヤノン|佳能|캐논|nikon|ニコン|尼康|니콘|カメラ|camera|相机|相機|카메라))/iu,['camera battery','replacement battery']],
+  ['tool-battery-charger',/(?:(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구).{0,40}(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기)|(?:バッテリー充電器|battery\s*charger|电池充电器|電池充電器|배터리\s*충전기).{0,40}(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구))/iu,['power tool battery charger']],
+  ['tool-battery',/(?:(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구).{0,45}(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리)|(?:工具用?(?:交換)?バッテリー|電動工具用?バッテリー|power\s*tool\s*(?:replacement\s*)?battery|电动工具电池|電動工具電池|공구\s*배터리).{0,45}(?:makita|マキタ|牧田|마끼다|dewalt|デウォルト|得伟|得偉|디월트|bosch|ボッシュ|博世|보쉬|milwaukee|ミルウォーキー|米沃奇|밀워키|電動工具|power\s*tool|电动工具|電動工具|전동\s*공구))/iu,['power tool battery','replacement tool battery']],
+  ['label-tape',/(?:(?:brother|ブラザー|兄弟|브라더|p[- ]?touch|dymo|ダイモ|casio|カシオ|卡西欧|卡西歐|카시오|tepra|テプラ|锦宫|錦宮|킹짐).{0,45}(?:ラベル(?:ライター用)?テープ|label\s*tape|labeling\s*tape|标签带|標籤帶|라벨\s*테이프)|(?:ラベル(?:ライター用)?テープ|label\s*tape|labeling\s*tape|标签带|標籤帶|라벨\s*테이프).{0,45}(?:brother|ブラザー|兄弟|브라더|p[- ]?touch|dymo|ダイモ|casio|カシオ|卡西欧|卡西歐|카시오|tepra|テプラ|锦宫|錦宮|킹짐))/iu,['label tape cartridge','label maker tape']],
+  ['label-maker',/(?:ラベルライター(?:本体)?|label\s*(?:maker|printer)|标签打印机|標籤打印機|라벨\s*프린터)/iu,['label maker','label printer']],
+  ['air-fryer-liner',/(?:(?:air\s*fryer|エアフライヤー|空气炸锅|空氣炸鍋|에어프라이어).{0,35}(?:ライナー|liners?|纸垫|紙墊|라이너)|(?:ライナー|liners?|纸垫|紙墊|라이너).{0,35}(?:air\s*fryer|エアフライヤー|空气炸锅|空氣炸鍋|에어프라이어))/iu,['air fryer liner','air fryer basket liner']],
+  ['air-fryer',/(?:エアフライヤー(?:本体)?|air\s*fryer(?:\s*(?:unit|appliance))?|空气炸锅|空氣炸鍋|에어프라이어(?:\s*본체)?)/iu,['air fryer']],
+  ['vacuum-dust-bag',/(?:(?:miele|ミーレ|美诺|美諾|밀레|philips|フィリップス|飞利浦|飛利浦|필립스|bosch|ボッシュ|博世|보쉬|vacuum|掃除機|吸尘器|吸塵器|진공청소기).{0,45}(?:紙パック|ダストバッグ|dust\s*bags?|集尘袋|集塵袋|먼지\s*봉투)|(?:紙パック|ダストバッグ|dust\s*bags?|集尘袋|集塵袋|먼지\s*봉투).{0,45}(?:miele|ミーレ|美诺|美諾|밀레|philips|フィリップス|飞利浦|飛利浦|필립스|bosch|ボッシュ|博世|보쉬|vacuum|掃除機|吸尘器|吸塵器|진공청소기))/iu,['vacuum cleaner dust bags','vacuum bags']],
+  ['vacuum-cleaner',/(?:掃除機(?:本体)?|vacuum\s*cleaner(?:\s*(?:unit|body))?|吸尘器|吸塵器|진공청소기(?:\s*본체)?)/iu,['vacuum cleaner']],
   ['laptop-case',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:ケース|スリーブ|バッグ|ポーチ|case|sleeve|bag|pouch|包|套|파우치|케이스|가방))/iu,['laptop case','laptop sleeve']],
   ['laptop-stand',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:スタンド|台|stand|holder|支架|거치대|스탠드))/iu,['laptop stand','notebook stand']],
   ['laptop-charger',/(?:(?:ノート(?:パソコン|PC)|ラップトップ|laptop|notebook(?:\s*computer)?|笔记本电脑|筆記型電腦|노트북).{0,12}(?:充電器|ACアダプター|charger|power\s*adapter|充电器|充電器|电源适配器|電源適配器|충전기|전원\s*어댑터))/iu,['laptop charger','power adapter']],
@@ -298,7 +316,13 @@ export function semanticSearchGroups(value) {
   }
   if (specificCategories.has('air-purifier-filter')) groups = groups.filter((group) => group.category !== 'air-purifier');
   if (specificCategories.has('water-filter-cartridge')) groups = groups.filter((group) => group.category !== 'water-purifier');
+  if (specificCategories.has('refrigerator-water-filter')) groups = groups.filter((group) => !['air-purifier-filter','air-purifier','water-filter-cartridge','water-purifier'].includes(group.category));
   if (specificCategories.has('printer-ink')) groups = groups.filter((group) => !['printer','photo-printer'].includes(group.category));
+  if (specificCategories.has('electric-toothbrush-head')) groups = groups.filter((group) => group.category !== 'electric-toothbrush');
+  if (specificCategories.has('shaver-replacement-blade') || specificCategories.has('shaver-cleaning-cartridge')) groups = groups.filter((group) => group.category !== 'electric-shaver');
+  if (specificCategories.has('camera-battery') || specificCategories.has('camera-battery-charger')) groups = groups.filter((group) => group.category !== 'camera');
+  if (specificCategories.has('air-fryer-liner')) groups = groups.filter((group) => group.category !== 'air-fryer');
+  if (specificCategories.has('vacuum-dust-bag')) groups = groups.filter((group) => !['vacuum-cleaner','home-use'].includes(group.category));
   if (specificCategories.has('t-shirt')) groups = groups.filter((group) => group.category !== 'tops');
   if (specificCategories.has('life-jacket')) groups = groups.filter((group) => group.category !== 'jacket');
   if (specificCategories.has('laptop-case')) groups = groups.filter((group) => group.category !== 'laptop');
@@ -359,7 +383,10 @@ export function semanticSearchGroups(value) {
     groups.unshift({ category: 'kitchen-appliance', terms: ['blender','mixer','toaster','kettle','coffee','juicer','chopper','cooktop','oven','grill','waffle','processor','cooker','fryer'] });
   }
   const specificIntent = groups.some((group) => [
-    'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light'
+    'steam-engine-model','dual-charger','ptz-network-camera','towel-warmer','camera-filter','bath-six-light',
+    'shaver-cleaning-cartridge','shaver-replacement-blade','electric-shaver','coffee-capsule','capsule-coffee-maker',
+    'camera-battery','camera-battery-charger','tool-battery','tool-battery-charger','label-tape','label-maker',
+    'air-fryer-liner','air-fryer','vacuum-dust-bag','vacuum-cleaner'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
   const colors = specificIntent ? [] : COLOR_RULES
     .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))

@@ -345,6 +345,9 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
     const asset = shellPath === '/' ? 'index.html' : shellPath.slice(1);
     assert.equal(fs.existsSync(new URL(asset, publicDir)), true, `offline shell asset is missing: ${shellPath}`);
   }
+  assert.match(serviceWorker, /hoshilu-shell-v138/);
+  assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
+  assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
 
 test('PWA公開回答は内部SKU・在庫数・元URL・取込証跡を除外する', () => {

@@ -24,6 +24,7 @@ WITH scoped AS (
     event_date_utc,
     channel,
     SUM(CASE WHEN event_type = 'landing_view' THEN 1 ELSE 0 END) AS landing_views,
+    SUM(CASE WHEN event_type = 'lp_search_cta' THEN 1 ELSE 0 END) AS lp_search_ctas,
     SUM(CASE WHEN event_type = 'search_started' THEN 1 ELSE 0 END) AS searches_started,
     SUM(CASE WHEN event_type = 'search_completed' THEN 1 ELSE 0 END) AS searches_completed,
     SUM(CASE WHEN event_type = 'registration_started' THEN 1 ELSE 0 END) AS registrations_started,
@@ -36,6 +37,7 @@ WITH scoped AS (
 )
 SELECT
   *,
+  ROUND(100.0 * lp_search_ctas / NULLIF(landing_views, 0), 2) AS landing_to_cta_pct,
   ROUND(100.0 * searches_started / NULLIF(landing_views, 0), 2) AS landing_to_search_pct,
   ROUND(100.0 * searches_completed / NULLIF(searches_started, 0), 2) AS search_completion_pct,
   ROUND(100.0 * registrations_completed / NULLIF(registrations_started, 0), 2) AS registration_completion_pct,
@@ -86,10 +88,16 @@ SELECT
   locale,
   content AS seo_landing,
   SUM(CASE WHEN event_type = 'landing_view' THEN 1 ELSE 0 END) AS landing_views,
+  SUM(CASE WHEN event_type = 'lp_search_cta' THEN 1 ELSE 0 END) AS lp_search_ctas,
   SUM(CASE WHEN event_type = 'search_started' THEN 1 ELSE 0 END) AS searches_started,
   SUM(CASE WHEN event_type = 'search_completed' THEN 1 ELSE 0 END) AS searches_completed,
   SUM(CASE WHEN event_type = 'registration_completed' THEN 1 ELSE 0 END) AS registrations_completed,
   SUM(CASE WHEN event_type = 'marketplace_click' THEN 1 ELSE 0 END) AS marketplace_clicks,
+  ROUND(
+    100.0 * SUM(CASE WHEN event_type = 'lp_search_cta' THEN 1 ELSE 0 END)
+    / NULLIF(SUM(CASE WHEN event_type = 'landing_view' THEN 1 ELSE 0 END), 0),
+    2
+  ) AS landing_to_cta_pct,
   ROUND(
     100.0 * SUM(CASE WHEN event_type = 'search_started' THEN 1 ELSE 0 END)
     / NULLIF(SUM(CASE WHEN event_type = 'landing_view' THEN 1 ELSE 0 END), 0),

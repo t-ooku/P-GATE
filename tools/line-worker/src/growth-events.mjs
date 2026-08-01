@@ -1,6 +1,7 @@
 const EVENTS = new Set([
   'landing_view',
   'experiment_exposure',
+  'lp_search_cta',
   'search_started',
   'search_completed',
   'registration_started',
