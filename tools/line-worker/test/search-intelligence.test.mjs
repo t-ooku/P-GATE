@@ -1519,6 +1519,10 @@ test('有機ELテレビは4言語で画面・解像度・Hz・端子・映像規
     '65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV',
     '65英寸 4K 120Hz HDMI 2.1 Dolby Vision OLED电视',
     '65인치 4K 120Hz HDMI 2.1 Dolby Vision OLED 텔레비전',
+    '映画館みたいな深い黒でゲームも滑らかに見たい 65型 4K 120Hz HDMI 2.1 Dolby Vision',
+    'cinematic deep blacks and smooth gaming 65 inch 4K 120Hz HDMI 2.1 Dolby Vision',
+    '想要影院般深邃黑色和流畅游戏画面 65英寸 4K 120Hz HDMI 2.1 Dolby Vision',
+    '영화관 같은 깊은 블랙과 부드러운 게임 화면 65인치 4K 120Hz HDMI 2.1 Dolby Vision',
   ];
   const candidates = [
     { asin: 'MATCH', product_name: '65 inch 4K 120Hz HDMI 2.1 Dolby Vision OLED TV' },

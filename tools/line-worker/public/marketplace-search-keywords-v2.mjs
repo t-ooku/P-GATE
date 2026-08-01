@@ -367,7 +367,7 @@ function buildBuiltInDishwasherSearchKeywords(query) {
 
 function buildOledTelevisionSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
-  if (!/(?:有機EL.{0,8}(?:テレビ|TV)|OLED.{0,8}(?:TV|television|电视|電視|텔레비전))/iu.test(normalized)) return '';
+  if (!/(?:有機EL.{0,8}(?:テレビ|TV)|OLED.{0,8}(?:TV|television|电视|電視|텔레비전)|映画館.{0,16}深い黒.{0,16}ゲーム.{0,12}滑らか|cinematic.{0,12}deep\s+blacks?.{0,12}smooth\s+gaming|影院.{0,12}深邃黑色.{0,8}(?:和|与|與).{0,8}流畅游戏|영화관.{0,12}깊은\s*블랙.{0,8}(?:과|와).{0,8}부드러운\s*게임)/iu.test(normalized)) return '';
   const size = normalized.match(/\b(\d{2,3})\s*(?:型|インチ|inch(?:es)?|英寸|인치)/iu)?.[1];
   const resolution = /\b4\s*k\b/iu.test(normalized) ? '4K' : '';
   const refresh = normalized.match(/\b(\d{2,3})\s*hz\b/iu)?.[1];
