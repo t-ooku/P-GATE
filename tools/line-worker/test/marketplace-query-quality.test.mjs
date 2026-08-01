@@ -81,6 +81,21 @@ test('通常ケースも機種・MagSafe・透明条件を4言語で保持する
   }
 });
 
+test('光るケースを取り消した4言語検索は透明な通常ケースへ切り替える', () => {
+  const queries = [
+    'TikTokで見た光るiPhone 15 Proケースじゃなくて普通の透明ケース',
+    'not the glowing iPhone 15 Pro case from TikTok, just a regular clear case',
+    '不要抖音的发光iPhone 15 Pro手机壳，要普通透明手机壳',
+    '틱톡의 빛나는 iPhone 15 Pro 케이스 말고 일반 투명 케이스',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 15 Proケース 透明', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('スマホ保護フィルムは機種・強化ガラス・覗き見防止を4言語で保持する', () => {
   const devices = [
     ['iPhone 15 Pro', [

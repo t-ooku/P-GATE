@@ -1406,6 +1406,11 @@ function isIplHairRemovalMismatch(candidate, requested) {
   return false;
 }
 
+function rejectsLightUpPhoneCase(query) {
+  return /(?:(?:光る|発光|ピカピカ|ライトアップ).{0,32}(?:ケース|カバー).{0,10}(?:じゃなく|ではなく)|not\s+(?:a\s+|an\s+|the\s+)?(?:glow(?:ing)?|light[- ]?up|luminous).{0,32}(?:case|cover)|(?:不要|不是|不想要).{0,24}(?:发光|發光|会亮|會亮).{0,24}(?:手机壳|手機殼)|(?:빛나는|발광|불빛\s*나는).{0,32}(?:케이스|커버).{0,10}(?:말고|아닌|아니고))/iu
+    .test(String(query || '').normalize('NFKC'));
+}
+
 function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
@@ -1423,6 +1428,8 @@ function isDeviceSpecificPhoneCaseMismatch(candidate, query) {
   if (wantsMagSafe && !/(?:magsafe|マグセーフ|磁気吸着|磁吸|맥세이프|자석)/iu.test(text)) return true;
   if (/(?:透明|\bclear\b|transparent|투명)/iu.test(normalizedQuery)
     && !/(?:透明|\bclear\b|transparent|투명)/iu.test(text)) return true;
+  if (rejectsLightUpPhoneCase(normalizedQuery)
+    && /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|빛나는|발광|불빛)/iu.test(text)) return true;
   return false;
 }
 
@@ -2355,8 +2362,8 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !cameraPetFeederIntent && !iplHairRemovalIntent) return candidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
-  const lightUpPhoneCase = (groups.some((group) => group.category === 'light-up')
-    && (requested.has('phone-case') || deviceSpecificCase)) || implicitLightUpPhoneCase;
+  const lightUpPhoneCase = !rejectsLightUpPhoneCase(normalizedQuery) && ((groups.some((group) => group.category === 'light-up')
+    && (requested.has('phone-case') || deviceSpecificCase)) || implicitLightUpPhoneCase);
   const powerBank = requested.has('power-bank');
   const laptopHub = requested.has('laptop-hub');
   const thunderboltDock = requested.has('thunderbolt-dock');

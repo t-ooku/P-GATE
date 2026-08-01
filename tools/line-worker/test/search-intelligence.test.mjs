@@ -985,6 +985,26 @@ test('通常のスマホケースも4言語で機種・MagSafe・透明条件が
   }
 });
 
+test('光るケースを取り消した4言語検索は透明な通常ケースだけを提示する', () => {
+  const queries = [
+    'TikTokで見た光るiPhone 15 Proケースじゃなくて普通の透明ケース',
+    'not the glowing iPhone 15 Pro case from TikTok, just a regular clear case',
+    '不要抖音的发光iPhone 15 Pro手机壳，要普通透明手机壳',
+    '틱톡의 빛나는 iPhone 15 Pro 케이스 말고 일반 투명 케이스',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 15 Pro Clear Phone Case' },
+    { asin: 'GLOW', product_name: 'iPhone 15 Pro Clear Light-up LED Phone Case' },
+    { asin: 'OPAQUE', product_name: 'iPhone 15 Pro Black Phone Case' },
+    { asin: 'MAX', product_name: 'iPhone 15 Pro Max Clear Phone Case' },
+    { asin: 'CHARGER', product_name: 'iPhone 15 Pro Clear Wireless Charger' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('スマホ保護フィルムは4言語で機種・ガラス・覗き見防止が一致する候補だけを提示する', () => {
   const cases = [
     ['iPhone 15 Pro', [
