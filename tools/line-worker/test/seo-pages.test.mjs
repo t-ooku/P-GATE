@@ -7,6 +7,11 @@ test('日英SEO必須10ページを別URLで提供する', () => {
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\//);
+    assert.match(html, /<meta property="og:image" content="https:\/\/hoshilu\.app\/og\/hoshilu-x-v3\.png">/);
+    assert.match(html, /<meta property="og:image:width" content="1200">/);
+    assert.match(html, /<meta property="og:image:height" content="630">/);
+    assert.match(html, /<meta property="og:locale" content="(?:ja_JP|en_US)">/);
+    assert.match(html, /primaryImageOfPage/);
     assert.match(html, /hreflang="ja"/);
     assert.match(html, /hreflang="en"/);
     assert.match(html, /hreflang="x-default"/);

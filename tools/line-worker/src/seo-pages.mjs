@@ -44,6 +44,9 @@ export function renderSeoPage(pathname) {
     ? 'はい。色、形、用途、見た場所など、覚えている特徴をそのまま入力できます。'
     : 'Yes. Enter any clues you remember, such as color, shape, purpose, or where you saw it.';
   const canonical = `${ORIGIN}/${locale}/${slug}`;
+  const shareImage = `${ORIGIN}/og/hoshilu-x-v3.png`;
+  const ogLocale = locale === 'ja' ? 'ja_JP' : 'en_US';
+  const ogLocaleAlternate = locale === 'ja' ? 'en_US' : 'ja_JP';
   const homeLabel = locale === 'ja' ? 'ホーム' : 'Home';
   const guideLabel = locale === 'ja' ? '商品検索ガイド' : 'Product search guides';
   const relatedTitle = locale === 'ja' ? '関連する探し方' : 'Related search guides';
@@ -54,7 +57,7 @@ export function renderSeoPage(pathname) {
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'WebPage', name: title, description, url: canonical, isPartOf: { '@type': 'WebSite', name: 'HOSHILU', url: `${ORIGIN}/` } },
+      { '@type': 'WebPage', name: title, description, url: canonical, primaryImageOfPage: { '@type': 'ImageObject', url: shareImage, width: 1200, height: 630 }, isPartOf: { '@type': 'WebSite', name: 'HOSHILU', url: `${ORIGIN}/` } },
       { '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: homeLabel, item: `${ORIGIN}/` },
         { '@type': 'ListItem', position: 2, name: title, item: canonical }
@@ -72,6 +75,8 @@ export function renderSeoPage(pathname) {
 <link rel="canonical" href="${canonical}"><link rel="alternate" hreflang="${locale}" href="${canonical}">
 <link rel="alternate" hreflang="${alternate}" href="${ORIGIN}/${alternate}/${slug}"><link rel="alternate" hreflang="x-default" href="${ORIGIN}/en/${slug}">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)} | HOSHILU"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${canonical}">
+<meta property="og:locale" content="${ogLocale}"><meta property="og:locale:alternate" content="${ogLocaleAlternate}">
+<meta property="og:image" content="${shareImage}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="HOSHILU">
 <script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>
 <link rel="stylesheet" href="/styles.css"></head>
 <body><main class="shell"><nav aria-label="${esc(guideLabel)}"><a href="/">${esc(homeLabel)}</a><span aria-hidden="true"> / </span><span aria-current="page">${esc(title)}</span></nav><section class="hero"><p class="eyebrow">HOSHILU</p><h1>${esc(title)}</h1><p>${esc(description)}</p>
