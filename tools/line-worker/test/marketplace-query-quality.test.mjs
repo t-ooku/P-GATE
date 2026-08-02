@@ -2531,6 +2531,21 @@ test('smartwatch band material corrections discard the negated material in four 
     }
   }
 });
+
+test('smartwatch model corrections inherit the omitted Apple Watch brand in four languages', () => {
+  const queries = [
+    'Apple Watch Series 8ではなくSeries 9 45mm シリコンバンド',
+    'Apple Watch Series 8, not Series 8 but Series 9, 45mm silicone band',
+    'Apple Watch Series 8不要，改成Series 9，45mm硅胶表带',
+    'Apple Watch Series 8 말고 Series 9 45mm 실리콘 밴드',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Apple Watch Series 9 45mm バンド シリコン', `${marketplace}: ${query}`);
+    }
+  }
+});
 test('圧力IH炊飯器は容量・蒸気カット・保温時間を4言語で保持する', () => {
   const inputs = [
     '圧力IH炊飯器 5.5合 蒸気カット 保温40時間',

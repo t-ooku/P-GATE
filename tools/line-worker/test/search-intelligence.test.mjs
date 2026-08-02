@@ -4059,6 +4059,24 @@ test('smartwatch band material corrections exclude the negated material in four 
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
   }
 });
+
+test('smartwatch model corrections exclude the negated generation in four languages', () => {
+  const queries = [
+    'Apple Watch Series 8ではなくSeries 9 45mm シリコンバンド',
+    'Apple Watch Series 8, not Series 8 but Series 9, 45mm silicone band',
+    'Apple Watch Series 8不要，改成Series 9，45mm硅胶表带',
+    'Apple Watch Series 8 말고 Series 9 45mm 실리콘 밴드',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Apple Watch Series 9 Band 45mm Silicone' },
+    { asin: 'OLD', product_name: 'Apple Watch Series 8 Band 45mm Silicone' },
+    { asin: 'SIZE', product_name: 'Apple Watch Series 9 Band 41mm Silicone' },
+    { asin: 'LEATHER', product_name: 'Apple Watch Series 9 Band 45mm Leather' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
 test('圧力IH炊飯器は4言語で容量・蒸気・保温条件が一致する本体だけを提示する', () => {
   const queries = [
     '圧力IH炊飯器 5.5合 蒸気カット 保温40時間',

@@ -95,9 +95,24 @@ function buildApplePencilSearchKeywords(query) {
 }
 
 function smartWatchBandModel(query) {
-  const apple = String(query || '').match(/\bapple\s*watch\s*(ultra(?:\s*[12])?|series\s*\d{1,2}|se(?:\s*[23])?)/iu);
-  if (apple) return apple[0].replace(/apple\s*watch/iu, 'Apple Watch').replace(/\s+/gu, ' ').trim();
-  const galaxy = String(query || '').match(/\bgalaxy\s*watch\s*(\d{1,2})(?:\s*(classic|pro))?/iu);
+  const normalized = String(query || '');
+  if (/\bapple\s*watch\b/iu.test(normalized)) {
+    const apple = [...normalized.matchAll(/\b(?:apple\s*watch\s*)?(ultra(?:\s*[12])?|series\s*\d{1,2}|se(?:\s*[23])?)\b/giu)]
+      .filter((match) => {
+        const before = normalized.slice(Math.max(0, match.index - 16), match.index);
+        const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 14);
+        return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+          && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|not\s+(?:series|ultra|se)\b|but\s+(?:series|ultra|se)\b|不要|而不是|말고|아닌|아니고)/iu.test(after);
+      }).at(-1);
+    if (apple) {
+      const rawToken = apple[1].replace(/\s+/gu, ' ').trim();
+      const token = /^series\b/iu.test(rawToken) ? rawToken.replace(/^series/iu, 'Series')
+        : /^ultra\b/iu.test(rawToken) ? rawToken.replace(/^ultra/iu, 'Ultra')
+          : rawToken.replace(/^se/iu, 'SE');
+      return `Apple Watch ${token}`;
+    }
+  }
+  const galaxy = normalized.match(/\bgalaxy\s*watch\s*(\d{1,2})(?:\s*(classic|pro))?/iu);
   if (galaxy) return `Galaxy Watch${galaxy[1]}${galaxy[2] ? ` ${galaxy[2][0].toUpperCase()}${galaxy[2].slice(1).toLowerCase()}` : ''}`;
   return '';
 }
