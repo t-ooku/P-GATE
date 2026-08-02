@@ -1052,7 +1052,13 @@ function buildRobotVacuumConsumableSearchKeywords(query) {
   }
   if (!product) return '';
   const model = robotVacuumModel(normalized);
-  const count = normalized.match(/(\d+)\s*(?:個|枚|本|セット|個セット|pack|packs|pcs|pieces|件套|个装|個裝|개|매|세트)/iu)?.[1];
+  const countMatches = [...normalized.matchAll(/(\d+)\s*(?:個|枚|本|セット|個セット|pack|packs|pcs|pieces|件套|个装|個裝|개|매|세트)/giu)];
+  const count = countMatches.filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1)?.[1];
   return [model || 'ロボット掃除機', product, count ? `${count}個セット` : ''].filter(Boolean).join(' ');
 }
 

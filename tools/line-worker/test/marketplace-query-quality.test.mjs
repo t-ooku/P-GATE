@@ -1078,6 +1078,21 @@ test('ロボット掃除機の交換部品を4言語で本体から分離し型�
   }
 });
 
+test('ロボット掃除機の交換部品は4言語の数量訂正で最後の個数だけを保持する', () => {
+  const queries = [
+    'ルンバ j7用 交換フィルター 3個ではなく2個セット',
+    'replacement filters for Roomba j7, not 3 pack but 2 pack',
+    'Roomba j7替换滤网不要3件套，要2件套',
+    '룸바 j7용 교체 필터 3개 말고 2개 세트',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Roomba j7 交換フィルター 2個セット', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('ロボット掃除機の複数交換パーツセットを4言語で単品から分離する', () => {
   const cases = [
     'ルンバ j7用 交換パーツセット フィルター サイドブラシ メインブラシ',

@@ -3090,6 +3090,24 @@ test('ロボット掃除機の交換部品は本体・異種部品・別型番�
   }
 });
 
+test('ロボット掃除機の交換部品は4言語の数量訂正後の個数だけを提示する', () => {
+  const queries = [
+    'ルンバ j7用 交換フィルター 3個ではなく2個セット',
+    'replacement filters for Roomba j7, not 3 pack but 2 pack',
+    'Roomba j7替换滤网不要3件套，要2件套',
+    '룸바 j7용 교체 필터 3개 말고 2개 세트',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Roomba j7 交換用 HEPAフィルター 2個セット' },
+    { asin: 'OLD', product_name: 'Roomba j7 交換用 HEPAフィルター 3個セット' },
+    { asin: 'BRUSH', product_name: 'Roomba j7 交換サイドブラシ 2個セット' },
+    { asin: 'WRONG', product_name: 'Roomba i7 交換用 HEPAフィルター 2個セット' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
+
 test('ロボット掃除機の交換パーツセットは指定部品が揃う同型番候補だけを表示する', () => {
   const candidates = [
     { asin: 'KIT', product_name: 'Roomba j7 交換パーツセット HEPAフィルター サイドブラシ メインローラーブラシ' },

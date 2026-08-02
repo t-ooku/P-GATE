@@ -1879,8 +1879,15 @@ function waterFilterPartNumber(text) {
 }
 
 function requestedPackageCount(text) {
-  return Number(String(text || '').normalize('NFKC')
-    .match(/(?<![\p{L}\p{N}])(\d+)\s*(?:個|本|枚|錠|粒|個入り|pack|packs|count|pcs|pieces|tabs?|tablets?|pods?|capsules?|件套|个装|個裝|块|塊|盒|卷|巻|张|張|颗|顆|개|개입|장|정|캡슐|세트)/iu)?.[1] || 0);
+  const normalized = String(text || '').normalize('NFKC');
+  const matches = [...normalized.matchAll(/(\d+)\s*(?:個|本|枚|錠|粒|個入り|pack|packs|count|pcs|pieces|tabs?|tablets?|pods?|capsules?|件套|个装|個裝|块|塊|盒|卷|巻|张|張|颗|顆|개|개입|장|정|캡슐|세트)/giu)];
+  const selected = matches.filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1);
+  return Number(selected?.[1] || 0);
 }
 
 function isWaterFilterCartridgeMismatch(candidate, query) {
@@ -2173,6 +2180,8 @@ function isRobotVacuumConsumableMismatch(candidate, requested, query) {
     .normalize('NFKC').toLowerCase();
   const requestedModel = robotVacuumModel(query);
   if (requestedModel && robotVacuumModel(text) !== requestedModel) return true;
+  const requestedCount = requestedPackageCount(query);
+  if (requestedCount && requestedPackageCount(text) !== requestedCount) return true;
   const isFilter = /(?:hepa\s*)?(?:フィルター|filters?|滤网|濾網|필터)/iu.test(text);
   const isBrush = /(?:サイド|side|边刷|邊刷|사이드)?\s*(?:ブラシ|brush(?:es)?|刷子|브러시)/iu.test(text);
   const isBag = /(?:紙パック|ダストバッグ|dust\s*bags?|replacement\s*bags?|集尘袋|集塵袋|尘袋|塵袋|먼지\s*봉투|더스트\s*백)/iu.test(text);
