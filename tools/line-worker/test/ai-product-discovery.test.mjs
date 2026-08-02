@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { aiProductDiscoveryConfigured, aiProductDiscoveryTest, discoverProductsWithAi } from '../src/ai-product-discovery.mjs';
 
-test('AI discovery requires a configured Gemini key', () => {
+test('AI discovery accepts either Gemini or OpenAI configuration', () => {
   assert.equal(aiProductDiscoveryConfigured({}), false);
   assert.equal(aiProductDiscoveryConfigured({ GEMINI_API_KEY: 'g'.repeat(32) }), true);
+  assert.equal(aiProductDiscoveryConfigured({ OPENAI_API_KEY: 'o'.repeat(32) }), true);
 });
 
 test('AI discovery returns only cited product pages with an image', async () => {
