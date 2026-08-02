@@ -4077,6 +4077,24 @@ test('smartwatch model corrections exclude the negated generation in four langua
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
   }
 });
+
+test('Galaxy Watch model corrections exclude the negated generation in four languages', () => {
+  const queries = [
+    'Galaxy Watch5ではなくWatch6 Classic 47mm ステンレスバンド',
+    'Galaxy Watch5, not Watch5 but Watch6 Classic, 47mm stainless steel band',
+    'Galaxy Watch5不要，改成Watch6 Classic，47mm不锈钢表带',
+    'Galaxy Watch5 말고 Watch6 Classic 47mm 스테인리스 밴드',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Galaxy Watch6 Classic 47mm Stainless Steel Band' },
+    { asin: 'OLD', product_name: 'Galaxy Watch5 47mm Stainless Steel Band' },
+    { asin: 'BASE', product_name: 'Galaxy Watch6 47mm Stainless Steel Band' },
+    { asin: 'SIZE', product_name: 'Galaxy Watch6 Classic 43mm Stainless Steel Band' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
 test('圧力IH炊飯器は4言語で容量・蒸気・保温条件が一致する本体だけを提示する', () => {
   const queries = [
     '圧力IH炊飯器 5.5合 蒸気カット 保温40時間',

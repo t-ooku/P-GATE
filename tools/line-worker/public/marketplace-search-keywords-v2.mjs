@@ -112,7 +112,14 @@ function smartWatchBandModel(query) {
       return `Apple Watch ${token}`;
     }
   }
-  const galaxy = normalized.match(/\bgalaxy\s*watch\s*(\d{1,2})(?:\s*(classic|pro))?/iu);
+  const galaxy = /\bgalaxy\s*watch/iu.test(normalized)
+    ? [...normalized.matchAll(/\b(?:galaxy\s*)?watch\s*(\d{1,2})(?:\s*(classic|pro))?/giu)]
+      .filter((match) => {
+        const before = normalized.slice(Math.max(0, match.index - 16), match.index);
+        const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 14);
+        return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+          && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|not\s+(?:galaxy\s*)?watch\b|but\s+(?:galaxy\s*)?watch\b|不要|而不是|말고|아닌|아니고)/iu.test(after);
+      }).at(-1) : null;
   if (galaxy) return `Galaxy Watch${galaxy[1]}${galaxy[2] ? ` ${galaxy[2][0].toUpperCase()}${galaxy[2].slice(1).toLowerCase()}` : ''}`;
   return '';
 }

@@ -359,7 +359,14 @@ function smartWatchBandConstraints(value) {
         return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
           && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|not\s+(?:series|ultra|se)\b|but\s+(?:series|ultra|se)\b|不要|而不是|말고|아닌|아니고)/iu.test(after);
       }).at(-1) : null;
-  const galaxy = text.match(/\bgalaxy\s*watch\s*(\d{1,2})(?:\s*(classic|pro))?/iu);
+  const galaxy = /\bgalaxy\s*watch/iu.test(text)
+    ? [...text.matchAll(/\b(?:galaxy\s*)?watch\s*(\d{1,2})(?:\s*(classic|pro))?/giu)]
+      .filter((match) => {
+        const before = text.slice(Math.max(0, match.index - 16), match.index);
+        const after = text.slice(match.index + match[0].length, match.index + match[0].length + 14);
+        return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+          && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|not\s+(?:galaxy\s*)?watch\b|but\s+(?:galaxy\s*)?watch\b|不要|而不是|말고|아닌|아니고)/iu.test(after);
+      }).at(-1) : null;
   const model = apple
     ? `applewatch${apple[1].toLowerCase().replace(/\s+/gu, '')}`
     : galaxy ? `galaxywatch${galaxy[1]}${galaxy[2] ? galaxy[2].toLowerCase() : ''}` : '';

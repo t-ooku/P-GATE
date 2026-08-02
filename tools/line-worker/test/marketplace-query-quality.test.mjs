@@ -2546,6 +2546,21 @@ test('smartwatch model corrections inherit the omitted Apple Watch brand in four
     }
   }
 });
+
+test('smartwatch model corrections inherit the omitted Galaxy brand in four languages', () => {
+  const queries = [
+    'Galaxy Watch5ではなくWatch6 Classic 47mm ステンレスバンド',
+    'Galaxy Watch5, not Watch5 but Watch6 Classic, 47mm stainless steel band',
+    'Galaxy Watch5不要，改成Watch6 Classic，47mm不锈钢表带',
+    'Galaxy Watch5 말고 Watch6 Classic 47mm 스테인리스 밴드',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Galaxy Watch6 Classic 47mm バンド ステンレス', `${marketplace}: ${query}`);
+    }
+  }
+});
 test('圧力IH炊飯器は容量・蒸気カット・保温時間を4言語で保持する', () => {
   const inputs = [
     '圧力IH炊飯器 5.5合 蒸気カット 保温40時間',
