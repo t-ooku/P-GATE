@@ -46,6 +46,20 @@ test('AI discovery drops hallucinated uncited URLs and private destinations', as
   assert.equal(aiProductDiscoveryTest.safePublicHttpsUrl('https://hoshilu.app/item'), '');
 });
 
+test('AI discovery accepts a verified product URL on the cited host when tracking URLs differ', async () => {
+  const productUrl = 'https://shop.example.test/products/light-case';
+  const citationUrl = 'https://shop.example.test/click?campaign=google-search';
+  const fetchImpl = async (url) => String(url).includes('/v1beta/interactions')
+    ? Response.json({ steps: [{ type: 'model_output', content: [{
+      type: 'text', text: JSON.stringify({ products: [{ title: 'Light Case', url: productUrl }] }),
+      annotations: [{ type: 'url_citation', url: citationUrl, title: 'Example shop' }]
+    }] }] })
+    : new Response('<meta property="og:image" content="https://cdn.example.test/light-case.jpg"><script type="application/ld+json">{"@type":"Product"}</script>', { headers: { 'content-type': 'text/html' } });
+  const result = await discoverProductsWithAi('light case', 'EN', { GEMINI_API_KEY: 'g'.repeat(32) }, fetchImpl);
+  assert.equal(result.candidates.length, 1);
+  assert.equal(result.candidates[0].url, productUrl);
+});
+
 test('AI discovery falls back to grounded citations when model text is not JSON', async () => {
   const productUrl = 'https://shop.example.test/item/light-case';
   const fetchImpl = async (url) => String(url).includes('/v1beta/interactions')

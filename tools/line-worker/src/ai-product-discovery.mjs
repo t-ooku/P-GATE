@@ -43,6 +43,17 @@ function parseSuggestedProducts(text) {
   }
 }
 
+function citedProductUrl(value, citations) {
+  const candidateUrl = safePublicHttpsUrl(value);
+  if (!candidateUrl) return '';
+  const candidate = new URL(candidateUrl);
+  for (const citedUrl of citations.keys()) {
+    const cited = new URL(citedUrl);
+    if (candidate.hostname === cited.hostname) return candidateUrl;
+  }
+  return '';
+}
+
 function metaValue(html, key) {
   const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const forward = new RegExp(`<meta[^>]+(?:property|name)=["']${escaped}["'][^>]+content=["']([^"']+)["'][^>]*>`, 'i');
@@ -116,8 +127,7 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
   }
   const parsed = textOutputAndCitations(await response.json());
   const structuredSuggestions = parseSuggestedProducts(parsed.text).filter((item) => {
-    const url = safePublicHttpsUrl(item?.url);
-    return url && parsed.citations.has(url);
+    return Boolean(citedProductUrl(item?.url, parsed.citations));
   });
   const suggestions = (structuredSuggestions.length ? structuredSuggestions : [...parsed.citations].map(([url, title]) => ({
     title,
@@ -135,4 +145,4 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
   return { triggered: true, configured: true, provider: 'GEMINI_GOOGLE_SEARCH', candidates };
 }
 
-export const aiProductDiscoveryTest = { safePublicHttpsUrl, textOutputAndCitations, parseSuggestedProducts, verifiedProductPage };
+export const aiProductDiscoveryTest = { safePublicHttpsUrl, textOutputAndCitations, parseSuggestedProducts, citedProductUrl, verifiedProductPage };
