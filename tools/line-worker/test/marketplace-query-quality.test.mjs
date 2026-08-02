@@ -1099,6 +1099,21 @@ test('除湿機は方式・能力・タンク・衣類乾燥・排水条件を4�
   }
 });
 
+test('除湿機の日量訂正は否定した能力を捨てて新しい能力を4言語で採用する', () => {
+  const queries = [
+    'コンプレッサー式 除湿機 20L/日ではなく25L/日 タンク4L 衣類乾燥 連続排水',
+    'compressor dehumidifier not 20L/day but 25L/day tank 4L laundry drying continuous drainage',
+    '压缩机式除湿机不要20L每天要25L每天水箱4L衣物干燥连续排水',
+    '컴프레서식 제습기 20L/일 말고 25L/일 물통4L 의류 건조 연속 배수',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'コンプレッサー式除湿機 25L/日 タンク4L 衣類乾燥 連続排水', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('電動昇降デスクは天板サイズ・モーター・メモリ・安全条件を4言語で保持する', () => {
   const queries = [
     '天板140×70cm デュアルモーター 電動昇降デスク 4メモリ 衝突防止',

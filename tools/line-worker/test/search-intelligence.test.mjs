@@ -2413,6 +2413,23 @@ test('除湿機は4言語で方式・能力・タンク・衣類乾燥・排水�
   }
 });
 
+test('除湿機の日量訂正は旧能力の商品を除外して訂正後の本体だけを提示する', () => {
+  const queries = [
+    'コンプレッサー式 除湿機 20L/日ではなく25L/日 タンク4L 衣類乾燥 連続排水',
+    'compressor dehumidifier not 20L/day but 25L/day tank 4L laundry drying continuous drainage',
+    '压缩机式除湿机不要20L每天要25L每天水箱4L衣物干燥连续排水',
+    '컴프레서식 제습기 20L/일 말고 25L/일 물통4L 의류 건조 연속 배수',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'compressor dehumidifier 25L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'OLD', product_name: 'compressor dehumidifier 20L/day tank 4L laundry drying continuous drainage' },
+    { asin: 'TANK', product_name: 'compressor dehumidifier 25L/day tank 5L laundry drying continuous drainage' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('電動昇降デスクは4言語で天板サイズ・モーター・メモリ・安全条件が一致する本体だけを提示する', () => {
   const queries = [
     '天板140×70cm デュアルモーター 電動昇降デスク 4メモリ 衝突防止',
