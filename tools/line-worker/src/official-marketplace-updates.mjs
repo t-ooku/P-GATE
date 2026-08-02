@@ -50,6 +50,19 @@ function noticeType(title='') {
   return'EDITORIAL';
 }
 
+export function officialNoticeSummary(title='',label='') {
+  const facts=[];
+  const patterns=[
+    /(?:最大\s*)?\d+(?:\.\d+)?\s*%\s*OFF/iu,
+    /(?:ポイント\s*)?(?:最大\s*)?\d+(?:\.\d+)?\s*倍/iu,
+    /(?:総額\s*)?[¥￥]\s*[\d,]+\s*(?:COUPON|クーポン)?/iu,
+    /\d{1,2}[\/-]\d{1,2}(?:\([^)]{1,3}\))?\s*(?:まで|迄|限定|開始|終了)?/u
+  ];
+  for(const pattern of patterns){const value=String(title).match(pattern)?.[0]?.replace(/\s+/g,' ').trim();if(value&&!facts.includes(value))facts.push(value);}
+  const detail=facts.length?`公式掲載内容：${facts.join('・')}。`:'';
+  return `${detail}${label}公式ページに現在掲載されている情報です。条件・対象・期間は公式ページで確認してください。`.slice(0,500);
+}
+
 export function extractOfficialNotices(html,marketplace,label,baseUrl) {
   const notices=[],seen=new Set();
   const pattern=/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/giu;
@@ -60,7 +73,7 @@ export function extractOfficialNotices(html,marketplace,label,baseUrl) {
     let url='';try{url=new URL(match[1],baseUrl).href;}catch{continue;}
     if(!officialUrl(marketplace,url)||seen.has(url)||url===baseUrl)continue;
     seen.add(url);
-    notices.push({marketplace,title,summary:`${label}公式ページに現在掲載されている情報です。条件・対象・期間は公式ページで確認してください。`,source_url:url,info_type:noticeType(title),sale_id:`official-notice-${marketplace}-${stableId(url)}`});
+    notices.push({marketplace,title,summary:officialNoticeSummary(title,label),source_url:url,info_type:noticeType(title),sale_id:`official-notice-${marketplace}-${stableId(url)}`});
     if(notices.length===3)break;
   }
   return notices;

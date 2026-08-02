@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { extractOfficialNotices, OFFICIAL_MARKETPLACE_SOURCES, syncOfficialMarketplaceUpdates } from '../src/official-marketplace-updates.mjs';
+import { extractOfficialNotices, officialNoticeSummary, OFFICIAL_MARKETPLACE_SOURCES, syncOfficialMarketplaceUpdates } from '../src/official-marketplace-updates.mjs';
 
 test('specific campaigns are extracted only from links on the official marketplace domain',()=>{
   const notices=extractOfficialNotices(`<a href="/campaign/summer/">夏のポイント10倍キャンペーン</a>
@@ -9,6 +9,12 @@ test('specific campaigns are extracted only from links on the official marketpla
   assert.equal(notices[0].source_url,'https://event.rakuten.co.jp/campaign/summer/');
   assert.equal(notices[0].info_type,'EDITORIAL');
   assert.match(notices[0].sale_id,/^official-notice-RAKUTEN_JP-/);
+});
+
+test('公式タイトルに明記された割引率・倍率・期限だけを詳細へ反映する',()=>{
+  assert.match(officialNoticeSummary('最大90%OFF 8/4まで','SHEIN'),/最大90%OFF・8\/4まで/);
+  assert.match(officialNoticeSummary('ポイント最大15倍 8/2(日)迄','楽天市場'),/ポイント最大15倍・8\/2\(日\)迄/);
+  assert.doesNotMatch(officialNoticeSummary('夏のお得なキャンペーン','楽天市場'),/\d+%|\d+倍/);
 });
 
 test('ten official marketplace sources are collected without copying images',async()=>{
