@@ -78,3 +78,10 @@
 - Commercial ranking accepts only candidates marked as hard-filter-passed and already carrying a finite relevance score; it may break exact relevance ties but cannot outrank a better relevance score.
 - An intentionally irrelevant contracted candidate is removed before both ranking stages in regression tests.
 - `HOSHILU_TWO_STAGE_RANKING_ENABLED` defaults to OFF and production ranking remains unchanged.
+
+## Phase 8 implementation
+
+- `shadow-evaluation.mjs` creates comparison-only records without raw queries, product URLs, names, or arbitrary reason codes.
+- Empty samples remain unmeasured (`metrics: null`), and mandatory safety violation rates are explicit.
+- `HOSHILU_SEARCH_SHADOW_ENABLED` defaults to OFF; no production request path imports this module yet.
+- The one-to-two-week production shadow observation period has not started, so the report is deliberately never marked ready by code alone.
