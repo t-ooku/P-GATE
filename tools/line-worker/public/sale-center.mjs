@@ -29,10 +29,10 @@ const deliveryChannels={
   KO:[['APP','HOSHILU 앱','앱 내·기기 알림'],['LINE','LINE','연결된 공식 LINE'],['EMAIL','이메일','인증된 이메일 주소']]
 };
 const settingsCopy={
-  JA:{open:'通知設定を開く',title:'通知設定',lead:'セールだけ最初からON。通知先と必要な情報を選べます。',info:'受け取る情報',channel:'通知先',channelNote:'HOSHILUアプリはアプリ内・端末通知、LINE・メールは連携・確認済みの宛先へ配信します。SMSは費用が発生するため使用しません。',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
-  EN:{open:'Notification settings',title:'Notification settings',lead:'Sales are on by default. Choose where and what to receive.',info:'Updates to receive',channel:'Delivery channels',channelNote:'App alerts appear in HOSHILU and on the device. LINE and email require a connected, verified destination. SMS is not used.',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
-  ZH:{open:'通知设置',title:'通知设置',lead:'默认只开启促销，并可选择通知渠道。',info:'接收的信息',channel:'通知渠道',channelNote:'应用通知显示在 HOSHILU 和设备上；LINE、邮件需要已连接并验证的地址。不使用收费短信。',mall:'目标商城',frequency:'通知频率',language:'通知语言',timing:'通知时间',advance:'促销开始前提醒',quietStart:'免打扰开始',quietEnd:'免打扰结束',privacy:'设置将与会员ID关联保存。',reset:'恢复默认',save:'保存设置',saved:'通知设置已保存。',login:'免费会员登录后可设置。'},
-  KO:{open:'알림 설정',title:'알림 설정',lead:'세일만 기본 ON이며 알림 받을 곳을 선택할 수 있습니다.',info:'받을 정보',channel:'알림 받을 곳',channelNote:'앱 알림은 HOSHILU와 기기에 표시되며 LINE·이메일은 연결·인증된 주소로 발송됩니다. 유료 SMS는 사용하지 않습니다.',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
+  JA:{open:'通知設定を開く',title:'通知設定',lead:'セールだけ最初からON。通知方法と必要な情報を選べます。',info:'受け取る情報',channel:'通知方法：アプリ・LINE・メール',channelNote:'アプリ利用者もLINE・メールを追加でき、複数の通知方法を同時に選べます。ブラウザ利用時はLINEまたはメールを選択してください。SMSは費用が発生するため使用しません。',externalRequired:'ブラウザで受け取るには、連携済みのLINEまたはメールを1つ以上選択してください。',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
+  EN:{open:'Notification settings',title:'Notification settings',lead:'Sales are on by default. Choose how and what to receive.',info:'Updates to receive',channel:'Notification methods: App, LINE, Email',channelNote:'App users can also add LINE and email, and select multiple methods together. Browser users must select LINE or email. SMS is not used.',externalRequired:'To receive browser-user alerts, select at least one connected LINE or email destination.',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
+  ZH:{open:'通知设置',title:'通知设置',lead:'默认只开启促销，并可选择通知方式。',info:'接收的信息',channel:'通知方式：应用、LINE、电子邮件',channelNote:'应用用户也可以添加 LINE 和电子邮件，并同时选择多种方式。浏览器用户必须选择 LINE 或电子邮件。不使用收费短信。',externalRequired:'浏览器用户必须至少选择一个已连接的 LINE 或电子邮件地址。',mall:'目标商城',frequency:'通知频率',language:'通知语言',timing:'通知时间',advance:'促销开始前提醒',quietStart:'免打扰开始',quietEnd:'免打扰结束',privacy:'设置将与会员ID关联保存。',reset:'恢复默认',save:'保存设置',saved:'通知设置已保存。',login:'免费会员登录后可设置。'},
+  KO:{open:'알림 설정',title:'알림 설정',lead:'세일만 기본 ON이며 알림 방법을 선택할 수 있습니다.',info:'받을 정보',channel:'알림 방법: 앱, LINE, 이메일',channelNote:'앱 이용자도 LINE과 이메일을 추가하고 여러 알림 방법을 함께 선택할 수 있습니다. 브라우저 이용자는 LINE 또는 이메일을 선택해야 합니다. 유료 SMS는 사용하지 않습니다.',externalRequired:'브라우저에서 알림을 받으려면 연결된 LINE 또는 이메일을 하나 이상 선택하세요.',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
 };
 
 const officialUpdates=[
@@ -121,10 +121,10 @@ function renderSettingsCopy(){
   Object.entries(values).forEach(([id,value])=>{const element=document.querySelector(`#${id}`);if(element)element.textContent=value;});
 }
 
-function checkboxGrid(root,rows,name,selected){
+function checkboxGrid(root,rows,name,selected,available=null){
   root.replaceChildren(...rows.map(([value,label,description])=>{
     const wrapper=document.createElement('label');
-    const input=document.createElement('input');input.type='checkbox';input.name=name;input.value=value;input.checked=selected.has(value);
+    const input=document.createElement('input');input.type='checkbox';input.name=name;input.value=value;input.checked=selected.has(value);input.disabled=available instanceof Set&&!available.has(value);
     const copyWrap=document.createElement('span');const strong=document.createElement('strong');strong.textContent=label;copyWrap.append(strong);
     if(description){const small=document.createElement('small');small.textContent=description;copyWrap.append(small);}
     wrapper.append(input,copyWrap);return wrapper;
@@ -133,13 +133,13 @@ function checkboxGrid(root,rows,name,selected){
 
 function selectedValues(name){return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(input=>input.value);}
 function defaultPreference(){return{enabled:1,advance_notice:1,marketplaces:'ALL',info_types:'SALE',delivery_channels:'APP',frequency:'INSTANT',quiet_start:'21:00',quiet_end:'08:00',language:language()};}
-function fillSettings(preference=defaultPreference()){
+function fillSettings(preference=defaultPreference(),availableChannels=['APP']){
   const selectedMalls=new Set(preference.marketplaces==='ALL'?marketplaces.map(([value])=>value):String(preference.marketplaces||'').split(','));
   const selectedTypes=new Set(preference.enabled===0?[]:String(preference.info_types||'SALE').split(','));
   checkboxGrid(document.querySelector('#settingsMarketplaces'),marketplaces,'marketplace',selectedMalls);
   checkboxGrid(document.querySelector('#settingsInfoTypes'),infoTypesLocalized[language()]||infoTypes,'infoType',selectedTypes);
   const selectedChannels=new Set(String(preference.delivery_channels||'APP').split(','));
-  checkboxGrid(document.querySelector('#settingsChannels'),deliveryChannels[language()]||deliveryChannels.JA,'deliveryChannel',selectedChannels);
+  checkboxGrid(document.querySelector('#settingsChannels'),deliveryChannels[language()]||deliveryChannels.JA,'deliveryChannel',selectedChannels,new Set(availableChannels));
   document.querySelector('#settingsFrequency').value=preference.frequency||'INSTANT';
   document.querySelector('#settingsLanguage').value=preference.language||language();
   document.querySelector('#settingsAdvance').checked=Boolean(preference.advance_notice);
@@ -152,6 +152,7 @@ const status=document.querySelector('#salePreferenceStatus');
 const settingsDialog=document.querySelector('#notificationSettingsDialog');
 const settingsStatus=document.querySelector('#notificationSettingsStatus');
 let memberPreference=null;
+let availableDeliveryChannels=['APP'];
 let sales=[];
 renderCopy();
 fetch('/api/sales').then(r=>r.ok?r.json():{sales:[]}).then(data=>{sales=data.sales||[];render(sales);}).catch(()=>render([]));
@@ -159,9 +160,9 @@ window.addEventListener('hoshilu:languagechange',()=>{renderCopy();render(sales)
 document.querySelector('[data-language-select]')?.addEventListener('change',()=>{renderCopy();render(sales);});
 fetch('/api/member/sale-preferences',{cache:'no-store'}).then(async response=>{
   if(response.status===401){toggle.disabled=true;document.querySelector('#settingsSave').disabled=true;return;}
-  const data=await response.json();memberPreference=data.preference||defaultPreference();
+  const data=await response.json();memberPreference=data.preference||defaultPreference();availableDeliveryChannels=data.available_delivery_channels||['APP'];
   toggle.checked=Boolean(memberPreference.enabled)&&String(memberPreference.info_types||'SALE').split(',').includes('SALE');
-  fillSettings(memberPreference);
+  fillSettings(memberPreference,availableDeliveryChannels);
 }).catch(()=>{toggle.disabled=true;});
 toggle?.addEventListener('change',async()=>{
   const response=await fetch('/api/member/sale-preferences',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({enabled:toggle.checked,advance_notice:true})});
@@ -169,17 +170,22 @@ toggle?.addEventListener('change',async()=>{
   const t=copy[language()]||copy.JA;status.dataset.untouched='false';status.textContent=toggle.checked?t.saved:t.off;
 });
 document.querySelector('#openNotificationSettings')?.addEventListener('click',()=>{
-  fillSettings(memberPreference||defaultPreference());
+  fillSettings(memberPreference||defaultPreference(),availableDeliveryChannels);
   settingsStatus.textContent=memberPreference?'':(settingsCopy[language()]||settingsCopy.JA).login;
   settingsDialog.showModal();
 });
 document.querySelector('#notificationSettingsClose')?.addEventListener('click',()=>settingsDialog.close());
-document.querySelector('#settingsReset')?.addEventListener('click',()=>fillSettings(defaultPreference()));
+document.querySelector('#settingsReset')?.addEventListener('click',()=>fillSettings(defaultPreference(),availableDeliveryChannels));
 document.querySelector('#notificationSettingsForm')?.addEventListener('submit',async event=>{
   event.preventDefault();
   const types=selectedValues('infoType');
   const malls=selectedValues('marketplace');
   const channels=selectedValues('deliveryChannel');
+  const installed=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  if(!installed&&!channels.some((value)=>value==='LINE'||value==='EMAIL')){
+    settingsStatus.textContent=(settingsCopy[language()]||settingsCopy.JA).externalRequired;
+    return;
+  }
   if(channels.includes('APP')&&'Notification'in window&&Notification.permission==='default')await Notification.requestPermission();
   const payload={
     enabled:types.length>0,advance_notice:document.querySelector('#settingsAdvance').checked,
@@ -190,7 +196,7 @@ document.querySelector('#notificationSettingsForm')?.addEventListener('submit',a
   };
   const response=await fetch('/api/member/sale-preferences',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
   if(!response.ok){settingsStatus.textContent=(settingsCopy[language()]||settingsCopy.JA).login;return;}
-  const data=await response.json();memberPreference=data.preference;
+  const data=await response.json();memberPreference=data.preference;availableDeliveryChannels=data.available_delivery_channels||availableDeliveryChannels;
   toggle.checked=Boolean(memberPreference.enabled)&&String(memberPreference.info_types||'').split(',').includes('SALE');
   settingsStatus.textContent=(settingsCopy[language()]||settingsCopy.JA).saved;
 });

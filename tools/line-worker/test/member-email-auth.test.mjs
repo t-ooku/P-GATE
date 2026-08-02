@@ -7,13 +7,13 @@ import { emailLoginConfigured, requestEmailCode } from '../src/member-email-auth
 
 test('email login remains disabled until database, sender and API key exist', () => {
   assert.equal(emailLoginConfigured({}), false);
-  assert.equal(emailLoginConfigured({ PRODUCT_DB: {}, RESEND_API_KEY: 're_test', MEMBER_EMAIL_FROM: 'login@hoshilu.app' }), true);
+  assert.equal(emailLoginConfigured({ PRODUCT_DB: {}, RESEND_API_KEY: 're_test', MEMBER_EMAIL_FROM: 'notification@auth.hoshilu.app' }), true);
 });
 
 test('email login rejects invalid email before sending', async () => {
   const env = {
     PRODUCT_DB: { prepare() { return { bind() { return this; }, first: async () => null }; } },
-    RESEND_API_KEY: 're_test', MEMBER_EMAIL_FROM: 'login@hoshilu.app',
+    RESEND_API_KEY: 're_test', MEMBER_EMAIL_FROM: 'notification@auth.hoshilu.app',
     MEMBER_SESSION_SECRET: 'member-session-secret-32-characters-minimum'
   };
   const response = await requestEmailCode(new Request('https://hoshilu.app/api/member/email/request', {

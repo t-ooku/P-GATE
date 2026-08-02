@@ -106,13 +106,15 @@ async function publicList(env) {
   });
 }
 
-async function ensurePreference(env, memberId) {
+async function ensurePreference(env, memberId, availableChannels = ['APP']) {
   const now = new Date().toISOString();
+  const initialChannels = [...new Set(availableChannels
+    .filter((value) => NOTIFICATION_DELIVERY_CHANNELS.includes(value)))].join(',') || 'APP';
   await env.PRODUCT_DB.prepare(
     `INSERT OR IGNORE INTO member_sale_preferences
      (member_id,enabled,advance_notice,marketplaces,info_types,frequency,quiet_start,quiet_end,language,delivery_channels,created_at,updated_at)
-     VALUES(?1,1,1,'ALL','SALE','INSTANT','21:00','08:00','JA','APP',?2,?2)`
-  ).bind(memberId, now).run();
+     VALUES(?1,1,1,'ALL','SALE','INSTANT','21:00','08:00','JA',?2,?3,?3)`
+  ).bind(memberId, initialChannels, now).run();
   return env.PRODUCT_DB.prepare(
     `SELECT enabled,advance_notice,marketplaces,info_types,frequency,
      quiet_start,quiet_end,language,delivery_channels,updated_at
@@ -120,10 +122,20 @@ async function ensurePreference(env, memberId) {
   ).bind(memberId).first();
 }
 
+async function availableDeliveryChannels(env, memberId) {
+  const result = await env.PRODUCT_DB.prepare(
+    `SELECT channel FROM member_notification_destinations
+     WHERE member_id=?1 AND channel IN ('LINE','EMAIL')`
+  ).bind(memberId).all();
+  return ['APP', ...(result?.results || []).map((row) => row.channel)
+    .filter((value) => value === 'LINE' || value === 'EMAIL')];
+}
+
 async function memberPreference(request, env, member) {
+  const availableChannels = await availableDeliveryChannels(env, member.id);
   if (request.method === 'GET') {
-    const preference = await ensurePreference(env, member.id);
-    return Response.json({ ok: true, preference }, { headers: { 'cache-control': 'no-store' } });
+    const preference = await ensurePreference(env, member.id, availableChannels);
+    return Response.json({ ok: true, preference, available_delivery_channels: availableChannels }, { headers: { 'cache-control': 'no-store' } });
   }
   const input = await request.json();
   const enabled = input.enabled === false ? 0 : 1;
@@ -141,7 +153,7 @@ async function memberPreference(request, env, member) {
   const quietEnd = time(input.quiet_end, '08:00');
   const language = ['JA','EN','ZH','KO'].includes(input.language) ? input.language : 'JA';
   const requestedChannels = Array.isArray(input.delivery_channels)
-    ? input.delivery_channels.filter((value) => NOTIFICATION_DELIVERY_CHANNELS.includes(value)) : ['APP'];
+    ? input.delivery_channels.filter((value) => NOTIFICATION_DELIVERY_CHANNELS.includes(value) && availableChannels.includes(value)) : ['APP'];
   const deliveryChannels = [...new Set(requestedChannels)].join(',') || 'APP';
   const now = new Date().toISOString();
   await env.PRODUCT_DB.prepare(
@@ -158,7 +170,7 @@ async function memberPreference(request, env, member) {
   return Response.json({ ok: true, preference: {
     enabled, advance_notice: advance, marketplaces, info_types: infoTypes,
     frequency, quiet_start: quietStart, quiet_end: quietEnd, language, delivery_channels: deliveryChannels
-  } });
+  }, available_delivery_channels: availableChannels });
 }
 
 function internalAuthorized(request, env) {
