@@ -1565,8 +1565,20 @@ function compactUnknownSearchPhrase(normalized) {
   return compacted.length >= 2 && compacted.length < normalized.length ? compacted : normalized;
 }
 
+function buildBentoDividerSearchKeywords(query) {
+  const text = String(query || '').normalize('NFKC');
+  const japanese = /(?:弁当|おべんとう).{0,40}(?:草|葉|緑).{0,40}(?:仕切|しきり|区切)|(?:草|葉|緑).{0,40}(?:仕切|しきり|区切).{0,40}(?:弁当|おべんとう)/iu.test(text);
+  const english = /(?:bento|lunch\s*box|packed\s*lunch).{0,50}(?:green|grass|leaf).{0,40}(?:divider|separator)|(?:green|grass|leaf).{0,40}(?:divider|separator).{0,50}(?:bento|lunch\s*box)/iu.test(text);
+  const chinese = /(?:便当|便當|饭盒|飯盒).{0,40}(?:绿色|綠色|草|叶|葉).{0,40}(?:隔板|分隔|隔开|隔開)|(?:绿色|綠色|草|叶|葉).{0,40}(?:隔板|分隔).{0,40}(?:便当|便當|饭盒|飯盒)/u.test(text);
+  const korean = /(?:도시락).{0,40}(?:초록|녹색|풀|잎).{0,40}(?:칸막이|구분|분리)|(?:초록|녹색|풀|잎).{0,40}(?:칸막이|구분|분리).{0,40}(?:도시락)/u.test(text);
+  return /(?:^|\s)バラン(?:\s|$)/u.test(text) || japanese || english || chinese || korean
+    ? '弁当 バラン 仕切り' : '';
+}
+
 export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') {
   const rawNormalized = String(query || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
+  const rawBentoDivider = buildBentoDividerSearchKeywords(rawNormalized);
+  if (rawBentoDivider) return rawBentoDivider;
   const rawShaverReplacement = buildShaverReplacementSearchKeywords(rawNormalized);
   if (rawShaverReplacement) return rawShaverReplacement;
   const rawCoffeeCapsule = buildCoffeeCapsuleSearchKeywords(rawNormalized);

@@ -2331,6 +2331,19 @@ function isRobotVacuumConsumableMismatch(candidate, requested, query) {
   return false;
 }
 
+function isBentoDividerIntent(query) {
+  const text = String(query || '').normalize('NFKC');
+  return /(?:バラン|(?:弁当|おべんとう).{0,40}(?:草|葉|緑).{0,40}(?:仕切|しきり|区切)|(?:bento|lunch\s*box).{0,50}(?:green|grass|leaf).{0,40}(?:divider|separator)|(?:green|grass|leaf).{0,40}(?:divider|separator).{0,50}(?:bento|lunch\s*box)|(?:便当|便當|饭盒|飯盒).{0,40}(?:绿色|綠色|草|叶|葉).{0,40}(?:隔板|分隔)|도시락.{0,40}(?:초록|녹색|풀|잎).{0,40}(?:칸막이|구분|분리))/iu.test(text);
+}
+
+function isBentoDividerMismatch(candidate) {
+  const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
+    .normalize('NFKC').toLowerCase();
+  const divider = /(?:バラン|弁当.{0,12}(?:仕切|シート)|bento.{0,12}(?:divider|separator)|food.{0,12}(?:divider|separator)|便当.{0,12}(?:隔板|分隔)|便當.{0,12}(?:隔板|分隔)|도시락.{0,12}(?:칸막이|구분))/iu.test(text);
+  const wrong = /(?:人工芝|芝生|草刈|除草|種子|苗|ガーデン|garden|lawn|grass\s*seed|artificial\s*grass|조화|인조잔디|草坪|人工草)/iu.test(text);
+  return !divider || wrong;
+}
+
 function tabletModel(text) {
   const value = String(text || '').normalize('NFKC').toLowerCase();
   const latin = value.match(/\bipad\s*(air|pro|mini)\b/u);
@@ -2416,6 +2429,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     .map((group) => group.category)
     .filter((category) => !CATEGORY_MODIFIERS.has(category)));
   const normalizedQuery = String(query || '').normalize('NFKC');
+  const bentoDividerIntent = isBentoDividerIntent(normalizedQuery);
   const smartWatchBand = smartWatchBandConstraints(normalizedQuery);
   const smartWatchBandIntent = smartWatchBand.band && Boolean(smartWatchBand.model);
   const phoneScreenProtector = phoneScreenProtectorConstraints(normalizedQuery);
@@ -2558,7 +2572,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const deviceSpecificCase = (phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery)
     ) || implicitLightUpPhoneCase;
-  if (!requested.size && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
+  if (!requested.size && !bentoDividerIntent && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
     && !portableSsdIntent && !sdMemoryCardIntent && !gamingMonitorIntent
@@ -2613,6 +2627,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     generation: tabletGeneration(query)
   };
   return candidates.filter((candidate) => {
+    if (bentoDividerIntent) return !isBentoDividerMismatch(candidate);
     if (smartWatchBandIntent) return !isSmartWatchBandMismatch(candidate, smartWatchBand);
     if (phoneScreenProtectorIntent) return !isPhoneScreenProtectorMismatch(candidate, phoneScreenProtector);
     if (cameraPrimeLensIntent) return !isCameraPrimeLensMismatch(candidate, cameraPrimeLens);

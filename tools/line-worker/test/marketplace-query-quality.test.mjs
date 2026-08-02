@@ -18,6 +18,20 @@ const SEARCH_MARKETPLACES = [
   "ZOZOTOWN_JP", "SHOPLIST_JP", "MUSINSA_JP", "BUYMA_JP", "SNKRDUNK_JP",
 ];
 
+test('弁当の草のような緑の仕切りを4言語でバランへ変換する', () => {
+  const queries = [
+    '弁当に入っている草みたいな見た目の緑のしきり / 料理・食事に使う',
+    'the green grass-like divider inside a bento lunch box used with food',
+    '便当里像绿色草一样的分隔板，吃饭时用',
+    '도시락 안에 있는 초록색 풀처럼 생긴 칸막이 음식에 쓰는 것'
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace), '弁当 バラン 仕切り');
+    }
+  }
+});
+
 test("日英中韓640件の検索語コーパスを決定論的に生成する", () => {
   const corpus = buildMarketplaceQueryCorpus();
   assert.equal(corpus.length, 640);

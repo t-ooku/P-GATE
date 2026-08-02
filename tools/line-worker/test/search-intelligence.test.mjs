@@ -4518,3 +4518,21 @@ test('IPL光美容器の照射回数と出力段階の同時訂正は両方一�
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
   }
 });
+
+test('弁当の緑の草状仕切りはバランだけを候補に残す', () => {
+  const queries = [
+    '弁当に入っている草みたいな見た目の緑のしきり / 料理・食事に使う',
+    'the green grass-like divider inside a bento lunch box used with food',
+    '便当里像绿色草一样的分隔板，吃饭时用',
+    '도시락 안에 있는 초록색 풀처럼 생긴 칸막이 음식에 쓰는 것'
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'お弁当用 バラン 緑 仕切りシート' },
+    { asin: 'LAWN', product_name: '人工芝 緑 ガーデン用' },
+    { asin: 'SEED', product_name: '芝生の種子 緑化用' },
+    { asin: 'PICK', product_name: '弁当用 おかずピック' }
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
+  }
+});
