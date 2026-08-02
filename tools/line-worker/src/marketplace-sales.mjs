@@ -9,7 +9,7 @@ export const MARKETPLACE_INFO_TYPES = Object.freeze([
   'SALE', 'COUPON', 'NEW_ARRIVAL', 'LIMITED', 'RESTOCK', 'EDITORIAL'
 ]);
 
-export const NOTIFICATION_DELIVERY_CHANNELS = Object.freeze(['APP', 'LINE', 'EMAIL', 'SMS']);
+export const NOTIFICATION_DELIVERY_CHANNELS = Object.freeze(['APP', 'LINE', 'EMAIL']);
 
 const OFFICIAL_SOURCE_DOMAINS = Object.freeze({
   AMAZON_JP: ['amazon.co.jp'], RAKUTEN_JP: ['rakuten.co.jp'], YAHOO_JP: ['shopping.yahoo.co.jp'],

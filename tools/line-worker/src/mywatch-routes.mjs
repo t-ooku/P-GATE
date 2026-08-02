@@ -98,8 +98,8 @@ export async function deliverDueWebNotifications(env, now = new Date()) {
   if (!env.PRODUCT_DB) return { delivered: 0 };
   const occurredAt = new Date(now).toISOString();
   const due = await env.PRODUCT_DB.prepare(
-    `SELECT notification_id FROM mywatch_notifications
-    WHERE channel='WEB' AND status='PENDING' AND next_attempt_at<=?1
+    `SELECT notification_id,channel FROM mywatch_notifications
+    WHERE channel IN ('WEB','APP') AND status='PENDING' AND next_attempt_at<=?1
     ORDER BY next_attempt_at ASC LIMIT 100`
   ).bind(occurredAt).all();
   let delivered = 0;
@@ -107,15 +107,15 @@ export async function deliverDueWebNotifications(env, now = new Date()) {
     const result = await env.PRODUCT_DB.prepare(
       `UPDATE mywatch_notifications
       SET status='DELIVERED',attempts=attempts+1,delivered_at=?2,updated_at=?2
-      WHERE notification_id=?1 AND channel='WEB' AND status='PENDING'`
+      WHERE notification_id=?1 AND channel IN ('WEB','APP') AND status='PENDING'`
     ).bind(row.notification_id, occurredAt).run();
     if (!Number(result?.meta?.changes || 0)) continue;
     delivered += 1;
     await env.PRODUCT_DB.prepare(
       `INSERT INTO mywatch_delivery_audit
       (audit_id,notification_id,action,channel,result,error_code,occurred_at)
-      VALUES(?1,?2,'DELIVER','WEB','SUCCESS','',?3)`
-    ).bind(crypto.randomUUID(), row.notification_id, occurredAt).run();
+      VALUES(?1,?2,'DELIVER',?3,'SUCCESS','',?4)`
+    ).bind(crypto.randomUUID(), row.notification_id, row.channel, occurredAt).run();
   }
   return { delivered };
 }

@@ -1,3 +1,4 @@
+import { storeMemberNotificationDestination } from './member-notification-delivery.mjs';
 const encoder = new TextEncoder();
 function b64(bytes) { let binary=''; for(const byte of bytes) binary+=String.fromCharCode(byte); return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,''); }
 async function digest(value) { return b64(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value)))); }
@@ -32,5 +33,6 @@ export async function verifyEmailCode(request,env,issueSession,now=Math.floor(Da
   const expected=await digest(`code:${emailHash}:${code}:${secret(env)}`);
   if(expected!==row.code_hash){await env.PRODUCT_DB.prepare('UPDATE member_email_challenges SET attempts=attempts+1 WHERE email_hash=?').bind(emailHash).run();return Response.json({ok:false,error:'CODE_INVALID'},{status:401});}
   await env.PRODUCT_DB.prepare('DELETE FROM member_email_challenges WHERE email_hash=?').bind(emailHash).run();
+  await storeMemberNotificationDestination(env,emailHash,'EMAIL',email);
   return issueSession({id:emailHash,name:email.split('@')[0].slice(0,40),picture:'',provider:'EMAIL'},env);
 }

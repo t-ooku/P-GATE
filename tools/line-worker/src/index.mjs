@@ -20,6 +20,7 @@ import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offe
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
+import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import {
   runSpApiScheduledSync, spApiConfiguredTenants
@@ -1124,6 +1125,7 @@ export default {
     ctx.waitUntil(Promise.allSettled([
       runDueSocialPosts(env, scheduledAt),
       deliverDueWebNotifications(env, scheduledAt),
+      deliverDueMemberNotifications(env, scheduledAt),
       runMarketplaceContentCycle(env, scheduledAt),
       runSpApiScheduledSync(env, scheduledAt),
       purgeAdminAuthRecords(env, scheduledAt),

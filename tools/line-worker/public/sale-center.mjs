@@ -23,16 +23,16 @@ const infoTypesLocalized={
   KO:[['SALE','세일','대형·시즌 세일'],['COUPON','쿠폰','공식 쿠폰·포인트'],['NEW_ARRIVAL','신상품','신상품·신규 입점'],['LIMITED','한정·콜라보','기간 한정·콜라보'],['RESTOCK','재입고','품절 상품 재입고'],['EDITORIAL','쇼핑몰 최신 정보','기획전·랭킹·트렌드']]
 };
 const deliveryChannels={
-  JA:[['APP','HOSHILUアプリ','アプリ内のお知らせ'],['LINE','LINE','連携済みの公式LINE'],['EMAIL','メール','登録・確認済みメール'],['SMS','SMS','登録・確認済み電話番号']],
-  EN:[['APP','HOSHILU app','In-app notifications'],['LINE','LINE','Connected official LINE account'],['EMAIL','Email','Verified email address'],['SMS','SMS','Verified phone number']],
-  ZH:[['APP','HOSHILU 应用','应用内通知'],['LINE','LINE','已连接的官方 LINE'],['EMAIL','电子邮件','已验证的邮箱'],['SMS','短信','已验证的手机号码']],
-  KO:[['APP','HOSHILU 앱','앱 내 알림'],['LINE','LINE','연결된 공식 LINE'],['EMAIL','이메일','인증된 이메일 주소'],['SMS','SMS','인증된 전화번호']]
+  JA:[['APP','HOSHILUアプリ','アプリ内・端末のお知らせ'],['LINE','LINE','連携済みの公式LINE'],['EMAIL','メール','登録・確認済みメール']],
+  EN:[['APP','HOSHILU app','In-app and device notifications'],['LINE','LINE','Connected official LINE account'],['EMAIL','Email','Verified email address']],
+  ZH:[['APP','HOSHILU 应用','应用内和设备通知'],['LINE','LINE','已连接的官方 LINE'],['EMAIL','电子邮件','已验证的邮箱']],
+  KO:[['APP','HOSHILU 앱','앱 내·기기 알림'],['LINE','LINE','연결된 공식 LINE'],['EMAIL','이메일','인증된 이메일 주소']]
 };
 const settingsCopy={
-  JA:{open:'通知設定を開く',title:'通知設定',lead:'セールだけ最初からON。通知先と必要な情報を選べます。',info:'受け取る情報',channel:'通知先',channelNote:'HOSHILUアプリはアプリ内通知、LINE・メール・SMSは連携・確認済みの宛先へ配信します。',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
-  EN:{open:'Notification settings',title:'Notification settings',lead:'Sales are on by default. Choose where and what to receive.',info:'Updates to receive',channel:'Delivery channels',channelNote:'App alerts appear in HOSHILU. LINE, email and SMS require a connected, verified destination.',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
-  ZH:{open:'通知设置',title:'通知设置',lead:'默认只开启促销，并可选择通知渠道。',info:'接收的信息',channel:'通知渠道',channelNote:'应用通知显示在 HOSHILU 内；LINE、邮件和短信需要已连接并验证的地址。',mall:'目标商城',frequency:'通知频率',language:'通知语言',timing:'通知时间',advance:'促销开始前提醒',quietStart:'免打扰开始',quietEnd:'免打扰结束',privacy:'设置将与会员ID关联保存。',reset:'恢复默认',save:'保存设置',saved:'通知设置已保存。',login:'免费会员登录后可设置。'},
-  KO:{open:'알림 설정',title:'알림 설정',lead:'세일만 기본 ON이며 알림 받을 곳을 선택할 수 있습니다.',info:'받을 정보',channel:'알림 받을 곳',channelNote:'앱 알림은 HOSHILU 안에 표시되며 LINE·이메일·SMS는 연결·인증된 주소로 발송됩니다.',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
+  JA:{open:'通知設定を開く',title:'通知設定',lead:'セールだけ最初からON。通知先と必要な情報を選べます。',info:'受け取る情報',channel:'通知先',channelNote:'HOSHILUアプリはアプリ内・端末通知、LINE・メールは連携・確認済みの宛先へ配信します。SMSは費用が発生するため使用しません。',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
+  EN:{open:'Notification settings',title:'Notification settings',lead:'Sales are on by default. Choose where and what to receive.',info:'Updates to receive',channel:'Delivery channels',channelNote:'App alerts appear in HOSHILU and on the device. LINE and email require a connected, verified destination. SMS is not used.',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
+  ZH:{open:'通知设置',title:'通知设置',lead:'默认只开启促销，并可选择通知渠道。',info:'接收的信息',channel:'通知渠道',channelNote:'应用通知显示在 HOSHILU 和设备上；LINE、邮件需要已连接并验证的地址。不使用收费短信。',mall:'目标商城',frequency:'通知频率',language:'通知语言',timing:'通知时间',advance:'促销开始前提醒',quietStart:'免打扰开始',quietEnd:'免打扰结束',privacy:'设置将与会员ID关联保存。',reset:'恢复默认',save:'保存设置',saved:'通知设置已保存。',login:'免费会员登录后可设置。'},
+  KO:{open:'알림 설정',title:'알림 설정',lead:'세일만 기본 ON이며 알림 받을 곳을 선택할 수 있습니다.',info:'받을 정보',channel:'알림 받을 곳',channelNote:'앱 알림은 HOSHILU와 기기에 표시되며 LINE·이메일은 연결·인증된 주소로 발송됩니다. 유료 SMS는 사용하지 않습니다.',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
 };
 
 const officialUpdates=[
@@ -179,9 +179,11 @@ document.querySelector('#notificationSettingsForm')?.addEventListener('submit',a
   event.preventDefault();
   const types=selectedValues('infoType');
   const malls=selectedValues('marketplace');
+  const channels=selectedValues('deliveryChannel');
+  if(channels.includes('APP')&&'Notification'in window&&Notification.permission==='default')await Notification.requestPermission();
   const payload={
     enabled:types.length>0,advance_notice:document.querySelector('#settingsAdvance').checked,
-    info_types:types,marketplaces:malls,delivery_channels:selectedValues('deliveryChannel'),frequency:document.querySelector('#settingsFrequency').value,
+    info_types:types,marketplaces:malls,delivery_channels:channels,frequency:document.querySelector('#settingsFrequency').value,
     language:document.querySelector('#settingsLanguage').value,
     quiet_start:document.querySelector('#settingsQuietStart').value,
     quiet_end:document.querySelector('#settingsQuietEnd').value

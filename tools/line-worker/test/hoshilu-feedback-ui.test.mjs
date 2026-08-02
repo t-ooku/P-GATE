@@ -16,7 +16,8 @@ test('通知先、確認済み最新情報、送料込み価格比較を画面�
   ]);
   assert.doesNotMatch(html, /<article><strong>名前が分からなくても探せる<\/strong>/);
   assert.match(html, /id="settingsChannels"/);
-  for (const channel of ['APP', 'LINE', 'EMAIL', 'SMS']) assert.match(sale, new RegExp(`'${channel}'`));
+  for (const channel of ['APP', 'LINE', 'EMAIL']) assert.match(sale, new RegExp(`'${channel}'`));
+  assert.doesNotMatch(sale, /\['SMS','SMS'/);
   assert.match(migration, /delivery_channels/);
   assert.match(sale, /確認済みの最新情報はまだありません/);
   assert.match(sale, /if\(!sale\.official\)card\.append\(link\)/);
