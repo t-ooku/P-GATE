@@ -2501,6 +2501,21 @@ test('smartwatch replacement bands retain model, case size, and material in four
     }
   }
 });
+
+test('smartwatch band size corrections discard the negated case size in four languages', () => {
+  const queries = [
+    'Apple Watch Series 9 バンド 41mmではなく45mm シリコン',
+    'Apple Watch Series 9 band not 41mm but 45mm silicone',
+    'Apple Watch Series 9表带不要41mm，要45mm硅胶',
+    'Apple Watch Series 9 밴드 41mm 말고 45mm 실리콘',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Apple Watch Series 9 45mm バンド シリコン', `${marketplace}: ${query}`);
+    }
+  }
+});
 test('圧力IH炊飯器は容量・蒸気カット・保温時間を4言語で保持する', () => {
   const inputs = [
     '圧力IH炊飯器 5.5合 蒸気カット 保温40時間',

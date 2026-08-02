@@ -356,7 +356,12 @@ function smartWatchBandConstraints(value) {
   const model = apple
     ? apple[0].toLowerCase().replace(/\s+/gu, '')
     : galaxy ? `galaxywatch${galaxy[1]}${galaxy[2] ? galaxy[2].toLowerCase() : ''}` : '';
-  const size = text.match(/\b(4[0-9])\s*mm\b/iu)?.[1] || '';
+  const size = [...text.matchAll(/\b(4[0-9])\s*mm\b/giu)].filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1)?.[1] || '';
   const material = /(?:チタン|titanium|钛(?:金属)?|鈦(?:金屬)?|티타늄)/iu.test(text) ? 'titanium'
     : /(?:ステンレス|stainless(?:\s*steel)?|不锈钢|不鏽鋼|스테인리스)/iu.test(text) ? 'stainless'
       : /(?:レザー|本革|革|leather|皮革|真皮|가죽)/iu.test(text) ? 'leather'
