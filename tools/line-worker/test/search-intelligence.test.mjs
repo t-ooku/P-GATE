@@ -4379,6 +4379,23 @@ test('ドライブレコーダーは4言語で前後構成・画質・駐車監�
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
   }
 });
+
+test('ドライブレコーダーの解像度訂正は旧解像度を除外して訂正後の本体だけを提示する', () => {
+  const queries = [
+    '前後2カメラ 4Kではなく2K 駐車監視 GPS Wi-Fi ドライブレコーダー',
+    'not 4K but 2K front and rear dash cam with parking monitoring GPS Wi-Fi',
+    '不要4K要2K 前后双摄 停车监控 GPS Wi-Fi 行车记录仪',
+    '4K 말고 2K 전후방 2채널 주차 감시 GPS Wi-Fi 블랙박스',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '2K front and rear dash cam parking monitoring GPS Wi-Fi' },
+    { asin: 'OLD', product_name: '4K front and rear dash cam parking monitoring GPS Wi-Fi' },
+    { asin: 'NOGPS', product_name: '2K front and rear dash cam parking monitoring Wi-Fi' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
 test('カメラ付き自動給餌器は4言語で容量・画質・通信・音声条件が一致する本体だけを提示する', () => {
   const queries = [
     '5L 1080pカメラ Wi-Fi 双方向音声 ペット自動給餌器',

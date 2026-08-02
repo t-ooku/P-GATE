@@ -2781,6 +2781,21 @@ test('ドライブレコーダーは前後構成・解像度・駐車監視・�
     }
   }
 });
+
+test('ドライブレコーダーの解像度訂正は旧解像度を捨てて新しい解像度を4言語で採用する', () => {
+  const inputs = [
+    '前後2カメラ 4Kではなく2K 駐車監視 GPS Wi-Fi ドライブレコーダー',
+    'not 4K but 2K front and rear dash cam with parking monitoring GPS Wi-Fi',
+    '不要4K要2K 前后双摄 停车监控 GPS Wi-Fi 行车记录仪',
+    '4K 말고 2K 전후방 2채널 주차 감시 GPS Wi-Fi 블랙박스',
+  ];
+  for (const input of inputs) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace),
+        'ドライブレコーダー 前後2カメラ 2K 駐車監視 GPS Wi-Fi', `${marketplace}: ${input}`);
+    }
+  }
+});
 test('カメラ付き自動給餌器は容量・画質・通信・音声条件を4言語で保持する', () => {
   const inputs = [
     '5L 1080pカメラ Wi-Fi 双方向音声 ペット自動給餌器',

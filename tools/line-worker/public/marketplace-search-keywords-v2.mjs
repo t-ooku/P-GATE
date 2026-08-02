@@ -680,7 +680,13 @@ function buildDualDashCamSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const dashCam = /(?:ドライブレコーダー|dash[\s-]*cam(?:era)?|行车记录仪|行車記錄器|블랙박스|(?:あおり|煽り)運転.{0,24}前.{0,12}後ろ.{0,16}録画|records?.{0,16}(?:both\s*)?front.{0,12}(?:and|&).{0,12}rear.{0,24}(?:road|driving|incident|accident)|(?:防碰瓷|事故取证).{0,20}前后.{0,12}(?:录像|錄像)|(?:사고|보복운전).{0,16}대비.{0,20}전후방.{0,16}녹화)/iu.test(normalized);
   const dual = /(?:前後\s*2\s*カメラ|前.{0,8}後ろ.{0,12}録画|front\s*(?:and|&)\s*rear|records?.{0,16}(?:both\s*)?front.{0,12}(?:and|&).{0,12}rear|dual[\s-]*camera|前后双摄|前后.{0,8}(?:录像|錄像)|前後雙鏡|전후방\s*2?\s*채널|전후방.{0,12}녹화)/iu.test(normalized);
-  const resolution = normalized.match(/\b([248])\s*K\b/iu)?.[1];
+  const resolutionMatches = [...normalized.matchAll(/\b([248])\s*K\b/giu)];
+  const resolution = resolutionMatches.filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1)?.[1];
   const parking = /(?:駐車(?:中も?)?監視|parking\s*(?:monitoring|mode)|停车监控|停車監控|주차\s*감시)/iu.test(normalized);
   const gps = /\bGPS\b/iu.test(normalized);
   const wifi = /\bWi[\s-]*Fi\b/iu.test(normalized);
