@@ -32,6 +32,32 @@ function addAiAction() {
   fallback.insertBefore(button, fallback.querySelector('.marketplace-links'));
 }
 
+function linkDisplayedProducts() {
+  for (const card of document.querySelectorAll('.product-card:not([data-product-linked])')) {
+    const destination = card.querySelector('a.offer-link,a.price-offer,a.all-marketplaces-button');
+    const image = card.querySelector(':scope > .product-image');
+    const title = card.querySelector(':scope > h3');
+    if (!destination || (!image && !title)) continue;
+    const link = document.createElement('a');
+    link.className = 'product-primary-link';
+    link.href = destination.href;
+    if (!String(destination.getAttribute('href') || '').startsWith('#')) {
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    }
+    link.setAttribute('aria-label', `${String(title?.textContent || '').trim()}の商品ページを見る`);
+    if (image) link.append(image);
+    if (title) link.append(title);
+    card.insertBefore(link, card.querySelector('.evidence,.offer-list,.price-comparison,.price-offer,.all-marketplaces-button') || card.firstChild?.nextSibling || null);
+    card.dataset.productLinked = 'true';
+  }
+}
+
+function enhanceResults() {
+  addAiAction();
+  linkDisplayedProducts();
+}
+
 const results = document.querySelector('#resultCards');
-if (results) new MutationObserver(addAiAction).observe(results, { childList: true, subtree: true });
-addAiAction();
+if (results) new MutationObserver(enhanceResults).observe(results, { childList: true, subtree: true });
+enhanceResults();
