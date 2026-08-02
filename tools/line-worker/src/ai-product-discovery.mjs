@@ -126,6 +126,12 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
   }))).slice(0, MAX_AI_CANDIDATES);
   const outcomes = await Promise.allSettled(suggestions.map((item) => verifiedProductPage(item, parsed.citations.get(safePublicHttpsUrl(item.url)), fetchImpl)));
   const candidates = outcomes.flatMap((outcome) => outcome.status === 'fulfilled' && outcome.value ? [outcome.value] : []);
+  console.info('AI_PRODUCT_DISCOVERY_RESULT', {
+    citations: parsed.citations.size,
+    suggestions: suggestions.length,
+    verified: candidates.length,
+    verification_errors: outcomes.filter((outcome) => outcome.status === 'rejected').length
+  });
   return { triggered: true, configured: true, provider: 'GEMINI_GOOGLE_SEARCH', candidates };
 }
 
