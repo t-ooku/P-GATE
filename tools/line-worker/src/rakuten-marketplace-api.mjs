@@ -66,9 +66,29 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch) {
   url.searchParams.set('elements', 'itemName,itemCode,itemPrice,itemUrl,affiliateUrl,mediumImageUrls,smallImageUrls,catchcopy,itemCaption,availability,postageFlag');
   const affiliateId = String(env.RAKUTEN_AFFILIATE_ID || '').trim();
   if (affiliateId) url.searchParams.set('affiliateId', affiliateId);
-  const response = await fetcher(url.toString(), { headers: { accept: 'application/json' } });
-  if (!response.ok) throw new Error('RAKUTEN_MARKETPLACE_SEARCH_FAILED');
-  return normalizeRakutenItems(await response.json());
+  const request = async (requestUrl) => {
+    const response = await fetcher(requestUrl.toString(), { headers: { accept: 'application/json' } });
+    if (response.ok) return response.json();
+    let providerCode = '';
+    try {
+      const payload = await response.json();
+      providerCode = String(payload?.error || '').slice(0, 80);
+    } catch {}
+    const error = new Error('RAKUTEN_MARKETPLACE_SEARCH_FAILED');
+    error.status = Number(response.status) || 0;
+    error.providerCode = providerCode;
+    throw error;
+  };
+  const payload = await request(url);
+  const normalized = normalizeRakutenItems(payload);
+  if (normalized.length || !(payload?.items || payload?.Items || []).length || !affiliateId) {
+    return normalized;
+  }
+
+  // If Rakuten changes its affiliate redirect shape, never expose an unverified
+  // redirect. Re-fetch the same confirmed items as direct official product URLs.
+  url.searchParams.delete('affiliateId');
+  return normalizeRakutenItems(await request(url));
 }
 
 export async function searchRakutenMarketplaceWithFallback(

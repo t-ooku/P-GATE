@@ -1063,8 +1063,20 @@ async function handleKnowledgeApi(request, env, ctx) {
       outcomes.forEach((outcome, index) => {
         const source = marketplaceSearches[index];
         result = { ...(result || {}), [source.key]: outcome.status === 'fulfilled' };
-        if (outcome.status !== 'fulfilled') return;
+        if (outcome.status !== 'fulfilled') {
+          console.warn('MARKETPLACE_PRODUCT_SEARCH_FAILED', {
+            source: source.key,
+            status: Number(outcome.reason?.status) || 0,
+            provider_code: String(outcome.reason?.providerCode || '').slice(0, 80)
+          });
+          return;
+        }
         const candidates = filterCategoryMismatches(input.query, outcome.value);
+        console.info('MARKETPLACE_PRODUCT_SEARCH_RESULT', {
+          source: source.key,
+          returned: Array.isArray(outcome.value) ? outcome.value.length : 0,
+          accepted: candidates.length
+        });
         result.candidates = rankMerchantCandidates(result.candidates || [], candidates).slice(0, 10);
       });
     }

@@ -115,3 +115,42 @@ test('複合条件が0件なら主要商品語で一度だけ再検索する', a
   assert.equal(candidates.length, 1);
   assert.equal(candidates[0].offers[0].marketplace, 'RAKUTEN_JP');
 });
+
+test('Rakuten API errors retain only safe status metadata', async () => {
+  await assert.rejects(
+    searchRakutenMarketplace(env, 'ローテーブル', async () => Response.json(
+      { error: 'too_many_requests', error_description: 'request rejected' },
+      { status: 429 }
+    )),
+    (error) => {
+      assert.equal(error.message, 'RAKUTEN_MARKETPLACE_SEARCH_FAILED');
+      assert.equal(error.status, 429);
+      assert.equal(error.providerCode, 'too_many_requests');
+      return true;
+    }
+  );
+});
+
+test('invalid affiliate redirects retry as verified direct Rakuten product URLs', async () => {
+  const requests = [];
+  const candidates = await searchRakutenMarketplace(env, 'ローテーブル', async (url) => {
+    const requestUrl = new URL(url);
+    requests.push(requestUrl);
+    return Response.json({ items: [{
+      itemName: '木製 ローテーブル',
+      itemCode: 'shop:low-table',
+      itemPrice: 4980,
+      itemUrl: requestUrl.searchParams.has('affiliateId')
+        ? 'https://hb.afl.rakuten.co.jp/changed-format/low-table'
+        : 'https://item.rakuten.co.jp/shop/low-table/',
+      affiliateUrl: requestUrl.searchParams.has('affiliateId')
+        ? 'https://hb.afl.rakuten.co.jp/changed-format/low-table'
+        : '',
+      availability: 1
+    }] });
+  });
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].searchParams.get('affiliateId'), 'affiliate-id');
+  assert.equal(requests[1].searchParams.has('affiliateId'), false);
+  assert.equal(candidates[0].offers[0].product_url, 'https://item.rakuten.co.jp/shop/low-table/');
+});
