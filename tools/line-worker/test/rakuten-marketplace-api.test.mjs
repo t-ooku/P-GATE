@@ -26,6 +26,21 @@ test('楽天市場の商品詳細URLをHOSHILUの出品情報へ正規化する'
   assert.equal(candidates[0].offers[0].stock_status, 'IN_STOCK');
 });
 
+test('楽天は公式送料込みフラグがある商品だけ送料0の比較価格にする', () => {
+  const candidates = normalizeRakutenItems({ items: [{
+    itemName:'送料無料の商品',itemCode:'shop:free',itemPrice:5980,postageFlag:0,
+    itemUrl:'https://item.rakuten.co.jp/shop/free/'
+  },{
+    itemName:'送料別の商品',itemCode:'shop:paid',itemPrice:4980,postageFlag:1,
+    itemUrl:'https://item.rakuten.co.jp/shop/paid/'
+  }] });
+  assert.equal(candidates[0].offers[0].shipping_fee,0);
+  assert.equal(candidates[0].offers[0].total_cost,5980);
+  assert.equal(candidates[0].offers[0].shipping_fee_confirmed,true);
+  assert.equal(candidates[1].offers[0].shipping_fee_confirmed,false);
+  assert.equal(candidates[1].offers[0].total_cost,0);
+});
+
 test('楽天公式affiliateUrlを通常商品URLより優先する', () => {
   const affiliateUrl = 'https://hb.afl.rakuten.co.jp/hgc/abc123/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fshop%2Fitem-1%2F&m=https%3A%2F%2Fm.rakuten.co.jp%2Fshop%2Fi%2F1';
   const candidates = normalizeRakutenItems({ items: [{
@@ -63,6 +78,7 @@ test('楽天市場APIへ整理済み検索語とサーバー側認証情報を�
   assert.equal(requested.url.searchParams.get('accessKey'), 'access-key');
   assert.equal(requested.url.searchParams.get('affiliateId'), 'affiliate-id');
   assert.equal(requested.url.searchParams.get('keyword'), '小型 写真プリンター');
+  assert.match(requested.url.searchParams.get('elements'),/postageFlag/);
   assert.equal(candidates.length, 1);
 });
 

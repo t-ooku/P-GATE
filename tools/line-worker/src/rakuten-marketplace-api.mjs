@@ -25,6 +25,8 @@ export function normalizeRakutenItems(payload = {}) {
     const image = String(item.mediumImageUrls?.[0]?.imageUrl || item.mediumImageUrls?.[0] || item.smallImageUrls?.[0]?.imageUrl || item.smallImageUrls?.[0] || '').trim();
     const itemCode = String(item.itemCode || item.productId || '').trim();
     const name = String(item.itemName || item.productName || '').trim();
+    const price = Number(item.itemPrice || item.minPrice || 0);
+    const shippingIncluded = Number(item.postageFlag) === 0;
     return {
       rank: index + 1,
       record_key: itemCode ? `RAKUTEN:${itemCode}` : `RAKUTEN:${productUrl}`,
@@ -38,8 +40,10 @@ export function normalizeRakutenItems(payload = {}) {
       offers: productUrl ? [{
         marketplace: 'RAKUTEN_JP',
         product_url: productUrl,
-        price: Number(item.itemPrice || item.minPrice || 0),
-        total_cost: Number(item.itemPrice || item.minPrice || 0),
+        price,
+        shipping_fee: shippingIncluded ? 0 : null,
+        total_cost: shippingIncluded ? price : 0,
+        shipping_fee_confirmed: shippingIncluded,
         currency: 'JPY',
         stock_status: item.availability === 0 ? 'OUT_OF_STOCK' : 'IN_STOCK',
         source: 'rakuten_ichiba_api'
@@ -59,7 +63,7 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch) {
   url.searchParams.set('keyword', query);
   url.searchParams.set('hits', '10');
   url.searchParams.set('formatVersion', '2');
-  url.searchParams.set('elements', 'itemName,itemCode,itemPrice,itemUrl,affiliateUrl,mediumImageUrls,smallImageUrls,catchcopy,itemCaption,availability');
+  url.searchParams.set('elements', 'itemName,itemCode,itemPrice,itemUrl,affiliateUrl,mediumImageUrls,smallImageUrls,catchcopy,itemCaption,availability,postageFlag');
   const affiliateId = String(env.RAKUTEN_AFFILIATE_ID || '').trim();
   if (affiliateId) url.searchParams.set('affiliateId', affiliateId);
   const response = await fetcher(url.toString(), { headers: { accept: 'application/json' } });
