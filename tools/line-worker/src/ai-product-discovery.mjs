@@ -76,7 +76,7 @@ async function verifiedProductPage(candidate, citationTitle, fetchImpl) {
     /(?:add.?to.?cart|カートに入れる|商品価格|itemprop=["']price)/i.test(html),
     /\/(?:product|products|item|items|dp)\//i.test(productUrl)
   ].filter(Boolean).length;
-  if (!image || productSignals < 2) return null;
+  if (!image || productSignals < 1) return null;
   return {
     title: String(candidate?.title || pageTitle || citationTitle || 'AI探索の商品候補').slice(0, 160),
     description: String(candidate?.reason || '').slice(0, 240),
@@ -105,10 +105,15 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
   });
   if (!response.ok) throw new Error('AI_PRODUCT_DISCOVERY_FAILED');
   const parsed = textOutputAndCitations(await response.json());
-  const suggestions = parseSuggestedProducts(parsed.text).filter((item) => {
+  const structuredSuggestions = parseSuggestedProducts(parsed.text).filter((item) => {
     const url = safePublicHttpsUrl(item?.url);
     return url && parsed.citations.has(url);
-  }).slice(0, MAX_AI_CANDIDATES);
+  });
+  const suggestions = (structuredSuggestions.length ? structuredSuggestions : [...parsed.citations].map(([url, title]) => ({
+    title,
+    url,
+    reason: 'GeminiのGoogle検索で、この検索条件に近い候補として引用されました。'
+  }))).slice(0, MAX_AI_CANDIDATES);
   const outcomes = await Promise.allSettled(suggestions.map((item) => verifiedProductPage(item, parsed.citations.get(safePublicHttpsUrl(item.url)), fetchImpl)));
   const candidates = outcomes.flatMap((outcome) => outcome.status === 'fulfilled' && outcome.value ? [outcome.value] : []);
   return { triggered: true, configured: true, provider: 'GEMINI_GOOGLE_SEARCH', candidates };
