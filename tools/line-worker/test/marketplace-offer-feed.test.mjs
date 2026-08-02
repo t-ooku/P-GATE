@@ -22,6 +22,20 @@ test('Qoo10・SHEIN・楽天の商品詳細URLだけをフィードとして受�
  assert.deepEqual(result.records.map(row=>row.marketplace),['QOO10_JP','SHEIN_JP','RAKUTEN_JP']);
 });
 
+test('送料込み価格は送料が明示されたフィードだけ受け入れる',()=>{
+ const base={tenant:'itg',batch_id:'shipping-20260802',records:[{
+  record_key:'r1',marketplace:'RAKUTEN_JP',external_product_id:'shop:item',
+  product_url:'https://item.rakuten.co.jp/shop/item/',price:1000,shipping_fee:200,total_cost:1200,delivery_days:2
+ }]};
+ const result=validateMarketplaceOfferFeed(base).records[0];
+ assert.equal(result.shipping_fee,200);
+ assert.equal(result.total_cost,1200);
+ assert.equal(result.shipping_fee_confirmed,1);
+ assert.equal(result.delivery_days,2);
+ assert.throws(()=>validateMarketplaceOfferFeed({...base,records:[{...base.records[0],total_cost:1100}]}),/TOTAL_COST_INVALID/);
+ assert.throws(()=>validateMarketplaceOfferFeed({...base,records:[{...base.records[0],shipping_fee:-1,total_cost:999}]}),/SHIPPING_FEE_INVALID/);
+});
+
 test('楽天公式アフィリエイトURLは実商品URLを含む場合だけフィードへ受け入れる',()=>{
  const valid=validateMarketplaceOfferFeed({tenant:'itg',batch_id:'affiliate-offer-20260730',records:[{
   record_key:'r1',marketplace:'RAKUTEN_JP',external_product_id:'shop:item',
@@ -117,6 +131,7 @@ test('商品データ権利の承認状態と根拠を監査用に保存する�
   })
  }),env);
  assert.equal(response.status,200);
+ assert.match(sql,/shipping_fee,total_cost,shipping_fee_confirmed,delivery_days/);
  assert.match(sql,/data_rights_status,rights_reference/);
  assert.deepEqual(values.slice(-2),['APPROVED','https://partner.example/approval/456']);
 });

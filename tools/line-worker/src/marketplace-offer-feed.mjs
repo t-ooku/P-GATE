@@ -54,6 +54,23 @@ export function validateMarketplaceOfferFeed(payload = {}) {
       if (asin && !/^[A-Z0-9]{10}$/.test(asin)) throw new Error('OFFER_FEED_ASIN_INVALID');
       const price = Number(record.price ?? 0);
       if (!Number.isFinite(price) || price < 0) throw new Error('OFFER_FEED_PRICE_INVALID');
+      const shippingFeeConfirmed = record.shipping_fee !== undefined
+        && record.shipping_fee !== null && record.shipping_fee !== '';
+      const shippingFee = shippingFeeConfirmed ? Number(record.shipping_fee) : null;
+      if (shippingFeeConfirmed && (!Number.isFinite(shippingFee) || shippingFee < 0)) {
+        throw new Error('OFFER_FEED_SHIPPING_FEE_INVALID');
+      }
+      const totalCost = shippingFeeConfirmed
+        ? Number(record.total_cost ?? (price + shippingFee)) : null;
+      if (shippingFeeConfirmed && (!Number.isFinite(totalCost)
+        || Math.abs(totalCost - (price + shippingFee)) > 0.01)) {
+        throw new Error('OFFER_FEED_TOTAL_COST_INVALID');
+      }
+      const deliveryDays = record.delivery_days === undefined || record.delivery_days === null
+        || record.delivery_days === '' ? null : Number(record.delivery_days);
+      if (deliveryDays !== null && (!Number.isInteger(deliveryDays) || deliveryDays < 0 || deliveryDays > 365)) {
+        throw new Error('OFFER_FEED_DELIVERY_DAYS_INVALID');
+      }
       const currency = clean(record.currency || 'JPY', 8).toUpperCase();
       if (!/^[A-Z]{3}$/.test(currency)) throw new Error('OFFER_FEED_CURRENCY_INVALID');
       const stockStatus = clean(record.stock_status || 'UNKNOWN', 24).toUpperCase();
@@ -66,6 +83,10 @@ export function validateMarketplaceOfferFeed(payload = {}) {
         seller_id: clean(record.seller_id, 160),
         product_url: productUrl,
         price,
+        shipping_fee: shippingFee,
+        total_cost: totalCost,
+        shipping_fee_confirmed: shippingFeeConfirmed ? 1 : 0,
+        delivery_days: deliveryDays,
         currency,
         stock_status: stockStatus,
         active: record.active === false ? 0 : 1,
@@ -174,16 +195,19 @@ export async function syncMarketplaceOffers(request, env) {
   if (!authorized(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
   try {
     const input = validateMarketplaceOfferFeed(await request.json());
-    const sql = `INSERT INTO marketplace_offers(tenant,record_key,asin,marketplace,external_product_id,seller_id,product_url,price,currency,stock_status,active,observed_at,source,data_rights_status,rights_reference)
-      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)
+    const sql = `INSERT INTO marketplace_offers(tenant,record_key,asin,marketplace,external_product_id,seller_id,product_url,price,shipping_fee,total_cost,shipping_fee_confirmed,delivery_days,currency,stock_status,active,observed_at,source,data_rights_status,rights_reference)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)
       ON CONFLICT(tenant,marketplace,external_product_id,seller_id) DO UPDATE SET
-      record_key=excluded.record_key,asin=excluded.asin,product_url=excluded.product_url,price=excluded.price,currency=excluded.currency,
+      record_key=excluded.record_key,asin=excluded.asin,product_url=excluded.product_url,price=excluded.price,
+      shipping_fee=excluded.shipping_fee,total_cost=excluded.total_cost,shipping_fee_confirmed=excluded.shipping_fee_confirmed,
+      delivery_days=excluded.delivery_days,currency=excluded.currency,
       stock_status=excluded.stock_status,active=excluded.active,observed_at=excluded.observed_at,source=excluded.source,
       data_rights_status=excluded.data_rights_status,rights_reference=excluded.rights_reference`;
     const statement = env.PRODUCT_DB.prepare(sql);
     const results = await env.PRODUCT_DB.batch(input.records.map((row) => statement.bind(
       input.tenant, row.record_key, row.asin, row.marketplace, row.external_product_id, row.seller_id,
-      row.product_url, row.price, row.currency, row.stock_status, row.active, row.observed_at, row.source,
+      row.product_url, row.price, row.shipping_fee, row.total_cost, row.shipping_fee_confirmed, row.delivery_days,
+      row.currency, row.stock_status, row.active, row.observed_at, row.source,
       row.data_rights_status, row.rights_reference
     )));
     return Response.json({

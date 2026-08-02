@@ -938,11 +938,17 @@ export function sanitizePublicCandidate(candidate) {
 }
 
 function sanitizePublicOffer(offer) {
+  const shippingFeeConfirmed = offer?.shipping_fee_confirmed === true
+    || Number(offer?.shipping_fee_confirmed) === 1
+    || (offer?.shipping_fee !== undefined && offer?.shipping_fee !== null
+      && offer?.total_cost !== undefined && offer?.total_cost !== null);
   return {
     marketplace: String(offer?.marketplace || ''),
     price: Number(offer?.price || 0),
     shipping_fee: Number(offer?.shipping_fee || 0),
-    total_cost: Number(offer?.total_cost ?? (Number(offer?.price || 0) + Number(offer?.shipping_fee || 0))),
+    total_cost: shippingFeeConfirmed
+      ? Number(offer?.total_cost ?? (Number(offer?.price || 0) + Number(offer?.shipping_fee || 0))) : 0,
+    shipping_fee_confirmed: shippingFeeConfirmed,
     currency: String(offer?.currency || 'JPY'),
     stock_status: String(offer?.stock_status || 'UNKNOWN'),
     delivery_days: Number(offer?.delivery_days || 0)
