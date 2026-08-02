@@ -29,6 +29,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(css, /@media \(max-width: 760px\)/);
   assert.match(css, /\.marketplace-mobile-line \{\s*display: block/);
+  assert.match(css, /#marketplaceCoverageLead \.marketplace-mobile-line:nth-child\(2\)[\s\S]*white-space: nowrap/);
   assert.match(css, /grid-template-columns: 1fr/);
   assert.match(css, /\.marketplace-group > p \{\s*display: none/s);
   assert.match(css, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
@@ -51,7 +52,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v297/);
+  assert.match(serviceWorker, /hoshilu-shell-v298/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

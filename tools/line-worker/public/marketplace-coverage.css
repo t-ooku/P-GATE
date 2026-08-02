@@ -176,6 +176,12 @@
     line-height: 1.55;
   }
 
+  #marketplaceCoverageLead .marketplace-mobile-line:nth-child(2) {
+    font-size: clamp(7px, 2.15vw, 9px);
+    letter-spacing: -.04em;
+    white-space: nowrap;
+  }
+
   .marketplace-count {
     min-width: 82px;
     padding: 10px 8px;
