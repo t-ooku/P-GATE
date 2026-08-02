@@ -36,7 +36,8 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(css, /\.marketplace-group-fashion li \{[\s\S]*white-space: nowrap/);
   assert.match(layout, /item\.setAttribute\('role', 'button'\)/);
   assert.match(layout, /scrollIntoView\(\{ behavior: 'smooth'/);
-  assert.match(layout, /insight\.after\(saleRadar, benefits\)/);
+  assert.match(layout, /insight\.before\(saleRadar\)/);
+  assert.match(layout, /saleRadar\.after\(benefits\)/);
   assert.match(layout, /ホシル検索/);
 
   for (const language of ['JA', 'EN', 'ZH', 'KO']) {
@@ -50,7 +51,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v294/);
+  assert.match(serviceWorker, /hoshilu-shell-v295/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

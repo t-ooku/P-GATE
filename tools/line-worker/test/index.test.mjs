@@ -340,7 +340,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v294/);
+  assert.match(serviceWorker, /hoshilu-shell-v295/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -427,6 +427,15 @@ test('商品カードには実出品でないモール検索ボタンを付け�
 
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.doesNotMatch(appSource, /candidate\.marketplace_search_links|candidate\.amazon_search_url/);
+});
+
+test('弁当の緑の草状仕切りは画面・Amazon・楽天でバラン検索へ統一する', () => {
+  const query = '弁当に入っている草みたいな見た目の緑のしきり / 料理・食事に使う';
+  const expected = '弁当 バラン 仕切り';
+  assert.equal(buildMarketplaceSearchKeywords(query, 'AMAZON_JP'), expected);
+  assert.equal(buildAmazonSearchKeywords(query), expected);
+  assert.equal(buildRakutenSearchKeywords(query), expected);
+  assert.deepEqual(buildRakutenSearchKeywordCandidates(query), [expected]);
 });
 
 test('保存済みAmazon商品詳細URLは非収益の商品確認リンクとして署名する', async () => {

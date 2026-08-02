@@ -653,6 +653,8 @@ export function buildAmazonSearchKeywords(query) {
   const asinTerms = String(query || '').toUpperCase().match(/\bB[A-Z0-9]{9}\b/g) || [];
   const cleaned = redactSearchPersonalData(query);
   if (!cleaned) return '';
+  const specializedKeywords = buildMarketplaceSearchKeywords(cleaned, 'AMAZON_JP');
+  if (/バラン/u.test(specializedKeywords)) return specializedKeywords;
   const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) {
     const hasJapaneseTerms = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(cleaned);
@@ -708,6 +710,8 @@ export function buildRakutenSearchKeywords(query) {
     .replace(/\s+/gu, ' ')
     .trim();
   if (!cleaned) return '';
+  const specializedKeywords = buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP');
+  if (/バラン/u.test(specializedKeywords)) return specializedKeywords;
   if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(cleaned)) {
     cleaned = cleaned
       .replace(/\b[a-z][a-z-]{2,}\b/g, ' ')

@@ -10,7 +10,8 @@ if (coverage && journey && search) {
 }
 
 if (insight && saleRadar && benefits) {
-  insight.after(saleRadar, benefits);
+  insight.before(saleRadar);
+  saleRadar.after(benefits);
 }
 
 const searchLabels = { JA:'ホシル検索', EN:'HOSHILU Search', ZH:'HOSHILU 搜索', KO:'HOSHILU 검색' };
