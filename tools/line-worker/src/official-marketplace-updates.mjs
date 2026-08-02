@@ -56,6 +56,7 @@ export function extractOfficialNotices(html,marketplace,label,baseUrl) {
   for(const match of String(html||'').matchAll(pattern)){
     const title=decode(match[2]).slice(0,140);
     if(title.length<6||!/(?:セール|クーポン|キャンペーン|ポイント|お得|割引|特集|新着|限定|sale|coupon|campaign|points?|deal|event|new arrivals?|促销|优惠|积分|活动|세일|쿠폰|이벤트|포인트)/iu.test(title))continue;
+    if(/(?:TOPへ$|について$|^その他の|AIでさがす|ポイントメイク$|利用ガイド|ヘルプ|よくある質問)/iu.test(title))continue;
     let url='';try{url=new URL(match[1],baseUrl).href;}catch{continue;}
     if(!officialUrl(marketplace,url)||seen.has(url)||url===baseUrl)continue;
     seen.add(url);
@@ -87,6 +88,8 @@ export async function syncOfficialMarketplaceUpdates(env, now=new Date(), fetche
   for (const result of results) {
     if (result.status !== 'fulfilled') { failed+=1; continue; }
     const item=result.value;
+    await env.PRODUCT_DB.prepare(`UPDATE marketplace_sale_events SET status='DRAFT',updated_at=?2 WHERE marketplace=?1 AND sale_id LIKE ?3`)
+      .bind(item.marketplace,startsAt,`official-notice-${item.marketplace}-%`).run();
     const rows=[{...item,sale_id:`official-feed-${item.marketplace}`,info_type:'EDITORIAL'},...(item.notices||[])];
     for(const row of rows){
       const infoType=['SALE','COUPON','NEW_ARRIVAL','LIMITED','EDITORIAL'].includes(row.info_type)?row.info_type:'EDITORIAL';

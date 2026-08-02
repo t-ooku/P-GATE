@@ -21,9 +21,10 @@ test('ten official marketplace sources are collected without copying images',asy
   const result=await syncOfficialMarketplaceUpdates(env,new Date('2026-08-02T03:00:00.000Z'),fetcher);
   assert.deepEqual(result,{checked:10,updated:10,failed:0});
   assert.equal(OFFICIAL_MARKETPLACE_SOURCES.length,10);
-  assert.equal(writes.length,10);
-  assert.deepEqual(new Set(writes.map(({values})=>values[1])).size,10);
-  for(const {sql,values} of writes){
+  const inserts=writes.filter(({sql})=>/INSERT INTO marketplace_sale_events/.test(sql));
+  assert.equal(inserts.length,10);
+  assert.deepEqual(new Set(inserts.map(({values})=>values[1])).size,10);
+  for(const {sql,values} of inserts){
     assert.match(sql,/image_url,image_rights_status/);
     assert.match(sql,/'','NONE'/);
     assert.match(values[0],/^official-feed-/);
@@ -40,6 +41,12 @@ test('failed official sources are omitted instead of publishing guesses',async()
   assert.deepEqual(result,{checked:10,updated:0,failed:10});
   assert.equal(calls,10);
   assert.equal(writes,0);
+});
+
+test('navigation and help links are not published as current marketplace updates',()=>{
+  const notices=extractOfficialNotices(`<a href="/information/278">ポイント交換・利用について</a>
+    <a href="/ai-search/">AIでさがす 会員限定</a><a href="/sale/">夏の特別セール</a>`,'SNKRDUNK','SNKRDUNK','https://snkrdunk.com/information/');
+  assert.deepEqual(notices.map(({title})=>title),['夏の特別セール']);
 });
 
 test('official source list uses only HTTPS marketplace domains',()=>{
