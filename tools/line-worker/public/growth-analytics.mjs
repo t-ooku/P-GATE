@@ -1,3 +1,5 @@
+import { growthMarketplace } from './growth-marketplaces.mjs';
+
 const params = new URLSearchParams(location.search);
 const attribution = {
   source: params.get('utm_source') || '',
@@ -27,13 +29,9 @@ document.addEventListener('click', event => {
   if (!target) return;
   if (target.classList.contains('wish-button')) send('wish_saved');
   if (target.classList.contains('share-discovery-button') || target.classList.contains('share-copy-button')) send('share_started');
-  if (target.classList.contains('buy-link') && target.tagName === 'A') {
-    const label = String(target.textContent || '').toUpperCase();
-    const marketplace = label.includes('AMAZON') ? 'AMAZON_JP'
-      : label.includes('楽天') || label.includes('RAKUTEN') ? 'RAKUTEN_JP'
-      : label.includes('QOO10') ? 'QOO10_JP'
-      : label.includes('SHEIN') ? 'SHEIN_JP' : '';
-    send('marketplace_click', { marketplace });
+  if ((target.classList.contains('buy-link') || target.classList.contains('offer-link')) && target.tagName === 'A') {
+    const marketplace = growthMarketplace(target.dataset.marketplace, target.textContent);
+    if (marketplace) send('marketplace_click', { marketplace });
   }
 });
 

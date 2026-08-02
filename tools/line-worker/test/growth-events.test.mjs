@@ -28,6 +28,17 @@ test('rejects unknown event types and marketplace values', () => {
   assert.equal(normalizeGrowthEvent({ event_type: 'landing_view', marketplace: 'unknown' }).marketplace, '');
 });
 
+test('accepts anonymous registration and inquiry events across all ten marketplaces', () => {
+  assert.equal(normalizeGrowthEvent({ event_type: 'member_registered' }).event_type, 'member_registered');
+  assert.equal(normalizeGrowthEvent({ event_type: 'inquiry_submitted' }).event_type, 'inquiry_submitted');
+  for (const marketplace of [
+    'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
+    'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+  ]) {
+    assert.equal(normalizeGrowthEvent({ event_type: 'marketplace_click', marketplace }).marketplace, marketplace);
+  }
+});
+
 test('separates QA, attributed, and unattributed growth traffic', () => {
   assert.equal(classifyGrowthTraffic({
     source: 'codex_acceptance',

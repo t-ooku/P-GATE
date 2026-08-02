@@ -4,10 +4,15 @@ const EVENTS = new Set([
   'search_completed',
   'wish_saved',
   'marketplace_click',
-  'share_started'
+  'share_started',
+  'member_registered',
+  'inquiry_submitted'
 ]);
 const LOCALES = new Set(['JA', 'EN', 'ZH', 'KO']);
-const MARKETPLACES = new Set(['', 'AMAZON_JP', 'RAKUTEN_JP', 'QOO10_JP', 'SHEIN_JP']);
+const MARKETPLACES = new Set([
+  '', 'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
+  'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+]);
 
 function clean(value, length = 80) {
   return String(value || '').trim().replace(/[^\p{L}\p{N}_.-]/gu, '').slice(0, length);
