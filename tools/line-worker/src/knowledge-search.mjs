@@ -43,6 +43,7 @@ const OPTION_SETS = {
 };
 
 const CONTEXTUAL_USE_OPTIONS_JA = {
+  snack: ['そのまま食べるお菓子','甘いお菓子','塩味のお菓子','素材を生かしたお菓子','個包装','大袋・シェア用','持ち歩き用','ギフト用','海外のお菓子','アレルギーに配慮'],
   photoPrinter: ['スマホ写真を印刷する','推し活カードを作る','チェキ風写真を作る','シール写真を作る','手帳・アルバムに貼る','イベントで配る','旅行写真をその場で印刷する','プレゼントを作る','名札・ラベルを作る','持ち歩いて使う'],
   camera: ['写真を撮る','動画を撮る','旅行で使う','Vlog・SNS投稿に使う','子どもが遊ぶ','推し活で使う','チェキ風に楽しむ','防犯・見守りに使う','車や自転車で撮影する','水中・アウトドアで使う'],
   figure: ['飾って楽しむ','コレクションする','子どもが遊ぶ','プレゼントにする','推し活で使う','撮影小物にする','ゲーム・アニメ関連','映画・アメコミ関連','組み立てて遊ぶ','限定品を探している'],
@@ -55,6 +56,7 @@ const CONTEXTUAL_USE_OPTIONS_JA = {
 };
 
 const CONTEXTUAL_DETAIL_OPTIONS_JA = {
+  snack: ['チップス','スナック菓子','さつまいも・野菜系','オーガニック','無添加','低糖質','グルテンフリー','小袋・個包装','大袋','食べ比べセット'],
   photoPrinter: ['スマホ対応','Bluetooth対応','手のひらサイズ','充電式','シール紙対応','チェキ風サイズ','カラー印刷','モノクロ印刷','インク不要','専用アプリ対応'],
   phoneCase: ['LEDで光るケース','通知で光るケース','背面が光るケース','蓄光タイプ','透明ケース','iPhone用','Android用','充電式','電源不要','ストラップ付き'],
   earphones: ['完全ワイヤレス','耳をふさがない','カナル型','インナーイヤー型','ノイズキャンセリング','マイク付き','Bluetooth対応','有線タイプ','防水・スポーツ用','透明・クリア'],
@@ -167,6 +169,7 @@ const SEMANTIC_THEME = {
 
 function queryTheme(query) {
   const value = String(query || '').normalize('NFKC').toLowerCase();
+  if (/(?:チップス|スナック菓子|ポテトチップ|さつまいも.{0,6}(?:菓子|チップ)|お菓子|駄菓子|snacks?|chips|薯片|零食|감자칩|과자)/u.test(value)) return 'snack';
   const semanticTheme = semanticSearchGroups(value)
     .map((group) => SEMANTIC_THEME[group.category])
     .find(Boolean);
@@ -217,7 +220,7 @@ function contextualDetailOptions(query, language) {
   return [...unused, ...candidates.filter((option) => !unused.includes(option))].slice(0, 10);
 }
 
-const DETAIL_FIRST_THEMES = new Set(['phoneCase','earphones','charger','lamp','backpack','socks','shoes','laptop','mouse-pad','rodent-supplies','bicycle-chain','umbrella-stand','lip-care','toner','serum','moisturizer','sunscreen','face-mask','cleanser','cushion-foundation','foundation','eye-shadow','blush','mascara','eyeliner','nail-care','hair-treatment','camera-bag','fan-accessory','t-shirt','tops','pants','skirt','dress','bag','hat','watch','bottle','organizer','umbrella','fan','humidifier','furniture','bedding','stationery','cooking','cleaning','pet','baby','outdoor']);
+const DETAIL_FIRST_THEMES = new Set(['snack','phoneCase','earphones','charger','lamp','backpack','socks','shoes','laptop','mouse-pad','rodent-supplies','bicycle-chain','umbrella-stand','lip-care','toner','serum','moisturizer','sunscreen','face-mask','cleanser','cushion-foundation','foundation','eye-shadow','blush','mascara','eyeliner','nail-care','hair-treatment','camera-bag','fan-accessory','t-shirt','tops','pants','skirt','dress','bag','hat','watch','bottle','organizer','umbrella','fan','humidifier','furniture','bedding','stationery','cooking','cleaning','pet','baby','outdoor']);
 
 function contextualQuestion(query, language, fallback) {
   if (language !== 'JA') return fallback;

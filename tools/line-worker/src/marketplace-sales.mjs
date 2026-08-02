@@ -9,6 +9,8 @@ export const MARKETPLACE_INFO_TYPES = Object.freeze([
   'SALE', 'COUPON', 'NEW_ARRIVAL', 'LIMITED', 'RESTOCK', 'EDITORIAL'
 ]);
 
+export const NOTIFICATION_DELIVERY_CHANNELS = Object.freeze(['APP', 'LINE', 'EMAIL', 'SMS']);
+
 const OFFICIAL_SOURCE_DOMAINS = Object.freeze({
   AMAZON_JP: ['amazon.co.jp'], RAKUTEN_JP: ['rakuten.co.jp'], YAHOO_JP: ['shopping.yahoo.co.jp'],
   QOO10_JP: ['qoo10.jp'], SHEIN_JP: ['shein.com'], ZOZOTOWN: ['zozo.jp'],
@@ -108,12 +110,12 @@ async function ensurePreference(env, memberId) {
   const now = new Date().toISOString();
   await env.PRODUCT_DB.prepare(
     `INSERT OR IGNORE INTO member_sale_preferences
-     (member_id,enabled,advance_notice,marketplaces,info_types,frequency,quiet_start,quiet_end,language,created_at,updated_at)
-     VALUES(?1,1,1,'ALL','SALE','INSTANT','21:00','08:00','JA',?2,?2)`
+     (member_id,enabled,advance_notice,marketplaces,info_types,frequency,quiet_start,quiet_end,language,delivery_channels,created_at,updated_at)
+     VALUES(?1,1,1,'ALL','SALE','INSTANT','21:00','08:00','JA','APP',?2,?2)`
   ).bind(memberId, now).run();
   return env.PRODUCT_DB.prepare(
     `SELECT enabled,advance_notice,marketplaces,info_types,frequency,
-     quiet_start,quiet_end,language,updated_at
+     quiet_start,quiet_end,language,delivery_channels,updated_at
      FROM member_sale_preferences WHERE member_id=?1`
   ).bind(memberId).first();
 }
@@ -138,20 +140,24 @@ async function memberPreference(request, env, member) {
   const quietStart = time(input.quiet_start, '21:00');
   const quietEnd = time(input.quiet_end, '08:00');
   const language = ['JA','EN','ZH','KO'].includes(input.language) ? input.language : 'JA';
+  const requestedChannels = Array.isArray(input.delivery_channels)
+    ? input.delivery_channels.filter((value) => NOTIFICATION_DELIVERY_CHANNELS.includes(value)) : ['APP'];
+  const deliveryChannels = [...new Set(requestedChannels)].join(',') || 'APP';
   const now = new Date().toISOString();
   await env.PRODUCT_DB.prepare(
     `INSERT INTO member_sale_preferences
-     (member_id,enabled,advance_notice,marketplaces,info_types,frequency,quiet_start,quiet_end,language,created_at,updated_at)
-     VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?10)
+     (member_id,enabled,advance_notice,marketplaces,info_types,frequency,quiet_start,quiet_end,language,delivery_channels,created_at,updated_at)
+     VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?11)
      ON CONFLICT(member_id) DO UPDATE SET
        enabled=excluded.enabled,advance_notice=excluded.advance_notice,
        marketplaces=excluded.marketplaces,info_types=excluded.info_types,
        frequency=excluded.frequency,quiet_start=excluded.quiet_start,
-       quiet_end=excluded.quiet_end,language=excluded.language,updated_at=excluded.updated_at`
-  ).bind(member.id, enabled, advance, marketplaces, infoTypes, frequency, quietStart, quietEnd, language, now).run();
+       quiet_end=excluded.quiet_end,language=excluded.language,
+       delivery_channels=excluded.delivery_channels,updated_at=excluded.updated_at`
+  ).bind(member.id, enabled, advance, marketplaces, infoTypes, frequency, quietStart, quietEnd, language, deliveryChannels, now).run();
   return Response.json({ ok: true, preference: {
     enabled, advance_notice: advance, marketplaces, info_types: infoTypes,
-    frequency, quiet_start: quietStart, quiet_end: quietEnd, language
+    frequency, quiet_start: quietStart, quiet_end: quietEnd, language, delivery_channels: deliveryChannels
   } });
 }
 
@@ -224,7 +230,7 @@ export async function enqueueSaleNotifications(env, now = new Date()) {
        WHERE status='APPROVED' AND starts_at<=?1 AND ends_at>=?2`
     ).bind(horizon, at).all(),
     env.PRODUCT_DB.prepare(
-      `SELECT member_id,advance_notice,marketplaces,info_types,frequency,quiet_start,quiet_end
+      `SELECT member_id,advance_notice,marketplaces,info_types,frequency,quiet_start,quiet_end,delivery_channels
        FROM member_sale_preferences WHERE enabled=1`
     ).all()
   ]);
@@ -249,16 +255,22 @@ export async function enqueueSaleNotifications(env, now = new Date()) {
         : `${MARKETPLACE_LABELS[sale.marketplace]}の${titles[infoType]}`;
       const nextAt = nextMarketplaceNotificationAt(member, now);
       const delivered = Date.parse(nextAt) <= now.getTime();
-      const result = await env.PRODUCT_DB.prepare(
-        `INSERT OR IGNORE INTO mywatch_notifications
-         (notification_id,member_id,wish_id,event_key,event_type,channel,title,body,status,attempts,next_attempt_at,delivered_at,created_at,updated_at)
-         VALUES(?1,?2,'MARKETPLACE_SALES',?3,?4,'WEB',?5,?6,?7,?8,?9,?10,?11,?11)`
-      ).bind(
-        notificationId, member.member_id, eventKey, noticeType, title,
-        sale.summary || sale.title, delivered ? 'DELIVERED' : 'PENDING',
-        delivered ? 1 : 0, nextAt, delivered ? at : null, at
-      ).run();
-      if (!Number(result?.meta?.changes || 0)) continue;
+      let inserted = false;
+      for (const channel of String(member.delivery_channels || 'APP').split(',').filter((value) => NOTIFICATION_DELIVERY_CHANNELS.includes(value))) {
+        const channelNotificationId = channel === 'APP' ? notificationId : crypto.randomUUID();
+        const channelDelivered = channel === 'APP' && delivered;
+        const result = await env.PRODUCT_DB.prepare(
+          `INSERT OR IGNORE INTO mywatch_notifications
+           (notification_id,member_id,wish_id,event_key,event_type,channel,title,body,status,attempts,next_attempt_at,delivered_at,created_at,updated_at)
+           VALUES(?1,?2,'MARKETPLACE_SALES',?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)`
+        ).bind(
+          channelNotificationId, member.member_id, `${eventKey}:${channel}`, noticeType, channel, title,
+          sale.summary || sale.title, channelDelivered ? 'DELIVERED' : 'PENDING',
+          channelDelivered ? 1 : 0, nextAt, channelDelivered ? at : null, at
+        ).run();
+        inserted ||= Number(result?.meta?.changes || 0) > 0;
+      }
+      if (!inserted) continue;
       await env.PRODUCT_DB.prepare(
         `INSERT OR IGNORE INTO member_sale_notifications
          (member_id,sale_id,notice_type,notification_id,created_at) VALUES(?1,?2,?3,?4,?5)`

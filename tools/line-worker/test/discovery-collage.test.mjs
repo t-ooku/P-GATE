@@ -29,7 +29,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v276/);
+  assert.match(sw, /hoshilu-shell-v277/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
@@ -53,7 +53,9 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /if\(!memberSession\)return''/);
   assert.match(app, /function personalizedQuickExamples/);
   assert.match(app, /if\(!memberSession\)return\[\]/);
-  assert.match(app, /new Set\(\[\.\.\.matched,\.\.\.related\]\)\]\.slice\(0,3\)/);
+  assert.match(app, /seenThemes\.has\(theme\)/);
+  assert.match(app, /picked\.push\(clean\)/);
+  assert.doesNotMatch(app, /一緒に使える便利グッズ/);
   assert.match(app, /無料会員登録で、あなた向けの検索例を表示/);
   assert.match(app, /renderMemberState\(\).*renderQuickExamples/s);
   assert.match(app, /baseSetLanguage\(language\);renderQuickExamples\(language\)/);

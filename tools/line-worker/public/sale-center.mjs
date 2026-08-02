@@ -22,11 +22,17 @@ const infoTypesLocalized={
   ZH:[['SALE','促销','大型及季节促销'],['COUPON','优惠券','官方优惠券及积分活动'],['NEW_ARRIVAL','新品','新品及新上架'],['LIMITED','限定与联名','期间限定及联名'],['RESTOCK','补货','缺货商品重新上架'],['EDITORIAL','商城最新信息','专题、榜单及趋势']],
   KO:[['SALE','세일','대형·시즌 세일'],['COUPON','쿠폰','공식 쿠폰·포인트'],['NEW_ARRIVAL','신상품','신상품·신규 입점'],['LIMITED','한정·콜라보','기간 한정·콜라보'],['RESTOCK','재입고','품절 상품 재입고'],['EDITORIAL','쇼핑몰 최신 정보','기획전·랭킹·트렌드']]
 };
+const deliveryChannels={
+  JA:[['APP','HOSHILUアプリ','アプリ内のお知らせ'],['LINE','LINE','連携済みの公式LINE'],['EMAIL','メール','登録・確認済みメール'],['SMS','SMS','登録・確認済み電話番号']],
+  EN:[['APP','HOSHILU app','In-app notifications'],['LINE','LINE','Connected official LINE account'],['EMAIL','Email','Verified email address'],['SMS','SMS','Verified phone number']],
+  ZH:[['APP','HOSHILU 应用','应用内通知'],['LINE','LINE','已连接的官方 LINE'],['EMAIL','电子邮件','已验证的邮箱'],['SMS','短信','已验证的手机号码']],
+  KO:[['APP','HOSHILU 앱','앱 내 알림'],['LINE','LINE','연결된 공식 LINE'],['EMAIL','이메일','인증된 이메일 주소'],['SMS','SMS','인증된 전화번호']]
+};
 const settingsCopy={
-  JA:{open:'通知設定を開く',title:'通知設定',lead:'セールだけ最初からON。必要な情報だけ後から追加できます。',info:'受け取る情報',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
-  EN:{open:'Notification settings',title:'Notification settings',lead:'Sales are on by default. Add only the updates you want.',info:'Updates to receive',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
-  ZH:{open:'通知设置',title:'通知设置',lead:'默认只开启促销。其他信息可按需添加。',info:'接收的信息',mall:'目标商城',frequency:'通知频率',language:'通知语言',timing:'通知时间',advance:'促销开始前提醒',quietStart:'免打扰开始',quietEnd:'免打扰结束',privacy:'设置将与会员ID关联保存。',reset:'恢复默认',save:'保存设置',saved:'通知设置已保存。',login:'免费会员登录后可设置。'},
-  KO:{open:'알림 설정',title:'알림 설정',lead:'세일만 기본 ON입니다. 필요한 정보만 추가하세요.',info:'받을 정보',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
+  JA:{open:'通知設定を開く',title:'通知設定',lead:'セールだけ最初からON。通知先と必要な情報を選べます。',info:'受け取る情報',channel:'通知先',channelNote:'HOSHILUアプリはアプリ内通知、LINE・メール・SMSは連携・確認済みの宛先へ配信します。',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
+  EN:{open:'Notification settings',title:'Notification settings',lead:'Sales are on by default. Choose where and what to receive.',info:'Updates to receive',channel:'Delivery channels',channelNote:'App alerts appear in HOSHILU. LINE, email and SMS require a connected, verified destination.',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
+  ZH:{open:'通知设置',title:'通知设置',lead:'默认只开启促销，并可选择通知渠道。',info:'接收的信息',channel:'通知渠道',channelNote:'应用通知显示在 HOSHILU 内；LINE、邮件和短信需要已连接并验证的地址。',mall:'目标商城',frequency:'通知频率',language:'通知语言',timing:'通知时间',advance:'促销开始前提醒',quietStart:'免打扰开始',quietEnd:'免打扰结束',privacy:'设置将与会员ID关联保存。',reset:'恢复默认',save:'保存设置',saved:'通知设置已保存。',login:'免费会员登录后可设置。'},
+  KO:{open:'알림 설정',title:'알림 설정',lead:'세일만 기본 ON이며 알림 받을 곳을 선택할 수 있습니다.',info:'받을 정보',channel:'알림 받을 곳',channelNote:'앱 알림은 HOSHILU 안에 표시되며 LINE·이메일·SMS는 연결·인증된 주소로 발송됩니다.',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
 };
 
 const officialUpdates=[
@@ -42,10 +48,10 @@ const officialUpdates=[
   ,{marketplace_label:'SNKRDUNK',title:'公式スニーカー・ファッション情報',summary:'SNKRDUNK公式の新着、発売情報、鑑定付き商品を確認できます。',source_url:'https://snkrdunk.com/information/',official:true}
 ];
 const officialCopy={
-  JA:{title:'公式セール・最新情報',summary:'公式サイトのセール、キャンペーン、新着情報を確認できます。',status:'公式情報を常時掲載'},
-  EN:{title:'Official sales & updates',summary:'See sales, campaigns and new arrivals on the official marketplace site.',status:'Official updates always available'},
-  ZH:{title:'官方促销与最新信息',summary:'查看商城官方网站的促销、活动和新品信息。',status:'持续显示官方信息'},
-  KO:{title:'공식 세일·최신 정보',summary:'쇼핑몰 공식 사이트의 세일, 캠페인, 신상품 정보를 확인하세요.',status:'공식 정보를 항상 표시'}
+  JA:{title:'確認済みの最新情報はまだありません',summary:'HOSHILU内に掲載できる公式情報を確認中です。確認でき次第、内容と期間をここに表示します。',status:'未確認情報は掲載しません'},
+  EN:{title:'No verified update is available yet',summary:'HOSHILU is checking official information. Details and dates will appear here after verification.',status:'Unverified information is not published'},
+  ZH:{title:'暂无已验证的最新信息',summary:'HOSHILU 正在核实官方信息，确认后将在此显示内容与日期。',status:'不发布未经确认的信息'},
+  KO:{title:'확인된 최신 정보가 아직 없습니다',summary:'HOSHILU가 공식 정보를 확인 중이며 확인 후 내용과 기간을 여기에 표시합니다.',status:'미확인 정보는 게시하지 않습니다'}
 };
 
 function language(){return document.querySelector('[data-language-select]')?.value||'JA';}
@@ -56,7 +62,8 @@ function render(sales=[]){
   const rail=document.querySelector('#saleRail'); if(!rail)return;
   const t=copy[language()]||copy.JA;
   const officialText=officialCopy[language()]||officialCopy.JA;
-  const items=[...sales,...officialUpdates];
+  const covered=new Set(sales.map((sale)=>sale.marketplace_label));
+  const items=[...sales,...officialUpdates.filter((item)=>!covered.has(item.marketplace_label))];
   rail.replaceChildren(...items.map(sale=>{
     const card=document.createElement('article');card.className='sale-card';
     if(sale.video_url){
@@ -70,7 +77,7 @@ function render(sales=[]){
     const period=document.createElement('time');period.textContent=sale.official?officialText.status:`${t.starts} ${date(sale.starts_at)} · ${t.ends} ${date(sale.ends_at)}${sale.updated_at?` · ${t.updated} ${dateTime(sale.updated_at)}`:''}`;
     const link=document.createElement('a');link.href=sale.source_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=t.detail;
     if(sale.official)card.classList.add('official-update');
-    card.append(mall,title,body,period,link);return card;
+    card.append(mall,title,body,period);if(!sale.official)card.append(link);return card;
   }));
 }
 
@@ -104,7 +111,8 @@ function renderSettingsCopy(){
   const t=settingsCopy[language()]||settingsCopy.JA;
   const values={
     openNotificationSettings:t.open,notificationSettingsTitle:t.title,
-    notificationSettingsLead:t.lead,settingsInfoLegend:t.info,settingsMallLegend:t.mall,
+    notificationSettingsLead:t.lead,settingsInfoLegend:t.info,settingsChannelLegend:t.channel,
+    settingsChannelNote:t.channelNote,settingsMallLegend:t.mall,
     settingsFrequencyLabel:t.frequency,settingsLanguageLabel:t.language,
     settingsTimingLegend:t.timing,settingsAdvanceLabel:t.advance,
     settingsQuietStartLabel:t.quietStart,settingsQuietEndLabel:t.quietEnd,
@@ -124,12 +132,14 @@ function checkboxGrid(root,rows,name,selected){
 }
 
 function selectedValues(name){return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(input=>input.value);}
-function defaultPreference(){return{enabled:1,advance_notice:1,marketplaces:'ALL',info_types:'SALE',frequency:'INSTANT',quiet_start:'21:00',quiet_end:'08:00',language:language()};}
+function defaultPreference(){return{enabled:1,advance_notice:1,marketplaces:'ALL',info_types:'SALE',delivery_channels:'APP',frequency:'INSTANT',quiet_start:'21:00',quiet_end:'08:00',language:language()};}
 function fillSettings(preference=defaultPreference()){
   const selectedMalls=new Set(preference.marketplaces==='ALL'?marketplaces.map(([value])=>value):String(preference.marketplaces||'').split(','));
   const selectedTypes=new Set(preference.enabled===0?[]:String(preference.info_types||'SALE').split(','));
   checkboxGrid(document.querySelector('#settingsMarketplaces'),marketplaces,'marketplace',selectedMalls);
   checkboxGrid(document.querySelector('#settingsInfoTypes'),infoTypesLocalized[language()]||infoTypes,'infoType',selectedTypes);
+  const selectedChannels=new Set(String(preference.delivery_channels||'APP').split(','));
+  checkboxGrid(document.querySelector('#settingsChannels'),deliveryChannels[language()]||deliveryChannels.JA,'deliveryChannel',selectedChannels);
   document.querySelector('#settingsFrequency').value=preference.frequency||'INSTANT';
   document.querySelector('#settingsLanguage').value=preference.language||language();
   document.querySelector('#settingsAdvance').checked=Boolean(preference.advance_notice);
@@ -171,7 +181,7 @@ document.querySelector('#notificationSettingsForm')?.addEventListener('submit',a
   const malls=selectedValues('marketplace');
   const payload={
     enabled:types.length>0,advance_notice:document.querySelector('#settingsAdvance').checked,
-    info_types:types,marketplaces:malls,frequency:document.querySelector('#settingsFrequency').value,
+    info_types:types,marketplaces:malls,delivery_channels:selectedValues('deliveryChannel'),frequency:document.querySelector('#settingsFrequency').value,
     language:document.querySelector('#settingsLanguage').value,
     quiet_start:document.querySelector('#settingsQuietStart').value,
     quiet_end:document.querySelector('#settingsQuietEnd').value
