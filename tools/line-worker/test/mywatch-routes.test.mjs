@@ -68,5 +68,10 @@ test('会員画面でWeb通知の一覧・既読・非表示を操作できる',
   assert.match(app, /updateNotification\(item\.notification_id,'READ'\)/);
   assert.match(app, /updateNotification\(item\.notification_id,'DISMISS'\)/);
   assert.match(css, /\.notification-item\.unread/);
+  assert.match(app, /index\+=3/);
+  assert.match(app, /notificationRotationTimer=setInterval\(\(\)=>move\(1\),6000\)/);
+  assert.match(css, /\.notification-page\{[^}]*flex:0 0 100%/);
+  assert.match(css, /scroll-snap-type:x mandatory/);
   assert.match(serviceWorker, /mywatch\.css/);
+  assert.match(serviceWorker, /hoshilu-shell-v287/);
 });
