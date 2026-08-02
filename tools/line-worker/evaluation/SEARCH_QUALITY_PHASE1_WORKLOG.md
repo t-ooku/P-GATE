@@ -71,3 +71,10 @@
 - Schema, commercial-field, duplicate, deterministic sampling, and direction checks run before any review.
 - Batches 1–3 require 100% review; later batches sample 20%. A whole batch needs at least 90% and explicit Claude naturalness approval, otherwise it remains pending or is rejected.
 - No generated row is merged into the production dataset by this phase implementation.
+
+## Phase 7 implementation
+
+- Soft relevance scoring uses preferred-attribute matches and evidence strength before any commercial input is read.
+- Commercial ranking accepts only candidates marked as hard-filter-passed and already carrying a finite relevance score; it may break exact relevance ties but cannot outrank a better relevance score.
+- An intentionally irrelevant contracted candidate is removed before both ranking stages in regression tests.
+- `HOSHILU_TWO_STAGE_RANKING_ENABLED` defaults to OFF and production ranking remains unchanged.
