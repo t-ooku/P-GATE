@@ -728,7 +728,15 @@ export function buildRakutenSearchKeywordCandidates(query) {
   const rememberedProduct = buildRakutenSearchKeywords(
     String(query || '').split('/')[0]
   );
-  return [...new Set([primary, rememberedProduct].filter(Boolean))].slice(0, 2);
+  const normalized = String(query || '').normalize('NFKC');
+  const explicitProduct = [
+    'カットソー', 'ローテーブル', 'センターテーブル', 'ダイニングテーブル',
+    'サイドテーブル', 'Tシャツ', 'ブラウス', 'シャツ', 'ニット',
+    'カーディガン', 'ワンピース', 'スカート', 'パンツ', 'ジャケット',
+    'ソファ', 'チェア', 'デスク', 'ベッド', '本棚', 'ラック'
+  ].find((term) => normalized.includes(term)) || '';
+  const broadProduct = explicitProduct === 'ローテーブル' ? 'センターテーブル' : explicitProduct;
+  return [...new Set([primary, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 2);
 }
 
 export function buildRakutenSearchDestination(query) {
