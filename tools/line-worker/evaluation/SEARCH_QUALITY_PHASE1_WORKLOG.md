@@ -51,3 +51,10 @@
 - `body-accessory-classifier.mjs` classifies explicit structured evidence first, then multilingual body/accessory terms from JSON rules.
 - Body requests reject accessory-only candidates with `ACCESSORY_ONLY`; uncertain candidates are retained for later evidence gates rather than guessed.
 - `HOSHILU_ACCESSORY_CLASSIFIER_ENABLED` defaults to OFF and production search remains unchanged.
+
+## Phase 5 implementation
+
+- `evidence-gate.mjs` rejects model incompatibility before evaluating evidence-required claims.
+- Voltage, waterproofing, model compatibility, and genuine-brand claims require a confirmed value and named source; image-only or missing evidence never passes.
+- Product URLs explicitly requested as verified require `url_verified: true`.
+- `HOSHILU_EVIDENCE_GATE_ENABLED` defaults to OFF and production search remains unchanged.
