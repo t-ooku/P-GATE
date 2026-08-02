@@ -306,7 +306,12 @@ test('PWA公開質問は同意・文字数・匿名セッション・Turnstile�
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token'
   });
   assert.equal(valid.query, 'breakfast cereal');
+  assert.equal(valid.search_attempt, 1);
   assert.equal(valid.traffic_class, 'UNATTRIBUTED');
+  assert.equal(validateKnowledgeRequest({
+    query: 'breakfast cereal', consent: true, search_attempt: 2,
+    session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token'
+  }).search_attempt, 2);
   assert.equal(validateKnowledgeRequest({
     query: 'breakfast cereal', consent: true,
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token',
@@ -335,7 +340,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v280/);
+  assert.match(serviceWorker, /hoshilu-shell-v281/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });

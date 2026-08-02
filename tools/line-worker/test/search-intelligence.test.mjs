@@ -816,12 +816,10 @@ test('camera memory produces ten camera-related use suggestions', async () => {
     'SNSで見たピンクの小さいカメラみたいなもの / 推し活で使う',
     'JA'
   );
-  assert.equal(continued.clarification.required, true);
-  assert.equal(continued.clarification.options.length, 10);
+  assert.equal(continued.clarification.required, false);
+  assert.equal(continued.clarification.options.length, 0);
+  assert.equal(continued.search_guidance.product_presentation_required, true);
   assert.match(continued.clarification.question, /カメラの種類・特徴/);
-  assert.deepEqual(continued.clarification.options.slice(0, 3).map((item) => item.label), [
-    'トイカメラ', 'キッズカメラ', 'ミニデジタルカメラ'
-  ]);
 });
 
 test('写真プリンターをカメラ用途へ誤分類しない', async () => {
@@ -2832,6 +2830,19 @@ test('public knowledge policy shows indexed products while asking one refinement
   assert.equal(result.clarification.required, true);
   assert.equal(result.candidates[0].asin, row.asin);
   assert.equal(result.search_guidance.provisional, true);
+});
+
+test('second public search stops clarification and presents available products', async () => {
+  const row = { asin: 'B000000002', product_name: 'Blue Table Lamp', stock: 4 };
+  const env = { PRODUCT_DB: { prepare() { return { bind() { return { all: async () => ({ results: [row] }) }; } }; } } };
+  const result = await applyIndexedSearchPolicy(
+    { query_id: 'q-second', candidates: [] }, env, 'SNSで見た青いもの', 'JA',
+    { force_product_presentation: true }
+  );
+  assert.equal(result.clarification.required, false);
+  assert.deepEqual(result.clarification.options, []);
+  assert.equal(result.candidates[0].asin, row.asin);
+  assert.equal(result.search_guidance.product_presentation_met, true);
 });
 
 test('kitchen appliance intent excludes broad cooking-only matches and supports one-pass search', () => {

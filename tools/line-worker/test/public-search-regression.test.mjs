@@ -22,13 +22,14 @@ function environment(rows) {
   };
 }
 
-function request(query, language = 'JA') {
+function request(query, language = 'JA', searchAttempt = 1) {
   return new Request('https://hoshilu.app/api/knowledge', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       query,
       language,
+      search_attempt: searchAttempt,
       consent: true,
       session_id: 'anonymous_session_123456',
       turnstile_token: 'verified-token'
@@ -55,14 +56,37 @@ test('public search API asks one question and suggests MYWISH for context-only i
     const secondResponse = await worker.fetch(request('SNSで見た青いもの / 遊び・趣味に使う'), environment([]), context);
     const secondPayload = await secondResponse.json();
     assert.equal(secondResponse.status, 200, JSON.stringify(secondPayload));
-    assert.equal(secondPayload.result.clarification.required, true);
+    assert.equal(secondPayload.result.clarification.required, false);
     assert.equal(secondPayload.result.search_guidance.continuation, true);
+    assert.equal(secondPayload.result.search_guidance.product_presentation_required, true);
     assert.match(secondPayload.result.amazon_search_url, /\/go\?/);
     const thirdResponse = await worker.fetch(request('SNSで見た青いもの / 遊び・趣味に使う / 手のひらサイズ'), environment([]), context);
     const thirdPayload = await thirdResponse.json();
     assert.equal(thirdResponse.status, 200, JSON.stringify(thirdPayload));
-    assert.equal(thirdPayload.result.clarification.required, true);
+    assert.equal(thirdPayload.result.clarification.required, false);
     assert.match(thirdPayload.result.amazon_search_url, /\/go\?/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('second search presents an indexed product instead of asking again', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => String(url).includes('siteverify')
+    ? Response.json({ success: true })
+    : Response.json({ ok: true, result: { query_id: 'gas-second', candidates: [], message: '' } });
+  const row = {
+    asin: 'B000SECOND', product_name: 'Blue light-up phone case', manufacturer: 'Example',
+    image_url: 'https://images.example.test/case.jpg', stock: 2
+  };
+  try {
+    const response = await worker.fetch(request('TikTokで見た光るスマホケース', 'JA', 2), environment([row]), context);
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    assert.equal(payload.result.clarification.required, false);
+    assert.equal(payload.result.search_guidance.product_presentation_required, true);
+    assert.equal(payload.result.search_guidance.product_presentation_met, true);
+    assert.equal(payload.result.candidates[0].asin, row.asin);
   } finally {
     globalThis.fetch = originalFetch;
   }

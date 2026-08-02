@@ -214,6 +214,8 @@ export function validateKnowledgeRequest(payload) {
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
   if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
   const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
+  const searchAttempt = Number.isInteger(payload.search_attempt)
+    ? Math.min(2, Math.max(1, payload.search_attempt)) : 1;
   const cleanAttribution = (value) => String(value || '').trim()
     .replace(/[^\p{L}\p{N}_.-]/gu, '').slice(0, 80);
   const attribution = {
@@ -223,7 +225,7 @@ export function validateKnowledgeRequest(payload) {
     content: cleanAttribution(payload.content)
   };
   return {
-    query, session_id: sessionId, turnstile_token: turnstileToken, language,
+    query, session_id: sessionId, turnstile_token: turnstileToken, language, search_attempt: searchAttempt,
     consent: true, attribution,
     traffic_class: classifyGrowthTraffic(attribution)
   };
@@ -957,7 +959,9 @@ async function handleKnowledgeApi(request, env, ctx) {
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     const [gasOutcome, indexedOutcome] = await Promise.allSettled([
       callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } }),
-      applyIndexedSearchPolicy({ candidates: [] }, env, input.query, input.language)
+      applyIndexedSearchPolicy({ candidates: [] }, env, input.query, input.language, {
+        force_product_presentation: input.search_attempt >= 2
+      })
     ]);
     const gasResult = gasOutcome.status === 'fulfilled' ? gasOutcome.value : { candidates: [], message: '' };
     let result = indexedOutcome.status === 'fulfilled' ? indexedOutcome.value : gasResult;
@@ -968,7 +972,7 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(result.candidates, gasResult.candidates)
       };
     }
-    const shouldSearchMarketplaces = String(input.query).includes(' / ') || !(result?.candidates || []).length;
+    const shouldSearchMarketplaces = input.search_attempt >= 2 || String(input.query).includes(' / ') || !(result?.candidates || []).length;
     if (shouldSearchMarketplaces) {
       const marketplaceSearches = [];
       if (creatorsApiConfigured(env)) marketplaceSearches.push({
@@ -996,6 +1000,14 @@ async function handleKnowledgeApi(request, env, ctx) {
       traffic_class: input.traffic_class,
       candidates: filterCategoryMismatches(input.query, result?.candidates || []).slice(0, 10)
     };
+    if (input.search_attempt >= 2) {
+      result.clarification = { ...(result.clarification || {}), required: false, options: [] };
+      result.search_guidance = {
+        ...(result.search_guidance || {}),
+        product_presentation_required: true,
+        product_presentation_met: result.candidates.length > 0
+      };
+    }
     const sessionHash = await hashUser(input.session_id);
     const decorated = await decoratePwaResult(
       result,

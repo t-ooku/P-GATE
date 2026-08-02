@@ -2743,7 +2743,7 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
     .map(({ candidate }, index) => ({ ...candidate, rank: index + 1 }));
 }
 
-export async function applyIndexedSearchPolicy(baseResult, env, query, language = 'JA') {
+export async function applyIndexedSearchPolicy(baseResult, env, query, language = 'JA', options = {}) {
   if (!env.PRODUCT_DB) return {
     ...(baseResult || {}),
     candidates: filterCategoryMismatches(query, baseResult?.candidates || [])
@@ -2771,6 +2771,7 @@ export async function applyIndexedSearchPolicy(baseResult, env, query, language 
     : decision.reason === 'NO_CANDIDATES' || decision.candidate_categories.length === 0 ? copy.use : copy.detail;
   const question = contextualQuestion(query, language, baseQuestion);
   const isContinuation = String(query || '').includes(' / ');
+  const forceProductPresentation = options.force_product_presentation === true || isContinuation;
   if (decision.needs_clarification) {
     const provisionalCandidates = displayCandidates;
     return {
@@ -2778,13 +2779,15 @@ export async function applyIndexedSearchPolicy(baseResult, env, query, language 
       query_id: baseResult?.query_id || crypto.randomUUID(),
       candidates: provisionalCandidates,
       message: `${question}${decision.offer_mywish ? ` ${copy.wish}` : ''}`,
-      clarification: { required: true, question, reason: decision.reason, options: clarificationOptions(decision, language, query) },
+      clarification: { required: !forceProductPresentation, question, reason: decision.reason, options: forceProductPresentation ? [] : clarificationOptions(decision, language, query) },
       mywish: { suggested: decision.offer_mywish, query },
       search_guidance: {
         confidence: decision.confidence,
         information_score: decision.information_score,
         provisional: provisionalCandidates.length > 0,
-        continuation: isContinuation
+        continuation: isContinuation,
+        product_presentation_required: forceProductPresentation,
+        product_presentation_met: provisionalCandidates.length > 0
       }
     };
   }
