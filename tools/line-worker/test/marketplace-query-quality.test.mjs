@@ -1133,6 +1133,21 @@ test('電動昇降デスクは天板サイズ・モーター・メモリ・安�
   }
 });
 
+test('電動昇降デスクの天板サイズ訂正は旧サイズを捨てて新サイズを4言語で採用する', () => {
+  const queries = [
+    '天板140×70cmではなく120×60cm デュアルモーター 電動昇降デスク 4メモリ 衝突防止',
+    'not 140x70 cm but 120x60 cm dual-motor electric standing desk 4 memory presets anti-collision',
+    '不要140×70cm要120×60cm 双电机 电动升降桌 4档记忆 防碰撞',
+    '140×70cm 말고 120×60cm 듀얼 모터 전동 스탠딩 데스크 4메모리 충돌 방지',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        '電動昇降デスク 120×60cm デュアルモーター 4メモリ 衝突防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('オフィスチェアは支持機能・肘掛け・素材・耐荷重を4言語で保持する', () => {
   const queries = [
     'エルゴノミクスオフィスチェア ヘッドレスト 腰サポート 4D肘掛け メッシュ 耐荷重150kg',

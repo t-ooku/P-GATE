@@ -2458,6 +2458,23 @@ test('電動昇降デスクは4言語で天板サイズ・モーター・メモ�
   }
 });
 
+test('電動昇降デスクの天板サイズ訂正は旧サイズを除外して訂正後の本体だけを提示する', () => {
+  const queries = [
+    '天板140×70cmではなく120×60cm デュアルモーター 電動昇降デスク 4メモリ 衝突防止',
+    'not 140x70 cm but 120x60 cm dual-motor electric standing desk 4 memory presets anti-collision',
+    '不要140×70cm要120×60cm 双电机 电动升降桌 4档记忆 防碰撞',
+    '140×70cm 말고 120×60cm 듀얼 모터 전동 스탠딩 데스크 4메모리 충돌 방지',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '120x60 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'OLD', product_name: '140x70 cm dual-motor electric standing desk 4 memory presets anti-collision' },
+    { asin: 'MEMORY', product_name: '120x60 cm dual-motor electric standing desk 2 memory presets anti-collision' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('オフィスチェアは4言語で支持機能・肘掛け・素材・耐荷重が一致する本体だけを提示する', () => {
   const queries = [
     'エルゴノミクスオフィスチェア ヘッドレスト 腰サポート 4D肘掛け メッシュ 耐荷重150kg',

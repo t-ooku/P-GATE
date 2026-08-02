@@ -1369,7 +1369,13 @@ function isCompressorDehumidifierMismatch(candidate, requested) {
 
 function electricStandingDeskConstraints(value) {
   const text = String(value || '').normalize('NFKC');
-  const size = text.match(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*cm\b/iu);
+  const sizeMatches = [...text.matchAll(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*cm\b/giu)];
+  const size = sizeMatches.filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1);
   return {
     desk: /(?:電動昇降デスク|electric\s*(?:height\s*adjustable\s*|standing\s*)desk|电动升降桌|電動升降桌|전동\s*스탠딩\s*데스크|座りっぱなし.{0,16}(?:減ら|避け).{0,16}立って.{0,12}仕事|alternate.{0,12}sitting.{0,12}standing.{0,20}(?:work|working)|工作时.{0,12}坐站交替|工作時.{0,12}坐站交替|일할\s*때.{0,12}앉았다.{0,8}서서.{0,12}일)/iu.test(text),
     size: size ? `${size[1]}x${size[2]}` : '',

@@ -621,7 +621,13 @@ function buildCompressorDehumidifierSearchKeywords(query) {
 function buildElectricStandingDeskSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const desk = /(?:電動昇降デスク|electric\s*(?:height\s*adjustable\s*|standing\s*)desk|电动升降桌|電動升降桌|전동\s*스탠딩\s*데스크|座りっぱなし.{0,16}(?:減ら|避け).{0,16}立って.{0,12}仕事|alternate.{0,12}sitting.{0,12}standing.{0,20}(?:work|working)|工作时.{0,12}坐站交替|工作時.{0,12}坐站交替|일할\s*때.{0,12}앉았다.{0,8}서서.{0,12}일)/iu.test(normalized);
-  const size = normalized.match(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*cm\b/iu);
+  const sizeMatches = [...normalized.matchAll(/\b(\d{2,3})\s*[x×]\s*(\d{2,3})\s*cm\b/giu)];
+  const size = sizeMatches.filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1);
   const dualMotor = /(?:デュアルモーター|dual[\s-]*motor|双电机|雙馬達|듀얼\s*모터)/iu.test(normalized);
   const memory = normalized.match(/\b(\d)\s*(?:メモリ|memory\s*preset(?:s)?|档记忆|檔記憶|메모리)/iu)?.[1];
   const antiCollision = /(?:衝突防止|anti[\s-]*collision|防碰撞|충돌\s*방지)/iu.test(normalized);
