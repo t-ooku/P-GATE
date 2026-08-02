@@ -979,7 +979,7 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(result.candidates, gasResult.candidates)
       };
     }
-    const shouldSearchMarketplaces = input.search_attempt >= 2 || String(input.query).includes(' / ') || !(result?.candidates || []).length;
+    const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env);
     if (shouldSearchMarketplaces) {
       const marketplaceSearches = [];
       if (creatorsApiConfigured(env)) marketplaceSearches.push({

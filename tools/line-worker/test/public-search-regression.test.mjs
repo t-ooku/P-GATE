@@ -127,6 +127,30 @@ test('AI product discovery runs from the first search when ten-mall candidates r
   }
 });
 
+test('first search always checks a configured marketplace API even when an indexed candidate exists', async () => {
+  const originalFetch = globalThis.fetch;
+  let rakutenCalls = 0;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    if (target.includes('openapi.rakuten.co.jp')) {
+      rakutenCalls += 1;
+      return Response.json({items:[{
+        itemName:'送料無料 光るスマホケース',itemCode:'shop:case-1',itemPrice:2980,postageFlag:0,
+        itemUrl:'https://item.rakuten.co.jp/shop/case-1/',availability:1
+      }]});
+    }
+    return Response.json({ ok: true, result: { query_id: 'gas-first-marketplace', candidates: [], message: '' } });
+  };
+  const row={asin:'B000INDEX01',product_name:'光るスマホケース',image_url:'https://images.example.test/index.jpg',stock:1};
+  const env={...environment([row]),RAKUTEN_APPLICATION_ID:'app',RAKUTEN_ACCESS_KEY:'key'};
+  try{
+    const payload=await (await worker.fetch(request('TikTokで見た光るスマホケース','JA',1),env,context)).json();
+    assert.equal(rakutenCalls,1);
+    assert.equal(payload.result.candidates.some(item=>item.offers?.some(offer=>offer.marketplace==='RAKUTEN_JP')),true);
+  }finally{globalThis.fetch=originalFetch;}
+});
+
 test('public search API can return an ITG indexed result without an unapproved outbound URL', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => String(url).includes('siteverify')
