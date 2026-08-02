@@ -64,10 +64,17 @@ async function enqueue(request, env) {
 
 async function list(request, env, member) {
   const result = await env.PRODUCT_DB.prepare(
-    `SELECT notification_id,wish_id,event_type,title,body,status,delivered_at,read_at,created_at
-    FROM mywatch_notifications
-    WHERE member_id=?1 AND status='DELIVERED' AND dismissed_at IS NULL
-    ORDER BY created_at DESC LIMIT 50`
+    `SELECT n.notification_id,n.wish_id,n.event_type,n.title,n.body,n.status,
+      n.delivered_at,n.read_at,n.created_at,
+      CASE WHEN n.wish_id='MARKETPLACE_SALES' THEN COALESCE((
+        SELECT s.source_url FROM marketplace_sale_events s
+        WHERE s.sale_id=substr(n.event_key,1,instr(n.event_key,':')-1)
+          AND s.status='APPROVED' AND s.source_url LIKE 'https://%'
+        LIMIT 1
+      ),'') ELSE '' END AS source_url
+    FROM mywatch_notifications n
+    WHERE n.member_id=?1 AND n.status='DELIVERED' AND n.dismissed_at IS NULL
+    ORDER BY n.created_at DESC LIMIT 50`
   ).bind(member.id).all();
   return Response.json({ ok: true, notifications: result?.results || [] }, {
     headers: { 'cache-control': 'no-store' }

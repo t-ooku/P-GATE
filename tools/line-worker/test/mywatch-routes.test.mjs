@@ -67,11 +67,25 @@ test('会員画面でWeb通知の一覧・既読・非表示を操作できる',
   assert.match(app, /fetch\('\/api\/member\/notifications'/);
   assert.match(app, /updateNotification\(item\.notification_id,'READ'\)/);
   assert.match(app, /updateNotification\(item\.notification_id,'DISMISS'\)/);
+  assert.match(app, /notification-source-link/);
+  assert.doesNotMatch(app, /const fallback=body\.match/);
+  assert.match(app, /source\.rel='noopener noreferrer'/);
+  assert.match(app, /source\.textContent=ui\.open/);
   assert.match(css, /\.notification-item\.unread/);
+  assert.match(css, /\.notification-source-link/);
   assert.match(app, /index\+=3/);
   assert.match(app, /notificationRotationTimer=setInterval\(\(\)=>move\(1\),6000\)/);
   assert.match(css, /\.notification-page\{[^}]*flex:0 0 100%/);
   assert.match(css, /scroll-snap-type:x mandatory/);
   assert.match(serviceWorker, /mywatch\.css/);
-  assert.match(serviceWorker, /hoshilu-shell-v289/);
+  assert.match(serviceWorker, /hoshilu-shell-v290/);
+});
+
+test('既存のモール通知にも承認済み公式URLを補完する', async () => {
+  const fs = await import('node:fs');
+  const source = fs.readFileSync(new URL('../src/mywatch-routes.mjs', import.meta.url), 'utf8');
+  assert.match(source, /s\.sale_id=substr\(n\.event_key,1,instr\(n\.event_key,':'\)-1\)/);
+  assert.match(source, /s\.status='APPROVED'/);
+  assert.match(source, /s\.source_url LIKE 'https:\/\/%'/);
+  assert.match(source, /AS source_url/);
 });
