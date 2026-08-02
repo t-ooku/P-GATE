@@ -621,7 +621,12 @@ function portableSsdConstraints(value) {
     portable: /(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용).{0,32}ssd|ssd.{0,32}(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용)/iu.test(text),
     capacity: capacity ? `${capacity[1]}${capacity[2].toUpperCase()}` : '',
     usbGen: text.match(/usb\s*3\.2\s*gen\s*([12](?:x[12])?)/iu)?.[1]?.toLowerCase() || '',
-    readSpeed: text.match(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/iu)?.[1] || '',
+    readSpeed: [...text.matchAll(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/giu)].filter((match) => {
+      const before = text.slice(Math.max(0, match.index - 12), match.index);
+      const after = text.slice(match.index + match[0].length, match.index + match[0].length + 10);
+      return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+        && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+    }).at(-1)?.[1] || '',
     nvme: /\bnvme\b/iu.test(text),
     shockproof: /耐衝撃|耐冲击|耐衝擊|抗震|shock[- ]?proof|충격\s*(?:방지|보호)/iu.test(text),
     wrongProduct: /(?:enclosure|ケース(?:のみ|単体)|外付けケース|硬盘盒|硬碟盒|케이스\s*(?:단품|전용)|hdd|hard\s*drive|ハードディスク|机械硬盘|機械硬碟|하드\s*디스크|usb\s*(?:flash|memory)|flash\s*drive|memory\s*stick|usbメモリ|u盘|隨身碟|usb\s*메모리|内蔵|internal|内置|內置|내장)/iu.test(text)

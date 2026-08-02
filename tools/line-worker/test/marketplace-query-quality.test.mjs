@@ -479,6 +479,21 @@ test('ポータブルSSDは4言語の容量訂正で否定された旧容量を�
   }
 });
 
+test('ポータブルSSDは4言語の速度訂正で否定された旧速度を捨てる', () => {
+  const queries = [
+    'ポータブルSSD 1TB USB 3.2 Gen2 読込1050MB/sではなく2000MB/s 耐衝撃',
+    'portable SSD 1TB USB 3.2 Gen 2 not 1050MB/s but 2000MB/s shockproof',
+    '便携式SSD 1TB USB 3.2 Gen2 读取不要1050MB/s，要2000MB/s 抗震',
+    '휴대용 SSD 1TB USB 3.2 Gen2 읽기 1050MB/s 말고 2000MB/s 충격방지',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'ポータブルSSD 1TB USB 3.2 Gen 2 読込 2000MB/s 耐衝撃', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('カメラ用SDカードは容量・UHS・速度クラス・読込速度を4言語で保持する', () => {
   const queries = [
     '4Kと8K動画撮影用 SDカード 256GB UHS-II V90 読込300MB/s',

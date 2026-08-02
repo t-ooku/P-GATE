@@ -208,7 +208,12 @@ function buildPortableSsdSearchKeywords(query) {
       && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
   }).at(-1);
   const usbGen = String(query || '').match(/usb\s*3\.2\s*gen\s*([12](?:x[12])?)/iu)?.[1];
-  const speed = String(query || '').match(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/iu)?.[1];
+  const speed = [...normalized.matchAll(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/giu)].filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1)?.[1];
   const nvme = /\bnvme\b/iu.test(query) ? 'NVMe' : '';
   const shockproof = /耐衝撃|耐冲击|耐衝擊|抗震|shock[- ]?proof|충격\s*(?:방지|보호)/iu.test(query) ? '耐衝撃' : '';
   if (!capacity) return '';
