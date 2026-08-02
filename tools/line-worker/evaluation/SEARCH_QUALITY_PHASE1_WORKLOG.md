@@ -45,3 +45,9 @@
 - Every rejection includes a stable reason code and relevant canonical attribute IDs.
 - `HOSHILU_CANONICAL_HARD_FILTER_ENABLED` defaults to OFF and the module is not connected to production traffic.
 - The 50-case synthetic-candidate regression requires both exclusion and required-attribute violation rates to remain exactly zero.
+
+## Phase 4 implementation
+
+- `body-accessory-classifier.mjs` classifies explicit structured evidence first, then multilingual body/accessory terms from JSON rules.
+- Body requests reject accessory-only candidates with `ACCESSORY_ONLY`; uncertain candidates are retained for later evidence gates rather than guessed.
+- `HOSHILU_ACCESSORY_CLASSIFIER_ENABLED` defaults to OFF and production search remains unchanged.
