@@ -145,6 +145,21 @@ test('PixelからGalaxy Ultraへの逆訂正は新機種とUSB充電方式を保
   }
 });
 
+test('音声入力風の端末訂正と電池不要の口語表現を4言語で正規化する', () => {
+  const queries = [
+    'ギャラクシー S24 ウルトラじゃなくてピクセル 9 プロのNFCで電池いらない光るケース',
+    'no wait not Galaxy S24 Ultra I mean Pixel 9 Pro battery free NFC light up case',
+    '不是Galaxy S24 Ultra我要Pixel 9 Pro不用装电池的NFC发光手机壳',
+    '갤럭시 S24 울트라 아니고 픽셀 9 프로 배터리 필요 없는 NFC 발광 케이스',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Pixel 9 Pro ケース NFC 電池不要 光る', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('光るケースの機種訂正は4言語で最後のiPhone指定だけを保持する', () => {
   const queries = [
     '光るiPhone 15 Proケース、やっぱりiPhone 15 Pro Max用',

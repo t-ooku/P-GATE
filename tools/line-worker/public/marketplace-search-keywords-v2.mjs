@@ -23,7 +23,14 @@ function correctedIphoneMatch(query) {
 }
 
 function deviceName(query) {
-  const correctedTail = String(query || '').match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|\bbut\b|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|改要|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
+  const rawQuery = String(query || '');
+  const aliasNormalized = rawQuery
+    .replace(/(?:ギャラクシー|갤럭시)/giu, 'Galaxy')
+    .replace(/(?:ピクセル|픽셀)/giu, 'Pixel')
+    .replace(/(?:ウルトラ|울트라)/giu, 'Ultra')
+    .replace(/(?:プロ|프로)/giu, 'Pro');
+  if (aliasNormalized !== rawQuery) return deviceName(aliasNormalized);
+  const correctedTail = rawQuery.match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|\bbut\b|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|改要|我要|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
   if (correctedTail && /(?:\b(?:iphone|ipad|galaxy|pixel|xperia|aquos)\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰|ギャラクシー|三星|갤럭시|픽셀|エクスペリア|엑스페리아|アクオス|아쿠오스)/iu.test(correctedTail)) {
     return deviceName(correctedTail);
   }
@@ -1276,7 +1283,7 @@ export function buildDeviceAccessorySearchKeywords(query) {
     && /(?:(?:nfc|電池不要|電源不要).{0,32}(?:ではなく|じゃなく).{0,20}(?:usb[- ]?)?充電式|not\s+.{0,40}(?:battery[- ]?free|\bnfc\b).{0,40}(?:but|instead).{0,24}(?:usb[- ]?)?rechargeable|不要.{0,24}(?:nfc|免电池|免電池|无需电池|無需電池).{0,28}(?:要|改要).{0,20}(?:usb[- ]?)?充[电電]式|(?:nfc|배터리\s*없는|전원\s*불필요).{0,32}(?:말고|아닌|아니고).{0,20}(?:usb[- ]?)?충전식)/iu.test(normalized);
   const casePower = label === 'ケース' && !correctedRechargeableCase
     && /\bnfc\b/iu.test(normalized)
-    && /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|免电池|免電池|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalized)
+    && /(?:電池(?:不要|いらない)|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|免电池|免電池|无需电池|無需電池|不用(?:装|裝)?电池|不用(?:装|裝)?電池|배터리\s*(?:없는|불필요|필요\s*없는)|전원\s*불필요)/iu.test(normalized)
     ? 'NFC 電池不要' : '';
   const caseRechargeable = correctedRechargeableCase ? 'USB充電式' : '';
   const conditions = [...new Set([
@@ -1656,7 +1663,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const phoneCasePower = products.includes('スマホケース')
     && !correctedRechargeablePhoneCase
     && /\bnfc\b/iu.test(normalized)
-    && /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalized)
+    && /(?:電池(?:不要|いらない)|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用(?:装|裝)?电池|不用(?:装|裝)?電池|배터리\s*(?:없는|불필요|필요\s*없는)|전원\s*불필요)/iu.test(normalized)
     ? 'NFC 電池不要' : '';
   const phoneCaseRechargeable = correctedRechargeablePhoneCase ? 'USB充電式' : '';
   const specifications = specificationTokens(normalized);

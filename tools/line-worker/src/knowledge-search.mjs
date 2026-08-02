@@ -315,8 +315,12 @@ function isTrueWirelessEarphonesMismatch(candidate) {
 }
 
 function phoneCaseDeviceModel(value) {
-  const text = String(value || '').normalize('NFKC');
-  const correctedTail = text.match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|\bbut\b|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|改要|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
+  const text = String(value || '').normalize('NFKC')
+    .replace(/(?:ギャラクシー|갤럭시)/giu, 'Galaxy')
+    .replace(/(?:ピクセル|픽셀)/giu, 'Pixel')
+    .replace(/(?:ウルトラ|울트라)/giu, 'Ultra')
+    .replace(/(?:プロ|프로)/giu, 'Pro');
+  const correctedTail = text.match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|\bbut\b|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|改要|我要|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
   if (correctedTail && /\b(?:iphone|galaxy|pixel)\b/iu.test(correctedTail)) {
     return phoneCaseDeviceModel(correctedTail);
   }
@@ -1572,12 +1576,12 @@ function isLightUpPhoneCaseMismatch(candidate, query) {
   const correctedRechargeable = /(?:(?:nfc|電池不要|電源不要).{0,32}(?:ではなく|じゃなく).{0,20}(?:usb[- ]?)?充電式|not\s+.{0,40}(?:battery[- ]?free|\bnfc\b).{0,40}(?:but|instead).{0,24}(?:usb[- ]?)?rechargeable|不要.{0,24}(?:nfc|免电池|免電池|无需电池|無需電池).{0,28}(?:要|改要).{0,20}(?:usb[- ]?)?充[电電]式|(?:nfc|배터리\s*없는|전원\s*불필요).{0,32}(?:말고|아닌|아니고).{0,20}(?:usb[- ]?)?충전식)/iu.test(normalizedQuery);
   const wantsNfc = !correctedRechargeable && /\bnfc\b/iu.test(normalizedQuery);
   const wantsBatteryFree = !correctedRechargeable
-    && /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalizedQuery);
+    && /(?:電池(?:不要|いらない)|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用(?:装|裝)?电池|不用(?:装|裝)?電池|배터리\s*(?:없는|불필요|필요\s*없는)|전원\s*불필요)/iu.test(normalizedQuery);
   if (correctedRechargeable
     && !/(?:usb[- ]?.{0,8}充電式|usb[- ]?.{0,8}rechargeable|usb[- ]?.{0,8}充[电電]式|usb[- ]?.{0,8}충전식|充電式|rechargeable|充[电電]式|충전식)/iu.test(text)) return true;
   if (wantsNfc && !/\bnfc\b/iu.test(text)) return true;
   if (wantsBatteryFree
-    && !/(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(text)) return true;
+    && !/(?:電池(?:不要|いらない)|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用(?:装|裝)?电池|不用(?:装|裝)?電池|배터리\s*(?:없는|불필요|필요\s*없는)|전원\s*불필요)/iu.test(text)) return true;
   if (/(?:リングライト|ring\s*light|补光灯|補光燈|링\s*라이트|スマホスタンド|phone\s*stand|手机支架|手機支架|스마트폰\s*거치대|ケース用.{0,12}(?:発光|LED|ライト)(?:パーツ|部品|モジュール)|(?:phone|mobile)\s*case.{0,12}(?:light\s*insert|LED\s*module)|手机壳用.{0,12}(?:发光配件|LED模块)|手機殼用.{0,12}(?:發光配件|LED模組)|케이스용.{0,12}(?:발광\s*부품|LED\s*모듈))/iu.test(text)) return true;
   return false;
 }
