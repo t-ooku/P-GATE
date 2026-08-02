@@ -114,10 +114,19 @@ function buildSmartWatchBandSearchKeywords(query) {
     return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
       && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
   }).at(-1)?.[1];
-  const material = /(?:チタン|titanium|钛(?:金属)?|鈦(?:金屬)?|티타늄)/iu.test(query) ? 'チタン'
-    : /(?:ステンレス|stainless(?:\s*steel)?|不锈钢|不鏽鋼|스테인리스)/iu.test(query) ? 'ステンレス'
-      : /(?:レザー|本革|革|leather|皮革|真皮|가죽)/iu.test(query) ? 'レザー'
-        : /(?:シリコン|silicone|硅胶|矽膠|실리콘)/iu.test(query) ? 'シリコン' : '';
+  const material = [
+    ['チタン', /(?:チタン|titanium|钛(?:金属)?|鈦(?:金屬)?|티타늄)/giu],
+    ['ステンレス', /(?:ステンレス|stainless(?:\s*steel)?|不锈钢|不鏽鋼|스테인리스)/giu],
+    ['レザー', /(?:レザー|本革|革|leather|皮革|真皮|가죽)/giu],
+    ['シリコン', /(?:シリコン|silicone|硅胶|矽膠|실리콘)/giu],
+  ].flatMap(([label, pattern]) => [...normalized.matchAll(pattern)].map((match) => ({ label, match })))
+    .sort((left, right) => left.match.index - right.match.index)
+    .filter(({ match }) => {
+      const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+      const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 10);
+      return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+        && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+    }).at(-1)?.label || '';
   return [model, size ? `${size}mm` : '', 'バンド', material].filter(Boolean).join(' ');
 }
 
