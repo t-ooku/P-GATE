@@ -1,8 +1,9 @@
-# HOSHILU Bing Webmaster Tools提出手順（未申請）
+# HOSHILU Bing Webmaster Tools提出手順（取込済み・登録確認待ち）
 
-状態: `READY_FOR_OWNER_ACTION`  
+状態: `IMPORTED_OWNER_CONFIRMED`
+確認日: 2026-08-02
 費用: 0円  
-未実行: アカウント作成、Google連携許可、サイト追加、所有権確認、サイトマップ送信、URL送信
+本人操作: Search Consoleからの `hoshilu.app` 取込とID発行まで完了（確認値・ID値は保存しない）。インデックス登録・順位上昇は未確認。
 
 ## 事前確認済み
 
@@ -17,11 +18,11 @@
 Bing公式では、Google Search Consoleで確認済みのサイトを取り込むと、サイト所有権とサイトマップをBing Webmaster Toolsへ移行できる。重複するDNS変更を避けられるため、HOSHILUではこの経路を優先する。
 
 1. HOSHILU所有者本人のアカウントで `https://www.bing.com/webmasters/` を開く。
-2. Google Search Consoleの `hoshilu.app` 所有権確認が完了していることを確認する。
-3. `Import` を選び、HOSHILUのSearch Console情報を読むための権限範囲を本人が確認して許可する。
+2. Google Search Consoleの `hoshilu.app` 所有権確認が完了していることを確認する。**完了（2026-08-02）**。
+3. `Import` を選び、HOSHILUのSearch Console情報を読むための権限範囲を本人が確認して許可する。**完了（2026-08-02）**。
 4. 一覧から `hoshilu.app` だけを選ぶ。ITGの販売店舗や無関係なサイトは選ばない。
-5. 取込後、Sitemaps画面に `https://hoshilu.app/sitemap.xml` が表示されることを確認する。なければ本人が同URLを1回だけ送信する。
-6. Site ExplorerまたはURL Inspectionでトップ、日英SEOページ各1件、`/privacy`、`/terms`を確認する。
+5. 取込後、Sitemaps画面に `https://hoshilu.app/sitemap.xml` が表示されることを確認する。**取込操作完了（2026-08-02）、処理結果・検出URL数は未確認**。
+6. Site ExplorerまたはURL Inspectionでトップ、日英SEOページ各1件、`/privacy`、`/terms`を確認する。**未確認**。
 7. 48時間程度は分析データ生成を待ち、即時掲載や順位上昇を実績として断定しない。
 
 ## 代替経路: 手動追加

@@ -10,10 +10,11 @@
 
 ## Google Search Console
 
-- 2026-08-02: `hoshilu.app` ドメインプロパティの所有権確認を完了。
-- サイトマップ `https://hoshilu.app/sitemap.xml` は送信済みだが、現在「サイトマップを読み込めませんでした」と表示されている。
+- 2026-08-02: `hoshilu.app` ドメインプロパティの所有権確認とサイトマップ送信を完了。
+- 2026-08-02: Bing Webmaster ToolsへSearch Consoleから`hoshilu.app`を取り込み、ID発行まで完了。確認値・ID値は記録しない。
+- Search Console/Bingのインデックス登録、検出URL数、順位上昇は未確認。
 - 本番応答はHTTP 200・`application/xml`・XML解析成功を確認済み。旧URLを含む本番サイトマップと最新コードの差異をSEO作業枠で修正する。
-- 修正反映と再確認が完了するまで、Search Consoleでの再送信は行わない。
+- サイトマップの処理結果が未確認のため、重複再送信は行わない。
 - 再送信後は、検出URL数、ステータス、エラー内容を記録し、自然検索クリックと指名検索を別指標で確認する。
 
 ## 保留中の外部操作
