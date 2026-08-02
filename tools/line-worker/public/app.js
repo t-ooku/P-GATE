@@ -22,7 +22,7 @@ const navigationCopy = {
   ZH:{eyebrow:'找到真正想要的商品。',features:['HOSHILU 搜索','已收藏'],account:'我的页面',candidateAmazon:'在 Amazon 查找此商品'},
   KO:{eyebrow:'원하는 것을 제대로 찾기.',features:['HOSHILU 검색','저장'],account:'마이페이지',candidateAmazon:'Amazon에서 이 상품 찾기'}
 };
-const journeyStep4Copy={JA:['見つからなければSNSでも探す','Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます。'],EN:['Search social platforms too','If marketplaces do not have it, continue the same search on Instagram, X, TikTok, and YouTube.'],ZH:['找不到时也搜索社交平台','如果商城里没有，可用相同条件继续搜索 Instagram、X、TikTok 和 YouTube。'],KO:['찾지 못하면 SNS에서도 검색','쇼핑몰에 없다면 같은 조건으로 Instagram, X, TikTok, YouTube에서도 계속 검색할 수 있습니다.']};
+const journeyStep4Copy={JA:['見つからなければSNSやAIでも探せる','Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます。'],EN:['Search social platforms too','If marketplaces do not have it, continue the same search on Instagram, X, TikTok, and YouTube.'],ZH:['找不到时也搜索社交平台','如果商城里没有，可用相同条件继续搜索 Instagram、X、TikTok 和 YouTube。'],KO:['찾지 못하면 SNS에서도 검색','쇼핑몰에 없다면 같은 조건으로 Instagram, X, TikTok, YouTube에서도 계속 검색할 수 있습니다.']};
 const wishSearchCopy={JA:'保存した「欲しい」を検索',EN:'Search saved wants',ZH:'搜索已保存的心愿',KO:'저장한 원하는 것 검색'};
 const shareCopy={
   JA:{title:'HOSHILUで探した',button:'SNSでシェア',copy:'リンクをコピー',include:'検索内容も投稿に含める',privacy:'初期状態では検索内容を共有しません。',tag:'#ホシルで見つけた',prefix:'HOSHILUで探しました：',copied:'投稿文とHOSHILUリンクをコピーしました'},
