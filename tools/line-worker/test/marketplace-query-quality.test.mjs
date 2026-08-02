@@ -70,6 +70,21 @@ test('SNSで見た光るケースは機種とMagSafe条件を4言語で保持す
   }
 });
 
+test('NFCで光る電池不要ケースは発光方式を4言語で保持する', () => {
+  const queries = [
+    'TikTokで見たNFCで光る電池不要のスマホケース',
+    'battery-free NFC light-up phone case from TikTok',
+    '抖音看到的NFC感应发光无需电池手机壳',
+    '틱톡에서 본 NFC 연동 배터리 없는 발광 스마트폰 케이스',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'NFC 電池不要 光る スマホケース', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('光るケースの機種訂正は4言語で最後のiPhone指定だけを保持する', () => {
   const queries = [
     '光るiPhone 15 Proケース、やっぱりiPhone 15 Pro Max用',

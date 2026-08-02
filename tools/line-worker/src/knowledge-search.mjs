@@ -1568,6 +1568,12 @@ function isLightUpPhoneCaseMismatch(candidate, query) {
     .toLowerCase();
   const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
   if (!hasLightUpEvidence) return true;
+  const normalizedQuery = String(query || '').normalize('NFKC');
+  const wantsNfc = /\bnfc\b/iu.test(normalizedQuery);
+  const wantsBatteryFree = /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalizedQuery);
+  if (wantsNfc && !/\bnfc\b/iu.test(text)) return true;
+  if (wantsBatteryFree
+    && !/(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(text)) return true;
   if (/(?:リングライト|ring\s*light|补光灯|補光燈|링\s*라이트|スマホスタンド|phone\s*stand|手机支架|手機支架|스마트폰\s*거치대|ケース用.{0,12}(?:発光|LED|ライト)(?:パーツ|部品|モジュール)|(?:phone|mobile)\s*case.{0,12}(?:light\s*insert|LED\s*module)|手机壳用.{0,12}(?:发光配件|LED模块)|手機殼用.{0,12}(?:發光配件|LED模組)|케이스용.{0,12}(?:발광\s*부품|LED\s*모듈))/iu.test(text)) return true;
   return false;
 }

@@ -1644,6 +1644,10 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const materials = matchedMaterials(normalized);
   const attributes = matchedAttributes(normalized)
     .filter((label) => !products.some((product) => product.includes(label)));
+  const phoneCasePower = products.includes('スマホケース')
+    && /\bnfc\b/iu.test(normalized)
+    && /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalized)
+    ? 'NFC 電池不要' : '';
   const specifications = specificationTokens(normalized);
   const sizes = products.some((product) => APPAREL_PRODUCTS.has(product))
     ? apparelSizeTokens(normalized)
@@ -1653,6 +1657,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const productLimit = Math.min(products.length, 2);
   const attributeLimit = Math.max(0, limit - productLimit);
   const conditions = [...new Set([
+    ...(phoneCasePower ? [phoneCasePower] : []),
     ...specifications,
     ...shoeSizes,
     ...sizes,
