@@ -85,6 +85,21 @@ test('NFCで光る電池不要ケースは発光方式を4言語で保持する'
   }
 });
 
+test('NFC電池不要からUSB充電式への言い直しは訂正後の方式だけを保持する', () => {
+  const queries = [
+    'NFCで電池不要のタイプではなくUSB充電式の光るスマホケース',
+    'not a battery-free NFC case but a USB rechargeable light-up phone case',
+    '不要NFC免电池款，要USB充电式发光手机壳',
+    'NFC 배터리 없는 방식 말고 USB 충전식 발광 스마트폰 케이스',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'USB充電式 光る スマホケース', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('光るケースの機種訂正は4言語で最後のiPhone指定だけを保持する', () => {
   const queries = [
     '光るiPhone 15 Proケース、やっぱりiPhone 15 Pro Max用',

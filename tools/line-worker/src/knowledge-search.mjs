@@ -1535,7 +1535,7 @@ function isIplHairRemovalMismatch(candidate, requested) {
 }
 
 function rejectsLightUpPhoneCase(query) {
-  return /(?:(?:光る|発光|ピカピカ|ライトアップ).{0,32}(?:ケース|カバー).{0,10}(?:じゃなく|ではなく)|not\s+(?:a\s+|an\s+|the\s+)?(?:glow(?:ing)?|light[- ]?up|luminous).{0,32}(?:case|cover)|(?:不要|不是|不想要).{0,24}(?:发光|發光|会亮|會亮).{0,24}(?:手机壳|手機殼)|(?:빛나는|발광|불빛\s*나는).{0,32}(?:케이스|커버).{0,10}(?:말고|아닌|아니고))/iu
+  return /(?:(?:光る|発光|ピカピカ|ライトアップ).{0,32}(?:ケース|カバー).{0,10}(?:じゃなく|ではなく)|not\s+(?:a\s+|an\s+|the\s+)?(?:glow(?:ing)?|light[- ]?up|luminous).{0,32}(?:case|cover)|(?:不要|不是|不想要).{0,8}(?:发光|發光|会亮|會亮).{0,24}(?:手机壳|手機殼)|(?:빛나는|발광|불빛\s*나는).{0,32}(?:케이스|커버).{0,10}(?:말고|아닌|아니고))/iu
     .test(String(query || '').normalize('NFKC'));
 }
 
@@ -1569,8 +1569,12 @@ function isLightUpPhoneCaseMismatch(candidate, query) {
   const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
   if (!hasLightUpEvidence) return true;
   const normalizedQuery = String(query || '').normalize('NFKC');
-  const wantsNfc = /\bnfc\b/iu.test(normalizedQuery);
-  const wantsBatteryFree = /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalizedQuery);
+  const correctedRechargeable = /(?:(?:nfc|電池不要|電源不要).{0,32}(?:ではなく|じゃなく).{0,20}(?:usb[- ]?)?充電式|not\s+.{0,40}(?:battery[- ]?free|\bnfc\b).{0,40}(?:but|instead).{0,24}(?:usb[- ]?)?rechargeable|不要.{0,24}(?:nfc|免电池|免電池|无需电池|無需電池).{0,28}(?:要|改要).{0,20}(?:usb[- ]?)?充[电電]式|(?:nfc|배터리\s*없는|전원\s*불필요).{0,32}(?:말고|아닌|아니고).{0,20}(?:usb[- ]?)?충전식)/iu.test(normalizedQuery);
+  const wantsNfc = !correctedRechargeable && /\bnfc\b/iu.test(normalizedQuery);
+  const wantsBatteryFree = !correctedRechargeable
+    && /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalizedQuery);
+  if (correctedRechargeable
+    && !/(?:usb[- ]?.{0,8}充電式|usb[- ]?.{0,8}rechargeable|usb[- ]?.{0,8}充[电電]式|usb[- ]?.{0,8}충전식|充電式|rechargeable|充[电電]式|충전식)/iu.test(text)) return true;
   if (wantsNfc && !/\bnfc\b/iu.test(text)) return true;
   if (wantsBatteryFree
     && !/(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(text)) return true;

@@ -1644,10 +1644,14 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const materials = matchedMaterials(normalized);
   const attributes = matchedAttributes(normalized)
     .filter((label) => !products.some((product) => product.includes(label)));
+  const correctedRechargeablePhoneCase = products.includes('スマホケース')
+    && /(?:(?:nfc|電池不要|電源不要).{0,32}(?:ではなく|じゃなく).{0,20}(?:usb[- ]?)?充電式|not\s+.{0,40}(?:battery[- ]?free|\bnfc\b).{0,40}(?:but|instead).{0,24}(?:usb[- ]?)?rechargeable|不要.{0,24}(?:nfc|免电池|免電池|无需电池|無需電池).{0,28}(?:要|改要).{0,20}(?:usb[- ]?)?充[电電]式|(?:nfc|배터리\s*없는|전원\s*불필요).{0,32}(?:말고|아닌|아니고).{0,20}(?:usb[- ]?)?충전식)/iu.test(normalized);
   const phoneCasePower = products.includes('スマホケース')
+    && !correctedRechargeablePhoneCase
     && /\bnfc\b/iu.test(normalized)
     && /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalized)
     ? 'NFC 電池不要' : '';
+  const phoneCaseRechargeable = correctedRechargeablePhoneCase ? 'USB充電式' : '';
   const specifications = specificationTokens(normalized);
   const sizes = products.some((product) => APPAREL_PRODUCTS.has(product))
     ? apparelSizeTokens(normalized)
@@ -1658,6 +1662,7 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
   const attributeLimit = Math.max(0, limit - productLimit);
   const conditions = [...new Set([
     ...(phoneCasePower ? [phoneCasePower] : []),
+    ...(phoneCaseRechargeable ? [phoneCaseRechargeable] : []),
     ...specifications,
     ...shoeSizes,
     ...sizes,
