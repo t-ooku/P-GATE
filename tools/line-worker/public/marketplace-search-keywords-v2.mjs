@@ -723,11 +723,22 @@ function buildCameraPetFeederSearchKeywords(query) {
 function buildIplHairRemovalSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const device = /(?:IPL\s*光美容器|IPL\s*(?:hair\s*removal\s*)?device|IPL\s*脱毛仪|IPL\s*脫毛儀|IPL\s*제모기|(?:家|自宅).{0,16}(?:ムダ毛|脱毛).{0,12}(?:ケア|処理)|サロン.{0,12}(?:ムダ毛|脱毛).{0,20}(?:家|自宅).{0,12}(?:ケア|処理)|(?:remove|reduce).{0,12}(?:body\s*)?hair.{0,16}(?:at\s*home|home)|at\s*home.{0,40}(?:remov|reduc).{0,12}(?:body\s*)?hair|在家.{0,12}(?:脱毛|除毛)|美容院.{0,20}(?:脱毛|除毛).{0,16}在家|집에서.{0,12}(?:제모|털\s*제거)|살롱.{0,20}(?:제모|털\s*제거).{0,16}집에서)/iu.test(normalized);
-  const tenThousands = normalized.match(/(\d{1,3})\s*(?:万\s*(?:回|発|发|次)?|만\s*회)/iu)?.[1];
-  const rawFlashes = normalized.match(/\b(\d{5,7})\s*flashes?\b/iu)?.[1];
-  const flashes = tenThousands ? String(Number(tenThousands) * 10000) : rawFlashes || '';
+  const flashMatches = [...normalized.matchAll(/(\d{1,3})\s*(?:万\s*(?:回|発|发|次)?|만\s*회)|\b(\d{5,7})\s*flashes?\b/giu)];
+  const flashMatch = flashMatches.filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1);
+  const flashes = flashMatch?.[1] ? String(Number(flashMatch[1]) * 10000) : flashMatch?.[2] || '';
   const cooling = /(?:冷却(?:機能)?|冷やし|cool(?:ing|\s*my\s*skin)|冰感冷却|冷感|냉각)/iu.test(normalized);
-  const levels = normalized.match(/(\d{1,2})\s*(?:段階|levels?|档|檔|단계)/iu)?.[1];
+  const levelMatches = [...normalized.matchAll(/(\d{1,2})\s*(?:段階|levels?|档|檔|단계)/giu)];
+  const levels = levelMatches.filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1)?.[1];
   const skinSensor = /(?:肌色センサー|skin[\s-]*tone\s*sensor|肤色传感器|膚色感測器|피부톤\s*센서)/iu.test(normalized);
   if (!device || !flashes || !cooling || !levels || !skinSensor) return '';
   return ['IPL光美容器', `${Number(flashes) / 10000}万回`, '冷却機能', `${levels}段階`, '肌色センサー'].join(' ');

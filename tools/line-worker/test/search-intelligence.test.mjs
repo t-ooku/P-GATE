@@ -4490,3 +4490,20 @@ test('IPL光美容器は4言語で照射回数・冷却・出力段階・肌色�
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
   }
 });
+
+test('IPL光美容器の照射回数と出力段階の同時訂正は両方一致する本体だけを提示する', () => {
+  const queries = [
+    'IPL光美容器 50万回ではなく90万回 冷却機能 5段階ではなく9段階 肌色センサー',
+    'IPL hair removal device not 500000 flashes but 900000 flashes cooling not 5 levels but 9 levels skin tone sensor',
+    'IPL脱毛仪 不要50万发要90万发 冰感冷却 不要5档要9档 肤色传感器',
+    'IPL 제모기 50만회 말고 90만회 냉각 5단계 말고 9단계 피부톤 센서',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'IPL hair removal device 900000 flashes cooling 9 levels skin tone sensor' },
+    { asin: 'OLD_FLASHES', product_name: 'IPL hair removal device 500000 flashes cooling 9 levels skin tone sensor' },
+    { asin: 'OLD_LEVELS', product_name: 'IPL hair removal device 900000 flashes cooling 5 levels skin tone sensor' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});

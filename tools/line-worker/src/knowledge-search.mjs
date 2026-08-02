@@ -1558,13 +1558,25 @@ function isCameraPetFeederMismatch(candidate, requested) {
 
 function iplHairRemovalConstraints(value) {
   const text = String(value || '').normalize('NFKC');
-  const tenThousands = text.match(/(\d{1,3})\s*(?:万\s*(?:回|発|发|次)?|만\s*회)/iu)?.[1];
-  const rawFlashes = text.match(/\b(\d{5,7})\s*flashes?\b/iu)?.[1];
+  const flashMatches = [...text.matchAll(/(\d{1,3})\s*(?:万\s*(?:回|発|发|次)?|만\s*회)|\b(\d{5,7})\s*flashes?\b/giu)];
+  const flashMatch = flashMatches.filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1);
+  const levelMatches = [...text.matchAll(/(\d{1,2})\s*(?:段階|levels?|档|檔|단계)/giu)];
+  const levels = levelMatches.filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1)?.[1] || '';
   return {
     device: /(?:IPL\s*光美容器|IPL\s*(?:hair\s*removal\s*)?device|IPL\s*脱毛仪|IPL\s*脫毛儀|IPL\s*제모기|(?:家|自宅).{0,16}(?:ムダ毛|脱毛).{0,12}(?:ケア|処理)|サロン.{0,12}(?:ムダ毛|脱毛).{0,20}(?:家|自宅).{0,12}(?:ケア|処理)|(?:remove|reduce).{0,12}(?:body\s*)?hair.{0,16}(?:at\s*home|home)|at\s*home.{0,40}(?:remov|reduc).{0,12}(?:body\s*)?hair|在家.{0,12}(?:脱毛|除毛)|美容院.{0,20}(?:脱毛|除毛).{0,16}在家|집에서.{0,12}(?:제모|털\s*제거)|살롱.{0,20}(?:제모|털\s*제거).{0,16}집에서)/iu.test(text),
-    flashes: tenThousands ? String(Number(tenThousands) * 10000) : rawFlashes || '',
+    flashes: flashMatch?.[1] ? String(Number(flashMatch[1]) * 10000) : flashMatch?.[2] || '',
     cooling: /(?:冷却(?:機能)?|冷やし|cool(?:ing|\s*my\s*skin)|冰感冷却|冷感|냉각)/iu.test(text),
-    levels: text.match(/(\d{1,2})\s*(?:段階|levels?|档|檔|단계)/iu)?.[1] || '',
+    levels,
     skinSensor: /(?:肌色センサー|skin[\s-]*tone\s*sensor|肤色传感器|膚色感測器|피부톤\s*센서)/iu.test(text),
     wrongProduct: /(?:保護メガネ|protective\s*(?:glasses|goggles)|防护眼镜|防護眼鏡|보호\s*안경|交換(?:用)?(?:カートリッジ|ヘッド)|replacement\s*(?:cartridge|head)|替换(?:灯头|头)|替換(?:燈頭|頭)|교체용\s*(?:카트리지|헤드)|電気シェーバー|electric\s*shaver|电动剃须刀|電動刮鬍刀|전기\s*면도기|脱毛ワックス|hair\s*removal\s*wax|脱毛蜡|脫毛蠟|제모\s*왁스)/iu.test(text)
   };
