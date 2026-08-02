@@ -28,6 +28,12 @@ const deliveryChannels={
   ZH:[['APP','HOSHILU 应用','应用内和设备通知'],['LINE','LINE','已连接的官方 LINE'],['EMAIL','电子邮件','已验证的邮箱']],
   KO:[['APP','HOSHILU 앱','앱 내·기기 알림'],['LINE','LINE','연결된 공식 LINE'],['EMAIL','이메일','인증된 이메일 주소']]
 };
+const emailLinkCopy={
+  JA:{title:'メール通知先を追加',send:'確認コードを送る',verify:'認証して追加',address:'メールアドレス',code:'6桁コード',sending:'確認コードを送信しています…',sent:'メールに届いた6桁コードを入力してください。',linked:'メール通知先を追加しました。メールを選択して設定を保存できます。',failed:'メールアドレスまたは確認コードを確認してください。'},
+  EN:{title:'Add an email destination',send:'Send verification code',verify:'Verify and add',address:'Email address',code:'6-digit code',sending:'Sending a verification code…',sent:'Enter the 6-digit code sent to your email.',linked:'Email destination added. Select Email and save your settings.',failed:'Check the email address or verification code.'},
+  ZH:{title:'添加电子邮件通知地址',send:'发送验证码',verify:'验证并添加',address:'电子邮件地址',code:'6位验证码',sending:'正在发送验证码…',sent:'请输入邮件中收到的6位验证码。',linked:'电子邮件通知地址已添加。请选择电子邮件并保存设置。',failed:'请检查电子邮件地址或验证码。'},
+  KO:{title:'이메일 알림 주소 추가',send:'인증 코드 보내기',verify:'인증 후 추가',address:'이메일 주소',code:'6자리 코드',sending:'인증 코드를 보내는 중…',sent:'이메일로 받은 6자리 코드를 입력하세요.',linked:'이메일 알림 주소를 추가했습니다. 이메일을 선택하고 설정을 저장하세요.',failed:'이메일 주소 또는 인증 코드를 확인하세요.'}
+};
 const settingsCopy={
   JA:{open:'通知設定を開く',title:'通知設定',lead:'セールだけ最初からON。通知方法と必要な情報を選べます。',info:'受け取る情報',channel:'通知方法：アプリ・LINE・メール',channelNote:'アプリ利用者もLINE・メールを追加でき、複数の通知方法を同時に選べます。ブラウザ利用時はLINEまたはメールを選択してください。SMSは費用が発生するため使用しません。',externalRequired:'ブラウザで受け取るには、連携済みのLINEまたはメールを1つ以上選択してください。',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
   EN:{open:'Notification settings',title:'Notification settings',lead:'Sales are on by default. Choose how and what to receive.',info:'Updates to receive',channel:'Notification methods: App, LINE, Email',channelNote:'App users can also add LINE and email, and select multiple methods together. Browser users must select LINE or email. SMS is not used.',externalRequired:'To receive browser-user alerts, select at least one connected LINE or email destination.',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
@@ -109,6 +115,7 @@ function renderCopy(){
 
 function renderSettingsCopy(){
   const t=settingsCopy[language()]||settingsCopy.JA;
+  const email=emailLinkCopy[language()]||emailLinkCopy.JA;
   const values={
     openNotificationSettings:t.open,notificationSettingsTitle:t.title,
     notificationSettingsLead:t.lead,settingsInfoLegend:t.info,settingsChannelLegend:t.channel,
@@ -119,6 +126,11 @@ function renderSettingsCopy(){
     settingsPrivacyText:t.privacy,settingsReset:t.reset,settingsSave:t.save
   };
   Object.entries(values).forEach(([id,value])=>{const element=document.querySelector(`#${id}`);if(element)element.textContent=value;});
+  document.querySelector('#settingsEmailLinkTitle').textContent=email.title;
+  document.querySelector('#settingsEmailSend').textContent=email.send;
+  document.querySelector('#settingsEmailVerify').textContent=email.verify;
+  document.querySelector('#settingsEmailAddress').placeholder=email.address;
+  document.querySelector('#settingsEmailCode').placeholder=email.code;
 }
 
 function checkboxGrid(root,rows,name,selected,available=null){
@@ -151,6 +163,7 @@ const toggle=document.querySelector('#saleOnlyToggle');
 const status=document.querySelector('#salePreferenceStatus');
 const settingsDialog=document.querySelector('#notificationSettingsDialog');
 const settingsStatus=document.querySelector('#notificationSettingsStatus');
+const settingsEmailStatus=document.querySelector('#settingsEmailStatus');
 let memberPreference=null;
 let availableDeliveryChannels=['APP'];
 let sales=[];
@@ -176,6 +189,26 @@ document.querySelector('#openNotificationSettings')?.addEventListener('click',()
 });
 document.querySelector('#notificationSettingsClose')?.addEventListener('click',()=>settingsDialog.close());
 document.querySelector('#settingsReset')?.addEventListener('click',()=>fillSettings(defaultPreference(),availableDeliveryChannels));
+document.querySelector('#settingsEmailSend')?.addEventListener('click',async()=>{
+  const labels=emailLinkCopy[language()]||emailLinkCopy.JA;
+  const email=document.querySelector('#settingsEmailAddress').value.trim();
+  if(!email){settingsEmailStatus.textContent=labels.failed;return;}
+  settingsEmailStatus.textContent=labels.sending;
+  const response=await fetch('/api/member/email/request',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email})});
+  settingsEmailStatus.textContent=response.ok?labels.sent:labels.failed;
+});
+document.querySelector('#settingsEmailVerify')?.addEventListener('click',async()=>{
+  const labels=emailLinkCopy[language()]||emailLinkCopy.JA;
+  const email=document.querySelector('#settingsEmailAddress').value.trim();
+  const code=document.querySelector('#settingsEmailCode').value.trim();
+  if(!email||!/^\d{6}$/.test(code)){settingsEmailStatus.textContent=labels.failed;return;}
+  const response=await fetch('/api/member/email/link',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,code})});
+  if(!response.ok){settingsEmailStatus.textContent=labels.failed;return;}
+  availableDeliveryChannels=[...new Set([...availableDeliveryChannels,'EMAIL'])];
+  fillSettings(memberPreference||defaultPreference(),availableDeliveryChannels);
+  const emailChoice=document.querySelector('input[name="deliveryChannel"][value="EMAIL"]');if(emailChoice)emailChoice.checked=true;
+  settingsEmailStatus.textContent=labels.linked;
+});
 document.querySelector('#notificationSettingsForm')?.addEventListener('submit',async event=>{
   event.preventDefault();
   const types=selectedValues('infoType');

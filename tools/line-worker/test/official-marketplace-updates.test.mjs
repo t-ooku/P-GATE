@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { OFFICIAL_MARKETPLACE_SOURCES, syncOfficialMarketplaceUpdates } from '../src/official-marketplace-updates.mjs';
+import { extractOfficialNotices, OFFICIAL_MARKETPLACE_SOURCES, syncOfficialMarketplaceUpdates } from '../src/official-marketplace-updates.mjs';
+
+test('specific campaigns are extracted only from links on the official marketplace domain',()=>{
+  const notices=extractOfficialNotices(`<a href="/campaign/summer/">夏のポイント10倍キャンペーン</a>
+    <a href="https://evil.example/sale">偽のセール</a><a href="/help/">ヘルプ</a>`,'RAKUTEN_JP','楽天市場','https://event.rakuten.co.jp/');
+  assert.equal(notices.length,1);
+  assert.equal(notices[0].source_url,'https://event.rakuten.co.jp/campaign/summer/');
+  assert.equal(notices[0].info_type,'EDITORIAL');
+  assert.match(notices[0].sale_id,/^official-notice-RAKUTEN_JP-/);
+});
 
 test('ten official marketplace sources are collected without copying images',async()=>{
   const writes=[];

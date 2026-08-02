@@ -36,6 +36,35 @@ function officialUrl(marketplace, value) {
   } catch { return false; }
 }
 
+function stableId(value='') {
+  let hash=2166136261;
+  for(const char of String(value)){hash^=char.codePointAt(0);hash=Math.imul(hash,16777619);}
+  return (hash>>>0).toString(36);
+}
+
+function noticeType(title='') {
+  if(/(?:クーポン|coupon|优惠券|쿠폰)/iu.test(title))return'COUPON';
+  if(/(?:新着|新商品|new arrivals?|新品|신상품)/iu.test(title))return'NEW_ARRIVAL';
+  if(/(?:限定|limited|限量|한정)/iu.test(title))return'LIMITED';
+  if(/(?:セール|sale|割引|off|deal|タイムセール|促销|세일)/iu.test(title))return'SALE';
+  return'EDITORIAL';
+}
+
+export function extractOfficialNotices(html,marketplace,label,baseUrl) {
+  const notices=[],seen=new Set();
+  const pattern=/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/giu;
+  for(const match of String(html||'').matchAll(pattern)){
+    const title=decode(match[2]).slice(0,140);
+    if(title.length<6||!/(?:セール|クーポン|キャンペーン|ポイント|お得|割引|特集|新着|限定|sale|coupon|campaign|points?|deal|event|new arrivals?|促销|优惠|积分|活动|세일|쿠폰|이벤트|포인트)/iu.test(title))continue;
+    let url='';try{url=new URL(match[1],baseUrl).href;}catch{continue;}
+    if(!officialUrl(marketplace,url)||seen.has(url)||url===baseUrl)continue;
+    seen.add(url);
+    notices.push({marketplace,title,summary:`${label}公式ページに現在掲載されている情報です。条件・対象・期間は公式ページで確認してください。`,source_url:url,info_type:noticeType(title),sale_id:`official-notice-${marketplace}-${stableId(url)}`});
+    if(notices.length===3)break;
+  }
+  return notices;
+}
+
 async function fetchSource(source, fetcher) {
   const [marketplace,label,url,fallbackTitle] = source;
   const controller = new AbortController();
@@ -45,7 +74,8 @@ async function fetchSource(source, fetcher) {
     if (!response.ok || !officialUrl(marketplace, response.url || url)) throw new Error(`OFFICIAL_SOURCE_${response.status}`);
     const html = (await response.text()).slice(0,750000);
     const copy = metadata(html, fallbackTitle, label);
-    return { marketplace, source_url:response.url || url, ...copy };
+    const sourceUrl=response.url || url;
+    return { marketplace, source_url:sourceUrl, ...copy, notices:extractOfficialNotices(html,marketplace,label,sourceUrl) };
   } finally { clearTimeout(timer); }
 }
 
@@ -57,14 +87,18 @@ export async function syncOfficialMarketplaceUpdates(env, now=new Date(), fetche
   for (const result of results) {
     if (result.status !== 'fulfilled') { failed+=1; continue; }
     const item=result.value;
-    const write=await env.PRODUCT_DB.prepare(
+    const rows=[{...item,sale_id:`official-feed-${item.marketplace}`,info_type:'EDITORIAL'},...(item.notices||[])];
+    for(const row of rows){
+      const infoType=['SALE','COUPON','NEW_ARRIVAL','LIMITED','EDITORIAL'].includes(row.info_type)?row.info_type:'EDITORIAL';
+      await env.PRODUCT_DB.prepare(
       `INSERT INTO marketplace_sale_events
        (sale_id,marketplace,info_type,title,summary,starts_at,ends_at,announced_at,source_url,image_url,image_rights_status,video_url,video_rights_status,status,created_at,updated_at)
-       VALUES(?1,?2,'EDITORIAL',?3,?4,?5,?6,?5,?7,'','NONE','','NONE','APPROVED',?5,?5)
+       VALUES(?1,?2,'${infoType}',?3,?4,?5,?6,?5,?7,'','NONE','','NONE','APPROVED',?5,?5)
        ON CONFLICT(sale_id) DO UPDATE SET title=excluded.title,summary=excluded.summary,starts_at=excluded.starts_at,
-       ends_at=excluded.ends_at,announced_at=excluded.announced_at,source_url=excluded.source_url,status='APPROVED',updated_at=excluded.updated_at`
-    ).bind(`official-feed-${item.marketplace}`,item.marketplace,item.title,item.summary,startsAt,endsAt,item.source_url).run();
-    if (Number(write?.meta?.changes ?? 1)>0) updated+=1;
+       ends_at=excluded.ends_at,announced_at=excluded.announced_at,source_url=excluded.source_url,info_type=excluded.info_type,status='APPROVED',updated_at=excluded.updated_at`
+      ).bind(row.sale_id,item.marketplace,row.title,row.summary,startsAt,endsAt,row.source_url).run();
+    }
+    updated+=1;
   }
   return { checked:SOURCES.length, updated, failed };
 }

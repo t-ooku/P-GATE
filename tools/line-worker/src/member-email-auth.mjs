@@ -23,8 +23,9 @@ export async function requestEmailCode(request,env,now=Math.floor(Date.now()/100
   try{await sendCode(email,code,env);}catch{await env.PRODUCT_DB.prepare('DELETE FROM member_email_challenges WHERE email_hash=?').bind(emailHash).run();return Response.json({ok:false,error:'EMAIL_SEND_FAILED'},{status:502});}
   return Response.json({ok:true,expires_in:600},{headers:{'cache-control':'no-store'}});
 }
-export async function verifyEmailCode(request,env,issueSession,now=Math.floor(Date.now()/1000)) {
+async function consumeEmailCode(request,env,now=Math.floor(Date.now()/1000)) {
   if(!emailLoginConfigured(env)) return Response.json({ok:false,error:'EMAIL_LOGIN_NOT_CONFIGURED'},{status:503});
+  const origin=request.headers.get('origin'); if(origin&&origin!==new URL(request.url).origin) return Response.json({ok:false,error:'ORIGIN_NOT_ALLOWED'},{status:403});
   const input=await request.json(),email=normalizeEmail(input.email),code=String(input.code||'').trim();
   if(!email||!/^\d{6}$/.test(code)) return Response.json({ok:false,error:'CODE_INVALID'},{status:400});
   const emailHash=await digest(`email:${email}:${secret(env)}`);
@@ -33,6 +34,17 @@ export async function verifyEmailCode(request,env,issueSession,now=Math.floor(Da
   const expected=await digest(`code:${emailHash}:${code}:${secret(env)}`);
   if(expected!==row.code_hash){await env.PRODUCT_DB.prepare('UPDATE member_email_challenges SET attempts=attempts+1 WHERE email_hash=?').bind(emailHash).run();return Response.json({ok:false,error:'CODE_INVALID'},{status:401});}
   await env.PRODUCT_DB.prepare('DELETE FROM member_email_challenges WHERE email_hash=?').bind(emailHash).run();
+  return {email,emailHash};
+}
+export async function verifyEmailCode(request,env,issueSession,now=Math.floor(Date.now()/1000)) {
+  const verified=await consumeEmailCode(request,env,now);if(verified instanceof Response)return verified;
+  const {email,emailHash}=verified;
   await storeMemberNotificationDestination(env,emailHash,'EMAIL',email);
   return issueSession({id:emailHash,name:email.split('@')[0].slice(0,40),picture:'',provider:'EMAIL'},env);
+}
+export async function linkEmailDestination(request,env,memberId,now=Math.floor(Date.now()/1000)) {
+  if(!memberId)return Response.json({ok:false,error:'MEMBER_REQUIRED'},{status:401});
+  const verified=await consumeEmailCode(request,env,now);if(verified instanceof Response)return verified;
+  await storeMemberNotificationDestination(env,memberId,'EMAIL',verified.email);
+  return Response.json({ok:true,channel:'EMAIL'},{headers:{'cache-control':'no-store'}});
 }
