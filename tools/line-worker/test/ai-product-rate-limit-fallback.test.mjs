@@ -17,7 +17,7 @@ test('Gemini discovery retries a stable model when the primary model is rate lim
     }
     return new Response('<meta property="og:type" content="product"><meta property="og:image" content="https://cdn.example.test/low-table.jpg">', { headers: { 'content-type': 'text/html' } });
   });
-  assert.deepEqual(models, ['gemini-3.6-flash', 'gemini-2.5-flash']);
-  assert.equal(result.model, 'gemini-2.5-flash');
+  assert.deepEqual(models, ['gemini-3.6-flash', 'gemini-3.5-flash']);
+  assert.equal(result.model, 'gemini-3.5-flash');
   assert.equal(result.candidates[0].url, productUrl);
 });

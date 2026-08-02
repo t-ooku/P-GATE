@@ -105,7 +105,7 @@ export function aiProductDiscoveryConfigured(env = {}) {
 export async function discoverProductsWithAi(query, language, env = {}, fetchImpl = fetch) {
   if (!aiProductDiscoveryConfigured(env)) return { triggered: false, configured: false, candidates: [] };
   const requestedModel = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
-  const models = [...new Set([requestedModel, 'gemini-2.5-flash'])];
+  const models = [...new Set([requestedModel, 'gemini-3.5-flash'])];
   let response;
   let model = requestedModel;
   for (const candidateModel of models) {
