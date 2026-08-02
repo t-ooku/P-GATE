@@ -39,7 +39,7 @@ function request(query, language = 'JA', searchAttempt = 1) {
 
 const context = { waitUntil() {} };
 
-test('public search API asks one question and suggests MYWISH for context-only input', async () => {
+test('public search API attempts product presentation from the first search and suggests MYWISH', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => String(url).includes('siteverify')
     ? Response.json({ success: true })
@@ -50,8 +50,8 @@ test('public search API asks one question and suggests MYWISH for context-only i
     assert.equal(response.status, 200, JSON.stringify(payload));
     assert.equal(payload.ok, true);
     assert.deepEqual(payload.result.candidates, []);
-    assert.equal(payload.result.clarification.required, true);
-    assert.ok(payload.result.clarification.options.length >= 10);
+    assert.equal(payload.result.clarification.required, false);
+    assert.equal(payload.result.search_guidance.product_presentation_required, true);
     assert.equal(payload.result.mywish.suggested, true);
     const secondResponse = await worker.fetch(request('SNSで見た青いもの / 遊び・趣味に使う'), environment([]), context);
     const secondPayload = await secondResponse.json();
@@ -92,7 +92,7 @@ test('second search presents an indexed product instead of asking again', async 
   }
 });
 
-test('AI product discovery runs only on the second search when ten-mall candidates remain empty', async () => {
+test('AI product discovery runs from the first search when ten-mall candidates remain empty', async () => {
   const originalFetch = globalThis.fetch;
   const productUrl = 'https://shop.example.test/products/unknown-light';
   let aiCalls = 0;
@@ -113,10 +113,11 @@ test('AI product discovery runs only on the second search when ten-mall candidat
   const env = { ...environment([]), GEMINI_API_KEY: 'g'.repeat(32) };
   try {
     const firstPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 1), env, context)).json();
-    assert.equal(firstPayload.result.ai_discovery, undefined);
-    assert.equal(aiCalls, 0);
-    const secondPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 2), env, context)).json();
     assert.equal(aiCalls, 1);
+    assert.equal(firstPayload.result.ai_discovery.provider, 'GEMINI_GOOGLE_SEARCH');
+    assert.equal(firstPayload.result.ai_discovery.candidates[0].url, productUrl);
+    const secondPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 2), env, context)).json();
+    assert.equal(aiCalls, 2);
     assert.equal(secondPayload.result.candidates.length, 0);
     assert.equal(secondPayload.result.ai_discovery.provider, 'GEMINI_GOOGLE_SEARCH');
     assert.equal(secondPayload.result.ai_discovery.candidates[0].url, productUrl);

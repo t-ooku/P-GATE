@@ -961,7 +961,7 @@ async function handleKnowledgeApi(request, env, ctx) {
     const [gasOutcome, indexedOutcome] = await Promise.allSettled([
       callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } }),
       applyIndexedSearchPolicy({ candidates: [] }, env, input.query, input.language, {
-        force_product_presentation: input.search_attempt >= 2
+        force_product_presentation: true
       })
     ]);
     const gasResult = gasOutcome.status === 'fulfilled' ? gasOutcome.value : { candidates: [], message: '' };
@@ -1008,16 +1008,16 @@ async function handleKnowledgeApi(request, env, ctx) {
         product_presentation_required: true,
         product_presentation_met: result.candidates.length > 0
       };
-      if (!result.candidates.length) {
-        try {
-          result.ai_discovery = await discoverProductsWithAi(input.query, input.language, env);
-        } catch (error) {
-          console.warn('AI_PRODUCT_DISCOVERY_UNAVAILABLE', {
-            status: Number(error?.status) || 0,
-            provider_code: String(error?.providerCode || '').slice(0, 80)
-          });
-          result.ai_discovery = { triggered: true, configured: true, candidates: [], unavailable: true };
-        }
+    }
+    if (!result.candidates.length) {
+      try {
+        result.ai_discovery = await discoverProductsWithAi(input.query, input.language, env);
+      } catch (error) {
+        console.warn('AI_PRODUCT_DISCOVERY_UNAVAILABLE', {
+          status: Number(error?.status) || 0,
+          provider_code: String(error?.providerCode || '').slice(0, 80)
+        });
+        result.ai_discovery = { triggered: true, configured: true, candidates: [], unavailable: true };
       }
     }
     const sessionHash = await hashUser(input.session_id);
