@@ -479,7 +479,12 @@ function cameraPrimeLensConstraints(value) {
   const canon = /(?:canon|キヤノン|キャノン|佳能|캐논)/iu.test(text);
   const mount = sony && /(?:\be\s*[- ]?mount\b|Eマウント|E卡口|E마운트)/iu.test(text) ? 'sony-e'
     : canon && /(?:\brf\s*[- ]?mount\b|RFマウント|RF卡口|RF마운트)/iu.test(text) ? 'canon-rf' : '';
-  const focalLength = text.match(/\b(\d{2,3})\s*mm\b/iu)?.[1] || '';
+  const focalLength = [...text.matchAll(/\b(\d{2,3})\s*mm\b/giu)].filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1)?.[1] || '';
   const aperture = text.match(/\bf\s*\/?\s*(\d(?:\.\d)?)\b/iu)?.[1] || '';
   const primeLens = /(?:単焦点(?:レンズ)?|prime\s+lens|定焦(?:镜头|鏡頭)|단렌즈|단초점\s*렌즈)/iu.test(text);
   const lens = primeLens || /(?:camera\s+lens|交換レンズ|镜头|鏡頭|렌즈)/iu.test(text);

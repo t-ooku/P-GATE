@@ -160,7 +160,13 @@ function buildCameraPrimeLensSearchKeywords(query) {
   const mount = sony && /(?:\be\s*[- ]?mount\b|Eマウント|E卡口|E마운트)/iu.test(query) ? 'Sony Eマウント'
     : canon && /(?:\brf\s*[- ]?mount\b|RFマウント|RF卡口|RF마운트)/iu.test(query) ? 'Canon RFマウント' : '';
   if (!mount) return '';
-  const focalLength = String(query || '').match(/\b(\d{2,3})\s*mm\b/iu)?.[1];
+  const normalized = String(query || '');
+  const focalLength = [...normalized.matchAll(/\b(\d{2,3})\s*mm\b/giu)].filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1)?.[1];
   const aperture = String(query || '').match(/\bf\s*\/?\s*(\d(?:\.\d)?)\b/iu)?.[1];
   return [mount, focalLength ? `${focalLength}mm` : '', aperture ? `F${aperture}` : '', '単焦点レンズ']
     .filter(Boolean).join(' ');
