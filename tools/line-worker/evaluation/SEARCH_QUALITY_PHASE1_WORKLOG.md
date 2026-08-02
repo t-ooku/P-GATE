@@ -85,3 +85,10 @@
 - Empty samples remain unmeasured (`metrics: null`), and mandatory safety violation rates are explicit.
 - `HOSHILU_SEARCH_SHADOW_ENABLED` defaults to OFF; no production request path imports this module yet.
 - The one-to-two-week production shadow observation period has not started, so the report is deliberately never marked ready by code alone.
+
+## Phase 9 implementation
+
+- Gradual rollout accepts only 0%, 5%, 25%, or 100%; invalid values fail closed to 0%.
+- Any non-zero rollout requires explicit approval, at least seven shadow days, no measured regression, zero exclusion/URL violations, and 100% zero-result honesty.
+- Cohort assignment is deterministic from an anonymous subject identifier, and an empty identifier is never enrolled.
+- The implementation is not imported by production search and current rollout remains 0%; PC/mobile QA and measured phase progression are still required.
