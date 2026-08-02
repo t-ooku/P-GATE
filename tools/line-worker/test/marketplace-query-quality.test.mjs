@@ -2833,6 +2833,21 @@ test('カメラ付き自動給餌器の容量訂正は旧容量を捨てて2K画
     }
   }
 });
+
+test('カメラ付き自動給餌器は容量と画質の同時訂正を4言語で反映する', () => {
+  const inputs = [
+    '6Lではなく4L 1080pカメラではなく2Kカメラ Wi-Fi 双方向音声 ペット自動給餌器',
+    'automatic pet feeder not 6L but 4L with not 1080p camera but 2K camera Wi-Fi two-way audio',
+    '不要6L要4L 不要1080p摄像头要2K摄像头 Wi-Fi 双向语音 自动喂食器',
+    '6L 말고 4L 1080p 카메라 말고 2K 카메라 Wi-Fi 양방향 음성 자동 급식기',
+  ];
+  for (const input of inputs) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace),
+        'ペット自動給餌器 4L 2Kカメラ Wi-Fi 双方向音声', `${marketplace}: ${input}`);
+    }
+  }
+});
 test('IPL光美容器は照射回数・冷却・出力段階・肌色検知を4言語で保持する', () => {
   const inputs = [
     'IPL光美容器 50万回 冷却機能 5段階 肌色センサー',

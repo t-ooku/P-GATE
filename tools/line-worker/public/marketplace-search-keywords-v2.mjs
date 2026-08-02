@@ -704,8 +704,16 @@ function buildCameraPetFeederSearchKeywords(query) {
     return !/(?:not|不要)\s*$/iu.test(before)
       && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
   }).at(-1)?.[1];
-  const cameraMatch = normalized.match(/(?:(1080p|2K).{0,16}(?:カメラ|camera|摄像头|鏡頭|카메라)|(?:カメラ|camera|摄像头|鏡頭|카메라).{0,16}(1080p|2K))/iu);
-  const camera = (cameraMatch?.[1] || cameraMatch?.[2] || '').toLowerCase() === '1080p' ? '1080p' : cameraMatch ? '2K' : '';
+  const cameraPresent = /(?:カメラ|camera|摄像头|鏡頭|카메라)/iu.test(normalized);
+  const cameraMatches = [...normalized.matchAll(/\b(1080p|2K)\b/giu)];
+  const cameraMatch = cameraMatches.filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 20);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:(?:カメラ|camera|摄像头|鏡頭|카메라)\s*)?(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1);
+  const camera = cameraPresent && cameraMatch
+    ? (cameraMatch[1].toLowerCase() === '1080p' ? '1080p' : '2K') : '';
   const wifi = /\bWi[\s-]*Fi\b/iu.test(normalized);
   const twoWayAudio = /(?:双方向音声|two[\s-]*way\s*audio|双向语音|雙向語音|양방향\s*음성)/iu.test(normalized);
   if (!feeder || !capacity || !camera || !wifi || !twoWayAudio) return '';
