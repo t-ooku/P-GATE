@@ -200,7 +200,13 @@ function buildDisplayPortCableSearchKeywords(query) {
 function buildPortableSsdSearchKeywords(query) {
   const portable = /(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용).{0,32}ssd|ssd.{0,32}(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용)/iu.test(query);
   if (!portable) return '';
-  const capacity = String(query || '').match(/\b(\d(?:\.\d)?)\s*(tb|gb)\b/iu);
+  const normalized = String(query || '');
+  const capacity = [...normalized.matchAll(/\b(\d(?:\.\d)?)\s*(tb|gb)\b/giu)].filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1);
   const usbGen = String(query || '').match(/usb\s*3\.2\s*gen\s*([12](?:x[12])?)/iu)?.[1];
   const speed = String(query || '').match(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/iu)?.[1];
   const nvme = /\bnvme\b/iu.test(query) ? 'NVMe' : '';

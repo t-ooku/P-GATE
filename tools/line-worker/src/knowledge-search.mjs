@@ -610,7 +610,12 @@ function isDisplayPortCableMismatch(candidate, requested) {
 
 function portableSsdConstraints(value) {
   const text = String(value || '').normalize('NFKC');
-  const capacity = text.match(/\b(\d(?:\.\d)?)\s*(tb|gb)\b/iu);
+  const capacity = [...text.matchAll(/\b(\d(?:\.\d)?)\s*(tb|gb)\b/giu)].filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1);
   return {
     ssd: /\bssd\b/iu.test(text),
     portable: /(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용).{0,32}ssd|ssd.{0,32}(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용)/iu.test(text),

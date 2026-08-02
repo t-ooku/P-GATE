@@ -1484,6 +1484,24 @@ test('ポータブルSSDは4言語で容量・速度・接続世代・耐久条�
   }
 });
 
+test('ポータブルSSDは4言語の容量訂正後の商品だけを提示する', () => {
+  const queries = [
+    'ポータブルSSD 2TBではなく1TB USB 3.2 Gen2 読込1050MB/s 防滴 耐衝撃',
+    'portable SSD not 2TB but 1TB USB 3.2 Gen 2 1050MB/s water resistant shockproof',
+    '便携式SSD不要2TB，要1TB USB 3.2 Gen2 读取1050MB/s 防水抗震',
+    '휴대용 SSD 2TB 말고 1TB USB 3.2 Gen2 읽기 1050MB/s 방수 충격방지',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Portable SSD 1TB USB 3.2 Gen2 Read 1050MB/s Water Resistant Shockproof' },
+    { asin: 'OLD', product_name: 'Portable SSD 2TB USB 3.2 Gen2 Read 1050MB/s Water Resistant Shockproof' },
+    { asin: 'SLOW', product_name: 'Portable SSD 1TB USB 3.2 Gen2 Read 550MB/s Water Resistant Shockproof' },
+    { asin: 'HDD', product_name: 'Portable HDD 1TB USB 3.2 Gen2 Read 1050MB/s Water Resistant Shockproof' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('カメラ用SDカードは4言語で容量・UHS・Vクラス・速度が一致する候補だけを提示する', () => {
   const queries = [
     '4Kと8K動画撮影用 SDカード 256GB UHS-II V90 読込300MB/s',
