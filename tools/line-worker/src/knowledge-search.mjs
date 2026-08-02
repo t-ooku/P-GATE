@@ -620,7 +620,12 @@ function portableSsdConstraints(value) {
     ssd: /\bssd\b/iu.test(text),
     portable: /(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용).{0,32}ssd|ssd.{0,32}(?:ポータブル|外付け|portable|external|移动|移動|便携|便攜|외장|휴대용)/iu.test(text),
     capacity: capacity ? `${capacity[1]}${capacity[2].toUpperCase()}` : '',
-    usbGen: text.match(/usb\s*3\.2\s*gen\s*([12](?:x[12])?)/iu)?.[1]?.toLowerCase() || '',
+    usbGen: [...text.matchAll(/(?:usb\s*3\.2\s*)?gen\s*([12](?:x[12])?)/giu)].filter((match) => {
+      const before = text.slice(Math.max(0, match.index - 12), match.index);
+      const after = text.slice(match.index + match[0].length, match.index + match[0].length + 12);
+      return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+        && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|not\s+(?:(?:usb\s*3\.2\s*)?gen\b)|but\s+(?:(?:usb\s*3\.2\s*)?gen\b)|不要|而不是|말고|아닌|아니고)/iu.test(after);
+    }).at(-1)?.[1]?.toLowerCase() || '',
     readSpeed: [...text.matchAll(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/giu)].filter((match) => {
       const before = text.slice(Math.max(0, match.index - 12), match.index);
       const after = text.slice(match.index + match[0].length, match.index + match[0].length + 10);

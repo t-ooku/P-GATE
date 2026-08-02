@@ -207,7 +207,12 @@ function buildPortableSsdSearchKeywords(query) {
     return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
       && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
   }).at(-1);
-  const usbGen = String(query || '').match(/usb\s*3\.2\s*gen\s*([12](?:x[12])?)/iu)?.[1];
+  const usbGen = [...normalized.matchAll(/(?:usb\s*3\.2\s*)?gen\s*([12](?:x[12])?)/giu)].filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|not\s+(?:(?:usb\s*3\.2\s*)?gen\b)|but\s+(?:(?:usb\s*3\.2\s*)?gen\b)|不要|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1)?.[1];
   const speed = [...normalized.matchAll(/\b(\d{3,4})\s*(?:mb\s*\/\s*s|mbps|mb\/秒)/giu)].filter((match) => {
     const before = normalized.slice(Math.max(0, match.index - 12), match.index);
     const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 10);
