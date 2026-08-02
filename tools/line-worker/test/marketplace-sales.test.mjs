@@ -80,7 +80,7 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v291/);
+  assert.match(sw, /hoshilu-shell-v292/);
   assert.match(css, /\.sale-rail\{[^}]*align-items:flex-start/);
   assert.doesNotMatch(css, /\.sale-card\{[^}]*min-height:/);
   assert.match(sw, /sale-center\.mjs/);

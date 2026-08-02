@@ -195,6 +195,15 @@ export function productMarketplaceOffers(offers = []) {
   }).map((offer) => ({ ...offer, marketplace: offer.marketplace || marketplaceForDestination(offer.product_url) })).slice(0, 10);
 }
 
+export function legacyAmazonProductLead(candidate = {}) {
+  const asin = String(candidate.asin || '').trim().toUpperCase();
+  const destination = String(candidate.amazon_jp_url || '').trim();
+  if (!/^[A-Z0-9]{10}$/.test(asin) || !isProductDetailDestination(destination)) return '';
+  if (marketplaceForDestination(destination) !== 'AMAZON_JP') return '';
+  return new RegExp(`/(?:dp|gp/product)/${asin}(?:[/?]|$)`, 'i').test(new URL(destination).pathname)
+    ? destination : '';
+}
+
 function offerSummary(offer) {
   if (!offer) return '';
   const labels = { AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング' };
@@ -885,7 +894,25 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
       publicOffer.tracking_url = `${origin}/go?token=${encodeURIComponent(offerToken)}`;
       copy.offers.push(publicOffer);
     }
+    if (!copy.offers.length) {
+      const productLead = legacyAmazonProductLead(candidate);
+      if (productLead) {
+        const leadToken = await createTrackToken({
+          u: sessionHash, r: seed, a: candidate.asin, d: productLead,
+          exp: Math.floor(Date.now() / 1000) + 86400 * 7,
+          j: `${seed}:${candidate.asin}:AMAZON_PRODUCT_LEAD`, c: 'PWA',
+          m: 'AMAZON_JP', t: 'PRODUCT_LEAD', cm: false
+        }, env.LINK_SIGNING_SECRET);
+        copy.offers.push({
+          marketplace: 'AMAZON_JP', price: 0, shipping_fee: 0, total_cost: 0,
+          shipping_fee_confirmed: false, currency: 'JPY', stock_status: 'UNKNOWN',
+          verification_status: 'UNVERIFIED',
+          tracking_url: `${origin}/go?token=${encodeURIComponent(leadToken)}`
+        });
+      }
+    }
     copy.selected_offer = selected.offer ? copy.offers[0] || sanitizePublicOffer(selected.offer) : null;
+    if (!copy.selected_offer && copy.offers.length) copy.selected_offer = copy.offers[0];
     copy.tracking_url = '';
     if (isAllowedDestination(destination)) {
       const token = await createTrackToken({

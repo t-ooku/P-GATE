@@ -340,7 +340,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v291/);
+  assert.match(serviceWorker, /hoshilu-shell-v292/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -427,6 +427,27 @@ test('商品カードには実出品でないモール検索ボタンを付け�
 
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.doesNotMatch(appSource, /candidate\.marketplace_search_links|candidate\.amazon_search_url/);
+});
+
+test('保存済みAmazon商品詳細URLは非収益の商品確認リンクとして署名する', async () => {
+  const env = { LINK_SIGNING_SECRET: 'secret' };
+  const decorated = await workerModule.decoratePwaResultForTest(
+    { query_id: 'q-product-lead', candidates: [{
+      asin: 'B0061BRUBY', product_name: '12 Electric Cooktop with 1 Burner', stock: 99,
+      amazon_jp_url: 'https://www.amazon.co.jp/dp/B0061BRUBY', offers: []
+    }] },
+    new Request('https://p-gate.example/api/knowledge'), env, 'session-hash', '電気コンロ'
+  );
+  const offer = decorated.candidates[0].offers[0];
+  assert.equal(offer.marketplace, 'AMAZON_JP');
+  assert.equal(offer.verification_status, 'UNVERIFIED');
+  assert.match(offer.tracking_url, /^https:\/\/p-gate\.example\/go\?token=/);
+  assert.equal('product_url' in offer, false);
+  const token = new URL(offer.tracking_url).searchParams.get('token');
+  const payload = await verifyTrackToken(token, env.LINK_SIGNING_SECRET);
+  assert.equal(payload.t, 'PRODUCT_LEAD');
+  assert.equal(payload.cm, false);
+  assert.equal(payload.d, 'https://www.amazon.co.jp/dp/B0061BRUBY');
 });
 test('PWA公開設定はSite Keyだけを返し、無効な質問をAPI境界で拒否する', async () => {
   const ctx = { waitUntil() {} };
