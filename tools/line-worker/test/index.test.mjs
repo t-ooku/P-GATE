@@ -340,7 +340,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v290/);
+  assert.match(serviceWorker, /hoshilu-shell-v291/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -528,13 +528,15 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     AMAZON_CREATORS_CREDENTIAL_VERSION: '2.3',
     AMAZON_ASSOCIATE_TAG: 'hoshilu-22',
     RAKUTEN_APPLICATION_ID: 'rakuten-app',
-    RAKUTEN_ACCESS_KEY: 'rakuten-key'
+    RAKUTEN_ACCESS_KEY: 'rakuten-key',
+    YAHOO_SHOPPING_CLIENT_ID: 'yahoo-client-id'
   });
   assert.equal(optional.checks.mywatch_configured, true);
   assert.equal(optional.checks.unmet_demand_sync_configured, true);
   assert.deepEqual(optional.checks.sp_api_configured_tenants, ['itg']);
   assert.equal(optional.checks.amazon_creators_configured, true);
   assert.equal(optional.checks.rakuten_marketplace_configured, true);
+  assert.equal(optional.checks.yahoo_shopping_configured, true);
   assert.equal(JSON.stringify(optional.checks).includes('refresh'), false);
 
   const ctx = { waitUntil() {} };

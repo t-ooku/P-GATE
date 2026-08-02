@@ -15,6 +15,7 @@ import {
   rakutenApiConfigured,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
+import { searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
@@ -324,7 +325,8 @@ export function getEnvironmentReadiness(env = {}) {
       seller_auth_weak: weak.some((name) =>
         sellerAuthNames.includes(name) || name === 'SELLER_ALLOWED_TENANTS'),
       amazon_creators_configured: creatorsApiConfigured(env),
-      rakuten_marketplace_configured: rakutenApiConfigured(env)
+      rakuten_marketplace_configured: rakutenApiConfigured(env),
+      yahoo_shopping_configured: yahooShoppingApiConfigured(env)
     }
   };
 }
@@ -979,7 +981,8 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(result.candidates, gasResult.candidates)
       };
     }
-    const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env);
+    const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env)
+      || yahooShoppingApiConfigured(env);
     if (shouldSearchMarketplaces) {
       const marketplaceSearches = [];
       if (creatorsApiConfigured(env)) marketplaceSearches.push({
@@ -992,6 +995,10 @@ async function handleKnowledgeApi(request, env, ctx) {
           env,
           buildRakutenSearchKeywordCandidates(input.query)
         )
+      });
+      if (yahooShoppingApiConfigured(env)) marketplaceSearches.push({
+        key: 'yahoo_catalog_connected',
+        run: searchYahooShopping(env, buildMarketplaceSearchKeywords(input.query))
       });
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
       outcomes.forEach((outcome, index) => {

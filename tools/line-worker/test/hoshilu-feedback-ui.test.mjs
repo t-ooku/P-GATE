@@ -26,6 +26,8 @@ test('通知先、確認済み最新情報、送料込み価格比較を画面�
   assert.match(app, /\.sort\(\(a,b\)=>Number\(a\.total_cost\)-Number\(b\.total_cost\)\)/);
   assert.match(app, /送料込み価格が確認できた/);
   assert.match(app, /price-offer-scroll/);
+  assert.match(app, /priced\.length===1/);
+  assert.match(app, /single-price-offer/);
   assert.match(sale, /\/api\/member\/email\/link/);
   assert.match(sale, /availableDeliveryChannels=\[\.\.\.new Set\(\[\.\.\.availableDeliveryChannels,'EMAIL'\]\)\]/);
   assert.match(knowledge, /snack: \['チップス','スナック菓子','さつまいも・野菜系'/);
