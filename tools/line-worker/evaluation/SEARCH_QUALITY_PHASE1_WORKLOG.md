@@ -64,3 +64,10 @@
 - Canonical attributes used by the structured query are required to contain Japanese, English, Korean, and Chinese expressions.
 - Localized zero-result, clarification, and evidence-badge messages preserve honest no-result behavior and never invent item counts or URLs.
 - Message rendering is standalone and not connected to the production response path.
+
+## Phase 6.5 implementation
+
+- AI-generated keyword rows are accepted only into an isolated staging object while `HOSHILU_KEYWORD_EXPANSION_ENABLED` is enabled; the flag defaults to OFF.
+- Schema, commercial-field, duplicate, deterministic sampling, and direction checks run before any review.
+- Batches 1–3 require 100% review; later batches sample 20%. A whole batch needs at least 90% and explicit Claude naturalness approval, otherwise it remains pending or is rejected.
+- No generated row is merged into the production dataset by this phase implementation.
