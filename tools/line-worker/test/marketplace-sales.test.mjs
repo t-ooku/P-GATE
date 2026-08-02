@@ -65,6 +65,8 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
     readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8')
   ]);
   assert.match(html, /HOSHILU SALE RADAR/);
+  assert.match(html, /全てのセールを、<br>先回りチェックしよう/);
+  assert.match(html, /10モールのセール情報を横断。開始前にもお知らせし/);
   assert.match(html, /セール専用通知/);
   assert.match(html, /id="notificationSettingsDialog"/);
   assert.match(html, /id="settingsInfoTypes"/);
@@ -76,11 +78,12 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.match(client, /data-language-select.*addEventListener\('change'/s);
   assert.match(client, /const officialUpdates=\[/);
   assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*SHOPLIST.*MUSINSA.*BUYMA.*SNKRDUNK/s);
-  assert.match(client, /掲載10モール/);
+  assert.match(client, /全てのセールを、\\n先回りチェックしよう/);
+  assert.match(client, /10モールのセール情報を横断/);
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v298/);
+  assert.match(sw, /hoshilu-shell-v299/);
   assert.match(css, /\.sale-rail\{[^}]*align-items:flex-start/);
   assert.doesNotMatch(css, /\.sale-card\{[^}]*min-height:/);
   assert.match(sw, /sale-center\.mjs/);
