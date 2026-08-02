@@ -1029,6 +1029,27 @@ test('USB充電式からNFC電池不要への逆訂正は指定機種の新方�
   }
 });
 
+test('GalaxyからPixelへの機種・方式同時訂正は新機種のNFC電池不要ケースだけを提示する', () => {
+  const queries = [
+    'Galaxy S24 UltraのUSB充電式ではなくPixel 9 Pro用NFC電池不要の光るケース',
+    'not a USB rechargeable Galaxy S24 Ultra case but a battery-free NFC light-up case for Pixel 9 Pro',
+    '不要Galaxy S24 Ultra的USB充电式，改要Pixel 9 Pro用NFC免电池发光手机壳',
+    'Galaxy S24 Ultra USB 충전식 말고 Pixel 9 Pro용 NFC 배터리 없는 발광 케이스',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Pixel 9 Pro Battery-free NFC Light-up LED Case no battery required' },
+    { asin: 'OLD', product_name: 'Galaxy S24 Ultra USB Rechargeable Light-up LED Case' },
+    { asin: 'WRONGMODEL', product_name: 'Pixel 9 Pro XL Battery-free NFC Light-up LED Case no battery required' },
+    { asin: 'RECHARGE', product_name: 'Pixel 9 Pro USB Rechargeable Light-up LED Case' },
+    { asin: 'NONFC', product_name: 'Pixel 9 Pro Battery-free Light-up LED Case no battery required' },
+    { asin: 'PLAIN', product_name: 'Pixel 9 Pro NFC Phone Case Cover' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('光るケースの機種訂正は4言語で最後に指定したiPhoneだけを提示する', () => {
   const queries = [
     '光るiPhone 15 Proケース、やっぱりiPhone 15 Pro Max用',

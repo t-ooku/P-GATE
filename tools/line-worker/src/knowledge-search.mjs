@@ -316,7 +316,7 @@ function isTrueWirelessEarphonesMismatch(candidate) {
 
 function phoneCaseDeviceModel(value) {
   const text = String(value || '').normalize('NFKC');
-  const correctedTail = text.match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
+  const correctedTail = text.match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|\bbut\b|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|改要|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
   if (correctedTail && /\b(?:iphone|galaxy|pixel)\b/iu.test(correctedTail)) {
     return phoneCaseDeviceModel(correctedTail);
   }
@@ -328,7 +328,7 @@ function phoneCaseDeviceModel(value) {
   if (correctedIphoneModel && /(?:\biphone\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)/iu.test(text)) {
     return `iphone${correctedIphoneModel.toLowerCase().replace(/\s+/gu, '')}`;
   }
-  const correctedPixelModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro\s*fold|pro|fold|a))?)\b/iu)?.[1] || '';
+  const correctedPixelModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro\s*(?:xl|fold)|pro|xl|fold|a))?)\b/iu)?.[1] || '';
   if (correctedPixelModel && /(?:\bpixel\b|ピクセル|픽셀)/iu.test(text)) {
     return `pixel${correctedPixelModel.toLowerCase().replace(/\s+/gu, '')}`;
   }
@@ -345,7 +345,7 @@ function phoneCaseDeviceModel(value) {
   }
   const match = iphoneMatch
     || text.match(/\bgalaxy\s*[a-z][\s-]*\d{1,3}(?:\s*(?:ultra|plus|\+|fe))?/iu)
-    || text.match(/\bpixel\s*\d{1,2}(?!\d)(?:\s*(?:pro\s*fold|pro|fold|a))?/iu);
+    || text.match(/\bpixel\s*\d{1,2}(?!\d)(?:\s*(?:pro\s*(?:xl|fold)|pro|xl|fold|a))?/iu);
   return match ? match[0].toLowerCase().replace(/[\s-]+/gu, '') : '';
 }
 

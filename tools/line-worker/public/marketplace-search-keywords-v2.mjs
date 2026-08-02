@@ -23,7 +23,7 @@ function correctedIphoneMatch(query) {
 }
 
 function deviceName(query) {
-  const correctedTail = String(query || '').match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
+  const correctedTail = String(query || '').match(/(?:じゃなくて|じゃない|ではなく(?:て)?|いや(?:違う)?|訂正(?:すると)?|;\s*use\b|,\s*use\b|actually(?:\s+for)?|\bbut\b|(?:\bno[\s,]+)?\bi\s+mean\b|\bno(?:[\s,]+(?:sorry|wait))?\b|改成|改要|换成|換成|改为|改為|不对|不對|我是说|我是說|말고|아니고|아니|정정(?:하면)?)[\s、，,:：]*([\s\S]+)$/iu)?.[1] || '';
   if (correctedTail && /(?:\b(?:iphone|ipad|galaxy|pixel|xperia|aquos)\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰|ギャラクシー|三星|갤럭시|픽셀|エクスペリア|엑스페리아|アクオス|아쿠오스)/iu.test(correctedTail)) {
     return deviceName(correctedTail);
   }
@@ -35,7 +35,7 @@ function deviceName(query) {
   if (correctedIphoneModel && /(?:\biphone\b|アイフォーン|アイフォン|苹果手机|蘋果手機|아이폰)/iu.test(query)) {
     return deviceName(`iPhone ${correctedIphoneModel}`);
   }
-  const correctedPixelModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro\s*fold|pro|fold|a))?)\b/iu)?.[1] || '';
+  const correctedPixelModel = correctedTail.match(/^(\d{1,2}(?!\d)(?:\s*(?:pro\s*(?:xl|fold)|pro|xl|fold|a))?)\b/iu)?.[1] || '';
   if (correctedPixelModel && /(?:\bpixel\b|ピクセル|픽셀)/iu.test(query)) {
     return deviceName(`Pixel ${correctedPixelModel}`);
   }
@@ -59,9 +59,9 @@ function deviceName(query) {
     : 'Galaxy';
   const localizedGalaxy = query.match(/(?:ギャラクシー|三星(?:手机|手機)?|갤럭시)\s*([a-z])[\s-]*(\d{1,3})(?:\s*(ultra|plus|\+|fe))?/iu);
   if (localizedGalaxy) return `Galaxy ${localizedGalaxy[1].toUpperCase()}${localizedGalaxy[2]}${localizedGalaxy[3] ? ` ${localizedGalaxy[3]}` : ''}`;
-  const pixel = query.match(/\bpixel(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro|fold|a))?)?/iu);
+  const pixel = query.match(/\bpixel(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro\s*(?:xl|fold)|pro|xl|fold|a))?)?/iu);
   if (pixel) return pixel[0].replace(/^pixel/iu, 'Pixel').trim();
-  const localizedPixel = query.match(/픽셀(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro|fold|a))?)?/iu);
+  const localizedPixel = query.match(/픽셀(?:\s*\d{1,2}(?!\d)(?:\s*(?:pro\s*(?:xl|fold)|pro|xl|fold|a))?)?/iu);
   if (localizedPixel) return localizedPixel[0].replace(/^픽셀/iu, 'Pixel').trim();
   const xperia = query.match(/\bxperia\s*((?:1|5|10)\s*(?:vi|v|iv|iii|ii)?)/iu);
   if (xperia) return `Xperia ${xperia[1].trim()}`;
