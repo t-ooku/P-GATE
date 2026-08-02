@@ -1011,7 +1011,11 @@ async function handleKnowledgeApi(request, env, ctx) {
       if (!result.candidates.length) {
         try {
           result.ai_discovery = await discoverProductsWithAi(input.query, input.language, env);
-        } catch {
+        } catch (error) {
+          console.warn('AI_PRODUCT_DISCOVERY_UNAVAILABLE', {
+            status: Number(error?.status) || 0,
+            provider_code: String(error?.providerCode || '').slice(0, 80)
+          });
           result.ai_discovery = { triggered: true, configured: true, candidates: [], unavailable: true };
         }
       }

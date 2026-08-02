@@ -103,7 +103,17 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
       tools: [{ type: 'google_search' }]
     })
   });
-  if (!response.ok) throw new Error('AI_PRODUCT_DISCOVERY_FAILED');
+  if (!response.ok) {
+    let providerCode = '';
+    try {
+      const failure = await response.json();
+      providerCode = String(failure?.error?.status || failure?.error?.code || '').slice(0, 80);
+    } catch {}
+    const error = new Error('AI_PRODUCT_DISCOVERY_FAILED');
+    error.status = response.status;
+    error.providerCode = providerCode;
+    throw error;
+  }
   const parsed = textOutputAndCitations(await response.json());
   const structuredSuggestions = parseSuggestedProducts(parsed.text).filter((item) => {
     const url = safePublicHttpsUrl(item?.url);
