@@ -92,6 +92,40 @@ test('second search presents an indexed product instead of asking again', async 
   }
 });
 
+test('AI product discovery runs only on the second search when ten-mall candidates remain empty', async () => {
+  const originalFetch = globalThis.fetch;
+  const productUrl = 'https://shop.example.test/products/unknown-light';
+  let aiCalls = 0;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    if (target.includes('/v1beta/interactions')) {
+      aiCalls += 1;
+      return Response.json({ steps: [{ type: 'model_output', content: [{
+        type: 'text',
+        text: JSON.stringify({ products: [{ title: 'Possible light case', url: productUrl, reason: 'Visual clue match' }] }),
+        annotations: [{ type: 'url_citation', url: productUrl, title: 'Example shop' }]
+      }] }] });
+    }
+    if (target === productUrl) return new Response('<meta property="og:type" content="product"><meta property="og:image" content="https://cdn.example.test/unknown-light.jpg"><button>Add to cart</button>', { headers: { 'content-type': 'text/html' } });
+    return Response.json({ ok: true, result: { query_id: 'gas-ai-fallback', candidates: [], message: '' } });
+  };
+  const env = { ...environment([]), GEMINI_API_KEY: 'g'.repeat(32) };
+  try {
+    const firstPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 1), env, context)).json();
+    assert.equal(firstPayload.result.ai_discovery, undefined);
+    assert.equal(aiCalls, 0);
+    const secondPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 2), env, context)).json();
+    assert.equal(aiCalls, 1);
+    assert.equal(secondPayload.result.candidates.length, 0);
+    assert.equal(secondPayload.result.ai_discovery.provider, 'GEMINI_GOOGLE_SEARCH');
+    assert.equal(secondPayload.result.ai_discovery.candidates[0].url, productUrl);
+    assert.equal(secondPayload.result.ai_discovery.candidates[0].verification, 'AI_DISCOVERY_UNCONFIRMED');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('public search API can return an ITG indexed result without an unapproved outbound URL', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => String(url).includes('siteverify')

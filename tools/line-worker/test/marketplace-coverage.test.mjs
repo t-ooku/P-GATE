@@ -5,12 +5,13 @@ import { readFile } from 'node:fs/promises';
 const read = name => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
 test('トップ画面で主要5モールとファッション追加5モールを区別して表示する', async () => {
-  const [html, css, module, layout, serviceWorker] = await Promise.all([
+  const [html, css, module, layout, serviceWorker, app] = await Promise.all([
     read('index.html'),
     read('marketplace-coverage.css'),
     read('marketplace-coverage.mjs'),
     read('lp-layout.mjs'),
-    read('service-worker.js')
+    read('service-worker.js'),
+    read('app.js')
   ]);
 
   assert.match(html, /MARKETPLACE COVERAGE/);
@@ -46,7 +47,9 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v281/);
+  assert.match(serviceWorker, /hoshilu-shell-v282/);
+  assert.match(app, /AIが見つけた可能性のある商品/);
+  assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
   assert.match(serviceWorker, /marketplace-coverage\.mjs/);
 });

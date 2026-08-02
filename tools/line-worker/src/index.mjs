@@ -17,6 +17,7 @@ import {
 } from './rakuten-marketplace-api.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
+import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -1007,6 +1008,13 @@ async function handleKnowledgeApi(request, env, ctx) {
         product_presentation_required: true,
         product_presentation_met: result.candidates.length > 0
       };
+      if (!result.candidates.length) {
+        try {
+          result.ai_discovery = await discoverProductsWithAi(input.query, input.language, env);
+        } catch {
+          result.ai_discovery = { triggered: true, configured: true, candidates: [], unavailable: true };
+        }
+      }
     }
     const sessionHash = await hashUser(input.session_id);
     const decorated = await decoratePwaResult(
