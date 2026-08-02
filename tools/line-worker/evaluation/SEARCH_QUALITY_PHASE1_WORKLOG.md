@@ -38,3 +38,10 @@
 - Attribute and product-type expressions live in JSON configuration rather than the legacy regular-expression file.
 - `HOSHILU_STRUCTURED_QUERY_ENABLED` defaults to OFF; the module is not imported by `index.mjs`, so production behavior remains unchanged.
 - The 50-case test measures product-type, required-attribute, and excluded-attribute classification thresholds before any future shadow connection.
+
+## Phase 3 implementation
+
+- `src/search-quality/hard-filter.mjs` applies product type, required attributes, then excluded attributes in a fixed order.
+- Every rejection includes a stable reason code and relevant canonical attribute IDs.
+- `HOSHILU_CANONICAL_HARD_FILTER_ENABLED` defaults to OFF and the module is not connected to production traffic.
+- The 50-case synthetic-candidate regression requires both exclusion and required-attribute violation rates to remain exactly zero.
