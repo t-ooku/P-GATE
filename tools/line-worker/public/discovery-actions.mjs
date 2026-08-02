@@ -12,9 +12,9 @@ export function socialDiscoverySearchLinks(value, origin = 'https://hoshilu.app'
   const hoshiluUrl = `${String(origin).replace(/\/$/, '')}/?q=${encoded}`;
   const shareBody = `HOSHILUでこの検索を続ける\n${query}\n${hoshiluUrl}`;
   return [
-    { label: 'Instagram', url: `https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com ${query}`)}` },
+    { label: 'Instagram', url: `https://www.instagram.com/explore/search/keyword/?q=${encoded}` },
     { label: 'X', url: `https://x.com/search?q=${encoded}&src=typed_query` },
-    { label: 'TikTok', url: `https://www.google.com/search?q=${encodeURIComponent(`site:tiktok.com ${query}`)}` },
+    { label: 'TikTok', url: `https://www.tiktok.com/search?q=${encoded}` },
     { label: 'YouTube', url: `https://www.youtube.com/results?search_query=${encoded}` },
     { label: 'LINEで共有', url: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(hoshiluUrl)}` },
     { label: 'Gmailで送る', url: `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent('HOSHILU検索')}&body=${encodeURIComponent(shareBody)}` }
