@@ -262,9 +262,9 @@ function buildNoiseCancellingHeadphonesSearchKeywords(query) {
   const multipoint = /multi[- ]?point|マルチポイント|多点连接|多點連接|멀티포인트/iu.test(query) ? 'マルチポイント' : '';
   const battery = String(query || '').match(/\b(\d{2,3})\s*(?:時間|hours?|hrs?|小时|小時|시간)/iu)?.[1];
   const usbC = /usb[- ]?c|type[- ]?c/iu.test(query) ? 'USB-C' : '';
-  if (!overEar || !bluetooth || !battery) return '';
+  if (!overEar || !bluetooth) return '';
   return ['ノイズキャンセリングヘッドホン', overEar, `Bluetooth ${bluetooth}`, multipoint,
-    `${battery}時間再生`, usbC].filter(Boolean).join(' ');
+    battery ? `${battery}時間再生` : '', usbC].filter(Boolean).join(' ');
 }
 
 function buildRobotVacuumBodySearchKeywords(query) {

@@ -1580,6 +1580,24 @@ test('ノイズキャンセリングヘッドホンは4言語で形状・接続�
   }
 });
 
+test('イヤホンからヘッドホンへの言い直しは4言語で訂正前の商品を候補から除外する', () => {
+  const queries = [
+    'ノイズキャンセリングイヤホンじゃなくてオーバーイヤーヘッドホン Bluetooth 5.3',
+    'not noise cancelling earbuds, I mean over-ear headphones Bluetooth 5.3',
+    '不要降噪耳塞，要头戴式主动降噪耳机 Bluetooth 5.3',
+    '노이즈 캔슬링 이어폰 말고 오버이어 헤드폰 Bluetooth 5.3',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Over-ear ANC Noise Cancelling Headphones Bluetooth 5.3 Wireless' },
+    { asin: 'EARBUDS', product_name: 'ANC Noise Cancelling Earbuds Bluetooth 5.3 Wireless' },
+    { asin: 'ONEAR', product_name: 'On-ear ANC Noise Cancelling Headphones Bluetooth 5.3 Wireless' },
+    { asin: 'OLDBT', product_name: 'Over-ear ANC Noise Cancelling Headphones Bluetooth 5.0 Wireless' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('ロボット掃除機本体は4言語で測距・吸引力・集塵・水拭きが一致する候補だけを提示する', () => {
   const queries = [
     'LiDAR 5000Pa 自動ゴミ収集 水拭き対応ロボット掃除機',
