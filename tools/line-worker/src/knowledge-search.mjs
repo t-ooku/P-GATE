@@ -485,7 +485,12 @@ function cameraPrimeLensConstraints(value) {
     return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
       && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
   }).at(-1)?.[1] || '';
-  const aperture = text.match(/\bf\s*\/?\s*(\d(?:\.\d)?)\b/iu)?.[1] || '';
+  const aperture = [...text.matchAll(/\bf\s*\/?\s*(\d(?:\.\d)?)\b/giu)].filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1)?.[1] || '';
   const primeLens = /(?:単焦点(?:レンズ)?|prime\s+lens|定焦(?:镜头|鏡頭)|단렌즈|단초점\s*렌즈)/iu.test(text);
   const lens = primeLens || /(?:camera\s+lens|交換レンズ|镜头|鏡頭|렌즈)/iu.test(text);
   const accessory = /(?:adapter|アダプター|转接环|轉接環|어댑터|cap|キャップ|镜头盖|鏡頭蓋|렌즈캡|filter|フィルター|滤镜|濾鏡|필터)/iu.test(text);

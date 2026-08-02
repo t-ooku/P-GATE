@@ -380,6 +380,21 @@ test('単焦点レンズは4言語の焦点距離訂正で否定された旧焦�
   }
 });
 
+test('単焦点レンズは4言語のF値訂正で否定された旧F値を捨てる', () => {
+  const queries = [
+    'Sony Eマウント 50mm F1.8ではなくF1.4 単焦点レンズ',
+    'Sony E-mount 50mm prime lens not F1.8 but F1.4',
+    '索尼E卡口50mm定焦镜头不要F1.8，要F1.4',
+    'Sony E마운트 50mm 단렌즈 F1.8 말고 F1.4',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'Sony Eマウント 50mm F1.4 単焦点レンズ', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('充電ケーブルは端子組み合わせ・長さ・W数・編み込みを4言語で保持する', () => {
   const cases = [
     ['USB-C to USB-C 2m 60W 編み込み 充電ケーブル', [

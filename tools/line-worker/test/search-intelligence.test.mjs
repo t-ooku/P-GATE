@@ -1367,6 +1367,24 @@ test('単焦点レンズは4言語の焦点距離訂正後の商品だけを提�
   }
 });
 
+test('単焦点レンズは4言語のF値訂正後の商品だけを提示する', () => {
+  const queries = [
+    'Sony Eマウント 50mm F1.8ではなくF1.4 単焦点レンズ',
+    'Sony E-mount 50mm prime lens not F1.8 but F1.4',
+    '索尼E卡口50mm定焦镜头不要F1.8，要F1.4',
+    'Sony E마운트 50mm 단렌즈 F1.8 말고 F1.4',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'Sony E-mount 50mm F1.4 Prime Lens' },
+    { asin: 'OLD', product_name: 'Sony E-mount 50mm F1.8 Prime Lens' },
+    { asin: '35MM', product_name: 'Sony E-mount 35mm F1.4 Prime Lens' },
+    { asin: 'RF', product_name: 'Canon RF-mount 50mm F1.4 Prime Lens' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin), ['MATCH'], query);
+  }
+});
+
 test('充電ケーブルは4言語で端子・長さ・W数・編み込みが一致する候補だけを提示する', () => {
   const queries = [
     '2m 60Wの編み込みUSB-C to USB-C充電ケーブル',

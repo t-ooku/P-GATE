@@ -167,7 +167,12 @@ function buildCameraPrimeLensSearchKeywords(query) {
     return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
       && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
   }).at(-1)?.[1];
-  const aperture = String(query || '').match(/\bf\s*\/?\s*(\d(?:\.\d)?)\b/iu)?.[1];
+  const aperture = [...normalized.matchAll(/\bf\s*\/?\s*(\d(?:\.\d)?)\b/giu)].filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 10);
+    return !/(?:not|no|不要|不是|不想要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|ではない|じゃない|but\b|而不是|말고|아닌|아니고)/iu.test(after);
+  }).at(-1)?.[1];
   return [mount, focalLength ? `${focalLength}mm` : '', aperture ? `F${aperture}` : '', '単焦点レンズ']
     .filter(Boolean).join(' ');
 }
