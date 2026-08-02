@@ -60,8 +60,21 @@ function selectedLanguage() {
 export function applyMarketplaceCoverage(language = selectedLanguage()) {
   const copy = COPY[language] || COPY.JA;
   if (!nodes.title) return;
-  nodes.title.textContent = copy.title;
-  nodes.lead.textContent = copy.lead;
+  const responsiveCopy = (node, parts) => {
+    node.replaceChildren(...parts.map((part) => {
+      const line = document.createElement('span');
+      line.className = 'marketplace-mobile-line';
+      line.textContent = part;
+      return line;
+    }));
+  };
+  if (language === 'JA') {
+    responsiveCopy(nodes.title, ['探せるモールが、', 'ひと目で分かる。']);
+    responsiveCopy(nodes.lead, ['商品・家電・コスメなどは主要5モール。', 'ファッション検索では5モールを追加して横断します。']);
+  } else {
+    nodes.title.textContent = copy.title;
+    nodes.lead.textContent = copy.lead;
+  }
   nodes.count.textContent = copy.count;
   nodes.core.textContent = copy.core;
   nodes.coreList.setAttribute('aria-label', copy.coreAria);

@@ -199,4 +199,5 @@ document.querySelector('#notificationSettingsForm')?.addEventListener('submit',a
   const data=await response.json();memberPreference=data.preference;availableDeliveryChannels=data.available_delivery_channels||availableDeliveryChannels;
   toggle.checked=Boolean(memberPreference.enabled)&&String(memberPreference.info_types||'').split(',').includes('SALE');
   settingsStatus.textContent=(settingsCopy[language()]||settingsCopy.JA).saved;
+  settingsDialog.close();
 });

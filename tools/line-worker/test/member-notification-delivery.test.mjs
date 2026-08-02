@@ -68,3 +68,8 @@ test('login codes and member alerts share the approved HOSHILU sender',async()=>
   assert.match(config,/"MEMBER_EMAIL_FROM": "notification@auth\.hoshilu\.app"/);
   assert.doesNotMatch(config,/login@auth\.hoshilu\.app/);
 });
+
+test('successful notification settings save closes the dialog',async()=>{
+  const client=await readFile(new URL('../public/sale-center.mjs',import.meta.url),'utf8');
+  assert.match(client,/settingsStatus\.textContent=.*\.saved;\s*settingsDialog\.close\(\)/s);
+});

@@ -28,6 +28,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(css, /\.marketplace-groups/);
   assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
   assert.match(css, /@media \(max-width: 760px\)/);
+  assert.match(css, /\.marketplace-mobile-line \{\s*display: block/);
   assert.match(css, /grid-template-columns: 1fr/);
   assert.match(css, /\.marketplace-group > p \{\s*display: none/s);
   assert.match(css, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
@@ -42,12 +43,14 @@ test('トップ画面で主要5モールとファッション追加5モールを
     assert.match(module, new RegExp(`${language}: \\{`));
   }
   assert.match(module, /hoshilu:languagechange/);
+  assert.match(module, /\['探せるモールが、', 'ひと目で分かる。'\]/);
+  assert.match(module, /\['商品・家電・コスメなどは主要5モール。', 'ファッション検索では5モールを追加して横断します。'\]/);
   assert.match(module, /Up to 10 marketplaces/);
   assert.match(module, /Instagram, X, TikTok, and YouTube/);
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v284/);
+  assert.match(serviceWorker, /hoshilu-shell-v285/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

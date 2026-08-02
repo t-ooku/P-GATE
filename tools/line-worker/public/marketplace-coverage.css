@@ -32,6 +32,10 @@
   line-height: 1.7;
 }
 
+.marketplace-mobile-line {
+  display: inline;
+}
+
 .marketplace-count {
   display: grid;
   min-width: 112px;
@@ -148,6 +152,10 @@
 }
 
 @media (max-width: 760px) {
+  .marketplace-mobile-line {
+    display: block;
+  }
+
   .marketplace-coverage {
     margin-bottom: 10px;
     padding: 10px;
