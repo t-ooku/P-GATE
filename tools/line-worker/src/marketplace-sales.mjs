@@ -32,6 +32,13 @@ export function isOfficialMarketplaceSource(marketplace, value) {
     .some((domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`));
 }
 
+export function buildSaleNotificationBody(sale) {
+  const message = String(sale?.summary || sale?.title || '').trim();
+  const source = isOfficialMarketplaceSource(sale?.marketplace, sale?.source_url)
+    ? String(sale.source_url).trim() : '';
+  return source ? `${message}\n\n公式ページを開く\n${source}` : message;
+}
+
 function jstParts(date) {
   const shifted = new Date(date.getTime() + 9 * 3600000);
   return {
@@ -239,7 +246,7 @@ export async function enqueueSaleNotifications(env, now = new Date()) {
   const horizon = new Date(now.getTime() + 7 * 86400000).toISOString();
   const [sales, members] = await Promise.all([
     env.PRODUCT_DB.prepare(
-      `SELECT sale_id,marketplace,info_type,title,summary,starts_at FROM marketplace_sale_events
+      `SELECT sale_id,marketplace,info_type,title,summary,starts_at,source_url FROM marketplace_sale_events
        WHERE status='APPROVED' AND starts_at<=?1 AND ends_at>=?2`
     ).bind(horizon, at).all(),
     env.PRODUCT_DB.prepare(
@@ -278,7 +285,7 @@ export async function enqueueSaleNotifications(env, now = new Date()) {
            VALUES(?1,?2,'MARKETPLACE_SALES',?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)`
         ).bind(
           channelNotificationId, member.member_id, `${eventKey}:${channel}`, noticeType, channel, title,
-          sale.summary || sale.title, channelDelivered ? 'DELIVERED' : 'PENDING',
+          buildSaleNotificationBody(sale), channelDelivered ? 'DELIVERED' : 'PENDING',
           channelDelivered ? 1 : 0, nextAt, channelDelivered ? at : null, at
         ).run();
         inserted ||= Number(result?.meta?.changes || 0) > 0;

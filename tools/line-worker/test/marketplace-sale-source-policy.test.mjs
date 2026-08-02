@@ -1,6 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleMarketplaceSaleRoutes, isOfficialMarketplaceSource } from '../src/marketplace-sales.mjs';
+import { buildSaleNotificationBody, handleMarketplaceSaleRoutes, isOfficialMarketplaceSource } from '../src/marketplace-sales.mjs';
+
+test('sale notifications include a tappable official marketplace URL', () => {
+  const body = buildSaleNotificationBody({
+    marketplace: 'RAKUTEN_JP',
+    summary: '楽天市場公式で掲載中のキャンペーン情報です。',
+    source_url: 'https://event.rakuten.co.jp/'
+  });
+  assert.equal(body, '楽天市場公式で掲載中のキャンペーン情報です。\n\n公式ページを開く\nhttps://event.rakuten.co.jp/');
+  assert.doesNotMatch(buildSaleNotificationBody({
+    marketplace: 'RAKUTEN_JP', summary: '案内', source_url: 'https://example.com/'
+  }), /example\.com/);
+});
 
 test('10モールの記事・セール出典は対応する公式HTTPSドメインだけを許可する', () => {
   const valid = [
