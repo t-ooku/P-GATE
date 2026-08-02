@@ -394,14 +394,17 @@ function phoneScreenProtectorConstraints(value) {
   const glassPattern = /(?:強化ガラス|ガラスフィルム|tempered\s*glass|钢化玻璃|鋼化玻璃|강화유리)/iu;
   const glossyPattern = /(?:光沢|glossy|高光|亮面|유광)/iu;
   const antiGlarePattern = /(?:反射防止|アンチグレア|anti[- ]?glare|matte|防眩光|防眩|저반사|무광)/iu;
+  const fingerprintPattern = /(?:指紋防止|耐指紋|anti[- ]?fingerprint|fingerprint[- ]?resistant|oleophobic|防指纹|防指紋|지문\s*방지)/iu;
   const privacy = privacyPattern.test(text);
   const glass = glassPattern.test(text);
   const glossy = glossyPattern.test(text);
   const antiGlare = antiGlarePattern.test(text);
+  const fingerprint = fingerprintPattern.test(text);
   const rejectPrivacy = privacy && isNegatedPhoneAttribute(text, privacyPattern);
   const rejectGlass = glass && isNegatedPhoneAttribute(text, glassPattern);
   const rejectGlossy = glossy && isNegatedPhoneAttribute(text, glossyPattern);
   const rejectAntiGlare = antiGlare && isNegatedPhoneAttribute(text, antiGlarePattern);
+  const rejectFingerprint = fingerprint && isNegatedPhoneAttribute(text, fingerprintPattern);
   return {
     model: phoneCaseDeviceModel(text),
     protector: /(?:保護フィルム|ガラスフィルム|保護膜|screen\s*protector|protective\s*film|钢化膜|鋼化膜|保护膜|保護膜|필름|보호필름)/iu.test(text),
@@ -409,14 +412,15 @@ function phoneScreenProtectorConstraints(value) {
     pet: /\bpet\b/iu.test(text),
     antiGlare: antiGlare && !rejectAntiGlare,
     blueLight: /(?:ブルーライト(?:カット|軽減)|blue[- ]?light\s*(?:filter(?:ing)?|blocking|reduction)|防蓝光|防藍光|블루라이트\s*(?:차단|필터))/iu.test(text),
-    fingerprint: /(?:指紋防止|耐指紋|anti[- ]?fingerprint|fingerprint[- ]?resistant|oleophobic|防指纹|防指紋|지문\s*방지)/iu.test(text),
+    fingerprint: fingerprint && !rejectFingerprint,
     shatter: /(?:飛散防止|shatterproof|anti[- ]?shatter|防爆|방비산|비산\s*방지)/iu.test(text),
     glossy: glossy && !rejectGlossy,
     privacy: privacy && !rejectPrivacy,
     rejectPrivacy,
     rejectGlass,
     rejectGlossy,
-    rejectAntiGlare
+    rejectAntiGlare,
+    rejectFingerprint
   };
 }
 
@@ -437,6 +441,7 @@ function isPhoneScreenProtectorMismatch(candidate, requested) {
   if (requested.rejectGlass && evidence.glass) return true;
   if (requested.rejectGlossy && evidence.glossy) return true;
   if (requested.rejectAntiGlare && evidence.antiGlare) return true;
+  if (requested.rejectFingerprint && evidence.fingerprint) return true;
   return false;
 }
 

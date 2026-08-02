@@ -1180,8 +1180,10 @@ export function buildDeviceAccessorySearchKeywords(query) {
   const protectorBlueLight = label === '保護フィルム'
     && /(?:ブルーライト(?:カット|軽減)|blue[- ]?light\s*(?:filter(?:ing)?|blocking|reduction)|防蓝光|防藍光|블루라이트\s*(?:차단|필터))/iu.test(normalized)
     ? 'ブルーライトカット' : '';
+  const protectorFingerprintPattern = /(?:指紋防止|耐指紋|anti[- ]?fingerprint|fingerprint[- ]?resistant|oleophobic|防指纹|防指紋|지문\s*방지)/iu;
   const protectorFingerprint = label === '保護フィルム'
-    && /(?:指紋防止|耐指紋|anti[- ]?fingerprint|fingerprint[- ]?resistant|oleophobic|防指纹|防指紋|지문\s*방지)/iu.test(normalized)
+    && protectorFingerprintPattern.test(normalized)
+    && !isNegatedAttribute(normalized, protectorFingerprintPattern)
     ? '指紋防止' : '';
   const protectorShatter = label === '保護フィルム'
     && /(?:飛散防止|shatterproof|anti[- ]?shatter|防爆|방비산|비산\s*방지)/iu.test(normalized)

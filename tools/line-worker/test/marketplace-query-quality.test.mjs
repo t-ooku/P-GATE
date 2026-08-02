@@ -326,6 +326,21 @@ test('指紋防止と飛散防止の複合仕様を4言語で同時に保持す�
   }
 });
 
+test('複合仕様の一部訂正でも維持条件と追加条件を4言語で保持する', () => {
+  const queries = [
+    'iPhone 16 Pro用の飛散防止で、指紋防止じゃなくてブルーライトカット保護フィルム',
+    'shatterproof, not anti-fingerprint, blue light filtering screen protector for iPhone 16 Pro',
+    'iPhone 16 Pro防爆，不要防指纹，改成防蓝光保护膜',
+    'iPhone 16 Pro 비산 방지, 지문 방지 말고 블루라이트 차단 보호필름',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 16 Pro 保護フィルム ブルーライトカット 飛散防止', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('単焦点レンズはマウント・焦点距離・F値を4言語で保持する', () => {
   const cases = [
     ['Sony Eマウント 35mm F1.8 単焦点レンズ', [
