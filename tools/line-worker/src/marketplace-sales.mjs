@@ -1,4 +1,5 @@
 import { readMemberSession } from './member-auth.mjs';
+import { syncOfficialMarketplaceUpdates } from './official-marketplace-updates.mjs';
 
 export const SALE_MARKETPLACES = Object.freeze([
   'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
@@ -298,6 +299,9 @@ export async function runMarketplaceContentCycle(env, now = new Date()) {
   const checkedAt = now.toISOString();
   const runId = crypto.randomUUID();
   try {
+    const official = env.OFFICIAL_MARKETPLACE_SYNC_DISABLED === true
+      ? { checked:0, updated:0, failed:0, skipped:true }
+      : await syncOfficialMarketplaceUpdates(env, now);
     const result = await enqueueSaleNotifications(env, now);
     const coverage = await env.PRODUCT_DB.prepare(
       `SELECT COUNT(*) AS approved_active_events,COUNT(DISTINCT marketplace) AS covered_marketplaces
@@ -311,7 +315,7 @@ export async function runMarketplaceContentCycle(env, now = new Date()) {
        (run_id,checked_at,status,approved_active_events,covered_marketplaces,queued_notifications,error_code)
        VALUES(?1,?2,'SUCCESS',?3,?4,?5,'')`
     ).bind(runId, checkedAt, approvedActiveEvents, coveredMarketplaces, result.queued).run();
-    return { status: 'SUCCESS', queued: result.queued, approved_active_events: approvedActiveEvents, covered_marketplaces: coveredMarketplaces };
+    return { status: 'SUCCESS', queued: result.queued, approved_active_events: approvedActiveEvents, covered_marketplaces: coveredMarketplaces, official };
   } catch (error) {
     const errorCode = String(error?.message || 'MARKETPLACE_CONTENT_CYCLE_FAILED').slice(0, 80);
     try {

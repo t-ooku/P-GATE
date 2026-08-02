@@ -23,7 +23,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /grid-template-columns:minmax\(280px,1fr\) minmax\(220px,270px\) minmax\(360px,1fr\)/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v285/);
+  assert.match(worker, /hoshilu-shell-v286/);
   assert.match(worker, /ai-search-ui\.mjs/);
   assert.match(worker, /ai-search-layout-fix\.css/);
 });

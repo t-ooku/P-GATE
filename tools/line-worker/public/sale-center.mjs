@@ -77,7 +77,7 @@ function render(sales=[]){
     const period=document.createElement('time');period.textContent=sale.official?officialText.status:`${t.starts} ${date(sale.starts_at)} · ${t.ends} ${date(sale.ends_at)}${sale.updated_at?` · ${t.updated} ${dateTime(sale.updated_at)}`:''}`;
     const link=document.createElement('a');link.href=sale.source_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=t.detail;
     if(sale.official)card.classList.add('official-update');
-    card.append(mall,title,body,period);if(!sale.official)card.append(link);return card;
+    card.append(mall,title,body,period,link);return card;
   }));
 }
 

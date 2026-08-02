@@ -20,7 +20,7 @@ test('通知先、確認済み最新情報、送料込み価格比較を画面�
   assert.doesNotMatch(sale, /\['SMS','SMS'/);
   assert.match(migration, /delivery_channels/);
   assert.match(sale, /確認済みの最新情報はまだありません/);
-  assert.match(sale, /if\(!sale\.official\)card\.append\(link\)/);
+  assert.match(sale, /card\.append\(mall,title,body,period,link\)/);
   assert.match(app, /\.sort\(\(a,b\)=>Number\(a\.total_cost\)-Number\(b\.total_cost\)\)/);
   assert.match(app, /送料込み価格が確認できた/);
   assert.match(app, /price-offer-scroll/);

@@ -80,7 +80,7 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v285/);
+  assert.match(sw, /hoshilu-shell-v286/);
   assert.match(sw, /sale-center\.mjs/);
   assert.match(sw, /hero-slides\.mjs/);
   assert.match(sw, /hoshilu-fashion-collage-v1\.png/);
@@ -95,7 +95,7 @@ test('商品画像はAPPROVEDになるまで公開しない契約を持つ', asy
 
 test('10 marketplace content and notification runs are recorded for monitoring', async () => {
   const writes=[];
-  const env={PRODUCT_DB:{
+  const env={OFFICIAL_MARKETPLACE_SYNC_DISABLED:true,PRODUCT_DB:{
     prepare(sql){
       return{
         bind(...values){
@@ -110,7 +110,7 @@ test('10 marketplace content and notification runs are recorded for monitoring',
     }
   }};
   const result=await runMarketplaceContentCycle(env,new Date('2026-08-01T00:00:00.000Z'));
-  assert.deepEqual(result,{status:'SUCCESS',queued:0,approved_active_events:3,covered_marketplaces:2});
+  assert.deepEqual(result,{status:'SUCCESS',queued:0,approved_active_events:3,covered_marketplaces:2,official:{checked:0,updated:0,failed:0,skipped:true}});
   assert.equal(writes.length,1);
   assert.match(writes[0].sql,/marketplace_content_run_audit/);
   assert.deepEqual(writes[0].values.slice(1),['2026-08-01T00:00:00.000Z',3,2,0]);
