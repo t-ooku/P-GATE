@@ -58,3 +58,9 @@
 - Voltage, waterproofing, model compatibility, and genuine-brand claims require a confirmed value and named source; image-only or missing evidence never passes.
 - Product URLs explicitly requested as verified require `url_verified: true`.
 - `HOSHILU_EVIDENCE_GATE_ENABLED` defaults to OFF and production search remains unchanged.
+
+## Phase 6 implementation
+
+- Canonical attributes used by the structured query are required to contain Japanese, English, Korean, and Chinese expressions.
+- Localized zero-result, clarification, and evidence-badge messages preserve honest no-result behavior and never invent item counts or URLs.
+- Message rendering is standalone and not connected to the production response path.
