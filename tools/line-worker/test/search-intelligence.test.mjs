@@ -4336,6 +4336,23 @@ test('圧力IH炊飯器は4言語で容量・蒸気・保温条件が一致す�
     assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH']);
   }
 });
+
+test('圧力IH炊飯器の容量訂正は旧容量を除外して訂正後の本体だけを提示する', () => {
+  const queries = [
+    '圧力IH炊飯器 5.5合ではなく3合 蒸気カット 保温40時間',
+    'pressure IH rice cooker not 5.5 go but 3 go steam reduction keep warm 40 hours',
+    '压力IH电饭煲 不要5.5合要3合 蒸汽减少 保温40小时',
+    '압력 IH 밥솥 5.5合 말고 3合 증기 절감 보온 40시간',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: '圧力IH炊飯器 3合 蒸気カット 保温40時間' },
+    { asin: 'OLD', product_name: '圧力IH炊飯器 5.5合 蒸気カット 保温40時間' },
+    { asin: 'SHORT', product_name: '圧力IH炊飯器 3合 蒸気カット 保温24時間' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((item) => item.asin), ['MATCH'], query);
+  }
+});
 test('ドライブレコーダーは4言語で前後構成・画質・駐車監視・通信条件が一致する本体だけを提示する', () => {
   const queries = [
     '前後2カメラ 4K 駐車監視 GPS Wi-Fi ドライブレコーダー',

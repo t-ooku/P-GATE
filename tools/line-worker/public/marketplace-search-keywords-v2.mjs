@@ -663,7 +663,13 @@ function buildRetrofitSmartLockSearchKeywords(query) {
 function buildPressureIhRiceCookerSearchKeywords(query) {
   const normalized = String(query || '').normalize('NFKC');
   const cooker = /(?:圧力\s*IH\s*炊飯器|pressure\s*(?:IH|induction)\s*rice\s*cooker|压力\s*IH\s*电饭煲|壓力\s*IH\s*電子鍋|압력\s*IH\s*밥솥|圧力.{0,8}IH.{0,20}\d(?:\.\d)?\s*合.{0,12}炊|cooks?.{0,16}\d(?:\.\d)?\s*go\s*rice.{0,24}pressure\s*induction|压力\s*IH.{0,16}\d(?:\.\d)?\s*合.{0,8}(?:米饭|米飯)|압력\s*IH.{0,16}\d(?:\.\d)?\s*合.{0,8}밥\s*짓)/iu.test(normalized);
-  const capacity = normalized.match(/\b(\d(?:\.\d)?)\s*(?:合|go\b)/iu)?.[1];
+  const capacityMatches = [...normalized.matchAll(/\b(\d(?:\.\d)?)\s*(?:合|go\b)/giu)];
+  const capacity = capacityMatches.filter((match) => {
+    const before = normalized.slice(Math.max(0, match.index - 12), match.index);
+    const after = normalized.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1)?.[1];
   const steamCut = /(?:蒸気(?:カット|セーブ|低減|.{0,4}抑)|steam[\s-]*(?:cut|reduction|save)|蒸汽(?:减少|减量)|蒸氣(?:減少|減量)|증기\s*(?:절감|감소))/iu.test(normalized);
   const keepWarm = normalized.match(/(?:保温|keep[\s-]*warm|保溫|보온)\s*(\d{1,2})\s*(?:時間|hours?|小时|小時|시간)/iu)?.[1];
   if (!cooker || !capacity || !steamCut || !keepWarm) return '';

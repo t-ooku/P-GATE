@@ -2748,6 +2748,21 @@ test('圧力IH炊飯器は容量・蒸気カット・保温時間を4言語で�
     }
   }
 });
+
+test('圧力IH炊飯器の容量訂正は旧容量を捨てて新しい容量を4言語で採用する', () => {
+  const inputs = [
+    '圧力IH炊飯器 5.5合ではなく3合 蒸気カット 保温40時間',
+    'pressure IH rice cooker not 5.5 go but 3 go steam reduction keep warm 40 hours',
+    '压力IH电饭煲 不要5.5合要3合 蒸汽减少 保温40小时',
+    '압력 IH 밥솥 5.5合 말고 3合 증기 절감 보온 40시간',
+  ];
+  for (const input of inputs) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(input, marketplace),
+        '圧力IH炊飯器 3合 蒸気カット 保温40時間', `${marketplace}: ${input}`);
+    }
+  }
+});
 test('ドライブレコーダーは前後構成・解像度・駐車監視・通信条件を4言語で保持する', () => {
   const inputs = [
     '前後2カメラ 4K 駐車監視 GPS Wi-Fi ドライブレコーダー',

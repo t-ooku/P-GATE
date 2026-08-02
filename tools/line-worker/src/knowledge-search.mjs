@@ -1454,9 +1454,16 @@ function isRetrofitSmartLockMismatch(candidate, requested) {
 
 function pressureIhRiceCookerConstraints(value) {
   const text = String(value || '').normalize('NFKC');
+  const capacityMatches = [...text.matchAll(/\b(\d(?:\.\d)?)\s*(?:合|go\b)/giu)];
+  const capacity = capacityMatches.filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1)?.[1] || '';
   return {
     cooker: /(?:圧力\s*IH\s*炊飯器|pressure\s*(?:IH|induction)\s*rice\s*cooker|压力\s*IH\s*电饭煲|壓力\s*IH\s*電子鍋|압력\s*IH\s*밥솥|圧力.{0,8}IH.{0,20}\d(?:\.\d)?\s*合.{0,12}炊|cooks?.{0,16}\d(?:\.\d)?\s*go\s*rice.{0,24}pressure\s*induction|压力\s*IH.{0,16}\d(?:\.\d)?\s*合.{0,8}(?:米饭|米飯)|압력\s*IH.{0,16}\d(?:\.\d)?\s*合.{0,8}밥\s*짓)/iu.test(text),
-    capacity: text.match(/\b(\d(?:\.\d)?)\s*(?:合|go\b)/iu)?.[1] || '',
+    capacity,
     steamCut: /(?:蒸気(?:カット|セーブ|低減|.{0,4}抑)|steam[\s-]*(?:cut|reduction|save)|蒸汽(?:减少|减量)|蒸氣(?:減少|減量)|증기\s*(?:절감|감소))/iu.test(text),
     keepWarm: text.match(/(?:保温|keep[\s-]*warm|保溫|보온)\s*(\d{1,2})\s*(?:時間|hours?|小时|小時|시간)/iu)?.[1] || '',
     wrongProduct: /(?:内釜|inner\s*pot|内胆|內鍋|내솥|交換(?:用)?ふた|replacement\s*lid|替换盖|替換蓋|교체\s*뚜껑|パッキン|gasket|密封圈|패킹|保温専用|rice\s*warmer|保温锅|保溫鍋|보온\s*전용)/iu.test(text)
