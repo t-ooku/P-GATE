@@ -1402,13 +1402,14 @@ function isElectricStandingDeskMismatch(candidate, requested) {
 
 function ergonomicOfficeChairConstraints(value) {
   const text = String(value || '').normalize('NFKC');
+  const loadMatches = [...text.matchAll(/(?:(?:耐荷重|weight\s*capacity|承重|하중)\s*(?:(?:not|不要)\s*)?|(?:ではなく|じゃなく|but|要|말고)\s*)(\d{2,3})\s*kg\b/giu)];
   return {
     chair: /(?:エルゴノミクスオフィスチェア|ergonomic\s*office\s*chair|人体工学办公椅|人體工學辦公椅|인체공학\s*사무용\s*의자|長時間座って.{0,12}腰.{0,8}首.{0,12}つらくならず.{0,16}肘位置.{0,12}細かく|back.{0,8}neck\s*comfortable.{0,16}long\s*sitting.{0,20}precisely\s*adjustable\s*arms|长时间坐着.{0,12}腰.{0,8}脖子.{0,12}舒服.{0,16}精细调节扶手|오래\s*앉아도.{0,12}허리.{0,8}목.{0,12}편하고.{0,16}팔걸이\s*위치.{0,12}세밀하게)/iu.test(text),
     headrest: /(?:ヘッドレスト|headrest|头枕|頭枕|헤드레스트)/iu.test(text),
     lumbar: /(?:腰サポート|lumbar\s*support|腰部支撑|腰部支撐|요추\s*지지)/iu.test(text),
     armrests: text.match(/\b(\d)D\s*(?:肘掛け|armrests?|扶手|팔걸이)/iu)?.[1] || '',
     mesh: /(?:メッシュ|mesh|网布|網布|메쉬)/iu.test(text),
-    load: text.match(/(?:耐荷重|weight\s*capacity|承重|하중)\s*(\d{2,3})\s*kg\b/iu)?.[1] || '',
+    load: loadMatches.at(-1)?.[1] || '',
     wrongProduct: /(?:chair\s*cover|椅子カバー|椅套|의자\s*커버|replacement\s*casters?|交換キャスター|替换脚轮|替換腳輪|교체용\s*캐스터|gas\s*cylinder|ガスシリンダー|气压杆|氣壓桿|가스\s*실린더|seat\s*cushion|座布団|坐垫|坐墊|방석|replacement\s*armrests?|交換肘掛け|替换扶手|替換扶手|교체용\s*팔걸이)/iu.test(text)
   };
 }

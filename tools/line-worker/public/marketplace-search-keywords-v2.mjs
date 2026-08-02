@@ -642,7 +642,8 @@ function buildErgonomicOfficeChairSearchKeywords(query) {
   const lumbar = /(?:腰サポート|lumbar\s*support|腰部支撑|腰部支撐|요추\s*지지)/iu.test(normalized);
   const armrests = normalized.match(/\b(\d)D\s*(?:肘掛け|armrests?|扶手|팔걸이)/iu)?.[1];
   const mesh = /(?:メッシュ|mesh|网布|網布|메쉬)/iu.test(normalized);
-  const load = normalized.match(/(?:耐荷重|weight\s*capacity|承重|하중)\s*(\d{2,3})\s*kg\b/iu)?.[1];
+  const loadMatches = [...normalized.matchAll(/(?:(?:耐荷重|weight\s*capacity|承重|하중)\s*(?:(?:not|不要)\s*)?|(?:ではなく|じゃなく|but|要|말고)\s*)(\d{2,3})\s*kg\b/giu)];
+  const load = loadMatches.at(-1)?.[1];
   if (!chair || !headrest || !lumbar || !armrests || !mesh || !load) return '';
   return ['エルゴノミクスオフィスチェア', 'ヘッドレスト', '腰サポート', `${armrests}D肘掛け`, 'メッシュ', `耐荷重${load}kg`].join(' ');
 }

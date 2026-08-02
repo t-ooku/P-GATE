@@ -1167,6 +1167,21 @@ test('オフィスチェアは支持機能・肘掛け・素材・耐荷重を4�
   }
 });
 
+test('オフィスチェアの耐荷重訂正は旧数値を捨てて新しい耐荷重を4言語で採用する', () => {
+  const queries = [
+    'エルゴノミクスオフィスチェア ヘッドレスト 腰サポート 4D肘掛け メッシュ 耐荷重150kgではなく120kg',
+    'ergonomic office chair headrest lumbar support 4D armrests mesh weight capacity not 150kg but 120kg',
+    '人体工学办公椅 头枕 腰部支撑 4D扶手 网布 承重不要150kg要120kg',
+    '인체공학 사무용 의자 헤드레스트 요추 지지 4D 팔걸이 메쉬 하중 150kg 말고 120kg',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'エルゴノミクスオフィスチェア ヘッドレスト 腰サポート 4D肘掛け メッシュ 耐荷重120kg', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('スマートロックは認証・通信・施錠・非常解錠条件を4言語で保持する', () => {
   const queries = [
     '後付けスマートロック 指紋 暗証番号 Matter オートロック 非常用キー',
