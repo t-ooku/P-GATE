@@ -739,6 +739,20 @@ export function buildRakutenSearchKeywordCandidates(query) {
   return [...new Set([primary, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 2);
 }
 
+export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = '') {
+  const rakutenCandidates = buildRakutenSearchKeywordCandidates(query);
+  return [...new Set([primaryKeywords, ...rakutenCandidates].map((value) =>
+    String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 3);
+}
+
+async function searchMarketplaceApiWithFallback(searcher, keywordCandidates) {
+  for (const keywords of keywordCandidates) {
+    const candidates = await searcher(keywords);
+    if (candidates.length) return candidates;
+  }
+  return [];
+}
+
 export function buildRakutenSearchDestination(query) {
   const keywords = buildRakutenSearchKeywords(query);
   if (!keywords) return '';
@@ -1026,7 +1040,10 @@ async function handleKnowledgeApi(request, env, ctx) {
       const marketplaceSearches = [];
       if (creatorsApiConfigured(env)) marketplaceSearches.push({
         key: 'amazon_catalog_connected',
-        run: searchAmazonCreators(env, buildAmazonSearchKeywords(input.query))
+        run: searchMarketplaceApiWithFallback(
+          (keywords) => searchAmazonCreators(env, keywords),
+          buildMarketplaceApiKeywordCandidates(input.query, buildAmazonSearchKeywords(input.query))
+        )
       });
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_connected',
@@ -1037,7 +1054,10 @@ async function handleKnowledgeApi(request, env, ctx) {
       });
       if (yahooShoppingApiConfigured(env)) marketplaceSearches.push({
         key: 'yahoo_catalog_connected',
-        run: searchYahooShopping(env, buildMarketplaceSearchKeywords(input.query))
+        run: searchMarketplaceApiWithFallback(
+          (keywords) => searchYahooShopping(env, keywords),
+          buildMarketplaceApiKeywordCandidates(input.query, buildMarketplaceSearchKeywords(input.query))
+        )
       });
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
       outcomes.forEach((outcome, index) => {

@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRakutenSearchKeywordCandidates } from '../src/index.mjs';
+import {
+  buildMarketplaceApiKeywordCandidates,
+  buildRakutenSearchKeywordCandidates
+} from '../src/index.mjs';
 import { filterCategoryMismatches } from '../src/knowledge-search.mjs';
 import { searchRakutenMarketplaceWithFallback } from '../src/rakuten-marketplace-api.mjs';
 
@@ -15,6 +18,20 @@ test('low table search retries the common center-table synonym', () => {
   assert.deepEqual(
     buildRakutenSearchKeywordCandidates('ローテーブル'),
     ['ローテーブル', 'センターテーブル']
+  );
+});
+
+test('all connected marketplace APIs receive the original query and the product-noun retry', () => {
+  assert.deepEqual(
+    buildMarketplaceApiKeywordCandidates(
+      '楽で涼しいカットソー 丈長めで色は白系 女性向けおしゃれ',
+      'white cooling long cut and sew top'
+    ),
+    [
+      'white cooling long cut and sew top',
+      '楽で涼しいカットソー 丈長めで色は白系 女性向けおしゃれ',
+      'カットソー'
+    ]
   );
 });
 
