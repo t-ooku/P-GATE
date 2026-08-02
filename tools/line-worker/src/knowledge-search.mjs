@@ -1516,10 +1516,19 @@ function isDualDashCamMismatch(candidate, requested) {
 
 function cameraPetFeederConstraints(value) {
   const text = String(value || '').normalize('NFKC');
+  const capacityMatches = [...text.matchAll(/\b(\d(?:\.\d)?)\s*L\b/giu)];
+  const capacity = capacityMatches.filter((match) => {
+    const before = text.slice(Math.max(0, match.index - 12), match.index);
+    const after = text.slice(match.index + match[0].length, match.index + match[0].length + 12);
+    return !/(?:not|不要)\s*$/iu.test(before)
+      && !/^\s*(?:ではなく|じゃなく|말고|아니고|아닌|而不是)/iu.test(after);
+  }).at(-1)?.[1] || '';
+  const cameraMatch = text.match(/(?:(1080p|2K).{0,16}(?:カメラ|camera|摄像头|鏡頭|카메라)|(?:カメラ|camera|摄像头|鏡頭|카메라).{0,16}(1080p|2K))/iu);
+  const camera = (cameraMatch?.[1] || cameraMatch?.[2] || '').toLowerCase() === '1080p' ? '1080p' : cameraMatch ? '2K' : '';
   return {
     feeder: /(?:ペット(?:用)?自動給餌器|自動給餌器|automatic\s*(?:pet\s*)?feeder|自动喂食器|自動餵食器|자동\s*급식기|留守中.{0,20}(?:猫|犬|ペット).{0,20}(?:自動.{0,8}(?:ご飯|餌)|(?:ご飯|餌).{0,8}自動)|留守中.{0,12}(?:猫|犬|ペット).{0,24}(?:決まった時間|時間を決め).{0,16}(?:ごはん|ご飯|餌).{0,24}(?:映像|見ながら).{0,16}話しかけ|feeds?.{0,12}(?:cat|dog|pet).{0,20}automatically.{0,24}(?:away|not\s*home)|schedule\s*meals?.{0,24}(?:see|watch).{0,12}(?:and\s*)?talk.{0,16}(?:cat|dog|pet).{0,20}away|出门时.{0,20}自动.{0,8}(?:给)?(?:猫|狗|宠物)喂食|出门时.{0,16}定时.{0,8}(?:给)?(?:猫|狗|宠物)喂食.{0,24}看着.{0,16}说话|外出時.{0,20}自動.{0,8}(?:給)?(?:貓|狗|寵物)餵食|집을\s*비울\s*때.{0,20}(?:고양이|강아지|반려동물).{0,20}자동으로.{0,8}밥|외출\s*중.{0,12}(?:고양이|강아지|반려동물).{0,20}정해진\s*시간.{0,16}밥.{0,20}보며.{0,12}말하고)/iu.test(text),
-    capacity: text.match(/\b(\d(?:\.\d)?)\s*L\b/iu)?.[1] || '',
-    camera: /(?:1080p.{0,16}(?:カメラ|camera|摄像头|鏡頭|카메라)|(?:カメラ|camera|摄像头|鏡頭|카메라).{0,16}1080p)/iu.test(text),
+    capacity,
+    camera,
     wifi: /\bWi[\s-]*Fi\b/iu.test(text),
     twoWayAudio: /(?:双方向音声|two[\s-]*way\s*audio|双向语音|雙向語音|양방향\s*음성)/iu.test(text),
     wrongProduct: /(?:給餌(?:用)?皿|pet\s*(?:food\s*)?bowl|宠物食盆|寵物食碗|반려동물\s*식기|乾燥剤|desiccant|干燥剂|乾燥劑|건조제|replacement\s*(?:power\s*)?(?:cable|adapter)|交換用電源(?:ケーブル|アダプター)|替换电源|替換電源|교체용\s*전원|pet\s*camera\s*only|見守りカメラ単体|宠物摄像头单独|寵物攝影機單獨|펫캠\s*단품|water\s*fountain|自動給水器|宠物饮水机|寵物飲水機|자동\s*급수기)/iu.test(text)
@@ -1532,7 +1541,8 @@ function isCameraPetFeederMismatch(candidate, requested) {
   const evidence = cameraPetFeederConstraints(text);
   if (!evidence.feeder || evidence.wrongProduct) return true;
   if (requested.capacity && evidence.capacity !== requested.capacity) return true;
-  for (const field of ['camera', 'wifi', 'twoWayAudio']) {
+  if (requested.camera && evidence.camera !== requested.camera) return true;
+  for (const field of ['wifi', 'twoWayAudio']) {
     if (requested[field] && !evidence[field]) return true;
   }
   return false;
