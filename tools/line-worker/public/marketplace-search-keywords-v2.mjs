@@ -1263,7 +1263,7 @@ export function buildDeviceAccessorySearchKeywords(query) {
     && protectorPrivacyPattern.test(normalized)
     && !isNegatedAttribute(normalized, protectorPrivacyPattern)
     ? '覗き見防止' : '';
-  const rejectsLightUpCase = /(?:(?:光る|発光|ピカピカ|ライトアップ).{0,32}(?:ケース|カバー).{0,10}(?:じゃなく|ではなく)|not\s+(?:a\s+|an\s+|the\s+)?(?:glow(?:ing)?|light[- ]?up|luminous).{0,32}(?:case|cover)|(?:不要|不是|不想要).{0,24}(?:发光|發光|会亮|會亮).{0,24}(?:手机壳|手機殼)|(?:빛나는|발광|불빛\s*나는).{0,32}(?:케이스|커버).{0,10}(?:말고|아닌|아니고))/iu.test(normalized);
+  const rejectsLightUpCase = /(?:(?:光る|発光|ピカピカ|ライトアップ).{0,32}(?:ケース|カバー).{0,10}(?:じゃなく|ではなく)|not\s+(?:a\s+|an\s+|the\s+)?(?:glow(?:ing)?|light[- ]?up|luminous).{0,32}(?:case|cover)|(?:不要|不是|不想要)(?:(?![,，]\s*(?:要|改)).){0,24}(?:发光|發光|会亮|會亮).{0,24}(?:手机壳|手機殼)|(?:빛나는|발광|불빛\s*나는).{0,32}(?:케이스|커버).{0,10}(?:말고|아닌|아니고))/iu.test(normalized);
   const specifications = specificationTokens(normalized)
     .filter((token) => !base.toLowerCase().includes(token.toLowerCase())
       && !(caseMagSafe && token.toLowerCase() === 'magsafe'));
@@ -1272,8 +1272,15 @@ export function buildDeviceAccessorySearchKeywords(query) {
   const attributes = matchedAttributes(normalized)
     .filter((token) => ['透明', '光る'].includes(token) && !materials.includes(token)
       && !(token === '光る' && rejectsLightUpCase));
+  const correctedRechargeableCase = label === 'ケース'
+    && /(?:(?:nfc|電池不要|電源不要).{0,32}(?:ではなく|じゃなく).{0,20}(?:usb[- ]?)?充電式|not\s+.{0,40}(?:battery[- ]?free|\bnfc\b).{0,40}(?:but|instead).{0,24}(?:usb[- ]?)?rechargeable|不要.{0,24}(?:nfc|免电池|免電池|无需电池|無需電池).{0,28}(?:要|改要).{0,20}(?:usb[- ]?)?充[电電]式|(?:nfc|배터리\s*없는|전원\s*불필요).{0,32}(?:말고|아닌|아니고).{0,20}(?:usb[- ]?)?충전식)/iu.test(normalized);
+  const casePower = label === 'ケース' && !correctedRechargeableCase
+    && /\bnfc\b/iu.test(normalized)
+    && /(?:電池不要|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|免电池|免電池|无需电池|無需電池|不用电池|不用電池|배터리\s*(?:없는|불필요)|전원\s*불필요)/iu.test(normalized)
+    ? 'NFC 電池不要' : '';
+  const caseRechargeable = correctedRechargeableCase ? 'USB充電式' : '';
   const conditions = [...new Set([
-    ...specifications, ...materials, ...attributes, caseMagSafe, protectorGlass, protectorPrivacy, protectorPet,
+    casePower, caseRechargeable, ...specifications, ...materials, ...attributes, caseMagSafe, protectorGlass, protectorPrivacy, protectorPet,
     protectorAntiGlare, protectorBlueLight, protectorFingerprint, protectorShatter
   ].filter(Boolean))].slice(0, 3);
   return [base, ...conditions].join(' ');

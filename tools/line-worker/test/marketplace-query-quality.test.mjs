@@ -100,6 +100,21 @@ test('NFC電池不要からUSB充電式への言い直しは訂正後の方式�
   }
 });
 
+test('USB充電式からNFC電池不要への逆訂正はiPhone機種と新方式を保持する', () => {
+  const queries = [
+    'iPhone 15 Pro用のUSB充電式ではなくNFCで電池不要の光るケース',
+    'not a USB rechargeable case but a battery-free NFC light-up case for iPhone 15 Pro',
+    '不要USB充电式，要NFC免电池发光iPhone 15 Pro手机壳',
+    'iPhone 15 Pro용 USB 충전식 말고 NFC 배터리 없는 발광 케이스',
+  ];
+  for (const query of queries) {
+    for (const marketplace of SEARCH_MARKETPLACES) {
+      assert.equal(buildMarketplaceSearchKeywords(query, marketplace),
+        'iPhone 15 Proケース NFC 電池不要 光る', `${marketplace}: ${query}`);
+    }
+  }
+});
+
 test('光るケースの機種訂正は4言語で最後のiPhone指定だけを保持する', () => {
   const queries = [
     '光るiPhone 15 Proケース、やっぱりiPhone 15 Pro Max用',

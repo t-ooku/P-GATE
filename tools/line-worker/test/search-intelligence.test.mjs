@@ -1008,6 +1008,27 @@ test('NFC電池不要からUSB充電式への言い直しは充電式ケース�
   }
 });
 
+test('USB充電式からNFC電池不要への逆訂正は指定機種の新方式だけを提示する', () => {
+  const queries = [
+    'iPhone 15 Pro用のUSB充電式ではなくNFCで電池不要の光るケース',
+    'not a USB rechargeable case but a battery-free NFC light-up case for iPhone 15 Pro',
+    '不要USB充电式，要NFC免电池发光iPhone 15 Pro手机壳',
+    'iPhone 15 Pro용 USB 충전식 말고 NFC 배터리 없는 발광 케이스',
+  ];
+  const candidates = [
+    { asin: 'MATCH', product_name: 'iPhone 15 Pro Battery-free NFC Light-up LED Case no battery required' },
+    { asin: 'OLD', product_name: 'iPhone 15 Pro USB Rechargeable Light-up LED Case' },
+    { asin: 'WRONGMODEL', product_name: 'iPhone 15 Pro Max Battery-free NFC Light-up LED Case no battery required' },
+    { asin: 'NONFC', product_name: 'iPhone 15 Pro Battery-free Light-up LED Case no battery required' },
+    { asin: 'PLAIN', product_name: 'iPhone 15 Pro NFC Phone Case Cover' },
+    { asin: 'TAG', product_name: 'iPhone 15 Pro Battery-free NFC LED Tag Sticker' },
+  ];
+  for (const query of queries) {
+    assert.deepEqual(filterCategoryMismatches(query, candidates).map((candidate) => candidate.asin),
+      ['MATCH'], query);
+  }
+});
+
 test('光るケースの機種訂正は4言語で最後に指定したiPhoneだけを提示する', () => {
   const queries = [
     '光るiPhone 15 Proケース、やっぱりiPhone 15 Pro Max用',
