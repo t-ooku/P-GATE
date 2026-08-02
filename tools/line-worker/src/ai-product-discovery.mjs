@@ -43,6 +43,22 @@ function parseSuggestedProducts(text) {
   }
 }
 
+function generateContentOutputAndCitations(payload) {
+  let text = '';
+  const citations = new Map();
+  for (const candidate of Array.isArray(payload?.candidates) ? payload.candidates : []) {
+    for (const part of Array.isArray(candidate?.content?.parts) ? candidate.content.parts : []) {
+      if (part?.text) text += `${part.text}\n`;
+    }
+    for (const chunk of Array.isArray(candidate?.groundingMetadata?.groundingChunks)
+      ? candidate.groundingMetadata.groundingChunks : []) {
+      const url = safePublicHttpsUrl(chunk?.web?.uri);
+      if (url) citations.set(url, String(chunk?.web?.title || ''));
+    }
+  }
+  return { text: text.trim(), citations };
+}
+
 function citedProductUrl(value, citations) {
   const candidateUrl = safePublicHttpsUrl(value);
   if (!candidateUrl) return '';
@@ -105,33 +121,49 @@ export function aiProductDiscoveryConfigured(env = {}) {
 export async function discoverProductsWithAi(query, language, env = {}, fetchImpl = fetch) {
   if (!aiProductDiscoveryConfigured(env)) return { triggered: false, configured: false, candidates: [] };
   const requestedModel = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
-  const models = [...new Set([requestedModel, 'gemini-3.5-flash'])];
-  let response;
+  const prompt = `Find up to ${MAX_AI_CANDIDATES} likely purchasable products matching this HOSHILU search: ${query}\nLanguage: ${language}. Return only a JSON object {"products":[{"title":"","url":"","reason":""}]}. URLs must be direct public product detail pages, not search results, articles, social posts, homepages, or shortened links. Prefer exact visual/use clues. Do not invent products or URLs.`;
   let model = requestedModel;
-  for (const candidateModel of models) {
-    model = candidateModel;
-    response = await fetchImpl('https://generativelanguage.googleapis.com/v1beta/interactions', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-      body: JSON.stringify({
-        model,
-        input: `Find up to ${MAX_AI_CANDIDATES} likely purchasable products matching this HOSHILU search: ${query}\nLanguage: ${language}. Return only a JSON object {"products":[{"title":"","url":"","reason":""}]}. URLs must be direct public product detail pages, not search results, articles, social posts, homepages, or shortened links. Prefer exact visual/use clues. Do not invent products or URLs.`,
-        tools: [{ type: 'google_search' }]
-      })
-    });
-    if (response.ok) break;
+  let response = await fetchImpl('https://generativelanguage.googleapis.com/v1beta/interactions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+    body: JSON.stringify({ model, input: prompt, tools: [{ type: 'google_search' }] })
+  });
+  let parsed;
+  if (response.ok) {
+    parsed = textOutputAndCitations(await response.json());
+  } else {
     let providerCode = '';
     try {
       const failure = await response.clone().json();
       providerCode = String(failure?.error?.status || failure?.error?.code || '').slice(0, 80);
     } catch {}
-    if (response.status === 429 && candidateModel !== models.at(-1)) continue;
+    if (response.status === 429) {
+      model = 'gemini-2.5-flash';
+      response = await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          tools: [{ google_search: {} }]
+        })
+      });
+      if (response.ok) parsed = generateContentOutputAndCitations(await response.json());
+      else {
+        try {
+          const failure = await response.clone().json();
+          providerCode = String(failure?.error?.status || failure?.error?.code || '').slice(0, 80);
+        } catch {}
+      }
+    }
+    if (parsed) {
+      // Continue with grounded candidates from the stable Generate Content API.
+    } else {
     const error = new Error('AI_PRODUCT_DISCOVERY_FAILED');
     error.status = response.status;
     error.providerCode = providerCode;
     throw error;
+    }
   }
-  const parsed = textOutputAndCitations(await response.json());
   const structuredSuggestions = parseSuggestedProducts(parsed.text).filter((item) => {
     return Boolean(citedProductUrl(item?.url, parsed.citations));
   });
@@ -151,4 +183,4 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
   return { triggered: true, configured: true, provider: 'GEMINI_GOOGLE_SEARCH', model, candidates };
 }
 
-export const aiProductDiscoveryTest = { safePublicHttpsUrl, textOutputAndCitations, parseSuggestedProducts, citedProductUrl, verifiedProductPage };
+export const aiProductDiscoveryTest = { safePublicHttpsUrl, textOutputAndCitations, generateContentOutputAndCitations, parseSuggestedProducts, citedProductUrl, verifiedProductPage };

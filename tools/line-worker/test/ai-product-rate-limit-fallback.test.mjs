@@ -9,15 +9,18 @@ test('Gemini discovery retries a stable model when the primary model is rate lim
     if (String(url).includes('/v1beta/interactions')) {
       const model = JSON.parse(options.body).model;
       models.push(model);
-      if (model === 'gemini-3.6-flash') return Response.json({ error: { status: 'too_many_requests' } }, { status: 429 });
-      return Response.json({ steps: [{ type: 'model_output', content: [{
-        type: 'text', text: JSON.stringify({ products: [{ title: '木製ローテーブル', url: productUrl, reason: 'Exact product noun' }] }),
-        annotations: [{ type: 'url_citation', url: productUrl, title: 'Low table' }]
-      }] }] });
+      return Response.json({ error: { status: 'too_many_requests' } }, { status: 429 });
+    }
+    if (String(url).includes(':generateContent')) {
+      models.push('gemini-2.5-flash');
+      return Response.json({ candidates: [{
+        content: { parts: [{ text: JSON.stringify({ products: [{ title: '木製ローテーブル', url: productUrl, reason: 'Exact product noun' }] }) }] },
+        groundingMetadata: { groundingChunks: [{ web: { uri: productUrl, title: 'Low table' } }] }
+      }] });
     }
     return new Response('<meta property="og:type" content="product"><meta property="og:image" content="https://cdn.example.test/low-table.jpg">', { headers: { 'content-type': 'text/html' } });
   });
-  assert.deepEqual(models, ['gemini-3.6-flash', 'gemini-3.5-flash']);
-  assert.equal(result.model, 'gemini-3.5-flash');
+  assert.deepEqual(models, ['gemini-3.6-flash', 'gemini-2.5-flash']);
+  assert.equal(result.model, 'gemini-2.5-flash');
   assert.equal(result.candidates[0].url, productUrl);
 });
