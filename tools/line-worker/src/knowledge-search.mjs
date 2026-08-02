@@ -2479,7 +2479,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && Boolean(iplHairRemoval.flashes && iplHairRemoval.cooling
       && iplHairRemoval.levels && iplHairRemoval.skinSensor)
     && !iplHairRemoval.wrongProduct;
-  const implicitLightUpPhoneCase = /(?:スマホ.{0,20}(?:着信|通知).{0,20}(?:背面|裏).{0,12}(?:光|ピカ)|(?:着信|通知).{0,20}スマホ.{0,12}(?:背面|裏).{0,12}(?:光|ピカ)|phone.{0,20}(?:back|rear).{0,16}lights?\s*up.{0,16}notifications?|notifications?.{0,20}(?:back|rear).{0,12}of\s*(?:the\s*)?phone.{0,12}(?:glow|lights?\s*up)|手机.{0,20}(?:通知|来电).{0,20}背面.{0,12}(?:会亮|发光)|(?:通知|来电).{0,12}手机.{0,12}背面.{0,12}(?:会亮|发光)|스마트폰.{0,20}(?:알림|전화).{0,20}뒷면.{0,12}(?:불이\s*들어오|빛나)|(?:알림|전화).{0,12}스마트폰.{0,12}뒷면.{0,12}(?:불이\s*들어오|빛나))/iu.test(normalizedQuery);
+  const implicitLightUpPhoneCase = /(?:スマホ.{0,20}(?:着信|通知|メッセージ).{0,20}(?:背面|裏).{0,12}(?:光|ピカ)|(?:着信|通知|メッセージ).{0,20}スマホ.{0,12}(?:背面|裏).{0,12}(?:光|ピカ)|phone.{0,20}(?:back|rear).{0,24}(?:glow|lights?\s*up).{0,32}(?:notifications?|messages?)|(?:notifications?|messages?).{0,32}(?:back|rear).{0,16}of\s*(?:the\s*)?phone.{0,16}(?:glow|lights?\s*up)|手机.{0,20}(?:通知|来电|消息).{0,20}背面.{0,12}(?:会亮|发光)|(?:通知|来电|消息).{0,20}手机.{0,12}背面.{0,12}(?:会亮|发光)|(?:스마트폰|휴대폰).{0,20}(?:알림|전화|메시지).{0,20}뒷면.{0,12}(?:불이\s*들어오|빛나)|(?:알림|전화|메시지).{0,20}(?:스마트폰|휴대폰).{0,12}뒷면.{0,12}(?:불이\s*들어오|빛나))/iu.test(normalizedQuery);
   const deviceSpecificCase = (phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery)
     ) || implicitLightUpPhoneCase;

@@ -919,6 +919,10 @@ test('光るスマホケースは初回提示から一般ケース・LED照明�
     'notifications make the back of the phone glow, saw it on TikTok',
     '通知一来手机背面就发光，抖音看到的那个',
     '알림이 오면 스마트폰 뒷면이 빛나는 틱톡에서 본 그거',
+    'TikTokで見たメッセージが来るとスマホの背面が光るやつ',
+    'the TikTok thing that makes the back of my phone light up when I get a message',
+    '抖音上那个收到消息手机背面会亮的东西',
+    '틱톡에서 본 메시지 오면 휴대폰 뒷면에 불 들어오는 거',
   ];
   const candidates = [
     { asin: 'VALIDJA001', product_name: 'LEDで光るスマホケース 通知発光カバー' },
