@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { aiProductDiscoveryConfigured, aiProductDiscoveryTest, discoverProductsWithAi } from '../src/ai-product-discovery.mjs';
+import {
+  aiProductDiscoveryConfigured,
+  aiProductDiscoveryTest,
+  discoverProductsWithAi,
+  normalizeAiIntent
+} from '../src/ai-product-discovery.mjs';
 
 test('AI discovery accepts either Gemini or OpenAI configuration', () => {
   assert.equal(aiProductDiscoveryConfigured({}), false);
@@ -8,69 +13,95 @@ test('AI discovery accepts either Gemini or OpenAI configuration', () => {
   assert.equal(aiProductDiscoveryConfigured({ OPENAI_API_KEY: 'o'.repeat(32) }), true);
 });
 
-test('AI discovery returns only cited product pages with an image', async () => {
-  const productUrl = 'https://shop.example.test/products/light-case';
+test('normalizes product candidates and multilingual search keywords', () => {
+  const result = normalizeAiIntent({
+    category: '完全ワイヤレスイヤホン',
+    features: ['透明', 'クリア', '透明'],
+    product_candidates: [{
+      name: 'Nothing Ear',
+      brand: 'Nothing',
+      match_score: 97,
+      reason: '透明デザインが近い',
+      matched_features: ['透明', 'ワイヤレス'],
+      search_keywords: ['Nothing Ear', '透明 イヤホン']
+    }],
+    search_keywords: ['透明 ワイヤレスイヤホン', 'クリア イヤホン'],
+    multilingual_keywords: {
+      en: ['transparent earbuds'],
+      ko: ['투명 이어폰']
+    }
+  });
+  assert.equal(result.category, '完全ワイヤレスイヤホン');
+  assert.deepEqual(result.features, ['透明', 'クリア']);
+  assert.equal(result.product_candidates[0].name, 'Nothing Ear');
+  assert.equal(result.product_candidates[0].match_score, 97);
+  assert.deepEqual(result.multilingual_keywords.en, ['transparent earbuds']);
+});
+
+test('Gemini returns candidate names and keywords without product URLs', async () => {
   const calls = [];
   const fetchImpl = async (url, options = {}) => {
     calls.push({ url: String(url), options });
-    if (String(url).includes('/v1beta/interactions')) {
-      return Response.json({ steps: [{ type: 'model_output', content: [{
-        type: 'text',
-        text: JSON.stringify({ products: [{ title: 'Notification light phone case', url: productUrl, reason: 'The back lights up.' }] }),
-        annotations: [{ type: 'url_citation', url: productUrl, title: 'Example shop' }]
-      }] }] });
-    }
-    return new Response('<html><head><meta property="og:type" content="product"><meta property="og:title" content="Light Case"><meta property="og:image" content="https://cdn.example.test/light-case.jpg"></head><body><button>Add to cart</button></body></html>', {
-      headers: { 'content-type': 'text/html; charset=utf-8' }
+    return Response.json({
+      candidates: [{ content: { parts: [{ text: JSON.stringify({
+        category: '完全ワイヤレスイヤホン',
+        intent_summary: '透明なケースと本体が見えるイヤホン',
+        features: ['透明', 'スケルトン', 'ワイヤレス'],
+        product_candidates: [
+          { name: 'Nothing Ear', brand: 'Nothing', match_score: 96, reason: '透明デザイン', search_keywords: ['Nothing Ear'] },
+          { name: 'TOZO Crystal Pods', brand: 'TOZO', match_score: 88, reason: '透明ケース', search_keywords: ['TOZO Crystal Pods'] }
+        ],
+        search_keywords: ['透明 ワイヤレスイヤホン', 'スケルトン イヤホン'],
+        multilingual_keywords: { ja: ['透明 イヤホン'], en: ['transparent earbuds'], zh: [], ko: [] }
+      }) }] } }]
     });
   };
-  const result = await discoverProductsWithAi('TikTokで見た光るスマホケース', 'JA', { GEMINI_API_KEY: 'g'.repeat(32) }, fetchImpl);
-  assert.equal(result.triggered, true);
-  assert.equal(result.provider, 'GEMINI_GOOGLE_SEARCH');
-  assert.equal(result.candidates.length, 1);
-  assert.equal(result.candidates[0].url, productUrl);
-  assert.equal(result.candidates[0].image, 'https://cdn.example.test/light-case.jpg');
-  assert.equal(result.candidates[0].verification, 'AI_DISCOVERY_UNCONFIRMED');
-  assert.equal(calls.length, 2);
-});
-
-test('AI discovery drops hallucinated uncited URLs and private destinations', async () => {
-  const fetchImpl = async () => Response.json({ steps: [{ type: 'model_output', content: [{
-    type: 'text', text: JSON.stringify({ products: [{ title: 'Fake', url: 'https://fake.example.test/products/1' }] }),
-    annotations: [{ type: 'url_citation', url: 'https://real.example.test/products/1', title: 'Real' }]
-  }] }] });
-  const result = await discoverProductsWithAi('unknown item', 'EN', { GEMINI_API_KEY: 'g'.repeat(32) }, fetchImpl);
+  const result = await discoverProductsWithAi(
+    '韓国っぽい透明のワイヤレスイヤホン',
+    'JA',
+    { GEMINI_API_KEY: 'g'.repeat(32), GEMINI_PRODUCT_DISCOVERY_MODEL: 'gemini-test' },
+    fetchImpl
+  );
+  assert.equal(result.provider, 'GEMINI_PRODUCT_INTENT');
+  assert.equal(result.analysis.product_candidates.length, 2);
+  assert.equal(result.analysis.product_candidates[0].name, 'Nothing Ear');
   assert.deepEqual(result.candidates, []);
-  assert.equal(aiProductDiscoveryTest.safePublicHttpsUrl('http://example.test/item'), '');
-  assert.equal(aiProductDiscoveryTest.safePublicHttpsUrl('https://127.0.0.1/item'), '');
-  assert.equal(aiProductDiscoveryTest.safePublicHttpsUrl('https://[::1]/item'), '');
-  assert.equal(aiProductDiscoveryTest.safePublicHttpsUrl('https://hoshilu.app/item'), '');
+  assert.match(calls[0].url, /generateContent$/);
+  const requestBody = JSON.parse(calls[0].options.body);
+  assert.equal(requestBody.generationConfig.responseMimeType, 'application/json');
+  assert.doesNotMatch(requestBody.contents[0].parts[0].text, /direct public product detail pages/i);
 });
 
-test('AI discovery accepts a verified product URL on the cited host when tracking URLs differ', async () => {
-  const productUrl = 'https://shop.example.test/products/light-case';
-  const citationUrl = 'https://shop.example.test/click?campaign=google-search';
-  const fetchImpl = async (url) => String(url).includes('/v1beta/interactions')
-    ? Response.json({ steps: [{ type: 'model_output', content: [{
-      type: 'text', text: JSON.stringify({ products: [{ title: 'Light Case', url: productUrl }] }),
-      annotations: [{ type: 'url_citation', url: citationUrl, title: 'Example shop' }]
-    }] }] })
-    : new Response('<meta property="og:image" content="https://cdn.example.test/light-case.jpg"><script type="application/ld+json">{"@type":"Product"}</script>', { headers: { 'content-type': 'text/html' } });
-  const result = await discoverProductsWithAi('light case', 'EN', { GEMINI_API_KEY: 'g'.repeat(32) }, fetchImpl);
-  assert.equal(result.candidates.length, 1);
-  assert.equal(result.candidates[0].url, productUrl);
+test('falls back to OpenAI when Gemini fails', async () => {
+  const fetchImpl = async (url) => {
+    if (String(url).includes('generativelanguage.googleapis.com')) {
+      return new Response(JSON.stringify({ error: { status: 'UNAVAILABLE' } }), {
+        status: 503,
+        headers: { 'content-type': 'application/json' }
+      });
+    }
+    return Response.json({
+      output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({
+        category: 'イヤホン',
+        features: ['透明'],
+        product_candidates: [{ name: 'SoundPEATS Clear', match_score: 85, reason: '透明デザイン' }],
+        search_keywords: ['透明 イヤホン'],
+        multilingual_keywords: { ja: [], en: ['clear earbuds'], zh: [], ko: [] }
+      }) }] }]
+    });
+  };
+  const result = await discoverProductsWithAi('透明イヤホン', 'JA', {
+    GEMINI_API_KEY: 'g'.repeat(32),
+    OPENAI_API_KEY: 'o'.repeat(32),
+    OPENAI_PRODUCT_DISCOVERY_MODEL: 'gpt-test'
+  }, fetchImpl);
+  assert.equal(result.provider, 'OPENAI_PRODUCT_INTENT');
+  assert.equal(result.analysis.product_candidates[0].name, 'SoundPEATS Clear');
 });
 
-test('AI discovery falls back to grounded citations when model text is not JSON', async () => {
-  const productUrl = 'https://shop.example.test/item/light-case';
-  const fetchImpl = async (url) => String(url).includes('/v1beta/interactions')
-    ? Response.json({ steps: [{ type: 'model_output', content: [{
-      type: 'text', text: 'A possible matching product was found.',
-      annotations: [{ type: 'url_citation', url: productUrl, title: 'Light Case' }]
-    }] }] })
-    : new Response('<meta property="og:image" content="https://cdn.example.test/light-case.jpg"><div itemprop="price">2980</div>', { headers: { 'content-type': 'text/html' } });
-  const result = await discoverProductsWithAi('光るケース', 'JA', { GEMINI_API_KEY: 'g'.repeat(32) }, fetchImpl);
-  assert.equal(result.candidates.length, 1);
-  assert.equal(result.candidates[0].url, productUrl);
-  assert.equal(result.candidates[0].image, 'https://cdn.example.test/light-case.jpg');
+test('prompt explicitly requests candidate names and short marketplace terms', () => {
+  const prompt = aiProductDiscoveryTest.providerPrompt('SNSで見た透明イヤホン', 'JA');
+  assert.match(prompt, /Do not return URLs/);
+  assert.match(prompt, /marketplace-friendly search terms/);
+  assert.match(prompt, /product_candidates/);
 });
