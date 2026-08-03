@@ -25,7 +25,7 @@ function decorateLinks(container) {
   }
 }
 
-function waitForSearchCompletion(submitButton, timeoutMs = 20000) {
+function waitForSearchCompletion(submitButton, timeoutMs = 45000) {
   return new Promise((resolve) => {
     const startedAt = Date.now();
     let observedBusy = submitButton.disabled;
