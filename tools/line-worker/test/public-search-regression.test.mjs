@@ -92,36 +92,45 @@ test('second search presents an indexed product instead of asking again', async 
   }
 });
 
-test('AI product discovery runs from the first search when ten-mall candidates remain empty', async () => {
+test('AI product intent analysis runs from the first search when ten-mall candidates remain empty', async () => {
   const originalFetch = globalThis.fetch;
-  const productUrl = 'https://shop.example.test/products/unknown-light';
   let aiCalls = 0;
   globalThis.fetch = async (url) => {
     const target = String(url);
     if (target.includes('siteverify')) return Response.json({ success: true });
-    if (target.includes('/v1beta/interactions')) {
+    if (target.includes('generativelanguage.googleapis.com')) {
       aiCalls += 1;
-      return Response.json({ steps: [{ type: 'model_output', content: [{
-        type: 'text',
-        text: JSON.stringify({ products: [{ title: 'Possible light case', url: productUrl, reason: 'Visual clue match' }] }),
-        annotations: [{ type: 'url_citation', url: productUrl, title: 'Example shop' }]
-      }] }] });
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        category: 'スマートフォンアクセサリー',
+        intent_summary: '見たことのない光る小物',
+        features: ['光る', '小型'],
+        product_candidates: [{
+          name: 'LED スマホアクセサリー',
+          match_score: 86,
+          reason: '光る小物という視覚的な手がかりに一致',
+          matched_features: ['光る', '小型'],
+          search_keywords: ['LED スマホアクセサリー', '光る 小物']
+        }],
+        search_keywords: ['光る 小物', 'LED スマホアクセサリー'],
+        multilingual_keywords: {
+          ja: ['光る 小物'], en: ['LED phone accessory'], zh: [], ko: []
+        }
+      }) }] } }] });
     }
-    if (target === productUrl) return new Response('<meta property="og:type" content="product"><meta property="og:image" content="https://cdn.example.test/unknown-light.jpg"><button>Add to cart</button>', { headers: { 'content-type': 'text/html' } });
     return Response.json({ ok: true, result: { query_id: 'gas-ai-fallback', candidates: [], message: '' } });
   };
   const env = { ...environment([]), GEMINI_API_KEY: 'g'.repeat(32) };
   try {
     const firstPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 1), env, context)).json();
     assert.equal(aiCalls, 1);
-    assert.equal(firstPayload.result.ai_discovery.provider, 'GEMINI_GOOGLE_SEARCH');
-    assert.equal(firstPayload.result.ai_discovery.candidates[0].url, productUrl);
+    assert.equal(firstPayload.result.ai_discovery.provider, 'GEMINI_PRODUCT_INTENT');
+    assert.equal(firstPayload.result.ai_discovery.analysis.product_candidates[0].name, 'LED スマホアクセサリー');
+    assert.deepEqual(firstPayload.result.ai_discovery.analysis.search_keywords, ['光る 小物', 'LED スマホアクセサリー']);
     const secondPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 2), env, context)).json();
     assert.equal(aiCalls, 2);
     assert.equal(secondPayload.result.candidates.length, 0);
-    assert.equal(secondPayload.result.ai_discovery.provider, 'GEMINI_GOOGLE_SEARCH');
-    assert.equal(secondPayload.result.ai_discovery.candidates[0].url, productUrl);
-    assert.equal(secondPayload.result.ai_discovery.candidates[0].verification, 'AI_DISCOVERY_UNCONFIRMED');
+    assert.equal(secondPayload.result.ai_discovery.provider, 'GEMINI_PRODUCT_INTENT');
+    assert.equal(secondPayload.result.ai_discovery.analysis.product_candidates[0].match_score, 86);
   } finally {
     globalThis.fetch = originalFetch;
   }
