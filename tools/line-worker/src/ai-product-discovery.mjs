@@ -1,5 +1,5 @@
 const MAX_AI_CANDIDATES = 3;
-const GEMINI_TIMEOUT_MS = 3500;
+const GEMINI_TIMEOUT_MS = 30000;
 const OPENAI_TIMEOUT_MS = 8000;
 const GEMINI_RATE_LIMIT_COOLDOWN_MS = 5 * 60 * 1000;
 let geminiBlockedUntil = 0;
@@ -229,7 +229,8 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
       console.warn('AI_PRODUCT_DISCOVERY_PROVIDER_FAILED', {
         provider,
         status: Number(error?.status || 0),
-        provider_code: String(error?.providerCode || error?.name || '').slice(0, 80)
+        provider_code: String(error?.providerCode || error?.name || '').slice(0, 80),
+        timeout_ms: provider === 'gemini' ? GEMINI_TIMEOUT_MS : OPENAI_TIMEOUT_MS
       });
     }
   }
