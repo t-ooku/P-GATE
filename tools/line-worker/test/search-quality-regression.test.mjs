@@ -230,3 +230,103 @@ test('候補ゼロでも空文字を返さず原文ベースのフォールバ�
     assert.ok(buildRakutenSearchKeywords(query).length > 0, query);
   }
 });
+
+// --- H. 引継ぎ指示書(2026-08-05)必須クエリ：原文そのまま ------------------
+// これらは指示書に列挙された文言をそのまま(言い換えせず)ケース化したもの。
+// 既存のA〜Fは近い言い換えのみで、指示書の原文一致ケースが欠けていたため追加。
+const handoffRequiredLiteralCases = [
+  'カットソー',
+  '透明ワイヤレスイヤホン',
+  '韓国っぽいバッグ',
+  '旅行で荷物を小さくしたい',
+  '名前が分からないけど袋の空気を抜くやつ',
+  'SNSで見た透明なやつ'
+];
+
+for (const query of handoffRequiredLiteralCases) {
+  test(`引継ぎ指示書の必須クエリは原文を保持する: ${query}`, () => {
+    const { amazon } = assertKeywordsKeepOriginal(query);
+    assertJapanesePrimary(query, amazon);
+  });
+}
+
+// --- I. 代表カテゴリ追加監査（引継ぎ指示書 セクション4） -------------------
+// ファッション: 対象者否定(メンズではない)・サイズ否定(大きすぎない)
+const additionalFashionCases = [
+  ['メンズではない白いカットソー', 'メンズ'],
+  ['大きすぎない通勤バッグ', null]
+];
+
+for (const [query, excludedTerm] of additionalFashionCases) {
+  test(`ファッション追加監査は対象者/サイズ否定を反転せず5モールを有効化する: ${query}`, () => {
+    const { amazon } = assertKeywordsKeepOriginal(query);
+    assertJapanesePrimary(query, amazon);
+    if (excludedTerm) assert.notEqual(amazon.trim(), excludedTerm);
+    assert.equal(isApparelSearch(query), true, `${query} should enable the apparel marketplace gate`);
+    assert.deepEqual(
+      buildApparelMarketplaceDestinations(query).map((item) => item.marketplace),
+      ['ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP']
+    );
+  });
+}
+
+// 家電・ガジェット: 色保持・有線否定・対象機種否定(iPhone以外でも)
+const additionalElectronicsCases = [
+  ['青い小型加湿器', '青'],
+  ['有線ではないイヤホン', '有線'],
+  ['iPhone以外でも使える充電器', null]
+];
+
+for (const [query, excludedOrColorTerm] of additionalElectronicsCases) {
+  test(`家電追加監査は色/否定条件を保持しファッション5モールを誤って有効化しない: ${query}`, () => {
+    const { amazon } = assertKeywordsKeepOriginal(query);
+    assertJapanesePrimary(query, amazon);
+    assert.equal(isApparelSearch(query), false, `${query} must not trigger the apparel marketplace gate`);
+    assert.deepEqual(buildApparelMarketplaceDestinations(query), []);
+    if (excludedOrColorTerm) assert.notEqual(amazon.trim(), excludedOrColorTerm);
+  });
+}
+
+// 色そのものが検索語から失われていないことを個別に確認する（「青い小型加湿器」）。
+test('色の条件（青）はAmazon/Qoo10/Rakuten検索語から失われない', () => {
+  const query = '青い小型加湿器';
+  assert.ok(buildAmazonSearchKeywords(query).includes('青'), 'amazon should keep 青');
+  assert.ok(buildQoo10SearchKeywords(query).includes('青'), 'qoo10 should keep 青');
+  assert.ok(buildRakutenSearchKeywords(query).includes('青'), 'rakuten should keep 青');
+});
+
+// 色の否定（ベージュであって白ではない）が反転しないことを確認する。
+test('色の否定条件（白ではなくベージュ）は反転せずベージュが残る', () => {
+  const query = '白ではなくベージュの収納ケース';
+  const amazon = buildAmazonSearchKeywords(query);
+  const qoo10 = buildQoo10SearchKeywords(query);
+  assert.ok(amazon.includes('ベージュ'), `amazon should keep ベージュ, got "${amazon}"`);
+  assert.ok(qoo10.includes('ベージュ'), `qoo10 should keep ベージュ, got "${qoo10}"`);
+  assert.notEqual(amazon.trim(), '白');
+  assert.notEqual(qoo10.trim(), '白');
+});
+
+// 価格条件（1万円以下）が検索語から失われないことを確認する。
+test('価格条件（1万円以下）は検索語から失われない', () => {
+  const query = '1万円以下で軽いモバイルバッテリー';
+  const amazon = buildAmazonSearchKeywords(query);
+  assert.match(amazon, /1万円以下|10000円以下|1万円/u, `amazon should keep the price constraint, got "${amazon}"`);
+});
+
+// 用途・曖昧文の追加監査（旅行で服を小さくまとめる／SNSで見た透明な丸いやつ）。
+// 曖昧文が勝手に具体的な商品名へ断定されていないか、原語の核となる単語
+// （透明・丸い・空気を抜く 等）が残っているかを確認する。
+const additionalVagueCases = [
+  ['旅行で服を小さくまとめるもの', '旅行'],
+  ['SNSで見た透明な丸いやつ', '透明']
+];
+
+for (const [query, coreTerm] of additionalVagueCases) {
+  test(`曖昧文追加監査は核となる語を保持し特定商品へ断定しない: ${query}`, () => {
+    const { amazon, rakuten, qoo10 } = assertKeywordsKeepOriginal(query);
+    assertJapanesePrimary(query, amazon);
+    assert.ok(amazon.includes(coreTerm), `amazon should keep "${coreTerm}", got "${amazon}"`);
+    assert.ok(rakuten.trim().length > 0);
+    assert.ok(qoo10.trim().length > 0);
+  });
+}

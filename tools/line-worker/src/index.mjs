@@ -655,6 +655,22 @@ function dedupeCaseInsensitive(values) {
   return output;
 }
 
+// buildMarketplaceSearchKeywords()'s per-product builders (marketplace-
+// search-keywords-v2.mjs) only recognize a narrow, product-specific
+// attribute vocabulary (capacity, wattage, connector, etc.). A JPY budget
+// phrase like "1万円以下" is not part of that vocabulary for most products,
+// so it is silently dropped whenever the builder recognizes the product
+// category (e.g. "1万円以下で軽いモバイルバッテリー" -> "モバイルバッテリー").
+// This restores just the price constraint - not a full原文-vs-category
+// rewrite - when it is missing from the specialized/compact result.
+const PRICE_CONSTRAINT_PATTERN = /(?:¥|￥)?\s*\d[\d,]*\s*(?:万|千)?\s*円\s*(?:以下|未満|以内|まで)/u;
+
+function extractMissingPriceConstraint(originalQuery, builtKeywords) {
+  const match = String(originalQuery || '').match(PRICE_CONSTRAINT_PATTERN);
+  if (!match) return '';
+  return String(builtKeywords || '').includes(match[0]) ? '' : match[0];
+}
+
 function structuredMarketplaceTerms(query) {
   const segments = String(query || '')
     .split(/\s*(?:\/|／|\||｜)\s*/u)
@@ -717,8 +733,10 @@ export function buildAmazonSearchKeywords(query) {
   const localizedTerms = AMAZON_JP_QUERY_ALIASES
     .filter(([pattern]) => pattern.test(cleaned))
     .flatMap(([, terms]) => terms);
+  const missingPriceConstraint = extractMissingPriceConstraint(cleaned, primaryText);
   const optimized = dedupeCaseInsensitive([
     primaryText,
+    ...(missingPriceConstraint ? [missingPriceConstraint] : []),
     ...asinTerms.map((term) => term.toLowerCase()),
     ...localizedTerms,
     ...categoryJapaneseLabels,
@@ -756,7 +774,9 @@ export function buildRakutenSearchKeywords(query) {
   }
   const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) return structuredTerms.join(' ');
-  return buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP') || cleaned;
+  const rakutenKeywords = buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP') || cleaned;
+  const missingPriceConstraint = extractMissingPriceConstraint(cleaned, rakutenKeywords);
+  return missingPriceConstraint ? `${rakutenKeywords} ${missingPriceConstraint}` : rakutenKeywords;
 }
 
 export function buildRakutenSearchKeywordCandidates(query) {
@@ -816,7 +836,10 @@ export function buildQoo10SearchKeywords(query) {
   const deviceAccessoryTerms = buildDeviceAccessorySearchKeywords(cleaned);
   if (deviceAccessoryTerms) return deviceAccessoryTerms;
   const compactTerms = buildMarketplaceSearchKeywords(cleaned, 'QOO10_JP');
-  if (compactTerms !== cleaned) return compactTerms;
+  if (compactTerms !== cleaned) {
+    const missingPriceConstraint = extractMissingPriceConstraint(cleaned, compactTerms);
+    return missingPriceConstraint ? `${compactTerms} ${missingPriceConstraint}` : compactTerms;
+  }
   const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) return structuredTerms.join(' ');
   const localizedTerms = QOO10_QUERY_ALIASES
