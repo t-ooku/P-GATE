@@ -2774,19 +2774,21 @@ export function filterCategoryMismatches(query, candidates = []) {
   });
 }
 
-// 100-point apparel relevance score (2026-08-05 v3.0 instructions §8):
-// category 40 / product-type(raw category noun) 20 / audience 10 /
-// color 10 / sleeve 5 / feature 5 / use-case-or-season 5 (not implemented -
-// always 0, see docs/HOSHILU_SEARCH_PIPELINE_VOL2_DESIGN_2026-08-05.md) /
-// raw-query-word 5. Only computed when the query requests an
+// 100-point apparel relevance score (2026-08-05 v4.0 rubric):
+// category 40 / product-type 20 / audience 10 / color 10 / use-case 10 /
+// feature 5 / raw-query-word 5. Only computed when the query requests an
 // apparel-adjacent category (same domain filterCategoryMismatches gates on)
-// - for every other category this returns 0 for all candidates, which is a
-// no-op tiebreak identical to the previous arrival-order-only behavior.
+// - for every other category this returns an all-zero breakdown, which is
+// a no-op tiebreak identical to the previous arrival-order-only behavior.
+// Returns the full breakdown (not just the total) so it can be attached to
+// the ranked candidate for inspection - see rankMerchantCandidates below.
 function apparelRelevanceScore(query, requested, colorPatterns, candidate) {
-  if (![...requested].some((category) => APPAREL_ADJACENT_DOMAIN_CATEGORIES.has(category))) return 0;
+  const zero = { total: 0, breakdown: { category: 0, product_type: 0, audience: 0, color: 0, use_case: 0, feature: 0, raw_text: 0 } };
+  if (![...requested].some((category) => APPAREL_ADJACENT_DOMAIN_CATEGORIES.has(category))) return zero;
   const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
-  let score = requested.has(inferCandidateCategory(candidate)) ? 40 : 0;
-  return score + scoreApparelAttributeMatch(query, text, { colorPatterns });
+  const category = requested.has(inferCandidateCategory(candidate)) ? 40 : 0;
+  const attributes = scoreApparelAttributeMatch(query, text, { colorPatterns });
+  return { total: category + attributes.total, breakdown: { category, ...attributes.breakdown } };
 }
 
 export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = [], query = '') {
@@ -2822,14 +2824,22 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
     merged.set(key, { ...candidate, ...existing, offers: uniqueOffers });
   }
   return [...merged.values()]
-    .map((candidate, position) => ({ candidate, position }))
+    .map((candidate, position) => ({ candidate, position, score: relevanceScore(candidate) }))
     .sort((left, right) =>
       Number(hasMerchantOffer(right.candidate)) -
         Number(hasMerchantOffer(left.candidate)) ||
-      relevanceScore(right.candidate) - relevanceScore(left.candidate) ||
+      right.score.total - left.score.total ||
       left.position - right.position
     )
-    .map(({ candidate }, index) => ({ ...candidate, rank: index + 1 }));
+    // relevance_score/relevance_score_breakdown make the 100-point rubric
+    // inspectable per candidate (2026-08-05 v4.0 instructions: "スコア内訳
+    // を確認可能にしてください") instead of only affecting sort order.
+    .map(({ candidate, score }, index) => ({
+      ...candidate,
+      rank: index + 1,
+      relevance_score: score.total,
+      relevance_score_breakdown: score.breakdown
+    }));
 }
 
 export async function applyIndexedSearchPolicy(baseResult, env, query, language = 'JA', options = {}) {
