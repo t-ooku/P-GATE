@@ -37,9 +37,16 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(css, /\.marketplace-group-fashion li \{[\s\S]*white-space: nowrap/);
   assert.match(layout, /item\.setAttribute\('role', 'button'\)/);
   assert.match(layout, /scrollIntoView\(\{ behavior: 'smooth'/);
-  assert.match(layout, /insight\.before\(saleRadar\)/);
-  assert.match(layout, /saleRadar\.after\(benefits\)/);
+  // UI v3: section order comes from static HTML/CSS grid, not a runtime
+  // reorder, to avoid a layout shift after first paint.
+  assert.doesNotMatch(layout, /insight\.before\(saleRadar\)/);
+  assert.doesNotMatch(layout, /saleRadar\.after\(benefits\)/);
   assert.match(layout, /ホシル検索/);
+  assert.match(html, /class="hoshilu-secondary"/);
+  assert.ok(
+    html.indexOf('class="hoshilu-secondary"') < html.indexOf('class="marketplace-coverage"'),
+    'sale radar / announcements column should be defined before marketplace coverage in the static primary-late order'
+  );
 
   for (const language of ['JA', 'EN', 'ZH', 'KO']) {
     assert.match(module, new RegExp(`${language}: \\{`));
@@ -52,7 +59,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v302/);
+  assert.match(serviceWorker, /hoshilu-shell-v303/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

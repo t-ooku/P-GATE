@@ -78,7 +78,7 @@ test('会員画面でWeb通知の一覧・既読・非表示を操作できる',
   assert.match(css, /\.notification-page\{[^}]*flex:0 0 100%/);
   assert.match(css, /scroll-snap-type:x mandatory/);
   assert.match(serviceWorker, /mywatch\.css/);
-  assert.match(serviceWorker, /hoshilu-shell-v302/);
+  assert.match(serviceWorker, /hoshilu-shell-v303/);
 });
 
 test('既存のモール通知にも承認済み公式URLを補完する', async () => {

@@ -17,9 +17,9 @@ test('確認済みセールAPIは最終更新時刻を安全に公開する', as
   assert.equal('image_url' in sale && sale.image_url !== '', false);
 });
 
-test('SALE RADARは更新時刻を4言語で表示する', async () => {
+test('SALE RADARは更新日を4言語対応の日付フォーマットで各行に表示する', async () => {
   const client = await readFile(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
   for (const label of ["updated:'更新'", "updated:'Updated'", "updated:'更新'", "updated:'업데이트'"]) assert.match(client, new RegExp(label));
   assert.match(client, /sale\.updated_at/);
-  assert.match(client, /dateTime\(sale\.updated_at\)/);
+  assert.match(client, /date\(sale\.updated_at\|\|sale\.starts_at\|\|Date\.now\(\)\)/);
 });

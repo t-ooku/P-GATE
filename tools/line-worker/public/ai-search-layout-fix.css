@@ -156,6 +156,12 @@
   gap:10px;
 }
 
+@media(min-width:1440px){
+  .marketplace-fallback-group .marketplace-links{
+    grid-template-columns:repeat(10,minmax(0,1fr));
+  }
+}
+
 .marketplace-fallback-group .marketplace-links .buy-link{
   min-height:52px;
   display:flex;

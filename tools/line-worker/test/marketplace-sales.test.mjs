@@ -58,7 +58,7 @@ test('管理APIは内部Secretなしでセール情報を登録できない', as
   assert.equal((await response.json()).error, 'SALE_ADMIN_UNAUTHORIZED');
 });
 
-test('LPはセール専用通知・横スクロール・SEO構造化データを含む', async () => {
+test('LPはセール専用通知・縦スクロール一覧・SEO構造化データを含む', async () => {
   const [html, css, sw] = await Promise.all([
     readFile(new URL('../public/index.html', import.meta.url), 'utf8'),
     readFile(new URL('../public/sale-center.css', import.meta.url), 'utf8'),
@@ -73,7 +73,8 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.match(html, /id="settingsMarketplaces"/);
   assert.match(html, /SearchAction/);
   assert.match(html, /hreflang="x-default"/);
-  assert.match(css, /scroll-snap-type:x mandatory/);
+  assert.match(css, /\.sale-rail\{[^}]*overflow-y:auto/);
+  assert.doesNotMatch(css, /scroll-snap-type:x mandatory/);
   const client = await readFile(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
   assert.match(client, /data-language-select.*addEventListener\('change'/s);
   assert.match(client, /const officialUpdates=\[/);
@@ -83,9 +84,9 @@ test('LPはセール専用通知・横スクロール・SEO構造化データを
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v302/);
-  assert.match(css, /\.sale-rail\{[^}]*align-items:flex-start/);
-  assert.doesNotMatch(css, /\.sale-card\{[^}]*min-height:/);
+  assert.match(sw, /hoshilu-shell-v303/);
+  assert.match(css, /\.sale-rail\{[^}]*overflow-y:auto/);
+  assert.doesNotMatch(css, /\.sale-card\{/);
   assert.match(sw, /sale-center\.mjs/);
   assert.match(sw, /hero-slides\.mjs/);
   assert.match(sw, /hoshilu-fashion-collage-v1\.png/);
