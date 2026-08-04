@@ -29,8 +29,11 @@ import {
 } from './sp-api-d1-repository.mjs';
 import { handleSpApiAdminRoutes } from './sp-api-admin-routes.mjs';
 import { handleSpApiSellerRoutes } from './sp-api-seller-routes.mjs';
-import { semanticSearchGroups } from './search-intelligence.mjs';
+import { requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
+import {
+  buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation
+} from './apparel-query-attributes.mjs';
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
 } from './social-publisher.mjs';
@@ -681,7 +684,7 @@ function structuredMarketplaceTerms(query) {
 }
 export function buildAmazonSearchKeywords(query) {
   const asinTerms = String(query || '').toUpperCase().match(/\bB[A-Z0-9]{9}\b/g) || [];
-  const cleaned = redactSearchPersonalData(query);
+  const cleaned = stripSentencePunctuation(redactSearchPersonalData(query));
   if (!cleaned) return '';
   const specializedKeywords = buildMarketplaceSearchKeywords(cleaned, 'AMAZON_JP');
   if (/バラン/u.test(specializedKeywords)) return specializedKeywords;
@@ -759,10 +762,10 @@ export function buildAmazonSearchDestination(query, associateTag = '') {
 }
 
 export function buildRakutenSearchKeywords(query) {
-  let cleaned = redactSearchPersonalData(query)
+  let cleaned = stripSentencePunctuation(redactSearchPersonalData(query)
     .replace(/\bB[A-Z0-9]{9}\b/giu, ' ')
     .replace(/\s+/gu, ' ')
-    .trim();
+    .trim());
   if (!cleaned) return '';
   const specializedKeywords = buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP');
   if (/バラン/u.test(specializedKeywords)) return specializedKeywords;
@@ -795,16 +798,42 @@ export function buildRakutenSearchKeywordCandidates(query) {
   return [...new Set([primary, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 2);
 }
 
-export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = '') {
-  const rakutenCandidates = buildRakutenSearchKeywordCandidates(query);
-  return [...new Set([primaryKeywords, ...rakutenCandidates].map((value) =>
-    String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 3);
+// "条件整理検索" (organized-conditions) candidate: for apparel-body queries,
+// reconstruct a clean "audience + category + sleeve + color + features"
+// phrase (e.g. "レディース トップス 長袖 白 涼しい おしゃれ") as a second
+// fallback tier between the raw-text candidate and the bare category-only
+// candidate, so a marketplace whose relevance engine struggles with a long
+// free-form sentence still gets a well-formed, condition-preserving query
+// to try before falling back to a single bare category word.
+function organizedApparelCandidate(query) {
+  const groups = semanticSearchGroups(query);
+  const category = groups.find((group) => group.category !== 'color')?.category;
+  if (!category) return '';
+  const categoryLabel = APPAREL_CATEGORY_JA_LABELS.get(category) || '';
+  if (!categoryLabel) return '';
+  const colorGroup = groups.find((group) => group.category === 'color');
+  const colorLabel = colorGroup ? colorLabelFromEnglishTerms(colorGroup.terms) : '';
+  return buildOrganizedApparelQuery(query, { categoryLabel, colorLabel });
 }
 
-async function searchMarketplaceApiWithFallback(searcher, keywordCandidates) {
+export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = '') {
+  const rakutenCandidates = buildRakutenSearchKeywordCandidates(query);
+  const organized = organizedApparelCandidate(query);
+  return [...new Set([primaryKeywords, organized, ...rakutenCandidates].map((value) =>
+    String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 4);
+}
+
+// query is optional: when provided, a keyword candidate is only accepted if
+// at least one of its results survives filterCategoryMismatches, not just
+// if the raw response was non-empty. Without this, a marketplace that
+// returns some non-empty but entirely category-mismatched results for the
+// first (broadest) keyword candidate would stop the cascade there and never
+// try the cleaner, more specific candidates that follow.
+async function searchMarketplaceApiWithFallback(searcher, keywordCandidates, query = '') {
   for (const keywords of keywordCandidates) {
     const candidates = await searcher(keywords);
-    if (candidates.length) return candidates;
+    if (!candidates.length) continue;
+    if (!query || filterCategoryMismatches(query, candidates).length) return candidates;
   }
   return [];
 }
@@ -828,10 +857,10 @@ const QOO10_QUERY_ALIASES = [
 ];
 
 export function buildQoo10SearchKeywords(query) {
-  const cleaned = redactSearchPersonalData(query)
+  const cleaned = stripSentencePunctuation(redactSearchPersonalData(query)
     .replace(/\bB[A-Z0-9]{9}\b/giu, ' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim());
   if (!cleaned) return '';
   const deviceAccessoryTerms = buildDeviceAccessorySearchKeywords(cleaned);
   if (deviceAccessoryTerms) return deviceAccessoryTerms;
@@ -1109,21 +1138,25 @@ async function handleKnowledgeApi(request, env, ctx) {
         key: 'amazon_catalog_connected',
         run: searchMarketplaceApiWithFallback(
           (keywords) => searchAmazonCreators(env, keywords),
-          buildMarketplaceApiKeywordCandidates(input.query, buildAmazonSearchKeywords(input.query))
+          buildMarketplaceApiKeywordCandidates(input.query, buildAmazonSearchKeywords(input.query)),
+          input.query
         )
       });
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_connected',
         run: searchRakutenMarketplaceWithFallback(
           env,
-          buildRakutenSearchKeywordCandidates(input.query)
+          buildRakutenSearchKeywordCandidates(input.query),
+          fetch,
+          input.query
         )
       });
       if (yahooShoppingApiConfigured(env)) marketplaceSearches.push({
         key: 'yahoo_catalog_connected',
         run: searchMarketplaceApiWithFallback(
           (keywords) => searchYahooShopping(env, keywords),
-          buildMarketplaceApiKeywordCandidates(input.query, buildMarketplaceSearchKeywords(input.query))
+          buildMarketplaceApiKeywordCandidates(input.query, buildMarketplaceSearchKeywords(input.query)),
+          input.query
         )
       });
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));

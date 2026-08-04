@@ -2,6 +2,7 @@ import {
   isRakutenAffiliateProductUrl,
   isRakutenDirectProductUrl
 } from './rakuten-url-policy.mjs';
+import { filterCategoryMismatches } from './knowledge-search.mjs';
 
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 
@@ -91,10 +92,16 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch) {
   return normalizeRakutenItems(await request(url));
 }
 
+// query is optional: when provided, a keyword candidate is only accepted if
+// at least one result survives filterCategoryMismatches (see the matching
+// change in index.mjs's searchMarketplaceApiWithFallback for why - a
+// non-empty but entirely category-mismatched response must not stop the
+// fallback cascade before a cleaner candidate is tried).
 export async function searchRakutenMarketplaceWithFallback(
   env,
   keywordCandidates,
-  fetcher = fetch
+  fetcher = fetch,
+  query = ''
 ) {
   const candidates = [...new Set(
     (Array.isArray(keywordCandidates) ? keywordCandidates : [keywordCandidates])
@@ -103,7 +110,8 @@ export async function searchRakutenMarketplaceWithFallback(
   )].slice(0, 2);
   for (const keywords of candidates) {
     const results = await searchRakutenMarketplace(env, keywords, fetcher);
-    if (results.length) return results;
+    if (!results.length) continue;
+    if (!query || filterCategoryMismatches(query, results).length) return results;
   }
   return [];
 }
