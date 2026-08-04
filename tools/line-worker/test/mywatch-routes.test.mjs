@@ -66,7 +66,13 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(html, /mywatch\.css/);
   assert.match(app, /fetch\('\/api\/member\/notifications'/);
   assert.match(app, /updateNotification\(item\.notification_id,'READ'\)/);
-  assert.match(app, /notification-source-link|notificationRow/);
+  // 2026-08-05 v4.0: the first ticker pass (v3.0) dropped the read/dismiss
+  // buttons to fit a compact one-line row; v4.0 explicitly requires not
+  // removing existing functionality, so both actions - and the row's own
+  // product-click-through - were restored as small buttons within the row.
+  assert.match(app, /updateNotification\(item\.notification_id,'DISMISS'\)/);
+  assert.match(app, /window\.open\(sourceUrl/);
+  assert.match(app, /notificationRow/);
   assert.doesNotMatch(app, /const fallback=body\.match/);
   // 2026-08-05 v3.0: the 3-card-per-page horizontal carousel was replaced by
   // a shared vertical ticker (see vertical-ticker.mjs), which also fixed the
@@ -76,6 +82,7 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.doesNotMatch(app, /notification-carousel/);
   assert.match(css, /\.notification-row\.unread/);
   assert.match(css, /\.notification-thumb/);
+  assert.match(css, /\.notification-row-action/);
   assert.match(serviceWorker, /mywatch\.css/);
   assert.match(serviceWorker, /hoshilu-shell-v303/);
 });
