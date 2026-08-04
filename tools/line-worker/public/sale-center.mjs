@@ -1,3 +1,5 @@
+import { attachVerticalTicker } from './vertical-ticker.mjs';
+
 const copy = {
   JA:{title:'全てのセールを、\n先回りチェックしよう',lead:'10モールのセール情報を横断。開始前にもお知らせし、始まったらホシルで本当に安い購入先を探せます。',notice:'無料会員限定・セール専用通知',noticeBody:'おすすめ記事や一般ニュースは通知しません。割引セールの開始前と開始時だけをお知らせします。',toggle:'全モールのセール通知を受け取る',login:'ログインすると設定を保存できます。',empty:'確認済みのセール情報を準備中です。未確認情報は掲載しません。',starts:'開始',ends:'終了',updated:'更新',detail:'公式情報を見る',saved:'セール通知だけを受け取る設定を保存しました。',off:'セール通知を停止しました。'},
   EN:{title:'Only real sales, before they start.',lead:'Track verified sale events across ten marketplaces. Get advance notice, then compare where the final price is truly lowest.',notice:'Free members · sale-only alerts',noticeBody:'No general news or recommendation alerts. HOSHILU only notifies you before and when verified sales start.',toggle:'Receive sale alerts from all marketplaces',login:'Sign in to save this setting.',empty:'Verified sale updates are being prepared. Unverified information is not published.',starts:'Starts',ends:'Ends',updated:'Updated',detail:'View official details',saved:'Sale-only notifications are enabled.',off:'Sale notifications are disabled.'},
@@ -106,6 +108,7 @@ function render(sales=[]){
     return row;
   });
   rail.replaceChildren(...rows);
+  attachVerticalTicker(rail);
   const moreWrap=document.querySelector('#saleRailMore');
   if(moreWrap){
     moreWrap.replaceChildren();

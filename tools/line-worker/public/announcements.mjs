@@ -4,6 +4,8 @@
 // (.info-row / .info-row-list) are shared with the Sale Radar panel so both
 // lists render as the same fixed-height, manually-scrollable, one-row-per-item
 // format specified for HOSHILU UI v3.
+import { attachVerticalTicker } from './vertical-ticker.mjs';
+
 const labels = {
   JA: { title: 'お知らせ', more: 'もっと見る' },
   EN: { title: 'Announcements', more: 'Show more' },
@@ -94,6 +96,7 @@ function render() {
     row.append(label, dateEl, spacer, title);
     return row;
   }));
+  attachVerticalTicker(list);
   const moreWrap = document.querySelector('#announcementListMore');
   if (moreWrap) {
     moreWrap.replaceChildren();
