@@ -1,5 +1,6 @@
 import { searchProductsAcrossTenantsWithDecision } from './product-index-v2.mjs';
 import { inferCandidateCategory, requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
+import { scoreApparelAttributeMatch } from './apparel-query-attributes.mjs';
 
 const COPY = {
   JA: {
@@ -2435,22 +2436,38 @@ function isTabletAccessoryMismatch(
 // once no relevance score exists (see rankMerchantCandidates). Confirmed
 // with '楽で涼しいカットソー。袖長めで色は白系。女性向けおしゃれ' returning
 // an unrelated "Marine Battlewagon Bucket" candidate as an accepted, unranked
-// "other" match. Scoped narrowly here to the reproduced apparel-body domain
-// (tops/pants/skirt/dress): an "other" candidate is only kept when it shares
-// some generic clothing/fashion-domain wording with the requested category;
-// every other requested category keeps the original permissive behavior.
+// "other" match, and again with 旅行で荷物を小さくしたい/一人暮らし用の炊飯器.
+// An "other" candidate is only kept when it shares some generic
+// domain-family wording with the requested category; every requested
+// category outside these three explicitly-reproduced families keeps the
+// original permissive behavior (see the '靴下' test below, which relies on
+// an unclassifiable-but-plausible "Unknown Korean Fashion Item" surviving).
 // Scoped to the same apparel-adjacent categories apparel-marketplaces.mjs's
 // APPAREL_TERMS gate uses for the five fashion marketplaces (tops/bottoms/
-// dresses plus bags/shoes/hats/socks), not just clothing bodies.
+// dresses plus bags/shoes/hats/socks), plus rice-cooker and travel-packing.
 const APPAREL_ADJACENT_DOMAIN_CATEGORIES = new Set([
   'tops', 'pants', 'skirt', 'dress', 'bag', 'shoes', 'hat', 'socks'
 ]);
-const APPAREL_DOMAIN_MARKER_PATTERN = /(?:服|ファッション|アパレル|コーデ|着る|羽織る|着心地|レディース|メンズ|衣服|服装|服裝|时尚|時尚|패션|의류|fashion|apparel|wear|outfit|clothing)/iu;
+const DOMAIN_FAMILIES = [
+  {
+    categories: APPAREL_ADJACENT_DOMAIN_CATEGORIES,
+    marker: /(?:服|ファッション|アパレル|コーデ|着る|羽織る|着心地|レディース|メンズ|衣服|服装|服裝|时尚|時尚|패션|의류|fashion|apparel|wear|outfit|clothing)/iu
+  },
+  {
+    categories: new Set(['rice-cooker']),
+    marker: /(?:炊飯|キッチン|調理|kitchen|cook(?:ing|er)?|厨房|烹饪|주방|취사)/iu
+  },
+  {
+    categories: new Set(['travel-packing']),
+    marker: /(?:旅行|収納|圧縮|パッキング|トラベル|travel|packing|luggage|storage|compression|旅行袋|收纳|收納|压缩|壓縮|여행|수납|압축)/iu
+  }
+];
 
-function isPlausiblyInRequestedApparelDomain(requested, candidateText) {
-  const requestsApparelAdjacent = [...requested].some((category) => APPAREL_ADJACENT_DOMAIN_CATEGORIES.has(category));
-  if (!requestsApparelAdjacent) return true;
-  return APPAREL_DOMAIN_MARKER_PATTERN.test(candidateText);
+function isPlausiblyInRequestedDomain(requested, candidateText) {
+  const family = DOMAIN_FAMILIES.find(({ categories }) =>
+    [...requested].some((category) => categories.has(category)));
+  if (!family) return true;
+  return family.marker.test(candidateText);
 }
 
 export function filterCategoryMismatches(query, candidates = []) {
@@ -2753,25 +2770,34 @@ export function filterCategoryMismatches(query, candidates = []) {
     if (requested.has(category)) return true;
     if (category !== 'other') return false;
     const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
-    return isPlausiblyInRequestedApparelDomain(requested, text);
+    return isPlausiblyInRequestedDomain(requested, text);
   });
+}
+
+// 100-point apparel relevance score (2026-08-05 v3.0 instructions §8):
+// category 40 / product-type(raw category noun) 20 / audience 10 /
+// color 10 / sleeve 5 / feature 5 / use-case-or-season 5 (not implemented -
+// always 0, see docs/HOSHILU_SEARCH_PIPELINE_VOL2_DESIGN_2026-08-05.md) /
+// raw-query-word 5. Only computed when the query requests an
+// apparel-adjacent category (same domain filterCategoryMismatches gates on)
+// - for every other category this returns 0 for all candidates, which is a
+// no-op tiebreak identical to the previous arrival-order-only behavior.
+function apparelRelevanceScore(query, requested, colorPatterns, candidate) {
+  if (![...requested].some((category) => APPAREL_ADJACENT_DOMAIN_CATEGORIES.has(category))) return 0;
+  const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
+  let score = requested.has(inferCandidateCategory(candidate)) ? 40 : 0;
+  return score + scoreApparelAttributeMatch(query, text, { colorPatterns });
 }
 
 export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = [], query = '') {
   // No stage before this one computes a relevance score - candidates are
   // only ever accepted/rejected (filterCategoryMismatches) or merged/deduped
-  // here. Without at least a color-match signal, two candidates that both
-  // "have an offer" rank purely by arrival order, so a candidate ignoring
-  // the requested color could outrank one that matches it. This is a
-  // narrow, additive signal (category matching is filterCategoryMismatches's
-  // job); audience/use-case/feature scoring needs the structured-query
-  // pipeline described in docs/HOSHILU_SEARCH_PIPELINE_VOL2_DESIGN_2026-08-05.md.
+  // here, so without this, two candidates that both "have an offer" rank
+  // purely by arrival order regardless of how well they match the query.
+  const groups = query ? semanticSearchGroups(query) : [];
+  const requested = new Set(groups.map((group) => group.category).filter((category) => !CATEGORY_MODIFIERS.has(category)));
   const colorPatterns = query ? requestedColorPatterns(query) : [];
-  const matchesRequestedColor = (candidate) => {
-    if (!colorPatterns.length) return false;
-    const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
-    return colorPatterns.some((pattern) => pattern.test(text));
-  };
+  const relevanceScore = (candidate) => apparelRelevanceScore(query, requested, colorPatterns, candidate);
   const merged = new Map();
   for (const candidate of [...baseCandidates, ...indexedCandidates]) {
     const key = String(candidate?.asin || candidate?.record_key || '').trim();
@@ -2800,8 +2826,7 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
     .sort((left, right) =>
       Number(hasMerchantOffer(right.candidate)) -
         Number(hasMerchantOffer(left.candidate)) ||
-      Number(matchesRequestedColor(right.candidate)) -
-        Number(matchesRequestedColor(left.candidate)) ||
+      relevanceScore(right.candidate) - relevanceScore(left.candidate) ||
       left.position - right.position
     )
     .map(({ candidate }, index) => ({ ...candidate, rank: index + 1 }));

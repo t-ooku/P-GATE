@@ -32,6 +32,8 @@ const RULES = [
   ['rodent-supplies',/(?:ペット|飼育|小動物).{0,8}マウス|マウス.{0,8}(?:ケージ|飼育|小動物)/iu,['pet mouse','rodent','cage']],
   ['mouse',/(マウス(?!パッド|マット|.{0,8}(?:ケージ|飼育))|trackball|computer mouse|mouse(?! cage| habitat| for pet)|パソコンで動かす|(?:电脑|電腦).{0,8}(?:鼠标|滑鼠)|(?:游戏|遊戲)(?:鼠标|滑鼠)|컴퓨터.{0,8}마우스|게이밍 마우스)/iu,['mouse','trackball']],
   ['bottle',/(水筒|ボトル|bottle|飲み物.*容器)/iu,['bottle']],
+  ['rice-cooker',/(炊飯器|炊飯|三合炊き|3合炊き|一合炊き|1合炊き|二合炊き|2合炊き|rice\s*cooker|电饭煲|電飯煲|电饭锅|電飯鍋|밥솥|전기밥솥)/iu,['rice cooker']],
+  ['travel-packing',/(旅行.{0,8}(?:荷物|服).{0,12}(?:小さく|コンパクト|まとめ)|圧縮(?:袋|バッグ)|パッキングキューブ|真空収納袋|トラベルポーチ|衣類圧縮袋|packing\s*cubes?|compression\s*bags?|travel\s*pouch|vacuum\s*storage\s*bags?|(?:旅行|出差).{0,8}(?:行李|衣物).{0,12}(?:变小|變小|收纳|收納|压缩|壓縮)|压缩袋|壓縮袋|真空收纳袋|真空收納袋|여행.{0,8}짐.{0,12}(?:줄이|압축)|압축\s*(?:팩|가방)|패킹\s*큐브)/iu,['packing cubes','compression bag','travel pouch']],
   ['lamp',/(テーブルランプ|卓上.*ライト|table lamp|布.*傘.*ライト)/iu,['lamp','light']],
   ['table-lamp-details',/(?:ガラス|glass|玻璃|유리).{0,16}(?:布.{0,4}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓)|(?:布.{0,4}(?:傘|シェード)|fabric\s+shade|布艺灯罩|布藝燈罩|패브릭\s*갓).{0,16}(?:ガラス|glass|玻璃|유리)/iu,['table lamp','glass','fabric shade']],
   ['towel-warmer',/(タオルウォーマー|温める.*タオル|(?:浴室|お風呂).{0,16}(?:タオル.{0,8}温め|温め.{0,8}タオル)|(?:浴室|お風呂).{0,12}(?:壁|棒|ラック).{0,8}温か|heated towel|towel warmer|(?:warm|heated).{0,12}(?:metal\s+)?bars?.{0,20}bathroom|bathroom.{0,20}(?:warm|heated).{0,12}bars?|浴室.{0,16}(?:加热毛巾架|加熱毛巾架|发热.{0,6}金属杆|發熱.{0,6}金屬桿)|욕실.{0,16}(?:온열\s*수건걸이|따뜻.{0,8}(?:금속\s*)?막대))/iu,['towel','warmer','heated']],
