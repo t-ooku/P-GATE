@@ -30,6 +30,7 @@ import {
 import { handleSpApiAdminRoutes } from './sp-api-admin-routes.mjs';
 import { handleSpApiSellerRoutes } from './sp-api-seller-routes.mjs';
 import { semanticSearchGroups } from './search-intelligence.mjs';
+import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
 } from './social-publisher.mjs';
@@ -641,6 +642,19 @@ const AMAZON_JP_QUERY_ALIASES = [
   [/(?:折叠|折疊|접이식|foldable|folding)/iu, ['折りたたみ']]
 ];
 
+function dedupeCaseInsensitive(values) {
+  const seen = new Set();
+  const output = [];
+  for (const value of values) {
+    const text = String(value || '');
+    const key = text.toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    output.push(text);
+  }
+  return output;
+}
+
 function structuredMarketplaceTerms(query) {
   const segments = String(query || '')
     .split(/\s*(?:\/|／|\||｜)\s*/u)
@@ -678,7 +692,22 @@ export function buildAmazonSearchKeywords(query) {
       ...structuredSemanticTerms
     ])].slice(0, 12).join(' ');
   }
-  const semanticTerms = semanticSearchGroups(cleaned)
+  const semanticGroups = semanticSearchGroups(cleaned);
+  // specializedKeywords already preserves the original meaning while
+  // stripping SNS/context filler ("SNSで見た" etc.) via the shared
+  // marketplace-search-keywords-v2 fallback, so it is the primary text
+  // rather than the raw cleaned string.
+  const primaryText = specializedKeywords || cleaned;
+  const categoryJapaneseLabels = semanticGroups
+    .map((group) => APPAREL_CATEGORY_JA_LABELS.get(group.category))
+    .filter((label) => label && !primaryText.includes(label));
+  // The original text is always the primary search term (never dropped, see
+  // the カットソー fix). A known Japanese category label is added alongside
+  // it as a supplement. English category words are only added when we do
+  // NOT already have a Japanese label for the matched category - otherwise
+  // they would add nothing but risk narrowing an already-good Japanese
+  // query with unrelated English AND-terms.
+  const semanticTerms = categoryJapaneseLabels.length ? [] : semanticGroups
     .flatMap((group) => group.terms || [])
     .map((term) => String(term).toLowerCase().trim())
     .filter(Boolean);
@@ -688,10 +717,17 @@ export function buildAmazonSearchKeywords(query) {
   const localizedTerms = AMAZON_JP_QUERY_ALIASES
     .filter(([pattern]) => pattern.test(cleaned))
     .flatMap(([, terms]) => terms);
-  const optimized = [...new Set([...asinTerms.map((term) => term.toLowerCase()), ...localizedTerms, ...semanticTerms, ...directTerms])]
-    .filter((term) => !['with', 'from', 'that', 'this', 'type', 'size'].includes(term))
+  const optimized = dedupeCaseInsensitive([
+    primaryText,
+    ...asinTerms.map((term) => term.toLowerCase()),
+    ...localizedTerms,
+    ...categoryJapaneseLabels,
+    ...directTerms,
+    ...semanticTerms
+  ])
+    .filter((term) => !['with', 'from', 'that', 'this', 'type', 'size'].includes(term.toLowerCase()))
     .slice(0, 12);
-  return optimized.length ? optimized.join(' ') : cleaned;
+  return optimized.join(' ');
 }
 
 export function buildAmazonSearchDestination(query, associateTag = '') {
@@ -783,21 +819,29 @@ export function buildQoo10SearchKeywords(query) {
   if (compactTerms !== cleaned) return compactTerms;
   const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) return structuredTerms.join(' ');
-  const semanticTerms = semanticSearchGroups(cleaned)
+  const localizedTerms = QOO10_QUERY_ALIASES
+    .filter(([pattern]) => pattern.test(cleaned))
+    .flatMap(([, terms]) => terms);
+  if (localizedTerms.length) return dedupeCaseInsensitive([cleaned, localizedTerms[0]]).join(' ');
+  const semanticGroups = semanticSearchGroups(cleaned);
+  const categoryJapaneseLabels = semanticGroups
+    .map((group) => APPAREL_CATEGORY_JA_LABELS.get(group.category))
+    .filter((label) => label && !cleaned.includes(label));
+  // Same principle as buildAmazonSearchKeywords: keep the original query as
+  // the primary term and only ever supplement it, never replace it, with
+  // category words. English category words are skipped when a Japanese
+  // label already covers the same category.
+  const semanticTerms = categoryJapaneseLabels.length ? [] : semanticGroups
     .flatMap((group) => group.terms || [])
     .map((term) => String(term).toLowerCase().trim())
     .filter(Boolean);
   const directTerms = cleaned
     .toLowerCase()
     .match(/[a-z][a-z0-9-]{2,}/g) || [];
-  const localizedTerms = QOO10_QUERY_ALIASES
-    .filter(([pattern]) => pattern.test(cleaned))
-    .flatMap(([, terms]) => terms);
-  if (localizedTerms.length) return localizedTerms[0];
-  const optimized = [...new Set([...semanticTerms, ...directTerms])]
-    .filter((term) => !['with', 'from', 'that', 'this', 'type', 'size'].includes(term))
+  const optimized = dedupeCaseInsensitive([cleaned, ...categoryJapaneseLabels, ...directTerms, ...semanticTerms])
+    .filter((term) => !['with', 'from', 'that', 'this', 'type', 'size'].includes(term.toLowerCase()))
     .slice(0, 4);
-  return optimized.length ? optimized.join(' ') : cleaned;
+  return optimized.join(' ');
 }
 
 export function buildQoo10SearchDestination(query) {

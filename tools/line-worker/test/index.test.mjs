@@ -700,7 +700,7 @@ test('Qoo10はiPhoneより明示された商品種別を優先し多言語でも
     ['iPhone portable charger power bank', 'iPhone モバイルバッテリー'],
     ['iPhone 15 Pro対応ケース', 'iPhone 15 Proケース'],
     ['iPhone用充电线 케이블', 'iPhone ケーブル'],
-    ['iPhone', 'iphone'],
+    ['iPhone', 'iPhone'],
   ];
   for (const [query, expected] of cases) {
     assert.equal(buildQoo10SearchKeywords(query), expected, query);
