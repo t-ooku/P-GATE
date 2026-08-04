@@ -11,6 +11,9 @@ outputs/*.zip
 outputs/RELEASE_MANIFEST_*.json
 # Local inspection and reproducible build output
 .tmp-*/
+.tmp/
+.deploy-ai-*/
+.codex-notification-hardening/
 dist/*-dry-run/
 dist/chrome-headless-icon/
 dist/inspect-assets/
