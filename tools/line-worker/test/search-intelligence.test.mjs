@@ -699,6 +699,37 @@ test('rankMerchantCandidatesはqueryを渡さない既存呼び出しでは色�
   assert.deepEqual(ranked.map((item) => item.asin), ['BLACK0001', 'WHITE0001']);
 });
 
+test('rankMerchantCandidatesは対象者・色・袖丈・特徴の一致度でカットソー候補を並び替える', () => {
+  const query = '楽で涼しいカットソー。袖長めで色は白系。女性向けおしゃれ';
+  const ranked = rankMerchantCandidates([
+    { asin: 'PARTIAL0001', product_name: 'メンズ カットソー 黒 半袖', offers: [{ seller_id: 's', marketplace: 'AMAZON_JP', product_url: 'u1' }] },
+    { asin: 'FULLMATCH01', product_name: 'レディース 長袖カットソー 白 涼しい おしゃれ トップス', offers: [{ seller_id: 's', marketplace: 'AMAZON_JP', product_url: 'u2' }] }
+  ], [], query);
+  assert.deepEqual(ranked.map((item) => item.asin), ['FULLMATCH01', 'PARTIAL0001']);
+});
+
+// Regression for the 2026-08-05 v3.0 report: the same "other"-bypass hole
+// also affected 用途 (use-case) queries where RULES previously had no
+// category pattern at all (炊飯器/旅行の荷物圧縮), so filterCategoryMismatches
+// had nothing to compare against and let an unrelated candidate through.
+test('炊飯器検索は分類不能な無関係商品を除外する', () => {
+  const query = '一人暮らし用の炊飯器';
+  const candidates = filterCategoryMismatches(query, [
+    { asin: 'MISMATCH01', product_name: 'Marine Battlewagon Bucket 10L 船舶 アウトドア 万能バケツ' },
+    { asin: 'RICECOOKER1', product_name: '一人暮らし 3合炊き 炊飯器 コンパクト' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['RICECOOKER1']);
+});
+
+test('旅行の荷物圧縮検索は分類不能な無関係商品を除外する', () => {
+  const query = '旅行で荷物を小さくしたい';
+  const candidates = filterCategoryMismatches(query, [
+    { asin: 'MISMATCH01', product_name: 'Marine Battlewagon Bucket 10L 船舶 アウトドア 万能バケツ' },
+    { asin: 'PACKING001', product_name: '圧縮バッグ 旅行用 トラベルポーチ パッキングキューブ' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['PACKING001']);
+});
+
 test('portable parasol search excludes patio umbrellas and umbrella accessories', () => {
   const candidates = filterCategoryMismatches('折りたたみ日傘 / 軽量 / 晴雨兼用', [
     { asin: 'PORTABLE1', product_name: '超軽量 折りたたみ日傘 晴雨兼用' },

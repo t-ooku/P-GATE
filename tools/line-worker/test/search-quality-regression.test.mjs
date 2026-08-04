@@ -8,7 +8,8 @@ import {
   buildRakutenSearchDestination,
   buildYahooShoppingSearchDestination,
   buildQoo10SearchDestination,
-  buildSheinSearchDestination
+  buildSheinSearchDestination,
+  buildMarketplaceApiKeywordCandidates
 } from '../src/index.mjs';
 import { isApparelSearch, buildApparelMarketplaceDestinations } from '../src/apparel-marketplaces.mjs';
 
@@ -330,3 +331,124 @@ for (const [query, coreTerm] of additionalVagueCases) {
     assert.ok(qoo10.trim().length > 0);
   });
 }
+
+// --- J. HOSHILU検索品質・UI完成版 実装指示書 v3.0（2026-08-05）セクション11 ---
+// 100件以上への拡張。原文保持・非空・日本語主軸の基本監査に加え、ファッシ
+// ョン系は5モールゲートも確認する。
+const v3FashionCases = [
+  '白い長袖カットソー',
+  '楽で涼しい女性向けトップス',
+  'メンズ夏用セットアップ',
+  '韓国風バッグ',
+  '黒以外のスニーカー',
+  '小学生用レインコート',
+  '大きめサイズのワンピース',
+  'ニットではないトップス',
+  '半袖ではなく長袖'
+];
+
+for (const query of v3FashionCases) {
+  test(`v3.0追加ファッション監査は原文を保持し5モールを有効化する: ${query}`, () => {
+    const { amazon } = assertKeywordsKeepOriginal(query);
+    assertJapanesePrimary(query, amazon);
+    assert.equal(isApparelSearch(query), true, `${query} should enable the apparel marketplace gate`);
+    assert.deepEqual(
+      buildApparelMarketplaceDestinations(query).map((item) => item.marketplace),
+      ['ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP']
+    );
+  });
+}
+
+const v3ElectronicsCases = [
+  '一人暮らし用の炊飯器',
+  '海外対応ドライヤー',
+  '小さい急速充電器',
+  'Type-Cモバイルバッテリー',
+  '明るすぎない寝室ライト'
+];
+
+for (const query of v3ElectronicsCases) {
+  test(`v3.0追加家電監査は原文を保持しファッション5モールを誤って有効化しない: ${query}`, () => {
+    const { amazon } = assertKeywordsKeepOriginal(query);
+    assertJapanesePrimary(query, amazon);
+    assert.equal(isApparelSearch(query), false, `${query} must not trigger the apparel marketplace gate`);
+  });
+}
+
+const v3DailyGoodsCases = [
+  '荷物を小さくするもの',
+  '水筒の細いブラシ',
+  '猫の毛を取る掃除用品',
+  '雨でも滑りにくい靴',
+  'コードをまとめるもの'
+];
+
+for (const query of v3DailyGoodsCases) {
+  test(`v3.0追加生活用品監査は原文を保持する: ${query}`, () => {
+    const { amazon } = assertKeywordsKeepOriginal(query);
+    assertJapanesePrimary(query, amazon);
+  });
+}
+
+const v3VagueCases = [
+  'SNSで見た透明なやつ',
+  '名前が分からないけど袋の空気を抜くもの',
+  '韓国の人が持っていそうなバッグ',
+  '子どもが寝る時に使えるライト'
+];
+
+for (const query of v3VagueCases) {
+  test(`v3.0追加曖昧文監査は検索語が1つ以上生成される: ${query}`, () => {
+    const { amazon, rakuten, qoo10 } = assertKeywordsKeepOriginal(query);
+    assertJapanesePrimary(query, amazon);
+    assert.ok(rakuten.trim().length > 0);
+    assert.ok(qoo10.trim().length > 0);
+  });
+}
+
+// 多言語（JA/EN/ZH/KO）で同等の検索語生成ができることを確認する。
+const v3MultilingualCases = [
+  ['white long-sleeve cut and sew top', '白い長袖カットソー(EN)'],
+  ['白色长袖棉质上衣', '白い長袖カットソー(ZH)'],
+  ['흰색 긴팔 컷소', '白い長袖カットソー(KO)'],
+  ['rice cooker for living alone', '一人暮らし用の炊飯器(EN)'],
+  ['独居用小型电饭煲', '一人暮らし用の炊飯器(ZH)'],
+  ['혼자 사는 사람을 위한 밥솥', '一人暮らし用の炊飯器(KO)'],
+  ['something to make luggage smaller for travel', '荷物を小さくするもの(EN)'],
+  ['能让行李变小的东西', '荷物を小さくするもの(ZH)'],
+  ['짐을 작게 만들어주는 것', '荷物を小さくするもの(KO)'],
+  ['a bag that looks Korean-style', '韓国風バッグ(EN)'],
+  ['看起来是韩国风格的包', '韓国風バッグ(ZH)'],
+  ['한국풍처럼 보이는 가방', '韓国風バッグ(KO)']
+];
+
+for (const [query, label] of v3MultilingualCases) {
+  test(`v3.0多言語監査は検索語が1つ以上生成され原文が失われない: ${label}`, () => {
+    const amazon = buildAmazonSearchKeywords(query);
+    const rakuten = buildRakutenSearchKeywords(query);
+    const qoo10 = buildQoo10SearchKeywords(query);
+    assert.ok(amazon.trim().length > 0, `amazon keywords empty for ${label}`);
+    assert.ok(rakuten.trim().length > 0, `rakuten keywords empty for ${label}`);
+    assert.ok(qoo10.trim().length > 0, `qoo10 keywords empty for ${label}`);
+  });
+}
+
+// 句読点整形（第1検索が原文を壊さず整形されること）の確認。
+test('句読点を含む原文検索は句読点だけ整形され語順・内容は保持される', () => {
+  const query = '楽で涼しいカットソー。袖長めで色は白系。女性向けおしゃれ';
+  const amazon = buildAmazonSearchKeywords(query);
+  assert.doesNotMatch(amazon, /。/u, '句読点「。」が整形後も残っている');
+  assert.match(amazon, /カットソー/u);
+  assert.match(amazon, /白系/u);
+  assert.match(amazon, /女性向け/u);
+});
+
+// 条件整理検索（第2検索）が候補に含まれることの確認。
+test('条件整理検索がAmazon宛て検索語候補に含まれる', () => {
+  const query = '楽で涼しいカットソー。袖長めで色は白系。女性向けおしゃれ';
+  const candidates = buildMarketplaceApiKeywordCandidates(query, buildAmazonSearchKeywords(query));
+  assert.ok(
+    candidates.some((candidate) => candidate.includes('レディース') && candidate.includes('白')),
+    `organized-conditions candidate missing, got ${JSON.stringify(candidates)}`
+  );
+});

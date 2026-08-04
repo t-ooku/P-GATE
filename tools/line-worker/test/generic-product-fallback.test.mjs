@@ -21,7 +21,7 @@ test('low table search retries the common center-table synonym', () => {
   );
 });
 
-test('all connected marketplace APIs receive the original query and the product-noun retry', () => {
+test('all connected marketplace APIs receive the original query, the organized-conditions retry, and the product-noun retry', () => {
   assert.deepEqual(
     buildMarketplaceApiKeywordCandidates(
       '楽で涼しいカットソー 丈長めで色は白系 女性向けおしゃれ',
@@ -29,6 +29,7 @@ test('all connected marketplace APIs receive the original query and the product-
     ),
     [
       'white cooling long cut and sew top',
+      'レディース トップス 白 涼しい おしゃれ',
       '楽で涼しいカットソー 丈長めで色は白系 女性向けおしゃれ',
       'カットソー'
     ]
