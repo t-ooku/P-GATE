@@ -1098,7 +1098,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       result = {
         ...gasResult,
         ...result,
-        candidates: rankMerchantCandidates(result.candidates, gasResult.candidates)
+        candidates: rankMerchantCandidates(result.candidates, gasResult.candidates, input.query)
       };
     }
     const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env)
@@ -1144,7 +1144,7 @@ async function handleKnowledgeApi(request, env, ctx) {
           returned: Array.isArray(outcome.value) ? outcome.value.length : 0,
           accepted: candidates.length
         });
-        result.candidates = rankMerchantCandidates(result.candidates || [], candidates).slice(0, 10);
+        result.candidates = rankMerchantCandidates(result.candidates || [], candidates, input.query).slice(0, 10);
       });
     }
     result = {

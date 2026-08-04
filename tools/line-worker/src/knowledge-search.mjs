@@ -1,5 +1,5 @@
 import { searchProductsAcrossTenantsWithDecision } from './product-index-v2.mjs';
-import { inferCandidateCategory, semanticSearchGroups } from './search-intelligence.mjs';
+import { inferCandidateCategory, requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
 
 const COPY = {
   JA: {
@@ -2423,6 +2423,36 @@ function isTabletAccessoryMismatch(
   return false;
 }
 
+// filterCategoryMismatches()'s final fallback intentionally keeps candidates
+// inferCandidateCategory() cannot classify into any of search-intelligence.mjs's
+// ~150 RULES categories ("other"), rather than rejecting them outright - a
+// genuinely novel/niche product (e.g. a creatively-titled fashion import)
+// should not be dropped just because no regex happens to match its title.
+// That safety net has a hole: a candidate from a completely unrelated domain
+// (marine/outdoor gear, tools, industrial parts) is *also* classified
+// "other" when it matches none of the RULES categories, so it was passing
+// through unfiltered and could still outrank genuinely relevant candidates
+// once no relevance score exists (see rankMerchantCandidates). Confirmed
+// with '楽で涼しいカットソー。袖長めで色は白系。女性向けおしゃれ' returning
+// an unrelated "Marine Battlewagon Bucket" candidate as an accepted, unranked
+// "other" match. Scoped narrowly here to the reproduced apparel-body domain
+// (tops/pants/skirt/dress): an "other" candidate is only kept when it shares
+// some generic clothing/fashion-domain wording with the requested category;
+// every other requested category keeps the original permissive behavior.
+// Scoped to the same apparel-adjacent categories apparel-marketplaces.mjs's
+// APPAREL_TERMS gate uses for the five fashion marketplaces (tops/bottoms/
+// dresses plus bags/shoes/hats/socks), not just clothing bodies.
+const APPAREL_ADJACENT_DOMAIN_CATEGORIES = new Set([
+  'tops', 'pants', 'skirt', 'dress', 'bag', 'shoes', 'hat', 'socks'
+]);
+const APPAREL_DOMAIN_MARKER_PATTERN = /(?:服|ファッション|アパレル|コーデ|着る|羽織る|着心地|レディース|メンズ|衣服|服装|服裝|时尚|時尚|패션|의류|fashion|apparel|wear|outfit|clothing)/iu;
+
+function isPlausiblyInRequestedApparelDomain(requested, candidateText) {
+  const requestsApparelAdjacent = [...requested].some((category) => APPAREL_ADJACENT_DOMAIN_CATEGORIES.has(category));
+  if (!requestsApparelAdjacent) return true;
+  return APPAREL_DOMAIN_MARKER_PATTERN.test(candidateText);
+}
+
 export function filterCategoryMismatches(query, candidates = []) {
   const groups = semanticSearchGroups(query);
   const requested = new Set(groups
@@ -2720,11 +2750,28 @@ export function filterCategoryMismatches(query, candidates = []) {
       );
     }
     const category = inferCandidateCategory(candidate);
-    return category === 'other' || requested.has(category);
+    if (requested.has(category)) return true;
+    if (category !== 'other') return false;
+    const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
+    return isPlausiblyInRequestedApparelDomain(requested, text);
   });
 }
 
-export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = []) {
+export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = [], query = '') {
+  // No stage before this one computes a relevance score - candidates are
+  // only ever accepted/rejected (filterCategoryMismatches) or merged/deduped
+  // here. Without at least a color-match signal, two candidates that both
+  // "have an offer" rank purely by arrival order, so a candidate ignoring
+  // the requested color could outrank one that matches it. This is a
+  // narrow, additive signal (category matching is filterCategoryMismatches's
+  // job); audience/use-case/feature scoring needs the structured-query
+  // pipeline described in docs/HOSHILU_SEARCH_PIPELINE_VOL2_DESIGN_2026-08-05.md.
+  const colorPatterns = query ? requestedColorPatterns(query) : [];
+  const matchesRequestedColor = (candidate) => {
+    if (!colorPatterns.length) return false;
+    const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
+    return colorPatterns.some((pattern) => pattern.test(text));
+  };
   const merged = new Map();
   for (const candidate of [...baseCandidates, ...indexedCandidates]) {
     const key = String(candidate?.asin || candidate?.record_key || '').trim();
@@ -2753,6 +2800,8 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
     .sort((left, right) =>
       Number(hasMerchantOffer(right.candidate)) -
         Number(hasMerchantOffer(left.candidate)) ||
+      Number(matchesRequestedColor(right.candidate)) -
+        Number(matchesRequestedColor(left.candidate)) ||
       left.position - right.position
     )
     .map(({ candidate }, index) => ({ ...candidate, rank: index + 1 }));
@@ -2779,7 +2828,8 @@ export async function applyIndexedSearchPolicy(baseResult, env, query, language 
   );
   const displayCandidates = rankMerchantCandidates(
     baseCandidates,
-    indexedCandidates
+    indexedCandidates,
+    query
   ).slice(0, 10);
   const copy = COPY[language] || COPY.JA;
   const baseQuestion = decision.reason === 'CATEGORY_DIVERGENCE' ? copy.category

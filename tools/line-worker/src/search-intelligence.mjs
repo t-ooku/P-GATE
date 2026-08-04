@@ -403,6 +403,20 @@ export function semanticSearchGroups(value) {
   return groups;
 }
 
+// Reuses the same COLOR_RULES patterns semanticSearchGroups() already used
+// to detect the query's requested color(s), so a candidate's title can be
+// tested against the exact same patterns (unlike group.terms, which are
+// English-only labels and cannot match a Japanese candidate title such as
+// "白" for a "white" request). Used by rankMerchantCandidates() to rank a
+// color-matching candidate above one that ignores the requested color,
+// since the live ranking path otherwise has no relevance scoring at all.
+export function requestedColorPatterns(query) {
+  const text = String(query || '').normalize('NFKC');
+  return COLOR_RULES
+    .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))
+    .map(([pattern]) => pattern);
+}
+
 export function inferCandidateCategory(candidate) {
   const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
   return RULES.find(([, pattern]) => pattern.test(text))?.[0] || 'other';

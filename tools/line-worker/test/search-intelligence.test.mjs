@@ -651,6 +651,54 @@ test('明示カテゴリと矛盾する外部候補だけを表示前に除外�
   assert.deepEqual(candidates.map((item) => item.asin), ['B000SOCK01', 'B000OTHER1']);
 });
 
+// Regression for the 2026-08-05 report: '楽で涼しいカットソー。袖長めで色は
+// 白系。女性向けおしゃれ' returned an unrelated "Marine Battlewagon Bucket"
+// as an accepted candidate. inferCandidateCategory() has no RULES entry for
+// marine/outdoor gear, so it classified it "other", and the old fallback
+// (`category === 'other' || requested.has(category)`) let any unclassifiable
+// candidate through regardless of the query's category. Fixed by requiring
+// an "other" candidate to share some generic clothing/fashion-domain wording
+// when the query requests an apparel-body category (tops/pants/skirt/dress).
+test('衣類本体カテゴリの検索は分類不能でもファッションと無関係な商品を除外する', () => {
+  const query = '楽で涼しいカットソー。袖長めで色は白系。女性向けおしゃれ';
+  const candidates = filterCategoryMismatches(query, [
+    { asin: 'B0REAL0001', product_name: '楽な着心地 長袖カットソー レディース 白 涼しい 夏 おしゃれ トップス' },
+    { asin: 'B0MISMATCH', product_name: 'Marine Battlewagon Bucket 10L 船舶 アウトドア 万能バケツ' },
+    { asin: 'B0FASHION1', product_name: 'Unknown Korean Fashion Item' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['B0REAL0001', 'B0FASHION1']);
+});
+
+test('分類不能な商品でも到着順が先だと関連度スコアなしでは1位になり得る（rankMerchantCandidatesの現状）', () => {
+  const query = '楽で涼しいカットソー。袖長めで色は白系。女性向けおしゃれ';
+  const mismatchFirst = filterCategoryMismatches(query, [
+    { asin: 'B0MISMATCH', product_name: 'Marine Battlewagon Bucket 10L 船舶 アウトドア 万能バケツ', offers: [{ seller_id: 's2', marketplace: 'AMAZON_JP', product_url: 'https://example/2' }] },
+    { asin: 'B0REAL0001', product_name: '楽な着心地 長袖カットソー レディース 白 涼しい 夏 おしゃれ トップス', offers: [{ seller_id: 's1', marketplace: 'AMAZON_JP', product_url: 'https://example/1' }] }
+  ]);
+  // The category-mismatch fix above already removes the marine candidate
+  // before ranking is ever reached for this exact query, so no reordering
+  // is needed here - this test documents that filterCategoryMismatches, not
+  // rankMerchantCandidates, is what prevents an arrival-order-based win.
+  assert.deepEqual(mismatchFirst.map((item) => item.asin), ['B0REAL0001']);
+});
+
+test('rankMerchantCandidatesは要求された色に一致する候補をhasOffer同点時に優先する', () => {
+  const query = '白いカットソー';
+  const ranked = rankMerchantCandidates([
+    { asin: 'BLACK0001', product_name: '黒いカットソー', offers: [{ seller_id: 's1', marketplace: 'AMAZON_JP', product_url: 'https://example/black' }] },
+    { asin: 'WHITE0001', product_name: '白いカットソー', offers: [{ seller_id: 's2', marketplace: 'AMAZON_JP', product_url: 'https://example/white' }] }
+  ], [], query);
+  assert.deepEqual(ranked.map((item) => item.asin), ['WHITE0001', 'BLACK0001']);
+});
+
+test('rankMerchantCandidatesはqueryを渡さない既存呼び出しでは色による並び替えをしない（後方互換）', () => {
+  const ranked = rankMerchantCandidates([
+    { asin: 'BLACK0001', product_name: '黒いカットソー', offers: [{ seller_id: 's1', marketplace: 'AMAZON_JP', product_url: 'https://example/black' }] },
+    { asin: 'WHITE0001', product_name: '白いカットソー', offers: [{ seller_id: 's2', marketplace: 'AMAZON_JP', product_url: 'https://example/white' }] }
+  ], []);
+  assert.deepEqual(ranked.map((item) => item.asin), ['BLACK0001', 'WHITE0001']);
+});
+
 test('portable parasol search excludes patio umbrellas and umbrella accessories', () => {
   const candidates = filterCategoryMismatches('折りたたみ日傘 / 軽量 / 晴雨兼用', [
     { asin: 'PORTABLE1', product_name: '超軽量 折りたたみ日傘 晴雨兼用' },
