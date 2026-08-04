@@ -136,7 +136,7 @@
 
           <section id="hoshiluSearch" class="search-panel" aria-labelledby="searchTitle">
             <div class="panel-heading">
-              <div><p id="searchStep" class="step">ホシル</p><details class="panel-heading-details"><summary id="searchTitleSummary">使い方を見る</summary><h2 id="searchTitle"><span>商品名が分からなくても、うまく説明できなくても大丈夫。</span><span>見た目、見た場所、使い方。覚えていることから話してください。</span></h2></details></div>
+              <p id="searchStep" class="step">ホシル</p>
             </div>
             <form id="knowledgeForm">
               <label class="visually-hidden" for="query">欲しいものについて話す</label>
@@ -145,8 +145,9 @@
               <label class="consent"><input id="consent" type="checkbox" required><span id="consentText">質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。</span></label>
               <div id="turnstileContainer" class="turnstile-container"></div>
               <button id="submitButton" class="primary" type="submit"><span id="submitText">一緒に見つける</span><span aria-hidden="true">→</span></button>
-              <p id="status" class="status" role="status" aria-live="polite"></p>
             </form>
+            <details class="panel-heading-details"><summary id="searchTitleSummary">使い方を見る</summary><h2 id="searchTitle"><span>商品名が分からなくても、うまく説明できなくても大丈夫。</span><span>見た目、見た場所、使い方。覚えていることから話してください。</span></h2></details>
+            <p id="status" class="status" role="status" aria-live="polite"></p>
           </section>
 
           <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle">
@@ -154,6 +155,65 @@
             <p id="resultMessage" class="result-message"></p>
             <p class="affiliate-link-note" data-i18n="affiliate.searchNotice">広告：Amazon・楽天市場へのリンクにはアフィリエイトリンクが含まれる場合があります。購入価格や検索順位には影響しません。</p>
             <div id="resultCards" class="result-grid"></div>
+          </section>
+
+          <section id="quickMarketplaceStrip" class="quick-strip" aria-label="対応10モールと公式SNSへのクイックアクセス">
+            <ul id="quickStripMalls" class="quick-strip-row" aria-label="対応10モール（タップで詳細へ）">
+              <li><a href="#marketplaceCoverage">Amazon</a></li>
+              <li><a href="#marketplaceCoverage">楽天市場</a></li>
+              <li><a href="#marketplaceCoverage">Yahoo!</a></li>
+              <li><a href="#marketplaceCoverage">Qoo10</a></li>
+              <li><a href="#marketplaceCoverage">SHEIN</a></li>
+              <li><a href="#marketplaceCoverage">ZOZOTOWN</a></li>
+              <li><a href="#marketplaceCoverage">SHOPLIST</a></li>
+              <li><a href="#marketplaceCoverage">MUSINSA</a></li>
+              <li><a href="#marketplaceCoverage">BUYMA</a></li>
+              <li><a href="#marketplaceCoverage">SNKRDUNK</a></li>
+            </ul>
+            <ul id="quickStripSns" class="quick-strip-row quick-strip-row-sns" aria-label="公式SNS">
+              <li><a href="https://lin.ee/xKS56YM" target="_blank" rel="noopener noreferrer" data-i18n="social.line">LINE公式</a></li>
+              <li><a href="https://www.instagram.com/hoshilu.app/" target="_blank" rel="noopener noreferrer" data-i18n="social.instagram">Instagram公式</a></li>
+              <li><a href="https://x.com/iCHMR81Lv4VYJYG" target="_blank" rel="noopener noreferrer" data-i18n="social.x">X公式</a></li>
+            </ul>
+          </section>
+
+          <section id="marketplaceCoverage" class="marketplace-coverage" aria-labelledby="marketplaceCoverageTitle">
+            <div class="marketplace-coverage-heading">
+              <div>
+                <p class="step">MARKETPLACE COVERAGE</p>
+                <h2 id="marketplaceCoverageTitle">探せるモールが、ひと目で分かる。</h2>
+                <p id="marketplaceCoverageLead">商品・家電・コスメなどは主要5モール。ファッション検索では5モールを追加して横断します。</p>
+              </div>
+              <p class="marketplace-count"><strong>10</strong><span id="marketplaceCoverageCount">最大10モール対応</span></p>
+            </div>
+            <div class="marketplace-groups">
+              <article class="marketplace-group marketplace-group-core">
+                <p id="marketplaceCoreLabel">すべてのジャンル</p>
+                <ul id="marketplaceCoreList" aria-label="主要5モール">
+                  <li>Amazon</li><li>楽天市場</li><li class="marketplace-yahoo"><span>Yahoo!<br>ショッピング</span></li><li>Qoo10</li><li>SHEIN</li>
+                </ul>
+              </article>
+              <article class="marketplace-group marketplace-group-fashion">
+                <p id="marketplaceFashionLabel">ファッション検索で追加</p>
+                <ul id="marketplaceFashionList" aria-label="ファッション追加4モール">
+                  <li>ZOZOTOWN</li><li>SHOPLIST</li><li>MUSINSA</li><li>BUYMA</li><li>SNKRDUNK</li>
+                </ul>
+              </article>
+            </div>
+            <p id="marketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。</p>
+          </section>
+
+          <section id="officialSocial" class="official-social" aria-labelledby="officialSocialTitle">
+            <div class="official-social-copy">
+              <p class="step">HOSHILU OFFICIAL</p>
+              <h2 id="officialSocialTitle" data-i18n="social.officialTitle">ホシル公式アカウント</h2>
+              <p data-i18n="social.officialLead">新機能やお得な情報を、公式アカウントからお届けします。</p>
+            </div>
+            <div class="official-social-links" aria-label="HOSHILU official social accounts">
+              <a class="official-social-link line" href="https://lin.ee/xKS56YM" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.line">LINE公式</strong></a>
+              <a class="official-social-link instagram" href="https://www.instagram.com/hoshilu.app/" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.instagram">Instagram公式</strong></a>
+              <a class="official-social-link x" href="https://x.com/iCHMR81Lv4VYJYG" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.x">X公式</strong></a>
+            </div>
           </section>
         </div>
 
@@ -192,32 +252,6 @@
         </div>
 
         <div class="hoshilu-primary-late">
-          <section class="marketplace-coverage" aria-labelledby="marketplaceCoverageTitle">
-            <div class="marketplace-coverage-heading">
-              <div>
-                <p class="step">MARKETPLACE COVERAGE</p>
-                <h2 id="marketplaceCoverageTitle">探せるモールが、ひと目で分かる。</h2>
-                <p id="marketplaceCoverageLead">商品・家電・コスメなどは主要5モール。ファッション検索では5モールを追加して横断します。</p>
-              </div>
-              <p class="marketplace-count"><strong>10</strong><span id="marketplaceCoverageCount">最大10モール対応</span></p>
-            </div>
-            <div class="marketplace-groups">
-              <article class="marketplace-group marketplace-group-core">
-                <p id="marketplaceCoreLabel">すべてのジャンル</p>
-                <ul id="marketplaceCoreList" aria-label="主要5モール">
-                  <li>Amazon</li><li>楽天市場</li><li class="marketplace-yahoo"><span>Yahoo!<br>ショッピング</span></li><li>Qoo10</li><li>SHEIN</li>
-                </ul>
-              </article>
-              <article class="marketplace-group marketplace-group-fashion">
-                <p id="marketplaceFashionLabel">ファッション検索で追加</p>
-                <ul id="marketplaceFashionList" aria-label="ファッション追加4モール">
-                  <li>ZOZOTOWN</li><li>SHOPLIST</li><li>MUSINSA</li><li>BUYMA</li><li>SNKRDUNK</li>
-                </ul>
-              </article>
-            </div>
-            <p id="marketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。</p>
-          </section>
-
           <section class="lp-benefits" aria-labelledby="benefitTitle">
             <p class="step">WHY HOSHILU</p>
             <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
@@ -261,19 +295,6 @@
               <h2 id="discoveryTitle"><span>名前が分からなくても、</span><span>記憶から探せる。</span></h2>
               <p id="discoveryBody">見た目、見た場所、使い方。覚えていることから話してください。</p>
               <button id="discoveryExample" class="discovery-example" type="button">SNSで見た、ピンクの小さいカメラみたいなもの</button>
-            </div>
-          </section>
-
-          <section class="official-social" aria-labelledby="officialSocialTitle">
-            <div class="official-social-copy">
-              <p class="step">HOSHILU OFFICIAL</p>
-              <h2 id="officialSocialTitle" data-i18n="social.officialTitle">ホシル公式アカウント</h2>
-              <p data-i18n="social.officialLead">新機能やお得な情報を、公式アカウントからお届けします。</p>
-            </div>
-            <div class="official-social-links" aria-label="HOSHILU official social accounts">
-              <a class="official-social-link line" href="https://lin.ee/xKS56YM" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.line">LINE公式</strong></a>
-              <a class="official-social-link instagram" href="https://www.instagram.com/hoshilu.app/" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.instagram">Instagram公式</strong></a>
-              <a class="official-social-link x" href="https://x.com/iCHMR81Lv4VYJYG" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.x">X公式</strong></a>
             </div>
           </section>
         </div>

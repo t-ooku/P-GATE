@@ -1,6 +1,7 @@
-/* HOSHILU UI v3: PC two-column layout, mobile single-column reorder.
+/* HOSHILU UI v4: PC two-column layout, mobile single-column reorder.
    Mobile-first: single column, natural DOM order (search -> results ->
-   announcements -> sale radar -> marketplace coverage -> ...). At the PC
+   quick marketplace/SNS strip -> marketplace coverage detail -> official
+   social detail -> announcements -> sale radar -> ...). At the PC
    breakpoint the announcements/sale-radar block moves into a right column
    that spans the same vertical range as the primary column, without any
    JavaScript reordering (avoids load-time layout shift). */
@@ -74,5 +75,115 @@
 @media (max-width: 1179px) {
   .hoshilu-secondary {
     position: static;
+  }
+}
+
+/* Quick marketplace/SNS strip: an icon-centric, single-purpose index that
+   sits directly under the search action so repeat visitors can see "10
+   marketplaces + SNS" without scrolling, even though the full
+   MARKETPLACE COVERAGE / HOSHILU OFFICIAL sections (heading, lead copy,
+   grouping, notes) are too tall to fit above the fold on a phone screen.
+   The detailed sections stay further down the page unchanged; these chips
+   only jump to them (mall chips) or open the account directly (SNS chips),
+   so the two blocks have distinct roles instead of duplicating one link. */
+.quick-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.quick-strip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quick-strip-row a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-decoration: none;
+  color: #4f37c8;
+  background: #f2efff;
+  border: 1px solid #ded7ff;
+}
+
+.quick-strip-row a:hover,
+.quick-strip-row a:focus-visible {
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink), var(--violet));
+  outline: none;
+}
+
+.quick-strip-row-sns a {
+  color: #fff;
+  background: linear-gradient(135deg, var(--pink), var(--violet), #27b8ed);
+  border-color: transparent;
+}
+
+.quick-strip-row-sns a:hover,
+.quick-strip-row-sns a:focus-visible {
+  filter: brightness(1.08);
+}
+
+#officialSocial {
+  scroll-margin-top: var(--topbar-height, 74px);
+}
+
+@media (max-width: 760px) {
+  .quick-strip {
+    gap: 4px;
+  }
+
+  .quick-strip-row {
+    gap: 4px;
+  }
+
+  .quick-strip-row a {
+    min-height: 26px;
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+
+  /* First-view compaction: only margins/gaps between the hero, search
+     panel and quick strip are tightened here. Nothing that affects tap
+     target size, text readability, form operability, or the marketplace
+     coverage / official social detail sections themselves is touched. */
+  .hoshilu-primary-early {
+    gap: 6px;
+  }
+
+  .hero {
+    padding: 8px 0 10px;
+  }
+
+  #hoshiluSearch {
+    margin-top: 8px;
+    padding: 12px 20px;
+  }
+
+  .panel-heading {
+    margin-bottom: 4px;
+  }
+
+  #quickQueries {
+    margin: 4px 0 6px;
+  }
+
+  #status {
+    margin-top: 4px;
+  }
+
+  #status:empty {
+    min-height: 0;
   }
 }

@@ -43,9 +43,13 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.doesNotMatch(layout, /saleRadar\.after\(benefits\)/);
   assert.match(layout, /ホシル検索/);
   assert.match(html, /class="hoshilu-secondary"/);
+  // UI v4: search input -> search action -> collapsible explanation -> 10
+  // marketplaces + SNS must all be reachable without scrolling, so
+  // marketplace-coverage now lives in hoshilu-primary-early right after the
+  // results section, ahead of the announcements/sale-radar sidebar.
   assert.ok(
-    html.indexOf('class="hoshilu-secondary"') < html.indexOf('class="marketplace-coverage"'),
-    'sale radar / announcements column should be defined before marketplace coverage in the static primary-late order'
+    html.indexOf('class="marketplace-coverage"') < html.indexOf('class="hoshilu-secondary"'),
+    'marketplace coverage should be defined before the announcements/sale-radar column in the static primary-early order'
   );
 
   for (const language of ['JA', 'EN', 'ZH', 'KO']) {
