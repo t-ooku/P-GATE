@@ -56,7 +56,7 @@ test('配信時刻を迎えたWeb通知だけを配信済みにする', async ()
   assert.match(writes[1].sql, /mywatch_delivery_audit/);
 });
 
-test('会員画面でWeb通知の一覧・既読・非表示を操作できる', async () => {
+test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操作できる', async () => {
   const fs = await import('node:fs');
   const [html, app, css, serviceWorker] = [
     '../public/index.html', '../public/app.js', '../public/mywatch.css',
@@ -66,17 +66,16 @@ test('会員画面でWeb通知の一覧・既読・非表示を操作できる',
   assert.match(html, /mywatch\.css/);
   assert.match(app, /fetch\('\/api\/member\/notifications'/);
   assert.match(app, /updateNotification\(item\.notification_id,'READ'\)/);
-  assert.match(app, /updateNotification\(item\.notification_id,'DISMISS'\)/);
-  assert.match(app, /notification-source-link/);
+  assert.match(app, /notification-source-link|notificationRow/);
   assert.doesNotMatch(app, /const fallback=body\.match/);
-  assert.match(app, /source\.rel='noopener noreferrer'/);
-  assert.match(app, /source\.textContent=ui\.open/);
-  assert.match(css, /\.notification-item\.unread/);
-  assert.match(css, /\.notification-source-link/);
-  assert.match(app, /index\+=3/);
-  assert.match(app, /notificationRotationTimer=setInterval\(\(\)=>move\(1\),6000\)/);
-  assert.match(css, /\.notification-page\{[^}]*flex:0 0 100%/);
-  assert.match(css, /scroll-snap-type:x mandatory/);
+  // 2026-08-05 v3.0: the 3-card-per-page horizontal carousel was replaced by
+  // a shared vertical ticker (see vertical-ticker.mjs), which also fixed the
+  // partially-cut-off neighboring card reported on mobile.
+  assert.match(app, /attachVerticalTicker\(list\)/);
+  assert.match(app, /unreadDiff/);
+  assert.doesNotMatch(app, /notification-carousel/);
+  assert.match(css, /\.notification-row\.unread/);
+  assert.match(css, /\.notification-thumb/);
   assert.match(serviceWorker, /mywatch\.css/);
   assert.match(serviceWorker, /hoshilu-shell-v303/);
 });
