@@ -5,8 +5,8 @@ const insight = document.querySelector('#insight');
 const saleRadar = document.querySelector('.sale-center');
 const benefits = document.querySelector('.lp-benefits');
 
-if (coverage && journey && search) {
-  coverage.after(journey, search);
+if (coverage && journey) {
+  coverage.after(journey);
 }
 
 if (insight && saleRadar && benefits) {

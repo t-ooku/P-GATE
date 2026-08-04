@@ -5,19 +5,21 @@ export function safeDiscoverySearchQuery(value) {
     .replace(/\s+/g, ' ').trim().slice(0, 80);
 }
 
+export function gmailShareLink(subject, body) {
+  return `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 export function socialDiscoverySearchLinks(value, origin = 'https://hoshilu.app') {
   const query = safeDiscoverySearchQuery(value);
   if (!query) return [];
   const encoded = encodeURIComponent(query);
   const hoshiluUrl = `${String(origin).replace(/\/$/, '')}/?q=${encoded}`;
-  const shareBody = `HOSHILUでこの検索を続ける\n${query}\n${hoshiluUrl}`;
   return [
     { label: 'Instagram', url: `https://www.instagram.com/explore/search/keyword/?q=${encoded}` },
     { label: 'X', url: `https://x.com/search?q=${encoded}&src=typed_query` },
     { label: 'TikTok', url: `https://www.tiktok.com/search?q=${encoded}` },
     { label: 'YouTube', url: `https://www.youtube.com/results?search_query=${encoded}` },
-    { label: 'LINEで共有', url: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(hoshiluUrl)}` },
-    { label: 'Gmailで送る', url: `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent('HOSHILU検索')}&body=${encodeURIComponent(shareBody)}` }
+    { label: 'LINEで共有', url: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(hoshiluUrl)}` }
   ];
 }
 

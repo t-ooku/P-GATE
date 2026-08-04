@@ -82,7 +82,7 @@ function addAiAction() {
   button.className = 'hoshilu-ai-search';
   button.innerHTML = `<strong>${title}</strong><small>${note}</small>`;
   button.addEventListener('click', () => runAiSearch(button));
-  fallback.insertBefore(button, fallback.querySelector('.marketplace-links'));
+  fallback.insertBefore(button, fallback.querySelector('.marketplace-fallback-group'));
 }
 
 function linkDisplayedProducts() {

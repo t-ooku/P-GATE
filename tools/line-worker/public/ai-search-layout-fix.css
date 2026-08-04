@@ -1,3 +1,36 @@
+.panel-heading-details{
+  width:100%;
+}
+
+.panel-heading-details>summary{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  list-style:none;
+  color:#5140ba;
+  font-size:12px;
+  font-weight:850;
+  padding:6px 0;
+}
+
+.panel-heading-details>summary::-webkit-details-marker{
+  display:none;
+}
+
+.panel-heading-details>summary::after{
+  content:'▾';
+  font-size:10px;
+}
+
+.panel-heading-details[open]>summary::after{
+  content:'▴';
+}
+
+.panel-heading-details>h2{
+  margin-top:8px;
+}
+
 .marketplace-fallback{
   display:grid;
   grid-template-columns:1fr;
@@ -5,37 +38,67 @@
   align-items:stretch;
 }
 
-.marketplace-fallback>div:first-child{
+.marketplace-fallback-intro{
   min-width:0;
 }
 
-.marketplace-fallback .amazon-keywords{
-  width:100%;
-  max-width:100%;
+.keyword-tag-block{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
 }
 
-.marketplace-fallback .amazon-keywords code{
-  white-space:normal;
-  word-break:break-word;
+.keyword-tag-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  flex:1;
+  min-width:0;
 }
 
-.marketplace-fallback>.marketplace-links{
+.keyword-tag{
+  padding:6px 11px;
+  border:1px solid #ded7ff;
+  border-radius:999px;
+  background:#fff;
+  color:#5140ba;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.copy-all-keywords{
+  flex:0 0 auto;
+}
+
+.marketplace-fallback-group{
   width:100%;
   min-width:0;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:10px;
 }
 
-.marketplace-fallback>.social-search-links{
-  width:100%;
-  min-width:0;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:10px;
+.marketplace-fallback-group+.marketplace-fallback-group{
   padding-top:16px;
   border-top:1px solid #e9e5f5;
 }
 
-.marketplace-fallback .marketplace-links .buy-link{
+.marketplace-fallback-group-label{
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.04em;
+}
+
+.marketplace-fallback-group .marketplace-links{
+  width:100%;
+  min-width:0;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+}
+
+.marketplace-fallback-group .marketplace-links .buy-link{
   min-height:52px;
   display:flex;
   align-items:center;
@@ -51,8 +114,7 @@
 }
 
 @media(max-width:980px){
-  .marketplace-fallback>.marketplace-links,
-  .marketplace-fallback>.social-search-links{
+  .marketplace-fallback-group .marketplace-links{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
@@ -62,24 +124,23 @@
     gap:14px;
   }
 
-  .marketplace-fallback>.marketplace-links,
-  .marketplace-fallback>.social-search-links{
+  .marketplace-fallback-group .marketplace-links{
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:8px;
   }
 
-  .marketplace-fallback .marketplace-links .buy-link{
+  .marketplace-fallback-group .marketplace-links .buy-link{
     min-height:48px;
     padding:9px 6px;
     font-size:clamp(10px,3vw,12px);
   }
 
-  .marketplace-fallback .amazon-keywords{
+  .keyword-tag-block{
     align-items:stretch;
     flex-direction:column;
   }
 
-  .marketplace-fallback .copy-keywords{
+  .copy-all-keywords{
     width:100%;
   }
 

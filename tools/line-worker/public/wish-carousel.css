@@ -83,12 +83,19 @@
   grid-column: 2;
   grid-row: 1 / span 2;
   display: flex;
+  flex-wrap: wrap;
   gap: 7px;
 }
 
 .share-discovery-button {
   color: #fff;
   background: linear-gradient(105deg, var(--pink), var(--violet), var(--cyan));
+}
+
+.share-gmail-button {
+  color: #3c4043;
+  background: #fff;
+  border: 1px solid #dadce0;
 }
 
 .share-discovery-status {

@@ -131,6 +131,28 @@
         <div class="hero-visual" aria-hidden="true"></div>
       </section>
 
+      <section id="hoshiluSearch" class="search-panel" aria-labelledby="searchTitle">
+        <div class="panel-heading">
+          <div><p id="searchStep" class="step">ホシル</p><details class="panel-heading-details"><summary id="searchTitleSummary">使い方を見る</summary><h2 id="searchTitle"><span>商品名が分からなくても、うまく説明できなくても大丈夫。</span><span>見た目、見た場所、使い方。覚えていることから話してください。</span></h2></details></div>
+        </div>
+        <form id="knowledgeForm">
+          <label class="visually-hidden" for="query">欲しいものについて話す</label>
+          <div class="query-field"><textarea id="query" name="query" minlength="2" maxlength="200" required placeholder="例：昔見た、iPhoneの後ろにつける丸い磁石みたいな充電器"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
+          <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
+          <label class="consent"><input id="consent" type="checkbox" required><span id="consentText">質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。</span></label>
+          <div id="turnstileContainer" class="turnstile-container"></div>
+          <button id="submitButton" class="primary" type="submit"><span id="submitText">一緒に見つける</span><span aria-hidden="true">→</span></button>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle">
+        <div class="section-title"><div><p class="step">MATCHES</p><h2 id="resultsTitle">ホシルからの提案</h2></div></div>
+        <p id="resultMessage" class="result-message"></p>
+        <p class="affiliate-link-note" data-i18n="affiliate.searchNotice">広告：Amazon・楽天市場へのリンクにはアフィリエイトリンクが含まれる場合があります。購入価格や検索順位には影響しません。</p>
+        <div id="resultCards" class="result-grid"></div>
+      </section>
+
       <section class="marketplace-coverage" aria-labelledby="marketplaceCoverageTitle">
         <div class="marketplace-coverage-heading">
           <div>
@@ -196,28 +218,6 @@
         </ol>
       </section>
 
-      <section id="hoshiluSearch" class="search-panel" aria-labelledby="searchTitle">
-        <div class="panel-heading">
-          <div><p id="searchStep" class="step">ホシル</p><h2 id="searchTitle"><span>商品名が分からなくても、うまく説明できなくても大丈夫。</span><span>見た目、見た場所、使い方。覚えていることから話してください。</span></h2></div>
-        </div>
-        <form id="knowledgeForm">
-          <label class="visually-hidden" for="query">欲しいものについて話す</label>
-          <div class="query-field"><textarea id="query" name="query" minlength="2" maxlength="200" required placeholder="例：昔見た、iPhoneの後ろにつける丸い磁石みたいな充電器"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
-          <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
-          <label class="consent"><input id="consent" type="checkbox" required><span id="consentText">質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。</span></label>
-          <div id="turnstileContainer" class="turnstile-container"></div>
-          <button id="submitButton" class="primary" type="submit"><span id="submitText">一緒に見つける</span><span aria-hidden="true">→</span></button>
-          <p id="status" class="status" role="status" aria-live="polite"></p>
-        </form>
-      </section>
-
-      <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle">
-        <div class="section-title"><div><p class="step">MATCHES</p><h2 id="resultsTitle">ホシルからの提案</h2></div></div>
-        <p id="resultMessage" class="result-message"></p>
-        <p class="affiliate-link-note" data-i18n="affiliate.searchNotice">広告：Amazon・楽天市場へのリンクにはアフィリエイトリンクが含まれる場合があります。購入価格や検索順位には影響しません。</p>
-        <div id="resultCards" class="result-grid"></div>
-      </section>
-
       <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle">
         <p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">保存した「欲しい」を振り返る。</h2>
         <p id="insightSummary">ほしっとくした内容と、選んだ通知条件をまとめて確認できます。</p>
@@ -259,6 +259,6 @@
       </section>
     </div></main>
   <footer><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">HOSHILUはAmazonアソシエイトおよび楽天アフィリエイトのリンクを通じて収入を得る場合があります。</span><span><a href="/privacy.html">プライバシー</a> ・ <a href="/terms.html">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script><script src="/site-i18n.js"></script><script type="module" src="/lp-layout.mjs?v=82"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=88"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs"></script><script type="module" src="/app.js?v=88"></script><script type="module" src="/ai-search-ui.mjs"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script><script src="/site-i18n.js"></script><script type="module" src="/lp-layout.mjs?v=83"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=88"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs"></script><script type="module" src="/app.js?v=89"></script><script type="module" src="/ai-search-ui.mjs"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>
