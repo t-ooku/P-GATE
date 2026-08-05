@@ -34,7 +34,8 @@ import { handleSpApiSellerRoutes } from './sp-api-seller-routes.mjs';
 import { requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
-  buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation
+  buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation,
+  extractApparelProductType
 } from './apparel-query-attributes.mjs';
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
@@ -691,6 +692,22 @@ function extractMissingPriceConstraint(originalQuery, builtKeywords) {
   return String(builtKeywords || '').includes(match[0]) ? '' : match[0];
 }
 
+// v3.5 real-report fix: marketplace-search-keywords-v2.mjs's GENERIC_PRODUCTS
+// dictionary recognizes the broad category ("トップス") but not every
+// specific garment noun (e.g. "カットソー" is not in that file at all, only
+// in apparel-query-attributes.mjs's finer-grained PRODUCT_TYPE_PATTERNS). A
+// query naming both ("カットソー トップス") builds specialized keywords from
+// whichever term the dictionary recognizes and silently drops the other -
+// so what the user typed and what actually gets searched on Rakuten/Amazon
+// diverge. Reinserts the specific garment noun when it survived detection
+// but not into the built keyword string.
+function ensureApparelProductTypeTerm(query, keywords) {
+  const productType = extractApparelProductType(query);
+  const text = String(keywords || '').trim();
+  if (!productType || text.includes(productType)) return text;
+  return text ? `${productType} ${text}` : productType;
+}
+
 function structuredMarketplaceTerms(query) {
   const segments = String(query || '')
     .split(/\s*(?:\/|／|\||｜)\s*/u)
@@ -742,7 +759,7 @@ export function buildAmazonSearchKeywords(query) {
   // stripping SNS/context filler ("SNSで見た" etc.) via the shared
   // marketplace-search-keywords-v2 fallback, so it is the primary text
   // rather than the raw cleaned string.
-  const primaryText = specializedKeywords || cleaned;
+  const primaryText = ensureApparelProductTypeTerm(cleaned, specializedKeywords || cleaned);
   const categoryJapaneseLabels = semanticGroups
     .map((group) => APPAREL_CATEGORY_JA_LABELS.get(group.category))
     .filter((label) => label && !primaryText.includes(label));
@@ -807,7 +824,10 @@ export function buildRakutenSearchKeywords(query) {
   }
   const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) return structuredTerms.join(' ');
-  const rakutenKeywords = buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP') || cleaned;
+  const rakutenKeywords = ensureApparelProductTypeTerm(
+    cleaned,
+    buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP') || cleaned
+  );
   const missingPriceConstraint = extractMissingPriceConstraint(cleaned, rakutenKeywords);
   return missingPriceConstraint ? `${rakutenKeywords} ${missingPriceConstraint}` : rakutenKeywords;
 }
@@ -1086,14 +1106,40 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
   });
   const amazonSearchUrl = marketplaceSearchLinks
     .find((link) => link.marketplace === 'AMAZON_JP')?.url || '';
+  const aiDiscovery = await aiDiscoveryWithSignedCandidateLinks(result.ai_discovery, {
+    env, origin, sessionHash, seed, category: demandCategory,
+    trafficClass: result.traffic_class || 'UNATTRIBUTED'
+  });
   return {
     ...result,
     candidates,
     amazon_search_url: amazonSearchUrl,
     amazon_search_keywords: buildAmazonSearchKeywords(query),
     search_keywords: buildAmazonSearchKeywords(query),
-    marketplace_search_links: marketplaceSearchLinks
+    marketplace_search_links: marketplaceSearchLinks,
+    ...(aiDiscovery ? { ai_discovery: aiDiscovery } : {})
   };
+}
+
+// AI Search v2 STEP2 (spec section 8): each AI-generated product candidate
+// needs its own marketplace search buttons, not just the top candidate's
+// match score/reason. Per [hoshilu-ssot] rule "商品URLは許可ドメイン・正規化・
+// 追跡URL生成を経由する", these must be the same signed /go tracking links
+// the whole-query fallback uses - never client-built raw marketplace URLs -
+// so this reuses signedMarketplaceSearchLinks per candidate, keyed by that
+// candidate's own AI-generated search_keywords (falling back to its name).
+async function aiDiscoveryWithSignedCandidateLinks(aiDiscovery, context) {
+  const candidates = aiDiscovery?.analysis?.product_candidates;
+  if (!Array.isArray(candidates) || !candidates.length) return aiDiscovery;
+  const decorated = [];
+  for (const [index, candidate] of candidates.entries()) {
+    const candidateQuery = candidate.search_keywords?.[0] || candidate.name;
+    const marketplace_search_links = await signedMarketplaceSearchLinks(candidateQuery, {
+      ...context, seed: `${context.seed}:CANDIDATE_${index}`
+    });
+    decorated.push({ ...candidate, marketplace_search_links });
+  }
+  return { ...aiDiscovery, analysis: { ...aiDiscovery.analysis, product_candidates: decorated } };
 }
 
 export const decoratePwaResultForTest = decoratePwaResult;

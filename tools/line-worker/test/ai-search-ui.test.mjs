@@ -64,3 +64,22 @@ test('AIチャットは検索の成功を確認してからダイアログを閉
   assert.match(script, /function showSearchError\(refinedQuery\)/);
   assert.match(script, /ai-chat-retry/);
 });
+
+// AI Search v2 STEP2 (docs/HOSHILU_AI_SEARCH_V2_SPEC_2026-08-04.md section 8):
+// the fallback UI previously only ever showed the first AI candidate's
+// match score/reason and no per-candidate marketplace buttons. Every
+// returned candidate (name, match rate, reason, matched features, and its
+// own signed marketplace search links) must render, not just the first one.
+test('AI検索候補は候補ごとにモール検索ボタン付きで表示される（1件目だけではない）', async () => {
+  const [app, css] = await Promise.all([read('app.js'), read('ai-search-layout-fix.css')]);
+  assert.match(app, /function aiCandidateCards\(/);
+  assert.match(app, /function aiCandidateCard\(/);
+  assert.match(app, /list\.forEach\(aiCandidate=>wrap\.append\(aiCandidateCard\(aiCandidate,labels\)\)\)/);
+  assert.match(app, /marketplaceLinks\(aiCandidate\.marketplace_search_links,true\)/);
+  assert.match(app, /candidateCards=aiCandidateCards\(analysis\?\.product_candidates,language\)/);
+  // regression guard: the old implementation only ever read
+  // product_candidates[0] for score/reason display.
+  assert.doesNotMatch(app, /product_candidates\|\|\[\]\)\)\[0\]/);
+  assert.match(css, /\.ai-candidate-card\{/);
+  assert.match(css, /\.ai-candidate-list\{/);
+});

@@ -94,6 +94,40 @@
   line-height:1.5;
 }
 
+.ai-candidate-list{
+  display:grid;
+  gap:12px;
+  margin-top:14px;
+}
+
+.ai-candidate-list-title{
+  font-size:12px;
+  font-weight:850;
+  color:var(--muted);
+  letter-spacing:.02em;
+}
+
+.ai-candidate-card{
+  display:grid;
+  gap:8px;
+  padding:14px;
+  border:1px solid #e2dcff;
+  border-radius:14px;
+  background:#fff;
+}
+
+.ai-candidate-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.ai-candidate-name{
+  font-size:13px;
+  color:var(--ink);
+}
+
 .keyword-tag-label{
   display:block;
   width:100%;

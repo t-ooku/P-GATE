@@ -42,6 +42,31 @@ test('Rakuten search keeps Japanese conditions separate from Amazon aliases', ()
   );
 });
 
+// v3.5 real-report fix: marketplace-search-keywords-v2.mjs's GENERIC_PRODUCTS
+// dictionary only recognizes the broad category noun ("トップス"), not every
+// specific garment ("カットソー" lives in apparel-query-attributes.mjs's
+// finer PRODUCT_TYPE_PATTERNS instead). A query naming both used to have the
+// specific term silently dropped from the built keywords - what the user
+// typed and what Rakuten/Amazon actually searched for diverged.
+test('カットソーとトップスを両方含む検索語は片方が消えずに両方残る', () => {
+  const query = 'カットソー トップス';
+  const rakutenKeywords = buildRakutenSearchKeywords(query);
+  assert.match(rakutenKeywords, /カットソー/);
+  assert.match(rakutenKeywords, /トップス/);
+  assert.equal(
+    decodeURIComponent(new URL(buildRakutenSearchDestination(query)).pathname),
+    '/search/mall/カットソー トップス/'
+  );
+  const amazonKeywords = buildAmazonSearchKeywords(query);
+  assert.match(amazonKeywords, /カットソー/);
+  assert.match(amazonKeywords, /トップス/);
+  // a garment noun the dictionary already recognizes on its own must not be
+  // duplicated by the reinsertion fix.
+  assert.equal(buildRakutenSearchKeywords('トップス'), 'トップス');
+  // non-apparel queries are unaffected (extractApparelProductType is null).
+  assert.doesNotMatch(buildRakutenSearchKeywords('モバイルバッテリー 1万円以下'), /カットソー|トップス/);
+});
+
 test('Amazon structured Japanese search does not add broad English aliases', () => {
   const keywords = buildAmazonSearchKeywords('折りたたみ日傘 / 軽量 / 晴雨兼用 / 完全遮光');
   assert.match(keywords, /折りたたみ日傘/);
@@ -427,6 +452,60 @@ test('商品カードには実出品でないモール検索ボタンを付け�
 
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.doesNotMatch(appSource, /candidate\.marketplace_search_links|candidate\.amazon_search_url/);
+});
+
+// AI Search v2 STEP2 (docs/HOSHILU_AI_SEARCH_V2_SPEC_2026-08-04.md section 8):
+// every AI-generated product candidate needs its own marketplace search
+// links, not just the top candidate. These must be signed /go tracking
+// tokens like every other product link on the site (per [hoshilu-ssot]:
+// AI never generates URLs, HOSHILU signs and verifies all of them) - never a
+// raw, client-built marketplace URL.
+test('AI検索候補には候補ごとに署名済みのモール検索リンクが付く', async () => {
+  const env = { LINK_SIGNING_SECRET: 'secret' };
+  const decorated = await workerModule.decoratePwaResultForTest(
+    {
+      query_id: 'q-ai-discovery',
+      candidates: [],
+      ai_discovery: {
+        triggered: true,
+        configured: true,
+        provider: 'GEMINI_PRODUCT_INTENT',
+        analysis: {
+          category: '完全ワイヤレスイヤホン',
+          intent_summary: '',
+          features: ['透明'],
+          product_candidates: [
+            { name: 'Nothing Ear', brand: 'Nothing', match_score: 95, reason: '透明デザイン', matched_features: ['透明'], search_keywords: ['Nothing Ear 透明'] },
+            { name: 'JBL Tune Beam', brand: 'JBL', match_score: 70, reason: '', matched_features: [], search_keywords: [] }
+          ],
+          search_keywords: ['透明 ワイヤレスイヤホン'],
+          multilingual_keywords: { ja: [], en: [], zh: [], ko: [] }
+        }
+      }
+    },
+    new Request('https://p-gate.example/api/knowledge'),
+    env,
+    'session-hash',
+    '韓国っぽい透明のワイヤレスイヤホン'
+  );
+  const candidates = decorated.ai_discovery.analysis.product_candidates;
+  assert.equal(candidates.length, 2);
+  for (const candidate of candidates) {
+    assert.ok(Array.isArray(candidate.marketplace_search_links));
+    assert.ok(candidate.marketplace_search_links.length >= 5);
+    for (const link of candidate.marketplace_search_links) {
+      assert.match(link.url, /^https:\/\/p-gate\.example\/go\?token=/);
+      const token = new URL(link.url).searchParams.get('token');
+      const payload = await verifyTrackToken(token, env.LINK_SIGNING_SECRET);
+      assert.equal(payload.t, 'SEARCH_FALLBACK');
+      assert.equal(payload.m, link.marketplace);
+    }
+  }
+  // the second candidate falls back to its own name when it has no AI-
+  // generated search_keywords - never the first candidate's keywords.
+  const secondCandidateToken = new URL(candidates[1].marketplace_search_links[0].url).searchParams.get('token');
+  const secondPayload = await verifyTrackToken(secondCandidateToken, env.LINK_SIGNING_SECRET);
+  assert.match(decodeURIComponent(secondPayload.d).replace(/\+/g, ' '), /JBL Tune Beam/);
 });
 
 test('弁当の緑の草状仕切りは画面・Amazon・楽天でバラン検索へ統一する', () => {
