@@ -30,6 +30,7 @@ import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
 import { decideContractPolicy, findContractInD1, jstDateKey, knowledgeKeyForQuery } from './contract-policy.mjs';
 import { handleMultilingualSyncRoutes } from './multilingual-seo-routes.mjs';
 import { attachMultilingualContent } from './multilingual-seo.mjs';
+import { handleProductIdentifierSyncRoutes } from './product-identifier-routes.mjs';
 import { recordEvents as recordKpiEvents } from './measurement.mjs';
 import { recordEvents as recordMarketplaceKpiEvents, refreshMarketplaceKpiSummary } from './marketplace-measurement.mjs';
 import { refreshAnonymousBenchmark } from './benchmark.mjs';
@@ -1595,6 +1596,8 @@ export default {
     if (contractPolicySyncResponse) return contractPolicySyncResponse;
     const multilingualSyncResponse = await handleMultilingualSyncRoutes(request, env);
     if (multilingualSyncResponse) return multilingualSyncResponse;
+    const productIdentifierSyncResponse = await handleProductIdentifierSyncRoutes(request, env);
+    if (productIdentifierSyncResponse) return productIdentifierSyncResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
     const adminAuthResponse = await handleAdminAuthRoutes(request, env);
