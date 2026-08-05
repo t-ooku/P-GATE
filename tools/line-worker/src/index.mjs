@@ -27,9 +27,12 @@ import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-route
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
-import { decideContractPolicy, jstDateKey, knowledgeKeyForQuery } from './contract-policy.mjs';
+import { decideContractPolicy, findContractInD1, jstDateKey, knowledgeKeyForQuery } from './contract-policy.mjs';
 import { handleMultilingualSyncRoutes } from './multilingual-seo-routes.mjs';
 import { attachMultilingualContent } from './multilingual-seo.mjs';
+import { recordEvents as recordKpiEvents } from './measurement.mjs';
+import { recordEvents as recordMarketplaceKpiEvents, refreshMarketplaceKpiSummary } from './marketplace-measurement.mjs';
+import { refreshAnonymousBenchmark } from './benchmark.mjs';
 import {
   runSpApiScheduledSync, spApiConfiguredTenants
 } from './sp-api-d1-repository.mjs';
@@ -383,6 +386,40 @@ async function hashUser(value) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+// HOSHILU GAS→Web移行 (docs/HOSHILU_GAS_TO_WEB_MIGRATION_BRIEF_2026-08-06.md §3,
+// gas/MeasurementEngine.gs, gas/MarketplaceMeasurementEngine.gs): Worker→GASの
+// callGas(env,'TRACK',...)は変更せず、その並走としてD1へも同じイベントを記録
+// する。gas/LineIntegration.gs track()と同じくチャネルごとに1件だけ設定された
+// 契約(env.LINE_CONTRACT_ID/env.PWA_CONTRACT_ID)からtenant/account_type/
+// account_idを補い、campaign_idは`${channel}_PILOT`、experiment_variantは
+// 'P_GATE'固定とする。契約が未設定・D1未同期の間は無条件でno-op。
+async function recordMeasurementEventsToD1(env, channel, events) {
+  if (!env.PRODUCT_DB || !Array.isArray(events) || !events.length) return;
+  const contractId = String((channel === 'PWA' ? env.PWA_CONTRACT_ID : env.LINE_CONTRACT_ID) || '').trim();
+  if (!contractId) return;
+  try {
+    const contract = await findContractInD1(env, contractId);
+    if (!contract) return;
+    const campaignId = `${channel}_PILOT`;
+    const kpiEvents = events.map((event) => ({
+      event_id: event.event_id, occurred_at: event.occurred_at, event_type: event.event_type,
+      tenant: contract.tenant, account_type: contract.account_type, account_id: contract.account_id,
+      session_id: event.user_hash, recommendation_id: event.recommendation_id, campaign_id: campaignId,
+      experiment_variant: 'P_GATE', asin: event.asin, consent: true, source: channel
+    }));
+    await recordKpiEvents(env, kpiEvents);
+    const marketplaceEvents = events.filter((event) => event.marketplace).map((event) => ({
+      event_id: event.event_id, occurred_at: event.occurred_at, tenant: contract.tenant,
+      account_type: contract.account_type, account_id: contract.account_id, session_id: event.user_hash,
+      recommendation_id: event.recommendation_id, asin: event.asin, marketplace: event.marketplace,
+      event_type: event.event_type, channel, consent: true
+    }));
+    if (marketplaceEvents.length) await recordMarketplaceKpiEvents(env, marketplaceEvents);
+  } catch (error) {
+    console.warn('KPI_D1_RECORD_FALLBACK', { channel, error: String(error.message || error) });
+  }
+}
+
 async function callGas(env, action, body) {
   const timeoutMs = action === 'KNOWLEDGE' ? 2200 : action === 'EVENT' ? 3000 : 5000;
   const response = await fetch(env.GAS_BACKEND_URL, {
@@ -590,7 +627,10 @@ async function processLineEvent(event, origin, env, ctx) {
     await replyToLine(event.replyToken, messages, env);
     const userId = event.source?.userId || event.source?.groupId || event.source?.roomId || '';
     const events = impressionEvents(result, event, await hashUser(userId || event.webhookEventId));
-    if (events.length) ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'LINE' }));
+    if (events.length) {
+      ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'LINE' }));
+      ctx.waitUntil(recordMeasurementEventsToD1(env, 'LINE', events));
+    }
   } catch (error) {
     console.error('LINE_EVENT_FAILED', String(error?.message || error));
     await replyToLine(event.replyToken, await buildLineFallbackMessages(event, origin, env), env);
@@ -633,6 +673,7 @@ async function handleRedirect(request, env, ctx) {
       ctx.waitUntil(recordUnmetDemandEvent(env, payload, occurredAt, channel));
     }
     ctx.waitUntil(callGas(env, 'TRACK', { events, channel }));
+    ctx.waitUntil(recordMeasurementEventsToD1(env, channel, events));
     return Response.redirect(payload.d, 302);
   } catch (error) {
     return new Response(String(error.message || error), { status: 400 });
@@ -1459,7 +1500,10 @@ async function handleKnowledgeApi(request, env, ctx) {
       occurred_at: new Date().toISOString(), user_hash: sessionHash,
       recommendation_id: decorated.query_id, asin: candidate.asin, event_type: 'IMPRESSION'
     }));
-    if (events.length) ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'PWA' }));
+    if (events.length) {
+      ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'PWA' }));
+      ctx.waitUntil(recordMeasurementEventsToD1(env, 'PWA', events));
+    }
     console.info('SEARCH_TRACE', { requestId, stage: '10_ui_sent', query: input.query, ui_sent_count: (decorated.candidates || []).length });
     return Response.json({ ok: true, result: decorated }, {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
@@ -1597,7 +1641,13 @@ export default {
       runMarketplaceContentCycle(env, scheduledAt),
       runSpApiScheduledSync(env, scheduledAt),
       purgeAdminAuthRecords(env, scheduledAt),
-      purgeSellerAuthRecords(env, scheduledAt)
+      purgeSellerAuthRecords(env, scheduledAt),
+      refreshMarketplaceKpiSummary(env),
+      // refreshAnonymousBenchmark()はkpi_summaryを読む前に自分でrefreshKpiSummary()
+      // を呼ぶ(gas/BenchmarkEngine.gs同様、KPI集計→ベンチマーク算出の順で依存する)。
+      // ここで別途refreshKpiSummary(env)を並列実行すると、同じkpi_summaryテーブルへの
+      // DELETE+INSERTが競合しPRIMARY KEY衝突を起こすため呼ばない。
+      refreshAnonymousBenchmark(env)
     ]));
   }
 };

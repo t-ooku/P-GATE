@@ -206,6 +206,14 @@ export async function findContractInD1(env, contractId) {
   return rowToContract(row);
 }
 
+// gas/ContractPolicyEngine.gs loadContracts() のD1版。gas/BenchmarkEngine.gsの
+// eligibleAccounts()のように全契約の同意状態を横断的に見る処理で使う。
+export async function loadAllContractsFromD1(env) {
+  if (!env.PRODUCT_DB) return [];
+  const result = await env.PRODUCT_DB.prepare('SELECT * FROM contracts').all();
+  return (result.results || []).map(rowToContract);
+}
+
 async function loadConflictingDecisions(env, targetContract) {
   if (!targetContract.competitor_group) return [];
   const result = await env.PRODUCT_DB.prepare(

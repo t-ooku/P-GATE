@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   normalizeContract, isActive, includesCategory, answerSignature, evaluateContractPolicy,
-  findContractInD1, decideContractPolicy, jstDateKey, knowledgeKeyForQuery
+  findContractInD1, decideContractPolicy, jstDateKey, knowledgeKeyForQuery, loadAllContractsFromD1
 } from '../src/contract-policy.mjs';
 import {
   handleContractPolicySyncRoutes, validateContractSyncPayload
@@ -210,6 +210,19 @@ test('findContractInD1はcategory_scopeのJSONをcategories配列へ復元する
   const contract = await findContractInD1(env, 'C1');
   assert.deepEqual(contract.categories, ['ELECTRONICS']);
   assert.equal(await findContractInD1(env, 'MISSING'), null);
+});
+
+test('loadAllContractsFromD1は全契約を復元し、D1未設定なら空配列を返す', async () => {
+  assert.deepEqual(await loadAllContractsFromD1({}), []);
+  const rows = [{
+    contract_id: 'C1', tenant: 'itg', account_type: 'SELLER', account_id: 'A1', status: 'ACTIVE',
+    start_date: '2026-01-01', end_date: '', category_scope: '["*"]', competitor_group: '',
+    exclusivity_mode: 'NONE', competitor_acceptance: 0, benchmark_consent: 1, updated_at: '2026-08-01T00:00:00.000Z'
+  }];
+  const env = { PRODUCT_DB: { prepare: () => ({ all: async () => ({ results: rows }) }) } };
+  const contracts = await loadAllContractsFromD1(env);
+  assert.equal(contracts.length, 1);
+  assert.equal(contracts[0].benchmark_consent, true);
 });
 
 test('decideContractPolicyはD1未同期の契約に対しCONTRACT_NOT_FOUNDを投げる(GASフォールバックの起点)', async () => {
