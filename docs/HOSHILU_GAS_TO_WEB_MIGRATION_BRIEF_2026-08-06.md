@@ -21,6 +21,10 @@ HOSHILUは「GASを廃止してWeb版に一本化する」プロジェクトで�
 
 `index.mjs`のPWA検索は現在、D1索引検索とGAS(`KNOWLEDGE`)を`Promise.allSettled`で競わせ、D1に十分な候補があればD1を優先し、無ければGASにフォールバックする実装になっている。**これは「移行中」であることの直接的な証拠であり、この設計を壊さず段階的に置き換えるのが正しい進め方。**
 
+### 包括承認（2026-08-06）
+
+大久津さんより、**§2のZIP取込経路を除き、GAS版にのみ存在しWeb版に無い機能は全てWeb版へ構築してよい**と承認済み。これにより§3・§4で個別に「着手前にユーザー承認」としていたUI設計・スキーマ新設の事前合意ゲートは不要。ただし§1のガードレール（本番デプロイ前確認、Secret登録・外部公開・契約変更の承認）は引き続き有効。
+
 ## 1. 絶対に守るガードレール
 
 - `docs/MYGATE_to_HOSHILU_REBRAND_ADDENDUM_v5.1.md`により、互換フェーズ中は`mygate_*`、Project GATE、GASシート名、Worker名を見た目統一のためだけにリネームしない。
@@ -46,11 +50,11 @@ HOSHILUは「GASを廃止してWeb版に一本化する」プロジェクトで�
 | `ProductIndexSyncEngine.gs` / `UnmetDemandEngine.gs`のpush部分 | 既にWorker/D1へブリッジ済み | 変更不要。参考実装として他エンジンの移植パターンに使う |
 | `ContractPolicyEngine.gs`（競合排他・カテゴリ独占判定） | Worker未実装、`KnowledgeEngine`から同期呼び出し | 優先度高。D1にcontract/policyテーブルを新設し、Worker内にロジック移植。移植完了後に`index.mjs`のKNOWLEDGE経路からGAS呼び出しを外せる |
 | `KnowledgeEngine.gs`（トークン一致検索＋根拠付き回答） | D1 FTS検索(`product-index-v2.mjs`)と機能競合中、GASはフォールバック | ContractPolicy移植が終わるまではフォールバックとして残す。D1側の再現率がGAS版に追いついたことをテストで確認してから依存を外す |
-| `MultilingualSeoEngine.gs`（表記ゆれ承認テーブル） | Sheetsを承認UIとして使用、Worker側に相当データモデル無し | Sheetsの「承認チェック」運用を代替する管理画面をWorker側（admin-*.mjs系）に新設する必要あり。UI設計を先に決めてから着手 |
-| `BenchmarkEngine.gs` / `MeasurementEngine.gs` / `MarketplaceMeasurementEngine.gs`（契約別KPI・匿名ベンチマーク） | Worker側の`growth-events.mjs`等はB2C成長指標で別物、B2B契約KPIのデータモデルが無い | 優先度中。D1にAccount/Campaign/Experiment概念を持つスキーマを新設しないと移植できない。既存のB2C成長分析と混同しない |
-| `SocialKnowledgeEngine.gs`（SNSコメントのPII除去・モデレーション・レビューキュー） | Worker側は投稿実績集計のみで受信コメント処理は無し | 優先度低。レビューキューUIが要る点は多言語承認と同種の課題 |
-| `ProductIdentifierEngine.gs`（JAN/EAN/UPC↔ASIN） | チェックディジット計算は移植容易、承認ワークフローがSheets依存 | 検証ロジックのみ先にWorker側ユーティリティとして移植可。承認ワークフローは管理画面が必要 |
-| `PreflightEngine.gs` | GAS側だけを自己点検、Worker側は`index.mjs`内で別途自己点検 | 統合診断は無くても実害は小さい。優先度低 |
+| `MultilingualSeoEngine.gs`（表記ゆれ承認テーブル） | Sheetsを承認UIとして使用、Worker側に相当データモデル無し | 承認済み。D1にalias/localized_contentテーブル＋`Approved`フラグを新設し、admin-*.mjs系に承認画面を追加してWeb版へ構築する |
+| `BenchmarkEngine.gs` / `MeasurementEngine.gs` / `MarketplaceMeasurementEngine.gs`（契約別KPI・匿名ベンチマーク） | Worker側の`growth-events.mjs`等はB2C成長指標で別物、B2B契約KPIのデータモデルが無い | 承認済み。D1にAccount/Campaign/Experiment概念を持つスキーマを新設して移植する。既存のB2C成長分析（growth-events.mjs）とはテーブルを分離し混同しない |
+| `SocialKnowledgeEngine.gs`（SNSコメントのPII除去・モデレーション・レビューキュー） | Worker側は投稿実績集計のみで受信コメント処理は無し | 承認済み。レビューキューUIをadmin側に新設して移植する |
+| `ProductIdentifierEngine.gs`（JAN/EAN/UPC↔ASIN） | チェックディジット計算は移植容易、承認ワークフローがSheets依存 | 承認済み。検証ロジックをWorker側ユーティリティへ移植し、承認ワークフロー用の管理画面も合わせて構築する |
+| `PreflightEngine.gs` | GAS側だけを自己点検、Worker側は`index.mjs`内で別途自己点検 | 承認済み。GAS側チェック項目をWorker側の自己点検へ統合する |
 | `Project_GATE_Bridge.ps1` / ZIP取込 | 移行不可（§2参照） | ユーザー確認待ち。着手しない |
 
 ## 4. 作業を依頼された時の進め方（Claudeへの指示）
@@ -60,7 +64,7 @@ HOSHILUは「GASを廃止してWeb版に一本化する」プロジェクトで�
 3. Workerにロジックを実装したら、`index.mjs`の`callGas()`呼び出しは**即座に削除せず**、既存のD1優先・GASフォールバックのパターン（`Promise.allSettled`＋優先順位判定）に倣って並走させる。
 4. 移植した機能について回帰テストを`tools/line-worker/test/`に追加する。既存テストと`docs/HOSHILU_AI_SEARCH_V2_SPEC_2026-08-04.md`が定める「テスト失敗中は本番デプロイしない」原則に従う。
 5. GAS側の呼び出しを完全に外す判断（フォールバック除去）は、Web側で十分な期間・十分なテストで再現性が確認できてから、ユーザーの承認を得て行う。無断でGAS依存を削除しない。
-6. Sheetsを承認UIとして使っている機能（多言語表記、SNSレビュー、商品コード承認）を移植する場合は、先に管理画面のUI/権限設計をユーザーと合意してから実装に入る。Sheetsの「誰でも一目で編集できる」利便性を失わない設計にする。
+6. Sheetsを承認UIとして使っている機能（多言語表記、SNSレビュー、商品コード承認）は包括承認済みのため事前合意なしで着手してよい。ただしSheetsの「誰でも一目で編集できる」利便性を失わない設計（一覧表示・チェックボックス的な承認操作・検索/絞り込み）を管理画面側でも再現すること。
 7. 本番同期・Secret登録・外部公開に関わる変更は、実装後もデプロイ前に必ずユーザー確認を取る（§1のガードレール参照）。
 
 ## 5. 非対象（このドキュメントの範囲外）
