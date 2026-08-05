@@ -45,11 +45,12 @@ async function enqueue(request, env) {
   const deliveredAt = delivered ? now : null;
   const result = await env.PRODUCT_DB.prepare(
     `INSERT OR IGNORE INTO mywatch_notifications
-    (notification_id,member_id,wish_id,event_key,event_type,channel,title,body,status,attempts,next_attempt_at,delivered_at,created_at,updated_at)
-    VALUES(?1,?2,?3,?4,?5,'WEB',?6,?7,?8,?9,?10,?11,?12,?12)`
+    (notification_id,member_id,wish_id,event_key,event_type,channel,title,body,status,attempts,next_attempt_at,delivered_at,created_at,updated_at,asin,marketplace,image_url)
+    VALUES(?1,?2,?3,?4,?5,'WEB',?6,?7,?8,?9,?10,?11,?12,?12,?13,?14,?15)`
   ).bind(
     notificationId, memberId, wishId, event.event_key, event.event_type,
-    copy.title, copy.body, status, attempts, nextAt, deliveredAt, now
+    copy.title, copy.body, status, attempts, nextAt, deliveredAt, now,
+    event.asin, event.marketplace, event.image_url
   ).run();
   const queued = Number(result?.meta?.changes || 0) > 0;
   if (queued && delivered) {
@@ -62,18 +63,21 @@ async function enqueue(request, env) {
   return Response.json({ ok: true, queued, duplicate: !queued });
 }
 
+// v3.4 CTO instruction: AIウォッチ(個別商品監視)とSALE RADAR(市場全体)の通知を
+// 完全分離する。この2つは元々同じ mywatch_notifications テーブルへ書き込まれ
+// ていた - enqueueSaleNotifications()(marketplace-sales.mjs, SALE RADAR/市場
+// 全体、wish_id='MARKETPLACE_SALES' の固定センチネル)と、この下の enqueue()
+// (個別 wish への実際の価格・在庫・クーポンイベント)の両方。SALE RADARの内容
+// は既に sale-center.mjs/#saleRail が marketplace_sale_events から独立して
+// 表示しているため、AIウォッチ通知パネル(このAPI)からは除外し、実際に商品を
+// 指す個別イベントだけを返す。
 async function list(request, env, member) {
   const result = await env.PRODUCT_DB.prepare(
     `SELECT n.notification_id,n.wish_id,n.event_type,n.title,n.body,n.status,
-      n.delivered_at,n.read_at,n.created_at,
-      CASE WHEN n.wish_id='MARKETPLACE_SALES' THEN COALESCE((
-        SELECT s.source_url FROM marketplace_sale_events s
-        WHERE s.sale_id=substr(n.event_key,1,instr(n.event_key,':')-1)
-          AND s.status='APPROVED' AND s.source_url LIKE 'https://%'
-        LIMIT 1
-      ),'') ELSE '' END AS source_url
+      n.delivered_at,n.read_at,n.created_at,n.asin,n.marketplace,n.image_url
     FROM mywatch_notifications n
     WHERE n.member_id=?1 AND n.status='DELIVERED' AND n.dismissed_at IS NULL
+      AND n.wish_id!='MARKETPLACE_SALES'
     ORDER BY n.created_at DESC LIMIT 50`
   ).bind(member.id).all();
   return Response.json({ ok: true, notifications: result?.results || [] }, {

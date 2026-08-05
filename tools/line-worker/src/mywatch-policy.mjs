@@ -10,6 +10,11 @@ const FLAG_FOR_EVENT = {
   RESTOCK: 'watch_restock'
 };
 
+const KNOWN_MARKETPLACES = new Set([
+  'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
+  'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+]);
+
 export function normalizeWatchEvent(input = {}) {
   const type = String(input.event_type || '').trim().toUpperCase();
   if (!WATCH_EVENT_TYPES.includes(type)) throw new Error('MYWATCH_EVENT_TYPE_INVALID');
@@ -17,11 +22,15 @@ export function normalizeWatchEvent(input = {}) {
   if (!/^[A-Za-z0-9:_-]{8,160}$/.test(eventKey)) throw new Error('MYWATCH_EVENT_KEY_INVALID');
   const occurredAt = new Date(input.occurred_at || Date.now());
   if (Number.isNaN(occurredAt.valueOf())) throw new Error('MYWATCH_OCCURRED_AT_INVALID');
+  const imageUrl = String(input.image_url || '').trim();
   return {
     event_key: eventKey,
     event_type: type,
     asin: /^[A-Z0-9]{10}$/i.test(String(input.asin || '').trim())
       ? String(input.asin).trim().toUpperCase() : '',
+    marketplace: KNOWN_MARKETPLACES.has(String(input.marketplace || '').trim().toUpperCase())
+      ? String(input.marketplace).trim().toUpperCase() : '',
+    image_url: /^https:\/\//i.test(imageUrl) ? imageUrl.slice(0, 500) : '',
     title: String(input.title || '').trim().slice(0, 120),
     detail: String(input.detail || '').trim().slice(0, 500),
     occurred_at: occurredAt.toISOString()

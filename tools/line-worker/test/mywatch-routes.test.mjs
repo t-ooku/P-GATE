@@ -87,11 +87,15 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(serviceWorker, /hoshilu-shell-v303/);
 });
 
-test('既存のモール通知にも承認済み公式URLを補完する', async () => {
+// v3.4 CTO instruction: AIウォッチ(個別商品監視)とSALE RADAR(市場全体)の通知は
+// 完全分離する。SALE RADARの内容は sale-center.mjs/#saleRail が
+// marketplace_sale_events から独立して表示しているため、AIウォッチ通知
+// パネル(このAPI)は市場全体のセール通知(wish_id='MARKETPLACE_SALES')を
+// 除外し、実際に商品を指す個別イベントの列(asin/marketplace/image_url)
+// だけを返す。
+test('AIウォッチ通知一覧はSALE RADAR(MARKETPLACE_SALES)を除外し商品単位の列を返す', async () => {
   const fs = await import('node:fs');
   const source = fs.readFileSync(new URL('../src/mywatch-routes.mjs', import.meta.url), 'utf8');
-  assert.match(source, /s\.sale_id=substr\(n\.event_key,1,instr\(n\.event_key,':'\)-1\)/);
-  assert.match(source, /s\.status='APPROVED'/);
-  assert.match(source, /s\.source_url LIKE 'https:\/\/%'/);
-  assert.match(source, /AS source_url/);
+  assert.match(source, /n\.wish_id!='MARKETPLACE_SALES'/);
+  assert.match(source, /n\.asin,n\.marketplace,n\.image_url/);
 });
