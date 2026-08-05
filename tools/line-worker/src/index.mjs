@@ -26,6 +26,8 @@ import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
+import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
+import { decideContractPolicy, jstDateKey, knowledgeKeyForQuery } from './contract-policy.mjs';
 import {
   runSpApiScheduledSync, spApiConfiguredTenants
 } from './sp-api-d1-repository.mjs';
@@ -1224,6 +1226,44 @@ async function handleAiChatApi(request, env) {
   }
 }
 
+// HOSHILU GAS→Web移行 (docs/HOSHILU_GAS_TO_WEB_MIGRATION_BRIEF_2026-08-06.md §3,
+// gas/ContractPolicyEngine.gs): D1優先・GASフォールバックで走らせる契約ポリシー判定。
+// callGas('KNOWLEDGE')はgas/LineIntegration.gs answerPublic()経由で既に
+// ContractPolicyEngine.decide()を内部適用しているが、それはGAS自身が
+// 返した候補にしか及ばない。D1索引検索(result.candidates)はGAS側のロジックを
+// 経由しないため、ここでD1に同期済みの契約ポリシーを追加で適用する。
+// env.PWA_CONTRACT_ID / env.PWA_DEFAULT_CATEGORY が未設定、または対象契約が
+// まだ gas/ContractPolicySyncEngine.gs でD1へpushされていない間は無条件でno-op
+// し、既存の(GAS側で判定済みの)結果をそのまま素通しする。
+async function applyD1ContractPolicy(env, result, query, requestId) {
+  const contractId = String(env.PWA_CONTRACT_ID || '').trim();
+  const category = String(env.PWA_DEFAULT_CATEGORY || '').trim();
+  const candidates = Array.isArray(result?.candidates) ? result.candidates : [];
+  if (!contractId || !category || candidates.length === 0) return result;
+  try {
+    const policy = await decideContractPolicy(env, {
+      contract_id: contractId,
+      category,
+      date_jst: jstDateKey(),
+      knowledge_key: await knowledgeKeyForQuery(query),
+      answer_payload: candidates.map((candidate) => ({
+        asin: candidate.asin, rank: candidate.rank, evidence: candidate.evidence?.source_hash || ''
+      }))
+    });
+    if (!policy.allowed) {
+      console.info('CONTRACT_POLICY_D1_BLOCKED', { requestId, reason: policy.reason });
+      return { ...result, candidates: [], policy_reason: policy.reason, disclosure_required: false };
+    }
+    return { ...result, policy_reason: policy.reason, disclosure_required: policy.disclosure_required };
+  } catch (error) {
+    // D1未同期(CONTRACT_NOT_FOUND)やストア未設定・一時的なD1障害はすべて
+    // フォールバック対象: GAS側で既に判定済みの結果をそのまま使い、
+    // ここではブロックしない(段階移行中はGAS側を権威として残す)。
+    console.warn('CONTRACT_POLICY_D1_FALLBACK', { requestId, error: String(error.message || error) });
+    return result;
+  }
+}
+
 async function handleKnowledgeApi(request, env, ctx) {
   try {
     const requestOrigin = request.headers.get('origin');
@@ -1254,6 +1294,7 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(result.candidates, gasResult.candidates, input.query)
       };
     }
+    result = await applyD1ContractPolicy(env, result, input.query, requestId);
     const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env)
       || yahooShoppingApiConfigured(env);
     if (shouldSearchMarketplaces) {
@@ -1490,6 +1531,8 @@ export default {
     if (request.method === 'GET' && url.pathname === '/api/internal/marketplace-offers/stats') return marketplaceOfferStats(request, env);
     const unmetDemandResponse = await handleUnmetDemandRoutes(request, env);
     if (unmetDemandResponse) return unmetDemandResponse;
+    const contractPolicySyncResponse = await handleContractPolicySyncRoutes(request, env);
+    if (contractPolicySyncResponse) return contractPolicySyncResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
     const adminAuthResponse = await handleAdminAuthRoutes(request, env);
