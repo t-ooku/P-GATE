@@ -770,6 +770,24 @@ test('英語の家具リストが偶然ファッション語を含んでいて�
   assert.deepEqual(candidates.map((item) => item.asin), ['REAL01']);
 });
 
+// Regression for the 2026-08-05 v3.5 report: real production screenshots
+// for "カットソー" showed a dog cut-and-sew shirt ranked as the #2 result.
+// Root cause: pet apparel is keyword-stuffed with the exact same clothing
+// vocabulary (カットソー/トップス/シャツ) as human apparel, so it matched
+// the 'tops' category directly with no positive-marker signal able to tell
+// the two apart. Fixed by adding an explicit "for an animal" off-domain
+// marker (犬用/猫用/ペット用/dog clothes/etc.) alongside the existing
+// furniture/knife/guitar markers.
+test('犬用・ペット用カットソーはカットソー検索から除外される', () => {
+  const candidates = filterCategoryMismatches('カットソー', [
+    { asin: 'REAL01', product_name: 'レディース カットソー 長袖 白 トップス' },
+    { asin: 'DOG01', product_name: '犬用 カットソー 秋冬 あったか 小型犬 トップス' },
+    { asin: 'DOG02', product_name: 'Dog Clothes Cotton Cut and Sew Top for Small Dogs' },
+    { asin: 'PET01', product_name: 'ペット用 カットソー トップス 猫 犬兼用' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['REAL01']);
+});
+
 // Regression for the 2026-08-05 RC2 real-device report: "カットソー" search
 // returned only one candidate (an unrelated medical scrub). Root cause: real
 // listings are keyword-stuffed with synonyms for SEO ("カットソー Tシャツ

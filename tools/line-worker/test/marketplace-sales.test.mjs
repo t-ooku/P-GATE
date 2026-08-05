@@ -93,6 +93,25 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   assert.match(sw, /hoshilu-electronics-collage-v1\.png/);
 });
 
+// Regression for the 2026-08-05 report: on mobile (<=760px), SALE RADAR /
+// HOSHILU NEWS ticker rows reflow the mall name and title onto their own
+// full-width grid lines (see the max-width:760px block below), which needs
+// roughly 3x the desktop row height. But .info-row is a flex item inside
+// .sale-rail/.info-row-list (display:flex;flex-direction:column), and the
+// default flex-shrink:1 let the browser shrink each row down toward its
+// 44px min-height (sized for the desktop single-line layout) to fit more
+// rows in the fixed-height scroll viewport. That squeezed the 3-line grid
+// content into a box too short for it, collapsing the title's grid row to
+// 0px and rendering the title text visually on top of the mall text above
+// it (verified live: title.top < mall.bottom). Fixed with flex-shrink:0 so
+// each row keeps its natural (3-line) content height and the ticker's
+// existing overflow-y:auto scroll handles the rest, as intended.
+test('モバイルのSALE RADAR行は3行スタック時に潰れて文字が重ならないようflex-shrink:0を持つ', async () => {
+  const css = await readFile(new URL('../public/sale-center.css', import.meta.url), 'utf8');
+  const mobileBlock = css.match(/@media\(max-width:760px\)\{([\s\S]*?)\}\}$/m)?.[0] || '';
+  assert.match(mobileBlock, /\.info-row\{[^}]*flex-shrink:0/);
+});
+
 test('商品画像はAPPROVEDになるまで公開しない契約を持つ', async () => {
   const source = await readFile(new URL('../src/marketplace-sales.mjs', import.meta.url), 'utf8');
   assert.match(source, /image_rights_status === 'APPROVED'/);

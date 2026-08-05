@@ -2469,7 +2469,16 @@ const DOMAIN_FAMILIES = [
     // body). These matched the 'tops' category DIRECTLY (not through the
     // 'other' bypass), so the guard below is now also applied to direct
     // category matches, not just 'other'.
-    offDomainMarker: /(?:家具|机|デスク|椅子|チェア|棚|ラック|テーブル|ソファ|furniture|(?:side|coffee|dining|center|flip|round|end)\s*table|\bchair\b|\bdesk\b|\bsofa\b|船用品|船舶|ナイフ|刃物|\bknife\b|\bknives\b|\bblade\b|ギター|guitar|ukulele|violin|\barch\s*top\b|健康保険フォーム|保険金請求書|cms-1500|legal\s*pad|\bnotepad\b|メモ帳|文房具)/iu
+    //
+    // 2026-08-05 v3.5 report (real production screenshots, カットソー query):
+    // a "犬用カットソー" (dog cut-and-sew shirt) listing ranked as the #2
+    // result. Pet apparel uses the exact same clothing vocabulary (カットソー,
+    // トップス, シャツ) as human apparel, so no positive-marker check can
+    // distinguish them - only an explicit pet/animal-audience off-domain
+    // marker can. Scoped to unambiguous "for an animal" phrasing (犬用/猫用/
+    // ペット用 etc., or "dog/cat/pet clothes") so legitimate human-apparel
+    // listings that merely depict a dog print/pattern are not affected.
+    offDomainMarker: /(?:家具|机|デスク|椅子|チェア|棚|ラック|テーブル|ソファ|furniture|(?:side|coffee|dining|center|flip|round|end)\s*table|\bchair\b|\bdesk\b|\bsofa\b|船用品|船舶|ナイフ|刃物|\bknife\b|\bknives\b|\bblade\b|ギター|guitar|ukulele|violin|\barch\s*top\b|健康保険フォーム|保険金請求書|cms-1500|legal\s*pad|\bnotepad\b|メモ帳|文房具|犬用|犬服|犬の服|愛犬用|猫用|猫服|猫の服|愛猫用|ペット用|ペット服|ペットウェア|ペット衣類|小動物用|dog\s*(?:clothes|clothing|apparel|costume|outfit|coat|sweater|shirt|wear)|cat\s*(?:clothes|clothing|apparel|costume|outfit|wear)|pet\s*(?:clothes|clothing|apparel|costume|outfit|wear)|for\s+(?:dogs?|cats?|pets?)\b|\bpuppy\b)/iu
   },
   {
     categories: new Set(['rice-cooker']),
