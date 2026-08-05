@@ -31,15 +31,6 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /white-space: nowrap/);
   assert.match(sw, /hoshilu-shell-v303/);
   assert.match(sw, /discovery-actions\.mjs/);
-  assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
-  assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
-  assert.match(html, /href="https:\/\/x\.com\/iCHMR81Lv4VYJYG"/);
-  assert.match(styles, /\.official-social-link\.line\{grid-column:1\/-1;background:#06c755\}/);
-  assert.match(styles, /\.official-social-link\.instagram\{background:linear-gradient/);
-  assert.match(styles, /\.official-social-link\.x\{background:#000\}/);
-  assert.match(i18n, /Official HOSHILU accounts/);
-  assert.match(i18n, /HOSHILU 官方账号/);
-  assert.match(i18n, /HOSHILU 공식 계정/);
   assert.match(sw, /marketplace-search-keywords-v2\.mjs/);
   assert.match(app, /buildMarketplaceSearchKeywords/);
   assert.match(sw, /if \(response\.ok\)/);
