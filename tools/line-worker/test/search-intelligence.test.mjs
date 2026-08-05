@@ -699,6 +699,45 @@ test('rankMerchantCandidatesはqueryを渡さない既存呼び出しでは色�
   assert.deepEqual(ranked.map((item) => item.asin), ['BLACK0001', 'WHITE0001']);
 });
 
+// Regression for the 2026-08-05 v3.1 report: 家具/船用品 still appeared in
+// カットソー results even after the v3.0 "other"-bypass fix above. Root
+// cause (found by logging inferCandidateCategory + filterCategoryMismatches
+// output for realistic candidate titles): the v3.0 fix only rejects an
+// unclassifiable ("other") candidate when its text has NO fashion-domain
+// marker word at all. A furniture listing whose English marketing copy
+// happens to also say "Fashion" (e.g. cross-tagged "Home Decor Fashion"
+// listings, common on real marketplaces) still passed. Fixed by adding an
+// offDomainMarker check that disqualifies unambiguous furniture nouns
+// regardless of an incidental positive marker match.
+test('英語の家具リストが偶然ファッション語を含んでいてもカットソー検索では除外される', () => {
+  const candidates = filterCategoryMismatches('カットソー', [
+    { asin: 'REAL01', product_name: 'レディース カットソー 長袖 白 トップス' },
+    { asin: 'FURNITURE01', product_name: 'Wood Side Table Modern Furniture Fashion Home Decor' },
+    { asin: 'FURNITURE02', product_name: 'ローテーブル センターテーブル 木製 家具' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['REAL01']);
+});
+
+// マリン/ボート系の語は「マリンボーダー」「ボートネック」という実在のファッ
+// ション用語でもあるため、offDomainMarkerには含めていない。誤って除外しな
+// いことを固定化する。
+test('マリンボーダー・ボートネックはファッション用語として除外されない', () => {
+  const candidates = filterCategoryMismatches('カットソー', [
+    { asin: 'MARINE01', product_name: 'マリンボーダー ボートネック カットソー レディース' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['MARINE01']);
+});
+
+// 2026-08-05 v3.1: category-score 0(=ジャンル不一致)はfilterCategoryMismatches
+// をすり抜けた場合でも、rankMerchantCandidatesで最終的に除外する二段構えにする。
+test('rankMerchantCandidatesはfilterを通過してしまったカテゴリ不一致候補も除外する', () => {
+  const ranked = rankMerchantCandidates([
+    { asin: 'REAL01', product_name: 'レディース カットソー 長袖 白 トップス', offers: [{ seller_id: 's1', marketplace: 'AMAZON_JP', product_url: 'u1' }] },
+    { asin: 'LEAKED01', product_name: 'Wood Side Table Modern Furniture Fashion Home Decor', offers: [{ seller_id: 's2', marketplace: 'AMAZON_JP', product_url: 'u2' }] }
+  ], [], 'カットソー');
+  assert.deepEqual(ranked.map((item) => item.asin), ['REAL01']);
+});
+
 test('rankMerchantCandidatesは対象者・色・袖丈・特徴の一致度でカットソー候補を並び替える', () => {
   const query = '楽で涼しいカットソー。袖長めで色は白系。女性向けおしゃれ';
   const ranked = rankMerchantCandidates([

@@ -1,6 +1,7 @@
 import { searchProductsAcrossTenantsWithDecision } from './product-index-v2.mjs';
 import { inferCandidateCategory, requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
 import { scoreApparelAttributeMatch } from './apparel-query-attributes.mjs';
+import { lookupTeacherDatasetEntry } from './search-quality/teacher-dataset-lookup.mjs';
 
 const COPY = {
   JA: {
@@ -2451,7 +2452,13 @@ const APPAREL_ADJACENT_DOMAIN_CATEGORIES = new Set([
 const DOMAIN_FAMILIES = [
   {
     categories: APPAREL_ADJACENT_DOMAIN_CATEGORIES,
-    marker: /(?:服|ファッション|アパレル|コーデ|着る|羽織る|着心地|レディース|メンズ|衣服|服装|服裝|时尚|時尚|패션|의류|fashion|apparel|wear|outfit|clothing)/iu
+    marker: /(?:服|ファッション|アパレル|コーデ|着る|羽織る|着心地|レディース|メンズ|衣服|服装|服裝|时尚|時尚|패션|의류|fashion|apparel|wear|outfit|clothing)/iu,
+    // Deliberately narrow: マリン/ボート/nautical/marine are common legitimate
+    // fashion pattern names (マリンボーダー = Breton/marine stripe, ボートネック
+    // = boat neck), so they are excluded here to avoid rejecting real apparel
+    // matches. Only unambiguous furniture nouns and the exact 船用品/船舶
+    // compounds (never used as a fashion pattern name) are listed.
+    offDomainMarker: /(?:家具|机|デスク|椅子|チェア|棚|ラック|テーブル|ソファ|furniture|(?:side|coffee|dining|center)\s*table|\bchair\b|\bdesk\b|\bsofa\b|船用品|船舶)/iu
   },
   {
     categories: new Set(['rice-cooker']),
@@ -2463,10 +2470,20 @@ const DOMAIN_FAMILIES = [
   }
 ];
 
+// 2026-08-05 v3.1 report: even after the "other"-bypass fix above, a
+// furniture listing titled 'Wood Side Table Modern Furniture Fashion Home
+// Decor' still survived a カットソー search - its marketing copy happens to
+// contain "Fashion", which satisfies the family.marker positive test even
+// though the product is unambiguously off-domain. A positive keyword match
+// alone is not sufficient signal on real marketplace listings, which are
+// frequently cross-tagged with generic marketing words. offDomainMarker is
+// checked first and, when it hits, disqualifies the candidate regardless of
+// any incidental positive marker match.
 function isPlausiblyInRequestedDomain(requested, candidateText) {
   const family = DOMAIN_FAMILIES.find(({ categories }) =>
     [...requested].some((category) => categories.has(category)));
   if (!family) return true;
+  if (family.offDomainMarker?.test(candidateText)) return false;
   return family.marker.test(candidateText);
 }
 
@@ -2673,7 +2690,21 @@ export function filterCategoryMismatches(query, candidates = []) {
     screenSize: tabletScreenSize(query),
     generation: tabletGeneration(query)
   };
+  // Teacher Dataset connection (2026-08-05 v3.1): when the query exactly
+  // matches a committed teacher-dataset entry (evaluation/teacher-dataset/
+  // *.json), its GPT/human-authored excluded_conditions are enforced against
+  // every candidate before any of the category-specific checks below run.
+  // Only fires on an exact/normalized match, so non-matching queries are
+  // unaffected.
+  const teacherEntry = lookupTeacherDatasetEntry(query);
+  const teacherExcludedTerms = (teacherEntry?.excluded_conditions || [])
+    .map((term) => String(term || '').normalize('NFKC').toLowerCase())
+    .filter(Boolean);
   return candidates.filter((candidate) => {
+    if (teacherExcludedTerms.length) {
+      const candidateText = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`.normalize('NFKC').toLowerCase();
+      if (teacherExcludedTerms.some((term) => candidateText.includes(term))) return false;
+    }
     if (bentoDividerIntent) return !isBentoDividerMismatch(candidate);
     if (smartWatchBandIntent) return !isSmartWatchBandMismatch(candidate, smartWatchBand);
     if (phoneScreenProtectorIntent) return !isPhoneScreenProtectorMismatch(candidate, phoneScreenProtector);
@@ -2800,6 +2831,14 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
   const requested = new Set(groups.map((group) => group.category).filter((category) => !CATEGORY_MODIFIERS.has(category)));
   const colorPatterns = query ? requestedColorPatterns(query) : [];
   const relevanceScore = (candidate) => apparelRelevanceScore(query, requested, colorPatterns, candidate);
+  // 2026-08-05 v3.1 instructions: a category-score of 0 must mean 0 results,
+  // not merely "ranked last" - filterCategoryMismatches is the primary gate,
+  // but this is a second line of defense against any candidate whose text
+  // slips past it (e.g. via a stray marketing-copy keyword collision). Only
+  // applied when the query actually requests an apparel-adjacent category -
+  // apparelRelevanceScore returns an all-zero breakdown for every other
+  // category, which is not a mismatch signal and must not exclude anything.
+  const apparelDomainRequested = [...requested].some((category) => APPAREL_ADJACENT_DOMAIN_CATEGORIES.has(category));
   const merged = new Map();
   for (const candidate of [...baseCandidates, ...indexedCandidates]) {
     const key = String(candidate?.asin || candidate?.record_key || '').trim();
@@ -2825,6 +2864,7 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
   }
   return [...merged.values()]
     .map((candidate, position) => ({ candidate, position, score: relevanceScore(candidate) }))
+    .filter(({ score }) => !apparelDomainRequested || score.breakdown.category > 0)
     .sort((left, right) =>
       Number(hasMerchantOffer(right.candidate)) -
         Number(hasMerchantOffer(left.candidate)) ||
