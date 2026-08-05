@@ -20,6 +20,7 @@ import { searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shoppin
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
+import { analyzeChatTurn } from './ai-chat-intent.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -245,6 +246,21 @@ export function validateKnowledgeRequest(payload) {
     consent: true, attribution,
     traffic_class: classifyGrowthTraffic(attribution)
   };
+}
+
+// HOSHILU AI Chat (2026-08-05): shares the same session/Turnstile/consent
+// gate as /api/knowledge rather than inventing a separate auth path.
+export function validateChatRequest(payload) {
+  payload = payload || {};
+  const sessionId = String(payload.session_id || '').trim();
+  const turnstileToken = String(payload.turnstile_token || '').trim();
+  if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
+  if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
+  if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
+  const history = Array.isArray(payload.history) ? payload.history.slice(0, 8) : [];
+  if (!history.length) throw new Error('CHAT_HISTORY_EMPTY');
+  const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
+  return { history, session_id: sessionId, turnstile_token: turnstileToken, language, consent: true };
 }
 
 export function getEnvironmentReadiness(env = {}) {
@@ -1135,6 +1151,33 @@ export function interleaveCandidatesBySource(groups = []) {
   return result;
 }
 
+// HOSHILU AI Chat (2026-08-05, CTO instruction: "少ないチャットで各モールから
+// 希望にそう商品を提示"): the chat itself never returns a product - it only
+// decides whether one more clarifying question is worth the cost, or hands
+// back a refined_query for the client to submit to the existing, unchanged
+// /api/knowledge pipeline (Teacher Dataset connection, ranking, all
+// marketplaces). Question text is never logged, matching /api/knowledge's
+// existing "question body is not stored in logs" policy.
+async function handleAiChatApi(request, env) {
+  try {
+    const requestOrigin = request.headers.get('origin');
+    const ownOrigin = new URL(request.url).origin;
+    if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+    const length = Number(request.headers.get('content-length') || 0);
+    if (length > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
+    const input = validateChatRequest(await request.json());
+    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    const result = await analyzeChatTurn(input.history, input.language, env, fetch);
+    return Response.json({ ok: true, result }, {
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+    });
+  } catch (error) {
+    const clientErrors = ['CONSENT_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'CHAT_HISTORY_EMPTY', 'TURNSTILE_VERIFICATION_FAILED'];
+    const status = clientErrors.includes(error.message) ? 400 : 500;
+    return Response.json({ ok: false, error: error.message || 'CHAT_FAILED' }, { status });
+  }
+}
+
 async function handleKnowledgeApi(request, env, ctx) {
   try {
     const requestOrigin = request.headers.get('origin');
@@ -1394,6 +1437,7 @@ export default {
     if (sellerResponse) return sellerResponse;
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
+    if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env);
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
