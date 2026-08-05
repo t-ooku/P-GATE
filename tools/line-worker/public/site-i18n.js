@@ -24,6 +24,10 @@ Object.assign(messages.JA,{'social.officialTitle':'ホシル公式アカウン�
 Object.assign(messages.EN,{'social.officialTitle':'Official HOSHILU accounts','social.officialLead':'Follow our official accounts for new features and useful updates.','social.line':'Official LINE','social.instagram':'Official Instagram','social.x':'Official X'});
 Object.assign(messages.ZH,{'social.officialTitle':'HOSHILU 官方账号','social.officialLead':'通过官方账号获取新功能和实用资讯。','social.line':'官方 LINE','social.instagram':'官方 Instagram','social.x':'官方 X'});
 Object.assign(messages.KO,{'social.officialTitle':'HOSHILU 공식 계정','social.officialLead':'새로운 기능과 유용한 소식을 공식 계정에서 전해 드립니다.','social.line':'공식 LINE','social.instagram':'공식 Instagram','social.x':'공식 X'});
+Object.assign(messages.JA,{'insight.diffNote':'SALE RADARは市場全体のセール情報です。ほしっとくは、保存した商品だけの販売開始・値下げ・再入荷・クーポンをお知らせします。'});
+Object.assign(messages.EN,{'insight.diffNote':'SALE RADAR covers sales across the whole market. Saved-item alerts only notify you about the items you saved — availability, price drops, restocks, and coupons.'});
+Object.assign(messages.ZH,{'insight.diffNote':'SALE RADAR 显示整个市场的促销信息。「稍后再看」的提醒仅针对您保存的商品，通知开售、降价、补货和优惠券。'});
+Object.assign(messages.KO,{'insight.diffNote':'SALE RADAR는 시장 전체의 세일 정보를 보여줍니다. 저장 항목 알림은 저장하신 상품에 대해서만 판매 시작·가격 인하·재입고·쿠폰을 알려드립니다.'});
 function detect(){const saved=localStorage.getItem('mygate_language');if(LANGUAGES[saved])return saved;const value=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();return value.startsWith('en')?'EN':value.startsWith('zh')?'ZH':value.startsWith('ko')?'KO':'JA';}
 function t(key,language=detect()){return messages[language]?.[key]||messages.JA[key]||key;}
 function apply(language=detect()){const selected=LANGUAGES[language]?language:'JA';localStorage.setItem('mygate_language',selected);document.documentElement.lang=LANGUAGES[selected];document.querySelectorAll('[data-i18n]').forEach(node=>{node.textContent=t(node.dataset.i18n,selected);});document.querySelectorAll('[data-language-select]').forEach(select=>{select.value=selected;});return selected;}
