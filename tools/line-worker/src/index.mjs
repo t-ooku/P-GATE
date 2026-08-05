@@ -6,6 +6,7 @@ import { handleMemberRoutes, lineLoginConfigured } from './member-auth.mjs';
 import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
+import { lookupTeacherDatasetEntry } from './search-quality/teacher-dataset-lookup.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
 import {
   buildDeviceAccessorySearchKeywords,
@@ -686,6 +687,15 @@ export function buildAmazonSearchKeywords(query) {
   const asinTerms = String(query || '').toUpperCase().match(/\bB[A-Z0-9]{9}\b/g) || [];
   const cleaned = stripSentencePunctuation(redactSearchPersonalData(query));
   if (!cleaned) return '';
+  // Teacher Dataset connection (2026-08-05 v3.1): a query that exactly
+  // matches a committed teacher-dataset entry (see
+  // evaluation/teacher-dataset/*.json, compiled by
+  // scripts/compile-teacher-dataset-rules.mjs) uses its GPT/human-authored
+  // search terms directly instead of the regex-based builders below. This
+  // only fires on an exact/normalized match, so it cannot change behavior
+  // for any query that is not literally one of the authored teacher entries.
+  const teacherEntry = lookupTeacherDatasetEntry(query);
+  if (teacherEntry?.search_terms?.ja?.length) return teacherEntry.search_terms.ja.join(' ');
   const specializedKeywords = buildMarketplaceSearchKeywords(cleaned, 'AMAZON_JP');
   if (/バラン/u.test(specializedKeywords)) return specializedKeywords;
   const structuredTerms = structuredMarketplaceTerms(cleaned);
@@ -767,6 +777,10 @@ export function buildRakutenSearchKeywords(query) {
     .replace(/\s+/gu, ' ')
     .trim());
   if (!cleaned) return '';
+  // Teacher Dataset connection (2026-08-05 v3.1) - see the matching comment
+  // in buildAmazonSearchKeywords above.
+  const teacherEntry = lookupTeacherDatasetEntry(query);
+  if (teacherEntry?.search_terms?.ja?.length) return teacherEntry.search_terms.ja.join(' ');
   const specializedKeywords = buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP');
   if (/バラン/u.test(specializedKeywords)) return specializedKeywords;
   if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(cleaned)) {

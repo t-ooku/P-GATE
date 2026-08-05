@@ -1,0 +1,2209 @@
+[
+  {
+    "query_text": "カットソー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "カットソー(トップス)を探している",
+    "ideal_answer": "カットソー(トップス)",
+    "reason": "単一カテゴリの明確な衣類名。2026-08-05に船用品・家具が誤って上位表示された既知バグの直接対象クエリ。",
+    "category": "tops",
+    "search_terms": {
+      "ja": [
+        "カットソー",
+        "レディース カットソー"
+      ],
+      "en": [
+        "cut and sewn top"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "船用品",
+      "家具",
+      "船舶"
+    ],
+    "confidence": 0.9,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "透明ワイヤレスイヤホン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "透明な完全ワイヤレスイヤホンを探している",
+    "ideal_answer": "透明な完全ワイヤレスイヤホン",
+    "reason": "色属性(透明)とカテゴリ(完全ワイヤレスイヤホン)が明確。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "透明 ワイヤレスイヤホン",
+        "クリア 完全ワイヤレスイヤホン"
+      ],
+      "en": [
+        "transparent true wireless earbuds"
+      ],
+      "ko": [
+        "투명 무선이어폰"
+      ],
+      "zh": [
+        "透明真无线耳机"
+      ]
+    },
+    "excluded_conditions": [
+      "有線"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "韓国っぽいバッグ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "韓国系デザインのバッグを探している",
+    "ideal_answer": "韓国系デザインのバッグ",
+    "reason": "デザイン系統(韓国っぽい)とカテゴリ(バッグ)が明確。",
+    "category": "bag",
+    "search_terms": {
+      "ja": [
+        "韓国っぽい バッグ",
+        "韓国系 バッグ"
+      ],
+      "en": [
+        "korean style bag"
+      ],
+      "ko": [
+        "한국 스타일 가방"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "SNSで見た透明なやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。色属性(透明)しか手がかりがなく、カテゴリ情報がゼロ",
+    "ideal_answer": "透明な何をお探しですか？(スマホケース、イヤホン、傘、水筒など)",
+    "reason": "色属性のみでカテゴリ不明のultra_ambiguous例。断定は誤答リスクが高く確認質問が正しい理想回答。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "旅行で荷物を小さくしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "旅行用の荷物圧縮グッズを探している",
+    "ideal_answer": "圧縮バッグ・トラベルポーチ・パッキングキューブ",
+    "reason": "用途(旅行の荷物圧縮)からカテゴリを推定できる例。product-types.jsonに直接該当語がない用途ベースクエリ。",
+    "category": "travel-packing",
+    "search_terms": {
+      "ja": [
+        "圧縮バッグ 旅行用",
+        "トラベルポーチ パッキングキューブ"
+      ],
+      "en": [
+        "travel packing cubes",
+        "compression bag"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "名前が分からないけど透明なやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。色属性(透明)のみで対象不明",
+    "ideal_answer": "透明な何をお探しですか？(スマホケース、イヤホン、傘、水筒など)",
+    "reason": "「SNSで見た透明なやつ」と同型のultra_ambiguous例。確認質問が理想回答。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "1万円以下で軽いモバイルバッテリー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "予算1万円以内かつ軽量なモバイルバッテリーを探している",
+    "ideal_answer": "1万円以下の軽量モバイルバッテリー",
+    "reason": "価格上限と重量属性が明確。2026-08-05の価格消失バグの対象クエリ。",
+    "category": "power-bank",
+    "search_terms": {
+      "ja": [
+        "モバイルバッテリー 軽量 1万円以下",
+        "軽い モバイルバッテリー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "重い"
+    ],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "一人暮らし用の炊飯器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "一人暮らし向けの小容量炊飯器を探している",
+    "ideal_answer": "3合炊き以下のコンパクト炊飯器",
+    "reason": "対象者(一人暮らし)からカテゴリ・容量を推定する用途ベースクエリ。",
+    "category": "rice-cooker",
+    "search_terms": {
+      "ja": [
+        "一人暮らし 炊飯器",
+        "3合炊き コンパクト炊飯器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "白いスニーカー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "白色のスニーカーを探している",
+    "ideal_answer": "白色のスニーカー",
+    "reason": "色・カテゴリともに明確なrich例。",
+    "category": "shoes",
+    "search_terms": {
+      "ja": [
+        "白 スニーカー",
+        "ホワイト スニーカー"
+      ],
+      "en": [
+        "white sneakers"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.9,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "折りたたみ日傘",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "折りたたみ式の日傘を探している",
+    "ideal_answer": "折りたたみ式日傘",
+    "reason": "機能属性(折りたたみ)とカテゴリ(日傘)が明確。",
+    "category": "parasol",
+    "search_terms": {
+      "ja": [
+        "折りたたみ日傘",
+        "折り畳み 日傘"
+      ],
+      "en": [
+        "foldable parasol"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "羽根なし扇風機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "羽根のない扇風機を探している",
+    "ideal_answer": "ブレードレス(羽根なし)扇風機",
+    "reason": "機能属性(羽根なし)が明確。",
+    "category": "fan",
+    "search_terms": {
+      "ja": [
+        "羽根なし扇風機",
+        "ブレードレス扇風機"
+      ],
+      "en": [
+        "bladeless fan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ノートパソコン用マウスパッド",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ノートパソコンで使うマウスパッドを探している",
+    "ideal_answer": "ノートパソコン用マウスパッド",
+    "reason": "用途・カテゴリが明確。",
+    "category": "mouse-pad",
+    "search_terms": {
+      "ja": [
+        "マウスパッド ノートパソコン用"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "写真がすぐ印刷できるプリンター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "インスタント写真プリンターを探している",
+    "ideal_answer": "インスタントフォトプリンター",
+    "reason": "機能(その場で印刷)からカテゴリを推定。",
+    "category": "photo-printer",
+    "search_terms": {
+      "ja": [
+        "写真プリンター",
+        "インスタントプリンター"
+      ],
+      "en": [
+        "instant photo printer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "防水のワイヤレスイヤホン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "完全防水のワイヤレスイヤホンを探している",
+    "ideal_answer": "IPX7以上の防水ワイヤレスイヤホン",
+    "reason": "防水は生活防水と区別が必要な属性。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "防水 ワイヤレスイヤホン",
+        "ipx7 イヤホン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "防滴",
+      "生活防水"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "子ども用リュック 通園",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "通園向けの子ども用リュックを探している",
+    "ideal_answer": "通園向け子ども用リュック",
+    "reason": "対象者(子ども・通園)が明確。",
+    "category": "backpack",
+    "search_terms": {
+      "ja": [
+        "子ども用リュック 通園",
+        "キッズリュック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "大人用"
+    ],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "日本で使えるアメリカのドライヤー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "100V対応で日本国内でも使える米国製ドライヤーを探している",
+    "ideal_answer": "100V対応のドライヤー(米国仕様からの変換不要品)",
+    "reason": "電圧互換性という見落としやすい属性が必須。",
+    "category": "hair-dryer",
+    "search_terms": {
+      "ja": [
+        "ドライヤー 100v対応",
+        "日本で使える ドライヤー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "推し活で使える小さい写真プリンター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "携帯できる小型フォトプリンターを探している",
+    "ideal_answer": "小型・携帯用フォトプリンター",
+    "reason": "用途(推し活)とサイズ属性(小さい)からカテゴリを推定。",
+    "category": "photo-printer",
+    "search_terms": {
+      "ja": [
+        "小型 フォトプリンター",
+        "携帯用 写真プリンター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ロボット掃除機の交換フィルター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ロボット掃除機用の消耗品フィルターを探している",
+    "ideal_answer": "ロボット掃除機用交換フィルター",
+    "reason": "本体ではなく消耗品を求めている点が重要な区別。",
+    "category": "robot-vacuum-filter",
+    "search_terms": {
+      "ja": [
+        "ロボット掃除機 フィルター",
+        "ルンバ フィルター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ロボット掃除機 本体"
+    ],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "iPhone15用の光るケース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "iPhone15対応でLED発光するケースを探している",
+    "ideal_answer": "iPhone15対応 LED発光ケース",
+    "reason": "機種互換性と機能属性(光る)の両方が必須。",
+    "category": "phone-case",
+    "search_terms": {
+      "ja": [
+        "iphone15 光るケース",
+        "iphone 15 led ケース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "車の小さい部品 名前がわからない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。車部品というカテゴリ以外の手がかりがない",
+    "ideal_answer": "どの部分の部品か、写真や場所を教えてください(エンジン周り、内装、配線など)",
+    "reason": "カテゴリは推定できるが具体的な部品が特定不能なambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "コードなしのマウス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ワイヤレスマウスを探している",
+    "ideal_answer": "ワイヤレスマウス",
+    "reason": "言い換え表現(コードなし=ワイヤレス)の吸収。",
+    "category": "wireless-mouse",
+    "search_terms": {
+      "ja": [
+        "ワイヤレスマウス",
+        "コードレスマウス"
+      ],
+      "en": [
+        "wireless mouse"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "有線"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "お風呂で使える防水スピーカー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "完全防水のお風呂用スピーカーを探している",
+    "ideal_answer": "IPX7以上の防水Bluetoothスピーカー",
+    "reason": "利用シーン(お風呂)から防水等級が必須と推定。",
+    "category": "speaker",
+    "search_terms": {
+      "ja": [
+        "防水スピーカー お風呂用",
+        "ipx7 スピーカー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "防滴"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "加湿器 卓上 小型",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "デスクに置ける小型加湿器を探している",
+    "ideal_answer": "卓上サイズの小型加湿器",
+    "reason": "設置場所(卓上)とサイズ属性が明確。",
+    "category": "humidifier",
+    "search_terms": {
+      "ja": [
+        "卓上 加湿器",
+        "小型加湿器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ノースリーブのワンピース 白",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "白色のノースリーブワンピースを探している",
+    "ideal_answer": "白色 ノースリーブワンピース",
+    "reason": "袖丈・色・カテゴリが明確なrich例。",
+    "category": "dress",
+    "search_terms": {
+      "ja": [
+        "ノースリーブ ワンピース 白"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "くるぶし丈の靴下",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "くるぶし丈の靴下を探している",
+    "ideal_answer": "くるぶし丈ソックス",
+    "reason": "丈のバリエーション属性が明確。",
+    "category": "socks",
+    "search_terms": {
+      "ja": [
+        "くるぶし丈 靴下",
+        "スニーカーソックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "子供の写真がすぐ印刷できるカメラ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "子ども向けのインスタントカメラを探している",
+    "ideal_answer": "キッズ向けインスタントカメラ",
+    "reason": "対象者(子ども)と機能(その場で印刷)の両方が属性。",
+    "category": "photo-printer",
+    "search_terms": {
+      "ja": [
+        "キッズ インスタントカメラ",
+        "子供用 プリントカメラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "マンションのベランダに置けるパラソル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "省スペース設置向けの日よけパラソルを探している",
+    "ideal_answer": "コンパクトなベランダ用パラソル",
+    "reason": "設置場所(ベランダ)からサイズ制約を推定。",
+    "category": "parasol",
+    "search_terms": {
+      "ja": [
+        "ベランダ パラソル",
+        "コンパクト パラソル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ガーデンパラソル"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "アイフォン15専用ケース 純正っぽいやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "iPhone15対応で純正に近い質感のケースを探している",
+    "ideal_answer": "iPhone15対応 高品質・純正風ケース",
+    "reason": "機種互換性と質感の言い換え(純正っぽい)を含む。",
+    "category": "phone-case",
+    "search_terms": {
+      "ja": [
+        "iphone15 ケース 純正風"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "互換品",
+      "ノーブランド"
+    ],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ゲーミングモニター 27インチ 144hz",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "27インチ144Hzのゲーミングモニターを探している",
+    "ideal_answer": "27インチ・144Hz対応ゲーミングモニター",
+    "reason": "サイズ・リフレッシュレートが明示された仕様特定クエリ。",
+    "category": "gaming-monitor",
+    "search_terms": {
+      "ja": [
+        "ゲーミングモニター 27インチ 144hz"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.9,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "メカニカルキーボード 赤軸",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "赤軸のメカニカルキーボードを探している",
+    "ideal_answer": "赤軸メカニカルキーボード",
+    "reason": "軸の種類という専門属性が明確。",
+    "category": "mechanical-keyboard",
+    "search_terms": {
+      "ja": [
+        "メカニカルキーボード 赤軸"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "青軸",
+      "茶軸"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ノイズキャンセリングイヤホン Bluetooth",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ノイズキャンセリング機能付きBluetoothイヤホンを探している",
+    "ideal_answer": "ANC対応Bluetoothイヤホン",
+    "reason": "機能属性(ノイキャン)とBluetooth接続が明確。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "ノイズキャンセリング イヤホン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "有線"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ポータブルSSD 1TB",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "1TB容量のポータブルSSDを探している",
+    "ideal_answer": "1TBポータブルSSD",
+    "reason": "容量が明示された仕様特定クエリ。",
+    "category": "portable-ssd",
+    "search_terms": {
+      "ja": [
+        "ポータブルssd 1tb"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.9,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ドライブレコーダー 前後2カメラ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "前後2カメラ式のドライブレコーダーを探している",
+    "ideal_answer": "前後2カメラ ドライブレコーダー",
+    "reason": "構成(前後2カメラ)が明示。",
+    "category": "dashcam",
+    "search_terms": {
+      "ja": [
+        "ドライブレコーダー 前後2カメラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ペットに餌をあげるカメラ付き自動給餌器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "カメラ付き自動給餌器を探している",
+    "ideal_answer": "カメラ付き自動給餌器",
+    "reason": "機能・カテゴリが明確。",
+    "category": "pet-feeder",
+    "search_terms": {
+      "ja": [
+        "自動給餌器 カメラ付き"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "脱毛器 家庭用",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家庭用IPL脱毛器を探している",
+    "ideal_answer": "家庭用IPL光脱毛器",
+    "reason": "利用シーン(家庭用)からカテゴリ推定。",
+    "category": "ipl-hair-removal",
+    "search_terms": {
+      "ja": [
+        "家庭用脱毛器",
+        "ipl脱毛器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "折りたたみ電動自転車",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "折りたたみ式の電動アシスト自転車を探している",
+    "ideal_answer": "折りたたみ電動アシスト自転車",
+    "reason": "機能属性(折りたたみ)とカテゴリが明確。",
+    "category": "folding-electric-bike",
+    "search_terms": {
+      "ja": [
+        "折りたたみ電動自転車"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ポータブル電源 車中泊用",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車中泊で使えるポータブル電源を探している",
+    "ideal_answer": "大容量ポータブル電源",
+    "reason": "利用シーン(車中泊)から容量要件を推定。",
+    "category": "portable-power-station",
+    "search_terms": {
+      "ja": [
+        "ポータブル電源 車中泊"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "除湿機 コンプレッサー式",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "コンプレッサー式の除湿機を探している",
+    "ideal_answer": "コンプレッサー式除湿機",
+    "reason": "方式(コンプレッサー式)が明確な仕様属性。",
+    "category": "dehumidifier",
+    "search_terms": {
+      "ja": [
+        "除湿機 コンプレッサー式"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "デシカント式"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "スタンディングデスク 電動",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電動昇降式のスタンディングデスクを探している",
+    "ideal_answer": "電動昇降スタンディングデスク",
+    "reason": "機能属性(電動昇降)が明確。",
+    "category": "electric-standing-desk",
+    "search_terms": {
+      "ja": [
+        "スタンディングデスク 電動昇降"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "人間工学オフィスチェア",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "人間工学に基づいたオフィスチェアを探している",
+    "ideal_answer": "エルゴノミクスオフィスチェア",
+    "reason": "設計思想(人間工学)というカテゴリ属性。",
+    "category": "ergonomic-office-chair",
+    "search_terms": {
+      "ja": [
+        "エルゴノミクス チェア",
+        "人間工学 椅子"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "スマートロック 後付け",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "既存のドアに後付けできるスマートロックを探している",
+    "ideal_answer": "後付け型スマートロック",
+    "reason": "設置方式(後付け)が重要な区別属性。",
+    "category": "retrofit-smart-lock",
+    "search_terms": {
+      "ja": [
+        "スマートロック 後付け"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "圧力IH炊飯器 5合",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "5合炊きの圧力IH炊飯器を探している",
+    "ideal_answer": "5合炊き圧力IH炊飯器",
+    "reason": "容量・方式が明示された仕様特定クエリ。",
+    "category": "rice-cooker",
+    "search_terms": {
+      "ja": [
+        "圧力ih炊飯器 5合"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "夕焼けみたいなライト",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "サンセット効果のプロジェクションライトを探している",
+    "ideal_answer": "サンセットランプ(夕焼け風投影ライト)",
+    "reason": "比喩表現(夕焼けみたい)から具体的商品名への変換が必要。",
+    "category": "lamp",
+    "search_terms": {
+      "ja": [
+        "サンセットランプ",
+        "夕焼け ライト"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ぬいぐるみみたいなバッグチャーム",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ぬいぐるみ型のバッグチャームを探している",
+    "ideal_answer": "ぬいぐるみ型バッグチャーム",
+    "reason": "形状・カテゴリの言い換え。",
+    "category": "bag-charm",
+    "search_terms": {
+      "ja": [
+        "ぬいぐるみ バッグチャーム"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "正規品のワイヤレスイヤホン 互換品じゃない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "純正の完全ワイヤレスイヤホンを探している(互換品は除外)",
+    "ideal_answer": "メーカー純正の完全ワイヤレスイヤホン",
+    "reason": "正規品/互換品という信頼性属性の除外条件が明示。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "正規品 ワイヤレスイヤホン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "互換品",
+      "類似品",
+      "ノーブランド"
+    ],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ボートネックのカットソー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ボートネック仕様のカットソーを探している",
+    "ideal_answer": "ボートネックカットソー",
+    "reason": "ネックライン(ボートネック)は実在のファッション用語であり船具ではない。誤って除外しないための確認事例。",
+    "category": "tops",
+    "search_terms": {
+      "ja": [
+        "ボートネック カットソー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "マリンボーダーのカットソー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "マリンボーダー柄のカットソーを探している",
+    "ideal_answer": "マリンボーダーカットソー",
+    "reason": "柄名(マリンボーダー)は実在のファッション用語であり船具ではない。誤って除外しないための確認事例。",
+    "category": "tops",
+    "search_terms": {
+      "ja": [
+        "マリンボーダー カットソー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "黒いレザーの長財布",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "黒色レザーの長財布を探している",
+    "ideal_answer": "黒色レザー長財布",
+    "reason": "色・素材・形状が明確なrich例。",
+    "category": "wallet",
+    "search_terms": {
+      "ja": [
+        "黒 レザー 長財布"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ゲームにつなぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。ゲーム機本体・コントローラー・ケーブル・ヘッドセットのいずれも候補になり得る",
+    "ideal_answer": "どのゲーム機とつなぎますか？(Switch/PS/スマホなど)コントローラーですか、それともイヤホン・ケーブルですか？",
+    "reason": "product_typeを一意に確定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "よく分からないけど便利そうなキッチン用品",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。カテゴリ・機能ともに手がかりが乏しい",
+    "ideal_answer": "どんな作業を楽にしたいですか？(切る、混ぜる、保存するなど)",
+    "reason": "カテゴリが全く特定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.15,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "あの白いやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。色属性(白)のみで対象不明",
+    "ideal_answer": "白い何をお探しですか？(スニーカー、イヤホン、水筒など)",
+    "reason": "子どもの検索は色や見た目のみを手がかりにすることが多い典型例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ゲームにつなぐやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。ゲーム関連の周辺機器全般が候補",
+    "ideal_answer": "どのゲーム機とつなぎますか？コントローラーですか、それともイヤホン・ケーブルですか？",
+    "reason": "子どもは製品名でなく用途で説明する典型例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ママが持ってるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。誰かが持っている物という手がかりのみ",
+    "ideal_answer": "ママが持っているものの色や使い方を教えてください",
+    "reason": "所有者を手がかりにした社会的文脈のultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.15,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ぴかぴかするイヤホン",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "光る完全ワイヤレスイヤホンを探している",
+    "ideal_answer": "LEDが光る完全ワイヤレスイヤホン",
+    "reason": "「ぴかぴか」はLED_LIGHT_UP属性への子ども特有の言い換え。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "光る イヤホン",
+        "led 完全ワイヤレスイヤホン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "YouTubeで見たやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。動画で見た商品という手がかりのみ",
+    "ideal_answer": "動画で見たものの色・形・使い方を教えてください",
+    "reason": "情報源(YouTube)のみでカテゴリ情報がないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.15,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "学校で使うやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。文房具・かばん等の学用品全般が候補",
+    "ideal_answer": "どんな時に使いますか？(勉強道具、体育用品、給食用品など)",
+    "reason": "利用シーン(学校)のみでカテゴリが広すぎるambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "名前わかんない",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "完全に不明。手がかりが皆無",
+    "ideal_answer": "見た目、色、大きさ、使い方のどれか一つでも教えてください",
+    "reason": "手がかりゼロのultra_ambiguous例。最初の確認質問が必須。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.05,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "透明なやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。色属性(透明)のみ",
+    "ideal_answer": "透明な何をお探しですか？(スマホケース、傘、水筒など)",
+    "reason": "色属性のみでカテゴリ情報がないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "黒いイヤホン",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "黒色のイヤホンを探している",
+    "ideal_answer": "黒色のイヤホン(有線・完全ワイヤレス問わず)",
+    "reason": "色属性とカテゴリの両方が明確なrich例。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "黒 イヤホン",
+        "ブラック イヤホン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ちっちゃいやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。サイズ属性(小さい)のみ",
+    "ideal_answer": "小さい何をお探しですか？(おもちゃ、文房具、ガジェットなど)",
+    "reason": "サイズ属性のみでカテゴリ情報がないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.15,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "パパが使ってるひげそり",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "電気シェーバーを探している",
+    "ideal_answer": "電気シェーバー(メンズ用)",
+    "reason": "所有者(パパ)からカテゴリを推定できる例。",
+    "category": "electric-shaver",
+    "search_terms": {
+      "ja": [
+        "電気シェーバー メンズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "おともだちが持ってるピンクのケース",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ピンク色のスマホケースを推測",
+    "ideal_answer": "ピンク色のスマホケース",
+    "reason": "色属性は明確だが対象物はスマホケースと推測される中程度のambiguous例。",
+    "category": "phone-case",
+    "search_terms": {
+      "ja": [
+        "ピンク スマホケース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "光る靴",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "LEDが光る子ども靴を探している",
+    "ideal_answer": "LED発光するキッズシューズ",
+    "reason": "機能属性(光る)とカテゴリ(靴)が明確。",
+    "category": "shoes",
+    "search_terms": {
+      "ja": [
+        "光る靴 キッズ",
+        "led シューズ 子供"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "アニメに出てくるみたいなカバン",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。アニメ風デザインという抽象的手がかりのみ",
+    "ideal_answer": "どのアニメのどんなデザインか教えてください(色、キャラクターなど)",
+    "reason": "抽象的な意匠表現のみでカテゴリ以外が特定不能なambiguous例。",
+    "category": "bag",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "水にぬれても平気なやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。防水製品全般が候補",
+    "ideal_answer": "何を水に濡らしたいですか？(スピーカー、イヤホン、時計など)",
+    "reason": "防水という属性のみでカテゴリが特定できないambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ゲームのコントローラーみたいなやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ゲームコントローラー、またはその形の別製品",
+    "ideal_answer": "ゲームコントローラー(形が似た別製品の可能性もあり)",
+    "reason": "形状の比喩からカテゴリを推定するが誤認の可能性もあるambiguous例。",
+    "category": "game-controller",
+    "search_terms": {
+      "ja": [
+        "ゲームコントローラー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "お兄ちゃんの部屋にあるひかるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。光る家電・ガジェット全般が候補",
+    "ideal_answer": "光る何をお探しですか？(ライト、ゲーミング機器、時計など)",
+    "reason": "所有者・場所・機能(光る)を手がかりにしたultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.1,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "ランドセルみたいな形のリュック",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ランドセル型デザインのリュックを探している",
+    "ideal_answer": "ランドセル型リュック",
+    "reason": "形状の言い換え(ランドセルみたいな形)からカテゴリを推定。",
+    "category": "backpack",
+    "search_terms": {
+      "ja": [
+        "ランドセル型 リュック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "キラキラしてるシール",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ラメ・ホログラム加工のシールを探している",
+    "ideal_answer": "キラキラ(ホログラム/ラメ)加工のシール",
+    "reason": "質感属性(キラキラ)からカテゴリを推定。",
+    "category": "sticker",
+    "search_terms": {
+      "ja": [
+        "キラキラ シール",
+        "ホログラム シール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "カメラみたいな形のおもちゃ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "カメラ型のおもちゃを探している",
+    "ideal_answer": "カメラ型のキッズトイ",
+    "reason": "形状の比喩(カメラみたいな形)からカテゴリを推定。",
+    "category": "toy-camera",
+    "search_terms": {
+      "ja": [
+        "カメラ型 おもちゃ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "テレビに映すやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "スマホやPCの画面をテレビへ映したい",
+    "ideal_answer": "お使いの機器は何ですか？HDMIケーブルで直接つなぎますか、それともWi-Fiで映す機器(Chromecast等)をお探しですか？",
+    "reason": "手段(有線/無線)が不明なため断定は誤答リスクが高いambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "充電する線",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "充電ケーブルを探している",
+    "ideal_answer": "充電ケーブル(USBケーブル)",
+    "reason": "「線」は高齢者層に多い「ケーブル」の言い換え。",
+    "category": "cable",
+    "search_terms": {
+      "ja": [
+        "充電ケーブル",
+        "usbケーブル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "軽い掃除機",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "軽量な掃除機を探している",
+    "ideal_answer": "軽量なコードレス掃除機",
+    "reason": "高齢者は重量が購入基準の中心になりやすい。",
+    "category": "vacuum",
+    "search_terms": {
+      "ja": [
+        "軽量 掃除機",
+        "軽い コードレス掃除機"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "重い",
+      "業務用"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "よく見えるライト",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "明るい読書灯・拡大鏡付きライトを探している",
+    "ideal_answer": "高輝度LEDライト(読書灯・拡大鏡付きなど)",
+    "reason": "視力を意識した「よく見える」という表現からカテゴリを推定。",
+    "category": "lamp",
+    "search_terms": {
+      "ja": [
+        "高輝度 led ライト",
+        "読書灯"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "文字が大きい電卓",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "表示が大きい電卓を探している",
+    "ideal_answer": "大画面・大型ボタンの電卓",
+    "reason": "視認性を意識した属性(文字が大きい)が明確。",
+    "category": "calculator",
+    "search_terms": {
+      "ja": [
+        "大型電卓",
+        "文字が大きい 電卓"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "血圧を測るやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "家庭用血圧計を探している",
+    "ideal_answer": "家庭用血圧計",
+    "reason": "用途表現から医療機器カテゴリを直接推定できる例。",
+    "category": "blood-pressure-monitor",
+    "search_terms": {
+      "ja": [
+        "血圧計 家庭用"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "音が大きく聞こえる電話",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "着信音・通話音量が大きい電話機を探している",
+    "ideal_answer": "大音量対応の固定電話機",
+    "reason": "聴力を意識した「音が大きく聞こえる」という表現からカテゴリを推定。",
+    "category": "landline-phone",
+    "search_terms": {
+      "ja": [
+        "大音量 電話機",
+        "シニア向け 電話"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "孫と話せるタブレット",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "ビデオ通話が簡単にできるタブレットを探している",
+    "ideal_answer": "ビデオ通話向けの簡単操作タブレット",
+    "reason": "用途(孫とのビデオ通話)からカテゴリと機能要件を推定。",
+    "category": "tablet",
+    "search_terms": {
+      "ja": [
+        "ビデオ通話 タブレット",
+        "シニア向け タブレット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "滑りにくい杖",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "先端が滑りにくい歩行杖を探している",
+    "ideal_answer": "滑り止め加工の歩行杖",
+    "reason": "安全性属性(滑りにくい)が明確。",
+    "category": "walking-cane",
+    "search_terms": {
+      "ja": [
+        "滑り止め 杖",
+        "歩行杖"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "温かいままのお茶が飲める水筒",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "保温性能の高い水筒を探している",
+    "ideal_answer": "高保温タイプの水筒",
+    "reason": "機能属性(保温)を日常表現で説明した例。",
+    "category": "bottle",
+    "search_terms": {
+      "ja": [
+        "保温 水筒",
+        "保温性能 高い 水筒"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "sumaho keesu iphone 15",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "iPhone15用のスマホケースを探している(ローマ字入力)",
+    "ideal_answer": "iPhone15専用スマホケース",
+    "reason": "ローマ字表記(sumaho keesu=スマホケース)の入力例。",
+    "category": "phone-case",
+    "search_terms": {
+      "ja": [
+        "iphone 15 ケース",
+        "iphone15 スマホケース"
+      ],
+      "en": [
+        "iphone 15 case"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "투명 iphone 케이스 15",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "iPhone15用の透明ケースを探している(韓国語)",
+    "ideal_answer": "iPhone15用の透明なスマホケース",
+    "reason": "韓国語母語話者の検索例。",
+    "category": "phone-case",
+    "search_terms": {
+      "ja": [
+        "iphone 15 透明ケース"
+      ],
+      "en": [
+        "clear case iphone 15"
+      ],
+      "ko": [
+        "아이폰15 투명 케이스"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "transparent wireless earbuds korean style",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "韓国風デザインの透明な完全ワイヤレスイヤホンを探している",
+    "ideal_answer": "韓国系デザインの透明な完全ワイヤレスイヤホン",
+    "reason": "英語母語話者/在日外国人の検索例。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "透明 ワイヤレスイヤホン 韓国系"
+      ],
+      "en": [
+        "transparent wireless earbuds korean style"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "充電器 charger USB-C 快速",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "USB-C対応の急速充電器を探している(日中英混在)",
+    "ideal_answer": "USB-C対応急速充電器",
+    "reason": "日本語・中国語・英語混在の入力例。",
+    "category": "charger",
+    "search_terms": {
+      "ja": [
+        "usb-c 急速充電器"
+      ],
+      "en": [
+        "usb-c fast charger"
+      ],
+      "ko": [],
+      "zh": [
+        "type-c快充充电器"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "가벼운 무선 청소기",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "軽量なコードレス掃除機を探している(韓国語)",
+    "ideal_answer": "軽量なコードレス掃除機",
+    "reason": "韓国語での「軽い掃除機」相当の検索例。",
+    "category": "vacuum",
+    "search_terms": {
+      "ja": [
+        "軽量 コードレス掃除機"
+      ],
+      "en": [],
+      "ko": [
+        "가벼운 무선 청소기"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "白色 无线耳机 透明",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "白色または透明の完全ワイヤレスイヤホンを探している(中国語)",
+    "ideal_answer": "白色/透明の完全ワイヤレスイヤホン",
+    "reason": "中国語母語話者の検索例。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "白 透明 ワイヤレスイヤホン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "白色无线耳机",
+        "透明无线耳机"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "kankoku fasshon baggu",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "韓国系ファッションのバッグを探している(ローマ字入力)",
+    "ideal_answer": "韓国系デザインのバッグ",
+    "reason": "ローマ字表記(kankoku fasshon baggu=韓国ファッションバッグ)の入力例。",
+    "category": "bag",
+    "search_terms": {
+      "ja": [
+        "韓国系 ファッション バッグ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "light up phone case for iphone 15",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "iPhone15対応で光るスマホケースを探している(英語)",
+    "ideal_answer": "iPhone15対応 LED発光ケース",
+    "reason": "英語での明確な仕様指定クエリ。",
+    "category": "phone-case",
+    "search_terms": {
+      "ja": [
+        "iphone15 光るケース"
+      ],
+      "en": [
+        "light up phone case iphone 15"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "旅行 packing cube 小さく",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "荷物を小さくまとめる旅行用パッキングキューブを探している(日英混在)",
+    "ideal_answer": "圧縮パッキングキューブ",
+    "reason": "日本語・英語混在の用途ベース検索例。",
+    "category": "travel-packing",
+    "search_terms": {
+      "ja": [
+        "圧縮 パッキングキューブ"
+      ],
+      "en": [
+        "packing cubes compression"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "가볍고 방수되는 보조배터리",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "軽量かつ防水のモバイルバッテリーを探している(韓国語)",
+    "ideal_answer": "軽量・防水対応モバイルバッテリー",
+    "reason": "韓国語での複合属性検索例。",
+    "category": "power-bank",
+    "search_terms": {
+      "ja": [
+        "軽量 防水 モバイルバッテリー"
+      ],
+      "en": [],
+      "ko": [
+        "가벼운 방수 보조배터리"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "iphone 15 ke-su toumei",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "iPhone15用の透明ケースを探している(ローマ字混在)",
+    "ideal_answer": "iPhone15用の透明なスマホケース",
+    "reason": "漢字部分をローマ字化した混在入力例。",
+    "category": "phone-case",
+    "search_terms": {
+      "ja": [
+        "iphone 15 ケース 透明"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "适合iphone15的透明手机壳",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "iPhone15用の透明ケースを探している(中国語)",
+    "ideal_answer": "iPhone15用の透明なスマホケース",
+    "reason": "中国語での明確な機種指定クエリ。",
+    "category": "phone-case",
+    "search_terms": {
+      "ja": [
+        "iphone15 透明ケース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "iphone15透明手机壳"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "small fan usb powered korean brand",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "USB給電式の小型扇風機(韓国ブランド希望)を探している",
+    "ideal_answer": "USB給電の小型扇風機",
+    "reason": "英語での属性(小型・USB給電)指定クエリ。ブランド国籍は参考情報。",
+    "category": "fan",
+    "search_terms": {
+      "ja": [
+        "usb扇風機 小型"
+      ],
+      "en": [
+        "usb powered mini fan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "재입고 알림 받고 싶어요 무선이어폰",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "完全ワイヤレスイヤホンの再入荷通知を希望している",
+    "ideal_answer": "完全ワイヤレスイヤホン(再入荷通知希望)",
+    "reason": "韓国語での通知希望を含む検索例。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "完全ワイヤレスイヤホン"
+      ],
+      "en": [],
+      "ko": [
+        "무선이어폰"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "黑色 轻便 行李箱",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "黒色で軽量なスーツケースを探している(中国語)",
+    "ideal_answer": "黒色・軽量スーツケース",
+    "reason": "中国語での色・重量属性指定クエリ。",
+    "category": "suitcase",
+    "search_terms": {
+      "ja": [
+        "黒 軽量 スーツケース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "黑色轻便行李箱"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "nihon de tsukaeru dorai-ya-",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "日本国内で使える(100V対応)ドライヤーを探している(ローマ字入力)",
+    "ideal_answer": "100V対応ドライヤー",
+    "reason": "電圧互換性への言及をローマ字で行った例。",
+    "category": "hair-dryer",
+    "search_terms": {
+      "ja": [
+        "日本で使える ドライヤー",
+        "100v対応 ドライヤー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "guitar strap made in usa",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "アメリカ製のギターストラップを探している",
+    "ideal_answer": "米国製ギターストラップ",
+    "reason": "英語での明確な原産国指定クエリ。",
+    "category": "guitar-strap",
+    "search_terms": {
+      "ja": [
+        "アメリカ製 ギターストラップ"
+      ],
+      "en": [
+        "guitar strap made in usa"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "선물용 예쁜 포장 미니 가습기",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "ギフト向けのデザイン性が高い小型加湿器を探している(韓国語)",
+    "ideal_answer": "ギフト向け小型加湿器",
+    "reason": "用途(ギフト)とデザイン性を含む韓国語検索例。",
+    "category": "humidifier",
+    "search_terms": {
+      "ja": [
+        "ギフト 小型加湿器"
+      ],
+      "en": [],
+      "ko": [
+        "미니 가습기"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "适合露营的迷你风扇",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "キャンプ向けの小型扇風機を探している(中国語)",
+    "ideal_answer": "アウトドア・キャンプ向け小型扇風機",
+    "reason": "用途(キャンプ)を含む中国語検索例。",
+    "category": "fan",
+    "search_terms": {
+      "ja": [
+        "キャンプ用 小型扇風機"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "露营迷你风扇"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  },
+  {
+    "query_text": "wireless earbuds toumei kankoku fuu",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "韓国風デザインの透明な完全ワイヤレスイヤホンを探している(英日ローマ字混在)",
+    "ideal_answer": "韓国系デザインの透明な完全ワイヤレスイヤホン",
+    "reason": "英語・ローマ字日本語混在の入力例。",
+    "category": "earbuds",
+    "search_terms": {
+      "ja": [
+        "透明 ワイヤレスイヤホン 韓国風"
+      ],
+      "en": [
+        "transparent wireless earbuds"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-06",
+    "authored_updated_date": "2026-08-06"
+  }
+]

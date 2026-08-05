@@ -1,0 +1,1999 @@
+{
+  "generated_at": "2026-08-05T04:29:02.382Z",
+  "source_batches": [
+    "2026-08-06-day1-batch-001.json"
+  ],
+  "entry_count": 99,
+  "entries": [
+    {
+      "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
+      "query_text": "カットソー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tops",
+      "ideal_answer": "カットソー(トップス)",
+      "search_terms": {
+        "ja": [
+          "カットソー",
+          "レディース カットソー"
+        ],
+        "en": [
+          "cut and sewn top"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "船用品",
+        "家具",
+        "船舶"
+      ],
+      "confidence": 0.9,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "670a2cb9dbddf778a42acd9e363aecdcd7d7aac72979eeceb98ac705bfc8bf3f",
+      "query_text": "透明ワイヤレスイヤホン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "earbuds",
+      "ideal_answer": "透明な完全ワイヤレスイヤホン",
+      "search_terms": {
+        "ja": [
+          "透明 ワイヤレスイヤホン",
+          "クリア 完全ワイヤレスイヤホン"
+        ],
+        "en": [
+          "transparent true wireless earbuds"
+        ],
+        "ko": [
+          "투명 무선이어폰"
+        ],
+        "zh": [
+          "透明真无线耳机"
+        ]
+      },
+      "excluded_conditions": [
+        "有線"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "8d92ca685184cca9e0ffbb97de040b2eb27b80138ece77c598bb60bd1565ac4a",
+      "query_text": "韓国っぽいバッグ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bag",
+      "ideal_answer": "韓国系デザインのバッグ",
+      "search_terms": {
+        "ja": [
+          "韓国っぽい バッグ",
+          "韓国系 バッグ"
+        ],
+        "en": [
+          "korean style bag"
+        ],
+        "ko": [
+          "한국 스타일 가방"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "957ecb3cf8021121a4e18641178fde150d2aa3ce9f3f70f57d3bec1e16497bfe",
+      "query_text": "SNSで見た透明なやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "透明な何をお探しですか？(スマホケース、イヤホン、傘、水筒など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "19ad21161530e690d77baccd3aee7057df200885e7294f3c9d09d1049fc8b127",
+      "query_text": "旅行で荷物を小さくしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "travel-packing",
+      "ideal_answer": "圧縮バッグ・トラベルポーチ・パッキングキューブ",
+      "search_terms": {
+        "ja": [
+          "圧縮バッグ 旅行用",
+          "トラベルポーチ パッキングキューブ"
+        ],
+        "en": [
+          "travel packing cubes",
+          "compression bag"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "ada8be3cbb588c5620051084da93f1aeb3ade95e98c98353ad95dc18b780924d",
+      "query_text": "名前が分からないけど透明なやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "透明な何をお探しですか？(スマホケース、イヤホン、傘、水筒など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "680527112943cc54e355195864c8e52321dd7fd1901512ee8e4df8d1e4f56272",
+      "query_text": "1万円以下で軽いモバイルバッテリー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "power-bank",
+      "ideal_answer": "1万円以下の軽量モバイルバッテリー",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー 軽量 1万円以下",
+          "軽い モバイルバッテリー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "重い"
+      ],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "767ee71deed65ee7b7dd5e09b0537d9a9988d8b20ff2e44f4637247f829d829e",
+      "query_text": "一人暮らし用の炊飯器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rice-cooker",
+      "ideal_answer": "3合炊き以下のコンパクト炊飯器",
+      "search_terms": {
+        "ja": [
+          "一人暮らし 炊飯器",
+          "3合炊き コンパクト炊飯器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "3d9ab129eb606f17cd90fdd40cc3903dc2fa7a20997780cbedd8a5a5c1ca2f49",
+      "query_text": "白いスニーカー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "shoes",
+      "ideal_answer": "白色のスニーカー",
+      "search_terms": {
+        "ja": [
+          "白 スニーカー",
+          "ホワイト スニーカー"
+        ],
+        "en": [
+          "white sneakers"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.9,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "0d02a1135b5a92d487aeaa9fdf6ad267c60e5db71dbcca1bdd301e7e6e13bfbe",
+      "query_text": "折りたたみ日傘",
+      "locale": "ja",
+      "persona": "general",
+      "category": "parasol",
+      "ideal_answer": "折りたたみ式日傘",
+      "search_terms": {
+        "ja": [
+          "折りたたみ日傘",
+          "折り畳み 日傘"
+        ],
+        "en": [
+          "foldable parasol"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "385464350810ece99bd269f7b4849c44c20c7ab4c2ed06a5db11b061812384d1",
+      "query_text": "羽根なし扇風機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fan",
+      "ideal_answer": "ブレードレス(羽根なし)扇風機",
+      "search_terms": {
+        "ja": [
+          "羽根なし扇風機",
+          "ブレードレス扇風機"
+        ],
+        "en": [
+          "bladeless fan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "ab44fbb60dcaaa86134cf5656ac1882d5f1ee6d1cc314a15ed14325c2e6b4ead",
+      "query_text": "ノートパソコン用マウスパッド",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mouse-pad",
+      "ideal_answer": "ノートパソコン用マウスパッド",
+      "search_terms": {
+        "ja": [
+          "マウスパッド ノートパソコン用"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "b735cd96f6b811bcd5b6f2443b3539f79180d4cd954c18f923dbfe5674b11ef5",
+      "query_text": "写真がすぐ印刷できるプリンター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "photo-printer",
+      "ideal_answer": "インスタントフォトプリンター",
+      "search_terms": {
+        "ja": [
+          "写真プリンター",
+          "インスタントプリンター"
+        ],
+        "en": [
+          "instant photo printer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "262ccaa874194e1c4e2bbf8ec8c89498280b6cf7d4ab9e465813e86718753d71",
+      "query_text": "防水のワイヤレスイヤホン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "earbuds",
+      "ideal_answer": "IPX7以上の防水ワイヤレスイヤホン",
+      "search_terms": {
+        "ja": [
+          "防水 ワイヤレスイヤホン",
+          "ipx7 イヤホン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "防滴",
+        "生活防水"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "c7e7fa777ea3a45b31efb7d55e5f28e10f84133a0dd0e76cc3b71434e0518242",
+      "query_text": "子ども用リュック 通園",
+      "locale": "ja",
+      "persona": "general",
+      "category": "backpack",
+      "ideal_answer": "通園向け子ども用リュック",
+      "search_terms": {
+        "ja": [
+          "子ども用リュック 通園",
+          "キッズリュック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "大人用"
+      ],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "52d94760aadecd8203803000fde37ac577ae667e38350fa57b2f33cc51baf5bb",
+      "query_text": "日本で使えるアメリカのドライヤー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hair-dryer",
+      "ideal_answer": "100V対応のドライヤー(米国仕様からの変換不要品)",
+      "search_terms": {
+        "ja": [
+          "ドライヤー 100v対応",
+          "日本で使える ドライヤー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "cdf00c3450daea52d78a776764bfeb0623676d87b5f22b361a89eea92ee13135",
+      "query_text": "推し活で使える小さい写真プリンター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "photo-printer",
+      "ideal_answer": "小型・携帯用フォトプリンター",
+      "search_terms": {
+        "ja": [
+          "小型 フォトプリンター",
+          "携帯用 写真プリンター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "0cc662b554f5ee67d0631331a917ea1049c69f9620b82e818681081e0b535921",
+      "query_text": "ロボット掃除機の交換フィルター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "robot-vacuum-filter",
+      "ideal_answer": "ロボット掃除機用交換フィルター",
+      "search_terms": {
+        "ja": [
+          "ロボット掃除機 フィルター",
+          "ルンバ フィルター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ロボット掃除機 本体"
+      ],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "54b91162ccc360719d9472eae1e5a3c02e5c1cb39b871782f155007e43e02090",
+      "query_text": "iPhone15用の光るケース",
+      "locale": "ja",
+      "persona": "general",
+      "category": "phone-case",
+      "ideal_answer": "iPhone15対応 LED発光ケース",
+      "search_terms": {
+        "ja": [
+          "iphone15 光るケース",
+          "iphone 15 led ケース"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "6589e2c869788e520ca463809ebdd637f3ee2397196c8eb589b1240c550ebb7e",
+      "query_text": "車の小さい部品 名前がわからない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どの部分の部品か、写真や場所を教えてください(エンジン周り、内装、配線など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "8e369c4f48fb658eabd1fc655626b8115c20e95f734d67ca48d5dc4446ddce58",
+      "query_text": "コードなしのマウス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wireless-mouse",
+      "ideal_answer": "ワイヤレスマウス",
+      "search_terms": {
+        "ja": [
+          "ワイヤレスマウス",
+          "コードレスマウス"
+        ],
+        "en": [
+          "wireless mouse"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "有線"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "801cbec0c1e3f75ef6dc832006587b1094b5bd56b9759015b1fa3e5e0d5b39a2",
+      "query_text": "お風呂で使える防水スピーカー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "speaker",
+      "ideal_answer": "IPX7以上の防水Bluetoothスピーカー",
+      "search_terms": {
+        "ja": [
+          "防水スピーカー お風呂用",
+          "ipx7 スピーカー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "防滴"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "b4838f6653676a8e2922cb9155b6f1ca41b067380f8ffb1768cbfa5ab7692c86",
+      "query_text": "加湿器 卓上 小型",
+      "locale": "ja",
+      "persona": "general",
+      "category": "humidifier",
+      "ideal_answer": "卓上サイズの小型加湿器",
+      "search_terms": {
+        "ja": [
+          "卓上 加湿器",
+          "小型加湿器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "862d53ff1b4ea0d2778cfa229c6fe926f4540fc0b98a4ea620ea14fc7f7b2cc4",
+      "query_text": "ノースリーブのワンピース 白",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dress",
+      "ideal_answer": "白色 ノースリーブワンピース",
+      "search_terms": {
+        "ja": [
+          "ノースリーブ ワンピース 白"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "b97897742fba6e43ae9390f00661c5426052b2c54f9f2599ffcec4849e483e79",
+      "query_text": "くるぶし丈の靴下",
+      "locale": "ja",
+      "persona": "general",
+      "category": "socks",
+      "ideal_answer": "くるぶし丈ソックス",
+      "search_terms": {
+        "ja": [
+          "くるぶし丈 靴下",
+          "スニーカーソックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "564d2b44c5b07c2dce5694365eb169121c82eb390135b742dbbf7e13b02ac046",
+      "query_text": "子供の写真がすぐ印刷できるカメラ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "photo-printer",
+      "ideal_answer": "キッズ向けインスタントカメラ",
+      "search_terms": {
+        "ja": [
+          "キッズ インスタントカメラ",
+          "子供用 プリントカメラ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "e73f03883b09526e6a246143a50e99773704e22bd647cb4dc30c57e8739d480b",
+      "query_text": "マンションのベランダに置けるパラソル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "parasol",
+      "ideal_answer": "コンパクトなベランダ用パラソル",
+      "search_terms": {
+        "ja": [
+          "ベランダ パラソル",
+          "コンパクト パラソル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ガーデンパラソル"
+      ],
+      "confidence": 0.65,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "b1c50bfe9fcea096bd7f8e6bcc926e9ba7c5ef97fa98afe517ca369074e5d458",
+      "query_text": "アイフォン15専用ケース 純正っぽいやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "phone-case",
+      "ideal_answer": "iPhone15対応 高品質・純正風ケース",
+      "search_terms": {
+        "ja": [
+          "iphone15 ケース 純正風"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "互換品",
+        "ノーブランド"
+      ],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "9f68c79e7e1496c20c4a7964cd24c85d470a6968123ded8c93a2c5026801ceca",
+      "query_text": "ゲーミングモニター 27インチ 144hz",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gaming-monitor",
+      "ideal_answer": "27インチ・144Hz対応ゲーミングモニター",
+      "search_terms": {
+        "ja": [
+          "ゲーミングモニター 27インチ 144hz"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.9,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "eae86d5c5c068a0bf17ec9d1bde0f22c3445aefda7c45be4d32fc56a4084ec1b",
+      "query_text": "メカニカルキーボード 赤軸",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mechanical-keyboard",
+      "ideal_answer": "赤軸メカニカルキーボード",
+      "search_terms": {
+        "ja": [
+          "メカニカルキーボード 赤軸"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "青軸",
+        "茶軸"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "8295bd9b951133ccca2ae6a3566e6820088da954314d45c7ece69088ebf26263",
+      "query_text": "ノイズキャンセリングイヤホン Bluetooth",
+      "locale": "ja",
+      "persona": "general",
+      "category": "earbuds",
+      "ideal_answer": "ANC対応Bluetoothイヤホン",
+      "search_terms": {
+        "ja": [
+          "ノイズキャンセリング イヤホン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "有線"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "90396ed89f1c56b44d5583dfe859f78b1145e9a9e50d4e6f60210bad82cbcae1",
+      "query_text": "ポータブルSSD 1TB",
+      "locale": "ja",
+      "persona": "general",
+      "category": "portable-ssd",
+      "ideal_answer": "1TBポータブルSSD",
+      "search_terms": {
+        "ja": [
+          "ポータブルssd 1tb"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.9,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "31c92a2d5e0be75daf6ec102d1f2e9c1412cc0af3b15b82516184c4fe4c206e4",
+      "query_text": "ドライブレコーダー 前後2カメラ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dashcam",
+      "ideal_answer": "前後2カメラ ドライブレコーダー",
+      "search_terms": {
+        "ja": [
+          "ドライブレコーダー 前後2カメラ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "788a0cda49dee4028eb858fc78a34f8dd24c8126e5979d9168dd338a5e774453",
+      "query_text": "ペットに餌をあげるカメラ付き自動給餌器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-feeder",
+      "ideal_answer": "カメラ付き自動給餌器",
+      "search_terms": {
+        "ja": [
+          "自動給餌器 カメラ付き"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "38c091f9b437b67f9dbe3f65af84c8e18ca9d4d70e068b17254b3845fdbb4905",
+      "query_text": "脱毛器 家庭用",
+      "locale": "ja",
+      "persona": "general",
+      "category": "ipl-hair-removal",
+      "ideal_answer": "家庭用IPL光脱毛器",
+      "search_terms": {
+        "ja": [
+          "家庭用脱毛器",
+          "ipl脱毛器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "bd1e7f057ef2e85615135448eb398c7d80db05e19199fdcfc584cd6b5d844ed5",
+      "query_text": "折りたたみ電動自転車",
+      "locale": "ja",
+      "persona": "general",
+      "category": "folding-electric-bike",
+      "ideal_answer": "折りたたみ電動アシスト自転車",
+      "search_terms": {
+        "ja": [
+          "折りたたみ電動自転車"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "137c0d3d7084eed21c687da6708d92d8c09ee59bfc1b48757a4c71e04a68863b",
+      "query_text": "ポータブル電源 車中泊用",
+      "locale": "ja",
+      "persona": "general",
+      "category": "portable-power-station",
+      "ideal_answer": "大容量ポータブル電源",
+      "search_terms": {
+        "ja": [
+          "ポータブル電源 車中泊"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "efc4de6c002ec1c4ec022c45f162fb4efc68cac2c376376174b33558b8a9b867",
+      "query_text": "除湿機 コンプレッサー式",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dehumidifier",
+      "ideal_answer": "コンプレッサー式除湿機",
+      "search_terms": {
+        "ja": [
+          "除湿機 コンプレッサー式"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "デシカント式"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "561956a1327f51d4a9b50a8ce697036e821889b787c4ef84b40d1315f2ee4072",
+      "query_text": "スタンディングデスク 電動",
+      "locale": "ja",
+      "persona": "general",
+      "category": "electric-standing-desk",
+      "ideal_answer": "電動昇降スタンディングデスク",
+      "search_terms": {
+        "ja": [
+          "スタンディングデスク 電動昇降"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "3a181fb5090436abaf23478515678d747b4bcbfa72e9f061d750cfd0f2072ef8",
+      "query_text": "人間工学オフィスチェア",
+      "locale": "ja",
+      "persona": "general",
+      "category": "ergonomic-office-chair",
+      "ideal_answer": "エルゴノミクスオフィスチェア",
+      "search_terms": {
+        "ja": [
+          "エルゴノミクス チェア",
+          "人間工学 椅子"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "29fdfe4973d100ae8d438d97148161c72e17e3cff3071aaac64fe3f971ff719b",
+      "query_text": "スマートロック 後付け",
+      "locale": "ja",
+      "persona": "general",
+      "category": "retrofit-smart-lock",
+      "ideal_answer": "後付け型スマートロック",
+      "search_terms": {
+        "ja": [
+          "スマートロック 後付け"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "87b4d2305f85fb209b8ea169eebba7e97c6c34e1ce9dc6b65193fec16d05ddde",
+      "query_text": "圧力IH炊飯器 5合",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rice-cooker",
+      "ideal_answer": "5合炊き圧力IH炊飯器",
+      "search_terms": {
+        "ja": [
+          "圧力ih炊飯器 5合"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "54a7a25bcd41521e26d6f2fcb99562765a2b3e8907ad709d74ab1b6ce4bc1926",
+      "query_text": "夕焼けみたいなライト",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lamp",
+      "ideal_answer": "サンセットランプ(夕焼け風投影ライト)",
+      "search_terms": {
+        "ja": [
+          "サンセットランプ",
+          "夕焼け ライト"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "e796a8b980c981e7bd491353bda1c77b3902988511a2d75d8112f36610063126",
+      "query_text": "ぬいぐるみみたいなバッグチャーム",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bag-charm",
+      "ideal_answer": "ぬいぐるみ型バッグチャーム",
+      "search_terms": {
+        "ja": [
+          "ぬいぐるみ バッグチャーム"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "fdf685c9a1940a66861bd455c9d47a375f06fab3760eb6ec6a50c4b49941a236",
+      "query_text": "正規品のワイヤレスイヤホン 互換品じゃない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "earbuds",
+      "ideal_answer": "メーカー純正の完全ワイヤレスイヤホン",
+      "search_terms": {
+        "ja": [
+          "正規品 ワイヤレスイヤホン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "互換品",
+        "類似品",
+        "ノーブランド"
+      ],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "967a4f0226d4bf2208bb417902a7ed614b438533ea9d7e99bb353409976ca799",
+      "query_text": "ボートネックのカットソー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tops",
+      "ideal_answer": "ボートネックカットソー",
+      "search_terms": {
+        "ja": [
+          "ボートネック カットソー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "00bad06935b219a09a4cb4abdf8026c65d6427177fc6ac76d242522e54d415c9",
+      "query_text": "マリンボーダーのカットソー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tops",
+      "ideal_answer": "マリンボーダーカットソー",
+      "search_terms": {
+        "ja": [
+          "マリンボーダー カットソー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "507c39b3d6e6a3d644cb4b5fa912a395e80e3a7f0024218ffe4026afb51e6a48",
+      "query_text": "黒いレザーの長財布",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wallet",
+      "ideal_answer": "黒色レザー長財布",
+      "search_terms": {
+        "ja": [
+          "黒 レザー 長財布"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "4fb14f74a9c6c2192d702e751b65a7b4641241701109188e4227cbd4f614c12b",
+      "query_text": "ゲームにつなぐやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どのゲーム機とつなぎますか？(Switch/PS/スマホなど)コントローラーですか、それともイヤホン・ケーブルですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "c92df9598436458342164cd3a51cdb5011cc2293d7dd7c0b3f688c02f09bf5eb",
+      "query_text": "よく分からないけど便利そうなキッチン用品",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どんな作業を楽にしたいですか？(切る、混ぜる、保存するなど)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.15,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "5fd91a21c63abc266a75cebf96e5f6d2d47925d2651d87cd6fc77543ac8a7c3b",
+      "query_text": "あの白いやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "白い何をお探しですか？(スニーカー、イヤホン、水筒など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "a99950b9da5cff19d6c413b3b7795c531db1b05fc3113c7939e9669c8717febc",
+      "query_text": "ママが持ってるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ママが持っているものの色や使い方を教えてください",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.15,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "c26eba4024a7a569ea71a3c52dfc691ea63fb55509c76cb7d9ee56075714bdd8",
+      "query_text": "ぴかぴかするイヤホン",
+      "locale": "ja",
+      "persona": "child",
+      "category": "earbuds",
+      "ideal_answer": "LEDが光る完全ワイヤレスイヤホン",
+      "search_terms": {
+        "ja": [
+          "光る イヤホン",
+          "led 完全ワイヤレスイヤホン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "c86ac961cbc28bcc5f586938884dd4bf9e9f816db75aecc4ae6d7cb6022c2098",
+      "query_text": "YouTubeで見たやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "動画で見たものの色・形・使い方を教えてください",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.15,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "5ead73fd70497e41613fe653395a2e7894c929a6ba4ef8b9ca926a8f9cfe29de",
+      "query_text": "学校で使うやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どんな時に使いますか？(勉強道具、体育用品、給食用品など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "6304137e41d67b12c85f04eca4c837f145977dfb2c2f545965de4e0a11de947a",
+      "query_text": "名前わかんない",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "見た目、色、大きさ、使い方のどれか一つでも教えてください",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.05,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "3b78a787f1f3437392b434b452b34b681678c4634f24801a06504c30b76bbaac",
+      "query_text": "透明なやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "透明な何をお探しですか？(スマホケース、傘、水筒など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "ccf6a3d343d839dbe988312cb3a1254cf07dcd56ce83675d6da9281197553349",
+      "query_text": "黒いイヤホン",
+      "locale": "ja",
+      "persona": "child",
+      "category": "earbuds",
+      "ideal_answer": "黒色のイヤホン(有線・完全ワイヤレス問わず)",
+      "search_terms": {
+        "ja": [
+          "黒 イヤホン",
+          "ブラック イヤホン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "3f3594e61f16fe575c80289dca66fe334ff02ee1c01677ff2db1bd93f05c2c8d",
+      "query_text": "ちっちゃいやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "小さい何をお探しですか？(おもちゃ、文房具、ガジェットなど)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.15,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "a5716f5b6580dbc8c5686db495b0173a6c0bcba2184b2196f827885d75189661",
+      "query_text": "パパが使ってるひげそり",
+      "locale": "ja",
+      "persona": "child",
+      "category": "electric-shaver",
+      "ideal_answer": "電気シェーバー(メンズ用)",
+      "search_terms": {
+        "ja": [
+          "電気シェーバー メンズ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "cc55b83baa30551bb51688a2386265ca89bf6e791e5242103327145f89728837",
+      "query_text": "おともだちが持ってるピンクのケース",
+      "locale": "ja",
+      "persona": "child",
+      "category": "phone-case",
+      "ideal_answer": "ピンク色のスマホケース",
+      "search_terms": {
+        "ja": [
+          "ピンク スマホケース"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "433c091163ba82d2a9d90bf1ce1b5865e03d0d7debd9eac7396e2e66ac7f463b",
+      "query_text": "光る靴",
+      "locale": "ja",
+      "persona": "child",
+      "category": "shoes",
+      "ideal_answer": "LED発光するキッズシューズ",
+      "search_terms": {
+        "ja": [
+          "光る靴 キッズ",
+          "led シューズ 子供"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "69b736f4cb4717ea4fe2608fbdf1ba71567fe9d6d77b573e629801c33f012bea",
+      "query_text": "アニメに出てくるみたいなカバン",
+      "locale": "ja",
+      "persona": "child",
+      "category": "bag",
+      "ideal_answer": "どのアニメのどんなデザインか教えてください(色、キャラクターなど)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "777661e8f356537d0c26dcfcd916b09ae02b607e67f74591f39cf19158fe0411",
+      "query_text": "水にぬれても平気なやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何を水に濡らしたいですか？(スピーカー、イヤホン、時計など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "6f19bf325707595d23ead9311690fdd304f361adbb3b839e600421e2c193917d",
+      "query_text": "ゲームのコントローラーみたいなやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "game-controller",
+      "ideal_answer": "ゲームコントローラー(形が似た別製品の可能性もあり)",
+      "search_terms": {
+        "ja": [
+          "ゲームコントローラー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "cd369350b94eea637e5842edfa4c0fbcba6a9c48665ea3a86aedf82d5154813b",
+      "query_text": "お兄ちゃんの部屋にあるひかるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "光る何をお探しですか？(ライト、ゲーミング機器、時計など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.1,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "497e528566f52f9a3cac0450d8d4d73fe4bb8f491b7b0659913e4bef02ea290b",
+      "query_text": "ランドセルみたいな形のリュック",
+      "locale": "ja",
+      "persona": "child",
+      "category": "backpack",
+      "ideal_answer": "ランドセル型リュック",
+      "search_terms": {
+        "ja": [
+          "ランドセル型 リュック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "a8443a8c86cf8f7439d332d1416f7a9c9380038ecd122d8611503e9f44fae102",
+      "query_text": "キラキラしてるシール",
+      "locale": "ja",
+      "persona": "child",
+      "category": "sticker",
+      "ideal_answer": "キラキラ(ホログラム/ラメ)加工のシール",
+      "search_terms": {
+        "ja": [
+          "キラキラ シール",
+          "ホログラム シール"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "0a7b0ca8f5b52589ef9468092c76e65cf7474ff49e6a4595b783443701636316",
+      "query_text": "カメラみたいな形のおもちゃ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "toy-camera",
+      "ideal_answer": "カメラ型のキッズトイ",
+      "search_terms": {
+        "ja": [
+          "カメラ型 おもちゃ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "734ea8073cdfcc25bdbcbc6304ab237557786f8aab8e1b7131059336ccf5889c",
+      "query_text": "テレビに映すやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "お使いの機器は何ですか？HDMIケーブルで直接つなぎますか、それともWi-Fiで映す機器(Chromecast等)をお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "4a63583d0e0025a9c3a1699bb8a686fcfc5eee74e6795df905851dd3fd093318",
+      "query_text": "充電する線",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "cable",
+      "ideal_answer": "充電ケーブル(USBケーブル)",
+      "search_terms": {
+        "ja": [
+          "充電ケーブル",
+          "usbケーブル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "2cac6c5f0a8d0d62aa1e9e1fcba4f1e585db78dfdafac03948dbd97956736761",
+      "query_text": "軽い掃除機",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "vacuum",
+      "ideal_answer": "軽量なコードレス掃除機",
+      "search_terms": {
+        "ja": [
+          "軽量 掃除機",
+          "軽い コードレス掃除機"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "重い",
+        "業務用"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "fea6afa6d1b34c1e4531e468acb4467a4ffca3707bc616d5b4a5ad4d55c5ad11",
+      "query_text": "よく見えるライト",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "lamp",
+      "ideal_answer": "高輝度LEDライト(読書灯・拡大鏡付きなど)",
+      "search_terms": {
+        "ja": [
+          "高輝度 led ライト",
+          "読書灯"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "c861182cded87c31eaabe222a71d049372bdc1bc2f6f1ff234d8a2e0ec26d364",
+      "query_text": "文字が大きい電卓",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "calculator",
+      "ideal_answer": "大画面・大型ボタンの電卓",
+      "search_terms": {
+        "ja": [
+          "大型電卓",
+          "文字が大きい 電卓"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "5a62dc80b668ddfd3608d63ab34348e374ac386acdaeaf4d9a53fa9c77628b3c",
+      "query_text": "血圧を測るやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "blood-pressure-monitor",
+      "ideal_answer": "家庭用血圧計",
+      "search_terms": {
+        "ja": [
+          "血圧計 家庭用"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "08e2874c12a8fa5dc81b1b75d9f5105fd431e036fdbf61190b63c3311fc96759",
+      "query_text": "音が大きく聞こえる電話",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "landline-phone",
+      "ideal_answer": "大音量対応の固定電話機",
+      "search_terms": {
+        "ja": [
+          "大音量 電話機",
+          "シニア向け 電話"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "85122772a4c303992e12f9d2c42b12829219f02afb4c053c35536d289ac2e998",
+      "query_text": "孫と話せるタブレット",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "tablet",
+      "ideal_answer": "ビデオ通話向けの簡単操作タブレット",
+      "search_terms": {
+        "ja": [
+          "ビデオ通話 タブレット",
+          "シニア向け タブレット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "5e53534ee263e62dd42009a6c748af0432fb988beeb2f79453cf7df08d562ae4",
+      "query_text": "滑りにくい杖",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "walking-cane",
+      "ideal_answer": "滑り止め加工の歩行杖",
+      "search_terms": {
+        "ja": [
+          "滑り止め 杖",
+          "歩行杖"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "141dfa9c81ca31a08aa6c6abd4b9ce1a9e3559bb2afb4980aa5a2f21cf3e7c06",
+      "query_text": "温かいままのお茶が飲める水筒",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "bottle",
+      "ideal_answer": "高保温タイプの水筒",
+      "search_terms": {
+        "ja": [
+          "保温 水筒",
+          "保温性能 高い 水筒"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "bb7643bd7c6e1551da5200f76829117a2966b214f1e2d3b8aa17a8dc1b9bcf84",
+      "query_text": "sumaho keesu iphone 15",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "phone-case",
+      "ideal_answer": "iPhone15専用スマホケース",
+      "search_terms": {
+        "ja": [
+          "iphone 15 ケース",
+          "iphone15 スマホケース"
+        ],
+        "en": [
+          "iphone 15 case"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "0cbbd4da7edc643df32fe31fa678f57853e7445a2e68c678d0c60ac2da41a70a",
+      "query_text": "투명 iphone 케이스 15",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "phone-case",
+      "ideal_answer": "iPhone15用の透明なスマホケース",
+      "search_terms": {
+        "ja": [
+          "iphone 15 透明ケース"
+        ],
+        "en": [
+          "clear case iphone 15"
+        ],
+        "ko": [
+          "아이폰15 투명 케이스"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "7ce477e7d53b113b96e2963cc5cfb91e10e9d6f6d04bddf4422b0dc3730d7505",
+      "query_text": "transparent wireless earbuds korean style",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "earbuds",
+      "ideal_answer": "韓国系デザインの透明な完全ワイヤレスイヤホン",
+      "search_terms": {
+        "ja": [
+          "透明 ワイヤレスイヤホン 韓国系"
+        ],
+        "en": [
+          "transparent wireless earbuds korean style"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "9c36ce272634a0cb78d01272ac62fff1acda3c701e32056fcd516ac70f23ffdc",
+      "query_text": "充電器 charger USB-C 快速",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "charger",
+      "ideal_answer": "USB-C対応急速充電器",
+      "search_terms": {
+        "ja": [
+          "usb-c 急速充電器"
+        ],
+        "en": [
+          "usb-c fast charger"
+        ],
+        "ko": [],
+        "zh": [
+          "type-c快充充电器"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "ebe3b8be5a612ffc3279dcf2d5d5423eb1b7e6ae05a8eb8733a193d5903470af",
+      "query_text": "가벼운 무선 청소기",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "vacuum",
+      "ideal_answer": "軽量なコードレス掃除機",
+      "search_terms": {
+        "ja": [
+          "軽量 コードレス掃除機"
+        ],
+        "en": [],
+        "ko": [
+          "가벼운 무선 청소기"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "d58b2b25226af2391017e698ce93d128feb7ff5d94fffd3d04ae07ac9ec3e807",
+      "query_text": "白色 无线耳机 透明",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "earbuds",
+      "ideal_answer": "白色/透明の完全ワイヤレスイヤホン",
+      "search_terms": {
+        "ja": [
+          "白 透明 ワイヤレスイヤホン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "白色无线耳机",
+          "透明无线耳机"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "a9389129739b2556d64345558c7ed584733842b923c7cb8a2ba3f477f690a237",
+      "query_text": "kankoku fasshon baggu",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "bag",
+      "ideal_answer": "韓国系デザインのバッグ",
+      "search_terms": {
+        "ja": [
+          "韓国系 ファッション バッグ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "272a9cc3e292065321c2115135908faa7e515203d36b63222ef85f694817773c",
+      "query_text": "light up phone case for iphone 15",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "phone-case",
+      "ideal_answer": "iPhone15対応 LED発光ケース",
+      "search_terms": {
+        "ja": [
+          "iphone15 光るケース"
+        ],
+        "en": [
+          "light up phone case iphone 15"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "4a1436b7c363b0902fb417c2f6c115fc32503a55d4131befa0a3280cdfb173af",
+      "query_text": "旅行 packing cube 小さく",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "travel-packing",
+      "ideal_answer": "圧縮パッキングキューブ",
+      "search_terms": {
+        "ja": [
+          "圧縮 パッキングキューブ"
+        ],
+        "en": [
+          "packing cubes compression"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "28e3efe80a2850ffae0dffc0173a4a25ce9a94017529a7da586bf500aa243e1b",
+      "query_text": "가볍고 방수되는 보조배터리",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "power-bank",
+      "ideal_answer": "軽量・防水対応モバイルバッテリー",
+      "search_terms": {
+        "ja": [
+          "軽量 防水 モバイルバッテリー"
+        ],
+        "en": [],
+        "ko": [
+          "가벼운 방수 보조배터리"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "d0a0bf8e29c9737a264e2029814341e487a6c71ca1c4a0dbb2f7301630b7f6ca",
+      "query_text": "iphone 15 ke-su toumei",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "phone-case",
+      "ideal_answer": "iPhone15用の透明なスマホケース",
+      "search_terms": {
+        "ja": [
+          "iphone 15 ケース 透明"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "9616b3b0ff42ea7216f8f3b8acff5555b7022927a9b1955a49aba455010c5fa1",
+      "query_text": "适合iphone15的透明手机壳",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "phone-case",
+      "ideal_answer": "iPhone15用の透明なスマホケース",
+      "search_terms": {
+        "ja": [
+          "iphone15 透明ケース"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "iphone15透明手机壳"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "fadbb433261b214b386c83b2cfb0cac9296b98cdf641faace93a277fc42aa7a5",
+      "query_text": "small fan usb powered korean brand",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "fan",
+      "ideal_answer": "USB給電の小型扇風機",
+      "search_terms": {
+        "ja": [
+          "usb扇風機 小型"
+        ],
+        "en": [
+          "usb powered mini fan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "4c3a0ca5b26f9592a901a7fd848044fdc03231d7fb099d78ecf272fc9afae760",
+      "query_text": "재입고 알림 받고 싶어요 무선이어폰",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "earbuds",
+      "ideal_answer": "完全ワイヤレスイヤホン(再入荷通知希望)",
+      "search_terms": {
+        "ja": [
+          "完全ワイヤレスイヤホン"
+        ],
+        "en": [],
+        "ko": [
+          "무선이어폰"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "5ccb9f822d8c2c64cbcbdde0c740797373883243fb80c86c21b887657d1d6892",
+      "query_text": "黑色 轻便 行李箱",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "suitcase",
+      "ideal_answer": "黒色・軽量スーツケース",
+      "search_terms": {
+        "ja": [
+          "黒 軽量 スーツケース"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "黑色轻便行李箱"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "e9dca8f5248a499178a45cdd1a6b8f6a1e5ab90f51cf6b646257f8e13a7beb8b",
+      "query_text": "nihon de tsukaeru dorai-ya-",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "hair-dryer",
+      "ideal_answer": "100V対応ドライヤー",
+      "search_terms": {
+        "ja": [
+          "日本で使える ドライヤー",
+          "100v対応 ドライヤー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "640d6f1df09d7b1b7bf9ea169e72a1eb2c21696e4d9b29fb490d19f0d63c8429",
+      "query_text": "guitar strap made in usa",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "guitar-strap",
+      "ideal_answer": "米国製ギターストラップ",
+      "search_terms": {
+        "ja": [
+          "アメリカ製 ギターストラップ"
+        ],
+        "en": [
+          "guitar strap made in usa"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "23e83491ef6ca10261451686cda3f61926aecc69dfd2ca09f97a288fdb6c9786",
+      "query_text": "선물용 예쁜 포장 미니 가습기",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "humidifier",
+      "ideal_answer": "ギフト向け小型加湿器",
+      "search_terms": {
+        "ja": [
+          "ギフト 小型加湿器"
+        ],
+        "en": [],
+        "ko": [
+          "미니 가습기"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "e6f1ce3851afba0b2b35dc4d0b367f346956299433ddfd72fc3590bfd7569c91",
+      "query_text": "适合露营的迷你风扇",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "fan",
+      "ideal_answer": "アウトドア・キャンプ向け小型扇風機",
+      "search_terms": {
+        "ja": [
+          "キャンプ用 小型扇風機"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "露营迷你风扇"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "76e0f21d3d30b40a3851d91b1a895a41e0ccf52c7b1a61947e13b258a2bd40f6",
+      "query_text": "wireless earbuds toumei kankoku fuu",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "earbuds",
+      "ideal_answer": "韓国系デザインの透明な完全ワイヤレスイヤホン",
+      "search_terms": {
+        "ja": [
+          "透明 ワイヤレスイヤホン 韓国風"
+        ],
+        "en": [
+          "transparent wireless earbuds"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-06-day1-batch-001.json"
+    }
+  ]
+}

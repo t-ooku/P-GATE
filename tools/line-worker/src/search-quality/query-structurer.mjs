@@ -1,5 +1,6 @@
 import canonicalAttributes from './canonical-attributes.json' with { type: 'json' };
 import productTypes from './product-types.json' with { type: 'json' };
+import { lookupTeacherDatasetEntry } from './teacher-dataset-lookup.mjs';
 
 const LOCALES = new Set(['ja','en','ko','zh']);
 const CONFLICTS = new Map([
@@ -91,16 +92,42 @@ export function structureSearchQuery(rawQuery, requestedLocale = 'ja') {
   const product = detectProductType(text, language);
   const internalTest = /^\s*\[内部テスト\]/u.test(raw);
   if (internalTest && /出品URL未確認|URL未確認/iu.test(raw)) required.add('URL_VERIFIED');
+  // Teacher Dataset connection (2026-08-05 v3.1): product-types.json alone
+  // cannot classify child/elderly/vague queries like "ゲームにつなぐやつ" -
+  // they simply have no matching vocabulary. When that happens, consult
+  // teacher-dataset-lookup.mjs (compiled from committed
+  // evaluation/teacher-dataset/*.json batches) before giving up. A concrete
+  // teacher-authored category resolves product_type directly; an
+  // UNCLASSIFIED teacher entry (the query was ultra-ambiguous even to the
+  // human/GPT author) is still surfaced via teacher_dataset_match so callers
+  // can show its ideal_answer as a clarifying question instead of a generic
+  // fallback.
+  const teacherMatch = product.id === 'UNKNOWN' ? lookupTeacherDatasetEntry(raw) : null;
+  const resolvedProductId = teacherMatch && teacherMatch.category !== 'UNCLASSIFIED'
+    ? teacherMatch.category
+    : product.id;
+  const resolvedProductLabel = teacherMatch && teacherMatch.category !== 'UNCLASSIFIED'
+    ? teacherMatch.category
+    : product.label;
   const ambiguity = [];
-  if (product.id === 'UNKNOWN' && !internalTest) ambiguity.push('product_type');
+  if (resolvedProductId === 'UNKNOWN' && !internalTest) ambiguity.push('product_type');
   if (contradictory) ambiguity.push('contradictory_attributes');
-  if (required.has('VOLTAGE_100V_COMPAT') && product.id === 'SMALL_APPLIANCE') ambiguity.push('product_specification');
+  if (required.has('VOLTAGE_100V_COMPAT') && resolvedProductId === 'SMALL_APPLIANCE') ambiguity.push('product_specification');
 
   return {
     raw_query: raw,
     locale: language,
-    product_type: product.id,
-    product_type_label: product.label,
+    product_type: resolvedProductId,
+    product_type_label: resolvedProductLabel,
+    teacher_dataset_match: teacherMatch ? {
+      content_hash: teacherMatch.content_hash,
+      category: teacherMatch.category,
+      ideal_answer: teacherMatch.ideal_answer,
+      search_terms: teacherMatch.search_terms,
+      excluded_conditions: teacherMatch.excluded_conditions,
+      persona: teacherMatch.persona,
+      confidence: teacherMatch.confidence
+    } : null,
     required_attributes: [...required],
     preferred_attributes: [],
     excluded_attributes: [...excluded],
