@@ -699,6 +699,30 @@ test('rankMerchantCandidatesはqueryを渡さない既存呼び出しでは色�
   assert.deepEqual(ranked.map((item) => item.asin), ['BLACK0001', 'WHITE0001']);
 });
 
+// Regression for the 2026-08-05 v3.4 report: real production screenshots
+// for "カットソー" showed a health-insurance claim form, a legal pad, a
+// knife, an electric guitar, and two furniture items ranked alongside the
+// one real match. Root cause: the 'tops' RULES pattern's bare
+// /\btops?\b|トップス/ alternative matched these DIRECTLY (not through the
+// 'other' bypass the earlier v3.1/v3.2 fixes covered) because "TOPS" is an
+// unrelated stationery/knife brand and "top" appears in generic phrases
+// ("Round Top" table, "Arch Top" guitar body, "Top Shelf" marketing copy).
+// Fixed by requiring clothing-context corroboration whenever the ONLY
+// evidence for 'tops' is that bare/ambiguous word.
+test('カットソー検索は本番で実際に混入した無関係商品(保険フォーム/メモ帳/ナイフ/ギター/家具)を全て除外する', () => {
+  const candidates = filterCategoryMismatches('カットソー', [
+    { asin: 'REAL01', product_name: 'Hanky Panky Womens Signature Lace V-Front Cami White Pajama Top' },
+    { asin: 'BAD01', product_name: '(White) - Top Shelf Marine Products Battlewagon Bucket' },
+    { asin: 'BAD02', product_name: 'Astonishing Side Table With Round Top White' },
+    { asin: 'BAD03', product_name: 'Tucson Flip Top End Table with Charging Station and Shelf White/White' },
+    { asin: 'BAD04', product_name: 'Jackson ジャクソン JSシリーズ エレキギター Dinky ディンキー Arch Top JS32 DKAM/Snow White スノー・ホワイト' },
+    { asin: 'BAD05', product_name: 'TOP50135RV - TOPS CMS-1500 健康保険フォーム' },
+    { asin: 'BAD06', product_name: 'top63016？トップスプリズムプラス色付きジュニアLegalパッドbyトップス' },
+    { asin: 'BAD07', product_name: 'TOPS Scandi Trekker' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['REAL01']);
+});
+
 // v3.4 CTO instruction: 検索意図一致 ＞ カテゴリ一致 ＞ Teacher Dataset一致 ＞
 // 商品品質 ＞ スポンサー補正 ＞ 価格 ＞ レビュー。以下はこの順序のうち、実際に
 // データが存在する③Teacher Dataset一致と⑥価格が正しくタイブレークすることの

@@ -1281,9 +1281,24 @@ async function handleKnowledgeApi(request, env, ctx) {
         });
         perSourceCandidates.push({ key: source.key, candidates });
       });
-      const interleavedCandidates = interleaveCandidatesBySource(perSourceCandidates.map((item) => item.candidates));
-      const beforeRankingCount = (result.candidates || []).length + interleavedCandidates.length;
-      const rankedAll = rankMerchantCandidates(result.candidates || [], interleavedCandidates, input.query);
+      // v3.4 CTO diagnosis (real production evidence): amazon_creators_
+      // configured was false in production - the live Amazon API never
+      // even ran - yet results were still Amazon-only with zero Rakuten,
+      // even though rakuten_marketplace_configured was true. Root cause:
+      // this call previously passed `result.candidates` (the GAS/D1 base
+      // pool, populated by applyIndexedSearchPolicy earlier and often
+      // already Amazon-heavy) as rankMerchantCandidates' privileged
+      // baseCandidates argument, ahead of the newly-fetched marketplace
+      // pool in arrival order - the exact same tie-break-loses-late-
+      // arrivals bug the interleaving fix above addresses, just one layer
+      // higher up. Fixed by treating the base pool as one more source to
+      // interleave rather than a privileged first pool.
+      const interleavedCandidates = interleaveCandidatesBySource([
+        result.candidates || [],
+        ...perSourceCandidates.map((item) => item.candidates)
+      ]);
+      const beforeRankingCount = interleavedCandidates.length;
+      const rankedAll = rankMerchantCandidates([], interleavedCandidates, input.query);
       const finalSlice = rankedAll.slice(0, 10);
       const countByMarketplace = (list) => list.reduce((counts, item) => {
         const marketplace = String(item.record_key || '').startsWith('RAKUTEN:') ? 'RAKUTEN_JP'

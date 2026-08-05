@@ -56,6 +56,10 @@ async function submitRefinedQuery(refinedQuery) {
   const submitButton = document.querySelector('#submitButton');
   const queryField = document.querySelector('#query');
   if (!submitButton || !queryField || !refinedQuery) return;
+  // The chat's own last turn just consumed the Turnstile token via
+  // /api/ai-chat. Refresh it here so the main search form's own token wait
+  // does not immediately reuse that already-consumed token and fail.
+  await window.HoshiluChatAuth?.requestToken?.();
   queryField.value = refinedQuery;
   submitButton.click();
   await waitForSearchCompletion(submitButton);

@@ -2458,7 +2458,18 @@ const DOMAIN_FAMILIES = [
     // = boat neck), so they are excluded here to avoid rejecting real apparel
     // matches. Only unambiguous furniture nouns and the exact 船用品/船舶
     // compounds (never used as a fashion pattern name) are listed.
-    offDomainMarker: /(?:家具|机|デスク|椅子|チェア|棚|ラック|テーブル|ソファ|furniture|(?:side|coffee|dining|center)\s*table|\bchair\b|\bdesk\b|\bsofa\b|船用品|船舶)/iu
+    //
+    // 2026-08-05 v3.4 report (real production screenshots, カットソー query):
+    // the RULES 'tops' pattern includes a bare /\btops?\b/ (for legitimate
+    // English queries like "white top"), but on real marketplace candidate
+    // titles this word is extremely common OUTSIDE clothing - "TOPS" is an
+    // unrelated stationery/knife brand ("TOPS CMS-1500" claim form pad,
+    // "TOPS Scandi Trekker" knife), and "top" appears in furniture/guitar
+    // descriptors ("Round Top" table, "Flip Top" table, "Arch Top" guitar
+    // body). These matched the 'tops' category DIRECTLY (not through the
+    // 'other' bypass), so the guard below is now also applied to direct
+    // category matches, not just 'other'.
+    offDomainMarker: /(?:家具|机|デスク|椅子|チェア|棚|ラック|テーブル|ソファ|furniture|(?:side|coffee|dining|center|flip|round|end)\s*table|\bchair\b|\bdesk\b|\bsofa\b|船用品|船舶|ナイフ|刃物|\bknife\b|\bknives\b|\bblade\b|ギター|guitar|ukulele|violin|\barch\s*top\b|健康保険フォーム|保険金請求書|cms-1500|legal\s*pad|\bnotepad\b|メモ帳|文房具)/iu
   },
   {
     categories: new Set(['rice-cooker']),
@@ -2479,12 +2490,51 @@ const DOMAIN_FAMILIES = [
 // frequently cross-tagged with generic marketing words. offDomainMarker is
 // checked first and, when it hits, disqualifies the candidate regardless of
 // any incidental positive marker match.
-function isPlausiblyInRequestedDomain(requested, candidateText) {
-  const family = DOMAIN_FAMILIES.find(({ categories }) =>
+function matchingDomainFamily(requested) {
+  return DOMAIN_FAMILIES.find(({ categories }) =>
     [...requested].some((category) => categories.has(category)));
+}
+
+function isPlausiblyInRequestedDomain(requested, candidateText) {
+  const family = matchingDomainFamily(requested);
   if (!family) return true;
   if (family.offDomainMarker?.test(candidateText)) return false;
   return family.marker.test(candidateText);
+}
+
+// Applied even to a DIRECT category match (inferCandidateCategory already
+// says e.g. 'tops') - a positive RULES match is not proof enough on its own
+// when the matched word is generic (see the v3.4 offDomainMarker comment
+// above), so any unambiguous off-domain signal still disqualifies the
+// candidate regardless of how it was classified.
+function isDefinitelyOffDomain(requested, candidateText) {
+  const family = matchingDomainFamily(requested);
+  return Boolean(family?.offDomainMarker?.test(candidateText));
+}
+
+// 2026-08-05 v3.4 report (real production screenshots): even with
+// isDefinitelyOffDomain above, candidates like "TOPS Scandi Trekker" (a
+// knife brand) or "...トップスプリズムプラス...byトップス" (a stationery
+// brand) still survived - their titles contain no off-domain NOUN to
+// blocklist, just the brand name "TOPS"/"トップス" itself, which is exactly
+// the same bare word the 'tops' RULES pattern matches on. A blocklist can
+// never keep up with every brand that happens to be named "Tops". Instead:
+// the RULES 'tops' pattern matches BOTH unambiguous clothing vocabulary
+// (カットソー/ブラウス/シャツ/blouse) and a bare /\btops?\b|トップス/ that
+// commonly collides with unrelated brand names. When a candidate's only
+// evidence is that bare/ambiguous word, require additional clothing-context
+// corroboration before trusting the match at all - this is a positive-
+// evidence requirement, not another blocklist entry, so it generalizes to
+// brand collisions a blocklist cannot enumerate in advance.
+const TOPS_UNAMBIGUOUS_TERMS = /カットソー|ブラウス|シャツ|\bblouse\b/iu;
+const TOPS_AMBIGUOUS_WORD = /\btops?\b|トップス/iu;
+const CLOTHING_CONTEXT_MARKER = /(?:服|ファッション|アパレル|コーデ|着る|羽織る|着心地|レディース|メンズ|衣服|服装|服裝|时尚|時尚|패션|의류|fashion|apparel|wear|outfit|clothing|pajama|cami(?:sole)?|レース|lace|tank\s*top|crop\s*top|\bt-?shirt\b|\btee\b|women'?s|men'?s|cardigan|sweater|knit|袖|sleeve)/iu;
+
+function hasUnreliableAmbiguousMatch(category, candidateText) {
+  if (category !== 'tops') return false;
+  if (TOPS_UNAMBIGUOUS_TERMS.test(candidateText)) return false;
+  if (!TOPS_AMBIGUOUS_WORD.test(candidateText)) return false;
+  return !CLOTHING_CONTEXT_MARKER.test(candidateText);
 }
 
 export function filterCategoryMismatches(query, candidates = []) {
@@ -2798,10 +2848,13 @@ export function filterCategoryMismatches(query, candidates = []) {
       );
     }
     const category = inferCandidateCategory(candidate);
-    if (requested.has(category)) return true;
+    const candidateText = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
+    if (requested.has(category)) {
+      if (hasUnreliableAmbiguousMatch(category, candidateText)) return false;
+      return !isDefinitelyOffDomain(requested, candidateText);
+    }
     if (category !== 'other') return false;
-    const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
-    return isPlausiblyInRequestedDomain(requested, text);
+    return isPlausiblyInRequestedDomain(requested, candidateText);
   });
 }
 
