@@ -5,7 +5,7 @@ import { purgeSellerAuthRecords } from './seller-login-guard.mjs';
 import { handleMemberRoutes, lineLoginConfigured } from './member-auth.mjs';
 import { emailLoginConfigured } from './member-email-auth.mjs';
 import { syncProducts } from './product-index-v2.mjs';
-import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions } from './knowledge-search.mjs';
+import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates, suggestedKeywordOptions, teacherDatasetExclusionCount } from './knowledge-search.mjs';
 import { lookupTeacherDatasetEntry } from './search-quality/teacher-dataset-lookup.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
 import {
@@ -1143,6 +1143,12 @@ async function handleKnowledgeApi(request, env, ctx) {
     const length = Number(request.headers.get('content-length') || 0);
     if (length > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
     const input = validateKnowledgeRequest(await request.json());
+    // v3.4 CTO instruction: every checkpoint in the marketplace search trace
+    // (API送信/レスポンス件数/accepted件数/Teacher Dataset補正件数/ranking
+    // 入力・出力件数/モール別件数/UI送信件数) must share one requestId so the
+    // full path for a single search can be reconstructed from logs alone.
+    const requestId = crypto.randomUUID();
+    console.info('SEARCH_TRACE', { requestId, stage: '0_request_received', query: input.query });
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     const [gasOutcome, indexedOutcome] = await Promise.allSettled([
       callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } }),
@@ -1177,7 +1183,8 @@ async function handleKnowledgeApi(request, env, ctx) {
           env,
           buildRakutenSearchKeywordCandidates(input.query),
           fetch,
-          input.query
+          input.query,
+          requestId
         )
       });
       if (yahooShoppingApiConfigured(env)) marketplaceSearches.push({
@@ -1211,6 +1218,7 @@ async function handleKnowledgeApi(request, env, ctx) {
         result = { ...(result || {}), [source.key]: outcome.status === 'fulfilled' };
         if (outcome.status !== 'fulfilled') {
           console.warn('MARKETPLACE_PRODUCT_SEARCH_FAILED', {
+            requestId,
             source: source.key,
             status: Number(outcome.reason?.status) || 0,
             provider_code: String(outcome.reason?.providerCode || '').slice(0, 80)
@@ -1218,11 +1226,15 @@ async function handleKnowledgeApi(request, env, ctx) {
           perSourceCandidates.push({ key: source.key, candidates: [] });
           return;
         }
+        const returnedCount = Array.isArray(outcome.value) ? outcome.value.length : 0;
         const candidates = filterCategoryMismatches(input.query, outcome.value);
+        const teacherExcluded = teacherDatasetExclusionCount(input.query, outcome.value);
         console.info('MARKETPLACE_PRODUCT_SEARCH_RESULT', {
+          requestId,
           source: source.key,
-          returned: Array.isArray(outcome.value) ? outcome.value.length : 0,
-          accepted: candidates.length
+          returned: returnedCount,
+          accepted: candidates.length,
+          teacher_dataset_excluded: teacherExcluded
         });
         perSourceCandidates.push({ key: source.key, candidates });
       });
@@ -1230,10 +1242,20 @@ async function handleKnowledgeApi(request, env, ctx) {
       const beforeRankingCount = (result.candidates || []).length + interleavedCandidates.length;
       const rankedAll = rankMerchantCandidates(result.candidates || [], interleavedCandidates, input.query);
       const finalSlice = rankedAll.slice(0, 10);
-      console.info('MARKETPLACE_RANKING_RESULT', {
-        before_ranking: beforeRankingCount,
-        after_ranking: rankedAll.length,
-        sent_to_client: finalSlice.length,
+      const countByMarketplace = (list) => list.reduce((counts, item) => {
+        const marketplace = String(item.record_key || '').startsWith('RAKUTEN:') ? 'RAKUTEN_JP'
+          : String(item.offers?.[0]?.marketplace || (item.asin ? 'AMAZON_JP' : 'OTHER'));
+        counts[marketplace] = (counts[marketplace] || 0) + 1;
+        return counts;
+      }, {});
+      console.info('SEARCH_TRACE', {
+        requestId,
+        stage: '9_marketplace_ranking',
+        query: input.query,
+        ranking_input_count: beforeRankingCount,
+        ranking_output_count: rankedAll.length,
+        sent_to_client_count: finalSlice.length,
+        by_marketplace_in_final: countByMarketplace(finalSlice),
         rakuten_accepted: perSourceCandidates.find((item) => item.key === 'rakuten_catalog_connected')?.candidates.length || 0,
         rakuten_in_final: finalSlice.filter((item) => String(item.record_key || '').startsWith('RAKUTEN:')).length
       });
@@ -1277,8 +1299,9 @@ async function handleKnowledgeApi(request, env, ctx) {
       recommendation_id: decorated.query_id, asin: candidate.asin, event_type: 'IMPRESSION'
     }));
     if (events.length) ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'PWA' }));
+    console.info('SEARCH_TRACE', { requestId, stage: '10_ui_sent', query: input.query, ui_sent_count: (decorated.candidates || []).length });
     return Response.json({ ok: true, result: decorated }, {
-      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
     });
   } catch (error) {
     const code = String(error.message || error);

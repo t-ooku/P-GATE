@@ -699,6 +699,34 @@ test('rankMerchantCandidatesはqueryを渡さない既存呼び出しでは色�
   assert.deepEqual(ranked.map((item) => item.asin), ['BLACK0001', 'WHITE0001']);
 });
 
+// v3.4 CTO instruction: 検索意図一致 ＞ カテゴリ一致 ＞ Teacher Dataset一致 ＞
+// 商品品質 ＞ スポンサー補正 ＞ 価格 ＞ レビュー。以下はこの順序のうち、実際に
+// データが存在する③Teacher Dataset一致と⑥価格が正しくタイブレークすることの
+// 固定化テスト(hasMerchantOfferだけが検索意図より先に来ないことの確認)。
+test('同カテゴリ・同スコアの候補はTeacher Dataset一致語を含む方が優先される', () => {
+  const ranked = rankMerchantCandidates([
+    { asin: 'NOMATCH01', product_name: '掃除機', offers: [{ seller_id: 's1', marketplace: 'AMAZON_JP', product_url: 'u1' }] },
+    { asin: 'MATCH01', product_name: '軽量 掃除機', offers: [{ seller_id: 's2', marketplace: 'AMAZON_JP', product_url: 'u2' }] }
+  ], [], '軽い掃除機');
+  // teacher-dataset entry for '軽い掃除機' has search_terms.ja including
+  // '軽量 掃除機' (see evaluation/teacher-dataset/2026-08-06-day1-batch-001.json)
+  assert.equal(ranked[0].asin, 'MATCH01');
+});
+
+test('カテゴリ・Teacher Dataset一致・購入可否が同点なら価格が安い方を優先する', () => {
+  const ranked = rankMerchantCandidates([
+    {
+      asin: 'EXPENSIVE01', product_name: 'カットソー',
+      offers: [{ seller_id: 's1', marketplace: 'AMAZON_JP', product_url: 'u1', price: 5000 }]
+    },
+    {
+      asin: 'CHEAP01', product_name: 'カットソー',
+      offers: [{ seller_id: 's2', marketplace: 'AMAZON_JP', product_url: 'u2', price: 2000 }]
+    }
+  ], [], 'カットソー');
+  assert.equal(ranked[0].asin, 'CHEAP01');
+});
+
 // Regression for the 2026-08-05 v3.1 report: 家具/船用品 still appeared in
 // カットソー results even after the v3.0 "other"-bypass fix above. Root
 // cause (found by logging inferCandidateCategory + filterCategoryMismatches

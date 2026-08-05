@@ -54,7 +54,7 @@ export function normalizeRakutenItems(payload = {}) {
   }).filter((item) => item.product_name && item.offers.length);
 }
 
-export async function searchRakutenMarketplace(env, keywords, fetcher = fetch) {
+export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, requestId = '') {
   if (!rakutenApiConfigured(env)) return [];
   const query = String(keywords || '').normalize('NFKC').trim().slice(0, 200);
   if (!query) return [];
@@ -80,12 +80,14 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch) {
     error.providerCode = providerCode;
     throw error;
   };
-  // v3.2 CTO instruction: 楽天だけの①API送信/②レスポンス件数を必ずログ出力する。
-  console.info('RAKUTEN_PIPELINE_TRACE', { stage: '1_api_request', keywords: query, affiliate_id_present: Boolean(affiliateId) });
+  // v3.2/v3.4 CTO instruction: 楽天だけの①API送信/②レスポンス件数を、同一
+  // requestIdで必ずログ出力する。
+  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '1_api_request', keywords: query, affiliate_id_present: Boolean(affiliateId) });
   const payload = await request(url);
   const rawItemCount = (payload?.items || payload?.Items || []).length;
   const normalized = normalizeRakutenItems(payload);
   console.info('RAKUTEN_PIPELINE_TRACE', {
+    requestId,
     stage: '2_api_response',
     keywords: query,
     raw_item_count: rawItemCount,
@@ -99,9 +101,9 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch) {
   // If Rakuten changes its affiliate redirect shape, never expose an unverified
   // redirect. Re-fetch the same confirmed items as direct official product URLs.
   url.searchParams.delete('affiliateId');
-  console.info('RAKUTEN_PIPELINE_TRACE', { stage: '2b_api_retry_without_affiliate', keywords: query });
+  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '2b_api_retry_without_affiliate', keywords: query });
   const retried = normalizeRakutenItems(await request(url));
-  console.info('RAKUTEN_PIPELINE_TRACE', { stage: '2c_api_retry_response', keywords: query, normalized_item_count: retried.length });
+  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '2c_api_retry_response', keywords: query, normalized_item_count: retried.length });
   return retried;
 }
 
@@ -114,7 +116,8 @@ export async function searchRakutenMarketplaceWithFallback(
   env,
   keywordCandidates,
   fetcher = fetch,
-  query = ''
+  query = '',
+  requestId = ''
 ) {
   const candidates = [...new Set(
     (Array.isArray(keywordCandidates) ? keywordCandidates : [keywordCandidates])
@@ -122,7 +125,7 @@ export async function searchRakutenMarketplaceWithFallback(
       .filter(Boolean)
   )].slice(0, 2);
   for (const keywords of candidates) {
-    const results = await searchRakutenMarketplace(env, keywords, fetcher);
+    const results = await searchRakutenMarketplace(env, keywords, fetcher, requestId);
     if (!results.length) continue;
     if (!query || filterCategoryMismatches(query, results).length) return results;
   }

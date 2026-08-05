@@ -2805,6 +2805,23 @@ export function filterCategoryMismatches(query, candidates = []) {
   });
 }
 
+// v3.4 CTO instruction: "Teacher Dataset補正件数" must be observable in the
+// request trace as its own number, separate from filterCategoryMismatches's
+// overall accepted/rejected count. Deliberately kept as a read-only counter
+// alongside filterCategoryMismatches rather than changing that function's
+// return shape (an array), which ~15 call sites and its test suite depend on.
+export function teacherDatasetExclusionCount(query, candidates = []) {
+  const entry = lookupTeacherDatasetEntry(query);
+  const excludedTerms = (entry?.excluded_conditions || [])
+    .map((term) => String(term || '').normalize('NFKC').toLowerCase())
+    .filter(Boolean);
+  if (!excludedTerms.length) return 0;
+  return candidates.filter((candidate) => {
+    const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`.normalize('NFKC').toLowerCase();
+    return excludedTerms.some((term) => text.includes(term));
+  }).length;
+}
+
 // 100-point apparel relevance score (2026-08-05 v4.0 rubric):
 // category 40 / product-type 20 / audience 10 / color 10 / use-case 10 /
 // feature 5 / raw-query-word 5. Only computed when the query requests an
@@ -2820,6 +2837,42 @@ function apparelRelevanceScore(query, requested, colorPatterns, candidate) {
   const category = requested.has(inferCandidateCategory(candidate)) ? 40 : 0;
   const attributes = scoreApparelAttributeMatch(query, text, { colorPatterns });
   return { total: category + attributes.total, breakdown: { category, ...attributes.breakdown } };
+}
+
+// v3.4 CTO instruction: "検索意図一致 ＞ スポンサー補正" as an absolute rule.
+// ①検索意図一致 is enforced upstream as a hard gate, not a rank factor - every
+// candidate reaching this function has already survived filterCategoryMismatches
+// (and, for apparel-adjacent queries, the category>0 filter below), so a
+// non-matching candidate is never ranked, only ever excluded before this point.
+// From here, ties among already-matched candidates are broken in this order:
+// ②カテゴリ一致 → ③Teacher Dataset一致 → ④商品品質(購入可否) → ⑤スポンサー補正
+// → ⑥価格 → ⑦レビュー → 到着順. ⑤と⑦は現状ライブなデータソースが存在しない
+// ため常に0(no-op)だが、将来値を持つデータが追加された時にこの位置へそのまま
+// 差し込めるよう、比較チェーンの中に明示的なスロットとして残してある。
+
+function candidateMinPrice(candidate) {
+  const prices = (candidate?.offers || [])
+    .map((offer) => Number(offer?.price))
+    .filter((price) => Number.isFinite(price) && price > 0);
+  return prices.length ? Math.min(...prices) : Infinity;
+}
+
+// ③Teacher Dataset一致: does this candidate's text contain one of the
+// teacher-authored search terms for this exact query? Distinct from
+// apparelRelevanceScore's ②category component - this checks the specific
+// GPT/human-authored vocabulary (evaluation/teacher-dataset/*.json), not the
+// general ~150-category RULES classifier.
+function teacherDatasetMatchScore(query, candidate) {
+  const entry = query ? lookupTeacherDatasetEntry(query) : null;
+  if (!entry) return 0;
+  const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`.normalize('NFKC').toLowerCase();
+  const terms = [
+    ...(entry.search_terms?.ja || []),
+    ...(entry.search_terms?.en || []),
+    ...(entry.search_terms?.ko || []),
+    ...(entry.search_terms?.zh || [])
+  ].map((term) => String(term || '').normalize('NFKC').toLowerCase()).filter(Boolean);
+  return terms.some((term) => text.includes(term)) ? 1 : 0;
 }
 
 export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = [], query = '') {
@@ -2863,12 +2916,21 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
     merged.set(key, { ...candidate, ...existing, offers: uniqueOffers });
   }
   return [...merged.values()]
-    .map((candidate, position) => ({ candidate, position, score: relevanceScore(candidate) }))
+    .map((candidate, position) => ({
+      candidate,
+      position,
+      score: relevanceScore(candidate),
+      teacherMatch: teacherDatasetMatchScore(query, candidate)
+    }))
     .filter(({ score }) => !apparelDomainRequested || score.breakdown.category > 0)
     .sort((left, right) =>
-      Number(hasMerchantOffer(right.candidate)) -
-        Number(hasMerchantOffer(left.candidate)) ||
-      right.score.total - left.score.total ||
+      (right.score.breakdown.category - left.score.breakdown.category) ||          // ②カテゴリ一致
+      (right.teacherMatch - left.teacherMatch) ||                                  // ③Teacher Dataset一致
+      (Number(hasMerchantOffer(right.candidate)) - Number(hasMerchantOffer(left.candidate))) || // ④商品品質(購入可否)
+      ((right.score.total - right.score.breakdown.category) - (left.score.total - left.score.breakdown.category)) || // ④品質(属性一致度の残り)
+      0 ||                                                                         // ⑤スポンサー補正(ライブデータなし、no-op)
+      (candidateMinPrice(left.candidate) - candidateMinPrice(right.candidate)) ||  // ⑥価格(安い順)
+      0 ||                                                                         // ⑦レビュー(ライブデータなし、no-op)
       left.position - right.position
     )
     // relevance_score/relevance_score_breakdown make the 100-point rubric
