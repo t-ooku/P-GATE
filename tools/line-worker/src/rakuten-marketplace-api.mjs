@@ -80,16 +80,29 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch) {
     error.providerCode = providerCode;
     throw error;
   };
+  // v3.2 CTO instruction: 楽天だけの①API送信/②レスポンス件数を必ずログ出力する。
+  console.info('RAKUTEN_PIPELINE_TRACE', { stage: '1_api_request', keywords: query, affiliate_id_present: Boolean(affiliateId) });
   const payload = await request(url);
+  const rawItemCount = (payload?.items || payload?.Items || []).length;
   const normalized = normalizeRakutenItems(payload);
-  if (normalized.length || !(payload?.items || payload?.Items || []).length || !affiliateId) {
+  console.info('RAKUTEN_PIPELINE_TRACE', {
+    stage: '2_api_response',
+    keywords: query,
+    raw_item_count: rawItemCount,
+    normalized_item_count: normalized.length,
+    dropped_by_normalization: rawItemCount - normalized.length
+  });
+  if (normalized.length || !rawItemCount || !affiliateId) {
     return normalized;
   }
 
   // If Rakuten changes its affiliate redirect shape, never expose an unverified
   // redirect. Re-fetch the same confirmed items as direct official product URLs.
   url.searchParams.delete('affiliateId');
-  return normalizeRakutenItems(await request(url));
+  console.info('RAKUTEN_PIPELINE_TRACE', { stage: '2b_api_retry_without_affiliate', keywords: query });
+  const retried = normalizeRakutenItems(await request(url));
+  console.info('RAKUTEN_PIPELINE_TRACE', { stage: '2c_api_retry_response', keywords: query, normalized_item_count: retried.length });
+  return retried;
 }
 
 // query is optional: when provided, a keyword candidate is only accepted if

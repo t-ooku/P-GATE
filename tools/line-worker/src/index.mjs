@@ -1120,6 +1120,21 @@ function sanitizePublicOffer(offer) {
   };
 }
 
+// Round-robin interleave across marketplace sources before ranking, so a
+// single source's candidates never occupy every early tie-break "position"
+// ahead of another equally-scored source (see MARKETPLACE_RANKING_RESULT
+// comment above for the bug this fixes).
+export function interleaveCandidatesBySource(groups = []) {
+  const result = [];
+  const maxLength = Math.max(0, ...groups.map((group) => (Array.isArray(group) ? group.length : 0)));
+  for (let index = 0; index < maxLength; index += 1) {
+    for (const group of groups) {
+      if (Array.isArray(group) && group[index]) result.push(group[index]);
+    }
+  }
+  return result;
+}
+
 async function handleKnowledgeApi(request, env, ctx) {
   try {
     const requestOrigin = request.headers.get('origin');
@@ -1174,6 +1189,23 @@ async function handleKnowledgeApi(request, env, ctx) {
         )
       });
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
+      // v3.2 CTO diagnosis: this loop used to call
+      // rankMerchantCandidates(...).slice(0, 10) on every iteration, so
+      // whichever source was processed first (amazon_catalog_connected is
+      // pushed before rakuten_catalog_connected/yahoo_catalog_connected
+      // above) could already fill all 10 slots with equally-scored
+      // candidates before a later source's candidates were even merged in -
+      // and since rankMerchantCandidates ties on arrival position, a
+      // later-processed source's candidates always lost that tie and were
+      // sliced away, structurally starving Rakuten/Yahoo even when their
+      // candidates were equally valid. Reproduced and confirmed with a
+      // logged trace (10 equally-scored Amazon candidates + 1 accepted
+      // Rakuten candidate -> Rakuten dropped every time). Fixed by
+      // collecting every source's accepted candidates first, interleaving
+      // them round-robin across sources (so no single source's candidates
+      // occupy every early "position" tie-break slot), and ranking+slicing
+      // exactly once after all sources have reported in.
+      const perSourceCandidates = [];
       outcomes.forEach((outcome, index) => {
         const source = marketplaceSearches[index];
         result = { ...(result || {}), [source.key]: outcome.status === 'fulfilled' };
@@ -1183,6 +1215,7 @@ async function handleKnowledgeApi(request, env, ctx) {
             status: Number(outcome.reason?.status) || 0,
             provider_code: String(outcome.reason?.providerCode || '').slice(0, 80)
           });
+          perSourceCandidates.push({ key: source.key, candidates: [] });
           return;
         }
         const candidates = filterCategoryMismatches(input.query, outcome.value);
@@ -1191,8 +1224,20 @@ async function handleKnowledgeApi(request, env, ctx) {
           returned: Array.isArray(outcome.value) ? outcome.value.length : 0,
           accepted: candidates.length
         });
-        result.candidates = rankMerchantCandidates(result.candidates || [], candidates, input.query).slice(0, 10);
+        perSourceCandidates.push({ key: source.key, candidates });
       });
+      const interleavedCandidates = interleaveCandidatesBySource(perSourceCandidates.map((item) => item.candidates));
+      const beforeRankingCount = (result.candidates || []).length + interleavedCandidates.length;
+      const rankedAll = rankMerchantCandidates(result.candidates || [], interleavedCandidates, input.query);
+      const finalSlice = rankedAll.slice(0, 10);
+      console.info('MARKETPLACE_RANKING_RESULT', {
+        before_ranking: beforeRankingCount,
+        after_ranking: rankedAll.length,
+        sent_to_client: finalSlice.length,
+        rakuten_accepted: perSourceCandidates.find((item) => item.key === 'rakuten_catalog_connected')?.candidates.length || 0,
+        rakuten_in_final: finalSlice.filter((item) => String(item.record_key || '').startsWith('RAKUTEN:')).length
+      });
+      result.candidates = finalSlice;
     }
     result = {
       ...(result || {}),
