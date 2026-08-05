@@ -165,6 +165,10 @@ ultra_ambiguousな例（「ゲームにつなぐやつ」「透明なやつ」�
 - §7の検索ログ匿名化抽出（案Aも案Bも未実装、設計のみ）
 - 認証付きの取り込みAPIエンドポイント（`src/index.mjs`へのルート追加）。現状はCLIでSQLファイルを生成する運用のみ
 
+## 13. 付記：AIウォッチ向け列の追加（2026-08-05, CTO指示書v3.2 ⑥）
+
+`migrations/0035_teacher_dataset_watch_columns.sql`で`teacher_queries`へ`price_watch`／`stock_watch`／`coupon_watch`／`launch_watch`(いずれもINTEGER, NULL許容の0/1)を追加した。CTO指示どおり**列のみ**であり、JSON仕様(`teacher-dataset.schema.json`)・取り込みロジック(`teacher-dataset-ingest.mjs`)・コンパイル済みアーティファクトへの接続は行っていない。詳細は[HOSHILU_AI_WATCH_FUTURE_DESIGN_v0.1.md](HOSHILU_AI_WATCH_FUTURE_DESIGN_v0.1.md)§3を参照。
+
 ## 12. 推奨次ステップ
 
 1. 本書とBusiness仕様書のレビュー（特に§7の案A/B判断、Business v1.1と既存v0.2の整合方針）

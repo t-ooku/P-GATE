@@ -108,8 +108,8 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /copySearchKeywords/);
   assert.match(app, /検索ワードをコピー/);
   assert.match(app, /Find this product on Amazon/);
-  assert.match(app, /features:\['HOSHILU 搜索','已收藏'\]/);
-  assert.match(app, /features:\['HOSHILU 검색','저장'\]/);
+  assert.match(app, /features:\['HOSHILU 搜索','AI监控'\]/);
+  assert.match(app, /features:\['HOSHILU 검색','AI 워치'\]/);
   assert.match(html, /class="language-label header-language"/);
   assert.match(html, /HOSHILUはAmazonアソシエイトおよび楽天アフィリエイトのリンクを通じて収入を得る場合があります。/);
   assert.match(html, /広告：Amazon・楽天市場へのリンクにはアフィリエイトリンクが含まれる場合があります。/);
