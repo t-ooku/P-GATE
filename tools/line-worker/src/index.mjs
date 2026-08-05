@@ -1539,20 +1539,30 @@ function handlePublicConfig(env) {
   });
 }
 
+// gas/PreflightEngine.gs CORE_SHEETSの「必須シート」チェックのD1版。この
+// migration一式(0037〜0041)で追加した各エンジンの索引テーブルもここに含め、
+// デプロイ後にsqlite_master上で実在を横断確認できるようにする。
+const CORE_D1_TABLES = [
+  'mywatch_notifications', 'import_restriction_knowledge',
+  'sp_api_listings', 'sp_api_sync_audit', 'marketplace_sale_events',
+  'member_sale_preferences',
+  'contracts', 'contract_decisions',
+  'product_aliases', 'localized_product_content',
+  'kpi_events', 'kpi_summary', 'kpi_uplift',
+  'marketplace_kpi_events', 'marketplace_kpi_summary',
+  'anonymous_benchmark',
+  'social_knowledge_inbox', 'social_knowledge_aggregates', 'social_hashtag_aggregates',
+  'product_identifiers'
+];
+
 async function databaseFeatureChecks(env) {
-  const expected = [
-    'mywatch_notifications', 'import_restriction_knowledge',
-    'sp_api_listings', 'sp_api_sync_audit', 'marketplace_sale_events',
-    'member_sale_preferences'
-  ];
+  const expected = CORE_D1_TABLES;
   if (!env.PRODUCT_DB) return Object.fromEntries(expected.map((name) => [name, false]));
   try {
+    const placeholders = expected.map((_, index) => `?${index + 1}`).join(',');
     const result = await env.PRODUCT_DB.prepare(
-      `SELECT name FROM sqlite_master WHERE type='table'
-      AND name IN ('mywatch_notifications','import_restriction_knowledge',
-      'sp_api_listings','sp_api_sync_audit','marketplace_sale_events',
-      'member_sale_preferences')`
-    ).all();
+      `SELECT name FROM sqlite_master WHERE type='table' AND name IN (${placeholders})`
+    ).bind(...expected).all();
     const found = new Set((result?.results || []).map((row) => row.name));
     return Object.fromEntries(expected.map((name) => [name, found.has(name)]));
   } catch {
