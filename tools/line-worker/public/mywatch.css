@@ -1,7 +1,9 @@
 .mywatch-hub{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
-.mywatch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mywatch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .mywatch-heading h3{margin:0;font-size:16px}
 .mywatch-heading button{border:0;border-radius:10px;background:var(--soft);color:#5140ba;padding:8px 11px;cursor:pointer;font-weight:800}
+.mywatch-test-controls{display:flex;gap:6px;flex-wrap:wrap}
+.mywatch-test-button{border:1px dashed #b8a9ff!important;background:#fff!important;font-size:11px!important;padding:6px 9px!important}
 .notification-list{margin-top:12px;min-width:0;color:#211b3b}
 .notification-list.info-row-list{background:rgba(115,87,255,.06);scrollbar-color:#a993ff transparent}
 .notification-list .info-row{color:#211b3b;border-bottom-color:var(--line)}

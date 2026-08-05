@@ -2847,7 +2847,7 @@ export function filterCategoryMismatches(query, candidates = []) {
         tabletConstraints
       );
     }
-    const category = inferCandidateCategory(candidate);
+    const category = inferCandidateCategory(candidate, requested);
     const candidateText = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
     if (requested.has(category)) {
       if (hasUnreliableAmbiguousMatch(category, candidateText)) return false;
@@ -2887,7 +2887,7 @@ function apparelRelevanceScore(query, requested, colorPatterns, candidate) {
   const zero = { total: 0, breakdown: { category: 0, product_type: 0, audience: 0, color: 0, use_case: 0, feature: 0, raw_text: 0 } };
   if (![...requested].some((category) => APPAREL_ADJACENT_DOMAIN_CATEGORIES.has(category))) return zero;
   const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
-  const category = requested.has(inferCandidateCategory(candidate)) ? 40 : 0;
+  const category = requested.has(inferCandidateCategory(candidate, requested)) ? 40 : 0;
   const attributes = scoreApparelAttributeMatch(query, text, { colorPatterns });
   return { total: category + attributes.total, breakdown: { category, ...attributes.breakdown } };
 }

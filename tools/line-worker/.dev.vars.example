@@ -35,3 +35,10 @@ AMAZON_CREATORS_CREDENTIAL_ID=
 AMAZON_CREATORS_CREDENTIAL_SECRET=
 AMAZON_CREATORS_CREDENTIAL_VERSION=2.3
 AMAZON_ASSOCIATE_TAG=
+
+# AI Watch verification-only test notifications (POST/DELETE
+# /api/member/notifications/test-seed). Set to "1" only during a QA/RC
+# verification window, then back to "0" - it lets any logged-in member seed
+# 4 fake notification cards into their own account. The real price/stock/
+# coupon monitor is a separate, not-yet-built pipeline.
+MYWATCH_TEST_EVENTS_ENABLED=0

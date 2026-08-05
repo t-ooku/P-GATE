@@ -22,7 +22,8 @@
     "MEMBER_EMAIL_FROM": "notification@auth.hoshilu.app",
     "SELLER_ACCOUNT_NAME": "ITG GROUP",
     "SELLER_ALLOWED_TENANTS": "itg,itt,mc2",
-    "SELLER_PLAN": "PARTNER"
+    "SELLER_PLAN": "PARTNER",
+    "MYWATCH_TEST_EVENTS_ENABLED": "1"
   },
   "triggers": {
     "crons": ["*/15 * * * *"]

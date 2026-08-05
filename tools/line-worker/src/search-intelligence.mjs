@@ -419,8 +419,25 @@ export function requestedColorPatterns(query) {
     .map(([pattern]) => pattern);
 }
 
-export function inferCandidateCategory(candidate) {
+// preferredCategories (typically the query's requested-category set) breaks
+// ties when a candidate's title matches more than one RULES pattern - very
+// common on real marketplace listings, which are keyword-stuffed with
+// synonyms for SEO (e.g. a listing titled "カットソー Tシャツ トップス"
+// matches both 't-shirt' and 'tops'). Without this, RULES.find always
+// returns whichever category happens to appear earlier in the RULES array,
+// regardless of what the shopper actually searched for - so a plain
+// "カットソー" query (which only requests 'tops') rejected every candidate
+// whose title also happened to say "Tシャツ", because they were classified
+// 't-shirt' by array order alone and 't-shirt' wasn't in the requested set.
+// Reproduced 2026-08-05: real Rakuten カットソー results returning a single
+// surviving candidate (an unrelated medical scrub) because every genuine
+// cut-sew top was misclassified away by this order dependency.
+export function inferCandidateCategory(candidate, preferredCategories) {
   const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`;
+  if (preferredCategories && preferredCategories.size) {
+    const preferred = RULES.find(([category, pattern]) => preferredCategories.has(category) && pattern.test(text));
+    if (preferred) return preferred[0];
+  }
   return RULES.find(([, pattern]) => pattern.test(text))?.[0] || 'other';
 }
 

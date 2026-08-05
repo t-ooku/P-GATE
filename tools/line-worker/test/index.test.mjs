@@ -465,7 +465,7 @@ test('PWA公開設定はSite Keyだけを返し、無効な質問をAPI境界で
     { TURNSTILE_SITE_KEY: 'public-site-key', TURNSTILE_SECRET_KEY: 'must-not-leak' }, ctx
   );
   const config = await configResponse.json();
-  assert.deepEqual(config, { turnstile_site_key: 'public-site-key', line_login_configured: false, email_login_configured: false, sms_login_configured: false });
+  assert.deepEqual(config, { turnstile_site_key: 'public-site-key', line_login_configured: false, email_login_configured: false, sms_login_configured: false, mywatch_test_events_enabled: false });
   assert.equal(JSON.stringify(config).includes('must-not-leak'), false);
 
   const invalidResponse = await workerModule.default.fetch(
@@ -602,7 +602,7 @@ test('公開設定はTurnstile Site Key未設定時に503を返す', async () =>
     new Request('https://p-gate.example/api/config'), {}, { waitUntil() {} }
   );
   assert.equal(response.status, 503);
-  assert.deepEqual(await response.json(), { turnstile_site_key: '', line_login_configured: false, email_login_configured: false, sms_login_configured: false });
+  assert.deepEqual(await response.json(), { turnstile_site_key: '', line_login_configured: false, email_login_configured: false, sms_login_configured: false, mywatch_test_events_enabled: false });
 });
 
 test('Qoo10の商品検索はASINと末尾ノイズを除き短い商品条件へ整える', () => {

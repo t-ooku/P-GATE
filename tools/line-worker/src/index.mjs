@@ -1373,7 +1373,19 @@ async function handleKnowledgeApi(request, env, ctx) {
 
 function handlePublicConfig(env) {
   const siteKey = String(env.TURNSTILE_SITE_KEY || '');
-  return Response.json({ turnstile_site_key: siteKey, line_login_configured: lineLoginConfigured(env), email_login_configured: emailLoginConfigured(env), sms_login_configured: false }, {
+  return Response.json({
+    turnstile_site_key: siteKey,
+    line_login_configured: lineLoginConfigured(env),
+    email_login_configured: emailLoginConfigured(env),
+    sms_login_configured: false,
+    // RC2 verification-only flag (see mywatch-routes.mjs's test-seed route):
+    // lets a logged-in member seed the 4 AI Watch notification types
+    // (値下げ/クーポン/再入荷/販売開始) to verify the notification UI without
+    // a live price/stock/coupon monitor, which is a separate future task.
+    // Off by default; only true when an operator explicitly turns it on for
+    // a verification window.
+    mywatch_test_events_enabled: String(env.MYWATCH_TEST_EVENTS_ENABLED || '') === '1'
+  }, {
     status: siteKey ? 200 : 503,
     headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
   });

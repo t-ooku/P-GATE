@@ -15,6 +15,34 @@
 
 保存先: `localStorage`の`hoshilu_watch_preferences`(クライアント側)。将来、無料会員ログイン時はサーバー側(`member_wishes`等の既存テーブル)へも同期される設計を維持する。
 
+## 1.5. 現行4項目の「外部監視処理」は別タスク(RC2, 2026-08-05 追記)
+
+RC2実機検証で「AIウォッチの通知機能が稼働していない」との指摘を受けた。切り分けた結果:
+
+- **実装済み**: 通知の保存・配信・既読/非表示・UI表示のパイプライン全体
+  (`mywatch-routes.mjs`の`enqueue`/`list`/`update`/`deliverDueWebNotifications`、
+  `mywatch_notifications`・`mywatch_delivery_audit`テーブル)。
+  `POST /api/internal/mywatch/events`という、共有秘密(`MYWATCH_CRON_SECRET`)で
+  保護された内部APIへ「値下げ/クーポン/再入荷/販売開始のイベントが発生した」
+  というイベントを渡せば、以降の保存・配信・表示は正しく動作する。
+- **未実装(このセクションが指す「別タスク」)**: 実際にAmazon/楽天/Yahoo!等の
+  商品ページを定期的に見に行き、価格・在庫・クーポンの変化を検知して
+  上記の内部APIを呼び出す、外部監視処理そのもの。現時点でこれを呼び出す
+  クローラーやcronジョブは存在しない。`wrangler.jsonc`の`triggers.crons`
+  (`*/15 * * * *`)は`deliverDueWebNotifications`(溜まった通知を配信する側)
+  だけを回しており、検知側の処理は含まれていない。
+
+つまり「AIウォッチのUIとパイプラインは完成しているが、そこに投入するイベントを
+実際に生成する仕組みがまだない」状態。RC2ではこの区別を検証できるよう、
+`POST/DELETE /api/member/notifications/test-seed`(会員セッション必須、
+`MYWATCH_TEST_EVENTS_ENABLED=1`の間だけ有効)で4種類のテスト通知を手動投入・
+削除できるQA専用の仕組みを追加した。これは本番の検知処理の代替ではなく、
+UI・配信パイプラインの動作確認のためだけの機能であり、検証終了後は
+`MYWATCH_TEST_EVENTS_ENABLED`を`0`に戻す。
+
+実際の外部監視処理(スクレイピング/API定期ポーリング等でのAmazon/楽天/Yahoo!
+価格・在庫・クーポン検知)の設計・実装は、本書の対象外として別タスクで扱う。
+
 ## 2. 将来追加予定の6項目
 
 | 項目 | 判定に必要なデータ | 実装難易度(概算) | 備考 |

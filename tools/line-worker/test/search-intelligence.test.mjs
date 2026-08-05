@@ -770,6 +770,46 @@ test('英語の家具リストが偶然ファッション語を含んでいて�
   assert.deepEqual(candidates.map((item) => item.asin), ['REAL01']);
 });
 
+// Regression for the 2026-08-05 RC2 real-device report: "カットソー" search
+// returned only one candidate (an unrelated medical scrub). Root cause: real
+// listings are keyword-stuffed with synonyms for SEO ("カットソー Tシャツ
+// トップス"), and inferCandidateCategory() used to always return whichever
+// RULES category happened to appear earliest in the array, regardless of
+// what the shopper searched for - a title mentioning both "カットソー" and
+// "Tシャツ" was always classified 't-shirt' (RULES order), never 'tops', so
+// a bare "カットソー" query (which only requests 'tops') rejected every such
+// candidate. Fixed by having inferCandidateCategory prefer a match that is
+// in the caller's requested-category set when more than one RULES pattern
+// matches.
+test('タイトルにTシャツ等の同義語が併記されたカットソー商品も除外されない', () => {
+  const candidates = filterCategoryMismatches('カットソー', [
+    { asin: 'REAL01', product_name: 'レディース 半袖 カットソー Tシャツ トップス 無地 シンプル' },
+    { asin: 'REAL02', product_name: 'メンズ カットソー 長袖 ロンT ストリート トップス シャツ' }
+  ]);
+  assert.deepEqual(candidates.map((item) => item.asin), ['REAL01', 'REAL02']);
+});
+
+// RC2実機報告の再現(4件): 「カットソー」検索が1件(医療用スクラブ)のみに
+// なっていた。上のtシャツ/トップス分類バグの修正により、本物のカットソー
+// 商品が複数生き残り、かつスクラブより上位にランクされることを固定化する。
+test('カットソー系4クエリすべてで複数の本物カットソーが医療用スクラブより上位に出る', () => {
+  const pool = [
+    { asin: 'A1', product_name: 'レディース 半袖 カットソー Tシャツ トップス 無地 綿100%', offers: [{ marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000001' }] },
+    { asin: 'A2', product_name: 'メンズ カットソー 長袖 ロンT トップス シャツ ストリート', offers: [{ marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000002' }] },
+    { asin: 'A3', product_name: 'レディース 白 長袖 カットソー シンプル トップス Tシャツ', offers: [{ marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000003' }] },
+    { asin: 'A4', product_name: 'カットソー ブラウス 半袖 レディース きれいめ シャツ', offers: [{ marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000004' }] },
+    { asin: 'SCRUB', product_name: '医療 白衣 スクラブ 半袖 メディカルウェア 男女兼用 制菌 レディース メンズ', offers: [{ marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000005' }] },
+    { asin: 'FURNITURE', product_name: 'ローテーブル センターテーブル 木製 家具', offers: [{ marketplace: 'AMAZON_JP', product_url: 'https://amazon.co.jp/dp/B000000006' }] }
+  ];
+  for (const query of ['カットソー', 'レディース カットソー', 'レディース 半袖 カットソー', 'レディース 白 長袖 カットソー']) {
+    const ranked = rankMerchantCandidates([], filterCategoryMismatches(query, pool), query);
+    assert.ok(ranked.length >= 3, `expected multiple カットソー candidates for "${query}", got ${ranked.length}`);
+    assert.ok(!ranked.some((item) => item.asin === 'FURNITURE'), `furniture should never appear for "${query}"`);
+    const scrubIndex = ranked.findIndex((item) => item.asin === 'SCRUB');
+    assert.ok(scrubIndex === -1 || scrubIndex > 0, `scrub must not be the only/top result for "${query}"`);
+  }
+});
+
 // マリン/ボート系の語は「マリンボーダー」「ボートネック」という実在のファッ
 // ション用語でもあるため、offDomainMarkerには含めていない。誤って除外しな
 // いことを固定化する。

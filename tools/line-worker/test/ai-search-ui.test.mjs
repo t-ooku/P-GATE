@@ -39,3 +39,28 @@ test('WHY HOSHILU is concise and official social labels are not duplicated', asy
   assert.doesNotMatch(html, /<div class="benefit-grid">/);
   assert.doesNotMatch(html, /official-social-link[^>]*>\s*<span/);
 });
+
+// Regression for the RC2 real-device report: the AI chat dialog closed
+// immediately after the last turn and only afterwards tried to trigger the
+// real search by clicking #submitButton and polling its disabled state -
+// which could not tell "results actually rendered" apart from "silently did
+// nothing" (e.g. native required-field validation blocking the click), and
+// once dialog.close() ran, the dialog (and any later error message appended
+// to it) was already removed from the DOM. Fixed by running the real search
+// directly (window.HoshiluSearch.run, awaited for a real ok/fail result) and
+// only closing the dialog after a confirmed success.
+test('AIチャットは検索の成功を確認してからダイアログを閉じ、失敗時は開いたまま再試行を出す', async () => {
+  const [app, script] = await Promise.all([read('app.js'), read('ai-search-ui.mjs')]);
+  assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch\}/);
+  assert.match(app, /async function runKnowledgeSearch\(\)/);
+  assert.match(app, /return\{ok:true,result:payload\.result\}/);
+  assert.match(app, /return\{ok:false,error:String\(error\?\.message\|\|error\)\}/);
+  assert.match(script, /window\.HoshiluSearch\?\.run/);
+  assert.doesNotMatch(script, /submitButton\.click\(\)/);
+  // dialog.close() must only appear guarded behind a successful outcome,
+  // never unconditionally right after the last chat turn resolves.
+  assert.doesNotMatch(script, /needs_clarification[\s\S]{0,400}dialog\.close\(\)/);
+  assert.match(script, /if \(outcome\.ok\) \{\s*dialog\.close\(\);/);
+  assert.match(script, /function showSearchError\(refinedQuery\)/);
+  assert.match(script, /ai-chat-retry/);
+});
