@@ -28,6 +28,8 @@ import { deliverDueMemberNotifications } from './member-notification-delivery.mj
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
 import { decideContractPolicy, jstDateKey, knowledgeKeyForQuery } from './contract-policy.mjs';
+import { handleMultilingualSyncRoutes } from './multilingual-seo-routes.mjs';
+import { attachMultilingualContent } from './multilingual-seo.mjs';
 import {
   runSpApiScheduledSync, spApiConfiguredTenants
 } from './sp-api-d1-repository.mjs';
@@ -1264,6 +1266,19 @@ async function applyD1ContractPolicy(env, result, query, requestId) {
   }
 }
 
+// HOSHILU GAS→Web移行 (docs/HOSHILU_GAS_TO_WEB_MIGRATION_BRIEF_2026-08-06.md §3,
+// gas/MultilingualSeoEngine.gs): D1索引検索由来の候補(candidate.tenantを持つ)
+// へ、D1に同期済みの承認済み別名・多言語コンテンツを補う。GAS由来の候補は
+// 既にgas/KnowledgeEngine.gs answer()内でMultilingualSeoEngine.attachAliases/
+// attachLocalizedContent済み(=descriptionが入っている)なので上書きしない。
+// D1未設定・クエリ失敗時はno-op。返却直前にtenant(内部専用フィールド)を除去する。
+async function applyD1MultilingualContent(env, result, language) {
+  const candidates = Array.isArray(result?.candidates) ? result.candidates : [];
+  const enriched = candidates.length ? await attachMultilingualContent(env, candidates, language) : candidates;
+  const cleaned = enriched.map(({ tenant, ...candidate }) => candidate);
+  return candidates.length ? { ...result, candidates: cleaned } : result;
+}
+
 async function handleKnowledgeApi(request, env, ctx) {
   try {
     const requestOrigin = request.headers.get('origin');
@@ -1294,6 +1309,7 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(result.candidates, gasResult.candidates, input.query)
       };
     }
+    result = await applyD1MultilingualContent(env, result, input.language);
     result = await applyD1ContractPolicy(env, result, input.query, requestId);
     const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env)
       || yahooShoppingApiConfigured(env);
@@ -1533,6 +1549,8 @@ export default {
     if (unmetDemandResponse) return unmetDemandResponse;
     const contractPolicySyncResponse = await handleContractPolicySyncRoutes(request, env);
     if (contractPolicySyncResponse) return contractPolicySyncResponse;
+    const multilingualSyncResponse = await handleMultilingualSyncRoutes(request, env);
+    if (multilingualSyncResponse) return multilingualSyncResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
     const adminAuthResponse = await handleAdminAuthRoutes(request, env);

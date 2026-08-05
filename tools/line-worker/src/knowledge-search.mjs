@@ -262,6 +262,10 @@ function indexedCandidate(row, rank) {
   return {
     rank: rank + 1,
     asin: row.asin,
+    // gas/MultilingualSeoEngine.gsのWorker移植(multilingual-seo.mjs)がD1索引
+    // 候補へ承認済みの多言語display_name/descriptionを補うために使う内部専用
+    // フィールド。GAS由来の候補には無い(既にGAS側で多言語化済みのため)。
+    tenant: row.tenant,
     product_name: row.product_name,
     display_name: row.product_name,
     manufacturer: row.manufacturer,
