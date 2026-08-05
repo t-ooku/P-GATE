@@ -82,6 +82,24 @@ test('楽天市場APIへ整理済み検索語とサーバー側認証情報を�
   assert.equal(candidates.length, 1);
 });
 
+// Regression for the 2026-08 report: real credentials against the live
+// openapi.rakuten.co.jp endpoint returned 403
+// REQUEST_CONTEXT_BODY_HTTP_REFERRER_MISSING for every request, so Rakuten
+// contributed zero results end-to-end even with valid keys. Root cause:
+// Rakuten's migrated API enforces the app's registered "許可されたウェブ
+// サイト" (hoshilu.app) via the request's HTTP Referer, and a backend fetch
+// sends no Referer by default. Confirmed live that adding both Referer and
+// Origin resolves it. This locks in that both headers are always sent.
+test('楽天市場APIへは登録済みサイトのRefererとOriginを付与する', async () => {
+  let requested;
+  await searchRakutenMarketplace(env, 'カットソー', async (url, options) => {
+    requested = options;
+    return Response.json({ items: [] });
+  });
+  assert.equal(requested.headers.referer, 'https://hoshilu.app/');
+  assert.equal(requested.headers.origin, 'https://hoshilu.app');
+});
+
 test('複合条件が0件なら主要商品語で一度だけ再検索する', async () => {
   const requestedKeywords = [];
   const candidates = await searchRakutenMarketplaceWithFallback(

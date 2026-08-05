@@ -67,8 +67,17 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   url.searchParams.set('elements', 'itemName,itemCode,itemPrice,itemUrl,affiliateUrl,mediumImageUrls,smallImageUrls,catchcopy,itemCaption,availability,postageFlag');
   const affiliateId = String(env.RAKUTEN_AFFILIATE_ID || '').trim();
   if (affiliateId) url.searchParams.set('affiliateId', affiliateId);
+  // 2026-08 Rakuten platform migration: the new openapi.rakuten.co.jp
+  // endpoint enforces the app's registered "許可されたウェブサイト" (allowed
+  // website) via the request's HTTP Referer, rejecting server-to-server
+  // calls with no Referer as 403 REQUEST_CONTEXT_BODY_HTTP_REFERRER_MISSING
+  // (reproduced directly against this exact endpoint/credentials). A backend
+  // fetch has no natural Referer, so both Referer and Origin must be set
+  // explicitly to the app's registered hoshilu.app website.
   const request = async (requestUrl) => {
-    const response = await fetcher(requestUrl.toString(), { headers: { accept: 'application/json' } });
+    const response = await fetcher(requestUrl.toString(), {
+      headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' }
+    });
     if (response.ok) return response.json();
     let providerCode = '';
     try {
