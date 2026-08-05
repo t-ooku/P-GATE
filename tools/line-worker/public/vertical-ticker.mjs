@@ -1,5 +1,5 @@
 // Shared vertical auto-rotating ticker behavior for HOSHILU NEWS, SALE
-// RADAR, and the ホシっといて通知 list (2026-08-05 v3/v4.0 instructions).
+// RADAR, and the AIウォッチ通知 list (2026-08-05 v3/v4.0 instructions).
 // The container is a fixed-height, natively scrollable list
 // (overflow-y: auto, scroll-snap-type: y mandatory - see ticker.css) with
 // every row stacked inside it. Manual wheel/touch scrolling uses the
