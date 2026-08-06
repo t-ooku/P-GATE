@@ -11,7 +11,8 @@ test('Swippitt is identified without requiring the word insert', () => {
 
 test('social actions search public platforms and share through LINE', () => {
   const links = socialDiscoverySearchLinks('丸く光るライト', 'https://hoshilu.app');
-  assert.deepEqual(links.map(link => link.label), ['Instagram', 'X', 'TikTok', 'YouTube', 'LINEで共有']);
+  assert.deepEqual(links.map(link => link.label), ['Instagramで探す', 'Xで探す', 'TikTokで探す', 'YouTubeで探す', 'LINEで共有']);
+  assert.deepEqual(links.map(link => link.channel), ['instagram', 'x', 'tiktok', 'youtube', 'line']);
   assert.match(links[0].url, /^https:\/\/www\.instagram\.com\/explore\/search\/keyword\/\?q=/);
   assert.match(links[2].url, /^https:\/\/www\.tiktok\.com\/search\?q=/);
   assert.doesNotMatch(links[0].url, /google\.com\/search/);

@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="/sticky-nav.css">
   <link rel="stylesheet" href="/speech-input.css">
   <link rel="stylesheet" href="/install.css">
-  <link rel="stylesheet" href="/layout-v3.css">
+  <link rel="stylesheet" href="/layout-v3.css?v=91">
   <title>ホシル｜最大10モール横断の商品検索・セール通知</title>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://hoshilu.app/#website","url":"https://hoshilu.app/","name":"ホシル｜HOSHILU","inLanguage":["ja","en","zh","ko"],"potentialAction":{"@type":"SearchAction","target":"https://hoshilu.app/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"WebApplication","@id":"https://hoshilu.app/#app","name":"ホシル","alternateName":"HOSHILU","url":"https://hoshilu.app/","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"名前が分からない商品を記憶や特徴から探し、最大10モールを横断して購入先と確認済みセール情報を案内する無料の商品検索サービス。","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}},{"@type":"Organization","@id":"https://hoshilu.app/#organization","name":"HOSHILU","url":"https://hoshilu.app/","logo":{"@type":"ImageObject","url":"https://hoshilu.app/icons/hoshilu-v2-512.png"}}]}</script>
 </head>
@@ -198,6 +198,55 @@
 
         </div>
 
+        <div class="hoshilu-primary-late">
+          <section class="search-journey" aria-labelledby="journeyTitle">
+            <div class="journey-heading">
+              <p class="step">HOSHILU SEARCH AGENT</p>
+              <h2 id="journeyTitle"><span>検索する前に、</span><span>ホシルに話す。</span></h2>
+              <p id="journeyLead"><span>曖昧な「欲しい」を、</span><span>見つかる検索へ変換します。</span></p>
+            </div>
+            <ol class="journey-steps">
+              <li><span>1</span><div><strong id="journeyStep1Title">思い出せるまま話す</strong><p id="journeyStep1Body">名前が分からなくても、見た目・用途・見た場所だけで大丈夫。</p></div></li>
+              <li><span>2</span><div><strong id="journeyStep2Title">検索条件を精密化</strong><p id="journeyStep2Body">ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。</p></div></li>
+              <li><span>3</span><div><strong id="journeyStep3Title">商品ページへ直接リンク。主要5モール、ファッション含めて最大10モールで探せます。</strong><p id="journeyStep3Body" hidden></p></div></li>
+              <li><span>4</span><div><strong id="journeyStep4Title">見つからなければSNSやAIでも探せる</strong><p id="journeyStep4Body">Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます。</p></div></li>
+            </ol>
+          </section>
+
+          <section class="discovery-collage" aria-labelledby="discoveryTitle">
+            <picture class="discovery-collage-media" aria-hidden="true">
+              <source media="(max-width: 760px)" srcset="/hoshilu-discovery-collage-mobile.webp" type="image/webp">
+              <img src="/hoshilu-discovery-collage.webp" alt="" width="1536" height="864" loading="lazy" decoding="async">
+            </picture>
+            <div class="discovery-collage-copy">
+              <p class="step">HOSHILU DISCOVERY</p>
+              <h2 id="discoveryTitle"><span>名前が分からなくても、</span><span>記憶から探せる。</span></h2>
+              <p id="discoveryBody">見た目、見た場所、使い方。覚えていることから話してください。</p>
+              <button id="discoveryExample" class="discovery-example" type="button">SNSで見た、ピンクの小さいカメラみたいなもの</button>
+            </div>
+          </section>
+
+          <section class="lp-benefits" aria-labelledby="benefitTitle">
+            <p class="step">WHY HOSHILU</p>
+            <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
+          </section>
+
+          <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle">
+            <p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">AIウォッチ中の商品を振り返る。</h2>
+            <p id="insightSummary">AIウォッチ中の商品と、選んだ通知条件をまとめて確認できます。</p>
+            <p class="insight-diff-note" data-i18n="insight.diffNote">HOSHILU SALE RADARは市場全体(Amazonセール・楽天スーパーSALE・メガ割など)を見ます。AIウォッチは個別商品を見ます。AIが価格・在庫・クーポン・販売開始を24時間監視します。</p>
+            <div id="mywish" class="insight-wishes">
+              <div class="wish-toolbar"><h3 id="wishTitle">AIウォッチ中のキーワード</h3><label class="wish-filter"><span class="visually-hidden">AIウォッチ中のキーワードを検索</span><input id="wishFilter" type="search" autocomplete="off" placeholder="AIウォッチを検索"></label></div>
+              <p id="wishDescription"><span>お気に入りではありません。</span><span>AIがこの商品を継続監視し、条件を満たしたら知らせる機能です。</span></p>
+              <div id="wishList" class="wish-list" aria-label="更新が新しい順のAIウォッチキーワード"><p class="empty">AIウォッチ中の商品はまだありません。</p></div>
+            </div>
+            <div id="mywatch" class="mywatch-hub" aria-labelledby="mywatchTitle">
+              <div class="mywatch-heading"><h3 id="mywatchTitle">AIウォッチ通知</h3><span id="mywatchTestControls" class="mywatch-test-controls hidden"></span><button id="refreshNotifications" type="button">更新</button></div>
+              <div id="notificationList" class="notification-list" aria-live="polite"><p class="empty">無料会員でログインすると通知を確認できます。</p></div>
+            </div>
+          </section>
+        </div>
+
         <div class="hoshilu-secondary">
           <section id="announcements" class="announcements-panel" aria-labelledby="announcementsTitle">
             <div class="announcements-heading">
@@ -231,58 +280,9 @@
             <div id="saleRailMore"></div>
           </section>
         </div>
-
-        <div class="hoshilu-primary-late">
-          <section class="lp-benefits" aria-labelledby="benefitTitle">
-            <p class="step">WHY HOSHILU</p>
-            <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
-          </section>
-
-          <section class="search-journey" aria-labelledby="journeyTitle">
-            <div class="journey-heading">
-              <p class="step">HOSHILU SEARCH AGENT</p>
-              <h2 id="journeyTitle"><span>検索する前に、</span><span>ホシルに話す。</span></h2>
-              <p id="journeyLead"><span>曖昧な「欲しい」を、</span><span>見つかる検索へ変換します。</span></p>
-            </div>
-            <ol class="journey-steps">
-              <li><span>1</span><div><strong id="journeyStep1Title">思い出せるまま話す</strong><p id="journeyStep1Body">名前が分からなくても、見た目・用途・見た場所だけで大丈夫。</p></div></li>
-              <li><span>2</span><div><strong id="journeyStep2Title">検索条件を精密化</strong><p id="journeyStep2Body">ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。</p></div></li>
-              <li><span>3</span><div><strong id="journeyStep3Title">商品ページへ直接リンク。主要5モール、ファッション含めて最大10モールで探せます。</strong><p id="journeyStep3Body" hidden></p></div></li>
-              <li><span>4</span><div><strong id="journeyStep4Title">見つからなければSNSやAIでも探せる</strong><p id="journeyStep4Body">Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます。</p></div></li>
-            </ol>
-          </section>
-
-          <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle">
-            <p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">AIウォッチ中の商品を振り返る。</h2>
-            <p id="insightSummary">AIウォッチ中の商品と、選んだ通知条件をまとめて確認できます。</p>
-            <p class="insight-diff-note" data-i18n="insight.diffNote">HOSHILU SALE RADARは市場全体(Amazonセール・楽天スーパーSALE・メガ割など)を見ます。AIウォッチは個別商品を見ます。AIが価格・在庫・クーポン・販売開始を24時間監視します。</p>
-            <div id="mywish" class="insight-wishes">
-              <div class="wish-toolbar"><h3 id="wishTitle">AIウォッチ中のキーワード</h3><label class="wish-filter"><span class="visually-hidden">AIウォッチ中のキーワードを検索</span><input id="wishFilter" type="search" autocomplete="off" placeholder="AIウォッチを検索"></label></div>
-              <p id="wishDescription"><span>お気に入りではありません。</span><span>AIがこの商品を継続監視し、条件を満たしたら知らせる機能です。</span></p>
-              <div id="wishList" class="wish-list" aria-label="更新が新しい順のAIウォッチキーワード"><p class="empty">AIウォッチ中の商品はまだありません。</p></div>
-            </div>
-            <div id="mywatch" class="mywatch-hub" aria-labelledby="mywatchTitle">
-              <div class="mywatch-heading"><h3 id="mywatchTitle">AIウォッチ通知</h3><span id="mywatchTestControls" class="mywatch-test-controls hidden"></span><button id="refreshNotifications" type="button">更新</button></div>
-              <div id="notificationList" class="notification-list" aria-live="polite"><p class="empty">無料会員でログインすると通知を確認できます。</p></div>
-            </div>
-          </section>
-
-          <section class="discovery-collage" aria-labelledby="discoveryTitle">
-            <picture class="discovery-collage-media" aria-hidden="true">
-              <source media="(max-width: 760px)" srcset="/hoshilu-discovery-collage-mobile.webp" type="image/webp">
-              <img src="/hoshilu-discovery-collage.webp" alt="" width="1536" height="864" loading="lazy" decoding="async">
-            </picture>
-            <div class="discovery-collage-copy">
-              <p class="step">HOSHILU DISCOVERY</p>
-              <h2 id="discoveryTitle"><span>名前が分からなくても、</span><span>記憶から探せる。</span></h2>
-              <p id="discoveryBody">見た目、見た場所、使い方。覚えていることから話してください。</p>
-              <button id="discoveryExample" class="discovery-example" type="button">SNSで見た、ピンクの小さいカメラみたいなもの</button>
-            </div>
-          </section>
-        </div>
       </div>
     </div></main>
   <footer><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">HOSHILUはAmazonアソシエイトおよび楽天アフィリエイトのリンクを通じて収入を得る場合があります。</span><span><a href="/privacy.html">プライバシー</a> ・ <a href="/terms.html">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script><script src="/site-i18n.js"></script><script type="module" src="/lp-layout.mjs?v=84"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=89"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs"></script><script type="module" src="/app.js?v=90"></script><script type="module" src="/ai-search-ui.mjs"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script><script src="/site-i18n.js"></script><script type="module" src="/lp-layout.mjs?v=84"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=89"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs"></script><script type="module" src="/app.js?v=91"></script><script type="module" src="/ai-search-ui.mjs"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>

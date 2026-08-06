@@ -26,6 +26,14 @@ import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
+import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
+import { decideContractPolicy, findContractInD1, jstDateKey, knowledgeKeyForQuery } from './contract-policy.mjs';
+import { handleMultilingualSyncRoutes } from './multilingual-seo-routes.mjs';
+import { attachMultilingualContent } from './multilingual-seo.mjs';
+import { handleProductIdentifierSyncRoutes } from './product-identifier-routes.mjs';
+import { recordEvents as recordKpiEvents } from './measurement.mjs';
+import { recordEvents as recordMarketplaceKpiEvents, refreshMarketplaceKpiSummary } from './marketplace-measurement.mjs';
+import { refreshAnonymousBenchmark } from './benchmark.mjs';
 import {
   runSpApiScheduledSync, spApiConfiguredTenants
 } from './sp-api-d1-repository.mjs';
@@ -379,6 +387,40 @@ async function hashUser(value) {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+// HOSHILU GAS→Web移行 (docs/HOSHILU_GAS_TO_WEB_MIGRATION_BRIEF_2026-08-06.md §3,
+// gas/MeasurementEngine.gs, gas/MarketplaceMeasurementEngine.gs): Worker→GASの
+// callGas(env,'TRACK',...)は変更せず、その並走としてD1へも同じイベントを記録
+// する。gas/LineIntegration.gs track()と同じくチャネルごとに1件だけ設定された
+// 契約(env.LINE_CONTRACT_ID/env.PWA_CONTRACT_ID)からtenant/account_type/
+// account_idを補い、campaign_idは`${channel}_PILOT`、experiment_variantは
+// 'P_GATE'固定とする。契約が未設定・D1未同期の間は無条件でno-op。
+async function recordMeasurementEventsToD1(env, channel, events) {
+  if (!env.PRODUCT_DB || !Array.isArray(events) || !events.length) return;
+  const contractId = String((channel === 'PWA' ? env.PWA_CONTRACT_ID : env.LINE_CONTRACT_ID) || '').trim();
+  if (!contractId) return;
+  try {
+    const contract = await findContractInD1(env, contractId);
+    if (!contract) return;
+    const campaignId = `${channel}_PILOT`;
+    const kpiEvents = events.map((event) => ({
+      event_id: event.event_id, occurred_at: event.occurred_at, event_type: event.event_type,
+      tenant: contract.tenant, account_type: contract.account_type, account_id: contract.account_id,
+      session_id: event.user_hash, recommendation_id: event.recommendation_id, campaign_id: campaignId,
+      experiment_variant: 'P_GATE', asin: event.asin, consent: true, source: channel
+    }));
+    await recordKpiEvents(env, kpiEvents);
+    const marketplaceEvents = events.filter((event) => event.marketplace).map((event) => ({
+      event_id: event.event_id, occurred_at: event.occurred_at, tenant: contract.tenant,
+      account_type: contract.account_type, account_id: contract.account_id, session_id: event.user_hash,
+      recommendation_id: event.recommendation_id, asin: event.asin, marketplace: event.marketplace,
+      event_type: event.event_type, channel, consent: true
+    }));
+    if (marketplaceEvents.length) await recordMarketplaceKpiEvents(env, marketplaceEvents);
+  } catch (error) {
+    console.warn('KPI_D1_RECORD_FALLBACK', { channel, error: String(error.message || error) });
+  }
+}
+
 async function callGas(env, action, body) {
   const timeoutMs = action === 'KNOWLEDGE' ? 2200 : action === 'EVENT' ? 3000 : 5000;
   const response = await fetch(env.GAS_BACKEND_URL, {
@@ -586,7 +628,10 @@ async function processLineEvent(event, origin, env, ctx) {
     await replyToLine(event.replyToken, messages, env);
     const userId = event.source?.userId || event.source?.groupId || event.source?.roomId || '';
     const events = impressionEvents(result, event, await hashUser(userId || event.webhookEventId));
-    if (events.length) ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'LINE' }));
+    if (events.length) {
+      ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'LINE' }));
+      ctx.waitUntil(recordMeasurementEventsToD1(env, 'LINE', events));
+    }
   } catch (error) {
     console.error('LINE_EVENT_FAILED', String(error?.message || error));
     await replyToLine(event.replyToken, await buildLineFallbackMessages(event, origin, env), env);
@@ -629,6 +674,7 @@ async function handleRedirect(request, env, ctx) {
       ctx.waitUntil(recordUnmetDemandEvent(env, payload, occurredAt, channel));
     }
     ctx.waitUntil(callGas(env, 'TRACK', { events, channel }));
+    ctx.waitUntil(recordMeasurementEventsToD1(env, channel, events));
     return Response.redirect(payload.d, 302);
   } catch (error) {
     return new Response(String(error.message || error), { status: 400 });
@@ -1224,6 +1270,57 @@ async function handleAiChatApi(request, env) {
   }
 }
 
+// HOSHILU GAS→Web移行 (docs/HOSHILU_GAS_TO_WEB_MIGRATION_BRIEF_2026-08-06.md §3,
+// gas/ContractPolicyEngine.gs): D1優先・GASフォールバックで走らせる契約ポリシー判定。
+// callGas('KNOWLEDGE')はgas/LineIntegration.gs answerPublic()経由で既に
+// ContractPolicyEngine.decide()を内部適用しているが、それはGAS自身が
+// 返した候補にしか及ばない。D1索引検索(result.candidates)はGAS側のロジックを
+// 経由しないため、ここでD1に同期済みの契約ポリシーを追加で適用する。
+// env.PWA_CONTRACT_ID / env.PWA_DEFAULT_CATEGORY が未設定、または対象契約が
+// まだ gas/ContractPolicySyncEngine.gs でD1へpushされていない間は無条件でno-op
+// し、既存の(GAS側で判定済みの)結果をそのまま素通しする。
+async function applyD1ContractPolicy(env, result, query, requestId) {
+  const contractId = String(env.PWA_CONTRACT_ID || '').trim();
+  const category = String(env.PWA_DEFAULT_CATEGORY || '').trim();
+  const candidates = Array.isArray(result?.candidates) ? result.candidates : [];
+  if (!contractId || !category || candidates.length === 0) return result;
+  try {
+    const policy = await decideContractPolicy(env, {
+      contract_id: contractId,
+      category,
+      date_jst: jstDateKey(),
+      knowledge_key: await knowledgeKeyForQuery(query),
+      answer_payload: candidates.map((candidate) => ({
+        asin: candidate.asin, rank: candidate.rank, evidence: candidate.evidence?.source_hash || ''
+      }))
+    });
+    if (!policy.allowed) {
+      console.info('CONTRACT_POLICY_D1_BLOCKED', { requestId, reason: policy.reason });
+      return { ...result, candidates: [], policy_reason: policy.reason, disclosure_required: false };
+    }
+    return { ...result, policy_reason: policy.reason, disclosure_required: policy.disclosure_required };
+  } catch (error) {
+    // D1未同期(CONTRACT_NOT_FOUND)やストア未設定・一時的なD1障害はすべて
+    // フォールバック対象: GAS側で既に判定済みの結果をそのまま使い、
+    // ここではブロックしない(段階移行中はGAS側を権威として残す)。
+    console.warn('CONTRACT_POLICY_D1_FALLBACK', { requestId, error: String(error.message || error) });
+    return result;
+  }
+}
+
+// HOSHILU GAS→Web移行 (docs/HOSHILU_GAS_TO_WEB_MIGRATION_BRIEF_2026-08-06.md §3,
+// gas/MultilingualSeoEngine.gs): D1索引検索由来の候補(candidate.tenantを持つ)
+// へ、D1に同期済みの承認済み別名・多言語コンテンツを補う。GAS由来の候補は
+// 既にgas/KnowledgeEngine.gs answer()内でMultilingualSeoEngine.attachAliases/
+// attachLocalizedContent済み(=descriptionが入っている)なので上書きしない。
+// D1未設定・クエリ失敗時はno-op。返却直前にtenant(内部専用フィールド)を除去する。
+async function applyD1MultilingualContent(env, result, language) {
+  const candidates = Array.isArray(result?.candidates) ? result.candidates : [];
+  const enriched = candidates.length ? await attachMultilingualContent(env, candidates, language) : candidates;
+  const cleaned = enriched.map(({ tenant, ...candidate }) => candidate);
+  return candidates.length ? { ...result, candidates: cleaned } : result;
+}
+
 async function handleKnowledgeApi(request, env, ctx) {
   try {
     const requestOrigin = request.headers.get('origin');
@@ -1254,6 +1351,8 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(result.candidates, gasResult.candidates, input.query)
       };
     }
+    result = await applyD1MultilingualContent(env, result, input.language);
+    result = await applyD1ContractPolicy(env, result, input.query, requestId);
     const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env)
       || yahooShoppingApiConfigured(env);
     if (shouldSearchMarketplaces) {
@@ -1402,7 +1501,10 @@ async function handleKnowledgeApi(request, env, ctx) {
       occurred_at: new Date().toISOString(), user_hash: sessionHash,
       recommendation_id: decorated.query_id, asin: candidate.asin, event_type: 'IMPRESSION'
     }));
-    if (events.length) ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'PWA' }));
+    if (events.length) {
+      ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'PWA' }));
+      ctx.waitUntil(recordMeasurementEventsToD1(env, 'PWA', events));
+    }
     console.info('SEARCH_TRACE', { requestId, stage: '10_ui_sent', query: input.query, ui_sent_count: (decorated.candidates || []).length });
     return Response.json({ ok: true, result: decorated }, {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
@@ -1437,20 +1539,30 @@ function handlePublicConfig(env) {
   });
 }
 
+// gas/PreflightEngine.gs CORE_SHEETSの「必須シート」チェックのD1版。この
+// migration一式(0037〜0041)で追加した各エンジンの索引テーブルもここに含め、
+// デプロイ後にsqlite_master上で実在を横断確認できるようにする。
+const CORE_D1_TABLES = [
+  'mywatch_notifications', 'import_restriction_knowledge',
+  'sp_api_listings', 'sp_api_sync_audit', 'marketplace_sale_events',
+  'member_sale_preferences',
+  'contracts', 'contract_decisions',
+  'product_aliases', 'localized_product_content',
+  'kpi_events', 'kpi_summary', 'kpi_uplift',
+  'marketplace_kpi_events', 'marketplace_kpi_summary',
+  'anonymous_benchmark',
+  'social_knowledge_inbox', 'social_knowledge_aggregates', 'social_hashtag_aggregates',
+  'product_identifiers'
+];
+
 async function databaseFeatureChecks(env) {
-  const expected = [
-    'mywatch_notifications', 'import_restriction_knowledge',
-    'sp_api_listings', 'sp_api_sync_audit', 'marketplace_sale_events',
-    'member_sale_preferences'
-  ];
+  const expected = CORE_D1_TABLES;
   if (!env.PRODUCT_DB) return Object.fromEntries(expected.map((name) => [name, false]));
   try {
+    const placeholders = expected.map((_, index) => `?${index + 1}`).join(',');
     const result = await env.PRODUCT_DB.prepare(
-      `SELECT name FROM sqlite_master WHERE type='table'
-      AND name IN ('mywatch_notifications','import_restriction_knowledge',
-      'sp_api_listings','sp_api_sync_audit','marketplace_sale_events',
-      'member_sale_preferences')`
-    ).all();
+      `SELECT name FROM sqlite_master WHERE type='table' AND name IN (${placeholders})`
+    ).bind(...expected).all();
     const found = new Set((result?.results || []).map((row) => row.name));
     return Object.fromEntries(expected.map((name) => [name, found.has(name)]));
   } catch {
@@ -1490,6 +1602,12 @@ export default {
     if (request.method === 'GET' && url.pathname === '/api/internal/marketplace-offers/stats') return marketplaceOfferStats(request, env);
     const unmetDemandResponse = await handleUnmetDemandRoutes(request, env);
     if (unmetDemandResponse) return unmetDemandResponse;
+    const contractPolicySyncResponse = await handleContractPolicySyncRoutes(request, env);
+    if (contractPolicySyncResponse) return contractPolicySyncResponse;
+    const multilingualSyncResponse = await handleMultilingualSyncRoutes(request, env);
+    if (multilingualSyncResponse) return multilingualSyncResponse;
+    const productIdentifierSyncResponse = await handleProductIdentifierSyncRoutes(request, env);
+    if (productIdentifierSyncResponse) return productIdentifierSyncResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
     const adminAuthResponse = await handleAdminAuthRoutes(request, env);
@@ -1536,7 +1654,13 @@ export default {
       runMarketplaceContentCycle(env, scheduledAt),
       runSpApiScheduledSync(env, scheduledAt),
       purgeAdminAuthRecords(env, scheduledAt),
-      purgeSellerAuthRecords(env, scheduledAt)
+      purgeSellerAuthRecords(env, scheduledAt),
+      refreshMarketplaceKpiSummary(env),
+      // refreshAnonymousBenchmark()はkpi_summaryを読む前に自分でrefreshKpiSummary()
+      // を呼ぶ(gas/BenchmarkEngine.gs同様、KPI集計→ベンチマーク算出の順で依存する)。
+      // ここで別途refreshKpiSummary(env)を並列実行すると、同じkpi_summaryテーブルへの
+      // DELETE+INSERTが競合しPRIMARY KEY衝突を起こすため呼ばない。
+      refreshAnonymousBenchmark(env)
     ]));
   }
 };

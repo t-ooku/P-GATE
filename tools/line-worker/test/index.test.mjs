@@ -383,7 +383,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v303/);
+  assert.match(serviceWorker, /hoshilu-shell-v304/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -675,6 +675,12 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(payload.ok, true);
   assert.equal(payload.release, '1.18.0');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
+  // §3移行(ContractPolicy/MultilingualSeo/Measurement/SocialKnowledge/ProductIdentifier)で
+  // 追加したD1テーブルもgas/PreflightEngine.gsの「必須シート」チェック相当として含まれる。
+  assert.equal(payload.checks.database_features.contracts, false);
+  assert.equal(payload.checks.database_features.kpi_events, false);
+  assert.equal(payload.checks.database_features.social_knowledge_inbox, false);
+  assert.equal(payload.checks.database_features.product_identifiers, false);
   assert.deepEqual(payload.checks.social_publishers, {
     X: false,
     INSTAGRAM: false,
