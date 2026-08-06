@@ -14,12 +14,16 @@ export function socialDiscoverySearchLinks(value, origin = 'https://hoshilu.app'
   if (!query) return [];
   const encoded = encodeURIComponent(query);
   const hoshiluUrl = `${String(origin).replace(/\/$/, '')}/?q=${encoded}`;
+  // `channel` drives the brand-colour CSS in ai-search-ui.css
+  // (.marketplace-search-link[data-channel="..."]). Without it these render
+  // with no background at all - i.e. as plain blue default-link text, which
+  // is exactly the "青文字リンク" regression.
   return [
-    { label: 'Instagram', url: `https://www.instagram.com/explore/search/keyword/?q=${encoded}` },
-    { label: 'X', url: `https://x.com/search?q=${encoded}&src=typed_query` },
-    { label: 'TikTok', url: `https://www.tiktok.com/search?q=${encoded}` },
-    { label: 'YouTube', url: `https://www.youtube.com/results?search_query=${encoded}` },
-    { label: 'LINEで共有', url: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(hoshiluUrl)}` }
+    { channel: 'instagram', label: 'Instagramで探す', url: `https://www.instagram.com/explore/search/keyword/?q=${encoded}` },
+    { channel: 'x', label: 'Xで探す', url: `https://x.com/search?q=${encoded}&src=typed_query` },
+    { channel: 'tiktok', label: 'TikTokで探す', url: `https://www.tiktok.com/search?q=${encoded}` },
+    { channel: 'youtube', label: 'YouTubeで探す', url: `https://www.youtube.com/results?search_query=${encoded}` },
+    { channel: 'line', label: 'LINEで共有', url: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(hoshiluUrl)}` }
   ];
 }
 
