@@ -234,18 +234,17 @@ test('公開検索APIが失敗しても4モールへの検索導線を表示す�
   assert.match(appSource, /SHEINで探す/);
   assert.match(appSource, /renderResults\(emergencyMarketplaceFallback\(elements\.query\.value\)\)/);
 });
-// Regression for the 2026-08-05 report: real product results already found
-// (the carousel has cards) still had the full "10モールとSNSを横断して探す"
-// marketplaceFallbackCard appended right after them, because decoratePwaResult
-// always attaches marketplace_search_links regardless of whether candidates
-// were found. This duplicated the mall-links block as unwanted clutter below
-// genuine results. Fixed by only rendering marketplaceFallbackCard in the
-// empty-candidates branch, where it is the actual fallback UI.
-test('候補商品が見つかった場合はモール横断フォールバックカードを重複表示しない', () => {
+// 2026-08-05 report had reversed this: when results were already found, the
+// "10モールとSNSを横断して探す" marketplaceFallbackCard was suppressed to
+// avoid clutter below genuine results. The 2026-08-07 instructions (#8)
+// explicitly reverse that decision: mall/SNS cross-search must stay visible
+// even when a search already returned product cards, not only when it found
+// nothing. Assert the card is now appended in *both* branches.
+test('検索結果の有無に関わらずモール横断フォールバックカードを表示する', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(
     appSource,
-    /resultCards\.push\(carousel,refinementCard\(\)\);elements\.cards\.replaceChildren\(\.\.\.resultCards\);\}else\{/
+    /resultCards\.push\(carousel,refinementCard\(\)\);const marketplaceFallback=marketplaceFallbackCard\(result\);if\(marketplaceFallback\)resultCards\.push\(marketplaceFallback\);elements\.cards\.replaceChildren\(\.\.\.resultCards\);\}else\{/
   );
   assert.match(
     appSource,
