@@ -41,6 +41,7 @@ import {
 import { handleSpApiAdminRoutes } from './sp-api-admin-routes.mjs';
 import { handleSpApiSellerRoutes } from './sp-api-seller-routes.mjs';
 import { requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
+import { expandSearchQuery } from './query-expansion.mjs';
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
   buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation,
@@ -1369,13 +1370,28 @@ async function handleKnowledgeApi(request, env, ctx) {
     if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
     const length = Number(request.headers.get('content-length') || 0);
     if (length > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
-    const input = validateKnowledgeRequest(await request.json());
+    const validatedInput = validateKnowledgeRequest(await request.json());
+    // v4.2 項目1・2・3: 商品名を知らなくても探せる検索。ここで1回だけ展開
+    // すれば、D1検索・3モールのキーワード生成・filterCategoryMismatches・
+    // semanticSearchGroups が下流ですべて自動的に恩恵を受ける(詳細は
+    // query-expansion.mjs のコメント参照)。該当ルールが無ければ
+    // input.query は元のまま変わらない。
+    const originalQuery = validatedInput.query;
+    const expandedQuery = expandSearchQuery(originalQuery);
+    const input = { ...validatedInput, query: expandedQuery.query };
     // v3.4 CTO instruction: every checkpoint in the marketplace search trace
     // (API送信/レスポンス件数/accepted件数/Teacher Dataset補正件数/ranking
     // 入力・出力件数/モール別件数/UI送信件数) must share one requestId so the
     // full path for a single search can be reconstructed from logs alone.
     const requestId = crypto.randomUUID();
-    console.info('SEARCH_TRACE', { requestId, stage: '0_request_received', query: input.query });
+    console.info('SEARCH_TRACE', {
+      requestId,
+      stage: '0_request_received',
+      query: input.query,
+      original_query: originalQuery,
+      query_expanded: expandedQuery.expanded,
+      query_expansion_rule: expandedQuery.expansion?.rule_id || null
+    });
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     const [gasOutcome, indexedOutcome] = await Promise.allSettled([
       callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } }),
