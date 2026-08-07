@@ -25,6 +25,6 @@ test('画面は翻訳ラベルを使い、元検索語を再検索用に保持�
   ]);
   assert.match(app, /localizedWishLabel\(value,elements\.language\.value\)/);
   assert.match(app, /elements\.query\.value=value/);
-  assert.match(serviceWorker, /hoshilu-shell-v318/);
+  assert.match(serviceWorker, /hoshilu-shell-v319/);
   assert.match(serviceWorker, /wish-localization\.mjs/);
 });

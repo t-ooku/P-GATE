@@ -76,8 +76,8 @@ test('必須検索テストの6クエリすべてが教師データで解決ま�
 // 厚くしたぶんが失われないよう件数と代表クエリを固定する。
 test('教師データが全ペルソナで実用的な件数を保っている', () => {
   const stats = teacherDatasetStats();
-  assert.ok(stats.entryCount >= 407, `expected at least 407 compiled entries, got ${stats.entryCount}`);
-  assert.ok(stats.sourceBatches.length >= 10, `expected at least 10 batches, got ${stats.sourceBatches.length}`);
+  assert.ok(stats.entryCount >= 439, `expected at least 439 compiled entries, got ${stats.entryCount}`);
+  assert.ok(stats.sourceBatches.length >= 11, `expected at least 11 batches, got ${stats.sourceBatches.length}`);
 });
 
 test('子ども・高齢者の言い換えから商品を引ける', () => {
@@ -324,4 +324,36 @@ test('園芸の薬剤は植物と用途を確認してから答える', () => {
   const pest = lookupTeacherDatasetEntry('虫が葉っぱを食べてしまう');
   assert.equal(pest.category, 'UNCLASSIFIED');
   assert.match(pest.ideal_answer, /野菜|食用/);
+});
+
+// 体型・容姿の悩み (batch-011)。
+// 「お腹まわりが目立たない服」と打つ人が求めているのは服であって、痩せ方の
+// 助言ではない。ここでダイエット食品やサプリを出すのは、聞かれていない
+// 論評を身体について返すことになる。答えを服の話に留める。
+test('体型の悩みにダイエット商材を出さない', () => {
+  for (const query of ['お腹まわりが目立たない服', '二の腕を隠したい']) {
+    const entry = lookupTeacherDatasetEntry(query);
+    assert.ok(entry, `missing teacher entry: ${query}`);
+    assert.match(entry.ideal_answer, /トップス|服|袖/, `${query}: answer should stay about clothing`);
+    assert.ok(entry.excluded_conditions.some((item) => /ダイエット|サプリ/.test(item)), `${query}`);
+  }
+  // 薄毛も同様。育毛剤・発毛剤は医薬品領域なので商品として提示しない。
+  const hair = lookupTeacherDatasetEntry('髪が薄いのを隠す帽子じゃないやつ');
+  assert.equal(hair.category, 'UNCLASSIFIED');
+  assert.ok(hair.excluded_conditions.includes('育毛剤'));
+});
+
+// 汚れの正体が違うと、いくら強い洗剤でも落ちない。
+test('汚れの種類ごとに正しい洗浄剤へ導く', () => {
+  // 浴室の鏡の白いくもりは水垢。カビ取り剤では落ちない。
+  const mirror = lookupTeacherDatasetEntry('お風呂の鏡が白くくもって取れない');
+  assert.match(mirror.ideal_answer, /水垢/);
+  assert.ok(mirror.excluded_conditions.includes('カビ取り剤'));
+  // まな板のにおいの原因は菌なので、中性洗剤ではなく除菌漂白
+  const board = lookupTeacherDatasetEntry('まな板がくさい');
+  assert.match(board.ideal_answer, /除菌|漂白/);
+  // エアコン内部の自己洗浄は故障・発火の危険があるので商品を勧めない
+  const aircon = lookupTeacherDatasetEntry('エアコンの中のカビっぽいにおい');
+  assert.equal(aircon.category, 'UNCLASSIFIED');
+  assert.match(aircon.ideal_answer, /業者|故障|発火/);
 });
