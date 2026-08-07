@@ -1,4 +1,8 @@
-const MARKETPLACE_MESSAGE = '主要5モール（Amazon・楽天市場・Yahoo!ショッピング・Qoo10・SHEIN）に対応。ファッション検索ではZOZOTOWN・SHOPLIST・MUSINSA・BUYMA・SNKRDUNKを追加し、最大10モールから探せます。';
+// v4.2 項目14: SHOPLIST/MUSINSAは標準検索から外れ、ロフト・ハンズ・
+// マツキヨココカラ・@cosme・ABC-MARTを追加。「主要5モール」はHOSHILUが商品
+// をまとめて比較できるAmazon・楽天市場・Yahoo!ショッピングを指すよう更新
+// (Qoo10・SHEINは個別に探すモール側)。
+const MARKETPLACE_MESSAGE = 'まとめて比較できる3モール（Amazon・楽天市場・Yahoo!ショッピング）に加え、Qoo10・SHEIN・ZOZOTOWNなど最大13モールを個別にも探せます。';
 
 const THEMES = Object.freeze([
   { id: 'cross_market_phone_case', pillar: 'CROSS_MARKET', format: 'CAROUSEL', memory: 'TikTokで見た、光るスマホケース', refined: 'TikTokで見た光るiPhoneケース', hook: 'その「どこで売ってる？」を主要5モールから探そう。' },
@@ -43,7 +47,7 @@ function reelScript(theme) {
     scenes: [
       `0-2秒：${theme.hook}`,
       `2-5秒：検索欄へ「${theme.memory}」と入力`,
-      `5-9秒：主要5モールと、ファッション検索時は最大10モールになることを表示`,
+      `5-9秒：まとめて比較する3モールと、個別に探せる最大13モールを表示`,
       `9-12秒：「名前が分からなくても、ホシル。」＋保存・コメントCTA`
     ],
     cover_text: focus ? `${focus === FOCUS_COPY.QOO10_JP ? 'Qoo10' : 'SHEIN'}で見た、あれ何？` : '名前不明でも探せる',
@@ -71,7 +75,7 @@ export function buildYouthSearchPost(index, platform = 'X') {
     campaign_pillar: theme.pillar,
     marketplace_focus: theme.marketplace_focus || 'ALL',
     content_format: theme.format,
-    caption: `${platformHook}\n${PILLAR_COPY[theme.pillar]}${focusMessage}\n${commentCta}\n${MARKETPLACE_MESSAGE}\n#ホシル #あいまい検索 #10モール横断 #ほしっとく${focusHashtags}`,
+    caption: `${platformHook}\n${PILLAR_COPY[theme.pillar]}${focusMessage}\n${commentCta}\n${MARKETPLACE_MESSAGE}\n#ホシル #あいまい検索 #13モール横断 #ほしっとく${focusHashtags}`,
     link: `https://hoshilu.app/?q=${encodeURIComponent(theme.refined)}&utm_source=${source}&utm_medium=organic_social&utm_campaign=${campaign}&utm_content=${theme.id}`,
     prefill_query: theme.refined,
     reel_script: reelScript(theme),

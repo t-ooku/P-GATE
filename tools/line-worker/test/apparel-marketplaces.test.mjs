@@ -13,11 +13,16 @@ test('アパレルの曖昧な日本語・英語・トレンド表現を判定�
   assert.equal(isApparelSearch('推し活で使える写真プリンター'), false);
 });
 
-// ZOZOTOWN and SHOPLIST take their keyword percent-encoded as Shift_JIS, not
-// UTF-8 (see src/shift-jis-url.mjs), so decodeURIComponent throws "URI
-// malformed" on their links. Decode each destination with the charset that
-// mall actually uses before asserting on the keyword.
-const SHIFT_JIS_MARKETPLACES = new Set(['ZOZOTOWN_JP', 'SHOPLIST_JP']);
+// ZOZOTOWN takes its keyword percent-encoded as Shift_JIS, not UTF-8 (see
+// src/shift-jis-url.mjs), so decodeURIComponent throws "URI malformed" on its
+// link. Decode each destination with the charset that mall actually uses
+// before asserting on the keyword.
+const SHIFT_JIS_MARKETPLACES = new Set(['ZOZOTOWN_JP']);
+// v4.2 項目14: @cosme SHOPPINGとABC-MARTは検索結果ページのキーワードパラ
+// メータを確認できなかったため、検索語を含まないランディングページへ暫定
+// リンクしている(src/apparel-marketplaces.mjsのコメント参照)。この2モール
+// だけは検索語が含まれないことを前提にテストする。
+const LANDING_PAGE_ONLY_MARKETPLACES = new Set(['COSME_JP', 'ABCMART_JP']);
 function decodeDestination(link) {
   if (!SHIFT_JIS_MARKETPLACES.has(link.marketplace)) {
     return decodeURIComponent(link.destination).replaceAll('+', ' ');
@@ -31,14 +36,17 @@ function decodeDestination(link) {
   return new TextDecoder('shift_jis').decode(Uint8Array.from(bytes)).replaceAll('+', ' ');
 }
 
+const EXPECTED_MARKETPLACES = [
+  'ZOZOTOWN_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+];
+
 test('アパレルモールへ商品向けに圧縮した検索語を安全に引き継ぐ', () => {
   const query = '韓国っぽい 黒 クロップド丈 トップス';
   const links = buildApparelMarketplaceDestinations(query);
-  assert.deepEqual(links.map((item) => item.marketplace), [
-    'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
-  ]);
+  assert.deepEqual(links.map((item) => item.marketplace), EXPECTED_MARKETPLACES);
   for (const link of links) {
     assert.equal(new URL(link.destination).protocol, 'https:');
+    if (LANDING_PAGE_ONLY_MARKETPLACES.has(link.marketplace)) continue;
     const decoded = decodeDestination(link);
     assert.match(decoded, /韓国風/);
     assert.match(decoded, /黒/);
@@ -50,8 +58,9 @@ test('アパレルモールへ商品向けに圧縮した検索語を安全に�
 test('中国語・韓国語の自然文もアパレル判定し正規化した検索語を渡す', () => {
   for (const query of ['想找轻量黑色手提包', '가벼운 갈색 가방을 찾고 있어요']) {
     const links = buildApparelMarketplaceDestinations(query);
-    assert.equal(links.length, 5);
+    assert.equal(links.length, EXPECTED_MARKETPLACES.length);
     for (const link of links) {
+      if (LANDING_PAGE_ONLY_MARKETPLACES.has(link.marketplace)) continue;
       const decoded = decodeDestination(link);
       assert.match(decoded, /軽量/);
       assert.match(decoded, /バッグ/);
@@ -60,15 +69,30 @@ test('中国語・韓国語の自然文もアパレル判定し正規化した�
   }
 });
 
-test('アパレル以外の検索でも10モール目標のため追加5モールを表示する', () => {
-  // 2026-08-07 instructions #8: all ten marketplaces stay searchable on every
-  // query now, not just apparel-looking ones - isApparelSearch remains for
-  // other callers, but no longer gates this list.
+test('アパレル以外の検索でも13モール目標のため直接検索モールを表示する', () => {
+  // 2026-08-07 instructions #8: every "direct" marketplace stays searchable
+  // on every query now, not just apparel-looking ones - isApparelSearch
+  // remains for other callers, but no longer gates this list.
   const links = buildApparelMarketplaceDestinations('USB充電の写真プリンター');
-  assert.deepEqual(links.map((item) => item.marketplace), [
-    'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
-  ]);
+  assert.deepEqual(links.map((item) => item.marketplace), EXPECTED_MARKETPLACES);
   assert.deepEqual(buildApparelMarketplaceDestinations(''), []);
+});
+
+test('v4.2項目14: SHOPLIST/MUSINSAはこの検索導線から外れている', () => {
+  const links = buildApparelMarketplaceDestinations('カットソー');
+  const marketplaces = links.map((item) => item.marketplace);
+  assert.ok(!marketplaces.includes('SHOPLIST_JP'));
+  assert.ok(!marketplaces.includes('MUSINSA_JP'));
+});
+
+test('v4.2項目14: 新規5モールはhttps宛のロフト・ハンズ・マツキヨ・@cosme・ABC-MARTドメインを指す', () => {
+  const links = buildApparelMarketplaceDestinations('カットソー');
+  const byMarketplace = Object.fromEntries(links.map((item) => [item.marketplace, item.destination]));
+  assert.match(byMarketplace.LOFT_JP, /^https:\/\/www\.loft\.co\.jp\//);
+  assert.match(byMarketplace.HANDS_JP, /^https:\/\/hands\.net\//);
+  assert.match(byMarketplace.MATSUKIYO_JP, /^https:\/\/www\.matsukiyococokara-online\.com\//);
+  assert.match(byMarketplace.COSME_JP, /^https:\/\/www\.cosme\.com\//);
+  assert.match(byMarketplace.ABCMART_JP, /^https:\/\/www\.abc-mart\.net\//);
 });
 
 // 2026-08-07 実機報告: 「夏用、丈長め、おしゃれ、ブラウス」で検索したら
@@ -86,11 +110,13 @@ test('具体的な衣類名がすべてのモールの検索語に残る', async
     assert.match(decodeURIComponent(buildSheinSearchDestination(query)), /ブラウス/, `SHEIN: ${query}`);
     assert.match(decodeURIComponent(buildQoo10SearchDestination(query)), /ブラウス/, `Qoo10: ${query}`);
     for (const link of buildApparelMarketplaceDestinations(query)) {
+      if (LANDING_PAGE_ONLY_MARKETPLACES.has(link.marketplace)) continue;
       assert.match(decodeDestination(link), /ブラウス/, `${link.marketplace}: ${query}`);
     }
   }
   // カットソーは GENERIC_PRODUCTS に無く、復元しないと完全に消える語
   for (const link of buildApparelMarketplaceDestinations('カットソー レディース')) {
+    if (LANDING_PAGE_ONLY_MARKETPLACES.has(link.marketplace)) continue;
     assert.match(decodeDestination(link), /カットソー/, link.marketplace);
   }
 });

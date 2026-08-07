@@ -10,7 +10,7 @@ import {
 test('Instagram投稿はコメント誘導と若者向け必須ハッシュタグを公開前に補完する', () => {
   const post = normalizeSocialPost({ platform: 'INSTAGRAM', caption: '名前が分からなくても探せる', media_url: 'https://hoshilu.app/social/post.png', status: 'APPROVED' });
   assert.match(post.caption, /コメントで教えて/);
-  for (const tag of ['#ホシル', '#あいまい検索', '#10モール横断', '#ほしっとく']) assert.match(post.caption, new RegExp(tag));
+  for (const tag of ['#ホシル', '#あいまい検索', '#13モール横断', '#ほしっとく']) assert.match(post.caption, new RegExp(tag));
 });
 
 test('affiliate social posts always include disclosure', () => {
@@ -281,7 +281,7 @@ test('Instagram publisher creates a Reels container for an MP4 media URL', async
   assert.equal(createPayload.share_to_feed, true);
   assert.equal(createPayload.hide_like_and_view_counts, true);
   assert.equal('image_url' in createPayload, false);
-  assert.match(createPayload.caption, /#10モール横断/);
+  assert.match(createPayload.caption, /#13モール横断/);
   assert.match(createPayload.caption, /@hoshilu\.app のプロフィールリンクから/);
   assert.doesNotMatch(createPayload.caption, /utm_source=/);
 });

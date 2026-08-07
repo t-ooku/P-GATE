@@ -28,15 +28,19 @@ test('Yahoo!ショッピングの商品詳細URLだけを10モール商品候補
   assert.deepEqual(productMarketplaceOffers([{ marketplace: 'YAHOO_JP', product_url: productUrl, stock_status: 'IN_STOCK' }]).map(item => item.marketplace), ['YAHOO_JP']);
 });
 
-test('LP・検索フォールバック・SALE RADARを10モール表記へ統一する', async () => {
+// v4.2 項目14・15: LPの検索フォールバックは「主要5モール/最大10モール」から
+// 「まとめて検索3モール/個別に探す最大13モール」表記へ切り替えた。SALE RADAR
+// (sale-center.mjs / marketplace-sales.mjs)はこのPRで対象を変更していない
+// ため、10モールのままで正しい。
+test('LP・検索フォールバックは13モール表記、SALE RADARは10モール表記のまま', async () => {
   const [html, app, coverage, sales] = await Promise.all([
     readPublic('index.html'), readPublic('app.js'), readPublic('marketplace-coverage.mjs'), readPublic('sale-center.mjs')
   ]);
-  assert.match(html, /主要5モール/);
+  assert.match(html, /まとめて検索/);
   assert.match(html, /Yahoo!ショッピング/);
-  assert.match(html, /最大10モール/);
+  assert.match(html, /最大13モール/);
   assert.match(app, /marketplace:'YAHOO_JP'.+shopping\.yahoo\.co\.jp\/search/);
-  assert.match(coverage, /Up to 10 marketplaces/);
+  assert.match(coverage, /Up to 13 marketplaces/);
   assert.match(sales, /10モールのセール情報を横断/);
   assert.match(sales, /\['YAHOO_JP','Yahoo!ショッピング'\]/);
   assert.match(sales, /preference\.marketplaces==='ALL'\?marketplaces\.map/);

@@ -301,7 +301,7 @@ test('Amazon検索フォールバックに承認済みアソシエイトIDを付
   assert.match(url.searchParams.get('k'), /phone/);
 });
 
-test('アパレル検索では主力4モールに専門5モールを追加する', async () => {
+test('アパレル検索では統合3モールに直接検索10モールを追加する(v4.2項目14)', async () => {
   const decorated = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-apparel', candidates: [] },
     new Request('https://hoshilu.app/api/knowledge'),
@@ -313,9 +313,29 @@ test('アパレル検索では主力4モールに専門5モールを追加する
     decorated.marketplace_search_links.map((item) => item.marketplace),
     [
       'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
-      'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+      'ZOZOTOWN_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP',
+      'BUYMA_JP', 'SNKRDUNK_JP'
     ]
   );
+  // v4.2 項目17: integrated/directの区分がレスポンスに載っていること。
+  const modeByMarketplace = Object.fromEntries(
+    decorated.marketplace_search_links.map((item) => [item.marketplace, item.mode])
+  );
+  assert.equal(modeByMarketplace.AMAZON_JP, 'integrated');
+  assert.equal(modeByMarketplace.RAKUTEN_JP, 'integrated');
+  assert.equal(modeByMarketplace.YAHOO_JP, 'integrated');
+  for (const marketplace of ['QOO10_JP', 'SHEIN_JP', 'ZOZOTOWN_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP', 'BUYMA_JP', 'SNKRDUNK_JP']) {
+    assert.equal(modeByMarketplace[marketplace], 'direct', marketplace);
+  }
+});
+
+test('v4.2項目14: 検索結果リンクの許可ドメインに新規5モールが含まれる', async () => {
+  const { isAllowedDestination } = await import('../src/index.mjs');
+  assert.equal(isAllowedDestination('https://www.loft.co.jp/store/goods/search.aspx?keyword=a'), true);
+  assert.equal(isAllowedDestination('https://hands.net/search/?q=a'), true);
+  assert.equal(isAllowedDestination('https://www.matsukiyococokara-online.com/store/catalogsearch/result/?q=a'), true);
+  assert.equal(isAllowedDestination('https://www.cosme.com/products/search.php'), true);
+  assert.equal(isAllowedDestination('https://www.abc-mart.net/shop/goods/search.aspx'), true);
 });
 
 test('AmazonへはHOSHILUが整理した商品条件を引き継ぐ', () => {
@@ -425,7 +445,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v326/);
+  assert.match(serviceWorker, /hoshilu-shell-v327/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });

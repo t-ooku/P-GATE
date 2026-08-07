@@ -82,7 +82,7 @@
   font-weight: 900;
 }
 
-.marketplace-group-fashion > p::before {
+.marketplace-group-direct > p::before {
   content: "+ ";
   color: var(--pink);
 }
@@ -129,11 +129,11 @@
   background: linear-gradient(135deg, var(--pink), var(--violet));
 }
 
-.marketplace-group-fashion li {
+.marketplace-group-direct li {
   color: #5140ba;
 }
 
-.marketplace-group-fashion ul {
+.marketplace-group-direct ul {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
@@ -246,7 +246,7 @@
     gap: 3px;
   }
 
-  .marketplace-group-core ul {
+  .marketplace-group-integrated ul {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 1px;
   }
@@ -257,14 +257,14 @@
     font-size: clamp(8px, 2.35vw, 10px);
   }
 
-  .marketplace-group-core li {
+  .marketplace-group-integrated li {
     gap: 4px;
     justify-content: center;
     white-space: nowrap;
     overflow-wrap: normal;
   }
 
-  .marketplace-group-core li::before {
+  .marketplace-group-integrated li::before {
     width: 5px;
     height: 5px;
     flex-basis: 5px;
@@ -275,7 +275,7 @@
     text-align: center;
   }
 
-  .marketplace-group-fashion ul {
+  .marketplace-group-direct ul {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
@@ -298,21 +298,21 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .marketplace-group-core ul {
+  .marketplace-group-integrated ul {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  .marketplace-group-core li {
+  .marketplace-group-integrated li {
     gap: 2px;
     font-size: clamp(7px, 2.15vw, 9px);
     letter-spacing: -.025em;
   }
 
-  .marketplace-group-fashion ul {
+  .marketplace-group-direct ul {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  .marketplace-group-fashion li {
+  .marketplace-group-direct li {
     gap: 2px;
     font-size: clamp(7px, 1.9vw, 9px);
     letter-spacing: -.035em;
@@ -320,7 +320,7 @@
     overflow-wrap: normal;
   }
 
-  .marketplace-group-fashion li::before {
+  .marketplace-group-direct li::before {
     width: 4px;
     height: 4px;
     flex-basis: 4px;

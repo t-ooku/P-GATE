@@ -11,7 +11,10 @@ const EVENTS = new Set([
 const LOCALES = new Set(['JA', 'EN', 'ZH', 'KO']);
 const MARKETPLACES = new Set([
   '', 'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
-  'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+  'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP',
+  // v4.2 項目14で追加された5モール。SHOPLIST_JP/MUSINSA_JPは新規の検索導線
+  // からは外れたが、既存クリックイベントの後方互換のためこのSetには残す。
+  'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP'
 ]);
 
 function clean(value, length = 80) {
