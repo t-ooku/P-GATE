@@ -44,7 +44,7 @@ import { requestedColorPatterns, semanticSearchGroups } from './search-intellige
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
   buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation,
-  extractApparelProductType
+  extractApparelProductType, ensureApparelProductTypeTerm
 } from './apparel-query-attributes.mjs';
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
@@ -748,12 +748,7 @@ function extractMissingPriceConstraint(originalQuery, builtKeywords) {
 // so what the user typed and what actually gets searched on Rakuten/Amazon
 // diverge. Reinserts the specific garment noun when it survived detection
 // but not into the built keyword string.
-function ensureApparelProductTypeTerm(query, keywords) {
-  const productType = extractApparelProductType(query);
-  const text = String(keywords || '').trim();
-  if (!productType || text.includes(productType)) return text;
-  return text ? `${productType} ${text}` : productType;
-}
+// 実装は apparel-query-attributes.mjs に移動(全モールから使うため)。
 
 function structuredMarketplaceTerms(query) {
   const segments = String(query || '')
@@ -961,7 +956,10 @@ export function buildQoo10SearchKeywords(query) {
   if (!cleaned) return '';
   const deviceAccessoryTerms = buildDeviceAccessorySearchKeywords(cleaned);
   if (deviceAccessoryTerms) return deviceAccessoryTerms;
-  const compactTerms = buildMarketplaceSearchKeywords(cleaned, 'QOO10_JP');
+  // ensureApparelProductTypeTerm for the same reason as SHEIN above: the
+  // compact builder returns the broad category ("トップス") and drops the
+  // specific garment the user typed ("ブラウス").
+  const compactTerms = ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'QOO10_JP'));
   if (compactTerms !== cleaned) {
     const missingPriceConstraint = extractMissingPriceConstraint(cleaned, compactTerms);
     return missingPriceConstraint ? `${compactTerms} ${missingPriceConstraint}` : compactTerms;
@@ -1006,7 +1004,10 @@ export function buildSheinSearchDestination(query) {
     .replace(/\bB[A-Z0-9]{9}\b/giu, ' ')
     .replace(/\s+/gu, ' ')
     .trim();
-  const keywords = buildMarketplaceSearchKeywords(cleaned, 'SHEIN_JP');
+  // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords collapses
+  // "ブラウス" to "トップス", so without this SHEIN receives the broad category
+  // and loses the word that actually narrows the search (reported 2026-08-07).
+  const keywords = ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'SHEIN_JP'));
   if (!keywords) return '';
   return `https://jp.shein.com/pdsearch/${encodeURIComponent(keywords)}/`;
 }

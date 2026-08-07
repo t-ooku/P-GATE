@@ -420,7 +420,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v322/);
+  assert.match(serviceWorker, /hoshilu-shell-v323/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1039,4 +1039,36 @@ test('条件検索チップはAI検索と同じ1本のクエリ条件に追加�
   const layoutCss = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
   assert.match(layoutCss, /\.condition-chip\.selected\{/);
   assert.match(layoutCss, /\.condition-chip\{[^}]*min-height:44px/);
+});
+
+// 商品提示中も検索窓を画面に残す (2026-08-07 request)。
+// 商品が出たあとに絞り込みたくなったとき、元の検索パネルまでスクロールで
+// 戻らないと語を足せなかった。
+//
+// 重要なのは #query を唯一の正とし続けること。AI連想キーワードのチップも
+// 条件検索のチップも #query に書き込むので、常駐バーが自前の状態を持つと
+// 2つの入力欄が別々の内容で検索してしまう。バーは描画のたびに #query を
+// 映し、送信時に #query へ書き戻すだけにしてある。
+test('検索結果の上に検索窓を常駐させ、#queryを唯一の正とする', () => {
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  const css = fs.readFileSync(new URL('../public/sticky-nav.css', import.meta.url), 'utf8');
+
+  assert.match(html, /id="stickySearch"[^>]*class="sticky-search hidden"/);
+  assert.match(html, /id="stickySearchInput"/);
+  // 結果が出ているときだけ出す
+  assert.match(appSource, /form\.classList\.toggle\('hidden',!showing\)/);
+  // 送信時は #query に書き戻してから同じ検索経路を通す
+  assert.match(appSource, /elements\.query\.value=value;[\s\S]{0,120}runKnowledgeSearch\(\)/);
+  // 入力途中の内容を描画で上書きしない
+  assert.match(appSource, /if\(showing&&document\.activeElement!==input\)input\.value=elements\.query\.value/);
+  // 描画のたびに同期する
+  assert.match(appSource, /syncStickySearch\(\);elements\.results\.scrollIntoView/);
+  // スクロールしても残る
+  assert.match(css, /\.sticky-search\s*\{[^}]*position:\s*sticky/);
+  // タップ領域44px
+  assert.match(css, /\.sticky-search input\s*\{[^}]*min-height:\s*44px/);
+  ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
+    assert.match(appSource, new RegExp(`${language}:\\{placeholder:'[^']+',submit:'[^']+',label:'[^']+'\\}`));
+  });
 });

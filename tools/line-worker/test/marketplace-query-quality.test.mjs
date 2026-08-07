@@ -2899,3 +2899,48 @@ test('IPL光美容器は照射回数と出力段階の同時訂正を4言語で�
     }
   }
 });
+
+// 2026-08-07 実機報告: 「夏用、丈長め、おしゃれ、ブラウス」で私服のブラウスが
+// 6番目以降に落ち、ビジネス用が先頭に出た。
+//
+// v4.0 の採点表には TPO の軸がそもそも無く、リクルート用と休日用を分ける
+// ものが何もなかった。そのため商品種別と対象者で加点されるビジネス商品が、
+// ユーザーの望む私服より上に来ていた。
+//
+// この軸だけは「一致で加点」ではなく「不一致で減点」にしてある。カジュアル
+// 服の多くは自分をカジュアルとは名乗らないので、「カジュアル」という語を
+// 加点対象にするとその語をたまたま使った商品が有利になるだけになる。
+// 確実なのは逆側で、ビジネス用はそれが売りなので必ずそう書いてある。
+test('私服を探しているときビジネス用の服が上位に来ない', async () => {
+  const { scoreApparelAttributeMatch, apparelTpo } = await import('../src/apparel-query-attributes.mjs');
+  const query = '夏用、丈長め、おしゃれ、ブラウス';
+  assert.equal(apparelTpo(query), 'casual');
+
+  const business = scoreApparelAttributeMatch(query, 'レディース ブラウス ビジネス 通勤 オフィス 長袖 白').total;
+  const recruit = scoreApparelAttributeMatch(query, 'リクルートスーツ用 ブラウス 就活 白 長袖').total;
+  const casual = scoreApparelAttributeMatch(query, 'ブラウス レディース 夏 半袖 おしゃれ ロング丈 カジュアル').total;
+  const neutral = scoreApparelAttributeMatch(query, 'ブラウス レディース 白 長袖').total;
+
+  assert.ok(casual > business, `casual ${casual} should beat business ${business}`);
+  assert.ok(casual > recruit, `casual ${casual} should beat recruit ${recruit}`);
+  // 何も名乗っていない商品は減点されない（大半の商品がこれに当たる）
+  assert.ok(neutral > business, `neutral ${neutral} should beat business ${business}`);
+  assert.equal(scoreApparelAttributeMatch(query, 'ブラウス レディース 白 長袖').breakdown.tpo_mismatch, 0);
+});
+
+test('季節語が用途として認識される', async () => {
+  const { extractApparelUseCase } = await import('../src/apparel-query-attributes.mjs');
+  assert.deepEqual(extractApparelUseCase('夏用 ブラウス'), ['涼しい']);
+  assert.deepEqual(extractApparelUseCase('冬用 コート'), ['暖かい']);
+  // 逆側を名乗っていない商品はどちらの用途にも当たらない
+  assert.deepEqual(extractApparelUseCase('ブラウス 白'), []);
+});
+
+test('TPOはどちらも名乗っていなければ判定しない', async () => {
+  const { apparelTpo } = await import('../src/apparel-query-attributes.mjs');
+  assert.equal(apparelTpo('ブラウス レディース 白'), null);
+  assert.equal(apparelTpo('ビジネス ブラウス'), 'business');
+  assert.equal(apparelTpo('カジュアル ブラウス'), 'casual');
+  // 両方書いてある商品はどちらの場面にも使えるという意味なので競合させない
+  assert.equal(apparelTpo('ビジネスにもカジュアルにも使えるブラウス'), null);
+});

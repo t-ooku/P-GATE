@@ -20,10 +20,40 @@ const SLEEVE_PATTERNS = [
 
 // "用途" (use-case, scored separately from 特徴/style below per the
 // 2026-08-05 v4.0 rubric): climate/season-oriented purpose words.
+//
+// 2026-08-07: "夏用"/"冬用" added. A season word is the most common way a
+// user states this purpose, and it was not matched at all - only indirect
+// wordings like "涼しい" were.
 const USE_CASE_PATTERNS = [
-  ['涼しい', /(?:涼しい|涼感|接触冷感|ひんやり|通気性|薄手|cool(?:ing)?|breathable|凉感|凉爽|透气|시원한|통기성)/iu],
-  ['暖かい', /(?:暖かい|温かい|あったか|防寒|保温|warm|insulated|保暖|따뜻한|보온)/iu]
+  ['涼しい', /(?:涼しい|涼感|接触冷感|ひんやり|通気性|薄手|夏用|夏物|春夏|夏|cool(?:ing)?|breathable|summer|凉感|凉爽|透气|夏季|시원한|통기성|여름)/iu],
+  ['暖かい', /(?:暖かい|温かい|あったか|防寒|保温|厚手|冬用|冬物|秋冬|冬|warm|insulated|winter|保暖|冬季|따뜻한|보온|겨울)/iu]
 ];
+
+// TPO (2026-08-07). Reported: searching 「夏用、丈長め、おしゃれ、ブラウス」
+// put business blouses first and pushed casual ones to 6th and below. The
+// rubric had no axis for this at all - nothing separated a recruit-suit
+// blouse from a weekend one - so a business listing that matched product
+// type and audience simply outscored the casual listing the user wanted.
+//
+// Unlike the other axes this one is scored as a MISMATCH rather than a
+// match. Most casual clothing does not announce itself as casual, so
+// rewarding the word "カジュアル" would favour listings that happen to use
+// it. What is reliable is the opposite: business wear does say so
+// (リクルート, 就活, 事務服, 制服), because that is its selling point. So a
+// query asking for casual is protected by pushing the explicitly-business
+// listings down, not by lifting the ones that self-describe as casual.
+const TPO_BUSINESS = /(?:ビジネス|オフィス|通勤|就活|リクルート|事務服|制服|スーツ|フォーマル|礼装|冠婚葬祭|business|formal|office\s*wear|recruit|商务|商務|正装|정장|비즈니스)/iu;
+const TPO_CASUAL = /(?:カジュアル|普段着|私服|デイリー|休日|タウン|おしゃれ|オシャレ|お洒落|デート|遊び|casual|everyday|street|休闲|休閒|캐주얼|데일리)/iu;
+
+export function apparelTpo(text) {
+  const value = String(text || '').normalize('NFKC');
+  const business = TPO_BUSINESS.test(value);
+  const casual = TPO_CASUAL.test(value);
+  // Both present means the listing covers either occasion; that is not a
+  // conflict with anything, so it is treated as unspecified.
+  if (business === casual) return null;
+  return business ? 'business' : 'casual';
+}
 
 // "特徴" (style/fit descriptors): a small, curated, non-exhaustive list of
 // generic descriptive words commonly used in apparel search text.
@@ -154,7 +184,15 @@ function contentWords(text) {
 export function scoreApparelAttributeMatch(query, candidateText, { colorPatterns = [] } = {}) {
   const queryText = String(query || '').normalize('NFKC');
   const text = String(candidateText || '').normalize('NFKC');
-  const breakdown = { product_type: 0, audience: 0, color: 0, use_case: 0, feature: 0, raw_text: 0 };
+  const breakdown = { product_type: 0, audience: 0, color: 0, use_case: 0, feature: 0, raw_text: 0, tpo_mismatch: 0 };
+
+  // Only fires when the query states an occasion AND the candidate states the
+  // opposite one. Silence on either side is not a conflict, so ordinary
+  // listings are untouched - this can only push down items that actively
+  // advertise the occasion the user did not ask for.
+  const queryTpo = apparelTpo(queryText);
+  const candidateTpo = apparelTpo(text);
+  if (queryTpo && candidateTpo && queryTpo !== candidateTpo) breakdown.tpo_mismatch = -20;
 
   const queryProductType = extractApparelProductType(queryText);
   if (queryProductType && extractApparelProductType(text) === queryProductType) breakdown.product_type = 20;
@@ -179,4 +217,25 @@ export function scoreApparelAttributeMatch(query, candidateText, { colorPatterns
 
   const total = Object.values(breakdown).reduce((sum, value) => sum + value, 0);
   return { total, breakdown };
+}
+
+/**
+ * Put the specific garment noun back into a built keyword string.
+ *
+ * GENERIC_PRODUCTS in marketplace-search-keywords-v2.mjs only knows broad
+ * category nouns, so "ブラウス" collapses to "トップス" and "カットソー"
+ * disappears entirely - the user's most specific word, the one that actually
+ * narrows the search, is the one that gets dropped. Reported 2026-08-07:
+ * searching 「夏用、丈長め、おしゃれ、ブラウス」 reached SHEIN as 「白 トップス」.
+ *
+ * This lived as a private helper in index.mjs and was only applied to the
+ * Amazon and Rakuten keyword builders, which is why those two kept "ブラウス"
+ * while SHEIN, Qoo10 and the five apparel malls lost it. It belongs next to
+ * extractApparelProductType so every caller can reach it.
+ */
+export function ensureApparelProductTypeTerm(query, keywords) {
+  const productType = extractApparelProductType(query);
+  const text = String(keywords || '').trim();
+  if (!productType || text.includes(productType)) return text;
+  return text ? `${productType} ${text}` : productType;
 }

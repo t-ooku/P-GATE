@@ -1,5 +1,6 @@
 import { buildMarketplaceSearchKeywords } from '../public/marketplace-search-keywords-v2.mjs';
 import { encodeShiftJisPercent } from './shift-jis-url.mjs';
+import { ensureApparelProductTypeTerm } from './apparel-query-attributes.mjs';
 
 const APPAREL_TERMS = [
   /服|洋服|トップス|シャツ|ブラウス|ニット|カーディガン|ジャケット|アウター|コート|カットソー|長袖|半袖|袖なし|ノースリーブ/u,
@@ -27,8 +28,13 @@ export function buildApparelMarketplaceDestinations(query) {
   // exported for other callers/tests, just no longer gates this list).
   if (!source) return [];
 
+  // buildMarketplaceSearchKeywords collapses the specific garment noun into
+  // its broad category ("ブラウス" -> "トップス", "カットソー" -> dropped), which
+  // is exactly the word that narrows an apparel search. Amazon and Rakuten
+  // already put it back; these five malls did not, so a blouse search reached
+  // them as a generic tops search (reported 2026-08-07).
   const keywordsFor = (marketplace) =>
-    buildMarketplaceSearchKeywords(source, marketplace) || source;
+    ensureApparelProductTypeTerm(source, buildMarketplaceSearchKeywords(source, marketplace)) || source;
 
   // ZOZOTOWN and SHOPLIST decode their keyword parameter as Shift_JIS (see
   // shift-jis-url.mjs for the live verification). URL.searchParams always

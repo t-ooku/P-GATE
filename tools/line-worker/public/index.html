@@ -152,6 +152,11 @@
             <p id="status" class="status" role="status" aria-live="polite"></p>
           </section>
 
+          <form id="stickySearch" class="sticky-search hidden" role="search">
+            <input id="stickySearchInput" type="search" autocomplete="off" enterkeyhint="search" aria-label="検索ワードを足して絞り込む" placeholder="ワードを足して絞り込む">
+            <button id="stickySearchSubmit" type="submit" class="sticky-search-submit">絞り込む</button>
+          </form>
+
           <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle">
             <div class="section-title"><div><p class="step">MATCHES</p><h2 id="resultsTitle">ホシルからの提案</h2></div></div>
             <p id="resultMessage" class="result-message"></p>
