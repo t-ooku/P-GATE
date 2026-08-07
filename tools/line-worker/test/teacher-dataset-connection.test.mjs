@@ -76,8 +76,8 @@ test('必須検索テストの6クエリすべてが教師データで解決ま�
 // 厚くしたぶんが失われないよう件数と代表クエリを固定する。
 test('教師データが全ペルソナで実用的な件数を保っている', () => {
   const stats = teacherDatasetStats();
-  assert.ok(stats.entryCount >= 377, `expected at least 377 compiled entries, got ${stats.entryCount}`);
-  assert.ok(stats.sourceBatches.length >= 9, `expected at least 9 batches, got ${stats.sourceBatches.length}`);
+  assert.ok(stats.entryCount >= 407, `expected at least 407 compiled entries, got ${stats.entryCount}`);
+  assert.ok(stats.sourceBatches.length >= 10, `expected at least 10 batches, got ${stats.sourceBatches.length}`);
 });
 
 test('子ども・高齢者の言い換えから商品を引ける', () => {
@@ -286,4 +286,42 @@ test('見た場所しか分からないクエリは特徴を聞き返す', () =>
   // 逆に、場所の記憶が具体的で対象がほぼ決まるものは断定してよい
   assert.match(lookupTeacherDatasetEntry('ホテルにあった小さい冷蔵庫みたいなの').ideal_answer, /小型冷蔵庫/);
   assert.match(lookupTeacherDatasetEntry('飛行機の中で配られたやつ 目にかぶせる').ideal_answer, /アイマスク/);
+});
+
+// 防災 (batch-010)。ここは間違いの重さが非対称で、停電時のライトを探して
+// いる人にインテリア照明を出すのは、単に外したのではなく役に立たない物を
+// 掴ませたことになる。「電源が失われている」前提を除外条件で固定する。
+test('防災用品は電源前提の商品を除外する', () => {
+  const light = lookupTeacherDatasetEntry('停電のときに使うあかり');
+  assert.match(light.ideal_answer, /ランタン/);
+  assert.ok(light.excluded_conditions.some((item) => item.includes('コンセント')));
+
+  const radio = lookupTeacherDatasetEntry('電気がなくても使えるラジオ');
+  assert.ok(radio.excluded_conditions.some((item) => item.includes('コンセント')));
+
+  // 事前充電が要るモバイルバッテリーは「充電手段が無い」状況の答えにならない
+  const charger = lookupTeacherDatasetEntry('スマホの充電が切れたとき 電気がない');
+  assert.ok(charger.excluded_conditions.some((item) => item.includes('モバイルバッテリー')));
+
+  // 災害用の簡易トイレと介護用ポータブルトイレは別物
+  const toilet = lookupTeacherDatasetEntry('トイレが流せなくなったとき用');
+  assert.ok(toilet.excluded_conditions.some((item) => item.includes('ポータブルトイレ')));
+});
+
+// 洗濯の相談は原因が菌や皮脂で、香りを足す製品では解決しない。
+test('においの相談に香りでごまかす製品を出さない', () => {
+  const odor = lookupTeacherDatasetEntry('洗濯物が生乾きのにおいがする');
+  assert.match(odor.ideal_answer, /除菌|消臭/);
+  assert.ok(odor.excluded_conditions.some((item) => item.includes('柔軟剤')));
+  assert.ok(odor.excluded_conditions.some((item) => item.includes('芳香剤')));
+
+  const collar = lookupTeacherDatasetEntry('えりの黄ばみが落ちない');
+  assert.ok(collar.excluded_conditions.some((item) => item.includes('柔軟剤')));
+});
+
+// 食用作物に使えない薬剤があるため、害虫相談は植物を確認してから。
+test('園芸の薬剤は植物と用途を確認してから答える', () => {
+  const pest = lookupTeacherDatasetEntry('虫が葉っぱを食べてしまう');
+  assert.equal(pest.category, 'UNCLASSIFIED');
+  assert.match(pest.ideal_answer, /野菜|食用/);
 });

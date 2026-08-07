@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-07T10:19:41.701Z",
+  "generated_at": "2026-08-07T10:24:50.359Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -9,9 +9,10 @@
     "2026-08-07-batch-006.json",
     "2026-08-07-batch-007.json",
     "2026-08-07-batch-008.json",
-    "2026-08-07-batch-009.json"
+    "2026-08-07-batch-009.json",
+    "2026-08-07-batch-010.json"
   ],
-  "entry_count": 377,
+  "entry_count": 407,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -8286,6 +8287,686 @@
       "excluded_conditions": [],
       "confidence": 0.7,
       "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "18099c6d66e9a7bf31159cadde232bc3e2e7276ffee21fe9c4fc9185397fe0ba",
+      "query_text": "停電のときに使うあかり",
+      "locale": "ja",
+      "persona": "general",
+      "category": "emergency-light",
+      "ideal_answer": "防災用ランタン(電池式・充電式)",
+      "search_terms": {
+        "ja": [
+          "防災 ランタン",
+          "停電 用 ライト 電池式"
+        ],
+        "en": [
+          "emergency lantern power outage"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "インテリア照明 コンセント式",
+        "デスクライト"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "53883d9019c3b486c7a4811262378cc8372548832d51aa491efbff0cd6a7b2df",
+      "query_text": "電気がなくても使えるラジオ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "emergency-radio",
+      "ideal_answer": "防災ラジオ(手回し・ソーラー充電)",
+      "search_terms": {
+        "ja": [
+          "防災ラジオ 手回し",
+          "ラジオ ソーラー 充電 防災"
+        ],
+        "en": [
+          "emergency hand crank radio"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ラジオ コンセント式のみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "09c80589bd16aa14a5802bc9855bef0696e00c28d632e7ad482cb3a76cb86b59",
+      "query_text": "水を貯めておくやつ 災害用",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "水を入れて運ぶ給水タンクと、そのまま備蓄できる長期保存水があります。どちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "a44105f1fe438720e363e71c865f1f8a36851a13636905870a72081b6caff3e7",
+      "query_text": "地震のときガラスが飛び散らないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "safety-film",
+      "ideal_answer": "ガラス飛散防止フィルム",
+      "search_terms": {
+        "ja": [
+          "ガラス飛散防止フィルム",
+          "窓 飛散防止 地震"
+        ],
+        "en": [
+          "shatter proof window film"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "遮熱フィルム 断熱のみ",
+        "目隠しシート"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "c21f5b3beb6930081fc0915dbff81b575f4687d6ac0636670b07c8809f8021e2",
+      "query_text": "持ち出す用のリュックに入れておくもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "水・食料・ライト・携帯トイレ・救急用品が基本です。一式セットと、個別に揃える方法があります。ご家族は何人でしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "54b64e96100102734875fa581759a310ea63b9b9e8bd5bd2baa068ab8208220a",
+      "query_text": "トイレが流せなくなったとき用",
+      "locale": "ja",
+      "persona": "general",
+      "category": "emergency-toilet",
+      "ideal_answer": "簡易トイレ(携帯トイレ)",
+      "search_terms": {
+        "ja": [
+          "簡易トイレ 防災",
+          "携帯トイレ 凝固剤 災害"
+        ],
+        "en": [
+          "emergency portable toilet bags"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "介護用ポータブルトイレ 据置"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "79eb3e0c21d9e76e2de48d2fac7eaf01015ed63db4f1eb3607c53ebfe00dbd8d",
+      "query_text": "スマホの充電が切れたとき 電気がない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "solar-charger",
+      "ideal_answer": "防災用ソーラー充電器(手回し併用)",
+      "search_terms": {
+        "ja": [
+          "ソーラー充電器 防災",
+          "手回し 充電器 スマホ"
+        ],
+        "en": [
+          "solar phone charger emergency"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "モバイルバッテリー 要事前充電"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "2e9eebfd9ae4dbdad6dfc5dce14f96f5fac4c94257569ac5e95a0391cd311ee0",
+      "query_text": "水やりを忘れても枯れないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "self-watering",
+      "ideal_answer": "植物用自動給水器(給水キャップ)",
+      "search_terms": {
+        "ja": [
+          "植物 自動給水",
+          "水やり 自動 留守 鉢"
+        ],
+        "en": [
+          "plant self watering spikes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ペット 給水器"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "a877255bb6d13a9c47319fff8a616d8bd571b661896c9a6baa69143b94103595",
+      "query_text": "ベランダで野菜を育てたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "planter",
+      "ideal_answer": "ベランダ用プランター(野菜栽培)",
+      "search_terms": {
+        "ja": [
+          "プランター 野菜 ベランダ",
+          "家庭菜園 セット 初心者"
+        ],
+        "en": [
+          "balcony vegetable planter"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "畑用 大型 資材"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "2f900ea8272715b96bb32268bac0fde513df287cd6394b5155d80857450eea72",
+      "query_text": "土に混ぜるやつ 花が元気になる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "肥料にも種類があります(緩効性、液体、活力剤など)。育てている植物と、今の様子を教えていただけますか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "4248dcbe40b79d78d89d5deca759f81a9a47e55a2163ddb2ed690cdb22c5ed3f",
+      "query_text": "虫が葉っぱを食べてしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何を育てていて、どんな虫がついていますか？ 食用の野菜かどうかでも使える薬剤が変わります。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "bc5f45d315c6c20512582119840b8e56138ec8a4ce348dfaa60c0df095c9d888",
+      "query_text": "植木鉢の下に置くやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "plant-saucer",
+      "ideal_answer": "植木鉢用の受け皿",
+      "search_terms": {
+        "ja": [
+          "植木鉢 受け皿",
+          "鉢皿 プラスチック"
+        ],
+        "en": [
+          "plant pot saucer tray"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "f9e7768159dd4eae532390d22b3df53fe53c666e1dcc2db00bfbe80012a2565b",
+      "query_text": "えりの黄ばみが落ちない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "collar-stain-remover",
+      "ideal_answer": "襟・袖用の部分洗い洗剤",
+      "search_terms": {
+        "ja": [
+          "襟 黄ばみ 洗剤",
+          "襟汚れ 部分洗い 皮脂"
+        ],
+        "en": [
+          "collar stain remover"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "漂白剤 色柄物不可",
+        "柔軟剤"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "c70d7cf15a09c043e63fd6812dcda6119d58df9b7ee6eaac2340d10cf7a6fed4",
+      "query_text": "洗濯物が生乾きのにおいがする",
+      "locale": "ja",
+      "persona": "general",
+      "category": "laundry-sanitizer",
+      "ideal_answer": "部屋干し用の除菌洗剤(消臭タイプ)",
+      "search_terms": {
+        "ja": [
+          "部屋干し 洗剤 除菌",
+          "生乾き臭 消臭 洗濯"
+        ],
+        "en": [
+          "laundry sanitizer odor"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "柔軟剤 香り付けのみ",
+        "芳香剤"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "2d9c91f6a1c2010ee5a1f26cf850cc066cba6ecd1efb20c0bc67ae1f4a48e896",
+      "query_text": "セーターが縮んでしまった",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ウールなどは専用の柔軟剤で戻せる場合がありますが、素材によっては元に戻りません。洗濯表示の素材を教えていただけますか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "780b10de485e6d341fe8057bf4a01c265f2bbd1cde024baae5d86869df3cceb2",
+      "query_text": "洗濯機で洗えない服を家で洗いたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "delicate-detergent",
+      "ideal_answer": "おしゃれ着用中性洗剤",
+      "search_terms": {
+        "ja": [
+          "おしゃれ着洗剤 中性",
+          "ドライマーク 洗剤 自宅"
+        ],
+        "en": [
+          "delicate fabric detergent"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "漂白剤",
+        "粉末洗剤 弱アルカリ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "2ccbe7af9d23d9d29033cdac4cc443ea048ce9eb0ebc39d8d8bdff2c26cace0b",
+      "query_text": "服についた毛玉をとるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fabric-shaver",
+      "ideal_answer": "毛玉取り器(電動)",
+      "search_terms": {
+        "ja": [
+          "毛玉取り 電動",
+          "毛玉取り器 ニット"
+        ],
+        "en": [
+          "fabric shaver pill remover"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "粘着ローラー ペットの毛"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "8ce8a72924947d4eeee97792cd81b77259c1ee8db26ec0a4b3dcf9df2b2cbea7",
+      "query_text": "靴下がいつも片方なくなる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sock-clip",
+      "ideal_answer": "洗濯用ソックスクリップ(ペア留め)",
+      "search_terms": {
+        "ja": [
+          "ソックスクリップ 洗濯",
+          "靴下 ペア 洗濯ネット"
+        ],
+        "en": [
+          "sock clips laundry pairing"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "bcb36d159cc3c86dae9508ea5f06386d5fa1581259fcac405df522655aba4afc",
+      "query_text": "お腹が大きくなってきて履けるズボン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "maternity-wear",
+      "ideal_answer": "マタニティパンツ(お腹を締め付けない)",
+      "search_terms": {
+        "ja": [
+          "マタニティ パンツ",
+          "妊婦 ズボン お腹 ゆったり"
+        ],
+        "en": [
+          "maternity pants"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ウエストゴム 通常 パンツ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "b3b8173c7b975c38193b10c158883e737f267b0ee8c055c06b6499c805dc83d4",
+      "query_text": "妊娠中に寝るとき楽な枕",
+      "locale": "ja",
+      "persona": "general",
+      "category": "maternity-pillow",
+      "ideal_answer": "マタニティ抱き枕(横向き寝用)",
+      "search_terms": {
+        "ja": [
+          "抱き枕 マタニティ",
+          "妊婦 抱き枕 横向き"
+        ],
+        "en": [
+          "maternity body pillow"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "枕 通常"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "01d785bf2889c4ed3748b0760f903f3491800127628fc8ba24d9cf757d577b79",
+      "query_text": "お腹を冷やさないようにするもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "belly-warmer",
+      "ideal_answer": "腹巻き(冷え対策)",
+      "search_terms": {
+        "ja": [
+          "腹巻き",
+          "腹巻 冷え対策 薄手"
+        ],
+        "en": [
+          "belly warmer band"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "使い捨てカイロ 直貼り"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "91ea98aca2f266f0324540b3218eab4f9381737416e36ef65caa7c6b41bfafe1",
+      "query_text": "家で将棋をさすやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "shogi-set",
+      "ideal_answer": "将棋セット(盤と駒)",
+      "search_terms": {
+        "ja": [
+          "将棋セット 盤 駒",
+          "将棋盤 折りたたみ"
+        ],
+        "en": [
+          "shogi board and pieces"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "囲碁 セット",
+        "チェス"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "edebf3e747657fefef8af2cd1abc615f28a7f0babcc4b4b92ee177b3d0c3b12d",
+      "query_text": "ひとりでできる頭の体操の本みたいなの",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "puzzle-book",
+      "ideal_answer": "脳トレドリル(パズル・計算)",
+      "search_terms": {
+        "ja": [
+          "脳トレ ドリル 高齢者",
+          "パズル 本 大人 認知"
+        ],
+        "en": [
+          "brain training puzzle book"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "46ca07257ccee25debb70fd166a221f2f73721a05a6592d78f6c63a904dc52f0",
+      "query_text": "孫と一緒にできるゲーム 電気を使わない",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "board-game",
+      "ideal_answer": "ボードゲーム(家族で遊べるもの)",
+      "search_terms": {
+        "ja": [
+          "ボードゲーム 家族",
+          "カードゲーム 子供と大人"
+        ],
+        "en": [
+          "family board game"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "テレビゲーム",
+        "ゲーム機"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "031f8a9d42c576642559971db23cbe72eb336aacc97608f5dd0785f10603a1ca",
+      "query_text": "歌をうたう機械 家で",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "karaoke-machine",
+      "ideal_answer": "家庭用カラオケマイク(機器)",
+      "search_terms": {
+        "ja": [
+          "家庭用 カラオケ",
+          "カラオケマイク 家庭用 Bluetooth"
+        ],
+        "en": [
+          "home karaoke machine"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "会議用マイク",
+        "コンデンサーマイク 配信"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "0a4d86221699ae1a4aa4d629baa49634460beb561dcc22f15790c2f8c9d70aa3",
+      "query_text": "写真をきれいに残しておきたい 昔のやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "photo-scanner",
+      "ideal_answer": "写真スキャナー(紙焼き写真のデジタル化)",
+      "search_terms": {
+        "ja": [
+          "写真 スキャナー デジタル化",
+          "アルバム スキャン 機械"
+        ],
+        "en": [
+          "photo scanner digitize prints"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "書類スキャナー 自動給紙のみ",
+        "写真プリンター 印刷"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "45c49c0ab59d700d9b3ad64b1097c562941ecb834071f4b2d6c1ae27f1ef6d02",
+      "query_text": "bousai set japan earthquake",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "emergency-kit",
+      "ideal_answer": "防災セット(非常用持ち出し袋)",
+      "search_terms": {
+        "ja": [
+          "防災セット 非常用持ち出し袋"
+        ],
+        "en": [
+          "earthquake emergency kit japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "fec7f581604c7fb4786e34fad647cd4593df11b8957fcecc9784aedfa2e3a7ad",
+      "query_text": "생리 용품 일본 어디서",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ナプキン、タンポン、吸水ショーツなど種類があります。どれをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [
+          "생리대",
+          "탐폰"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "7e303cbd2372363d9478c2ac26798d69776dbf0d05f1627243b8ff00093df27b",
+      "query_text": "洗衣 除臭 日本 洗剤",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "laundry-sanitizer",
+      "ideal_answer": "部屋干し用の除菌洗剤(消臭タイプ)",
+      "search_terms": {
+        "ja": [
+          "部屋干し 洗剤 除菌"
+        ],
+        "en": [
+          "laundry sanitizer odor"
+        ],
+        "ko": [],
+        "zh": [
+          "洗衣液 除臭",
+          "室内晾晒 洗衣"
+        ]
+      },
+      "excluded_conditions": [
+        "柔軟剤 香り付けのみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "97b55294397529b529821c9cf427f49468c1f625ae4c89d92ed38e4b201df52e",
+      "query_text": "maternity pillow japan size",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "maternity-pillow",
+      "ideal_answer": "マタニティ抱き枕(横向き寝用)",
+      "search_terms": {
+        "ja": [
+          "抱き枕 マタニティ"
+        ],
+        "en": [
+          "maternity body pillow japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-010.json"
     }
   ]
 }
