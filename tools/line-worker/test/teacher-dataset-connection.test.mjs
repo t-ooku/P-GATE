@@ -76,8 +76,8 @@ test('必須検索テストの6クエリすべてが教師データで解決ま�
 // 厚くしたぶんが失われないよう件数と代表クエリを固定する。
 test('教師データが全ペルソナで実用的な件数を保っている', () => {
   const stats = teacherDatasetStats();
-  assert.ok(stats.entryCount >= 439, `expected at least 439 compiled entries, got ${stats.entryCount}`);
-  assert.ok(stats.sourceBatches.length >= 11, `expected at least 11 batches, got ${stats.sourceBatches.length}`);
+  assert.ok(stats.entryCount >= 469, `expected at least 469 compiled entries, got ${stats.entryCount}`);
+  assert.ok(stats.sourceBatches.length >= 12, `expected at least 12 batches, got ${stats.sourceBatches.length}`);
 });
 
 test('子ども・高齢者の言い換えから商品を引ける', () => {
@@ -356,4 +356,49 @@ test('汚れの種類ごとに正しい洗浄剤へ導く', () => {
   const aircon = lookupTeacherDatasetEntry('エアコンの中のカビっぽいにおい');
   assert.equal(aircon.category, 'UNCLASSIFIED');
   assert.match(aircon.ideal_answer, /業者|故障|発火/);
+});
+
+// 2026-08-07: 執筆中に「刺繍枠(эмブロイダリーフープ)」「供物・линeなど」と、
+// カタカナのつもりでキリル文字が混入した記録が2件見つかった。日本語として
+// 読めるつもりで書いた文字列に別の文字体系が紛れると、目視では気づきにくい
+// うえ検索語としても機能しない。書いた本人が見落とす種類の誤りなので、
+// 機械で止める。
+test('日本語の記述にキリル文字が紛れていない', async () => {
+  const compiled = JSON.parse(
+    await readFile(new URL('../src/search-quality/teacher-dataset-rules.generated.json', import.meta.url), 'utf8')
+  );
+  const cyrillic = /[\u0400-\u04FF]/u;
+  const offenders = [];
+  for (const entry of compiled.entries) {
+    // locale が ko/zh/en の記録も、日本語欄にキリル文字が入る理由はない
+    for (const field of ['query_text', 'ideal_answer']) {
+      if (cyrillic.test(entry[field] || '')) offenders.push(`${entry.query_text}.${field}`);
+    }
+  }
+  assert.deepEqual(offenders, []);
+});
+
+// 動物種を確認せずにペット用品を売らない。犬用が猫に安全とは限らない。
+test('ペット用品は動物種を確認してから答える', () => {
+  const shampoo = lookupTeacherDatasetEntry('ペットのシャンプー');
+  assert.equal(shampoo.category, 'UNCLASSIFIED');
+  assert.match(shampoo.ideal_answer, /犬|猫/);
+  assert.ok(shampoo.excluded_conditions.includes('人間用シャンプー'));
+
+  const en = lookupTeacherDatasetEntry('cat shampoo japan safe');
+  assert.ok(en.excluded_conditions.includes('犬用シャンプー'));
+
+  // 種が明示されていれば断定してよい
+  assert.match(lookupTeacherDatasetEntry('うさぎの牧草入れ').ideal_answer, /うさぎ|牧草/);
+  assert.match(lookupTeacherDatasetEntry('ハムスターが回すやつ').ideal_answer, /回し車/);
+});
+
+// 同じ動作でも競技が違えば別の商品になる。
+test('競技が分からないスポーツ用品は聞き返す', () => {
+  const wrap = lookupTeacherDatasetEntry('運動するときに手に巻くやつ');
+  assert.equal(wrap.category, 'UNCLASSIFIED');
+  assert.match(wrap.ideal_answer, /バンテージ|リストラップ|スポーツ/);
+  // 競技が明示されていれば断定する
+  assert.match(lookupTeacherDatasetEntry('ヨガのときに敷くやつ').ideal_answer, /ヨガマット/);
+  assert.match(lookupTeacherDatasetEntry('卓球のラケットに貼るやつ').ideal_answer, /ラバー/);
 });

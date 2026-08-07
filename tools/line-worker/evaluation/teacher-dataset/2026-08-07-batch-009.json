@@ -140,7 +140,7 @@
     "locale": "ja",
     "persona": "elderly",
     "user_intent": "お盆の供物・供花を探している",
-    "ideal_answer": "お盆のお供え(供物・линeなど)",
+    "ideal_answer": "お盆のお供え(供物・供花など)",
     "reason": "宗派や地域差があるため幅を持たせるが、カテゴリまでは答えられる。",
     "category": "memorial-offering",
     "search_terms": {
