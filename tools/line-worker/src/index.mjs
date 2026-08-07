@@ -20,6 +20,7 @@ import { searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shoppin
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
+import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn } from './ai-chat-intent.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
@@ -1090,7 +1091,7 @@ export function trackingEventsForPayload(payload, occurredAt) {
   }));
 }
 
-async function decoratePwaResult(result, request, env, sessionHash, query = '') {
+async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA') {
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
   const candidates = [];
@@ -1163,8 +1164,37 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
     amazon_search_keywords: buildAmazonSearchKeywords(query),
     search_keywords: buildAmazonSearchKeywords(query),
     marketplace_search_links: marketplaceSearchLinks,
+    refinement_chips: refinementChipsForQuery(query, language),
     ...(aiDiscovery ? { ai_discovery: aiDiscovery } : {})
   };
+}
+
+// Condition search (Phase C item 11, 2026-08-07). search-refinement-policy
+// has carried a complete, tested condition model since before this change,
+// but nothing ever called it - the AI free-text box was the only way in.
+// Surfacing its chips on the search response is what merges the two into one
+// model: a chip's label is appended to the very same query string the AI
+// search already reads, so "AI検索" and "条件検索" are two entry points to
+// one condition, not two parallel search paths.
+//
+// Chips are grouped per dimension for the client, and dimensions the query
+// already pins down are dropped so the panel narrows as conditions are added
+// rather than re-offering a decision the user has made.
+function refinementChipsForQuery(query, language) {
+  const locale = String(language || 'JA').toLowerCase();
+  const context = { known_dimensions: knownRefinementDimensions(query, locale) };
+  const groups = new Map();
+  for (const chip of suggestRefinementChips(context, locale, 40)) {
+    if (!groups.has(chip.dimension)) {
+      groups.set(chip.dimension, {
+        dimension: chip.dimension,
+        label: refinementDimensionLabel(chip.dimension, locale),
+        values: []
+      });
+    }
+    groups.get(chip.dimension).values.push({ value: chip.value, label: chip.label });
+  }
+  return [...groups.values()].filter((group) => group.label && group.values.length);
 }
 
 // AI Search v2 STEP2 (spec section 8): each AI-generated product candidate
@@ -1494,7 +1524,8 @@ async function handleKnowledgeApi(request, env, ctx) {
       request,
       env,
       sessionHash,
-      input.query
+      input.query,
+      input.language
     );
     const events = (decorated.candidates || []).map((candidate) => ({
       event_id: `${decorated.query_id}:IMPRESSION:${candidate.asin}`,

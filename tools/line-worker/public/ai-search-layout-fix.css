@@ -292,3 +292,80 @@
     font-size:clamp(26px,8vw,38px);
   }
 }
+
+/* Condition search panel (Phase C item 11, 2026-08-07). Shares .keyword-tag
+   with the related-keyword chips but is single-select per row, so selected
+   state needs to be visually unambiguous - aria-pressed alone is not enough
+   for sighted users. .refinement-card is a flex row by default; this panel
+   stacks. */
+.condition-search-card{
+  display:grid;
+  gap:12px;
+}
+
+.condition-search-title{
+  display:block;
+  margin-bottom:0;
+  color:#5140ba;
+}
+
+.condition-search-body{
+  margin:0;
+}
+
+.condition-group{
+  display:grid;
+  gap:6px;
+}
+
+.condition-group-label{
+  color:var(--muted);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.06em;
+}
+
+.condition-value-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.condition-chip{
+  cursor:pointer;
+  font-family:inherit;
+  line-height:1.5;
+  transition:background .15s,border-color .15s,color .15s;
+}
+
+.condition-chip:hover,
+.condition-chip:focus-visible{
+  border-color:var(--violet);
+  background:var(--soft);
+  outline:none;
+}
+
+.condition-chip.selected{
+  background:var(--violet);
+  border-color:var(--violet);
+  color:#fff;
+}
+
+.condition-search-submit{
+  min-height:48px;
+  justify-content:center;
+}
+
+.condition-search-submit:disabled{
+  cursor:not-allowed;
+  opacity:.45;
+  box-shadow:none;
+}
+
+@media(max-width:760px){
+  .condition-chip{
+    min-height:44px;
+    padding:6px 14px;
+    font-size:12px;
+  }
+}

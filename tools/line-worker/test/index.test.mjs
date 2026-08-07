@@ -420,7 +420,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v308/);
+  assert.match(serviceWorker, /hoshilu-shell-v309/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -962,4 +962,69 @@ test('indexed knowledge candidates remain ahead of unverified GAS fallbacks', ()
     [{ asin: 'B000SOCIAL', product_name: 'SNS Sensor' }]
   );
   assert.deepEqual(ranked.map((candidate) => candidate.asin), ['B000CAMERA', 'B000SOCIAL']);
+});
+
+// Unified search condition model (Phase C item 11, 2026-08-07). "AI検索" and
+// "条件検索" must be two entry points to ONE condition, not two search paths.
+// search-refinement-policy.mjs held a complete condition model that nothing
+// ever called; attaching its chips to the search response is what joins
+// them, because selecting a chip appends its label to the same query string
+// the AI free-text search already reads.
+test('検索応答に条件検索チップを軸ごとにまとめて返す', async () => {
+  const env = { LINK_SIGNING_SECRET: 'secret' };
+  const request = new Request('https://p-gate.example/api/knowledge');
+  const decorated = await workerModule.decoratePwaResultForTest(
+    { query_id: 'q-chips', candidates: [] }, request, env, 'session-hash', 'ワイヤレスイヤホン', 'JA'
+  );
+  assert.deepEqual(
+    decorated.refinement_chips.map((group) => group.dimension),
+    ['category', 'scene', 'size', 'power', 'appearance']
+  );
+  assert.deepEqual(
+    decorated.refinement_chips.map((group) => group.label),
+    ['種類', '使う場所', '大きさ', '電源', '見た目']
+  );
+  decorated.refinement_chips.forEach((group) => {
+    assert.ok(group.values.length >= 5);
+    group.values.forEach((item) => {
+      assert.equal(typeof item.value, 'string');
+      assert.ok(item.label.length > 0);
+    });
+  });
+
+  // 既に決まっている軸は出し直さない（条件を足すほど絞れる）
+  const narrowed = await workerModule.decoratePwaResultForTest(
+    { query_id: 'q-narrow', candidates: [] }, request, env, 'session-hash', 'モバイル充電器 / USB充電 / 旅行中', 'JA'
+  );
+  assert.deepEqual(narrowed.refinement_chips.map((group) => group.dimension), ['category', 'size', 'appearance']);
+
+  // 表示言語に追従する
+  const english = await workerModule.decoratePwaResultForTest(
+    { query_id: 'q-en', candidates: [] }, request, env, 'session-hash', 'wireless earbuds', 'EN'
+  );
+  assert.deepEqual(english.refinement_chips.map((group) => group.label), ['Type', 'Where you use it', 'Size', 'Power', 'Look']);
+});
+
+test('条件検索チップはAI検索と同じ1本のクエリ条件に追加される', () => {
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(appSource, /function conditionSearchCard\(result\)/);
+  // サーバーが返したラベルを描画するだけで、辞書のコピーを持たない
+  assert.match(appSource, /result\?\.refinement_chips/);
+  // AI検索・連想キーワードと同じ " / " 区切りで既存クエリに追加して再検索する
+  assert.match(appSource, /elements\.query\.value=\[base,\.\.\.selected\.values\(\)\]\.filter\(Boolean\)\.join\(' \/ '\)/);
+  assert.match(appSource, /submit\.addEventListener\('click',\(\)=>\{[\s\S]{0,400}runKnowledgeSearch\(\)/);
+  // 1軸につき1つ（applyRefinementChips のルールと揃える）
+  assert.match(appSource, /if\(active\)selected\.delete\(group\.dimension\);/);
+  assert.match(appSource, /selected\.set\(group\.dimension,item\.label\)/);
+  // 未選択では実行できない
+  assert.match(appSource, /submit\.disabled=selected\.size===0/);
+  // 検索結果の有無を問わず出す
+  assert.match(appSource, /const conditionSearch=conditionSearchCard\(result\);if\(conditionSearch\)resultCards\.push\(conditionSearch\)/);
+  assert.match(appSource, /const emptyConditionSearch=conditionSearchCard\(result\);if\(emptyConditionSearch\)emptyCards\.push\(emptyConditionSearch\)/);
+  ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
+    assert.match(appSource, new RegExp(`${language}:\\{title:'[^']+',body:'[^']+',submit:'[^']+'\\}`));
+  });
+  const layoutCss = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
+  assert.match(layoutCss, /\.condition-chip\.selected\{/);
+  assert.match(layoutCss, /\.condition-chip\{[^}]*min-height:44px/);
 });
