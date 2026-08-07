@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-07T10:24:50.359Z",
+  "generated_at": "2026-08-07T10:42:26.432Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -10,9 +10,10 @@
     "2026-08-07-batch-007.json",
     "2026-08-07-batch-008.json",
     "2026-08-07-batch-009.json",
-    "2026-08-07-batch-010.json"
+    "2026-08-07-batch-010.json",
+    "2026-08-07-batch-011.json"
   ],
-  "entry_count": 407,
+  "entry_count": 439,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -8967,6 +8968,748 @@
       "excluded_conditions": [],
       "confidence": 0.7,
       "source_file": "2026-08-07-batch-010.json"
+    },
+    {
+      "content_hash": "2e3a6779592821b3db06d956c8b80c7b49c4bcb1c9d594ddf54689096415157c",
+      "query_text": "お腹まわりが目立たない服",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tops",
+      "ideal_answer": "お腹まわりが目立ちにくいトップス(Aライン・ゆるシルエット)",
+      "search_terms": {
+        "ja": [
+          "Aライン トップス",
+          "体型カバー トップス ゆったり"
+        ],
+        "en": [
+          "tummy hiding top loose fit"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ダイエット食品",
+        "サプリメント",
+        "補正下着 加圧"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "f75cb67dde734122ac079580ff9fbe0314af4e33a416d7979c1859b9f929cdb6",
+      "query_text": "二の腕を隠したい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tops",
+      "ideal_answer": "二の腕をカバーする袖のトップス(五分袖・フレンチスリーブ)",
+      "search_terms": {
+        "ja": [
+          "二の腕 カバー トップス",
+          "五分袖 トップス レディース"
+        ],
+        "en": [
+          "arm covering sleeve top"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ダイエット器具",
+        "サプリメント"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "0396dd83ae7ba55e08b1d8e59af820604a5a0dfade696cca7298f217b8b03fb4",
+      "query_text": "背が低くても着られるパンツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pants",
+      "ideal_answer": "低身長向けパンツ(ショート丈・petiteサイズ)",
+      "search_terms": {
+        "ja": [
+          "低身長 パンツ",
+          "ショート丈 パンツ 小柄"
+        ],
+        "en": [
+          "petite length pants"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "829cbad6b96c7ceceb133a8d4aa002e997c0eb320f6ea7f3d4a1b64ef1a21db4",
+      "query_text": "汗じみが目立たない色の服",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tops",
+      "ideal_answer": "汗染みが目立ちにくいトップス(色・加工)",
+      "search_terms": {
+        "ja": [
+          "汗染み 目立たない シャツ",
+          "吸汗速乾 トップス 脇汗"
+        ],
+        "en": [
+          "sweat proof shirt"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "制汗剤 身体用"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "4940a62a9c8855102f5a7ed2bc25a1b84e5d4455fbd4760ecab95127ab0513cb",
+      "query_text": "髪が薄いのを隠す帽子じゃないやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "部分ウィッグ(ヘアトッパー)と、地肌を目立たなくするパウダーがあります。どちらをお試しになりたいですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "育毛剤",
+        "発毛剤"
+      ],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "db8c48e7678990452b8211033fbe0a9d39b8379333215713eab96348cec918b6",
+      "query_text": "スーツの中に着るシャツ 首がしまるのが苦しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dress-shirt",
+      "ideal_answer": "ゆったり衿のワイシャツ(首回りにゆとりのあるもの)",
+      "search_terms": {
+        "ja": [
+          "ワイシャツ 首回り ゆったり",
+          "シャツ 首 苦しくない"
+        ],
+        "en": [
+          "dress shirt roomy collar"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "e6f2f0c03173506a06c70c9f24b9cbcd5673b06d9e9904ae002cb9b205c642e0",
+      "query_text": "結婚式に呼ばれたけど着るものがない 女性",
+      "locale": "ja",
+      "persona": "general",
+      "category": "formal-dress",
+      "ideal_answer": "結婚式お呼ばれドレス",
+      "search_terms": {
+        "ja": [
+          "結婚式 お呼ばれ ドレス",
+          "パーティードレス 結婚式 ゲスト"
+        ],
+        "en": [
+          "wedding guest dress japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "白いドレス",
+        "ウェディングドレス 新婦用"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "80fb9bcab0668b8c4de0abb0528cdc2fa3d9a92b519189faf490cfb6f6c53989",
+      "query_text": "面接に着ていく服 就活じゃない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "business-wear",
+      "ideal_answer": "ビジネスカジュアル〜スーツ(中途面接向け)",
+      "search_terms": {
+        "ja": [
+          "ビジネススーツ 面接 転職",
+          "オフィスカジュアル 面接"
+        ],
+        "en": [
+          "job interview outfit business"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "リクルートスーツ 新卒向け"
+      ],
+      "confidence": 0.65,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "260e33e8ea42be2df58c0231e53dc07e620a0846d288a925f0c17d3ace3ad4f7",
+      "query_text": "くつずれしないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blister-prevention",
+      "ideal_answer": "靴擦れ防止パッド(かかと・指用)",
+      "search_terms": {
+        "ja": [
+          "靴擦れ防止 パッド",
+          "かかと 靴擦れ クッション"
+        ],
+        "en": [
+          "blister prevention pads shoes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "絆創膏 傷用",
+        "インソール 衝撃吸収のみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "ffd027cd53a44667cd3ea77c9c1c5189e70328db5f2403ef84b028f851691930",
+      "query_text": "靴の中が大きくてかぱかぱする",
+      "locale": "ja",
+      "persona": "general",
+      "category": "shoe-insert",
+      "ideal_answer": "サイズ調整パッド(かかと・つま先用)",
+      "search_terms": {
+        "ja": [
+          "靴 サイズ調整 パッド",
+          "かかと パカパカ 防止"
+        ],
+        "en": [
+          "shoe size adjustment inserts"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "f73ff8bc13bbc46bc7d488d5ee212b316648d1b7b1daa539b1488aca89661c81",
+      "query_text": "雨の日に靴がぬれない方法",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "靴の上から履くレインカバーと、布地に吹く防水スプレーがあります。どちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "e7c9353cd3b1eed798b4753e458bad0f7ee64b991153b54046bf7de591823620",
+      "query_text": "立ち仕事で足が痛い",
+      "locale": "ja",
+      "persona": "general",
+      "category": "insole",
+      "ideal_answer": "疲労軽減インソール(立ち仕事向け)",
+      "search_terms": {
+        "ja": [
+          "インソール 立ち仕事",
+          "中敷き 疲れにくい 衝撃吸収"
+        ],
+        "en": [
+          "anti fatigue insoles standing work"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "サイズ調整パッド"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "e48ea2e4dfa24e7cfc39b42bf45975604201cdbecb4d9b1e7fe98d81965e097c",
+      "query_text": "革靴の底がすり減った",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "貼るタイプの補修ソールがありますが、革靴は修理店でのソール交換のほうが長持ちします。どちらをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "2902be84107fd930b74e70506cd5ca682cb4024e3c0434aa68be93a7f5f3f063",
+      "query_text": "看護師が使うはさみ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "medical-scissors",
+      "ideal_answer": "医療用はさみ(包帯・テープ用)",
+      "search_terms": {
+        "ja": [
+          "医療用 はさみ ナース",
+          "包帯 はさみ 先丸"
+        ],
+        "en": [
+          "medical bandage scissors nurse"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "裁ちばさみ 布用",
+        "キッチンばさみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "55a5b91ccc48aa21e0716a924923161b17a671bb748008203e455e5e022357a7",
+      "query_text": "配達で使う荷物を運ぶやつ 階段も",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hand-truck",
+      "ideal_answer": "階段対応台車(3輪キャリー)",
+      "search_terms": {
+        "ja": [
+          "階段 台車 3輪",
+          "キャリーカート 階段 昇降"
+        ],
+        "en": [
+          "stair climbing hand truck"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "平面用 台車 4輪のみ"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "9dfb7af65266281ecbe390e68ebc55c769d8a4d37f2c48be16a7aebd768de2d0",
+      "query_text": "料理人が使う長い箸",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cooking-chopsticks",
+      "ideal_answer": "菜箸(調理用)",
+      "search_terms": {
+        "ja": [
+          "菜箸 長い",
+          "調理用 箸 ステンレス"
+        ],
+        "en": [
+          "long cooking chopsticks"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "介護箸",
+        "割り箸",
+        "食事用の箸"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "5412db003c2ad34ad5701c3817a42f6e179cc9efd67d900220adf79ad792daed",
+      "query_text": "美容師が腰につけるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tool-belt",
+      "ideal_answer": "シザーケース(美容師用)",
+      "search_terms": {
+        "ja": [
+          "シザーケース 美容師",
+          "美容師 ウエストバッグ 道具"
+        ],
+        "en": [
+          "hairdresser scissor case belt"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "工具用 腰袋 大工"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "d290f7a4efbc86428df97de7b96710c407410c6255155e2af8856fe0bd479658",
+      "query_text": "在宅で電話するとき周りの音が入らないようにしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "noise-cancelling-mic",
+      "ideal_answer": "ノイズキャンセリングマイク付きヘッドセット",
+      "search_terms": {
+        "ja": [
+          "ヘッドセット ノイズキャンセリングマイク",
+          "在宅 通話 マイク 環境音"
+        ],
+        "en": [
+          "noise cancelling headset mic"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "イヤホン 再生側ノイキャンのみ"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "1d2ccc89ecdae0d96f7459b4351efba3f660354fe08694129e83af07186a371e",
+      "query_text": "窓のさんの細いところの汚れ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "detail-brush",
+      "ideal_answer": "サッシ溝用ブラシ(すき間ブラシ)",
+      "search_terms": {
+        "ja": [
+          "サッシ ブラシ 溝",
+          "隙間 掃除 ブラシ 細い"
+        ],
+        "en": [
+          "window track cleaning brush"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "デッキブラシ 大型"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "b54b2a5052129091085c1a65cad22db7928fedfffba3965965971cc51ef09d40",
+      "query_text": "換気扇のベタベタ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "degreaser",
+      "ideal_answer": "換気扇用 強力油汚れ洗剤",
+      "search_terms": {
+        "ja": [
+          "換気扇 掃除 洗剤 強力",
+          "レンジフード 油汚れ 洗剤"
+        ],
+        "en": [
+          "range hood degreaser"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "中性洗剤 食器用"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "e0f4b6dc5f9b160ddcf4b78720bce9c4a98e6c9cc64340027525c56afa9bda21",
+      "query_text": "トイレの黒ずみ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "toilet-cleaner",
+      "ideal_answer": "トイレ用洗剤(黒ずみ・輪じみ用)",
+      "search_terms": {
+        "ja": [
+          "トイレ 黒ずみ 洗剤",
+          "便器 輪じみ 落とす"
+        ],
+        "en": [
+          "toilet bowl ring stain cleaner"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "浴室用洗剤",
+        "キッチン洗剤"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "ba98af08af3b4da7377ae69f3d8c190619384faf0500cca53155830c567e4a0d",
+      "query_text": "お風呂の鏡が白くくもって取れない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "limescale-remover",
+      "ideal_answer": "浴室鏡の水垢除去クリーナー(研磨パッド)",
+      "search_terms": {
+        "ja": [
+          "鏡 水垢 落とす",
+          "浴室 鏡 ウロコ 研磨"
+        ],
+        "en": [
+          "bathroom mirror limescale remover"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "カビ取り剤",
+        "中性洗剤"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "55f9550151ec27157bb9b5a284ddb8717f034e98fda3a045a62f48bfc04723cd",
+      "query_text": "エアコンの中のカビっぽいにおい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "市販の洗浄スプレーもありますが、内部は基板や熱交換器があり、機種によっては故障や発火の原因になります。フィルター清掃で改善しない場合は専門業者の分解洗浄をご検討ください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "1ff1ed15d28acf03744b218a4fa12c1889cfd43620601ed636969b2e2d435bbc",
+      "query_text": "フローリングのべたつき",
+      "locale": "ja",
+      "persona": "general",
+      "category": "floor-cleaner",
+      "ideal_answer": "フローリング用クリーナー(べたつき除去)",
+      "search_terms": {
+        "ja": [
+          "フローリング 洗剤 べたつき",
+          "床 掃除 ウェットシート"
+        ],
+        "en": [
+          "floor cleaner sticky residue"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "カーペット用洗剤",
+        "畳用"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "eaab40560a74b12bbf608fc526d94e787c561cf9f1798c9ea35b9805d83b8bf9",
+      "query_text": "まな板がくさい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cutting-board-care",
+      "ideal_answer": "まな板用の除菌漂白剤",
+      "search_terms": {
+        "ja": [
+          "まな板 除菌 漂白",
+          "キッチン 漂白剤 まな板"
+        ],
+        "en": [
+          "cutting board sanitizer bleach"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "食器用中性洗剤"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "5f836a1d571542491a215bc4a673f64b2e72d81b682863ba37a1dd793f896d03",
+      "query_text": "包丁が切れない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "手軽なシャープナーと、しっかり研げる砥石があります。どちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "94484f55a4608289a013e9f077b7aee6a7d647b16240bc9367a9f0cc924ee4e4",
+      "query_text": "冷蔵庫の中がにおう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fridge-deodorizer",
+      "ideal_answer": "冷蔵庫用脱臭剤",
+      "search_terms": {
+        "ja": [
+          "冷蔵庫 脱臭剤",
+          "冷蔵庫 消臭 活性炭"
+        ],
+        "en": [
+          "refrigerator deodorizer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "芳香剤 香り付け",
+        "室内用消臭スプレー"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "6425d6c947cd7ad9765c79a219ce9d04913241bec65cf4473c6b13d7cfc5fcdc",
+      "query_text": "ラップがうまく切れない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wrap-dispenser",
+      "ideal_answer": "ラップケース(カッター付きホルダー)",
+      "search_terms": {
+        "ja": [
+          "ラップ ケース カッター",
+          "ラップホルダー マグネット"
+        ],
+        "en": [
+          "plastic wrap dispenser cutter"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "761b961d0bba49132fc5cb5d2652dad14a68f5d41cf99478f767259abfad47c5",
+      "query_text": "nurse scissors japan bandage",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "medical-scissors",
+      "ideal_answer": "医療用はさみ(包帯・テープ用)",
+      "search_terms": {
+        "ja": [
+          "医療用 はさみ 包帯"
+        ],
+        "en": [
+          "medical bandage scissors nurse"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "裁ちばさみ 布用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "eef4bb90e4d03b5113d7c4985d08e042127e94f974450582ebe50f7427a95a8b",
+      "query_text": "결혼식 하객 원피스 일본",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "formal-dress",
+      "ideal_answer": "結婚式お呼ばれドレス",
+      "search_terms": {
+        "ja": [
+          "結婚式 お呼ばれ ドレス"
+        ],
+        "en": [
+          "wedding guest dress japan"
+        ],
+        "ko": [
+          "하객룩 원피스",
+          "결혼식 하객 드레스"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "白いドレス"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "b979a3b22884acd65ec837638c36bdbe0fabb91703d5981ab0938d73598747d3",
+      "query_text": "浴室 镜子 水垢 去除",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "limescale-remover",
+      "ideal_answer": "浴室鏡の水垢除去クリーナー(研磨パッド)",
+      "search_terms": {
+        "ja": [
+          "鏡 水垢 落とす"
+        ],
+        "en": [
+          "bathroom mirror limescale remover"
+        ],
+        "ko": [],
+        "zh": [
+          "浴室镜子 水垢",
+          "水垢 清洁剂"
+        ]
+      },
+      "excluded_conditions": [
+        "カビ取り剤"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "2af8988b04f6ec65785fa8f116bb262340c021edc762bdf27d6d3c4de3d1209e",
+      "query_text": "kutsuzure bousi pad",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "blister-prevention",
+      "ideal_answer": "靴擦れ防止パッド(かかと・指用)",
+      "search_terms": {
+        "ja": [
+          "靴擦れ防止 パッド"
+        ],
+        "en": [
+          "blister prevention pads shoes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "絆創膏 傷用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-011.json"
     }
   ]
 }
