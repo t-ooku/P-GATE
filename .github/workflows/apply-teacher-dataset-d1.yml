@@ -24,10 +24,15 @@ on:
           evaluation/teacher-dataset/2026-08-07-batch-002.generated.sql
           evaluation/teacher-dataset/2026-08-07-batch-003.generated.sql
           evaluation/teacher-dataset/2026-08-07-batch-004.generated.sql
+          evaluation/teacher-dataset/2026-08-07-batch-005.generated.sql
+          evaluation/teacher-dataset/2026-08-07-batch-006.generated.sql
+          evaluation/teacher-dataset/2026-08-07-batch-007.generated.sql
       confirm:
         description: 'Type APPLY to confirm writing to the production D1 database'
         required: true
         default: ''
+        # 既定は空のまま。取り消せない操作なので、実行者が毎回意識して
+        # APPLY と打つことを求める。
 
 permissions:
   contents: read
