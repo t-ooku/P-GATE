@@ -94,3 +94,23 @@ test('具体的な衣類名がすべてのモールの検索語に残る', async
     assert.match(decodeDestination(link), /カットソー/, link.marketplace);
   }
 });
+
+// 2026-08-07 追加報告: 「ブラウス」を戻したあとも「トップス」が残り、モールへ
+// 「ブラウス トップス」として届いていた。ユーザーはブラウスを探しているので
+// あって、トップス全般を探しているわけではない。辞書が補った広いカテゴリ語は
+// 具体語が取れた時点で落とす。
+test('具体的な衣類名が取れたら辞書が補った広いカテゴリ語は落とす', async () => {
+  const { ensureApparelProductTypeTerm } = await import('../src/apparel-query-attributes.mjs');
+  assert.equal(ensureApparelProductTypeTerm('夏用、丈長め、おしゃれ、ブラウス', 'トップス'), 'ブラウス');
+  assert.equal(ensureApparelProductTypeTerm('白 ブラウス', '白 トップス'), 'ブラウス 白');
+
+  // ただし落とすのは辞書が足した分だけ。ユーザー自身が両方打ったなら両方残す。
+  assert.equal(ensureApparelProductTypeTerm('カットソー トップス', 'カットソー トップス'), 'カットソー トップス');
+  // 広いカテゴリ語しか打っていないなら、それが探している物なので残す。
+  assert.equal(ensureApparelProductTypeTerm('トップス', 'トップス'), 'トップス');
+  // 長い語句の一部として既に入っているときに前置して二重にしない。
+  assert.equal(
+    ensureApparelProductTypeTerm('楽で涼しいカットソー', '楽で涼しいカットソー 丈長め'),
+    '楽で涼しいカットソー 丈長め'
+  );
+});
