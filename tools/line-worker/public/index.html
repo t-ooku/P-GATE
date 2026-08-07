@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#7357ff">
-  <meta name="description" content="ホシルは、名前が分からない商品を記憶や特徴から探し、Amazon・楽天市場・Yahoo!ショッピング・Qoo10・SHEIN・SNKRDUNKなど最大10モールを横断。無料会員には確認済みセール情報だけを事前通知します。">
-  <meta name="keywords" content="商品検索AI,セール通知,価格比較,Amazon セール,楽天市場 セール,Qoo10 メガ割,SHEIN セール,ZOZOTOWN セール,SHOPLIST セール,MUSINSA セール,BUYMA セール">
+  <meta name="description" content="ホシルは、名前が分からない商品を記憶や特徴から探し、Amazon・楽天市場・Yahoo!ショッピング・Qoo10・SHEIN・SNKRDUNKなど最大13モールを横断。無料会員には確認済みセール情報だけを事前通知します。">
+  <meta name="keywords" content="商品検索AI,セール通知,価格比較,Amazon セール,楽天市場 セール,Qoo10 メガ割,SHEIN セール,ZOZOTOWN セール,ロフト セール,ハンズ セール,BUYMA セール">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ホシル｜HOSHILU">
@@ -43,8 +43,8 @@
   <link rel="stylesheet" href="/speech-input.css">
   <link rel="stylesheet" href="/install.css">
   <link rel="stylesheet" href="/layout-v3.css?v=91">
-  <title>ホシル｜最大10モール横断の商品検索・セール通知</title>
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://hoshilu.app/#website","url":"https://hoshilu.app/","name":"ホシル｜HOSHILU","inLanguage":["ja","en","zh","ko"],"potentialAction":{"@type":"SearchAction","target":"https://hoshilu.app/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"WebApplication","@id":"https://hoshilu.app/#app","name":"ホシル","alternateName":"HOSHILU","url":"https://hoshilu.app/","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"名前が分からない商品を記憶や特徴から探し、最大10モールを横断して購入先と確認済みセール情報を案内する無料の商品検索サービス。","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}},{"@type":"Organization","@id":"https://hoshilu.app/#organization","name":"HOSHILU","url":"https://hoshilu.app/","logo":{"@type":"ImageObject","url":"https://hoshilu.app/icons/hoshilu-v2-512.png"}}]}</script>
+  <title>ホシル｜最大13モール横断の商品検索・セール通知</title>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://hoshilu.app/#website","url":"https://hoshilu.app/","name":"ホシル｜HOSHILU","inLanguage":["ja","en","zh","ko"],"potentialAction":{"@type":"SearchAction","target":"https://hoshilu.app/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"WebApplication","@id":"https://hoshilu.app/#app","name":"ホシル","alternateName":"HOSHILU","url":"https://hoshilu.app/","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"名前が分からない商品を記憶や特徴から探し、最大13モールを横断して購入先と確認済みセール情報を案内する無料の商品検索サービス。","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}},{"@type":"Organization","@id":"https://hoshilu.app/#organization","name":"HOSHILU","url":"https://hoshilu.app/","logo":{"@type":"ImageObject","url":"https://hoshilu.app/icons/hoshilu-v2-512.png"}}]}</script>
 </head>
 <body>
   <header class="topbar">
@@ -56,7 +56,6 @@
       <select id="languageSelect" data-language-select aria-label="Language"><option value="JA">🇯🇵 日本語</option><option value="EN">🇺🇸 English</option><option value="ZH">🇨🇳 中文</option><option value="KO">🇰🇷 한국어</option></select>
     </label>
     <nav class="account-nav" aria-label="Account"><a id="memberLink" href="/login.html">マイページ</a><button id="memberLogout" class="account-logout hidden" type="button" data-i18n="nav.logout">ログアウト</button><a class="business-link" href="/seller" data-i18n="nav.business">メーカー＆セラー専用</a></nav>
-    <button id="installButton" class="secondary" type="button" aria-haspopup="dialog" aria-controls="installDialog" data-i18n="nav.install">アプリとして使う</button>
   </header>
 
   <dialog id="installDialog" class="install-dialog" aria-labelledby="installDialogTitle">
@@ -173,25 +172,25 @@
               <div>
                 <p class="step">MARKETPLACE COVERAGE</p>
                 <h2 id="marketplaceCoverageTitle">探せるモールが、ひと目で分かる。</h2>
-                <p id="marketplaceCoverageLead">ジャンルを問わず、常に最大10モールを横断して探します。</p>
+                <p id="marketplaceCoverageLead">まとめて検索3モールと、個別に探す10モールに対応。</p>
               </div>
-              <p class="marketplace-count"><strong>10</strong><span id="marketplaceCoverageCount">最大10モール対応</span></p>
+              <p class="marketplace-count"><strong>13</strong><span id="marketplaceCoverageCount">最大13モール対応</span></p>
             </div>
             <div class="marketplace-groups">
-              <article class="marketplace-group marketplace-group-core">
-                <p id="marketplaceCoreLabel">すべてのジャンル</p>
-                <ul id="marketplaceCoreList" aria-label="主要5モール">
-                  <li>Amazon</li><li>楽天市場</li><li class="marketplace-yahoo"><span>Yahoo!<br>ショッピング</span></li><li>Qoo10</li><li>SHEIN</li>
+              <article class="marketplace-group marketplace-group-integrated">
+                <p id="marketplaceIntegratedLabel">まとめて検索</p>
+                <ul id="marketplaceIntegratedList" aria-label="HOSHILUが商品をまとめて探して比較する3モール">
+                  <li>Amazon</li><li>楽天市場</li><li class="marketplace-yahoo"><span>Yahoo!<br>ショッピング</span></li>
                 </ul>
               </article>
-              <article class="marketplace-group marketplace-group-fashion">
-                <p id="marketplaceFashionLabel">ファッション</p>
-                <ul id="marketplaceFashionList" aria-label="ファッション5モール">
-                  <li>ZOZOTOWN</li><li>SHOPLIST</li><li>MUSINSA</li><li>BUYMA</li><li>SNKRDUNK</li>
+              <article class="marketplace-group marketplace-group-direct">
+                <p id="marketplaceDirectLabel">個別に探す</p>
+                <ul id="marketplaceDirectList" aria-label="HOSHILUの検索結果には含まれない、個別に探す10モール">
+                  <li>Qoo10</li><li>SHEIN</li><li>ZOZOTOWN</li><li>ロフト</li><li>ハンズ</li><li>マツキヨココカラ</li><li>@cosme</li><li>ABC-MART</li><li>BUYMA</li><li>SNKRDUNK</li>
                 </ul>
               </article>
             </div>
-            <p id="marketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。</p>
+            <p id="marketplaceCoverageNote" class="marketplace-coverage-note">HOSHILUが商品をまとめて探して比較します。個別に探すモールはHOSHILUの検索結果には含まれません。各ショップでも同じ条件で探せます。出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。
           </section>
 
           <section class="sale-center" aria-labelledby="saleCenterTitle">
@@ -251,7 +250,7 @@
             <ol class="journey-steps">
               <li><span>1</span><div><strong id="journeyStep1Title">思い出せるまま話す</strong><p id="journeyStep1Body">名前が分からなくても、見た目・用途・見た場所だけで大丈夫。</p></div></li>
               <li><span>2</span><div><strong id="journeyStep2Title">検索条件を精密化</strong><p id="journeyStep2Body">ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。</p></div></li>
-              <li><span>3</span><div><strong id="journeyStep3Title">商品ページへ直接リンク。ジャンルを問わず、常に最大10モールで探せます。</strong><p id="journeyStep3Body" hidden></p></div></li>
+              <li><span>3</span><div><strong id="journeyStep3Title">商品ページへ直接リンク。HOSHILUがまとめて比較する3モールに加え、最大13モールで探せます。</strong><p id="journeyStep3Body" hidden></p></div></li>
               <li><span>4</span><div><strong id="journeyStep4Title">見つからなければSNSやAIでも探せる</strong><p id="journeyStep4Body">Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます。</p></div></li>
             </ol>
           </section>
@@ -279,6 +278,9 @@
               <a class="official-social-link line" href="https://lin.ee/xKS56YM" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.line">LINE公式</strong></a>
               <a class="official-social-link instagram" href="https://www.instagram.com/hoshilu.app/" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.instagram">Instagram公式</strong></a>
               <a class="official-social-link x" href="https://x.com/iCHMR81Lv4VYJYG" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.x">X公式</strong></a>
+              <!-- v4.2 項目13: トップバーから移設。インストール自体はSNS導線ではないため
+                   official-social-link と見た目は揃えつつ、独自クラスで区別する。 -->
+              <button id="installButton" class="official-social-link install" type="button" aria-haspopup="dialog" aria-controls="installDialog"><strong data-i18n="nav.install">アプリとして使う</strong></button>
             </div>
           </section>
 

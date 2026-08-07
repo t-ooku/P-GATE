@@ -17,7 +17,7 @@ export function normalizeSocialPost(input = {}) {
   if (INVALID_HOSHILU_OWNER_CLAIM.test(caption)) throw new Error('SOCIAL_ENTITY_CLAIM_INVALID');
   if (platform === 'INSTAGRAM') {
     if (!/コメント/.test(caption)) caption += ' 気になった商品をコメントで教えてね。';
-    const requiredTags = ['#ホシル', '#あいまい検索', '#10モール横断', '#ほしっとく'];
+    const requiredTags = ['#ホシル', '#あいまい検索', '#13モール横断', '#ほしっとく'];
     const missingTags = requiredTags.filter(tag => !caption.includes(tag));
     if (missingTags.length) caption += ` ${missingTags.join(' ')}`;
   }

@@ -60,8 +60,21 @@ const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
   'shopping.yahoo.co.jp', 'store.shopping.yahoo.co.jp',
   'qoo10.jp', 'shein.com', 'zozo.jp', 'shop-list.com',
-  'musinsa.com', 'buyma.com', 'snkrdunk.com'
+  'musinsa.com', 'buyma.com', 'snkrdunk.com',
+  // v4.2 項目14: 新規5モール(ロフト/ハンズ/マツキヨココカラ/@cosme/ABC-MART)。
+  'loft.co.jp', 'hands.net', 'matsukiyococokara-online.com',
+  'cosme.com', 'abc-mart.net'
 ];
+// v4.2 項目17: マーケットプレイスごとの検索モード。'integrated' は
+// HOSHILUが実際に商品データを取得できるAPI連携先(Amazon/Rakuten/Yahoo)、
+// 'direct' はHOSHILUが商品データを持たず、そのモール自身の検索結果ページへ
+// ディープリンクするだけの先。UI側(app.js)がこの区分をハードコードし直さ
+// なくて済むよう、/api/knowledge のレスポンスに各リンクの mode を載せる
+// (signedMarketplaceSearchLinks参照)。ここが唯一の判定元。
+const INTEGRATED_MARKETPLACES = new Set(['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP']);
+function searchModeForMarketplace(marketplace) {
+  return INTEGRATED_MARKETPLACES.has(String(marketplace || '').toUpperCase()) ? 'integrated' : 'direct';
+}
 const RELEASE = '1.18.0';
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
@@ -1052,7 +1065,11 @@ async function signedMarketplaceSearchLinks(query, context) {
       c: 'PWA', m: item.marketplace, t: 'SEARCH_FALLBACK', g: context.category,
       x: context.trafficClass
     }, context.env.LINK_SIGNING_SECRET);
-    links.push({ marketplace: item.marketplace, label: item.label, url: `${context.origin}/go?token=${encodeURIComponent(token)}` });
+    links.push({
+      marketplace: item.marketplace, label: item.label,
+      url: `${context.origin}/go?token=${encodeURIComponent(token)}`,
+      mode: searchModeForMarketplace(item.marketplace)
+    });
   }
   return links;
 }

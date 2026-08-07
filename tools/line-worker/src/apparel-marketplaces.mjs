@@ -23,35 +23,55 @@ export function isApparelSearch(query) {
 
 export function buildApparelMarketplaceDestinations(query) {
   const source = searchText(query);
-  // 2026-08-07 instructions #8: all ten marketplaces stay searchable on
-  // every query, not just apparel-looking ones (isApparelSearch is kept
+  // 2026-08-07 instructions #8: every "direct" marketplace stays searchable
+  // on every query, not just apparel-looking ones (isApparelSearch is kept
   // exported for other callers/tests, just no longer gates this list).
   if (!source) return [];
 
   // buildMarketplaceSearchKeywords collapses the specific garment noun into
   // its broad category ("ブラウス" -> "トップス", "カットソー" -> dropped), which
   // is exactly the word that narrows an apparel search. Amazon and Rakuten
-  // already put it back; these five malls did not, so a blouse search reached
+  // already put it back; these malls did not, so a blouse search reached
   // them as a generic tops search (reported 2026-08-07).
   const keywordsFor = (marketplace) =>
     ensureApparelProductTypeTerm(source, buildMarketplaceSearchKeywords(source, marketplace)) || source;
 
-  // ZOZOTOWN and SHOPLIST decode their keyword parameter as Shift_JIS (see
-  // shift-jis-url.mjs for the live verification). URL.searchParams always
-  // percent-encodes as UTF-8, so the query string is assembled by hand here -
-  // going through searchParams would re-encode the Shift_JIS escapes.
+  // ZOZOTOWN decodes its keyword parameter as Shift_JIS (see shift-jis-url.mjs
+  // for the live verification). URL.searchParams always percent-encodes as
+  // UTF-8, so the query string is assembled by hand here - going through
+  // searchParams would re-encode the Shift_JIS escapes.
   const zozo = `https://zozo.jp/search/?p_keyv=${encodeShiftJisPercent(keywordsFor('ZOZOTOWN_JP'))}`;
-  const shoplist = `https://www.shop-list.com/women/svc/product/Search/?keyword=${encodeShiftJisPercent(keywordsFor('SHOPLIST_JP'))}`;
 
-  // /jp/search/goods 404s ("ページが見つかりませんでした", verified 2026-08-07).
-  // The live search path is /jp/search.
-  const musinsa = new URL('https://global.musinsa.com/jp/search');
-  musinsa.searchParams.set('keyword', keywordsFor('MUSINSA_JP'));
+  // v4.2 項目14: SHOPLIST/MUSINSAはこの検索導線から外す。既存ユーザーの保存
+  // データ(AIウォッチ等)との後方互換のため、マーケットプレイスコード自体は
+  // mywatch-policy.mjs等に残すが、新規の検索結果としては提示しない。代わり
+  // にロフト・ハンズ・マツキヨココカラ・@cosme SHOPPING・ABC-MARTを追加する。
+  const loft = new URL('https://www.loft.co.jp/store/goods/search.aspx');
+  loft.searchParams.set('keyword', keywordsFor('LOFT_JP'));
+  loft.searchParams.set('search', 'x');
+
+  const hands = `https://hands.net/search/?q=${encodeURIComponent(keywordsFor('HANDS_JP'))}`;
+
+  const matsukiyo = new URL('https://www.matsukiyococokara-online.com/store/catalogsearch/result/');
+  matsukiyo.searchParams.set('q', keywordsFor('MATSUKIYO_JP'));
+
+  // @cosme SHOPPINGとABC-MARTは、検索結果ページのGETキーワードパラメータ名
+  // を2026-08-07時点で確定できなかった(WebSearch/WebFetch経由で複数の候補
+  // パラメータを試したが確認できず、このサンドボックスは生のcurl/Bashネッ
+  // トワークアクセスを遮断しているため直接確認もできない)。誤ったパラメー
+  // タで検索結果0件のリンクを静かに出すより安全なため、暫定的に検索ランデ
+  // ィングページへリンクする。パラメータが確認でき次第、keywordsFor()を
+  // 使った検索結果への直リンクに更新すること。
+  const cosme = 'https://www.cosme.com/products/search.php';
+  const abcmart = 'https://www.abc-mart.net/shop/goods/search.aspx';
 
   return [
     { marketplace: 'ZOZOTOWN_JP', label: 'ZOZOTOWNで探す', destination: zozo },
-    { marketplace: 'SHOPLIST_JP', label: 'SHOPLISTで探す', destination: shoplist },
-    { marketplace: 'MUSINSA_JP', label: 'MUSINSAで探す', destination: musinsa.toString() },
+    { marketplace: 'LOFT_JP', label: 'ロフトで探す', destination: loft.toString() },
+    { marketplace: 'HANDS_JP', label: 'ハンズで探す', destination: hands },
+    { marketplace: 'MATSUKIYO_JP', label: 'マツキヨココカラで探す', destination: matsukiyo.toString() },
+    { marketplace: 'COSME_JP', label: '@cosme SHOPPINGで探す', destination: cosme },
+    { marketplace: 'ABCMART_JP', label: 'ABC-MARTで探す', destination: abcmart },
     {
       marketplace: 'BUYMA_JP',
       label: 'BUYMAで探す',

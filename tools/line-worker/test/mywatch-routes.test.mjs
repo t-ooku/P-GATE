@@ -147,7 +147,7 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(css, /\.notification-thumb/);
   assert.match(css, /\.notification-row-action/);
   assert.match(serviceWorker, /mywatch\.css/);
-  assert.match(serviceWorker, /hoshilu-shell-v326/);
+  assert.match(serviceWorker, /hoshilu-shell-v327/);
 });
 
 // v3.4 CTO instruction: AIウォッチ(個別商品監視)とSALE RADAR(市場全体)の通知は

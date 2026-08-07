@@ -12,7 +12,10 @@ const FLAG_FOR_EVENT = {
 
 const KNOWN_MARKETPLACES = new Set([
   'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
-  'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+  'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP',
+  // v4.2 項目14で追加された5モール。この商品でAIウォッチを保存できるように
+  // する(SHOPLIST_JP/MUSINSA_JPは既存ウォッチの後方互換のため残す)。
+  'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP'
 ]);
 
 export function normalizeWatchEvent(input = {}) {

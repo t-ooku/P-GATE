@@ -8,7 +8,7 @@ test('スマホの主要5モールは1行でYahooだけ指定位置で改行す�
     readFile(new URL('../public/marketplace-coverage.css', import.meta.url), 'utf8')
   ]);
   assert.match(html, /class="marketplace-yahoo"><span>Yahoo!<br>ショッピング<\/span>/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.marketplace-group-core ul \{\s*grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
-  assert.match(css, /@media \(max-width: 390px\)[\s\S]*\.marketplace-group-core ul \{\s*grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*\.marketplace-group-integrated ul \{\s*grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(max-width: 390px\)[\s\S]*\.marketplace-group-integrated ul \{\s*grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
   assert.match(css, /\.marketplace-yahoo span \{[\s\S]*text-align: center/);
 });

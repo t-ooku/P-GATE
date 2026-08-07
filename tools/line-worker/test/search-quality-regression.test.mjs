@@ -80,7 +80,7 @@ for (const query of fashionCases) {
     const apparelDestinations = buildApparelMarketplaceDestinations(query);
     assert.deepEqual(
       apparelDestinations.map((item) => item.marketplace),
-      ['ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'],
+      ['ZOZOTOWN_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP', 'BUYMA_JP', 'SNKRDUNK_JP'],
       `${query} should activate all five apparel marketplaces`
     );
   });
@@ -107,7 +107,7 @@ for (const query of electronicsCases) {
     assertJapanesePrimary(query, amazon);
     assert.equal(isApparelSearch(query), false, `${query} is correctly classified as non-apparel`);
     assert.deepEqual(buildApparelMarketplaceDestinations(query).map((item) => item.marketplace), [
-      'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+      'ZOZOTOWN_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
     ]);
   });
 }
@@ -229,7 +229,7 @@ test('1モールの検索語生成に問題があっても他モールの検索�
   assert.ok(buildYahooShoppingSearchDestination(query).startsWith('https://shopping.yahoo.co.jp'));
   assert.ok(buildQoo10SearchDestination(query).startsWith('https://www.qoo10.jp'));
   assert.ok(buildSheinSearchDestination(query).startsWith('https://jp.shein.com'));
-  assert.equal(buildApparelMarketplaceDestinations(query).length, 5);
+  assert.equal(buildApparelMarketplaceDestinations(query).length, 8);
 });
 
 test('候補ゼロでも空文字を返さず原文ベースのフォールバックを維持する', () => {
@@ -274,7 +274,7 @@ for (const [query, excludedTerm] of additionalFashionCases) {
     assert.equal(isApparelSearch(query), true, `${query} should enable the apparel marketplace gate`);
     assert.deepEqual(
       buildApparelMarketplaceDestinations(query).map((item) => item.marketplace),
-      ['ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP']
+      ['ZOZOTOWN_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP', 'BUYMA_JP', 'SNKRDUNK_JP']
     );
   });
 }
@@ -291,7 +291,7 @@ for (const [query, excludedOrColorTerm] of additionalElectronicsCases) {
     const { amazon } = assertKeywordsKeepOriginal(query);
     assertJapanesePrimary(query, amazon);
     assert.equal(isApparelSearch(query), false, `${query} is correctly classified as non-apparel`);
-    assert.equal(buildApparelMarketplaceDestinations(query).length, 5);
+    assert.equal(buildApparelMarketplaceDestinations(query).length, 8);
     if (excludedOrColorTerm) assert.notEqual(amazon.trim(), excludedOrColorTerm);
   });
 }
@@ -362,7 +362,7 @@ for (const query of v3FashionCases) {
     assert.equal(isApparelSearch(query), true, `${query} should enable the apparel marketplace gate`);
     assert.deepEqual(
       buildApparelMarketplaceDestinations(query).map((item) => item.marketplace),
-      ['ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP']
+      ['ZOZOTOWN_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP', 'BUYMA_JP', 'SNKRDUNK_JP']
     );
   });
 }

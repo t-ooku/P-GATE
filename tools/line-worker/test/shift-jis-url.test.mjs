@@ -48,16 +48,21 @@ test('ASCIIは素通しし、区切り文字だけをエスケープする', () 
   assert.equal(encodeShiftJisPercent('S-M_size.1'), 'S-M_size.1');
 });
 
-test('Shift_JISを使うのはZOZOTOWNとSHOPLISTだけで、他8モールはUTF-8のまま', () => {
+test('Shift_JISを使うのはZOZOTOWNだけで、他のモールはUTF-8のまま(v4.2項目14でSHOPLIST/MUSINSAは検索導線から除外)', () => {
   const links = buildApparelMarketplaceDestinations('弁当 バラン 仕切り');
   const byMarketplace = Object.fromEntries(links.map((link) => [link.marketplace, link.destination]));
   // Shift_JIS: 「弁当」= 95 D9 93 96
   assert.match(byMarketplace.ZOZOTOWN_JP, /p_keyv=%95%D9%93%96/);
-  assert.match(byMarketplace.SHOPLIST_JP, /keyword=%95%D9%93%96/);
   // UTF-8: 「弁当」= E5 BC 81 E5 BD 93
-  assert.match(byMarketplace.MUSINSA_JP, /%E5%BC%81%E5%BD%93/);
+  assert.match(byMarketplace.LOFT_JP, /%E5%BC%81%E5%BD%93/);
+  assert.match(byMarketplace.HANDS_JP, /%E5%BC%81%E5%BD%93/);
+  assert.match(byMarketplace.MATSUKIYO_JP, /%E5%BC%81%E5%BD%93/);
   assert.match(byMarketplace.BUYMA_JP, /%E5%BC%81%E5%BD%93/);
   assert.match(byMarketplace.SNKRDUNK_JP, /%E5%BC%81%E5%BD%93/);
+  // @cosme SHOPPING/ABC-MARTはキーワードパラメータ未確認のためランディング
+  // ページのみ(src/apparel-marketplaces.mjsのコメント参照)。
+  assert.doesNotMatch(byMarketplace.COSME_JP, /\?/);
+  assert.doesNotMatch(byMarketplace.ABCMART_JP, /\?/);
   // 全モールがhttpsの正当なURLであること
   for (const link of links) assert.equal(new URL(link.destination).protocol, 'https:');
 });
