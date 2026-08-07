@@ -109,7 +109,11 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
 test('モバイルのSALE RADAR行は3行スタック時に潰れて文字が重ならないようflex-shrink:0を持つ', async () => {
   const css = await readFile(new URL('../public/sale-center.css', import.meta.url), 'utf8');
   const mobileBlock = css.match(/@media\(max-width:760px\)\{([\s\S]*?)\}\}$/m)?.[0] || '';
-  assert.match(mobileBlock, /\.info-row\{[^}]*flex-shrink:0/);
+  // 2026-08-07: scoped to :not(.notification-row) so this rule no longer
+  // leaks into the AIウォッチ通知 list, which has its own mobile grid in
+  // mywatch.css - but the flex-shrink:0 protection for SALE RADAR/NEWS rows
+  // themselves must remain.
+  assert.match(mobileBlock, /\.info-row:not\(\.notification-row\)\{[^}]*flex-shrink:0/);
 });
 
 test('商品画像はAPPROVEDになるまで公開しない契約を持つ', async () => {
