@@ -1,4 +1,5 @@
 import { buildMarketplaceSearchKeywords } from '../public/marketplace-search-keywords-v2.mjs';
+import { encodeShiftJisPercent } from './shift-jis-url.mjs';
 
 const APPAREL_TERMS = [
   /服|洋服|トップス|シャツ|ブラウス|ニット|カーディガン|ジャケット|アウター|コート|カットソー|長袖|半袖|袖なし|ノースリーブ/u,
@@ -29,11 +30,12 @@ export function buildApparelMarketplaceDestinations(query) {
   const keywordsFor = (marketplace) =>
     buildMarketplaceSearchKeywords(source, marketplace) || source;
 
-  const zozo = new URL('https://zozo.jp/search/');
-  zozo.searchParams.set('p_keyv', keywordsFor('ZOZOTOWN_JP'));
-
-  const shoplist = new URL('https://www.shop-list.com/women/svc/product/Search/');
-  shoplist.searchParams.set('keyword', keywordsFor('SHOPLIST_JP'));
+  // ZOZOTOWN and SHOPLIST decode their keyword parameter as Shift_JIS (see
+  // shift-jis-url.mjs for the live verification). URL.searchParams always
+  // percent-encodes as UTF-8, so the query string is assembled by hand here -
+  // going through searchParams would re-encode the Shift_JIS escapes.
+  const zozo = `https://zozo.jp/search/?p_keyv=${encodeShiftJisPercent(keywordsFor('ZOZOTOWN_JP'))}`;
+  const shoplist = `https://www.shop-list.com/women/svc/product/Search/?keyword=${encodeShiftJisPercent(keywordsFor('SHOPLIST_JP'))}`;
 
   // /jp/search/goods 404s ("ページが見つかりませんでした", verified 2026-08-07).
   // The live search path is /jp/search.
@@ -41,8 +43,8 @@ export function buildApparelMarketplaceDestinations(query) {
   musinsa.searchParams.set('keyword', keywordsFor('MUSINSA_JP'));
 
   return [
-    { marketplace: 'ZOZOTOWN_JP', label: 'ZOZOTOWNで探す', destination: zozo.toString() },
-    { marketplace: 'SHOPLIST_JP', label: 'SHOPLISTで探す', destination: shoplist.toString() },
+    { marketplace: 'ZOZOTOWN_JP', label: 'ZOZOTOWNで探す', destination: zozo },
+    { marketplace: 'SHOPLIST_JP', label: 'SHOPLISTで探す', destination: shoplist },
     { marketplace: 'MUSINSA_JP', label: 'MUSINSAで探す', destination: musinsa.toString() },
     {
       marketplace: 'BUYMA_JP',
