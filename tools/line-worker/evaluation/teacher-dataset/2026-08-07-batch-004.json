@@ -256,7 +256,7 @@
     "user_intent": "排水口用の洗浄剤またはブラシを探している",
     "ideal_answer": "薬剤で溶かすタイプと、ブラシでこするタイプがあります。どちらをお探しですか？",
     "reason": "手段が2通りあるambiguous例。",
-    "category": "drain-cleaner",
+    "category": "UNCLASSIFIED",
     "search_terms": {
       "ja": [],
       "en": [],

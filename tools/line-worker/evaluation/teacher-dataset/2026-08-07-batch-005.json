@@ -1,0 +1,776 @@
+[
+  {
+    "query_text": "首からさげる小さい扇風機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "首掛け式のポータブル扇風機を探している",
+    "ideal_answer": "首掛けポータブル扇風機",
+    "reason": "装着方法とサイズが明示されている。既存のネッククーラー(冷却)とは仕組みが違う。",
+    "category": "portable-fan",
+    "search_terms": {
+      "ja": [
+        "首掛け扇風機",
+        "ポータブルファン 携帯 USB"
+      ],
+      "en": [
+        "neck fan portable"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ネッククーラー 保冷剤式",
+      "据置型扇風機"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "寝るとき涼しいシーツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "接触冷感の寝具(敷きパッド・シーツ)を探している",
+    "ideal_answer": "接触冷感シーツ(冷感敷きパッド)",
+    "reason": "体感からの要求。エアコンではなく寝具で解決する例。",
+    "category": "cooling-bedding",
+    "search_terms": {
+      "ja": [
+        "接触冷感 敷きパッド",
+        "冷感シーツ ひんやり"
+      ],
+      "en": [
+        "cooling bed sheet"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "電気毛布",
+      "羽毛布団"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "汗をかいても化粧が落ちないやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "化粧崩れ防止のフィックススプレー等を探している",
+    "ideal_answer": "メイクキープスプレー(化粧崩れ防止)",
+    "reason": "結果からの説明。ファンデーション本体と区別する。",
+    "category": "makeup-setting-spray",
+    "search_terms": {
+      "ja": [
+        "メイクキープスプレー",
+        "化粧崩れ防止 フィックス"
+      ],
+      "en": [
+        "makeup setting spray"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ファンデーション",
+      "日焼け止め"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "窓から入る熱をふせぐシート",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "遮熱・断熱の窓用フィルムを探している",
+    "ideal_answer": "遮熱窓用フィルム",
+    "reason": "設置場所と目的が明確。カーテンとは手段が違う。",
+    "category": "window-film",
+    "search_terms": {
+      "ja": [
+        "窓 遮熱フィルム",
+        "断熱シート 窓 夏"
+      ],
+      "en": [
+        "window heat blocking film"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "遮光カーテン"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "虫にさされたあとにぬるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "虫刺され後の外用薬を探しているが、症状と対象年齢で適切な薬が変わる",
+    "ideal_answer": "市販の虫刺され薬は年齢や症状で選ぶものが変わります。腫れがひどい場合や小さなお子さまの場合は薬剤師・医師にご相談ください。",
+    "reason": "外用薬は年齢制限や成分の適否がある。断定して勧めるべきでない安全側の例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "キャンプで使う虫をよせつけないやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "屋外用の虫よけ(蚊取り・忌避剤)を探している",
+    "ideal_answer": "身につける虫よけと、置いて焚くタイプ(蚊取り線香など)のどちらをお探しですか？",
+    "reason": "手段が複数あり断定できない。人体用と空間用で商品が別。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "お茶を水でつくるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "水出し用のポット(フィルターインボトル)を探している",
+    "ideal_answer": "水出し茶ポット(フィルター付き)",
+    "reason": "調理法からの説明。急須や電気ケトルと区別する。",
+    "category": "cold-brew-pitcher",
+    "search_terms": {
+      "ja": [
+        "水出しポット お茶",
+        "冷水筒 フィルター付き"
+      ],
+      "en": [
+        "cold brew tea pitcher"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "急須",
+      "電気ケトル"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "窓のまわりが濡れるのを防ぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結露吸水テープ・結露防止シートを探している",
+    "ideal_answer": "結露吸水テープ(結露防止シート)",
+    "reason": "既存の結露取りワイパー(除去)に対し、こちらは予防。手段が別。",
+    "category": "condensation-absorber",
+    "search_terms": {
+      "ja": [
+        "結露吸水テープ",
+        "結露防止シート 窓"
+      ],
+      "en": [
+        "window condensation absorber tape"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "結露取りワイパー"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "寒いときに足につけるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "足を温める何かを探しているが、靴下・湯たんぽ・電気あんかなど手段が不明",
+    "ideal_answer": "履くもの(厚手の靴下・ルームシューズ)、温めるもの(湯たんぽ・電気あんか)のどちらをお探しですか？",
+    "reason": "「足につける」だけでは商品が定まらないambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "お湯を入れてあたためるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "湯たんぽを探している",
+    "ideal_answer": "湯たんぽ",
+    "reason": "動作が具体的で断定できる。電気式のあんかと区別する。",
+    "category": "hot-water-bottle",
+    "search_terms": {
+      "ja": [
+        "湯たんぽ",
+        "湯たんぽ カバー付き"
+      ],
+      "en": [
+        "hot water bottle"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "電気あんか",
+      "電気毛布"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "くつのなかにいれるあったかいやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "靴用の使い捨てカイロ(足用)を探している",
+    "ideal_answer": "足用使い捨てカイロ(靴用)",
+    "reason": "既存の靴用消臭剤と同じ場所だが目的が別。取り違え防止。",
+    "category": "foot-warmer-pad",
+    "search_terms": {
+      "ja": [
+        "靴用カイロ",
+        "足用 使い捨てカイロ つま先"
+      ],
+      "en": [
+        "toe warmer pad"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "靴 消臭剤",
+      "インソール 通常"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "静電気でパチッとしないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "静電気除去グッズ(ブレスレット・キーホルダー・スプレー)を探している",
+    "ideal_answer": "静電気除去キーホルダー(静電気防止グッズ)",
+    "reason": "冬季の困りごと。衣類用スプレーとの区別は追加質問の余地。",
+    "category": "anti-static",
+    "search_terms": {
+      "ja": [
+        "静電気除去 キーホルダー",
+        "静電気防止 グッズ"
+      ],
+      "en": [
+        "anti static keychain"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "部屋の空気が乾くのを直すやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "加湿器を探している",
+    "ideal_answer": "加湿器",
+    "reason": "既存の「加湿器 卓上 小型」を、症状からの言い方で補完する。",
+    "category": "humidifier",
+    "search_terms": {
+      "ja": [
+        "加湿器",
+        "加湿器 寝室 静音"
+      ],
+      "en": [
+        "room humidifier"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "除湿機",
+      "空気清浄機 加湿なし"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "春になると目がかゆくなるので付けるめがね",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "花粉症対策用の防護メガネを探している",
+    "ideal_answer": "花粉症用メガネ(防護メガネ)",
+    "reason": "季節と症状から用品を導く。通常のメガネやサングラスと区別する。",
+    "category": "pollen-glasses",
+    "search_terms": {
+      "ja": [
+        "花粉症 メガネ",
+        "花粉 ゴーグル 曇らない"
+      ],
+      "en": [
+        "pollen protection glasses"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "サングラス",
+      "老眼鏡"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "洗濯物に花粉がつかないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "花粉付着防止スプレーを探している",
+    "ideal_answer": "花粉付着防止スプレー",
+    "reason": "予防が目的。柔軟剤や洗剤とは別カテゴリ。",
+    "category": "laundry-spray",
+    "search_terms": {
+      "ja": [
+        "花粉 付着防止 スプレー",
+        "静電気防止 スプレー 衣類 花粉"
+      ],
+      "en": [
+        "anti pollen clothing spray"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "柔軟剤",
+      "洗濯洗剤"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "部屋の空気をきれいにする機械 花粉",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "花粉対応の空気清浄機を探している",
+    "ideal_answer": "空気清浄機(花粉対応・HEPAフィルター)",
+    "reason": "既存の空気清浄機エントリを、花粉という用途軸で補完する。",
+    "category": "air-purifier",
+    "search_terms": {
+      "ja": [
+        "空気清浄機 花粉",
+        "空気清浄機 HEPA 花粉対策"
+      ],
+      "en": [
+        "air purifier for pollen"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "加湿器 単体",
+      "サーキュレーター"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "赤ちゃんの体温をはかる耳のやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "耳式体温計を探している",
+    "ideal_answer": "耳式体温計(赤外線体温計)",
+    "reason": "測定部位が明示されている。ただし乳児の測定精度は製品差があり、医療判断は別。",
+    "category": "baby-thermometer",
+    "search_terms": {
+      "ja": [
+        "耳式体温計 赤ちゃん",
+        "非接触 体温計 乳児"
+      ],
+      "en": [
+        "baby ear thermometer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "水銀体温計"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "赤ちゃんの鼻水をとるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "鼻吸い器を探している",
+    "ideal_answer": "鼻吸い器(電動・手動)",
+    "reason": "対象と目的が明確。電動/手動の選択は追加質問の余地。",
+    "category": "nasal-aspirator",
+    "search_terms": {
+      "ja": [
+        "鼻吸い器 赤ちゃん",
+        "電動鼻水吸引器 ベビー"
+      ],
+      "en": [
+        "baby nasal aspirator"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "赤ちゃんが座って food たべるやつ",
+    "locale": "mixed",
+    "persona": "general",
+    "user_intent": "ベビーチェア(ハイチェア)を探している",
+    "ideal_answer": "ベビーチェア(お食事用椅子)",
+    "reason": "日本語に英単語が混ざる実際の入力例。用途が食事と明確。",
+    "category": "high-chair",
+    "search_terms": {
+      "ja": [
+        "ベビーチェア 食事",
+        "ハイチェア 赤ちゃん テーブル"
+      ],
+      "en": [
+        "baby high chair"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "よだれでふくやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "スタイ(よだれかけ)を探している",
+    "ideal_answer": "スタイ(よだれかけ)",
+    "reason": "用途からの説明。タオル・ガーゼと区別する。",
+    "category": "bib",
+    "search_terms": {
+      "ja": [
+        "スタイ 赤ちゃん",
+        "よだれかけ ベビー"
+      ],
+      "en": [
+        "baby bib"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ガーゼハンカチ",
+      "フェイスタオル"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "抱っこするときに肩が痛くならないやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "肩の負担が少ない抱っこひもを探している",
+    "ideal_answer": "抱っこひも(肩負担軽減タイプ)",
+    "reason": "身体的な困りごとから商品要件を導く。スリングとの選択は追加質問。",
+    "category": "baby-carrier",
+    "search_terms": {
+      "ja": [
+        "抱っこひも 肩 楽",
+        "ベビーキャリア 腰ベルト付き"
+      ],
+      "en": [
+        "baby carrier shoulder support"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "赤ちゃんが階段から落ちないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベビーゲート(階段用)を探している",
+    "ideal_answer": "ベビーゲート(階段用safety gate)",
+    "reason": "安全用品で設置場所が明示。柵一般と区別する。",
+    "category": "baby-gate",
+    "search_terms": {
+      "ja": [
+        "ベビーゲート 階段",
+        "階段 柵 赤ちゃん 転落防止"
+      ],
+      "en": [
+        "baby safety gate stairs"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ペット用ゲート 低い"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "おむつのにおいがしないゴミ箱",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "おむつ用防臭ゴミ箱を探している",
+    "ideal_answer": "おむつ用防臭ゴミ箱",
+    "reason": "対象と機能が明確。通常のゴミ箱と区別する。",
+    "category": "diaper-pail",
+    "search_terms": {
+      "ja": [
+        "おむつ ゴミ箱 防臭",
+        "おむつペール 消臭"
+      ],
+      "en": [
+        "diaper pail odor sealing"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ゴミ箱 一般 ふた付き"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "かべの穴をかくすやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "壁の穴の補修材(パテ・シール)を探している",
+    "ideal_answer": "壁穴補修材(壁用パテ)",
+    "reason": "賃貸の原状回復でよくある需要。ポスターなどで隠す発想と区別する。",
+    "category": "wall-repair",
+    "search_terms": {
+      "ja": [
+        "壁 穴 補修 パテ",
+        "壁紙 補修 シール"
+      ],
+      "en": [
+        "wall hole repair putty"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ポスター",
+      "ウォールステッカー 装飾"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ドアがバタンとしまらないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ドアクローザーまたはドア用緩衝材を探している",
+    "ideal_answer": "ドア枠に貼る緩衝材と、ゆっくり閉まる金具(ドアクローザー)のどちらをお探しですか？",
+    "reason": "手段が2通りで工事の要否も変わるambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "すべりどめのシール おふろ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴槽・浴室床用の滑り止めシールを探している",
+    "ideal_answer": "浴室用滑り止めシール",
+    "reason": "既存の浴室手すりと同じ転倒防止だが手段が別。",
+    "category": "anti-slip-sticker",
+    "search_terms": {
+      "ja": [
+        "お風呂 滑り止め シール",
+        "浴槽 滑り止め マット"
+      ],
+      "en": [
+        "bathtub anti slip stickers"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "蛇口から水がぽたぽた落ちる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "蛇口の水漏れを直したいが、原因部品が特定できていない",
+    "ideal_answer": "多くはパッキンの劣化ですが、蛇口の型番や漏れている箇所で必要な部品が変わります。どこから漏れていますか？",
+    "reason": "困りごとの表明であって商品名ではない。誤った部品を買わせないため確認を返す。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ねじがなめてしまった",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "頭が潰れたネジを外す工具(ネジザウルス・エキストラクター)を探している",
+    "ideal_answer": "なめたネジ外し工具(ネジエキストラクター)",
+    "reason": "「なめる」はDIY用語。通常のドライバーでは解決しない点が要件。",
+    "category": "screw-extractor",
+    "search_terms": {
+      "ja": [
+        "なめたネジ 外す 工具",
+        "ネジ エキストラクター"
+      ],
+      "en": [
+        "stripped screw extractor"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ドライバー 通常",
+      "電動ドライバー"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "家具の脚につけて床が傷つかないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家具用フェルトパッド・脚カバーを探している",
+    "ideal_answer": "家具脚用フェルトパッド",
+    "reason": "取り付け先と目的が明確。ラグと区別する。",
+    "category": "furniture-pad",
+    "search_terms": {
+      "ja": [
+        "家具 フェルト 傷防止",
+        "椅子 脚カバー 床 傷"
+      ],
+      "en": [
+        "furniture felt pads floor protection"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ラグ",
+      "カーペット"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "夏に部屋で熱中症にならないようにする道具",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "熱中症対策の温湿度計(警告表示付き)を探している",
+    "ideal_answer": "熱中症計(温湿度計・警告付き)",
+    "reason": "高齢者は暑さの自覚が遅れやすい。可視化する道具という位置づけ。",
+    "category": "thermo-hygrometer",
+    "search_terms": {
+      "ja": [
+        "熱中症計",
+        "温湿度計 熱中症 警告"
+      ],
+      "en": [
+        "heat stroke thermo hygrometer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "エアコン",
+      "扇風機"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "冬にお風呂場が寒いのをなんとかしたい",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "浴室・脱衣所用の暖房器具を探している",
+    "ideal_answer": "脱衣所用ヒーター(浴室暖房)",
+    "reason": "ヒートショック対策。工事の要否で商品が分かれるので置き型を基本に案内する。",
+    "category": "bathroom-heater",
+    "search_terms": {
+      "ja": [
+        "脱衣所 ヒーター",
+        "浴室 暖房 小型 置き型"
+      ],
+      "en": [
+        "bathroom space heater"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  }
+]

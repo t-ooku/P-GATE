@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { lookupTeacherDatasetEntry, teacherDatasetStats } from '../src/search-quality/teacher-dataset-lookup.mjs';
 import { structureSearchQuery } from '../src/search-quality/query-structurer.mjs';
 import { filterCategoryMismatches } from '../src/knowledge-search.mjs';
@@ -75,8 +76,8 @@ test('必須検索テストの6クエリすべてが教師データで解決ま�
 // 厚くしたぶんが失われないよう件数と代表クエリを固定する。
 test('教師データが全ペルソナで実用的な件数を保っている', () => {
   const stats = teacherDatasetStats();
-  assert.ok(stats.entryCount >= 220, `expected at least 220 compiled entries, got ${stats.entryCount}`);
-  assert.ok(stats.sourceBatches.length >= 4, `expected at least 4 batches, got ${stats.sourceBatches.length}`);
+  assert.ok(stats.entryCount >= 315, `expected at least 315 compiled entries, got ${stats.entryCount}`);
+  assert.ok(stats.sourceBatches.length >= 7, `expected at least 7 batches, got ${stats.sourceBatches.length}`);
 });
 
 test('子ども・高齢者の言い換えから商品を引ける', () => {
@@ -129,4 +130,91 @@ test('外国語・ローマ字の言い回しからも同じ商品に着地す�
   assert.match(lookupTeacherDatasetEntry('일본 밥솥 소형').ideal_answer, /炊飯器/);
   assert.match(lookupTeacherDatasetEntry('日本 电饭煲 小型 一人用').ideal_answer, /炊飯器/);
   assert.match(lookupTeacherDatasetEntry('kotatsu table heater').ideal_answer, /こたつ/);
+});
+
+// 季節・育児・趣味・車まわりの拡充 (batch-005/006/007)。
+// この4領域は「症状や場面」でしか説明されないうえ、よく似た別商品が並んで
+// いる。検索としては成功していても違う物を買わせてしまうので、
+// excluded_conditions が search_terms と同じくらい効く。
+test('よく似た別商品を取り違えないよう除外条件を持つ', () => {
+  // ウォッシャー液とクーラントの取り違えはエンジンの重大故障になりうる
+  const washer = lookupTeacherDatasetEntry('車のウォッシャー液がなくなった');
+  assert.ok(washer.excluded_conditions.some((item) => item.includes('クーラント')));
+  // 洗顔料ではメイクは落ちない
+  const remover = lookupTeacherDatasetEntry('メイクを落とすやつ');
+  assert.ok(remover.excluded_conditions.some((item) => item.includes('洗顔料')));
+  // 布用と紙用のはさみは別物
+  const shears = lookupTeacherDatasetEntry('布を切る大きいはさみ');
+  assert.ok(shears.excluded_conditions.some((item) => item.includes('紙用')));
+  // 小鳥の砂に猫砂を出さない
+  const grit = lookupTeacherDatasetEntry('小鳥のかごに入れる砂');
+  assert.ok(grit.excluded_conditions.includes('猫砂'));
+  // 結露は「取る」と「防ぐ」で商品が別
+  const absorber = lookupTeacherDatasetEntry('窓のまわりが濡れるのを防ぐやつ');
+  assert.ok(absorber.excluded_conditions.some((item) => item.includes('ワイパー')));
+});
+
+// 人や動物の症状に踏み込むクエリは、市販薬・受診の判断を奪わない。
+test('症状に関わるクエリは受診・相談を促して断定しない', () => {
+  for (const query of ['虫にさされたあとにぬるやつ', '猫が吐いた毛をなんとかしたい']) {
+    const entry = lookupTeacherDatasetEntry(query);
+    assert.ok(entry, `missing teacher entry: ${query}`);
+    assert.equal(entry.category, 'UNCLASSIFIED', `${query}: should stay unclassified`);
+    assert.ok(entry.confidence <= 0.3, `${query}: confidence too high`);
+    assert.match(entry.ideal_answer, /ご相談|相談してください|医師|薬剤師|動物病院/, `${query}`);
+  }
+});
+
+test('初心者が道具名を知らない趣味クエリを引ける', () => {
+  assert.match(lookupTeacherDatasetEntry('プラモデルの部品を切るやつ').ideal_answer, /ニッパー/);
+  assert.match(lookupTeacherDatasetEntry('ギターの音を合わせるやつ').ideal_answer, /チューナー/);
+  assert.match(lookupTeacherDatasetEntry('釣りで魚をすくうやつ').ideal_answer, /ランディングネット|玉網/);
+  assert.match(lookupTeacherDatasetEntry('星を見るやつ').ideal_answer, /望遠鏡/);
+});
+
+// 教師データ全体の不変条件 (2026-08-07)。
+//
+// batch-005/006/007 を書いている途中で17件見つけた不整合の再発防止。
+// ideal_answer が「どちらをお探しですか？」のような確認を返しているのに
+// category に具体的な商品カテゴリが入っていた。この2つがずれると、答えは
+// 「まだ決められない」と言っているのに、検索側はそのカテゴリで断定して
+// 探しに行ってしまう——つまりHOSHILUが最も避けるべき「確認せず決めつける」
+// 挙動をデータ側から誘発する。
+//
+// 断定していない記録は UNCLASSIFIED であること、という一点で揃える。
+test('確認を返す記録は必ずUNCLASSIFIEDで、断定と矛盾しない', async () => {
+  const compiled = JSON.parse(
+    await readFile(new URL('../src/search-quality/teacher-dataset-rules.generated.json', import.meta.url), 'utf8')
+  );
+  const asksBack = (entry) => /(?:か？|ですか？|ください。?)$/u.test(entry.ideal_answer.trim());
+  const mismatched = compiled.entries.filter((entry) => asksBack(entry) && entry.category !== 'UNCLASSIFIED');
+  assert.deepEqual(
+    mismatched.map((entry) => `${entry.query_text} -> ${entry.category}`),
+    [],
+    '確認を返しているのに具体カテゴリを持つ記録があります'
+  );
+
+  // 逆向き: UNCLASSIFIED は「まだ決められない」という意味なので、
+  // 高いconfidenceが付いていたらどちらかが間違っている。
+  const overconfident = compiled.entries.filter((entry) => entry.category === 'UNCLASSIFIED' && entry.confidence > 0.5);
+  assert.deepEqual(overconfident.map((entry) => entry.query_text), []);
+});
+
+test('全記録が必須項目とスキーマ上の値域を満たす', async () => {
+  const compiled = JSON.parse(
+    await readFile(new URL('../src/search-quality/teacher-dataset-rules.generated.json', import.meta.url), 'utf8')
+  );
+  const personas = new Set(['child', 'elderly', 'foreign', 'general']);
+  const locales = new Set(['ja', 'en', 'ko', 'zh', 'mixed']);
+  for (const entry of compiled.entries) {
+    assert.ok(entry.query_text?.trim(), 'query_text is required');
+    assert.ok(entry.ideal_answer?.trim(), `ideal_answer required: ${entry.query_text}`);
+    assert.ok(personas.has(entry.persona), `bad persona: ${entry.query_text}`);
+    assert.ok(locales.has(entry.locale), `bad locale: ${entry.query_text}`);
+    assert.ok(entry.confidence >= 0 && entry.confidence <= 1, `bad confidence: ${entry.query_text}`);
+    assert.ok(Array.isArray(entry.excluded_conditions), `excluded_conditions must be array: ${entry.query_text}`);
+  }
+  // content_hash は query_text+category+locale なので、同じ質問が2つ残らない
+  const hashes = compiled.entries.map((entry) => entry.content_hash);
+  assert.equal(new Set(hashes).size, hashes.length, 'duplicate content_hash in compiled artifact');
 });

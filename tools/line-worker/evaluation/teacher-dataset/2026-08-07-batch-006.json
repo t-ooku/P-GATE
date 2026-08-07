@@ -1,0 +1,865 @@
+[
+  {
+    "query_text": "布を切る大きいはさみ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "裁ちばさみを探している",
+    "ideal_answer": "裁ちばさみ(布用はさみ)",
+    "reason": "対象素材が要件。紙用と兼用すると切れ味が落ちるため区別が実用上重要。",
+    "category": "fabric-scissors",
+    "search_terms": {
+      "ja": [
+        "裁ちばさみ",
+        "布用 はさみ 裁縫"
+      ],
+      "en": [
+        "fabric shears"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "紙用はさみ",
+      "工作はさみ 子供用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ミシンがなくても布をくっつけるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布用の接着剤または裾上げテープを探している",
+    "ideal_answer": "布用ボンドと、アイロンで付ける裾上げテープがあります。どちらをお探しですか？",
+    "reason": "手段が2通り。用途(裾上げか小物作りか)で商品が分かれる。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "刺しゅうするときに布をぴんとはるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "刺繍枠を探している",
+    "ideal_answer": "刺繍枠(эмブロイダリーフープ)",
+    "reason": "初心者は道具名を知らない。動作と目的から特定できる。",
+    "category": "embroidery-hoop",
+    "search_terms": {
+      "ja": [
+        "刺繍枠",
+        "刺しゅう フープ 木製"
+      ],
+      "en": [
+        "embroidery hoop"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "あみものするときの棒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "編み針(棒針・かぎ針)を探している",
+    "ideal_answer": "棒針とかぎ針があり、編み方で使うものが変わります。どちらをお探しですか？",
+    "reason": "「棒」だけでは棒針かかぎ針か決まらないambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "プラモデルの部品を切るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "模型用ニッパーを探している",
+    "ideal_answer": "模型用ニッパー(プラモデル用)",
+    "reason": "工作用途が明確。電工ニッパーとは刃の作りが違う。",
+    "category": "nippers",
+    "search_terms": {
+      "ja": [
+        "模型 ニッパー プラモデル",
+        "ガンプラ ニッパー 薄刃"
+      ],
+      "en": [
+        "model kit nippers"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "電工ニッパー",
+      "ペンチ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "紙をきれいにまっすぐ切るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペーパーカッター(裁断機)を探している",
+    "ideal_answer": "ペーパーカッター(小型裁断機)",
+    "reason": "「まっすぐ」が要件。はさみと区別する。",
+    "category": "paper-trimmer",
+    "search_terms": {
+      "ja": [
+        "ペーパーカッター",
+        "裁断機 A4 小型"
+      ],
+      "en": [
+        "paper trimmer guillotine"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "はさみ",
+      "カッターナイフ 単体"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ギターの音を合わせるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ギターチューナーを探している",
+    "ideal_answer": "ギターチューナー(クリップ式など)",
+    "reason": "既存のギターストラップと同じ楽器領域を、別の周辺機器で補完する。",
+    "category": "guitar-tuner",
+    "search_terms": {
+      "ja": [
+        "ギター チューナー クリップ",
+        "チューナー ギター ベース"
+      ],
+      "en": [
+        "guitar tuner clip on"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "メトロノーム",
+      "ギター 本体"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "リズムを刻む機械",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "メトロノームを探している",
+    "ideal_answer": "メトロノーム",
+    "reason": "チューナーと混同されやすいので、用途(テンポ)で分ける。",
+    "category": "metronome",
+    "search_terms": {
+      "ja": [
+        "メトロノーム",
+        "電子メトロノーム 練習"
+      ],
+      "en": [
+        "metronome"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "チューナー 音程"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ピアノの音を小さくして練習したい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "騒音を抑えて練習したいが、電子ピアノ・消音ユニット・防音室と手段が分かれる",
+    "ideal_answer": "電子ピアノでヘッドホン練習、アコースティックピアノへの消音ユニット取り付け、防音マットなど手段が複数あります。今お使いの楽器は何ですか？",
+    "reason": "所有楽器が分からないと手段が決まらない。高額商品なので断定を避ける。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "カメラをぶらさげるひも",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "カメラストラップを探している",
+    "ideal_answer": "カメラストラップ",
+    "reason": "既存のギターストラップと同名概念だが対象機器が別。取り違え防止。",
+    "category": "camera-strap",
+    "search_terms": {
+      "ja": [
+        "カメラ ストラップ",
+        "カメラ ネックストラップ 速写"
+      ],
+      "en": [
+        "camera neck strap"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ギターストラップ",
+      "スマホショルダー"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "カメラを立てる三本足",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "三脚を探している",
+    "ideal_answer": "三脚(カメラ用)",
+    "reason": "形状からの説明。自撮り棒と区別する。",
+    "category": "tripod",
+    "search_terms": {
+      "ja": [
+        "三脚 カメラ",
+        "カメラ 三脚 軽量 コンパクト"
+      ],
+      "en": [
+        "camera tripod"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "自撮り棒 単体"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "写真の背景を白くするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "撮影用の背景紙・背景布を探している",
+    "ideal_answer": "撮影用背景紙(白バック)",
+    "reason": "物撮り需要。照明機材と区別する。",
+    "category": "photo-backdrop",
+    "search_terms": {
+      "ja": [
+        "撮影 背景紙 白",
+        "物撮り 背景 ボード"
+      ],
+      "en": [
+        "photography white backdrop"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "撮影用ライト",
+      "レフ板"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "釣りで魚をすくうやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ランディングネット(玉網)を探している",
+    "ideal_answer": "ランディングネット(玉網)",
+    "reason": "動作からの説明。虫取り網と区別する。",
+    "category": "landing-net",
+    "search_terms": {
+      "ja": [
+        "ランディングネット 釣り",
+        "玉網 タモ 釣り"
+      ],
+      "en": [
+        "fishing landing net"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "虫取り網"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "外で火をたくときの台",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "焚き火台を探している",
+    "ideal_answer": "焚き火台",
+    "reason": "キャンプ用品。バーベキューコンロと近いが用途が別。",
+    "category": "fire-pit",
+    "search_terms": {
+      "ja": [
+        "焚き火台",
+        "焚き火台 コンパクト ソロキャンプ"
+      ],
+      "en": [
+        "portable fire pit camping"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "バーベキューコンロ 網焼き専用"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "寝袋の下にしくやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "スリーピングマット(キャンプマット)を探している",
+    "ideal_answer": "スリーピングマット(キャンプ用)",
+    "reason": "位置関係からの説明。レジャーシートと区別する。",
+    "category": "sleeping-pad",
+    "search_terms": {
+      "ja": [
+        "スリーピングマット",
+        "キャンプ マット 銀マット 断熱"
+      ],
+      "en": [
+        "camping sleeping pad"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "レジャーシート 薄手"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "山で水をきれいにする道具",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "携帯浄水器を探している",
+    "ideal_answer": "携帯浄水器(アウトドア用)",
+    "reason": "命に関わりうる用途なので、浄水性能の確認が要る点は前提として商品名まで答える。",
+    "category": "water-filter",
+    "search_terms": {
+      "ja": [
+        "携帯浄水器 アウトドア",
+        "浄水器 登山 フィルター"
+      ],
+      "en": [
+        "portable water filter outdoor"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "家庭用 浄水ポット"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "立ちながら電話するとき肩がつらい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ハンズフリー通話用のヘッドセットを探している",
+    "ideal_answer": "通話用ヘッドセット(ハンズフリー)",
+    "reason": "身体の困りごとから商品を導く。スマホスタンドという別解もあるが本命はヘッドセット。",
+    "category": "headset",
+    "search_terms": {
+      "ja": [
+        "ヘッドセット 通話",
+        "ヘッドセット マイク付き 仕事"
+      ],
+      "en": [
+        "office headset with mic"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "イヤホン 音楽専用"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "画面を横から見られないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "覗き見防止フィルターを探している",
+    "ideal_answer": "覗き見防止プライバシーフィルター",
+    "reason": "目的が明確。ブルーライトカットと区別する。",
+    "category": "privacy-filter",
+    "search_terms": {
+      "ja": [
+        "覗き見防止 フィルター",
+        "プライバシーフィルター ノートPC"
+      ],
+      "en": [
+        "privacy screen filter"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ブルーライトカットフィルム",
+      "画面保護 通常"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "紙をまとめてとめるやつ 針を使わない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "針なしステープラーを探している",
+    "ideal_answer": "針なしステープラー",
+    "reason": "「針を使わない」という否定が要件。通常のホチキスを除外できる。",
+    "category": "stapleless-stapler",
+    "search_terms": {
+      "ja": [
+        "針なしホチキス",
+        "ステープラー 針不要"
+      ],
+      "en": [
+        "stapleless stapler"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ホチキス 針あり",
+      "クリップ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "書類をスキャンして電子化するやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ドキュメントスキャナーを探している",
+    "ideal_answer": "ドキュメントスキャナー(自動給紙)",
+    "reason": "既存の写真プリンターと逆方向の機器。混同を避ける。",
+    "category": "document-scanner",
+    "search_terms": {
+      "ja": [
+        "ドキュメントスキャナー",
+        "スキャナー 自動給紙 書類"
+      ],
+      "en": [
+        "document scanner adf"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "プリンター 印刷専用",
+      "写真プリンター"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "名刺を整理するやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "名刺ファイル・名刺ホルダーを探している",
+    "ideal_answer": "名刺ホルダー(名刺ファイル)",
+    "reason": "既存のトレカ用スリーブと形が近いが用途が別。",
+    "category": "business-card-organizer",
+    "search_terms": {
+      "ja": [
+        "名刺ホルダー",
+        "名刺ファイル 大容量"
+      ],
+      "en": [
+        "business card organizer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "トレカ スリーブ",
+      "財布 カード入れ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "会議の音声を文字にする機械",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "文字起こし対応のICレコーダーを探している",
+    "ideal_answer": "ICレコーダー(文字起こし対応)",
+    "reason": "アプリで済む場合もあるが、専用機を求めている前提で答える。",
+    "category": "voice-recorder",
+    "search_terms": {
+      "ja": [
+        "ICレコーダー 文字起こし",
+        "ボイスレコーダー 会議 高音質"
+      ],
+      "en": [
+        "voice recorder transcription"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ベッドの下に入れる箱",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベッド下収納ケースを探している",
+    "ideal_answer": "ベッド下収納ケース",
+    "reason": "設置場所が要件で高さ制限がある。通常の収納ボックスと区別する。",
+    "category": "under-bed-storage",
+    "search_terms": {
+      "ja": [
+        "ベッド下 収納ケース",
+        "収納 引き出し 薄型 ベッド下"
+      ],
+      "en": [
+        "under bed storage box"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "クローゼット収納 縦型"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "服をかけるところを増やすやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "クローゼットの吊り下げ収納・ハンガーラックを探している",
+    "ideal_answer": "クローゼット内で段を増やす吊り下げ収納と、部屋に置くハンガーラックのどちらをお探しですか？",
+    "reason": "設置場所で商品が分かれるambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "コードがごちゃごちゃするのをまとめるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ケーブル収納・結束グッズを探している",
+    "ideal_answer": "ケーブルクリップ(配線整理グッズ)",
+    "reason": "既存の充電ケーブル関連を、整理という別軸で補完する。",
+    "category": "cable-organizer",
+    "search_terms": {
+      "ja": [
+        "ケーブル 収納 クリップ",
+        "配線 まとめる 結束バンド"
+      ],
+      "en": [
+        "cable management clips"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "充電ケーブル 本体"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "洗面所の歯ブラシを浮かせて置くやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浮かせて収納する歯ブラシホルダーを探している",
+    "ideal_answer": "歯ブラシホルダー(浮かせる収納)",
+    "reason": "衛生目的の「浮かせる」が要件。コップと区別する。",
+    "category": "toothbrush-holder",
+    "search_terms": {
+      "ja": [
+        "歯ブラシホルダー 浮かせる",
+        "歯ブラシ 収納 磁石 壁"
+      ],
+      "en": [
+        "floating toothbrush holder"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "コップ 単体"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "自由研究でつかえるかんさつキット",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "夏休みの自由研究向けの観察・実験キットを探している",
+    "ideal_answer": "自由研究用の観察・実験キット",
+    "reason": "学校行事に紐づく季節需要。学年で難度が変わるので幅を持たせる。",
+    "category": "science-kit",
+    "search_terms": {
+      "ja": [
+        "自由研究 キット 小学生",
+        "観察キット 実験 夏休み"
+      ],
+      "en": [
+        "science experiment kit for kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "星を見るやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "天体望遠鏡を探している",
+    "ideal_answer": "天体望遠鏡",
+    "reason": "動作からの説明。双眼鏡や顕微鏡と区別する。",
+    "category": "telescope",
+    "search_terms": {
+      "ja": [
+        "天体望遠鏡 初心者",
+        "望遠鏡 子供 星"
+      ],
+      "en": [
+        "telescope for kids astronomy"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "双眼鏡",
+      "顕微鏡"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "虫をつかまえてかっておくやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "飼育ケース(虫かご)を探している",
+    "ideal_answer": "飼育ケース(虫かご)",
+    "reason": "捕獲用の網と飼育用のケースは別物。",
+    "category": "insect-cage",
+    "search_terms": {
+      "ja": [
+        "虫かご",
+        "飼育ケース 昆虫 通気"
+      ],
+      "en": [
+        "insect breeding cage"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "虫取り網"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "小さい字が読めないから大きくする道具 スマホ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "スマホ画面用の拡大レンズ、または文字サイズ設定の相談",
+    "ideal_answer": "スマホ用拡大レンズ(画面拡大スタンド)",
+    "reason": "既存の読書用ルーペと違いスマホ画面が対象。設定変更で解決する場合もある。",
+    "category": "phone-magnifier",
+    "search_terms": {
+      "ja": [
+        "スマホ 拡大鏡 スタンド",
+        "スマホ画面 拡大レンズ"
+      ],
+      "en": [
+        "phone screen magnifier"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "読書用ルーペ 手持ち"
+    ],
+    "confidence": 0.6,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "japanese knife sharpening stone",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "砥石を英語で探している",
+    "ideal_answer": "砥石(包丁研ぎ)",
+    "reason": "日本製の刃物文化に紐づく需要。シャープナー(簡易研ぎ器)と区別する。",
+    "category": "whetstone",
+    "search_terms": {
+      "ja": [
+        "砥石 包丁",
+        "包丁 研ぎ 砥石 番手"
+      ],
+      "en": [
+        "japanese whetstone knife sharpening"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "簡易シャープナー ロール式"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "가위 주방용 분해되는",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "分解して洗えるキッチンばさみを韓国語で探している",
+    "ideal_answer": "分解洗浄できるキッチンばさみ",
+    "reason": "衛生上「分解できる」が要件。裁ちばさみと区別する。",
+    "category": "kitchen-scissors",
+    "search_terms": {
+      "ja": [
+        "キッチンばさみ 分解 洗える"
+      ],
+      "en": [
+        "kitchen shears detachable dishwasher"
+      ],
+      "ko": [
+        "주방가위 분해",
+        "분리형 주방 가위"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "裁ちばさみ 布用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "收纳 床下 抽屉 矮",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "ベッド下用の低い収納引き出しを中国語で探している",
+    "ideal_answer": "ベッド下収納ケース(薄型)",
+    "reason": "中国語。高さ制限が要件である点は日本語版と同じ。",
+    "category": "under-bed-storage",
+    "search_terms": {
+      "ja": [
+        "ベッド下 収納 薄型"
+      ],
+      "en": [
+        "under bed storage drawer low"
+      ],
+      "ko": [],
+      "zh": [
+        "床底收纳箱",
+        "床下 抽屉 收纳"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "kodomo you jitensha herumetto",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "子ども用自転車ヘルメットをローマ字で探している",
+    "ideal_answer": "子ども用自転車ヘルメット",
+    "reason": "ローマ字入力。安全用品なので用途(自転車)を保持する。",
+    "category": "helmet",
+    "search_terms": {
+      "ja": [
+        "自転車 ヘルメット 子供"
+      ],
+      "en": [
+        "kids bicycle helmet"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "バイク用フルフェイス",
+      "工事用ヘルメット"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  }
+]

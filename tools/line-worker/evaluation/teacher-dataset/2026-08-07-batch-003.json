@@ -530,7 +530,7 @@
     "user_intent": "開けやすい保存容器またはオープナーを探している",
     "ideal_answer": "開けやすい保存容器と、既存の瓶のふたを開ける道具(オープナー)のどちらをお探しですか？",
     "reason": "対象が容器そのものか補助具かで商品が分かれるambiguous例。",
-    "category": "easy-open-container",
+    "category": "UNCLASSIFIED",
     "search_terms": {
       "ja": [],
       "en": [],

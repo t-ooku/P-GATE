@@ -619,7 +619,7 @@
     "user_intent": "プレイ中も使える長い充電ケーブルまたは充電スタンドを探している",
     "ideal_answer": "長い充電ケーブル、または充電スタンドのどちらをお探しですか？",
     "reason": "手段が2通りあり断定できないambiguous例。",
-    "category": "charging-cable",
+    "category": "UNCLASSIFIED",
     "search_terms": {
       "ja": [],
       "en": [],
@@ -1081,7 +1081,7 @@
     "user_intent": "遮音用のイヤーマフまたはノイズキャンセリングヘッドホンを探している",
     "ideal_answer": "完全に音を遮る防音イヤーマフと、音楽も聴けるノイズキャンセリングヘッドホンのどちらがよいですか？",
     "reason": "手段が2通りあるためambiguous。用途は同じでも商品が別。",
-    "category": "noise-cancelling-headphones",
+    "category": "UNCLASSIFIED",
     "search_terms": {
       "ja": [],
       "en": [],
