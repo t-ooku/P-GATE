@@ -165,6 +165,46 @@
   flex:0 0 auto;
 }
 
+/* AI related-keyword suggestions (Phase C item 11, 2026-08-07). These chips
+   are <button>s, not the read-only <span> chips above, so they need an
+   explicit tap affordance and a >=44px-tall touch target on mobile. */
+.related-keyword-card{
+  display:block;
+}
+
+.related-keyword-block{
+  margin-top:0;
+}
+
+.related-keyword-tag{
+  cursor:pointer;
+  font-family:inherit;
+  line-height:1.5;
+  transition:background .15s,border-color .15s,color .15s;
+}
+
+.related-keyword-tag::before{
+  content:"＋";
+  margin-right:4px;
+  font-weight:900;
+}
+
+.related-keyword-tag:hover,
+.related-keyword-tag:focus-visible{
+  background:var(--violet);
+  border-color:var(--violet);
+  color:#fff;
+  outline:none;
+}
+
+@media(max-width:760px){
+  .related-keyword-tag{
+    min-height:44px;
+    padding:6px 14px;
+    font-size:12px;
+  }
+}
+
 .marketplace-fallback-group{
   width:100%;
   min-width:0;
