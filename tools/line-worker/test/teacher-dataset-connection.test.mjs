@@ -76,8 +76,8 @@ test('必須検索テストの6クエリすべてが教師データで解決ま�
 // 厚くしたぶんが失われないよう件数と代表クエリを固定する。
 test('教師データが全ペルソナで実用的な件数を保っている', () => {
   const stats = teacherDatasetStats();
-  assert.ok(stats.entryCount >= 495, `expected at least 495 compiled entries, got ${stats.entryCount}`);
-  assert.ok(stats.sourceBatches.length >= 13, `expected at least 13 batches, got ${stats.sourceBatches.length}`);
+  assert.ok(stats.entryCount >= 524, `expected at least 524 compiled entries, got ${stats.entryCount}`);
+  assert.ok(stats.sourceBatches.length >= 14, `expected at least 14 batches, got ${stats.sourceBatches.length}`);
 });
 
 test('子ども・高齢者の言い換えから商品を引ける', () => {
@@ -439,4 +439,38 @@ test('効果が誤解されやすい商品は前提を先に示す', () => {
   const nenga = lookupTeacherDatasetEntry('年賀状を家で印刷したい');
   assert.equal(nenga.category, 'UNCLASSIFIED');
   assert.match(nenga.ideal_answer, /枚数|注文/u);
+});
+
+// 素材と規格 (batch-014)。ここの共通した罠は素材で、ある金属に正しい
+// クリーナーが別の金属を痛める。規格も同じで、「時計の電池」「自転車の
+// タイヤに空気」はサイズや形式が分からないと意味をなさない。
+test('素材・規格が分からないものは聞き返し、分かるものは断定する', () => {
+  // 自転車のバルブは英式・仏式・米式があり、合わない道具では永遠に入らない
+  const valve = lookupTeacherDatasetEntry('自転車のタイヤに空気が入らない');
+  assert.equal(valve.category, 'UNCLASSIFIED');
+  assert.match(valve.ideal_answer, /英式|仏式|米式|バルブ/u);
+  // 防水時計を自分で開けると防水性が落ちる
+  const watch = lookupTeacherDatasetEntry('腕時計の電池交換');
+  assert.equal(watch.category, 'UNCLASSIFIED');
+  assert.match(watch.ideal_answer, /防水|パッキン/u);
+  // 金属ごとの専用品。金メッキや真鍮に銀用を使うと風合いが落ちる
+  const silver = lookupTeacherDatasetEntry('シルバーのアクセサリーが黒くなった');
+  assert.ok(silver.excluded_conditions.some((item) => item.includes('金メッキ')));
+  // 競技が明示されていれば断定してよい（手にはめる系の衝突を避ける）
+  assert.match(lookupTeacherDatasetEntry('スキーのときに手にはめるやつ').ideal_answer, /スキーグローブ/);
+  assert.ok(lookupTeacherDatasetEntry('スキーのときに手にはめるやつ').excluded_conditions.includes('野球グローブ'));
+});
+
+// 「金属アレルギー対応」は万人に安全という意味ではない。
+test('金属アレルギーは対応品でも断定しない', () => {
+  const earrings = lookupTeacherDatasetEntry('金属アレルギーでも大丈夫なピアス');
+  assert.equal(earrings.category, 'UNCLASSIFIED');
+  assert.match(earrings.ideal_answer, /人によって|皮膚科/u);
+});
+
+// 買わずに解決する可能性があるなら、それを先に伝える。
+test('買い替えずに済む可能性を先に示す', () => {
+  const towel = lookupTeacherDatasetEntry('タオルがすぐ臭くなる');
+  assert.equal(towel.category, 'UNCLASSIFIED');
+  assert.match(towel.ideal_answer, /洗い方|洗濯槽|既存のタオル/u);
 });

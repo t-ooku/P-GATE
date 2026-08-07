@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-07T10:59:45.018Z",
+  "generated_at": "2026-08-07T11:16:07.303Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -13,9 +13,10 @@
     "2026-08-07-batch-010.json",
     "2026-08-07-batch-011.json",
     "2026-08-07-batch-012.json",
-    "2026-08-07-batch-013.json"
+    "2026-08-07-batch-013.json",
+    "2026-08-07-batch-014.json"
   ],
-  "entry_count": 495,
+  "entry_count": 524,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -10933,6 +10934,638 @@
       "excluded_conditions": [],
       "confidence": 0.3,
       "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "18bcbb779cc0496a7a95bb5e68a9b5c261ee11a2324306e303fcc14b9cf58d84",
+      "query_text": "光を通さないカーテン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "curtain",
+      "ideal_answer": "遮光カーテン(遮光1級など)",
+      "search_terms": {
+        "ja": [
+          "遮光カーテン 1級",
+          "カーテン 遮光 寝室"
+        ],
+        "en": [
+          "blackout curtains"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "レースカーテン",
+        "遮熱フィルム"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "53c9f968a5805d18321289c43ca491e3f57eeb45df9687d30e8f9eac41747035",
+      "query_text": "カーテンレールがない窓につけるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tension-rod-curtain",
+      "ideal_answer": "突っ張り棒式カーテンポール",
+      "search_terms": {
+        "ja": [
+          "カーテン 突っ張り棒",
+          "つっぱりポール カーテン 賃貸"
+        ],
+        "en": [
+          "tension curtain rod"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "家具転倒防止 突っ張り棒",
+        "物干し竿"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "f6060c2b737c6df3e12c111af59224932c650623f618d9c295b8c28f906b428f",
+      "query_text": "床に敷くふわふわしたやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rug",
+      "ideal_answer": "ラグ(敷物)",
+      "search_terms": {
+        "ja": [
+          "ラグ 洗える",
+          "カーペット 床 敷物"
+        ],
+        "en": [
+          "area rug soft"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ヨガマット",
+        "レジャーシート"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "6c7feff47e0f35c579dce6eec05d1e077328719104dfd6e2015c9e09ff37be0c",
+      "query_text": "玄関に置く姿見",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mirror",
+      "ideal_answer": "姿見(全身鏡・スタンドミラー)",
+      "search_terms": {
+        "ja": [
+          "姿見 全身鏡",
+          "スタンドミラー 玄関"
+        ],
+        "en": [
+          "full length standing mirror"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "手鏡",
+        "洗面鏡 取り付け"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "dcc7776b035355b14acf5089b8a2e8fb903310a45315c480efbac3cee6b236f2",
+      "query_text": "タオルがすぐ臭くなる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "抗菌・速乾タイプのタオルがありますが、においの原因は洗濯槽の菌や生乾きのこともあります。既存のタオルでも部屋干し用洗剤で改善する場合があります。買い替えと洗い方、どちらから試しますか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "ab544028033d4a53f63d8024e93abe9cc52924ea37e6a4416879b880f396544f",
+      "query_text": "観葉植物を置く台",
+      "locale": "ja",
+      "persona": "general",
+      "category": "plant-stand",
+      "ideal_answer": "プランタースタンド(鉢置き台)",
+      "search_terms": {
+        "ja": [
+          "プランタースタンド",
+          "観葉植物 台 木製"
+        ],
+        "en": [
+          "plant stand pot holder"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "鉢 受け皿"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "905525e31fd45ac2ac459c2055ea2782c6d5105772573f2092cc7a293971ef02",
+      "query_text": "腕時計の電池交換",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "腕時計の電池は型番(SR626SWなど)で違い、防水時計は裏蓋のパッキン交換も要るため、自分で開けると防水性が落ちます。時計の型番と、防水表示の有無を教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "457fb4c6689ea26b6fee0c2e2f927849362f43049b67f86b5495b583011aa434",
+      "query_text": "時計のベルトが長い",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "金属ベルトはコマを外して調整でき、革やナイロンは交換になります。今のベルトはどちらの素材ですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "5a44eea00dd08f102f03cccd2e09eda77c6d42ef63315344e0e28a8abd211362",
+      "query_text": "シルバーのアクセサリーが黒くなった",
+      "locale": "ja",
+      "persona": "general",
+      "category": "silver-polish",
+      "ideal_answer": "シルバー磨きクロス(専用クリーナー)",
+      "search_terms": {
+        "ja": [
+          "シルバー 磨き クロス",
+          "シルバークリーナー 変色"
+        ],
+        "en": [
+          "silver polishing cloth tarnish"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "金メッキ用",
+        "真鍮用",
+        "研磨剤 金属全般"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "147ade1cb84fb941a89aa04ba764536ba4a9ae4b84faeeaf5cd8c289c9e56015",
+      "query_text": "金属アレルギーでも大丈夫なピアス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "サージカルステンレス、チタン、樹脂などがあります。ただし何に反応するかは人によって違うので、皮膚科で調べた金属が分かっていればそれを避けたものをお選びください。",
+      "search_terms": {
+        "ja": [
+          "ピアス チタン 金属アレルギー",
+          "サージカルステンレス ピアス"
+        ],
+        "en": [
+          "hypoallergenic titanium earrings"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "35a0bf0846d215b276f5eee252e8e31c5563c432a8147e3d1c4cd02a481e72af",
+      "query_text": "指輪のサイズが分からない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "リングゲージという測定具で号数を測れます。指は季節や時間帯でむくむので、複数回測るのが確実です。まずゲージをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "b20ca9d8e8dd0978a917662e9968d3cec27fd71707b9b9738ebf0c56f2a30ea4",
+      "query_text": "茶葉を入れる小さいやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tea-infuser",
+      "ideal_answer": "茶こし(ティーインフューザー)",
+      "search_terms": {
+        "ja": [
+          "茶こし ティーインフューザー",
+          "お茶 パック 茶こし"
+        ],
+        "en": [
+          "tea infuser strainer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "急須",
+        "コーヒードリッパー"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "4853b2b2fd4ca9302224d224f1fa25cb24b95eff87e650211bde3d4852ff0a1f",
+      "query_text": "コーヒー豆を挽くやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "手動のコーヒーミルと電動グラインダーがあります。挽く量と手間で選びますが、どちらをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "fb84d76e4b9c4a7ea019be27860d1579dd8aa47a0e07476f5a12414dfc79555f",
+      "query_text": "カフェインが入っていないコーヒー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "decaf-coffee",
+      "ideal_answer": "デカフェコーヒー(カフェインレス)",
+      "search_terms": {
+        "ja": [
+          "デカフェ コーヒー",
+          "カフェインレス コーヒー 豆"
+        ],
+        "en": [
+          "decaf coffee beans"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "カフェイン強化 コーヒー",
+        "エナジードリンク"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "91b1a25890fc8ebe540648099cdd67dc66e10051c809f103dfe5e4df45e055ca",
+      "query_text": "急須なしでお茶をいれたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ティーバッグで手軽にいれる方法と、フィルター付きの水筒・ボトルで持ち歩く方法があります。どちらをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "5c20c8620779ee71cdbac33df41643a84e9032bbc4497697c1458cd939df1569",
+      "query_text": "スキーのときに手にはめるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "ski-gloves",
+      "ideal_answer": "スキーグローブ(防水・保温)",
+      "search_terms": {
+        "ja": [
+          "スキーグローブ 防水",
+          "スノーボード グローブ 保温"
+        ],
+        "en": [
+          "ski gloves waterproof"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "野球グローブ",
+        "作業用手袋",
+        "軍手"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "c33b6707cb867bf236511e84027874d00aaa03f74a5d0fd8babf1d71080ca709",
+      "query_text": "雪道で靴が滑らないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "shoe-spikes",
+      "ideal_answer": "靴用滑り止めスパイク(着脱式)",
+      "search_terms": {
+        "ja": [
+          "靴 滑り止め 雪道",
+          "スノースパイク 着脱式"
+        ],
+        "en": [
+          "snow ice shoe spikes traction"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "浴室 滑り止めマット",
+        "インソール"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "a8abaa591968d662bc4c7f7693a8dda5f8bf430e87e433ddce668613bdcf8226",
+      "query_text": "自転車のタイヤに空気が入らない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "自転車のバルブには英式・仏式・米式があり、空気入れが合っていないと入りません。また、パンクしている可能性もあります。バルブの形と、空気が抜ける速さを教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "8708e4a0378bf243477181b7a8d89ce19aa9789619041d7bae96a79bf8c289f5",
+      "query_text": "自転車のサドルが痛い",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "手軽なクッション付きサドルカバーと、体格に合ったサドルへの交換があります。どちらをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "90a36d9fca69bf339d3eab921f884a17776309e633c586e49160dcc854f6a286",
+      "query_text": "自転車に子どもを乗せるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "前乗せ(1〜3歳前後)と後ろ乗せ(2〜6歳前後)があり、お子さまの年齢と体重で選びます。またヘルメットの着用が努力義務です。お子さまは何歳でしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "039b4183982e41da6552d2e82f73576d72ddd00a6c8988838e943184017b8355",
+      "query_text": "イヤホンを2人で分けて聴くやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "audio-splitter",
+      "ideal_answer": "イヤホン分配アダプター",
+      "search_terms": {
+        "ja": [
+          "イヤホン 分配 アダプター",
+          "イヤホンジャック 2股"
+        ],
+        "en": [
+          "headphone splitter adapter"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "HDMI 分配器",
+        "USBハブ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "7a6d787fe36e12a60c6cbf26b33e68620cd9b6be32e5a49462c3582695b10897",
+      "query_text": "レコードを聴く機械",
+      "locale": "ja",
+      "persona": "general",
+      "category": "record-player",
+      "ideal_answer": "レコードプレーヤー(ターンテーブル)",
+      "search_terms": {
+        "ja": [
+          "レコードプレーヤー",
+          "ターンテーブル スピーカー内蔵"
+        ],
+        "en": [
+          "record player turntable"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "CDプレーヤー",
+        "カセットデッキ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "a8e4fe00aa8f9953b6c69427b7678f9b4b18a4930485617ecc9d11de3e6ef48f",
+      "query_text": "楽器の音を録音するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "パソコンに繋いで録るオーディオインターフェースと、単体で録れるハンディレコーダーがあります。どちらをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "05bcdb00507022128515823a7e45bdfa2af2fb9aa537d572490f96b3e5339a22",
+      "query_text": "ボタンをつけるのに使う糸",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sewing-thread",
+      "ideal_answer": "ボタン付け糸(手縫い糸)",
+      "search_terms": {
+        "ja": [
+          "ボタン付け糸",
+          "手縫い糸 ボタン"
+        ],
+        "en": [
+          "button sewing thread"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ミシン糸",
+        "刺繍糸"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "42ee4c52baf7fbc7e86abcdaaadfc993f365d61c71689e69157a492f69da50be",
+      "query_text": "針に糸を通すのが見えない",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "needle-threader",
+      "ideal_answer": "糸通し(ニードルスレダー)",
+      "search_terms": {
+        "ja": [
+          "糸通し 針",
+          "ニードルスレダー 裁縫"
+        ],
+        "en": [
+          "needle threader"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ルーペ",
+        "老眼鏡"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "8faafd49b290dc7116745a2e3bb510dcdefde120b90d2f2fc22867050d4fd31f",
+      "query_text": "blackout curtain japan size",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "curtain",
+      "ideal_answer": "遮光カーテン(遮光1級など)",
+      "search_terms": {
+        "ja": [
+          "遮光カーテン 1級"
+        ],
+        "en": [
+          "blackout curtains japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "レースカーテン"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "178932b603a9d7eb0232c39d5303528759a962920001eb11727c3ee9fa8bff57",
+      "query_text": "무카페인 커피 일본",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "decaf-coffee",
+      "ideal_answer": "デカフェコーヒー(カフェインレス)",
+      "search_terms": {
+        "ja": [
+          "デカフェ コーヒー"
+        ],
+        "en": [
+          "decaf coffee"
+        ],
+        "ko": [
+          "디카페인 커피"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "カフェイン強化 コーヒー"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "abf4293658306e0ae2133552fccbe8d08642981cda22136583e9c2a65264e419",
+      "query_text": "防滑 鞋套 雪 日本",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "shoe-spikes",
+      "ideal_answer": "靴用滑り止めスパイク(着脱式)",
+      "search_terms": {
+        "ja": [
+          "靴 滑り止め 雪道"
+        ],
+        "en": [
+          "snow shoe spikes"
+        ],
+        "ko": [],
+        "zh": [
+          "防滑鞋套",
+          "雪地 防滑"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-014.json"
+    },
+    {
+      "content_hash": "fb30188c4e63babd2a5f97bda41b3c013d83b250a1aea82c78edfa2705c53201",
+      "query_text": "tokei denchi koukan jibun de",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "腕時計の電池は型番で違い、防水時計は裏蓋のパッキン交換も必要です。自分で開けると防水性が落ちます。時計の型番と防水表示を教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-014.json"
     }
   ]
 }
