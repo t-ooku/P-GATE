@@ -125,7 +125,7 @@
   <main id="top">
     <div id="userView">
       <div class="hoshilu-layout">
-        <div class="hoshilu-primary-early">
+        <div class="hoshilu-primary">
           <section class="hero" aria-labelledby="heroTitle">
             <div class="hero-copy">
               <p id="heroEyebrow" class="eyebrow">欲しいを、ちゃんと見つける。</p>
@@ -157,6 +157,53 @@
             <div id="resultCards" class="result-grid"></div>
           </section>
 
+          <section class="sale-center" aria-labelledby="saleCenterTitle">
+            <div class="sale-center-heading">
+              <div>
+                <p class="step">HOSHILU SALE RADAR</p>
+                <h2 id="saleCenterTitle">全てのセールを、<br>先回りチェックしよう</h2>
+            <p id="saleCenterLead" class="sale-center-lead">10モールのセール情報を横断。開始前にもお知らせし、始まったらホシルで本当に安い購入先を探せます。</p>
+              </div>
+              <aside class="sale-notice-card" aria-label="無料会員のセール通知設定">
+                <strong id="saleNoticeTitle">無料会員限定・セール専用通知</strong>
+                <p id="saleNoticeBody">おすすめ記事や一般ニュースは通知しません。割引セールの開始前と開始時だけをお知らせします。</p>
+                <label class="sale-preference"><input id="saleOnlyToggle" type="checkbox" checked><span id="saleToggleLabel">全モールのセール通知を受け取る</span></label>
+                <small id="salePreferenceStatus" class="sale-preference-status" aria-live="polite">ログインすると設定を保存できます。</small>
+                <button id="openNotificationSettings" class="sale-settings-button" type="button">通知設定を開く</button>
+              </aside>
+            </div>
+            <div id="saleRail" class="sale-rail" aria-label="掲載モールの最新セール情報">
+              <p class="sale-empty">確認済みのセール情報を読み込んでいます。</p>
+            </div>
+            <div id="saleRailMore"></div>
+          </section>
+
+          <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle">
+            <p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">AIウォッチ中の商品を振り返る。</h2>
+            <p id="insightSummary">AIウォッチ中の商品と、選んだ通知条件をまとめて確認できます。</p>
+            <p class="insight-diff-note" data-i18n="insight.diffNote">HOSHILU SALE RADARは市場全体(Amazonセール・楽天スーパーSALE・メガ割など)を見ます。AIウォッチは個別商品を見ます。AIが価格・在庫・クーポン・販売開始を24時間監視します。</p>
+            <div id="mywish" class="insight-wishes">
+              <div class="wish-toolbar"><h3 id="wishTitle">AIウォッチ中のキーワード</h3><label class="wish-filter"><span class="visually-hidden">AIウォッチ中のキーワードを検索</span><input id="wishFilter" type="search" autocomplete="off" placeholder="AIウォッチを検索"></label></div>
+              <p id="wishDescription"><span>お気に入りではありません。</span><span>AIがこの商品を継続監視し、条件を満たしたら知らせる機能です。</span></p>
+              <div id="wishList" class="wish-list" aria-label="更新が新しい順のAIウォッチキーワード"><p class="empty">AIウォッチ中の商品はまだありません。</p></div>
+            </div>
+            <div id="mywatch" class="mywatch-hub" aria-labelledby="mywatchTitle">
+              <div class="mywatch-heading"><h3 id="mywatchTitle">AIウォッチ通知</h3><span id="mywatchTestControls" class="mywatch-test-controls hidden"></span><button id="refreshNotifications" type="button">更新</button></div>
+              <div id="notificationList" class="notification-list" aria-live="polite"><p class="empty">無料会員でログインすると通知を確認できます。</p></div>
+            </div>
+          </section>
+
+          <section id="announcements" class="announcements-panel" aria-labelledby="announcementsTitle">
+            <div class="announcements-heading">
+              <p class="step">HOSHILU NEWS</p>
+              <h2 id="announcementsTitle">お知らせ</h2>
+            </div>
+            <div id="announcementList" class="info-row-list" aria-label="HOSHILUからのお知らせ">
+              <p class="sale-empty">お知らせを読み込んでいます。</p>
+            </div>
+            <div id="announcementListMore"></div>
+          </section>
+
           <section id="marketplaceCoverage" class="marketplace-coverage" aria-labelledby="marketplaceCoverageTitle">
             <div class="marketplace-coverage-heading">
               <div>
@@ -183,22 +230,6 @@
             <p id="marketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。</p>
           </section>
 
-          <section id="officialSocial" class="official-social" aria-labelledby="officialSocialTitle">
-            <div class="official-social-copy">
-              <p class="step">HOSHILU OFFICIAL</p>
-              <h2 id="officialSocialTitle" data-i18n="social.officialTitle">ホシル公式アカウント</h2>
-              <p data-i18n="social.officialLead">新機能やお得な情報を、公式アカウントからお届けします。</p>
-            </div>
-            <div class="official-social-links" aria-label="HOSHILU official social accounts">
-              <a class="official-social-link line" href="https://lin.ee/xKS56YM" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.line">LINE公式</strong></a>
-              <a class="official-social-link instagram" href="https://www.instagram.com/hoshilu.app/" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.instagram">Instagram公式</strong></a>
-              <a class="official-social-link x" href="https://x.com/iCHMR81Lv4VYJYG" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.x">X公式</strong></a>
-            </div>
-          </section>
-
-        </div>
-
-        <div class="hoshilu-primary-late">
           <section class="search-journey" aria-labelledby="journeyTitle">
             <div class="journey-heading">
               <p class="step">HOSHILU SEARCH AGENT</p>
@@ -226,58 +257,22 @@
             </div>
           </section>
 
+          <section id="officialSocial" class="official-social" aria-labelledby="officialSocialTitle">
+            <div class="official-social-copy">
+              <p class="step">HOSHILU OFFICIAL</p>
+              <h2 id="officialSocialTitle" data-i18n="social.officialTitle">ホシル公式アカウント</h2>
+              <p data-i18n="social.officialLead">新機能やお得な情報を、公式アカウントからお届けします。</p>
+            </div>
+            <div class="official-social-links" aria-label="HOSHILU official social accounts">
+              <a class="official-social-link line" href="https://lin.ee/xKS56YM" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.line">LINE公式</strong></a>
+              <a class="official-social-link instagram" href="https://www.instagram.com/hoshilu.app/" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.instagram">Instagram公式</strong></a>
+              <a class="official-social-link x" href="https://x.com/iCHMR81Lv4VYJYG" target="_blank" rel="noopener noreferrer"><strong data-i18n="social.x">X公式</strong></a>
+            </div>
+          </section>
+
           <section class="lp-benefits" aria-labelledby="benefitTitle">
             <p class="step">WHY HOSHILU</p>
             <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
-          </section>
-
-          <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle">
-            <p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">AIウォッチ中の商品を振り返る。</h2>
-            <p id="insightSummary">AIウォッチ中の商品と、選んだ通知条件をまとめて確認できます。</p>
-            <p class="insight-diff-note" data-i18n="insight.diffNote">HOSHILU SALE RADARは市場全体(Amazonセール・楽天スーパーSALE・メガ割など)を見ます。AIウォッチは個別商品を見ます。AIが価格・在庫・クーポン・販売開始を24時間監視します。</p>
-            <div id="mywish" class="insight-wishes">
-              <div class="wish-toolbar"><h3 id="wishTitle">AIウォッチ中のキーワード</h3><label class="wish-filter"><span class="visually-hidden">AIウォッチ中のキーワードを検索</span><input id="wishFilter" type="search" autocomplete="off" placeholder="AIウォッチを検索"></label></div>
-              <p id="wishDescription"><span>お気に入りではありません。</span><span>AIがこの商品を継続監視し、条件を満たしたら知らせる機能です。</span></p>
-              <div id="wishList" class="wish-list" aria-label="更新が新しい順のAIウォッチキーワード"><p class="empty">AIウォッチ中の商品はまだありません。</p></div>
-            </div>
-            <div id="mywatch" class="mywatch-hub" aria-labelledby="mywatchTitle">
-              <div class="mywatch-heading"><h3 id="mywatchTitle">AIウォッチ通知</h3><span id="mywatchTestControls" class="mywatch-test-controls hidden"></span><button id="refreshNotifications" type="button">更新</button></div>
-              <div id="notificationList" class="notification-list" aria-live="polite"><p class="empty">無料会員でログインすると通知を確認できます。</p></div>
-            </div>
-          </section>
-        </div>
-
-        <div class="hoshilu-secondary">
-          <section id="announcements" class="announcements-panel" aria-labelledby="announcementsTitle">
-            <div class="announcements-heading">
-              <p class="step">HOSHILU NEWS</p>
-              <h2 id="announcementsTitle">お知らせ</h2>
-            </div>
-            <div id="announcementList" class="info-row-list" aria-label="HOSHILUからのお知らせ">
-              <p class="sale-empty">お知らせを読み込んでいます。</p>
-            </div>
-            <div id="announcementListMore"></div>
-          </section>
-
-          <section class="sale-center" aria-labelledby="saleCenterTitle">
-            <div class="sale-center-heading">
-              <div>
-                <p class="step">HOSHILU SALE RADAR</p>
-                <h2 id="saleCenterTitle">全てのセールを、<br>先回りチェックしよう</h2>
-            <p id="saleCenterLead" class="sale-center-lead">10モールのセール情報を横断。開始前にもお知らせし、始まったらホシルで本当に安い購入先を探せます。</p>
-              </div>
-              <aside class="sale-notice-card" aria-label="無料会員のセール通知設定">
-                <strong id="saleNoticeTitle">無料会員限定・セール専用通知</strong>
-                <p id="saleNoticeBody">おすすめ記事や一般ニュースは通知しません。割引セールの開始前と開始時だけをお知らせします。</p>
-                <label class="sale-preference"><input id="saleOnlyToggle" type="checkbox" checked><span id="saleToggleLabel">全モールのセール通知を受け取る</span></label>
-                <small id="salePreferenceStatus" class="sale-preference-status" aria-live="polite">ログインすると設定を保存できます。</small>
-                <button id="openNotificationSettings" class="sale-settings-button" type="button">通知設定を開く</button>
-              </aside>
-            </div>
-            <div id="saleRail" class="sale-rail" aria-label="掲載モールの最新セール情報">
-              <p class="sale-empty">確認済みのセール情報を読み込んでいます。</p>
-            </div>
-            <div id="saleRailMore"></div>
           </section>
         </div>
       </div>

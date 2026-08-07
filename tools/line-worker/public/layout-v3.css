@@ -1,19 +1,19 @@
-/* HOSHILU UI v4: PC two-column layout, mobile single-column reorder.
-   Mobile-first: single column, natural DOM order (search -> results ->
-   marketplace coverage detail -> official social detail -> announcements ->
-   sale radar -> ...). At the PC breakpoint the announcements/sale-radar
-   block moves into a right column that spans the same vertical range as
-   the primary column, without any JavaScript reordering (avoids load-time
-   layout shift). */
+/* HOSHILU UI v5 (2026-08-07): single-column layout, same static DOM order
+   on every breakpoint (search -> MATCHES -> SALE RADAR -> INSIGHT -> NEWS
+   -> MARKETPLACE COVERAGE -> SEARCH AGENT -> DISCOVERY -> OFFICIAL). The
+   previous v4 layout split sections into a PC-only two-column grid (a
+   sticky right rail for announcements/sale-radar), which meant the PC
+   reading order did not match the mobile DOM order. Per the 2026-08-07
+   instructions the section order must be identical across PC/tablet/
+   mobile, so the two-/three-column split is removed; .hoshilu-primary is
+   the single flow every section now lives in, at every width. */
 .hoshilu-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
 }
 
-.hoshilu-primary-early,
-.hoshilu-primary-late,
-.hoshilu-secondary {
+.hoshilu-primary {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 24px;
@@ -27,25 +27,7 @@
   }
 
   .hoshilu-layout {
-    grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr);
-    align-items: start;
-  }
-
-  .hoshilu-primary-early {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .hoshilu-secondary {
-    grid-column: 2;
-    grid-row: 1 / 3;
-    position: sticky;
-    top: calc(var(--topbar-height, 74px) + 16px);
-  }
-
-  .hoshilu-primary-late {
-    grid-column: 1;
-    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -72,12 +54,6 @@
   margin-top: 4px;
 }
 
-@media (max-width: 1179px) {
-  .hoshilu-secondary {
-    position: static;
-  }
-}
-
 #officialSocial {
   scroll-margin-top: var(--topbar-height, 74px);
 }
@@ -87,7 +63,7 @@
      panel are tightened here. Nothing that affects tap target size, text
      readability, form operability, or the marketplace coverage / official
      social detail sections themselves is touched. */
-  .hoshilu-primary-early {
+  .hoshilu-primary {
     gap: 6px;
   }
 
