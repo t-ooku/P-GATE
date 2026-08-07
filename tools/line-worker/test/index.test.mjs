@@ -420,7 +420,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v311/);
+  assert.match(serviceWorker, /hoshilu-shell-v312/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1012,9 +1012,10 @@ test('検索応答に条件検索チップを軸ごとにまとめて返す', as
 
 test('条件検索チップはAI検索と同じ1本のクエリ条件に追加される', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(appSource, /function conditionSearchCard\(result\)/);
-  // サーバーが返したラベルを描画するだけで、辞書のコピーを持たない
-  assert.match(appSource, /result\?\.refinement_chips/);
+  assert.match(appSource, /function conditionSearchCard\(groups\)/);
+  // サーバーが返したラベルをそのまま描画する（軸名も値名もハードコードしない）
+  assert.match(appSource, /textElement\('span','condition-group-label',group\.label\)/);
+  assert.match(appSource, /chip\.textContent=item\.label/);
   // AI検索・連想キーワードと同じ " / " 区切りで既存クエリに追加して再検索する
   assert.match(appSource, /elements\.query\.value=\[base,\.\.\.selected\.values\(\)\]\.filter\(Boolean\)\.join\(' \/ '\)/);
   assert.match(appSource, /submit\.addEventListener\('click',\(\)=>\{[\s\S]{0,400}runKnowledgeSearch\(\)/);
@@ -1023,9 +1024,15 @@ test('条件検索チップはAI検索と同じ1本のクエリ条件に追加�
   assert.match(appSource, /selected\.set\(group\.dimension,item\.label\)/);
   // 未選択では実行できない
   assert.match(appSource, /submit\.disabled=selected\.size===0/);
-  // 検索結果の有無を問わず出す
-  assert.match(appSource, /const conditionSearch=conditionSearchCard\(result\);if\(conditionSearch\)resultCards\.push\(conditionSearch\)/);
-  assert.match(appSource, /const emptyConditionSearch=conditionSearchCard\(result\);if\(emptyConditionSearch\)emptyCards\.push\(emptyConditionSearch\)/);
+  // 2026-08-07: 検索結果側ではなく検索パネル内の「詳細検索」に移動し、
+  // 初回検索の前から条件を指定できるようにした。検索前に描画されるため
+  // チップは検索応答ではなく /api/refinement-chips から取るが、生成元は
+  // 同じ search-refinement-policy なので辞書は1つのまま。
+  assert.match(appSource, /async function renderAdvancedSearch\(\)/);
+  assert.match(appSource, /fetch\(`\/api\/refinement-chips\?language=\$\{encodeURIComponent\(language\)\}`/);
+  assert.match(appSource, /toggle\.setAttribute\('aria-expanded',String\(toggle\.getAttribute\('aria-expanded'\)!=='true'\)\)/);
+  // 言語を変えたらラベルもチップも取り直す
+  assert.match(appSource, /advancedSearchGroups=null;renderAdvancedSearch\(\)/);
   ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
     assert.match(appSource, new RegExp(`${language}:\\{title:'[^']+',body:'[^']+',submit:'[^']+'\\}`));
   });

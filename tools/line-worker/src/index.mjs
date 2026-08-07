@@ -1661,6 +1661,15 @@ export default {
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env);
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
+    if (request.method === 'GET' && url.pathname === '/api/refinement-chips') {
+      // Condition search moved into the search panel (2026-08-07 request):
+      // the panel is now shown BEFORE a search runs, so its chips can no
+      // longer ride along on the search response. Static per language and
+      // safe to cache.
+      return new Response(JSON.stringify({ ok: true, groups: refinementChipsForQuery('', url.searchParams.get('language') || 'JA') }), {
+        headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=3600' }
+      });
+    }
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
     if (request.method === 'GET') {
