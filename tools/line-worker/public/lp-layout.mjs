@@ -1,8 +1,8 @@
-// HOSHILU UI v3 places every section via static HTML/CSS grid order
-// (.hoshilu-primary-early / .hoshilu-secondary / .hoshilu-primary-late) -
-// this module intentionally does not move sections around at runtime
-// anymore, since a JS-based reorder after first paint causes a visible
-// layout shift and previously fought with the static order.
+// HOSHILU UI v5 places every section via static HTML/CSS grid order
+// (.hoshilu-primary, single column at every breakpoint) - this module
+// intentionally does not move sections around at runtime anymore, since
+// a JS-based reorder after first paint causes a visible layout shift and
+// previously fought with the static order.
 const search = document.querySelector('#hoshiluSearch');
 
 const searchLabels = { JA:'ホシル検索', EN:'HOSHILU Search', ZH:'HOSHILU 搜索', KO:'HOSHILU 검색' };

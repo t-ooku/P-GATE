@@ -68,9 +68,11 @@ test('ai-search-ui.cssはモール10件とSNS5チャネル全てへブランド�
   assert.match(css, /\.marketplace-search-link\{min-height:4[4-9]px|min-height:[5-9]\dpx/);
 });
 
-test('4セクションはMARKETPLACE COVERAGE→OFFICIAL→SEARCH AGENT→DISCOVERYの順で隣接する', async () => {
+test('4セクションはMARKETPLACE COVERAGE→SEARCH AGENT→DISCOVERY→OFFICIALの順で隣接する', async () => {
   const html = await read('index.html');
-  const order = ['MARKETPLACE COVERAGE', 'HOSHILU OFFICIAL', 'HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY'];
+  // 2026-08-07 指示書 #14: 正式なセクション順は
+  // MARKETPLACE COVERAGE(6) -> SEARCH AGENT(7) -> DISCOVERY(8) -> OFFICIAL(9)。
+  const order = ['MARKETPLACE COVERAGE', 'HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY', 'HOSHILU OFFICIAL'];
   const positions = order.map((label) => {
     const index = html.indexOf(`<p class="step">${label}</p>`);
     assert.notEqual(index, -1, `missing section: ${label}`);

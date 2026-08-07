@@ -42,15 +42,34 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.doesNotMatch(layout, /insight\.before\(saleRadar\)/);
   assert.doesNotMatch(layout, /saleRadar\.after\(benefits\)/);
   assert.match(layout, /ホシル検索/);
-  assert.match(html, /class="hoshilu-secondary"/);
-  // UI v4: search input -> search action -> collapsible explanation -> 10
-  // marketplaces + SNS must all be reachable without scrolling, so
-  // marketplace-coverage now lives in hoshilu-primary-early right after the
-  // results section, ahead of the announcements/sale-radar sidebar.
-  assert.ok(
-    html.indexOf('class="marketplace-coverage"') < html.indexOf('class="hoshilu-secondary"'),
-    'marketplace coverage should be defined before the announcements/sale-radar column in the static primary-early order'
-  );
+  assert.match(html, /class="hoshilu-primary"/);
+  // UI v5 (2026-08-07): every section lives in one static column, in the
+  // exact same order at every breakpoint - ホシル検索 -> MATCHES -> SALE
+  // RADAR -> INSIGHT -> NEWS -> MARKETPLACE COVERAGE -> SEARCH AGENT ->
+  // DISCOVERY -> OFFICIAL. Assert the canonical order directly so a future
+  // edit can't silently reintroduce a per-breakpoint split.
+  const sectionMarkers = [
+    ['hoshiluSearch', 'id="hoshiluSearch"'],
+    ['MATCHES', 'class="section-title"><div><p class="step">MATCHES'],
+    ['SALE RADAR', '<p class="step">HOSHILU SALE RADAR'],
+    ['INSIGHT', '<p class="step">HOSHILU INSIGHT'],
+    ['NEWS', '<p class="step">HOSHILU NEWS'],
+    ['MARKETPLACE COVERAGE', '<p class="step">MARKETPLACE COVERAGE'],
+    ['SEARCH AGENT', '<p class="step">HOSHILU SEARCH AGENT'],
+    ['DISCOVERY', '<p class="step">HOSHILU DISCOVERY'],
+    ['OFFICIAL', '<p class="step">HOSHILU OFFICIAL'],
+  ];
+  const positions = sectionMarkers.map(([name, marker]) => {
+    const index = html.indexOf(marker);
+    assert.notEqual(index, -1, `missing section marker for ${name}: ${marker}`);
+    return index;
+  });
+  for (let i = 1; i < positions.length; i += 1) {
+    assert.ok(
+      positions[i - 1] < positions[i],
+      `${sectionMarkers[i - 1][0]} should come before ${sectionMarkers[i][0]} in the static section order`
+    );
+  }
 
   for (const language of ['JA', 'EN', 'ZH', 'KO']) {
     assert.match(module, new RegExp(`${language}: \\{`));
@@ -63,7 +82,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v304/);
+  assert.match(serviceWorker, /hoshilu-shell-v305/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
