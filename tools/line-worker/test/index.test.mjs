@@ -382,7 +382,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v305/);
+  assert.match(serviceWorker, /hoshilu-shell-v306/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -890,6 +890,31 @@ test('商品カードは10モールの実在商品ページを1モール1件だ�
   assert.equal(appSource.includes('marketplaceLabel(offer.marketplace)}で見る'), true);
   assert.equal(appSource.includes("JA:'全部のモールで探す'"), true);
   assert.equal(appSource.includes("document.querySelector('.marketplace-fallback')?.scrollIntoView"), true);
+});
+
+// AI Lowest-Price Compare gap-fill (Phase C item 12/13, 2026-08-07): the
+// price-comparison panel must never silently drop a marketplace HOSHILU
+// isn't API-connected to for this specific product - it should offer a
+// "search this mall too" link built from the same signed
+// result.marketplace_search_links every other fallback button uses, never
+// an AI-estimated price. This confirms that gap-fill helper exists, is
+// wired into every renderOfferOptions branch (0/1/N confirmed offers), and
+// is threaded from renderResults() via the `result` argument rather than
+// reading marketplace_search_links off the per-candidate object (which
+// decoratePwaResult deliberately never attaches - see the doesNotMatch
+// assertion above).
+test('価格比較パネルはAPI未連携モールにも「このモールでも探す」導線を表示する', () => {
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(appSource, /function unverifiedMarketplaceLinks\(covered,result,language\)/);
+  assert.match(appSource, /このモールでも探す（価格未確認）/);
+  assert.match(appSource, /renderOfferOptions\(candidate,t,language,result\)/);
+  assert.match(appSource, /renderOfferOptions\(candidate,t,elements\.language\.value,result\)/);
+  // wired into all three branches: no confirmed offers, offers without a
+  // price, and priced offers (both single and multi-offer panel paths).
+  assert.match(appSource, /if\(!linked\.length\)return unverifiedMarketplaceLinks\(covered,result,language\)/);
+  assert.match(appSource, /const gap=unverifiedMarketplaceLinks\(covered,result,language\);if\(gap\)list\.append\(gap\)/);
+  assert.match(appSource, /const gap=unverifiedMarketplaceLinks\(covered,result,language\);if\(!gap\)return link;/);
+  assert.match(appSource, /const gap=unverifiedMarketplaceLinks\(covered,result,language\);if\(gap\)panel\.append\(gap\)/);
 });
 
 
