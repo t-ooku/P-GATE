@@ -1,8 +1,9 @@
+// v4.2 項目4: 表記から「HOSHILU」の冠称を外し、正式表示は「AIで探す」とする。
 const languageCopy = {
-  JA: ['HOSHILU AIでも候補を探す', 'HOSHILU内で結果を表示します'],
-  EN: ['Search with HOSHILU AI', 'Results stay inside HOSHILU'],
-  ZH: ['使用 HOSHILU AI 查找候选', '结果显示在 HOSHILU 内'],
-  KO: ['HOSHILU AI로 후보 찾기', 'HOSHILU 안에서 결과를 표시합니다']
+  JA: ['AIで探す', 'HOSHILU内で結果を表示します'],
+  EN: ['Search with AI', 'Results stay inside HOSHILU'],
+  ZH: ['使用 AI 查找候选', '结果显示在 HOSHILU 内'],
+  KO: ['AI로 찾기', 'HOSHILU 안에서 결과를 표시합니다']
 };
 
 // HOSHILU AI Chat (2026-08-05): as few turns as possible, then hand off to
@@ -12,10 +13,10 @@ const languageCopy = {
 // untouched). Stays entirely inside HOSHILU (calls our own /api/ai-chat,
 // never links out to an external AI chat site).
 const chatCopy = {
-  JA: { title: 'HOSHILU AIチャット', placeholder: '返信を入力…', send: '送信', searching: '探しています…', finding: '条件に合う商品を探しています…', error: '通信に失敗しました。もう一度お試しください。', searchError: '検索に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる' },
-  EN: { title: 'HOSHILU AI Chat', placeholder: 'Type a reply…', send: 'Send', searching: 'Searching…', finding: 'Looking for matching products…', error: 'Something went wrong. Please try again.', searchError: 'Search failed. Please try again.', retry: 'Try again', close: 'Close' },
-  ZH: { title: 'HOSHILU AI 聊天', placeholder: '输入回复…', send: '发送', searching: '正在查找…', finding: '正在查找符合条件的商品…', error: '通信失败，请重试。', searchError: '搜索失败，请重试。', retry: '重试', close: '关闭' },
-  KO: { title: 'HOSHILU AI 채팅', placeholder: '답장을 입력…', send: '보내기', searching: '찾고 있습니다…', finding: '조건에 맞는 상품을 찾고 있습니다…', error: '통신에 실패했습니다. 다시 시도해 주세요.', searchError: '검색에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기' }
+  JA: { title: 'AIチャット', placeholder: '返信を入力…', send: '送信', searching: '探しています…', finding: '条件に合う商品を探しています…', error: '通信に失敗しました。もう一度お試しください。', searchError: '検索に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる' },
+  EN: { title: 'AI Chat', placeholder: 'Type a reply…', send: 'Send', searching: 'Searching…', finding: 'Looking for matching products…', error: 'Something went wrong. Please try again.', searchError: 'Search failed. Please try again.', retry: 'Try again', close: 'Close' },
+  ZH: { title: 'AI 聊天', placeholder: '输入回复…', send: '发送', searching: '正在查找…', finding: '正在查找符合条件的商品…', error: '通信失败，请重试。', searchError: '搜索失败，请重试。', retry: '重试', close: '关闭' },
+  KO: { title: 'AI 채팅', placeholder: '답장을 입력…', send: '보내기', searching: '찾고 있습니다…', finding: '조건에 맞는 상품을 찾고 있습니다…', error: '통신에 실패했습니다. 다시 시도해 주세요.', searchError: '검색에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기' }
 };
 
 const channelNames = [

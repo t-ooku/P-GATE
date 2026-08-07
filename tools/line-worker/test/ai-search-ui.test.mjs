@@ -11,7 +11,8 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(html, /ai-search-ui\.mjs/);
   assert.match(html, /ai-search-ui\.css/);
   assert.match(html, /ai-search-layout-fix\.css/);
-  assert.match(script, /HOSHILU AIでも候補を探す/);
+  assert.match(script, /AIで探す/);
+  assert.doesNotMatch(script, /HOSHILU AIで探す/);
   assert.match(script, /#submitButton/);
   assert.doesNotMatch(script, /aistudio|gemini\.google|chatgpt|claude\.ai/i);
   for (const marketplace of ['AMAZON_JP','RAKUTEN_JP','YAHOO_JP','QOO10_JP','SHEIN_JP','ZOZOTOWN_JP','SHOPLIST_JP','MUSINSA_JP','BUYMA_JP','SNKRDUNK_JP']) {
@@ -70,6 +71,47 @@ test('AIチャットは検索の成功を確認してからダイアログを閉
 // match score/reason and no per-candidate marketplace buttons. Every
 // returned candidate (name, match rate, reason, matched features, and its
 // own signed marketplace search links) must render, not just the first one.
+// v4.2 項目4: 「HOSHILU AIで探す」表記の廃止。ボタン・ダイアログタイトルの
+// どちらにも「HOSHILU AIで探す」/「HOSHILU AIチャット」という表示文言が
+// 残っていないことを確認する(内部コメントやfeature名としてのHOSHILU AI Chat
+// は対象外)。
+test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチャット」に統一されている', async () => {
+  const script = await read('ai-search-ui.mjs');
+  assert.match(script, /JA: \['AIで探す',/);
+  assert.match(script, /title: 'AIチャット'/);
+  assert.doesNotMatch(script, /'HOSHILU AIでも候補を探す'/);
+  assert.doesNotMatch(script, /title: 'HOSHILU AIチャット'/);
+});
+
+// v4.2 項目6・7: 「AIで探す」を押した時点で直前の検索文を初期コンテキスト
+// として渡す。空のチャットを開いて「何を探していますか？」と聞くのは禁止
+// なので、チャット履歴の最初のエントリは必ず直前の検索文(originalQuery)で
+// なければならない。
+test('v4.2項目6・7: 「AIで探す」を押すと直前の検索文がチャットの初期コンテキストとして渡される', async () => {
+  const script = await read('ai-search-ui.mjs');
+  assert.match(script, /const originalQuery = String\(document\.querySelector\('#query'\)\?\.value \|\| ''\)\.trim\(\)/);
+  assert.match(script, /if \(!originalQuery\) return;/);
+  assert.match(script, /openChatDialog\(originalQuery, language\)/);
+  assert.match(script, /const history = \[\{ role: 'user', text: originalQuery \}\]/);
+  assert.match(script, /messages\.append\(chatMessageRow\('user', originalQuery\)\)/);
+});
+
+// v4.2 項目8・9: 会話の結果(refined_query)は #query へ書き戻され、既存の
+// runKnowledgeSearch()(HOSHILU本体の検索)を通る。AIチャット自身が商品名・
+// 価格・URLを生成することはない。
+test('v4.2項目8・9: 会話結果は#queryへ書き戻され、HOSHILU本体の検索(runKnowledgeSearch)を通る', async () => {
+  const script = await read('ai-search-ui.mjs');
+  assert.match(script, /queryField\.value = refinedQuery/);
+  assert.match(script, /queryField\.dispatchEvent\(new Event\('input', \{ bubbles: true \}\)\)/);
+  assert.match(script, /window\.HoshiluSearch\?\.run/);
+});
+
+test('v4.2項目9: AIチャットはGeminiを第一候補としOpenAIへフォールバックする(架空の商品情報を返さない)', async () => {
+  const intent = await readFile(new URL('../src/ai-chat-intent.mjs', import.meta.url), 'utf8');
+  assert.match(intent, /const providers = \[geminiConfigured && 'gemini', openAiConfigured && 'openai'\]/);
+  assert.match(intent, /Never include a price, stock status, product URL, or a claim that you found a specific real product/);
+});
+
 test('AI検索候補は候補ごとにモール検索ボタン付きで表示される（1件目だけではない）', async () => {
   const [app, css] = await Promise.all([read('app.js'), read('ai-search-layout-fix.css')]);
   assert.match(app, /function aiCandidateCards\(/);
