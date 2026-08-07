@@ -12,7 +12,9 @@
 
 .wish-toolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(190px, 320px);
+  /* 3rd track added 2026-08-07 for the bulk delete button; auto so it only
+     takes the width of its label and the filter keeps its size. */
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 320px) auto;
   align-items: center;
   gap: 12px;
   margin-bottom: 11px;
@@ -41,8 +43,13 @@
 
 @media (max-width: 560px) {
   .wish-toolbar {
+    /* the bulk delete button drops to its own full-width row here */
     grid-template-columns: minmax(0, 1fr) minmax(130px, 46%);
     gap: 8px;
+  }
+
+  .wish-delete-all {
+    grid-column: 1 / -1;
   }
 
   .wish-toolbar h3,
@@ -167,4 +174,74 @@
 
 .wish-cycle + .wish-cycle {
   margin-top: 9px;
+}
+
+/* HOSHILU INSIGHT delete controls (2026-08-07 request). Removing one AI Watch
+   item required opening the row, finding 削除 in the editor and confirming.
+   The row now carries its own one-tap delete, and the toolbar a bulk one.
+   The row button lives inside <summary> (the only place that is a direct
+   child of <details> and still on the row), so summary becomes a flex row
+   and the label takes the remaining width. */
+.wish-item summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wish-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.wish-item-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.wish-row-delete {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: #8b8698;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.wish-row-delete:hover,
+.wish-row-delete:focus-visible {
+  border-color: #f0b4b4;
+  background: #fff0f0;
+  color: #b42318;
+  outline: none;
+}
+
+.wish-delete-all {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid #f0dada;
+  border-radius: 11px;
+  background: #fff6f6;
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.wish-delete-all:hover,
+.wish-delete-all:focus-visible {
+  background: #ffecec;
+  outline: none;
+}
+
+@media (max-width: 760px) {
+  .wish-delete-all {
+    width: 100%;
+    min-height: 44px;
+  }
 }
