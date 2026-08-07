@@ -18,7 +18,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 //
 // Only files matching *-batch-*.json are treated as real teacher-dataset
 // batches. format-example-batch.json is a format sample, not real data, and
-// is intentionally excluded.
+// is intentionally excluded. So are the *.report.json files that
+// ingest-teacher-dataset-batch.mjs writes next to each batch: their names
+// also end in -batch-NNN.report.json, so without the exclusion they were
+// read as batches and reported as "3 invalid records" on every compile -
+// noise that would eventually hide a real validation failure.
 
 const DATASET_DIR = resolve(__dirname, '..', 'evaluation', 'teacher-dataset');
 const OUTPUT_PATH = resolve(__dirname, '..', 'src', 'search-quality', 'teacher-dataset-rules.generated.json');
@@ -26,7 +30,7 @@ const OUTPUT_PATH = resolve(__dirname, '..', 'src', 'search-quality', 'teacher-d
 async function loadBatchFiles() {
   const entries = await readdir(DATASET_DIR).catch(() => []);
   return entries
-    .filter((name) => /-batch-.*\.json$/u.test(name))
+    .filter((name) => /-batch-.*\.json$/u.test(name) && !/\.report\.json$/u.test(name))
     .sort();
 }
 

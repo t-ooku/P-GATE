@@ -1,0 +1,798 @@
+[
+  {
+    "query_text": "小さい字を大きくして見るやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "拡大鏡(ルーペ)を探している",
+    "ideal_answer": "拡大鏡(ルーペ)",
+    "reason": "「大きくして見る」という機能の説明。老眼鏡と拡大鏡は別物なので用途で分岐する。",
+    "category": "magnifier",
+    "search_terms": {
+      "ja": [
+        "拡大鏡 ルーペ",
+        "ルーペ 手持ち 読書"
+      ],
+      "en": [
+        "magnifying glass for reading"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "老眼鏡",
+      "双眼鏡",
+      "顕微鏡"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "新聞を読むときのめがね",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "老眼鏡を探している",
+    "ideal_answer": "老眼鏡(リーディンググラス)",
+    "reason": "場面から老眼鏡と特定できる。度数は本人しか分からないため商品カテゴリまでを答える。",
+    "category": "reading-glasses",
+    "search_terms": {
+      "ja": [
+        "老眼鏡",
+        "リーディンググラス 軽量"
+      ],
+      "en": [
+        "reading glasses"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "サングラス",
+      "度入りメガネ 近視用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "首からさげるルーペ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "首掛け式の拡大鏡を探している",
+    "ideal_answer": "首掛けルーペ(ネックルーペ)",
+    "reason": "装着方法が明示されているので断定できる。",
+    "category": "magnifier",
+    "search_terms": {
+      "ja": [
+        "ネックルーペ",
+        "首掛け ルーペ 両手が使える"
+      ],
+      "en": [
+        "neck magnifier hands free"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "手元を明るくするあかり",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "手元照明(デスクライト)を探している",
+    "ideal_answer": "手元用デスクライト",
+    "reason": "既存の「よく見えるライト」と別軸で、設置型の照明であることを示す。",
+    "category": "desk-lamp",
+    "search_terms": {
+      "ja": [
+        "デスクライト 手元 明るい",
+        "LED スタンドライト 読書"
+      ],
+      "en": [
+        "desk reading lamp"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "懐中電灯",
+      "シーリングライト"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "字が大きいカレンダー",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "大きな文字のカレンダーを探している",
+    "ideal_answer": "大文字カレンダー(見やすいカレンダー)",
+    "reason": "視認性の要求。手帳と区別する。",
+    "category": "calendar",
+    "search_terms": {
+      "ja": [
+        "カレンダー 文字が大きい",
+        "見やすい カレンダー 壁掛け"
+      ],
+      "en": [
+        "large print calendar"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "手帳",
+      "卓上カレンダー 小型"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "じかんが大きく出るとけい",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "大きな表示のデジタル時計を探している",
+    "ideal_answer": "大画面デジタル時計",
+    "reason": "表示サイズが要件。腕時計と置き時計の区別は追加質問の余地。",
+    "category": "digital-clock",
+    "search_terms": {
+      "ja": [
+        "デジタル時計 大画面",
+        "置き時計 見やすい 大きい表示"
+      ],
+      "en": [
+        "large display digital clock"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "耳が遠くなってきたので音を大きくするやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "集音器または補聴器を探しているが、どちらが適切か医学的判断を要する",
+    "ideal_answer": "集音器(家電)と補聴器(医療機器)では扱いが異なります。まずは耳鼻科でご相談のうえ、用途をお聞かせください。",
+    "reason": "補聴器は医療機器で、聴力低下の原因診断が先。断定して商品を勧めるべきでない安全側の例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "テレビの音だけ大きくするやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "手元スピーカー(テレビ用)を探している",
+    "ideal_answer": "テレビ用手元スピーカー",
+    "reason": "「自分の手元だけ音量を上げる」という具体的用途で、補聴器とは別カテゴリ。",
+    "category": "tv-speaker",
+    "search_terms": {
+      "ja": [
+        "テレビ 手元スピーカー",
+        "お手元スピーカー ワイヤレス"
+      ],
+      "en": [
+        "tv wireless speaker for hearing"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "補聴器",
+      "集音器"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ボタンが大きい携帯電話",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "シニア向け携帯電話(かんたんスマホ・ガラケー)を探している",
+    "ideal_answer": "シニア向け携帯電話(かんたん操作)",
+    "reason": "操作性の要求が明確。既存の「音が大きく聞こえる電話」は固定電話寄りなので携帯として分ける。",
+    "category": "senior-phone",
+    "search_terms": {
+      "ja": [
+        "らくらくホン",
+        "シニア向け 携帯電話 大きいボタン"
+      ],
+      "en": [
+        "senior mobile phone large buttons"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "固定電話",
+      "子供向けキッズケータイ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "留守番電話のついた電話機",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "留守番電話機能付きの固定電話を探している",
+    "ideal_answer": "留守番電話機能付き電話機",
+    "reason": "機能が明示されている。既存の「音が大きく聞こえる電話」と機能軸で補完し合う。",
+    "category": "landline-phone",
+    "search_terms": {
+      "ja": [
+        "留守番電話 電話機",
+        "固定電話 留守電 迷惑電話対策"
+      ],
+      "en": [
+        "landline phone answering machine"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "歩くときに押していく荷物入れ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "シルバーカー(歩行補助車)を探している",
+    "ideal_answer": "シルバーカー(歩行車)",
+    "reason": "「押していく」+「荷物」でショッピングカートと紛らわしいが、歩行補助が主目的。",
+    "category": "rollator",
+    "search_terms": {
+      "ja": [
+        "シルバーカー 歩行車",
+        "手押し車 高齢者 買い物"
+      ],
+      "en": [
+        "rollator walker with seat"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ベビーカー",
+      "台車 運搬用"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "おふろで手すりみたいなの",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "浴室用の手すり(吸盤式または据置式)を探している",
+    "ideal_answer": "浴室用手すり",
+    "reason": "転倒防止の安全用品。設置方法(工事要否)は追加質問が要る。",
+    "category": "bath-handrail",
+    "search_terms": {
+      "ja": [
+        "浴室 手すり 吸盤",
+        "お風呂 手すり 工事不要"
+      ],
+      "en": [
+        "bathroom grab bar suction"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "タオル掛け"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "おふろのいすが低くてつらい",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "座面の高い風呂椅子を探している",
+    "ideal_answer": "高座面の風呂椅子(バスチェア)",
+    "reason": "困りごと(低くてつらい)から要件(座面が高い)を導く例。",
+    "category": "bath-chair",
+    "search_terms": {
+      "ja": [
+        "風呂椅子 高め",
+        "バスチェア 高座面 介護"
+      ],
+      "en": [
+        "high bath stool for elderly"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ベッドから起きるとき掴まるやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "ベッド用手すり(起き上がり補助)を探している",
+    "ideal_answer": "ベッド用手すり(介助バー)",
+    "reason": "動作と場所が具体的で断定できる。",
+    "category": "bed-handrail",
+    "search_terms": {
+      "ja": [
+        "ベッド 手すり 起き上がり",
+        "介助バー ベッド"
+      ],
+      "en": [
+        "bed assist rail"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "つまずかないようにする玄関のやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "段差解消スロープを探している",
+    "ideal_answer": "段差解消スロープ",
+    "reason": "転倒予防。マットと取り違えやすいので段差解消を固定する。",
+    "category": "threshold-ramp",
+    "search_terms": {
+      "ja": [
+        "段差スロープ 玄関",
+        "段差解消 スロープ 室内"
+      ],
+      "en": [
+        "threshold ramp"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "玄関マット"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "血の数値をはかる機械",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "血圧計か血糖値測定器のどちらかを探しているが特定できない",
+    "ideal_answer": "血圧を測るものと血糖値を測るものがあります。どちらをお探しですか？",
+    "reason": "「血の数値」では血圧か血糖か判別できない。健康機器の取り違えは避けるべきなので選択肢を返す。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "指にはさんで測るやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "パルスオキシメーター(血中酸素濃度計)を探している",
+    "ideal_answer": "パルスオキシメーター",
+    "reason": "装着方法から特定できる。使用目的の判断は医療者に委ねる前提で商品名まで答える。",
+    "category": "pulse-oximeter",
+    "search_terms": {
+      "ja": [
+        "パルスオキシメーター",
+        "血中酸素 測定 指"
+      ],
+      "en": [
+        "pulse oximeter"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "体温計",
+      "血圧計"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "腰にはるやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "腰痛用の貼付剤かサポーターを探しているが症状の原因が不明",
+    "ideal_answer": "湿布などの貼るタイプと、腰を支えるサポーターがあります。痛みが続く場合は医療機関へご相談ください。",
+    "reason": "痛みの原因が不明なまま製品を断定するのは適切でない。選択肢の提示に留める安全側の例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "くすりを飲みわすれないようにするやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "服薬管理用のピルケース・服薬カレンダーを探している",
+    "ideal_answer": "服薬管理ケース(お薬カレンダー)",
+    "reason": "飲み忘れ防止という管理用品で、薬そのものではないため断定して問題ない。",
+    "category": "pill-organizer",
+    "search_terms": {
+      "ja": [
+        "お薬カレンダー",
+        "ピルケース 1週間 曜日"
+      ],
+      "en": [
+        "weekly pill organizer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "サプリメント",
+      "医薬品"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "たちあがるとき楽な椅子",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "立ち上がり補助機能付きの椅子を探している",
+    "ideal_answer": "立ち上がり補助椅子",
+    "reason": "動作の困難から機能を導く。座椅子と区別する。",
+    "category": "lift-chair",
+    "search_terms": {
+      "ja": [
+        "立ち上がり補助 椅子",
+        "電動 リフトアップチェア 高齢者"
+      ],
+      "en": [
+        "lift assist chair for elderly"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "かるくて押しやすいそうじき",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "軽量のスティック掃除機を探している",
+    "ideal_answer": "軽量スティック掃除機",
+    "reason": "既存「軽い掃除機」を、押しやすさ(自走・取り回し)の軸で補完する。",
+    "category": "vacuum",
+    "search_terms": {
+      "ja": [
+        "スティック掃除機 軽い",
+        "掃除機 軽量 コードレス 高齢者"
+      ],
+      "en": [
+        "lightweight stick vacuum"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "業務用 大型",
+      "ロボット掃除機"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ふたが開けやすい容器",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "開けやすい保存容器またはオープナーを探している",
+    "ideal_answer": "開けやすい保存容器と、既存の瓶のふたを開ける道具(オープナー)のどちらをお探しですか？",
+    "reason": "対象が容器そのものか補助具かで商品が分かれるambiguous例。",
+    "category": "easy-open-container",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "びんのふたをあける道具",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "瓶のふた用オープナーを探している",
+    "ideal_answer": "ジャーオープナー(瓶ふた開け)",
+    "reason": "対象と動作が明確で断定できる。",
+    "category": "jar-opener",
+    "search_terms": {
+      "ja": [
+        "瓶 オープナー",
+        "ふた開け 道具 力がいらない"
+      ],
+      "en": [
+        "jar opener for weak hands"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "缶切り",
+      "栓抜き"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "にぎりやすい箸",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "握力が弱くても使いやすい箸(介護箸)を探している",
+    "ideal_answer": "介護用箸(持ちやすい箸)",
+    "reason": "身体機能に合わせた食器。通常の箸と区別する。",
+    "category": "adaptive-chopsticks",
+    "search_terms": {
+      "ja": [
+        "介護箸 持ちやすい",
+        "箸 バネ付き 握力"
+      ],
+      "en": [
+        "adaptive chopsticks for elderly"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "割り箸",
+      "菜箸"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "こぼれにくいおさら",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "縁が高く食べこぼしにくい介護用食器を探している",
+    "ideal_answer": "介護用食器(すくいやすい皿)",
+    "reason": "食事介助用品。子ども用食器と用途が近いが対象年齢が違う。",
+    "category": "adaptive-tableware",
+    "search_terms": {
+      "ja": [
+        "介護 食器 すくいやすい",
+        "皿 縁が高い 食べこぼし"
+      ],
+      "en": [
+        "adaptive plate high rim"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "洗濯物を高いところに干さなくていいやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "低い位置で干せる室内物干しを探している",
+    "ideal_answer": "室内物干しスタンド(低め・高さ調整可)",
+    "reason": "身体的な困りごとから商品要件(高さ)を導く例。",
+    "category": "laundry-rack",
+    "search_terms": {
+      "ja": [
+        "室内物干し 高さ調整",
+        "物干しスタンド 低い 腰に優しい"
+      ],
+      "en": [
+        "indoor laundry drying rack adjustable"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "重いふとんを軽くしたい",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "軽量の掛け布団を探している",
+    "ideal_answer": "軽量掛け布団",
+    "reason": "重さが負担という要件。羽毛/化繊の選択は追加質問。",
+    "category": "lightweight-futon",
+    "search_terms": {
+      "ja": [
+        "掛け布団 軽い",
+        "羽毛布団 軽量 シングル"
+      ],
+      "en": [
+        "lightweight comforter"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "あしもとだけあたためるやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "足元用のヒーター(パネルヒーター・フットウォーマー)を探している",
+    "ideal_answer": "足元ヒーター(フットウォーマー)",
+    "reason": "暖房範囲が限定されている。エアコンやこたつと区別する。",
+    "category": "foot-warmer",
+    "search_terms": {
+      "ja": [
+        "足元 ヒーター",
+        "フットウォーマー 電気 省エネ"
+      ],
+      "en": [
+        "foot warmer heater"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "エアコン",
+      "こたつ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "孫にお金をおくるとき使う袋",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "祝儀袋・ぽち袋を探している",
+    "ideal_answer": "ぽち袋(祝儀袋)",
+    "reason": "用途と相手が明確。封筒一般と区別する。",
+    "category": "money-envelope",
+    "search_terms": {
+      "ja": [
+        "ぽち袋",
+        "祝儀袋 お年玉"
+      ],
+      "en": [
+        "japanese money envelope"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "封筒 事務用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "庭の草をとる道具 腰を曲げないやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "立ったまま使える除草道具を探している",
+    "ideal_answer": "立ち作業用の除草道具(草取り器)",
+    "reason": "姿勢の制約が要件になっている例。",
+    "category": "weeding-tool",
+    "search_terms": {
+      "ja": [
+        "草取り 立ったまま",
+        "除草 道具 腰痛"
+      ],
+      "en": [
+        "stand up weeder tool"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "しゃがまずに靴をはくやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "ロング靴べらを探している",
+    "ideal_answer": "ロング靴べら(長い靴ベラ)",
+    "reason": "動作の制約から長さという要件を導く。",
+    "category": "long-shoehorn",
+    "search_terms": {
+      "ja": [
+        "靴べら ロング",
+        "長い靴べら 立ったまま"
+      ],
+      "en": [
+        "long handled shoehorn"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "薬を飲むときの水にとろみをつけるもの",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "嚥下補助のとろみ剤を探している",
+    "ideal_answer": "とろみ剤(嚥下補助食品)",
+    "reason": "嚥下困難への対応。食品カテゴリだが医薬品ではないため商品名まで答えてよい。",
+    "category": "thickening-agent",
+    "search_terms": {
+      "ja": [
+        "とろみ剤 介護",
+        "嚥下 とろみ 粉末"
+      ],
+      "en": [
+        "thickening powder for swallowing"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "片栗粉 調理用"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  }
+]

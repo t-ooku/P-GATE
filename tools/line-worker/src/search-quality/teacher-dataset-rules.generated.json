@@ -1,9 +1,12 @@
 {
-  "generated_at": "2026-08-05T04:29:02.382Z",
+  "generated_at": "2026-08-07T09:21:25.390Z",
   "source_batches": [
-    "2026-08-06-day1-batch-001.json"
+    "2026-08-06-day1-batch-001.json",
+    "2026-08-07-batch-002.json",
+    "2026-08-07-batch-003.json",
+    "2026-08-07-batch-004.json"
   ],
-  "entry_count": 99,
+  "entry_count": 220,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -1994,6 +1997,2827 @@
       "excluded_conditions": [],
       "confidence": 0.6,
       "source_file": "2026-08-06-day1-batch-001.json"
+    },
+    {
+      "content_hash": "080fc8a7f4b894fb03f61807411933f5c9cea61a9dd7e0a039f609f90bfab582",
+      "query_text": "えんぴつの芯が出るやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "mechanical-pencil",
+      "ideal_answer": "シャープペンシル",
+      "search_terms": {
+        "ja": [
+          "シャープペンシル",
+          "シャーペン 小学生"
+        ],
+        "en": [
+          "mechanical pencil"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "鉛筆削り",
+        "替え芯のみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "6c493f27087a26fec8558eb1071d7dfce96ce67ef83fb995de27e27e84b7b4d9",
+      "query_text": "字を消すやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "eraser",
+      "ideal_answer": "消しゴム",
+      "search_terms": {
+        "ja": [
+          "消しゴム",
+          "よく消える消しゴム"
+        ],
+        "en": [
+          "eraser"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "修正テープ",
+        "砂消し"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "c4c217d1b36d30d8eeee820977ca0d459d4fe53ad2ba1d65b68111cc7e71f04f",
+      "query_text": "まちがえたところを白くするやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "correction-tape",
+      "ideal_answer": "修正テープ",
+      "search_terms": {
+        "ja": [
+          "修正テープ",
+          "修正液"
+        ],
+        "en": [
+          "correction tape"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "消しゴム"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "0c4d51724f8b98de8bce635c13ec81277f13dd7fadd111d11781da92c19e7d66",
+      "query_text": "丸をかくやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "compass",
+      "ideal_answer": "コンパス(製図用)",
+      "search_terms": {
+        "ja": [
+          "コンパス 製図",
+          "コンパス 小学生 算数"
+        ],
+        "en": [
+          "drawing compass"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "方位磁針",
+        "登山用コンパス",
+        "方位磁石"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "1dd7ffa461418faf4bf8a48cbd72569dadc9901889b97f3411ac09ea45cf6d6c",
+      "query_text": "角をはかるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "protractor",
+      "ideal_answer": "分度器",
+      "search_terms": {
+        "ja": [
+          "分度器",
+          "分度器 小学生"
+        ],
+        "en": [
+          "protractor"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "8713dbd654ad44d3ecdceccff399839aced79cd67c02c9754c92f9d8e87c810d",
+      "query_text": "まっすぐ線ひくやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "ruler",
+      "ideal_answer": "定規",
+      "search_terms": {
+        "ja": [
+          "定規",
+          "ものさし 小学生"
+        ],
+        "en": [
+          "ruler"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "fbcafea3d3cff733ebe5506ddf1494da8ec565ef055884897954dc33b38c065f",
+      "query_text": "のりみたいなテープ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "glue-tape",
+      "ideal_answer": "テープのり",
+      "search_terms": {
+        "ja": [
+          "テープのり",
+          "テープのり 詰め替え"
+        ],
+        "en": [
+          "glue tape"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "液体のり",
+        "スティックのり"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "ffd4d18067d6617f9e9d8d048b7fcc1eb463446b8c488274bd4bfa4d72420048",
+      "query_text": "ふでばこ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "pencil-case",
+      "ideal_answer": "筆箱(ペンケース)",
+      "search_terms": {
+        "ja": [
+          "筆箱",
+          "ペンケース 小学生"
+        ],
+        "en": [
+          "pencil case"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "d17114a3da267ad57a649933652ebb6143b460bca6b9b708fd2c6ff135a17985",
+      "query_text": "下に敷くやつ 勉強",
+      "locale": "ja",
+      "persona": "child",
+      "category": "desk-pad",
+      "ideal_answer": "下敷き",
+      "search_terms": {
+        "ja": [
+          "下敷き",
+          "下敷き 小学生 B5"
+        ],
+        "en": [
+          "desk pad"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "マウスパッド",
+        "ランチョンマット"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "9eaa2d926a3db7431418c385acd267f4daad1de34041708f27554884629da90e",
+      "query_text": "プリントいれるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "clear-file",
+      "ideal_answer": "クリアファイル",
+      "search_terms": {
+        "ja": [
+          "クリアファイル",
+          "クリアファイル A4"
+        ],
+        "en": [
+          "clear file folder"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ファイルボックス",
+        "書類ケース 大型"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "eb69e755a4af59c5f9c8214a7002cd3e6b39af809a18b45e775b2a444d87ac78",
+      "query_text": "うわばき",
+      "locale": "ja",
+      "persona": "child",
+      "category": "indoor-shoes",
+      "ideal_answer": "上履き",
+      "search_terms": {
+        "ja": [
+          "上履き",
+          "上履き 白 小学生"
+        ],
+        "en": [
+          "school indoor shoes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "スニーカー 屋外",
+        "運動靴 外履き"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "b27115c9148e6c93ca57a8a081fac6143701124718be855a66b20dffec6df8e1",
+      "query_text": "たいそうぎをいれるふくろ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "drawstring-bag",
+      "ideal_answer": "体操着袋(巾着袋)",
+      "search_terms": {
+        "ja": [
+          "体操着袋",
+          "巾着袋 小学生"
+        ],
+        "en": [
+          "drawstring bag for school"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "ea0f05990a56975e3e1e237e82880ee982f92619167700a16d974db81b15e8c5",
+      "query_text": "きゅうしょくのときつけるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "school-apron",
+      "ideal_answer": "給食着(給食エプロン)",
+      "search_terms": {
+        "ja": [
+          "給食着",
+          "給食エプロン 子供"
+        ],
+        "en": [
+          "school lunch apron"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "4a27ebc79a5ddc22ca14ee118382b5b9451c32346f197183a2073948c5980f01",
+      "query_text": "ランドセルにつけるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ランドセルに何を付けたいですか？(防犯ブザー、キーホルダー、反射材、雨カバーなど)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "aaee991e831f16cf96c818c3de096a85ff4c7cd20b6bdaf18f2072e555105f40",
+      "query_text": "あぶないときならすやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "personal-alarm",
+      "ideal_answer": "防犯ブザー",
+      "search_terms": {
+        "ja": [
+          "防犯ブザー",
+          "防犯ブザー 小学生 ランドセル"
+        ],
+        "en": [
+          "personal safety alarm"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "火災報知器",
+        "目覚まし時計"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "b0e5c2f355d902d2cda91ce2ecc464dc187656baa420129a8407fc1f36f74889",
+      "query_text": "雨の日にランドセルにかぶせるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "school-bag-rain-cover",
+      "ideal_answer": "ランドセル用レインカバー",
+      "search_terms": {
+        "ja": [
+          "ランドセルカバー 雨",
+          "ランドセル レインカバー"
+        ],
+        "en": [
+          "school bag rain cover"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "レインコート",
+        "傘"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "e1c9a6c9c02643939d846680c9e90de119958e36fcadc4e93ef717ad3469fbc7",
+      "query_text": "サッカーのすねにつけるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "shin-guard",
+      "ideal_answer": "レガース(シンガード)",
+      "search_terms": {
+        "ja": [
+          "レガース サッカー",
+          "シンガード ジュニア"
+        ],
+        "en": [
+          "soccer shin guard"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "a980740fe44f05be3453344b0d4b2b6ea893ca039bda60b6a11b0d39fea40469",
+      "query_text": "バスケのシューズ 音がキュッてなるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "basketball-shoes",
+      "ideal_answer": "バスケットボールシューズ",
+      "search_terms": {
+        "ja": [
+          "バスケットシューズ ジュニア",
+          "バッシュ 子供"
+        ],
+        "en": [
+          "basketball shoes kids"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ランニングシューズ",
+        "スパイク"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "619749415dd675fc8a409a8735f622ee50b5a1ee9ff52b107a3261d2ea405c20",
+      "query_text": "水泳のときに耳に入れるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "ear-plugs",
+      "ideal_answer": "水泳用耳栓",
+      "search_terms": {
+        "ja": [
+          "耳栓 水泳",
+          "スイミング 耳栓 子供"
+        ],
+        "en": [
+          "swimming ear plugs"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "睡眠用耳栓",
+        "ライブ用耳栓"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "28843e9a9abb99ace8e112471478e67af2e98846ab96b8810c277e8960ef3023",
+      "query_text": "プールでつけるゴーグル",
+      "locale": "ja",
+      "persona": "child",
+      "category": "swim-goggles",
+      "ideal_answer": "水泳用ゴーグル",
+      "search_terms": {
+        "ja": [
+          "スイミングゴーグル 子供",
+          "水泳 ゴーグル ジュニア"
+        ],
+        "en": [
+          "swim goggles kids"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "スキーゴーグル",
+        "保護メガネ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "6cbf093be93ba370d7ed829edcb98689ed8621a496b22b45f7e3c9cedf9a090f",
+      "query_text": "なわとび",
+      "locale": "ja",
+      "persona": "child",
+      "category": "jump-rope",
+      "ideal_answer": "縄跳び(なわとび)",
+      "search_terms": {
+        "ja": [
+          "縄跳び 子供",
+          "なわとび 小学生"
+        ],
+        "en": [
+          "jump rope kids"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "6e63fcdbda90f2cfd63a29040491d155c332ade1285d17f25285980eed548aa3",
+      "query_text": "さかあがりの練習するやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "gymnastics-aid",
+      "ideal_answer": "逆上がり補助ベルト(鉄棒練習器具)",
+      "search_terms": {
+        "ja": [
+          "逆上がり 補助ベルト",
+          "鉄棒 練習 補助"
+        ],
+        "en": [
+          "gymnastics pull up aid"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "8b9973c20bf7fa6db1356f0d60aa984cede00f35ae941ebf30d65708bfbc5068",
+      "query_text": "野球のときに手にはめるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "baseball-glove",
+      "ideal_answer": "野球グローブ(グラブ)",
+      "search_terms": {
+        "ja": [
+          "野球 グローブ 少年用",
+          "軟式 グラブ ジュニア"
+        ],
+        "en": [
+          "baseball glove youth"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "de829b9e64d8cdccfc744fff268d78a0f7dd6f40aa1077f7e76b1b96f45ae3b1",
+      "query_text": "スイッチのカセット入れるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "game-card-case",
+      "ideal_answer": "Switch用ゲームカードケース",
+      "search_terms": {
+        "ja": [
+          "Switch カードケース",
+          "スイッチ ソフト 収納"
+        ],
+        "en": [
+          "switch game card case"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "本体ケース",
+        "収納バッグ 本体用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "35434a2b236992ec19a3ee476afe42d49a9a9a86f81925a2e3605fb159a2e40d",
+      "query_text": "ゲームしながら充電できるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "charging-cable",
+      "ideal_answer": "長い充電ケーブル、または充電スタンドのどちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "4b9389ff3e846680121a46de2c57f9bc0feee5c7a8463721fc009fc921350719",
+      "query_text": "画面がバキバキにならないようにするやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "screen-protector",
+      "ideal_answer": "画面保護ガラスフィルム",
+      "search_terms": {
+        "ja": [
+          "ガラスフィルム",
+          "画面保護フィルム"
+        ],
+        "en": [
+          "screen protector"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "スマホケース 背面のみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "a07e787315329a0debac0865fe5bec8517c5f5fce32f439f833397118e37f1c5",
+      "query_text": "カードをまもるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "card-sleeve",
+      "ideal_answer": "カードスリーブ(トレカ用)",
+      "search_terms": {
+        "ja": [
+          "カードスリーブ トレカ",
+          "トレカ ローダー"
+        ],
+        "en": [
+          "trading card sleeves"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "名刺入れ",
+        "カードケース 財布"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "e7f428b6091ca746302e8b13754c0dec19a45336c749fe5f13129e5cec031d9a",
+      "query_text": "ガチャガチャのちいさいの",
+      "locale": "ja",
+      "persona": "child",
+      "category": "capsule-toy",
+      "ideal_answer": "カプセルトイ(ガチャガチャ景品)",
+      "search_terms": {
+        "ja": [
+          "ガチャガチャ 景品",
+          "カプセルトイ ミニチュア"
+        ],
+        "en": [
+          "capsule toy"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "a97f289f0f9a50ac71143f237f83bea644c06ce72e8746a75d2d59dc1cf456c3",
+      "query_text": "組み立てるブロック",
+      "locale": "ja",
+      "persona": "child",
+      "category": "building-blocks",
+      "ideal_answer": "ブロック玩具",
+      "search_terms": {
+        "ja": [
+          "ブロック おもちゃ",
+          "知育ブロック"
+        ],
+        "en": [
+          "building blocks toy"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ジグソーパズル"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "af059296f1ba99da8e1c1131ad570918a09907042d578bd2a05328c4386e6c95",
+      "query_text": "スライムつくるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "slime-kit",
+      "ideal_answer": "スライム手作りキット",
+      "search_terms": {
+        "ja": [
+          "スライム キット",
+          "スライム 手作り 材料"
+        ],
+        "en": [
+          "slime making kit"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "e7923dc1c534b4f70f6ee80947c0a926f4dacf781546ac114ac97d6299d7afaf",
+      "query_text": "ひとりでにうごくおもちゃの車",
+      "locale": "ja",
+      "persona": "child",
+      "category": "rc-car",
+      "ideal_answer": "ラジコンカー",
+      "search_terms": {
+        "ja": [
+          "ラジコンカー 子供",
+          "RCカー 初心者"
+        ],
+        "en": [
+          "rc car for kids"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ミニカー 手転がし"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "42c64865f3b0a078480e8a27a1f3637feb0461c4b6a758fe26bef56b7a095553",
+      "query_text": "空にとばすやつ カメラついてる",
+      "locale": "ja",
+      "persona": "child",
+      "category": "drone",
+      "ideal_answer": "カメラ付きドローン(トイドローン)",
+      "search_terms": {
+        "ja": [
+          "トイドローン カメラ付き",
+          "ドローン 初心者 子供"
+        ],
+        "en": [
+          "camera drone for kids"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "凧",
+        "紙飛行機"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "394a6901ab877dede93a511ed6fe1a65f4f17a1f91282c3ede3ded8f94a3eb45",
+      "query_text": "こおりがとけないみずとう",
+      "locale": "ja",
+      "persona": "child",
+      "category": "water-bottle",
+      "ideal_answer": "保冷水筒(ステンレスボトル)",
+      "search_terms": {
+        "ja": [
+          "水筒 保冷 子供",
+          "ステンレスボトル 保冷 直飲み"
+        ],
+        "en": [
+          "insulated water bottle kids"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "保温専用",
+        "プラスチック 保冷なし"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "7619392c58f8542b56e4ec79da26f65572630f52db2c727db3868c84afdf296b",
+      "query_text": "首にかけるすずしいやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "neck-cooler",
+      "ideal_answer": "ネッククーラー",
+      "search_terms": {
+        "ja": [
+          "ネッククーラー",
+          "首掛け 冷却 子供"
+        ],
+        "en": [
+          "neck cooler"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ネックファン 送風のみ"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "445af08d6825f24e55eede86394399e7a7743ccf30370177f289231f37aa3445",
+      "query_text": "かさをいれるふくろ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "umbrella-case",
+      "ideal_answer": "傘カバー(折りたたみ傘用ケース)",
+      "search_terms": {
+        "ja": [
+          "傘カバー",
+          "折りたたみ傘 ケース"
+        ],
+        "en": [
+          "umbrella case"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "傘立て"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "d1dbf304b5c7947a27c61e6c6c9f044bd2d8415b110ef6ac6d288d0cce12ff8a",
+      "query_text": "くつのなかにいれるやつ くさくならない",
+      "locale": "ja",
+      "persona": "child",
+      "category": "shoe-deodorizer",
+      "ideal_answer": "靴用消臭剤",
+      "search_terms": {
+        "ja": [
+          "靴 消臭剤",
+          "シューズ 脱臭 子供"
+        ],
+        "en": [
+          "shoe deodorizer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "インソール 衝撃吸収のみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "9a036c7a7575b0b9d141e3570e7f5326b03555d9baaec61c98eea716d334af60",
+      "query_text": "自転車につけるライト",
+      "locale": "ja",
+      "persona": "child",
+      "category": "bike-light",
+      "ideal_answer": "自転車用ライト",
+      "search_terms": {
+        "ja": [
+          "自転車 ライト",
+          "自転車 前照灯 USB充電"
+        ],
+        "en": [
+          "bicycle light"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "懐中電灯 ハンディ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "e7abecf7c3f73d43db817c510f218bb8e9bcfc21621bf55082b60d0a0a65e27b",
+      "query_text": "じてんしゃのかぎ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "bike-lock",
+      "ideal_answer": "自転車用ロック(鍵)",
+      "search_terms": {
+        "ja": [
+          "自転車 鍵",
+          "自転車 ワイヤーロック"
+        ],
+        "en": [
+          "bicycle lock"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "玄関 鍵",
+        "スマートロック"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "8934c955658eed5951e020aed040bf8ded055af205100d63f4a47e649e69bceb",
+      "query_text": "あたまにかぶるやつ 自転車",
+      "locale": "ja",
+      "persona": "child",
+      "category": "helmet",
+      "ideal_answer": "自転車用ヘルメット",
+      "search_terms": {
+        "ja": [
+          "自転車 ヘルメット 子供",
+          "キッズ ヘルメット 自転車"
+        ],
+        "en": [
+          "kids bike helmet"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "工事用ヘルメット",
+        "バイク用フルフェイス"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "091a56d5e5cc97a78f29d38756874099f5c5aed5ce9d5a30db90d75a751fcb21",
+      "query_text": "ひかるくつひも",
+      "locale": "ja",
+      "persona": "child",
+      "category": "led-shoelaces",
+      "ideal_answer": "LED発光シューレース(光る靴ひも)",
+      "search_terms": {
+        "ja": [
+          "光る靴ひも",
+          "LED シューレース"
+        ],
+        "en": [
+          "led shoelaces"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "光る靴 本体"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "1b63ef6db288dbcc4fef73373898706f1cd9a46d43b14b480996e83c462cc8b1",
+      "query_text": "暗記するときに使う赤いシート",
+      "locale": "ja",
+      "persona": "child",
+      "category": "memorization-sheet",
+      "ideal_answer": "暗記用赤シート",
+      "search_terms": {
+        "ja": [
+          "赤シート 暗記",
+          "暗記シート 赤"
+        ],
+        "en": [
+          "red memorization sheet"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "下敷き 通常"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "5262e2ef12381f1fc39ccd80451f9a793161446dabe87e5170327fcce7e38076",
+      "query_text": "時間はかるやつ 勉強",
+      "locale": "ja",
+      "persona": "child",
+      "category": "study-timer",
+      "ideal_answer": "学習用タイマー",
+      "search_terms": {
+        "ja": [
+          "勉強 タイマー",
+          "学習タイマー 静音"
+        ],
+        "en": [
+          "study timer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ストップウォッチ 競技用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "a07f64849d50e7e0343a5eb4958e3523823364b519611735f2619e62dec8c77b",
+      "query_text": "音がきこえなくなるやつ 勉強",
+      "locale": "ja",
+      "persona": "child",
+      "category": "noise-cancelling-headphones",
+      "ideal_answer": "完全に音を遮る防音イヤーマフと、音楽も聴けるノイズキャンセリングヘッドホンのどちらがよいですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.45,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "8e165ca2676fbb0b00f73e8a3b875a896464f123afd31405e9a4117adff7bbb3",
+      "query_text": "すわるところが痛くならないクッション 勉強",
+      "locale": "ja",
+      "persona": "child",
+      "category": "seat-cushion",
+      "ideal_answer": "座り心地改善クッション(座布団)",
+      "search_terms": {
+        "ja": [
+          "椅子 クッション 勉強",
+          "座布団 長時間 疲れにくい"
+        ],
+        "en": [
+          "seat cushion for studying"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "b5d05a827991ffa0b67dfb8b5c1d96346c254196e44fc24790729669b5feac7e",
+      "query_text": "スマホ見ないようにする箱",
+      "locale": "ja",
+      "persona": "child",
+      "category": "phone-lock-box",
+      "ideal_answer": "タイムロックコンテナ(スマホ封印ボックス)",
+      "search_terms": {
+        "ja": [
+          "タイムロックコンテナ",
+          "スマホ 封印 ボックス 勉強"
+        ],
+        "en": [
+          "time lock container phone"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "金庫 貴重品"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-002.json"
+    },
+    {
+      "content_hash": "f625b10a9e0ae86199a7e9fa2979f3a34adaf47e0baab2d1eed481e8c42af4f8",
+      "query_text": "小さい字を大きくして見るやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "magnifier",
+      "ideal_answer": "拡大鏡(ルーペ)",
+      "search_terms": {
+        "ja": [
+          "拡大鏡 ルーペ",
+          "ルーペ 手持ち 読書"
+        ],
+        "en": [
+          "magnifying glass for reading"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "老眼鏡",
+        "双眼鏡",
+        "顕微鏡"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "84e7f128b6613851411dd1cd9f56f4541b13efb1157593a93a0f1d2681865e68",
+      "query_text": "新聞を読むときのめがね",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "reading-glasses",
+      "ideal_answer": "老眼鏡(リーディンググラス)",
+      "search_terms": {
+        "ja": [
+          "老眼鏡",
+          "リーディンググラス 軽量"
+        ],
+        "en": [
+          "reading glasses"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "サングラス",
+        "度入りメガネ 近視用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "24a304f95c497d7e940186b7e902e95f7404b6ebfbee483e0424792f8aa7e3c9",
+      "query_text": "首からさげるルーペ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "magnifier",
+      "ideal_answer": "首掛けルーペ(ネックルーペ)",
+      "search_terms": {
+        "ja": [
+          "ネックルーペ",
+          "首掛け ルーペ 両手が使える"
+        ],
+        "en": [
+          "neck magnifier hands free"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "d25206045ffb0e4895bcb4072bb99c683d8ddb1fe69a263eff02469376a208f4",
+      "query_text": "手元を明るくするあかり",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "desk-lamp",
+      "ideal_answer": "手元用デスクライト",
+      "search_terms": {
+        "ja": [
+          "デスクライト 手元 明るい",
+          "LED スタンドライト 読書"
+        ],
+        "en": [
+          "desk reading lamp"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "懐中電灯",
+        "シーリングライト"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "6882d7dbf933b2d23beaa966a9f452d8843b3d93ed3e777c5a3a29bc2846078b",
+      "query_text": "字が大きいカレンダー",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "calendar",
+      "ideal_answer": "大文字カレンダー(見やすいカレンダー)",
+      "search_terms": {
+        "ja": [
+          "カレンダー 文字が大きい",
+          "見やすい カレンダー 壁掛け"
+        ],
+        "en": [
+          "large print calendar"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "手帳",
+        "卓上カレンダー 小型"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "b7cbb68a70e37d7b917f468cdf3a8d360f90ea345a3b5b754dd2ac2dbb7a8c99",
+      "query_text": "じかんが大きく出るとけい",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "digital-clock",
+      "ideal_answer": "大画面デジタル時計",
+      "search_terms": {
+        "ja": [
+          "デジタル時計 大画面",
+          "置き時計 見やすい 大きい表示"
+        ],
+        "en": [
+          "large display digital clock"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "e7229f9b7c657ab8902a1451529e1383dde422f8897ed233f89657ab2ca493c9",
+      "query_text": "耳が遠くなってきたので音を大きくするやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "集音器(家電)と補聴器(医療機器)では扱いが異なります。まずは耳鼻科でご相談のうえ、用途をお聞かせください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "5e5e24feccf1909f6b499ad8a9a4cda2ced30b7599addd24f4e4a0a0c7f3ba41",
+      "query_text": "テレビの音だけ大きくするやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "tv-speaker",
+      "ideal_answer": "テレビ用手元スピーカー",
+      "search_terms": {
+        "ja": [
+          "テレビ 手元スピーカー",
+          "お手元スピーカー ワイヤレス"
+        ],
+        "en": [
+          "tv wireless speaker for hearing"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "補聴器",
+        "集音器"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "1e9eb239dd16a4270b7a6ff1a6540f099abe3ac0dac492f19eb839a052f7a463",
+      "query_text": "ボタンが大きい携帯電話",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "senior-phone",
+      "ideal_answer": "シニア向け携帯電話(かんたん操作)",
+      "search_terms": {
+        "ja": [
+          "らくらくホン",
+          "シニア向け 携帯電話 大きいボタン"
+        ],
+        "en": [
+          "senior mobile phone large buttons"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "固定電話",
+        "子供向けキッズケータイ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "d49c07f598ff5648f0dd2844d52833b924060b8736ade23bdbd54d59bca1a577",
+      "query_text": "留守番電話のついた電話機",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "landline-phone",
+      "ideal_answer": "留守番電話機能付き電話機",
+      "search_terms": {
+        "ja": [
+          "留守番電話 電話機",
+          "固定電話 留守電 迷惑電話対策"
+        ],
+        "en": [
+          "landline phone answering machine"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "142afcef2c151c8cbfb8fae849666282ef6a5f78a8cc10a0580f2df5cac2fddb",
+      "query_text": "歩くときに押していく荷物入れ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "rollator",
+      "ideal_answer": "シルバーカー(歩行車)",
+      "search_terms": {
+        "ja": [
+          "シルバーカー 歩行車",
+          "手押し車 高齢者 買い物"
+        ],
+        "en": [
+          "rollator walker with seat"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ベビーカー",
+        "台車 運搬用"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "80be5517b77c1937663366a1f2a8476e852a5f839676e072cd421c9da1c9fc9e",
+      "query_text": "おふろで手すりみたいなの",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "bath-handrail",
+      "ideal_answer": "浴室用手すり",
+      "search_terms": {
+        "ja": [
+          "浴室 手すり 吸盤",
+          "お風呂 手すり 工事不要"
+        ],
+        "en": [
+          "bathroom grab bar suction"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "タオル掛け"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "e809e539e6986c64d55d56d123355a2971f8cd553f12e4d047d9a409476e7a76",
+      "query_text": "おふろのいすが低くてつらい",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "bath-chair",
+      "ideal_answer": "高座面の風呂椅子(バスチェア)",
+      "search_terms": {
+        "ja": [
+          "風呂椅子 高め",
+          "バスチェア 高座面 介護"
+        ],
+        "en": [
+          "high bath stool for elderly"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "89ba8dac2fdd0c0db5829ee0f38d27db8e1e70299e0af3a8b980a67e123926c5",
+      "query_text": "ベッドから起きるとき掴まるやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "bed-handrail",
+      "ideal_answer": "ベッド用手すり(介助バー)",
+      "search_terms": {
+        "ja": [
+          "ベッド 手すり 起き上がり",
+          "介助バー ベッド"
+        ],
+        "en": [
+          "bed assist rail"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "f2621c2b488fe0328ba25290492607f1fdd866091dfb0f39191299cc9f921797",
+      "query_text": "つまずかないようにする玄関のやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "threshold-ramp",
+      "ideal_answer": "段差解消スロープ",
+      "search_terms": {
+        "ja": [
+          "段差スロープ 玄関",
+          "段差解消 スロープ 室内"
+        ],
+        "en": [
+          "threshold ramp"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "玄関マット"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "f4f262b2ac3daabb9c70a7febdcb4efb955b7ec8bd872f90f04c524f424f29bc",
+      "query_text": "血の数値をはかる機械",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "血圧を測るものと血糖値を測るものがあります。どちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "7f9c60c2cc9a436a3ae1aed619f613fcedbafe5416984f5f470b151f94cd26e9",
+      "query_text": "指にはさんで測るやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "pulse-oximeter",
+      "ideal_answer": "パルスオキシメーター",
+      "search_terms": {
+        "ja": [
+          "パルスオキシメーター",
+          "血中酸素 測定 指"
+        ],
+        "en": [
+          "pulse oximeter"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "体温計",
+        "血圧計"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "d540a1f56b190ff6b05cfbbe56894b177370e76b03855cfd76ce272903974fff",
+      "query_text": "腰にはるやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "湿布などの貼るタイプと、腰を支えるサポーターがあります。痛みが続く場合は医療機関へご相談ください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "7e43ed6b430ffe5505fc9692b3cb34874ef14345b815aeee5047404aea3c396c",
+      "query_text": "くすりを飲みわすれないようにするやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "pill-organizer",
+      "ideal_answer": "服薬管理ケース(お薬カレンダー)",
+      "search_terms": {
+        "ja": [
+          "お薬カレンダー",
+          "ピルケース 1週間 曜日"
+        ],
+        "en": [
+          "weekly pill organizer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "サプリメント",
+        "医薬品"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "747adb32898c08ee0c4d2dff0f580c0d09ac9f0dd00c27164106479a317495d7",
+      "query_text": "たちあがるとき楽な椅子",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "lift-chair",
+      "ideal_answer": "立ち上がり補助椅子",
+      "search_terms": {
+        "ja": [
+          "立ち上がり補助 椅子",
+          "電動 リフトアップチェア 高齢者"
+        ],
+        "en": [
+          "lift assist chair for elderly"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "f6cf6f756499747585471ab8e00abca5bfe56101d1b80ecf0a9411dc53a8ea36",
+      "query_text": "かるくて押しやすいそうじき",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "vacuum",
+      "ideal_answer": "軽量スティック掃除機",
+      "search_terms": {
+        "ja": [
+          "スティック掃除機 軽い",
+          "掃除機 軽量 コードレス 高齢者"
+        ],
+        "en": [
+          "lightweight stick vacuum"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "業務用 大型",
+        "ロボット掃除機"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "8d17c04521c1c96c60754bedf56f8671b968d27d05459d9d0bc8bdeee8845644",
+      "query_text": "ふたが開けやすい容器",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "easy-open-container",
+      "ideal_answer": "開けやすい保存容器と、既存の瓶のふたを開ける道具(オープナー)のどちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "f3b41b8777c7a678ad49c25901a62392f216690cd24c6ed3a78707cfb338fff0",
+      "query_text": "びんのふたをあける道具",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "jar-opener",
+      "ideal_answer": "ジャーオープナー(瓶ふた開け)",
+      "search_terms": {
+        "ja": [
+          "瓶 オープナー",
+          "ふた開け 道具 力がいらない"
+        ],
+        "en": [
+          "jar opener for weak hands"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "缶切り",
+        "栓抜き"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "88c7c2306e33565bc322f4fe5a64a8a83fd1d9445c5a4eadd6a727ddc8d1b40c",
+      "query_text": "にぎりやすい箸",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "adaptive-chopsticks",
+      "ideal_answer": "介護用箸(持ちやすい箸)",
+      "search_terms": {
+        "ja": [
+          "介護箸 持ちやすい",
+          "箸 バネ付き 握力"
+        ],
+        "en": [
+          "adaptive chopsticks for elderly"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "割り箸",
+        "菜箸"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "546918c0986df03213ea0aa27d8e181cea39f473df0f3ffd045bb908c820b3c2",
+      "query_text": "こぼれにくいおさら",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "adaptive-tableware",
+      "ideal_answer": "介護用食器(すくいやすい皿)",
+      "search_terms": {
+        "ja": [
+          "介護 食器 すくいやすい",
+          "皿 縁が高い 食べこぼし"
+        ],
+        "en": [
+          "adaptive plate high rim"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "bf700cfccbe8dce24e182a4d794b15667b4037a4f6a20f9701ad636bf7340fcc",
+      "query_text": "洗濯物を高いところに干さなくていいやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "laundry-rack",
+      "ideal_answer": "室内物干しスタンド(低め・高さ調整可)",
+      "search_terms": {
+        "ja": [
+          "室内物干し 高さ調整",
+          "物干しスタンド 低い 腰に優しい"
+        ],
+        "en": [
+          "indoor laundry drying rack adjustable"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "0e5ff6b877dd4740ffecaf1ee7bf098ee83f49de721642694ae6e48eac54b55f",
+      "query_text": "重いふとんを軽くしたい",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "lightweight-futon",
+      "ideal_answer": "軽量掛け布団",
+      "search_terms": {
+        "ja": [
+          "掛け布団 軽い",
+          "羽毛布団 軽量 シングル"
+        ],
+        "en": [
+          "lightweight comforter"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "717613f793da8edf3b9dc2f44cd1237fbc09ab908e1761767c5907032a6dc993",
+      "query_text": "あしもとだけあたためるやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "foot-warmer",
+      "ideal_answer": "足元ヒーター(フットウォーマー)",
+      "search_terms": {
+        "ja": [
+          "足元 ヒーター",
+          "フットウォーマー 電気 省エネ"
+        ],
+        "en": [
+          "foot warmer heater"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "エアコン",
+        "こたつ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "c64d20d00a61b18b405030b98b43a1daff73ab2bd7ad65ced2c4a32a7e7073ca",
+      "query_text": "孫にお金をおくるとき使う袋",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "money-envelope",
+      "ideal_answer": "ぽち袋(祝儀袋)",
+      "search_terms": {
+        "ja": [
+          "ぽち袋",
+          "祝儀袋 お年玉"
+        ],
+        "en": [
+          "japanese money envelope"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "封筒 事務用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "9fb4fbb0d81162e45b7ab56cddcdac1f638849e34a0c7a7fcf4658d7397e391f",
+      "query_text": "庭の草をとる道具 腰を曲げないやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "weeding-tool",
+      "ideal_answer": "立ち作業用の除草道具(草取り器)",
+      "search_terms": {
+        "ja": [
+          "草取り 立ったまま",
+          "除草 道具 腰痛"
+        ],
+        "en": [
+          "stand up weeder tool"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "1221713b87483c4aece606c8eafcb9df0ba2e8c268e72b71bb3cc5bd1c989341",
+      "query_text": "しゃがまずに靴をはくやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "long-shoehorn",
+      "ideal_answer": "ロング靴べら(長い靴ベラ)",
+      "search_terms": {
+        "ja": [
+          "靴べら ロング",
+          "長い靴べら 立ったまま"
+        ],
+        "en": [
+          "long handled shoehorn"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "520ef168853d9ff4f1626b41f0406533874eb57fef3ae9fddb1233d82f476bb7",
+      "query_text": "薬を飲むときの水にとろみをつけるもの",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "thickening-agent",
+      "ideal_answer": "とろみ剤(嚥下補助食品)",
+      "search_terms": {
+        "ja": [
+          "とろみ剤 介護",
+          "嚥下 とろみ 粉末"
+        ],
+        "en": [
+          "thickening powder for swallowing"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "片栗粉 調理用"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-003.json"
+    },
+    {
+      "content_hash": "de9f61ed92605a2e604165aa0d595e41445cebd18865a6c0f8cb056136f6b72b",
+      "query_text": "赤ちゃんが寝てる間に見張るカメラ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "baby-monitor",
+      "ideal_answer": "ベビーモニター(見守りカメラ)",
+      "search_terms": {
+        "ja": [
+          "ベビーモニター",
+          "見守りカメラ 赤ちゃん"
+        ],
+        "en": [
+          "baby monitor camera"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "防犯カメラ 屋外",
+        "ペットカメラ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "b5decc23697e1e7bb8e19ae8f2b0553c437ddd22f2bd76ff49201f5dd2fadc8b",
+      "query_text": "哺乳瓶を消毒するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bottle-sterilizer",
+      "ideal_answer": "哺乳瓶消毒器(電子レンジ式・スチーム式)",
+      "search_terms": {
+        "ja": [
+          "哺乳瓶 消毒器",
+          "哺乳瓶 除菌 レンジ"
+        ],
+        "en": [
+          "baby bottle sterilizer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "92f1c5999da56686b7bcb641ce9340f752de3b57e0e6f172facc6b9dae5c6b38",
+      "query_text": "子どもが引き出しを開けないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "child-safety-lock",
+      "ideal_answer": "チャイルドロック(引き出し・扉用)",
+      "search_terms": {
+        "ja": [
+          "チャイルドロック 引き出し",
+          "いたずら防止 ロック ベビー"
+        ],
+        "en": [
+          "child safety cabinet lock"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "257331fd761d960dcbaa50ad1268246845407aa736263d7ae545bd0c3466c52e",
+      "query_text": "ベビーカーにつける日よけ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "stroller-accessory",
+      "ideal_answer": "ベビーカー用サンシェード(日よけ)",
+      "search_terms": {
+        "ja": [
+          "ベビーカー 日よけ",
+          "ベビーカー サンシェード UVカット"
+        ],
+        "en": [
+          "stroller sun shade"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "56d0a4f155fd216af30c481b93e3910168d0cb6d7e1075b1cbaf8249c6a65b3b",
+      "query_text": "離乳食を小分けにして冷凍する容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "food-storage",
+      "ideal_answer": "離乳食 小分け冷凍トレー",
+      "search_terms": {
+        "ja": [
+          "離乳食 冷凍 小分け",
+          "フリージングトレー 離乳食"
+        ],
+        "en": [
+          "baby food freezer tray"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "217621b3930205983c255ed799935940600224de61e983d8905751f9d7dc1dac",
+      "query_text": "野菜を細くするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "slicer",
+      "ideal_answer": "スライサー(千切り器)",
+      "search_terms": {
+        "ja": [
+          "スライサー 千切り",
+          "野菜 千切り器"
+        ],
+        "en": [
+          "vegetable julienne slicer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "フードプロセッサー"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "e6f05460b38aa9808e038f6dd0656eacef7dd793dd9172ef9e2a6193039c26a0",
+      "query_text": "油を使わずに揚げ物ができるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "air-fryer",
+      "ideal_answer": "ノンフライヤー(エアフライヤー)",
+      "search_terms": {
+        "ja": [
+          "ノンフライヤー",
+          "エアフライヤー 油不要"
+        ],
+        "en": [
+          "air fryer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "電気フライヤー 油使用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "3a3928901f6ef2db2c160f35c92284c3d5119b209f4f7aaf1314c377cb7a5500",
+      "query_text": "低い温度でじっくり火を通す機械",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sous-vide",
+      "ideal_answer": "低温調理器(サーキュレーター式)",
+      "search_terms": {
+        "ja": [
+          "低温調理器",
+          "サーキュレーター 低温調理"
+        ],
+        "en": [
+          "sous vide cooker"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "b0f65aa27689a491c926075251bda2523da1887bef392dcbec274a55861ac385",
+      "query_text": "ごはんを保温しないで冷凍する容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rice-container",
+      "ideal_answer": "ごはん冷凍용保存容器",
+      "search_terms": {
+        "ja": [
+          "ご飯 冷凍 容器",
+          "ごはん 保存容器 レンジ 一膳"
+        ],
+        "en": [
+          "rice freezer container"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "炊飯器",
+        "保温ジャー"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "7d7f6378461b3d9cac950cc7ddd84fac7b219f073f1011e1eb316b05282451e2",
+      "query_text": "鍋のふたを立てておくやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lid-holder",
+      "ideal_answer": "鍋ふたスタンド(ふた置き)",
+      "search_terms": {
+        "ja": [
+          "鍋ふた スタンド",
+          "鍋 蓋置き キッチン"
+        ],
+        "en": [
+          "pot lid holder stand"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "f7ff67da1d796bd7e899143216463a4c889ed5379aa64859042d4355ceab4ff3",
+      "query_text": "排水口のぬめりをとるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "drain-cleaner",
+      "ideal_answer": "薬剤で溶かすタイプと、ブラシでこするタイプがあります。どちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "cb892ca2169f0c17b3fb2bc4c9d8b4d92b4f3cd9e31fc22c00d59806ba1bfcff",
+      "query_text": "コンロの周りの油汚れを落とすもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "kitchen-cleaner",
+      "ideal_answer": "キッチン用油汚れ洗剤",
+      "search_terms": {
+        "ja": [
+          "キッチン 油汚れ 洗剤",
+          "換気扇 掃除 洗剤"
+        ],
+        "en": [
+          "kitchen degreaser cleaner"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "浴室用洗剤",
+        "トイレ用洗剤"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "75134abf2c65a6c3179c3cde331fb89687ec77ba913e3003d717a71119364a87",
+      "query_text": "窓の結露をとるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "condensation-wiper",
+      "ideal_answer": "結露取りワイパー",
+      "search_terms": {
+        "ja": [
+          "結露取りワイパー",
+          "窓 結露 スクイジー"
+        ],
+        "en": [
+          "window condensation squeegee"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "除湿機"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "b3a1c6ff34f63eda08986c704b9853d7dfb14902f62d72c8d68221d0b412aa41",
+      "query_text": "お風呂のカビを防ぐやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mold-prevention",
+      "ideal_answer": "浴室用防カビ剤",
+      "search_terms": {
+        "ja": [
+          "お風呂 防カビ 燻煙",
+          "浴室 防カビ剤"
+        ],
+        "en": [
+          "bathroom mold prevention"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "カビ取り剤 塩素系 除去用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "c9614a9d6129b41599df255e719fe69e5248146ef8c10a34e702ec896d237a1b",
+      "query_text": "エアコンの下につけて風を上に向けるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "aircon-deflector",
+      "ideal_answer": "エアコン用風よけルーバー",
+      "search_terms": {
+        "ja": [
+          "エアコン 風よけ",
+          "エアコン ルーバー 直風防止"
+        ],
+        "en": [
+          "air conditioner wind deflector"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "サーキュレーター",
+        "扇風機"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "254f89e98b28f49cb777ca79e95c271d67af5de084de4461988c0dd60d0cfdde",
+      "query_text": "洗濯機の中を洗うもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "washing-machine-cleaner",
+      "ideal_answer": "洗濯槽クリーナー",
+      "search_terms": {
+        "ja": [
+          "洗濯槽クリーナー",
+          "洗濯機 槽洗浄 塩素"
+        ],
+        "en": [
+          "washing machine tub cleaner"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "洗濯洗剤 衣類用",
+        "柔軟剤"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "bf8c2a7748ecaff792ec1397ee5ec137ea8a12e670440e9d5c03c989999c7d31",
+      "query_text": "虫が入ってこないようにする網戸のやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "screen-door-tape",
+      "ideal_answer": "網戸用すきまテープ(補修材)",
+      "search_terms": {
+        "ja": [
+          "網戸 すきまテープ",
+          "網戸 補修 虫よけ"
+        ],
+        "en": [
+          "window screen gap tape"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "殺虫剤",
+        "虫よけスプレー 人体用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "d08fdf7be7d1fb9885a9a1025c43c969beefd7e3d53b80c65866ed4d72f9359a",
+      "query_text": "地震で家具が倒れないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "furniture-anchor",
+      "ideal_answer": "家具転倒防止器具(突っ張り棒・固定金具)",
+      "search_terms": {
+        "ja": [
+          "家具 転倒防止",
+          "突っ張り棒 家具固定 地震"
+        ],
+        "en": [
+          "furniture anti tip anchor"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "突っ張り棒 物干し用",
+        "カーテンレール"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "8ab211e81cc681821d9a52243414865501d14d21e326131750887f92ca40259b",
+      "query_text": "猫が爪をとぐやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cat-scratcher",
+      "ideal_answer": "猫用爪とぎ",
+      "search_terms": {
+        "ja": [
+          "猫 爪とぎ",
+          "爪とぎ ダンボール 猫"
+        ],
+        "en": [
+          "cat scratching post"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "猫用 爪切り"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "cf16dca315f82acda082279bb4843802914f65ebc818318cb6962f3327361a1b",
+      "query_text": "犬の抜け毛をとるブラシ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-grooming-brush",
+      "ideal_answer": "犬用アンダーコートブラシ(抜け毛取り)",
+      "search_terms": {
+        "ja": [
+          "犬 抜け毛 ブラシ",
+          "アンダーコート ブラシ 犬"
+        ],
+        "en": [
+          "dog deshedding brush"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "5eadfff935f3b011d431fba9814e8d54ce311aec7b8f202ce15d21c5282d9ed6",
+      "query_text": "ペットのトイレのにおいを消すやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-deodorizer",
+      "ideal_answer": "ペット用消臭剤",
+      "search_terms": {
+        "ja": [
+          "ペット 消臭剤",
+          "犬 猫 トイレ 消臭 除菌"
+        ],
+        "en": [
+          "pet odor eliminator"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "人間用 芳香剤",
+        "アロマオイル"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "1768ebd8d359d910cd12adc9fc978c1ee180f0b3829af8bab6737b2b19f91246",
+      "query_text": "留守中に水をあげる犬用のやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-water-dispenser",
+      "ideal_answer": "ペット用自動給水器",
+      "search_terms": {
+        "ja": [
+          "ペット 自動給水器",
+          "犬 給水器 循環 フィルター"
+        ],
+        "en": [
+          "pet automatic water dispenser"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "自動給餌器 フードのみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "b4ebb879d6d9d3763fda918b4f39b36cbfc3d71623ca1c7eced43a4d5a560e4c",
+      "query_text": "車の窓につける日よけ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "car-sunshade",
+      "ideal_answer": "車用サンシェード",
+      "search_terms": {
+        "ja": [
+          "車 サンシェード",
+          "フロントガラス 日除け"
+        ],
+        "en": [
+          "car windshield sunshade"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ベビーカー 日よけ",
+        "室内カーテン"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "1ac6d542e2269ff59e0e3ee02282bed289c5ed3b69bea7e5699698fc58f4f976",
+      "query_text": "車の中でスマホを立てるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "car-phone-mount",
+      "ideal_answer": "車載スマホホルダー",
+      "search_terms": {
+        "ja": [
+          "車 スマホホルダー",
+          "車載ホルダー エアコン吹き出し口"
+        ],
+        "en": [
+          "car phone mount"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "卓上スマホスタンド"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "2241d4243c286bfa84f40aa95a21ffd24a2b5e4fab5aaa68d0373946ab61eb0e",
+      "query_text": "タイヤの空気を入れるやつ 電動",
+      "locale": "ja",
+      "persona": "general",
+      "category": "air-compressor",
+      "ideal_answer": "電動空気入れ",
+      "search_terms": {
+        "ja": [
+          "電動空気入れ 車",
+          "エアコンプレッサー 車 タイヤ"
+        ],
+        "en": [
+          "portable tire inflator"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "手動ポンプ",
+        "自転車 空気入れ 手押し"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "59d9fb6a23695933a92cdfca3d92c8e714bfa970f36447793d26da10782e7282",
+      "query_text": "飛行機で首を支えるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "travel-pillow",
+      "ideal_answer": "ネックピロー(トラベル枕)",
+      "search_terms": {
+        "ja": [
+          "ネックピロー 飛行機",
+          "トラベル枕 携帯"
+        ],
+        "en": [
+          "travel neck pillow"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "枕 寝具用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "11ddcae2038f8c8bae835ca6625658d2da1b2e9477940cf6e2ab75f33c7243a2",
+      "query_text": "スーツケースの中で服をまとめるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "packing-cube",
+      "ideal_answer": "パッキングキューブ(旅行用仕分けケース)",
+      "search_terms": {
+        "ja": [
+          "パッキングキューブ",
+          "旅行 圧縮袋 衣類"
+        ],
+        "en": [
+          "packing cubes for luggage"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "2684de4f47c08c0d7b73839b19c77130820c2579b9d5b6270040907a3892a22d",
+      "query_text": "コンセントの形が国によって違うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "travel-adapter",
+      "ideal_answer": "海外用変換プラグ(トラベルアダプター)",
+      "search_terms": {
+        "ja": [
+          "変換プラグ 海外",
+          "海外 コンセント 変換 マルチ"
+        ],
+        "en": [
+          "universal travel adapter"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "変圧器 電圧変換"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "e01e353dc40e5dad9fa2312e0da8c03222c28d19b9de7e68091a6bf10404cadf",
+      "query_text": "会議で使う丸いマイク",
+      "locale": "ja",
+      "persona": "general",
+      "category": "conference-microphone",
+      "ideal_answer": "会議用スピーカーフォン",
+      "search_terms": {
+        "ja": [
+          "会議用スピーカーフォン",
+          "全指向性 マイク 会議 USB"
+        ],
+        "en": [
+          "conference speakerphone"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "コンデンサーマイク 配信用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "055ac0f6c480de158e8e444d9419a083abba0e831d337ef3be27e5f3f488d19e",
+      "query_text": "パソコンの画面をもう一枚増やすやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "portable-monitor",
+      "ideal_answer": "モバイルモニター(サブディスプレイ)",
+      "search_terms": {
+        "ja": [
+          "モバイルモニター",
+          "サブディスプレイ 15インチ 持ち運び"
+        ],
+        "en": [
+          "portable monitor second screen"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "HDMI分配器",
+        "変換アダプタのみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "ca8dc11475841ffdfc04bded57ed950e0173edf832bb874213278e89360739ea",
+      "query_text": "ノートパソコンを高くする台",
+      "locale": "ja",
+      "persona": "general",
+      "category": "laptop-stand",
+      "ideal_answer": "ノートパソコンスタンド",
+      "search_terms": {
+        "ja": [
+          "ノートパソコン スタンド",
+          "PCスタンド 高さ調整 姿勢"
+        ],
+        "en": [
+          "laptop riser stand"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "スタンディングデスク"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "420dd160f8c324c0ef2918abb07376ee38e0413addc0c526556258da6b1c5e62",
+      "query_text": "書類を立てて置くやつ 打ちながら見る",
+      "locale": "ja",
+      "persona": "general",
+      "category": "document-holder",
+      "ideal_answer": "書類ホルダー(デスク用スタンド)",
+      "search_terms": {
+        "ja": [
+          "書類スタンド デスク",
+          "書見台 タイピング"
+        ],
+        "en": [
+          "document holder for typing"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "b6f3363c548b9a39afb0f02038a6096a22740947d9e0440c036e98bc40852f71",
+      "query_text": "bentou baran plastic leaf",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "bento-divider",
+      "ideal_answer": "弁当用バラン(仕切り)",
+      "search_terms": {
+        "ja": [
+          "弁当 バラン 仕切り"
+        ],
+        "en": [
+          "bento divider plastic grass",
+          "sushi grass divider"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "b9d97550506145d68290bc264c5bcdd5522a811690c8b60e81b7385dbfb9e73e",
+      "query_text": "suihanki hitori gurashi",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "rice-cooker",
+      "ideal_answer": "小容量の炊飯器(3合以下)",
+      "search_terms": {
+        "ja": [
+          "炊飯器 一人暮らし 3合"
+        ],
+        "en": [
+          "small rice cooker single person"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "38d76db65c0674ac94b6188160fef56df82411f280826ebdbb868453e03966f2",
+      "query_text": "where to buy japanese school backpack randoseru",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "backpack",
+      "ideal_answer": "ランドセル(日本の学童用リュック)",
+      "search_terms": {
+        "ja": [
+          "ランドセル"
+        ],
+        "en": [
+          "randoseru japanese school bag"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "登山用バックパック"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "c474864041240711317bba70a436eafea3e10dd41aff3042d2a6c5da31118f90",
+      "query_text": "kotatsu table heater",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "kotatsu",
+      "ideal_answer": "こたつ(ヒーター付きテーブル)",
+      "search_terms": {
+        "ja": [
+          "こたつ",
+          "こたつテーブル"
+        ],
+        "en": [
+          "kotatsu heated table"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ヒーター 単体",
+        "テーブル 暖房なし"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "70a46e0401d1ce8711fd5a2708f0714f99d23b59e125c68e911ffb8bcf575ca7",
+      "query_text": "일본 밥솥 소형",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "rice-cooker",
+      "ideal_answer": "小容量の炊飯器",
+      "search_terms": {
+        "ja": [
+          "炊飯器 小型"
+        ],
+        "en": [
+          "compact rice cooker"
+        ],
+        "ko": [
+          "일본 밥솥",
+          "소형 전기밥솥"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "d47a2fa4887077137c681460232cda30448cc1ddb7fbcbaf6e0dccefaff48b6b",
+      "query_text": "접이식 우산 가벼운",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "parasol",
+      "ideal_answer": "軽量の折りたたみ傘",
+      "search_terms": {
+        "ja": [
+          "折りたたみ傘 軽量"
+        ],
+        "en": [
+          "lightweight folding umbrella"
+        ],
+        "ko": [
+          "접이식 우산",
+          "가벼운 우산"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "1d4472a8963873d989d4478f4e44d00a16ff7e9dd4f524a8b35ef8b80c532045",
+      "query_text": "얼굴 붓기 빼는 마사지 기계",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "facial-massager",
+      "ideal_answer": "美顔ローラー(フェイシャルマッサージ器)",
+      "search_terms": {
+        "ja": [
+          "美顔ローラー",
+          "フェイスマッサージャー"
+        ],
+        "en": [
+          "facial massage roller"
+        ],
+        "ko": [
+          "얼굴 마사지기",
+          "페이스 롤러"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "d74858586fccad719cb5e4882610200304cfd6a0ca2bb81da701b5692b81c43f",
+      "query_text": "日本 电饭煲 小型 一人用",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "rice-cooker",
+      "ideal_answer": "小容量の炊飯器",
+      "search_terms": {
+        "ja": [
+          "炊飯器 一人暮らし"
+        ],
+        "en": [
+          "small rice cooker"
+        ],
+        "ko": [],
+        "zh": [
+          "电饭煲 小型",
+          "迷你电饭煲"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "3a23230ae16c57f69ffaa6ecd009449973d4d0a27c647d18d1e5cf93a2657d83",
+      "query_text": "保温杯 儿童 直饮",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "water-bottle",
+      "ideal_answer": "子ども用ステンレスボトル(直飲み)",
+      "search_terms": {
+        "ja": [
+          "水筒 子供 直飲み 保温"
+        ],
+        "en": [
+          "kids insulated water bottle"
+        ],
+        "ko": [],
+        "zh": [
+          "儿童保温杯",
+          "直饮water bottle"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "84164d0a4bc5ccbef66b838823d9cae3497b64c4ff14942ee625208f7ab7531d",
+      "query_text": "防晒 帽子 可折叠",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "hat",
+      "ideal_answer": "折りたたみ可能なUVカット帽子",
+      "search_terms": {
+        "ja": [
+          "帽子 UVカット 折りたたみ"
+        ],
+        "en": [
+          "packable sun hat uv"
+        ],
+        "ko": [],
+        "zh": [
+          "防晒帽",
+          "可折叠 遮阳帽"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "f1a5995f3b8c69abce2d26de84b5e8ea8681a26989789ced9709d7cd3f3190ac",
+      "query_text": "nihon no bunbougu kawaii",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "stationery",
+      "ideal_answer": "日本の文房具(デザイン文具)",
+      "search_terms": {
+        "ja": [
+          "文房具 かわいい",
+          "日本 文具 ギフト"
+        ],
+        "en": [
+          "japanese stationery cute"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-08-07-batch-004.json"
+    },
+    {
+      "content_hash": "4df21b7d61a88bdd7e337527e267203db33ec1f5fd72259d0c05ac7769451653",
+      "query_text": "iphone charger fast japan plug",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "charger",
+      "ideal_answer": "急速充電器(USB-C PD・日本仕様プラグ)",
+      "search_terms": {
+        "ja": [
+          "急速充電器 USB-C PD"
+        ],
+        "en": [
+          "fast charger usb c pd japan plug"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "変換プラグのみ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-004.json"
     }
   ]
 }

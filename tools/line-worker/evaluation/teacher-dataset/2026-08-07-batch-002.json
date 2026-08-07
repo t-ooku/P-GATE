@@ -1,0 +1,1146 @@
+[
+  {
+    "query_text": "えんぴつの芯が出るやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "シャープペンシルを探している",
+    "ideal_answer": "シャープペンシル",
+    "reason": "「芯が出る」という動作の説明だけで名称が出てこない、子どもの典型的な言い換え。",
+    "category": "mechanical-pencil",
+    "search_terms": {
+      "ja": [
+        "シャープペンシル",
+        "シャーペン 小学生"
+      ],
+      "en": [
+        "mechanical pencil"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "鉛筆削り",
+      "替え芯のみ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "字を消すやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "消しゴムを探している",
+    "ideal_answer": "消しゴム",
+    "reason": "用途のみでの表現。鉛筆削りや修正テープと取り違えやすいので用途語を固定する。",
+    "category": "eraser",
+    "search_terms": {
+      "ja": [
+        "消しゴム",
+        "よく消える消しゴム"
+      ],
+      "en": [
+        "eraser"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "修正テープ",
+      "砂消し"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "まちがえたところを白くするやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "修正テープを探している",
+    "ideal_answer": "修正テープ",
+    "reason": "「白くする」という結果からの説明。消しゴムと区別が必要。",
+    "category": "correction-tape",
+    "search_terms": {
+      "ja": [
+        "修正テープ",
+        "修正液"
+      ],
+      "en": [
+        "correction tape"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "消しゴム"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "丸をかくやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "コンパス(製図用)を探している",
+    "ideal_answer": "コンパス(製図用)",
+    "reason": "方位磁針のコンパスと同名のため、製図用であることを固定する必要がある典型例。",
+    "category": "compass",
+    "search_terms": {
+      "ja": [
+        "コンパス 製図",
+        "コンパス 小学生 算数"
+      ],
+      "en": [
+        "drawing compass"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "方位磁針",
+      "登山用コンパス",
+      "方位磁石"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "角をはかるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "分度器を探している",
+    "ideal_answer": "分度器",
+    "reason": "算数用具は名称より用途で覚えられていることが多い。",
+    "category": "protractor",
+    "search_terms": {
+      "ja": [
+        "分度器",
+        "分度器 小学生"
+      ],
+      "en": [
+        "protractor"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "まっすぐ線ひくやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "定規を探している",
+    "ideal_answer": "定規",
+    "reason": "動作からの説明。三角定規・直定規の区別は追加質問が要る。",
+    "category": "ruler",
+    "search_terms": {
+      "ja": [
+        "定規",
+        "ものさし 小学生"
+      ],
+      "en": [
+        "ruler"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "のりみたいなテープ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "テープのり(両面テープ状ののり)を探している",
+    "ideal_answer": "テープのり",
+    "reason": "「のり」と「テープ」の中間物という説明。液体のりと区別する。",
+    "category": "glue-tape",
+    "search_terms": {
+      "ja": [
+        "テープのり",
+        "テープのり 詰め替え"
+      ],
+      "en": [
+        "glue tape"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "液体のり",
+      "スティックのり"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ふでばこ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "筆箱・ペンケースを探している",
+    "ideal_answer": "筆箱(ペンケース)",
+    "reason": "子どもは「ペンケース」より「ふでばこ」を使う。表記ゆれの吸収が目的。",
+    "category": "pencil-case",
+    "search_terms": {
+      "ja": [
+        "筆箱",
+        "ペンケース 小学生"
+      ],
+      "en": [
+        "pencil case"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "下に敷くやつ 勉強",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "下敷きを探している",
+    "ideal_answer": "下敷き",
+    "reason": "「下敷き」という単語が出ず、位置と場面で説明した例。",
+    "category": "desk-pad",
+    "search_terms": {
+      "ja": [
+        "下敷き",
+        "下敷き 小学生 B5"
+      ],
+      "en": [
+        "desk pad"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "マウスパッド",
+      "ランチョンマット"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "プリントいれるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "クリアファイルを探している",
+    "ideal_answer": "クリアファイル",
+    "reason": "学校の配布物を持ち帰る用途。ファイルボックスと取り違えやすい。",
+    "category": "clear-file",
+    "search_terms": {
+      "ja": [
+        "クリアファイル",
+        "クリアファイル A4"
+      ],
+      "en": [
+        "clear file folder"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ファイルボックス",
+      "書類ケース 大型"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "うわばき",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "上履き(school indoor shoes)を探している",
+    "ideal_answer": "上履き",
+    "reason": "学校用語。一般的なスニーカー検索に流れると誤答になる。",
+    "category": "indoor-shoes",
+    "search_terms": {
+      "ja": [
+        "上履き",
+        "上履き 白 小学生"
+      ],
+      "en": [
+        "school indoor shoes"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "スニーカー 屋外",
+      "運動靴 外履き"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "たいそうぎをいれるふくろ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "体操着袋(巾着)を探している",
+    "ideal_answer": "体操着袋(巾着袋)",
+    "reason": "学校指定用品。用途を保持しないと一般的なバッグに流れる。",
+    "category": "drawstring-bag",
+    "search_terms": {
+      "ja": [
+        "体操着袋",
+        "巾着袋 小学生"
+      ],
+      "en": [
+        "drawstring bag for school"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "きゅうしょくのときつけるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "給食エプロン・給食着を探している",
+    "ideal_answer": "給食着(給食エプロン)",
+    "reason": "場面だけの説明。マスクや三角巾と混ざるので用途語を固定する。",
+    "category": "school-apron",
+    "search_terms": {
+      "ja": [
+        "給食着",
+        "給食エプロン 子供"
+      ],
+      "en": [
+        "school lunch apron"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ランドセルにつけるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ランドセルに取り付ける何かを探しているが対象が不明",
+    "ideal_answer": "ランドセルに何を付けたいですか？(防犯ブザー、キーホルダー、反射材、雨カバーなど)",
+    "reason": "取り付け先だけが分かっていて対象物が不明。断定せず選択肢を返すべきambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "あぶないときならすやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "防犯ブザーを探している",
+    "ideal_answer": "防犯ブザー",
+    "reason": "用途の説明のみ。子どもの安全用品なので誤答を避けたい。",
+    "category": "personal-alarm",
+    "search_terms": {
+      "ja": [
+        "防犯ブザー",
+        "防犯ブザー 小学生 ランドセル"
+      ],
+      "en": [
+        "personal safety alarm"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "火災報知器",
+      "目覚まし時計"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "雨の日にランドセルにかぶせるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ランドセルカバー(レインカバー)を探している",
+    "ideal_answer": "ランドセル用レインカバー",
+    "reason": "取り付け先と場面が揃っているので断定できる例。",
+    "category": "school-bag-rain-cover",
+    "search_terms": {
+      "ja": [
+        "ランドセルカバー 雨",
+        "ランドセル レインカバー"
+      ],
+      "en": [
+        "school bag rain cover"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "レインコート",
+      "傘"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "サッカーのすねにつけるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "レガース(すね当て)を探している",
+    "ideal_answer": "レガース(シンガード)",
+    "reason": "部位と競技から特定できる。名称が出ない典型。",
+    "category": "shin-guard",
+    "search_terms": {
+      "ja": [
+        "レガース サッカー",
+        "シンガード ジュニア"
+      ],
+      "en": [
+        "soccer shin guard"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "バスケのシューズ 音がキュッてなるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "バスケットボールシューズを探している",
+    "ideal_answer": "バスケットボールシューズ",
+    "reason": "体育館用の摩擦音という手がかり。ランニングシューズと区別する。",
+    "category": "basketball-shoes",
+    "search_terms": {
+      "ja": [
+        "バスケットシューズ ジュニア",
+        "バッシュ 子供"
+      ],
+      "en": [
+        "basketball shoes kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ランニングシューズ",
+      "スパイク"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "水泳のときに耳に入れるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "水泳用耳栓を探している",
+    "ideal_answer": "水泳用耳栓",
+    "reason": "睡眠用耳栓と用途が違うため水泳用を固定する。",
+    "category": "ear-plugs",
+    "search_terms": {
+      "ja": [
+        "耳栓 水泳",
+        "スイミング 耳栓 子供"
+      ],
+      "en": [
+        "swimming ear plugs"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "睡眠用耳栓",
+      "ライブ用耳栓"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "プールでつけるゴーグル",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "スイミングゴーグルを探している",
+    "ideal_answer": "水泳用ゴーグル",
+    "reason": "場面が明確で断定可能。スキーゴーグル等と区別する。",
+    "category": "swim-goggles",
+    "search_terms": {
+      "ja": [
+        "スイミングゴーグル 子供",
+        "水泳 ゴーグル ジュニア"
+      ],
+      "en": [
+        "swim goggles kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "スキーゴーグル",
+      "保護メガネ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "なわとび",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "縄跳びを探している",
+    "ideal_answer": "縄跳び(なわとび)",
+    "reason": "ひらがな表記のみでの検索。表記ゆれ吸収。",
+    "category": "jump-rope",
+    "search_terms": {
+      "ja": [
+        "縄跳び 子供",
+        "なわとび 小学生"
+      ],
+      "en": [
+        "jump rope kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "さかあがりの練習するやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "逆上がり補助ベルトや鉄棒の練習器具を探している",
+    "ideal_answer": "逆上がり補助ベルト(鉄棒練習器具)",
+    "reason": "「逆上がり」という技名から用具を引く。器械体操用品。",
+    "category": "gymnastics-aid",
+    "search_terms": {
+      "ja": [
+        "逆上がり 補助ベルト",
+        "鉄棒 練習 補助"
+      ],
+      "en": [
+        "gymnastics pull up aid"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "野球のときに手にはめるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "野球グローブを探している",
+    "ideal_answer": "野球グローブ(グラブ)",
+    "reason": "装着部位と競技で特定可能。バッティンググローブとの区別は追加質問。",
+    "category": "baseball-glove",
+    "search_terms": {
+      "ja": [
+        "野球 グローブ 少年用",
+        "軟式 グラブ ジュニア"
+      ],
+      "en": [
+        "baseball glove youth"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "スイッチのカセット入れるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "Nintendo Switch用ゲームカードケースを探している",
+    "ideal_answer": "Switch用ゲームカードケース",
+    "reason": "「カセット」という子ども語。本体ケースと区別が必要。",
+    "category": "game-card-case",
+    "search_terms": {
+      "ja": [
+        "Switch カードケース",
+        "スイッチ ソフト 収納"
+      ],
+      "en": [
+        "switch game card case"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "本体ケース",
+      "収納バッグ 本体用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ゲームしながら充電できるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "プレイ中も使える長い充電ケーブルまたは充電スタンドを探している",
+    "ideal_answer": "長い充電ケーブル、または充電スタンドのどちらをお探しですか？",
+    "reason": "手段が2通りあり断定できないambiguous例。",
+    "category": "charging-cable",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "画面がバキバキにならないようにするやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "画面保護フィルム・ガラスフィルムを探している",
+    "ideal_answer": "画面保護ガラスフィルム",
+    "reason": "破損防止という結果からの説明。ケースとの区別が要る。",
+    "category": "screen-protector",
+    "search_terms": {
+      "ja": [
+        "ガラスフィルム",
+        "画面保護フィルム"
+      ],
+      "en": [
+        "screen protector"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "スマホケース 背面のみ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "カードをまもるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "トレーディングカード用スリーブやローダーを探している",
+    "ideal_answer": "カードスリーブ(トレカ用)",
+    "reason": "トレカ文化の用語。名刺入れ等と区別する。",
+    "category": "card-sleeve",
+    "search_terms": {
+      "ja": [
+        "カードスリーブ トレカ",
+        "トレカ ローダー"
+      ],
+      "en": [
+        "trading card sleeves"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "名刺入れ",
+      "カードケース 財布"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ガチャガチャのちいさいの",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "カプセルトイ(ガチャガチャ)の景品やミニチュアを探している",
+    "ideal_answer": "カプセルトイ(ガチャガチャ景品)",
+    "reason": "遊び方の名称から商品を引く。",
+    "category": "capsule-toy",
+    "search_terms": {
+      "ja": [
+        "ガチャガチャ 景品",
+        "カプセルトイ ミニチュア"
+      ],
+      "en": [
+        "capsule toy"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "組み立てるブロック",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ブロック玩具を探している",
+    "ideal_answer": "ブロック玩具",
+    "reason": "動作からの説明。パズルと区別する。",
+    "category": "building-blocks",
+    "search_terms": {
+      "ja": [
+        "ブロック おもちゃ",
+        "知育ブロック"
+      ],
+      "en": [
+        "building blocks toy"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ジグソーパズル"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "スライムつくるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "スライム作成キットを探している",
+    "ideal_answer": "スライム手作りキット",
+    "reason": "工作系の遊び。材料単体か完成品かは追加質問の余地あり。",
+    "category": "slime-kit",
+    "search_terms": {
+      "ja": [
+        "スライム キット",
+        "スライム 手作り 材料"
+      ],
+      "en": [
+        "slime making kit"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ひとりでにうごくおもちゃの車",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ラジコンカーまたは自走式のおもちゃの車を探している",
+    "ideal_answer": "ラジコンカー",
+    "reason": "「ひとりでに動く」= 自走。ミニカーとの区別が要る。",
+    "category": "rc-car",
+    "search_terms": {
+      "ja": [
+        "ラジコンカー 子供",
+        "RCカー 初心者"
+      ],
+      "en": [
+        "rc car for kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ミニカー 手転がし"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "空にとばすやつ カメラついてる",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "カメラ付きドローンを探している",
+    "ideal_answer": "カメラ付きドローン(トイドローン)",
+    "reason": "飛ばす+カメラでドローンに特定できる。凧やラジコン飛行機と区別。",
+    "category": "drone",
+    "search_terms": {
+      "ja": [
+        "トイドローン カメラ付き",
+        "ドローン 初心者 子供"
+      ],
+      "en": [
+        "camera drone for kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "凧",
+      "紙飛行機"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "こおりがとけないみずとう",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "保冷効果の高い水筒を探している",
+    "ideal_answer": "保冷水筒(ステンレスボトル)",
+    "reason": "「氷が溶けない」= 保冷性能の要求。保温との取り違えに注意。",
+    "category": "water-bottle",
+    "search_terms": {
+      "ja": [
+        "水筒 保冷 子供",
+        "ステンレスボトル 保冷 直飲み"
+      ],
+      "en": [
+        "insulated water bottle kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "保温専用",
+      "プラスチック 保冷なし"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "首にかけるすずしいやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ネッククーラー(首を冷やす器具)を探している",
+    "ideal_answer": "ネッククーラー",
+    "reason": "装着部位と体感からの説明。扇風機との区別。",
+    "category": "neck-cooler",
+    "search_terms": {
+      "ja": [
+        "ネッククーラー",
+        "首掛け 冷却 子供"
+      ],
+      "en": [
+        "neck cooler"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ネックファン 送風のみ"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "かさをいれるふくろ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "傘カバー(傘ケース)を探している",
+    "ideal_answer": "傘カバー(折りたたみ傘用ケース)",
+    "reason": "収納対象からの説明。傘立てと区別する。",
+    "category": "umbrella-case",
+    "search_terms": {
+      "ja": [
+        "傘カバー",
+        "折りたたみ傘 ケース"
+      ],
+      "en": [
+        "umbrella case"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "傘立て"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "くつのなかにいれるやつ くさくならない",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "靴用消臭剤・脱臭剤を探している",
+    "ideal_answer": "靴用消臭剤",
+    "reason": "目的(消臭)が明確。インソールと混ざるので消臭を固定する。",
+    "category": "shoe-deodorizer",
+    "search_terms": {
+      "ja": [
+        "靴 消臭剤",
+        "シューズ 脱臭 子供"
+      ],
+      "en": [
+        "shoe deodorizer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "インソール 衝撃吸収のみ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "自転車につけるライト",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "自転車用ライトを探している",
+    "ideal_answer": "自転車用ライト",
+    "reason": "取り付け先が明確。懐中電灯と区別する。",
+    "category": "bike-light",
+    "search_terms": {
+      "ja": [
+        "自転車 ライト",
+        "自転車 前照灯 USB充電"
+      ],
+      "en": [
+        "bicycle light"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "懐中電灯 ハンディ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "じてんしゃのかぎ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "自転車の鍵(ロック)を探している",
+    "ideal_answer": "自転車用ロック(鍵)",
+    "reason": "ひらがな表記。玄関の鍵などと混ざらないよう自転車を固定。",
+    "category": "bike-lock",
+    "search_terms": {
+      "ja": [
+        "自転車 鍵",
+        "自転車 ワイヤーロック"
+      ],
+      "en": [
+        "bicycle lock"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "玄関 鍵",
+      "スマートロック"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "あたまにかぶるやつ 自転車",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "自転車用ヘルメットを探している",
+    "ideal_answer": "自転車用ヘルメット",
+    "reason": "場面が明示されているので断定可能。工事用と区別する。",
+    "category": "helmet",
+    "search_terms": {
+      "ja": [
+        "自転車 ヘルメット 子供",
+        "キッズ ヘルメット 自転車"
+      ],
+      "en": [
+        "kids bike helmet"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "工事用ヘルメット",
+      "バイク用フルフェイス"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ひかるくつひも",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "光る靴ひも(LEDシューレース)を探している",
+    "ideal_answer": "LED発光シューレース(光る靴ひも)",
+    "reason": "既存の「光る靴」と別物。部品単体であることを保持する。",
+    "category": "led-shoelaces",
+    "search_terms": {
+      "ja": [
+        "光る靴ひも",
+        "LED シューレース"
+      ],
+      "en": [
+        "led shoelaces"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "光る靴 本体"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "暗記するときに使う赤いシート",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "暗記用の赤シート(チェックシート)を探している",
+    "ideal_answer": "暗記用赤シート",
+    "reason": "色と用途の説明。下敷きと混ざるので暗記用途を固定する。",
+    "category": "memorization-sheet",
+    "search_terms": {
+      "ja": [
+        "赤シート 暗記",
+        "暗記シート 赤"
+      ],
+      "en": [
+        "red memorization sheet"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "下敷き 通常"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "時間はかるやつ 勉強",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "学習用タイマー(勉強タイマー)を探している",
+    "ideal_answer": "学習用タイマー",
+    "reason": "場面が勉強と明示。キッチンタイマーでも代替可能だが学習用を優先。",
+    "category": "study-timer",
+    "search_terms": {
+      "ja": [
+        "勉強 タイマー",
+        "学習タイマー 静音"
+      ],
+      "en": [
+        "study timer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ストップウォッチ 競技用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "音がきこえなくなるやつ 勉強",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "遮音用のイヤーマフまたはノイズキャンセリングヘッドホンを探している",
+    "ideal_answer": "完全に音を遮る防音イヤーマフと、音楽も聴けるノイズキャンセリングヘッドホンのどちらがよいですか？",
+    "reason": "手段が2通りあるためambiguous。用途は同じでも商品が別。",
+    "category": "noise-cancelling-headphones",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "すわるところが痛くならないクッション 勉強",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "長時間座るための座布団・クッションを探している",
+    "ideal_answer": "座り心地改善クッション(座布団)",
+    "reason": "長時間学習の課題から用品を引く。",
+    "category": "seat-cushion",
+    "search_terms": {
+      "ja": [
+        "椅子 クッション 勉強",
+        "座布団 長時間 疲れにくい"
+      ],
+      "en": [
+        "seat cushion for studying"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "スマホ見ないようにする箱",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "スマホを一定時間開けられないようにするタイムロックコンテナを探している",
+    "ideal_answer": "タイムロックコンテナ(スマホ封印ボックス)",
+    "reason": "行動制御を目的とした商品。金庫と区別する。",
+    "category": "phone-lock-box",
+    "search_terms": {
+      "ja": [
+        "タイムロックコンテナ",
+        "スマホ 封印 ボックス 勉強"
+      ],
+      "en": [
+        "time lock container phone"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "金庫 貴重品"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  }
+]
