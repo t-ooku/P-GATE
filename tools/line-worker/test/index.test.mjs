@@ -246,15 +246,20 @@ test('検索結果の有無に関わらずモール横断フォールバック�
   // the has-results branch builds and pushes the fallback card before it
   // renders, not that it is appended immediately after the carousel (the AI
   // related-keyword card was later inserted into this same branch).
+  // 2026-08-07 (Phase C 項目A): the has-results branch now pushes two rows
+  // (confirmed / unconfirmed) instead of a single carousel, so the assertion
+  // is on the fallback card still being pushed into resultCards, not on the
+  // exact single-line shape renderResults used to have.
   assert.match(
     appSource,
-    /const marketplaceFallback=marketplaceFallbackCard\(result\);if\(marketplaceFallback\)resultCards\.push\(marketplaceFallback\);elements\.cards\.replaceChildren\(\.\.\.resultCards\);\}else\{/
+    /const marketplaceFallback=marketplaceFallbackCard\(result\);\s*if\(marketplaceFallback\)resultCards\.push\(marketplaceFallback\);/
   );
-  assert.match(appSource, /resultCards\.push\(carousel\)/);
+  assert.match(appSource, /resultCards\.push\(\.\.\.rows\)/);
   assert.match(appSource, /resultCards\.push\(refinementCard\(\)\)/);
+  assert.match(appSource, /elements\.cards\.replaceChildren\(\.\.\.resultCards\);/);
   assert.match(
     appSource,
-    /emptyCards\.push\(marketplaceFallback\);elements\.cards\.replaceChildren\(\.\.\.emptyCards\);/
+    /emptyCards\.push\(marketplaceFallback\);\s*elements\.cards\.replaceChildren\(\.\.\.emptyCards\);/
   );
 });
 // AI related-keyword suggestions (Phase C item 11, 2026-08-07): 5件以上の
@@ -274,8 +279,8 @@ test('AI連想キーワードをタップで検索条件に追加できる', () 
   assert.match(appSource, /chip\.className='keyword-tag related-keyword-tag'/);
   assert.match(appSource, /chip\.addEventListener\('click',\(\)=>applyRelatedKeyword\(term\)\)/);
   // 検索結果あり／なしの両方の分岐に差し込まれている
-  assert.match(appSource, /const relatedKeywords=relatedKeywordCard\(result\);if\(relatedKeywords\)resultCards\.push\(relatedKeywords\)/);
-  assert.match(appSource, /const emptyRelatedKeywords=relatedKeywordCard\(result\);if\(emptyRelatedKeywords\)emptyCards\.push\(emptyRelatedKeywords\)/);
+  assert.match(appSource, /const relatedKeywords=relatedKeywordCard\(result\);\s*if\(relatedKeywords\)resultCards\.push\(relatedKeywords\)/);
+  assert.match(appSource, /const emptyRelatedKeywords=relatedKeywordCard\(result\);\s*if\(emptyRelatedKeywords\)emptyCards\.push\(emptyRelatedKeywords\)/);
   // 出典は実データのみ: AI意図解析と、実際に返ってきた商品の一致語・商品名
   assert.match(appSource, /analysis\?\.search_keywords\|\|\[\]\)\.forEach\(pushAi\)/);
   assert.match(appSource, /candidate\?\.evidence\?\.matched_terms\|\|\[\]\)\.forEach\(countResult\)/);
@@ -420,7 +425,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v324/);
+  assert.match(serviceWorker, /hoshilu-shell-v325/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1063,7 +1068,7 @@ test('検索結果の上に検索窓を常駐させ、#queryを唯一の正と�
   // 入力途中の内容を描画で上書きしない
   assert.match(appSource, /if\(showing&&document\.activeElement!==input\)input\.value=elements\.query\.value/);
   // 描画のたびに同期する
-  assert.match(appSource, /syncStickySearch\(\);elements\.results\.scrollIntoView/);
+  assert.match(appSource, /syncStickySearch\(\);\s*elements\.results\.scrollIntoView/);
   // スクロールしても残る
   assert.match(css, /\.sticky-search\s*\{[^}]*position:\s*sticky/);
   // タップ領域44px

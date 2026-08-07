@@ -197,6 +197,16 @@ export function marketplaceForDestination(destination) {
 
 const PRODUCT_MARKETPLACES = new Set(PRODUCT_MARKETPLACE_LIST);
 
+// 2026-08-07: the results area is now two rows - the upper row holds
+// candidates whose total cost including shipping was actually confirmed on a
+// connected marketplace, the lower row holds candidates that really exist but
+// whose price/stock could not be confirmed. Each row shows up to 30, so the
+// worker has to be allowed to send up to 60. This was 30 for a single row;
+// leaving it there meant the lower row could only ever be filled by starving
+// the upper one.
+export const CLIENT_CANDIDATE_LIMIT = 60;
+export const CLIENT_CANDIDATE_ROW_LIMIT = 30;
+
 export function isProductDetailDestination(destination) {
   return isAllowedDestination(destination) && Boolean(marketplaceForProductUrl(destination));
 }
@@ -1096,7 +1106,7 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
   const candidates = [];
-  const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, 30);
+  const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT);
   for (const candidate of displayCandidates) {
     const copy = sanitizePublicCandidate(candidate);
     const productOffers = productMarketplaceOffers(candidate.offers);
@@ -1475,7 +1485,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       ]);
       const beforeRankingCount = interleavedCandidates.length;
       const rankedAll = rankMerchantCandidates([], interleavedCandidates, input.query);
-      const finalSlice = rankedAll.slice(0, 30);
+      const finalSlice = rankedAll.slice(0, CLIENT_CANDIDATE_LIMIT);
       const countByMarketplace = (list) => list.reduce((counts, item) => {
         const marketplace = String(item.record_key || '').startsWith('RAKUTEN:') ? 'RAKUTEN_JP'
           : String(item.offers?.[0]?.marketplace || (item.asin ? 'AMAZON_JP' : 'OTHER'));
@@ -1498,7 +1508,7 @@ async function handleKnowledgeApi(request, env, ctx) {
     result = {
       ...(result || {}),
       traffic_class: input.traffic_class,
-      candidates: filterCategoryMismatches(input.query, result?.candidates || []).slice(0, 30)
+      candidates: filterCategoryMismatches(input.query, result?.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT)
     };
     if (input.search_attempt >= 2) {
       result.clarification = { ...(result.clarification || {}), required: false, options: [] };
