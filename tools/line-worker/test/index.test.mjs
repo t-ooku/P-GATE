@@ -420,7 +420,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v323/);
+  assert.match(serviceWorker, /hoshilu-shell-v324/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1071,4 +1071,20 @@ test('検索結果の上に検索窓を常駐させ、#queryを唯一の正と�
   ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
     assert.match(appSource, new RegExp(`${language}:\\{placeholder:'[^']+',submit:'[^']+',label:'[^']+'\\}`));
   });
+});
+
+// HOSHILU AIチャットが本番で動かないという報告 (2026-08-07)。画面には
+// 「通信に失敗しました」としか出ず、catch {} が例外を完全に捨てていたため、
+// Turnstileが未準備なのか、APIキーが未設定なのか、レート制限なのかが
+// 利用者からも開発者からも分からなかった。原因の判別が付かない障害は
+// 直しようがないので、コードを画面とコンソールの両方へ出す。
+test('AIチャットの失敗はエラーコードを表示して原因が分かるようにする', () => {
+  const chatUi = fs.readFileSync(new URL('../public/ai-search-ui.mjs', import.meta.url), 'utf8');
+  // 例外を握り潰さない
+  assert.doesNotMatch(chatUi, /\}\s*catch\s*\{\s*\n\s*status\.remove\(\);/);
+  assert.match(chatUi, /catch \(error\)/);
+  assert.match(chatUi, /console\.error\('HOSHILU_CHAT_FAILED'/);
+  assert.match(chatUi, /\$\{copy\.error\}（\$\{code\}）/);
+  // Turnstileが取れていないことを、通信失敗と区別して止める
+  assert.match(chatUi, /if \(!token\) throw new Error\('TURNSTILE_TOKEN_UNAVAILABLE'\)/);
 });

@@ -61,6 +61,11 @@ function chatMessageRow(role, text) {
 async function postChatTurn(history, language) {
   const auth = window.HoshiluChatAuth;
   const token = await (auth?.requestToken?.() ?? '');
+  // Turnstile が用意できないまま送ると、サーバー側では
+  // TURNSTILE_TOKEN_INVALID として弾かれる。原因が「認証の準備ができて
+  // いない」なのか「通信そのものが失敗した」なのかを取り違えると、直す
+  // 場所を間違えるので、ここで区別できる形で止める。
+  if (!token) throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
   const response = await fetch('/api/ai-chat', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -148,9 +153,16 @@ function openChatDialog(originalQuery, language) {
         return;
       }
       showSearchError(refinedQuery);
-    } catch {
+    } catch (error) {
+      // 以前は catch {} でエラーを完全に捨てていたため、画面には
+      // 「通信に失敗しました」としか出ず、実際に何が起きたのか
+      // (Turnstile未準備・APIキー未設定・レート制限のどれか) が
+      // 利用者からも開発者からも分からなかった。原因の判別が付かない
+      // 障害は直しようがないので、コードを画面とコンソールの両方に出す。
+      const code = String(error?.message || 'CHAT_FAILED');
+      console.error('HOSHILU_CHAT_FAILED', code, error);
       status.remove();
-      messages.append(chatMessageRow('assistant', copy.error));
+      messages.append(chatMessageRow('assistant', `${copy.error}（${code}）`));
       form.classList.remove('hidden');
       input.focus();
     }

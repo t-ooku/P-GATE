@@ -233,9 +233,31 @@ export function scoreApparelAttributeMatch(query, candidateText, { colorPatterns
  * while SHEIN, Qoo10 and the five apparel malls lost it. It belongs next to
  * extractApparelProductType so every caller can reach it.
  */
+// 広いカテゴリ語。具体的な衣類名が取れているとき、これらは絞り込みの役に
+// 立たないどころか、モール側では余計な語として効いて結果を薄める。
+const BROAD_APPAREL_CATEGORIES = ['トップス', 'ボトムス', 'アウター', 'インナー', 'ウェア', '服', '衣類'];
+
 export function ensureApparelProductTypeTerm(query, keywords) {
   const productType = extractApparelProductType(query);
   const text = String(keywords || '').trim();
-  if (!productType || text.includes(productType)) return text;
-  return text ? `${productType} ${text}` : productType;
+  if (!productType) return text;
+  // 具体語が取れたら、辞書が補った広いカテゴリ語を落とす。
+  // 2026-08-07 報告: 「ブラウス」を戻したあとも「トップス」が残り、モールへ
+  // 「ブラウス トップス」として届いていた。ユーザーはブラウスを探しているの
+  // であって、トップス全般を探しているわけではない。
+  //
+  // ただし落とすのは辞書が足した分だけで、ユーザー自身が「カットソー
+  // トップス」と両方打った場合は両方残す。打った語を消すのは、辞書が語を
+  // 足しすぎるのと同じくらい検索結果を歪める。
+  const original = String(query || '').normalize('NFKC');
+  const kept = text.split(/\s+/u)
+    .filter(Boolean)
+    .filter((word) => word === productType
+      || !BROAD_APPAREL_CATEGORIES.includes(word)
+      || original.includes(word));
+  // 部分文字列で判定する。「楽で涼しいカットソー」のように長い語句の一部と
+  // して既に入っている場合に前置すると、同じ語が二重に並ぶ。
+  const result = kept.join(' ');
+  if (result.includes(productType)) return result;
+  return result ? `${productType} ${result}` : productType;
 }
