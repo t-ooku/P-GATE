@@ -16,3 +16,18 @@
 .ai-discovery-notice{color:#514d67;line-height:1.65}.ai-discovery-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.8rem}
 .ai-discovery-item{display:flex;flex-direction:column;gap:.45rem;padding:.7rem;border:1px solid #ded7ff;border-radius:18px;background:#fff;color:#24175b;text-decoration:none}
 .ai-discovery-item img{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:12px;background:#f7f6fb}.ai-discovery-item small{color:#6d6880;overflow-wrap:anywhere}.ai-discovery-item span{font-weight:800;color:#6548e8}
+
+/* 2026-08-07 Phase C 項目A: 提示欄の上下2段構成。
+   上段=送料込み価格を確認できた商品 / 下段=実在するが価格・在庫が未確認の商品。
+   下段は未確認であることが一目で分かるよう、枠と帯を分ける。 */
+.result-row{margin-top:20px}
+.result-row+.result-row{margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.result-row-heading{display:flex;align-items:center;gap:9px;margin-bottom:4px}
+.result-row-title{margin:0;font-size:14px;letter-spacing:-.01em}
+.result-row-count{padding:3px 9px;border-radius:999px;background:var(--soft);color:#5140ba;font-size:10px;font-weight:900}
+.result-row-note{margin:0 0 12px;color:var(--muted);font-size:11px;line-height:1.6}
+.result-row-unconfirmed .result-row-title{color:#8a6d1f}
+.result-row-unconfirmed .result-row-count{background:#fdf4e0;color:#8a6d1f}
+.product-card.unverified-card{border-color:#f0dfb4;background:linear-gradient(180deg,#fffdf7,#fff)}
+.unverified-badge{align-self:flex-start;margin-top:6px;padding:4px 9px;border-radius:999px;background:#fdf4e0;color:#8a6d1f;font-size:10px;font-weight:900}
+@media(max-width:760px){.result-row-heading{flex-wrap:wrap}}
