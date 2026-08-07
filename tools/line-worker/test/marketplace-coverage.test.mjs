@@ -51,10 +51,13 @@ test('トップ画面で常に最大10モールを横断できることを表示
   const sectionMarkers = [
     ['hoshiluSearch', 'id="hoshiluSearch"'],
     ['MATCHES', 'class="section-title"><div><p class="step">MATCHES'],
+    // 2026-08-07: MARKETPLACE COVERAGE moved above SALE RADAR on request -
+    // which malls HOSHILU can search is what a first-time visitor needs to
+    // know before any sale feed makes sense.
+    ['MARKETPLACE COVERAGE', '<p class="step">MARKETPLACE COVERAGE'],
     ['SALE RADAR', '<p class="step">HOSHILU SALE RADAR'],
     ['INSIGHT', '<p class="step">HOSHILU INSIGHT'],
     ['NEWS', '<p class="step">HOSHILU NEWS'],
-    ['MARKETPLACE COVERAGE', '<p class="step">MARKETPLACE COVERAGE'],
     ['SEARCH AGENT', '<p class="step">HOSHILU SEARCH AGENT'],
     ['DISCOVERY', '<p class="step">HOSHILU DISCOVERY'],
     ['OFFICIAL', '<p class="step">HOSHILU OFFICIAL'],
@@ -82,7 +85,7 @@ test('トップ画面で常に最大10モールを横断できることを表示
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v309/);
+  assert.match(serviceWorker, /hoshilu-shell-v310/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

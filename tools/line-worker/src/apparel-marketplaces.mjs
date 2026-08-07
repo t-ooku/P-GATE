@@ -35,7 +35,9 @@ export function buildApparelMarketplaceDestinations(query) {
   const shoplist = new URL('https://www.shop-list.com/women/svc/product/Search/');
   shoplist.searchParams.set('keyword', keywordsFor('SHOPLIST_JP'));
 
-  const musinsa = new URL('https://global.musinsa.com/jp/search/goods');
+  // /jp/search/goods 404s ("ページが見つかりませんでした", verified 2026-08-07).
+  // The live search path is /jp/search.
+  const musinsa = new URL('https://global.musinsa.com/jp/search');
   musinsa.searchParams.set('keyword', keywordsFor('MUSINSA_JP'));
 
   return [
