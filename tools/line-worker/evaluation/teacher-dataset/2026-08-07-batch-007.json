@@ -1,0 +1,734 @@
+[
+  {
+    "query_text": "お米みたいだけどお米じゃないダイエットのやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "こんにゃく米などの米代替食品を探している",
+    "ideal_answer": "こんにゃく米(糖質オフの米代替食品)",
+    "reason": "「〜みたいだけど〜じゃない」は代替食品の典型的な言い方。玄米や雑穀と区別する。",
+    "category": "konjac-rice",
+    "search_terms": {
+      "ja": [
+        "こんにゃく米",
+        "糖質オフ 米 代替"
+      ],
+      "en": [
+        "konjac rice diet"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "玄米",
+      "雑穀米",
+      "白米"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "お湯を入れるだけのごはん 非常用",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "アルファ米などの非常食を探している",
+    "ideal_answer": "アルファ米(非常用長期保存食)",
+    "reason": "調理法と用途から特定できる。インスタント食品一般と区別する。",
+    "category": "emergency-food",
+    "search_terms": {
+      "ja": [
+        "アルファ米 非常食",
+        "非常食 5年保存 ごはん"
+      ],
+      "en": [
+        "emergency food long shelf life rice"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "カップ麺",
+      "レトルトごはん 常温短期"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "赤ちゃんが食べられるおかし",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "月齢に合ったベビー用おやつを探している",
+    "ideal_answer": "ベビー用おやつ(対象月齢表示のあるもの)",
+    "reason": "アレルギーと窒息のリスクがあるため、月齢表示のある製品であることを条件に含める。",
+    "category": "baby-snacks",
+    "search_terms": {
+      "ja": [
+        "ベビー おやつ 月齢",
+        "赤ちゃん せんべい 離乳食"
+      ],
+      "en": [
+        "baby snacks by age"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "大人向け菓子",
+      "ナッツ 硬い"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "コーヒーの粉をこすやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "コーヒーのドリッパーまたはフィルターを探している",
+    "ideal_answer": "紙フィルターと、繰り返し使えるドリッパー(金属・布)があります。どちらをお探しですか？",
+    "reason": "消耗品か器具かで商品が分かれるambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "炭酸水を家でつくる機械",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "炭酸水メーカーを探している",
+    "ideal_answer": "炭酸水メーカー",
+    "reason": "既存のキッチン家電を、製造という軸で補完する。ガスシリンダーの継続購入が要る点は購入前確認事項。",
+    "category": "soda-maker",
+    "search_terms": {
+      "ja": [
+        "炭酸水メーカー",
+        "ソーダメーカー 家庭用"
+      ],
+      "en": [
+        "sparkling water maker"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "炭酸水 ペットボトル 飲料"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "お弁当が腐らないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "保冷剤や抗菌シートなど弁当の傷み対策用品を探している",
+    "ideal_answer": "保冷剤・保冷バッグと、抗菌シートがあります。どちらをお探しですか？",
+    "reason": "既存のバラン(仕切り)と同じ弁当領域だが目的が別。手段も2通りある。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "こどもが自分でにぎれるおにぎりの型",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "おにぎり型(ライスモールド)を探している",
+    "ideal_answer": "おにぎり型(ライスモールド)",
+    "reason": "調理器具。弁当箱と区別する。",
+    "category": "onigiri-mold",
+    "search_terms": {
+      "ja": [
+        "おにぎり型",
+        "おにぎり メーカー 型 子供"
+      ],
+      "en": [
+        "onigiri rice mold"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "弁当箱"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "歯が悪くても食べられるやわらかいごはん",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "介護食・やわらか食を探している",
+    "ideal_answer": "介護食(やわらか食・区分表示のあるもの)",
+    "reason": "嚥下・咀嚼の状態で適した区分が変わるため、区分表示のある製品を条件に含める。",
+    "category": "soft-meal",
+    "search_terms": {
+      "ja": [
+        "介護食 やわらか",
+        "ユニバーサルデザインフード 区分"
+      ],
+      "en": [
+        "soft texture care food"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "メイクを落とすやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "クレンジング(メイク落とし)を探している",
+    "ideal_answer": "クレンジング(メイク落とし)",
+    "reason": "洗顔料とクレンジングは役割が違い、洗顔だけではメイクが落ちない。区別が実用上重要。",
+    "category": "makeup-remover",
+    "search_terms": {
+      "ja": [
+        "クレンジング メイク落とし",
+        "クレンジングオイル"
+      ],
+      "en": [
+        "makeup remover cleansing"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "洗顔料 フォーム",
+      "化粧水"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "顔を洗ったあとに最初につけるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "化粧水を探している",
+    "ideal_answer": "化粧水(トナー)",
+    "reason": "使用順序からの説明。乳液・美容液と順番で区別する。",
+    "category": "toner",
+    "search_terms": {
+      "ja": [
+        "化粧水",
+        "化粧水 保湿 敏感肌"
+      ],
+      "en": [
+        "facial toner"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "乳液",
+      "クレンジング"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "かかとがガサガサなのを直すやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "かかと用の保湿クリームまたは角質ケア用品を探している",
+    "ideal_answer": "保湿クリームと、角質を削るケア用品があります。どちらをお探しですか？",
+    "reason": "手段が2通り。削る系は使いすぎのリスクがあるので断定しない。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "髪をまっすぐにする道具",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ヘアアイロン(ストレート)を探している",
+    "ideal_answer": "ストレートヘアアイロン",
+    "reason": "既存のドライヤーと別機器。カールアイロンとも区別する。",
+    "category": "hair-straightener",
+    "search_terms": {
+      "ja": [
+        "ヘアアイロン ストレート",
+        "ストレートアイロン 前髪"
+      ],
+      "en": [
+        "hair straightener flat iron"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "カールアイロン コテ",
+      "ドライヤー"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "まゆげを整えるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "眉用のシェーバーまたは眉ばさみを探している",
+    "ideal_answer": "眉用シェーバー、眉ばさみ、毛抜きがあります。どれをお探しですか？",
+    "reason": "同じ目的に道具が3種あり、断定できないambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "日焼けしないようにぬるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "日焼け止めを探している",
+    "ideal_answer": "日焼け止め(SPF/PA表示のあるもの)",
+    "reason": "既存の化粧崩れ防止スプレーと同じ場面だが目的が別。",
+    "category": "sunscreen",
+    "search_terms": {
+      "ja": [
+        "日焼け止め",
+        "日焼け止め SPF50 顔"
+      ],
+      "en": [
+        "sunscreen spf"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "日焼け後のケア アフターサン",
+      "化粧下地 UVなし"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ひげそりのあとにつけるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "アフターシェーブローションを探している",
+    "ideal_answer": "アフターシェーブローション",
+    "reason": "使用順序からの説明。既存の電動シェーバーと補完関係。",
+    "category": "aftershave",
+    "search_terms": {
+      "ja": [
+        "アフターシェーブローション",
+        "髭剃り後 化粧水 男性"
+      ],
+      "en": [
+        "aftershave lotion"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "シェービングフォーム 剃る前"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "つめをきる道具 分厚い爪でも切れる",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "厚い爪にも対応する爪切り(ニッパー型など)を探している",
+    "ideal_answer": "厚爪対応の爪切り(ニッパー型)",
+    "reason": "高齢者は爪が厚く硬くなりやすい。通常の爪切りでは対応できない点が要件。",
+    "category": "nail-clipper",
+    "search_terms": {
+      "ja": [
+        "爪切り 厚い爪",
+        "ニッパー型 爪切り 高齢者"
+      ],
+      "en": [
+        "nail clipper for thick nails"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "爪やすり 単体"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "冬に車のガラスが凍るのをなんとかしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "フロントガラスの凍結防止カバーまたは解氷スプレーを探している",
+    "ideal_answer": "凍る前にかぶせるカバーと、凍ってから使う解氷スプレーがあります。どちらをお探しですか？",
+    "reason": "予防と対処で商品が別。既存のサンシェード(日よけ)とも別物。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "車のウォッシャー液がなくなった",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ウォッシャー液を探している",
+    "ideal_answer": "ウォッシャー液(車用)",
+    "reason": "冷却水(クーラント)と取り違えると重大な故障につながるため、明確に区別する。",
+    "category": "washer-fluid",
+    "search_terms": {
+      "ja": [
+        "ウォッシャー液",
+        "ウォッシャー液 撥水 冬用"
+      ],
+      "en": [
+        "windshield washer fluid"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "クーラント 冷却水",
+      "エンジンオイル",
+      "ブレーキフルード"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "車の中のにおいをとるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車内用の消臭剤を探している",
+    "ideal_answer": "車内用消臭剤",
+    "reason": "芳香剤(香りを足す)と消臭剤(においを消す)は目的が別。",
+    "category": "car-deodorizer",
+    "search_terms": {
+      "ja": [
+        "車 消臭剤",
+        "車内 消臭 無香料"
+      ],
+      "en": [
+        "car odor eliminator"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "芳香剤 香り付け"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "シートベルトが首にあたって痛い",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "シートベルトカバー(パッド)を探している",
+    "ideal_answer": "シートベルトパッド(カバー)",
+    "reason": "身体の困りごとから小物を導く。",
+    "category": "seatbelt-pad",
+    "search_terms": {
+      "ja": [
+        "シートベルト パッド",
+        "シートベルトカバー 肩 痛い"
+      ],
+      "en": [
+        "seat belt shoulder pad"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "バッテリーが上がったときにつなぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ブースターケーブルまたはジャンプスターターを探している",
+    "ideal_answer": "他車とつなぐブースターケーブルと、単体で始動できるジャンプスターターがあります。どちらをお探しですか？",
+    "reason": "手段が2通り。1人で対処したいかで選択が変わる。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "猫が吐いた毛をなんとかしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "毛玉対策のフードまたはサプリを探しているが、頻度によっては受診が必要",
+    "ideal_answer": "毛玉ケア用のフードやサプリがあります。ただし吐く回数が多い場合は病気の可能性もあるので、動物病院にご相談ください。",
+    "reason": "動物の症状に踏み込む。断定して商品だけ勧めるのは適切でない。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "犬が散歩で引っ張るのをなんとかしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "引っ張り防止のハーネスを探している",
+    "ideal_answer": "引っ張り防止ハーネス(犬用)",
+    "reason": "行動の困りごとから用品を導く。首輪と区別する。",
+    "category": "dog-harness",
+    "search_terms": {
+      "ja": [
+        "犬 ハーネス 引っ張り防止",
+        "ハーネス 犬 胴輪 しつけ"
+      ],
+      "en": [
+        "no pull dog harness"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "首輪 単体",
+      "リード 単体"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ペットの毛が服につくのをとるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "粘着クリーナー(コロコロ)またはペット用毛取りブラシを探している",
+    "ideal_answer": "粘着ローラー(コロコロ)",
+    "reason": "既存の犬用抜け毛ブラシは体に使うもの。こちらは衣類に使う。",
+    "category": "lint-roller",
+    "search_terms": {
+      "ja": [
+        "粘着ローラー 衣類",
+        "コロコロ ペットの毛 服"
+      ],
+      "en": [
+        "lint roller pet hair clothes"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "犬 ブラッシング用ブラシ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "小鳥のかごに入れる砂",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "小鳥用の砂(グリット・ボレー粉)を探している",
+    "ideal_answer": "小鳥用の砂(グリット)",
+    "reason": "対象動物が明確。猫砂と取り違えると危険。",
+    "category": "bird-grit",
+    "search_terms": {
+      "ja": [
+        "小鳥 砂 グリット",
+        "インコ ボレー粉"
+      ],
+      "en": [
+        "bird grit small birds"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "猫砂",
+      "ハムスター 床材"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "金魚の水をきれいにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "水槽用のフィルターまたはカルキ抜きを探している",
+    "ideal_answer": "水を循環させるフィルターと、水道水のカルキを抜く中和剤があります。どちらをお探しですか？",
+    "reason": "「きれいにする」が濾過か水質調整か決まらないambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "kesyouhin kurenjingu sensitive skin",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "敏感肌向けクレンジングをローマ字と英語混じりで探している",
+    "ideal_answer": "敏感肌向けクレンジング",
+    "reason": "ローマ字+英語。洗顔料との区別は日本語版と同じ。",
+    "category": "makeup-remover",
+    "search_terms": {
+      "ja": [
+        "クレンジング 敏感肌"
+      ],
+      "en": [
+        "cleansing oil sensitive skin"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "洗顔料"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "일본 자외선 차단제 얼굴용",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "顔用の日焼け止めを韓国語で探している",
+    "ideal_answer": "顔用日焼け止め(SPF/PA表示)",
+    "reason": "韓国語。日本製コスメの定番需要。",
+    "category": "sunscreen",
+    "search_terms": {
+      "ja": [
+        "日焼け止め 顔用"
+      ],
+      "en": [
+        "face sunscreen spf"
+      ],
+      "ko": [
+        "자외선 차단제",
+        "선크림 얼굴"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "宠物 除臭 车内",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "ペット用の車内消臭剤を中国語で探している",
+    "ideal_answer": "車内用ペット消臭剤",
+    "reason": "中国語。ペット用と車内用の2条件。",
+    "category": "car-deodorizer",
+    "search_terms": {
+      "ja": [
+        "車 ペット 消臭剤"
+      ],
+      "en": [
+        "pet car odor eliminator"
+      ],
+      "ko": [],
+      "zh": [
+        "宠物除臭剂",
+        "车内 除臭"
+      ]
+    },
+    "excluded_conditions": [
+      "芳香剤 香り付け"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "non alcohol wet tissue for baby japan",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "赤ちゃん用のノンアルコールウェットティッシュを英語で探している",
+    "ideal_answer": "赤ちゃん用ウェットティッシュ(ノンアルコール)",
+    "reason": "成分条件が明示されている。除菌用アルコールタイプを除外する。",
+    "category": "baby-wipes",
+    "search_terms": {
+      "ja": [
+        "ウェットティッシュ ノンアルコール 赤ちゃん"
+      ],
+      "en": [
+        "baby wipes alcohol free"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "除菌シート アルコール"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  }
+]
