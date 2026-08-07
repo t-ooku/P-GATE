@@ -245,3 +245,104 @@
     min-height: 44px;
   }
 }
+
+/* v4.2 項目10・11: 検索履歴の個別削除(×)・全削除。AIウォッチの削除UI
+   (.wish-row-delete / .wish-delete-all)と見た目を揃える。 */
+.search-history-section {
+  margin: 4px 0 14px;
+}
+
+.search-history-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.search-history-toolbar h3 {
+  margin: 0;
+  color: #5140ba;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.search-history-delete-all {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid #f0dada;
+  border-radius: 11px;
+  background: #fff6f6;
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.search-history-delete-all:hover,
+.search-history-delete-all:focus-visible {
+  background: #ffecec;
+  outline: none;
+}
+
+.search-history-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-history-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid #ded7ff;
+  border-radius: 999px;
+  background: var(--soft);
+}
+
+.search-history-row button.search-history-apply {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #5140ba;
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-history-row-delete {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: #8b8698;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.search-history-row-delete:hover,
+.search-history-row-delete:focus-visible {
+  background: #fff0f0;
+  color: #b42318;
+  outline: none;
+}
+
+@media (max-width: 760px) {
+  .search-history-delete-all {
+    width: 100%;
+    min-height: 40px;
+  }
+}

@@ -91,14 +91,17 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   };
   // v3.2/v3.4 CTO instruction: 楽天だけの①API送信/②レスポンス件数を、同一
   // requestIdで必ずログ出力する。
-  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '1_api_request', keywords: query, affiliate_id_present: Boolean(affiliateId) });
+  // v4.2 項目12 プライバシー監査: 同意画面の「質問本文はサーバーログへ
+  // 保存しません」という約束を守るため、ユーザーの検索文に由来する
+  // keywords文字列そのものはログへ出さず、文字数だけを残す。
+  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '1_api_request', keywords_length: String(query || '').length, affiliate_id_present: Boolean(affiliateId) });
   const payload = await request(url);
   const rawItemCount = (payload?.items || payload?.Items || []).length;
   const normalized = normalizeRakutenItems(payload);
   console.info('RAKUTEN_PIPELINE_TRACE', {
     requestId,
     stage: '2_api_response',
-    keywords: query,
+    keywords_length: String(query || '').length,
     raw_item_count: rawItemCount,
     normalized_item_count: normalized.length,
     dropped_by_normalization: rawItemCount - normalized.length
@@ -110,9 +113,9 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   // If Rakuten changes its affiliate redirect shape, never expose an unverified
   // redirect. Re-fetch the same confirmed items as direct official product URLs.
   url.searchParams.delete('affiliateId');
-  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '2b_api_retry_without_affiliate', keywords: query });
+  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '2b_api_retry_without_affiliate', keywords_length: String(query || '').length });
   const retried = normalizeRakutenItems(await request(url));
-  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '2c_api_retry_response', keywords: query, normalized_item_count: retried.length });
+  console.info('RAKUTEN_PIPELINE_TRACE', { requestId, stage: '2c_api_retry_response', keywords_length: String(query || '').length, normalized_item_count: retried.length });
   return retried;
 }
 
