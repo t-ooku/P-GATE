@@ -1,0 +1,676 @@
+[
+  {
+    "query_text": "時計の中に入ってる丸い電池",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ボタン電池を探しているが型番が不明",
+    "ideal_answer": "ボタン電池は型番(CR2032、SR626SWなど)ごとに大きさが違い、合わないと入りません。電池の表面に書かれた番号を教えてください。",
+    "reason": "型番が分からないまま断定すると、物理的に入らない電池を買わせてしまう。番号を聞くのが正しい。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "リモコンの電池",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "リモコン用の乾電池を探しているが単3か単4か不明",
+    "ideal_answer": "単3形と単4形のどちらでしょうか。リモコンの電池ぶたを開けると、入っている電池に書いてあります。",
+    "reason": "サイズを確認せず断定できない。日常的だが間違えると使えない典型。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "充電できる電池",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "充電式のニッケル水素電池を探している",
+    "ideal_answer": "充電式ニッケル水素電池(単3・単4など)",
+    "reason": "充電式という条件は明確。サイズは追加確認だが、カテゴリまでは断定できる。",
+    "category": "rechargeable-battery",
+    "search_terms": {
+      "ja": [
+        "充電池 ニッケル水素",
+        "エネループ 単3 充電式"
+      ],
+      "en": [
+        "rechargeable nimh batteries"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "アルカリ乾電池 使い捨て",
+      "モバイルバッテリー"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "補聴器の電池",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "補聴器用空気電池を探しているが型番(色)が不明",
+    "ideal_answer": "補聴器用電池はPR41(茶)、PR48(橙)、PR536(黄)などサイズが分かれています。今お使いの電池のシールの色か番号を教えてください。",
+    "reason": "補聴器そのものは医療機器だが、消耗品の電池は型番さえ合えば断定してよい。型番確認が要る。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "補聴器 電池 空気電池"
+      ],
+      "en": [
+        "hearing aid battery"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "プラスドライバーの小さいやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "精密ドライバー(小型のプラス)を探している",
+    "ideal_answer": "精密ドライバー(プラス)",
+    "reason": "サイズ規格(#0/#1、PH000など)は対象物次第だが、精密ドライバーというカテゴリまでは断定できる。",
+    "category": "screwdriver",
+    "search_terms": {
+      "ja": [
+        "精密ドライバー プラス",
+        "精密ドライバーセット 眼鏡 時計"
+      ],
+      "en": [
+        "precision phillips screwdriver"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "電動ドライバー",
+      "インパクトドライバー"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "六角の穴のネジを回すやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "六角レンチを探している",
+    "ideal_answer": "六角レンチ(アーレンキー)",
+    "reason": "ネジ頭の形状から工具が決まる。ミリ/インチとサイズは追加確認。",
+    "category": "hex-key",
+    "search_terms": {
+      "ja": [
+        "六角レンチ セット",
+        "アーレンキー ミリ"
+      ],
+      "en": [
+        "hex key allen wrench set"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "トルクスドライバー 星形",
+      "プラスドライバー"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "星の形の穴のネジ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "トルクス(星形)ドライバーを探している",
+    "ideal_answer": "トルクスドライバー(星形)",
+    "reason": "六角と混同されやすいが別規格。合わないと確実にネジを潰す。",
+    "category": "torx-driver",
+    "search_terms": {
+      "ja": [
+        "トルクスドライバー",
+        "星型 ドライバー T型"
+      ],
+      "en": [
+        "torx screwdriver set"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "六角レンチ",
+      "プラスドライバー"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "棚を壁につけるネジ 石膏ボード",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "石膏ボード用アンカーを探している",
+    "ideal_answer": "石膏ボード用アンカー",
+    "reason": "下地が石膏ボードだと普通の木ネジは効かず、棚ごと落ちる。下地の指定が要件。",
+    "category": "drywall-anchor",
+    "search_terms": {
+      "ja": [
+        "石膏ボード アンカー",
+        "ボードアンカー 棚 取り付け"
+      ],
+      "en": [
+        "drywall anchor"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "木ネジ 単体",
+      "コンクリートビス"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "スマホの充電さすところが小さい四角いやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "USB Type-Cケーブルを探している",
+    "ideal_answer": "USB Type-Cケーブル",
+    "reason": "端子形状の説明。Lightningやmicro USBと物理的に互換がない。",
+    "category": "usb-c-cable",
+    "search_terms": {
+      "ja": [
+        "USB Type-C ケーブル",
+        "USB-C 充電ケーブル 急速"
+      ],
+      "en": [
+        "usb type c cable"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "Lightning ケーブル",
+      "micro USB ケーブル"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "iPhoneの古いほうの充電コード",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "Lightningケーブルを探している",
+    "ideal_answer": "Lightningケーブル(iPhone旧端子)",
+    "reason": "iPhone 15以降はUSB-Cで端子が変わった。世代で別物になる。",
+    "category": "lightning-cable",
+    "search_terms": {
+      "ja": [
+        "Lightning ケーブル",
+        "iPhone 充電ケーブル ライトニング"
+      ],
+      "en": [
+        "lightning cable iphone"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "USB Type-C ケーブル",
+      "30ピン ドックコネクタ"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "テレビとパソコンをつなぐ線",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "HDMIケーブルを探している",
+    "ideal_answer": "HDMIケーブル",
+    "reason": "既存の「テレビに映すやつ」が有線/無線で曖昧だったのに対し、こちらは有線と読める。",
+    "category": "hdmi-cable",
+    "search_terms": {
+      "ja": [
+        "HDMI ケーブル",
+        "HDMI ケーブル 2m 4K"
+      ],
+      "en": [
+        "hdmi cable"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "VGA ケーブル",
+      "Chromecast 無線"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "延長コードの穴がたりない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電源タップ(延長コード)を探している",
+    "ideal_answer": "電源タップ(口数の多い延長コード)",
+    "reason": "困りごとからの表現。合計消費電力の確認は購入前の注意点。",
+    "category": "power-strip",
+    "search_terms": {
+      "ja": [
+        "電源タップ 6個口",
+        "延長コード 雷ガード"
+      ],
+      "en": [
+        "power strip multiple outlets"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "変換プラグ 海外用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "コピー用紙のふつうのやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "A4のコピー用紙を探している",
+    "ideal_answer": "A4コピー用紙",
+    "reason": "日本の「ふつう」はA4。ただしB5等の可能性もあるため断定はA4として扱いつつサイズ確認の余地を残す。",
+    "category": "copy-paper",
+    "search_terms": {
+      "ja": [
+        "コピー用紙 A4",
+        "コピー用紙 A4 500枚"
+      ],
+      "en": [
+        "a4 copy paper"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "写真をいれるアルバムの大きさが合わない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "写真サイズに合うアルバムを探しているが、写真のサイズが不明",
+    "ideal_answer": "写真はL判、2L判、KGサイズなどで大きさが違います。お手元の写真のサイズはどれですか？",
+    "reason": "規格が合わないと収まらない。サイズ確認が先。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "スマホに貼るフィルムのサイズ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "機種に合う保護フィルムを探しているが機種が不明",
+    "ideal_answer": "保護フィルムは機種ごとに大きさとカメラ穴の位置が違います。お使いの機種名を教えてください。",
+    "reason": "汎用品もあるが機種専用が基本。機種を聞くのが正しい。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "掃除機のごみパックが合うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "掃除機の紙パックを探しているが、掃除機の型番が不明",
+    "ideal_answer": "紙パックはメーカーと型番で形が違います。掃除機本体に書かれた型番を教えてください。",
+    "reason": "既存の「掃除機紙パック」エントリを、型番不明という現実的な入り口で補完する。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "空気清浄機のフィルターの替え",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "空気清浄機の交換フィルターを探しているが機種が不明",
+    "ideal_answer": "フィルターは機種専用です。空気清浄機本体の型番(シャープKC-〇〇、ダイキンMCK〇〇など)を教えてください。",
+    "reason": "既存の空気清浄機本体エントリと対になる消耗品。型番が要る。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "電動歯ブラシの先っぽ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電動歯ブラシの替えブラシを探しているがブランド・機種が不明",
+    "ideal_answer": "替えブラシはブランドごとに取り付け方が違います。お使いの電動歯ブラシのメーカー(ブラウン、フィリップスなど)はどちらですか？",
+    "reason": "ブランド間の互換がない典型。断定は誤購入になる。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "シェーバーの刃だけ買いたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電動シェーバーの替刃を探しているが機種が不明",
+    "ideal_answer": "替刃は機種専用です。シェーバー本体の型番を教えてください。",
+    "reason": "既存の「シェーバーの替刃と洗浄液」エントリを、型番不明の入り口で補完する。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "プリンターのインクがなくなった",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "プリンターの交換インクを探しているが型番が不明",
+    "ideal_answer": "インクはプリンターの機種ごとに型番が決まっています(例: エプソンIC〇〇、キヤノンBCI-〇〇)。プリンター本体の型番か、今使っているインクの型番を教えてください。",
+    "reason": "純正/互換の別もあるが、まず型番が要る。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "メガネのねじがゆるんだ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "メガネ用の精密ドライバー・ネジのセットを探している",
+    "ideal_answer": "メガネ修理キット(精密ドライバー・小ネジ)",
+    "reason": "工具とネジがセットの商品が一般的。既存の精密ドライバーとは用途特化で分ける。",
+    "category": "eyeglass-repair-kit",
+    "search_terms": {
+      "ja": [
+        "メガネ 修理キット ネジ",
+        "眼鏡 ドライバー 小ねじ セット"
+      ],
+      "en": [
+        "eyeglass repair kit screws"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ふとんカバーの大きさ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布団カバーを探しているがサイズが不明",
+    "ideal_answer": "シングル、セミダブル、ダブルなどでサイズが違い、掛け布団用と敷き布団用でも別です。どちらをお探しですか？",
+    "reason": "2軸(サイズ・掛け/敷き)の確認が要る。合わないと使えない。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "まくらカバーが入らない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "枕に合うカバーを探しているが枕のサイズが不明",
+    "ideal_answer": "枕カバーは43×63cmが一般的ですが、50×70cmなど別サイズもあります。お使いの枕の寸法を教えてください。",
+    "reason": "寸法を測ってもらうのが確実。断定は誤購入。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "子どもの靴のサイズがすぐ変わる",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "成長に合わせた子ども靴を探しているが足のサイズが不明",
+    "ideal_answer": "お子さまの足の実寸(cm)はいくつですか？ サイズが分かれば、成長を見込んだ選び方もご案内できます。",
+    "reason": "サイズが分からないと選べない。子どもの足は合わないと発育に影響しうる。",
+    "category": "kids-shoes",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "海外で日本の家電を使いたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "海外で使うための変圧器を探しているが、渡航先と機器の対応電圧が不明",
+    "ideal_answer": "行き先の電圧と、その家電が海外電圧に対応しているかで必要なものが変わります(変換プラグだけで足りる場合と、変圧器が要る場合があります)。渡航先はどちらですか？",
+    "reason": "既存の変換プラグと違い、こちらは電圧の話。取り違えると家電が壊れる。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "100V 200V ちがい 洗濯機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電圧規格が家電選びにどう影響するかを確認したい",
+    "ideal_answer": "日本の家庭用は通常100Vで、200Vは専用コンセントが必要です。お住まいのコンセント形状をご確認ください。工事が必要な場合もあります。",
+    "reason": "商品検索ではなく前提確認。誤って200V機を買うと使えない。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "cr2032 battery equivalent japan",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "CR2032ボタン電池を英語で探している",
+    "ideal_answer": "CR2032 ボタン電池",
+    "reason": "型番が明示されているので断定できる。型番不明の日本語版と対になる。",
+    "category": "button-battery",
+    "search_terms": {
+      "ja": [
+        "CR2032 ボタン電池"
+      ],
+      "en": [
+        "cr2032 coin cell battery"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "CR2025",
+      "CR2016"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "a4 vs b5 paper size japan",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "日本の紙サイズの違いを確認したうえで用紙を探している",
+    "ideal_answer": "A4またはB5のコピー用紙(用途に応じて)",
+    "reason": "規格の確認を伴う検索。日本ではA4が標準。",
+    "category": "copy-paper",
+    "search_terms": {
+      "ja": [
+        "コピー用紙 A4",
+        "コピー用紙 B5"
+      ],
+      "en": [
+        "a4 paper",
+        "b5 paper japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "변압기 일본 가전 한국에서",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "日本の家電を韓国で使うための変圧器を韓国語で探している",
+    "ideal_answer": "日本は100V、韓国は220Vです。その家電が海外電圧に対応していない場合は変圧器が必要です。機器の対応電圧をご確認ください。",
+    "reason": "電圧が違う国をまたぐ持ち込み。断定すると家電の破損につながる。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [
+        "변압기 110v 220v",
+        "일본 가전 변압기"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "打印机 墨盒 型号 怎么找",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "プリンターのインク型番の調べ方を中国語で聞いている",
+    "ideal_answer": "インクはプリンターの機種ごとに型番が決まっています。プリンター本体に貼られた型番か、今お使いのインクの型番を教えてください。",
+    "reason": "中国語。型番確認が要る点は日本語版と同じ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "打印机 墨盒",
+        "墨盒 型号"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  }
+]
