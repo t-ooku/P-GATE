@@ -1384,11 +1384,14 @@ async function handleKnowledgeApi(request, env, ctx) {
     // 入力・出力件数/モール別件数/UI送信件数) must share one requestId so the
     // full path for a single search can be reconstructed from logs alone.
     const requestId = crypto.randomUUID();
+    // v4.2 項目12 プライバシー監査: 同意画面は「質問本文はサーバーログへ
+    // 保存しません」と明示しているため、ユーザーの検索文そのもの(query /
+    // original_query)はここを含むどのSEARCH_TRACEにも出力しない。段階の
+    // 追跡に必要な情報(文字数・展開の有無・展開ルールID)だけを残す。
     console.info('SEARCH_TRACE', {
       requestId,
       stage: '0_request_received',
-      query: input.query,
-      original_query: originalQuery,
+      query_length: input.query.length,
       query_expanded: expandedQuery.expanded,
       query_expansion_rule: expandedQuery.expansion?.rule_id || null
     });
@@ -1511,7 +1514,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       console.info('SEARCH_TRACE', {
         requestId,
         stage: '9_marketplace_ranking',
-        query: input.query,
+        query_length: input.query.length,
         ranking_input_count: beforeRankingCount,
         ranking_output_count: rankedAll.length,
         sent_to_client_count: finalSlice.length,
@@ -1563,7 +1566,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       ctx.waitUntil(callGas(env, 'TRACK', { events, channel: 'PWA' }));
       ctx.waitUntil(recordMeasurementEventsToD1(env, 'PWA', events));
     }
-    console.info('SEARCH_TRACE', { requestId, stage: '10_ui_sent', query: input.query, ui_sent_count: (decorated.candidates || []).length });
+    console.info('SEARCH_TRACE', { requestId, stage: '10_ui_sent', query_length: input.query.length, ui_sent_count: (decorated.candidates || []).length });
     return Response.json({ ok: true, result: decorated }, {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
     });

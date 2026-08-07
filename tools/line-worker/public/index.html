@@ -142,6 +142,10 @@
               <label class="visually-hidden" for="query">欲しいものについて話す</label>
               <div class="query-field"><textarea id="query" name="query" minlength="2" maxlength="200" required placeholder="例：昔見た、iPhoneの後ろにつける丸い磁石みたいな充電器"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
               <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
+              <div id="searchHistorySection" class="search-history-section hidden">
+                <div class="search-history-toolbar"><h3 id="searchHistoryTitle">検索履歴</h3><button id="deleteAllSearchHistory" type="button" class="search-history-delete-all hidden">すべて削除</button></div>
+                <ul id="searchHistoryList" class="search-history-list" aria-label="検索履歴"></ul>
+              </div>
               <button id="advancedSearchToggle" type="button" class="advanced-search-toggle" aria-expanded="false" aria-controls="advancedSearchPanel">詳細検索</button>
               <div id="advancedSearchPanel" class="advanced-search-panel hidden"></div>
               <label class="consent"><input id="consent" type="checkbox" required><span id="consentText">質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。</span></label>
