@@ -1,0 +1,109 @@
+name: Apply teacher dataset to D1
+
+# Manual-only. docs/HOSHILU_COMMAND_GOVERNANCE_2026-08-02.md requires explicit
+# approval before anything writes to production D1, and ci.yml's deploy job is
+# deliberately scoped to the Worker for that reason. This workflow does not
+# change that rule - it is the mechanism for carrying out an approval that has
+# already been given, and it never runs on push.
+#
+# It exists because the authoring environment has no network route to
+# api.cloudflare.com, so `wrangler d1 execute --remote` cannot be run from
+# there. The repository already holds the Cloudflare credentials this needs.
+#
+# The generated SQL is INSERT OR IGNORE only (verified: zero DELETE/DROP/
+# UPDATE/TRUNCATE/ALTER statements), keyed by content_hash, so re-running a
+# batch is a no-op rather than a duplicate or an overwrite.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sql_files:
+        description: 'Space-separated SQL files under tools/line-worker/ to apply'
+        required: true
+        default: >-
+          evaluation/teacher-dataset/2026-08-07-batch-002.generated.sql
+          evaluation/teacher-dataset/2026-08-07-batch-003.generated.sql
+          evaluation/teacher-dataset/2026-08-07-batch-004.generated.sql
+      confirm:
+        description: 'Type APPLY to confirm writing to the production D1 database'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: cloudflare-d1-teacher-dataset
+      cancel-in-progress: false
+    steps:
+      - name: Require explicit confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "APPLY" ]; then
+            echo "::error::confirm input must be exactly APPLY. Nothing was executed."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check Cloudflare credentials are configured
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID are not set."
+            exit 1
+          fi
+
+      # Refuse anything that is not a plain INSERT OR IGNORE. The files are
+      # generated, but this workflow takes a path as input, so it verifies what
+      # it is about to run rather than trusting the filename.
+      - name: Verify the SQL is additive only
+        working-directory: tools/line-worker
+        run: |
+          for file in ${{ github.event.inputs.sql_files }}; do
+            if [ ! -f "$file" ]; then
+              echo "::error::missing SQL file: $file"
+              exit 1
+            fi
+            if grep -iqE '(^|[[:space:]])(delete|drop|truncate|alter|update)[[:space:]]' "$file"; then
+              echo "::error::$file contains a destructive statement - refusing to run."
+              exit 1
+            fi
+            if grep -qE '^[[:space:]]*INSERT' "$file" && ! grep -qE '^[[:space:]]*INSERT OR IGNORE' "$file"; then
+              echo "::error::$file has an INSERT that is not INSERT OR IGNORE - refusing to run."
+              exit 1
+            fi
+            echo "ok: $file ($(grep -c '^INSERT OR IGNORE' "$file") statements)"
+          done
+
+      - name: Count rows before
+        working-directory: tools/line-worker
+        run: npx wrangler d1 execute PRODUCT_DB --remote --command "SELECT COUNT(*) AS teacher_queries FROM teacher_queries;"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Apply SQL
+        working-directory: tools/line-worker
+        run: |
+          for file in ${{ github.event.inputs.sql_files }}; do
+            echo "--- applying $file"
+            npx wrangler d1 execute PRODUCT_DB --remote --file="$file" --yes
+          done
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Count rows after
+        working-directory: tools/line-worker
+        run: |
+          npx wrangler d1 execute PRODUCT_DB --remote --command "SELECT COUNT(*) AS teacher_queries FROM teacher_queries;"
+          npx wrangler d1 execute PRODUCT_DB --remote --command "SELECT persona, COUNT(*) AS n FROM teacher_queries GROUP BY persona ORDER BY n DESC;"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
