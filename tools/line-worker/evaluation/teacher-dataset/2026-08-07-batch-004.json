@@ -1,0 +1,1125 @@
+[
+  {
+    "query_text": "赤ちゃんが寝てる間に見張るカメラ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベビーモニターを探している",
+    "ideal_answer": "ベビーモニター(見守りカメラ)",
+    "reason": "対象と用途が明確。防犯カメラと用途が違うので育児用を固定する。",
+    "category": "baby-monitor",
+    "search_terms": {
+      "ja": [
+        "ベビーモニター",
+        "見守りカメラ 赤ちゃん"
+      ],
+      "en": [
+        "baby monitor camera"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "防犯カメラ 屋外",
+      "ペットカメラ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "哺乳瓶を消毒するやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "哺乳瓶消毒器を探している",
+    "ideal_answer": "哺乳瓶消毒器(電子レンジ式・スチーム式)",
+    "reason": "対象物が明確。食器用の消毒と区別する。",
+    "category": "bottle-sterilizer",
+    "search_terms": {
+      "ja": [
+        "哺乳瓶 消毒器",
+        "哺乳瓶 除菌 レンジ"
+      ],
+      "en": [
+        "baby bottle sterilizer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "子どもが引き出しを開けないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "チャイルドロック(いたずら防止ロック)を探している",
+    "ideal_answer": "チャイルドロック(引き出し・扉用)",
+    "reason": "危険防止用品。取り付け対象が明示されている。",
+    "category": "child-safety-lock",
+    "search_terms": {
+      "ja": [
+        "チャイルドロック 引き出し",
+        "いたずら防止 ロック ベビー"
+      ],
+      "en": [
+        "child safety cabinet lock"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ベビーカーにつける日よけ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベビーカー用の日よけ(サンシェード)を探している",
+    "ideal_answer": "ベビーカー用サンシェード(日よけ)",
+    "reason": "取り付け先と用途が揃っている。",
+    "category": "stroller-accessory",
+    "search_terms": {
+      "ja": [
+        "ベビーカー 日よけ",
+        "ベビーカー サンシェード UVカット"
+      ],
+      "en": [
+        "stroller sun shade"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "離乳食を小分けにして冷凍する容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "離乳食用の小分け冷凍トレーを探している",
+    "ideal_answer": "離乳食 小分け冷凍トレー",
+    "reason": "用途・工程が具体的で断定できる。製氷皿と近いが離乳食用を優先。",
+    "category": "food-storage",
+    "search_terms": {
+      "ja": [
+        "離乳食 冷凍 小分け",
+        "フリージングトレー 離乳食"
+      ],
+      "en": [
+        "baby food freezer tray"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "野菜を細くするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "スライサー(千切り器)を探している",
+    "ideal_answer": "スライサー(千切り器)",
+    "reason": "動作からの説明。フードプロセッサーと区別する。",
+    "category": "slicer",
+    "search_terms": {
+      "ja": [
+        "スライサー 千切り",
+        "野菜 千切り器"
+      ],
+      "en": [
+        "vegetable julienne slicer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "フードプロセッサー"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "油を使わずに揚げ物ができるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ノンフライヤー(エアフライヤー)を探している",
+    "ideal_answer": "ノンフライヤー(エアフライヤー)",
+    "reason": "調理方式が明確で断定できる。オーブンレンジと区別する。",
+    "category": "air-fryer",
+    "search_terms": {
+      "ja": [
+        "ノンフライヤー",
+        "エアフライヤー 油不要"
+      ],
+      "en": [
+        "air fryer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "電気フライヤー 油使用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "低い温度でじっくり火を通す機械",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "低温調理器を探している",
+    "ideal_answer": "低温調理器(サーキュレーター式)",
+    "reason": "調理法から機器を引く。炊飯器の低温モードとは別商品。",
+    "category": "sous-vide",
+    "search_terms": {
+      "ja": [
+        "低温調理器",
+        "サーキュレーター 低温調理"
+      ],
+      "en": [
+        "sous vide cooker"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ごはんを保温しないで冷凍する容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ごはん冷凍保存容器を探している",
+    "ideal_answer": "ごはん冷凍용保存容器",
+    "reason": "保温を否定している点が要件。炊飯器と混ざらないようにする。",
+    "category": "rice-container",
+    "search_terms": {
+      "ja": [
+        "ご飯 冷凍 容器",
+        "ごはん 保存容器 レンジ 一膳"
+      ],
+      "en": [
+        "rice freezer container"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "炊飯器",
+      "保温ジャー"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "鍋のふたを立てておくやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "鍋ふたスタンドを探している",
+    "ideal_answer": "鍋ふたスタンド(ふた置き)",
+    "reason": "対象と動作が明確な小物。まな板スタンドと区別する。",
+    "category": "lid-holder",
+    "search_terms": {
+      "ja": [
+        "鍋ふた スタンド",
+        "鍋 蓋置き キッチン"
+      ],
+      "en": [
+        "pot lid holder stand"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "排水口のぬめりをとるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "排水口用の洗浄剤またはブラシを探している",
+    "ideal_answer": "薬剤で溶かすタイプと、ブラシでこするタイプがあります。どちらをお探しですか？",
+    "reason": "手段が2通りあるambiguous例。",
+    "category": "drain-cleaner",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "コンロの周りの油汚れを落とすもの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "キッチン用の油汚れ洗剤を探している",
+    "ideal_answer": "キッチン用油汚れ洗剤",
+    "reason": "汚れの種類と場所が明確。浴室用と区別する。",
+    "category": "kitchen-cleaner",
+    "search_terms": {
+      "ja": [
+        "キッチン 油汚れ 洗剤",
+        "換気扇 掃除 洗剤"
+      ],
+      "en": [
+        "kitchen degreaser cleaner"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "浴室用洗剤",
+      "トイレ用洗剤"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "窓の結露をとるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結露取りワイパーを探している",
+    "ideal_answer": "結露取りワイパー",
+    "reason": "季節性の困りごと。除湿機とは別の直接的な道具。",
+    "category": "condensation-wiper",
+    "search_terms": {
+      "ja": [
+        "結露取りワイパー",
+        "窓 結露 スクイジー"
+      ],
+      "en": [
+        "window condensation squeegee"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "除湿機"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "お風呂のカビを防ぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室用の防カビくん煙剤などを探している",
+    "ideal_answer": "浴室用防カビ剤",
+    "reason": "予防が目的でカビ取り剤(除去)とは別。取り違えると効果が出ない。",
+    "category": "mold-prevention",
+    "search_terms": {
+      "ja": [
+        "お風呂 防カビ 燻煙",
+        "浴室 防カビ剤"
+      ],
+      "en": [
+        "bathroom mold prevention"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "カビ取り剤 塩素系 除去用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "エアコンの下につけて風を上に向けるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "エアコン風よけ(ルーバー)を探している",
+    "ideal_answer": "エアコン用風よけルーバー",
+    "reason": "取り付け先と目的が具体的。サーキュレーターと区別する。",
+    "category": "aircon-deflector",
+    "search_terms": {
+      "ja": [
+        "エアコン 風よけ",
+        "エアコン ルーバー 直風防止"
+      ],
+      "en": [
+        "air conditioner wind deflector"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "サーキュレーター",
+      "扇風機"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "洗濯機の中を洗うもの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯槽クリーナーを探している",
+    "ideal_answer": "洗濯槽クリーナー",
+    "reason": "洗濯用洗剤と混同されやすいので、対象が「槽」であることを固定する。",
+    "category": "washing-machine-cleaner",
+    "search_terms": {
+      "ja": [
+        "洗濯槽クリーナー",
+        "洗濯機 槽洗浄 塩素"
+      ],
+      "en": [
+        "washing machine tub cleaner"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "洗濯洗剤 衣類用",
+      "柔軟剤"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "虫が入ってこないようにする網戸のやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "網戸用の隙間テープまたは補修材を探している",
+    "ideal_answer": "網戸用すきまテープ(補修材)",
+    "reason": "侵入経路をふさぐ目的。殺虫剤とは手段が違う。",
+    "category": "screen-door-tape",
+    "search_terms": {
+      "ja": [
+        "網戸 すきまテープ",
+        "網戸 補修 虫よけ"
+      ],
+      "en": [
+        "window screen gap tape"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "殺虫剤",
+      "虫よけスプレー 人体用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "地震で家具が倒れないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家具転倒防止器具を探している",
+    "ideal_answer": "家具転倒防止器具(突っ張り棒・固定金具)",
+    "reason": "防災用品。突っ張り棒(物干し用)と区別する。",
+    "category": "furniture-anchor",
+    "search_terms": {
+      "ja": [
+        "家具 転倒防止",
+        "突っ張り棒 家具固定 地震"
+      ],
+      "en": [
+        "furniture anti tip anchor"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "突っ張り棒 物干し用",
+      "カーテンレール"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "猫が爪をとぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "猫用の爪とぎを探している",
+    "ideal_answer": "猫用爪とぎ",
+    "reason": "動物と行動が明確。爪切りと区別する。",
+    "category": "cat-scratcher",
+    "search_terms": {
+      "ja": [
+        "猫 爪とぎ",
+        "爪とぎ ダンボール 猫"
+      ],
+      "en": [
+        "cat scratching post"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "猫用 爪切り"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "犬の抜け毛をとるブラシ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "犬用の抜け毛取りブラシを探している",
+    "ideal_answer": "犬用アンダーコートブラシ(抜け毛取り)",
+    "reason": "対象と目的が明確。人間用ブラシと区別する。",
+    "category": "pet-grooming-brush",
+    "search_terms": {
+      "ja": [
+        "犬 抜け毛 ブラシ",
+        "アンダーコート ブラシ 犬"
+      ],
+      "en": [
+        "dog deshedding brush"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ペットのトイレのにおいを消すやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペット用消臭剤を探している",
+    "ideal_answer": "ペット用消臭剤",
+    "reason": "対象がペット用であることが安全上重要(人間用の一部成分は動物に不適)。",
+    "category": "pet-deodorizer",
+    "search_terms": {
+      "ja": [
+        "ペット 消臭剤",
+        "犬 猫 トイレ 消臭 除菌"
+      ],
+      "en": [
+        "pet odor eliminator"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "人間用 芳香剤",
+      "アロマオイル"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "留守中に水をあげる犬用のやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペット用自動給水器を探している",
+    "ideal_answer": "ペット用自動給水器",
+    "reason": "既存の自動給餌器と対になる商品。給餌と給水の取り違えを防ぐ。",
+    "category": "pet-water-dispenser",
+    "search_terms": {
+      "ja": [
+        "ペット 自動給水器",
+        "犬 給水器 循環 フィルター"
+      ],
+      "en": [
+        "pet automatic water dispenser"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "自動給餌器 フードのみ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "車の窓につける日よけ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車用サンシェードを探している",
+    "ideal_answer": "車用サンシェード",
+    "reason": "取り付け先が車と明示。ベビーカー用と区別する。",
+    "category": "car-sunshade",
+    "search_terms": {
+      "ja": [
+        "車 サンシェード",
+        "フロントガラス 日除け"
+      ],
+      "en": [
+        "car windshield sunshade"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ベビーカー 日よけ",
+      "室内カーテン"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "車の中でスマホを立てるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車載スマホホルダーを探している",
+    "ideal_answer": "車載スマホホルダー",
+    "reason": "設置場所が車内。卓上スタンドと区別する。",
+    "category": "car-phone-mount",
+    "search_terms": {
+      "ja": [
+        "車 スマホホルダー",
+        "車載ホルダー エアコン吹き出し口"
+      ],
+      "en": [
+        "car phone mount"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "卓上スマホスタンド"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "タイヤの空気を入れるやつ 電動",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電動空気入れ(エアコンプレッサー)を探している",
+    "ideal_answer": "電動空気入れ",
+    "reason": "電動という要件が明示。手動ポンプを除外できる。",
+    "category": "air-compressor",
+    "search_terms": {
+      "ja": [
+        "電動空気入れ 車",
+        "エアコンプレッサー 車 タイヤ"
+      ],
+      "en": [
+        "portable tire inflator"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "手動ポンプ",
+      "自転車 空気入れ 手押し"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "飛行機で首を支えるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ネックピロー(トラベル枕)を探している",
+    "ideal_answer": "ネックピロー(トラベル枕)",
+    "reason": "場面と部位から特定できる。通常の枕と区別する。",
+    "category": "travel-pillow",
+    "search_terms": {
+      "ja": [
+        "ネックピロー 飛行機",
+        "トラベル枕 携帯"
+      ],
+      "en": [
+        "travel neck pillow"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "枕 寝具用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "スーツケースの中で服をまとめるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "パッキングキューブ(圧縮袋・仕分けケース)を探している",
+    "ideal_answer": "パッキングキューブ(旅行用仕分けケース)",
+    "reason": "既存の「旅行で荷物を小さくしたい」を、道具名の軸で補完する。",
+    "category": "packing-cube",
+    "search_terms": {
+      "ja": [
+        "パッキングキューブ",
+        "旅行 圧縮袋 衣類"
+      ],
+      "en": [
+        "packing cubes for luggage"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "コンセントの形が国によって違うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "海外用の電源変換プラグを探している",
+    "ideal_answer": "海外用変換プラグ(トラベルアダプター)",
+    "reason": "変圧器(電圧変換)とは別物なので、形状変換であることを固定する。",
+    "category": "travel-adapter",
+    "search_terms": {
+      "ja": [
+        "変換プラグ 海外",
+        "海外 コンセント 変換 マルチ"
+      ],
+      "en": [
+        "universal travel adapter"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "変圧器 電圧変換"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "会議で使う丸いマイク",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "会議用スピーカーフォン(全指向性マイク)を探している",
+    "ideal_answer": "会議用スピーカーフォン",
+    "reason": "形状と場面から特定できる。実況用マイクと区別する。",
+    "category": "conference-microphone",
+    "search_terms": {
+      "ja": [
+        "会議用スピーカーフォン",
+        "全指向性 マイク 会議 USB"
+      ],
+      "en": [
+        "conference speakerphone"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "コンデンサーマイク 配信用"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "パソコンの画面をもう一枚増やすやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "モバイルモニター(サブディスプレイ)を探している",
+    "ideal_answer": "モバイルモニター(サブディスプレイ)",
+    "reason": "目的が画面拡張。分配器(スプリッタ)と取り違えやすい。",
+    "category": "portable-monitor",
+    "search_terms": {
+      "ja": [
+        "モバイルモニター",
+        "サブディスプレイ 15インチ 持ち運び"
+      ],
+      "en": [
+        "portable monitor second screen"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "HDMI分配器",
+      "変換アダプタのみ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "ノートパソコンを高くする台",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ノートPCスタンドを探している",
+    "ideal_answer": "ノートパソコンスタンド",
+    "reason": "既存のスタンディングデスクと違い、卓上の小型什器。",
+    "category": "laptop-stand",
+    "search_terms": {
+      "ja": [
+        "ノートパソコン スタンド",
+        "PCスタンド 高さ調整 姿勢"
+      ],
+      "en": [
+        "laptop riser stand"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "スタンディングデスク"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "書類を立てて置くやつ 打ちながら見る",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "デスク用の書類ホルダー(タイピング用)を探している",
+    "ideal_answer": "書類ホルダー(デスク用スタンド)",
+    "reason": "用途(タイピング中の視線移動軽減)が具体的。",
+    "category": "document-holder",
+    "search_terms": {
+      "ja": [
+        "書類スタンド デスク",
+        "書見台 タイピング"
+      ],
+      "en": [
+        "document holder for typing"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "bentou baran plastic leaf",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "弁当の仕切り(バラン)をローマ字混じり英語で探している",
+    "ideal_answer": "弁当用バラン(仕切り)",
+    "reason": "ローマ字+英語の混在。2026-08-07に日本語側で改善したバラン検索の外国語版。",
+    "category": "bento-divider",
+    "search_terms": {
+      "ja": [
+        "弁当 バラン 仕切り"
+      ],
+      "en": [
+        "bento divider plastic grass",
+        "sushi grass divider"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "suihanki hitori gurashi",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "一人暮らし用の炊飯器をローマ字で探している",
+    "ideal_answer": "小容量の炊飯器(3合以下)",
+    "reason": "ローマ字のみ。既存の日本語版クエリの外国語対応。",
+    "category": "rice-cooker",
+    "search_terms": {
+      "ja": [
+        "炊飯器 一人暮らし 3合"
+      ],
+      "en": [
+        "small rice cooker single person"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "where to buy japanese school backpack randoseru",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "ランドセルを英語で探している",
+    "ideal_answer": "ランドセル(日本の学童用リュック)",
+    "reason": "固有の日本製品を英語話者が探す例。一般的なバックパックと区別する。",
+    "category": "backpack",
+    "search_terms": {
+      "ja": [
+        "ランドセル"
+      ],
+      "en": [
+        "randoseru japanese school bag"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "登山用バックパック"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "kotatsu table heater",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "こたつを英語で探している",
+    "ideal_answer": "こたつ(ヒーター付きテーブル)",
+    "reason": "日本固有の家具。ヒーター単体やテーブル単体と区別する。",
+    "category": "kotatsu",
+    "search_terms": {
+      "ja": [
+        "こたつ",
+        "こたつテーブル"
+      ],
+      "en": [
+        "kotatsu heated table"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ヒーター 単体",
+      "テーブル 暖房なし"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "일본 밥솥 소형",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "小型の日本製炊飯器を韓国語で探している",
+    "ideal_answer": "小容量の炊飯器",
+    "reason": "韓国語での家電検索。電圧の違いは購入前確認事項。",
+    "category": "rice-cooker",
+    "search_terms": {
+      "ja": [
+        "炊飯器 小型"
+      ],
+      "en": [
+        "compact rice cooker"
+      ],
+      "ko": [
+        "일본 밥솥",
+        "소형 전기밥솥"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "접이식 우산 가벼운",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "軽い折りたたみ傘を韓国語で探している",
+    "ideal_answer": "軽量の折りたたみ傘",
+    "reason": "既存の折りたたみ日傘の韓国語版。日傘か雨傘かは追加確認の余地。",
+    "category": "parasol",
+    "search_terms": {
+      "ja": [
+        "折りたたみ傘 軽量"
+      ],
+      "en": [
+        "lightweight folding umbrella"
+      ],
+      "ko": [
+        "접이식 우산",
+        "가벼운 우산"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "얼굴 붓기 빼는 마사지 기계",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "顔のむくみ用の美顔器・マッサージ器を韓国語で探している",
+    "ideal_answer": "美顔ローラー(フェイシャルマッサージ器)",
+    "reason": "美容機器。医療機器ではないことを前提に商品カテゴリまで答える。",
+    "category": "facial-massager",
+    "search_terms": {
+      "ja": [
+        "美顔ローラー",
+        "フェイスマッサージャー"
+      ],
+      "en": [
+        "facial massage roller"
+      ],
+      "ko": [
+        "얼굴 마사지기",
+        "페이스 롤러"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "日本 电饭煲 小型 一人用",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "一人用の小型炊飯器を中国語で探している",
+    "ideal_answer": "小容量の炊飯器",
+    "reason": "中国語での家電検索。電圧仕様の確認が要る点は共通。",
+    "category": "rice-cooker",
+    "search_terms": {
+      "ja": [
+        "炊飯器 一人暮らし"
+      ],
+      "en": [
+        "small rice cooker"
+      ],
+      "ko": [],
+      "zh": [
+        "电饭煲 小型",
+        "迷你电饭煲"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "保温杯 儿童 直饮",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "子ども用の直飲み保温ボトルを中国語で探している",
+    "ideal_answer": "子ども用ステンレスボトル(直飲み)",
+    "reason": "中国語。子ども用という対象と直飲みという形式が要件。",
+    "category": "water-bottle",
+    "search_terms": {
+      "ja": [
+        "水筒 子供 直飲み 保温"
+      ],
+      "en": [
+        "kids insulated water bottle"
+      ],
+      "ko": [],
+      "zh": [
+        "儿童保温杯",
+        "直饮water bottle"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "防晒 帽子 可折叠",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "折りたためるUVカット帽子を中国語で探している",
+    "ideal_answer": "折りたたみ可能なUVカット帽子",
+    "reason": "中国語。日傘と目的が近いが商品は別。",
+    "category": "hat",
+    "search_terms": {
+      "ja": [
+        "帽子 UVカット 折りたたみ"
+      ],
+      "en": [
+        "packable sun hat uv"
+      ],
+      "ko": [],
+      "zh": [
+        "防晒帽",
+        "可折叠 遮阳帽"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "nihon no bunbougu kawaii",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "日本のかわいい文房具をローマ字で探している",
+    "ideal_answer": "日本の文房具(デザイン文具)",
+    "reason": "訪日客・海外ファンに多い漠然とした土産需要。カテゴリ提示に留める。",
+    "category": "stationery",
+    "search_terms": {
+      "ja": [
+        "文房具 かわいい",
+        "日本 文具 ギフト"
+      ],
+      "en": [
+        "japanese stationery cute"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "iphone charger fast japan plug",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "日本のコンセント形状に合う急速充電器を英語で探している",
+    "ideal_answer": "急速充電器(USB-C PD・日本仕様プラグ)",
+    "reason": "プラグ形状と急速充電という2要件。変換プラグとは別。",
+    "category": "charger",
+    "search_terms": {
+      "ja": [
+        "急速充電器 USB-C PD"
+      ],
+      "en": [
+        "fast charger usb c pd japan plug"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "変換プラグのみ"
+    ],
+    "confidence": 0.85,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  }
+]
