@@ -103,7 +103,7 @@ function listingPrice(listing) {
 
 export function normalizeCreatorsItems(payload = {}) {
   const items = payload?.itemsResult?.items || payload?.searchResult?.items || [];
-  return items.slice(0, 10).map((item, index) => {
+  return items.slice(0, 30).map((item, index) => {
     const listing = listingFor(item);
     const stockStatus = listingAvailability(listing);
     const price = listingPrice(listing);

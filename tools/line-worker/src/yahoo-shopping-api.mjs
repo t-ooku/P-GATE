@@ -18,7 +18,7 @@ function deliveryDays(value) {
 
 export function normalizeYahooShoppingItems(payload = {}) {
   const hits = Array.isArray(payload.hits) ? payload.hits : [];
-  return hits.slice(0, 10).map((item, index) => {
+  return hits.slice(0, 30).map((item, index) => {
     const productUrl = String(item?.url || '').trim();
     const name = String(item?.name || '').trim();
     const price = Number(item?.price || 0);
@@ -61,7 +61,7 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch) {
   const url = new URL(API_URL);
   url.searchParams.set('appid', String(env.YAHOO_SHOPPING_CLIENT_ID).trim());
   url.searchParams.set('query', query);
-  url.searchParams.set('results', '10');
+  url.searchParams.set('results', '30');
   url.searchParams.set('in_stock', 'true');
   const response = await fetcher(url.toString(), { headers: { accept: 'application/json' } });
   if (!response.ok) throw new Error('YAHOO_SHOPPING_SEARCH_FAILED');

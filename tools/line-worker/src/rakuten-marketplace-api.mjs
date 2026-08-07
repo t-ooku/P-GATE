@@ -16,7 +16,7 @@ function unwrapItem(value) {
 
 export function normalizeRakutenItems(payload = {}) {
   const values = payload.items || payload.Items || [];
-  return values.slice(0, 10).map((value, index) => {
+  return values.slice(0, 30).map((value, index) => {
     const item = unwrapItem(value);
     const affiliateUrl = String(item.affiliateUrl || '').trim();
     const regularUrl = String(item.itemUrl || item.itemUrlPC || '').trim();
@@ -62,7 +62,7 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   url.searchParams.set('applicationId', String(env.RAKUTEN_APPLICATION_ID).trim());
   url.searchParams.set('accessKey', String(env.RAKUTEN_ACCESS_KEY).trim());
   url.searchParams.set('keyword', query);
-  url.searchParams.set('hits', '10');
+  url.searchParams.set('hits', '30');
   url.searchParams.set('formatVersion', '2');
   url.searchParams.set('elements', 'itemName,itemCode,itemPrice,itemUrl,affiliateUrl,mediumImageUrls,smallImageUrls,catchcopy,itemCaption,availability,postageFlag');
   const affiliateId = String(env.RAKUTEN_AFFILIATE_ID || '').trim();
