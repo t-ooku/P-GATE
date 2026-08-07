@@ -21,7 +21,10 @@ export function isApparelSearch(query) {
 
 export function buildApparelMarketplaceDestinations(query) {
   const source = searchText(query);
-  if (!source || !isApparelSearch(source)) return [];
+  // 2026-08-07 instructions #8: all ten marketplaces stay searchable on
+  // every query, not just apparel-looking ones (isApparelSearch is kept
+  // exported for other callers/tests, just no longer gates this list).
+  if (!source) return [];
 
   const keywordsFor = (marketplace) =>
     buildMarketplaceSearchKeywords(source, marketplace) || source;

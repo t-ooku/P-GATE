@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const read = name => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
-test('トップ画面で主要5モールとファッション追加5モールを区別して表示する', async () => {
+test('トップ画面で常に最大10モールを横断できることを表示する', async () => {
   const [html, css, module, layout, serviceWorker, app] = await Promise.all([
     read('index.html'),
     read('marketplace-coverage.css'),
@@ -16,7 +16,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
 
   assert.match(html, /MARKETPLACE COVERAGE/);
   assert.match(html, /すべてのジャンル/);
-  assert.match(html, /ファッション検索で追加/);
+  assert.match(html, /ファッション/);
   for (const mall of ['Amazon', '楽天市場', 'Qoo10', 'SHEIN', 'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA', 'SNKRDUNK']) {
     assert.match(html, new RegExp(`>${mall}<`));
   }
@@ -76,7 +76,7 @@ test('トップ画面で主要5モールとファッション追加5モールを
   }
   assert.match(module, /hoshilu:languagechange/);
   assert.match(module, /\['探せるモールが、', 'ひと目で分かる。'\]/);
-  assert.match(module, /\['商品・家電・コスメなどは主要5モール。', 'ファッション検索では5モールを追加して横断します。'\]/);
+  assert.match(module, /\['ジャンルを問わず、', '常に最大10モールを横断して探します。'\]/);
   assert.match(module, /Up to 10 marketplaces/);
   assert.match(module, /Instagram, X, TikTok, and YouTube/);
   assert.match(module, /最多支持10个商城/);
