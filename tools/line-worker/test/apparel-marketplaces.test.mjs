@@ -70,3 +70,27 @@ test('アパレル以外の検索でも10モール目標のため追加5モー�
   ]);
   assert.deepEqual(buildApparelMarketplaceDestinations(''), []);
 });
+
+// 2026-08-07 実機報告: 「夏用、丈長め、おしゃれ、ブラウス」で検索したら
+// SHEIN に「白 トップス」として届いていた。
+//
+// GENERIC_PRODUCTS は広いカテゴリ名しか知らないため「ブラウス」は「トップス」
+// に潰れ、ユーザーが打った中で最も絞り込みに効く語がちょうど消える。
+// ensureApparelProductTypeTerm という復元処理は前からあったが Amazon と楽天に
+// しか適用されておらず、SHEIN・Qoo10・アパレル5モールは素通しだった。
+test('具体的な衣類名がすべてのモールの検索語に残る', async () => {
+  const { buildApparelMarketplaceDestinations } = await import('../src/apparel-marketplaces.mjs');
+  const { buildSheinSearchDestination, buildQoo10SearchDestination } = await import('../src/index.mjs');
+
+  for (const query of ['夏用、丈長め、おしゃれ、ブラウス', '白 ブラウス']) {
+    assert.match(decodeURIComponent(buildSheinSearchDestination(query)), /ブラウス/, `SHEIN: ${query}`);
+    assert.match(decodeURIComponent(buildQoo10SearchDestination(query)), /ブラウス/, `Qoo10: ${query}`);
+    for (const link of buildApparelMarketplaceDestinations(query)) {
+      assert.match(decodeDestination(link), /ブラウス/, `${link.marketplace}: ${query}`);
+    }
+  }
+  // カットソーは GENERIC_PRODUCTS に無く、復元しないと完全に消える語
+  for (const link of buildApparelMarketplaceDestinations('カットソー レディース')) {
+    assert.match(decodeDestination(link), /カットソー/, link.marketplace);
+  }
+});
