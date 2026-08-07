@@ -1094,7 +1094,7 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '') 
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
   const candidates = [];
-  const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, 10);
+  const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, 30);
   for (const candidate of displayCandidates) {
     const copy = sanitizePublicCandidate(candidate);
     const productOffers = productMarketplaceOffers(candidate.offers);
@@ -1444,7 +1444,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       ]);
       const beforeRankingCount = interleavedCandidates.length;
       const rankedAll = rankMerchantCandidates([], interleavedCandidates, input.query);
-      const finalSlice = rankedAll.slice(0, 10);
+      const finalSlice = rankedAll.slice(0, 30);
       const countByMarketplace = (list) => list.reduce((counts, item) => {
         const marketplace = String(item.record_key || '').startsWith('RAKUTEN:') ? 'RAKUTEN_JP'
           : String(item.offers?.[0]?.marketplace || (item.asin ? 'AMAZON_JP' : 'OTHER'));
@@ -1467,7 +1467,7 @@ async function handleKnowledgeApi(request, env, ctx) {
     result = {
       ...(result || {}),
       traffic_class: input.traffic_class,
-      candidates: filterCategoryMismatches(input.query, result?.candidates || []).slice(0, 10)
+      candidates: filterCategoryMismatches(input.query, result?.candidates || []).slice(0, 30)
     };
     if (input.search_attempt >= 2) {
       result.clarification = { ...(result.clarification || {}), required: false, options: [] };

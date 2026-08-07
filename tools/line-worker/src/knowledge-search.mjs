@@ -3019,7 +3019,7 @@ export async function applyIndexedSearchPolicy(baseResult, env, query, language 
     env,
     ['itg', 'itt', 'mc2'],
     query,
-    20
+    40
   );
   const decision = indexed.decision;
   const baseCandidates = filterCategoryMismatches(query, Array.isArray(baseResult?.candidates)
@@ -3033,7 +3033,7 @@ export async function applyIndexedSearchPolicy(baseResult, env, query, language 
     baseCandidates,
     indexedCandidates,
     query
-  ).slice(0, 10);
+  ).slice(0, 30);
   const copy = COPY[language] || COPY.JA;
   const baseQuestion = decision.reason === 'CATEGORY_DIVERGENCE' ? copy.category
     : decision.reason === 'NO_CANDIDATES' || decision.candidate_categories.length === 0 ? copy.use : copy.detail;

@@ -170,7 +170,7 @@ export function decideSearchResponse({
       action: "clarify",
       reason: "category_branch",
       question: categoryQuestion(categories),
-      candidates: ranked.slice(0, 10),
+      candidates: ranked.slice(0, 30),
     };
   }
 
@@ -178,7 +178,7 @@ export function decideSearchResponse({
     return {
       action: "answer",
       reason: "sufficient_confidence",
-      candidates: ranked.slice(0, 10),
+      candidates: ranked.slice(0, 30),
     };
   }
 
@@ -187,7 +187,7 @@ export function decideSearchResponse({
       action: "clarify",
       reason: "low_confidence",
       question: missingSignalQuestion(context),
-      candidates: ranked.slice(0, 10),
+      candidates: ranked.slice(0, 30),
     };
   }
 
