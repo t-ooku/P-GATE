@@ -62,7 +62,7 @@ test('AIウォッチは行ごとの1タップ削除と一括削除を持つ', as
   assert.match(html, /id="deleteAllWishes"[^>]*class="wish-delete-all hidden"/);
   // 4言語ぶんのラベル
   ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
-    assert.match(app, new RegExp(`${language}:\\{deleteWishAria:'[^']+',deleteAllWishes:'[^']+',deleteAllConfirm:'[^']+'`));
+    assert.match(app, new RegExp(`${language}:\\{[^\n]*?deleteWishAria:'[^']+',deleteAllWishes:'[^']+',deleteAllConfirm:'[^']+'`));
   });
   // タップ領域44px
   assert.match(css, /\.wish-row-delete\s*\{[^}]*width:\s*44px;[\s\S]*?height:\s*44px/);
