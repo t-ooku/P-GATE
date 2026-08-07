@@ -5,14 +5,39 @@
 .mywatch-test-controls{display:flex;gap:6px;flex-wrap:wrap}
 .mywatch-test-button{border:1px dashed #b8a9ff!important;background:#fff!important;font-size:11px!important;padding:6px 9px!important}
 .notification-list{margin-top:12px;min-width:0;color:#211b3b}
-.notification-list.info-row-list{background:rgba(115,87,255,.06);scrollbar-color:#a993ff transparent}
+/* .info-row-list is sized calc(44px * 3.5) for the single-line SALE RADAR /
+   NEWS ticker rows. Notification rows stack title + mall + body (~76px on
+   PC, ~94px on mobile), so that viewport showed barely two of them. Size
+   this list to its own rows instead, and use max-height so a one- or
+   two-notification list does not leave a half-empty scroll box. */
+.notification-list.info-row-list{height:auto;max-height:240px;background:rgba(115,87,255,.06);scrollbar-color:#a993ff transparent}
 .notification-list .info-row{color:#211b3b;border-bottom-color:var(--line)}
 .notification-list .info-row:hover,.notification-list .info-row:focus-visible{background:rgba(115,87,255,.08)}
+/* sale-center.css styles .info-row-title/.info-row-date for the SALE RADAR
+   and NEWS tickers, which sit on a dark purple gradient - so both are light
+   (#fff / #cfc7ff). The AIウォッチ list reuses the same row classes but on a
+   near-white background, where those colours rendered the notification
+   title invisible (white on white) and the date at roughly 1.4:1 contrast.
+   Re-stating them here, scoped to .notification-list, keeps the tickers
+   untouched. Same unscoped-.info-row-* cascade leak as the 2026-08-07
+   grid-column overlap fix. */
+.notification-list .info-row-title{color:#211b3b}
+.notification-list .info-row-date{color:#6d6b80}
 .notification-row.unread .info-row-title{font-weight:900}
 .notification-unread-dot{width:9px;height:9px;padding:0;border-radius:50%;background:#d8d2f0}
 .notification-row.unread .notification-unread-dot{background:linear-gradient(135deg,var(--pink),var(--violet))}
 .notification-thumb{width:28px;height:28px;flex:0 0 28px;border-radius:8px;object-fit:cover}
-.notification-row{grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;min-height:44px}
+/* notificationRow() renders the thumbnail INSTEAD of the unread dot, so a
+   notification that carries a product image had no unread marker other than
+   the bold title. Ring the thumbnail in the same gradient the dot uses. */
+.notification-row.unread .notification-thumb{box-shadow:0 0 0 2px var(--violet)}
+/* flex-shrink:0 is what stops these rows collapsing. .info-row-list is a
+   fixed-height flex column (44px * 3.5), so without it the flex items shrink
+   to their 44px min-height while .notification-row-content still needs ~51px
+   (PC) / ~69px (mobile) - the body text then spilled into the row below.
+   The ticker rows get this from sale-center.css's mobile block; notification
+   rows need it at every width because they stack title + mall + body. */
+.notification-row{grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;min-height:44px;flex-shrink:0}
 .notification-row-content{display:grid;gap:2px;min-width:0;align-items:center}
 .notification-row-content .info-row-title{overflow:visible;white-space:normal}
 .notification-list .info-row-mall{justify-self:start;background:var(--soft);color:#5140ba}
@@ -21,4 +46,8 @@
 .notification-row-action{width:26px;height:26px;padding:0;border:1px solid var(--line);border-radius:8px;background:#fff;color:#5140ba;font-weight:900;cursor:pointer;line-height:1}
 .notification-row-action:hover,.notification-row-action:focus-visible{background:#f0edff;outline:none}
 .notification-row-action.dismiss{color:#8b8698}
-@media(max-width:760px){.notification-row{grid-template-columns:auto minmax(0,1fr) auto}.notification-row .info-row-date{display:none}}
+/* The ✓/× controls sit inside a row that is itself a role="link" opening the
+   product page, so an inaccurate tap does not just miss - it navigates away.
+   26px was well under the 44px minimum touch target; the row is ~69px tall
+   on mobile so a full 44px control fits without changing the layout. */
+@media(max-width:760px){.notification-list.info-row-list{height:auto;max-height:300px}.notification-row{grid-template-columns:auto minmax(0,1fr) auto}.notification-row .info-row-date{display:none}.notification-row-action{width:44px;height:44px;font-size:15px}.notification-row-actions{gap:6px}}
