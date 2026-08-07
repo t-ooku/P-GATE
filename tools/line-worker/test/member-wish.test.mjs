@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { handleMemberWishRoutes } from '../src/member-wish-v2.mjs';
 
 test('MYWISH APIはD1未設定時に安全に停止する', async () => {
@@ -34,4 +35,35 @@ test('MYWATCH通知頻度をAPIと会員画面の両方で変更できる', asyn
   assert.match(app, /watchFrequencyFor/);
   assert.match(app, /\['MUTED','通知を停止'\]/);
   assert.match(app, /payloadFor\(value,options,frequency\.value\)/);
+});
+
+// HOSHILU INSIGHT delete controls (2026-08-07 request). Removing one AI Watch
+// item meant opening the row's <details>, finding 削除 in the editor and
+// confirming - three interactions to undo one. The row now carries its own
+// one-tap delete and the toolbar a bulk one.
+test('AIウォッチは行ごとの1タップ削除と一括削除を持つ', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../public/wish-carousel.css', import.meta.url), 'utf8');
+
+  // ローカル一覧・通知条件・会員レコード・サーバー記録をまとめて消す実装が
+  // 1つだけあり、行ボタンとエディタの削除が両方それを呼ぶ
+  assert.match(app, /async function deleteWish\(value\)\{/);
+  assert.match(app, /memberWishRecords=memberWishRecords\.filter\(item=>item\.query_text!==value\)/);
+  assert.match(app, /await deleteWish\(value\);renderWishes\(\);/);
+  assert.match(app, /function wishRowDeleteButton\(value,actions\)/);
+  // 行の削除ボタンは<summary>内にあるので、押しても<details>が開いてしまわない
+  assert.match(app, /event\.preventDefault\(\);\s*event\.stopPropagation\(\);\s*await deleteWish\(value\)/);
+  // 一括削除は確認あり（1件は再検索で戻せるが全件は戻せない）
+  assert.match(app, /async function deleteAllWishes\(actions\)/);
+  assert.match(app, /if\(!values\.length\|\|!confirm\(actions\.deleteAllConfirm\)\)return;/);
+  // 0件のときは一括削除ボタンを出さない
+  assert.match(app, /deleteAll\.classList\.toggle\('hidden',!allWishes\.length\)/);
+  assert.match(html, /id="deleteAllWishes"[^>]*class="wish-delete-all hidden"/);
+  // 4言語ぶんのラベル
+  ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
+    assert.match(app, new RegExp(`${language}:\\{deleteWishAria:'[^']+',deleteAllWishes:'[^']+',deleteAllConfirm:'[^']+'`));
+  });
+  // タップ領域44px
+  assert.match(css, /\.wish-row-delete\s*\{[^}]*width:\s*44px;[\s\S]*?height:\s*44px/);
 });
