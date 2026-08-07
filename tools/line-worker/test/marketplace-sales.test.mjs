@@ -84,7 +84,7 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v307/);
+  assert.match(sw, /hoshilu-shell-v308/);
   assert.match(css, /\.sale-rail\{[^}]*overflow-y:auto/);
   assert.doesNotMatch(css, /\.sale-card\{/);
   assert.match(sw, /sale-center\.mjs/);
@@ -114,6 +114,34 @@ test('モバイルのSALE RADAR行は3行スタック時に潰れて文字が重
   // mywatch.css - but the flex-shrink:0 protection for SALE RADAR/NEWS rows
   // themselves must remain.
   assert.match(mobileBlock, /\.info-row:not\(\.notification-row\)\{[^}]*flex-shrink:0/);
+});
+
+// AIウォッチUI (Phase C item17, 2026-08-07). Scoping the rule above to
+// :not(.notification-row) left the AIウォッチ rows with the default
+// flex-shrink:1, so inside the fixed-height .info-row-list flex column they
+// collapsed to their 44px min-height while the stacked title+mall+body
+// content still needed ~51px (PC) / ~69px (mobile) - measured live: each
+// row's content overflowed 7px (PC) / 14px (mobile) into the row below.
+// Separately, sale-center.css colours .info-row-title/.info-row-date for
+// the dark SALE RADAR/NEWS gradient (#fff / #cfc7ff); on the AIウォッチ
+// list's near-white background that rendered the notification title white
+// on white. Both are fixed in mywatch.css, scoped to .notification-list /
+// .notification-row so the tickers keep their own styling.
+test('AIウォッチ通知行は潰れず、タイトルが白抜けせず、タップ領域を44px確保する', async () => {
+  const css = await readFile(new URL('../public/mywatch.css', import.meta.url), 'utf8');
+  // 行が潰れて次の行に文字が重ならない
+  assert.match(css, /\.notification-row\{[^}]*flex-shrink:0/);
+  // 明るい背景の上でタイトル・日付が読める色に上書きされている
+  assert.match(css, /\.notification-list \.info-row-title\{color:#211b3b\}/);
+  assert.match(css, /\.notification-list \.info-row-date\{color:#6d6b80\}/);
+  // サムネイル付き通知でも未読が分かる
+  assert.match(css, /\.notification-row\.unread \.notification-thumb\{[^}]*box-shadow/);
+  // スマホの✓/×はタップ領域44px以上（行自体がrole="link"のため誤タップが遷移になる）
+  const mobileBlock = css.match(/@media\(max-width:760px\)\{[\s\S]*\}$/m)?.[0] || '';
+  assert.match(mobileBlock, /\.notification-row-action\{[^}]*width:44px;height:44px/);
+  // 通知行の高さに合わせたビューポート（44px想定のticker用高さを使わない）
+  assert.match(css, /\.notification-list\.info-row-list\{height:auto;max-height:240px/);
+  assert.match(mobileBlock, /\.notification-list\.info-row-list\{height:auto;max-height:300px\}/);
 });
 
 test('商品画像はAPPROVEDになるまで公開しない契約を持つ', async () => {
