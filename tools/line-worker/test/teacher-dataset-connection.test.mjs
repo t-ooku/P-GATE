@@ -76,8 +76,8 @@ test('必須検索テストの6クエリすべてが教師データで解決ま�
 // 厚くしたぶんが失われないよう件数と代表クエリを固定する。
 test('教師データが全ペルソナで実用的な件数を保っている', () => {
   const stats = teacherDatasetStats();
-  assert.ok(stats.entryCount >= 469, `expected at least 469 compiled entries, got ${stats.entryCount}`);
-  assert.ok(stats.sourceBatches.length >= 12, `expected at least 12 batches, got ${stats.sourceBatches.length}`);
+  assert.ok(stats.entryCount >= 495, `expected at least 495 compiled entries, got ${stats.entryCount}`);
+  assert.ok(stats.sourceBatches.length >= 13, `expected at least 13 batches, got ${stats.sourceBatches.length}`);
 });
 
 test('子ども・高齢者の言い換えから商品を引ける', () => {
@@ -401,4 +401,42 @@ test('競技が分からないスポーツ用品は聞き返す', () => {
   // 競技が明示されていれば断定する
   assert.match(lookupTeacherDatasetEntry('ヨガのときに敷くやつ').ideal_answer, /ヨガマット/);
   assert.match(lookupTeacherDatasetEntry('卓球のラケットに貼るやつ').ideal_answer, /ラバー/);
+});
+
+// アレルギー (batch-013)。ここは今までで最も安全側に倒す必要がある。
+// アレルゲンの取り違えは「買い物の失敗」ではなく医療事故になりうるので、
+// 曖昧な要望から商品を断定しない。とくに「卵不使用」と「アレルギー対応」は
+// 別物で、前者は同一工場でのコンタミネーションを排除しない。この区別を
+// answer で必ず伝える。
+test('アレルギーは断定せず、表示と製造ラインの確認を促す', () => {
+  for (const query of ['卵を使っていないお菓子', '小麦アレルギーでも食べられるパン', 'gluten free bread japan where']) {
+    const entry = lookupTeacherDatasetEntry(query);
+    assert.ok(entry, `missing teacher entry: ${query}`);
+    assert.equal(entry.category, 'UNCLASSIFIED', `${query}: must not assert a product`);
+    assert.ok(entry.confidence <= 0.35, `${query}: confidence too high`);
+    assert.match(entry.ideal_answer, /コンタミ|専用ライン|表示/u, `${query}: must explain the distinction`);
+  }
+  // 調乳用の水は硬水を避けるという明確な条件があるので断定してよい
+  const water = lookupTeacherDatasetEntry('赤ちゃんに飲ませる水');
+  assert.match(water.ideal_answer, /軟水/);
+  assert.ok(water.excluded_conditions.includes('硬水'));
+});
+
+// 見守りは本人の同意と尊厳に関わる。カメラを黙って勧めない。
+test('見守り機器はカメラを既定にせず本人の意向を確かめる', () => {
+  const watch = lookupTeacherDatasetEntry('見守りができる機械 ひとり暮らしの親');
+  assert.equal(watch.category, 'UNCLASSIFIED');
+  assert.match(watch.ideal_answer, /センサー|望まれない|どの形/u);
+});
+
+// 期待とずれやすい商品は、売る前に前提を説明する。
+test('効果が誤解されやすい商品は前提を先に示す', () => {
+  // 冷風扇は気化熱式で室温は下がらない
+  const cooler = lookupTeacherDatasetEntry('エアコンがない部屋を涼しくしたい');
+  assert.equal(cooler.category, 'UNCLASSIFIED');
+  assert.match(cooler.ideal_answer, /窓|排熱/u);
+  // 年賀状は枚数によって印刷サービスのほうが安い
+  const nenga = lookupTeacherDatasetEntry('年賀状を家で印刷したい');
+  assert.equal(nenga.category, 'UNCLASSIFIED');
+  assert.match(nenga.ideal_answer, /枚数|注文/u);
 });
