@@ -13,6 +13,24 @@ test('アパレルの曖昧な日本語・英語・トレンド表現を判定�
   assert.equal(isApparelSearch('推し活で使える写真プリンター'), false);
 });
 
+// ZOZOTOWN and SHOPLIST take their keyword percent-encoded as Shift_JIS, not
+// UTF-8 (see src/shift-jis-url.mjs), so decodeURIComponent throws "URI
+// malformed" on their links. Decode each destination with the charset that
+// mall actually uses before asserting on the keyword.
+const SHIFT_JIS_MARKETPLACES = new Set(['ZOZOTOWN_JP', 'SHOPLIST_JP']);
+function decodeDestination(link) {
+  if (!SHIFT_JIS_MARKETPLACES.has(link.marketplace)) {
+    return decodeURIComponent(link.destination).replaceAll('+', ' ');
+  }
+  const bytes = [];
+  const url = link.destination;
+  for (let i = 0; i < url.length; i += 1) {
+    if (url[i] === '%') { bytes.push(parseInt(url.slice(i + 1, i + 3), 16)); i += 2; }
+    else bytes.push(url.charCodeAt(i));
+  }
+  return new TextDecoder('shift_jis').decode(Uint8Array.from(bytes)).replaceAll('+', ' ');
+}
+
 test('アパレルモールへ商品向けに圧縮した検索語を安全に引き継ぐ', () => {
   const query = '韓国っぽい 黒 クロップド丈 トップス';
   const links = buildApparelMarketplaceDestinations(query);
@@ -21,7 +39,7 @@ test('アパレルモールへ商品向けに圧縮した検索語を安全に�
   ]);
   for (const link of links) {
     assert.equal(new URL(link.destination).protocol, 'https:');
-    const decoded = decodeURIComponent(link.destination).replaceAll('+', ' ');
+    const decoded = decodeDestination(link);
     assert.match(decoded, /韓国風/);
     assert.match(decoded, /黒/);
     assert.match(decoded, /トップス/);
@@ -34,7 +52,7 @@ test('中国語・韓国語の自然文もアパレル判定し正規化した�
     const links = buildApparelMarketplaceDestinations(query);
     assert.equal(links.length, 5);
     for (const link of links) {
-      const decoded = decodeURIComponent(link.destination).replaceAll('+', ' ');
+      const decoded = decodeDestination(link);
       assert.match(decoded, /軽量/);
       assert.match(decoded, /バッグ/);
       assert.doesNotMatch(decoded, /想找|찾고 있어요/);
