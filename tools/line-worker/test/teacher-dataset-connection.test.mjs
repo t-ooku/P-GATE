@@ -76,8 +76,8 @@ test('必須検索テストの6クエリすべてが教師データで解決ま�
 // 厚くしたぶんが失われないよう件数と代表クエリを固定する。
 test('教師データが全ペルソナで実用的な件数を保っている', () => {
   const stats = teacherDatasetStats();
-  assert.ok(stats.entryCount >= 345, `expected at least 345 compiled entries, got ${stats.entryCount}`);
-  assert.ok(stats.sourceBatches.length >= 8, `expected at least 8 batches, got ${stats.sourceBatches.length}`);
+  assert.ok(stats.entryCount >= 377, `expected at least 377 compiled entries, got ${stats.entryCount}`);
+  assert.ok(stats.sourceBatches.length >= 9, `expected at least 9 batches, got ${stats.sourceBatches.length}`);
 });
 
 test('子ども・高齢者の言い換えから商品を引ける', () => {
@@ -254,4 +254,36 @@ test('規格が確定しているものは断定して商品まで答える', ()
   // 石膏ボードに木ネジを使うと棚ごと落ちる
   assert.ok(lookupTeacherDatasetEntry('棚を壁につけるネジ 石膏ボード')
     .excluded_conditions.some((item) => item.includes('木ネジ')));
+});
+
+// 冠婚葬祭 (batch-009)。日本の贈答の作法は、間違いが「役に立たない」では
+// なく「失礼」になる。とくに祝儀袋と香典袋は正反対の場面で使うものなので、
+// 取り違えを両方向から塞いでおく。
+test('祝儀袋と香典袋を取り違えない', () => {
+  const koden = lookupTeacherDatasetEntry('お葬式に持っていくお金の袋');
+  assert.match(koden.ideal_answer, /香典袋|不祝儀/);
+  assert.ok(koden.excluded_conditions.includes('祝儀袋'));
+
+  const shugi = lookupTeacherDatasetEntry('結婚式に持っていくお金の袋');
+  assert.match(shugi.ideal_answer, /祝儀袋/);
+  assert.ok(shugi.excluded_conditions.includes('香典袋'));
+
+  // 外国語からの入り口でも同じ保護が要る
+  const en = lookupTeacherDatasetEntry('japanese funeral money envelope which one');
+  assert.match(en.ideal_answer, /香典袋|不祝儀/);
+  assert.ok(en.excluded_conditions.includes('祝儀袋'));
+});
+
+// 「どこで見たか」しか手がかりが無いクエリは、情報源だけでは商品を決め
+// られない。ここで当てにいくと、まったく違う商品を自信満々に出すことになる。
+test('見た場所しか分からないクエリは特徴を聞き返す', () => {
+  for (const query of ['テレビの通販でやってたやつ', '病院の待合室にあったやつ']) {
+    const entry = lookupTeacherDatasetEntry(query);
+    assert.ok(entry, `missing teacher entry: ${query}`);
+    assert.equal(entry.category, 'UNCLASSIFIED');
+    assert.ok(entry.confidence <= 0.25, `${query}: confidence too high`);
+  }
+  // 逆に、場所の記憶が具体的で対象がほぼ決まるものは断定してよい
+  assert.match(lookupTeacherDatasetEntry('ホテルにあった小さい冷蔵庫みたいなの').ideal_answer, /小型冷蔵庫/);
+  assert.match(lookupTeacherDatasetEntry('飛行機の中で配られたやつ 目にかぶせる').ideal_answer, /アイマスク/);
 });

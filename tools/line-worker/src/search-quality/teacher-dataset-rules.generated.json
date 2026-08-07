@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-07T10:08:17.763Z",
+  "generated_at": "2026-08-07T10:19:41.701Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -8,9 +8,10 @@
     "2026-08-07-batch-005.json",
     "2026-08-07-batch-006.json",
     "2026-08-07-batch-007.json",
-    "2026-08-07-batch-008.json"
+    "2026-08-07-batch-008.json",
+    "2026-08-07-batch-009.json"
   ],
-  "entry_count": 345,
+  "entry_count": 377,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -7615,6 +7616,676 @@
       "excluded_conditions": [],
       "confidence": 0.3,
       "source_file": "2026-08-07-batch-008.json"
+    },
+    {
+      "content_hash": "f8db30a07499615510eccebcf38592d84c82202a6fd8372e729986a5d05f5932",
+      "query_text": "お葬式に持っていくお金の袋",
+      "locale": "ja",
+      "persona": "general",
+      "category": "condolence-envelope",
+      "ideal_answer": "香典袋(不祝儀袋)",
+      "search_terms": {
+        "ja": [
+          "香典袋",
+          "不祝儀袋 御霊前"
+        ],
+        "en": [
+          "japanese condolence money envelope"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "祝儀袋",
+        "ぽち袋",
+        "お年玉袋"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "201f2d77d63169991c6c026a4135efa18b38fd194a5d5aa5269ea350a4cd97c6",
+      "query_text": "結婚式に持っていくお金の袋",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gift-envelope",
+      "ideal_answer": "祝儀袋(結婚祝い用)",
+      "search_terms": {
+        "ja": [
+          "祝儀袋 結婚式",
+          "ご祝儀袋 結び切り"
+        ],
+        "en": [
+          "japanese wedding money envelope"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "香典袋",
+        "不祝儀袋"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "fbc53f3658269ae0dc2eed64100e484e95df28d0a349ad2973cf593514c5e69c",
+      "query_text": "お葬式に着ていく服がない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "喪服は男性用・女性用で形が違い、急ぎであればレンタルという方法もあります。どちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "1f4365817b8e38c0b6d02cb4b80298f63274c80490f43bdb36747c4d4baf8166",
+      "query_text": "お葬式のときの数珠",
+      "locale": "ja",
+      "persona": "general",
+      "category": "prayer-beads",
+      "ideal_answer": "数珠(念珠)",
+      "search_terms": {
+        "ja": [
+          "数珠 略式",
+          "念珠 男性用 女性用"
+        ],
+        "en": [
+          "japanese prayer beads juzu"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "6145ca998f4170dd5cc4ac0e7c645d189309299c38508f703f4768c03ac8c284",
+      "query_text": "入学祝いのお返し",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "内祝いは相手との関係やいただいた額で相場が変わります。ご予算はどのくらいをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "5cf55b12a54c56de11c8129f7ba3101e2b9ca4655a30ce3669a210405be74335",
+      "query_text": "のしをつけてもらえるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "のしは目的によって表書きが変わります(御祝、内祝、御礼、御供など)。どのような場面での贈り物でしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "2a2e893dbef162a570eba63020faef1303b9ca3b8786f116535bb022f44eb5c6",
+      "query_text": "お盆にお供えするもの",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "memorial-offering",
+      "ideal_answer": "お盆のお供え(供物・линeなど)",
+      "search_terms": {
+        "ja": [
+          "お盆 お供え",
+          "仏壇 供物 セット"
+        ],
+        "en": [
+          "obon memorial offering"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "e897376bb72e71be56b80dca8120919732b6bab78d18f018da9437c63aab1312",
+      "query_text": "上司にわたすちょっとしたお礼の品",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "相手が目上の方の場合、消えもの(菓子・お茶など)が無難とされます。ご予算はどのくらいでしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "0678e576a77bedf6690885ae9ed8aa4edb50f2ffe03f90de529efb1e0bfc40e2",
+      "query_text": "男の人がもらってうれしいもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "相手の年齢やご関係(家族、同僚、恋人など)とご予算を教えていただけますか？ それによっておすすめが変わります。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "78e2878dba42a65a717ae38c07ae0578d93aabefca01965b21342c5a6efd8681",
+      "query_text": "赤ちゃんが生まれた友達にあげるもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "baby-gift",
+      "ideal_answer": "出産祝い(ベビー用品・カタログギフトなど)",
+      "search_terms": {
+        "ja": [
+          "出産祝い",
+          "出産祝い ギフトセット"
+        ],
+        "en": [
+          "baby shower gift japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "adcb3589e08ca2458394f31223c420c099910c2510b0d12985ae814fc156b2d7",
+      "query_text": "引っ越しのあいさつに配るもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "moving-gift",
+      "ideal_answer": "引っ越し挨拶ギフト(タオル・洗剤など)",
+      "search_terms": {
+        "ja": [
+          "引っ越し 挨拶 品物",
+          "引越し 粗品 タオル 洗剤"
+        ],
+        "en": [
+          "moving in greeting gift japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "b3d67441e662c636b6c3fea421e8c4330868fcbebeeb10d92d41d463d20bc6a9",
+      "query_text": "自分では買わないけどもらうと嬉しいもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どなたへの贈り物でしょうか？ ご関係とご予算が分かれば絞り込めます。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "1a2b57543c02cfbd6515bf955fe8d4d543f60f68d23233d8433057345677c687",
+      "query_text": "一人暮らしを始めるのに必要なもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "家電(冷蔵庫・洗濯機・電子レンジ)、寝具、カーテン、調理器具などが基本です。すでにお持ちのものはありますか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "7560fc3d44fe60061a44d18a1443f7329194adccd4674671e0c2e9d35d8b9e77",
+      "query_text": "引っ越しのときに使うダンボール",
+      "locale": "ja",
+      "persona": "general",
+      "category": "moving-box",
+      "ideal_answer": "引っ越し用ダンボール(サイズ混合セット)",
+      "search_terms": {
+        "ja": [
+          "引っ越し ダンボール セット",
+          "段ボール 引越し 大小"
+        ],
+        "en": [
+          "moving cardboard boxes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "宅配用 小型 封筒"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "637f0a3e4db21f6d09c735e5914635ebe6df4048cdcb27bfd491a9a3062fca7b",
+      "query_text": "カーテンの大きさがわからない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "カーテンはレールの長さと、レールから床(または窓枠下)までの高さで決まります。その2か所を測っていただけますか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "be6d6934057f10f12888f04b700adced7d28373b72e7aab4a0a9fb959dccac7c",
+      "query_text": "床に傷をつけないで家具を動かしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "furniture-slider",
+      "ideal_answer": "家具移動用スライダー",
+      "search_terms": {
+        "ja": [
+          "家具 移動 スライダー",
+          "重い家具 動かす シート"
+        ],
+        "en": [
+          "furniture moving sliders"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "フェルトパッド 貼り付け固定用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "4c6b54f765f7fc788670344abd466b27c809fa1f0897198025c2eaa626c7bafd",
+      "query_text": "賃貸で壁に穴をあけずに飾りたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "damage-free-hook",
+      "ideal_answer": "貼ってはがせるフック(壁を傷つけない)",
+      "search_terms": {
+        "ja": [
+          "穴あけない フック",
+          "はがせる 粘着フック 賃貸"
+        ],
+        "en": [
+          "damage free adhesive hooks"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "石膏ボードアンカー",
+        "釘 ネジ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "0a9e51b608caf5c77c02d723aff5b9df1b93f3ba00d745a3514f7bb597c08c21",
+      "query_text": "テレビの通販でやってたやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どんな用途のものでしたか？ 見た目や使い方で覚えていることを教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "093ab4d7b13665e956af3941325bcec326416bc2bb71a73cf84d73f8f2123882",
+      "query_text": "病院の待合室にあったやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どんなものでしたか？ 大きさや使い道で覚えていることがあれば教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "99cd52939a4d43026fe5d0c775af7b80a544ad54c3f8ac491acc5cc123f26499",
+      "query_text": "ホテルにあった小さい冷蔵庫みたいなの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "compact-fridge",
+      "ideal_answer": "小型冷蔵庫(1ドア・ホテルタイプ)",
+      "search_terms": {
+        "ja": [
+          "小型冷蔵庫 1ドア",
+          "ミニ冷蔵庫 静音 寝室"
+        ],
+        "en": [
+          "compact mini fridge"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "保冷ボックス 電源なし",
+        "ワインセラー"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "c2f8751c24cc64e9b8e06f109291b40c82944557abf9d7d4e47e9e95df63dbd3",
+      "query_text": "飛行機の中で配られたやつ 目にかぶせる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "eye-mask",
+      "ideal_answer": "アイマスク(睡眠用)",
+      "search_terms": {
+        "ja": [
+          "アイマスク 睡眠",
+          "アイマスク 遮光 旅行"
+        ],
+        "en": [
+          "sleep eye mask travel"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ホットアイマスク 使い捨て 温熱"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "ff4248a8c1c3944919445d4b45ab11f642591cbb5fab47daec862984715c01d4",
+      "query_text": "美容室で使ってた髪をとかすやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ブラシにも種類があります。髪を乾かしながら使うもの、絡まりをほどくもの、巻くものなど、どの用途でしたか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "d073743b512adf287dbbde18c43b51f90509c5af62aa37404b3c8430bb0dc325",
+      "query_text": "カフェで見た氷が入ってる透明のコップ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tumbler",
+      "ideal_answer": "クリアタンブラー",
+      "search_terms": {
+        "ja": [
+          "クリアタンブラー",
+          "タンブラー 透明 蓋付き"
+        ],
+        "en": [
+          "clear tumbler cup"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ステンレス水筒 保温"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "060e6cd1c8e221fa948a8c6a1f6757071687343718ca1f99a619e0cc403cbea2",
+      "query_text": "運動会で使うカメラ 遠くが撮れる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "望遠に強いカメラ本体と、お手持ちのカメラに付ける望遠レンズがあります。今カメラはお持ちですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "a91d52f556f47baafb44371a18310a9e75c8e48ca581ad967f03ed9a25c0511f",
+      "query_text": "卒業式にかざる花",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "胸に付けるコサージュと、贈る花束があります。どちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "05484b275bc67b846fcfb2a6701911523fe8ded0c35df21c9a9eecbb93d066b6",
+      "query_text": "お正月にかざるもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "new-year-decoration",
+      "ideal_answer": "正月飾り(しめ飾り・鏡餅・門松など)",
+      "search_terms": {
+        "ja": [
+          "正月飾り",
+          "しめ飾り 玄関 モダン"
+        ],
+        "en": [
+          "japanese new year decoration"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "8cc2ef05cfe705c9e177a6ac14b75f6594fa6d846248e78d9e0abe91be334915",
+      "query_text": "ひなまつりのかざり 場所をとらないやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hina-doll",
+      "ideal_answer": "コンパクト雛人形(親王飾りなど)",
+      "search_terms": {
+        "ja": [
+          "雛人形 コンパクト",
+          "ひな人形 親王飾り 小さい"
+        ],
+        "en": [
+          "compact hina doll set"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "097eed2dbb10700639da1d93aba66e9803d66b6db296b7a07d10d5039cea19f2",
+      "query_text": "こどもの日のかざり マンション",
+      "locale": "ja",
+      "persona": "general",
+      "category": "kodomo-no-hi-decoration",
+      "ideal_answer": "室内用の五月飾り(コンパクト鯉のぼり・兜)",
+      "search_terms": {
+        "ja": [
+          "五月人形 コンパクト",
+          "室内 鯉のぼり ベランダ"
+        ],
+        "en": [
+          "indoor koinobori compact"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "屋外用 大型 鯉のぼり ポール"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "26b89ad78755b6175d60f43f45a924e8082377f009511524c899be86b30beebe",
+      "query_text": "japanese funeral money envelope which one",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "condolence-envelope",
+      "ideal_answer": "香典袋(不祝儀袋)",
+      "search_terms": {
+        "ja": [
+          "香典袋",
+          "不祝儀袋"
+        ],
+        "en": [
+          "japanese condolence envelope koden"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "祝儀袋",
+        "ぽち袋"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "65661dacf7a3efa9aa70a12cd526bac4709a0550fdbc4d0400ef4e786c191427",
+      "query_text": "hikkoshi aisatsu gift what to buy",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "moving-gift",
+      "ideal_answer": "引っ越し挨拶ギフト(タオル・洗剤など)",
+      "search_terms": {
+        "ja": [
+          "引っ越し 挨拶 品物"
+        ],
+        "en": [
+          "moving greeting gift japan neighbors"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "a2fe0c6035b1c85217a11165a69c66e40b0ec070d968724730b4c7ed3d0dec27",
+      "query_text": "일본 결혼식 축의금 봉투",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "gift-envelope",
+      "ideal_answer": "祝儀袋(結婚祝い用)",
+      "search_terms": {
+        "ja": [
+          "祝儀袋 結婚式"
+        ],
+        "en": [
+          "japanese wedding money envelope"
+        ],
+        "ko": [
+          "일본 축의금 봉투",
+          "결혼식 봉투"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "香典袋"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-009.json"
+    },
+    {
+      "content_hash": "b23bd7d8555c278920e2bba1b560c010b2059d026e556044dbe268492edb9f3c",
+      "query_text": "搬家 礼物 日本 邻居",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "moving-gift",
+      "ideal_answer": "引っ越し挨拶ギフト(タオル・洗剤など)",
+      "search_terms": {
+        "ja": [
+          "引っ越し 挨拶 品物"
+        ],
+        "en": [
+          "moving greeting gift japan"
+        ],
+        "ko": [],
+        "zh": [
+          "搬家 礼物",
+          "邻居 见面礼"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-009.json"
     }
   ]
 }
