@@ -1,0 +1,623 @@
+[
+  {
+    "query_text": "卵を使っていないお菓子",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "卵不使用の菓子を探しているが、アレルギー対応品かどうかの確認が要る",
+    "ideal_answer": "「卵不使用」の表示があっても、同じ工場で卵を扱うコンタミネーションの可能性があります。アレルギー対応が必要な場合は、特定原材料の表示とアレルゲンフリー専用品をご確認ください。",
+    "reason": "「使っていない」と「アレルギー対応」は別物。医学的な重篤度が分からない以上、断定せず確認事項を示す。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "卵不使用 お菓子 アレルギー対応"
+      ],
+      "en": [
+        "egg free snacks allergy"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "小麦アレルギーでも食べられるパン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "グルテンフリー/小麦不使用のパンを探しているが、アレルギー重篤度が不明",
+    "ideal_answer": "米粉パンなど小麦不使用の製品があります。ただしアレルギー対応が必要な場合は、専用ラインで製造された製品かどうかをご確認ください。",
+    "reason": "グルテンフリー(嗜好・体質)とアレルギー対応(医療)は要求水準が違う。混同させない。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "米粉パン 小麦不使用",
+        "グルテンフリー パン"
+      ],
+      "en": [
+        "gluten free bread japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "乳製品が入っていないアイス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "乳不使用のアイスを探している",
+    "ideal_answer": "乳不使用アイス(豆乳・ココナッツベースなど)",
+    "reason": "代替品が一般に流通しており、カテゴリとしては答えられる。表示確認の注意は付ける。",
+    "category": "allergy-free-food",
+    "search_terms": {
+      "ja": [
+        "乳不使用 アイス",
+        "豆乳アイス 乳製品不使用"
+      ],
+      "en": [
+        "dairy free ice cream"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "減塩の調味料",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "減塩タイプの調味料を探している",
+    "ideal_answer": "減塩調味料(醤油・味噌など)",
+    "reason": "健康志向の一般的な需要。治療食が必要な場合は医師の指示という前提はあるが、商品は断定できる。",
+    "category": "low-sodium-seasoning",
+    "search_terms": {
+      "ja": [
+        "減塩 醤油",
+        "減塩 味噌 調味料"
+      ],
+      "en": [
+        "low sodium soy sauce"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "糖質が少ない主食",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "低糖質の主食(麺・パン・米代替)を探している",
+    "ideal_answer": "低糖質の主食(糖質オフ麺・パンなど)",
+    "reason": "既存のこんにゃく米を、主食全般という軸で補完する。糖尿病の食事療法は医師の管理下。",
+    "category": "low-carb-food",
+    "search_terms": {
+      "ja": [
+        "低糖質 麺",
+        "糖質オフ パン 主食"
+      ],
+      "en": [
+        "low carb staple food japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "医薬品",
+      "治療用特殊食品"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "赤ちゃんに飲ませる水",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "調乳に使える軟水を探している",
+    "ideal_answer": "調乳用の軟水(ミネラルウォーター)",
+    "reason": "硬水は乳児の内臓に負担になるとされる。軟水という条件が実質的な要件。",
+    "category": "baby-water",
+    "search_terms": {
+      "ja": [
+        "赤ちゃん 水 軟水 調乳",
+        "ベビー用 ミネラルウォーター"
+      ],
+      "en": [
+        "soft water for baby formula"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "硬水",
+      "炭酸水"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "子どもの服のサイズがわからない",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "子ども服のサイズを知りたいが、身長が不明",
+    "ideal_answer": "子ども服は身長(cm)表記が基本です。80、90、100…のように10cm刻みで、お子さまの身長に近いものを選びます。今の身長はどのくらいですか？",
+    "reason": "年齢ではなく身長で決まるという知識自体が要る。既存の靴サイズと同型。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "入園で名前を書くやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "お名前シール・お名前スタンプを探している",
+    "ideal_answer": "貼るシールと、押すスタンプ、アイロンで付ける布用ラベルがあります。持ち物の種類で使い分けます。どれをお探しですか？",
+    "reason": "貼る対象(布・プラスチック・文具)で商品が変わる。入園準備の定番。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "すぐ大きくなるから調整できる服",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "サイズ調整機能付きの子ども服を探している",
+    "ideal_answer": "アジャスター付き子ども服(裾・ウエスト調整)",
+    "reason": "成長という制約から機能を導く。既存の子ども靴と同じ考え方。",
+    "category": "adjustable-kids-wear",
+    "search_terms": {
+      "ja": [
+        "子供服 アジャスター付き",
+        "キッズ ウエスト調整 パンツ"
+      ],
+      "en": [
+        "adjustable waist kids clothes"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "汚れてもいい服 保育園",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "汚れを気にせず着られる保育園用の普段着を探している",
+    "ideal_answer": "保育園用の普段着(汚れても洗いやすいもの)",
+    "reason": "場面が明確。園によってフード禁止などの規則がある点は注意事項。",
+    "category": "play-clothes",
+    "search_terms": {
+      "ja": [
+        "保育園 服 洗いやすい",
+        "子供服 普段着 動きやすい"
+      ],
+      "en": [
+        "daycare play clothes kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "フォーマル 子供服",
+      "フード付き"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "年賀状を家で印刷したい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "はがき印刷ができるプリンターまたは印刷サービスを探している",
+    "ideal_answer": "家庭用プリンターで印刷する方法と、ネット注文で印刷を頼む方法があります。枚数が多い場合は注文のほうが安くなることもあります。どちらをお考えですか？",
+    "reason": "枚数によって最適解が変わる。プリンターを売るのが常に正解ではない。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "写真を大きく引き伸ばしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "写真の大判プリントを探している",
+    "ideal_answer": "写真の大判プリント(引き伸ばしサービス)",
+    "reason": "既存の写真プリンター(小型・その場で)とは別。家庭用機では出せないサイズ。",
+    "category": "photo-print-service",
+    "search_terms": {
+      "ja": [
+        "写真 大判プリント",
+        "写真 引き伸ばし A2 ポスター"
+      ],
+      "en": [
+        "large format photo printing"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "写真プリンター 小型 L判"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "スマホの写真をアルバムみたいにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "フォトブック作成サービスを探している",
+    "ideal_answer": "フォトブック(写真集作成サービス)",
+    "reason": "既存の写真アルバム(紙焼きを入れる)とは別で、印刷製本まで含む。",
+    "category": "photo-book",
+    "search_terms": {
+      "ja": [
+        "フォトブック 作成",
+        "スマホ 写真 アルバム 印刷"
+      ],
+      "en": [
+        "photo book printing service"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "アルバム 台紙のみ"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "インクを使わないプリンター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "感熱式プリンター(インク不要)を探している",
+    "ideal_answer": "感熱式プリンター(インク不要)",
+    "reason": "既存の写真プリンター・インク型番と対になる。ランニングコストの観点。",
+    "category": "thermal-printer",
+    "search_terms": {
+      "ja": [
+        "感熱式 プリンター インク不要",
+        "サーマルプリンター スマホ"
+      ],
+      "en": [
+        "thermal printer no ink"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "インクジェットプリンター",
+      "レーザープリンター"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "洗濯物を早く乾かす機械",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類乾燥機または除湿機の衣類乾燥モードを探している",
+    "ideal_answer": "衣類乾燥機(乾燥専用)と、除湿機の衣類乾燥モードがあります。設置スペースと予算で変わりますが、どちらをお考えですか？",
+    "reason": "既存の除湿機・室内物干しと近接。手段が複数ある。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "寝るとき音が静かな扇風機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "静音性の高い扇風機(DCモーター)を探している",
+    "ideal_answer": "静音扇風機(DCモーター)",
+    "reason": "既存の羽根なし扇風機・首掛け扇風機と別軸で、静音という要件。",
+    "category": "fan",
+    "search_terms": {
+      "ja": [
+        "扇風機 静音 DCモーター",
+        "扇風機 寝室 静か"
+      ],
+      "en": [
+        "quiet dc motor fan bedroom"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "業務用 送風機",
+      "サーキュレーター 風量重視"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "エアコンがない部屋を涼しくしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "エアコンなしで室温を下げたいが、住環境と予算で手段が変わる",
+    "ideal_answer": "窓用エアコン、スポットクーラー、冷風扇などがあります。窓の形状や排熱の逃がし方で置けるものが変わります。お部屋の窓はどんな形ですか？",
+    "reason": "冷風扇は気化熱式で室温は下がらないなど、期待とのずれが起きやすい領域。断定しない。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "暖房で乾燥するのをなんとかしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "加湿器を探している",
+    "ideal_answer": "加湿器(暖房併用向け)",
+    "reason": "既存の加湿器エントリを、原因(暖房)からの言い方で補完する。",
+    "category": "humidifier",
+    "search_terms": {
+      "ja": [
+        "加湿器 暖房 乾燥",
+        "加湿器 リビング 大容量"
+      ],
+      "en": [
+        "humidifier for heated room"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "除湿機"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "こたつのふとんだけ買いたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "こたつ布団のみを探している",
+    "ideal_answer": "こたつ布団(単品)",
+    "reason": "既存のこたつ(英語)と対になる、部材単体の需要。サイズ適合が要る。",
+    "category": "kotatsu-futon",
+    "search_terms": {
+      "ja": [
+        "こたつ布団 単品",
+        "こたつ 掛け布団 正方形"
+      ],
+      "en": [
+        "kotatsu futon cover only"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "こたつ 本体 セット"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "窓につける結露を防ぐヒーター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "窓用の結露防止ヒーターを探している",
+    "ideal_answer": "窓用結露防止ヒーター",
+    "reason": "既存の結露ワイパー(取る)・吸水テープ(受ける)に続く第三の手段(そもそも発生させない)。",
+    "category": "window-heater",
+    "search_terms": {
+      "ja": [
+        "窓 結露防止 ヒーター",
+        "サッシ ヒーター 結露"
+      ],
+      "en": [
+        "window condensation prevention heater"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "結露取りワイパー",
+      "除湿機"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "見守りができる機械 ひとり暮らしの親",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "離れて暮らす高齢者の見守り機器を探している",
+    "ideal_answer": "カメラ型、センサー型(人感・電気ポットの使用通知など)、緊急通報ボタンがあります。ご本人がカメラを望まれない場合もあるので、どの形が良いでしょうか？",
+    "reason": "本人の同意と尊厳に関わる。カメラを黙って勧めるべきでない。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "子どもがどこにいるか分かるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "子ども用のGPS端末を探している",
+    "ideal_answer": "子ども用GPS端末(見守りタグ)",
+    "reason": "既存のキッズケータイと近いが、通話機能の有無で別商品。",
+    "category": "gps-tracker",
+    "search_terms": {
+      "ja": [
+        "子供 GPS 見守り",
+        "GPS 端末 ランドセル 小学生"
+      ],
+      "en": [
+        "kids gps tracker japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "キッズ携帯 通話機能付き"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "gluten free bread japan where",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "グルテンフリーのパンを英語で探しているが、アレルギー対応かは別問題",
+    "ideal_answer": "米粉パンなど小麦不使用の製品があります。アレルギー対応が必要な場合は、専用ラインで製造された製品かどうかをご確認ください。",
+    "reason": "訪日客に多い需要。嗜好と医療の区別は日本語版と同じ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "米粉パン 小麦不使用"
+      ],
+      "en": [
+        "gluten free bread japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "halal food japan supermarket",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "ハラル対応食品を英語で探しているが、認証の有無が要件",
+    "ideal_answer": "ハラル認証マークのある製品をお探しでしょうか。日本の一般的な調味料にはみりんや料理酒(アルコール)が含まれることが多いのでご注意ください。",
+    "reason": "宗教上の要件は本人にしか判断できない。認証という具体的な確認点を示す。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "ハラル認証 食品"
+      ],
+      "en": [
+        "halal certified food japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "아기 분유 물 일본",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "調乳用の水を韓国語で探している",
+    "ideal_answer": "調乳用の軟水(ミネラルウォーター)",
+    "reason": "硬水を避けるという条件は日本語版と同じ。",
+    "category": "baby-water",
+    "search_terms": {
+      "ja": [
+        "赤ちゃん 水 軟水 調乳"
+      ],
+      "en": [
+        "soft water baby formula"
+      ],
+      "ko": [
+        "아기 물 분유",
+        "연수 생수"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "硬水"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  },
+  {
+    "query_text": "儿童 衣服 尺码 日本 身高",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "日本の子ども服サイズを中国語で確認したい",
+    "ideal_answer": "日本の子ども服は身長(cm)表記が基本で、80、90、100…と10cm刻みです。お子さまの身長を教えていただければ目安をご案内できます。",
+    "reason": "国によってサイズ表記の基準が違う。身長基準という知識が要る。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "儿童 尺码 日本",
+        "童装 身高 尺码"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-07",
+    "authored_updated_date": "2026-08-07"
+  }
+]

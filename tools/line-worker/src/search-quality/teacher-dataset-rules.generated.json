@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-07T10:55:02.389Z",
+  "generated_at": "2026-08-07T10:59:45.018Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -12,9 +12,10 @@
     "2026-08-07-batch-009.json",
     "2026-08-07-batch-010.json",
     "2026-08-07-batch-011.json",
-    "2026-08-07-batch-012.json"
+    "2026-08-07-batch-012.json",
+    "2026-08-07-batch-013.json"
   ],
-  "entry_count": 469,
+  "entry_count": 495,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -10363,6 +10364,575 @@
       ],
       "confidence": 0.85,
       "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "ad894f67a766630ec44477b7e53aa9f1371084cb47d0097c07be6786a8b4368e",
+      "query_text": "卵を使っていないお菓子",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "「卵不使用」の表示があっても、同じ工場で卵を扱うコンタミネーションの可能性があります。アレルギー対応が必要な場合は、特定原材料の表示とアレルゲンフリー専用品をご確認ください。",
+      "search_terms": {
+        "ja": [
+          "卵不使用 お菓子 アレルギー対応"
+        ],
+        "en": [
+          "egg free snacks allergy"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "2861aad171a7b7df1cc61c6a17aa9fb3bde85658b8c56145885e43ab789f202e",
+      "query_text": "小麦アレルギーでも食べられるパン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "米粉パンなど小麦不使用の製品があります。ただしアレルギー対応が必要な場合は、専用ラインで製造された製品かどうかをご確認ください。",
+      "search_terms": {
+        "ja": [
+          "米粉パン 小麦不使用",
+          "グルテンフリー パン"
+        ],
+        "en": [
+          "gluten free bread japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "96ed66a405d898df40a899decf26841c9b4f41686b0e72f69656bc75dbfc5ea1",
+      "query_text": "乳製品が入っていないアイス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "allergy-free-food",
+      "ideal_answer": "乳不使用アイス(豆乳・ココナッツベースなど)",
+      "search_terms": {
+        "ja": [
+          "乳不使用 アイス",
+          "豆乳アイス 乳製品不使用"
+        ],
+        "en": [
+          "dairy free ice cream"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "6f00c09df44c06af015c32e5eece6c22e0910e5da83357f39fa2275aed8f87f5",
+      "query_text": "減塩の調味料",
+      "locale": "ja",
+      "persona": "general",
+      "category": "low-sodium-seasoning",
+      "ideal_answer": "減塩調味料(醤油・味噌など)",
+      "search_terms": {
+        "ja": [
+          "減塩 醤油",
+          "減塩 味噌 調味料"
+        ],
+        "en": [
+          "low sodium soy sauce"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "e1d8aba8a5fa70bb5cab6874fc8323310afd35761854b65c94a2ed0b1f22fc87",
+      "query_text": "糖質が少ない主食",
+      "locale": "ja",
+      "persona": "general",
+      "category": "low-carb-food",
+      "ideal_answer": "低糖質の主食(糖質オフ麺・パンなど)",
+      "search_terms": {
+        "ja": [
+          "低糖質 麺",
+          "糖質オフ パン 主食"
+        ],
+        "en": [
+          "low carb staple food japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "医薬品",
+        "治療用特殊食品"
+      ],
+      "confidence": 0.65,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "1fed57dc2d490da186ee7f3c3f55eb63ba3bb1ad58b2b70f4ab6663c9c10143b",
+      "query_text": "赤ちゃんに飲ませる水",
+      "locale": "ja",
+      "persona": "general",
+      "category": "baby-water",
+      "ideal_answer": "調乳用の軟水(ミネラルウォーター)",
+      "search_terms": {
+        "ja": [
+          "赤ちゃん 水 軟水 調乳",
+          "ベビー用 ミネラルウォーター"
+        ],
+        "en": [
+          "soft water for baby formula"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "硬水",
+        "炭酸水"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "20149ee9f719592198d8d60dbd7c06c40a29c33076585b118033345a716ea305",
+      "query_text": "子どもの服のサイズがわからない",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "子ども服は身長(cm)表記が基本です。80、90、100…のように10cm刻みで、お子さまの身長に近いものを選びます。今の身長はどのくらいですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "01ca12b6ca3fd7bc8fb59d8e50a5783c97f0528e3b2cc4398a39a57d7d987a16",
+      "query_text": "入園で名前を書くやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "貼るシールと、押すスタンプ、アイロンで付ける布用ラベルがあります。持ち物の種類で使い分けます。どれをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "85b31885a018662ab6e673fed495e61e3f96180aefeff70c61a3152aa5caf0e6",
+      "query_text": "すぐ大きくなるから調整できる服",
+      "locale": "ja",
+      "persona": "child",
+      "category": "adjustable-kids-wear",
+      "ideal_answer": "アジャスター付き子ども服(裾・ウエスト調整)",
+      "search_terms": {
+        "ja": [
+          "子供服 アジャスター付き",
+          "キッズ ウエスト調整 パンツ"
+        ],
+        "en": [
+          "adjustable waist kids clothes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "e4f9a7d7c9ee6c46affc984537dda7fe43d6b6cea2ce92aa3f14da0bacb57d25",
+      "query_text": "汚れてもいい服 保育園",
+      "locale": "ja",
+      "persona": "child",
+      "category": "play-clothes",
+      "ideal_answer": "保育園用の普段着(汚れても洗いやすいもの)",
+      "search_terms": {
+        "ja": [
+          "保育園 服 洗いやすい",
+          "子供服 普段着 動きやすい"
+        ],
+        "en": [
+          "daycare play clothes kids"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "フォーマル 子供服",
+        "フード付き"
+      ],
+      "confidence": 0.65,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "29dba1bcc5f953b8a309bc5f1302d684e21f3c7bf8612c639d08d5c480086d59",
+      "query_text": "年賀状を家で印刷したい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "家庭用プリンターで印刷する方法と、ネット注文で印刷を頼む方法があります。枚数が多い場合は注文のほうが安くなることもあります。どちらをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "c07bda356bdc1c122341d24c1a0c6f733e397fb91ffb40ceccd36a994e3967c1",
+      "query_text": "写真を大きく引き伸ばしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "photo-print-service",
+      "ideal_answer": "写真の大判プリント(引き伸ばしサービス)",
+      "search_terms": {
+        "ja": [
+          "写真 大判プリント",
+          "写真 引き伸ばし A2 ポスター"
+        ],
+        "en": [
+          "large format photo printing"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "写真プリンター 小型 L判"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "99472bda34a981919c7ab4817827135c06df93f0b7147e33013745d584557d57",
+      "query_text": "スマホの写真をアルバムみたいにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "photo-book",
+      "ideal_answer": "フォトブック(写真集作成サービス)",
+      "search_terms": {
+        "ja": [
+          "フォトブック 作成",
+          "スマホ 写真 アルバム 印刷"
+        ],
+        "en": [
+          "photo book printing service"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "アルバム 台紙のみ"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "f3b59bef79104b4c1bd227a1472d6d62d1957d91d2bff6c854c1e5852e2ba41b",
+      "query_text": "インクを使わないプリンター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "thermal-printer",
+      "ideal_answer": "感熱式プリンター(インク不要)",
+      "search_terms": {
+        "ja": [
+          "感熱式 プリンター インク不要",
+          "サーマルプリンター スマホ"
+        ],
+        "en": [
+          "thermal printer no ink"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "インクジェットプリンター",
+        "レーザープリンター"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "e41c80a9857d036ca1b5ea00a482dbfc2f8a4dc3aa8848fed628cd89190706fe",
+      "query_text": "洗濯物を早く乾かす機械",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "衣類乾燥機(乾燥専用)と、除湿機の衣類乾燥モードがあります。設置スペースと予算で変わりますが、どちらをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "f2869df2f686c5371fe7237fca00318f11f01390cbf9315cdb4ab3e3ff673cf5",
+      "query_text": "寝るとき音が静かな扇風機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fan",
+      "ideal_answer": "静音扇風機(DCモーター)",
+      "search_terms": {
+        "ja": [
+          "扇風機 静音 DCモーター",
+          "扇風機 寝室 静か"
+        ],
+        "en": [
+          "quiet dc motor fan bedroom"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "業務用 送風機",
+        "サーキュレーター 風量重視"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "7b1a397d5c57e50160b118960c5810ca0751049906cf6d98028604afa69d6311",
+      "query_text": "エアコンがない部屋を涼しくしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "窓用エアコン、スポットクーラー、冷風扇などがあります。窓の形状や排熱の逃がし方で置けるものが変わります。お部屋の窓はどんな形ですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "83c108c396022f37c7f4e6ec2622508453e9bfea3a34d4a4435ad7e757173156",
+      "query_text": "暖房で乾燥するのをなんとかしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "humidifier",
+      "ideal_answer": "加湿器(暖房併用向け)",
+      "search_terms": {
+        "ja": [
+          "加湿器 暖房 乾燥",
+          "加湿器 リビング 大容量"
+        ],
+        "en": [
+          "humidifier for heated room"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "除湿機"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "89c429f80806c1b9553317e188f60a919d23e2e1010617ce9e1b5666a110ddff",
+      "query_text": "こたつのふとんだけ買いたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "kotatsu-futon",
+      "ideal_answer": "こたつ布団(単品)",
+      "search_terms": {
+        "ja": [
+          "こたつ布団 単品",
+          "こたつ 掛け布団 正方形"
+        ],
+        "en": [
+          "kotatsu futon cover only"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "こたつ 本体 セット"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "3f23f98bb36b74b337432e084123457a4a8a29b8c6b317eab6d771d2dbacb9be",
+      "query_text": "窓につける結露を防ぐヒーター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "window-heater",
+      "ideal_answer": "窓用結露防止ヒーター",
+      "search_terms": {
+        "ja": [
+          "窓 結露防止 ヒーター",
+          "サッシ ヒーター 結露"
+        ],
+        "en": [
+          "window condensation prevention heater"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "結露取りワイパー",
+        "除湿機"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "4919fd932c8add13fc5c8aebeec073fa1466aec35c00ea72e5b0781727d6c50a",
+      "query_text": "見守りができる機械 ひとり暮らしの親",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "カメラ型、センサー型(人感・電気ポットの使用通知など)、緊急通報ボタンがあります。ご本人がカメラを望まれない場合もあるので、どの形が良いでしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "f307706faab86782355cfe1f89150b869df4b4105ed10f7e22efd7a920969839",
+      "query_text": "子どもがどこにいるか分かるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "gps-tracker",
+      "ideal_answer": "子ども用GPS端末(見守りタグ)",
+      "search_terms": {
+        "ja": [
+          "子供 GPS 見守り",
+          "GPS 端末 ランドセル 小学生"
+        ],
+        "en": [
+          "kids gps tracker japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "キッズ携帯 通話機能付き"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "bb02fdb000abde22c6e904a529234ba586293138f8c8186b13ec60ed9a7d6ddb",
+      "query_text": "gluten free bread japan where",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "米粉パンなど小麦不使用の製品があります。アレルギー対応が必要な場合は、専用ラインで製造された製品かどうかをご確認ください。",
+      "search_terms": {
+        "ja": [
+          "米粉パン 小麦不使用"
+        ],
+        "en": [
+          "gluten free bread japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "6f78961e7c84de9a7b10b0d4a34b6f1a0efc5dfea8e2ae3fb2ebf254b69cda79",
+      "query_text": "halal food japan supermarket",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ハラル認証マークのある製品をお探しでしょうか。日本の一般的な調味料にはみりんや料理酒(アルコール)が含まれることが多いのでご注意ください。",
+      "search_terms": {
+        "ja": [
+          "ハラル認証 食品"
+        ],
+        "en": [
+          "halal certified food japan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "536955570e375bef0a28dee9c837b75eebd37a6a1055650cac5c16ea4fde3e5d",
+      "query_text": "아기 분유 물 일본",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "baby-water",
+      "ideal_answer": "調乳用の軟水(ミネラルウォーター)",
+      "search_terms": {
+        "ja": [
+          "赤ちゃん 水 軟水 調乳"
+        ],
+        "en": [
+          "soft water baby formula"
+        ],
+        "ko": [
+          "아기 물 분유",
+          "연수 생수"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "硬水"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-013.json"
+    },
+    {
+      "content_hash": "93c73c9e3d0efcf4147aae2c1498b182f72f9766e3b7705ebfadc5c666cf7df2",
+      "query_text": "儿童 衣服 尺码 日本 身高",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "日本の子ども服は身長(cm)表記が基本で、80、90、100…と10cm刻みです。お子さまの身長を教えていただければ目安をご案内できます。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "儿童 尺码 日本",
+          "童装 身高 尺码"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-013.json"
     }
   ]
 }
