@@ -242,14 +242,52 @@ test('公開検索APIが失敗しても4モールへの検索導線を表示す�
 // nothing. Assert the card is now appended in *both* branches.
 test('検索結果の有無に関わらずモール横断フォールバックカードを表示する', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  // Asserted without pinning the neighbouring pushes: the guarantee is that
+  // the has-results branch builds and pushes the fallback card before it
+  // renders, not that it is appended immediately after the carousel (the AI
+  // related-keyword card was later inserted into this same branch).
   assert.match(
     appSource,
-    /resultCards\.push\(carousel,refinementCard\(\)\);const marketplaceFallback=marketplaceFallbackCard\(result\);if\(marketplaceFallback\)resultCards\.push\(marketplaceFallback\);elements\.cards\.replaceChildren\(\.\.\.resultCards\);\}else\{/
+    /const marketplaceFallback=marketplaceFallbackCard\(result\);if\(marketplaceFallback\)resultCards\.push\(marketplaceFallback\);elements\.cards\.replaceChildren\(\.\.\.resultCards\);\}else\{/
   );
+  assert.match(appSource, /resultCards\.push\(carousel\)/);
+  assert.match(appSource, /resultCards\.push\(refinementCard\(\)\)/);
   assert.match(
     appSource,
     /emptyCards\.push\(marketplaceFallback\);elements\.cards\.replaceChildren\(\.\.\.emptyCards\);/
   );
+});
+// AI related-keyword suggestions (Phase C item 11, 2026-08-07): 5件以上の
+// タップ可能な連想キーワードを検索条件に追加できること。出典は必ず実データ
+// (AI意図解析 / 実際に見つかった商品の一致語・商品名)で、AIが価格や商品を
+// 捏造しないのと同じ原則でキーワードも創作しない。
+test('AI連想キーワードをタップで検索条件に追加できる', () => {
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(appSource, /function relatedKeywordSuggestions\(result,query\)/);
+  assert.match(appSource, /function relatedKeywordCard\(result\)/);
+  // 5件未満なら中途半端なブロックを出さない
+  assert.match(appSource, /if\(terms\.length<5\)return null;/);
+  // タップで既存条件に " / " 区切りで追加し、同じ検索ルートとして再検索する
+  assert.match(appSource, /elements\.query\.value=current\?`\$\{current\} \/ \$\{term\}`:term;/);
+  assert.match(appSource, /function applyRelatedKeyword\(term\)[\s\S]{0,400}runKnowledgeSearch\(\)/);
+  // 読み取り専用のspanではなくbuttonで、クリックハンドラを持つ
+  assert.match(appSource, /chip\.className='keyword-tag related-keyword-tag'/);
+  assert.match(appSource, /chip\.addEventListener\('click',\(\)=>applyRelatedKeyword\(term\)\)/);
+  // 検索結果あり／なしの両方の分岐に差し込まれている
+  assert.match(appSource, /const relatedKeywords=relatedKeywordCard\(result\);if\(relatedKeywords\)resultCards\.push\(relatedKeywords\)/);
+  assert.match(appSource, /const emptyRelatedKeywords=relatedKeywordCard\(result\);if\(emptyRelatedKeywords\)emptyCards\.push\(emptyRelatedKeywords\)/);
+  // 出典は実データのみ: AI意図解析と、実際に返ってきた商品の一致語・商品名
+  assert.match(appSource, /analysis\?\.search_keywords\|\|\[\]\)\.forEach\(pushAi\)/);
+  assert.match(appSource, /candidate\?\.evidence\?\.matched_terms\|\|\[\]\)\.forEach\(countResult\)/);
+  // モールの販促定型文はキーワード候補にしない
+  assert.match(appSource, /const relatedKeywordStopWords=new Set\(\[[^\]]*'送料無料'/);
+  // 4言語ぶんのラベルがある
+  ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
+    assert.match(appSource, new RegExp(`${language}:\\{ai:'[^']+',result:'[^']+'\\}`));
+  });
+  const layoutCss = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
+  // スマホでのタップ領域を44px以上に保つ
+  assert.match(layoutCss, /\.related-keyword-tag\{[^}]*min-height:44px/);
 });
 test('Amazon検索フォールバックに承認済みアソシエイトIDを付ける', () => {
   const destination = buildAmazonSearchDestination('光るスマホケース', 'hoshilu-22');
@@ -382,7 +420,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v306/);
+  assert.match(serviceWorker, /hoshilu-shell-v307/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
