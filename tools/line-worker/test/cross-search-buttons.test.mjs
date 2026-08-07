@@ -68,11 +68,13 @@ test('ai-search-ui.cssはモール10件とSNS5チャネル全てへブランド�
   assert.match(css, /\.marketplace-search-link\{min-height:4[4-9]px|min-height:[5-9]\dpx/);
 });
 
-test('4セクションはMARKETPLACE COVERAGE→SEARCH AGENT→DISCOVERY→OFFICIALの順で隣接する', async () => {
+test('SEARCH AGENT→DISCOVERY→OFFICIALの3セクションは順に隣接する', async () => {
   const html = await read('index.html');
   // 2026-08-07 指示書 #14: 正式なセクション順は
   // MARKETPLACE COVERAGE(6) -> SEARCH AGENT(7) -> DISCOVERY(8) -> OFFICIAL(9)。
-  const order = ['MARKETPLACE COVERAGE', 'HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY', 'HOSHILU OFFICIAL'];
+  // 2026-08-07: MARKETPLACE COVERAGE moved up to sit above SALE RADAR, so it
+  // is no longer adjacent to SEARCH AGENT. The remaining three stay adjacent.
+  const order = ['HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY', 'HOSHILU OFFICIAL'];
   const positions = order.map((label) => {
     const index = html.indexOf(`<p class="step">${label}</p>`);
     assert.notEqual(index, -1, `missing section: ${label}`);
@@ -80,9 +82,9 @@ test('4セクションはMARKETPLACE COVERAGE→SEARCH AGENT→DISCOVERY→OFFIC
   });
   assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
   // この4つの間に他セクションの見出し(step)を挟まない。
-  const between = html.slice(positions[0], positions[3]);
+  const between = html.slice(positions[0], positions[2]);
   const steps = [...between.matchAll(/<p class="step">([^<]+)<\/p>/g)].map((match) => match[1]);
-  assert.deepEqual(steps, order.slice(0, 3));
+  assert.deepEqual(steps, order.slice(0, 2));
 });
 
 test('オフライン時のフォールバックはナビゲーションだけを対象にする', async () => {

@@ -1571,12 +1571,41 @@ function buildBentoDividerSearchKeywords(query) {
   const english = /(?:bento|lunch\s*box|packed\s*lunch).{0,50}(?:green|grass|leaf).{0,40}(?:divider|separator)|(?:green|grass|leaf).{0,40}(?:divider|separator).{0,50}(?:bento|lunch\s*box)/iu.test(text);
   const chinese = /(?:便当|便當|饭盒|飯盒).{0,40}(?:绿色|綠色|草|叶|葉).{0,40}(?:隔板|分隔|隔开|隔開)|(?:绿色|綠色|草|叶|葉).{0,40}(?:隔板|分隔).{0,40}(?:便当|便當|饭盒|飯盒)/u.test(text);
   const korean = /(?:도시락).{0,40}(?:초록|녹색|풀|잎).{0,40}(?:칸막이|구분|분리)|(?:초록|녹색|풀|잎).{0,40}(?:칸막이|구분|분리).{0,40}(?:도시락)/u.test(text);
-  return /(?:^|\s)バラン(?:\s|$)/u.test(text) || japanese || english || chinese || korean
+  // 2026-08-07 real report: "弁当箱に入れる緑色の葉っぱのような物 食べ物では
+  // ない" returned an apron, a Wii game and measuring cups. Every branch above
+  // requires the user to already say 仕切り/divider - i.e. to know what the
+  // thing does. That is precisely the knowledge HOSHILU exists to not require
+  // ("商品名が分からなくても大丈夫"), so a description of the object misses.
+  //
+  // This branch matches the description instead: 弁当 near 葉/緑/草, plus a
+  // signal that the item is an OBJECT rather than food ("食べ物ではない",
+  // "〜のような物", "プラスチック", "飾り" ...). That guard is what keeps real
+  //食材 queries out - "弁当用の大葉" stays a food search, because nothing in
+  // it says the leaf is not food.
+  const notFood = /食べ物では|食品では|食べられ(?:ない|ません)|食べno|飾り|かざり|彩り|いろどり|装飾|造花|フェイク|人工|プラスチック|樹脂|ビニール|使い捨て/u;
+  const looksLike = /(?:よう|よー|みたい|似た|っぽい)(?:な|の)?(?:物|もの|やつ|の)|レプリカ|模造/u;
+  const bentoLeaf = /(?:弁当|おべんとう|ランチボックス).{0,40}(?:草|葉|緑)|(?:草|葉|緑).{0,40}(?:弁当|おべんとう|ランチボックス)/u.test(text);
+  const japaneseDescriptive = bentoLeaf && (notFood.test(text) || looksLike.test(text));
+  return /(?:^|\s)バラン(?:\s|$)/u.test(text) || japanese || japaneseDescriptive || english || chinese || korean
     ? '弁当 バラン 仕切り' : '';
 }
 
 export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') {
-  const rawNormalized = String(query || '').normalize('NFKC').replace(/\s+/g, ' ').trim();
+  // " / " is HOSHILU's INTERNAL condition separator ("カットソー / レディース /
+  // 半袖"): runKnowledgeSearch() reads it as "same search root, narrowed", and
+  // the AI search, the AI related-keyword chips and the condition chips all
+  // append with it. It must never reach a marketplace as part of the keyword.
+  // buildAmazonSearchKeywords/buildRakutenSearchKeywords/buildQoo10SearchKeywords
+  // already drop it, but this builder did not - so SHEIN and the five apparel
+  // malls searched for the literal string including the slashes and returned
+  // "0件" (verified 2026-08-07 on ZOZOTOWN / SHOPLIST / MUSINSA / BUYMA, which
+  // also rendered the slash-laden keyword as mojibake). For SHEIN it was worse:
+  // the keyword goes in the URL *path*, so the slashes broke the URL structure.
+  //
+  // Whitespace is required on BOTH sides so only the separator is removed: a
+  // bare slash inside a spec ("読込 1050MB/s", "S/M", "24/7") is part of the
+  // product term and must survive.
+  const rawNormalized = String(query || '').normalize('NFKC').replace(/\s+\/\s+/gu, ' ').replace(/\s+/g, ' ').trim();
   const rawBentoDivider = buildBentoDividerSearchKeywords(rawNormalized);
   if (rawBentoDivider) return rawBentoDivider;
   const rawShaverReplacement = buildShaverReplacementSearchKeywords(rawNormalized);

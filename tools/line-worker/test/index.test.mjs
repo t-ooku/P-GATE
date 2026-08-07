@@ -420,7 +420,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v309/);
+  assert.match(serviceWorker, /hoshilu-shell-v310/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -930,29 +930,34 @@ test('商品カードは10モールの実在商品ページを1モール1件だ�
   assert.equal(appSource.includes("document.querySelector('.marketplace-fallback')?.scrollIntoView"), true);
 });
 
-// AI Lowest-Price Compare gap-fill (Phase C item 12/13, 2026-08-07): the
-// price-comparison panel must never silently drop a marketplace HOSHILU
-// isn't API-connected to for this specific product - it should offer a
-// "search this mall too" link built from the same signed
-// result.marketplace_search_links every other fallback button uses, never
-// an AI-estimated price. This confirms that gap-fill helper exists, is
-// wired into every renderOfferOptions branch (0/1/N confirmed offers), and
-// is threaded from renderResults() via the `result` argument rather than
-// reading marketplace_search_links off the per-candidate object (which
-// decoratePwaResult deliberately never attaches - see the doesNotMatch
-// assertion above).
-test('価格比較パネルはAPI未連携モールにも「このモールでも探す」導線を表示する', () => {
+// AI Lowest-Price Compare gap-fill (Phase C item 12/13, 2026-08-07).
+//
+// The price-comparison panel lists only marketplaces with a CONFIRMED total
+// including shipping. A mall can carry this exact product without one, and
+// dropping those hid a real place to buy it.
+//
+// 2026-08-07 real-device report: the first cut of this built the entries
+// from result.marketplace_search_links, so every product card listed all
+// nine other malls regardless of whether they were ever shown to carry that
+// product, and each link went to a keyword search page rather than to the
+// product. These entries must come from candidate.offers - the same
+// per-product offer list the confirmed prices come from - so every link
+// opens the SAME product on that mall, and only malls where it was actually
+// found appear. No price is shown, because none was confirmed.
+test('価格未確認モールの導線は同一商品のオファーだけから作る', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(appSource, /function unverifiedMarketplaceLinks\(covered,result,language\)/);
-  assert.match(appSource, /このモールでも探す（価格未確認）/);
-  assert.match(appSource, /renderOfferOptions\(candidate,t,language,result\)/);
-  assert.match(appSource, /renderOfferOptions\(candidate,t,elements\.language\.value,result\)/);
-  // wired into all three branches: no confirmed offers, offers without a
-  // price, and priced offers (both single and multi-offer panel paths).
-  assert.match(appSource, /if\(!linked\.length\)return unverifiedMarketplaceLinks\(covered,result,language\)/);
-  assert.match(appSource, /const gap=unverifiedMarketplaceLinks\(covered,result,language\);if\(gap\)list\.append\(gap\)/);
-  assert.match(appSource, /const gap=unverifiedMarketplaceLinks\(covered,result,language\);if\(!gap\)return link;/);
-  assert.match(appSource, /const gap=unverifiedMarketplaceLinks\(covered,result,language\);if\(gap\)panel\.append\(gap\)/);
+  assert.match(appSource, /function unverifiedMarketplaceLinks\(offers,language\)/);
+  assert.match(appSource, /同じ商品が見つかったモール（価格未確認）/);
+  // 全体クエリの検索リンクではなく、その商品のオファーのtracking_urlを使う
+  assert.match(appSource, /url:offer\.tracking_url/);
+  assert.doesNotMatch(appSource, /unverifiedMarketplaceLinks\([^)]*marketplace_search_links/);
+  // 価格が確定しているモールは価格側に出るので、ここでは除外する
+  assert.match(appSource, /Number\(offer\?\.total_cost\)>0\|\|seen\.has\(marketplace\)/);
+  // 確定価格あり(単数・複数)の両方の分岐に差し込む
+  assert.match(appSource, /const gap=unverifiedMarketplaceLinks\(linked,language\);if\(!gap\)return link;/);
+  assert.match(appSource, /const gap=unverifiedMarketplaceLinks\(linked,language\);if\(gap\)panel\.append\(gap\)/);
+  // オファーが1件も無ければ同一商品の情報が無いので何も出さない
+  assert.match(appSource, /if\(!linked\.length\)return null;/);
 });
 
 
