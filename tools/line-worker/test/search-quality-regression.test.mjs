@@ -97,11 +97,18 @@ const electronicsCases = [
 ];
 
 for (const query of electronicsCases) {
-  test(`家電検索は原文を保持しファッション5モールを誤って有効化しない: ${query}`, () => {
+  // 2026-08-07 instructions #8: buildApparelMarketplaceDestinations no
+  // longer gates on isApparelSearch - all ten marketplaces (including the
+  // five previously "fashion-only" ones) are searchable for every query.
+  // isApparelSearch itself is unchanged and still correctly classifies
+  // these electronics queries as non-apparel.
+  test(`家電検索は原文を保持し、ファッション5モールも含め常に検索導線を出す: ${query}`, () => {
     const { amazon } = assertKeywordsKeepOriginal(query);
     assertJapanesePrimary(query, amazon);
-    assert.equal(isApparelSearch(query), false, `${query} must not trigger the apparel marketplace gate`);
-    assert.deepEqual(buildApparelMarketplaceDestinations(query), []);
+    assert.equal(isApparelSearch(query), false, `${query} is correctly classified as non-apparel`);
+    assert.deepEqual(buildApparelMarketplaceDestinations(query).map((item) => item.marketplace), [
+      'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+    ]);
   });
 }
 
@@ -211,9 +218,10 @@ test('1モールの検索語生成に問題があっても他モールの検索�
   // Amazon destination must not prevent the other marketplaces from
   // producing valid destinations. We simulate this with an empty query,
   // which every builder treats as "no keywords" and safely returns '' for,
-  // while a real query still produces destinations for every marketplace
-  // even though buildApparelMarketplaceDestinations legitimately returns
-  // nothing for it.
+  // while a real query still produces destinations for every marketplace -
+  // including the five buildApparelMarketplaceDestinations covers, which
+  // (2026-08-07 instructions #8) are always searchable now, not only for
+  // apparel-looking queries.
   const query = 'テレビにつなげるゲーム機';
   assert.equal(buildAmazonSearchDestination('', 'hoshilu-22'), '');
   assert.ok(buildAmazonSearchDestination(query, 'hoshilu-22').startsWith('https://www.amazon.co.jp/s'));
@@ -221,7 +229,7 @@ test('1モールの検索語生成に問題があっても他モールの検索�
   assert.ok(buildYahooShoppingSearchDestination(query).startsWith('https://shopping.yahoo.co.jp'));
   assert.ok(buildQoo10SearchDestination(query).startsWith('https://www.qoo10.jp'));
   assert.ok(buildSheinSearchDestination(query).startsWith('https://jp.shein.com'));
-  assert.deepEqual(buildApparelMarketplaceDestinations(query), []);
+  assert.equal(buildApparelMarketplaceDestinations(query).length, 5);
 });
 
 test('候補ゼロでも空文字を返さず原文ベースのフォールバックを維持する', () => {
@@ -279,11 +287,11 @@ const additionalElectronicsCases = [
 ];
 
 for (const [query, excludedOrColorTerm] of additionalElectronicsCases) {
-  test(`家電追加監査は色/否定条件を保持しファッション5モールを誤って有効化しない: ${query}`, () => {
+  test(`家電追加監査は色/否定条件を保持し、ファッション5モールも含め常に検索導線を出す: ${query}`, () => {
     const { amazon } = assertKeywordsKeepOriginal(query);
     assertJapanesePrimary(query, amazon);
-    assert.equal(isApparelSearch(query), false, `${query} must not trigger the apparel marketplace gate`);
-    assert.deepEqual(buildApparelMarketplaceDestinations(query), []);
+    assert.equal(isApparelSearch(query), false, `${query} is correctly classified as non-apparel`);
+    assert.equal(buildApparelMarketplaceDestinations(query).length, 5);
     if (excludedOrColorTerm) assert.notEqual(amazon.trim(), excludedOrColorTerm);
   });
 }

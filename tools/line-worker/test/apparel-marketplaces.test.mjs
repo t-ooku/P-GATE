@@ -42,6 +42,13 @@ test('中国語・韓国語の自然文もアパレル判定し正規化した�
   }
 });
 
-test('アパレル以外には追加モールを表示しない', () => {
-  assert.deepEqual(buildApparelMarketplaceDestinations('USB充電の写真プリンター'), []);
+test('アパレル以外の検索でも10モール目標のため追加5モールを表示する', () => {
+  // 2026-08-07 instructions #8: all ten marketplaces stay searchable on every
+  // query now, not just apparel-looking ones - isApparelSearch remains for
+  // other callers, but no longer gates this list.
+  const links = buildApparelMarketplaceDestinations('USB充電の写真プリンター');
+  assert.deepEqual(links.map((item) => item.marketplace), [
+    'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'
+  ]);
+  assert.deepEqual(buildApparelMarketplaceDestinations(''), []);
 });
