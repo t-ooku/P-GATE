@@ -76,8 +76,8 @@ test('必須検索テストの6クエリすべてが教師データで解決ま�
 // 厚くしたぶんが失われないよう件数と代表クエリを固定する。
 test('教師データが全ペルソナで実用的な件数を保っている', () => {
   const stats = teacherDatasetStats();
-  assert.ok(stats.entryCount >= 315, `expected at least 315 compiled entries, got ${stats.entryCount}`);
-  assert.ok(stats.sourceBatches.length >= 7, `expected at least 7 batches, got ${stats.sourceBatches.length}`);
+  assert.ok(stats.entryCount >= 345, `expected at least 345 compiled entries, got ${stats.entryCount}`);
+  assert.ok(stats.sourceBatches.length >= 8, `expected at least 8 batches, got ${stats.sourceBatches.length}`);
 });
 
 test('子ども・高齢者の言い換えから商品を引ける', () => {
@@ -217,4 +217,41 @@ test('全記録が必須項目とスキーマ上の値域を満たす', async ()
   // content_hash は query_text+category+locale なので、同じ質問が2つ残らない
   const hashes = compiled.entries.map((entry) => entry.content_hash);
   assert.equal(new Set(hashes).size, hashes.length, 'duplicate content_hash in compiled artifact');
+});
+
+// 規格・型番の領域 (batch-008)。
+// 他の領域では惜しい間違いは「役に立たない」で済むが、ここでは物理的に
+// 入らない・電圧が合わない・取り付かない、つまり買っても使えない。だから
+// 多くの記録は商品を断定せず、足りない情報を聞き返す形にしてある。
+// 「電池を買いたい」に対する正直な答えは推測ではなく「どれですか？」。
+test('規格が要る商品は推測せず型番・サイズを聞き返す', () => {
+  const cases = [
+    ['時計の中に入ってる丸い電池', /CR2032|型番|番号/],
+    ['リモコンの電池', /単3|単4/],
+    ['プリンターのインクがなくなった', /型番/],
+    ['空気清浄機のフィルターの替え', /型番|機種/],
+    ['電動歯ブラシの先っぽ', /ブラウン|フィリップス|メーカー/],
+    ['ふとんカバーの大きさ', /シングル|サイズ/],
+    ['スマホに貼るフィルムのサイズ', /機種/],
+  ];
+  for (const [query, expected] of cases) {
+    const entry = lookupTeacherDatasetEntry(query);
+    assert.ok(entry, `missing teacher entry: ${query}`);
+    assert.equal(entry.category, 'UNCLASSIFIED', `${query}: should not assert a product`);
+    assert.match(entry.ideal_answer, expected, `${query}`);
+  }
+});
+
+// 逆に、規格が文面で確定しているものは断定してよい。
+test('規格が確定しているものは断定して商品まで答える', () => {
+  assert.match(lookupTeacherDatasetEntry('六角の穴のネジを回すやつ').ideal_answer, /六角レンチ/);
+  assert.match(lookupTeacherDatasetEntry('星の形の穴のネジ').ideal_answer, /トルクス/);
+  assert.match(lookupTeacherDatasetEntry('cr2032 battery equivalent japan').ideal_answer, /CR2032/);
+  // 物理的に互換のない端子・工具は取り違えないよう除外しておく
+  assert.ok(lookupTeacherDatasetEntry('星の形の穴のネジ').excluded_conditions.includes('六角レンチ'));
+  assert.ok(lookupTeacherDatasetEntry('スマホの充電さすところが小さい四角いやつ')
+    .excluded_conditions.some((item) => item.includes('Lightning')));
+  // 石膏ボードに木ネジを使うと棚ごと落ちる
+  assert.ok(lookupTeacherDatasetEntry('棚を壁につけるネジ 石膏ボード')
+    .excluded_conditions.some((item) => item.includes('木ネジ')));
 });
