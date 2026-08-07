@@ -3002,11 +3002,22 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
     // relevance_score/relevance_score_breakdown make the 100-point rubric
     // inspectable per candidate (2026-08-05 v4.0 instructions: "スコア内訳
     // を確認可能にしてください") instead of only affecting sort order.
+    //
+    // v4.2 項目21: この関数が返す候補は常に自然検索結果 = MATCHES。有料枠
+    // (SPONSORED)は一切ここで生成・混入しない - ⑤のスロットが恒久的に0
+    // (no-op)であることと合わせて、「課金で自然検索の関連性順位を上げる」
+    // ことがこの関数からは構造的にできないことを保証する。将来SPONSORED
+    // 候補を追加する場合は、この配列とは別の枠として返し、result_type で
+    // 区別して初めてクライアントへ渡す設計にすること（src/sponsor-intent-matching.mjs
+    // の classifySponsoredCandidate 参照。カテゴリ不一致の除外基準を自然
+    // 検索結果と共有しているが、この rankMerchantCandidates へは何も書き
+    // 戻さない、意図的に未接続の判定関数）。
     .map(({ candidate, score }, index) => ({
       ...candidate,
       rank: index + 1,
       relevance_score: score.total,
-      relevance_score_breakdown: score.breakdown
+      relevance_score_breakdown: score.breakdown,
+      result_type: 'MATCHES'
     }));
 }
 
