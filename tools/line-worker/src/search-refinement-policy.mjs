@@ -279,3 +279,43 @@ export function refinementRequest(query, selectedChips, context = {}, locale = "
     prior_search_id: String(context?.search_id || ""),
   };
 }
+
+/**
+ * Group headings for the condition-search UI (Phase C item 11, 2026-08-07).
+ *
+ * suggestRefinementChips() returns a flat chip list tagged with `dimension`,
+ * which was enough for a single "did you mean" strip but not for the grouped,
+ * one-value-per-dimension panel the unified search needs. The headings live
+ * here, next to the labels they head, so the client renders strings it is
+ * handed rather than keeping a second copy of this dictionary that could
+ * drift from it.
+ */
+const DIMENSION_LABELS = Object.freeze({
+  ja: { category: "種類", scene: "使う場所", size: "大きさ", power: "電源", appearance: "見た目" },
+  en: { category: "Type", scene: "Where you use it", size: "Size", power: "Power", appearance: "Look" },
+  zh: { category: "种类", scene: "使用场所", size: "大小", power: "电源", appearance: "外观" },
+  ko: { category: "종류", scene: "사용 장소", size: "크기", power: "전원", appearance: "외형" },
+});
+
+export function refinementDimensionLabel(dimension, locale = "ja") {
+  return DIMENSION_LABELS[localeKey(locale)]?.[String(dimension || "")] || "";
+}
+
+/**
+ * Dimensions the query already pins down, so the panel stops offering them.
+ *
+ * applyRefinementChips() appends a dimension's *label* to the query and
+ * accepts only one chip per dimension, so a label already present in the
+ * query means that dimension is decided. Matching on the same COPY strings
+ * the chips are built from keeps the two in step: whatever a chip can add is
+ * exactly what is detected here.
+ */
+export function knownRefinementDimensions(query, locale = "ja") {
+  const lang = localeKey(locale);
+  const text = String(query || "").toLocaleLowerCase();
+  if (!text) return [];
+  return DIMENSION_ORDER.filter((dimension) =>
+    Object.values(COPY[lang]?.[dimension] || {})
+      .some((label) => label && text.includes(String(label).toLocaleLowerCase()))
+  );
+}
