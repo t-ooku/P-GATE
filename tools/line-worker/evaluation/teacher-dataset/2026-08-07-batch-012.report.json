@@ -1,12 +1,12 @@
 {
-  "batchId": "2026-08-07-batch-009",
-  "sourceFile": "/root/work/P-GATE/tools/line-worker/evaluation/teacher-dataset/2026-08-07-batch-009.json",
-  "generatedAt": "2026-08-07T10:55:02.706Z",
-  "totalRecords": 32,
-  "validRecords": 32,
+  "batchId": "2026-08-07-batch-012",
+  "sourceFile": "/root/work/P-GATE/tools/line-worker/evaluation/teacher-dataset/2026-08-07-batch-012.json",
+  "generatedAt": "2026-08-07T10:55:02.890Z",
+  "totalRecords": 30,
+  "validRecords": 30,
   "invalidRecords": 0,
   "withinBatchDuplicates": 0,
-  "sqlStatementsGenerated": 32,
+  "sqlStatementsGenerated": 30,
   "invalidDetails": [],
   "note": "This report reflects local validation and within-batch dedup only. Duplicate detection against records already stored in Cloudflare D1 happens at apply time via INSERT OR IGNORE (content_hash UNIQUE). No network calls were made."
 }

@@ -50,7 +50,7 @@
     "locale": "ja",
     "persona": "general",
     "user_intent": "刺繍枠を探している",
-    "ideal_answer": "刺繍枠(эмブロイダリーフープ)",
+    "ideal_answer": "刺繍枠(エンブロイダリーフープ)",
     "reason": "初心者は道具名を知らない。動作と目的から特定できる。",
     "category": "embroidery-hoop",
     "search_terms": {

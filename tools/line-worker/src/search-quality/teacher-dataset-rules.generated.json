@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-07T10:42:26.432Z",
+  "generated_at": "2026-08-07T10:55:02.389Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -11,9 +11,10 @@
     "2026-08-07-batch-008.json",
     "2026-08-07-batch-009.json",
     "2026-08-07-batch-010.json",
-    "2026-08-07-batch-011.json"
+    "2026-08-07-batch-011.json",
+    "2026-08-07-batch-012.json"
   ],
-  "entry_count": 439,
+  "entry_count": 469,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -5586,7 +5587,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "embroidery-hoop",
-      "ideal_answer": "刺繍枠(эмブロイダリーフープ)",
+      "ideal_answer": "刺繍枠(エンブロイダリーフープ)",
       "search_terms": {
         "ja": [
           "刺繍枠",
@@ -7749,7 +7750,7 @@
       "locale": "ja",
       "persona": "elderly",
       "category": "memorial-offering",
-      "ideal_answer": "お盆のお供え(供物・линeなど)",
+      "ideal_answer": "お盆のお供え(供物・供花など)",
       "search_terms": {
         "ja": [
           "お盆 お供え",
@@ -9710,6 +9711,658 @@
       ],
       "confidence": 0.85,
       "source_file": "2026-08-07-batch-011.json"
+    },
+    {
+      "content_hash": "6f2da4b2d8ca0d9cf3c106f80c6d167408fb5f8ccabf1dba8b9dd3793f21785a",
+      "query_text": "ペットのシャンプー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "犬・猫・小動物で使えるシャンプーが違います。猫に犬用を使うと成分が体質に合わないことがあります。どの動物用でしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "人間用シャンプー"
+      ],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "479044f21984474e25bde22fa2949d42a71a7b441b99e84f0c4259ec1a1c4ae2",
+      "query_text": "うさぎの牧草入れ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rabbit-hay-feeder",
+      "ideal_answer": "うさぎ用牧草入れ(牧草フィーダー)",
+      "search_terms": {
+        "ja": [
+          "うさぎ 牧草入れ",
+          "牧草フィーダー ラビット"
+        ],
+        "en": [
+          "rabbit hay feeder"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "犬 フードボウル",
+        "猫 食器"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "41859aaa1eec7c7326bbf24c3ec6693d0416adaf9da81bc4c8bff0c2392fada7",
+      "query_text": "ハムスターが回すやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hamster-wheel",
+      "ideal_answer": "ハムスター用回し車",
+      "search_terms": {
+        "ja": [
+          "ハムスター 回し車",
+          "回し車 静音 ハムスター"
+        ],
+        "en": [
+          "hamster exercise wheel"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "a6e9450a8811753abe7effc21bad7064ab636494df1a420014f8e041f1183ba7",
+      "query_text": "熱帯魚の水をあたためるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "aquarium-heater",
+      "ideal_answer": "水槽用ヒーター(観賞魚用)",
+      "search_terms": {
+        "ja": [
+          "水槽 ヒーター 熱帯魚",
+          "観賞魚 ヒーター サーモスタット"
+        ],
+        "en": [
+          "aquarium heater tropical fish"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "電気ケトル",
+        "保温ヒーター 人間用"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "af37b490ece46f7ccf44c4e6fc7a1008aed0dce3e3c7f58ba30dc8a945364ccf",
+      "query_text": "犬が舐めても大丈夫な床の掃除用品",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-safe-cleaner",
+      "ideal_answer": "ペットにも配慮した床用クリーナー",
+      "search_terms": {
+        "ja": [
+          "ペット 安心 フローリング 洗剤",
+          "床 掃除 ペット 舐めても"
+        ],
+        "en": [
+          "pet safe floor cleaner"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "塩素系漂白剤",
+        "強アルカリ洗剤"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "49de0ddf625bad1609a3b2b10a2871521a9b55b22d833ef3640c5c19b021c6a4",
+      "query_text": "猫が脱走しないようにする玄関のやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-gate",
+      "ideal_answer": "脱走防止ゲート(猫用・高さのあるもの)",
+      "search_terms": {
+        "ja": [
+          "猫 脱走防止 ゲート",
+          "玄関 脱走防止 柵 猫 突っ張り"
+        ],
+        "en": [
+          "cat escape prevention gate"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ベビーゲート 低い"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "f07047f950137a853518773ff713ce2ca743ad93ba2c0a7f591b8322270aa570",
+      "query_text": "お湯が出るまで時間がかかる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "配管の長さによるもので、商品での解決が難しいことが多いです。追い焚きや即湯ユニットの設置は工事が必要です。賃貸か持ち家かで選択肢が変わりますが、どちらでしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "4fe9f761766a26825dd91a0985098696fe07f9047665e23fa7d8bc134409c479",
+      "query_text": "網戸の張り替え",
+      "locale": "ja",
+      "persona": "general",
+      "category": "screen-mesh",
+      "ideal_answer": "網戸張り替えネット(ローラー等の道具込み)",
+      "search_terms": {
+        "ja": [
+          "網戸 張り替え ネット",
+          "網戸 張り替え セット ローラー"
+        ],
+        "en": [
+          "window screen replacement mesh kit"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "網戸 すきまテープ 部分補修"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "ca433199f74c2ada4df6c10a3a7bf8e03e4e59ffe588a975b5f6dbdaf6373e5f",
+      "query_text": "換気扇のフィルターを汚れにくくするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "range-hood-filter",
+      "ideal_answer": "レンジフード用 使い捨てフィルター",
+      "search_terms": {
+        "ja": [
+          "レンジフード フィルター 使い捨て",
+          "換気扇 フィルター 貼る"
+        ],
+        "en": [
+          "range hood disposable filter"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "換気扇 洗剤"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "2d7114545aa15e0eb91c6419562d097a0bda6bfd03c591a5933b9d4f48eedffc",
+      "query_text": "玄関の鍵を増やしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "同じ鍵をもう1本作る(合鍵)のと、鍵そのものを増やして防犯性を上げる(補助錠)のとで別になります。どちらでしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "3cef42bd3069f9a93bed1bd4b7126a30f430b81e9a27eb1ecfa7e3881a171ae3",
+      "query_text": "水道から出る水をきれいにしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "蛇口に直接つけるタイプ、ポット型、据置型があります。設置場所とご予算で変わりますが、どれをお考えですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "71cf2cd4559beeed0166c7939c64a82136b156f7f5a589c2e4658fe9bfb611a6",
+      "query_text": "トイレのタンクの中の部品",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "タンク内はボールタップ、フロートバルブなど複数の部品があり、メーカーと便器の型番で適合が変わります。症状(水が止まらない、流れが弱いなど)と型番を教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "f1bb0cd12c7afbe74acca6448c4310ce275dd1f7e5c3ea2ac8d9df734f0c856c",
+      "query_text": "資格の勉強で使う付箋 はがせるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sticky-notes",
+      "ideal_answer": "はがせる付箋(インデックス・フィルムタイプ)",
+      "search_terms": {
+        "ja": [
+          "付箋 インデックス はがせる",
+          "フィルム付箋 勉強"
+        ],
+        "en": [
+          "removable index sticky notes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "のり 強粘着",
+        "マスキングテープ 装飾用"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "633f9281aacb5455fdde29f6f3a90f75c9a57141c887e914a975f051c4710d4c",
+      "query_text": "分厚い本を開いたままにしておくやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "book-holder",
+      "ideal_answer": "書見台(ブックスタンド)",
+      "search_terms": {
+        "ja": [
+          "書見台 本",
+          "ブックスタンド 厚い本 固定"
+        ],
+        "en": [
+          "book stand holder thick books"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "書類スタンド 薄い書類用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "3f3c3f796346c3d06d195abf8e4a1aa00908ec16fb7e2df3e26906435c27c423",
+      "query_text": "答えのところだけ隠して勉強するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "memorization-sheet",
+      "ideal_answer": "暗記用赤シート",
+      "search_terms": {
+        "ja": [
+          "赤シート 暗記",
+          "暗記 下敷き 隠す"
+        ],
+        "en": [
+          "red memorization sheet"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "3789846cee17b9ddb0259af6da0ad4d8ddff88b055c2b6dff65edac72dbc6c60",
+      "query_text": "電卓 試験で使えるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "試験ごとに使える電卓の条件(関数機能の有無、印字機能、音の有無など)が定められています。どの試験でしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "b83183839ac9c22976352ee2873e546bfa2670b7e3d1e03a6f938600d943537e",
+      "query_text": "液体を機内に持ち込むための入れ物",
+      "locale": "ja",
+      "persona": "general",
+      "category": "travel-bottle",
+      "ideal_answer": "携帯用詰め替えボトル(機内持ち込み対応)",
+      "search_terms": {
+        "ja": [
+          "旅行 詰め替えボトル 100ml",
+          "機内持ち込み 化粧品 容器"
+        ],
+        "en": [
+          "travel size toiletry bottles tsa"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "大容量 詰め替えボトル"
+      ],
+      "confidence": 0.75,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "c806c78f29663332589b70fc636cef268a0cca470a0c6537051799f2a733514f",
+      "query_text": "スーツケースが開かないようにする鍵",
+      "locale": "ja",
+      "persona": "general",
+      "category": "tsa-lock",
+      "ideal_answer": "TSAロック(スーツケース用)",
+      "search_terms": {
+        "ja": [
+          "TSAロック",
+          "スーツケース 鍵 TSA"
+        ],
+        "en": [
+          "tsa approved luggage lock"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "南京錠 TSA非対応"
+      ],
+      "confidence": 0.8,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "df670e92a610a19c0bd7b856617d1a0e208af4d073a411a4b5136c7dd8ba8e91",
+      "query_text": "旅行先で服がしわになる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "持ち運べる衣類スチーマーと、吹きかけるしわ取りスプレーがあります。荷物を減らしたい場合はスプレーが軽いです。どちらをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "6f2a7ec84f0a07d8ee040ce10b5721fa422f2a8aaa517afc2c9866f20eb46c82",
+      "query_text": "海外で日本のコンセントが使えるようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "travel-adapter",
+      "ideal_answer": "海外用変換プラグ(トラベルアダプター)",
+      "search_terms": {
+        "ja": [
+          "変換プラグ 海外",
+          "トラベルアダプター マルチ"
+        ],
+        "en": [
+          "universal travel adapter"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "変圧器 電圧変換"
+      ],
+      "confidence": 0.8,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "9933e5e988e4383db6cbee64a6148344aa46c28544bf33b9079471a4b9667f1f",
+      "query_text": "運動するときに手に巻くやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ボクシングのバンテージ、ウエイトトレーニングのリストラップ、テーピングなど競技で変わります。何のスポーツでしょうか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "9a475303608f409ad485990c152c82a59870775e8f4610b0652a3d381d696bd7",
+      "query_text": "ヨガのときに敷くやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "yoga-mat",
+      "ideal_answer": "ヨガマット",
+      "search_terms": {
+        "ja": [
+          "ヨガマット",
+          "ヨガマット 厚手 滑らない"
+        ],
+        "en": [
+          "yoga mat non slip"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "キャンプ マット 断熱",
+        "レジャーシート"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "7f5f3109bebd9ba8152212db75a7522927a42cf2b5508ae12614f03e5f873c47",
+      "query_text": "ゴルフの球を打つ練習を家でしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "golf-practice",
+      "ideal_answer": "パターの練習用マットと、実際に打てる練習ネットがあります。どちらをお探しですか？ ネットは設置スペースが必要です。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "f7b40db7e2660a8cd530aa1677e4dc9d3a4f2f2dcb24973d1aface9e31232107",
+      "query_text": "ランニングのときスマホを持つやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "腕に着けるアームバンドと、腰に巻くランニングポーチがあります。どちらがお好みですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "455eb13bda2ed901a2a6ef41739d5664eb6920cf2a7c1560c9ec602cf9c0bdd0",
+      "query_text": "水泳で使う帽子",
+      "locale": "ja",
+      "persona": "general",
+      "category": "swim-cap",
+      "ideal_answer": "スイミングキャップ",
+      "search_terms": {
+        "ja": [
+          "スイミングキャップ",
+          "水泳帽 メッシュ シリコン"
+        ],
+        "en": [
+          "swim cap"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "帽子 日よけ 屋外用"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "6e0b9b554329b341cd6e7773214b20b94cf0806f8221c0cdfd77eb0d97dc64b9",
+      "query_text": "卓球のラケットに貼るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "table-tennis-rubber",
+      "ideal_answer": "卓球ラバー",
+      "search_terms": {
+        "ja": [
+          "卓球 ラバー",
+          "卓球 ラバー 裏ソフト"
+        ],
+        "en": [
+          "table tennis rubber sheet"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "卓球 ラケット 本体",
+        "グリップテープ"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "b26b7a603470ed7656517273be93cd216bf0fb3e29b94a54fe56cca3bb9f4b28",
+      "query_text": "cat shampoo japan safe",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "猫専用のシャンプーをお選びください。犬用は成分が猫に合わない場合があります。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "犬用シャンプー",
+        "人間用シャンプー"
+      ],
+      "confidence": 0.3,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "757d7453676c11258ba9c1d70cb4f2f3aa5fa05f38285a033dd4000bf3f8a995",
+      "query_text": "tsa rokku suutsukeesu",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "tsa-lock",
+      "ideal_answer": "TSAロック(スーツケース用)",
+      "search_terms": {
+        "ja": [
+          "TSAロック スーツケース"
+        ],
+        "en": [
+          "tsa approved luggage lock"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "南京錠 TSA非対応"
+      ],
+      "confidence": 0.8,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "3ff96f345abbb47d56da1e05ea2ab6a96c2f7ee56dcab0a3c9b9f9e2a32e308d",
+      "query_text": "요가 매트 두꺼운 일본",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "yoga-mat",
+      "ideal_answer": "ヨガマット(厚手)",
+      "search_terms": {
+        "ja": [
+          "ヨガマット 厚手"
+        ],
+        "en": [
+          "thick yoga mat"
+        ],
+        "ko": [
+          "요가매트 두꺼운"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "キャンプ マット 断熱"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
+    },
+    {
+      "content_hash": "e36d99e635ca13ff2c413a1f5df446b059a80cacb0bc3365155dbd43059a66f7",
+      "query_text": "旅行 分装瓶 100ml 飞机",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "travel-bottle",
+      "ideal_answer": "携帯用詰め替えボトル(100ml以下)",
+      "search_terms": {
+        "ja": [
+          "旅行 詰め替えボトル 100ml"
+        ],
+        "en": [
+          "travel size bottles 100ml"
+        ],
+        "ko": [],
+        "zh": [
+          "分装瓶 旅行",
+          "100ml 分装瓶"
+        ]
+      },
+      "excluded_conditions": [
+        "大容量 詰め替えボトル"
+      ],
+      "confidence": 0.85,
+      "source_file": "2026-08-07-batch-012.json"
     }
   ]
 }
