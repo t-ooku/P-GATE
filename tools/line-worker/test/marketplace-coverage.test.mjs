@@ -85,7 +85,7 @@ test('トップ画面で常に最大10モールを横断できることを表示
   assert.match(module, /最多支持10个商城/);
   assert.match(module, /최대 10개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v321/);
+  assert.match(serviceWorker, /hoshilu-shell-v322/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
