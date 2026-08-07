@@ -27,6 +27,7 @@ on:
           evaluation/teacher-dataset/2026-08-07-batch-005.generated.sql
           evaluation/teacher-dataset/2026-08-07-batch-006.generated.sql
           evaluation/teacher-dataset/2026-08-07-batch-007.generated.sql
+          evaluation/teacher-dataset/2026-08-07-batch-008.generated.sql
       confirm:
         description: 'Type APPLY to confirm writing to the production D1 database'
         required: true
