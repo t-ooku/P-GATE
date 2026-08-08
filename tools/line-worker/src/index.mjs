@@ -21,7 +21,7 @@ import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_L
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
-import { analyzeChatTurn } from './ai-chat-intent.mjs';
+import { analyzeChatTurn, chatIntentConfigured } from './ai-chat-intent.mjs';
 import { buildPriceComparison, realPriceRows, requestAiPriceEstimates } from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
@@ -393,7 +393,14 @@ export function getEnvironmentReadiness(env = {}) {
         sellerAuthNames.includes(name) || name === 'SELLER_ALLOWED_TENANTS'),
       amazon_creators_configured: creatorsApiConfigured(env),
       rakuten_marketplace_configured: rakutenApiConfigured(env),
-      yahoo_shopping_configured: yahooShoppingApiConfigured(env)
+      yahoo_shopping_configured: yahooShoppingApiConfigured(env),
+      // 診断用（2026-08-08追加）: verifyTurnstile()はTURNSTILE_SECRET_KEY未設定だと
+      // TURNSTILE_NOT_CONFIGURED を投げるが、そのエラーコードはhandleAiChatApi等の
+      // clientErrors許可リストに含まれていないため、本番でTURNSTILE_SECRET_KEYが
+      // 未設定だとAIチャット系エンドポイントが全件HTTP 500になる。この仮説を
+      // /health だけで即座に確認できるようにする。
+      turnstile_configured: Boolean(String(env.TURNSTILE_SECRET_KEY || '').trim()),
+      ai_chat_configured: chatIntentConfigured(env)
     }
   };
 }

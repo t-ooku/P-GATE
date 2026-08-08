@@ -666,6 +666,11 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(getEnvironmentReadiness({
     ...base, ADMIN_SESSION_SECRET: base.LINK_SIGNING_SECRET
   }).checks.admin_credentials_distinct, false);
+  assert.equal(getEnvironmentReadiness(base).checks.turnstile_configured, true);
+  assert.equal(getEnvironmentReadiness({ ...base, TURNSTILE_SECRET_KEY: '' }).checks.turnstile_configured, false);
+  assert.equal(getEnvironmentReadiness(base).checks.ai_chat_configured, false);
+  assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_chat_configured, true);
+  assert.equal(getEnvironmentReadiness({ ...base, OPENAI_API_KEY: 'o'.repeat(20) }).checks.ai_chat_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.admin_auth_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.admin_credentials_distinct, true);
   assert.equal(getEnvironmentReadiness(base).checks.seller_auth_configured, true);
