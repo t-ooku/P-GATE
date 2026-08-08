@@ -45,6 +45,8 @@ test('marketplaceLinks()はSNSリンクへdata-channelを出力し、ラベル�
   assert.match(app, /if\(item\.channel\)link\.dataset\.channel=String\(item\.channel\)/);
   // モールボタンだけが「〜で探す」を落とし、SNSボタンは原文のまま描画する。
   assert.match(app, /item\.channel\?rawLabel:rawLabel\.replace\(\/\(\?:で探す\|で検索\)\$\/u,''\)/);
+  assert.match(app, /item\.copy_query&&item\.search_query/);
+  assert.match(app, /copySocialSearchQuery\(item\.search_query\)/);
 });
 
 test('ai-search-ui.cssはモール10件とSNS5チャネル全てへブランド配色を定義する', async () => {

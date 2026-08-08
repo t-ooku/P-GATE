@@ -255,7 +255,7 @@
 .search-history-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
   margin-bottom: 8px;
 }
@@ -268,7 +268,9 @@
 }
 
 .search-history-delete-all {
-  flex: 0 0 auto;
+  display: block;
+  width: fit-content;
+  margin-top: 9px;
   min-height: 32px;
   padding: 6px 12px;
   border: 1px solid #f0dada;
@@ -287,22 +289,29 @@
 }
 
 .search-history-list {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 8px;
   margin: 0;
-  padding: 0;
+  max-height: 136px;
+  padding: 0 5px 0 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: thin;
   list-style: none;
 }
 
 .search-history-row {
   display: flex;
   align-items: center;
+  min-height: 40px;
   gap: 4px;
   padding: 6px 6px 6px 12px;
   border: 1px solid #ded7ff;
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--soft);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .search-history-row button.search-history-apply {
@@ -342,7 +351,7 @@
 
 @media (max-width: 760px) {
   .search-history-delete-all {
-    width: 100%;
+    width: fit-content;
     min-height: 40px;
   }
 }

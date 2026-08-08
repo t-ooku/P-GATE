@@ -14,7 +14,9 @@ test('social actions search public platforms and share through LINE', () => {
   assert.deepEqual(links.map(link => link.label), ['Instagramで探す', 'Xで探す', 'TikTokで探す', 'YouTubeで探す', 'LINEで共有']);
   assert.deepEqual(links.map(link => link.channel), ['instagram', 'x', 'tiktok', 'youtube', 'line']);
   assert.match(links[0].url, /^https:\/\/www\.instagram\.com\/explore\/search\/keyword\/\?q=/);
-  assert.match(links[2].url, /^https:\/\/www\.tiktok\.com\/search\?q=/);
+  assert.match(links[2].url, /^https:\/\/www\.tiktok\.com\/search\/video\?q=/);
+  assert.deepEqual(links.filter(link => ['instagram', 'tiktok'].includes(link.channel)).map(link => link.copy_query), [true, true]);
+  assert.deepEqual(links.filter(link => ['instagram', 'tiktok'].includes(link.channel)).map(link => link.search_query), ['丸く光るライト', '丸く光るライト']);
   assert.doesNotMatch(links[0].url, /google\.com\/search/);
   assert.doesNotMatch(links[2].url, /google\.com\/search/);
   assert.match(links[4].url, /^https:\/\/social-plugins\.line\.me\/lineit\/share\?/);

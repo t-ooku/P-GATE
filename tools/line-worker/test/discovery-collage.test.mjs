@@ -29,7 +29,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v333/);
+  assert.match(sw, /hoshilu-shell-v334/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
@@ -82,7 +82,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /Yahoo!ショッピング/);
   assert.match(app, /Instagram.*X.*TikTok.*YouTube/s);
   assert.match(discoveryActions, /instagram\.com\/explore\/search\/keyword\/\?q=/);
-  assert.match(discoveryActions, /tiktok\.com\/search\?q=/);
+  assert.match(discoveryActions, /tiktok\.com\/search\/video\?q=/);
   assert.doesNotMatch(discoveryActions, /google\.com\/search/);
   assert.match(app, /String\(result\?\.search_keywords\|\|result\?\.amazon_search_keywords\|\|elements\.query\.value/);
   assert.match(app, /replace\(\/\(\?:で探す\|で検索\)\$\/u/);

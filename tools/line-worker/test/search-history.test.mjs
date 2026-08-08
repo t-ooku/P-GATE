@@ -32,6 +32,14 @@ test('v4.2項目10・11: 検索履歴セクションはHTML側に存在し、個
   assert.match(html, /id="searchHistorySection"/);
   assert.match(html, /id="searchHistoryList"/);
   assert.match(html, /id="deleteAllSearchHistory"/);
+  assert.ok(html.indexOf('id="searchHistoryList"') < html.indexOf('id="deleteAllSearchHistory"'));
+});
+
+test('検索履歴は3件分の縦回転スクロールで、全削除ボタンはその下に置く', async () => {
+  const [app, css] = await Promise.all([read('app.js'), read('wish-carousel.css')]);
+  assert.match(app, /attachVerticalTicker\(elements\.searchHistoryList,\{intervalMs:4200\}\)/);
+  assert.match(css, /\.search-history-list\s*\{[\s\S]*?max-height:\s*136px;[\s\S]*?overflow-y:\s*auto;[\s\S]*?scroll-snap-type:\s*y mandatory;/);
+  assert.match(css, /\.search-history-delete-all\s*\{[\s\S]*?margin-top:\s*9px;/);
 });
 
 test('renderSearchHistoryは言語切替・ログイン状態変化のたびに呼ばれ、常に最新表示になる', async () => {

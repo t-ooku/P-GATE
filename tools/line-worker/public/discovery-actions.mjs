@@ -19,9 +19,12 @@ export function socialDiscoverySearchLinks(value, origin = 'https://hoshilu.app'
   // with no background at all - i.e. as plain blue default-link text, which
   // is exactly the "青文字リンク" regression.
   return [
-    { channel: 'instagram', label: 'Instagramで探す', url: `https://www.instagram.com/explore/search/keyword/?q=${encoded}` },
+    // Instagram/TikTokのモバイルアプリはUniversal Linkを開く際に検索クエリを
+    // 落とすことがある。URLにも検索語を残しつつ、リンク押下時に同じ語を
+    // クリップボードへ保存して、遷移先が空欄でもそのまま貼り付けられるようにする。
+    { channel: 'instagram', label: 'Instagramで探す', url: `https://www.instagram.com/explore/search/keyword/?q=${encoded}`, search_query: query, copy_query: true },
     { channel: 'x', label: 'Xで探す', url: `https://x.com/search?q=${encoded}&src=typed_query` },
-    { channel: 'tiktok', label: 'TikTokで探す', url: `https://www.tiktok.com/search?q=${encoded}` },
+    { channel: 'tiktok', label: 'TikTokで探す', url: `https://www.tiktok.com/search/video?q=${encoded}`, search_query: query, copy_query: true },
     { channel: 'youtube', label: 'YouTubeで探す', url: `https://www.youtube.com/results?search_query=${encoded}` },
     { channel: 'line', label: 'LINEで共有', url: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(hoshiluUrl)}` }
   ];

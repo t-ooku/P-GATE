@@ -39,7 +39,7 @@ function animateScrollTop(viewport, target, onDone) {
   }, STEP_MS);
 }
 
-export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector = ':scope > *' } = {}) {
+export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector = ':scope > *', useRowOffsets = false } = {}) {
   if (!viewport) return;
   const existing = timers.get(viewport);
   if (existing) {
@@ -63,7 +63,11 @@ export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector 
     const rowHeight = rows[0]?.getBoundingClientRect().height || 0;
     if (!rowHeight) return;
     const maxScroll = viewport.scrollHeight - viewport.clientHeight;
-    const next = viewport.scrollTop + rowHeight;
+    let next = viewport.scrollTop + rowHeight;
+    if (useRowOffsets) {
+      const positions = rows.map((row) => Math.max(0, row.offsetTop - rows[0].offsetTop));
+      next = positions.find((position) => position > viewport.scrollTop + 2) ?? 0;
+    }
     animating = true;
     animateScrollTop(viewport, next > maxScroll - 1 ? 0 : next, () => { animating = false; });
   };

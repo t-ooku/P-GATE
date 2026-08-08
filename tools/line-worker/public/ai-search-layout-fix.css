@@ -595,6 +595,87 @@
 .product-image-gallery-button:hover,.product-image-gallery-button:focus-visible{background:#5140e8;outline:3px solid #23b8ff;outline-offset:2px}
 .product-image-gallery-count{position:absolute;right:8px;bottom:8px;padding:4px 8px;border-radius:999px;background:#17172bcc;color:#fff;font-size:10px;font-weight:800}
 
+/* 2026-08-09: 楽天市場の商品一覧に近い、画像を左・情報を右へまとめた
+   コンパクトな縦型商品リスト。商品カード自体は縦に回転し、カード内の
+   複数画像だけは従来どおり左右ボタンで切り替える。 */
+.result-carousel{position:relative;padding:18px 0}
+.result-track{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:14px;
+  max-height:min(72vh,720px);
+  padding:2px 7px 2px 2px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scroll-snap-type:y mandatory;
+  scrollbar-width:thin;
+}
+.result-track>.product-card{
+  flex:0 0 auto;
+  width:100%;
+  min-height:190px;
+  display:grid;
+  grid-template-columns:clamp(120px,18vw,172px) minmax(0,1fr);
+  align-content:start;
+  align-items:start;
+  column-gap:14px;
+  row-gap:7px;
+  padding:14px;
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+}
+.result-track>.product-card>*{grid-column:2;min-width:0;margin-top:0;margin-bottom:0}
+.result-track>.product-card>.product-image-gallery{
+  grid-column:1;
+  grid-row:1 / span 14;
+  width:100%;
+  margin:0;
+  align-self:start;
+}
+.result-track>.product-card>.product-image-gallery .product-image{width:100%;aspect-ratio:1/1;max-height:172px}
+.result-track>.product-card h3{
+  display:-webkit-box;
+  margin:0;
+  overflow:hidden;
+  font-size:14px;
+  line-height:1.45;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+}
+.result-track>.product-card p{
+  display:-webkit-box;
+  flex:none;
+  margin:0;
+  overflow:hidden;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+}
+.result-track>.product-card .product-primary-link{grid-column:2;gap:4px}
+.result-track>.product-card .product-image-gallery-button{width:30px;height:38px;font-size:22px}
+.result-track>.product-card .product-image-gallery-button.previous{left:5px}
+.result-track>.product-card .product-image-gallery-button.next{right:5px}
+.result-carousel>.carousel-button{
+  left:50%;
+  right:auto;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  transform:translateX(-50%);
+  font-size:18px;
+}
+.result-carousel>.carousel-button.previous{top:-4px}
+.result-carousel>.carousel-button.next{top:auto;bottom:-4px}
+@media(max-width:760px){
+  .result-track{max-height:min(70vh,620px);gap:10px}
+  .result-track>.product-card{grid-template-columns:104px minmax(0,1fr);column-gap:10px;padding:11px;min-height:164px}
+  .result-track>.product-card>.product-image-gallery .product-image{max-height:132px}
+  .result-carousel>.carousel-button{display:grid}
+}
+
 /* AI candidate cards' marketplace buttons (2026-08-08 request): these are
    generic per-mall search links, not a confirmed product page, so without
    context a "Amazon" button reads like a direct link to the exact item.

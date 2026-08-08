@@ -29,4 +29,6 @@ test('複数画像がある商品カードだけ前後ボタンと枚数表示�
   assert.match(app, /product-image-gallery-button previous/);
   assert.match(app, /product-image-gallery-count/);
   assert.match(css, /\.product-image-gallery\{/);
+  assert.match(css, /-webkit-line-clamp:2/);
+  assert.match(css, /grid-template-columns:clamp\(120px,18vw,172px\) minmax\(0,1fr\)/);
 });
