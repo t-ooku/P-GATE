@@ -23,6 +23,7 @@ import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn } from './ai-chat-intent.mjs';
 import { buildPriceComparison, realPriceRows, requestAiPriceEstimates } from './ai-price-comparison.mjs';
+import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -700,6 +701,11 @@ async function handleRedirect(request, env, ctx) {
     }
     ctx.waitUntil(callGas(env, 'TRACK', { events, channel }));
     ctx.waitUntil(recordMeasurementEventsToD1(env, channel, events));
+    // v4.3 Priority 5 (section 27-28): 送客計測基盤。既存の計測(callGas/
+    // recordMeasurementEventsToD1)には一切手を加えず、追加でこのイベントも
+    // 記録する。失敗してもリダイレクト自体は絶対に止めない(下のrecord
+    // OutboundCommerceEvent内部で例外を握りつぶす設計)。
+    ctx.waitUntil(recordOutboundCommerceEvent(env, payload, occurredAt));
     return Response.redirect(payload.d, 302);
   } catch (error) {
     return new Response(String(error.message || error), { status: 400 });
