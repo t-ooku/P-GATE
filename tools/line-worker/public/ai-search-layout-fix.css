@@ -425,3 +425,175 @@
   border-radius:16px;
   background:#faf8ff;
 }
+
+/* Hero MARKETPLACE COVERAGE widget (2026-08-08 request): a second, collapsible
+   copy of the #marketplaceCoverage widget placed directly under the hero so a
+   first-time visitor sees it before the search form, without pushing the
+   search box far down on repeat visits. It reuses every .marketplace-coverage*
+   class from marketplace-coverage.css as-is (only the two #marketplaceCoverageLead
+   id-scoped mobile rules there don't apply to this new id, mirrored below), so
+   only the <details>/<summary> chrome needs new rules here. */
+.hero-marketplace-coverage{
+  margin:20px 0 0;
+  cursor:default;
+}
+
+.hero-marketplace-coverage>summary{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  cursor:pointer;
+  list-style:none;
+  margin:0;
+}
+
+.hero-marketplace-coverage>summary::-webkit-details-marker{
+  display:none;
+}
+
+.hero-marketplace-coverage>summary::after{
+  content:'▾';
+  font-size:10px;
+  color:var(--violet);
+}
+
+.hero-marketplace-coverage[open]>summary::after{
+  content:'▴';
+}
+
+.hero-marketplace-coverage>.marketplace-coverage-heading{
+  margin-top:10px;
+}
+
+#heroMarketplaceCoverageLead{
+  max-width:720px;
+  margin:0;
+  color:var(--muted);
+  font-size:clamp(12px,1.6vw,15px);
+  line-height:1.7;
+}
+
+@media(max-width:760px){
+  .hero-marketplace-coverage{
+    margin-top:10px;
+  }
+
+  #heroMarketplaceCoverageLead{
+    font-size:10px;
+    line-height:1.55;
+  }
+
+  #heroMarketplaceCoverageLead .marketplace-mobile-line:nth-child(2){
+    font-size:clamp(7px,2.15vw,9px);
+    letter-spacing:-.04em;
+    white-space:nowrap;
+  }
+}
+
+/* Merge 検索履歴/検索例 into one visual block (2026-08-08 request). Search
+   history previously had zero dedicated CSS (plain <ul>/<li>), so it looked
+   like an unrelated, unfinished element next to the styled .chip examples.
+   Styling history rows as the same rounded-pill chip (with an inline delete
+   button) makes both read as one consistent set of suggestions. */
+.search-hints{
+  display:block;
+}
+
+.search-history-section{
+  margin:0 0 4px;
+}
+
+.search-history-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.search-history-toolbar h3{
+  margin:0;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.06em;
+}
+
+.search-history-delete-all{
+  border:0;
+  background:none;
+  padding:4px 6px;
+  color:#b42318;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.search-history-delete-all:hover,
+.search-history-delete-all:focus-visible{
+  text-decoration:underline;
+  outline:none;
+}
+
+.search-history-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:0 0 14px;
+  padding:0;
+  list-style:none;
+}
+
+.search-history-row{
+  display:inline-flex;
+  align-items:center;
+  gap:2px;
+  padding:0;
+  border:1px solid #ded7ff;
+  border-radius:999px;
+  background:var(--soft);
+  overflow:hidden;
+}
+
+.search-history-apply{
+  max-width:220px;
+  padding:8px 4px 8px 12px;
+  border:0;
+  background:none;
+  overflow:hidden;
+  color:#5140ba;
+  font-size:12px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  cursor:pointer;
+}
+
+.search-history-row-delete{
+  padding:8px 10px 8px 4px;
+  border:0;
+  background:none;
+  color:#9088b8;
+  font-size:13px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.search-history-row-delete:hover,
+.search-history-row-delete:focus-visible{
+  color:#b42318;
+  outline:none;
+}
+
+/* AI candidate cards' marketplace buttons (2026-08-08 request): these are
+   generic per-mall search links, not a confirmed product page, so without
+   context a "Amazon" button reads like a direct link to the exact item.
+   This caption makes the search-not-guaranteed nature explicit right above
+   the button row, matching the same expectation-setting text already used
+   in the standalone MARKETPLACE COVERAGE widget's note. */
+.ai-candidate-links-note{
+  margin:2px 0 0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.55;
+}
