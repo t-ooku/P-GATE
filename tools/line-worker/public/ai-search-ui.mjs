@@ -12,11 +12,15 @@ const languageCopy = {
 // /api/knowledge flow (Teacher Dataset, ranking, all marketplaces
 // untouched). Stays entirely inside HOSHILU (calls our own /api/ai-chat,
 // never links out to an external AI chat site).
+// v4.3 項目6: 会話が完了しても即座に自動検索へ進まず、チャット内に明確な
+// 「この条件で探す」CTAを設置し、押した時にだけHOSHILU検索へ戻す
+// (Gemini自身が商品一覧を作って会話を終える設計は禁止 - このCTAが
+// 「会話の結果をHOSHILU検索へ渡す」という一回きりの明示的な操作になる)。
 const chatCopy = {
-  JA: { title: 'AIチャット', placeholder: '返信を入力…', send: '送信', searching: '探しています…', finding: '条件に合う商品を探しています…', error: '通信に失敗しました。もう一度お試しください。', searchError: '検索に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる' },
-  EN: { title: 'AI Chat', placeholder: 'Type a reply…', send: 'Send', searching: 'Searching…', finding: 'Looking for matching products…', error: 'Something went wrong. Please try again.', searchError: 'Search failed. Please try again.', retry: 'Try again', close: 'Close' },
-  ZH: { title: 'AI 聊天', placeholder: '输入回复…', send: '发送', searching: '正在查找…', finding: '正在查找符合条件的商品…', error: '通信失败，请重试。', searchError: '搜索失败，请重试。', retry: '重试', close: '关闭' },
-  KO: { title: 'AI 채팅', placeholder: '답장을 입력…', send: '보내기', searching: '찾고 있습니다…', finding: '조건에 맞는 상품을 찾고 있습니다…', error: '통신에 실패했습니다. 다시 시도해 주세요.', searchError: '검색에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기' }
+  JA: { title: 'AIチャット', placeholder: '返信を入力…', send: '送信', searching: '探しています…', finding: '条件に合う商品を探しています…', error: '通信に失敗しました。もう一度お試しください。', searchError: '検索に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる', ready: '検索の準備ができました。', searchCta: 'この条件で探す' },
+  EN: { title: 'AI Chat', placeholder: 'Type a reply…', send: 'Send', searching: 'Searching…', finding: 'Looking for matching products…', error: 'Something went wrong. Please try again.', searchError: 'Search failed. Please try again.', retry: 'Try again', close: 'Close', ready: 'Ready to search.', searchCta: 'Search with this' },
+  ZH: { title: 'AI 聊天', placeholder: '输入回复…', send: '发送', searching: '正在查找…', finding: '正在查找符合条件的商品…', error: '通信失败，请重试。', searchError: '搜索失败，请重试。', retry: '重试', close: '关闭', ready: '已准备好搜索。', searchCta: '用这个条件搜索' },
+  KO: { title: 'AI 채팅', placeholder: '답장을 입력…', send: '보내기', searching: '찾고 있습니다…', finding: '조건에 맞는 상품을 찾고 있습니다…', error: '통신에 실패했습니다. 다시 시도해 주세요.', searchError: '검색에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기', ready: '검색 준비가 되었습니다.', searchCta: '이 조건으로 찾기' }
 };
 
 const channelNames = [
@@ -125,6 +129,35 @@ function openChatDialog(originalQuery, language) {
     messages.append(retry);
   }
 
+  // v4.3 項目6: 会話が完了(needs_clarification=false)した直後に自動で
+  // 検索へ進まない。「この条件で探す」ボタンを押した時にだけ、その時点の
+  // refinedQueryでHOSHILU検索(runFinalSearch)へ進む。Geminiが商品一覧を
+  // 創作して会話を終える設計は禁止なので、この関数はrefinedQuery(文字列)
+  // 以外の商品情報を一切扱わない。
+  function showSearchCta(refinedQuery) {
+    const readyRow = chatMessageRow('assistant', copy.ready);
+    const cta = document.createElement('button');
+    cta.type = 'button';
+    cta.className = 'ai-chat-search-cta';
+    cta.textContent = copy.searchCta;
+    cta.addEventListener('click', async () => {
+      cta.disabled = true;
+      const status = chatMessageRow('assistant', copy.finding);
+      status.classList.add('ai-chat-message-status');
+      messages.append(status);
+      const outcome = await runFinalSearch(refinedQuery);
+      status.remove();
+      if (outcome.ok) {
+        dialog.close();
+        return;
+      }
+      cta.remove();
+      readyRow.remove();
+      showSearchError(refinedQuery);
+    });
+    messages.append(readyRow, cta);
+  }
+
   async function runTurn() {
     form.classList.add('hidden');
     const status = chatMessageRow('assistant', copy.searching);
@@ -141,19 +174,12 @@ function openChatDialog(originalQuery, language) {
         input.focus();
         return;
       }
-      // Do not close the dialog yet - stay open through the real search so
-      // failure can be shown and retried (see showSearchError above), per
-      // the RC2 report: "検索中表示 → 結果取得成功 → 検索欄へ最終検索文を
-      // 反映 → 商品結果を描画 → ダイアログを閉じる".
+      // Conversation is done. Show the explicit "この条件で探す" CTA and
+      // wait for the user to press it - never auto-search here (see
+      // showSearchCta above and v4.3 spec section 6).
       const refinedQuery = result.refined_query || originalQuery;
-      status.textContent = copy.finding;
-      const outcome = await runFinalSearch(refinedQuery);
       status.remove();
-      if (outcome.ok) {
-        dialog.close();
-        return;
-      }
-      showSearchError(refinedQuery);
+      showSearchCta(refinedQuery);
     } catch (error) {
       // 以前は catch {} でエラーを完全に捨てていたため、画面には
       // 「通信に失敗しました」としか出ず、実際に何が起きたのか
