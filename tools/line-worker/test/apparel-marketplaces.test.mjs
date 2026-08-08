@@ -54,7 +54,12 @@ test('アパレルモールへ商品向けに圧縮した検索語を安全に�
     assert.match(decoded, /韓国風/);
     assert.match(decoded, /黒/);
     assert.match(decoded, /トップス/);
-    assert.doesNotMatch(decoded, /っぽい|丈/);
+    assert.doesNotMatch(decoded, /っぽい/);
+    // 2026-08-08: ensureApparelQualifierTermsが「クロップド丈」を「ショート丈」
+    // として復元するようになったため、「丈」自体は残ってよい(むしろ絞り込み
+    // に有効な情報なので残すべき)。「クロップド」という原語ではなく正規化
+    // 済みの「ショート丈」になっていることを確認する。
+    assert.match(decoded, /ショート丈/);
   }
 });
 
@@ -206,4 +211,64 @@ test('Yahoo!ショッピング: 具体的な衣類名がブラウス→トップ
     const candidates = buildMarketplaceApiKeywordCandidates(query, primaryKeywords);
     assert.ok(candidates.some((candidate) => candidate.includes('ブラウス')), `Yahoo API candidates should include ブラウス: ${query}`);
   }
+});
+
+// 2026-08-08 再報告: 「ブラウス 夏用 丈長め おしゃれ」で検索すると、Amazon
+// 以外のモールの検索窓が「ブラウス」だけになっていた。2026-08-07の修正
+// (ensureApparelProductTypeTerm)は商品名詞(ブラウス)だけを復元しており、
+// marketplace-search-keywords-v2.mjsのGENERIC_ATTRIBUTESにはアパレル用の
+// 季節・スタイル・丈の語彙が元々1つも登録されていなかったため、「夏用」
+// 「丈長め」「おしゃれ」はどの語も一切拾われていなかった。
+// ensureApparelQualifierTerms(新設)がこれらを復元する。
+test('2026-08-08: 「ブラウス 夏用 丈長め おしゃれ」の季節・丈・スタイル語が全モールの検索語に残る', async () => {
+  const { buildAmazonSearchKeywords, buildRakutenSearchKeywords, buildQoo10SearchKeywords,
+    buildSheinSearchDestination, buildYahooShoppingSearchDestination } = await import('../src/index.mjs');
+  const query = 'ブラウス 夏用 丈長め おしゃれ';
+
+  const amazon = buildAmazonSearchKeywords(query);
+  const rakuten = buildRakutenSearchKeywords(query);
+  const qoo10 = buildQoo10SearchKeywords(query);
+  const shein = decodeURIComponent(buildSheinSearchDestination(query));
+  const yahoo = decodeURIComponent(buildYahooShoppingSearchDestination(query));
+
+  for (const [name, keywords] of [['Amazon', amazon], ['Rakuten', rakuten], ['Qoo10', qoo10], ['SHEIN', shein], ['Yahoo', yahoo]]) {
+    assert.match(keywords, /ブラウス/, `${name} should keep ブラウス, got "${keywords}"`);
+    // 「夏用」はUSE_CASE_PATTERNSの正規化ラベル「涼しい」として復元される
+    assert.match(keywords, /涼しい/, `${name} should restore 夏用→涼しい, got "${keywords}"`);
+    assert.match(keywords, /おしゃれ/, `${name} should keep おしゃれ, got "${keywords}"`);
+    // 「丈長め」はLENGTH_PATTERNSの正規化ラベル「ロング丈」として復元される
+    assert.match(keywords, /ロング丈/, `${name} should restore 丈長め→ロング丈, got "${keywords}"`);
+    // 単語1つ(「ブラウス」だけ)に潰れていないこと自体も確認する
+    assert.notEqual(keywords.trim(), 'ブラウス', `${name} should not collapse to just ブラウス`);
+  }
+});
+
+test('2026-08-08: 個別に探す10モールでも同じ季節・丈・スタイル語が維持される(マツキヨを除く)', async () => {
+  const query = 'ブラウス 夏用 丈長め おしゃれ';
+  const links = buildApparelMarketplaceDestinations(query);
+  for (const link of links) {
+    if (LANDING_PAGE_ONLY_MARKETPLACES.has(link.marketplace)) continue;
+    const decoded = decodeDestination(link);
+    assert.match(decoded, /涼しい/, `${link.marketplace} should restore 夏用→涼しい`);
+    assert.match(decoded, /ロング丈/, `${link.marketplace} should restore 丈長め→ロング丈`);
+    assert.match(decoded, /おしゃれ/, `${link.marketplace} should keep おしゃれ`);
+  }
+});
+
+test('2026-08-08: ensureApparelQualifierTermsは既に同じ内容が表現済みの語を重複して足さない', async () => {
+  const { ensureApparelQualifierTerms } = await import('../src/apparel-query-attributes.mjs');
+  // 「丈長め」がすでに原文のまま残っているテキストに、正規化ラベル
+  // 「ロング丈」を重複して足さない(足すと「丈長めで...ロング丈」という
+  // 同じ意味の繰り返しになり、モール側の検索語をいたずらに長くするだけ)。
+  const alreadyPhrased = '楽で涼しいカットソー 丈長めで色は白系 女性向けおしゃれ';
+  assert.equal(ensureApparelQualifierTerms(alreadyPhrased, alreadyPhrased), alreadyPhrased);
+});
+
+test('2026-08-08: ensureApparelQualifierTermsはアパレル商品種別が無いクエリには何も足さない', async () => {
+  const { ensureApparelQualifierTerms } = await import('../src/apparel-query-attributes.mjs');
+  // 「夏用」「おしゃれ」に相当する語がクエリに含まれていても、アパレルの
+  // 具体的な商品種別(ブラウス等)が無ければ、無関係なカテゴリ(この例では
+  // 加湿器)へアパレル語彙を注入しない。
+  const query = '夏用 おしゃれ 小型加湿器';
+  assert.equal(ensureApparelQualifierTerms(query, '小型加湿器'), '小型加湿器');
 });

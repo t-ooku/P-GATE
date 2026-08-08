@@ -18,6 +18,16 @@ const SLEEVE_PATTERNS = [
   ['袖なし', /(?:ノースリーブ|袖なし|sleeveless|无袖|無袖|민소매)/iu]
 ];
 
+// "丈"(着丈・スカート丈などの長さ)。2026-08-08報告: 「夏用、丈長め、
+// おしゃれ、ブラウス」のうち「丈長め」がどのモールの検索語にも一切現れて
+// いなかった - このリポジトリのどこにも「丈」の長さを表すパターンが存在
+// していなかったため。
+const LENGTH_PATTERNS = [
+  ['ロング丈', /(?:丈\s*長め|ロング丈|マキシ丈|くるぶし丈|ロングスカート|ロングワンピース|long\s*length|maxi[- ]?length|长款|長款|롱\s*기장)/iu],
+  ['ショート丈', /(?:丈\s*短め|ショート丈|ミニ丈|ミニスカート|クロップド丈|クロップド|short\s*length|mini[- ]?length|cropped|短款|크롭\s*기장|미니\s*기장)/iu],
+  ['ミモレ丈', /(?:ミモレ丈|ミディ丈|midi[- ]?length|중기장)/iu]
+];
+
 // "用途" (use-case, scored separately from 特徴/style below per the
 // 2026-08-05 v4.0 rubric): climate/season-oriented purpose words.
 //
@@ -98,6 +108,10 @@ export function extractApparelAudience(query) {
 
 export function extractApparelSleeve(query) {
   return firstMatch(SLEEVE_PATTERNS, String(query || '').normalize('NFKC'));
+}
+
+export function extractApparelLength(query) {
+  return firstMatch(LENGTH_PATTERNS, String(query || '').normalize('NFKC'));
 }
 
 export function extractApparelFeatures(query) {
@@ -263,4 +277,51 @@ export function ensureApparelProductTypeTerm(query, keywords) {
   const result = kept.join(' ');
   if (result.includes(productType)) return result;
   return result ? `${productType} ${result}` : productType;
+}
+
+/**
+ * Put back the descriptive qualifier words (season/use-case, style/fit
+ * feature, hem length) that GENERIC_ATTRIBUTES in
+ * marketplace-search-keywords-v2.mjs never knew about in the first place -
+ * that dictionary is shared across every product category (electronics,
+ * kitchen, etc.) and only recognizes colors, a handful of generic
+ * attributes, and category-specific use-case words for OTHER categories
+ * (通勤/アウトドア/浴室用/キッチン用). It has no season, style, or hem-length
+ * vocabulary for apparel at all.
+ *
+ * Reported 2026-08-08: searching 「ブラウス 夏用 丈長め おしゃれ」 reached
+ * every non-Amazon mall as just 「ブラウス」 - not merely missing the
+ * product noun (that was 2026-08-07's ensureApparelProductTypeTerm fix),
+ * but silently dropping every qualifying word that would have actually
+ * narrowed the search. Unlike ensureApparelProductTypeTerm this only fires
+ * when an apparel product type is present at all, so it never injects
+ * apparel vocabulary into an unrelated (electronics/kitchen/etc.) query.
+ */
+// Only appends a label when neither the label text itself NOR the pattern
+// that produced it already appears in `text`. Without the pattern check, a
+// query like 「丈長めで色は白系」 whose cleaned text is passed through
+// unchanged would get "ロング丈" appended even though "丈長め" already says
+// the same thing in different words - a redundant, not missing, qualifier.
+function missingQualifierLabels(patterns, original, text) {
+  return patterns
+    .filter(([, pattern]) => pattern.test(original))
+    .map(([label]) => label)
+    .filter((label, index, values) => values.indexOf(label) === index)
+    .filter((label) => !text.includes(label))
+    .filter((label) => !patterns.some(([patternLabel, pattern]) => patternLabel === label && pattern.test(text)));
+}
+
+export function ensureApparelQualifierTerms(query, keywords) {
+  const text = String(keywords || '').trim();
+  const productType = extractApparelProductType(query);
+  if (!productType) return text;
+  const original = String(query || '').normalize('NFKC');
+  const missing = [
+    ...missingQualifierLabels(USE_CASE_PATTERNS, original, text),
+    ...missingQualifierLabels(FEATURE_PATTERNS, original, text),
+    ...missingQualifierLabels(LENGTH_PATTERNS, original, text),
+    ...missingQualifierLabels(SLEEVE_PATTERNS, original, text)
+  ];
+  if (!missing.length) return text;
+  return [text, ...missing].filter(Boolean).join(' ');
 }

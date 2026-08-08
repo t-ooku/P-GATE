@@ -48,7 +48,8 @@ import { expandSearchQuery } from './query-expansion.mjs';
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
   buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation,
-  extractApparelProductType, ensureApparelProductTypeTerm, BROAD_APPAREL_CATEGORIES
+  extractApparelProductType, ensureApparelProductTypeTerm, BROAD_APPAREL_CATEGORIES,
+  ensureApparelQualifierTerms
 } from './apparel-query-attributes.mjs';
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
@@ -832,7 +833,14 @@ export function buildAmazonSearchKeywords(query) {
   // stripping SNS/context filler ("SNSで見た" etc.) via the shared
   // marketplace-search-keywords-v2 fallback, so it is the primary text
   // rather than the raw cleaned string.
-  const primaryText = ensureApparelProductTypeTerm(cleaned, specializedKeywords || cleaned);
+  // 2026-08-08 report: 「ブラウス 夏用 丈長め おしゃれ」 dropped every
+  // qualifying word except the product noun. ensureApparelQualifierTerms
+  // restores the season/style/length words GENERIC_ATTRIBUTES never knew
+  // about (see its doc comment in apparel-query-attributes.mjs).
+  const primaryText = ensureApparelQualifierTerms(
+    cleaned,
+    ensureApparelProductTypeTerm(cleaned, specializedKeywords || cleaned)
+  );
   // 2026-08-08 再発報告: 「夏用、丈長め、おしゃれ、ブラウス」がAmazonで
   // 「ブラウス トップス」として届いていた。ensureApparelProductTypeTerm は
   // primaryText から広いカテゴリ語(トップス等)を落とすが、この
@@ -910,9 +918,9 @@ export function buildRakutenSearchKeywords(query) {
   }
   const structuredTerms = structuredMarketplaceTerms(cleaned);
   if (structuredTerms.length) return structuredTerms.join(' ');
-  const rakutenKeywords = ensureApparelProductTypeTerm(
+  const rakutenKeywords = ensureApparelQualifierTerms(
     cleaned,
-    buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP') || cleaned
+    ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP') || cleaned)
   );
   const missingPriceConstraint = extractMissingPriceConstraint(cleaned, rakutenKeywords);
   return missingPriceConstraint ? `${rakutenKeywords} ${missingPriceConstraint}` : rakutenKeywords;
@@ -1002,8 +1010,13 @@ export function buildQoo10SearchKeywords(query) {
   if (deviceAccessoryTerms) return deviceAccessoryTerms;
   // ensureApparelProductTypeTerm for the same reason as SHEIN above: the
   // compact builder returns the broad category ("トップス") and drops the
-  // specific garment the user typed ("ブラウス").
-  const compactTerms = ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'QOO10_JP'));
+  // specific garment the user typed ("ブラウス"). ensureApparelQualifierTerms
+  // additionally restores season/style/length words (2026-08-08 report:
+  // 「ブラウス 夏用 丈長め おしゃれ」 reached Qoo10 as just 「ブラウス」).
+  const compactTerms = ensureApparelQualifierTerms(
+    cleaned,
+    ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'QOO10_JP'))
+  );
   if (compactTerms !== cleaned) {
     const missingPriceConstraint = extractMissingPriceConstraint(cleaned, compactTerms);
     return missingPriceConstraint ? `${compactTerms} ${missingPriceConstraint}` : compactTerms;
@@ -1051,7 +1064,13 @@ export function buildSheinSearchDestination(query) {
   // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords collapses
   // "ブラウス" to "トップス", so without this SHEIN receives the broad category
   // and loses the word that actually narrows the search (reported 2026-08-07).
-  const keywords = ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'SHEIN_JP'));
+  // ensureApparelQualifierTerms additionally restores season/style/length
+  // words (reported 2026-08-08: 「ブラウス 夏用 丈長め おしゃれ」 reached
+  // SHEIN as just 「ブラウス」).
+  const keywords = ensureApparelQualifierTerms(
+    cleaned,
+    ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'SHEIN_JP'))
+  );
   if (!keywords) return '';
   return `https://jp.shein.com/pdsearch/${encodeURIComponent(keywords)}/`;
 }
@@ -1063,7 +1082,11 @@ export function buildYahooShoppingSearchDestination(query) {
   // category and lost the word that actually narrows the search (reported
   // 2026-08-07, still present for Yahoo specifically as of 2026-08-08 - the
   // Amazon/Rakuten/SHEIN builders already call this, Yahoo never did).
-  const keywords = ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'YAHOO_JP'));
+  // ensureApparelQualifierTerms restores season/style/length words on top.
+  const keywords = ensureApparelQualifierTerms(
+    cleaned,
+    ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'YAHOO_JP'))
+  );
   if (!keywords) return '';
   const url = new URL('https://shopping.yahoo.co.jp/search');
   url.searchParams.set('p', keywords);
@@ -1567,7 +1590,10 @@ async function handleKnowledgeApi(request, env, ctx) {
           // search path, which did not.
           buildMarketplaceApiKeywordCandidates(
             input.query,
-            ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
+            ensureApparelQualifierTerms(
+              input.query,
+              ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
+            )
           ),
           input.query
         )
