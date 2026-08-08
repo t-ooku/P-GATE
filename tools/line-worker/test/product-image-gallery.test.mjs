@@ -30,5 +30,10 @@ test('複数画像がある商品カードだけ前後ボタンと枚数表示�
   assert.match(app, /product-image-gallery-count/);
   assert.match(css, /\.product-image-gallery\{/);
   assert.match(css, /-webkit-line-clamp:2/);
-  assert.match(css, /grid-template-columns:clamp\(120px,18vw,172px\) minmax\(0,1fr\)/);
+  // 楽天市場の参照画面どおり、PCは縦長4列、スマホは画像左・情報右。
+  assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(css, /grid-template-columns:minmax\(112px,38%\) minmax\(0,1fr\)/);
+  assert.match(css, /\.result-track>\.product-card \.price-offer b\{[^}]*color:#c90000/);
+  assert.match(css, /\.watch-settings-button/);
+  assert.match(app, /JA:'保存＆通知設定'/);
 });

@@ -255,7 +255,7 @@ test('検索結果の有無に関わらずモール横断フォールバック�
     /const marketplaceFallback=marketplaceFallbackCard\(result\);\s*if\(marketplaceFallback\)resultCards\.push\(marketplaceFallback\);/
   );
   assert.match(appSource, /resultCards\.push\(\.\.\.rows\)/);
-  assert.match(appSource, /resultCards\.push\(refinementCard\(\)\)/);
+  assert.doesNotMatch(appSource, /function refinementCard\(/);
   assert.match(appSource, /elements\.cards\.replaceChildren\(\.\.\.resultCards\);/);
   assert.match(
     appSource,
@@ -286,10 +286,13 @@ test('AI連想キーワードをタップで検索条件に追加できる', () 
   assert.match(appSource, /candidate\?\.evidence\?\.matched_terms\|\|\[\]\)\.forEach\(countResult\)/);
   // モールの販促定型文はキーワード候補にしない
   assert.match(appSource, /const relatedKeywordStopWords=new Set\(\[[^\]]*'送料無料'/);
-  // 4言語ぶんのラベルがある
+  // 4言語ぶんのラベル・補足・再検索ボタンがあり、旧「まだ見つからない場合」
+  // セクションを増やさず同じ関連キーワード欄へ統合される
   ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
-    assert.match(appSource, new RegExp(`${language}:\\{ai:'[^']+',result:'[^']+'\\}`));
+    assert.match(appSource, new RegExp(`${language}:\\{ai:'[^']+',result:'[^']+',body:'[^']+',button:'[^']+'\\}`));
   });
+  assert.match(appSource, /覚えている色・大きさ・電源・使う場所などを検索文に追加すると、候補をさらに絞れます。/);
+  assert.match(appSource, /button\.className='secondary related-keyword-refine'/);
   const layoutCss = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
   // スマホでのタップ領域を44px以上に保つ
   assert.match(layoutCss, /\.related-keyword-tag\{[^}]*min-height:44px/);
@@ -445,7 +448,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v334/);
+  assert.match(serviceWorker, /hoshilu-shell-v335/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -624,7 +627,7 @@ test('PWA公開設定はSite Keyだけを返し、無効な質問をAPI境界で
     { TURNSTILE_SITE_KEY: 'public-site-key', TURNSTILE_SECRET_KEY: 'must-not-leak' }, ctx
   );
   const config = await configResponse.json();
-  assert.deepEqual(config, { turnstile_site_key: 'public-site-key', line_login_configured: false, email_login_configured: false, sms_login_configured: false, mywatch_test_events_enabled: false });
+  assert.deepEqual(config, { turnstile_site_key: 'public-site-key', line_login_configured: false, email_login_configured: false, sms_login_configured: false });
   assert.equal(JSON.stringify(config).includes('must-not-leak'), false);
 
   const invalidResponse = await workerModule.default.fetch(
@@ -772,7 +775,7 @@ test('公開設定はTurnstile Site Key未設定時に503を返す', async () =>
     new Request('https://p-gate.example/api/config'), {}, { waitUntil() {} }
   );
   assert.equal(response.status, 503);
-  assert.deepEqual(await response.json(), { turnstile_site_key: '', line_login_configured: false, email_login_configured: false, sms_login_configured: false, mywatch_test_events_enabled: false });
+  assert.deepEqual(await response.json(), { turnstile_site_key: '', line_login_configured: false, email_login_configured: false, sms_login_configured: false });
 });
 
 test('Qoo10の商品検索はASINと末尾ノイズを除き短い商品条件へ整える', () => {

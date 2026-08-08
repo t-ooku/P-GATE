@@ -18,7 +18,7 @@
 
 const timers = new WeakMap();
 const STEP_MS = 16;
-const STEP_DURATION_MS = 350;
+const STEP_DURATION_MS = 600;
 
 function prefersReducedMotion() {
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -27,16 +27,34 @@ function prefersReducedMotion() {
 function animateScrollTop(viewport, target, onDone) {
   const start = viewport.scrollTop;
   const distance = target - start;
-  if (!distance) { onDone(); return; }
+  if (!distance) { onDone(); return () => {}; }
+  // scroll-snap can pull scrollTop to the destination while the fixed-step
+  // animation is still in progress, which looks like a small jump. Disable
+  // snapping only for the automatic transition, then restore the caller's
+  // inline value for touch/wheel scrolling.
+  const previousScrollSnapType = viewport.style.scrollSnapType;
+  viewport.style.scrollSnapType = 'none';
   const steps = Math.max(1, Math.round(STEP_DURATION_MS / STEP_MS));
   let step = 0;
+  let finished = false;
+  const finish = (completed) => {
+    if (finished) return;
+    finished = true;
+    clearInterval(stepTimer);
+    viewport.style.scrollSnapType = previousScrollSnapType;
+    if (completed) {
+      viewport.scrollTop = target;
+      onDone();
+    }
+  };
   const stepTimer = setInterval(() => {
     step += 1;
     const progress = Math.min(1, step / steps);
     const eased = 1 - (1 - progress) ** 3;
     viewport.scrollTop = start + distance * eased;
-    if (progress >= 1) { clearInterval(stepTimer); onDone(); }
+    if (progress >= 1) finish(true);
   }, STEP_MS);
+  return () => finish(false);
 }
 
 export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector = ':scope > *', useRowOffsets = false } = {}) {
@@ -44,12 +62,14 @@ export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector 
   const existing = timers.get(viewport);
   if (existing) {
     clearInterval(existing.timer);
+    existing.cancelAnimation();
+    existing.cancelResume();
     viewport.removeEventListener('pointerenter', existing.pause);
     viewport.removeEventListener('pointerleave', existing.resume);
     viewport.removeEventListener('touchstart', existing.pause);
     viewport.removeEventListener('touchend', existing.resume);
     viewport.removeEventListener('focusin', existing.pause);
-    viewport.removeEventListener('focusout', existing.resume);
+    viewport.removeEventListener('focusout', existing.focusout);
     timers.delete(viewport);
   }
 
@@ -58,6 +78,7 @@ export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector 
 
   let timer = null;
   let animating = false;
+  let cancelAnimation = () => {};
   const advance = () => {
     if (animating) return;
     const rowHeight = rows[0]?.getBoundingClientRect().height || 0;
@@ -69,7 +90,10 @@ export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector 
       next = positions.find((position) => position > viewport.scrollTop + 2) ?? 0;
     }
     animating = true;
-    animateScrollTop(viewport, next > maxScroll - 1 ? 0 : next, () => { animating = false; });
+    cancelAnimation = animateScrollTop(viewport, next > maxScroll - 1 ? 0 : next, () => {
+      animating = false;
+      cancelAnimation = () => {};
+    });
   };
   const start = () => {
     if (timer) return;
@@ -83,20 +107,27 @@ export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector 
     if (resumeTimeout) clearTimeout(resumeTimeout);
     resumeTimeout = setTimeout(start, 400);
   };
+  const cancelResume = () => {
+    if (resumeTimeout) { clearTimeout(resumeTimeout); resumeTimeout = null; }
+  };
+  const focusout = (event) => {
+    if (!viewport.contains(event.relatedTarget)) resume();
+  };
 
   viewport.addEventListener('pointerenter', pause);
   viewport.addEventListener('pointerleave', resume);
   viewport.addEventListener('touchstart', pause, { passive: true });
   viewport.addEventListener('touchend', resume);
   viewport.addEventListener('focusin', pause);
-  viewport.addEventListener('focusout', (event) => {
-    if (!viewport.contains(event.relatedTarget)) resume();
-  });
+  viewport.addEventListener('focusout', focusout);
 
   start();
   timers.set(viewport, {
     get timer() { return timer; },
     pause,
-    resume
+    resume,
+    focusout,
+    cancelAnimation: () => { cancelAnimation(); animating = false; },
+    cancelResume
   });
 }

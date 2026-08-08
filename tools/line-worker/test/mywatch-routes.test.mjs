@@ -147,7 +147,24 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(css, /\.notification-thumb/);
   assert.match(css, /\.notification-row-action/);
   assert.match(serviceWorker, /mywatch\.css/);
-  assert.match(serviceWorker, /hoshilu-shell-v334/);
+  assert.match(serviceWorker, /hoshilu-shell-v335/);
+  // RC2で使った投入・削除ボタンは本番UIへ残さない。テスト用API自体は
+  // 下記の回帰テストからだけ明示的にフラグを立てて検証する。
+  const indexMarkup = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  const wrangler = fs.readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
+  assert.doesNotMatch(app, /mywatchTestControls|テスト通知を4件表示|テスト通知を削除/);
+  assert.doesNotMatch(indexMarkup, /mywatchTestControls/);
+  assert.doesNotMatch(wrangler, /MYWATCH_TEST_EVENTS_ENABLED/);
+});
+
+test('縦回転はスクロールスナップを一時停止して滑らかに移動し再描画時に解除する', async () => {
+  const fs = await import('node:fs');
+  const ticker = fs.readFileSync(new URL('../public/vertical-ticker.mjs', import.meta.url), 'utf8');
+  assert.match(ticker, /STEP_DURATION_MS = 600/);
+  assert.match(ticker, /viewport\.style\.scrollSnapType = 'none'/);
+  assert.match(ticker, /viewport\.style\.scrollSnapType = previousScrollSnapType/);
+  assert.match(ticker, /existing\.cancelAnimation\(\)/);
+  assert.match(ticker, /existing\.cancelResume\(\)/);
 });
 
 // v3.4 CTO instruction: AIウォッチ(個別商品監視)とSALE RADAR(市場全体)の通知は
