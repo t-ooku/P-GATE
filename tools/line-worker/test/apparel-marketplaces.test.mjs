@@ -18,11 +18,14 @@ test('アパレルの曖昧な日本語・英語・トレンド表現を判定�
 // link. Decode each destination with the charset that mall actually uses
 // before asserting on the keyword.
 const SHIFT_JIS_MARKETPLACES = new Set(['ZOZOTOWN_JP']);
-// v4.2 項目14: @cosme SHOPPINGとABC-MARTは検索結果ページのキーワードパラ
-// メータを確認できなかったため、検索語を含まないランディングページへ暫定
-// リンクしている(src/apparel-marketplaces.mjsのコメント参照)。この2モール
-// だけは検索語が含まれないことを前提にテストする。
-const LANDING_PAGE_ONLY_MARKETPLACES = new Set(['COSME_JP', 'ABCMART_JP']);
+// 2026-08-08: @cosme SHOPPING(products/list.php?name=)とABC-MART
+// (search.aspx?keyword=)は実際のキーワードパラメータをWebFetch/WebSearchで
+// 特定できたため検索語を維持するようになった。一方マツキヨココカラは逆に
+// 「?q=」パラメータが実際には効いていないことが確認できたため、v4.2時点の
+// ような暫定ランディングページへ切り替えた(src/apparel-marketplaces.mjsの
+// コメント参照)。今はこの1モールだけ検索語が含まれないことを前提にテスト
+// する。
+const LANDING_PAGE_ONLY_MARKETPLACES = new Set(['MATSUKIYO_JP']);
 function decodeDestination(link) {
   if (!SHIFT_JIS_MARKETPLACES.has(link.marketplace)) {
     return decodeURIComponent(link.destination).replaceAll('+', ' ');
@@ -155,6 +158,37 @@ test('Amazon: 具体的な衣類名が取れたらcategoryJapaneseLabels補完�
   }
   // ユーザー自身が両方打ったなら両方残る(辞書が足した分だけを落とす)。
   assert.match(buildAmazonSearchKeywords('カットソー トップス レディース'), /トップス/);
+});
+
+// 2026-08-08 再報告: 「マツキヨ・アットコスメ・ABCマート・Instagram・
+// TikTok」で検索語が維持されないとの報告を受け、実際にWebFetch/WebSearchで
+// 各URLを検証した。@cosme SHOPPINGとABC-MARTは正しいパラメータ名が判明した
+// ため検索語を維持するようになった一方、マツキヨは逆に「?q=」が実際には
+// 何も絞り込んでいないことが確認できたため暫定ランディングページへ切り
+// 替えた。この3モールの具体的なURL形式をここに固定する。
+test('2026-08-08: @cosme SHOPPINGとABC-MARTは検証済みの正しいパラメータで検索語を維持する', () => {
+  const links = buildApparelMarketplaceDestinations('白 長袖 ブラウス');
+  const byMarketplace = Object.fromEntries(links.map((item) => [item.marketplace, item.destination]));
+  // products/list.php?name= : WebFetchで実クエリ(3,106件)とダミー語(0件)
+  // で結果件数が変わることを確認済み。旧実装のproducts/search.phpは
+  // キーワードを一切受け付けない静的ページだった。
+  const cosmeUrl = new URL(byMarketplace.COSME_JP);
+  assert.equal(cosmeUrl.pathname, '/products/list.php');
+  assert.match(cosmeUrl.searchParams.get('name'), /ブラウス/);
+  // search.aspx?keyword= : WebSearchでwww.abc-mart.net自身が同じ形式の
+  // search.aspx?keyword=... URLを実際に検索エンジンにインデックスさせて
+  // いることを確認済み(ライブの差分検証はabc-mart.netがWebFetchを403で
+  // 拒否するため未実施 - 確度はマツキヨ・@cosmeほど高くない)。
+  const abcmartUrl = new URL(byMarketplace.ABCMART_JP);
+  assert.equal(abcmartUrl.pathname, '/shop/goods/search.aspx');
+  assert.match(abcmartUrl.searchParams.get('keyword'), /ブラウス/);
+});
+
+test('2026-08-08: マツキヨは「?q=」パラメータが実際には効いていないことを確認し、暫定ランディングページへ戻した', () => {
+  const links = buildApparelMarketplaceDestinations('白 長袖 ブラウス');
+  const matsukiyo = links.find((item) => item.marketplace === 'MATSUKIYO_JP');
+  assert.equal(matsukiyo.destination, 'https://www.matsukiyococokara-online.com/store/catalogsearch/result/');
+  assert.doesNotMatch(matsukiyo.destination, /\?/);
 });
 
 test('Yahoo!ショッピング: 具体的な衣類名がブラウス→トップスに潰れず検索語・API候補の両方に残る', async () => {

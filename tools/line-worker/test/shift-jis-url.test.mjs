@@ -56,13 +56,15 @@ test('Shift_JISを使うのはZOZOTOWNだけで、他のモールはUTF-8のま�
   // UTF-8: 「弁当」= E5 BC 81 E5 BD 93
   assert.match(byMarketplace.LOFT_JP, /%E5%BC%81%E5%BD%93/);
   assert.match(byMarketplace.HANDS_JP, /%E5%BC%81%E5%BD%93/);
-  assert.match(byMarketplace.MATSUKIYO_JP, /%E5%BC%81%E5%BD%93/);
   assert.match(byMarketplace.BUYMA_JP, /%E5%BC%81%E5%BD%93/);
   assert.match(byMarketplace.SNKRDUNK_JP, /%E5%BC%81%E5%BD%93/);
-  // @cosme SHOPPING/ABC-MARTはキーワードパラメータ未確認のためランディング
-  // ページのみ(src/apparel-marketplaces.mjsのコメント参照)。
-  assert.doesNotMatch(byMarketplace.COSME_JP, /\?/);
-  assert.doesNotMatch(byMarketplace.ABCMART_JP, /\?/);
+  // 2026-08-08: @cosme SHOPPING/ABC-MARTは正しいキーワードパラメータが
+  // 判明したためUTF-8で検索語を維持するようになった一方、マツキヨは逆に
+  // 「?q=」が実際には効いていないことが確認できたためランディングページ
+  // のみに切り替えた(src/apparel-marketplaces.mjsのコメント参照)。
+  assert.match(byMarketplace.COSME_JP, /%E5%BC%81%E5%BD%93/);
+  assert.match(byMarketplace.ABCMART_JP, /%E5%BC%81%E5%BD%93/);
+  assert.doesNotMatch(byMarketplace.MATSUKIYO_JP, /\?/);
   // 全モールがhttpsの正当なURLであること
   for (const link of links) assert.equal(new URL(link.destination).protocol, 'https:');
 });
