@@ -60,15 +60,12 @@ export function buildApparelMarketplaceDestinations(query) {
 
   const hands = `https://hands.net/search/?q=${encodeURIComponent(keywordsFor('HANDS_JP'))}`;
 
-  // 2026-08-08 report: マツキヨの検索語が維持されないと再報告があり、
-  // ?q= パラメータを実際に検証した(WebFetchで同一クエリ・存在しないはず
-  // のダミーキーワードの両方を投げても「検索結果 27,438 商品」と常に同じ
-  // 件数が返り、キーワードが一切フィルタに効いていないことを確認)。誤った
-  // パラメータのまま検索結果面に直リンクするより安全なため、@cosme/
-  // ABC-MARTと同じ「暫定ランディングページ」方式に切り替える。正しい
-  // パラメータ名(または検索がJS側でのみ発火する仕様)が確認でき次第、
-  // keywordsFor()を使った直リンクに戻すこと。
-  const matsukiyo = 'https://www.matsukiyococokara-online.com/store/catalogsearch/result/';
+  // 2026-08-08再検証: 旧実装の ?q= は無効だったが、公式検索結果で使われる
+  // search_keyword= は有効。「プライマー」で48件、存在しないダミー語で0件
+  // になることを実レスポンスで確認したため、ランディングページではなく
+  // HOSHILUが整理した検索語を引き継ぐ。
+  const matsukiyo = new URL('https://www.matsukiyococokara-online.com/store/catalogsearch/result');
+  matsukiyo.searchParams.set('search_keyword', keywordsFor('MATSUKIYO_JP'));
 
   // 2026-08-08: @cosme SHOPPINGの正しい検索パラメータをWebFetchで特定した。
   // products/search.php(旧実装)はキーワードを受け付けない静的ランディング
@@ -79,24 +76,19 @@ export function buildApparelMarketplaceDestinations(query) {
   const cosme = new URL('https://www.cosme.com/products/list.php');
   cosme.searchParams.set('name', keywordsFor('COSME_JP'));
 
-  // 2026-08-08: ABC-MARTの検索パラメータをWebSearchで調査した。
-  // www.abc-mart.net/shop/goods/search.aspx?keyword=... という形の実URLが
-  // 検索エンジンに複数件インデックスされており(例: gs.abc-mart.net/shop/
-  // goods/search.aspx?keyword=adidas+gazelle)、keyword= が正しいパラメータ
-  // 名である可能性が高い。ただしabc-mart.net自体はWebFetchを403で拒否する
-  // ためライブでの差分検証(実クエリ/ダミー語で件数が変わるか)はできて
-  // いない - マツキヨ・@cosmeほど確実ではない点は正直に記しておく。誤りと
-  // 分かった場合はランディングページ方式に戻すこと。
-  const abcmart = new URL('https://www.abc-mart.net/shop/goods/search.aspx');
-  abcmart.searchParams.set('keyword', keywordsFor('ABCMART_JP'));
+  // 2026-08-08実レスポンス再検証: ABC-MARTはkeyword=をShift_JISとして
+  // 解釈する。URLSearchParamsのUTF-8では日本語が文字化けして件数が空に
+  // なった一方、「スニーカー」をShift_JISで渡すと3,211件になった。
+  // ZOZOTOWNと同様、searchParamsで再エンコードせずURLを手で組み立てる。
+  const abcmart = `https://www.abc-mart.net/shop/goods/search.aspx?keyword=${encodeShiftJisPercent(keywordsFor('ABCMART_JP'))}`;
 
   return [
     { marketplace: 'ZOZOTOWN_JP', label: 'ZOZOTOWNで探す', destination: zozo },
     { marketplace: 'LOFT_JP', label: 'ロフトで探す', destination: loft.toString() },
     { marketplace: 'HANDS_JP', label: 'ハンズで探す', destination: hands },
-    { marketplace: 'MATSUKIYO_JP', label: 'マツキヨココカラで探す', destination: matsukiyo },
+    { marketplace: 'MATSUKIYO_JP', label: 'マツキヨココカラで探す', destination: matsukiyo.toString() },
     { marketplace: 'COSME_JP', label: '@cosme SHOPPINGで探す', destination: cosme.toString() },
-    { marketplace: 'ABCMART_JP', label: 'ABC-MARTで探す', destination: abcmart.toString() },
+    { marketplace: 'ABCMART_JP', label: 'ABC-MARTで探す', destination: abcmart },
     {
       marketplace: 'BUYMA_JP',
       label: 'BUYMAで探す',
