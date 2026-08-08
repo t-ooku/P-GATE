@@ -133,6 +133,32 @@
             <div class="hero-visual" aria-hidden="true"></div>
           </section>
 
+          <details id="heroMarketplaceCoverage" class="marketplace-coverage hero-marketplace-coverage">
+            <summary class="step hero-marketplace-coverage-summary">MARKETPLACE COVERAGE</summary>
+            <div class="marketplace-coverage-heading">
+              <div>
+                <h2 id="heroMarketplaceCoverageTitle">探せるモールが、ひと目で分かる。</h2>
+                <p id="heroMarketplaceCoverageLead">まとめて検索3モールと、個別に探す10モールに対応。</p>
+              </div>
+              <p class="marketplace-count"><strong>13</strong><span id="heroMarketplaceCoverageCount">最大13モール対応</span></p>
+            </div>
+            <div class="marketplace-groups">
+              <article class="marketplace-group marketplace-group-integrated">
+                <p id="heroMarketplaceIntegratedLabel">まとめて検索</p>
+                <ul id="heroMarketplaceIntegratedList" aria-label="HOSHILUが商品をまとめて探して比較する3モール">
+                  <li>Amazon</li><li>楽天市場</li><li class="marketplace-yahoo"><span>Yahoo!<br>ショッピング</span></li>
+                </ul>
+              </article>
+              <article class="marketplace-group marketplace-group-direct">
+                <p id="heroMarketplaceDirectLabel">個別に探す</p>
+                <ul id="heroMarketplaceDirectList" aria-label="HOSHILUの検索結果には含まれない、個別に探す10モール">
+                  <li>Qoo10</li><li>SHEIN</li><li>ZOZOTOWN</li><li>ロフト</li><li>ハンズ</li><li>マツキヨココカラ</li><li>@cosme</li><li>ABC-MART</li><li>BUYMA</li><li>SNKRDUNK</li>
+                </ul>
+              </article>
+            </div>
+            <p id="heroMarketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。</p>
+          </details>
+
           <section id="hoshiluSearch" class="search-panel" aria-labelledby="searchTitle">
             <div class="panel-heading">
               <p id="searchStep" class="step">ホシル</p>
@@ -140,10 +166,12 @@
             <form id="knowledgeForm">
               <label class="visually-hidden" for="query">欲しいものについて話す</label>
               <div class="query-field"><textarea id="query" name="query" minlength="2" maxlength="200" required placeholder="例：昔見た、iPhoneの後ろにつける丸い磁石みたいな充電器"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
-              <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
-              <div id="searchHistorySection" class="search-history-section hidden">
-                <div class="search-history-toolbar"><h3 id="searchHistoryTitle">検索履歴</h3><button id="deleteAllSearchHistory" type="button" class="search-history-delete-all hidden">すべて削除</button></div>
-                <ul id="searchHistoryList" class="search-history-list" aria-label="検索履歴"></ul>
+              <div id="searchHintsSection" class="search-hints">
+                <div id="searchHistorySection" class="search-history-section hidden">
+                  <div class="search-history-toolbar"><h3 id="searchHistoryTitle">検索履歴</h3><button id="deleteAllSearchHistory" type="button" class="search-history-delete-all hidden">すべて削除</button></div>
+                  <ul id="searchHistoryList" class="search-history-list" aria-label="検索履歴"></ul>
+                </div>
+                <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
               </div>
               <button id="advancedSearchToggle" type="button" class="advanced-search-toggle" aria-expanded="false" aria-controls="advancedSearchPanel">詳細検索</button>
               <div id="advancedSearchPanel" class="advanced-search-panel hidden"></div>
@@ -292,6 +320,6 @@
       </div>
     </div></main>
   <footer><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">HOSHILUはAmazonアソシエイトおよび楽天アフィリエイトのリンクを通じて収入を得る場合があります。</span><span><a href="/privacy.html">プライバシー</a> ・ <a href="/terms.html">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script><script src="/site-i18n.js"></script><script type="module" src="/lp-layout.mjs?v=84"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=89"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs"></script><script type="module" src="/app.js?v=91"></script><script type="module" src="/ai-search-ui.mjs"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script><script src="/site-i18n.js"></script><script type="module" src="/lp-layout.mjs?v=84"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=89"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs"></script><script type="module" src="/app.js?v=92"></script><script type="module" src="/ai-search-ui.mjs"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>

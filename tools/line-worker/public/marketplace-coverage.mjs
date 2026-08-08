@@ -3,7 +3,12 @@
 // ずれるため廃止。/api/knowledge のレスポンスが持つ integrated(=HOSHILUが
 // 商品データを取得できる) / direct(=検索結果ページへ案内するだけ) という
 // 区分に統一する(src/index.mjs の searchModeForMarketplace が唯一の判定元)。
-const COPY = {
+// 2026-08-08: ヒーロー直下に置く2つ目のMARKETPLACE COVERAGEウィジェット
+// (hero-marketplace-coverage.mjs)が同じ文言・同じ判定を再利用できるよう、
+// COPYとレンダリング本体(applyMarketplaceCoverageToNodes)をここからexport
+// する。この節の下にある既存のnodes/applyMarketplaceCoverage自体の挙動は
+// 一切変えていない(id・出力とも従来通り)。
+export const COPY = {
   JA: {
     title: '探せるモールが、ひと目で分かる。',
     lead: 'まとめて検索3モールと、個別に探す10モールに対応。',
@@ -57,14 +62,17 @@ const nodes = {
   note: document.querySelector('#marketplaceCoverageNote')
 };
 
-function selectedLanguage() {
+export function selectedLanguage() {
   const saved = localStorage.getItem('mygate_language');
   return COPY[saved] ? saved : 'JA';
 }
 
-export function applyMarketplaceCoverage(language = selectedLanguage()) {
+// nodesを引数として受け取る形にし、同じ文言・同じ分岐ロジックをヒーロー側
+// ウィジェット(hero-marketplace-coverage.mjs)からも再利用できるようにした
+// 以外、中身はapplyMarketplaceCoverageの元実装と同一。
+export function applyMarketplaceCoverageToNodes(targetNodes, language = selectedLanguage()) {
   const copy = COPY[language] || COPY.JA;
-  if (!nodes.title) return;
+  if (!targetNodes.title) return;
   const responsiveCopy = (node, parts) => {
     node.replaceChildren(...parts.map((part) => {
       const line = document.createElement('span');
@@ -74,18 +82,22 @@ export function applyMarketplaceCoverage(language = selectedLanguage()) {
     }));
   };
   if (language === 'JA') {
-    responsiveCopy(nodes.title, ['探せるモールが、', 'ひと目で分かる。']);
-    responsiveCopy(nodes.lead, ['まとめて検索3モールと、', '個別に探す10モールに対応。']);
+    responsiveCopy(targetNodes.title, ['探せるモールが、', 'ひと目で分かる。']);
+    responsiveCopy(targetNodes.lead, ['まとめて検索3モールと、', '個別に探す10モールに対応。']);
   } else {
-    nodes.title.textContent = copy.title;
-    nodes.lead.textContent = copy.lead;
+    targetNodes.title.textContent = copy.title;
+    targetNodes.lead.textContent = copy.lead;
   }
-  nodes.count.textContent = copy.count;
-  nodes.core.textContent = copy.core;
-  nodes.coreList.setAttribute('aria-label', copy.coreAria);
-  nodes.fashion.textContent = copy.fashion;
-  nodes.fashionList.setAttribute('aria-label', copy.fashionAria);
-  nodes.note.textContent = copy.note;
+  targetNodes.count.textContent = copy.count;
+  targetNodes.core.textContent = copy.core;
+  targetNodes.coreList.setAttribute('aria-label', copy.coreAria);
+  targetNodes.fashion.textContent = copy.fashion;
+  targetNodes.fashionList.setAttribute('aria-label', copy.fashionAria);
+  targetNodes.note.textContent = copy.note;
+}
+
+export function applyMarketplaceCoverage(language = selectedLanguage()) {
+  applyMarketplaceCoverageToNodes(nodes, language);
 }
 
 document.addEventListener('hoshilu:languagechange', event => {
