@@ -585,6 +585,16 @@
   outline:none;
 }
 
+/* 取得元APIが返した実画像だけをカード内で切り替える。画像が1枚の時は
+   従来どおり静止画像だけになり、存在しない2枚目を作らない。 */
+.product-image-gallery{position:relative;margin:10px 0;border-radius:12px;background:#fafafa;overflow:hidden}
+.product-image-gallery .product-image{display:block;margin:0;width:100%;aspect-ratio:1.45;object-fit:contain}
+.product-image-gallery-button{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:44px;border:1px solid #ffffffaa;border-radius:12px;background:#17172bb8;color:#fff;font-size:26px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.product-image-gallery-button.previous{left:8px}
+.product-image-gallery-button.next{right:8px}
+.product-image-gallery-button:hover,.product-image-gallery-button:focus-visible{background:#5140e8;outline:3px solid #23b8ff;outline-offset:2px}
+.product-image-gallery-count{position:absolute;right:8px;bottom:8px;padding:4px 8px;border-radius:999px;background:#17172bcc;color:#fff;font-size:10px;font-weight:800}
+
 /* AI candidate cards' marketplace buttons (2026-08-08 request): these are
    generic per-mall search links, not a confirmed product page, so without
    context a "Amazon" button reads like a direct link to the exact item.

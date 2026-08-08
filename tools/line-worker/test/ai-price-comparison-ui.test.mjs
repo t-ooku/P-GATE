@@ -14,7 +14,15 @@ test('v4.3項目12: index.htmlはAI最安比較のスクリプト・スタイル
 
 test('v4.3項目12: productCard()はwindow.HoshiluPriceComparisonへ橋渡しする(ai-search-uiと同じブリッジパターン)', async () => {
   const app = await read('app.js');
-  assert.match(app, /window\.HoshiluPriceComparison\?\.attach\(card,candidate\)/);
+  assert.match(app, /window\.HoshiluPriceComparison\?\.attach\(card,\{\.\.\.candidate,search_query:/);
+});
+
+test('AI推定価格の各モール横に、同じ検索語を引き継ぐ検索ボタンを表示する', async () => {
+  const script = await read('ai-price-comparison-ui.mjs');
+  assert.match(script, /search_query: String\(candidate\.search_query/);
+  assert.match(script, /function appendSearchLink\(item, row, t\)/);
+  assert.match(script, /price-compare-search-link/);
+  assert.match(script, /appendSearchLink\(item, row, t\)/);
 });
 
 test('v4.3項目13: UIは実価格(REAL)とAI推定(AI_ESTIMATE)を別のCSSクラスで描画し混同しない', async () => {
@@ -38,7 +46,7 @@ test('v4.3項目16: 断定文言(cheapest_claim)とヘッジ文言(hedged_claim)
 
 test('service-workerがAI最安比較の新規ファイルをプリキャッシュ対象に含む', async () => {
   const worker = await read('service-worker.js');
-  assert.match(worker, /hoshilu-shell-v332/);
+  assert.match(worker, /hoshilu-shell-v333/);
   assert.match(worker, /ai-price-comparison-ui\.mjs/);
   assert.match(worker, /ai-price-comparison-ui\.css/);
 });

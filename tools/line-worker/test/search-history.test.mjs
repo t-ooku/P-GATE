@@ -40,3 +40,9 @@ test('renderSearchHistoryは言語切替・ログイン状態変化のたびに�
   assert.match(app, /function renderMemberState\(\)\{[\s\S]{0,600}renderSearchHistory\(\);\}/);
   assert.match(app, /rememberMemberSearch\(query\)\{[\s\S]{0,300}renderSearchHistory\(\);\}/);
 });
+
+test('検索履歴の直下に×なしの履歴由来チップを重複表示しない', async () => {
+  const app = await read('app.js');
+  assert.doesNotMatch(app, /personalizedQuickExamples/);
+  assert.match(app, /elements\.quick\.classList\.toggle\('hidden',Boolean\(memberSession\)\)/);
+});

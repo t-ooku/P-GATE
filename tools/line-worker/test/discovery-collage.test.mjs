@@ -29,7 +29,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v332/);
+  assert.match(sw, /hoshilu-shell-v333/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
@@ -51,12 +51,10 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /function personalizedDiscoveryExample/);
   assert.match(app, /rememberMemberSearch\(elements\.query\.value\)/);
   assert.match(app, /if\(!memberSession\)return''/);
-  assert.match(app, /function personalizedQuickExamples/);
-  assert.match(app, /if\(!memberSession\)return\[\]/);
-  assert.match(app, /seenThemes\.has\(theme\)/);
-  assert.match(app, /picked\.push\(clean\)/);
+  assert.doesNotMatch(app, /function personalizedQuickExamples/);
+  assert.match(app, /elements\.quick\.classList\.toggle\('hidden',Boolean\(memberSession\)\)/);
   assert.doesNotMatch(app, /一緒に使える便利グッズ/);
-  assert.match(app, /無料会員登録で、あなた向けの検索例を表示/);
+  assert.match(app, /無料会員登録で検索履歴を保存/);
   assert.match(app, /renderMemberState\(\).*renderQuickExamples/s);
   assert.match(app, /baseSetLanguage\(language\);renderQuickExamples\(language\)/);
   assert.match(sw, /wish-carousel\.css/);
@@ -86,7 +84,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(discoveryActions, /instagram\.com\/explore\/search\/keyword\/\?q=/);
   assert.match(discoveryActions, /tiktok\.com\/search\?q=/);
   assert.doesNotMatch(discoveryActions, /google\.com\/search/);
-  assert.match(app, /String\(elements\.query\.value\|\|result\?\.search_keywords/);
+  assert.match(app, /String\(result\?\.search_keywords\|\|result\?\.amazon_search_keywords\|\|elements\.query\.value/);
   assert.match(app, /replace\(\/\(\?:で探す\|で検索\)\$\/u/);
   assert.match(styles, /@media\(max-width:760px\)\{\.marketplace-links\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(discoveryActions, /https:\/\/(?:www\.)?swippitt\.net\//);

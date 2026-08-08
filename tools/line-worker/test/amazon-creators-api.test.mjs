@@ -33,6 +33,25 @@ test('normalizes Amazon catalog items into HOSHILU candidates', () => {
   assert.match(result[0].offers[0].product_url, /amazon\.co\.jp\/dp\/B012345678/);
 });
 
+test('Amazon公式APIが返した主画像と2枚目以降だけを画像一覧として保持する', () => {
+  const [candidate] = normalizeCreatorsItems({ itemsResult: { items: [{
+    asin: 'B012345678', detailPageURL: 'https://www.amazon.co.jp/dp/B012345678',
+    itemInfo: { title: { displayValue: '複数画像の商品' } },
+    images: {
+      primary: { large: { url: 'https://m.media-amazon.com/images/I/main.jpg' } },
+      variants: [
+        { large: { url: 'https://m.media-amazon.com/images/I/second.jpg' } },
+        { medium: { url: 'javascript:alert(1)' } }
+      ]
+    }
+  }] } });
+  assert.deepEqual(candidate.image_urls, [
+    'https://m.media-amazon.com/images/I/main.jpg',
+    'https://m.media-amazon.com/images/I/second.jpg'
+  ]);
+  assert.equal(candidate.image, candidate.image_urls[0]);
+});
+
 test('fetches and reuses a Creators API OAuth token', async () => {
   resetCreatorsTokenForTest();
   const calls = [];
@@ -104,6 +123,9 @@ test('v3.3 uses the Japan token endpoint and plain Bearer authorization', async 
   await searchAmazonCreators(v3env, '折りたたみ日傘', fetcher);
   const search = calls.find((call) => call.url.includes('/searchItems'));
   assert.equal(search.options.headers.authorization, 'Bearer v3-token');
+  const resources = JSON.parse(search.options.body).resources;
+  assert.ok(resources.includes('images.variants.large'));
+  assert.ok(resources.includes('images.variants.medium'));
 });
 
 test('one 401 discards the token and authenticates exactly once again', async () => {

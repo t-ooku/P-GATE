@@ -26,6 +26,22 @@ test('楽天市場の商品詳細URLをHOSHILUの出品情報へ正規化する'
   assert.equal(candidates[0].offers[0].stock_status, 'IN_STOCK');
 });
 
+test('楽天公式APIの複数画像URLを重複なく保持する', () => {
+  const [candidate] = normalizeRakutenItems({ items: [{
+    itemName: '複数画像の商品', itemCode: 'shop:multi', itemPrice: 5980,
+    itemUrl: 'https://item.rakuten.co.jp/shop/multi/',
+    mediumImageUrls: [
+      { imageUrl: 'https://thumbnail.image.rakuten.co.jp/main.jpg' },
+      { imageUrl: 'https://thumbnail.image.rakuten.co.jp/second.jpg' }
+    ],
+    smallImageUrls: [{ imageUrl: 'https://thumbnail.image.rakuten.co.jp/main.jpg' }]
+  }] });
+  assert.deepEqual(candidate.image_urls, [
+    'https://thumbnail.image.rakuten.co.jp/main.jpg',
+    'https://thumbnail.image.rakuten.co.jp/second.jpg'
+  ]);
+});
+
 test('楽天は公式送料込みフラグがある商品だけ送料0の比較価格にする', () => {
   const candidates = normalizeRakutenItems({ items: [{
     itemName:'送料無料の商品',itemCode:'shop:free',itemPrice:5980,postageFlag:0,

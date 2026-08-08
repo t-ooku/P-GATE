@@ -243,7 +243,8 @@ function linkDisplayedProducts() {
     link.setAttribute('aria-label', `${String(title?.textContent || '').trim()}の商品ページを見る`);
     if (image) link.append(image);
     if (title) link.append(title);
-    card.insertBefore(link, card.querySelector('.evidence,.offer-list,.price-comparison,.price-offer,.all-marketplaces-button') || card.firstChild?.nextSibling || null);
+    const gallery = card.querySelector(':scope > .product-image-gallery');
+    card.insertBefore(link, gallery?.nextSibling || card.querySelector('.evidence,.offer-list,.price-comparison,.price-offer,.all-marketplaces-button') || card.firstChild?.nextSibling || null);
     card.dataset.productLinked = 'true';
   }
 }

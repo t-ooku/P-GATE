@@ -33,7 +33,7 @@ test('検索履歴の各行は検索例と同じ丸みのあるチップ調に�
   assert.match(css, /\.search-history-toolbar\{/);
 });
 
-test('既存の検索履歴・検索例のレンダリング/削除ロジックはDOM構造の変更後も無傷', async () => {
+test('検索履歴の削除ロジックを保ち、履歴由来の×なし重複チップは表示しない', async () => {
   const app = await read('app.js');
   assert.match(app, /function renderSearchHistory\(\)/);
   assert.match(app, /function renderQuickExamples\(/);
@@ -41,4 +41,6 @@ test('既存の検索履歴・検索例のレンダリング/削除ロジック�
   assert.match(app, /function deleteAllSearchHistory\(\)/);
   assert.match(app, /quick:\$\('#quickQueries'\)/);
   assert.match(app, /searchHistorySection:\$\('#searchHistorySection'\)/);
+  assert.doesNotMatch(app, /function personalizedQuickExamples/);
+  assert.match(app, /if\(memberSession\)return/);
 });

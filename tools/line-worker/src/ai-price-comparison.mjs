@@ -238,8 +238,9 @@ function marketplaceLabel(marketplace) {
 // real/aiEstimatesを最終的な表示用データへ合成する純粋関数(通信なし)。
 // v4.3 section 13・15・16: 実価格とAI推定を色/ラベルで区別できる形に分け、
 // 「最安」の断定はreal同士でのみ許可し、AI推定を含む場合は必ずヘッジする。
-export function buildPriceComparison({ real = [], aiEstimates = [], requestedDirectMarketplaces = [], language = 'JA' }) {
+export function buildPriceComparison({ real = [], aiEstimates = [], requestedDirectMarketplaces = [], searchLinks = [], language = 'JA' }) {
   const realRows = [...real].sort((a, b) => a.total_cost - b.total_cost);
+  const searchLinkByMarketplace = new Map(searchLinks.map((item) => [item.marketplace, item]));
   const estimatedMarketplaces = new Set(aiEstimates.map((item) => item.marketplace));
   const aiRows = aiEstimates
     .map((item) => ({
@@ -248,6 +249,8 @@ export function buildPriceComparison({ real = [], aiEstimates = [], requestedDir
       range_max: item.range_max,
       confidence: item.confidence,
       confidence_label: confidenceLabel(item.confidence, language),
+      search_url: searchLinkByMarketplace.get(item.marketplace)?.url || '',
+      search_query: searchLinkByMarketplace.get(item.marketplace)?.search_query || '',
       source: 'AI_ESTIMATE'
     }))
     .sort((a, b) => a.range_min - b.range_min);

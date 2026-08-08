@@ -11,19 +11,19 @@ const DEFAULT_DIRECT_MARKETPLACES = ['LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COS
 const copy = {
   JA: {
     button: 'AI最安比較', title: 'AI最安比較', loading: '比較しています…', error: '比較に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる',
-    realLabel: '実価格', estimateLabel: 'AI推定', unavailableLabel: '価格推定できません', empty: '比較できる情報がありませんでした。'
+    realLabel: '実価格', estimateLabel: 'AI推定', unavailableLabel: '価格推定できません', search: '検索', empty: '比較できる情報がありませんでした。'
   },
   EN: {
     button: 'AI Price Compare', title: 'AI Price Compare', loading: 'Comparing…', error: 'Comparison failed. Please try again.', retry: 'Try again', close: 'Close',
-    realLabel: 'Real price', estimateLabel: 'AI estimate', unavailableLabel: 'Cannot estimate', empty: 'No comparison data available.'
+    realLabel: 'Real price', estimateLabel: 'AI estimate', unavailableLabel: 'Cannot estimate', search: 'Search', empty: 'No comparison data available.'
   },
   ZH: {
     button: 'AI比价', title: 'AI比价', loading: '正在比较…', error: '比较失败，请重试。', retry: '重试', close: '关闭',
-    realLabel: '实际价格', estimateLabel: 'AI推测', unavailableLabel: '无法推测价格', empty: '没有可比较的信息。'
+    realLabel: '实际价格', estimateLabel: 'AI推测', unavailableLabel: '无法推测价格', search: '搜索', empty: '没有可比较的信息。'
   },
   KO: {
     button: 'AI 최저가 비교', title: 'AI 최저가 비교', loading: '비교하고 있습니다…', error: '비교에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기',
-    realLabel: '실제 가격', estimateLabel: 'AI 추정', unavailableLabel: '가격 추정 불가', empty: '비교할 정보가 없습니다.'
+    realLabel: '실제 가격', estimateLabel: 'AI 추정', unavailableLabel: '가격 추정 불가', search: '검색', empty: '비교할 정보가 없습니다.'
   }
 };
 
@@ -39,7 +39,7 @@ function textEl(tag, className, text) {
 }
 
 function marketplaceLabel(marketplace) {
-  return String(marketplace || '').replace(/_JP$/, '');
+  return {LOFT_JP:'ロフト',HANDS_JP:'ハンズ',MATSUKIYO_JP:'マツキヨ',COSME_JP:'@cosme',QOO10_JP:'Qoo10',ZOZOTOWN_JP:'ZOZOTOWN',AMAZON_JP:'Amazon',RAKUTEN_JP:'楽天市場',YAHOO_JP:'Yahoo!ショッピング'}[marketplace] || String(marketplace || '').replace(/_JP$/, '');
 }
 
 async function fetchComparison(candidate, language) {
@@ -53,6 +53,7 @@ async function fetchComparison(candidate, language) {
     body: JSON.stringify({
       product: { title, brand: candidate.manufacturer || '', category: '' },
       real_offers: Array.isArray(candidate.offers) ? candidate.offers : [],
+      search_query: String(candidate.search_query || title).slice(0, 200),
       direct_marketplaces: DEFAULT_DIRECT_MARKETPLACES,
       language,
       session_id: auth?.sessionId || '',
@@ -71,6 +72,15 @@ function renderRow(row, label, className) {
   item.append(textEl('span', 'price-compare-marketplace', marketplaceLabel(row.marketplace)));
   item.append(textEl('span', 'price-compare-badge', label));
   return item;
+}
+
+function appendSearchLink(item, row, t) {
+  if (!row.search_url) return;
+  const link = document.createElement('a');
+  link.href = row.search_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+  link.className = 'price-compare-search-link'; link.textContent = t.search;
+  if (row.search_query) link.title = `${marketplaceLabel(row.marketplace)}: ${row.search_query}`;
+  item.append(link);
 }
 
 function renderComparison(container, result, t) {
@@ -92,6 +102,7 @@ function renderComparison(container, result, t) {
   }
   for (const row of result.ai_estimated) {
     const item = renderRow(row, t.estimateLabel, 'price-compare-row-estimate');
+    appendSearchLink(item, row, t);
     item.append(textEl('strong', 'price-compare-amount', `約¥${row.range_min.toLocaleString('ja-JP')}〜¥${row.range_max.toLocaleString('ja-JP')}`));
     if (row.confidence_label) item.append(textEl('span', 'price-compare-confidence', row.confidence_label));
     container.append(item);

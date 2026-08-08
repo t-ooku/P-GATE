@@ -1100,14 +1100,27 @@ export function buildYahooShoppingSearchDestination(query) {
   return url.toString();
 }
 
-function marketplaceSearchDestinations(query, env = {}) {
+export function marketplaceSearchDestinations(query, env = {}) {
+  // モール横断ボタンは「同じ条件を各店で確認する」導線。検索語の意味まで
+  // 店ごとに書き換えると比較できないため、HOSHILUが一度だけ整理した共通語を
+  // URLパラメータ名・文字コードだけ各店仕様に合わせて渡す。
+  const sharedKeywords = buildAmazonSearchKeywords(query);
+  if (!sharedKeywords) return [];
+  const amazon = new URL('https://www.amazon.co.jp/s');
+  amazon.searchParams.set('k', sharedKeywords);
+  const associateTag = String(env.AMAZON_ASSOCIATE_TAG || '').trim();
+  if (/^[a-z0-9][a-z0-9-]{1,49}$/i.test(associateTag)) amazon.searchParams.set('tag', associateTag);
+  const yahoo = new URL('https://shopping.yahoo.co.jp/search');
+  yahoo.searchParams.set('p', sharedKeywords);
+  const qoo10 = new URL('https://www.qoo10.jp/s/');
+  qoo10.searchParams.set('keyword', sharedKeywords);
   return [
-    { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: buildAmazonSearchDestination(query, env.AMAZON_ASSOCIATE_TAG) },
-    { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: buildRakutenSearchDestination(query) },
-    { marketplace: 'YAHOO_JP', label: 'Yahoo!ショッピングで探す', destination: buildYahooShoppingSearchDestination(query) },
-    { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: buildQoo10SearchDestination(query) },
-    { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: buildSheinSearchDestination(query) }
-  ].concat(buildApparelMarketplaceDestinations(query));
+    { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: amazon.toString() },
+    { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(sharedKeywords)}/` },
+    { marketplace: 'YAHOO_JP', label: 'Yahoo!ショッピングで探す', destination: yahoo.toString() },
+    { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: qoo10.toString() },
+    { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: `https://jp.shein.com/pdsearch/${encodeURIComponent(sharedKeywords)}/` }
+  ].concat(buildApparelMarketplaceDestinations(query, sharedKeywords));
 }
 
 async function signedMarketplaceSearchLinks(query, context) {
@@ -1314,6 +1327,12 @@ export function sanitizePublicCandidate(candidate) {
   delete copy.amazon_us_url;
   delete copy.marketplace_search_links;
   delete copy.amazon_search_url;
+  const imageUrls = [...(Array.isArray(copy.image_urls) ? copy.image_urls : []), copy.image, copy.image_url]
+    .map((value) => String(value || '').trim())
+    .filter((value) => /^https:\/\//i.test(value));
+  copy.image_urls = [...new Set(imageUrls)].slice(0, 8);
+  copy.image = copy.image_urls[0] || '';
+  copy.image_url = copy.image_urls[0] || '';
   copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 10).map(sanitizePublicOffer);
   copy.tracking_url = '';
   if (copy.evidence) {
@@ -1407,6 +1426,7 @@ export function validatePriceComparisonRequest(payload) {
   if (!title) throw new Error('PRICE_COMPARISON_PRODUCT_TITLE_REQUIRED');
   const brand = String(payload.product?.brand || '').trim().slice(0, 100);
   const category = String(payload.product?.category || '').trim().slice(0, 100);
+  const searchQuery = redactSearchPersonalData(payload.search_query || title).slice(0, 200);
   const realOffers = (Array.isArray(payload.real_offers) ? payload.real_offers : []).slice(0, 10);
   const directMarketplaces = [...new Set(
     (Array.isArray(payload.direct_marketplaces) ? payload.direct_marketplaces : [])
@@ -1416,6 +1436,7 @@ export function validatePriceComparisonRequest(payload) {
   const language = ['JA', 'EN', 'ZH', 'KO'].includes(payload.language) ? payload.language : 'JA';
   return {
     product: { title, brand, category },
+    search_query: searchQuery || title,
     real_offers: realOffers,
     direct_marketplaces: directMarketplaces,
     language,
@@ -1450,6 +1471,15 @@ async function handlePriceComparisonApi(request, env) {
       real,
       aiEstimates: aiResult.estimates,
       requestedDirectMarketplaces: input.direct_marketplaces,
+      searchLinks: (await signedMarketplaceSearchLinks(input.search_query, {
+        env,
+        origin: ownOrigin,
+        sessionHash: await hashUser(input.session_id),
+        seed: `PRICE_COMPARE:${crypto.randomUUID()}`,
+        category: 'price_comparison',
+        trafficClass: 'UNATTRIBUTED'
+      })).filter((link) => input.direct_marketplaces.includes(link.marketplace))
+        .map((link) => ({ ...link, search_query: buildAmazonSearchKeywords(input.search_query) })),
       language: input.language
     });
     return Response.json({ ok: true, result: comparison }, {

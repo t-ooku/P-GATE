@@ -23,7 +23,11 @@ export function normalizeRakutenItems(payload = {}) {
     const productUrl = isRakutenAffiliateProductUrl(affiliateUrl)
       ? affiliateUrl
       : (isRakutenDirectProductUrl(regularUrl) ? regularUrl : '');
-    const image = String(item.mediumImageUrls?.[0]?.imageUrl || item.mediumImageUrls?.[0] || item.smallImageUrls?.[0]?.imageUrl || item.smallImageUrls?.[0] || '').trim();
+    const imageUrls = [...(Array.isArray(item.mediumImageUrls) ? item.mediumImageUrls : []), ...(Array.isArray(item.smallImageUrls) ? item.smallImageUrls : [])]
+      .map((value) => String(value?.imageUrl || value || '').trim())
+      .filter((value) => /^https:\/\//i.test(value));
+    const uniqueImageUrls = [...new Set(imageUrls)].slice(0, 8);
+    const image = uniqueImageUrls[0] || '';
     const itemCode = String(item.itemCode || item.productId || '').trim();
     const name = String(item.itemName || item.productName || '').trim();
     const price = Number(item.itemPrice || item.minPrice || 0);
@@ -36,6 +40,7 @@ export function normalizeRakutenItems(payload = {}) {
       description: String(item.catchcopy || item.itemCaption || '').trim().slice(0, 500),
       image,
       image_url: image,
+      image_urls: uniqueImageUrls,
       stock: productUrl ? 1 : 0,
       marketplace_source: 'RAKUTEN_ICHIBA_API',
       offers: productUrl ? [{

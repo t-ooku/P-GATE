@@ -21,7 +21,7 @@ export function isApparelSearch(query) {
   return value.length > 0 && APPAREL_TERMS.some((pattern) => pattern.test(value));
 }
 
-export function buildApparelMarketplaceDestinations(query) {
+export function buildApparelMarketplaceDestinations(query, sharedSearchKeywords = '') {
   const source = searchText(query);
   // 2026-08-07 instructions #8: every "direct" marketplace stays searchable
   // on every query, not just apparel-looking ones (isApparelSearch is kept
@@ -39,7 +39,12 @@ export function buildApparelMarketplaceDestinations(query) {
   // length vocabulary at all, so a query like 「ブラウス 夏用 丈長め おしゃれ」
   // still reached every one of these malls as just 「ブラウス」.
   // ensureApparelQualifierTerms restores those words from the original query.
-  const keywordsFor = (marketplace) => ensureApparelQualifierTerms(
+  // 2026-08-08再修正: モールごとに別々の語へ最適化すると、同じ検索から
+  // 開いたのに検索欄の内容がモールごとに異なる。呼び出し元が共通検索語を
+  // 渡した場合は、文字コードやパラメータ名だけを各モールに合わせ、検索語
+  // そのものは全モールで同一にする。未指定時は既存APIとの互換性を保つ。
+  const shared = searchText(sharedSearchKeywords);
+  const keywordsFor = (marketplace) => shared || ensureApparelQualifierTerms(
     source,
     ensureApparelProductTypeTerm(source, buildMarketplaceSearchKeywords(source, marketplace)) || source
   );

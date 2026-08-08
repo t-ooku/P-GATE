@@ -65,9 +65,16 @@ async function accessToken(env, fetcher = fetch, now = Date.now) {
   return cachedToken.value;
 }
 
-function imageFor(item) {
-  const primary = item?.images?.primary || {};
-  return primary.large?.url || primary.medium?.url || primary.small?.url || '';
+function imageUrlsFor(item) {
+  // Amazon Creators API公式Images resourceはprimaryとvariantsを返す。
+  // https://affiliate-program.amazon.com/creatorsapi/docs/en-us/api-reference/resources/images
+  // 取得元に存在する画像だけを使い、HOSHILU側で画像を生成・推測しない。
+  const images = item?.images || {};
+  const values = [images.primary, ...(Array.isArray(images.variants) ? images.variants : [])]
+    .map((image) => image?.large?.url || image?.medium?.url || image?.small?.url || '')
+    .map((value) => String(value || '').trim())
+    .filter((value) => /^https:\/\//i.test(value));
+  return [...new Set(values)].slice(0, 8);
 }
 
 function listingFor(item) {
@@ -108,14 +115,16 @@ export function normalizeCreatorsItems(payload = {}) {
     const stockStatus = listingAvailability(listing);
     const price = listingPrice(listing);
     const productUrl = String(item.detailPageURL || '');
+    const imageUrls = imageUrlsFor(item);
     return {
       rank: index + 1,
       asin: String(item.asin || ''),
       product_name: String(item?.itemInfo?.title?.displayValue || item.asin || ''),
       display_name: String(item?.itemInfo?.title?.displayValue || item.asin || ''),
       description: (item?.itemInfo?.features?.displayValues || []).slice(0, 2).join(' '),
-      image: imageFor(item),
-      image_url: imageFor(item),
+      image: imageUrls[0] || '',
+      image_url: imageUrls[0] || '',
+      image_urls: imageUrls,
       stock: stockStatus === 'IN_STOCK' ? 1 : 0,
       amazon_jp_url: productUrl,
       offers: productUrl ? [{
@@ -200,7 +209,10 @@ export async function searchAmazonCreators(env, keywords, fetcher = fetch, optio
         itemCount: 10,
         searchIndex: 'All',
         resources: [
+          'images.primary.large',
           'images.primary.medium',
+          'images.variants.large',
+          'images.variants.medium',
           'itemInfo.title',
           'itemInfo.features',
           'offersV2.listings.availability',

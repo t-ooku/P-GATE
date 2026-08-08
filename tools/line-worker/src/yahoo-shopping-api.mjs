@@ -34,6 +34,7 @@ export function normalizeYahooShoppingItems(payload = {}) {
       description: String(item?.description || item?.headline || '').trim().slice(0, 500),
       image,
       image_url: image,
+      image_urls: /^https:\/\//i.test(image) ? [image] : [],
       stock: productUrl ? 1 : 0,
       marketplace_source: 'YAHOO_SHOPPING_API',
       offers: productUrl && price > 0 ? [{
