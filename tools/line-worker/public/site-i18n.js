@@ -24,10 +24,15 @@ Object.assign(messages.JA,{'social.officialTitle':'ホシル公式アカウン�
 Object.assign(messages.EN,{'social.officialTitle':'Official HOSHILU accounts','social.officialLead':'Follow our official accounts for new features and useful updates.','social.line':'Official LINE','social.instagram':'Official Instagram','social.x':'Official X'});
 Object.assign(messages.ZH,{'social.officialTitle':'HOSHILU 官方账号','social.officialLead':'通过官方账号获取新功能和实用资讯。','social.line':'官方 LINE','social.instagram':'官方 Instagram','social.x':'官方 X'});
 Object.assign(messages.KO,{'social.officialTitle':'HOSHILU 공식 계정','social.officialLead':'새로운 기능과 유용한 소식을 공식 계정에서 전해 드립니다.','social.line':'공식 LINE','social.instagram':'공식 Instagram','social.x':'공식 X'});
-Object.assign(messages.JA,{'insight.diffNote':'HOSHILU SALE RADARは市場全体(Amazonセール・楽天スーパーSALE・メガ割など)を見ます。AIウォッチは個別商品を見ます。AIが価格・在庫・クーポン・販売開始を24時間監視します。'});
-Object.assign(messages.EN,{'insight.diffNote':'HOSHILU SALE RADAR watches the whole market (Amazon sales, Rakuten Super SALE, mega discounts, and more). AI Watch watches one product: AI monitors its price, stock, coupons, and availability around the clock.'});
-Object.assign(messages.ZH,{'insight.diffNote':'HOSHILU SALE RADAR 关注整个市场(Amazon促销、乐天Super SALE、Mega割等)。AI监控只关注单个商品：AI会24小时监控价格、库存、优惠券和开售情况。'});
-Object.assign(messages.KO,{'insight.diffNote':'HOSHILU SALE RADAR는 시장 전체(Amazon 세일, 라쿠텐 슈퍼SALE, 메가할인 등)를 봅니다. AI 워치는 개별 상품을 봅니다: AI가 가격·재고·쿠폰·판매 시작을 24시간 지켜봅니다.'});
+// HOSHILU INSIGHT 通知仕様変更指示書 v1.0 section11・12・18: HOSHILU
+// INSIGHT(保存した検索条件→新着通知)/AIウォッチ(個別商品→値下げ・
+// クーポン・再入荷・販売開始監視)/HOSHILU SALE RADAR(市場全体→セール・
+// キャンペーン監視)の3つの責務を明示的に分ける。この#insightセクション
+// 自体はHOSHILU INSIGHT(検索条件監視)を表示するため、その説明を先頭に置く。
+Object.assign(messages.JA,{'insight.diffNote':'HOSHILU INSIGHTは保存した検索条件を見て、新しく一致する商品が見つかったら通知します。AIウォッチは個別商品を見て、価格・在庫・クーポン・販売開始を24時間監視します。HOSHILU SALE RADARは市場全体(Amazonセール・楽天スーパーSALE・メガ割など)を見ます。'});
+Object.assign(messages.EN,{'insight.diffNote':'HOSHILU INSIGHT watches your saved search conditions and notifies you when a new matching product is found. AI Watch watches one product: AI monitors its price, stock, coupons, and availability around the clock. HOSHILU SALE RADAR watches the whole market (Amazon sales, Rakuten Super SALE, mega discounts, and more).'});
+Object.assign(messages.ZH,{'insight.diffNote':'HOSHILU INSIGHT 会关注您保存的搜索条件，新发现符合条件的商品时通知您。AI监控只关注单个商品：AI会24小时监控价格、库存、优惠券和开售情况。HOSHILU SALE RADAR 关注整个市场(Amazon促销、乐天Super SALE、Mega割等)。'});
+Object.assign(messages.KO,{'insight.diffNote':'HOSHILU INSIGHT는 저장한 검색 조건을 지켜보다가 새로 일치하는 상품을 찾으면 알려드립니다. AI 워치는 개별 상품을 봅니다: AI가 가격·재고·쿠폰·판매 시작을 24시간 지켜봅니다. HOSHILU SALE RADAR는 시장 전체(Amazon 세일, 라쿠텐 슈퍼SALE, 메가할인 등)를 봅니다.'});
 function detect(){const saved=localStorage.getItem('mygate_language');if(LANGUAGES[saved])return saved;const value=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();return value.startsWith('en')?'EN':value.startsWith('zh')?'ZH':value.startsWith('ko')?'KO':'JA';}
 function t(key,language=detect()){return messages[language]?.[key]||messages.JA[key]||key;}
 function apply(language=detect()){const selected=LANGUAGES[language]?language:'JA';localStorage.setItem('mygate_language',selected);document.documentElement.lang=LANGUAGES[selected];document.querySelectorAll('[data-i18n]').forEach(node=>{node.textContent=t(node.dataset.i18n,selected);});document.querySelectorAll('[data-language-select]').forEach(select=>{select.value=selected;});return selected;}

@@ -27,6 +27,7 @@ import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
+import { handleInsightRoutes } from './insight-routes.mjs';
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
@@ -1783,6 +1784,8 @@ export default {
     if (saleResponse) return saleResponse;
     const mywatchResponse = await handleMywatchRoutes(request, env);
     if (mywatchResponse) return mywatchResponse;
+    const insightResponse = await handleInsightRoutes(request, env);
+    if (insightResponse) return insightResponse;
     const memberResponse = await handleMemberRoutes(request, env);
     if (memberResponse) return memberResponse;
     const sellerResponse = await handleSellerRoutes(request, env);

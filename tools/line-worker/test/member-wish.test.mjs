@@ -31,10 +31,15 @@ test('MYWATCH通知頻度をAPIと会員画面の両方で変更できる', asyn
     import('node:fs').then(fs => fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'))
   ]);
   assert.match(source, /WATCH_FREQUENCIES/);
-  assert.match(source, /watch_frequency=excluded\.watch_frequency/);
+  // HOSHILU INSIGHT v1.0: 保存条件エディタ(wishItem)はもうwatch_sale等の
+  // 4フラグを送らないため、watch_frequencyもCOALESCEで部分更新される
+  // (未指定なら既存値を温存)側に変わった。AIウォッチの🔔ダイアログは
+  // 引き続きpayloadForで4フラグ全部を明示的に送るので、そちらの挙動は
+  // 今までと同一(常に上書き)のまま。
+  assert.match(source, /watch_frequency=COALESCE\(\?9,member_wishes\.watch_frequency\)/);
   assert.match(app, /watchFrequencyFor/);
   assert.match(app, /\['MUTED','通知を停止'\]/);
-  assert.match(app, /payloadFor\(value,options,frequency\.value\)/);
+  assert.match(app, /updateInsightWatch\(record,notifyNewMatch,frequency\.value\)/);
 });
 
 // HOSHILU INSIGHT delete controls (2026-08-07 request). Removing one AI Watch

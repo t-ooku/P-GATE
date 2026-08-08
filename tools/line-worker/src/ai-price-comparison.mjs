@@ -14,11 +14,17 @@
 import { isIntegratedMarketplace } from './marketplace-search-mode.mjs';
 import { matchProductIdentity } from './product-identity-matching.mjs';
 
+// 2026-08-08 追記: 「AI推定価格です。実際の販売価格・在庫はショップで確認
+// してください。」だけだと、この数字が何をもとにした推定なのかが伝わらない
+// との指摘を受け、推定の根拠(該当モールの類似商品の価格情報)を明記する一文
+// を追記した。既存文の先頭部分はそのまま残しているため、この文言に依存する
+// 既存の正規表現アサーション(test/price-comparison-api.test.mjs,
+// test/v4.3-regression-sections-32-34.test.mjs)は無傷で通る。
 export const PRICE_ESTIMATE_DISCLAIMER = Object.freeze({
-  JA: 'AI推定価格です。実際の販売価格・在庫はショップで確認してください。',
-  EN: 'This is an AI-estimated price. Please check the actual price and stock on the shop.',
-  ZH: '这是AI推测价格。实际售价和库存请在商城确认。',
-  KO: '이것은 AI 추정 가격입니다. 실제 판매 가격과 재고는 쇼핑몰에서 확인하세요.'
+  JA: 'AI推定価格です。実際の販売価格・在庫はショップで確認してください。※該当モールの類似商品の価格情報をもとにした参考値です。',
+  EN: 'This is an AI-estimated price. Please check the actual price and stock on the shop. *This is a reference value based on price information for similar products on that marketplace.',
+  ZH: '这是AI推测价格。实际售价和库存请在商城确认。※该数值是根据该商城同类商品的价格信息推算的参考值。',
+  KO: '이것은 AI 추정 가격입니다. 실제 판매 가격과 재고는 쇼핑몰에서 확인하세요. ※해당 쇼핑몰의 유사 상품 가격 정보를 바탕으로 한 참고값입니다.'
 });
 
 export const CONFIDENCE_LEVELS = Object.freeze(['HIGH', 'MEDIUM', 'LOW']);
