@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import cryptoModule from 'node:crypto';
-import { handleInsightRoutes, scanWishForNewMatches } from '../src/insight-routes.mjs';
+import { handleInsightRoutes, scanWishForNewMatches, runInsightScan } from '../src/insight-routes.mjs';
 import { filterCategoryMismatches } from '../src/knowledge-search.mjs';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
@@ -176,6 +176,46 @@ test('section19・12: SALE RADARのセンチネル(MARKETPLACE_SALES)やmarketpl
   const source = readFileSync(new URL('../src/insight-routes.mjs', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /MARKETPLACE_SALES/);
   assert.doesNotMatch(source, /marketplace_sale_events/);
+});
+
+// 2026-08-08: HOSHILU AIウォッチ側の /api/internal/mywatch/events は
+// まだ存在しない外部の価格監視パイプラインからのイベント受け口のため
+// scheduled()配線を見送っていたが、INSIGHTのスキャンはD1索引検索のみで
+// 完結する(AI呼び出しが無い)ため、cronから直接呼べる runInsightScan() を
+// 用意した。CRON_SECRET認証もRequestオブジェクトも不要な内部呼び出し専用
+// 関数であることを確認する。
+test('runInsightScan()はRequest/認証なしで直接呼び出せ、scan()と同じ結果件数を返す', async () => {
+  const { sqlite, db } = sqliteD1();
+  insertWish(sqlite, { memberId: 'm1', wishId: 'w-direct-1', queryText: '白 長袖 レディース カットソー' });
+  insertWish(sqlite, { memberId: 'm1', wishId: 'w-direct-2', queryText: '靴', notifyNewMatch: 0 });
+  const result = await runInsightScan({ PRODUCT_DB: db }, '2026-08-08T03:00:00Z');
+  assert.equal(result.scanned, 1);
+  assert.equal(result.truncated, false);
+});
+
+test('runInsightScan()はPRODUCT_DB未設定でも例外を投げず0件で返す', async () => {
+  const result = await runInsightScan({});
+  assert.deepEqual(result, { scanned: 0, notifications_sent: 0, truncated: false });
+});
+
+test('runInsightScan()は1回の実行でスキャンする件数に上限があり、超過時はtruncated:trueで報告する', async () => {
+  const { sqlite, db } = sqliteD1();
+  // 上限(300件)ちょうどでは打ち切らないことも合わせて確認できるよう、
+  // 上限+2件だけ作る(全件フルスキャンは重いので必要最小限に留める)。
+  for (let index = 0; index < 302; index += 1) {
+    insertWish(sqlite, { memberId: 'm1', wishId: `w-batch-${String(index).padStart(4, '0')}`, queryText: 'カメラ' });
+  }
+  const result = await runInsightScan({ PRODUCT_DB: db }, '2026-08-08T03:00:00Z');
+  assert.equal(result.truncated, true);
+  assert.equal(result.scanned, 300);
+});
+
+test('scheduled()のcronハンドラがrunInsightScanを呼び出す配線になっている', async () => {
+  const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(source, /import\s*\{\s*handleInsightRoutes,\s*runInsightScan\s*\}\s*from\s*'\.\/insight-routes\.mjs'/);
+  const scheduledMatch = source.match(/async scheduled\(controller, env, ctx\)\s*\{[\s\S]*?\n  \}/);
+  assert.ok(scheduledMatch, 'scheduled()ハンドラが見つかりません');
+  assert.match(scheduledMatch[0], /runInsightScan\(env, scheduledAt\.toISOString\(\)\)/);
 });
 
 test('scan() HTTPハンドラは複数の保存条件を一度に処理し、結果件数を返す', async () => {

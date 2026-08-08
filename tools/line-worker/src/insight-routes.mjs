@@ -9,12 +9,17 @@
 // 重複防止は search_watch_matches テーブル(member_wishes.wish_idを
 // search_watch_idとして流用)で行う。
 //
-// 既知の制約(誠実に明記): このAPIはscheduled()のcronへはまだ配線して
-// いない(呼び出せば正しく動作するが、定期実行の自動起動はまだ無い)。
-// 理由は insight-catalog-search.mjs 側のコメントと同じ - 全ウォッチ×検索
-// 呼び出しを無制限にcron化する前に、レート制限・コスト面の設計を別途行う
-// 必要があるため。既存の /api/internal/mywatch/events も同様に手動/内部API
-// トリガー方式であり、この設計はリポジトリ内で既に確立されたパターン。
+// 2026-08-08 cron配線: applyIndexedSearchPolicy (insight-catalog-search.mjs
+// が呼ぶ実体) はD1索引検索のみで、AI(Gemini/OpenAI)呼び出しは一切発生しない
+// ため、mywatch/events(=まだ存在しない外部の価格監視パイプラインからの
+// イベント受け口)と違い、このAPIは自己完結して定期実行できる。ただし
+// ウォッチ件数が増えた将来にD1負荷が無制限に増えないよう、1回の実行で
+// スキャンする件数に上限(INSIGHT_SCAN_BATCH_LIMIT)を設ける。上限に達した
+// 場合は次回実行に持ち越されるだけで、超過分が永久にスキャンされなくなる
+// わけではない(15分ごとに呼ばれるため、上限×1時間あたり4回ぶんが実質の
+// スループット)。runInsightScan()がscheduled()から直接(HTTP経由でなく)
+// 呼ばれる本体で、scan()はCRON_SECRET認証つきの手動/外部トリガー用HTTP
+// エンドポイントとして両方を提供する。
 
 import { searchCandidatesForInsight } from './insight-catalog-search.mjs';
 import { detectNewMatchesForWish } from './insight-search-watch.mjs';
@@ -97,18 +102,26 @@ export async function scanWishForNewMatches(env, wish, now = new Date().toISOStr
   return { scanned: true, matched: persisted.queued ? newMatches.length : 0 };
 }
 
-async function scan(request, env) {
-  if (!internalAuthorized(request, env)) {
-    return Response.json({ ok: false, error: 'INSIGHT_UNAUTHORIZED' }, { status: 401 });
-  }
-  if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'DB_UNAVAILABLE' }, { status: 503 });
-  const now = new Date().toISOString();
+// 1回のscheduled()呼び出しでスキャンするウォッチ件数の上限。D1負荷を
+// ウォッチ総数に対して無制限に増やさないための保護であり、機能を無効化する
+// ものではない(15分ごとに次のバッチへ進む)。
+const INSIGHT_SCAN_BATCH_LIMIT = 300;
+
+// scheduled()から直接呼ばれる本体。HTTPリクエスト/CRON_SECRET認証を必要と
+// せず、Worker内部からの呼び出し専用(scan()はこの関数をHTTP経由で叩く薄い
+// ラッパーとして以下に残す)。
+export async function runInsightScan(env, now = new Date().toISOString()) {
+  if (!env.PRODUCT_DB) return { scanned: 0, notifications_sent: 0, truncated: false };
   const wishes = await env.PRODUCT_DB.prepare(
-    'SELECT member_id,wish_id,query_text,language,notify_new_match FROM member_wishes WHERE notify_new_match=1'
-  ).all();
+    `SELECT member_id,wish_id,query_text,language,notify_new_match FROM member_wishes
+    WHERE notify_new_match=1 ORDER BY wish_id ASC LIMIT ?1`
+  ).bind(INSIGHT_SCAN_BATCH_LIMIT + 1).all();
+  const rows = wishes?.results || [];
+  const truncated = rows.length > INSIGHT_SCAN_BATCH_LIMIT;
+  const batch = truncated ? rows.slice(0, INSIGHT_SCAN_BATCH_LIMIT) : rows;
   let scannedCount = 0;
   let matchedNotificationCount = 0;
-  for (const wish of wishes?.results || []) {
+  for (const wish of batch) {
     try {
       const outcome = await scanWishForNewMatches(env, wish, now);
       if (outcome.scanned) scannedCount += 1;
@@ -119,7 +132,20 @@ async function scan(request, env) {
       });
     }
   }
-  return Response.json({ ok: true, scanned: scannedCount, notifications_sent: matchedNotificationCount });
+  if (truncated) {
+    console.warn('INSIGHT_SCAN_BATCH_TRUNCATED', { limit: INSIGHT_SCAN_BATCH_LIMIT });
+  }
+  return { scanned: scannedCount, notifications_sent: matchedNotificationCount, truncated };
+}
+
+async function scan(request, env) {
+  if (!internalAuthorized(request, env)) {
+    return Response.json({ ok: false, error: 'INSIGHT_UNAUTHORIZED' }, { status: 401 });
+  }
+  if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'DB_UNAVAILABLE' }, { status: 503 });
+  const now = new Date().toISOString();
+  const result = await runInsightScan(env, now);
+  return Response.json({ ok: true, scanned: result.scanned, notifications_sent: result.notifications_sent });
 }
 
 export async function handleInsightRoutes(request, env) {

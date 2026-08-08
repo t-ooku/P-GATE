@@ -27,7 +27,7 @@ import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
-import { handleInsightRoutes } from './insight-routes.mjs';
+import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
@@ -48,7 +48,7 @@ import { expandSearchQuery } from './query-expansion.mjs';
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
   buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation,
-  extractApparelProductType, ensureApparelProductTypeTerm
+  extractApparelProductType, ensureApparelProductTypeTerm, BROAD_APPAREL_CATEGORIES
 } from './apparel-query-attributes.mjs';
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
@@ -833,9 +833,22 @@ export function buildAmazonSearchKeywords(query) {
   // marketplace-search-keywords-v2 fallback, so it is the primary text
   // rather than the raw cleaned string.
   const primaryText = ensureApparelProductTypeTerm(cleaned, specializedKeywords || cleaned);
+  // 2026-08-08 再発報告: 「夏用、丈長め、おしゃれ、ブラウス」がAmazonで
+  // 「ブラウス トップス」として届いていた。ensureApparelProductTypeTerm は
+  // primaryText から広いカテゴリ語(トップス等)を落とすが、この
+  // categoryJapaneseLabels 補完は RULES テーブル由来のカテゴリ語を
+  // primaryText への部分文字列一致だけで足すため、落としたばかりの
+  // 広いカテゴリ語を無条件に積み直してしまっていた。具体的な商品種別
+  // (extractApparelProductType)が取れており、かつユーザー自身がその
+  // 広いカテゴリ語を書いていない場合は、ensureApparelProductTypeTerm と
+  // 同じ基準で補完しない。
+  const detectedProductType = extractApparelProductType(cleaned);
   const categoryJapaneseLabels = semanticGroups
     .map((group) => APPAREL_CATEGORY_JA_LABELS.get(group.category))
-    .filter((label) => label && !primaryText.includes(label));
+    .filter((label) => label && !primaryText.includes(label))
+    .filter((label) => !(
+      detectedProductType && BROAD_APPAREL_CATEGORIES.includes(label) && !cleaned.includes(label)
+    ));
   // The original text is always the primary search term (never dropped, see
   // the カットソー fix). A known Japanese category label is added alongside
   // it as a supplement. English category words are only added when we do
@@ -1044,7 +1057,13 @@ export function buildSheinSearchDestination(query) {
 }
 
 export function buildYahooShoppingSearchDestination(query) {
-  const keywords = buildMarketplaceSearchKeywords(redactSearchPersonalData(query), 'YAHOO_JP');
+  const cleaned = redactSearchPersonalData(query);
+  // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords collapses
+  // "ブラウス" to "トップス", so without this Yahoo received only the broad
+  // category and lost the word that actually narrows the search (reported
+  // 2026-08-07, still present for Yahoo specifically as of 2026-08-08 - the
+  // Amazon/Rakuten/SHEIN builders already call this, Yahoo never did).
+  const keywords = ensureApparelProductTypeTerm(cleaned, buildMarketplaceSearchKeywords(cleaned, 'YAHOO_JP'));
   if (!keywords) return '';
   const url = new URL('https://shopping.yahoo.co.jp/search');
   url.searchParams.set('p', keywords);
@@ -1540,7 +1559,16 @@ async function handleKnowledgeApi(request, env, ctx) {
         key: 'yahoo_catalog_connected',
         run: searchMarketplaceApiWithFallback(
           (keywords) => searchYahooShopping(env, keywords),
-          buildMarketplaceApiKeywordCandidates(input.query, buildMarketplaceSearchKeywords(input.query)),
+          // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with
+          // no marketplace code collapses "ブラウス" to the broad category
+          // "トップス" alone, dropping the specific noun entirely (reported
+          // 2026-08-07/2026-08-08). Amazon/Rakuten/SHEIN/Yahoo destination
+          // link building already restore it; this is the Yahoo catalog API
+          // search path, which did not.
+          buildMarketplaceApiKeywordCandidates(
+            input.query,
+            ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
+          ),
           input.query
         )
       });
@@ -1834,7 +1862,12 @@ export default {
       // を呼ぶ(gas/BenchmarkEngine.gs同様、KPI集計→ベンチマーク算出の順で依存する)。
       // ここで別途refreshKpiSummary(env)を並列実行すると、同じkpi_summaryテーブルへの
       // DELETE+INSERTが競合しPRIMARY KEY衝突を起こすため呼ばない。
-      refreshAnonymousBenchmark(env)
+      refreshAnonymousBenchmark(env),
+      // HOSHILU INSIGHT v1.0 (2026-08-08 cron配線): 保存した検索条件の新着
+      // スキャン。D1索引検索のみでAI呼び出しは発生しないため、mywatchの
+      // 価格監視(まだ存在しない外部パイプライン頼み)と違い自己完結して
+      // 定期実行できる。1回あたりの件数上限は insight-routes.mjs 側で管理。
+      runInsightScan(env, scheduledAt.toISOString())
     ]));
   }
 };

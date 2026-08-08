@@ -235,7 +235,10 @@ export function scoreApparelAttributeMatch(query, candidateText, { colorPatterns
  */
 // 広いカテゴリ語。具体的な衣類名が取れているとき、これらは絞り込みの役に
 // 立たないどころか、モール側では余計な語として効いて結果を薄める。
-const BROAD_APPAREL_CATEGORIES = ['トップス', 'ボトムス', 'アウター', 'インナー', 'ウェア', '服', '衣類'];
+// index.mjs の categoryJapaneseLabels 補完(RULES由来のカテゴリ語)が同じ
+// 広いカテゴリ語を後から積み直してしまう問題(2026-08-08 Amazon再発報告)
+// を防ぐため export する。
+export const BROAD_APPAREL_CATEGORIES = ['トップス', 'ボトムス', 'アウター', 'インナー', 'ウェア', '服', '衣類'];
 
 export function ensureApparelProductTypeTerm(query, keywords) {
   const productType = extractApparelProductType(query);

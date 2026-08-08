@@ -140,3 +140,36 @@ test('具体的な衣類名が取れたら辞書が補った広いカテゴリ�
     '楽で涼しいカットソー 丈長め'
   );
 });
+
+// 2026-08-08 再発報告: SHEIN/Qoo10/アパレル5モール(上のテスト)は2026-08-07に
+// 修正されたが、Amazonは別経路(semanticSearchGroups由来のcategoryJapaneseLabels
+// 補完)で「トップス」を積み直しており、「ブラウス トップス」のままだった。
+// Yahoo!ショッピングは逆にensureApparelProductTypeTerm自体が一度も配線されて
+// おらず、「ブラウス」が丸ごと落ちて「トップス」だけになっていた。
+test('Amazon: 具体的な衣類名が取れたらcategoryJapaneseLabels補完が広いカテゴリ語を積み直さない', async () => {
+  const { buildAmazonSearchKeywords } = await import('../src/index.mjs');
+  for (const query of ['夏用、丈長め、おしゃれ、ブラウス', '白 ブラウス']) {
+    const keywords = buildAmazonSearchKeywords(query);
+    assert.match(keywords, /ブラウス/, `Amazon should keep ブラウス: ${query}`);
+    assert.doesNotMatch(keywords, /トップス/, `Amazon should not re-add トップス: ${query}`);
+  }
+  // ユーザー自身が両方打ったなら両方残る(辞書が足した分だけを落とす)。
+  assert.match(buildAmazonSearchKeywords('カットソー トップス レディース'), /トップス/);
+});
+
+test('Yahoo!ショッピング: 具体的な衣類名がブラウス→トップスに潰れず検索語・API候補の両方に残る', async () => {
+  const { buildYahooShoppingSearchDestination, buildMarketplaceApiKeywordCandidates } =
+    await import('../src/index.mjs');
+  const { buildMarketplaceSearchKeywords } = await import('../public/marketplace-search-keywords-v2.mjs');
+  const { ensureApparelProductTypeTerm } = await import('../src/apparel-query-attributes.mjs');
+  for (const query of ['夏用、丈長め、おしゃれ、ブラウス', '白 ブラウス']) {
+    const destination = decodeURIComponent(buildYahooShoppingSearchDestination(query));
+    assert.match(destination, /ブラウス/, `Yahoo destination should keep ブラウス: ${query}`);
+
+    // /api/knowledge のYahooカタログAPI検索経路が使う候補配列も同様に確認する
+    // (marketplace-search-mode.mjs 相当の内部呼び出しをそのまま再現)。
+    const primaryKeywords = ensureApparelProductTypeTerm(query, buildMarketplaceSearchKeywords(query));
+    const candidates = buildMarketplaceApiKeywordCandidates(query, primaryKeywords);
+    assert.ok(candidates.some((candidate) => candidate.includes('ブラウス')), `Yahoo API candidates should include ブラウス: ${query}`);
+  }
+});
