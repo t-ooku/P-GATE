@@ -437,6 +437,7 @@ function productCard(candidate,index,t,confirmed){
   if(options)card.append(options);else card.append(allMarketplacesButton());
   const watch=createWatchOptions(t);
   card.append(watch.bell,watch.dialog);
+  window.HoshiluPriceComparison?.attach(card,candidate);
   return card;
 }
 function resultCarousel(cards){

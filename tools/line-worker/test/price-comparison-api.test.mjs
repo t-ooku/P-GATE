@@ -1,0 +1,116 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import cryptoModule from 'node:crypto';
+import worker, { validatePriceComparisonRequest } from '../src/index.mjs';
+
+globalThis.crypto ??= cryptoModule.webcrypto;
+globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
+globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
+
+// v4.3 指示書 Priority 3: /api/price-comparison のエンドツーエンド確認。
+
+function environment(overrides = {}) {
+  return {
+    TURNSTILE_SECRET_KEY: 'turnstile-secret',
+    TURNSTILE_SITE_KEY: 'site-key',
+    LINK_SIGNING_SECRET: 'l'.repeat(32),
+    ...overrides
+  };
+}
+
+function request(body) {
+  return new Request('https://hoshilu.app/api/price-comparison', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      product: { title: 'ハンディファン ホワイト', brand: 'HOSHILU', category: '家電' },
+      real_offers: [
+        { marketplace: 'AMAZON_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a' },
+        { marketplace: 'RAKUTEN_JP', total_cost: 9180, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=b' }
+      ],
+      direct_marketplaces: ['LOFT_JP', 'HANDS_JP'],
+      language: 'JA',
+      consent: true,
+      session_id: 'anonymous_session_123456',
+      turnstile_token: 'verified-token',
+      ...body
+    })
+  });
+}
+
+const context = { waitUntil() {} };
+
+test('validatePriceComparisonRequest: 未知のモールや不正な同意は弾く', () => {
+  assert.throws(() => validatePriceComparisonRequest({ consent: false }), /CONSENT_REQUIRED/);
+  const result = validatePriceComparisonRequest({
+    product: { title: '商品' }, consent: true, session_id: 'a'.repeat(20), turnstile_token: 't',
+    direct_marketplaces: ['LOFT_JP', 'NOT_A_REAL_MALL', 'AMAZON_JP']
+  });
+  // AMAZON_JPはIntegratedなのでdirect一覧には残らない。NOT_A_REAL_MALLは
+  // 未知のモールとして弾かれる。
+  assert.deepEqual(result.direct_marketplaces, ['LOFT_JP']);
+});
+
+test('v4.3項目12・13: 実価格(Amazon/楽天)とAI推定(ロフト/ハンズ)が明確に分かれて返る', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    if (target.includes('generativelanguage.googleapis.com')) {
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        estimates: [
+          { marketplace: 'LOFT_JP', range_min: 8000, range_max: 10000, confidence: 'HIGH' },
+          { marketplace: 'HANDS_JP', range_min: 8500, range_max: 10500, confidence: 'MEDIUM' }
+        ]
+      }) }] } }] });
+    }
+    throw new Error(`UNEXPECTED_FETCH:${target}`);
+  };
+  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32) };
+  try {
+    const response = await worker.fetch(request({}), env, context);
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    assert.equal(payload.ok, true);
+    assert.deepEqual(payload.result.real.map((r) => r.marketplace), ['AMAZON_JP', 'RAKUTEN_JP']);
+    assert.equal(payload.result.real[0].source, 'REAL');
+    assert.deepEqual(payload.result.ai_estimated.map((r) => r.marketplace).sort(), ['HANDS_JP', 'LOFT_JP']);
+    assert.equal(payload.result.ai_estimated[0].source, 'AI_ESTIMATE');
+    assert.equal(payload.result.disclaimer_required, true);
+    assert.match(payload.result.disclaimer_text, /AI推定価格です/);
+    assert.equal(payload.result.cheapest_claim.marketplace, 'AMAZON_JP');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('v4.3項目9: AI障害時でも実価格側は正常に返り、比較API全体は500にならない', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    return new Response('down', { status: 503 });
+  };
+  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32) };
+  try {
+    const response = await worker.fetch(request({}), env, context);
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    assert.deepEqual(payload.result.real.map((r) => r.marketplace), ['AMAZON_JP', 'RAKUTEN_JP']);
+    assert.deepEqual(payload.result.ai_estimated, []);
+    assert.deepEqual(payload.result.unavailable.map((r) => r.marketplace).sort(), ['HANDS_JP', 'LOFT_JP']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('Turnstile検証に失敗すれば400で拒否される(通常検索と同じ保護)', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => (String(url).includes('siteverify') ? Response.json({ success: false }) : new Response('unused'));
+  try {
+    const response = await worker.fetch(request({}), environment(), context);
+    assert.equal(response.status, 400);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

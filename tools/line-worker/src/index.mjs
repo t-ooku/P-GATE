@@ -22,6 +22,7 @@ import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offe
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn } from './ai-chat-intent.mjs';
+import { buildPriceComparison, realPriceRows, requestAiPriceEstimates } from './ai-price-comparison.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -51,6 +52,7 @@ import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
 } from './social-publisher.mjs';
 import { renderSeoPage } from './seo-pages.mjs';
+import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import { classifyGrowthTraffic, handleGrowthEvent } from './growth-events.mjs';
 import {
   runMarketplaceContentCycle, handleMarketplaceSaleRoutes
@@ -65,16 +67,14 @@ const ALLOWED_DESTINATION_DOMAINS = [
   'loft.co.jp', 'hands.net', 'matsukiyococokara-online.com',
   'cosme.com', 'abc-mart.net'
 ];
-// v4.2 項目17: マーケットプレイスごとの検索モード。'integrated' は
-// HOSHILUが実際に商品データを取得できるAPI連携先(Amazon/Rakuten/Yahoo)、
-// 'direct' はHOSHILUが商品データを持たず、そのモール自身の検索結果ページへ
-// ディープリンクするだけの先。UI側(app.js)がこの区分をハードコードし直さ
-// なくて済むよう、/api/knowledge のレスポンスに各リンクの mode を載せる
-// (signedMarketplaceSearchLinks参照)。ここが唯一の判定元。
-const INTEGRATED_MARKETPLACES = new Set(['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP']);
-function searchModeForMarketplace(marketplace) {
-  return INTEGRATED_MARKETPLACES.has(String(marketplace || '').toUpperCase()) ? 'integrated' : 'direct';
-}
+// v4.2 項目17 / v4.3 項目18: マーケットプレイスごとの検索モード。
+// 'integrated' はHOSHILUが実際に商品データを取得できるAPI連携先
+// (Amazon/Rakuten/Yahoo)、'direct' はHOSHILUが商品データを持たず、その
+// モール自身の検索結果ページへディープリンクするだけの先。UI側(app.js)が
+// この区分をハードコードし直さなくて済むよう、/api/knowledge のレスポンスに
+// 各リンクの mode を載せる(signedMarketplaceSearchLinks参照)。
+// marketplace-search-mode.mjs がここが唯一の判定元(v4.3のAI最安比較
+// (ai-price-comparison.mjs)も同じ定義を再利用する)。
 const RELEASE = '1.18.0';
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
@@ -1329,6 +1329,83 @@ async function handleAiChatApi(request, env) {
   }
 }
 
+// v4.3 指示書 Priority 3 (section 12-18): AI最安比較。/api/knowledge が既に
+// 返した実オファー(candidate.offers、Integratedモールの確認済み価格)と、
+// Directモールに対するAI推定価格帯を1つの比較結果へ合成して返す。
+// AI呼び出しはこのエンドポイントに限定され、通常検索(/api/knowledge)側の
+// 商品カード・MATCHESには一切影響しない(section 11: この機能のみの例外)。
+const KNOWN_DIRECT_MARKETPLACES = new Set([
+  'QOO10_JP', 'SHEIN_JP', 'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP',
+  'SNKRDUNK_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP'
+]);
+const MAX_PRICE_COMPARISON_DIRECT_MARKETPLACES = 6;
+
+export function validatePriceComparisonRequest(payload) {
+  payload = payload || {};
+  const sessionId = String(payload.session_id || '').trim();
+  const turnstileToken = String(payload.turnstile_token || '').trim();
+  if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
+  if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
+  if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
+  const title = String(payload.product?.title || '').trim().slice(0, 200);
+  if (!title) throw new Error('PRICE_COMPARISON_PRODUCT_TITLE_REQUIRED');
+  const brand = String(payload.product?.brand || '').trim().slice(0, 100);
+  const category = String(payload.product?.category || '').trim().slice(0, 100);
+  const realOffers = (Array.isArray(payload.real_offers) ? payload.real_offers : []).slice(0, 10);
+  const directMarketplaces = [...new Set(
+    (Array.isArray(payload.direct_marketplaces) ? payload.direct_marketplaces : [])
+      .map((item) => String(item || '').trim().toUpperCase())
+      .filter((item) => KNOWN_DIRECT_MARKETPLACES.has(item))
+  )].slice(0, MAX_PRICE_COMPARISON_DIRECT_MARKETPLACES);
+  const language = ['JA', 'EN', 'ZH', 'KO'].includes(payload.language) ? payload.language : 'JA';
+  return {
+    product: { title, brand, category },
+    real_offers: realOffers,
+    direct_marketplaces: directMarketplaces,
+    language,
+    session_id: sessionId,
+    turnstile_token: turnstileToken
+  };
+}
+
+async function handlePriceComparisonApi(request, env) {
+  try {
+    const requestOrigin = request.headers.get('origin');
+    const ownOrigin = new URL(request.url).origin;
+    if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+    const length = Number(request.headers.get('content-length') || 0);
+    if (length > 6000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
+    const input = validatePriceComparisonRequest(await request.json());
+    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    const real = realPriceRows(input.real_offers);
+    // 既に実価格が確認できているDirectモールは無い(realPriceRowsはIntegrated
+    // のみを返す)ため、依頼されたdirect_marketplacesは常にそのままAI推定の
+    // 対象になる。
+    let aiResult = { estimates: [], provider: null };
+    try {
+      aiResult = await requestAiPriceEstimates(
+        { title: input.product.title, brand: input.product.brand, category: input.product.category, language: input.language },
+        input.direct_marketplaces, env, fetch
+      );
+    } catch (error) {
+      console.warn('AI_PRICE_COMPARISON_ESTIMATE_UNAVAILABLE', { status: Number(error?.status) || 0 });
+    }
+    const comparison = buildPriceComparison({
+      real,
+      aiEstimates: aiResult.estimates,
+      requestedDirectMarketplaces: input.direct_marketplaces,
+      language: input.language
+    });
+    return Response.json({ ok: true, result: comparison }, {
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+    });
+  } catch (error) {
+    const clientErrors = ['CONSENT_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'TURNSTILE_VERIFICATION_FAILED', 'PRICE_COMPARISON_PRODUCT_TITLE_REQUIRED'];
+    const status = clientErrors.includes(error.message) ? 400 : 500;
+    return Response.json({ ok: false, error: error.message || 'PRICE_COMPARISON_FAILED' }, { status });
+  }
+}
+
 // HOSHILU GAS→Web移行 (docs/HOSHILU_GAS_TO_WEB_MIGRATION_BRIEF_2026-08-06.md §3,
 // gas/ContractPolicyEngine.gs): D1優先・GASフォールバックで走らせる契約ポリシー判定。
 // callGas('KNOWLEDGE')はgas/LineIntegration.gs answerPublic()経由で既に
@@ -1707,6 +1784,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env);
+    if (request.method === 'POST' && url.pathname === '/api/price-comparison') return handlePriceComparisonApi(request, env);
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
     if (request.method === 'GET' && url.pathname === '/api/refinement-chips') {
       // Condition search moved into the search panel (2026-08-07 request):
