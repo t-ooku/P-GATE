@@ -34,6 +34,48 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(worker, /ai-search-layout-fix\.css/);
 });
 
+// 2026-08-08: ユーザーからの実際のロゴ・ブランドカラー指定に基づき、
+// マツキヨ・ロフトは黄色系、ハンズは緑色系、@cosmeはエメラルドグリーン系
+// へ変更した(従来はマツキヨ=青、ロフト=ピンク赤、ハンズ=赤、@cosme=
+// ピンクだった)。厳密な色一致ではなく色系統だけを固定する - HSL変換で
+// 色相(hue)を確認する。
+function hexToHslHue(hex) {
+  const value = hex.replace('#', '');
+  const r = parseInt(value.slice(0, 2), 16) / 255;
+  const g = parseInt(value.slice(2, 4), 16) / 255;
+  const b = parseInt(value.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  if (max === min) return 0;
+  const d = max - min;
+  let hue;
+  if (max === r) hue = ((g - b) / d) % 6;
+  else if (max === g) hue = (b - r) / d + 2;
+  else hue = (r - g) / d + 4;
+  hue *= 60;
+  return hue < 0 ? hue + 360 : hue;
+}
+
+test('2026-08-08: マツキヨ・ロフトは黄色系、ハンズは緑色系、@cosmeはエメラルドグリーン系のボタン色になっている', async () => {
+  const styles = await read('ai-search-ui.css');
+  const colorFor = (marketplace) => {
+    const match = styles.match(new RegExp(`data-marketplace="${marketplace}"\\]\\{background:(#[0-9a-f]{6})`));
+    assert.ok(match, `${marketplace}の背景色が見つかりません`);
+    return match[1];
+  };
+  // 黄色の色相はおよそ45-65度
+  const yellowHue = hexToHslHue(colorFor('MATSUKIYO_JP'));
+  assert.ok(yellowHue >= 40 && yellowHue <= 65, `マツキヨは黄色系であるべき (hue=${yellowHue})`);
+  const loftHue = hexToHslHue(colorFor('LOFT_JP'));
+  assert.ok(loftHue >= 40 && loftHue <= 65, `ロフトは黄色系であるべき (hue=${loftHue})`);
+  // 緑〜エメラルドグリーンの色相はおよそ100-175度(エメラルドグリーンは
+  // 青緑寄りで170度前後になる)
+  const handsHue = hexToHslHue(colorFor('HANDS_JP'));
+  assert.ok(handsHue >= 100 && handsHue <= 175, `ハンズは緑色系であるべき (hue=${handsHue})`);
+  const cosmeHue = hexToHslHue(colorFor('COSME_JP'));
+  assert.ok(cosmeHue >= 100 && cosmeHue <= 175, `@cosmeは緑色系(エメラルドグリーン)であるべき (hue=${cosmeHue})`);
+});
+
 test('WHY HOSHILU is concise and official social labels are not duplicated', async () => {
   const html = await read('index.html');
   assert.match(html, /<h2 id="benefitTitle">[^<]+<\/h2>/);
