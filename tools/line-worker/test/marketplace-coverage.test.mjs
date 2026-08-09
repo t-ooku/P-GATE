@@ -93,7 +93,7 @@ test('トップ画面でまとめて検索3モール・個別に探す最大13�
   assert.match(module, /最多支持13个商城/);
   assert.match(module, /최대 13개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v339/);
+  assert.match(serviceWorker, /hoshilu-shell-v340/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
