@@ -5,6 +5,7 @@ import {
 } from './social-publisher.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-evergreen-13mall-v1';
+const FEATURE_LAUNCH_DATE = '2026-08-09';
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -17,14 +18,20 @@ const X_POSTS = [
 
 const INSTAGRAM_POSTS = [
   {
-    caption: '名前が分からない商品も、覚えている特徴を話すだけ。HOSHILUが検索語に整理して、最大13モールの入口をまとめます。気になった商品をコメントで教えてね。',
-    media_url: 'https://hoshilu.app/social/instagram-launch-v1.png'
+    caption: '名前が分からない商品も、覚えている特徴を話すだけ。HOSHILUが検索語に整理して、最大13モールの入口をまとめます。気になった商品をコメントで教えてね。@hoshilu.app',
+    media_url: 'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4'
   },
   {
-    caption: '色・大きさ・電源・使う場所。覚えている条件を少し足すと、欲しい商品に近づきます。HOSHILUで最大13モールを見比べてみて。気になった商品をコメントで教えてね。',
-    media_url: 'https://hoshilu.app/hoshilu-discovery-collage.webp'
+    caption: '色・大きさ・電源・使う場所。覚えている条件を少し足すと、欲しい商品に近づきます。HOSHILUで最大13モールを見比べてみて。気になった商品をコメントで教えてね。@hoshilu.app',
+    media_url: 'https://hoshilu.app/social/instagram-reel-cross-market-audio-v2.mp4'
   }
 ];
+
+const FEATURE_LAUNCH = Object.freeze({
+  X: 'HOSHILUの新しい検索体験を公開。説明から検索語を整理し、最大13モールを横断。実価格とAIによる類似価格推定を分けて表示し、気になる商品は「保存＆通知設定」へ。名前が分からない欲しいものも探せます。 #ホシル #商品検索',
+  INSTAGRAM: 'HOSHILUの今の機能を12秒で紹介します。\n① 説明から検索語を整理\n② 最大13モールを同じ検索語で横断\n③ 実価格とAIによる類似価格推定を区別\n④ 保存＆通知設定であとから確認\n\n名前が分からない「欲しいもの」をコメントで教えてください。次の検索動画で試します。@hoshilu.app\n#商品検索 #価格比較 #ネットショッピング #買い物好きな人と繋がりたい',
+  media_url: 'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4'
+});
 
 const pad = value => String(value).padStart(2, '0');
 
@@ -74,11 +81,25 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         content_id: `evergreen-x-${contentIndex + 1}`,
         platform: 'X',
         campaign_id: CAMPAIGN_ID,
-        caption: X_POSTS[contentIndex],
+        caption: key === FEATURE_LAUNCH_DATE ? FEATURE_LAUNCH.X : X_POSTS[contentIndex],
         link: campaignLink('X', key),
         scheduled_at: scheduledAt(parts, 20, 0),
         status: 'APPROVED'
       }));
+    }
+    if (key === FEATURE_LAUNCH_DATE) {
+      posts.push(normalizeSocialPost({
+        post_id: `${CAMPAIGN_ID}-instagram-${key}`,
+        content_id: 'feature-launch-reel-20260809',
+        platform: 'INSTAGRAM',
+        campaign_id: CAMPAIGN_ID,
+        caption: FEATURE_LAUNCH.INSTAGRAM,
+        link: campaignLink('INSTAGRAM', key),
+        media_url: FEATURE_LAUNCH.media_url,
+        scheduled_at: scheduledAt(parts, 20, 15),
+        status: 'APPROVED'
+      }));
+      continue;
     }
     if (instagramWeekdayContent.has(parts.weekday)) {
       const contentIndex = instagramWeekdayContent.get(parts.weekday);
@@ -107,10 +128,14 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
   const posts = buildSocialAutopilotPosts(now).filter(post => readiness[post.platform]);
   let inserted = 0;
   for (const post of posts) {
-    const result = await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO social_post_queue
+    const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
        affiliate,approved_at,created_at,updated_at)
-      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,'APPROVED',0,?9,?9,?9)`)
+      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,'APPROVED',0,?9,?9,?9)
+      ON CONFLICT(post_id) DO UPDATE SET content_id=excluded.content_id,
+        caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
+        scheduled_at=excluded.scheduled_at,updated_at=excluded.updated_at
+      WHERE social_post_queue.status='APPROVED'`)
       .bind(post.post_id, post.platform, CAMPAIGN_ID, post.content_id, post.caption,
         post.link, post.media_url, post.scheduled_at, now.toISOString()).run();
     inserted += Number(result?.meta?.changes || 0);

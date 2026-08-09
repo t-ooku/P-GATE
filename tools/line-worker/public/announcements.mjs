@@ -23,6 +23,17 @@ const badgeCopy = {
 const announcements = [
   {
     type: 'NEW',
+    date: '2026-08-09',
+    url: '/',
+    text: {
+      JA: 'AI検索・最大13モール比較・保存＆通知設定を強化',
+      EN: 'AI search, 13-marketplace comparison, and saved alerts improved',
+      ZH: 'AI 搜索、13 商城比较与保存通知功能升级',
+      KO: 'AI 검색·13개 쇼핑몰 비교·저장 알림 기능 강화'
+    }
+  },
+  {
+    type: 'NEW',
     date: '2026-08-06',
     url: '/',
     text: {
@@ -48,10 +59,10 @@ const announcements = [
     date: '2026-08-01',
     url: '/',
     text: {
-      JA: 'ファッション5モールを追加し最大10モール対応に',
-      EN: 'Added five fashion marketplaces, now up to ten total',
-      ZH: '新增五个时尚商城，最多支持十个商城',
-      KO: '패션 5개 쇼핑몰 추가로 최대 10개 쇼핑몰 지원'
+      JA: '対応モールを拡大し最大13モール対応に',
+      EN: 'Marketplace coverage expanded to up to 13',
+      ZH: '商城覆盖范围扩大至最多 13 个',
+      KO: '지원 쇼핑몰을 최대 13개로 확대'
     }
   }
 ];

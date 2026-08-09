@@ -5,15 +5,20 @@ import {
   seedSocialAutopilotQueue
 } from '../src/social-autopilot.mjs';
 
-test('販促自動運用は14日先までX週4回・Instagram週2回だけを計画する', () => {
+test('販促自動運用は今日の機能リールと14日先までの定期投稿を計画する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-09T03:00:00.000Z'));
-  assert.equal(posts.length, 12);
+  assert.equal(posts.length, 13);
   assert.equal(posts.filter(post => post.platform === 'X').length, 8);
-  assert.equal(posts.filter(post => post.platform === 'INSTAGRAM').length, 4);
+  assert.equal(posts.filter(post => post.platform === 'INSTAGRAM').length, 5);
   assert.equal(posts.some(post => post.platform === 'TIKTOK'), false);
   assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
   assert.equal(new Set(posts.filter(post => post.platform === 'INSTAGRAM')
     .map(post => post.media_url)).size, 2);
+  assert.equal(posts.filter(post => post.platform === 'INSTAGRAM')
+    .every(post => post.media_url.endsWith('.mp4')), true);
+  const launchReel = posts.find(post => post.content_id === 'feature-launch-reel-20260809');
+  assert.equal(launchReel.scheduled_at, '2026-08-09T11:15:00.000Z');
+  assert.match(launchReel.caption, /実価格とAIによる類似価格推定を区別/);
   for (const post of posts) {
     assert.match(post.caption, /13モール|検索語|商品|条件/);
     assert.doesNotMatch(post.caption, /(?:9|10)モール/);
@@ -40,7 +45,7 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
     INSTAGRAM_ACCOUNT_ID: 'ig-account',
     PRODUCT_DB: {
       prepare(sql) {
-        assert.match(sql, /INSERT OR IGNORE INTO social_post_queue/);
+        assert.match(sql, /ON CONFLICT\(post_id\) DO UPDATE/);
         return {
           bind(...values) {
             return {
@@ -55,7 +60,7 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
     }
   };
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
-  assert.deepEqual(result, { enabled: true, planned: 12, inserted: 12 });
+  assert.deepEqual(result, { enabled: true, planned: 13, inserted: 13 });
   assert.equal(rows.some(row => row[1] === 'TIKTOK'), false);
   assert.equal(rows.every(row => row[2] === 'hoshilu-evergreen-13mall-v1'), true);
 });
