@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install Worker dependencies
+        run: npm ci --prefix tools/line-worker
       - name: Run all regression tests
         run: npm test
       - name: Build single-file GAS bundle
@@ -47,6 +49,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install Worker dependencies
+        run: npm ci --prefix tools/line-worker
       - name: Check Cloudflare credentials are configured
         id: creds
         run: |
