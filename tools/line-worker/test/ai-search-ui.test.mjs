@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v361/);
+  assert.match(worker, /hoshilu-shell-v362/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /:scope > \.product-card-media-column/);
@@ -127,10 +127,23 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
   assert.doesNotMatch(script, /title: 'HOSHILU AIチャット'/);
 });
 
-test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず独立して読み込まれる', async () => {
+test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/app\.js\?v=113"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=2"><\/script>/);
+  assert.match(html, /<script type="module" src="\/app\.js\?v=114"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=3"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
+});
+
+test('AI確認モードは一時的なTurnstile・Worker失敗を別トークンで1回再試行し、手動再試行も残す', async () => {
+  const [app, script] = await Promise.all([read('app.js'), read('ai-search-ui.mjs')]);
+  assert.match(app, /let lastIssuedTurnstileToken=''/);
+  assert.match(app, /token!==lastIssuedTurnstileToken/);
+  assert.match(app, /token&&token!==lastIssuedTurnstileToken/);
+  assert.match(script, /for \(let attempt = 0; attempt < 2; attempt \+= 1\)/);
+  assert.match(script, /TURNSTILE_\|CHAT_HTTP_5/);
+  assert.match(script, /await new Promise\(\(resolve\) => setTimeout\(resolve, 150\)\)/);
+  assert.match(script, /HOSHILU_IDENTIFY_FAILED/);
+  assert.match(script, /retry\.addEventListener\('click'/);
+  assert.match(script, /status\.textContent=`\$\{copy\.error\}（\$\{code\}）`/);
 });
 
 // v4.2 項目6・7: 「AIで探す」を押した時点で直前の検索文を初期コンテキスト

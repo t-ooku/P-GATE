@@ -71,20 +71,35 @@ function chatMessageRow(role, text) {
 
 async function postChatTurn(history, language, mode = 'REFINE') {
   const auth = window.HoshiluChatAuth;
-  const token = await (auth?.requestToken?.() ?? '');
-  // Turnstile が用意できないまま送ると、サーバー側では
-  // TURNSTILE_TOKEN_INVALID として弾かれる。原因が「認証の準備ができて
-  // いない」なのか「通信そのものが失敗した」なのかを取り違えると、直す
-  // 場所を間違えるので、ここで区別できる形で止める。
-  if (!token) throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
-  const response = await fetch('/api/ai-chat', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ history, language, mode, session_id: auth?.sessionId || '', consent: true, turnstile_token: token })
-  });
-  const payload = await response.json();
-  if (!response.ok || !payload.ok) throw new Error(payload.error || 'CHAT_FAILED');
-  return payload.result;
+  let lastError = new Error('CHAT_FAILED');
+  // Turnstile tokenは単回使用。Chromeでreset直後に古い応答が一瞬残る場合や、
+  // 一時的なWorker障害で確認モード全体を即終了させないよう、毎回別トークンを
+  // 取り直して1回だけ自動再試行する。
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const token = await (auth?.requestToken?.() ?? '');
+      if (!token) throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ history, language, mode, session_id: auth?.sessionId || '', consent: true, turnstile_token: token })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        const error = new Error(payload.error || `CHAT_HTTP_${response.status}`);
+        error.status = response.status;
+        throw error;
+      }
+      return payload.result;
+    } catch (error) {
+      lastError = error;
+      const code = String(error?.message || 'CHAT_FAILED');
+      const retryable = /TURNSTILE_|CHAT_HTTP_5\d\d|CHAT_FAILED/u.test(code) || Number(error?.status || 0) >= 500;
+      if (!retryable || attempt === 1) break;
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+  }
+  throw lastError;
 }
 
 function openIdentifyDialog(originalQuery,language){
@@ -99,7 +114,7 @@ function openIdentifyDialog(originalQuery,language){
   const history=[{role:'user',text:originalQuery}];let noCount=0;
   messages.append(chatMessageRow('user',originalQuery));
   const showOtherMalls=()=>{const button=document.createElement('button');button.type='button';button.className='ai-chat-other-malls';button.textContent=copy.other;button.addEventListener('click',async()=>{button.disabled=true;const status=chatMessageRow('assistant',copy.finding);status.classList.add('ai-chat-message-status');messages.append(status);await runFinalSearch(originalQuery);dialog.close();window.setTimeout(()=>document.querySelector('#marketplaceFallback,.marketplace-fallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});messages.append(button);};
-  const ask=async()=>{const status=chatMessageRow('assistant',copy.thinking);status.classList.add('ai-chat-message-status');messages.append(status);try{const result=await postChatTurn(history,language,'IDENTIFY');status.remove();const candidate=String(result.candidate_name||result.refined_query||'').trim();if(!candidate)throw new Error('CANDIDATE_EMPTY');history.push({role:'assistant',text:candidate});const question=chatMessageRow('assistant',copy.question(candidate));question.classList.add('ai-chat-identify-question');messages.append(question);const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runFinalSearch(result.refined_query||candidate);finding.remove();if(outcome.ok)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});actions.append(yes,no);messages.append(actions);}catch(error){console.error('HOSHILU_IDENTIFY_FAILED',error);status.textContent=copy.error;showOtherMalls();}};
+  const ask=async()=>{const status=chatMessageRow('assistant',copy.thinking);status.classList.add('ai-chat-message-status');messages.append(status);try{const result=await postChatTurn(history,language,'IDENTIFY');status.remove();const candidate=String(result.candidate_name||result.refined_query||'').trim();if(!candidate)throw new Error('CANDIDATE_EMPTY');history.push({role:'assistant',text:candidate});const question=chatMessageRow('assistant',copy.question(candidate));question.classList.add('ai-chat-identify-question');messages.append(question);const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runFinalSearch(result.refined_query||candidate);finding.remove();if(outcome.ok)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});actions.append(yes,no);messages.append(actions);}catch(error){const code=String(error?.message||'CHAT_FAILED');console.error('HOSHILU_IDENTIFY_FAILED',code,error);status.textContent=`${copy.error}（${code}）`;const retry=document.createElement('button');retry.type='button';retry.className='ai-chat-retry';retry.textContent=chatCopy[language]?.retry||chatCopy.JA.retry;retry.addEventListener('click',()=>{retry.remove();status.remove();void ask();});messages.append(retry);showOtherMalls();}};
   dialog.showModal();void ask();
 }
 

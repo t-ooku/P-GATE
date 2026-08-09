@@ -17,6 +17,8 @@
 // AI calls (matching the CTO's "できるだけ少ないチャットで" / budget-conscious
 // instruction) - never open-ended chat.
 
+import { expandSearchQuery } from './query-expansion.mjs';
+
 // 20秒×2プロバイダでは失敗時に最大40秒待たせる。検索語の整理は短いJSON
 // 応答なので5秒で打ち切り、失敗時は既存の原文フォールバックで検索を続ける。
 const CHAT_TIMEOUT_MS = 5000;
@@ -161,9 +163,12 @@ function fallbackResult(history, mode = 'REFINE') {
   const userTurns = history.filter((turn) => turn.role === 'user');
   const lastUserTurn = userTurns.at(-1);
   const originalUserTurn = userTurns[0];
-  const refinedQuery = mode === 'IDENTIFY' ? originalUserTurn?.text : lastUserTurn?.text;
+  const originalQuery = originalUserTurn?.text || '';
+  const knownExpansion = mode === 'IDENTIFY' ? expandSearchQuery(originalQuery) : null;
+  const refinedQuery = mode === 'IDENTIFY' ? (knownExpansion?.query || originalQuery) : lastUserTurn?.text;
   return { needs_clarification: false, clarifying_question: '', refined_query: refinedQuery || '',
-    candidate_name: mode === 'IDENTIFY' ? (refinedQuery || '') : '' };
+    candidate_name: mode === 'IDENTIFY'
+      ? (knownExpansion?.expansion?.primary || refinedQuery || '') : '' };
 }
 
 export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl = fetch, options = {}) {

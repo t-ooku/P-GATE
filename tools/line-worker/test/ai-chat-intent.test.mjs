@@ -114,6 +114,21 @@ test('全プロバイダ失敗時も直近のユーザー発言で検索へフ�
   assert.equal(result.refined_query, '軽いモバイルバッテリー');
 });
 
+test('IDENTIFYでGeminiが一時失敗しても検証済み展開があればLILMOON候補を返す', async () => {
+  const fetchImpl = async () => new Response('error', { status: 503 });
+  const result = await analyzeChatTurn(
+    [{ role: 'user', text: 'カラコン ローラ 度入り' }],
+    'JA',
+    { GEMINI_API_KEY: 'g'.repeat(32) },
+    fetchImpl,
+    { mode: 'IDENTIFY' }
+  );
+  assert.equal(result.needs_clarification, false);
+  assert.equal(result.candidate_name, 'LILMOON リルムーン 度あり');
+  assert.match(result.refined_query, /^LILMOON リルムーン 度あり/);
+  assert.match(result.refined_query, /カラコン ローラ 度入り/);
+});
+
 test('価格・URL・在庫を主張する応答は仕様上返せない構造になっている(refined_queryは検索語のみ)', () => {
   const result = normalizeChatTurnResult({ needs_clarification: false, refined_query: '透明 イヤホン https://example.com 3,980円' });
   assert.doesNotMatch(result.refined_query, /https?:\/\//);
