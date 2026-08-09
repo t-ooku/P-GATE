@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import cryptoModule from 'node:crypto';
-import worker, { buildAmazonSearchKeywords, validatePriceComparisonRequest } from '../src/index.mjs';
+import worker, { buildAmazonSearchKeywords, validatePriceComparisonRequest, verifyTrackToken } from '../src/index.mjs';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
@@ -81,6 +81,13 @@ test('v4.3項目12・13: 実価格(Amazon/楽天)とAI推定(ロフト/ハンズ
       assert.equal(row.search_query, buildAmazonSearchKeywords('携帯扇風機'));
       assert.match(row.search_url, /^https:\/\/hoshilu\.app\/go\?token=/);
     }
+    const loftRow = payload.result.ai_estimated.find((row) => row.marketplace === 'LOFT_JP');
+    const loftToken = new URL(loftRow.search_url).searchParams.get('token');
+    const loftDestination = new URL((await verifyTrackToken(loftToken, env.LINK_SIGNING_SECRET)).d);
+    assert.equal(loftDestination.searchParams.get('sort'), 'price');
+    assert.equal(loftRow.search_sort, 'PRICE_ASC');
+    const handsRow = payload.result.ai_estimated.find((row) => row.marketplace === 'HANDS_JP');
+    assert.equal(handsRow.search_sort, '');
     assert.equal(payload.result.disclaimer_required, true);
     assert.match(payload.result.disclaimer_text, /AI推定価格です/);
     assert.equal(payload.result.cheapest_claim.marketplace, 'AMAZON_JP');

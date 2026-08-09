@@ -251,6 +251,7 @@ export function buildPriceComparison({ real = [], aiEstimates = [], requestedDir
       confidence_label: confidenceLabel(item.confidence, language),
       search_url: searchLinkByMarketplace.get(item.marketplace)?.url || '',
       search_query: searchLinkByMarketplace.get(item.marketplace)?.search_query || '',
+      search_sort: searchLinkByMarketplace.get(item.marketplace)?.search_sort || '',
       source: 'AI_ESTIMATE'
     }))
     .sort((a, b) => a.range_min - b.range_min);

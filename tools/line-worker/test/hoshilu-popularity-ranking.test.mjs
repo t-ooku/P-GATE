@@ -10,16 +10,32 @@ test('API連携有無を加点せず観測できた人気・口コミ・需要�
 });
 
 test('API未連携モールも正規に観測した商品オファーがあれば候補根拠へ含める', () => {
+  const yesterday = new Date(Date.now() - 86400000).toISOString();
   const signals = popularitySignalsForObservedCandidate({
     marketplace_source: 'D1_INDEX',
     offers: [
-      { marketplace: 'LOFT_JP', price: 2000 },
-      { marketplace: 'HANDS_JP', price: 2100 }
+      { marketplace: 'LOFT_JP', price: 2000, observed_at: yesterday },
+      { marketplace: 'HANDS_JP', price: 2100, observed_at: yesterday }
     ]
   }, 0, 1, { low: 1000, high: 3000 });
   assert.equal(signals.marketplace_popularity, null);
   assert.equal(signals.marketplace_coverage, 2 / 3);
   assert.equal(signals.price_competitiveness, 0.5);
+  assert.ok(signals.freshness > 0.9);
+});
+
+test('取得経路ではなく実データの強さでAPI未連携商品もAPI商品と同じ順位表に載る', () => {
+  const ranked = rankHoshiluPopularity([
+    { id: 'api', marketplace_source: 'RAKUTEN_RANKING_API', popularity_signals: {
+      marketplace_popularity: 0.4, review_confidence: 0.2, marketplace_coverage: 1 / 3,
+      price_competitiveness: 0.2, hoshilu_demand: null, freshness: 0.4
+    } },
+    { id: 'non-api', marketplace_source: 'D1_INDEX', popularity_signals: {
+      marketplace_popularity: null, review_confidence: 0.9, marketplace_coverage: 2 / 3,
+      price_competitiveness: 0.8, hoshilu_demand: 0.7, freshness: 0.9
+    } }
+  ]);
+  assert.deepEqual(ranked.map((item) => item.id), ['non-api', 'api']);
 });
 
 test('根拠が少ない商品は満点換算で1位にせずconfidenceで抑制する', () => {

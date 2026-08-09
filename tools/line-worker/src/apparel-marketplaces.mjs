@@ -21,7 +21,7 @@ export function isApparelSearch(query) {
   return value.length > 0 && APPAREL_TERMS.some((pattern) => pattern.test(value));
 }
 
-export function buildApparelMarketplaceDestinations(query, sharedSearchKeywords = '') {
+export function buildApparelMarketplaceDestinations(query, sharedSearchKeywords = '', options = {}) {
   const source = searchText(query);
   // 2026-08-07 instructions #8: every "direct" marketplace stays searchable
   // on every query, not just apparel-looking ones (isApparelSearch is kept
@@ -53,7 +53,8 @@ export function buildApparelMarketplaceDestinations(query, sharedSearchKeywords 
   // for the live verification). URL.searchParams always percent-encodes as
   // UTF-8, so the query string is assembled by hand here - going through
   // searchParams would re-encode the Shift_JIS escapes.
-  const zozo = `https://zozo.jp/search/?p_keyv=${encodeShiftJisPercent(keywordsFor('ZOZOTOWN_JP'))}`;
+  const priceAscending = options.sort === 'PRICE_ASC';
+  const zozo = `https://zozo.jp/search/?p_keyv=${encodeShiftJisPercent(keywordsFor('ZOZOTOWN_JP'))}${priceAscending ? '&p_scpid=1' : ''}`;
 
   // v4.2 項目14: SHOPLIST/MUSINSAはこの検索導線から外す。既存ユーザーの保存
   // データ(AIウォッチ等)との後方互換のため、マーケットプレイスコード自体は
@@ -62,6 +63,7 @@ export function buildApparelMarketplaceDestinations(query, sharedSearchKeywords 
   const loft = new URL('https://www.loft.co.jp/store/goods/search.aspx');
   loft.searchParams.set('keyword', keywordsFor('LOFT_JP'));
   loft.searchParams.set('search', 'x');
+  if (priceAscending) loft.searchParams.set('sort', 'price');
 
   const hands = `https://hands.net/search/?q=${encodeURIComponent(keywordsFor('HANDS_JP'))}`;
 
@@ -80,29 +82,34 @@ export function buildApparelMarketplaceDestinations(query, sharedSearchKeywords 
   // 正しく変わることを確認済み。
   const cosme = new URL('https://www.cosme.com/products/list.php');
   cosme.searchParams.set('name', keywordsFor('COSME_JP'));
+  if (priceAscending) cosme.searchParams.set('sort', '5');
 
   // 2026-08-08実レスポンス再検証: ABC-MARTはkeyword=をShift_JISとして
   // 解釈する。URLSearchParamsのUTF-8では日本語が文字化けして件数が空に
   // なった一方、「スニーカー」をShift_JISで渡すと3,211件になった。
   // ZOZOTOWNと同様、searchParamsで再エンコードせずURLを手で組み立てる。
-  const abcmart = `https://www.abc-mart.net/shop/goods/search.aspx?keyword=${encodeShiftJisPercent(keywordsFor('ABCMART_JP'))}`;
+  const abcmart = `https://www.abc-mart.net/shop/goods/search.aspx?keyword=${encodeShiftJisPercent(keywordsFor('ABCMART_JP'))}${priceAscending ? '&fssort=price' : ''}`;
 
   return [
-    { marketplace: 'ZOZOTOWN_JP', label: 'ZOZOTOWNで探す', destination: zozo },
-    { marketplace: 'LOFT_JP', label: 'ロフトで探す', destination: loft.toString() },
-    { marketplace: 'HANDS_JP', label: 'ハンズで探す', destination: hands },
-    { marketplace: 'MATSUKIYO_JP', label: 'マツキヨココカラで探す', destination: matsukiyo.toString() },
-    { marketplace: 'COSME_JP', label: '@cosme SHOPPINGで探す', destination: cosme.toString() },
-    { marketplace: 'ABCMART_JP', label: 'ABC-MARTで探す', destination: abcmart },
+    { marketplace: 'ZOZOTOWN_JP', label: 'ZOZOTOWNで探す', destination: zozo, sort_applied: priceAscending },
+    { marketplace: 'LOFT_JP', label: 'ロフトで探す', destination: loft.toString(), sort_applied: priceAscending },
+    // ハンズ・マツキヨ・SNKRDUNKは公式検索画面で価格昇順のURL指定を
+    // 再現できなかったため、未確認パラメータを推測で付けない。
+    { marketplace: 'HANDS_JP', label: 'ハンズで探す', destination: hands, sort_applied: false },
+    { marketplace: 'MATSUKIYO_JP', label: 'マツキヨココカラで探す', destination: matsukiyo.toString(), sort_applied: false },
+    { marketplace: 'COSME_JP', label: '@cosme SHOPPINGで探す', destination: cosme.toString(), sort_applied: priceAscending },
+    { marketplace: 'ABCMART_JP', label: 'ABC-MARTで探す', destination: abcmart, sort_applied: priceAscending },
     {
       marketplace: 'BUYMA_JP',
       label: 'BUYMAで探す',
-      destination: `https://www.buyma.com/r/${encodeURIComponent(keywordsFor('BUYMA_JP'))}/`
+      destination: `https://www.buyma.com/r/${priceAscending ? '-O3/' : ''}${encodeURIComponent(keywordsFor('BUYMA_JP'))}/`,
+      sort_applied: priceAscending
     },
     {
       marketplace: 'SNKRDUNK_JP',
       label: 'SNKRDUNKで探す',
-      destination: `https://snkrdunk.com/search/?keywords=${encodeURIComponent(keywordsFor('SNKRDUNK_JP'))}`
+      destination: `https://snkrdunk.com/search/?keywords=${encodeURIComponent(keywordsFor('SNKRDUNK_JP'))}`,
+      sort_applied: false
     }
   ];
 }

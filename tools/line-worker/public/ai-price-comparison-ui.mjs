@@ -11,19 +11,19 @@ const DEFAULT_DIRECT_MARKETPLACES = ['LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COS
 const copy = {
   JA: {
     button: 'AI最安比較', title: 'AI最安比較', loading: '比較しています…', error: '比較に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる',
-    realLabel: '実価格', estimateLabel: 'AI推定', unavailableLabel: '価格推定できません', search: '検索', empty: '比較できる情報がありませんでした。'
+    realLabel: '実価格', estimateLabel: 'AI推定', unavailableLabel: '価格推定できません', search: '価格の安い順で見る', searchDefault: 'この検索語で見る', empty: '比較できる情報がありませんでした。'
   },
   EN: {
     button: 'AI Price Compare', title: 'AI Price Compare', loading: 'Comparing…', error: 'Comparison failed. Please try again.', retry: 'Try again', close: 'Close',
-    realLabel: 'Real price', estimateLabel: 'AI estimate', unavailableLabel: 'Cannot estimate', search: 'Search', empty: 'No comparison data available.'
+    realLabel: 'Real price', estimateLabel: 'AI estimate', unavailableLabel: 'Cannot estimate', search: 'View lowest price first', searchDefault: 'Search this phrase', empty: 'No comparison data available.'
   },
   ZH: {
     button: 'AI比价', title: 'AI比价', loading: '正在比较…', error: '比较失败，请重试。', retry: '重试', close: '关闭',
-    realLabel: '实际价格', estimateLabel: 'AI推测', unavailableLabel: '无法推测价格', search: '搜索', empty: '没有可比较的信息。'
+    realLabel: '实际价格', estimateLabel: 'AI推测', unavailableLabel: '无法推测价格', search: '按价格从低到高查看', searchDefault: '用这个关键词搜索', empty: '没有可比较的信息。'
   },
   KO: {
     button: 'AI 최저가 비교', title: 'AI 최저가 비교', loading: '비교하고 있습니다…', error: '비교에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기',
-    realLabel: '실제 가격', estimateLabel: 'AI 추정', unavailableLabel: '가격 추정 불가', search: '검색', empty: '비교할 정보가 없습니다.'
+    realLabel: '실제 가격', estimateLabel: 'AI 추정', unavailableLabel: '가격 추정 불가', search: '낮은 가격순으로 보기', searchDefault: '이 검색어로 보기', empty: '비교할 정보가 없습니다.'
   }
 };
 
@@ -78,7 +78,7 @@ function appendSearchLink(item, row, t) {
   if (!row.search_url) return;
   const link = document.createElement('a');
   link.href = row.search_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
-  link.className = 'price-compare-search-link'; link.textContent = t.search;
+  link.className = 'price-compare-search-link'; link.textContent = row.search_sort === 'PRICE_ASC' ? t.search : t.searchDefault;
   if (row.search_query) link.title = `${marketplaceLabel(row.marketplace)}: ${row.search_query}`;
   item.append(link);
 }

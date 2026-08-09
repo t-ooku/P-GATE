@@ -22,6 +22,8 @@ test('AI推定価格の各モール横に、同じ検索語を引き継ぐ検索
   assert.match(script, /search_query: String\(candidate\.search_query/);
   assert.match(script, /function appendSearchLink\(item, row, t\)/);
   assert.match(script, /price-compare-search-link/);
+  assert.match(script, /価格の安い順で見る/);
+  assert.match(script, /row\.search_sort === 'PRICE_ASC'/);
   assert.match(script, /appendSearchLink\(item, row, t\)/);
 });
 
@@ -46,7 +48,7 @@ test('v4.3項目16: 断定文言(cheapest_claim)とヘッジ文言(hedged_claim)
 
 test('service-workerがAI最安比較の新規ファイルをプリキャッシュ対象に含む', async () => {
   const worker = await read('service-worker.js');
-  assert.match(worker, /hoshilu-shell-v354/);
+  assert.match(worker, /hoshilu-shell-v355/);
   assert.match(worker, /ai-price-comparison-ui\.mjs/);
   assert.match(worker, /ai-price-comparison-ui\.css/);
 });

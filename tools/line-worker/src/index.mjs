@@ -1123,7 +1123,7 @@ export function buildYahooShoppingSearchDestination(query) {
   return url.toString();
 }
 
-export function marketplaceSearchDestinations(query, env = {}) {
+export function marketplaceSearchDestinations(query, env = {}, options = {}) {
   // モール横断ボタンは「同じ条件を各店で確認する」導線。検索語の意味まで
   // 店ごとに書き換えると比較できないため、HOSHILUが一度だけ整理した共通語を
   // URLパラメータ名・文字コードだけ各店仕様に合わせて渡す。
@@ -1134,28 +1134,36 @@ export function marketplaceSearchDestinations(query, env = {}) {
   const sharedKeywords = amazonKeywords.replace(/\bB[A-Z0-9]{9}\b/giu, ' ').replace(/\s+/g, ' ').trim();
   const amazon = new URL('https://www.amazon.co.jp/s');
   amazon.searchParams.set('k', amazonKeywords);
+  const priceAscending = options.sort === 'PRICE_ASC';
+  if (priceAscending) amazon.searchParams.set('s', 'price-asc-rank');
   const associateTag = String(env.AMAZON_ASSOCIATE_TAG || '').trim();
   if (/^[a-z0-9][a-z0-9-]{1,49}$/i.test(associateTag)) amazon.searchParams.set('tag', associateTag);
   const destinations = [
-    { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: amazon.toString() }
+    { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: amazon.toString(), sort_applied: priceAscending }
   ];
   // ASINだけの入力では、意味のない空検索を他12モールへ作らない。
   if (!sharedKeywords) return destinations;
   const yahoo = new URL('https://shopping.yahoo.co.jp/search');
   yahoo.searchParams.set('p', sharedKeywords);
+  if (priceAscending) yahoo.searchParams.set('X', '2');
   const qoo10 = new URL('https://www.qoo10.jp/s/');
   qoo10.searchParams.set('keyword', sharedKeywords);
+  if (priceAscending) qoo10.searchParams.set('sortType', 'SORT_PRICE_ASC');
+  const rakuten = new URL(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(sharedKeywords)}/`);
+  if (priceAscending) rakuten.searchParams.set('s', '2');
+  const shein = new URL(`https://jp.shein.com/pdsearch/${encodeURIComponent(sharedKeywords)}/`);
+  if (priceAscending) shein.searchParams.set('sort', 'price_asc');
   return destinations.concat([
-    { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(sharedKeywords)}/` },
-    { marketplace: 'YAHOO_JP', label: 'Yahoo!ショッピングで探す', destination: yahoo.toString() },
-    { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: qoo10.toString() },
-    { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: `https://jp.shein.com/pdsearch/${encodeURIComponent(sharedKeywords)}/` }
-  ], buildApparelMarketplaceDestinations(query, sharedKeywords));
+    { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: rakuten.toString(), sort_applied: priceAscending },
+    { marketplace: 'YAHOO_JP', label: 'Yahoo!ショッピングで探す', destination: yahoo.toString(), sort_applied: priceAscending },
+    { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: qoo10.toString(), sort_applied: priceAscending },
+    { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: shein.toString(), sort_applied: priceAscending }
+  ], buildApparelMarketplaceDestinations(query, sharedKeywords, options));
 }
 
 async function signedMarketplaceSearchLinks(query, context) {
   const links = [];
-  for (const item of marketplaceSearchDestinations(query, context.env)) {
+  for (const item of marketplaceSearchDestinations(query, context.env, { sort: context.sort })) {
     if (!isAllowedDestination(item.destination)) continue;
     const token = await createTrackToken({
       u: context.sessionHash, r: context.seed, a: context.asin || '', d: item.destination,
@@ -1167,7 +1175,8 @@ async function signedMarketplaceSearchLinks(query, context) {
     links.push({
       marketplace: item.marketplace, label: item.label,
       url: `${context.origin}/go?token=${encodeURIComponent(token)}`,
-      mode: searchModeForMarketplace(item.marketplace)
+      mode: searchModeForMarketplace(item.marketplace),
+      ...(context.sort === 'PRICE_ASC' ? { sort: item.sort_applied === true ? 'PRICE_ASC' : '' } : {})
     });
   }
   return links;
@@ -1397,13 +1406,19 @@ export function popularitySignalsForObservedCandidate(candidate, index, total, p
   const hasMarketplacePopularity = /RANKING_API|YAHOO_SHOPPING_API/u.test(String(candidate.marketplace_source || ''));
   const low = Number(priceRange.low) || 0; const high = Number(priceRange.high) || 0;
   const priceSignal = price > 0 ? (high > low ? 1 - (price - low) / (high - low) : 0.5) : null;
+  const observedTimes = [candidate.observed_at, candidate.updated_at, ...(candidate.offers || []).map((offer) => offer.observed_at)]
+    .map((value) => Date.parse(String(value || ''))).filter(Number.isFinite);
+  const newestObservedAt = observedTimes.length ? Math.max(...observedTimes) : null;
+  const ageDays = newestObservedAt === null ? null : Math.max(0, (Date.now() - newestObservedAt) / 86400000);
   return {
     marketplace_popularity: hasMarketplacePopularity ? Math.max(0, 1 - (rank - 1) / Math.max(1, total)) : null,
     review_confidence: reviewCount ? (reviewAverage / 5) * Math.min(1, Math.log10(reviewCount + 1) / 3) : null,
     marketplace_coverage: observedMarketplaces.size ? Math.min(1, observedMarketplaces.size / 3) : null,
     price_competitiveness: priceSignal,
     hoshilu_demand: Number.isFinite(Number(candidate.hoshilu_demand_signal)) ? Number(candidate.hoshilu_demand_signal) : null,
-    freshness: null
+    // API由来か否かではなく、正規に観測した時刻だけで鮮度を評価する。
+    // 30日を超えるデータは0点だが、日時自体は根拠として明示される。
+    freshness: ageDays === null ? null : Math.max(0, 1 - ageDays / 30)
   };
 }
 
@@ -1601,9 +1616,10 @@ async function handlePriceComparisonApi(request, env) {
         sessionHash: await hashUser(input.session_id),
         seed: `PRICE_COMPARE:${crypto.randomUUID()}`,
         category: 'price_comparison',
-        trafficClass: 'UNATTRIBUTED'
+        trafficClass: 'UNATTRIBUTED',
+        sort: 'PRICE_ASC'
       })).filter((link) => input.direct_marketplaces.includes(link.marketplace))
-        .map((link) => ({ ...link, search_query: buildAmazonSearchKeywords(input.search_query) })),
+        .map((link) => ({ ...link, search_query: buildAmazonSearchKeywords(input.search_query), search_sort: link.sort })),
       language: input.language
     });
     return Response.json({ ok: true, result: comparison }, {

@@ -57,3 +57,24 @@ test('ASINだけの入力ではAmazon以外の空検索リンクを作らない'
   const links = marketplaceSearchDestinations('B08N5WRWNW');
   assert.deepEqual(links.map(({ marketplace }) => marketplace), ['AMAZON_JP']);
 });
+
+test('AI最安比較用リンクだけ、公式に確認できた価格昇順指定を付ける', () => {
+  const normal = marketplaceSearchDestinations('ハンディファン');
+  const sorted = marketplaceSearchDestinations('ハンディファン', {}, { sort: 'PRICE_ASC' });
+  const destination = (links, marketplace) => links.find((item) => item.marketplace === marketplace).destination;
+
+  assert.equal(new URL(destination(normal, 'AMAZON_JP')).searchParams.get('s'), null);
+  assert.equal(new URL(destination(sorted, 'AMAZON_JP')).searchParams.get('s'), 'price-asc-rank');
+  assert.equal(new URL(destination(sorted, 'RAKUTEN_JP')).searchParams.get('s'), '2');
+  assert.equal(new URL(destination(sorted, 'YAHOO_JP')).searchParams.get('X'), '2');
+  assert.equal(new URL(destination(sorted, 'QOO10_JP')).searchParams.get('sortType'), 'SORT_PRICE_ASC');
+  assert.equal(new URL(destination(sorted, 'SHEIN_JP')).searchParams.get('sort'), 'price_asc');
+  assert.match(destination(sorted, 'ZOZOTOWN_JP'), /[?&]p_scpid=1(?:&|$)/);
+  assert.equal(new URL(destination(sorted, 'LOFT_JP')).searchParams.get('sort'), 'price');
+  assert.equal(new URL(destination(sorted, 'COSME_JP')).searchParams.get('sort'), '5');
+  assert.match(destination(sorted, 'ABCMART_JP'), /[?&]fssort=price(?:&|$)/);
+  assert.match(destination(sorted, 'BUYMA_JP'), /\/r\/-O3\//);
+  for (const marketplace of ['HANDS_JP', 'MATSUKIYO_JP', 'SNKRDUNK_JP']) {
+    assert.equal(sorted.find((item) => item.marketplace === marketplace).sort_applied, false);
+  }
+});
