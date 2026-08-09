@@ -18,8 +18,8 @@
 // instruction) - never open-ended chat.
 
 // 20秒×2プロバイダでは失敗時に最大40秒待たせる。検索語の整理は短いJSON
-// 応答なので8秒で打ち切り、失敗時は既存の原文フォールバックで検索を続ける。
-const CHAT_TIMEOUT_MS = 8000;
+// 応答なので5秒で打ち切り、失敗時は既存の原文フォールバックで検索を続ける。
+const CHAT_TIMEOUT_MS = 5000;
 const MAX_CHAT_TURNS = 2;
 const MAX_MESSAGE_LENGTH = 200;
 const MAX_HISTORY_MESSAGES = 4;
