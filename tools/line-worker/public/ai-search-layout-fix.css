@@ -737,6 +737,23 @@
 }
 .result-carousel>.carousel-button.previous{top:-4px}
 .result-carousel>.carousel-button.next{top:auto;bottom:-4px}
+/* PCでは4商品を1画面で比較しやすくする。正方形画像の高さと説明領域を
+   抑え、画像・商品名・価格が同じ表示範囲に収まりやすい密度にする。 */
+@media(min-width:761px){
+  .result-track>.product-card{min-height:0;gap:6px;padding:10px}
+  .result-track>.product-card>.product-card-media-column .product-image-gallery .product-image{
+    height:clamp(180px,15vw,225px);
+    aspect-ratio:auto;
+  }
+  .result-track>.product-card .product-card-media-actions{gap:5px;margin-top:5px}
+  .result-track>.product-card .product-card-media-actions .watch-settings-button,
+  .result-track>.product-card .product-card-media-actions .ai-price-compare-button{min-height:32px;padding:6px 8px}
+  .result-track>.product-card h3{min-height:2.8em;font-size:13px;line-height:1.4}
+  .result-track>.product-card p{-webkit-line-clamp:1;line-clamp:1;font-size:10.5px;line-height:1.4}
+  .result-track>.product-card .evidence{min-height:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .result-track>.product-card .offer-list{gap:5px}
+  .result-track>.product-card .price-offer{padding:7px 8px}
+}
 @media(max-width:760px){
   .result-track{
     display:flex;

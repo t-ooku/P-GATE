@@ -12,3 +12,11 @@ test('商品提示はPC4列・モバイル横長行で縦回転する', async ()
   assert.match(app, /attachVerticalTicker\(track,\{intervalMs:6500,rowSelector:':scope > \.product-card',useRowOffsets:true\}\)/);
   assert.match(app, /scrollBy\(\{top:/);
 });
+
+test('PC4列では画像と価格が同じ表示範囲に収まるようカードをコンパクト化する', async () => {
+  const styles = await read('ai-search-layout-fix.css');
+  assert.match(styles, /@media\(min-width:761px\)\{[\s\S]*?\.result-track>\.product-card\{min-height:0;gap:6px;padding:10px\}/);
+  assert.match(styles, /height:clamp\(180px,15vw,225px\);[\s\S]*?aspect-ratio:auto/);
+  assert.match(styles, /\.result-track>\.product-card p\{-webkit-line-clamp:1;line-clamp:1/);
+  assert.match(styles, /\.result-track>\.product-card \.price-offer\{padding:7px 8px\}/);
+});
