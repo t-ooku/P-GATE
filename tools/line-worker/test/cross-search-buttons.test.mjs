@@ -46,7 +46,21 @@ test('marketplaceLinks()はSNSリンクへdata-channelを出力し、ラベル�
   // モールボタンだけが「〜で探す」を落とし、SNSボタンは原文のまま描画する。
   assert.match(app, /item\.channel\?rawLabel:rawLabel\.replace\(\/\(\?:で探す\|で検索\)\$\/u,''\)/);
   assert.match(app, /item\.copy_query&&item\.search_query/);
-  assert.match(app, /copySocialSearchQuery\(item\.search_query\)/);
+  assert.match(app, /event\.preventDefault\(\);openSocialSearchHandoff\(item\)/);
+  assert.match(app, /const copied=await copySocialSearchQuery\(item\.search_query\)/);
+  assert.match(app, /social-search-copy-button/);
+  assert.match(app, /social-search-open-button/);
+  assert.match(app, /dialog\.showModal\(\)/);
+});
+
+test('Instagram/TikTokは画面遷移前に検索語を確認・再コピーできる2段階導線を持つ', async () => {
+  const [app, css] = await Promise.all([read('app.js'), read('ai-search-layout-fix.css')]);
+  assert.match(app, /Instagram・TikTokのアプリは検索語を自動入力できないことがあります/);
+  assert.match(app, /検索語を長押ししてコピーしてください/);
+  assert.match(app, /return true/);
+  assert.match(app, /return copied/);
+  assert.match(css, /\.social-search-handoff-dialog/);
+  assert.match(css, /\.social-search-handoff-actions/);
 });
 
 test('ai-search-ui.cssはモール10件とSNS5チャネル全てへブランド配色を定義する', async () => {
