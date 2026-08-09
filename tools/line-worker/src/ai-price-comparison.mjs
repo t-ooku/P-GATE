@@ -322,8 +322,14 @@ function marketplaceLabel(marketplace) {
 // v4.3 section 13・15・16: 実価格とAI推定を色/ラベルで区別できる形に分け、
 // 「最安」の断定はreal同士でのみ許可し、AI推定を含む場合は必ずヘッジする。
 export function buildPriceComparison({ real = [], aiEstimates = [], requestedDirectMarketplaces = [], searchLinks = [], language = 'JA' }) {
-  const realRows = [...real].sort((a, b) => a.total_cost - b.total_cost);
   const searchLinkByMarketplace = new Map(searchLinks.map((item) => [item.marketplace, item]));
+  const withSearchLink = (item) => ({
+    ...item,
+    search_url: searchLinkByMarketplace.get(item.marketplace)?.url || '',
+    search_query: searchLinkByMarketplace.get(item.marketplace)?.search_query || '',
+    search_sort: searchLinkByMarketplace.get(item.marketplace)?.search_sort || ''
+  });
+  const realRows = [...real].map(withSearchLink).sort((a, b) => a.total_cost - b.total_cost);
   const estimatedMarketplaces = new Set(aiEstimates.map((item) => item.marketplace));
   const aiRows = aiEstimates
     .map((item) => ({
@@ -342,7 +348,7 @@ export function buildPriceComparison({ real = [], aiEstimates = [], requestedDir
   // (section 17: もっともらしい推定値を無理に表示せず、正直に不能と示す)。
   const unavailableRows = requestedDirectMarketplaces
     .filter((marketplace) => !estimatedMarketplaces.has(marketplace))
-    .map((marketplace) => ({ marketplace, source: 'UNAVAILABLE' }));
+    .map((marketplace) => withSearchLink({ marketplace, source: 'UNAVAILABLE' }));
 
   let cheapestClaim = null;
   if (realRows.length) {

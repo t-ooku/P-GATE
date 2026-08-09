@@ -568,7 +568,7 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   const watch=createWatchOptions(candidate,t);
   mediaActions.append(watch.bell);
   card.append(watch.dialog);
-  window.HoshiluPriceComparison?.attach(card,{...candidate,search_query:searchQuery||candidate.search_query||''});
+  window.HoshiluPriceComparison?.attach(card,{...candidate,search_query:searchQuery||candidate.search_query||'',search_category:searchQuery||candidate.search_category||candidate.related_category||''});
   const priceComparisonButton=card.querySelector(':scope > .ai-price-compare-button');
   if(priceComparisonButton)mediaActions.append(priceComparisonButton);
   return card;
@@ -899,7 +899,8 @@ function renderHoshiluRanking(result,rankingKind){
   elements.rankingModes.querySelectorAll('.ranking-mode-button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.mode===rankingKind)));
   elements.rankingStatus.textContent=`${result.category.label}｜${ranking.ranking_type}`;
   const nodes=[textElement('h3',`ranking-result-title${isCheapest?' ranking-ai-cheapest-title':''}`,ranking.ranking_type),textElement('p','ranking-ai-cheapest-methodology',ranking.methodology)];
-  if(ranking.candidates?.length)nodes.push(...ranking.candidates.map((candidate,index)=>rankingCard(candidate,index,ranking.ranking_type,result.category.label,isCheapest?'cheapest':'popularity')));
+  const categorySearchQuery=String(result.category?.label||'').split(/[>›»→]/u).map((value)=>value.trim()).filter(Boolean).at(-1)||String(result.category?.label||'').trim();
+  if(ranking.candidates?.length)nodes.push(...ranking.candidates.map((candidate,index)=>rankingCard(candidate,index,ranking.ranking_type,categorySearchQuery,isCheapest?'cheapest':'popularity')));
   else nodes.push(textElement('p','ranking-ai-cheapest-disclaimer','この小ジャンルでは、現在価格を比較できる商品がありません。'));
   if(isCheapest&&ranking.disclaimer)nodes.push(textElement('p','ranking-ai-cheapest-disclaimer',ranking.disclaimer));
   elements.rankingResults.replaceChildren(...nodes);

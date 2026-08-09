@@ -67,3 +67,14 @@ test('ランキング商品は商品名を2行に省略し詳細を押した時�
   assert.match(css, /\.ranking-details-close\{display:none\}/);
   assert.match(css, /\.ranking-product-details\[open\] \.ranking-details-open\{display:none\}/);
 });
+
+test('ランキング画面は閉じるボタンと2種類のランキングボタンを固定し結果だけ縦スクロールする', async () => {
+  const html = await readFile(new URL('index.html', root), 'utf8');
+  const css = await readFile(new URL('styles.css', root), 'utf8');
+  assert.match(html, /class="ranking-dialog-fixed"[\s\S]*id="rankingDialogClose"[\s\S]*id="rankingModeList"/);
+  assert.match(html, /class="ranking-dialog-scroll"/);
+  assert.match(css, /\.ranking-dialog-card\{[^}]*display:flex[^}]*overflow:hidden/);
+  assert.match(css, /\.ranking-dialog-fixed\{[^}]*flex:0 0 auto/);
+  assert.match(css, /\.ranking-dialog-scroll\{[^}]*overflow-y:auto/);
+  assert.match(css, /\.ranking-mode-list:empty\{display:none\}/);
+});

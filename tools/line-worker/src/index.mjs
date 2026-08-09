@@ -1627,7 +1627,7 @@ export function validatePriceComparisonRequest(payload) {
   if (!title) throw new Error('PRICE_COMPARISON_PRODUCT_TITLE_REQUIRED');
   const brand = String(payload.product?.brand || '').trim().slice(0, 100);
   const category = String(payload.product?.category || '').trim().slice(0, 100);
-  const searchQuery = redactSearchPersonalData(payload.search_query || title).slice(0, 200);
+  const searchQuery = finalPriceComparisonSearchQuery(payload.search_query, { title, category });
   const realOffers = (Array.isArray(payload.real_offers) ? payload.real_offers : []).slice(0, 10);
   const directMarketplaces = [...new Set(
     (Array.isArray(payload.direct_marketplaces) ? payload.direct_marketplaces : [])
@@ -1644,6 +1644,20 @@ export function validatePriceComparisonRequest(payload) {
     session_id: sessionId,
     turnstile_token: turnstileToken
   };
+}
+
+// ランキングの表示名（例: 「コンタクトレンズ・ケア用品 › カラーコンタクト
+// レンズ」）を、そのままモールの検索欄へ渡さない。最終小分類だけを使い、
+// 末尾が階層記号で終わる不完全値は商品カテゴリ、最後に商品名へ戻す。
+export function finalPriceComparisonSearchQuery(value, product = {}) {
+  const clean = (input, limit = 200) => redactSearchPersonalData(input)
+    .normalize('NFKC').replace(/\s+/gu, ' ').trim().slice(0, limit);
+  const leaf = (input) => clean(input).split(/[>›»→]/u).map((part) => part.trim()).filter(Boolean).at(-1) || '';
+  const raw = clean(value);
+  const incompleteHierarchy = /[>›»→]\s*$/u.test(raw);
+  const categoryLeaf = leaf(product.category);
+  const selected = incompleteHierarchy ? (categoryLeaf || clean(product.title)) : (leaf(raw) || categoryLeaf || clean(product.title));
+  return selected.slice(0, 200);
 }
 
 async function handlePriceComparisonApi(request, env) {
@@ -1668,6 +1682,7 @@ async function handlePriceComparisonApi(request, env) {
     } catch (error) {
       console.warn('AI_PRICE_COMPARISON_ESTIMATE_UNAVAILABLE', { status: Number(error?.status) || 0 });
     }
+    const comparisonMarketplaces = new Set([...input.direct_marketplaces, ...real.map((row) => row.marketplace)]);
     const comparison = buildPriceComparison({
       real,
       aiEstimates: aiResult.estimates,
@@ -1680,7 +1695,7 @@ async function handlePriceComparisonApi(request, env) {
         category: 'price_comparison',
         trafficClass: 'UNATTRIBUTED',
         sort: 'PRICE_ASC'
-      })).filter((link) => input.direct_marketplaces.includes(link.marketplace))
+      })).filter((link) => comparisonMarketplaces.has(link.marketplace))
         .map((link) => ({ ...link, search_query: buildAmazonSearchKeywords(input.search_query), search_sort: link.sort })),
       language: input.language
     });

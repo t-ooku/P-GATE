@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import cryptoModule from 'node:crypto';
-import worker, { buildAmazonSearchKeywords, validatePriceComparisonRequest, verifyTrackToken } from '../src/index.mjs';
+import worker, { buildAmazonSearchKeywords, finalPriceComparisonSearchQuery, validatePriceComparisonRequest, verifyTrackToken } from '../src/index.mjs';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
@@ -52,6 +52,17 @@ test('validatePriceComparisonRequest: 未知のモールや不正な同意は弾
   assert.deepEqual(result.direct_marketplaces, ['LOFT_JP']);
 });
 
+test('AI最安比較はカテゴリ階層名から最終小ジャンルだけを検索語にする', () => {
+  assert.equal(
+    finalPriceComparisonSearchQuery('コンタクトレンズ・ケア用品 › カラーコンタクトレンズ', { title: 'LILMOON カラコン' }),
+    'カラーコンタクトレンズ'
+  );
+  assert.equal(
+    finalPriceComparisonSearchQuery('コンタクトレンズ・ケア用品>', { title: 'LILMOON カラコン', category: 'カラーコンタクトレンズ' }),
+    'カラーコンタクトレンズ'
+  );
+});
+
 test('v4.3項目12・13: 実価格(Amazon/楽天)とAI推定(ロフト/ハンズ)が明確に分かれて返る', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
@@ -75,6 +86,8 @@ test('v4.3項目12・13: 実価格(Amazon/楽天)とAI推定(ロフト/ハンズ
     assert.equal(payload.ok, true);
     assert.deepEqual(payload.result.real.map((r) => r.marketplace), ['AMAZON_JP', 'RAKUTEN_JP']);
     assert.equal(payload.result.real[0].source, 'REAL');
+    assert.equal(payload.result.real[0].search_query, buildAmazonSearchKeywords('携帯扇風機'));
+    assert.equal(payload.result.real[0].search_sort, 'PRICE_ASC');
     assert.deepEqual(payload.result.ai_estimated.map((r) => r.marketplace).sort(), ['HANDS_JP', 'LOFT_JP']);
     assert.equal(payload.result.ai_estimated[0].source, 'AI_ESTIMATE');
     for (const row of payload.result.ai_estimated) {
@@ -94,6 +107,35 @@ test('v4.3項目12・13: 実価格(Amazon/楽天)とAI推定(ロフト/ハンズ
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('価格昇順リンクは親階層語を残さず最終小ジャンルでモール検索する', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    if (target.includes('generativelanguage.googleapis.com')) return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+      estimates: [{ marketplace: 'LOFT_JP', range_min: 1200, range_max: 2200, confidence: 'MEDIUM' }]
+    }) }] } }] });
+    throw new Error(`UNEXPECTED_FETCH:${target}`);
+  };
+  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32) };
+  try {
+    const response = await worker.fetch(request({
+      product: { title: 'LILMOON 度あり カラコン', brand: 'LILMOON', category: 'カラーコンタクトレンズ' },
+      real_offers: [], direct_marketplaces: ['LOFT_JP'],
+      search_query: 'コンタクトレンズ・ケア用品 › カラーコンタクトレンズ'
+    }), env, context);
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    const row = payload.result.ai_estimated[0];
+    assert.equal(row.search_query, buildAmazonSearchKeywords('カラーコンタクトレンズ'));
+    assert.doesNotMatch(row.search_query, /コンタクトレンズ・ケア用品|[>›]/u);
+    const token = new URL(row.search_url).searchParams.get('token');
+    const destination = new URL((await verifyTrackToken(token, env.LINK_SIGNING_SECRET)).d);
+    assert.equal(destination.searchParams.get('keyword'), buildAmazonSearchKeywords('カラーコンタクトレンズ'));
+    assert.equal(destination.searchParams.get('sort'), 'price');
+  } finally { globalThis.fetch = originalFetch; }
 });
 
 test('v4.3項目9: AI障害時でも実価格側は正常に返り、比較API全体は500にならない', async () => {

@@ -51,7 +51,7 @@ async function fetchComparison(candidate, language) {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
-      product: { title, brand: candidate.manufacturer || '', category: '' },
+      product: { title, brand: candidate.manufacturer || '', category: candidate.search_category || candidate.related_category || '' },
       real_offers: Array.isArray(candidate.offers) ? candidate.offers : [],
       search_query: String(candidate.search_query || title).slice(0, 200),
       direct_marketplaces: DEFAULT_DIRECT_MARKETPLACES,
@@ -98,6 +98,7 @@ function renderComparison(container, result, t) {
       link.className = 'price-compare-link'; link.textContent = marketplaceLabel(row.marketplace);
       item.append(link);
     }
+    appendSearchLink(item, row, t);
     container.append(item);
   }
   for (const row of result.ai_estimated) {
@@ -109,6 +110,7 @@ function renderComparison(container, result, t) {
   }
   for (const row of result.unavailable) {
     const item = renderRow(row, t.unavailableLabel, 'price-compare-row-unavailable');
+    appendSearchLink(item, row, t);
     container.append(item);
   }
   if (result.cheapest_claim?.text) container.append(textEl('p', 'price-compare-claim price-compare-claim-real', result.cheapest_claim.text));
