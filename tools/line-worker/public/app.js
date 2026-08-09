@@ -4,6 +4,7 @@ import { RESULT_ROW_LIMIT, resultRowCopyFor, splitCandidateRows } from './result
 import { localizedWishLabel } from './wish-localization.mjs';
 import { safeDiscoverySearchQuery, socialDiscoverySearchLinks, swippittDiscoveryMatch, gmailShareLink } from './discovery-actions.mjs';
 import { attachVerticalTicker, detachVerticalTicker } from './vertical-ticker.mjs';
+import { createRankingConfirmationFlow, currentRankingCategoryProposal, rejectRankingCategoryProposal } from './ranking-confirmation-flow.mjs';
 const copy = {
   JA: { hero:'今日は、|何が欲しい？', userView:'ユーザー体験', sellerView:'セラー体験', languageLabel:'表示言語', title:'商品名が分からなくても、うまく説明できなくても大丈夫。\n見た目、見た場所、使い方。覚えていることから話してください。', titleSummary:'使い方を見る', placeholder:'例：インスタで見た、ピンクで小さいカメラみたいなもの', consent:'質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。', submit:'一緒に見つける', results:'ホシルからの提案', loading:'候補を探しています…', buy:'販売ページで確認', total:'合計', shipping:'送料', delivery:'配送目安', days:'日', error:'現在検索できません。入力内容または通信状態を確認して、もう一度お試しください。', examples:['TikTokで見た光るスマホケース','推し活で使える小さな写真プリンター','韓国っぽい透明のワイヤレスイヤホン'], wish:'この条件で新着を通知', wishSaved:'新着通知を設定しました', emptyWish:'新着通知を設定した検索条件はまだありません。', filteredEmptyWish:'一致する保存条件はありません。', wishTitle:'保存した検索条件', wishDescription:'お気に入りではありません。\n保存した検索条件に新しく一致する商品が見つかったらお知らせします。', watchSavedStatus:'AIウォッチ中', watchTitle:'AIウォッチ', watchDescription:'AIがこの商品の価格・在庫・クーポンを24時間監視します。', watchLabels:['値下げ','クーポン','再入荷','販売開始'], sellerTitle:'欲しいを、|売上機会に。', sellerDescription:'米国Amazon仕入れの並行輸入商品を、在日外国人と米国商品を探す日本人へ届けます。' },
   EN: { hero:'What are you |looking for today?', userView:'Shopper', sellerView:'Seller', languageLabel:'Language', title:'You do not need to know the product name.\nAppearance, where you saw it, and how it is used. Tell us whatever you remember.', titleSummary:'How it works', placeholder:'Example: a small US car part whose name I do not know in Japanese', consent:'I consent to processing my question and anonymous usage measurement. The raw question is not stored in server logs.', submit:'Find it with me', results:'Suggestions from HOSHILU', loading:'Looking for matches…', buy:'View product page', total:'Total', shipping:'Shipping', delivery:'Delivery estimate', days:'days', error:'Search is unavailable. Check your input or connection and try again.', examples:['a US-exclusive collectible figure','a small US appliance that works in Japan','a small car part whose name I forgot'], wish:'Notify me of new matches', wishSaved:'Notifications set', emptyWish:'No saved search conditions with notifications yet.', filteredEmptyWish:'No saved conditions match your search.', wishTitle:'Saved search conditions', wishDescription:'This is not a favorites list.\nWe will let you know when a new product matches a condition you saved.', watchSavedStatus:'AI Watch on', watchTitle:'AI Watch', watchDescription:'AI monitors this product’s price, stock, and coupons around the clock.', watchLabels:['Price drop','Coupon','Restock','Available'], sellerTitle:'Turn demand into |sales opportunities.', sellerDescription:'Connect US Amazon imports with international residents in Japan and Japanese shoppers seeking American products.' },
@@ -50,7 +51,7 @@ const shareCopy={
 
 const $ = (selector) => document.querySelector(selector);
 const elements = { form:$('#knowledgeForm'), query:$('#query'), consent:$('#consent'), language:$('#languageSelect'), languageLabel:$('#languageLabel'), heroTitle:$('#heroTitle'), heroEyebrow:$('#heroEyebrow'), searchStep:$('#searchStep'), searchTitle:$('#searchTitle'), searchTitleSummary:$('#searchTitleSummary'), consentText:$('#consentText'), submitText:$('#submitText'), submit:$('#submitButton'), searchModeSwitch:$('#searchModeSwitch'), searchModeIdentify:$('#searchModeIdentify'), searchModeDirect:$('#searchModeDirect'), rankingButton:$('#rankingSearchButton'), rankingDialog:$('#rankingDialog'), rankingModes:$('#rankingModeList'), rankingStatus:$('#rankingStatus'), rankingResults:$('#rankingResults'), status:$('#status'), quick:$('#quickQueries'), searchHistorySection:$('#searchHistorySection'), searchHistoryTitle:$('#searchHistoryTitle'), searchHistoryList:$('#searchHistoryList'), deleteAllSearchHistory:$('#deleteAllSearchHistory'), results:$('#resultsSection'), resultsTitle:$('#resultsTitle'), message:$('#resultMessage'), cards:$('#resultCards'), turnstile:$('#turnstileContainer'), install:$('#installButton'), wishList:$('#wishList'), wishTitle:$('#wishTitle'), wishDescription:$('#wishDescription'), wishFilter:$('#wishFilter'), clear:$('#clearQuery'), memberLink:$('#memberLink'), memberLogout:$('#memberLogout'), insightTitle:$('#insightTitle'), insightSummary:$('#insightSummary'), discoveryTitle:$('#discoveryTitle'), discoveryBody:$('#discoveryBody'), discoveryExample:$('#discoveryExample'), journey:[$('#journeyTitle'),$('#journeyLead'),$('#journeyStep1Title'),$('#journeyStep1Body'),$('#journeyStep2Title'),$('#journeyStep2Body'),$('#journeyStep3Title'),$('#journeyStep3Body')] };
-let turnstileWidget = null; let installPrompt = null; let memberSession = null; let memberWishRecords = []; let searchAttempt=0; let searchRoot=''; let rankingCategorySelection=null; const sessionId = getSessionId();
+let turnstileWidget = null; let installPrompt = null; let memberSession = null; let memberWishRecords = []; let searchAttempt=0; let searchRoot=''; let rankingCategorySelection=null; let rankingConfirmationFlow=null; let rankingRequestSequence=0; const sessionId = getSessionId();
 
 const installCopy = {
   JA: ['iPhone / iPad：Safariの共有ボタンを押し、「ホーム画面に追加」を選びます。','Android：Chromeのメニューから「アプリをインストール」または「ホーム画面に追加」を選びます。','PC：Chrome / Edgeのアドレスバー右側にあるインストールアイコンを押します。'],
@@ -64,6 +65,7 @@ function selectedCopy(){ return copy[elements.language.value]||copy.JA; }
 function splitEmphasis(value){ const [plain,accent='']=value.split('|'); const fragment=document.createDocumentFragment(); fragment.append(plain); if(accent){const span=document.createElement('span');span.textContent=accent;fragment.append(span);} return fragment; }
 function splitLines(value){return String(value||'').split('|').map(line=>textElement('span','',line));}
 function currentSearchMode(){return elements.searchModeSwitch?.dataset.mode==='direct'?'direct':'identify';}
+function isUsableProductQuery(value){const query=String(value||'').normalize('NFKC').trim();return query.length>=2||/^[\p{Script=Han}\p{Script=Katakana}]$/u.test(query);}
 function setSearchMode(mode,persist=true){const value=mode==='direct'?'direct':'identify';const labels=searchModeCopy[elements.language.value]||searchModeCopy.JA;elements.searchModeSwitch.dataset.mode=value;elements.searchModeIdentify.classList.toggle('active',value==='identify');elements.searchModeDirect.classList.toggle('active',value==='direct');elements.searchModeIdentify.setAttribute('aria-pressed',String(value==='identify'));elements.searchModeDirect.setAttribute('aria-pressed',String(value==='direct'));elements.submitText.textContent=value==='identify'?labels.identifySubmit:labels.directSubmit;if(persist)localStorage.setItem('hoshilu_search_mode',value);}
 function setLanguage(language){ const t=copy[language]||copy.JA; const nav=navigationCopy[language]||navigationCopy.JA; const modes=searchModeCopy[language]||searchModeCopy.JA; window.HoshiluI18n?.apply(language); document.documentElement.lang={JA:'ja',EN:'en',ZH:'zh-CN',KO:'ko'}[language]||'ja'; localStorage.setItem('mygate_language',language); elements.language.value=language; elements.heroTitle.replaceChildren(splitEmphasis(t.hero)); elements.heroEyebrow.textContent=nav.eyebrow; elements.languageLabel.textContent=t.languageLabel; elements.searchModeSwitch.setAttribute('aria-label',modes.step);elements.searchModeIdentify.textContent=modes.identify;elements.searchModeDirect.textContent=modes.direct;elements.searchStep.textContent=modes.step; elements.searchTitleSummary.textContent=t.titleSummary; elements.searchTitle.replaceChildren(...t.title.split('\n').map(line=>{ const span=document.createElement('span'); span.textContent=line; return span; })); elements.query.placeholder=t.placeholder; elements.consentText.textContent=t.consent; elements.resultsTitle.textContent=t.results; elements.wishTitle.textContent=t.wishTitle; elements.wishDescription.replaceChildren(...t.wishDescription.split('\n').map(line=>{const span=document.createElement('span');span.textContent=line;return span;})); const actions=actionCopy[language]||actionCopy.JA; elements.clear.setAttribute('aria-label',actions.clear); elements.clear.textContent=actions.clear; elements.discoveryTitle.replaceChildren(...actions.discoveryTitle.split('\n').map(line=>{const span=document.createElement('span');span.textContent=line;return span;})); elements.discoveryBody.textContent=actions.discoveryBody; elements.discoveryExample.textContent=actions.discoveryExample; elements.journey.forEach((node,index)=>{node.replaceChildren(...(index<2?splitLines(actions.journey[index]):[document.createTextNode(actions.journey[index])]));}); elements.quick.replaceChildren(...t.examples.map(example=>{ const b=document.createElement('button'); b.type='button'; b.className='chip'; b.textContent=example; b.addEventListener('click',()=>{elements.query.value=example;elements.query.focus();}); return b; })); setSearchMode(currentSearchMode(),false);renderWishes(); }
 const baseSetLanguage=setLanguage;setLanguage=function(language){baseSetLanguage(language);renderQuickExamples(language);renderSearchHistory();};
@@ -854,18 +856,42 @@ document.querySelector('#stickyMarketplaceJump')?.addEventListener('click',()=>{
   document.querySelector('#marketplaceFallback')?.scrollIntoView({behavior:'smooth',block:'start'});
 });
 window.HoshiluSearch={run:runKnowledgeSearch};
-elements.form.addEventListener('submit',event=>{event.preventDefault();const query=String(elements.query.value||'').trim();if(currentSearchMode()==='identify'&&typeof window.HoshiluIdentifySearch?.open==='function'){window.HoshiluIdentifySearch.open(query,elements.language.value);return;}runKnowledgeSearch();});
-function renderRankingClarification(clarification,rerun){
+elements.form.addEventListener('submit',event=>{event.preventDefault();const query=String(elements.query.value||'').trim();if(!isUsableProductQuery(query)){elements.query.focus();elements.status.textContent='商品名・ジャンル・覚えている特徴を入力してください。';return;}if(currentSearchMode()==='identify'&&typeof window.HoshiluIdentifySearch?.open==='function'){window.HoshiluIdentifySearch.open(query,elements.language.value);return;}runKnowledgeSearch();});
+function returnFromRankingToSearch(){
+  rankingRequestSequence+=1;rankingCategorySelection=null;rankingConfirmationFlow=null;
+  if(elements.rankingDialog.open)elements.rankingDialog.close();
+  elements.status.textContent='小ジャンルを特定できませんでした。検索文に種類・用途・対象などを追加してください。';
+  elements.form.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>elements.query.focus(),300);
+}
+function renderRankingRefinement(rerun){
   elements.rankingModes.replaceChildren();
-  elements.rankingStatus.textContent=clarification.question||'どの小分類のランキングを見ますか？';
-  const guide=textElement('p','ranking-category-guide',clarification.guidance||'近い小分類を選ぶか、具体的な商品種類を入力してください。');
-  const options=document.createElement('div');options.className='ranking-category-options';
-  (clarification.options||[]).forEach(option=>{const button=document.createElement('button');button.type='button';button.className='ranking-category-option';button.textContent=`${option.official_category?'公式小分類：':option.ai_recommended?'AI候補：':''}${option.label}`;button.addEventListener('click',()=>{rankingCategorySelection={id:option.value,label:option.label,genre_id:option.genre_id,source:option.source};elements.query.value=option.query||option.label;rerun(rankingCategorySelection);});options.append(button);});
+  elements.rankingStatus.textContent=`別の小ジャンルを探します。検索文に特徴を追加してください（NO ${rankingConfirmationFlow?.rejectionCount||0}/3）`;
   const instruction=document.createElement('form');instruction.className='ranking-category-instruction';
   const input=document.createElement('input');input.type='search';input.value=elements.query.value;input.placeholder='例：レディーススニーカー';input.setAttribute('aria-label','ランキングの小分類を入力');
-  const submit=document.createElement('button');submit.type='submit';submit.textContent='この小分類で調べる';
-  instruction.append(input,submit);instruction.addEventListener('submit',event=>{event.preventDefault();const value=String(input.value||'').trim();if(value.length<2)return;rankingCategorySelection=null;elements.query.value=value;rerun(null);});
-  elements.rankingResults.replaceChildren(guide,options,instruction);
+  const submit=document.createElement('button');submit.type='submit';submit.textContent='AIにもう一度聞く';
+  instruction.append(input,submit);instruction.addEventListener('submit',event=>{event.preventDefault();const value=String(input.value||'').trim();if(!isUsableProductQuery(value)){input.focus();return;}rankingCategorySelection=null;elements.query.value=value;rerun(null,{confirmationOnly:true,preserveRejections:true});});
+  elements.rankingResults.replaceChildren(instruction);
+  input.focus();
+}
+function renderRankingCategoryConfirmation(confirmation,rerun,rejectionCount=0){
+  rankingConfirmationFlow=createRankingConfirmationFlow(confirmation.options||[],rejectionCount);
+  elements.rankingModes.replaceChildren();
+  const paint=()=>{
+    const proposal=currentRankingCategoryProposal(rankingConfirmationFlow);
+    if(!proposal){renderRankingRefinement(rerun);return;}
+    elements.rankingStatus.textContent=confirmation.question||'このジャンルですか？';
+    const card=document.createElement('section');card.className='ranking-confirmation-card';
+    card.append(textElement('p','ranking-confirmation-guide',confirmation.guidance||'該当する場合はYES、違う場合はNOを押してください。'),textElement('strong','ranking-confirmation-label',proposal.label));
+    const actions=document.createElement('div');actions.className='ranking-confirmation-actions';
+    const yes=document.createElement('button');yes.type='button';yes.className='ranking-confirmation-yes';yes.textContent='YES';
+    const no=document.createElement('button');no.type='button';no.className='ranking-confirmation-no';no.textContent='NO';
+    yes.addEventListener('click',()=>{yes.disabled=true;no.disabled=true;rankingCategorySelection={id:proposal.value,label:proposal.label,genre_id:proposal.genre_id,source:proposal.source};rerun(rankingCategorySelection,{confirmationOnly:false,preserveRejections:false});});
+    no.addEventListener('click',()=>{const outcome=rejectRankingCategoryProposal(rankingConfirmationFlow);rankingConfirmationFlow=outcome.flow;if(outcome.action==='return_to_search'){returnFromRankingToSearch();return;}if(outcome.action==='needs_refinement'){renderRankingRefinement(rerun);return;}paint();});
+    actions.append(yes,no);card.append(actions,textElement('small','ranking-rejection-count',`NO ${rankingConfirmationFlow.rejectionCount}/3`));
+    elements.rankingResults.replaceChildren(card);
+  };
+  paint();
 }
 function renderHoshiluRanking(result,rankingKind){
   const isCheapest=rankingKind==='cheapest';
@@ -883,23 +909,31 @@ function renderRankingModeChoices(result){
   elements.rankingResults.replaceChildren();elements.rankingModes.replaceChildren();
   [{mode:'popularity',label:'HOSHILU総合人気ランキング'},{mode:'cheapest',label:'HOSHILU最安値ランキング'}].forEach(item=>{const button=document.createElement('button');button.type='button';button.className='ranking-mode-button';button.dataset.mode=item.mode;button.setAttribute('aria-pressed','false');button.textContent=item.label;button.addEventListener('click',()=>renderHoshiluRanking(result,item.mode));elements.rankingModes.append(button);});
 }
-async function prepareHoshiluRankings(categorySelection=rankingCategorySelection){
+async function prepareHoshiluRankings(categorySelection=rankingCategorySelection,{confirmationOnly=categorySelection===null,preserveRejections=false}={}){
+  const requestSequence=++rankingRequestSequence;
+  const rejectionCount=preserveRejections?(rankingConfirmationFlow?.rejectionCount||0):0;
+  if(!preserveRejections)rankingConfirmationFlow=null;
   elements.rankingStatus.textContent='AIが小ジャンルを確認しています…';elements.rankingResults.replaceChildren();elements.rankingModes.replaceChildren();
   try{
     const token=await waitForFreshTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
-    const response=await fetch('/api/hoshilu-rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,category_selection:categorySelection,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
+    const response=await fetch('/api/hoshilu-rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,category_selection:categorySelection,confirmation_only:confirmationOnly,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
     const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'HOSHILU_RANKING_FAILED');
-    const result=payload.result;if(result.mode==='clarification'){renderRankingClarification(result.clarification,prepareHoshiluRankings);return;}
+    if(requestSequence!==rankingRequestSequence||!elements.rankingDialog.open)return;
+    const result=payload.result;
+    if(result.mode==='category_confirmation'){renderRankingCategoryConfirmation(result.confirmation,prepareHoshiluRankings,rejectionCount);return;}
+    if(result.mode==='clarification'){renderRankingCategoryConfirmation({question:'このジャンルですか？',guidance:result.clarification.guidance,options:result.clarification.options},prepareHoshiluRankings,rejectionCount);return;}
     renderRankingModeChoices(result);
-  }catch{elements.rankingStatus.textContent='現在、総合ランキングを取得できません。通常検索はそのまま利用できます。';}
+  }catch{if(requestSequence===rankingRequestSequence&&elements.rankingDialog.open)elements.rankingStatus.textContent='現在、総合ランキングを取得できません。検索窓の文章を確認して、もう一度お試しください。';}
 }
 async function openRankingSearch(){
-  if(String(elements.query.value||'').trim().length<2){elements.query.focus();elements.status.textContent='ランキングを見たい商品カテゴリを入力してください。';return;}
-  rankingCategorySelection=null;elements.rankingDialog.showModal();elements.rankingModes.replaceChildren();elements.rankingResults.replaceChildren();elements.rankingStatus.textContent='';
-  prepareHoshiluRankings();
+  if(!isUsableProductQuery(elements.query.value)){elements.query.focus();elements.status.textContent='ランキングを見たい商品カテゴリを入力してください。';return;}
+  if(elements.rankingDialog.open)return;
+  rankingCategorySelection=null;rankingConfirmationFlow=null;elements.rankingDialog.showModal();elements.rankingModes.replaceChildren();elements.rankingResults.replaceChildren();elements.rankingStatus.textContent='';
+  prepareHoshiluRankings(null,{confirmationOnly:true,preserveRejections:false});
 }
 elements.rankingButton?.addEventListener('click',openRankingSearch);
-document.querySelector('#rankingDialogClose')?.addEventListener('click',()=>elements.rankingDialog.close());
+document.querySelector('#rankingDialogClose')?.addEventListener('click',()=>{rankingRequestSequence+=1;rankingConfirmationFlow=null;elements.rankingDialog.close();});
+elements.rankingDialog?.addEventListener('cancel',()=>{rankingRequestSequence+=1;rankingConfirmationFlow=null;});
 elements.language.addEventListener('change',()=>{setLanguage(elements.language.value);renderMemberState();renderNotifications();advancedSearchGroups=null;renderAdvancedSearch();syncStickySearch();});
 const installDialog=$('#installDialog');const installInstructions=$('#installInstructions');
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}

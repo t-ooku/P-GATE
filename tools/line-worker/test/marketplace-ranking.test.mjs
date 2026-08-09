@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MARKETPLACE_RANKING_CAPABILITIES, resolveRankingCategory, normalizeRakutenRanking, fetchRakutenRanking, suggestRankingCategoriesWithAi, normalizeRakutenGenre, discoverRakutenRankingCategories, marketplaceRankingResult } from '../src/marketplace-ranking.mjs';
+import { MARKETPLACE_RANKING_CAPABILITIES, resolveRankingCategory, normalizeRakutenRanking, fetchRakutenRanking, suggestRankingCategoriesWithAi, normalizeRakutenGenre, discoverRakutenRankingCategories, marketplaceRankingResult, rankingCategoryConfirmationResult } from '../src/marketplace-ranking.mjs';
 
 test('ランキング検索の必須5語を公式確認済みの楽天子ジャンルへ解決する', () => {
   const expected = new Map([['ハンディファン','565082'],['ワイヤレスイヤホン','502835'],['レディーススニーカー','206906'],['モバイルバッテリー','564277'],['化粧水','216307']]);
@@ -58,6 +58,24 @@ test('楽天公式の商品genreIdとGenre Searchから固定辞書外の小分�
   assert.equal(result[0].label, 'キッチン家電 › 炊飯器');
   assert.equal(result[0].official_category, true);
   assert.ok(calls.some((url) => url.includes('/20260701')));
+});
+
+test('家電・美容以外も公式商品ジャンルから小分類確認へ展開する', async () => {
+  const genres = [
+    ['炊飯器','204586'],['電動歯ブラシ','208522'],['ベビーカー','401151'],['キャットタワー','206265'],
+    ['テント','302373'],['ゴルフ距離計','506027'],['フライパン','559219'],['枕','205582'],
+    ['ビジネスバッグ','502221'],['腕時計','558929'],['プリンター','110080'],['万年筆','210246']
+  ];
+  for (const [label, genreId] of genres) {
+    const result = await rankingCategoryConfirmationResult({ RAKUTEN_APPLICATION_ID:'app', RAKUTEN_ACCESS_KEY:'access' }, label, async (url) => {
+      const target = new URL(url);
+      if (target.pathname.includes('/IchibaItem/Search/')) return Response.json({ Items:[{genreId,itemName:`${label} 商品`} ] });
+      if (target.pathname.includes('/IchibaGenre/Search/')) return Response.json({ genre:{genreId,nameJa:label,level:3},ancestors:[{genreId:'100000',nameJa:'商品カテゴリ',level:2}] });
+      throw new Error(`unexpected: ${url}`);
+    });
+    assert.equal(result.confirmation.options[0].genre_id, genreId, label);
+    assert.match(result.confirmation.options[0].label, new RegExp(label), label);
+  }
 });
 
 test('動的な小分類選択はGenre Searchで再検証してから公式ランキングへ渡す', async () => {

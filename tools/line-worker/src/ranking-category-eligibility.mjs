@@ -23,8 +23,9 @@ function categoryIsAccessory(category = {}) {
 function categoryTerms(category = {}) {
   const registered = VERIFIED_TERMS[String(category.id || '')] || [];
   const leaf = leafCategoryLabel(category);
-  const leafTerms = leaf.split(/[・･／/()（）,、]/u).map((term) => term.trim()).filter((term) => term.length >= 2);
-  return [...new Set([...registered.map(normalized), ...leafTerms, leaf].filter((term) => term.length >= 2))];
+  const usable = (term) => term.length >= 2 || /^[\p{Script=Han}\p{Script=Katakana}]$/u.test(term);
+  const leafTerms = leaf.split(/[・･／/()（）,、]/u).map((term) => term.trim()).filter(usable);
+  return [...new Set([...registered.map(normalized), ...leafTerms, leaf].filter(usable))];
 }
 
 function titleWithoutHashtags(candidate = {}) {

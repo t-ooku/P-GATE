@@ -7,6 +7,31 @@ globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
 globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 
+test('ランキング初回は商品を取得せず小ジャンルを1件ずつYES・NO確認する', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    if (target.includes('/IchibaItem/Search/')) return Response.json({ Items: [] });
+    throw new Error(`RANKING_FETCH_MUST_WAIT_FOR_YES:${target}`);
+  };
+  const request = new Request('https://hoshilu.app/api/hoshilu-rankings', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ query: 'ハンディファン', confirmation_only: true, consent: true, session_id: 'ranking_session_123456', turnstile_token: 'verified-token' })
+  });
+  try {
+    const response = await worker.fetch(request, {
+      TURNSTILE_SECRET_KEY: 'turnstile-secret', RAKUTEN_APPLICATION_ID: 'app', RAKUTEN_ACCESS_KEY: 'access', LINK_SIGNING_SECRET: 'l'.repeat(32)
+    }, { waitUntil() {} });
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    assert.equal(payload.result.mode, 'category_confirmation');
+    assert.equal(payload.result.confirmation.question, 'このジャンルですか？');
+    assert.equal(payload.result.confirmation.options[0].label, 'ハンディファン');
+    assert.equal(payload.result.confirmation.max_rejections, 3);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最安値ランキングを返す', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {

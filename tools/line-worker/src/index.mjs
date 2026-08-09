@@ -22,7 +22,7 @@ import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offe
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
-import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult } from './marketplace-ranking.mjs';
+import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
 import { filterRankingCategoryCandidates } from './ranking-category-eligibility.mjs';
 import { relatedProductRecommendationQueries } from './related-product-recommendations.mjs';
 import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
@@ -267,13 +267,18 @@ function offerSummary(offer) {
   return [marketplace, price, delivery].filter(Boolean).join(' / ');
 }
 
+export function isUsableProductQuery(query) {
+  const value = String(query || '').normalize('NFKC').trim();
+  return value.length >= 2 || /^[\p{Script=Han}\p{Script=Katakana}]$/u.test(value);
+}
+
 export function validateKnowledgeRequest(payload) {
   payload = payload || {};
   const query = String(payload.query || '').trim();
   const sessionId = String(payload.session_id || '').trim();
   const turnstileToken = String(payload.turnstile_token || '').trim();
   if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
-  if (query.length < 2 || query.length > 200) throw new Error('QUERY_LENGTH_INVALID');
+  if (!isUsableProductQuery(query) || query.length > 200) throw new Error('QUERY_LENGTH_INVALID');
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
   if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
   const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
@@ -955,7 +960,7 @@ export function buildRakutenSearchKeywords(query) {
   return missingPriceConstraint ? `${rakutenKeywords} ${missingPriceConstraint}` : rakutenKeywords;
 }
 
-export function buildRakutenSearchKeywordCandidates(query) {
+export function buildRakutenSearchKeywordCandidates(query, fallbackQuery = '') {
   const primary = buildRakutenSearchKeywords(query);
   const rememberedProduct = buildRakutenSearchKeywords(
     String(query || '').split('/')[0]
@@ -972,7 +977,14 @@ export function buildRakutenSearchKeywordCandidates(query) {
   // AND検索で0件になり得る。英数字の商品・ブランド識別子を第2候補として
   // 単独検索し、LILMOON等に限らず同じ形の失敗へ一般化して対応する。
   const identifier = String(query || '').normalize('NFKC').match(/\b[A-Za-z][A-Za-z0-9-]{2,}\b/u)?.[0] || '';
-  return [...new Set([primary, identifier, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
+  // AI変換語で該当商品が0件だった時だけ使う原文側の安全網。先頭候補の
+  // 成功時は呼ばれないため、通常の検索速度を落とさない。
+  const fallback = fallbackQuery && String(fallbackQuery).normalize('NFKC') !== String(query).normalize('NFKC')
+    ? buildRakutenSearchKeywords(fallbackQuery) : '';
+  // 再検索は最大3回に抑えつつ、AI変換語・AIが見つけた識別子の次に
+  // 必ずAI前の検索条件へ到達できる順序にする。従来の商品語フォールバックは
+  // AI変換が無い検索ではこれまでどおり第2候補に残る。
+  return [...new Set([primary, identifier, fallback, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
 }
 
 // "条件整理検索" (organized-conditions) candidate: for apparel-body queries,
@@ -993,12 +1005,21 @@ function organizedApparelCandidate(query) {
   return buildOrganizedApparelQuery(query, { categoryLabel, colorLabel });
 }
 
-export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = '') {
+export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = '', fallbackKeywords = '') {
   const rakutenCandidates = buildRakutenSearchKeywordCandidates(query);
   const organized = organizedApparelCandidate(query);
   const identifier = String(query || '').normalize('NFKC').match(/\b[A-Za-z][A-Za-z0-9-]{2,}\b/u)?.[0] || '';
-  return [...new Set([primaryKeywords, organized, ...rakutenCandidates, identifier].map((value) =>
-    String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 4);
+  return [...new Set([primaryKeywords, organized, identifier, fallbackKeywords, ...rakutenCandidates].map((value) =>
+    String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 5);
+}
+
+// AI変換語を主経路にしつつ、変換語で適合商品が1件も残らない場合だけ
+// AI前の検索条件へ戻す。両方をAND連結しないので、人物名などの曖昧な手掛かりが
+// 正しい商品名検索を0件化する問題も避ける。
+export function filterSearchCandidatesWithFallback(refinedQuery, fallbackQuery, candidates = []) {
+  const refined = filterCategoryMismatches(refinedQuery, candidates);
+  if (refined.length || !fallbackQuery || fallbackQuery === refinedQuery) return refined;
+  return filterCategoryMismatches(fallbackQuery, candidates);
 }
 
 // query is optional: when provided, a keyword candidate is only accepted if
@@ -1007,11 +1028,11 @@ export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = ''
 // returns some non-empty but entirely category-mismatched results for the
 // first (broadest) keyword candidate would stop the cascade there and never
 // try the cleaner, more specific candidates that follow.
-async function searchMarketplaceApiWithFallback(searcher, keywordCandidates, query = '') {
+async function searchMarketplaceApiWithFallback(searcher, keywordCandidates, query = '', fallbackQuery = '') {
   for (const keywords of keywordCandidates) {
     const candidates = await searcher(keywords);
     if (!candidates.length) continue;
-    if (!query || filterCategoryMismatches(query, candidates).length) return candidates;
+    if (!query || filterSearchCandidatesWithFallback(query, fallbackQuery, candidates).length) return candidates;
   }
   return [];
 }
@@ -1459,10 +1480,15 @@ async function handleHoshiluRankingApi(request, env) {
     const payload = await request.json();
     const input = validateRankingRequest({ ...payload, marketplace: 'RAKUTEN_JP' });
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    if (input.confirmation_only && !input.category_selection) {
+      const result = await rankingCategoryConfirmationResult(env, input.query, fetch);
+      return Response.json({ ok: true, result }, { headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } });
+    }
+    const rankingQuery = String(input.category_selection?.label || input.query).split('›').pop().trim();
     const [rakutenOutcome, yahooOutcome, indexedOutcome] = await Promise.allSettled([
       marketplaceRankingResult(env, input.query, 'RAKUTEN_JP', fetch, input.category_selection),
-      yahooShoppingApiConfigured(env) ? searchYahooShopping(env, input.query, fetch, { sort: '-review_count' }) : [],
-      applyIndexedSearchPolicy({ candidates: [] }, env, input.query, 'JA', { force_product_presentation: true })
+      yahooShoppingApiConfigured(env) ? searchYahooShopping(env, rankingQuery, fetch, { sort: '-review_count' }) : [],
+      applyIndexedSearchPolicy({ candidates: [] }, env, rankingQuery, 'JA', { force_product_presentation: true })
     ]);
     if (rakutenOutcome.status !== 'fulfilled') throw rakutenOutcome.reason;
     const resolution = rakutenOutcome.value;
@@ -1479,7 +1505,7 @@ async function handleHoshiluRankingApi(request, env) {
     // 説明文・SEO用ハッシュタグだけが一致した周辺商品を、安さだけで上位へ
     // 押し上げない。楽天公式genre内の商品は構造化カテゴリを根拠にし、
     // その他モールは商品名そのものの小ジャンル一致を必須にする。
-    const categoryQuery = String(resolution.category.label || input.query).split('›').pop().trim();
+    const categoryQuery = String(resolution.category.label || rankingQuery).split('›').pop().trim();
     const observed = filterCategoryMismatches(
       categoryQuery,
       filterRankingCategoryCandidates(mergedObserved, resolution.category)
@@ -1496,7 +1522,7 @@ async function handleHoshiluRankingApi(request, env) {
     const priceRanked = buildAiCheapestRanking(ranked, aiPriceResult.estimates).slice(0, 30);
     const priceByKey = new Map(priceRanked.map((candidate) => [rankingCandidateKey(candidate), candidate]));
     const enriched = ranked.map((candidate) => priceByKey.get(rankingCandidateKey(candidate)) || candidate);
-    const decorated = await decoratePwaResult({ query_id: crypto.randomUUID(), candidates: enriched }, request, env, await hashUser(input.session_id), input.query, 'JA');
+    const decorated = await decoratePwaResult({ query_id: crypto.randomUUID(), candidates: enriched }, request, env, await hashUser(input.session_id), rankingQuery, 'JA');
     const aiCheapestCandidates = decorated.candidates
       .filter((candidate) => Number(candidate.ai_cheapest_rank) > 0)
       .sort((a, b) => a.ai_cheapest_rank - b.ai_cheapest_rank);
@@ -1671,7 +1697,7 @@ async function handlePriceComparisonApi(request, env) {
 export function validateRankingRequest(payload = {}) {
   if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
   const query = redactSearchPersonalData(payload.query).slice(0, 200).trim();
-  if (query.length < 2) throw new Error('RANKING_QUERY_REQUIRED');
+  if (!isUsableProductQuery(query)) throw new Error('RANKING_QUERY_REQUIRED');
   const marketplace = String(payload.marketplace || '').trim().toUpperCase();
   if (!MARKETPLACE_RANKING_CAPABILITIES.some((item) => item.marketplace_id === marketplace)) throw new Error('RANKING_MARKETPLACE_INVALID');
   const sessionId = String(payload.session_id || '').trim();
@@ -1688,7 +1714,7 @@ export function validateRankingRequest(payload = {}) {
     if (!/^\d{3,12}$/u.test(genreId) || !/^[a-z0-9_]{3,80}$/u.test(id) || label.length < 1 || !['STATIC_REGISTRY','RAKUTEN_GENRE_API'].includes(source)) throw new Error('RANKING_CATEGORY_SELECTION_INVALID');
     categorySelection = { genre_id: genreId, id, label, source };
   }
-  return { query, marketplace, session_id: sessionId, turnstile_token: turnstileToken, category_selection: categorySelection };
+  return { query, marketplace, session_id: sessionId, turnstile_token: turnstileToken, category_selection: categorySelection, confirmation_only: payload.confirmation_only === true };
 }
 
 async function handleRankingApi(request, env) {
@@ -1852,18 +1878,20 @@ async function handleKnowledgeApi(request, env, ctx) {
         key: 'amazon_catalog_connected',
         run: searchMarketplaceApiWithFallback(
           (keywords) => searchAmazonCreators(env, keywords),
-          buildMarketplaceApiKeywordCandidates(input.query, buildAmazonSearchKeywords(input.query)),
-          input.query
+          buildMarketplaceApiKeywordCandidates(input.query, buildAmazonSearchKeywords(input.query), buildAmazonSearchKeywords(expandedQuery.query)),
+          input.query,
+          expandedQuery.query
         )
       });
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_connected',
         run: searchRakutenMarketplaceWithFallback(
           env,
-          buildRakutenSearchKeywordCandidates(input.query),
+          buildRakutenSearchKeywordCandidates(input.query, expandedQuery.query),
           fetch,
           input.query,
-          requestId
+          requestId,
+          expandedQuery.query
         )
       });
       if (yahooShoppingApiConfigured(env)) marketplaceSearches.push({
@@ -1881,9 +1909,14 @@ async function handleKnowledgeApi(request, env, ctx) {
             ensureApparelQualifierTerms(
               input.query,
               ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
+            ),
+            ensureApparelQualifierTerms(
+              expandedQuery.query,
+              ensureApparelProductTypeTerm(expandedQuery.query, buildMarketplaceSearchKeywords(expandedQuery.query))
             )
           ),
-          input.query
+          input.query,
+          expandedQuery.query
         )
       });
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
@@ -1918,7 +1951,7 @@ async function handleKnowledgeApi(request, env, ctx) {
           return;
         }
         const returnedCount = Array.isArray(outcome.value) ? outcome.value.length : 0;
-        const candidates = filterCategoryMismatches(input.query, outcome.value);
+        const candidates = filterSearchCandidatesWithFallback(input.query, expandedQuery.query, outcome.value);
         const teacherExcluded = teacherDatasetExclusionCount(input.query, outcome.value);
         console.info('MARKETPLACE_PRODUCT_SEARCH_RESULT', {
           requestId,
@@ -1971,7 +2004,7 @@ async function handleKnowledgeApi(request, env, ctx) {
     result = {
       ...(result || {}),
       traffic_class: input.traffic_class,
-      candidates: filterCategoryMismatches(input.query, result?.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT)
+      candidates: filterSearchCandidatesWithFallback(input.query, expandedQuery.query, result?.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT)
     };
     if (input.search_attempt >= 2) {
       result.clarification = { ...(result.clarification || {}), required: false, options: [] };

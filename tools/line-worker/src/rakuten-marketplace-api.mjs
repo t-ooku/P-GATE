@@ -135,17 +135,21 @@ export async function searchRakutenMarketplaceWithFallback(
   keywordCandidates,
   fetcher = fetch,
   query = '',
-  requestId = ''
+  requestId = '',
+  fallbackQuery = ''
 ) {
   const candidates = [...new Set(
     (Array.isArray(keywordCandidates) ? keywordCandidates : [keywordCandidates])
       .map((value) => String(value || '').normalize('NFKC').trim())
       .filter(Boolean)
-  )].slice(0, 2);
+  )].slice(0, 3);
   for (const keywords of candidates) {
     const results = await searchRakutenMarketplace(env, keywords, fetcher, requestId);
     if (!results.length) continue;
     if (!query || filterCategoryMismatches(query, results).length) return results;
+    // AI変換語に一致しない結果でも、AI前の検索条件には適合するなら採用する。
+    // 原文とAI語をAND結合しないため、誤変換時にも正しい商品を救済できる。
+    if (fallbackQuery && fallbackQuery !== query && filterCategoryMismatches(fallbackQuery, results).length) return results;
   }
   return [];
 }

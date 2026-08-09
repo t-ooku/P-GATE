@@ -4,15 +4,21 @@ import { readFile } from 'node:fs/promises';
 
 const root = new URL('../public/', import.meta.url);
 
-test('ランキングで検索は小分類確定後にHOSHILUの人気・最安値を別ボタンで選ぶ', async () => {
+test('ランキングで探すは小分類をYES確認後に人気・最安値を別ボタンで選ぶ', async () => {
   const html = await readFile(new URL('index.html', root), 'utf8');
   const app = await readFile(new URL('app.js', root), 'utf8');
   const css = await readFile(new URL('styles.css', root), 'utf8');
-  assert.match(html, /ランキングで検索/);
+  assert.match(html, /ランキングで探す/);
   assert.match(html, /id="rankingModeList"/);
-  assert.match(app, /prepareHoshiluRankings\(\);/);
+  assert.match(app, /prepareHoshiluRankings\(null,\{confirmationOnly:true,preserveRejections:false\}\)/);
   assert.match(app, /function renderRankingModeChoices/);
   assert.match(app, /function renderHoshiluRanking/);
+  assert.match(app, /function renderRankingCategoryConfirmation/);
+  assert.match(app, /confirmation_only:confirmationOnly/);
+  assert.match(app, /yes\.textContent='YES'/);
+  assert.match(app, /no\.textContent='NO'/);
+  assert.match(app, /outcome\.action==='return_to_search'/);
+  assert.match(app, /returnFromRankingToSearch/);
   assert.match(app, /HOSHILU総合人気ランキング/);
   assert.match(app, /HOSHILU最安値ランキング/);
   assert.match(app, /rankingKind==='cheapest'/);
@@ -34,16 +40,18 @@ test('曖昧検索向けの従来2モードはランキング導線と分離し�
   assert.match(app, /window\.HoshiluIdentifySearch\.open/);
 });
 
-test('小分類未確定時はAI候補チップと自由入力の両方でHOSHILUへ指示できる', async () => {
+test('小分類未確定時は一候補ずつ確認し、候補切れなら自由入力で再判定できる', async () => {
   const app = await readFile(new URL('app.js', root), 'utf8');
   const css = await readFile(new URL('styles.css', root), 'utf8');
-  assert.match(app, /function renderRankingClarification/);
-  assert.match(app, /AI候補：/);
-  assert.match(app, /公式小分類：/);
+  assert.match(app, /function renderRankingCategoryConfirmation/);
+  assert.match(app, /createRankingConfirmationFlow/);
+  assert.match(app, /rejectRankingCategoryProposal/);
   assert.match(app, /category_selection:categorySelection/);
-  assert.match(app, /この小分類で調べる/);
+  assert.match(app, /AIにもう一度聞く/);
   assert.match(app, /ランキングの小分類を入力/);
   assert.match(css, /ranking-category-instruction/);
+  const worker = await readFile(new URL('service-worker.js', root), 'utf8');
+  assert.match(worker, /ranking-confirmation-flow\.mjs/);
 });
 
 test('ランキング商品は商品名を2行に省略し詳細を押した時だけ全文と補足を表示する', async () => {

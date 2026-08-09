@@ -116,7 +116,7 @@ function truncateUtf8(value, maxBytes = 120) {
 // 方式ではないため、固定5分類以外も同じ根拠で安全に増やせる。
 export async function discoverRakutenRankingCategories(env, rawQuery, fetcher = fetch) {
   const query = truncateUtf8(String(expandSearchQuery(rawQuery).query || rawQuery || '').normalize('NFKC').replace(/\s+/gu, ' ').trim());
-  if (query.length < 2) return [];
+  if (query.length < 2 && !/^[\p{Script=Han}\p{Script=Katakana}]$/u.test(query)) return [];
   const cacheKey = await discoveryCacheKey(query);
   const cached = await readRankingCache(env, 'RAKUTEN_JP', cacheKey, 'GENRE_DISCOVERY');
   if (cached) return cached;
@@ -192,6 +192,70 @@ export async function suggestRankingCategoriesWithAi(env, rawQuery, options, fet
     } catch {}
   }
   return [];
+}
+
+function rankingCategoryOption(category = {}) {
+  return {
+    value: String(category.id || ''),
+    label: String(category.label || ''),
+    query: String(category.label || ''),
+    genre_id: String(category.genre_id || ''),
+    source: 'STATIC_REGISTRY',
+    official_category: true
+  };
+}
+
+function uniqueRankingCategoryOptions(options = []) {
+  const seen = new Set();
+  return options.filter((option) => {
+    const key = String(option.genre_id || option.value || '');
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// ランキング取得前の確認専用。ここでは商品ランキングAPIを呼ばず、
+// 入力から推定した小分類候補だけを最大3件返す。YES後に初めてランキングを
+// 取得するため、誤分類のまま高コストな検索へ進まず、NOで次候補へ移れる。
+export async function rankingCategoryConfirmationResult(env, rawQuery, fetcher = fetch) {
+  const resolution = resolveRankingCategory(rawQuery);
+  const discovered = await discoverRakutenRankingCategories(env, rawQuery, fetcher).catch(() => []);
+  const direct = resolution.resolved ? [rankingCategoryOption(resolution.category)] : [];
+  const staticOptions = resolution.resolved
+    ? RAKUTEN_RANKING_CATEGORIES.map(rankingCategoryOption)
+    : resolution.clarification.options;
+  const rawPool = uniqueRankingCategoryOptions([...direct, ...discovered, ...staticOptions]);
+  const recommendedIds = await suggestRankingCategoriesWithAi(env, rawQuery, rawPool, fetcher);
+  const order = new Map(recommendedIds.map((id, index) => [id, index]));
+  const directId = direct[0]?.value;
+  // AIまたは公式商品検索が関連ありと判断していない固定ジャンルを、
+  // NO後の穴埋めとして無関係に表示しない。
+  const groundedIds = new Set([...direct, ...discovered].map((option) => option.value));
+  const pool = rawPool.filter((option) => groundedIds.has(option.value) || order.has(option.value));
+  const options = pool
+    .map((option, index) => ({ option, index }))
+    .sort((a, b) => {
+      if (a.option.value === directId) return -1;
+      if (b.option.value === directId) return 1;
+      const aiA = order.get(a.option.value); const aiB = order.get(b.option.value);
+      if (aiA !== undefined || aiB !== undefined) return (aiA ?? 99) - (aiB ?? 99);
+      const discoveredA = a.option.source === 'RAKUTEN_GENRE_API' ? 0 : 1;
+      const discoveredB = b.option.source === 'RAKUTEN_GENRE_API' ? 0 : 1;
+      return discoveredA - discoveredB || a.index - b.index;
+    })
+    .map(({ option }) => option)
+    .slice(0, 3);
+  return {
+    mode: 'category_confirmation',
+    query: String(rawQuery || '').trim(),
+    confirmation: {
+      question: 'このジャンルですか？',
+      guidance: 'YESを押すと、人気ランキングと最安値ランキングを選べます。違う場合はNOを押してください。',
+      options,
+      max_rejections: 3
+    }
+  };
 }
 
 function itemOf(value) { return value?.Item || value?.item || value || {}; }
