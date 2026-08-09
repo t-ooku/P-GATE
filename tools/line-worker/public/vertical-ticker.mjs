@@ -57,21 +57,25 @@ function animateScrollTop(viewport, target, onDone) {
   return () => finish(false);
 }
 
-export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector = ':scope > *', useRowOffsets = false } = {}) {
+export function detachVerticalTicker(viewport) {
   if (!viewport) return;
   const existing = timers.get(viewport);
-  if (existing) {
-    clearInterval(existing.timer);
-    existing.cancelAnimation();
-    existing.cancelResume();
-    viewport.removeEventListener('pointerenter', existing.pause);
-    viewport.removeEventListener('pointerleave', existing.resume);
-    viewport.removeEventListener('touchstart', existing.pause);
-    viewport.removeEventListener('touchend', existing.resume);
-    viewport.removeEventListener('focusin', existing.pause);
-    viewport.removeEventListener('focusout', existing.focusout);
-    timers.delete(viewport);
-  }
+  if (!existing) return;
+  clearInterval(existing.timer);
+  existing.cancelAnimation();
+  existing.cancelResume();
+  viewport.removeEventListener('pointerenter', existing.pause);
+  viewport.removeEventListener('pointerleave', existing.resume);
+  viewport.removeEventListener('touchstart', existing.pause);
+  viewport.removeEventListener('touchend', existing.resume);
+  viewport.removeEventListener('focusin', existing.pause);
+  viewport.removeEventListener('focusout', existing.focusout);
+  timers.delete(viewport);
+}
+
+export function attachVerticalTicker(viewport, { intervalMs = 5000, rowSelector = ':scope > *', useRowOffsets = false } = {}) {
+  if (!viewport) return;
+  detachVerticalTicker(viewport);
 
   const rows = [...viewport.querySelectorAll(rowSelector)];
   if (rows.length < 2 || prefersReducedMotion()) return;

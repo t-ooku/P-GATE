@@ -3,7 +3,7 @@ import { buildMarketplaceSearchKeywords } from './marketplace-search-keywords-v2
 import { RESULT_ROW_LIMIT, resultRowCopyFor, splitCandidateRows } from './result-rows.mjs';
 import { localizedWishLabel } from './wish-localization.mjs';
 import { safeDiscoverySearchQuery, socialDiscoverySearchLinks, swippittDiscoveryMatch, gmailShareLink } from './discovery-actions.mjs';
-import { attachVerticalTicker } from './vertical-ticker.mjs';
+import { attachVerticalTicker, detachVerticalTicker } from './vertical-ticker.mjs';
 const copy = {
   JA: { hero:'今日は、|何が欲しい？', userView:'ユーザー体験', sellerView:'セラー体験', languageLabel:'表示言語', title:'商品名が分からなくても、うまく説明できなくても大丈夫。\n見た目、見た場所、使い方。覚えていることから話してください。', titleSummary:'使い方を見る', placeholder:'例：インスタで見た、ピンクで小さいカメラみたいなもの', consent:'質問の処理と匿名の利用状況計測に同意します。質問本文はサーバーログへ保存しません。', submit:'一緒に見つける', results:'ホシルからの提案', loading:'候補を探しています…', buy:'販売ページで確認', total:'合計', shipping:'送料', delivery:'配送目安', days:'日', error:'現在検索できません。入力内容または通信状態を確認して、もう一度お試しください。', examples:['TikTokで見た光るスマホケース','推し活で使える小さな写真プリンター','韓国っぽい透明のワイヤレスイヤホン'], wish:'この条件で新着を通知', wishSaved:'新着通知を設定しました', emptyWish:'新着通知を設定した検索条件はまだありません。', filteredEmptyWish:'一致する保存条件はありません。', wishTitle:'保存した検索条件', wishDescription:'お気に入りではありません。\n保存した検索条件に新しく一致する商品が見つかったらお知らせします。', watchSavedStatus:'AIウォッチ中', watchTitle:'AIウォッチ', watchDescription:'AIがこの商品の価格・在庫・クーポンを24時間監視します。', watchLabels:['値下げ','クーポン','再入荷','販売開始'], sellerTitle:'欲しいを、|売上機会に。', sellerDescription:'米国Amazon仕入れの並行輸入商品を、在日外国人と米国商品を探す日本人へ届けます。' },
   EN: { hero:'What are you |looking for today?', userView:'Shopper', sellerView:'Seller', languageLabel:'Language', title:'You do not need to know the product name.\nAppearance, where you saw it, and how it is used. Tell us whatever you remember.', titleSummary:'How it works', placeholder:'Example: a small US car part whose name I do not know in Japanese', consent:'I consent to processing my question and anonymous usage measurement. The raw question is not stored in server logs.', submit:'Find it with me', results:'Suggestions from HOSHILU', loading:'Looking for matches…', buy:'View product page', total:'Total', shipping:'Shipping', delivery:'Delivery estimate', days:'days', error:'Search is unavailable. Check your input or connection and try again.', examples:['a US-exclusive collectible figure','a small US appliance that works in Japan','a small car part whose name I forgot'], wish:'Notify me of new matches', wishSaved:'Notifications set', emptyWish:'No saved search conditions with notifications yet.', filteredEmptyWish:'No saved conditions match your search.', wishTitle:'Saved search conditions', wishDescription:'This is not a favorites list.\nWe will let you know when a new product matches a condition you saved.', watchSavedStatus:'AI Watch on', watchTitle:'AI Watch', watchDescription:'AI monitors this product’s price, stock, and coupons around the clock.', watchLabels:['Price drop','Coupon','Restock','Available'], sellerTitle:'Turn demand into |sales opportunities.', sellerDescription:'Connect US Amazon imports with international residents in Japan and Japanese shoppers seeking American products.' },
@@ -499,6 +499,9 @@ function resultRow(cards,title,note,rowKind){
   return row;
 }
 function renderResults(result,requestId){
+  // resultCarouselは検索ごとに新しいtrackを作るため、DOMから外す前に旧tickerの
+  // interval・アニメーション・イベントを明示解除する。
+  elements.cards.querySelectorAll('.result-track').forEach(detachVerticalTicker);
   const t=selectedCopy();
   elements.results.classList.remove('hidden');
   elements.message.textContent=result.message||'';

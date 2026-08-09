@@ -1104,23 +1104,30 @@ export function marketplaceSearchDestinations(query, env = {}) {
   // モール横断ボタンは「同じ条件を各店で確認する」導線。検索語の意味まで
   // 店ごとに書き換えると比較できないため、HOSHILUが一度だけ整理した共通語を
   // URLパラメータ名・文字コードだけ各店仕様に合わせて渡す。
-  const sharedKeywords = buildAmazonSearchKeywords(query);
-  if (!sharedKeywords) return [];
+  const amazonKeywords = buildAmazonSearchKeywords(query);
+  if (!amazonKeywords) return [];
+  // ASINはAmazon内では有効な商品識別子だが、他モールでは検索ノイズになる。
+  // 共通条件は維持しつつ、Amazon以外へ渡す入口で一度だけ除去する。
+  const sharedKeywords = amazonKeywords.replace(/\bB[A-Z0-9]{9}\b/giu, ' ').replace(/\s+/g, ' ').trim();
   const amazon = new URL('https://www.amazon.co.jp/s');
-  amazon.searchParams.set('k', sharedKeywords);
+  amazon.searchParams.set('k', amazonKeywords);
   const associateTag = String(env.AMAZON_ASSOCIATE_TAG || '').trim();
   if (/^[a-z0-9][a-z0-9-]{1,49}$/i.test(associateTag)) amazon.searchParams.set('tag', associateTag);
+  const destinations = [
+    { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: amazon.toString() }
+  ];
+  // ASINだけの入力では、意味のない空検索を他12モールへ作らない。
+  if (!sharedKeywords) return destinations;
   const yahoo = new URL('https://shopping.yahoo.co.jp/search');
   yahoo.searchParams.set('p', sharedKeywords);
   const qoo10 = new URL('https://www.qoo10.jp/s/');
   qoo10.searchParams.set('keyword', sharedKeywords);
-  return [
-    { marketplace: 'AMAZON_JP', label: 'Amazonで探す', destination: amazon.toString() },
+  return destinations.concat([
     { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(sharedKeywords)}/` },
     { marketplace: 'YAHOO_JP', label: 'Yahoo!ショッピングで探す', destination: yahoo.toString() },
     { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: qoo10.toString() },
     { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: `https://jp.shein.com/pdsearch/${encodeURIComponent(sharedKeywords)}/` }
-  ].concat(buildApparelMarketplaceDestinations(query, sharedKeywords));
+  ], buildApparelMarketplaceDestinations(query, sharedKeywords));
 }
 
 async function signedMarketplaceSearchLinks(query, context) {

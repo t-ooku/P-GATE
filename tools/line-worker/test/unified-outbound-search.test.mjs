@@ -42,3 +42,18 @@ test('マツキヨとABC-MARTは正しい公式パラメータ名・文字コー
   assert.match(abc, /[?&]keyword=/);
   assert.match(abc, /%[0-9A-F]{2}/);
 });
+
+test('ASINはAmazonだけに残し、他12モールの共通検索語には混入させない', () => {
+  const asin = 'B08N5WRWNW';
+  const links = marketplaceSearchDestinations(`${asin} 手袋 防水`);
+  assert.equal(links.length, 13);
+  assert.match(decodedSearchQuery(links.find((item) => item.marketplace === 'AMAZON_JP')), new RegExp(asin, 'i'));
+  for (const item of links.filter((link) => link.marketplace !== 'AMAZON_JP')) {
+    assert.doesNotMatch(item.destination, new RegExp(asin, 'i'), item.marketplace);
+  }
+});
+
+test('ASINだけの入力ではAmazon以外の空検索リンクを作らない', () => {
+  const links = marketplaceSearchDestinations('B08N5WRWNW');
+  assert.deepEqual(links.map(({ marketplace }) => marketplace), ['AMAZON_JP']);
+});
