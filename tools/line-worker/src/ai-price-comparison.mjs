@@ -145,6 +145,27 @@ export function validateAiEstimates(parsed, marketplaces) {
   return estimates;
 }
 
+export function validateCandidatePriceEstimates(parsed, allowedCandidateIndices) {
+  const allowed = Number.isInteger(allowedCandidateIndices)
+    ? new Set(Array.from({ length: allowedCandidateIndices }, (_, index) => index))
+    : new Set(allowedCandidateIndices || []);
+  const seen = new Set(); const estimates = [];
+  for (const entry of Array.isArray(parsed?.estimates) ? parsed.estimates : []) {
+    const candidateIndex = Number(entry?.candidate_index);
+    const min = Number(entry?.range_min); const max = Number(entry?.range_max);
+    if (!Number.isInteger(candidateIndex) || !allowed.has(candidateIndex) || seen.has(candidateIndex)) continue;
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max <= 0 || min >= max) continue;
+    const confidence = cleanString(entry?.confidence, 10).toUpperCase();
+    seen.add(candidateIndex);
+    estimates.push({ candidate_index: candidateIndex, range_min: Math.round(min), range_max: Math.round(max), confidence: CONFIDENCE_LEVELS.includes(confidence) ? confidence : null });
+  }
+  return estimates;
+}
+
+function candidatePricePrompt(targets, language) {
+  return `You are HOSHILU's cautious product price-range assistant. Estimate only products whose real price is unavailable.\nDisplay language: ${language}\nProducts:\n${targets.map(({ candidate, candidate_index: candidateIndex }) => `${candidateIndex}: ${cleanString(candidate.display_name || candidate.product_name, 200)} | brand=${cleanString(candidate.manufacturer, 100) || 'unknown'} | category=${cleanString(candidate.related_category, 100) || 'unknown'}`).join('\n')}\n\nReturn JSON only: {"estimates":[{"candidate_index":0,"range_min":0,"range_max":0,"confidence":"HIGH"}]}\nRules:\n- candidate_index must be copied from the product list above.\n- Give a broad Japanese-yen range, never a single exact price.\n- Omit a product if there is no reasonable basis.\n- Do not invent a seller, URL, stock, sale, or confirmed price.\n- confidence is HIGH, MEDIUM, or LOW.`;
+}
+
 async function providerFetch(fetchImpl, url, options, timeoutMs) {
   return fetchImpl(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
 }
@@ -229,6 +250,68 @@ export async function requestAiPriceEstimates(context, marketplaces, env = {}, f
   }
   console.warn('AI_PRICE_ESTIMATE_ALL_PROVIDERS_FAILED', { attempted: providers.length, had_error: Boolean(lastError) });
   return { estimates: [], provider: null, unavailable: true };
+}
+
+export async function requestAiCandidatePriceEstimates(candidates = [], env = {}, fetchImpl = fetch, language = 'JA') {
+  const targets = (Array.isArray(candidates) ? candidates : [])
+    .map((candidate, candidateIndex) => ({ candidate, candidate_index: candidateIndex }))
+    .filter(({ candidate }) => !observedCandidatePrice(candidate)).slice(0, 8);
+  if (!targets.length || !priceComparisonConfigured(env)) return { estimates: [], provider: null };
+  const prompt = candidatePricePrompt(targets, language);
+  const providers = [String(env.GEMINI_API_KEY || '').length >= 20 && 'gemini', String(env.OPENAI_API_KEY || '').length >= 20 && 'openai'].filter(Boolean);
+  for (const provider of providers) {
+    try {
+      const response = provider === 'gemini'
+        ? await providerFetch(fetchImpl, `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash'))}:generateContent`, {
+          method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } })
+        }, 6000)
+        : await providerFetch(fetchImpl, 'https://api.openai.com/v1/responses', {
+          method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.OPENAI_API_KEY}` },
+          body: JSON.stringify({ model: String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5'), input: prompt, reasoning: { effort: 'low' }, text: { format: { type: 'json_object' } } })
+        }, 6000);
+      if (!response.ok) continue;
+      const payload = await response.json();
+      const parsed = parseJsonText(provider === 'gemini' ? geminiText(payload) : openAiText(payload));
+      const estimates = validateCandidatePriceEstimates(parsed, targets.map((target) => target.candidate_index));
+      return { estimates, provider };
+    } catch (error) {
+      console.warn('AI_RANKING_PRICE_ESTIMATE_PROVIDER_FAILED', { provider, status: Number(error?.status || 0) });
+    }
+  }
+  return { estimates: [], provider: null, unavailable: true };
+}
+
+function observedCandidatePrice(candidate = {}) {
+  const rows = (Array.isArray(candidate.offers) ? candidate.offers : []).map((offer) => {
+    const confirmedTotal = offer?.shipping_fee_confirmed === true || Number(offer?.shipping_fee_confirmed) === 1;
+    const total = confirmedTotal ? Number(offer.total_cost) : 0;
+    const itemPrice = Number(offer.price);
+    if (total > 0) return { value: total, source: 'CONFIRMED_TOTAL' };
+    if (itemPrice > 0) return { value: itemPrice, source: 'OBSERVED_ITEM_PRICE' };
+    return null;
+  }).filter(Boolean);
+  return rows.sort((a, b) => a.value - b.value)[0] || null;
+}
+
+export function buildAiCheapestRanking(candidates = [], estimates = []) {
+  const estimateByIndex = new Map(estimates.map((estimate) => [estimate.candidate_index, estimate]));
+  return (Array.isArray(candidates) ? candidates : []).map((candidate, index) => {
+    const observed = observedCandidatePrice(candidate);
+    const estimate = estimateByIndex.get(index);
+    if (observed) return { ...candidate, ai_cheapest_price_source: observed.source, ai_cheapest_price_min: observed.value, ai_cheapest_price_max: observed.value, ai_cheapest_sort_value: observed.value };
+    if (estimate) return { ...candidate, ai_cheapest_price_source: 'AI_ESTIMATE', ai_cheapest_price_min: estimate.range_min, ai_cheapest_price_max: estimate.range_max, ai_cheapest_price_confidence: estimate.confidence, ai_cheapest_sort_value: (estimate.range_min + estimate.range_max) / 2 };
+    return null;
+  }).filter(Boolean)
+    .sort((a, b) => {
+      const priceDifference = a.ai_cheapest_sort_value - b.ai_cheapest_sort_value;
+      if (priceDifference) return priceDifference;
+      // 同額なら確認済み価格をAI推定より先にする。同じ種別同士は安定ソートに任せる。
+      const aPriority = a.ai_cheapest_price_source === 'AI_ESTIMATE' ? 1 : 0;
+      const bPriority = b.ai_cheapest_price_source === 'AI_ESTIMATE' ? 1 : 0;
+      return aPriority - bPriority;
+    })
+    .map((candidate, index) => ({ ...candidate, ai_cheapest_rank: index + 1 }));
 }
 
 function marketplaceLabel(marketplace) {

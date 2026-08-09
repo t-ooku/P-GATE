@@ -25,7 +25,10 @@ import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } f
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult } from './marketplace-ranking.mjs';
 import { relatedProductRecommendationQueries } from './related-product-recommendations.mjs';
 import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
-import { buildPriceComparison, realPriceRows, requestAiPriceEstimates } from './ai-price-comparison.mjs';
+import {
+  buildAiCheapestRanking, buildPriceComparison, realPriceRows,
+  requestAiCandidatePriceEstimates, requestAiPriceEstimates
+} from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
@@ -1376,6 +1379,11 @@ export function sanitizePublicCandidate(candidate) {
     hoshilu_popularity_rank: Math.max(0, Number(source.hoshilu_popularity_rank) || 0),
     hoshilu_popularity_score: Math.max(0, Number(source.hoshilu_popularity_score) || 0),
     hoshilu_popularity_confidence: Math.max(0, Math.min(100, Number(source.hoshilu_popularity_confidence) || 0)),
+    ai_cheapest_rank: Math.max(0, Number(source.ai_cheapest_rank) || 0),
+    ai_cheapest_price_source: ['CONFIRMED_TOTAL', 'OBSERVED_ITEM_PRICE', 'AI_ESTIMATE'].includes(String(source.ai_cheapest_price_source || '')) ? String(source.ai_cheapest_price_source) : '',
+    ai_cheapest_price_min: Math.max(0, Number(source.ai_cheapest_price_min) || 0),
+    ai_cheapest_price_max: Math.max(0, Number(source.ai_cheapest_price_max) || 0),
+    ai_cheapest_price_confidence: ['HIGH', 'MEDIUM', 'LOW'].includes(String(source.ai_cheapest_price_confidence || '')) ? String(source.ai_cheapest_price_confidence) : '',
     description: publicText(source.description, 1000),
     available: Number(source.stock || 0) > 0,
     tracking_url: ''
@@ -1472,13 +1480,31 @@ async function handleHoshiluRankingApi(request, env) {
       ...candidate,
       popularity_signals: popularitySignalsForObservedCandidate(candidate, index, observed.length, priceRange)
     }))).slice(0, 30);
-    const decorated = await decoratePwaResult({ query_id: crypto.randomUUID(), candidates: ranked }, request, env, await hashUser(input.session_id), input.query, 'JA');
+    // 実価格が無い候補だけを最大8件、1回のAI呼び出しで価格帯推定する。
+    // 実価格と推定価格は同じ値として扱わず、sourceを公開レスポンスまで保持する。
+    const aiPriceResult = await requestAiCandidatePriceEstimates(ranked, env, fetch, 'JA');
+    const priceRanked = buildAiCheapestRanking(ranked, aiPriceResult.estimates).slice(0, 30);
+    const priceByKey = new Map(priceRanked.map((candidate) => [rankingCandidateKey(candidate), candidate]));
+    const enriched = ranked.map((candidate) => priceByKey.get(rankingCandidateKey(candidate)) || candidate);
+    const decorated = await decoratePwaResult({ query_id: crypto.randomUUID(), candidates: enriched }, request, env, await hashUser(input.session_id), input.query, 'JA');
+    const aiCheapestCandidates = decorated.candidates
+      .filter((candidate) => Number(candidate.ai_cheapest_rank) > 0)
+      .sort((a, b) => a.ai_cheapest_rank - b.ai_cheapest_rank);
     return Response.json({ ok: true, result: {
       mode: 'hoshilu_organic', category: resolution.category,
       ranking_type: 'HOSHILU総合人気ランキング（ベータ）',
       methodology: 'API接続の有無を問わず、HOSHILUが正規に観測できた商品・モール順位・口コミ・価格・モール横断性を合成。未取得データは加点せず、スポンサーは順位へ混ぜません。',
       marketplace_scope: MARKETPLACE_RANKING_CAPABILITIES.map(({ marketplace_id, label }) => ({ marketplace_id, label })),
-      candidates: decorated.candidates, sponsors: []
+      candidates: decorated.candidates,
+      ai_cheapest: {
+        ranking_type: 'AI最安ランキング（ベータ）',
+        methodology: '確認できた実価格を優先し、価格未取得の商品だけAI推定価格帯の中央値で参考順を作成します。',
+        disclaimer: 'AI推定価格を含む参考ランキングです。実際の販売価格・送料・在庫は各モールで確認してください。',
+        candidates: aiCheapestCandidates,
+        estimated_count: aiCheapestCandidates.filter((candidate) => candidate.ai_cheapest_price_source === 'AI_ESTIMATE').length,
+        unpriced_count: Math.max(0, ranked.length - aiCheapestCandidates.length)
+      },
+      sponsors: []
     } }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
   } catch (error) {
     const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   PRICE_ESTIMATE_DISCLAIMER, realPriceRows, validateAiEstimates, buildPriceComparison,
-  requestAiPriceEstimates, partitionOffersByProductIdentity, confidenceLabel
+  requestAiPriceEstimates, partitionOffersByProductIdentity, confidenceLabel,
+  validateCandidatePriceEstimates, requestAiCandidatePriceEstimates, buildAiCheapestRanking
 } from '../src/ai-price-comparison.mjs';
 import { normalizeOffer } from '../src/hoshilu-product-schema.mjs';
 
@@ -139,4 +140,55 @@ test('confidenceLabel: 高/中/低へ変換される', () => {
   assert.equal(confidenceLabel('MEDIUM', 'JA'), '中');
   assert.equal(confidenceLabel('LOW', 'JA'), '低');
   assert.equal(confidenceLabel(null, 'JA'), null);
+});
+
+test('AI最安ランキングは実価格・商品価格・AI推定価格帯を混同せず参考値で並べる', () => {
+  const candidates = [
+    { product_name: '送料込み商品', offers: [{ price: 3000, total_cost: 3300, shipping_fee_confirmed: true }] },
+    { product_name: '価格不明商品', offers: [] },
+    { product_name: '送料未確認商品', offers: [{ price: 2500, total_cost: 0, shipping_fee_confirmed: false }] }
+  ];
+  const ranked = buildAiCheapestRanking(candidates, [{ candidate_index: 1, range_min: 1800, range_max: 2200, confidence: 'MEDIUM' }]);
+  assert.deepEqual(ranked.map((item) => item.product_name), ['価格不明商品', '送料未確認商品', '送料込み商品']);
+  assert.equal(ranked[0].ai_cheapest_price_source, 'AI_ESTIMATE');
+  assert.equal(ranked[1].ai_cheapest_price_source, 'OBSERVED_ITEM_PRICE');
+  assert.equal(ranked[2].ai_cheapest_price_source, 'CONFIRMED_TOTAL');
+  assert.deepEqual(ranked.map((item) => item.ai_cheapest_rank), [1, 2, 3]);
+});
+
+test('AI最安ランキングは同額なら確認済み価格をAI推定より優先し同種別の順序を保つ', () => {
+  const ranked = buildAiCheapestRanking([
+    { product_name: '実価格A', offers: [{ price: 2000 }] },
+    { product_name: '推定価格', offers: [] },
+    { product_name: '実価格B', offers: [{ price: 2000 }] }
+  ], [{ candidate_index: 1, range_min: 1500, range_max: 2500, confidence: 'LOW' }]);
+  assert.deepEqual(ranked.map((item) => item.product_name), ['実価格A', '実価格B', '推定価格']);
+});
+
+test('ランキング価格AIは価格不明商品のみ最大8件を1回で推定する', async () => {
+  let calls = 0; let prompt = '';
+  const result = await requestAiCandidatePriceEstimates([
+    { product_name: '実価格あり', offers: [{ price: 1000 }] },
+    { product_name: '価格不明A', offers: [] },
+    { product_name: '価格不明B', offers: [] }
+  ], { GEMINI_API_KEY: 'g'.repeat(32) }, async (_url, init) => {
+    calls += 1; prompt = JSON.parse(init.body).contents[0].parts[0].text;
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ estimates: [
+      { candidate_index: 1, range_min: 2000, range_max: 3000, confidence: 'LOW' },
+      { candidate_index: 0, range_min: 1, range_max: 2, confidence: 'HIGH' }
+    ] }) }] } }] });
+  });
+  assert.equal(calls, 1);
+  assert.doesNotMatch(prompt, /実価格あり/);
+  assert.match(prompt, /1: 価格不明A/);
+  assert.deepEqual(result.estimates.map((item) => item.candidate_index), [1]);
+});
+
+test('ランキング価格帯は許可された候補番号と幅のある正数だけを受理する', () => {
+  const result = validateCandidatePriceEstimates({ estimates: [
+    { candidate_index: 4, range_min: 1000, range_max: 2000, confidence: 'HIGH' },
+    { candidate_index: 1, range_min: 1000, range_max: 1000, confidence: 'MEDIUM' },
+    { candidate_index: 9, range_min: 1000, range_max: 2000, confidence: 'LOW' }
+  ] }, [1, 4]);
+  assert.deepEqual(result, [{ candidate_index: 4, range_min: 1000, range_max: 2000, confidence: 'HIGH' }]);
 });

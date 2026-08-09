@@ -571,16 +571,25 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   if(priceComparisonButton)mediaActions.append(priceComparisonButton);
   return card;
 }
-function rankingCard(candidate,index,rankingType,searchQuery){
+function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popularity'){
   const card=productCard(candidate,index,selectedCopy(),true,searchQuery);
   card.classList.add('ranking-product-card');
   const rank=card.querySelector(':scope > .rank');
-  const number=Math.max(1,Number(candidate.hoshilu_popularity_rank||candidate.rank)||index+1);
+  const number=Math.max(1,Number(rankingKind==='cheapest'?candidate.ai_cheapest_rank:(candidate.hoshilu_popularity_rank||candidate.rank))||index+1);
   if(rank)rank.textContent=number===1?'🥇 1位':number===2?'🥈 2位':number===3?'🥉 3位':`${number}位`;
   const review=document.createElement('div');review.className='ranking-review-summary';
   const average=Number(candidate.review_average)||0;const count=Math.max(0,Number(candidate.review_count)||0);
   review.textContent=average&&count?`★ ${average.toFixed(2)} ・ 口コミ ${count.toLocaleString()}件`:'口コミ評価は公式データ未取得';
   const title=card.querySelector(':scope > h3');if(title)title.after(review);
+  if(rankingKind==='cheapest'){
+    const price=document.createElement('div');price.className='ranking-price-summary';
+    const min=Math.max(0,Number(candidate.ai_cheapest_price_min)||0);const max=Math.max(min,Number(candidate.ai_cheapest_price_max)||min);
+    if(candidate.ai_cheapest_price_source==='AI_ESTIMATE'){
+      price.classList.add('ai-estimated');price.textContent=`AI推定価格 約¥${min.toLocaleString()}〜¥${max.toLocaleString()}（参考）`;
+    }else if(candidate.ai_cheapest_price_source==='CONFIRMED_TOTAL')price.textContent=`確認済み送料込み価格 ¥${min.toLocaleString()}`;
+    else price.textContent=`確認済み商品価格 ¥${min.toLocaleString()}（送料は別途確認）`;
+    review.after(price);
+  }
   card.dataset.rankingType=rankingType;
   return card;
 }
@@ -839,8 +848,7 @@ async function runRankingSearch(marketplace){
     const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'RANKING_FAILED');
     const result=payload.result;
     if(result.mode==='clarification'){
-      elements.rankingStatus.textContent=result.clarification.question;
-      result.clarification.options.forEach(option=>{const button=document.createElement('button');button.type='button';button.className='ranking-category-option';button.textContent=option.label;button.addEventListener('click',()=>{elements.query.value=option.label;runRankingSearch(marketplace);});elements.rankingResults.append(button);});return;
+      renderRankingClarification(result.clarification,()=>runRankingSearch(marketplace));return;
     }
     if(result.mode!=='native_api'){
       elements.rankingStatus.textContent=`${result.marketplace.label}: ${result.ranking_type}。公式APIで順位を確認できないため、架空の順位は表示しません。`;
@@ -852,21 +860,39 @@ async function runRankingSearch(marketplace){
     elements.rankingResults.replaceChildren(heading,...cards);
   }catch(error){elements.rankingStatus.textContent=error.message==='CONSENT_REQUIRED'?'同意欄を確認してください。':'現在ランキングを取得できません。通常検索はそのまま利用できます。';}
 }
+function renderRankingClarification(clarification,rerun){
+  elements.rankingStatus.textContent=clarification.question||'どの小分類のランキングを見ますか？';
+  const guide=textElement('p','ranking-category-guide',clarification.guidance||'近い小分類を選ぶか、具体的な商品種類を入力してください。');
+  const options=document.createElement('div');options.className='ranking-category-options';
+  (clarification.options||[]).forEach(option=>{const button=document.createElement('button');button.type='button';button.className='ranking-category-option';button.textContent=`${option.ai_recommended?'AI候補：':''}${option.label}`;button.addEventListener('click',()=>{elements.query.value=option.label;rerun();});options.append(button);});
+  const instruction=document.createElement('form');instruction.className='ranking-category-instruction';
+  const input=document.createElement('input');input.type='search';input.value=elements.query.value;input.placeholder='例：レディーススニーカー';input.setAttribute('aria-label','ランキングの小分類を入力');
+  const submit=document.createElement('button');submit.type='submit';submit.textContent='この小分類で調べる';
+  instruction.append(input,submit);instruction.addEventListener('submit',event=>{event.preventDefault();const value=String(input.value||'').trim();if(value.length<2)return;elements.query.value=value;rerun();});
+  elements.rankingResults.replaceChildren(guide,options,instruction);
+}
 async function runHoshiluRanking(){
   elements.rankingStatus.textContent='HOSHILU総合人気ランキングを集計しています…';elements.rankingResults.replaceChildren();
   try{
     const token=await waitForFreshTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
     const response=await fetch('/api/hoshilu-rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
     const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'HOSHILU_RANKING_FAILED');
-    const result=payload.result;if(result.mode==='clarification'){elements.rankingStatus.textContent=result.clarification.question;return;}
+    const result=payload.result;if(result.mode==='clarification'){renderRankingClarification(result.clarification,runHoshiluRanking);return;}
     elements.rankingStatus.textContent=`${result.category.label}｜${result.methodology}`;
-    elements.rankingResults.replaceChildren(textElement('h3','ranking-result-title',result.ranking_type),...result.candidates.map((candidate,index)=>rankingCard(candidate,index,result.ranking_type,result.category.label)));
+    const nodes=[textElement('h3','ranking-result-title',result.ranking_type),...result.candidates.map((candidate,index)=>rankingCard(candidate,index,result.ranking_type,result.category.label,'popularity'))];
+    if(result.ai_cheapest?.candidates?.length){
+      nodes.push(textElement('h3','ranking-result-title ranking-ai-cheapest-title',result.ai_cheapest.ranking_type));
+      nodes.push(textElement('p','ranking-ai-cheapest-methodology',result.ai_cheapest.methodology));
+      nodes.push(...result.ai_cheapest.candidates.map((candidate,index)=>rankingCard(candidate,index,result.ai_cheapest.ranking_type,result.category.label,'cheapest')));
+      nodes.push(textElement('p','ranking-ai-cheapest-disclaimer',result.ai_cheapest.disclaimer));
+    }
+    elements.rankingResults.replaceChildren(...nodes);
   }catch{elements.rankingStatus.textContent='現在、総合ランキングを取得できません。通常検索はそのまま利用できます。';}
 }
 async function openRankingSearch(){
   if(String(elements.query.value||'').trim().length<2){elements.query.focus();elements.status.textContent='ランキングを見たい商品カテゴリを入力してください。';return;}
   elements.rankingDialog.showModal();elements.rankingList.replaceChildren();elements.rankingResults.replaceChildren();elements.rankingStatus.textContent='';
-  try{const overall=document.createElement('button');overall.type='button';overall.className='ranking-marketplace-button';overall.dataset.mode='hoshilu_organic';overall.textContent='HOSHILU総合人気ランキング';overall.addEventListener('click',runHoshiluRanking);elements.rankingList.append(overall);const response=await fetch('/api/ranking-capabilities');const payload=await response.json();payload.marketplaces.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='ranking-marketplace-button';button.dataset.mode=item.ranking_mode;button.textContent=item.status==='available'?item.label:`${item.label}（準備中）`;button.addEventListener('click',()=>runRankingSearch(item.marketplace_id));elements.rankingList.append(button);});}catch{elements.rankingStatus.textContent='ショップ一覧を取得できません。';}
+  try{const overall=document.createElement('button');overall.type='button';overall.className='ranking-marketplace-button';overall.dataset.mode='hoshilu_organic';overall.textContent='HOSHILU総合人気＋AI最安ランキング';overall.addEventListener('click',runHoshiluRanking);elements.rankingList.append(overall);const response=await fetch('/api/ranking-capabilities');const payload=await response.json();payload.marketplaces.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='ranking-marketplace-button';button.dataset.mode=item.ranking_mode;button.textContent=item.status==='available'?item.label:`${item.label}（準備中）`;button.addEventListener('click',()=>runRankingSearch(item.marketplace_id));elements.rankingList.append(button);});runHoshiluRanking();}catch{elements.rankingStatus.textContent='ショップ一覧を取得できません。';}
 }
 elements.rankingButton?.addEventListener('click',openRankingSearch);
 document.querySelector('#rankingDialogClose')?.addEventListener('click',()=>elements.rankingDialog.close());

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MARKETPLACE_RANKING_CAPABILITIES, resolveRankingCategory, normalizeRakutenRanking, fetchRakutenRanking } from '../src/marketplace-ranking.mjs';
+import { MARKETPLACE_RANKING_CAPABILITIES, resolveRankingCategory, normalizeRakutenRanking, fetchRakutenRanking, suggestRankingCategoriesWithAi } from '../src/marketplace-ranking.mjs';
 
 test('ランキング検索の必須5語を公式確認済みの楽天子ジャンルへ解決する', () => {
   const expected = new Map([['ハンディファン','565082'],['ワイヤレスイヤホン','502835'],['レディーススニーカー','206906'],['モバイルバッテリー','564277'],['化粧水','216307']]);
@@ -11,6 +11,18 @@ test('曖昧なカテゴリは広い順位を捏造せず確認質問を返す',
   const result = resolveRankingCategory('靴');
   assert.equal(result.resolved, false);
   assert.ok(result.clarification.options.length >= 4);
+  assert.equal(result.clarification.options[0].value, 'womens_sneakers');
+  assert.match(result.clarification.guidance, /小分類/);
+  assert.equal(resolveRankingCategory('扇風機').resolved, false);
+});
+
+test('AIは登録済み小分類だけを候補として返し、分類を勝手に確定しない', async () => {
+  const options = resolveRankingCategory('靴').clarification.options;
+  const ids = await suggestRankingCategoriesWithAi({ GEMINI_API_KEY: 'g'.repeat(32) }, '靴', options, async (_url, init) => {
+    assert.match(JSON.parse(init.body).contents[0].parts[0].text, /選択肢にない分類は作らず/);
+    return Response.json({ candidates: [{ content: { parts: [{ text: '{"category_ids":["womens_sneakers","not_allowed"]}' }] } }] });
+  });
+  assert.deepEqual(ids, ['womens_sneakers']);
 });
 
 test('Capability Registryは13モールを方式とレビュー範囲つきで一元管理する', () => {
