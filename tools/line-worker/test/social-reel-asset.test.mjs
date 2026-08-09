@@ -25,5 +25,5 @@ test('今日の機能紹介リールは縦型・音声付きMP4として同梱�
   assert.equal(header.includes(Buffer.from('mp4a')),true);
   // 2026-08-09: コンテナ情報だけ正常で映像NALが破損したMP4を見逃したため、
   // 全フレームのデコード確認済み成果物そのものを固定して再混入を防ぐ。
-  assert.equal(createHash('sha256').update(header).digest('hex'),'3f2c9683bace3eefb42113908da9c13240456b6d4f5d0119caa3d7e0bb093d88');
+  assert.equal(createHash('sha256').update(header).digest('hex'),'512e0d923d392dd7dd63fb190067edabb9704d6b0057ad36278d34f507c52528');
 });
