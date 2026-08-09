@@ -1459,7 +1459,7 @@ async function handleHoshiluRankingApi(request, env) {
     const input = validateRankingRequest({ ...payload, marketplace: 'RAKUTEN_JP' });
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     const [rakutenOutcome, yahooOutcome, indexedOutcome] = await Promise.allSettled([
-      marketplaceRankingResult(env, input.query, 'RAKUTEN_JP', fetch),
+      marketplaceRankingResult(env, input.query, 'RAKUTEN_JP', fetch, input.category_selection),
       yahooShoppingApiConfigured(env) ? searchYahooShopping(env, input.query, fetch, { sort: '-review_count' }) : [],
       applyIndexedSearchPolicy({ candidates: [] }, env, input.query, 'JA', { force_product_presentation: true })
     ]);
@@ -1507,7 +1507,7 @@ async function handleHoshiluRankingApi(request, env) {
       sponsors: []
     } }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
   } catch (error) {
-    const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
+    const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_CATEGORY_SELECTION_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
     return Response.json({ ok: false, error: error.message || 'HOSHILU_RANKING_FAILED' }, { status: client.includes(error.message) ? 400 : 502 });
   }
 }
@@ -1668,7 +1668,17 @@ export function validateRankingRequest(payload = {}) {
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
   const turnstileToken = String(payload.turnstile_token || '').trim();
   if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
-  return { query, marketplace, session_id: sessionId, turnstile_token: turnstileToken };
+  let categorySelection = null;
+  if (payload.category_selection !== undefined && payload.category_selection !== null) {
+    const value = payload.category_selection;
+    const genreId = String(value?.genre_id || '').trim();
+    const id = String(value?.id || value?.value || '').trim();
+    const label = redactSearchPersonalData(value?.label).slice(0, 100).trim();
+    const source = String(value?.source || '').trim();
+    if (!/^\d{3,12}$/u.test(genreId) || !/^[a-z0-9_]{3,80}$/u.test(id) || label.length < 1 || !['STATIC_REGISTRY','RAKUTEN_GENRE_API'].includes(source)) throw new Error('RANKING_CATEGORY_SELECTION_INVALID');
+    categorySelection = { genre_id: genreId, id, label, source };
+  }
+  return { query, marketplace, session_id: sessionId, turnstile_token: turnstileToken, category_selection: categorySelection };
 }
 
 async function handleRankingApi(request, env) {
@@ -1678,7 +1688,7 @@ async function handleRankingApi(request, env) {
     if (Number(request.headers.get('content-length') || 0) > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
     const input = validateRankingRequest(await request.json());
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    let result = await marketplaceRankingResult(env, input.query, input.marketplace, fetch);
+    let result = await marketplaceRankingResult(env, input.query, input.marketplace, fetch, input.category_selection);
     // 専用ランキングAPI/ページを確認できないモールは、架空順位や未検証URLを
     // 作らず、既存の検証済み検索URLビルダーへフォールバックする。
     if (result.mode === 'direct_link') {
@@ -1687,7 +1697,7 @@ async function handleRankingApi(request, env) {
     }
     return Response.json({ ok: true, result }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
   } catch (error) {
-    const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_MARKETPLACE_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
+    const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_MARKETPLACE_INVALID','RANKING_CATEGORY_SELECTION_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
     return Response.json({ ok: false, error: error.message || 'RANKING_FAILED' }, { status: client.includes(error.message) ? 400 : 502 });
   }
 }

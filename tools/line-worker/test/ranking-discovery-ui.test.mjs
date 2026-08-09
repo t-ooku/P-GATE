@@ -18,6 +18,8 @@ test('小分類未確定時はAI候補チップと自由入力の両方でHOSHIL
   const css = await readFile(new URL('styles.css', root), 'utf8');
   assert.match(app, /function renderRankingClarification/);
   assert.match(app, /AI候補：/);
+  assert.match(app, /公式小分類：/);
+  assert.match(app, /category_selection:categorySelection/);
   assert.match(app, /この小分類で調べる/);
   assert.match(app, /ランキングの小分類を入力/);
   assert.match(css, /ranking-category-instruction/);

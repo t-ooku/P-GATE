@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MARKETPLACE_RANKING_CAPABILITIES, resolveRankingCategory, normalizeRakutenRanking, fetchRakutenRanking, suggestRankingCategoriesWithAi } from '../src/marketplace-ranking.mjs';
+import { MARKETPLACE_RANKING_CAPABILITIES, resolveRankingCategory, normalizeRakutenRanking, fetchRakutenRanking, suggestRankingCategoriesWithAi, normalizeRakutenGenre, discoverRakutenRankingCategories, marketplaceRankingResult } from '../src/marketplace-ranking.mjs';
 
 test('ランキング検索の必須5語を公式確認済みの楽天子ジャンルへ解決する', () => {
   const expected = new Map([['ハンディファン','565082'],['ワイヤレスイヤホン','502835'],['レディーススニーカー','206906'],['モバイルバッテリー','564277'],['化粧水','216307']]);
@@ -42,4 +42,52 @@ test('楽天Ranking APIへaccessKeyとgenreIdを送りRefererを付ける', asyn
   const result = await fetchRakutenRanking({ RAKUTEN_APPLICATION_ID:'app', RAKUTEN_ACCESS_KEY:'access' }, { genre_id:'564277' }, async (url, init) => { requestUrl=url; headers=init.headers; return { ok:true, json:async()=>({Items:[]}) }; });
   assert.deepEqual(result, []); const url=new URL(requestUrl);
   assert.equal(url.searchParams.get('genreId'),'564277'); assert.equal(url.searchParams.get('accessKey'),'access'); assert.equal(headers.referer,'https://hoshilu.app/');
+});
+
+test('楽天公式の商品genreIdとGenre Searchから固定辞書外の小分類候補を発見する', async () => {
+  const calls = [];
+  const result = await discoverRakutenRankingCategories({ RAKUTEN_APPLICATION_ID:'app', RAKUTEN_ACCESS_KEY:'access' }, '炊飯器', async (url) => {
+    calls.push(url); const target = new URL(url);
+    if (target.pathname.includes('/IchibaItem/Search/')) return Response.json({ Items: [
+      { genreId:'204586', itemName:'炊飯器A' }, { genreId:'204586', itemName:'炊飯器B' }, { genreId:'211734', itemName:'炊飯器部品' }
+    ] });
+    const id = target.searchParams.get('genreId');
+    return Response.json({ genre:{ genreId:id, nameJa:id==='204586'?'炊飯器':'炊飯器部品', level:3 }, ancestors:[{genreId:'100644',nameJa:'キッチン家電',level:2}] });
+  });
+  assert.equal(result[0].genre_id, '204586');
+  assert.equal(result[0].label, 'キッチン家電 › 炊飯器');
+  assert.equal(result[0].official_category, true);
+  assert.ok(calls.some((url) => url.includes('/20260701')));
+});
+
+test('動的な小分類選択はGenre Searchで再検証してから公式ランキングへ渡す', async () => {
+  const result = await marketplaceRankingResult({ RAKUTEN_APPLICATION_ID:'app', RAKUTEN_ACCESS_KEY:'access' }, '炊飯器', 'RAKUTEN_JP', async (url) => {
+    const target = new URL(url);
+    if (target.pathname.includes('/IchibaGenre/Search/')) return Response.json({ genre:{ genreId:'204586', nameJa:'炊飯器', level:3 }, ancestors:[{genreId:'100644',nameJa:'キッチン家電',level:2}] });
+    if (target.pathname.includes('/IchibaItem/Ranking/')) return Response.json({ Items:[{rank:1,itemName:'人気炊飯器',itemUrl:'https://item.rakuten.co.jp/shop/rice/',itemPrice:10000}] });
+    throw new Error(`unexpected: ${url}`);
+  }, { id:'rakuten_204586', label:'炊飯器', genre_id:'204586', source:'RAKUTEN_GENRE_API' });
+  assert.equal(result.category.label, 'キッチン家電 › 炊飯器');
+  assert.equal(result.candidates[0].product_name, '人気炊飯器');
+});
+
+test('ランキング件数不足なら架空順位にせず楽天口コミ件数順へ明示してフォールバックする', async () => {
+  const result = await marketplaceRankingResult({ RAKUTEN_APPLICATION_ID:'app', RAKUTEN_ACCESS_KEY:'access' }, 'ハンディファン', 'RAKUTEN_JP', async (url) => {
+    const target = new URL(url);
+    if (target.pathname.includes('/IchibaItem/Ranking/')) return new Response('{}',{status:404});
+    if (target.pathname.includes('/IchibaItem/Search/')) {
+      assert.equal(target.searchParams.get('sort'), '-reviewCount');
+      return Response.json({ Items:[{itemName:'口コミ多数',itemUrl:'https://item.rakuten.co.jp/shop/fan/',itemPrice:3000,reviewCount:500}] });
+    }
+    throw new Error(`unexpected: ${url}`);
+  });
+  assert.equal(result.mode, 'derived_api');
+  assert.equal(result.ranking_type, '楽天市場 口コミ件数順');
+  assert.equal(result.candidates[0].review_count, 500);
+});
+
+test('Genre Search応答は公式の親子階層だけを正規化する', () => {
+  assert.deepEqual(normalizeRakutenGenre({ genre:{genreId:'123456',nameJa:'ドッグフード',level:3}, ancestors:[{genreId:'1',nameJa:'ペット用品',level:1},{genreId:'2',nameJa:'犬用品',level:2}] }), {
+    genre_id:'123456', label:'ドッグフード', level:3, path:['ペット用品','犬用品','ドッグフード']
+  });
 });

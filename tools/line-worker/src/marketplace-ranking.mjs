@@ -2,6 +2,11 @@ import { expandSearchQuery } from './query-expansion.mjs';
 import { isRakutenAffiliateProductUrl, isRakutenDirectProductUrl } from './rakuten-url-policy.mjs';
 
 const RAKUTEN_RANKING_API = 'https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601';
+// 2026-07-01版の公式API。商品検索が返す実商品のgenreIdを入口にし、
+// Genre Searchで公式の小分類名・親子階層を確認する。固定辞書だけに依存せず、
+// 楽天市場の全ジャンルをオンデマンドでランキング候補にできるようにする。
+const RAKUTEN_ITEM_SEARCH_API = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
+const RAKUTEN_GENRE_SEARCH_API = 'https://openapi.rakuten.co.jp/ichibagt/api/IchibaGenre/Search/20260701';
 
 // 公式ランキングページで子ジャンルとIDを照合したものだけを登録する。
 // 未登録語を広い親ジャンルへ勝手に丸めず、確認質問へ戻すのがランキング検索の安全弁。
@@ -37,7 +42,7 @@ export function resolveRankingCategory(rawQuery) {
   const preferredIds = priorityPatterns.filter(([pattern]) => pattern.test(query)).map(([, id]) => id);
   const options = [...RAKUTEN_RANKING_CATEGORIES]
     .sort((a, b) => preferredIds.indexOf(b.id) - preferredIds.indexOf(a.id))
-    .map(({ id, label }) => ({ value: id, label }));
+    .map(({ id, label, genre_id }) => ({ value: id, label, genre_id, source: 'STATIC_REGISTRY' }));
   return category
     ? { resolved: true, query, category: { id: category.id, label: category.label, genre_id: category.genre_id } }
     : { resolved: false, query, clarification: {
@@ -45,6 +50,103 @@ export function resolveRankingCategory(rawQuery) {
       guidance: '近い小分類を選ぶか、商品種類を入力してHOSHILUへ伝えてください。広い分類のまま順位は作りません。',
       options
     } };
+}
+
+function rakutenApiUrl(endpoint, env) {
+  if (!String(env.RAKUTEN_APPLICATION_ID || '').trim() || !String(env.RAKUTEN_ACCESS_KEY || '').trim()) throw new Error('RAKUTEN_RANKING_NOT_CONFIGURED');
+  const url = new URL(endpoint);
+  url.searchParams.set('applicationId', String(env.RAKUTEN_APPLICATION_ID).trim());
+  url.searchParams.set('accessKey', String(env.RAKUTEN_ACCESS_KEY).trim());
+  url.searchParams.set('formatVersion', '2');
+  const affiliateId = String(env.RAKUTEN_AFFILIATE_ID || '').trim();
+  if (affiliateId) url.searchParams.set('affiliateId', affiliateId);
+  return url;
+}
+
+function rakutenRequestOptions(timeout = 5000) {
+  return { headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' }, signal: AbortSignal.timeout(timeout) };
+}
+
+function arrayOfItems(payload = {}) {
+  return payload.Items || payload.items || [];
+}
+
+function genreNode(value = {}) { return value?.genre || value?.Genre || value || {}; }
+
+export function normalizeRakutenGenre(payload = {}) {
+  const current = genreNode(payload.genre || payload.current?.genre || payload.currentGenre || payload.current || {});
+  const genreId = String(current.genreId || current.genre_id || '').trim();
+  const label = String(current.nameJa || current.genreName || current.name || '').trim();
+  if (!/^\d{3,12}$/u.test(genreId) || !label) return null;
+  const ancestors = (payload.ancestors || payload.Ancestors || []).map(genreNode)
+    .map((node) => String(node.nameJa || node.genreName || node.name || '').trim()).filter(Boolean);
+  const path = [...ancestors.filter((name) => name !== label), label];
+  return { genre_id: genreId, label, level: Math.max(0, Number(current.level) || 0), path };
+}
+
+export async function fetchRakutenGenre(env, genreId, fetcher = fetch) {
+  const value = String(genreId || '').trim();
+  if (!/^\d{3,12}$/u.test(value)) throw new Error('RAKUTEN_GENRE_INVALID');
+  const url = rakutenApiUrl(RAKUTEN_GENRE_SEARCH_API, env);
+  url.searchParams.set('genreId', value);
+  const response = await fetcher(url.toString(), rakutenRequestOptions());
+  if (!response.ok) { const error = new Error('RAKUTEN_GENRE_FAILED'); error.status = response.status; throw error; }
+  const genre = normalizeRakutenGenre(await response.json());
+  if (!genre || genre.genre_id !== value) throw new Error('RAKUTEN_GENRE_INVALID');
+  return genre;
+}
+
+async function discoveryCacheKey(rawQuery) {
+  const bytes = new TextEncoder().encode(String(rawQuery || '').normalize('NFKC').trim().toLowerCase());
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return `discovery_${[...new Uint8Array(digest)].map((value) => value.toString(16).padStart(2, '0')).join('').slice(0, 32)}`;
+}
+
+function truncateUtf8(value, maxBytes = 120) {
+  let result = '';
+  for (const character of String(value || '')) {
+    if (new TextEncoder().encode(result + character).byteLength > maxBytes) break;
+    result += character;
+  }
+  return result;
+}
+
+// 入力語に対する楽天の実商品上位30件からgenreIdを集計し、上位3分類を
+// Genre Search APIで公式名称へ解決する。商品タイトルからAIが分類名を創作する
+// 方式ではないため、固定5分類以外も同じ根拠で安全に増やせる。
+export async function discoverRakutenRankingCategories(env, rawQuery, fetcher = fetch) {
+  const query = truncateUtf8(String(expandSearchQuery(rawQuery).query || rawQuery || '').normalize('NFKC').replace(/\s+/gu, ' ').trim());
+  if (query.length < 2) return [];
+  const cacheKey = await discoveryCacheKey(query);
+  const cached = await readRankingCache(env, 'RAKUTEN_JP', cacheKey, 'GENRE_DISCOVERY');
+  if (cached) return cached;
+  const url = rakutenApiUrl(RAKUTEN_ITEM_SEARCH_API, env);
+  url.searchParams.set('keyword', query);
+  url.searchParams.set('hits', '30');
+  url.searchParams.set('field', '0');
+  url.searchParams.set('elements', 'genreId,itemName');
+  const response = await fetcher(url.toString(), rakutenRequestOptions(4500));
+  if (!response.ok) return [];
+  const scores = new Map();
+  arrayOfItems(await response.json()).slice(0, 30).forEach((value, index) => {
+    const item = itemOf(value); const genreId = String(item.genreId || '').trim();
+    if (/^\d{3,12}$/u.test(genreId)) scores.set(genreId, (scores.get(genreId) || 0) + Math.max(1, 30 - index));
+  });
+  const ids = [...scores.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([genreId]) => genreId);
+  const details = await Promise.allSettled(ids.map((genreId) => fetchRakutenGenre(env, genreId, fetcher)));
+  const categories = details.filter((result) => result.status === 'fulfilled').map((result) => {
+    const genre = result.value;
+    return {
+      value: `rakuten_${genre.genre_id}`,
+      label: genre.path.slice(-2).join(' › '),
+      query: genre.label,
+      genre_id: genre.genre_id,
+      source: 'RAKUTEN_GENRE_API',
+      official_category: true
+    };
+  });
+  await writeRankingCache(env, 'RAKUTEN_JP', cacheKey, 'GENRE_DISCOVERY', categories, Date.now(), 24 * 60 * 60 * 1000);
+  return categories;
 }
 
 function parseAiCategoryIds(payload, allowedIds) {
@@ -115,16 +217,26 @@ export function normalizeRakutenRanking(payload = {}) {
   }).filter((item) => item.product_name && item.offers.length);
 }
 
-export async function fetchRakutenRanking(env, category, fetcher = fetch) {
-  if (!String(env.RAKUTEN_APPLICATION_ID || '').trim() || !String(env.RAKUTEN_ACCESS_KEY || '').trim()) throw new Error('RAKUTEN_RANKING_NOT_CONFIGURED');
-  const url = new URL(RAKUTEN_RANKING_API);
-  url.searchParams.set('applicationId', String(env.RAKUTEN_APPLICATION_ID).trim());
-  url.searchParams.set('accessKey', String(env.RAKUTEN_ACCESS_KEY).trim());
+export function normalizeRakutenReviewRanking(payload = {}) {
+  return normalizeRakutenRanking({ Items: arrayOfItems(payload).map((value, index) => ({
+    ...itemOf(value), rank: index + 1
+  })) }).map((candidate) => ({ ...candidate, marketplace_source: 'RAKUTEN_ICHIBA_ITEM_SEARCH_REVIEW_COUNT' }));
+}
+
+export async function fetchRakutenReviewRanking(env, category, fetcher = fetch) {
+  const url = rakutenApiUrl(RAKUTEN_ITEM_SEARCH_API, env);
   url.searchParams.set('genreId', String(category.genre_id));
-  url.searchParams.set('formatVersion', '2');
-  const affiliateId = String(env.RAKUTEN_AFFILIATE_ID || '').trim();
-  if (affiliateId) url.searchParams.set('affiliateId', affiliateId);
-  const response = await fetcher(url.toString(), { headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' }, signal: AbortSignal.timeout(5000) });
+  url.searchParams.set('sort', '-reviewCount');
+  url.searchParams.set('hits', '30');
+  const response = await fetcher(url.toString(), rakutenRequestOptions());
+  if (!response.ok) { const error = new Error('RAKUTEN_REVIEW_RANKING_FAILED'); error.status = response.status; throw error; }
+  return normalizeRakutenReviewRanking(await response.json());
+}
+
+export async function fetchRakutenRanking(env, category, fetcher = fetch) {
+  const url = rakutenApiUrl(RAKUTEN_RANKING_API, env);
+  url.searchParams.set('genreId', String(category.genre_id));
+  const response = await fetcher(url.toString(), rakutenRequestOptions());
   if (!response.ok) { const error = new Error('RAKUTEN_RANKING_FAILED'); error.status = response.status; throw error; }
   return normalizeRakutenRanking(await response.json());
 }
@@ -138,36 +250,64 @@ async function readRankingCache(env, marketplaceId, categoryId, rankingType, now
   } catch { return null; }
 }
 
-async function writeRankingCache(env, marketplaceId, categoryId, rankingType, candidates, now = Date.now()) {
+async function writeRankingCache(env, marketplaceId, categoryId, rankingType, candidates, now = Date.now(), ttlMs = 5 * 60 * 1000) {
   if (!env.PRODUCT_DB) return;
   try {
     const updatedAt = new Date(now).toISOString();
-    const expiresAt = new Date(now + 5 * 60 * 1000).toISOString();
+    const expiresAt = new Date(now + ttlMs).toISOString();
     await env.PRODUCT_DB.prepare('INSERT INTO marketplace_ranking_cache(marketplace_id,category_id,ranking_type,payload_json,expires_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6) ON CONFLICT(marketplace_id,category_id,ranking_type) DO UPDATE SET payload_json=excluded.payload_json,expires_at=excluded.expires_at,updated_at=excluded.updated_at').bind(marketplaceId, categoryId, rankingType, JSON.stringify(candidates), expiresAt, updatedAt).run();
   } catch {}
 }
 
-export async function marketplaceRankingResult(env, rawQuery, marketplaceId, fetcher = fetch) {
-  const resolution = resolveRankingCategory(rawQuery);
+async function resolveSelectedRankingCategory(env, selection, fetcher) {
+  if (!selection) return null;
+  const staticCategory = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === selection.id || entry.genre_id === String(selection.genre_id));
+  if (staticCategory) return { id: staticCategory.id, label: staticCategory.label, genre_id: staticCategory.genre_id, source: 'STATIC_REGISTRY' };
+  const genre = await fetchRakutenGenre(env, selection.genre_id, fetcher);
+  return { id: `rakuten_${genre.genre_id}`, label: genre.path.slice(-2).join(' › '), genre_id: genre.genre_id, source: 'RAKUTEN_GENRE_API' };
+}
+
+export async function marketplaceRankingResult(env, rawQuery, marketplaceId, fetcher = fetch, categorySelection = null) {
+  const selectedCategory = await resolveSelectedRankingCategory(env, categorySelection, fetcher);
+  const resolution = selectedCategory
+    ? { resolved: true, query: String(rawQuery || '').trim(), category: selectedCategory }
+    : resolveRankingCategory(rawQuery);
   if (!resolution.resolved) {
-    const recommendedIds = await suggestRankingCategoriesWithAi(env, rawQuery, resolution.clarification.options, fetcher);
+    const [recommendedIds, discovered] = await Promise.all([
+      suggestRankingCategoriesWithAi(env, rawQuery, resolution.clarification.options, fetcher),
+      discoverRakutenRankingCategories(env, rawQuery, fetcher).catch(() => [])
+    ]);
     const order = new Map(recommendedIds.map((id, index) => [id, index]));
-    const options = resolution.clarification.options.map((option) => ({
+    const staticOptions = resolution.clarification.options.map((option) => ({
       ...option, ai_recommended: order.has(option.value)
     })).sort((a, b) => (order.get(a.value) ?? 99) - (order.get(b.value) ?? 99));
-    return { mode: 'clarification', ...resolution, clarification: { ...resolution.clarification, options } };
+    const discoveredIds = new Set(discovered.map((option) => option.genre_id));
+    const options = [...discovered, ...staticOptions.filter((option) => !discoveredIds.has(option.genre_id))].slice(0, 12);
+    const guidance = discovered.length
+      ? '楽天市場の実商品から見つけた公式小分類です。近い分類を選んでください。選択後は全13モールの観測商品を同じ分類で集計します。'
+      : resolution.clarification.guidance;
+    return { mode: 'clarification', ...resolution, clarification: { ...resolution.clarification, guidance, options, dynamic_category_count: discovered.length } };
   }
   const capability = MARKETPLACE_RANKING_CAPABILITIES.find((entry) => entry.marketplace_id === marketplaceId);
   if (!capability) throw new Error('RANKING_MARKETPLACE_INVALID');
   if (marketplaceId === 'RAKUTEN_JP') {
-    const rankingType = 'REALTIME';
+    let rankingType = 'REALTIME';
+    let mode = 'native_api';
+    let rankingLabel = '楽天市場 リアルタイムランキング';
     let candidates = await readRankingCache(env, marketplaceId, resolution.category.id, rankingType);
     const cacheHit = Boolean(candidates);
     if (!candidates) {
-      candidates = await fetchRakutenRanking(env, resolution.category, fetcher);
+      try {
+        candidates = await fetchRakutenRanking(env, resolution.category, fetcher);
+      } catch (error) {
+        if (error.status !== 404) throw error;
+        rankingType = 'REVIEW_COUNT'; mode = 'derived_api'; rankingLabel = '楽天市場 口コミ件数順';
+        candidates = await readRankingCache(env, marketplaceId, resolution.category.id, rankingType);
+        if (!candidates) candidates = await fetchRakutenReviewRanking(env, resolution.category, fetcher);
+      }
       await writeRankingCache(env, marketplaceId, resolution.category.id, rankingType, candidates);
     }
-    return { mode: 'native_api', marketplace: capability, category: resolution.category, ranking_type: '楽天市場 リアルタイムランキング', cache_hit: cacheHit, candidates };
+    return { mode, marketplace: capability, category: resolution.category, ranking_type: rankingLabel, cache_hit: cacheHit, candidates };
   }
   return { mode: capability.ranking_mode, marketplace: capability, category: resolution.category, ranking_type: capability.status === 'planned' ? '準備中' : 'モールでランキングを調べる', candidates: [] };
 }

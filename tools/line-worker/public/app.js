@@ -50,7 +50,7 @@ const shareCopy={
 
 const $ = (selector) => document.querySelector(selector);
 const elements = { form:$('#knowledgeForm'), query:$('#query'), consent:$('#consent'), language:$('#languageSelect'), languageLabel:$('#languageLabel'), heroTitle:$('#heroTitle'), heroEyebrow:$('#heroEyebrow'), searchStep:$('#searchStep'), searchTitle:$('#searchTitle'), searchTitleSummary:$('#searchTitleSummary'), consentText:$('#consentText'), submitText:$('#submitText'), submit:$('#submitButton'), searchModeSwitch:$('#searchModeSwitch'), searchModeIdentify:$('#searchModeIdentify'), searchModeDirect:$('#searchModeDirect'), rankingButton:$('#rankingSearchButton'), rankingDialog:$('#rankingDialog'), rankingList:$('#rankingMarketplaceList'), rankingStatus:$('#rankingStatus'), rankingResults:$('#rankingResults'), status:$('#status'), quick:$('#quickQueries'), searchHistorySection:$('#searchHistorySection'), searchHistoryTitle:$('#searchHistoryTitle'), searchHistoryList:$('#searchHistoryList'), deleteAllSearchHistory:$('#deleteAllSearchHistory'), results:$('#resultsSection'), resultsTitle:$('#resultsTitle'), message:$('#resultMessage'), cards:$('#resultCards'), turnstile:$('#turnstileContainer'), install:$('#installButton'), wishList:$('#wishList'), wishTitle:$('#wishTitle'), wishDescription:$('#wishDescription'), wishFilter:$('#wishFilter'), clear:$('#clearQuery'), memberLink:$('#memberLink'), memberLogout:$('#memberLogout'), insightTitle:$('#insightTitle'), insightSummary:$('#insightSummary'), discoveryTitle:$('#discoveryTitle'), discoveryBody:$('#discoveryBody'), discoveryExample:$('#discoveryExample'), journey:[$('#journeyTitle'),$('#journeyLead'),$('#journeyStep1Title'),$('#journeyStep1Body'),$('#journeyStep2Title'),$('#journeyStep2Body'),$('#journeyStep3Title'),$('#journeyStep3Body')] };
-let turnstileWidget = null; let installPrompt = null; let memberSession = null; let memberWishRecords = []; let searchAttempt=0; let searchRoot=''; const sessionId = getSessionId();
+let turnstileWidget = null; let installPrompt = null; let memberSession = null; let memberWishRecords = []; let searchAttempt=0; let searchRoot=''; let rankingCategorySelection=null; const sessionId = getSessionId();
 
 const installCopy = {
   JA: ['iPhone / iPad：Safariの共有ボタンを押し、「ホーム画面に追加」を選びます。','Android：Chromeのメニューから「アプリをインストール」または「ホーム画面に追加」を選びます。','PC：Chrome / Edgeのアドレスバー右側にあるインストールアイコンを押します。'],
@@ -840,17 +840,17 @@ document.querySelector('#stickyMarketplaceJump')?.addEventListener('click',()=>{
 });
 window.HoshiluSearch={run:runKnowledgeSearch};
 elements.form.addEventListener('submit',event=>{event.preventDefault();const query=String(elements.query.value||'').trim();if(currentSearchMode()==='identify'&&typeof window.HoshiluIdentifySearch?.open==='function'){window.HoshiluIdentifySearch.open(query,elements.language.value);return;}runKnowledgeSearch();});
-async function runRankingSearch(marketplace){
+async function runRankingSearch(marketplace,categorySelection=rankingCategorySelection){
   elements.rankingStatus.textContent='ランキングを取得しています…';elements.rankingResults.replaceChildren();
   try{
     const token=await waitForFreshTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
-    const response=await fetch('/api/rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,marketplace,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
+    const response=await fetch('/api/rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,marketplace,category_selection:categorySelection,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
     const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'RANKING_FAILED');
     const result=payload.result;
     if(result.mode==='clarification'){
-      renderRankingClarification(result.clarification,()=>runRankingSearch(marketplace));return;
+      renderRankingClarification(result.clarification,(selection)=>runRankingSearch(marketplace,selection));return;
     }
-    if(result.mode!=='native_api'){
+    if(!['native_api','derived_api'].includes(result.mode)){
       elements.rankingStatus.textContent=`${result.marketplace.label}: ${result.ranking_type}。公式APIで順位を確認できないため、架空の順位は表示しません。`;
       if(result.direct_url){const link=document.createElement('a');link.className='buy-link ranking-direct-link';link.href=result.direct_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=result.direct_label;elements.rankingResults.append(link);}return;
     }
@@ -864,18 +864,18 @@ function renderRankingClarification(clarification,rerun){
   elements.rankingStatus.textContent=clarification.question||'どの小分類のランキングを見ますか？';
   const guide=textElement('p','ranking-category-guide',clarification.guidance||'近い小分類を選ぶか、具体的な商品種類を入力してください。');
   const options=document.createElement('div');options.className='ranking-category-options';
-  (clarification.options||[]).forEach(option=>{const button=document.createElement('button');button.type='button';button.className='ranking-category-option';button.textContent=`${option.ai_recommended?'AI候補：':''}${option.label}`;button.addEventListener('click',()=>{elements.query.value=option.label;rerun();});options.append(button);});
+  (clarification.options||[]).forEach(option=>{const button=document.createElement('button');button.type='button';button.className='ranking-category-option';button.textContent=`${option.official_category?'公式小分類：':option.ai_recommended?'AI候補：':''}${option.label}`;button.addEventListener('click',()=>{rankingCategorySelection={id:option.value,label:option.label,genre_id:option.genre_id,source:option.source};elements.query.value=option.query||option.label;rerun(rankingCategorySelection);});options.append(button);});
   const instruction=document.createElement('form');instruction.className='ranking-category-instruction';
   const input=document.createElement('input');input.type='search';input.value=elements.query.value;input.placeholder='例：レディーススニーカー';input.setAttribute('aria-label','ランキングの小分類を入力');
   const submit=document.createElement('button');submit.type='submit';submit.textContent='この小分類で調べる';
-  instruction.append(input,submit);instruction.addEventListener('submit',event=>{event.preventDefault();const value=String(input.value||'').trim();if(value.length<2)return;elements.query.value=value;rerun();});
+  instruction.append(input,submit);instruction.addEventListener('submit',event=>{event.preventDefault();const value=String(input.value||'').trim();if(value.length<2)return;rankingCategorySelection=null;elements.query.value=value;rerun(null);});
   elements.rankingResults.replaceChildren(guide,options,instruction);
 }
-async function runHoshiluRanking(){
+async function runHoshiluRanking(categorySelection=rankingCategorySelection){
   elements.rankingStatus.textContent='HOSHILU総合人気ランキングを集計しています…';elements.rankingResults.replaceChildren();
   try{
     const token=await waitForFreshTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
-    const response=await fetch('/api/hoshilu-rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
+    const response=await fetch('/api/hoshilu-rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,category_selection:categorySelection,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
     const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'HOSHILU_RANKING_FAILED');
     const result=payload.result;if(result.mode==='clarification'){renderRankingClarification(result.clarification,runHoshiluRanking);return;}
     elements.rankingStatus.textContent=`${result.category.label}｜${result.methodology}`;
@@ -891,8 +891,8 @@ async function runHoshiluRanking(){
 }
 async function openRankingSearch(){
   if(String(elements.query.value||'').trim().length<2){elements.query.focus();elements.status.textContent='ランキングを見たい商品カテゴリを入力してください。';return;}
-  elements.rankingDialog.showModal();elements.rankingList.replaceChildren();elements.rankingResults.replaceChildren();elements.rankingStatus.textContent='';
-  try{const overall=document.createElement('button');overall.type='button';overall.className='ranking-marketplace-button';overall.dataset.mode='hoshilu_organic';overall.textContent='HOSHILU総合人気＋AI最安ランキング';overall.addEventListener('click',runHoshiluRanking);elements.rankingList.append(overall);const response=await fetch('/api/ranking-capabilities');const payload=await response.json();payload.marketplaces.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='ranking-marketplace-button';button.dataset.mode=item.ranking_mode;button.textContent=item.status==='available'?item.label:`${item.label}（準備中）`;button.addEventListener('click',()=>runRankingSearch(item.marketplace_id));elements.rankingList.append(button);});runHoshiluRanking();}catch{elements.rankingStatus.textContent='ショップ一覧を取得できません。';}
+  rankingCategorySelection=null;elements.rankingDialog.showModal();elements.rankingList.replaceChildren();elements.rankingResults.replaceChildren();elements.rankingStatus.textContent='';
+  try{const overall=document.createElement('button');overall.type='button';overall.className='ranking-marketplace-button';overall.dataset.mode='hoshilu_organic';overall.textContent='HOSHILU総合人気＋AI最安ランキング';overall.addEventListener('click',()=>runHoshiluRanking());elements.rankingList.append(overall);const response=await fetch('/api/ranking-capabilities');const payload=await response.json();payload.marketplaces.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='ranking-marketplace-button';button.dataset.mode=item.ranking_mode;button.textContent=item.status==='available'?item.label:`${item.label}（準備中）`;button.addEventListener('click',()=>runRankingSearch(item.marketplace_id));elements.rankingList.append(button);});runHoshiluRanking();}catch{elements.rankingStatus.textContent='ショップ一覧を取得できません。';}
 }
 elements.rankingButton?.addEventListener('click',openRankingSearch);
 document.querySelector('#rankingDialogClose')?.addEventListener('click',()=>elements.rankingDialog.close());
