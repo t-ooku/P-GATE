@@ -1497,7 +1497,7 @@ async function handleHoshiluRankingApi(request, env) {
       marketplace_scope: MARKETPLACE_RANKING_CAPABILITIES.map(({ marketplace_id, label }) => ({ marketplace_id, label })),
       candidates: decorated.candidates,
       ai_cheapest: {
-        ranking_type: 'AI最安ランキング（ベータ）',
+        ranking_type: 'HOSHILU最安値ランキング（ベータ）',
         methodology: '確認できた実価格を優先し、価格未取得の商品だけAI推定価格帯の中央値で参考順を作成します。',
         disclaimer: 'AI推定価格を含む参考ランキングです。実際の販売価格・送料・在庫は各モールで確認してください。',
         candidates: aiCheapestCandidates,

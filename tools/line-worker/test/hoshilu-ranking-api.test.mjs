@@ -7,7 +7,7 @@ globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
 globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 
-test('総合人気ランキング応答の直下に、価格根拠を分けたAI最安ランキングを返す', async () => {
+test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最安値ランキングを返す', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
     const target = String(url);
@@ -28,7 +28,7 @@ test('総合人気ランキング応答の直下に、価格根拠を分けたAI
     const payload = await response.json();
     assert.equal(response.status, 200, JSON.stringify(payload));
     assert.equal(payload.result.ranking_type, 'HOSHILU総合人気ランキング（ベータ）');
-    assert.equal(payload.result.ai_cheapest.ranking_type, 'AI最安ランキング（ベータ）');
+    assert.equal(payload.result.ai_cheapest.ranking_type, 'HOSHILU最安値ランキング（ベータ）');
     assert.equal(payload.result.ai_cheapest.candidates[0].ai_cheapest_price_source, 'OBSERVED_ITEM_PRICE');
     assert.equal(payload.result.ai_cheapest.candidates[0].ai_cheapest_price_min, 2980);
     assert.match(payload.result.ai_cheapest.disclaimer, /AI推定価格/);
