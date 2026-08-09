@@ -797,7 +797,8 @@ async function runRankingSearch(marketplace){
       result.clarification.options.forEach(option=>{const button=document.createElement('button');button.type='button';button.className='ranking-category-option';button.textContent=option.label;button.addEventListener('click',()=>{elements.query.value=option.label;runRankingSearch(marketplace);});elements.rankingResults.append(button);});return;
     }
     if(result.mode!=='native_api'){
-      elements.rankingStatus.textContent=`${result.marketplace.label}: ${result.ranking_type}。公式APIで順位を確認できないため、架空の順位は表示しません。`;return;
+      elements.rankingStatus.textContent=`${result.marketplace.label}: ${result.ranking_type}。公式APIで順位を確認できないため、架空の順位は表示しません。`;
+      if(result.direct_url){const link=document.createElement('a');link.className='buy-link ranking-direct-link';link.href=result.direct_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=result.direct_label;elements.rankingResults.append(link);}return;
     }
     elements.rankingStatus.textContent=`${result.category.label}｜${result.ranking_type}`;
     const heading=textElement('h3','ranking-result-title',`${result.marketplace.label} ${result.category.label} 人気ランキング`);

@@ -1528,7 +1528,13 @@ async function handleRankingApi(request, env) {
     if (Number(request.headers.get('content-length') || 0) > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
     const input = validateRankingRequest(await request.json());
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    const result = await marketplaceRankingResult(env, input.query, input.marketplace, fetch);
+    let result = await marketplaceRankingResult(env, input.query, input.marketplace, fetch);
+    // 専用ランキングAPI/ページを確認できないモールは、架空順位や未検証URLを
+    // 作らず、既存の検証済み検索URLビルダーへフォールバックする。
+    if (result.mode === 'direct_link') {
+      const direct = marketplaceSearchDestinations(input.query, env).find((item) => item.marketplace === input.marketplace);
+      if (direct && isAllowedDestination(direct.destination)) result = { ...result, direct_url: direct.destination, direct_label: `${result.marketplace.label}で${result.category.label}を探す` };
+    }
     return Response.json({ ok: true, result }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
   } catch (error) {
     const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_MARKETPLACE_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
