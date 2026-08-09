@@ -43,7 +43,7 @@ const shareCopy={
 };
 
 const $ = (selector) => document.querySelector(selector);
-const elements = { form:$('#knowledgeForm'), query:$('#query'), consent:$('#consent'), language:$('#languageSelect'), languageLabel:$('#languageLabel'), heroTitle:$('#heroTitle'), heroEyebrow:$('#heroEyebrow'), searchStep:$('#searchStep'), searchTitle:$('#searchTitle'), searchTitleSummary:$('#searchTitleSummary'), consentText:$('#consentText'), submitText:$('#submitText'), submit:$('#submitButton'), status:$('#status'), quick:$('#quickQueries'), searchHistorySection:$('#searchHistorySection'), searchHistoryTitle:$('#searchHistoryTitle'), searchHistoryList:$('#searchHistoryList'), deleteAllSearchHistory:$('#deleteAllSearchHistory'), results:$('#resultsSection'), resultsTitle:$('#resultsTitle'), message:$('#resultMessage'), cards:$('#resultCards'), turnstile:$('#turnstileContainer'), install:$('#installButton'), wishList:$('#wishList'), wishTitle:$('#wishTitle'), wishDescription:$('#wishDescription'), wishFilter:$('#wishFilter'), clear:$('#clearQuery'), memberLink:$('#memberLink'), memberLogout:$('#memberLogout'), goSearch:$('#goSearch'), goWish:$('#goWish'), insightTitle:$('#insightTitle'), insightSummary:$('#insightSummary'), discoveryTitle:$('#discoveryTitle'), discoveryBody:$('#discoveryBody'), discoveryExample:$('#discoveryExample'), journey:[$('#journeyTitle'),$('#journeyLead'),$('#journeyStep1Title'),$('#journeyStep1Body'),$('#journeyStep2Title'),$('#journeyStep2Body'),$('#journeyStep3Title'),$('#journeyStep3Body')] };
+const elements = { form:$('#knowledgeForm'), query:$('#query'), consent:$('#consent'), language:$('#languageSelect'), languageLabel:$('#languageLabel'), heroTitle:$('#heroTitle'), heroEyebrow:$('#heroEyebrow'), searchStep:$('#searchStep'), searchTitle:$('#searchTitle'), searchTitleSummary:$('#searchTitleSummary'), consentText:$('#consentText'), submitText:$('#submitText'), submit:$('#submitButton'), rankingButton:$('#rankingSearchButton'), rankingDialog:$('#rankingDialog'), rankingList:$('#rankingMarketplaceList'), rankingStatus:$('#rankingStatus'), rankingResults:$('#rankingResults'), status:$('#status'), quick:$('#quickQueries'), searchHistorySection:$('#searchHistorySection'), searchHistoryTitle:$('#searchHistoryTitle'), searchHistoryList:$('#searchHistoryList'), deleteAllSearchHistory:$('#deleteAllSearchHistory'), results:$('#resultsSection'), resultsTitle:$('#resultsTitle'), message:$('#resultMessage'), cards:$('#resultCards'), turnstile:$('#turnstileContainer'), install:$('#installButton'), wishList:$('#wishList'), wishTitle:$('#wishTitle'), wishDescription:$('#wishDescription'), wishFilter:$('#wishFilter'), clear:$('#clearQuery'), memberLink:$('#memberLink'), memberLogout:$('#memberLogout'), goSearch:$('#goSearch'), goWish:$('#goWish'), insightTitle:$('#insightTitle'), insightSummary:$('#insightSummary'), discoveryTitle:$('#discoveryTitle'), discoveryBody:$('#discoveryBody'), discoveryExample:$('#discoveryExample'), journey:[$('#journeyTitle'),$('#journeyLead'),$('#journeyStep1Title'),$('#journeyStep1Body'),$('#journeyStep2Title'),$('#journeyStep2Body'),$('#journeyStep3Title'),$('#journeyStep3Body')] };
 let turnstileWidget = null; let installPrompt = null; let memberSession = null; let memberWishRecords = []; let searchAttempt=0; let searchRoot=''; const sessionId = getSessionId();
 
 const installCopy = {
@@ -552,6 +552,19 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   if(priceComparisonButton)mediaActions.append(priceComparisonButton);
   return card;
 }
+function rankingCard(candidate,index,rankingType,searchQuery){
+  const card=productCard(candidate,index,selectedCopy(),true,searchQuery);
+  card.classList.add('ranking-product-card');
+  const rank=card.querySelector(':scope > .rank');
+  const number=Math.max(1,Number(candidate.rank)||index+1);
+  if(rank)rank.textContent=number===1?'🥇 1位':number===2?'🥈 2位':number===3?'🥉 3位':`${number}位`;
+  const review=document.createElement('div');review.className='ranking-review-summary';
+  const average=Number(candidate.review_average)||0;const count=Math.max(0,Number(candidate.review_count)||0);
+  review.textContent=average&&count?`★ ${average.toFixed(2)} ・ 口コミ ${count.toLocaleString()}件`:'口コミ評価は公式データ未取得';
+  const title=card.querySelector(':scope > h3');if(title)title.after(review);
+  card.dataset.rankingType=rankingType;
+  return card;
+}
 function resultCarousel(cards){
   const carousel=document.createElement('div');
   carousel.className='result-carousel';
@@ -772,6 +785,33 @@ document.querySelector('#stickySearch')?.addEventListener('submit',event=>{
 });
 window.HoshiluSearch={run:runKnowledgeSearch};
 elements.form.addEventListener('submit',event=>{event.preventDefault();runKnowledgeSearch();});
+async function runRankingSearch(marketplace){
+  elements.rankingStatus.textContent='ランキングを取得しています…';elements.rankingResults.replaceChildren();
+  try{
+    const token=await waitForFreshTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
+    const response=await fetch('/api/rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,marketplace,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
+    const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'RANKING_FAILED');
+    const result=payload.result;
+    if(result.mode==='clarification'){
+      elements.rankingStatus.textContent=result.clarification.question;
+      result.clarification.options.forEach(option=>{const button=document.createElement('button');button.type='button';button.className='ranking-category-option';button.textContent=option.label;button.addEventListener('click',()=>{elements.query.value=option.label;runRankingSearch(marketplace);});elements.rankingResults.append(button);});return;
+    }
+    if(result.mode!=='native_api'){
+      elements.rankingStatus.textContent=`${result.marketplace.label}: ${result.ranking_type}。公式APIで順位を確認できないため、架空の順位は表示しません。`;return;
+    }
+    elements.rankingStatus.textContent=`${result.category.label}｜${result.ranking_type}`;
+    const heading=textElement('h3','ranking-result-title',`${result.marketplace.label} ${result.category.label} 人気ランキング`);
+    const cards=result.candidates.map((candidate,index)=>rankingCard(candidate,index,result.ranking_type,result.category.label));
+    elements.rankingResults.replaceChildren(heading,...cards);
+  }catch(error){elements.rankingStatus.textContent=error.message==='CONSENT_REQUIRED'?'同意欄を確認してください。':'現在ランキングを取得できません。通常検索はそのまま利用できます。';}
+}
+async function openRankingSearch(){
+  if(String(elements.query.value||'').trim().length<2){elements.query.focus();elements.status.textContent='ランキングを見たい商品カテゴリを入力してください。';return;}
+  elements.rankingDialog.showModal();elements.rankingList.replaceChildren();elements.rankingResults.replaceChildren();elements.rankingStatus.textContent='';
+  try{const response=await fetch('/api/ranking-capabilities');const payload=await response.json();payload.marketplaces.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='ranking-marketplace-button';button.dataset.mode=item.ranking_mode;button.textContent=item.status==='available'?item.label:`${item.label}（準備中）`;button.addEventListener('click',()=>runRankingSearch(item.marketplace_id));elements.rankingList.append(button);});}catch{elements.rankingStatus.textContent='ショップ一覧を取得できません。';}
+}
+elements.rankingButton?.addEventListener('click',openRankingSearch);
+document.querySelector('#rankingDialogClose')?.addEventListener('click',()=>elements.rankingDialog.close());
 elements.language.addEventListener('change',()=>{setLanguage(elements.language.value);renderMemberState();renderNotifications();advancedSearchGroups=null;renderAdvancedSearch();syncStickySearch();});
 const installDialog=$('#installDialog');const installInstructions=$('#installInstructions');
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}

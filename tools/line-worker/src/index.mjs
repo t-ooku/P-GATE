@@ -22,6 +22,7 @@ import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offe
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn, chatIntentConfigured } from './ai-chat-intent.mjs';
+import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult } from './marketplace-ranking.mjs';
 import { buildPriceComparison, realPriceRows, requestAiPriceEstimates } from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
@@ -1507,6 +1508,34 @@ async function handlePriceComparisonApi(request, env) {
   }
 }
 
+export function validateRankingRequest(payload = {}) {
+  if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
+  const query = redactSearchPersonalData(payload.query).slice(0, 200).trim();
+  if (query.length < 2) throw new Error('RANKING_QUERY_REQUIRED');
+  const marketplace = String(payload.marketplace || '').trim().toUpperCase();
+  if (!MARKETPLACE_RANKING_CAPABILITIES.some((item) => item.marketplace_id === marketplace)) throw new Error('RANKING_MARKETPLACE_INVALID');
+  const sessionId = String(payload.session_id || '').trim();
+  if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
+  const turnstileToken = String(payload.turnstile_token || '').trim();
+  if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
+  return { query, marketplace, session_id: sessionId, turnstile_token: turnstileToken };
+}
+
+async function handleRankingApi(request, env) {
+  try {
+    const origin = request.headers.get('origin');
+    if (origin && origin !== new URL(request.url).origin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+    if (Number(request.headers.get('content-length') || 0) > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
+    const input = validateRankingRequest(await request.json());
+    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    const result = await marketplaceRankingResult(env, input.query, input.marketplace, fetch);
+    return Response.json({ ok: true, result }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
+  } catch (error) {
+    const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_MARKETPLACE_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
+    return Response.json({ ok: false, error: error.message || 'RANKING_FAILED' }, { status: client.includes(error.message) ? 400 : 502 });
+  }
+}
+
 // HOSHILU GAS→Web移行 (docs/HOSHILU_GAS_TO_WEB_MIGRATION_BRIEF_2026-08-06.md §3,
 // gas/ContractPolicyEngine.gs): D1優先・GASフォールバックで走らせる契約ポリシー判定。
 // callGas('KNOWLEDGE')はgas/LineIntegration.gs answerPublic()経由で既に
@@ -1893,6 +1922,8 @@ export default {
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/price-comparison') return handlePriceComparisonApi(request, env);
+    if (request.method === 'POST' && url.pathname === '/api/rankings') return handleRankingApi(request, env);
+    if (request.method === 'GET' && url.pathname === '/api/ranking-capabilities') return Response.json({ ok: true, marketplaces: MARKETPLACE_RANKING_CAPABILITIES }, { headers: { 'cache-control': 'public, max-age=3600' } });
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
     if (request.method === 'GET' && url.pathname === '/api/refinement-chips') {
       // Condition search moved into the search panel (2026-08-07 request):
