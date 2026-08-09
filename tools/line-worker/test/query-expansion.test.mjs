@@ -6,6 +6,21 @@ import {
   QUERY_EXPANSION_WEIGHTS,
   queryExpansionRuleIds
 } from '../src/query-expansion.mjs';
+
+test('ローラの度入りカラコンをLILMOONへ一発で展開する', () => {
+  const result = expandSearchQuery('カラコン ローラ 度入り');
+  assert.equal(result.expanded, true);
+  assert.equal(result.expansion.rule_id, 'lilmoon-rola-colored-contacts');
+  assert.match(result.query, /^LILMOON リルムーン 度あり カラコン/u);
+  assert.match(result.query, /ローラ/u);
+  assert.match(buildAmazonSearchKeywords(result.query), /LILMOON/u);
+  assert.ok(buildRakutenSearchKeywordCandidates(result.query).some((value) => /LILMOON/u.test(value)));
+});
+
+test('ローラ単独やカラコンだけではLILMOONへ誤展開しない', () => {
+  assert.equal(expandSearchQuery('ローラが使っている商品').expanded, false);
+  assert.equal(expandSearchQuery('度入りカラコン').expanded, false);
+});
 import { buildAmazonSearchKeywords, buildRakutenSearchKeywordCandidates } from '../src/index.mjs';
 
 // v4.2 合格条件: 「顔用扇風機」→ ハンディファン
@@ -119,6 +134,7 @@ test('primary/synonym/related/broad の重みは降順に定義されている',
 test('各展開ルールはsynonym/related/broadを持つ', () => {
   for (const ruleId of queryExpansionRuleIds) {
     const sample = {
+      'lilmoon-rola-colored-contacts': 'カラコン ローラ 度入り',
       'handheld-fan': '顔用扇風機',
       'power-bank': 'スマホの電気なくなった時のやつ',
       'garment-steamer': '服のシワ取るやつ',

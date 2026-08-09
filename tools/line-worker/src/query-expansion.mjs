@@ -35,6 +35,19 @@ export const QUERY_EXPANSION_WEIGHTS = Object.freeze({
 // 正式名詞そのもの（「ワイヤレスイヤホン」等）には反応させない。
 const EXPANSION_RULES = [
   {
+    id: 'lilmoon-rola-colored-contacts',
+    // 2026-08-09 ユーザー正解フィードバック:
+    // 「カラコン ローラ 度入り」はLILMOON（リルムーン）の度あり商品を指す。
+    // 現行公式サイトでもLILMOONの度数展開を確認済み。
+    // https://www.lilmoon.jp/ / https://www.lilmoon.jp/product/chocolate.html
+    // 人名「ローラ」単独では別商品へ誤展開し得るため、カラコン文脈との共起を必須にする。
+    match: /(?=.*(?:カラコン|カラー\s*コンタクト|color(?:ed)?\s*contacts?))(?=.*(?:ローラ|rola))(?=.*(?:度入り|度あり|度数|prescription))/iu,
+    primary: 'LILMOON リルムーン 度あり',
+    synonyms: ['リルムーン カラーコンタクト', 'LILMOON prescription color contacts'],
+    related: ['LILMOON 1DAY', 'LILMOON 1MONTH'],
+    broad: ['度あり カラコン']
+  },
+  {
     id: 'handheld-fan',
     // 合格条件: 「顔用扇風機」「暑い時に顔に風くるやつ」→ ハンディファン
     match: /(顔用扇風機|顔[にへ]?.{0,6}(?:あてる|向ける|くる|来る).{0,6}扇風機|扇風機.{0,6}顔|暑い.{0,10}(?:時|とき).{0,10}顔.{0,10}風.{0,10}(?:くる|来る|当た|涼)|顔.{0,10}風.{0,10}(?:くる|来る|当た|涼).{0,10}(?:やつ|もの|扇風機)?|face\s*fan|hand[- ]?held\s*fan|cool(?:ing)?\s+(?:my|your)\s*face)/iu,
