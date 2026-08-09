@@ -1,3 +1,5 @@
+import Encoding from 'encoding-japanese';
+
 const SOURCES = Object.freeze([
   ['AMAZON_JP','Amazon','https://www.amazon.co.jp/gp/goldbox/','Amazonのタイムセール・公式情報'],
   ['RAKUTEN_JP','楽天市場','https://event.rakuten.co.jp/','楽天市場のキャンペーン・公式情報'],
@@ -43,8 +45,13 @@ export async function decodeOfficialHtml(response) {
   const meta=probe.match(/<meta[^>]+charset\s*=\s*["']?([^"'\s/>;]+)/i)?.[1]
     ||probe.match(/<meta[^>]+content\s*=\s*["'][^"']*charset\s*=\s*([^;"'\s]+)/i)?.[1]||'';
   const charset=charsetLabel(header||meta);
-  try{return new TextDecoder(charset).decode(bytes).slice(0,750000);}
-  catch{return new TextDecoder('utf-8').decode(bytes).slice(0,750000);}
+  // Cloudflare WorkersのTextDecoderはUTF-8のみ対応するため、日本語の旧来文字コードは
+  // ブラウザ互換の純JavaScript変換器で復号する。NodeのTextDecoderへ依存するとテストだけ
+  // 成功し、本番WorkerではUTF-8フォールバックして再び文字化けする。
+  if(charset==='utf-8')return new TextDecoder().decode(bytes).slice(0,750000);
+  const from=charset==='shift_jis'?'SJIS':charset==='euc-jp'?'EUCJP':'JIS';
+  try{return Encoding.convert(bytes,{to:'UNICODE',from,type:'string'}).slice(0,750000);}
+  catch{return new TextDecoder().decode(bytes).slice(0,750000);}
 }
 
 function brokenEncoding(value='') {

@@ -9,5 +9,8 @@
     "evaluate:search-quality": "node scripts/evaluate-search-quality-baseline.mjs",
     "validate:marketplace-offers": "node scripts/validate-marketplace-offer-feed.mjs",
     "ingest:teacher-dataset": "node scripts/ingest-teacher-dataset-batch.mjs"
+  },
+  "dependencies": {
+    "encoding-japanese": "^2.2.0"
   }
 }
