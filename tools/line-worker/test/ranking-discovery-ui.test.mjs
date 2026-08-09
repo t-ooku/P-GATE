@@ -45,3 +45,17 @@ test('小分類未確定時はAI候補チップと自由入力の両方でHOSHIL
   assert.match(app, /ランキングの小分類を入力/);
   assert.match(css, /ranking-category-instruction/);
 });
+
+test('ランキング商品は商品名を2行に省略し詳細を押した時だけ全文と補足を表示する', async () => {
+  const app = await readFile(new URL('app.js', root), 'utf8');
+  const css = await readFile(new URL('styles.css', root), 'utf8');
+  assert.match(app, /title\.classList\.add\('ranking-product-title'\)/);
+  assert.match(app, /description\?\.remove\(\)/);
+  assert.match(app, /details\.className='ranking-product-details'/);
+  assert.match(app, /ranking-details-open','詳細を見る'/);
+  assert.match(app, /ranking-full-product-title/);
+  assert.match(app, /ranking-product-description/);
+  assert.match(css, /\.ranking-product-title\{[^}]*-webkit-line-clamp:2/);
+  assert.match(css, /\.ranking-details-close\{display:none\}/);
+  assert.match(css, /\.ranking-product-details\[open\] \.ranking-details-open\{display:none\}/);
+});

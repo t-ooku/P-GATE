@@ -580,7 +580,15 @@ function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popula
   const review=document.createElement('div');review.className='ranking-review-summary';
   const average=Number(candidate.review_average)||0;const count=Math.max(0,Number(candidate.review_count)||0);
   review.textContent=average&&count?`★ ${average.toFixed(2)} ・ 口コミ ${count.toLocaleString()}件`:'口コミ評価は公式データ未取得';
-  const title=card.querySelector(':scope > h3');if(title)title.after(review);
+  const title=card.querySelector(':scope > h3');
+  const fullTitle=String(title?.textContent||candidate.display_name||candidate.product_name||'商品名未取得').trim();
+  if(title){title.classList.add('ranking-product-title');title.title=fullTitle;title.after(review);}
+  const description=card.querySelector(':scope > p');
+  const descriptionText=String(description?.textContent||'').trim();
+  description?.remove();
+  const evidence=card.querySelector(':scope > .evidence');
+  evidence?.remove();
+  let detailsAnchor=review;
   if(rankingKind==='cheapest'){
     const price=document.createElement('div');price.className='ranking-price-summary';
     const min=Math.max(0,Number(candidate.ai_cheapest_price_min)||0);const max=Math.max(min,Number(candidate.ai_cheapest_price_max)||min);
@@ -588,8 +596,15 @@ function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popula
       price.classList.add('ai-estimated');price.textContent=`AI推定価格 約¥${min.toLocaleString()}〜¥${max.toLocaleString()}（参考）`;
     }else if(candidate.ai_cheapest_price_source==='CONFIRMED_TOTAL')price.textContent=`確認済み送料込み価格 ¥${min.toLocaleString()}`;
     else price.textContent=`確認済み商品価格 ¥${min.toLocaleString()}（送料は別途確認）`;
-    review.after(price);
+    review.after(price);detailsAnchor=price;
   }
+  const details=document.createElement('details');details.className='ranking-product-details';
+  const summary=document.createElement('summary');summary.append(textElement('span','ranking-details-open','詳細を見る'),textElement('span','ranking-details-close','閉じる'));
+  const content=document.createElement('div');content.className='ranking-product-details-content';
+  content.append(textElement('strong','ranking-full-product-title',fullTitle));
+  if(descriptionText)content.append(textElement('p','ranking-product-description',descriptionText));
+  if(evidence)content.append(evidence);
+  details.append(summary,content);detailsAnchor.after(details);
   card.dataset.rankingType=rankingType;
   return card;
 }

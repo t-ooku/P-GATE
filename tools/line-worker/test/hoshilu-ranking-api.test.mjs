@@ -15,6 +15,9 @@ test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最�
     if (target.includes('openapi.rakuten.co.jp/ichibaranking')) return Response.json({ Items: [
       { rank: 1, itemName: 'テスト ハンディファン', itemUrl: 'https://item.rakuten.co.jp/shop/item/', itemPrice: 2980, reviewAverage: 4.6, reviewCount: 300 }
     ] });
+    if (target.includes('shopping.yahooapis.jp')) return Response.json({ hits: [
+      { code: 'cheap-charger', name: 'USB充電器 急速20W #ハンディファン #夏', url: 'https://store.shopping.yahoo.co.jp/shop/cheap-charger.html', price: 100, shipping: { code: 2 } }
+    ] });
     throw new Error(`UNEXPECTED_FETCH:${target}`);
   };
   const request = new Request('https://hoshilu.app/api/hoshilu-rankings', {
@@ -23,7 +26,7 @@ test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最�
   });
   try {
     const response = await worker.fetch(request, {
-      TURNSTILE_SECRET_KEY: 'turnstile-secret', RAKUTEN_APPLICATION_ID: 'app', RAKUTEN_ACCESS_KEY: 'access', LINK_SIGNING_SECRET: 'l'.repeat(32)
+      TURNSTILE_SECRET_KEY: 'turnstile-secret', RAKUTEN_APPLICATION_ID: 'app', RAKUTEN_ACCESS_KEY: 'access', YAHOO_SHOPPING_CLIENT_ID: 'client', LINK_SIGNING_SECRET: 'l'.repeat(32)
     }, { waitUntil() {} });
     const payload = await response.json();
     assert.equal(response.status, 200, JSON.stringify(payload));
@@ -31,6 +34,8 @@ test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最�
     assert.equal(payload.result.ai_cheapest.ranking_type, 'HOSHILU最安値ランキング（ベータ）');
     assert.equal(payload.result.ai_cheapest.candidates[0].ai_cheapest_price_source, 'OBSERVED_ITEM_PRICE');
     assert.equal(payload.result.ai_cheapest.candidates[0].ai_cheapest_price_min, 2980);
+    assert.equal(payload.result.ai_cheapest.candidates.some((candidate) => candidate.product_name.includes('USB充電器')), false);
+    assert.match(payload.result.ai_cheapest.methodology, /小ジャンルの商品本体だけ/);
     assert.match(payload.result.ai_cheapest.disclaimer, /AI推定価格/);
   } finally { globalThis.fetch = originalFetch; }
 });

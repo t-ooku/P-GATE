@@ -23,6 +23,7 @@ import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult } from './marketplace-ranking.mjs';
+import { filterRankingCategoryCandidates } from './ranking-category-eligibility.mjs';
 import { relatedProductRecommendationQueries } from './related-product-recommendations.mjs';
 import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
 import {
@@ -1469,11 +1470,20 @@ async function handleHoshiluRankingApi(request, env) {
     // API接続の有無でモールを除外しない。楽天/Yahoo!の公式API候補に加え、
     // D1へ正規に取り込まれた全モールの商品・オファーを候補母集団へ含める。
     // データが無いモールの商品をAIで創作することはしない。
-    const observed = mergeObservedRankingCandidates([
-      resolution.candidates || [],
+    const mergedObserved = mergeObservedRankingCandidates([
+      (resolution.candidates || []).map((candidate) => ({ ...candidate, ranking_category_verified: true })),
       yahooOutcome.status === 'fulfilled' ? yahooOutcome.value : [],
       indexedOutcome.status === 'fulfilled' ? indexedOutcome.value?.candidates || [] : []
     ]);
+    // 価格順へ並べる前に、小ジャンルの商品本体だけへ絞る。レコメンド商品や
+    // 説明文・SEO用ハッシュタグだけが一致した周辺商品を、安さだけで上位へ
+    // 押し上げない。楽天公式genre内の商品は構造化カテゴリを根拠にし、
+    // その他モールは商品名そのものの小ジャンル一致を必須にする。
+    const categoryQuery = String(resolution.category.label || input.query).split('›').pop().trim();
+    const observed = filterCategoryMismatches(
+      categoryQuery,
+      filterRankingCategoryCandidates(mergedObserved, resolution.category)
+    );
     const prices = observed.map((candidate) => Number(candidate.offers?.[0]?.total_cost || candidate.offers?.[0]?.price || 0)).filter((price) => price > 0);
     const priceRange = { low: prices.length ? Math.min(...prices) : 0, high: prices.length ? Math.max(...prices) : 0 };
     const ranked = rankHoshiluPopularity(observed.map((candidate, index) => ({
@@ -1498,7 +1508,7 @@ async function handleHoshiluRankingApi(request, env) {
       candidates: decorated.candidates,
       ai_cheapest: {
         ranking_type: 'HOSHILU最安値ランキング（ベータ）',
-        methodology: '確認できた実価格を優先し、価格未取得の商品だけAI推定価格帯の中央値で参考順を作成します。',
+        methodology: '選択した小ジャンルの商品本体だけに絞り、確認できた実価格を優先。価格未取得の商品だけAI推定価格帯の中央値で参考順を作成します。',
         disclaimer: 'AI推定価格を含む参考ランキングです。実際の販売価格・送料・在庫は各モールで確認してください。',
         candidates: aiCheapestCandidates,
         estimated_count: aiCheapestCandidates.filter((candidate) => candidate.ai_cheapest_price_source === 'AI_ESTIMATE').length,
