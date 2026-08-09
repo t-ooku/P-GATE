@@ -26,11 +26,39 @@ function decode(value='') {
     .replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/\s+/g,' ').trim();
 }
 
+function charsetLabel(value='') {
+  const label=String(value).trim().toLowerCase().replace(/["']/g,'');
+  if(/^(?:shift[_-]?jis|sjis|windows-31j|ms_kanji|x-sjis)$/.test(label))return'shift_jis';
+  if(/^(?:euc[_-]?jp|x-euc-jp)$/.test(label))return'euc-jp';
+  if(/^iso-2022-jp$/.test(label))return'iso-2022-jp';
+  return'utf-8';
+}
+
+export async function decodeOfficialHtml(response) {
+  const bytes=new Uint8Array(await response.arrayBuffer());
+  // charset指定はHTTPヘッダーを優先し、無い場合はHTML先頭のASCII領域にある
+  // meta charset/http-equivを参照する。response.text()固定ではShift_JISが壊れる。
+  const header=String(response.headers.get('content-type')||'').match(/charset\s*=\s*([^;\s]+)/i)?.[1]||'';
+  const probe=Array.from(bytes.slice(0,8192),byte=>byte<128?String.fromCharCode(byte):' ').join('');
+  const meta=probe.match(/<meta[^>]+charset\s*=\s*["']?([^"'\s/>;]+)/i)?.[1]
+    ||probe.match(/<meta[^>]+content\s*=\s*["'][^"']*charset\s*=\s*([^;"'\s]+)/i)?.[1]||'';
+  const charset=charsetLabel(header||meta);
+  try{return new TextDecoder(charset).decode(bytes).slice(0,750000);}
+  catch{return new TextDecoder('utf-8').decode(bytes).slice(0,750000);}
+}
+
+function brokenEncoding(value='') {
+  return (String(value).match(/�/g)||[]).length>=2;
+}
+
 function metadata(html, fallbackTitle, label) {
-  const title = decode(html.match(/<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)/i)?.[1]
+  const fallbackSummary=`${label}の公式ページで現在掲載されている情報です。条件・対象者・期間は公式ページで確認してください。`;
+  let title = decode(html.match(/<meta[^>]+(?:property|name)=["']og:title["'][^>]+content=["']([^"']+)/i)?.[1]
     || html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || fallbackTitle).slice(0,140);
-  const description = decode(html.match(/<meta[^>]+(?:property|name)=["'](?:og:description|description)["'][^>]+content=["']([^"']+)/i)?.[1]
-    || `${label}の公式ページで現在掲載されている情報です。条件・対象者・期間は公式ページで確認してください。`).slice(0,500);
+  let description = decode(html.match(/<meta[^>]+(?:property|name)=["'](?:og:description|description)["'][^>]+content=["']([^"']+)/i)?.[1]
+    || fallbackSummary).slice(0,500);
+  if(brokenEncoding(title))title=fallbackTitle;
+  if(brokenEncoding(description))description=fallbackSummary;
   return { title: title || fallbackTitle, summary: description };
 }
 
@@ -91,7 +119,7 @@ async function fetchSource(source, fetcher) {
   try {
     const response = await fetcher(url, { redirect:'follow', signal:controller.signal, headers:{'user-agent':'HOSHILU-Sale-Radar/1.0 (+https://hoshilu.app/)','accept':'text/html'} });
     if (!response.ok || !officialUrl(marketplace, response.url || url)) throw new Error(`OFFICIAL_SOURCE_${response.status}`);
-    const html = (await response.text()).slice(0,750000);
+    const html = await decodeOfficialHtml(response);
     const copy = metadata(html, fallbackTitle, label);
     const sourceUrl=response.url || url;
     return { marketplace, source_url:sourceUrl, ...copy, notices:extractOfficialNotices(html,marketplace,label,sourceUrl) };

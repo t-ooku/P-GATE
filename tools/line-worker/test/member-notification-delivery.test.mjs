@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { storeMemberNotificationDestination } from '../src/member-notification-delivery.mjs';
+import { safeMemberNotificationCopy, storeMemberNotificationDestination } from '../src/member-notification-delivery.mjs';
 
 test('verified destinations are encrypted before storage', async()=>{
   let bound=[];
@@ -72,4 +72,11 @@ test('login codes and member alerts share the approved HOSHILU sender',async()=>
 test('successful notification settings save closes the dialog',async()=>{
   const client=await readFile(new URL('../public/sale-center.mjs',import.meta.url),'utf8');
   assert.match(client,/settingsStatus\.textContent=.*\.saved;\s*settingsDialog\.close\(\)/s);
+});
+
+test('既にキューへ入った文字化け本文は送信前に安全な公式案内へ置き換える',()=>{
+  const copy=safeMemberNotificationCopy('ABC-MARTのモール最新情報','��C�zM���A�ABC���\n\n公式ページを開く\nhttps://www.abc-mart.net/shop/');
+  assert.equal(copy.title,'ABC-MARTのモール最新情報');
+  assert.equal(copy.body,'公式ページで最新情報をご確認ください。\n\n公式ページを開く\nhttps://www.abc-mart.net/shop/');
+  assert.equal(safeMemberNotificationCopy('正常な件名','正常な本文').body,'正常な本文');
 });

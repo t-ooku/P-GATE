@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { extractOfficialNotices, officialNoticeSummary, OFFICIAL_MARKETPLACE_SOURCES, syncOfficialMarketplaceUpdates } from '../src/official-marketplace-updates.mjs';
+import { decodeOfficialHtml, extractOfficialNotices, officialNoticeSummary, OFFICIAL_MARKETPLACE_SOURCES, syncOfficialMarketplaceUpdates } from '../src/official-marketplace-updates.mjs';
 
 test('specific campaigns are extracted only from links on the official marketplace domain',()=>{
   const notices=extractOfficialNotices(`<a href="/campaign/summer/">夏のポイント10倍キャンペーン</a>
@@ -57,4 +57,10 @@ test('navigation and help links are not published as current marketplace updates
 
 test('official source list uses only HTTPS marketplace domains',()=>{
   for(const [, , value] of OFFICIAL_MARKETPLACE_SOURCES) assert.equal(new URL(value).protocol,'https:');
+});
+
+test('Shift_JISの公式ページを文字化けさせず日本語へ復号する',async()=>{
+  const bytes=Uint8Array.from(Buffer.from('QUJDLU1BUlSM9o6ug1qBW4OL','base64'));
+  const response=new Response(bytes,{headers:{'content-type':'text/html; charset=Shift_JIS'}});
+  assert.equal(await decodeOfficialHtml(response),'ABC-MART公式セール');
 });
