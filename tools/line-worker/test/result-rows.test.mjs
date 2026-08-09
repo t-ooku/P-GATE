@@ -119,5 +119,5 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
 test('新しいモジュールはService Workerのプリキャッシュに含まれる', async () => {
   const sw = await readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8');
   assert.match(sw, /'\/result-rows\.mjs'/);
-  assert.match(sw, /hoshilu-shell-v344/);
+  assert.match(sw, /hoshilu-shell-v345/);
 });

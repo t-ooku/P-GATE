@@ -77,7 +77,7 @@ async function list(request, env, member) {
       n.delivered_at,n.read_at,n.created_at,n.asin,n.marketplace,n.image_url
     FROM mywatch_notifications n
     WHERE n.member_id=?1 AND n.status='DELIVERED' AND n.dismissed_at IS NULL
-      AND n.wish_id!='MARKETPLACE_SALES'
+      AND n.wish_id NOT IN ('MARKETPLACE_SALES','AI_WATCH_TEST')
     ORDER BY n.created_at DESC LIMIT 50`
   ).bind(member.id).all();
   return Response.json({ ok: true, notifications: result?.results || [] }, {

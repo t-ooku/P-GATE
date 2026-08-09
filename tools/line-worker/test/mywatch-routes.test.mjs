@@ -147,7 +147,7 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(css, /\.notification-thumb/);
   assert.match(css, /\.notification-row-action/);
   assert.match(serviceWorker, /mywatch\.css/);
-  assert.match(serviceWorker, /hoshilu-shell-v344/);
+  assert.match(serviceWorker, /hoshilu-shell-v345/);
   // RC2で使った投入・削除ボタンは本番UIへ残さない。テスト用API自体は
   // 下記の回帰テストからだけ明示的にフラグを立てて検証する。
   const indexMarkup = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
@@ -176,8 +176,10 @@ test('縦回転はスクロールスナップを一時停止して滑らかに�
 test('AIウォッチ通知一覧はSALE RADAR(MARKETPLACE_SALES)を除外し商品単位の列を返す', async () => {
   const fs = await import('node:fs');
   const source = fs.readFileSync(new URL('../src/mywatch-routes.mjs', import.meta.url), 'utf8');
-  assert.match(source, /n\.wish_id!='MARKETPLACE_SALES'/);
+  assert.match(source, /n\.wish_id NOT IN \('MARKETPLACE_SALES','AI_WATCH_TEST'\)/);
   assert.match(source, /n\.asin,n\.marketplace,n\.image_url/);
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(app, /filter\(item=>item\.wish_id!=='AI_WATCH_TEST'\)/);
 });
 
 // RC2: 開発・検証専用のテスト通知投入。フラグOFFなら404で完全に無効化され、

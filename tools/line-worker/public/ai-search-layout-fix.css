@@ -758,7 +758,7 @@
     border-width:0 0 1px;
     border-radius:0;
   }
-  .result-track>.product-card>.rank{top:20px;left:14px}
+  .result-track>.product-card>.rank{position:static;grid-column:2;justify-self:start;z-index:auto;box-shadow:none}
   .result-track>.product-card>*{grid-column:2}
   .result-track>.product-card>.product-card-media-column{
     grid-column:1;
