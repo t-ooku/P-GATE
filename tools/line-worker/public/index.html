@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="/install.css">
   <link rel="stylesheet" href="/layout-v3.css?v=91">
   <title>ホシル｜最大13モール横断の商品検索・セール通知</title>
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://hoshilu.app/#website","url":"https://hoshilu.app/","name":"ホシル｜HOSHILU","inLanguage":["ja","en","zh","ko"],"potentialAction":{"@type":"SearchAction","target":"https://hoshilu.app/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"WebApplication","@id":"https://hoshilu.app/#app","name":"ホシル","alternateName":"HOSHILU","url":"https://hoshilu.app/","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"名前が分からない商品を記憶や特徴から探し、最大13モールを横断して購入先と確認済みセール情報を案内する無料の商品検索サービス。","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}},{"@type":"Organization","@id":"https://hoshilu.app/#organization","name":"HOSHILU","url":"https://hoshilu.app/","logo":{"@type":"ImageObject","url":"https://hoshilu.app/icons/hoshilu-v2-512.png"}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://hoshilu.app/#website","url":"https://hoshilu.app/","name":"ホシル｜HOSHILU","inLanguage":["ja","en","zh","ko"],"potentialAction":{"@type":"SearchAction","target":"https://hoshilu.app/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"WebApplication","@id":"https://hoshilu.app/#app","name":"ホシル","alternateName":"HOSHILU","url":"https://hoshilu.app/","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"名前が分からない商品を記憶や特徴から探し、最大13モールを横断して購入先と確認済みセール情報を案内する無料の商品検索サービス。","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}},{"@type":"Organization","@id":"https://hoshilu.app/#organization","name":"HOSHILU","url":"https://hoshilu.app/","logo":{"@type":"ImageObject","url":"https://hoshilu.app/icons/hoshilu-v2-512.png"}},{"@type":"FAQPage","@id":"https://hoshilu.app/#faq","mainEntity":[{"@type":"Question","name":"ホシルでは何を検索できますか？","acceptedAnswer":{"@type":"Answer","text":"商品名が分からなくても、見た目・用途・見た場所などの手がかりから商品を探せます。まとめて検索3モールと個別検索10モールの最大13モールに対応しています。"}},{"@type":"Question","name":"ホシルは無料で使えますか？","acceptedAnswer":{"@type":"Answer","text":"商品検索はログインなしで無料で利用できます。検索履歴の保存や通知機能は無料会員向けに提供しています。"}},{"@type":"Question","name":"表示価格は実際の販売価格ですか？","acceptedAnswer":{"@type":"Answer","text":"接続済みモールで確認できた送料込み価格と、AIによる参考推定価格を区別して表示します。購入前に必ずリンク先モールで最新価格・送料・在庫を確認してください。"}},{"@type":"Question","name":"InstagramやTikTokでも同じ検索語を使えますか？","acceptedAnswer":{"@type":"Answer","text":"検索語をコピーしてInstagramまたはTikTokを開く導線を用意しています。アプリの検索欄が空の場合は、コピーした検索語を貼り付けてください。"}}]}]}</script>
 </head>
 <body>
   <header class="topbar">
@@ -317,6 +317,17 @@
           <section class="lp-benefits" aria-labelledby="benefitTitle">
             <p class="step">WHY HOSHILU</p>
             <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
+          </section>
+
+          <section id="faq" class="hoshilu-faq" aria-labelledby="faqTitle">
+            <p class="step">HOSHILU FAQ</p>
+            <h2 id="faqTitle" data-i18n="faq.title">よくある質問</h2>
+            <div class="hoshilu-faq-list">
+              <details><summary data-i18n="faq.search.question">ホシルでは何を検索できますか？</summary><p data-i18n="faq.search.answer">商品名が分からなくても、見た目・用途・見た場所などの手がかりから商品を探せます。まとめて検索3モールと個別検索10モールの最大13モールに対応しています。</p></details>
+              <details><summary data-i18n="faq.free.question">ホシルは無料で使えますか？</summary><p data-i18n="faq.free.answer">商品検索はログインなしで無料で利用できます。検索履歴の保存や通知機能は無料会員向けに提供しています。</p></details>
+              <details><summary data-i18n="faq.price.question">表示価格は実際の販売価格ですか？</summary><p data-i18n="faq.price.answer">接続済みモールで確認できた送料込み価格と、AIによる参考推定価格を区別して表示します。購入前に必ずリンク先モールで最新価格・送料・在庫を確認してください。</p></details>
+              <details><summary data-i18n="faq.social.question">InstagramやTikTokでも同じ検索語を使えますか？</summary><p data-i18n="faq.social.answer">検索語をコピーしてInstagramまたはTikTokを開く導線を用意しています。アプリの検索欄が空の場合は、コピーした検索語を貼り付けてください。</p></details>
+            </div>
           </section>
         </div>
       </div>
