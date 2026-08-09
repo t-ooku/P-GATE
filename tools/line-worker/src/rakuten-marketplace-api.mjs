@@ -81,7 +81,8 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   // explicitly to the app's registered hoshilu.app website.
   const request = async (requestUrl) => {
     const response = await fetcher(requestUrl.toString(), {
-      headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' }
+      headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
+      signal: AbortSignal.timeout(5000)
     });
     if (response.ok) return response.json();
     let providerCode = '';

@@ -65,7 +65,7 @@ export async function fetchRakutenRanking(env, category, fetcher = fetch) {
   url.searchParams.set('formatVersion', '2');
   const affiliateId = String(env.RAKUTEN_AFFILIATE_ID || '').trim();
   if (affiliateId) url.searchParams.set('affiliateId', affiliateId);
-  const response = await fetcher(url.toString(), { headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' } });
+  const response = await fetcher(url.toString(), { headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' }, signal: AbortSignal.timeout(5000) });
   if (!response.ok) { const error = new Error('RAKUTEN_RANKING_FAILED'); error.status = response.status; throw error; }
   return normalizeRakutenRanking(await response.json());
 }

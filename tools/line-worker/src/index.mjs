@@ -1370,19 +1370,46 @@ export function sanitizePublicCandidate(candidate) {
   return copy;
 }
 
-function popularitySignalsForObservedCandidate(candidate, index, total) {
+export function popularitySignalsForObservedCandidate(candidate, index, total, priceRange = {}) {
   const reviewCount = Math.max(0, Number(candidate.review_count) || 0);
   const reviewAverage = Math.max(0, Math.min(5, Number(candidate.review_average) || 0));
   const rank = Math.max(1, Number(candidate.rank) || index + 1);
   const price = Number(candidate.offers?.[0]?.total_cost || candidate.offers?.[0]?.price || 0);
+  const observedMarketplaces = new Set((candidate.offers || []).map((offer) => String(offer.marketplace || '')).filter(Boolean));
+  const hasMarketplacePopularity = /RANKING_API|YAHOO_SHOPPING_API/u.test(String(candidate.marketplace_source || ''));
+  const low = Number(priceRange.low) || 0; const high = Number(priceRange.high) || 0;
+  const priceSignal = price > 0 ? (high > low ? 1 - (price - low) / (high - low) : 0.5) : null;
   return {
-    marketplace_popularity: Math.max(0, 1 - (rank - 1) / Math.max(1, total)),
+    marketplace_popularity: hasMarketplacePopularity ? Math.max(0, 1 - (rank - 1) / Math.max(1, total)) : null,
     review_confidence: reviewCount ? (reviewAverage / 5) * Math.min(1, Math.log10(reviewCount + 1) / 3) : null,
-    marketplace_coverage: null,
-    price_competitiveness: price > 0 ? 0.5 : null,
-    hoshilu_demand: null,
+    marketplace_coverage: observedMarketplaces.size ? Math.min(1, observedMarketplaces.size / 3) : null,
+    price_competitiveness: priceSignal,
+    hoshilu_demand: Number.isFinite(Number(candidate.hoshilu_demand_signal)) ? Number(candidate.hoshilu_demand_signal) : null,
     freshness: null
   };
+}
+
+function rankingCandidateKey(candidate = {}) {
+  const identifier = String(candidate.hoshilu_product_id || candidate.record_key || candidate.asin || '').trim().toUpperCase();
+  return identifier || String(candidate.product_name || candidate.display_name || '').normalize('NFKC').toLowerCase().replace(/\s+/gu, '').slice(0, 160);
+}
+
+function mergeObservedRankingCandidates(groups = []) {
+  const merged = new Map();
+  for (const candidate of groups.flat()) {
+    const key = rankingCandidateKey(candidate); if (!key) continue;
+    const existing = merged.get(key);
+    if (!existing) { merged.set(key, candidate); continue; }
+    const offers = [...(existing.offers || []), ...(candidate.offers || [])];
+    const seen = new Set();
+    merged.set(key, { ...existing, ...candidate,
+      review_average: Math.max(Number(existing.review_average) || 0, Number(candidate.review_average) || 0),
+      review_count: Math.max(Number(existing.review_count) || 0, Number(candidate.review_count) || 0),
+      image_urls: [...new Set([...(existing.image_urls || []), ...(candidate.image_urls || [])])].slice(0, 8),
+      offers: offers.filter((offer) => { const offerKey = `${offer.marketplace}:${offer.product_url}`; if (seen.has(offerKey)) return false; seen.add(offerKey); return true; })
+    });
+  }
+  return [...merged.values()];
 }
 
 async function handleHoshiluRankingApi(request, env) {
@@ -1390,21 +1417,34 @@ async function handleHoshiluRankingApi(request, env) {
     const payload = await request.json();
     const input = validateRankingRequest({ ...payload, marketplace: 'RAKUTEN_JP' });
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    const resolution = await marketplaceRankingResult(env, input.query, 'RAKUTEN_JP', fetch);
+    const [rakutenOutcome, yahooOutcome, indexedOutcome] = await Promise.allSettled([
+      marketplaceRankingResult(env, input.query, 'RAKUTEN_JP', fetch),
+      yahooShoppingApiConfigured(env) ? searchYahooShopping(env, input.query, fetch, { sort: '-review_count' }) : [],
+      applyIndexedSearchPolicy({ candidates: [] }, env, input.query, 'JA', { force_product_presentation: true })
+    ]);
+    if (rakutenOutcome.status !== 'fulfilled') throw rakutenOutcome.reason;
+    const resolution = rakutenOutcome.value;
     if (resolution.mode === 'clarification') return Response.json({ ok: true, result: resolution });
-    const observed = [...(resolution.candidates || [])];
-    if (yahooShoppingApiConfigured(env)) {
-      try { observed.push(...await searchYahooShopping(env, resolution.category.label, fetch, { sort: '-review_count' })); } catch {}
-    }
+    // API接続の有無でモールを除外しない。楽天/Yahoo!の公式API候補に加え、
+    // D1へ正規に取り込まれた全モールの商品・オファーを候補母集団へ含める。
+    // データが無いモールの商品をAIで創作することはしない。
+    const observed = mergeObservedRankingCandidates([
+      resolution.candidates || [],
+      yahooOutcome.status === 'fulfilled' ? yahooOutcome.value : [],
+      indexedOutcome.status === 'fulfilled' ? indexedOutcome.value?.candidates || [] : []
+    ]);
+    const prices = observed.map((candidate) => Number(candidate.offers?.[0]?.total_cost || candidate.offers?.[0]?.price || 0)).filter((price) => price > 0);
+    const priceRange = { low: prices.length ? Math.min(...prices) : 0, high: prices.length ? Math.max(...prices) : 0 };
     const ranked = rankHoshiluPopularity(observed.map((candidate, index) => ({
       ...candidate,
-      popularity_signals: popularitySignalsForObservedCandidate(candidate, index, observed.length)
+      popularity_signals: popularitySignalsForObservedCandidate(candidate, index, observed.length, priceRange)
     }))).slice(0, 30);
     const decorated = await decoratePwaResult({ query_id: crypto.randomUUID(), candidates: ranked }, request, env, await hashUser(input.session_id), input.query, 'JA');
     return Response.json({ ok: true, result: {
       mode: 'hoshilu_organic', category: resolution.category,
       ranking_type: 'HOSHILU総合人気ランキング（ベータ）',
-      methodology: '観測できたモール順位・口コミ・価格を合成。未取得データは加点せず、スポンサーは順位へ混ぜません。',
+      methodology: 'API接続の有無を問わず、HOSHILUが正規に観測できた商品・モール順位・口コミ・価格・モール横断性を合成。未取得データは加点せず、スポンサーは順位へ混ぜません。',
+      marketplace_scope: MARKETPLACE_RANKING_CAPABILITIES.map(({ marketplace_id, label }) => ({ marketplace_id, label })),
       candidates: decorated.candidates, sponsors: []
     } }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
   } catch (error) {
