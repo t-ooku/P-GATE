@@ -1326,26 +1326,31 @@ async function aiDiscoveryWithSignedCandidateLinks(aiDiscovery, context) {
 export const decoratePwaResultForTest = decoratePwaResult;
 
 export function sanitizePublicCandidate(candidate) {
-  const copy = { ...(candidate || {}) };
-  delete copy.sku;
-  copy.available = Number(copy.stock || 0) > 0;
-  delete copy.stock;
-  delete copy.amazon_jp_url;
-  delete copy.amazon_us_url;
-  delete copy.marketplace_search_links;
-  delete copy.amazon_search_url;
-  const imageUrls = [...(Array.isArray(copy.image_urls) ? copy.image_urls : []), copy.image, copy.image_url]
+  const source = candidate || {};
+  const publicText = (value, limit) => String(value || '').trim().slice(0, limit);
+  // 公開境界はdenylist（既知の内部項目だけ削除）にしない。候補生成元へ将来
+  // 仕入原価・社内スコア等が追加されても、ここへ明示しない限りAPIへ流れない。
+  const copy = {
+    rank: Math.max(0, Number(source.rank) || 0),
+    asin: publicText(source.asin, 32),
+    product_name: publicText(source.product_name, 500),
+    display_name: publicText(source.display_name, 500),
+    description: publicText(source.description, 1000),
+    available: Number(source.stock || 0) > 0,
+    tracking_url: ''
+  };
+  const imageUrls = [...(Array.isArray(source.image_urls) ? source.image_urls : []), source.image, source.image_url]
     .map((value) => String(value || '').trim())
     .filter((value) => /^https:\/\//i.test(value));
   copy.image_urls = [...new Set(imageUrls)].slice(0, 8);
   copy.image = copy.image_urls[0] || '';
   copy.image_url = copy.image_urls[0] || '';
-  copy.offers = (Array.isArray(copy.offers) ? copy.offers : []).slice(0, 10).map(sanitizePublicOffer);
-  copy.tracking_url = '';
-  if (copy.evidence) {
+  copy.offers = (Array.isArray(source.offers) ? source.offers : []).slice(0, 10).map(sanitizePublicOffer);
+  if (source.evidence) {
     copy.evidence = {
-      matched_terms: Array.isArray(copy.evidence.matched_terms) ? copy.evidence.matched_terms.slice(0, 6) : [],
-      information_score: Number(copy.evidence.information_score || 0)
+      matched_terms: Array.isArray(source.evidence.matched_terms)
+        ? source.evidence.matched_terms.map((value) => publicText(value, 100)).filter(Boolean).slice(0, 6) : [],
+      information_score: Number(source.evidence.information_score || 0)
     };
   }
   return copy;

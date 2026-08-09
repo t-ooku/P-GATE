@@ -456,6 +456,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
 test('PWA公開回答は内部SKU・在庫数・元URL・取込証跡を除外する', () => {
   const result = sanitizePublicCandidate({
     asin: 'B000000001', sku: 'INTERNAL-SKU', stock: 17,
+    internal_cost: 432, private_supplier_score: 98, future_internal_field: '非公開',
     amazon_jp_url: 'https://www.amazon.co.jp/dp/B000000001',
     offers: [{ marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item', seller_name: '非公開店舗', external_product_id: 'secret', price: 1000, shipping_fee: 200, total_cost: 1200, currency: 'JPY', stock_status: 'IN_STOCK', delivery_days: 2 }],
     evidence: { matched_terms: ['朝食'], information_score: 90, source_hash: 'secret-hash', imported_at: 'now' }
@@ -470,6 +471,9 @@ test('PWA公開回答は内部SKU・在庫数・元URL・取込証跡を除外�
   assert.equal('seller_name' in result.offers[0], false);
   assert.equal('external_product_id' in result.offers[0], false);
   assert.equal('source_hash' in result.evidence, false);
+  assert.equal('internal_cost' in result, false);
+  assert.equal('private_supplier_score' in result, false);
+  assert.equal('future_internal_field' in result, false);
 });
 
 test('PWAは実在する複数モール購入先を個別の署名付きURLへ変換し元URLを返さない', async () => {
