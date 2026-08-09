@@ -37,6 +37,9 @@ export function normalizeYahooShoppingItems(payload = {}) {
       image_urls: /^https:\/\//i.test(image) ? [image] : [],
       stock: productUrl ? 1 : 0,
       marketplace_source: 'YAHOO_SHOPPING_API',
+      review_average: Math.max(0, Math.min(5, Number(item?.review?.rate) || 0)),
+      review_count: Math.max(0, Number(item?.review?.count) || 0),
+      review_url: /^https:\/\//i.test(String(item?.review?.url || '')) ? String(item.review.url) : '',
       offers: productUrl && price > 0 ? [{
         marketplace: 'YAHOO_JP',
         product_url: productUrl,
@@ -55,7 +58,7 @@ export function normalizeYahooShoppingItems(payload = {}) {
     && isMarketplaceProductUrl('YAHOO_JP', item.offers[0].product_url));
 }
 
-export async function searchYahooShopping(env, keywords, fetcher = fetch) {
+export async function searchYahooShopping(env, keywords, fetcher = fetch, options = {}) {
   if (!yahooShoppingApiConfigured(env)) return [];
   const query = String(keywords || '').normalize('NFKC').trim().slice(0, 200);
   if (!query) return [];
@@ -63,8 +66,12 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch) {
   url.searchParams.set('appid', String(env.YAHOO_SHOPPING_CLIENT_ID).trim());
   url.searchParams.set('query', query);
   url.searchParams.set('results', '30');
+  // 既定のmedium画像は146px。公式APIのimage_size=600を指定すると
+  // exImage.urlが600x600で返るため、カード寸法は変えず画像だけ鮮明にする。
+  url.searchParams.set('image_size', '600');
+  if (['-review_count', '-score'].includes(options.sort)) url.searchParams.set('sort', options.sort);
   url.searchParams.set('in_stock', 'true');
-  const response = await fetcher(url.toString(), { headers: { accept: 'application/json' } });
+  const response = await fetcher(url.toString(), { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
   if (!response.ok) throw new Error('YAHOO_SHOPPING_SEARCH_FAILED');
   return normalizeYahooShoppingItems(await response.json());
 }

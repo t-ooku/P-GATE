@@ -17,7 +17,9 @@
 // AI calls (matching the CTO's "できるだけ少ないチャットで" / budget-conscious
 // instruction) - never open-ended chat.
 
-const CHAT_TIMEOUT_MS = 20000;
+// 20秒×2プロバイダでは失敗時に最大40秒待たせる。検索語の整理は短いJSON
+// 応答なので8秒で打ち切り、失敗時は既存の原文フォールバックで検索を続ける。
+const CHAT_TIMEOUT_MS = 8000;
 const MAX_CHAT_TURNS = 2;
 const MAX_MESSAGE_LENGTH = 200;
 const MAX_HISTORY_MESSAGES = 4;

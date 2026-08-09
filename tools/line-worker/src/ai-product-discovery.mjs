@@ -1,6 +1,8 @@
 const MAX_AI_CANDIDATES = 5;
-const GEMINI_TIMEOUT_MS = 30000;
-const OPENAI_TIMEOUT_MS = 12000;
+// 通常検索候補が0件の時だけ走る補助経路。長時間待たせるよりモールへの
+// 直接検索導線を早く返すことを優先し、各プロバイダを短い上限で打ち切る。
+const GEMINI_TIMEOUT_MS = 10000;
+const OPENAI_TIMEOUT_MS = 8000;
 const GEMINI_RATE_LIMIT_COOLDOWN_MS = 5 * 60 * 1000;
 let geminiBlockedUntil = 0;
 

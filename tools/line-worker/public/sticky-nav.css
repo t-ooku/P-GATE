@@ -133,6 +133,18 @@
   opacity: .55;
 }
 
+.sticky-marketplace-jump {
+  grid-column: 1 / -1;
+  min-height: 38px;
+  border: 1px solid #d7cff5;
+  border-radius: 11px;
+  background: #f5f1ff;
+  color: #5140ba;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
 @media (max-width: 760px) {
   .sticky-search {
     padding: 8px 10px;

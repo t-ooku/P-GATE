@@ -40,5 +40,6 @@ test('searches the official endpoint without exposing the client ID in output da
   assert.equal(url.hostname, 'shopping.yahooapis.jp');
   assert.equal(url.searchParams.get('appid'), 'secret-client-id');
   assert.equal(url.searchParams.get('query'), '光る スマホケース');
+  assert.equal(url.searchParams.get('image_size'), '600');
   assert.deepEqual(results, []);
 });

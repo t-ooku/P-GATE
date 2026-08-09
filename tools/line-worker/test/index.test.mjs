@@ -448,7 +448,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v348/);
+  assert.match(serviceWorker, /hoshilu-shell-v349/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1109,7 +1109,7 @@ test('検索結果の上に検索窓を常駐させ、#queryを唯一の正と�
   // タップ領域44px
   assert.match(css, /\.sticky-search input\s*\{[^}]*min-height:\s*44px/);
   ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
-    assert.match(appSource, new RegExp(`${language}:\\{placeholder:'[^']+',submit:'[^']+',label:'[^']+'\\}`));
+    assert.match(appSource, new RegExp(`${language}:\\{placeholder:'[^']+',submit:'[^']+',label:'[^']+',marketplaces:'[^']+'\\}`));
   });
 });
 

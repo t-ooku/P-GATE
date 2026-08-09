@@ -24,6 +24,7 @@ import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementC
 import { analyzeChatTurn, chatIntentConfigured } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult } from './marketplace-ranking.mjs';
 import { relatedProductRecommendationQueries } from './related-product-recommendations.mjs';
+import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
 import { buildPriceComparison, realPriceRows, requestAiPriceEstimates } from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
@@ -1342,6 +1343,12 @@ export function sanitizePublicCandidate(candidate) {
     manufacturer: publicText(source.manufacturer, 200),
     related_category: publicText(source.related_category, 100),
     recommendation_reason: publicText(source.recommendation_reason, 200),
+    review_average: Math.max(0, Math.min(5, Number(source.review_average) || 0)),
+    review_count: Math.max(0, Number(source.review_count) || 0),
+    review_url: /^https:\/\//i.test(String(source.review_url || '')) ? publicText(source.review_url, 1000) : '',
+    hoshilu_popularity_rank: Math.max(0, Number(source.hoshilu_popularity_rank) || 0),
+    hoshilu_popularity_score: Math.max(0, Number(source.hoshilu_popularity_score) || 0),
+    hoshilu_popularity_confidence: Math.max(0, Math.min(100, Number(source.hoshilu_popularity_confidence) || 0)),
     description: publicText(source.description, 1000),
     available: Number(source.stock || 0) > 0,
     tracking_url: ''
@@ -1361,6 +1368,49 @@ export function sanitizePublicCandidate(candidate) {
     };
   }
   return copy;
+}
+
+function popularitySignalsForObservedCandidate(candidate, index, total) {
+  const reviewCount = Math.max(0, Number(candidate.review_count) || 0);
+  const reviewAverage = Math.max(0, Math.min(5, Number(candidate.review_average) || 0));
+  const rank = Math.max(1, Number(candidate.rank) || index + 1);
+  const price = Number(candidate.offers?.[0]?.total_cost || candidate.offers?.[0]?.price || 0);
+  return {
+    marketplace_popularity: Math.max(0, 1 - (rank - 1) / Math.max(1, total)),
+    review_confidence: reviewCount ? (reviewAverage / 5) * Math.min(1, Math.log10(reviewCount + 1) / 3) : null,
+    marketplace_coverage: null,
+    price_competitiveness: price > 0 ? 0.5 : null,
+    hoshilu_demand: null,
+    freshness: null
+  };
+}
+
+async function handleHoshiluRankingApi(request, env) {
+  try {
+    const payload = await request.json();
+    const input = validateRankingRequest({ ...payload, marketplace: 'RAKUTEN_JP' });
+    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    const resolution = await marketplaceRankingResult(env, input.query, 'RAKUTEN_JP', fetch);
+    if (resolution.mode === 'clarification') return Response.json({ ok: true, result: resolution });
+    const observed = [...(resolution.candidates || [])];
+    if (yahooShoppingApiConfigured(env)) {
+      try { observed.push(...await searchYahooShopping(env, resolution.category.label, fetch, { sort: '-review_count' })); } catch {}
+    }
+    const ranked = rankHoshiluPopularity(observed.map((candidate, index) => ({
+      ...candidate,
+      popularity_signals: popularitySignalsForObservedCandidate(candidate, index, observed.length)
+    }))).slice(0, 30);
+    const decorated = await decoratePwaResult({ query_id: crypto.randomUUID(), candidates: ranked }, request, env, await hashUser(input.session_id), input.query, 'JA');
+    return Response.json({ ok: true, result: {
+      mode: 'hoshilu_organic', category: resolution.category,
+      ranking_type: 'HOSHILU総合人気ランキング（ベータ）',
+      methodology: '観測できたモール順位・口コミ・価格を合成。未取得データは加点せず、スポンサーは順位へ混ぜません。',
+      candidates: decorated.candidates, sponsors: []
+    } }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
+  } catch (error) {
+    const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
+    return Response.json({ ok: false, error: error.message || 'HOSHILU_RANKING_FAILED' }, { status: client.includes(error.message) ? 400 : 502 });
+  }
 }
 
 function sanitizePublicOffer(offer) {
@@ -2009,6 +2059,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/price-comparison') return handlePriceComparisonApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/rankings') return handleRankingApi(request, env);
+    if (request.method === 'POST' && url.pathname === '/api/hoshilu-rankings') return handleHoshiluRankingApi(request, env);
     if (request.method === 'GET' && url.pathname === '/api/ranking-capabilities') return Response.json({ ok: true, marketplaces: MARKETPLACE_RANKING_CAPABILITIES }, { headers: { 'cache-control': 'public, max-age=3600' } });
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
     if (request.method === 'GET' && url.pathname === '/api/refinement-chips') {
