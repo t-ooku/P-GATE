@@ -108,16 +108,7 @@
   font-weight: 900;
   text-align: center;
   overflow-wrap: anywhere;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background .18s ease, color .18s ease;
-}
-
-.marketplace-group li:hover,
-.marketplace-group li:focus-visible {
-  color: #4f37c8;
-  background: #f2efff;
-  outline: none;
+  cursor: default;
 }
 
 .marketplace-group li::before {
@@ -144,18 +135,41 @@
   line-height: 1.6;
 }
 
-/* Ten marketplaces in a single row on wide desktop viewports: flatten the
-   two <ul> groups into the parent grid with display:contents so all ten
-   <li> items share one 10-column row without a horizontal scrollbar. */
+/* 13モールを同じ重みで1行表示する。PCは均等13列、狭い画面は1行のまま
+   横スクロール可能にし、名称を不自然に2行へ割らない。 */
+.marketplace-groups {
+  grid-template-columns: repeat(13, minmax(82px, 1fr));
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.marketplace-group,
+.marketplace-group ul {
+  display: contents;
+}
+
+.marketplace-group li {
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.marketplace-yahoo span {
+  white-space: nowrap;
+}
+
 @media (min-width: 1024px) {
   .marketplace-coverage {
     min-width: 0;
   }
 
   .marketplace-groups {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    gap: 4px;
     min-width: 0;
+    overflow-x: visible;
   }
 
   .marketplace-group {
@@ -169,6 +183,8 @@
   .marketplace-group li {
     min-width: 0;
     padding: 6px 2px;
+    font-size: clamp(8px, .72vw, 11px);
+    letter-spacing: -.035em;
   }
 }
 
@@ -228,8 +244,8 @@
   }
 
   .marketplace-groups {
-    grid-template-columns: 1fr;
-    gap: 0;
+    grid-template-columns: repeat(13, minmax(76px, 1fr));
+    gap: 3px;
     margin-top: 6px;
   }
 
@@ -244,11 +260,6 @@
 
   .marketplace-group ul {
     gap: 3px;
-  }
-
-  .marketplace-group-integrated ul {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 1px;
   }
 
   .marketplace-group li {
@@ -275,10 +286,6 @@
     text-align: center;
   }
 
-  .marketplace-group-direct ul {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
   .marketplace-coverage-note {
     margin-top: 5px;
     font-size: 9px;
@@ -294,22 +301,10 @@
     min-width: 72px;
   }
 
-  .marketplace-group ul {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .marketplace-group-integrated ul {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
   .marketplace-group-integrated li {
     gap: 2px;
     font-size: clamp(7px, 2.15vw, 9px);
     letter-spacing: -.025em;
-  }
-
-  .marketplace-group-direct ul {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .marketplace-group-direct li {

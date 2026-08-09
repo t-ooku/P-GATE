@@ -52,7 +52,9 @@ function enhance(card) {
   tiktok.addEventListener('click', () => copyFor('https://www.tiktok.com/', status));
 
   targets.append(x, instagram, tiktok);
-  card.append(targets);
+  // 「HOSHILUで探した」の共有6導線を同じ1行に収めるため、既存3ボタンの
+  // actions内へ追加する。別コンテナでcard直下へ足すとPCでも2段に分かれる。
+  (card.querySelector('.share-discovery-actions') || card).append(targets);
 }
 
 const observer = new MutationObserver(() => {

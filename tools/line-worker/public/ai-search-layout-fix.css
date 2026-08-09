@@ -445,8 +445,12 @@
    id-scoped mobile rules there don't apply to this new id, mirrored below), so
    only the <details>/<summary> chrome needs new rules here. */
 .hero-marketplace-coverage{
-  margin:20px 0 0;
+  margin:6px 0 0;
   cursor:default;
+}
+
+.hoshilu-primary>.hero{
+  padding-bottom:12px;
 }
 
 .hero-marketplace-coverage>summary{
@@ -464,13 +468,14 @@
 }
 
 .hero-marketplace-coverage>summary::after{
-  content:'▾';
-  font-size:10px;
+  content:'（開く）';
+  font-size:11px;
+  letter-spacing:0;
   color:var(--violet);
 }
 
 .hero-marketplace-coverage[open]>summary::after{
-  content:'▴';
+  content:'（閉じる）';
 }
 
 .hero-marketplace-coverage>.marketplace-coverage-heading{
@@ -487,7 +492,11 @@
 
 @media(max-width:760px){
   .hero-marketplace-coverage{
-    margin-top:10px;
+    margin-top:3px;
+  }
+
+  .hoshilu-primary>.hero{
+    padding-bottom:6px;
   }
 
   #heroMarketplaceCoverageLead{
@@ -821,3 +830,62 @@
 .social-search-handoff-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .social-search-copy-button,.social-search-open-button{min-height:48px;display:grid;place-items:center;margin:0;text-align:center;text-decoration:none}
 @media(max-width:520px){.social-search-handoff-actions{grid-template-columns:1fr}.social-search-handoff-card{padding:22px 18px}}
+
+/* 2026-08-10: 13モールを「個別に探す」へ統合し、まとめ検索への戻り方を
+   補足リンクとして明示する。 */
+.marketplace-fallback-search-jump{
+  display:inline-flex;
+  margin:0 0 10px;
+  padding:0;
+  border:0;
+  color:#5134ce;
+  background:transparent;
+  font-size:11px;
+  font-weight:850;
+  line-height:1.5;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  cursor:pointer;
+}
+
+.marketplace-fallback-group .marketplace-search-link[data-marketplace="YAHOO_JP"]{
+  white-space:nowrap;
+  font-size:clamp(9px,.72vw,11px);
+  letter-spacing:-.045em;
+}
+
+.target-price-current{
+  grid-column:1 / -1;
+  color:var(--ink);
+  font-size:13px;
+  line-height:1.4;
+}
+
+.target-price-label{
+  color:#5140ba;
+}
+
+/* 商品カードの主要操作は、白い補助ボタンより一段強く見せる。 */
+.result-track>.product-card .product-card-media-actions .watch-settings-button{
+  border:0;
+  color:#fff;
+  background:linear-gradient(105deg,#ff4f9a,#7357ff);
+  box-shadow:0 7px 18px #7357ff2b;
+  font-size:12px;
+  font-weight:950;
+}
+
+.result-track>.product-card .product-card-media-actions .ai-price-compare-button{
+  border:2px solid #6547ef;
+  color:#4b31c9;
+  background:linear-gradient(135deg,#fff,#f0ecff);
+  font-size:12px;
+  font-weight:950;
+}
+
+@media(min-width:1440px){
+  .marketplace-fallback-group .marketplace-links{
+    grid-template-columns:repeat(13,minmax(0,1fr));
+    gap:7px;
+  }
+}

@@ -87,10 +87,10 @@
 }
 
 .share-discovery-actions {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  display: flex;
-  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  grid-row: auto;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 7px;
 }
 
@@ -112,10 +112,7 @@
 }
 
 .direct-social-targets {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: contents;
 }
 
 .social-target {
@@ -130,6 +127,9 @@
   font-weight: 850;
   text-decoration: none;
   cursor: pointer;
+  min-width: 0;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .social-target-x { color: #fff; background: #111; }
@@ -152,10 +152,15 @@
   .share-discovery-actions {
     grid-column: 1;
     grid-row: auto;
+    grid-template-columns: repeat(6, minmax(112px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 3px;
   }
 
-  .share-discovery-actions button {
-    flex: 1;
+  .share-discovery-actions button,
+  .share-discovery-actions a {
+    min-width: 0;
+    font-size: 10px;
   }
 }
 

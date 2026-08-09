@@ -10,9 +10,12 @@ const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), '
 // 閉じておく。
 
 test('ヒーロー直下にheroMarketplaceCoverageという折りたたみ式のMARKETPLACE COVERAGEを設置する', async () => {
-  const html = await read('index.html');
+  const [html,css] = await Promise.all([read('index.html'),read('ai-search-layout-fix.css')]);
   assert.match(html, /<details id="heroMarketplaceCoverage" class="marketplace-coverage hero-marketplace-coverage">/);
   assert.match(html, /<summary class="step hero-marketplace-coverage-summary">MARKETPLACE COVERAGE<\/summary>/);
+  assert.match(css, /hero-marketplace-coverage>summary::after\{[\s\S]*content:'（開く）'/);
+  assert.match(css, /hero-marketplace-coverage\[open\]>summary::after\{\s*content:'（閉じる）'/);
+  assert.match(css, /\.hoshilu-primary>\.hero\{\s*padding-bottom:12px/);
   // ヒーロー(.hero)の直後、既存の検索フォーム(#hoshiluSearch)より前に置く。
   const heroEnd = html.indexOf('<div class="hero-visual" aria-hidden="true"></div>');
   const widgetStart = html.indexOf('id="heroMarketplaceCoverage"');

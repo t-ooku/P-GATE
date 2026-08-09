@@ -81,11 +81,13 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   assert.match(client, /const officialUpdates=\[/);
   assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*ロフト.*ハンズ.*マツキヨココカラ.*@cosme.*ABC-MART.*BUYMA.*SNKRDUNK/s);
   assert.match(client, /全てのセールを、\\n先回りチェックしよう/);
+  assert.match(css, /\.sale-center h2\{[^}]*white-space:pre-line/);
+  assert.match(css, /font-size:clamp\(1\.8rem,3\.7vw,3\.6rem\)/);
   assert.match(client, /13モールのセール情報を横断/);
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v363/);
+  assert.match(sw, /hoshilu-shell-v364/);
   assert.match(css, /\.sale-rail\{[^}]*overflow-y:auto/);
   assert.doesNotMatch(css, /\.sale-card\{/);
   assert.match(sw, /sale-center\.mjs/);

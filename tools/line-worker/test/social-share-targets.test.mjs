@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('PC共有にX・Instagram・TikTokの明示ボタンを追加する', async () => {
-  const source = await readFile(new URL('../public/social-share-targets.js', import.meta.url), 'utf8');
+  const [source,css] = await Promise.all([
+    readFile(new URL('../public/social-share-targets.js', import.meta.url), 'utf8'),
+    readFile(new URL('../public/wish-carousel.css', import.meta.url), 'utf8')
+  ]);
   assert.match(source, /twitter\.com\/intent\/tweet/);
   assert.match(source, /https:\/\/www\.instagram\.com\//);
   assert.match(source, /https:\/\/www\.tiktok\.com\//);
@@ -12,4 +15,7 @@ test('PC共有にX・Instagram・TikTokの明示ボタンを追加する', async
   assert.match(source, /include && query/);
   assert.match(source, /\/x-card-v3\?/);
   assert.match(source, /utm_content=x_card_v3/);
+  assert.match(source, /card\.querySelector\('\.share-discovery-actions'\)/);
+  assert.match(css, /\.share-discovery-actions \{[\s\S]*grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.direct-social-targets \{\s*display: contents/);
 });
