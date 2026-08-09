@@ -14,7 +14,7 @@ test('chatIntentConfigured accepts either Gemini or OpenAI configuration', () =>
   assert.equal(chatIntentConfigured({ OPENAI_API_KEY: 'o'.repeat(32) }), true);
 });
 
-test('sanitizeChatHistory keeps only user/assistant turns with text, capped at 4', () => {
+test('sanitizeChatHistory keeps only user/assistant turns with text, capped at 8 for three NO turns', () => {
   const history = [
     { role: 'user', text: 'a' },
     { role: 'system', text: 'ignored' },
@@ -25,8 +25,8 @@ test('sanitizeChatHistory keeps only user/assistant turns with text, capped at 4
     { role: 'user', text: 'e' }
   ];
   const result = sanitizeChatHistory(history);
-  assert.equal(result.length, 4);
-  assert.deepEqual(result.map((t) => t.text), ['b', 'c', 'd', 'e']);
+  assert.equal(result.length, 5);
+  assert.deepEqual(result.map((t) => t.text), ['a', 'b', 'c', 'd', 'e']);
 });
 
 test('normalizeChatTurnResult never returns a clarifying_question when needs_clarification is false', () => {
@@ -137,4 +137,11 @@ test('通常検索はGemini Flash-Lite・最小思考・短いJSONでブラン�
   assert.equal(requestBody.generationConfig.thinkingConfig.thinkingLevel, 'minimal');
   assert.match(requestBody.contents[0].parts[0].text, /spokesperson/);
   assert.match(result.refined_query, /LILMOON/);
+});
+
+test('IDENTIFYモードは商品候補を1つだけ返し、拒否済み候補を繰り返さない指示を送る',async()=>{
+  let prompt='';const fetchImpl=async(_url,options)=>{prompt=JSON.parse(options.body).contents[0].parts[0].text;return Response.json({candidates:[{content:{parts:[{text:JSON.stringify({candidate_name:'LILMOON リルムーン ワンデー',refined_query:'LILMOON リルムーン 度あり カラコン',needs_clarification:false})}]}}]});};
+  const history=[{role:'user',text:'カラコン ローラ 度入り'},{role:'assistant',text:'別ブランドA'},{role:'user',text:'違います。別の商品候補を1つ提示してください。'}];
+  const result=await analyzeChatTurn(history,'JA',{GEMINI_API_KEY:'g'.repeat(32)},fetchImpl,{mode:'IDENTIFY'});
+  assert.equal(result.candidate_name,'LILMOON リルムーン ワンデー');assert.match(result.refined_query,/LILMOON/);assert.match(prompt,/exactly ONE/i);assert.match(prompt,/rejected/i);
 });

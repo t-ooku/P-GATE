@@ -4,14 +4,14 @@
   white-space: nowrap;
 }
 
-.feature-pills {
+.search-mode-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   width: min(100%, 560px);
 }
 
-.feature-pills span {
+.search-mode-switch span {
   display: grid;
   min-height: 38px;
   place-items: center;

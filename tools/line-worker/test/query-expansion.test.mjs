@@ -14,14 +14,15 @@ test('ローラの度入りカラコンをLILMOONへ一発で展開する', () =
   assert.match(result.query, /^LILMOON リルムーン 度あり カラコン/u);
   assert.match(result.query, /ローラ/u);
   assert.match(buildAmazonSearchKeywords(result.query), /LILMOON/u);
-  assert.ok(buildRakutenSearchKeywordCandidates(result.query).some((value) => /LILMOON/u.test(value)));
+  assert.ok(buildRakutenSearchKeywordCandidates(result.query).includes('LILMOON'));
+  assert.ok(buildMarketplaceApiKeywordCandidates(result.query).includes('LILMOON'));
 });
 
 test('ローラ単独やカラコンだけではLILMOONへ誤展開しない', () => {
   assert.equal(expandSearchQuery('ローラが使っている商品').expanded, false);
   assert.equal(expandSearchQuery('度入りカラコン').expanded, false);
 });
-import { buildAmazonSearchKeywords, buildRakutenSearchKeywordCandidates } from '../src/index.mjs';
+import { buildAmazonSearchKeywords, buildMarketplaceApiKeywordCandidates, buildRakutenSearchKeywordCandidates } from '../src/index.mjs';
 
 // v4.2 合格条件: 「顔用扇風機」→ ハンディファン
 test('顔用扇風機はハンディファンへ展開される(合格条件)', () => {

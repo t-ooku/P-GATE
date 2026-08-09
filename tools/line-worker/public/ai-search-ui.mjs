@@ -22,6 +22,12 @@ const chatCopy = {
   ZH: { title: 'AI 聊天', placeholder: '输入回复…', send: '发送', searching: '正在查找…', finding: '正在查找符合条件的商品…', error: '通信失败，请重试。', searchError: '搜索失败，请重试。', retry: '重试', close: '关闭', ready: '已准备好搜索。', searchCta: '用这个条件搜索' },
   KO: { title: 'AI 채팅', placeholder: '답장을 입력…', send: '보내기', searching: '찾고 있습니다…', finding: '조건에 맞는 상품을 찾고 있습니다…', error: '통신에 실패했습니다. 다시 시도해 주세요.', searchError: '검색에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기', ready: '검색 준비가 되었습니다.', searchCta: '이 조건으로 찾기' }
 };
+const identifyCopy={
+  JA:{title:'AIに確認して探す',thinking:'商品を1つに絞っています…',question:name=>`この商品ですか？\n${name}`,yes:'YES、この商品を探す',no:'NO、別の候補',other:'他モールで探す',error:'候補を確認できませんでした。',finding:'確認した商品を各モールで探しています…',rejected:'違います。別の商品候補を1つ提示してください。',close:'閉じる'},
+  EN:{title:'Confirm with AI',thinking:'Narrowing it to one product…',question:name=>`Is this the product?\n${name}`,yes:'YES, search for it',no:'NO, another option',other:'Search other marketplaces',error:'Could not confirm a candidate.',finding:'Searching marketplaces for the confirmed product…',rejected:'No. Suggest one different product candidate.',close:'Close'},
+  ZH:{title:'先让 AI 确认',thinking:'正在缩小到一个商品…',question:name=>`是这个商品吗？\n${name}`,yes:'YES，搜索此商品',no:'NO，换一个候选',other:'前往其他商城搜索',error:'无法确认候选商品。',finding:'正在各商城搜索已确认的商品…',rejected:'不是。请再提出一个不同的商品候选。',close:'关闭'},
+  KO:{title:'AI 확인 후 찾기',thinking:'상품을 하나로 좁히는 중…',question:name=>`이 상품인가요?\n${name}`,yes:'YES, 이 상품 찾기',no:'NO, 다른 후보',other:'다른 쇼핑몰에서 찾기',error:'상품 후보를 확인하지 못했습니다.',finding:'확인한 상품을 각 쇼핑몰에서 찾는 중…',rejected:'아닙니다. 다른 상품 후보를 하나 제시해 주세요.',close:'닫기'}
+};
 
 const channelNames = [
   ['Instagram', 'instagram'], ['TikTok', 'tiktok'], ['YouTube', 'youtube'],
@@ -63,7 +69,7 @@ function chatMessageRow(role, text) {
   return row;
 }
 
-async function postChatTurn(history, language) {
+async function postChatTurn(history, language, mode = 'REFINE') {
   const auth = window.HoshiluChatAuth;
   const token = await (auth?.requestToken?.() ?? '');
   // Turnstile が用意できないまま送ると、サーバー側では
@@ -74,11 +80,27 @@ async function postChatTurn(history, language) {
   const response = await fetch('/api/ai-chat', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ history, language, session_id: auth?.sessionId || '', consent: true, turnstile_token: token })
+    body: JSON.stringify({ history, language, mode, session_id: auth?.sessionId || '', consent: true, turnstile_token: token })
   });
   const payload = await response.json();
   if (!response.ok || !payload.ok) throw new Error(payload.error || 'CHAT_FAILED');
   return payload.result;
+}
+
+function openIdentifyDialog(originalQuery,language){
+  if(!originalQuery)return;
+  const copy=identifyCopy[language]||identifyCopy.JA;
+  const dialog=document.createElement('dialog');dialog.className='ai-chat-dialog ai-identify-dialog';
+  const panel=document.createElement('div');panel.className='ai-chat-dialog-card';
+  const close=document.createElement('button');close.type='button';close.className='ai-chat-dialog-close';close.setAttribute('aria-label',copy.close);close.textContent='✕';close.addEventListener('click',()=>dialog.close());
+  const title=document.createElement('strong');title.textContent=copy.title;
+  const messages=document.createElement('div');messages.className='ai-chat-messages';
+  panel.append(close,title,messages);dialog.append(panel);document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());
+  const history=[{role:'user',text:originalQuery}];let noCount=0;
+  messages.append(chatMessageRow('user',originalQuery));
+  const showOtherMalls=()=>{const button=document.createElement('button');button.type='button';button.className='ai-chat-other-malls';button.textContent=copy.other;button.addEventListener('click',async()=>{button.disabled=true;const status=chatMessageRow('assistant',copy.finding);status.classList.add('ai-chat-message-status');messages.append(status);await runFinalSearch(originalQuery);dialog.close();window.setTimeout(()=>document.querySelector('#marketplaceFallback,.marketplace-fallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});messages.append(button);};
+  const ask=async()=>{const status=chatMessageRow('assistant',copy.thinking);status.classList.add('ai-chat-message-status');messages.append(status);try{const result=await postChatTurn(history,language,'IDENTIFY');status.remove();const candidate=String(result.candidate_name||result.refined_query||'').trim();if(!candidate)throw new Error('CANDIDATE_EMPTY');history.push({role:'assistant',text:candidate});const question=chatMessageRow('assistant',copy.question(candidate));question.classList.add('ai-chat-identify-question');messages.append(question);const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runFinalSearch(result.refined_query||candidate);finding.remove();if(outcome.ok)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});actions.append(yes,no);messages.append(actions);}catch(error){console.error('HOSHILU_IDENTIFY_FAILED',error);status.textContent=copy.error;showOtherMalls();}};
+  dialog.showModal();void ask();
 }
 
 function openChatDialog(originalQuery, language) {
@@ -251,6 +273,8 @@ function enhanceResults() {
   addAiAction();
   linkDisplayedProducts();
 }
+
+window.HoshiluIdentifySearch={open:openIdentifyDialog};
 
 const results = document.querySelector('#resultCards');
 if (results) new MutationObserver(enhanceResults).observe(results, { childList: true, subtree: true });

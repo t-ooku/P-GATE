@@ -4,6 +4,7 @@ const PLANS = Object.freeze({
     basic_insight: true,
     performance_attribution: true,
     advanced_demand_report: false,
+    target_price_demand: true,
     scheduled_alert_report: false,
     api_priority_support: false
   },
@@ -12,6 +13,7 @@ const PLANS = Object.freeze({
     basic_insight: true,
     performance_attribution: true,
     advanced_demand_report: false,
+    target_price_demand: true,
     scheduled_alert_report: false,
     api_priority_support: false
   },
@@ -20,6 +22,7 @@ const PLANS = Object.freeze({
     basic_insight: true,
     performance_attribution: true,
     advanced_demand_report: true,
+    target_price_demand: true,
     scheduled_alert_report: true,
     api_priority_support: false
   },
@@ -28,6 +31,7 @@ const PLANS = Object.freeze({
     basic_insight: true,
     performance_attribution: true,
     advanced_demand_report: true,
+    target_price_demand: true,
     scheduled_alert_report: true,
     api_priority_support: true
   },
@@ -36,6 +40,7 @@ const PLANS = Object.freeze({
     basic_insight: true,
     performance_attribution: true,
     advanced_demand_report: true,
+    target_price_demand: true,
     scheduled_alert_report: true,
     api_priority_support: true
   }

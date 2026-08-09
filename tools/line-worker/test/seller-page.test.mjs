@@ -70,3 +70,11 @@ test('seller demand report excludes QA, unattributed, and legacy traffic', async
   const demandSql = seenSql.find((sql) => sql.includes('unmet_demand_events')) || '';
   assert.match(demandSql, /traffic_class='ATTRIBUTED'/);
 });
+
+test('サブスク加入セラーは自社出品外も含む匿名の購入希望価格を条件検索できる',async()=>{
+  const seen=[];const env={PRODUCT_DB:{prepare(sql){seen.push(String(sql));const statement={all:async()=>({results:[]}),bind(...values){seen.push(values);return{all:async()=>({results:String(sql).includes('target_price_jpy')?[{target_product_name:'LILMOON ワンデー 度あり',interested_users:7,min_target_price_jpy:2200,average_target_price_jpy:2800,max_target_price_jpy:3200,last_updated_at:'2026-08-10'}]:[]})};}};return statement;}}};
+  const response=await sellerPageResponse(env,{account:'Brand',tenants:['itg'],plan:'LITE'},new URLSearchParams({demand_query:'LILMOON',demand_min:'2000',demand_max:'3500'}));
+  const html=await response.text();assert.match(html,/PURCHASE INTENT/);assert.match(html,/LILMOON ワンデー 度あり/);assert.match(html,/7人以上/);assert.match(html,/¥2,800/);assert.match(html,/自社の出品有無を問わず/);
+  const sql=seen.find(value=>typeof value==='string'&&value.includes('target_price_jpy'))||'';assert.match(sql,/count\(DISTINCT member_id\)>=5/);
+  const params=seen.find(value=>Array.isArray(value)&&value[0]==='%LILMOON%');assert.deepEqual(params,['%LILMOON%',2000,3500]);
+});

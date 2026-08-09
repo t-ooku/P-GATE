@@ -31,6 +31,7 @@ import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs'
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
+import { runTargetPriceScan } from './target-price-watch.mjs';
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
@@ -312,7 +313,8 @@ export function validateChatRequest(payload) {
   const history = Array.isArray(payload.history) ? payload.history.slice(0, 8) : [];
   if (!history.length) throw new Error('CHAT_HISTORY_EMPTY');
   const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
-  return { history, session_id: sessionId, turnstile_token: turnstileToken, language, consent: true };
+  const mode = payload.mode === 'IDENTIFY' ? 'IDENTIFY' : 'REFINE';
+  return { history, session_id: sessionId, turnstile_token: turnstileToken, language, mode, consent: true };
 }
 
 export function getEnvironmentReadiness(env = {}) {
@@ -962,7 +964,11 @@ export function buildRakutenSearchKeywordCandidates(query) {
     'ソファ', 'チェア', 'デスク', 'ベッド', '本棚', 'ラック'
   ].find((term) => normalized.includes(term)) || '';
   const broadProduct = explicitProduct === 'ローテーブル' ? 'センターテーブル' : explicitProduct;
-  return [...new Set([primary, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 2);
+  // AIが特定したブランド識別子を長い文章の中へ埋めたままだと、モール側の
+  // AND検索で0件になり得る。英数字の商品・ブランド識別子を第2候補として
+  // 単独検索し、LILMOON等に限らず同じ形の失敗へ一般化して対応する。
+  const identifier = String(query || '').normalize('NFKC').match(/\b[A-Za-z][A-Za-z0-9-]{2,}\b/u)?.[0] || '';
+  return [...new Set([primary, identifier, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
 }
 
 // "条件整理検索" (organized-conditions) candidate: for apparel-body queries,
@@ -986,7 +992,8 @@ function organizedApparelCandidate(query) {
 export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = '') {
   const rakutenCandidates = buildRakutenSearchKeywordCandidates(query);
   const organized = organizedApparelCandidate(query);
-  return [...new Set([primaryKeywords, organized, ...rakutenCandidates].map((value) =>
+  const identifier = String(query || '').normalize('NFKC').match(/\b[A-Za-z][A-Za-z0-9-]{2,}\b/u)?.[0] || '';
+  return [...new Set([primaryKeywords, organized, ...rakutenCandidates, identifier].map((value) =>
     String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 4);
 }
 
@@ -1498,12 +1505,9 @@ export function interleaveCandidatesBySource(groups = []) {
 }
 
 // HOSHILU AI Chat (2026-08-05, CTO instruction: "少ないチャットで各モールから
-// 希望にそう商品を提示"): the chat itself never returns a product - it only
-// decides whether one more clarifying question is worth the cost, or hands
-// back a refined_query for the client to submit to the existing, unchanged
-// /api/knowledge pipeline (Teacher Dataset connection, ranking, all
-// marketplaces). Question text is never logged, matching /api/knowledge's
-// existing "question body is not stored in logs" policy.
+// 希望にそう商品を提示"): REFINEは検索語だけ、IDENTIFYは確認用の商品仮説を
+// 1件だけ返す。どちらも価格・在庫・URLは返さず、YES後の商品実在確認は既存の
+// /api/knowledge（モールAPI/D1）だけが行う。質問本文はログへ保存しない。
 async function handleAiChatApi(request, env) {
   try {
     const requestOrigin = request.headers.get('origin');
@@ -1513,7 +1517,7 @@ async function handleAiChatApi(request, env) {
     if (length > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
     const input = validateChatRequest(await request.json());
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    const result = await analyzeChatTurn(input.history, input.language, env, fetch);
+    const result = await analyzeChatTurn(input.history, input.language, env, fetch, { mode: input.mode });
     return Response.json({ ok: true, result }, {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
     });
@@ -1740,11 +1744,14 @@ async function handleKnowledgeApi(request, env, ctx) {
       refineMarketplaceSearchQuery(originalQuery, input.language, env, fetch)
     ]);
     const aiRefinement = aiRefinementOutcome.status === 'fulfilled' ? aiRefinementOutcome.value : null;
+    // AIが作った短い検索語を主検索へ使い、元の文章は先行して実行済みの
+    // GAS/D1結果として残す。両方を1本のAND検索文へ連結すると、人物名など
+    // 商品タイトルに無い手掛かりまで必須語になり0件化するため。
     const aiRefinedQuery = aiRefinement && !aiRefinement.needs_clarification
-      ? mergeAiRefinedSearchQuery(originalQuery, aiRefinement.refined_query) : originalQuery;
-    const aiExpandedQuery = expandSearchQuery(aiRefinedQuery);
+      ? redactSearchPersonalData(aiRefinement.refined_query).replace(/\s+/gu, ' ').trim().slice(0, 200) : '';
+    const aiExpandedQuery = expandSearchQuery(aiRefinedQuery || originalQuery);
     const queryWasAiRefined = aiExpandedQuery.query !== expandedQuery.query;
-    if (queryWasAiRefined) input = { ...input, query: aiExpandedQuery.query };
+    input = { ...input, query: queryWasAiRefined ? aiExpandedQuery.query : expandedQuery.query };
     const gasResult = gasOutcome.status === 'fulfilled' ? gasOutcome.value : { candidates: [], message: '' };
     let result = indexedOutcome.status === 'fulfilled' ? indexedOutcome.value : gasResult;
     if (indexedOutcome.status === 'fulfilled' && (gasResult?.candidates || []).length) {
@@ -1769,7 +1776,9 @@ async function handleKnowledgeApi(request, env, ctx) {
     result = { ...result, ai_query_refinement: {
       applied: queryWasAiRefined,
       provider: queryWasAiRefined ? String(aiRefinement?.provider || '') : '',
-      configured: aiRefinement?.configured === true
+      configured: aiRefinement?.configured === true,
+      // 同じ利用者の画面へだけ返し、検索窓と実際のAPI送信語を一致させる。
+      effective_query: input.query !== originalQuery ? input.query : ''
     } };
     result = await applyD1MultilingualContent(env, result, input.language);
     result = await applyD1ContractPolicy(env, result, input.query, requestId);
@@ -2185,7 +2194,9 @@ export default {
       // スキャン。D1索引検索のみでAI呼び出しは発生しないため、mywatchの
       // 価格監視(まだ存在しない外部パイプライン頼み)と違い自己完結して
       // 定期実行できる。1回あたりの件数上限は insight-routes.mjs 側で管理。
-      runInsightScan(env, scheduledAt.toISOString())
+      runInsightScan(env, scheduledAt.toISOString()),
+      // APIで確認できた価格だけを購入希望額と比較する。AI推定価格は使わない。
+      runTargetPriceScan(env, scheduledAt.toISOString())
     ]));
   }
 };

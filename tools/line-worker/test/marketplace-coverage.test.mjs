@@ -49,7 +49,7 @@ test('トップ画面でまとめて検索3モール・個別に探す最大13�
   // reorder, to avoid a layout shift after first paint.
   assert.doesNotMatch(layout, /insight\.before\(saleRadar\)/);
   assert.doesNotMatch(layout, /saleRadar\.after\(benefits\)/);
-  assert.match(layout, /ホシル検索/);
+  assert.match(layout, /検索方法/);
   assert.match(html, /class="hoshilu-primary"/);
   // UI v5 (2026-08-07): every section lives in one static column, in the
   // exact same order at every breakpoint - ホシル検索 -> MATCHES -> SALE
@@ -93,7 +93,7 @@ test('トップ画面でまとめて検索3モール・個別に探す最大13�
   assert.match(module, /最多支持13个商城/);
   assert.match(module, /최대 13개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v353/);
+  assert.match(serviceWorker, /hoshilu-shell-v354/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

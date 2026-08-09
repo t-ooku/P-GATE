@@ -31,7 +31,7 @@ test('section9・10: AIウォッチの説明文は変更されない(値下げ�
   assert.match(app, /watchLabels:\['値下げ','クーポン','再入荷','販売開始'\]/);
   // createWatchOptions(🔔ダイアログ)は今までどおりwatchLabelsの4チェック
   // ボックスを描画する
-  const bellMatch = app.match(/function createWatchOptions\(t\)\{[\s\S]*?\n(?=function saveWatchChoice)/);
+  const bellMatch = app.match(/function createWatchOptions\(candidate,t\)\{[\s\S]*?\n(?=function saveWatchChoice)/);
   assert.ok(bellMatch, 'createWatchOptions関数が見つかりません');
   assert.match(bellMatch[0], /t\.watchLabels\.map/);
   assert.match(bellMatch[0], /t\.watchTitle/);

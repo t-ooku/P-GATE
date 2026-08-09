@@ -100,6 +100,16 @@ test('section15: AIウォッチ(🔔)が保存した4フラグは、INSIGHT側�
   assert.equal(updated.watch_restock, 1);
 });
 
+test('購入希望価格と商品識別情報を保存し、不正な金額を拒否する',async()=>{
+  const {db}=sqliteD1();const env={PRODUCT_DB:db,MEMBER_SESSION_SECRET};
+  const cookie=await memberCookie({id:'member-target',name:'テスト',provider:'EMAIL'});
+  const response=await requestFor(env,'POST','/api/member/wishes',cookie,{query:'LILMOON リルムーン 度あり カラコン',language:'JA',watch_price:true,target_price_jpy:2980,target_product_key:'YAHOO:lilmoon-1',target_product_name:'LILMOON ワンデー 度あり'});
+  assert.equal(response.status,200);const wish=(await response.json()).wish;
+  assert.equal(wish.target_price_jpy,2980);assert.equal(wish.target_product_key,'YAHOO:lilmoon-1');assert.equal(wish.target_product_name,'LILMOON ワンデー 度あり');
+  const invalid=await requestFor(env,'POST','/api/member/wishes',cookie,{query:'LILMOON',target_price_jpy:99});
+  assert.equal(invalid.status,400);assert.equal((await invalid.json()).error,'TARGET_PRICE_INVALID');
+});
+
 test('section15: HOSHILU INSIGHT側の新規保存(POSTでnotify_new_matchのみ)は既定のAIウォッチ値のみ与え、既存行があれば温存する', async () => {
   const { db } = sqliteD1();
   const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET };

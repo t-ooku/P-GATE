@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v353/);
+  assert.match(worker, /hoshilu-shell-v354/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /:scope > \.product-card-media-column/);
@@ -129,7 +129,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/app\.js\?v=106"><\/script><script type="module" src="\/ai-search-ui\.mjs"><\/script>/);
+  assert.match(html, /<script type="module" src="\/app\.js\?v=107"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=2"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -174,4 +174,22 @@ test('AI検索候補は候補ごとにモール検索ボタン付きで表示さ
   assert.doesNotMatch(app, /product_candidates\|\|\[\]\)\)\[0\]/);
   assert.match(css, /\.ai-candidate-card\{/);
   assert.match(css, /\.ai-candidate-list\{/);
+});
+
+test('検索方法はスライド式2モードで、AI確認は3回目のNO後に他モール導線へ切り替わる',async()=>{
+  const html=await readFile(new URL('../public/index.html',import.meta.url),'utf8');
+  const app=await readFile(new URL('../public/app.js',import.meta.url),'utf8');
+  const script=await readFile(new URL('../public/ai-search-ui.mjs',import.meta.url),'utf8');
+  const css=await readFile(new URL('../public/sticky-nav.css',import.meta.url),'utf8');
+  assert.doesNotMatch(html,/id="goSearch"|id="goWish"/);assert.match(html,/id="searchModeIdentify"/);assert.match(html,/id="searchModeDirect"/);
+  assert.match(css,/search-mode-switch\[data-mode="direct"\]::before/);assert.match(css,/opacity: \.42/);
+  assert.match(app,/HoshiluIdentifySearch\?\.open/);assert.match(script,/mode, session_id/);assert.match(script,/mode = 'REFINE'/);
+  assert.match(script,/noCount>=3/);assert.match(script,/ai-chat-other-malls/);assert.match(script,/window\.HoshiluIdentifySearch=\{open:openIdentifyDialog\}/);
+});
+
+test('購入希望価格は検索文ではなく商品単位で保存し、ログイン同期でも希望額を保持する',async()=>{
+  const app=await readFile(new URL('../public/app.js',import.meta.url),'utf8');
+  assert.match(app,/const wishQuery=amount\?productName:elements\.query\.value/);
+  assert.match(app,/saveWish\(wishQuery,inputs\.map/);
+  assert.match(app,/const saved=getWatchPreferences\(\)\.find\(item=>item\.query===query\)\|\|\{\};await persistMemberWish\(query,watchOptionsFor\(query\),saved\)/);
 });

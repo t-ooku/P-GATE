@@ -5,14 +5,12 @@
 // previously fought with the static order.
 const search = document.querySelector('#hoshiluSearch');
 
-const searchLabels = { JA:'ホシル検索', EN:'HOSHILU Search', ZH:'HOSHILU 搜索', KO:'HOSHILU 검색' };
+const searchLabels = { JA:'検索方法', EN:'Search mode', ZH:'搜索方式', KO:'검색 방법' };
 function applySearchLabel() {
   const language = document.querySelector('[data-language-select]')?.value || 'JA';
   const label = searchLabels[language] || searchLabels.JA;
   const searchStep = document.querySelector('#searchStep');
-  const goSearch = document.querySelector('#goSearch');
   if (searchStep) searchStep.textContent = label;
-  if (goSearch) goSearch.textContent = label;
 }
 
 document.querySelectorAll('.marketplace-group li').forEach((item) => {

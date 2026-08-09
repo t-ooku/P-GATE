@@ -8,7 +8,8 @@ const number = (value) => Number(value || 0).toLocaleString('ja-JP');
 
 export async function sellerPageResponse(
   env = {},
-  seller = { account: 'Seller', tenants: ['itg'], plan: 'LITE' }
+  seller = { account: 'Seller', tenants: ['itg'], plan: 'LITE' },
+  searchParams = new URLSearchParams()
 ) {
   const allowed = new Set(seller.tenants || []);
   const entitlements = sellerPlanEntitlements(seller.plan);
@@ -17,7 +18,29 @@ export async function sellerPageResponse(
   let restrictions = [];
   let syncs = [];
   let marketplaceOffers = [];
+  let targetPriceDemands = [];
+  const demandQuery=String(searchParams?.get?.('demand_query')||'').normalize('NFKC').trim().slice(0,80);
+  const demandMin=Math.max(0,Math.min(100000000,Number(searchParams?.get?.('demand_min'))||0));
+  const demandMax=Math.max(demandMin,Math.min(100000000,Number(searchParams?.get?.('demand_max'))||100000000));
   if (env.PRODUCT_DB) {
+    try {
+      if (entitlements.target_price_demand) {
+        const result = await env.PRODUCT_DB.prepare(`SELECT json_extract(condition_snapshot,'$.price_condition.target_product_name') AS target_product_name,
+          count(DISTINCT member_id) AS interested_users,
+          min(CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)) AS min_target_price_jpy,
+          round(avg(CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER))) AS average_target_price_jpy,
+          max(CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)) AS max_target_price_jpy,
+          max(updated_at) AS last_updated_at
+          FROM member_wishes
+          WHERE CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100
+            AND json_extract(condition_snapshot,'$.price_condition.target_product_name') LIKE ?1 ESCAPE '\\'
+            AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER) BETWEEN ?2 AND ?3
+          GROUP BY json_extract(condition_snapshot,'$.price_condition.target_product_name') HAVING count(DISTINCT member_id)>=5
+          ORDER BY interested_users DESC,last_updated_at DESC LIMIT 100`)
+          .bind(`%${demandQuery.replace(/[\\%_]/g,'\\$&')}%`,demandMin,demandMax).all();
+        targetPriceDemands=result.results||[];
+      }
+    } catch {}
     try {
       const result = await env.PRODUCT_DB.prepare(
         'SELECT tenant,count(*) AS products FROM products GROUP BY tenant ORDER BY tenant'
@@ -135,6 +158,11 @@ export async function sellerPageResponse(
       : verified > 0 ? '7日以内に確認済み' : '商品URLフィードの接続が必要';
     return `<article class="seller-panel"><span>${label}</span><strong>${state}</strong><span>${note}</span></article>`;
   }).join('');
+  const targetDemandRows=!entitlements.target_price_demand
+    ? '<tr><td colspan="5">サブスク加入後に利用できます。</td></tr>'
+    : targetPriceDemands.length
+      ? targetPriceDemands.map(row=>`<tr><td>${esc(row.target_product_name)}</td><td>${number(row.interested_users)}人以上</td><td>¥${number(row.min_target_price_jpy)}</td><td>¥${number(row.average_target_price_jpy)}</td><td>¥${number(row.max_target_price_jpy)}</td></tr>`).join('')
+      : '<tr><td colspan="5">匿名希望者が5人以上集まった商品を表示します。現在の条件では集計待ちです。</td></tr>';
 
   const html = `<!doctype html><html lang="ja"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -142,7 +170,7 @@ export async function sellerPageResponse(
   <link rel="icon" href="/icons/icon.svg"><link rel="stylesheet" href="/auth.css">
   <style>
   .seller-shell .auth-card{margin-bottom:18px;scroll-margin-top:24px}
-  .seller-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:22px}
+  .seller-actions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:22px}
   .seller-actions a{display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none}
   @media(max-width:700px){.seller-actions{grid-template-columns:1fr 1fr}.seller-actions a:last-child{grid-column:1/-1}}
   </style><title>メーカー・セラー管理 | HOSHILU</title></head><body>
@@ -154,7 +182,7 @@ export async function sellerPageResponse(
   <p>契約プラン: <strong>${esc(seller.plan)}</strong> / 対象店舗: ${tenantSummary}</p>
   <nav class="seller-actions" aria-label="管理メニュー">
   <a class="primary-button" href="#catalog">商品管理</a><a class="primary-button" href="#offers">購入先管理</a>
-  <a class="primary-button" href="#demand">需要分析</a><a class="primary-button" href="#integration">データ連携</a>
+  <a class="primary-button" href="#demand">需要分析</a><a class="primary-button" href="#target-price-demand">購入意向</a><a class="primary-button" href="#integration">データ連携</a>
   <a class="primary-button" href="#plan">契約プラン</a></nav></section>
 
   <section class="auth-card"><p class="eyebrow">AMAZON SP-API</p><h2>Amazon商品同期</h2>
@@ -182,6 +210,11 @@ export async function sellerPageResponse(
   <section class="auth-card" id="demand"><p class="eyebrow">DEMAND</p><h2>契約商品で満たせなかった需要</h2>
   <p>個人を特定しないカテゴリ集計です。QA・流入元なし・過去不明の記録を除外し、流入元付きの匿名セッションが5件以上あるカテゴリだけを表示します。セッション件数は人数を意味しません。</p>
   <div class="seller-grid">${demandCards}</div></section>
+
+  <section class="auth-card" id="target-price-demand"><p class="eyebrow">PURCHASE INTENT</p><h2>購入したい価格</h2>
+  <p>自社の出品有無を問わず、匿名集計された「この価格なら購入したい」需要を確認できます。会員ID・個別の検索履歴は表示せず、同一商品で5人以上集まった場合だけ公開します。</p>
+  <form method="get" action="/seller" class="auth-form"><label><span>商品名・ブランド</span><input name="demand_query" value="${esc(demandQuery)}" maxlength="80" placeholder="例：LILMOON"></label><label><span>希望価格（下限）</span><input name="demand_min" type="number" min="0" max="100000000" value="${demandMin||''}"></label><label><span>希望価格（上限）</span><input name="demand_max" type="number" min="0" max="100000000" value="${demandMax===100000000?'':demandMax}"></label><button class="primary-button" type="submit">条件検索</button></form>
+  <div class="seller-table-wrap"><table><thead><tr><th>商品</th><th>購入意向</th><th>最低希望額</th><th>平均希望額</th><th>最高希望額</th></tr></thead><tbody>${targetDemandRows}</tbody></table></div></section>
 
   <section class="auth-card" id="restrictions"><p class="eyebrow">IMPORT KNOWLEDGE</p><h2>輸入制限と国内代替需要</h2>
   <p>注文番号や顧客情報を含まない月次集計です。</p><div class="seller-grid">${restrictionCards}</div></section>

@@ -215,7 +215,7 @@ export async function handleSellerRoutes(request, env) {
   if (request.method === 'GET' && (url.pathname === '/seller' || url.pathname === '/seller.html')) {
     const seller = await readSellerSession(request, env);
     if (!seller) return noStoreRedirect(`${url.origin}/seller-login.html`);
-    return sellerPageResponse(env, seller);
+    return sellerPageResponse(env, seller, url.searchParams);
   }
   if (request.method === 'GET' && url.pathname === '/seller/sp-api') {
     const seller = await readSellerSession(request, env);
