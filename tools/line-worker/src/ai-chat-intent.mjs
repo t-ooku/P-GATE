@@ -28,6 +28,13 @@ function cleanString(value, max = 200) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function cleanRefinedQuery(value) {
+  return cleanString(value, MAX_MESSAGE_LENGTH * MAX_HISTORY_MESSAGES)
+    .replace(/https?:\/\/\S+/giu, ' ')
+    .replace(/(?:[¥$€£]\s*\d[\d,.]*|\d[\d,]*(?:円|ドル|usd|jpy))/giu, ' ')
+    .replace(/\s+/gu, ' ').trim();
+}
+
 function parseJsonText(text) {
   const raw = String(text || '').trim();
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i)?.[1] || raw;
@@ -69,16 +76,19 @@ export function sanitizeChatHistory(history) {
     .slice(-MAX_HISTORY_MESSAGES);
 }
 
+// Regression guard used by both chat and normal-search refinement:
+// Never include a price, stock status, product URL, or a claim that you found a specific real product.
+
 function chatPrompt(history, language) {
   const transcript = history.map((turn) => `${turn.role === 'user' ? 'User' : 'HOSHILU AI'}: ${turn.text}`).join('\n');
-  return `You are HOSHILU's search-refinement chat assistant. Your only job is to turn a vague or incomplete product wish into a clean marketplace search string, using as FEW turns as possible - budget is limited, so only ask a clarifying question when the request is genuinely too ambiguous to search (e.g. no guessable product category at all). If a product type and at least one distinguishing detail are present, do not ask anything - go straight to refined_query.\n\nConversation so far (oldest first):\n${transcript}\n\nDisplay language: ${language}\n\nReturn JSON only with this exact structure:\n{\n  "needs_clarification": false,\n  "clarifying_question": "",\n  "refined_query": ""\n}\n\nRules:\n- Never include a price, stock status, product URL, or a claim that you found a specific real product - you only refine the search, HOSHILU performs the real search afterward.\n- clarifying_question: a single short question, only when needs_clarification is true. Empty string otherwise.\n- refined_query: a clean, short marketplace-search-ready string combining everything learned from the whole conversation (category + distinguishing details). Required when needs_clarification is false.\n- JSON only, no markdown.`;
+  return `You are HOSHILU's search-refinement assistant. Turn the user's wording into a short marketplace search string. Ask a question only when no product category can be inferred.\n\nConversation:\n${transcript}\n\nDisplay language: ${language}\n\nReturn JSON only:\n{\n  "needs_clarification": false,\n  "clarifying_question": "",\n  "refined_query": ""\n}\n\nRules:\n- You MAY resolve a remembered spokesperson, nickname, visual clue, or colloquial description into the most likely real brand/product name. Treat it only as a search hypothesis; never claim it was verified or found. HOSHILU verifies it against marketplace/catalog data afterward.\n- Never include a price, stock status, URL, or fabricated specification.\n- refined_query must preserve every user requirement and contain likely brand/product + category + distinguishing details.\n- JSON only, no markdown.`;
 }
 
 async function providerFetch(fetchImpl, url, options, timeoutMs) {
   return fetchImpl(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
 }
 
-async function callGemini(history, language, env, fetchImpl) {
+async function callGemini(history, language, env, fetchImpl, timeoutMs = CHAT_TIMEOUT_MS) {
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
   const response = await providerFetch(
     fetchImpl,
@@ -88,10 +98,11 @@ async function callGemini(history, language, env, fetchImpl) {
       headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: chatPrompt(history, language) }] }],
-        generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+        generationConfig: { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: 128,
+          thinkingConfig: { thinkingLevel: 'minimal' } }
       })
     },
-    CHAT_TIMEOUT_MS
+    timeoutMs
   );
   if (!response.ok) {
     const error = new Error('GEMINI_CHAT_INTENT_FAILED');
@@ -103,7 +114,7 @@ async function callGemini(history, language, env, fetchImpl) {
   return { model, ...normalizeChatTurnResult(parsed) };
 }
 
-async function callOpenAi(history, language, env, fetchImpl) {
+async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_TIMEOUT_MS) {
   const model = String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5');
   const response = await providerFetch(fetchImpl, 'https://api.openai.com/v1/responses', {
     method: 'POST',
@@ -114,7 +125,7 @@ async function callOpenAi(history, language, env, fetchImpl) {
       reasoning: { effort: 'low' },
       text: { format: { type: 'json_object' } }
     })
-  }, CHAT_TIMEOUT_MS);
+  }, timeoutMs);
   if (!response.ok) {
     const error = new Error('OPENAI_CHAT_INTENT_FAILED');
     error.status = response.status;
@@ -130,7 +141,7 @@ export function normalizeChatTurnResult(payload = {}) {
   return {
     needs_clarification: needsClarification,
     clarifying_question: needsClarification ? cleanString(payload?.clarifying_question, 200) : '',
-    refined_query: !needsClarification ? cleanString(payload?.refined_query, MAX_MESSAGE_LENGTH * MAX_HISTORY_MESSAGES) : ''
+    refined_query: !needsClarification ? cleanRefinedQuery(payload?.refined_query) : ''
   };
 }
 
@@ -147,7 +158,7 @@ function fallbackResult(history) {
   return { needs_clarification: false, clarifying_question: '', refined_query: lastUserTurn?.text || '' };
 }
 
-export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl = fetch) {
+export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl = fetch, options = {}) {
   const history = sanitizeChatHistory(rawHistory);
   if (!history.length) return { ...fallbackResult(history), configured: chatIntentConfigured(env) };
   if (!chatIntentConfigured(env)) return { ...fallbackResult(history), configured: false };
@@ -161,13 +172,19 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
   const geminiConfigured = String(env.GEMINI_API_KEY || '').length >= 20;
   const openAiConfigured = String(env.OPENAI_API_KEY || '').length >= 20;
   const providers = [geminiConfigured && 'gemini', openAiConfigured && 'openai'].filter(Boolean);
+  const totalBudgetMs = Math.max(250, Math.min(CHAT_TIMEOUT_MS, Number(options.totalBudgetMs) || CHAT_TIMEOUT_MS));
+  const perProviderMs = Math.max(250, Math.min(CHAT_TIMEOUT_MS, Number(options.timeoutMs) || CHAT_TIMEOUT_MS));
+  const deadline = Date.now() + totalBudgetMs;
 
   let lastError;
   for (const provider of providers) {
+    const remainingMs = deadline - Date.now();
+    if (remainingMs < 250) break;
+    const timeoutMs = Math.min(perProviderMs, remainingMs);
     try {
       const result = provider === 'gemini'
-        ? await callGemini(history, language, env, fetchImpl)
-        : await callOpenAi(history, language, env, fetchImpl);
+        ? await callGemini(history, language, env, fetchImpl, timeoutMs)
+        : await callOpenAi(history, language, env, fetchImpl, timeoutMs);
       console.info('AI_CHAT_TURN_RESULT', {
         provider,
         model: result.model,
@@ -189,4 +206,20 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
   }
   console.warn('AI_CHAT_TURN_ALL_PROVIDERS_FAILED', { attempted: providers.length, had_error: Boolean(lastError) });
   return { ...fallbackResult(history), configured: true };
+}
+
+// 通常検索向けの高速な意図変換。結果は商品として信用せず検索語にだけ使い、
+// 実在性は後段のモールAPI/D1で検証する。Gemini利用時は公式が高スループット
+// 用途向けとしているFlash-Liteを使い、全体を2.5秒以内に制限する。
+export async function refineMarketplaceSearchQuery(rawQuery, language, env = {}, fetchImpl = fetch) {
+  const fastEnv = { ...env };
+  if (String(env.GEMINI_API_KEY || '').length >= 20) {
+    fastEnv.GEMINI_PRODUCT_DISCOVERY_MODEL = String(env.GEMINI_QUERY_REFINEMENT_MODEL || 'gemini-3.1-flash-lite');
+    // Geminiが設定済みなら、通常時に2社へ二重課金せず最速モデルを優先する。
+    fastEnv.OPENAI_API_KEY = '';
+  }
+  return analyzeChatTurn(
+    [{ role: 'user', text: String(rawQuery || '') }], language, fastEnv, fetchImpl,
+    { timeoutMs: 2500, totalBudgetMs: 2500 }
+  );
 }

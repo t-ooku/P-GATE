@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   analyzeChatTurn,
   chatIntentConfigured,
+  refineMarketplaceSearchQuery,
   sanitizeChatHistory,
   normalizeChatTurnResult
 } from '../src/ai-chat-intent.mjs';
@@ -114,7 +115,26 @@ test('全プロバイダ失敗時も直近のユーザー発言で検索へフ�
 });
 
 test('価格・URL・在庫を主張する応答は仕様上返せない構造になっている(refined_queryは検索語のみ)', () => {
-  const result = normalizeChatTurnResult({ needs_clarification: false, refined_query: '透明 イヤホン' });
+  const result = normalizeChatTurnResult({ needs_clarification: false, refined_query: '透明 イヤホン https://example.com 3,980円' });
   assert.doesNotMatch(result.refined_query, /https?:\/\//);
   assert.doesNotMatch(result.refined_query, /円|¥|\$/);
+});
+
+test('通常検索はGemini Flash-Lite・最小思考・短いJSONでブランド名へ高速変換する', async () => {
+  let requestedUrl = ''; let requestBody;
+  const fetchImpl = async (url, options) => {
+    requestedUrl = String(url); requestBody = JSON.parse(options.body);
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+      needs_clarification: false, clarifying_question: '',
+      refined_query: 'LILMOON リルムーン 度あり カラコン'
+    }) }] } }] });
+  };
+  const result = await refineMarketplaceSearchQuery(
+    'カラコン ローラ 度入り', 'JA', { GEMINI_API_KEY: 'g'.repeat(32) }, fetchImpl
+  );
+  assert.match(requestedUrl, /gemini-3\.1-flash-lite/);
+  assert.equal(requestBody.generationConfig.maxOutputTokens, 128);
+  assert.equal(requestBody.generationConfig.thinkingConfig.thinkingLevel, 'minimal');
+  assert.match(requestBody.contents[0].parts[0].text, /spokesperson/);
+  assert.match(result.refined_query, /LILMOON/);
 });

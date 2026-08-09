@@ -122,12 +122,13 @@ test('AI product intent analysis runs from the first search when ten-mall candid
   const env = { ...environment([]), GEMINI_API_KEY: 'g'.repeat(32) };
   try {
     const firstPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 1), env, context)).json();
-    assert.equal(aiCalls, 1);
+    // 通常検索の高速な検索語変換1回 + 候補0件時の商品意図解析1回。
+    assert.equal(aiCalls, 2);
     assert.equal(firstPayload.result.ai_discovery.provider, 'GEMINI_PRODUCT_INTENT');
     assert.equal(firstPayload.result.ai_discovery.analysis.product_candidates[0].name, 'LED スマホアクセサリー');
     assert.deepEqual(firstPayload.result.ai_discovery.analysis.search_keywords, ['光る 小物', 'LED スマホアクセサリー']);
     const secondPayload = await (await worker.fetch(request('見たことのない光る小物', 'JA', 2), env, context)).json();
-    assert.equal(aiCalls, 2);
+    assert.equal(aiCalls, 4);
     assert.equal(secondPayload.result.candidates.length, 0);
     assert.equal(secondPayload.result.ai_discovery.provider, 'GEMINI_PRODUCT_INTENT');
     assert.equal(secondPayload.result.ai_discovery.analysis.product_candidates[0].match_score, 86);

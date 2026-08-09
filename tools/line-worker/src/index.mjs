@@ -21,7 +21,7 @@ import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_L
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
-import { analyzeChatTurn, chatIntentConfigured } from './ai-chat-intent.mjs';
+import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult } from './marketplace-ranking.mjs';
 import { relatedProductRecommendationQueries } from './related-product-recommendations.mjs';
 import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
@@ -287,6 +287,17 @@ export function validateKnowledgeRequest(payload) {
     consent: true, attribution,
     traffic_class: classifyGrowthTraffic(attribution)
   };
+}
+
+export function mergeAiRefinedSearchQuery(originalQuery, refinedQuery) {
+  const original = redactSearchPersonalData(originalQuery).replace(/\s+/gu, ' ').trim().slice(0, 200);
+  const refined = redactSearchPersonalData(refinedQuery).replace(/\s+/gu, ' ').trim().slice(0, 200);
+  if (refined.length < 2 || refined.toLocaleLowerCase() === original.toLocaleLowerCase()) return original;
+  // AIが元条件を落としても検索条件を失わないよう、原文を必ず併記する。
+  if (refined.toLocaleLowerCase().includes(original.toLocaleLowerCase())) return refined;
+  const refinedBudget = Math.max(0, 199 - original.length);
+  const prefix = refined.slice(0, refinedBudget).trim();
+  return prefix ? `${prefix} ${original}` : original;
 }
 
 // HOSHILU AI Chat (2026-08-05): shares the same session/Turnstile/consent
@@ -1701,7 +1712,7 @@ async function handleKnowledgeApi(request, env, ctx) {
     // input.query は元のまま変わらない。
     const originalQuery = validatedInput.query;
     const expandedQuery = expandSearchQuery(originalQuery);
-    const input = { ...validatedInput, query: expandedQuery.query };
+    let input = { ...validatedInput, query: expandedQuery.query };
     // v3.4 CTO instruction: every checkpoint in the marketplace search trace
     // (API送信/レスポンス件数/accepted件数/Teacher Dataset補正件数/ranking
     // 入力・出力件数/モール別件数/UI送信件数) must share one requestId so the
@@ -1719,12 +1730,21 @@ async function handleKnowledgeApi(request, env, ctx) {
       query_expansion_rule: expandedQuery.expansion?.rule_id || null
     });
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    const [gasOutcome, indexedOutcome] = await Promise.allSettled([
+    // 通常検索でもAIを検索語変換器として使う。ただし既存DB/GAS検索と並列に
+    // 走らせるため、Gemini待ちを丸ごと検索時間へ上乗せしない。
+    const [gasOutcome, indexedOutcome, aiRefinementOutcome] = await Promise.allSettled([
       callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } }),
       applyIndexedSearchPolicy({ candidates: [] }, env, input.query, input.language, {
         force_product_presentation: true
-      })
+      }),
+      refineMarketplaceSearchQuery(originalQuery, input.language, env, fetch)
     ]);
+    const aiRefinement = aiRefinementOutcome.status === 'fulfilled' ? aiRefinementOutcome.value : null;
+    const aiRefinedQuery = aiRefinement && !aiRefinement.needs_clarification
+      ? mergeAiRefinedSearchQuery(originalQuery, aiRefinement.refined_query) : originalQuery;
+    const aiExpandedQuery = expandSearchQuery(aiRefinedQuery);
+    const queryWasAiRefined = aiExpandedQuery.query !== expandedQuery.query;
+    if (queryWasAiRefined) input = { ...input, query: aiExpandedQuery.query };
     const gasResult = gasOutcome.status === 'fulfilled' ? gasOutcome.value : { candidates: [], message: '' };
     let result = indexedOutcome.status === 'fulfilled' ? indexedOutcome.value : gasResult;
     if (indexedOutcome.status === 'fulfilled' && (gasResult?.candidates || []).length) {
@@ -1734,6 +1754,23 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(result.candidates, gasResult.candidates, input.query)
       };
     }
+    // AIがブランド/商品名を補った場合はD1も短い再検索を行う。外部APIだけ
+    // でなく、HOSHILU内の確認済み商品データにもAI変換を反映する。
+    if (queryWasAiRefined) {
+      try {
+        const refinedIndexed = await applyIndexedSearchPolicy({ candidates: [] }, env, input.query, input.language, {
+          force_product_presentation: true
+        });
+        result = { ...result, candidates: rankMerchantCandidates(
+          result.candidates || [], refinedIndexed.candidates || [], input.query
+        ) };
+      } catch {}
+    }
+    result = { ...result, ai_query_refinement: {
+      applied: queryWasAiRefined,
+      provider: queryWasAiRefined ? String(aiRefinement?.provider || '') : '',
+      configured: aiRefinement?.configured === true
+    } };
     result = await applyD1MultilingualContent(env, result, input.language);
     result = await applyD1ContractPolicy(env, result, input.query, requestId);
     const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env)

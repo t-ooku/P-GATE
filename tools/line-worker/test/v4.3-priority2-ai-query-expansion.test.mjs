@@ -86,7 +86,8 @@ test('v4.3項目8・9: AI(discoverProductsWithAi)はTeacher Dataset/D1/モール
   try {
     const payload = await (await worker.fetch(request('名前が分からないけど透明なやつ'), env, context)).json();
     assert.equal(payload.ok, true);
-    assert.equal(aiCalls, 1);
+    // 検索前の検索語変換と、全候補0件時の商品意図解析を別目的で各1回呼ぶ。
+    assert.equal(aiCalls, 2);
     assert.equal(payload.result.ai_discovery.triggered, true);
   } finally {
     globalThis.fetch = originalFetch;
@@ -119,7 +120,8 @@ test('v4.3項目9: AIプロバイダが両方とも失敗しても検索全体�
     assert.equal(payload.ok, true);
     assert.deepEqual(payload.result.candidates, []);
     assert.equal(payload.result.ai_discovery.unavailable, true);
-    assert.equal(geminiCalls, 1);
+    // 検索語変換のGemini 1回 + 商品意図解析のGemini 1回。
+    assert.equal(geminiCalls, 2);
     assert.equal(openAiCalls, 1);
   } finally {
     globalThis.fetch = originalFetch;
@@ -149,7 +151,8 @@ test('v4.3項目9: GeminiとOpenAIを同時実行しない(Geminiが成功すれ
   try {
     const payload = await (await worker.fetch(request('また別の未知クエリ'), env, context)).json();
     assert.equal(payload.ok, true);
-    assert.equal(geminiCalls, 1);
+    // 検索語変換・商品意図解析ともGeminiで成功し、OpenAIへは流れない。
+    assert.equal(geminiCalls, 2);
     assert.equal(openAiCalls, 0);
   } finally {
     globalThis.fetch = originalFetch;

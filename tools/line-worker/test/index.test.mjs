@@ -20,8 +20,19 @@ const {
   getEnvironmentReadiness, buildAmazonSearchDestination, buildRakutenSearchDestination,
   buildQoo10SearchDestination, buildQoo10SearchKeywords, buildSheinSearchDestination,
   buildAmazonSearchKeywords, buildRakutenSearchKeywords,
-  buildRakutenSearchKeywordCandidates, trackingEventsForPayload, rankSellerOffers
+  buildRakutenSearchKeywordCandidates, trackingEventsForPayload, rankSellerOffers,
+  mergeAiRefinedSearchQuery
 } = workerModule;
+
+test('AI検索語は元の条件を落とさずモール検索へ渡す', () => {
+  assert.equal(
+    mergeAiRefinedSearchQuery('カラコン ローラ 度入り', 'LILMOON リルムーン 度あり カラコン'),
+    'LILMOON リルムーン 度あり カラコン カラコン ローラ 度入り'
+  );
+  assert.equal(mergeAiRefinedSearchQuery('軽い 扇風機', ''), '軽い 扇風機');
+  const longOriginal = `限定条件${'あ'.repeat(190)}`;
+  assert.ok(mergeAiRefinedSearchQuery(longOriginal, '推定ブランド'.repeat(40)).endsWith(longOriginal));
+});
 
 test('Rakuten search keeps Japanese conditions separate from Amazon aliases', () => {
   const query = '折りたたみ日傘 / 軽量 / 晴雨兼用';
@@ -448,7 +459,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v352/);
+  assert.match(serviceWorker, /hoshilu-shell-v353/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
