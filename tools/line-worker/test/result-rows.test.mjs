@@ -8,6 +8,7 @@ import {
   candidateOffers,
   resultRowCopy,
   resultRowCopyFor,
+  recommendationReason,
   splitCandidateRows
 } from '../public/result-rows.mjs';
 import { CLIENT_CANDIDATE_LIMIT, CLIENT_CANDIDATE_ROW_LIMIT } from '../src/index.mjs';
@@ -65,6 +66,11 @@ test('提示欄を上段（価格確定）と下段（価格・在庫未確認�
   assert.deepEqual(splitCandidateRows(undefined).unconfirmed, []);
 });
 
+test('2段目の横展開レコメンドは選定理由を表示できる', () => {
+  assert.match(recommendationReason({ evidence:{ matched_terms:['冷却','首掛け'] } }),/冷却・首掛け/);
+  assert.equal(resultRowCopy.JA.unconfirmedTitle,'HOSHILU AI選定レコメンド');
+});
+
 test('各段は最大30件、合計60件までを取り込む', () => {
   assert.equal(RESULT_ROW_LIMIT, 30);
   const candidates = [
@@ -103,21 +109,24 @@ test('4言語すべてに2段の見出し・説明・バッジがある', () => 
 // 「AIは理解する。HOSHILUは探す。」- 下段は価格を推測しないことが前提なので、
 // 未確認であることの明示が消えたら仕様違反。
 test('下段の文言は価格を推測しないと明言し、未確認バッジを出す', async () => {
-  assert.match(resultRowCopy.JA.unconfirmedNote, /推測しません/);
-  assert.match(resultRowCopy.EN.unconfirmedNote, /never estimates a price/);
+  assert.match(resultRowCopy.JA.unconfirmedNote, /価格・在庫は/);
+  assert.match(resultRowCopy.EN.unconfirmedNote, /price and availability/);
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /splitCandidateRows\(result\.candidates,RESULT_ROW_LIMIT\)/);
   assert.match(app, /'product-card unverified-card'/);
   assert.match(app, /'unverified-badge'/);
   assert.match(app, /result-row-\$\{rowKind\}/);
+  assert.match(app, /AI選定理由/);
+  assert.match(app, /fetch\('\/api\/related-recommendations'/);
+  assert.match(app, /setTimeout\(\(\)=>\{loadRelatedRecommendations/);
   const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8');
   assert.match(css, /\.product-card\.unverified-card\{/);
   assert.match(css, /\.unverified-badge\{/);
-  assert.match(css, /\.result-row-unconfirmed \.result-row-title\{/);
+  assert.match(css, /\.result-row-recommended \.result-row-title\{/);
 });
 
 test('新しいモジュールはService Workerのプリキャッシュに含まれる', async () => {
   const sw = await readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8');
   assert.match(sw, /'\/result-rows\.mjs'/);
-  assert.match(sw, /hoshilu-shell-v347/);
+  assert.match(sw, /hoshilu-shell-v348/);
 });

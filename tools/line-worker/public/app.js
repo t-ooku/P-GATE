@@ -542,6 +542,7 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   if(candidate.description)card.append(textElement('p','',candidate.description));
   const terms=candidate.evidence?.matched_terms||[];
   if(terms.length)card.append(textElement('div','evidence',`${window.HoshiluI18n?.t('search.evidence',elements.language.value)||'一致した手がかり：'}${terms.slice(0,4).join(' / ')}`));
+  if(!confirmed&&candidate.recommendation_reason)card.append(textElement('div','recommendation-reason',`AI選定理由：${candidate.recommendation_reason}`));
   const options=renderOfferOptions(candidate,t,elements.language.value);
   if(options)card.append(options);else card.append(allMarketplacesButton());
   const watch=createWatchOptions(t);
@@ -604,12 +605,13 @@ function renderResults(result,requestId){
   elements.results.classList.remove('hidden');
   elements.message.textContent=result.message||'';
   const copy=resultRowCopyFor(elements.language.value);
-  const {confirmed,unconfirmed}=splitCandidateRows(result.candidates,RESULT_ROW_LIMIT);
-  console.info('SEARCH_TRACE_CLIENT',{requestId,stage:'11_ui_render',ui_render_count:confirmed.length+unconfirmed.length,ui_confirmed_count:confirmed.length,ui_unconfirmed_count:unconfirmed.length});
+  const {confirmed}=splitCandidateRows(result.candidates,RESULT_ROW_LIMIT);
+  const recommended=(Array.isArray(result.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);
+  console.info('SEARCH_TRACE_CLIENT',{requestId,stage:'11_ui_render',ui_render_count:confirmed.length+recommended.length,ui_confirmed_count:confirmed.length,ui_recommended_count:recommended.length});
   const sharedSearchQuery=String(result?.search_keywords||result?.amazon_search_keywords||elements.query.value||'');
   const rows=[
     resultRow(confirmed.map((candidate,index)=>productCard(candidate,index,t,true,sharedSearchQuery)),copy.confirmedTitle,copy.confirmedNote,'confirmed'),
-    resultRow(unconfirmed.map((candidate,index)=>productCard(candidate,index,t,false,sharedSearchQuery)),copy.unconfirmedTitle,copy.unconfirmedNote,'unconfirmed')
+    resultRow(recommended.map((candidate,index)=>productCard(candidate,index,t,false,sharedSearchQuery)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended')
   ].filter(Boolean);
   if(rows.length){
     const resultCards=[];
@@ -643,6 +645,27 @@ function renderResults(result,requestId){
   }
   syncStickySearch();
   elements.results.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+let relatedRecommendationSequence=0;
+async function loadRelatedRecommendations(query,sequence){
+  const token=await waitForFreshTurnstileToken();
+  if(!token||sequence!==relatedRecommendationSequence)return;
+  const response=await fetch('/api/related-recommendations',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
+    query,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,turnstile_token:token
+  })});
+  const payload=await response.json();
+  if(!response.ok||!payload.ok||sequence!==relatedRecommendationSequence)return;
+  const recommendations=(Array.isArray(payload.result?.recommendations)?payload.result.recommendations:[]).slice(0,RESULT_ROW_LIMIT);
+  const oldRow=elements.cards.querySelector('[data-row="recommended"]');
+  if(!recommendations.length){oldRow?.remove();return;}
+  const copy=resultRowCopyFor(elements.language.value);
+  const row=resultRow(recommendations.map((candidate,index)=>productCard(candidate,index,selectedCopy(),false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');
+  if(!row)return;
+  if(oldRow)oldRow.replaceWith(row);else{
+    const anchor=elements.cards.querySelector('.related-keywords-card,.marketplace-fallback');
+    if(anchor)elements.cards.insertBefore(row,anchor);else elements.cards.append(row);
+  }
 }
 async function initializeTurnstile(){ const response=await fetch('/api/config',{cache:'no-store'});if(!response.ok)throw new Error('TURNSTILE_NOT_CONFIGURED');const config=await response.json();for(let i=0;i<100&&!window.turnstile;i+=1)await new Promise(resolve=>setTimeout(resolve,50));if(!window.turnstile)throw new Error('TURNSTILE_UNAVAILABLE');turnstileWidget=window.turnstile.render(elements.turnstile,{sitekey:config.turnstile_site_key,theme:'light',size:'flexible'}); }
 
@@ -703,7 +726,7 @@ const curatedDiscoveryObserver=new MutationObserver(renderCuratedDiscoveryMatch)
 // could not distinguish "results rendered" from "silently did nothing".
 // Exposed on window (see the HoshiluChatAuth precedent above) for the same
 // reason: app.js must never be evaluated a second time as an ES module.
-async function runKnowledgeSearch(){const t=selectedCopy();const currentRoot=String(elements.query.value||'').split(' / ')[0].trim().toLocaleLowerCase();searchAttempt=currentRoot&&currentRoot===searchRoot?Math.min(2,searchAttempt+1):1;searchRoot=currentRoot;elements.status.className='status';elements.status.textContent=t.loading;elements.submit.disabled=true;try{const token=await waitForTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');const response=await fetch('/api/knowledge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,search_attempt:searchAttempt,turnstile_token:token,...(window.HoshiluGrowthAttribution||{})})});const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'SEARCH_FAILED');rememberMemberSearch(elements.query.value);renderResults(payload.result,response.headers.get('x-request-id'));elements.status.textContent='';return{ok:true,result:payload.result};}catch(error){rememberMemberSearch(elements.query.value);renderResults(emergencyMarketplaceFallback(elements.query.value));elements.status.className='status';elements.status.textContent='';return{ok:false,error:String(error?.message||error)};}finally{elements.submit.disabled=false;if(turnstileWidget!==null)window.turnstile?.reset(turnstileWidget);}}
+async function runKnowledgeSearch(){const t=selectedCopy();const submittedQuery=String(elements.query.value||'').trim();const currentRoot=submittedQuery.split(' / ')[0].trim().toLocaleLowerCase();searchAttempt=currentRoot&&currentRoot===searchRoot?Math.min(2,searchAttempt+1):1;searchRoot=currentRoot;elements.status.className='status';elements.status.textContent=t.loading;elements.submit.disabled=true;const sequence=++relatedRecommendationSequence;try{const token=await waitForTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');const response=await fetch('/api/knowledge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:submittedQuery,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,search_attempt:searchAttempt,turnstile_token:token,...(window.HoshiluGrowthAttribution||{})})});const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'SEARCH_FAILED');rememberMemberSearch(elements.query.value);renderResults(payload.result,response.headers.get('x-request-id'));elements.status.textContent='';setTimeout(()=>{loadRelatedRecommendations(submittedQuery,sequence).catch(()=>{});},0);return{ok:true,result:payload.result};}catch(error){rememberMemberSearch(elements.query.value);renderResults(emergencyMarketplaceFallback(elements.query.value));elements.status.className='status';elements.status.textContent='';return{ok:false,error:String(error?.message||error)};}finally{elements.submit.disabled=false;if(turnstileWidget!==null)window.turnstile?.reset(turnstileWidget);}}
 
 // Advanced (condition) search panel (2026-08-07 request). Originally rendered
 // with the results; moved into the search panel under the query box and the

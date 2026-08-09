@@ -23,6 +23,7 @@ import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn, chatIntentConfigured } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult } from './marketplace-ranking.mjs';
+import { relatedProductRecommendationQueries } from './related-product-recommendations.mjs';
 import { buildPriceComparison, realPriceRows, requestAiPriceEstimates } from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
@@ -1339,6 +1340,8 @@ export function sanitizePublicCandidate(candidate) {
     product_name: publicText(source.product_name, 500),
     display_name: publicText(source.display_name, 500),
     manufacturer: publicText(source.manufacturer, 200),
+    related_category: publicText(source.related_category, 100),
+    recommendation_reason: publicText(source.recommendation_reason, 200),
     description: publicText(source.description, 1000),
     available: Number(source.stock || 0) > 0,
     tracking_url: ''
@@ -1765,6 +1768,7 @@ async function handleKnowledgeApi(request, env, ctx) {
         rakuten_in_final: finalSlice.filter((item) => String(item.record_key || '').startsWith('RAKUTEN:')).length
       });
       result.candidates = finalSlice;
+
     }
     result = {
       ...(result || {}),
@@ -1818,6 +1822,81 @@ async function handleKnowledgeApi(request, env, ctx) {
     const status = clientErrors.includes(code) ? 400 : 500;
     return Response.json({ ok: false, error: code }, {
       status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+    });
+  }
+}
+
+export function validateRelatedRecommendationsRequest(payload = {}) {
+  const input = validateKnowledgeRequest({ ...payload, search_attempt: 1 });
+  return { query: input.query, language: input.language, session_id: input.session_id,
+    turnstile_token: input.turnstile_token, consent: true };
+}
+
+// 関連商品は本検索の「価格不明品」ではない。スマホカバー→充電器・
+// ストラップのような別カテゴリを、主結果描画後に独立取得する。本検索へ
+// 外部API呼び出しを混ぜると初回表示の待ち時間・失敗率・API消費を増やすため、
+// 専用エンドポイントに分離する。
+async function searchRelatedCategory(env, query, requestId) {
+  const providers = [
+    rakutenApiConfigured(env) && (() => searchRakutenMarketplaceWithFallback(
+      env, buildRakutenSearchKeywordCandidates(query), fetch, query, requestId
+    )),
+    yahooShoppingApiConfigured(env) && (() => searchMarketplaceApiWithFallback(
+      (keywords) => searchYahooShopping(env, keywords),
+      buildMarketplaceApiKeywordCandidates(query, buildMarketplaceSearchKeywords(query)), query
+    )),
+    creatorsApiConfigured(env) && (() => searchMarketplaceApiWithFallback(
+      (keywords) => searchAmazonCreators(env, keywords),
+      buildMarketplaceApiKeywordCandidates(query, buildAmazonSearchKeywords(query)), query
+    ))
+  ].filter(Boolean);
+  for (const run of providers) {
+    try {
+      const candidates = filterCategoryMismatches(query, await run());
+      if (candidates.length) return rankMerchantCandidates([], candidates, query).slice(0, 10);
+    } catch (error) {
+      console.warn('RELATED_RECOMMENDATION_PROVIDER_FAILED', {
+        requestId, status: Number(error?.status) || 0,
+        provider_code: String(error?.providerCode || '').slice(0, 80)
+      });
+    }
+  }
+  return [];
+}
+
+async function handleRelatedRecommendationsApi(request, env) {
+  try {
+    const requestOrigin = request.headers.get('origin');
+    const ownOrigin = new URL(request.url).origin;
+    if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+    if (Number(request.headers.get('content-length') || 0) > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
+    const input = validateRelatedRecommendationsRequest(await request.json());
+    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    const groups = relatedProductRecommendationQueries(input.query).slice(0, 3);
+    const requestId = crypto.randomUUID();
+    const sessionHash = await hashUser(input.session_id);
+    const decoratedGroups = await Promise.all(groups.map(async (group, index) => {
+      const candidates = (await searchRelatedCategory(env, group.query, requestId))
+        .map((candidate) => ({ ...candidate, related_category: group.query, recommendation_reason: group.reason }));
+      if (!candidates.length) return [];
+      const publicResult = await decoratePwaResult(
+        { candidates, query_id: `${requestId}:RELATED:${index}` }, request, env,
+        sessionHash, group.query, input.language
+      );
+      return publicResult.candidates.map((candidate) => ({
+        ...candidate, related_category: group.query, recommendation_reason: group.reason
+      }));
+    }));
+    return Response.json({ ok: true, result: {
+      recommendations: interleaveCandidatesBySource(decoratedGroups).slice(0, 30),
+      categories: groups.map(({ query, reason }) => ({ query, reason }))
+    } }, { headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId } });
+  } catch (error) {
+    const code = String(error.message || error);
+    const clientErrors = ['CONSENT_REQUIRED','QUERY_LENGTH_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
+    return Response.json({ ok: false, error: code }, {
+      status: clientErrors.includes(code) ? 400 : 502,
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
     });
   }
 }
@@ -1926,6 +2005,7 @@ export default {
     if (sellerResponse) return sellerResponse;
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
+    if (request.method === 'POST' && url.pathname === '/api/related-recommendations') return handleRelatedRecommendationsApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/price-comparison') return handlePriceComparisonApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/rankings') return handleRankingApi(request, env);
