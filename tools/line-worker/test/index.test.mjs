@@ -448,20 +448,21 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v340/);
+  assert.match(serviceWorker, /hoshilu-shell-v341/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
 
 test('PWA公開回答は内部SKU・在庫数・元URL・取込証跡を除外する', () => {
   const result = sanitizePublicCandidate({
-    asin: 'B000000001', sku: 'INTERNAL-SKU', stock: 17,
+    asin: 'B000000001', manufacturer: '公開メーカー', sku: 'INTERNAL-SKU', stock: 17,
     internal_cost: 432, private_supplier_score: 98, future_internal_field: '非公開',
     amazon_jp_url: 'https://www.amazon.co.jp/dp/B000000001',
     offers: [{ marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/shop/item', seller_name: '非公開店舗', external_product_id: 'secret', price: 1000, shipping_fee: 200, total_cost: 1200, currency: 'JPY', stock_status: 'IN_STOCK', delivery_days: 2 }],
     evidence: { matched_terms: ['朝食'], information_score: 90, source_hash: 'secret-hash', imported_at: 'now' }
   });
   assert.equal(result.asin, 'B000000001');
+  assert.equal(result.manufacturer, '公開メーカー');
   assert.equal(result.available, true);
   assert.equal('sku' in result, false);
   assert.equal('stock' in result, false);

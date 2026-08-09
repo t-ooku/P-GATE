@@ -28,6 +28,7 @@ test('商品画像はタップで横スワイプ式の拡大ギャラリーを�
   assert.match(app, /product-image-lightbox/);
   assert.match(app, /lightbox\.showModal/);
   assert.match(app, /track\.scrollTo\(\{left:current\*track\.clientWidth/);
+  assert.match(app, /track\.addEventListener\('scroll',[\s\S]*?show\(index\)/);
   assert.match(app, /product-image-gallery-button previous/);
   assert.match(app, /product-image-gallery-count/);
   assert.match(css, /\.product-image-gallery\{/);

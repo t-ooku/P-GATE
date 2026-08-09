@@ -1337,6 +1337,7 @@ export function sanitizePublicCandidate(candidate) {
     asin: publicText(source.asin, 32),
     product_name: publicText(source.product_name, 500),
     display_name: publicText(source.display_name, 500),
+    manufacturer: publicText(source.manufacturer, 200),
     description: publicText(source.description, 1000),
     available: Number(source.stock || 0) > 0,
     tracking_url: ''

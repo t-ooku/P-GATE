@@ -511,6 +511,7 @@ function productImageGallery(candidate){
   lightbox.addEventListener('click',event=>{if(event.target===lightbox)lightbox.close();});
   track.addEventListener('scroll',()=>{
     const index=Math.max(0,Math.min(urls.length-1,Math.round(track.scrollLeft/Math.max(1,track.clientWidth))));
+    show(index);
     lightboxCount.textContent=`${index+1} / ${urls.length}`;
   },{passive:true});
   gallery.append(lightbox);
