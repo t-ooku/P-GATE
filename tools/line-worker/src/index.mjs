@@ -54,6 +54,7 @@ import {
 import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
 } from './social-publisher.mjs';
+import { runSocialAutopilotCycle } from './social-autopilot.mjs';
 import { renderSeoPage } from './seo-pages.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import { classifyGrowthTraffic, handleGrowthEvent } from './growth-events.mjs';
@@ -394,6 +395,7 @@ export function getEnvironmentReadiness(env = {}) {
       amazon_creators_configured: creatorsApiConfigured(env),
       rakuten_marketplace_configured: rakutenApiConfigured(env),
       yahoo_shopping_configured: yahooShoppingApiConfigured(env),
+      social_autopilot_enabled: env.SOCIAL_AUTOPILOT_ENABLED === 'true',
       // 診断用（2026-08-08追加）: verifyTurnstile()はTURNSTILE_SECRET_KEY未設定だと
       // TURNSTILE_NOT_CONFIGURED を投げるが、そのエラーコードはhandleAiChatApi等の
       // clientErrors許可リストに含まれていないため、本番でTURNSTILE_SECRET_KEYが
@@ -1918,7 +1920,9 @@ export default {
   async scheduled(controller, env, ctx) {
     const scheduledAt = new Date(controller.scheduledTime);
     ctx.waitUntil(Promise.allSettled([
-      runDueSocialPosts(env, scheduledAt),
+      // 大隆さんの2026-08-09承認に基づく販促自動運用。先に14日先までの
+      // 権利確認済み投稿を冪等補充し、その後に期限到来分を配信する。
+      runSocialAutopilotCycle(env, scheduledAt),
       deliverDueWebNotifications(env, scheduledAt),
       deliverDueMemberNotifications(env, scheduledAt),
       runMarketplaceContentCycle(env, scheduledAt),

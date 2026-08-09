@@ -674,6 +674,8 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     ...base, ADMIN_SESSION_SECRET: base.LINK_SIGNING_SECRET
   }).checks.admin_credentials_distinct, false);
   assert.equal(getEnvironmentReadiness(base).checks.turnstile_configured, true);
+  assert.equal(getEnvironmentReadiness(base).checks.social_autopilot_enabled, false);
+  assert.equal(getEnvironmentReadiness({ ...base, SOCIAL_AUTOPILOT_ENABLED: 'true' }).checks.social_autopilot_enabled, true);
   assert.equal(getEnvironmentReadiness({ ...base, TURNSTILE_SECRET_KEY: '' }).checks.turnstile_configured, false);
   assert.equal(getEnvironmentReadiness(base).checks.ai_chat_configured, false);
   assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_chat_configured, true);

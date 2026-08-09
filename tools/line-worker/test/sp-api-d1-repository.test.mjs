@@ -76,5 +76,5 @@ test('購入可能なSP-API出品だけを公開検索候補へ接続する', as
 test('cronの各処理は一つの失敗で他処理を中断しない', async () => {
   const fs = await import('node:fs');
   const source = fs.readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
-  assert.match(source, /Promise\.allSettled\(\[\s*runDueSocialPosts/);
+  assert.match(source, /Promise\.allSettled\(\[[\s\S]{0,300}runSocialAutopilotCycle/);
 });
