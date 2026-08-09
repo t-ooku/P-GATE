@@ -3,7 +3,8 @@ import { syncOfficialMarketplaceUpdates } from './official-marketplace-updates.m
 
 export const SALE_MARKETPLACES = Object.freeze([
   'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
-  'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA', 'SNKRDUNK'
+  'ZOZOTOWN', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP',
+  'ABCMART_JP', 'BUYMA', 'SNKRDUNK'
 ]);
 
 export const MARKETPLACE_INFO_TYPES = Object.freeze([
@@ -15,7 +16,9 @@ export const NOTIFICATION_DELIVERY_CHANNELS = Object.freeze(['APP', 'LINE', 'EMA
 const OFFICIAL_SOURCE_DOMAINS = Object.freeze({
   AMAZON_JP: ['amazon.co.jp'], RAKUTEN_JP: ['rakuten.co.jp'], YAHOO_JP: ['shopping.yahoo.co.jp'],
   QOO10_JP: ['qoo10.jp'], SHEIN_JP: ['shein.com'], ZOZOTOWN: ['zozo.jp'],
-  SHOPLIST: ['shop-list.com'], MUSINSA: ['musinsa.com'], BUYMA: ['buyma.com'], SNKRDUNK: ['snkrdunk.com']
+  LOFT_JP: ['loft.co.jp'], HANDS_JP: ['hands.net'],
+  MATSUKIYO_JP: ['matsukiyococokara-online.com'], COSME_JP: ['cosme.com'],
+  ABCMART_JP: ['abc-mart.net'], BUYMA: ['buyma.com'], SNKRDUNK: ['snkrdunk.com']
 });
 
 function safeHttpsUrl(value) {
@@ -74,16 +77,17 @@ export function nextMarketplaceNotificationAt(preference, now = new Date()) {
 }
 
 const MARKETPLACE_LABELS = Object.freeze({
-  AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', QOO10_JP: 'Qoo10',
-  SHEIN_JP: 'SHEIN', ZOZOTOWN: 'ZOZOTOWN', SHOPLIST: 'SHOPLIST',
-  MUSINSA: 'MUSINSA', BUYMA: 'BUYMA', SNKRDUNK: 'SNKRDUNK'
+  AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング',
+  QOO10_JP: 'Qoo10', SHEIN_JP: 'SHEIN', ZOZOTOWN: 'ZOZOTOWN',
+  LOFT_JP: 'ロフト', HANDS_JP: 'ハンズ', MATSUKIYO_JP: 'マツキヨココカラ',
+  COSME_JP: '@cosme', ABCMART_JP: 'ABC-MART', BUYMA: 'BUYMA', SNKRDUNK: 'SNKRDUNK'
 });
 
 function safeSale(row) {
   return {
     sale_id: row.sale_id,
     marketplace: row.marketplace,
-    marketplace_label: row.marketplace === 'YAHOO_JP' ? 'Yahoo!ショッピング' : (MARKETPLACE_LABELS[row.marketplace] || row.marketplace),
+    marketplace_label: MARKETPLACE_LABELS[row.marketplace] || row.marketplace,
     info_type: row.info_type || 'SALE',
     title: row.title,
     summary: row.summary,
@@ -105,7 +109,9 @@ export async function listPublicSales(env, now = new Date()) {
      WHERE status='APPROVED' AND ends_at>=?1
      ORDER BY starts_at ASC LIMIT 40`
   ).bind(at).all();
-  return (result?.results || []).map(safeSale);
+  // 旧対象（SHOPLIST/MUSINSA）の承認済み行がDBに残っていても、現在の13モール
+  // 以外は公開しない。表示と通知設定の対象が再びずれないよう同じ定数を使う。
+  return (result?.results || []).filter((row) => SALE_MARKETPLACES.includes(row.marketplace)).map(safeSale);
 }
 
 async function publicList(env) {
@@ -256,6 +262,7 @@ export async function enqueueSaleNotifications(env, now = new Date()) {
   ]);
   let queued = 0;
   for (const sale of sales?.results || []) {
+    if (!SALE_MARKETPLACES.includes(sale.marketplace)) continue;
     const advance = Date.parse(sale.starts_at) > now.getTime();
     for (const member of members?.results || []) {
       const infoType = sale.info_type || 'SALE';

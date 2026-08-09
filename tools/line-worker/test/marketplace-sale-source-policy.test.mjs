@@ -14,12 +14,14 @@ test('sale notifications include a tappable official marketplace URL', () => {
   }), /example\.com/);
 });
 
-test('10モールの記事・セール出典は対応する公式HTTPSドメインだけを許可する', () => {
+test('13モールの記事・セール出典は対応する公式HTTPSドメインだけを許可する', () => {
   const valid = [
     ['AMAZON_JP','https://www.amazon.co.jp/deals'], ['RAKUTEN_JP','https://event.rakuten.co.jp/'],
     ['YAHOO_JP','https://shopping.yahoo.co.jp/promotion/campaign/'], ['QOO10_JP','https://www.qoo10.jp/gmkt.inc/Events/Promotion.aspx'],
-    ['SHEIN_JP','https://jp.shein.com/'], ['ZOZOTOWN','https://zozo.jp/'], ['SHOPLIST','https://www.shop-list.com/'],
-    ['MUSINSA','https://global.musinsa.com/'], ['BUYMA','https://www.buyma.com/'], ['SNKRDUNK','https://snkrdunk.com/information/']
+    ['SHEIN_JP','https://jp.shein.com/'], ['ZOZOTOWN','https://zozo.jp/'], ['LOFT_JP','https://www.loft.co.jp/store/'],
+    ['HANDS_JP','https://hands.net/'], ['MATSUKIYO_JP','https://www.matsukiyococokara-online.com/'],
+    ['COSME_JP','https://www.cosme.com/'], ['ABCMART_JP','https://www.abc-mart.net/shop/'],
+    ['BUYMA','https://www.buyma.com/'], ['SNKRDUNK','https://snkrdunk.com/information/']
   ];
   for (const [marketplace,url] of valid) assert.equal(isOfficialMarketplaceSource(marketplace,url), true, marketplace);
   assert.equal(isOfficialMarketplaceSource('AMAZON_JP','https://amazon.co.jp.evil.example/deals'), false);

@@ -30,9 +30,8 @@ test('Yahoo!ショッピングの商品詳細URLだけを10モール商品候補
 
 // v4.2 項目14・15: LPの検索フォールバックは「主要5モール/最大10モール」から
 // 「まとめて検索3モール/個別に探す最大13モール」表記へ切り替えた。SALE RADAR
-// (sale-center.mjs / marketplace-sales.mjs)はこのPRで対象を変更していない
-// ため、10モールのままで正しい。
-test('LP・検索フォールバックは13モール表記、SALE RADARは10モール表記のまま', async () => {
+// SALE RADARと通知設定も2026-08-09に現行の同じ13モールへ統一した。
+test('LP・検索フォールバック・SALE RADARは13モール表記で一致する', async () => {
   const [html, app, coverage, sales] = await Promise.all([
     readPublic('index.html'), readPublic('app.js'), readPublic('marketplace-coverage.mjs'), readPublic('sale-center.mjs')
   ]);
@@ -41,9 +40,9 @@ test('LP・検索フォールバックは13モール表記、SALE RADARは10モ�
   assert.match(html, /最大13モール/);
   assert.match(app, /marketplace:'YAHOO_JP'.+shopping\.yahoo\.co\.jp\/search/);
   assert.match(coverage, /Up to 13 marketplaces/);
-  assert.match(sales, /10モールのセール情報を横断/);
+  assert.match(sales, /13モールのセール情報を横断/);
   assert.match(sales, /\['YAHOO_JP','Yahoo!ショッピング'\]/);
   assert.match(sales, /preference\.marketplaces==='ALL'\?marketplaces\.map/);
-  assert.equal(SALE_MARKETPLACES.length, 10);
+  assert.equal(SALE_MARKETPLACES.length, 13);
   assert.equal(SALE_MARKETPLACES.includes('YAHOO_JP'), true);
 });

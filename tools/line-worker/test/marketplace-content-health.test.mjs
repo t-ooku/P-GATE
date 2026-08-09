@@ -12,7 +12,7 @@ function database(rows) {
   return { prepare: () => ({ first: async () => rows[call++] ?? null }) };
 }
 
-test('記事・セール通知監視は最終成功・失敗と10モール網羅数だけを返す', async () => {
+test('記事・セール通知監視は最終成功・失敗と13モール網羅数だけを返す', async () => {
   const env = { MYWATCH_CRON_SECRET: secret, PRODUCT_DB: database([
     { checked_at: '2026-08-01T03:50:00.000Z', status: 'SUCCESS', approved_active_events: 8, covered_marketplaces: 6, queued_notifications: 3, error_code: '' },
     { checked_at: '2026-08-01T03:50:00.000Z' },
@@ -21,7 +21,7 @@ test('記事・セール通知監視は最終成功・失敗と10モール網羅
   const response = await marketplaceContentHealth(request(), env, new Date('2026-08-01T04:05:00.000Z'));
   const body = await response.json();
   assert.equal(body.status, 'HEALTHY');
-  assert.equal(body.expected_marketplaces, 10);
+  assert.equal(body.expected_marketplaces, 13);
   assert.equal(body.minutes_since_success, 15);
   assert.equal(body.latest.covered_marketplaces, 6);
   assert.equal(body.last_failure_code, 'SALE_FEED_TEMPORARY');

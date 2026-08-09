@@ -5,15 +5,20 @@ const SOURCES = Object.freeze([
   ['QOO10_JP','Qoo10','https://www.qoo10.jp/gmkt.inc/deal/timesale.aspx','Qoo10のタイムセール・公式情報'],
   ['SHEIN_JP','SHEIN','https://jp.shein.com/','SHEINのセール・公式情報'],
   ['ZOZOTOWN','ZOZOTOWN','https://zozo.jp/coupon/','ZOZOTOWNの本日のショップクーポン'],
-  ['SHOPLIST','SHOPLIST','https://shop-list.com/all/svc/product/Search/?type=sale','SHOPLISTのセール・公式情報'],
-  ['MUSINSA','MUSINSA','https://global.musinsa.com/jp/main/welcome','MUSINSAのセール・公式情報'],
+  ['LOFT_JP','ロフト','https://www.loft.co.jp/store/','ロフトのセール・公式情報'],
+  ['HANDS_JP','ハンズ','https://hands.net/','ハンズのセール・公式情報'],
+  ['MATSUKIYO_JP','マツキヨココカラ','https://www.matsukiyococokara-online.com/','マツキヨココカラのセール・公式情報'],
+  ['COSME_JP','@cosme','https://www.cosme.com/','@cosme SHOPPINGのセール・公式情報'],
+  ['ABCMART_JP','ABC-MART','https://www.abc-mart.net/shop/','ABC-MARTのセール・公式情報'],
   ['BUYMA','BUYMA','https://www.buyma.com/','BUYMAのクーポン・公式情報'],
   ['SNKRDUNK','SNKRDUNK','https://snkrdunk.com/information/','SNKRDUNKの運営からのお知らせ']
 ]);
 
 const DOMAIN = Object.freeze({
   AMAZON_JP:'amazon.co.jp',RAKUTEN_JP:'rakuten.co.jp',YAHOO_JP:'shopping.yahoo.co.jp',QOO10_JP:'qoo10.jp',
-  SHEIN_JP:'shein.com',ZOZOTOWN:'zozo.jp',SHOPLIST:'shop-list.com',MUSINSA:'musinsa.com',BUYMA:'buyma.com',SNKRDUNK:'snkrdunk.com'
+  SHEIN_JP:'shein.com',ZOZOTOWN:'zozo.jp',LOFT_JP:'loft.co.jp',HANDS_JP:'hands.net',
+  MATSUKIYO_JP:'matsukiyococokara-online.com',COSME_JP:'cosme.com',ABCMART_JP:'abc-mart.net',
+  BUYMA:'buyma.com',SNKRDUNK:'snkrdunk.com'
 });
 
 function decode(value='') {

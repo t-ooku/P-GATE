@@ -17,7 +17,7 @@ test('公式タイトルに明記された割引率・倍率・期限だけを�
   assert.doesNotMatch(officialNoticeSummary('夏のお得なキャンペーン','楽天市場'),/\d+%|\d+倍/);
 });
 
-test('ten official marketplace sources are collected without copying images',async()=>{
+test('thirteen official marketplace sources are collected without copying images',async()=>{
   const writes=[];
   const env={PRODUCT_DB:{prepare(sql){return{bind(...values){return{async run(){writes.push({sql,values});return{meta:{changes:1}};}};}};}}};
   const fetcher=async(url)=>new Response(
@@ -25,11 +25,11 @@ test('ten official marketplace sources are collected without copying images',asy
     {status:200,headers:{'content-type':'text/html'}}
   );
   const result=await syncOfficialMarketplaceUpdates(env,new Date('2026-08-02T03:00:00.000Z'),fetcher);
-  assert.deepEqual(result,{checked:10,updated:10,failed:0});
-  assert.equal(OFFICIAL_MARKETPLACE_SOURCES.length,10);
+  assert.deepEqual(result,{checked:13,updated:13,failed:0});
+  assert.equal(OFFICIAL_MARKETPLACE_SOURCES.length,13);
   const inserts=writes.filter(({sql})=>/INSERT INTO marketplace_sale_events/.test(sql));
-  assert.equal(inserts.length,10);
-  assert.deepEqual(new Set(inserts.map(({values})=>values[1])).size,10);
+  assert.equal(inserts.length,13);
+  assert.deepEqual(new Set(inserts.map(({values})=>values[1])).size,13);
   for(const {sql,values} of inserts){
     assert.match(sql,/image_url,image_rights_status/);
     assert.match(sql,/'','NONE'/);
@@ -44,8 +44,8 @@ test('failed official sources are omitted instead of publishing guesses',async()
   const env={PRODUCT_DB:{prepare(){return{bind(){return{async run(){writes+=1;return{meta:{changes:1}};}};}};}}};
   const fetcher=async()=>{calls+=1;return new Response('',{status:503});};
   const result=await syncOfficialMarketplaceUpdates(env,new Date('2026-08-02T03:00:00.000Z'),fetcher);
-  assert.deepEqual(result,{checked:10,updated:0,failed:10});
-  assert.equal(calls,10);
+  assert.deepEqual(result,{checked:13,updated:0,failed:13});
+  assert.equal(calls,13);
   assert.equal(writes,0);
 });
 

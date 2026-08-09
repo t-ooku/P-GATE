@@ -6,10 +6,11 @@ import {
   nextMarketplaceNotificationAt, runMarketplaceContentCycle
 } from '../src/marketplace-sales.mjs';
 
-test('セール通知は掲載10モールだけを対象にする', () => {
+test('セール通知は現行の掲載13モールだけを対象にする', () => {
   assert.deepEqual(SALE_MARKETPLACES, [
     'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
-    'ZOZOTOWN', 'SHOPLIST', 'MUSINSA', 'BUYMA', 'SNKRDUNK'
+    'ZOZOTOWN', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP',
+    'ABCMART_JP', 'BUYMA', 'SNKRDUNK'
   ]);
 });
 
@@ -66,7 +67,7 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   ]);
   assert.match(html, /HOSHILU SALE RADAR/);
   assert.match(html, /全てのセールを、<br>先回りチェックしよう/);
-  assert.match(html, /10モールのセール情報を横断。開始前にもお知らせし/);
+  assert.match(html, /13モールのセール情報を横断。開始前にもお知らせし/);
   assert.match(html, /セール専用通知/);
   assert.match(html, /id="notificationSettingsDialog"/);
   assert.match(html, /id="settingsInfoTypes"/);
@@ -78,13 +79,13 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   const client = await readFile(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
   assert.match(client, /data-language-select.*addEventListener\('change'/s);
   assert.match(client, /const officialUpdates=\[/);
-  assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*SHOPLIST.*MUSINSA.*BUYMA.*SNKRDUNK/s);
+  assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*ロフト.*ハンズ.*マツキヨココカラ.*@cosme.*ABC-MART.*BUYMA.*SNKRDUNK/s);
   assert.match(client, /全てのセールを、\\n先回りチェックしよう/);
-  assert.match(client, /10モールのセール情報を横断/);
+  assert.match(client, /13モールのセール情報を横断/);
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v335/);
+  assert.match(sw, /hoshilu-shell-v336/);
   assert.match(css, /\.sale-rail\{[^}]*overflow-y:auto/);
   assert.doesNotMatch(css, /\.sale-card\{/);
   assert.match(sw, /sale-center\.mjs/);
@@ -150,7 +151,7 @@ test('商品画像はAPPROVEDになるまで公開しない契約を持つ', asy
   assert.match(source, /status='APPROVED'/);
 });
 
-test('10 marketplace content and notification runs are recorded for monitoring', async () => {
+test('13 marketplace content and notification runs are recorded for monitoring', async () => {
   const writes=[];
   const env={OFFICIAL_MARKETPLACE_SYNC_DISABLED:true,PRODUCT_DB:{
     prepare(sql){
