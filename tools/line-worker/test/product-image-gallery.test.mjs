@@ -21,19 +21,25 @@ test('公開候補は取得元のHTTPS画像だけを重複なく最大8枚返�
   assert.equal(candidate.image, candidate.image_urls[0]);
 });
 
-test('複数画像がある商品カードだけ前後ボタンと枚数表示を出す', async () => {
+test('商品画像はタップで横スワイプ式の拡大ギャラリーを開く', async () => {
   const app = await read('app.js');
   const css = await read('ai-search-layout-fix.css');
   assert.match(app, /function productImageGallery\(candidate\)/);
-  assert.match(app, /if\(urls\.length===1\)return gallery/);
+  assert.match(app, /product-image-lightbox/);
+  assert.match(app, /lightbox\.showModal/);
+  assert.match(app, /track\.scrollTo\(\{left:current\*track\.clientWidth/);
   assert.match(app, /product-image-gallery-button previous/);
   assert.match(app, /product-image-gallery-count/);
   assert.match(css, /\.product-image-gallery\{/);
+  assert.match(css, /\.product-image-lightbox-track\{[^}]*scroll-snap-type:x mandatory/);
   assert.match(css, /-webkit-line-clamp:2/);
   // 楽天市場の参照画面どおり、PCは縦長4列、スマホは画像左・情報右。
   assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
-  assert.match(css, /grid-template-columns:minmax\(112px,38%\) minmax\(0,1fr\)/);
+  assert.match(css, /grid-template-columns:minmax\(126px,40%\) minmax\(0,1fr\)/);
   assert.match(css, /\.result-track>\.product-card \.price-offer b\{[^}]*color:#c90000/);
+  assert.match(app, /mediaActions\.append\(watch\.bell\)/);
+  assert.match(app, /mediaActions\.append\(priceComparisonButton\)/);
+  assert.match(css, /\.product-card-media-actions/);
   assert.match(css, /\.watch-settings-button/);
   assert.match(app, /JA:'保存＆通知設定'/);
 });

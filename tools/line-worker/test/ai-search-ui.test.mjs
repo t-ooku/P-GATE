@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v338/);
+  assert.match(worker, /hoshilu-shell-v339/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /gallery\?\.nextSibling/);
@@ -128,8 +128,8 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/app\.js\?v=98"><\/script><script type="module" src="\/ai-search-ui\.mjs"><\/script>/);
-  assert.doesNotMatch(html, /src="\/app\.js\?v=98"<\/script>/);
+  assert.match(html, /<script type="module" src="\/app\.js\?v=99"><\/script><script type="module" src="\/ai-search-ui\.mjs"><\/script>/);
+  assert.doesNotMatch(html, /src="\/app\.js\?v=99"<\/script>/);
 });
 
 // v4.2 項目6・7: 「AIで探す」を押した時点で直前の検索文を初期コンテキスト

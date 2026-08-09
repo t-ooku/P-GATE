@@ -8,7 +8,7 @@ test('商品提示はPC4列・モバイル横長行で縦回転する', async ()
   const [app, styles] = await Promise.all([read('app.js'), read('ai-search-layout-fix.css')]);
   assert.match(styles, /\.result-track\{[\s\S]*?grid-template-columns:repeat\(4,minmax\(0,1fr\)\);[\s\S]*?overflow-y:auto;[\s\S]*?scroll-snap-type:y mandatory;/);
   assert.match(styles, /@media\(max-width:760px\)\{[\s\S]*?\.result-track\{[\s\S]*?flex-direction:column/);
-  assert.match(styles, /grid-template-columns:minmax\(112px,38%\) minmax\(0,1fr\)/);
+  assert.match(styles, /grid-template-columns:minmax\(126px,40%\) minmax\(0,1fr\)/);
   assert.match(app, /attachVerticalTicker\(track,\{intervalMs:6500,rowSelector:':scope > \.product-card',useRowOffsets:true\}\)/);
   assert.match(app, /scrollBy\(\{top:/);
 });

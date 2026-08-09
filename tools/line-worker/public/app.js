@@ -447,15 +447,89 @@ function aiDiscoveryCard(result){const items=(result?.ai_discovery?.candidates||
 // API連携できた商品だけを出すと提示数が極端に少なくなるが、HOSHILUは価格を
 // 推測しない。したがって下段は「価格・在庫は未確認」と明示したうえで、商品
 // ページへのリンクだけを出す。各段の上限は30件（Worker側は合計60件まで返す）。
-function productImageGallery(candidate){const urls=[...(Array.isArray(candidate?.image_urls)?candidate.image_urls:[]),candidate?.image,candidate?.image_url].map(value=>String(value||'').trim()).filter((value,index,values)=>/^https:\/\//i.test(value)&&values.indexOf(value)===index).slice(0,8);if(!urls.length)return null;const gallery=document.createElement('div');gallery.className='product-image-gallery';const image=document.createElement('img');image.className='product-image';image.src=urls[0];image.alt='';image.loading='lazy';image.referrerPolicy='no-referrer';gallery.append(image);if(urls.length===1)return gallery;let current=0;const previous=document.createElement('button');previous.type='button';previous.className='product-image-gallery-button previous';previous.textContent='‹';previous.setAttribute('aria-label','前の画像を見る');const next=document.createElement('button');next.type='button';next.className='product-image-gallery-button next';next.textContent='›';next.setAttribute('aria-label','次の画像を見る');const count=textElement('span','product-image-gallery-count',`1 / ${urls.length}`);const show=index=>{current=(index+urls.length)%urls.length;image.src=urls[current];count.textContent=`${current+1} / ${urls.length}`;};previous.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(current-1);});next.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(current+1);});gallery.append(previous,next,count);return gallery;}
+function productImageGallery(candidate){
+  const urls=[...(Array.isArray(candidate?.image_urls)?candidate.image_urls:[]),candidate?.image,candidate?.image_url]
+    .map(value=>String(value||'').trim())
+    .filter((value,index,values)=>/^https:\/\//i.test(value)&&values.indexOf(value)===index)
+    .slice(0,8);
+  if(!urls.length)return null;
+  const gallery=document.createElement('div');
+  gallery.className='product-image-gallery';
+  const image=document.createElement('img');
+  image.className='product-image';
+  image.src=urls[0];
+  image.alt=String(candidate?.display_name||candidate?.product_name||'商品画像');
+  image.loading='lazy';
+  image.referrerPolicy='no-referrer';
+  image.tabIndex=0;
+  image.setAttribute('role','button');
+  image.setAttribute('aria-label','商品画像を拡大して見る');
+  gallery.append(image);
+
+  let current=0;
+  let count=null;
+  const show=index=>{
+    current=(index+urls.length)%urls.length;
+    image.src=urls[current];
+    if(count)count.textContent=`${current+1} / ${urls.length}`;
+  };
+  if(urls.length>1){
+    const previous=document.createElement('button');
+    previous.type='button';previous.className='product-image-gallery-button previous';previous.textContent='‹';previous.setAttribute('aria-label','前の画像を見る');
+    const next=document.createElement('button');
+    next.type='button';next.className='product-image-gallery-button next';next.textContent='›';next.setAttribute('aria-label','次の画像を見る');
+    count=textElement('span','product-image-gallery-count',`1 / ${urls.length}`);
+    previous.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(current-1);});
+    next.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();show(current+1);});
+    gallery.append(previous,next,count);
+  }
+
+  const lightbox=document.createElement('dialog');
+  lightbox.className='product-image-lightbox';
+  lightbox.setAttribute('aria-label','商品画像ギャラリー');
+  const close=document.createElement('button');
+  close.type='button';close.className='product-image-lightbox-close';close.textContent='✕';close.setAttribute('aria-label','拡大画像を閉じる');
+  const track=document.createElement('div');
+  track.className='product-image-lightbox-track';
+  urls.forEach((url,index)=>{
+    const slide=document.createElement('div');
+    slide.className='product-image-lightbox-slide';
+    const expanded=document.createElement('img');
+    expanded.src=url;expanded.alt=`${image.alt} ${index+1}枚目`;expanded.loading='lazy';expanded.referrerPolicy='no-referrer';
+    slide.append(expanded);track.append(slide);
+  });
+  const lightboxCount=textElement('span','product-image-lightbox-count',`1 / ${urls.length}`);
+  lightbox.append(close,track,lightboxCount);
+  const openLightbox=()=>{
+    if(typeof lightbox.showModal==='function')lightbox.showModal();else lightbox.setAttribute('open','');
+    requestAnimationFrame(()=>track.scrollTo({left:current*track.clientWidth,behavior:'instant'}));
+    lightboxCount.textContent=`${current+1} / ${urls.length}`;
+  };
+  image.addEventListener('click',openLightbox);
+  image.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openLightbox();}});
+  close.addEventListener('click',()=>lightbox.close());
+  lightbox.addEventListener('click',event=>{if(event.target===lightbox)lightbox.close();});
+  track.addEventListener('scroll',()=>{
+    const index=Math.max(0,Math.min(urls.length-1,Math.round(track.scrollLeft/Math.max(1,track.clientWidth))));
+    lightboxCount.textContent=`${index+1} / ${urls.length}`;
+  },{passive:true});
+  gallery.append(lightbox);
+  return gallery;
+}
 function productCard(candidate,index,t,confirmed,searchQuery=''){
   const card=document.createElement('article');
   card.className=confirmed?'product-card':'product-card unverified-card';
   const safeRank=Math.max(1,Number(candidate.rank)||index+1);
   card.append(textElement('span','rank',`NO. ${safeRank}`));
   if(!confirmed)card.append(textElement('span','unverified-badge',resultRowCopyFor(elements.language.value).badge));
+  const mediaColumn=document.createElement('div');
+  mediaColumn.className='product-card-media-column';
   const gallery=productImageGallery(candidate);
-  if(gallery)card.append(gallery);
+  if(gallery)mediaColumn.append(gallery);
+  const mediaActions=document.createElement('div');
+  mediaActions.className='product-card-media-actions';
+  mediaColumn.append(mediaActions);
+  card.append(mediaColumn);
   card.append(textElement('h3','',candidate.display_name||candidate.product_name||candidate.asin));
   if(candidate.description)card.append(textElement('p','',candidate.description));
   const terms=candidate.evidence?.matched_terms||[];
@@ -463,8 +537,11 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   const options=renderOfferOptions(candidate,t,elements.language.value);
   if(options)card.append(options);else card.append(allMarketplacesButton());
   const watch=createWatchOptions(t);
-  card.append(watch.bell,watch.dialog);
+  mediaActions.append(watch.bell);
+  card.append(watch.dialog);
   window.HoshiluPriceComparison?.attach(card,{...candidate,search_query:searchQuery||candidate.search_query||''});
+  const priceComparisonButton=card.querySelector(':scope > .ai-price-compare-button');
+  if(priceComparisonButton)mediaActions.append(priceComparisonButton);
   return card;
 }
 function resultCarousel(cards){
