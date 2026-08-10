@@ -20,6 +20,9 @@ jobs:
         run: npm ci --prefix tools/line-worker
       - name: Run all regression tests
         run: npm test
+      - name: Block deterministic search-quality regressions
+        working-directory: tools/line-worker
+        run: npm run check:search-quality
       - name: Build single-file GAS bundle
         run: npm run build
       - name: Verify generated bundle is reproducible

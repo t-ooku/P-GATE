@@ -17,6 +17,15 @@ function noStoreJson(value, init = {}) {
 
 const safeCount = value => Math.max(0, Number(value || 0));
 
+const SOURCE_BY_PLATFORM = Object.freeze({ X: 'x', INSTAGRAM: 'instagram', TIKTOK: 'tiktok' });
+const FUNNEL_EVENTS = Object.freeze([
+  'landing_view', 'search_started', 'search_completed', 'ai_result_clicked',
+  'ranking_result_clicked', 'price_comparison_opened', 'marketplace_click', 'returning_visit'
+]);
+const emptyFunnel = () => Object.fromEntries(FUNNEL_EVENTS.map(event => [event, 0]));
+const percentage = (numerator, denominator) => denominator > 0
+  ? Math.round((numerator / denominator) * 1000) / 10 : null;
+
 export async function promotionDashboardSummary(env, now = new Date()) {
   const queue = await env.PRODUCT_DB.prepare(`SELECT platform,status,COUNT(*) AS total,
     MAX(CASE WHEN status='PUBLISHED' THEN published_at ELSE '' END) AS last_published_at
@@ -28,6 +37,17 @@ export async function promotionDashboardSummary(env, now = new Date()) {
     status,external_post_id,last_error FROM social_post_queue
     WHERE status IN ('PUBLISHED','FAILED') ORDER BY updated_at DESC LIMIT 30`).all();
   const readiness = socialPublisherReadiness(env);
+  const since = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).toISOString();
+  let funnelRows = [];
+  try {
+    const result = await env.PRODUCT_DB.prepare(`SELECT LOWER(source) AS source,event_type,COUNT(*) AS total
+      FROM growth_events WHERE occurred_at>=?1 AND traffic_class='ATTRIBUTED'
+      AND LOWER(source) IN ('x','instagram','tiktok')
+      GROUP BY LOWER(source),event_type`).bind(since).all();
+    funnelRows = result.results || [];
+  } catch {
+    // 移行前の開発DBでも、投稿運用画面そのものは利用可能に保つ。
+  }
   const grouped = new Map(PLATFORMS.map(platform => [platform, {
     platform,
     configured: Boolean(readiness[platform]),
@@ -35,7 +55,9 @@ export async function promotionDashboardSummary(env, now = new Date()) {
     counts: { approved: 0, publishing: 0, published: 0, failed: 0, cancelled: 0, review_required: 0 },
     next: null,
     recent: [],
-    last_published_at: ''
+    last_published_at: '',
+    funnel_7d: emptyFunnel(),
+    funnel_rates_7d: { search_completion: null, comparison_reach: null, marketplace_outbound: null }
   }]));
   for (const row of queue.results || []) {
     const channel = grouped.get(row.platform);
@@ -50,6 +72,19 @@ export async function promotionDashboardSummary(env, now = new Date()) {
   for (const row of recent.results || []) {
     const channel = grouped.get(row.platform);
     if (channel && channel.recent.length < 5) channel.recent.push(row);
+  }
+  for (const row of funnelRows) {
+    const platform = PLATFORMS.find(value => SOURCE_BY_PLATFORM[value] === String(row.source || '').toLowerCase());
+    const channel = grouped.get(platform);
+    if (channel && FUNNEL_EVENTS.includes(row.event_type)) channel.funnel_7d[row.event_type] = safeCount(row.total);
+  }
+  for (const channel of grouped.values()) {
+    const funnel = channel.funnel_7d;
+    channel.funnel_rates_7d = {
+      search_completion: percentage(funnel.search_completed, funnel.search_started),
+      comparison_reach: percentage(funnel.price_comparison_opened, funnel.search_completed),
+      marketplace_outbound: percentage(funnel.marketplace_click, funnel.search_completed)
+    };
   }
   return {
     ok: true,

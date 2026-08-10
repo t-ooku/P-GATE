@@ -15,6 +15,24 @@ function metric(label, value, tone = '') {
   node.append(element('span', label), element('strong', String(value)));
   return node;
 }
+const rate = value => value === null ? '—' : `${value}%`;
+function renderFunnel(channel) {
+  const section = element('section', '', 'promotion-funnel');
+  section.append(element('h3', '直近7日 購買導線'), element('p', 'SNS流入として記録されたイベント件数（QA除外）', 'funnel-note'));
+  const steps = element('div', '', 'funnel-steps');
+  steps.append(
+    metric('流入', channel.funnel_7d.landing_view), metric('検索開始', channel.funnel_7d.search_started),
+    metric('検索完了', channel.funnel_7d.search_completed), metric('AI結果', channel.funnel_7d.ai_result_clicked),
+    metric('ランキング', channel.funnel_7d.ranking_result_clicked), metric('価格比較', channel.funnel_7d.price_comparison_opened),
+    metric('モール送客', channel.funnel_7d.marketplace_click, 'success'), metric('再訪', channel.funnel_7d.returning_visit)
+  );
+  const rates = element('div', '', 'funnel-rates');
+  rates.append(metric('検索完了率', rate(channel.funnel_rates_7d.search_completion)),
+    metric('比較到達率', rate(channel.funnel_rates_7d.comparison_reach)),
+    metric('送客率', rate(channel.funnel_rates_7d.marketplace_outbound), 'success'));
+  section.append(steps, rates);
+  return section;
+}
 
 function renderChannel(channel) {
   const card = element('article', '', 'auth-card promotion-channel');
@@ -43,7 +61,7 @@ function renderChannel(channel) {
       element('small', post.last_error || ''));
     recent.append(row);
   }
-  card.append(head, next, metrics, recent);
+  card.append(head, next, metrics, renderFunnel(channel), recent);
   return card;
 }
 

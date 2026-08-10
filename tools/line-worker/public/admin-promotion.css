@@ -14,5 +14,7 @@
 .promotion-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .promotion-metric{padding:11px;border:1px solid #e9e5f5;border-radius:12px;display:grid;gap:5px}
 .promotion-metric span{color:#6d6b80;font-size:10px}.promotion-metric strong{font-size:22px}.promotion-metric.success strong{color:#177a47}.promotion-metric.danger strong{color:#b42318}
+.promotion-funnel{display:grid;gap:9px;padding-top:4px}.promotion-funnel h3{margin:0;font-size:14px}.funnel-note{margin:0;color:#6d6b80;font-size:10px;line-height:1.5}.funnel-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.funnel-rates{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.promotion-funnel .promotion-metric{padding:8px}.promotion-funnel .promotion-metric strong{font-size:17px}
 .recent-posts{display:grid;gap:8px}.recent-posts h3{margin:0;font-size:14px}.recent-post{display:grid;grid-template-columns:auto 1fr;gap:5px 8px;padding-top:9px;border-top:1px solid #e9e5f5}.recent-post time{color:#6d6b80;font-size:11px}.recent-post p{grid-column:1/-1;margin:0;font-size:11px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.recent-post small{grid-column:1/-1;color:#b42318}.empty-row{color:#6d6b80;font-size:12px}
 @media(max-width:900px){.promotion-channel-grid{grid-template-columns:1fr}.dashboard-actions{align-items:flex-start;flex-direction:column}}
+@media(max-width:480px){.funnel-steps{grid-template-columns:repeat(2,1fr)}}

@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { SEARCH_QUALITY_CASES } from '../evaluation/search-quality-cases.mjs';
 import { scoreSearchQualityBaseline, validateSearchQualityCases } from '../evaluation/search-quality-baseline.mjs';
@@ -57,6 +57,24 @@ const report = {
   ],
   ...scoreSearchQualityBaseline(SEARCH_QUALITY_CASES, observations)
 };
+
+if (process.argv.includes('--check')) {
+  const baseline = JSON.parse(await readFile(resolve('evaluation/search-quality-phase1-baseline.json'), 'utf8'));
+  const regressions = [];
+  const lowerIsBetter = new Set(['exclusion_violation_rate', 'accessory_confusion_rate']);
+  for (const [name, expected] of Object.entries(baseline.metrics || {})) {
+    const actual = report.metrics[name];
+    if (expected === null || actual === null) continue;
+    const regressed = lowerIsBetter.has(name) ? actual > expected : actual < expected;
+    if (regressed) regressions.push(`${name}: ${expected} -> ${actual}`);
+  }
+  if (report.cases < baseline.cases || report.measured_cases < baseline.measured_cases) {
+    regressions.push(`coverage: ${baseline.measured_cases}/${baseline.cases} -> ${report.measured_cases}/${report.cases}`);
+  }
+  if (regressions.length) throw new Error(`SEARCH_QUALITY_REGRESSION\n${regressions.join('\n')}`);
+  console.log(JSON.stringify({ ok: true, cases: report.cases, measured_cases: report.measured_cases, metrics: report.metrics }));
+  process.exit(0);
+}
 
 const outputPath = resolve(process.argv[2] || 'evaluation/search-quality-phase1-baseline.json');
 await writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');

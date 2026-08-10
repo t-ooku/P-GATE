@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T18:20:02.651Z",
+  "generated_at": "2026-08-10T10:46:23.518Z",
   "implementation": "legacy-filter-baseline",
   "notes": [
     "Candidate-level checks use deterministic positive and negative fixtures.",
@@ -10,10 +10,10 @@
   "cases": 50,
   "measured_cases": 50,
   "metrics": {
-    "product_type_accuracy": 0.4166666666666667,
-    "required_attribute_satisfaction": 0,
-    "exclusion_violation_rate": 0.5833333333333334,
-    "accessory_confusion_rate": 0.5,
+    "product_type_accuracy": 0.5,
+    "required_attribute_satisfaction": 0.2857142857142857,
+    "exclusion_violation_rate": 0.5,
+    "accessory_confusion_rate": 0.7,
     "compatibility_accuracy": 0.6,
     "clarification_appropriateness": null,
     "zero_result_honesty": 0.3333333333333333,
@@ -68,12 +68,12 @@
     {
       "case_id": "SQ-08",
       "measured": true,
-      "product_type_match": false
+      "product_type_match": true
     },
     {
       "case_id": "SQ-09",
       "measured": true,
-      "accessory_confusion": false
+      "accessory_confusion": true
     },
     {
       "case_id": "SQ-10",
@@ -153,7 +153,7 @@
     {
       "case_id": "SQ-25",
       "measured": true,
-      "accessory_confusion": false
+      "accessory_confusion": true
     },
     {
       "case_id": "SQ-26",
@@ -193,7 +193,7 @@
     {
       "case_id": "SQ-33",
       "measured": true,
-      "required_attributes_satisfied": false
+      "required_attributes_satisfied": true
     },
     {
       "case_id": "SQ-34",
@@ -228,7 +228,7 @@
     {
       "case_id": "SQ-40",
       "measured": true,
-      "exclusion_violation": true
+      "exclusion_violation": false
     },
     {
       "case_id": "SQ-41",
@@ -243,7 +243,7 @@
     {
       "case_id": "SQ-43",
       "measured": true,
-      "required_attributes_satisfied": false
+      "required_attributes_satisfied": true
     },
     {
       "case_id": "SQ-44",
