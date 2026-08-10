@@ -44,6 +44,7 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   assert.match(css, /\.marketplace-group > p \{\s*display: none/s);
   assert.match(css, /grid-template-columns: repeat\(13, minmax\(0, 1fr\)\)/);
   assert.match(css, /overflow-x: auto/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)[\s\S]*overflow-x: hidden/);
   assert.match(css, /\.marketplace-group-direct li \{[\s\S]*white-space: nowrap/);
   assert.doesNotMatch(layout, /item\.setAttribute\('role', 'button'\)/);
   assert.doesNotMatch(layout, /document\.querySelectorAll\('\.marketplace-group li'\)/);
@@ -95,7 +96,7 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   assert.match(module, /最多支持13个商城/);
   assert.match(module, /최대 13개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v367/);
+  assert.match(serviceWorker, /hoshilu-shell-v368/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

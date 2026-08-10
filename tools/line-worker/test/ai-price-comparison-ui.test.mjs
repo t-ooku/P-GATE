@@ -50,7 +50,14 @@ test('v4.3項目16: 断定文言(cheapest_claim)とヘッジ文言(hedged_claim)
 
 test('service-workerがAI最安比較の新規ファイルをプリキャッシュ対象に含む', async () => {
   const worker = await read('service-worker.js');
-  assert.match(worker, /hoshilu-shell-v367/);
+  assert.match(worker, /hoshilu-shell-v368/);
   assert.match(worker, /ai-price-comparison-ui\.mjs/);
   assert.match(worker, /ai-price-comparison-ui\.css/);
+});
+
+test('AI最安比較ダイアログは横揺れせず閉じるボタンを固定する', async () => {
+  const css = await read('ai-price-comparison-ui.css');
+  assert.match(css, /\.price-compare-dialog\{[^}]*overflow:hidden/);
+  assert.match(css, /\.price-compare-body\{[^}]*overflow-y:auto[^}]*overflow-x:hidden/);
+  assert.match(css, /\.price-compare-dialog-close\{[^}]*position:absolute[^}]*z-index:5/);
 });

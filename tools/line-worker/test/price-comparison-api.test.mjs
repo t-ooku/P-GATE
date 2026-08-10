@@ -63,6 +63,12 @@ test('AI最安比較はカテゴリ階層名から最終小ジャンルだけを
   );
 });
 
+test('AI最安比較は長時間待たせずGeminiと予備AIの合計を8秒以内に制限する', async () => {
+  const source = await import('node:fs/promises').then(({ readFile }) => readFile(new URL('../src/ai-price-comparison.mjs', import.meta.url), 'utf8'));
+  assert.match(source, /GEMINI_ESTIMATE_TIMEOUT_MS = 4500/);
+  assert.match(source, /OPENAI_ESTIMATE_TIMEOUT_MS = 3500/);
+});
+
 test('v4.3項目12・13: API連携中の実価格(楽天)とAI推定(ロフト/ハンズ)が明確に分かれて返る', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {

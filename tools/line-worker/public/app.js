@@ -605,20 +605,21 @@ function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popula
   card.dataset.rankingType=rankingType;
   return card;
 }
-function resultCarousel(cards){
+function resultCarousel(cards,rowKind='confirmed'){
   const carousel=document.createElement('div');
   carousel.className='result-carousel';
   const track=document.createElement('div');
   track.className='result-track';
   track.append(...cards);
   carousel.append(track);
-  attachVerticalTicker(track,{intervalMs:6500,rowSelector:':scope > .product-card',useRowOffsets:true});
+  if(rowKind!=='recommended')attachVerticalTicker(track,{intervalMs:6500,rowSelector:':scope > .product-card',useRowOffsets:true});
   if(cards.length>3){
     const previous=document.createElement('button');
-    previous.type='button';previous.className='carousel-button previous';previous.setAttribute('aria-label','前の商品を見る');previous.textContent='↑';
+    const horizontal=rowKind==='recommended';
+    previous.type='button';previous.className='carousel-button previous';previous.setAttribute('aria-label','前の商品を見る');previous.textContent=horizontal?'‹':'↑';
     const next=document.createElement('button');
-    next.type='button';next.className='carousel-button next';next.setAttribute('aria-label','次の商品を見る');next.textContent='↓';
-    const move=direction=>{const first=track.querySelector(':scope > .product-card');track.scrollBy({top:direction*((first?.getBoundingClientRect().height||220)+14),behavior:'smooth'});};
+    next.type='button';next.className='carousel-button next';next.setAttribute('aria-label','次の商品を見る');next.textContent=horizontal?'›':'↓';
+    const move=direction=>{const first=track.querySelector(':scope > .product-card');const distance=horizontal?(first?.getBoundingClientRect().width||280)+14:(first?.getBoundingClientRect().height||220)+14;track.scrollBy(horizontal?{left:direction*distance,behavior:'smooth'}:{top:direction*distance,behavior:'smooth'});};
     previous.addEventListener('click',()=>move(-1));
     next.addEventListener('click',()=>move(1));
     carousel.append(previous,next);
@@ -633,7 +634,7 @@ function resultRow(cards,title,note,rowKind){
   const heading=document.createElement('div');
   heading.className='result-row-heading';
   heading.append(textElement('h3','result-row-title',title),textElement('span','result-row-count',String(cards.length)));
-  row.append(heading,textElement('p','result-row-note',note),resultCarousel(cards));
+  row.append(heading,textElement('p','result-row-note',note),resultCarousel(cards,rowKind));
   return row;
 }
 function renderResults(result,requestId){

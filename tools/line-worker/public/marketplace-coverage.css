@@ -244,9 +244,10 @@
   }
 
   .marketplace-groups {
-    grid-template-columns: repeat(13, minmax(76px, 1fr));
-    gap: 3px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3px 8px;
     margin-top: 6px;
+    overflow-x: hidden;
   }
 
   .marketplace-group {
@@ -266,6 +267,7 @@
     min-height: 24px;
     padding: 2px;
     font-size: clamp(8px, 2.35vw, 10px);
+    justify-content: flex-start;
   }
 
   .marketplace-group-integrated li {

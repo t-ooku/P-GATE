@@ -1674,29 +1674,30 @@ async function handlePriceComparisonApi(request, env) {
     // 既に実価格が確認できているDirectモールは無い(realPriceRowsはIntegrated
     // のみを返す)ため、依頼されたdirect_marketplacesは常にそのままAI推定の
     // 対象になる。
-    let aiResult = { estimates: [], provider: null };
-    try {
-      aiResult = await requestAiPriceEstimates(
+    const aiPromise = requestAiPriceEstimates(
         { title: input.product.title, brand: input.product.brand, category: input.product.category, language: input.language },
         input.direct_marketplaces, env, fetch
-      );
-    } catch (error) {
+      ).catch((error) => {
       console.warn('AI_PRICE_COMPARISON_ESTIMATE_UNAVAILABLE', { status: Number(error?.status) || 0 });
-    }
+      return { estimates: [], provider: null };
+    });
+    // 署名付き検索リンクはAI推定を待つ必要がないため並列に生成する。
+    const linksPromise = signedMarketplaceSearchLinks(input.search_query, {
+      env,
+      origin: ownOrigin,
+      sessionHash: await hashUser(input.session_id),
+      seed: `PRICE_COMPARE:${crypto.randomUUID()}`,
+      category: 'price_comparison',
+      trafficClass: 'UNATTRIBUTED',
+      sort: 'PRICE_ASC'
+    });
+    const [aiResult, signedLinks] = await Promise.all([aiPromise, linksPromise]);
     const comparisonMarketplaces = new Set([...input.direct_marketplaces, ...real.map((row) => row.marketplace)]);
     const comparison = buildPriceComparison({
       real,
       aiEstimates: aiResult.estimates,
       requestedDirectMarketplaces: input.direct_marketplaces,
-      searchLinks: (await signedMarketplaceSearchLinks(input.search_query, {
-        env,
-        origin: ownOrigin,
-        sessionHash: await hashUser(input.session_id),
-        seed: `PRICE_COMPARE:${crypto.randomUUID()}`,
-        category: 'price_comparison',
-        trafficClass: 'UNATTRIBUTED',
-        sort: 'PRICE_ASC'
-      })).filter((link) => comparisonMarketplaces.has(link.marketplace))
+      searchLinks: signedLinks.filter((link) => comparisonMarketplaces.has(link.marketplace))
         .map((link) => ({ ...link, search_query: buildAmazonSearchKeywords(input.search_query), search_sort: link.sort })),
       language: input.language
     });

@@ -170,7 +170,10 @@ async function providerFetch(fetchImpl, url, options, timeoutMs) {
   return fetchImpl(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
 }
 
-const ESTIMATE_TIMEOUT_MS = 20000;
+// 価格比較は購入直前の操作なので、長いAI待機を許容しない。Geminiを4.5秒、
+// 障害時のOpenAIを3.5秒に制限し、両方失敗しても実価格と検索リンクは返す。
+const GEMINI_ESTIMATE_TIMEOUT_MS = 4500;
+const OPENAI_ESTIMATE_TIMEOUT_MS = 3500;
 
 async function callGemini(context, marketplaces, language, env, fetchImpl) {
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
@@ -185,7 +188,7 @@ async function callGemini(context, marketplaces, language, env, fetchImpl) {
         generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
       })
     },
-    ESTIMATE_TIMEOUT_MS
+    GEMINI_ESTIMATE_TIMEOUT_MS
   );
   if (!response.ok) {
     const error = new Error('GEMINI_PRICE_ESTIMATE_FAILED');
@@ -208,7 +211,7 @@ async function callOpenAi(context, marketplaces, language, env, fetchImpl) {
       reasoning: { effort: 'low' },
       text: { format: { type: 'json_object' } }
     })
-  }, ESTIMATE_TIMEOUT_MS);
+  }, OPENAI_ESTIMATE_TIMEOUT_MS);
   if (!response.ok) {
     const error = new Error('OPENAI_PRICE_ESTIMATE_FAILED');
     error.status = response.status;

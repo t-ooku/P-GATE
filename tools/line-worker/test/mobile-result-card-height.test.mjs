@@ -10,7 +10,7 @@ test('商品提示はPC4列・モバイル横長行で縦回転する', async ()
   assert.match(styles, /@media\(max-width:760px\)\{[\s\S]*?\.result-track\{[\s\S]*?flex-direction:column/);
   assert.match(styles, /grid-template-columns:minmax\(126px,40%\) minmax\(0,1fr\)/);
   assert.match(app, /attachVerticalTicker\(track,\{intervalMs:6500,rowSelector:':scope > \.product-card',useRowOffsets:true\}\)/);
-  assert.match(app, /scrollBy\(\{top:/);
+  assert.match(app, /scrollBy\(horizontal\?\{left:[^}]+\}:\{top:/);
 });
 
 test('PC4列では画像と価格が同じ表示範囲に収まるようカードをコンパクト化する', async () => {
