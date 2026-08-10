@@ -1,4 +1,6 @@
-import { adminLoginPageResponse, adminSpApiPageResponse } from './admin-sp-api-page.mjs';
+import {
+  adminLoginPageResponse, adminPromotionPageResponse, adminSpApiPageResponse
+} from './admin-sp-api-page.mjs';
 import {
   adminLoginFingerprint, adminLoginLocked, recordAdminLoginFailure,
   recordAdminLoginLocked, recordAdminLoginSuccess, recordAdminLogout
@@ -114,6 +116,12 @@ export async function handleAdminAuthRoutes(request, env) {
       return noStoreRedirect(`${url.origin}/admin-login`);
     }
     return adminSpApiPageResponse();
+  }
+  if (request.method === 'GET' && url.pathname === '/admin/promotion') {
+    if (!await readAdminSession(request, env)) {
+      return noStoreRedirect(`${url.origin}/admin-login`);
+    }
+    return adminPromotionPageResponse();
   }
   if (url.pathname.startsWith('/admin-shell')) return new Response('not found', { status: 404 });
   if (!url.pathname.startsWith('/api/admin/')) return null;

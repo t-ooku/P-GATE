@@ -68,7 +68,9 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
   const start = new Date(now.getTime() + JST_OFFSET_MS);
   start.setUTCHours(0, 0, 0, 0);
   const xWeekdayContent = new Map([[0, 0], [1, 1], [3, 2], [5, 3]]);
-  const instagramWeekdayContent = new Map([[2, 0], [6, 1]]);
+  // 月・火・土の週3回。月曜は正式版の主要機能、火曜は検索の使い方、
+  // 土曜は条件追加のコツを訴求し、同じ動画・本文の連投を避ける。
+  const instagramWeekdayContent = new Map([[1, 0], [2, 1], [6, 0]]);
 
   for (let offset = 0; offset < days; offset += 1) {
     const day = new Date(start.getTime() + offset * DAY_MS - JST_OFFSET_MS);

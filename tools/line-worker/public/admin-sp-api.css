@@ -1,5 +1,6 @@
 .admin-shell{width:min(920px,calc(100% - 32px));margin:32px auto;display:grid;gap:18px}
 .admin-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.admin-nav{display:flex;gap:8px;margin:18px 0 12px}.admin-nav a{padding:9px 13px;border:1px solid #ddd8ff;border-radius:11px;color:#5140ba;text-decoration:none;font-weight:800}.admin-nav a.active{color:#fff;background:#7357ff;border-color:#7357ff}
 .auth-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .auth-summary-item{padding:14px;border:1px solid #ddd8ff;border-radius:14px;display:grid;gap:6px}
 .auth-summary-item strong{font-size:1.7rem}

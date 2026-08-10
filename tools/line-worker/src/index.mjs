@@ -1,5 +1,6 @@
 import { handleSellerRoutes } from './seller-auth.mjs';
 import { handleAdminAuthRoutes } from './admin-auth.mjs';
+import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
 import { purgeAdminAuthRecords } from './admin-login-guard.mjs';
 import { purgeSellerAuthRecords } from './seller-login-guard.mjs';
 import { handleMemberRoutes, lineLoginConfigured } from './member-auth.mjs';
@@ -2220,6 +2221,8 @@ export default {
     if (productIdentifierSyncResponse) return productIdentifierSyncResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
+    const promotionDashboardResponse = await handlePromotionDashboardRoutes(request, env);
+    if (promotionDashboardResponse) return promotionDashboardResponse;
     const adminAuthResponse = await handleAdminAuthRoutes(request, env);
     if (adminAuthResponse) return adminAuthResponse;
     const spApiAdminResponse = await handleSpApiAdminRoutes(request, env);

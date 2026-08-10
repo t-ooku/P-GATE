@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { adminLoginPageResponse, adminSpApiPageResponse } from '../src/admin-sp-api-page.mjs';
+import {
+  adminLoginPageResponse, adminPromotionPageResponse, adminSpApiPageResponse
+} from '../src/admin-sp-api-page.mjs';
 
 test('認証管理画面はSecretを埋め込まず監査集計だけを表示する', async () => {
   const login = await adminLoginPageResponse().text();
@@ -16,6 +18,19 @@ test('認証管理画面はSecretを埋め込まず監査集計だけを表示�
   assert.match(client, /admin_auth_summary/);
   assert.match(client, /seller_auth_summary/);
   assert.doesNotMatch(client, /alert_states|alerts\/ack|sync_health/);
+});
+
+test('販促管理画面は各SNSを独立表示し管理Secretを公開しない', async () => {
+  const page = adminPromotionPageResponse();
+  const html = await page.text();
+  assert.match(html, /販促運用ダッシュボード/);
+  assert.match(html, /id="channelGrid"/);
+  assert.match(html, /\/admin\/sp-api/);
+  assert.match(page.headers.get('content-security-policy'), /default-src 'none'/);
+  assert.doesNotMatch(html, /SOCIAL_ADMIN_SECRET|ADMIN_SESSION_SECRET/);
+  const client = readFileSync(new URL('../public/admin-promotion.js', import.meta.url), 'utf8');
+  assert.match(client, /X.*INSTAGRAM.*TIKTOK/);
+  assert.match(client, /\/api\/admin\/promotion-dashboard/);
 });
 
 test('認証専用checkerは0025と0026を参照しない', () => {
