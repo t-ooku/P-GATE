@@ -2,8 +2,8 @@ const ORIGIN = 'https://hoshilu.app';
 
 const pages = {
   'american-products-in-japan': {
-    ja: ['アメリカ商品を日本で探す', 'アメリカ商品や海外商品を、名前が分からなくても特徴から探せます。', '母国やSNSで見た商品の色・形・用途を入力してください。Amazon、楽天市場、Qoo10、SHEINの購入先を横断して確認できます。'],
-    en: ['Find American products in Japan', 'Find US and overseas products available in Japan—even when you do not know the product name.', 'Describe the color, shape, use, or where you saw it. HOSHILU helps you compare available listings across Amazon, Rakuten, Qoo10, and SHEIN.']
+    ja: ['アメリカ商品を日本で探す', 'アメリカ商品や海外商品を、名前が分からなくても特徴から探せます。', '母国やSNSで見た商品の色・形・用途を入力してください。Amazon、楽天市場、Yahoo!ショッピング、Qoo10、SHEINの主要5モールを確認し、ファッション検索時だけ追加5モールを加えます。表示する商品リンクは確認済みのものに限ります。'],
+    en: ['Find American products in Japan', 'Find US and overseas products available in Japan—even when you do not know the product name.', 'Describe the color, shape, use, or where you saw it. HOSHILU checks five core marketplaces—Amazon, Rakuten, Yahoo Shopping, Qoo10, and SHEIN—and adds five fashion marketplaces only for fashion searches. Product links are shown only when verified.']
   },
   'find-product-without-name': {
     ja: ['商品名が分からない商品を探す', 'SNSで見た商品の名前を忘れても、覚えている特徴から検索できます。', '見た場所、使い方、色、形、サイズを文章にすると、HOSHILUが商品向けの検索条件へ整理します。'],
