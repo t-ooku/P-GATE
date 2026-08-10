@@ -315,7 +315,7 @@ test('Amazon検索フォールバックに承認済みアソシエイトIDを付
   assert.match(url.searchParams.get('k'), /phone/);
 });
 
-test('アパレル検索では統合3モールに直接検索10モールを追加する(v4.2項目14)', async () => {
+test('アパレル検索では統合2モールに直接検索11モールを追加する(v4.2項目14)', async () => {
   const decorated = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-apparel', candidates: [] },
     new Request('https://hoshilu.app/api/knowledge'),
@@ -335,7 +335,7 @@ test('アパレル検索では統合3モールに直接検索10モールを追�
   const modeByMarketplace = Object.fromEntries(
     decorated.marketplace_search_links.map((item) => [item.marketplace, item.mode])
   );
-  assert.equal(modeByMarketplace.AMAZON_JP, 'integrated');
+  assert.equal(modeByMarketplace.AMAZON_JP, 'direct');
   assert.equal(modeByMarketplace.RAKUTEN_JP, 'integrated');
   assert.equal(modeByMarketplace.YAHOO_JP, 'integrated');
   for (const marketplace of ['QOO10_JP', 'SHEIN_JP', 'ZOZOTOWN_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP', 'BUYMA_JP', 'SNKRDUNK_JP']) {
@@ -461,7 +461,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v364/);
+  assert.match(serviceWorker, /hoshilu-shell-v365/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });

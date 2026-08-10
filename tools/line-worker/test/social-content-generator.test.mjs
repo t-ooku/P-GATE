@@ -10,7 +10,7 @@ test('若者向け投稿は12種類の検索テーマを提供する', () => {
 
 // v4.2 項目14: SHOPLIST/MUSINSAは検索導線から外れ、最大モール数は13になった。
 // 「主要5モール」表記も、HOSHILUがまとめて比較できるAmazon・楽天市場・
-// Yahoo!ショッピングを指す「まとめて比較できる3モール」に置き換えた。
+// 正式運用では楽天市場・Yahoo!ショッピングだけをAPI連携表示する。
 test('投稿はまとめて比較3モール・個別に探す最大13モール対応、コメント誘導、自然なハッシュタグを含む', () => {
   for (let index = 0; index < youthSearchThemes.length; index += 1) {
     const post = buildYouthSearchPost(index, ['X', 'INSTAGRAM', 'TIKTOK'][index % 3]);
@@ -25,7 +25,7 @@ test('投稿はまとめて比較3モール・個別に探す最大13モール�
     assert.match(post.caption, /SHEIN/);
     assert.match(post.caption, /コメント/);
     assert.match(post.caption, /#ホシル/);
-    assert.match(post.caption, /まとめて比較できる3モール/);
+    assert.match(post.caption, /楽天市場・Yahoo!ショッピングをまとめて比較/);
     assert.match(post.caption, /最大13モール/);
     assert.match(post.caption, /#13モール横断/);
   }

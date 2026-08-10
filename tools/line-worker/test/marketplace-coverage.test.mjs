@@ -5,10 +5,10 @@ import { readFile } from 'node:fs/promises';
 const read = name => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
 // v4.2 項目14・15・16: 「主要5モール/ファッション5モール」を廃止し、実際の
-// integrated/direct区分に合わせて「まとめて検索3モール/個別に探す10モール」
+// integrated/direct区分に合わせて「まとめて検索2モール/個別に探す11モール」
 // へ統一。SHOPLIST/MUSINSAは個別に探すリストから外れ、ロフト・ハンズ・
 // マツキヨココカラ・@cosme・ABC-MARTを追加。
-test('トップ画面でまとめて検索3モール・個別に探す最大13モールを表示する', async () => {
+test('トップ画面でまとめて検索2モール・個別に探す最大13モールを表示する', async () => {
   const [html, css, module, layout, serviceWorker, app] = await Promise.all([
     read('index.html'),
     read('marketplace-coverage.css'),
@@ -27,6 +27,9 @@ test('トップ画面でまとめて検索3モール・個別に探す最大13�
   assert.doesNotMatch(html, />SHOPLIST</);
   assert.doesNotMatch(html, />MUSINSA</);
   assert.match(html, /最大13モール対応/);
+  assert.match(html, /まとめて検索2モールと、個別に探す11モールに対応/);
+  assert.match(html, /heroMarketplaceIntegratedList[^]*?<li>楽天市場<\/li><li class="marketplace-yahoo"/);
+  assert.match(html, /heroMarketplaceDirectList[^]*?<li>Amazon<\/li>/);
   assert.match(html, /class="marketplace-yahoo"><span>Yahoo!ショッピング<\/span>/);
   assert.match(html, /出品を確認できた商品は商品ページへ/);
   assert.match(html, /HOSHILUが商品をまとめて探して比較します。/);
@@ -86,13 +89,13 @@ test('トップ画面でまとめて検索3モール・個別に探す最大13�
   }
   assert.match(module, /hoshilu:languagechange/);
   assert.match(module, /\['探せるモールが、', 'ひと目で分かる。'\]/);
-  assert.match(module, /\['まとめて検索3モールと、', '個別に探す10モールに対応。'\]/);
+  assert.match(module, /\['まとめて検索2モールと、', '個別に探す11モールに対応。'\]/);
   assert.match(module, /Up to 13 marketplaces/);
   assert.match(module, /Instagram, X, TikTok, and YouTube/);
   assert.match(module, /最多支持13个商城/);
   assert.match(module, /최대 13개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v364/);
+  assert.match(serviceWorker, /hoshilu-shell-v365/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);
@@ -102,4 +105,5 @@ test('トップ画面でまとめて検索3モール・個別に探す最大13�
   assert.match(app, /marketplaceFallbackGroup\(directLabel,marketplaceLinks\(allLinks\),directBody,searchJump\)/);
   assert.match(app, /marketplace-fallback-search-jump/);
   assert.match(app, /querySelector\('#hoshiluSearch'\)\?\.scrollIntoView/);
+  assert.doesNotMatch(html, /<em>BETA<\/em>|PUBLIC BETA|ベータ版/);
 });

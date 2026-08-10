@@ -11,42 +11,42 @@
 export const COPY = {
   JA: {
     title: '探せるモールが、ひと目で分かる。',
-    lead: 'まとめて検索3モールと、個別に探す10モールに対応。',
+    lead: 'まとめて検索2モールと、個別に探す11モールに対応。',
     count: '最大13モール対応',
     core: 'まとめて検索',
-    coreAria: 'HOSHILUが商品をまとめて探して比較する3モール',
+    coreAria: 'HOSHILUが商品をまとめて探して比較する2モール',
     fashion: '個別に探す',
-    fashionAria: 'HOSHILUの検索結果には含まれない、個別に探す10モール',
+    fashionAria: 'HOSHILUの検索結果には含まれない、個別に探す11モール',
     note: '出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。'
   },
   EN: {
     title: 'See where HOSHILU can search.',
-    lead: 'HOSHILU compares 3 integrated marketplaces and links out to 10 more you can search directly.',
+    lead: 'HOSHILU compares 2 integrated marketplaces and links out to 11 more you can search directly.',
     count: 'Up to 13 marketplaces',
     core: 'Search together',
-    coreAria: 'Three marketplaces HOSHILU compares directly',
+    coreAria: 'Two marketplaces HOSHILU compares directly',
     fashion: 'Search individually',
-    fashionAria: 'Ten marketplaces not included in HOSHILU results, searchable directly',
+    fashionAria: 'Eleven marketplaces not included in HOSHILU results, searchable directly',
     note: 'Verified listings open the product page. Otherwise, HOSHILU opens marketplace results, then lets you continue on Instagram, X, TikTok, and YouTube.'
   },
   ZH: {
     title: '一眼看懂可搜索的商城。',
-    lead: 'HOSHILU可比较3个整合商城，并可另外前往10个商城单独搜索。',
+    lead: 'HOSHILU可比较2个整合商城，并可另外前往11个商城单独搜索。',
     count: '最多支持13个商城',
     core: '一起搜索',
-    coreAria: 'HOSHILU可整合比较的3个商城',
+    coreAria: 'HOSHILU可整合比较的2个商城',
     fashion: '单独搜索',
-    fashionAria: '不包含在HOSHILU结果中、可单独搜索的10个商城',
+    fashionAria: '不包含在HOSHILU结果中、可单独搜索的11个商城',
     note: '已确认在售的商品会直接打开商品页；尚未找到时，还可继续在 Instagram、X、TikTok 和 YouTube 搜索。'
   },
   KO: {
     title: '검색 가능한 쇼핑몰을 한눈에.',
-    lead: 'HOSHILU가 3개 통합 쇼핑몰을 비교하고, 10개 쇼핑몰은 개별 검색으로 연결합니다.',
+    lead: 'HOSHILU가 2개 통합 쇼핑몰을 비교하고, 11개 쇼핑몰은 개별 검색으로 연결합니다.',
     count: '최대 13개 쇼핑몰',
     core: '한번에 검색',
-    coreAria: 'HOSHILU가 상품을 모아 비교하는 3개 쇼핑몰',
+    coreAria: 'HOSHILU가 상품을 모아 비교하는 2개 쇼핑몰',
     fashion: '개별 검색',
-    fashionAria: 'HOSHILU 검색 결과에는 포함되지 않는, 개별 검색용 10개 쇼핑몰',
+    fashionAria: 'HOSHILU 검색 결과에는 포함되지 않는, 개별 검색용 11개 쇼핑몰',
     note: '판매가 확인된 상품은 상품 페이지로 안내하고, 찾지 못하면 Instagram, X, TikTok, YouTube에서도 계속 검색할 수 있습니다.'
   }
 };
@@ -83,7 +83,7 @@ export function applyMarketplaceCoverageToNodes(targetNodes, language = selected
   };
   if (language === 'JA') {
     responsiveCopy(targetNodes.title, ['探せるモールが、', 'ひと目で分かる。']);
-    responsiveCopy(targetNodes.lead, ['まとめて検索3モールと、', '個別に探す10モールに対応。']);
+    responsiveCopy(targetNodes.lead, ['まとめて検索2モールと、', '個別に探す11モールに対応。']);
   } else {
     targetNodes.title.textContent = copy.title;
     targetNodes.lead.textContent = copy.lead;

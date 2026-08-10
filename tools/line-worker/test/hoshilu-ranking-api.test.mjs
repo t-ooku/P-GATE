@@ -55,8 +55,8 @@ test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最�
     }, { waitUntil() {} });
     const payload = await response.json();
     assert.equal(response.status, 200, JSON.stringify(payload));
-    assert.equal(payload.result.ranking_type, 'HOSHILU総合人気ランキング（ベータ）');
-    assert.equal(payload.result.ai_cheapest.ranking_type, 'HOSHILU最安値ランキング（ベータ）');
+    assert.equal(payload.result.ranking_type, 'HOSHILU総合人気ランキング');
+    assert.equal(payload.result.ai_cheapest.ranking_type, 'HOSHILU最安値ランキング');
     assert.equal(payload.result.ai_cheapest.candidates[0].ai_cheapest_price_source, 'OBSERVED_ITEM_PRICE');
     assert.equal(payload.result.ai_cheapest.candidates[0].ai_cheapest_price_min, 2980);
     assert.equal(payload.result.ai_cheapest.candidates.some((candidate) => candidate.product_name.includes('USB充電器')), false);

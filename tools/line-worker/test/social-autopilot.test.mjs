@@ -18,7 +18,8 @@ test('販促自動運用は今日の機能リールと14日先までの定期投
     .every(post => post.media_url.endsWith('.mp4')), true);
   const launchReel = posts.find(post => post.content_id === 'feature-launch-reel-20260809');
   assert.equal(launchReel.scheduled_at, '2026-08-09T11:15:00.000Z');
-  assert.match(launchReel.caption, /実価格とAIによる類似価格推定を区別/);
+  assert.match(launchReel.caption, /ランキングとAI最安比較/);
+  assert.match(launchReel.caption, /値下がり通知/);
   for (const post of posts) {
     assert.match(post.caption, /13モール|検索語|商品|条件/);
     assert.doesNotMatch(post.caption, /(?:9|10)モール/);
@@ -62,7 +63,7 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
   assert.deepEqual(result, { enabled: true, planned: 13, inserted: 13 });
   assert.equal(rows.some(row => row[1] === 'TIKTOK'), false);
-  assert.equal(rows.every(row => row[2] === 'hoshilu-evergreen-13mall-v1'), true);
+  assert.equal(rows.every(row => row[2] === 'hoshilu-official-13mall-v2'), true);
 });
 
 test('販促自動運用は認証未設定の媒体をキューへ入れない', async () => {

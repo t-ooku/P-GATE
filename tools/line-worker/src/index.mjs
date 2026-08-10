@@ -81,7 +81,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 ];
 // v4.2 項目17 / v4.3 項目18: マーケットプレイスごとの検索モード。
 // 'integrated' はHOSHILUが実際に商品データを取得できるAPI連携先
-// (Amazon/Rakuten/Yahoo)、'direct' はHOSHILUが商品データを持たず、その
+// (Rakuten/Yahoo)、'direct' はHOSHILUが商品データを持たず、その
 // モール自身の検索結果ページへディープリンクするだけの先。UI側(app.js)が
 // この区分をハードコードし直さなくて済むよう、/api/knowledge のレスポンスに
 // 各リンクの mode を載せる(signedMarketplaceSearchLinks参照)。
@@ -1528,12 +1528,12 @@ async function handleHoshiluRankingApi(request, env) {
       .sort((a, b) => a.ai_cheapest_rank - b.ai_cheapest_rank);
     return Response.json({ ok: true, result: {
       mode: 'hoshilu_organic', category: resolution.category,
-      ranking_type: 'HOSHILU総合人気ランキング（ベータ）',
+      ranking_type: 'HOSHILU総合人気ランキング',
       methodology: 'API接続の有無を問わず、HOSHILUが正規に観測できた商品・モール順位・口コミ・価格・モール横断性を合成。未取得データは加点せず、スポンサーは順位へ混ぜません。',
       marketplace_scope: MARKETPLACE_RANKING_CAPABILITIES.map(({ marketplace_id, label }) => ({ marketplace_id, label })),
       candidates: decorated.candidates,
       ai_cheapest: {
-        ranking_type: 'HOSHILU最安値ランキング（ベータ）',
+        ranking_type: 'HOSHILU最安値ランキング',
         methodology: '選択した小ジャンルの商品本体だけに絞り、確認できた実価格を優先。価格未取得の商品だけAI推定価格帯の中央値で参考順を作成します。',
         disclaimer: 'AI推定価格を含む参考ランキングです。実際の販売価格・送料・在庫は各モールで確認してください。',
         candidates: aiCheapestCandidates,
@@ -1885,19 +1885,12 @@ async function handleKnowledgeApi(request, env, ctx) {
     } };
     result = await applyD1MultilingualContent(env, result, input.language);
     result = await applyD1ContractPolicy(env, result, input.query, requestId);
-    const shouldSearchMarketplaces = creatorsApiConfigured(env) || rakutenApiConfigured(env)
-      || yahooShoppingApiConfigured(env);
+    // 2026-08-10正式運用: 公開検索でAPI取得するのは楽天・Yahoo!のみ。
+    // Amazon Creators API実装は接続審査後に再有効化できる形で残すが、
+    // 未接続の現在はAmazonを他の外部モールと同じ検索リンクとして扱う。
+    const shouldSearchMarketplaces = rakutenApiConfigured(env) || yahooShoppingApiConfigured(env);
     if (shouldSearchMarketplaces) {
       const marketplaceSearches = [];
-      if (creatorsApiConfigured(env)) marketplaceSearches.push({
-        key: 'amazon_catalog_connected',
-        run: searchMarketplaceApiWithFallback(
-          (keywords) => searchAmazonCreators(env, keywords),
-          buildMarketplaceApiKeywordCandidates(input.query, buildAmazonSearchKeywords(input.query), buildAmazonSearchKeywords(expandedQuery.query)),
-          input.query,
-          expandedQuery.query
-        )
-      });
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_connected',
         run: searchRakutenMarketplaceWithFallback(
@@ -2090,10 +2083,6 @@ async function searchRelatedCategory(env, query, requestId) {
     yahooShoppingApiConfigured(env) && (() => searchMarketplaceApiWithFallback(
       (keywords) => searchYahooShopping(env, keywords),
       buildMarketplaceApiKeywordCandidates(query, buildMarketplaceSearchKeywords(query)), query
-    )),
-    creatorsApiConfigured(env) && (() => searchMarketplaceApiWithFallback(
-      (keywords) => searchAmazonCreators(env, keywords),
-      buildMarketplaceApiKeywordCandidates(query, buildAmazonSearchKeywords(query)), query
     ))
   ].filter(Boolean);
   for (const run of providers) {

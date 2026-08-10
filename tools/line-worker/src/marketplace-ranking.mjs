@@ -21,7 +21,7 @@ export const RAKUTEN_RANKING_CATEGORIES = Object.freeze([
 export const MARKETPLACE_RANKING_CAPABILITIES = Object.freeze([
   { marketplace_id: 'RAKUTEN_JP', label: '楽天市場', ranking_mode: 'native_api', review_mode: 'summary_api', status: 'available' },
   { marketplace_id: 'YAHOO_JP', label: 'Yahoo!ショッピング', ranking_mode: 'derived_api', review_mode: 'summary_api', status: 'planned' },
-  { marketplace_id: 'AMAZON_JP', label: 'Amazon', ranking_mode: 'native_api', review_mode: 'direct_link', status: 'awaiting_sp_api' },
+  { marketplace_id: 'AMAZON_JP', label: 'Amazon', ranking_mode: 'direct_link', review_mode: 'direct_link', status: 'available' },
   ...[
     ['QOO10_JP','Qoo10'],['SHEIN_JP','SHEIN'],['ZOZOTOWN_JP','ZOZOTOWN'],['LOFT_JP','ロフト'],
     ['HANDS_JP','ハンズ'],['MATSUKIYO_JP','マツキヨココカラ'],['COSME_JP','@cosme'],

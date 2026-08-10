@@ -63,7 +63,7 @@ test('AI最安比較はカテゴリ階層名から最終小ジャンルだけを
   );
 });
 
-test('v4.3項目12・13: 実価格(Amazon/楽天)とAI推定(ロフト/ハンズ)が明確に分かれて返る', async () => {
+test('v4.3項目12・13: API連携中の実価格(楽天)とAI推定(ロフト/ハンズ)が明確に分かれて返る', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
     const target = String(url);
@@ -84,7 +84,7 @@ test('v4.3項目12・13: 実価格(Amazon/楽天)とAI推定(ロフト/ハンズ
     const payload = await response.json();
     assert.equal(response.status, 200, JSON.stringify(payload));
     assert.equal(payload.ok, true);
-    assert.deepEqual(payload.result.real.map((r) => r.marketplace), ['AMAZON_JP', 'RAKUTEN_JP']);
+    assert.deepEqual(payload.result.real.map((r) => r.marketplace), ['RAKUTEN_JP']);
     assert.equal(payload.result.real[0].source, 'REAL');
     assert.equal(payload.result.real[0].search_query, buildAmazonSearchKeywords('携帯扇風機'));
     assert.equal(payload.result.real[0].search_sort, 'PRICE_ASC');
@@ -103,7 +103,7 @@ test('v4.3項目12・13: 実価格(Amazon/楽天)とAI推定(ロフト/ハンズ
     assert.equal(handsRow.search_sort, '');
     assert.equal(payload.result.disclaimer_required, true);
     assert.match(payload.result.disclaimer_text, /AI推定価格です/);
-    assert.equal(payload.result.cheapest_claim.marketplace, 'AMAZON_JP');
+    assert.equal(payload.result.cheapest_claim.marketplace, 'RAKUTEN_JP');
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -150,7 +150,7 @@ test('v4.3項目9: AI障害時でも実価格側は正常に返り、比較API�
     const response = await worker.fetch(request({}), env, context);
     const payload = await response.json();
     assert.equal(response.status, 200, JSON.stringify(payload));
-    assert.deepEqual(payload.result.real.map((r) => r.marketplace), ['AMAZON_JP', 'RAKUTEN_JP']);
+    assert.deepEqual(payload.result.real.map((r) => r.marketplace), ['RAKUTEN_JP']);
     assert.deepEqual(payload.result.ai_estimated, []);
     assert.deepEqual(payload.result.unavailable.map((r) => r.marketplace).sort(), ['HANDS_JP', 'LOFT_JP']);
   } finally {

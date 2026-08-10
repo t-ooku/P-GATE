@@ -16,8 +16,8 @@ test('v4.3項目13: realPriceRowsはIntegratedモールの実オファーのみ�
     { marketplace: 'LOFT_JP', total_cost: 8000, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=c' },
     { marketplace: 'YAHOO_JP', total_cost: 0, currency: 'JPY', tracking_url: '' }
   ]);
-  assert.equal(rows.length, 2);
-  assert.deepEqual(rows.map((row) => row.marketplace), ['AMAZON_JP', 'RAKUTEN_JP']);
+  assert.equal(rows.length, 1);
+  assert.deepEqual(rows.map((row) => row.marketplace), ['RAKUTEN_JP']);
   assert.equal(rows[0].source, 'REAL');
 });
 
@@ -56,7 +56,7 @@ test('v4.3項目15: AI推定が1件でもあれば、必須の注意書きが付
   });
   assert.equal(withAi.disclaimer_required, true);
   assert.equal(withAi.disclaimer_text, PRICE_ESTIMATE_DISCLAIMER.JA);
-  const withoutAi = buildPriceComparison({ real: [{ marketplace: 'AMAZON_JP', total_cost: 100 }], aiEstimates: [], requestedDirectMarketplaces: [], language: 'JA' });
+  const withoutAi = buildPriceComparison({ real: [{ marketplace: 'RAKUTEN_JP', total_cost: 100 }], aiEstimates: [], requestedDirectMarketplaces: [], language: 'JA' });
   assert.equal(withoutAi.disclaimer_required, false);
   assert.equal(withoutAi.disclaimer_text, null);
 });
@@ -64,16 +64,16 @@ test('v4.3項目15: AI推定が1件でもあれば、必須の注意書きが付
 test('v4.3項目16: 実価格同士なら断定できるが、AI推定を含む場合は断定せずヘッジする', () => {
   const comparison = buildPriceComparison({
     real: [
-      { marketplace: 'AMAZON_JP', total_cost: 8980 },
+      { marketplace: 'YAHOO_JP', total_cost: 8980 },
       { marketplace: 'RAKUTEN_JP', total_cost: 9180 }
     ],
     aiEstimates: [{ marketplace: 'LOFT_JP', range_min: 7000, range_max: 8500, confidence: 'MEDIUM' }],
     requestedDirectMarketplaces: ['LOFT_JP'],
     language: 'JA'
   });
-  // 実価格同士の断定は許可(AMAZONが最安)
+  // 実価格同士の断定は許可(Yahoo!が最安)
   assert.equal(comparison.cheapest_claim.definitive, true);
-  assert.equal(comparison.cheapest_claim.marketplace, 'AMAZON_JP');
+  assert.equal(comparison.cheapest_claim.marketplace, 'YAHOO_JP');
   assert.match(comparison.cheapest_claim.text, /最安/);
   // AI推定(ロフト:7000-8500)がAmazonの実価格(8980)より安い可能性があるので、
   // 断定ではなくヘッジされた文言が別枠で付く

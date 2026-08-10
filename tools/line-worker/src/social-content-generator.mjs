@@ -1,8 +1,8 @@
 // v4.2 項目14: SHOPLIST/MUSINSAは標準検索から外れ、ロフト・ハンズ・
 // マツキヨココカラ・@cosme・ABC-MARTを追加。「主要5モール」はHOSHILUが商品
-// をまとめて比較できるAmazon・楽天市場・Yahoo!ショッピングを指すよう更新
-// (Qoo10・SHEINは個別に探すモール側)。
-const MARKETPLACE_MESSAGE = 'まとめて比較できる3モール（Amazon・楽天市場・Yahoo!ショッピング）に加え、Qoo10・SHEIN・ZOZOTOWNなど最大13モールを個別にも探せます。';
+// をまとめて比較できる楽天市場・Yahoo!ショッピングを指す。Amazonは公式API
+// 接続まではQoo10等と同じ個別検索導線として、最大13モールの対象に含める。
+const MARKETPLACE_MESSAGE = '楽天市場・Yahoo!ショッピングをまとめて比較し、Amazon・Qoo10・SHEIN・ZOZOTOWNなど最大13モールを個別にも探せます。';
 
 const THEMES = Object.freeze([
   { id: 'cross_market_phone_case', pillar: 'CROSS_MARKET', format: 'CAROUSEL', memory: 'TikTokで見た、光るスマホケース', refined: 'TikTokで見た光るiPhoneケース', hook: 'その「どこで売ってる？」を主要5モールから探そう。' },
@@ -47,7 +47,7 @@ function reelScript(theme) {
     scenes: [
       `0-2秒：${theme.hook}`,
       `2-5秒：検索欄へ「${theme.memory}」と入力`,
-      `5-9秒：まとめて比較する3モールと、個別に探せる最大13モールを表示`,
+      `5-9秒：まとめて比較する2モールと、個別に探せる最大13モールを表示`,
       `9-12秒：「名前が分からなくても、ホシル。」＋保存・コメントCTA`
     ],
     cover_text: focus ? `${focus === FOCUS_COPY.QOO10_JP ? 'Qoo10' : 'SHEIN'}で見た、あれ何？` : '名前不明でも探せる',

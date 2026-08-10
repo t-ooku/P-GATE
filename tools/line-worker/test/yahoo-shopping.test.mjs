@@ -29,7 +29,7 @@ test('Yahoo!ショッピングの商品詳細URLだけを10モール商品候補
 });
 
 // v4.2 項目14・15: LPの検索フォールバックは「主要5モール/最大10モール」から
-// 「まとめて検索3モール/個別に探す最大13モール」表記へ切り替えた。SALE RADAR
+// 「まとめて検索2モール/個別に探す最大13モール」表記へ切り替えた。SALE RADAR
 // SALE RADARと通知設定も2026-08-09に現行の同じ13モールへ統一した。
 test('LP・検索フォールバック・SALE RADARは13モール表記で一致する', async () => {
   const [html, app, coverage, sales] = await Promise.all([

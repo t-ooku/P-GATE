@@ -231,7 +231,7 @@ test('2026-08-08: 「ブラウス 夏用 丈長め おしゃれ」の季節・�
   }
 });
 
-test('2026-08-08: 個別に探す10モールでも同じ季節・丈・スタイル語が維持される', async () => {
+test('2026-08-08: 個別に探す11モールでも同じ季節・丈・スタイル語が維持される', async () => {
   const query = 'ブラウス 夏用 丈長め おしゃれ';
   const links = buildApparelMarketplaceDestinations(query);
   for (const link of links) {

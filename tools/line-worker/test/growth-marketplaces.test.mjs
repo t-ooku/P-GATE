@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GROWTH_MARKETPLACES, growthMarketplace } from '../public/growth-marketplaces.mjs';
 
-test('統合3モールと直接検索10モールを送客分類する(v4.2項目14で5モール追加)', () => {
+test('統合2モールと直接検索11モールを送客分類する(v4.2項目14で5モール追加)', () => {
   assert.equal(GROWTH_MARKETPLACES.length, 15);
   for (const marketplace of GROWTH_MARKETPLACES) {
     assert.equal(growthMarketplace(marketplace), marketplace);

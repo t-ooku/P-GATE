@@ -54,7 +54,7 @@ test('v4.3項目33: AI会話検索の一連の要件(検索文引継ぎ・CTA・
 test('v4.3項目34: 1商品について実価格・AI推定・注意書き・最安判定文言が揃い、混同されない', () => {
   const comparison = buildPriceComparison({
     real: realPriceRows([
-      { marketplace: 'AMAZON_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a' },
+      { marketplace: 'YAHOO_JP', total_cost: 8980, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=a' },
       { marketplace: 'RAKUTEN_JP', total_cost: 9180, currency: 'JPY', tracking_url: 'https://hoshilu.app/go?token=b' }
     ]),
     aiEstimates: [
@@ -77,7 +77,7 @@ test('v4.3項目34: 1商品について実価格・AI推定・注意書き・最
   assert.match(comparison.disclaimer_text, /AI推定価格です。実際の販売価格・在庫はショップで確認してください。/);
   // 最安判定文言(実価格同士のみ断定)
   assert.equal(comparison.cheapest_claim.definitive, true);
-  assert.equal(comparison.cheapest_claim.marketplace, 'AMAZON_JP');
+  assert.equal(comparison.cheapest_claim.marketplace, 'YAHOO_JP');
   // 実価格とAI推定が混同されていない(別配列・別sourceラベル)
   const realMarketplaces = new Set(comparison.real.map((row) => row.marketplace));
   const estimateMarketplaces = new Set(comparison.ai_estimated.map((row) => row.marketplace));
