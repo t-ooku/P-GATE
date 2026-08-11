@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v369/);
+  assert.match(worker, /hoshilu-shell-v370/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /:scope > \.product-card-media-column/);
@@ -99,7 +99,8 @@ test('AIチャットは検索の成功を確認してからダイアログを閉
   assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch\}/);
   assert.match(app, /async function runKnowledgeSearch\(\)/);
   assert.match(app, /return\{ok:true,result:payload\.result\}/);
-  assert.match(app, /return\{ok:false,error:String\(error\?\.message\|\|error\)\}/);
+  assert.match(app, /const safeError=String\(error\?\.message\|\|error\)\.slice\(0,80\)/);
+  assert.match(app, /return\{ok:false,error:safeError\}/);
   assert.match(script, /window\.HoshiluSearch\?\.run/);
   assert.doesNotMatch(script, /submitButton\.click\(\)/);
   // dialog.close() must only appear guarded behind a successful outcome,
