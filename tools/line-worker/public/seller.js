@@ -65,10 +65,9 @@ document.querySelector('#sellerInventoryRuleForm')?.addEventListener('submit', (
 document.querySelector('#sellerAiRuleForm')?.addEventListener('submit', (event) => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
-  const submitter = event.submitter;
   updatePriority({
     action: 'UPSERT_RULE', tenant: data.get('tenant'),
-    scope_type: 'AI_RECOMMENDED', scope_value: '*', active: submitter?.value === '1'
+    scope_type: 'AI_RECOMMENDED', scope_value: '*', active: data.get('active') === 'on'
   });
 });
 

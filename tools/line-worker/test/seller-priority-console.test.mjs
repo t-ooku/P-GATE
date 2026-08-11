@@ -134,8 +134,27 @@ test('セラー画面は自社クリック・確定消化額・残高だけを�
   assert.match(html, /30日消化額<\/span><strong>¥25/);
   assert.match(html, /利用可能残高<\/span><strong>¥8,000/);
   assert.doesNotMatch(html, /RAKUTEN_JP<\/td><td>1/);
-  assert.match(html, /全商品ON/);
+  assert.match(html, /with care/);
+  assert.match(html, /Find fun/);
+  assert.match(html, /全商品で優先出品を開始/);
+  assert.doesNotMatch(html, /全商品ON|ルールON・残高待ち/);
   assert.match(html, /商品数が多いため、商品1件ずつの操作は設けていません/);
+});
+
+test('決済未接続時は店舗名と開始しない理由を明示し、操作を一つに絞る', async () => {
+  const { db } = database();
+  await changeSellerPriority({ PRODUCT_DB: db }, seller, {
+    action: 'UPSERT_RULE', tenant: 'itg', scope_type: 'CATEGORY', scope_value: 'カラーコンタクト', active: true
+  }, '2026-08-11T01:00:00Z');
+  const response = await sellerPageResponse({ PRODUCT_DB: db }, seller);
+  const html = await response.text();
+  assert.match(html, /決済・チャージ機能は接続準備中です/);
+  assert.match(html, /with care/);
+  assert.match(html, /Amazon店舗 · ITG/);
+  assert.match(html, /設定済み・開始待ち/);
+  assert.match(html, /この店舗の設定をすべて停止/);
+  assert.match(html, /全商品を対象に設定/);
+  assert.doesNotMatch(html, /ルールON・残高待ち|全商品ON|全商品OFF/);
 });
 
 test('残高・ルール・Seller IDが揃う優先出品だけを同一商品の購入先先頭へ送る', async () => {

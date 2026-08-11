@@ -1,4 +1,5 @@
 import { sellerPlanEntitlements } from './seller-pricing-policy.mjs';
+import { SP_API_SELLERS } from './sp-api-sync.mjs';
 
 const esc = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -6,6 +7,17 @@ const esc = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({
 
 const number = (value) => Number(value || 0).toLocaleString('ja-JP');
 const yenFromMicros = (value) => `¥${number(Math.round(Number(value || 0) / 1_000_000))}`;
+const tenantDisplay = (tenant) => {
+  const normalized = String(tenant || '').trim().toLowerCase();
+  return {
+    code: normalized ? normalized.toUpperCase() : 'STORE',
+    name: SP_API_SELLERS[normalized]?.storeName || normalized || '未設定'
+  };
+};
+const tenantText = (tenant) => {
+  const store = tenantDisplay(tenant);
+  return `${store.name}（${store.code}）`;
+};
 const safeDate = (value) => {
   const date = new Date(value);
   return Number.isFinite(date.getTime())
@@ -188,12 +200,15 @@ export async function sellerPageResponse(
   const lineLoginReady = Boolean(env.LINE_LOGIN_CHANNEL_ID && env.LINE_LOGIN_CHANNEL_SECRET);
   const lineMessagingReady = Boolean(env.LINE_CHANNEL_SECRET && env.LINE_CHANNEL_ACCESS_TOKEN);
   const tenantSummary = products.length
-    ? products.map((row) => `${esc(row.tenant)}: ${number(row.products)}`).join(' / ')
-    : (seller.tenants || []).map(esc).join(' / ') || '未設定';
+    ? products.map((row) => `${esc(tenantText(row.tenant))}: ${number(row.products)}`).join(' / ')
+    : (seller.tenants || []).map((tenant) => esc(tenantText(tenant))).join(' / ') || '未設定';
 
   const productCards = products.length
-    ? products.map((row) => `<article class="seller-panel"><span>${esc(row.tenant)}</span>
-      <strong>${number(row.products)}</strong><span>検索カタログ件数</span></article>`).join('')
+    ? products.map((row) => {
+      const store = tenantDisplay(row.tenant);
+      return `<article class="seller-panel"><span>${esc(store.name)} · ${esc(store.code)}</span>
+        <strong>${number(row.products)}</strong><span>検索カタログ件数</span></article>`;
+    }).join('')
     : '<article class="seller-panel"><span>商品</span><strong>0</strong><span>未登録</span></article>';
 
   const demandCards = !entitlements.advanced_demand_report
@@ -248,24 +263,64 @@ export async function sellerPageResponse(
   const availableMicros = walletAvailable
     ? Math.max(0, Number(wallet.balance_micros_jpy || 0) - Number(wallet.reserved_micros_jpy || 0)) : 0;
   const priorityFunded = walletAvailable && wallet.status === 'ACTIVE' && availableMicros > 0;
-  const priorityState = inclusionRules.length ? (priorityFunded ? '運用中' : '残高待ち') : '停止中';
+  const priorityState = inclusionRules.length ? (priorityFunded ? '運用中' : '開始待ち') : '停止中';
+  const readiness = !walletAvailable
+    ? {
+      state: 'blocked', title: '決済・チャージ機能は接続準備中です',
+      body: '優先出品の条件は保存できますが、利用可能残高を接続するまで実際の優先表示と課金は開始されません。入金済みと誤認させる残高は表示しません。'
+    }
+    : wallet.status !== 'ACTIVE'
+      ? {
+        state: 'blocked', title: '請求アカウントが停止中です',
+        body: '現在の設定は保持されていますが、請求アカウントが有効になるまで優先表示は開始されません。'
+      }
+      : availableMicros <= 0
+        ? {
+          state: 'blocked', title: '利用可能残高がありません',
+          body: '現在の設定は保持されていますが、利用可能残高が追加されるまで優先表示は開始されません。'
+        }
+        : inclusionRules.length
+          ? {
+            state: 'ready', title: '優先出品を運用中です',
+            body: '在庫・商品URL・検索適合の条件を満たす購入先だけを、同一商品内の優先枠へ表示します。'
+          }
+          : {
+            state: 'idle', title: '優先出品は停止中です',
+            body: '利用可能残高は接続済みです。全商品または条件指定のルールを設定すると優先出品を開始できます。'
+          };
   const priorityRuleRows = priorityRules.length
-    ? priorityRules.map((row) => `<tr><td>${esc(row.tenant)}</td><td>${esc(scopeLabels[row.scope_type] || row.scope_type)}</td>
-      <td>${esc(row.scope_type === 'INVENTORY_MIN' ? `${row.scope_value}個以上` : row.scope_value)}</td>
-      <td><span class="status-pill ${Number(row.active) === 1 ? 'is-active' : 'is-paused'}">${Number(row.active) === 1 ? 'ON' : 'OFF'}</span></td>
-      <td>${esc(safeDate(row.priority_started_at))}</td><td><button class="compact-button" type="button"
+    ? priorityRules.map((row) => `<tr><td data-label="店舗"><strong>${esc(tenantDisplay(row.tenant).name)}</strong><small>${esc(tenantDisplay(row.tenant).code)}</small></td><td data-label="対象">${esc(scopeLabels[row.scope_type] || row.scope_type)}</td>
+      <td data-label="条件">${esc(row.scope_type === 'INVENTORY_MIN' ? `${row.scope_value}個以上` : row.scope_value)}</td>
+      <td data-label="状態"><span class="status-pill ${Number(row.active) === 1 ? 'is-active' : 'is-paused'}">${Number(row.active) === 1 ? '有効' : '停止'}</span></td>
+      <td data-label="優先開始">${esc(safeDate(row.priority_started_at))}</td><td data-label="操作"><button class="compact-button" type="button"
         data-priority-action="SET_RULE_STATUS" data-rule-id="${esc(row.rule_id)}" data-active="${Number(row.active) === 1 ? '0' : '1'}">
         ${Number(row.active) === 1 ? '停止' : '再開'}</button></td></tr>`).join('')
-    : '<tr><td colspan="6">優先出品ルールは未登録です。店舗ごとの「全商品ON」または条件ルールから開始できます。</td></tr>';
+    : '<tr><td colspan="6">優先出品ルールは未登録です。店舗カードの「全商品を対象に設定」または条件指定から開始できます。</td></tr>';
   const tenantPriorityCards = [...allowed].map((tenant) => {
     const rows = priorityRules.filter((row) => String(row.tenant) === tenant && Number(row.active) === 1);
-    const enabled = rows.some((row) => ['ALL','CATEGORY','BRAND','MANUFACTURER','AI_RECOMMENDED'].includes(String(row.scope_type)));
-    return `<article class="seller-panel priority-store-card"><span>${esc(tenant)}</span>
-      <strong>${enabled ? (priorityFunded ? '優先出品 ON' : 'ルールON・残高待ち') : '掲載停止'}</strong><span>有効ルール ${number(rows.length)}件</span>
-      <div class="inline-actions"><button class="primary-button" type="button" data-priority-action="SET_ALL" data-tenant="${esc(tenant)}" data-active="1">全商品ON</button>
-      <button class="danger-button" type="button" data-priority-action="SET_ALL" data-tenant="${esc(tenant)}" data-active="0">全商品OFF</button></div></article>`;
+    const inclusionRows = rows.filter((row) => ['ALL','CATEGORY','BRAND','MANUFACTURER','AI_RECOMMENDED'].includes(String(row.scope_type)));
+    const enabled = inclusionRows.length > 0;
+    const allActive = inclusionRows.some((row) => String(row.scope_type) === 'ALL');
+    const store = tenantDisplay(tenant);
+    const state = enabled
+      ? priorityFunded ? (allActive ? '全商品で運用中' : '条件指定で運用中') : '設定済み・開始待ち'
+      : '停止中';
+    const stateClass = enabled ? (priorityFunded ? 'is-running' : 'is-waiting') : 'is-stopped';
+    const explanation = enabled
+      ? priorityFunded ? '条件を満たす購入先を優先枠へ表示しています。' : '設定は保存済みです。残高接続まで優先表示は始まりません。'
+      : '優先出品ルールは設定されていません。';
+    const action = enabled
+      ? `<button class="danger-button priority-store-action" type="button" data-priority-action="SET_ALL" data-tenant="${esc(tenant)}" data-active="0">この店舗の設定をすべて停止</button>`
+      : `<button class="primary-button priority-store-action" type="button" data-priority-action="SET_ALL" data-tenant="${esc(tenant)}" data-active="1">${priorityFunded ? '全商品で優先出品を開始' : '全商品を対象に設定'}</button>`;
+    return `<article class="seller-panel priority-store-card">
+      <div class="store-identity"><span>Amazon店舗 · ${esc(store.code)}</span><h3>${esc(store.name)}</h3></div>
+      <span class="priority-state ${stateClass}">${state}</span>
+      <p>${explanation}</p>
+      <div class="priority-store-meta"><span>有効な優先ルール</span><strong>${number(inclusionRows.length)}件</strong></div>
+      <div class="priority-store-actions">${action}<a href="#priority-settings">条件を指定する</a></div>
+      </article>`;
   }).join('');
-  const tenantOptions = [...allowed].map((tenant) => `<option value="${esc(tenant)}">${esc(tenant)}</option>`).join('');
+  const tenantOptions = [...allowed].map((tenant) => `<option value="${esc(tenant)}">${esc(tenantText(tenant))}</option>`).join('');
   const spendMicros30d = Number(billingStats?.spend_micros_30d || 0);
   const settledClicks30d = Number(billingStats?.settled_clicks_30d || 0);
   const averageCostMicros = settledClicks30d > 0 ? spendMicros30d / settledClicks30d : 0;
@@ -325,9 +380,15 @@ export async function sellerPageResponse(
 
   <section class="auth-card" id="priority"><p class="eyebrow">PRIORITY LISTING</p><h2>優先出品・掲載停止</h2>
   <p>商品そのものの自然検索順位は変えません。同一商品の購入先が複数ある場合だけ、在庫・URL・残高の条件を満たす優先出品を先着順で表示します。停止後に再開したルールは再開日時から並び直します。</p>
+  <div class="priority-readiness is-${readiness.state}">
+    <div><span class="priority-readiness-label">現在の状態</span><strong>${esc(readiness.title)}</strong><p>${esc(readiness.body)}</p></div>
+    <a class="ghost-button" href="#performance">残高と成果を確認</a>
+  </div>
   <div id="sellerPriorityStatus" class="operation-status" role="status" aria-live="polite"></div>
-  <div class="seller-grid">${tenantPriorityCards}</div>
-  <div class="priority-forms">
+  <div class="seller-grid priority-store-grid">${tenantPriorityCards}</div>
+  <details id="priority-settings" class="priority-settings">
+    <summary><span><strong>条件を指定して優先出品する</strong><small>ジャンル・ブランド・メーカー・在庫・AI推奨</small></span><span class="summary-action">設定を開く</span></summary>
+    <div class="priority-forms">
     <form id="sellerPriorityRuleForm" class="auth-form priority-form">
       <h3>条件を追加</h3>
       <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select></label>
@@ -335,7 +396,7 @@ export async function sellerPageResponse(
         <option value="CATEGORY">ジャンル</option><option value="BRAND">ブランド</option><option value="MANUFACTURER">メーカー</option>
       </select></label>
       <label><span>条件名</span><input name="scope_value" maxlength="80" required placeholder="例：カラーコンタクト"></label>
-      <button class="primary-button" type="submit">この条件をON</button>
+      <button class="primary-button" type="submit">この条件を追加</button>
     </form>
     <form id="sellerInventoryRuleForm" class="auth-form priority-form">
       <h3>在庫条件</h3>
@@ -347,13 +408,17 @@ export async function sellerPageResponse(
       <h3>AI推奨一括反映</h3>
       <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select></label>
       <p>検索適合・在庫・URL確認に合格した推奨対象だけを優先枠候補にします。</p>
-      <div class="inline-actions"><button class="primary-button" type="submit" name="active" value="1">ON</button>
-      <button class="ghost-button" type="submit" name="active" value="0">OFF</button></div>
+      <label class="toggle-field"><input name="active" type="checkbox" checked><span>AI推奨を有効にする</span></label>
+      <button class="ghost-button" type="submit">AI推奨設定を保存</button>
     </form>
-  </div>
-  <div class="seller-table-wrap"><table><thead><tr><th>店舗</th><th>対象</th><th>条件</th><th>状態</th><th>優先開始</th><th>操作</th></tr></thead>
-  <tbody>${priorityRuleRows}</tbody></table></div>
-  <p class="data-note">全商品OFFは、その店舗のジャンル・ブランド・メーカー・AI推奨を含む全ルールを停止します。商品数が多いため、商品1件ずつの操作は設けていません。</p></section>
+    </div>
+  </details>
+  <details class="priority-rules">
+    <summary class="priority-rules-heading"><div><h3>現在の設定</h3><p>店舗ごとの優先条件と開始日時です。</p></div><span>${number(priorityRules.length)}件・確認</span></summary>
+    <div class="seller-table-wrap"><table><thead><tr><th>店舗</th><th>対象</th><th>条件</th><th>状態</th><th>優先開始</th><th>操作</th></tr></thead>
+    <tbody>${priorityRuleRows}</tbody></table></div>
+    <p class="data-note">「この店舗の設定をすべて停止」は、ジャンル・ブランド・メーカー・AI推奨を含む全ルールを停止します。商品数が多いため、商品1件ずつの操作は設けていません。</p>
+  </details></section>
 
   <section class="auth-card" id="catalog"><p class="eyebrow">CATALOG</p><h2>商品管理</h2>
   <p>対象店舗に紐づく検索カタログ件数です。販売中商品としての公開は、Amazon出品同期と照合の合格後に行います。</p>
