@@ -71,7 +71,17 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch, option
   url.searchParams.set('image_size', '600');
   if (['-review_count', '-score'].includes(options.sort)) url.searchParams.set('sort', options.sort);
   url.searchParams.set('in_stock', 'true');
-  const response = await fetcher(url.toString(), { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
-  if (!response.ok) throw new Error('YAHOO_SHOPPING_SEARCH_FAILED');
+  const response = await fetcher(url.toString(), { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(3500) });
+  if (!response.ok) {
+    let providerCode = '';
+    try {
+      const payload = await response.json();
+      providerCode = String(payload?.Error?.Message || payload?.error || '').slice(0, 80);
+    } catch {}
+    const error = new Error('YAHOO_SHOPPING_SEARCH_FAILED');
+    error.status = Number(response.status) || 0;
+    error.providerCode = providerCode;
+    throw error;
+  }
   return normalizeYahooShoppingItems(await response.json());
 }

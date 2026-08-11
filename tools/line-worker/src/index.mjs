@@ -1052,11 +1052,34 @@ export function summarizeMarketplaceSearchOutcomes(searches = [], outcomes = [],
 // first (broadest) keyword candidate would stop the cascade there and never
 // try the cleaner, more specific candidates that follow.
 async function searchMarketplaceApiWithFallback(searcher, keywordCandidates, query = '', fallbackQuery = '') {
-  for (const keywords of keywordCandidates) {
-    const candidates = await searcher(keywords);
-    if (!candidates.length) continue;
+  // A sequential fallback cascade multiplied the provider's 5 second timeout
+  // by as many as five keyword variants.  That made an ordinary search wait
+  // up to 25 seconds for Yahoo alone before the Worker could answer, which in
+  // turn sent the PWA into its emergency-link fallback.  Keep the preference
+  // order. Try the primary once, then evaluate at most two fallback variants
+  // concurrently, bounding the provider to two short request windows.
+  const variants = [...new Set((keywordCandidates || [])
+    .map((value) => String(value || '').normalize('NFKC').trim())
+    .filter(Boolean))].slice(0, 3);
+  const first = variants.length ? await Promise.allSettled([searcher(variants[0])]) : [];
+  const firstCandidates = first[0]?.status === 'fulfilled' && Array.isArray(first[0].value) ? first[0].value : [];
+  if (firstCandidates.length && (!query
+    || filterSearchCandidatesWithFallback(query, fallbackQuery, firstCandidates).length)) return firstCandidates;
+  const outcomes = first.concat(await Promise.allSettled(variants.slice(1).map((keywords) => searcher(keywords))));
+  let firstFailure = null;
+  for (const outcome of outcomes) {
+    if (outcome.status !== 'fulfilled') {
+      firstFailure ||= outcome.reason;
+      continue;
+    }
+    const candidates = Array.isArray(outcome.value) ? outcome.value : [];
+    if (outcome === first[0] || !candidates.length) continue;
     if (!query || filterSearchCandidatesWithFallback(query, fallbackQuery, candidates).length) return candidates;
   }
+  // Preserve the distinction between a genuine zero-result response and a
+  // provider/network failure.  If every useful variant failed, bubble one
+  // sanitized provider error into marketplace_search_status.
+  if (firstFailure && outcomes.every((outcome) => outcome.status === 'rejected')) throw firstFailure;
   return [];
 }
 

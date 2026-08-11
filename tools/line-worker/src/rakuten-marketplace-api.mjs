@@ -82,7 +82,7 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   const request = async (requestUrl) => {
     const response = await fetcher(requestUrl.toString(), {
       headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
-      signal: AbortSignal.timeout(5000)
+      signal: AbortSignal.timeout(3500)
     });
     if (response.ok) return response.json();
     let providerCode = '';
@@ -143,13 +143,33 @@ export async function searchRakutenMarketplaceWithFallback(
       .map((value) => String(value || '').normalize('NFKC').trim())
       .filter(Boolean)
   )].slice(0, 3);
-  for (const keywords of candidates) {
-    const results = await searchRakutenMarketplace(env, keywords, fetcher, requestId);
+  // Try the primary once, then run the remaining small fallback set
+  // concurrently. Sequential requests used to turn the provider timeout into
+  // a 15 second endpoint delay even though only one result set is selected.
+  const first = candidates.length ? await Promise.allSettled([
+    searchRakutenMarketplace(env, candidates[0], fetcher, requestId)
+  ]) : [];
+  const firstResults = first[0]?.status === 'fulfilled' && Array.isArray(first[0].value) ? first[0].value : [];
+  if (firstResults.length && (!query || filterCategoryMismatches(query, firstResults).length
+    || (fallbackQuery && fallbackQuery !== query && filterCategoryMismatches(fallbackQuery, firstResults).length))) {
+    return firstResults;
+  }
+  const outcomes = first.concat(await Promise.allSettled(candidates.slice(1).map((keywords) =>
+    searchRakutenMarketplace(env, keywords, fetcher, requestId))));
+  let firstFailure = null;
+  for (const outcome of outcomes) {
+    if (outcome.status !== 'fulfilled') {
+      firstFailure ||= outcome.reason;
+      continue;
+    }
+    if (outcome === first[0]) continue;
+    const results = Array.isArray(outcome.value) ? outcome.value : [];
     if (!results.length) continue;
     if (!query || filterCategoryMismatches(query, results).length) return results;
     // AI変換語に一致しない結果でも、AI前の検索条件には適合するなら採用する。
     // 原文とAI語をAND結合しないため、誤変換時にも正しい商品を救済できる。
     if (fallbackQuery && fallbackQuery !== query && filterCategoryMismatches(fallbackQuery, results).length) return results;
   }
+  if (firstFailure && outcomes.every((outcome) => outcome.status === 'rejected')) throw firstFailure;
   return [];
 }
