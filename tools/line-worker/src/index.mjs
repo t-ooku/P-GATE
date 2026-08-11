@@ -68,6 +68,9 @@ import { renderSeoPage } from './seo-pages.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import { classifyGrowthTraffic, handleGrowthEvent } from './growth-events.mjs';
 import {
+  applySellerPriority, sellerPriorityContext
+} from './seller-priority-console.mjs';
+import {
   runMarketplaceContentCycle, handleMarketplaceSaleRoutes
 } from './marketplace-sales.mjs';
 const encoder = new TextEncoder();
@@ -193,6 +196,13 @@ export function rankSellerOffers(offers = []) {
     .map((offer, index) => ({ offer, index }))
     .filter(({ offer }) => offerIsActive(offer))
     .sort((left, right) => {
+      const priority = Number(right.offer?.priority_listing === true) - Number(left.offer?.priority_listing === true);
+      if (priority) return priority;
+      if (left.offer?.priority_listing === true && right.offer?.priority_listing === true) {
+        const leftPriorityTime = Date.parse(left.offer?.priority_started_at || '') || Number.MAX_SAFE_INTEGER;
+        const rightPriorityTime = Date.parse(right.offer?.priority_started_at || '') || Number.MAX_SAFE_INTEGER;
+        if (leftPriorityTime !== rightPriorityTime) return leftPriorityTime - rightPriorityTime;
+      }
       const leftPlan = SELLER_PLAN_PRIORITY[String(left.offer?.seller_plan || left.offer?.plan || 'LITE').toUpperCase()] ?? SELLER_PLAN_PRIORITY.LITE;
       const rightPlan = SELLER_PLAN_PRIORITY[String(right.offer?.seller_plan || right.offer?.plan || 'LITE').toUpperCase()] ?? SELLER_PLAN_PRIORITY.LITE;
       const leftTime = Date.parse(left.offer?.registered_at || left.offer?.created_at || '') || Number.MAX_SAFE_INTEGER;
@@ -1304,9 +1314,12 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
   const seed = result.query_id || crypto.randomUUID();
   const candidates = [];
   const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT);
+  const priorityContext = await sellerPriorityContext(env, displayCandidates);
   for (const candidate of displayCandidates) {
     const copy = sanitizePublicCandidate(candidate);
-    const productOffers = productMarketplaceOffers(candidate.offers);
+    const productOffers = productMarketplaceOffers(
+      applySellerPriority(candidate, candidate.offers, priorityContext)
+    );
     const selected = productOffers.length ? { url: productOffers[0].product_url, offer: productOffers[0] } : { url: '', offer: null };
     const destination = selected.url;
     copy.offers = [];
@@ -1316,7 +1329,9 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
         u: sessionHash, r: seed, a: candidate.asin, d: offer.product_url,
         exp: Math.floor(Date.now() / 1000) + 86400 * 7,
         j: `${seed}:${candidate.asin}:${offer.marketplace || offerIndex}`, c: 'PWA',
-        m: offer.marketplace || marketplaceForDestination(offer.product_url)
+        m: offer.marketplace || marketplaceForDestination(offer.product_url),
+        sid: offer.seller_id || '', hpid: candidate.hoshilu_product_id || '',
+        sp: offer.priority_listing === true, so: 'HOSHILU'
       }, env.LINK_SIGNING_SECRET);
       publicOffer.tracking_url = `${origin}/go?token=${encodeURIComponent(offerToken)}`;
       copy.offers.push(publicOffer);
@@ -1346,7 +1361,9 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
         u: sessionHash, r: seed, a: candidate.asin, d: destination,
         exp: Math.floor(Date.now() / 1000) + 86400 * 7,
         j: `${seed}:${candidate.asin}`, c: 'PWA',
-        m: selected.offer?.marketplace || marketplaceForDestination(destination)
+        m: selected.offer?.marketplace || marketplaceForDestination(destination),
+        sid: selected.offer?.seller_id || '', hpid: candidate.hoshilu_product_id || '',
+        sp: selected.offer?.priority_listing === true, so: 'HOSHILU'
       }, env.LINK_SIGNING_SECRET);
       copy.tracking_url = `${origin}/go?token=${encodeURIComponent(token)}`;
     }
@@ -1608,7 +1625,8 @@ function sanitizePublicOffer(offer) {
     shipping_fee_confirmed: shippingFeeConfirmed,
     currency: String(offer?.currency || 'JPY'),
     stock_status: String(offer?.stock_status || 'UNKNOWN'),
-    delivery_days: Number(offer?.delivery_days || 0)
+    delivery_days: Number(offer?.delivery_days || 0),
+    priority_listing: offer?.priority_listing === true
   };
 }
 

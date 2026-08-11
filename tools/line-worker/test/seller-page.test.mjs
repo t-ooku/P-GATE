@@ -59,7 +59,9 @@ test('seller console never exposes another tenant totals', async () => {
   assert.doesNotMatch(html, /99,972/);
   assert.doesNotMatch(html, /96,125/);
   assert.doesNotMatch(html, /kitchen-appliance/);
-  assert.match(html, /GROWTH以上/);
+  assert.match(html, /Businessで利用できます/);
+  assert.match(html, /料金設計中/);
+  assert.doesNotMatch(html, /月額9,800円/);
 });
 
 test('seller demand report excludes QA, unattributed, and legacy traffic', async () => {

@@ -5,6 +5,13 @@ const esc = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({
 }[character]));
 
 const number = (value) => Number(value || 0).toLocaleString('ja-JP');
+const yenFromMicros = (value) => `¥${number(Math.round(Number(value || 0) / 1_000_000))}`;
+const safeDate = (value) => {
+  const date = new Date(value);
+  return Number.isFinite(date.getTime())
+    ? new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tokyo' }).format(date)
+    : '記録なし';
+};
 
 export async function sellerPageResponse(
   env = {},
@@ -13,12 +20,18 @@ export async function sellerPageResponse(
 ) {
   const allowed = new Set(seller.tenants || []);
   const entitlements = sellerPlanEntitlements(seller.plan);
+  const publicPlan = entitlements.advanced_demand_report ? 'Business' : 'Seller';
   let products = [];
   let demands = [];
   let restrictions = [];
   let syncs = [];
   let marketplaceOffers = [];
   let targetPriceDemands = [];
+  let priorityRules = [];
+  let wallet = null;
+  let billingStats = null;
+  let referralStats = null;
+  let referralMarketplaces = [];
   const demandQuery=String(searchParams?.get?.('demand_query')||'').normalize('NFKC').trim().slice(0,80);
   const demandMin=Math.max(0,Math.min(100000000,Number(searchParams?.get?.('demand_min'))||0));
   const demandMax=Math.max(demandMin,Math.min(100000000,Number(searchParams?.get?.('demand_max'))||100000000));
@@ -101,6 +114,67 @@ export async function sellerPageResponse(
       marketplaceOffers = (result.results || [])
         .filter((row) => allowed.has(String(row.tenant)));
     } catch {}
+    const sellerKey = String(seller.seller_key || '');
+    if (/^[A-Za-z0-9_-]{20,120}$/u.test(sellerKey)) {
+      try {
+        const result = await env.PRODUCT_DB.prepare(`SELECT rule_id,tenant,scope_type,scope_value,
+          active,priority_started_at,updated_at FROM seller_priority_rules
+          WHERE seller_key=?1 ORDER BY tenant,active DESC,priority_started_at,rule_id`)
+          .bind(sellerKey).all();
+        priorityRules = (result.results || []).filter((row) => allowed.has(String(row.tenant)));
+      } catch {}
+      try {
+        wallet = await env.PRODUCT_DB.prepare(`SELECT currency,balance_micros_jpy,
+          reserved_micros_jpy,status,updated_at FROM seller_billing_wallets
+          WHERE seller_key=?1`).bind(sellerKey).first();
+      } catch {}
+      try {
+        billingStats = await env.PRODUCT_DB.prepare(`SELECT
+          COUNT(CASE WHEN status='SETTLED' AND datetime(occurred_at)>=datetime('now','-30 days') THEN 1 END) AS settled_clicks_30d,
+          COALESCE(SUM(CASE WHEN status='SETTLED' AND datetime(occurred_at)>=datetime('now','-30 days') THEN amount_micros_jpy ELSE 0 END),0) AS spend_micros_30d,
+          COUNT(CASE WHEN status='PENDING' THEN 1 END) AS pending_clicks,
+          COALESCE(SUM(CASE WHEN status='SETTLED' THEN amount_micros_jpy ELSE 0 END),0) AS lifetime_spend_micros
+          FROM seller_qualified_click_charges WHERE seller_key=?1`).bind(sellerKey).first();
+      } catch {}
+    }
+    const tenants = [...allowed];
+    if (tenants.length) {
+      try {
+        const placeholders = tenants.map((_, index) => `?${index + 1}`).join(',');
+        const sellerIdsResult = await env.PRODUCT_DB.prepare(`SELECT DISTINCT seller_id
+          FROM marketplace_offers WHERE tenant IN (${placeholders}) AND seller_id<>''
+          ORDER BY seller_id LIMIT 100`).bind(...tenants).all();
+        const sellerIdsSet = new Set((sellerIdsResult.results || [])
+          .map((row) => String(row.seller_id || '')).filter(Boolean));
+        try {
+          const spApiSellerIds = await env.PRODUCT_DB.prepare(`SELECT DISTINCT merchant_id AS seller_id
+            FROM sp_api_listings WHERE tenant IN (${placeholders}) AND merchant_id<>''
+            ORDER BY merchant_id LIMIT 100`).bind(...tenants).all();
+          for (const row of spApiSellerIds.results || []) {
+            const id = String(row.seller_id || '');
+            if (id) sellerIdsSet.add(id);
+          }
+        } catch {}
+        const sellerIds = [...sellerIdsSet].slice(0, 100);
+        if (sellerIds.length) {
+          const ids = sellerIds.map((_, index) => `?${index + 1}`).join(',');
+          referralStats = await env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS clicks_30d,
+            COUNT(DISTINCT session_id) AS sessions_30d,
+            SUM(CASE WHEN organic_or_sponsored='SPONSORED' THEN 1 ELSE 0 END) AS priority_clicks_30d,
+            MAX(occurred_at) AS last_click_at FROM outbound_commerce_events
+            WHERE seller_id IN (${ids}) AND datetime(occurred_at)>=datetime('now','-30 days')`)
+            .bind(...sellerIds).first();
+          const byMarketplace = await env.PRODUCT_DB.prepare(`SELECT destination_marketplace,
+            COUNT(*) AS clicks,COUNT(DISTINCT session_id) AS sessions,
+            SUM(CASE WHEN organic_or_sponsored='SPONSORED' THEN 1 ELSE 0 END) AS priority_clicks
+            FROM outbound_commerce_events WHERE seller_id IN (${ids})
+              AND datetime(occurred_at)>=datetime('now','-30 days')
+            GROUP BY destination_marketplace ORDER BY clicks DESC,destination_marketplace`)
+            .bind(...sellerIds).all();
+          referralMarketplaces = byMarketplace.results || [];
+        }
+      } catch {}
+    }
   }
 
   const productTotal = products.reduce((sum, row) => sum + Number(row.products || 0), 0);
@@ -123,7 +197,7 @@ export async function sellerPageResponse(
     : '<article class="seller-panel"><span>商品</span><strong>0</strong><span>未登録</span></article>';
 
   const demandCards = !entitlements.advanced_demand_report
-    ? '<article class="seller-panel"><span>契約機能</span><strong>詳細分析</strong><span>GROWTH以上で利用できます</span></article>'
+    ? '<article class="seller-panel"><span>契約機能</span><strong>詳細分析</strong><span>Businessで利用できます</span></article>'
     : demands.length
       ? demands.map((row) => `<article class="seller-panel"><span>${esc(row.category || '未分類')}</span>
         <strong>${number(row.outbound_count)}</strong>
@@ -131,7 +205,7 @@ export async function sellerPageResponse(
       : '<article class="seller-panel"><span>プライバシー保護</span><strong>集計待ち</strong><span>流入元付きの匿名セッション5件以上だけを表示します</span></article>';
 
   const restrictionCards = !entitlements.advanced_demand_report
-    ? '<article class="seller-panel"><span>契約機能</span><strong>詳細分析</strong><span>GROWTH以上で利用できます</span></article>'
+    ? '<article class="seller-panel"><span>契約機能</span><strong>詳細分析</strong><span>Businessで利用できます</span></article>'
     : restrictions.length
       ? restrictions.map((row) => `<article class="seller-panel"><span>${esc(row.restriction_class)}</span>
         <strong>${number(row.demand_count)}</strong>
@@ -163,27 +237,61 @@ export async function sellerPageResponse(
     : targetPriceDemands.length
       ? targetPriceDemands.map(row=>`<tr><td>${esc(row.target_product_name)}</td><td>${number(row.interested_users)}人以上</td><td>¥${number(row.min_target_price_jpy)}</td><td>¥${number(row.average_target_price_jpy)}</td><td>¥${number(row.max_target_price_jpy)}</td></tr>`).join('')
       : '<tr><td colspan="5">匿名希望者が5人以上集まった商品を表示します。現在の条件では集計待ちです。</td></tr>';
+  const scopeLabels = {
+    ALL: '全商品', CATEGORY: 'ジャンル', BRAND: 'ブランド', MANUFACTURER: 'メーカー',
+    INVENTORY_MIN: '最低在庫数', AI_RECOMMENDED: 'AI推奨'
+  };
+  const inclusionRules = priorityRules.filter((row) =>
+    Number(row.active) === 1 && ['ALL','CATEGORY','BRAND','MANUFACTURER','AI_RECOMMENDED'].includes(String(row.scope_type))
+  );
+  const walletAvailable = Boolean(wallet);
+  const availableMicros = walletAvailable
+    ? Math.max(0, Number(wallet.balance_micros_jpy || 0) - Number(wallet.reserved_micros_jpy || 0)) : 0;
+  const priorityFunded = walletAvailable && wallet.status === 'ACTIVE' && availableMicros > 0;
+  const priorityState = inclusionRules.length ? (priorityFunded ? '運用中' : '残高待ち') : '停止中';
+  const priorityRuleRows = priorityRules.length
+    ? priorityRules.map((row) => `<tr><td>${esc(row.tenant)}</td><td>${esc(scopeLabels[row.scope_type] || row.scope_type)}</td>
+      <td>${esc(row.scope_type === 'INVENTORY_MIN' ? `${row.scope_value}個以上` : row.scope_value)}</td>
+      <td><span class="status-pill ${Number(row.active) === 1 ? 'is-active' : 'is-paused'}">${Number(row.active) === 1 ? 'ON' : 'OFF'}</span></td>
+      <td>${esc(safeDate(row.priority_started_at))}</td><td><button class="compact-button" type="button"
+        data-priority-action="SET_RULE_STATUS" data-rule-id="${esc(row.rule_id)}" data-active="${Number(row.active) === 1 ? '0' : '1'}">
+        ${Number(row.active) === 1 ? '停止' : '再開'}</button></td></tr>`).join('')
+    : '<tr><td colspan="6">優先出品ルールは未登録です。店舗ごとの「全商品ON」または条件ルールから開始できます。</td></tr>';
+  const tenantPriorityCards = [...allowed].map((tenant) => {
+    const rows = priorityRules.filter((row) => String(row.tenant) === tenant && Number(row.active) === 1);
+    const enabled = rows.some((row) => ['ALL','CATEGORY','BRAND','MANUFACTURER','AI_RECOMMENDED'].includes(String(row.scope_type)));
+    return `<article class="seller-panel priority-store-card"><span>${esc(tenant)}</span>
+      <strong>${enabled ? (priorityFunded ? '優先出品 ON' : 'ルールON・残高待ち') : '掲載停止'}</strong><span>有効ルール ${number(rows.length)}件</span>
+      <div class="inline-actions"><button class="primary-button" type="button" data-priority-action="SET_ALL" data-tenant="${esc(tenant)}" data-active="1">全商品ON</button>
+      <button class="danger-button" type="button" data-priority-action="SET_ALL" data-tenant="${esc(tenant)}" data-active="0">全商品OFF</button></div></article>`;
+  }).join('');
+  const tenantOptions = [...allowed].map((tenant) => `<option value="${esc(tenant)}">${esc(tenant)}</option>`).join('');
+  const spendMicros30d = Number(billingStats?.spend_micros_30d || 0);
+  const settledClicks30d = Number(billingStats?.settled_clicks_30d || 0);
+  const averageCostMicros = settledClicks30d > 0 ? spendMicros30d / settledClicks30d : 0;
+  const marketplaceReferralRows = referralMarketplaces.length
+    ? referralMarketplaces.map((row) => `<tr><td>${esc(row.destination_marketplace)}</td><td>${number(row.clicks)}</td>
+      <td>${number(row.sessions)}</td><td>${number(row.priority_clicks)}</td></tr>`).join('')
+    : '<tr><td colspan="4">販売先を特定できる送客イベントはまだありません。</td></tr>';
+  const referralClicks = Number(referralStats?.clicks_30d || 0);
+  const referralSessions = Number(referralStats?.sessions_30d || 0);
+  const priorityClicks = Number(referralStats?.priority_clicks_30d || 0);
 
   const html = `<!doctype html><html lang="ja"><head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#7357ff"><meta name="robots" content="noindex,nofollow">
-  <link rel="icon" href="/icons/icon.svg"><link rel="stylesheet" href="/auth.css">
-  <style>
-  .seller-shell .auth-card{margin-bottom:18px;scroll-margin-top:24px}
-  .seller-actions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:22px}
-  .seller-actions a{display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none}
-  @media(max-width:700px){.seller-actions{grid-template-columns:1fr 1fr}.seller-actions a:last-child{grid-column:1/-1}}
-  </style><title>メーカー・セラー管理 | HOSHILU</title></head><body>
+  <link rel="icon" href="/icons/icon.svg"><link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/seller-console.css">
+  <title>メーカー・セラー管理 | HOSHILU</title></head><body>
   <header class="auth-top"><a class="auth-brand" href="/"><img src="/icons/icon.svg" width="42" height="42" alt=""><span>HOSHILU FOR BUSINESS</span></a>
   <div class="auth-actions"><button id="sellerLogout" class="ghost-button" type="button">ログアウト</button></div></header>
   <main class="seller-shell">
   <section class="auth-card"><p class="eyebrow">MAKER &amp; SELLER CONSOLE</p>
   <h1>${esc(seller.account)} 管理画面</h1>
-  <p>契約プラン: <strong>${esc(seller.plan)}</strong> / 対象店舗: ${tenantSummary}</p>
+  <p>契約プラン: <strong>${publicPlan}</strong> / 対象店舗: ${tenantSummary}</p>
   <nav class="seller-actions" aria-label="管理メニュー">
-  <a class="primary-button" href="#catalog">商品管理</a><a class="primary-button" href="#offers">購入先管理</a>
-  <a class="primary-button" href="#demand">需要分析</a><a class="primary-button" href="#target-price-demand">購入意向</a><a class="primary-button" href="#integration">データ連携</a>
-  <a class="primary-button" href="#plan">契約プラン</a></nav></section>
+  <a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
+  <a class="primary-button" href="#catalog">商品管理</a><a class="primary-button" href="#offers">購入先管理</a><a class="primary-button" href="#demand">需要分析</a>
+  <a class="primary-button" href="#integration">データ連携</a><a class="primary-button" href="#plan">契約プラン</a></nav></section>
 
   <section class="auth-card"><p class="eyebrow">AMAZON SP-API</p><h2>Amazon商品同期</h2>
   <p>3店舗の接続状態、最終同期、出品件数を確認し、全件同期を実行できます。</p>
@@ -196,15 +304,63 @@ export async function sellerPageResponse(
   <section class="seller-grid">
   <article class="seller-panel"><span>対象店舗</span><strong>${allowed.size}</strong><span>${tenantSummary}</span></article>
   <article class="seller-panel"><span>検索カタログ</span><strong>${number(productTotal)}</strong><span>対象店舗の商品総数</span></article>
-  <article class="seller-panel"><span>未充足Amazon送客</span><strong>${number(demandTotal)}</strong><span>契約商品で満たせなかった需要</span></article>
+  <article class="seller-panel"><span>優先出品</span><strong>${priorityState}</strong><span>有効ルール ${number(inclusionRules.length)}件</span></article>
+  <article class="seller-panel"><span>30日送客</span><strong>${number(referralClicks)}</strong><span>匿名セッション ${number(referralSessions)}件</span></article>
   </section>
+
+  <section class="auth-card" id="performance"><p class="eyebrow">PERFORMANCE &amp; BILLING</p><h2>送客成果と消化状況</h2>
+  <p>自然検索からの送客は課金しません。消化額には、不正・重複を除外して請求台帳で確定した優先出品クリックだけを集計します。</p>
+  <div class="seller-grid metric-grid">
+  <article class="seller-panel"><span>30日総送客クリック</span><strong>${number(referralClicks)}</strong><span>販売先を特定できた実送客</span></article>
+  <article class="seller-panel"><span>30日優先出品クリック</span><strong>${number(priorityClicks)}</strong><span>署名付きリンクで優先枠と確認できた件数</span></article>
+  <article class="seller-panel"><span>30日請求確定クリック</span><strong>${number(settledClicks30d)}</strong><span>審査・24時間重複除外後</span></article>
+  <article class="seller-panel"><span>30日消化額</span><strong>${yenFromMicros(spendMicros30d)}</strong><span>確定クリック平均 ${yenFromMicros(averageCostMicros)}</span></article>
+  <article class="seller-panel"><span>利用可能残高</span><strong>${walletAvailable ? yenFromMicros(availableMicros) : '未接続'}</strong>
+    <span>${walletAvailable ? `状態 ${esc(wallet.status)} / 更新 ${esc(safeDate(wallet.updated_at))}` : '決済接続前のため推測値を表示しません'}</span></article>
+  <article class="seller-panel"><span>確定前クリック</span><strong>${number(billingStats?.pending_clicks || 0)}</strong><span>確定前は残高から消化しません</span></article>
+  </div>
+  <div class="seller-table-wrap"><table><thead><tr><th>送客先</th><th>クリック</th><th>匿名セッション</th><th>優先出品</th></tr></thead>
+  <tbody>${marketplaceReferralRows}</tbody></table></div>
+  <p class="data-note">最終送客: ${esc(safeDate(referralStats?.last_click_at))}。クリック数は売上件数ではありません。</p></section>
+
+  <section class="auth-card" id="priority"><p class="eyebrow">PRIORITY LISTING</p><h2>優先出品・掲載停止</h2>
+  <p>商品そのものの自然検索順位は変えません。同一商品の購入先が複数ある場合だけ、在庫・URL・残高の条件を満たす優先出品を先着順で表示します。停止後に再開したルールは再開日時から並び直します。</p>
+  <div id="sellerPriorityStatus" class="operation-status" role="status" aria-live="polite"></div>
+  <div class="seller-grid">${tenantPriorityCards}</div>
+  <div class="priority-forms">
+    <form id="sellerPriorityRuleForm" class="auth-form priority-form">
+      <h3>条件を追加</h3>
+      <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select></label>
+      <label><span>一括条件</span><select name="scope_type" required>
+        <option value="CATEGORY">ジャンル</option><option value="BRAND">ブランド</option><option value="MANUFACTURER">メーカー</option>
+      </select></label>
+      <label><span>条件名</span><input name="scope_value" maxlength="80" required placeholder="例：カラーコンタクト"></label>
+      <button class="primary-button" type="submit">この条件をON</button>
+    </form>
+    <form id="sellerInventoryRuleForm" class="auth-form priority-form">
+      <h3>在庫条件</h3>
+      <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select></label>
+      <label><span>最低在庫数</span><input name="scope_value" type="number" min="0" max="1000000" value="1" required></label>
+      <button class="ghost-button" type="submit">在庫条件を保存</button>
+    </form>
+    <form id="sellerAiRuleForm" class="auth-form priority-form">
+      <h3>AI推奨一括反映</h3>
+      <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select></label>
+      <p>検索適合・在庫・URL確認に合格した推奨対象だけを優先枠候補にします。</p>
+      <div class="inline-actions"><button class="primary-button" type="submit" name="active" value="1">ON</button>
+      <button class="ghost-button" type="submit" name="active" value="0">OFF</button></div>
+    </form>
+  </div>
+  <div class="seller-table-wrap"><table><thead><tr><th>店舗</th><th>対象</th><th>条件</th><th>状態</th><th>優先開始</th><th>操作</th></tr></thead>
+  <tbody>${priorityRuleRows}</tbody></table></div>
+  <p class="data-note">全商品OFFは、その店舗のジャンル・ブランド・メーカー・AI推奨を含む全ルールを停止します。商品数が多いため、商品1件ずつの操作は設けていません。</p></section>
 
   <section class="auth-card" id="catalog"><p class="eyebrow">CATALOG</p><h2>商品管理</h2>
   <p>対象店舗に紐づく検索カタログ件数です。販売中商品としての公開は、Amazon出品同期と照合の合格後に行います。</p>
   <div class="seller-grid">${productCards}</div></section>
 
   <section class="auth-card" id="offers"><p class="eyebrow">OFFERS</p><h2>購入先管理</h2>
-  <p>同一ASINに複数の販売先がある場合は、契約条件と有効な出品状態に従って購入先を選びます。在庫切れや出品停止時は公開候補から外します。</p>
+  <p>同一ASINに複数の販売先がある場合は、検索適合・販売中・確認済みURLを満たす購入先だけを表示します。優先出品中は先着順、在庫切れ・残高不足・掲載停止時は次順位へ繰り上げます。</p>
   <a class="ghost-button" href="/seller/sp-api">Amazon出品を確認する</a></section>
 
   <section class="auth-card" id="demand"><p class="eyebrow">DEMAND</p><h2>契約商品で満たせなかった需要</h2>
@@ -238,7 +394,12 @@ export async function sellerPageResponse(
   </div></section>
 
   <section class="auth-card" id="plan"><p class="eyebrow">SELLER PLAN</p><h2>契約プラン</h2>
-  <p>有料契約によって商品そのものの検索順位は変わりません。プラン差は購入先の優先条件と、利用できる分析・連携機能にのみ適用します。</p></section>
+  <p>現在のプラン: <strong>${publicPlan}</strong>。有料契約によって商品そのものの検索順位は変わりません。</p>
+  <div class="seller-grid">
+    <article class="seller-panel"><span>Seller</span><strong>月額0円</strong><span>優先出品、チャージ、クリック・流入・消化額分析</span></article>
+    <article class="seller-panel"><span>Business</span><strong>料金設計中</strong><span>Seller機能 + AI分析、市場分析、未充足需要、Search API</span></article>
+  </div>
+  <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たした有効クリックだけです。</p></section>
   </main><script type="module" src="/seller.js"></script></body></html>`;
 
   return new Response(html, { headers: {

@@ -9,12 +9,9 @@
 // 新しい個人情報を一切追加しない - 検索文そのものは、この経路のどこにも
 // 現れない(section 29のプライバシー方針を維持)。
 //
-// hoshilu_product_id/seller_id/organic_or_sponsoredは、リンク生成側
-// (signedMarketplaceSearchLinks等)がまだこれらを署名トークンへ渡していない
-// 既存リンクでは常にnull/ORGANICになる - 「取得できない値はNULL可」
-// (v4.3 section 21と同じ原則)。将来、Priority 4のcanonical product ID・
-// 契約Sellerのseller_id・v4.2 PR-Eのスポンサー判定を実際にリンク生成へ
-// 渡すようになれば、このモジュールを変更せずに値が埋まるようになる設計。
+// 商品カードの購入先リンクは、検証済みSeller ID・canonical product ID・
+// 優先出品判定を署名トークンへ含める。既存リンクや一般検索リンクなど、
+// 取得できない経路は引き続きnull/ORGANICとし、推測で補完しない。
 
 const ORGANIC_OR_SPONSORED = new Set(['ORGANIC', 'SPONSORED']);
 

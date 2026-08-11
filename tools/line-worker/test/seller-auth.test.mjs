@@ -96,9 +96,10 @@ test('セラーセッションは明示店舗を正規化して重複を除く',
     SELLER_ACCOUNT_NAME: 'ITG UPDATED',
     SELLER_PLAN: 'LITE'
   });
-  assert.deepEqual(narrowed, {
-    account: 'ITG UPDATED', tenants: ['itg'], plan: 'LITE'
-  });
+  assert.equal(narrowed.account, 'ITG UPDATED');
+  assert.deepEqual(narrowed.tenants, ['itg']);
+  assert.equal(narrowed.plan, 'LITE');
+  assert.match(narrowed.seller_key, /^[A-Za-z0-9_-]{20,120}$/);
 
   const revoked = await readSellerSession(new Request('https://hoshilu.app/seller', {
     headers: { cookie: `__Host-hoshilu_seller_session=${token}` }
@@ -153,10 +154,29 @@ test('正しい認証はHttpOnlyセッションを発行する', async () => {
   const seller = await readSellerSession(new Request('https://hoshilu.app/seller', {
     headers: { cookie: `__Host-hoshilu_seller_session=${token}` }
   }), env);
-  assert.deepEqual(seller, { account: 'ITG GROUP', tenants: ['itg', 'itt', 'mc2'], plan: 'PARTNER' });
+  assert.equal(seller.account, 'ITG GROUP');
+  assert.deepEqual(seller.tenants, ['itg', 'itt', 'mc2']);
+  assert.equal(seller.plan, 'PARTNER');
+  assert.match(seller.seller_key, /^[A-Za-z0-9_-]{20,120}$/);
   assert.equal(await verifySellerSession(new Request('https://hoshilu.app/seller', {
     headers: { cookie: `__Host-hoshilu_seller_session=${token}` }
   }), env, Math.floor(Date.now() / 1000) + 43200), false);
+});
+
+test('セッション確認APIは内部Sellerキーをブラウザへ返さない', async () => {
+  const login = await handleSellerRoutes(new Request('https://hoshilu.app/api/seller/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', origin: 'https://hoshilu.app' },
+    body: JSON.stringify({ id: env.SELLER_AUTH_ID, password: env.SELLER_AUTH_PASSWORD })
+  }), env);
+  const token = login.headers.get('set-cookie').match(/__Host-hoshilu_seller_session=([^;]+)/)[1];
+  const response = await handleSellerRoutes(new Request('https://hoshilu.app/api/seller/session', {
+    headers: { cookie: `__Host-hoshilu_seller_session=${token}` }
+  }), env);
+  const payload = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(payload.seller.account, 'ITG GROUP');
+  assert.equal('seller_key' in payload.seller, false);
 });
 
 test('セラーログアウトは同一オリジンだけ許可する', async () => {

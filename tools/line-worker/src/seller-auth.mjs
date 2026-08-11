@@ -2,6 +2,9 @@ import { sellerPageResponse } from './seller-page.mjs';
 import { spApiSellerPageResponse } from './sp-api-seller-page.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import {
+  changeSellerPriority, sellerPriorityClientError
+} from './seller-priority-console.mjs';
+import {
   sellerLoginFingerprint, sellerLoginLocked, recordSellerLoginFailure,
   recordSellerLoginLocked, recordSellerLoginSuccess, recordSellerLogout
 } from './seller-login-guard.mjs';
@@ -96,18 +99,23 @@ function safeSessionText(value, fallback) {
   const normalized = String(value || '').trim().slice(0, 100);
   return normalized || fallback;
 }
-function sellerIdentity(env) {
+async function sellerAccountKey(env) {
+  const value = `seller-account\n${env.SELLER_AUTH_ID}`;
+  return toBase64Url(bytesToBase64(await hmac(value, env.AUTH_SESSION_SECRET))).slice(0, 43);
+}
+async function sellerIdentity(env) {
   const plan = String(env.SELLER_PLAN || 'LITE').toUpperCase();
   return {
     account: String(env.SELLER_ACCOUNT_NAME || env.SELLER_AUTH_ID || 'Seller').slice(0, 100),
     tenants: configuredSellerTenants(env),
-    plan: ['PARTNER', 'PRO', 'GROWTH', 'LITE'].includes(plan) ? plan : 'LITE'
+    plan: ['PARTNER', 'PRO', 'GROWTH', 'LITE'].includes(plan) ? plan : 'LITE',
+    seller_key: await sellerAccountKey(env)
   };
 }
 async function createSellerSession(env, nowSeconds = Math.floor(Date.now() / 1000)) {
   const payload = toBase64Url(bytesToBase64(encoder.encode(JSON.stringify({
     role: 'seller', exp: nowSeconds + 60 * 60 * 12, nonce: crypto.randomUUID(),
-    auth_version: await sellerCredentialVersion(env), ...sellerIdentity(env)
+    auth_version: await sellerCredentialVersion(env), ...(await sellerIdentity(env))
   }))));
   const signature = toBase64Url(bytesToBase64(await hmac(payload, env.AUTH_SESSION_SECRET)));
   return `${payload}.${signature}`;
@@ -129,11 +137,12 @@ export async function readSellerSession(request, env, nowSeconds = Math.floor(Da
         .filter((value) => currentlyAllowed.has(value)))]
       : [];
     if (sessionTenants.length === 0) return null;
-    const currentIdentity = sellerIdentity(env);
+    const currentIdentity = await sellerIdentity(env);
     return {
       account: currentIdentity.account,
       tenants: sessionTenants,
-      plan: currentIdentity.plan
+      plan: currentIdentity.plan,
+      seller_key: currentIdentity.seller_key
     };
   } catch {
     return null;
@@ -191,12 +200,37 @@ async function handleLogin(request, env) {
   const session = await createSellerSession(env);
   return sellerJson({ ok: true }, { headers: sellerSessionHeaders(session) });
 }
+async function handlePriorityMutation(request, env) {
+  const url = new URL(request.url);
+  if (request.headers.get('origin') !== url.origin) {
+    return sellerJson({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+  }
+  const seller = await readSellerSession(request, env);
+  if (!seller) return sellerJson({ ok: false, error: 'SELLER_AUTH_REQUIRED' }, { status: 401 });
+  const parsed = await readBoundedJson(request, 4000);
+  if (!parsed.ok) return sellerJson({ ok: false, error: parsed.error }, {
+    status: parsed.error === 'REQUEST_TOO_LARGE' ? 413 : 400
+  });
+  try {
+    const result = await changeSellerPriority(env, seller, parsed.value);
+    return sellerJson(result);
+  } catch (error) {
+    const code = String(error?.message || 'SELLER_PRIORITY_UPDATE_FAILED');
+    console.error(JSON.stringify({ message: 'seller priority update failed', code }));
+    return sellerJson({ ok: false, error: code }, {
+      status: sellerPriorityClientError(error) ? 400 : 503
+    });
+  }
+}
 export async function handleSellerRoutes(request, env) {
   const url = new URL(request.url);
   if (request.method === 'POST' && url.pathname === '/api/seller/login') return handleLogin(request, env);
   if (request.method === 'GET' && url.pathname === '/api/seller/session') {
     const seller = await readSellerSession(request, env);
-    return sellerJson({ ok: Boolean(seller), seller }, { status: seller ? 200 : 401 });
+    const publicSeller = seller ? {
+      account: seller.account, tenants: seller.tenants, plan: seller.plan
+    } : null;
+    return sellerJson({ ok: Boolean(seller), seller: publicSeller }, { status: seller ? 200 : 401 });
   }
   if (request.method === 'POST' && url.pathname === '/api/seller/logout') {
     if (request.headers.get('origin') !== url.origin) {
@@ -211,6 +245,9 @@ export async function handleSellerRoutes(request, env) {
       }
     }
     return sellerJson({ ok: true }, { headers: sellerSessionHeaders() });
+  }
+  if (request.method === 'POST' && url.pathname === '/api/seller/priority-rules') {
+    return handlePriorityMutation(request, env);
   }
   if (request.method === 'GET' && (url.pathname === '/seller' || url.pathname === '/seller.html')) {
     const seller = await readSellerSession(request, env);

@@ -127,6 +127,7 @@ export async function attachSpApiOffers(env, tenant, rows = []) {
   for (const item of result?.results || []) {
     const offers = byAsin.get(item.asin) || [];
     offers.push({
+      tenant: item.tenant,
       marketplace: 'AMAZON_JP',
       seller_id: item.merchant_id,
       merchant_id: item.merchant_id,
