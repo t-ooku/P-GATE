@@ -207,7 +207,7 @@ export async function sellerPageResponse(
     ? products.map((row) => {
       const store = tenantDisplay(row.tenant);
       return `<article class="seller-panel"><span>${esc(store.name)} · ${esc(store.code)}</span>
-        <strong>${number(row.products)}</strong><span>検索カタログ件数</span></article>`;
+        <strong>${number(row.products)}</strong><span>この店舗に紐づく検索用の商品データ件数です。現在販売中または検索画面に表示中の商品数とは限りません。</span></article>`;
     }).join('')
     : '<article class="seller-panel"><span>商品</span><strong>0</strong><span>未登録</span></article>';
 
@@ -245,7 +245,8 @@ export async function sellerPageResponse(
     const note = stale > 0
       ? `再確認期限超過 ${number(stale)}件`
       : verified > 0 ? '7日以内に確認済み' : '商品URLフィードの接続が必要';
-    return `<article class="seller-panel"><span>${label}</span><strong>${state}</strong><span>${note}</span></article>`;
+    return `<article class="seller-panel"><span>${label}</span><strong>${state}</strong><span>${note}</span>
+      <p class="metric-help">検索結果から商品詳細ページへ直接送客できるURLの確認状況です。商品数や売上件数ではありません。</p></article>`;
   }).join('');
   const targetDemandRows=!entitlements.target_price_demand
     ? '<tr><td colspan="5">サブスク加入後に利用できます。</td></tr>'
@@ -255,6 +256,12 @@ export async function sellerPageResponse(
   const scopeLabels = {
     ALL: '全商品', CATEGORY: 'ジャンル', BRAND: 'ブランド', MANUFACTURER: 'メーカー',
     INVENTORY_MIN: '最低在庫数', AI_RECOMMENDED: 'AI推奨'
+  };
+  const scopeValueDisplay = (row) => {
+    if (row.scope_type === 'ALL') return 'すべての商品';
+    if (row.scope_type === 'AI_RECOMMENDED') return 'AI推奨と判定された商品';
+    if (row.scope_type === 'INVENTORY_MIN') return `${row.scope_value}個以上`;
+    return row.scope_value;
   };
   const inclusionRules = priorityRules.filter((row) =>
     Number(row.active) === 1 && ['ALL','CATEGORY','BRAND','MANUFACTURER','AI_RECOMMENDED'].includes(String(row.scope_type))
@@ -290,9 +297,9 @@ export async function sellerPageResponse(
           };
   const priorityRuleRows = priorityRules.length
     ? priorityRules.map((row) => `<tr><td data-label="店舗"><strong>${esc(tenantDisplay(row.tenant).name)}</strong><small>${esc(tenantDisplay(row.tenant).code)}</small></td><td data-label="対象">${esc(scopeLabels[row.scope_type] || row.scope_type)}</td>
-      <td data-label="条件">${esc(row.scope_type === 'INVENTORY_MIN' ? `${row.scope_value}個以上` : row.scope_value)}</td>
-      <td data-label="状態"><span class="status-pill ${Number(row.active) === 1 ? 'is-active' : 'is-paused'}">${Number(row.active) === 1 ? '有効' : '停止'}</span></td>
-      <td data-label="優先開始">${esc(safeDate(row.priority_started_at))}</td><td data-label="操作"><button class="compact-button" type="button"
+      <td data-label="条件">${esc(scopeValueDisplay(row))}</td>
+      <td data-label="設定状態"><span class="status-pill ${Number(row.active) === 1 ? 'is-active' : 'is-paused'}">${Number(row.active) === 1 ? '有効' : '停止'}</span></td>
+      <td data-label="基準日時">${esc(safeDate(row.priority_started_at))}</td><td data-label="操作"><button class="compact-button" type="button"
         data-priority-action="SET_RULE_STATUS" data-rule-id="${esc(row.rule_id)}" data-active="${Number(row.active) === 1 ? '0' : '1'}">
         ${Number(row.active) === 1 ? '停止' : '再開'}</button></td></tr>`).join('')
     : '<tr><td colspan="6">優先出品ルールは未登録です。店舗カードの「全商品を対象に設定」または条件指定から開始できます。</td></tr>';
@@ -316,7 +323,7 @@ export async function sellerPageResponse(
       <div class="store-identity"><span>Amazon店舗 · ${esc(store.code)}</span><h3>${esc(store.name)}</h3></div>
       <span class="priority-state ${stateClass}">${state}</span>
       <p>${explanation}</p>
-      <div class="priority-store-meta"><span>有効な優先ルール</span><strong>${number(inclusionRows.length)}件</strong></div>
+      <div class="priority-store-meta"><div><span>保存済みの対象指定</span><small>全商品・ジャンル・ブランド・メーカー・AI推奨のうち、現在有効な設定数です。商品数や表示回数ではありません。</small></div><strong>${number(inclusionRows.length)}件</strong></div>
       <div class="priority-store-actions">${action}<a href="#priority-settings">条件を指定する</a></div>
       </article>`;
   }).join('');
@@ -343,6 +350,7 @@ export async function sellerPageResponse(
   <section class="auth-card"><p class="eyebrow">MAKER &amp; SELLER CONSOLE</p>
   <h1>${esc(seller.account)} 管理画面</h1>
   <p>契約プラン: <strong>${publicPlan}</strong> / 対象店舗: ${tenantSummary}</p>
+  <p class="section-intro">商品情報、HOSHILUから各モールへの送客、優先出品の設定、確定した請求状況を確認する画面です。表示する件数は項目ごとに集計対象が異なるため、各数字の下にある説明もあわせて確認してください。</p>
   <nav class="seller-actions" aria-label="管理メニュー">
   <a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
   <a class="primary-button" href="#catalog">商品管理</a><a class="primary-button" href="#offers">購入先管理</a><a class="primary-button" href="#demand">需要分析</a>
@@ -351,28 +359,33 @@ export async function sellerPageResponse(
   <section class="auth-card"><p class="eyebrow">AMAZON SP-API</p><h2>Amazon商品同期</h2>
   <p>3店舗の接続状態、最終同期、出品件数を確認し、全件同期を実行できます。</p>
   <div class="seller-grid">
-  <article class="seller-panel"><span>LWAアプリ認証</span><strong>${spApiClientReady ? '設定済み' : '未設定'}</strong><span>Client ID・Secretの値は表示しません</span></article>
-  <article class="seller-panel"><span>店舗認可</span><strong>${configuredTenants.length}/${allowed.size}</strong><span>Refresh Token登録済み店舗</span></article>
+  <article class="seller-panel"><span>LWAアプリ認証</span><strong>${spApiClientReady ? '設定済み' : '未設定'}</strong><span>Amazon SP-APIへ接続するアプリ側の認証状態です。安全のためClient ID・Secretの値そのものは表示しません。</span></article>
+  <article class="seller-panel"><span>店舗認可</span><strong>${configuredTenants.length}/${allowed.size}</strong><span>管理対象店舗のうち、Amazonから商品情報を取得するRefresh Tokenが登録済みの店舗数です。</span></article>
   </div>
   <a class="primary-button" href="/seller/sp-api">SP-API同期画面を開く</a></section>
 
   <section class="seller-grid">
-  <article class="seller-panel"><span>対象店舗</span><strong>${allowed.size}</strong><span>${tenantSummary}</span></article>
-  <article class="seller-panel"><span>検索カタログ</span><strong>${number(productTotal)}</strong><span>対象店舗の商品総数</span></article>
-  <article class="seller-panel"><span>優先出品</span><strong>${priorityState}</strong><span>有効ルール ${number(inclusionRules.length)}件</span></article>
-  <article class="seller-panel"><span>30日送客</span><strong>${number(referralClicks)}</strong><span>匿名セッション ${number(referralSessions)}件</span></article>
+  <article class="seller-panel"><span>対象店舗</span><strong>${allowed.size}</strong><span>${tenantSummary}</span><p class="metric-help">このログインアカウントから閲覧・設定できる店舗数です。</p></article>
+  <article class="seller-panel"><span>検索カタログ</span><strong>${number(productTotal)}</strong><span>対象店舗に紐づく商品データの総数です。現在販売中または検索表示中の商品数と必ずしも一致しません。</span></article>
+  <article class="seller-panel"><span>優先出品</span><strong>${priorityState}</strong><span>保存済みの対象指定 ${number(inclusionRules.length)}件</span><p class="metric-help">対象指定の件数であり、対象商品数や優先表示回数ではありません。残高未接続時は設定済みでも優先表示されません。</p></article>
+  <article class="seller-panel"><span>過去30日の総送客クリック</span><strong>${number(referralClicks)}</strong><span>匿名セッション ${number(referralSessions)}件</span><p class="metric-help">HOSHILUから販売先の商品ページへ移動した回数です。売上件数や購入者数ではありません。</p></article>
   </section>
 
   <section class="auth-card" id="performance"><p class="eyebrow">PERFORMANCE &amp; BILLING</p><h2>送客成果と消化状況</h2>
   <p>自然検索からの送客は課金しません。消化額には、不正・重複を除外して請求台帳で確定した優先出品クリックだけを集計します。</p>
+  <div class="term-guide" aria-label="成果指標の説明">
+    <div><strong>クリック</strong><span>購入先ボタンから販売先ページへ移動した回数です。購入完了を意味しません。</span></div>
+    <div><strong>匿名セッション</strong><span>同じ閲覧のまとまりを個人が分からない形で数えた値です。人数とは一致しません。</span></div>
+    <div><strong>請求確定</strong><span>不正判定と24時間の重複除外を終え、請求台帳に確定した優先出品クリックです。</span></div>
+  </div>
   <div class="seller-grid metric-grid">
-  <article class="seller-panel"><span>30日総送客クリック</span><strong>${number(referralClicks)}</strong><span>販売先を特定できた実送客</span></article>
-  <article class="seller-panel"><span>30日優先出品クリック</span><strong>${number(priorityClicks)}</strong><span>署名付きリンクで優先枠と確認できた件数</span></article>
-  <article class="seller-panel"><span>30日請求確定クリック</span><strong>${number(settledClicks30d)}</strong><span>審査・24時間重複除外後</span></article>
-  <article class="seller-panel"><span>30日消化額</span><strong>${yenFromMicros(spendMicros30d)}</strong><span>確定クリック平均 ${yenFromMicros(averageCostMicros)}</span></article>
+  <article class="seller-panel"><span>30日総送客クリック</span><strong>${number(referralClicks)}</strong><span>過去30日間に販売先を特定できた購入先リンクが押された総回数です。自然検索と優先出品の両方を含みます。</span></article>
+  <article class="seller-panel"><span>30日優先出品クリック</span><strong>${number(priorityClicks)}</strong><span>過去30日間に、署名付きリンクによって優先出品枠からの送客と確認できた回数です。請求確定前のクリックも含みます。</span></article>
+  <article class="seller-panel"><span>30日請求確定クリック</span><strong>${number(settledClicks30d)}</strong><span>優先出品クリックのうち、不正判定と24時間の重複除外を終えて請求対象になった回数です。</span></article>
+  <article class="seller-panel"><span>30日消化額</span><strong>${yenFromMicros(spendMicros30d)}</strong><span>過去30日間の請求確定クリックで前払い残高から消化した合計です。確定クリック平均は ${yenFromMicros(averageCostMicros)} です。</span></article>
   <article class="seller-panel"><span>利用可能残高</span><strong>${walletAvailable ? yenFromMicros(availableMicros) : '未接続'}</strong>
-    <span>${walletAvailable ? `状態 ${esc(wallet.status)} / 更新 ${esc(safeDate(wallet.updated_at))}` : '決済接続前のため推測値を表示しません'}</span></article>
-  <article class="seller-panel"><span>確定前クリック</span><strong>${number(billingStats?.pending_clicks || 0)}</strong><span>確定前は残高から消化しません</span></article>
+    <span>${walletAvailable ? `総残高から確保中の金額を除いた、優先出品に使用できる金額です。状態 ${esc(wallet.status)} / 更新 ${esc(safeDate(wallet.updated_at))}` : '決済・チャージ機能の接続前です。推測や仮の残高は表示しません。'}</span></article>
+  <article class="seller-panel"><span>確定前クリック</span><strong>${number(billingStats?.pending_clicks || 0)}</strong><span>請求判定中の優先出品クリックです。確定するまでは利用可能残高から消化しません。</span></article>
   </div>
   <div class="seller-table-wrap"><table><thead><tr><th>送客先</th><th>クリック</th><th>匿名セッション</th><th>優先出品</th></tr></thead>
   <tbody>${marketplaceReferralRows}</tbody></table></div>
@@ -380,6 +393,11 @@ export async function sellerPageResponse(
 
   <section class="auth-card" id="priority"><p class="eyebrow">PRIORITY LISTING</p><h2>優先出品・掲載停止</h2>
   <p>商品そのものの自然検索順位は変えません。同一商品の購入先が複数ある場合だけ、在庫・URL・残高の条件を満たす優先出品を先着順で表示します。停止後に再開したルールは再開日時から並び直します。</p>
+  <div class="term-guide" aria-label="優先出品の説明">
+    <div><strong>自然検索</strong><span>商品自体の検索順位です。有料契約や優先出品によって順位を上げません。</span></div>
+    <div><strong>優先出品</strong><span>同じ商品の購入先が複数ある場合に、条件を満たす店舗の購入先を先に表示する仕組みです。</span></div>
+    <div><strong>先着順</strong><span>同じ条件を満たす店舗が複数ある場合は、優先出品を開始した日時が早い設定を先に扱います。</span></div>
+  </div>
   <div class="priority-readiness is-${readiness.state}">
     <div><span class="priority-readiness-label">現在の状態</span><strong>${esc(readiness.title)}</strong><p>${esc(readiness.body)}</p></div>
     <a class="ghost-button" href="#performance">残高と成果を確認</a>
@@ -391,41 +409,46 @@ export async function sellerPageResponse(
     <div class="priority-forms">
     <form id="sellerPriorityRuleForm" class="auth-form priority-form">
       <h3>条件を追加</h3>
+      <p>選んだ店舗のうち、指定したジャンル・ブランド・メーカーに一致する商品をまとめて優先出品の候補にします。</p>
       <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select></label>
       <label><span>一括条件</span><select name="scope_type" required>
         <option value="CATEGORY">ジャンル</option><option value="BRAND">ブランド</option><option value="MANUFACTURER">メーカー</option>
       </select></label>
-      <label><span>条件名</span><input name="scope_value" maxlength="80" required placeholder="例：カラーコンタクト"></label>
+      <p class="field-help">ジャンルは検索カタログの分類、ブランドとメーカーは登録情報との一致で判定します。</p>
+      <label><span>条件名</span><input name="scope_value" maxlength="80" required placeholder="例：カラーコンタクト"><small>対象にしたいジャンル名・ブランド名・メーカー名を、商品データに登録されている表記で入力します。</small></label>
       <button class="primary-button" type="submit">この条件を追加</button>
     </form>
     <form id="sellerInventoryRuleForm" class="auth-form priority-form">
       <h3>在庫条件</h3>
+      <p>他の対象指定に追加する安全条件です。確認できた在庫数がこの値以上の商品だけを優先出品の候補にします。</p>
       <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select></label>
-      <label><span>最低在庫数</span><input name="scope_value" type="number" min="0" max="1000000" value="1" required></label>
+      <label><span>最低在庫数</span><input name="scope_value" type="number" min="0" max="1000000" value="1" required><small>在庫数を確認できない商品、または入力値を下回る商品は優先表示しません。</small></label>
       <button class="ghost-button" type="submit">在庫条件を保存</button>
     </form>
     <form id="sellerAiRuleForm" class="auth-form priority-form">
       <h3>AI推奨一括反映</h3>
-      <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select></label>
-      <p>検索適合・在庫・URL確認に合格した推奨対象だけを優先枠候補にします。</p>
+      <p>HOSHILUが検索内容との適合を確認し、AI推奨対象と判定した商品だけを優先出品の候補にする対象指定です。</p>
+      <label><span>店舗</span><select name="tenant" required>${tenantOptions}</select><small>AI推奨を適用するAmazon店舗を選びます。</small></label>
+      <p class="field-help">在庫・商品URL・利用可能残高など、通常の優先出品条件にも合格した場合だけ表示されます。設定しただけで掲載や売上を保証する機能ではありません。</p>
       <label class="toggle-field"><input name="active" type="checkbox" checked><span>AI推奨を有効にする</span></label>
       <button class="ghost-button" type="submit">AI推奨設定を保存</button>
     </form>
     </div>
   </details>
   <details class="priority-rules">
-    <summary class="priority-rules-heading"><div><h3>現在の設定</h3><p>店舗ごとの優先条件と開始日時です。</p></div><span>${number(priorityRules.length)}件・確認</span></summary>
-    <div class="seller-table-wrap"><table><thead><tr><th>店舗</th><th>対象</th><th>条件</th><th>状態</th><th>優先開始</th><th>操作</th></tr></thead>
+    <summary class="priority-rules-heading"><div><h3>保存済みの設定</h3><p>有効・停止中を含む、店舗ごとの対象指定と判定条件です。</p></div><span>${number(priorityRules.length)}件・確認</span></summary>
+    <div class="setting-guide"><strong>一覧の見方</strong><span>「有効」は対象指定として保存されている状態です。残高未接続などで優先表示が開始していない場合もあります。「優先順の基準日時」は同条件の先着順に使う日時で、再開すると更新されます。</span></div>
+    <div class="seller-table-wrap"><table><thead><tr><th>店舗</th><th>対象</th><th>条件</th><th>設定状態</th><th>優先順の基準日時</th><th>操作</th></tr></thead>
     <tbody>${priorityRuleRows}</tbody></table></div>
     <p class="data-note">「この店舗の設定をすべて停止」は、ジャンル・ブランド・メーカー・AI推奨を含む全ルールを停止します。商品数が多いため、商品1件ずつの操作は設けていません。</p>
   </details></section>
 
   <section class="auth-card" id="catalog"><p class="eyebrow">CATALOG</p><h2>商品管理</h2>
-  <p>対象店舗に紐づく検索カタログ件数です。販売中商品としての公開は、Amazon出品同期と照合の合格後に行います。</p>
+  <p>対象店舗に紐づく検索用の商品データを確認します。ここに表示される数は登録済みデータの件数であり、そのまま現在販売中の商品数や検索画面への表示件数を意味しません。販売中商品としての公開は、Amazon出品同期と照合の合格後に行います。</p>
   <div class="seller-grid">${productCards}</div></section>
 
   <section class="auth-card" id="offers"><p class="eyebrow">OFFERS</p><h2>購入先管理</h2>
-  <p>同一ASINに複数の販売先がある場合は、検索適合・販売中・確認済みURLを満たす購入先だけを表示します。優先出品中は先着順、在庫切れ・残高不足・掲載停止時は次順位へ繰り上げます。</p>
+  <p>購入先とは、検索結果の商品からAmazonなどの販売ページへ移動するためのリンクです。同一ASINに複数の販売先がある場合は、検索適合・販売中・確認済みURLを満たす購入先だけを表示します。優先出品中は先着順、在庫切れ・残高不足・掲載停止時は次順位へ繰り上げます。</p>
   <a class="ghost-button" href="/seller/sp-api">Amazon出品を確認する</a></section>
 
   <section class="auth-card" id="demand"><p class="eyebrow">DEMAND</p><h2>契約商品で満たせなかった需要</h2>
@@ -434,17 +457,17 @@ export async function sellerPageResponse(
 
   <section class="auth-card" id="target-price-demand"><p class="eyebrow">PURCHASE INTENT</p><h2>購入したい価格</h2>
   <p>自社の出品有無を問わず、匿名集計された「この価格なら購入したい」需要を確認できます。会員ID・個別の検索履歴は表示せず、同一商品で5人以上集まった場合だけ公開します。</p>
-  <form method="get" action="/seller" class="auth-form"><label><span>商品名・ブランド</span><input name="demand_query" value="${esc(demandQuery)}" maxlength="80" placeholder="例：LILMOON"></label><label><span>希望価格（下限）</span><input name="demand_min" type="number" min="0" max="100000000" value="${demandMin||''}"></label><label><span>希望価格（上限）</span><input name="demand_max" type="number" min="0" max="100000000" value="${demandMax===100000000?'':demandMax}"></label><button class="primary-button" type="submit">条件検索</button></form>
+  <form method="get" action="/seller" class="auth-form"><label><span>商品名・ブランド</span><input name="demand_query" value="${esc(demandQuery)}" maxlength="80" placeholder="例：LILMOON"><small>入力した文字を含む商品名・ブランドの匿名需要に絞り込みます。</small></label><label><span>希望価格（下限）</span><input name="demand_min" type="number" min="0" max="100000000" value="${demandMin||''}"><small>表示したい希望価格帯の最低額です。空欄の場合は下限を指定しません。</small></label><label><span>希望価格（上限）</span><input name="demand_max" type="number" min="0" max="100000000" value="${demandMax===100000000?'':demandMax}"><small>表示したい希望価格帯の最高額です。空欄の場合は上限を指定しません。</small></label><button class="primary-button" type="submit">条件検索</button></form>
   <div class="seller-table-wrap"><table><thead><tr><th>商品</th><th>購入意向</th><th>最低希望額</th><th>平均希望額</th><th>最高希望額</th></tr></thead><tbody>${targetDemandRows}</tbody></table></div></section>
 
   <section class="auth-card" id="restrictions"><p class="eyebrow">IMPORT KNOWLEDGE</p><h2>輸入制限と国内代替需要</h2>
-  <p>注文番号や顧客情報を含まない月次集計です。</p><div class="seller-grid">${restrictionCards}</div></section>
+  <p>輸入制限により契約商品で満たせなかった需要と、国内で購入できる代替商品を確認できた件数を、制限区分ごとにまとめた月次集計です。注文番号や顧客情報は含めず、同一区分の匿名需要が5件以上になった場合だけ表示します。</p><div class="seller-grid">${restrictionCards}</div></section>
 
   <section class="auth-card" id="integration"><p class="eyebrow">DATA CONNECTION</p><h2>CSV・API連携</h2>
   <div class="seller-grid">
-  <article class="seller-panel"><span>CSV</span><strong>一括取込</strong><span>ASIN・在庫・価格・購入先URL・出品状態を更新</span></article>
-  <article class="seller-panel"><span>API</span><strong>自動同期</strong><span>商品・在庫・出品停止を継続同期</span></article>
-  <article class="seller-panel"><span>Amazon SP-API</span><strong>${configuredTenants.length}/${allowed.size} 接続</strong><span>${syncSummary}。認証情報は表示しません</span></article>
+  <article class="seller-panel"><span>CSV</span><strong>一括取込</strong><span>ファイルを使ってASIN・在庫・価格・購入先URL・出品状態をまとめて更新する方式です。このカードは連携方式の説明で、取込完了を示す表示ではありません。</span></article>
+  <article class="seller-panel"><span>API</span><strong>自動同期</strong><span>外部システムから商品・在庫・出品停止を継続的に反映する方式です。このカードは利用可能な連携方式の説明で、接続済みを意味しません。</span></article>
+  <article class="seller-panel"><span>Amazon SP-API</span><strong>${configuredTenants.length}/${allowed.size} 接続</strong><span>管理対象店舗のうちAmazon商品同期の認可が完了した店舗数です。最新同期: ${syncSummary}。認証情報そのものは表示しません。</span></article>
   </div></section>
 
   <section class="auth-card" id="marketplaces"><p class="eyebrow">MARKETPLACE URL HEALTH</p>
@@ -454,15 +477,15 @@ export async function sellerPageResponse(
 
   <section class="auth-card" id="line"><p class="eyebrow">LINE</p><h2>LINE接続状況</h2>
   <div class="seller-grid">
-  <article class="seller-panel"><span>LINEログイン</span><strong>${lineLoginReady ? '設定済み' : '未設定'}</strong><span>ユーザー認証</span></article>
-  <article class="seller-panel"><span>公式アカウント</span><strong>${lineMessagingReady ? '接続済み' : '未接続'}</strong><span>通知・応答Webhook</span></article>
+  <article class="seller-panel"><span>LINEログイン</span><strong>${lineLoginReady ? '設定済み' : '未設定'}</strong><span>ユーザーがLINEアカウントで本人確認・ログインするための認証設定です。</span></article>
+  <article class="seller-panel"><span>公式アカウント</span><strong>${lineMessagingReady ? '接続済み' : '未接続'}</strong><span>通知の送信や受信メッセージへの応答に使うWebhookとアクセストークンの接続状態です。</span></article>
   </div></section>
 
   <section class="auth-card" id="plan"><p class="eyebrow">SELLER PLAN</p><h2>契約プラン</h2>
   <p>現在のプラン: <strong>${publicPlan}</strong>。有料契約によって商品そのものの検索順位は変わりません。</p>
   <div class="seller-grid">
-    <article class="seller-panel"><span>Seller</span><strong>月額0円</strong><span>優先出品、チャージ、クリック・流入・消化額分析</span></article>
-    <article class="seller-panel"><span>Business</span><strong>料金設計中</strong><span>Seller機能 + AI分析、市場分析、未充足需要、Search API</span></article>
+    <article class="seller-panel"><span>Seller</span><strong>月額0円</strong><span>自然検索への商品掲載、優先出品の対象指定、クリック・流入・消化額の確認を扱う基本プランです。前払いチャージは決済機能の接続後に利用可能になり、優先出品クリックの成果課金は月額とは別です。</span></article>
+    <article class="seller-panel"><span>Business</span><strong>料金設計中</strong><span>Seller機能に加え、AI分析、市場分析、未充足需要、Search APIを提供する予定のプランです。料金は未確定で、ここから契約や請求は開始されません。</span></article>
   </div>
   <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たした有効クリックだけです。</p></section>
   </main><script type="module" src="/seller.js"></script></body></html>`;

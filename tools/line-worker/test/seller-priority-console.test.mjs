@@ -138,6 +138,12 @@ test('セラー画面は自社クリック・確定消化額・残高だけを�
   assert.match(html, /Find fun/);
   assert.match(html, /全商品で優先出品を開始/);
   assert.doesNotMatch(html, /全商品ON|ルールON・残高待ち/);
+  assert.doesNotMatch(html, /有効な優先ルール/);
+  assert.match(html, /保存済みの対象指定/);
+  assert.match(html, /商品数や表示回数ではありません/);
+  assert.match(html, /購入完了を意味しません/);
+  assert.match(html, /優先順の基準日時/);
+  assert.match(html, /料金は未確定で、ここから契約や請求は開始されません/);
   assert.match(html, /商品数が多いため、商品1件ずつの操作は設けていません/);
 });
 
@@ -154,6 +160,8 @@ test('決済未接続時は店舗名と開始しない理由を明示し、操�
   assert.match(html, /設定済み・開始待ち/);
   assert.match(html, /この店舗の設定をすべて停止/);
   assert.match(html, /全商品を対象に設定/);
+  assert.match(html, /現在有効な設定数です。商品数や表示回数ではありません/);
+  assert.match(html, /残高未接続などで優先表示が開始していない場合もあります/);
   assert.doesNotMatch(html, /ルールON・残高待ち|全商品ON|全商品OFF/);
 });
 
