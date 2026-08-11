@@ -12,8 +12,8 @@ export function adminLoginPageResponse() {
   <link rel="stylesheet" href="/auth.css"><title>運用管理ログイン | HOSHILU</title></head><body>
   <main class="auth-shell"><section class="auth-card"><p class="eyebrow">OPERATOR ONLY</p>
   <h1>運用管理ログイン</h1><p>ログインから30分後に再認証します。</p>
-  <form id="adminLoginForm"><label>メールアドレス<input name="id" type="email" autocomplete="username" required maxlength="100"></label>
-  <label>パスワード（8文字以上）<input name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="200"></label>
+  <form id="adminLoginForm"><label>メールアドレス<input id="adminId" name="id" type="email" autocomplete="username" required maxlength="100"></label>
+  <label>パスワード（8文字以上）<input id="adminPassword" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="200"></label>
   <button class="primary-button" type="submit">ログイン</button><p id="adminLoginStatus" role="status"></p></form>
   </section></main><script type="module" src="/admin-login.js"></script></body></html>`, { headers });
 }

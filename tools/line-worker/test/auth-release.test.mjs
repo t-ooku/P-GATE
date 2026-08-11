@@ -11,6 +11,8 @@ test('認証管理画面はSecretを埋め込まず監査集計だけを表示�
   const html = await page.text();
   assert.match(login, /運用管理ログイン/);
   assert.match(login, /メールアドレス/);
+  assert.match(login, /id="adminId"/);
+  assert.match(login, /id="adminPassword"/);
   assert.match(login, /minlength="8"/);
   assert.match(html, /管理ログイン監査/);
   assert.match(html, /セラーログイン監査/);

@@ -24,7 +24,7 @@ form.addEventListener('submit', async (event) => {
       ? '試行回数が上限に達しました。15分後に再試行してください。'
       : error.message === 'LOGIN_UNAVAILABLE'
         ? '現在ログインを確認できません。管理担当者へ連絡してください。'
-        : '管理IDまたはパスワードを確認してください。';
+        : 'メールアドレスまたはパスワードを確認してください。';
     submit.disabled = error.message === 'LOGIN_RATE_LIMITED';
   }
 });
