@@ -26,6 +26,43 @@ const emptyFunnel = () => Object.fromEntries(FUNNEL_EVENTS.map(event => [event, 
 const percentage = (numerator, denominator) => denominator > 0
   ? Math.round((numerator / denominator) * 1000) / 10 : null;
 
+async function businessKpiSummary(env, now) {
+  const since7d = new Date(now.getTime() - (7 * 86400000)).toISOString();
+  const since30d = new Date(now.getTime() - (30 * 86400000)).toISOString();
+  const empty = { visitors: 0, sessions: 0, landing_view: 0, search_started: 0, search_completed: 0,
+    ai_result_clicked: 0, ranking_result_clicked: 0, price_comparison_opened: 0,
+    marketplace_click: 0, returning_visit: 0, member_registered: 0 };
+  const period = async (since) => {
+    const counts = { ...empty };
+    const totals = await env.PRODUCT_DB.prepare(`SELECT
+      COUNT(DISTINCT CASE WHEN visitor_id<>'' THEN visitor_id END) AS visitors,
+      COUNT(DISTINCT CASE WHEN session_id<>'' THEN session_id END) AS sessions
+      FROM growth_events WHERE occurred_at>=?1 AND traffic_class<>'QA'`).bind(since).first();
+    counts.visitors = safeCount(totals?.visitors);
+    counts.sessions = safeCount(totals?.sessions);
+    const result = await env.PRODUCT_DB.prepare(`SELECT event_type,COUNT(*) AS total
+      FROM growth_events WHERE occurred_at>=?1 AND traffic_class<>'QA' GROUP BY event_type`).bind(since).all();
+    for (const row of result.results || []) {
+      if (Object.hasOwn(counts, row.event_type)) counts[row.event_type] = safeCount(row.total);
+    }
+    return { ...counts, rates: {
+      visit_to_search: percentage(counts.search_started, counts.landing_view),
+      search_completion: percentage(counts.search_completed, counts.search_started),
+      result_engagement: percentage(counts.ai_result_clicked + counts.ranking_result_clicked, counts.search_completed),
+      comparison_reach: percentage(counts.price_comparison_opened, counts.search_completed),
+      marketplace_outbound: percentage(counts.marketplace_click, counts.search_completed),
+      registration: percentage(counts.member_registered, counts.landing_view)
+    } };
+  };
+  let registeredMembers = 0;
+  try {
+    const row = await env.PRODUCT_DB.prepare(`SELECT COUNT(DISTINCT member_id) AS total
+      FROM member_notification_destinations WHERE verified_at<>''`).first();
+    registeredMembers = safeCount(row?.total);
+  } catch {}
+  return { registered_members: registeredMembers, periods: { '7d': await period(since7d), '30d': await period(since30d) } };
+}
+
 export async function promotionDashboardSummary(env, now = new Date()) {
   const queue = await env.PRODUCT_DB.prepare(`SELECT platform,status,COUNT(*) AS total,
     MAX(CASE WHEN status='PUBLISHED' THEN published_at ELSE '' END) AS last_published_at
@@ -90,6 +127,7 @@ export async function promotionDashboardSummary(env, now = new Date()) {
     ok: true,
     generated_at: now.toISOString(),
     autopilot_enabled: env.SOCIAL_AUTOPILOT_ENABLED === 'true',
+    business_kpis: await businessKpiSummary(env, now),
     channels: PLATFORMS.map(platform => grouped.get(platform))
   };
 }

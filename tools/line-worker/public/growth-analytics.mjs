@@ -9,8 +9,28 @@ const attribution = {
 };
 window.HoshiluGrowthAttribution = Object.freeze({ ...attribution });
 const locale = () => String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
+const randomId = () => crypto.randomUUID();
+const readOrCreate = (key, fallback) => {
+  try {
+    const current = localStorage.getItem(key);
+    if (/^[a-f0-9-]{20,64}$/i.test(current || '')) return current;
+    const created = fallback(); localStorage.setItem(key, created); return created;
+  } catch { return fallback(); }
+};
+const visitorId = readOrCreate('hoshilu_anonymous_visitor_id', randomId);
+const sessionId = (() => {
+  try {
+    const key = 'hoshilu_anonymous_session';
+    const current = JSON.parse(sessionStorage.getItem(key) || 'null');
+    if (current?.id && Date.now() - Number(current.touched_at || 0) < 30 * 60 * 1000) {
+      current.touched_at = Date.now(); sessionStorage.setItem(key, JSON.stringify(current)); return current.id;
+    }
+    const next = { id: randomId(), touched_at: Date.now() };
+    sessionStorage.setItem(key, JSON.stringify(next)); return next.id;
+  } catch { return randomId(); }
+})();
 const send = (event_type, extra = {}) => {
-  const body = JSON.stringify({ event_type, locale: locale(), ...attribution, ...extra });
+  const body = JSON.stringify({ event_type, locale: locale(), visitor_id: visitorId, session_id: sessionId, ...attribution, ...extra });
   if (navigator.sendBeacon) {
     navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' }));
     return;

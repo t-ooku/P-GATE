@@ -2,6 +2,8 @@ const grid = document.querySelector('#channelGrid');
 const status = document.querySelector('#promotionStatus');
 const refresh = document.querySelector('#refreshPromotion');
 const logout = document.querySelector('#adminLogout');
+const businessGrid = document.querySelector('#businessKpiGrid');
+let businessKpis = null; let kpiPeriod = '7d';
 const labels = { X: 'X', INSTAGRAM: 'Instagram', TIKTOK: 'TikTok' };
 const element = (tag, value = '', className = '') => {
   const node = document.createElement(tag); node.textContent = value; node.className = className; return node;
@@ -16,6 +18,21 @@ function metric(label, value, tone = '') {
   return node;
 }
 const rate = value => value === null ? '—' : `${value}%`;
+function renderBusinessKpis() {
+  if (!businessGrid || !businessKpis) return;
+  const data = businessKpis.periods[kpiPeriod];
+  businessGrid.replaceChildren(
+    metric('登録者（累計）', businessKpis.registered_members, 'success'),
+    metric('匿名訪問者', data.visitors), metric('訪問セッション', data.sessions),
+    metric('流入PV', data.landing_view), metric('検索開始', data.search_started),
+    metric('検索完了', data.search_completed), metric('AI結果クリック', data.ai_result_clicked),
+    metric('ランキングクリック', data.ranking_result_clicked), metric('価格比較', data.price_comparison_opened),
+    metric('モール送客', data.marketplace_click, 'success'), metric('再訪', data.returning_visit),
+    metric('訪問→検索', rate(data.rates.visit_to_search)), metric('検索完了率', rate(data.rates.search_completion)),
+    metric('結果反応率', rate(data.rates.result_engagement)), metric('比較到達率', rate(data.rates.comparison_reach)),
+    metric('送客率', rate(data.rates.marketplace_outbound), 'success')
+  );
+}
 function renderFunnel(channel) {
   const section = element('section', '', 'promotion-funnel');
   section.append(element('h3', '直近7日 購買導線'), element('p', 'SNS流入として記録されたイベント件数（QA除外）', 'funnel-note'));
@@ -72,6 +89,7 @@ async function load() {
     if (response.status === 401) return location.replace('/admin-login');
     if (!response.ok) throw new Error('PROMOTION_STATUS_FAILED');
     const payload = await response.json();
+    businessKpis = payload.business_kpis; renderBusinessKpis();
     grid.replaceChildren(...payload.channels.map(renderChannel));
     status.textContent = payload.autopilot_enabled
       ? `自動運用中・更新 ${dateTime(payload.generated_at)}` : '自動運用は停止しています。';
@@ -79,6 +97,11 @@ async function load() {
   finally { refresh.disabled = false; }
 }
 refresh.addEventListener('click', load);
+document.querySelectorAll('[data-kpi-period]').forEach(button => button.addEventListener('click', () => {
+  kpiPeriod = button.dataset.kpiPeriod;
+  document.querySelectorAll('[data-kpi-period]').forEach(item => item.classList.toggle('active', item === button));
+  renderBusinessKpis();
+}));
 logout.addEventListener('click', async () => {
   logout.disabled = true;
   try {

@@ -10,6 +10,7 @@ const migration = readFileSync(new URL('../migrations/0006_social_post_queue.sql
 const unmetMigration = readFileSync(new URL('../migrations/0004_unmet_demand_events.sql', import.meta.url), 'utf8');
 const growthMigration = readFileSync(new URL('../migrations/0012_growth_events.sql', import.meta.url), 'utf8');
 const trafficMigration = readFileSync(new URL('../migrations/0013_growth_event_traffic_class.sql', import.meta.url), 'utf8');
+const visitorMigration = readFileSync(new URL('../migrations/0047_growth_visitor_sessions.sql', import.meta.url), 'utf8');
 
 function d1(db) {
   return {
@@ -32,7 +33,8 @@ function d1(db) {
 }
 
 function setup() {
-  const db = new DatabaseSync(':memory:'); db.exec(migration); db.exec(unmetMigration); db.exec(growthMigration); db.exec(trafficMigration);
+  const db = new DatabaseSync(':memory:'); db.exec(migration); db.exec(unmetMigration); db.exec(growthMigration); db.exec(trafficMigration); db.exec(visitorMigration);
+  db.exec(`CREATE TABLE member_notification_destinations(member_id TEXT,channel TEXT,verified_at TEXT); INSERT INTO member_notification_destinations VALUES('m1','LINE','2026-08-01'),('m1','EMAIL','2026-08-02'),('m2','EMAIL','2026-08-03');`);
   const insert = db.prepare(`INSERT INTO social_post_queue
     (post_id,platform,caption,scheduled_at,status,published_at,external_post_id,last_error,created_at,updated_at)
     VALUES (?,?,?,?,?,?,?,?,?,?)`);
@@ -46,6 +48,8 @@ function setup() {
   event.run('e2', 'search_completed', 'JA', 'instagram', 'social', 'campaign', '', '', '2026-08-09T12:01:00Z', 'ATTRIBUTED');
   event.run('e3', 'marketplace_click', 'JA', 'instagram', 'social', 'campaign', '', 'RAKUTEN_JP', '2026-08-09T12:02:00Z', 'ATTRIBUTED');
   event.run('qa', 'marketplace_click', 'JA', 'instagram', 'qa', 'test', '', 'RAKUTEN_JP', '2026-08-09T12:03:00Z', 'QA');
+  db.exec(`UPDATE growth_events SET visitor_id='550e8400-e29b-41d4-a716-446655440000', session_id='650e8400-e29b-41d4-a716-446655440000' WHERE event_id IN ('e1','e2');
+    UPDATE growth_events SET visitor_id='750e8400-e29b-41d4-a716-446655440000', session_id='850e8400-e29b-41d4-a716-446655440000' WHERE event_id='e3';`);
   return db;
 }
 
@@ -66,6 +70,10 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(summary.channels[1].funnel_7d.marketplace_click, 1);
   assert.equal(summary.channels[1].funnel_rates_7d.search_completion, 100);
   assert.equal(summary.channels[1].funnel_rates_7d.marketplace_outbound, 100);
+  assert.equal(summary.business_kpis.registered_members, 2);
+  assert.equal(summary.business_kpis.periods['7d'].search_started, 1);
+  assert.equal(summary.business_kpis.periods['7d'].visitors, 2);
+  assert.equal(summary.business_kpis.periods['7d'].sessions, 2);
 });
 
 test('販促ダッシュボードAPIは管理認証が無ければ拒否する', async () => {

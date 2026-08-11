@@ -25,6 +25,11 @@ function clean(value, length = 80) {
   return String(value || '').trim().replace(/[^\p{L}\p{N}_.-]/gu, '').slice(0, length);
 }
 
+function anonymousId(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  return /^[a-f0-9-]{20,64}$/.test(normalized) ? normalized : '';
+}
+
 export function classifyGrowthTraffic(event = {}) {
   const source = clean(event.source).toLowerCase();
   const medium = clean(event.medium).toLowerCase();
@@ -52,7 +57,9 @@ export function normalizeGrowthEvent(input = {}) {
     medium: clean(input.medium),
     campaign: clean(input.campaign),
     content: clean(input.content),
-    marketplace: MARKETPLACES.has(marketplace) ? marketplace : ''
+    marketplace: MARKETPLACES.has(marketplace) ? marketplace : '',
+    visitor_id: anonymousId(input.visitor_id),
+    session_id: anonymousId(input.session_id)
   };
 }
 
@@ -69,11 +76,12 @@ export async function handleGrowthEvent(request, env) {
   const trafficClass = classifyGrowthTraffic(event);
   await env.PRODUCT_DB.prepare(
     `INSERT INTO growth_events
-    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
-    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
   ).bind(
     crypto.randomUUID(), event.event_type, event.locale, event.source, event.medium,
-    event.campaign, event.content, event.marketplace, new Date().toISOString(), trafficClass
+    event.campaign, event.content, event.marketplace, new Date().toISOString(), trafficClass,
+    event.visitor_id, event.session_id
   ).run();
   return Response.json({ ok: true }, {
     status: 202,

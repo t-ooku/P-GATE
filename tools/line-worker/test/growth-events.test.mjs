@@ -20,7 +20,14 @@ test('accepts only anonymous allowlisted growth dimensions', () => {
     campaign: 'ambiguoussearch',
     content: 'reel_01',
     marketplace: 'QOO10_JP'
+    ,visitor_id: '', session_id: ''
   });
+});
+
+test('accepts only random anonymous visitor and session identifiers', () => {
+  const event = normalizeGrowthEvent({ event_type: 'landing_view', visitor_id: '550e8400-e29b-41d4-a716-446655440000', session_id: 'bad' });
+  assert.equal(event.visitor_id, '550e8400-e29b-41d4-a716-446655440000');
+  assert.equal(event.session_id, '');
 });
 
 test('rejects unknown event types and marketplace values', () => {

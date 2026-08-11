@@ -40,11 +40,15 @@ export function adminPromotionPageResponse() {
   <link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/admin-sp-api.css">
   <link rel="stylesheet" href="/admin-promotion.css"><title>販促運用 | HOSHILU</title></head><body>
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
-  <p class="eyebrow">PROMOTION OPERATIONS</p><h1>販促運用ダッシュボード</h1></div>
+  <p class="eyebrow">BUSINESS KPI</p><h1>HOSHILU 経営ダッシュボード</h1></div>
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
   <nav class="admin-nav"><a class="active" href="/admin/promotion">販促一覧</a><a href="/admin/sp-api">認証監査</a></nav>
   <div class="dashboard-actions"><p id="promotionStatus" role="status"></p>
   <button id="refreshPromotion" class="ghost-button" type="button">最新状態に更新</button></div></section>
+  <section class="auth-card"><div class="kpi-period-head"><div><p class="eyebrow">ACQUISITION &amp; COMMERCE</p><h2>全体ファネル</h2></div>
+  <div class="kpi-period-switch" role="group" aria-label="集計期間"><button type="button" data-kpi-period="7d" class="active">7日</button><button type="button" data-kpi-period="30d">30日</button></div></div>
+  <p class="funnel-note">QAを除外。匿名訪問者はブラウザ生成IDで重複除外し、個人情報・検索文は保存しません。</p>
+  <div id="businessKpiGrid" class="business-kpi-grid" aria-live="polite"></div></section>
   <section id="channelGrid" class="promotion-channel-grid" aria-live="polite"></section>
   </main><script type="module" src="/admin-promotion.js"></script></body></html>`, { headers });
 }
