@@ -5,7 +5,8 @@ import {
   buildMarketplaceApiKeywordCandidates,
   buildRakutenSearchKeywords,
   buildRakutenSearchKeywordCandidates,
-  filterSearchCandidatesWithFallback
+  filterSearchCandidatesWithFallback,
+  summarizeMarketplaceSearchOutcomes
 } from '../src/index.mjs';
 import { searchRakutenMarketplaceWithFallback } from '../src/rakuten-marketplace-api.mjs';
 
@@ -59,4 +60,25 @@ test('楽天APIもAI変換語と識別子が外れた後に原文商品を実際
   );
   assert.equal(calls.at(-1), fallbackKeywords);
   assert.equal(result[0].product_name, '完全ワイヤレスイヤホン ノイズキャンセリング');
+});
+
+test('モールAPI診断は接続失敗・0件・除外後0件を秘密情報なしで区別する', () => {
+  const searches = [{ key: 'rakuten_catalog_connected' }, { key: 'yahoo_catalog_connected' }];
+  const failed = summarizeMarketplaceSearchOutcomes(searches, [
+    { status: 'rejected', reason: new Error('secret provider detail') },
+    { status: 'rejected', reason: new Error('another secret detail') }
+  ], [0, 0]);
+  assert.equal(failed.all_requests_failed, true);
+  assert.deepEqual(failed.sources, [
+    { source: 'rakuten_catalog_connected', status: 'REQUEST_FAILED', returned: 0, accepted: 0 },
+    { source: 'yahoo_catalog_connected', status: 'REQUEST_FAILED', returned: 0, accepted: 0 }
+  ]);
+  assert.equal(JSON.stringify(failed).includes('secret provider detail'), false);
+
+  const mixed = summarizeMarketplaceSearchOutcomes(searches, [
+    { status: 'fulfilled', value: [{ product_name: '候補' }] },
+    { status: 'fulfilled', value: [] }
+  ], [0, 0]);
+  assert.equal(mixed.any_request_succeeded, true);
+  assert.deepEqual(mixed.sources.map((source) => source.status), ['FILTERED_OUT', 'NO_RESULTS']);
 });

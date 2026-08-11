@@ -1024,6 +1024,27 @@ export function filterSearchCandidatesWithFallback(refinedQuery, fallbackQuery, 
   return filterCategoryMismatches(fallbackQuery, candidates);
 }
 
+export function summarizeMarketplaceSearchOutcomes(searches = [], outcomes = [], acceptedCounts = []) {
+  const sources = searches.map((search, index) => {
+    const outcome = outcomes[index];
+    const fulfilled = outcome?.status === 'fulfilled';
+    const returned = fulfilled && Array.isArray(outcome.value) ? outcome.value.length : 0;
+    const accepted = Math.max(0, Number(acceptedCounts[index]) || 0);
+    return {
+      source: String(search?.key || ''),
+      status: fulfilled ? (returned ? (accepted ? 'AVAILABLE' : 'FILTERED_OUT') : 'NO_RESULTS') : 'REQUEST_FAILED',
+      returned,
+      accepted
+    };
+  });
+  return {
+    checked: sources.length > 0,
+    all_requests_failed: sources.length > 0 && sources.every((source) => source.status === 'REQUEST_FAILED'),
+    any_request_succeeded: sources.some((source) => source.status !== 'REQUEST_FAILED'),
+    sources
+  };
+}
+
 // query is optional: when provided, a keyword candidate is only accepted if
 // at least one of its results survives filterCategoryMismatches, not just
 // if the raw response was non-empty. Without this, a marketplace that
@@ -1956,6 +1977,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       // occupy every early "position" tie-break slot), and ranking+slicing
       // exactly once after all sources have reported in.
       const perSourceCandidates = [];
+      const acceptedCounts = [];
       outcomes.forEach((outcome, index) => {
         const source = marketplaceSearches[index];
         result = { ...(result || {}), [source.key]: outcome.status === 'fulfilled' };
@@ -1967,6 +1989,7 @@ async function handleKnowledgeApi(request, env, ctx) {
             provider_code: String(outcome.reason?.providerCode || '').slice(0, 80)
           });
           perSourceCandidates.push({ key: source.key, candidates: [] });
+          acceptedCounts.push(0);
           return;
         }
         const returnedCount = Array.isArray(outcome.value) ? outcome.value.length : 0;
@@ -1980,7 +2003,11 @@ async function handleKnowledgeApi(request, env, ctx) {
           teacher_dataset_excluded: teacherExcluded
         });
         perSourceCandidates.push({ key: source.key, candidates });
+        acceptedCounts.push(candidates.length);
       });
+      result.marketplace_search_status = summarizeMarketplaceSearchOutcomes(
+        marketplaceSearches, outcomes, acceptedCounts
+      );
       // v3.4 CTO diagnosis (real production evidence): amazon_creators_
       // configured was false in production - the live Amazon API never
       // even ran - yet results were still Amazon-only with zero Rakuten,
@@ -2034,6 +2061,14 @@ async function handleKnowledgeApi(request, env, ctx) {
       };
     }
     if (!result.candidates.length) {
+      if (result.marketplace_search_status?.all_requests_failed) {
+        result.message = {
+          JA: '楽天市場・Yahoo!ショッピングとの接続に失敗しました。時間をおいてもう一度お試しください。',
+          EN: 'Could not connect to Rakuten or Yahoo! Shopping. Please try again later.',
+          ZH: '无法连接乐天市场或Yahoo!购物，请稍后重试。',
+          KO: '라쿠텐 또는 Yahoo! 쇼핑에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+        }[input.language] || 'Marketplace connection failed. Please try again later.';
+      }
       try {
         result.ai_discovery = await discoverProductsWithAi(input.query, input.language, env);
       } catch (error) {
