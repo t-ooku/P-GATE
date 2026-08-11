@@ -91,6 +91,16 @@ test('v4.3項目16: 実価格が1件も無ければ断定できる相手が無�
   assert.equal(comparison.cheapest_claim, null);
 });
 
+test('実価格が1モールだけなら最安と断定せず、確認できたモールだけを案内する', () => {
+  const comparison = buildPriceComparison({
+    real: [{ marketplace: 'RAKUTEN_JP', total_cost: 1848 }],
+    aiEstimates: [], requestedDirectMarketplaces: ['LOFT_JP'], language: 'JA'
+  });
+  assert.equal(comparison.cheapest_claim, null);
+  assert.match(comparison.confirmed_price_note, /楽天市場のみ/);
+  assert.doesNotMatch(comparison.confirmed_price_note, /最安/);
+});
+
 test('v4.3項目9: GeminiとOpenAIを同時実行せず、Geminiが成功すればOpenAIは呼ばれない', async () => {
   let geminiCalls = 0;
   let openAiCalls = 0;
@@ -122,6 +132,36 @@ test('v4.3項目9: AIプロバイダが両方とも失敗すればunavailable:tr
   const result = await requestAiPriceEstimates({ title: 'x', language: 'JA' }, ['LOFT_JP'], env, fetchImpl);
   assert.equal(result.unavailable, true);
   assert.deepEqual(result.estimates, []);
+});
+
+test('Geminiが一部だけ推定した場合は未取得モールだけOpenAIで補う', async () => {
+  const calls = [];
+  const fetchImpl = async (url, options) => {
+    const target = String(url);
+    const prompt = target.includes('generativelanguage.googleapis.com')
+      ? JSON.parse(options.body).contents[0].parts[0].text
+      : JSON.parse(options.body).input;
+    calls.push({ target, prompt });
+    if (target.includes('generativelanguage.googleapis.com')) {
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        estimates: [{ marketplace: 'LOFT_JP', range_min: 1700, range_max: 2300, confidence: 'MEDIUM' }]
+      }) }] } }] });
+    }
+    return Response.json({ output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({
+      estimates: [{ marketplace: 'HANDS_JP', range_min: 1800, range_max: 2500, confidence: 'LOW' }]
+    }) }] }] });
+  };
+  const result = await requestAiPriceEstimates(
+    { title: 'LILY ANNA カラコン', referencePriceHint: 1848, language: 'JA' },
+    ['LOFT_JP','HANDS_JP'],
+    { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32) },
+    fetchImpl
+  );
+  assert.deepEqual(result.estimates.map((row) => row.marketplace), ['LOFT_JP','HANDS_JP']);
+  assert.equal(result.provider, 'gemini+openai');
+  assert.match(calls[0].prompt, /1848 JPY/);
+  assert.doesNotMatch(calls[1].prompt, /LOFT_JP/);
+  assert.match(calls[1].prompt, /HANDS_JP/);
 });
 
 test('v4.3項目19・20: 同一商品と判定できないオファーはsimilarへ分離される', () => {

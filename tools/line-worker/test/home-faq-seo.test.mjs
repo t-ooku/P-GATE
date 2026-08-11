@@ -28,5 +28,5 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 13);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v368/);
+  assert.match(worker, /hoshilu-shell-v369/);
 });

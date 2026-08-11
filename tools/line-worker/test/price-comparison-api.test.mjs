@@ -109,7 +109,8 @@ test('v4.3項目12・13: API連携中の実価格(楽天)とAI推定(ロフト/�
     assert.equal(handsRow.search_sort, '');
     assert.equal(payload.result.disclaimer_required, true);
     assert.match(payload.result.disclaimer_text, /AI推定価格です/);
-    assert.equal(payload.result.cheapest_claim.marketplace, 'RAKUTEN_JP');
+    assert.equal(payload.result.cheapest_claim, null);
+    assert.match(payload.result.confirmed_price_note, /楽天市場のみ/);
   } finally {
     globalThis.fetch = originalFetch;
   }

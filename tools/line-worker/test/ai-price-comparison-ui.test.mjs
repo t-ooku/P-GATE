@@ -46,11 +46,13 @@ test('v4.3項目16: 断定文言(cheapest_claim)とヘッジ文言(hedged_claim)
   const script = await read('ai-price-comparison-ui.mjs');
   assert.match(script, /price-compare-claim-real/);
   assert.match(script, /price-compare-claim-hedged/);
+  assert.match(script, /confirmed_price_note/);
+  assert.match(script, /price-compare-confirmed-note/);
 });
 
 test('service-workerがAI最安比較の新規ファイルをプリキャッシュ対象に含む', async () => {
   const worker = await read('service-worker.js');
-  assert.match(worker, /hoshilu-shell-v368/);
+  assert.match(worker, /hoshilu-shell-v369/);
   assert.match(worker, /ai-price-comparison-ui\.mjs/);
   assert.match(worker, /ai-price-comparison-ui\.css/);
 });
@@ -60,4 +62,6 @@ test('AI最安比較ダイアログは横揺れせず閉じるボタンを固定
   assert.match(css, /\.price-compare-dialog\{[^}]*overflow:hidden/);
   assert.match(css, /\.price-compare-body\{[^}]*overflow-y:auto[^}]*overflow-x:hidden/);
   assert.match(css, /\.price-compare-dialog-close\{[^}]*position:absolute[^}]*z-index:5/);
+  assert.match(css, /@media\(max-width:480px\)\{\.price-compare-row\{display:grid/);
+  assert.match(css, /\.price-compare-search-link\{grid-column:1\/-1[^}]*white-space:normal/);
 });

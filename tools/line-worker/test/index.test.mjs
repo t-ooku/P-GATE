@@ -461,7 +461,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v368/);
+  assert.match(serviceWorker, /hoshilu-shell-v369/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -692,7 +692,9 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(getEnvironmentReadiness({ ...base, SOCIAL_AUTOPILOT_ENABLED: 'true' }).checks.social_autopilot_enabled, true);
   assert.equal(getEnvironmentReadiness({ ...base, TURNSTILE_SECRET_KEY: '' }).checks.turnstile_configured, false);
   assert.equal(getEnvironmentReadiness(base).checks.ai_chat_configured, false);
+  assert.equal(getEnvironmentReadiness(base).checks.ai_price_comparison_configured, false);
   assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_chat_configured, true);
+  assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_price_comparison_configured, true);
   assert.equal(getEnvironmentReadiness({ ...base, OPENAI_API_KEY: 'o'.repeat(20) }).checks.ai_chat_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.admin_auth_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.admin_credentials_distinct, true);

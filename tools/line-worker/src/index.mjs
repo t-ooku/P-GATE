@@ -25,11 +25,11 @@ import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementC
 import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
 import { filterRankingCategoryCandidates } from './ranking-category-eligibility.mjs';
-import { relatedProductRecommendationQueries } from './related-product-recommendations.mjs';
+import { resolveRelatedProductRecommendationQueries } from './related-product-recommendations.mjs';
 import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
 import {
   buildAiCheapestRanking, buildPriceComparison, realPriceRows,
-  requestAiCandidatePriceEstimates, requestAiPriceEstimates
+  priceComparisonConfigured, requestAiCandidatePriceEstimates, requestAiPriceEstimates
 } from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
@@ -428,7 +428,8 @@ export function getEnvironmentReadiness(env = {}) {
       // 未設定だとAIチャット系エンドポイントが全件HTTP 500になる。この仮説を
       // /health だけで即座に確認できるようにする。
       turnstile_configured: Boolean(String(env.TURNSTILE_SECRET_KEY || '').trim()),
-      ai_chat_configured: chatIntentConfigured(env)
+      ai_chat_configured: chatIntentConfigured(env),
+      ai_price_comparison_configured: priceComparisonConfigured(env)
     }
   };
 }
@@ -1675,7 +1676,15 @@ async function handlePriceComparisonApi(request, env) {
     // のみを返す)ため、依頼されたdirect_marketplacesは常にそのままAI推定の
     // 対象になる。
     const aiPromise = requestAiPriceEstimates(
-        { title: input.product.title, brand: input.product.brand, category: input.product.category, language: input.language },
+        {
+          title: input.product.title,
+          brand: input.product.brand,
+          category: input.product.category,
+          language: input.language,
+          // 同じ商品についてAPIで確認できた実価格を、AIが広い参考価格帯を
+          // 作るための根拠として渡す。実価格をそのまま複製する指示ではない。
+          referencePriceHint: real[0]?.total_cost || 0
+        },
         input.direct_marketplaces, env, fetch
       ).catch((error) => {
       console.warn('AI_PRICE_COMPARISON_ESTIMATE_UNAVAILABLE', { status: Number(error?.status) || 0 });
@@ -2109,7 +2118,7 @@ async function handleRelatedRecommendationsApi(request, env) {
     if (Number(request.headers.get('content-length') || 0) > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
     const input = validateRelatedRecommendationsRequest(await request.json());
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    const groups = relatedProductRecommendationQueries(input.query).slice(0, 3);
+    const groups = (await resolveRelatedProductRecommendationQueries(input.query, input.language, env)).slice(0, 3);
     const requestId = crypto.randomUUID();
     const sessionHash = await hashUser(input.session_id);
     const decoratedGroups = await Promise.all(groups.map(async (group, index) => {

@@ -24,6 +24,7 @@
 .price-compare-search-link:hover,.price-compare-search-link:focus-visible{background:#ffedd5;outline:2px solid #fb923c;outline-offset:1px}
 .price-compare-claim{font-size:12px;padding:9px 12px;border-radius:11px}
 .price-compare-claim-real{background:#ecfdf5;color:#166534;font-weight:700}
+.price-compare-confirmed-note{background:#eef6ff;color:#174f7a;font-weight:700}
 .price-compare-claim-hedged{background:#fff7ed;color:#9a3412}
 .price-compare-disclaimer{font-size:11px;color:#71717a;padding:8px 10px;border-top:1px solid #e9e5f5;line-height:1.5}
-@media(max-width:480px){.price-compare-row{flex-wrap:wrap}.price-compare-amount{width:100%;margin-left:0}}
+@media(max-width:480px){.price-compare-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}.price-compare-marketplace{min-width:0;overflow-wrap:anywhere}.price-compare-badge{justify-self:end}.price-compare-amount{grid-column:1/-1;width:100%;margin-left:0}.price-compare-link{grid-column:1/-1}.price-compare-search-link{grid-column:1/-1;justify-self:start;max-width:100%;white-space:normal}}

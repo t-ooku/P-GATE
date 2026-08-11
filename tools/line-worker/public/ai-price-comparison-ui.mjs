@@ -114,6 +114,7 @@ function renderComparison(container, result, t) {
     container.append(item);
   }
   if (result.cheapest_claim?.text) container.append(textEl('p', 'price-compare-claim price-compare-claim-real', result.cheapest_claim.text));
+  if (result.confirmed_price_note) container.append(textEl('p', 'price-compare-claim price-compare-confirmed-note', result.confirmed_price_note));
   if (result.hedged_claim?.text) container.append(textEl('p', 'price-compare-claim price-compare-claim-hedged', result.hedged_claim.text));
   if (result.disclaimer_required) container.append(textEl('p', 'price-compare-disclaimer', result.disclaimer_text));
 }

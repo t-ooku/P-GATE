@@ -176,7 +176,10 @@ const GEMINI_ESTIMATE_TIMEOUT_MS = 4500;
 const OPENAI_ESTIMATE_TIMEOUT_MS = 3500;
 
 async function callGemini(context, marketplaces, language, env, fetchImpl) {
-  const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
+  // 価格比較は短時間応答が必要なので、専用指定が無ければ実際の検索語変換
+  // でも使う軽量モデルを優先する。PRODUCT_DISCOVERY_MODELは長い生成向けの
+  // 設定で、価格比較の4.5秒上限と合わない場合がある。
+  const model = String(env.GEMINI_PRICE_COMPARISON_MODEL || env.GEMINI_QUERY_REFINEMENT_MODEL || env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.1-flash-lite');
   const response = await providerFetch(
     fetchImpl,
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -201,7 +204,7 @@ async function callGemini(context, marketplaces, language, env, fetchImpl) {
 }
 
 async function callOpenAi(context, marketplaces, language, env, fetchImpl) {
-  const model = String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5');
+  const model = String(env.OPENAI_PRICE_COMPARISON_MODEL || env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5');
   const response = await providerFetch(fetchImpl, 'https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${env.OPENAI_API_KEY}` },
@@ -238,12 +241,25 @@ export async function requestAiPriceEstimates(context, marketplaces, env = {}, f
   const language = context.language || 'JA';
 
   let lastError;
+  const estimates = [];
+  const completed = new Set();
+  const usedProviders = [];
   for (const provider of providers) {
+    const pending = marketplaces.filter((marketplace) => !completed.has(marketplace));
+    if (!pending.length) break;
     try {
-      const estimates = provider === 'gemini'
-        ? await callGemini(context, marketplaces, language, env, fetchImpl)
-        : await callOpenAi(context, marketplaces, language, env, fetchImpl);
-      return { estimates, provider };
+      const rows = provider === 'gemini'
+        ? await callGemini(context, pending, language, env, fetchImpl)
+        : await callOpenAi(context, pending, language, env, fetchImpl);
+      // 有効なJSONでも空配列や一部モールだけの回答になることがある。その時に
+      // 成功扱いで即終了すると、残りが全て「推定不能」になるため、未取得分だけ
+      // 次の設定済みプロバイダへ渡す。
+      if (rows.length) usedProviders.push(provider);
+      for (const row of rows) {
+        if (completed.has(row.marketplace)) continue;
+        completed.add(row.marketplace);
+        estimates.push(row);
+      }
     } catch (error) {
       lastError = error;
       console.warn('AI_PRICE_ESTIMATE_PROVIDER_FAILED', {
@@ -251,6 +267,7 @@ export async function requestAiPriceEstimates(context, marketplaces, env = {}, f
       });
     }
   }
+  if (estimates.length) return { estimates, provider: usedProviders.join('+') || null };
   console.warn('AI_PRICE_ESTIMATE_ALL_PROVIDERS_FAILED', { attempted: providers.length, had_error: Boolean(lastError) });
   return { estimates: [], provider: null, unavailable: true };
 }
@@ -317,8 +334,15 @@ export function buildAiCheapestRanking(candidates = [], estimates = []) {
     .map((candidate, index) => ({ ...candidate, ai_cheapest_rank: index + 1 }));
 }
 
-function marketplaceLabel(marketplace) {
-  return String(marketplace || '').replace(/_JP$/, '');
+function marketplaceLabel(marketplace, language = 'JA') {
+  const code = String(marketplace || '').toUpperCase();
+  const labels = {
+    JA: { RAKUTEN_JP:'楽天市場', YAHOO_JP:'Yahoo!ショッピング', AMAZON_JP:'Amazon', LOFT_JP:'ロフト', HANDS_JP:'ハンズ', MATSUKIYO_JP:'マツキヨ', COSME_JP:'@cosme', QOO10_JP:'Qoo10', ZOZOTOWN_JP:'ZOZOTOWN' },
+    EN: { RAKUTEN_JP:'Rakuten', YAHOO_JP:'Yahoo! Shopping' },
+    ZH: { RAKUTEN_JP:'乐天市场', YAHOO_JP:'Yahoo!购物' },
+    KO: { RAKUTEN_JP:'라쿠텐', YAHOO_JP:'Yahoo! 쇼핑' }
+  };
+  return labels[language]?.[code] || labels.JA[code] || code.replace(/_JP$/, '');
 }
 
 // real/aiEstimatesを最終的な表示用データへ合成する純粋関数(通信なし)。
@@ -354,17 +378,25 @@ export function buildPriceComparison({ real = [], aiEstimates = [], requestedDir
     .map((marketplace) => withSearchLink({ marketplace, source: 'UNAVAILABLE' }));
 
   let cheapestClaim = null;
-  if (realRows.length) {
+  let confirmedPriceNote = null;
+  if (realRows.length >= 2) {
     cheapestClaim = {
       definitive: true,
       marketplace: realRows[0].marketplace,
       text: {
-        JA: `現在確認できた実価格では${marketplaceLabel(realRows[0].marketplace)}が最安です。`,
-        EN: `Among confirmed real prices, ${marketplaceLabel(realRows[0].marketplace)} is currently the cheapest.`,
-        ZH: `在已确认的实际价格中，${marketplaceLabel(realRows[0].marketplace)}目前最便宜。`,
-        KO: `현재 확인된 실제 가격 중에서는 ${marketplaceLabel(realRows[0].marketplace)}가 가장 저렴합니다.`
+        JA: `現在確認できた実価格では${marketplaceLabel(realRows[0].marketplace, language)}が最安です。`,
+        EN: `Among confirmed real prices, ${marketplaceLabel(realRows[0].marketplace, language)} is currently the cheapest.`,
+        ZH: `在已确认的实际价格中，${marketplaceLabel(realRows[0].marketplace, language)}目前最便宜。`,
+        KO: `현재 확인된 실제 가격 중에서는 ${marketplaceLabel(realRows[0].marketplace, language)}가 가장 저렴합니다.`
       }[language] || null
     };
+  } else if (realRows.length === 1) {
+    confirmedPriceNote = {
+      JA: `実価格を確認できたモールは${marketplaceLabel(realRows[0].marketplace, language)}のみです。ほかのモールは参考推定または検索先をご案内します。`,
+      EN: `${marketplaceLabel(realRows[0].marketplace, language)} is the only marketplace with a confirmed real price. Other rows are estimates or search links.`,
+      ZH: `目前只有${marketplaceLabel(realRows[0].marketplace, language)}取得了已确认的实际价格。其他商城显示参考推测或搜索链接。`,
+      KO: `실제 가격이 확인된 쇼핑몰은 ${marketplaceLabel(realRows[0].marketplace, language)}뿐입니다. 다른 쇼핑몰은 참고 추정 또는 검색 링크입니다.`
+    }[language] || null;
   }
   // AI推定側に、確定済みの最安実価格より安い可能性がある候補があれば、
   // 断定はせずヘッジした文言だけを別枠で添える(実価格の断定と混同させない)。
@@ -374,10 +406,10 @@ export function buildPriceComparison({ real = [], aiEstimates = [], requestedDir
     definitive: false,
     marketplace: cheaperEstimate.marketplace,
     text: {
-      JA: `AI推定では${marketplaceLabel(cheaperEstimate.marketplace)}が安い可能性があります。`,
-      EN: `Based on AI estimates, ${marketplaceLabel(cheaperEstimate.marketplace)} might be cheaper.`,
-      ZH: `根据AI推测，${marketplaceLabel(cheaperEstimate.marketplace)}可能更便宜。`,
-      KO: `AI 추정으로는 ${marketplaceLabel(cheaperEstimate.marketplace)}가 더 저렴할 수 있습니다.`
+      JA: `AI推定では${marketplaceLabel(cheaperEstimate.marketplace, language)}が安い可能性があります。`,
+      EN: `Based on AI estimates, ${marketplaceLabel(cheaperEstimate.marketplace, language)} might be cheaper.`,
+      ZH: `根据AI推测，${marketplaceLabel(cheaperEstimate.marketplace, language)}可能更便宜。`,
+      KO: `AI 추정으로는 ${marketplaceLabel(cheaperEstimate.marketplace, language)}가 더 저렴할 수 있습니다.`
     }[language] || null
   } : null;
 
@@ -386,6 +418,7 @@ export function buildPriceComparison({ real = [], aiEstimates = [], requestedDir
     ai_estimated: aiRows,
     unavailable: unavailableRows,
     cheapest_claim: cheapestClaim,
+    confirmed_price_note: confirmedPriceNote,
     hedged_claim: hedgedClaim,
     disclaimer_required: aiRows.length > 0,
     disclaimer_text: aiRows.length > 0 ? (PRICE_ESTIMATE_DISCLAIMER[language] || PRICE_ESTIMATE_DISCLAIMER.JA) : null
