@@ -10,6 +10,8 @@ test('認証管理画面はSecretを埋め込まず監査集計だけを表示�
   const page = adminSpApiPageResponse();
   const html = await page.text();
   assert.match(login, /運用管理ログイン/);
+  assert.match(login, /メールアドレス/);
+  assert.match(login, /minlength="8"/);
   assert.match(html, /管理ログイン監査/);
   assert.match(html, /セラーログイン監査/);
   assert.match(page.headers.get('content-security-policy'), /default-src 'none'/);
@@ -23,7 +25,7 @@ test('認証管理画面はSecretを埋め込まず監査集計だけを表示�
 test('販促管理画面は各SNSを独立表示し管理Secretを公開しない', async () => {
   const page = adminPromotionPageResponse();
   const html = await page.text();
-  assert.match(html, /販促運用ダッシュボード/);
+  assert.match(html, /HOSHILU 経営ダッシュボード/);
   assert.match(html, /id="channelGrid"/);
   assert.match(html, /\/admin\/sp-api/);
   assert.match(page.headers.get('content-security-policy'), /default-src 'none'/);

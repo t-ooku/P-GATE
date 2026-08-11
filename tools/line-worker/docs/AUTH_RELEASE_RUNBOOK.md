@@ -1,6 +1,6 @@
 # 認証強化リリース手順
 
-対象は Worker release `1.18.0`、`0027_admin_login_guard.sql`、
+対象は Worker release `1.18.1`、`0027_admin_login_guard.sql`、
 `0028_seller_login_guard.sql` です。同期リース／通知状態の0025・0026は別リリースであり、
 この手順の合否条件には含めません。
 
@@ -35,8 +35,8 @@ npx.cmd --yes wrangler@4.113.0 d1 export hoshilu-products --remote --output ..\.
 - 次の値が本番Secret／設定に存在し、すべて相互に異なる。
 
 ```text
-ADMIN_AUTH_ID
-ADMIN_AUTH_PASSWORD（16文字以上）
+ADMIN_AUTH_ID（所有者のメールアドレス）
+ADMIN_AUTH_PASSWORD（8文字以上）
 ADMIN_SESSION_SECRET（独立したランダム値64文字以上）
 SELLER_AUTH_ID
 SELLER_AUTH_PASSWORD（12文字以上）
@@ -56,7 +56,7 @@ preflight合格後だけWorkerを公開します。0027、0028は適用済みの
 npx.cmd --yes wrangler@4.113.0 deploy
 ```
 
-公開後は `/health` がHTTP 200、`release` が `1.18.0`、次の値であることを確認します。
+公開後は `/health` がHTTP 200、`release` が `1.18.1`、次の値であることを確認します。
 
 - `admin_auth_configured=true`
 - `admin_auth_weak=false`

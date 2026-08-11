@@ -88,7 +88,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // 各リンクの mode を載せる(signedMarketplaceSearchLinks参照)。
 // marketplace-search-mode.mjs がここが唯一の判定元(v4.3のAI最安比較
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
-const RELEASE = '1.18.0';
+const RELEASE = '1.18.1';
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
   'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY',
@@ -334,7 +334,7 @@ export function getEnvironmentReadiness(env = {}) {
     return value && value.length < 32;
   });
   if (env.ADMIN_AUTH_ID && String(env.ADMIN_AUTH_ID).length < 3) weak.push('ADMIN_AUTH_ID');
-  if (env.ADMIN_AUTH_PASSWORD && String(env.ADMIN_AUTH_PASSWORD).length < 16) {
+  if (env.ADMIN_AUTH_PASSWORD && String(env.ADMIN_AUTH_PASSWORD).length < 8) {
     weak.push('ADMIN_AUTH_PASSWORD');
   }
   if (env.ADMIN_SESSION_SECRET && String(env.ADMIN_SESSION_SECRET).length < 64) {

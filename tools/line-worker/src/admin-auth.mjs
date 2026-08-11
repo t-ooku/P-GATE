@@ -15,7 +15,7 @@ const unsafeExampleValue = (value) =>
   /replace[-_ ]?with|change[-_ ]?me|changeme|placeholder/i.test(String(value || ''));
 const adminConfigured = (env) =>
   String(env.ADMIN_AUTH_ID || '').length >= 3 &&
-  String(env.ADMIN_AUTH_PASSWORD || '').length >= 16 &&
+  String(env.ADMIN_AUTH_PASSWORD || '').length >= 8 &&
   String(env.ADMIN_SESSION_SECRET || '').length >= 64 &&
   !unsafeExampleValue(env.ADMIN_AUTH_ID) &&
   !unsafeExampleValue(env.ADMIN_AUTH_PASSWORD) &&

@@ -461,7 +461,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v369/);
+  assert.match(serviceWorker, /hoshilu-shell-v370/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -662,7 +662,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     GAS_BACKEND_URL: 'https://script.google.com/macros/s/example/exec',
     GAS_BRIDGE_SECRET: 'g'.repeat(32), LINK_SIGNING_SECRET: 'l'.repeat(32),
     TURNSTILE_SITE_KEY: 'site-key', TURNSTILE_SECRET_KEY: 'turnstile-secret',
-    ADMIN_AUTH_ID: 'operator', ADMIN_AUTH_PASSWORD: 'admin-password-12345',
+    ADMIN_AUTH_ID: 'owner@example.com', ADMIN_AUTH_PASSWORD: 'A1b2C3d4',
     ADMIN_SESSION_SECRET: 'a'.repeat(64),
     SELLER_AUTH_ID: 'seller-admin',
     SELLER_AUTH_PASSWORD: 'seller-password-123',
@@ -677,7 +677,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const placeholders = getEnvironmentReadiness({
     ...base,
     GAS_BACKEND_URL: 'https://script.google.com/macros/s/REPLACE_WITH_DEPLOYMENT_ID/exec',
-    ADMIN_AUTH_PASSWORD: 'replace-with-password-at-least-16-characters',
+    ADMIN_AUTH_PASSWORD: 'replace-with-password-at-least-8-characters',
     ADMIN_SESSION_SECRET: 'replace-with-secret-at-least-64-characters-xxxxxxxxxxxxxxxxxxxxxxxx'
   });
   assert.equal(placeholders.ready, false);
@@ -765,7 +765,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const payload = await response.json();
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
-  assert.equal(payload.release, '1.18.0');
+  assert.equal(payload.release, '1.18.1');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
   // §3移行(ContractPolicy/MultilingualSeo/Measurement/SocialKnowledge/ProductIdentifier)で
   // 追加したD1テーブルもgas/PreflightEngine.gsの「必須シート」チェック相当として含まれる。
