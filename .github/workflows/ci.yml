@@ -67,7 +67,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - name: Verify only migration 0048 is pending
+      - name: Verify historical schema and isolate migration 0048
         working-directory: tools/line-worker
         run: |
           output="$(npx wrangler d1 migrations list hoshilu-products --remote 2>&1)"
@@ -79,10 +79,45 @@ jobs:
               pending+=("$name")
             fi
           done < <(find migrations -maxdepth 1 -type f -name '*.sql' -print | sort)
-          if [ "${pending[*]}" != "0048_seller_priority_console.sql" ]; then
-            echo "::error::Expected only 0048_seller_priority_console.sql to be pending; found: ${pending[*]:-none}"
+          expected="0037_contract_policy.sql 0038_multilingual_seo.sql 0039_kpi_measurement.sql 0040_social_knowledge.sql 0041_product_identifiers.sql 0042_hoshilu_product_schema.sql 0043_outbound_commerce_events.sql 0044_insight_search_watch.sql 0045_marketplace_ranking.sql 0046_ranking_sponsor_slots.sql 0047_growth_visitor_sessions.sql 0048_seller_priority_console.sql"
+          if [ "${pending[*]}" != "$expected" ]; then
+            echo "::error::Unexpected D1 migration state; found: ${pending[*]:-none}"
             exit 1
           fi
+
+          historical_objects="contracts contracts_tenant contracts_competitor_group contract_decisions contract_decisions_contract contract_sync_batches product_aliases product_aliases_lookup localized_product_content localized_product_content_lookup multilingual_sync_batches kpi_events kpi_events_summary_scope kpi_summary kpi_uplift marketplace_kpi_events marketplace_kpi_events_summary_scope marketplace_kpi_summary anonymous_benchmark social_knowledge_inbox social_knowledge_inbox_duplicate_hash social_knowledge_inbox_review_status social_knowledge_aggregates social_hashtag_aggregates product_identifiers product_identifiers_lookup product_identifier_sync_batches hoshilu_products hoshilu_product_offers hoshilu_product_offers_by_product hoshilu_product_offers_by_identifier outbound_commerce_events outbound_commerce_events_by_destination outbound_commerce_events_by_seller search_watch_matches search_watch_matches_by_member marketplace_capabilities marketplace_ranking_cache idx_marketplace_ranking_cache_expiry ranking_sponsor_campaigns idx_ranking_sponsor_category_active growth_events_visitor_time growth_events_session_time"
+          quoted="$(printf "'%s'," $historical_objects)"
+          quoted="${quoted%,}"
+          schema="$(npx wrangler d1 execute hoshilu-products --remote --json --command "SELECT name FROM sqlite_master WHERE name IN ($quoted) ORDER BY name;")"
+          echo "$schema"
+          for object in $historical_objects; do
+            grep -Fq "\"$object\"" <<<"$schema" || { echo "::error::Historical schema object is missing: $object"; exit 1; }
+          done
+
+          member_columns="$(npx wrangler d1 execute hoshilu-products --remote --json --command "SELECT name FROM pragma_table_info('member_wishes') WHERE name IN ('notify_new_match','condition_snapshot') ORDER BY name;")"
+          growth_columns="$(npx wrangler d1 execute hoshilu-products --remote --json --command "SELECT name FROM pragma_table_info('growth_events') WHERE name IN ('visitor_id','session_id') ORDER BY name;")"
+          for column in notify_new_match condition_snapshot; do
+            grep -Fq "\"$column\"" <<<"$member_columns" || { echo "::error::Historical member_wishes column is missing: $column"; exit 1; }
+          done
+          for column in visitor_id session_id; do
+            grep -Fq "\"$column\"" <<<"$growth_columns" || { echo "::error::Historical growth_events column is missing: $column"; exit 1; }
+          done
+
+          mkdir -p migrations-0048
+          cp migrations/0048_seller_priority_console.sql migrations-0048/
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const config = JSON.parse(fs.readFileSync('wrangler.jsonc', 'utf8'));
+          config.d1_databases = config.d1_databases.map((database) =>
+            database.database_name === 'hoshilu-products'
+              ? { ...database, migrations_dir: 'migrations-0048' }
+              : database
+          );
+          fs.writeFileSync('wrangler.0048.json', JSON.stringify(config, null, 2));
+          NODE
+          isolated="$(npx wrangler d1 migrations list hoshilu-products --remote --config wrangler.0048.json 2>&1)"
+          echo "$isolated"
+          grep -Fq '0048_seller_priority_console.sql' <<<"$isolated" || { echo "::error::Migration 0048 is not pending in isolated config"; exit 1; }
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -94,7 +129,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Apply seller console migration
         working-directory: tools/line-worker
-        run: npx wrangler d1 migrations apply hoshilu-products --remote
+        run: npx wrangler d1 migrations apply hoshilu-products --remote --config wrangler.0048.json
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -106,7 +141,7 @@ jobs:
           for table in seller_priority_rules seller_priority_memberships seller_billing_wallets seller_qualified_click_charges seller_console_audit; do
             grep -Fq "\"$table\"" <<<"$output" || { echo "::error::Missing table $table"; exit 1; }
           done
-          pending="$(npx wrangler d1 migrations list hoshilu-products --remote 2>&1)"
+          pending="$(npx wrangler d1 migrations list hoshilu-products --remote --config wrangler.0048.json 2>&1)"
           if grep -Fq '0048_seller_priority_console.sql' <<<"$pending"; then
             echo "::error::Migration 0048 is still pending"
             exit 1
