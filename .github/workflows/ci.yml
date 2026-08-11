@@ -91,16 +91,25 @@ jobs:
           schema="$(npx wrangler d1 execute hoshilu-products --remote --json --command "SELECT name FROM sqlite_master WHERE name IN ($quoted) ORDER BY name;")"
           echo "$schema"
           for object in $historical_objects; do
-            grep -Fq "\"$object\"" <<<"$schema" || { echo "::error::Historical schema object is missing: $object"; exit 1; }
+            if grep -Fq "\"$object\"" <<<"$schema"; then
+              echo "::error::Historical migration is partially applied; unexpected object: $object"
+              exit 1
+            fi
           done
 
           member_columns="$(npx wrangler d1 execute hoshilu-products --remote --json --command "SELECT name FROM pragma_table_info('member_wishes') WHERE name IN ('notify_new_match','condition_snapshot') ORDER BY name;")"
           growth_columns="$(npx wrangler d1 execute hoshilu-products --remote --json --command "SELECT name FROM pragma_table_info('growth_events') WHERE name IN ('visitor_id','session_id') ORDER BY name;")"
           for column in notify_new_match condition_snapshot; do
-            grep -Fq "\"$column\"" <<<"$member_columns" || { echo "::error::Historical member_wishes column is missing: $column"; exit 1; }
+            if grep -Fq "\"$column\"" <<<"$member_columns"; then
+              echo "::error::Historical migration is partially applied; unexpected member_wishes column: $column"
+              exit 1
+            fi
           done
           for column in visitor_id session_id; do
-            grep -Fq "\"$column\"" <<<"$growth_columns" || { echo "::error::Historical growth_events column is missing: $column"; exit 1; }
+            if grep -Fq "\"$column\"" <<<"$growth_columns"; then
+              echo "::error::Historical migration is partially applied; unexpected growth_events column: $column"
+              exit 1
+            fi
           done
 
           mkdir -p migrations-0048
