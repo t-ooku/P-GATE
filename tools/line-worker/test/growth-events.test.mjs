@@ -48,7 +48,7 @@ test('accepts anonymous registration and inquiry events across all ten marketpla
 
 test('accepts the official-launch commerce journey KPIs without storing search text', () => {
   for (const event_type of [
-    'ai_result_clicked', 'ranking_result_clicked',
+    'search_failed', 'ai_result_clicked', 'ranking_result_clicked',
     'price_comparison_opened', 'returning_visit'
   ]) {
     const normalized = normalizeGrowthEvent({ event_type, query: '保存してはいけない検索文' });

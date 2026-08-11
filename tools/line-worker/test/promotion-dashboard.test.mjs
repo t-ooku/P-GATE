@@ -14,11 +14,16 @@ const visitorMigration = readFileSync(new URL('../migrations/0047_growth_visitor
 
 function d1(db) {
   return {
+    async batch(statements) {
+      return statements.map(item => ({ results: item.__statement.all(...item.__values) }));
+    },
     prepare(sql) {
       const statement = db.prepare(sql);
       return {
         bind(...values) {
           return {
+            __statement: statement,
+            __values: values,
             async all() { return { results: statement.all(...values) }; },
             async first() { return statement.get(...values) || null; },
             async run() { statement.run(...values); return { meta: { changes: 1 } }; }
@@ -42,14 +47,30 @@ function setup() {
   insert.run('ig-live', 'INSTAGRAM', '公開済みリール', '2026-08-09T11:15:00.000Z', 'PUBLISHED', '2026-08-09T11:16:00.000Z', 'ig-1', '', '2026-08-09T00:00:00Z', '2026-08-09T11:16:00Z');
   insert.run('ig-fail', 'INSTAGRAM', '失敗リール', '2026-08-08T11:15:00.000Z', 'FAILED', '', '', 'API_ERROR', '2026-08-08T00:00:00Z', '2026-08-08T11:16:00Z');
   const event = db.prepare(`INSERT INTO growth_events
-    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
-    VALUES (?,?,?,?,?,?,?,?,?,?)`);
-  event.run('e1', 'search_started', 'JA', 'instagram', 'social', 'campaign', '', '', '2026-08-09T12:00:00Z', 'ATTRIBUTED');
-  event.run('e2', 'search_completed', 'JA', 'instagram', 'social', 'campaign', '', '', '2026-08-09T12:01:00Z', 'ATTRIBUTED');
-  event.run('e3', 'marketplace_click', 'JA', 'instagram', 'social', 'campaign', '', 'RAKUTEN_JP', '2026-08-09T12:02:00Z', 'ATTRIBUTED');
-  event.run('qa', 'marketplace_click', 'JA', 'instagram', 'qa', 'test', '', 'RAKUTEN_JP', '2026-08-09T12:03:00Z', 'QA');
-  db.exec(`UPDATE growth_events SET visitor_id='550e8400-e29b-41d4-a716-446655440000', session_id='650e8400-e29b-41d4-a716-446655440000' WHERE event_id IN ('e1','e2');
-    UPDATE growth_events SET visitor_id='750e8400-e29b-41d4-a716-446655440000', session_id='850e8400-e29b-41d4-a716-446655440000' WHERE event_id='e3';`);
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const v1 = '550e8400-e29b-41d4-a716-446655440000';
+  const v2 = '750e8400-e29b-41d4-a716-446655440000';
+  const s1 = '650e8400-e29b-41d4-a716-446655440000';
+  const s2 = '850e8400-e29b-41d4-a716-446655440000';
+  const s3 = '950e8400-e29b-41d4-a716-446655440000';
+  for (const [id, type, at, marketplace = '', visitor = v1, session = s1] of [
+    ['e0', 'landing_view', '2026-08-09T11:59:00Z'],
+    ['e1', 'search_started', '2026-08-09T12:00:00Z'],
+    ['e2', 'search_completed', '2026-08-09T12:01:00Z'],
+    ['e3', 'price_comparison_opened', '2026-08-09T12:01:30Z'],
+    ['e4', 'marketplace_click', '2026-08-09T12:02:00Z', 'RAKUTEN_JP'],
+    ['e5', 'landing_view', '2026-08-09T13:00:00Z', '', v2, s2],
+    ['e6', 'search_started', '2026-08-09T13:01:00Z', '', v2, s2],
+    ['e7', 'search_failed', '2026-08-09T13:01:10Z', '', v2, s2],
+    ['e8', 'landing_view', '2026-08-09T14:00:00Z', '', v1, s3]
+  ]) event.run(id, type, 'JA', 'instagram', 'social', 'campaign', '', marketplace, at, 'ATTRIBUTED', visitor, session);
+  const oldSession = 'a50e8400-e29b-41d4-a716-446655440000';
+  for (const [id, type, at, marketplace = ''] of [
+    ['old0', 'landing_view', '2026-08-01T11:59:00Z'], ['old1', 'search_started', '2026-08-01T12:00:00Z'],
+    ['old2', 'search_completed', '2026-08-01T12:01:00Z'], ['old3', 'marketplace_click', '2026-08-01T12:02:00Z', 'AMAZON_JP']
+  ]) event.run(id, type, 'JA', 'x', 'social', 'old', '', marketplace, at, 'ATTRIBUTED', v1, oldSession);
+  event.run('qa', 'marketplace_click', 'JA', 'instagram', 'qa', 'test', '', 'RAKUTEN_JP', '2026-08-09T12:03:00Z', 'QA', v1, s1);
   return db;
 }
 
@@ -66,14 +87,37 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(summary.channels[1].counts.failed, 1);
   assert.equal(summary.channels[2].configured, false);
   assert.match(summary.channels[1].schedule, /月・火・土 20:15/);
-  assert.equal(summary.channels[1].funnel_7d.search_started, 1);
+  assert.equal(summary.channels[1].funnel_7d.search_started, 2);
   assert.equal(summary.channels[1].funnel_7d.marketplace_click, 1);
-  assert.equal(summary.channels[1].funnel_rates_7d.search_completion, 100);
+  assert.equal(summary.channels[1].funnel_rates_7d.search_completion, 50);
   assert.equal(summary.channels[1].funnel_rates_7d.marketplace_outbound, 100);
+  assert.equal(summary.business_kpis.status, 'READY');
   assert.equal(summary.business_kpis.registered_members, 2);
-  assert.equal(summary.business_kpis.periods['7d'].search_started, 1);
-  assert.equal(summary.business_kpis.periods['7d'].visitors, 2);
-  assert.equal(summary.business_kpis.periods['7d'].sessions, 2);
+  const period = summary.business_kpis.periods['7d'];
+  assert.equal(period.current.visitors, 2);
+  assert.equal(period.current.sessions, 3);
+  assert.equal(period.current.repeat_visitors, 1);
+  assert.equal(period.current.search_sessions, 2);
+  assert.equal(period.current.completed_search_sessions, 1);
+  assert.equal(period.current.failed_search_sessions, 1);
+  assert.equal(period.current.value_sessions, 1);
+  assert.equal(period.current.outbound_sessions, 1);
+  assert.equal(period.current.rates.search_completion, 50);
+  assert.equal(period.current.rates.value_realization, 100);
+  assert.equal(period.previous.value_sessions, 1);
+  assert.equal(period.sources[0].source, 'instagram');
+  assert.equal(period.marketplaces[0].marketplace, 'RAKUTEN_JP');
+  assert.equal(period.daily.at(-1).value_sessions, 1);
+});
+
+test('経営KPIが未移行でもSNS運用部分は表示できる', async () => {
+  const db = setup();
+  db.exec('DROP TABLE growth_events');
+  const summary = await promotionDashboardSummary({ PRODUCT_DB: d1(db), SOCIAL_AUTOPILOT_ENABLED: 'false' }, new Date('2026-08-10T00:00:00.000Z'));
+  assert.equal(summary.ok, true);
+  assert.equal(summary.business_kpis.status, 'UNAVAILABLE');
+  assert.equal(summary.channels.length, 3);
+  assert.ok(summary.social_warnings.includes('social_funnel'));
 });
 
 test('販促ダッシュボードAPIは管理認証が無ければ拒否する', async () => {

@@ -18,7 +18,7 @@ const readOrCreate = (key, fallback) => {
   } catch { return fallback(); }
 };
 const visitorId = readOrCreate('hoshilu_anonymous_visitor_id', randomId);
-const sessionId = (() => {
+const sessionId = () => {
   try {
     const key = 'hoshilu_anonymous_session';
     const current = JSON.parse(sessionStorage.getItem(key) || 'null');
@@ -28,9 +28,9 @@ const sessionId = (() => {
     const next = { id: randomId(), touched_at: Date.now() };
     sessionStorage.setItem(key, JSON.stringify(next)); return next.id;
   } catch { return randomId(); }
-})();
+};
 const send = (event_type, extra = {}) => {
-  const body = JSON.stringify({ event_type, locale: locale(), visitor_id: visitorId, session_id: sessionId, ...attribution, ...extra });
+  const body = JSON.stringify({ event_type, locale: locale(), visitor_id: visitorId, session_id: sessionId(), ...attribution, ...extra });
   if (navigator.sendBeacon) {
     navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' }));
     return;
@@ -51,6 +51,9 @@ document.addEventListener('submit', event => {
   if (event.target?.id === 'knowledgeForm') send('search_started');
 });
 
+document.addEventListener('hoshilu:search-completed', () => send('search_completed'));
+document.addEventListener('hoshilu:search-failed', () => send('search_failed'));
+
 document.addEventListener('click', event => {
   const target = event.target.closest('a,button');
   if (!target) return;
@@ -63,13 +66,3 @@ document.addEventListener('click', event => {
     if (marketplace) send('marketplace_click', { marketplace });
   }
 });
-
-const results = document.querySelector('#resultsSection');
-if (results) {
-  new MutationObserver(() => {
-    if (!results.classList.contains('hidden') && results.dataset.measured !== '1') {
-      results.dataset.measured = '1';
-      send('search_completed');
-    }
-  }).observe(results, { attributes: true, attributeFilter: ['class'] });
-}

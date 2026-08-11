@@ -2,6 +2,7 @@ const EVENTS = new Set([
   'landing_view',
   'search_started',
   'search_completed',
+  'search_failed',
   'ai_result_clicked',
   'ranking_result_clicked',
   'price_comparison_opened',

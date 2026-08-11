@@ -7,6 +7,13 @@ const SCHEDULES = Object.freeze({
   INSTAGRAM: '月・火・土 20:15（リール）',
   TIKTOK: '未接続'
 });
+const SOURCE_BY_PLATFORM = Object.freeze({ X: 'x', INSTAGRAM: 'instagram', TIKTOK: 'tiktok' });
+const FUNNEL_EVENTS = Object.freeze([
+  'landing_view', 'search_started', 'search_completed', 'search_failed', 'ai_result_clicked',
+  'ranking_result_clicked', 'price_comparison_opened', 'marketplace_click', 'returning_visit'
+]);
+const emptyFunnel = () => Object.fromEntries(FUNNEL_EVENTS.map(event => [event, 0]));
+const VALUE_EVENT_SQL = "'ai_result_clicked','ranking_result_clicked','price_comparison_opened','wish_saved','share_started','marketplace_click'";
 
 function noStoreJson(value, init = {}) {
   const headers = new Headers(init.headers);
@@ -15,85 +22,283 @@ function noStoreJson(value, init = {}) {
   return Response.json(value, { ...init, headers });
 }
 
-const safeCount = value => Math.max(0, Number(value || 0));
-
-const SOURCE_BY_PLATFORM = Object.freeze({ X: 'x', INSTAGRAM: 'instagram', TIKTOK: 'tiktok' });
-const FUNNEL_EVENTS = Object.freeze([
-  'landing_view', 'search_started', 'search_completed', 'ai_result_clicked',
-  'ranking_result_clicked', 'price_comparison_opened', 'marketplace_click', 'returning_visit'
-]);
-const emptyFunnel = () => Object.fromEntries(FUNNEL_EVENTS.map(event => [event, 0]));
+const safeCount = value => Math.max(0, Math.round(Number(value || 0)));
+const safeNumber = value => Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : null;
 const percentage = (numerator, denominator) => denominator > 0
   ? Math.round((numerator / denominator) * 1000) / 10 : null;
+const iso = value => new Date(value).toISOString();
+const shiftDays = (value, days) => new Date(new Date(value).getTime() + days * 86400000);
+
+const SESSION_METRICS_SQL = `WITH base AS (
+  SELECT visitor_id,session_id,event_type,traffic_class,occurred_at
+  FROM growth_events
+  WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
+), session_flags AS (
+  SELECT session_id,
+    MAX(CASE WHEN event_type='landing_view' THEN 1 ELSE 0 END) AS landed,
+    MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS searched,
+    MAX(CASE WHEN event_type='search_completed' THEN 1 ELSE 0 END) AS completed,
+    MAX(CASE WHEN event_type='search_failed' THEN 1 ELSE 0 END) AS failed,
+    MAX(CASE WHEN event_type IN (${VALUE_EVENT_SQL}) THEN 1 ELSE 0 END) AS valued,
+    MAX(CASE WHEN event_type='price_comparison_opened' THEN 1 ELSE 0 END) AS compared,
+    MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS outbound,
+    MAX(CASE WHEN event_type='wish_saved' THEN 1 ELSE 0 END) AS wished,
+    MAX(CASE WHEN event_type='share_started' THEN 1 ELSE 0 END) AS shared,
+    MAX(CASE WHEN event_type='member_registered' THEN 1 ELSE 0 END) AS registered,
+    MAX(CASE WHEN traffic_class='ATTRIBUTED' THEN 1 ELSE 0 END) AS attributed,
+    MIN(CASE WHEN event_type='search_started' THEN occurred_at END) AS search_at,
+    MIN(CASE WHEN event_type='search_completed' THEN occurred_at END) AS completed_at,
+    MIN(CASE WHEN event_type IN (${VALUE_EVENT_SQL}) THEN occurred_at END) AS value_at
+  FROM base WHERE session_id<>'' GROUP BY session_id
+), visitor_flags AS (
+  SELECT visitor_id,COUNT(DISTINCT session_id) AS session_count
+  FROM base WHERE visitor_id<>'' GROUP BY visitor_id
+)
+SELECT
+  (SELECT COUNT(*) FROM visitor_flags) AS visitors,
+  (SELECT COUNT(*) FROM visitor_flags WHERE session_count>=2) AS repeat_visitors,
+  COUNT(*) AS sessions,
+  SUM(landed) AS landing_sessions,
+  SUM(searched) AS search_sessions,
+  SUM(CASE WHEN searched=1 AND completed=1 THEN 1 ELSE 0 END) AS completed_search_sessions,
+  SUM(CASE WHEN searched=1 AND failed=1 THEN 1 ELSE 0 END) AS failed_search_sessions,
+  SUM(CASE WHEN completed=1 AND valued=1 THEN 1 ELSE 0 END) AS value_sessions,
+  SUM(CASE WHEN completed=1 AND compared=1 THEN 1 ELSE 0 END) AS comparison_sessions,
+  SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions,
+  SUM(CASE WHEN completed=1 AND wished=1 THEN 1 ELSE 0 END) AS wish_sessions,
+  SUM(CASE WHEN completed=1 AND shared=1 THEN 1 ELSE 0 END) AS share_sessions,
+  SUM(registered) AS registration_sessions,
+  SUM(attributed) AS attributed_sessions,
+  ROUND(AVG(CASE WHEN search_at IS NOT NULL AND completed_at>=search_at
+    THEN (julianday(completed_at)-julianday(search_at))*86400 END),1) AS avg_search_seconds,
+  ROUND(AVG(CASE WHEN search_at IS NOT NULL AND value_at>=search_at
+    THEN (julianday(value_at)-julianday(search_at))*86400 END),1) AS avg_value_seconds,
+  (SELECT COUNT(*) FROM base) AS events,
+  (SELECT COUNT(*) FROM base WHERE visitor_id<>'' AND session_id<>'') AS identified_events,
+  (SELECT MAX(occurred_at) FROM base) AS last_event_at
+FROM session_flags`;
+
+const SOURCE_BREAKDOWN_SQL = `WITH base AS (
+  SELECT visitor_id,session_id,event_type,source,medium
+  FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA' AND session_id<>''
+), sessions AS (
+  SELECT session_id,MAX(visitor_id) AS visitor_id,
+    COALESCE(NULLIF(MAX(source),''),'DIRECT') AS source,
+    COALESCE(NULLIF(MAX(medium),''),'NONE') AS medium,
+    MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS searched,
+    MAX(CASE WHEN event_type='search_completed' THEN 1 ELSE 0 END) AS completed,
+    MAX(CASE WHEN event_type IN (${VALUE_EVENT_SQL}) THEN 1 ELSE 0 END) AS valued,
+    MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS outbound
+  FROM base GROUP BY session_id
+)
+SELECT source,medium,COUNT(*) AS sessions,
+  COUNT(DISTINCT CASE WHEN visitor_id<>'' THEN visitor_id END) AS visitors,
+  SUM(searched) AS search_sessions,
+  SUM(CASE WHEN searched=1 AND completed=1 THEN 1 ELSE 0 END) AS completed_search_sessions,
+  SUM(CASE WHEN completed=1 AND valued=1 THEN 1 ELSE 0 END) AS value_sessions,
+  SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions
+FROM sessions GROUP BY source,medium
+ORDER BY value_sessions DESC,outbound_sessions DESC,sessions DESC LIMIT 10`;
+
+const MARKETPLACE_BREAKDOWN_SQL = `SELECT marketplace,COUNT(DISTINCT session_id) AS outbound_sessions
+  FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
+  AND event_type='marketplace_click' AND marketplace<>'' AND session_id<>''
+  GROUP BY marketplace ORDER BY outbound_sessions DESC,marketplace ASC LIMIT 15`;
+
+const DAILY_SQL = `WITH sessions AS (
+  SELECT substr(occurred_at,1,10) AS day,session_id,MAX(visitor_id) AS visitor_id,
+    MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS searched,
+    MAX(CASE WHEN event_type='search_completed' THEN 1 ELSE 0 END) AS completed,
+    MAX(CASE WHEN event_type IN (${VALUE_EVENT_SQL}) THEN 1 ELSE 0 END) AS valued,
+    MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS outbound
+  FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA' AND session_id<>''
+  GROUP BY substr(occurred_at,1,10),session_id
+)
+SELECT day,COUNT(DISTINCT CASE WHEN visitor_id<>'' THEN visitor_id END) AS visitors,
+  SUM(searched) AS search_sessions,
+  SUM(CASE WHEN completed=1 AND valued=1 THEN 1 ELSE 0 END) AS value_sessions,
+  SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions
+FROM sessions GROUP BY day ORDER BY day`;
+
+function normalizedMetrics(row = {}) {
+  const fields = [
+    'visitors', 'repeat_visitors', 'sessions', 'landing_sessions', 'search_sessions',
+    'completed_search_sessions', 'failed_search_sessions', 'value_sessions',
+    'comparison_sessions', 'outbound_sessions', 'wish_sessions', 'share_sessions',
+    'registration_sessions', 'attributed_sessions', 'events', 'identified_events'
+  ];
+  const metrics = Object.fromEntries(fields.map(field => [field, safeCount(row[field])]));
+  return {
+    ...metrics,
+    avg_search_seconds: safeNumber(row.avg_search_seconds),
+    avg_value_seconds: safeNumber(row.avg_value_seconds),
+    last_event_at: row.last_event_at || '',
+    rates: {
+      visit_to_search: percentage(metrics.search_sessions, metrics.landing_sessions),
+      search_completion: percentage(metrics.completed_search_sessions, metrics.search_sessions),
+      search_failure: percentage(metrics.failed_search_sessions, metrics.search_sessions),
+      value_realization: percentage(metrics.value_sessions, metrics.completed_search_sessions),
+      comparison_reach: percentage(metrics.comparison_sessions, metrics.completed_search_sessions),
+      marketplace_outbound: percentage(metrics.outbound_sessions, metrics.completed_search_sessions),
+      repeat_visitor: percentage(metrics.repeat_visitors, metrics.visitors),
+      registration: percentage(metrics.registration_sessions, metrics.landing_sessions),
+      attributed_sessions: percentage(metrics.attributed_sessions, metrics.sessions),
+      tracking_coverage: percentage(metrics.identified_events, metrics.events)
+    }
+  };
+}
+
+function fillDaily(start, end, rows = []) {
+  const byDay = new Map(rows.map(row => [row.day, row]));
+  const daily = [];
+  for (let cursor = new Date(start); cursor < end; cursor = shiftDays(cursor, 1)) {
+    const day = cursor.toISOString().slice(0, 10);
+    const row = byDay.get(day) || {};
+    daily.push({ day, visitors: safeCount(row.visitors), search_sessions: safeCount(row.search_sessions),
+      value_sessions: safeCount(row.value_sessions), outbound_sessions: safeCount(row.outbound_sessions) });
+  }
+  return daily;
+}
+
+function sourceRows(rows = []) {
+  return rows.map(row => ({
+    source: String(row.source || 'DIRECT').toLowerCase(),
+    medium: String(row.medium || 'NONE').toLowerCase(),
+    visitors: safeCount(row.visitors), sessions: safeCount(row.sessions),
+    search_sessions: safeCount(row.search_sessions), completed_search_sessions: safeCount(row.completed_search_sessions),
+    value_sessions: safeCount(row.value_sessions),
+    outbound_sessions: safeCount(row.outbound_sessions),
+    value_rate: percentage(safeCount(row.value_sessions), safeCount(row.completed_search_sessions))
+  }));
+}
+
+function marketplaceRows(rows = []) {
+  return rows.map(row => ({ marketplace: String(row.marketplace || ''), outbound_sessions: safeCount(row.outbound_sessions) }));
+}
+
+function comparison(current, previous) {
+  const countKeys = ['visitors', 'sessions', 'search_sessions', 'completed_search_sessions', 'value_sessions', 'outbound_sessions'];
+  const rateKeys = ['visit_to_search', 'search_completion', 'search_failure', 'value_realization', 'marketplace_outbound', 'repeat_visitor'];
+  return {
+    counts: Object.fromEntries(countKeys.map(key => [key, previous[key] > 0
+      ? Math.round(((current[key] - previous[key]) / previous[key]) * 1000) / 10
+      : current[key] > 0 ? null : 0])),
+    rates: Object.fromEntries(rateKeys.map(key => [key,
+      current.rates[key] === null || previous.rates[key] === null ? null
+        : Math.round((current.rates[key] - previous.rates[key]) * 10) / 10]))
+  };
+}
+
+function improvementInsights(current, previous, sources) {
+  if (!current.events) return [{ tone: 'info', title: '計測開始待ち', detail: '本番イベントが届くと、改善優先順位を自動表示します。' }];
+  const insights = [];
+  if ((current.rates.tracking_coverage ?? 0) < 90) {
+    insights.push({ tone: 'warning', title: '計測データを先に整える',
+      detail: `匿名ID付与率は${current.rates.tracking_coverage ?? 0}%です。率の判断は90%以上になってから行います。` });
+  }
+  if (current.search_sessions < 20) {
+    insights.push({ tone: 'info', title: '判断保留', detail: `検索セッションは${current.search_sessions}件です。まず20件以上を集め、率より実数と不具合を確認します。` });
+  } else {
+    const stages = [
+      { title: '訪問から検索開始', from: current.landing_sessions, to: current.search_sessions, rate: current.rates.visit_to_search },
+      { title: '検索開始から成功', from: current.search_sessions, to: current.completed_search_sessions, rate: current.rates.search_completion },
+      { title: '検索成功から商品発見', from: current.completed_search_sessions, to: current.value_sessions, rate: current.rates.value_realization },
+      { title: '商品発見からモール送客', from: current.value_sessions, to: current.outbound_sessions,
+        rate: percentage(current.outbound_sessions, current.value_sessions) }
+    ].filter(stage => stage.from > 0);
+    const largest = stages.sort((a, b) => (b.from - b.to) - (a.from - a.to))[0];
+    if (largest) insights.push({ tone: 'action', title: `最優先：${largest.title}`,
+      detail: `${largest.from}→${largest.to}、離脱${Math.max(0, largest.from - largest.to)}件（到達率${largest.rate ?? 0}%）です。` });
+  }
+  const rateDeltas = comparison(current, previous).rates;
+  const regressions = [
+    ['検索開始率', rateDeltas.visit_to_search], ['検索成功率', rateDeltas.search_completion],
+    ['価値到達率', rateDeltas.value_realization], ['モール送客率', rateDeltas.marketplace_outbound]
+  ].filter(([, delta]) => delta !== null && delta <= -5).sort((a, b) => a[1] - b[1]);
+  if (regressions[0]) insights.push({ tone: 'danger', title: `${regressions[0][0]}が悪化`,
+    detail: `直前期間より${Math.abs(regressions[0][1])}ポイント低下しています。変更履歴と流入元を確認してください。` });
+  const best = sources.filter(row => row.search_sessions >= 3).sort((a, b) => b.value_rate - a.value_rate)[0];
+  if (best) insights.push({ tone: 'success', title: `質の高い流入：${best.source}`,
+    detail: `${best.search_sessions}検索、価値到達率${best.value_rate ?? 0}%です。量を増やせるか検証します。` });
+  return insights.slice(0, 4);
+}
+
+async function periodSummary(env, now, days) {
+  const end = new Date(now);
+  const start = shiftDays(end, -days);
+  const previousStart = shiftDays(start, -days);
+  const statements = [
+    env.PRODUCT_DB.prepare(SESSION_METRICS_SQL).bind(iso(start), iso(end)),
+    env.PRODUCT_DB.prepare(SESSION_METRICS_SQL).bind(iso(previousStart), iso(start)),
+    env.PRODUCT_DB.prepare(SOURCE_BREAKDOWN_SQL).bind(iso(start), iso(end)),
+    env.PRODUCT_DB.prepare(MARKETPLACE_BREAKDOWN_SQL).bind(iso(start), iso(end)),
+    env.PRODUCT_DB.prepare(DAILY_SQL).bind(iso(start), iso(end))
+  ];
+  const results = typeof env.PRODUCT_DB.batch === 'function'
+    ? await env.PRODUCT_DB.batch(statements)
+    : await Promise.all([statements[0].first(), statements[1].first(), statements[2].all(), statements[3].all(), statements[4].all()]);
+  const first = result => Array.isArray(result?.results) ? result.results[0] || {} : result || {};
+  const rows = result => Array.isArray(result?.results) ? result.results : [];
+  const current = normalizedMetrics(first(results[0]));
+  const previous = normalizedMetrics(first(results[1]));
+  const sources = sourceRows(rows(results[2]));
+  const marketplaces = marketplaceRows(rows(results[3]));
+  return {
+    days, start_at: iso(start), end_at: iso(end), current, previous,
+    comparison: comparison(current, previous),
+    daily: fillDaily(start, end, rows(results[4])), sources, marketplaces,
+    insights: improvementInsights(current, previous, sources)
+  };
+}
 
 async function businessKpiSummary(env, now) {
-  const since7d = new Date(now.getTime() - (7 * 86400000)).toISOString();
-  const since30d = new Date(now.getTime() - (30 * 86400000)).toISOString();
-  const empty = { visitors: 0, sessions: 0, landing_view: 0, search_started: 0, search_completed: 0,
-    ai_result_clicked: 0, ranking_result_clicked: 0, price_comparison_opened: 0,
-    marketplace_click: 0, returning_visit: 0, member_registered: 0 };
-  const period = async (since) => {
-    const counts = { ...empty };
-    const totals = await env.PRODUCT_DB.prepare(`SELECT
-      COUNT(DISTINCT CASE WHEN visitor_id<>'' THEN visitor_id END) AS visitors,
-      COUNT(DISTINCT CASE WHEN session_id<>'' THEN session_id END) AS sessions
-      FROM growth_events WHERE occurred_at>=?1 AND traffic_class<>'QA'`).bind(since).first();
-    counts.visitors = safeCount(totals?.visitors);
-    counts.sessions = safeCount(totals?.sessions);
-    const result = await env.PRODUCT_DB.prepare(`SELECT event_type,COUNT(*) AS total
-      FROM growth_events WHERE occurred_at>=?1 AND traffic_class<>'QA' GROUP BY event_type`).bind(since).all();
-    for (const row of result.results || []) {
-      if (Object.hasOwn(counts, row.event_type)) counts[row.event_type] = safeCount(row.total);
-    }
-    return { ...counts, rates: {
-      visit_to_search: percentage(counts.search_started, counts.landing_view),
-      search_completion: percentage(counts.search_completed, counts.search_started),
-      result_engagement: percentage(counts.ai_result_clicked + counts.ranking_result_clicked, counts.search_completed),
-      comparison_reach: percentage(counts.price_comparison_opened, counts.search_completed),
-      marketplace_outbound: percentage(counts.marketplace_click, counts.search_completed),
-      registration: percentage(counts.member_registered, counts.landing_view)
-    } };
-  };
   let registeredMembers = 0;
   try {
     const row = await env.PRODUCT_DB.prepare(`SELECT COUNT(DISTINCT member_id) AS total
       FROM member_notification_destinations WHERE verified_at<>''`).first();
     registeredMembers = safeCount(row?.total);
   } catch {}
-  return { registered_members: registeredMembers, periods: { '7d': await period(since7d), '30d': await period(since30d) } };
+  try {
+    const [period7d, period30d] = await Promise.all([periodSummary(env, now, 7), periodSummary(env, now, 30)]);
+    return {
+      status: 'READY', north_star: '商品発見セッション', registered_members: registeredMembers,
+      definition: '検索成功後に商品・ランキング・価格比較・お気に入り・共有・モール送客へ進んだ重複なしセッション',
+      periods: { '7d': period7d, '30d': period30d }
+    };
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'promotion_kpi_query_failed', error: String(error?.message || error).slice(0, 120) }));
+    return { status: 'UNAVAILABLE', error: 'KPI_DATA_UNAVAILABLE', registered_members: registeredMembers, periods: {} };
+  }
 }
 
-export async function promotionDashboardSummary(env, now = new Date()) {
-  const queue = await env.PRODUCT_DB.prepare(`SELECT platform,status,COUNT(*) AS total,
+async function socialPromotionSummary(env, now) {
+  const warnings = [];
+  const query = async (label, operation, fallback = { results: [] }) => {
+    try { return await operation(); } catch (error) {
+      warnings.push(label);
+      console.error(JSON.stringify({ event: 'promotion_social_query_failed', query: label,
+        error: String(error?.message || error).slice(0, 120) }));
+      return fallback;
+    }
+  };
+  const queue = await query('queue_counts', () => env.PRODUCT_DB.prepare(`SELECT platform,status,COUNT(*) AS total,
     MAX(CASE WHEN status='PUBLISHED' THEN published_at ELSE '' END) AS last_published_at
-    FROM social_post_queue GROUP BY platform,status ORDER BY platform,status`).all();
-  const upcoming = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,caption,scheduled_at,status
+    FROM social_post_queue GROUP BY platform,status ORDER BY platform,status`).all());
+  const upcoming = await query('upcoming_posts', () => env.PRODUCT_DB.prepare(`SELECT post_id,platform,caption,scheduled_at,status
     FROM social_post_queue WHERE status IN ('APPROVED','PUBLISHING') AND scheduled_at>=?1
-    ORDER BY scheduled_at ASC LIMIT 30`).bind(now.toISOString()).all();
-  const recent = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,caption,scheduled_at,published_at,
+    ORDER BY scheduled_at ASC LIMIT 30`).bind(now.toISOString()).all());
+  const recent = await query('recent_posts', () => env.PRODUCT_DB.prepare(`SELECT post_id,platform,caption,scheduled_at,published_at,
     status,external_post_id,last_error FROM social_post_queue
-    WHERE status IN ('PUBLISHED','FAILED') ORDER BY updated_at DESC LIMIT 30`).all();
+    WHERE status IN ('PUBLISHED','FAILED') ORDER BY updated_at DESC LIMIT 30`).all());
+  const since = shiftDays(now, -7).toISOString();
+  const funnelResult = await query('social_funnel', () => env.PRODUCT_DB.prepare(`SELECT LOWER(source) AS source,event_type,COUNT(*) AS total
+    FROM growth_events WHERE occurred_at>=?1 AND traffic_class='ATTRIBUTED'
+    AND LOWER(source) IN ('x','instagram','tiktok') GROUP BY LOWER(source),event_type`).bind(since).all());
   const readiness = socialPublisherReadiness(env);
-  const since = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)).toISOString();
-  let funnelRows = [];
-  try {
-    const result = await env.PRODUCT_DB.prepare(`SELECT LOWER(source) AS source,event_type,COUNT(*) AS total
-      FROM growth_events WHERE occurred_at>=?1 AND traffic_class='ATTRIBUTED'
-      AND LOWER(source) IN ('x','instagram','tiktok')
-      GROUP BY LOWER(source),event_type`).bind(since).all();
-    funnelRows = result.results || [];
-  } catch {
-    // 移行前の開発DBでも、投稿運用画面そのものは利用可能に保つ。
-  }
   const grouped = new Map(PLATFORMS.map(platform => [platform, {
-    platform,
-    configured: Boolean(readiness[platform]),
-    schedule: SCHEDULES[platform],
+    platform, configured: Boolean(readiness[platform]), schedule: SCHEDULES[platform],
     counts: { approved: 0, publishing: 0, published: 0, failed: 0, cancelled: 0, review_required: 0 },
-    next: null,
-    recent: [],
-    last_published_at: '',
-    funnel_7d: emptyFunnel(),
+    next: null, recent: [], last_published_at: '', funnel_7d: emptyFunnel(),
     funnel_rates_7d: { search_completion: null, comparison_reach: null, marketplace_outbound: null }
   }]));
   for (const row of queue.results || []) {
@@ -110,7 +315,7 @@ export async function promotionDashboardSummary(env, now = new Date()) {
     const channel = grouped.get(row.platform);
     if (channel && channel.recent.length < 5) channel.recent.push(row);
   }
-  for (const row of funnelRows) {
+  for (const row of funnelResult.results || []) {
     const platform = PLATFORMS.find(value => SOURCE_BY_PLATFORM[value] === String(row.source || '').toLowerCase());
     const channel = grouped.get(platform);
     if (channel && FUNNEL_EVENTS.includes(row.event_type)) channel.funnel_7d[row.event_type] = safeCount(row.total);
@@ -123,12 +328,17 @@ export async function promotionDashboardSummary(env, now = new Date()) {
       marketplace_outbound: percentage(funnel.marketplace_click, funnel.search_completed)
     };
   }
+  return { warnings, channels: PLATFORMS.map(platform => grouped.get(platform)) };
+}
+
+export async function promotionDashboardSummary(env, now = new Date()) {
+  const [businessKpis, social] = await Promise.all([
+    businessKpiSummary(env, now), socialPromotionSummary(env, now)
+  ]);
   return {
-    ok: true,
-    generated_at: now.toISOString(),
+    ok: true, generated_at: now.toISOString(),
     autopilot_enabled: env.SOCIAL_AUTOPILOT_ENABLED === 'true',
-    business_kpis: await businessKpiSummary(env, now),
-    channels: PLATFORMS.map(platform => grouped.get(platform))
+    business_kpis: businessKpis, social_warnings: social.warnings, channels: social.channels
   };
 }
 

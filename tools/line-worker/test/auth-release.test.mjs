@@ -29,12 +29,27 @@ test('販促管理画面は各SNSを独立表示し管理Secretを公開しな�
   const html = await page.text();
   assert.match(html, /HOSHILU 経営ダッシュボード/);
   assert.match(html, /id="channelGrid"/);
+  assert.match(html, /id="northStarGrid"/);
+  assert.match(html, /id="valueFunnel"/);
+  assert.match(html, /id="sourceTable"/);
   assert.match(html, /\/admin\/sp-api/);
   assert.match(page.headers.get('content-security-policy'), /default-src 'none'/);
   assert.doesNotMatch(html, /SOCIAL_ADMIN_SECRET|ADMIN_SESSION_SECRET/);
   const client = readFileSync(new URL('../public/admin-promotion.js', import.meta.url), 'utf8');
   assert.match(client, /X.*INSTAGRAM.*TIKTOK/);
   assert.match(client, /\/api\/admin\/promotion-dashboard/);
+  assert.match(client, /North Star｜商品発見/);
+  assert.match(client, /直前期間/);
+});
+
+test('検索成功と失敗は検索ごとに別イベントとして計測する', () => {
+  const analytics = readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(analytics, /hoshilu:search-completed/);
+  assert.match(analytics, /hoshilu:search-failed/);
+  assert.doesNotMatch(analytics, /dataset\.measured/);
+  assert.match(app, /CustomEvent\('hoshilu:search-completed'\)/);
+  assert.match(app, /CustomEvent\('hoshilu:search-failed'\)/);
 });
 
 test('認証専用checkerは0025と0026を参照しない', () => {

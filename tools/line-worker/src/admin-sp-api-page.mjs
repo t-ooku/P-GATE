@@ -38,17 +38,33 @@ export function adminPromotionPageResponse() {
   return new Response(`<!doctype html><html lang="ja"><head><meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
   <link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/admin-sp-api.css">
-  <link rel="stylesheet" href="/admin-promotion.css"><title>販促運用 | HOSHILU</title></head><body>
+  <link rel="stylesheet" href="/admin-promotion.css"><title>経営KPI | HOSHILU</title></head><body>
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">BUSINESS KPI</p><h1>HOSHILU 経営ダッシュボード</h1></div>
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
-  <nav class="admin-nav"><a class="active" href="/admin/promotion">販促一覧</a><a href="/admin/sp-api">認証監査</a></nav>
+  <nav class="admin-nav"><a class="active" href="/admin/promotion">経営KPI</a><a href="/admin/sp-api">認証監査</a></nav>
   <div class="dashboard-actions"><p id="promotionStatus" role="status"></p>
   <button id="refreshPromotion" class="ghost-button" type="button">最新状態に更新</button></div></section>
-  <section class="auth-card"><div class="kpi-period-head"><div><p class="eyebrow">ACQUISITION &amp; COMMERCE</p><h2>全体ファネル</h2></div>
+  <section class="auth-card kpi-overview"><div class="kpi-period-head"><div><p class="eyebrow">NORTH STAR &amp; GROWTH</p><h2>事業の現在地</h2></div>
   <div class="kpi-period-switch" role="group" aria-label="集計期間"><button type="button" data-kpi-period="7d" class="active">7日</button><button type="button" data-kpi-period="30d">30日</button></div></div>
-  <p class="funnel-note">QAを除外。匿名訪問者はブラウザ生成IDで重複除外し、個人情報・検索文は保存しません。</p>
+  <p class="funnel-note">QAを除外し、ブラウザ生成の匿名IDで重複を除外。個人情報・検索文は保存しません。</p>
+  <div id="northStarGrid" class="north-star-grid" aria-live="polite"></div>
+  <div id="kpiUnavailable" class="kpi-unavailable" hidden></div></section>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">DECISION SUPPORT</p><h2>今やること</h2></div><span class="section-note">直前の同期間と比較</span></div>
+  <div id="insightGrid" class="insight-grid" aria-live="polite"></div></section>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">VALUE FUNNEL</p><h2>価値到達ファネル</h2></div><span class="section-note">ユニークセッション</span></div>
+  <div id="valueFunnel" class="value-funnel" aria-live="polite"></div></section>
+  <section class="dashboard-split">
+  <article class="auth-card"><div class="section-head"><div><p class="eyebrow">TREND</p><h2>日別推移</h2></div></div><div id="trendChart" class="trend-chart" aria-live="polite"></div></article>
+  <article class="auth-card"><div class="section-head"><div><p class="eyebrow">DATA TRUST</p><h2>計測品質</h2></div></div><div id="qualityGrid" class="quality-grid" aria-live="polite"></div></article>
+  </section>
+  <section class="dashboard-split">
+  <article class="auth-card"><div class="section-head"><div><p class="eyebrow">ACQUISITION QUALITY</p><h2>流入元別の成果</h2></div></div><div id="sourceTable" class="data-table-wrap" aria-live="polite"></div></article>
+  <article class="auth-card"><div class="section-head"><div><p class="eyebrow">COMMERCE</p><h2>モール送客</h2></div></div><div id="marketplaceTable" class="data-table-wrap" aria-live="polite"></div></article>
+  </section>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">SUPPORTING METRICS</p><h2>詳細KPI</h2></div></div>
   <div id="businessKpiGrid" class="business-kpi-grid" aria-live="polite"></div></section>
+  <div class="section-head social-section-head"><div><p class="eyebrow">SOCIAL OPERATIONS</p><h2>SNS投稿運用</h2></div></div>
   <section id="channelGrid" class="promotion-channel-grid" aria-live="polite"></section>
   </main><script type="module" src="/admin-promotion.js"></script></body></html>`, { headers });
 }
