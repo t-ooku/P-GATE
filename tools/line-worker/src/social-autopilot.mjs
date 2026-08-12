@@ -1,7 +1,8 @@
 import {
   normalizeSocialPost,
   runDueSocialPosts,
-  socialPublisherReadiness
+  socialPublisherReadiness,
+  syncInstagramPublishedPermalinks
 } from './social-publisher.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
@@ -174,5 +175,6 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
 export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl = fetch) {
   const seeded = await seedSocialAutopilotQueue(env, now);
   const published = await runDueSocialPosts(env, now, fetchImpl);
-  return { seeded, published };
+  const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
+  return { seeded, published, permalinks };
 }
