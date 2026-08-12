@@ -99,12 +99,14 @@ test('販促自動運用は認証未設定の媒体をキューへ入れない',
 
 test('承認済み20260812動画はAI生成表示とUTM付きで一度だけキュー登録できる', async () => {
   const rows = [];
+  const statements = [];
   const env = {
     SOCIAL_AUTOPILOT_ENABLED: 'true',
     INSTAGRAM_ACCESS_TOKEN: 'ig-token',
     INSTAGRAM_ACCOUNT_ID: 'ig-account',
     PRODUCT_DB: {
-      prepare() {
+      prepare(sql) {
+        statements.push(sql);
         return {
           bind(...values) {
             return { async run() { rows.push(values); return { meta: { changes: 1 } }; } };
@@ -121,4 +123,6 @@ test('承認済み20260812動画はAI生成表示とUTM付きで一度だけキ�
   assert.match(approved[5], /utm_source=instagram/);
   assert.match(approved[6], /hoshilu-approved-model-reel-20260812\.mp4$/);
   assert.equal(approved[7], '2026-08-12T14:00:00.000Z');
+  assert.equal(statements.some(sql => /INSTAGRAM_CONTAINER_IN_PROGRESS/.test(sql)), true);
+  assert.equal(statements.some(sql => /SET status='APPROVED',last_error=''/.test(sql)), true);
 });

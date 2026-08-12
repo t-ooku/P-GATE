@@ -160,6 +160,14 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
         post.link, post.media_url, post.scheduled_at, now.toISOString()).run();
     inserted += Number(result?.meta?.changes || 0);
   }
+  if (approvedModelReel.length) {
+    const retry = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue
+      SET status='APPROVED',last_error='',updated_at=?2
+      WHERE post_id=?1 AND status='FAILED'
+      AND last_error IN ('INSTAGRAM_CONTAINER_IN_PROGRESS','INSTAGRAM_CONTAINER_TIMEOUT')`)
+      .bind(APPROVED_MODEL_REEL.post_id, now.toISOString()).run();
+    inserted += Number(retry?.meta?.changes || 0);
+  }
   return { enabled: true, planned: posts.length, inserted };
 }
 

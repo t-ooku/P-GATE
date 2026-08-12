@@ -183,7 +183,7 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
     await hooks.onJobCreated?.(creationId);
   }
   let statusCode = '';
-  for (let attempt = 0; attempt < 30; attempt += 1) {
+  for (let attempt = 0; attempt < 90; attempt += 1) {
     const status = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(creationId)}?fields=status_code`, { headers });
     if (!status.ok) {
       const detail = clean(await status.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
