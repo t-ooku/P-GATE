@@ -75,7 +75,6 @@ jobs:
   # One-time read-only verification for the explicitly approved 2026-08-12
   # Instagram reel. Remove after the terminal D1 result is confirmed.
   instagram-approved-reel-monitor:
-    needs: deploy
     if: github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[instagram-approved-reel-monitor]')
     runs-on: ubuntu-latest
     timeout-minutes: 20
