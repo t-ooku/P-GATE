@@ -109,17 +109,11 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - name: Generate missing OAuth encryption Secret and report Secret names
+      - name: Generate OAuth encryption Secret
         working-directory: tools/line-worker
         run: |
-          npx wrangler secret list --json > /tmp/hoshilu-secret-names.json
-          node -e "const fs=require('node:fs');const rows=JSON.parse(fs.readFileSync('/tmp/hoshilu-secret-names.json','utf8'));for(const row of rows)console.log(row.name)"
-          if ! node -e "const fs=require('node:fs');const rows=JSON.parse(fs.readFileSync('/tmp/hoshilu-secret-names.json','utf8'));process.exit(rows.some(row=>row.name==='SOCIAL_OAUTH_ENCRYPTION_KEY')?0:1)"; then
-            node -e "process.stdout.write(require('node:crypto').randomBytes(48).toString('base64url'))" | npx wrangler secret put SOCIAL_OAUTH_ENCRYPTION_KEY
-          fi
-          if ! node -e "const fs=require('node:fs');const rows=JSON.parse(fs.readFileSync('/tmp/hoshilu-secret-names.json','utf8'));process.exit(rows.some(row=>row.name==='INSTAGRAM_APP_SECRET')?0:1)"; then
-            echo "::warning::INSTAGRAM_APP_SECRET is not configured; Meta App Secret must be entered directly without chat or GitHub logs."
-          fi
+          node -e "process.stdout.write(require('node:crypto').randomBytes(48).toString('base64url'))" | npx wrangler secret put SOCIAL_OAUTH_ENCRYPTION_KEY
+          echo "SOCIAL_OAUTH_ENCRYPTION_KEY configured without exposing its value."
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
