@@ -60,6 +60,10 @@ test('accepts the official-launch commerce journey KPIs without storing search t
 test('separates SEO article views and transitions from search starts', () => {
   assert.equal(normalizeGrowthEvent({ event_type: 'seo_article_view', content: 'find-product-without-name' }).event_type, 'seo_article_view');
   assert.equal(normalizeGrowthEvent({ event_type: 'seo_search_transition', content: 'find-product-without-name' }).event_type, 'seo_search_transition');
+  assert.equal(normalizeGrowthEvent({ event_type: 'seo_comparison_view', content: 'find-product-without-name' }).event_type, 'seo_comparison_view');
+  assert.equal(normalizeGrowthEvent({ event_type: 'seo_evidence_view', content: 'find-product-without-name' }).event_type, 'seo_evidence_view');
+  assert.equal(normalizeGrowthEvent({ event_type: 'seo_review_guide_view', content: 'find-product-without-name' }).event_type, 'seo_review_guide_view');
+  assert.equal(normalizeGrowthEvent({ event_type: 'seo_identity_guide_view', content: 'find-product-without-name' }).event_type, 'seo_identity_guide_view');
   assert.equal(normalizeGrowthEvent({ event_type: 'search_started', source: 'seo_article', medium: 'internal' }).event_type, 'search_started');
 });
 

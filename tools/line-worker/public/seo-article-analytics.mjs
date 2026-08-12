@@ -1,4 +1,5 @@
 const articleId = String(document.body?.dataset.seoArticleId || '').trim().slice(0, 64);
+const searchIntent = String(document.body?.dataset.seoIntent || '').trim().slice(0, 80);
 const locale = String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
 const randomId = () => crypto.randomUUID();
 const readOrCreate = (key, storage) => {
@@ -22,7 +23,7 @@ const eventMedium = isQaVisit ? 'qa' : 'internal';
 
 function send(event_type) {
   const body = JSON.stringify({
-    event_type, locale, source: eventSource, medium: eventMedium, content: articleId,
+    event_type, locale, source: eventSource, medium: eventMedium, campaign: searchIntent, content: articleId,
     visitor_id: visitorId, session_id: sessionId
   });
   if (navigator.sendBeacon) {
@@ -42,3 +43,18 @@ function preserveArticleContext() {
 send('seo_article_view');
 document.querySelectorAll('[data-seo-search-form]').forEach((form) => form.addEventListener('submit', preserveArticleContext));
 document.querySelectorAll('[data-seo-search-link]').forEach((link) => link.addEventListener('click', preserveArticleContext));
+
+if ('IntersectionObserver' in window) {
+  const observedEvents = new Set();
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting || entry.intersectionRatio < 0.5) continue;
+      const eventType = String(entry.target.dataset.seoSectionEvent || '');
+      if (!eventType || observedEvents.has(eventType)) continue;
+      observedEvents.add(eventType);
+      send(eventType);
+      observer.unobserve(entry.target);
+    }
+  }, { threshold: [0.5] });
+  document.querySelectorAll('[data-seo-section-event]').forEach((section) => observer.observe(section));
+}

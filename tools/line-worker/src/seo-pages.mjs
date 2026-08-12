@@ -1,5 +1,5 @@
 const ORIGIN = 'https://hoshilu.app';
-const UPDATED_AT = '2026-08-12';
+const UPDATED_AT = '2026-08-13';
 
 const jaDefaults = {
   audience: [
@@ -199,6 +199,88 @@ const pages = {
   }
 };
 
+const visualProfiles = {
+  ja: {
+    'american-products-in-japan': {
+      intent: 'american_products_in_japan', cluster: 'overseas-shopping', articleType: 'shopping-guide',
+      headings: ['確認する情報', '検索・照合方法', '購入前の判断'],
+      steps: [['原語の手掛かり', '英語の商品名・ブランド・見た場所を、分かる範囲で残します。'], ['日本で使う条件', '電圧、規格、サイズ、配送など、日本で必要な条件を加えます。'], ['同一性と販売条件', '型番を照合し、保証・付属品・販売者の説明を購入先で確認します。']]
+    },
+    'find-product-without-name': {
+      intent: 'unknown_product_name', cluster: 'ai-discovery', articleType: 'how-to',
+      headings: ['覚えている状態', 'HOSHILUへ伝える内容', '候補の確かめ方'],
+      steps: [['記憶を4つに分ける', '見た場所・使う人・用途・外観のうち、覚えている情報を整理します。'], ['自然な文章で入力', '商品名を推測せず、「何をする物か」をそのまま入力します。'], ['違いを次へ反映', '候補が違えば、色・形・大きさなど違った点を条件へ加えます。']]
+    },
+    'how-to-search-by-description': {
+      intent: 'descriptive_product_search', cluster: 'ai-discovery', articleType: 'how-to',
+      headings: ['検索文の状態', '書き方', '比較しやすくする工夫'],
+      steps: [['カテゴリと用途', '何に使う物か、誰がどこで使うかを書きます。'], ['必須・希望・除外', '絶対に必要な条件、できれば欲しい条件、避けたい条件を分けます。'], ['候補を比べる', '同じ条件で候補を見て、足りない条件だけを追加します。']]
+    },
+    'shopping-in-japan': {
+      intent: 'international_shopping_in_japan', cluster: 'overseas-shopping', articleType: 'shopping-guide',
+      headings: ['分かっている情報', '日本向けに加える条件', '購入前の確認'],
+      steps: [['原語を残す', '母国語や英語の商品名が分かる場合は、その表記を検索条件に残します。'], ['日本対応を加える', '規格、対応機種、配送先など、日本で使うための条件を追加します。'], ['販売条件を確認', '送料、返品、保証と商品同一性を販売ページで確認します。']]
+    },
+    'product-requests': {
+      intent: 'save_unresolved_search', cluster: 'saved-search', articleType: 'feature-guide',
+      headings: ['検索状況', '次の操作', '保存・再確認の考え方'],
+      steps: [['まず検索する', '覚えている条件で実在する候補を探します。'], ['違う点を整理する', '見つからない場合は、候補が違った理由を検索条件へ加えます。'], ['条件を保存する', '商品条件だけを保存し、後から同じ条件で探し直します。']]
+    },
+    'compare-amazon-rakuten-yahoo-shopping': {
+      intent: 'compare_amazon_rakuten_yahoo', cluster: 'marketplace-comparison', articleType: 'comparison-guide',
+      headings: ['購入先', 'HOSHILUでの確認方法', '購入前の最終確認'],
+      steps: [['条件を固定', '商品名・型番・容量・セット数を、3モールで同じ条件にそろえます。'], ['取得方法を区別', 'HOSHILU内で取得した候補と、同じ条件で開く検索先を区別します。'], ['販売ページで確認', '価格、送料、在庫、販売者、適用ポイントを購入直前に確認します。']]
+    },
+    'search-product-by-model-number': {
+      intent: 'search_by_model_number', cluster: 'exact-product-search', articleType: 'how-to',
+      headings: ['型番の手掛かり', '入力・照合方法', '同一商品の判断'],
+      steps: [['型番を確認', '本体、箱、メーカー情報から、ハイフンや末尾記号まで確認します。'], ['省略せず入力', '正式な型番を中心に、商品名やブランドを補助として加えます。'], ['仕様を照合', '容量、色、世代、セット数、対応機種まで一致するか確認します。']]
+    },
+    'how-to-compare-the-same-product': {
+      intent: 'compare_exact_product', cluster: 'exact-product-search', articleType: 'comparison-guide',
+      headings: ['判定', '商品識別条件', '比較での扱い'],
+      steps: [['識別条件を固定', '型番・容量・色・セット数・対応機種を比較前に決めます。'], ['完全一致を分ける', '1項目でも違う候補は、同一商品ではなく類似商品へ分けます。'], ['総額を確認', '同一商品だけで価格、送料、在庫、販売条件を確認します。']]
+    },
+    'shopping-guide-for-parents': {
+      intent: 'shopping_for_children', cluster: 'audience-guides', articleType: 'shopping-guide',
+      headings: ['子どもの状況', '検索条件への変換', '保護者が確認する点'],
+      steps: [['使う状況を確認', '年齢だけでなく、体格、利用場所、使う時間や場面を整理します。'], ['条件を言葉にする', 'サイズ、片付けやすさ、材質など、保護者が重視する点を書きます。'], ['表示を確認', '対象年齢、注意事項、仕様をメーカー・販売ページで確認します。']]
+    },
+    'shopping-guide-for-seniors': {
+      intent: 'shopping_for_seniors', cluster: 'audience-guides', articleType: 'shopping-guide',
+      headings: ['使う人の状況', '確認する仕様', '適合性の判断'],
+      steps: [['本人の困りごと', '見えにくさ、握りにくさ、重さなど、本人が困る場面を確認します。'], ['操作条件を整理', '文字の大きさ、ボタン数、重さ、電源方式、使用場所を書きます。'], ['必要なら専門確認', '医療・介護用途の適合性は推測せず、専門職やメーカーへ確認します。']]
+    }
+  },
+  en: {
+    'american-products-in-japan': {
+      intent: 'american_products_in_japan', cluster: 'overseas-shopping', articleType: 'shopping-guide',
+      headings: ['Information you know', 'How to search or match it', 'Final purchase decision'],
+      steps: [['Keep original clues', 'Retain the English name, brand, and where you saw the product.'], ['Add Japan requirements', 'Add voltage, standards, size, delivery, and other conditions needed in Japan.'], ['Verify identity and terms', 'Match the model and check warranty, accessories, and seller terms.']]
+    },
+    'find-product-without-name': {
+      intent: 'unknown_product_name', cluster: 'ai-discovery', articleType: 'how-to',
+      headings: ['What you remember', 'What to tell HOSHILU', 'How to verify candidates'],
+      steps: [['Split the memory', 'List where you saw it, who uses it, what it does, and what it looks like.'], ['Describe it naturally', 'Explain the purpose without guessing a product name.'], ['Refine by differences', 'If a candidate is wrong, add the color, shape, size, or other difference.']]
+    },
+    'how-to-search-by-description': {
+      intent: 'descriptive_product_search', cluster: 'ai-discovery', articleType: 'how-to',
+      headings: ['Search state', 'What to write', 'How to make comparison easier'],
+      steps: [['Category and purpose', 'State what it is for, who uses it, and where it will be used.'], ['Required, preferred, excluded', 'Separate must-have conditions, preferences, and exclusions.'], ['Compare candidates', 'Keep the same conditions and add only what is missing.']]
+    },
+    'shopping-in-japan': {
+      intent: 'international_shopping_in_japan', cluster: 'overseas-shopping', articleType: 'shopping-guide',
+      headings: ['Known information', 'Conditions to add for Japan', 'Checks before purchase'],
+      steps: [['Keep the original name', 'Use the original-language or English name when you know it.'], ['Add Japan compatibility', 'Add standards, device compatibility, and delivery requirements.'], ['Confirm seller terms', 'Check shipping, returns, warranty, and exact product identity.']]
+    },
+    'product-requests': {
+      intent: 'save_unresolved_search', cluster: 'saved-search', articleType: 'feature-guide',
+      headings: ['Search status', 'Next action', 'How to save and return'],
+      steps: [['Search first', 'Use the conditions you remember to look for real candidates.'], ['Record the difference', 'If nothing fits, add why the candidates were wrong.'], ['Save conditions', 'Save only product conditions and return to the same search later.']]
+    }
+  }
+};
+
 const esc = (value) => String(value).replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 }[character]));
@@ -209,15 +291,38 @@ export const seoPagePaths = Object.entries(pages).flatMap(([slug, locales]) =>
   Object.keys(locales).map((locale) => pathFor(locale, slug))
 );
 
-function list(items) {
-  return `<ul>${items.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>`;
+function list(items, className = '') {
+  return `<ul${className ? ` class="${esc(className)}"` : ''}>${items.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>`;
 }
 
-function table(rows, locale) {
-  const headings = locale === 'ja'
-    ? ['確認する状況', '入力・確認方法', '比較時の考え方']
-    : ['Situation', 'What to enter or check', 'How to compare'];
-  return `<div class="seo-table-wrap"><table><thead><tr>${headings.map((heading) => `<th>${esc(heading)}</th>`).join('')}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+function table(rows, headings) {
+  return `<div class="seo-table-wrap"><table><thead><tr>${headings.map((heading) => `<th scope="col">${esc(heading)}</th>`).join('')}</tr></thead><tbody>${rows.map((row) => `<tr>${row.map((cell, index) => `<td data-label="${esc(headings[index])}">${esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+
+function guideVisual(profile, page, isJa) {
+  const title = isJa ? '検索から購入確認までの流れ' : 'From search conditions to purchase checks';
+  const caption = isJa
+    ? '商品や価格をAIが作るのではなく、条件整理から実在候補の確認へ進む概念図です。'
+    : 'A conceptual guide from organizing conditions to checking real candidates. AI does not invent products or prices.';
+  const inputLabel = isJa ? 'HOSHILUへの入力例' : 'Example input for HOSHILU';
+  const organize = isJa ? 'AIが条件を整理' : 'AI organizes the conditions';
+  const search = isJa ? 'HOSHILUが実在候補を探す' : 'HOSHILU searches real candidates';
+  const confirm = isJa ? '販売ページで最終確認' : 'Final check on the seller page';
+  return `<figure class="guide-visual" aria-labelledby="guide-visual-title"><figcaption><strong id="guide-visual-title">${title}</strong><span>${caption}</span></figcaption><ol class="guide-flow">${profile.steps.map(([stepTitle, text]) => `<li><span class="flow-number" aria-hidden="true"></span><div><strong>${esc(stepTitle)}</strong><p>${esc(text)}</p></div></li>`).join('')}</ol><div class="search-concept" role="group" aria-label="${title}"><div class="concept-query"><small>${inputLabel}</small><strong>${esc(page.query)}</strong></div><div class="concept-route"><span>${organize}</span><i aria-hidden="true">→</i><span>${search}</span><i aria-hidden="true">→</i><span>${confirm}</span></div></div></figure>`;
+}
+
+function reviewChecks(isJa) {
+  const checks = isJa
+    ? [['件数', '少数の高評価だけで決めない'], ['投稿日', '古い情報だけに偏っていないか'], ['利用条件', '自分と近い用途・環境か'], ['低評価', '同じ指摘が繰り返されているか']]
+    : [['Count', 'Do not rely on a few high ratings'], ['Date', 'Check whether the information is current'], ['Context', 'Look for a use case similar to yours'], ['Lower ratings', 'Look for concerns that repeat']];
+  return `<ul class="review-check-grid">${checks.map(([title, text]) => `<li><strong>${title}</strong><span>${text}</span></li>`).join('')}</ul>`;
+}
+
+function identityGuide(isJa) {
+  const states = isJa
+    ? [['完全一致', '型番・容量・色・セット数・対応機種が一致', 'match'], ['類似商品', '名称は近いが、いずれかの仕様が違う', 'similar'], ['確認が必要', '識別情報を商品ページで確認できない', 'unknown']]
+    : [['Exact match', 'Model, capacity, color, pack, and compatibility match', 'match'], ['Similar product', 'The name is close but a specification differs', 'similar'], ['Check required', 'The seller page does not confirm identity', 'unknown']];
+  return `<div class="identity-guide">${states.map(([title, text, state]) => `<div data-state="${state}"><strong>${title}</strong><span>${text}</span></div>`).join('')}</div>`;
 }
 
 function alternateLinks(slug, locale) {
@@ -261,12 +366,34 @@ function structuredData(page, locale, slug, canonical) {
   return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
 }
 
+export function evaluateSeoPageQuality(pathname) {
+  const match = /^\/(ja|en)\/([a-z-]+)\/?$/.exec(pathname);
+  if (!match) return null;
+  const [, locale, slug] = match;
+  const page = pages[slug]?.[locale];
+  const profile = visualProfiles[locale]?.[slug];
+  if (!page || !profile) return null;
+  const text = JSON.stringify({ page, profile });
+  const forbidden = /最安(?:値)?です|人気No\.1|絶対おすすめ|guaranteed cheapest|number one product/i.test(text);
+  const breakdown = {
+    intent: page.title && page.description && page.conclusion && profile.intent ? 20 : 0,
+    hoshiluValue: page.query && profile.steps?.length === 3 && profile.cluster ? 20 : 0,
+    evidence: page.evidence?.length >= 3 && page.review && page.identity && !forbidden ? 20 : 0,
+    readability: page.criteria?.length >= 3 && page.comparison?.length >= 3 && page.tips?.length >= 3 ? 15 : 0,
+    searchCta: page.query.length <= 200 ? 10 : 0,
+    risk: !forbidden && page.faq?.length >= 2 ? 10 : 0,
+    technical: profile.headings?.length === 3 && ['ja', 'en'].includes(locale) ? 5 : 0
+  };
+  return { total: Object.values(breakdown).reduce((sum, value) => sum + value, 0), breakdown };
+}
+
 export function renderSeoPage(pathname) {
   const match = /^\/(ja|en)\/([a-z-]+)\/?$/.exec(pathname);
   if (!match) return null;
   const [, locale, slug] = match;
   const page = pages[slug]?.[locale];
-  if (!page) return null;
+  const profile = visualProfiles[locale]?.[slug];
+  if (!page || !profile) return null;
   const canonical = `${ORIGIN}${pathFor(locale, slug)}`;
   const isJa = locale === 'ja';
   const searchLabel = isJa ? '探したい商品の条件' : 'Product conditions';
@@ -274,34 +401,36 @@ export function renderSeoPage(pathname) {
   const labels = isJa ? {
     conclusion: '結論', audience: 'この方法が向く人', criteria: '選ぶ条件と注意点', comparison: '候補を比較するときの見方',
     evidence: 'おすすめ・比較の根拠', reviews: '口コミを確認するときのポイント', identity: '同一商品と類似商品の違い',
-    try: 'HOSHILUで実際に探す', sources: '情報取得元と更新日', related: '関連記事', faq: 'よくある質問',
+    visual: '図で分かる探し方', toc: 'この記事の要点', try: 'HOSHILUで実際に探す', sources: '情報取得元と更新日', related: '関連記事', faq: 'よくある質問',
     sourceText: 'HOSHILU本番公開画面・公開機能仕様。価格・在庫・販売条件は各販売ページで確認してください。'
   } : {
     conclusion: 'Conclusion', audience: 'Who this method is for', criteria: 'Selection criteria and cautions', comparison: 'How to compare candidates',
     evidence: 'Basis for recommendations and comparisons', reviews: 'How to check reviews', identity: 'Exact matches and similar products',
-    try: 'Search with HOSHILU', sources: 'Sources and last update', related: 'Related guides', faq: 'Frequently asked questions',
+    visual: 'Visual search guide', toc: 'In this guide', try: 'Search with HOSHILU', sources: 'Sources and last update', related: 'Related guides', faq: 'Frequently asked questions',
     sourceText: 'HOSHILU production pages and published feature specifications. Confirm price, availability, and seller terms on each marketplace.'
   };
   return `<!doctype html>
 <html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(page.title)} | HOSHILU</title><meta name="description" content="${esc(page.description)}"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
 <link rel="canonical" href="${canonical}">${alternateLinks(slug, locale)}
-<meta property="og:type" content="article"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(page.title)}"><meta property="og:description" content="${esc(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og/hoshilu-x-v3.png">
+<meta property="og:type" content="article"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="${esc(page.title)}"><meta property="og:description" content="${esc(page.description)}"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
 <link rel="stylesheet" href="/seo-article.css"><script type="application/ld+json">${structuredData(page, locale, slug, canonical)}</script></head>
-<body data-seo-article-id="${esc(slug)}"><header class="seo-header"><a href="/" aria-label="HOSHILU home">HOSHILU <small>${isJa ? 'ホシル' : 'product discovery'}</small></a></header>
+<body data-seo-article-id="${esc(slug)}" data-seo-intent="${esc(profile.intent)}" data-seo-cluster="${esc(profile.cluster)}" data-seo-article-type="${esc(profile.articleType)}"><header class="seo-header"><a href="/" aria-label="${isJa ? 'HOSHILUホーム' : 'HOSHILU home'}">HOSHILU <small>${isJa ? 'ホシル' : 'product discovery'}</small></a></header>
 <main class="seo-shell"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><span>${esc(page.title)}</span></nav>
 <article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDE</p><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p><p class="updated"><time datetime="${UPDATED_AT}">${isJa ? '最終更新' : 'Last updated'}: ${UPDATED_AT}</time></p></header>
-<section class="answer"><h2>${labels.conclusion}</h2><p>${esc(page.conclusion)}</p></section>
-<section><h2>${labels.audience}</h2>${list(page.audience)}</section>
-<section><h2>${labels.criteria}</h2><dl>${page.criteria.map(([term, description]) => `<div><dt>${esc(term)}</dt><dd>${esc(description)}</dd></div>`).join('')}</dl>${page.tips ? list(page.tips) : ''}</section>
-<section><h2>${labels.comparison}</h2>${table(page.comparison, locale)}</section>
-<aside class="mid-cta"><h2>${labels.try}</h2><p>${isJa ? '例を編集して、現在のHOSHILU検索へ進めます。' : 'Edit the example and continue to the current HOSHILU search.'}</p><form action="/" method="get" data-seo-search-form><label for="seo-search">${searchLabel}</label><textarea id="seo-search" name="q" required maxlength="200">${esc(page.query)}</textarea><button type="submit">${submit}</button></form></aside>
-<section><h2>${labels.evidence}</h2>${list(page.evidence)}</section>
-<section><h2>${labels.reviews}</h2><p>${esc(page.review)}</p></section>
-<section><h2>${labels.identity}</h2><p>${esc(page.identity)}</p></section>
-<section><h2>${labels.faq}</h2>${page.faq.map(([question, answer]) => `<details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>`).join('')}</section>
-<section class="source-note"><h2>${labels.sources}</h2><p>${esc(labels.sourceText)}</p><p>${isJa ? '最終更新日' : 'Last updated'}: <time datetime="${UPDATED_AT}">${UPDATED_AT}</time></p></section>
-<nav class="related" aria-label="${labels.related}"><h2>${labels.related}</h2><ul>${relatedLinks(locale, slug)}</ul></nav>
+<nav class="article-toc" aria-label="${labels.toc}"><strong>${labels.toc}</strong><div><a href="#answer">${labels.conclusion}</a><a href="#visual-guide">${labels.visual}</a><a href="#comparison">${labels.comparison}</a><a href="#search-with-hoshilu">${labels.try}</a><a href="#sources">${labels.sources}</a></div></nav>
+<section class="answer" id="answer"><h2>${labels.conclusion}</h2><p>${esc(page.conclusion)}</p></section>
+<section id="visual-guide"><h2>${labels.visual}</h2>${guideVisual(profile, page, isJa)}</section>
+<section id="audience"><h2>${labels.audience}</h2>${list(page.audience, 'audience-list')}</section>
+<section id="criteria"><h2>${labels.criteria}</h2><dl class="criteria-grid">${page.criteria.map(([term, description]) => `<div><dt>${esc(term)}</dt><dd>${esc(description)}</dd></div>`).join('')}</dl>${page.tips ? list(page.tips, 'check-list') : ''}</section>
+<section id="comparison" data-seo-section-event="seo_comparison_view"><h2>${labels.comparison}</h2>${table(page.comparison, profile.headings)}</section>
+<aside class="mid-cta" id="search-with-hoshilu"><h2>${labels.try}</h2><p>${isJa ? '例を編集して、現在のHOSHILU検索へ進めます。' : 'Edit the example and continue to the current HOSHILU search.'}</p><form action="/" method="get" data-seo-search-form><label for="seo-search">${searchLabel}</label><textarea id="seo-search" name="q" required maxlength="200">${esc(page.query)}</textarea><button type="submit">${submit}</button></form></aside>
+<section id="evidence" data-seo-section-event="seo_evidence_view"><h2>${labels.evidence}</h2>${list(page.evidence, 'evidence-grid')}</section>
+<section id="reviews" data-seo-section-event="seo_review_guide_view"><h2>${labels.reviews}</h2>${reviewChecks(isJa)}<p>${esc(page.review)}</p></section>
+<section id="identity" data-seo-section-event="seo_identity_guide_view"><h2>${labels.identity}</h2>${identityGuide(isJa)}<p>${esc(page.identity)}</p></section>
+<section id="faq"><h2>${labels.faq}</h2>${page.faq.map(([question, answer]) => `<details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>`).join('')}</section>
+<section class="source-note" id="sources"><h2>${labels.sources}</h2><p>${esc(labels.sourceText)}</p><p>${isJa ? '最終更新日' : 'Last updated'}: <time datetime="${UPDATED_AT}">${UPDATED_AT}</time></p></section>
+<nav class="related" aria-label="${labels.related}"><h2>${labels.related}</h2><ul class="related-grid">${relatedLinks(locale, slug)}</ul></nav>
 <p class="bottom-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a></p></article></main>
 <footer><a href="/privacy.html">${isJa ? 'プライバシー' : 'Privacy'}</a><a href="/terms.html">${isJa ? '利用上の注意' : 'Terms'}</a></footer>
 <script type="module" src="/seo-article-analytics.mjs"></script></body></html>`;

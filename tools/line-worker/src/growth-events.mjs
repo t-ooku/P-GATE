@@ -12,6 +12,10 @@ const EVENTS = new Set([
   'share_started',
   'seo_article_view',
   'seo_search_transition',
+  'seo_comparison_view',
+  'seo_evidence_view',
+  'seo_review_guide_view',
+  'seo_identity_guide_view',
   'member_registered',
   'inquiry_submitted'
 ]);
