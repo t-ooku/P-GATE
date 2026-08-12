@@ -22,6 +22,7 @@ test('主要カテゴリはカラコン以外も固定ルールで高速に横�
   assert.deepEqual(relatedProductRecommendationQueries('ノートパソコン').map(item=>item.query),['ワイヤレスマウス','ノートパソコンケース','USB Type-C ハブ']);
   assert.deepEqual(relatedProductRecommendationQueries('炊飯器 5合').map(item=>item.query),['米びつ','米とぎボウル','キッチンスケール']);
   assert.deepEqual(relatedProductRecommendationQueries('ベビーカー 軽量').map(item=>item.query),['ベビーカー レインカバー','ベビーカーフック','ベビーカーシート']);
+  assert.deepEqual(relatedProductRecommendationQueries('天然石 ピアス').map(item=>item.query),['アクセサリーケース','ピアスキャッチ','ジュエリークロス']);
 });
 test('固定ルールにないカテゴリは同期判定では創作しない',()=>assert.deepEqual(relatedProductRecommendationQueries('未知の商品XYZ'),[]));
 

@@ -119,6 +119,8 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
   assert.match(app, /AI選定理由/);
   assert.match(app, /fetch\('\/api\/related-recommendations'/);
   assert.match(app, /setTimeout\(\(\)=>\{loadRelatedRecommendations/);
+  assert.match(app, /async function loadRelatedRecommendations[\s\S]*?waitForTurnstileToken\(\)/);
+  assert.doesNotMatch(app, /waitForFreshTurnstileToken/);
   const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8');
   assert.match(css, /\.product-card\.unverified-card\{/);
   assert.match(css, /\.unverified-badge\{/);

@@ -691,22 +691,38 @@ function renderResults(result,requestId){
 
 let relatedRecommendationSequence=0;
 async function loadRelatedRecommendations(query,sequence){
-  const token=await waitForFreshTurnstileToken();
-  if(!token||sequence!==relatedRecommendationSequence)return;
-  const response=await fetch('/api/related-recommendations',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
-    query,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,turnstile_token:token
-  })});
-  const payload=await response.json();
-  if(!response.ok||!payload.ok||sequence!==relatedRecommendationSequence)return;
-  const recommendations=(Array.isArray(payload.result?.recommendations)?payload.result.recommendations:[]).slice(0,RESULT_ROW_LIMIT);
-  const oldRow=elements.cards.querySelector('[data-row="recommended"]');
-  if(!recommendations.length){oldRow?.remove();return;}
-  const copy=resultRowCopyFor(elements.language.value);
-  const row=resultRow(recommendations.map((candidate,index)=>productCard(candidate,index,selectedCopy(),false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');
-  if(!row)return;
-  if(oldRow)oldRow.replaceWith(row);else{
-    const anchor=elements.cards.querySelector('.related-keywords-card,.marketplace-fallback');
-    if(anchor)elements.cards.insertBefore(row,anchor);else elements.cards.append(row);
+  for(let attempt=0;attempt<2;attempt+=1){
+    try{
+      const token=await waitForTurnstileToken();
+      if(!token||sequence!==relatedRecommendationSequence)return;
+      const response=await fetch('/api/related-recommendations',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
+        query,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,turnstile_token:token
+      })});
+      const payload=await response.json();
+      if(sequence!==relatedRecommendationSequence)return;
+      if(!response.ok||!payload.ok){
+        const code=String(payload.error||`RELATED_RECOMMENDATIONS_HTTP_${response.status}`);
+        if(attempt===0&&(/TURNSTILE_/u.test(code)||response.status>=500)){
+          if(/TURNSTILE_/u.test(code))await recoverTurnstileWidget();
+          continue;
+        }
+        throw new Error(code);
+      }
+      const recommendations=(Array.isArray(payload.result?.recommendations)?payload.result.recommendations:[]).slice(0,RESULT_ROW_LIMIT);
+      const oldRow=elements.cards.querySelector('[data-row="recommended"]');
+      if(!recommendations.length){oldRow?.remove();return;}
+      const copy=resultRowCopyFor(elements.language.value);
+      const row=resultRow(recommendations.map((candidate,index)=>productCard(candidate,index,selectedCopy(),false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');
+      if(!row)return;
+      if(oldRow)oldRow.replaceWith(row);else{
+        const anchor=elements.cards.querySelector('.related-keywords-card,.marketplace-fallback');
+        if(anchor)elements.cards.insertBefore(row,anchor);else elements.cards.append(row);
+      }
+      return;
+    }catch(error){
+      if(attempt===0)continue;
+      console.warn('RELATED_RECOMMENDATIONS_FAILED',String(error?.message||error).slice(0,80));
+    }
   }
 }
 function onTurnstileToken(token){turnstileToken=String(token||'');const waiter=turnstileTokenWaiter;if(!turnstileToken||!waiter)return;turnstileTokenWaiter=null;clearTimeout(waiter.timeout);waiter.resolve(turnstileToken);}
@@ -920,7 +936,7 @@ async function prepareHoshiluRankings(categorySelection=rankingCategorySelection
   if(!preserveRejections)rankingConfirmationFlow=null;
   elements.rankingStatus.textContent='AIが小ジャンルを確認しています…';elements.rankingResults.replaceChildren();elements.rankingModes.replaceChildren();
   try{
-    const token=await waitForFreshTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
+    const token=await waitForTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
     const response=await fetch('/api/hoshilu-rankings',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:elements.query.value,category_selection:categorySelection,confirmation_only:confirmationOnly,consent:elements.consent.checked,session_id:sessionId,turnstile_token:token})});
     const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'HOSHILU_RANKING_FAILED');
     if(requestSequence!==rankingRequestSequence||!elements.rankingDialog.open)return;
