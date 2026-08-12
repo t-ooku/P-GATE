@@ -1,7 +1,9 @@
 .hero h1 {
   font-size: clamp(30px, 7vw, 72px);
   line-height: 1.08;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 .search-mode-switch {
@@ -99,10 +101,6 @@
 
   .hero h1 {
     white-space: normal;
-  }
-
-  html:lang(ja) .hero h1 {
-    white-space: nowrap;
   }
 
   .mywish-copy span {
