@@ -319,17 +319,19 @@ function trackingFields(link) {
   }
 }
 
-export async function syncInstagramPublishedPermalinks(env, now = new Date(), fetchImpl = fetch) {
+export async function syncInstagramPublishedPermalinks(env, now = new Date(), fetchImpl = fetch, onlyPostId = '') {
   if (!env.PRODUCT_DB) return { checked: 0, saved: 0, failed: 0 };
+  const requestedPostId = clean(onlyPostId, 100);
   let due;
   try {
     due = await env.PRODUCT_DB.prepare(`SELECT q.post_id,q.external_post_id,q.published_at,q.link
       FROM social_post_queue q
-      WHERE q.platform='INSTAGRAM' AND q.status='PUBLISHED'
+      WHERE (?1='' OR q.post_id=?1)
+      AND q.platform='INSTAGRAM' AND q.status='PUBLISHED'
       AND q.external_post_id<>''
       AND NOT EXISTS (SELECT 1 FROM social_post_performance p
         WHERE p.post_id=q.post_id AND p.public_url IS NOT NULL AND p.public_url<>'')
-      ORDER BY q.published_at DESC LIMIT 10`).all();
+      ORDER BY q.published_at DESC LIMIT 10`).bind(requestedPostId).all();
   } catch (error) {
     console.error('INSTAGRAM_PERMALINK_SYNC_QUERY_FAILED', clean(error?.message || error, 200));
     return { checked: 0, saved: 0, failed: 1 };
@@ -380,6 +382,37 @@ function authorized(request, env) {
 
 export async function handleSocialAdminRoutes(request, env) {
   const url = new URL(request.url);
+  if (request.method === 'GET' && url.pathname.startsWith('/api/social/posts/')) {
+    const postId = clean(decodeURIComponent(url.pathname.slice('/api/social/posts/'.length)), 100);
+    if (!postId || !/^[a-zA-Z0-9_-]+$/.test(postId)) {
+      return Response.json({ ok: false, error: 'SOCIAL_POST_ID_INVALID' }, { status: 400 });
+    }
+    const selectPublished = () => env.PRODUCT_DB.prepare(`SELECT q.post_id,q.platform,q.status,
+      q.external_post_id,q.published_at,p.public_url
+      FROM social_post_queue q
+      LEFT JOIN social_post_performance p ON p.post_id=q.post_id AND p.public_url IS NOT NULL
+      WHERE q.post_id=?1 AND q.status='PUBLISHED'
+      ORDER BY p.snapshot_at DESC LIMIT 1`).bind(postId).first();
+    if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'PRODUCT_DB_NOT_CONFIGURED' }, { status: 503 });
+    let published = await selectPublished();
+    if (!published) return Response.json({ ok: false, error: 'SOCIAL_POST_NOT_FOUND' }, { status: 404 });
+    if (published.platform === 'INSTAGRAM' && !published.public_url) {
+      await syncInstagramPublishedPermalinks(env, new Date(), fetch, postId);
+      published = await selectPublished();
+    }
+    return Response.json({
+      ok: true,
+      post_id: published.post_id,
+      platform: published.platform,
+      status: published.status,
+      external_post_id: published.external_post_id,
+      published_at: published.published_at,
+      public_url: published.public_url || null
+    }, {
+      status: published.public_url ? 200 : 202,
+      headers: { 'cache-control': 'no-store' }
+    });
+  }
   if (!url.pathname.startsWith('/api/internal/social/')) return null;
   if (!authorized(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
   if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'PRODUCT_DB_NOT_CONFIGURED' }, { status: 503 });
