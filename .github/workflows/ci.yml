@@ -70,3 +70,38 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+
+  # One-time read-only verification for the explicitly approved 2026-08-12
+  # Instagram reel. Remove after the terminal D1 result is confirmed.
+  instagram-approved-reel-monitor:
+    needs: deploy
+    if: github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[instagram-approved-reel-monitor]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Worker dependencies
+        run: npm ci --prefix tools/line-worker
+      - name: Wait for Cron and verify the approved reel result
+        working-directory: tools/line-worker
+        run: |
+          for attempt in $(seq 1 30); do
+            output="$(npx wrangler d1 execute hoshilu-products --remote --command "SELECT status,external_post_id,last_error,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-approved-model-reel-20260812'")"
+            echo "$output"
+            if echo "$output" | grep -q '"status": "PUBLISHED"'; then
+              exit 0
+            fi
+            if echo "$output" | grep -q '"status": "FAILED"'; then
+              exit 1
+            fi
+            sleep 30
+          done
+          echo "::error::Approved Instagram reel did not reach a terminal state."
+          exit 1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
