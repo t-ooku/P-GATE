@@ -294,6 +294,84 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
   return { checked: (due.results || []).length, published };
 }
 
+function instagramPermalink(value) {
+  try {
+    const url = new URL(String(value || ''));
+    const host = url.hostname.toLowerCase();
+    if (url.protocol !== 'https:' || (host !== 'instagram.com' && !host.endsWith('.instagram.com'))) return '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
+function trackingFields(link) {
+  try {
+    const url = new URL(String(link || ''));
+    return {
+      source: clean(url.searchParams.get('utm_source'), 100),
+      medium: clean(url.searchParams.get('utm_medium'), 100),
+      campaign: clean(url.searchParams.get('utm_campaign'), 200),
+      content: clean(url.searchParams.get('utm_content'), 200)
+    };
+  } catch {
+    return { source: '', medium: '', campaign: '', content: '' };
+  }
+}
+
+export async function syncInstagramPublishedPermalinks(env, now = new Date(), fetchImpl = fetch) {
+  if (!env.PRODUCT_DB) return { checked: 0, saved: 0, failed: 0 };
+  let due;
+  try {
+    due = await env.PRODUCT_DB.prepare(`SELECT q.post_id,q.external_post_id,q.published_at,q.link
+      FROM social_post_queue q
+      WHERE q.platform='INSTAGRAM' AND q.status='PUBLISHED'
+      AND q.external_post_id<>''
+      AND NOT EXISTS (SELECT 1 FROM social_post_performance p
+        WHERE p.post_id=q.post_id AND p.public_url IS NOT NULL AND p.public_url<>'')
+      ORDER BY q.published_at DESC LIMIT 10`).all();
+  } catch (error) {
+    console.error('INSTAGRAM_PERMALINK_SYNC_QUERY_FAILED', clean(error?.message || error, 200));
+    return { checked: 0, saved: 0, failed: 1 };
+  }
+  const rows = due.results || [];
+  if (!rows.length) return { checked: 0, saved: 0, failed: 0 };
+  let credential;
+  try {
+    credential = await getInstagramPublishCredentials(env, fetchImpl);
+  } catch (error) {
+    console.error('INSTAGRAM_PERMALINK_SYNC_AUTH_FAILED', clean(error?.message || error, 200));
+    return { checked: rows.length, saved: 0, failed: rows.length };
+  }
+  const headers = { authorization: `Bearer ${credential.accessToken}` };
+  const timestamp = now.toISOString();
+  let saved = 0;
+  let failed = 0;
+  for (const row of rows) {
+    try {
+      const response = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(row.external_post_id)}?fields=id,permalink`, { headers });
+      if (!response.ok) throw new Error(`INSTAGRAM_PERMALINK_${response.status}`);
+      const permalink = instagramPermalink((await response.json())?.permalink);
+      if (!permalink) throw new Error('INSTAGRAM_PERMALINK_INVALID');
+      const utm = trackingFields(row.link);
+      const publishedAt = clean(row.published_at, 40) || timestamp;
+      await env.PRODUCT_DB.prepare(`INSERT INTO social_post_performance
+        (snapshot_id,post_id,platform,snapshot_at,published_at,public_url,
+         utm_source,utm_medium,utm_campaign,utm_content,traffic_class,created_at,updated_at)
+        VALUES (?1,?2,'INSTAGRAM',?3,?4,?5,?6,?7,?8,?9,'ATTRIBUTED',?10,?10)
+        ON CONFLICT(snapshot_id) DO UPDATE SET public_url=excluded.public_url,
+          updated_at=excluded.updated_at`)
+        .bind(`published:${row.post_id}`, row.post_id, publishedAt, publishedAt,
+          permalink, utm.source, utm.medium, utm.campaign, utm.content, timestamp).run();
+      saved += 1;
+    } catch (error) {
+      failed += 1;
+      console.error('INSTAGRAM_PERMALINK_SYNC_FAILED', row.post_id, clean(error?.message || error, 200));
+    }
+  }
+  return { checked: rows.length, saved, failed };
+}
+
 function authorized(request, env) {
   const expected = String(env.SOCIAL_ADMIN_SECRET || '');
   const received = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
