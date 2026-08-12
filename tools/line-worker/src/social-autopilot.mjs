@@ -6,6 +6,17 @@ import {
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
 const FEATURE_LAUNCH_DATE = '2026-08-09';
+const APPROVED_MODEL_REEL = Object.freeze({
+  post_id: 'hoshilu-approved-model-reel-20260812',
+  content_id: 'approved-ai-model-reel-20260812',
+  platform: 'INSTAGRAM',
+  campaign_id: 'hoshilu-ai-model-reel-20260812',
+  caption: '「名前は分からないけど、こんな商品が欲しい」をHOSHILUで。覚えている特徴から探して、最大13モールを見比べられます。HOSHILUはこちら → https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=hoshilu_ai_model_reel_20260812&utm_content=approved_video 気になった商品をコメントで教えてね。@hoshilu.app ※この動画はAI生成映像を使用しています。 #AI生成',
+  link: 'https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=hoshilu_ai_model_reel_20260812&utm_content=approved_video',
+  media_url: 'https://hoshilu.app/social/hoshilu-approved-model-reel-20260812.mp4',
+  scheduled_at: '2026-08-12T14:00:00.000Z',
+  status: 'APPROVED'
+});
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -127,9 +138,16 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
     return { enabled: false, planned: 0, inserted: 0 };
   }
   const readiness = socialPublisherReadiness(env);
-  const posts = buildSocialAutopilotPosts(now).filter(post => readiness[post.platform]);
+  const approvedModelReel = now.getTime() >= Date.parse(APPROVED_MODEL_REEL.scheduled_at)
+    ? [normalizeSocialPost(APPROVED_MODEL_REEL)]
+    : [];
+  const posts = [...approvedModelReel, ...buildSocialAutopilotPosts(now)]
+    .filter(post => readiness[post.platform]);
   let inserted = 0;
   for (const post of posts) {
+    const campaignId = post.post_id === APPROVED_MODEL_REEL.post_id
+      ? APPROVED_MODEL_REEL.campaign_id
+      : CAMPAIGN_ID;
     const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
        affiliate,approved_at,created_at,updated_at)
@@ -138,7 +156,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
         caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
         scheduled_at=excluded.scheduled_at,updated_at=excluded.updated_at
       WHERE social_post_queue.status='APPROVED'`)
-      .bind(post.post_id, post.platform, CAMPAIGN_ID, post.content_id, post.caption,
+      .bind(post.post_id, post.platform, campaignId, post.content_id, post.caption,
         post.link, post.media_url, post.scheduled_at, now.toISOString()).run();
     inserted += Number(result?.meta?.changes || 0);
   }

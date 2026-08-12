@@ -14,6 +14,17 @@ test('Instagram向け4モール横断リールは音声付きMP4素材として�
   assert.equal(header.includes(Buffer.from('mp4a')),true);
 });
 
+test('20260812承認済みモデル動画は元音源付きの同一MP4を配信する',async()=>{
+  const url=new URL('../public/social/hoshilu-approved-model-reel-20260812.mp4',import.meta.url);
+  const info=await stat(url);
+  const file=await readFile(url);
+  assert.equal(info.size,6_359_041);
+  assert.equal(file.subarray(4,8).toString('ascii'),'ftyp');
+  assert.equal(file.includes(Buffer.from('avc1')),true);
+  assert.equal(file.includes(Buffer.from('mp4a')),true);
+  assert.equal(createHash('sha256').update(file).digest('hex'),'304a5c8cdb6be3d47c93c5ba71605eb9ab6dd106854b9896ffcb3d70da81d42f');
+});
+
 test('今日の機能紹介リールは縦型・音声付きMP4として同梱する',async()=>{
   const url=new URL('../public/social/hoshilu-feature-reel-13mall-v1.mp4',import.meta.url);
   const info=await stat(url);
