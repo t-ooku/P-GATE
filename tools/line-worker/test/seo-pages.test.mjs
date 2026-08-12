@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { renderSeoPage, seoPagePaths } from '../src/seo-pages.mjs';
 
 test('既存10ページと検索意図が異なる日本語5ページを提供する', () => {
@@ -28,4 +29,11 @@ test('英語版がない日本語記事へ存在しないalternateを出さな�
 test('未定義SEOパスは通常ルーティングへ戻す', () => {
   assert.equal(renderSeoPage('/ja/not-defined'), null);
   assert.equal(renderSeoPage('/api/config'), null);
+});
+
+test('受け入れ検証アクセスは記事の実KPIではなくQAへ分類できる', () => {
+  const analytics = readFileSync(new URL('../public/seo-article-analytics.mjs', import.meta.url), 'utf8');
+  assert.match(analytics, /requestedSource\.startsWith\('codex'\)/);
+  assert.match(analytics, /requestedMedium === 'qa'/);
+  assert.match(analytics, /eventMedium = isQaVisit \? 'qa' : 'internal'/);
 });
