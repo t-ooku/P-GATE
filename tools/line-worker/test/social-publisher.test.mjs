@@ -5,7 +5,8 @@ import {
   publishSocialPost,
   runDueSocialPosts,
   socialPublisherReadiness,
-  syncInstagramPublishedPermalinks
+  syncInstagramPublishedPermalinks,
+  handleSocialAdminRoutes
 } from '../src/social-publisher.mjs';
 
 test('Instagram投稿はコメント誘導と若者向け必須ハッシュタグを公開前に補完する', () => {
@@ -323,12 +324,12 @@ test('公開済みInstagram投稿の正式URLとUTMを計測テーブルへ保�
     PRODUCT_DB: {
       prepare(sql) {
         if (sql.includes('FROM social_post_queue q')) {
-          return { all: async () => ({ results: [{
-            post_id: 'approved-reel',
-            external_post_id: 'ig-media-1',
-            published_at: '2026-08-12T14:45:15.000Z',
-            link: 'https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=model_reel&utm_content=approved_video'
-          }] }) };
+          return { bind: () => ({ all: async () => ({ results: [{
+              post_id: 'approved-reel',
+              external_post_id: 'ig-media-1',
+              published_at: '2026-08-12T14:45:15.000Z',
+              link: 'https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=model_reel&utm_content=approved_video'
+            }] }) }) };
         }
         return {
           bind(...values) {
@@ -352,4 +353,50 @@ test('公開済みInstagram投稿の正式URLとUTMを計測テーブルへ保�
     'instagram', 'organic_social', 'model_reel', 'approved_video',
     '2026-08-12T14:46:00.000Z'
   ]);
+});
+
+test('公開済み投稿APIはInstagram正式URLを即時保存して公開情報だけ返す', async () => {
+  let storedUrl = '';
+  const row = {
+    post_id: 'approved-reel', platform: 'INSTAGRAM', status: 'PUBLISHED',
+    external_post_id: 'ig-media-1', published_at: '2026-08-12T14:45:15.000Z'
+  };
+  const env = {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('SELECT q.post_id,q.platform,q.status')) {
+          return { bind: () => ({ first: async () => ({ ...row, public_url: storedUrl }) }) };
+        }
+        if (sql.includes('SELECT q.post_id,q.external_post_id')) {
+          return { bind: () => ({ all: async () => ({ results: [{
+            ...row, link: 'https://hoshilu.app/?utm_source=instagram'
+          }] }) }) };
+        }
+        return {
+          bind(...values) {
+            return { run: async () => { storedUrl = values[4]; return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ permalink: 'https://www.instagram.com/reel/ExampleCode/' });
+  try {
+    const response = await handleSocialAdminRoutes(new Request('https://hoshilu.app/api/social/posts/approved-reel'), env);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      post_id: 'approved-reel',
+      platform: 'INSTAGRAM',
+      status: 'PUBLISHED',
+      external_post_id: 'ig-media-1',
+      published_at: '2026-08-12T14:45:15.000Z',
+      public_url: 'https://www.instagram.com/reel/ExampleCode/'
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
