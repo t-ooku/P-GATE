@@ -90,7 +90,7 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v373/);
+  assert.match(sw, /hoshilu-shell-v374/);
   assert.match(css, /\.sale-rail\{[^}]*overflow-y:auto/);
   assert.doesNotMatch(css, /\.sale-card\{/);
   assert.match(sw, /sale-center\.mjs/);
