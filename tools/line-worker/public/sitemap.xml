@@ -92,6 +92,36 @@
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/shopping-guide-for-seniors"/>
     <changefreq>weekly</changefreq><priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://hoshilu.app/ja/search-products-by-budget-and-purpose</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/search-products-by-budget-and-purpose"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/compare-total-price-with-shipping</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/compare-total-price-with-shipping"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/how-to-read-shopping-reviews</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/how-to-read-shopping-reviews"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/how-to-use-shopping-rankings</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/how-to-use-shopping-rankings"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-a-gift-by-recipient-and-occasion</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-a-gift-by-recipient-and-occasion"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
   <url><loc>https://hoshilu.app/privacy.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://hoshilu.app/terms.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>

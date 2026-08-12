@@ -196,6 +196,76 @@ const pages = {
       query: '高齢の家族が使う、表示が大きく操作が少ない軽いタイマー',
       tips: ['使う人の困りごとを本人と確認して検索条件にする', '文字の大きさ、ボタン数、重さ、電源方式を確認する', '医療・介護用途では適合性を販売ページだけで断定しない']
     })
+  },
+  'search-products-by-budget-and-purpose': {
+    ja: guide('ja', {
+      title: '予算と用途から商品を探す方法',
+      description: '商品名が決まっていないときに、予算・使う人・利用場面・必須条件から候補を探す手順を解説します。',
+      conclusion: '予算だけで候補を切らず、使う人、利用場面、必須条件、避けたい条件を先に整理します。価格は送料や販売条件で変わるため、候補を特定した後に販売ページで支払総額と在庫を確認してください。',
+      query: '在宅勤務で毎日使う、1万円以内で軽くて折りたためるデスクライト',
+      tips: ['予算は上限として入力し、送料を含むかを購入先で確認する', '必須条件と、できれば欲しい条件を分ける', '安さだけでなく使用頻度や置き場所に合う仕様を確認する'],
+      comparison: [
+        ['予算だけ決まっている', '上限金額と用途を入力', '候補が広いため必須条件を追加'],
+        ['用途と場面が決まっている', '使う人・場所・頻度を入力', '必要な仕様を候補ごとに確認'],
+        ['避けたい条件がある', '重さ・大きさ・素材などを除外条件にする', '商品説明で該当しないことを確認']
+      ]
+    })
+  },
+  'compare-total-price-with-shipping': {
+    ja: guide('ja', {
+      title: '送料込みの支払総額で商品を比較する方法',
+      description: '表示価格だけで判断せず、送料・数量・販売単位・適用条件をそろえて購入候補を比較する方法を解説します。',
+      conclusion: '比較する商品を完全一致にそろえたうえで、商品価格、送料、数量、販売単位、購入時に適用される条件を確認します。確認できない費用がある場合は、最安と断定せず販売ページで支払総額を確かめてください。',
+      query: '同じ型番の商品を送料込みの支払総額で比較したい',
+      tips: ['型番・容量・色・セット数を一致させる', '送料無料の適用条件や配送先による差を確認する', 'ポイントやクーポンは自分の購入時に適用できるものだけを分けて見る'],
+      comparison: [
+        ['商品価格', '同一商品・同じ販売単位か', '税込表示と数量を確認'],
+        ['送料', '配送先・購入額などの適用条件', '購入手続き前の総額で確認'],
+        ['値引き・ポイント', '対象者・期限・利用条件', '確実に適用できる条件だけを別に記録']
+      ]
+    })
+  },
+  'how-to-read-shopping-reviews': {
+    ja: guide('ja', {
+      title: '買い物の口コミを正しく読む方法',
+      description: '評価点だけに頼らず、件数・投稿日・利用条件・低評価の共通点から口コミを確認する手順を解説します。',
+      conclusion: '口コミは評価点だけで結論を出さず、投稿件数、投稿日、自分と近い利用条件、低評価で繰り返される指摘を確認します。取得元や投稿内容を確認できない要約は事実として扱わず、販売ページの原文も確認してください。',
+      query: '口コミで静音性と手入れのしやすさを確認できる小型加湿器',
+      tips: ['評価点と投稿件数をセットで見る', '自分と近い部屋の広さや使用頻度の投稿を探す', '同じ不満が複数の時期に繰り返されているか確認する'],
+      comparison: [
+        ['評価点が高い', '件数と投稿日を確認', '少数・古い投稿だけなら判断を保留'],
+        ['具体的な使用感がある', '利用環境が自分と近いか確認', '用途が違えば参考範囲を分ける'],
+        ['低評価がある', '同じ指摘の反復と販売者対応を確認', '単発の感想と共通傾向を分ける']
+      ]
+    })
+  },
+  'how-to-use-shopping-rankings': {
+    ja: guide('ja', {
+      title: '通販ランキングから商品を選ぶ方法',
+      description: 'ランキングの対象期間・カテゴリ・集計元・広告表示を確認し、自分の用途に合う商品候補を探す方法を解説します。',
+      conclusion: '順位だけで購入を決めず、対象期間、カテゴリ、集計元、更新日時、広告・スポンサー表示を確認します。ランキングは候補を知る入口として使い、商品仕様、口コミ、価格、在庫は販売ページで個別に確かめてください。',
+      query: '小学生が使う水筒のランキング候補を、容量と洗いやすさで比較したい',
+      tips: ['ランキングの集計元・対象期間・更新日時を確認する', '総合順位ではなく自分の用途に合うカテゴリを見る', '広告・スポンサー枠を自然順位と分けて確認する'],
+      comparison: [
+        ['順位の根拠を確認できる', '集計元・期間・カテゴリ・更新日時を見る', '候補発見の参考として利用'],
+        ['広告表示がある', '広告・スポンサー表記を確認', '自然順位と混ぜず別枠として扱う'],
+        ['根拠を確認できない', '人気・売れ筋と断定しない', '販売ページの仕様や口コミから再確認']
+      ]
+    })
+  },
+  'find-a-gift-by-recipient-and-occasion': {
+    ja: guide('ja', {
+      title: '贈る相手と場面からプレゼントを探す方法',
+      description: '商品名が決まっていないプレゼントを、相手・場面・予算・避けたい条件から探す手順を解説します。',
+      conclusion: '相手の属性だけで決めつけず、贈る場面、予算、好み、すでに持っていそうな物、避けたい条件を整理します。候補が見つかったら、サイズ、仕様、配送日、包装対応を販売ページで確認してください。',
+      query: 'コーヒーが好きな友人への誕生日プレゼント、5000円以内で場所を取らないもの',
+      tips: ['相手の年齢や性別だけで好みを決めつけない', '予算・贈る日・持ち運びやすさを条件にする', '配送予定日や包装対応は購入先で確認する'],
+      comparison: [
+        ['好みが分かる', '好きなこと・よく使う場面を入力', 'すでに持っている可能性を確認'],
+        ['好みが曖昧', '消耗品・サイズ不要など外しにくい条件を整理', 'アレルギーや利用制限を確認'],
+        ['渡す日が決まっている', '配送日・受取方法・包装条件を確認', '販売ページの最新案内で最終判断']
+      ]
+    })
   }
 };
 
@@ -250,6 +320,31 @@ const visualProfiles = {
       intent: 'shopping_for_seniors', cluster: 'audience-guides', articleType: 'shopping-guide',
       headings: ['使う人の状況', '確認する仕様', '適合性の判断'],
       steps: [['本人の困りごと', '見えにくさ、握りにくさ、重さなど、本人が困る場面を確認します。'], ['操作条件を整理', '文字の大きさ、ボタン数、重さ、電源方式、使用場所を書きます。'], ['必要なら専門確認', '医療・介護用途の適合性は推測せず、専門職やメーカーへ確認します。']]
+    },
+    'search-products-by-budget-and-purpose': {
+      intent: 'search_by_budget_and_purpose', cluster: 'needs-and-budget', articleType: 'how-to',
+      headings: ['分かっている条件', '検索文への入れ方', '候補の確認'],
+      steps: [['用途を先に決める', '使う人・場所・頻度を整理し、必要な役割を明確にします。'], ['予算と条件を分ける', '上限予算、必須条件、希望条件、除外条件の順に入力します。'], ['支払総額を確認', '候補を特定してから、送料・在庫・販売条件を購入先で確認します。']]
+    },
+    'compare-total-price-with-shipping': {
+      intent: 'compare_total_price_with_shipping', cluster: 'price-comparison', articleType: 'comparison-guide',
+      headings: ['比較項目', 'そろえる条件', '最終確認'],
+      steps: [['同一商品にそろえる', '型番・容量・色・セット数・販売単位が一致する候補だけを分けます。'], ['費用を分解する', '商品価格、送料、値引き、ポイントの適用条件を別々に確認します。'], ['購入直前に総額確認', '配送先を指定した支払画面で、実際に適用される総額を確認します。']]
+    },
+    'how-to-read-shopping-reviews': {
+      intent: 'evaluate_shopping_reviews', cluster: 'reviews-and-trust', articleType: 'review-guide',
+      headings: ['口コミの状態', '確認する情報', '判断での扱い'],
+      steps: [['母数と新しさを見る', '評価点と一緒に投稿件数・投稿日・更新状況を確認します。'], ['利用条件をそろえる', '自分と近い場所・頻度・目的で使った投稿を探します。'], ['共通点を分ける', '単発の感想と、低評価で繰り返される指摘を分けて判断します。']]
+    },
+    'how-to-use-shopping-rankings': {
+      intent: 'evaluate_shopping_rankings', cluster: 'rankings-and-trust', articleType: 'ranking-guide',
+      headings: ['ランキングの状態', '確認する根拠', '候補選びでの扱い'],
+      steps: [['集計条件を見る', '集計元・対象期間・カテゴリ・更新日時が示されているか確認します。'], ['広告を分ける', 'スポンサーや広告の表示を、自然な順位と分けて見ます。'], ['用途で絞り直す', '順位を入口に、仕様・口コミ・価格・在庫を候補ごとに確認します。']]
+    },
+    'find-a-gift-by-recipient-and-occasion': {
+      intent: 'find_gift_by_recipient_and_occasion', cluster: 'gift-discovery', articleType: 'shopping-guide',
+      headings: ['分かっている情報', '検索条件への変換', '購入前の確認'],
+      steps: [['贈る場面を決める', '相手との関係、贈る理由、渡す日を整理します。'], ['好みと制約を言葉にする', '予算・好み・サイズ・避けたい条件を入力します。'], ['配送と仕様を確認', '商品仕様、到着予定、包装対応を販売ページで確認します。']]
     }
   },
   en: {
@@ -337,7 +432,7 @@ function alternateLinks(slug, locale) {
 
 function relatedLinks(locale, currentSlug) {
   const preferred = locale === 'ja'
-    ? ['find-product-without-name', 'how-to-search-by-description', 'compare-amazon-rakuten-yahoo-shopping', 'how-to-compare-the-same-product']
+    ? ['find-product-without-name', 'how-to-search-by-description', 'search-products-by-budget-and-purpose', 'compare-total-price-with-shipping', 'how-to-read-shopping-reviews', 'how-to-use-shopping-rankings', 'find-a-gift-by-recipient-and-occasion', 'compare-amazon-rakuten-yahoo-shopping', 'how-to-compare-the-same-product']
     : ['find-product-without-name', 'how-to-search-by-description', 'shopping-in-japan', 'american-products-in-japan'];
   return preferred.filter((slug) => slug !== currentSlug && pages[slug]?.[locale]).slice(0, 3)
     .map((slug) => `<li><a href="${pathFor(locale, slug)}">${esc(pages[slug][locale].title)}</a></li>`).join('');

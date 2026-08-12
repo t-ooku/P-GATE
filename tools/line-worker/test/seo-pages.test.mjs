@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('既存10ページと検索意図が異なる日本語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 15);
+test('検索意図が異なる日本語15ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 20);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\//);
@@ -39,6 +39,24 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
     return html.match(/<ol class="guide-flow">([\s\S]*?)<\/ol>/)?.[1] || '';
   });
   assert.equal(new Set(flows).size, japanesePaths.length);
+});
+
+test('新規5テーマは商品・価格・口コミ・順位を根拠なく断定しない', () => {
+  const paths = [
+    '/ja/search-products-by-budget-and-purpose',
+    '/ja/compare-total-price-with-shipping',
+    '/ja/how-to-read-shopping-reviews',
+    '/ja/how-to-use-shopping-rankings',
+    '/ja/find-a-gift-by-recipient-and-occasion'
+  ];
+  for (const path of paths) {
+    const html = renderSeoPage(path);
+    assert.ok(html);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    assert.match(html, /販売ページ/);
+    assert.doesNotMatch(html, /最安(?:値)?です|人気No\.1|売れ筋No\.1|絶対おすすめ/);
+    assert.doesNotMatch(html, /Premium|月額980円/);
+  }
 });
 
 test('スマホ比較表は横スクロールではなく行カードへ変換するCSSを持つ', () => {
