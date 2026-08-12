@@ -10,10 +10,19 @@ const readOrCreate = (key, storage) => {
 };
 const visitorId = readOrCreate('hoshilu_anonymous_visitor_id', localStorage);
 const sessionId = readOrCreate('hoshilu_seo_session_id', sessionStorage);
+const queryParams = new URLSearchParams(location.search);
+const requestedSource = String(queryParams.get('utm_source') || '').trim().toLowerCase().slice(0, 64);
+const requestedMedium = String(queryParams.get('utm_medium') || '').trim().toLowerCase().slice(0, 32);
+const isQaVisit = requestedSource.startsWith('codex')
+  || requestedSource.startsWith('test')
+  || requestedSource.startsWith('qa')
+  || requestedMedium === 'qa';
+const eventSource = isQaVisit ? (requestedSource || 'qa') : 'seo_article';
+const eventMedium = isQaVisit ? 'qa' : 'internal';
 
 function send(event_type) {
   const body = JSON.stringify({
-    event_type, locale, source: 'seo_article', medium: 'internal', content: articleId,
+    event_type, locale, source: eventSource, medium: eventMedium, content: articleId,
     visitor_id: visitorId, session_id: sessionId
   });
   if (navigator.sendBeacon) {
