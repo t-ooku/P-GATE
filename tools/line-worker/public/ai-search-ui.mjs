@@ -7,11 +7,11 @@ const languageCopy = {
 };
 
 // HOSHILU AI Chat (2026-08-05): as few turns as possible, then hand off to
-// the real search. The chat itself never invents a product - it only ends
-// with refined_query, which is submitted to the existing #submitButton /
-// /api/knowledge flow (Teacher Dataset, ranking, all marketplaces
-// untouched). Stays entirely inside HOSHILU (calls our own /api/ai-chat,
-// never links out to an external AI chat site).
+// the real search. IDENTIFY may return one product-name hypothesis for the
+// user to confirm, but never a verified listing, price, stock value, or URL.
+// The confirmed hypothesis is submitted to /api/knowledge and is retained as
+// an explicitly unverified AI candidate if the connected marketplace APIs do
+// not return a product card. Stays entirely inside HOSHILU.
 // v4.3 項目6: 会話が完了しても即座に自動検索へ進まず、チャット内に明確な
 // 「この条件で探す」CTAを設置し、押した時にだけHOSHILU検索へ戻す
 // (Gemini自身が商品一覧を作って会話を終える設計は禁止 - このCTAが
@@ -47,19 +47,15 @@ function decorateLinks(container) {
 // actually succeeded - unlike the previous approach (simulate a click on
 // the submit button, then poll its disabled state), which could not tell
 // "results rendered" apart from "silently did nothing".
-async function runFinalSearch(refinedQuery) {
+async function runFinalSearch(refinedQuery, aiCandidateFallback = null) {
   const queryField = document.querySelector('#query');
   const searchRunner = window.HoshiluSearch?.run;
   if (!queryField || !refinedQuery || typeof searchRunner !== 'function') {
     return { ok: false, error: 'SEARCH_UNAVAILABLE' };
   }
-  // The chat's own last turn just consumed the Turnstile token via
-  // /api/ai-chat. Refresh it here so the main search's own token wait does
-  // not immediately reuse that already-consumed token and fail.
-  await window.HoshiluChatAuth?.requestToken?.();
   queryField.value = refinedQuery;
   queryField.dispatchEvent(new Event('input', { bubbles: true }));
-  return searchRunner();
+  return searchRunner({ aiCandidateFallback });
 }
 
 function chatMessageRow(role, text) {
@@ -111,10 +107,33 @@ function openIdentifyDialog(originalQuery,language){
   const title=document.createElement('strong');title.textContent=copy.title;
   const messages=document.createElement('div');messages.className='ai-chat-messages';
   panel.append(close,title,messages);dialog.append(panel);document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());
-  const history=[{role:'user',text:originalQuery}];let noCount=0;
+  const history=[{role:'user',text:originalQuery}];let noCount=0;let otherMallsButton=null;
   messages.append(chatMessageRow('user',originalQuery));
-  const showOtherMalls=()=>{const button=document.createElement('button');button.type='button';button.className='ai-chat-other-malls';button.textContent=copy.other;button.addEventListener('click',async()=>{button.disabled=true;const status=chatMessageRow('assistant',copy.finding);status.classList.add('ai-chat-message-status');messages.append(status);await runFinalSearch(originalQuery);dialog.close();window.setTimeout(()=>document.querySelector('#marketplaceFallback,.marketplace-fallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});messages.append(button);};
-  const ask=async()=>{const status=chatMessageRow('assistant',copy.thinking);status.classList.add('ai-chat-message-status');messages.append(status);try{const result=await postChatTurn(history,language,'IDENTIFY');status.remove();const candidate=String(result.candidate_name||result.refined_query||'').trim();if(!candidate)throw new Error('CANDIDATE_EMPTY');history.push({role:'assistant',text:candidate});const question=chatMessageRow('assistant',copy.question(candidate));question.classList.add('ai-chat-identify-question');messages.append(question);const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runFinalSearch(result.refined_query||candidate);finding.remove();if(outcome.ok)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});actions.append(yes,no);messages.append(actions);}catch(error){const code=String(error?.message||'CHAT_FAILED');console.error('HOSHILU_IDENTIFY_FAILED',code,error);status.textContent=`${copy.error}（${code}）`;const retry=document.createElement('button');retry.type='button';retry.className='ai-chat-retry';retry.textContent=chatCopy[language]?.retry||chatCopy.JA.retry;retry.addEventListener('click',()=>{retry.remove();status.remove();void ask();});messages.append(retry);showOtherMalls();}};
+  const showOtherMalls=()=>{
+    if(otherMallsButton?.isConnected)return;
+    const button=document.createElement('button');otherMallsButton=button;button.type='button';button.className='ai-chat-other-malls';button.textContent=copy.other;
+    button.addEventListener('click',async()=>{button.disabled=true;const status=chatMessageRow('assistant',copy.finding);status.classList.add('ai-chat-message-status');messages.append(status);await runFinalSearch(originalQuery);dialog.close();window.setTimeout(()=>document.querySelector('#marketplaceFallback,.marketplace-fallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});
+    messages.append(button);
+  };
+  const ask=async()=>{
+    const status=chatMessageRow('assistant',copy.thinking);status.classList.add('ai-chat-message-status');messages.append(status);
+    try{
+      const result=await postChatTurn(history,language,'IDENTIFY');status.remove();
+      const candidate=String(result.candidate_name||result.refined_query||'').trim();if(!candidate)throw new Error('CANDIDATE_EMPTY');
+      const aiCandidateFallback={name:candidate,brand:String(result.candidate_brand||''),reason:String(result.candidate_reason||''),matched_features:Array.isArray(result.matched_features)?result.matched_features:[],match_score:Number(result.match_score||0),search_keywords:[String(result.refined_query||candidate)],marketplace_search_links:Array.isArray(result.marketplace_search_links)?result.marketplace_search_links:[]};
+      history.push({role:'assistant',text:candidate});
+      const question=chatMessageRow('assistant',copy.question(candidate));question.classList.add('ai-chat-identify-question');messages.append(question);
+      const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';
+      const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
+      const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;
+      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runFinalSearch(result.refined_query||candidate,aiCandidateFallback);finding.remove();if(outcome.ok)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
+      no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});
+      actions.append(yes,no);messages.append(actions);
+    }catch(error){
+      const code=String(error?.message||'CHAT_FAILED');console.error('HOSHILU_IDENTIFY_FAILED',code,error);status.textContent=copy.error;
+      const retry=document.createElement('button');retry.type='button';retry.className='ai-chat-retry';retry.textContent=chatCopy[language]?.retry||chatCopy.JA.retry;retry.addEventListener('click',()=>{retry.remove();status.remove();void ask();});messages.append(retry);showOtherMalls();
+    }
+  };
   dialog.showModal();void ask();
 }
 
@@ -218,15 +237,13 @@ function openChatDialog(originalQuery, language) {
       status.remove();
       showSearchCta(refinedQuery);
     } catch (error) {
-      // 以前は catch {} でエラーを完全に捨てていたため、画面には
-      // 「通信に失敗しました」としか出ず、実際に何が起きたのか
-      // (Turnstile未準備・APIキー未設定・レート制限のどれか) が
-      // 利用者からも開発者からも分からなかった。原因の判別が付かない
-      // 障害は直しようがないので、コードを画面とコンソールの両方に出す。
+      // Technical details stay in the console for diagnosis. The customer
+      // sees a stable recovery message rather than a Turnstile/container
+      // implementation error that they cannot act on.
       const code = String(error?.message || 'CHAT_FAILED');
       console.error('HOSHILU_CHAT_FAILED', code, error);
       status.remove();
-      messages.append(chatMessageRow('assistant', `${copy.error}（${code}）`));
+      messages.append(chatMessageRow('assistant', copy.error));
       form.classList.remove('hidden');
       input.focus();
     }

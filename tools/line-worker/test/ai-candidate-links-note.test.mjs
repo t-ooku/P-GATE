@@ -18,17 +18,17 @@ const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), '
 // 追加されていることを固定化する。
 test('AI候補カードのモールボタン直前に、検索リンクであることを明示するcaptionを表示する', async () => {
   const app = await read('app.js');
-  assert.match(app, /linksNote:'気になったら、下のモールで検索して確認してください/);
+  assert.match(app, /linksNote:'ZOZOTOWNを含む13モールで、この候補名を検索できます/);
   assert.match(
     app,
     /if\(links\)\{card\.append\(textElement\('p','ai-candidate-links-note',labels\.linksNote\)\);card\.append\(links\);\}/
   );
   // 4言語すべてに用意されている。
   for (const marker of [
-    "linksNote:'気になったら、下のモールで検索して確認してください",
-    "linksNote:'Tap a marketplace below to search for this item",
-    "linksNote:'如果感兴趣，请在下方商城搜索确认",
-    'linksNote:\'관심 있으면 아래 쇼핑몰에서 검색해 확인해 주세요'
+    "linksNote:'ZOZOTOWNを含む13モールで、この候補名を検索できます",
+    "linksNote:'Search this candidate by name across 13 marketplaces, including ZOZOTOWN",
+    "linksNote:'可在包括 ZOZOTOWN 在内的13个商城按候选名称搜索",
+    'linksNote:\'ZOZOTOWN을 포함한 13개 쇼핑몰에서 이 후보명으로 검색할 수 있습니다'
   ]) {
     assert.ok(app.includes(marker), `missing linksNote translation: ${marker}`);
   }

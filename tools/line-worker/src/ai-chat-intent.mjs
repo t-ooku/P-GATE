@@ -4,10 +4,10 @@
 // (same env vars: GEMINI_API_KEY / OPENAI_API_KEY / *_PRODUCT_DISCOVERY_MODEL)
 // rather than introducing a third AI integration.
 //
-// SSoT boundary (unchanged from the rest of HOSHILU): this module NEVER
-// returns a product name, price, stock status, or URL. It only decides (a)
-// whether one more clarifying question is worth asking, or (b) a refined
-// search string to hand back to the real search pipeline
+// SSoT boundary: IDENTIFY may return one product-name hypothesis plus the
+// clues behind it, but NEVER a verified listing, price, stock status, or URL.
+// It decides (a) whether one more clarifying question is worth asking, or
+// (b) a candidate/refined search string to hand back to the real pipeline
 // (buildAmazonSearchKeywords / applyIndexedSearchPolicy / etc. - all
 // untouched by this module). "AIは理解する。HOSHILUは探す。"
 //
@@ -84,7 +84,7 @@ export function sanitizeChatHistory(history) {
 function chatPrompt(history, language, mode = 'REFINE') {
   const transcript = history.map((turn) => `${turn.role === 'user' ? 'User' : 'HOSHILU AI'}: ${turn.text}`).join('\n');
   if (mode === 'IDENTIFY') {
-    return `You are HOSHILU's product-identification assistant. From the entire conversation, propose exactly ONE most likely real brand/product hypothesis for the user to confirm. If the user rejected an earlier hypothesis, never repeat it.\n\nConversation:\n${transcript}\n\nDisplay language: ${language}\n\nReturn JSON only:\n{\n  "needs_clarification": false,\n  "clarifying_question": "",\n  "candidate_name": "",\n  "refined_query": ""\n}\n\nRules:\n- candidate_name is one concise brand + product name hypothesis, not a list.\n- refined_query is a marketplace-search-ready string for that same candidate and must preserve known requirements such as size, color, compatibility, prescription, or intended use.\n- Never claim the candidate was verified or found. Never include price, stock, URL, or fabricated specifications.\n- JSON only, no markdown.`;
+    return `You are HOSHILU's product-identification assistant. From the entire conversation, propose exactly ONE most likely real brand/product hypothesis for the user to confirm. If the user rejected an earlier hypothesis, never repeat it.\n\nConversation:\n${transcript}\n\nDisplay language: ${language}\n\nReturn JSON only:\n{\n  "needs_clarification": false,\n  "clarifying_question": "",\n  "candidate_name": "",\n  "candidate_brand": "",\n  "candidate_reason": "",\n  "matched_features": [],\n  "match_score": 0,\n  "refined_query": ""\n}\n\nRules:\n- candidate_name is one concise brand + product name hypothesis, not a list.\n- candidate_brand is the brand only when reasonably inferable.\n- candidate_reason briefly explains which remembered clues led to this hypothesis; matched_features contains only clues present in the conversation.\n- match_score is hypothesis confidence from 0 to 100, not marketplace verification confidence.\n- refined_query is a marketplace-search-ready string for that same candidate and must preserve known requirements such as size, color, compatibility, prescription, or intended use.\n- Never claim the candidate was verified or found. Never include price, stock, URL, or fabricated specifications.\n- JSON only, no markdown.`;
   }
   return `You are HOSHILU's search-refinement assistant. Turn the user's wording into a short marketplace search string. Ask a question only when no product category can be inferred.\n\nConversation:\n${transcript}\n\nDisplay language: ${language}\n\nReturn JSON only:\n{\n  "needs_clarification": false,\n  "clarifying_question": "",\n  "refined_query": ""\n}\n\nRules:\n- You MAY resolve a remembered spokesperson, nickname, visual clue, or colloquial description into the most likely real brand/product name. Treat it only as a search hypothesis; never claim it was verified or found. HOSHILU verifies it against marketplace/catalog data afterward.\n- Never include a price, stock status, URL, or fabricated specification.\n- refined_query must preserve every user requirement and contain likely brand/product + category + distinguishing details.\n- JSON only, no markdown.`;
 }
@@ -103,7 +103,7 @@ async function callGemini(history, language, env, fetchImpl, timeoutMs = CHAT_TI
       headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: chatPrompt(history, language, mode) }] }],
-        generationConfig: { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: 128,
+        generationConfig: { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: mode === 'IDENTIFY' ? 256 : 128,
           thinkingConfig: { thinkingLevel: 'minimal' } }
       })
     },
@@ -143,11 +143,18 @@ async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_TI
 
 export function normalizeChatTurnResult(payload = {}) {
   const needsClarification = payload?.needs_clarification === true;
+  const matchedFeatures = (Array.isArray(payload?.matched_features) ? payload.matched_features : [])
+    .map((value) => cleanString(value, 100)).filter(Boolean).slice(0, 8);
+  const matchScore = Math.max(0, Math.min(100, Math.round(Number(payload?.match_score) || 0)));
   return {
     needs_clarification: needsClarification,
     clarifying_question: needsClarification ? cleanString(payload?.clarifying_question, 200) : '',
     refined_query: !needsClarification ? cleanRefinedQuery(payload?.refined_query) : '',
-    candidate_name: !needsClarification ? cleanRefinedQuery(payload?.candidate_name).slice(0, 160) : ''
+    candidate_name: !needsClarification ? cleanRefinedQuery(payload?.candidate_name).slice(0, 160) : '',
+    candidate_brand: !needsClarification ? cleanString(payload?.candidate_brand, 120) : '',
+    candidate_reason: !needsClarification ? cleanString(payload?.candidate_reason, 300) : '',
+    matched_features: !needsClarification ? matchedFeatures : [],
+    match_score: !needsClarification ? matchScore : 0
   };
 }
 
@@ -168,7 +175,8 @@ function fallbackResult(history, mode = 'REFINE') {
   const refinedQuery = mode === 'IDENTIFY' ? (knownExpansion?.query || originalQuery) : lastUserTurn?.text;
   return { needs_clarification: false, clarifying_question: '', refined_query: refinedQuery || '',
     candidate_name: mode === 'IDENTIFY'
-      ? (knownExpansion?.expansion?.primary || refinedQuery || '') : '' };
+      ? (knownExpansion?.expansion?.primary || refinedQuery || '') : '',
+    candidate_brand: '', candidate_reason: '', matched_features: [], match_score: 0 };
 }
 
 export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl = fetch, options = {}) {
@@ -206,7 +214,7 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
         turn: userTurnCount
       });
       if (atTurnLimit && result.needs_clarification) {
-        return { needs_clarification: false, clarifying_question: '', refined_query: result.refined_query || fallbackResult(history, mode).refined_query,
+        return { ...result, needs_clarification: false, clarifying_question: '', refined_query: result.refined_query || fallbackResult(history, mode).refined_query,
           candidate_name: result.candidate_name || fallbackResult(history, mode).candidate_name, configured: true, provider };
       }
       return { ...result, candidate_name: mode === 'IDENTIFY'
@@ -226,7 +234,7 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
 
 // 通常検索向けの高速な意図変換。結果は商品として信用せず検索語にだけ使い、
 // 実在性は後段のモールAPI/D1で検証する。Gemini利用時は公式が高スループット
-// 用途向けとしているFlash-Liteを使い、全体を2.5秒以内に制限する。
+// 用途向けとしているFlash-Liteを使い、全体を1.5秒以内に制限する。
 export async function refineMarketplaceSearchQuery(rawQuery, language, env = {}, fetchImpl = fetch) {
   const fastEnv = { ...env };
   if (String(env.GEMINI_API_KEY || '').length >= 20) {
@@ -236,6 +244,6 @@ export async function refineMarketplaceSearchQuery(rawQuery, language, env = {},
   }
   return analyzeChatTurn(
     [{ role: 'user', text: String(rawQuery || '') }], language, fastEnv, fetchImpl,
-    { timeoutMs: 2500, totalBudgetMs: 2500 }
+    { timeoutMs: 1500, totalBudgetMs: 1500 }
   );
 }

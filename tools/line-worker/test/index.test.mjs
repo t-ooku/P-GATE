@@ -243,7 +243,7 @@ test('公開検索APIが失敗しても4モールへの検索導線を表示す�
   assert.match(appSource, /楽天市場で探す/);
   assert.match(appSource, /Qoo10で探す/);
   assert.match(appSource, /SHEINで探す/);
-  assert.match(appSource, /renderResults\(emergencyMarketplaceFallback\(elements\.query\.value\)\)/);
+  assert.match(appSource, /const fallback=withAiCandidateFallback\(emergencyMarketplaceFallback\(elements\.query\.value\),options\.aiCandidateFallback\);renderResults\(fallback\)/);
 });
 // 2026-08-05 report had reversed this: when results were already found, the
 // "10モールとSNSを横断して探す" marketplaceFallbackCard was suppressed to
@@ -441,6 +441,23 @@ test('PWA公開質問は同意・文字数・匿名セッション・Turnstile�
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token',
     source: 'instagram', medium: 'organic_social', campaign: 'itg_brand_reel'
   }).traffic_class, 'ATTRIBUTED');
+  const withAiCandidate = validateKnowledgeRequest({
+    query: '天然石 ピアス', consent: true,
+    session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token',
+    ai_candidate_fallback: {
+      name: '【studio CLIP】天然石ピアス https://evil.example/item ¥1,890',
+      brand: 'studio CLIP',
+      reason: '天然石という特徴に一致 $25',
+      matched_features: ['天然石', '小ぶり', 'https://evil.example/feature'],
+      match_score: 999
+    }
+  }).ai_candidate_fallback;
+  assert.equal(withAiCandidate.name, '【studio CLIP】天然石ピアス');
+  assert.equal(withAiCandidate.brand, 'studio CLIP');
+  assert.equal(withAiCandidate.reason, '天然石という特徴に一致');
+  assert.deepEqual(withAiCandidate.matched_features, ['天然石', '小ぶり']);
+  assert.equal(withAiCandidate.match_score, 100);
+  assert.doesNotMatch(JSON.stringify(withAiCandidate), /https?:|1,890|\$25/u);
   assert.throws(() => validateKnowledgeRequest({ ...valid, consent: false }), /CONSENT_REQUIRED/);
   assert.throws(() => validateKnowledgeRequest({ ...valid, query: 'x' }), /QUERY_LENGTH_INVALID/);
   assert.equal(validateKnowledgeRequest({ ...valid, query: '靴' }).query, '靴');
@@ -552,7 +569,8 @@ test('商品カードには実出品でないモール検索ボタンを付け�
   assert.equal(candidate.offers.length, 0);
 
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(appSource, /candidate\.marketplace_search_links|candidate\.amazon_search_url/);
+  const productCardSource = appSource.slice(appSource.indexOf('function productCard('), appSource.indexOf('function rankingCard('));
+  assert.doesNotMatch(productCardSource, /candidate\.marketplace_search_links|candidate\.amazon_search_url/);
 });
 
 // AI Search v2 STEP2 (docs/HOSHILU_AI_SEARCH_V2_SPEC_2026-08-04.md section 8):
@@ -1130,18 +1148,16 @@ test('検索結果の上に検索窓を常駐させ、#queryを唯一の正と�
   });
 });
 
-// HOSHILU AIチャットが本番で動かないという報告 (2026-08-07)。画面には
-// 「通信に失敗しました」としか出ず、catch {} が例外を完全に捨てていたため、
-// Turnstileが未準備なのか、APIキーが未設定なのか、レート制限なのかが
-// 利用者からも開発者からも分からなかった。原因の判別が付かない障害は
-// 直しようがないので、コードを画面とコンソールの両方へ出す。
-test('AIチャットの失敗はエラーコードを表示して原因が分かるようにする', () => {
+// 技術エラーはコンソールへ残して診断可能にする一方、利用者には操作不能な
+// Turnstileの内部コードを見せず、安定した再試行メッセージだけを表示する。
+test('AIチャットの失敗はコンソールで診断でき、画面には内部エラーコードを露出しない', () => {
   const chatUi = fs.readFileSync(new URL('../public/ai-search-ui.mjs', import.meta.url), 'utf8');
   // 例外を握り潰さない
   assert.doesNotMatch(chatUi, /\}\s*catch\s*\{\s*\n\s*status\.remove\(\);/);
   assert.match(chatUi, /catch \(error\)/);
   assert.match(chatUi, /console\.error\('HOSHILU_CHAT_FAILED'/);
-  assert.match(chatUi, /\$\{copy\.error\}（\$\{code\}）/);
+  assert.match(chatUi, /messages\.append\(chatMessageRow\('assistant', copy\.error\)\)/);
+  assert.doesNotMatch(chatUi, /\$\{copy\.error\}（\$\{code\}）/);
   // Turnstileが取れていないことを、通信失敗と区別して止める
   assert.match(chatUi, /if \(!token\) throw new Error\('TURNSTILE_TOKEN_UNAVAILABLE'\)/);
 });

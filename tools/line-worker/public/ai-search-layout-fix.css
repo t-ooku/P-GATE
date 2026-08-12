@@ -116,6 +116,18 @@
   background:#fff;
 }
 
+.ai-candidate-status{
+  display:inline-flex;
+  width:fit-content;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#fff3d6;
+  color:#805b00;
+  font-size:10px;
+  font-weight:850;
+  line-height:1.35;
+}
+
 .ai-candidate-heading{
   display:flex;
   align-items:center;

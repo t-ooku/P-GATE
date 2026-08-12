@@ -13,7 +13,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(html, /ai-search-layout-fix\.css/);
   assert.match(script, /AIで探す/);
   assert.doesNotMatch(script, /HOSHILU AIで探す/);
-  assert.match(script, /#submitButton/);
+  assert.match(script, /window\.HoshiluSearch\?\.run/);
   assert.doesNotMatch(script, /aistudio|gemini\.google|chatgpt|claude\.ai/i);
   for (const marketplace of ['AMAZON_JP','RAKUTEN_JP','YAHOO_JP','QOO10_JP','SHEIN_JP','ZOZOTOWN_JP','SHOPLIST_JP','MUSINSA_JP','BUYMA_JP','SNKRDUNK_JP']) {
     assert.match(styles, new RegExp(`data-marketplace="${marketplace}"`));
@@ -97,10 +97,10 @@ test('WHY HOSHILU is concise and official social labels are not duplicated', asy
 test('AIチャットは検索の成功を確認してからダイアログを閉じ、失敗時は開いたまま再試行を出す', async () => {
   const [app, script] = await Promise.all([read('app.js'), read('ai-search-ui.mjs')]);
   assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch\}/);
-  assert.match(app, /async function runKnowledgeSearch\(\)/);
-  assert.match(app, /return\{ok:true,result:payload\.result\}/);
+  assert.match(app, /async function runKnowledgeSearch\(options=\{\}\)/);
+  assert.match(app, /return\{ok:true,result\}/);
   assert.match(app, /const safeError=String\(error\?\.message\|\|error\)\.slice\(0,80\)/);
-  assert.match(app, /return\{ok:false,error:safeError\}/);
+  assert.match(app, /return\{ok:false,error:safeError,result:fallback\}/);
   assert.match(script, /window\.HoshiluSearch\?\.run/);
   assert.doesNotMatch(script, /submitButton\.click\(\)/);
   // dialog.close() must only appear guarded behind a successful outcome,
@@ -130,7 +130,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/app\.js\?v=120"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=3"><\/script>/);
+  assert.match(html, /<script type="module" src="\/app\.js\?v=121"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=4"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -139,12 +139,44 @@ test('AI確認モードは一時的なTurnstile・Worker失敗を別トークン
   assert.match(app, /let lastIssuedTurnstileToken=''/);
   assert.match(app, /token!==lastIssuedTurnstileToken/);
   assert.match(app, /token&&token!==lastIssuedTurnstileToken/);
+  assert.match(app, /turnstileRequestQueue\.then\(\(\)=>acquireTurnstileToken\(\)\)/);
+  assert.match(app, /callback:onTurnstileToken/);
   assert.match(script, /for \(let attempt = 0; attempt < 2; attempt \+= 1\)/);
   assert.match(script, /TURNSTILE_\|CHAT_HTTP_5/);
   assert.match(script, /await new Promise\(\(resolve\) => setTimeout\(resolve, 150\)\)/);
   assert.match(script, /HOSHILU_IDENTIFY_FAILED/);
   assert.match(script, /retry\.addEventListener\('click'/);
-  assert.match(script, /status\.textContent=`\$\{copy\.error\}（\$\{code\}）`/);
+  assert.match(script, /status\.textContent=copy\.error/);
+  assert.doesNotMatch(script, /status\.textContent=`\$\{copy\.error\}（\$\{code\}）`/);
+});
+
+test('AI確認候補は販売確認前と明示して本検索へ引き継ぎ、他モール導線を重複させない', async () => {
+  const [app, script, css] = await Promise.all([read('app.js'), read('ai-search-ui.mjs'), read('ai-search-layout-fix.css')]);
+  assert.match(script, /runFinalSearch\(result\.refined_query\|\|candidate,aiCandidateFallback\)/);
+  assert.match(script, /return searchRunner\(\{ aiCandidateFallback \}\)/);
+  assert.doesNotMatch(script.slice(script.indexOf('async function runFinalSearch'), script.indexOf('function chatMessageRow')), /requestToken/);
+  assert.match(script, /if\(otherMallsButton\?\.isConnected\)return/);
+  assert.match(app, /function withAiCandidateFallback\(result,candidate\)/);
+  assert.match(app, /function aiCandidateRequestPayload\(candidate\)/);
+  assert.match(app, /ai_candidate_fallback:aiCandidatePayload/);
+  assert.match(app, /const links=candidateLinks\.length\?candidateLinks:resultLinks/);
+  assert.match(script, /marketplace_search_links:Array\.isArray\(result\.marketplace_search_links\)\?result\.marketplace_search_links:\[\]/);
+  assert.match(app, /product_candidates:\[selected,\.\.\.existing\]\.slice\(0,5\)/);
+  assert.match(app, /selected_by_user:true/);
+  assert.match(app, /AI特定候補（13モールで販売確認前）/);
+  assert.match(app, /ZOZOTOWNを含む13モール/);
+  assert.match(app, /価格・在庫・販売状況は未確認/);
+  assert.match(css, /\.ai-candidate-status\{/);
+});
+
+test('IDENTIFY APIは知識検索が失敗しても使える13モール署名リンクを候補へ先渡しする', async () => {
+  const worker = await readFile(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  const start = worker.indexOf('async function handleAiChatApi');
+  const end = worker.indexOf('// v4.3 指示書 Priority 3', start);
+  const handler = worker.slice(start, end);
+  assert.match(handler, /input\.mode === 'IDENTIFY' && result\.candidate_name/);
+  assert.match(handler, /signedMarketplaceSearchLinks\(candidateQuery/);
+  assert.match(handler, /marketplace_search_links: marketplaceSearchLinks/);
 });
 
 // v4.2 項目6・7: 「AIで探す」を押した時点で直前の検索文を初期コンテキスト

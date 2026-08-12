@@ -17,8 +17,8 @@ globalThis.atob ??= (value) => Buffer.from(value, 'base64').toString('binary');
 //      入口(src/index.mjs:1397)で最初に適用される。
 //   2. Teacher Dataset lookup / D1 FTS5 index / 3モールAPI検索が続けて実行
 //      される。
-//   3. これらすべてが0件だった場合に限り discoverProductsWithAi() が最後の
-//      手段として呼ばれる(src/index.mjs:1557-1566)。
+//   3. Teacher Dataset/D1が0件なら、外部モール照会と並行して
+//      discoverProductsWithAi() を開始し、外部モールも0件の時だけ結果を表示する。
 // 「解決済み項目を再改修しない」の原則に従い、この動作自体は変更せず、
 // このテストで固定化(regression-lock)する。特に、既存テストで未確認だった
 // 「AIプロバイダが両方とも失敗しても検索全体は200で応答を返す」
@@ -40,7 +40,7 @@ function environment(overrides = {}) {
   };
 }
 
-function request(query, searchAttempt = 1) {
+function request(query, searchAttempt = 1, aiCandidateFallback = null) {
   return new Request('https://hoshilu.app/api/knowledge', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -50,7 +50,8 @@ function request(query, searchAttempt = 1) {
       search_attempt: searchAttempt,
       consent: true,
       session_id: 'anonymous_session_priority2',
-      turnstile_token: 'verified-token'
+      turnstile_token: 'verified-token',
+      ...(aiCandidateFallback ? { ai_candidate_fallback: aiCandidateFallback } : {})
     })
   });
 }
@@ -68,7 +69,7 @@ test('v4.3項目7: ルールベースのQuery ExpansionはAIを一切呼び出�
   assert.ok(result.expansion.weights.related > result.expansion.weights.broad);
 });
 
-test('v4.3項目8・9: AI(discoverProductsWithAi)はTeacher Dataset/D1/モール検索が全て0件だった時のみ呼ばれる', async () => {
+test('v4.3項目8・9: Teacher Dataset/D1が0件ならAI商品解析を開始し、全モール0件時に結果を使う', async () => {
   const originalFetch = globalThis.fetch;
   let aiCalls = 0;
   globalThis.fetch = async (url) => {
@@ -89,6 +90,44 @@ test('v4.3項目8・9: AI(discoverProductsWithAi)はTeacher Dataset/D1/モール
     // 検索前の検索語変換と、全候補0件時の商品意図解析を別目的で各1回呼ぶ。
     assert.equal(aiCalls, 2);
     assert.equal(payload.result.ai_discovery.triggered, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('AIチャットで確定した候補はGeminiを二重実行せず、未確認候補としてそのまま残す', async () => {
+  const originalFetch = globalThis.fetch;
+  let geminiCalls = 0;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    if (target.includes('generativelanguage.googleapis.com')) {
+      geminiCalls += 1;
+      return new Response('duplicate Gemini call is forbidden', { status: 500 });
+    }
+    return Response.json({ ok: true, result: { query_id: 'gas-confirmed', candidates: [], message: '' } });
+  };
+  const confirmed = {
+    name: '【studio CLIP】【daily CLIP】天然石ピアス',
+    brand: 'studio CLIP',
+    reason: '天然石と小ぶりな一粒デザインに一致',
+    matched_features: ['天然石', '一粒ピアス'],
+    match_score: 92
+  };
+  try {
+    const response = await worker.fetch(
+      request('天然石 ピアス', 1, confirmed),
+      { ...environment(), GEMINI_API_KEY: 'g'.repeat(32) },
+      context
+    );
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    assert.equal(payload.ok, true);
+    assert.equal(geminiCalls, 0);
+    assert.equal(payload.result.ai_discovery.provider, 'AI_CHAT_CONFIRMED');
+    assert.equal(payload.result.ai_discovery.analysis.product_candidates[0].name, confirmed.name);
+    assert.equal(payload.result.ai_discovery.analysis.product_candidates[0].selected_by_user, true);
+    assert.ok(payload.result.ai_discovery.analysis.product_candidates[0].marketplace_search_links.length >= 13);
   } finally {
     globalThis.fetch = originalFetch;
   }

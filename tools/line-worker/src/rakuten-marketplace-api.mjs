@@ -82,7 +82,7 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   const request = async (requestUrl) => {
     const response = await fetcher(requestUrl.toString(), {
       headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
-      signal: AbortSignal.timeout(3500)
+      signal: AbortSignal.timeout(2500)
     });
     if (response.ok) return response.json();
     let providerCode = '';
@@ -143,26 +143,17 @@ export async function searchRakutenMarketplaceWithFallback(
       .map((value) => String(value || '').normalize('NFKC').trim())
       .filter(Boolean)
   )].slice(0, 3);
-  // Try the primary once, then run the remaining small fallback set
-  // concurrently. Sequential requests used to turn the provider timeout into
-  // a 15 second endpoint delay even though only one result set is selected.
-  const first = candidates.length ? await Promise.allSettled([
-    searchRakutenMarketplace(env, candidates[0], fetcher, requestId)
-  ]) : [];
-  const firstResults = first[0]?.status === 'fulfilled' && Array.isArray(first[0].value) ? first[0].value : [];
-  if (firstResults.length && (!query || filterCategoryMismatches(query, firstResults).length
-    || (fallbackQuery && fallbackQuery !== query && filterCategoryMismatches(fallbackQuery, firstResults).length))) {
-    return firstResults;
-  }
-  const outcomes = first.concat(await Promise.allSettled(candidates.slice(1).map((keywords) =>
-    searchRakutenMarketplace(env, keywords, fetcher, requestId))));
+  // Run all bounded variants concurrently, then inspect them in preference
+  // order. Selection quality is unchanged, while latency is capped at one
+  // provider timeout window instead of primary + fallback windows.
+  const outcomes = await Promise.allSettled(candidates.map((keywords) =>
+    searchRakutenMarketplace(env, keywords, fetcher, requestId)));
   let firstFailure = null;
   for (const outcome of outcomes) {
     if (outcome.status !== 'fulfilled') {
       firstFailure ||= outcome.reason;
       continue;
     }
-    if (outcome === first[0]) continue;
     const results = Array.isArray(outcome.value) ? outcome.value : [];
     if (!results.length) continue;
     if (!query || filterCategoryMismatches(query, results).length) return results;

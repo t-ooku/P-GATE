@@ -304,9 +304,24 @@ export function validateKnowledgeRequest(payload) {
     campaign: cleanAttribution(payload.campaign),
     content: cleanAttribution(payload.content)
   };
+  const rawAiCandidate = payload.ai_candidate_fallback && typeof payload.ai_candidate_fallback === 'object'
+    ? payload.ai_candidate_fallback : null;
+  const cleanCandidateText = (value, max) => redactSearchPersonalData(String(value || ''))
+    .replace(/https?:\/\/\S+/giu, ' ')
+    .replace(/(?:[¥$€£]\s*\d[\d,.]*|\d[\d,]*(?:円|ドル|usd|jpy))/giu, ' ')
+    .replace(/\s+/gu, ' ').trim().slice(0, max);
+  const aiCandidateName = cleanCandidateText(rawAiCandidate?.name, 160);
+  const aiCandidateFallback = aiCandidateName ? {
+    name: aiCandidateName,
+    brand: cleanCandidateText(rawAiCandidate?.brand, 120),
+    reason: cleanCandidateText(rawAiCandidate?.reason, 300),
+    matched_features: (Array.isArray(rawAiCandidate?.matched_features) ? rawAiCandidate.matched_features : [])
+      .map((value) => cleanCandidateText(value, 100)).filter(Boolean).slice(0, 8),
+    match_score: Math.max(0, Math.min(100, Math.round(Number(rawAiCandidate?.match_score) || 0)))
+  } : null;
   return {
     query, session_id: sessionId, turnstile_token: turnstileToken, language, search_attempt: searchAttempt,
-    consent: true, attribution,
+    consent: true, attribution, ai_candidate_fallback: aiCandidateFallback,
     traffic_class: classifyGrowthTraffic(attribution)
   };
 }
@@ -497,7 +512,7 @@ async function recordMeasurementEventsToD1(env, channel, events) {
 }
 
 async function callGas(env, action, body) {
-  const timeoutMs = action === 'KNOWLEDGE' ? 2200 : action === 'EVENT' ? 3000 : 5000;
+  const timeoutMs = action === 'KNOWLEDGE' ? 1500 : action === 'EVENT' ? 3000 : 5000;
   const response = await fetch(env.GAS_BACKEND_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -1063,20 +1078,13 @@ export function summarizeMarketplaceSearchOutcomes(searches = [], outcomes = [],
 // first (broadest) keyword candidate would stop the cascade there and never
 // try the cleaner, more specific candidates that follow.
 async function searchMarketplaceApiWithFallback(searcher, keywordCandidates, query = '', fallbackQuery = '') {
-  // A sequential fallback cascade multiplied the provider's 5 second timeout
-  // by as many as five keyword variants.  That made an ordinary search wait
-  // up to 25 seconds for Yahoo alone before the Worker could answer, which in
-  // turn sent the PWA into its emergency-link fallback.  Keep the preference
-  // order. Try the primary once, then evaluate at most two fallback variants
-  // concurrently, bounding the provider to two short request windows.
+  // Run the bounded three-variant set concurrently, then evaluate responses
+  // in preference order. This preserves primary/fallback selection while
+  // reducing the provider critical path from two timeout windows to one.
   const variants = [...new Set((keywordCandidates || [])
     .map((value) => String(value || '').normalize('NFKC').trim())
     .filter(Boolean))].slice(0, 3);
-  const first = variants.length ? await Promise.allSettled([searcher(variants[0])]) : [];
-  const firstCandidates = first[0]?.status === 'fulfilled' && Array.isArray(first[0].value) ? first[0].value : [];
-  if (firstCandidates.length && (!query
-    || filterSearchCandidatesWithFallback(query, fallbackQuery, firstCandidates).length)) return firstCandidates;
-  const outcomes = first.concat(await Promise.allSettled(variants.slice(1).map((keywords) => searcher(keywords))));
+  const outcomes = await Promise.allSettled(variants.map((keywords) => searcher(keywords)));
   let firstFailure = null;
   for (const outcome of outcomes) {
     if (outcome.status !== 'fulfilled') {
@@ -1084,7 +1092,7 @@ async function searchMarketplaceApiWithFallback(searcher, keywordCandidates, que
       continue;
     }
     const candidates = Array.isArray(outcome.value) ? outcome.value : [];
-    if (outcome === first[0] || !candidates.length) continue;
+    if (!candidates.length) continue;
     if (!query || filterSearchCandidatesWithFallback(query, fallbackQuery, candidates).length) return candidates;
   }
   // Preserve the distinction between a genuine zero-result response and a
@@ -1659,7 +1667,17 @@ async function handleAiChatApi(request, env) {
     if (length > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
     const input = validateChatRequest(await request.json());
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    const result = await analyzeChatTurn(input.history, input.language, env, fetch, { mode: input.mode });
+    let result = await analyzeChatTurn(input.history, input.language, env, fetch, { mode: input.mode });
+    if (input.mode === 'IDENTIFY' && result.candidate_name) {
+      const candidateQuery = result.refined_query || result.candidate_name;
+      const category = semanticSearchGroups(candidateQuery)
+        .map((group) => group.category).find((value) => value && value !== 'color') || 'unclassified';
+      const marketplaceSearchLinks = await signedMarketplaceSearchLinks(candidateQuery, {
+        env, origin: ownOrigin, sessionHash: await hashUser(input.session_id),
+        seed: `AI_CHAT:${crypto.randomUUID()}`, category, trafficClass: 'UNATTRIBUTED'
+      });
+      result = { ...result, marketplace_search_links: marketplaceSearchLinks };
+    }
     return Response.json({ ok: true, result }, {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
     });
@@ -1878,6 +1896,36 @@ async function applyD1MultilingualContent(env, result, language) {
   return candidates.length ? { ...result, candidates: cleaned } : result;
 }
 
+function confirmedAiCandidateDiscovery(candidate, query) {
+  if (!candidate?.name) return null;
+  return {
+    triggered: true,
+    configured: true,
+    provider: 'AI_CHAT_CONFIRMED',
+    candidates: [],
+    analysis: {
+      category: '',
+      intent_summary: '',
+      features: candidate.matched_features || [],
+      product_candidates: [{ ...candidate, search_keywords: [query || candidate.name], selected_by_user: true }],
+      search_keywords: [query || candidate.name],
+      multilingual_keywords: { ja: [], en: [], zh: [], ko: [] }
+    }
+  };
+}
+
+async function safeAiProductDiscovery(query, language, env) {
+  try {
+    return await discoverProductsWithAi(query, language, env);
+  } catch (error) {
+    console.warn('AI_PRODUCT_DISCOVERY_UNAVAILABLE', {
+      status: Number(error?.status) || 0,
+      provider_code: String(error?.providerCode || '').slice(0, 80)
+    });
+    return { triggered: true, configured: true, candidates: [], unavailable: true };
+  }
+}
+
 async function handleKnowledgeApi(request, env, ctx) {
   try {
     const requestOrigin = request.headers.get('origin');
@@ -1913,12 +1961,20 @@ async function handleKnowledgeApi(request, env, ctx) {
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     // 通常検索でもAIを検索語変換器として使う。ただし既存DB/GAS検索と並列に
     // 走らせるため、Gemini待ちを丸ごと検索時間へ上乗せしない。
+    const aiRefinementTask = input.ai_candidate_fallback
+      ? Promise.resolve({
+        needs_clarification: false,
+        refined_query: input.query,
+        configured: true,
+        provider: 'AI_CHAT_CONFIRMED'
+      })
+      : refineMarketplaceSearchQuery(originalQuery, input.language, env, fetch);
     const [gasOutcome, indexedOutcome, aiRefinementOutcome] = await Promise.allSettled([
       callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } }),
       applyIndexedSearchPolicy({ candidates: [] }, env, input.query, input.language, {
         force_product_presentation: true
       }),
-      refineMarketplaceSearchQuery(originalQuery, input.language, env, fetch)
+      aiRefinementTask
     ]);
     const aiRefinement = aiRefinementOutcome.status === 'fulfilled' ? aiRefinementOutcome.value : null;
     // AIが作った短い検索語を主検索へ使い、元の文章は先行して実行済みの
@@ -1959,6 +2015,15 @@ async function handleKnowledgeApi(request, env, ctx) {
     } };
     result = await applyD1MultilingualContent(env, result, input.language);
     result = await applyD1ContractPolicy(env, result, input.query, requestId);
+    const confirmedDiscovery = confirmedAiCandidateDiscovery(input.ai_candidate_fallback, input.query);
+    let aiDiscoveryPromise = null;
+    if (!confirmedDiscovery && !(result?.candidates || []).length) {
+      // When local/GAS data has no candidate, start AI fallback while Rakuten
+      // and Yahoo are searched. This removes a full AI round-trip from the
+      // zero-result critical path without spending AI calls when local data
+      // already has products.
+      aiDiscoveryPromise = safeAiProductDiscovery(input.query, input.language, env);
+    }
     // 2026-08-10正式運用: 公開検索でAPI取得するのは楽天・Yahoo!のみ。
     // Amazon Creators API実装は接続審査後に再有効化できる形で残すが、
     // 未接続の現在はAmazonを他の外部モールと同じ検索リンクとして扱う。
@@ -2111,15 +2176,12 @@ async function handleKnowledgeApi(request, env, ctx) {
           KO: '라쿠텐 또는 Yahoo! 쇼핑에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'
         }[input.language] || 'Marketplace connection failed. Please try again later.';
       }
-      try {
-        result.ai_discovery = await discoverProductsWithAi(input.query, input.language, env);
-      } catch (error) {
-        console.warn('AI_PRODUCT_DISCOVERY_UNAVAILABLE', {
-          status: Number(error?.status) || 0,
-          provider_code: String(error?.providerCode || '').slice(0, 80)
-        });
-        result.ai_discovery = { triggered: true, configured: true, candidates: [], unavailable: true };
-      }
+      result.ai_discovery = confirmedDiscovery
+        || await (aiDiscoveryPromise || safeAiProductDiscovery(input.query, input.language, env));
+    } else if (aiDiscoveryPromise) {
+      // The marketplace search found products after the fallback had already
+      // started. Keep the Promise attached to the request lifecycle.
+      ctx.waitUntil(aiDiscoveryPromise);
     }
     const sessionHash = await hashUser(input.session_id);
     const decorated = await decoratePwaResult(

@@ -156,7 +156,9 @@ test('first search always checks a configured marketplace API even when an index
   const env={...environment([row]),RAKUTEN_APPLICATION_ID:'app',RAKUTEN_ACCESS_KEY:'key'};
   try{
     const payload=await (await worker.fetch(request('TikTokで見た光るスマホケース','JA',1),env,context)).json();
-    assert.equal(rakutenCalls,1);
+    // Primary and bounded fallback keywords are now checked concurrently so
+    // one slow variant does not add another full provider timeout window.
+    assert.ok(rakutenCalls >= 1 && rakutenCalls <= 3, `unexpected Rakuten call count: ${rakutenCalls}`);
     assert.equal(payload.result.candidates.some(item=>item.offers?.some(offer=>offer.marketplace==='RAKUTEN_JP')),true);
   }finally{globalThis.fetch=originalFetch;}
 });

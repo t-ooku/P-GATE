@@ -71,7 +71,7 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch, option
   url.searchParams.set('image_size', '600');
   if (['-review_count', '-score'].includes(options.sort)) url.searchParams.set('sort', options.sort);
   url.searchParams.set('in_stock', 'true');
-  const response = await fetcher(url.toString(), { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(3500) });
+  const response = await fetcher(url.toString(), { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(2500) });
   if (!response.ok) {
     let providerCode = '';
     try {

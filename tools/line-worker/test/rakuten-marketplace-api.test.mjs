@@ -150,6 +150,28 @@ test('複合条件が0件なら主要商品語で一度だけ再検索する', a
   assert.equal(candidates[0].offers[0].marketplace, 'RAKUTEN_JP');
 });
 
+test('楽天の検索語候補は待ち時間を直列加算せず最大3本を同時照会する', async () => {
+  let active = 0;
+  let maxActive = 0;
+  const requestedKeywords = [];
+  const candidates = await searchRakutenMarketplaceWithFallback(
+    env,
+    ['天然石 ピアス', 'studio CLIP ピアス', '一粒 ピアス'],
+    async (url) => {
+      active += 1;
+      maxActive = Math.max(maxActive, active);
+      requestedKeywords.push(new URL(url).searchParams.get('keyword'));
+      await new Promise((resolve) => setTimeout(resolve, 15));
+      active -= 1;
+      return Response.json({ items: [] });
+    }
+  );
+
+  assert.deepEqual(requestedKeywords, ['天然石 ピアス', 'studio CLIP ピアス', '一粒 ピアス']);
+  assert.equal(maxActive, 3);
+  assert.deepEqual(candidates, []);
+});
+
 test('Rakuten API errors retain only safe status metadata', async () => {
   await assert.rejects(
     searchRakutenMarketplace(env, 'ローテーブル', async () => Response.json(

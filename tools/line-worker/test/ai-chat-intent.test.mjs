@@ -155,8 +155,13 @@ test('通常検索はGemini Flash-Lite・最小思考・短いJSONでブラン�
 });
 
 test('IDENTIFYモードは商品候補を1つだけ返し、拒否済み候補を繰り返さない指示を送る',async()=>{
-  let prompt='';const fetchImpl=async(_url,options)=>{prompt=JSON.parse(options.body).contents[0].parts[0].text;return Response.json({candidates:[{content:{parts:[{text:JSON.stringify({candidate_name:'LILMOON リルムーン ワンデー',refined_query:'LILMOON リルムーン 度あり カラコン',needs_clarification:false})}]}}]});};
+  let prompt='';const fetchImpl=async(_url,options)=>{prompt=JSON.parse(options.body).contents[0].parts[0].text;return Response.json({candidates:[{content:{parts:[{text:JSON.stringify({candidate_name:'LILMOON リルムーン ワンデー',candidate_brand:'LILMOON',candidate_reason:'ローラと度入りの手掛かりに合うため',matched_features:['ローラ','度入り'],match_score:88,refined_query:'LILMOON リルムーン 度あり カラコン',needs_clarification:false})}]}}]});};
   const history=[{role:'user',text:'カラコン ローラ 度入り'},{role:'assistant',text:'別ブランドA'},{role:'user',text:'違います。別の商品候補を1つ提示してください。'}];
   const result=await analyzeChatTurn(history,'JA',{GEMINI_API_KEY:'g'.repeat(32)},fetchImpl,{mode:'IDENTIFY'});
-  assert.equal(result.candidate_name,'LILMOON リルムーン ワンデー');assert.match(result.refined_query,/LILMOON/);assert.match(prompt,/exactly ONE/i);assert.match(prompt,/rejected/i);
+  assert.equal(result.candidate_name,'LILMOON リルムーン ワンデー');assert.equal(result.candidate_brand,'LILMOON');assert.equal(result.candidate_reason,'ローラと度入りの手掛かりに合うため');assert.deepEqual(result.matched_features,['ローラ','度入り']);assert.equal(result.match_score,88);assert.match(result.refined_query,/LILMOON/);assert.match(prompt,/exactly ONE/i);assert.match(prompt,/rejected/i);assert.match(prompt,/candidate_reason/);assert.match(prompt,/match_score/);
+});
+
+test('AI候補メタデータを長さ・件数・スコア範囲内へ正規化する',()=>{
+  const result=normalizeChatTurnResult({needs_clarification:false,candidate_name:'天然石ピアス',candidate_brand:'studio CLIP',candidate_reason:'天然石と小ぶりの手掛かり',matched_features:['天然石','小ぶり','','普段使い'],match_score:140,refined_query:'studio CLIP 天然石ピアス'});
+  assert.equal(result.candidate_brand,'studio CLIP');assert.equal(result.candidate_reason,'天然石と小ぶりの手掛かり');assert.deepEqual(result.matched_features,['天然石','小ぶり','普段使い']);assert.equal(result.match_score,100);
 });
