@@ -1,11 +1,19 @@
 import { growthMarketplace } from './growth-marketplaces.mjs';
 
 const params = new URLSearchParams(location.search);
+let seoContext = null;
+try {
+  const stored = JSON.parse(sessionStorage.getItem('hoshilu_seo_context') || 'null');
+  if (stored?.article_id && Date.now() - Number(stored.created_at || 0) < 30 * 60 * 1000) seoContext = stored;
+  else sessionStorage.removeItem('hoshilu_seo_context');
+} catch {}
+const hasUrlAttribution = ['utm_source', 'utm_medium', 'utm_campaign', 'campaign', 'utm_content']
+  .some((name) => params.has(name));
 const attribution = {
-  source: params.get('utm_source') || '',
-  medium: params.get('utm_medium') || '',
+  source: params.get('utm_source') || (!hasUrlAttribution && seoContext ? 'seo_article' : ''),
+  medium: params.get('utm_medium') || (!hasUrlAttribution && seoContext ? 'internal' : ''),
   campaign: params.get('utm_campaign') || params.get('campaign') || '',
-  content: params.get('utm_content') || ''
+  content: params.get('utm_content') || (!hasUrlAttribution && seoContext ? String(seoContext.article_id).slice(0, 64) : '')
 };
 window.HoshiluGrowthAttribution = Object.freeze({ ...attribution });
 const locale = () => String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();

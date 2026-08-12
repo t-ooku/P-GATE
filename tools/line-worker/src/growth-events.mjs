@@ -10,6 +10,8 @@ const EVENTS = new Set([
   'wish_saved',
   'marketplace_click',
   'share_started',
+  'seo_article_view',
+  'seo_search_transition',
   'member_registered',
   'inquiry_submitted'
 ]);

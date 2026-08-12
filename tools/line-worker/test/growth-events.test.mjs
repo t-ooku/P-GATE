@@ -57,6 +57,12 @@ test('accepts the official-launch commerce journey KPIs without storing search t
   }
 });
 
+test('separates SEO article views and transitions from search starts', () => {
+  assert.equal(normalizeGrowthEvent({ event_type: 'seo_article_view', content: 'find-product-without-name' }).event_type, 'seo_article_view');
+  assert.equal(normalizeGrowthEvent({ event_type: 'seo_search_transition', content: 'find-product-without-name' }).event_type, 'seo_search_transition');
+  assert.equal(normalizeGrowthEvent({ event_type: 'search_started', source: 'seo_article', medium: 'internal' }).event_type, 'search_started');
+});
+
 test('separates QA, attributed, and unattributed growth traffic', () => {
   assert.equal(classifyGrowthTraffic({
     source: 'codex_acceptance',
