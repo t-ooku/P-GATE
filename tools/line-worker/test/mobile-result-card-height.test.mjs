@@ -39,7 +39,8 @@ test('レコメンド理由は商品名直後に置き価格枠をカード幅�
 
 test('Turnstileは初回トークン待機中にwidgetをリセットしない', async () => {
   const [app, html] = await Promise.all([read('app.js'), read('index.html')]);
-  assert.match(app, /window\.turnstile\.ready\(\(\)=>/);
+  assert.match(app, /async function waitForTurnstileApi\(\)/);
+  assert.doesNotMatch(app, /window\.turnstile\.ready\(/);
   assert.match(app, /retry:'auto','retry-interval':3000,'refresh-expired':'manual'/);
   assert.match(app, /callback:onTurnstileToken/);
   assert.match(app, /if\(lastIssuedTurnstileToken\)await resetTurnstileWidget\(\)/);

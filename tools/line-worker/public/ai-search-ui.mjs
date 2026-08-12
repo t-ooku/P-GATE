@@ -92,6 +92,7 @@ async function postChatTurn(history, language, mode = 'REFINE') {
       const code = String(error?.message || 'CHAT_FAILED');
       const retryable = /TURNSTILE_|CHAT_HTTP_5\d\d|CHAT_FAILED/u.test(code) || Number(error?.status || 0) >= 500;
       if (!retryable || attempt === 1) break;
+      if (/TURNSTILE_/u.test(code)) await auth?.invalidateToken?.();
       await new Promise((resolve) => setTimeout(resolve, 150));
     }
   }
