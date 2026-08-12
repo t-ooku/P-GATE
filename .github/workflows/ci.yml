@@ -95,6 +95,10 @@ jobs:
               exit 0
             fi
             if echo "$output" | grep -q '"status": "FAILED"'; then
+              if echo "$output" | grep -Eq 'INSTAGRAM_CONTAINER_(IN_PROGRESS|TIMEOUT)'; then
+                sleep 30
+                continue
+              fi
               exit 1
             fi
             sleep 30
