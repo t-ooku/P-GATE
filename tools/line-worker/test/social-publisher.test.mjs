@@ -4,7 +4,8 @@ import {
   normalizeSocialPost,
   publishSocialPost,
   runDueSocialPosts,
-  socialPublisherReadiness
+  socialPublisherReadiness,
+  syncInstagramPublishedPermalinks
 } from '../src/social-publisher.mjs';
 
 test('Instagram投稿はコメント誘導と若者向け必須ハッシュタグを公開前に補完する', () => {
@@ -312,4 +313,43 @@ test('Instagram publisher creates a Stories container when content id is marked 
     media_type: 'STORIES',
     image_url: 'https://hoshilu.app/social/instagram-want-poll-v1.png'
   });
+});
+
+test('公開済みInstagram投稿の正式URLとUTMを計測テーブルへ保存する', async () => {
+  const writes = [];
+  const env = {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('FROM social_post_queue q')) {
+          return { all: async () => ({ results: [{
+            post_id: 'approved-reel',
+            external_post_id: 'ig-media-1',
+            published_at: '2026-08-12T14:45:15.000Z',
+            link: 'https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=model_reel&utm_content=approved_video'
+          }] }) };
+        }
+        return {
+          bind(...values) {
+            return { run: async () => { writes.push({ sql, values }); return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  const result = await syncInstagramPublishedPermalinks(env, new Date('2026-08-12T14:46:00.000Z'), async (url, options) => {
+    assert.match(url, /ig-media-1\?fields=id,permalink$/);
+    assert.equal(options.headers.authorization, 'Bearer token');
+    return Response.json({ id: 'ig-media-1', permalink: 'https://www.instagram.com/reel/ExampleCode/' });
+  });
+  assert.deepEqual(result, { checked: 1, saved: 1, failed: 0 });
+  assert.equal(writes.length, 1);
+  assert.deepEqual(writes[0].values, [
+    'published:approved-reel', 'approved-reel',
+    '2026-08-12T14:45:15.000Z', '2026-08-12T14:45:15.000Z',
+    'https://www.instagram.com/reel/ExampleCode/',
+    'instagram', 'organic_social', 'model_reel', 'approved_video',
+    '2026-08-12T14:46:00.000Z'
+  ]);
 });
