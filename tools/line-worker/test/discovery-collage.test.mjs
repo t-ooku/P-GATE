@@ -6,6 +6,7 @@ const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), '
 
 test('discovery collage is lightweight, localized, accessible, and cached', async () => {
   const styles = await read('styles.css');
+  const heroFixes = await read('hero-fixes.css');
   const [html, app, discoveryActions, css, wishCss, sw, i18n, desktop, mobile] = await Promise.all([
     read('index.html'), read('app.js'), read('discovery-actions.mjs'), read('discovery.css'),
     read('wish-carousel.css'), read('service-worker.js'), read('site-i18n.js'),
@@ -13,6 +14,11 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
     stat(new URL('../public/hoshilu-discovery-collage-mobile.webp', import.meta.url)),
   ]);
   assert.match(html, /id="discoveryTitle"><span>名前が分からなくても、<\/span><span>記憶から探せる。<\/span>/);
+  assert.match(html, /id="heroTitle"><span class="hero-title-line">商品名が分からなくても、<\/span><span class="hero-title-line hero-title-accent">欲しい物を探せる。<\/span>/);
+  assert.match(app, /first\.className='hero-title-line'/);
+  assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
+  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \.hero-title-line \{ white-space: nowrap; \}/);
+  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{[\s\S]*?font-size: clamp\(25px, 6\.85vw, 29px\);/);
   assert.match(html, /loading="lazy"/);
   assert.match(html, /hoshilu-discovery-collage-mobile\.webp/);
   assert.match(html, /見た目、見た場所、使い方。覚えていることから話してください。/);
@@ -91,17 +97,23 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(discoveryActions, /function swippittDiscoveryMatch/);
   assert.match(app, /これですか？↓/);
   assert.match(discoveryActions, /static\.wixstatic\.com\/media\/494321_/);
-  assert.match(html, /id="journeyStep4Title">見つからなければSNSやAIでも探せる/);
-  assert.match(html, /Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます/);
+  assert.match(html, /id="journeyStep4Title">比較・通知・SNSへつなぐ/);
+  assert.match(html, /ランキング・AI最安比較・AIウォッチを使い/);
   assert.match(css, /font-size: clamp\(28px, 7\.4vw, 34px\)/);
   assert.match(css, /minmax\(280px, 34%\)/);
   assert.match(css, /font-size: clamp\(44px, 5vw, 68px\)/);
   assert.match(sw, /hoshilu-discovery-collage\.webp/);
-  assert.match(html, /id="journeyTitle"><span>検索する前に、<\/span><span>ホシルに話す。<\/span>/);
-  assert.match(html, /商品ページへ直接リンク。HOSHILUがまとめて比較する2モールに加え、最大13モールで探せます。/);
-  assert.match(html, /id="journeyStep3Body" hidden><\/p>/);
+  assert.match(html, /id="journeyTitle"><span>2つの探し方から、<\/span><span>購入先・次の候補まで。<\/span>/);
+  assert.match(html, /楽天・Yahoo!をまとめて確認し、11モールの検索先と横レコメンドを提示。/);
+  assert.match(html, /id="journeyStep3Body">/);
   assert.doesNotMatch(html, /確認済み商品ページへ直接案内/);
-  assert.match(app, /Talk to HOSHILU before you search/);
+  assert.match(app, /Two ways to search/);
+  assert.match(html, /AIに確認する探し方、すぐ検索、最大13モールの横断、同一商品の比較、通知まで/);
+  assert.match(html, /AIに確認して商品を特定する/);
+  assert.match(html, /特徴・予算からすぐ検索する/);
+  assert.match(html, /最大13モールで購入先を探す/);
+  assert.match(html, /確認済み価格とAI推定を区別する/);
+  assert.match(html, /見つからない条件を保存する/);
   assert.match(app, /elements\.journey\.forEach/);
   assert.match(app, /copySearchKeywords/);
   assert.match(app, /検索ワードをコピー/);

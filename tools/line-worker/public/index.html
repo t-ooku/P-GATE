@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="/ai-price-comparison-ui.css?v=84">
   <link rel="stylesheet" href="/wish-carousel.css">
   <link rel="stylesheet" href="/mywatch.css">
-  <link rel="stylesheet" href="/hero-fixes.css">
+  <link rel="stylesheet" href="/hero-fixes.css?v=86">
   <link rel="stylesheet" href="/hero-slides.css?v=82">
   <link rel="stylesheet" href="/marketplace-coverage.css?v=88">
   <link rel="stylesheet" href="/sale-center.css?v=84">
@@ -130,7 +130,7 @@
           <section class="hero" aria-labelledby="heroTitle">
             <div class="hero-copy">
               <p id="heroEyebrow" class="eyebrow">欲しいを、ちゃんと見つける。</p>
-              <h1 id="heroTitle">商品名が分からなくても、<span>欲しい物を探せる。</span></h1>
+              <h1 id="heroTitle"><span class="hero-title-line">商品名が分からなくても、</span><span class="hero-title-line hero-title-accent">欲しい物を探せる。</span></h1>
             </div>
             <div class="hero-visual" aria-hidden="true"></div>
           </section>
@@ -284,14 +284,14 @@
           <section class="search-journey" aria-labelledby="journeyTitle">
             <div class="journey-heading">
               <p class="step">HOSHILU SEARCH AGENT</p>
-              <h2 id="journeyTitle"><span>検索する前に、</span><span>ホシルに話す。</span></h2>
-              <p id="journeyLead"><span>曖昧な「欲しい」を、</span><span>見つかる検索へ変換します。</span></p>
+              <h2 id="journeyTitle"><span>2つの探し方から、</span><span>購入先・次の候補まで。</span></h2>
+              <p id="journeyLead"><span>AI確認とすぐ検索を選べ、</span><span>比較・レコメンド・通知まで続けられます。</span></p>
             </div>
             <ol class="journey-steps">
-              <li><span>1</span><div><strong id="journeyStep1Title">思い出せるまま話す</strong><p id="journeyStep1Body">名前が分からなくても、見た目・用途・見た場所だけで大丈夫。</p></div></li>
-              <li><span>2</span><div><strong id="journeyStep2Title">検索条件を精密化</strong><p id="journeyStep2Body">ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。</p></div></li>
-              <li><span>3</span><div><strong id="journeyStep3Title">商品ページへ直接リンク。HOSHILUがまとめて比較する2モールに加え、最大13モールで探せます。</strong><p id="journeyStep3Body" hidden></p></div></li>
-              <li><span>4</span><div><strong id="journeyStep4Title">見つからなければSNSやAIでも探せる</strong><p id="journeyStep4Body">Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます。</p></div></li>
+              <li><span>1</span><div><strong id="journeyStep1Title">探し方を選ぶ</strong><p id="journeyStep1Body">商品名が曖昧なら「AIに確認」、分かるなら「すぐ検索」。</p></div></li>
+              <li><span>2</span><div><strong id="journeyStep2Title">条件を検索語へ整理</strong><p id="journeyStep2Body">AIが見た目・用途・予算を整理し、必要なときだけ候補を確認。</p></div></li>
+              <li><span>3</span><div><strong id="journeyStep3Title">最大13モールと関連商品</strong><p id="journeyStep3Body">楽天・Yahoo!をまとめて確認し、11モールの検索先と横レコメンドを提示。</p></div></li>
+              <li><span>4</span><div><strong id="journeyStep4Title">比較・通知・SNSへつなぐ</strong><p id="journeyStep4Body">ランキング・AI最安比較・AIウォッチを使い、見つからなければInstagram・X・TikTok・YouTubeでも探せます。</p></div></li>
             </ol>
           </section>
 
@@ -328,13 +328,14 @@
             <div class="shopping-guides-heading">
               <p class="step">HOSHILU SHOPPING GUIDES</p>
               <h2 id="shoppingGuidesTitle">迷わず探すための買い物ガイド</h2>
-              <p>商品名が分からないときも、同じ商品を比べたいときも、検索条件の作り方から確認できます。</p>
+              <p>AIに確認する探し方、すぐ検索、最大13モールの横断、同一商品の比較、通知まで、現在のHOSHILUに合わせて案内します。</p>
             </div>
             <div class="shopping-guide-links">
-              <a href="/ja/find-product-without-name"><strong>商品名が分からない商品を探す</strong><span>記憶や用途から検索条件を作る</span></a>
-              <a href="/ja/compare-amazon-rakuten-yahoo-shopping"><strong>Amazon・楽天・Yahoo!を比較</strong><span>同じ条件で購入先を確認する</span></a>
-              <a href="/ja/how-to-compare-the-same-product"><strong>同じ商品を正しく比較</strong><span>型番・容量・セット数をそろえる</span></a>
-              <a href="/ja/shopping-guide-for-parents"><strong>子ども用品を用途から探す</strong><span>年齢・場面・注意点を整理する</span></a>
+              <a href="/ja/find-product-without-name"><strong>AIに確認して商品を特定する</strong><span>名前が分からない商品を、記憶・用途・見た目から絞り込む</span></a>
+              <a href="/ja/how-to-search-by-description"><strong>特徴・予算からすぐ検索する</strong><span>必須条件と希望条件を整理し、探せる検索語を作る</span></a>
+              <a href="/ja/compare-amazon-rakuten-yahoo-shopping"><strong>最大13モールで購入先を探す</strong><span>楽天・Yahoo!をまとめて確認し、Amazonなどにも同じ条件を引き継ぐ</span></a>
+              <a href="/ja/how-to-compare-the-same-product"><strong>同一商品と価格を正しく比較する</strong><span>型番・容量・セット数をそろえ、確認済み価格とAI推定を区別する</span></a>
+              <a href="/ja/product-requests"><strong>見つからない条件を保存する</strong><span>新着通知とAIウォッチで、検索後も価格・在庫・新候補を確認する</span></a>
             </div>
           </section>
 
@@ -357,6 +358,6 @@
       </div>
     </div></main>
   <footer><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">HOSHILUはAmazonアソシエイトおよび楽天アフィリエイトのリンクを通じて収入を得る場合があります。</span><span><a href="/privacy.html">プライバシー</a> ・ <a href="/terms.html">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=90"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs"></script><script type="module" src="/app.js?v=123"></script><script type="module" src="/ai-search-ui.mjs?v=5"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=84"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=90"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs"></script><script type="module" src="/app.js?v=124"></script><script type="module" src="/ai-search-ui.mjs?v=5"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=84"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>

@@ -31,7 +31,14 @@ const searchModeCopy={
   ZH:{step:'搜索方式',identify:'先让 AI 确认',direct:'立即搜索',identifySubmit:'询问 AI 商品',directSubmit:'立即搜索'},
   KO:{step:'검색 방법',identify:'AI 확인 후 찾기',direct:'바로 검색',identifySubmit:'AI에게 상품 묻기',directSubmit:'바로 검색'}
 };
-const journeyStep4Copy={JA:['見つからなければSNSやAIでも探せる','Instagram・X・TikTok・YouTubeでも同じ条件を横断して探せます。'],EN:['Search social platforms too','If marketplaces do not have it, continue the same search on Instagram, X, TikTok, and YouTube.'],ZH:['找不到时也搜索社交平台','如果商城里没有，可用相同条件继续搜索 Instagram、X、TikTok 和 YouTube。'],KO:['찾지 못하면 SNS에서도 검색','쇼핑몰에 없다면 같은 조건으로 Instagram, X, TikTok, YouTube에서도 계속 검색할 수 있습니다.']};
+const journeyStep4Copy={JA:['比較・通知・SNSへつなぐ','ランキング・AI最安比較・AIウォッチを使い、見つからなければInstagram・X・TikTok・YouTubeでも探せます。'],EN:['Continue to comparison, alerts, and social search','Use rankings, AI price comparison, and AI Watch, then search Instagram, X, TikTok, and YouTube if needed.'],ZH:['继续比较、提醒和社交搜索','使用排行榜、AI价格比较和AI监控，仍未找到时继续搜索 Instagram、X、TikTok 和 YouTube。'],KO:['비교·알림·SNS 검색으로 이어가기','랭킹·AI 최저가 비교·AI 워치를 사용하고, 찾지 못하면 Instagram·X·TikTok·YouTube에서도 검색합니다.']};
+const latestSearchAgentCopy={
+  JA:['2つの探し方から、|購入先・次の候補まで。','AI確認とすぐ検索を選べ、|比較・レコメンド・通知まで続けられます。','探し方を選ぶ','商品名が曖昧なら「AIに確認」、分かるなら「すぐ検索」。','条件を検索語へ整理','AIが見た目・用途・予算を整理し、必要なときだけ候補を確認。','最大13モールと関連商品','楽天・Yahoo!をまとめて確認し、11モールの検索先と横レコメンドを提示。'],
+  EN:['Two ways to search,|then products and next options.','Choose AI confirmation or direct search,|then compare, browse recommendations, and set alerts.','Choose how to search','Use AI confirmation for a vague item, or direct search when you know what to enter.','Turn clues into search terms','AI organizes appearance, use, and budget, and only asks for confirmation when needed.','Up to 13 marketplaces and related products','Review Rakuten and Yahoo together, then continue to 11 marketplace searches and horizontal recommendations.'],
+  ZH:['从两种搜索方式开始，|直达购买处和下一批候选。','可选择 AI 确认或立即搜索，|并继续比较、相关推荐和提醒。','选择搜索方式','商品不明确时使用 AI 确认，已知条件时立即搜索。','整理为可搜索的条件','AI整理外观、用途和预算，只在必要时确认候选。','最多13个商城与相关商品','汇总查看乐天和Yahoo，并提供另外11个商城的搜索入口和横向推荐。'],
+  KO:['두 가지 검색 방법에서,|구매처와 다음 후보까지.','AI 확인 또는 바로 검색을 선택하고,|비교·추천·알림까지 이어집니다.','검색 방법 선택','상품이 모호하면 AI 확인, 조건을 알면 바로 검색을 사용합니다.','조건을 검색어로 정리','AI가 생김새·용도·예산을 정리하고 필요할 때만 후보를 확인합니다.','최대 13개 쇼핑몰과 관련 상품','라쿠텐·Yahoo를 함께 확인하고 11개 쇼핑몰 검색과 가로 추천을 제공합니다.']
+};
+for(const language of Object.keys(latestSearchAgentCopy))actionCopy[language].journey=latestSearchAgentCopy[language];
 const wishSearchCopy={JA:'保存した「欲しい」を検索',EN:'Search saved wants',ZH:'搜索已保存的心愿',KO:'저장한 원하는 것 검색'};
 // v4.2 項目10・11: 検索履歴の個別削除(×)・全削除。ローカル保存のみ(サーバー
 // 同期なし)なので、削除はlocalStorageから消すだけでよく、ページ更新しても
@@ -62,7 +69,7 @@ const installCopy = {
 
 function getSessionId(){ const key='mygate_session_id'; const current=localStorage.getItem(key); if(current&&/^[A-Za-z0-9_-]{16,100}$/.test(current))return current; const value=crypto.randomUUID().replaceAll('-',''); localStorage.setItem(key,value); return value; }
 function selectedCopy(){ return copy[elements.language.value]||copy.JA; }
-function splitEmphasis(value){ const [plain,accent='']=value.split('|'); const fragment=document.createDocumentFragment(); fragment.append(plain); if(accent){const span=document.createElement('span');span.textContent=accent;fragment.append(span);} return fragment; }
+function splitEmphasis(value){ const [plain,accent='']=value.split('|'); const fragment=document.createDocumentFragment(); const first=document.createElement('span');first.className='hero-title-line';first.textContent=plain;fragment.append(first);if(accent){const span=document.createElement('span');span.className='hero-title-line hero-title-accent';span.textContent=accent;fragment.append(span);}return fragment; }
 function splitLines(value){return String(value||'').split('|').map(line=>textElement('span','',line));}
 function currentSearchMode(){return elements.searchModeSwitch?.dataset.mode==='direct'?'direct':'identify';}
 function isUsableProductQuery(value){const query=String(value||'').normalize('NFKC').trim();return query.length>=2||/^[\p{Script=Han}\p{Script=Katakana}]$/u.test(query);}

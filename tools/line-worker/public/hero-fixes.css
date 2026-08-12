@@ -6,6 +6,18 @@
   text-wrap: balance;
 }
 
+#heroEyebrow {
+  margin-bottom: 14px;
+  font-size: clamp(15px, 1.7vw, 19px);
+  letter-spacing: .07em;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+#heroTitle .hero-title-line { display: block; }
+#heroTitle .hero-title-line:not(.hero-title-accent) { color: var(--ink); background: none; }
+html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
+
 .search-mode-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -67,6 +79,11 @@
 .journey-steps p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
 
 @media (max-width: 420px) {
+  html:lang(ja) #heroTitle {
+    font-size: clamp(25px, 6.85vw, 29px);
+    letter-spacing: -0.06em;
+  }
+
   .hero h1 {
     font-size: clamp(28px, 8vw, 34px);
     letter-spacing: -0.06em;
