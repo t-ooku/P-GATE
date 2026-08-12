@@ -30,6 +30,12 @@ LINE_LOGIN_CHANNEL_ID=
 LINE_LOGIN_CHANNEL_SECRET=
 LINE_LOGIN_CALLBACK_URL=https://hoshilu.app/api/member/line/callback
 
+# Instagram Business Login. App ID is public and lives in wrangler.jsonc.
+# Keep the App Secret, OAuth encryption key, and access token out of Git.
+INSTAGRAM_APP_SECRET=
+SOCIAL_OAUTH_ENCRYPTION_KEY=
+INSTAGRAM_ACCESS_TOKEN=
+
 # Amazon Creators API (Amazon.co.jp Associates)
 AMAZON_CREATORS_CREDENTIAL_ID=
 AMAZON_CREATORS_CREDENTIAL_SECRET=

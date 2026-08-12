@@ -61,8 +61,9 @@ import {
   ensureApparelQualifierTerms
 } from './apparel-query-attributes.mjs';
 import {
-  handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadiness
+  handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadinessWithStoredCredentials
 } from './social-publisher.mjs';
+import { handleInstagramOAuthRoutes, instagramOAuthReadiness } from './instagram-oauth.mjs';
 import { runSocialAutopilotCycle } from './social-autopilot.mjs';
 import { renderSeoPage } from './seo-pages.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
@@ -2249,7 +2250,7 @@ const CORE_D1_TABLES = [
   'marketplace_kpi_events', 'marketplace_kpi_summary',
   'anonymous_benchmark',
   'social_knowledge_inbox', 'social_knowledge_aggregates', 'social_hashtag_aggregates',
-  'product_identifiers'
+  'product_identifiers', 'instagram_oauth_credentials'
 ];
 
 async function databaseFeatureChecks(env) {
@@ -2270,6 +2271,7 @@ async function databaseFeatureChecks(env) {
 async function handleHealth(env) {
   const readiness = getEnvironmentReadiness(env);
   const databaseFeatures = await databaseFeatureChecks(env);
+  const instagramOAuth = await instagramOAuthReadiness(env);
   return Response.json({
     ok: readiness.ready,
     release: readiness.release,
@@ -2278,7 +2280,8 @@ async function handleHealth(env) {
     checks: {
       ...readiness.checks,
       database_features: databaseFeatures,
-      social_publishers: socialPublisherReadiness(env)
+      social_publishers: await socialPublisherReadinessWithStoredCredentials(env),
+      instagram_oauth: instagramOAuth
     }
   }, {
     status: readiness.ready ? 200 : 503,
@@ -2289,6 +2292,8 @@ async function handleHealth(env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const instagramOAuthResponse = await handleInstagramOAuthRoutes(request, env);
+    if (instagramOAuthResponse) return instagramOAuthResponse;
     if (request.method === 'GET' && url.pathname === '/og/hoshilu-x-v3.png' && env.ASSETS) {
       return env.ASSETS.fetch(new Request(new URL('/og-hoshilu.png', request.url), request));
     }

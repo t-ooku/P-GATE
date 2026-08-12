@@ -1,3 +1,7 @@
+import {
+  getInstagramPublishCredentials, instagramOAuthReadiness
+} from './instagram-oauth.mjs';
+
 const PLATFORMS = new Set(['X', 'INSTAGRAM', 'TIKTOK']);
 const DISCLOSURE = '※リンク先にはアフィリエイト広告を含む場合があります。';
 const INVALID_HOSHILU_OWNER_CLAIM = /(?:ITG(?:グループ株式会社)?[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}(?:HOSHILU|ホシル)|(?:HOSHILU|ホシル)[^。\n]{0,20}(?:所有|運営))|(?:HOSHILU|ホシル)[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}ITG(?:グループ株式会社)?|ITG(?:グループ株式会社)?[^。\n]{0,20}(?:所有|運営)))/i;
@@ -57,6 +61,14 @@ export function socialPublisherReadiness(env = {}) {
     INSTAGRAM: Boolean(String(env.INSTAGRAM_ACCESS_TOKEN || '').trim() && String(env.INSTAGRAM_ACCOUNT_ID || '').trim()),
     TIKTOK: Boolean(String(env.TIKTOK_ACCESS_TOKEN || '').trim() && env.TIKTOK_APP_AUDITED === 'true')
   };
+}
+
+export async function socialPublisherReadinessWithStoredCredentials(env = {}) {
+  const readiness = socialPublisherReadiness(env);
+  if (!readiness.INSTAGRAM) {
+    readiness.INSTAGRAM = (await instagramOAuthReadiness(env)).connected;
+  }
+  return readiness;
 }
 
 const oauthEncode = (value) => encodeURIComponent(String(value))
@@ -236,9 +248,16 @@ async function publishTikTok(post, env, fetchImpl) {
 export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}) {
   const normalized = normalizeSocialPost(post);
   if (normalized.status !== 'APPROVED') throw new Error('SOCIAL_POST_NOT_APPROVED');
+  if (normalized.platform === 'INSTAGRAM') {
+    const credential = await getInstagramPublishCredentials(env, fetchImpl);
+    return publishInstagram(normalized, {
+      ...env,
+      INSTAGRAM_ACCOUNT_ID: credential.accountId,
+      INSTAGRAM_ACCESS_TOKEN: credential.accessToken
+    }, fetchImpl, hooks);
+  }
   if (!socialPublisherReadiness(env)[normalized.platform]) throw new Error(`SOCIAL_${normalized.platform}_NOT_CONFIGURED`);
   if (normalized.platform === 'X') return publishX(normalized, env, fetchImpl);
-  if (normalized.platform === 'INSTAGRAM') return publishInstagram(normalized, env, fetchImpl, hooks);
   return publishTikTok(normalized, env, fetchImpl);
 }
 
@@ -290,7 +309,7 @@ export async function handleSocialAdminRoutes(request, env) {
     const result = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,caption,link,media_url,
       scheduled_at,status,affiliate,external_post_id,last_error,updated_at
       FROM social_post_queue ORDER BY scheduled_at ASC LIMIT 100`).all();
-    return Response.json({ ok: true, posts: result.results || [], readiness: socialPublisherReadiness(env) });
+    return Response.json({ ok: true, posts: result.results || [], readiness: await socialPublisherReadinessWithStoredCredentials(env) });
   }
   if (request.method === 'POST' && url.pathname === '/api/internal/social/approve') {
     const input = await request.json();
@@ -302,7 +321,8 @@ export async function handleSocialAdminRoutes(request, env) {
     try {
       const post = normalizeSocialPost(existing);
       if (post.platform !== 'X' && !post.media_url) throw new Error(`${post.platform}_MEDIA_REQUIRED`);
-      if (!socialPublisherReadiness(env)[post.platform]) throw new Error(`SOCIAL_${post.platform}_NOT_CONFIGURED`);
+      if (post.platform === 'INSTAGRAM') await getInstagramPublishCredentials(env);
+      else if (!socialPublisherReadiness(env)[post.platform]) throw new Error(`SOCIAL_${post.platform}_NOT_CONFIGURED`);
     } catch (error) {
       return Response.json({ ok: false, error: clean(error?.message || error, 100) }, { status: 409 });
     }

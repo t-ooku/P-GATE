@@ -773,11 +773,13 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(payload.checks.database_features.kpi_events, false);
   assert.equal(payload.checks.database_features.social_knowledge_inbox, false);
   assert.equal(payload.checks.database_features.product_identifiers, false);
+  assert.equal(payload.checks.database_features.instagram_oauth_credentials, false);
   assert.deepEqual(payload.checks.social_publishers, {
     X: false,
     INSTAGRAM: false,
     TIKTOK: false
   });
+  assert.deepEqual(payload.checks.instagram_oauth, { configured: false, connected: false });
   assert.equal(JSON.stringify(payload).includes(base.GAS_BRIDGE_SECRET), false);
   assert.equal(JSON.stringify(payload).includes(base.TURNSTILE_SECRET_KEY), false);
 
