@@ -1,7 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { SEARCH_QUALITY_CASES } from '../evaluation/search-quality-cases.mjs';
-import { scoreSearchQualityBaseline, validateSearchQualityCases } from '../evaluation/search-quality-baseline.mjs';
+import {
+  scoreSearchQualityBaseline,
+  searchQualityGateFailures,
+  validateSearchQualityCases
+} from '../evaluation/search-quality-baseline.mjs';
 import { filterCategoryMismatches } from '../src/knowledge-search.mjs';
 import { isMarketplaceProductUrl } from '../src/marketplace-product-url-policy.mjs';
 
@@ -49,7 +53,7 @@ const observations = SEARCH_QUALITY_CASES.map((item) => {
 
 const report = {
   generated_at: new Date().toISOString(),
-  implementation: 'legacy-filter-baseline',
+  implementation: 'explicit-evidence-filter-v1',
   notes: [
     'Candidate-level checks use deterministic positive and negative fixtures.',
     'Top-1, Top-3, nDCG and MRR require confirmed catalog product IDs and remain unmeasured for this supplied dataset.',
@@ -71,6 +75,7 @@ if (process.argv.includes('--check')) {
   if (report.cases < baseline.cases || report.measured_cases < baseline.measured_cases) {
     regressions.push(`coverage: ${baseline.measured_cases}/${baseline.cases} -> ${report.measured_cases}/${report.cases}`);
   }
+  regressions.push(...searchQualityGateFailures(report));
   if (regressions.length) throw new Error(`SEARCH_QUALITY_REGRESSION\n${regressions.join('\n')}`);
   console.log(JSON.stringify({ ok: true, cases: report.cases, measured_cases: report.measured_cases, metrics: report.metrics }));
   process.exit(0);

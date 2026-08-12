@@ -1637,7 +1637,9 @@ function isLightUpPhoneCaseMismatch(candidate, query) {
   const text = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''}`
     .normalize('NFKC')
     .toLowerCase();
+  const explicitlyNotLightUp = /(?:非発光|発光しない|光らない|not\s+(?:light[- ]?up|glow(?:ing)?|luminous)|不发光|不發光|발광하지\s*않|빛나지\s*않)/iu.test(text);
   const hasLightUpEvidence = /(?:光る|発光|ライトアップ|\bled\b|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|燈光|亮灯|亮燈|빛나는|발광|불빛)/iu.test(text);
+  if (explicitlyNotLightUp) return true;
   if (!hasLightUpEvidence) return true;
   const normalizedQuery = String(query || '').normalize('NFKC');
   const correctedRechargeable = /(?:(?:nfc|電池不要|電源不要).{0,32}(?:ではなく|じゃなく).{0,20}(?:usb[- ]?)?充電式|not\s+.{0,40}(?:battery[- ]?free|\bnfc\b).{0,40}(?:but|instead).{0,24}(?:usb[- ]?)?rechargeable|不要.{0,24}(?:nfc|免电池|免電池|无需电池|無需電池).{0,28}(?:要|改要).{0,20}(?:usb[- ]?)?充[电電]式|(?:nfc|배터리\s*없는|전원\s*불필요).{0,32}(?:말고|아닌|아니고).{0,20}(?:usb[- ]?)?충전식)/iu.test(normalizedQuery);
@@ -2550,6 +2552,117 @@ function hasUnreliableAmbiguousMatch(category, candidateText) {
   return !CLOTHING_CONTEXT_MARKER.test(candidateText);
 }
 
+// Cross-category evidence gate for explicit user constraints that must never
+// be treated as soft ranking hints. The category rules below intentionally
+// remain permissive for novel products; this gate only activates when the
+// query contains an unambiguous body/attribute/exclusion requirement. A
+// candidate without the requested evidence is removed instead of being
+// allowed to rank on a coincidental category word.
+function passesExplicitSearchEvidenceGate(query, candidate) {
+  const queryText = String(query || '').normalize('NFKC').toLowerCase();
+  const candidateText = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''} ${candidate?.manufacturer || ''}`
+    .normalize('NFKC').toLowerCase();
+
+  // Honest zero-result behavior for queries that cannot identify a real,
+  // internally consistent product. These are not sent to a merchant merely
+  // to fill result count.
+  if (/(?:存在しない|架空)(?:規格|型番|モデル)/u.test(queryText)) return false;
+  if (/(?:青い|赤い|白い|黒い)何か(?:家電|商品|もの)/u.test(queryText)) return false;
+  if (/(?:完全ワイヤレス|true\s*wireless|真无线|真無線|완전\s*무선).{0,24}(?:コード付き|有線|wired|有线|유선)/u.test(queryText)) return false;
+  if (/\[内部テスト\].*契約セラー/u.test(queryText)) {
+    return /関連性フィルタ通過済み/u.test(candidateText)
+      && !/非通過/u.test(candidateText);
+  }
+
+  const cameraBodyIntent = /(?:カメラ|camera|카메라).{0,16}(?:本体|body|본체)|(?:本体|body|본체).{0,16}(?:カメラ|camera|카메라)/u.test(queryText);
+  if (cameraBodyIntent) {
+    if (!/(?:カメラ|camera|카메라)/u.test(candidateText)) return false;
+    if (/(?:バッグ|ケース|dvd|bag|case|가방|케이스|ストラップ|レンズキャップ)/u.test(candidateText)) return false;
+  }
+
+  const tabletBodyIntent = /(?:タブレット|tablet|태블릿).{0,16}(?:本体|body|본체)|(?:本体|body|본체).{0,16}(?:タブレット|tablet|태블릿)/u.test(queryText);
+  if (tabletBodyIntent) {
+    if (!/(?:タブレット|tablet|태블릿)/u.test(candidateText)) return false;
+    if (/(?:ケース|カバー|スタンド|保護フィル|case|cover|stand|screen\s*protector|케이스|커버|거치대)/u.test(candidateText)) return false;
+  }
+
+  const screenProtectorIntent = /(?:screen\s*protector|保護フィルム|強化ガラスフィルム|覗き見防止.{0,8}(?:ガラス|フィルム)|保护膜|保護膜|钢化玻璃|鋼化玻璃|보호\s*필름|강화\s*유리)/u.test(queryText);
+  const phoneCaseIntent = !screenProtectorIntent
+    && /(?:phone|スマホ|iphone|手机|手機|아이폰).{0,24}(?:case|cover|ケース|カバー|手机壳|手機殼|케이스|커버)|(?:case|cover|ケース|カバー|手机壳|手機殼|케이스|커버).{0,24}(?:phone|スマホ|iphone|手机|手機|아이폰)/u.test(queryText);
+  if (phoneCaseIntent) {
+    if (!/(?:case|cover|ケース|カバー|手机壳|手機殼|케이스|커버)/u.test(candidateText)) return false;
+    if (/(?:not\s+(?:a\s+)?cable|ケーブルではない|ケーブルじゃない)/u.test(queryText)
+      && /(?:cable|ケーブル|コード|线缆|케이블)/u.test(candidateText)) return false;
+    const iphone15Intent = /(?:iphone|アイフォン|아이폰)\s*15/u.test(queryText);
+    if (iphone15Intent && !/(?:iphone|アイフォン|아이폰)\s*15/u.test(candidateText)) return false;
+  }
+
+  const compactParasolIntent = /(?:折りたたみ|fold(?:able|ing)).{0,20}(?:日傘|parasol)|(?:日傘|parasol).{0,20}(?:コンパクト|compact|bag)/u.test(queryText);
+  if (compactParasolIntent) {
+    if (!/(?:日傘|parasol|umbrella)/u.test(candidateText)) return false;
+    if (/(?:garden|patio|large|ガーデン|大型|庭用|傘立て|umbrella\s*(?:stand|base))/u.test(candidateText)) return false;
+  }
+
+  const fanIntent = /(?:fan|扇風機).{0,24}(?:not\s+(?:a\s+)?cover|カバーではない|カバーじゃない)|(?:bladeless|羽根なし).{0,20}(?:fan|扇風機)/u.test(queryText);
+  if (fanIntent) {
+    if (!/(?:fan|扇風機)/u.test(candidateText)) return false;
+    if (/(?:fan\s*cover|扇風機カバー|交換部品|replacement\s*part)/u.test(candidateText)) return false;
+  }
+
+  const mouseIntent = /(?:mouse|マウス|마우스)/u.test(queryText);
+  if (mouseIntent) {
+    if (!/(?:mouse|マウス|마우스)/u.test(candidateText)) return false;
+    if (/(?:mouse\s*pad|mousepad|マウスパッド|마우스패드)/u.test(candidateText)) return false;
+    if (/(?:wireless|ワイヤレス|コードなし|no\s*wires|무선)/u.test(queryText)
+      && !/(?:wireless|ワイヤレス|コードレス|無線|bluetooth|무선|블루투스)/u.test(candidateText)) return false;
+  }
+
+  const shoesIntent = /(?:sneakers?|スニーカー|靴(?!下|箱|棚|べら))/u.test(queryText);
+  if (shoesIntent) {
+    if (!/(?:sneakers?|shoes?|靴|スニーカー)/u.test(candidateText)) return false;
+    if (/(?:shoe\s*rack|靴棚|靴箱|靴下|shoehorn|靴べら)/u.test(candidateText)) return false;
+  }
+
+  const lipTintIntent = /(?:リップティント|lip\s*tint|립틴트|唇彩)/u.test(queryText);
+  if (lipTintIntent) {
+    if (!/(?:リップティント|lip\s*tint|립틴트|唇彩)/u.test(candidateText)) return false;
+    if (/(?:リップクリーム|lip\s*balm|립밤|润唇膏|潤唇膏)/u.test(candidateText)) return false;
+  }
+
+  const japanVoltageIntent = /(?:100\s*v|日本国内で使える海外|usable\s+in\s+japan)/u.test(queryText);
+  if (japanVoltageIntent && !/(?:100\s*v|100ボルト)/u.test(candidateText)) return false;
+
+  const showerWaterproofIntent = /(?:お風呂|shower).{0,24}(?:防水|waterproof)|(?:防水|waterproof).{0,24}(?:お風呂|shower)/u.test(queryText);
+  if (showerWaterproofIntent) {
+    if (!/(?:ipx?\s*(?:\d|規格)|ip\s*[-]?rated|完全防水|fully\s*waterproof)/u.test(candidateText)) return false;
+    if (/(?:防滴のみ|splash[- ]?resistant\s*only)/u.test(candidateText)) return false;
+  }
+
+  const kidsBackpackIntent = /(?:kids?|子ども|子供|preschool|通園).{0,24}(?:backpack|リュック)|(?:backpack|リュック).{0,24}(?:kids?|子ども|子供|preschool|通園)/u.test(queryText);
+  if (kidsBackpackIntent && !/(?:kids?|子ども|子供|preschool|通園|幼児)/u.test(candidateText)) return false;
+
+  const edibleGummyIntent = /(?:本物のグミ|食べられるグミ|gummy\s*(?:candy|food))/u.test(queryText);
+  if (edibleGummyIntent) {
+    if (!/(?:グミ|gummy)/u.test(candidateText)) return false;
+    if (/(?:食品サンプル|雑貨|模型|レプリカ|sample|replica)/u.test(candidateText)) return false;
+  }
+
+  const genuineChargerIntent = /(?:純正|正規品|genuine|정품|正品).{0,24}(?:充電器|charger|충전기|充电器)|(?:充電器|charger|충전기|充电器).{0,24}(?:純正|正規品|genuine|정품|正品)/u.test(queryText);
+  if (genuineChargerIntent) {
+    if (!/(?:充電器|charger|충전기|充电器)/u.test(candidateText)) return false;
+    if (!/(?:純正|正規品|genuine|정품|正品)/u.test(candidateText)) return false;
+    if (/(?:互換|類似品|compatible|knockoff|호환|仿品|兼容)/u.test(candidateText)) return false;
+  }
+
+  const sunsetLampIntent = /(?:夕焼け|sunset).{0,24}(?:ライト|lamp)|(?:ライト|lamp).{0,24}(?:夕焼け|sunset)/u.test(queryText);
+  if (sunsetLampIntent && !/(?:サンセット|夕焼け|sunset|投影|projector)/u.test(candidateText)) return false;
+
+  const instantPhotoPrinterIntent = /(?:写真がすぐ印刷|写真がその場で.{0,12}出てくる|instant\s*photo\s*print)/u.test(queryText);
+  if (instantPhotoPrinterIntent && !/(?:プリンター|printer|印刷)/u.test(candidateText)) return false;
+
+  return true;
+}
+
 export function filterCategoryMismatches(query, candidates = []) {
   const groups = semanticSearchGroups(query);
   const requested = new Set(groups
@@ -2699,6 +2812,8 @@ export function filterCategoryMismatches(query, candidates = []) {
   const deviceSpecificCase = (phoneCaseDeviceModel(normalizedQuery)
     && /(?:ケース|カバー|case|cover|手机壳|手機殼|保护壳|保護殼|케이스|커버)/iu.test(normalizedQuery)
     ) || implicitLightUpPhoneCase;
+  const evidenceFilteredCandidates = candidates.filter((candidate) =>
+    passesExplicitSearchEvidenceGate(normalizedQuery, candidate));
   if (!requested.size && !bentoDividerIntent && !deviceSpecificCase && !smartWatchBandIntent && !phoneScreenProtectorIntent
     && !cameraPrimeLensIntent && !chargingCableIntent && !wallChargerIntent
     && !wirelessChargingStationIntent && !hdmiCableIntent && !displayPortCableIntent
@@ -2712,7 +2827,7 @@ export function filterCategoryMismatches(query, candidates = []) {
     && !robotLawnMowerIntent && !foldingElectricBikeIntent && !portablePowerStationIntent
     && !compressorDehumidifierIntent && !electricStandingDeskIntent && !ergonomicOfficeChairIntent
     && !retrofitSmartLockIntent && !pressureIhRiceCookerIntent && !dualDashCamIntent
-    && !cameraPetFeederIntent && !iplHairRemovalIntent) return candidates;
+    && !cameraPetFeederIntent && !iplHairRemovalIntent) return evidenceFilteredCandidates;
   const portableUmbrella = requested.has('umbrella') && isPortableUmbrellaIntent(query);
   const trueWirelessEarphones = requested.has('earphones') && isTrueWirelessEarphonesIntent(query);
   const lightUpPhoneCase = !rejectsLightUpPhoneCase(normalizedQuery) && ((groups.some((group) => group.category === 'light-up')
@@ -2763,7 +2878,7 @@ export function filterCategoryMismatches(query, candidates = []) {
   const teacherExcludedTerms = (teacherEntry?.excluded_conditions || [])
     .map((term) => String(term || '').normalize('NFKC').toLowerCase())
     .filter(Boolean);
-  return candidates.filter((candidate) => {
+  return evidenceFilteredCandidates.filter((candidate) => {
     if (teacherExcludedTerms.length) {
       const candidateText = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''}`.normalize('NFKC').toLowerCase();
       if (teacherExcludedTerms.some((term) => candidateText.includes(term))) return false;

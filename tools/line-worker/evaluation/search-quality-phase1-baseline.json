@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-10T10:46:23.518Z",
-  "implementation": "legacy-filter-baseline",
+  "generated_at": "2026-08-12T09:46:29.960Z",
+  "implementation": "explicit-evidence-filter-v1",
   "notes": [
     "Candidate-level checks use deterministic positive and negative fixtures.",
     "Top-1, Top-3, nDCG and MRR require confirmed catalog product IDs and remain unmeasured for this supplied dataset.",
@@ -10,13 +10,13 @@
   "cases": 50,
   "measured_cases": 50,
   "metrics": {
-    "product_type_accuracy": 0.5,
-    "required_attribute_satisfaction": 0.2857142857142857,
-    "exclusion_violation_rate": 0.5,
-    "accessory_confusion_rate": 0.7,
-    "compatibility_accuracy": 0.6,
+    "product_type_accuracy": 1,
+    "required_attribute_satisfaction": 1,
+    "exclusion_violation_rate": 0,
+    "accessory_confusion_rate": 0,
+    "compatibility_accuracy": 1,
     "clarification_appropriateness": null,
-    "zero_result_honesty": 0.3333333333333333,
+    "zero_result_honesty": 1,
     "marketplace_url_precision": 1
   },
   "measurement_counts": {
@@ -63,7 +63,7 @@
     {
       "case_id": "SQ-07",
       "measured": true,
-      "exclusion_violation": true
+      "exclusion_violation": false
     },
     {
       "case_id": "SQ-08",
@@ -73,12 +73,12 @@
     {
       "case_id": "SQ-09",
       "measured": true,
-      "accessory_confusion": true
+      "accessory_confusion": false
     },
     {
       "case_id": "SQ-10",
       "measured": true,
-      "accessory_confusion": true
+      "accessory_confusion": false
     },
     {
       "case_id": "SQ-11",
@@ -88,7 +88,7 @@
     {
       "case_id": "SQ-12",
       "measured": true,
-      "product_type_match": false
+      "product_type_match": true
     },
     {
       "case_id": "SQ-13",
@@ -98,7 +98,7 @@
     {
       "case_id": "SQ-14",
       "measured": true,
-      "accessory_confusion": true
+      "accessory_confusion": false
     },
     {
       "case_id": "SQ-15",
@@ -118,12 +118,12 @@
     {
       "case_id": "SQ-18",
       "measured": true,
-      "accessory_confusion": true
+      "accessory_confusion": false
     },
     {
       "case_id": "SQ-19",
       "measured": true,
-      "accessory_confusion": true
+      "accessory_confusion": false
     },
     {
       "case_id": "SQ-20",
@@ -133,7 +133,7 @@
     {
       "case_id": "SQ-21",
       "measured": true,
-      "accessory_confusion": true
+      "accessory_confusion": false
     },
     {
       "case_id": "SQ-22",
@@ -143,17 +143,17 @@
     {
       "case_id": "SQ-23",
       "measured": true,
-      "product_type_match": false
+      "product_type_match": true
     },
     {
       "case_id": "SQ-24",
       "measured": true,
-      "product_type_match": false
+      "product_type_match": true
     },
     {
       "case_id": "SQ-25",
       "measured": true,
-      "accessory_confusion": true
+      "accessory_confusion": false
     },
     {
       "case_id": "SQ-26",
@@ -168,12 +168,12 @@
     {
       "case_id": "SQ-28",
       "measured": true,
-      "compatibility_match": false
+      "compatibility_match": true
     },
     {
       "case_id": "SQ-29",
       "measured": true,
-      "compatibility_match": false
+      "compatibility_match": true
     },
     {
       "case_id": "SQ-30",
@@ -183,12 +183,12 @@
     {
       "case_id": "SQ-31",
       "measured": true,
-      "required_attributes_satisfied": false
+      "required_attributes_satisfied": true
     },
     {
       "case_id": "SQ-32",
       "measured": true,
-      "required_attributes_satisfied": false
+      "required_attributes_satisfied": true
     },
     {
       "case_id": "SQ-33",
@@ -198,32 +198,32 @@
     {
       "case_id": "SQ-34",
       "measured": true,
-      "exclusion_violation": true
+      "exclusion_violation": false
     },
     {
       "case_id": "SQ-35",
       "measured": true,
-      "product_type_match": false
+      "product_type_match": true
     },
     {
       "case_id": "SQ-36",
       "measured": true,
-      "required_attributes_satisfied": false
+      "required_attributes_satisfied": true
     },
     {
       "case_id": "SQ-37",
       "measured": true,
-      "exclusion_violation": true
+      "exclusion_violation": false
     },
     {
       "case_id": "SQ-38",
       "measured": true,
-      "exclusion_violation": true
+      "exclusion_violation": false
     },
     {
       "case_id": "SQ-39",
       "measured": true,
-      "exclusion_violation": true
+      "exclusion_violation": false
     },
     {
       "case_id": "SQ-40",
@@ -233,12 +233,12 @@
     {
       "case_id": "SQ-41",
       "measured": true,
-      "exclusion_violation": true
+      "exclusion_violation": false
     },
     {
       "case_id": "SQ-42",
       "measured": true,
-      "required_attributes_satisfied": false
+      "required_attributes_satisfied": true
     },
     {
       "case_id": "SQ-43",
@@ -248,17 +248,17 @@
     {
       "case_id": "SQ-44",
       "measured": true,
-      "product_type_match": false
+      "product_type_match": true
     },
     {
       "case_id": "SQ-45",
       "measured": true,
-      "required_attributes_satisfied": false
+      "required_attributes_satisfied": true
     },
     {
       "case_id": "SQ-46",
       "measured": true,
-      "zero_result_honest": false
+      "zero_result_honest": true
     },
     {
       "case_id": "SQ-47",
@@ -268,12 +268,12 @@
     {
       "case_id": "SQ-48",
       "measured": true,
-      "zero_result_honest": false
+      "zero_result_honest": true
     },
     {
       "case_id": "SQ-49",
       "measured": true,
-      "product_type_match": false
+      "product_type_match": true
     },
     {
       "case_id": "SQ-50",

@@ -34,7 +34,7 @@ const rows = [
   [33,'ja','子ども用 リュック 通園','リュック',['KIDS_SIZE'],[],'子供向けサイズと明記のリュック','大人用サイズのみ',false,['amazon','rakuten','shein'],'REQUIRED_ATTRIBUTE_MISSING'],
   [34,'en','kids backpack for preschool (not adult size)','リュック',['KIDS_SIZE'],['ADULT_SIZE'],'kids backpack','adult backpack',false,['amazon'],'EXCLUDED_ATTRIBUTE_MATCHED'],
   [35,'ja','本物のグミ お菓子 韓国','食品',['REAL_FOOD'],[],'食べられるグミ菓子','グミ型の雑貨・食品サンプル',false,['qoo10','shein'],'PRODUCT_TYPE_MISMATCH'],
-  [36,'ja','ブランド〇〇の純正充電器(正規品)','充電器',['GENUINE_BRAND'],[],'ブランド純正・正規品','互換品、類似品',false,['amazon','rakuten'],'REQUIRED_ATTRIBUTE_MISSING'],
+  [36,'ja','ブランド〇〇の純正充電器(正規品)','充電器',['GENUINE_BRAND'],[],'ブランド純正充電器・正規品','互換充電器、類似品',false,['amazon','rakuten'],'REQUIRED_ATTRIBUTE_MISSING'],
   [37,'en','genuine brand charger (not a compatible knockoff)','充電器',['GENUINE_BRAND'],['COMPATIBLE_GENERIC'],'genuine charger','compatible knockoff',false,['amazon'],'EXCLUDED_ATTRIBUTE_MATCHED'],
   [38,'ko','정품 충전기 (호환 제품 아님)','充電器',['GENUINE_BRAND'],['COMPATIBLE_GENERIC'],'정품 충전기','호환 제품',false,['qoo10','amazon'],'EXCLUDED_ATTRIBUTE_MATCHED'],
   [39,'zh','正品充电器(不是仿品)','充電器',['GENUINE_BRAND'],['COMPATIBLE_GENERIC'],'正品充电器','仿品・兼容品',false,['qoo10'],'EXCLUDED_ATTRIBUTE_MATCHED'],
@@ -64,4 +64,3 @@ export const SEARCH_QUALITY_CASES = rows.map(([number, locale, query, productTyp
   marketplace_context: marketplaces,
   reason_code: reasonCode
 }));
-

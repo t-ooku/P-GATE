@@ -7,6 +7,35 @@ const REQUIRED_REASON_CODES = new Set([
 
 const ratio = (passed, measured) => measured ? passed / measured : null;
 
+const ABSOLUTE_QUALITY_GATES = Object.freeze({
+  product_type_accuracy: { direction: 'min', value: 1 },
+  required_attribute_satisfaction: { direction: 'min', value: 1 },
+  exclusion_violation_rate: { direction: 'max', value: 0 },
+  accessory_confusion_rate: { direction: 'max', value: 0 },
+  compatibility_accuracy: { direction: 'min', value: 1 },
+  zero_result_honesty: { direction: 'min', value: 1 },
+  marketplace_url_precision: { direction: 'min', value: 1 }
+});
+
+export function searchQualityGateFailures(report, minimumCases = 50) {
+  const failures = [];
+  if (Number(report?.cases || 0) < minimumCases || Number(report?.measured_cases || 0) < minimumCases) {
+    failures.push(`coverage: ${report?.measured_cases || 0}/${report?.cases || 0}; required ${minimumCases}/${minimumCases}`);
+  }
+  for (const [name, gate] of Object.entries(ABSOLUTE_QUALITY_GATES)) {
+    const actual = report?.metrics?.[name];
+    if (typeof actual !== 'number') {
+      failures.push(`${name}: unmeasured; required ${gate.direction} ${gate.value}`);
+      continue;
+    }
+    if ((gate.direction === 'min' && actual < gate.value)
+      || (gate.direction === 'max' && actual > gate.value)) {
+      failures.push(`${name}: ${actual}; required ${gate.direction} ${gate.value}`);
+    }
+  }
+  return failures;
+}
+
 export function validateSearchQualityCases(cases) {
   const errors = [];
   const ids = new Set();
@@ -91,4 +120,3 @@ export function scoreSearchQualityBaseline(cases, observations = []) {
     case_results: scoredCases
   };
 }
-
