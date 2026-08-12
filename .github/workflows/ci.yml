@@ -66,7 +66,7 @@ jobs:
       - name: Deploy Worker
         if: steps.creds.outputs.configured == 'true'
         working-directory: tools/line-worker
-        run: npx wrangler deploy
+        run: npx --yes wrangler@4.121.0 deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -89,7 +89,7 @@ jobs:
         working-directory: tools/line-worker
         run: |
           for attempt in $(seq 1 30); do
-            output="$(npx wrangler d1 execute hoshilu-products --remote --command "SELECT status,external_post_id,last_error,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-approved-model-reel-20260812'")"
+            output="$(npx --yes wrangler@4.121.0 d1 execute hoshilu-products --remote --command "SELECT status,external_post_id,last_error,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-approved-model-reel-20260812'")"
             echo "$output"
             if echo "$output" | grep -q '"status": "PUBLISHED"'; then
               exit 0
