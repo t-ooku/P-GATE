@@ -70,34 +70,3 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-  # One-time read-only verification for the published Instagram permalink.
-  # Remove after public_url is confirmed in D1.
-  instagram-permalink-monitor:
-    if: github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[instagram-permalink-monitor]')
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install Worker dependencies
-        run: npm ci --prefix tools/line-worker
-      - name: Wait for Cron and verify the official Instagram permalink
-        working-directory: tools/line-worker
-        run: |
-          for attempt in $(seq 1 30); do
-            output="$(npx --yes wrangler@4.121.0 d1 execute hoshilu-products --remote --command "SELECT q.status,q.external_post_id,q.published_at,p.public_url,p.utm_source,p.utm_medium,p.utm_campaign,p.utm_content FROM social_post_queue q LEFT JOIN social_post_performance p ON p.post_id=q.post_id AND p.public_url IS NOT NULL WHERE q.post_id='hoshilu-approved-model-reel-20260812' ORDER BY p.snapshot_at DESC LIMIT 1")"
-            echo "$output"
-            if echo "$output" | grep -Eq 'https://(www\\.)?instagram\\.com/(reel|p)/[^" ]+'; then
-              exit 0
-            fi
-            sleep 30
-          done
-          echo "::error::Instagram permalink was not stored within the verification window."
-          exit 1
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
