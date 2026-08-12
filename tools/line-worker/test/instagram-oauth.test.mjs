@@ -57,6 +57,7 @@ function testEnvironment(database = createDatabase()) {
     INSTAGRAM_APP_SECRET: 'instagram-app-secret-for-tests',
     SOCIAL_OAUTH_ENCRYPTION_KEY: 'e'.repeat(64),
     INSTAGRAM_ACCOUNT_ID: ACCOUNT_ID,
+    INSTAGRAM_EXPECTED_USERNAME: 'hoshilu.app',
     INSTAGRAM_OAUTH_REDIRECT_URI: 'https://hoshilu.app/api/oauth/instagram/callback'
   };
 }
@@ -100,13 +101,16 @@ test('Instagram Business Login stores only an encrypted long-lived token', async
         permissions: ['instagram_business_basic', 'instagram_business_content_publish']
       });
     }
+    if (url.startsWith('https://graph.instagram.com/me?')) {
+      return Response.json({ user_id: ACCOUNT_ID, username: 'hoshilu.app' });
+    }
     if (url.startsWith('https://graph.instagram.com/access_token?')) {
       return Response.json({ access_token: 'long-lived-token', token_type: 'bearer', expires_in: 5184000 });
     }
     return Response.json({}, { status: 404 });
   });
   assert.equal(callback.status, 200);
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 3);
   assert.equal(database.row.account_id, ACCOUNT_ID);
   assert.equal(database.row.access_token_ciphertext.includes('long-lived-token'), false);
   assert.equal(database.row.access_token_iv.includes('long-lived-token'), false);
@@ -128,7 +132,9 @@ test('OAuth callback rejects a different Instagram account before storage', asyn
   const response = await handleInstagramOAuthRoutes(new Request(
     `${env.INSTAGRAM_OAUTH_REDIRECT_URI}?code=code&state=${encodeURIComponent(state)}`,
     { headers: { cookie: cookieFrom(start) } }
-  ), env, async () => Response.json({ access_token: 'short', user_id: '999' }));
+  ), env, async url => url.startsWith('https://api.instagram.com/')
+    ? Response.json({ access_token: 'short', user_id: '999' })
+    : Response.json({ user_id: '999', username: 'different.account' }));
   assert.equal(response.status, 403);
   assert.equal(database.row, null);
   assert.doesNotMatch(await response.text(), /short/);
@@ -144,9 +150,15 @@ test('Meta signed data-deletion request removes the credential and returns a ver
   await handleInstagramOAuthRoutes(new Request(
     `${env.INSTAGRAM_OAUTH_REDIRECT_URI}?code=code&state=${encodeURIComponent(state)}`,
     { headers: { cookie: cookieFrom(start) } }
-  ), env, async url => url.startsWith('https://api.instagram.com/')
-    ? Response.json({ access_token: 'short', user_id: ACCOUNT_ID })
-    : Response.json({ access_token: 'long', expires_in: 5184000 }));
+  ), env, async url => {
+    if (url.startsWith('https://api.instagram.com/')) {
+      return Response.json({ access_token: 'short', user_id: ACCOUNT_ID });
+    }
+    if (url.startsWith('https://graph.instagram.com/me?')) {
+      return Response.json({ user_id: ACCOUNT_ID, username: 'hoshilu.app' });
+    }
+    return Response.json({ access_token: 'long', expires_in: 5184000 });
+  });
   assert.ok(database.row);
 
   const body = new URLSearchParams({

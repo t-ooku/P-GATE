@@ -20,6 +20,7 @@
     "AMAZON_CREATORS_CREDENTIAL_VERSION": "2.3",
     "INSTAGRAM_APP_ID": "1349062573483200",
     "INSTAGRAM_ACCOUNT_ID": "17841441143206766",
+    "INSTAGRAM_EXPECTED_USERNAME": "hoshilu.app",
     "INSTAGRAM_OAUTH_REDIRECT_URI": "https://hoshilu.app/api/oauth/instagram/callback",
     "MEMBER_EMAIL_FROM": "notification@auth.hoshilu.app",
     "SOCIAL_AUTOPILOT_ENABLED": "true",

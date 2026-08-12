@@ -87,7 +87,8 @@ function config(env = {}) {
     appId: clean(env.INSTAGRAM_APP_ID, 80),
     appSecret: String(env.INSTAGRAM_APP_SECRET || '').trim(),
     encryptionSecret: String(env.SOCIAL_OAUTH_ENCRYPTION_KEY || '').trim(),
-    expectedAccountId: clean(env.INSTAGRAM_ACCOUNT_ID, 80)
+    expectedAccountId: clean(env.INSTAGRAM_ACCOUNT_ID, 80),
+    expectedUsername: clean(env.INSTAGRAM_EXPECTED_USERNAME, 80).replace(/^@/, '').toLowerCase()
   };
 }
 
@@ -100,7 +101,7 @@ function oauthConfigReady(env) {
   const current = config(env);
   return Boolean(
     current.appId && current.appSecret && current.encryptionSecret.length >= 32
-    && current.expectedAccountId && env.PRODUCT_DB
+    && current.expectedUsername && env.PRODUCT_DB
   );
 }
 
@@ -199,7 +200,18 @@ async function exchangeAuthorizationCode(code, request, env, fetchImpl) {
   const accountId = clean(short?.user_id, 80);
   const shortToken = String(short?.access_token || '').trim();
   if (!accountId || !shortToken) throw new Error('INSTAGRAM_OAUTH_CODE_EXCHANGE_INVALID');
-  if (accountId !== current.expectedAccountId) throw new Error('INSTAGRAM_OAUTH_ACCOUNT_MISMATCH');
+
+  const profileUrl = new URL('https://graph.instagram.com/me');
+  profileUrl.searchParams.set('fields', 'user_id,username');
+  profileUrl.searchParams.set('access_token', shortToken);
+  const profileResponse = await fetchImpl(profileUrl.toString());
+  if (!profileResponse.ok) throw new Error(`INSTAGRAM_OAUTH_PROFILE_${profileResponse.status}`);
+  const profile = await profileResponse.json();
+  const profileAccountId = clean(profile?.user_id || profile?.id, 80);
+  const profileUsername = clean(profile?.username, 80).replace(/^@/, '').toLowerCase();
+  if (!profileAccountId || profileAccountId !== accountId || profileUsername !== current.expectedUsername) {
+    throw new Error('INSTAGRAM_OAUTH_ACCOUNT_MISMATCH');
+  }
 
   const longUrl = new URL('https://graph.instagram.com/access_token');
   longUrl.searchParams.set('grant_type', 'ig_exchange_token');
@@ -264,7 +276,7 @@ export async function getInstagramPublishCredentials(env, fetchImpl = fetch) {
   if (env.PRODUCT_DB && current.encryptionSecret.length >= 32) {
     try {
       const row = await credentialRow(env);
-      if (row?.status === 'ACTIVE' && row.account_id === current.expectedAccountId) {
+      if (row?.status === 'ACTIVE') {
         return await refreshCredential(row, env, fetchImpl);
       }
     } catch (error) {
@@ -282,8 +294,8 @@ export async function instagramOAuthReadiness(env) {
     try {
       const row = await credentialRow(env);
       connected = Boolean(
-        row?.status === 'ACTIVE' && row.account_id === config(env).expectedAccountId
-        && Number.isFinite(Date.parse(row.expires_at)) && Date.parse(row.expires_at) > Date.now()
+        row?.status === 'ACTIVE' && Number.isFinite(Date.parse(row.expires_at))
+        && Date.parse(row.expires_at) > Date.now()
       );
     } catch {
       connected = false;
