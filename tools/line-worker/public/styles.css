@@ -46,7 +46,7 @@
 .recommendation-reason{margin:0 0 10px;padding:8px 10px;border-radius:10px;background:#f4f0ff;color:#5140ba;font-size:10px;font-weight:750;line-height:1.5}.result-row-recommended .result-row-title{color:#5636c7}.result-row-recommended .result-track{scroll-behavior:smooth}
 
 /* 関連商品は主結果の縦一覧と混同させず、30件を横方向へ流して発見できる棚にする。 */
-.result-row-recommended .result-track{display:flex;max-height:none;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:thin;padding:2px 2px 10px}.result-row-recommended .result-track>.product-card{flex:0 0 min(300px,82vw);scroll-snap-align:start}.result-row-recommended .carousel-button.previous,.result-row-recommended .carousel-button.next{top:42%;bottom:auto}.result-row-recommended .carousel-button.previous{left:-4px}.result-row-recommended .carousel-button.next{left:auto;right:-4px}
+.result-row-recommended .result-track{display:flex;flex-direction:row;max-height:none;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:thin;padding:2px 2px 10px}.result-row-recommended .result-track>.product-card{flex:0 0 min(300px,82vw);scroll-snap-align:start}.result-row-recommended .carousel-button.previous,.result-row-recommended .carousel-button.next{top:42%;bottom:auto}.result-row-recommended .carousel-button.previous{left:-4px}.result-row-recommended .carousel-button.next{left:auto;right:-4px}
 
 /* 商品単位通知も横揺れを止め、閉じるボタンを縦スクロール中も上部へ固定する。 */
 .product-watch-dialog{max-width:92vw;overflow:hidden;overscroll-behavior:contain}.product-watch-dialog-card{max-height:86dvh;overflow-y:auto;overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y}.product-watch-dialog-close{position:sticky;z-index:5;top:0;justify-self:end;margin-bottom:-28px}

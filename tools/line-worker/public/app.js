@@ -554,11 +554,12 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   mediaActions.className='product-card-media-actions';
   mediaColumn.append(mediaActions);
   card.append(mediaColumn);
-  card.append(textElement('h3','',candidate.display_name||candidate.product_name||candidate.asin));
+  const title=textElement('h3','',candidate.display_name||candidate.product_name||candidate.asin);
+  card.append(title);
+  if(!confirmed&&candidate.recommendation_reason)title.after(textElement('div','recommendation-reason',`AI選定理由：${candidate.recommendation_reason}`));
   if(candidate.description)card.append(textElement('p','',candidate.description));
   const terms=candidate.evidence?.matched_terms||[];
   if(terms.length)card.append(textElement('div','evidence',`${window.HoshiluI18n?.t('search.evidence',elements.language.value)||'一致した手がかり：'}${terms.slice(0,4).join(' / ')}`));
-  if(!confirmed&&candidate.recommendation_reason)card.append(textElement('div','recommendation-reason',`AI選定理由：${candidate.recommendation_reason}`));
   const options=renderOfferOptions(candidate,t,elements.language.value);
   if(options)card.append(options);else card.append(allMarketplacesButton());
   const watch=createWatchOptions(candidate,t);
@@ -708,7 +709,7 @@ async function loadRelatedRecommendations(query,sequence){
     if(anchor)elements.cards.insertBefore(row,anchor);else elements.cards.append(row);
   }
 }
-async function initializeTurnstile(){ const response=await fetch('/api/config',{cache:'no-store'});if(!response.ok)throw new Error('TURNSTILE_NOT_CONFIGURED');const config=await response.json();for(let i=0;i<100&&!window.turnstile;i+=1)await new Promise(resolve=>setTimeout(resolve,50));if(!window.turnstile)throw new Error('TURNSTILE_UNAVAILABLE');turnstileWidget=window.turnstile.render(elements.turnstile,{sitekey:config.turnstile_site_key,theme:'light',size:'flexible'}); }
+async function initializeTurnstile(){ const response=await fetch('/api/config',{cache:'no-store'});if(!response.ok)throw new Error('TURNSTILE_NOT_CONFIGURED');const config=await response.json();for(let i=0;i<200&&!window.turnstile;i+=1)await new Promise(resolve=>setTimeout(resolve,50));if(!window.turnstile)throw new Error('TURNSTILE_UNAVAILABLE');await new Promise((resolve,reject)=>window.turnstile.ready(()=>{try{turnstileWidget=window.turnstile.render(elements.turnstile,{sitekey:config.turnstile_site_key,theme:'light',size:'flexible',retry:'auto','retry-interval':3000,'refresh-expired':'auto','error-callback':code=>console.warn('TURNSTILE_CLIENT_ERROR',String(code||'').slice(0,40))});resolve();}catch(error){reject(error);}})); }
 
 const notificationUiCopy={JA:{title:'AIウォッチ通知',refresh:'更新',login:'無料会員でログインすると通知を確認できます。',empty:'通知はまだありません。',read:'既読にする',dismiss:'非表示'},EN:{title:'AI Watch alerts',refresh:'Refresh',login:'Sign in as a free member to see alerts.',empty:'No notifications yet.',read:'Mark read',dismiss:'Dismiss'},ZH:{title:'AI监控提醒',refresh:'更新',login:'登录免费会员后即可查看提醒。',empty:'暂无提醒。',read:'标为已读',dismiss:'隐藏'},KO:{title:'AI 워치 알림',refresh:'새로고침',login:'무료 회원으로 로그인하면 알림을 확인할 수 있습니다.',empty:'아직 알림이 없습니다.',read:'읽음',dismiss:'숨기기'}};
 let memberNotifications=[];
@@ -743,7 +744,7 @@ elements.wishFilter.addEventListener('input',()=>{wishMatchIndex=0;renderWishes(
 elements.wishFilter.addEventListener('keydown',event=>{if(event.key!=='Enter')return;event.preventDefault();const matches=[...elements.wishList.querySelectorAll('.wish-cycle:first-child .wish-item')];if(!matches.length)return;const target=matches[wishMatchIndex%matches.length];wishMatchIndex=(wishMatchIndex+1)%matches.length;matches.forEach(item=>{item.open=false;});target.open=true;elements.wishList.scrollTo({top:Math.max(0,target.offsetTop-matches[0].offsetTop),behavior:'smooth'});});
 
 function issueTurnstileToken(token){lastIssuedTurnstileToken=token;return token;}
-async function waitForTurnstileToken(){for(let attempt=0;attempt<100;attempt+=1){const token=window.turnstile?.getResponse(turnstileWidget)||'';if(token&&token!==lastIssuedTurnstileToken)return issueTurnstileToken(token);if(attempt===0&&turnstileWidget!==null)window.turnstile?.reset(turnstileWidget);await new Promise(resolve=>setTimeout(resolve,100));}return '';}
+async function waitForTurnstileToken(){for(let attempt=0;attempt<150;attempt+=1){const token=window.turnstile?.getResponse(turnstileWidget)||'';if(token&&token!==lastIssuedTurnstileToken)return issueTurnstileToken(token);if(attempt===0&&lastIssuedTurnstileToken&&turnstileWidget!==null)window.turnstile?.reset(turnstileWidget);await new Promise(resolve=>setTimeout(resolve,100));}return '';}
 // v3.4 fix: Turnstile tokens are single-use server-side. The main search
 // form already resets the widget after every submission (see the form's
 // finally block), but Chrome may briefly keep returning the consumed response
