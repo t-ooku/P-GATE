@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyGrowthTraffic, normalizeGrowthEvent } from '../src/growth-events.mjs';
+import { classifyGrowthTraffic, handleGrowthEvent, normalizeGrowthEvent } from '../src/growth-events.mjs';
 
 test('accepts only anonymous allowlisted growth dimensions', () => {
   assert.deepEqual(normalizeGrowthEvent({
@@ -79,4 +79,39 @@ test('separates QA, attributed, and unattributed growth traffic', () => {
     campaign: 'itg_brand_reel'
   }), 'ATTRIBUTED');
   assert.equal(classifyGrowthTraffic({}), 'UNATTRIBUTED');
+});
+
+test('visitor columnsのD1 migration適用前もイベント件数を保存する', async () => {
+  const calls = [];
+  const env = {
+    PRODUCT_DB: {
+      prepare(sql) {
+        return {
+          bind(...values) {
+            calls.push({ sql, values });
+            return {
+              async run() {
+                if (sql.includes('visitor_id,session_id')) throw new Error('table growth_events has no column named visitor_id');
+                return { success: true };
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+  const request = new Request('https://hoshilu.app/api/events', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      event_type: 'seo_article_view', source: 'codex_qa', medium: 'qa',
+      visitor_id: '550e8400-e29b-41d4-a716-446655440000',
+      session_id: '550e8400-e29b-41d4-a716-446655440001'
+    })
+  });
+  const response = await handleGrowthEvent(request, env);
+  assert.equal(response.status, 202);
+  assert.deepEqual(await response.json(), { ok: true, identity_recorded: false });
+  assert.equal(calls.length, 2);
+  assert.match(calls[1].sql, /occurred_at,traffic_class\)/);
+  assert.equal(calls[1].values.length, 10);
 });

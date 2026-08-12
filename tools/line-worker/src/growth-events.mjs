@@ -81,16 +81,33 @@ export async function handleGrowthEvent(request, env) {
     return Response.json({ ok: false, error: 'EVENT_INVALID' }, { status: 400 });
   }
   const trafficClass = classifyGrowthTraffic(event);
-  await env.PRODUCT_DB.prepare(
-    `INSERT INTO growth_events
-    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
-    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
-  ).bind(
+  const values = [
     crypto.randomUUID(), event.event_type, event.locale, event.source, event.medium,
     event.campaign, event.content, event.marketplace, new Date().toISOString(), trafficClass,
     event.visitor_id, event.session_id
-  ).run();
-  return Response.json({ ok: true }, {
+  ];
+  let identityRecorded = true;
+  try {
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
+    ).bind(...values).run();
+  } catch (error) {
+    const message = String(error?.message || error);
+    const visitorColumnsMissing = /(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(message);
+    if (!visitorColumnsMissing) throw error;
+    // Production migrations are intentionally manual. Keep privacy-safe event
+    // counts available while migration 0047 is pending, without pretending
+    // visitor/session retention metrics are connected.
+    identityRecorded = false;
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    ).bind(...values.slice(0, 10)).run();
+  }
+  return Response.json({ ok: true, identity_recorded: identityRecorded }, {
     status: 202,
     headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
   });
