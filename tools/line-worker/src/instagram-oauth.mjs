@@ -197,9 +197,9 @@ async function exchangeAuthorizationCode(code, request, env, fetchImpl) {
   });
   if (!shortResponse.ok) throw new Error(`INSTAGRAM_OAUTH_CODE_EXCHANGE_${shortResponse.status}`);
   const short = await shortResponse.json();
-  const accountId = clean(short?.user_id, 80);
+  const oauthAccountId = clean(short?.user_id, 80);
   const shortToken = String(short?.access_token || '').trim();
-  if (!accountId || !shortToken) throw new Error('INSTAGRAM_OAUTH_CODE_EXCHANGE_INVALID');
+  if (!oauthAccountId || !shortToken) throw new Error('INSTAGRAM_OAUTH_CODE_EXCHANGE_INVALID');
 
   const profileUrl = new URL('https://graph.instagram.com/me');
   profileUrl.searchParams.set('fields', 'user_id,username');
@@ -209,7 +209,7 @@ async function exchangeAuthorizationCode(code, request, env, fetchImpl) {
   const profile = await profileResponse.json();
   const profileAccountId = clean(profile?.user_id || profile?.id, 80);
   const profileUsername = clean(profile?.username, 80).replace(/^@/, '').toLowerCase();
-  if (!profileAccountId || profileAccountId !== accountId || profileUsername !== current.expectedUsername) {
+  if (!profileAccountId || profileUsername !== current.expectedUsername) {
     throw new Error('INSTAGRAM_OAUTH_ACCOUNT_MISMATCH');
   }
 
@@ -226,7 +226,7 @@ async function exchangeAuthorizationCode(code, request, env, fetchImpl) {
     throw new Error('INSTAGRAM_OAUTH_LONG_TOKEN_INVALID');
   }
   return {
-    accountId,
+    accountId: profileAccountId,
     accessToken,
     tokenType: clean(long?.token_type || 'bearer', 40),
     scopes: Array.isArray(short?.permissions) ? short.permissions.join(',') : REQUIRED_SCOPES.join(','),

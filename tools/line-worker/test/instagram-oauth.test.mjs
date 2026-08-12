@@ -13,6 +13,7 @@ const {
 } = await import('../src/instagram-oauth.mjs');
 
 const ACCOUNT_ID = '17841441143206766';
+const OAUTH_SCOPED_ID = 'oauth-scoped-user-id';
 
 function createDatabase() {
   let row = null;
@@ -97,7 +98,7 @@ test('Instagram Business Login stores only an encrypted long-lived token', async
       assert.match(options.body, /code=one-time-code/);
       return Response.json({
         access_token: 'short-lived-token',
-        user_id: ACCOUNT_ID,
+        user_id: OAUTH_SCOPED_ID,
         permissions: ['instagram_business_basic', 'instagram_business_content_publish']
       });
     }
@@ -152,7 +153,7 @@ test('Meta signed data-deletion request removes the credential and returns a ver
     { headers: { cookie: cookieFrom(start) } }
   ), env, async url => {
     if (url.startsWith('https://api.instagram.com/')) {
-      return Response.json({ access_token: 'short', user_id: ACCOUNT_ID });
+      return Response.json({ access_token: 'short', user_id: OAUTH_SCOPED_ID });
     }
     if (url.startsWith('https://graph.instagram.com/me?')) {
       return Response.json({ user_id: ACCOUNT_ID, username: 'hoshilu.app' });
