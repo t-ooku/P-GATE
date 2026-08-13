@@ -87,8 +87,19 @@ function testEnvironment(database, stored, overrides = {}) {
     SOCIAL_MEDIA_BUCKET: {
       async put(key, body, options) {
         const bytes = new Uint8Array(await new Response(body).arrayBuffer());
-        stored.push({ key, bytes, options });
+        stored.push({ key, bytes, options, httpEtag: '"stored-etag"', etag: 'stored-etag' });
         return { size: bytes.byteLength, httpEtag: '"stored-etag"' };
+      },
+      async head(key) {
+        const object = [...stored].reverse().find((entry) => entry.key === key);
+        if (!object) return null;
+        return {
+          key,
+          size: object.bytes.byteLength,
+          httpEtag: object.httpEtag,
+          etag: object.etag,
+          httpMetadata: object.options?.httpMetadata || {}
+        };
       },
       async delete(key) { stored.push({ deleted: key }); }
     },
@@ -240,6 +251,38 @@ test('承認済み1件だけを生成し、R2保存後はREVIEW_REQUIREDで停�
     'url_visible', 'audio_present', 'no_unrelated_brand', 'factual', 'ai_disclosure',
     'rights_confirmed', 'duplicate_checked', 'postprocessed'
   ].map((name) => [name, true]));
+
+  const rawApproval = await handleRunwayGenerationRoutes(new Request(
+    'https://hoshilu.app/api/internal/runway/approve', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${'s'.repeat(32)}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        job_id: 'runway-test-20260813-v1',
+        scheduled_at: '2026-08-13T09:00:00.000Z',
+        checks: completeChecks
+      })
+    }
+  ), env);
+  assert.equal(rawApproval.status, 409);
+  assert.deepEqual(await rawApproval.json(), {
+    ok: false,
+    error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+    reason: 'STORAGE_KEY_INVALID'
+  });
+  assert.equal(database.prepare('SELECT status FROM runway_generation_jobs').get().status,
+    'GENERATED_REVIEW_REQUIRED');
+  assert.equal(database.prepare('SELECT status FROM social_post_queue').get().status, 'REVIEW_REQUIRED');
+
+  const processedKey = `runway/runway-test-20260813-v1/postprocessed-${'a'.repeat(64)}.mp4`;
+  const processedBytes = new Uint8Array([9, 8, 7, 6, 5]);
+  const processedObject = await env.SOCIAL_MEDIA_BUCKET.put(processedKey, processedBytes, {
+    httpMetadata: { contentType: 'video/mp4' }
+  });
+  database.prepare(`UPDATE runway_generation_jobs SET storage_key=?,storage_etag=?,
+    storage_size_bytes=?,storage_content_type='video/mp4' WHERE job_id=?`).run(
+    processedKey, processedObject.httpEtag, processedBytes.byteLength, 'runway-test-20260813-v1'
+  );
+
   const approval = await handleRunwayGenerationRoutes(new Request(
     'https://hoshilu.app/api/internal/runway/approve', {
       method: 'POST',
@@ -288,12 +331,20 @@ test('投稿キューとの承認競合時は初回1000-credit上限を解除し
   const database = new DatabaseSync(':memory:');
   database.exec(queueMigration);
   database.exec(runwayMigration);
+  const processedKey = `runway/runway-test-20260813-v1/postprocessed-${'b'.repeat(64)}.mp4`;
   insertApprovedJob(database, {
     status: 'GENERATED_REVIEW_REQUIRED',
-    storage_key: 'runway/runway-test-20260813-v1/output.mp4',
+    storage_key: processedKey,
+    storage_etag: '"stored-etag"',
+    storage_size_bytes: 4,
+    storage_content_type: 'video/mp4',
     qa_status: 'PENDING'
   });
-  const env = testEnvironment(database, []);
+  const stored = [];
+  const env = testEnvironment(database, stored);
+  await env.SOCIAL_MEDIA_BUCKET.put(processedKey, new Uint8Array([1, 2, 3, 4]), {
+    httpMetadata: { contentType: 'video/mp4' }
+  });
   const checks = Object.fromEntries([
     'identity_consistent', 'face_hands_ok', 'hoshilu_visible', 'japanese_subtitles',
     'url_visible', 'audio_present', 'no_unrelated_brand', 'factual', 'ai_disclosure',
@@ -312,6 +363,157 @@ test('投稿キューとの承認競合時は初回1000-credit上限を解除し
   ), env);
   assert.equal(response.status, 409);
   assert.equal(database.prepare('SELECT initial_test_completed FROM runway_budget_policy').get().initial_test_completed, 0);
+});
+
+test('Runway承認はpostprocessed R2実体とDBメタデータをfail-closedで照合する', async (t) => {
+  const completeChecks = Object.fromEntries([
+    'identity_consistent', 'face_hands_ok', 'hoshilu_visible', 'japanese_subtitles',
+    'url_visible', 'audio_present', 'no_unrelated_brand', 'factual', 'ai_disclosure',
+    'rights_confirmed', 'duplicate_checked', 'postprocessed'
+  ].map((name) => [name, true]));
+  const jobId = 'runway-test-20260813-v1';
+  const processedKey = `runway/${jobId}/postprocessed-${'c'.repeat(64)}.mp4`;
+  const validHead = {
+    key: processedKey,
+    size: 4,
+    httpEtag: '"verified-etag"',
+    etag: 'verified-etag',
+    httpMetadata: { contentType: 'video/mp4' }
+  };
+  const cases = [
+    {
+      name: 'postprocessed key belongs to a different job',
+      job: { storage_key: `runway/another-job/postprocessed-${'c'.repeat(64)}.mp4` },
+      head: validHead,
+      status: 409,
+      error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+      reason: 'STORAGE_KEY_INVALID'
+    },
+    {
+      name: 'postprocessed key digest is not 64 hex characters',
+      job: { storage_key: `runway/${jobId}/postprocessed-${'z'.repeat(64)}.mp4` },
+      head: validHead,
+      status: 409,
+      error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+      reason: 'STORAGE_KEY_INVALID'
+    },
+    {
+      name: 'R2 object missing',
+      head: null,
+      status: 409,
+      error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+      reason: 'OBJECT_NOT_FOUND'
+    },
+    {
+      name: 'R2 content type mismatch',
+      head: { ...validHead, httpMetadata: { contentType: 'application/octet-stream' } },
+      status: 409,
+      error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+      reason: 'CONTENT_TYPE_MISMATCH'
+    },
+    {
+      name: 'database content type mismatch',
+      job: { storage_content_type: 'application/octet-stream' },
+      head: validHead,
+      status: 409,
+      error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+      reason: 'CONTENT_TYPE_MISMATCH'
+    },
+    {
+      name: 'R2 size mismatch',
+      head: { ...validHead, size: 5 },
+      status: 409,
+      error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+      reason: 'SIZE_MISMATCH'
+    },
+    {
+      name: 'recorded ETag mismatch',
+      head: { ...validHead, httpEtag: '"other-etag"', etag: 'other-etag' },
+      status: 409,
+      error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+      reason: 'ETAG_MISMATCH'
+    },
+    {
+      name: 'blank database ETag is not treated as NULL',
+      job: { storage_etag: '' },
+      head: validHead,
+      status: 409,
+      error: 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+      reason: 'ETAG_MISMATCH'
+    },
+    {
+      name: 'R2 head unavailable',
+      throws: true,
+      status: 503,
+      error: 'RUNWAY_MEDIA_STORAGE_UNAVAILABLE',
+      reason: 'STORAGE_UNAVAILABLE'
+    },
+    {
+      name: 'NULL database ETag is allowed when key type and size match',
+      job: { storage_etag: null },
+      head: validHead,
+      status: 200
+    }
+  ];
+
+  for (const mediaCase of cases) {
+    await t.test(mediaCase.name, async () => {
+      const database = new DatabaseSync(':memory:');
+      database.exec(queueMigration);
+      database.exec(runwayMigration);
+      insertApprovedJob(database, {
+        status: 'GENERATED_REVIEW_REQUIRED',
+        storage_key: processedKey,
+        storage_etag: '"verified-etag"',
+        storage_size_bytes: 4,
+        storage_content_type: 'video/mp4',
+        qa_status: 'PENDING',
+        ...(mediaCase.job || {})
+      });
+      database.prepare(`INSERT INTO social_post_queue
+        (post_id,platform,caption,link,media_url,scheduled_at,status,created_at,updated_at)
+        VALUES (?,'INSTAGRAM','','','','2026-08-13T09:00:00.000Z','REVIEW_REQUIRED',?,?)`).run(
+        'hoshilu-runway-test-20260813-v1',
+        '2026-08-13T08:00:00.000Z',
+        '2026-08-13T08:00:00.000Z'
+      );
+      const env = testEnvironment(database, [], {
+        SOCIAL_MEDIA_BUCKET: {
+          async head() {
+            if (mediaCase.throws) throw new Error('temporary R2 failure');
+            return mediaCase.head;
+          }
+        }
+      });
+      const response = await handleRunwayGenerationRoutes(new Request(
+        'https://hoshilu.app/api/internal/runway/approve', {
+          method: 'POST',
+          headers: { authorization: `Bearer ${'s'.repeat(32)}`, 'content-type': 'application/json' },
+          body: JSON.stringify({
+            job_id: jobId,
+            scheduled_at: '2026-08-13T09:00:00.000Z',
+            checks: completeChecks
+          })
+        }
+      ), env);
+      assert.equal(response.status, mediaCase.status);
+      const body = await response.json();
+      if (mediaCase.status === 200) {
+        assert.equal(body.status, 'APPROVED_FOR_POST');
+        assert.equal(database.prepare('SELECT status FROM runway_generation_jobs').get().status,
+          'APPROVED_FOR_POST');
+        assert.equal(database.prepare('SELECT status FROM social_post_queue').get().status, 'APPROVED');
+      } else {
+        assert.equal(body.error, mediaCase.error);
+        assert.equal(body.reason, mediaCase.reason);
+        assert.equal(database.prepare('SELECT status FROM runway_generation_jobs').get().status,
+          'GENERATED_REVIEW_REQUIRED');
+        assert.equal(database.prepare('SELECT status FROM social_post_queue').get().status, 'REVIEW_REQUIRED');
+        assert.equal(database.prepare('SELECT initial_test_completed FROM runway_budget_policy').get().initial_test_completed, 0);
+      }
+      database.close();
+    });
+  }
 });
 
 test('課金見込みと確定料金式が一致しないジョブは送信しない', async () => {

@@ -52,6 +52,79 @@ function changes(result) {
   return Number(result?.meta?.changes || 0);
 }
 
+function isPostprocessedStorageKey(jobId, storageKey) {
+  const prefix = `runway/${jobId}/postprocessed-`;
+  const value = typeof storageKey === 'string' ? storageKey : '';
+  return value.startsWith(prefix)
+    && /^[0-9a-f]{64}\.mp4$/i.test(value.slice(prefix.length));
+}
+
+function normalizeStrongEtag(value) {
+  const etag = String(value ?? '').trim();
+  if (!etag || /^W\//i.test(etag)) return '';
+  return etag.startsWith('"') && etag.endsWith('"')
+    ? etag.slice(1, -1)
+    : etag;
+}
+
+async function verifyPostprocessedMedia(env, job) {
+  if (!isPostprocessedStorageKey(job.job_id, job.storage_key)) {
+    return { ok: false, reason: 'STORAGE_KEY_INVALID' };
+  }
+  if (!env.SOCIAL_MEDIA_BUCKET || typeof env.SOCIAL_MEDIA_BUCKET.head !== 'function') {
+    return { ok: false, unavailable: true, reason: 'STORAGE_UNAVAILABLE' };
+  }
+
+  let object;
+  try {
+    object = await env.SOCIAL_MEDIA_BUCKET.head(job.storage_key);
+  } catch {
+    return { ok: false, unavailable: true, reason: 'STORAGE_UNAVAILABLE' };
+  }
+  if (!object) return { ok: false, reason: 'OBJECT_NOT_FOUND' };
+
+  const objectContentType = String(object.httpMetadata?.contentType || '').trim().toLowerCase();
+  const databaseContentType = String(job.storage_content_type || '').trim().toLowerCase();
+  if (objectContentType !== 'video/mp4' || databaseContentType !== 'video/mp4') {
+    return { ok: false, reason: 'CONTENT_TYPE_MISMATCH' };
+  }
+
+  const objectSize = Number(object.size);
+  const databaseSize = Number(job.storage_size_bytes);
+  if (!Number.isSafeInteger(objectSize) || objectSize <= 0
+    || !Number.isSafeInteger(databaseSize) || databaseSize <= 0
+    || objectSize !== databaseSize) {
+    return { ok: false, reason: 'SIZE_MISMATCH' };
+  }
+
+  // Older rows may have a true SQL NULL storage_etag. They remain eligible only
+  // when key, existence, type and size all match. Blank strings are not treated
+  // as NULL. When an ETag was recorded, a strong R2 ETag match is mandatory;
+  // blank/weak/missing/mismatched values fail shut.
+  const databaseEtagIsNull = job.storage_etag == null;
+  const databaseEtag = normalizeStrongEtag(job.storage_etag);
+  if (!databaseEtagIsNull && !databaseEtag) {
+    return { ok: false, reason: 'ETAG_MISMATCH' };
+  }
+  if (databaseEtag) {
+    const objectEtags = [object.httpEtag, object.etag]
+      .map(normalizeStrongEtag)
+      .filter(Boolean);
+    if (!objectEtags.includes(databaseEtag)) {
+      return { ok: false, reason: 'ETAG_MISMATCH' };
+    }
+  }
+
+  return {
+    ok: true,
+    storage_key: job.storage_key,
+    storage_size_bytes: databaseSize,
+    storage_content_type: job.storage_content_type,
+    storage_etag_is_null: databaseEtagIsNull ? 1 : 0,
+    storage_etag: databaseEtagIsNull ? '' : String(job.storage_etag)
+  };
+}
+
 function auditStatement(env, eventType, jobId, details, timestamp) {
   return env.PRODUCT_DB.prepare(`INSERT INTO runway_audit_log
     (audit_id,event,job_id,attempt_id,detail,created_at)
@@ -502,19 +575,36 @@ export async function handleRunwayGenerationRoutes(request, env) {
     if (failedChecks.length) {
       return Response.json({ ok: false, error: 'RUNWAY_QA_INCOMPLETE', failed_checks: failedChecks }, { status: 409 });
     }
-    const job = await env.PRODUCT_DB.prepare(`SELECT job_id,post_id,status,storage_key,
-      rights_confirmed,ai_disclosure_confirmed FROM runway_generation_jobs WHERE job_id=?1`)
+    const job = await env.PRODUCT_DB.prepare(`SELECT job_id,post_id,status,storage_key,storage_etag,
+      storage_size_bytes,storage_content_type,rights_confirmed,ai_disclosure_confirmed
+      FROM runway_generation_jobs WHERE job_id=?1`)
       .bind(jobId).first();
     if (!job || job.status !== 'GENERATED_REVIEW_REQUIRED' || !job.storage_key
       || integer(job.rights_confirmed) !== 1 || integer(job.ai_disclosure_confirmed) !== 1) {
       return Response.json({ ok: false, error: 'RUNWAY_JOB_NOT_REVIEWABLE' }, { status: 409 });
     }
+    const mediaVerification = await verifyPostprocessedMedia(env, job);
+    if (!mediaVerification.ok) {
+      return Response.json({
+        ok: false,
+        error: mediaVerification.unavailable
+          ? 'RUNWAY_MEDIA_STORAGE_UNAVAILABLE'
+          : 'RUNWAY_POSTPROCESSED_MEDIA_INVALID',
+        reason: mediaVerification.reason
+      }, { status: mediaVerification.unavailable ? 503 : 409 });
+    }
     const timestamp = new Date().toISOString();
     const results = await env.PRODUCT_DB.batch([
       env.PRODUCT_DB.prepare(`UPDATE runway_generation_jobs SET status='APPROVED_FOR_POST',
         qa_status='PASSED',updated_at=?2 WHERE job_id=?1 AND status='GENERATED_REVIEW_REQUIRED'
+        AND storage_key=?4 AND storage_size_bytes=?5 AND storage_content_type=?6
+        AND ((?7=1 AND storage_etag IS NULL) OR (?7=0 AND storage_etag=?8))
         AND EXISTS (SELECT 1 FROM social_post_queue WHERE post_id=?3 AND status='REVIEW_REQUIRED')`)
-        .bind(jobId, timestamp, job.post_id),
+        .bind(
+          jobId, timestamp, job.post_id, mediaVerification.storage_key,
+          mediaVerification.storage_size_bytes, mediaVerification.storage_content_type,
+          mediaVerification.storage_etag_is_null, mediaVerification.storage_etag
+        ),
       // Completing the explicitly bounded first test hands subsequent jobs to
       // the monthly 3,000-credit cap. This transition is possible only after
       // every required QA check above passed.
