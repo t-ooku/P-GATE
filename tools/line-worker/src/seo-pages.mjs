@@ -481,6 +481,54 @@ export const seoPagePaths = Object.entries(pages).flatMap(([slug, locales]) =>
   Object.keys(locales).map((locale) => pathFor(locale, slug))
 );
 
+export const seoHubPaths = ['/ja/guides'];
+
+const guideHubGroups = [
+  {
+    id: 'discover',
+    title: '名前・特徴・予算から探す',
+    description: '商品名が分からない状態から、見た目・用途・予算・贈る相手を検索条件へ変えるガイドです。',
+    slugs: [
+      'find-product-without-name', 'how-to-search-by-description',
+      'search-products-by-budget-and-purpose', 'find-a-gift-by-recipient-and-occasion'
+    ]
+  },
+  {
+    id: 'identify',
+    title: '同じ商品・使える商品を見分ける',
+    description: '型番、サイズ、設置場所、対応機種を照合し、似ているだけの商品を混ぜないためのガイドです。',
+    slugs: [
+      'search-product-by-model-number', 'how-to-compare-the-same-product',
+      'how-to-check-size-and-installation-space', 'check-device-compatibility-before-buying'
+    ]
+  },
+  {
+    id: 'compare',
+    title: '購入先・総額・口コミを比較する',
+    description: '購入先を横断し、送料込み総額、配送・返品、口コミ、ランキングの根拠を確認するガイドです。',
+    slugs: [
+      'compare-amazon-rakuten-yahoo-shopping', 'compare-total-price-with-shipping',
+      'compare-delivery-and-return-conditions', 'how-to-read-shopping-reviews',
+      'how-to-use-shopping-rankings'
+    ]
+  },
+  {
+    id: 'lifestyle',
+    title: '使う人・暮らしに合わせて探す',
+    description: '子ども、高齢者、一人暮らし、狭い部屋など、実際の利用条件から候補を絞るガイドです。',
+    slugs: [
+      'shopping-guide-for-parents', 'shopping-guide-for-seniors',
+      'shopping-guide-for-living-alone', 'find-products-for-small-spaces'
+    ]
+  },
+  {
+    id: 'continue',
+    title: '海外商品を探し、見つからなければ続ける',
+    description: '海外で見た商品を日本で探す方法と、一度で見つからない条件を保存して探し直す方法です。',
+    slugs: ['american-products-in-japan', 'shopping-in-japan', 'product-requests']
+  }
+];
+
 function list(items, className = '') {
   return `<ul${className ? ` class="${esc(className)}"` : ''}>${items.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>`;
 }
@@ -529,8 +577,62 @@ function relatedLinks(locale, currentSlug) {
   const preferred = locale === 'ja'
     ? ['find-product-without-name', 'how-to-search-by-description', 'how-to-check-size-and-installation-space', 'check-device-compatibility-before-buying', 'find-products-for-small-spaces', 'shopping-guide-for-living-alone', 'compare-delivery-and-return-conditions', 'search-products-by-budget-and-purpose', 'compare-total-price-with-shipping', 'how-to-read-shopping-reviews', 'how-to-use-shopping-rankings', 'find-a-gift-by-recipient-and-occasion', 'compare-amazon-rakuten-yahoo-shopping', 'how-to-compare-the-same-product']
     : ['find-product-without-name', 'how-to-search-by-description', 'shopping-in-japan', 'american-products-in-japan'];
-  return preferred.filter((slug) => slug !== currentSlug && pages[slug]?.[locale]).slice(0, 3)
-    .map((slug) => `<li><a href="${pathFor(locale, slug)}">${esc(pages[slug][locale].title)}</a></li>`).join('');
+  const links = preferred.filter((slug) => slug !== currentSlug && pages[slug]?.[locale]).slice(0, 3)
+    .map((slug) => `<li><a href="${pathFor(locale, slug)}">${esc(pages[slug][locale].title)}</a></li>`);
+  if (locale === 'ja') links.push('<li class="all-guides-link"><a href="/ja/guides">買い物ガイドをすべて見る</a></li>');
+  return links.join('');
+}
+
+function guideHubStructuredData(canonical) {
+  const articleSlugs = guideHubGroups.flatMap((group) => group.slugs);
+  const graph = [
+    {
+      '@type': 'CollectionPage', '@id': `${canonical}#page`, url: canonical,
+      name: '商品選び・比較・探し方ガイド一覧',
+      description: '商品名が分からないときの探し方から、同一商品・送料・口コミ・ランキングの確認までを目的別にまとめたHOSHILUの買い物ガイド一覧です。',
+      inLanguage: 'ja', dateModified: UPDATED_AT,
+      isPartOf: { '@type': 'WebSite', '@id': `${ORIGIN}/#website`, url: `${ORIGIN}/`, name: 'HOSHILU' }
+    },
+    {
+      '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'HOSHILU', item: `${ORIGIN}/` },
+        { '@type': 'ListItem', position: 2, name: '買い物ガイド', item: canonical }
+      ]
+    },
+    {
+      '@type': 'ItemList', name: 'HOSHILU買い物ガイド',
+      numberOfItems: articleSlugs.length,
+      itemListElement: articleSlugs.map((slug, index) => ({
+        '@type': 'ListItem', position: index + 1,
+        name: pages[slug].ja.title, url: `${ORIGIN}${pathFor('ja', slug)}`
+      }))
+    }
+  ];
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
+}
+
+function renderGuideHub() {
+  const canonical = `${ORIGIN}/ja/guides`;
+  const groups = guideHubGroups.map((group) => `<section class="guide-hub-section" id="${group.id}">
+<header><h2>${esc(group.title)}</h2><p>${esc(group.description)}</p></header>
+<ul class="guide-hub-grid">${group.slugs.map((slug) => `<li><a href="${pathFor('ja', slug)}"><strong>${esc(pages[slug].ja.title)}</strong><span>${esc(pages[slug].ja.description)}</span></a></li>`).join('')}</ul>
+</section>`).join('');
+  return `<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>商品選び・比較・探し方ガイド一覧 | HOSHILU</title><meta name="description" content="商品名が分からないときの探し方から、同一商品・送料・口コミ・ランキングの確認までを目的別にまとめたHOSHILUの買い物ガイド一覧です。"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<link rel="canonical" href="${canonical}"><link rel="alternate" hreflang="ja" href="${canonical}"><link rel="alternate" hreflang="x-default" href="${canonical}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU"><meta property="og:title" content="商品選び・比較・探し方ガイド一覧"><meta property="og:description" content="商品を探す、見分ける、比較する、探し続けるための買い物ガイドを目的別に一覧化しています。"><meta property="og:url" content="${canonical}"><meta property="og:image" content="${ORIGIN}/og-hoshilu.png">
+<link rel="stylesheet" href="/seo-article.css"><script type="application/ld+json">${guideHubStructuredData(canonical)}</script></head>
+<body data-seo-article-id="shopping-guides-hub" data-seo-intent="shopping_guides_hub" data-seo-cluster="content-hub" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a></header>
+<main class="seo-shell"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><span>買い物ガイド</span></nav>
+<article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDES</p><h1>商品選び・比較・探し方ガイド</h1><p class="lead">欲しい物の状態に合わせて、探し方・見分け方・比較方法を選べます。AIは条件を整理し、HOSHILUは実在する商品候補と購入先を探します。</p><p class="updated"><time datetime="${UPDATED_AT}">最終更新: ${UPDATED_AT}</time></p></header>
+<nav class="article-toc guide-hub-toc" aria-label="ガイドの分類"><strong>目的から選ぶ</strong><div>${guideHubGroups.map((group) => `<a href="#${group.id}">${esc(group.title)}</a>`).join('')}<a href="#hub-search">HOSHILUで探す</a></div></nav>
+<section class="answer"><h2>今の状況に近い項目から選んでください</h2><p>商品名が分からない場合は「名前・特徴・予算から探す」、候補が決まっている場合は「同じ商品・使える商品を見分ける」、購入直前なら「購入先・総額・口コミを比較する」から始められます。</p></section>
+${groups}
+<aside class="mid-cta" id="hub-search"><h2>覚えている条件からHOSHILUで探す</h2><p>商品名が分からなくても、用途・見た目・使う人・予算を文章で入力できます。</p><form action="/" method="get" data-seo-search-form><label for="guide-hub-search">探したい商品の条件</label><textarea id="guide-hub-search" name="q" required maxlength="200" placeholder="例：一人暮らしの部屋で使う、収納しやすい小さなテーブル"></textarea><input type="hidden" name="utm_source" value="seo_hub"><input type="hidden" name="utm_medium" value="internal"><input type="hidden" name="utm_campaign" value="shopping_guides"><input type="hidden" name="utm_content" value="shopping-guides-hub"><button type="submit">この条件でHOSHILU検索へ</button></form></aside>
+<p class="bottom-cta"><a href="/?utm_source=seo_hub&amp;utm_medium=internal&amp;utm_campaign=shopping_guides&amp;utm_content=shopping-guides-hub" data-seo-search-link>HOSHILUの検索画面を開く</a></p></article></main>
+<footer><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>
+<script type="module" src="/seo-article-analytics.mjs"></script></body></html>`;
 }
 
 function structuredData(page, locale, slug, canonical) {
@@ -578,6 +680,7 @@ export function evaluateSeoPageQuality(pathname) {
 }
 
 export function renderSeoPage(pathname) {
+  if (/^\/ja\/guides\/?$/.test(pathname)) return renderGuideHub();
   const match = /^\/(ja|en)\/([a-z-]+)\/?$/.exec(pathname);
   if (!match) return null;
   const [, locale, slug] = match;

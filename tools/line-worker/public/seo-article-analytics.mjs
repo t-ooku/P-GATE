@@ -1,16 +1,12 @@
+import { growthSessionId, growthVisitorId } from './growth-identity.mjs';
+
 const articleId = String(document.body?.dataset.seoArticleId || '').trim().slice(0, 64);
 const searchIntent = String(document.body?.dataset.seoIntent || '').trim().slice(0, 80);
+const contentKind = String(document.body?.dataset.seoContentKind || 'article').trim().toLowerCase().slice(0, 32);
+const viewEvent = contentKind === 'hub' ? 'seo_hub_view' : 'seo_article_view';
+const transitionEvent = contentKind === 'hub' ? 'seo_hub_search_transition' : 'seo_search_transition';
 const locale = String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
-const randomId = () => crypto.randomUUID();
-const readOrCreate = (key, storage) => {
-  try {
-    const current = storage.getItem(key);
-    if (/^[a-f0-9-]{20,64}$/i.test(current || '')) return current;
-    const created = randomId(); storage.setItem(key, created); return created;
-  } catch { return randomId(); }
-};
-const visitorId = readOrCreate('hoshilu_anonymous_visitor_id', localStorage);
-const sessionId = readOrCreate('hoshilu_seo_session_id', sessionStorage);
+const visitorId = growthVisitorId();
 const queryParams = new URLSearchParams(location.search);
 const requestedSource = String(queryParams.get('utm_source') || '').trim().toLowerCase().slice(0, 64);
 const requestedMedium = String(queryParams.get('utm_medium') || '').trim().toLowerCase().slice(0, 32);
@@ -18,29 +14,32 @@ const isQaVisit = requestedSource.startsWith('codex')
   || requestedSource.startsWith('test')
   || requestedSource.startsWith('qa')
   || requestedMedium === 'qa';
-const eventSource = isQaVisit ? (requestedSource || 'qa') : 'seo_article';
+const eventSource = isQaVisit ? (requestedSource || 'qa') : (contentKind === 'hub' ? 'seo_hub' : 'seo_article');
 const eventMedium = isQaVisit ? 'qa' : 'internal';
 
 function send(event_type) {
   const body = JSON.stringify({
     event_type, locale, source: eventSource, medium: eventMedium, campaign: searchIntent, content: articleId,
-    visitor_id: visitorId, session_id: sessionId
+    visitor_id: visitorId, session_id: growthSessionId()
   });
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' }));
-    return;
+  if (typeof navigator.sendBeacon === 'function') {
+    try {
+      if (navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' })) === true) return;
+    } catch {}
   }
   fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
 }
 
 function preserveArticleContext() {
   try {
-    sessionStorage.setItem('hoshilu_seo_context', JSON.stringify({ article_id: articleId, created_at: Date.now() }));
+    sessionStorage.setItem('hoshilu_seo_context', JSON.stringify({
+      article_id: articleId, search_intent: searchIntent, content_kind: contentKind, created_at: Date.now()
+    }));
   } catch {}
-  send('seo_search_transition');
+  send(transitionEvent);
 }
 
-send('seo_article_view');
+send(viewEvent);
 document.querySelectorAll('[data-seo-search-form]').forEach((form) => form.addEventListener('submit', preserveArticleContext));
 document.querySelectorAll('[data-seo-search-link]').forEach((link) => link.addEventListener('click', preserveArticleContext));
 

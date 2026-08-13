@@ -27,6 +27,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(worker, /hoshilu-shell-v377/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
+  assert.match(script, /link\.dataset\.marketplace = destination\.dataset\.marketplace/);
   assert.match(script, /:scope > \.product-card-media-column/);
   assert.match(script, /mediaColumn\?\.nextSibling/);
   assert.match(script, /target = '_blank'/);

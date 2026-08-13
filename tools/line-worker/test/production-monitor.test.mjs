@@ -7,10 +7,36 @@ const expectedIndexHtml = `
   <script type="module" src="/ai-search-ui.mjs?v=8"></script>
   <script type="module" src="/growth-analytics.mjs?v=1"></script>`;
 
-function mockFetch({ healthOk = true, yahooAvailable = true, appMarkers = true } = {}) {
-  return async (input) => {
-    const request = input instanceof Request ? input : new Request(input);
+const guideSecurityHeaders = {
+  'content-security-policy': "default-src 'self'; object-src 'none'",
+  'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY'
+};
+
+function mockFetch({
+  healthOk = true,
+  yahooAvailable = true,
+  appMarkers = true,
+  redirectOk = true,
+  notFoundOk = true,
+  guideHeaders = guideSecurityHeaders
+} = {}) {
+  return async (input, init = {}) => {
+    const request = input instanceof Request ? input : new Request(input, init);
     const url = new URL(request.url);
+    if (url.hostname === 'www.hoshilu.app') throw new TypeError('DNS unavailable');
+    if (url.protocol === 'http:' && url.pathname === '/') return new Response(null, {
+      status: redirectOk ? 308 : 200,
+      headers: redirectOk ? { location: 'https://hoshilu.app/' } : {}
+    });
+    if (url.pathname.includes('__hoshilu-monitor-missing-')) return new Response('not found', { status: notFoundOk ? 404 : 200 });
+    if (url.pathname === '/ja/guides') {
+      if (request.method === 'HEAD') return new Response(null, { status: 200, headers: guideHeaders });
+      return new Response('<link rel="canonical" href="https://hoshilu.app/ja/guides">', { headers: guideHeaders });
+    }
+    if (url.pathname === '/sitemap.xml') return new Response('<urlset><url><loc>https://hoshilu.app/ja/guides</loc></url></urlset>');
     if (url.pathname === '/health') return Response.json({ ok: healthOk, checks: {
       turnstile_configured: true, ai_chat_configured: true,
       rakuten_marketplace_configured: true, yahoo_shopping_configured: true
@@ -60,7 +86,8 @@ test('scheduled monitor can validate the assets currently referenced by producti
 test('production monitor verifies health, deployed assets, rankings and trace IDs', async () => {
   const result = await inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch(), expectedIndexHtml });
   assert.equal(result.ok, true);
-  assert.equal(result.checks.length, 6);
+  assert.equal(result.checks.length, 9);
+  assert.deepEqual(result.warnings, ['www.hoshilu.app: SKIP (DNS or endpoint unavailable)']);
 });
 
 test('production monitor rejects stale assets without reliability markers', async () => {
@@ -82,7 +109,7 @@ test('production monitor applies a timeout signal to every network request', asy
       return fetcher(input, init);
     }
   });
-  assert.equal(requests, 9);
+  assert.equal(requests, 17);
 });
 
 test('production monitor fails when Yahoo ranking regresses to planned', async () => {
@@ -110,5 +137,28 @@ test('production monitor rejects a hanging request within the fetch deadline', {
       })
     }),
     error => error?.name === 'TimeoutError'
+  );
+});
+
+test('production monitor fails when canonical HTTP redirect is missing', async () => {
+  await assert.rejects(
+    inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch({ redirectOk: false }), expectedIndexHtml }),
+    /HTTP_APEX_REDIRECT_STATUS:200/u
+  );
+});
+
+test('production monitor fails when unknown routes return the SPA shell', async () => {
+  await assert.rejects(
+    inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch({ notFoundOk: false }), expectedIndexHtml }),
+    /EXPECTED_404_GOT_200/u
+  );
+});
+
+test('production monitor requires security headers on the guide hub', async () => {
+  const incomplete = { ...guideSecurityHeaders };
+  delete incomplete['content-security-policy'];
+  await assert.rejects(
+    inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch({ guideHeaders: incomplete }), expectedIndexHtml }),
+    /GUIDE_HUB_SECURITY_HEADER_MISSING:content-security-policy/u
   );
 });

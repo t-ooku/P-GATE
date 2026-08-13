@@ -13,6 +13,13 @@ const ASSET_MARKERS = Object.freeze({
   'ai-search-ui.mjs': ['AI_CHAT_HTTP_TIMEOUT_MS', 'tokenCallbackTimeoutMs'],
   'growth-analytics.mjs': ['SEARCH_WATCHDOG_MS', 'search-execution-started', 'search_dead_end', 'search_degraded']
 });
+const REQUIRED_PAGE_SECURITY_HEADERS = Object.freeze([
+  'content-security-policy',
+  'permissions-policy',
+  'referrer-policy',
+  'x-content-type-options',
+  'x-frame-options'
+]);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -79,6 +86,89 @@ async function checkAnonymousEventIngestion(fetcher, baseUrl, checks, requestTim
   checks.push('/api/events anonymous QA ingestion');
 }
 
+async function checkCanonicalHttpRedirect(fetcher, origin, checks, requestTimeoutMs = 10000) {
+  const source = new URL('/', origin);
+  source.protocol = 'http:';
+  const target = new URL('/', origin);
+  target.protocol = 'https:';
+  const response = await fetcher(source, {
+    redirect: 'manual',
+    headers: { 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
+    signal: AbortSignal.timeout(requestTimeoutMs)
+  });
+  assert(response.status === 308, `HTTP_APEX_REDIRECT_STATUS:${response.status}`);
+  const location = response.headers.get('location');
+  assert(location && new URL(location, source).toString() === target.toString(), `HTTP_APEX_REDIRECT_LOCATION:${location || 'missing'}`);
+  checks.push('HTTP apex permanently redirects to canonical HTTPS');
+}
+
+async function checkNotFoundSemantics(fetcher, origin, checks, nonce, requestTimeoutMs = 10000) {
+  const paths = [
+    `/__hoshilu-monitor-missing-${nonce}`,
+    `/ja/__hoshilu-monitor-missing-${nonce}`,
+    `/api/__hoshilu-monitor-missing-${nonce}`
+  ];
+  for (const pathname of paths) {
+    const response = await fetcher(new URL(pathname, origin), {
+      redirect: 'manual',
+      headers: { 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
+      signal: AbortSignal.timeout(requestTimeoutMs)
+    });
+    assert(response.status === 404, `${pathname}:EXPECTED_404_GOT_${response.status}`);
+  }
+  checks.push('unknown public, Japanese and API routes return 404');
+}
+
+async function checkGuideHub(fetcher, origin, checks, cacheBust, requestTimeoutMs = 10000) {
+  const pathname = '/ja/guides';
+  const canonical = new URL(pathname, origin).toString();
+  const response = await fetcher(new URL(`${pathname}?${cacheBust}`, origin), {
+    redirect: 'manual',
+    headers: { accept: 'text/html', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
+    signal: AbortSignal.timeout(requestTimeoutMs)
+  });
+  const html = await responseText(response, pathname);
+  assert(html.includes(`<link rel="canonical" href="${canonical}">`), 'GUIDE_HUB_SELF_CANONICAL_MISSING');
+  for (const name of REQUIRED_PAGE_SECURITY_HEADERS) {
+    assert(String(response.headers.get(name) || '').trim().length > 0, `GUIDE_HUB_SECURITY_HEADER_MISSING:${name}`);
+  }
+
+  const head = await fetcher(new URL(pathname, origin), {
+    method: 'HEAD',
+    redirect: 'manual',
+    headers: { accept: 'text/html', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
+    signal: AbortSignal.timeout(requestTimeoutMs)
+  });
+  assert(head.status === 200, `GUIDE_HUB_HEAD_STATUS:${head.status}`);
+
+  const sitemap = await responseText(await fetcher(new URL(`/sitemap.xml?${cacheBust}`, origin), {
+    headers: { accept: 'application/xml', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
+    signal: AbortSignal.timeout(requestTimeoutMs)
+  }), '/sitemap.xml');
+  assert(sitemap.includes(`<loc>${canonical}</loc>`), 'GUIDE_HUB_SITEMAP_ENTRY_MISSING');
+  checks.push('/ja/guides GET/HEAD, self-canonical, sitemap and security headers');
+}
+
+async function checkOptionalWww(fetcher, origin, checks, warnings, requestTimeoutMs = 5000) {
+  const www = new URL('/', origin);
+  www.hostname = `www.${origin.hostname}`;
+  try {
+    const response = await fetcher(www, {
+      redirect: 'manual',
+      headers: { 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
+      signal: AbortSignal.timeout(Math.min(5000, requestTimeoutMs))
+    });
+    const location = response.headers.get('location');
+    const redirectsToApex = [301, 302, 307, 308].includes(response.status)
+      && location
+      && new URL(location, www).hostname === origin.hostname;
+    if (redirectsToApex) checks.push('www redirects to apex');
+    else warnings.push(`www.hoshilu.app: WARNING (HTTP ${response.status}; apex redirect is not configured)`);
+  } catch {
+    warnings.push('www.hoshilu.app: SKIP (DNS or endpoint unavailable)');
+  }
+}
+
 export async function inspectProduction({
   baseUrl = DEFAULT_BASE_URL,
   fetcher = fetch,
@@ -89,9 +179,13 @@ export async function inspectProduction({
   const origin = new URL(baseUrl);
   const checks = [];
   const fetchTimeoutMs = Math.max(10, Math.min(30000, Number(requestTimeoutMs) || 10000));
+  const warnings = [];
   assert(['source', 'live'].includes(assetPolicy), `ASSET_POLICY_INVALID:${assetPolicy}`);
 
   const cacheBust = `monitor=${Date.now()}`;
+  const nonce = `${Date.now().toString(36)}-${crypto.randomUUID()}`;
+  await checkCanonicalHttpRedirect(fetcher, origin, checks, fetchTimeoutMs);
+  await checkOptionalWww(fetcher, origin, checks, warnings, fetchTimeoutMs);
   const health = await responseJson(await fetcher(new URL(`/health?${cacheBust}`, origin), {
     headers: { accept: 'application/json', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
     signal: AbortSignal.timeout(fetchTimeoutMs)
@@ -121,6 +215,9 @@ export async function inspectProduction({
   }
   checks.push(`critical assets current (${expectedAssets.join(', ')})`);
 
+  await checkNotFoundSemantics(fetcher, origin, checks, nonce, fetchTimeoutMs);
+  await checkGuideHub(fetcher, origin, checks, cacheBust, fetchTimeoutMs);
+
   const capabilities = await responseJson(await fetcher(new URL(`/api/ranking-capabilities?${cacheBust}`, origin), {
     headers: { accept: 'application/json', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
     signal: AbortSignal.timeout(fetchTimeoutMs)
@@ -134,7 +231,7 @@ export async function inspectProduction({
   await checkTraceableValidation(fetcher, origin, '/api/ai-chat', 'TURNSTILE_VERIFICATION_FAILED', checks, 'hoshilu-production-monitor-invalid-token', fetchTimeoutMs);
   await checkTraceableValidation(fetcher, origin, '/api/knowledge', 'TURNSTILE_TOKEN_INVALID', checks, '', fetchTimeoutMs);
   await checkAnonymousEventIngestion(fetcher, origin, checks, fetchTimeoutMs);
-  return { ok: true, checked_at: new Date().toISOString(), checks, expected_assets: expectedAssets };
+  return { ok: true, checked_at: new Date().toISOString(), checks, warnings, expected_assets: expectedAssets };
 }
 
 export async function runProductionMonitor(options = {}) {
@@ -172,7 +269,11 @@ function cliOptions(argv) {
 async function main() {
   try {
     const result = await runProductionMonitor(cliOptions(process.argv.slice(2)));
-    const summary = [`## HOSHILU production monitor: PASS`, '', `Checked: ${result.checked_at}`, ...result.checks.map((item) => `- ${item}`), ''].join('\n');
+    const summary = [
+      `## HOSHILU production monitor: PASS`, '', `Checked: ${result.checked_at}`,
+      ...result.checks.map((item) => `- ${item}`),
+      ...result.warnings.map((item) => `- ${item}`), ''
+    ].join('\n');
     console.log(summary);
     if (process.env.GITHUB_STEP_SUMMARY) await import('node:fs/promises').then(({ appendFile }) => appendFile(process.env.GITHUB_STEP_SUMMARY, summary));
   } catch (error) {

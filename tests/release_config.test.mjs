@@ -40,6 +40,10 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);
   assert.doesNotMatch(ci, /Project_GATE_Complete_v\d+\.\d+/);
+  assert.match(ci, /Require Cloudflare credentials for production deploy/u);
+  assert.match(ci, /CLOUDFLARE_API_TOKEN\/CLOUDFLARE_ACCOUNT_ID are required for the production deploy/u);
+  assert.doesNotMatch(ci, /skipping deploy/u);
+  assert.doesNotMatch(ci, /steps\.creds\.outputs\.configured/u);
 });
 
 test('手動ワークフローは自動トリガーを持たない', () => {

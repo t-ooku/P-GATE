@@ -18,6 +18,17 @@ test('ホームFAQは利用者に見える回答とFAQPage構造化データを�
   assert.match(html, /class="hoshilu-faq"/);
 });
 
+test('ホームはcanonicalに一致する言語指定と全ガイドへの明確な導線を持つ', async () => {
+  const [html, styles] = await Promise.all([read('index.html'), read('styles.css')]);
+  assert.match(html, /<link rel="alternate" hreflang="ja" href="https:\/\/hoshilu\.app\/">/);
+  assert.match(html, /<link rel="alternate" hreflang="x-default" href="https:\/\/hoshilu\.app\/">/);
+  assert.doesNotMatch(html, /rel="alternate" hreflang="(?:en|zh|ko)"/);
+  assert.doesNotMatch(html, /hreflang="[^"]+" href="[^\"]+\?lang=/);
+  assert.match(html, /class="shopping-guides-all"><a href="\/ja\/guides">目的別の買い物ガイドをすべて見る/);
+  assert.match(styles, /\.shopping-guides-all a\{[^}]*min-height:48px/);
+  assert.match(styles, /\.shopping-guides-all a:hover,\.shopping-guides-all a:focus-visible/);
+});
+
 test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを案内する', async () => {
   const [i18n, sitemap, robots, worker] = await Promise.all([
     read('site-i18n.js'), read('sitemap.xml'), read('robots.txt'), read('service-worker.js')
@@ -26,7 +37,8 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
     assert.match(i18n, new RegExp(`Object\\.assign\\(messages\\.${language},\\{'faq\\.title'`));
   }
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 28);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 29);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
   assert.match(worker, /hoshilu-shell-v377/);
 });

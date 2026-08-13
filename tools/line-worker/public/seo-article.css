@@ -248,6 +248,38 @@ summary { min-height: 44px; font-weight: 800; cursor: pointer; }
 .related-grid li { margin: 0; }
 .related-grid a { display: flex; min-height: 64px; align-items: center; padding: .85rem 1rem; border: 1px solid var(--line); border-radius: 14px; background: #fff; color: var(--brand-dark); font-weight: 700; text-decoration: none; }
 .related-grid a:hover { border-color: var(--brand); background: var(--soft); }
+.all-guides-link a { border-color: var(--brand); background: var(--soft); }
+.guide-hub-section > header { margin-bottom: 1rem; }
+.guide-hub-section > header h2 { margin-bottom: .4rem; }
+.guide-hub-section > header p { margin: 0; color: var(--muted); }
+.guide-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .8rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.guide-hub-grid li { min-width: 0; margin: 0; }
+.guide-hub-grid a {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  min-width: 0;
+  min-height: 108px;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.guide-hub-grid a:hover { border-color: var(--brand); background: var(--soft); }
+.guide-hub-grid strong { color: var(--brand-dark); line-height: 1.45; }
+.guide-hub-grid span { color: var(--muted); font-size: .86rem; line-height: 1.6; }
 .bottom-cta { margin-top: 2.5rem; text-align: center; }
 .bottom-cta a { width: min(100%, 420px); }
 footer { display: flex; justify-content: center; gap: 1.5rem; padding: 2rem; border-top: 1px solid var(--line); font-size: .88rem; }
@@ -258,7 +290,7 @@ footer a { min-height: 44px; color: var(--muted); }
   .seo-shell { padding-inline: 1rem; }
   .seo-hero { border-radius: 20px; }
   article > section, article > aside, article > nav { margin-top: 2.2rem; scroll-margin-top: 1rem; }
-  .guide-flow, .criteria-grid, .evidence-grid, .identity-guide, .related-grid { grid-template-columns: 1fr; }
+  .guide-flow, .criteria-grid, .evidence-grid, .identity-guide, .related-grid, .guide-hub-grid { grid-template-columns: 1fr; }
   .review-check-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .concept-route { align-items: stretch; flex-direction: column; }
   .concept-route i { transform: rotate(90deg); }

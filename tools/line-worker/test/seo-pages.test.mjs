@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { evaluateSeoPageQuality, renderSeoPage, seoPagePaths } from '../src/seo-pages.mjs';
+import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
 test('検索意図が異なる日本語20ページと英語5ページを提供する', () => {
   assert.equal(seoPagePaths.length, 25);
@@ -41,6 +41,24 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
+test('日本語ガイドハブは20記事を重複なく分類し全記事から戻れる', () => {
+  assert.deepEqual(seoHubPaths, ['/ja/guides']);
+  const html = renderSeoPage('/ja/guides');
+  assert.ok(html);
+  assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\/ja\/guides">/);
+  assert.match(html, /<meta name="robots" content="index,follow/);
+  assert.match(html, /<h1>商品選び・比較・探し方ガイド<\/h1>/);
+  assert.match(html, /"@type":"CollectionPage"/);
+  assert.match(html, /"@type":"ItemList"/);
+
+  const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
+  assert.equal(japanesePaths.length, 20);
+  for (const path of japanesePaths) {
+    assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
+    assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
+  }
+});
+
 test('新規5テーマは商品・価格・口コミ・順位を根拠なく断定しない', () => {
   const paths = [
     '/ja/how-to-check-size-and-installation-space',
@@ -59,12 +77,14 @@ test('新規5テーマは商品・価格・口コミ・順位を根拠なく断�
   }
 });
 
-test('サイトマップは全SEOページとcanonicalの法的ページだけを含む', () => {
+test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-13<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 29);
 });
 
 test('既存SEO記事から今回の新規5記事へ内部リンクがある', () => {
@@ -87,6 +107,9 @@ test('スマホ比較表は横スクロールではなく行カードへ変換�
   assert.match(css, /table, tbody, tr, td\s*\{\s*display:\s*block/);
   assert.doesNotMatch(css, /margin-right:\s*-1rem/);
   assert.match(css, /:focus-visible/);
+  assert.match(css, /\.guide-hub-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s);
+  assert.match(css, /\.guide-hub-grid a\s*\{[^}]*min-height:\s*108px[^}]*overflow-wrap:\s*anywhere/s);
+  assert.match(css, /@media \(max-width:\s*700px\)[\s\S]*\.guide-hub-grid\s*\{\s*grid-template-columns:\s*1fr/);
 });
 
 test('Service Workerは存在しない旧SEO素材をprecacheしない', () => {

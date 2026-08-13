@@ -307,6 +307,7 @@ function linkDisplayedProducts() {
     const link = document.createElement('a');
     link.className = 'product-primary-link';
     link.href = destination.href;
+    if (destination.dataset.marketplace) link.dataset.marketplace = destination.dataset.marketplace;
     if (!String(destination.getAttribute('href') || '').startsWith('#')) {
       link.target = '_blank';
       link.rel = 'noopener noreferrer';

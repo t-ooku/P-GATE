@@ -65,7 +65,7 @@ import {
 } from './social-publisher.mjs';
 import { handleInstagramOAuthRoutes, instagramOAuthReadiness } from './instagram-oauth.mjs';
 import { runSocialAutopilotCycle } from './social-autopilot.mjs';
-import { renderSeoPage } from './seo-pages.mjs';
+import { renderSeoPage, seoHubPaths, seoPagePaths } from './seo-pages.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import { classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure } from './growth-events.mjs';
 import {
@@ -93,6 +93,16 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // marketplace-search-mode.mjs がここが唯一の判定元(v4.3のAI最安比較
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
 const RELEASE = '1.18.0';
+const CANONICAL_HOST = 'hoshilu.app';
+const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths]);
+const DOCUMENT_SECURITY_HEADERS = Object.freeze({
+  'content-security-policy': "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'",
+  'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'strict-transport-security': 'max-age=31536000',
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY'
+});
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
   'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY',
@@ -2382,9 +2392,48 @@ async function handleHealth(env) {
   });
 }
 
+export function canonicalRequestRedirect(requestUrl) {
+  const target = new URL(requestUrl);
+  const hostname = target.hostname.toLowerCase().replace(/\.$/u, '');
+  if (![CANONICAL_HOST, `www.${CANONICAL_HOST}`].includes(hostname)) return null;
+  let changed = false;
+  if (target.protocol !== 'https:') {
+    target.protocol = 'https:';
+    changed = true;
+  }
+  if (hostname !== CANONICAL_HOST) {
+    target.hostname = CANONICAL_HOST;
+    target.port = '';
+    changed = true;
+  }
+  const cleanLegacyPaths = new Map([
+    ['/index.html', '/'], ['/privacy.html', '/privacy'], ['/terms.html', '/terms']
+  ]);
+  if (cleanLegacyPaths.has(target.pathname)) {
+    target.pathname = cleanLegacyPaths.get(target.pathname);
+    changed = true;
+  } else if (target.pathname.length > 1 && target.pathname.endsWith('/')) {
+    const withoutTrailingSlash = target.pathname.slice(0, -1);
+    if (CANONICAL_CONTENT_PATHS.has(withoutTrailingSlash)) {
+      target.pathname = withoutTrailingSlash;
+      changed = true;
+    }
+  }
+  return changed ? target.toString() : null;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const canonicalTarget = canonicalRequestRedirect(url);
+    if (canonicalTarget) return new Response(null, {
+      status: 308,
+      headers: {
+        location: canonicalTarget,
+        'cache-control': 'public, max-age=86400',
+        'x-content-type-options': 'nosniff'
+      }
+    });
     const instagramOAuthResponse = await handleInstagramOAuthRoutes(request, env);
     if (instagramOAuthResponse) return instagramOAuthResponse;
     if (request.method === 'GET' && url.pathname === '/og/hoshilu-x-v3.png' && env.ASSETS) {
@@ -2445,18 +2494,22 @@ export default {
     }
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
-    if (request.method === 'GET') {
+    if (request.method === 'GET' || request.method === 'HEAD') {
       const seoPage = renderSeoPage(url.pathname);
-      if (seoPage) return new Response(seoPage, {
+      if (seoPage) return new Response(request.method === 'HEAD' ? null : seoPage, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
           'cache-control': 'public, max-age=300',
-          'x-content-type-options': 'nosniff'
+          ...DOCUMENT_SECURITY_HEADERS
         }
       });
     }
+    if (url.pathname.startsWith('/api/')) return Response.json({ ok: false, error: 'NOT_FOUND' }, {
+      status: 404,
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+    });
     if (env.ASSETS) return env.ASSETS.fetch(request);
-    return new Response('not found', { status: 404 });
+    return new Response('not found', { status: 404, headers: DOCUMENT_SECURITY_HEADERS });
   },
   async scheduled(controller, env, ctx) {
     const scheduledAt = new Date(controller.scheduledTime);
