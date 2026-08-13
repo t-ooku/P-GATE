@@ -75,10 +75,11 @@ jobs:
         working-directory: tools/line-worker
         run: node scripts/check-production-health.mjs --attempts 6 --retry-ms 10000
 
-  # Temporary read-only production preflight for the individually approved
-  # 0047 migration. The exact commit token is required, so later pushes skip it.
-  d1-0047-plan:
-    if: github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[plan-d1-0047]')
+  # Temporary one-shot production application for the individually approved
+  # 0047 migration. It uses an isolated migrations directory so the other
+  # pending migrations cannot be applied by this job.
+  d1-0047-apply:
+    if: github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[apply-d1-0047-approved]')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -86,9 +87,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify approved SQL and local behavior
+      - name: Verify approved SQL, credentials, and local behavior
         working-directory: tools/line-worker
         run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then exit 1; fi
           actual=$(sha256sum migrations/0047_growth_visitor_sessions.sql | cut -d' ' -f1)
           test "$actual" = "3564fa1291387b279a927d3371d956127e916d12756ce4aa16d09bdcaeb79e45"
           if grep -iqE '(^|[[:space:]])(delete|drop|truncate|update|insert)[[:space:]]' migrations/0047_growth_visitor_sessions.sql; then exit 1; fi
@@ -96,43 +98,97 @@ jobs:
           test "$(grep -c '^CREATE INDEX IF NOT EXISTS growth_events_' migrations/0047_growth_visitor_sessions.sql)" -eq 2
           npm ci
           node --test test/growth-events.test.mjs test/promotion-dashboard.test.mjs
-      - name: Read production schema, pending migrations, counts, and recovery bookmark
+      - name: Recheck production and prepare isolated 0047 plan
         working-directory: tools/line-worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx --yes wrangler@4.121.0 d1 info PRODUCT_DB --json > d1-info.json
-          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > bookmark-before.json
-          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote > pending-migrations.txt
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > recovery-bookmark-before.json
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote > pending-before.txt
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS growth_event_count FROM growth_events;" > count-before.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS identity_columns FROM pragma_table_info('growth_events') WHERE name IN ('visitor_id','session_id');" > columns-before.json
-          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT group_concat(name, ',') AS growth_indexes FROM sqlite_master WHERE type='index' AND tbl_name='growth_events';" > indexes-before.json
           node <<'NODE'
           const fs = require('node:fs');
           const rows = name => { const v=JSON.parse(fs.readFileSync(name)); return (Array.isArray(v)?v:[v]).flatMap(x=>x.results||x.result?.results||[]); };
           const find = (v,k) => { if(!v||typeof v!=='object') return; if(typeof v[k]==='string') return v[k]; for(const x of Object.values(v)){const y=find(x,k);if(y)return y;} };
-          const version=find(JSON.parse(fs.readFileSync('d1-info.json')),'version');
-          const bookmark=find(JSON.parse(fs.readFileSync('bookmark-before.json')),'bookmark');
+          const bookmark=find(JSON.parse(fs.readFileSync('recovery-bookmark-before.json')),'bookmark');
           const count=Number(rows('count-before.json')[0]?.growth_event_count);
           const columns=Number(rows('columns-before.json')[0]?.identity_columns);
-          if((version&&version!=='production')||!bookmark||!Number.isInteger(count)||count<0||columns!==0) throw new Error(JSON.stringify({version,bookmark:Boolean(bookmark),count,columns}));
-          const backend=version||'time-travel-supported';
-          console.log(`::notice::D1_0047_PLAN backend=${backend} growth_events=${count} identity_columns=${columns} recovery_bookmark_captured=yes`);
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,`D1 0047 plan: backend=${backend}, growth_events=${count}, identity_columns=${columns}, recovery bookmark captured=yes\n`);
+          if(!bookmark||!Number.isInteger(count)||count<0||columns!==0) throw new Error(JSON.stringify({bookmark:Boolean(bookmark),count,columns}));
+          console.log(`::notice::D1_0047_RECHECK growth_events=${count} identity_columns=${columns} recovery_bookmark_captured=yes`);
           NODE
-          grep -q '0047_growth_visitor_sessions.sql' pending-migrations.txt
-          echo "::notice::PENDING_MIGRATIONS $(tr '\n' ' ' < pending-migrations.txt | tail -c 1200)"
-      - name: Preserve D1 preflight evidence
+          grep -q '0047_growth_visitor_sessions.sql' pending-before.txt
+          mkdir -p .migration-0047
+          cp migrations/0047_growth_visitor_sessions.sql .migration-0047/0047_growth_visitor_sessions.sql
+          cat > wrangler-0047.jsonc <<'JSON'
+          {
+            "name": "project-gate-line-bridge",
+            "main": "src/index.mjs",
+            "compatibility_date": "2026-07-14",
+            "d1_databases": [{
+              "binding": "PRODUCT_DB",
+              "database_name": "hoshilu-products",
+              "database_id": "17629324-b771-4348-982c-c25da48c29b2",
+              "migrations_dir": ".migration-0047"
+            }]
+          }
+          JSON
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote --config wrangler-0047.jsonc > isolated-pending.txt
+          test "$(grep -c '0047_growth_visitor_sessions.sql' isolated-pending.txt)" -eq 1
+          if grep -qE '0048_|0049_' isolated-pending.txt; then exit 1; fi
+      - name: Apply only 0047 and verify existing rows, columns, and indexes
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          before=$(node -e "const d=require('./count-before.json');console.log((Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0].growth_event_count)")
+          npx --yes wrangler@4.121.0 d1 migrations apply PRODUCT_DB --remote --config wrangler-0047.jsonc
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS total_rows, SUM(CASE WHEN visitor_id='' AND session_id='' THEN 1 ELSE 0 END) AS legacy_empty_rows FROM growth_events;" > count-after.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS identity_columns FROM pragma_table_info('growth_events') WHERE name IN ('visitor_id','session_id');" > columns-after.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS identity_indexes FROM sqlite_master WHERE type='index' AND name IN ('growth_events_visitor_time','growth_events_session_time');" > indexes-after.json
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote > pending-after.txt
+          node - "$before" <<'NODE'
+          const fs=require('node:fs'); const before=Number(process.argv[2]);
+          const row=name=>{const d=JSON.parse(fs.readFileSync(name));return (Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0]};
+          const counts=row('count-after.json'), columns=Number(row('columns-after.json').identity_columns), indexes=Number(row('indexes-after.json').identity_indexes);
+          if(Number(counts.total_rows)<before||Number(counts.legacy_empty_rows)<before||columns!==2||indexes!==2) throw new Error(JSON.stringify({before,counts,columns,indexes}));
+          console.log(`::notice::D1_0047_APPLIED before=${before} after=${counts.total_rows} preserved_legacy_rows=${counts.legacy_empty_rows} columns=${columns} indexes=${indexes}`);
+          NODE
+          if grep -q '0047_growth_visitor_sessions.sql' pending-after.txt; then exit 1; fi
+      - name: Verify production event identity and QA isolation
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          response=$(curl --fail-with-body --silent --show-error -X POST https://hoshilu.app/api/events -H 'content-type: application/json' --data '{"event_type":"seo_article_view","locale":"JA","source":"codex_qa_d1_0047","medium":"qa","campaign":"migration0047acceptance","content":"d1_0047","visitor_id":"11111111-2222-4333-8444-555555555555","session_id":"66666666-7777-4888-8999-aaaaaaaaaaaa"}')
+          echo "$response" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const x=JSON.parse(s);if(x.ok!==true||x.identity_recorded!==true)process.exit(1)})"
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS acceptance_rows, MAX(LENGTH(visitor_id)) AS visitor_length, MAX(LENGTH(session_id)) AS session_length, MIN(traffic_class) AS traffic_class FROM growth_events WHERE source='codex_qa_d1_0047' AND campaign='migration0047acceptance';" > acceptance-event.json
+          node <<'NODE'
+          const d=require('./acceptance-event.json'); const row=(Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0];
+          if(!row||Number(row.acceptance_rows)<1||Number(row.visitor_length)!==36||Number(row.session_length)!==36||row.traffic_class!=='QA') throw new Error(JSON.stringify(row));
+          console.log('::notice::D1_0047_EVENT identity_recorded=true traffic_class=QA visitor_length=36 session_length=36');
+          NODE
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > bookmark-after.json
+      - name: Preserve D1 migration evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: d1-0047-plan-${{ github.run_id }}
+          name: d1-0047-apply-${{ github.run_id }}
           path: |
-            tools/line-worker/d1-info.json
-            tools/line-worker/bookmark-before.json
-            tools/line-worker/pending-migrations.txt
+            tools/line-worker/recovery-bookmark-before.json
+            tools/line-worker/bookmark-after.json
+            tools/line-worker/pending-before.txt
+            tools/line-worker/pending-after.txt
+            tools/line-worker/isolated-pending.txt
             tools/line-worker/count-before.json
-            tools/line-worker/columns-before.json
-            tools/line-worker/indexes-before.json
+            tools/line-worker/count-after.json
+            tools/line-worker/columns-after.json
+            tools/line-worker/indexes-after.json
+            tools/line-worker/acceptance-event.json
           retention-days: 30
