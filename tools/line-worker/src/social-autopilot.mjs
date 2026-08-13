@@ -80,17 +80,17 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
   const posts = [];
   const start = new Date(now.getTime() + JST_OFFSET_MS);
   start.setUTCHours(0, 0, 0, 0);
-  const xWeekdayContent = new Map([[0, 0], [1, 1], [3, 2], [5, 3]]);
-  // 月・火・土の週3回。月曜は正式版の主要機能、火曜は検索の使い方、
-  // 土曜は条件追加のコツを訴求し、同じ動画・本文の連投を避ける。
-  const instagramWeekdayContent = new Map([[1, 0], [2, 1], [6, 0]]);
+  // InstagramとXは月・水・金の週3回。同じ訴求動画を両方へ配信し、
+  // 動画生成費を二重に発生させない。
+  const weekdayContent = new Map([[1, 0], [3, 1], [5, 0]]);
 
   for (let offset = 0; offset < days; offset += 1) {
     const day = new Date(start.getTime() + offset * DAY_MS - JST_OFFSET_MS);
     const parts = jstDateParts(day);
     const key = dateKey(parts);
-    if (xWeekdayContent.has(parts.weekday)) {
-      const contentIndex = xWeekdayContent.get(parts.weekday);
+    if (weekdayContent.has(parts.weekday)) {
+      const contentIndex = weekdayContent.get(parts.weekday);
+      const content = INSTAGRAM_POSTS[contentIndex];
       posts.push(normalizeSocialPost({
         post_id: `${CAMPAIGN_ID}-x-${key}`,
         content_id: `evergreen-x-${contentIndex + 1}`,
@@ -98,6 +98,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         campaign_id: CAMPAIGN_ID,
         caption: key === FEATURE_LAUNCH_DATE ? FEATURE_LAUNCH.X : X_POSTS[contentIndex],
         link: campaignLink('X', key),
+        media_url: content.media_url,
         scheduled_at: scheduledAt(parts, 20, 0),
         status: 'APPROVED'
       }));
@@ -116,8 +117,8 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
       }));
       continue;
     }
-    if (instagramWeekdayContent.has(parts.weekday)) {
-      const contentIndex = instagramWeekdayContent.get(parts.weekday);
+    if (weekdayContent.has(parts.weekday)) {
+      const contentIndex = weekdayContent.get(parts.weekday);
       const content = INSTAGRAM_POSTS[contentIndex];
       posts.push(normalizeSocialPost({
         post_id: `${CAMPAIGN_ID}-instagram-${key}`,

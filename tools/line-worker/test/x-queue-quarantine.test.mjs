@@ -124,11 +124,11 @@ test('time-travel recovery evidence requires a non-empty nested bookmark', () =>
   );
 });
 
-test('completed one-shot is removed while both X publication flags remain disabled', () => {
+test('completed quarantine workflow stays removed when explicitly approved X autopilot is enabled', () => {
   const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
   const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
   assert.doesNotMatch(workflow, /setup-x-oauth-quarantine-approved/);
   assert.doesNotMatch(workflow, /x-oauth-infra-and-queue-quarantine/);
-  assert.match(wrangler, /"X_PUBLISHING_ENABLED": "false"/);
-  assert.match(wrangler, /"X_EVERGREEN_AUTOPILOT_ENABLED": "false"/);
+  assert.match(wrangler, /"X_PUBLISHING_ENABLED": "true"/);
+  assert.match(wrangler, /"X_EVERGREEN_AUTOPILOT_ENABLED": "true"/);
 });
