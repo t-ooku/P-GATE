@@ -64,6 +64,19 @@ export function socialPublisherReadiness(env = {}) {
   };
 }
 
+export function xPublishingSafetyReadiness(env = {}) {
+  const expectedUsername = String(env.X_EXPECTED_USERNAME || '').trim();
+  const expectedUsernameValid = /^[A-Za-z0-9_]{1,15}$/.test(expectedUsername);
+  return {
+    enabled: env.X_PUBLISHING_ENABLED === 'true',
+    expectedUsernameConfigured: Boolean(expectedUsername),
+    expectedUsernameValid,
+    ready: env.X_PUBLISHING_ENABLED === 'true'
+      && expectedUsernameValid
+      && socialPublisherReadiness(env).X
+  };
+}
+
 export async function socialPublisherReadinessWithStoredCredentials(env = {}) {
   const readiness = socialPublisherReadiness(env);
   if (!readiness.INSTAGRAM) {
@@ -110,19 +123,53 @@ async function oauth1Authorization(method, url, env) {
     .join(', ')}`;
 }
 
-async function publishX(post, env, fetchImpl) {
-  const endpoint = 'https://api.x.com/2/tweets';
+function assertXPublishingConfiguration(env) {
+  if (env.X_PUBLISHING_ENABLED !== 'true') throw new Error('X_PUBLISHING_DISABLED');
+  const expectedUsername = String(env.X_EXPECTED_USERNAME || '').trim();
+  if (!expectedUsername) throw new Error('X_EXPECTED_USERNAME_REQUIRED');
+  if (!/^[A-Za-z0-9_]{1,15}$/.test(expectedUsername)) {
+    throw new Error('X_EXPECTED_USERNAME_INVALID');
+  }
+  if (!socialPublisherReadiness(env).X) throw new Error('SOCIAL_X_NOT_CONFIGURED');
+  return expectedUsername;
+}
+
+async function xAuthorization(method, endpoint, env) {
   const oauth1Ready = ['X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_TOKEN_SECRET']
     .every((name) => Boolean(String(env[name] || '').trim()));
   const bearerToken = String(env.X_USER_ACCESS_TOKEN || '').trim();
   // Prefer the long-lived OAuth 1.0a user context when both credential sets
   // exist. A stale OAuth 2 bearer token must not mask valid OAuth 1.0a keys.
-  const authorization = oauth1Ready
-    ? await oauth1Authorization('POST', endpoint, env)
+  return oauth1Ready
+    ? oauth1Authorization(method, endpoint, env)
     : bearerToken
       ? `Bearer ${bearerToken}`
       : '';
-  const response = await fetchImpl('https://api.x.com/2/tweets', {
+}
+
+async function verifyXPublishingAccount(expectedUsername, env, fetchImpl) {
+  const endpoint = 'https://api.x.com/2/users/me';
+  const authorization = await xAuthorization('GET', endpoint, env);
+  const response = await fetchImpl(endpoint, {
+    method: 'GET',
+    headers: { authorization }
+  });
+  if (!response.ok) throw new Error(`X_ACCOUNT_VERIFY_${response.status}`);
+  let username = '';
+  try {
+    username = String((await response.json())?.data?.username || '');
+  } catch {
+    throw new Error('X_ACCOUNT_VERIFY_RESPONSE_INVALID');
+  }
+  if (username !== expectedUsername) throw new Error('X_ACCOUNT_MISMATCH');
+}
+
+async function publishX(post, env, fetchImpl) {
+  const expectedUsername = assertXPublishingConfiguration(env);
+  await verifyXPublishingAccount(expectedUsername, env, fetchImpl);
+  const endpoint = 'https://api.x.com/2/tweets';
+  const authorization = await xAuthorization('POST', endpoint, env);
+  const response = await fetchImpl(endpoint, {
     method: 'POST',
     headers: { authorization, 'content-type': 'application/json' },
     body: JSON.stringify({ text: [post.caption, post.link].filter(Boolean).join('\n') })
@@ -258,8 +305,8 @@ export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}
       INSTAGRAM_ACCESS_TOKEN: credential.accessToken
     }, fetchImpl, hooks);
   }
-  if (!socialPublisherReadiness(env)[normalized.platform]) throw new Error(`SOCIAL_${normalized.platform}_NOT_CONFIGURED`);
   if (normalized.platform === 'X') return publishX(normalized, env, fetchImpl);
+  if (!socialPublisherReadiness(env)[normalized.platform]) throw new Error(`SOCIAL_${normalized.platform}_NOT_CONFIGURED`);
   return publishTikTok(normalized, env, fetchImpl);
 }
 
@@ -454,6 +501,7 @@ export async function handleSocialAdminRoutes(request, env) {
       const post = normalizeSocialPost(existing);
       if (post.platform !== 'X' && !post.media_url) throw new Error(`${post.platform}_MEDIA_REQUIRED`);
       if (post.platform === 'INSTAGRAM') await getInstagramPublishCredentials(env);
+      else if (post.platform === 'X') assertXPublishingConfiguration(env);
       else if (!socialPublisherReadiness(env)[post.platform]) throw new Error(`SOCIAL_${post.platform}_NOT_CONFIGURED`);
     } catch (error) {
       return Response.json({ ok: false, error: clean(error?.message || error, 100) }, { status: 409 });

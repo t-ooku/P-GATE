@@ -2,7 +2,8 @@ import {
   normalizeSocialPost,
   runDueSocialPosts,
   socialPublisherReadinessWithStoredCredentials,
-  syncInstagramPublishedPermalinks
+  syncInstagramPublishedPermalinks,
+  xPublishingSafetyReadiness
 } from './social-publisher.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
@@ -155,8 +156,10 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
   const evergreen = buildSocialAutopilotPosts(now).filter(post => (
     post.platform !== 'INSTAGRAM' || env.INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED === 'true'
   ));
+  const xPublishingSafety = xPublishingSafetyReadiness(env);
   const posts = [...approvedModelReel, ...evergreen]
-    .filter(post => readiness[post.platform]);
+    .filter(post => readiness[post.platform]
+      && (post.platform !== 'X' || xPublishingSafety.ready));
   let inserted = 0;
   for (const post of posts) {
     const campaignId = post.post_id === APPROVED_MODEL_REEL.post_id

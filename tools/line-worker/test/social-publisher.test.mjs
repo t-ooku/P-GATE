@@ -5,9 +5,21 @@ import {
   publishSocialPost,
   runDueSocialPosts,
   socialPublisherReadiness,
+  xPublishingSafetyReadiness,
   syncInstagramPublishedPermalinks,
   handleSocialAdminRoutes
 } from '../src/social-publisher.mjs';
+
+const X_EXPECTED_USERNAME = 'HOSHILUOfficial';
+
+function xBearerEnv(overrides = {}) {
+  return {
+    X_USER_ACCESS_TOKEN: 'token',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EXPECTED_USERNAME,
+    ...overrides
+  };
+}
 
 test('Instagram投稿はコメント誘導と若者向け必須ハッシュタグを公開前に補完する', () => {
   const post = normalizeSocialPost({ platform: 'INSTAGRAM', caption: '名前が分からなくても探せる', media_url: 'https://hoshilu.app/social/post.png', status: 'APPROVED' });
@@ -58,6 +70,8 @@ test('1件の公開失敗が同時刻の次の承認済み投稿を止めない'
   const updates = [];
   const env = {
     X_USER_ACCESS_TOKEN: 'token',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EXPECTED_USERNAME,
     PRODUCT_DB: {
       prepare(sql) {
         return {
@@ -77,7 +91,10 @@ test('1件の公開失敗が同時刻の次の承認済み投稿を止めない'
     }
   };
   let publishes = 0;
-  const result = await runDueSocialPosts(env, new Date('2026-07-30T02:00:00.000Z'), async () => {
+  const result = await runDueSocialPosts(env, new Date('2026-07-30T02:00:00.000Z'), async (url) => {
+    if (url.endsWith('/2/users/me')) {
+      return Response.json({ data: { username: X_EXPECTED_USERNAME } });
+    }
     publishes += 1;
     return publishes === 1
       ? Response.json({ title: 'Unauthorized' }, { status: 401 })
@@ -104,22 +121,81 @@ test('publisher readiness requires platform credentials and TikTok audit', () =>
     X_ACCESS_TOKEN: 'token',
     X_ACCESS_TOKEN_SECRET: 'token-secret'
   }).X, true);
+  assert.deepEqual(xPublishingSafetyReadiness({ X_USER_ACCESS_TOKEN: 'x' }), {
+    enabled: false,
+    expectedUsernameConfigured: false,
+    expectedUsernameValid: false,
+    ready: false
+  });
+});
+
+test('X credentials alone remain visible to health but cannot publish without explicit opt-in', async () => {
+  let requests = 0;
+  const env = { X_USER_ACCESS_TOKEN: 'token' };
+  assert.equal(socialPublisherReadiness(env).X, true);
+  await assert.rejects(() => publishSocialPost({
+    platform: 'X',
+    caption: 'HOSHILUの安全な予約投稿です。',
+    status: 'APPROVED'
+  }, env, async () => {
+    requests += 1;
+    return Response.json({});
+  }), /X_PUBLISHING_DISABLED/);
+  assert.equal(requests, 0);
+});
+
+test('X publishing requires an explicit expected username before any API request', async () => {
+  let requests = 0;
+  await assert.rejects(() => publishSocialPost({
+    platform: 'X',
+    caption: 'HOSHILUの安全な予約投稿です。',
+    status: 'APPROVED'
+  }, {
+    X_USER_ACCESS_TOKEN: 'token',
+    X_PUBLISHING_ENABLED: 'true'
+  }, async () => {
+    requests += 1;
+    return Response.json({});
+  }), /X_EXPECTED_USERNAME_REQUIRED/);
+  assert.equal(requests, 0);
+});
+
+test('X publisher refuses an authenticated account whose username is not the expected account', async () => {
+  const requests = [];
+  await assert.rejects(() => publishSocialPost({
+    platform: 'X',
+    caption: 'HOSHILUの対象アカウントを確認します。',
+    status: 'APPROVED'
+  }, xBearerEnv(), async (url, options) => {
+    requests.push({ url, options });
+    return Response.json({ data: { username: 'DifferentAccount' } });
+  }), /X_ACCOUNT_MISMATCH/);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url, 'https://api.x.com/2/users/me');
+  assert.equal(requests[0].options.method, 'GET');
 });
 
 test('X publisher uses official create-post endpoint after approval', async () => {
-  let request;
+  const requests = [];
   const id = await publishSocialPost({
     platform: 'X',
     caption: '曖昧な欲しいを検索語に変える。',
     link: 'https://hoshilu.app/?utm_source=x',
     status: 'APPROVED'
-  }, { X_USER_ACCESS_TOKEN: 'token' }, async (url, options) => {
-    request = { url, options };
+  }, xBearerEnv(), async (url, options) => {
+    requests.push({ url, options });
+    if (url.endsWith('/2/users/me')) {
+      return Response.json({ data: { username: X_EXPECTED_USERNAME } });
+    }
     return Response.json({ data: { id: 'post-1' } }, { status: 201 });
   });
   assert.equal(id, 'post-1');
-  assert.equal(request.url, 'https://api.x.com/2/tweets');
-  assert.match(request.options.headers.authorization, /^Bearer /);
+  assert.deepEqual(requests.map(request => request.url), [
+    'https://api.x.com/2/users/me',
+    'https://api.x.com/2/tweets'
+  ]);
+  assert.match(requests[0].options.headers.authorization, /^Bearer /);
+  assert.match(requests[1].options.headers.authorization, /^Bearer /);
 });
 
 test('social links percent-encode the complete Japanese search query', async () => {
@@ -129,7 +205,10 @@ test('social links percent-encode the complete Japanese search query', async () 
     caption: 'HOSHILU search example',
     link: 'https://hoshilu.app/?q=TikTokで見た光るスマホケース&utm_source=x',
     status: 'APPROVED'
-  }, { X_USER_ACCESS_TOKEN: 'token' }, async (_url, options) => {
+  }, xBearerEnv(), async (url, options) => {
+    if (url.endsWith('/2/users/me')) {
+      return Response.json({ data: { username: X_EXPECTED_USERNAME } });
+    }
     postedText = JSON.parse(options.body).text;
     return Response.json({ data: { id: 'post-encoded-link' } }, { status: 201 });
   });
@@ -148,8 +227,14 @@ test('X publisher supports long-lived OAuth 1.0a user credentials', async () => 
     X_API_KEY: 'consumer-key',
     X_API_SECRET: 'consumer-secret',
     X_ACCESS_TOKEN: 'access-token',
-    X_ACCESS_TOKEN_SECRET: 'access-secret'
-  }, async (_url, options) => {
+    X_ACCESS_TOKEN_SECRET: 'access-secret',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EXPECTED_USERNAME
+  }, async (url, options) => {
+    if (url.endsWith('/2/users/me')) {
+      assert.match(options.headers.authorization, /^OAuth /);
+      return Response.json({ data: { username: X_EXPECTED_USERNAME } });
+    }
     authorization = options.headers.authorization;
     return Response.json({ data: { id: 'post-oauth1' } }, { status: 201 });
   });
@@ -169,8 +254,14 @@ test('X publisher prefers OAuth 1.0a when a stale bearer token is also configure
     X_API_KEY: 'consumer-key',
     X_API_SECRET: 'consumer-secret',
     X_ACCESS_TOKEN: 'access-token',
-    X_ACCESS_TOKEN_SECRET: 'access-secret'
-  }, async (_url, options) => {
+    X_ACCESS_TOKEN_SECRET: 'access-secret',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EXPECTED_USERNAME
+  }, async (url, options) => {
+    if (url.endsWith('/2/users/me')) {
+      assert.match(options.headers.authorization, /^OAuth /);
+      return Response.json({ data: { username: X_EXPECTED_USERNAME } });
+    }
     authorization = options.headers.authorization;
     return Response.json({ data: { id: 'post-oauth1-preferred' } }, { status: 201 });
   });
