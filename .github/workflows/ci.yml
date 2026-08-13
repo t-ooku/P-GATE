@@ -361,6 +361,14 @@ jobs:
         working-directory: tools/line-worker
         run: npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > initial-reel-recovery-bookmark-before.json
 
+      - name: Install the pinned media toolchain
+        if: steps.preflight.outputs.mode == 'review'
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg=7:6.1.1-3ubuntu5
+          test "$(dpkg-query -W -f='${Version}' ffmpeg)" = '7:6.1.1-3ubuntu5'
+
       - name: Reproduce and byte-verify the approved candidate
         if: steps.preflight.outputs.mode == 'review'
         working-directory: tools/line-worker

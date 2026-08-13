@@ -192,6 +192,7 @@ test('workflow is explicit, exact-hash gated and never calls the Runway generati
   assert.match(section, /needs: \[test, deploy\]/);
   assert.match(section, /9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad/);
   assert.match(section, /competing_due_count/);
+  assert.match(section, /ffmpeg=7:6\.1\.1-3ubuntu5/);
   assert.doesNotMatch(section, /api\.dev\.runwayml\.com|\/api\/internal\/runway\/run/);
 });
 
