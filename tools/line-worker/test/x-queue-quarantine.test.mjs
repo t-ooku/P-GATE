@@ -124,16 +124,11 @@ test('time-travel recovery evidence requires a non-empty nested bookmark', () =>
   );
 });
 
-test('one-shot workflow keeps X disabled and performs a full-scope APPROVED-only quarantine', () => {
+test('completed one-shot is removed while both X publication flags remain disabled', () => {
   const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
   const wrangler = readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
-  assert.match(workflow, /\[setup-x-oauth-quarantine-approved\]/);
-  assert.match(workflow, /verify_queue_quarantine_20260813\.mjs bookmark/);
-  assert.match(workflow, /SELECT post_id,campaign_id,platform,scheduled_at,status,external_post_id,platform_job_id,published_at,last_error/);
-  assert.match(workflow, /AND status='APPROVED' AND external_post_id='' AND platform_job_id='' AND published_at=''/);
-  assert.doesNotMatch(workflow, /status IN \('APPROVED','FAILED'\)/);
-  assert.match(workflow, /verify_queue_quarantine_20260813\.mjs mutation/);
-  assert.match(workflow, /verify_queue_quarantine_20260813\.mjs postflight/);
+  assert.doesNotMatch(workflow, /setup-x-oauth-quarantine-approved/);
+  assert.doesNotMatch(workflow, /x-oauth-infra-and-queue-quarantine/);
   assert.match(wrangler, /"X_PUBLISHING_ENABLED": "false"/);
   assert.match(wrangler, /"X_EVERGREEN_AUTOPILOT_ENABLED": "false"/);
 });
