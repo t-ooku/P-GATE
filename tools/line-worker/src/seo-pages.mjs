@@ -266,6 +266,76 @@ const pages = {
         ['渡す日が決まっている', '配送日・受取方法・包装条件を確認', '販売ページの最新案内で最終判断']
       ]
     })
+  },
+  'how-to-check-size-and-installation-space': {
+    ja: guide('ja', {
+      title: '設置場所とサイズを確認して商品を選ぶ方法',
+      description: '置き場所・搬入経路・使用時の余白を測り、設置できる商品をサイズ条件から探す手順を解説します。',
+      conclusion: '設置場所の幅・奥行き・高さだけでなく、搬入経路、扉やふたを開く余白、放熱・配線に必要な空間も分けて測ります。候補の外寸と使用時寸法は商品説明で確認し、数値を確認できない場合は設置可能と断定しないでください。',
+      query: '幅45cmの棚に置けて、ふたを開けても高さ70cm以内の調理家電',
+      tips: ['置き場所と搬入経路を別々に測る', '本体外寸と、扉・ふたを開いた使用時寸法を分ける', '放熱、配線、給排水などに必要な余白を商品説明で確認する'],
+      comparison: [
+        ['設置場所', '幅・奥行き・高さと周囲の障害物', '最も狭い箇所を実測して記録'],
+        ['商品寸法', '本体外寸と使用時に広がる部分', 'メーカー・販売ページの寸法図で確認'],
+        ['搬入・使用余白', '通路、ドア、階段、放熱、配線', '設置までの経路と使用条件を別に照合']
+      ]
+    })
+  },
+  'check-device-compatibility-before-buying': {
+    ja: guide('ja', {
+      title: '対応機種・規格を確認して商品を選ぶ方法',
+      description: 'アクセサリーや周辺機器を買う前に、機種・世代・端子・規格の対応を確認して候補を探す方法を解説します。',
+      conclusion: '「同じシリーズ用」だけで判断せず、使用中の機器の正式な型番・世代と、商品の対応機種一覧・端子・規格を照合します。対応表に記載がない場合や条件付き対応の場合は、互換性を推測せずメーカーや販売者の最新案内を確認してください。',
+      query: '手元の機器の型番とUSB-C端子に対応する持ち運び用アクセサリー',
+      tips: ['設定画面・本体表示・箱などから正確な型番と世代を確認する', '端子の形だけでなく通信・給電・映像など必要な規格を確認する', '変換アダプターやソフトウェア条件が必要な場合は別条件として記録する'],
+      comparison: [
+        ['明記された対応', '型番・世代が対応一覧にある', '必要な追加条件も併せて確認'],
+        ['条件付き対応', 'OS、端子、アダプターなどの条件がある', '自分の利用環境で満たせるか照合'],
+        ['対応不明', 'シリーズ名だけ、または対応表に記載なし', '互換性を推測せず購入を保留']
+      ]
+    })
+  },
+  'find-products-for-small-spaces': {
+    ja: guide('ja', {
+      title: '狭い部屋で使いやすい商品を探す方法',
+      description: '限られた床面積や収納に合わせ、使用時・収納時の大きさと動線から商品候補を探す手順を解説します。',
+      conclusion: '「コンパクト」という表現だけに頼らず、置ける寸法、使用時に必要な面積、収納時の形、出し入れする動線を具体的にします。折りたたみや積み重ねの可否は名称から推測せず、商品説明の寸法と使用条件を確認してください。',
+      query: 'ワンルームで毎日使い、使わない時は幅30cmの隙間に収納できる室内用品',
+      tips: ['床面積だけでなく、扉や引き出しを開く動線も測る', '使用時と収納時の寸法を分けて検索条件にする', '折りたたみ・積み重ね・壁寄せの条件を商品説明で確認する'],
+      comparison: [
+        ['常設する商品', '設置面積と生活動線への影響', '使ったままでも通路を確保できるか'],
+        ['収納する商品', '収納時寸法・重さ・出し入れ方法', '毎回無理なく片付けられるか'],
+        ['形が変わる商品', '折りたたみ・伸縮時の固定方法', '使用時と収納時の両方を確認']
+      ]
+    })
+  },
+  'shopping-guide-for-living-alone': {
+    ja: guide('ja', {
+      title: '一人暮らしの商品を用途から探す買い物ガイド',
+      description: '一人暮らしで必要な商品を、生活頻度・置き場所・手入れ・予算から整理して探す方法を解説します。',
+      conclusion: '「一人暮らし向け」という名称だけで選ばず、実際の生活頻度、部屋の寸法、収納、手入れに使える時間を検索条件へ変えます。まとめ買いの前に優先度を決め、候補ごとに設置条件、容量、消費電力など必要な仕様を販売ページで確認してください。',
+      query: '一人暮らしで週3回使い、手入れが簡単で棚に収納できる調理用品',
+      tips: ['毎日・週数回・来客時など使う頻度を明記する', '部屋の寸法、収納場所、コンセント位置を先に確認する', '容量の大きさより、手入れと保管を続けられるかを確認する'],
+      comparison: [
+        ['使用頻度が高い', '出しやすさ・手入れ・設置場所', '日常動線を妨げない仕様を優先'],
+        ['必要な時だけ使う', '収納時寸法・重さ・準備時間', '出し入れの負担を確認'],
+        ['購入を急がない', '代用品の有無と利用開始時期', '優先度を下げ、条件を保存して再検討']
+      ]
+    })
+  },
+  'compare-delivery-and-return-conditions': {
+    ja: guide('ja', {
+      title: '配送日・返品条件まで含めて購入先を比較する方法',
+      description: '価格だけでなく、発送・到着予定、受取方法、返品期限、返送料などの購入条件を比較する手順を解説します。',
+      conclusion: '「最短発送」と「到着予定」を区別し、配送先、注文時刻、在庫状況による条件を購入直前に確認します。返品は期限だけでなく、開封後の可否、返送料、連絡方法を販売ページで確認し、条件を確認できない購入先を同等として扱わないでください。',
+      query: '同じ型番の商品を到着予定日と返品条件まで含めて比較したい',
+      tips: ['発送予定と到着予定を分けて確認する', '配送先・注文締切・在庫で予定が変わるかを見る', '返品期限、開封可否、返送料、連絡方法を別々に確認する'],
+      comparison: [
+        ['配送', '発送日・到着予定・受取方法', '配送先を指定した最新表示で確認'],
+        ['返品', '期限・開封後の可否・返送料', '販売者ごとの条件を記録'],
+        ['確認できない条件', '予定日や返品方法の記載がない', '価格だけで同等と判断せず保留']
+      ]
+    })
   }
 };
 
@@ -345,6 +415,31 @@ const visualProfiles = {
       intent: 'find_gift_by_recipient_and_occasion', cluster: 'gift-discovery', articleType: 'shopping-guide',
       headings: ['分かっている情報', '検索条件への変換', '購入前の確認'],
       steps: [['贈る場面を決める', '相手との関係、贈る理由、渡す日を整理します。'], ['好みと制約を言葉にする', '予算・好み・サイズ・避けたい条件を入力します。'], ['配送と仕様を確認', '商品仕様、到着予定、包装対応を販売ページで確認します。']]
+    },
+    'how-to-check-size-and-installation-space': {
+      intent: 'check_size_and_installation_space', cluster: 'size-and-installation', articleType: 'how-to',
+      headings: ['測る場所', '商品側で照合する寸法', '設置前の最終確認'],
+      steps: [['場所を実測', '設置場所と搬入経路の幅・奥行き・高さを別々に測ります。'], ['使用時寸法を照合', '本体外寸に加え、扉・ふた・配線・放熱に必要な空間を確認します。'], ['不明点は保留', '寸法図や必要余白を確認できない場合は、設置可能と断定しません。']]
+    },
+    'check-device-compatibility-before-buying': {
+      intent: 'check_device_compatibility', cluster: 'compatibility-check', articleType: 'how-to',
+      headings: ['手元の機器情報', '商品の対応条件', '互換性の判断'],
+      steps: [['型番と世代を確認', '設定画面、本体、箱から正式な型番と世代を確認します。'], ['規格まで照合', '対応機種、端子、通信・給電など必要な規格を商品説明で確認します。'], ['条件付き対応を分ける', 'OSやアダプターが必要なら、自分の環境で満たせるか個別に確認します。']]
+    },
+    'find-products-for-small-spaces': {
+      intent: 'find_products_for_small_spaces', cluster: 'small-space-living', articleType: 'shopping-guide',
+      headings: ['部屋の制約', '検索へ入れる条件', '使い続けられるか'],
+      steps: [['生活動線を測る', '置き場所だけでなく、通路と扉・引き出しを開く範囲を確認します。'], ['二つの寸法を入力', '使用時と収納時の大きさを分け、出し入れの条件も加えます。'], ['変形方法を確認', '折りたたみ・伸縮・積み重ねの可否を商品説明で確かめます。']]
+    },
+    'shopping-guide-for-living-alone': {
+      intent: 'shopping_for_living_alone', cluster: 'audience-guides', articleType: 'shopping-guide',
+      headings: ['暮らしの条件', '候補の優先順位', '購入前の確認'],
+      steps: [['頻度と場所を整理', '誰か向けの一般論ではなく、自分が使う頻度と置き場所を確認します。'], ['必要度で分ける', 'すぐ必要、代用できる、後から検討する商品条件に分けます。'], ['維持しやすさを確認', '容量、設置、収納、手入れなど使い続ける条件を確認します。']]
+    },
+    'compare-delivery-and-return-conditions': {
+      intent: 'compare_delivery_and_return_conditions', cluster: 'marketplace-comparison', articleType: 'comparison-guide',
+      headings: ['購入条件', '購入先ごとの確認', '比較での扱い'],
+      steps: [['同じ商品にそろえる', '型番・容量・セット数を一致させてから購入条件を比べます。'], ['配送と返品を分解', '発送・到着・受取方法と、返品期限・開封可否・返送料を分けます。'], ['購入直前に再確認', '配送先と注文時点で表示される最新条件を販売ページで確認します。']]
     }
   },
   en: {
@@ -432,7 +527,7 @@ function alternateLinks(slug, locale) {
 
 function relatedLinks(locale, currentSlug) {
   const preferred = locale === 'ja'
-    ? ['find-product-without-name', 'how-to-search-by-description', 'search-products-by-budget-and-purpose', 'compare-total-price-with-shipping', 'how-to-read-shopping-reviews', 'how-to-use-shopping-rankings', 'find-a-gift-by-recipient-and-occasion', 'compare-amazon-rakuten-yahoo-shopping', 'how-to-compare-the-same-product']
+    ? ['find-product-without-name', 'how-to-search-by-description', 'how-to-check-size-and-installation-space', 'check-device-compatibility-before-buying', 'find-products-for-small-spaces', 'shopping-guide-for-living-alone', 'compare-delivery-and-return-conditions', 'search-products-by-budget-and-purpose', 'compare-total-price-with-shipping', 'how-to-read-shopping-reviews', 'how-to-use-shopping-rankings', 'find-a-gift-by-recipient-and-occasion', 'compare-amazon-rakuten-yahoo-shopping', 'how-to-compare-the-same-product']
     : ['find-product-without-name', 'how-to-search-by-description', 'shopping-in-japan', 'american-products-in-japan'];
   return preferred.filter((slug) => slug !== currentSlug && pages[slug]?.[locale]).slice(0, 3)
     .map((slug) => `<li><a href="${pathFor(locale, slug)}">${esc(pages[slug][locale].title)}</a></li>`).join('');
@@ -527,6 +622,6 @@ export function renderSeoPage(pathname) {
 <section class="source-note" id="sources"><h2>${labels.sources}</h2><p>${esc(labels.sourceText)}</p><p>${isJa ? '最終更新日' : 'Last updated'}: <time datetime="${UPDATED_AT}">${UPDATED_AT}</time></p></section>
 <nav class="related" aria-label="${labels.related}"><h2>${labels.related}</h2><ul class="related-grid">${relatedLinks(locale, slug)}</ul></nav>
 <p class="bottom-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a></p></article></main>
-<footer><a href="/privacy.html">${isJa ? 'プライバシー' : 'Privacy'}</a><a href="/terms.html">${isJa ? '利用上の注意' : 'Terms'}</a></footer>
+<footer><a href="/privacy">${isJa ? 'プライバシー' : 'Privacy'}</a><a href="/terms">${isJa ? '利用上の注意' : 'Terms'}</a></footer>
 <script type="module" src="/seo-article-analytics.mjs"></script></body></html>`;
 }

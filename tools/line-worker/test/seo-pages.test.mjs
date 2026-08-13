@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語15ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 20);
+test('検索意図が異なる日本語20ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 25);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\//);
@@ -43,11 +43,11 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
 
 test('新規5テーマは商品・価格・口コミ・順位を根拠なく断定しない', () => {
   const paths = [
-    '/ja/search-products-by-budget-and-purpose',
-    '/ja/compare-total-price-with-shipping',
-    '/ja/how-to-read-shopping-reviews',
-    '/ja/how-to-use-shopping-rankings',
-    '/ja/find-a-gift-by-recipient-and-occasion'
+    '/ja/how-to-check-size-and-installation-space',
+    '/ja/check-device-compatibility-before-buying',
+    '/ja/find-products-for-small-spaces',
+    '/ja/shopping-guide-for-living-alone',
+    '/ja/compare-delivery-and-return-conditions'
   ];
   for (const path of paths) {
     const html = renderSeoPage(path);
@@ -56,6 +56,28 @@ test('新規5テーマは商品・価格・口コミ・順位を根拠なく断�
     assert.match(html, /販売ページ/);
     assert.doesNotMatch(html, /最安(?:値)?です|人気No\.1|売れ筋No\.1|絶対おすすめ/);
     assert.doesNotMatch(html, /Premium|月額980円/);
+  }
+});
+
+test('サイトマップは全SEOページとcanonicalの法的ページだけを含む', () => {
+  const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
+  for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
+  assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
+});
+
+test('既存SEO記事から今回の新規5記事へ内部リンクがある', () => {
+  const newPaths = new Set([
+    '/ja/how-to-check-size-and-installation-space',
+    '/ja/check-device-compatibility-before-buying',
+    '/ja/find-products-for-small-spaces',
+    '/ja/shopping-guide-for-living-alone',
+    '/ja/compare-delivery-and-return-conditions'
+  ]);
+  for (const path of seoPagePaths.filter((candidate) => candidate.startsWith('/ja/') && !newPaths.has(candidate))) {
+    const html = renderSeoPage(path);
+    assert.ok([...newPaths].some((newPath) => html.includes(`href="${newPath}"`)), `${path} should link to a new article`);
   }
 });
 

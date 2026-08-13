@@ -122,6 +122,36 @@
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-a-gift-by-recipient-and-occasion"/>
     <changefreq>weekly</changefreq><priority>0.8</priority>
   </url>
-  <url><loc>https://hoshilu.app/privacy.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://hoshilu.app/terms.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url>
+    <loc>https://hoshilu.app/ja/how-to-check-size-and-installation-space</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/how-to-check-size-and-installation-space"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/check-device-compatibility-before-buying</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/check-device-compatibility-before-buying"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-products-for-small-spaces</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-products-for-small-spaces"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/shopping-guide-for-living-alone</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/shopping-guide-for-living-alone"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/compare-delivery-and-return-conditions</loc>
+    <lastmod>2026-08-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/compare-delivery-and-return-conditions"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url><loc>https://hoshilu.app/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://hoshilu.app/terms</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>
