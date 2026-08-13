@@ -7,6 +7,10 @@
     {
       "pattern": "hoshilu.app",
       "custom_domain": true
+    },
+    {
+      "pattern": "www.hoshilu.app",
+      "custom_domain": true
     }
   ],
   "assets": {
