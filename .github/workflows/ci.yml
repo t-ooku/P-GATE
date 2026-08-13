@@ -62,7 +62,7 @@ jobs:
           test -n "${CLOUDFLARE_API_TOKEN}"
           test -n "${CLOUDFLARE_ACCOUNT_ID}"
           actual="$(sha256sum migrations/0050_runway_video_generation.sql | cut -d' ' -f1)"
-          test "$actual" = "e3fee260b8e50c6e794bb25b354a82ae8dad6b74b5aac11602b73c79676f10a8"
+          test "$actual" = "4cbd032c9f6cf59075c04dd1f09d5259025f6fd18cf336aac79ca9be7fc694b8"
           if grep -iqE '(^|[[:space:]])(delete|drop|truncate|alter)[[:space:]]' migrations/0050_runway_video_generation.sql; then
             echo "::error::Destructive statement found in 0050"
             exit 1

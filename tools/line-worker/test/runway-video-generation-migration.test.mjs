@@ -4,6 +4,13 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 
 const sql = readFileSync(new URL('../migrations/0050_runway_video_generation.sql', import.meta.url), 'utf8');
+
+test('Runway triggers avoid nested END tokens that break remote D1 migration parsing', () => {
+  assert.doesNotMatch(sql, /SELECT\s+CASE\b/i);
+  assert.doesNotMatch(sql, /\r\n/);
+  assert.equal((sql.match(/CREATE TRIGGER IF NOT EXISTS/g) || []).length, 2);
+});
+
 test('Runway generation migration is idempotent and enforces budget/job invariants', () => {
   const db = new DatabaseSync(':memory:');
   db.exec(sql); db.exec(sql);

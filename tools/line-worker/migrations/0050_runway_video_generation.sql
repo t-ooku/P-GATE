@@ -47,24 +47,22 @@ BEFORE INSERT ON runway_cost_reservations
 WHEN NEW.scope='TEST' AND NEW.status IN ('RESERVED','SUBMITTED','UNKNOWN','SETTLED')
   AND (SELECT initial_test_completed FROM runway_budget_policy WHERE policy_id=1)=0
 BEGIN
-  SELECT CASE WHEN (
+  SELECT RAISE(ABORT,'RUNWAY_INITIAL_TEST_LIMIT') WHERE (
     COALESCE((SELECT SUM(credits) FROM runway_cost_reservations
       WHERE scope='TEST' AND period_key=NEW.period_key
       AND status IN ('RESERVED','SUBMITTED','UNKNOWN','SETTLED')),0) + NEW.credits
-  ) > (SELECT initial_cap_credits FROM runway_budget_policy WHERE policy_id=1)
-  THEN RAISE(ABORT,'RUNWAY_INITIAL_TEST_LIMIT') END;
+  ) > (SELECT initial_cap_credits FROM runway_budget_policy WHERE policy_id=1);
 END;
 
 CREATE TRIGGER IF NOT EXISTS trg_runway_month_reservation_cap
 BEFORE INSERT ON runway_cost_reservations
 WHEN NEW.scope='MONTH' AND NEW.status IN ('RESERVED','SUBMITTED','UNKNOWN','SETTLED')
 BEGIN
-  SELECT CASE WHEN (
+  SELECT RAISE(ABORT,'RUNWAY_MONTHLY_LIMIT') WHERE (
     COALESCE((SELECT SUM(credits) FROM runway_cost_reservations
       WHERE scope='MONTH' AND period_key=NEW.period_key
       AND status IN ('RESERVED','SUBMITTED','UNKNOWN','SETTLED')),0) + NEW.credits
-  ) > (SELECT monthly_cap_credits FROM runway_budget_policy WHERE policy_id=1)
-  THEN RAISE(ABORT,'RUNWAY_MONTHLY_LIMIT') END;
+  ) > (SELECT monthly_cap_credits FROM runway_budget_policy WHERE policy_id=1);
 END;
 CREATE INDEX IF NOT EXISTS idx_runway_jobs_status_schedule ON runway_generation_jobs(status,scheduled_at);
 CREATE INDEX IF NOT EXISTS idx_runway_attempts_job ON runway_generation_attempts(job_id,attempt_number);
