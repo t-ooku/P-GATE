@@ -5,6 +5,7 @@ import test from 'node:test';
 import {
   INITIAL_REEL,
   parseJsonDocument,
+  verifyD1ImportMutation,
   verifyApproved,
   verifyCandidate,
   verifyHealth,
@@ -187,19 +188,46 @@ test('staged, approved, published and reconciled evidence remains exact', () => 
 
 test('mutation verifier rejects partial writes', () => {
   assert.equal(verifyMutationChanges([{ meta: { changes: 1 } }, { meta: { changes: 1 } }], [1, 1]), true);
-  assert.equal(verifyMutationChanges([{ meta: { changes: 3, rows_written: 2 } }], [1, 1]), true);
-  assert.equal(verifyMutationChanges([{ meta: { changes: 3, rows_written: 5 } }], [1, 1]), true);
   assert.throws(() => verifyMutationChanges([{ meta: { changes: 1 } }, { meta: { changes: 0 } }], [1, 1]), /D1_MUTATION_CHANGE_COUNT_INVALID/);
-  assert.throws(() => verifyMutationChanges([{ meta: { changes: 3, rows_written: 1 } }], [1, 1]), /D1_MUTATION_CHANGE_COUNT_INVALID/);
-  assert.throws(() => verifyMutationChanges([{ meta: { changes: 4, rows_written: 5 } }], [1, 1]), /D1_MUTATION_CHANGE_COUNT_INVALID/);
+  assert.throws(() => verifyMutationChanges([{ meta: { changes: 3, rows_written: 2 } }], [1, 1]), /D1_MUTATION_CHANGE_COUNT_INVALID/);
 });
 
 test('Wrangler progress text cannot corrupt strict JSON verification', () => {
   const payload = [{ results: [{ ok: 1 }], meta: { changes: 1 } }];
   assert.deepEqual(parseJsonDocument(JSON.stringify(payload)), payload);
-  assert.deepEqual(parseJsonDocument(`\u001b[90m├ Checking remote database...\u001b[0m\n${JSON.stringify(payload)}\n`), payload);
-  assert.deepEqual(parseJsonDocument(`notice {not-json}\n${JSON.stringify(payload)}\ntrailing status`), payload);
-  assert.throws(() => parseJsonDocument('├ Checking remote database...'), /JSON_DOCUMENT_NOT_FOUND/);
+  assert.deepEqual(parseJsonDocument(`├ Checking if file needs uploading\n│\n${JSON.stringify(payload)}`), payload);
+  assert.deepEqual(parseJsonDocument(`├ Checking if file needs uploading\r\n│\r\n${JSON.stringify(payload)}`), payload);
+  assert.deepEqual(parseJsonDocument(`├ Checking if file needs uploading\n│\n├ 🌀 Uploading 17629324-b771-4348-982c-c25da48c29b2.1d25dbc043540c5a.sql\n│ 🌀 Uploading complete.\n│\n${JSON.stringify(payload)}`), payload);
+  assert.throws(() => parseJsonDocument(`notice {not-json}\n${JSON.stringify(payload)}\ntrailing status`), SyntaxError);
+  assert.throws(() => parseJsonDocument('├ Checking remote database...'), SyntaxError);
+  assert.throws(() => parseJsonDocument('├ Checking if file needs uploading\n│\nnot-json'), SyntaxError);
+});
+
+function importPayload({ queries, rowsWritten, changes = 1, changedDb = true, primary = true } = {}) {
+  return [{
+    results: [{ 'Total queries executed': queries, 'Rows written': rowsWritten }],
+    success: true,
+    finalBookmark: '000001-test-bookmark',
+    meta: { changes, rows_written: rowsWritten, changed_db: changedDb, served_by_primary: primary }
+  }];
+}
+
+test('D1 import verifier accounts for indexed physical writes and rejects drift', () => {
+  assert.equal(verifyD1ImportMutation(importPayload({ queries: 2, rowsWritten: 2 }), { queries: 2, rowsWritten: 2 }), true);
+  assert.equal(verifyD1ImportMutation(importPayload({ queries: 2, rowsWritten: 5, changes: 3 }), { queries: 2, rowsWritten: 5 }), true);
+  assert.equal(verifyD1ImportMutation(importPayload({ queries: 1, rowsWritten: 2, changes: 2 }), { queries: 1, rowsWritten: 2 }), true);
+  assert.equal(verifyD1ImportMutation(importPayload({ queries: 3, rowsWritten: 6, changes: 4 }), { queries: 3, rowsWritten: 6 }), true);
+  assert.equal(verifyD1ImportMutation(importPayload({ queries: 3, rowsWritten: 0, changes: 1, changedDb: true }), { queries: 3, rowsWritten: 0 }), true);
+  assert.throws(() => verifyD1ImportMutation(importPayload({ queries: 2, rowsWritten: 4 }), { queries: 2, rowsWritten: 5 }), /D1_IMPORT_COUNTS_INVALID/);
+  assert.throws(() => verifyD1ImportMutation(importPayload({ queries: 1, rowsWritten: 5 }), { queries: 2, rowsWritten: 5 }), /D1_IMPORT_COUNTS_INVALID/);
+  assert.throws(() => verifyD1ImportMutation(importPayload({ queries: 2, rowsWritten: 5, primary: false }), { queries: 2, rowsWritten: 5 }), /D1_IMPORT_NOT_PRIMARY/);
+  const missingBookmark = importPayload({ queries: 2, rowsWritten: 5 });
+  missingBookmark[0].finalBookmark = '';
+  assert.throws(() => verifyD1ImportMutation(missingBookmark, { queries: 2, rowsWritten: 5 }), /D1_IMPORT_BOOKMARK_MISSING/);
+  const failed = importPayload({ queries: 2, rowsWritten: 5 });
+  failed[0].success = false;
+  assert.throws(() => verifyD1ImportMutation(failed, { queries: 2, rowsWritten: 5 }), /D1_IMPORT_NOT_SUCCESSFUL/);
+  assert.throws(() => verifyD1ImportMutation([...importPayload({ queries: 2, rowsWritten: 5 }), ...importPayload({ queries: 2, rowsWritten: 5 })], { queries: 2, rowsWritten: 5 }), /D1_IMPORT_ENVELOPE_INVALID/);
 });
 
 test('workflow is explicit, exact-hash gated and never calls the Runway generation API', () => {

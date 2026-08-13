@@ -24,47 +24,14 @@ function fail(code, detail = '') {
 }
 
 export function parseJsonDocument(value) {
-  const text = String(value ?? '').replace(/^\uFEFF/u, '').replace(/\u001B\[[0-?]*[ -/]*[@-~]/gu, '').trim();
+  const text = String(value ?? '').replace(/^\uFEFF/u, '').trim();
   try {
     return JSON.parse(text);
-  } catch {
-    // Wrangler can write a progress line (for example, "├ Checking...") to
-    // stdout before its --json document. Extract exactly one balanced JSON
-    // value so the verifier remains strict about the payload itself without
-    // treating CLI presentation text as database corruption.
+  } catch (error) {
+    const prefix = /^├ Checking if file needs uploading\r?\n│\r?\n(?:├ 🌀 Uploading [0-9a-f-]+\.[0-9a-f]+\.sql\r?\n│ 🌀 Uploading complete\.\r?\n│\r?\n)?/u;
+    if (!prefix.test(text)) throw error;
+    return JSON.parse(text.replace(prefix, ''));
   }
-  for (let start = 0; start < text.length; start += 1) {
-    if (text[start] !== '[' && text[start] !== '{') continue;
-    const stack = [];
-    let quoted = false;
-    let escaped = false;
-    for (let index = start; index < text.length; index += 1) {
-      const character = text[index];
-      if (quoted) {
-        if (escaped) escaped = false;
-        else if (character === '\\') escaped = true;
-        else if (character === '"') quoted = false;
-        continue;
-      }
-      if (character === '"') {
-        quoted = true;
-        continue;
-      }
-      if (character === '[' || character === '{') stack.push(character);
-      else if (character === ']' || character === '}') {
-        const expected = character === ']' ? '[' : '{';
-        if (stack.pop() !== expected) break;
-        if (stack.length === 0) {
-          try {
-            return JSON.parse(text.slice(start, index + 1));
-          } catch {
-            break;
-          }
-        }
-      }
-    }
-  }
-  fail('JSON_DOCUMENT_NOT_FOUND');
 }
 
 function readJson(path) {
@@ -79,19 +46,28 @@ export function d1Rows(payload) {
 export function verifyMutationChanges(payload, expected) {
   const entries = Array.isArray(payload) ? payload : [payload];
   const actual = entries.map((entry) => Number(entry?.meta?.changes ?? entry?.result?.meta?.changes));
-  if (entries.length === 1 && expected.length > 1) {
-    const rowsWritten = Number(entries[0]?.meta?.rows_written ?? entries[0]?.result?.meta?.rows_written);
-    const expectedWrites = expected.reduce((sum, value) => sum + value, 0);
-    // Wrangler aggregates a multi-statement D1 file into one result. These
-    // guarded two-write files also fire exactly one audit/update trigger, so
-    // changes must be logical writes + 1. rows_written counts index/internal
-    // writes as well and is therefore only a lower-bound integrity signal.
-    if (rowsWritten >= expectedWrites && actual[0] === expectedWrites + 1) return true;
-    fail('D1_MUTATION_CHANGE_COUNT_INVALID', JSON.stringify({ actual, rows_written: rowsWritten, expected }));
-  }
   if (actual.length !== expected.length || actual.some((value, index) => value !== expected[index])) {
     fail('D1_MUTATION_CHANGE_COUNT_INVALID', JSON.stringify({ actual, expected }));
   }
+  return true;
+}
+
+export function verifyD1ImportMutation(payload, { queries, rowsWritten }) {
+  const entries = Array.isArray(payload) ? payload : [payload];
+  if (entries.length !== 1) fail('D1_IMPORT_ENVELOPE_INVALID');
+  const entry = entries[0];
+  if (entry?.success !== true) fail('D1_IMPORT_NOT_SUCCESSFUL');
+  if (!string(entry.finalBookmark)) fail('D1_IMPORT_BOOKMARK_MISSING');
+  const summaries = Array.isArray(entry.results) ? entry.results : [];
+  if (summaries.length !== 1) fail('D1_IMPORT_SUMMARY_INVALID');
+  const summary = summaries[0];
+  const actualQueries = number(summary['Total queries executed']);
+  const summaryRows = number(summary['Rows written']);
+  const metaRows = number(entry?.meta?.rows_written);
+  if (actualQueries !== queries || summaryRows !== rowsWritten || metaRows !== rowsWritten) {
+    fail('D1_IMPORT_COUNTS_INVALID', JSON.stringify({ actualQueries, summaryRows, metaRows, queries, rowsWritten }));
+  }
+  assertEqual(entry?.meta?.served_by_primary, true, 'D1_IMPORT_NOT_PRIMARY');
   return true;
 }
 
@@ -388,7 +364,7 @@ export function verifyReconciled({ jobs, policy, audit }) {
 }
 
 function usage() {
-  console.error('Usage: verify_initial_reel_publish.mjs <preflight|candidate|mutation|staged|qa-approved|approved|status|published|reconciled> ...');
+  console.error('Usage: verify_initial_reel_publish.mjs <preflight|candidate|mutation|import-mutation|staged|qa-approved|approved|status|published|reconciled> ...');
   process.exit(64);
 }
 
@@ -406,6 +382,13 @@ async function main(argv) {
   }
   if (command === 'mutation' && args.length === 2) {
     verifyMutationChanges(readJson(args[0]), args[1].split(',').map(Number));
+    return;
+  }
+  if (command === 'import-mutation' && args.length === 3) {
+    verifyD1ImportMutation(readJson(args[0]), {
+      queries: Number(args[1]),
+      rowsWritten: Number(args[2])
+    });
     return;
   }
   if (command === 'staged' && args.length === 3) {

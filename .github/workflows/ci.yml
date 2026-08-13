@@ -487,7 +487,7 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --file ops/runway/stage_initial_reel_20260813_v4.sql --yes > initial-reel-stage-mutation.json
-          node ops/runway/verify_initial_reel_publish.mjs mutation initial-reel-stage-mutation.json 1,1
+          node ops/runway/verify_initial_reel_publish.mjs import-mutation initial-reel-stage-mutation.json 2 2
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-staged.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-queue-staged.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT (SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'hoshilu-runway-model-ugc-20260813-v1' AND platform='INSTAGRAM' AND (content_id='runway-hoshilu-model-ugc-test-20260813-v1' OR media_url='https://hoshilu.app/api/social/media/runway/runway-hoshilu-model-ugc-test-20260813-v1.mp4' OR link='https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=hoshilu_runway_test&utm_content=runway_product_ugc_test_20260813_v1') AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'' OR platform_job_id<>'')) AS duplicate_count,(SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'hoshilu-runway-model-ugc-20260813-v1' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS competing_due_count;" > initial-reel-collision-staged.json
@@ -500,7 +500,7 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --file ops/runway/approve_initial_reel_20260813_v4.sql --yes > initial-reel-approve-mutation.json
-          node ops/runway/verify_initial_reel_publish.mjs mutation initial-reel-approve-mutation.json 1,1
+          node ops/runway/verify_initial_reel_publish.mjs import-mutation initial-reel-approve-mutation.json 2 5
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-qa-approved.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-queue-qa-approved.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT audit_id,event,detail,created_at FROM runway_audit_log WHERE audit_id='runway-initial-reel-v4-qa-approved-20260813';" > initial-reel-approval-audit.json
@@ -536,7 +536,7 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --file ops/runway/release_initial_reel_20260813_v4.sql --yes > initial-reel-release-mutation.json
-          node ops/runway/verify_initial_reel_publish.mjs mutation initial-reel-release-mutation.json 1
+          node ops/runway/verify_initial_reel_publish.mjs import-mutation initial-reel-release-mutation.json 1 2
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-approved.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-queue-approved.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT audit_id,event,detail,created_at FROM runway_audit_log WHERE audit_id='runway-initial-reel-v4-qa-approved-20260813';" > initial-reel-approval-audit.json
@@ -596,9 +596,9 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --file ops/runway/reconcile_initial_reel_20260813_v4.sql --yes > initial-reel-reconcile-mutation.json
-          expected_changes='1,1,1'
-          if [ '${{ steps.preflight.outputs.mode }}' = published ]; then expected_changes='0,0,0'; fi
-          node ops/runway/verify_initial_reel_publish.mjs mutation initial-reel-reconcile-mutation.json "$expected_changes"
+          expected_rows=6
+          if [ '${{ steps.preflight.outputs.mode }}' = published ]; then expected_rows=0; fi
+          node ops/runway/verify_initial_reel_publish.mjs import-mutation initial-reel-reconcile-mutation.json 3 "$expected_rows"
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-reconciled.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT initial_cap_credits,monthly_cap_credits,enabled,kill_switch,initial_test_completed FROM runway_budget_policy WHERE policy_id=1;" > initial-reel-policy-reconciled.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT audit_id,event,detail,created_at FROM runway_audit_log WHERE audit_id='runway-initial-reel-v4-published-20260813';" > initial-reel-published-audit.json
