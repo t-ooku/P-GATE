@@ -99,7 +99,14 @@ test('production monitor rejects a hanging request within the fetch deadline', {
       requestTimeoutMs: 25,
       fetcher: (input, init = {}) => new Promise((_resolve, reject) => {
         const signal = input instanceof Request ? input.signal : init.signal;
-        signal?.addEventListener('abort', () => reject(signal.reason), { once: true });
+        // AbortSignal.timeout() intentionally uses an unref'd timer in Node. A
+        // referenced guard keeps the isolated CI test process alive long enough
+        // to observe the production timeout instead of cancelling the test.
+        const guard = setTimeout(() => reject(new Error('TEST_TIMEOUT_GUARD')), 500);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(guard);
+          reject(signal.reason);
+        }, { once: true });
       })
     }),
     error => error?.name === 'TimeoutError'
