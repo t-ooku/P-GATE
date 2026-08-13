@@ -1157,7 +1157,9 @@ test('AIチャットの失敗はコンソールで診断でき、画面には内
   assert.doesNotMatch(chatUi, /\}\s*catch\s*\{\s*\n\s*status\.remove\(\);/);
   assert.match(chatUi, /catch \(error\)/);
   assert.match(chatUi, /console\.error\('HOSHILU_CHAT_FAILED'/);
-  assert.match(chatUi, /messages\.append\(chatMessageRow\('assistant', copy\.error\)\)/);
+  assert.match(chatUi, /const outcome = await runFinalSearch\(directQuery\)/);
+  assert.match(chatUi, /if \(outcome\.ok \|\| outcome\.degraded\) \{ dialog\.close\(\); return; \}/);
+  assert.match(chatUi, /showSearchError\(directQuery\)/);
   assert.doesNotMatch(chatUi, /\$\{copy\.error\}（\$\{code\}）/);
   // Turnstileが取れていないことを、通信失敗と区別して止める
   assert.match(chatUi, /if \(!token\) throw new Error\('TURNSTILE_TOKEN_UNAVAILABLE'\)/);

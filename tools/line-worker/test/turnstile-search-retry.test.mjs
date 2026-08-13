@@ -39,3 +39,10 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /hoshilu:search-degraded/);
   assert.match(app, /degraded:true/);
 });
+
+test('AI chat failure automatically continues to the resilient main search', () => {
+  const chat = fs.readFileSync(new URL('../public/ai-search-ui.mjs', import.meta.url), 'utf8');
+  assert.match(chat, /const directQuery = history\.filter/);
+  assert.match(chat, /const outcome = await runFinalSearch\(directQuery\)/);
+  assert.match(chat, /outcome\.ok \|\| outcome\.degraded/);
+});

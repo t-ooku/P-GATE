@@ -1659,6 +1659,7 @@ export function interleaveCandidatesBySource(groups = []) {
 // 1件だけ返す。どちらも価格・在庫・URLは返さず、YES後の商品実在確認は既存の
 // /api/knowledge（モールAPI/D1）だけが行う。質問本文はログへ保存しない。
 async function handleAiChatApi(request, env) {
+  const requestId = crypto.randomUUID();
   try {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
@@ -1678,13 +1679,17 @@ async function handleAiChatApi(request, env) {
       });
       result = { ...result, marketplace_search_links: marketplaceSearchLinks };
     }
-    return Response.json({ ok: true, result }, {
-      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+    return Response.json({ ok: true, result, request_id: requestId }, {
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
     });
   } catch (error) {
     const clientErrors = ['CONSENT_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'CHAT_HISTORY_EMPTY', 'TURNSTILE_VERIFICATION_FAILED'];
     const status = clientErrors.includes(error.message) ? 400 : 500;
-    return Response.json({ ok: false, error: error.message || 'CHAT_FAILED' }, { status });
+    const code = String(error.message || 'CHAT_FAILED').slice(0, 80);
+    console.error('AI_CHAT_REQUEST_FAILED', { requestId, code, status });
+    return Response.json({ ok: false, error: code, request_id: requestId }, {
+      status, headers: { 'cache-control': 'no-store', 'x-request-id': requestId }
+    });
   }
 }
 

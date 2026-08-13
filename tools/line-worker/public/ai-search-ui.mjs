@@ -132,7 +132,11 @@ function openIdentifyDialog(originalQuery,language){
       actions.append(yes,no);messages.append(actions);
     }catch(error){
       const code=String(error?.message||'CHAT_FAILED');console.error('HOSHILU_IDENTIFY_FAILED',code,error);status.textContent=copy.error;
-      const retry=document.createElement('button');retry.type='button';retry.className='ai-chat-retry';retry.textContent=chatCopy[language]?.retry||chatCopy.JA.retry;retry.addEventListener('click',()=>{retry.remove();status.remove();void ask();});messages.append(retry);showOtherMalls();
+      status.textContent=copy.finding;
+      const outcome=await runFinalSearch(originalQuery);
+      status.remove();
+      if(outcome.ok||outcome.degraded){dialog.close();return;}
+      messages.append(chatMessageRow('assistant',copy.error));showOtherMalls();
     }
   };
   dialog.showModal();void ask();
@@ -243,10 +247,13 @@ function openChatDialog(originalQuery, language) {
       // implementation error that they cannot act on.
       const code = String(error?.message || 'CHAT_FAILED');
       console.error('HOSHILU_CHAT_FAILED', code, error);
+      status.textContent = copy.finding;
+      const directQuery = history.filter((turn) => turn.role === 'user')
+        .map((turn) => String(turn.text || '').trim()).filter(Boolean).join(' / ') || originalQuery;
+      const outcome = await runFinalSearch(directQuery);
       status.remove();
-      messages.append(chatMessageRow('assistant', copy.error));
-      form.classList.remove('hidden');
-      input.focus();
+      if (outcome.ok || outcome.degraded) { dialog.close(); return; }
+      showSearchError(directQuery);
     }
   }
 
