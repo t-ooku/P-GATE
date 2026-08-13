@@ -86,13 +86,17 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(summary.channels[1].counts.published, 1);
   assert.equal(summary.channels[1].counts.failed, 1);
   assert.equal(summary.channels[2].configured, false);
-  assert.match(summary.channels[1].schedule, /月・火・土 20:15/);
+  assert.match(summary.channels[1].schedule, /月〜土 20:15/);
   assert.equal(summary.channels[1].funnel_7d.search_started, 2);
   assert.equal(summary.channels[1].funnel_7d.marketplace_click, 1);
   assert.equal(summary.channels[1].funnel_rates_7d.search_completion, 50);
   assert.equal(summary.channels[1].funnel_rates_7d.marketplace_outbound, 100);
   assert.equal(summary.business_kpis.status, 'READY');
   assert.equal(summary.business_kpis.registered_members, 2);
+  assert.equal(summary.business_kpis.annual_traffic_goal.visitors, 1000000);
+  assert.equal(summary.business_kpis.annual_traffic_goal.daily_pace, 2740);
+  assert.equal(summary.business_kpis.annual_traffic_goal.monthly_pace, 83334);
+  assert.equal(summary.business_kpis.annual_traffic_goal.actual_visitors, 0);
   const period = summary.business_kpis.periods['7d'];
   assert.equal(period.current.visitors, 2);
   assert.equal(period.current.sessions, 3);
