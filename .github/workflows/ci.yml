@@ -74,3 +74,64 @@ jobs:
         if: steps.creds.outputs.configured == 'true'
         working-directory: tools/line-worker
         run: node scripts/check-production-health.mjs --attempts 6 --retry-ms 10000
+
+  # Temporary read-only production preflight for the individually approved
+  # 0047 migration. The exact commit token is required, so later pushes skip it.
+  d1-0047-plan:
+    if: github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push' && contains(github.event.head_commit.message, '[plan-d1-0047]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify approved SQL and local behavior
+        working-directory: tools/line-worker
+        run: |
+          actual=$(sha256sum migrations/0047_growth_visitor_sessions.sql | cut -d' ' -f1)
+          test "$actual" = "3564fa1291387b279a927d3371d956127e916d12756ce4aa16d09bdcaeb79e45"
+          if grep -iqE '(^|[[:space:]])(delete|drop|truncate|update|insert)[[:space:]]' migrations/0047_growth_visitor_sessions.sql; then exit 1; fi
+          test "$(grep -c '^ALTER TABLE growth_events ADD COLUMN' migrations/0047_growth_visitor_sessions.sql)" -eq 2
+          test "$(grep -c '^CREATE INDEX IF NOT EXISTS growth_events_' migrations/0047_growth_visitor_sessions.sql)" -eq 2
+          npm ci
+          node --test test/growth-events.test.mjs test/promotion-dashboard.test.mjs
+      - name: Read production schema, pending migrations, counts, and recovery bookmark
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 info PRODUCT_DB --json > d1-info.json
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > bookmark-before.json
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote > pending-migrations.txt
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS growth_event_count FROM growth_events;" > count-before.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS identity_columns FROM pragma_table_info('growth_events') WHERE name IN ('visitor_id','session_id');" > columns-before.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT group_concat(name, ',') AS growth_indexes FROM sqlite_master WHERE type='index' AND tbl_name='growth_events';" > indexes-before.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const rows = name => { const v=JSON.parse(fs.readFileSync(name)); return (Array.isArray(v)?v:[v]).flatMap(x=>x.results||x.result?.results||[]); };
+          const find = (v,k) => { if(!v||typeof v!=='object') return; if(typeof v[k]==='string') return v[k]; for(const x of Object.values(v)){const y=find(x,k);if(y)return y;} };
+          const version=find(JSON.parse(fs.readFileSync('d1-info.json')),'version');
+          const bookmark=find(JSON.parse(fs.readFileSync('bookmark-before.json')),'bookmark');
+          const count=Number(rows('count-before.json')[0]?.growth_event_count);
+          const columns=Number(rows('columns-before.json')[0]?.identity_columns);
+          if(version!=='production'||!bookmark||!Number.isInteger(count)||count<0||columns!==0) throw new Error(JSON.stringify({version,bookmark:Boolean(bookmark),count,columns}));
+          console.log(`::notice::D1_0047_PLAN backend=${version} growth_events=${count} identity_columns=${columns} recovery_bookmark_captured=yes`);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,`D1 0047 plan: backend=${version}, growth_events=${count}, identity_columns=${columns}, recovery bookmark captured=yes\n`);
+          NODE
+          grep -q '0047_growth_visitor_sessions.sql' pending-migrations.txt
+          echo "::notice::PENDING_MIGRATIONS $(tr '\n' ' ' < pending-migrations.txt | tail -c 1200)"
+      - name: Preserve D1 preflight evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: d1-0047-plan-${{ github.run_id }}
+          path: |
+            tools/line-worker/d1-info.json
+            tools/line-worker/bookmark-before.json
+            tools/line-worker/pending-migrations.txt
+            tools/line-worker/count-before.json
+            tools/line-worker/columns-before.json
+            tools/line-worker/indexes-before.json
+          retention-days: 30
