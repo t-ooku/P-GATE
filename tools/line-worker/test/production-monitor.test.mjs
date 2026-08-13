@@ -92,10 +92,11 @@ test('production monitor fails when Yahoo ranking regresses to planned', async (
   );
 });
 
-test('production monitor rejects a hanging request within the fetch deadline', async () => {
+test('production monitor rejects a hanging request within the fetch deadline', { timeout: 2000 }, async () => {
   await assert.rejects(
     inspectProduction({
       baseUrl: 'https://hoshilu.app/', expectedIndexHtml,
+      requestTimeoutMs: 25,
       fetcher: (input, init = {}) => new Promise((_resolve, reject) => {
         const signal = input instanceof Request ? input.signal : init.signal;
         signal?.addEventListener('abort', () => reject(signal.reason), { once: true });
@@ -103,4 +104,4 @@ test('production monitor rejects a hanging request within the fetch deadline', a
     }),
     error => error?.name === 'TimeoutError'
   );
-}, { timeout: 12000 });
+});
