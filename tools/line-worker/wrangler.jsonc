@@ -41,7 +41,7 @@
     "SELLER_PLAN": "PARTNER"
   },
   "triggers": {
-    "crons": ["*/15 * * * *"]
+    "crons": ["*/15 * * * *", "7,22,37,52 * * * *"]
   },
   "d1_databases": [
     {
