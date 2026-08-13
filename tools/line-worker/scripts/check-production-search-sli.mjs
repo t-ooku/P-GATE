@@ -59,6 +59,60 @@ export function searchMonthlySloSql() {
     AND occurred_at>=?1`;
 }
 
+export function deepCanarySql() {
+  return `SELECT event_id,medium AS component,campaign AS status,content AS code,occurred_at
+  FROM growth_events
+  WHERE event_type='deep_canary_result' AND traffic_class='QA' AND source='worker'
+    AND occurred_at>=?1
+  ORDER BY occurred_at DESC LIMIT 160`;
+}
+
+const CANARY_MAX_AGE_MINUTES = Object.freeze({
+  query_structurer: 35,
+  rakuten: 35,
+  yahoo: 35,
+  ai_chat_primary: 75,
+  openai_backup: 375
+});
+
+export function evaluateDeepCanary(rows = [], { now = Date.now() } = {}) {
+  const grouped = new Map(Object.keys(CANARY_MAX_AGE_MINUTES).map((component) => [component, []]));
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const component = String(row?.component || '');
+    if (!grouped.has(component)) continue;
+    const status = String(row?.status || '');
+    const code = String(row?.code || '');
+    const occurredAt = String(row?.occurred_at || '');
+    const timestamp = Date.parse(occurredAt);
+    const runId = String(row?.event_id || '').match(/^deep-canary:(\d+):/u)?.[1] || '';
+    if (!['PASS', 'FAIL'].includes(status) || !/^[A-Z][A-Z0-9_]{2,79}$/u.test(code)
+      || !runId || !Number.isFinite(timestamp) || timestamp > now + 5 * 60000) {
+      throw new Error(`DEEP_CANARY_RESULT_INVALID:${component || 'UNKNOWN'}`);
+    }
+    if (!grouped.get(component).some((item) => item.run_id === runId)) {
+      grouped.get(component).push({ status, code, timestamp, occurred_at: occurredAt, run_id: runId });
+    }
+  }
+  const summary = {};
+  for (const [component, items] of grouped) {
+    const latest = items[0];
+    if (!latest || now - latest.timestamp > CANARY_MAX_AGE_MINUTES[component] * 60000) {
+      throw new Error(`DEEP_CANARY_STALE:${component.toUpperCase()}`);
+    }
+    if (component === 'ai_chat_primary' && latest.status === 'FAIL') {
+      throw new Error(`DEEP_CANARY_AI_CHAT_IMMEDIATE:${latest.code}`);
+    }
+    if (component !== 'ai_chat_primary' && items.length >= 2
+      && items[0].status === 'FAIL' && items[1].status === 'FAIL') {
+      const prefix = component === 'openai_backup'
+        ? 'DEEP_CANARY_OPENAI_BACKUP_WARNING' : 'DEEP_CANARY_CONSECUTIVE_FAILURE';
+      throw new Error(`${prefix}:${component.toUpperCase()}:${latest.code}`);
+    }
+    summary[component] = { status: latest.status, code: latest.code, occurred_at: latest.occurred_at };
+  }
+  return summary;
+}
+
 export function evaluateSearchSli(row = {}, {
   windowMinutes = 15,
   maxHardFailures = 0,
@@ -130,6 +184,24 @@ async function queryD1(fetcher, endpoint, apiToken, sql, params = []) {
   return row;
 }
 
+async function queryD1Rows(fetcher, endpoint, apiToken, sql, params = []) {
+  const response = await fetcher(endpoint, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${apiToken}`,
+      'content-type': 'application/json',
+      'user-agent': 'HOSHILU-Production-Monitor/1.0'
+    },
+    body: JSON.stringify({ sql, params }),
+    signal: AbortSignal.timeout(10000)
+  });
+  assert(response?.ok, `DEEP_CANARY_D1_HTTP_${Number(response?.status) || 0}`);
+  const payload = await response.json();
+  const query = Array.isArray(payload?.result) ? payload.result[0] : null;
+  assert(payload?.success === true && query?.success !== false, 'DEEP_CANARY_D1_QUERY_FAILED');
+  return Array.isArray(query?.results) ? query.results : [];
+}
+
 export async function inspectProductionSearchSli({
   accountId,
   apiToken,
@@ -179,7 +251,11 @@ export async function inspectProductionSearchSli({
   const monthly = evaluateMonthlyContinuity(monthlyRow, {
     minimumFinished: monthlyMinimumFinished, unavailableRateLimit: monthlyUnavailableRateLimit
   });
-  return { ...acute, slo_window_minutes: sloMinutes, slo, monthly };
+  const canaryRows = await queryD1Rows(fetcher, endpoint, apiToken, deepCanarySql(), [
+    new Date(now - 7 * 86400000).toISOString()
+  ]);
+  const deepCanary = evaluateDeepCanary(canaryRows, { now });
+  return { ...acute, slo_window_minutes: sloMinutes, slo, monthly, deep_canary: deepCanary };
 }
 
 export async function runProductionSearchSli(options = {}) {
@@ -236,6 +312,7 @@ async function main() {
       `- degraded rate: ${(result.degraded_rate * 100).toFixed(1)}%`, ''
       ,`Six-hour quality window: ${result.slo.finished} finished / ${result.slo.degraded} degraded (${(result.slo.degraded_rate * 100).toFixed(1)}%)`, ''
       ,`Thirty-day continuity: ${result.monthly.finished} finished / ${result.monthly.unavailable} unavailable (${(result.monthly.unavailable_rate * 100).toFixed(3)}%)`, ''
+      ,`Deep canary: ${Object.entries(result.deep_canary).map(([component, value]) => `${component}=${value.status}`).join(', ')}`, ''
     ].join('\n');
     console.log(summary);
     if (process.env.GITHUB_STEP_SUMMARY) await import('node:fs/promises').then(({ appendFile }) => appendFile(process.env.GITHUB_STEP_SUMMARY, summary));

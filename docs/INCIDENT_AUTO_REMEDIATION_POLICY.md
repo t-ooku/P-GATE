@@ -33,7 +33,7 @@ HOSHILUで再現可能な不具合または本番障害を確認した場合、�
   `growth-analytics.mjs`を取得し、検索タイムアウト・縮退・匿名監視の実装markerを確認する。
   deploy直後の検査だけは、commit内の期待versionと本番を完全一致させる。
 - `/api/ai-chat`は固定の無効Turnstileトークンで`siteverify`到達まで確認し、
-  `/api/knowledge`は入力検証と追跡IDを確認する。AI・商品APIの課金呼び出しは行わない。
+  `/api/knowledge`は入力検証と追跡IDを確認する。この外形検査自体は課金APIを呼ばない。
 - `/api/events`へ検索文・visitor ID・session IDを持たないQAイベントを1件送り、
   監視テレメトリのD1書き込み経路も確認する。QAは実利用SLIから除外する。
 - D1から直近15分の匿名集計だけを取得する。
@@ -48,6 +48,16 @@ HOSHILUで再現可能な不具合または本番障害を確認した場合、�
   サーバー発行request IDと許可されたエラーコードだけをD1へ記録する。
   AIチャットと通常検索の失敗段階は区別するが、検索文・会話本文・例外本文は保存しない。
   1件でインシデント化する。
+- Cloudflare Workerの非公開cronから深層canaryを実行する。Query Structurer・楽天・Yahoo!は
+  15分ごと、AIチャット主系は1時間ごと、OpenAI予備系は6時間ごとに固定合成条件で確認する。
+  公開APIにTurnstile回避口は作らず、外部レスポンス、固定検索語、商品情報は保存しない。
+  D1へ保存するのはcomponent、PASS/FAIL、安全なエラーコード、実行時刻だけである。
+- AI呼び出しは入力上限を保守的に見積もり、出力token上限と固定頻度を併用する。
+  31日あたりの予約額は最大4.836米ドル、月次ヒューズは5米ドルとし、到達時は
+  `CANARY_MONTHLY_BUDGET_LIMIT`でAI canaryだけを停止して監視へ通知する。
+  楽天・Yahoo!の無課金canaryは継続する。
+- 5分監視はcomponent別の欠測・古さと失敗を確認する。AIチャット主系は1回の失敗で、
+  その他は異なる2回の連続失敗で同じ自動Issueへ接続し、回復時は既存の3回連続成功規則で閉じる。
 - GitHub scheduleは遅延または取りこぼし得るため、これだけを完全な保証とは扱わない。
-  Cloudflare Health Checks、外部監視、実AI・モールcanaryの追加に課金・Secret・権限が
-  必要な場合は、費用と操作を示して承認を得る。
+  Cloudflare Health Checksや外部監視の追加に課金・Secret・権限が必要な場合は、
+  費用と操作を示して承認を得る。

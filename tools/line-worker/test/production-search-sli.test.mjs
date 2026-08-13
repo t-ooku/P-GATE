@@ -1,15 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluateMonthlyContinuity, evaluateSearchSli, evaluateSearchSlo, inspectProductionSearchSli, searchBackendFailureSql, searchMonthlySloSql, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
+import { deepCanarySql, evaluateDeepCanary, evaluateMonthlyContinuity, evaluateSearchSli, evaluateSearchSlo, inspectProductionSearchSli, searchBackendFailureSql, searchMonthlySloSql, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
+
+function healthyCanaryRows(now = Date.now()) {
+  const iso = new Date(now - 60000).toISOString();
+  return ['query_structurer','ai_chat_primary','openai_backup','rakuten','yahoo']
+    .map((component) => ({ event_id:`deep-canary:${now}:${component}`, component, status:'PASS', code:'CANARY_OK', occurred_at:iso }));
+}
 
 function d1Fetch(row, sloRow = { finished: 10, degraded: 1 }, diagnosticRow = {}) {
   let calls = 0;
   return async (_url, init) => {
     assert.equal(init.headers.authorization, 'Bearer test-token');
     const body = JSON.parse(init.body);
-    assert.match(body.sql, /traffic_class<>'QA'/u);
+    if (body.sql.includes("event_type='deep_canary_result'")) assert.match(body.sql, /traffic_class='QA'/u);
+    else assert.match(body.sql, /traffic_class<>'QA'/u);
     assert.doesNotMatch(body.sql, /query_text|visitor_id|session_id/iu);
     assert.match(body.params[0], /^\d{4}-\d{2}-\d{2}T/u);
+    if (body.sql.includes("event_type='deep_canary_result'")) {
+      return Response.json({ success: true, result: [{ success: true, results: healthyCanaryRows() }] });
+    }
     calls += 1;
     const monthlyCall = Number(row.backend_failed) > 0 ? 4 : 3;
     const result = calls === 1 ? row
@@ -44,6 +54,44 @@ test('production SLO checks a six-hour one-percent quality budget', () => {
   assert.match(sql, /occurred_at>=\?1/u);
   assert.throws(() => evaluateSearchSlo({ finished: 100, degraded: 2 }), /SEARCH_SLO_DEGRADED:2\/100:0\.020/u);
   assert.equal(evaluateSearchSlo({ finished: 99, degraded: 99 }).finished, 99);
+});
+
+test('deep canary SQL selects only fixed operational fields', () => {
+  const sql = deepCanarySql();
+  assert.match(sql, /traffic_class='QA'/u);
+  assert.match(sql, /source='worker'/u);
+  assert.doesNotMatch(sql, /query|prompt|history|response|authorization/iu);
+});
+
+test('deep canary accepts fresh passing components', () => {
+  const now = Date.now();
+  const result = evaluateDeepCanary(healthyCanaryRows(now), { now });
+  assert.equal(result.rakuten.status, 'PASS');
+});
+
+test('deep canary alerts on one AI chat failure', () => {
+  const now = Date.now();
+  const rows = healthyCanaryRows(now).map((row) => row.component === 'ai_chat_primary'
+    ? { ...row, status:'FAIL', code:'GEMINI_CHAT_INTENT_FAILED' } : row);
+  assert.throws(() => evaluateDeepCanary(rows, { now }), /DEEP_CANARY_AI_CHAT_IMMEDIATE:GEMINI_CHAT_INTENT_FAILED/u);
+});
+
+test('deep canary requires two distinct failed marketplace runs and resets on pass', () => {
+  const now = Date.now();
+  const base = healthyCanaryRows(now).filter((row) => row.component !== 'rakuten');
+  const failed = [0, 15].map((minutes, index) => ({
+    event_id:`deep-canary:${now-index}:rakuten`, component:'rakuten', status:'FAIL',
+    code:'RAKUTEN_MARKETPLACE_SEARCH_FAILED', occurred_at:new Date(now-minutes*60000).toISOString()
+  }));
+  assert.throws(() => evaluateDeepCanary([...base, ...failed], { now }), /DEEP_CANARY_CONSECUTIVE_FAILURE:RAKUTEN/u);
+  assert.doesNotThrow(() => evaluateDeepCanary([...base, { ...failed[0], status:'PASS', code:'CANARY_OK' }, failed[1]], { now }));
+});
+
+test('deep canary uses component-specific stale windows', () => {
+  const now = Date.now();
+  const rows = healthyCanaryRows(now).map((row) => row.component === 'rakuten'
+    ? { ...row, occurred_at:new Date(now-36*60000).toISOString() } : row);
+  assert.throws(() => evaluateDeepCanary(rows, { now }), /DEEP_CANARY_STALE:RAKUTEN/u);
 });
 
 test('production SLI accepts a quiet window without pretending traffic exists', () => {

@@ -135,14 +135,18 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
       url('/hoshilu-search-agent-products-v1.webp') center / cover no-repeat;
   }
   .journey-heading h2 { font-size: clamp(22px, 6.5vw, 32px); white-space: normal; }
-  .journey-heading h2 span { display: inline; }
+  .journey-heading h2 span {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
   .journey-heading > p:last-child {
     margin: 6px 0 0;
     font-size: clamp(11px, 3.15vw, 14px);
     white-space: normal;
   }
-  html:lang(ja) .journey-heading h2,
-  html:lang(ja) .journey-heading > p:last-child { white-space: nowrap; }
+  html:lang(ja) .journey-heading h2 { white-space: normal; }
+  html:lang(ja) .journey-heading > p:last-child { white-space: normal; }
   .journey-heading > p:last-child span { display: inline; }
   .journey-steps { gap: 4px; }
   .journey-steps li { grid-template-columns: 23px 1fr; gap: 7px; padding: 6px 8px; border-radius: 11px; }

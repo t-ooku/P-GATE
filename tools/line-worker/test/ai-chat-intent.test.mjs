@@ -147,7 +147,7 @@ test('通常検索はGemini Flash-Lite・最小思考・短いJSONでブラン�
   const result = await refineMarketplaceSearchQuery(
     'カラコン ローラ 度入り', 'JA', { GEMINI_API_KEY: 'g'.repeat(32) }, fetchImpl
   );
-  assert.match(requestedUrl, /gemini-3\.1-flash-lite/);
+  assert.match(requestedUrl, /gemini-3\.5-flash-lite/);
   assert.equal(requestBody.generationConfig.maxOutputTokens, 128);
   assert.equal(requestBody.generationConfig.thinkingConfig.thinkingLevel, 'minimal');
   assert.match(requestBody.contents[0].parts[0].text, /spokesperson/);

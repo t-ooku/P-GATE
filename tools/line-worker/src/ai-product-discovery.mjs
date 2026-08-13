@@ -144,6 +144,7 @@ async function callOpenAi(query, language, env, fetchImpl) {
     body: JSON.stringify({
       model,
       input: providerPrompt(query, language),
+      max_output_tokens: 128,
       reasoning: { effort: 'low' },
       text: { format: { type: 'json_object' } }
     })

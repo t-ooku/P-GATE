@@ -41,8 +41,8 @@
 ## 現在の境界
 
 - GitHubのscheduleは5分が最短だが、混雑時に遅延・取りこぼしがあり得る。
-- 無効TurnstileトークンでCloudflare検証サービスへの到達までは確認するが、実AI、楽天、
-  Yahoo!の商品検索を定期的に消費するdeep canaryはまだ行わない。
+- 無効Turnstileトークンによる外形検査に加え、実AI、楽天、Yahoo!の商品検索を
+  非公開Worker cronのdeep canaryで定期確認する。AI費用は月5米ドルを上限とする。
 - Cloudflare内だけの監視は障害ドメインが本体と共通になるため、外部監視の代替ではない。
-- deep canary、Cloudflare Health Check通知、Sentry等の外部即時通知は、費用上限、通知先、
+- Cloudflare Health Check通知、Sentry等の外部即時通知は、費用上限、通知先、
   Secretまたは権限を確認してから追加する。

@@ -127,6 +127,7 @@ async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_TI
     body: JSON.stringify({
       model,
       input: chatPrompt(history, language, mode),
+      max_output_tokens: mode === 'IDENTIFY' ? 256 : 128,
       reasoning: { effort: 'low' },
       text: { format: { type: 'json_object' } }
     })
@@ -238,7 +239,7 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
 export async function refineMarketplaceSearchQuery(rawQuery, language, env = {}, fetchImpl = fetch) {
   const fastEnv = { ...env };
   if (String(env.GEMINI_API_KEY || '').length >= 20) {
-    fastEnv.GEMINI_PRODUCT_DISCOVERY_MODEL = String(env.GEMINI_QUERY_REFINEMENT_MODEL || 'gemini-3.1-flash-lite');
+    fastEnv.GEMINI_PRODUCT_DISCOVERY_MODEL = String(env.GEMINI_QUERY_REFINEMENT_MODEL || 'gemini-3.5-flash-lite');
     // Geminiが設定済みなら、通常時に2社へ二重課金せず最速モデルを優先する。
     fastEnv.OPENAI_API_KEY = '';
   }
@@ -246,4 +247,23 @@ export async function refineMarketplaceSearchQuery(rawQuery, language, env = {},
     [{ role: 'user', text: String(rawQuery || '') }], language, fastEnv, fetchImpl,
     { timeoutMs: 1500, totalBudgetMs: 1500 }
   );
+}
+
+// Internal scheduled-canary entrypoint. It deliberately bypasses provider
+// fallback so a broken primary or backup cannot be hidden by the other one.
+// The fixed synthetic history is supplied by deep-canary.mjs and is never
+// persisted or logged.
+export async function probeChatIntentProvider(provider, env = {}, fetchImpl = fetch, {
+  mode = 'REFINE', timeoutMs = CHAT_TIMEOUT_MS
+} = {}) {
+  const history = [{ role: 'user', text: '軽いワイヤレスイヤホン' }];
+  if (provider === 'gemini') {
+    if (String(env.GEMINI_API_KEY || '').length < 20) throw new Error('GEMINI_NOT_CONFIGURED');
+    return callGemini(history, 'JA', env, fetchImpl, timeoutMs, mode);
+  }
+  if (provider === 'openai') {
+    if (String(env.OPENAI_API_KEY || '').length < 20) throw new Error('OPENAI_NOT_CONFIGURED');
+    return callOpenAi(history, 'JA', env, fetchImpl, timeoutMs, mode);
+  }
+  throw new Error('CANARY_PROVIDER_INVALID');
 }
