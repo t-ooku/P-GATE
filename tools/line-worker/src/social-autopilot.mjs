@@ -159,7 +159,9 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
   const xPublishingSafety = xPublishingSafetyReadiness(env);
   const posts = [...approvedModelReel, ...evergreen]
     .filter(post => readiness[post.platform]
-      && (post.platform !== 'X' || xPublishingSafety.ready));
+      && (post.platform !== 'X' || (
+        xPublishingSafety.ready && env.X_EVERGREEN_AUTOPILOT_ENABLED === 'true'
+      )));
   let inserted = 0;
   for (const post of posts) {
     const campaignId = post.post_id === APPROVED_MODEL_REEL.post_id

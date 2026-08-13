@@ -107,6 +107,45 @@ test('1件の公開失敗が同時刻の次の承認済み投稿を止めない'
   assert.ok(updates.some((item) => item.sql.includes("status='PUBLISHED'") && item.values[0] === 'post-succeeds'));
 });
 
+test('X公開停止中は既存APPROVED行をclaimもFAILED化もしない', async () => {
+  const rows = [{
+    post_id: 'paused-x-post', platform: 'X', caption: 'approved but paused',
+    status: 'APPROVED', scheduled_at: '2026-08-14T11:00:00.000Z'
+  }];
+  const updates = [];
+  let publishes = 0;
+  const env = {
+    X_USER_ACCESS_TOKEN: 'configured-but-disabled',
+    PRODUCT_DB: {
+      prepare(sql) {
+        return {
+          bind(...values) {
+            if (sql.includes('SELECT * FROM social_post_queue')) {
+              assert.equal(values[1], 0);
+              return { all: async () => ({ results: rows }) };
+            }
+            return {
+              run: async () => {
+                updates.push({ sql, values });
+                return { meta: { changes: 0 } };
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+  const result = await runDueSocialPosts(env, new Date('2026-08-14T11:00:00.000Z'), async () => {
+    publishes += 1;
+    return Response.json({ data: { id: 'must-not-publish' } });
+  });
+  assert.deepEqual(result, { checked: 0, published: 0 });
+  assert.equal(publishes, 0);
+  assert.equal(updates.some(item => item.sql.includes("SET status='PUBLISHING'")), false);
+  assert.equal(updates.some(item => item.sql.includes("SET status='FAILED'")
+    && item.values[0] === 'paused-x-post'), false);
+});
+
 test('publisher readiness requires platform credentials and TikTok audit', () => {
   assert.deepEqual(socialPublisherReadiness({
     X_USER_ACCESS_TOKEN: 'x',

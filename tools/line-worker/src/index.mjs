@@ -66,6 +66,7 @@ import {
   handleSocialAdminRoutes, runDueSocialPosts, socialPublisherReadinessWithStoredCredentials
 } from './social-publisher.mjs';
 import { handleInstagramOAuthRoutes, instagramOAuthReadiness } from './instagram-oauth.mjs';
+import { handleXOAuthRoutes, xOAuthReadiness } from './x-oauth.mjs';
 import { runSocialAutopilotCycle } from './social-autopilot.mjs';
 import {
   handleRunwayGenerationRoutes, runRunwayGenerationCycle, runwayGenerationReadiness
@@ -2490,7 +2491,7 @@ const CORE_D1_TABLES = [
   'marketplace_kpi_events', 'marketplace_kpi_summary',
   'anonymous_benchmark',
   'social_knowledge_inbox', 'social_knowledge_aggregates', 'social_hashtag_aggregates',
-  'product_identifiers', 'instagram_oauth_credentials',
+  'product_identifiers', 'instagram_oauth_credentials', 'x_oauth_credentials',
   'runway_budget_policy', 'runway_budget_periods', 'runway_generation_jobs',
   'runway_generation_attempts', 'runway_cost_reservations',
   'runway_provider_usage_daily', 'runway_approval_grants', 'runway_audit_log'
@@ -2515,6 +2516,7 @@ async function handleHealth(env) {
   const readiness = getEnvironmentReadiness(env);
   const databaseFeatures = await databaseFeatureChecks(env);
   const instagramOAuth = await instagramOAuthReadiness(env);
+  const xOAuth = await xOAuthReadiness(env);
   return Response.json({
     ok: readiness.ready,
     release: readiness.release,
@@ -2525,6 +2527,7 @@ async function handleHealth(env) {
       database_features: databaseFeatures,
       social_publishers: await socialPublisherReadinessWithStoredCredentials(env),
       instagram_oauth: instagramOAuth,
+      x_oauth: xOAuth,
       runway_video_generation: runwayGenerationReadiness(env)
     }
   }, {
@@ -2577,6 +2580,8 @@ export default {
     });
     const instagramOAuthResponse = await handleInstagramOAuthRoutes(request, env);
     if (instagramOAuthResponse) return instagramOAuthResponse;
+    const xOAuthResponse = await handleXOAuthRoutes(request, env);
+    if (xOAuthResponse) return xOAuthResponse;
     const runwayMediaResponse = await handleRunwayMediaRoute(request, env);
     if (runwayMediaResponse) return runwayMediaResponse;
     if (request.method === 'GET' && url.pathname === '/og/hoshilu-x-v3.png' && env.ASSETS) {

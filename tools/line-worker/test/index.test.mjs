@@ -841,6 +841,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(payload.checks.database_features.social_knowledge_inbox, false);
   assert.equal(payload.checks.database_features.product_identifiers, false);
   assert.equal(payload.checks.database_features.instagram_oauth_credentials, false);
+  assert.equal(payload.checks.database_features.x_oauth_credentials, false);
   assert.equal(payload.checks.database_features.runway_generation_jobs, false);
   assert.deepEqual(payload.checks.social_publishers, {
     X: false,

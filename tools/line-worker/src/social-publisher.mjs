@@ -316,11 +316,14 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
   await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='FAILED',
     last_error='STALE_PUBLISHING_RECOVERED',updated_at=?2
     WHERE status='PUBLISHING' AND updated_at<?1`).bind(staleBefore, now.toISOString()).run();
+  const xReady = xPublishingSafetyReadiness(env).ready ? 1 : 0;
   const due = await env.PRODUCT_DB.prepare(`SELECT * FROM social_post_queue
-    WHERE status='APPROVED' AND scheduled_at<=?1 ORDER BY scheduled_at ASC LIMIT 5`)
-    .bind(now.toISOString()).all();
+    WHERE status='APPROVED' AND scheduled_at<=?1
+    AND (platform<>'X' OR ?2=1) ORDER BY scheduled_at ASC LIMIT 5`)
+    .bind(now.toISOString(), xReady).all();
+  const dueRows = (due.results || []).filter(row => row.platform !== 'X' || xReady === 1);
   let published = 0;
-  for (const row of due.results || []) {
+  for (const row of dueRows) {
     try {
       const claim = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='PUBLISHING',updated_at=?2
         WHERE post_id=?1 AND status='APPROVED'`).bind(row.post_id, now.toISOString()).run();
@@ -340,7 +343,7 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
         updated_at=?3 WHERE post_id=?1`).bind(row.post_id, clean(error?.message || error, 300), now.toISOString()).run();
     }
   }
-  return { checked: (due.results || []).length, published };
+  return { checked: dueRows.length, published };
 }
 
 function instagramPermalink(value) {

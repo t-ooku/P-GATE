@@ -55,6 +55,7 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
     INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED: 'true',
     X_USER_ACCESS_TOKEN: 'x-token',
     X_PUBLISHING_ENABLED: 'true',
+    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
     X_EXPECTED_USERNAME: 'HOSHILUOfficial',
     INSTAGRAM_ACCESS_TOKEN: 'ig-token',
     INSTAGRAM_ACCOUNT_ID: 'ig-account',
@@ -86,6 +87,7 @@ test('販促自動運用は認証未設定の媒体をキューへ入れない',
     SOCIAL_AUTOPILOT_ENABLED: 'true',
     X_USER_ACCESS_TOKEN: 'x-token',
     X_PUBLISHING_ENABLED: 'true',
+    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
     X_EXPECTED_USERNAME: 'HOSHILUOfficial',
     PRODUCT_DB: {
       prepare() {
@@ -106,6 +108,28 @@ test('SOCIAL_AUTOPILOT_ENABLEDだけではXのAPPROVED投稿を自動投入し�
   const rows = [];
   const env = {
     SOCIAL_AUTOPILOT_ENABLED: 'true',
+    X_USER_ACCESS_TOKEN: 'x-token',
+    PRODUCT_DB: {
+      prepare() {
+        return {
+          bind(...values) {
+            return { async run() { rows.push(values); return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
+  assert.deepEqual(result, { enabled: true, planned: 0, inserted: 0 });
+  assert.equal(rows.length, 0);
+});
+
+test('X投稿接続を有効にしても定期シリーズを別承認しなければ自動投入しない', async () => {
+  const rows = [];
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EXPECTED_USERNAME: 'iCHMR81Lv4VYJYG',
     X_USER_ACCESS_TOKEN: 'x-token',
     PRODUCT_DB: {
       prepare() {
