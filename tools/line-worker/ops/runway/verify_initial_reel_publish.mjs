@@ -23,8 +23,52 @@ function fail(code, detail = '') {
   throw new Error(detail ? `${code}: ${detail}` : code);
 }
 
+export function parseJsonDocument(value) {
+  const text = String(value ?? '').replace(/^\uFEFF/u, '').replace(/\u001B\[[0-?]*[ -/]*[@-~]/gu, '').trim();
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Wrangler can write a progress line (for example, "├ Checking...") to
+    // stdout before its --json document. Extract exactly one balanced JSON
+    // value so the verifier remains strict about the payload itself without
+    // treating CLI presentation text as database corruption.
+  }
+  for (let start = 0; start < text.length; start += 1) {
+    if (text[start] !== '[' && text[start] !== '{') continue;
+    const stack = [];
+    let quoted = false;
+    let escaped = false;
+    for (let index = start; index < text.length; index += 1) {
+      const character = text[index];
+      if (quoted) {
+        if (escaped) escaped = false;
+        else if (character === '\\') escaped = true;
+        else if (character === '"') quoted = false;
+        continue;
+      }
+      if (character === '"') {
+        quoted = true;
+        continue;
+      }
+      if (character === '[' || character === '{') stack.push(character);
+      else if (character === ']' || character === '}') {
+        const expected = character === ']' ? '[' : '{';
+        if (stack.pop() !== expected) break;
+        if (stack.length === 0) {
+          try {
+            return JSON.parse(text.slice(start, index + 1));
+          } catch {
+            break;
+          }
+        }
+      }
+    }
+  }
+  fail('JSON_DOCUMENT_NOT_FOUND');
+}
+
 function readJson(path) {
-  return JSON.parse(readFileSync(path, 'utf8'));
+  return parseJsonDocument(readFileSync(path, 'utf8'));
 }
 
 export function d1Rows(payload) {

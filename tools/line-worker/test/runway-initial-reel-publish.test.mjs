@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   INITIAL_REEL,
+  parseJsonDocument,
   verifyApproved,
   verifyCandidate,
   verifyHealth,
@@ -189,6 +190,14 @@ test('mutation verifier rejects partial writes', () => {
   assert.equal(verifyMutationChanges([{ meta: { changes: 3, rows_written: 2 } }], [1, 1]), true);
   assert.throws(() => verifyMutationChanges([{ meta: { changes: 1 } }, { meta: { changes: 0 } }], [1, 1]), /D1_MUTATION_CHANGE_COUNT_INVALID/);
   assert.throws(() => verifyMutationChanges([{ meta: { changes: 3, rows_written: 1 } }], [1, 1]), /D1_MUTATION_CHANGE_COUNT_INVALID/);
+});
+
+test('Wrangler progress text cannot corrupt strict JSON verification', () => {
+  const payload = [{ results: [{ ok: 1 }], meta: { changes: 1 } }];
+  assert.deepEqual(parseJsonDocument(JSON.stringify(payload)), payload);
+  assert.deepEqual(parseJsonDocument(`\u001b[90m├ Checking remote database...\u001b[0m\n${JSON.stringify(payload)}\n`), payload);
+  assert.deepEqual(parseJsonDocument(`notice {not-json}\n${JSON.stringify(payload)}\ntrailing status`), payload);
+  assert.throws(() => parseJsonDocument('├ Checking remote database...'), /JSON_DOCUMENT_NOT_FOUND/);
 });
 
 test('workflow is explicit, exact-hash gated and never calls the Runway generation API', () => {
