@@ -13,11 +13,22 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        # main is the GitHub scheduler branch; production source lives on the
+        # feature branch. Pull requests still test their own proposed head.
+        with:
+          ref: ${{ github.event_name == 'push' && 'feature/ui-search-v2' || github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install Worker dependencies
+        run: npm ci --prefix tools/line-worker
       - name: Run all regression tests
         run: npm test
+      - name: Block deterministic search-quality regressions
+        working-directory: tools/line-worker
+        run: npm run check:search-quality
       - name: Build single-file GAS bundle
         run: npm run build
       - name: Verify generated bundle is reproducible

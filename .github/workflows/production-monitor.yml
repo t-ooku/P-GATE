@@ -1,5 +1,8 @@
 name: HOSHILU production monitor
 
+# main owns the schedule; every check explicitly reads production source from
+# feature/ui-search-v2 so default-branch drift cannot weaken the monitor.
+
 on:
   # Offset from the top of the hour to reduce GitHub scheduler congestion.
   schedule:
