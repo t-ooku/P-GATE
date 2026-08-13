@@ -784,7 +784,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const payload = await response.json();
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
-  assert.equal(payload.release, '1.18.0');
+  assert.equal(payload.release, '1.19.0');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
   // §3移行(ContractPolicy/MultilingualSeo/Measurement/SocialKnowledge/ProductIdentifier)で
   // 追加したD1テーブルもgas/PreflightEngine.gsの「必須シート」チェック相当として含まれる。
@@ -793,12 +793,20 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(payload.checks.database_features.social_knowledge_inbox, false);
   assert.equal(payload.checks.database_features.product_identifiers, false);
   assert.equal(payload.checks.database_features.instagram_oauth_credentials, false);
+  assert.equal(payload.checks.database_features.runway_generation_jobs, false);
   assert.deepEqual(payload.checks.social_publishers, {
     X: false,
     INSTAGRAM: false,
     TIKTOK: false
   });
   assert.deepEqual(payload.checks.instagram_oauth, { configured: false, connected: false });
+  assert.deepEqual(payload.checks.runway_video_generation, {
+    api_configured: false,
+    database_configured: false,
+    media_storage_configured: false,
+    enabled: false,
+    ready: false
+  });
   assert.equal(JSON.stringify(payload).includes(base.GAS_BRIDGE_SECRET), false);
   assert.equal(JSON.stringify(payload).includes(base.TURNSTILE_SECRET_KEY), false);
 

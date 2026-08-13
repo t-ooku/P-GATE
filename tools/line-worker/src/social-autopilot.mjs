@@ -1,7 +1,7 @@
 import {
   normalizeSocialPost,
   runDueSocialPosts,
-  socialPublisherReadiness,
+  socialPublisherReadinessWithStoredCredentials,
   syncInstagramPublishedPermalinks
 } from './social-publisher.mjs';
 
@@ -138,11 +138,24 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
   if (env.SOCIAL_AUTOPILOT_ENABLED !== 'true' || !env.PRODUCT_DB) {
     return { enabled: false, planned: 0, inserted: 0 };
   }
-  const readiness = socialPublisherReadiness(env);
-  const approvedModelReel = now.getTime() >= Date.parse(APPROVED_MODEL_REEL.scheduled_at)
+  // Instagram credentials are stored encrypted in D1 after OAuth. Checking only
+  // static environment variables would incorrectly suppress Instagram posts even
+  // though the official account is connected.
+  const readiness = await socialPublisherReadinessWithStoredCredentials(env);
+  // Historical reel replay is off by default. Enabling stored Instagram OAuth must
+  // never make a past/manual reel appear as a new post when its external publication
+  // history is not present in this D1 queue.
+  const approvedModelReel = env.APPROVED_MODEL_REEL_REPLAY_ENABLED === 'true'
+    && now.getTime() >= Date.parse(APPROVED_MODEL_REEL.scheduled_at)
     ? [normalizeSocialPost(APPROVED_MODEL_REEL)]
     : [];
-  const posts = [...approvedModelReel, ...buildSocialAutopilotPosts(now)]
+  // Stored OAuth proves connectivity, not approval for a new evergreen series.
+  // Keep future Instagram seeding behind an independent opt-in so enabling the
+  // official OAuth connection cannot silently publish unrelated reels.
+  const evergreen = buildSocialAutopilotPosts(now).filter(post => (
+    post.platform !== 'INSTAGRAM' || env.INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED === 'true'
+  ));
+  const posts = [...approvedModelReel, ...evergreen]
     .filter(post => readiness[post.platform]);
   let inserted = 0;
   for (const post of posts) {

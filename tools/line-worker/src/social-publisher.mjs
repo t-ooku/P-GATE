@@ -429,6 +429,18 @@ export async function handleSocialAdminRoutes(request, env) {
     if (!postId || !Number.isFinite(Date.parse(scheduledAt))) return Response.json({ ok: false, error: 'SOCIAL_APPROVAL_INVALID' }, { status: 400 });
     const existing = await env.PRODUCT_DB.prepare('SELECT * FROM social_post_queue WHERE post_id=?1').bind(postId).first();
     if (!existing) return Response.json({ ok: false, error: 'SOCIAL_POST_NOT_FOUND' }, { status: 404 });
+    // Runway output has a stricter identity/content/post-processing QA gate.
+    // The generic social approval endpoint must not bypass it. It may only be
+    // used for a retry after the dedicated Runway approval already passed.
+    if (existing.campaign_id === 'hoshilu-runway-video') {
+      const runwayJob = await env.PRODUCT_DB.prepare(`SELECT status,qa_status,storage_key
+        FROM runway_generation_jobs WHERE job_id=?1 AND post_id=?2 LIMIT 1`)
+        .bind(existing.content_id, postId).first();
+      if (!runwayJob || runwayJob.status !== 'APPROVED_FOR_POST'
+        || runwayJob.qa_status !== 'PASSED' || !runwayJob.storage_key) {
+        return Response.json({ ok: false, error: 'RUNWAY_QA_REQUIRED' }, { status: 409 });
+      }
+    }
     try {
       const post = normalizeSocialPost(existing);
       if (post.platform !== 'X' && !post.media_url) throw new Error(`${post.platform}_MEDIA_REQUIRED`);

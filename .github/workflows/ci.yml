@@ -37,11 +37,132 @@ jobs:
   # per docs/HOSHILU_WORKER_RELEASE_RUNBOOK_2026-07-26.md (requires a D1
   # backup/verification step first) and
   # docs/HOSHILU_COMMAND_GOVERNANCE_2026-08-02.md (requires explicit
-  # approval for production sync) - this job must not perform either
-  # automatically.
-  deploy:
+  # approval for production sync). The isolated Runway setup below runs only
+  # with its explicit, user-approved commit marker and captures a restore point.
+  runway-infra-setup:
     needs: test
-    if: github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push'
+    if: >-
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[setup-runway-infra-approved]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: cloudflare-runway-infra
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify approved migration and credentials
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+          actual="$(sha256sum migrations/0050_runway_video_generation.sql | cut -d' ' -f1)"
+          test "$actual" = "e3fee260b8e50c6e794bb25b354a82ae8dad6b74b5aac11602b73c79676f10a8"
+          if grep -iqE '(^|[[:space:]])(delete|drop|truncate|alter)[[:space:]]' migrations/0050_runway_video_generation.sql; then
+            echo "::error::Destructive statement found in 0050"
+            exit 1
+          fi
+          node --test test/runway-video-generation-migration.test.mjs test/runway-generation.test.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Capture D1 restore point and prepare isolated migration
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > runway-recovery-bookmark-before.json
+          mkdir -p .migration-runway-0050
+          cp migrations/0050_runway_video_generation.sql .migration-runway-0050/0050_runway_video_generation.sql
+          cat > wrangler-runway-0050.jsonc <<'JSON'
+          {
+            "name": "project-gate-line-bridge",
+            "main": "src/index.mjs",
+            "compatibility_date": "2026-07-14",
+            "d1_databases": [{
+              "binding": "PRODUCT_DB",
+              "database_name": "hoshilu-products",
+              "database_id": "17629324-b771-4348-982c-c25da48c29b2",
+              "migrations_dir": ".migration-runway-0050"
+            }]
+          }
+          JSON
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote --config wrangler-runway-0050.jsonc > runway-pending-before.txt
+          pending_count="$(grep -c '0050_runway_video_generation.sql' runway-pending-before.txt || true)"
+          test "$pending_count" -le 1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Create bounded R2 media storage and 90-day lifecycle
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          if npx --yes wrangler@4.121.0 r2 bucket info hoshilu-social-media > runway-r2-info-before.txt 2>&1; then
+            echo "R2 bucket already exists"
+          else
+            npx --yes wrangler@4.121.0 r2 bucket create hoshilu-social-media
+          fi
+          npx --yes wrangler@4.121.0 r2 bucket lifecycle list hoshilu-social-media > runway-r2-lifecycle-before.txt
+          if grep -Fq 'expire-runway-media-90d' runway-r2-lifecycle-before.txt; then
+            npx --yes wrangler@4.121.0 r2 bucket lifecycle remove hoshilu-social-media --name expire-runway-media-90d
+          fi
+          npx --yes wrangler@4.121.0 r2 bucket lifecycle add hoshilu-social-media expire-runway-media-90d runway/ --expire-days 90 --force
+          npx --yes wrangler@4.121.0 r2 bucket info hoshilu-social-media > runway-r2-info-after.txt
+          npx --yes wrangler@4.121.0 r2 bucket lifecycle list hoshilu-social-media > runway-r2-lifecycle-after.txt
+          grep -Fq 'expire-runway-media-90d' runway-r2-lifecycle-after.txt
+          grep -Fq 'runway/' runway-r2-lifecycle-after.txt
+          grep -Eq '90([^0-9]|$)' runway-r2-lifecycle-after.txt
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Apply only Runway migration 0050 and verify policy
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 migrations apply PRODUCT_DB --remote --config wrangler-runway-0050.jsonc
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT initial_cap_credits,monthly_cap_credits,enabled,kill_switch,initial_test_completed FROM runway_budget_policy WHERE policy_id=1;" > runway-policy-after.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS table_count FROM sqlite_master WHERE type='table' AND name IN ('runway_budget_policy','runway_budget_periods','runway_generation_jobs','runway_generation_attempts','runway_cost_reservations','runway_provider_usage_daily','runway_approval_grants','runway_audit_log');" > runway-tables-after.json
+          node <<'NODE'
+          const fs=require('node:fs');
+          const rows=(name)=>{const d=JSON.parse(fs.readFileSync(name));return (Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[]);};
+          const policy=rows('runway-policy-after.json')[0], tables=rows('runway-tables-after.json')[0];
+          if(Number(policy?.initial_cap_credits)!==1000||Number(policy?.monthly_cap_credits)!==3000||Number(policy?.enabled)!==1||Number(policy?.kill_switch)!==0||Number(policy?.initial_test_completed)!==0||Number(tables?.table_count)!==8) throw new Error(JSON.stringify({policy,tables}));
+          console.log('::notice::RUNWAY_INFRA_READY initial=1000 monthly=3000 autobilling=unchanged tables=8');
+          NODE
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote --config wrangler-runway-0050.jsonc > runway-pending-after.txt
+          if grep -Fq '0050_runway_video_generation.sql' runway-pending-after.txt; then exit 1; fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Preserve Runway infrastructure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runway-infra-setup-${{ github.run_id }}
+          path: |
+            tools/line-worker/runway-recovery-bookmark-before.json
+            tools/line-worker/runway-pending-before.txt
+            tools/line-worker/runway-pending-after.txt
+            tools/line-worker/runway-policy-after.json
+            tools/line-worker/runway-tables-after.json
+            tools/line-worker/runway-r2-info-before.txt
+            tools/line-worker/runway-r2-info-after.txt
+            tools/line-worker/runway-r2-lifecycle-before.txt
+            tools/line-worker/runway-r2-lifecycle-after.txt
+          retention-days: 30
+
+  deploy:
+    needs: [test, runway-infra-setup]
+    if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      (needs.runway-infra-setup.result == 'success' || needs.runway-infra-setup.result == 'skipped') &&
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -72,3 +193,94 @@ jobs:
       - name: Verify production health, assets and critical API contracts
         working-directory: tools/line-worker
         run: node scripts/check-production-health.mjs --attempts 6 --retry-ms 10000
+
+  runway-initial-test-start:
+    needs: [test, deploy]
+    if: >-
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[start-runway-initial-test-approved]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    concurrency:
+      group: runway-initial-test
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify approved job definition and production readiness
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+          actual="$(sha256sum ops/runway/initial_test_job_20260813.sql | cut -d' ' -f1)"
+          test "$actual" = "bc56ba97729aebf4c0d5f3493db9b3c4072b7b818fa31858afdc492365e38691"
+          health="$(curl --fail-with-body --silent --show-error 'https://hoshilu.app/health?runway-initial-test=1')"
+          HEALTH="$health" node <<'NODE'
+          const health=JSON.parse(process.env.HEALTH);
+          const runway=health?.checks?.runway_video_generation;
+          const db=health?.checks?.database_features||{};
+          const tables=['runway_budget_policy','runway_budget_periods','runway_generation_jobs','runway_generation_attempts','runway_cost_reservations','runway_provider_usage_daily','runway_approval_grants','runway_audit_log'];
+          if(health.ok!==true||health.release!=='1.19.0'||runway?.api_configured!==true||runway?.database_configured!==true||runway?.media_storage_configured!==true||runway?.enabled!==true||runway?.ready!==true||tables.some(name=>db[name]!==true)) throw new Error(JSON.stringify({ok:health.ok,release:health.release,runway,runway_tables:Object.fromEntries(tables.map(name=>[name,db[name]]))}));
+          console.log('::notice::RUNWAY_PRODUCTION_READY secret=present database=ready storage=ready generation=enabled');
+          NODE
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Insert exactly one approved initial test job
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --file ops/runway/initial_test_job_20260813.sql --yes
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,request_fingerprint,status,recipe,recipe_version,character_image_url,product_image_url,duration_seconds,ratio,audio,product_info,user_concept,caption,link,expected_credits,rights_confirmed,ai_disclosure_confirmed,max_attempts,provider_task_id,storage_key,last_error_code,last_error_stage,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > runway-initial-job.json
+          node <<'NODE'
+          const fs=require('node:fs'),crypto=require('node:crypto');const d=require('./runway-initial-job.json'); const row=(Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0];
+          const fingerprintPayload={recipe:row?.recipe,recipe_version:row?.recipe_version,character_image_url:row?.character_image_url,product_image_url:row?.product_image_url,duration_seconds:Number(row?.duration_seconds),ratio:row?.ratio,audio:Number(row?.audio),expected_credits:Number(row?.expected_credits),product_info:row?.product_info,user_concept:row?.user_concept};
+          const fingerprint=crypto.createHash('sha256').update(JSON.stringify(fingerprintPayload)).digest('hex');
+          const expected={job_id:'runway-hoshilu-model-ugc-test-20260813-v1',post_id:'hoshilu-runway-model-ugc-20260813-v1',request_fingerprint:'c93f00332ed1dce7631663a67be340eb484de1c2c374deacceedbd783c34a3e1',recipe:'product_ugc',recipe_version:'2026-06',character_image_url:'https://hoshilu.app/social/runway/hoshilu-approved-model-reference-v1.jpg',product_image_url:'https://hoshilu.app/social/runway/hoshilu-product-screen-v1.jpg',ratio:'720:1280'};
+          if(!row||Object.entries(expected).some(([k,v])=>row[k]!==v)||fingerprint!==expected.request_fingerprint||!['APPROVED','BUDGET_RESERVED','SUBMITTING','PROCESSING','GENERATED_REVIEW_REQUIRED'].includes(row.status)||Number(row.duration_seconds)!==8||Number(row.audio)!==1||Number(row.expected_credits)!==336||Number(row.rights_confirmed)!==1||Number(row.ai_disclosure_confirmed)!==1||Number(row.max_attempts)!==1||!String(row.caption||'').includes('AI生成・AI加工映像')||new URL(row.link).searchParams.get('utm_content')!=='runway_product_ugc_test_20260813_v1') throw new Error(JSON.stringify({row,fingerprint}));
+          console.log(`::notice::RUNWAY_INITIAL_JOB status=${row.status} expected_credits=336 max_attempts=1 external_publish=false`);
+          NODE
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Monitor generation through R2 persistence without publishing
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 120); do
+            npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,status,expected_credits,provider_task_id,storage_key,storage_size_bytes,qa_status,last_error_code,last_error_stage,submitted_at,generated_at,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > runway-initial-job.json
+            status="$(node -e "const d=require('./runway-initial-job.json');const r=(Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0];process.stdout.write(String(r?.status||''))")"
+            echo "Runway initial test status: ${status:-MISSING} (check $attempt/120)"
+            case "$status" in
+              GENERATED_REVIEW_REQUIRED)
+                npx --yes wrangler@4.121.0 r2 object get 'hoshilu-social-media/runway/runway-hoshilu-model-ugc-test-20260813-v1/output.mp4' --remote --file runway-initial-output.mp4
+                test -s runway-initial-output.mp4
+                node -e "const fs=require('node:fs');const n=fs.statSync('runway-initial-output.mp4').size;if(n<=0||n>104857600)process.exit(1);console.log('Runway output bytes:',n)"
+                echo "::notice::RUNWAY_INITIAL_TEST_GENERATED review_required=true external_publish=false"
+                exit 0
+                ;;
+              FAILED_FINAL|BUDGET_BLOCKED|AMBIGUOUS_SUBMISSION|CANCELLED)
+                echo "::error::Runway initial test stopped with status $status"
+                exit 1
+                ;;
+            esac
+            sleep 30
+          done
+          echo "::error::Runway initial test monitor timed out without claiming success"
+          exit 1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Preserve initial test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runway-initial-test-${{ github.run_id }}
+          path: |
+            tools/line-worker/runway-initial-job.json
+            tools/line-worker/runway-initial-output.mp4
+          retention-days: 1

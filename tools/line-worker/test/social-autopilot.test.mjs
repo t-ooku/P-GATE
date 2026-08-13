@@ -52,6 +52,7 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
   const rows = [];
   const env = {
     SOCIAL_AUTOPILOT_ENABLED: 'true',
+    INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED: 'true',
     X_USER_ACCESS_TOKEN: 'x-token',
     INSTAGRAM_ACCESS_TOKEN: 'ig-token',
     INSTAGRAM_ACCOUNT_ID: 'ig-account',
@@ -97,11 +98,66 @@ test('販促自動運用は認証未設定の媒体をキューへ入れない',
   assert.deepEqual(new Set(platforms), new Set(['X']));
 });
 
+test('D1に保存したInstagram OAuth接続も自動投稿の接続済み媒体として扱う', async () => {
+  const platforms = [];
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    INSTAGRAM_APP_ID: 'app-id',
+    INSTAGRAM_APP_SECRET: 'a'.repeat(32),
+    SOCIAL_OAUTH_ENCRYPTION_KEY: 'b'.repeat(32),
+    INSTAGRAM_OAUTH_REDIRECT_URI: 'https://hoshilu.app/api/oauth/instagram/callback',
+    INSTAGRAM_EXPECTED_USERNAME: 'hoshilu.app',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('FROM instagram_oauth_credentials')) {
+          return {
+            first: async () => ({
+              status: 'ACTIVE',
+              expires_at: '2099-01-01T00:00:00.000Z'
+            })
+          };
+        }
+        return {
+          bind(...values) {
+            return { async run() { platforms.push(values[1]); return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
+  assert.equal(result.planned, 7);
+  assert.deepEqual(new Set(platforms), new Set(['INSTAGRAM']));
+});
+
+test('Instagram OAuth接続だけでは未承認の定期リールを自動投入しない', async () => {
+  const rows = [];
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    INSTAGRAM_ACCESS_TOKEN: 'ig-token',
+    INSTAGRAM_ACCOUNT_ID: 'ig-account',
+    PRODUCT_DB: {
+      prepare() {
+        return {
+          bind(...values) {
+            return { async run() { rows.push(values); return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
+  assert.equal(result.planned, 0);
+  assert.equal(rows.length, 0);
+});
+
 test('承認済み20260812動画はAI生成表示とUTM付きで一度だけキュー登録できる', async () => {
   const rows = [];
   const statements = [];
   const env = {
     SOCIAL_AUTOPILOT_ENABLED: 'true',
+    APPROVED_MODEL_REEL_REPLAY_ENABLED: 'true',
     INSTAGRAM_ACCESS_TOKEN: 'ig-token',
     INSTAGRAM_ACCOUNT_ID: 'ig-account',
     PRODUCT_DB: {

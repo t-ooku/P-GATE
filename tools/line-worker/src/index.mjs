@@ -65,6 +65,10 @@ import {
 } from './social-publisher.mjs';
 import { handleInstagramOAuthRoutes, instagramOAuthReadiness } from './instagram-oauth.mjs';
 import { runSocialAutopilotCycle } from './social-autopilot.mjs';
+import {
+  handleRunwayGenerationRoutes, runRunwayGenerationCycle, runwayGenerationReadiness
+} from './runway-generation.mjs';
+import { handleRunwayMediaRoute } from './social-media-r2.mjs';
 import { renderSeoPage, seoHubPaths, seoPagePaths } from './seo-pages.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import { classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure } from './growth-events.mjs';
@@ -92,7 +96,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // 各リンクの mode を載せる(signedMarketplaceSearchLinks参照)。
 // marketplace-search-mode.mjs がここが唯一の判定元(v4.3のAI最安比較
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
-const RELEASE = '1.18.0';
+const RELEASE = '1.19.0';
 const CANONICAL_HOST = 'hoshilu.app';
 const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths]);
 const DOCUMENT_SECURITY_HEADERS = Object.freeze({
@@ -2353,7 +2357,10 @@ const CORE_D1_TABLES = [
   'marketplace_kpi_events', 'marketplace_kpi_summary',
   'anonymous_benchmark',
   'social_knowledge_inbox', 'social_knowledge_aggregates', 'social_hashtag_aggregates',
-  'product_identifiers', 'instagram_oauth_credentials'
+  'product_identifiers', 'instagram_oauth_credentials',
+  'runway_budget_policy', 'runway_budget_periods', 'runway_generation_jobs',
+  'runway_generation_attempts', 'runway_cost_reservations',
+  'runway_provider_usage_daily', 'runway_approval_grants', 'runway_audit_log'
 ];
 
 async function databaseFeatureChecks(env) {
@@ -2384,7 +2391,8 @@ async function handleHealth(env) {
       ...readiness.checks,
       database_features: databaseFeatures,
       social_publishers: await socialPublisherReadinessWithStoredCredentials(env),
-      instagram_oauth: instagramOAuth
+      instagram_oauth: instagramOAuth,
+      runway_video_generation: runwayGenerationReadiness(env)
     }
   }, {
     status: readiness.ready ? 200 : 503,
@@ -2436,6 +2444,8 @@ export default {
     });
     const instagramOAuthResponse = await handleInstagramOAuthRoutes(request, env);
     if (instagramOAuthResponse) return instagramOAuthResponse;
+    const runwayMediaResponse = await handleRunwayMediaRoute(request, env);
+    if (runwayMediaResponse) return runwayMediaResponse;
     if (request.method === 'GET' && url.pathname === '/og/hoshilu-x-v3.png' && env.ASSETS) {
       return env.ASSETS.fetch(new Request(new URL('/og-hoshilu.png', request.url), request));
     }
@@ -2452,6 +2462,8 @@ export default {
     if (multilingualSyncResponse) return multilingualSyncResponse;
     const productIdentifierSyncResponse = await handleProductIdentifierSyncRoutes(request, env);
     if (productIdentifierSyncResponse) return productIdentifierSyncResponse;
+    const runwayGenerationResponse = await handleRunwayGenerationRoutes(request, env);
+    if (runwayGenerationResponse) return runwayGenerationResponse;
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
     const promotionDashboardResponse = await handlePromotionDashboardRoutes(request, env);
@@ -2517,6 +2529,10 @@ export default {
       // 大隆さんの2026-08-09承認に基づく販促自動運用。先に14日先までの
       // 権利確認済み投稿を冪等補充し、その後に期限到来分を配信する。
       runSocialAutopilotCycle(env, scheduledAt),
+      // Runway is isolated from publishing: a successful generation is persisted
+      // to R2 and stops at REVIEW_REQUIRED. It never bypasses the existing APPROVED
+      // publication gate, and a failure cannot block either Instagram or X.
+      runRunwayGenerationCycle(env, scheduledAt),
       deliverDueWebNotifications(env, scheduledAt),
       deliverDueMemberNotifications(env, scheduledAt),
       runMarketplaceContentCycle(env, scheduledAt),
