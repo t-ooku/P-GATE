@@ -82,15 +82,15 @@ test('regular and deep cron heartbeats use fixed internal rows and actual comple
     WHERE event_type='reliability_incident'`).get().count, 0);
 });
 
-test('GitHub schedule detects missing, stale, and stuck heartbeats at strict thresholds', () => {
+test('GitHub schedule tolerates platform delay while detecting missing, stale, and stuck heartbeats', () => {
   const { githubHeartbeatIncident, INCIDENT_CODES } = reliabilityControlTest;
   const now = new Date('2026-08-13T00:30:00.000Z');
   assert.equal(githubHeartbeatIncident(null, now), INCIDENT_CODES.missing);
   assert.equal(githubHeartbeatIncident({
-    campaign: 'COMPLETED', content: '12345', occurred_at: '2026-08-13T00:10:00.000Z'
+    campaign: 'COMPLETED', content: '12345', occurred_at: '2026-08-12T22:30:00.000Z'
   }, now), '');
   assert.equal(githubHeartbeatIncident({
-    campaign: 'COMPLETED', content: '12345', occurred_at: '2026-08-13T00:09:59.999Z'
+    campaign: 'COMPLETED', content: '12345', occurred_at: '2026-08-12T22:29:59.999Z'
   }, now), INCIDENT_CODES.stale);
   assert.equal(githubHeartbeatIncident({
     campaign: 'STARTED', content: '12345', occurred_at: '2026-08-13T00:20:00.000Z'
@@ -139,7 +139,7 @@ test('stale completion and stuck start enqueue separate fixed safe-code rows', a
   const { sqlite, env } = sqliteEnvironment();
   t.after(() => sqlite.close());
   seedGithubHeartbeat(sqlite, 'COMPLETED', '2026-08-13T00:00:00.000Z');
-  await inspectGithubScheduleHeartbeat(env, new Date('2026-08-13T00:20:00.001Z'));
+  await inspectGithubScheduleHeartbeat(env, new Date('2026-08-13T02:00:00.001Z'));
   seedGithubHeartbeat(sqlite, 'STARTED', '2026-08-13T00:20:00.000Z');
   await inspectGithubScheduleHeartbeat(env, new Date('2026-08-13T00:30:00.001Z'));
   assert.deepEqual(sqlite.prepare(`SELECT event_id,medium,campaign,content
