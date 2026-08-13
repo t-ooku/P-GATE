@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyGrowthTraffic, handleGrowthEvent, normalizeGrowthEvent } from '../src/growth-events.mjs';
+import { classifyGrowthTraffic, handleGrowthEvent, normalizeGrowthEvent, recordSearchOperationalFailure } from '../src/growth-events.mjs';
 
 test('accepts only anonymous allowlisted growth dimensions', () => {
   assert.deepEqual(normalizeGrowthEvent({
@@ -35,6 +35,19 @@ test('rejects unknown event types and marketplace values', () => {
   assert.equal(normalizeGrowthEvent({ event_type: 'landing_view', marketplace: 'unknown' }).marketplace, '');
 });
 
+test('server operational failures store only request ID and bounded code', async () => {
+  const calls = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };
+  assert.equal(await recordSearchOperationalFailure(env, {
+    requestId: 'e309d1ad-2a34-4f2f-913b-47fccdbbe24c',
+    code: 'MARKETPLACE_TIMEOUT', query: '保存禁止の検索文'
+  }), true);
+  assert.equal(calls[0].values[1], 'search_backend_failed');
+  assert.equal(calls[0].values[5], 'MARKETPLACE_TIMEOUT');
+  assert.equal(calls[0].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe24c');
+  assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
+});
+
 test('accepts anonymous registration and inquiry events across all ten marketplaces', () => {
   assert.equal(normalizeGrowthEvent({ event_type: 'member_registered' }).event_type, 'member_registered');
   assert.equal(normalizeGrowthEvent({ event_type: 'inquiry_submitted' }).event_type, 'inquiry_submitted');
@@ -48,7 +61,7 @@ test('accepts anonymous registration and inquiry events across all ten marketpla
 
 test('accepts the official-launch commerce journey KPIs without storing search text', () => {
   for (const event_type of [
-    'search_failed', 'ai_result_clicked', 'ranking_result_clicked',
+    'search_failed', 'search_dead_end', 'search_degraded', 'ai_result_clicked', 'ranking_result_clicked',
     'price_comparison_opened', 'returning_visit'
   ]) {
     const normalized = normalizeGrowthEvent({ event_type, query: '保存してはいけない検索文' });
@@ -114,4 +127,21 @@ test('visitor columnsのD1 migration適用前もイベント件数を保存す�
   assert.equal(calls.length, 2);
   assert.match(calls[1].sql, /occurred_at,traffic_class\)/);
   assert.equal(calls[1].values.length, 10);
+});
+
+test('rejects cross-origin events and uncorrelated public dead-end signals', async () => {
+  const env = { PRODUCT_DB: { prepare: () => ({ bind: () => ({ first: async () => null }) }) } };
+  const crossOrigin = await handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+    method: 'POST', headers: { origin: 'https://attacker.example', 'content-type': 'application/json' },
+    body: JSON.stringify({ event_type: 'landing_view' })
+  }), env);
+  assert.equal(crossOrigin.status, 403);
+  const deadEnd = await handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+    method: 'POST', headers: { origin: 'https://hoshilu.app', 'content-type': 'application/json' },
+    body: JSON.stringify({
+      event_type: 'search_dead_end',
+      session_id: '550e8400-e29b-41d4-a716-446655440000'
+    })
+  }), env);
+  assert.equal(deadEnd.status, 400);
 });

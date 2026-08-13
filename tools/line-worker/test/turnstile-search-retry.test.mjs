@@ -39,9 +39,23 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /await recoverTurnstileWidget\(\)/);
   assert.match(app, /x-request-id/);
   assert.match(app, /hoshilu:search-degraded/);
+  assert.match(app, /timedAbortController\(Math\.min\(KNOWLEDGE_HTTP_TIMEOUT_MS,remainingBeforeFetch\)\)/);
+  assert.match(app, /activeKnowledgeFetch\?\.abort\(\)/);
+  assert.match(app, /SEARCH_SUPERSEDED/);
+  assert.match(app, /SEARCH_DEADLINE_EXCEEDED/);
+  assert.match(app, /searchDeadlineAt=Date\.now\(\)\+60000/);
+  assert.match(app, /hoshilu:search-cancelled/);
+  assert.match(app, /error\?\.name==='TimeoutError'/);
+  assert.match(app, /error\?\.name==='AbortError'/);
+  assert.match(app, /parseFailed=true/);
+  assert.match(app, /if\(parseFailed&&attempt\+1<maxAttempts\)continue/);
+  assert.match(app, /Number\(error\?\.status\|\|0\)>=500/);
+  assert.match(app, /hoshilu:search-execution-started/);
+  assert.match(app, /Math\.min\(15000,Number\(options\.tokenCallbackTimeoutMs\)\|\|15000\)/);
   assert.match(app, /degraded:true/);
   assert.match(app, /const maxAttempts=Math\.max\(1,Math\.min\(2,Number\(options\.maxAttempts\)\|\|2\)\)/);
-  assert.match(app, /waitForTurnstileToken\(tokenCallbackTimeoutMs\)/);
+  assert.match(app, /Math\.floor\(\(remainingBeforeToken-1000\)\/2\)/);
+  assert.match(app, /waitForTurnstileToken\(tokenWaitBudget\)/);
 });
 
 test('AI chat failure automatically continues to the resilient main search', () => {

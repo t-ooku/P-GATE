@@ -67,7 +67,7 @@ import { handleInstagramOAuthRoutes, instagramOAuthReadiness } from './instagram
 import { runSocialAutopilotCycle } from './social-autopilot.mjs';
 import { renderSeoPage } from './seo-pages.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
-import { classifyGrowthTraffic, handleGrowthEvent } from './growth-events.mjs';
+import { classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure } from './growth-events.mjs';
 import {
   applySellerPriority, sellerPriorityContext
 } from './seller-priority-console.mjs';
@@ -2232,6 +2232,14 @@ async function handleKnowledgeApi(request, env, ctx) {
     const clientErrors = ['CONSENT_REQUIRED', 'QUERY_LENGTH_INVALID', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'TURNSTILE_VERIFICATION_FAILED'];
     const status = clientErrors.includes(code) ? 400 : 500;
     console.error('KNOWLEDGE_SEARCH_FAILED', { requestId, code: code.slice(0, 80), status });
+    if (status >= 500) {
+      try { await recordSearchOperationalFailure(env, { requestId, code }); }
+      catch (telemetryError) {
+        console.error('SEARCH_OPERATIONAL_TELEMETRY_FAILED', {
+          requestId, code: String(telemetryError?.message || telemetryError).slice(0, 80)
+        });
+      }
+    }
     return Response.json({ ok: false, error: code, request_id: requestId }, {
       status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
     });

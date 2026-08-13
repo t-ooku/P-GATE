@@ -40,10 +40,30 @@ const sessionId = () => {
 const send = (event_type, extra = {}) => {
   const body = JSON.stringify({ event_type, locale: locale(), visitor_id: visitorId, session_id: sessionId(), ...attribution, ...extra });
   if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' }));
-    return;
+    if (navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' })) === true) return;
   }
   fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
+};
+const SEARCH_WATCHDOG_MS = 75000;
+const searchWatches = new Map();
+const clearSearchWatch = executionId => {
+  const watch = searchWatches.get(String(executionId || ''));
+  if (!watch) return;
+  clearTimeout(watch);
+  searchWatches.delete(String(executionId));
+};
+const startSearchWatch = event => {
+  const executionId = String(event.detail?.executionId || '');
+  if (!/^[a-f0-9-]{20,64}$/iu.test(executionId)) return;
+  clearSearchWatch(executionId);
+  const watch = setTimeout(() => {
+    if (searchWatches.get(executionId) !== watch) return;
+    searchWatches.delete(executionId);
+    // No query text or exception body is sent. A timeout means the real
+    // result/degraded terminal events never arrived for this execution.
+    send('search_dead_end');
+  }, SEARCH_WATCHDOG_MS);
+  searchWatches.set(executionId, watch);
 };
 
 send('landing_view');
@@ -59,9 +79,16 @@ document.addEventListener('submit', event => {
   if (event.target?.id === 'knowledgeForm') send('search_started');
 });
 
-document.addEventListener('hoshilu:search-completed', () => send('search_completed'));
-document.addEventListener('hoshilu:search-failed', () => send('search_failed'));
-document.addEventListener('hoshilu:search-degraded', () => send('search_failed'));
+document.addEventListener('hoshilu:search-execution-started', startSearchWatch);
+document.addEventListener('hoshilu:search-cancelled', event => clearSearchWatch(event.detail?.executionId));
+document.addEventListener('hoshilu:search-completed', event => { clearSearchWatch(event.detail?.executionId); send('search_completed'); });
+document.addEventListener('hoshilu:search-failed', event => { clearSearchWatch(event.detail?.executionId); send('search_dead_end'); });
+document.addEventListener('hoshilu:search-degraded', event => {
+  clearSearchWatch(event.detail?.executionId);
+  // Attribution is preserved. The search text, request ID and exception
+  // message never enter the public analytics event.
+  send('search_degraded');
+});
 
 document.addEventListener('click', event => {
   const target = event.target.closest('a,button');

@@ -3,6 +3,8 @@ const EVENTS = new Set([
   'search_started',
   'search_completed',
   'search_failed',
+  'search_dead_end',
+  'search_degraded',
   'ai_result_clicked',
   'ranking_result_clicked',
   'price_comparison_opened',
@@ -70,9 +72,40 @@ export function normalizeGrowthEvent(input = {}) {
   };
 }
 
+// Internal-only operational telemetry. This event type is intentionally not
+// in the public EVENTS allowlist, so /api/events cannot forge it. It stores
+// only a server request ID and a bounded error code, never the search text.
+export async function recordSearchOperationalFailure(env, { requestId = '', code = '' } = {}) {
+  if (!env?.PRODUCT_DB) return false;
+  const safeCode = /^[A-Z][A-Z0-9_]{2,79}$/u.test(String(code || ''))
+    ? String(code) : 'KNOWLEDGE_INTERNAL_ERROR';
+  const values = [
+    crypto.randomUUID(), 'search_backend_failed', 'JA', 'worker', 'operational',
+    safeCode, clean(requestId), '', new Date().toISOString(), 'UNATTRIBUTED', '', ''
+  ];
+  try {
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
+    ).bind(...values).run();
+  } catch (error) {
+    const message = String(error?.message || error);
+    if (!/(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(message)) throw error;
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    ).bind(...values.slice(0, 10)).run();
+  }
+  return true;
+}
+
 export async function handleGrowthEvent(request, env) {
   const url = new URL(request.url);
   if (request.method !== 'POST' || url.pathname !== '/api/events') return null;
+  const origin = request.headers.get('origin');
+  if (origin && origin !== url.origin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
   if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'EVENT_STORE_UNAVAILABLE' }, { status: 503 });
   let event;
   try {
@@ -81,6 +114,21 @@ export async function handleGrowthEvent(request, env) {
     return Response.json({ ok: false, error: 'EVENT_INVALID' }, { status: 400 });
   }
   const trafficClass = classifyGrowthTraffic(event);
+  if (event.event_type === 'search_dead_end') {
+    // Advisory RUM can be forged by a browser, so correlate it to a recent
+    // search_started from the same anonymous session before accepting it.
+    if (!event.session_id) return Response.json({ ok: false, error: 'EVENT_CORRELATION_REQUIRED' }, { status: 400 });
+    try {
+      const started = await env.PRODUCT_DB.prepare(
+        `SELECT 1 AS found FROM growth_events
+         WHERE session_id=?1 AND event_type='search_started'
+           AND occurred_at>=?2 LIMIT 1`
+      ).bind(event.session_id, new Date(Date.now() - 5 * 60000).toISOString()).first();
+      if (!started?.found) return Response.json({ ok: false, error: 'EVENT_CORRELATION_REQUIRED' }, { status: 400 });
+    } catch {
+      return Response.json({ ok: false, error: 'EVENT_CORRELATION_UNAVAILABLE' }, { status: 503 });
+    }
+  }
   const values = [
     crypto.randomUUID(), event.event_type, event.locale, event.source, event.medium,
     event.campaign, event.content, event.marketplace, new Date().toISOString(), trafficClass,

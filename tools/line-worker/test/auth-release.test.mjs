@@ -48,8 +48,14 @@ test('検索成功と失敗は検索ごとに別イベントとして計測す�
   assert.match(analytics, /hoshilu:search-completed/);
   assert.match(analytics, /hoshilu:search-failed/);
   assert.match(analytics, /hoshilu:search-degraded/);
+  assert.match(analytics, /hoshilu:search-cancelled/);
+  assert.match(analytics, /send\('search_degraded'\)/);
+  assert.match(analytics, /send\('search_dead_end'\)/);
+  assert.match(analytics, /event\.detail\?\.executionId/);
+  assert.match(analytics, /SEARCH_WATCHDOG_MS/);
+  assert.match(analytics, /sendBeacon[\s\S]{0,180}=== true\) return/);
   assert.doesNotMatch(analytics, /dataset\.measured/);
-  assert.match(app, /CustomEvent\('hoshilu:search-completed'\)/);
+  assert.match(app, /CustomEvent\('hoshilu:search-completed'/);
   assert.match(app, /CustomEvent\('hoshilu:search-degraded'/);
 });
 

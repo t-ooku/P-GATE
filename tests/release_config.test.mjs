@@ -23,7 +23,8 @@ test('release version has one source of truth', () => {
   assert.ok(fs.existsSync(path.join(root, 'dist', `Project_GATE_Complete_v${minorVersion}.gs`)));
 });
 
-// 自動で走るワークフローは ci.yml ただ1つ、という規約は維持する。
+// 自動で走るワークフローは、release/deploy正本のci.ymlと本番外形監視の
+// production-monitor.ymlだけに固定する。
 // 2026-08-07 に apply-teacher-dataset-d1.yml を追加したが、これは
 // workflow_dispatch でしか起動しない手動実行用で、push や PR では動かない。
 // 規約の狙いは古いCIが増殖して「どれが本物か分からない」状態を防ぐことなので、
@@ -32,9 +33,9 @@ test('release version has one source of truth', () => {
 // ワークフローが後から push で走るようになっても気づけない。
 const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml'];
 
-test('GitHub Actions uses a single current workflow', () => {
+test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
-  assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)), ['ci.yml']);
+  assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)), ['ci.yml', 'production-monitor.yml']);
   const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);

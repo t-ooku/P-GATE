@@ -9,8 +9,9 @@ const REQUIRED_HEALTH_CHECKS = [
   'yahoo_shopping_configured'
 ];
 const ASSET_MARKERS = Object.freeze({
-  'app.js': ['tokenCallbackTimeoutMs', 'maxAttempts'],
-  'ai-search-ui.mjs': ['AI_CHAT_HTTP_TIMEOUT_MS', 'tokenCallbackTimeoutMs']
+  'app.js': ['KNOWLEDGE_HTTP_TIMEOUT_MS', 'SEARCH_DEADLINE_EXCEEDED', 'SEARCH_SUPERSEDED', 'tokenCallbackTimeoutMs', 'maxAttempts'],
+  'ai-search-ui.mjs': ['AI_CHAT_HTTP_TIMEOUT_MS', 'tokenCallbackTimeoutMs'],
+  'growth-analytics.mjs': ['SEARCH_WATCHDOG_MS', 'search-execution-started', 'search_dead_end', 'search_degraded']
 });
 
 function assert(condition, message) {
@@ -29,7 +30,7 @@ async function responseJson(response, label) {
 
 export function criticalAssetPaths(indexHtml = '') {
   const paths = [];
-  for (const name of ['app.js', 'ai-search-ui.mjs']) {
+  for (const name of ['app.js', 'ai-search-ui.mjs', 'growth-analytics.mjs']) {
     const escaped = name.replaceAll('.', '\\.');
     const match = String(indexHtml).match(new RegExp(`(?:src=["'])(/[^"']*${escaped}\\?v=\\d+)(?:["'])`, 'u'));
     if (match) paths.push(match[1]);
@@ -37,21 +38,23 @@ export function criticalAssetPaths(indexHtml = '') {
   return paths;
 }
 
-function probeRequest(baseUrl, pathname) {
+function probeRequest(baseUrl, pathname, turnstileToken = '') {
   return new Request(new URL(pathname, baseUrl), {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
     body: JSON.stringify({
       query: 'monitor probe',
+      history: [{ role: 'user', content: 'monitor probe' }],
       consent: true,
       session_id: 'monitor_session_20260813',
-      turnstile_token: ''
-    })
+      turnstile_token: turnstileToken
+    }),
+    signal: AbortSignal.timeout(10000)
   });
 }
 
-async function checkTraceableValidation(fetcher, baseUrl, pathname, expectedError, checks) {
-  const response = await fetcher(probeRequest(baseUrl, pathname));
+async function checkTraceableValidation(fetcher, baseUrl, pathname, expectedError, checks, turnstileToken = '') {
+  const response = await fetcher(probeRequest(baseUrl, pathname, turnstileToken));
   assert(response.status === 400, `${pathname}:EXPECTED_400_GOT_${response.status}`);
   const payload = await response.json();
   assert(payload?.ok === false && payload?.error === expectedError, `${pathname}:VALIDATION_RESPONSE_CHANGED`);
@@ -60,16 +63,31 @@ async function checkTraceableValidation(fetcher, baseUrl, pathname, expectedErro
   checks.push(`${pathname} validation and request ID`);
 }
 
+async function checkAnonymousEventIngestion(fetcher, baseUrl, checks) {
+  const response = await fetcher(new Request(new URL('/api/events', baseUrl), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
+    body: JSON.stringify({
+      event_type: 'landing_view', locale: 'JA',
+      source: 'qa_production_monitor', medium: 'qa', campaign: 'reliability_monitor'
+    }),
+    signal: AbortSignal.timeout(10000)
+  }));
+  assert(response.status === 202, `/api/events:EXPECTED_202_GOT_${response.status}`);
+  const payload = await response.json();
+  assert(payload?.ok === true, '/api/events:INGESTION_FAILED');
+  checks.push('/api/events anonymous QA ingestion');
+}
+
 export async function inspectProduction({
   baseUrl = DEFAULT_BASE_URL,
   fetcher = fetch,
-  expectedIndexHtml = null
+  expectedIndexHtml = null,
+  assetPolicy = 'source'
 } = {}) {
   const origin = new URL(baseUrl);
   const checks = [];
-  const localIndex = expectedIndexHtml ?? await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
-  const expectedAssets = criticalAssetPaths(localIndex);
-  assert(expectedAssets.length === 2, 'LOCAL_CRITICAL_ASSET_VERSION_MISSING');
+  assert(['source', 'live'].includes(assetPolicy), `ASSET_POLICY_INVALID:${assetPolicy}`);
 
   const cacheBust = `monitor=${Date.now()}`;
   const health = await responseJson(await fetcher(new URL(`/health?${cacheBust}`, origin), {
@@ -84,6 +102,11 @@ export async function inspectProduction({
     headers: { accept: 'text/html', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
     signal: AbortSignal.timeout(10000)
   }), '/');
+  const sourceIndex = assetPolicy === 'live'
+    ? productionHtml
+    : expectedIndexHtml ?? await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const expectedAssets = criticalAssetPaths(sourceIndex);
+  assert(expectedAssets.length === 3, `${assetPolicy === 'live' ? 'LIVE' : 'LOCAL'}_CRITICAL_ASSET_VERSION_MISSING`);
   for (const path of expectedAssets) {
     assert(productionHtml.includes(path), `PRODUCTION_ASSET_VERSION_MISMATCH:${path}`);
     const asset = await responseText(await fetcher(new URL(path, origin), {
@@ -91,7 +114,7 @@ export async function inspectProduction({
       signal: AbortSignal.timeout(10000)
     }), path);
     assert(asset.length > 1000, `PRODUCTION_ASSET_TOO_SMALL:${path}`);
-    const name = path.includes('ai-search-ui.mjs') ? 'ai-search-ui.mjs' : 'app.js';
+    const name = path.includes('ai-search-ui.mjs') ? 'ai-search-ui.mjs' : path.includes('growth-analytics.mjs') ? 'growth-analytics.mjs' : 'app.js';
     for (const marker of ASSET_MARKERS[name]) assert(asset.includes(marker), `PRODUCTION_ASSET_MARKER_MISSING:${name}:${marker}`);
   }
   checks.push(`critical assets current (${expectedAssets.join(', ')})`);
@@ -106,21 +129,25 @@ export async function inspectProduction({
   assert(yahoo?.status === 'available' && yahoo?.ranking_mode === 'native_api', 'YAHOO_RANKING_NOT_AVAILABLE');
   checks.push('13-mall registry and Yahoo! native ranking');
 
-  await checkTraceableValidation(fetcher, origin, '/api/ai-chat', 'TURNSTILE_TOKEN_INVALID', checks);
+  await checkTraceableValidation(fetcher, origin, '/api/ai-chat', 'TURNSTILE_VERIFICATION_FAILED', checks, 'hoshilu-production-monitor-invalid-token');
   await checkTraceableValidation(fetcher, origin, '/api/knowledge', 'TURNSTILE_TOKEN_INVALID', checks);
+  await checkAnonymousEventIngestion(fetcher, origin, checks);
   return { ok: true, checked_at: new Date().toISOString(), checks, expected_assets: expectedAssets };
 }
 
 export async function runProductionMonitor(options = {}) {
-  const attempts = Math.max(1, Math.min(10, Number(options.attempts) || 1));
+  const attempts = Math.max(1, Math.min(5, Number(options.attempts) || 1));
   const retryMs = Math.max(100, Math.min(30000, Number(options.retryMs) || 5000));
+  const deadlineMs = Math.max(10000, Math.min(180000, Number(options.deadlineMs) || 90000));
+  const deadlineAt = Date.now() + deadlineMs;
   let lastError;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    if (Date.now() >= deadlineAt) throw lastError || new Error('PRODUCTION_MONITOR_DEADLINE');
     try {
       return await inspectProduction(options);
     } catch (error) {
       lastError = error;
-      if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, retryMs));
+      if (attempt < attempts && Date.now() + retryMs < deadlineAt) await new Promise((resolve) => setTimeout(resolve, retryMs));
     }
   }
   throw lastError;
@@ -133,8 +160,10 @@ function cliOptions(argv) {
   };
   return {
     baseUrl: value('--base-url', process.env.HOSHILU_PRODUCTION_URL || DEFAULT_BASE_URL),
+    assetPolicy: value('--asset-policy', process.env.HOSHILU_MONITOR_ASSET_POLICY || 'source'),
     attempts: Number(value('--attempts', process.env.HOSHILU_MONITOR_ATTEMPTS || 1)),
-    retryMs: Number(value('--retry-ms', process.env.HOSHILU_MONITOR_RETRY_MS || 5000))
+    retryMs: Number(value('--retry-ms', process.env.HOSHILU_MONITOR_RETRY_MS || 5000)),
+    deadlineMs: Number(value('--deadline-ms', process.env.HOSHILU_MONITOR_DEADLINE_MS || 90000))
   };
 }
 
