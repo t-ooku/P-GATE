@@ -620,7 +620,7 @@ test('different paid run IDs atomically compete for the remaining monthly budget
   assert.ok(spent <= 5_000_000, `budget exceeded: ${spent}`);
 });
 
-test('query structurer canary uses the production 2500ms provider deadline', async (t) => {
+test('query structurer canary uses the production 3500ms provider deadline', async (t) => {
   const { sqlite, env } = sqliteEnvironment({
     GEMINI_PRODUCT_DISCOVERY_MODEL: 'primary-disabled-for-timeout-test'
   });
@@ -643,7 +643,7 @@ test('query structurer canary uses the production 2500ms provider deadline', asy
   } finally {
     AbortSignal.timeout = originalTimeout;
   }
-  assert.deepEqual(timeouts, [2500, 2500, 2500]);
+  assert.deepEqual(timeouts, [2500, 2500, 3500]);
 });
 
 test('public growth endpoint cannot forge deep canary result or budget rows', () => {
