@@ -42,6 +42,7 @@ export function normalizeSocialPost(input = {}) {
   return {
     post_id: clean(input.post_id, 100),
     content_id: clean(input.content_id, 100),
+    campaign_id: clean(input.campaign_id, 100),
     platform,
     caption: disclosedCaption,
     link,
@@ -159,6 +160,7 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
         media_type: 'REELS',
         video_url: post.media_url,
         caption: instagramCaption,
+        ...(post.campaign_id === 'hoshilu-runway-video' ? { is_ai_generated: true } : {}),
         share_to_feed: true,
         hide_like_and_view_counts: true
       }
@@ -324,7 +326,7 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
   const requestedPostId = clean(onlyPostId, 100);
   let due;
   try {
-    due = await env.PRODUCT_DB.prepare(`SELECT q.post_id,q.external_post_id,q.published_at,q.link
+    due = await env.PRODUCT_DB.prepare(`SELECT q.post_id,q.campaign_id,q.external_post_id,q.published_at,q.link
       FROM social_post_queue q
       WHERE (?1='' OR q.post_id=?1)
       AND q.platform='INSTAGRAM' AND q.status='PUBLISHED'
@@ -351,10 +353,14 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
   let failed = 0;
   for (const row of rows) {
     try {
-      const response = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(row.external_post_id)}?fields=id,permalink`, { headers });
+      const response = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(row.external_post_id)}?fields=id,permalink,is_ai_generated`, { headers });
       if (!response.ok) throw new Error(`INSTAGRAM_PERMALINK_${response.status}`);
-      const permalink = instagramPermalink((await response.json())?.permalink);
+      const payload = await response.json();
+      const permalink = instagramPermalink(payload?.permalink);
       if (!permalink) throw new Error('INSTAGRAM_PERMALINK_INVALID');
+      if (row.campaign_id === 'hoshilu-runway-video' && payload?.is_ai_generated !== true) {
+        throw new Error('INSTAGRAM_AI_LABEL_NOT_CONFIRMED');
+      }
       const utm = trackingFields(row.link);
       const publishedAt = clean(row.published_at, 40) || timestamp;
       await env.PRODUCT_DB.prepare(`INSERT INTO social_post_performance
@@ -365,6 +371,9 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
           updated_at=excluded.updated_at`)
         .bind(`published:${row.post_id}`, row.post_id, publishedAt, publishedAt,
           permalink, utm.source, utm.medium, utm.campaign, utm.content, timestamp).run();
+      if (row.campaign_id === 'hoshilu-runway-video') {
+        console.log('INSTAGRAM_AI_LABEL_CONFIRMED', row.post_id);
+      }
       saved += 1;
     } catch (error) {
       failed += 1;

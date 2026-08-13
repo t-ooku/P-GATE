@@ -287,3 +287,304 @@ jobs:
             tools/line-worker/runway-initial-job.json
             tools/line-worker/runway-initial-output.mp4
           retention-days: 1
+
+  # One-shot publication of the exact post-processed candidate explicitly
+  # approved on 2026-08-13. The public repository never receives the model
+  # video or font binaries: the runner pulls raw media from private R2 and the
+  # pinned fonts from their official upstream, then fails unless the rendered
+  # bytes exactly match the approved SHA-256.
+  runway-initial-reel-publish:
+    needs: [test, deploy]
+    if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deploy.result == 'success' &&
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[publish-runway-initial-reel-approved]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    concurrency:
+      group: runway-initial-reel-publish
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify controlled publication source and disabled replay flags
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+          grep -Fq "is_ai_generated: true" src/social-publisher.mjs
+          node <<'NODE'
+          const fs = require('node:fs');
+          const config = JSON.parse(fs.readFileSync('wrangler.jsonc', 'utf8'));
+          for (const name of ['APPROVED_MODEL_REEL_REPLAY_ENABLED', 'INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED']) {
+            if (config.vars?.[name] === 'true') throw new Error(`${name} must remain disabled for the one-shot publication`);
+          }
+          const source = fs.readFileSync('src/social-autopilot.mjs', 'utf8');
+          for (const guard of [
+            "env.APPROVED_MODEL_REEL_REPLAY_ENABLED === 'true'",
+            "env.INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED === 'true'"
+          ]) if (!source.includes(guard)) throw new Error(`Missing opt-in guard: ${guard}`);
+          NODE
+          sha256sum -c <<'HASHES'
+          6749bc880749d8fef141dc0fdfc97ff4740674148ee290b5c9e1ebd6c116a4bb  ops/runway/render_initial_reel_20260813.sh
+          51f80759a3f3bf1cf4ae46513ba5e885ea718e90f8183ad00f01eeaafd93c3eb  ops/runway/initial_reel_overlay_20260813.ass
+          HASHES
+          node --test test/social-publisher.test.mjs test/runway-initial-reel-publish.test.mjs
+
+      - name: Read production state and block duplicates or competing Instagram posts
+        id: preflight
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error 'https://hoshilu.app/health?runway-initial-reel-publish=1' > initial-reel-health.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-preflight.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-queue-preflight.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT (SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'hoshilu-runway-model-ugc-20260813-v1' AND platform='INSTAGRAM' AND (content_id='runway-hoshilu-model-ugc-test-20260813-v1' OR media_url='https://hoshilu.app/api/social/media/runway/runway-hoshilu-model-ugc-test-20260813-v1.mp4' OR link='https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=hoshilu_runway_test&utm_content=runway_product_ugc_test_20260813_v1') AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'' OR platform_job_id<>'')) AS duplicate_count,(SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'hoshilu-runway-model-ugc-20260813-v1' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS competing_due_count;" > initial-reel-collision-preflight.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT account_id,scopes,expires_at,status,last_refreshed_at FROM instagram_oauth_credentials WHERE platform='INSTAGRAM';" > initial-reel-instagram-credential.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT initial_cap_credits,monthly_cap_credits,enabled,kill_switch,initial_test_completed FROM runway_budget_policy WHERE policy_id=1;" > initial-reel-policy.json
+          mode="$(node ops/runway/verify_initial_reel_publish.mjs preflight initial-reel-health.json initial-reel-job-preflight.json initial-reel-queue-preflight.json initial-reel-collision-preflight.json initial-reel-instagram-credential.json initial-reel-policy.json)"
+          echo "mode=${mode}" >> "$GITHUB_OUTPUT"
+          echo "::notice::INITIAL_REEL_PREFLIGHT mode=${mode} duplicate=0 competing_due=0"
+
+      - name: Capture D1 restore point before approved mutations
+        if: steps.preflight.outputs.mode == 'review'
+        working-directory: tools/line-worker
+        run: npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > initial-reel-recovery-bookmark-before.json
+
+      - name: Reproduce and byte-verify the approved candidate
+        if: steps.preflight.outputs.mode == 'review'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          first_line="$(ffmpeg -version | sed -n '1p')"
+          case "$first_line" in
+            'ffmpeg version 6.1.1-3ubuntu5 '*) ;;
+            *) echo "::error::Unexpected ffmpeg build: $first_line"; exit 1 ;;
+          esac
+          work_dir="${RUNNER_TEMP}/hoshilu-initial-reel"
+          font_dir="${work_dir}/fonts"
+          mkdir -p "$font_dir"
+          raw_video="${work_dir}/raw.mp4"
+          candidate="${work_dir}/candidate.mp4"
+
+          npx --yes wrangler@4.121.0 r2 object get 'hoshilu-social-media/runway/runway-hoshilu-model-ugc-test-20260813-v1/output.mp4' --remote --file "$raw_video"
+          echo '6caeb845203e7d1d6453c31fd7c44e6157befffd8e5699fb749f42c4e1d31ef7  '"$raw_video" | sha256sum -c -
+
+          curl --fail-with-body --location --silent --show-error \
+            'https://raw.githubusercontent.com/notofonts/noto-cjk/v1.004/NotoSansCJKjp-Bold.otf' \
+            --output "${font_dir}/NotoSansCJKjp-Bold.otf"
+          curl --fail-with-body --location --silent --show-error \
+            'https://raw.githubusercontent.com/notofonts/noto-cjk/v1.004/NotoSansCJKjp-Regular.otf' \
+            --output "${font_dir}/NotoSansCJKjp-Regular.otf"
+          echo '9ca911f033c616162bc2d2f1d61c6739df8bc7a9bd027df0ed57c96029b33a7a  '"${font_dir}/NotoSansCJKjp-Bold.otf" | sha256sum -c -
+          echo 'f18253affd968c8ea592d8df6d84b1d4c5d3a46d267e53a1f6749e6c4f76a23d  '"${font_dir}/NotoSansCJKjp-Regular.otf" | sha256sum -c -
+          echo '0808fd0e65b9dd4fa832b6403842ba451bd0a722f27c58c396db7d85bbbf0bdb  public/social/runway/hoshilu-product-screen-v1.jpg' | sha256sum -c -
+
+          HOSHILU_FONT_DIR="$font_dir" bash ops/runway/render_initial_reel_20260813.sh "$raw_video" "$candidate"
+          ffmpeg -v error -i "$candidate" -f null -
+          ffprobe -v error -show_streams -show_format -of json "$candidate" > initial-reel-candidate-ffprobe.json
+          audio_sha="$(ffmpeg -v error -i "$candidate" -map 0:a:0 -c copy -f hash -hash sha256 - | sed -n 's/^SHA256=//p')"
+          node ops/runway/verify_initial_reel_publish.mjs candidate "$candidate" initial-reel-candidate-ffprobe.json "$audio_sha" > initial-reel-candidate-evidence.json
+          echo "candidate=${candidate}" >> "$GITHUB_ENV"
+          echo "::notice::INITIAL_REEL_CANDIDATE sha256=9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad bytes=1566948"
+
+      - name: Put immutable candidate in private R2 and verify round-trip bytes
+        if: steps.preflight.outputs.mode == 'review'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          object='hoshilu-social-media/runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad.mp4'
+          existing="${RUNNER_TEMP}/hoshilu-initial-reel/existing.mp4"
+          get_log="${RUNNER_TEMP}/hoshilu-initial-reel/r2-get-existing.log"
+          set +e
+          npx --yes wrangler@4.121.0 r2 object get "$object" --remote --file "$existing" > "$get_log" 2>&1
+          get_status=$?
+          set -e
+          if [ "$get_status" -eq 0 ]; then
+            echo '9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad  '"$existing" | sha256sum -c -
+          elif grep -Eiq 'not found|does not exist|404' "$get_log"; then
+            npx --yes wrangler@4.121.0 r2 object put "$object" --remote --file "$candidate" \
+              --content-type 'video/mp4' \
+              --cache-control 'public, max-age=3600, stale-while-revalidate=86400' \
+              --force
+          else
+            sed -n '1,80p' "$get_log" >&2
+            echo '::error::R2 existence check failed for a reason other than object absence'
+            exit 1
+          fi
+          roundtrip="${RUNNER_TEMP}/hoshilu-initial-reel/roundtrip.mp4"
+          npx --yes wrangler@4.121.0 r2 object get "$object" --remote --file "$roundtrip"
+          cmp --silent "$candidate" "$roundtrip"
+          echo '9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad  '"$roundtrip" | sha256sum -c -
+
+      - name: Stage candidate identity and approved caption while gates remain closed
+        if: steps.preflight.outputs.mode == 'review'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --file ops/runway/stage_initial_reel_20260813_v4.sql --yes > initial-reel-stage-mutation.json
+          node ops/runway/verify_initial_reel_publish.mjs mutation initial-reel-stage-mutation.json 1,1
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-staged.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-queue-staged.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT (SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'hoshilu-runway-model-ugc-20260813-v1' AND platform='INSTAGRAM' AND (content_id='runway-hoshilu-model-ugc-test-20260813-v1' OR media_url='https://hoshilu.app/api/social/media/runway/runway-hoshilu-model-ugc-test-20260813-v1.mp4' OR link='https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=hoshilu_runway_test&utm_content=runway_product_ugc_test_20260813_v1') AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'' OR platform_job_id<>'')) AS duplicate_count,(SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'hoshilu-runway-model-ugc-20260813-v1' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS competing_due_count;" > initial-reel-collision-staged.json
+          node ops/runway/verify_initial_reel_publish.mjs staged initial-reel-job-staged.json initial-reel-queue-staged.json initial-reel-collision-staged.json
+          echo '::notice::INITIAL_REEL_STAGED external_publish=false queue=REVIEW_REQUIRED qa=PENDING'
+
+      - name: Apply explicit QA approval while publication remains closed
+        if: steps.preflight.outputs.mode == 'review'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --file ops/runway/approve_initial_reel_20260813_v4.sql --yes > initial-reel-approve-mutation.json
+          node ops/runway/verify_initial_reel_publish.mjs mutation initial-reel-approve-mutation.json 1,1
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-qa-approved.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-queue-qa-approved.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT audit_id,event,detail,created_at FROM runway_audit_log WHERE audit_id='runway-initial-reel-v4-qa-approved-20260813';" > initial-reel-approval-audit.json
+          node ops/runway/verify_initial_reel_publish.mjs qa-approved initial-reel-job-qa-approved.json initial-reel-queue-qa-approved.json initial-reel-approval-audit.json
+          echo '::notice::INITIAL_REEL_QA_APPROVED external_publish=false queue=REVIEW_REQUIRED'
+
+      - name: Verify the approved public media route before releasing the queue
+        if: steps.preflight.outputs.mode == 'review' || steps.preflight.outputs.mode == 'qa_approved'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          media_url='https://hoshilu.app/api/social/media/runway/runway-hoshilu-model-ugc-test-20260813-v1.mp4'
+          for attempt in $(seq 1 12); do
+            status="$(curl --silent --show-error --head --output initial-reel-media-head.txt --write-out '%{http_code}' "$media_url")"
+            [ "$status" = 200 ] && break
+            sleep 5
+          done
+          test "$status" = 200
+          grep -Eiq '^content-type:[[:space:]]*video/mp4([[:space:]]|$)' initial-reel-media-head.txt
+          grep -Eiq '^content-length:[[:space:]]*1566948([[:space:]]|$)' initial-reel-media-head.txt
+          range_status="$(curl --silent --show-error --fail-with-body --header 'Range: bytes=0-1023' --output initial-reel-media-range.bin --dump-header initial-reel-media-range-headers.txt --write-out '%{http_code}' "$media_url")"
+          test "$range_status" = 206
+          test "$(stat -c '%s' initial-reel-media-range.bin)" = 1024
+          grep -Eiq '^content-type:[[:space:]]*video/mp4([[:space:]]|$)' initial-reel-media-range-headers.txt
+          grep -Eiq '^content-range:[[:space:]]*bytes 0-1023/1566948([[:space:]]|$)' initial-reel-media-range-headers.txt
+          curl --fail-with-body --silent --show-error "$media_url" --output initial-reel-media-full.mp4
+          echo '9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad  initial-reel-media-full.mp4' | sha256sum -c -
+          echo '::notice::INITIAL_REEL_MEDIA_ROUTE status=200 range=206 bytes=1566948 type=video/mp4'
+
+      - name: Release the target queue as the final pre-publication mutation
+        if: steps.preflight.outputs.mode == 'review' || steps.preflight.outputs.mode == 'qa_approved'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --file ops/runway/release_initial_reel_20260813_v4.sql --yes > initial-reel-release-mutation.json
+          node ops/runway/verify_initial_reel_publish.mjs mutation initial-reel-release-mutation.json 1
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-approved.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-queue-approved.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT audit_id,event,detail,created_at FROM runway_audit_log WHERE audit_id='runway-initial-reel-v4-qa-approved-20260813';" > initial-reel-approval-audit.json
+          node ops/runway/verify_initial_reel_publish.mjs approved initial-reel-job-approved.json initial-reel-queue-approved.json initial-reel-approval-audit.json
+          echo '::notice::INITIAL_REEL_APPROVED cron_publish_pending=true'
+
+      - name: Monitor the existing idempotent publisher through completion
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          published=false
+          for attempt in $(seq 1 105); do
+            npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-publish-queue.json
+            status="$(node ops/runway/verify_initial_reel_publish.mjs status initial-reel-publish-queue.json)"
+            echo "Initial reel publication status: ${status} (check ${attempt}/105)"
+            case "$status" in
+              PUBLISHED) published=true; break ;;
+              APPROVED|PUBLISHING) sleep 20 ;;
+              FAILED)
+                node -e "const d=require('./initial-reel-publish-queue.json');const r=(Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0];console.error('::error::INITIAL_REEL_PUBLISH_FAILED '+String(r?.last_error||'UNKNOWN').slice(0,300));"
+                exit 1
+                ;;
+              *) echo "::error::Unexpected publication status: ${status}"; exit 1 ;;
+            esac
+          done
+          if [ "$published" != true ]; then
+            echo '::error::Initial reel publication monitor timed out without claiming success'
+            exit 1
+          fi
+
+      - name: Resolve and verify the public Instagram permalink
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          resolved=false
+          for attempt in $(seq 1 30); do
+            http_status="$(curl --silent --show-error --output initial-reel-public-result.json --write-out '%{http_code}' 'https://hoshilu.app/api/social/posts/hoshilu-runway-model-ugc-20260813-v1')"
+            if [ "$http_status" = 200 ] && node -e "const p=require('./initial-reel-public-result.json');if(p.ok!==true||!p.public_url)process.exit(1)"; then
+              resolved=true
+              break
+            fi
+            if [ "$http_status" != 200 ] && [ "$http_status" != 202 ]; then
+              echo "Instagram permalink response: HTTP ${http_status} (check ${attempt}/30)"
+            fi
+            sleep 10
+          done
+          if [ "$resolved" != true ]; then
+            echo '::error::Instagram publication exists but its public permalink was not confirmed'
+            exit 1
+          fi
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,platform_job_id,external_post_id,last_error,approved_at,published_at,updated_at FROM social_post_queue WHERE post_id='hoshilu-runway-model-ugc-20260813-v1';" > initial-reel-published-queue.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,snapshot_at,published_at,public_url,utm_source,utm_medium,utm_campaign,utm_content,traffic_class FROM social_post_performance WHERE post_id='hoshilu-runway-model-ugc-20260813-v1' AND public_url<>'' ORDER BY snapshot_at DESC LIMIT 1;" > initial-reel-published-performance.json
+          node ops/runway/verify_initial_reel_publish.mjs published initial-reel-published-queue.json initial-reel-published-performance.json initial-reel-public-result.json
+
+      - name: Reconcile the Runway job after verified publication
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --file ops/runway/reconcile_initial_reel_20260813_v4.sql --yes > initial-reel-reconcile-mutation.json
+          expected_changes='1,1,1'
+          if [ '${{ steps.preflight.outputs.mode }}' = published ]; then expected_changes='0,0,0'; fi
+          node ops/runway/verify_initial_reel_publish.mjs mutation initial-reel-reconcile-mutation.json "$expected_changes"
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT job_id,post_id,provider_task_id,status,expected_credits,rights_confirmed,ai_disclosure_confirmed,attempt_count,max_attempts,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,caption,updated_at FROM runway_generation_jobs WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1';" > initial-reel-job-reconciled.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT initial_cap_credits,monthly_cap_credits,enabled,kill_switch,initial_test_completed FROM runway_budget_policy WHERE policy_id=1;" > initial-reel-policy-reconciled.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT audit_id,event,detail,created_at FROM runway_audit_log WHERE audit_id='runway-initial-reel-v4-published-20260813';" > initial-reel-published-audit.json
+          node ops/runway/verify_initial_reel_publish.mjs reconciled initial-reel-job-reconciled.json initial-reel-policy-reconciled.json initial-reel-published-audit.json
+          echo '::notice::INITIAL_REEL_PUBLISHED verified=true duplicate=false kpi_attribution=started'
+
+      - name: Preserve non-secret publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runway-initial-reel-publish-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: |
+            tools/line-worker/initial-reel-health.json
+            tools/line-worker/initial-reel-recovery-bookmark-before.json
+            tools/line-worker/initial-reel-job-preflight.json
+            tools/line-worker/initial-reel-queue-preflight.json
+            tools/line-worker/initial-reel-collision-preflight.json
+            tools/line-worker/initial-reel-policy.json
+            tools/line-worker/initial-reel-candidate-ffprobe.json
+            tools/line-worker/initial-reel-candidate-evidence.json
+            tools/line-worker/initial-reel-stage-mutation.json
+            tools/line-worker/initial-reel-job-staged.json
+            tools/line-worker/initial-reel-queue-staged.json
+            tools/line-worker/initial-reel-collision-staged.json
+            tools/line-worker/initial-reel-approve-mutation.json
+            tools/line-worker/initial-reel-job-qa-approved.json
+            tools/line-worker/initial-reel-queue-qa-approved.json
+            tools/line-worker/initial-reel-approval-audit.json
+            tools/line-worker/initial-reel-media-head.txt
+            tools/line-worker/initial-reel-media-range-headers.txt
+            tools/line-worker/initial-reel-release-mutation.json
+            tools/line-worker/initial-reel-job-approved.json
+            tools/line-worker/initial-reel-queue-approved.json
+            tools/line-worker/initial-reel-publish-queue.json
+            tools/line-worker/initial-reel-published-queue.json
+            tools/line-worker/initial-reel-published-performance.json
+            tools/line-worker/initial-reel-public-result.json
+            tools/line-worker/initial-reel-reconcile-mutation.json
+            tools/line-worker/initial-reel-job-reconciled.json
+            tools/line-worker/initial-reel-policy-reconciled.json
+            tools/line-worker/initial-reel-published-audit.json
+          retention-days: 30

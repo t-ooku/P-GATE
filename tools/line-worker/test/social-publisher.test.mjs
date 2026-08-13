@@ -280,12 +280,40 @@ test('Instagram publisher creates a Reels container for an MP4 media URL', async
   assert.equal(id, 'ig-reel-1');
   assert.equal(createPayload.media_type, 'REELS');
   assert.equal(createPayload.video_url, 'https://hoshilu.app/social/cross-market-reel.mp4?version=1');
+  assert.equal('is_ai_generated' in createPayload, false);
   assert.equal(createPayload.share_to_feed, true);
   assert.equal(createPayload.hide_like_and_view_counts, true);
   assert.equal('image_url' in createPayload, false);
   assert.match(createPayload.caption, /#13モール横断/);
   assert.match(createPayload.caption, /@hoshilu\.app のプロフィールリンクから/);
   assert.doesNotMatch(createPayload.caption, /utm_source=/);
+});
+
+test('Runway Instagram Reels self-disclose AI generation through the platform label', async () => {
+  let createPayload;
+  await publishSocialPost({
+    platform: 'INSTAGRAM',
+    campaign_id: 'hoshilu-runway-video',
+    caption: 'HOSHILU Runway reel',
+    media_url: 'https://hoshilu.app/api/social/media/runway/runway-test.mp4',
+    status: 'APPROVED'
+  }, {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0
+  }, async (url, options = {}) => {
+    if (url.endsWith('/123/media')) {
+      createPayload = JSON.parse(options.body);
+      return Response.json({ id: 'runway-reel-container' });
+    }
+    if (url.includes('/runway-reel-container?fields=status_code')) {
+      return Response.json({ status_code: 'FINISHED' });
+    }
+    if (url.endsWith('/123/media_publish')) return Response.json({ id: 'runway-reel' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(createPayload.media_type, 'REELS');
+  assert.equal(createPayload.is_ai_generated, true);
 });
 
 test('Instagram publisher creates a Stories container when content id is marked as a story', async () => {
@@ -326,6 +354,7 @@ test('公開済みInstagram投稿の正式URLとUTMを計測テーブルへ保�
         if (sql.includes('FROM social_post_queue q')) {
           return { bind: () => ({ all: async () => ({ results: [{
               post_id: 'approved-reel',
+              campaign_id: 'hoshilu-runway-video',
               external_post_id: 'ig-media-1',
               published_at: '2026-08-12T14:45:15.000Z',
               link: 'https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=model_reel&utm_content=approved_video'
@@ -340,9 +369,9 @@ test('公開済みInstagram投稿の正式URLとUTMを計測テーブルへ保�
     }
   };
   const result = await syncInstagramPublishedPermalinks(env, new Date('2026-08-12T14:46:00.000Z'), async (url, options) => {
-    assert.match(url, /ig-media-1\?fields=id,permalink$/);
+    assert.match(url, /ig-media-1\?fields=id,permalink,is_ai_generated$/);
     assert.equal(options.headers.authorization, 'Bearer token');
-    return Response.json({ id: 'ig-media-1', permalink: 'https://www.instagram.com/reel/ExampleCode/' });
+    return Response.json({ id: 'ig-media-1', permalink: 'https://www.instagram.com/reel/ExampleCode/', is_ai_generated: true });
   });
   assert.deepEqual(result, { checked: 1, saved: 1, failed: 0 });
   assert.equal(writes.length, 1);
@@ -369,9 +398,9 @@ test('公開済み投稿APIはInstagram正式URLを即時保存して公開情�
         if (sql.includes('SELECT q.post_id,q.platform,q.status')) {
           return { bind: () => ({ first: async () => ({ ...row, public_url: storedUrl }) }) };
         }
-        if (sql.includes('SELECT q.post_id,q.external_post_id')) {
+        if (sql.includes('SELECT q.post_id,q.campaign_id,q.external_post_id')) {
           return { bind: () => ({ all: async () => ({ results: [{
-            ...row, link: 'https://hoshilu.app/?utm_source=instagram'
+            ...row, campaign_id: 'model-reel', link: 'https://hoshilu.app/?utm_source=instagram'
           }] }) }) };
         }
         return {
@@ -383,7 +412,7 @@ test('公開済み投稿APIはInstagram正式URLを即時保存して公開情�
     }
   };
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async () => Response.json({ permalink: 'https://www.instagram.com/reel/ExampleCode/' });
+  globalThis.fetch = async () => Response.json({ permalink: 'https://www.instagram.com/reel/ExampleCode/', is_ai_generated: false });
   try {
     const response = await handleSocialAdminRoutes(new Request('https://hoshilu.app/api/social/posts/approved-reel'), env);
     assert.equal(response.status, 200);
