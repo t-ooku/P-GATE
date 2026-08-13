@@ -49,6 +49,9 @@ HOSHILUで再現可能な不具合または本番障害を確認した場合、�
   サーバー発行request IDと許可されたエラーコードだけをD1へ記録する。
   AIチャットと通常検索の失敗段階は区別するが、検索文・会話本文・例外本文は保存しない。
   1件でインシデント化する。
+  このD1記録はWorkers Logsのサンプリングに依存しない。2026-08-13の元障害より前の内部コードは
+  遡及取得できないが、以後の同種500はrequest ID・失敗component・安全なコードを、ログsamplingに
+  依存せず全件D1記録へ送る。D1自体が失敗した場合だけは永続記録が欠測し得る。
 - Cloudflare Workerの非公開cronから深層canaryを実行する。楽天・Yahoo!は15分ごと、
   Query Structurer・AIチャット主系は1時間ごと、OpenAI予備系は6時間ごとに固定合成条件で確認する。
   公開APIにTurnstile回避口は作らず、外部レスポンス、固定検索語、商品情報は保存しない。
@@ -69,8 +72,21 @@ HOSHILUで再現可能な不具合または本番障害を確認した場合、�
   連続失敗で同じ自動Issueへ接続する。初回配備時の欠測猶予は2026-08-13 10:30 UTCまでに限定し、
   同時刻以降の欠測は`STALE`とする。回復時は既存の3回連続成功規則で閉じる。
   有料probeの予約から2分を超えて対応する結果がない場合も、Worker中断として即時検知する。
+- OpenAI予備系の6時間slotが一時エラーで失敗した場合だけ、15分後に1回だけ確認probeを行う。
+  設定・認証・モデル・価格・予算などの非一時エラーは再課金せず即時検知する。確認probeも
+  同じ原子予算予約と月5米ドル上限を通り、無限再試行はしない。
+- GitHubのschedule開始・完了を、既存のCloudflare D1へ固定IDの内部heartbeatとして保存する。
+  Cloudflareの既存15分cronが20分超の欠測または未完了を検知し、`reliability_incident` outboxへ
+  PENDINGで保持する。GitHubが回復した次の実行は、最新状態がPASSへ戻っていても未処理outboxを
+  必ず同じ自動Issueへ記録し、Issue作成・更新に成功した後だけACKする。
+- 逆方向にはCloudflare通常cronとdeep-canary cronも開始・完了heartbeatをD1へ保存し、GitHub監視が
+  25分超の欠測または20分超の実行停滞を検知する。これによりGitHubとCloudflareは相互監視する。
+  heartbeat/outbox event typeは公開`/api/events`の許可リストへ追加しない。
 - 深層canaryから自動Issueへ渡す診断もcomponentと列挙済みの安全なエラーコードに限定する。
   利用者や固定canaryの検索文、外部レスポンス、商品情報、認証情報はIssueへ出力しない。
 - GitHub scheduleは遅延または取りこぼし得るため、これだけを完全な保証とは扱わない。
-  Cloudflare Health Checksや外部監視の追加に課金・Secret・権限が必要な場合は、
+  遅延・欠落そのものは上記のCloudflare heartbeat監視へ残し、GitHub復旧後に遡及Issue化する。
+  Cloudflare Health Checksや別の外部即時通知の追加に課金・Secret・権限が必要な場合は、
   費用と操作を示して承認を得る。
+- 5分GitHub監視、D1集計、Cloudflare heartbeatはCodex/ChatGPT Workを実行しないため、
+  Codexクレジットを消費しない。Codexは自動Issueの調査・修正が必要な時だけ使用する。

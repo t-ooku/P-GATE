@@ -15,6 +15,15 @@ const PRICING = Object.freeze({
 const COMPONENTS = new Set([
   'query_structurer', 'ai_chat_primary', 'openai_backup', 'rakuten', 'yahoo'
 ]);
+const OPENAI_RETRYABLE_CODES = new Set([
+  'CANARY_PROVIDER_TIMEOUT',
+  'CANARY_PROVIDER_RATE_LIMITED',
+  'CANARY_PROVIDER_UPSTREAM_5XX',
+  'CANARY_PROVIDER_NETWORK_FAILED',
+  'CANARY_PROVIDER_INVALID_JSON',
+  'OPENAI_CHAT_INTENT_INVALID_JSON',
+  'CANARY_AI_RESPONSE_INVALID'
+]);
 
 const safeCode = (value, fallback = 'CANARY_FAILED') => {
   const code = String(value || '').toUpperCase();
@@ -27,6 +36,37 @@ const scheduledComponents = (date) => {
   if (date.getUTCMinutes() === 7 && date.getUTCHours() % 6 === 0) components.push('openai_backup');
   return components;
 };
+
+const isTransientOpenAiFailureCode = (value) => {
+  const code = String(value || '');
+  return code === safeCode(code) && OPENAI_RETRYABLE_CODES.has(code);
+};
+
+const openAiPrimarySlot = (date) => {
+  if (date.getUTCMinutes() !== 22 || date.getUTCHours() % 6 !== 0) return null;
+  const slot = new Date(date);
+  slot.setUTCMinutes(7, 0, 0);
+  return slot;
+};
+
+async function scheduledOpenAiRetry(env, date) {
+  const primarySlot = openAiPrimarySlot(date);
+  if (!primarySlot) return [];
+  const expectedOccurredAt = primarySlot.toISOString();
+  const expectedEventId = `deep-canary:${primarySlot.getTime()}:openai_backup`;
+  // Read the newest OpenAI result without filtering by status or code first.
+  // A malformed or newer unexpected row must fail closed instead of reviving
+  // an older retryable failure and spending money on an unsafe extra probe.
+  const row = await env.PRODUCT_DB.prepare(`SELECT event_id,campaign AS status,content AS code,occurred_at
+    FROM growth_events WHERE event_type=?1 AND source='worker' AND traffic_class='QA'
+      AND medium='openai_backup'
+    ORDER BY occurred_at DESC,event_id DESC LIMIT 1`).bind(EVENT_TYPE).first();
+  if (String(row?.event_id || '') !== expectedEventId
+    || String(row?.occurred_at || '') !== expectedOccurredAt
+    || String(row?.status || '') !== 'FAIL'
+    || !isTransientOpenAiFailureCode(row?.code)) return [];
+  return ['openai_backup'];
+}
 
 const monthBounds = (now) => {
   const start = `${now.toISOString().slice(0, 7)}-01T00:00:00.000Z`;
@@ -62,9 +102,15 @@ const billingNow = (clock) => {
 const failureCode = (error) => {
   const status = Number(error?.status || 0);
   if (status === 401 || status === 403) return 'CANARY_PROVIDER_AUTH_FAILED';
+  if (status === 408) return 'CANARY_PROVIDER_TIMEOUT';
   if (status === 429) return 'CANARY_PROVIDER_RATE_LIMITED';
+  if (status >= 400 && status <= 499) return 'CANARY_PROVIDER_REQUEST_REJECTED';
   if (status >= 500 && status <= 599) return 'CANARY_PROVIDER_UPSTREAM_5XX';
   if (error?.name === 'AbortError' || error?.name === 'TimeoutError') return 'CANARY_PROVIDER_TIMEOUT';
+  if (error?.name === 'SyntaxError') return 'CANARY_PROVIDER_INVALID_JSON';
+  if (error?.name === 'TypeError' && /fetch|network|connection|socket/iu.test(String(error?.message || ''))) {
+    return 'CANARY_PROVIDER_NETWORK_FAILED';
+  }
   return safeCode(error?.message);
 };
 
@@ -179,7 +225,17 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
   if (!Number.isFinite(now.getTime())) throw new Error('CANARY_TIME_INVALID');
   const occurredAt = now.toISOString();
   const runId = String(now.getTime());
-  const components = [...new Set([...scheduledComponents(now), ...await missingComponents(env)])];
+  let retryComponents = [];
+  try {
+    retryComponents = await scheduledOpenAiRetry(env, now);
+  } catch (error) {
+    // A retry lookup failure must not stop the regular marketplace/Gemini
+    // checks, and must never default to an extra paid OpenAI request.
+    console.warn('DEEP_CANARY_OPENAI_RETRY_LOOKUP_FAILED', { code: failureCode(error) });
+  }
+  const components = [...new Set([
+    ...scheduledComponents(now), ...retryComponents, ...await missingComponents(env)
+  ])];
 
   const paidProbe = async (component, provider, probeEnv, mode) => {
     const pricing = pricingFor(component, probeEnv);
@@ -239,4 +295,5 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
 }
 
 export const deepCanaryTest = { scheduledComponents, safeCode, validateMarketplace, costFromUsage, monthBounds,
-  billingNow, wallClockNow, failureCode, PRICING_REVISION, PRICING_REVIEW_DEADLINE_MS };
+  billingNow, wallClockNow, failureCode, isTransientOpenAiFailureCode, scheduledOpenAiRetry,
+  PRICING_REVISION, PRICING_REVIEW_DEADLINE_MS };

@@ -139,6 +139,167 @@ test('deep canary frequency is 15m/1h/6h without a public endpoint', () => {
     ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary']);
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T06:07:00Z')),
     ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary', 'openai_backup']);
+  assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T06:22:00Z')),
+    ['rakuten', 'yahoo']);
+});
+
+test('only transient OpenAI result codes are eligible for the one delayed retry', () => {
+  for (const code of [
+    'CANARY_PROVIDER_TIMEOUT', 'CANARY_PROVIDER_RATE_LIMITED', 'CANARY_PROVIDER_UPSTREAM_5XX',
+    'CANARY_PROVIDER_NETWORK_FAILED', 'CANARY_PROVIDER_INVALID_JSON',
+    'OPENAI_CHAT_INTENT_INVALID_JSON', 'CANARY_AI_RESPONSE_INVALID'
+  ]) assert.equal(deepCanaryTest.isTransientOpenAiFailureCode(code), true, code);
+
+  for (const code of [
+    'OPENAI_NOT_CONFIGURED', 'CANARY_PROVIDER_AUTH_FAILED', 'CANARY_MODEL_PRICING_UNKNOWN',
+    'CANARY_PRICING_REVIEW_REQUIRED', 'CANARY_MONTHLY_BUDGET_LIMIT', 'CANARY_USAGE_MISSING',
+    'CANARY_COST_EXCEEDS_RESERVATION', 'CANARY_PROMPT_TOO_LARGE',
+    'OPENAI_CHAT_INTENT_OUTPUT_LIMIT', 'CANARY_BUDGET_SETTLEMENT_FAILED', 'CANARY_FAILED',
+    'CANARY_PROVIDER_REQUEST_REJECTED', 'OPENAI_CHAT_INTENT_FAILED', 'canary_provider_timeout'
+  ]) assert.equal(deepCanaryTest.isTransientOpenAiFailureCode(code), false, code);
+});
+
+test('provider status classification retries only transient HTTP failures', () => {
+  assert.equal(deepCanaryTest.failureCode({ status: 408, message: 'OPENAI_CHAT_INTENT_FAILED' }),
+    'CANARY_PROVIDER_TIMEOUT');
+  assert.equal(deepCanaryTest.failureCode({ status: 429, message: 'OPENAI_CHAT_INTENT_FAILED' }),
+    'CANARY_PROVIDER_RATE_LIMITED');
+  assert.equal(deepCanaryTest.failureCode({ status: 503, message: 'OPENAI_CHAT_INTENT_FAILED' }),
+    'CANARY_PROVIDER_UPSTREAM_5XX');
+  assert.equal(deepCanaryTest.failureCode({ status: 400, message: 'OPENAI_CHAT_INTENT_FAILED' }),
+    'CANARY_PROVIDER_REQUEST_REJECTED');
+  assert.equal(deepCanaryTest.failureCode({ status: 404, message: 'OPENAI_CHAT_INTENT_FAILED' }),
+    'CANARY_PROVIDER_REQUEST_REJECTED');
+  assert.equal(deepCanaryTest.isTransientOpenAiFailureCode('CANARY_PROVIDER_REQUEST_REJECTED'), false);
+});
+
+test('a transient regular OpenAI failure is retried once at minute 22 and then stops', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  const harness = providerHarness();
+  let openAiCalls = 0;
+  const fetcher = async (url, options) => {
+    if (String(url).includes('api.openai.com') && openAiCalls++ === 0) {
+      return new Response('temporary', { status: 503 });
+    }
+    return harness.fetcher(url, options);
+  };
+  const primary = await runDeepCanaryCycle(env, new Date('2026-08-13T06:07:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T06:07:01.000Z')
+  });
+  assert.equal(primary.results.find((row) => row.component === 'openai_backup')?.code,
+    'CANARY_PROVIDER_UPSTREAM_5XX');
+
+  const retry = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T06:22:01.000Z')
+  });
+  assert.deepEqual(retry.results.map((row) => row.component), ['rakuten', 'yahoo', 'openai_backup']);
+  assert.equal(retry.results.at(-1)?.status, 'PASS');
+
+  const replay = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T06:23:01.000Z')
+  });
+  assert.deepEqual(replay.results.map((row) => row.component), ['rakuten', 'yahoo']);
+  assert.equal(openAiCalls, 2);
+  assert.equal(sqlite.prepare(`SELECT COUNT(*) AS count FROM growth_events
+    WHERE event_type='deep_canary_budget' AND medium='openai_backup'`).get().count, 2);
+  const stored = JSON.stringify(sqlite.prepare('SELECT * FROM growth_events').all());
+  assert.doesNotMatch(stored, /軽い|ワイヤレス|イヤホン|authorization|response/iu);
+});
+
+test('overlapping minute-22 invocations make only one paid OpenAI retry', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  sqlite.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,
+      occurred_at,traffic_class,visitor_id,session_id)
+    VALUES(?, 'deep_canary_result', 'JA', 'worker', 'openai_backup', 'FAIL',
+      'OPENAI_CHAT_INTENT_INVALID_JSON', '', ?, 'QA', '', '')`)
+    .run(`deep-canary:${Date.parse('2026-08-13T06:07:00.000Z')}:openai_backup`,
+      '2026-08-13T06:07:00.000Z');
+  const { fetcher, calls } = providerHarness();
+  const retrySlot = new Date('2026-08-13T06:22:00.000Z');
+  await Promise.all([
+    runDeepCanaryCycle(env, retrySlot, fetcher, {
+      clock: () => new Date('2026-08-13T06:22:01.000Z')
+    }),
+    runDeepCanaryCycle(env, retrySlot, fetcher, {
+      clock: () => new Date('2026-08-13T06:22:01.000Z')
+    })
+  ]);
+  assert.equal(callsTo(calls, 'api.openai.com').length, 1);
+  assert.equal(sqlite.prepare(`SELECT COUNT(*) AS count FROM growth_events
+    WHERE event_type='deep_canary_budget' AND medium='openai_backup'`).get().count, 1);
+});
+
+test('non-transient OpenAI failures never schedule the delayed paid retry', async (t) => {
+  const codes = [
+    'OPENAI_NOT_CONFIGURED', 'CANARY_PROVIDER_AUTH_FAILED', 'CANARY_MODEL_PRICING_UNKNOWN',
+    'CANARY_PRICING_REVIEW_REQUIRED', 'CANARY_MONTHLY_BUDGET_LIMIT', 'CANARY_USAGE_MISSING',
+    'CANARY_COST_EXCEEDS_RESERVATION', 'CANARY_PROMPT_TOO_LARGE',
+    'OPENAI_CHAT_INTENT_OUTPUT_LIMIT', 'CANARY_PROVIDER_REQUEST_REJECTED',
+    'OPENAI_CHAT_INTENT_FAILED'
+  ];
+  for (const code of codes) {
+    await t.test(code, async (t) => {
+      const { sqlite, env } = sqliteEnvironment();
+      t.after(() => sqlite.close());
+      seedPriorResults(sqlite);
+      sqlite.prepare(`INSERT INTO growth_events
+        (event_id,event_type,locale,source,medium,campaign,content,marketplace,
+          occurred_at,traffic_class,visitor_id,session_id)
+        VALUES(?, 'deep_canary_result', 'JA', 'worker', 'openai_backup', 'FAIL', ?, '', ?, 'QA', '', '')`)
+        .run(`deep-canary:${Date.parse('2026-08-13T06:07:00.000Z')}:openai_backup`, code,
+          '2026-08-13T06:07:00.000Z');
+      const { fetcher, calls } = providerHarness();
+      const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
+        clock: () => new Date('2026-08-13T06:22:01.000Z')
+      });
+      assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
+      assert.equal(callsTo(calls, 'api.openai.com').length, 0);
+    });
+  }
+});
+
+test('retry lookup fails closed when the newest OpenAI result is not the exact regular slot', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  sqlite.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,
+      occurred_at,traffic_class,visitor_id,session_id)
+    VALUES('unexpected-newer-row', 'deep_canary_result', 'JA', 'worker', 'openai_backup',
+      'FAIL', 'CANARY_PROVIDER_TIMEOUT', '', '2026-08-13T06:08:00.000Z', 'QA', '', '')`).run();
+  const { fetcher, calls } = providerHarness();
+  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T06:22:01.000Z')
+  });
+  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
+  assert.equal(callsTo(calls, 'api.openai.com').length, 0);
+});
+
+test('the five-dollar fuse blocks a qualified retry before the OpenAI request', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  seedBudget(sqlite, 5_000_000);
+  sqlite.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,
+      occurred_at,traffic_class,visitor_id,session_id)
+    VALUES(?, 'deep_canary_result', 'JA', 'worker', 'openai_backup', 'FAIL',
+      'CANARY_PROVIDER_TIMEOUT', '', ?, 'QA', '', '')`)
+    .run(`deep-canary:${Date.parse('2026-08-13T06:07:00.000Z')}:openai_backup`,
+      '2026-08-13T06:07:00.000Z');
+  const { fetcher, calls } = providerHarness();
+  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T06:22:01.000Z')
+  });
+  assert.equal(result.results.find((row) => row.component === 'openai_backup')?.code,
+    'CANARY_MONTHLY_BUDGET_LIMIT');
+  assert.equal(callsTo(calls, 'api.openai.com').length, 0);
+  assert.equal(result.monthly_micro_usd, 5_000_000);
 });
 
 test('an existing result prevents missing components from bypassing provider cadence', async (t) => {

@@ -11,11 +11,27 @@ test('five-minute production monitor checks the live feature branch without depl
   assert.match(workflow, /persist-credentials: false/u);
   assert.match(workflow, /--asset-policy live/u);
   assert.match(workflow, /check-production-search-sli\.mjs/u);
+  assert.match(workflow, /production-monitor-control\.mjs heartbeat --status STARTED/u);
+  assert.match(workflow, /production-monitor-control\.mjs heartbeat --status COMPLETED/u);
+  assert.match(workflow, /production-monitor-control\.mjs heartbeat --status BOOTSTRAP/u);
+  assert.match(workflow, /--pending-output \/tmp\/hoshilu-pending-incidents\.json/u);
+  assert.match(workflow, /production-monitor-control\.mjs ack/u);
   assert.match(workflow, /--deadline-ms 90000/u);
   assert.match(workflow, /timeout-minutes: 2/u);
   assert.match(workflow, /branches: \[main\]/u);
   assert.match(workflow, /actions: read/u);
   assert.match(workflow, /issues: write/u);
+  assert.match(workflow, /timeout-minutes: 6/u);
+  assert.match(workflow, /cancel-in-progress: false/u);
+  assert.doesNotMatch(workflow, /cancel-in-progress: true/u);
+});
+
+test('monitor heartbeat is schedule-only and persisted incidents are acknowledged only after Issue recording', () => {
+  assert.match(workflow, /if: github\.event_name == 'schedule'/u);
+  assert.match(workflow, /steps\.incident\.outputs\.recorded == 'true'/u);
+  assert.match(workflow, /core\.setOutput\('recorded', 'true'\)/u);
+  assert.match(workflow, /heartbeat_start\.outcome != 'success'/u);
+  assert.match(workflow, /heartbeat_complete\.outcome != 'success'/u);
 });
 
 test('Worker logs are explicitly enabled for trace-ID root-cause analysis', () => {

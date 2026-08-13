@@ -81,6 +81,7 @@ import {
   runMarketplaceContentCycle, handleMarketplaceSaleRoutes
 } from './marketplace-sales.mjs';
 import { runDeepCanaryCycle } from './deep-canary.mjs';
+import { runReliabilityControlledCron } from './reliability-control.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -2632,36 +2633,44 @@ export default {
     // Deep canary uses its own offset trigger so its provider requests never
     // compete with the existing scheduled jobs for Worker outbound sockets.
     if (controller.cron === '7,22,37,52 * * * *') {
-      ctx.waitUntil(runDeepCanaryCycle(env, scheduledAt));
+      ctx.waitUntil(runReliabilityControlledCron(
+        env,
+        'cloudflare_deep',
+        () => runDeepCanaryCycle(env, scheduledAt)
+      ));
       return;
     }
-    ctx.waitUntil(Promise.allSettled([
-      // 大隆さんの2026-08-09承認に基づく販促自動運用。先に14日先までの
-      // 権利確認済み投稿を冪等補充し、その後に期限到来分を配信する。
-      runSocialAutopilotCycle(env, scheduledAt),
-      // Runway is isolated from publishing: a successful generation is persisted
-      // to R2 and stops at REVIEW_REQUIRED. It never bypasses the existing APPROVED
-      // publication gate, and a failure cannot block either Instagram or X.
-      runRunwayGenerationCycle(env, scheduledAt),
-      deliverDueWebNotifications(env, scheduledAt),
-      deliverDueMemberNotifications(env, scheduledAt),
-      runMarketplaceContentCycle(env, scheduledAt),
-      runSpApiScheduledSync(env, scheduledAt),
-      purgeAdminAuthRecords(env, scheduledAt),
-      purgeSellerAuthRecords(env, scheduledAt),
-      refreshMarketplaceKpiSummary(env),
-      // refreshAnonymousBenchmark()はkpi_summaryを読む前に自分でrefreshKpiSummary()
-      // を呼ぶ(gas/BenchmarkEngine.gs同様、KPI集計→ベンチマーク算出の順で依存する)。
-      // ここで別途refreshKpiSummary(env)を並列実行すると、同じkpi_summaryテーブルへの
-      // DELETE+INSERTが競合しPRIMARY KEY衝突を起こすため呼ばない。
-      refreshAnonymousBenchmark(env),
-      // HOSHILU INSIGHT v1.0 (2026-08-08 cron配線): 保存した検索条件の新着
-      // スキャン。D1索引検索のみでAI呼び出しは発生しないため、mywatchの
-      // 価格監視(まだ存在しない外部パイプライン頼み)と違い自己完結して
-      // 定期実行できる。1回あたりの件数上限は insight-routes.mjs 側で管理。
-      runInsightScan(env, scheduledAt.toISOString()),
-      // APIで確認できた価格だけを購入希望額と比較する。AI推定価格は使わない。
-      runTargetPriceScan(env, scheduledAt.toISOString())
-    ]));
+    ctx.waitUntil(runReliabilityControlledCron(
+      env,
+      'cloudflare_regular',
+      () => Promise.allSettled([
+        // 大隆さんの2026-08-09承認に基づく販促自動運用。先に14日先までの
+        // 権利確認済み投稿を冪等補充し、その後に期限到来分を配信する。
+        runSocialAutopilotCycle(env, scheduledAt),
+        // Runway is isolated from publishing: a successful generation is persisted
+        // to R2 and stops at REVIEW_REQUIRED. It never bypasses the existing APPROVED
+        // publication gate, and a failure cannot block either Instagram or X.
+        runRunwayGenerationCycle(env, scheduledAt),
+        deliverDueWebNotifications(env, scheduledAt),
+        deliverDueMemberNotifications(env, scheduledAt),
+        runMarketplaceContentCycle(env, scheduledAt),
+        runSpApiScheduledSync(env, scheduledAt),
+        purgeAdminAuthRecords(env, scheduledAt),
+        purgeSellerAuthRecords(env, scheduledAt),
+        refreshMarketplaceKpiSummary(env),
+        // refreshAnonymousBenchmark()はkpi_summaryを読む前に自分でrefreshKpiSummary()
+        // を呼ぶ(gas/BenchmarkEngine.gs同様、KPI集計→ベンチマーク算出の順で依存する)。
+        // ここで別途refreshKpiSummary(env)を並列実行すると、同じkpi_summaryテーブルへの
+        // DELETE+INSERTが競合しPRIMARY KEY衝突を起こすため呼ばない。
+        refreshAnonymousBenchmark(env),
+        // HOSHILU INSIGHT v1.0 (2026-08-08 cron配線): 保存した検索条件の新着
+        // スキャン。D1索引検索のみでAI呼び出しは発生しないため、mywatchの
+        // 価格監視(まだ存在しない外部パイプライン頼み)と違い自己完結して
+        // 定期実行できる。1回あたりの件数上限は insight-routes.mjs 側で管理。
+        runInsightScan(env, scheduledAt.toISOString()),
+        // APIで確認できた価格だけを購入希望額と比較する。AI推定価格は使わない。
+        runTargetPriceScan(env, scheduledAt.toISOString())
+      ])
+    ));
   }
 };

@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deepCanaryReservationSql, deepCanarySql, evaluateDeepCanary, evaluateMonthlyContinuity, evaluateSearchSli, evaluateSearchSlo, inspectProductionSearchSli, searchBackendFailureSql, searchMonthlySloSql, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
+import { deepCanaryReservationSql, deepCanarySql, evaluateDeepCanary, evaluateMonthlyContinuity,
+  evaluatePendingReliabilityIncidents, evaluateReliabilityHeartbeats, evaluateSearchSli, evaluateSearchSlo,
+  inspectProductionSearchSli, reliabilityHeartbeatSql, reliabilityPendingIncidentSql,
+  searchBackendFailureSql, searchMonthlySloSql, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
 
 function healthyCanaryRows(now = Date.now()) {
   const iso = new Date(now - 60000).toISOString();
@@ -8,19 +11,32 @@ function healthyCanaryRows(now = Date.now()) {
     .map((component) => ({ event_id:`deep-canary:${now}:${component}`, component, status:'PASS', code:'CANARY_OK', occurred_at:iso }));
 }
 
+function healthyHeartbeatRows(now = Date.now()) {
+  const occurred_at = new Date(now - 60000).toISOString();
+  return ['cloudflare_regular', 'cloudflare_deep'].map((component) => ({
+    event_id:`reliability-heartbeat:${component}`, component, status:'COMPLETED', run_id:String(now), occurred_at
+  }));
+}
+
 function d1Fetch(row, sloRow = { finished: 10, degraded: 1 }, diagnosticRow = {}) {
   let calls = 0;
   return async (_url, init) => {
     assert.equal(init.headers.authorization, 'Bearer test-token');
     const body = JSON.parse(init.body);
-    if (body.sql.includes("event_type='deep_canary_")) assert.match(body.sql, /traffic_class='QA'/u);
+    if (/event_type='(?:deep_canary_|reliability_)/u.test(body.sql)) assert.match(body.sql, /traffic_class='QA'/u);
     else assert.match(body.sql, /traffic_class<>'QA'/u);
     assert.doesNotMatch(body.sql, /query_text|visitor_id|session_id/iu);
-    assert.match(body.params[0], /^\d{4}-\d{2}-\d{2}T/u);
+    if (body.params.length) assert.match(body.params[0], /^\d{4}-\d{2}-\d{2}T/u);
     if (body.sql.includes("event_type='deep_canary_result'")) {
       return Response.json({ success: true, result: [{ success: true, results: healthyCanaryRows() }] });
     }
     if (body.sql.includes("event_type='deep_canary_budget'")) {
+      return Response.json({ success: true, result: [{ success: true, results: [] }] });
+    }
+    if (body.sql.includes("event_type='reliability_heartbeat'")) {
+      return Response.json({ success: true, result: [{ success: true, results: healthyHeartbeatRows() }] });
+    }
+    if (body.sql.includes("event_type='reliability_incident'")) {
       return Response.json({ success: true, result: [{ success: true, results: [] }] });
     }
     calls += 1;
@@ -73,6 +89,79 @@ test('deep canary reservation SQL selects only internal cost metadata', () => {
   assert.doesNotMatch(sql, /query|prompt|history|response|authorization|visitor_id|session_id/iu);
 });
 
+test('control-plane queries select only fixed internal heartbeat and incident fields', () => {
+  const heartbeat = reliabilityHeartbeatSql();
+  const incidents = reliabilityPendingIncidentSql();
+  assert.match(heartbeat, /cloudflare_regular/u);
+  assert.match(heartbeat, /cloudflare_deep/u);
+  assert.match(incidents, /campaign='PENDING'/u);
+  for (const sql of [heartbeat, incidents]) {
+    assert.doesNotMatch(sql, /query_text|visitor_id|session_id|prompt|history|response|authorization/iu);
+  }
+});
+
+test('control-plane heartbeat detects stale and stuck Cloudflare cron independently', () => {
+  const now = Date.now();
+  assert.equal(evaluateReliabilityHeartbeats(healthyHeartbeatRows(now), { now }).cloudflare_deep.status, 'COMPLETED');
+  const stale = healthyHeartbeatRows(now).map((row) => row.component === 'cloudflare_regular'
+    ? { ...row, occurred_at:new Date(now-26*60000).toISOString() } : row);
+  assert.throws(() => evaluateReliabilityHeartbeats(stale, { now }), /RELIABILITY_HEARTBEAT_STALE:CLOUDFLARE_REGULAR/u);
+  const stuck = healthyHeartbeatRows(now).map((row) => row.component === 'cloudflare_deep'
+    ? { ...row, status:'STARTED', occurred_at:new Date(now-21*60000).toISOString() } : row);
+  assert.throws(() => evaluateReliabilityHeartbeats(stuck, { now }), /RELIABILITY_HEARTBEAT_STUCK:CLOUDFLARE_DEEP/u);
+});
+
+test('pending reliability incident stays actionable until GitHub records it', () => {
+  const incident = { event_id:'reliability-incident:GITHUB_SCHEDULE_STALE', component:'github_schedule',
+    code:'GITHUB_SCHEDULE_STALE', occurred_at:new Date().toISOString() };
+  assert.throws(
+    () => evaluatePendingReliabilityIncidents([incident]),
+    error => error?.message === 'RELIABILITY_INCIDENT_PENDING:github_schedule:GITHUB_SCHEDULE_STALE'
+      && error.pendingIncidents?.[0]?.event_id === incident.event_id
+  );
+  assert.deepEqual(evaluatePendingReliabilityIncidents([]), []);
+});
+
+test('every pending reliability code is recorded before the matching ids are acknowledged', () => {
+  const rows = [
+    {
+      event_id: 'reliability-incident:GITHUB_SCHEDULE_HEARTBEAT_MISSING',
+      component: 'github_schedule', code: 'GITHUB_SCHEDULE_HEARTBEAT_MISSING',
+      occurred_at: '2026-08-13T11:00:00.000Z'
+    },
+    {
+      event_id: 'reliability-incident:GITHUB_SCHEDULE_HEARTBEAT_STUCK',
+      component: 'github_schedule', code: 'GITHUB_SCHEDULE_HEARTBEAT_STUCK',
+      occurred_at: '2026-08-13T11:05:00.000Z'
+    }
+  ];
+  assert.throws(() => evaluatePendingReliabilityIncidents(rows), (error) => {
+    assert.match(error.message, /GITHUB_SCHEDULE_HEARTBEAT_MISSING/u);
+    assert.match(error.message, /GITHUB_SCHEDULE_HEARTBEAT_STUCK/u);
+    assert.deepEqual(error.pendingIncidents.map((item) => item.event_id), rows.map((item) => item.event_id));
+    return true;
+  });
+});
+
+test('persisted control incident is surfaced before an unrelated current SLI failure', async () => {
+  let calls = 0;
+  const pending = {
+    event_id:'reliability-incident:GITHUB_SCHEDULE_HEARTBEAT_STALE',
+    component:'github_schedule', code:'GITHUB_SCHEDULE_HEARTBEAT_STALE',
+    occurred_at:'2026-08-13T11:00:00.000Z'
+  };
+  const fetcher = async (_url, init) => {
+    calls += 1;
+    const body = JSON.parse(init.body);
+    assert.match(body.sql, /event_type='reliability_incident'/u);
+    return Response.json({ success:true, result:[{ success:true, results:[pending] }] });
+  };
+  await assert.rejects(inspectProductionSearchSli({
+    accountId:'account', apiToken:'token', fetcher
+  }), /RELIABILITY_INCIDENT_PENDING:github_schedule:GITHUB_SCHEDULE_HEARTBEAT_STALE/u);
+  assert.equal(calls, 1);
+});
+
 test('deep canary accepts fresh passing components', () => {
   const now = Date.now();
   const result = evaluateDeepCanary(healthyCanaryRows(now), { now });
@@ -114,6 +203,14 @@ test('deep canary immediately alerts on non-transient control failures', () => {
       new RegExp(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:OPENAI_BACKUP:${code}`, 'u')
     );
   }
+});
+
+test('deep canary immediately alerts when a provider rejects the request contract', () => {
+  const now = Date.now();
+  const rows = healthyCanaryRows(now).map((row) => row.component === 'openai_backup'
+    ? { ...row, status:'FAIL', code:'CANARY_PROVIDER_REQUEST_REJECTED' } : row);
+  assert.throws(() => evaluateDeepCanary(rows, { now }),
+    /DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:OPENAI_BACKUP:CANARY_PROVIDER_REQUEST_REJECTED/u);
 });
 
 test('deep canary keeps transient OpenAI backup failures on a distinct two-run warning', () => {

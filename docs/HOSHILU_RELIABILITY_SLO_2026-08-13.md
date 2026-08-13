@@ -38,6 +38,9 @@
 3. 毎時のHOSHILU統括監査は、開いている自動Issueと失敗したActionsを最優先で調査し、
    安全な範囲で修正、回帰テスト、push、デプロイ、本番確認まで行う。
 4. 外形・実利用SLIが3回連続成功した後にIssueを自動closeする。
+5. GitHub scheduleは開始・完了heartbeatをD1へ残す。Cloudflare cronは20分超の欠測・未完了を
+   内部outboxへ永続化し、GitHub復旧後に必ずIssue化する。Cloudflare通常/deep cronもheartbeatを
+   残し、GitHub側が25分超の欠測または20分超の停滞を検知する。
 
 深層canaryは楽天・Yahoo!を15分ごと、Query Structurer・AIチャット主系を1時間ごと、
 OpenAI予備系を6時間ごとに確認する。最終実行からの許容時間は順に20分、70分、390分とする。
@@ -50,12 +53,16 @@ Query StructurerまたはAIチャット主系の失敗は1回で検知する。�
 2026-09-13 00:00 UTCまでに単価を再確認できなければ有料canaryを停止して即時検知する。
 初回の結果が完全に空の場合だけ、欠測のまま監視を開始しないよう全componentを一度確認する。
 その後は上記の固定周期を厳守する。予約後2分を超えて対応する結果がない有料probeも即時検知する。
+OpenAI予備系の通常slotが一時失敗した時だけ15分後に1回確認し、2回連続ならIssue化する。
+非一時エラーは確認を待たず即時検知し、すべての有料確認は同じ月5米ドル上限に含める。
 
 ## 現在の境界
 
-- GitHubのscheduleは5分が最短だが、混雑時に遅延・取りこぼしがあり得る。
+- GitHubのscheduleは5分が最短だが、混雑時に遅延・取りこぼしがあり得る。D1 heartbeat/outboxで
+  欠測を失わないが、GitHub自体が停止中のGitHub Issue作成は復旧後になる。
 - 無効Turnstileトークンによる外形検査に加え、実AI、楽天、Yahoo!の商品検索を
   非公開Worker cronのdeep canaryで定期確認する。AI費用は月5米ドルを上限とする。
 - Cloudflare内だけの監視は障害ドメインが本体と共通になるため、外部監視の代替ではない。
 - Cloudflare Health Check通知、Sentry等の外部即時通知は、費用上限、通知先、
   Secretまたは権限を確認してから追加する。
+- 監視cronとcanaryはCodex/ChatGPT Workを呼ばない。Codex使用量はIssue調査・実装修正時だけ発生する。

@@ -76,6 +76,22 @@ export function deepCanaryReservationSql() {
   ORDER BY occurred_at DESC LIMIT 160`;
 }
 
+export function reliabilityHeartbeatSql() {
+  return `SELECT event_id,medium AS component,campaign AS status,content AS run_id,occurred_at
+  FROM growth_events
+  WHERE event_type='reliability_heartbeat' AND traffic_class='QA'
+    AND medium IN ('cloudflare_regular','cloudflare_deep')
+  ORDER BY occurred_at DESC LIMIT 8`;
+}
+
+export function reliabilityPendingIncidentSql() {
+  return `SELECT event_id,medium AS component,content AS code,occurred_at
+  FROM growth_events
+  WHERE event_type='reliability_incident' AND traffic_class='QA' AND source='worker'
+    AND campaign='PENDING'
+  ORDER BY occurred_at ASC LIMIT 32`;
+}
+
 const CANARY_MAX_AGE_MINUTES = Object.freeze({
   query_structurer: 70,
   rakuten: 20,
@@ -91,7 +107,78 @@ const CANARY_PAID_COMPONENTS = new Set(['query_structurer', 'ai_chat_primary', '
 const CANARY_RESERVATION_MICRO_USD = Object.freeze({
   query_structurer: '0100000', ai_chat_primary: '0500000', openai_backup: '0007000'
 });
-const CANARY_IMMEDIATE_CODE_PATTERN = /(?:^|_)(?:NOT_CONFIGURED|CONFIG(?:URATION)?|SETTINGS?|AUTH(?:ENTICATION|ORIZATION)?|UNAUTHORIZED|FORBIDDEN|API_KEY|HTTP_(?:401|403)|MODEL|PROVIDER_INVALID|PRICING|BILLING|BUDGET|USAGE|COST|RESERVATION|PROMPT|OUTPUT_LIMIT)(?:_|$)/u;
+const CANARY_IMMEDIATE_CODE_PATTERN = /(?:^|_)(?:NOT_CONFIGURED|CONFIG(?:URATION)?|SETTINGS?|AUTH(?:ENTICATION|ORIZATION)?|UNAUTHORIZED|FORBIDDEN|API_KEY|HTTP_(?:401|403)|MODEL|PROVIDER_INVALID|REQUEST_REJECTED|PRICING|BILLING|BUDGET|USAGE|COST|RESERVATION|PROMPT|OUTPUT_LIMIT)(?:_|$)/u;
+const RELIABILITY_HEARTBEAT_COMPONENTS = new Set(['cloudflare_regular', 'cloudflare_deep']);
+const RELIABILITY_HEARTBEAT_MAX_AGE_MS = 25 * 60000;
+const RELIABILITY_HEARTBEAT_STARTED_MAX_AGE_MS = 20 * 60000;
+const RELIABILITY_BOOTSTRAP_DEADLINE_MS = Date.parse('2026-08-13T12:30:00.000Z');
+
+export function evaluateReliabilityHeartbeats(rows = [], { now = Date.now() } = {}) {
+  const nowMs = Number(now);
+  assert(Number.isFinite(nowMs), 'RELIABILITY_HEARTBEAT_TIME_INVALID');
+  const latest = new Map();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const component = String(row?.component || '');
+    if (!RELIABILITY_HEARTBEAT_COMPONENTS.has(component)) continue;
+    const eventId = String(row?.event_id || '');
+    const status = String(row?.status || '');
+    const runId = String(row?.run_id || '');
+    const occurredAt = String(row?.occurred_at || '');
+    const timestamp = Date.parse(occurredAt);
+    if (eventId !== `reliability-heartbeat:${component}`
+      || !['STARTED', 'COMPLETED'].includes(status)
+      || !/^\d{1,30}$/u.test(runId)
+      || !Number.isFinite(timestamp) || timestamp > nowMs + 5 * 60000) {
+      throw new Error(`RELIABILITY_HEARTBEAT_INVALID:${component.toUpperCase()}`);
+    }
+    if (!latest.has(component) || timestamp > latest.get(component).timestamp) {
+      latest.set(component, { status, run_id: runId, occurred_at: occurredAt, timestamp });
+    }
+  }
+  const summary = {};
+  for (const component of RELIABILITY_HEARTBEAT_COMPONENTS) {
+    const item = latest.get(component);
+    if (!item && nowMs < RELIABILITY_BOOTSTRAP_DEADLINE_MS) {
+      summary[component] = { status: 'PENDING', occurred_at: '' };
+      continue;
+    }
+    if (!item || nowMs - item.timestamp > RELIABILITY_HEARTBEAT_MAX_AGE_MS) {
+      throw new Error(`RELIABILITY_HEARTBEAT_STALE:${component.toUpperCase()}`);
+    }
+    if (item.status === 'STARTED' && nowMs - item.timestamp > RELIABILITY_HEARTBEAT_STARTED_MAX_AGE_MS) {
+      throw new Error(`RELIABILITY_HEARTBEAT_STUCK:${component.toUpperCase()}`);
+    }
+    summary[component] = { status: item.status, occurred_at: item.occurred_at };
+  }
+  return summary;
+}
+
+export function evaluatePendingReliabilityIncidents(rows = []) {
+  const incidents = [];
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const eventId = String(row?.event_id || '');
+    const component = String(row?.component || '');
+    const code = String(row?.code || '');
+    const occurredAt = String(row?.occurred_at || '');
+    if (!/^reliability-incident:[A-Z][A-Z0-9_]{2,79}$/u.test(eventId)
+      || !/^[a-z][a-z0-9_]{2,39}$/u.test(component)
+      || !/^[A-Z][A-Z0-9_]{2,79}$/u.test(code)
+      || !Number.isFinite(Date.parse(occurredAt))) {
+      throw new Error('RELIABILITY_INCIDENT_INVALID');
+    }
+    incidents.push({ event_id: eventId, component, code, occurred_at: occurredAt });
+  }
+  if (incidents.length) {
+    // Every ID that will be acknowledged must first be visible in the public
+    // GitHub incident. Values are already restricted to fixed safe formats.
+    const diagnostic = incidents.map((item) => `${item.component}:${item.code}`).join(',');
+    const error = new Error(`RELIABILITY_INCIDENT_PENDING:${diagnostic}`);
+    error.pendingIncidents = incidents;
+    error.pendingCutoff = new Date().toISOString();
+    throw error;
+  }
+  return [];
+}
 
 export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRows = [] } = {}) {
   const nowMs = Number(now);
@@ -246,10 +333,10 @@ async function queryD1Rows(fetcher, endpoint, apiToken, sql, params = []) {
     body: JSON.stringify({ sql, params }),
     signal: AbortSignal.timeout(10000)
   });
-  assert(response?.ok, `DEEP_CANARY_D1_HTTP_${Number(response?.status) || 0}`);
+  assert(response?.ok, `SEARCH_SLI_D1_HTTP_${Number(response?.status) || 0}`);
   const payload = await response.json();
   const query = Array.isArray(payload?.result) ? payload.result[0] : null;
-  assert(payload?.success === true && query?.success !== false, 'DEEP_CANARY_D1_QUERY_FAILED');
+  assert(payload?.success === true && query?.success !== false, 'SEARCH_SLI_D1_QUERY_FAILED');
   return Array.isArray(query?.results) ? query.results : [];
 }
 
@@ -273,6 +360,11 @@ export async function inspectProductionSearchSli({
   assert(String(apiToken || '').trim(), 'CLOUDFLARE_API_TOKEN_MISSING');
   const endpoint = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/d1/database/${encodeURIComponent(databaseId)}/query`;
   const now = Date.now();
+  // Persisted control-plane incidents take precedence over current quality
+  // checks. Otherwise a separate SLI failure could hide the outbox forever
+  // and prevent the recovered GitHub monitor from recording and ACKing it.
+  const pendingIncidents = await queryD1Rows(fetcher, endpoint, apiToken, reliabilityPendingIncidentSql());
+  evaluatePendingReliabilityIncidents(pendingIncidents);
   const acuteMinutes = boundedInteger(windowMinutes, 15, 5, 60);
   const sloMinutes = boundedInteger(sloWindowMinutes, 360, 60, 1440);
   const acuteCutoff = new Date(now - acuteMinutes * 60000).toISOString();
@@ -309,7 +401,10 @@ export async function inspectProductionSearchSli({
     new Date(now - 7 * 86400000).toISOString()
   ]);
   const deepCanary = evaluateDeepCanary(canaryRows, { now, reservationRows });
-  return { ...acute, slo_window_minutes: sloMinutes, slo, monthly, deep_canary: deepCanary };
+  const heartbeatRows = await queryD1Rows(fetcher, endpoint, apiToken, reliabilityHeartbeatSql());
+  const reliabilityHeartbeats = evaluateReliabilityHeartbeats(heartbeatRows, { now });
+  return { ...acute, slo_window_minutes: sloMinutes, slo, monthly, deep_canary: deepCanary,
+    reliability_heartbeats: reliabilityHeartbeats };
 }
 
 export async function runProductionSearchSli(options = {}) {
@@ -346,6 +441,7 @@ function cliOptions(argv) {
     sloDegradedRateLimit: Number(value('--slo-degraded-rate-limit', process.env.HOSHILU_SLO_DEGRADED_RATE_LIMIT || 0.01)),
     monthlyMinimumFinished: Number(value('--monthly-minimum-finished', process.env.HOSHILU_MONTHLY_MINIMUM_FINISHED || 1000)),
     monthlyUnavailableRateLimit: Number(value('--monthly-unavailable-rate-limit', process.env.HOSHILU_MONTHLY_UNAVAILABLE_RATE_LIMIT || 0.0005)),
+    pendingOutput: value('--pending-output', process.env.HOSHILU_PENDING_INCIDENT_OUTPUT || ''),
     attempts: Number(value('--attempts', process.env.HOSHILU_MONITOR_ATTEMPTS || 3)),
     retryMs: Number(value('--retry-ms', process.env.HOSHILU_MONITOR_RETRY_MS || 5000))
   };
@@ -366,12 +462,18 @@ async function main() {
       `- degraded rate: ${(result.degraded_rate * 100).toFixed(1)}%`, ''
       ,`Six-hour quality window: ${result.slo.finished} finished / ${result.slo.degraded} degraded (${(result.slo.degraded_rate * 100).toFixed(1)}%)`, ''
       ,`Thirty-day continuity: ${result.monthly.finished} finished / ${result.monthly.unavailable} unavailable (${(result.monthly.unavailable_rate * 100).toFixed(3)}%)`, ''
-      ,`Deep canary: ${Object.entries(result.deep_canary).map(([component, value]) => `${component}=${value.status}`).join(', ')}`, ''
+      ,`Deep canary: ${Object.entries(result.deep_canary).map(([component, value]) => `${component}=${value.status}(${value.code}) at ${value.occurred_at || 'pending'}`).join(', ')}`, ''
+      ,`Control heartbeats: ${Object.entries(result.reliability_heartbeats).map(([component, value]) => `${component}=${value.status} at ${value.occurred_at || 'pending'}`).join(', ')}`, ''
     ].join('\n');
     console.log(summary);
     if (process.env.GITHUB_STEP_SUMMARY) await import('node:fs/promises').then(({ appendFile }) => appendFile(process.env.GITHUB_STEP_SUMMARY, summary));
   } catch (error) {
-    const message = String(error?.message || error).slice(0, 240);
+    const pendingOutput = cliOptions(process.argv.slice(2)).pendingOutput;
+    if (pendingOutput && Array.isArray(error?.pendingIncidents)) {
+      const payload = { cutoff: error.pendingCutoff, incident_ids: error.pendingIncidents.map((item) => item.event_id) };
+      await import('node:fs/promises').then(({ writeFile }) => writeFile(pendingOutput, `${JSON.stringify(payload)}\n`, { mode: 0o600 }));
+    }
+    const message = String(error?.message || error).slice(0, 2000);
     const summary = `## HOSHILU real-user search SLI: FAIL\n\n- ${message}\n`;
     console.error(summary);
     if (process.env.GITHUB_STEP_SUMMARY) await import('node:fs/promises').then(({ appendFile }) => appendFile(process.env.GITHUB_STEP_SUMMARY, summary));
