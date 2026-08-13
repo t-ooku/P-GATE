@@ -23,9 +23,6 @@ import { expandSearchQuery } from './query-expansion.mjs';
 // primary, but a timeout leaves a bounded slice for the OpenAI backup before
 // the existing raw-query fallback continues to the marketplace search.
 const CHAT_PROVIDER_TIMEOUT_MS = 3500;
-// Query refinement runs beside local/GAS search. Allow current stable Gemini
-// latency without consuming the full provider budget or blocking fallback paths.
-export const QUERY_REFINEMENT_TIMEOUT_MS = CHAT_PROVIDER_TIMEOUT_MS;
 const CHAT_TOTAL_BUDGET_MS = 6500;
 const MAX_CHAT_TURNS = 2;
 const MAX_MESSAGE_LENGTH = 200;
@@ -317,7 +314,7 @@ export async function refineMarketplaceSearchQuery(rawQuery, language, env = {},
   return analyzeChatTurn(
     [{ role: 'user', text: String(rawQuery || '') }], language, fastEnv, fetchImpl,
     {
-      timeoutMs: QUERY_REFINEMENT_TIMEOUT_MS,
+      timeoutMs: 1500,
       totalBudgetMs: 1500,
       telemetryComponent: 'query_structurer',
       // Gemini is intentionally isolated from OpenAI here to avoid normal
