@@ -31,7 +31,8 @@ test('production SLI query only aggregates privacy-safe terminal event counts', 
 });
 
 test('production SLO enforces a thirty-day 99.95 percent continuity budget', () => {
-  assert.match(searchMonthlySloSql(), /search_backend_failed/u);
+  assert.doesNotMatch(searchMonthlySloSql(), /search_backend_failed/u);
+  assert.match(searchMonthlySloSql(), /event_type='search_dead_end'/u);
   assert.throws(
     () => evaluateMonthlyContinuity({ finished: 1000, unavailable: 1 }),
     /SEARCH_SLO_CONTINUITY:1\/1000:0\.0010/u
@@ -72,9 +73,24 @@ test('production SLI fails on one real dead-end event', () => {
 
 test('production SLI fails on one server-authenticated backend failure', () => {
   assert.match(searchBackendFailureSql(), /event_type='search_backend_failed'/u);
+  assert.match(searchBackendFailureSql(), /medium AS component/u);
   assert.throws(
     () => evaluateSearchSli({ started: 1, completed: 0, hard_failed: 0, backend_failed: 1, degraded: 0 }),
     /SEARCH_SLI_BACKEND_FAILURES:1/u
+  );
+});
+
+test('production SLI reports the safe AI chat stage, code and request ID', async () => {
+  await assert.rejects(
+    inspectProductionSearchSli({
+      accountId: 'account', apiToken: 'test-token',
+      fetcher: d1Fetch(
+        { started: 1, completed: 0, hard_failed: 0, backend_failed: 1, degraded: 0 },
+        { finished: 1, degraded: 0 },
+        { component: 'ai_chat', code: 'AI_CHAT_INTERNAL_ERROR', request_id: 'e309d1ad-2a34-4f2f-913b-47fccdbbe24d' }
+      )
+    }),
+    /SEARCH_SLI_BACKEND_FAILURES:1:ai_chat:AI_CHAT_INTERNAL_ERROR:e309d1ad-2a34-4f2f-913b-47fccdbbe24d/u
   );
 });
 

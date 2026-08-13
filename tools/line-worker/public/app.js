@@ -738,6 +738,11 @@ async function loadRelatedRecommendations(query,sequence){
     }
   }
 }
+function scheduleRelatedRecommendations(query,sequence){
+  const safeQuery=String(query||'').trim();
+  if(!safeQuery)return;
+  setTimeout(()=>{loadRelatedRecommendations(safeQuery,sequence).catch(()=>{});},0);
+}
 function onTurnstileToken(token){turnstileToken=String(token||'');const waiter=turnstileTokenWaiter;if(!turnstileToken||!waiter)return;turnstileTokenWaiter=null;clearTimeout(waiter.timeout);waiter.resolve(turnstileToken);}
 function clearTurnstileToken(){turnstileToken='';}
 function waitForTurnstileCallback(timeoutMs=15000){if(turnstileToken&&turnstileToken!==lastIssuedTurnstileToken)return Promise.resolve(turnstileToken);return new Promise(resolve=>{const waiter={resolve,timeout:null};waiter.timeout=setTimeout(()=>{if(turnstileTokenWaiter===waiter)turnstileTokenWaiter=null;resolve('');},timeoutMs);turnstileTokenWaiter=waiter;});}
@@ -871,7 +876,7 @@ async function runKnowledgeSearch(options={}){
     if(effectiveQuery&&effectiveQuery!==elements.query.value){elements.query.value=effectiveQuery;elements.query.dispatchEvent(new Event('input',{bubbles:true}));}
     rememberMemberSearch(elements.query.value);renderResults(result,lastRequestId);
     document.dispatchEvent(new CustomEvent('hoshilu:search-completed',{detail:{executionId}}));elements.status.textContent='';
-    setTimeout(()=>{loadRelatedRecommendations(effectiveQuery||submittedQuery,sequence).catch(()=>{});},0);
+    scheduleRelatedRecommendations(effectiveQuery||submittedQuery,sequence);
     return{ok:true,result,requestId:lastRequestId};
   }catch(error){
     const safeError=String(error?.message||error).slice(0,80);lastRequestId=String(error?.requestId||lastRequestId||'');
@@ -885,6 +890,10 @@ async function runKnowledgeSearch(options={}){
     const trace=lastRequestId?` (${({JA:'追跡ID',EN:'Tracking ID',ZH:'追踪ID',KO:'추적 ID'}[language]||'Tracking ID')}: ${lastRequestId})`:'';
     fallback.message=({JA:'本検索へ一時的に接続できないため、AI候補と13モールの検索先を表示しています。',EN:'The main search is temporarily unavailable, so the AI candidate and links to 13 marketplaces are shown.',ZH:'主搜索暂时不可用，现显示 AI 候选和 13 个商城的搜索链接。',KO:'본 검색에 일시적으로 연결할 수 없어 AI 후보와 13개 쇼핑몰 검색 링크를 표시합니다.'}[language]||'The main search is temporarily unavailable.')+trace;
     renderResults(fallback,lastRequestId);
+    // Main-search/API failures must not suppress the independently resilient
+    // related-product carousel. It obtains a fresh Turnstile token and shows
+    // only products verified by marketplace APIs.
+    scheduleRelatedRecommendations(submittedQuery,sequence);
     document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId,requestId:lastRequestId}}));
     elements.status.className='status';elements.status.textContent='';
     return{ok:false,degraded:true,error:safeError,result:fallback,requestId:lastRequestId};

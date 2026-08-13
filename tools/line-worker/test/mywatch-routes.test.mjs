@@ -147,7 +147,7 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(css, /\.notification-thumb/);
   assert.match(css, /\.notification-row-action/);
   assert.match(serviceWorker, /mywatch\.css/);
-  assert.match(serviceWorker, /hoshilu-shell-v377/);
+  assert.match(serviceWorker, /hoshilu-shell-v378/);
   // RC2で使った投入・削除ボタンは本番UIへ残さない。テスト用API自体は
   // 下記の回帰テストからだけ明示的にフラグを立てて検証する。
   const indexMarkup = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');

@@ -1687,7 +1687,7 @@ export function interleaveCandidatesBySource(groups = []) {
 // 希望にそう商品を提示"): REFINEは検索語だけ、IDENTIFYは確認用の商品仮説を
 // 1件だけ返す。どちらも価格・在庫・URLは返さず、YES後の商品実在確認は既存の
 // /api/knowledge（モールAPI/D1）だけが行う。質問本文はログへ保存しない。
-async function handleAiChatApi(request, env) {
+async function handleAiChatApi(request, env, ctx) {
   const requestId = crypto.randomUUID();
   try {
     const requestOrigin = request.headers.get('origin');
@@ -1695,7 +1695,14 @@ async function handleAiChatApi(request, env) {
     if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
     const length = Number(request.headers.get('content-length') || 0);
     if (length > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
-    const input = validateChatRequest(await request.json());
+    let body;
+    try { body = await request.json(); }
+    catch {
+      return Response.json({ ok: false, error: 'REQUEST_JSON_INVALID', request_id: requestId }, {
+        status: 400, headers: { 'cache-control': 'no-store', 'x-request-id': requestId }
+      });
+    }
+    const input = validateChatRequest(body);
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     let result = await analyzeChatTurn(input.history, input.language, env, fetch, { mode: input.mode });
     if (input.mode === 'IDENTIFY' && result.candidate_name) {
@@ -1716,6 +1723,14 @@ async function handleAiChatApi(request, env) {
     const status = clientErrors.includes(error.message) ? 400 : 500;
     const code = String(error.message || 'CHAT_FAILED').slice(0, 80);
     console.error('AI_CHAT_REQUEST_FAILED', { requestId, code, status });
+    if (status >= 500) {
+      const record = recordSearchOperationalFailure(env, { requestId, code, component: 'ai_chat' }).catch((telemetryError) => {
+        console.error('AI_CHAT_OPERATIONAL_TELEMETRY_FAILED', {
+          requestId, code: String(telemetryError?.message || telemetryError).slice(0, 80)
+        });
+      });
+      if (ctx?.waitUntil) ctx.waitUntil(record); else void record;
+    }
     return Response.json({ ok: false, error: code, request_id: requestId }, {
       status, headers: { 'cache-control': 'no-store', 'x-request-id': requestId }
     });
@@ -1970,7 +1985,14 @@ async function handleKnowledgeApi(request, env, ctx) {
     if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED', request_id: requestId }, { status: 403, headers: { 'x-request-id': requestId } });
     const length = Number(request.headers.get('content-length') || 0);
     if (length > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE', request_id: requestId }, { status: 413, headers: { 'x-request-id': requestId } });
-    const validatedInput = validateKnowledgeRequest(await request.json());
+    let body;
+    try { body = await request.json(); }
+    catch {
+      return Response.json({ ok: false, error: 'REQUEST_JSON_INVALID', request_id: requestId }, {
+        status: 400, headers: { 'cache-control': 'no-store', 'x-request-id': requestId }
+      });
+    }
+    const validatedInput = validateKnowledgeRequest(body);
     // v4.2 項目1・2・3: 商品名を知らなくても探せる検索。ここで1回だけ展開
     // すれば、D1検索・3モールのキーワード生成・filterCategoryMismatches・
     // semanticSearchGroups が下流ですべて自動的に恩恵を受ける(詳細は
@@ -2247,12 +2269,12 @@ async function handleKnowledgeApi(request, env, ctx) {
     const status = clientErrors.includes(code) ? 400 : 500;
     console.error('KNOWLEDGE_SEARCH_FAILED', { requestId, code: code.slice(0, 80), status });
     if (status >= 500) {
-      try { await recordSearchOperationalFailure(env, { requestId, code }); }
-      catch (telemetryError) {
+      const record = recordSearchOperationalFailure(env, { requestId, code }).catch((telemetryError) => {
         console.error('SEARCH_OPERATIONAL_TELEMETRY_FAILED', {
           requestId, code: String(telemetryError?.message || telemetryError).slice(0, 80)
         });
-      }
+      });
+      if (ctx?.waitUntil) ctx.waitUntil(record); else void record;
     }
     return Response.json({ ok: false, error: code, request_id: requestId }, {
       status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
@@ -2489,7 +2511,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/related-recommendations') return handleRelatedRecommendationsApi(request, env);
-    if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env);
+    if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/price-comparison') return handlePriceComparisonApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/rankings') return handleRankingApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/hoshilu-rankings') return handleHoshiluRankingApi(request, env);

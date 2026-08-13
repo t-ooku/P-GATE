@@ -48,6 +48,22 @@ test('server operational failures store only request ID and bounded code', async
   assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
 });
 
+test('AI chat operational failures are distinguishable without storing conversation text', async () => {
+  const calls = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };
+  assert.equal(await recordSearchOperationalFailure(env, {
+    requestId: 'e309d1ad-2a34-4f2f-913b-47fccdbbe24d',
+    code: 'unexpected provider detail',
+    component: 'ai_chat',
+    history: '保存禁止の会話本文'
+  }), true);
+  assert.equal(calls[0].values[1], 'search_backend_failed');
+  assert.equal(calls[0].values[4], 'ai_chat');
+  assert.equal(calls[0].values[5], 'AI_CHAT_INTERNAL_ERROR');
+  assert.equal(calls[0].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe24d');
+  assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
+});
+
 test('accepts anonymous registration and inquiry events across all ten marketplaces', () => {
   assert.equal(normalizeGrowthEvent({ event_type: 'member_registered' }).event_type, 'member_registered');
   assert.equal(normalizeGrowthEvent({ event_type: 'inquiry_submitted' }).event_type, 'inquiry_submitted');

@@ -77,12 +77,15 @@ export function normalizeGrowthEvent(input = {}) {
 // Internal-only operational telemetry. This event type is intentionally not
 // in the public EVENTS allowlist, so /api/events cannot forge it. It stores
 // only a server request ID and a bounded error code, never the search text.
-export async function recordSearchOperationalFailure(env, { requestId = '', code = '' } = {}) {
+export async function recordSearchOperationalFailure(env, {
+  requestId = '', code = '', component = 'knowledge'
+} = {}) {
   if (!env?.PRODUCT_DB) return false;
+  const safeComponent = component === 'ai_chat' ? 'ai_chat' : 'knowledge';
   const safeCode = /^[A-Z][A-Z0-9_]{2,79}$/u.test(String(code || ''))
-    ? String(code) : 'KNOWLEDGE_INTERNAL_ERROR';
+    ? String(code) : (safeComponent === 'ai_chat' ? 'AI_CHAT_INTERNAL_ERROR' : 'KNOWLEDGE_INTERNAL_ERROR');
   const values = [
-    crypto.randomUUID(), 'search_backend_failed', 'JA', 'worker', 'operational',
+    crypto.randomUUID(), 'search_backend_failed', 'JA', 'worker', safeComponent,
     safeCode, clean(requestId), '', new Date().toISOString(), 'UNATTRIBUTED', '', ''
   ];
   try {

@@ -61,6 +61,6 @@ test('記事と検索画面は共通ID、Beacon拒否時fallback、SEO文脈の�
   for (const className of ['price-offer', 'product-primary-link', 'price-compare-link', 'price-compare-search-link']) {
     assert.match(growth, new RegExp(className));
   }
-  assert.match(worker, /hoshilu-shell-v377/);
+  assert.match(worker, /hoshilu-shell-v378/);
   assert.match(worker, /growth-identity\.mjs/);
 });

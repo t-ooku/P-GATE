@@ -18,4 +18,6 @@ test('PC共有にX・Instagram・TikTokの明示ボタンを追加する', async
   assert.match(source, /card\.querySelector\('\.share-discovery-actions'\)/);
   assert.match(css, /\.share-discovery-actions \{[\s\S]*grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(css, /\.direct-social-targets \{\s*display: contents/);
+  assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.share-discovery-actions \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.doesNotMatch(css, /@media \(max-width: 560px\)[\s\S]*?grid-template-columns: repeat\(6, minmax\(112px, 1fr\)\)/);
 });

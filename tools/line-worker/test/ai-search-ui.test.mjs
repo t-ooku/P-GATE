@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v377/);
+  assert.match(worker, /hoshilu-shell-v378/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /link\.dataset\.marketplace = destination\.dataset\.marketplace/);
@@ -132,7 +132,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/app\.js\?v=127"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=8"><\/script>/);
+  assert.match(html, /<script type="module" src="\/app\.js\?v=128"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=8"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -179,6 +179,19 @@ test('IDENTIFY APIは知識検索が失敗しても使える13モール署名リ
   assert.match(handler, /input\.mode === 'IDENTIFY' && result\.candidate_name/);
   assert.match(handler, /signedMarketplaceSearchLinks\(candidateQuery/);
   assert.match(handler, /marketplace_search_links: marketplaceSearchLinks/);
+});
+
+test('AIチャット500は会話本文を保存せず追跡IDと安全なコードをD1監視へ記録する', async () => {
+  const worker = await readFile(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  const start = worker.indexOf('async function handleAiChatApi');
+  const end = worker.indexOf('// v4.3 指示書 Priority 3', start);
+  const handler = worker.slice(start, end);
+  assert.match(handler, /if \(status >= 500\)/);
+  assert.match(handler, /recordSearchOperationalFailure\(env, \{ requestId, code, component: 'ai_chat' \}\)/);
+  assert.match(handler, /AI_CHAT_OPERATIONAL_TELEMETRY_FAILED/);
+  assert.match(handler, /if \(ctx\?\.waitUntil\) ctx\.waitUntil\(record\)/);
+  assert.match(handler, /REQUEST_JSON_INVALID/);
+  assert.doesNotMatch(handler, /recordSearchOperationalFailure\([^\n]*(?:history|input)/);
 });
 
 // v4.2 項目6・7: 「AIで探す」を押した時点で直前の検索文を初期コンテキスト

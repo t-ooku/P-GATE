@@ -152,15 +152,20 @@
   .share-discovery-actions {
     grid-column: 1;
     grid-row: auto;
-    grid-template-columns: repeat(6, minmax(112px, 1fr));
-    overflow-x: auto;
-    padding-bottom: 3px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    width: 100%;
+    min-width: 0;
   }
 
   .share-discovery-actions button,
   .share-discovery-actions a {
     min-width: 0;
     font-size: 10px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

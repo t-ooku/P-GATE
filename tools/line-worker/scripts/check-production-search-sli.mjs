@@ -33,7 +33,7 @@ export function searchSliSql() {
 }
 
 export function searchBackendFailureSql() {
-  return `SELECT campaign AS code,content AS request_id
+  return `SELECT medium AS component,campaign AS code,content AS request_id
   FROM growth_events
   WHERE traffic_class<>'QA' AND event_type='search_backend_failed' AND occurred_at>=?1
   ORDER BY occurred_at DESC LIMIT 1`;
@@ -51,11 +51,11 @@ export function searchSloSql() {
 
 export function searchMonthlySloSql() {
   return `SELECT
-    COALESCE(SUM(CASE WHEN event_type IN ('search_completed','search_dead_end','search_backend_failed','search_degraded') THEN 1 ELSE 0 END),0) AS finished,
-    COALESCE(SUM(CASE WHEN event_type IN ('search_dead_end','search_backend_failed') THEN 1 ELSE 0 END),0) AS unavailable
+    COALESCE(SUM(CASE WHEN event_type IN ('search_completed','search_dead_end','search_degraded') THEN 1 ELSE 0 END),0) AS finished,
+    COALESCE(SUM(CASE WHEN event_type='search_dead_end' THEN 1 ELSE 0 END),0) AS unavailable
   FROM growth_events
   WHERE traffic_class<>'QA'
-    AND event_type IN ('search_completed','search_dead_end','search_backend_failed','search_degraded')
+    AND event_type IN ('search_completed','search_dead_end','search_degraded')
     AND occurred_at>=?1`;
 }
 
@@ -161,13 +161,16 @@ export async function inspectProductionSearchSli({
     const row = await queryD1(fetcher, endpoint, apiToken, searchBackendFailureSql(), [acuteCutoff]);
     const code = /^[A-Z][A-Z0-9_]{2,79}$/u.test(String(row.code || '')) ? String(row.code) : 'UNKNOWN';
     const requestId = /^[a-f0-9-]{20,64}$/iu.test(String(row.request_id || '')) ? String(row.request_id) : 'UNKNOWN';
-    backendDiagnostic = { code, request_id: requestId };
+    const component = ['ai_chat', 'knowledge'].includes(String(row.component || '')) ? String(row.component) : 'unknown';
+    backendDiagnostic = { component, code, request_id: requestId };
   }
   let acute;
   try {
     acute = evaluateSearchSli(acuteRow, { windowMinutes, maxHardFailures, maxBackendFailures, degradedMinimum, degradedRateLimit });
   } catch (error) {
-    if (backendDiagnostic) error.message = `${error.message}:${backendDiagnostic.code}:${backendDiagnostic.request_id}`;
+    if (backendDiagnostic) {
+      error.message = `${error.message}:${backendDiagnostic.component}:${backendDiagnostic.code}:${backendDiagnostic.request_id}`;
+    }
     throw error;
   }
   const sloRow = await queryD1(fetcher, endpoint, apiToken, searchSloSql(), [new Date(now - sloMinutes * 60000).toISOString()]);

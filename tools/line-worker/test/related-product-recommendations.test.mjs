@@ -26,6 +26,11 @@ test('主要カテゴリはカラコン以外も固定ルールで高速に横�
 });
 test('固定ルールにないカテゴリは同期判定では創作しない',()=>assert.deepEqual(relatedProductRecommendationQueries('未知の商品XYZ'),[]));
 
+test('LB 3in1 アイブロウは眉メイクの関連商品カテゴリを返す',()=>assert.deepEqual(
+  relatedProductRecommendationQueries('LB 3in1 アイブロウ').map(item=>item.query),
+  ['アイブロウブラシ','眉マスカラ','アイブロウコート']
+));
+
 test('固定ルールにない検索はAIが理解した別カテゴリへ横展開できる',async()=>{
   const calls=[];
   const fetchImpl=async(url,options)=>{

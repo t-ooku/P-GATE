@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { criticalAssetPaths, inspectProduction } from '../scripts/check-production-health.mjs';
 
 const expectedIndexHtml = `
-  <script src="/app.js?v=127"></script>
+  <script src="/app.js?v=128"></script>
   <script type="module" src="/ai-search-ui.mjs?v=8"></script>
   <script type="module" src="/growth-analytics.mjs?v=1"></script>`;
 
@@ -71,17 +71,17 @@ function mockFetch({
 }
 
 test('criticalAssetPaths reads all versioned production reliability assets', () => {
-  assert.deepEqual(criticalAssetPaths(expectedIndexHtml), ['/app.js?v=127', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1']);
+  assert.deepEqual(criticalAssetPaths(expectedIndexHtml), ['/app.js?v=128', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1']);
 });
 
 test('scheduled monitor can validate the assets currently referenced by production', async () => {
   const result = await inspectProduction({
     baseUrl: 'https://hoshilu.app/', fetcher: mockFetch(),
-    expectedIndexHtml: expectedIndexHtml.replace('app.js?v=127', 'app.js?v=999'),
+    expectedIndexHtml: expectedIndexHtml.replace('app.js?v=128', 'app.js?v=999'),
     assetPolicy: 'live'
   });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.expected_assets, ['/app.js?v=127', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1']);
+  assert.deepEqual(result.expected_assets, ['/app.js?v=128', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1']);
 });
 
 test('production monitor verifies health, deployed assets, rankings and trace IDs', async () => {
