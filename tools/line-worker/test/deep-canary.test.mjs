@@ -132,15 +132,15 @@ function providerHarness({ usage = true } = {}) {
 
 const callsTo = (calls, hostname) => calls.filter((call) => call.target.includes(hostname));
 
-test('deep canary frequency is 15m/1h/6h without a public endpoint', () => {
+test('deep canary frequency is 15m primary/1h structurer/6h backup without a public endpoint', () => {
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T01:22:00Z')),
-    ['rakuten', 'yahoo']);
+    ['rakuten', 'yahoo', 'ai_chat_primary']);
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T01:07:00Z')),
     ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary']);
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T06:07:00Z')),
     ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary', 'openai_backup']);
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T06:22:00Z')),
-    ['rakuten', 'yahoo']);
+    ['rakuten', 'yahoo', 'ai_chat_primary']);
 });
 
 test('only transient OpenAI result codes are eligible for the one delayed retry', () => {
@@ -194,7 +194,8 @@ test('a transient regular OpenAI failure is retried once at minute 22 and then s
   const retry = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
     clock: () => new Date('2026-08-13T06:22:01.000Z')
   });
-  assert.deepEqual(retry.results.map((row) => row.component), ['rakuten', 'yahoo', 'openai_backup']);
+  assert.deepEqual(retry.results.map((row) => row.component),
+    ['rakuten', 'yahoo', 'ai_chat_primary', 'openai_backup']);
   assert.equal(retry.results.at(-1)?.status, 'PASS');
 
   const replay = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
@@ -257,7 +258,7 @@ test('non-transient OpenAI failures never schedule the delayed paid retry', asyn
       const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
         clock: () => new Date('2026-08-13T06:22:01.000Z')
       });
-      assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
+      assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
       assert.equal(callsTo(calls, 'api.openai.com').length, 0);
     });
   }
@@ -276,7 +277,7 @@ test('retry lookup fails closed when the newest OpenAI result is not the exact r
   const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
     clock: () => new Date('2026-08-13T06:22:01.000Z')
   });
-  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
+  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
   assert.equal(callsTo(calls, 'api.openai.com').length, 0);
 });
 
@@ -313,8 +314,8 @@ test('an existing result prevents missing components from bypassing provider cad
   const { fetcher, calls } = providerHarness();
   const result = await runDeepCanaryCycle(env, new Date('2026-08-13T01:22:00Z'), fetcher,
     { clock: () => new Date('2026-08-13T01:22:01Z') });
-  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
-  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 0);
+  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
+  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 1);
   assert.equal(callsTo(calls, 'api.openai.com').length, 0);
 });
 
@@ -494,7 +495,7 @@ test('a completely new installation runs one explicit all-component bootstrap cy
     clock: () => new Date('2026-08-13T01:22:01.000Z')
   });
   assert.deepEqual(result.results.map((row) => row.component),
-    ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary', 'openai_backup']);
+    ['rakuten', 'yahoo', 'ai_chat_primary', 'query_structurer', 'openai_backup']);
 });
 
 test('expired pricing revision blocks every paid AI probe while marketplace probes continue', async (t) => {

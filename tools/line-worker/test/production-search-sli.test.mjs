@@ -168,11 +168,21 @@ test('deep canary accepts fresh passing components', () => {
   assert.equal(result.rakuten.status, 'PASS');
 });
 
-test('deep canary alerts on one AI chat failure', () => {
+test('deep canary requires two distinct transient AI chat failures and resets on pass', () => {
   const now = Date.now();
-  const rows = healthyCanaryRows(now).map((row) => row.component === 'ai_chat_primary'
-    ? { ...row, status:'FAIL', code:'GEMINI_CHAT_INTENT_FAILED' } : row);
-  assert.throws(() => evaluateDeepCanary(rows, { now }), /DEEP_CANARY_AI_CHAT_IMMEDIATE:GEMINI_CHAT_INTENT_FAILED/u);
+  const base = healthyCanaryRows(now).filter((row) => row.component !== 'ai_chat_primary');
+  const failed = [0, 15].map((minutes, index) => ({
+    event_id:`deep-canary:${now-index}:ai_chat_primary`, component:'ai_chat_primary', status:'FAIL',
+    code:'CANARY_PROVIDER_TIMEOUT', occurred_at:new Date(now-minutes*60000).toISOString()
+  }));
+  assert.doesNotThrow(() => evaluateDeepCanary([...base, failed[0]], { now }));
+  assert.throws(
+    () => evaluateDeepCanary([...base, ...failed], { now }),
+    /DEEP_CANARY_AI_CHAT_CONSECUTIVE:AI_CHAT_PRIMARY:CANARY_PROVIDER_TIMEOUT/u
+  );
+  assert.doesNotThrow(() => evaluateDeepCanary([
+    ...base, { ...failed[0], status:'PASS', code:'CANARY_OK' }, failed[1]
+  ], { now }));
 });
 
 test('deep canary alerts on one query structurer failure', () => {
@@ -240,7 +250,7 @@ test('deep canary requires two distinct failed marketplace runs and resets on pa
 
 test('deep canary detects a missed 15m/1h/6h run within 20/70/390 minutes', () => {
   const now = Date.now();
-  const windows = { rakuten:20, yahoo:20, query_structurer:70, ai_chat_primary:70, openai_backup:390 };
+  const windows = { rakuten:20, yahoo:20, ai_chat_primary:20, query_structurer:70, openai_backup:390 };
   for (const [component, minutes] of Object.entries(windows)) {
     const atBoundary = healthyCanaryRows(now).map((row) => row.component === component
       ? { ...row, occurred_at:new Date(now-minutes*60000).toISOString() } : row);

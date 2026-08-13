@@ -96,13 +96,12 @@ const CANARY_MAX_AGE_MINUTES = Object.freeze({
   query_structurer: 70,
   rakuten: 20,
   yahoo: 20,
-  ai_chat_primary: 70,
+  ai_chat_primary: 20,
   openai_backup: 390
 });
 
 const CANARY_BOOTSTRAP_DEADLINE_MS = Date.parse('2026-08-13T10:30:00.000Z');
 const CANARY_RESERVATION_GRACE_MS = 2 * 60000;
-const CANARY_PRIMARY_COMPONENTS = new Set(['query_structurer', 'ai_chat_primary']);
 const CANARY_PAID_COMPONENTS = new Set(['query_structurer', 'ai_chat_primary', 'openai_backup']);
 const CANARY_RESERVATION_MICRO_USD = Object.freeze({
   query_structurer: '0100000', ai_chat_primary: '0500000', openai_backup: '0007000'
@@ -232,18 +231,18 @@ export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRow
     if (!latest || nowMs - latest.timestamp > CANARY_MAX_AGE_MINUTES[component] * 60000) {
       throw new Error(`DEEP_CANARY_STALE:${component.toUpperCase()}`);
     }
-    if (CANARY_PRIMARY_COMPONENTS.has(component) && latest.status === 'FAIL') {
-      const prefix = component === 'ai_chat_primary'
-        ? 'DEEP_CANARY_AI_CHAT_IMMEDIATE' : 'DEEP_CANARY_QUERY_STRUCTURER_IMMEDIATE';
-      throw new Error(`${prefix}:${latest.code}`);
-    }
     if (latest.status === 'FAIL' && CANARY_IMMEDIATE_CODE_PATTERN.test(latest.code)) {
       throw new Error(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:${component.toUpperCase()}:${latest.code}`);
     }
-    if (!CANARY_PRIMARY_COMPONENTS.has(component) && items.length >= 2
+    if (component === 'query_structurer' && latest.status === 'FAIL') {
+      throw new Error(`DEEP_CANARY_QUERY_STRUCTURER_IMMEDIATE:${latest.code}`);
+    }
+    if (items.length >= 2
       && items[0].status === 'FAIL' && items[1].status === 'FAIL') {
-      const prefix = component === 'openai_backup'
-        ? 'DEEP_CANARY_OPENAI_BACKUP_WARNING' : 'DEEP_CANARY_CONSECUTIVE_FAILURE';
+      const prefix = component === 'ai_chat_primary'
+        ? 'DEEP_CANARY_AI_CHAT_CONSECUTIVE'
+        : component === 'openai_backup'
+          ? 'DEEP_CANARY_OPENAI_BACKUP_WARNING' : 'DEEP_CANARY_CONSECUTIVE_FAILURE';
       throw new Error(`${prefix}:${component.toUpperCase()}:${latest.code}`);
     }
     summary[component] = { status: latest.status, code: latest.code, occurred_at: latest.occurred_at };
