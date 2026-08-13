@@ -197,6 +197,9 @@ test('workflow is explicit, exact-hash gated and never calls the Runway generati
   assert.match(section, /88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9/);
   assert.match(section, /competing_due_count/);
   assert.match(section, /ffmpeg=7:6\.1\.1-3ubuntu5/);
+  assert.match(section, /get_r2_object_with_missing_retry/);
+  assert.match(section, /for attempt in \$\(seq 1 6\)/);
+  assert.match(section, /R2 round-trip verification failed after bounded retries/);
   assert.doesNotMatch(section, /api\.dev\.runwayml\.com|\/api\/internal\/runway\/run/);
 });
 

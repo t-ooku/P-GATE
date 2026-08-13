@@ -433,10 +433,29 @@ jobs:
           object='hoshilu-social-media/runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9.mp4'
           existing="${RUNNER_TEMP}/hoshilu-initial-reel/existing.mp4"
           get_log="${RUNNER_TEMP}/hoshilu-initial-reel/r2-get-existing.log"
-          set +e
-          npx --yes wrangler@4.121.0 r2 object get "$object" --remote --file "$existing" > "$get_log" 2>&1
-          get_status=$?
-          set -e
+          get_r2_object_with_missing_retry() {
+            local output_file="$1"
+            local log_file="$2"
+            local status=1
+            for attempt in $(seq 1 6); do
+              if npx --yes wrangler@4.121.0 r2 object get "$object" --remote --file "$output_file" > "$log_file" 2>&1; then
+                return 0
+              else
+                status=$?
+              fi
+              if ! grep -Eiq 'not found|does not exist|specified key does not exist|404' "$log_file"; then
+                sed -n '1,80p' "$log_file" >&2
+                return "$status"
+              fi
+              [ "$attempt" -lt 6 ] && sleep 2
+            done
+            return 44
+          }
+          if get_r2_object_with_missing_retry "$existing" "$get_log"; then
+            get_status=0
+          else
+            get_status=$?
+          fi
           if [ "$get_status" -eq 0 ]; then
             echo '88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9  '"$existing" | sha256sum -c -
           elif grep -Eiq 'not found|does not exist|404' "$get_log"; then
@@ -450,7 +469,15 @@ jobs:
             exit 1
           fi
           roundtrip="${RUNNER_TEMP}/hoshilu-initial-reel/roundtrip.mp4"
-          npx --yes wrangler@4.121.0 r2 object get "$object" --remote --file "$roundtrip"
+          roundtrip_log="${RUNNER_TEMP}/hoshilu-initial-reel/r2-get-roundtrip.log"
+          if get_r2_object_with_missing_retry "$roundtrip" "$roundtrip_log"; then
+            roundtrip_status=0
+          else
+            roundtrip_status=$?
+            sed -n '1,80p' "$roundtrip_log" >&2
+            echo '::error::R2 round-trip verification failed after bounded retries'
+            exit 1
+          fi
           cmp --silent "$candidate" "$roundtrip"
           echo '88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9  '"$roundtrip" | sha256sum -c -
 
