@@ -12,9 +12,9 @@ WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1'
   AND qa_status='PENDING'
   AND rights_confirmed=1
   AND ai_disclosure_confirmed=1
-  AND storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad.mp4'
+  AND storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9.mp4'
   AND storage_etag IS NULL
-  AND storage_size_bytes=1566948
+  AND storage_size_bytes=1565856
   AND storage_content_type='video/mp4'
   AND caption='商品名が分からなくても、覚えている見た目や使い方から探せる言葉へ。AIは理解、HOSHILUは探す。続きは @hoshilu.app のプロフィールから。気になった商品をコメントで教えてね。 #HOSHILU #ホシル #あいまい検索 #商品検索 #13モール横断 #ほしっとく'
   AND EXISTS (
@@ -57,7 +57,7 @@ SELECT
   'runway-hoshilu-model-ugc-test-20260813-v1',
   '',
   'QA_APPROVED_FOR_POST',
-  '{"checks":["identity_consistent","face_hands_ok","hoshilu_visible","japanese_subtitles","url_visible","audio_present","no_unrelated_brand","factual","ai_disclosure","rights_confirmed","duplicate_checked","postprocessed"],"candidate_sha256":"9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad","caption_ai_text":false,"platform_ai_label":true,"user_approved":"2026-08-13"}',
+  '{"checks":["identity_consistent","face_hands_ok","hoshilu_visible","japanese_subtitles","url_visible","audio_present","no_unrelated_brand","factual","ai_disclosure","rights_confirmed","duplicate_checked","postprocessed"],"candidate_sha256":"88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9","approved_visual_source_sha256":"9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad","technical_reencode":true,"ssim_all":0.997868,"psnr_average_db":50.505671,"caption_ai_text":false,"platform_ai_label":true,"user_approved":"2026-08-13"}',
   strftime('%Y-%m-%dT%H:%M:%fZ','now')
 WHERE EXISTS (
   SELECT 1 FROM runway_generation_jobs

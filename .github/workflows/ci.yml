@@ -336,7 +336,7 @@ jobs:
           ]) if (!source.includes(guard)) throw new Error(`Missing opt-in guard: ${guard}`);
           NODE
           sha256sum -c <<'HASHES'
-          6749bc880749d8fef141dc0fdfc97ff4740674148ee290b5c9e1ebd6c116a4bb  ops/runway/render_initial_reel_20260813.sh
+          d714f1254f81c3ca02753ec4872e85932f4c5d09d9200fa588e74e33172eb89f  ops/runway/render_initial_reel_20260813.sh
           51f80759a3f3bf1cf4ae46513ba5e885ea718e90f8183ad00f01eeaafd93c3eb  ops/runway/initial_reel_overlay_20260813.ass
           HASHES
           node --test test/social-publisher.test.mjs test/runway-initial-reel-publish.test.mjs
@@ -367,7 +367,19 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends ffmpeg=7:6.1.1-3ubuntu5
-          test "$(dpkg-query -W -f='${Version}' ffmpeg)" = '7:6.1.1-3ubuntu5'
+          cat > "${RUNNER_TEMP}/expected-media-packages.txt" <<'PACKAGES'
+          ffmpeg=7:6.1.1-3ubuntu5
+          libass9=1:0.17.1-2build1
+          libfontconfig1=2.15.0-1.1ubuntu2
+          libfreetype6=2.13.2+dfsg-1ubuntu0.1
+          libfribidi0=1.0.13-3build1
+          libharfbuzz0b=8.3.0-2build2
+          libx264-164=2:0.164.3108+git31e19f9-1
+          PACKAGES
+          dpkg-query -W -f='${Package}=${Version}\n' \
+            ffmpeg libass9 libfontconfig1 libfreetype6 libfribidi0 libharfbuzz0b libx264-164 \
+            > "${RUNNER_TEMP}/actual-media-packages.txt"
+          diff -u "${RUNNER_TEMP}/expected-media-packages.txt" "${RUNNER_TEMP}/actual-media-packages.txt"
 
       - name: Reproduce and byte-verify the approved candidate
         if: steps.preflight.outputs.mode == 'review'
@@ -384,6 +396,7 @@ jobs:
           mkdir -p "$font_dir"
           raw_video="${work_dir}/raw.mp4"
           candidate="${work_dir}/candidate.mp4"
+          candidate_repeat="${work_dir}/candidate-repeat.mp4"
 
           npx --yes wrangler@4.121.0 r2 object get 'hoshilu-social-media/runway/runway-hoshilu-model-ugc-test-20260813-v1/output.mp4' --remote --file "$raw_video"
           echo '6caeb845203e7d1d6453c31fd7c44e6157befffd8e5699fb749f42c4e1d31ef7  '"$raw_video" | sha256sum -c -
@@ -398,20 +411,26 @@ jobs:
           echo 'f18253affd968c8ea592d8df6d84b1d4c5d3a46d267e53a1f6749e6c4f76a23d  '"${font_dir}/NotoSansCJKjp-Regular.otf" | sha256sum -c -
           echo '0808fd0e65b9dd4fa832b6403842ba451bd0a722f27c58c396db7d85bbbf0bdb  public/social/runway/hoshilu-product-screen-v1.jpg' | sha256sum -c -
 
-          HOSHILU_FONT_DIR="$font_dir" bash ops/runway/render_initial_reel_20260813.sh "$raw_video" "$candidate"
+          HOSHILU_FONT_DIR="$font_dir" bash ops/runway/render_initial_reel_20260813.sh "$raw_video" "$candidate" 2>&1 | tee initial-reel-render-first.log
+          HOSHILU_FONT_DIR="$font_dir" bash ops/runway/render_initial_reel_20260813.sh "$raw_video" "$candidate_repeat" 2>&1 | tee initial-reel-render-repeat.log
+          cmp --silent "$candidate" "$candidate_repeat"
+          grep -Fq 'using cpu capabilities: none!' initial-reel-render-first.log
+          grep -Eq 'threads=1 .*lookahead_threads=1 .*sliced_threads=0' initial-reel-render-first.log
+          grep -Fq 'using cpu capabilities: none!' initial-reel-render-repeat.log
+          grep -Eq 'threads=1 .*lookahead_threads=1 .*sliced_threads=0' initial-reel-render-repeat.log
           ffmpeg -v error -i "$candidate" -f null -
           ffprobe -v error -show_streams -show_format -of json "$candidate" > initial-reel-candidate-ffprobe.json
           audio_sha="$(ffmpeg -v error -i "$candidate" -map 0:a:0 -c copy -f hash -hash sha256 - | sed -n 's/^SHA256=//p')"
           node ops/runway/verify_initial_reel_publish.mjs candidate "$candidate" initial-reel-candidate-ffprobe.json "$audio_sha" > initial-reel-candidate-evidence.json
           echo "candidate=${candidate}" >> "$GITHUB_ENV"
-          echo "::notice::INITIAL_REEL_CANDIDATE sha256=9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad bytes=1566948"
+          echo "::notice::INITIAL_REEL_CANDIDATE sha256=88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9 bytes=1565856"
 
       - name: Put immutable candidate in private R2 and verify round-trip bytes
         if: steps.preflight.outputs.mode == 'review'
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
-          object='hoshilu-social-media/runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad.mp4'
+          object='hoshilu-social-media/runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9.mp4'
           existing="${RUNNER_TEMP}/hoshilu-initial-reel/existing.mp4"
           get_log="${RUNNER_TEMP}/hoshilu-initial-reel/r2-get-existing.log"
           set +e
@@ -419,7 +438,7 @@ jobs:
           get_status=$?
           set -e
           if [ "$get_status" -eq 0 ]; then
-            echo '9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad  '"$existing" | sha256sum -c -
+            echo '88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9  '"$existing" | sha256sum -c -
           elif grep -Eiq 'not found|does not exist|404' "$get_log"; then
             npx --yes wrangler@4.121.0 r2 object put "$object" --remote --file "$candidate" \
               --content-type 'video/mp4' \
@@ -433,7 +452,7 @@ jobs:
           roundtrip="${RUNNER_TEMP}/hoshilu-initial-reel/roundtrip.mp4"
           npx --yes wrangler@4.121.0 r2 object get "$object" --remote --file "$roundtrip"
           cmp --silent "$candidate" "$roundtrip"
-          echo '9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad  '"$roundtrip" | sha256sum -c -
+          echo '88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9  '"$roundtrip" | sha256sum -c -
 
       - name: Stage candidate identity and approved caption while gates remain closed
         if: steps.preflight.outputs.mode == 'review'
@@ -474,15 +493,15 @@ jobs:
           done
           test "$status" = 200
           grep -Eiq '^content-type:[[:space:]]*video/mp4([[:space:]]|$)' initial-reel-media-head.txt
-          grep -Eiq '^content-length:[[:space:]]*1566948([[:space:]]|$)' initial-reel-media-head.txt
+          grep -Eiq '^content-length:[[:space:]]*1565856([[:space:]]|$)' initial-reel-media-head.txt
           range_status="$(curl --silent --show-error --fail-with-body --header 'Range: bytes=0-1023' --output initial-reel-media-range.bin --dump-header initial-reel-media-range-headers.txt --write-out '%{http_code}' "$media_url")"
           test "$range_status" = 206
           test "$(stat -c '%s' initial-reel-media-range.bin)" = 1024
           grep -Eiq '^content-type:[[:space:]]*video/mp4([[:space:]]|$)' initial-reel-media-range-headers.txt
-          grep -Eiq '^content-range:[[:space:]]*bytes 0-1023/1566948([[:space:]]|$)' initial-reel-media-range-headers.txt
+          grep -Eiq '^content-range:[[:space:]]*bytes 0-1023/1565856([[:space:]]|$)' initial-reel-media-range-headers.txt
           curl --fail-with-body --silent --show-error "$media_url" --output initial-reel-media-full.mp4
-          echo '9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad  initial-reel-media-full.mp4' | sha256sum -c -
-          echo '::notice::INITIAL_REEL_MEDIA_ROUTE status=200 range=206 bytes=1566948 type=video/mp4'
+          echo '88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9  initial-reel-media-full.mp4' | sha256sum -c -
+          echo '::notice::INITIAL_REEL_MEDIA_ROUTE status=200 range=206 bytes=1565856 type=video/mp4'
 
       - name: Release the target queue as the final pre-publication mutation
         if: steps.preflight.outputs.mode == 'review' || steps.preflight.outputs.mode == 'qa_approved'

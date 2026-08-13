@@ -24,9 +24,9 @@ WHERE post_id='hoshilu-runway-model-ugc-20260813-v1'
       AND post_id='hoshilu-runway-model-ugc-20260813-v1'
       AND status='APPROVED_FOR_POST'
       AND qa_status='PASSED'
-      AND storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad.mp4'
+      AND storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9.mp4'
       AND storage_etag IS NULL
-      AND storage_size_bytes=1566948
+      AND storage_size_bytes=1565856
       AND storage_content_type='video/mp4'
   )
   AND EXISTS (

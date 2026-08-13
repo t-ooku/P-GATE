@@ -9,9 +9,10 @@ export const INITIAL_REEL = Object.freeze({
   rawStorageKey: 'runway/runway-hoshilu-model-ugc-test-20260813-v1/output.mp4',
   rawSha256: '6caeb845203e7d1d6453c31fd7c44e6157befffd8e5699fb749f42c4e1d31ef7',
   rawSize: 3464151,
-  candidateSha256: '9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad',
-  candidateSize: 1566948,
-  candidateStorageKey: 'runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad.mp4',
+  candidateSha256: '88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9',
+  candidateSize: 1565856,
+  candidateStorageKey: 'runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9.mp4',
+  approvedVisualSourceSha256: '9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad',
   audioSha256: '2bb301fc39c09189059571e827589f92ad349dc337c69eec98d7204fc9888385',
   mediaUrl: 'https://hoshilu.app/api/social/media/runway/runway-hoshilu-model-ugc-test-20260813-v1.mp4',
   link: 'https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=hoshilu_runway_test&utm_content=runway_product_ugc_test_20260813_v1',
@@ -253,6 +254,10 @@ export function verifyApproved({ jobs, queue, audit }) {
   assertEqual(auditRow.event, 'QA_APPROVED_FOR_POST', 'APPROVAL_AUDIT_EVENT_INVALID');
   const detail = JSON.parse(string(auditRow.detail));
   assertEqual(detail.candidate_sha256, INITIAL_REEL.candidateSha256, 'APPROVAL_AUDIT_SHA_INVALID');
+  assertEqual(detail.approved_visual_source_sha256, INITIAL_REEL.approvedVisualSourceSha256, 'APPROVAL_AUDIT_VISUAL_SOURCE_INVALID');
+  assertEqual(detail.technical_reencode, true, 'APPROVAL_AUDIT_REENCODE_INVALID');
+  assertEqual(number(detail.ssim_all), 0.997868, 'APPROVAL_AUDIT_SSIM_INVALID');
+  assertEqual(number(detail.psnr_average_db), 50.505671, 'APPROVAL_AUDIT_PSNR_INVALID');
   assertEqual(detail.platform_ai_label, true, 'APPROVAL_AUDIT_AI_LABEL_INVALID');
   const requiredChecks = [
     'identity_consistent', 'face_hands_ok', 'hoshilu_visible', 'japanese_subtitles',
@@ -279,6 +284,10 @@ export function verifyQaApproved({ jobs, queue, audit }) {
   assertEqual(auditRow.event, 'QA_APPROVED_FOR_POST', 'APPROVAL_AUDIT_EVENT_INVALID');
   const detail = JSON.parse(string(auditRow.detail));
   assertEqual(detail.candidate_sha256, INITIAL_REEL.candidateSha256, 'APPROVAL_AUDIT_SHA_INVALID');
+  assertEqual(detail.approved_visual_source_sha256, INITIAL_REEL.approvedVisualSourceSha256, 'APPROVAL_AUDIT_VISUAL_SOURCE_INVALID');
+  assertEqual(detail.technical_reencode, true, 'APPROVAL_AUDIT_REENCODE_INVALID');
+  assertEqual(number(detail.ssim_all), 0.997868, 'APPROVAL_AUDIT_SSIM_INVALID');
+  assertEqual(number(detail.psnr_average_db), 50.505671, 'APPROVAL_AUDIT_PSNR_INVALID');
   assertEqual(detail.platform_ai_label, true, 'APPROVAL_AUDIT_AI_LABEL_INVALID');
   return true;
 }

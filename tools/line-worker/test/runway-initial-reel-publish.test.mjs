@@ -106,7 +106,7 @@ test('preflight blocks a duplicate, a competing due post and an expired token', 
 });
 
 test('candidate verification accepts the exact approved bytes and probe only', () => {
-  const candidate = new URL('../../../../runway-initial-test-31681423405/postprocess/HOSHILU_Runway_initial_test_candidate_20260813_v4.mp4', import.meta.url);
+  const candidate = new URL('../../../../runway-initial-test-31681423405/postprocess/HOSHILU_Runway_initial_test_candidate_20260813_v6a.mp4', import.meta.url);
   if (!candidate.protocol.startsWith('file')) return;
   let bytes;
   try { bytes = readFileSync(candidate); } catch { return; }
@@ -140,6 +140,10 @@ test('staged, approved, published and reconciled evidence remains exact', () => 
       'rights_confirmed', 'duplicate_checked', 'postprocessed'
     ],
     candidate_sha256: INITIAL_REEL.candidateSha256,
+    approved_visual_source_sha256: INITIAL_REEL.approvedVisualSourceSha256,
+    technical_reencode: true,
+    ssim_all: 0.997868,
+    psnr_average_db: 50.505671,
     platform_ai_label: true
   };
   const approvedJob = { ...stagedJob, status: 'APPROVED_FOR_POST', qa_status: 'PASSED' };
@@ -190,10 +194,20 @@ test('workflow is explicit, exact-hash gated and never calls the Runway generati
   const section = workflow.slice(workflow.indexOf('  runway-initial-reel-publish:'));
   assert.match(section, /publish-runway-initial-reel-approved/);
   assert.match(section, /needs: \[test, deploy\]/);
-  assert.match(section, /9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad/);
+  assert.match(section, /88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9/);
   assert.match(section, /competing_due_count/);
   assert.match(section, /ffmpeg=7:6\.1\.1-3ubuntu5/);
   assert.doesNotMatch(section, /api\.dev\.runwayml\.com|\/api\/internal\/runway\/run/);
+});
+
+test('renderer disables CPU-dependent video paths for reproducible approved bytes', () => {
+  const renderer = readFileSync(new URL('../ops/runway/render_initial_reel_20260813.sh', import.meta.url), 'utf8');
+  assert.match(renderer, /-cpuflags 0/);
+  assert.match(renderer, /-cpucount 1/);
+  assert.match(renderer, /-filter_threads 1/);
+  assert.match(renderer, /-filter_complex_threads 1/);
+  assert.match(renderer, /-x264-params 'asm=0:threads=1:lookahead_threads=1:sliced_threads=0'/);
+  assert.equal((renderer.match(/-threads 1/g) || []).length, 3);
 });
 
 test('split approval keeps queue release isolated and the initial cap until reconcile', () => {

@@ -2,9 +2,9 @@
 -- deliberately leaves both gates in REVIEW_REQUIRED/PENDING. A failure after
 -- either statement therefore cannot make the media public or publish it.
 UPDATE runway_generation_jobs
-SET storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad.mp4',
+SET storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9.mp4',
     storage_etag=NULL,
-    storage_size_bytes=1566948,
+    storage_size_bytes=1565856,
     storage_content_type='video/mp4',
     caption='商品名が分からなくても、覚えている見た目や使い方から探せる言葉へ。AIは理解、HOSHILUは探す。続きは @hoshilu.app のプロフィールから。気になった商品をコメントで教えてね。 #HOSHILU #ホシル #あいまい検索 #商品検索 #13モール横断 #ほしっとく',
     updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')
@@ -22,8 +22,8 @@ WHERE job_id='runway-hoshilu-model-ugc-test-20260813-v1'
     (storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/output.mp4'
       AND storage_size_bytes=3464151)
     OR
-    (storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad.mp4'
-      AND storage_size_bytes=1566948
+    (storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9.mp4'
+      AND storage_size_bytes=1565856
       AND storage_content_type='video/mp4'
       AND storage_etag IS NULL)
   )
@@ -59,8 +59,8 @@ WHERE post_id='hoshilu-runway-model-ugc-20260813-v1'
       AND post_id='hoshilu-runway-model-ugc-20260813-v1'
       AND status='GENERATED_REVIEW_REQUIRED'
       AND qa_status='PENDING'
-      AND storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-9e2a3a8079e925c3359bce243ef8b3f363ff204cdac0974c771d38f38d6612ad.mp4'
+      AND storage_key='runway/runway-hoshilu-model-ugc-test-20260813-v1/postprocessed-88e65826b923bbf11cfcf99228367a629c76a2eddc51ab661a58be36395b71b9.mp4'
       AND storage_etag IS NULL
-      AND storage_size_bytes=1566948
+      AND storage_size_bytes=1565856
       AND storage_content_type='video/mp4'
   );

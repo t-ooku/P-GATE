@@ -54,7 +54,13 @@ mkdir -p -- "$(dirname -- "${output_video}")"
 # is hidden only during its close-up and replaced with the fact-checked HOSHILU
 # screen. The original Runway AAC packets are copied without regeneration.
 ffmpeg -hide_banner -y \
+  -cpuflags 0 \
+  -cpucount 1 \
+  -filter_threads 1 \
+  -filter_complex_threads 1 \
+  -threads 1 \
   -i "${raw_video}" \
+  -threads 1 \
   -loop 1 -framerate 24 -i "${screen_image}" \
   -filter_complex \
     "[1:v]scale=720:1280:flags=lanczos,setsar=1[verified_screen];[0:v][verified_screen]overlay=x=0:y=0:enable='between(t,2.20,6.75)':eof_action=pass:shortest=0[composite];[composite]ass='${subtitle_file}':fontsdir='${font_dir}'[video]" \
@@ -65,6 +71,8 @@ ffmpeg -hide_banner -y \
   -crf 18 \
   -profile:v high \
   -level:v 4.0 \
+  -threads 1 \
+  -x264-params 'asm=0:threads=1:lookahead_threads=1:sliced_threads=0' \
   -pix_fmt yuv420p \
   -r 24 \
   -c:a copy \
