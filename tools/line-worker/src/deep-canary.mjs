@@ -1,4 +1,4 @@
-import { probeChatIntentProvider, QUERY_REFINEMENT_TIMEOUT_MS } from './ai-chat-intent.mjs';
+import { probeChatIntentProvider } from './ai-chat-intent.mjs';
 import { searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
 import { searchYahooShopping } from './yahoo-shopping-api.mjs';
 
@@ -264,7 +264,7 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
     if (reservation.duplicate) return { duplicate: true };
     if (!reservation.reserved) throw new Error('CANARY_MONTHLY_BUDGET_LIMIT');
     const result = await probeChatIntentProvider(provider, probeEnv, fetchImpl, {
-      mode, timeoutMs: component === 'query_structurer' ? QUERY_REFINEMENT_TIMEOUT_MS : 5000
+      mode, timeoutMs: component === 'query_structurer' ? 1500 : 5000
     });
     const actualCost = costFromUsage(result?._canaryUsage, pricing);
     await settleBudget(env, reservation.eventId, actualCost, pricing.reservation);
