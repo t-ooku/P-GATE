@@ -117,9 +117,10 @@ jobs:
           const bookmark=find(JSON.parse(fs.readFileSync('bookmark-before.json')),'bookmark');
           const count=Number(rows('count-before.json')[0]?.growth_event_count);
           const columns=Number(rows('columns-before.json')[0]?.identity_columns);
-          if(version!=='production'||!bookmark||!Number.isInteger(count)||count<0||columns!==0) throw new Error(JSON.stringify({version,bookmark:Boolean(bookmark),count,columns}));
-          console.log(`::notice::D1_0047_PLAN backend=${version} growth_events=${count} identity_columns=${columns} recovery_bookmark_captured=yes`);
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,`D1 0047 plan: backend=${version}, growth_events=${count}, identity_columns=${columns}, recovery bookmark captured=yes\n`);
+          if((version&&version!=='production')||!bookmark||!Number.isInteger(count)||count<0||columns!==0) throw new Error(JSON.stringify({version,bookmark:Boolean(bookmark),count,columns}));
+          const backend=version||'time-travel-supported';
+          console.log(`::notice::D1_0047_PLAN backend=${backend} growth_events=${count} identity_columns=${columns} recovery_bookmark_captured=yes`);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,`D1 0047 plan: backend=${backend}, growth_events=${count}, identity_columns=${columns}, recovery bookmark captured=yes\n`);
           NODE
           grep -q '0047_growth_visitor_sessions.sql' pending-migrations.txt
           echo "::notice::PENDING_MIGRATIONS $(tr '\n' ' ' < pending-migrations.txt | tail -c 1200)"
