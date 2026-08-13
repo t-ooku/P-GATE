@@ -22,8 +22,8 @@ const safeCode = (value, fallback = 'CANARY_FAILED') => {
 
 const scheduledComponents = (date) => {
   const components = ['query_structurer', 'rakuten', 'yahoo'];
-  if (date.getUTCMinutes() === 0) components.push('ai_chat_primary');
-  if (date.getUTCMinutes() === 0 && date.getUTCHours() % 6 === 0) components.push('openai_backup');
+  if (date.getUTCMinutes() === 7) components.push('ai_chat_primary');
+  if (date.getUTCMinutes() === 7 && date.getUTCHours() % 6 === 0) components.push('openai_backup');
   return components;
 };
 

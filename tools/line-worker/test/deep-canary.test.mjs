@@ -29,9 +29,9 @@ function providerFetch(url, options = {}) {
 }
 
 test('deep canary frequency is 15m/1h/6h without a public endpoint', () => {
-  assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T01:15:00Z')), ['query_structurer','rakuten','yahoo']);
-  assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T01:00:00Z')), ['query_structurer','rakuten','yahoo','ai_chat_primary']);
-  assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T06:00:00Z')), ['query_structurer','rakuten','yahoo','ai_chat_primary','openai_backup']);
+  assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T01:22:00Z')), ['query_structurer','rakuten','yahoo']);
+  assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T01:07:00Z')), ['query_structurer','rakuten','yahoo','ai_chat_primary']);
+  assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T06:07:00Z')), ['query_structurer','rakuten','yahoo','ai_chat_primary','openai_backup']);
 });
 
 test('deep canary has an offset cron and is isolated from the existing job fanout', () => {
@@ -45,7 +45,7 @@ test('deep canary has an offset cron and is isolated from the existing job fanou
 
 test('deep canary records only safe component/status/code metadata', async () => {
   const rows=[];
-  const result=await runDeepCanaryCycle(environment(rows),new Date('2026-08-13T06:00:00Z'),providerFetch);
+  const result=await runDeepCanaryCycle(environment(rows),new Date('2026-08-13T06:07:00Z'),providerFetch);
   assert.equal(result.results.every((row)=>row.status==='PASS'),true);
   assert.equal(rows.length,5);
   const stored=JSON.stringify(rows);
@@ -55,7 +55,7 @@ test('deep canary records only safe component/status/code metadata', async () =>
 
 test('monthly five-dollar fuse blocks paid probes before another charge', async () => {
   const rows=[];
-  const result=await runDeepCanaryCycle(environment(rows,4_999_900),new Date('2026-08-13T06:00:00Z'),providerFetch);
+  const result=await runDeepCanaryCycle(environment(rows,4_999_900),new Date('2026-08-13T06:07:00Z'),providerFetch);
   assert.equal(result.results.find((row)=>row.component==='query_structurer').code,'CANARY_MONTHLY_BUDGET_LIMIT');
   assert.equal(result.results.find((row)=>row.component==='rakuten').status,'PASS');
 });
