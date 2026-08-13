@@ -12,7 +12,10 @@ on:
   # gives the first installation an immediate run instead of waiting for cron.
   push:
     branches: [main]
-    paths: ['.github/workflows/production-monitor.yml']
+    paths:
+      - '.github/workflows/production-monitor.yml'
+      - 'docs/INCIDENT_AUTO_REMEDIATION_POLICY.md'
+      - 'docs/HOSHILU_RELIABILITY_SLO_2026-08-13.md'
 
 permissions:
   actions: read
