@@ -867,6 +867,17 @@
   font-size:14px;
   line-height:1.45;
 }
+.result-row-recommended .related-category-card{
+  flex-basis:min(320px,82vw);
+  justify-content:flex-start;
+  min-height:260px;
+}
+.result-row-recommended .related-category-card .marketplace-links{
+  margin-top:auto;
+  max-height:132px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
 .result-row-recommended .recommendation-reason{
   order:initial;
   margin:0;

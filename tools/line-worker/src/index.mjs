@@ -25,7 +25,9 @@ import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementC
 import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
 import { filterRankingCategoryCandidates } from './ranking-category-eligibility.mjs';
-import { resolveRelatedProductRecommendationQueries } from './related-product-recommendations.mjs';
+import {
+  relatedProductRecommendationQueries, resolveRelatedProductRecommendationQueries
+} from './related-product-recommendations.mjs';
 import { rankHoshiluPopularity } from './hoshilu-popularity-ranking.mjs';
 import {
   buildAiCheapestRanking, buildPriceComparison, realPriceRows,
@@ -138,10 +140,23 @@ function fromBase64Url(value) {
   return normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
 }
 
+const hmacKeyPromises = new Map();
+
+async function hmacKey(secret) {
+  const cacheKey = String(secret || '');
+  if (!hmacKeyPromises.has(cacheKey)) {
+    // Production uses only a small fixed set of signing secrets. Keep the map
+    // bounded so malformed/test inputs cannot grow isolate memory forever.
+    if (hmacKeyPromises.size >= 8) hmacKeyPromises.clear();
+    hmacKeyPromises.set(cacheKey, crypto.subtle.importKey(
+      'raw', encoder.encode(cacheKey), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    ));
+  }
+  return hmacKeyPromises.get(cacheKey);
+}
+
 async function hmac(value, secret) {
-  const key = await crypto.subtle.importKey(
-    'raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-  );
+  const key = await hmacKey(secret);
   return crypto.subtle.sign('HMAC', key, encoder.encode(value));
 }
 
@@ -1274,9 +1289,9 @@ export function marketplaceSearchDestinations(query, env = {}, options = {}) {
 }
 
 async function signedMarketplaceSearchLinks(query, context) {
-  const links = [];
-  for (const item of marketplaceSearchDestinations(query, context.env, { sort: context.sort })) {
-    if (!isAllowedDestination(item.destination)) continue;
+  const destinations = marketplaceSearchDestinations(query, context.env, { sort: context.sort })
+    .filter((item) => isAllowedDestination(item.destination));
+  return Promise.all(destinations.map(async (item) => {
     const token = await createTrackToken({
       u: context.sessionHash, r: context.seed, a: context.asin || '', d: item.destination,
       exp: Math.floor(Date.now() / 1000) + 86400 * 7,
@@ -1284,14 +1299,23 @@ async function signedMarketplaceSearchLinks(query, context) {
       c: 'PWA', m: item.marketplace, t: 'SEARCH_FALLBACK', g: context.category,
       x: context.trafficClass
     }, context.env.LINK_SIGNING_SECRET);
-    links.push({
+    return {
       marketplace: item.marketplace, label: item.label,
       url: `${context.origin}/go?token=${encodeURIComponent(token)}`,
       mode: searchModeForMarketplace(item.marketplace),
       ...(context.sort === 'PRICE_ASC' ? { sort: item.sort_applied === true ? 'PRICE_ASC' : '' } : {})
-    });
-  }
-  return links;
+    };
+  }));
+}
+
+async function decoratedRelatedCategoryGroups(groups, context) {
+  return Promise.all((Array.isArray(groups) ? groups : []).slice(0, 3).map(async (group, index) => ({
+    query: String(group?.query || '').trim().slice(0, 100),
+    reason: String(group?.reason || '').trim().slice(0, 200),
+    marketplace_search_links: await signedMarketplaceSearchLinks(group?.query, {
+      ...context, seed: `${context.seed}:RELATED_CATEGORY_${index}`
+    })
+  })));
 }
 export async function recordUnmetDemandEvent(
   env,
@@ -2243,7 +2267,7 @@ async function handleKnowledgeApi(request, env, ctx) {
       ctx.waitUntil(aiDiscoveryPromise);
     }
     const sessionHash = await hashUser(input.session_id);
-    const decorated = await decoratePwaResult(
+    let decorated = await decoratePwaResult(
       result,
       request,
       env,
@@ -2251,6 +2275,27 @@ async function handleKnowledgeApi(request, env, ctx) {
       input.query,
       input.language
     );
+    // A verified-product recommendation request needs a fresh Turnstile token
+    // and marketplace call. Put the safe rule-based category shelf in the main
+    // response so mobile users see a horizontal recommendation immediately;
+    // the async endpoint replaces it with real marketplace products when ready.
+    const immediateRelatedGroups = relatedProductRecommendationQueries(input.query);
+    if (immediateRelatedGroups.length) {
+      try {
+        decorated = { ...decorated, related_category_recommendations: await decoratedRelatedCategoryGroups(
+          immediateRelatedGroups,
+          { env, origin: ownOrigin, sessionHash, seed: requestId, category: 'related_product',
+            trafficClass: input.traffic_class }
+        ) };
+      } catch (error) {
+        // Recommendations are additive. A signing/configuration issue must
+        // never turn a successful main product search into an HTTP 500.
+        console.warn('RELATED_CATEGORY_FALLBACK_UNAVAILABLE', {
+          requestId, code: String(error?.message || 'RELATED_CATEGORY_FAILED').toUpperCase()
+            .replace(/[^A-Z0-9_]/gu, '_').slice(0, 80)
+        });
+      }
+    }
     const events = (decorated.candidates || []).map((candidate) => ({
       event_id: `${decorated.query_id}:IMPRESSION:${candidate.asin}`,
       occurred_at: new Date().toISOString(), user_hash: sessionHash,
@@ -2325,9 +2370,13 @@ async function handleRelatedRecommendationsApi(request, env) {
     if (Number(request.headers.get('content-length') || 0) > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
     const input = validateRelatedRecommendationsRequest(await request.json());
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    const groups = (await resolveRelatedProductRecommendationQueries(input.query, input.language, env)).slice(0, 3);
     const requestId = crypto.randomUUID();
     const sessionHash = await hashUser(input.session_id);
+    const groups = (await resolveRelatedProductRecommendationQueries(input.query, input.language, env)).slice(0, 3);
+    const categories = await decoratedRelatedCategoryGroups(groups, {
+      env, origin: ownOrigin, sessionHash, seed: requestId, category: 'related_product',
+      trafficClass: 'UNATTRIBUTED'
+    });
     const decoratedGroups = await Promise.all(groups.map(async (group, index) => {
       const candidates = (await searchRelatedCategory(env, group.query, requestId))
         .map((candidate) => ({ ...candidate, related_category: group.query, recommendation_reason: group.reason }));
@@ -2342,7 +2391,7 @@ async function handleRelatedRecommendationsApi(request, env) {
     }));
     return Response.json({ ok: true, result: {
       recommendations: interleaveCandidatesBySource(decoratedGroups).slice(0, 30),
-      categories: groups.map(({ query, reason }) => ({ query, reason }))
+      categories
     } }, { headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId } });
   } catch (error) {
     const code = String(error.message || error);

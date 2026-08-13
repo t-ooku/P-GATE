@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   normalizeAiRelatedQueries, relatedProductRecommendationQueries,
   resolveRelatedProductRecommendationQueries
@@ -77,4 +78,14 @@ test('医薬品など安全性の高い検索はAI自動補完しない',async()
 test('関連商品APIも本検索と同じ同意・session・Turnstile境界を使う',()=>{
   assert.equal(validateRelatedRecommendationsRequest({query:'スマホカバー',consent:true,session_id:'anonymous_session_123456',turnstile_token:'token',language:'JA'}).query,'スマホカバー');
   assert.throws(()=>validateRelatedRecommendationsRequest({query:'スマホカバー',consent:false,session_id:'anonymous_session_123456',turnstile_token:'token'}),/CONSENT_REQUIRED/);
+});
+
+test('本検索は非同期商品取得前にも署名済み関連カテゴリ棚を返す',()=>{
+  const source=readFileSync(new URL('../src/index.mjs',import.meta.url),'utf8');
+  assert.match(source,/related_category_recommendations: await decoratedRelatedCategoryGroups/);
+  assert.match(source,/relatedProductRecommendationQueries\(input\.query\)/);
+  assert.match(source,/categories = await decoratedRelatedCategoryGroups\(groups/);
+  assert.match(source,/marketplace_search_links: await signedMarketplaceSearchLinks/);
+  assert.match(source,/const hmacKeyPromises = new Map\(\)/);
+  assert.match(source,/return Promise\.all\(destinations\.map\(async \(item\)/);
 });

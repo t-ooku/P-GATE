@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deepCanarySql, evaluateDeepCanary, evaluateMonthlyContinuity, evaluateSearchSli, evaluateSearchSlo, inspectProductionSearchSli, searchBackendFailureSql, searchMonthlySloSql, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
+import { deepCanaryReservationSql, deepCanarySql, evaluateDeepCanary, evaluateMonthlyContinuity, evaluateSearchSli, evaluateSearchSlo, inspectProductionSearchSli, searchBackendFailureSql, searchMonthlySloSql, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
 
 function healthyCanaryRows(now = Date.now()) {
   const iso = new Date(now - 60000).toISOString();
@@ -13,12 +13,15 @@ function d1Fetch(row, sloRow = { finished: 10, degraded: 1 }, diagnosticRow = {}
   return async (_url, init) => {
     assert.equal(init.headers.authorization, 'Bearer test-token');
     const body = JSON.parse(init.body);
-    if (body.sql.includes("event_type='deep_canary_result'")) assert.match(body.sql, /traffic_class='QA'/u);
+    if (body.sql.includes("event_type='deep_canary_")) assert.match(body.sql, /traffic_class='QA'/u);
     else assert.match(body.sql, /traffic_class<>'QA'/u);
     assert.doesNotMatch(body.sql, /query_text|visitor_id|session_id/iu);
     assert.match(body.params[0], /^\d{4}-\d{2}-\d{2}T/u);
     if (body.sql.includes("event_type='deep_canary_result'")) {
       return Response.json({ success: true, result: [{ success: true, results: healthyCanaryRows() }] });
+    }
+    if (body.sql.includes("event_type='deep_canary_budget'")) {
+      return Response.json({ success: true, result: [{ success: true, results: [] }] });
     }
     calls += 1;
     const monthlyCall = Number(row.backend_failed) > 0 ? 4 : 3;
@@ -63,6 +66,13 @@ test('deep canary SQL selects only fixed operational fields', () => {
   assert.doesNotMatch(sql, /query|prompt|history|response|authorization/iu);
 });
 
+test('deep canary reservation SQL selects only internal cost metadata', () => {
+  const sql = deepCanaryReservationSql();
+  assert.match(sql, /event_type='deep_canary_budget'/u);
+  assert.match(sql, /campaign='RESERVED'/u);
+  assert.doesNotMatch(sql, /query|prompt|history|response|authorization|visitor_id|session_id/iu);
+});
+
 test('deep canary accepts fresh passing components', () => {
   const now = Date.now();
   const result = evaluateDeepCanary(healthyCanaryRows(now), { now });
@@ -76,6 +86,50 @@ test('deep canary alerts on one AI chat failure', () => {
   assert.throws(() => evaluateDeepCanary(rows, { now }), /DEEP_CANARY_AI_CHAT_IMMEDIATE:GEMINI_CHAT_INTENT_FAILED/u);
 });
 
+test('deep canary alerts on one query structurer failure', () => {
+  const now = Date.now();
+  const rows = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'
+    ? { ...row, status:'FAIL', code:'GEMINI_CHAT_INTENT_FAILED' } : row);
+  assert.throws(() => evaluateDeepCanary(rows, { now }), /DEEP_CANARY_QUERY_STRUCTURER_IMMEDIATE:GEMINI_CHAT_INTENT_FAILED/u);
+});
+
+test('deep canary immediately alerts on non-transient control failures', () => {
+  const now = Date.now();
+  const codes = [
+    'OPENAI_NOT_CONFIGURED',
+    'OPENAI_AUTH_FAILED',
+    'CANARY_MODEL_PRICING_UNKNOWN',
+    'CANARY_PRICING_REVIEW_REQUIRED',
+    'CANARY_MONTHLY_BUDGET_LIMIT',
+    'CANARY_USAGE_MISSING',
+    'CANARY_COST_EXCEEDS_RESERVATION',
+    'CANARY_BILLING_TIME_INVALID',
+    'CANARY_PROMPT_TOO_LARGE'
+  ];
+  for (const code of codes) {
+    const rows = healthyCanaryRows(now).map((row) => row.component === 'openai_backup'
+      ? { ...row, status:'FAIL', code } : row);
+    assert.throws(
+      () => evaluateDeepCanary(rows, { now }),
+      new RegExp(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:OPENAI_BACKUP:${code}`, 'u')
+    );
+  }
+});
+
+test('deep canary keeps transient OpenAI backup failures on a distinct two-run warning', () => {
+  const now = Date.now();
+  const base = healthyCanaryRows(now).filter((row) => row.component !== 'openai_backup');
+  const failed = [0, 360].map((minutes, index) => ({
+    event_id:`deep-canary:${now-index}:openai_backup`, component:'openai_backup', status:'FAIL',
+    code:'OPENAI_CHAT_INTENT_FAILED', occurred_at:new Date(now-minutes*60000).toISOString()
+  }));
+  assert.doesNotThrow(() => evaluateDeepCanary([...base, failed[0]], { now }));
+  assert.throws(
+    () => evaluateDeepCanary([...base, ...failed], { now }),
+    /DEEP_CANARY_OPENAI_BACKUP_WARNING:OPENAI_BACKUP:OPENAI_CHAT_INTENT_FAILED/u
+  );
+});
+
 test('deep canary requires two distinct failed marketplace runs and resets on pass', () => {
   const now = Date.now();
   const base = healthyCanaryRows(now).filter((row) => row.component !== 'rakuten');
@@ -87,11 +141,54 @@ test('deep canary requires two distinct failed marketplace runs and resets on pa
   assert.doesNotThrow(() => evaluateDeepCanary([...base, { ...failed[0], status:'PASS', code:'CANARY_OK' }, failed[1]], { now }));
 });
 
-test('deep canary uses component-specific stale windows', () => {
+test('deep canary detects a missed 15m/1h/6h run within 20/70/390 minutes', () => {
   const now = Date.now();
-  const rows = healthyCanaryRows(now).map((row) => row.component === 'rakuten'
-    ? { ...row, occurred_at:new Date(now-36*60000).toISOString() } : row);
-  assert.throws(() => evaluateDeepCanary(rows, { now }), /DEEP_CANARY_STALE:RAKUTEN/u);
+  const windows = { rakuten:20, yahoo:20, query_structurer:70, ai_chat_primary:70, openai_backup:390 };
+  for (const [component, minutes] of Object.entries(windows)) {
+    const atBoundary = healthyCanaryRows(now).map((row) => row.component === component
+      ? { ...row, occurred_at:new Date(now-minutes*60000).toISOString() } : row);
+    assert.doesNotThrow(() => evaluateDeepCanary(atBoundary, { now }));
+    const stale = atBoundary.map((row) => row.component === component
+      ? { ...row, occurred_at:new Date(now-(minutes+1)*60000).toISOString() } : row);
+    assert.throws(() => evaluateDeepCanary(stale, { now }), new RegExp(`DEEP_CANARY_STALE:${component.toUpperCase()}`, 'u'));
+  }
+});
+
+test('deep canary alerts when a paid reservation has no terminal result after two minutes', () => {
+  const now = Date.now();
+  const reservation = {
+    event_id:`deep-canary-budget:${now}:query_structurer`, component:'query_structurer', status:'RESERVED',
+    reserved_micro_usd:'0100000', maximum_micro_usd:'0100000',
+    occurred_at:new Date(now-3*60000).toISOString()
+  };
+  assert.throws(
+    () => evaluateDeepCanary(healthyCanaryRows(now).filter((row) => row.component !== 'query_structurer'), {
+      now, reservationRows:[reservation]
+    }),
+    /DEEP_CANARY_RESERVATION_STUCK:QUERY_STRUCTURER/u
+  );
+  const withTerminal = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'
+    ? { ...row, event_id:`deep-canary:${now}:query_structurer` } : row);
+  assert.doesNotThrow(() => evaluateDeepCanary(withTerminal, { now, reservationRows:[reservation] }));
+});
+
+test('deep canary rejects a reservation amount that does not match its component', () => {
+  const now = Date.now();
+  assert.throws(() => evaluateDeepCanary(healthyCanaryRows(now), { now, reservationRows:[{
+    event_id:`deep-canary-budget:${now}:query_structurer`, component:'query_structurer', status:'RESERVED',
+    reserved_micro_usd:'0000001', maximum_micro_usd:'0000001', occurred_at:new Date(now-1000).toISOString()
+  }] }), /DEEP_CANARY_RESERVATION_INVALID:QUERY_STRUCTURER/u);
+});
+
+test('deep canary missing-row bootstrap has a fixed UTC deadline', () => {
+  const beforeDeadline = Date.parse('2026-08-13T10:29:59.999Z');
+  const pending = evaluateDeepCanary([], { now:beforeDeadline });
+  assert.equal(pending.query_structurer.status, 'PENDING');
+  assert.equal(pending.openai_backup.code, 'CANARY_BOOTSTRAP_PENDING');
+  assert.throws(
+    () => evaluateDeepCanary([], { now:Date.parse('2026-08-13T10:30:00.000Z') }),
+    /DEEP_CANARY_STALE:QUERY_STRUCTURER/u
+  );
 });
 
 test('production SLI accepts a quiet window without pretending traffic exists', () => {

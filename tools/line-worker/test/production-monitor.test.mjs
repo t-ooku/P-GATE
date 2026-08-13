@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import { criticalAssetPaths, inspectProduction } from '../scripts/check-production-health.mjs';
 
 const expectedIndexHtml = `
-  <script src="/app.js?v=128"></script>
+  <script src="/app.js?v=129"></script>
   <script type="module" src="/ai-search-ui.mjs?v=8"></script>
-  <script type="module" src="/growth-analytics.mjs?v=1"></script>`;
+  <script type="module" src="/growth-analytics.mjs?v=1"></script>
+  <link rel="stylesheet" href="/ai-search-layout-fix.css?v=123">
+  <link rel="stylesheet" href="/wish-carousel.css?v=3">
+  <link rel="stylesheet" href="/hero-fixes.css?v=88">`;
 
 const guideSecurityHeaders = {
   'strict-transport-security': 'max-age=31536000',
@@ -43,9 +46,12 @@ function mockFetch({
       rakuten_marketplace_configured: true, yahoo_shopping_configured: true
     } });
     if (url.pathname === '/') return new Response(expectedIndexHtml);
-    if (url.pathname === '/app.js') return new Response(`${'x'.repeat(1100)} ${appMarkers ? 'KNOWLEDGE_HTTP_TIMEOUT_MS SEARCH_DEADLINE_EXCEEDED SEARCH_SUPERSEDED tokenCallbackTimeoutMs maxAttempts' : 'missing markers'}`);
+    if (url.pathname === '/app.js') return new Response(`${'x'.repeat(1100)} ${appMarkers ? 'KNOWLEDGE_HTTP_TIMEOUT_MS SEARCH_DEADLINE_EXCEEDED SEARCH_SUPERSEDED tokenCallbackTimeoutMs maxAttempts takeReadyTurnstileToken' : 'missing markers'}`);
     if (url.pathname === '/ai-search-ui.mjs') return new Response(`${'x'.repeat(1100)} AI_CHAT_HTTP_TIMEOUT_MS tokenCallbackTimeoutMs`);
     if (url.pathname === '/growth-analytics.mjs') return new Response(`${'x'.repeat(1100)} SEARCH_WATCHDOG_MS search-execution-started search_dead_end search_degraded`);
+    if (url.pathname === '/ai-search-layout-fix.css') return new Response(`${'x'.repeat(1100)} result-row-recommended related-category-card overflow-x:auto`);
+    if (url.pathname === '/wish-carousel.css') return new Response(`${'x'.repeat(1100)} share-discovery-actions share-gmail-button grid-column: 1 / -1`);
+    if (url.pathname === '/hero-fixes.css') return new Response(`${'x'.repeat(1100)} .journey-heading h2 span overflow-wrap: anywhere word-break: normal`);
     if (url.pathname === '/api/ranking-capabilities') return Response.json({ ok: true, marketplaces: [
       { marketplace_id: 'YAHOO_JP', status: yahooAvailable ? 'available' : 'planned', ranking_mode: yahooAvailable ? 'native_api' : 'derived_api' },
       ...Array.from({ length: 12 }, (_, index) => ({ marketplace_id: `M${index}` }))
@@ -71,17 +77,23 @@ function mockFetch({
 }
 
 test('criticalAssetPaths reads all versioned production reliability assets', () => {
-  assert.deepEqual(criticalAssetPaths(expectedIndexHtml), ['/app.js?v=128', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1']);
+  assert.deepEqual(criticalAssetPaths(expectedIndexHtml), [
+    '/app.js?v=129', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1',
+    '/ai-search-layout-fix.css?v=123', '/wish-carousel.css?v=3', '/hero-fixes.css?v=88'
+  ]);
 });
 
 test('scheduled monitor can validate the assets currently referenced by production', async () => {
   const result = await inspectProduction({
     baseUrl: 'https://hoshilu.app/', fetcher: mockFetch(),
-    expectedIndexHtml: expectedIndexHtml.replace('app.js?v=128', 'app.js?v=999'),
+    expectedIndexHtml: expectedIndexHtml.replace('app.js?v=129', 'app.js?v=999'),
     assetPolicy: 'live'
   });
   assert.equal(result.ok, true);
-  assert.deepEqual(result.expected_assets, ['/app.js?v=128', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1']);
+  assert.deepEqual(result.expected_assets, [
+    '/app.js?v=129', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1',
+    '/ai-search-layout-fix.css?v=123', '/wish-carousel.css?v=3', '/hero-fixes.css?v=88'
+  ]);
 });
 
 test('production monitor verifies health, deployed assets, rankings and trace IDs', async () => {
@@ -110,7 +122,7 @@ test('production monitor applies a timeout signal to every network request', asy
       return fetcher(input, init);
     }
   });
-  assert.equal(requests, 17);
+  assert.equal(requests, 20);
 });
 
 test('production monitor fails when Yahoo ranking regresses to planned', async () => {

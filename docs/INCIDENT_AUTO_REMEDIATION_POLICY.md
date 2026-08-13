@@ -30,7 +30,8 @@ HOSHILUで再現可能な不具合または本番障害を確認した場合、�
 - GitHubの既定ブランチ`main`に置いた`production-monitor.yml`を5分ごとに実行し、
   実装正本である`feature/ui-search-v2`を明示的にcheckoutして検査する。
 - 定期外形監視は、本番HTMLが現在参照している`app.js`、`ai-search-ui.mjs`、
-  `growth-analytics.mjs`を取得し、検索タイムアウト・縮退・匿名監視の実装markerを確認する。
+  `growth-analytics.mjs`に加え、横レコメンド、Gmail共有、SEARCH AGENT折返しを担う3つのCSSを
+  取得し、検索タイムアウト・縮退・匿名監視・モバイルUIの実装markerを確認する。
   deploy直後の検査だけは、commit内の期待versionと本番を完全一致させる。
 - `/api/ai-chat`は固定の無効Turnstileトークンで`siteverify`到達まで確認し、
   `/api/knowledge`は入力検証と追跡IDを確認する。この外形検査自体は課金APIを呼ばない。
@@ -48,16 +49,28 @@ HOSHILUで再現可能な不具合または本番障害を確認した場合、�
   サーバー発行request IDと許可されたエラーコードだけをD1へ記録する。
   AIチャットと通常検索の失敗段階は区別するが、検索文・会話本文・例外本文は保存しない。
   1件でインシデント化する。
-- Cloudflare Workerの非公開cronから深層canaryを実行する。Query Structurer・楽天・Yahoo!は
-  15分ごと、AIチャット主系は1時間ごと、OpenAI予備系は6時間ごとに固定合成条件で確認する。
+- Cloudflare Workerの非公開cronから深層canaryを実行する。楽天・Yahoo!は15分ごと、
+  Query Structurer・AIチャット主系は1時間ごと、OpenAI予備系は6時間ごとに固定合成条件で確認する。
   公開APIにTurnstile回避口は作らず、外部レスポンス、固定検索語、商品情報は保存しない。
-  D1へ保存するのはcomponent、PASS/FAIL、安全なエラーコード、実行時刻だけである。
-- AI呼び出しは入力上限を保守的に見積もり、出力token上限と固定頻度を併用する。
-  31日あたりの予約額は最大4.836米ドル、月次ヒューズは5米ドルとし、到達時は
-  `CANARY_MONTHLY_BUDGET_LIMIT`でAI canaryだけを停止して監視へ通知する。
-  楽天・Yahoo!の無課金canaryは継続する。
-- 5分監視はcomponent別の欠測・古さと失敗を確認する。AIチャット主系は1回の失敗で、
-  その他は異なる2回の連続失敗で同じ自動Issueへ接続し、回復時は既存の3回連続成功規則で閉じる。
+  結果行へ保存するのはcomponent、PASS/FAIL、安全なエラーコード、実行時刻だけである。
+  別の予算行には最大予約額またはusageから計算した実額だけを保存し、検索語や外部応答は保存しない。
+- AI呼び出しは固定promptのbyte上限、出力token上限、固定頻度を併用する。有料呼び出し直前に
+  D1へ最大想定額を原子的に予約し、成功時だけproviderのusage（Geminiは候補＋思考token、
+  OpenAIはreasoning込みoutput token）から計算した実額へ精算する。timeout・usage欠落・精算失敗時は
+  最大予約額を保持する。重複slotは再課金せず、UTC暦月の追加費用合計が5米ドルを超える予約は
+  `CANARY_MONTHLY_BUDGET_LIMIT`で停止して監視へ通知する。価格表は`2026-08-13`版だけを許可し、
+  `2026-09-13 00:00 UTC`までに再確認されなければ有料canaryを自動停止する。
+  楽天・Yahoo!のcatalog到達canaryは継続するが、各APIの利用条件・上限は継続監査対象とする。
+  結果が完全に空の初回だけ全componentを一度確認し、以後は固定周期以外に有料probeを呼ばない。
+- 5分監視はcomponent別の欠測・古さと失敗を確認する。楽天・Yahoo!は20分、Query Structurer・
+  AIチャット主系は70分、OpenAI予備系は390分を超えて結果がなければ異常とする。
+  Query StructurerとAIチャット主系はすべての失敗を1回で検知する。全componentの設定・認証・
+  モデル・価格表・予算・usage異常も1回で検知し、それ以外の非主系の一時失敗だけは異なる2回の
+  連続失敗で同じ自動Issueへ接続する。初回配備時の欠測猶予は2026-08-13 10:30 UTCまでに限定し、
+  同時刻以降の欠測は`STALE`とする。回復時は既存の3回連続成功規則で閉じる。
+  有料probeの予約から2分を超えて対応する結果がない場合も、Worker中断として即時検知する。
+- 深層canaryから自動Issueへ渡す診断もcomponentと列挙済みの安全なエラーコードに限定する。
+  利用者や固定canaryの検索文、外部レスポンス、商品情報、認証情報はIssueへ出力しない。
 - GitHub scheduleは遅延または取りこぼし得るため、これだけを完全な保証とは扱わない。
   Cloudflare Health Checksや外部監視の追加に課金・Secret・権限が必要な場合は、
   費用と操作を示して承認を得る。

@@ -34,7 +34,7 @@ test('AI chat rebuilds Turnstile after a rejected token before retrying', () => 
 
 test('Main search retries once and returns a traceable 13-mall degraded result', () => {
   const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(app, /for\(let attempt=0;attempt<2;attempt\+=1\)/);
+  assert.match(app, /for\(let attempt=0;attempt<maxAttempts;attempt\+=1\)/);
   assert.match(app, /response\.status>=500/);
   assert.match(app, /await recoverTurnstileWidget\(\)/);
   assert.match(app, /x-request-id/);

@@ -121,7 +121,15 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
   assert.match(app, /function scheduleRelatedRecommendations/);
   assert.match(app, /scheduleRelatedRecommendations\(effectiveQuery\|\|submittedQuery,sequence\)/);
   assert.match(app, /renderResults\(fallback,lastRequestId\);[\s\S]*?scheduleRelatedRecommendations\(submittedQuery,sequence\)/);
-  assert.match(app, /async function loadRelatedRecommendations[\s\S]*?waitForTurnstileToken\(\)/);
+  assert.match(app, /async function loadRelatedRecommendations[\s\S]*?takeReadyTurnstileToken\(\)/);
+  assert.match(app, /related_category_recommendations/);
+  assert.match(app, /function relatedCategoryCard/);
+  assert.match(app, /function recommendationRowFor/);
+  assert.match(app, /sequence!==relatedRecommendationSequence\|\|!token\)return/);
+  assert.doesNotMatch(app, /async function loadRelatedRecommendations[\s\S]{0,1800}?recoverTurnstileWidget\(\)/);
+  assert.match(app, /timedAbortController\(12000\)/);
+  assert.doesNotMatch(app, /if\(!recommendations\.length\)\{oldRow\?\.remove\(\);return;\}/);
+  assert.match(app, /categories\.map\(relatedCategoryCard\)/);
   assert.doesNotMatch(app, /waitForFreshTurnstileToken/);
   const css = await readFile(new URL('../public/styles.css', import.meta.url), 'utf8');
   assert.match(css, /\.product-card\.unverified-card\{/);
@@ -135,5 +143,5 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
 test('新しいモジュールはService Workerのプリキャッシュに含まれる', async () => {
   const sw = await readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8');
   assert.match(sw, /'\/result-rows\.mjs'/);
-  assert.match(sw, /hoshilu-shell-v379/);
+  assert.match(sw, /hoshilu-shell-v380/);
 });

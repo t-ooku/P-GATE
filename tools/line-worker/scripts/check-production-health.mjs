@@ -9,9 +9,12 @@ const REQUIRED_HEALTH_CHECKS = [
   'yahoo_shopping_configured'
 ];
 const ASSET_MARKERS = Object.freeze({
-  'app.js': ['KNOWLEDGE_HTTP_TIMEOUT_MS', 'SEARCH_DEADLINE_EXCEEDED', 'SEARCH_SUPERSEDED', 'tokenCallbackTimeoutMs', 'maxAttempts'],
+  'app.js': ['KNOWLEDGE_HTTP_TIMEOUT_MS', 'SEARCH_DEADLINE_EXCEEDED', 'SEARCH_SUPERSEDED', 'tokenCallbackTimeoutMs', 'maxAttempts', 'takeReadyTurnstileToken'],
   'ai-search-ui.mjs': ['AI_CHAT_HTTP_TIMEOUT_MS', 'tokenCallbackTimeoutMs'],
-  'growth-analytics.mjs': ['SEARCH_WATCHDOG_MS', 'search-execution-started', 'search_dead_end', 'search_degraded']
+  'growth-analytics.mjs': ['SEARCH_WATCHDOG_MS', 'search-execution-started', 'search_dead_end', 'search_degraded'],
+  'ai-search-layout-fix.css': ['result-row-recommended', 'related-category-card', 'overflow-x:auto'],
+  'wish-carousel.css': ['share-discovery-actions', 'share-gmail-button', 'grid-column: 1 / -1'],
+  'hero-fixes.css': ['.journey-heading h2 span', 'overflow-wrap: anywhere', 'word-break: normal']
 });
 const REQUIRED_PAGE_SECURITY_HEADERS = Object.freeze([
   'strict-transport-security',
@@ -38,9 +41,9 @@ async function responseJson(response, label) {
 
 export function criticalAssetPaths(indexHtml = '') {
   const paths = [];
-  for (const name of ['app.js', 'ai-search-ui.mjs', 'growth-analytics.mjs']) {
+  for (const name of Object.keys(ASSET_MARKERS)) {
     const escaped = name.replaceAll('.', '\\.');
-    const match = String(indexHtml).match(new RegExp(`(?:src=["'])(/[^"']*${escaped}\\?v=\\d+)(?:["'])`, 'u'));
+    const match = String(indexHtml).match(new RegExp(`(?:(?:src|href)=["'])(/[^"']*${escaped}\\?v=\\d+)(?:["'])`, 'u'));
     if (match) paths.push(match[1]);
   }
   return paths;
@@ -210,7 +213,8 @@ export async function inspectProduction({
     ? productionHtml
     : expectedIndexHtml ?? await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   const expectedAssets = criticalAssetPaths(sourceIndex);
-  assert(expectedAssets.length === 3, `${assetPolicy === 'live' ? 'LIVE' : 'LOCAL'}_CRITICAL_ASSET_VERSION_MISSING`);
+  assert(expectedAssets.length === Object.keys(ASSET_MARKERS).length,
+    `${assetPolicy === 'live' ? 'LIVE' : 'LOCAL'}_CRITICAL_ASSET_VERSION_MISSING`);
   for (const path of expectedAssets) {
     assert(productionHtml.includes(path), `PRODUCTION_ASSET_VERSION_MISMATCH:${path}`);
     const asset = await responseText(await fetcher(new URL(path, origin), {
@@ -218,7 +222,8 @@ export async function inspectProduction({
       signal: AbortSignal.timeout(fetchTimeoutMs)
     }), path);
     assert(asset.length > 1000, `PRODUCTION_ASSET_TOO_SMALL:${path}`);
-    const name = path.includes('ai-search-ui.mjs') ? 'ai-search-ui.mjs' : path.includes('growth-analytics.mjs') ? 'growth-analytics.mjs' : 'app.js';
+    const name = Object.keys(ASSET_MARKERS).find((candidate) => path.includes(candidate));
+    assert(name, `PRODUCTION_ASSET_MARKERS_UNKNOWN:${path}`);
     for (const marker of ASSET_MARKERS[name]) assert(asset.includes(marker), `PRODUCTION_ASSET_MARKER_MISSING:${name}:${marker}`);
   }
   checks.push(`critical assets current (${expectedAssets.join(', ')})`);

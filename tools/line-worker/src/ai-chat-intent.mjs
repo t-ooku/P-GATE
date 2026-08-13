@@ -114,12 +114,18 @@ async function callGemini(history, language, env, fetchImpl, timeoutMs = CHAT_TI
     error.status = response.status;
     throw error;
   }
-  const parsed = parseJsonText(geminiText(await response.json()));
+  const payload = await response.json();
+  const parsed = parseJsonText(geminiText(payload));
   if (!parsed) throw new Error('GEMINI_CHAT_INTENT_INVALID_JSON');
-  return { model, ...normalizeChatTurnResult(parsed) };
+  const usage = payload?.usageMetadata || {};
+  return { model, ...normalizeChatTurnResult(parsed), _canaryUsage: {
+    input_tokens: Math.max(0, Number(usage.promptTokenCount) || 0),
+    output_tokens: Math.max(0, (Number(usage.candidatesTokenCount) || 0) + (Number(usage.thoughtsTokenCount) || 0))
+  } };
 }
 
-async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_TIMEOUT_MS, mode = 'REFINE') {
+async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_TIMEOUT_MS, mode = 'REFINE',
+  maxOutputTokens = mode === 'IDENTIFY' ? 256 : 128) {
   const model = String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5');
   const response = await providerFetch(fetchImpl, 'https://api.openai.com/v1/responses', {
     method: 'POST',
@@ -127,7 +133,7 @@ async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_TI
     body: JSON.stringify({
       model,
       input: chatPrompt(history, language, mode),
-      max_output_tokens: mode === 'IDENTIFY' ? 256 : 128,
+      ...(Number.isInteger(maxOutputTokens) ? { max_output_tokens: maxOutputTokens } : {}),
       reasoning: { effort: 'low' },
       text: { format: { type: 'json_object' } }
     })
@@ -137,9 +143,14 @@ async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_TI
     error.status = response.status;
     throw error;
   }
-  const parsed = parseJsonText(openAiText(await response.json()));
+  const payload = await response.json();
+  if (payload?.status === 'incomplete') throw new Error('OPENAI_CHAT_INTENT_OUTPUT_LIMIT');
+  const parsed = parseJsonText(openAiText(payload));
   if (!parsed) throw new Error('OPENAI_CHAT_INTENT_INVALID_JSON');
-  return { model, ...normalizeChatTurnResult(parsed) };
+  return { model, ...normalizeChatTurnResult(parsed), _canaryUsage: {
+    input_tokens: Math.max(0, Number(payload?.usage?.input_tokens) || 0),
+    output_tokens: Math.max(0, Number(payload?.usage?.output_tokens) || 0)
+  } };
 }
 
 export function normalizeChatTurnResult(payload = {}) {
@@ -205,9 +216,10 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
     if (remainingMs < 250) break;
     const timeoutMs = Math.min(perProviderMs, remainingMs);
     try {
-      const result = provider === 'gemini'
+      const providerResult = provider === 'gemini'
         ? await callGemini(history, language, env, fetchImpl, timeoutMs, mode)
         : await callOpenAi(history, language, env, fetchImpl, timeoutMs, mode);
+      const { _canaryUsage, ...result } = providerResult;
       console.info('AI_CHAT_TURN_RESULT', {
         provider,
         model: result.model,
@@ -239,7 +251,7 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
 export async function refineMarketplaceSearchQuery(rawQuery, language, env = {}, fetchImpl = fetch) {
   const fastEnv = { ...env };
   if (String(env.GEMINI_API_KEY || '').length >= 20) {
-    fastEnv.GEMINI_PRODUCT_DISCOVERY_MODEL = String(env.GEMINI_QUERY_REFINEMENT_MODEL || 'gemini-3.5-flash-lite');
+    fastEnv.GEMINI_PRODUCT_DISCOVERY_MODEL = String(env.GEMINI_QUERY_REFINEMENT_MODEL || 'gemini-3.1-flash-lite');
     // Geminiが設定済みなら、通常時に2社へ二重課金せず最速モデルを優先する。
     fastEnv.OPENAI_API_KEY = '';
   }
@@ -257,13 +269,18 @@ export async function probeChatIntentProvider(provider, env = {}, fetchImpl = fe
   mode = 'REFINE', timeoutMs = CHAT_TIMEOUT_MS
 } = {}) {
   const history = [{ role: 'user', text: '軽いワイヤレスイヤホン' }];
+  const promptBytes = new TextEncoder().encode(chatPrompt(history, 'JA', mode)).byteLength;
+  // The canary's monthly reservation assumes these fixed upper bounds. Stop
+  // before a paid request if a future prompt edit could exceed that budget.
+  const maxPromptBytes = provider === 'openai' ? 3000 : 5000;
+  if (promptBytes > maxPromptBytes) throw new Error('CANARY_PROMPT_TOO_LARGE');
   if (provider === 'gemini') {
     if (String(env.GEMINI_API_KEY || '').length < 20) throw new Error('GEMINI_NOT_CONFIGURED');
     return callGemini(history, 'JA', env, fetchImpl, timeoutMs, mode);
   }
   if (provider === 'openai') {
     if (String(env.OPENAI_API_KEY || '').length < 20) throw new Error('OPENAI_NOT_CONFIGURED');
-    return callOpenAi(history, 'JA', env, fetchImpl, timeoutMs, mode);
+    return callOpenAi(history, 'JA', env, fetchImpl, timeoutMs, mode, mode === 'IDENTIFY' ? 256 : 128);
   }
   throw new Error('CANARY_PROVIDER_INVALID');
 }

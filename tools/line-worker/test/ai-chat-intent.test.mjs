@@ -147,7 +147,7 @@ test('通常検索はGemini Flash-Lite・最小思考・短いJSONでブラン�
   const result = await refineMarketplaceSearchQuery(
     'カラコン ローラ 度入り', 'JA', { GEMINI_API_KEY: 'g'.repeat(32) }, fetchImpl
   );
-  assert.match(requestedUrl, /gemini-3\.5-flash-lite/);
+  assert.match(requestedUrl, /gemini-3\.1-flash-lite/);
   assert.equal(requestBody.generationConfig.maxOutputTokens, 128);
   assert.equal(requestBody.generationConfig.thinkingConfig.thinkingLevel, 'minimal');
   assert.match(requestBody.contents[0].parts[0].text, /spokesperson/);
@@ -164,4 +164,11 @@ test('IDENTIFYモードは商品候補を1つだけ返し、拒否済み候補�
 test('AI候補メタデータを長さ・件数・スコア範囲内へ正規化する',()=>{
   const result=normalizeChatTurnResult({needs_clarification:false,candidate_name:'天然石ピアス',candidate_brand:'studio CLIP',candidate_reason:'天然石と小ぶりの手掛かり',matched_features:['天然石','小ぶり','','普段使い'],match_score:140,refined_query:'studio CLIP 天然石ピアス'});
   assert.equal(result.candidate_brand,'studio CLIP');assert.equal(result.candidate_reason,'天然石と小ぶりの手掛かり');assert.deepEqual(result.matched_features,['天然石','小ぶり','普段使い']);assert.equal(result.match_score,100);
+});
+
+test('OpenAIの通常経路もreasoning込み出力を128 tokenに制限する',async()=>{
+  let body;const fetchImpl=async(_url,options)=>{body=JSON.parse(options.body);return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({needs_clarification:false,refined_query:'軽い イヤホン'})}]}],usage:{input_tokens:40,output_tokens:20}});};
+  const result=await analyzeChatTurn([{role:'user',text:'軽いイヤホン'}],'JA',{OPENAI_API_KEY:'o'.repeat(32)},fetchImpl);
+  assert.equal(result.provider,'openai');assert.equal(body.max_output_tokens,128);
+  assert.equal('_canaryUsage' in result,false);
 });

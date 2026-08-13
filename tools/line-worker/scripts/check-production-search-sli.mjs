@@ -67,15 +67,36 @@ export function deepCanarySql() {
   ORDER BY occurred_at DESC LIMIT 160`;
 }
 
+export function deepCanaryReservationSql() {
+  return `SELECT event_id,medium AS component,campaign AS status,content AS reserved_micro_usd,
+    marketplace AS maximum_micro_usd,occurred_at
+  FROM growth_events
+  WHERE event_type='deep_canary_budget' AND traffic_class='QA' AND source='worker'
+    AND campaign='RESERVED' AND occurred_at>=?1
+  ORDER BY occurred_at DESC LIMIT 160`;
+}
+
 const CANARY_MAX_AGE_MINUTES = Object.freeze({
-  query_structurer: 35,
-  rakuten: 35,
-  yahoo: 35,
-  ai_chat_primary: 75,
-  openai_backup: 375
+  query_structurer: 70,
+  rakuten: 20,
+  yahoo: 20,
+  ai_chat_primary: 70,
+  openai_backup: 390
 });
 
-export function evaluateDeepCanary(rows = [], { now = Date.now() } = {}) {
+const CANARY_BOOTSTRAP_DEADLINE_MS = Date.parse('2026-08-13T10:30:00.000Z');
+const CANARY_RESERVATION_GRACE_MS = 2 * 60000;
+const CANARY_PRIMARY_COMPONENTS = new Set(['query_structurer', 'ai_chat_primary']);
+const CANARY_PAID_COMPONENTS = new Set(['query_structurer', 'ai_chat_primary', 'openai_backup']);
+const CANARY_RESERVATION_MICRO_USD = Object.freeze({
+  query_structurer: '0100000', ai_chat_primary: '0500000', openai_backup: '0007000'
+});
+const CANARY_IMMEDIATE_CODE_PATTERN = /(?:^|_)(?:NOT_CONFIGURED|CONFIG(?:URATION)?|SETTINGS?|AUTH(?:ENTICATION|ORIZATION)?|UNAUTHORIZED|FORBIDDEN|API_KEY|HTTP_(?:401|403)|MODEL|PROVIDER_INVALID|PRICING|BILLING|BUDGET|USAGE|COST|RESERVATION|PROMPT|OUTPUT_LIMIT)(?:_|$)/u;
+
+export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRows = [] } = {}) {
+  const nowMs = Number(now);
+  assert(Number.isFinite(nowMs), 'DEEP_CANARY_TIME_INVALID');
+  const resultKeys = new Set();
   const grouped = new Map(Object.keys(CANARY_MAX_AGE_MINUTES).map((component) => [component, []]));
   for (const row of Array.isArray(rows) ? rows : []) {
     const component = String(row?.component || '');
@@ -86,23 +107,53 @@ export function evaluateDeepCanary(rows = [], { now = Date.now() } = {}) {
     const timestamp = Date.parse(occurredAt);
     const runId = String(row?.event_id || '').match(/^deep-canary:(\d+):/u)?.[1] || '';
     if (!['PASS', 'FAIL'].includes(status) || !/^[A-Z][A-Z0-9_]{2,79}$/u.test(code)
-      || !runId || !Number.isFinite(timestamp) || timestamp > now + 5 * 60000) {
+      || !runId || !Number.isFinite(timestamp) || timestamp > nowMs + 5 * 60000) {
       throw new Error(`DEEP_CANARY_RESULT_INVALID:${component || 'UNKNOWN'}`);
     }
+    resultKeys.add(`${runId}:${component}`);
     if (!grouped.get(component).some((item) => item.run_id === runId)) {
       grouped.get(component).push({ status, code, timestamp, occurred_at: occurredAt, run_id: runId });
     }
   }
+  for (const row of Array.isArray(reservationRows) ? reservationRows : []) {
+    const component = String(row?.component || '');
+    const status = String(row?.status || '');
+    const reserved = String(row?.reserved_micro_usd || '');
+    const maximum = String(row?.maximum_micro_usd || '');
+    const occurredAt = String(row?.occurred_at || '');
+    const timestamp = Date.parse(occurredAt);
+    const match = String(row?.event_id || '').match(/^deep-canary-budget:(\d+):(query_structurer|ai_chat_primary|openai_backup)$/u);
+    const runId = match?.[1] || '';
+    if (!CANARY_PAID_COMPONENTS.has(component) || match?.[2] !== component || status !== 'RESERVED'
+      || !/^\d{7}$/u.test(reserved) || reserved !== maximum
+      || maximum !== CANARY_RESERVATION_MICRO_USD[component]
+      || !Number.isFinite(timestamp) || timestamp > nowMs + 5 * 60000) {
+      throw new Error(`DEEP_CANARY_RESERVATION_INVALID:${CANARY_PAID_COMPONENTS.has(component) ? component.toUpperCase() : 'UNKNOWN'}`);
+    }
+    if (nowMs - timestamp > CANARY_RESERVATION_GRACE_MS && !resultKeys.has(`${runId}:${component}`)) {
+      throw new Error(`DEEP_CANARY_RESERVATION_STUCK:${component.toUpperCase()}`);
+    }
+  }
   const summary = {};
   for (const [component, items] of grouped) {
+    items.sort((left, right) => right.timestamp - left.timestamp);
     const latest = items[0];
-    if (!latest || now - latest.timestamp > CANARY_MAX_AGE_MINUTES[component] * 60000) {
+    if (!latest && nowMs < CANARY_BOOTSTRAP_DEADLINE_MS) {
+      summary[component] = { status: 'PENDING', code: 'CANARY_BOOTSTRAP_PENDING', occurred_at: '' };
+      continue;
+    }
+    if (!latest || nowMs - latest.timestamp > CANARY_MAX_AGE_MINUTES[component] * 60000) {
       throw new Error(`DEEP_CANARY_STALE:${component.toUpperCase()}`);
     }
-    if (component === 'ai_chat_primary' && latest.status === 'FAIL') {
-      throw new Error(`DEEP_CANARY_AI_CHAT_IMMEDIATE:${latest.code}`);
+    if (CANARY_PRIMARY_COMPONENTS.has(component) && latest.status === 'FAIL') {
+      const prefix = component === 'ai_chat_primary'
+        ? 'DEEP_CANARY_AI_CHAT_IMMEDIATE' : 'DEEP_CANARY_QUERY_STRUCTURER_IMMEDIATE';
+      throw new Error(`${prefix}:${latest.code}`);
     }
-    if (component !== 'ai_chat_primary' && items.length >= 2
+    if (latest.status === 'FAIL' && CANARY_IMMEDIATE_CODE_PATTERN.test(latest.code)) {
+      throw new Error(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:${component.toUpperCase()}:${latest.code}`);
+    }
+    if (!CANARY_PRIMARY_COMPONENTS.has(component) && items.length >= 2
       && items[0].status === 'FAIL' && items[1].status === 'FAIL') {
       const prefix = component === 'openai_backup'
         ? 'DEEP_CANARY_OPENAI_BACKUP_WARNING' : 'DEEP_CANARY_CONSECUTIVE_FAILURE';
@@ -254,7 +305,10 @@ export async function inspectProductionSearchSli({
   const canaryRows = await queryD1Rows(fetcher, endpoint, apiToken, deepCanarySql(), [
     new Date(now - 7 * 86400000).toISOString()
   ]);
-  const deepCanary = evaluateDeepCanary(canaryRows, { now });
+  const reservationRows = await queryD1Rows(fetcher, endpoint, apiToken, deepCanaryReservationSql(), [
+    new Date(now - 7 * 86400000).toISOString()
+  ]);
+  const deepCanary = evaluateDeepCanary(canaryRows, { now, reservationRows });
   return { ...acute, slo_window_minutes: sloMinutes, slo, monthly, deep_canary: deepCanary };
 }
 

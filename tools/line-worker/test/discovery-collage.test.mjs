@@ -35,7 +35,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v379/);
+  assert.match(sw, /hoshilu-shell-v380/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
@@ -106,6 +106,8 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(html, /id="journeyTitle"><span>2つの探し方から、<\/span><span>購入先・次の候補まで。<\/span>/);
   assert.match(heroFixes, /html:lang\(ja\) \.journey-heading h2 \{ white-space: normal; \}/u);
   assert.match(heroFixes, /\.journey-heading h2 span \{[\s\S]*?display: block;[\s\S]*?overflow-wrap: anywhere;/u);
+  assert.match(heroFixes, /\.journey-heading h2 span \{[\s\S]*?width: 100%;[\s\S]*?word-break: normal;/u);
+  assert.match(wishCss, /@media \(max-width: 560px\)[\s\S]*?\.share-gmail-button \{[\s\S]*?grid-column: 1 \/ -1;/u);
   assert.doesNotMatch(heroFixes, /html:lang\(ja\) \.journey-heading h2,[\s\S]*?white-space: nowrap;/u);
   assert.match(html, /楽天・Yahoo!をまとめて確認し、11モールの検索先と横レコメンドを提示。/);
   assert.match(html, /id="journeyStep3Body">/);

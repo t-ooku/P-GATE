@@ -68,9 +68,19 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
   box-shadow: 0 20px 60px #30236610;
 }
 
-.journey-heading h2 { font-size: clamp(24px, 3vw, 36px); }
+.journey-heading { min-width: 0; max-width: 100%; }
+.journey-heading h2 {
+  min-width: 0;
+  max-width: 100%;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.24;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
 .journey-heading h2 span,
 .journey-heading > p:last-child span { display: block; }
+.journey-heading h2 span { width: 100%; max-width: 100%; white-space: normal; }
 .journey-heading > p:last-child { color: var(--muted); line-height: 1.7; }
 .journey-steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .journey-steps li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; padding: 13px; border-radius: 16px; background: #ffffffc7; }
@@ -137,8 +147,10 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
   .journey-heading h2 { font-size: clamp(22px, 6.5vw, 32px); white-space: normal; }
   .journey-heading h2 span {
     display: block;
+    width: 100%;
     max-width: 100%;
     overflow-wrap: anywhere;
+    word-break: normal;
   }
   .journey-heading > p:last-child {
     margin: 6px 0 0;

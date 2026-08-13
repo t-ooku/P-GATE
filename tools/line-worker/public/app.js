@@ -652,6 +652,14 @@ function resultRow(cards,title,note,rowKind){
   row.append(heading,textElement('p','result-row-note',note),resultCarousel(cards,rowKind));
   return row;
 }
+const relatedCategoryShelfCopy={
+  JA:{badge:'関連商品の検索候補',title:'一緒に探せる関連商品',note:'実在商品を確認中です。先に関連カテゴリを横スクロールし、最大13モールで探せます。',reason:'AI選定理由'},
+  EN:{badge:'Related search idea',title:'Related products to explore',note:'While verified products load, browse related categories horizontally and search up to 13 marketplaces.',reason:'Why AI selected it'},
+  ZH:{badge:'相关商品搜索候选',title:'可一起查找的相关商品',note:'正在确认真实商品。您可先横向浏览相关类别，并在最多13个商城中查找。',reason:'AI选择理由'},
+  KO:{badge:'관련 상품 검색 후보',title:'함께 찾을 관련 상품',note:'실제 상품을 확인하는 동안 관련 카테고리를 가로로 보고 최대 13개 쇼핑몰에서 찾을 수 있습니다.',reason:'AI 선정 이유'}
+};
+function relatedCategoryCard(item){const language=elements.language.value||'JA';const labels=relatedCategoryShelfCopy[language]||relatedCategoryShelfCopy.JA;const card=document.createElement('article');card.className='product-card unverified-card related-category-card';card.append(textElement('span','unverified-badge',labels.badge),textElement('h3','',String(item?.query||'')),textElement('div','recommendation-reason',`${labels.reason}：${String(item?.reason||'検索内容と一緒に使えるカテゴリ')}`));const links=marketplaceLinks(item?.marketplace_search_links,true);if(links)card.append(links);return card;}
+function recommendationRowFor(result,t,query){const products=(Array.isArray(result?.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);if(products.length){const copy=resultRowCopyFor(elements.language.value);return resultRow(products.map((candidate,index)=>productCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}
 function renderResults(result,requestId){
   // resultCarouselは検索ごとに新しいtrackを作るため、DOMから外す前に旧tickerの
   // interval・アニメーション・イベントを明示解除する。
@@ -666,7 +674,7 @@ function renderResults(result,requestId){
   const sharedSearchQuery=String(result?.search_keywords||result?.amazon_search_keywords||elements.query.value||'');
   const rows=[
     resultRow(confirmed.map((candidate,index)=>productCard(candidate,index,t,true,sharedSearchQuery)),copy.confirmedTitle,copy.confirmedNote,'confirmed'),
-    resultRow(recommended.map((candidate,index)=>productCard(candidate,index,t,false,sharedSearchQuery)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended')
+    recommendationRowFor(result,t,sharedSearchQuery)
   ].filter(Boolean);
   if(rows.length){
     const resultCards=[];
@@ -704,39 +712,34 @@ function renderResults(result,requestId){
 
 let relatedRecommendationSequence=0;
 async function loadRelatedRecommendations(query,sequence){
-  for(let attempt=0;attempt<2;attempt+=1){
-    try{
-      const token=await waitForTurnstileToken();
-      if(!token||sequence!==relatedRecommendationSequence)return;
-      const response=await fetch('/api/related-recommendations',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
+  try{
+      // This is an optional enhancement over the already-rendered category
+      // shelf. Never wait/reset/recover Turnstile in the background because
+      // that serialized issuer is also needed by the user's next search.
+      const token=await takeReadyTurnstileToken();
+      if(sequence!==relatedRecommendationSequence||!token)return;
+      const request=timedAbortController(12000);
+      let response;let payload;
+      try{response=await fetch('/api/related-recommendations',{method:'POST',headers:{'content-type':'application/json'},signal:request.controller.signal,body:JSON.stringify({
         query,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,turnstile_token:token
-      })});
-      const payload=await response.json();
+      })});payload=await response.json().catch(()=>({}));}finally{request.clear();}
       if(sequence!==relatedRecommendationSequence)return;
-      if(!response.ok||!payload.ok){
-        const code=String(payload.error||`RELATED_RECOMMENDATIONS_HTTP_${response.status}`);
-        if(attempt===0&&(/TURNSTILE_/u.test(code)||response.status>=500)){
-          if(/TURNSTILE_/u.test(code))await recoverTurnstileWidget();
-          continue;
-        }
-        throw new Error(code);
-      }
+      if(!response.ok||!payload.ok)throw new Error(String(payload.error||`RELATED_RECOMMENDATIONS_HTTP_${response.status}`));
       const recommendations=(Array.isArray(payload.result?.recommendations)?payload.result.recommendations:[]).slice(0,RESULT_ROW_LIMIT);
+      const categories=(Array.isArray(payload.result?.categories)?payload.result.categories:[]).slice(0,3);
       const oldRow=elements.cards.querySelector('[data-row="recommended"]');
-      if(!recommendations.length){oldRow?.remove();return;}
+      if(!recommendations.length&&!categories.length)return;
       const copy=resultRowCopyFor(elements.language.value);
-      const row=resultRow(recommendations.map((candidate,index)=>productCard(candidate,index,selectedCopy(),false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');
+      const categoryCopy=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;
+      const row=recommendations.length?resultRow(recommendations.map((candidate,index)=>productCard(candidate,index,selectedCopy(),false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended'):resultRow(categories.map(relatedCategoryCard),categoryCopy.title,categoryCopy.note,'recommended');
       if(!row)return;
       if(oldRow)oldRow.replaceWith(row);else{
         const anchor=elements.cards.querySelector('.related-keywords-card,.marketplace-fallback');
         if(anchor)elements.cards.insertBefore(row,anchor);else elements.cards.append(row);
       }
-      return;
     }catch(error){
-      if(attempt===0)continue;
       console.warn('RELATED_RECOMMENDATIONS_FAILED',String(error?.message||error).slice(0,80));
     }
-  }
 }
 function scheduleRelatedRecommendations(query,sequence){
   const safeQuery=String(query||'').trim();
@@ -792,6 +795,7 @@ async function acquireTurnstileToken(callbackTimeoutMs=15000){await ensureTurnst
 // one serialized issuer so reset/render cannot race against another request.
 // Tokens arrive through Turnstile's callback; getResponse polling is avoided.
 function waitForTurnstileToken(callbackTimeoutMs=15000){const request=turnstileRequestQueue.then(()=>acquireTurnstileToken(callbackTimeoutMs));turnstileRequestQueue=request.catch(()=>{});return request;}
+function takeReadyTurnstileToken(){const request=turnstileRequestQueue.then(()=>turnstileToken&&turnstileToken!==lastIssuedTurnstileToken?issueTurnstileToken(turnstileToken):'');turnstileRequestQueue=request.catch(()=>{});return request;}
 // Exposed for ai-search-ui.mjs (HOSHILU AI Chat), which needs the same
 // session_id and Turnstile token as the main search form. Uses a window
 // global rather than an ES module import so app.js is never evaluated a
