@@ -186,7 +186,9 @@ test('staged, approved, published and reconciled evidence remains exact', () => 
 
 test('mutation verifier rejects partial writes', () => {
   assert.equal(verifyMutationChanges([{ meta: { changes: 1 } }, { meta: { changes: 1 } }], [1, 1]), true);
+  assert.equal(verifyMutationChanges([{ meta: { changes: 3, rows_written: 2 } }], [1, 1]), true);
   assert.throws(() => verifyMutationChanges([{ meta: { changes: 1 } }, { meta: { changes: 0 } }], [1, 1]), /D1_MUTATION_CHANGE_COUNT_INVALID/);
+  assert.throws(() => verifyMutationChanges([{ meta: { changes: 3, rows_written: 1 } }], [1, 1]), /D1_MUTATION_CHANGE_COUNT_INVALID/);
 });
 
 test('workflow is explicit, exact-hash gated and never calls the Runway generation API', () => {

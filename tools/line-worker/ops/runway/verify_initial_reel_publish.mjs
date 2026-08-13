@@ -35,6 +35,12 @@ export function d1Rows(payload) {
 export function verifyMutationChanges(payload, expected) {
   const entries = Array.isArray(payload) ? payload : [payload];
   const actual = entries.map((entry) => Number(entry?.meta?.changes ?? entry?.result?.meta?.changes));
+  if (entries.length === 1 && expected.length > 1) {
+    const rowsWritten = Number(entries[0]?.meta?.rows_written ?? entries[0]?.result?.meta?.rows_written);
+    const expectedWrites = expected.reduce((sum, value) => sum + value, 0);
+    if (rowsWritten === expectedWrites && actual[0] >= expectedWrites) return true;
+    fail('D1_MUTATION_CHANGE_COUNT_INVALID', JSON.stringify({ actual, rows_written: rowsWritten, expected }));
+  }
   if (actual.length !== expected.length || actual.some((value, index) => value !== expected[index])) {
     fail('D1_MUTATION_CHANGE_COUNT_INVALID', JSON.stringify({ actual, expected }));
   }
