@@ -132,22 +132,23 @@ function providerHarness({ usage = true } = {}) {
 
 const callsTo = (calls, hostname) => calls.filter((call) => call.target.includes(hostname));
 
-test('deep canary frequency is 15m primary/1h structurer/6h backup without a public endpoint', () => {
+test('deep canary frequency is 15m marketplaces/1h Gemini/6h backup without a public endpoint', () => {
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T01:22:00Z')),
-    ['rakuten', 'yahoo', 'ai_chat_primary']);
+    ['rakuten', 'yahoo']);
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T01:07:00Z')),
     ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary']);
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T06:07:00Z')),
     ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary', 'openai_backup']);
   assert.deepEqual(deepCanaryTest.scheduledComponents(new Date('2026-08-13T06:22:00Z')),
-    ['rakuten', 'yahoo', 'ai_chat_primary']);
+    ['rakuten', 'yahoo']);
 });
 
 test('only transient OpenAI result codes are eligible for the one delayed retry', () => {
   for (const code of [
     'CANARY_PROVIDER_TIMEOUT', 'CANARY_PROVIDER_RATE_LIMITED', 'CANARY_PROVIDER_UPSTREAM_5XX',
     'CANARY_PROVIDER_NETWORK_FAILED', 'CANARY_PROVIDER_INVALID_JSON',
-    'OPENAI_CHAT_INTENT_INVALID_JSON', 'CANARY_AI_RESPONSE_INVALID'
+    'GEMINI_CHAT_INTENT_INVALID_JSON', 'OPENAI_CHAT_INTENT_INVALID_JSON',
+    'CANARY_AI_RESPONSE_INVALID'
   ]) assert.equal(deepCanaryTest.isTransientOpenAiFailureCode(code), true, code);
 
   for (const code of [
@@ -195,7 +196,7 @@ test('a transient regular OpenAI failure is retried once at minute 22 and then s
     clock: () => new Date('2026-08-13T06:22:01.000Z')
   });
   assert.deepEqual(retry.results.map((row) => row.component),
-    ['rakuten', 'yahoo', 'ai_chat_primary', 'openai_backup']);
+    ['rakuten', 'yahoo', 'openai_backup']);
   assert.equal(retry.results.at(-1)?.status, 'PASS');
 
   const replay = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
@@ -209,7 +210,7 @@ test('a transient regular OpenAI failure is retried once at minute 22 and then s
   assert.doesNotMatch(stored, /軽い|ワイヤレス|イヤホン|authorization|response/iu);
 });
 
-test('the 15-minute Gemini primary cadence confirms recovery at the next available offset', async (t) => {
+test('an hourly Gemini primary transient failure gets one confirmation at the next available offset', async (t) => {
   const { sqlite, env } = sqliteEnvironment();
   t.after(() => sqlite.close());
   seedPriorResults(sqlite);
@@ -245,7 +246,7 @@ test('the 15-minute Gemini primary cadence confirms recovery at the next availab
     WHERE event_type='deep_canary_budget' AND medium='ai_chat_primary'`).get().count, 2);
 });
 
-test('a non-transient Gemini primary failure receives only its normal scheduled check', async (t) => {
+test('a non-transient Gemini primary failure never schedules a paid confirmation', async (t) => {
   const { sqlite, env } = sqliteEnvironment();
   t.after(() => sqlite.close());
   seedPriorResults(sqlite);
@@ -260,8 +261,8 @@ test('a non-transient Gemini primary failure receives only its normal scheduled 
   const result = await runDeepCanaryCycle(env, new Date('2026-08-13T11:22:00.000Z'), fetcher, {
     clock: () => new Date('2026-08-13T11:22:01.000Z')
   });
-  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
-  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 1);
+  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
+  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 0);
 });
 
 test('the monthly fuse blocks a qualified Gemini confirmation before fetch', async (t) => {
@@ -335,7 +336,7 @@ test('non-transient OpenAI failures never schedule the delayed paid retry', asyn
       const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
         clock: () => new Date('2026-08-13T06:22:01.000Z')
       });
-      assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
+      assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
       assert.equal(callsTo(calls, 'api.openai.com').length, 0);
     });
   }
@@ -354,7 +355,7 @@ test('retry lookup fails closed when the newest OpenAI result is not the exact r
   const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:22:00.000Z'), fetcher, {
     clock: () => new Date('2026-08-13T06:22:01.000Z')
   });
-  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
+  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
   assert.equal(callsTo(calls, 'api.openai.com').length, 0);
 });
 
@@ -391,8 +392,8 @@ test('an existing result prevents missing components from bypassing provider cad
   const { fetcher, calls } = providerHarness();
   const result = await runDeepCanaryCycle(env, new Date('2026-08-13T01:22:00Z'), fetcher,
     { clock: () => new Date('2026-08-13T01:22:01Z') });
-  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
-  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 1);
+  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
+  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 0);
   assert.equal(callsTo(calls, 'api.openai.com').length, 0);
 });
 
@@ -572,7 +573,7 @@ test('a completely new installation runs one explicit all-component bootstrap cy
     clock: () => new Date('2026-08-13T01:22:01.000Z')
   });
   assert.deepEqual(result.results.map((row) => row.component),
-    ['rakuten', 'yahoo', 'ai_chat_primary', 'query_structurer', 'openai_backup']);
+    ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary', 'openai_backup']);
 });
 
 test('expired pricing revision blocks every paid AI probe while marketplace probes continue', async (t) => {

@@ -73,7 +73,10 @@ import {
 import { handleRunwayMediaRoute } from './social-media-r2.mjs';
 import { renderSeoPage, seoHubPaths, seoPagePaths } from './seo-pages.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
-import { classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure } from './growth-events.mjs';
+import {
+  classifyGrowthTraffic, handleGrowthEvent, recordSearchOperationalFailure,
+  recordSearchProviderDegradation
+} from './growth-events.mjs';
 import {
   applySellerPriority, sellerPriorityContext
 } from './seller-priority-console.mjs';
@@ -1745,6 +1748,21 @@ export function interleaveCandidatesBySource(groups = []) {
 // 希望にそう商品を提示"): REFINEは検索語だけ、IDENTIFYは確認用の商品仮説を
 // 1件だけ返す。どちらも価格・在庫・URLは返さず、YES後の商品実在確認は既存の
 // /api/knowledge（モールAPI/D1）だけが行う。質問本文はログへ保存しない。
+function queueSearchProviderDegradation(env, ctx, requestId, degradation) {
+  const record = recordSearchProviderDegradation(env, {
+    requestId,
+    component: degradation?.component,
+    provider: degradation?.provider,
+    code: degradation?.code
+  }).catch((error) => {
+    console.error('SEARCH_PROVIDER_DEGRADATION_TELEMETRY_FAILED', {
+      requestId,
+      code: String(error?.message || error).toUpperCase().replace(/[^A-Z0-9_]/gu, '_').slice(0, 80)
+    });
+  });
+  if (ctx?.waitUntil) ctx.waitUntil(record); else void record;
+}
+
 async function handleAiChatApi(request, env, ctx) {
   const requestId = crypto.randomUUID();
   try {
@@ -1762,7 +1780,13 @@ async function handleAiChatApi(request, env, ctx) {
     }
     const input = validateChatRequest(body);
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
-    let result = await analyzeChatTurn(input.history, input.language, env, fetch, { mode: input.mode });
+    let result = await analyzeChatTurn(input.history, input.language, env, fetch, {
+      mode: input.mode,
+      telemetryComponent: 'ai_chat',
+      onProviderDegraded: (degradation) => queueSearchProviderDegradation(
+        env, ctx, requestId, degradation
+      )
+    });
     if (input.mode === 'IDENTIFY' && result.candidate_name) {
       const candidateQuery = result.refined_query || result.candidate_name;
       const category = semanticSearchGroups(candidateQuery)
@@ -2084,7 +2108,11 @@ async function handleKnowledgeApi(request, env, ctx) {
         configured: true,
         provider: 'AI_CHAT_CONFIRMED'
       })
-      : refineMarketplaceSearchQuery(originalQuery, input.language, env, fetch);
+      : refineMarketplaceSearchQuery(originalQuery, input.language, env, fetch, {
+        onProviderDegraded: (degradation) => queueSearchProviderDegradation(
+          env, ctx, requestId, degradation
+        )
+      });
     const [gasOutcome, indexedOutcome, aiRefinementOutcome] = await Promise.allSettled([
       callGas(env, 'KNOWLEDGE', { request: { query: input.query, consent: true } }),
       applyIndexedSearchPolicy({ candidates: [] }, env, input.query, input.language, {

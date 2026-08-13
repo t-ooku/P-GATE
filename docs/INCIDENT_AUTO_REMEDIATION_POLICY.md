@@ -52,8 +52,18 @@ HOSHILUで再現可能な不具合または本番障害を確認した場合、�
   このD1記録はWorkers Logsのサンプリングに依存しない。2026-08-13の元障害より前の内部コードは
   遡及取得できないが、以後の同種500はrequest ID・失敗component・安全なコードを、ログsamplingに
   依存せず全件D1記録へ送る。D1自体が失敗した場合だけは永続記録が欠測し得る。
-- Cloudflare Workerの非公開cronから深層canaryを実行する。楽天・Yahoo!・AIチャット主系は15分ごと、
-  Query Structurerは1時間ごと、OpenAI予備系は6時間ごとに固定合成条件で確認する。
+- HTTP 200へ安全に縮退した実リクエストも、内部`search_provider_degraded`として監視する。
+  公開`/api/events`のallowlistには追加せず、保存するのはAIチャット／Query Structurerを区別する
+  component、GEMINI/ALLの固定provider、固定allowlistのコード、サーバー発行request ID、時刻だけとする。
+  検索文、会話本文、外部応答、例外本文、visitor ID、session IDは保存しない。
+  直近15分について5分監視が評価し、AIチャットの全provider縮退、またはGeminiがなく利用可能な
+  Query Structurer providerも失敗したall縮退は1件で即時Issue化する。Gemini主系のtimeout・429・
+  upstream 5xx・network・invalid JSONはcomponent別の異なる実request ID 2件でIssue化し、同一requestの
+  重複は数えない。設定・認証・リクエスト拒否など非一時の主系障害は1件で即時Issue化する。
+  記録は`ctx.waitUntil`でユーザーレスポンスを塞がず、既存のSLI失敗／単一Issue lifecycleへ接続する。
+  D1書き込み自体が失敗した場合は欠測し得るため、深層canaryと外形監視を併用する。
+- Cloudflare Workerの非公開cronから深層canaryを実行する。楽天・Yahoo!は15分ごと、
+  Query Structurer・AIチャット主系は1時間ごと、OpenAI予備系は6時間ごとに固定合成条件で確認する。
   公開APIにTurnstile回避口は作らず、外部レスポンス、固定検索語、商品情報は保存しない。
   結果行へ保存するのはcomponent、PASS/FAIL、安全なエラーコード、実行時刻だけである。
   別の予算行には最大予約額またはusageから計算した実額だけを保存し、検索語や外部応答は保存しない。
@@ -65,19 +75,21 @@ HOSHILUで再現可能な不具合または本番障害を確認した場合、�
   `2026-09-13 00:00 UTC`までに再確認されなければ有料canaryを自動停止する。
   楽天・Yahoo!のcatalog到達canaryは継続するが、各APIの利用条件・上限は継続監査対象とする。
   結果が完全に空の初回だけ全componentを一度確認する。通常は固定周期を守り、Query Structurer・
-  OpenAI予備系の一時失敗時だけ後続の15分offsetで1回に限って回復確認probeを行う。
-- 5分監視はcomponent別の欠測・古さと失敗を確認する。楽天・Yahoo!・AIチャット主系は20分、
-  Query Structurerは70分、OpenAI予備系は390分を超えて結果がなければ異常とする。
+  AIチャット主系・OpenAI予備系の一時失敗時だけ後続の15分offsetで1回に限って回復確認probeを行う。
+- 5分監視はcomponent別の欠測・古さと失敗を確認する。楽天・Yahoo!は20分、Query Structurer・
+  AIチャット主系は70分、OpenAI予備系は390分を超えて結果がなければ異常とする。
   Query Structurerはすべての失敗を1回で検知する。全componentの設定・認証・モデル・価格表・
   予算・usage異常も1回で検知し、AIチャット主系を含むその他の一時失敗だけは異なる2回の連続失敗で
   同じ自動Issueへ接続する。初回配備時の欠測猶予は2026-08-13 10:30 UTCまでに限定し、
   同時刻以降の欠測は`STALE`とする。回復時は既存の3回連続成功規則で閉じる。
   有料probeの予約から2分を超えて対応する結果がない場合も、Worker中断として即時検知する。
-- Query StructurerまたはOpenAI予備系の通常slotが一時エラーで失敗した場合だけ、最初に実行できた
-  後続offset（15分間隔）で1回だけ確認probeを行う。AIチャット主系は通常の15分周期で回復確認し、
-  一時失敗が2回連続した時にIssue化する。Query Structurerは初回失敗を即時Issue化し、OpenAI予備系は
-  確認も失敗した時に2回連続としてIssue化する。設定・認証・モデル・価格・予算などの非一時エラーは
+- Query Structurer、AIチャット主系、OpenAI予備系の通常`:07` slotが一時エラーで失敗した場合だけ、
+  後続の`:22`、`:37`、`:52`のうち最初に実行できたoffsetで1回だけ確認probeを行う。
+  AIチャット主系とOpenAI予備系は確認も失敗した時に異なる2回の連続失敗としてIssue化する。
+  Query Structurerは初回失敗を即時Issue化する。設定・認証・モデル・価格・予算などの非一時エラーは
   確認を待たず即時検知する。すべてのprobeは同じ原子予算予約と月5米ドル上限を通り、無限再試行はしない。
+  AIチャット主系の一時障害は最初のcanary失敗から約15分で確認するが、障害発生が毎時slotの直後なら
+  最初の失敗検知まで最大約1時間を要する。ユーザー経路はその間もOpenAIまたは通常検索へ縮退する。
 - GitHubのschedule開始・完了を、既存のCloudflare D1へ固定IDの内部heartbeatとして保存する。
   Cloudflareの既存15分cronが20分超の欠測または未完了を検知し、`reliability_incident` outboxへ
   PENDINGで保持する。GitHubが回復した次の実行は、最新状態がPASSへ戻っていても未処理outboxを

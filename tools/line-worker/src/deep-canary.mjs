@@ -21,6 +21,7 @@ const AI_RETRYABLE_CODES = new Set([
   'CANARY_PROVIDER_UPSTREAM_5XX',
   'CANARY_PROVIDER_NETWORK_FAILED',
   'CANARY_PROVIDER_INVALID_JSON',
+  'GEMINI_CHAT_INTENT_INVALID_JSON',
   'OPENAI_CHAT_INTENT_INVALID_JSON',
   'CANARY_AI_RESPONSE_INVALID'
 ]);
@@ -32,8 +33,7 @@ const safeCode = (value, fallback = 'CANARY_FAILED') => {
 
 const scheduledComponents = (date) => {
   const components = ['rakuten', 'yahoo'];
-  if (date.getUTCMinutes() === 7) components.push('query_structurer');
-  components.push('ai_chat_primary');
+  if (date.getUTCMinutes() === 7) components.push('query_structurer', 'ai_chat_primary');
   if (date.getUTCMinutes() === 7 && date.getUTCHours() % 6 === 0) components.push('openai_backup');
   return components;
 };
@@ -43,14 +43,13 @@ const isTransientAiFailureCode = (value) => {
   return code === safeCode(code) && AI_RETRYABLE_CODES.has(code);
 };
 
-// :07 is the regular Query Structurer/OpenAI slot. A transient failure may be
-// confirmed once at the first later deep-canary offset that actually runs
-// (:22/:37/:52). AI chat primary already runs on every 15-minute offset and
-// therefore gets its recovery check from the normal cadence.
+// :07 is the regular Query Structurer/AI-primary/OpenAI slot. A transient
+// failure may be confirmed once at the first later deep-canary offset that
+// actually runs (:22/:37/:52).
 // Requiring the newest row to remain the exact :07 row makes the first retry
 // self-closing: its own PASS/FAIL row prevents every later offset from paying
 // for another request.
-const aiPrimarySlot = (date, component) => {
+const regularAiSlot = (date, component) => {
   if (![22, 37, 52].includes(date.getUTCMinutes())) return null;
   if (component === 'openai_backup' && date.getUTCHours() % 6 !== 0) return null;
   const slot = new Date(date);
@@ -60,11 +59,11 @@ const aiPrimarySlot = (date, component) => {
 
 async function scheduledAiRetries(env, date) {
   const retries = [];
-  for (const component of ['query_structurer', 'openai_backup']) {
-    const primarySlot = aiPrimarySlot(date, component);
-    if (!primarySlot) continue;
-    const expectedOccurredAt = primarySlot.toISOString();
-    const expectedEventId = `deep-canary:${primarySlot.getTime()}:${component}`;
+  for (const component of ['query_structurer', 'ai_chat_primary', 'openai_backup']) {
+    const regularSlot = regularAiSlot(date, component);
+    if (!regularSlot) continue;
+    const expectedOccurredAt = regularSlot.toISOString();
+    const expectedEventId = `deep-canary:${regularSlot.getTime()}:${component}`;
     // Read the newest component result without filtering by status/code first.
     // A malformed or newer unexpected row must fail closed instead of reviving
     // an older failure and spending money on an unsafe extra probe.
@@ -80,8 +79,8 @@ async function scheduledAiRetries(env, date) {
   return retries;
 }
 
-// Backward-compatible test names while failed-only retries now cover Query
-// Structurer and the six-hour OpenAI backup. Primary chat uses normal cadence.
+// Backward-compatible test name while failed-only retries cover each paid AI
+// component and never create a public retry endpoint.
 const isTransientOpenAiFailureCode = isTransientAiFailureCode;
 const scheduledOpenAiRetry = async (env, date) => (await scheduledAiRetries(env, date))
   .filter((component) => component === 'openai_backup');

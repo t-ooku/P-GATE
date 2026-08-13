@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { deepCanaryReservationSql, deepCanarySql, evaluateDeepCanary, evaluateMonthlyContinuity,
-  evaluatePendingReliabilityIncidents, evaluateReliabilityHeartbeats, evaluateSearchSli, evaluateSearchSlo,
+  evaluatePendingReliabilityIncidents, evaluateReliabilityHeartbeats, evaluateSearchProviderDegradation,
+  evaluateSearchSli, evaluateSearchSlo,
   inspectProductionSearchSli, reliabilityHeartbeatSql, reliabilityPendingIncidentSql,
-  searchBackendFailureSql, searchMonthlySloSql, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
+  searchBackendFailureSql, searchMonthlySloSql, searchProviderDegradationSql,
+  searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
 
 function healthyCanaryRows(now = Date.now()) {
   const iso = new Date(now - 60000).toISOString();
@@ -18,8 +20,7 @@ function healthyHeartbeatRows(now = Date.now()) {
   }));
 }
 
-function d1Fetch(row, sloRow = { finished: 10, degraded: 1 }, diagnosticRow = {}) {
-  let calls = 0;
+function d1Fetch(row, sloRow = { finished: 10, degraded: 1 }, diagnosticRow = {}, providerRows = []) {
   return async (_url, init) => {
     assert.equal(init.headers.authorization, 'Bearer test-token');
     const body = JSON.parse(init.body);
@@ -39,11 +40,12 @@ function d1Fetch(row, sloRow = { finished: 10, degraded: 1 }, diagnosticRow = {}
     if (body.sql.includes("event_type='reliability_incident'")) {
       return Response.json({ success: true, result: [{ success: true, results: [] }] });
     }
-    calls += 1;
-    const monthlyCall = Number(row.backend_failed) > 0 ? 4 : 3;
-    const result = calls === 1 ? row
-      : Number(row.backend_failed) > 0 && calls === 2 ? diagnosticRow
-        : calls === monthlyCall ? { finished: 10, unavailable: 0 } : sloRow;
+    if (body.sql.includes("event_type='search_provider_degraded'")) {
+      return Response.json({ success: true, result: [{ success: true, results: providerRows }] });
+    }
+    const result = body.sql.includes("WHERE traffic_class<>'QA' AND event_type='search_backend_failed'") ? diagnosticRow
+      : body.sql.includes('AS unavailable') ? { finished: 10, unavailable: 0 }
+        : body.sql.includes('WITH recent AS') ? row : sloRow;
     return Response.json({ success: true, result: [{ success: true, results: [result] }] });
   };
 }
@@ -57,6 +59,71 @@ test('production SLI query only aggregates privacy-safe terminal event counts', 
   assert.doesNotMatch(sql, /unixepoch/u);
   assert.doesNotMatch(sql, /SELECT \*/u);
   assert.doesNotMatch(sql, /content/u);
+});
+
+test('provider degradation query selects only fixed anonymous operational fields', () => {
+  const sql = searchProviderDegradationSql();
+  assert.match(sql, /event_type='search_provider_degraded'/u);
+  assert.match(sql, /source='worker'/u);
+  assert.match(sql, /medium AS component/u);
+  assert.match(sql, /content AS request_id/u);
+  assert.doesNotMatch(sql, /query|prompt|history|response|visitor_id|session_id|authorization/iu);
+});
+
+test('one all-provider fallback is an immediate real-request incident', () => {
+  const row = {
+    component:'ai_chat_all', provider:'ALL', code:'AI_ALL_PROVIDERS_FAILED',
+    request_id:'e309d1ad-2a34-4f2f-913b-47fccdbbe240', occurred_at:new Date().toISOString()
+  };
+  assert.throws(
+    () => evaluateSearchProviderDegradation([row]),
+    /SEARCH_PROVIDER_ALL_FAILED:AI_CHAT_ALL:AI_ALL_PROVIDERS_FAILED:e309d1ad-2a34-4f2f-913b-47fccdbbe240/u
+  );
+});
+
+test('primary transient needs two distinct request IDs within the same component', () => {
+  const occurred_at = new Date().toISOString();
+  const first = {
+    component:'ai_chat_primary', provider:'GEMINI', code:'AI_PROVIDER_TIMEOUT',
+    request_id:'e309d1ad-2a34-4f2f-913b-47fccdbbe241', occurred_at
+  };
+  const second = { ...first, request_id:'e309d1ad-2a34-4f2f-913b-47fccdbbe242' };
+  assert.equal(evaluateSearchProviderDegradation([first]).ai_chat_primary_transient_requests, 1);
+  assert.equal(evaluateSearchProviderDegradation([first, first]).ai_chat_primary_transient_requests, 1);
+  assert.doesNotThrow(() => evaluateSearchProviderDegradation([
+    first, { ...second, component:'query_structurer_primary' }
+  ]));
+  assert.throws(
+    () => evaluateSearchProviderDegradation([first, second]),
+    /SEARCH_PROVIDER_PRIMARY_REPEATED:AI_CHAT_PRIMARY:AI_PROVIDER_TIMEOUT:e309d1ad-2a34-4f2f-913b-47fccdbbe241:2/u
+  );
+});
+
+test('one non-transient primary failure alerts and unknown codes fail closed', () => {
+  const row = {
+    component:'query_structurer_primary', provider:'GEMINI', code:'AI_PROVIDER_AUTH_FAILED',
+    request_id:'e309d1ad-2a34-4f2f-913b-47fccdbbe243', occurred_at:new Date().toISOString()
+  };
+  assert.throws(
+    () => evaluateSearchProviderDegradation([row]),
+    /SEARCH_PROVIDER_PRIMARY_NON_TRANSIENT:QUERY_STRUCTURER_PRIMARY:AI_PROVIDER_AUTH_FAILED/u
+  );
+  assert.throws(
+    () => evaluateSearchProviderDegradation([{ ...row, code:'RAW_UPPERCASE_PROVIDER_MESSAGE' }]),
+    /SEARCH_PROVIDER_DEGRADATION_INVALID/u
+  );
+});
+
+test('provider degradation flows through the existing SLI failure and Issue lifecycle', async () => {
+  const providerRows = [{
+    component:'ai_chat_all', provider:'ALL', code:'AI_ALL_PROVIDERS_FAILED',
+    request_id:'e309d1ad-2a34-4f2f-913b-47fccdbbe244', occurred_at:new Date().toISOString()
+  }];
+  await assert.rejects(inspectProductionSearchSli({
+    accountId:'account', apiToken:'test-token',
+    fetcher:d1Fetch({ started:1, completed:1, hard_failed:0, backend_failed:0, degraded:0 },
+      { finished:1, degraded:0 }, {}, providerRows)
+  }), /SEARCH_PROVIDER_ALL_FAILED:AI_CHAT_ALL/u);
 });
 
 test('production SLO enforces a thirty-day 99.95 percent continuity budget', () => {
@@ -185,6 +252,21 @@ test('deep canary requires two distinct transient AI chat failures and resets on
   ], { now }));
 });
 
+test('deep canary waits for confirmation on a transient invalid primary response', () => {
+  const now = Date.now();
+  const rows = healthyCanaryRows(now).map((row) => row.component === 'ai_chat_primary'
+    ? { ...row, status:'FAIL', code:'CANARY_PROVIDER_INVALID_JSON' } : row);
+  assert.doesNotThrow(() => evaluateDeepCanary(rows, { now }));
+});
+
+test('deep canary immediately alerts on one non-transient AI chat failure', () => {
+  const now = Date.now();
+  const rows = healthyCanaryRows(now).map((row) => row.component === 'ai_chat_primary'
+    ? { ...row, status:'FAIL', code:'GEMINI_CHAT_INTENT_FAILED' } : row);
+  assert.throws(() => evaluateDeepCanary(rows, { now }),
+    /DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:AI_CHAT_PRIMARY:GEMINI_CHAT_INTENT_FAILED/u);
+});
+
 test('deep canary alerts on one query structurer failure', () => {
   const now = Date.now();
   const rows = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'
@@ -248,9 +330,9 @@ test('deep canary requires two distinct failed marketplace runs and resets on pa
   assert.doesNotThrow(() => evaluateDeepCanary([...base, { ...failed[0], status:'PASS', code:'CANARY_OK' }, failed[1]], { now }));
 });
 
-test('deep canary detects a missed 15m/1h/6h run within 20/70/390 minutes', () => {
+test('deep canary detects missed 15m marketplaces, 1h Gemini, and 6h backup runs', () => {
   const now = Date.now();
-  const windows = { rakuten:20, yahoo:20, ai_chat_primary:20, query_structurer:70, openai_backup:390 };
+  const windows = { rakuten:20, yahoo:20, ai_chat_primary:70, query_structurer:70, openai_backup:390 };
   for (const [component, minutes] of Object.entries(windows)) {
     const atBoundary = healthyCanaryRows(now).map((row) => row.component === component
       ? { ...row, occurred_at:new Date(now-minutes*60000).toISOString() } : row);

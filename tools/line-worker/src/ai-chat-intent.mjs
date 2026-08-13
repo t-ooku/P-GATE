@@ -32,6 +32,37 @@ function cleanString(value, max = 200) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function providerFailureCode(error) {
+  const status = Number(error?.status || 0);
+  const name = String(error?.name || '');
+  const message = String(error?.message || '');
+  if (status === 401 || status === 403) return 'AI_PROVIDER_AUTH_FAILED';
+  if (status === 408 || name === 'TimeoutError' || name === 'AbortError'
+    || /timed?\s*out|timeout/iu.test(message)) return 'AI_PROVIDER_TIMEOUT';
+  if (status === 429) return 'AI_PROVIDER_RATE_LIMITED';
+  if (status >= 500) return 'AI_PROVIDER_UPSTREAM_5XX';
+  if (status >= 400) return 'AI_PROVIDER_REQUEST_REJECTED';
+  if (name === 'SyntaxError' || /INVALID_JSON/u.test(message)) return 'AI_PROVIDER_INVALID_JSON';
+  if (/OUTPUT_LIMIT/u.test(message)) return 'AI_PROVIDER_OUTPUT_LIMIT';
+  if (error instanceof TypeError || /fetch failed|network/iu.test(message)) return 'AI_PROVIDER_NETWORK_FAILED';
+  return 'AI_PROVIDER_FAILED';
+}
+
+function emitProviderDegradation(options, suffix, provider, code) {
+  if (typeof options?.onProviderDegraded !== 'function') return;
+  const scope = options.telemetryComponent === 'query_structurer' ? 'query_structurer' : 'ai_chat';
+  try {
+    options.onProviderDegraded({ component: `${scope}_${suffix}`, provider, code });
+  } catch (error) {
+    // Operational telemetry is additive and must never turn a recoverable AI
+    // provider failure into a user-visible search failure.
+    console.error('AI_PROVIDER_DEGRADATION_CALLBACK_FAILED', {
+      component: `${scope}_${suffix}`,
+      code: providerFailureCode(error)
+    });
+  }
+}
+
 function cleanRefinedQuery(value) {
   return cleanString(value, MAX_MESSAGE_LENGTH * MAX_HISTORY_MESSAGES)
     .replace(/https?:\/\/\S+/giu, ' ')
@@ -196,8 +227,18 @@ function fallbackResult(history, mode = 'REFINE') {
 export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl = fetch, options = {}) {
   const history = sanitizeChatHistory(rawHistory);
   const mode = options.mode === 'IDENTIFY' ? 'IDENTIFY' : 'REFINE';
+  const geminiConfigured = String(env.GEMINI_API_KEY || '').length >= 20;
+  const openAiConfigured = String(env.OPENAI_API_KEY || '').length >= 20;
+  const primaryProvider = geminiConfigured ? 'gemini' : (openAiConfigured ? 'openai' : 'gemini');
   if (!history.length) return { ...fallbackResult(history, mode), configured: chatIntentConfigured(env) };
-  if (!chatIntentConfigured(env)) return { ...fallbackResult(history, mode), configured: false };
+  if (!chatIntentConfigured(env)) {
+    if (options.singleProviderPrimaryOnly === true) {
+      emitProviderDegradation(options, 'primary', 'gemini', 'AI_PROVIDER_NOT_CONFIGURED');
+    } else {
+      emitProviderDegradation(options, 'all', 'all', 'AI_PROVIDERS_NOT_CONFIGURED');
+    }
+    return { ...fallbackResult(history, mode), configured: false };
+  }
 
   // Cost cap: once MAX_CHAT_TURNS user turns have already happened, never
   // ask another clarifying question - force a real search with the best
@@ -205,8 +246,6 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
   const userTurnCount = history.filter((turn) => turn.role === 'user').length;
   const atTurnLimit = userTurnCount >= (mode === 'IDENTIFY' ? 4 : MAX_CHAT_TURNS);
 
-  const geminiConfigured = String(env.GEMINI_API_KEY || '').length >= 20;
-  const openAiConfigured = String(env.OPENAI_API_KEY || '').length >= 20;
   const providers = [geminiConfigured && 'gemini', openAiConfigured && 'openai'].filter(Boolean);
   const totalBudgetMs = Math.max(250, Math.min(CHAT_TOTAL_BUDGET_MS,
     Number(options.totalBudgetMs) || CHAT_TOTAL_BUDGET_MS));
@@ -215,6 +254,7 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
   const deadline = Date.now() + totalBudgetMs;
 
   let lastError;
+  let primaryError;
   for (const provider of providers) {
     const remainingMs = deadline - Date.now();
     if (remainingMs < 250) break;
@@ -230,6 +270,12 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
         needs_clarification: result.needs_clarification && !atTurnLimit,
         turn: userTurnCount
       });
+      // A primary degradation is real only when the backup completed the
+      // request. If every provider fails, emit the single all-provider event
+      // below instead of two rows for one request.
+      if (provider === 'openai' && primaryError) {
+        emitProviderDegradation(options, 'primary', 'gemini', providerFailureCode(primaryError));
+      }
       if (atTurnLimit && result.needs_clarification) {
         return { ...result, needs_clarification: false, clarifying_question: '', refined_query: result.refined_query || fallbackResult(history, mode).refined_query,
           candidate_name: result.candidate_name || fallbackResult(history, mode).candidate_name, configured: true, provider };
@@ -238,6 +284,7 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
         ? (result.candidate_name || result.refined_query || fallbackResult(history, mode).candidate_name) : '', configured: true, provider };
     } catch (error) {
       lastError = error;
+      if (provider === primaryProvider) primaryError = error;
       console.warn('AI_CHAT_TURN_PROVIDER_FAILED', {
         provider,
         status: Number(error?.status || 0),
@@ -246,13 +293,18 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
     }
   }
   console.warn('AI_CHAT_TURN_ALL_PROVIDERS_FAILED', { attempted: providers.length, had_error: Boolean(lastError) });
+  if (options.singleProviderPrimaryOnly === true && primaryError) {
+    emitProviderDegradation(options, 'primary', primaryProvider, providerFailureCode(primaryError));
+  } else {
+    emitProviderDegradation(options, 'all', 'all', 'AI_ALL_PROVIDERS_FAILED');
+  }
   return { ...fallbackResult(history, mode), configured: true };
 }
 
 // 通常検索向けの高速な意図変換。結果は商品として信用せず検索語にだけ使い、
 // 実在性は後段のモールAPI/D1で検証する。Gemini利用時は公式が高スループット
 // 用途向けとしているFlash-Liteを使い、全体を1.5秒以内に制限する。
-export async function refineMarketplaceSearchQuery(rawQuery, language, env = {}, fetchImpl = fetch) {
+export async function refineMarketplaceSearchQuery(rawQuery, language, env = {}, fetchImpl = fetch, options = {}) {
   const fastEnv = { ...env };
   if (String(env.GEMINI_API_KEY || '').length >= 20) {
     fastEnv.GEMINI_PRODUCT_DISCOVERY_MODEL = String(env.GEMINI_QUERY_REFINEMENT_MODEL || 'gemini-3.1-flash-lite');
@@ -261,7 +313,16 @@ export async function refineMarketplaceSearchQuery(rawQuery, language, env = {},
   }
   return analyzeChatTurn(
     [{ role: 'user', text: String(rawQuery || '') }], language, fastEnv, fetchImpl,
-    { timeoutMs: 1500, totalBudgetMs: 1500 }
+    {
+      timeoutMs: 1500,
+      totalBudgetMs: 1500,
+      telemetryComponent: 'query_structurer',
+      // Gemini is intentionally isolated from OpenAI here to avoid normal
+      // double billing. With Gemini absent, OpenAI-only (or no-provider)
+      // failures retain all-provider semantics and alert immediately.
+      singleProviderPrimaryOnly: String(env.GEMINI_API_KEY || '').length >= 20,
+      onProviderDegraded: options.onProviderDegraded
+    }
   );
 }
 

@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyGrowthTraffic, handleGrowthEvent, normalizeGrowthEvent, recordSearchOperationalFailure } from '../src/growth-events.mjs';
+import {
+  classifyGrowthTraffic, handleGrowthEvent, normalizeGrowthEvent,
+  recordSearchOperationalFailure, recordSearchProviderDegradation
+} from '../src/growth-events.mjs';
 
 test('accepts only anonymous allowlisted growth dimensions', () => {
   assert.deepEqual(normalizeGrowthEvent({
@@ -32,6 +35,7 @@ test('accepts only random anonymous visitor and session identifiers', () => {
 
 test('rejects unknown event types and marketplace values', () => {
   assert.throws(() => normalizeGrowthEvent({ event_type: 'raw_query_saved' }), /GROWTH_EVENT_INVALID/);
+  assert.throws(() => normalizeGrowthEvent({ event_type: 'search_provider_degraded' }), /GROWTH_EVENT_INVALID/);
   assert.equal(normalizeGrowthEvent({ event_type: 'landing_view', marketplace: 'unknown' }).marketplace, '');
 });
 
@@ -62,6 +66,50 @@ test('AI chat operational failures are distinguishable without storing conversat
   assert.equal(calls[0].values[5], 'AI_CHAT_INTERNAL_ERROR');
   assert.equal(calls[0].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe24d');
   assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
+});
+
+test('provider degradation stores only fixed dimensions and a Worker request ID', async () => {
+  const calls = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };
+  assert.equal(await recordSearchProviderDegradation(env, {
+    requestId:'e309d1ad-2a34-4f2f-913b-47fccdbbe245',
+    component:'ai_chat_primary', provider:'gemini', code:'AI_PROVIDER_TIMEOUT',
+    query:'保存禁止の検索文', history:'保存禁止の会話', response:'保存禁止の外部応答',
+    visitor_id:'保存禁止', session_id:'保存禁止'
+  }), true);
+  assert.equal(calls[0].values[1], 'search_provider_degraded');
+  assert.equal(calls[0].values[3], 'worker');
+  assert.equal(calls[0].values[4], 'ai_chat_primary');
+  assert.equal(calls[0].values[5], 'AI_PROVIDER_TIMEOUT');
+  assert.equal(calls[0].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe245');
+  assert.equal(calls[0].values[7], 'GEMINI');
+  assert.equal(calls[0].values[10], '');
+  assert.equal(calls[0].values[11], '');
+  assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
+});
+
+test('provider degradation uses a fixed code allowlist and rejects forged dimensions', async () => {
+  const calls = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };
+  assert.equal(await recordSearchProviderDegradation(env, {
+    requestId:'e309d1ad-2a34-4f2f-913b-47fccdbbe246',
+    component:'ai_chat_all', provider:'all', code:'RAW_UPPERCASE_PROVIDER_MESSAGE'
+  }), true);
+  assert.equal(calls[0].values[5], 'AI_ALL_PROVIDERS_FAILED');
+  assert.equal(await recordSearchProviderDegradation(env, {
+    requestId:'e309d1ad-2a34-4f2f-913b-47fccdbbe248',
+    component:'query_structurer_all', provider:'all', code:'AI_ALL_PROVIDERS_FAILED'
+  }), true);
+  assert.equal(calls[1].values[4], 'query_structurer_all');
+  assert.equal(await recordSearchProviderDegradation(env, {
+    requestId:'e309d1ad-2a34-4f2f-913b-47fccdbbe247',
+    component:'unexpected_component', provider:'all', code:'AI_ALL_PROVIDERS_FAILED'
+  }), false);
+  assert.equal(await recordSearchProviderDegradation(env, {
+    requestId:'not-a-worker-request',
+    component:'ai_chat_all', provider:'all', code:'AI_ALL_PROVIDERS_FAILED'
+  }), false);
+  assert.equal(calls.length, 2);
 });
 
 test('accepts anonymous registration and inquiry events across all ten marketplaces', () => {

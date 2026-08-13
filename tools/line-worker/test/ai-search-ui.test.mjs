@@ -196,6 +196,32 @@ test('AIチャット500は会話本文を保存せず追跡IDと安全なコー�
   assert.doesNotMatch(handler, /recordSearchOperationalFailure\([^\n]*(?:history|input)/);
 });
 
+test('AIチャットprovider縮退は同じrequest IDでwaitUntilへ匿名記録する', async () => {
+  const worker = await readFile(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  const queueStart = worker.indexOf('function queueSearchProviderDegradation');
+  const handlerStart = worker.indexOf('async function handleAiChatApi', queueStart);
+  const handlerEnd = worker.indexOf('// v4.3 指示書 Priority 3', handlerStart);
+  const wiring = worker.slice(queueStart, handlerEnd);
+  assert.match(wiring, /recordSearchProviderDegradation\(env, \{/);
+  assert.match(wiring, /requestId,/);
+  assert.match(wiring, /component: degradation\?\.component/);
+  assert.match(wiring, /if \(ctx\?\.waitUntil\) ctx\.waitUntil\(record\)/);
+  assert.match(wiring, /telemetryComponent: 'ai_chat'/);
+  assert.match(wiring, /queueSearchProviderDegradation\(\s*env, ctx, requestId, degradation/);
+  assert.doesNotMatch(wiring, /recordSearchProviderDegradation\([^)]*(?:history|query|response|visitor|session)/su);
+});
+
+test('通常検索Query Structurer縮退もknowledge request IDでwaitUntilへ匿名記録する', async () => {
+  const worker = await readFile(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  const start = worker.indexOf('async function handleKnowledgeApi');
+  const end = worker.indexOf('export function validateRelatedRecommendationsRequest', start);
+  const handler = worker.slice(start, end);
+  assert.match(handler, /const requestId = crypto\.randomUUID\(\)/);
+  assert.match(handler, /refineMarketplaceSearchQuery\(originalQuery, input\.language, env, fetch, \{/);
+  assert.match(handler, /queueSearchProviderDegradation\(\s*env, ctx, requestId, degradation/);
+  assert.doesNotMatch(handler, /recordSearchProviderDegradation\([^)]*(?:originalQuery|input|history|response|visitor|session)/su);
+});
+
 // v4.2 項目6・7: 「AIで探す」を押した時点で直前の検索文を初期コンテキスト
 // として渡す。空のチャットを開いて「何を探していますか？」と聞くのは禁止
 // なので、チャット履歴の最初のエントリは必ず直前の検索文(originalQuery)で

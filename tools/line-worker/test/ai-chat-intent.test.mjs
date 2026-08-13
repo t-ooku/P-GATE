@@ -114,6 +114,121 @@ test('全プロバイダ失敗時も直近のユーザー発言で検索へフ�
   assert.equal(result.refined_query, '軽いモバイルバッテリー');
 });
 
+test('GeminiからOpenAIへ切替成功した時だけ匿名primary degradationを1件通知する', async () => {
+  const degradations = [];
+  const fetchImpl = async (url) => String(url).includes('generativelanguage.googleapis.com')
+    ? new Response('provider private response', { status:503 })
+    : Response.json({ status:'completed', output:[{ type:'message', content:[{
+      type:'output_text', text:JSON.stringify({ needs_clarification:false, refined_query:'軽い イヤホン' })
+    }] }], usage:{ input_tokens:10, output_tokens:5 } });
+  const result = await analyzeChatTurn(
+    [{ role:'user', text:'軽いイヤホン' }], 'JA',
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) }, fetchImpl,
+    { onProviderDegraded:(item) => degradations.push(item), telemetryComponent:'ai_chat' }
+  );
+  assert.equal(result.provider, 'openai');
+  assert.deepEqual(degradations, [{
+    component:'ai_chat_primary', provider:'gemini', code:'AI_PROVIDER_UPSTREAM_5XX'
+  }]);
+  assert.doesNotMatch(JSON.stringify(degradations), /軽いイヤホン|private response/u);
+});
+
+test('provider JSON parse SyntaxErrorは固定INVALID_JSON codeへ分類する', async () => {
+  const degradations = [];
+  const fetchImpl = async (url) => String(url).includes('generativelanguage.googleapis.com')
+    ? { ok:true, json:async () => { throw new SyntaxError('raw provider payload'); } }
+    : Response.json({ status:'completed', output:[{ type:'message', content:[{
+      type:'output_text', text:JSON.stringify({ needs_clarification:false, refined_query:'軽い イヤホン' })
+    }] }], usage:{ input_tokens:10, output_tokens:5 } });
+  const result = await analyzeChatTurn(
+    [{ role:'user', text:'検索本文' }], 'JA',
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) }, fetchImpl,
+    { onProviderDegraded:(item) => degradations.push(item) }
+  );
+  assert.equal(result.provider, 'openai');
+  assert.deepEqual(degradations, [{
+    component:'ai_chat_primary', provider:'gemini', code:'AI_PROVIDER_INVALID_JSON'
+  }]);
+  assert.doesNotMatch(JSON.stringify(degradations), /raw provider payload|検索本文/u);
+});
+
+test('全provider失敗はprimaryと重複せず匿名all degradationを1件だけ通知する', async () => {
+  const degradations = [];
+  const result = await analyzeChatTurn(
+    [{ role:'user', text:'会話本文は通知禁止' }], 'JA',
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) },
+    async () => new Response('外部応答は通知禁止', { status:503 }),
+    { onProviderDegraded:(item) => degradations.push(item), telemetryComponent:'ai_chat' }
+  );
+  assert.equal(result.provider, undefined);
+  assert.deepEqual(degradations, [{
+    component:'ai_chat_all', provider:'all', code:'AI_ALL_PROVIDERS_FAILED'
+  }]);
+  assert.doesNotMatch(JSON.stringify(degradations), /会話本文|外部応答/u);
+});
+
+test('provider未設定は構造的all degradationを1件だけ通知する', async () => {
+  const degradations = [];
+  const result = await analyzeChatTurn(
+    [{ role:'user', text:'検索本文は通知禁止' }], 'JA', {}, fetch,
+    { onProviderDegraded:(item) => degradations.push(item), telemetryComponent:'ai_chat' }
+  );
+  assert.equal(result.configured, false);
+  assert.deepEqual(degradations, [{
+    component:'ai_chat_all', provider:'all', code:'AI_PROVIDERS_NOT_CONFIGURED'
+  }]);
+});
+
+test('telemetry callbackの同期例外でもall-provider fallbackを維持する', async () => {
+  const result = await analyzeChatTurn(
+    [{ role:'user', text:'軽いモバイルバッテリー' }], 'JA',
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) },
+    async () => new Response('unavailable', { status:503 }),
+    { onProviderDegraded:() => { throw new Error('TELEMETRY_CALLBACK_FAILED'); } }
+  );
+  assert.equal(result.needs_clarification, false);
+  assert.equal(result.refined_query, '軽いモバイルバッテリー');
+  assert.equal(result.provider, undefined);
+});
+
+test('単一providerのQuery Structurer失敗はallではなくprimaryとして通知する', async () => {
+  const degradations = [];
+  const result = await refineMarketplaceSearchQuery(
+    '子供が使える軽いやつ', 'JA', { GEMINI_API_KEY:'g'.repeat(32) },
+    async () => new Response('provider response', { status:429 }),
+    { onProviderDegraded:(item) => degradations.push(item) }
+  );
+  assert.equal(result.refined_query, '子供が使える軽いやつ');
+  assert.deepEqual(degradations, [{
+    component:'query_structurer_primary', provider:'gemini', code:'AI_PROVIDER_RATE_LIMITED'
+  }]);
+});
+
+test('Query Structurer全provider未設定はallとして即時通知する', async () => {
+  const degradations = [];
+  const result = await refineMarketplaceSearchQuery(
+    '軽いイヤホン', 'JA', {}, fetch,
+    { onProviderDegraded:(item) => degradations.push(item) }
+  );
+  assert.equal(result.configured, false);
+  assert.deepEqual(degradations, [{
+    component:'query_structurer_all', provider:'all', code:'AI_PROVIDERS_NOT_CONFIGURED'
+  }]);
+});
+
+test('GeminiなしOpenAI-onlyのQuery Structurer失敗はallとして即時通知する', async () => {
+  const degradations = [];
+  const result = await refineMarketplaceSearchQuery(
+    '軽いイヤホン', 'JA', { OPENAI_API_KEY:'o'.repeat(32) },
+    async () => new Response('unavailable', { status:503 }),
+    { onProviderDegraded:(item) => degradations.push(item) }
+  );
+  assert.equal(result.refined_query, '軽いイヤホン');
+  assert.deepEqual(degradations, [{
+    component:'query_structurer_all', provider:'all', code:'AI_ALL_PROVIDERS_FAILED'
+  }]);
+});
+
 test('Gemini timeout leaves a bounded budget for the OpenAI backup', async () => {
   const originalNow = Date.now;
   let now = 1_000;

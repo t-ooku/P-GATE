@@ -25,6 +25,17 @@ const EVENTS = new Set([
   'inquiry_submitted'
 ]);
 const LOCALES = new Set(['JA', 'EN', 'ZH', 'KO']);
+const SEARCH_PROVIDER_DEGRADATION_COMPONENTS = new Set([
+  'ai_chat_primary', 'ai_chat_all',
+  'query_structurer_primary', 'query_structurer_all'
+]);
+const SEARCH_PROVIDER_DEGRADATION_CODES = new Set([
+  'AI_PROVIDER_TIMEOUT', 'AI_PROVIDER_RATE_LIMITED', 'AI_PROVIDER_UPSTREAM_5XX',
+  'AI_PROVIDER_REQUEST_REJECTED', 'AI_PROVIDER_AUTH_FAILED',
+  'AI_PROVIDER_INVALID_JSON', 'AI_PROVIDER_OUTPUT_LIMIT',
+  'AI_PROVIDER_NETWORK_FAILED', 'AI_PROVIDER_FAILED', 'AI_PROVIDER_NOT_CONFIGURED',
+  'AI_PROVIDERS_NOT_CONFIGURED', 'AI_ALL_PROVIDERS_FAILED'
+]);
 const MARKETPLACES = new Set([
   '', 'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
   'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP',
@@ -88,6 +99,50 @@ export async function recordSearchOperationalFailure(env, {
   const values = [
     crypto.randomUUID(), 'search_backend_failed', 'JA', 'worker', safeComponent,
     safeCode, clean(requestId), '', new Date().toISOString(), 'UNATTRIBUTED', '', ''
+  ];
+  try {
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
+    ).bind(...values).run();
+  } catch (error) {
+    const message = String(error?.message || error);
+    if (!/(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(message)) throw error;
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    ).bind(...values.slice(0, 10)).run();
+  }
+  return true;
+}
+
+// Internal-only provider telemetry. Like search_backend_failed, this event is
+// deliberately absent from EVENTS, so a browser cannot manufacture an
+// incident through /api/events. Fixed operational dimensions and the Worker
+// request ID are the only stored values; search text, conversation history,
+// provider responses, and visitor/session identifiers never enter this API.
+export async function recordSearchProviderDegradation(env, {
+  requestId = '', component = '', provider = '', code = ''
+} = {}) {
+  if (!env?.PRODUCT_DB) return false;
+  const safeComponent = String(component || '');
+  const safeProvider = String(provider || '').toLowerCase();
+  const safeRequestId = anonymousId(requestId);
+  const providerMatchesComponent = safeComponent.endsWith('_primary')
+    ? safeProvider === 'gemini'
+    : safeComponent.endsWith('_all') && safeProvider === 'all';
+  if (!SEARCH_PROVIDER_DEGRADATION_COMPONENTS.has(safeComponent)
+    || !providerMatchesComponent || !safeRequestId) return false;
+  const fallbackCode = safeComponent.endsWith('_all')
+    ? 'AI_ALL_PROVIDERS_FAILED' : 'AI_PROVIDER_FAILED';
+  const safeCode = SEARCH_PROVIDER_DEGRADATION_CODES.has(String(code || ''))
+    ? String(code) : fallbackCode;
+  const values = [
+    crypto.randomUUID(), 'search_provider_degraded', 'JA', 'worker', safeComponent,
+    safeCode, safeRequestId, safeProvider.toUpperCase(), new Date().toISOString(),
+    'UNATTRIBUTED', '', ''
   ];
   try {
     await env.PRODUCT_DB.prepare(
