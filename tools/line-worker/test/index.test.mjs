@@ -479,7 +479,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v375/);
+  assert.match(serviceWorker, /hoshilu-shell-v376/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1157,7 +1157,7 @@ test('AIチャットの失敗はコンソールで診断でき、画面には内
   assert.doesNotMatch(chatUi, /\}\s*catch\s*\{\s*\n\s*status\.remove\(\);/);
   assert.match(chatUi, /catch \(error\)/);
   assert.match(chatUi, /console\.error\('HOSHILU_CHAT_FAILED'/);
-  assert.match(chatUi, /const outcome = await runFinalSearch\(directQuery\)/);
+  assert.match(chatUi, /const outcome = await runFinalSearch\(directQuery,null,/);
   assert.match(chatUi, /if \(outcome\.ok \|\| outcome\.degraded\) \{ dialog\.close\(\); return; \}/);
   assert.match(chatUi, /showSearchError\(directQuery\)/);
   assert.doesNotMatch(chatUi, /\$\{copy\.error\}（\$\{code\}）/);

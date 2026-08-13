@@ -12,8 +12,8 @@ test('Turnstile uses callback delivery, serializes token requests, and rebuilds 
   assert.match(app, /async function waitForTurnstileApi\(\)/);
   assert.doesNotMatch(app, /window\.turnstile\.ready\(/);
   assert.match(app, /async function recoverTurnstileWidget\(\)/);
-  assert.match(app, /function waitForTurnstileToken\(\)/);
-  assert.match(app, /turnstileRequestQueue\.then\(\(\)=>acquireTurnstileToken\(\)\)/);
+  assert.match(app, /function waitForTurnstileToken\(callbackTimeoutMs=15000\)/);
+  assert.match(app, /turnstileRequestQueue\.then\(\(\)=>acquireTurnstileToken\(callbackTimeoutMs\)\)/);
   assert.match(app, /const token=await waitForTurnstileToken\(\)/);
   assert.match(app, /if\(!token\)throw new Error\('TURNSTILE_TOKEN_UNAVAILABLE'\)/);
   assert.match(app, /lastIssuedTurnstileToken/);
@@ -28,6 +28,8 @@ test('AI chat rebuilds Turnstile after a rejected token before retrying', () => 
   const chat = fs.readFileSync(new URL('../public/ai-search-ui.mjs', import.meta.url), 'utf8');
   assert.match(app, /invalidateToken:\(\)=>recoverTurnstileWidget\(\)/);
   assert.match(chat, /if \(\/TURNSTILE_\/u\.test\(code\)\) await auth\?\.invalidateToken\?\.\(\)/);
+  assert.match(chat, /requestToken\?\.\(AI_TOKEN_CALLBACK_TIMEOUT_MS\)/);
+  assert.match(chat, /signal: AbortSignal\.timeout\(AI_CHAT_HTTP_TIMEOUT_MS\)/);
 });
 
 test('Main search retries once and returns a traceable 13-mall degraded result', () => {
@@ -38,11 +40,20 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /x-request-id/);
   assert.match(app, /hoshilu:search-degraded/);
   assert.match(app, /degraded:true/);
+  assert.match(app, /const maxAttempts=Math\.max\(1,Math\.min\(2,Number\(options\.maxAttempts\)\|\|2\)\)/);
+  assert.match(app, /waitForTurnstileToken\(tokenCallbackTimeoutMs\)/);
 });
 
 test('AI chat failure automatically continues to the resilient main search', () => {
   const chat = fs.readFileSync(new URL('../public/ai-search-ui.mjs', import.meta.url), 'utf8');
   assert.match(chat, /const directQuery = history\.filter/);
-  assert.match(chat, /const outcome = await runFinalSearch\(directQuery\)/);
+  assert.match(chat, /const outcome = await runFinalSearch\(directQuery,null,/);
   assert.match(chat, /outcome\.ok \|\| outcome\.degraded/);
+  assert.match(chat, /maxAttempts:1/);
+});
+
+test('Turnstile verification is bounded on the Worker', () => {
+  const worker = fs.readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(worker, /siteverify[\s\S]{0,500}signal: AbortSignal\.timeout\(5000\)/);
+  assert.match(worker, /throw new Error\('TURNSTILE_TIMEOUT'\)/);
 });

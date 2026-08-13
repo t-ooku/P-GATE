@@ -462,11 +462,18 @@ export function getEnvironmentReadiness(env = {}) {
 
 async function verifyTurnstile(token, env, remoteIp) {
   if (!env.TURNSTILE_SECRET_KEY) throw new Error('TURNSTILE_NOT_CONFIGURED');
-  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: token, remoteip: remoteIp || undefined })
-  });
+  let response;
+  try {
+    response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: token, remoteip: remoteIp || undefined }),
+      signal: AbortSignal.timeout(5000)
+    });
+  } catch (error) {
+    if (error?.name === 'TimeoutError' || error?.name === 'AbortError') throw new Error('TURNSTILE_TIMEOUT');
+    throw error;
+  }
   if (!response.ok) throw new Error('TURNSTILE_HTTP_ERROR');
   const result = await response.json();
   if (!result.success) throw new Error('TURNSTILE_VERIFICATION_FAILED');

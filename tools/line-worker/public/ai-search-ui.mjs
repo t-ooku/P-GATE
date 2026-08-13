@@ -34,6 +34,12 @@ const channelNames = [
   ['LINE', 'line'], ['Gmail', 'gmail'], ['X', 'x']
 ];
 
+// A Turnstile callback normally arrives quickly. Keep the AI entry path
+// bounded so a blocked/failed widget cannot leave the modal spinning for the
+// full default token-recovery window before the marketplace fallback appears.
+const AI_TOKEN_CALLBACK_TIMEOUT_MS = 3000;
+const AI_CHAT_HTTP_TIMEOUT_MS = 7000;
+
 function decorateLinks(container) {
   for (const link of container.querySelectorAll('.marketplace-search-link')) {
     const label = String(link.textContent || '').trim();
@@ -47,7 +53,7 @@ function decorateLinks(container) {
 // actually succeeded - unlike the previous approach (simulate a click on
 // the submit button, then poll its disabled state), which could not tell
 // "results rendered" apart from "silently did nothing".
-async function runFinalSearch(refinedQuery, aiCandidateFallback = null) {
+async function runFinalSearch(refinedQuery, aiCandidateFallback = null, searchOptions = {}) {
   const queryField = document.querySelector('#query');
   const searchRunner = window.HoshiluSearch?.run;
   if (!queryField || !refinedQuery || typeof searchRunner !== 'function') {
@@ -55,7 +61,7 @@ async function runFinalSearch(refinedQuery, aiCandidateFallback = null) {
   }
   queryField.value = refinedQuery;
   queryField.dispatchEvent(new Event('input', { bubbles: true }));
-  return searchRunner({ aiCandidateFallback });
+  return searchRunner({ aiCandidateFallback, ...searchOptions });
 }
 
 function chatMessageRow(role, text) {
@@ -73,12 +79,13 @@ async function postChatTurn(history, language, mode = 'REFINE') {
   // 取り直して1回だけ自動再試行する。
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const token = await (auth?.requestToken?.() ?? '');
+      const token = await (auth?.requestToken?.(AI_TOKEN_CALLBACK_TIMEOUT_MS) ?? '');
       if (!token) throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
       const response = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ history, language, mode, session_id: auth?.sessionId || '', consent: true, turnstile_token: token })
+        body: JSON.stringify({ history, language, mode, session_id: auth?.sessionId || '', consent: true, turnstile_token: token }),
+        signal: AbortSignal.timeout(AI_CHAT_HTTP_TIMEOUT_MS)
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
@@ -90,7 +97,9 @@ async function postChatTurn(history, language, mode = 'REFINE') {
     } catch (error) {
       lastError = error;
       const code = String(error?.message || 'CHAT_FAILED');
-      const retryable = /TURNSTILE_|CHAT_HTTP_5\d\d|CHAT_FAILED/u.test(code) || Number(error?.status || 0) >= 500;
+      const retryable = /TURNSTILE_|CHAT_HTTP_5\d\d|CHAT_FAILED/u.test(code)
+        || error?.name === 'TimeoutError' || error?.name === 'AbortError'
+        || Number(error?.status || 0) >= 500;
       if (!retryable || attempt === 1) break;
       if (/TURNSTILE_/u.test(code)) await auth?.invalidateToken?.();
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -133,7 +142,7 @@ function openIdentifyDialog(originalQuery,language){
     }catch(error){
       const code=String(error?.message||'CHAT_FAILED');console.error('HOSHILU_IDENTIFY_FAILED',code,error);status.textContent=copy.error;
       status.textContent=copy.finding;
-      const outcome=await runFinalSearch(originalQuery);
+      const outcome=await runFinalSearch(originalQuery,null,{tokenCallbackTimeoutMs:AI_TOKEN_CALLBACK_TIMEOUT_MS,maxAttempts:1});
       status.remove();
       if(outcome.ok||outcome.degraded){dialog.close();return;}
       messages.append(chatMessageRow('assistant',copy.error));showOtherMalls();
@@ -250,7 +259,7 @@ function openChatDialog(originalQuery, language) {
       status.textContent = copy.finding;
       const directQuery = history.filter((turn) => turn.role === 'user')
         .map((turn) => String(turn.text || '').trim()).filter(Boolean).join(' / ') || originalQuery;
-      const outcome = await runFinalSearch(directQuery);
+      const outcome = await runFinalSearch(directQuery,null,{tokenCallbackTimeoutMs:AI_TOKEN_CALLBACK_TIMEOUT_MS,maxAttempts:1});
       status.remove();
       if (outcome.ok || outcome.degraded) { dialog.close(); return; }
       showSearchError(directQuery);

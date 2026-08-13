@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v375/);
+  assert.match(worker, /hoshilu-shell-v376/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /:scope > \.product-card-media-column/);
@@ -131,7 +131,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/app\.js\?v=125"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=7"><\/script>/);
+  assert.match(html, /<script type="module" src="\/app\.js\?v=126"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=8"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -140,7 +140,7 @@ test('AI確認モードは一時的なTurnstile・Worker失敗を別トークン
   assert.match(app, /let lastIssuedTurnstileToken=''/);
   assert.match(app, /token!==lastIssuedTurnstileToken/);
   assert.match(app, /token&&token!==lastIssuedTurnstileToken/);
-  assert.match(app, /turnstileRequestQueue\.then\(\(\)=>acquireTurnstileToken\(\)\)/);
+  assert.match(app, /turnstileRequestQueue\.then\(\(\)=>acquireTurnstileToken\(callbackTimeoutMs\)\)/);
   assert.match(app, /callback:onTurnstileToken/);
   assert.match(script, /for \(let attempt = 0; attempt < 2; attempt \+= 1\)/);
   assert.match(script, /TURNSTILE_\|CHAT_HTTP_5/);
@@ -154,7 +154,7 @@ test('AI確認モードは一時的なTurnstile・Worker失敗を別トークン
 test('AI確認候補は販売確認前と明示して本検索へ引き継ぎ、他モール導線を重複させない', async () => {
   const [app, script, css] = await Promise.all([read('app.js'), read('ai-search-ui.mjs'), read('ai-search-layout-fix.css')]);
   assert.match(script, /runFinalSearch\(result\.refined_query\|\|candidate,aiCandidateFallback\)/);
-  assert.match(script, /return searchRunner\(\{ aiCandidateFallback \}\)/);
+  assert.match(script, /return searchRunner\(\{ aiCandidateFallback, \.\.\.searchOptions \}\)/);
   assert.doesNotMatch(script.slice(script.indexOf('async function runFinalSearch'), script.indexOf('function chatMessageRow')), /requestToken/);
   assert.match(script, /if\(otherMallsButton\?\.isConnected\)return/);
   assert.match(app, /function withAiCandidateFallback\(result,candidate\)/);

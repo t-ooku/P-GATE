@@ -776,17 +776,17 @@ elements.wishFilter.addEventListener('input',()=>{wishMatchIndex=0;renderWishes(
 elements.wishFilter.addEventListener('keydown',event=>{if(event.key!=='Enter')return;event.preventDefault();const matches=[...elements.wishList.querySelectorAll('.wish-cycle:first-child .wish-item')];if(!matches.length)return;const target=matches[wishMatchIndex%matches.length];wishMatchIndex=(wishMatchIndex+1)%matches.length;matches.forEach(item=>{item.open=false;});target.open=true;elements.wishList.scrollTo({top:Math.max(0,target.offsetTop-matches[0].offsetTop),behavior:'smooth'});});
 
 function issueTurnstileToken(token){lastIssuedTurnstileToken=token;turnstileToken='';return token;}
-async function acquireTurnstileToken(){await ensureTurnstileWidget();if(turnstileToken&&turnstileToken!==lastIssuedTurnstileToken)return issueTurnstileToken(turnstileToken);if(lastIssuedTurnstileToken)await resetTurnstileWidget();let token=await waitForTurnstileCallback();if(token&&token!==lastIssuedTurnstileToken)return issueTurnstileToken(token);await recoverTurnstileWidget();token=await waitForTurnstileCallback();return token&&token!==lastIssuedTurnstileToken?issueTurnstileToken(token):'';}
+async function acquireTurnstileToken(callbackTimeoutMs=15000){await ensureTurnstileWidget();if(turnstileToken&&turnstileToken!==lastIssuedTurnstileToken)return issueTurnstileToken(turnstileToken);if(lastIssuedTurnstileToken)await resetTurnstileWidget();let token=await waitForTurnstileCallback(callbackTimeoutMs);if(token&&token!==lastIssuedTurnstileToken)return issueTurnstileToken(token);await recoverTurnstileWidget();token=await waitForTurnstileCallback(callbackTimeoutMs);return token&&token!==lastIssuedTurnstileToken?issueTurnstileToken(token):'';}
 // Turnstile tokens are single-use. All AI chat/search/ranking callers share
 // one serialized issuer so reset/render cannot race against another request.
 // Tokens arrive through Turnstile's callback; getResponse polling is avoided.
-function waitForTurnstileToken(){const request=turnstileRequestQueue.then(()=>acquireTurnstileToken());turnstileRequestQueue=request.catch(()=>{});return request;}
+function waitForTurnstileToken(callbackTimeoutMs=15000){const request=turnstileRequestQueue.then(()=>acquireTurnstileToken(callbackTimeoutMs));turnstileRequestQueue=request.catch(()=>{});return request;}
 // Exposed for ai-search-ui.mjs (HOSHILU AI Chat), which needs the same
 // session_id and Turnstile token as the main search form. Uses a window
 // global rather than an ES module import so app.js is never evaluated a
 // second time under a different cache-busting query string (which would
 // silently double-register the form's submit listener).
-window.HoshiluChatAuth={sessionId,requestToken:()=>waitForTurnstileToken(),invalidateToken:()=>recoverTurnstileWidget()};
+window.HoshiluChatAuth={sessionId,requestToken:(callbackTimeoutMs)=>waitForTurnstileToken(callbackTimeoutMs),invalidateToken:()=>recoverTurnstileWidget()};
 function renderCuratedDiscoveryMatch(){const existing=elements.cards.querySelector('.curated-discovery-match');const match=swippittDiscoveryMatch(elements.query.value);if(!match){existing?.remove();return;}if(existing)return;const language=elements.language.value||'JA';const question={JA:'これですか？↓',EN:'Is this it? ↓',ZH:'是这个吗？↓',KO:'이 제품인가요? ↓'}[language]||'これですか？↓';const card=document.createElement('article');card.className='product-card curated-discovery-match';const mediaLink=document.createElement('a');mediaLink.className='curated-discovery-media-link';mediaLink.href=match.url;mediaLink.target='_blank';mediaLink.rel='noopener noreferrer';mediaLink.setAttribute('aria-label',`${match.name} 公式サイト`);const image=document.createElement('img');image.className='product-image curated-discovery-media';image.src=match.imageUrl;image.alt='Swippitt HubとSwippitt Link';image.loading='lazy';image.decoding='async';image.referrerPolicy='no-referrer';mediaLink.append(image);card.append(textElement('span','rank','HOSHILU VERIFIED MATCH'),textElement('strong','curated-match-question',question),mediaLink,textElement('h3','',match.name),textElement('p','',match.description));const link=document.createElement('a');link.className='buy-link';link.href=match.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Swippitt公式サイトで確認';card.append(link);elements.cards.prepend(card);}
 const curatedDiscoveryObserver=new MutationObserver(renderCuratedDiscoveryMatch);curatedDiscoveryObserver.observe(elements.cards,{childList:true});
 // Extracted from the form's submit handler so the AI chat flow (ai-search-
@@ -806,19 +806,21 @@ async function runKnowledgeSearch(options={}){
   elements.status.className='status';elements.status.textContent=t.loading;elements.submit.disabled=true;
   const sequence=++relatedRecommendationSequence;
   const aiCandidatePayload=aiCandidateRequestPayload(options.aiCandidateFallback);
+  const maxAttempts=Math.max(1,Math.min(2,Number(options.maxAttempts)||2));
+  const tokenCallbackTimeoutMs=Math.max(1000,Math.min(15000,Number(options.tokenCallbackTimeoutMs)||15000));
   let lastRequestId='';
   try{
     let response;let payload;
-    for(let attempt=0;attempt<2;attempt+=1){
+    for(let attempt=0;attempt<maxAttempts;attempt+=1){
       try{
-        const token=await waitForTurnstileToken();
+        const token=await waitForTurnstileToken(tokenCallbackTimeoutMs);
         if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
         response=await fetch('/api/knowledge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:submittedQuery,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,search_attempt:searchAttempt,turnstile_token:token,...(aiCandidatePayload?{ai_candidate_fallback:aiCandidatePayload}:{}),...(window.HoshiluGrowthAttribution||{})})});
         lastRequestId=String(response.headers.get('x-request-id')||'');
         payload=await response.json();
         if(response.ok&&payload.ok)break;
         const code=String(payload.error||`SEARCH_HTTP_${response.status}`);
-        if(attempt===0&&(/TURNSTILE_/u.test(code)||response.status>=500)){
+        if(attempt+1<maxAttempts&&(/TURNSTILE_/u.test(code)||response.status>=500)){
           if(/TURNSTILE_/u.test(code))await recoverTurnstileWidget();
           continue;
         }
@@ -826,7 +828,7 @@ async function runKnowledgeSearch(options={}){
       }catch(error){
         if(error?.requestId)throw error;
         const code=String(error?.message||error);
-        if(attempt===0&&(/TURNSTILE_/u.test(code)||code==='Failed to fetch'||error instanceof TypeError)){
+        if(attempt+1<maxAttempts&&(/TURNSTILE_/u.test(code)||code==='Failed to fetch'||error instanceof TypeError)){
           if(/TURNSTILE_/u.test(code))await recoverTurnstileWidget();
           continue;
         }
