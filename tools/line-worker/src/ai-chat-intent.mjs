@@ -25,7 +25,7 @@ import { expandSearchQuery } from './query-expansion.mjs';
 const CHAT_PROVIDER_TIMEOUT_MS = 3500;
 // Query refinement runs beside local/GAS search. Allow current stable Gemini
 // latency without consuming the full provider budget or blocking fallback paths.
-export const QUERY_REFINEMENT_TIMEOUT_MS = 2500;
+export const QUERY_REFINEMENT_TIMEOUT_MS = CHAT_PROVIDER_TIMEOUT_MS;
 const CHAT_TOTAL_BUDGET_MS = 6500;
 const MAX_CHAT_TURNS = 2;
 const MAX_MESSAGE_LENGTH = 200;
