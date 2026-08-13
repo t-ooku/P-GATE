@@ -1,6 +1,7 @@
 import {
   getInstagramPublishCredentials, instagramOAuthReadiness
 } from './instagram-oauth.mjs';
+import { getXPublishCredentials, xOAuthReadiness } from './x-oauth.mjs';
 
 const PLATFORMS = new Set(['X', 'INSTAGRAM', 'TIKTOK']);
 const DISCLOSURE = '※リンク先にはアフィリエイト広告を含む場合があります。';
@@ -73,12 +74,14 @@ export function xPublishingSafetyReadiness(env = {}) {
     expectedUsernameValid,
     ready: env.X_PUBLISHING_ENABLED === 'true'
       && expectedUsernameValid
-      && socialPublisherReadiness(env).X
   };
 }
 
 export async function socialPublisherReadinessWithStoredCredentials(env = {}) {
   const readiness = socialPublisherReadiness(env);
+  if (!readiness.X) {
+    readiness.X = (await xOAuthReadiness(env)).connected;
+  }
   if (!readiness.INSTAGRAM) {
     readiness.INSTAGRAM = (await instagramOAuthReadiness(env)).connected;
   }
@@ -130,7 +133,6 @@ function assertXPublishingConfiguration(env) {
   if (!/^[A-Za-z0-9_]{1,15}$/.test(expectedUsername)) {
     throw new Error('X_EXPECTED_USERNAME_INVALID');
   }
-  if (!socialPublisherReadiness(env).X) throw new Error('SOCIAL_X_NOT_CONFIGURED');
   return expectedUsername;
 }
 
@@ -164,15 +166,104 @@ async function verifyXPublishingAccount(expectedUsername, env, fetchImpl) {
   if (username !== expectedUsername) throw new Error('X_ACCOUNT_MISMATCH');
 }
 
+function safeXMediaUrl(value) {
+  const url = new URL(String(value || ''));
+  if (url.protocol !== 'https:' || !['hoshilu.app', 'www.hoshilu.app'].includes(url.hostname)) {
+    throw new Error('X_MEDIA_URL_INVALID');
+  }
+  return url.toString();
+}
+
+async function xMediaRequest(url, accessToken, options, fetchImpl, errorCode) {
+  const response = await fetchImpl(url, {
+    ...options,
+    headers: { authorization: `Bearer ${accessToken}`, ...(options.headers || {}) }
+  });
+  if (!response.ok) throw new Error(`${errorCode}_${response.status}`);
+  return response;
+}
+
+async function uploadXVideo(mediaUrl, accessToken, env, fetchImpl) {
+  const mediaResponse = await fetchImpl(safeXMediaUrl(mediaUrl));
+  if (!mediaResponse.ok) throw new Error(`X_MEDIA_FETCH_${mediaResponse.status}`);
+  const contentType = String(mediaResponse.headers.get('content-type') || '').split(';')[0].toLowerCase();
+  if (contentType !== 'video/mp4') throw new Error('X_MEDIA_TYPE_INVALID');
+  const bytes = new Uint8Array(await mediaResponse.arrayBuffer());
+  const maxBytes = Math.min(512 * 1024 * 1024, Math.max(1, Number(env.X_MAX_VIDEO_BYTES || 100 * 1024 * 1024)));
+  if (!bytes.byteLength || bytes.byteLength > maxBytes) throw new Error('X_MEDIA_SIZE_INVALID');
+
+  const initialized = await xMediaRequest(
+    'https://api.x.com/2/media/upload/initialize', accessToken,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ media_type: contentType, total_bytes: bytes.byteLength, media_category: 'tweet_video' })
+    }, fetchImpl, 'X_MEDIA_INIT'
+  );
+  const mediaId = clean((await initialized.json())?.data?.id, 120);
+  if (!mediaId) throw new Error('X_MEDIA_ID_MISSING');
+
+  const chunkSize = 5 * 1024 * 1024;
+  for (let offset = 0, segment = 0; offset < bytes.byteLength; offset += chunkSize, segment += 1) {
+    const form = new FormData();
+    form.set('segment_index', String(segment));
+    form.set('media', new Blob([bytes.slice(offset, offset + chunkSize)], { type: contentType }), `segment-${segment}.mp4`);
+    await xMediaRequest(
+      `https://api.x.com/2/media/upload/${encodeURIComponent(mediaId)}/append`, accessToken,
+      { method: 'POST', body: form }, fetchImpl, 'X_MEDIA_APPEND'
+    );
+  }
+
+  const finalized = await xMediaRequest(
+    `https://api.x.com/2/media/upload/${encodeURIComponent(mediaId)}/finalize`, accessToken,
+    { method: 'POST' }, fetchImpl, 'X_MEDIA_FINALIZE'
+  );
+  let processing = (await finalized.json())?.data?.processing_info;
+  for (let attempt = 0; processing && processing.state !== 'succeeded' && attempt < 30; attempt += 1) {
+    if (processing.state === 'failed') throw new Error('X_MEDIA_PROCESSING_FAILED');
+    const suggestedDelay = Number(processing.check_after_secs);
+    const delay = Math.max(0, Math.min(10_000, Number(
+      env.X_MEDIA_POLL_DELAY_MS ?? (Number.isFinite(suggestedDelay) ? suggestedDelay * 1000 : 1000)
+    )));
+    if (delay) await new Promise(resolve => setTimeout(resolve, delay));
+    const status = await xMediaRequest(
+      `https://api.x.com/2/media/upload?command=STATUS&media_id=${encodeURIComponent(mediaId)}`,
+      accessToken, { method: 'GET' }, fetchImpl, 'X_MEDIA_STATUS'
+    );
+    processing = (await status.json())?.data?.processing_info;
+  }
+  if (processing && processing.state !== 'succeeded') throw new Error('X_MEDIA_PROCESSING_TIMEOUT');
+  return mediaId;
+}
+
 async function publishX(post, env, fetchImpl) {
   const expectedUsername = assertXPublishingConfiguration(env);
-  await verifyXPublishingAccount(expectedUsername, env, fetchImpl);
+  const oauth2Configured = Boolean(env.X_CLIENT_ID && env.X_CLIENT_SECRET
+    && env.SOCIAL_OAUTH_ENCRYPTION_KEY && env.PRODUCT_DB);
+  let accessToken = '';
+  if (oauth2Configured) {
+    const credential = await getXPublishCredentials(env, fetchImpl);
+    if (credential.username !== expectedUsername) throw new Error('X_ACCOUNT_MISMATCH');
+    accessToken = credential.accessToken;
+  } else {
+    if (!socialPublisherReadiness(env).X) throw new Error('SOCIAL_X_NOT_CONFIGURED');
+    await verifyXPublishingAccount(expectedUsername, env, fetchImpl);
+  }
   const endpoint = 'https://api.x.com/2/tweets';
-  const authorization = await xAuthorization('POST', endpoint, env);
+  if (post.media_url && !accessToken) throw new Error('X_MEDIA_REQUIRES_OAUTH2');
+  const mediaId = post.media_url
+    ? await uploadXVideo(post.media_url, accessToken, env, fetchImpl)
+    : '';
+  const authorization = accessToken
+    ? `Bearer ${accessToken}`
+    : await xAuthorization('POST', endpoint, env);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
     headers: { authorization, 'content-type': 'application/json' },
-    body: JSON.stringify({ text: [post.caption, post.link].filter(Boolean).join('\n') })
+    body: JSON.stringify({
+      text: [post.caption, post.link].filter(Boolean).join('\n'),
+      ...(mediaId ? { media: { media_ids: [mediaId] } } : {})
+    })
   });
   if (!response.ok) {
     const detail = clean(await response.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
@@ -504,7 +595,10 @@ export async function handleSocialAdminRoutes(request, env) {
       const post = normalizeSocialPost(existing);
       if (post.platform !== 'X' && !post.media_url) throw new Error(`${post.platform}_MEDIA_REQUIRED`);
       if (post.platform === 'INSTAGRAM') await getInstagramPublishCredentials(env);
-      else if (post.platform === 'X') assertXPublishingConfiguration(env);
+      else if (post.platform === 'X') {
+        assertXPublishingConfiguration(env);
+        await getXPublishCredentials(env);
+      }
       else if (!socialPublisherReadiness(env)[post.platform]) throw new Error(`SOCIAL_${post.platform}_NOT_CONFIGURED`);
     } catch (error) {
       return Response.json({ ok: false, error: clean(error?.message || error, 100) }, { status: 409 });

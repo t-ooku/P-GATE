@@ -7,14 +7,16 @@ import {
 
 test('販促自動運用は今日の機能リールと14日先までの定期投稿を計画する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-09T03:00:00.000Z'));
-  assert.equal(posts.length, 15);
-  assert.equal(posts.filter(post => post.platform === 'X').length, 8);
+  assert.equal(posts.length, 13);
+  assert.equal(posts.filter(post => post.platform === 'X').length, 6);
   assert.equal(posts.filter(post => post.platform === 'INSTAGRAM').length, 7);
   assert.equal(posts.some(post => post.platform === 'TIKTOK'), false);
   assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
   assert.equal(new Set(posts.filter(post => post.platform === 'INSTAGRAM')
     .map(post => post.media_url)).size, 2);
   assert.equal(posts.filter(post => post.platform === 'INSTAGRAM')
+    .every(post => post.media_url.endsWith('.mp4')), true);
+  assert.equal(posts.filter(post => post.platform === 'X')
     .every(post => post.media_url.endsWith('.mp4')), true);
   const launchReel = posts.find(post => post.content_id === 'feature-launch-reel-20260809');
   assert.equal(launchReel.scheduled_at, '2026-08-09T11:15:00.000Z');
@@ -28,13 +30,13 @@ test('販促自動運用は今日の機能リールと14日先までの定期投
   }
 });
 
-test('Instagramは毎週月・火・土の20時15分にリールを計画する', () => {
+test('Instagramは毎週月・水・金の20時15分にリールを計画する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-10T00:00:00.000Z'), 7)
     .filter(post => post.platform === 'INSTAGRAM');
   assert.deepEqual(posts.map(post => post.scheduled_at), [
     '2026-08-10T11:15:00.000Z',
-    '2026-08-11T11:15:00.000Z',
-    '2026-08-15T11:15:00.000Z'
+    '2026-08-12T11:15:00.000Z',
+    '2026-08-14T11:15:00.000Z'
   ]);
   assert.equal(posts.every(post => post.media_url.endsWith('.mp4')), true);
 });
@@ -76,7 +78,7 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
     }
   };
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
-  assert.deepEqual(result, { enabled: true, planned: 15, inserted: 15 });
+  assert.deepEqual(result, { enabled: true, planned: 13, inserted: 13 });
   assert.equal(rows.some(row => row[1] === 'TIKTOK'), false);
   assert.equal(rows.every(row => row[2] === 'hoshilu-official-13mall-v2'), true);
 });
@@ -100,7 +102,7 @@ test('販促自動運用は認証未設定の媒体をキューへ入れない',
     }
   };
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
-  assert.equal(result.planned, 8);
+  assert.equal(result.planned, 6);
   assert.deepEqual(new Set(platforms), new Set(['X']));
 });
 

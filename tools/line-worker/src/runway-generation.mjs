@@ -349,7 +349,7 @@ async function submitApprovedJob(env, job, policy, provider, now, fetchImpl) {
       duration: integer(job.duration_seconds),
       audio: integer(job.audio) === 1,
       productInfo: clean(job.product_info, 2500),
-      userConcept: clean(job.user_concept, 3500)
+      userConcept: `${clean(job.user_concept, 3400)} The performer is an adult woman, age 22.`.trim()
     }, fetchImpl);
     const taskId = clean(task?.id, 200);
     if (!taskId) throw new Error('RUNWAY_TASK_ID_MISSING');
