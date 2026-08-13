@@ -2563,6 +2563,14 @@ function passesExplicitSearchEvidenceGate(query, candidate) {
   const candidateText = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''} ${candidate?.manufacturer || ''}`
     .normalize('NFKC').toLowerCase();
 
+  // Product nouns are hard constraints. A shared material such as smoky
+  // quartz must not let earrings replace the ring the user requested.
+  const ringNoun = /(?:指輪|\bring\b|(?:^|[\s・「」『』【】()（）])リング(?:$|[\s・「」『』【】()（）]))/iu;
+  const ringIntent = ringNoun.test(queryText);
+  if (ringIntent && !ringNoun.test(candidateText)) return false;
+  const toteIntent = /(?:トート(?:バッグ)?|tote\s*bag)/iu.test(queryText);
+  if (toteIntent && !/(?:トート(?:バッグ)?|tote\s*bag)/iu.test(candidateText)) return false;
+
   // Honest zero-result behavior for queries that cannot identify a real,
   // internally consistent product. These are not sent to a merchant merely
   // to fill result count.

@@ -685,7 +685,8 @@ function resultCarousel(cards,rowKind='confirmed'){
   track.className='result-track';
   track.append(...cards);
   carousel.append(track);
-  if(rowKind!=='recommended')attachVerticalTicker(track,{intervalMs:6500,rowSelector:':scope > .product-card',useRowOffsets:true});
+  // The product lineup uses the page's normal vertical scroll. A nested
+  // ticker made the usable result viewport too small on mobile.
   if(cards.length>3){
     const previous=document.createElement('button');
     const horizontal=rowKind==='recommended';
@@ -724,6 +725,7 @@ function renderResults(result,requestId){
   elements.cards.querySelectorAll('.result-track').forEach(detachVerticalTicker);
   const t=selectedCopy();
   elements.results.classList.remove('hidden');
+  document.documentElement.classList.add('search-results-active');
   elements.message.textContent=result.message||'';
   const copy=resultRowCopyFor(elements.language.value);
   const candidateRows=splitCandidateRows(result.candidates,RESULT_ROW_LIMIT);

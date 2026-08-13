@@ -4,15 +4,15 @@ import { readFile } from 'node:fs/promises';
 
 const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
-test('商品提示はPC4列・モバイル横長行で縦回転する', async () => {
+test('商品提示はPC4列・モバイル横長行でページ全体を縦スクロールする', async () => {
   const [app, styles] = await Promise.all([read('app.js'), read('ai-search-layout-fix.css')]);
-  assert.match(styles, /\.result-track\{[\s\S]*?grid-template-columns:repeat\(4,minmax\(0,1fr\)\);[\s\S]*?overflow-y:auto;[\s\S]*?scroll-snap-type:y mandatory;/);
+  assert.match(styles, /\.result-track\{[\s\S]*?grid-template-columns:repeat\(4,minmax\(0,1fr\)\);[\s\S]*?max-height:none;[\s\S]*?overflow-y:visible;/);
   assert.match(styles, /@media\(max-width:760px\)\{[\s\S]*?\.result-track\{[\s\S]*?flex-direction:column/);
   assert.match(styles, /grid-template-columns:minmax\(126px,40%\) minmax\(0,1fr\)/);
   assert.match(styles, /@media\(max-width:760px\)\{[\s\S]*?\.result-track>\.product-card\{[\s\S]*?min-height:0;/);
   assert.match(styles, /\.result-track>\.product-card>\.product-card-media-column\{[\s\S]*?grid-row:1 \/ span 5;/);
   assert.doesNotMatch(styles, /grid-row:1 \/ span 14/);
-  assert.match(app, /attachVerticalTicker\(track,\{intervalMs:6500,rowSelector:':scope > \.product-card',useRowOffsets:true\}\)/);
+  assert.doesNotMatch(app, /attachVerticalTicker\(track,\{intervalMs:6500,rowSelector:':scope > \.product-card',useRowOffsets:true\}\)/);
   assert.match(app, /scrollBy\(horizontal\?\{left:[^}]+\}:\{top:/);
 });
 

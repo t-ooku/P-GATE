@@ -35,6 +35,14 @@ export const QUERY_EXPANSION_WEIGHTS = Object.freeze({
 // 正式名詞そのもの（「ワイヤレスイヤホン」等）には反応させない。
 const EXPANSION_RULES = [
   {
+    id: 'self-standing-tote-bag',
+    match: /(?=.*(?:自立|倒れにく|型崩れしにく))(?=.*(?:トート|バッグ|bag))/iu,
+    primary: '自立 トートバッグ 底板 マチあり',
+    synonyms: ['自立するトートバッグ', '底板付きトートバッグ', '底鋲付きトートバッグ'],
+    related: ['A4 PC収納 トートバッグ', '仕切り付きトートバッグ'],
+    broad: ['トートバッグ']
+  },
+  {
     id: 'lilmoon-rola-colored-contacts',
     // 2026-08-09 ユーザー正解フィードバック:
     // 「カラコン ローラ 度入り」はLILMOON（リルムーン）の度あり商品を指す。

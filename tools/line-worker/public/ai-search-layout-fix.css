@@ -647,10 +647,10 @@
   grid-template-columns:repeat(4,minmax(0,1fr));
   align-items:stretch;
   gap:18px 14px;
-  max-height:min(78vh,780px);
+  max-height:none;
   padding:2px 7px 2px 2px;
   overflow-x:hidden;
-  overflow-y:auto;
+  overflow-y:visible;
   scroll-snap-type:y mandatory;
   scrollbar-width:thin;
 }
@@ -779,7 +779,8 @@
   .result-track{
     display:flex;
     flex-direction:column;
-    max-height:min(72vh,660px);
+    max-height:none;
+    overflow-y:visible;
     gap:0;
     padding-right:3px;
   }

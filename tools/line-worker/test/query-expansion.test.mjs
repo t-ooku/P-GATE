@@ -135,6 +135,7 @@ test('primary/synonym/related/broad の重みは降順に定義されている',
 test('各展開ルールはsynonym/related/broadを持つ', () => {
   for (const ruleId of queryExpansionRuleIds) {
     const sample = {
+      'self-standing-tote-bag': '自立トートバッグ',
       'lilmoon-rola-colored-contacts': 'カラコン ローラ 度入り',
       'handheld-fan': '顔用扇風機',
       'power-bank': 'スマホの電気なくなった時のやつ',

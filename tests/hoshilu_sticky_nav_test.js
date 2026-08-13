@@ -10,6 +10,8 @@ assert.equal((index.match(/id="goSearch"/g) || []).length, 1);
 assert.match(css, /position:\s*sticky/);
 assert.match(css, /\.topbar\s*\{[\s\S]*position:\s*sticky/);
 assert.match(css, /top:\s*var\(--topbar-height/);
+assert.match(css, /\.search-results-active \.topbar/);
+assert.match(css, /\.search-results-active \.sticky-search\s*\{[\s\S]*top:\s*0/);
 assert.match(app, /syncTopbarHeight/);
 assert.match(app, /window\.scrollTo\(\{top:0,behavior:'smooth'\}\)/);
 assert.match(css, /grid-template-columns:\s*repeat\(2/);

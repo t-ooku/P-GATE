@@ -136,6 +136,15 @@
   backdrop-filter: blur(18px);
 }
 
+.search-results-active .topbar,
+.search-results-active .search-mode-switch {
+  position: static;
+}
+
+.search-results-active .sticky-search {
+  top: 0;
+}
+
 .sticky-search input {
   width: 100%;
   min-width: 0;

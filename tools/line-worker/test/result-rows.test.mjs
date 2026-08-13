@@ -157,12 +157,12 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
   assert.match(css, /\.unverified-badge\{/);
   assert.match(css, /\.result-row-recommended \.result-row-title\{/);
   assert.match(css, /\.result-row-recommended \.result-track\{[^}]*flex-direction:row[^}]*overflow-x:auto[^}]*overflow-y:hidden[^}]*scroll-snap-type:x mandatory/);
-  assert.match(app, /if\(rowKind!==\'recommended\'\)attachVerticalTicker/);
+  assert.doesNotMatch(app, /if\(rowKind!==\'recommended\'\)attachVerticalTicker/);
   assert.match(app, /const horizontal=rowKind===\'recommended\'/);
 });
 
 test('新しいモジュールはService Workerのプリキャッシュに含まれる', async () => {
   const sw = await readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8');
   assert.match(sw, /'\/result-rows\.mjs'/);
-  assert.match(sw, /hoshilu-shell-v384/);
+  assert.match(sw, /hoshilu-shell-v385/);
 });
