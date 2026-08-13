@@ -21,7 +21,7 @@ const {
   buildQoo10SearchDestination, buildQoo10SearchKeywords, buildSheinSearchDestination,
   buildAmazonSearchKeywords, buildRakutenSearchKeywords,
   buildRakutenSearchKeywordCandidates, trackingEventsForPayload, rankSellerOffers,
-  mergeAiRefinedSearchQuery
+  mergeAiRefinedSearchQuery, buildLineFallbackMessages
 } = workerModule;
 
 test('AI検索語は元の条件を落とさずモール検索へ渡す', () => {
@@ -239,7 +239,8 @@ test('公開検索APIが失敗しても4モールへの検索導線を表示す�
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(appSource, /function emergencyMarketplaceFallback\(query\)/);
   assert.match(appSource, /Amazonで探す/);
-  assert.match(appSource, /tag=hoshilu-22/);
+  assert.match(appSource, /tag=hoshilu00-22/);
+  assert.match(appSource, /BROWSER_EMERGENCY_FALLBACK/);
   assert.match(appSource, /楽天市場で探す/);
   assert.match(appSource, /Qoo10で探す/);
   assert.match(appSource, /SHEINで探す/);
@@ -310,9 +311,9 @@ test('AI連想キーワードをタップで検索条件に追加できる', () 
   assert.match(layoutCss, /\.related-keyword-tag\{[^}]*min-height:44px/);
 });
 test('Amazon検索フォールバックに承認済みアソシエイトIDを付ける', () => {
-  const destination = buildAmazonSearchDestination('光るスマホケース', 'hoshilu-22');
+  const destination = buildAmazonSearchDestination('光るスマホケース', 'hoshilu00-22');
   const url = new URL(destination);
-  assert.equal(url.searchParams.get('tag'), 'hoshilu-22');
+  assert.equal(url.searchParams.get('tag'), 'hoshilu00-22');
   assert.match(url.searchParams.get('k'), /phone/);
 });
 
@@ -320,7 +321,7 @@ test('アパレル検索では統合2モールに直接検索11モールを追�
   const decorated = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-apparel', candidates: [] },
     new Request('https://hoshilu.app/api/knowledge'),
-    { LINK_SIGNING_SECRET: 'test-secret', AMAZON_ASSOCIATE_TAG: 'hoshilu-22' },
+    { LINK_SIGNING_SECRET: 'test-secret', AMAZON_ASSOCIATE_TAG: 'hoshilu00-22' },
     'session-hash',
     'Korean street black cropped top'
   );
@@ -420,6 +421,35 @@ test('LINE返信は説明1件と商品最大3件', async () => {
   assert.match(messages[1].text, /\/go\?token=/);
 });
 
+test('LINE緊急検索3候補は全て署名済み送客URLと標準計測schemaを使う', async () => {
+  const secret = 'l'.repeat(32);
+  const messages = await buildLineFallbackMessages(
+    { webhookEventId: 'line-fallback-event-1', source: { userId: 'U123' }, message: { text: '光るスマホケース' } },
+    'https://hoshilu.app',
+    { LINK_SIGNING_SECRET: secret, AMAZON_ASSOCIATE_TAG: 'hoshilu00-22' }
+  );
+  const bubbles = messages[1].contents.contents;
+  assert.match(messages[0].text, /広告：以下はAmazonアソシエイトリンクです。/);
+  assert.match(messages[0].text, /Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。/);
+  assert.equal(bubbles.length, 3);
+  const payloads = [];
+  for (const bubble of bubbles) {
+    const outbound = new URL(bubble.footer.contents[0].action.uri);
+    assert.equal(outbound.origin, 'https://hoshilu.app');
+    assert.equal(outbound.pathname, '/go');
+    payloads.push(await verifyTrackToken(outbound.searchParams.get('token'), secret));
+  }
+  assert.equal(new Set(payloads.map((payload) => payload.j)).size, 3);
+  for (const payload of payloads) {
+    assert.equal(payload.m, 'AMAZON_JP');
+    assert.equal(payload.c, 'LINE');
+    assert.equal(payload.t, 'SEARCH_FALLBACK');
+    assert.equal(new URL(payload.d).searchParams.get('tag'), 'hoshilu00-22');
+    assert.ok(payload.u);
+    assert.ok(payload.r);
+  }
+});
+
 test('PWA公開質問は同意・文字数・匿名セッション・Turnstileを必須にする', () => {
   const valid = validateKnowledgeRequest({
     query: ' breakfast cereal ', consent: true,
@@ -479,7 +509,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v380/);
+  assert.match(serviceWorker, /hoshilu-shell-v381/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -712,6 +742,9 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(getEnvironmentReadiness({ ...base, TURNSTILE_SECRET_KEY: '' }).checks.turnstile_configured, false);
   assert.equal(getEnvironmentReadiness(base).checks.ai_chat_configured, false);
   assert.equal(getEnvironmentReadiness(base).checks.ai_price_comparison_configured, false);
+  assert.equal(getEnvironmentReadiness(base).checks.amazon_associate_link_configured, false);
+  assert.equal(getEnvironmentReadiness({ ...base, AMAZON_ASSOCIATE_TAG: 'hoshilu00-22' }).checks.amazon_associate_link_configured, true);
+  assert.equal(getEnvironmentReadiness({ ...base, AMAZON_ASSOCIATE_TAG: 'hoshilu-22' }).checks.amazon_associate_link_configured, false);
   assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_chat_configured, true);
   assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_price_comparison_configured, true);
   assert.equal(getEnvironmentReadiness({ ...base, OPENAI_API_KEY: 'o'.repeat(20) }).checks.ai_chat_configured, true);
@@ -764,7 +797,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     AMAZON_CREATORS_CREDENTIAL_ID: 'amazon-id',
     AMAZON_CREATORS_CREDENTIAL_SECRET: 'amazon-secret',
     AMAZON_CREATORS_CREDENTIAL_VERSION: '2.3',
-    AMAZON_ASSOCIATE_TAG: 'hoshilu-22',
+    AMAZON_ASSOCIATE_TAG: 'hoshilu00-22',
     RAKUTEN_APPLICATION_ID: 'rakuten-app',
     RAKUTEN_ACCESS_KEY: 'rakuten-key',
     YAHOO_SHOPPING_CLIENT_ID: 'yahoo-client-id'

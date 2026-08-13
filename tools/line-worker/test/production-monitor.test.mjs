@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import { criticalAssetPaths, inspectProduction } from '../scripts/check-production-health.mjs';
 
 const expectedIndexHtml = `
-  <script src="/app.js?v=129"></script>
-  <script type="module" src="/ai-search-ui.mjs?v=8"></script>
-  <script type="module" src="/growth-analytics.mjs?v=1"></script>
+  <script src="/app.js?v=130"></script>
+  <script type="module" src="/ai-search-ui.mjs?v=9"></script>
+  <script type="module" src="/growth-analytics.mjs?v=2"></script>
   <link rel="stylesheet" href="/ai-search-layout-fix.css?v=123">
   <link rel="stylesheet" href="/wish-carousel.css?v=3">
-  <link rel="stylesheet" href="/hero-fixes.css?v=88">`;
+  <link rel="stylesheet" href="/hero-fixes.css?v=88">
+  Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。`;
 
 const guideSecurityHeaders = {
   'strict-transport-security': 'max-age=31536000',
@@ -43,12 +44,13 @@ function mockFetch({
     if (url.pathname === '/sitemap.xml') return new Response('<urlset><url><loc>https://hoshilu.app/ja/guides</loc></url></urlset>');
     if (url.pathname === '/health') return Response.json({ ok: healthOk, checks: {
       turnstile_configured: true, ai_chat_configured: true,
+      amazon_associate_link_configured: true,
       rakuten_marketplace_configured: true, yahoo_shopping_configured: true
     } });
     if (url.pathname === '/') return new Response(expectedIndexHtml);
-    if (url.pathname === '/app.js') return new Response(`${'x'.repeat(1100)} ${appMarkers ? 'KNOWLEDGE_HTTP_TIMEOUT_MS SEARCH_DEADLINE_EXCEEDED SEARCH_SUPERSEDED tokenCallbackTimeoutMs maxAttempts takeReadyTurnstileToken' : 'missing markers'}`);
+    if (url.pathname === '/app.js') return new Response(`${'x'.repeat(1100)} ${appMarkers ? 'KNOWLEDGE_HTTP_TIMEOUT_MS SEARCH_DEADLINE_EXCEEDED SEARCH_SUPERSEDED tokenCallbackTimeoutMs maxAttempts takeReadyTurnstileToken hoshilu00-22 sponsored nofollow noopener noreferrer' : 'missing markers'}`);
     if (url.pathname === '/ai-search-ui.mjs') return new Response(`${'x'.repeat(1100)} AI_CHAT_HTTP_TIMEOUT_MS tokenCallbackTimeoutMs`);
-    if (url.pathname === '/growth-analytics.mjs') return new Response(`${'x'.repeat(1100)} SEARCH_WATCHDOG_MS search-execution-started search_dead_end search_degraded`);
+    if (url.pathname === '/growth-analytics.mjs') return new Response(`${'x'.repeat(1100)} SEARCH_WATCHDOG_MS search-execution-started search_dead_end search_degraded marketplace_fallback_click`);
     if (url.pathname === '/ai-search-layout-fix.css') return new Response(`${'x'.repeat(1100)} result-row-recommended related-category-card overflow-x:auto`);
     if (url.pathname === '/wish-carousel.css') return new Response(`${'x'.repeat(1100)} share-discovery-actions share-gmail-button grid-column: 1 / -1`);
     if (url.pathname === '/hero-fixes.css') return new Response(`${'x'.repeat(1100)} .journey-heading h2 span overflow-wrap: anywhere word-break: normal`);
@@ -78,7 +80,7 @@ function mockFetch({
 
 test('criticalAssetPaths reads all versioned production reliability assets', () => {
   assert.deepEqual(criticalAssetPaths(expectedIndexHtml), [
-    '/app.js?v=129', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1',
+    '/app.js?v=130', '/ai-search-ui.mjs?v=9', '/growth-analytics.mjs?v=2',
     '/ai-search-layout-fix.css?v=123', '/wish-carousel.css?v=3', '/hero-fixes.css?v=88'
   ]);
 });
@@ -86,12 +88,12 @@ test('criticalAssetPaths reads all versioned production reliability assets', () 
 test('scheduled monitor can validate the assets currently referenced by production', async () => {
   const result = await inspectProduction({
     baseUrl: 'https://hoshilu.app/', fetcher: mockFetch(),
-    expectedIndexHtml: expectedIndexHtml.replace('app.js?v=129', 'app.js?v=999'),
+    expectedIndexHtml: expectedIndexHtml.replace('app.js?v=130', 'app.js?v=999'),
     assetPolicy: 'live'
   });
   assert.equal(result.ok, true);
   assert.deepEqual(result.expected_assets, [
-    '/app.js?v=129', '/ai-search-ui.mjs?v=8', '/growth-analytics.mjs?v=1',
+    '/app.js?v=130', '/ai-search-ui.mjs?v=9', '/growth-analytics.mjs?v=2',
     '/ai-search-layout-fix.css?v=123', '/wish-carousel.css?v=3', '/hero-fixes.css?v=88'
   ]);
 });
@@ -99,7 +101,7 @@ test('scheduled monitor can validate the assets currently referenced by producti
 test('production monitor verifies health, deployed assets, rankings and trace IDs', async () => {
   const result = await inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch(), expectedIndexHtml });
   assert.equal(result.ok, true);
-  assert.equal(result.checks.length, 9);
+  assert.equal(result.checks.length, 10);
   assert.deepEqual(result.warnings, ['www.hoshilu.app: SKIP (DNS or endpoint unavailable)']);
 });
 

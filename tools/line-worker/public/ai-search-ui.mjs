@@ -310,7 +310,9 @@ function linkDisplayedProducts() {
     if (destination.dataset.marketplace) link.dataset.marketplace = destination.dataset.marketplace;
     if (!String(destination.getAttribute('href') || '').startsWith('#')) {
       link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.rel = destination.dataset.marketplace === 'AMAZON_JP'
+        ? 'sponsored nofollow noopener noreferrer'
+        : 'noopener noreferrer';
     }
     link.setAttribute('aria-label', `${String(title?.textContent || '').trim()}の商品ページを見る`);
     if (title) link.append(title);

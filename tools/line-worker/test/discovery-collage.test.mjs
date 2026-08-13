@@ -35,7 +35,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v380/);
+  assert.match(sw, /hoshilu-shell-v381/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
@@ -126,15 +126,15 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /features:\['HOSHILU 搜索','AI监控'\]/);
   assert.match(app, /features:\['HOSHILU 검색','AI 워치'\]/);
   assert.match(html, /class="language-label header-language"/);
-  assert.match(html, /HOSHILUはAmazonアソシエイトおよび楽天アフィリエイトのリンクを通じて収入を得る場合があります。/);
-  assert.match(html, /広告：Amazon・楽天市場へのリンクにはアフィリエイトリンクが含まれる場合があります。/);
+  assert.match(html, /Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。/);
+  assert.match(html, /広告：AmazonへのリンクはAmazonアソシエイトリンクです。/);
   assert.match(html, /data-i18n="affiliate\.searchNotice"/);
   assert.match(html, /data-i18n="affiliate\.footerDisclosure"/);
   assert.match(i18n, /affiliate\.searchNotice/);
   assert.match(i18n, /affiliate\.footerDisclosure/);
-  assert.match(i18n, /Amazon and Rakuten may be affiliate links/);
+  assert.match(i18n, /Amazon links are Amazon Associate links/);
   assert.match(i18n, /乐天市场/);
-  assert.match(i18n, /라쿠텐 시장/);
+  assert.match(i18n, /라쿠텐 링크/);
   assert.match(html, /social-share-targets\.js/);
   assert.match(html, /og\/hoshilu-x-v3\.png/);
   assert.match(html, /twitter:image:alt/);

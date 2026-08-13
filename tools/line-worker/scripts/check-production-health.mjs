@@ -5,13 +5,14 @@ const DEFAULT_BASE_URL = 'https://hoshilu.app/';
 const REQUIRED_HEALTH_CHECKS = [
   'turnstile_configured',
   'ai_chat_configured',
+  'amazon_associate_link_configured',
   'rakuten_marketplace_configured',
   'yahoo_shopping_configured'
 ];
 const ASSET_MARKERS = Object.freeze({
-  'app.js': ['KNOWLEDGE_HTTP_TIMEOUT_MS', 'SEARCH_DEADLINE_EXCEEDED', 'SEARCH_SUPERSEDED', 'tokenCallbackTimeoutMs', 'maxAttempts', 'takeReadyTurnstileToken'],
+  'app.js': ['KNOWLEDGE_HTTP_TIMEOUT_MS', 'SEARCH_DEADLINE_EXCEEDED', 'SEARCH_SUPERSEDED', 'tokenCallbackTimeoutMs', 'maxAttempts', 'takeReadyTurnstileToken', 'hoshilu00-22', 'sponsored nofollow noopener noreferrer'],
   'ai-search-ui.mjs': ['AI_CHAT_HTTP_TIMEOUT_MS', 'tokenCallbackTimeoutMs'],
-  'growth-analytics.mjs': ['SEARCH_WATCHDOG_MS', 'search-execution-started', 'search_dead_end', 'search_degraded'],
+  'growth-analytics.mjs': ['SEARCH_WATCHDOG_MS', 'search-execution-started', 'search_dead_end', 'search_degraded', 'marketplace_fallback_click'],
   'ai-search-layout-fix.css': ['result-row-recommended', 'related-category-card', 'overflow-x:auto'],
   'wish-carousel.css': ['share-discovery-actions', 'share-gmail-button', 'grid-column: 1 / -1'],
   'hero-fixes.css': ['.journey-heading h2 span', 'overflow-wrap: anywhere', 'word-break: normal']
@@ -209,6 +210,11 @@ export async function inspectProduction({
     headers: { accept: 'text/html', 'user-agent': 'HOSHILU-Production-Monitor/1.0' },
     signal: AbortSignal.timeout(fetchTimeoutMs)
   }), '/');
+  assert(
+    productionHtml.includes('Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。'),
+    'AMAZON_ASSOCIATE_DISCLOSURE_MISSING'
+  );
+  checks.push('Amazon Associate disclosure is current');
   const sourceIndex = assetPolicy === 'live'
     ? productionHtml
     : expectedIndexHtml ?? await readFile(new URL('../public/index.html', import.meta.url), 'utf8');

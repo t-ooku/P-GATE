@@ -11,7 +11,7 @@ const env = {
   AMAZON_CREATORS_CREDENTIAL_ID: 'credential-id',
   AMAZON_CREATORS_CREDENTIAL_SECRET: 'credential-secret',
   AMAZON_CREATORS_CREDENTIAL_VERSION: '2.3',
-  AMAZON_ASSOCIATE_TAG: 'hoshilu-22'
+  AMAZON_ASSOCIATE_TAG: 'hoshilu00-22'
 };
 
 test('Creators API requires all server-side credentials', () => {
@@ -22,7 +22,7 @@ test('Creators API requires all server-side credentials', () => {
 test('normalizes Amazon catalog items into HOSHILU candidates', () => {
   const result = normalizeCreatorsItems({ itemsResult: { items: [{
     asin: 'B012345678',
-    detailPageURL: 'https://www.amazon.co.jp/dp/B012345678?tag=hoshilu-22',
+    detailPageURL: 'https://www.amazon.co.jp/dp/B012345678?tag=hoshilu00-22',
     images: { primary: { medium: { url: 'https://m.media-amazon.com/image.jpg' } } },
     itemInfo: { title: { displayValue: 'LEDで光るスマホケース' }, features: { displayValues: ['通知で光る'] } }
   }] } });
@@ -67,7 +67,7 @@ test('fetches and reuses a Creators API OAuth token', async () => {
   assert.equal(search.options.headers['x-marketplace'], 'www.amazon.co.jp');
   assert.match(search.options.headers.authorization, /Version 2\.3/);
   const body = JSON.parse(search.options.body);
-  assert.equal(body.partnerTag, 'hoshilu-22');
+  assert.equal(body.partnerTag, 'hoshilu00-22');
   assert.deepEqual(body.languagesOfPreference, ['ja_JP']);
   assert.equal(body.currencyOfPreference, 'JPY');
   assert.ok(body.resources.includes('offersV2.listings.availability'));
@@ -84,7 +84,7 @@ test('Credential Version is required and invalid values are rejected', async () 
 });
 
 test('normalizes JPY price and availability without inventing stock', () => {
-  const url = 'https://www.amazon.co.jp/dp/B012345678?tag=hoshilu-22&ref_=abc';
+  const url = 'https://www.amazon.co.jp/dp/B012345678?tag=hoshilu00-22&ref_=abc';
   const [available, unknown] = normalizeCreatorsItems({ itemsResult: { items: [{
     asin: 'B012345678',
     detailPageURL: url,

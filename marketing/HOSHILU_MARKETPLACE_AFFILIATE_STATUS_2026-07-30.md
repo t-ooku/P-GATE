@@ -1,7 +1,7 @@
 # HOSHILU モール横断・アフィリエイト確認状況
 
-更新日: 2026-08-01
-最終一次情報確認: 2026-08-01
+更新日: 2026-08-13
+最終一次情報確認: 2026-08-13
 
 ## 実装方針
 
@@ -18,7 +18,7 @@
 
 | モール | 横断検索 | 商品詳細URL | アフィリエイト | 次の作業 |
 |---|---:|---:|---|---|
-| Amazon | 稼働中 | Creators API・承認済みURL | Amazonアソシエイト導入済み | 規約表示と成果確認を継続 |
+| Amazon | 稼働中 | Creators API未接続。検証済み商品URLとAmazon検索への外部導線 | 申込完了・ID `hoshilu00-22` 発行済み・最終審査前 | 正式タグ付きリンクを運用し、申込後180日以内の第三者による適格販売3件を確認。承認後かつ直近30日10件以上の適格販売を満たしてからCreators APIを接続 |
 | 楽天市場 | 稼働中 | 楽天API・フィード対応 | `affiliateUrl` 優先処理を実装済み | 法人利用条件と成果レポートを継続確認 |
 | Qoo10 | 稼働中 | 商品フィード対応 | 公式キュレーター制度あり、未接続 | HOSHILU媒体登録・商品リンク発行条件を確認 |
 | SHEIN | 稼働中 | 商品フィード対応 | 公式Affiliate Programあり、未接続 | 日本向け媒体審査とディープリンク条件を確認 |
@@ -36,6 +36,8 @@
 ## 公式確認先
 
 - Amazonアソシエイト: https://affiliate.amazon.co.jp/welcome
+- Amazonアソシエイト審査: https://affiliate.amazon.co.jp/help/node/topic/G8TW5AE9XL2VX9VM/
+- Amazon Creators API: https://affiliate.amazon.co.jp/creatorsapi
 - 楽天アフィリエイト: https://affiliate.rakuten.co.jp/
 - Qoo10キュレーター: https://www.qoo10.jp/gmkt.inc/mobile/sns/curatorhowto.aspx
 - SHEIN Affiliate Program: https://jp.shein.com/affiliate-a-427.html/
@@ -66,6 +68,9 @@
 
 ## 収益リンク安全状態
 
+- Amazonは2026-08-13に申込を完了し、ID `hoshilu00-22` の発行を確認した。最終審査承認、適格販売件数、注文、報酬は未取得であり、0件へ置き換えない。
+- Amazon Creators APIは未接続。接続済みの商品検索APIとして表示せず、資格取得・認証情報発行・本番検索成功を確認するまで外部検索導線として扱う。
+- Amazonへの収益リンクは登録IDを付け、サイト上にAmazon指定のアソシエイト開示文と広告表示を掲載する。自己注文を適格販売や目標注文へ算入しない。
 - 追加5モールはすべて通常検索URLであり、アフィリエイトURLとして扱わない。
 - デリバリー4社は採用見送り。検索導線・通知・SNS訴求・収益見込みへ含めない。
 - MUSINSA Curatorは制度の存在だけ確認済み。日本向け適用が確認できるまで収益見込みへ計上しない。

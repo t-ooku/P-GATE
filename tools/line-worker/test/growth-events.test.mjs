@@ -78,7 +78,7 @@ test('accepts anonymous registration and inquiry events across all ten marketpla
 test('accepts the official-launch commerce journey KPIs without storing search text', () => {
   for (const event_type of [
     'search_failed', 'search_dead_end', 'search_degraded', 'ai_result_clicked', 'ranking_result_clicked',
-    'price_comparison_opened', 'returning_visit'
+    'price_comparison_opened', 'returning_visit', 'marketplace_fallback_click'
   ]) {
     const normalized = normalizeGrowthEvent({ event_type, query: '保存してはいけない検索文' });
     assert.equal(normalized.event_type, event_type);

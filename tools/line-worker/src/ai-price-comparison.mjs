@@ -6,7 +6,7 @@
 // 影響しない(public/result-rows.mjs の「HOSHILUは価格を推測しません」は
 // 無傷のまま)。
 //
-// 実価格(Integrated: Amazon/楽天/Yahoo!、既にHOSHILUが確認済み)と
+// 実価格(Integrated: 楽天/Yahoo!、既にHOSHILUが確認済み)と
 // AI推定価格(Direct: それ以外のモール、AIが価格帯のみを推定)は、
 // 呼び出し元(UI)が絶対に混同しないよう、このモジュールの出力は
 // real/ai_estimated/unavailable の3つに明確に分離されている。

@@ -22,7 +22,7 @@ function decodedSearchQuery(item) {
 }
 
 test('顔用扇風機の検索語は13モールで同じ整理済み語を引き継ぐ', () => {
-  const links = marketplaceSearchDestinations('顔用 扇風機 ハンディファン 首掛け', { AMAZON_ASSOCIATE_TAG: 'hoshilu-22' });
+  const links = marketplaceSearchDestinations('顔用 扇風機 ハンディファン 首掛け', { AMAZON_ASSOCIATE_TAG: 'hoshilu00-22' });
   assert.equal(links.length, 13);
   const shared = buildAmazonSearchKeywords('顔用 扇風機 ハンディファン 首掛け');
   for (const item of links.filter((link) => !['ZOZOTOWN_JP', 'ABCMART_JP'].includes(link.marketplace))) {

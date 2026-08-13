@@ -15,7 +15,7 @@ test('marketplace_search_links(Direct含む)は価格を一切持たない(v4.2�
   const decorated = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-price-policy', candidates: [] },
     new Request('https://hoshilu.app/api/knowledge'),
-    { LINK_SIGNING_SECRET: 'test-secret', AMAZON_ASSOCIATE_TAG: 'hoshilu-22' },
+    { LINK_SIGNING_SECRET: 'test-secret', AMAZON_ASSOCIATE_TAG: 'hoshilu00-22' },
     'session-hash',
     '透明 ワイヤレスイヤホン'
   );

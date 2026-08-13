@@ -223,8 +223,8 @@ test('1モールの検索語生成に問題があっても他モールの検索�
   // (2026-08-07 instructions #8) are always searchable now, not only for
   // apparel-looking queries.
   const query = 'テレビにつなげるゲーム機';
-  assert.equal(buildAmazonSearchDestination('', 'hoshilu-22'), '');
-  assert.ok(buildAmazonSearchDestination(query, 'hoshilu-22').startsWith('https://www.amazon.co.jp/s'));
+  assert.equal(buildAmazonSearchDestination('', 'hoshilu00-22'), '');
+  assert.ok(buildAmazonSearchDestination(query, 'hoshilu00-22').startsWith('https://www.amazon.co.jp/s'));
   assert.ok(buildRakutenSearchDestination(query).startsWith('https://search.rakuten.co.jp'));
   assert.ok(buildYahooShoppingSearchDestination(query).startsWith('https://shopping.yahoo.co.jp'));
   assert.ok(buildQoo10SearchDestination(query).startsWith('https://www.qoo10.jp'));

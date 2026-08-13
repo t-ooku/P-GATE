@@ -83,6 +83,11 @@ document.addEventListener('click', event => {
   if (target.matches('.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link') && target.tagName === 'A') {
     const marketplace = growthMarketplace(target.dataset.marketplace, target.textContent);
     send(target.closest('.ranking-product-card') ? 'ranking_result_clicked' : 'ai_result_clicked', marketplace ? { marketplace } : {});
-    if (marketplace) send('marketplace_click', { marketplace });
+    if (marketplace) {
+      send('marketplace_click', { marketplace });
+      if (target.dataset.measurementContext === 'BROWSER_EMERGENCY_FALLBACK') {
+        send('marketplace_fallback_click', { marketplace, medium: 'fallback', campaign: 'browser_emergency' });
+      }
+    }
   }
 });

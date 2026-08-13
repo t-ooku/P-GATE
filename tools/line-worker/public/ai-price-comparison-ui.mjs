@@ -74,10 +74,16 @@ function renderRow(row, label, className) {
   return item;
 }
 
+function outboundRel(marketplace) {
+  return String(marketplace || '').toUpperCase() === 'AMAZON_JP'
+    ? 'sponsored nofollow noopener noreferrer'
+    : 'noopener noreferrer';
+}
+
 function appendSearchLink(item, row, t) {
   if (!row.search_url) return;
   const link = document.createElement('a');
-  link.href = row.search_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+  link.href = row.search_url; link.target = '_blank'; link.rel = outboundRel(row.marketplace);
   link.className = 'price-compare-search-link'; link.textContent = row.search_sort === 'PRICE_ASC' ? t.search : t.searchDefault;
   link.dataset.marketplace = String(row.marketplace || '');
   if (row.search_query) link.title = `${marketplaceLabel(row.marketplace)}: ${row.search_query}`;
@@ -95,7 +101,7 @@ function renderComparison(container, result, t) {
     item.append(textEl('strong', 'price-compare-amount', `¥${Number(row.total_cost).toLocaleString('ja-JP')}`));
     if (row.tracking_url) {
       const link = document.createElement('a');
-      link.href = row.tracking_url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      link.href = row.tracking_url; link.target = '_blank'; link.rel = outboundRel(row.marketplace);
       link.className = 'price-compare-link'; link.textContent = marketplaceLabel(row.marketplace);
       link.dataset.marketplace = String(row.marketplace || '');
       item.append(link);

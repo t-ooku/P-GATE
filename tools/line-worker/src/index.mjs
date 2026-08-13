@@ -205,6 +205,28 @@ export function isAllowedDestination(destination) {
   }
 }
 
+export function decorateAmazonAssociateDestination(destination, associateTag = '') {
+  const source = String(destination || '');
+  const tag = String(associateTag || '').trim();
+  try {
+    const url = new URL(source);
+    const host = url.hostname.toLowerCase().replace(/\.$/, '');
+    const taggablePath = /^\/s\/?$/u.test(url.pathname)
+      || /\/(?:dp|gp\/product)\/[A-Z0-9]{10}(?:\/|$)/iu.test(url.pathname);
+    if (url.protocol !== 'https:' || (host !== 'amazon.co.jp' && !host.endsWith('.amazon.co.jp')) || !taggablePath) {
+      return source;
+    }
+    if (!/^[a-z0-9][a-z0-9-]{1,49}$/i.test(tag)) {
+      url.searchParams.delete('tag');
+      return url.toString();
+    }
+    url.searchParams.set('tag', tag);
+    return url.toString();
+  } catch {
+    return source;
+  }
+}
+
 const SELLER_PLAN_PRIORITY = Object.freeze({
   PARTNER: 0,
   PRO: 1,
@@ -474,6 +496,7 @@ export function getEnvironmentReadiness(env = {}) {
       seller_auth_partial: sellerAuthPartial,
       seller_auth_weak: weak.some((name) =>
         sellerAuthNames.includes(name) || name === 'SELLER_ALLOWED_TENANTS'),
+      amazon_associate_link_configured: String(env.AMAZON_ASSOCIATE_TAG || '').trim() === 'hoshilu00-22',
       amazon_creators_configured: creatorsApiConfigured(env),
       rakuten_marketplace_configured: rakutenApiConfigured(env),
       yahoo_shopping_configured: yahooShoppingApiConfigured(env),
@@ -676,7 +699,7 @@ async function pushCompletedLineSearch(event, origin, env) {
   }
 }
 
-async function buildLineFallbackMessages(event, origin, env) {
+export async function buildLineFallbackMessages(event, origin, env) {
   const query = String(event?.message?.text || '').trim().slice(0, 200);
   if (!query) {
     return [{ type: 'text', text: '探しているものを文章で送ってください。見た目・用途・見た場所など、覚えていることだけで大丈夫です。' }];
@@ -694,16 +717,21 @@ async function buildLineFallbackMessages(event, origin, env) {
         { label: '特徴を重視して探す', query: `${query} 特徴` },
         { label: '似た商品まで広げる', query: `${query} 類似商品` }
       ];
+  const userId = event.source?.userId || event.source?.groupId || event.source?.roomId || '';
+  const userHash = await hashUser(userId || event.webhookEventId || crypto.randomUUID());
+  const recommendationId = String(event.webhookEventId || crypto.randomUUID());
   const bubbles = [];
   for (let index = 0; index < directions.length; index += 1) {
     const direction = directions[index];
     const destination = buildAmazonSearchDestination(direction.query, env.AMAZON_ASSOCIATE_TAG);
     let url = destination;
     try {
-      const token = await signTrackToken({
-        d: destination, m: 'AMAZON_SEARCH', s: 'LINE_FALLBACK',
-        q: `${String(event.webhookEventId || crypto.randomUUID()).slice(0, 90)}:${index + 1}`,
-        exp: Math.floor(Date.now() / 1000) + 60 * 30
+      const token = await createTrackToken({
+        u: userHash, r: recommendationId, a: '', d: destination,
+        exp: Math.floor(Date.now() / 1000) + 60 * 30,
+        j: `${recommendationId}:LINE_FALLBACK:${index + 1}`,
+        c: 'LINE', m: 'AMAZON_JP', t: 'SEARCH_FALLBACK',
+        g: 'unclassified', x: 'UNATTRIBUTED'
       }, env.LINK_SIGNING_SECRET);
       url = `${origin}/go?token=${encodeURIComponent(token)}`;
     } catch {}
@@ -724,7 +752,10 @@ async function buildLineFallbackMessages(event, origin, env) {
     });
   }
   return [
-    { type: 'text', text: `「${query}」から、近い商品を探せる3候補を作りました。横にスライドして選べます。`.slice(0, 5000) },
+    {
+      type: 'text',
+      text: `広告：以下はAmazonアソシエイトリンクです。Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。\n「${query}」から、近い商品を探せる3候補を作りました。横にスライドして選べます。`.slice(0, 5000)
+    },
     { type: 'flex', altText: `「${query}」の商品検索候補3件`, contents: { type: 'carousel', contents: bubbles } },
     {
       type: 'text',
@@ -807,7 +838,8 @@ async function handleRedirect(request, env, ctx) {
     // 記録する。失敗してもリダイレクト自体は絶対に止めない(下のrecord
     // OutboundCommerceEvent内部で例外を握りつぶす設計)。
     ctx.waitUntil(recordOutboundCommerceEvent(env, payload, occurredAt));
-    return Response.redirect(payload.d, 302);
+    const destination = decorateAmazonAssociateDestination(payload.d, env.AMAZON_ASSOCIATE_TAG);
+    return Response.redirect(destination, 302);
   } catch (error) {
     return new Response(String(error.message || error), { status: 400 });
   }

@@ -11,6 +11,7 @@ const EVENTS = new Set([
   'returning_visit',
   'wish_saved',
   'marketplace_click',
+  'marketplace_fallback_click',
   'share_started',
   'seo_article_view',
   'seo_search_transition',
