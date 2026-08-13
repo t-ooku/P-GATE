@@ -6,6 +6,7 @@ import {
   RESULT_ROW_LIMIT,
   candidateHasConfirmedPrice,
   candidateOffers,
+  fallbackRecommendationCandidates,
   resultRowCopy,
   resultRowCopyFor,
   recommendationReason,
@@ -71,6 +72,23 @@ test('2段目の横展開レコメンドは選定理由を表示できる', () =
   assert.equal(resultRowCopy.JA.unconfirmedTitle,'HOSHILU AI選定レコメンド');
 });
 
+test('関連APIが失敗しても主検索の実在商品から横レコメンドを必ず作る', () => {
+  const confirmed = [
+    { asin: 'TOP', offers: [priced('RAKUTEN_JP', 1000)] },
+    { asin: 'NEXT', offers: [priced('YAHOO_JP', 1200)] }
+  ];
+  assert.deepEqual(fallbackRecommendationCandidates({ confirmed, unconfirmed: [] }), {
+    candidates: [confirmed[1]], confirmed: true
+  });
+  assert.deepEqual(fallbackRecommendationCandidates({ confirmed: [confirmed[0]], unconfirmed: [] }), {
+    candidates: [confirmed[0]], confirmed: true
+  });
+  const unconfirmed = [{ asin: 'REAL', offers: [unpriced('ZOZOTOWN')] }];
+  assert.deepEqual(fallbackRecommendationCandidates({ confirmed, unconfirmed }), {
+    candidates: unconfirmed, confirmed: false
+  });
+});
+
 test('各段は最大30件、合計60件までを取り込む', () => {
   assert.equal(RESULT_ROW_LIMIT, 30);
   const candidates = [
@@ -97,7 +115,7 @@ test('Workerの送信上限は2段ぶん（60件）に引き上げられてい�
 test('4言語すべてに2段の見出し・説明・バッジがある', () => {
   for (const language of ['JA', 'EN', 'ZH', 'KO']) {
     const copy = resultRowCopy[language];
-    for (const key of ['confirmedTitle', 'confirmedNote', 'unconfirmedTitle', 'unconfirmedNote', 'badge']) {
+    for (const key of ['confirmedTitle', 'confirmedNote', 'unconfirmedTitle', 'unconfirmedNote', 'verifiedRecommendationTitle', 'verifiedRecommendationNote', 'badge']) {
       assert.equal(typeof copy[key], 'string', `${language}.${key}`);
       assert.ok(copy[key].length > 0, `${language}.${key}`);
     }
@@ -125,6 +143,9 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
   assert.match(app, /related_category_recommendations/);
   assert.match(app, /function relatedCategoryCard/);
   assert.match(app, /function recommendationRowFor/);
+  assert.match(app, /fallbackRecommendationCandidates\(candidateRows,RESULT_ROW_LIMIT\)/);
+  assert.match(app, /recommendationProducts='true'/);
+  assert.match(app, /oldRow\?\.dataset\.recommendationProducts===\'true\'/);
   assert.match(app, /sequence!==relatedRecommendationSequence\|\|!token\)return/);
   assert.doesNotMatch(app, /async function loadRelatedRecommendations[\s\S]{0,1800}?recoverTurnstileWidget\(\)/);
   assert.match(app, /timedAbortController\(12000\)/);
@@ -143,5 +164,5 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
 test('新しいモジュールはService Workerのプリキャッシュに含まれる', async () => {
   const sw = await readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8');
   assert.match(sw, /'\/result-rows\.mjs'/);
-  assert.match(sw, /hoshilu-shell-v383/);
+  assert.match(sw, /hoshilu-shell-v384/);
 });

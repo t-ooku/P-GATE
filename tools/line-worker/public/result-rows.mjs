@@ -35,6 +35,16 @@ export function splitCandidateRows(candidates, limit = RESULT_ROW_LIMIT) {
   return { confirmed, unconfirmed };
 }
 
+// 関連商品APIが一時的に使えなくても、主検索ですでに実在確認できた商品を
+// 横レコメンドへ回し、「関連キーワードだけで商品カードが無い」状態を作らない。
+export function fallbackRecommendationCandidates(rows, limit = RESULT_ROW_LIMIT) {
+  const unconfirmed = (Array.isArray(rows?.unconfirmed) ? rows.unconfirmed : []).slice(0, limit);
+  if (unconfirmed.length) return { candidates: unconfirmed, confirmed: false };
+  const confirmed = (Array.isArray(rows?.confirmed) ? rows.confirmed : []).slice(0, limit);
+  const secondary = confirmed.slice(1, limit + 1);
+  return { candidates: secondary.length ? secondary : confirmed.slice(0, 1), confirmed: true };
+}
+
 export function recommendationReason(candidate) {
   const matched = Array.isArray(candidate?.evidence?.matched_terms) ? candidate.evidence.matched_terms.filter(Boolean).slice(0, 3) : [];
   if (matched.length) return `検索条件と一致：${matched.join('・')}`;
@@ -49,6 +59,8 @@ export const resultRowCopy = {
     confirmedNote: '接続済みモールで、送料込みの合計金額を確認できました。',
     unconfirmedTitle: 'HOSHILU AI選定レコメンド',
     unconfirmedNote: '検索意図に関連する実在商品を最大30品選定しました。価格・在庫は各モールの商品ページでご確認ください。',
+    verifiedRecommendationTitle: '検索結果からのおすすめ商品',
+    verifiedRecommendationNote: '接続済みモールで実在と価格を確認できた商品を、横スクロールで表示しています。',
     badge: '価格・在庫は未確認'
   },
   EN: {
@@ -56,6 +68,8 @@ export const resultRowCopy = {
     confirmedNote: 'The total including shipping was confirmed on a connected marketplace.',
     unconfirmedTitle: 'HOSHILU AI-selected recommendations',
     unconfirmedNote: 'Up to 30 real products related to your search intent. Check current price and availability on each marketplace.',
+    verifiedRecommendationTitle: 'Recommended from your results',
+    verifiedRecommendationNote: 'Real products with verified prices from connected marketplaces, shown in a horizontal carousel.',
     badge: 'Price and stock unverified'
   },
   ZH: {
@@ -63,6 +77,8 @@ export const resultRowCopy = {
     confirmedNote: '已在已接入的商城确认含运费的合计金额。',
     unconfirmedTitle: 'HOSHILU AI精选推荐',
     unconfirmedNote: '最多推荐30件符合搜索意图的真实商品。价格与库存请在各商城确认。',
+    verifiedRecommendationTitle: '搜索结果中的推荐商品',
+    verifiedRecommendationNote: '横向展示已在接入商城确认真实存在及价格的商品。',
     badge: '价格与库存未确认'
   },
   KO: {
@@ -70,6 +86,8 @@ export const resultRowCopy = {
     confirmedNote: '연결된 쇼핑몰에서 배송비 포함 합계 금액을 확인했습니다.',
     unconfirmedTitle: 'HOSHILU AI 선정 추천',
     unconfirmedNote: '검색 의도와 관련된 실제 상품을 최대 30개 선정합니다. 가격과 재고는 각 쇼핑몰에서 확인하세요.',
+    verifiedRecommendationTitle: '검색 결과 추천 상품',
+    verifiedRecommendationNote: '연결된 쇼핑몰에서 실재 여부와 가격을 확인한 상품을 가로로 표시합니다.',
     badge: '가격·재고 미확인'
   }
 };

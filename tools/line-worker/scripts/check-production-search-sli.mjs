@@ -324,21 +324,21 @@ export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRow
     if (!latest || nowMs - latest.timestamp > CANARY_MAX_AGE_MINUTES[component] * 60000) {
       throw new Error(`DEEP_CANARY_STALE:${component.toUpperCase()}`);
     }
-    if (latest.status === 'FAIL' && component === 'ai_chat_primary'
+    if (latest.status === 'FAIL' && ['query_structurer', 'ai_chat_primary'].includes(component)
       && !CANARY_PRIMARY_TRANSIENT_CODES.has(latest.code)) {
       throw new Error(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:${component.toUpperCase()}:${latest.code}`);
     }
     if (latest.status === 'FAIL' && CANARY_IMMEDIATE_CODE_PATTERN.test(latest.code)
-      && !(component === 'ai_chat_primary' && CANARY_PRIMARY_TRANSIENT_CODES.has(latest.code))) {
+      && !(['query_structurer', 'ai_chat_primary'].includes(component)
+        && CANARY_PRIMARY_TRANSIENT_CODES.has(latest.code))) {
       throw new Error(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:${component.toUpperCase()}:${latest.code}`);
-    }
-    if (component === 'query_structurer' && latest.status === 'FAIL') {
-      throw new Error(`DEEP_CANARY_QUERY_STRUCTURER_IMMEDIATE:${latest.code}`);
     }
     if (items.length >= 2
       && items[0].status === 'FAIL' && items[1].status === 'FAIL') {
-      const prefix = component === 'ai_chat_primary'
-        ? 'DEEP_CANARY_AI_CHAT_CONSECUTIVE'
+      const prefix = component === 'query_structurer'
+        ? 'DEEP_CANARY_QUERY_STRUCTURER_CONSECUTIVE'
+        : component === 'ai_chat_primary'
+          ? 'DEEP_CANARY_AI_CHAT_CONSECUTIVE'
         : component === 'openai_backup'
           ? 'DEEP_CANARY_OPENAI_BACKUP_WARNING' : 'DEEP_CANARY_CONSECUTIVE_FAILURE';
       throw new Error(`${prefix}:${component.toUpperCase()}:${latest.code}`);

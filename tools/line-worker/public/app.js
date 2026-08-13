@@ -1,6 +1,9 @@
+Warning: truncated output (original token count: 42589)
+Total output lines: 1145
+
 import { campaignContext } from './campaign-attribution.mjs';
 import { buildMarketplaceSearchKeywords } from './marketplace-search-keywords-v2.mjs';
-import { RESULT_ROW_LIMIT, resultRowCopyFor, splitCandidateRows } from './result-rows.mjs';
+import { RESULT_ROW_LIMIT, fallbackRecommendationCandidates, resultRowCopyFor, splitCandidateRows } from './result-rows.mjs';
 import { localizedWishLabel } from './wish-localization.mjs';
 import { safeDiscoverySearchQuery, socialDiscoverySearchLinks, swippittDiscoveryMatch, gmailShareLink } from './discovery-actions.mjs';
 import { attachVerticalTicker, detachVerticalTicker } from './vertical-ticker.mjs';
@@ -241,328 +244,7 @@ function createWatchOptions(candidate,t){
   const options=document.createElement('div');
   options.className='watch-options';
   const inputs=t.watchLabels.map((label,index)=>{const input=document.createElement('input');input.type='checkbox';input.checked=index<2;const item=document.createElement('label');item.append(input,document.createTextNode(` ${label}`));options.append(item);return input;});
-  const priceLabels={JA:{label:'この金額以下になったら購入したい',current:'現在価格',unavailable:'未取得',unit:'円',note:'API確認価格だけを監視します（AI推定価格は不使用）。希望額は5人以上で匿名集計し、契約セラーの需要分析にも使います。',login:'価格監視には無料会員ログインが必要です。'},EN:{label:'Notify me at or below this price',current:'Current price',unavailable:'Unavailable',unit:'JPY',note:'We use API prices only, never AI estimates. Target prices may appear in seller demand analytics only in anonymous groups of 5+.',login:'Sign in as a free member to monitor a target price.'},ZH:{label:'降到此价格以下时通知',current:'当前价格',unavailable:'未获取',unit:'日元',note:'仅使用商城API确认价格。希望价仅在5人以上时匿名汇总，用于签约卖家的需求分析。',login:'价格监控需要登录免费会员。'},KO:{label:'이 가격 이하일 때 알림',current:'현재 가격',unavailable:'확인 불가',unit:'엔',note:'쇼핑몰 API 확인 가격만 사용합니다. 희망가는 5명 이상일 때만 익명 집계해 계약 판매자 수요 분석에 활용합니다.',login:'목표 가격 감시에는 무료 회원 로그인이 필요합니다.'}}[elements.language.value]||null;
-  const pricedOffers=[...(Array.isArray(candidate?.offers)?candidate.offers:[]),candidate?.selected_offer].filter(Boolean).map(offer=>({offer,total:Number(offer.total_cost||offer.price)})).filter(item=>Number.isFinite(item.total)&&item.total>0).sort((a,b)=>a.total-b.total);const currentOffer=pricedOffers[0];const currentPrice=currentOffer?.total;const currentPriceText=Number.isFinite(currentPrice)?formatMoney(currentPrice,currentOffer?.offer?.currency||'JPY',elements.language.value):priceLabels.unavailable;
-  const targetWrap=document.createElement('label');targetWrap.className='target-price-field';targetWrap.append(textElement('strong','target-price-current',`${priceLabels.current}：${currentPriceText}`),textElement('span','target-price-label',priceLabels.label));
-  const targetInput=document.createElement('input');targetInput.type='number';targetInput.inputMode='numeric';targetInput.min='100';targetInput.max='100000000';targetInput.step='100';if(Number.isFinite(currentPrice))targetInput.placeholder=String(Math.max(100,Math.floor(currentPrice*.9/100)*100));const productKey=String(candidate?.record_key||candidate?.asin||'');const productName=String(candidate?.display_name||candidate?.product_name||elements.query.value);const savedTarget=getWatchPreferences().find(item=>(productKey&&item.target_product_key===productKey)||item.target_product_name===productName);if(Number(savedTarget?.target_price_jpy)>=100)targetInput.value=String(savedTarget.target_price_jpy);targetWrap.append(targetInput,textElement('small','',priceLabels.unit));
-  const targetNote=textElement('p','watch-save-note',priceLabels.note);
-  const actions=actionCopy[elements.language.value]||actionCopy.JA;
-  const save=document.createElement('button');
-  save.type='button';save.className='watch-save-button';save.textContent=actions.saveWatch;
-  const status=textElement('p','watch-save-status','');
-  save.addEventListener('click',()=>{
-    const amount=Number(targetInput.value||0);if(targetInput.value&&(amount<100||amount>100000000)){targetInput.setCustomValidity('100円以上で入力してください');targetInput.reportValidity();return;}targetInput.setCustomValidity('');
-    if(amount&&!memberSession){status.textContent=priceLabels.login;return;}
-    const target=amount?{target_price_jpy:amount,target_product_key:productKey,target_product_name:productName}:{};
-    // 希望額は検索文ではなく商品単位で保存する。同じ検索結果から複数商品へ
-    // 希望額を付けても、同じwish_idへ上書きされないよう商品名を保存キーにする。
-    const wishQuery=amount?productName:elements.query.value;
-    if(saveWish(wishQuery,inputs.map((input)=>input.checked),target)){
-      status.textContent=t.watchSavedStatus;
-      bell.classList.add('watching');
-      setTimeout(()=>dialog.close(),700);
-    }
-  });
-  panel.append(options,targetWrap,targetNote,save,status);
-  dialog.append(panel);
-  return{bell,dialog,inputs};
-}
-function saveWatchChoice(candidate,inputs){const current=JSON.parse(localStorage.getItem('hoshilu_watch_preferences')||'[]');const item={asin:String(candidate.asin||''),query:elements.query.value.trim(),options:inputs.map(input=>input.checked),updatedAt:new Date().toISOString()};const next=[item,...(Array.isArray(current)?current:[]).filter(saved=>saved.asin!==item.asin||saved.query!==item.query)].slice(0,100);localStorage.setItem('hoshilu_watch_preferences',JSON.stringify(next));}
-function clarificationCard(result){const clarification=result?.clarification;if(!clarification?.required||!Array.isArray(clarification.options)||!clarification.options.length)return null;const card=document.createElement('article');card.className='clarification-card';card.append(textElement('strong','',clarification.question||''));const options=document.createElement('div');options.className='clarification-options';clarification.options.forEach(option=>{const button=document.createElement('button');button.type='button';button.className='clarification-option';button.textContent=String(option.label||option.value||'');button.addEventListener('click',()=>{options.querySelectorAll('button').forEach(item=>item.classList.remove('selected'));button.classList.add('selected');const addition=String(option.value||option.label||'').trim();const current=elements.query.value.trim();const parts=current.split(' / ').map(value=>value.trim());elements.query.value=addition&&!parts.includes(addition)?`${current} / ${addition}`:current;elements.clear.classList.remove('hidden');elements.submit.scrollIntoView({behavior:'smooth',block:'center'});});options.append(button);});card.append(options);return card;}
-function shareDiscoveryCard(){const copy=shareCopy[elements.language.value]||shareCopy.JA;const card=document.createElement('article');card.className='share-discovery';const intro=document.createElement('div');intro.className='share-discovery-copy';intro.append(textElement('strong','',copy.title),textElement('p','',copy.privacy));const include=document.createElement('input');include.type='checkbox';const includeLabel=document.createElement('label');includeLabel.className='share-include-query';includeLabel.append(include,document.createTextNode(` ${copy.include}`));const actions=document.createElement('div');actions.className='share-discovery-actions';const button=document.createElement('button');button.type='button';button.className='secondary share-discovery-button';button.textContent=copy.button;const copyButton=document.createElement('button');copyButton.type='button';copyButton.className='secondary share-copy-button';copyButton.textContent=copy.copy;const gmailButton=document.createElement('button');gmailButton.type='button';gmailButton.className='secondary share-gmail-button';gmailButton.textContent=copy.gmail;const status=textElement('span','share-discovery-status','');const payload=()=>{const raw=elements.query.value.trim().slice(0,80).replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/ig,'').replace(/\b0\d{1,4}-?\d{1,4}-?\d{3,4}\b/g,'').trim();const url=`${location.origin}/?utm_source=user_share&utm_medium=social&utm_campaign=found_with_hoshilu`;const text=include.checked&&raw?`${copy.prefix}${raw}\n${copy.tag}`:copy.tag;return{text,url};};button.addEventListener('click',async()=>{const data=payload();try{if(navigator.share){await navigator.share({title:copy.title,...data});return;}await navigator.clipboard.writeText(`${data.text}\n${data.url}`);status.textContent=copy.copied;}catch(error){if(error?.name==='AbortError')return;}});copyButton.addEventListener('click',async()=>{const data=payload();try{await navigator.clipboard.writeText(`${data.text}\n${data.url}`);status.textContent=copy.copied;}catch{}});gmailButton.addEventListener('click',()=>{const data=payload();window.open(gmailShareLink(copy.title,`${data.text}\n${data.url}`),'_blank','noopener,noreferrer');});actions.append(button,copyButton,gmailButton);card.append(intro,includeLabel,actions,status);return card;}
-const shareObserver=new MutationObserver(()=>{if(!elements.results.classList.contains('hidden')&&!elements.cards.querySelector('.share-discovery'))elements.cards.append(shareDiscoveryCard());});
-shareObserver.observe(elements.cards,{childList:true});
-async function copySearchKeywords(value,button,labels){try{await navigator.clipboard.writeText(value);}catch{const area=document.createElement('textarea');area.value=value;area.setAttribute('readonly','');area.style.position='fixed';area.style.opacity='0';document.body.append(area);area.select();document.execCommand('copy');area.remove();}button.textContent=labels.copiedKeywords;setTimeout(()=>{button.textContent=labels.copyKeywords;},1800);}
-async function copySocialSearchQuery(value){try{if(!navigator.clipboard?.writeText)throw new Error('clipboard unavailable');await navigator.clipboard.writeText(value);return true;}catch{const area=document.createElement('textarea');area.value=value;area.setAttribute('readonly','');area.style.position='fixed';area.style.opacity='0';document.body.append(area);area.select();const copied=document.execCommand('copy')===true;area.remove();return copied;}}
-const socialSearchHandoffCopy={
-  JA:{title:'検索語をコピーしてSNSで探す',body:'Instagram・TikTokのアプリは検索語を自動入力できないことがあります。下の検索語をコピーし、SNSの検索欄へ貼り付けてください。',copy:'検索語をコピー',copied:'コピーしました',failed:'自動コピーできませんでした。検索語を長押ししてコピーしてください。',open:name=>`${name}を開く`,close:'閉じる'},
-  EN:{title:'Copy the search terms, then open the app',body:'Instagram and TikTok may remove search terms when their apps open. Copy the terms below and paste them into the app search box.',copy:'Copy search terms',copied:'Copied',failed:'Automatic copy failed. Press and hold the terms to copy them.',open:name=>`Open ${name}`,close:'Close'},
-  ZH:{title:'复制搜索词后打开应用',body:'Instagram或TikTok应用打开时可能不会自动填入搜索词。请复制下方文字并粘贴到应用的搜索框。',copy:'复制搜索词',copied:'已复制',failed:'无法自动复制，请长按搜索词进行复制。',open:name=>`打开${name}`,close:'关闭'},
-  KO:{title:'검색어를 복사한 뒤 앱에서 찾기',body:'Instagram·TikTok 앱을 열 때 검색어가 자동 입력되지 않을 수 있습니다. 아래 검색어를 복사해 앱 검색창에 붙여 넣어 주세요.',copy:'검색어 복사',copied:'복사했습니다',failed:'자동 복사에 실패했습니다. 검색어를 길게 눌러 복사해 주세요.',open:name=>`${name} 열기`,close:'닫기'}
-};
-const marketplaceSearchHandoffCopy={
-  JA:{title:'検索語をコピーしてモールで探す',body:'このモールでは日本語の検索語を自動入力できないため、下の検索語をコピーして検索欄へ貼り付けてください。',copy:'検索語をコピー',copied:'コピーしました。モールの検索欄へ貼り付けてください。',failed:'自動コピーできませんでした。検索語を長押ししてコピーしてください。',open:name=>`${name}を開く`,close:'閉じる'},
-  EN:{title:'Copy the search terms, then open the marketplace',body:'This marketplace cannot receive Japanese search terms automatically. Copy the terms below and paste them into its search box.',copy:'Copy search terms',copied:'Copied. Paste the terms into the marketplace search box.',failed:'Automatic copy failed. Press and hold the terms to copy them.',open:name=>`Open ${name}`,close:'Close'},
-  ZH:{title:'复制搜索词后打开商城',body:'该商城无法自动接收日语搜索词。请复制下方文字并粘贴到商城搜索框。',copy:'复制搜索词',copied:'已复制，请粘贴到商城搜索框。',failed:'无法自动复制，请长按搜索词进行复制。',open:name=>`打开${name}`,close:'关闭'},
-  KO:{title:'검색어를 복사한 뒤 쇼핑몰에서 찾기',body:'이 쇼핑몰에는 일본어 검색어를 자동 입력할 수 없습니다. 아래 검색어를 복사해 쇼핑몰 검색창에 붙여 넣어 주세요.',copy:'검색어 복사',copied:'복사했습니다. 쇼핑몰 검색창에 붙여 넣어 주세요.',failed:'자동 복사에 실패했습니다. 검색어를 길게 눌러 복사해 주세요.',open:name=>`${name} 열기`,close:'닫기'}
-};
-function openSearchHandoff(item,copy,name){const dialog=document.createElement('dialog');dialog.className='social-search-handoff-dialog';const panel=document.createElement('div');panel.className='social-search-handoff-card';const close=document.createElement('button');close.type='button';close.className='social-search-handoff-close';close.setAttribute('aria-label',copy.close);close.textContent='✕';close.addEventListener('click',()=>dialog.close());const query=textElement('output','social-search-handoff-query',String(item.search_query));const status=textElement('p','social-search-handoff-status','');const copyButton=document.createElement('button');copyButton.type='button';copyButton.className='secondary social-search-copy-button';copyButton.textContent=copy.copy;const runCopy=async()=>{const copied=await copySocialSearchQuery(item.search_query);status.textContent=copied?copy.copied:copy.failed;copyButton.textContent=copied?copy.copied:copy.copy;return copied;};copyButton.addEventListener('click',()=>{void runCopy();});const open=document.createElement('a');open.className='buy-link social-search-open-button';open.href=item.url;open.target='_blank';open.rel='noopener noreferrer';open.textContent=copy.open(name);const actions=document.createElement('div');actions.className='social-search-handoff-actions';actions.append(copyButton,open);panel.append(close,textElement('strong','social-search-handoff-title',copy.title),textElement('p','social-search-handoff-body',copy.body),query,status,actions);dialog.append(panel);dialog.addEventListener('close',()=>dialog.remove());document.body.append(dialog);dialog.showModal();void runCopy();}
-function openSocialSearchHandoff(item){const copy=socialSearchHandoffCopy[elements.language.value]||socialSearchHandoffCopy.JA;const name=item.channel==='instagram'?'Instagram':'TikTok';openSearchHandoff(item,copy,name);}
-function openMarketplaceSearchHandoff(item){const copy=marketplaceSearchHandoffCopy[elements.language.value]||marketplaceSearchHandoffCopy.JA;const name=String(item.label||item.marketplace||'モール').replace(/(?:で探す|で検索)$/u,'');openSearchHandoff(item,copy,name);}
-function marketplaceLinks(links,compact=false){const valid=(Array.isArray(links)?links:[]).filter(item=>item?.url);if(!valid.length)return null;const wrap=document.createElement('div');wrap.className=compact?'marketplace-links compact':'marketplace-links';valid.forEach(item=>{const link=document.createElement('a');link.className='buy-link marketplace-search-link';link.dataset.marketplace=String(item.marketplace||'');if(item.measurement_context)link.dataset.measurementContext=String(item.measurement_context);
-// Social links carry `channel` instead of `marketplace`; ai-search-ui.css
-// colours them via [data-channel]. Emitting it is what keeps them rendering
-// as brand-coloured buttons rather than bare blue links.
-if(item.channel)link.dataset.channel=String(item.channel);link.href=item.url;link.target='_blank';link.rel=outboundRel(item.marketplace);if(item.copy_before_open&&item.search_query){link.dataset.searchQuery=String(item.search_query);link.title='検索語を確認してモールを開きます';link.addEventListener('click',(event)=>{event.preventDefault();openMarketplaceSearchHandoff(item);});}if(item.copy_query&&item.search_query){link.dataset.searchQuery=String(item.search_query);link.title='検索語をコピーして開きます';link.addEventListener('click',(event)=>{event.preventDefault();openSocialSearchHandoff(item);});}
-// Mall buttons sit under a "モールで探す" group heading, so the per-button
-// "〜で探す" suffix is redundant and gets stripped. Social buttons keep their
-// label verbatim ("Instagramで探す" / "LINEで共有") so the action stays explicit.
-const rawLabel=String(item.label||item.marketplace||'');link.textContent=item.channel?rawLabel:rawLabel.replace(/(?:で探す|で検索)$/u,'');if(item.copy_before_open)link.setAttribute('aria-label',`${rawLabel}（検索語をコピーして開く）`);wrap.append(link);});return wrap;}
-function emergencySearchKeywords(query){const source=String(query||'').trim();return source?(buildMarketplaceSearchKeywords(source,'AMAZON_JP')||source):'';}
-function emergencyMarketplaceSearchLinks(query){
-  const keywords=emergencySearchKeywords(query);if(!keywords)return[];
-  const encoded=encodeURIComponent(keywords);
-  // ZOZOTOWNとABC-MARTの検索語はShift_JIS指定のため、Workerへ到達できない
-  // 最終縮退ではASCII部分だけURLへ渡し、完全な検索語を同時にコピーする。
-  // 日本語だけの場合は壊れたURLを作らず公式検索画面を開く。
-  const legacyKeywords=keywords.normalize('NFKC').replace(/[^\x20-\x7e]+/gu,' ').replace(/\s+/gu,' ').trim();
-  const legacyEncoded=encodeURIComponent(legacyKeywords);
-  return[
-    {marketplace:'AMAZON_JP',label:'Amazonで探す',url:`https://www.amazon.co.jp/s?k=${encoded}&tag=hoshilu00-22`,search_query:keywords},
-    {marketplace:'RAKUTEN_JP',label:'楽天市場で探す',url:`https://search.rakuten.co.jp/search/mall/${encoded}/`,search_query:keywords},
-    {marketplace:'YAHOO_JP',label:'Yahoo!ショッピングで探す',url:`https://shopping.yahoo.co.jp/search?p=${encoded}`,search_query:keywords},
-    {marketplace:'QOO10_JP',label:'Qoo10で探す',url:`https://www.qoo10.jp/s/?keyword=${encoded}`,search_query:keywords},
-    {marketplace:'SHEIN_JP',label:'SHEINで探す',url:`https://jp.shein.com/pdsearch/${encoded}/`,search_query:keywords},
-    {marketplace:'ZOZOTOWN_JP',label:'ZOZOTOWNで探す',url:legacyKeywords?`https://zozo.jp/search/?p_keyv=${legacyEncoded}`:'https://zozo.jp/search/',search_query:keywords,copy_before_open:true},
-    {marketplace:'LOFT_JP',label:'ロフトで探す',url:`https://www.loft.co.jp/store/goods/search.aspx?keyword=${encoded}&search=x`,search_query:keywords},
-    {marketplace:'HANDS_JP',label:'ハンズで探す',url:`https://hands.net/search/?q=${encoded}`,search_query:keywords},
-    {marketplace:'MATSUKIYO_JP',label:'マツキヨココカラで探す',url:`https://www.matsukiyococokara-online.com/store/catalogsearch/result?search_keyword=${encoded}`,search_query:keywords},
-    {marketplace:'COSME_JP',label:'@cosme SHOPPINGで探す',url:`https://www.cosme.com/products/list.php?name=${encoded}`,search_query:keywords},
-    {marketplace:'ABCMART_JP',label:'ABC-MARTで探す',url:legacyKeywords?`https://www.abc-mart.net/shop/goods/search.aspx?keyword=${legacyEncoded}`:'https://www.abc-mart.net/shop/goods/search.aspx',search_query:keywords,copy_before_open:true},
-    {marketplace:'BUYMA_JP',label:'BUYMAで探す',url:`https://www.buyma.com/r/${encoded}/`,search_query:keywords},
-    {marketplace:'SNKRDUNK_JP',label:'SNKRDUNKで探す',url:`https://snkrdunk.com/search/?keywords=${encoded}`,search_query:keywords}
-  ].map(item=>({...item,measurement_context:'BROWSER_EMERGENCY_FALLBACK'}));
-}
-const emergencyRelatedRules=[
-  {match:/スマホ.{0,4}(?:ケース|カバー)|iphone.{0,4}(?:case|ケース|カバー)/iu,items:[['スマホ充電器','一緒に使う充電用品'],['スマホストラップ','持ち歩きや落下防止に関連'],['スマホ保護フィルム','端末保護に関連']]},
-  {match:/ハンディファン|携帯扇風機|顔用扇風機/iu,items:[['モバイルバッテリー','外出先での給電に関連'],['冷感タオル','暑さ対策として関連'],['ネッククーラー','同じ利用場面の暑さ対策']]},
-  {match:/ワイヤレスイヤホン|bluetooth.{0,3}イヤホン/iu,items:[['イヤホンケース','持ち運びと保護に関連'],['USB充電器','イヤホンの充電に関連'],['Bluetoothトランスミッター','接続機器の拡張に関連']]},
-  {match:/スニーカー|ランニングシューズ/iu,items:[['靴下','一緒に着用する商品'],['インソール','履き心地の調整に関連'],['防水スプレー 靴','靴の手入れに関連']]},
-  {match:/化粧水|フェイスローション/iu,items:[['乳液','スキンケア手順で関連'],['美容液','同じスキンケア用途'],['コットン 化粧用','化粧水の使用時に関連']]},
-  {match:/ピアス|イヤリング/iu,items:[['アクセサリーケース','ピアスの保管に関連'],['ピアスキャッチ','紛失防止や交換に関連'],['ジュエリークロス','アクセサリーの手入れに関連']]},
-  {match:/カラコン|カラー\s*コンタクト|コンタクト\s*レンズ/iu,items:[['コンタクトレンズ洗浄液','レンズの洗浄・保存に関連'],['コンタクトレンズケース','レンズの保管に関連'],['コンタクトレンズ装着液','装着時のケアに関連']]},
-  {match:/ノート\s*パソコン|ノート\s*pc|laptop/iu,items:[['ワイヤレスマウス','パソコン操作に関連'],['ノートパソコンケース','持ち運びと保護に関連'],['USB Type-C ハブ','周辺機器の接続に関連']]},
-  {match:/タブレット|ipad/iu,items:[['タブレットケース','端末の保護に関連'],['タブレット用タッチペン','入力や操作に関連'],['タブレット保護フィルム','画面保護に関連']]},
-  {match:/デジタルカメラ|ミラーレス|一眼レフ/iu,items:[['SDカード カメラ用','写真データの保存に関連'],['カメラバッグ','持ち運びと保護に関連'],['カメラ三脚','撮影時の固定に関連']]},
-  {match:/テレビ|モニター|ディスプレイ/iu,items:[['HDMIケーブル','映像機器の接続に関連'],['テレビ台','設置環境に関連'],['画面クリーナー','画面の手入れに関連']]},
-  {match:/プリンター|複合機/iu,items:[['プリンター用紙','印刷時に使用する商品'],['プリンターインク','印刷用の消耗品'],['USBプリンターケーブル','機器の接続に関連']]},
-  {match:/炊飯器/iu,items:[['米びつ','お米の保存に関連'],['米とぎボウル','炊飯準備に関連'],['キッチンスケール','分量の計測に関連']]},
-  {match:/コーヒー\s*メーカー|コーヒー\s*マシン/iu,items:[['コーヒーフィルター','抽出時に使用する商品'],['コーヒーグラインダー','豆の準備に関連'],['コーヒーマグ','飲用時に関連']]},
-  {match:/ベッド|マットレス/iu,items:[['ベッドシーツ','寝具として一緒に使用'],['枕','睡眠環境に関連'],['マットレスプロテクター','汚れや湿気の対策に関連']]},
-  {match:/ソファ|カウチ/iu,items:[['ソファカバー','汚れ防止や模様替えに関連'],['クッション','座り心地の調整に関連'],['サイドテーブル','ソファ周辺での使用に関連']]},
-  {match:/ベビーカー|バギー/iu,items:[['ベビーカー レインカバー','雨天時の利用に関連'],['ベビーカーフック','荷物の持ち運びに関連'],['ベビーカーシート','座面の汚れ対策に関連']]},
-  {match:/おむつ|オムツ|紙パンツ/iu,items:[['おしりふき','おむつ交換時に使用'],['おむつ替えシート','交換時の衛生に関連'],['おむつ消臭袋','使用済みおむつの処理に関連']]},
-  {match:/シャンプー/iu,items:[['コンディショナー','洗髪後のケアに関連'],['ヘアマスク','髪の集中ケアに関連'],['頭皮ブラシ','洗髪時のケアに関連']]},
-  {match:/ファンデーション/iu,items:[['化粧下地','ベースメイクの前工程に関連'],['メイクスポンジ','ファンデーションの塗布に関連'],['フェイスパウダー','ベースメイクの仕上げに関連']]},
-  {match:/アイブロウ|眉(?:毛)?(?:ペン|ペンシル|描き)|眉墨/iu,items:[['アイブロウブラシ','眉メイクの仕上げに関連'],['眉マスカラ','眉色の調整に関連'],['アイブロウコート','眉メイクの持続に関連']]},
-  {match:/掃除機|クリーナー/iu,items:[['すき間掃除ブラシ','細部の掃除に関連'],['掃除用ウェットシート','床や家具の仕上げ掃除に関連'],['収納ラック 掃除機','掃除用品の収納に関連']]},
-  {match:/ペット\s*フード|ドッグ\s*フード|キャット\s*フード/iu,items:[['ペットフード保存容器','フードの保存に関連'],['ペット用フードボウル','給餌時に使用'],['ペット用計量スプーン','給餌量の計測に関連']]}
-];
-function emergencyRelatedCategoryRecommendations(query){const normalized=String(query||'').normalize('NFKC');const rule=emergencyRelatedRules.find(item=>item.match.test(normalized));return rule?rule.items.map(([relatedQuery,reason])=>({query:relatedQuery,reason,marketplace_search_links:emergencyMarketplaceSearchLinks(relatedQuery)})):[];}
-function emergencyMarketplaceFallback(query){const messages={JA:'商品候補を取得できなかったため、最大13モールで同じ条件を探せるリンクを表示しています。',EN:'Product suggestions are temporarily unavailable, so you can continue the same search across up to 13 marketplaces.',ZH:'暂时无法获取商品候选，因此显示可在最多13个商城继续搜索相同条件的链接。',KO:'상품 후보를 가져오지 못해 같은 조건으로 최대 13개 쇼핑몰에서 계속 찾을 수 있는 링크를 표시합니다.'};return{message:messages[elements.language.value]||messages.JA,candidates:[],search_keywords:emergencySearchKeywords(query),marketplace_search_links:emergencyMarketplaceSearchLinks(query),related_category_recommendations:emergencyRelatedCategoryRecommendations(query)};}
-// linksNote (2026-08-08): AI候補のモールボタンは商品ページの直リンクでは
-// なく、そのモールでの検索リンクなので、どこを見ればよいか分からないという
-// 声を受けてボタンの直前に明示する(marketplaceLinksの'で探す'/'で検索'は
-// これらのボタンでは既定で削られて表示されるため、ラベルだけでは検索リンク
-// だと分かりにくい)。
-const aiIntentLabels={JA:{category:'カテゴリ',features:'特徴',confidence:'理解度',reason:'AI選定理由',keywords:'検索ワード',brand:'ブランド',candidates:'AI特定候補（13モールで販売確認前）',unverified:'価格・在庫・販売状況は未確認',linksNote:'ZOZOTOWNを含む13モールで、この候補名を検索できます。価格・在庫・販売状況は各モールで確認してください。'},EN:{category:'Category',features:'Features',confidence:'Match confidence',reason:'Why AI selected it',keywords:'Search terms',brand:'Brand',candidates:'AI-identified candidates (not yet verified across 13 marketplaces)',unverified:'Price, stock, and listing status unverified',linksNote:'Search this candidate by name across 13 marketplaces, including ZOZOTOWN. Check each marketplace for current price, stock, and listing status.'},ZH:{category:'类别',features:'特征',confidence:'理解度',reason:'AI选择理由',keywords:'搜索词',brand:'品牌',candidates:'AI识别候选（尚未在13个商城确认销售）',unverified:'价格、库存及销售状态未确认',linksNote:'可在包括 ZOZOTOWN 在内的13个商城按候选名称搜索。价格、库存及销售状态请以各商城为准。'},KO:{category:'카테고리',features:'특징',confidence:'이해도',reason:'AI 선정 이유',keywords:'검색어',brand:'브랜드',candidates:'AI 식별 후보(13개 쇼핑몰 판매 확인 전)',unverified:'가격·재고·판매 상태 미확인',linksNote:'ZOZOTOWN을 포함한 13개 쇼핑몰에서 이 후보명으로 검색할 수 있습니다. 가격·재고·판매 상태는 각 쇼핑몰에서 확인해 주세요.'}};
-function bulletList(className,items){const values=(Array.isArray(items)?items:[]).map(item=>String(item||'').trim()).filter(Boolean);if(!values.length)return null;const list=document.createElement('ul');list.className=className;values.forEach(value=>list.append(textElement('li','',value)));return list;}
-function aiIntentRow(label,valueNode){if(!valueNode)return null;const row=document.createElement('div');row.className='ai-intent-row';row.append(textElement('span','ai-intent-label',label),valueNode);return row;}
-function aiIntentSummaryBlock(analysis,language){if(!analysis)return null;const labels=aiIntentLabels[language]||aiIntentLabels.JA;const wrap=document.createElement('div');wrap.className='ai-intent-summary';const category=String(analysis.category||'').trim();if(category)wrap.append(aiIntentRow(labels.category,textElement('span','ai-intent-value',category)));const features=bulletList('ai-intent-features',analysis.features);if(features)wrap.append(aiIntentRow(labels.features,features));return wrap.childElementCount?wrap:null;}
-// AI Search v2 STEP2 (docs/HOSHILU_AI_SEARCH_V2_SPEC_2026-08-04.md section 8):
-// every candidate the AI returns - not just the first one - needs its own
-// match rate, reason, matched features and marketplace search buttons.
-// marketplace_search_links is attached server-side in index.mjs's
-// aiDiscoveryWithSignedCandidateLinks(), so the buttons here are the same
-// signed /go tracking links as every other product link (never a raw,
-// client-built marketplace URL).
-function aiCandidateCard(aiCandidate,labels){const card=document.createElement('article');card.className='ai-candidate-card';card.append(textElement('span','ai-candidate-status',labels.unverified));const heading=document.createElement('div');heading.className='ai-candidate-heading';heading.append(textElement('strong','ai-candidate-name',aiCandidate.name));const score=Math.round(Number(aiCandidate.match_score||0));if(score>0)heading.append(textElement('span','ai-intent-confidence-score',`${score}%`));card.append(heading);if(aiCandidate.brand)card.append(aiIntentRow(labels.brand,textElement('span','ai-intent-value',aiCandidate.brand)));if(aiCandidate.reason)card.append(aiIntentRow(labels.reason,textElement('span','ai-intent-value',aiCandidate.reason)));const features=bulletList('ai-intent-features',aiCandidate.matched_features);if(features)card.append(aiIntentRow(labels.features,features));const links=marketplaceLinks(aiCandidate.marketplace_search_links,true);if(links){card.append(textElement('p','ai-candidate-links-note',labels.linksNote));card.append(links);}return card;}
-function aiCandidateCards(candidates,language){const list=(Array.isArray(candidates)?candidates:[]).filter(aiCandidate=>aiCandidate?.name);if(!list.length)return null;const labels=aiIntentLabels[language]||aiIntentLabels.JA;const wrap=document.createElement('div');wrap.className='ai-candidate-list';wrap.append(textElement('strong','ai-candidate-list-title',labels.candidates));list.forEach(aiCandidate=>wrap.append(aiCandidateCard(aiCandidate,labels)));return wrap;}
-function keywordTags(value){const seen=new Set();const tags=[];for(const part of String(value||'').split(/[\/\n]+/)){for(const token of part.trim().split(/\s+/)){const clean=token.trim();if(!clean)continue;const key=clean.toLocaleLowerCase();if(seen.has(key))continue;seen.add(key);tags.push(clean);if(tags.length>=12)return tags;}}return tags;}
-function keywordTagBlock(value,actions,label){const tags=keywordTags(value);if(!tags.length)return null;const wrap=document.createElement('div');wrap.className='keyword-tag-block';if(label)wrap.append(textElement('span','ai-intent-label keyword-tag-label',label));const list=document.createElement('div');list.className='keyword-tag-list';tags.forEach(tag=>list.append(textElement('span','keyword-tag',tag)));const copyButton=document.createElement('button');copyButton.type='button';copyButton.className='copy-keywords copy-all-keywords';copyButton.textContent=actions.copyKeywords;copyButton.addEventListener('click',()=>copySearchKeywords(value,copyButton,actions));wrap.append(list,copyButton);return wrap;}
-// AI related-keyword suggestions (Phase C item 11, 2026-08-07). The
-// keywordTagBlock above only ever echoed the user's own words back as
-// read-only chips, so on a search that returned products there was no way
-// to narrow down without retyping. These chips are tappable and append to
-// the existing condition using the same " / " convention runKnowledgeSearch
-// already treats as "same search root, attempt 2".
-//
-// Every suggestion is real data, never an invented term:
-//   1. the AI intent analysis (search_keywords / candidate brands+names /
-//      features) when it ran - index.mjs only calls discoverProductsWithAi
-//      when the search returned zero candidates, so this source is the
-//      zero-result path;
-//   2. the matched terms and product titles of the products HOSHILU
-//      actually found, frequency-ranked, on the has-results path.
-// Terms already in the query are dropped: re-adding them is a no-op.
-const relatedKeywordCopy={
-  JA:{ai:'AI連想キーワード（タップで検索条件に追加）',result:'検索結果からの関連キーワード（タップで検索条件に追加）',body:'覚えている色・大きさ・電源・使う場所などを検索文に追加すると、候補をさらに絞れます。',button:'条件を追加して再検索'},
-  EN:{ai:'AI related keywords (tap to add to your search)',result:'Related keywords from these results (tap to add to your search)',body:'Add any remembered color, size, power source, or place of use to narrow the matches.',button:'Add details and search again'},
-  ZH:{ai:'AI联想关键词（点击加入搜索条件）',result:'来自搜索结果的相关关键词（点击加入搜索条件）',body:'补充记得的颜色、大小、电源或使用场所，可以进一步缩小候选范围。',button:'补充条件并再次搜索'},
-  KO:{ai:'AI 연상 키워드 (탭하여 검색 조건에 추가)',result:'검색 결과의 관련 키워드 (탭하여 검색 조건에 추가)',body:'기억나는 색상, 크기, 전원 방식, 사용 장소를 추가하면 후보를 더 좁힐 수 있습니다.',button:'조건을 추가해 다시 검색'}
-};
-// Marketplace listing titles are padded with promo boilerplate ("送料無料",
-// "正規品", ...). Suggesting those as refinements would narrow the search by
-// seller marketing rather than by product attributes, so they are dropped.
-const relatedKeywordStopWords=new Set(['送料無料','送料込み','送料込','正規品','新品','中古','未使用','即日発送','あす楽','ポイント','ポイント10倍','セール','sale','限定','数量限定','期間限定','クーポン','まとめ買い','公式','公式ストア','日本製','国内発送','ラッピング','ギフト','プレゼント','人気','おすすめ','高品質','最安値','激安','翌日配送','在庫あり','set','セット','新作','対応','用','的','and','the','for','with','a','of']);
-function splitKeywordTokens(value){return String(value||'').split(/[\s/／・|｜,、，.。;；:：!！?？~〜+＋*＊"'“”‘’()（）\[\]【】「」『』<>＜＞{}]+/u).map(token=>token.trim()).filter(Boolean);}
-function queryTokenSet(query){const set=new Set();splitKeywordTokens(query).forEach(token=>set.add(token.toLocaleLowerCase()));return set;}
-function relatedKeywordSuggestions(result,query){
-  const used=queryTokenSet(query);
-  const seen=new Set();
-  const aiTerms=[];
-  const resultTerms=new Map();
-  const clean=value=>{
-    const text=String(value||'').trim().replace(/\s+/g,' ');
-    if(text.length<2||text.length>28)return'';
-    const key=text.toLocaleLowerCase();
-    if(used.has(key)||seen.has(key)||relatedKeywordStopWords.has(key))return'';
-    if(!/[\p{L}\p{N}]/u.test(text)||/^[\p{N}\p{P}\s]+$/u.test(text))return'';
-    return text;
-  };
-  const pushAi=value=>{const text=clean(value);if(!text)return;seen.add(text.toLocaleLowerCase());aiTerms.push(text);};
-  const countResult=value=>{const text=clean(value);if(!text)return;const key=text.toLocaleLowerCase();resultTerms.set(key,{text,count:(resultTerms.get(key)?.count||0)+1});};
-  const analysis=result?.ai_discovery?.analysis||null;
-  (analysis?.search_keywords||[]).forEach(pushAi);
-  (analysis?.product_candidates||[]).forEach(candidate=>{pushAi(candidate?.brand);pushAi(candidate?.name);});
-  (analysis?.features||[]).forEach(pushAi);
-  (result?.candidates||[]).forEach(candidate=>{
-    (candidate?.evidence?.matched_terms||[]).forEach(countResult);
-    splitKeywordTokens(candidate?.display_name||candidate?.product_name||'').forEach(countResult);
-  });
-  const ranked=[...resultTerms.values()].sort((a,b)=>b.count-a.count).map(entry=>entry.text);
-  return{aiSourced:aiTerms.length>0,terms:[...aiTerms,...ranked].slice(0,12)};
-}
-function applyRelatedKeyword(term){
-  // " / " is the refinement separator runKnowledgeSearch() already parses to
-  // detect "same root, narrowed" - reusing it keeps searchAttempt correct.
-  const current=String(elements.query.value||'').trim();
-  elements.query.value=current?`${current} / ${term}`:term;
-  elements.clear?.classList.remove('hidden');
-  runKnowledgeSearch();
-}
-function relatedKeywordCard(result){
-  const language=elements.language.value;
-  const query=String(elements.query.value||'');
-  const{aiSourced,terms}=relatedKeywordSuggestions(result,query);
-  if(terms.length<5)return null;
-  const copy=relatedKeywordCopy[language]||relatedKeywordCopy.JA;
-  const card=document.createElement('article');
-  card.className='refinement-card related-keyword-card';
-  const wrap=document.createElement('div');
-  wrap.className='keyword-tag-block related-keyword-block';
-  wrap.append(textElement('span','ai-intent-label keyword-tag-label',aiSourced?copy.ai:copy.result));
-  const list=document.createElement('div');
-  list.className='keyword-tag-list';
-  terms.forEach(term=>{
-    const chip=document.createElement('button');
-    chip.type='button';
-    chip.className='keyword-tag related-keyword-tag';
-    chip.textContent=term;
-    chip.addEventListener('click',()=>applyRelatedKeyword(term));
-    list.append(chip);
-  });
-  wrap.append(list);
-  const note=textElement('p','related-keyword-note',copy.body);
-  const button=document.createElement('button');
-  button.type='button';
-  button.className='secondary related-keyword-refine';
-  button.textContent=copy.button;
-  button.addEventListener('click',()=>{focusSearch();setTimeout(()=>{const end=elements.query.value.length;elements.query.setSelectionRange(end,end);},380);});
-  card.append(wrap,note,button);
-  return card;
-}
-// Condition search (Phase C item 11, 2026-08-07). This is the second entry
-// point into the SAME search condition the AI free-text box drives, not a
-// separate search mode: picking chips appends their labels to the current
-// query with " / " - exactly what applyRefinementChips() does server-side and
-// what runKnowledgeSearch() already parses as "same root, narrowed". So one
-// query string remains the single condition model, reachable either by
-// describing the product in words or by picking conditions.
-//
-// The groups, labels and per-language copy all come from the server
-// (refinement_chips, built by search-refinement-policy.mjs) so this file
-// never holds a second copy of that dictionary. One value per dimension,
-// matching applyRefinementChips()'s own one-chip-per-dimension rule.
-const conditionSearchCopy={
-  JA:{title:'条件で絞り込む',body:'各項目から1つずつ選べます。選んだ条件は今の検索にそのまま追加されます。',submit:'この条件で探す'},
-  EN:{title:'Narrow by condition',body:'Pick up to one from each row. Your choices are added to the current search.',submit:'Search with these conditions'},
-  ZH:{title:'按条件筛选',body:'每项最多选择一个，所选条件将直接加入当前搜索。',submit:'用这些条件搜索'},
-  KO:{title:'조건으로 좁히기',body:'각 항목에서 하나씩 선택할 수 있습니다. 선택한 조건은 현재 검색에 추가됩니다.',submit:'이 조건으로 찾기'}
-};
-function conditionSearchCard(groups){
-  groups=(Array.isArray(groups)?groups:[]).filter(group=>group?.label&&group?.values?.length);
-  if(!groups.length)return null;
-  const copy=conditionSearchCopy[elements.language.value]||conditionSearchCopy.JA;
-  const selected=new Map();
-  const card=document.createElement('article');
-  card.className='condition-search-card';
-  card.append(textElement('strong','condition-search-title',copy.title),textElement('p','condition-search-body',copy.body));
-  const submit=document.createElement('button');
-  submit.type='button';
-  submit.className='primary condition-search-submit';
-  submit.textContent=copy.submit;
-  submit.disabled=true;
-  groups.forEach(group=>{
-    const row=document.createElement('div');
-    row.className='condition-group';
-    row.append(textElement('span','condition-group-label',group.label));
-    const list=document.createElement('div');
-    list.className='condition-value-list';
-    group.values.filter(item=>item?.label).forEach(item=>{
-      const chip=document.createElement('button');
-      chip.type='button';
-      chip.className='keyword-tag condition-chip';
-      chip.textContent=item.label;
-      chip.setAttribute('aria-pressed','false');
-      chip.addEventListener('click',()=>{
-        const active=selected.get(group.dimension)===item.label;
-        // one value per dimension: clear the row, then set unless re-tapped
-        [...list.children].forEach(node=>{node.classList.remove('selected');node.setAttribute('aria-pressed','false');});
-        if(active)selected.delete(group.dimension);
-        else{selected.set(group.dimension,item.label);chip.classList.add('selected');chip.setAttribute('aria-pressed','true');}
-        submit.disabled=selected.size===0;
-      });
-      list.append(chip);
-    });
-    row.append(list);
-    card.append(row);
-  });
-  submit.addEventListener('click',()=>{
-    if(!selected.size)return;
-    const base=String(elements.query.value||'').trim();
-    elements.query.value=[base,...selected.values()].filter(Boolean).join(' / ');
-    elements.clear?.classList.remove('hidden');
-    runKnowledgeSearch();
-  });
-  card.append(submit);
-  return card;
-}
-function marketplaceFallbackGroup(label,linksNode,description,searchJumpLabel){if(!linksNode)return null;const group=document.createElement('div');group.className='marketplace-fallback-group';group.append(textElement('p','marketplace-fallback-group-label',label));if(description)group.append(textElement('p','marketplace-fallback-group-description',description));if(searchJumpLabel){const jump=document.createElement('button');jump.type='button';jump.className='marketplace-fallback-search-jump';jump.textContent=searchJumpLabel;jump.addEventListener('click',()=>{document.querySelector('#hoshiluSearch')?.scrollIntoView({behavior:'smooth',block:'start'});window.setTimeout(()=>elements.query?.focus({preventScroll:true}),450);});group.append(jump);}group.append(linksNode);return group;}
-function marketplaceFallbackCard(result){if(!result?.marketplace_search_links?.length&&!result?.amazon_search_url)return null;const labels={
-  JA:{heading:'13モールとSNSを横断して探す',directLabel:'個別に探す',directBody:'各ショップでも同じ条件で探せます。',searchJump:'※まとめて検索する場合は、ホシル検索へ。',socialLabel:'SNSで探す',socialBody:'Instagram・TikTokは検索語もコピーして開きます。検索欄が空の場合は、そのまま貼り付けてください。'},
-  EN:{heading:'Search 13 marketplaces and social platforms',directLabel:'Search individually',directBody:'You can search the same terms directly on each shop.',searchJump:'※For a combined search, go to HOSHILU Search.',socialLabel:'Social search',socialBody:'Instagram and TikTok also copy the search terms. Paste them if the app opens with an empty search field.'},
-  ZH:{heading:'跨13个商城和社交平台查找',directLabel:'单独搜索',directBody:'您可以在各商城使用相同条件继续搜索。',searchJump:'※如需一次搜索多个商城，请前往HOSHILU搜索。',socialLabel:'社交平台',socialBody:'打开Instagram或TikTok时也会复制搜索词。如搜索框为空，请直接粘贴。'},
-  KO:{heading:'13개 쇼핑몰과 SNS에서 함께 찾기',directLabel:'개별 검색',directBody:'각 쇼핑몰에서도 같은 조건으로 찾을 수 있습니다.',searchJump:'※한번에 검색하려면 HOSHILU 검색으로 이동하세요.',socialLabel:'SNS',socialBody:'Instagram과 TikTok을 열 때 검색어도 복사합니다. 검색창이 비어 있으면 그대로 붙여넣으세요.'}
-};const {heading,directLabel,directBody,searchJump,socialLabel,socialBody}=labels[elements.language.value]||labels.JA;const actions=actionCopy[elements.language.value]||actionCopy.JA;const language=elements.language.value;const card=document.createElement('article');card.className='refinement-card marketplace-fallback';card.id='marketplaceFallback';const intro=document.createElement('div');intro.className='marketplace-fallback-intro';intro.append(textElement('strong','',heading));const analysis=result?.ai_discovery?.analysis||null;const intentBlock=aiIntentSummaryBlock(analysis,language);if(intentBlock)intro.append(intentBlock);const candidateCards=aiCandidateCards(analysis?.product_candidates,language);if(candidateCards)intro.append(candidateCards);const keywords=String(result?.search_keywords||result?.amazon_search_keywords||elements.query.value||'');const tagBlock=keywordTagBlock(keywords,actions,(aiIntentLabels[language]||aiIntentLabels.JA).keywords);if(tagBlock)intro.append(tagBlock);card.append(intro);const legacy=result.amazon_search_url?[{marketplace:'AMAZON_JP',label:'Amazonで探す',url:result.amazon_search_url,mode:'direct'}]:[];const allLinks=result.marketplace_search_links?.length?result.marketplace_search_links:legacy;const directGroup=marketplaceFallbackGroup(directLabel,marketplaceLinks(allLinks),directBody,searchJump);if(directGroup)card.append(directGroup);const socialLinks=marketplaceLinks(socialDiscoverySearchLinks(keywords));if(socialLinks){socialLinks.classList.add('social-search-links');const socialGroup=marketplaceFallbackGroup(socialLabel,socialLinks,socialBody);if(socialGroup)card.append(socialGroup);}return card;}
-function aiDiscoveryCard(result){const items=(result?.ai_discovery?.candidates||[]).filter(item=>item?.url&&item?.image).slice(0,3);if(!items.length)return null;const labels={JA:['AIが見つけた可能性のある商品','API連携モールで確認できなかったため、公開Webから近い候補を探しました。未確認候補のため、商品ページで内容を確認してください。','候補ページを見る'],EN:['Possible products found by AI','The connected marketplaces had no confirmed match, so AI searched the public web. These are unconfirmed leads; verify the product page.','View candidate page'],ZH:['AI找到的可能商品','API连接商城均无确认结果，因此AI搜索了公开网页。这些是未确认候选，请在商品页核实。','查看候选页面'],KO:['AI가 찾은 가능성 있는 상품','API 연동 쇼핑몰에서 확인되지 않아 공개 웹에서 비슷한 후보를 찾았습니다. 미확인 후보이므로 상품 페이지에서 확인하세요.','후보 페이지 보기']}[elements.language.value]||null;const card=document.createElement('article');card.className='ai-discovery-card';card.append(textElement('span','ai-discovery-badge','AI DISCOVERY'),textElement('h3','',labels[0]),textElement('p','ai-discovery-notice',labels[1]));const list=document.createElement('div');list.className='ai-discovery-list';items.forEach(item=>{const link=document.createElement('a');link.className='ai-discovery-item';link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';const image=document.createElement('img');image.src=item.image;image.alt='';image.loading='lazy';image.referrerPolicy='no-referrer';link.append(image,textElement('strong','',item.title),textElement('small','',item.source||''),textElement('span','',labels[2]));list.append(link);});card.append(list);return card;}// 2026-08-07: 提示欄を上下2段に分割する（Phase C 項目A）。
-// 上段 = 接続済みモールで送料込みの合計金額を実際に確認できた商品。
-// 下段 = 商品としては実在するが、価格・在庫が確認できていない商品。
-// API連携できた商品だけを出すと提示数が極端に少なくなるが、HOSHILUは価格を
-// 推測しない。したがって下段は「価格・在庫は未確認」と明示したうえで、商品
-// ページへのリンクだけを出す。各段の上限は30件（Worker側は合計60件まで返す）。
-function productImageGallery(candidate){
-  const urls=[...(Array.isArray(candidate?.image_urls)?candidate.image_urls:[]),candidate?.image,candidate?.image_url]
-    .map(value=>String(value||'').trim())
-    .filter((value,index,values)=>/^https:\/\//i.test(value)&&values.indexOf(value)===index)
-    .slice(0,8);
-  if(!urls.length)return null;
-  const gallery=document.createElement('div');
-  gallery.className='product-image-gallery';
-  const image=document.createElement('img');
-  image.className='product-image';
-  image.src=urls[0];
-  image.alt=String(candidate?.display_name||candidate?.product_name||'商品画像');
-  image.loading='lazy';
-  image.referrerPolicy='no-referrer';
-  image.tabIndex=0;
-  image.setAttribute('role','button');
-  image.setAttribute('aria-label','商品画像を拡大して見る');
-  gallery.append(image);
-
-  let current=0;
-  let count=null;
-  const show=index=>{
+  const priceLabels={JA:{label:'この金額以下にな…12589 tokens truncated…=>{
     current=(index+urls.length)%urls.length;
     image.src=urls[current];
     if(count)count.textContent=`${current+1} / ${urls.length}`;
@@ -717,7 +399,7 @@ const relatedCategoryShelfCopy={
   KO:{badge:'관련 상품 검색 후보',title:'함께 찾을 관련 상품',note:'관련 카테고리를 가로로 보고 최대 13개 쇼핑몰에서 실제 상품을 확인할 수 있습니다.',reason:'관련 후보 이유'}
 };
 function relatedCategoryCard(item){const language=elements.language.value||'JA';const labels=relatedCategoryShelfCopy[language]||relatedCategoryShelfCopy.JA;const card=document.createElement('article');card.className='product-card unverified-card related-category-card';card.append(textElement('span','unverified-badge',labels.badge),textElement('h3','',String(item?.query||'')),textElement('div','recommendation-reason',`${labels.reason}：${String(item?.reason||'検索内容と一緒に使えるカテゴリ')}`));const links=marketplaceLinks(item?.marketplace_search_links,true);if(links)card.append(links);return card;}
-function recommendationRowFor(result,t,query){const products=(Array.isArray(result?.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);if(products.length){const copy=resultRowCopyFor(elements.language.value);return resultRow(products.map((candidate,index)=>productCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}
+function recommendationRowFor(result,t,query,fallbackProducts={candidates:[],confirmed:false}){const products=(Array.isArray(result?.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);const copy=resultRowCopyFor(elements.language.value);if(products.length){const row=resultRow(products.map((candidate,index)=>productCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const verifiedFallback=(Array.isArray(fallbackProducts?.candidates)?fallbackProducts.candidates:[]).slice(0,RESULT_ROW_LIMIT);if(verifiedFallback.length){const confirmed=Boolean(fallbackProducts.confirmed);const row=resultRow(verifiedFallback.map((candidate,index)=>productCard(candidate,index,t,confirmed,query)),confirmed?copy.verifiedRecommendationTitle:copy.unconfirmedTitle,confirmed?copy.verifiedRecommendationNote:copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}
 function renderResults(result,requestId){
   // resultCarouselは検索ごとに新しいtrackを作るため、DOMから外す前に旧tickerの
   // interval・アニメーション・イベントを明示解除する。
@@ -726,13 +408,15 @@ function renderResults(result,requestId){
   elements.results.classList.remove('hidden');
   elements.message.textContent=result.message||'';
   const copy=resultRowCopyFor(elements.language.value);
-  const {confirmed}=splitCandidateRows(result.candidates,RESULT_ROW_LIMIT);
+  const candidateRows=splitCandidateRows(result.candidates,RESULT_ROW_LIMIT);
+  const {confirmed}=candidateRows;
+  const fallbackProducts=fallbackRecommendationCandidates(candidateRows,RESULT_ROW_LIMIT);
   const recommended=(Array.isArray(result.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);
   console.info('SEARCH_TRACE_CLIENT',{requestId,stage:'11_ui_render',ui_render_count:confirmed.length+recommended.length,ui_confirmed_count:confirmed.length,ui_recommended_count:recommended.length});
   const sharedSearchQuery=String(result?.search_keywords||result?.amazon_search_keywords||elements.query.value||'');
   const rows=[
     resultRow(confirmed.map((candidate,index)=>productCard(candidate,index,t,true,sharedSearchQuery)),copy.confirmedTitle,copy.confirmedNote,'confirmed'),
-    recommendationRowFor(result,t,sharedSearchQuery)
+    recommendationRowFor(result,t,sharedSearchQuery,fallbackProducts)
   ].filter(Boolean);
   if(rows.length){
     const resultCards=[];
@@ -787,9 +471,11 @@ async function loadRelatedRecommendations(query,sequence){
       const categories=(Array.isArray(payload.result?.categories)?payload.result.categories:[]).slice(0,3);
       const oldRow=elements.cards.querySelector('[data-row="recommended"]');
       if(!recommendations.length&&!categories.length)return;
+      if(!recommendations.length&&oldRow?.dataset.recommendationProducts==='true')return;
       const copy=resultRowCopyFor(elements.language.value);
       const categoryCopy=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;
       const row=recommendations.length?resultRow(recommendations.map((candidate,index)=>productCard(candidate,index,selectedCopy(),false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended'):resultRow(categories.map(relatedCategoryCard),categoryCopy.title,categoryCopy.note,'recommended');
+      if(recommendations.length&&row)row.dataset.recommendationProducts='true';
       if(!row)return;
       if(oldRow)oldRow.replaceWith(row);else{
         const anchor=elements.cards.querySelector('.related-keywords-card,.marketplace-fallback');

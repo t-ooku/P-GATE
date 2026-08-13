@@ -267,11 +267,23 @@ test('deep canary immediately alerts on one non-transient AI chat failure', () =
     /DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:AI_CHAT_PRIMARY:GEMINI_CHAT_INTENT_FAILED/u);
 });
 
-test('deep canary alerts on one query structurer failure', () => {
+test('deep canary confirms transient query structurer failures before alerting', () => {
   const now = Date.now();
-  const rows = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'
+  const latest = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'
     ? { ...row, status:'FAIL', code:'GEMINI_CHAT_INTENT_FAILED' } : row);
-  assert.throws(() => evaluateDeepCanary(rows, { now }), /DEEP_CANARY_QUERY_STRUCTURER_IMMEDIATE:GEMINI_CHAT_INTENT_FAILED/u);
+  assert.throws(() => evaluateDeepCanary(latest, { now }),
+    /DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:QUERY_STRUCTURER:GEMINI_CHAT_INTENT_FAILED/u);
+
+  const transient = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'
+    ? { ...row, status:'FAIL', code:'CANARY_PROVIDER_TIMEOUT' } : row);
+  assert.doesNotThrow(() => evaluateDeepCanary(transient, { now }));
+  transient.push({
+    component:'query_structurer', status:'FAIL', code:'CANARY_PROVIDER_TIMEOUT',
+    occurred_at:new Date(now - 15 * 60000).toISOString(),
+    event_id:`deep-canary:${now - 15 * 60000}:query_structurer`
+  });
+  assert.throws(() => evaluateDeepCanary(transient, { now }),
+    /DEEP_CANARY_QUERY_STRUCTURER_CONSECUTIVE:QUERY_STRUCTURER:CANARY_PROVIDER_TIMEOUT/u);
 });
 
 test('deep canary immediately alerts on non-transient control failures', () => {
