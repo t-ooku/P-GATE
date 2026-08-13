@@ -235,15 +235,30 @@ test('説明だけの商品検索も主力4モールへカテゴリ語を引き�
   }
 });
 
-test('公開検索APIが失敗しても4モールへの検索導線を表示する', async () => {
+test('公開検索APIとTurnstileが失敗しても13モールと横レコメンドを表示する', async () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const fallbackBlock = appSource.slice(
+    appSource.indexOf('function emergencyMarketplaceSearchLinks'),
+    appSource.indexOf('// linksNote', appSource.indexOf('function emergencyMarketplaceSearchLinks'))
+  );
+  assert.deepEqual(
+    [...fallbackBlock.matchAll(/marketplace:'([A-Z0-9_]+)'/gu)].map(match => match[1]),
+    ['AMAZON_JP','RAKUTEN_JP','YAHOO_JP','QOO10_JP','SHEIN_JP','ZOZOTOWN_JP','LOFT_JP','HANDS_JP','MATSUKIYO_JP','COSME_JP','ABCMART_JP','BUYMA_JP','SNKRDUNK_JP']
+  );
   assert.match(appSource, /function emergencyMarketplaceFallback\(query\)/);
   assert.match(appSource, /Amazonで探す/);
   assert.match(appSource, /tag=hoshilu00-22/);
   assert.match(appSource, /BROWSER_EMERGENCY_FALLBACK/);
   assert.match(appSource, /楽天市場で探す/);
+  assert.match(appSource, /Yahoo!ショッピングで探す/);
   assert.match(appSource, /Qoo10で探す/);
   assert.match(appSource, /SHEINで探す/);
+  assert.match(fallbackBlock, /ZOZOTOWNで探す[\s\S]*copy_before_open:true/);
+  assert.match(fallbackBlock, /ABC-MARTで探す[\s\S]*copy_before_open:true/);
+  assert.match(fallbackBlock, /アイブロウブラシ[\s\S]*眉マスカラ[\s\S]*アイブロウコート/);
+  assert.match(fallbackBlock, /related_category_recommendations:emergencyRelatedCategoryRecommendations\(query\)/);
+  assert.match(fallbackBlock, /最大13モールで同じ条件を探せるリンク/);
+  assert.doesNotMatch(fallbackBlock, /5つのモール|five marketplaces|五个商城|5개 쇼핑몰/u);
   assert.match(appSource, /const fallback=withAiCandidateFallback\(emergencyMarketplaceFallback\(elements\.query\.value\),options\.aiCandidateFallback\)/);
   assert.match(appSource, /AI候補と13モールの検索先を表示しています/);
 });
@@ -509,7 +524,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v381/);
+  assert.match(serviceWorker, /hoshilu-shell-v382/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });

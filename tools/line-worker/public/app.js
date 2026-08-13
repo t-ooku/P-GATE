@@ -280,19 +280,76 @@ const socialSearchHandoffCopy={
   ZH:{title:'复制搜索词后打开应用',body:'Instagram或TikTok应用打开时可能不会自动填入搜索词。请复制下方文字并粘贴到应用的搜索框。',copy:'复制搜索词',copied:'已复制',failed:'无法自动复制，请长按搜索词进行复制。',open:name=>`打开${name}`,close:'关闭'},
   KO:{title:'검색어를 복사한 뒤 앱에서 찾기',body:'Instagram·TikTok 앱을 열 때 검색어가 자동 입력되지 않을 수 있습니다. 아래 검색어를 복사해 앱 검색창에 붙여 넣어 주세요.',copy:'검색어 복사',copied:'복사했습니다',failed:'자동 복사에 실패했습니다. 검색어를 길게 눌러 복사해 주세요.',open:name=>`${name} 열기`,close:'닫기'}
 };
-function openSocialSearchHandoff(item){const copy=socialSearchHandoffCopy[elements.language.value]||socialSearchHandoffCopy.JA;const name=item.channel==='instagram'?'Instagram':'TikTok';const dialog=document.createElement('dialog');dialog.className='social-search-handoff-dialog';const panel=document.createElement('div');panel.className='social-search-handoff-card';const close=document.createElement('button');close.type='button';close.className='social-search-handoff-close';close.setAttribute('aria-label',copy.close);close.textContent='✕';close.addEventListener('click',()=>dialog.close());const query=textElement('output','social-search-handoff-query',String(item.search_query));const status=textElement('p','social-search-handoff-status','');const copyButton=document.createElement('button');copyButton.type='button';copyButton.className='secondary social-search-copy-button';copyButton.textContent=copy.copy;const runCopy=async()=>{const copied=await copySocialSearchQuery(item.search_query);status.textContent=copied?copy.copied:copy.failed;copyButton.textContent=copied?copy.copied:copy.copy;return copied;};copyButton.addEventListener('click',()=>{void runCopy();});const open=document.createElement('a');open.className='buy-link social-search-open-button';open.href=item.url;open.target='_blank';open.rel='noopener noreferrer';open.textContent=copy.open(name);const actions=document.createElement('div');actions.className='social-search-handoff-actions';actions.append(copyButton,open);panel.append(close,textElement('strong','social-search-handoff-title',copy.title),textElement('p','social-search-handoff-body',copy.body),query,status,actions);dialog.append(panel);dialog.addEventListener('close',()=>dialog.remove());document.body.append(dialog);dialog.showModal();void runCopy();}
+const marketplaceSearchHandoffCopy={
+  JA:{title:'検索語をコピーしてモールで探す',body:'このモールでは日本語の検索語を自動入力できないため、下の検索語をコピーして検索欄へ貼り付けてください。',copy:'検索語をコピー',copied:'コピーしました。モールの検索欄へ貼り付けてください。',failed:'自動コピーできませんでした。検索語を長押ししてコピーしてください。',open:name=>`${name}を開く`,close:'閉じる'},
+  EN:{title:'Copy the search terms, then open the marketplace',body:'This marketplace cannot receive Japanese search terms automatically. Copy the terms below and paste them into its search box.',copy:'Copy search terms',copied:'Copied. Paste the terms into the marketplace search box.',failed:'Automatic copy failed. Press and hold the terms to copy them.',open:name=>`Open ${name}`,close:'Close'},
+  ZH:{title:'复制搜索词后打开商城',body:'该商城无法自动接收日语搜索词。请复制下方文字并粘贴到商城搜索框。',copy:'复制搜索词',copied:'已复制，请粘贴到商城搜索框。',failed:'无法自动复制，请长按搜索词进行复制。',open:name=>`打开${name}`,close:'关闭'},
+  KO:{title:'검색어를 복사한 뒤 쇼핑몰에서 찾기',body:'이 쇼핑몰에는 일본어 검색어를 자동 입력할 수 없습니다. 아래 검색어를 복사해 쇼핑몰 검색창에 붙여 넣어 주세요.',copy:'검색어 복사',copied:'복사했습니다. 쇼핑몰 검색창에 붙여 넣어 주세요.',failed:'자동 복사에 실패했습니다. 검색어를 길게 눌러 복사해 주세요.',open:name=>`${name} 열기`,close:'닫기'}
+};
+function openSearchHandoff(item,copy,name){const dialog=document.createElement('dialog');dialog.className='social-search-handoff-dialog';const panel=document.createElement('div');panel.className='social-search-handoff-card';const close=document.createElement('button');close.type='button';close.className='social-search-handoff-close';close.setAttribute('aria-label',copy.close);close.textContent='✕';close.addEventListener('click',()=>dialog.close());const query=textElement('output','social-search-handoff-query',String(item.search_query));const status=textElement('p','social-search-handoff-status','');const copyButton=document.createElement('button');copyButton.type='button';copyButton.className='secondary social-search-copy-button';copyButton.textContent=copy.copy;const runCopy=async()=>{const copied=await copySocialSearchQuery(item.search_query);status.textContent=copied?copy.copied:copy.failed;copyButton.textContent=copied?copy.copied:copy.copy;return copied;};copyButton.addEventListener('click',()=>{void runCopy();});const open=document.createElement('a');open.className='buy-link social-search-open-button';open.href=item.url;open.target='_blank';open.rel='noopener noreferrer';open.textContent=copy.open(name);const actions=document.createElement('div');actions.className='social-search-handoff-actions';actions.append(copyButton,open);panel.append(close,textElement('strong','social-search-handoff-title',copy.title),textElement('p','social-search-handoff-body',copy.body),query,status,actions);dialog.append(panel);dialog.addEventListener('close',()=>dialog.remove());document.body.append(dialog);dialog.showModal();void runCopy();}
+function openSocialSearchHandoff(item){const copy=socialSearchHandoffCopy[elements.language.value]||socialSearchHandoffCopy.JA;const name=item.channel==='instagram'?'Instagram':'TikTok';openSearchHandoff(item,copy,name);}
+function openMarketplaceSearchHandoff(item){const copy=marketplaceSearchHandoffCopy[elements.language.value]||marketplaceSearchHandoffCopy.JA;const name=String(item.label||item.marketplace||'モール').replace(/(?:で探す|で検索)$/u,'');openSearchHandoff(item,copy,name);}
 function marketplaceLinks(links,compact=false){const valid=(Array.isArray(links)?links:[]).filter(item=>item?.url);if(!valid.length)return null;const wrap=document.createElement('div');wrap.className=compact?'marketplace-links compact':'marketplace-links';valid.forEach(item=>{const link=document.createElement('a');link.className='buy-link marketplace-search-link';link.dataset.marketplace=String(item.marketplace||'');if(item.measurement_context)link.dataset.measurementContext=String(item.measurement_context);
 // Social links carry `channel` instead of `marketplace`; ai-search-ui.css
 // colours them via [data-channel]. Emitting it is what keeps them rendering
 // as brand-coloured buttons rather than bare blue links.
-if(item.channel)link.dataset.channel=String(item.channel);link.href=item.url;link.target='_blank';link.rel=outboundRel(item.marketplace);if(item.copy_query&&item.search_query){link.dataset.searchQuery=String(item.search_query);link.title='検索語をコピーして開きます';link.addEventListener('click',(event)=>{event.preventDefault();openSocialSearchHandoff(item);});}
+if(item.channel)link.dataset.channel=String(item.channel);link.href=item.url;link.target='_blank';link.rel=outboundRel(item.marketplace);if(item.copy_before_open&&item.search_query){link.dataset.searchQuery=String(item.search_query);link.title='検索語を確認してモールを開きます';link.addEventListener('click',(event)=>{event.preventDefault();openMarketplaceSearchHandoff(item);});}if(item.copy_query&&item.search_query){link.dataset.searchQuery=String(item.search_query);link.title='検索語をコピーして開きます';link.addEventListener('click',(event)=>{event.preventDefault();openSocialSearchHandoff(item);});}
 // Mall buttons sit under a "モールで探す" group heading, so the per-button
 // "〜で探す" suffix is redundant and gets stripped. Social buttons keep their
 // label verbatim ("Instagramで探す" / "LINEで共有") so the action stays explicit.
-const rawLabel=String(item.label||item.marketplace||'');link.textContent=item.channel?rawLabel:rawLabel.replace(/(?:で探す|で検索)$/u,'');wrap.append(link);});return wrap;}
+const rawLabel=String(item.label||item.marketplace||'');link.textContent=item.channel?rawLabel:rawLabel.replace(/(?:で探す|で検索)$/u,'');if(item.copy_before_open)link.setAttribute('aria-label',`${rawLabel}（検索語をコピーして開く）`);wrap.append(link);});return wrap;}
 function emergencySearchKeywords(query){const source=String(query||'').trim();return source?(buildMarketplaceSearchKeywords(source,'AMAZON_JP')||source):'';}
-function emergencyMarketplaceSearchLinks(query){const keywords=emergencySearchKeywords(query);if(!keywords)return[];const encoded=encodeURIComponent(keywords);return[{marketplace:'AMAZON_JP',label:'Amazonで探す',url:`https://www.amazon.co.jp/s?k=${encoded}&tag=hoshilu00-22`,search_query:keywords},{marketplace:'RAKUTEN_JP',label:'楽天市場で探す',url:`https://search.rakuten.co.jp/search/mall/${encoded}/`,search_query:keywords},{marketplace:'YAHOO_JP',label:'Yahoo!ショッピングで探す',url:`https://shopping.yahoo.co.jp/search?p=${encoded}`,search_query:keywords},{marketplace:'QOO10_JP',label:'Qoo10で探す',url:`https://www.qoo10.jp/s/?keyword=${encoded}`,search_query:keywords},{marketplace:'SHEIN_JP',label:'SHEINで探す',url:`https://jp.shein.com/pdsearch/${encoded}/`,search_query:keywords}].map(item=>({...item,measurement_context:'BROWSER_EMERGENCY_FALLBACK'}));}
-function emergencyMarketplaceFallback(query){const messages={JA:'商品候補を取得できなかったため、5つのモールで同じ条件を探せるリンクを表示しています。',EN:'Product suggestions are temporarily unavailable, so you can continue the same search across five marketplaces.',ZH:'暂时无法获取商品候选，因此显示可在五个商城继续搜索相同条件的链接。',KO:'상품 후보를 가져오지 못해 같은 조건으로 5개 쇼핑몰에서 계속 찾을 수 있는 링크를 표시합니다.'};return{message:messages[elements.language.value]||messages.JA,candidates:[],search_keywords:emergencySearchKeywords(query),marketplace_search_links:emergencyMarketplaceSearchLinks(query)};}
+function emergencyMarketplaceSearchLinks(query){
+  const keywords=emergencySearchKeywords(query);if(!keywords)return[];
+  const encoded=encodeURIComponent(keywords);
+  // ZOZOTOWNとABC-MARTの検索語はShift_JIS指定のため、Workerへ到達できない
+  // 最終縮退ではASCII部分だけURLへ渡し、完全な検索語を同時にコピーする。
+  // 日本語だけの場合は壊れたURLを作らず公式検索画面を開く。
+  const legacyKeywords=keywords.normalize('NFKC').replace(/[^\x20-\x7e]+/gu,' ').replace(/\s+/gu,' ').trim();
+  const legacyEncoded=encodeURIComponent(legacyKeywords);
+  return[
+    {marketplace:'AMAZON_JP',label:'Amazonで探す',url:`https://www.amazon.co.jp/s?k=${encoded}&tag=hoshilu00-22`,search_query:keywords},
+    {marketplace:'RAKUTEN_JP',label:'楽天市場で探す',url:`https://search.rakuten.co.jp/search/mall/${encoded}/`,search_query:keywords},
+    {marketplace:'YAHOO_JP',label:'Yahoo!ショッピングで探す',url:`https://shopping.yahoo.co.jp/search?p=${encoded}`,search_query:keywords},
+    {marketplace:'QOO10_JP',label:'Qoo10で探す',url:`https://www.qoo10.jp/s/?keyword=${encoded}`,search_query:keywords},
+    {marketplace:'SHEIN_JP',label:'SHEINで探す',url:`https://jp.shein.com/pdsearch/${encoded}/`,search_query:keywords},
+    {marketplace:'ZOZOTOWN_JP',label:'ZOZOTOWNで探す',url:legacyKeywords?`https://zozo.jp/search/?p_keyv=${legacyEncoded}`:'https://zozo.jp/search/',search_query:keywords,copy_before_open:true},
+    {marketplace:'LOFT_JP',label:'ロフトで探す',url:`https://www.loft.co.jp/store/goods/search.aspx?keyword=${encoded}&search=x`,search_query:keywords},
+    {marketplace:'HANDS_JP',label:'ハンズで探す',url:`https://hands.net/search/?q=${encoded}`,search_query:keywords},
+    {marketplace:'MATSUKIYO_JP',label:'マツキヨココカラで探す',url:`https://www.matsukiyococokara-online.com/store/catalogsearch/result?search_keyword=${encoded}`,search_query:keywords},
+    {marketplace:'COSME_JP',label:'@cosme SHOPPINGで探す',url:`https://www.cosme.com/products/list.php?name=${encoded}`,search_query:keywords},
+    {marketplace:'ABCMART_JP',label:'ABC-MARTで探す',url:legacyKeywords?`https://www.abc-mart.net/shop/goods/search.aspx?keyword=${legacyEncoded}`:'https://www.abc-mart.net/shop/goods/search.aspx',search_query:keywords,copy_before_open:true},
+    {marketplace:'BUYMA_JP',label:'BUYMAで探す',url:`https://www.buyma.com/r/${encoded}/`,search_query:keywords},
+    {marketplace:'SNKRDUNK_JP',label:'SNKRDUNKで探す',url:`https://snkrdunk.com/search/?keywords=${encoded}`,search_query:keywords}
+  ].map(item=>({...item,measurement_context:'BROWSER_EMERGENCY_FALLBACK'}));
+}
+const emergencyRelatedRules=[
+  {match:/スマホ.{0,4}(?:ケース|カバー)|iphone.{0,4}(?:case|ケース|カバー)/iu,items:[['スマホ充電器','一緒に使う充電用品'],['スマホストラップ','持ち歩きや落下防止に関連'],['スマホ保護フィルム','端末保護に関連']]},
+  {match:/ハンディファン|携帯扇風機|顔用扇風機/iu,items:[['モバイルバッテリー','外出先での給電に関連'],['冷感タオル','暑さ対策として関連'],['ネッククーラー','同じ利用場面の暑さ対策']]},
+  {match:/ワイヤレスイヤホン|bluetooth.{0,3}イヤホン/iu,items:[['イヤホンケース','持ち運びと保護に関連'],['USB充電器','イヤホンの充電に関連'],['Bluetoothトランスミッター','接続機器の拡張に関連']]},
+  {match:/スニーカー|ランニングシューズ/iu,items:[['靴下','一緒に着用する商品'],['インソール','履き心地の調整に関連'],['防水スプレー 靴','靴の手入れに関連']]},
+  {match:/化粧水|フェイスローション/iu,items:[['乳液','スキンケア手順で関連'],['美容液','同じスキンケア用途'],['コットン 化粧用','化粧水の使用時に関連']]},
+  {match:/ピアス|イヤリング/iu,items:[['アクセサリーケース','ピアスの保管に関連'],['ピアスキャッチ','紛失防止や交換に関連'],['ジュエリークロス','アクセサリーの手入れに関連']]},
+  {match:/カラコン|カラー\s*コンタクト|コンタクト\s*レンズ/iu,items:[['コンタクトレンズ洗浄液','レンズの洗浄・保存に関連'],['コンタクトレンズケース','レンズの保管に関連'],['コンタクトレンズ装着液','装着時のケアに関連']]},
+  {match:/ノート\s*パソコン|ノート\s*pc|laptop/iu,items:[['ワイヤレスマウス','パソコン操作に関連'],['ノートパソコンケース','持ち運びと保護に関連'],['USB Type-C ハブ','周辺機器の接続に関連']]},
+  {match:/タブレット|ipad/iu,items:[['タブレットケース','端末の保護に関連'],['タブレット用タッチペン','入力や操作に関連'],['タブレット保護フィルム','画面保護に関連']]},
+  {match:/デジタルカメラ|ミラーレス|一眼レフ/iu,items:[['SDカード カメラ用','写真データの保存に関連'],['カメラバッグ','持ち運びと保護に関連'],['カメラ三脚','撮影時の固定に関連']]},
+  {match:/テレビ|モニター|ディスプレイ/iu,items:[['HDMIケーブル','映像機器の接続に関連'],['テレビ台','設置環境に関連'],['画面クリーナー','画面の手入れに関連']]},
+  {match:/プリンター|複合機/iu,items:[['プリンター用紙','印刷時に使用する商品'],['プリンターインク','印刷用の消耗品'],['USBプリンターケーブル','機器の接続に関連']]},
+  {match:/炊飯器/iu,items:[['米びつ','お米の保存に関連'],['米とぎボウル','炊飯準備に関連'],['キッチンスケール','分量の計測に関連']]},
+  {match:/コーヒー\s*メーカー|コーヒー\s*マシン/iu,items:[['コーヒーフィルター','抽出時に使用する商品'],['コーヒーグラインダー','豆の準備に関連'],['コーヒーマグ','飲用時に関連']]},
+  {match:/ベッド|マットレス/iu,items:[['ベッドシーツ','寝具として一緒に使用'],['枕','睡眠環境に関連'],['マットレスプロテクター','汚れや湿気の対策に関連']]},
+  {match:/ソファ|カウチ/iu,items:[['ソファカバー','汚れ防止や模様替えに関連'],['クッション','座り心地の調整に関連'],['サイドテーブル','ソファ周辺での使用に関連']]},
+  {match:/ベビーカー|バギー/iu,items:[['ベビーカー レインカバー','雨天時の利用に関連'],['ベビーカーフック','荷物の持ち運びに関連'],['ベビーカーシート','座面の汚れ対策に関連']]},
+  {match:/おむつ|オムツ|紙パンツ/iu,items:[['おしりふき','おむつ交換時に使用'],['おむつ替えシート','交換時の衛生に関連'],['おむつ消臭袋','使用済みおむつの処理に関連']]},
+  {match:/シャンプー/iu,items:[['コンディショナー','洗髪後のケアに関連'],['ヘアマスク','髪の集中ケアに関連'],['頭皮ブラシ','洗髪時のケアに関連']]},
+  {match:/ファンデーション/iu,items:[['化粧下地','ベースメイクの前工程に関連'],['メイクスポンジ','ファンデーションの塗布に関連'],['フェイスパウダー','ベースメイクの仕上げに関連']]},
+  {match:/アイブロウ|眉(?:毛)?(?:ペン|ペンシル|描き)|眉墨/iu,items:[['アイブロウブラシ','眉メイクの仕上げに関連'],['眉マスカラ','眉色の調整に関連'],['アイブロウコート','眉メイクの持続に関連']]},
+  {match:/掃除機|クリーナー/iu,items:[['すき間掃除ブラシ','細部の掃除に関連'],['掃除用ウェットシート','床や家具の仕上げ掃除に関連'],['収納ラック 掃除機','掃除用品の収納に関連']]},
+  {match:/ペット\s*フード|ドッグ\s*フード|キャット\s*フード/iu,items:[['ペットフード保存容器','フードの保存に関連'],['ペット用フードボウル','給餌時に使用'],['ペット用計量スプーン','給餌量の計測に関連']]}
+];
+function emergencyRelatedCategoryRecommendations(query){const normalized=String(query||'').normalize('NFKC');const rule=emergencyRelatedRules.find(item=>item.match.test(normalized));return rule?rule.items.map(([relatedQuery,reason])=>({query:relatedQuery,reason,marketplace_search_links:emergencyMarketplaceSearchLinks(relatedQuery)})):[];}
+function emergencyMarketplaceFallback(query){const messages={JA:'商品候補を取得できなかったため、最大13モールで同じ条件を探せるリンクを表示しています。',EN:'Product suggestions are temporarily unavailable, so you can continue the same search across up to 13 marketplaces.',ZH:'暂时无法获取商品候选，因此显示可在最多13个商城继续搜索相同条件的链接。',KO:'상품 후보를 가져오지 못해 같은 조건으로 최대 13개 쇼핑몰에서 계속 찾을 수 있는 링크를 표시합니다.'};return{message:messages[elements.language.value]||messages.JA,candidates:[],search_keywords:emergencySearchKeywords(query),marketplace_search_links:emergencyMarketplaceSearchLinks(query),related_category_recommendations:emergencyRelatedCategoryRecommendations(query)};}
 // linksNote (2026-08-08): AI候補のモールボタンは商品ページの直リンクでは
 // なく、そのモールでの検索リンクなので、どこを見ればよいか分からないという
 // 声を受けてボタンの直前に明示する(marketplaceLinksの'で探す'/'で検索'は
@@ -654,10 +711,10 @@ function resultRow(cards,title,note,rowKind){
   return row;
 }
 const relatedCategoryShelfCopy={
-  JA:{badge:'関連商品の検索候補',title:'一緒に探せる関連商品',note:'実在商品を確認中です。先に関連カテゴリを横スクロールし、最大13モールで探せます。',reason:'AI選定理由'},
-  EN:{badge:'Related search idea',title:'Related products to explore',note:'While verified products load, browse related categories horizontally and search up to 13 marketplaces.',reason:'Why AI selected it'},
-  ZH:{badge:'相关商品搜索候选',title:'可一起查找的相关商品',note:'正在确认真实商品。您可先横向浏览相关类别，并在最多13个商城中查找。',reason:'AI选择理由'},
-  KO:{badge:'관련 상품 검색 후보',title:'함께 찾을 관련 상품',note:'실제 상품을 확인하는 동안 관련 카테고리를 가로로 보고 최대 13개 쇼핑몰에서 찾을 수 있습니다.',reason:'AI 선정 이유'}
+  JA:{badge:'関連商品の検索候補',title:'一緒に探せる関連商品',note:'関連カテゴリを横スクロールし、最大13モールで実在商品を確認できます。',reason:'関連候補の理由'},
+  EN:{badge:'Related search idea',title:'Related products to explore',note:'Browse related categories horizontally and verify real products across up to 13 marketplaces.',reason:'Why it is related'},
+  ZH:{badge:'相关商品搜索候选',title:'可一起查找的相关商品',note:'可横向浏览相关类别，并在最多13个商城中确认真实商品。',reason:'相关理由'},
+  KO:{badge:'관련 상품 검색 후보',title:'함께 찾을 관련 상품',note:'관련 카테고리를 가로로 보고 최대 13개 쇼핑몰에서 실제 상품을 확인할 수 있습니다.',reason:'관련 후보 이유'}
 };
 function relatedCategoryCard(item){const language=elements.language.value||'JA';const labels=relatedCategoryShelfCopy[language]||relatedCategoryShelfCopy.JA;const card=document.createElement('article');card.className='product-card unverified-card related-category-card';card.append(textElement('span','unverified-badge',labels.badge),textElement('h3','',String(item?.query||'')),textElement('div','recommendation-reason',`${labels.reason}：${String(item?.reason||'検索内容と一緒に使えるカテゴリ')}`));const links=marketplaceLinks(item?.marketplace_search_links,true);if(links)card.append(links);return card;}
 function recommendationRowFor(result,t,query){const products=(Array.isArray(result?.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);if(products.length){const copy=resultRowCopyFor(elements.language.value);return resultRow(products.map((candidate,index)=>productCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}

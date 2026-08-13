@@ -47,10 +47,19 @@ test('marketplaceLinks()はSNSリンクへdata-channelを出力し、ラベル�
   assert.match(app, /item\.channel\?rawLabel:rawLabel\.replace\(\/\(\?:で探す\|で検索\)\$\/u,''\)/);
   assert.match(app, /item\.copy_query&&item\.search_query/);
   assert.match(app, /event\.preventDefault\(\);openSocialSearchHandoff\(item\)/);
+  assert.match(app, /event\.preventDefault\(\);openMarketplaceSearchHandoff\(item\)/);
   assert.match(app, /const copied=await copySocialSearchQuery\(item\.search_query\)/);
   assert.match(app, /social-search-copy-button/);
   assert.match(app, /social-search-open-button/);
   assert.match(app, /dialog\.showModal\(\)/);
+});
+
+test('日本語を直接渡せないモールは検索語・コピー結果・開く操作を画面で案内する', async () => {
+  const app = await read('app.js');
+  assert.match(app, /検索語をコピーしてモールで探す/);
+  assert.match(app, /コピーしました。モールの検索欄へ貼り付けてください。/);
+  assert.match(app, /function openMarketplaceSearchHandoff\(item\)/);
+  assert.match(app, /openSearchHandoff\(item,copy,name\)/);
 });
 
 test('Instagram/TikTokは画面遷移前に検索語を確認・再コピーできる2段階導線を持つ', async () => {

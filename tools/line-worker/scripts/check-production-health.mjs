@@ -10,7 +10,7 @@ const REQUIRED_HEALTH_CHECKS = [
   'yahoo_shopping_configured'
 ];
 const ASSET_MARKERS = Object.freeze({
-  'app.js': ['KNOWLEDGE_HTTP_TIMEOUT_MS', 'SEARCH_DEADLINE_EXCEEDED', 'SEARCH_SUPERSEDED', 'tokenCallbackTimeoutMs', 'maxAttempts', 'takeReadyTurnstileToken', 'hoshilu00-22', 'sponsored nofollow noopener noreferrer'],
+  'app.js': ['KNOWLEDGE_HTTP_TIMEOUT_MS', 'SEARCH_DEADLINE_EXCEEDED', 'SEARCH_SUPERSEDED', 'tokenCallbackTimeoutMs', 'maxAttempts', 'takeReadyTurnstileToken', 'hoshilu00-22', 'sponsored nofollow noopener noreferrer', 'emergencyRelatedCategoryRecommendations', "marketplace:'ABCMART_JP'"],
   'ai-search-ui.mjs': ['AI_CHAT_HTTP_TIMEOUT_MS', 'tokenCallbackTimeoutMs'],
   'growth-analytics.mjs': ['SEARCH_WATCHDOG_MS', 'search-execution-started', 'search_dead_end', 'search_degraded', 'marketplace_fallback_click'],
   'ai-search-layout-fix.css': ['result-row-recommended', 'related-category-card', 'overflow-x:auto'],
