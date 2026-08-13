@@ -2,7 +2,10 @@ const HEARTBEAT_EVENT_TYPE = 'reliability_heartbeat';
 const INCIDENT_EVENT_TYPE = 'reliability_incident';
 const GITHUB_HEARTBEAT_ID = 'reliability-heartbeat:github_schedule';
 const GITHUB_COMPONENT = 'github_schedule';
-const STALE_AFTER_MS = 20 * 60 * 1000;
+// GitHub scheduled workflows can be delayed substantially under platform load.
+// Cloudflare regular/deep heartbeats retain the strict 25-minute production
+// guard; this backstop only flags a missing GitHub scheduler after two hours.
+const STALE_AFTER_MS = 2 * 60 * 60 * 1000;
 const STARTED_STUCK_AFTER_MS = 10 * 60 * 1000;
 
 const CLOUDFLARE_COMPONENTS = Object.freeze({
