@@ -797,7 +797,63 @@ const curatedDiscoveryObserver=new MutationObserver(renderCuratedDiscoveryMatch)
 // reason: app.js must never be evaluated a second time as an ES module.
 function withAiCandidateFallback(result,candidate){const source=result&&typeof result==='object'?result:{};const name=String(candidate?.name||'').trim().slice(0,160);if(!name||(Array.isArray(source.candidates)&&source.candidates.length))return source;const analysis=source.ai_discovery?.analysis||{};const existing=(Array.isArray(analysis.product_candidates)?analysis.product_candidates:[]).filter(item=>item?.name&&String(item.name).trim().toLocaleLowerCase()!==name.toLocaleLowerCase());const candidateLinks=(Array.isArray(candidate?.marketplace_search_links)?candidate.marketplace_search_links:[]).filter(item=>item?.url);const resultLinks=(Array.isArray(source.marketplace_search_links)?source.marketplace_search_links:[]).filter(item=>item?.url);const links=candidateLinks.length?candidateLinks:resultLinks;const score=Math.max(0,Math.min(100,Math.round(Number(candidate?.match_score||0))));const selected={name,brand:String(candidate?.brand||'').trim().slice(0,120),reason:String(candidate?.reason||'').trim().slice(0,300),matched_features:(Array.isArray(candidate?.matched_features)?candidate.matched_features:[]).map(item=>String(item||'').trim().slice(0,100)).filter(Boolean).slice(0,8),match_score:score,search_keywords:(Array.isArray(candidate?.search_keywords)?candidate.search_keywords:[]).map(item=>String(item||'').trim().slice(0,100)).filter(Boolean).slice(0,8),marketplace_search_links:links,selected_by_user:true};return{...source,ai_discovery:{...(source.ai_discovery||{}),triggered:true,analysis:{...analysis,category:analysis.category||String(candidate?.category||'').trim().slice(0,100),product_candidates:[selected,...existing].slice(0,5)}}};}
 function aiCandidateRequestPayload(candidate){const name=String(candidate?.name||'').trim();return name?{name,brand:String(candidate?.brand||''),reason:String(candidate?.reason||''),matched_features:Array.isArray(candidate?.matched_features)?candidate.matched_features:[],match_score:Number(candidate?.match_score||0)}:null;}
-async function runKnowledgeSearch(options={}){const t=selectedCopy();const submittedQuery=String(elements.query.value||'').trim();const currentRoot=submittedQuery.split(' / ')[0].trim().toLocaleLowerCase();searchAttempt=currentRoot&&currentRoot===searchRoot?Math.min(2,searchAttempt+1):1;searchRoot=currentRoot;elements.status.className='status';elements.status.textContent=t.loading;elements.submit.disabled=true;const sequence=++relatedRecommendationSequence;const aiCandidatePayload=aiCandidateRequestPayload(options.aiCandidateFallback);try{const token=await waitForTurnstileToken();if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');const response=await fetch('/api/knowledge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:submittedQuery,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,search_attempt:searchAttempt,turnstile_token:token,...(aiCandidatePayload?{ai_candidate_fallback:aiCandidatePayload}:{}),...(window.HoshiluGrowthAttribution||{})})});const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.error||'SEARCH_FAILED');const result=withAiCandidateFallback(payload.result,options.aiCandidateFallback);const effectiveQuery=String(result?.ai_query_refinement?.effective_query||'').trim();if(effectiveQuery&&effectiveQuery!==elements.query.value){elements.query.value=effectiveQuery;elements.query.dispatchEvent(new Event('input',{bubbles:true}));}rememberMemberSearch(elements.query.value);renderResults(result,response.headers.get('x-request-id'));document.dispatchEvent(new CustomEvent('hoshilu:search-completed'));elements.status.textContent='';setTimeout(()=>{loadRelatedRecommendations(effectiveQuery||submittedQuery,sequence).catch(()=>{});},0);return{ok:true,result};}catch(error){const safeError=String(error?.message||error).slice(0,80);console.warn('HOSHILU_SEARCH_FAILED',safeError);rememberMemberSearch(elements.query.value);const fallback=withAiCandidateFallback(emergencyMarketplaceFallback(elements.query.value),options.aiCandidateFallback);renderResults(fallback);document.dispatchEvent(new CustomEvent('hoshilu:search-failed'));elements.status.className='status';elements.status.textContent='';return{ok:false,error:safeError,result:fallback};}finally{elements.submit.disabled=false;}}
+async function runKnowledgeSearch(options={}){
+  const t=selectedCopy();
+  const submittedQuery=String(elements.query.value||'').trim();
+  const currentRoot=submittedQuery.split(' / ')[0].trim().toLocaleLowerCase();
+  searchAttempt=currentRoot&&currentRoot===searchRoot?Math.min(2,searchAttempt+1):1;
+  searchRoot=currentRoot;
+  elements.status.className='status';elements.status.textContent=t.loading;elements.submit.disabled=true;
+  const sequence=++relatedRecommendationSequence;
+  const aiCandidatePayload=aiCandidateRequestPayload(options.aiCandidateFallback);
+  let lastRequestId='';
+  try{
+    let response;let payload;
+    for(let attempt=0;attempt<2;attempt+=1){
+      try{
+        const token=await waitForTurnstileToken();
+        if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
+        response=await fetch('/api/knowledge',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:submittedQuery,consent:elements.consent.checked,session_id:sessionId,language:elements.language.value,search_attempt:searchAttempt,turnstile_token:token,...(aiCandidatePayload?{ai_candidate_fallback:aiCandidatePayload}:{}),...(window.HoshiluGrowthAttribution||{})})});
+        lastRequestId=String(response.headers.get('x-request-id')||'');
+        payload=await response.json();
+        if(response.ok&&payload.ok)break;
+        const code=String(payload.error||`SEARCH_HTTP_${response.status}`);
+        if(attempt===0&&(/TURNSTILE_/u.test(code)||response.status>=500)){
+          if(/TURNSTILE_/u.test(code))await recoverTurnstileWidget();
+          continue;
+        }
+        const failure=new Error(code);failure.requestId=lastRequestId||String(payload.request_id||'');throw failure;
+      }catch(error){
+        if(error?.requestId)throw error;
+        const code=String(error?.message||error);
+        if(attempt===0&&(/TURNSTILE_/u.test(code)||code==='Failed to fetch'||error instanceof TypeError)){
+          if(/TURNSTILE_/u.test(code))await recoverTurnstileWidget();
+          continue;
+        }
+        error.requestId=lastRequestId;throw error;
+      }
+    }
+    if(!response?.ok||!payload?.ok)throw new Error(payload?.error||'SEARCH_FAILED');
+    const result=withAiCandidateFallback(payload.result,options.aiCandidateFallback);
+    const effectiveQuery=String(result?.ai_query_refinement?.effective_query||'').trim();
+    if(effectiveQuery&&effectiveQuery!==elements.query.value){elements.query.value=effectiveQuery;elements.query.dispatchEvent(new Event('input',{bubbles:true}));}
+    rememberMemberSearch(elements.query.value);renderResults(result,lastRequestId);
+    document.dispatchEvent(new CustomEvent('hoshilu:search-completed'));elements.status.textContent='';
+    setTimeout(()=>{loadRelatedRecommendations(effectiveQuery||submittedQuery,sequence).catch(()=>{});},0);
+    return{ok:true,result,requestId:lastRequestId};
+  }catch(error){
+    const safeError=String(error?.message||error).slice(0,80);lastRequestId=String(error?.requestId||lastRequestId||'');
+    console.warn('HOSHILU_SEARCH_DEGRADED',{error:safeError,requestId:lastRequestId});rememberMemberSearch(elements.query.value);
+    const fallback=withAiCandidateFallback(emergencyMarketplaceFallback(elements.query.value),options.aiCandidateFallback);
+    const language=elements.language.value||'JA';
+    const trace=lastRequestId?` (${({JA:'追跡ID',EN:'Tracking ID',ZH:'追踪ID',KO:'추적 ID'}[language]||'Tracking ID')}: ${lastRequestId})`:'';
+    fallback.message=({JA:'本検索へ一時的に接続できないため、AI候補と13モールの検索先を表示しています。',EN:'The main search is temporarily unavailable, so the AI candidate and links to 13 marketplaces are shown.',ZH:'主搜索暂时不可用，现显示 AI 候选和 13 个商城的搜索链接。',KO:'본 검색에 일시적으로 연결할 수 없어 AI 후보와 13개 쇼핑몰 검색 링크를 표시합니다.'}[language]||'The main search is temporarily unavailable.')+trace;
+    renderResults(fallback,lastRequestId);
+    document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{requestId:lastRequestId}}));
+    elements.status.className='status';elements.status.textContent='';
+    return{ok:false,degraded:true,error:safeError,result:fallback,requestId:lastRequestId};
+  }finally{elements.submit.disabled=false;}
+}
 
 // Advanced (condition) search panel (2026-08-07 request). Originally rendered
 // with the results; moved into the search panel under the query box and the

@@ -1927,12 +1927,15 @@ async function safeAiProductDiscovery(query, language, env) {
 }
 
 async function handleKnowledgeApi(request, env, ctx) {
+  // Create this before validation so even rejected requests can be matched
+  // to a Worker log without retaining the user's query text.
+  const requestId = crypto.randomUUID();
   try {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
-    if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+    if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED', request_id: requestId }, { status: 403, headers: { 'x-request-id': requestId } });
     const length = Number(request.headers.get('content-length') || 0);
-    if (length > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
+    if (length > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE', request_id: requestId }, { status: 413, headers: { 'x-request-id': requestId } });
     const validatedInput = validateKnowledgeRequest(await request.json());
     // v4.2 項目1・2・3: 商品名を知らなくても探せる検索。ここで1回だけ展開
     // すれば、D1検索・3モールのキーワード生成・filterCategoryMismatches・
@@ -1946,7 +1949,6 @@ async function handleKnowledgeApi(request, env, ctx) {
     // (API送信/レスポンス件数/accepted件数/Teacher Dataset補正件数/ranking
     // 入力・出力件数/モール別件数/UI送信件数) must share one requestId so the
     // full path for a single search can be reconstructed from logs alone.
-    const requestId = crypto.randomUUID();
     // v4.2 項目12 プライバシー監査: 同意画面は「質問本文はサーバーログへ
     // 保存しません」と明示しているため、ユーザーの検索文そのもの(query /
     // original_query)はここを含むどのSEARCH_TRACEにも出力しない。段階の
@@ -2209,8 +2211,9 @@ async function handleKnowledgeApi(request, env, ctx) {
     const code = String(error.message || error);
     const clientErrors = ['CONSENT_REQUIRED', 'QUERY_LENGTH_INVALID', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'TURNSTILE_VERIFICATION_FAILED'];
     const status = clientErrors.includes(code) ? 400 : 500;
-    return Response.json({ ok: false, error: code }, {
-      status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+    console.error('KNOWLEDGE_SEARCH_FAILED', { requestId, code: code.slice(0, 80), status });
+    return Response.json({ ok: false, error: code, request_id: requestId }, {
+      status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
     });
   }
 }

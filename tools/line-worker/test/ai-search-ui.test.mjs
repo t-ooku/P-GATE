@@ -93,20 +93,21 @@ test('WHY HOSHILU is concise and official social labels are not duplicated', asy
 // once dialog.close() ran, the dialog (and any later error message appended
 // to it) was already removed from the DOM. Fixed by running the real search
 // directly (window.HoshiluSearch.run, awaited for a real ok/fail result) and
-// only closing the dialog after a confirmed success.
-test('AIチャットは検索の成功を確認してからダイアログを閉じ、失敗時は開いたまま再試行を出す', async () => {
+// only closing after a confirmed result or a usable degraded result.
+test('AIチャットは本検索失敗時もAI候補と13モールの縮退結果を表示してダイアログを閉じる', async () => {
   const [app, script] = await Promise.all([read('app.js'), read('ai-search-ui.mjs')]);
   assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch\}/);
   assert.match(app, /async function runKnowledgeSearch\(options=\{\}\)/);
-  assert.match(app, /return\{ok:true,result\}/);
+  assert.match(app, /return\{ok:true,result,requestId:lastRequestId\}/);
   assert.match(app, /const safeError=String\(error\?\.message\|\|error\)\.slice\(0,80\)/);
-  assert.match(app, /return\{ok:false,error:safeError,result:fallback\}/);
+  assert.match(app, /return\{ok:false,degraded:true,error:safeError,result:fallback,requestId:lastRequestId\}/);
+  assert.match(app, /AI候補と13モールの検索先を表示しています/);
   assert.match(script, /window\.HoshiluSearch\?\.run/);
   assert.doesNotMatch(script, /submitButton\.click\(\)/);
   // dialog.close() must only appear guarded behind a successful outcome,
   // never unconditionally right after the last chat turn resolves.
   assert.doesNotMatch(script, /needs_clarification[\s\S]{0,400}dialog\.close\(\)/);
-  assert.match(script, /if \(outcome\.ok\) \{\s*dialog\.close\(\);/);
+  assert.match(script, /if \(outcome\.ok \|\| outcome\.degraded\) \{\s*dialog\.close\(\);/);
   assert.match(script, /function showSearchError\(refinedQuery\)/);
   assert.match(script, /ai-chat-retry/);
 });
@@ -130,7 +131,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/app\.js\?v=124"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=5"><\/script>/);
+  assert.match(html, /<script type="module" src="\/app\.js\?v=125"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=6"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 

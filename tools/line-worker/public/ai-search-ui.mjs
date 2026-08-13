@@ -127,7 +127,7 @@ function openIdentifyDialog(originalQuery,language){
       const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';
       const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
       const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;
-      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runFinalSearch(result.refined_query||candidate,aiCandidateFallback);finding.remove();if(outcome.ok)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
+      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runFinalSearch(result.refined_query||candidate,aiCandidateFallback);finding.remove();if(outcome.ok||outcome.degraded)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
       no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});
       actions.append(yes,no);messages.append(actions);
     }catch(error){
@@ -180,7 +180,7 @@ function openChatDialog(originalQuery, language) {
       messages.append(status);
       const outcome = await runFinalSearch(refinedQuery);
       status.remove();
-      if (outcome.ok) { dialog.close(); return; }
+      if (outcome.ok || outcome.degraded) { dialog.close(); return; }
       showSearchError(refinedQuery);
     });
     messages.append(retry);
@@ -204,7 +204,7 @@ function openChatDialog(originalQuery, language) {
       messages.append(status);
       const outcome = await runFinalSearch(refinedQuery);
       status.remove();
-      if (outcome.ok) {
+      if (outcome.ok || outcome.degraded) {
         dialog.close();
         return;
       }

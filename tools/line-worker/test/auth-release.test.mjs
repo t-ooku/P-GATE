@@ -47,9 +47,10 @@ test('検索成功と失敗は検索ごとに別イベントとして計測す�
   const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(analytics, /hoshilu:search-completed/);
   assert.match(analytics, /hoshilu:search-failed/);
+  assert.match(analytics, /hoshilu:search-degraded/);
   assert.doesNotMatch(analytics, /dataset\.measured/);
   assert.match(app, /CustomEvent\('hoshilu:search-completed'\)/);
-  assert.match(app, /CustomEvent\('hoshilu:search-failed'\)/);
+  assert.match(app, /CustomEvent\('hoshilu:search-degraded'/);
 });
 
 test('認証専用checkerは0025と0026を参照しない', () => {

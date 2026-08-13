@@ -61,6 +61,7 @@ document.addEventListener('submit', event => {
 
 document.addEventListener('hoshilu:search-completed', () => send('search_completed'));
 document.addEventListener('hoshilu:search-failed', () => send('search_failed'));
+document.addEventListener('hoshilu:search-degraded', () => send('search_failed'));
 
 document.addEventListener('click', event => {
   const target = event.target.closest('a,button');

@@ -35,12 +35,12 @@ test('v4.3項目6: 会話完了直後は自動検索せず、CTAを押した時�
   assert.match(ctaBody, /cta\.addEventListener\('click', async \(\) => \{/);
 });
 
-test('v4.3項目6: CTA押下後、検索成功時のみダイアログを閉じ、失敗時は再試行できる', async () => {
+test('v4.3項目6: CTA押下後、通常結果または13モール縮退結果を表示できた時に閉じる', async () => {
   const script = await read('ai-search-ui.mjs');
   const ctaStart = script.indexOf('function showSearchCta(refinedQuery)');
   const ctaEnd = script.indexOf('\n  async function runTurn()', ctaStart);
   const ctaBody = script.slice(ctaStart, ctaEnd);
-  assert.match(ctaBody, /if \(outcome\.ok\) \{\s*dialog\.close\(\);/);
+  assert.match(ctaBody, /if \(outcome\.ok \|\| outcome\.degraded\) \{\s*dialog\.close\(\);/);
   assert.match(ctaBody, /showSearchError\(refinedQuery\)/);
 });
 

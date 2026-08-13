@@ -243,7 +243,8 @@ test('公開検索APIが失敗しても4モールへの検索導線を表示す�
   assert.match(appSource, /楽天市場で探す/);
   assert.match(appSource, /Qoo10で探す/);
   assert.match(appSource, /SHEINで探す/);
-  assert.match(appSource, /const fallback=withAiCandidateFallback\(emergencyMarketplaceFallback\(elements\.query\.value\),options\.aiCandidateFallback\);renderResults\(fallback\)/);
+  assert.match(appSource, /const fallback=withAiCandidateFallback\(emergencyMarketplaceFallback\(elements\.query\.value\),options\.aiCandidateFallback\)/);
+  assert.match(appSource, /AI候補と13モールの検索先を表示しています/);
 });
 // 2026-08-05 report had reversed this: when results were already found, the
 // "10モールとSNSを横断して探す" marketplaceFallbackCard was suppressed to
