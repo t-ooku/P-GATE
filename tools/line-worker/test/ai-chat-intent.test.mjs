@@ -114,6 +114,41 @@ test('全プロバイダ失敗時も直近のユーザー発言で検索へフ�
   assert.equal(result.refined_query, '軽いモバイルバッテリー');
 });
 
+test('Gemini timeout leaves a bounded budget for the OpenAI backup', async () => {
+  const originalNow = Date.now;
+  let now = 1_000;
+  let calls = 0;
+  Date.now = () => now;
+  const fetchImpl = async (url) => {
+    calls += 1;
+    if (String(url).includes('generativelanguage.googleapis.com')) {
+      now += 3_501;
+      throw new DOMException('provider timed out', 'TimeoutError');
+    }
+    return Response.json({
+      status: 'completed',
+      output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({
+        needs_clarification: false,
+        refined_query: 'LB 3in1 アイブロウ'
+      }) }] }],
+      usage: { input_tokens: 40, output_tokens: 20 }
+    });
+  };
+  try {
+    const result = await analyzeChatTurn(
+      [{ role: 'user', text: 'LBっていうメーカーの眉毛描き' }],
+      'JA',
+      { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32) },
+      fetchImpl
+    );
+    assert.equal(calls, 2);
+    assert.equal(result.provider, 'openai');
+    assert.equal(result.refined_query, 'LB 3in1 アイブロウ');
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
 test('IDENTIFYでGeminiが一時失敗しても検証済み展開があればLILMOON候補を返す', async () => {
   const fetchImpl = async () => new Response('error', { status: 503 });
   const result = await analyzeChatTurn(

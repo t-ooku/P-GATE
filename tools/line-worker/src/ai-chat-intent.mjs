@@ -19,9 +19,11 @@
 
 import { expandSearchQuery } from './query-expansion.mjs';
 
-// 20秒×2プロバイダでは失敗時に最大40秒待たせる。検索語の整理は短いJSON
-// 応答なので5秒で打ち切り、失敗時は既存の原文フォールバックで検索を続ける。
-const CHAT_TIMEOUT_MS = 5000;
+// One provider must not consume the whole request deadline. Gemini is still
+// primary, but a timeout leaves a bounded slice for the OpenAI backup before
+// the existing raw-query fallback continues to the marketplace search.
+const CHAT_PROVIDER_TIMEOUT_MS = 3500;
+const CHAT_TOTAL_BUDGET_MS = 6500;
 const MAX_CHAT_TURNS = 2;
 const MAX_MESSAGE_LENGTH = 200;
 const MAX_HISTORY_MESSAGES = 8;
@@ -93,7 +95,7 @@ async function providerFetch(fetchImpl, url, options, timeoutMs) {
   return fetchImpl(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
 }
 
-async function callGemini(history, language, env, fetchImpl, timeoutMs = CHAT_TIMEOUT_MS, mode = 'REFINE') {
+async function callGemini(history, language, env, fetchImpl, timeoutMs = CHAT_PROVIDER_TIMEOUT_MS, mode = 'REFINE') {
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
   const response = await providerFetch(
     fetchImpl,
@@ -124,7 +126,7 @@ async function callGemini(history, language, env, fetchImpl, timeoutMs = CHAT_TI
   } };
 }
 
-async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_TIMEOUT_MS, mode = 'REFINE',
+async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_PROVIDER_TIMEOUT_MS, mode = 'REFINE',
   maxOutputTokens = mode === 'IDENTIFY' ? 256 : 128) {
   const model = String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5');
   const response = await providerFetch(fetchImpl, 'https://api.openai.com/v1/responses', {
@@ -206,8 +208,10 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
   const geminiConfigured = String(env.GEMINI_API_KEY || '').length >= 20;
   const openAiConfigured = String(env.OPENAI_API_KEY || '').length >= 20;
   const providers = [geminiConfigured && 'gemini', openAiConfigured && 'openai'].filter(Boolean);
-  const totalBudgetMs = Math.max(250, Math.min(CHAT_TIMEOUT_MS, Number(options.totalBudgetMs) || CHAT_TIMEOUT_MS));
-  const perProviderMs = Math.max(250, Math.min(CHAT_TIMEOUT_MS, Number(options.timeoutMs) || CHAT_TIMEOUT_MS));
+  const totalBudgetMs = Math.max(250, Math.min(CHAT_TOTAL_BUDGET_MS,
+    Number(options.totalBudgetMs) || CHAT_TOTAL_BUDGET_MS));
+  const perProviderMs = Math.max(250, Math.min(CHAT_PROVIDER_TIMEOUT_MS,
+    Number(options.timeoutMs) || CHAT_PROVIDER_TIMEOUT_MS));
   const deadline = Date.now() + totalBudgetMs;
 
   let lastError;
@@ -266,7 +270,7 @@ export async function refineMarketplaceSearchQuery(rawQuery, language, env = {},
 // The fixed synthetic history is supplied by deep-canary.mjs and is never
 // persisted or logged.
 export async function probeChatIntentProvider(provider, env = {}, fetchImpl = fetch, {
-  mode = 'REFINE', timeoutMs = CHAT_TIMEOUT_MS
+  mode = 'REFINE', timeoutMs = CHAT_PROVIDER_TIMEOUT_MS
 } = {}) {
   const history = [{ role: 'user', text: '軽いワイヤレスイヤホン' }];
   const promptBytes = new TextEncoder().encode(chatPrompt(history, 'JA', mode)).byteLength;

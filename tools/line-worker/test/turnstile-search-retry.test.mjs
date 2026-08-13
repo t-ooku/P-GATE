@@ -29,7 +29,10 @@ test('AI chat rebuilds Turnstile after a rejected token before retrying', () => 
   assert.match(app, /invalidateToken:\(\)=>recoverTurnstileWidget\(\)/);
   assert.match(chat, /if \(\/TURNSTILE_\/u\.test\(code\)\) await auth\?\.invalidateToken\?\.\(\)/);
   assert.match(chat, /requestToken\?\.\(AI_TOKEN_CALLBACK_TIMEOUT_MS\)/);
+  assert.match(chat, /const AI_CHAT_HTTP_TIMEOUT_MS = 12000/);
   assert.match(chat, /signal: AbortSignal\.timeout\(AI_CHAT_HTTP_TIMEOUT_MS\)/);
+  assert.doesNotMatch(chat, /error\?\.name === 'TimeoutError' \|\| error\?\.name === 'AbortError'/);
+  assert.match(chat, /error instanceof TypeError/);
 });
 
 test('Main search retries once and returns a traceable 13-mall degraded result', () => {

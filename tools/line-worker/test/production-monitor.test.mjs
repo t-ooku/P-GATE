@@ -4,7 +4,7 @@ import { criticalAssetPaths, inspectProduction } from '../scripts/check-producti
 
 const expectedIndexHtml = `
   <script src="/app.js?v=131"></script>
-  <script type="module" src="/ai-search-ui.mjs?v=9"></script>
+  <script type="module" src="/ai-search-ui.mjs?v=10"></script>
   <script type="module" src="/growth-analytics.mjs?v=2"></script>
   <link rel="stylesheet" href="/ai-search-layout-fix.css?v=123">
   <link rel="stylesheet" href="/wish-carousel.css?v=3">
@@ -80,7 +80,7 @@ function mockFetch({
 
 test('criticalAssetPaths reads all versioned production reliability assets', () => {
   assert.deepEqual(criticalAssetPaths(expectedIndexHtml), [
-    '/app.js?v=131', '/ai-search-ui.mjs?v=9', '/growth-analytics.mjs?v=2',
+    '/app.js?v=131', '/ai-search-ui.mjs?v=10', '/growth-analytics.mjs?v=2',
     '/ai-search-layout-fix.css?v=123', '/wish-carousel.css?v=3', '/hero-fixes.css?v=88'
   ]);
 });
@@ -93,7 +93,7 @@ test('scheduled monitor can validate the assets currently referenced by producti
   });
   assert.equal(result.ok, true);
   assert.deepEqual(result.expected_assets, [
-    '/app.js?v=131', '/ai-search-ui.mjs?v=9', '/growth-analytics.mjs?v=2',
+    '/app.js?v=131', '/ai-search-ui.mjs?v=10', '/growth-analytics.mjs?v=2',
     '/ai-search-layout-fix.css?v=123', '/wish-carousel.css?v=3', '/hero-fixes.css?v=88'
   ]);
 });

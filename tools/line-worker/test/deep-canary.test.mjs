@@ -209,6 +209,83 @@ test('a transient regular OpenAI failure is retried once at minute 22 and then s
   assert.doesNotMatch(stored, /軽い|ワイヤレス|イヤホン|authorization|response/iu);
 });
 
+test('the 15-minute Gemini primary cadence confirms recovery at the next available offset', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  const harness = providerHarness();
+  let primaryFailures = 0;
+  const fetcher = async (url, options = {}) => {
+    const body = JSON.parse(options.body || '{}');
+    const identify = String(body?.contents?.[0]?.parts?.[0]?.text || '').includes('"candidate_name"');
+    if (String(url).includes('generativelanguage.googleapis.com') && identify && primaryFailures++ === 0) {
+      return new Response('temporary', { status: 503 });
+    }
+    return harness.fetcher(url, options);
+  };
+  const regular = await runDeepCanaryCycle(env, new Date('2026-08-13T11:07:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T11:07:01.000Z')
+  });
+  assert.equal(regular.results.find((row) => row.component === 'ai_chat_primary')?.code,
+    'CANARY_PROVIDER_UPSTREAM_5XX');
+
+  // Simulate GitHub/Cloudflare missing the :22 offset: :37 must still be able
+  // to perform the one confirmation, while a replay cannot pay twice.
+  const retry = await runDeepCanaryCycle(env, new Date('2026-08-13T11:37:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T11:37:01.000Z')
+  });
+  assert.deepEqual(retry.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
+  assert.equal(retry.results.at(-1)?.status, 'PASS');
+
+  const replay = await runDeepCanaryCycle(env, new Date('2026-08-13T11:37:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T11:38:01.000Z')
+  });
+  assert.deepEqual(replay.results.map((row) => row.component), ['rakuten', 'yahoo']);
+  assert.equal(sqlite.prepare(`SELECT COUNT(*) AS count FROM growth_events
+    WHERE event_type='deep_canary_budget' AND medium='ai_chat_primary'`).get().count, 2);
+});
+
+test('a non-transient Gemini primary failure receives only its normal scheduled check', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  sqlite.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,
+      occurred_at,traffic_class,visitor_id,session_id)
+    VALUES(?, 'deep_canary_result', 'JA', 'worker', 'ai_chat_primary', 'FAIL',
+      'CANARY_PROVIDER_AUTH_FAILED', '', ?, 'QA', '', '')`)
+    .run(`deep-canary:${Date.parse('2026-08-13T11:07:00.000Z')}:ai_chat_primary`,
+      '2026-08-13T11:07:00.000Z');
+  const { fetcher, calls } = providerHarness();
+  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T11:22:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T11:22:01.000Z')
+  });
+  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo', 'ai_chat_primary']);
+  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 1);
+});
+
+test('the monthly fuse blocks a qualified Gemini confirmation before fetch', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  seedBudget(sqlite, 5_000_000);
+  sqlite.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,
+      occurred_at,traffic_class,visitor_id,session_id)
+    VALUES(?, 'deep_canary_result', 'JA', 'worker', 'ai_chat_primary', 'FAIL',
+      'CANARY_PROVIDER_TIMEOUT', '', ?, 'QA', '', '')`)
+    .run(`deep-canary:${Date.parse('2026-08-13T11:07:00.000Z')}:ai_chat_primary`,
+      '2026-08-13T11:07:00.000Z');
+  const { fetcher, calls } = providerHarness();
+  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T11:22:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T11:22:01.000Z')
+  });
+  assert.equal(result.results.find((row) => row.component === 'ai_chat_primary')?.code,
+    'CANARY_MONTHLY_BUDGET_LIMIT');
+  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 0);
+  assert.equal(result.monthly_micro_usd, 5_000_000);
+});
+
 test('overlapping minute-22 invocations make only one paid OpenAI retry', async (t) => {
   const { sqlite, env } = sqliteEnvironment();
   t.after(() => sqlite.close());

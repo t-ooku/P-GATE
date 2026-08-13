@@ -38,7 +38,10 @@ const channelNames = [
 // bounded so a blocked/failed widget cannot leave the modal spinning for the
 // full default token-recovery window before the marketplace fallback appears.
 const AI_TOKEN_CALLBACK_TIMEOUT_MS = 3000;
-const AI_CHAT_HTTP_TIMEOUT_MS = 7000;
+// Worker budget: Turnstile verification (up to 5s) + Gemini/OpenAI shared
+// provider budget (6.5s). The browser waits once for that bounded recovery,
+// then immediately hands the original wording to the resilient normal search.
+const AI_CHAT_HTTP_TIMEOUT_MS = 12000;
 
 function decorateLinks(container) {
   for (const link of container.querySelectorAll('.marketplace-search-link')) {
@@ -97,9 +100,12 @@ async function postChatTurn(history, language, mode = 'REFINE') {
     } catch (error) {
       lastError = error;
       const code = String(error?.message || 'CHAT_FAILED');
+      // A browser timeout already covers the Worker's bounded Gemini→OpenAI
+      // recovery. Repeating another full 12s would only delay the guaranteed
+      // normal-search fallback. Fresh-token retry remains for Turnstile,
+      // quick 5xx responses, and transport failures.
       const retryable = /TURNSTILE_|CHAT_HTTP_5\d\d|CHAT_FAILED/u.test(code)
-        || error?.name === 'TimeoutError' || error?.name === 'AbortError'
-        || Number(error?.status || 0) >= 500;
+        || error instanceof TypeError || Number(error?.status || 0) >= 500;
       if (!retryable || attempt === 1) break;
       if (/TURNSTILE_/u.test(code)) await auth?.invalidateToken?.();
       await new Promise((resolve) => setTimeout(resolve, 150));

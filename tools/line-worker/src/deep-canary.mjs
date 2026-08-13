@@ -15,7 +15,7 @@ const PRICING = Object.freeze({
 const COMPONENTS = new Set([
   'query_structurer', 'ai_chat_primary', 'openai_backup', 'rakuten', 'yahoo'
 ]);
-const OPENAI_RETRYABLE_CODES = new Set([
+const AI_RETRYABLE_CODES = new Set([
   'CANARY_PROVIDER_TIMEOUT',
   'CANARY_PROVIDER_RATE_LIMITED',
   'CANARY_PROVIDER_UPSTREAM_5XX',
@@ -38,36 +38,53 @@ const scheduledComponents = (date) => {
   return components;
 };
 
-const isTransientOpenAiFailureCode = (value) => {
+const isTransientAiFailureCode = (value) => {
   const code = String(value || '');
-  return code === safeCode(code) && OPENAI_RETRYABLE_CODES.has(code);
+  return code === safeCode(code) && AI_RETRYABLE_CODES.has(code);
 };
 
-const openAiPrimarySlot = (date) => {
-  if (date.getUTCMinutes() !== 22 || date.getUTCHours() % 6 !== 0) return null;
+// :07 is the regular Query Structurer/OpenAI slot. A transient failure may be
+// confirmed once at the first later deep-canary offset that actually runs
+// (:22/:37/:52). AI chat primary already runs on every 15-minute offset and
+// therefore gets its recovery check from the normal cadence.
+// Requiring the newest row to remain the exact :07 row makes the first retry
+// self-closing: its own PASS/FAIL row prevents every later offset from paying
+// for another request.
+const aiPrimarySlot = (date, component) => {
+  if (![22, 37, 52].includes(date.getUTCMinutes())) return null;
+  if (component === 'openai_backup' && date.getUTCHours() % 6 !== 0) return null;
   const slot = new Date(date);
   slot.setUTCMinutes(7, 0, 0);
   return slot;
 };
 
-async function scheduledOpenAiRetry(env, date) {
-  const primarySlot = openAiPrimarySlot(date);
-  if (!primarySlot) return [];
-  const expectedOccurredAt = primarySlot.toISOString();
-  const expectedEventId = `deep-canary:${primarySlot.getTime()}:openai_backup`;
-  // Read the newest OpenAI result without filtering by status or code first.
-  // A malformed or newer unexpected row must fail closed instead of reviving
-  // an older retryable failure and spending money on an unsafe extra probe.
-  const row = await env.PRODUCT_DB.prepare(`SELECT event_id,campaign AS status,content AS code,occurred_at
-    FROM growth_events WHERE event_type=?1 AND source='worker' AND traffic_class='QA'
-      AND medium='openai_backup'
-    ORDER BY occurred_at DESC,event_id DESC LIMIT 1`).bind(EVENT_TYPE).first();
-  if (String(row?.event_id || '') !== expectedEventId
-    || String(row?.occurred_at || '') !== expectedOccurredAt
-    || String(row?.status || '') !== 'FAIL'
-    || !isTransientOpenAiFailureCode(row?.code)) return [];
-  return ['openai_backup'];
+async function scheduledAiRetries(env, date) {
+  const retries = [];
+  for (const component of ['query_structurer', 'openai_backup']) {
+    const primarySlot = aiPrimarySlot(date, component);
+    if (!primarySlot) continue;
+    const expectedOccurredAt = primarySlot.toISOString();
+    const expectedEventId = `deep-canary:${primarySlot.getTime()}:${component}`;
+    // Read the newest component result without filtering by status/code first.
+    // A malformed or newer unexpected row must fail closed instead of reviving
+    // an older failure and spending money on an unsafe extra probe.
+    const row = await env.PRODUCT_DB.prepare(`SELECT event_id,campaign AS status,content AS code,occurred_at
+      FROM growth_events WHERE event_type=?1 AND source='worker' AND traffic_class='QA'
+        AND medium=?2
+      ORDER BY occurred_at DESC,event_id DESC LIMIT 1`).bind(EVENT_TYPE, component).first();
+    if (String(row?.event_id || '') === expectedEventId
+      && String(row?.occurred_at || '') === expectedOccurredAt
+      && String(row?.status || '') === 'FAIL'
+      && isTransientAiFailureCode(row?.code)) retries.push(component);
+  }
+  return retries;
 }
+
+// Backward-compatible test names while failed-only retries now cover Query
+// Structurer and the six-hour OpenAI backup. Primary chat uses normal cadence.
+const isTransientOpenAiFailureCode = isTransientAiFailureCode;
+const scheduledOpenAiRetry = async (env, date) => (await scheduledAiRetries(env, date))
+  .filter((component) => component === 'openai_backup');
 
 const monthBounds = (now) => {
   const start = `${now.toISOString().slice(0, 7)}-01T00:00:00.000Z`;
@@ -228,11 +245,11 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
   const runId = String(now.getTime());
   let retryComponents = [];
   try {
-    retryComponents = await scheduledOpenAiRetry(env, now);
+    retryComponents = await scheduledAiRetries(env, now);
   } catch (error) {
-    // A retry lookup failure must not stop the regular marketplace/Gemini
-    // checks, and must never default to an extra paid OpenAI request.
-    console.warn('DEEP_CANARY_OPENAI_RETRY_LOOKUP_FAILED', { code: failureCode(error) });
+    // A retry lookup failure must not stop regular checks, and must never
+    // default to an extra paid provider request.
+    console.warn('DEEP_CANARY_AI_RETRY_LOOKUP_FAILED', { code: failureCode(error) });
   }
   const components = [...new Set([
     ...scheduledComponents(now), ...retryComponents, ...await missingComponents(env)
@@ -296,5 +313,6 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
 }
 
 export const deepCanaryTest = { scheduledComponents, safeCode, validateMarketplace, costFromUsage, monthBounds,
-  billingNow, wallClockNow, failureCode, isTransientOpenAiFailureCode, scheduledOpenAiRetry,
+  billingNow, wallClockNow, failureCode, isTransientAiFailureCode, isTransientOpenAiFailureCode,
+  scheduledAiRetries, scheduledOpenAiRetry,
   PRICING_REVISION, PRICING_REVIEW_DEADLINE_MS };
