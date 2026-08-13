@@ -40,6 +40,50 @@ const INSTAGRAM_POSTS = [
   }
 ];
 
+const X_NON_VIDEO_POSTS = Object.freeze([
+  {
+    id: 'howto-description-search',
+    caption: '商品名が分からなくても大丈夫。色・形・用途・見た場所を文章で入力すると、HOSHILUが探せる検索語に整理します。',
+    query: '名前は分からないけど、通勤バッグの中で自立する本革トートバッグ'
+  },
+  {
+    id: 'howto-price-compare',
+    caption: '候補を見つけたら「AI最安比較」へ。確認済み価格とAIによる参考価格を区別しながら、購入先を見比べられます。',
+    query: 'スモーキークォーツのおしゃれなリング'
+  },
+  {
+    id: 'howto-price-alert',
+    caption: '今すぐ買わない商品は「値下がり通知☑」へ。希望価格を保存し、APIで確認できた価格が条件を満たした時に知らせます。',
+    query: '軽くて持ち運べる小型写真プリンター'
+  },
+  {
+    id: 'search-example-memory',
+    caption: '検索例：「動画で見た、バッグにつける小さいぬいぐるみ」。正式名を知らなくても、覚えている特徴から探せます。',
+    query: '動画で見た、バッグにつける小さいぬいぐるみ'
+  }
+]);
+
+const INSTAGRAM_GUIDE_POSTS = Object.freeze([
+  {
+    id: 'guide-search-screen',
+    caption: '操作案内① 検索欄へ、商品名ではなく覚えている特徴をそのまま入力。色・形・用途・見た場所を足すほど候補を絞れます。@hoshilu.app',
+    query: '名前は分からないけど、床に置いても自立する本革トートバッグ',
+    media_url: 'https://hoshilu.app/social/hoshilu-product-screen-v1.jpg'
+  },
+  {
+    id: 'guide-cross-market',
+    caption: '操作案内② HOSHILUで検索語を整理したら、対応モールを同じ条件で見比べます。検索結果の根拠と価格確認状況も分けて表示します。@hoshilu.app',
+    query: 'スモーキークォーツのおしゃれなリング',
+    media_url: 'https://hoshilu.app/social/instagram-ambiguous-four-market-v1.png'
+  },
+  {
+    id: 'guide-save-alert',
+    caption: '操作案内③ 気になる商品は保存して値下がり通知へ。買いたい価格を決めて、確認済み価格の変化を待てます。@hoshilu.app',
+    query: '軽くて持ち運べる小型写真プリンター',
+    media_url: 'https://hoshilu.app/social/instagram-want-poll-v1.png'
+  }
+]);
+
 const FEATURE_LAUNCH = Object.freeze({
   X: 'HOSHILU正式版を公開。説明から検索語を整理し、楽天市場・Yahoo!ショッピングをまとめて比較。Amazonを含む最大13モールへ同じ検索語でつなぎます。ランキング、AI最安比較、値下がり通知にも対応。 #ホシル #商品検索',
   INSTAGRAM: 'HOSHILU正式版の機能を12秒で紹介します。\n① 説明から検索語を整理\n② 最大13モールを同じ検索語で横断\n③ ランキングとAI最安比較\n④ 値下がり通知☑で購入したい価格を保存\n\n名前が分からない「欲しいもの」をコメントで教えてください。次の検索動画で試します。@hoshilu.app\n#商品検索 #価格比較 #ネットショッピング #買い物好きな人と繋がりたい',
@@ -66,14 +110,15 @@ function scheduledAt(parts, hour, minute) {
   return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, hour - 9, minute)).toISOString();
 }
 
-function campaignLink(platform, date) {
-  const query = new URLSearchParams({
+function campaignLink(platform, date, content = date, searchQuery = '') {
+  const params = new URLSearchParams({
     utm_source: platform === 'X' ? 'x' : 'instagram',
     utm_medium: 'social',
     utm_campaign: CAMPAIGN_ID,
-    utm_content: date
+    utm_content: content
   });
-  return `https://hoshilu.app/?${query}`;
+  if (searchQuery) params.set('q', searchQuery);
+  return `https://hoshilu.app/?${params}`;
 }
 
 export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
@@ -99,6 +144,19 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         caption: key === FEATURE_LAUNCH_DATE ? FEATURE_LAUNCH.X : X_POSTS[contentIndex],
         link: campaignLink('X', key),
         media_url: content.media_url,
+        scheduled_at: scheduledAt(parts, 20, 15),
+        status: 'APPROVED'
+      }));
+    } else {
+      const content = X_NON_VIDEO_POSTS[Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS)
+        % X_NON_VIDEO_POSTS.length];
+      posts.push(normalizeSocialPost({
+        post_id: `${CAMPAIGN_ID}-x-guide-${key}`,
+        content_id: content.id,
+        platform: 'X',
+        campaign_id: CAMPAIGN_ID,
+        caption: content.caption,
+        link: campaignLink('X', key, content.id, content.query),
         scheduled_at: scheduledAt(parts, 20, 0),
         status: 'APPROVED'
       }));
@@ -127,6 +185,20 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         campaign_id: CAMPAIGN_ID,
         caption: content.caption,
         link: campaignLink('INSTAGRAM', key),
+        media_url: content.media_url,
+        scheduled_at: scheduledAt(parts, 20, 15),
+        status: 'APPROVED'
+      }));
+    } else if ([2, 4, 6].includes(parts.weekday)) {
+      const content = INSTAGRAM_GUIDE_POSTS[Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS)
+        % INSTAGRAM_GUIDE_POSTS.length];
+      posts.push(normalizeSocialPost({
+        post_id: `${CAMPAIGN_ID}-instagram-guide-${key}`,
+        content_id: content.id,
+        platform: 'INSTAGRAM',
+        campaign_id: CAMPAIGN_ID,
+        caption: content.caption,
+        link: campaignLink('INSTAGRAM', key, content.id, content.query),
         media_url: content.media_url,
         scheduled_at: scheduledAt(parts, 20, 15),
         status: 'APPROVED'

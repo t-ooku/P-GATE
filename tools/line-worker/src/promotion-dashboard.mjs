@@ -3,8 +3,8 @@ import { socialPublisherReadiness } from './social-publisher.mjs';
 
 const PLATFORMS = ['X', 'INSTAGRAM', 'TIKTOK'];
 const SCHEDULES = Object.freeze({
-  X: '日・月・水・金 20:00',
-  INSTAGRAM: '月・火・土 20:15（リール）',
+  X: '毎日（火・木・土・日20:00、月・水・金はInstagramリールと同時刻20:15）',
+  INSTAGRAM: '月〜土 20:15（月・水・金リール、火・木・土操作案内）',
   TIKTOK: '未接続'
 });
 const SOURCE_BY_PLATFORM = Object.freeze({ X: 'x', INSTAGRAM: 'instagram', TIKTOK: 'tiktok' });
@@ -14,6 +14,13 @@ const FUNNEL_EVENTS = Object.freeze([
 ]);
 const emptyFunnel = () => Object.fromEntries(FUNNEL_EVENTS.map(event => [event, 0]));
 const VALUE_EVENT_SQL = "'ai_result_clicked','ranking_result_clicked','price_comparison_opened','wish_saved','share_started','marketplace_click'";
+const ANNUAL_TRAFFIC_TARGET = Object.freeze({
+  start_at: '2026-08-13T15:00:00.000Z',
+  end_at: '2027-08-13T15:00:00.000Z',
+  visitors: 1_000_000,
+  daily_pace: 2740,
+  monthly_pace: 83334
+});
 
 function noStoreJson(value, init = {}) {
   const headers = new Headers(init.headers);
@@ -259,10 +266,24 @@ async function businessKpiSummary(env, now) {
     registeredMembers = safeCount(row?.total);
   } catch {}
   try {
-    const [period7d, period30d] = await Promise.all([periodSummary(env, now, 7), periodSummary(env, now, 30)]);
+    const [period7d, period30d] = await Promise.all([
+      periodSummary(env, now, 7), periodSummary(env, now, 30)
+    ]);
+    const annualTraffic = await env.PRODUCT_DB.prepare(`SELECT COUNT(DISTINCT visitor_id) AS visitors
+      FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2
+      AND traffic_class<>'QA' AND visitor_id<>''`)
+      .bind(ANNUAL_TRAFFIC_TARGET.start_at, ANNUAL_TRAFFIC_TARGET.end_at).first();
+    const annualVisitors = safeCount(annualTraffic?.visitors);
     return {
       status: 'READY', north_star: '商品発見セッション', registered_members: registeredMembers,
       definition: '検索成功後に商品・ランキング・価格比較・お気に入り・共有・モール送客へ進んだ重複なしセッション',
+      annual_traffic_goal: {
+        ...ANNUAL_TRAFFIC_TARGET,
+        metric: 'QAアクセスを除く匿名ユニーク訪問者',
+        actual_visitors: annualVisitors,
+        remaining_visitors: Math.max(0, ANNUAL_TRAFFIC_TARGET.visitors - annualVisitors),
+        progress_percent: Math.round((annualVisitors / ANNUAL_TRAFFIC_TARGET.visitors) * 10000) / 100
+      },
       periods: { '7d': period7d, '30d': period30d }
     };
   } catch (error) {
