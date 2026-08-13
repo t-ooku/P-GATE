@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  fetchYahooHighRatingRanking,
+  normalizeYahooHighRatingRanking,
   normalizeYahooShoppingItems,
   searchYahooShopping,
   yahooShoppingApiConfigured
@@ -42,4 +44,46 @@ test('searches the official endpoint without exposing the client ID in output da
   assert.equal(url.searchParams.get('query'), '光る スマホケース');
   assert.equal(url.searchParams.get('image_size'), '600');
   assert.deepEqual(results, []);
+});
+
+test('高評価トレンドランキングは公式順位・評価集計・レビューURLだけを保持する', () => {
+  const candidates = normalizeYahooHighRatingRanking({ high_rating_trend_ranking: {
+    meta: { last_modified: '2026-08-13' },
+    ranking_data: [{
+      rank: 2,
+      item_information: {
+        name: '高評価イヤホン', code: 'earbuds-1', jan_code: '4901234567894',
+        url: 'https://store.shopping.yahoo.co.jp/shop/earbuds-1.html',
+        regular_price: 4980, bargain_price: 3980, premium_price: 2980
+      },
+      image: { medium: 'https://item-shopping.c.yimg.jp/i/g/shop_earbuds-1' },
+      review: { rate: 4.72, count: 1597, url: 'https://shopping.yahoo.co.jp/review/item/list?store_id=shop&page_key=earbuds-1' }
+    }]
+  } });
+  assert.equal(candidates[0].rank, 2);
+  assert.equal(candidates[0].record_key, 'JAN:4901234567894');
+  assert.equal(candidates[0].offers[0].price, 3980);
+  assert.equal(candidates[0].offers[0].total_cost, 0);
+  assert.equal(candidates[0].review_average, 4.72);
+  assert.equal(candidates[0].review_count, 1597);
+  assert.match(candidates[0].review_url, /shopping\.yahoo\.co\.jp\/review/u);
+  assert.equal('review_body' in candidates[0], false);
+});
+
+test('高評価トレンドランキングAPIへ既存Client IDと検索語を送る', async () => {
+  let requested = '';
+  const candidates = await fetchYahooHighRatingRanking(
+    { YAHOO_SHOPPING_CLIENT_ID: 'secret-client-id' },
+    'ワイヤレスイヤホン',
+    async (url) => {
+      requested = String(url);
+      return Response.json({ high_rating_trend_ranking: { ranking_data: [] } });
+    }
+  );
+  const url = new URL(requested);
+  assert.equal(url.pathname, '/ShoppingWebService/V1/highRatingTrendRanking');
+  assert.equal(url.searchParams.get('appid'), 'secret-client-id');
+  assert.equal(url.searchParams.get('query'), 'ワイヤレスイヤホン');
+  assert.equal(url.searchParams.get('limit'), '30');
+  assert.deepEqual(candidates, []);
 });

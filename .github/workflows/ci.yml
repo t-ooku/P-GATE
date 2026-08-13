@@ -70,3 +70,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Verify production health, assets and critical API contracts
+        if: steps.creds.outputs.configured == 'true'
+        working-directory: tools/line-worker
+        run: node scripts/check-production-health.mjs --attempts 6 --retry-ms 10000

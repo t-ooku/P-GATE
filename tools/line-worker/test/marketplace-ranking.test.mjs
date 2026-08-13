@@ -28,6 +28,7 @@ test('AIは登録済み小分類だけを候補として返し、分類を勝手
 test('Capability Registryは13モールを方式とレビュー範囲つきで一元管理する', () => {
   assert.equal(MARKETPLACE_RANKING_CAPABILITIES.length, 13);
   assert.deepEqual(MARKETPLACE_RANKING_CAPABILITIES.find((item) => item.marketplace_id === 'RAKUTEN_JP'), { marketplace_id:'RAKUTEN_JP', label:'楽天市場', ranking_mode:'native_api', review_mode:'summary_api', status:'available' });
+  assert.deepEqual(MARKETPLACE_RANKING_CAPABILITIES.find((item) => item.marketplace_id === 'YAHOO_JP'), { marketplace_id:'YAHOO_JP', label:'Yahoo!ショッピング', ranking_mode:'native_api', review_mode:'aggregate_api', status:'available' });
   assert.ok(MARKETPLACE_RANKING_CAPABILITIES.every((item) => item.ranking_mode && item.review_mode));
 });
 
@@ -102,6 +103,35 @@ test('ランキング件数不足なら架空順位にせず楽天口コミ件�
   assert.equal(result.mode, 'derived_api');
   assert.equal(result.ranking_type, '楽天市場 口コミ件数順');
   assert.equal(result.candidates[0].review_count, 500);
+});
+
+test('Yahoo!は高評価トレンドランキングを公式順位のまま返す', async () => {
+  const result = await marketplaceRankingResult({ YAHOO_SHOPPING_CLIENT_ID:'client' }, 'ワイヤレスイヤホン', 'YAHOO_JP', async (url) => {
+    const target = new URL(url);
+    assert.equal(target.pathname, '/ShoppingWebService/V1/highRatingTrendRanking');
+    return Response.json({ high_rating_trend_ranking: { ranking_data:[{
+      rank:1,
+      item_information:{name:'Yahoo公式1位',code:'earphone-1',url:'https://store.shopping.yahoo.co.jp/shop/earphone-1.html',regular_price:5000},
+      review:{rate:4.8,count:800,url:'https://shopping.yahoo.co.jp/review/item/list?store_id=shop&page_key=earphone-1'}
+    }] } });
+  });
+  assert.equal(result.mode, 'native_api');
+  assert.equal(result.ranking_type, 'Yahoo!ショッピング 高評価トレンドランキング');
+  assert.equal(result.candidates[0].product_name, 'Yahoo公式1位');
+  assert.equal(result.candidates[0].rank, 1);
+});
+
+test('Yahoo!高評価API障害時は口コミ件数順へ縮退する', async () => {
+  const result = await marketplaceRankingResult({ YAHOO_SHOPPING_CLIENT_ID:'client' }, 'ワイヤレスイヤホン', 'YAHOO_JP', async (url) => {
+    const target = new URL(url);
+    if (target.pathname.includes('highRatingTrendRanking')) return new Response('{}', { status: 503 });
+    assert.equal(target.pathname, '/ShoppingWebService/V3/itemSearch');
+    assert.equal(target.searchParams.get('sort'), '-review_count');
+    return Response.json({ hits:[{name:'口コミ多数イヤホン',code:'fallback-1',url:'https://store.shopping.yahoo.co.jp/shop/fallback-1.html',price:4000,review:{rate:4.5,count:700}}] });
+  });
+  assert.equal(result.mode, 'derived_api');
+  assert.equal(result.ranking_type, 'Yahoo!ショッピング 口コミ件数順');
+  assert.equal(result.candidates[0].review_count, 700);
 });
 
 test('Genre Search応答は公式の親子階層だけを正規化する', () => {

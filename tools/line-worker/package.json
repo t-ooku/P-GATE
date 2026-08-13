@@ -8,6 +8,7 @@
     "evaluate:marketplace-query": "node scripts/evaluate-marketplace-query-quality.mjs",
     "evaluate:search-quality": "node scripts/evaluate-search-quality-baseline.mjs",
     "check:search-quality": "node scripts/evaluate-search-quality-baseline.mjs --check && node scripts/evaluate-marketplace-query-quality.mjs",
+    "check:production": "node scripts/check-production-health.mjs",
     "validate:marketplace-offers": "node scripts/validate-marketplace-offer-feed.mjs",
     "ingest:teacher-dataset": "node scripts/ingest-teacher-dataset-batch.mjs"
   },

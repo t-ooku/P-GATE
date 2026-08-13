@@ -1,5 +1,6 @@
 import { expandSearchQuery } from './query-expansion.mjs';
 import { isRakutenAffiliateProductUrl, isRakutenDirectProductUrl } from './rakuten-url-policy.mjs';
+import { fetchYahooHighRatingRanking, searchYahooShopping } from './yahoo-shopping-api.mjs';
 
 const RAKUTEN_RANKING_API = 'https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601';
 // 2026-07-01版の公式API。商品検索が返す実商品のgenreIdを入口にし、
@@ -20,7 +21,7 @@ export const RAKUTEN_RANKING_CATEGORIES = Object.freeze([
 
 export const MARKETPLACE_RANKING_CAPABILITIES = Object.freeze([
   { marketplace_id: 'RAKUTEN_JP', label: '楽天市場', ranking_mode: 'native_api', review_mode: 'summary_api', status: 'available' },
-  { marketplace_id: 'YAHOO_JP', label: 'Yahoo!ショッピング', ranking_mode: 'derived_api', review_mode: 'summary_api', status: 'planned' },
+  { marketplace_id: 'YAHOO_JP', label: 'Yahoo!ショッピング', ranking_mode: 'native_api', review_mode: 'aggregate_api', status: 'available' },
   { marketplace_id: 'AMAZON_JP', label: 'Amazon', ranking_mode: 'direct_link', review_mode: 'direct_link', status: 'available' },
   ...[
     ['QOO10_JP','Qoo10'],['SHEIN_JP','SHEIN'],['ZOZOTOWN_JP','ZOZOTOWN'],['LOFT_JP','ロフト'],
@@ -370,6 +371,32 @@ export async function marketplaceRankingResult(env, rawQuery, marketplaceId, fet
         if (!candidates) candidates = await fetchRakutenReviewRanking(env, resolution.category, fetcher);
       }
       await writeRankingCache(env, marketplaceId, resolution.category.id, rankingType, candidates);
+    }
+    return { mode, marketplace: capability, category: resolution.category, ranking_type: rankingLabel, cache_hit: cacheHit, candidates };
+  }
+  if (marketplaceId === 'YAHOO_JP') {
+    const rankingType = 'HIGH_RATING_TREND';
+    const categoryQuery = String(resolution.category.label || rawQuery).split('›').pop().trim();
+    let candidates = await readRankingCache(env, marketplaceId, resolution.category.id, rankingType);
+    const cacheHit = Boolean(candidates);
+    let mode = 'native_api';
+    let rankingLabel = 'Yahoo!ショッピング 高評価トレンドランキング';
+    if (!candidates) {
+      try {
+        candidates = await fetchYahooHighRatingRanking(env, categoryQuery, fetcher);
+      } catch (error) {
+        // 外部APIの一時障害でランキング検索を行き止まりにしない。既存の商品
+        // 検索APIによる口コミ件数順へ縮退し、公式ランキングとは明確に区別する。
+        console.warn('YAHOO_HIGH_RATING_RANKING_FALLBACK', {
+          status: Number(error?.status) || 0,
+          code: String(error?.message || 'YAHOO_HIGH_RATING_RANKING_FAILED').slice(0, 80)
+        });
+        candidates = await readRankingCache(env, marketplaceId, resolution.category.id, 'REVIEW_COUNT');
+        if (!candidates) candidates = await searchYahooShopping(env, categoryQuery, fetcher, { sort: '-review_count' });
+        mode = 'derived_api';
+        rankingLabel = 'Yahoo!ショッピング 口コミ件数順';
+      }
+      await writeRankingCache(env, marketplaceId, resolution.category.id, mode === 'native_api' ? rankingType : 'REVIEW_COUNT', candidates);
     }
     return { mode, marketplace: capability, category: resolution.category, ranking_type: rankingLabel, cache_hit: cacheHit, candidates };
   }

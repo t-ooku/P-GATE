@@ -17,7 +17,7 @@ import {
   rakutenApiConfigured,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
-import { searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
+import { fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
@@ -1566,7 +1566,15 @@ async function handleHoshiluRankingApi(request, env) {
     const rankingQuery = String(input.category_selection?.label || input.query).split('›').pop().trim();
     const [rakutenOutcome, yahooOutcome, indexedOutcome] = await Promise.allSettled([
       marketplaceRankingResult(env, input.query, 'RAKUTEN_JP', fetch, input.category_selection),
-      yahooShoppingApiConfigured(env) ? searchYahooShopping(env, rankingQuery, fetch, { sort: '-review_count' }) : [],
+      yahooShoppingApiConfigured(env)
+        ? fetchYahooHighRatingRanking(env, rankingQuery, fetch).catch((error) => {
+          console.warn('YAHOO_HIGH_RATING_RANKING_FALLBACK', {
+            status: Number(error?.status) || 0,
+            code: String(error?.message || 'YAHOO_HIGH_RATING_RANKING_FAILED').slice(0, 80)
+          });
+          return searchYahooShopping(env, rankingQuery, fetch, { sort: '-review_count' });
+        })
+        : [],
       applyIndexedSearchPolicy({ candidates: [] }, env, rankingQuery, 'JA', { force_product_presentation: true })
     ]);
     if (rakutenOutcome.status !== 'fulfilled') throw rakutenOutcome.reason;
