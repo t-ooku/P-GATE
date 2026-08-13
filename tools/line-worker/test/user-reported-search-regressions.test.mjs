@@ -38,3 +38,18 @@ test('商品一覧は内部縦スクロールを使わず検索窓だけを固�
   assert.match(sticky, /\.search-results-active \.sticky-search\s*\{[\s\S]*?top:\s*0/);
   assert.match(app, /document\.documentElement\.classList\.add\('search-results-active'\)/);
 });
+
+test('本革トートバッグはショルダーバッグ単体と財布を除外する', () => {
+  const results = filterCategoryMismatches('本革 トートバッグ', [
+    candidate('TOTE', '本革 トートバッグ レディース A4'),
+    candidate('SHOULDER', '本革 ショルダーバッグ'),
+    candidate('WALLET', '本革 長財布')
+  ]);
+  assert.deepEqual(results.map((item) => item.asin), ['TOTE']);
+});
+
+test('商品棚の表示順位は候補の旧rankではなく必ずNO.1から振り直す', async () => {
+  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(app, /const safeRank=index\+1/);
+  assert.doesNotMatch(app, /Number\(candidate\.rank\)\|\|index\+1/);
+});

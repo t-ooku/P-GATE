@@ -614,7 +614,10 @@ function productImageGallery(candidate){
 function productCard(candidate,index,t,confirmed,searchQuery=''){
   const card=document.createElement('article');
   card.className=confirmed?'product-card':'product-card unverified-card';
-  const safeRank=Math.max(1,Number(candidate.rank)||index+1);
+  // Every rendered shelf starts at NO.1 after filtering/splitting. The
+  // server-side rank belongs to the pre-filtered aggregate and can start at
+  // NO.3 when rows 1-2 were removed or placed in another shelf.
+  const safeRank=index+1;
   card.append(textElement('span','rank',`NO. ${safeRank}`));
   if(!confirmed)card.append(textElement('span','unverified-badge',resultRowCopyFor(elements.language.value).badge));
   const mediaColumn=document.createElement('div');

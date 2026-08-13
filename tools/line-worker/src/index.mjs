@@ -2139,6 +2139,12 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidates: rankMerchantCandidates(result.candidates, gasResult.candidates, input.query)
       };
     }
+    // Preserve the conventional HOSHILU lane before the Gemini-refined lane
+    // adds candidates. Users make frequent, preference-heavy searches (bags,
+    // materials, shapes), so neither lane may overwrite the other.
+    const originalSearchCandidates = filterCategoryMismatches(
+      expandedQuery.query, result?.candidates || []
+    );
     // AIがブランド/商品名を補った場合はD1も短い再検索を行う。外部APIだけ
     // でなく、HOSHILU内の確認済み商品データにもAI変換を反映する。
     if (queryWasAiRefined) {
@@ -2299,10 +2305,23 @@ async function handleKnowledgeApi(request, env, ctx) {
       result.candidates = finalSlice;
 
     }
+    const refinedCandidates = filterSearchCandidatesWithFallback(
+      input.query, expandedQuery.query, result?.candidates || []
+    );
+    const originalLaneCandidates = filterCategoryMismatches(
+      expandedQuery.query, originalSearchCandidates
+    );
+    const combinedSearchCandidates = rankMerchantCandidates(
+      [], interleaveCandidatesBySource([refinedCandidates, originalLaneCandidates]), expandedQuery.query
+    );
     result = {
       ...(result || {}),
       traffic_class: input.traffic_class,
-      candidates: filterSearchCandidatesWithFallback(input.query, expandedQuery.query, result?.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT)
+      search_lanes: {
+        gemini_refined_count: refinedCandidates.length,
+        hoshilu_original_count: originalLaneCandidates.length
+      },
+      candidates: combinedSearchCandidates.slice(0, CLIENT_CANDIDATE_LIMIT)
     };
     if (input.search_attempt >= 2) {
       result.clarification = { ...(result.clarification || {}), required: false, options: [] };
