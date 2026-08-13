@@ -197,6 +197,9 @@ jobs:
   runway-initial-test-start:
     needs: [test, deploy]
     if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deploy.result == 'success' &&
       github.ref == 'refs/heads/feature/ui-search-v2' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[start-runway-initial-test-approved]')

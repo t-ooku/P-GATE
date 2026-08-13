@@ -4,11 +4,16 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 
 const sql = readFileSync(new URL('../migrations/0050_runway_video_generation.sql', import.meta.url), 'utf8');
+const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
 
 test('Runway triggers avoid nested END tokens that break remote D1 migration parsing', () => {
   assert.doesNotMatch(sql, /SELECT\s+CASE\b/i);
   assert.doesNotMatch(sql, /\r\n/);
   assert.equal((sql.match(/CREATE TRIGGER IF NOT EXISTS/g) || []).length, 2);
+});
+
+test('initial Runway job explicitly runs after a successful deploy even when infra setup was skipped', () => {
+  assert.match(workflow, /runway-initial-test-start:\s*\n\s+needs: \[test, deploy\][\s\S]*?if: >-\s*\n\s+always\(\) &&\s*\n\s+needs\.test\.result == 'success' &&\s*\n\s+needs\.deploy\.result == 'success' &&/);
 });
 
 test('Runway generation migration is idempotent and enforces budget/job invariants', () => {
