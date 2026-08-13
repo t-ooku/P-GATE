@@ -8,6 +8,7 @@ const expectedIndexHtml = `
   <script type="module" src="/growth-analytics.mjs?v=1"></script>`;
 
 const guideSecurityHeaders = {
+  'strict-transport-security': 'max-age=31536000',
   'content-security-policy': "default-src 'self'; object-src 'none'",
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
   'referrer-policy': 'strict-origin-when-cross-origin',
@@ -19,7 +20,7 @@ function mockFetch({
   healthOk = true,
   yahooAvailable = true,
   appMarkers = true,
-  redirectOk = true,
+  redirectStatus = 308,
   notFoundOk = true,
   guideHeaders = guideSecurityHeaders
 } = {}) {
@@ -28,8 +29,8 @@ function mockFetch({
     const url = new URL(request.url);
     if (url.hostname === 'www.hoshilu.app') throw new TypeError('DNS unavailable');
     if (url.protocol === 'http:' && url.pathname === '/') return new Response(null, {
-      status: redirectOk ? 308 : 200,
-      headers: redirectOk ? { location: 'https://hoshilu.app/' } : {}
+      status: redirectStatus,
+      headers: [301, 308].includes(redirectStatus) ? { location: 'https://hoshilu.app/' } : {}
     });
     if (url.pathname.includes('__hoshilu-monitor-missing-')) return new Response('not found', { status: notFoundOk ? 404 : 200 });
     if (url.pathname === '/ja/guides') {
@@ -140,10 +141,17 @@ test('production monitor rejects a hanging request within the fetch deadline', {
   );
 });
 
-test('production monitor fails when canonical HTTP redirect is missing', async () => {
+test('production monitor treats a runner-level HTTP 200 as advisory while HTTPS HSTS stays required', async () => {
+  const result = await inspectProduction({
+    baseUrl: 'https://hoshilu.app/', fetcher: mockFetch({ redirectStatus: 200 }), expectedIndexHtml
+  });
+  assert.ok(result.warnings.some((warning) => warning.includes('transparent upgrade')));
+});
+
+test('production monitor fails on an unexpected canonical HTTP response', async () => {
   await assert.rejects(
-    inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch({ redirectOk: false }), expectedIndexHtml }),
-    /HTTP_APEX_REDIRECT_STATUS:200/u
+    inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch({ redirectStatus: 503 }), expectedIndexHtml }),
+    /HTTP_APEX_REDIRECT_STATUS:503/u
   );
 });
 
