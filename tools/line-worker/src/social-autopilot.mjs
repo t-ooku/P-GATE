@@ -68,7 +68,7 @@ const INSTAGRAM_GUIDE_POSTS = Object.freeze([
     id: 'guide-search-screen',
     caption: '操作案内① 検索欄へ、商品名ではなく覚えている特徴をそのまま入力。色・形・用途・見た場所を足すほど候補を絞れます。@hoshilu.app',
     query: '名前は分からないけど、床に置いても自立する本革トートバッグ',
-    media_url: 'https://hoshilu.app/social/hoshilu-product-screen-v1.jpg'
+    media_url: 'https://hoshilu.app/social/runway/hoshilu-product-screen-v1.jpg'
   },
   {
     id: 'guide-cross-market',
