@@ -98,7 +98,23 @@ const FEATURE_LAUNCH = Object.freeze({
 });
 
 // Amazonが強い(在庫・レビューが厚い)カテゴリの検索例に絞った、Threads専用の
-// 常設ローテーション。日替わりで1本ずつ順番に使う。
+// 常設ローテーション。1日2枠(昼・夜)で先頭から順番に消費する。
+//
+// 2026-08-17: 4本→20本へ拡張した。4本しかなかった頃は同じ文面が4日ごとに
+// 再投稿され、月7回同じ文章が出る状態だった。楽天アフィリエイトガイドライン
+// の重複投稿禁止に触れうるうえ、Meta側のスパム判定リスクもある。
+//
+// うち5本(index 3・7・11・15・19)は affiliate:false のリンク無し投稿。
+// claude/hoshilu_affiliate_ops_spec_v1.0.md 第2部が「アカウントが宣伝botでは
+// ないことを示す」ために全体の25%を非アフィリエイト投稿にする設計としており、
+// 4本時代はこの枠が丸ごと抜けていた(全件アフィリエイトリンク付き)。
+// Amazonアソシエイトの承認メールは「3件の適格販売が発生した段階で、紐づいて
+// いるWebサイトまたはSNSを審査する」と明記しているので、リンクだけの
+// アカウントに見えることは実害になりうる。
+//
+// 非アフィリエイト枠は query を持たない=リンクを付けない。affiliate:false の
+// ときは social-publisher.mjs の normalizeSocialPost がPR表記を付けないので、
+// 「広告ではないのにPR表記がある」という逆向きの不正確さも起きない。
 const THREADS_AMAZON_POSTS = Object.freeze([
   {
     id: 'amazon-boost-books',
@@ -116,10 +132,94 @@ const THREADS_AMAZON_POSTS = Object.freeze([
     query: 'キッチンの排水溝に使う小さいゴミ受けネット'
   },
   {
+    id: 'trust-how-to-describe',
+    caption: '商品名が分からないときは、名前をひねり出そうとしなくて大丈夫です。「どこで使うか」「何に困っているか」をそのまま入れたほうが、たいてい早く見つかります。'
+  },
+  {
     id: 'amazon-boost-reviews',
     caption: '「これAmazonにあるかな」も、HOSHILUで検索すれば他モールの選択肢と一緒に確認できます。レビュー件数や評価も比較の参考にどうぞ。',
     query: '軽くて持ち運べる小型写真プリンター'
+  },
+  {
+    id: 'amazon-boost-kitchen',
+    caption: '作り置きを始めると急に足りなくなる保存容器。冷凍したいのか、そのまま温めたいのかで選ぶものが変わります。用途で検索すると、Amazonを含む各モールの候補を並べて見られます。',
+    query: '冷凍してそのままレンジで温められる保存容器'
+  },
+  {
+    id: 'amazon-boost-storage',
+    caption: 'クローゼットの上の段を、あと少しだけ使いこなしたい。奥行きや高さの条件から探すと、Amazonを含む複数モールの収納用品をまとめて比較できます。',
+    query: 'クローゼット上段の奥行きが深い場所に置く収納ケース'
+  },
+  {
+    id: 'trust-why-multiple-malls',
+    caption: '同じ商品でも、扱っているモールによって在庫も配送も違います。1つのモールだけ見て「無い」と判断してしまうのがいちばんもったいないので、HOSHILUは横断して確認できるようにしています。'
+  },
+  {
+    id: 'amazon-boost-stationery',
+    caption: '書き心地が気に入っていたペン、軸の色しか覚えていない。特徴を言葉にして検索すると、Amazonを含む取扱モールの候補から絞り込めます。',
+    query: 'インクが早く乾く細字のボールペン'
+  },
+  {
+    id: 'amazon-boost-hobby',
+    caption: '久しぶりに趣味を再開すると、消耗品の名前を忘れているもの。何をするための道具かで検索すれば、Amazonを含む各モールの在庫を確認できます。',
+    query: '刺繍で使う輪っかの形をした固定する道具'
+  },
+  {
+    id: 'amazon-boost-pet',
+    caption: 'うちの子にちょうどいいサイズが分からない。体格や使う場所の条件で探すと、Amazonを含む複数モールのペット用品を見比べられます。',
+    query: '小型犬用の折りたためる移動用キャリー'
+  },
+  {
+    id: 'trust-no-price-in-post',
+    caption: 'HOSHILUの投稿では価格を書きません。モールも時期も違えば値段は変わるので、こちらで数字を書くと必ず古くなります。実際の価格は、その場でご確認ください。'
+  },
+  {
+    id: 'amazon-boost-baby',
+    caption: '育児用品は「いつ使うものか」で名前がまるで違います。月齢や場面から検索すると、Amazonを含む各モールの候補を一度に確認できます。',
+    query: '寝返りを始めた赤ちゃんの転落を防ぐベッド用の柵'
+  },
+  {
+    id: 'amazon-boost-car',
+    caption: '車内のちょっとした不便は、たいてい既に解決する道具があります。困っている場面をそのまま入れると、Amazonを含む取扱モールから候補が出てきます。',
+    query: '運転席のドリンクホルダーを増やす後付けの台'
+  },
+  {
+    id: 'amazon-boost-tools',
+    caption: '一度きりの作業のために工具を買うのは気が引ける。何をしたいかで検索すると、Amazonを含む複数モールで手頃な選択肢を比較できます。',
+    query: '家具の組み立てに使う小さい電動ドライバー'
+  },
+  {
+    id: 'trust-child-and-senior',
+    caption: 'HOSHILUは、正式な商品名を知らない人が使えることを大事にしています。お子さんやご高齢の方が、思いついた言葉のまま入力しても探せることを目指しています。'
+  },
+  {
+    id: 'amazon-boost-health',
+    caption: '肩や腰のつらさを和らげる道具は種類が多くて選びにくいもの。どこがどうつらいかで検索すると、Amazonを含む各モールの候補を並べて確認できます。',
+    query: '座ったまま腰を支えるクッション'
+  },
+  {
+    id: 'amazon-boost-cable',
+    caption: 'ケーブル類は規格の名前が覚えづらい。つなぎたい機器の組み合わせで検索すれば、Amazonを含む取扱モールから合うものを絞り込めます。',
+    query: 'ノートパソコンとテレビをつなぐ映像用のケーブル'
+  },
+  {
+    id: 'amazon-boost-seasonal',
+    caption: '季節家電は、必要になってから探すと選ぶ時間がありません。置き場所や使い方の条件で先に見ておくと、Amazonを含む各モールの在庫を落ち着いて比較できます。',
+    query: '狭い部屋でも使える静かな衣類乾燥用の除湿機'
+  },
+  {
+    id: 'trust-not-found-is-ok',
+    caption: '探しても見つからなかった検索は、HOSHILUにとって一番の手がかりです。どんな言葉で探されたかを匿名で集計して、次に同じ言葉で探した人が見つけられるように改善しています。'
   }
+]);
+
+// 昼と夜の2枠。投稿量を増やすために夜枠を足した。
+const THREADS_AMAZON_SLOTS = Object.freeze([
+  // 既存キューとの互換のため、昼枠のpost_idには接尾辞を付けない。1日1本だった
+  // 頃に積まれた `{campaign}-{JST日付}` の行をそのまま更新でき、同じ日に
+  // 2本重複して積まれることがない。
+  { suffix: '', hour: 12, minute: 30 },
+  { suffix: '-pm', hour: 20, minute: 30 }
 ]);
 
 const pad = value => String(value).padStart(2, '0');
@@ -153,7 +253,9 @@ function campaignLink(platform, date, content = date, searchQuery = '') {
   return `https://hoshilu.app/?${params}`;
 }
 
+// query を持たない=非アフィリエイト枠。リンクを付けない。
 function threadsAmazonLink(content) {
+  if (!content.query) return '';
   const params = new URLSearchParams({
     utm_source: 'threads',
     utm_medium: 'social',
@@ -176,18 +278,24 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
     const parts = jstDateParts(day);
     const key = dateKey(parts);
     const dayIndex = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
-    const content = THREADS_AMAZON_POSTS[dayIndex % THREADS_AMAZON_POSTS.length];
-    posts.push(normalizeSocialPost({
-      post_id: `${THREADS_AMAZON_CAMPAIGN_ID}-${key}`,
-      content_id: content.id,
-      platform: 'THREADS',
-      campaign_id: THREADS_AMAZON_CAMPAIGN_ID,
-      caption: content.caption,
-      link: threadsAmazonLink(content),
-      affiliate: true,
-      scheduled_at: scheduledAt(parts, 12, 30),
-      status: 'APPROVED'
-    }));
+    THREADS_AMAZON_SLOTS.forEach((slot, slotIndex) => {
+      // 1日2枠なので、通し番号も2枠ぶん進める。20本を2本/日で消費するため
+      // 一巡は10日。同じ文面が再登場するまでの間隔を最大化する。
+      const rotation = (dayIndex * THREADS_AMAZON_SLOTS.length + slotIndex) % THREADS_AMAZON_POSTS.length;
+      const content = THREADS_AMAZON_POSTS[rotation];
+      const link = threadsAmazonLink(content);
+      posts.push(normalizeSocialPost({
+        post_id: `${THREADS_AMAZON_CAMPAIGN_ID}-${key}${slot.suffix}`,
+        content_id: content.id,
+        platform: 'THREADS',
+        campaign_id: THREADS_AMAZON_CAMPAIGN_ID,
+        caption: content.caption,
+        link,
+        affiliate: Boolean(link),
+        scheduled_at: scheduledAt(parts, slot.hour, slot.minute),
+        status: 'APPROVED'
+      }));
+    });
   }
   return posts.filter(post => Date.parse(post.scheduled_at) > now.getTime());
 }
