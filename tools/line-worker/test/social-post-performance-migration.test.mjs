@@ -38,6 +38,25 @@ function freshDbBeforeThreadsMigrations() {
   return db;
 }
 
+// D1 applies each migration file as a single transaction (confirmed against
+// production: https://developers.cloudflare.com/d1/sql-api/foreign-keys/ ,
+// https://github.com/cloudflare/workers-sdk/issues/5438). node:sqlite's
+// db.exec() on a multi-statement string does NOT do this on its own - each
+// statement autocommits - so 0052's PRAGMA defer_foreign_keys=on would only
+// defer within a statement, not across the whole file, unless the whole
+// file is wrapped in an explicit BEGIN/COMMIT here to match D1's real
+// behaviour.
+function applyMigrationAsSingleTransaction(db, sql) {
+  db.exec('BEGIN;');
+  try {
+    db.exec(sql);
+    db.exec('COMMIT;');
+  } catch (err) {
+    db.exec('ROLLBACK;');
+    throw err;
+  }
+}
+
 test('0052/0053マイグレーション前はTHREADSがqueueとperformanceの両方で拒否される', () => {
   const db = freshDbBeforeThreadsMigrations();
   assert.throws(() => db.prepare(`INSERT INTO social_post_queue
@@ -65,10 +84,11 @@ test('0052/0053マイグレーションはTHREADSを許可しつつ既存デー�
 
   // social_post_performance.post_id は social_post_queue.post_id への外部キーなので、
   // 先に子(performance)、次に親(queue)の順で適用しても、その逆でも安全であること。
-  db.exec(queueThreadsMigration);
-  db.exec(performanceThreadsMigration);
-  db.exec(queueThreadsMigration); // 再実行しても壊れないこと
-  db.exec(performanceThreadsMigration);
+  // 各ファイルはD1と同じく単一トランザクションとして適用する(上のヘルパー参照)。
+  applyMigrationAsSingleTransaction(db, queueThreadsMigration);
+  applyMigrationAsSingleTransaction(db, performanceThreadsMigration);
+  applyMigrationAsSingleTransaction(db, queueThreadsMigration); // 再実行しても壊れないこと
+  applyMigrationAsSingleTransaction(db, performanceThreadsMigration);
 
   // 既存データが失われていないこと。
   const preExistingQueue = db.prepare('SELECT platform FROM social_post_queue WHERE post_id=?').get('post-pre-existing');
