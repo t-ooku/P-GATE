@@ -27,11 +27,15 @@ test('release version has one source of truth', () => {
 // production-monitor.ymlだけに固定する。
 // 2026-08-07 に apply-teacher-dataset-d1.yml を追加したが、これは
 // workflow_dispatch でしか起動しない手動実行用で、push や PR では動かない。
+// 2026-08-17 に setcloudflaresecret.yml を追加した。Cloudflareダッシュボード
+// とwrangler loginが両方ブロックされていた(アカウント復旧待ち)期間に、
+// 既存のCLOUDFLARE_API_TOKEN Secretを使ってWorkerのSecretを設定するための
+// 手動実行専用ワークフロー(confirm: APPLY必須)。同じくpush/PRでは動かない。
 // 規約の狙いは古いCIが増殖して「どれが本物か分からない」状態を防ぐことなので、
 // 手動ワークフローは名前を列挙して明示的に許可し、そのうえで「自動トリガーを
 // 持たないこと」を下のテストで固定する。これを外すと、手動のつもりの
 // ワークフローが後から push で走るようになっても気づけない。
-const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml'];
+const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
