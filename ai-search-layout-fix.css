@@ -1,0 +1,1160 @@
+.panel-heading-details{
+  width:100%;
+}
+
+.panel-heading-details>summary{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+  list-style:none;
+  color:#5140ba;
+  font-size:12px;
+  font-weight:850;
+  padding:6px 0;
+}
+
+.panel-heading-details>summary::-webkit-details-marker{
+  display:none;
+}
+
+.panel-heading-details>summary::after{
+  content:'▾';
+  font-size:10px;
+}
+
+.panel-heading-details[open]>summary::after{
+  content:'▴';
+}
+
+.panel-heading-details>h2{
+  margin-top:8px;
+}
+
+.marketplace-fallback{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:18px;
+  align-items:stretch;
+}
+
+.marketplace-fallback-intro{
+  min-width:0;
+}
+
+.ai-intent-summary{
+  display:grid;
+  gap:10px;
+  margin-top:14px;
+  padding:14px;
+  border:1px solid #e2dcff;
+  border-radius:14px;
+  background:#faf8ff;
+}
+
+.ai-intent-row{
+  display:grid;
+  grid-template-columns:minmax(64px,88px) 1fr;
+  gap:10px;
+  align-items:start;
+  font-size:12px;
+}
+
+.ai-intent-label{
+  color:var(--muted);
+  font-weight:850;
+  letter-spacing:.02em;
+}
+
+.ai-intent-value{
+  color:var(--ink);
+  font-weight:700;
+}
+
+.ai-intent-confidence-score{
+  display:inline-block;
+  padding:2px 10px;
+  border-radius:999px;
+  background:linear-gradient(105deg,var(--pink),var(--violet),var(--cyan));
+  color:#fff;
+  font-weight:900;
+  justify-self:start;
+}
+
+.ai-intent-features{
+  margin:0;
+  padding-left:16px;
+  display:grid;
+  gap:3px;
+  color:var(--ink);
+  font-size:11px;
+}
+
+.ai-intent-features li{
+  line-height:1.5;
+}
+
+.ai-candidate-list{
+  display:grid;
+  gap:12px;
+  margin-top:14px;
+}
+
+.ai-candidate-list-title{
+  font-size:12px;
+  font-weight:850;
+  color:var(--muted);
+  letter-spacing:.02em;
+}
+
+.ai-candidate-card{
+  display:grid;
+  gap:8px;
+  padding:14px;
+  border:1px solid #e2dcff;
+  border-radius:14px;
+  background:#fff;
+}
+
+.ai-candidate-status{
+  display:inline-flex;
+  width:fit-content;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#fff3d6;
+  color:#805b00;
+  font-size:10px;
+  font-weight:850;
+  line-height:1.35;
+}
+
+.ai-candidate-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.ai-candidate-name{
+  font-size:13px;
+  color:var(--ink);
+}
+
+.keyword-tag-label{
+  display:block;
+  width:100%;
+  margin-bottom:6px;
+}
+
+.keyword-tag-block{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+}
+
+.keyword-tag-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  flex:1;
+  min-width:0;
+}
+
+.keyword-tag{
+  padding:6px 11px;
+  border:1px solid #ded7ff;
+  border-radius:999px;
+  background:#fff;
+  color:#5140ba;
+  font-size:11px;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.copy-all-keywords{
+  flex:0 0 auto;
+}
+
+/* AI related-keyword suggestions (Phase C item 11, 2026-08-07). These chips
+   are <button>s, not the read-only <span> chips above, so they need an
+   explicit tap affordance and a >=44px-tall touch target on mobile. */
+.related-keyword-card{
+  display:block;
+}
+
+.related-keyword-block{
+  margin-top:0;
+}
+
+.related-keyword-note{
+  margin:12px 0 0;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
+
+.related-keyword-refine{
+  margin-top:12px;
+}
+
+.related-keyword-tag{
+  cursor:pointer;
+  font-family:inherit;
+  line-height:1.5;
+  transition:background .15s,border-color .15s,color .15s;
+}
+
+.related-keyword-tag::before{
+  content:"＋";
+  margin-right:4px;
+  font-weight:900;
+}
+
+.related-keyword-tag:hover,
+.related-keyword-tag:focus-visible{
+  background:var(--violet);
+  border-color:var(--violet);
+  color:#fff;
+  outline:none;
+}
+
+@media(max-width:760px){
+  .related-keyword-tag{
+    min-height:44px;
+    padding:6px 14px;
+    font-size:12px;
+  }
+}
+
+.marketplace-fallback-group{
+  width:100%;
+  min-width:0;
+}
+
+.marketplace-fallback-group+.marketplace-fallback-group{
+  padding-top:16px;
+  border-top:1px solid #e9e5f5;
+}
+
+.marketplace-fallback-group-label{
+  margin:0 0 4px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.04em;
+}
+
+/* v4.2 項目15: まとめて検索/個別に探すグループの説明文
+   ("HOSHILUが商品をまとめて探して比較します。" / "HOSHILUの検索結果には
+   含まれません。各ショップでも同じ条件で探せます。")。 */
+.marketplace-fallback-group-description{
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.55;
+}
+
+.marketplace-fallback-group .marketplace-links{
+  width:100%;
+  min-width:0;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+}
+
+@media(min-width:1440px){
+  .marketplace-fallback-group .marketplace-links{
+    grid-template-columns:repeat(10,minmax(0,1fr));
+  }
+}
+
+.marketplace-fallback-group .marketplace-links .buy-link{
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 8px;
+  text-align:center;
+  line-height:1.35;
+}
+
+.lp-benefits #benefitTitle{
+  white-space:nowrap;
+  font-size:clamp(28px,4.5vw,64px);
+}
+
+@media(max-width:980px){
+  .marketplace-fallback-group .marketplace-links{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:760px){
+  .marketplace-fallback{
+    gap:14px;
+  }
+
+  .marketplace-fallback-group .marketplace-links{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .marketplace-fallback-group .marketplace-links .buy-link{
+    min-height:48px;
+    padding:9px 6px;
+    font-size:clamp(10px,3vw,12px);
+  }
+
+  .ai-intent-row{
+    grid-template-columns:1fr;
+    gap:4px;
+  }
+
+  .keyword-tag-block{
+    align-items:stretch;
+    flex-direction:column;
+  }
+
+  .copy-all-keywords{
+    width:100%;
+  }
+
+  .lp-benefits #benefitTitle{
+    white-space:normal;
+    font-size:clamp(26px,8vw,38px);
+  }
+}
+
+/* Condition search panel (Phase C item 11, 2026-08-07). Shares .keyword-tag
+   with the related-keyword chips but is single-select per row, so selected
+   state needs to be visually unambiguous - aria-pressed alone is not enough
+   for sighted users. .refinement-card is a flex row by default; this panel
+   stacks. */
+.condition-search-card{
+  display:grid;
+  gap:12px;
+}
+
+.condition-search-title{
+  display:block;
+  margin-bottom:0;
+  color:#5140ba;
+}
+
+.condition-search-body{
+  margin:0;
+}
+
+.condition-group{
+  display:grid;
+  gap:6px;
+}
+
+.condition-group-label{
+  color:var(--muted);
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.06em;
+}
+
+.condition-value-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.condition-chip{
+  cursor:pointer;
+  font-family:inherit;
+  line-height:1.5;
+  transition:background .15s,border-color .15s,color .15s;
+}
+
+.condition-chip:hover,
+.condition-chip:focus-visible{
+  border-color:var(--violet);
+  background:var(--soft);
+  outline:none;
+}
+
+.condition-chip.selected{
+  background:var(--violet);
+  border-color:var(--violet);
+  color:#fff;
+}
+
+.condition-search-submit{
+  min-height:48px;
+  justify-content:center;
+}
+
+.condition-search-submit:disabled{
+  cursor:not-allowed;
+  opacity:.45;
+  box-shadow:none;
+}
+
+@media(max-width:760px){
+  .condition-chip{
+    min-height:44px;
+    padding:6px 14px;
+    font-size:12px;
+  }
+}
+
+/* Advanced (condition) search, collapsed by default (2026-08-07 request).
+   Sits between the example chips and the consent checkbox in the search
+   panel, so conditions can be set before the first search. */
+.advanced-search-toggle{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  min-height:48px;
+  margin:0 0 12px;
+  padding:12px 16px;
+  border:1px solid #ded7ff;
+  border-radius:14px;
+  background:#faf8ff;
+  color:#5140ba;
+  font-family:inherit;
+  font-size:13px;
+  font-weight:850;
+  cursor:pointer;
+}
+
+.advanced-search-toggle::after{
+  content:'▾';
+  margin-left:auto;
+  font-size:11px;
+}
+
+.advanced-search-toggle[aria-expanded="true"]::after{
+  content:'▴';
+}
+
+.advanced-search-toggle:hover,
+.advanced-search-toggle:focus-visible{
+  border-color:var(--violet);
+  background:var(--soft);
+  outline:none;
+}
+
+.advanced-search-panel{
+  margin:0 0 16px;
+  padding:16px;
+  border:1px solid #e2dcff;
+  border-radius:16px;
+  background:#faf8ff;
+}
+
+/* Hero MARKETPLACE COVERAGE widget (2026-08-08 request): a second, collapsible
+   copy of the #marketplaceCoverage widget placed directly under the hero so a
+   first-time visitor sees it before the search form, without pushing the
+   search box far down on repeat visits. It reuses every .marketplace-coverage*
+   class from marketplace-coverage.css as-is (only the two #marketplaceCoverageLead
+   id-scoped mobile rules there don't apply to this new id, mirrored below), so
+   only the <details>/<summary> chrome needs new rules here. */
+.hero-marketplace-coverage{
+  margin:6px 0 0;
+  cursor:default;
+}
+
+.hoshilu-primary>.hero{
+  padding-bottom:12px;
+}
+
+.hero-marketplace-coverage>summary{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  cursor:pointer;
+  list-style:none;
+  margin:0;
+}
+
+.hero-marketplace-coverage>summary::-webkit-details-marker{
+  display:none;
+}
+
+.hero-marketplace-coverage>summary::after{
+  content:'（開く）';
+  font-size:11px;
+  letter-spacing:0;
+  color:var(--violet);
+}
+
+.hero-marketplace-coverage[open]>summary::after{
+  content:'（閉じる）';
+}
+
+.hero-marketplace-coverage>.marketplace-coverage-heading{
+  margin-top:10px;
+}
+
+#heroMarketplaceCoverageLead{
+  max-width:720px;
+  margin:0;
+  color:var(--muted);
+  font-size:clamp(12px,1.6vw,15px);
+  line-height:1.7;
+}
+
+@media(max-width:760px){
+  .hero-marketplace-coverage{
+    margin-top:3px;
+  }
+
+  .hoshilu-primary>.hero{
+    padding-bottom:6px;
+  }
+
+  #heroMarketplaceCoverageLead{
+    font-size:10px;
+    line-height:1.55;
+  }
+
+  #heroMarketplaceCoverageLead .marketplace-mobile-line:nth-child(2){
+    font-size:clamp(7px,2.15vw,9px);
+    letter-spacing:-.04em;
+    white-space:nowrap;
+  }
+}
+
+/* Merge 検索履歴/検索例 into one visual block (2026-08-08 request). Search
+   history previously had zero dedicated CSS (plain <ul>/<li>), so it looked
+   like an unrelated, unfinished element next to the styled .chip examples.
+   Styling history rows as the same rounded-pill chip (with an inline delete
+   button) makes both read as one consistent set of suggestions. */
+.search-hints{
+  display:block;
+}
+
+.search-history-section{
+  margin:0 0 4px;
+}
+
+.search-history-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.search-history-toolbar h3{
+  margin:0;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.06em;
+}
+
+.search-history-delete-all{
+  border:0;
+  background:none;
+  padding:4px 6px;
+  color:#b42318;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.search-history-delete-all:hover,
+.search-history-delete-all:focus-visible{
+  text-decoration:underline;
+  outline:none;
+}
+
+.search-history-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:0 0 14px;
+  padding:0;
+  list-style:none;
+}
+
+.search-history-row{
+  display:inline-flex;
+  align-items:center;
+  gap:2px;
+  padding:0;
+  border:1px solid #ded7ff;
+  border-radius:999px;
+  background:var(--soft);
+  overflow:hidden;
+}
+
+.search-history-apply{
+  max-width:220px;
+  padding:8px 4px 8px 12px;
+  border:0;
+  background:none;
+  overflow:hidden;
+  color:#5140ba;
+  font-size:12px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  cursor:pointer;
+}
+
+.search-history-row-delete{
+  padding:8px 10px 8px 4px;
+  border:0;
+  background:none;
+  color:#9088b8;
+  font-size:13px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.search-history-row-delete:hover,
+.search-history-row-delete:focus-visible{
+  color:#b42318;
+  outline:none;
+}
+
+/* 取得元APIが返した実画像だけをカード内と拡大表示で切り替える。
+   画像が1枚の時も拡大できるが、存在しない2枚目は作らない。 */
+.product-image-gallery{position:relative;margin:10px 0;border-radius:12px;background:#fafafa;overflow:hidden}
+.product-image-gallery .product-image{display:block;margin:0;width:100%;aspect-ratio:1.45;object-fit:contain;cursor:zoom-in}
+.product-image-gallery-button{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:44px;border:1px solid #ffffffaa;border-radius:12px;background:#17172bb8;color:#fff;font-size:26px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.product-image-gallery-button.previous{left:8px}
+.product-image-gallery-button.next{right:8px}
+.product-image-gallery-button:hover,.product-image-gallery-button:focus-visible{background:#5140e8;outline:3px solid #23b8ff;outline-offset:2px}
+.product-image-gallery-count{position:absolute;right:8px;bottom:8px;padding:4px 8px;border-radius:999px;background:#17172bcc;color:#fff;font-size:10px;font-weight:800}
+.product-image-lightbox{width:min(90vw,620px);max-width:none;padding:0;border:0;border-radius:18px;background:#fff;box-shadow:0 24px 80px #17172b66;overflow:hidden}
+.product-image-lightbox::backdrop{background:#17172bb3;backdrop-filter:blur(3px)}
+.product-image-lightbox-close{position:absolute;z-index:3;top:10px;right:10px;width:40px;height:40px;border:0;border-radius:999px;background:#17172bd9;color:#fff;font-size:20px;cursor:pointer}
+.product-image-lightbox-track{display:flex;width:100%;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-x:contain;scrollbar-width:none}
+.product-image-lightbox-track::-webkit-scrollbar{display:none}
+.product-image-lightbox-slide{flex:0 0 100%;display:grid;place-items:center;min-width:100%;padding:30px 18px 42px;scroll-snap-align:center;scroll-snap-stop:always}
+.product-image-lightbox-slide img{display:block;width:100%;height:auto;max-height:72vh;object-fit:contain}
+.product-image-lightbox-count{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);padding:5px 11px;border-radius:999px;background:#17172bd9;color:#fff;font-size:11px;font-weight:850}
+.product-card-media-column{width:100%;min-width:0}
+.product-card-media-actions{display:grid;gap:7px;margin-top:7px}
+.product-card-media-actions .watch-settings-button,.product-card-media-actions .ai-price-compare-button{width:100%;min-height:36px;margin:0;padding:8px 10px;border:1px solid #8b7cf2;border-radius:8px;background:#fff;color:#5140ba;font-size:11px;font-weight:850;line-height:1.3}
+
+/* 2026-08-09: 参照された楽天市場の実画面に合わせる。
+   PCは画像上・情報下の縦長カードを4列、スマホは画像左・情報右の横長行。
+   商品一覧は縦方向へ回転し、カード内の複数画像だけは左右切替を維持する。 */
+.result-carousel{position:relative;padding:18px 0}
+.result-track{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  align-items:stretch;
+  gap:18px 14px;
+  max-height:none;
+  padding:2px 7px 2px 2px;
+  overflow-x:hidden;
+  overflow-y:visible;
+  scroll-snap-type:y mandatory;
+  scrollbar-width:thin;
+}
+.result-track>.product-card{
+  position:relative;
+  width:100%;
+  min-height:510px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px;
+  padding:12px;
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+}
+.result-track>.product-card>.rank{
+  position:absolute;
+  top:18px;
+  left:18px;
+  z-index:2;
+  box-shadow:0 2px 8px #17172b24;
+}
+.result-track>.product-card>*{min-width:0;margin-top:0;margin-bottom:0}
+.result-track>.product-card>.product-card-media-column{
+  width:100%;
+  margin:2px 0 0;
+  align-self:start;
+}
+.result-track>.product-card>.product-card-media-column .product-image-gallery{margin:0}
+.result-track>.product-card>.product-card-media-column .product-image-gallery .product-image{
+  width:100%;
+  aspect-ratio:1/1;
+  max-height:none;
+}
+.result-track>.product-card h3{
+  display:-webkit-box;
+  margin:0;
+  overflow:hidden;
+  min-height:2.9em;
+  font-size:14px;
+  line-height:1.45;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+}
+.result-track>.product-card p{
+  display:-webkit-box;
+  flex:none;
+  margin:0;
+  overflow:hidden;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+}
+.result-track>.product-card .evidence{
+  min-height:1.5em;
+  margin:0;
+}
+.result-track>.product-card .price-offer b{
+  color:#c90000;
+  font-size:20px;
+  line-height:1.25;
+}
+.result-track>.product-card .price-offer strong,
+.result-track>.product-card .offer-link strong{
+  overflow-wrap:anywhere;
+}
+.result-track>.product-card .product-primary-link{gap:4px}
+.result-track>.product-card .watch-settings-button{
+  width:100%;
+  height:auto;
+  min-height:36px;
+  padding:8px 12px;
+  border-radius:11px;
+  font-size:11px;
+  line-height:1.35;
+  font-weight:850;
+}
+.result-track>.product-card .offer-link[data-marketplace="YAHOO_JP"] strong{
+  font-size:9px;
+  line-height:1.35;
+}
+.result-track>.product-card .price-offer[data-marketplace="YAHOO_JP"] strong{
+  font-size:10px;
+  line-height:1.35;
+}
+.result-track>.product-card .ai-price-compare-button{
+  min-height:36px;
+  margin-top:auto;
+  padding:8px 10px;
+  font-size:11px;
+}
+.result-track>.product-card .product-image-gallery-button{width:30px;height:38px;font-size:22px}
+.result-track>.product-card .product-image-gallery-button.previous{left:5px}
+.result-track>.product-card .product-image-gallery-button.next{right:5px}
+.result-carousel>.carousel-button{
+  left:50%;
+  right:auto;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  transform:translateX(-50%);
+  font-size:18px;
+}
+.result-carousel>.carousel-button.previous{top:-4px}
+.result-carousel>.carousel-button.next{top:auto;bottom:-4px}
+/* PCでは4商品を1画面で比較しやすくする。正方形画像の高さと説明領域を
+   抑え、画像・商品名・価格が同じ表示範囲に収まりやすい密度にする。 */
+@media(min-width:761px){
+  .result-track>.product-card{min-height:0;gap:6px;padding:10px}
+  .result-track>.product-card>.product-card-media-column .product-image-gallery .product-image{
+    height:clamp(180px,15vw,225px);
+    aspect-ratio:auto;
+  }
+  .result-track>.product-card .product-card-media-actions{gap:5px;margin-top:5px}
+  .result-track>.product-card .product-card-media-actions .watch-settings-button,
+  .result-track>.product-card .product-card-media-actions .ai-price-compare-button{min-height:32px;padding:6px 8px}
+  .result-track>.product-card h3{min-height:2.8em;font-size:13px;line-height:1.4}
+  .result-track>.product-card p{-webkit-line-clamp:1;line-clamp:1;font-size:10.5px;line-height:1.4}
+  .result-track>.product-card .evidence{min-height:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .result-track>.product-card .offer-list{gap:5px}
+  .result-track>.product-card .price-offer{padding:7px 8px}
+}
+@media(max-width:760px){
+  .result-track{
+    display:flex;
+    flex-direction:column;
+    max-height:none;
+    overflow-y:visible;
+    gap:0;
+    padding-right:3px;
+  }
+  .result-track>.product-card{
+    flex:0 0 auto;
+    min-height:0;
+    display:grid;
+    grid-template-columns:minmax(126px,40%) minmax(0,1fr);
+    align-content:start;
+    align-items:start;
+    column-gap:12px;
+    row-gap:7px;
+    padding:14px 8px;
+    border-width:0 0 1px;
+    border-radius:0;
+  }
+  .result-track>.product-card>.rank{position:static;grid-column:2;justify-self:start;z-index:auto;box-shadow:none}
+  .result-track>.product-card>*{grid-column:2}
+  .result-track>.product-card>.product-card-media-column{
+    grid-column:1;
+    grid-row:1 / span 5;
+    width:100%;
+    margin:0;
+  }
+  .result-track>.product-card>.product-card-media-column .product-image-gallery{margin:0}
+  .result-track>.product-card>.product-card-media-column .product-image-gallery .product-image{width:100%;aspect-ratio:1/1;max-height:none}
+  .result-track>.product-card h3{min-height:2.9em;font-size:14px;line-height:1.45}
+  .result-track>.product-card p{font-size:10px;line-height:1.45}
+  .result-track>.product-card .price-offer{padding:7px 8px}
+  .result-track>.product-card .price-offer b{font-size:19px}
+  .result-track>.product-card .watch-settings-button,
+  .result-track>.product-card .ai-price-compare-button{min-height:34px;padding:7px 8px;font-size:10px}
+  .result-track>.product-card .ai-price-compare-button{margin-top:0}
+  .result-carousel>.carousel-button{display:grid}
+}
+
+/* レコメンド棚だけは、共通の商品一覧に設定した縦回転を適用しない。
+   このファイルはstyles.cssより後に読み込まれるため、横方向の指定をここで
+   明示し、スマホのflex-direction:columnと上下矢印配置を確実に上書きする。 */
+.result-row-recommended .result-track{
+  display:flex;
+  flex-direction:row;
+  align-items:flex-start;
+  max-height:none;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  overscroll-behavior-x:contain;
+}
+.result-row-recommended .result-track>.product-card{
+  flex:0 0 min(300px,82vw);
+  width:min(300px,82vw);
+  min-width:0;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px;
+  padding:12px;
+  border:1px solid #f0dfb4;
+  border-radius:19px;
+  scroll-snap-align:start;
+}
+.result-row-recommended .result-track>.product-card>*{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.result-row-recommended .result-track>.product-card>.rank,
+.result-row-recommended .result-track>.product-card>.unverified-badge{
+  width:max-content;
+  max-width:100%;
+}
+.result-row-recommended .result-track>.product-card>.product-card-media-column{
+  width:100%;
+  margin:0;
+}
+.result-row-recommended .result-track>.product-card .product-image-gallery .product-image{
+  width:100%;
+  height:auto;
+  aspect-ratio:1.3/1;
+}
+.result-row-recommended .result-track>.product-card h3{
+  min-height:0;
+  font-size:14px;
+  line-height:1.45;
+}
+.result-row-recommended .related-category-card{
+  flex-basis:min(320px,82vw);
+  justify-content:flex-start;
+  min-height:260px;
+}
+.result-row-recommended .related-category-card .marketplace-links{
+  margin-top:auto;
+  max-height:132px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.result-row-recommended .recommendation-reason{
+  order:initial;
+  margin:0;
+  padding:8px 10px;
+  overflow-wrap:anywhere;
+}
+.result-row-recommended .price-comparison,
+.result-row-recommended .offer-list,
+.result-row-recommended .price-offer,
+.result-row-recommended .offer-link{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.result-row-recommended .price-offer strong,
+.result-row-recommended .price-offer b,
+.result-row-recommended .price-offer small,
+.result-row-recommended .offer-link strong,
+.result-row-recommended .offer-link span{
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+.result-row-recommended .result-carousel>.carousel-button{
+  top:42%;
+  bottom:auto;
+  transform:none;
+}
+.result-row-recommended .result-carousel>.carousel-button.previous{left:-4px;right:auto}
+.result-row-recommended .result-carousel>.carousel-button.next{left:auto;right:-4px}
+
+@media(max-width:760px){
+  .result-row-recommended .result-track{
+    flex-direction:row;
+    gap:12px;
+    padding:2px 2px 10px;
+  }
+  .result-row-recommended .result-track>.product-card{
+    flex:0 0 min(300px,82vw);
+    width:min(300px,82vw);
+    display:flex;
+    flex-direction:column;
+    padding:12px;
+    border-width:1px;
+    border-radius:19px;
+  }
+}
+
+/* AI candidate cards' marketplace buttons (2026-08-08 request): these are
+   generic per-mall search links, not a confirmed product page, so without
+   context a "Amazon" button reads like a direct link to the exact item.
+   This caption makes the search-not-guaranteed nature explicit right above
+   the button row, matching the same expectation-setting text already used
+   in the standalone MARKETPLACE COVERAGE widget's note. */
+.ai-candidate-links-note{
+  margin:2px 0 0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.55;
+}
+
+/* Instagram/TikTokのアプリはUniversal Linkの検索語を落とすことがある。
+   画面遷移より先にコピー完了を確認できる2段階導線として表示する。 */
+.social-search-handoff-dialog{width:min(92vw,480px);padding:0;border:0;border-radius:22px;background:transparent;box-shadow:0 24px 80px #17172b55}
+.social-search-handoff-dialog::backdrop{background:#17172b99;backdrop-filter:blur(3px)}
+.social-search-handoff-card{position:relative;display:grid;gap:14px;padding:24px;background:#fff;border-radius:22px;color:var(--ink)}
+.social-search-handoff-close{position:absolute;top:10px;right:10px;width:38px;height:38px;border:0;border-radius:50%;background:#f2effa;color:var(--ink);font-weight:900}
+.social-search-handoff-title{padding-right:36px;font-size:18px}
+.social-search-handoff-body,.social-search-handoff-status{margin:0;line-height:1.65}
+.social-search-handoff-query{display:block;padding:14px;border:1px solid #d9d1f8;border-radius:14px;background:#f8f6ff;font-weight:850;line-height:1.55;user-select:text;overflow-wrap:anywhere}
+.social-search-handoff-status{min-height:1.65em;color:#5d35d5;font-size:13px;font-weight:800}
+.social-search-handoff-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.social-search-copy-button,.social-search-open-button{min-height:48px;display:grid;place-items:center;margin:0;text-align:center;text-decoration:none}
+@media(max-width:520px){.social-search-handoff-actions{grid-template-columns:1fr}.social-search-handoff-card{padding:22px 18px}}
+
+/* 2026-08-10: 13モールを「個別に探す」へ統合し、まとめ検索への戻り方を
+   補足リンクとして明示する。 */
+.marketplace-fallback-search-jump{
+  display:inline-flex;
+  margin:0 0 10px;
+  padding:0;
+  border:0;
+  color:#5134ce;
+  background:transparent;
+  font-size:11px;
+  font-weight:850;
+  line-height:1.5;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  cursor:pointer;
+}
+
+.marketplace-fallback-group .marketplace-search-link[data-marketplace="YAHOO_JP"]{
+  white-space:nowrap;
+  font-size:clamp(9px,.72vw,11px);
+  letter-spacing:-.045em;
+}
+
+.target-price-current{
+  grid-column:1 / -1;
+  color:var(--ink);
+  font-size:13px;
+  line-height:1.4;
+}
+
+.target-price-label{
+  color:#5140ba;
+}
+
+/* 商品カードの主要操作は、白い補助ボタンより一段強く見せる。 */
+.result-track>.product-card .product-card-media-actions .watch-settings-button{
+  border:0;
+  color:#fff;
+  background:linear-gradient(105deg,#ff4f9a,#7357ff);
+  box-shadow:0 7px 18px #7357ff2b;
+  font-size:12px;
+  font-weight:950;
+}
+
+.result-track>.product-card .product-card-media-actions .ai-price-compare-button{
+  border:2px solid #6547ef;
+  color:#4b31c9;
+  background:linear-gradient(135deg,#fff,#f0ecff);
+  font-size:12px;
+  font-weight:950;
+}
+
+@media(min-width:1440px){
+  .marketplace-fallback-group .marketplace-links{
+    grid-template-columns:repeat(13,minmax(0,1fr));
+    gap:7px;
+  }
+}
+
+/* Color condition chips (2026-08-15, 大隆さん指摘: "色のボタンを作って、
+   タップしたら多種の色が出てきて、タップで検索に色を追加できるように
+   して" / "ユーザー心理としては色で選ぶことが重要"). Same tap-to-select
+   .condition-chip behavior/JS as every other dimension row - only the
+   swatch circle is new, so a real color is one glance instead of reading
+   text like "ピンク". .condition-chip.selected (background:var(--violet);
+   color:#fff) already applies here since these buttons carry that class
+   too; the extra ring below just keeps the selected state visible even for
+   pale swatches (white/beige) where a violet pill alone could still read
+   ambiguous against the swatch. */
+.condition-group-color .condition-group-label{
+  color:#5140ba;
+}
+
+.condition-color-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.condition-color-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:5px 13px 5px 6px;
+  border:1px solid #ded7ff;
+  border-radius:999px;
+  background:#fff;
+  color:#5140ba;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  transition:background .15s,border-color .15s,color .15s;
+}
+
+.condition-color-swatch{
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
+  border-radius:50%;
+  border:1px solid #00000022;
+  box-shadow:inset 0 0 0 1px #ffffff55;
+}
+
+.condition-color-chip.selected .condition-color-swatch{
+  box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--violet);
+}
+
+.condition-color-chip:hover,
+.condition-color-chip:focus-visible{
+  border-color:var(--violet);
+  background:var(--soft);
+  outline:none;
+}
+
+@media(max-width:760px){
+  .condition-color-chip{
+    min-height:44px;
+    padding:5px 15px 5px 6px;
+    font-size:12px;
+  }
+
+  .condition-color-swatch{
+    width:24px;
+    height:24px;
+    flex:0 0 24px;
+  }
+}
+
+/* Standalone "色で探す" entry point (2026-08-15, 大隆さん指摘: "最初から見える
+   独立した「色で探す」ボタンを別途トップに置く"). The swatch picker above
+   already worked, but it lived behind the unrelated 詳細検索 accordion label -
+   this puts its own button at the very top of the search panel, above the
+   query box, so it never requires opening 詳細検索 first. The four-dot icon
+   previews "this button is about color" before the label is even read. */
+.color-search-entry{
+  margin:0 0 12px;
+}
+
+.color-search-toggle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  min-height:48px;
+  padding:12px 16px;
+  border:1px solid #ded7ff;
+  border-radius:14px;
+  background:linear-gradient(105deg,#fff7fb,#faf8ff);
+  color:#5140ba;
+  font-family:inherit;
+  font-size:13px;
+  font-weight:850;
+  cursor:pointer;
+}
+
+.color-search-toggle::after{
+  content:'▾';
+  margin-left:auto;
+  font-size:11px;
+}
+
+.color-search-toggle[aria-expanded="true"]::after{
+  content:'▴';
+}
+
+.color-search-toggle:hover,
+.color-search-toggle:focus-visible{
+  border-color:var(--violet);
+  background:var(--soft);
+  outline:none;
+}
+
+.color-search-toggle-dots{
+  display:inline-grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:2px;
+  flex:0 0 auto;
+}
+
+.color-search-toggle-dots>span{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+}
+
+.color-search-toggle-dots>span:nth-child(1){background:#ef8bb0}
+.color-search-toggle-dots>span:nth-child(2){background:#2f6fed}
+.color-search-toggle-dots>span:nth-child(3){background:#f4d03f}
+.color-search-toggle-dots>span:nth-child(4){background:#2f9e5b}
+
+.color-search-panel{
+  margin:10px 0 0;
+  padding:16px;
+  border:1px solid #e2dcff;
+  border-radius:16px;
+  background:#faf8ff;
+}
+
+.color-search-body{
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
