@@ -31,11 +31,15 @@ test('release version has one source of truth', () => {
 // とwrangler loginが両方ブロックされていた(アカウント復旧待ち)期間に、
 // 既存のCLOUDFLARE_API_TOKEN Secretを使ってWorkerのSecretを設定するための
 // 手動実行専用ワークフロー(confirm: APPLY必須)。同じくpush/PRでは動かない。
+// 同日、apply-d1-migrations.ymlも追加した。social_post_queue/
+// social_post_performanceへTHREADSを許可する0052/0053マイグレーションを
+// 本番D1へ適用するための手動実行専用ワークフロー(confirm: APPLY必須、かつ
+// pending migrationの一覧が事前申告と完全一致しない限り何も実行しない)。
 // 規約の狙いは古いCIが増殖して「どれが本物か分からない」状態を防ぐことなので、
 // 手動ワークフローは名前を列挙して明示的に許可し、そのうえで「自動トリガーを
 // 持たないこと」を下のテストで固定する。これを外すと、手動のつもりの
 // ワークフローが後から push で走るようになっても気づけない。
-const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml'];
+const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
