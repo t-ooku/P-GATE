@@ -5,14 +5,34 @@
 -- same pattern for social_post_performance, for the full rationale).
 --
 -- social_post_performance.post_id has a FOREIGN KEY into this table, so
--- dropping social_post_queue with FK enforcement on fails even though the
--- recreated table ends up holding the same post_id values. Foreign key
--- checks are turned off only for this recreate step and restored
--- immediately after, matching SQLite's own documented procedure for
--- schema changes on a table that is an FK parent.
-PRAGMA foreign_keys=OFF;
+-- dropping social_post_queue would otherwise fail even though the
+-- recreated table ends up holding the same post_id values.
+--
+-- D1 does not support PRAGMA foreign_keys=OFF: migrations run inside a
+-- single transaction, and per SQLite semantics that pragma is a no-op once
+-- a transaction is open (confirmed against production behaviour and
+-- https://developers.cloudflare.com/d1/sql-api/foreign-keys/ /
+-- https://github.com/cloudflare/workers-sdk/issues/5438). D1's documented
+-- alternative is PRAGMA defer_foreign_keys=on, which lets the FK go
+-- transiently unsatisfied and only checks it again at transaction end.
+--
+-- That alone is still not enough here: recreating the table via
+-- "CREATE TABLE x_next (...) ... ALTER TABLE x_next RENAME TO x" leaves the
+-- deferred FK check failing at COMMIT even though the final data is
+-- consistent (reproduced locally - the rename does not clear the pending
+-- violation the same way a direct CREATE TABLE under the final name does).
+-- So this migration avoids RENAME entirely: back the data up under a
+-- throwaway name, drop the original, create the final table directly under
+-- its real name, copy the data back in, then drop the backup.
+PRAGMA defer_foreign_keys=on;
 
-CREATE TABLE IF NOT EXISTS social_post_queue_0052_next (
+DROP TABLE IF EXISTS social_post_queue_0052_backup;
+
+CREATE TABLE social_post_queue_0052_backup AS SELECT * FROM social_post_queue;
+
+DROP TABLE social_post_queue;
+
+CREATE TABLE social_post_queue (
   post_id TEXT PRIMARY KEY,
   platform TEXT NOT NULL CHECK(platform IN ('X','INSTAGRAM','TIKTOK','THREADS')),
   campaign_id TEXT NOT NULL DEFAULT '',
@@ -33,14 +53,10 @@ CREATE TABLE IF NOT EXISTS social_post_queue_0052_next (
   platform_job_id TEXT NOT NULL DEFAULT ''
 );
 
-INSERT INTO social_post_queue_0052_next
-  SELECT * FROM social_post_queue;
+INSERT INTO social_post_queue
+  SELECT * FROM social_post_queue_0052_backup;
 
-DROP TABLE social_post_queue;
-
-ALTER TABLE social_post_queue_0052_next RENAME TO social_post_queue;
+DROP TABLE social_post_queue_0052_backup;
 
 CREATE INDEX IF NOT EXISTS social_post_due
   ON social_post_queue(status,scheduled_at);
-
-PRAGMA foreign_keys=ON;
