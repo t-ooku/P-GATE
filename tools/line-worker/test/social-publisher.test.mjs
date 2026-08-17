@@ -7,6 +7,7 @@ import {
   socialPublisherReadiness,
   xPublishingSafetyReadiness,
   syncInstagramPublishedPermalinks,
+  syncThreadsInsights,
   handleSocialAdminRoutes
 } from '../src/social-publisher.mjs';
 
@@ -782,6 +783,178 @@ test('公開済み投稿APIはInstagram正式URLを即時保存して公開情�
       external_post_id: 'ig-media-1',
       published_at: '2026-08-12T14:45:15.000Z',
       public_url: 'https://www.instagram.com/reel/ExampleCode/'
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('Threadsインサイト取り込みはpermalinkと指標をJST日次スナップショットへ保存する', async () => {
+  const writes = [];
+  const env = {
+    THREADS_ACCESS_TOKEN: 'token',
+    THREADS_USER_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('FROM social_post_queue')) {
+          return { bind: () => ({ all: async () => ({ results: [{
+              post_id: 'threads-post-1',
+              campaign_id: 'hoshilu-threads-amazon-boost-v1',
+              external_post_id: 'threads-media-1',
+              published_at: '2026-08-17T03:00:00.000Z',
+              link: 'https://hoshilu.app/?utm_source=threads&utm_medium=social&utm_campaign=hoshilu-threads-amazon-boost-v1&utm_content=amazon-boost-books'
+            }] }) }) };
+        }
+        return {
+          bind(...values) {
+            return { run: async () => { writes.push({ sql, values }); return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  const requests = [];
+  const result = await syncThreadsInsights(env, new Date('2026-08-17T12:00:00.000Z'), async (url, options) => {
+    requests.push(url);
+    assert.equal(options.headers.authorization, 'Bearer token');
+    if (url.includes('fields=permalink')) {
+      return Response.json({ permalink: 'https://www.threads.com/@hoshilu.app/post/ExampleCode' });
+    }
+    if (url.includes('/insights')) {
+      return Response.json({ data: [
+        { name: 'views', values: [{ value: 120 }] },
+        { name: 'likes', values: [{ value: 8 }] },
+        { name: 'replies', values: [{ value: 2 }] },
+        { name: 'reposts', values: [{ value: 1 }] },
+        { name: 'quotes', values: [{ value: 0 }] },
+        { name: 'shares', values: [{ value: 3 }] }
+      ] });
+    }
+    return Response.json({}, { status: 404 });
+  });
+  assert.deepEqual(result, { checked: 1, saved: 1, failed: 0 });
+  assert.equal(requests.some(url => url.includes('threads-media-1?fields=permalink')), true);
+  assert.equal(requests.some(url => url.includes('threads-media-1/insights?metric=views,likes,replies,reposts,quotes,shares')), true);
+  assert.equal(writes.length, 1);
+  assert.deepEqual(writes[0].values, [
+    'threads:threads-post-1:2026-08-17', 'threads-post-1',
+    '2026-08-17T12:00:00.000Z', '2026-08-17T03:00:00.000Z',
+    'https://www.threads.com/@hoshilu.app/post/ExampleCode',
+    'threads', 'social', 'hoshilu-threads-amazon-boost-v1', 'amazon-boost-books',
+    120, 2, 4,
+    '2026-08-17T12:00:00.000Z'
+  ]);
+});
+
+test('Threadsインサイト取り込みは同じJST日内の再実行で同一スナップショットを更新する', async () => {
+  const upserts = [];
+  const env = {
+    THREADS_ACCESS_TOKEN: 'token',
+    THREADS_USER_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('FROM social_post_queue')) {
+          return { bind: () => ({ all: async () => ({ results: [{
+              post_id: 'threads-post-1', campaign_id: 'c', external_post_id: 'threads-media-1',
+              published_at: '2026-08-17T03:00:00.000Z', link: ''
+            }] }) }) };
+        }
+        return {
+          bind(...values) { return { run: async () => { upserts.push(values[0]); return { meta: { changes: 1 } }; } }; }
+        };
+      }
+    }
+  };
+  const fetchImpl = async (url) => (url.includes('fields=permalink')
+    ? Response.json({ permalink: 'https://www.threads.com/@hoshilu.app/post/ExampleCode' })
+    : Response.json({ data: [{ name: 'views', values: [{ value: 10 }] }] }));
+  await syncThreadsInsights(env, new Date('2026-08-17T09:00:00.000Z'), fetchImpl);
+  await syncThreadsInsights(env, new Date('2026-08-17T13:00:00.000Z'), fetchImpl); // 同じJST日(18:00-22:00)の後刻
+  assert.deepEqual(upserts, ['threads:threads-post-1:2026-08-17', 'threads:threads-post-1:2026-08-17']);
+});
+
+test('Threads未設定時はDBへ問い合わせずに0件を返す', async () => {
+  let queried = false;
+  const env = {
+    PRODUCT_DB: { prepare() { queried = true; return { bind: () => ({ all: async () => ({ results: [] }) }) }; } }
+  };
+  const result = await syncThreadsInsights(env, new Date(), async () => Response.json({}));
+  assert.deepEqual(result, { checked: 0, saved: 0, failed: 0 });
+  assert.equal(queried, false);
+});
+
+test('Threadsインサイトのクエリ失敗はfailed:1を返しスローしない', async () => {
+  const env = {
+    THREADS_ACCESS_TOKEN: 'token',
+    THREADS_USER_ID: '123',
+    PRODUCT_DB: { prepare() { return { bind: () => ({ all: async () => { throw new Error('D1_DOWN'); } }) }; } }
+  };
+  const result = await syncThreadsInsights(env, new Date(), async () => Response.json({}));
+  assert.deepEqual(result, { checked: 0, saved: 0, failed: 1 });
+});
+
+test('Threadsインサイトの一部行が失敗しても残りの行は保存される', async () => {
+  const writes = [];
+  const env = {
+    THREADS_ACCESS_TOKEN: 'token',
+    THREADS_USER_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('FROM social_post_queue')) {
+          return { bind: () => ({ all: async () => ({ results: [
+            { post_id: 'threads-fail', campaign_id: 'c', external_post_id: 'media-fail', published_at: '2026-08-17T03:00:00.000Z', link: '' },
+            { post_id: 'threads-ok', campaign_id: 'c', external_post_id: 'media-ok', published_at: '2026-08-17T03:00:00.000Z', link: '' }
+          ] }) }) };
+        }
+        return { bind(...values) { return { run: async () => { writes.push(values[0]); return { meta: { changes: 1 } }; } }; } };
+      }
+    }
+  };
+  const result = await syncThreadsInsights(env, new Date('2026-08-17T12:00:00.000Z'), async (url) => {
+    if (url.includes('media-fail')) return Response.json({ error: 'nope' }, { status: 500 });
+    if (url.includes('fields=permalink')) return Response.json({ permalink: 'https://www.threads.com/@hoshilu.app/post/Ok' });
+    return Response.json({ data: [] });
+  });
+  assert.deepEqual(result, { checked: 2, saved: 1, failed: 1 });
+  assert.deepEqual(writes, ['threads:threads-ok:2026-08-17']);
+});
+
+test('公開情報APIはThreadsのpublic_url未取得時にインサイト取り込みを試みる', async () => {
+  let storedUrl = '';
+  const row = {
+    post_id: 'threads-post', platform: 'THREADS', status: 'PUBLISHED',
+    external_post_id: 'threads-media-1', published_at: '2026-08-17T03:00:00.000Z'
+  };
+  const env = {
+    THREADS_ACCESS_TOKEN: 'token',
+    THREADS_USER_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('SELECT q.post_id,q.platform,q.status')) {
+          return { bind: () => ({ first: async () => ({ ...row, public_url: storedUrl }) }) };
+        }
+        if (sql.includes('FROM social_post_queue')) {
+          return { bind: () => ({ all: async () => ({ results: [{ ...row, campaign_id: 'c', link: '' }] }) }) };
+        }
+        return { bind(...values) { return { run: async () => { storedUrl = values[4]; return { meta: { changes: 1 } }; } }; } };
+      }
+    }
+  };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => (url.includes('fields=permalink')
+    ? Response.json({ permalink: 'https://www.threads.com/@hoshilu.app/post/Example' })
+    : Response.json({ data: [] }));
+  try {
+    const response = await handleSocialAdminRoutes(new Request('https://hoshilu.app/api/social/posts/threads-post'), env);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      post_id: 'threads-post',
+      platform: 'THREADS',
+      status: 'PUBLISHED',
+      external_post_id: 'threads-media-1',
+      published_at: '2026-08-17T03:00:00.000Z',
+      public_url: 'https://www.threads.com/@hoshilu.app/post/Example'
     });
   } finally {
     globalThis.fetch = originalFetch;

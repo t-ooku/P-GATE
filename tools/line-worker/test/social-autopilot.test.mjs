@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildSocialAutopilotPosts,
-  seedSocialAutopilotQueue
+  buildThreadsAmazonBoostPosts,
+  seedSocialAutopilotQueue,
+  runSocialAutopilotCycle
 } from '../src/social-autopilot.mjs';
 
 test('販促自動運用は今日の機能リールと14日先までの定期投稿を計画する', () => {
@@ -46,6 +48,34 @@ test('Instagramは月〜土20時15分、月・水・金をリールにする', (
   ]);
   assert.equal(posts.filter(post => /evergreen-instagram/.test(post.content_id))
     .every(post => post.media_url.endsWith('.mp4')), true);
+});
+
+test('Amazon優先Threadsローテーションは1日1本、Amazonが強いカテゴリの検索語だけで構成する', () => {
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'));
+  assert.equal(posts.length, 14);
+  assert.equal(posts.every(post => post.platform === 'THREADS'), true);
+  assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
+  assert.equal(posts.every(post => post.campaign_id === 'hoshilu-threads-amazon-boost-v1'), true);
+  assert.equal(posts.every(post => post.affiliate === true), true);
+  assert.equal(posts.every(post => /アフィリエイト広告/.test(post.caption)), true);
+  assert.equal(posts.every(post => !/[¥$]\s?\d|\d+\s?円/.test(post.caption)), true, '本文に価格を直書きしない');
+  for (const post of posts) {
+    const url = new URL(post.link);
+    assert.equal(url.hostname, 'hoshilu.app');
+    assert.equal(url.searchParams.get('utm_source'), 'threads');
+    assert.equal(url.searchParams.get('utm_campaign'), 'hoshilu-threads-amazon-boost-v1');
+    assert.ok(url.searchParams.get('q'), '検索語(q)が必ず含まれる');
+  }
+  // 1日1本で、翌日は次のローテーション内容へ進む。
+  assert.notEqual(posts[0].content_id, posts[1].content_id);
+});
+
+test('Amazon優先Threadsローテーションは同じ計画対象期間なら毎回同じ投稿を計画する(冪等)', () => {
+  // どちらも当日12:30 JST(03:30 UTC)の投稿枠より前なので、計画対象の
+  // post_id集合は完全に一致するはず(過去分は自動的に取り除かれる)。
+  const first = buildThreadsAmazonBoostPosts(new Date('2026-08-17T02:00:00.000Z'));
+  const second = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'));
+  assert.deepEqual(first.map(post => post.post_id), second.map(post => post.post_id));
 });
 
 test('販促自動運用は無効時にキューを書き換えない', async () => {
@@ -238,4 +268,81 @@ test('承認済み20260812動画はAI生成表示とUTM付きで一度だけキ�
   assert.equal(approved[7], '2026-08-12T14:00:00.000Z');
   assert.equal(statements.some(sql => /INSTAGRAM_CONTAINER_IN_PROGRESS/.test(sql)), true);
   assert.equal(statements.some(sql => /SET status='APPROVED',last_error=''/.test(sql)), true);
+});
+
+test('THREADS認証済みでもTHREADS_EVERGREEN_AUTOPILOT_ENABLEDが無ければAmazon優先投稿を入れない', async () => {
+  const rows = [];
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    THREADS_ACCESS_TOKEN: 'threads-token',
+    THREADS_USER_ID: '123',
+    PRODUCT_DB: {
+      prepare() {
+        return { bind(...values) { return { async run() { rows.push(values); return { meta: { changes: 1 } }; } }; } };
+      }
+    }
+  };
+  const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
+  assert.equal(result.planned, 0);
+  assert.equal(rows.some(row => row[1] === 'THREADS'), false);
+});
+
+test('THREADS_EVERGREEN_AUTOPILOT_ENABLEDが有効でもTHREADS未認証ならAmazon優先投稿を入れない', async () => {
+  const rows = [];
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    THREADS_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    PRODUCT_DB: {
+      prepare() {
+        return { bind(...values) { return { async run() { rows.push(values); return { meta: { changes: 1 } }; } }; } };
+      }
+    }
+  };
+  const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
+  assert.equal(result.planned, 0);
+  assert.equal(rows.some(row => row[1] === 'THREADS'), false);
+});
+
+test('THREADS認証とTHREADS_EVERGREEN_AUTOPILOT_ENABLEDが揃うとAmazon優先投稿をAPPROVEDで冪等登録する', async () => {
+  const rows = [];
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    THREADS_ACCESS_TOKEN: 'threads-token',
+    THREADS_USER_ID: '123',
+    THREADS_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    PRODUCT_DB: {
+      prepare(sql) {
+        assert.match(sql, /ON CONFLICT\(post_id\) DO UPDATE/);
+        return {
+          bind(...values) {
+            return { async run() { rows.push(values); return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
+  const threadsRows = rows.filter(row => row[1] === 'THREADS');
+  assert.equal(threadsRows.length, 14);
+  assert.equal(result.planned, 14);
+  assert.equal(result.inserted, 14);
+  assert.equal(threadsRows.every(row => row[2] === 'hoshilu-threads-amazon-boost-v1'), true);
+  assert.equal(threadsRows.every(row => row[8] === 1), true); // affiliateがDBへ正しく1として保存される
+});
+
+test('自動運用の1サイクルはThreadsインサイト取り込みも実行し結果を返す', async () => {
+  let threadsInsightsQueried = false;
+  const env = {
+    THREADS_ACCESS_TOKEN: 'threads-token',
+    THREADS_USER_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('social_post_queue') && sql.includes("platform='THREADS'")) threadsInsightsQueried = true;
+        return { bind: () => ({ all: async () => ({ results: [] }), run: async () => ({ meta: { changes: 0 } }) }) };
+      }
+    }
+  };
+  const result = await runSocialAutopilotCycle(env, new Date('2026-08-17T03:00:00.000Z'), async () => Response.json({}));
+  assert.deepEqual(result.threadsInsights, { checked: 0, saved: 0, failed: 0 });
+  assert.equal(threadsInsightsQueried, true);
 });
