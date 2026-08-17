@@ -3,7 +3,7 @@ import {
 } from './instagram-oauth.mjs';
 import { getXPublishCredentials, xOAuthReadiness } from './x-oauth.mjs';
 
-const PLATFORMS = new Set(['X', 'INSTAGRAM', 'TIKTOK']);
+const PLATFORMS = new Set(['X', 'INSTAGRAM', 'TIKTOK', 'THREADS']);
 const DISCLOSURE = '※リンク先にはアフィリエイト広告を含む場合があります。';
 const INVALID_HOSHILU_OWNER_CLAIM = /(?:ITG(?:グループ株式会社)?[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}(?:HOSHILU|ホシル)|(?:HOSHILU|ホシル)[^。\n]{0,20}(?:所有|運営))|(?:HOSHILU|ホシル)[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}ITG(?:グループ株式会社)?|ITG(?:グループ株式会社)?[^。\n]{0,20}(?:所有|運営)))/i;
 
@@ -17,7 +17,7 @@ const clean = (value, max = 2000) => String(value || '')
 export function normalizeSocialPost(input = {}) {
   const platform = clean(input.platform, 20).toUpperCase();
   if (!PLATFORMS.has(platform)) throw new Error('SOCIAL_PLATFORM_INVALID');
-  let caption = clean(input.caption, platform === 'X' ? 240 : 1800);
+  let caption = clean(input.caption, platform === 'X' ? 240 : platform === 'THREADS' ? 400 : 1800);
   if (caption.length < 5) throw new Error('SOCIAL_CAPTION_INVALID');
   if (INVALID_HOSHILU_OWNER_CLAIM.test(caption)) throw new Error('SOCIAL_ENTITY_CLAIM_INVALID');
   if (platform === 'INSTAGRAM') {
@@ -61,7 +61,8 @@ export function socialPublisherReadiness(env = {}) {
   return {
     X: xOAuth1 || Boolean(String(env.X_USER_ACCESS_TOKEN || '').trim()),
     INSTAGRAM: Boolean(String(env.INSTAGRAM_ACCESS_TOKEN || '').trim() && String(env.INSTAGRAM_ACCOUNT_ID || '').trim()),
-    TIKTOK: Boolean(String(env.TIKTOK_ACCESS_TOKEN || '').trim() && env.TIKTOK_APP_AUDITED === 'true')
+    TIKTOK: Boolean(String(env.TIKTOK_ACCESS_TOKEN || '').trim() && env.TIKTOK_APP_AUDITED === 'true'),
+    THREADS: Boolean(String(env.THREADS_ACCESS_TOKEN || '').trim() && String(env.THREADS_USER_ID || '').trim())
   };
 }
 
@@ -385,6 +386,73 @@ async function publishTikTok(post, env, fetchImpl) {
   return payload?.data?.publish_id || '';
 }
 
+// Threads (Meta) publishing. Unlike Instagram, Threads renders a URL in the
+// post body as a real clickable link, so the UTM-tagged post.link goes
+// straight into the text (same pattern as X) rather than needing a bio-link
+// workaround. Two-step container flow per Meta's docs: create a container,
+// wait for it to finish processing (recommended ~30s, then poll
+// GET /{id}?fields=status until FINISHED/ERRORED/EXPIRED), then publish.
+// https://developers.facebook.com/docs/threads/posts
+async function publishThreads(post, env, fetchImpl, hooks = {}) {
+  const userId = encodeURIComponent(env.THREADS_USER_ID);
+  const headers = { authorization: `Bearer ${env.THREADS_ACCESS_TOKEN}`, 'content-type': 'application/json' };
+  const text = [post.caption, post.link].filter(Boolean).join('\n');
+  let isVideo = false;
+  if (post.media_url) {
+    try {
+      isVideo = /\.(?:mp4|mov|m4v)$/i.test(new URL(post.media_url).pathname);
+    } catch {
+      throw new Error('THREADS_MEDIA_URL_INVALID');
+    }
+  }
+  const mediaPayload = post.media_url
+    ? { media_type: isVideo ? 'VIDEO' : 'IMAGE', text, ...(isVideo ? { video_url: post.media_url } : { image_url: post.media_url }) }
+    : { media_type: 'TEXT', text };
+  let creationId = clean(post.platform_job_id, 120);
+  if (!creationId) {
+    const create = await fetchImpl(`https://graph.threads.net/v1.0/${userId}/threads`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(mediaPayload)
+    });
+    if (!create.ok) {
+      const detail = clean(await create.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
+      throw new Error(`THREADS_CREATE_${create.status}${detail ? `_${detail}` : ''}`);
+    }
+    creationId = clean((await create.json())?.id, 120);
+    if (!creationId) throw new Error('THREADS_CREATION_ID_MISSING');
+    await hooks.onJobCreated?.(creationId);
+  }
+  const initialDelay = Math.max(0, Number(env.THREADS_INITIAL_DELAY_MS ?? 30000));
+  if (initialDelay) await new Promise(resolve => setTimeout(resolve, initialDelay));
+  let statusCode = '';
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const status = await fetchImpl(`https://graph.threads.net/v1.0/${encodeURIComponent(creationId)}?fields=status`, { headers });
+    if (!status.ok) {
+      const detail = clean(await status.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
+      throw new Error(`THREADS_STATUS_${status.status}${detail ? `_${detail}` : ''}`);
+    }
+    statusCode = String((await status.json())?.status || '').toUpperCase();
+    if (statusCode === 'FINISHED') break;
+    if (statusCode === 'ERRORED' || statusCode === 'EXPIRED') throw new Error(`THREADS_CONTAINER_${statusCode}`);
+    const delay = Math.max(0, Number(env.THREADS_POLL_DELAY_MS ?? 5000));
+    if (delay) await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  if (statusCode !== 'FINISHED') throw new Error(`THREADS_CONTAINER_${statusCode || 'TIMEOUT'}`);
+  const publish = await fetchImpl(`https://graph.threads.net/v1.0/${userId}/threads_publish`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ creation_id: creationId })
+  });
+  if (!publish.ok) {
+    const detail = clean(await publish.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
+    throw new Error(`THREADS_PUBLISH_${publish.status}${detail ? `_${detail}` : ''}`);
+  }
+  const publishPayload = await publish.json();
+  if (!publishPayload?.id) throw new Error('THREADS_PUBLISH_ID_MISSING');
+  return publishPayload.id;
+}
+
 export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}) {
   const normalized = normalizeSocialPost(post);
   if (normalized.status !== 'APPROVED') throw new Error('SOCIAL_POST_NOT_APPROVED');
@@ -398,6 +466,7 @@ export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}
   }
   if (normalized.platform === 'X') return publishX(normalized, env, fetchImpl);
   if (!socialPublisherReadiness(env)[normalized.platform]) throw new Error(`SOCIAL_${normalized.platform}_NOT_CONFIGURED`);
+  if (normalized.platform === 'THREADS') return publishThreads(normalized, env, fetchImpl, hooks);
   return publishTikTok(normalized, env, fetchImpl);
 }
 
@@ -593,7 +662,7 @@ export async function handleSocialAdminRoutes(request, env) {
     }
     try {
       const post = normalizeSocialPost(existing);
-      if (post.platform !== 'X' && !post.media_url) throw new Error(`${post.platform}_MEDIA_REQUIRED`);
+      if (post.platform !== 'X' && post.platform !== 'THREADS' && !post.media_url) throw new Error(`${post.platform}_MEDIA_REQUIRED`);
       if (post.platform === 'INSTAGRAM') await getInstagramPublishCredentials(env);
       else if (post.platform === 'X') {
         assertXPublishingConfiguration(env);
