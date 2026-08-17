@@ -6,7 +6,11 @@
 // のは、実オファー(candidate.offers)というJSオブジェクトの生データが必要
 // で、DOMからは復元できないため。
 
-const DEFAULT_DIRECT_MARKETPLACES = ['LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'QOO10_JP', 'ZOZOTOWN_JP'];
+// AMAZON_JPは先頭に置く。サーバ側(validatePriceComparisonRequest)が先頭から
+// 上限件数だけを採用するため、末尾に置くと将来モールが増えたときに黙って
+// 落ちる。Amazonは適格販売3件の期限(2027-02-09)を抱えていて、最安比較は
+// 購入意図が最も高い場面なので、ここから外れないことを優先する。
+const DEFAULT_DIRECT_MARKETPLACES = ['AMAZON_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'QOO10_JP', 'ZOZOTOWN_JP'];
 
 const copy = {
   JA: {
