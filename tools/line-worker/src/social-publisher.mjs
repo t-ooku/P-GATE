@@ -593,6 +593,100 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
   return { checked: rows.length, saved, failed };
 }
 
+function threadsPermalink(value) {
+  try {
+    const url = new URL(String(value || ''));
+    const host = url.hostname.toLowerCase();
+    if (url.protocol !== 'https:'
+      || (host !== 'threads.net' && !host.endsWith('.threads.net')
+        && host !== 'threads.com' && !host.endsWith('.threads.com'))) return '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
+function jstDateKey(date) {
+  return new Date(date.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+// Threads publishes a numeric value per named metric rather than the flat
+// object shape Instagram/TikTok use, e.g.
+// { data: [{ name: 'views', values: [{ value: 42 }] }, ...] }. Missing or
+// non-finite metrics are recorded as null (matches the rest of this table's
+// "unknown stays NULL, never 0" convention) rather than defaulting to 0.
+function threadsMetricValue(payload, name) {
+  const entry = (payload?.data || []).find(item => item?.name === name);
+  const raw = entry?.values?.[0]?.value ?? entry?.total_value?.value;
+  return Number.isFinite(raw) && raw >= 0 ? Math.trunc(raw) : null;
+}
+
+// Threads insights (依頼3): daily snapshot per published post. Unlike the
+// Instagram permalink sync above (which only backfills a permalink once and
+// never revisits a post), this is meant to be called repeatedly for the
+// life of a post so performance can be tracked over time - the snapshot_id
+// is keyed to the JST calendar day, so re-running within the same day
+// updates that day's row in place instead of accumulating duplicates.
+// https://developers.facebook.com/docs/threads/insights
+export async function syncThreadsInsights(env, now = new Date(), fetchImpl = fetch, onlyPostId = '') {
+  if (!env.PRODUCT_DB) return { checked: 0, saved: 0, failed: 0 };
+  if (!socialPublisherReadiness(env).THREADS) return { checked: 0, saved: 0, failed: 0 };
+  const requestedPostId = clean(onlyPostId, 100);
+  let due;
+  try {
+    due = await env.PRODUCT_DB.prepare(`SELECT post_id,campaign_id,external_post_id,published_at,link
+      FROM social_post_queue
+      WHERE (?1='' OR post_id=?1)
+      AND platform='THREADS' AND status='PUBLISHED'
+      AND external_post_id<>''
+      ORDER BY published_at DESC LIMIT 10`).bind(requestedPostId).all();
+  } catch (error) {
+    console.error('THREADS_INSIGHTS_SYNC_QUERY_FAILED', clean(error?.message || error, 200));
+    return { checked: 0, saved: 0, failed: 1 };
+  }
+  const rows = due.results || [];
+  if (!rows.length) return { checked: 0, saved: 0, failed: 0 };
+  const headers = { authorization: `Bearer ${env.THREADS_ACCESS_TOKEN}` };
+  const timestamp = now.toISOString();
+  const snapshotDay = jstDateKey(now);
+  let saved = 0;
+  let failed = 0;
+  for (const row of rows) {
+    try {
+      const mediaId = encodeURIComponent(row.external_post_id);
+      const metaResponse = await fetchImpl(`https://graph.threads.net/v1.0/${mediaId}?fields=permalink`, { headers });
+      if (!metaResponse.ok) throw new Error(`THREADS_PERMALINK_${metaResponse.status}`);
+      const permalink = threadsPermalink((await metaResponse.json())?.permalink);
+      const insightsResponse = await fetchImpl(`https://graph.threads.net/v1.0/${mediaId}/insights?metric=views,likes,replies,reposts,quotes,shares`, { headers });
+      if (!insightsResponse.ok) throw new Error(`THREADS_INSIGHTS_${insightsResponse.status}`);
+      const insightsPayload = await insightsResponse.json();
+      const views = threadsMetricValue(insightsPayload, 'views');
+      const replies = threadsMetricValue(insightsPayload, 'replies');
+      const reposts = threadsMetricValue(insightsPayload, 'reposts');
+      const quotes = threadsMetricValue(insightsPayload, 'quotes');
+      const sharesMetric = threadsMetricValue(insightsPayload, 'shares');
+      const shareComponents = [reposts, quotes, sharesMetric].filter(value => value !== null);
+      const shares = shareComponents.length ? shareComponents.reduce((sum, value) => sum + value, 0) : null;
+      const utm = trackingFields(row.link);
+      const publishedAt = clean(row.published_at, 40) || timestamp;
+      await env.PRODUCT_DB.prepare(`INSERT INTO social_post_performance
+        (snapshot_id,post_id,platform,snapshot_at,published_at,public_url,
+         utm_source,utm_medium,utm_campaign,utm_content,reach,impressions,comments,shares,traffic_class,created_at,updated_at)
+        VALUES (?1,?2,'THREADS',?3,?4,?5,?6,?7,?8,?9,?10,?10,?11,?12,'ATTRIBUTED',?13,?13)
+        ON CONFLICT(snapshot_id) DO UPDATE SET snapshot_at=excluded.snapshot_at,
+          public_url=excluded.public_url,reach=excluded.reach,impressions=excluded.impressions,
+          comments=excluded.comments,shares=excluded.shares,updated_at=excluded.updated_at`)
+        .bind(`threads:${row.post_id}:${snapshotDay}`, row.post_id, timestamp, publishedAt,
+          permalink, utm.source, utm.medium, utm.campaign, utm.content, views, replies, shares, timestamp).run();
+      saved += 1;
+    } catch (error) {
+      failed += 1;
+      console.error('THREADS_INSIGHTS_SYNC_FAILED', row.post_id, clean(error?.message || error, 200));
+    }
+  }
+  return { checked: rows.length, saved, failed };
+}
+
 function authorized(request, env) {
   const expected = String(env.SOCIAL_ADMIN_SECRET || '');
   const received = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
@@ -617,6 +711,10 @@ export async function handleSocialAdminRoutes(request, env) {
     if (!published) return Response.json({ ok: false, error: 'SOCIAL_POST_NOT_FOUND' }, { status: 404 });
     if (published.platform === 'INSTAGRAM' && !published.public_url) {
       await syncInstagramPublishedPermalinks(env, new Date(), fetch, postId);
+      published = await selectPublished();
+    }
+    if (published.platform === 'THREADS' && !published.public_url) {
+      await syncThreadsInsights(env, new Date(), fetch, postId);
       published = await selectPublished();
     }
     return Response.json({
