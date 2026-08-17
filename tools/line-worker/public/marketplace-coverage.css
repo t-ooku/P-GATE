@@ -104,7 +104,7 @@
   min-height: 30px;
   padding: 4px 2px;
   color: #17142d;
-  font-size: clamp(10px, 1.35vw, 12px);
+  font-size: clamp(12px, 1.6vw, 14px);
   font-weight: 900;
   text-align: center;
   overflow-wrap: anywhere;
@@ -183,7 +183,7 @@
   .marketplace-group li {
     min-width: 0;
     padding: 6px 2px;
-    font-size: clamp(8px, .72vw, 11px);
+    font-size: clamp(11px, .9vw, 13px);
     letter-spacing: -.035em;
   }
 }
@@ -266,7 +266,7 @@
   .marketplace-group li {
     min-height: 24px;
     padding: 2px;
-    font-size: clamp(8px, 2.35vw, 10px);
+    font-size: clamp(11px, 2.7vw, 13px);
     justify-content: flex-start;
   }
 

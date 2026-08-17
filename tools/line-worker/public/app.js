@@ -494,17 +494,31 @@ function conditionSearchCard(groups){
   submit.textContent=copy.submit;
   submit.disabled=true;
   groups.forEach(group=>{
+    const isColor=group.dimension==='color';
     const row=document.createElement('div');
-    row.className='condition-group';
+    row.className=isColor?'condition-group condition-group-color':'condition-group';
     row.append(textElement('span','condition-group-label',group.label));
     const list=document.createElement('div');
-    list.className='condition-value-list';
+    // Color gets its own tap-to-pick swatch grid (2026-08-15 request: "色の
+    // ボタンを作って、タップしたら多種の色が出てきて、タップで検索に色を
+    // 追加できるようにして"). Every other dimension keeps the plain text
+    // chip row - swatches only help when the value IS a color.
+    list.className=isColor?'condition-value-list condition-color-list':'condition-value-list';
     group.values.filter(item=>item?.label).forEach(item=>{
       const chip=document.createElement('button');
       chip.type='button';
-      chip.className='keyword-tag condition-chip';
-      chip.textContent=item.label;
+      chip.className=isColor?'condition-chip condition-color-chip':'keyword-tag condition-chip';
       chip.setAttribute('aria-pressed','false');
+      if(isColor){
+        const swatch=document.createElement('span');
+        swatch.className='condition-color-swatch';
+        if(item.swatch)swatch.style.backgroundColor=item.swatch;
+        swatch.setAttribute('aria-hidden','true');
+        chip.append(swatch,textElement('span','condition-color-label',item.label));
+        chip.setAttribute('aria-label',item.label);
+      }else{
+        chip.textContent=item.label;
+      }
       chip.addEventListener('click',()=>{
         const active=selected.get(group.dimension)===item.label;
         // one value per dimension: clear the row, then set unless re-tapped
@@ -1009,6 +1023,89 @@ document.querySelector('#advancedSearchToggle')?.addEventListener('click',()=>{
   renderAdvancedSearch();
 });
 
+// Standalone "色で探す" entry point (2026-08-15 request). The color swatch
+// picker already existed inside 詳細検索, but that meant tapping through an
+// unrelated accordion label just to reach the one dimension users care about
+// most ("ユーザー心理としては色で選ぶことが重要"). This puts a dedicated
+// button at the top of the search panel - visible before the query box is
+// even touched - that opens ONLY the color row. It reuses the same
+// /api/refinement-chips groups (and cache variable) as 詳細検索 so there is
+// still one dictionary and one fetch shared between both entry points.
+const colorSearchCopy={
+  JA:{toggle:'色で探す',toggleClose:'色の選択を閉じる',body:'気になる色をタップすると、今の検索条件に追加されます。',submit:'この色で探す'},
+  EN:{toggle:'Search by color',toggleClose:'Close color picker',body:'Tap a color to add it to your current search.',submit:'Search with this color'},
+  ZH:{toggle:'按颜色搜索',toggleClose:'关闭颜色选择',body:'点按想要的颜色，即可加入当前搜索条件。',submit:'用这个颜色搜索'},
+  KO:{toggle:'색상으로 찾기',toggleClose:'색상 선택 닫기',body:'원하는 색을 탭하면 지금 검색 조건에 추가됩니다.',submit:'이 색으로 찾기'}
+};
+function colorSearchCard(colorGroup){
+  if(!colorGroup?.values?.length)return null;
+  const copy=colorSearchCopy[elements.language.value]||colorSearchCopy.JA;
+  const card=document.createElement('div');
+  card.className='color-search-card';
+  card.append(textElement('p','color-search-body',copy.body));
+  const list=document.createElement('div');
+  list.className='condition-value-list condition-color-list';
+  const submit=document.createElement('button');
+  submit.type='button';
+  submit.className='primary condition-search-submit';
+  submit.textContent=copy.submit;
+  submit.disabled=true;
+  let picked=null;
+  colorGroup.values.filter(item=>item?.label).forEach(item=>{
+    const chip=document.createElement('button');
+    chip.type='button';
+    chip.className='condition-chip condition-color-chip';
+    chip.setAttribute('aria-pressed','false');
+    const swatch=document.createElement('span');
+    swatch.className='condition-color-swatch';
+    if(item.swatch)swatch.style.backgroundColor=item.swatch;
+    swatch.setAttribute('aria-hidden','true');
+    chip.append(swatch,textElement('span','condition-color-label',item.label));
+    chip.setAttribute('aria-label',item.label);
+    chip.addEventListener('click',()=>{
+      const active=picked===item.label;
+      [...list.children].forEach(node=>{node.classList.remove('selected');node.setAttribute('aria-pressed','false');});
+      if(active){picked=null;}
+      else{picked=item.label;chip.classList.add('selected');chip.setAttribute('aria-pressed','true');}
+      submit.disabled=!picked;
+    });
+    list.append(chip);
+  });
+  card.append(list);
+  submit.addEventListener('click',()=>{
+    if(!picked)return;
+    const base=String(elements.query.value||'').trim();
+    elements.query.value=[base,picked].filter(Boolean).join(' / ');
+    elements.clear?.classList.remove('hidden');
+    runKnowledgeSearch();
+  });
+  card.append(submit);
+  return card;
+}
+async function renderColorSearch(){
+  const panel=document.querySelector('#colorSearchPanel');
+  const toggle=document.querySelector('#colorSearchToggle');
+  const label=document.querySelector('#colorSearchToggleLabel');
+  if(!panel||!toggle)return;
+  const copy=colorSearchCopy[elements.language.value]||colorSearchCopy.JA;
+  const open=toggle.getAttribute('aria-expanded')==='true';
+  if(label)label.textContent=open?copy.toggleClose:copy.toggle;
+  if(!open){panel.classList.add('hidden');return;}
+  if(!advancedSearchGroups)advancedSearchGroups=await loadRefinementChips();
+  const colorGroup=(advancedSearchGroups||[]).find(group=>group?.dimension==='color');
+  const card=colorSearchCard(colorGroup);
+  // No color chips (offline / endpoint down) means nothing to choose, so the
+  // panel stays closed rather than opening on an empty box.
+  if(!card){toggle.setAttribute('aria-expanded','false');if(label)label.textContent=copy.toggle;panel.classList.add('hidden');return;}
+  panel.replaceChildren(card);
+  panel.classList.remove('hidden');
+}
+document.querySelector('#colorSearchToggle')?.addEventListener('click',()=>{
+  const toggle=document.querySelector('#colorSearchToggle');
+  toggle.setAttribute('aria-expanded',String(toggle.getAttribute('aria-expanded')!=='true'));
+  renderColorSearch();
+});
+
 // Persistent search bar over the results (2026-08-07 request). Once products
 // are on screen the query has to stay reachable, so the user can add a word
 // and re-search instead of scrolling back to the original panel.
@@ -1134,7 +1231,7 @@ async function openRankingSearch(){
 elements.rankingButton?.addEventListener('click',openRankingSearch);
 document.querySelector('#rankingDialogClose')?.addEventListener('click',()=>{rankingRequestSequence+=1;rankingConfirmationFlow=null;elements.rankingDialog.close();});
 elements.rankingDialog?.addEventListener('cancel',()=>{rankingRequestSequence+=1;rankingConfirmationFlow=null;});
-elements.language.addEventListener('change',()=>{setLanguage(elements.language.value);renderMemberState();renderNotifications();advancedSearchGroups=null;renderAdvancedSearch();syncStickySearch();});
+elements.language.addEventListener('change',()=>{setLanguage(elements.language.value);renderMemberState();renderNotifications();advancedSearchGroups=null;renderAdvancedSearch();renderColorSearch();syncStickySearch();});
 const installDialog=$('#installDialog');const installInstructions=$('#installInstructions');
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;}
 function showInstallHelp(){const language=elements.language.value||'JA';installInstructions.replaceChildren(...(installCopy[language]||installCopy.JA).map(value=>textElement('p','',value)));installDialog.showModal();}
@@ -1143,8 +1240,14 @@ window.addEventListener('appinstalled',()=>{installPrompt=null;elements.install.
 elements.install.addEventListener('click',async()=>{if(isStandalone()){elements.install.classList.add('hidden');return;}if(installPrompt){await installPrompt.prompt();const choice=await installPrompt.userChoice;installPrompt=null;if(choice.outcome==='accepted')elements.install.classList.add('hidden');return;}showInstallHelp();});
 $('#installDialogClose').addEventListener('click',()=>installDialog.close());$('#installDialogDone').addEventListener('click',()=>installDialog.close());installDialog.addEventListener('click',event=>{if(event.target===installDialog)installDialog.close();});if(isStandalone())elements.install.classList.add('hidden');
 const panelHeadingDetails=document.querySelector('.panel-heading-details');if(panelHeadingDetails&&!localStorage.getItem('hoshilu_panel_heading_seen')){panelHeadingDetails.open=true;localStorage.setItem('hoshilu_panel_heading_seen','1');}
-// 2026-08-08: ヒーロー直下のMARKETPLACE COVERAGEウィジェットは、各ブラウザで
-// 最初の1回だけ開いた状態にし、検索窓が下へ行き過ぎないよう2回目以降は
-// 閉じておく(panelHeadingDetailsと同じ「1回だけ開く」パターン)。
-const heroMarketplaceCoverageDetails=document.querySelector('#heroMarketplaceCoverage');if(heroMarketplaceCoverageDetails){heroMarketplaceCoverageDetails.open=!localStorage.getItem('hoshilu_hero_coverage_seen');localStorage.setItem('hoshilu_hero_coverage_seen','1');}
+// 2026-08-08時点では、ヒーロー直下のMARKETPLACE COVERAGEウィジェットを
+// 初回訪問時だけ開いた状態にしていた。しかし2026-08-16の実測データ
+// (/admin/promotion)で、訪問68件のうち検索を始めたのはわずか21件
+// (離脱69%)と判明し、離脱のほとんどは初回訪問者のはずの初回セッションに
+// 集中していると考えられる。このパネルを開いた状態で見せると、検索窓の
+// 前に13モール分のリストが挟まり、初回訪問者ほど検索窓まで遠くなって
+// しまう。本来一番見せたい相手(初回訪問者)の到達を遅らせていた可能性が
+// 高いため、大隆さんの判断で「初回訪問時も閉じたまま」に変更(検索窓を
+// 最優先で見せる。モール一覧は見たい人だけタップで開く)。
+const heroMarketplaceCoverageDetails=document.querySelector('#heroMarketplaceCoverage');if(heroMarketplaceCoverageDetails)heroMarketplaceCoverageDetails.open=false;
 const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode(localStorage.getItem('hoshilu_search_mode')||'identify',false);setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(loadNotifications);turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');

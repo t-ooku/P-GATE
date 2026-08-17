@@ -1011,3 +1011,150 @@
     gap:7px;
   }
 }
+
+/* Color condition chips (2026-08-15, 大隆さん指摘: "色のボタンを作って、
+   タップしたら多種の色が出てきて、タップで検索に色を追加できるように
+   して" / "ユーザー心理としては色で選ぶことが重要"). Same tap-to-select
+   .condition-chip behavior/JS as every other dimension row - only the
+   swatch circle is new, so a real color is one glance instead of reading
+   text like "ピンク". .condition-chip.selected (background:var(--violet);
+   color:#fff) already applies here since these buttons carry that class
+   too; the extra ring below just keeps the selected state visible even for
+   pale swatches (white/beige) where a violet pill alone could still read
+   ambiguous against the swatch. */
+.condition-group-color .condition-group-label{
+  color:#5140ba;
+}
+
+.condition-color-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.condition-color-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:5px 13px 5px 6px;
+  border:1px solid #ded7ff;
+  border-radius:999px;
+  background:#fff;
+  color:#5140ba;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+  transition:background .15s,border-color .15s,color .15s;
+}
+
+.condition-color-swatch{
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
+  border-radius:50%;
+  border:1px solid #00000022;
+  box-shadow:inset 0 0 0 1px #ffffff55;
+}
+
+.condition-color-chip.selected .condition-color-swatch{
+  box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--violet);
+}
+
+.condition-color-chip:hover,
+.condition-color-chip:focus-visible{
+  border-color:var(--violet);
+  background:var(--soft);
+  outline:none;
+}
+
+@media(max-width:760px){
+  .condition-color-chip{
+    min-height:44px;
+    padding:5px 15px 5px 6px;
+    font-size:12px;
+  }
+
+  .condition-color-swatch{
+    width:24px;
+    height:24px;
+    flex:0 0 24px;
+  }
+}
+
+/* Standalone "色で探す" entry point (2026-08-15, 大隆さん指摘: "最初から見える
+   独立した「色で探す」ボタンを別途トップに置く"). The swatch picker above
+   already worked, but it lived behind the unrelated 詳細検索 accordion label -
+   this puts its own button at the very top of the search panel, above the
+   query box, so it never requires opening 詳細検索 first. The four-dot icon
+   previews "this button is about color" before the label is even read. */
+.color-search-entry{
+  margin:0 0 12px;
+}
+
+.color-search-toggle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  min-height:48px;
+  padding:12px 16px;
+  border:1px solid #ded7ff;
+  border-radius:14px;
+  background:linear-gradient(105deg,#fff7fb,#faf8ff);
+  color:#5140ba;
+  font-family:inherit;
+  font-size:13px;
+  font-weight:850;
+  cursor:pointer;
+}
+
+.color-search-toggle::after{
+  content:'▾';
+  margin-left:auto;
+  font-size:11px;
+}
+
+.color-search-toggle[aria-expanded="true"]::after{
+  content:'▴';
+}
+
+.color-search-toggle:hover,
+.color-search-toggle:focus-visible{
+  border-color:var(--violet);
+  background:var(--soft);
+  outline:none;
+}
+
+.color-search-toggle-dots{
+  display:inline-grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:2px;
+  flex:0 0 auto;
+}
+
+.color-search-toggle-dots>span{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+}
+
+.color-search-toggle-dots>span:nth-child(1){background:#ef8bb0}
+.color-search-toggle-dots>span:nth-child(2){background:#2f6fed}
+.color-search-toggle-dots>span:nth-child(3){background:#f4d03f}
+.color-search-toggle-dots>span:nth-child(4){background:#2f9e5b}
+
+.color-search-panel{
+  margin:10px 0 0;
+  padding:16px;
+  border:1px solid #e2dcff;
+  border-radius:16px;
+  background:#faf8ff;
+}
+
+.color-search-body{
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
