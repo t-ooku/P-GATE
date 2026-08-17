@@ -846,7 +846,8 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.deepEqual(payload.checks.social_publishers, {
     X: false,
     INSTAGRAM: false,
-    TIKTOK: false
+    TIKTOK: false,
+    THREADS: false
   });
   assert.deepEqual(payload.checks.instagram_oauth, { configured: false, connected: false });
   assert.deepEqual(payload.checks.runway_video_generation, {
