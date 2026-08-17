@@ -3,11 +3,18 @@ import {
   runDueSocialPosts,
   socialPublisherReadinessWithStoredCredentials,
   syncInstagramPublishedPermalinks,
+  syncThreadsInsights,
   xPublishingSafetyReadiness
 } from './social-publisher.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
 const FEATURE_LAUNCH_DATE = '2026-08-09';
+// Amazonアソシエイトはアカウント作成から180日以内に適格販売3件が必要
+// (期限2027-02-09)。現状のペースでは届かない試算のため、Threadsの投稿は
+// 汎用の13モール訴求ではなく、Amazonが強いカテゴリ(本・家電・日用品)の
+// 検索例でAmazonクリックを底上げすることを優先する。価格はSNS本文に直書き
+// せず(Amazonアソシエイト規約)、affiliate:trueで開示文を必ず付ける。
+const THREADS_AMAZON_CAMPAIGN_ID = 'hoshilu-threads-amazon-boost-v1';
 const APPROVED_MODEL_REEL = Object.freeze({
   post_id: 'hoshilu-approved-model-reel-20260812',
   content_id: 'approved-ai-model-reel-20260812',
@@ -90,6 +97,31 @@ const FEATURE_LAUNCH = Object.freeze({
   media_url: 'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4'
 });
 
+// Amazonが強い(在庫・レビューが厚い)カテゴリの検索例に絞った、Threads専用の
+// 常設ローテーション。日替わりで1本ずつ順番に使う。
+const THREADS_AMAZON_POSTS = Object.freeze([
+  {
+    id: 'amazon-boost-books',
+    caption: '読みたかったのに、正式なタイトルを忘れてしまった本。覚えている表紙の色やあらすじの断片からHOSHILUで検索すると、Amazonを含む複数モールを一度に見比べられます。',
+    query: '表紙が青くてタイトルを忘れた海外小説'
+  },
+  {
+    id: 'amazon-boost-appliances',
+    caption: '地味に助かる小型家電ほど、正式名称が分からないもの。使う場所や機能の特徴で検索すれば、Amazonの在庫・レビューも他モールと一緒に比較できます。',
+    query: '布団を素早く乾かす小型の家電'
+  },
+  {
+    id: 'amazon-boost-daily-goods',
+    caption: '切れてから気づく日用品のストック。置き場所や見た目の特徴でHOSHILUに入力すると、Amazonを含めた対応モールをまとめて確認できます。',
+    query: 'キッチンの排水溝に使う小さいゴミ受けネット'
+  },
+  {
+    id: 'amazon-boost-reviews',
+    caption: '「これAmazonにあるかな」も、HOSHILUで検索すれば他モールの選択肢と一緒に確認できます。レビュー件数や評価も比較の参考にどうぞ。',
+    query: '軽くて持ち運べる小型写真プリンター'
+  }
+]);
+
 const pad = value => String(value).padStart(2, '0');
 
 function jstDateParts(date) {
@@ -119,6 +151,45 @@ function campaignLink(platform, date, content = date, searchQuery = '') {
   });
   if (searchQuery) params.set('q', searchQuery);
   return `https://hoshilu.app/?${params}`;
+}
+
+function threadsAmazonLink(content) {
+  const params = new URLSearchParams({
+    utm_source: 'threads',
+    utm_medium: 'social',
+    utm_campaign: THREADS_AMAZON_CAMPAIGN_ID,
+    utm_content: content.id,
+    q: content.query
+  });
+  return `https://hoshilu.app/?${params}`;
+}
+
+// 依頼2(Threads publisher)と同じ180日/3件のAmazon適格販売という制約に対する
+// 施策なので、13モール汎用ローテーションとは別の関数に分けている。1日1本、
+// THREADS_AMAZON_POSTSを順番に繰り返す。
+export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
+  const posts = [];
+  const start = new Date(now.getTime() + JST_OFFSET_MS);
+  start.setUTCHours(0, 0, 0, 0);
+  for (let offset = 0; offset < days; offset += 1) {
+    const day = new Date(start.getTime() + offset * DAY_MS - JST_OFFSET_MS);
+    const parts = jstDateParts(day);
+    const key = dateKey(parts);
+    const dayIndex = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
+    const content = THREADS_AMAZON_POSTS[dayIndex % THREADS_AMAZON_POSTS.length];
+    posts.push(normalizeSocialPost({
+      post_id: `${THREADS_AMAZON_CAMPAIGN_ID}-${key}`,
+      content_id: content.id,
+      platform: 'THREADS',
+      campaign_id: THREADS_AMAZON_CAMPAIGN_ID,
+      caption: content.caption,
+      link: threadsAmazonLink(content),
+      affiliate: true,
+      scheduled_at: scheduledAt(parts, 12, 30),
+      status: 'APPROVED'
+    }));
+  }
+  return posts.filter(post => Date.parse(post.scheduled_at) > now.getTime());
 }
 
 export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
@@ -229,27 +300,29 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
   const evergreen = buildSocialAutopilotPosts(now).filter(post => (
     post.platform !== 'INSTAGRAM' || env.INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED === 'true'
   ));
+  // Amazon適格販売3件を優先する専用ローテーション。Threadsの認証情報とは
+  // 独立に、他の常設シリーズと同じ「明示的な自動運用オプトイン」を要求する。
+  const threadsAmazonBoost = buildThreadsAmazonBoostPosts(now).filter(() => (
+    env.THREADS_EVERGREEN_AUTOPILOT_ENABLED === 'true'
+  ));
   const xPublishingSafety = xPublishingSafetyReadiness(env);
-  const posts = [...approvedModelReel, ...evergreen]
+  const posts = [...approvedModelReel, ...evergreen, ...threadsAmazonBoost]
     .filter(post => readiness[post.platform]
       && (post.platform !== 'X' || (
         xPublishingSafety.ready && env.X_EVERGREEN_AUTOPILOT_ENABLED === 'true'
       )));
   let inserted = 0;
   for (const post of posts) {
-    const campaignId = post.post_id === APPROVED_MODEL_REEL.post_id
-      ? APPROVED_MODEL_REEL.campaign_id
-      : CAMPAIGN_ID;
     const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
        affiliate,approved_at,created_at,updated_at)
-      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,'APPROVED',0,?9,?9,?9)
+      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,'APPROVED',?9,?10,?10,?10)
       ON CONFLICT(post_id) DO UPDATE SET content_id=excluded.content_id,
         caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
-        scheduled_at=excluded.scheduled_at,updated_at=excluded.updated_at
+        scheduled_at=excluded.scheduled_at,affiliate=excluded.affiliate,updated_at=excluded.updated_at
       WHERE social_post_queue.status='APPROVED'`)
-      .bind(post.post_id, post.platform, campaignId, post.content_id, post.caption,
-        post.link, post.media_url, post.scheduled_at, now.toISOString()).run();
+      .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption,
+        post.link, post.media_url, post.scheduled_at, post.affiliate ? 1 : 0, now.toISOString()).run();
     inserted += Number(result?.meta?.changes || 0);
   }
   if (approvedModelReel.length) {
@@ -267,5 +340,6 @@ export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl =
   const seeded = await seedSocialAutopilotQueue(env, now);
   const published = await runDueSocialPosts(env, now, fetchImpl);
   const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
-  return { seeded, published, permalinks };
+  const threadsInsights = await syncThreadsInsights(env, now, fetchImpl);
+  return { seeded, published, permalinks, threadsInsights };
 }
