@@ -162,13 +162,6 @@
             <div class="panel-heading">
               <p id="searchStep" class="step">ホシル</p>
             </div>
-            <div class="color-search-entry">
-              <button id="colorSearchToggle" type="button" class="color-search-toggle" aria-expanded="false" aria-controls="colorSearchPanel">
-                <span class="color-search-toggle-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-                <span id="colorSearchToggleLabel">色で探す</span>
-              </button>
-              <div id="colorSearchPanel" class="color-search-panel hidden"></div>
-            </div>
             <form id="knowledgeForm">
               <label class="visually-hidden" for="query">欲しいものについて話す</label>
               <div class="query-field"><textarea id="query" name="query" minlength="1" maxlength="200" required placeholder="例：昔見た、iPhoneの後ろにつける丸い磁石みたいな充電器"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
@@ -179,6 +172,13 @@
                   <button id="deleteAllSearchHistory" type="button" class="search-history-delete-all hidden">すべて削除</button>
                 </div>
                 <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
+              </div>
+              <div class="color-search-entry">
+                <button id="colorSearchToggle" type="button" class="color-search-toggle" aria-expanded="false" aria-controls="colorSearchPanel">
+                  <span class="color-search-toggle-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+                  <span id="colorSearchToggleLabel">色で探す</span>
+                </button>
+                <div id="colorSearchPanel" class="color-search-panel hidden"></div>
               </div>
               <button id="advancedSearchToggle" type="button" class="advanced-search-toggle" aria-expanded="false" aria-controls="advancedSearchPanel">詳細検索</button>
               <div id="advancedSearchPanel" class="advanced-search-panel hidden"></div>
