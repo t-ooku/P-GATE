@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import cryptoModule from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import worker, { buildAmazonSearchKeywords, finalPriceComparisonSearchQuery, validatePriceComparisonRequest, verifyTrackToken } from '../src/index.mjs';
+import { INTEGRATED_MARKETPLACES, isIntegratedMarketplace } from '../src/marketplace-search-mode.mjs';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
@@ -47,9 +49,34 @@ test('validatePriceComparisonRequest: 未知のモールや不正な同意は弾
     product: { title: '商品' }, consent: true, session_id: 'a'.repeat(20), turnstile_token: 't',
     direct_marketplaces: ['LOFT_JP', 'NOT_A_REAL_MALL', 'AMAZON_JP']
   });
-  // AMAZON_JPはIntegratedなのでdirect一覧には残らない。NOT_A_REAL_MALLは
-  // 未知のモールとして弾かれる。
-  assert.deepEqual(result.direct_marketplaces, ['LOFT_JP']);
+  // NOT_A_REAL_MALLは未知のモールとして弾かれる。
+  // AMAZON_JPは残る: 以前は「AMAZON_JPはIntegratedだから」という理由で
+  // 落としていたが、それは誤りだった。marketplace-search-mode.mjs
+  // (モール分類の唯一の判定元)ではINTEGRATEDはRAKUTEN_JP/YAHOO_JPのみで、
+  // 「Amazonは公式API未接続のため外部検索導線として扱う」と明記されている。
+  assert.deepEqual(result.direct_marketplaces, ['LOFT_JP', 'AMAZON_JP']);
+});
+
+test('AI最安比較のdirectモール一覧はintegratedと重ならず、Amazonを必ず含む', () => {
+  // 一度ドリフトした(Amazonがintegrated扱いされ、結果としてintegrated側にも
+  // direct側にも入らない隙間に落ちて、最安比較にAmazonが一切出なくなった)ため、
+  // 分類の唯一の判定元と突き合わせて固定する。
+  const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  const start = source.indexOf('const KNOWN_DIRECT_MARKETPLACES');
+  assert.ok(start > 0, 'KNOWN_DIRECT_MARKETPLACESが見つからない');
+  const block = source.slice(start, source.indexOf(']', start));
+  const known = (block.match(/'[A-Z0-9_]+'/g) || []).map((item) => item.replace(/'/g, ''));
+
+  assert.ok(known.includes('AMAZON_JP'), 'AMAZON_JPがdirect一覧から外れている');
+  for (const marketplace of known) {
+    assert.equal(
+      isIntegratedMarketplace(marketplace), false,
+      `${marketplace}はintegratedなのでdirect一覧に入れてはいけない`
+    );
+  }
+  for (const marketplace of INTEGRATED_MARKETPLACES) {
+    assert.ok(!known.includes(marketplace), `${marketplace}がdirect一覧に混入している`);
+  }
 });
 
 test('AI最安比較はカテゴリ階層名から最終小ジャンルだけを検索語にする', () => {

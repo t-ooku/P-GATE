@@ -50,24 +50,59 @@ test('Instagramは月〜土20時15分、月・水・金をリールにする', (
     .every(post => post.media_url.endsWith('.mp4')), true);
 });
 
-test('Amazon優先Threadsローテーションは1日1本、Amazonが強いカテゴリの検索語だけで構成する', () => {
+test('Amazon優先Threadsローテーションは1日2本、昼夜の枠で別内容を計画する', () => {
   const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'));
-  assert.equal(posts.length, 14);
+  // 14日 × 昼夜2枠。当日12:30 JST(03:00 UTC時点では未到来)も含む。
+  assert.equal(posts.length, 28);
   assert.equal(posts.every(post => post.platform === 'THREADS'), true);
   assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
   assert.equal(posts.every(post => post.campaign_id === 'hoshilu-threads-amazon-boost-v1'), true);
-  assert.equal(posts.every(post => post.affiliate === true), true);
-  assert.equal(posts.every(post => /アフィリエイト広告/.test(post.caption)), true);
   assert.equal(posts.every(post => !/[¥$]\s?\d|\d+\s?円/.test(post.caption)), true, '本文に価格を直書きしない');
-  for (const post of posts) {
+
+  // 昼枠のpost_idは接尾辞なし(1日1本だった頃のキュー行をそのまま更新できる)、
+  // 夜枠は-pm。同じ日に2本重複して積まれないことを固定する。
+  const noon = posts.filter(post => post.scheduled_at.endsWith('T03:30:00.000Z'));
+  const night = posts.filter(post => post.scheduled_at.endsWith('T11:30:00.000Z'));
+  assert.equal(noon.length, 14);
+  assert.equal(night.length, 14);
+  assert.equal(noon.every(post => !post.post_id.endsWith('-pm')), true);
+  assert.equal(night.every(post => post.post_id.endsWith('-pm')), true);
+
+  // 同じ日の昼と夜は別内容。翌日も次のローテーションへ進む。
+  assert.notEqual(posts[0].content_id, posts[1].content_id);
+  assert.notEqual(posts[0].content_id, posts[2].content_id);
+});
+
+test('Amazon優先Threadsローテーションはリンク付きのみをアフィリエイトとして扱う', () => {
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'));
+  const affiliate = posts.filter(post => post.affiliate);
+  const organic = posts.filter(post => !post.affiliate);
+
+  // 運用設計書v1.0第2部: 宣伝botに見えないよう非アフィリエイト投稿を混ぜる。
+  // 20本中5本(25%)がリンク無しなので、どの14日を切り出しても必ず両方入る。
+  assert.ok(organic.length > 0, '非アフィリエイト投稿が1本も計画されていない');
+  assert.ok(affiliate.length > organic.length, 'アフィリエイト投稿が主体であること');
+
+  for (const post of affiliate) {
     const url = new URL(post.link);
     assert.equal(url.hostname, 'hoshilu.app');
     assert.equal(url.searchParams.get('utm_source'), 'threads');
     assert.equal(url.searchParams.get('utm_campaign'), 'hoshilu-threads-amazon-boost-v1');
     assert.ok(url.searchParams.get('q'), '検索語(q)が必ず含まれる');
+    assert.match(post.caption, /アフィリエイト広告/, 'アフィリエイト投稿にはPR表記が要る');
   }
-  // 1日1本で、翌日は次のローテーション内容へ進む。
-  assert.notEqual(posts[0].content_id, posts[1].content_id);
+  for (const post of organic) {
+    assert.equal(post.link, '', '非アフィリエイト投稿にリンクを付けない');
+    // 広告ではないのにPR表記が付く、という逆向きの不正確さも防ぐ。
+    assert.doesNotMatch(post.caption, /アフィリエイト/, '非アフィリエイト投稿にPR表記を付けない');
+  }
+});
+
+test('Amazon優先Threadsローテーションの文面は20本あり、10日間は重複しない', () => {
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'), 10);
+  // 1日2本 × 10日 = 20本ぶんで、ちょうど一巡する。
+  assert.equal(posts.length, 20);
+  assert.equal(new Set(posts.map(post => post.content_id)).size, 20, '10日以内に同じ文面が再投稿されている');
 });
 
 test('Amazon優先Threadsローテーションは同じ計画対象期間なら毎回同じ投稿を計画する(冪等)', () => {
@@ -323,11 +358,18 @@ test('THREADS認証とTHREADS_EVERGREEN_AUTOPILOT_ENABLEDが揃うとAmazon優�
   };
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
   const threadsRows = rows.filter(row => row[1] === 'THREADS');
-  assert.equal(threadsRows.length, 14);
-  assert.equal(result.planned, 14);
-  assert.equal(result.inserted, 14);
+  assert.equal(threadsRows.length, 28); // 14日 × 昼夜2枠
+  assert.equal(result.planned, 28);
+  assert.equal(result.inserted, 28);
   assert.equal(threadsRows.every(row => row[2] === 'hoshilu-threads-amazon-boost-v1'), true);
-  assert.equal(threadsRows.every(row => row[8] === 1), true); // affiliateがDBへ正しく1として保存される
+  // affiliateがDBへ0/1として正しく保存される。リンク付きは1、
+  // 非アフィリエイト枠(リンク無し)は0で、両方が実際に計画されている。
+  assert.equal(threadsRows.every(row => row[8] === 0 || row[8] === 1), true);
+  const affiliateRows = threadsRows.filter(row => row[8] === 1);
+  const organicRows = threadsRows.filter(row => row[8] === 0);
+  assert.ok(affiliateRows.length > 0 && organicRows.length > 0);
+  assert.equal(affiliateRows.every(row => row[5] !== ''), true, 'affiliate=1はリンクを持つ');
+  assert.equal(organicRows.every(row => row[5] === ''), true, 'affiliate=0はリンクを持たない');
 });
 
 test('自動運用の1サイクルはThreadsインサイト取り込みも実行し結果を返す', async () => {
