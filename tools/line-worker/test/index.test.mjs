@@ -1184,20 +1184,31 @@ test('条件検索チップはAI検索と同じ1本のクエリ条件に追加�
 // 独立した「色で探す」ボタン (2026-08-15 request: "最初から見える独立した
 // 「色で探す」ボタンを別途トップに置く")。色の絞り込みは既に詳細検索の
 // 中で使えたが、それだと無関係な「詳細検索」ラベルを開かないと辿り着け
-// なかった。検索窓より前、検索パネルの一番上に専用ボタンを置き、タップ
-// すると色チップだけが開く。裏側のチップ辞書・APIは詳細検索と共有する
-// (advancedSearchGroupsを使い回し、二重取得しない)。
-test('検索パネルの最上部に独立した「色で探す」ボタンを置く', () => {
+// なかった。検索パネルの専用ボタンとして置き、タップすると色チップだけが
+// 開く。裏側のチップ辞書・APIは詳細検索と共有する(advancedSearchGroupsを
+// 使い回し、二重取得しない)。
+//
+// 2026-08-17 update: 当初は検索窓より前(検索フォームより前)に置いていたが、
+// 大隆さんの指示で「検索履歴の下、詳細条件ボタンの上」に移動した。検索窓・
+// 検索履歴を先に見せてから、絞り込み手段(色で探す→詳細検索)を並べる導線に
+// 揃えている。
+test('「色で探す」ボタンを検索履歴の下・詳細検索ボタンの上に置く', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   const css = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
 
-  // 検索窓(#query)より前、検索フォームより前に置かれている
-  const colorEntryIndex = html.indexOf('id="colorSearchToggle"');
+  // フォーム内、検索履歴セクションより後・詳細検索ボタンより前に置かれている
   const formIndex = html.indexOf('id="knowledgeForm"');
   const queryIndex = html.indexOf('id="query"');
-  assert.ok(colorEntryIndex > -1 && colorEntryIndex < formIndex);
-  assert.ok(formIndex < queryIndex);
+  const searchHintsIndex = html.indexOf('id="searchHintsSection"');
+  const historyIndex = html.indexOf('id="searchHistorySection"');
+  const colorEntryIndex = html.indexOf('id="colorSearchToggle"');
+  const advancedToggleIndex = html.indexOf('id="advancedSearchToggle"');
+  assert.ok(formIndex > -1 && formIndex < queryIndex, 'フォームは検索窓より前');
+  assert.ok(queryIndex < searchHintsIndex, '検索窓は検索ヒントより前');
+  assert.ok(searchHintsIndex < historyIndex, '検索ヒントは検索履歴セクションより前');
+  assert.ok(historyIndex > -1 && historyIndex < colorEntryIndex, '色で探すは検索履歴より後');
+  assert.ok(colorEntryIndex > -1 && colorEntryIndex < advancedToggleIndex, '色で探すは詳細検索ボタンより前');
   assert.match(html, /id="colorSearchToggle"[^>]*aria-controls="colorSearchPanel"/);
   assert.match(html, /id="colorSearchPanel" class="color-search-panel hidden"/);
 
