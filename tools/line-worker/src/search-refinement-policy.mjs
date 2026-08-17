@@ -42,12 +42,27 @@ const COPY = Object.freeze({
       body: "身につける",
     },
     appearance: {
-      white: "白",
-      black: "黒",
-      pink: "ピンク",
       transparent: "透明",
       round: "丸い",
       foldable: "折りたためる",
+    },
+    color: {
+      black: "黒",
+      white: "白",
+      gray: "グレー",
+      silver: "シルバー",
+      navy: "ネイビー",
+      blue: "ブルー",
+      green: "グリーン",
+      khaki: "カーキ",
+      yellow: "イエロー",
+      orange: "オレンジ",
+      red: "レッド",
+      pink: "ピンク",
+      purple: "パープル",
+      beige: "ベージュ",
+      brown: "ブラウン",
+      gold: "ゴールド",
     },
   },
   en: {
@@ -86,12 +101,27 @@ const COPY = Object.freeze({
       body: "Worn on the body",
     },
     appearance: {
-      white: "White",
-      black: "Black",
-      pink: "Pink",
       transparent: "Transparent",
       round: "Round",
       foldable: "Foldable",
+    },
+    color: {
+      black: "Black",
+      white: "White",
+      gray: "Gray",
+      silver: "Silver",
+      navy: "Navy",
+      blue: "Blue",
+      green: "Green",
+      khaki: "Khaki",
+      yellow: "Yellow",
+      orange: "Orange",
+      red: "Red",
+      pink: "Pink",
+      purple: "Purple",
+      beige: "Beige",
+      brown: "Brown",
+      gold: "Gold",
     },
   },
   zh: {
@@ -130,12 +160,27 @@ const COPY = Object.freeze({
       body: "佩戴在身上",
     },
     appearance: {
-      white: "白色",
-      black: "黑色",
-      pink: "粉色",
       transparent: "透明",
       round: "圆形",
       foldable: "可折叠",
+    },
+    color: {
+      black: "黑色",
+      white: "白色",
+      gray: "灰色",
+      silver: "银色",
+      navy: "藏青色",
+      blue: "蓝色",
+      green: "绿色",
+      khaki: "卡其色",
+      yellow: "黄色",
+      orange: "橙色",
+      red: "红色",
+      pink: "粉色",
+      purple: "紫色",
+      beige: "米色",
+      brown: "棕色",
+      gold: "金色",
     },
   },
   ko: {
@@ -174,18 +219,69 @@ const COPY = Object.freeze({
       body: "몸에 착용",
     },
     appearance: {
-      white: "흰색",
-      black: "검은색",
-      pink: "분홍색",
       transparent: "투명",
       round: "둥근 모양",
       foldable: "접을 수 있음",
     },
+    color: {
+      black: "검은색",
+      white: "흰색",
+      gray: "회색",
+      silver: "은색",
+      navy: "네이비",
+      blue: "파란색",
+      green: "초록색",
+      khaki: "카키색",
+      yellow: "노란색",
+      orange: "주황색",
+      red: "빨간색",
+      pink: "분홍색",
+      purple: "보라색",
+      beige: "베이지색",
+      brown: "갈색",
+      gold: "금색",
+    },
   },
 });
 
+/**
+ * Hex swatches for the color dimension (Cowork独立QA, 2026-08-15 request:
+ * "色のボタンを作って、タップしたら多種の色が出てきて、タップで検索に色を
+ * 追加できるようにして" - a dedicated tap-to-pick color palette, because
+ * color is a strong personal preference and the flat text chip "ピンク" is
+ * slower to scan than an actual pink swatch). Locale-independent - a color is
+ * the same hex regardless of language, so this is one dictionary instead of
+ * four. `null` means "render as an outlined/no-fill swatch" (not used today
+ * but kept as an escape hatch for a future value with no good flat color).
+ */
+export const COLOR_SWATCHES = Object.freeze({
+  black: "#1c1c1e",
+  white: "#ffffff",
+  gray: "#9aa0a6",
+  silver: "#c9ccd1",
+  navy: "#1f2a55",
+  blue: "#2f6fed",
+  green: "#2f9e5b",
+  khaki: "#8a8a5c",
+  yellow: "#f4d03f",
+  orange: "#ef8a34",
+  red: "#e34848",
+  pink: "#ef8bb0",
+  purple: "#9b6bd9",
+  beige: "#e6d3b3",
+  brown: "#8a5a3b",
+  gold: "#cfa544",
+});
+
+// "color" sits right after "category" (2026-08-15, 大隆さん指摘: "ユーザー
+// 心理としては色で選ぶことが重要。ユーザーそれぞれ、色にこだわりや好みを
+// 持っている") - order here is what/scene/size/power/appearance rows the
+// panel renders in (refinementChipsForQuery groups chips in this same
+// traversal order), so color needs to appear early to be prominent rather
+// than buried after scene/size/power like a minor detail.
 const DIMENSION_ORDER = Object.freeze([
   "category",
+  "color",
   "scene",
   "size",
   "power",
@@ -194,10 +290,14 @@ const DIMENSION_ORDER = Object.freeze([
 
 const DEFAULT_VALUES = Object.freeze({
   category: ["kitchen", "electronics", "beauty", "home", "fashion", "food"],
+  color: [
+    "black", "white", "gray", "silver", "navy", "blue", "green", "khaki",
+    "yellow", "orange", "red", "pink", "purple", "beige", "brown", "gold",
+  ],
   scene: ["home", "work", "travel", "outdoor", "car", "body"],
   size: ["palm", "bag", "tabletop", "tiny", "large"],
   power: ["none", "usb", "battery", "outlet", "compatible_jp"],
-  appearance: ["white", "black", "pink", "transparent", "round", "foldable"],
+  appearance: ["transparent", "round", "foldable"],
 });
 
 function localeKey(locale) {
@@ -208,7 +308,13 @@ function localeKey(locale) {
 function presentDimensions(context) {
   const dimensions = new Set();
   for (const type of context?.query_types || []) {
-    if (type === "shape_function" || type === "color_package") dimensions.add("appearance");
+    // color_package used to fold into "appearance" back when appearance held
+    // both colors and shape words. Splitting color into its own dimension
+    // means a query that already states a color must suppress "color", not
+    // "appearance" - shape_function (round/foldable/etc.) is the one that
+    // still maps to appearance.
+    if (type === "shape_function") dimensions.add("appearance");
+    if (type === "color_package") dimensions.add("color");
     if (type === "usage_scene" || type === "place_memory") dimensions.add("scene");
     if (type === "compatibility") dimensions.add("power");
     if (type === "category_branch") dimensions.add("category");
@@ -236,11 +342,13 @@ export function suggestRefinementChips(context = {}, locale = "ja", limit = 10) 
       const normalized = String(value);
       const label = COPY[lang]?.[dimension]?.[normalized];
       if (!label) continue;
+      const swatch = dimension === "color" ? COLOR_SWATCHES[normalized] : undefined;
       chips.push({
         id: `${dimension}:${normalized}`,
         dimension,
         value: normalized,
         label,
+        ...(swatch ? { swatch } : {}),
       });
       if (chips.length >= Math.max(1, Number(limit) || 10)) return chips;
     }
@@ -291,10 +399,10 @@ export function refinementRequest(query, selectedChips, context = {}, locale = "
  * drift from it.
  */
 const DIMENSION_LABELS = Object.freeze({
-  ja: { category: "種類", scene: "使う場所", size: "大きさ", power: "電源", appearance: "見た目" },
-  en: { category: "Type", scene: "Where you use it", size: "Size", power: "Power", appearance: "Look" },
-  zh: { category: "种类", scene: "使用场所", size: "大小", power: "电源", appearance: "外观" },
-  ko: { category: "종류", scene: "사용 장소", size: "크기", power: "전원", appearance: "외형" },
+  ja: { category: "種類", color: "色", scene: "使う場所", size: "大きさ", power: "電源", appearance: "見た目" },
+  en: { category: "Type", color: "Color", scene: "Where you use it", size: "Size", power: "Power", appearance: "Look" },
+  zh: { category: "种类", color: "颜色", scene: "使用场所", size: "大小", power: "电源", appearance: "外观" },
+  ko: { category: "종류", color: "색상", scene: "사용 장소", size: "크기", power: "전원", appearance: "외형" },
 });
 
 export function refinementDimensionLabel(dimension, locale = "ja") {

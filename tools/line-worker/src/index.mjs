@@ -1501,7 +1501,11 @@ function refinementChipsForQuery(query, language) {
   const locale = String(language || 'JA').toLowerCase();
   const context = { known_dimensions: knownRefinementDimensions(query, locale) };
   const groups = new Map();
-  for (const chip of suggestRefinementChips(context, locale, 40)) {
+  // 2026-08-15: limit raised 40->60. The new "color" dimension alone has 16
+  // values, and category(6)+color(16)+scene(6)+size(5)+power(5)+appearance(3)
+  // = 41 total chips when nothing is already known, which the old 40 cap
+  // would have silently truncated by one color swatch.
+  for (const chip of suggestRefinementChips(context, locale, 60)) {
     if (!groups.has(chip.dimension)) {
       groups.set(chip.dimension, {
         dimension: chip.dimension,
@@ -1509,7 +1513,11 @@ function refinementChipsForQuery(query, language) {
         values: []
       });
     }
-    groups.get(chip.dimension).values.push({ value: chip.value, label: chip.label });
+    groups.get(chip.dimension).values.push({
+      value: chip.value,
+      label: chip.label,
+      ...(chip.swatch ? { swatch: chip.swatch } : {})
+    });
   }
   return [...groups.values()].filter((group) => group.label && group.values.length);
 }
