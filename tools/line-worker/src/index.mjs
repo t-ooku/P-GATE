@@ -1833,11 +1833,30 @@ async function handleAiChatApi(request, env, ctx) {
 // Directモールに対するAI推定価格帯を1つの比較結果へ合成して返す。
 // AI呼び出しはこのエンドポイントに限定され、通常検索(/api/knowledge)側の
 // 商品カード・MATCHESには一切影響しない(section 11: この機能のみの例外)。
+// 2026-08-17: AMAZON_JPを追加した。それまでAmazonはこの一覧から漏れており、
+// AI最安比較にAmazonの行が一切出ない状態だった。根拠になっていたのは
+// test/price-comparison-api.test.mjs に残る「AMAZON_JPはIntegratedなので
+// direct一覧には残らない」という前提だが、これは古い。
+// src/marketplace-search-mode.mjs(モール分類の唯一の判定元)は
+// INTEGRATED_MARKETPLACES = {RAKUTEN_JP, YAHOO_JP} と定義し、
+// 「Amazonは公式API未接続のため外部検索導線として扱う」と明記している。
+// つまりAmazonはdirect側であり、integratedでもdirectでもない隙間に落ちていた。
+// Amazonアソシエイトは2027-02-09までに適格販売3件が必要で
+// (claude/hoshilu_amazon_status_2026-08-17.md)、最安比較は購入意図が最も
+// 高い場面なので、ここに出ないことの実害が大きい。
+//
+// 価格は捏造しない: 実価格はAPI未接続で取得できないため、Amazonの行は
+// AI推定(免責文つき)か「価格推定できません」+価格の安い順検索リンクの
+// どちらかにしかならない。section17の方針をそのまま踏襲する。
 const KNOWN_DIRECT_MARKETPLACES = new Set([
+  'AMAZON_JP',
   'QOO10_JP', 'SHEIN_JP', 'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP',
   'SNKRDUNK_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUKIYO_JP', 'COSME_JP', 'ABCMART_JP'
 ]);
-const MAX_PRICE_COMPARISON_DIRECT_MARKETPLACES = 6;
+// 6→7。directモールは先頭から上限件数だけ採用されるので、6のままAmazonを
+// 足すと既存モールが1つ押し出される。既存の比較内容を減らさずAmazonを
+// 加えるために1枠だけ広げた。
+const MAX_PRICE_COMPARISON_DIRECT_MARKETPLACES = 7;
 
 export function validatePriceComparisonRequest(payload) {
   payload = payload || {};
