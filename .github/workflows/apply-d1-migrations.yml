@@ -1,0 +1,113 @@
+name: Apply pending D1 migrations
+
+# Manual-only, same rationale as apply-teacher-dataset-d1.yml: ci.yml's
+# deploy job is deliberately scoped to the Worker only, and D1 schema
+# changes require a separate explicit approval
+# (docs/HOSHILU_COMMAND_GOVERNANCE_2026-08-02.md). This workflow is the
+# mechanism for carrying out an approval that has already been given.
+#
+# `wrangler d1 migrations apply` applies every migration file under
+# tools/line-worker/migrations/ that is not yet recorded in the database's
+# own d1_migrations tracking table, in filename order, with no partial stop
+# point. That is exactly what earlier reviews flagged as a risk here: some
+# migrations (e.g. 0039-0041, the KPI/measurement schema) were written and
+# tested but deliberately left unapplied pending a separate decision, and
+# they must not go live as a side effect of applying an unrelated migration
+# like this one. So this workflow refuses to run unless the operator
+# states up front, by filename, exactly which pending migrations they
+# expect - if the database's actual pending list differs at all (extra or
+# missing files), nothing is applied.
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_pending_migrations:
+        description: 'Space-separated filenames you expect to be pending, in order (must match exactly or nothing runs)'
+        required: true
+        default: '0052_social_post_queue_threads.sql 0053_social_post_performance_threads.sql'
+      confirm:
+        description: 'Type APPLY to confirm writing to the production D1 database'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: cloudflare-d1-migrations
+      cancel-in-progress: false
+    steps:
+      - name: Require explicit confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "APPLY" ]; then
+            echo "::error::confirm input must be exactly APPLY. Nothing was executed."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check Cloudflare credentials are configured
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID are not set."
+            exit 1
+          fi
+
+      - name: Verify the pending migration list matches exactly what was expected
+        working-directory: tools/line-worker
+        run: |
+          set +e
+          out=$(npx wrangler d1 migrations list PRODUCT_DB --remote 2>&1)
+          status=$?
+          echo "$out"
+          if [ $status -ne 0 ]; then
+            echo "::error::could not list migrations: $(echo "$out" | tr '\n' ' ' | tail -c 800)"
+            exit 1
+          fi
+          actual=$(echo "$out" | grep -oE '[0-9]{4}_[A-Za-z0-9_]+\.sql' | sort -u | tr '\n' ' ' | sed 's/ $//')
+          expected=$(echo "${{ github.event.inputs.expected_pending_migrations }}" | tr ' ' '\n' | sort -u | tr '\n' ' ' | sed 's/ $//')
+          echo "::notice::pending (actual): $actual"
+          echo "::notice::pending (expected): $expected"
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::pending migration list does not match what was expected - refusing to run. Check the annotations above, update expected_pending_migrations if this is intentional, and re-run."
+            exit 1
+          fi
+
+      - name: Apply pending migrations
+        working-directory: tools/line-worker
+        run: |
+          set +e
+          out=$(npx wrangler d1 migrations apply PRODUCT_DB --remote 2>&1)
+          status=$?
+          echo "$out"
+          if [ $status -ne 0 ]; then
+            echo "::error::migrations apply failed: $(echo "$out" | tr '\n' ' ' | tail -c 800)"
+            exit 1
+          fi
+          echo "::notice::migrations applied."
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Confirm schema now allows THREADS
+        working-directory: tools/line-worker
+        run: |
+          set +e
+          out=$(npx wrangler d1 execute PRODUCT_DB --remote \
+            --command "SELECT sql FROM sqlite_master WHERE type='table' AND name IN ('social_post_queue','social_post_performance');" 2>&1)
+          echo "$out"
+          if ! echo "$out" | grep -q "THREADS"; then
+            echo "::error::THREADS still not present in schema after apply - investigate before relying on this."
+            exit 1
+          fi
+          echo "::notice::confirmed: THREADS is now an allowed platform value."
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
