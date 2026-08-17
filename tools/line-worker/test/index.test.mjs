@@ -1116,31 +1116,38 @@ test('検索応答に条件検索チップを軸ごとにまとめて返す', as
   );
   assert.deepEqual(
     decorated.refinement_chips.map((group) => group.dimension),
-    ['category', 'scene', 'size', 'power', 'appearance']
+    ['category', 'color', 'scene', 'size', 'power', 'appearance']
   );
   assert.deepEqual(
     decorated.refinement_chips.map((group) => group.label),
-    ['種類', '使う場所', '大きさ', '電源', '見た目']
+    ['種類', '色', '使う場所', '大きさ', '電源', '見た目']
   );
+  // "appearance" now holds only shape words (round/foldable/transparent)
+  // since color moved into its own dimension (2026-08-15), so the generic
+  // floor drops from 5 to 3 - still enough to prove every group is populated,
+  // just no longer tied to appearance's old (larger) value count.
   decorated.refinement_chips.forEach((group) => {
-    assert.ok(group.values.length >= 5);
+    assert.ok(group.values.length >= 3);
     group.values.forEach((item) => {
       assert.equal(typeof item.value, 'string');
       assert.ok(item.label.length > 0);
     });
   });
+  const colorGroup = decorated.refinement_chips.find((group) => group.dimension === 'color');
+  assert.equal(colorGroup.values.length, 16);
+  colorGroup.values.forEach((item) => assert.match(item.swatch, /^#[0-9a-f]{6}$/));
 
   // 既に決まっている軸は出し直さない（条件を足すほど絞れる）
   const narrowed = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-narrow', candidates: [] }, request, env, 'session-hash', 'モバイル充電器 / USB充電 / 旅行中', 'JA'
   );
-  assert.deepEqual(narrowed.refinement_chips.map((group) => group.dimension), ['category', 'size', 'appearance']);
+  assert.deepEqual(narrowed.refinement_chips.map((group) => group.dimension), ['category', 'color', 'size', 'appearance']);
 
   // 表示言語に追従する
   const english = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-en', candidates: [] }, request, env, 'session-hash', 'wireless earbuds', 'EN'
   );
-  assert.deepEqual(english.refinement_chips.map((group) => group.label), ['Type', 'Where you use it', 'Size', 'Power', 'Look']);
+  assert.deepEqual(english.refinement_chips.map((group) => group.label), ['Type', 'Color', 'Where you use it', 'Size', 'Power', 'Look']);
 });
 
 test('条件検索チップはAI検索と同じ1本のクエリ条件に追加される', () => {
@@ -1172,6 +1179,46 @@ test('条件検索チップはAI検索と同じ1本のクエリ条件に追加�
   const layoutCss = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
   assert.match(layoutCss, /\.condition-chip\.selected\{/);
   assert.match(layoutCss, /\.condition-chip\{[^}]*min-height:44px/);
+});
+
+// 独立した「色で探す」ボタン (2026-08-15 request: "最初から見える独立した
+// 「色で探す」ボタンを別途トップに置く")。色の絞り込みは既に詳細検索の
+// 中で使えたが、それだと無関係な「詳細検索」ラベルを開かないと辿り着け
+// なかった。検索窓より前、検索パネルの一番上に専用ボタンを置き、タップ
+// すると色チップだけが開く。裏側のチップ辞書・APIは詳細検索と共有する
+// (advancedSearchGroupsを使い回し、二重取得しない)。
+test('検索パネルの最上部に独立した「色で探す」ボタンを置く', () => {
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  const css = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
+
+  // 検索窓(#query)より前、検索フォームより前に置かれている
+  const colorEntryIndex = html.indexOf('id="colorSearchToggle"');
+  const formIndex = html.indexOf('id="knowledgeForm"');
+  const queryIndex = html.indexOf('id="query"');
+  assert.ok(colorEntryIndex > -1 && colorEntryIndex < formIndex);
+  assert.ok(formIndex < queryIndex);
+  assert.match(html, /id="colorSearchToggle"[^>]*aria-controls="colorSearchPanel"/);
+  assert.match(html, /id="colorSearchPanel" class="color-search-panel hidden"/);
+
+  // 色チップのみを描画する専用パネル。詳細検索の全軸カードとは別物。
+  assert.match(appSource, /function colorSearchCard\(colorGroup\)/);
+  assert.match(appSource, /async function renderColorSearch\(\)/);
+  // 詳細検索と同じ /api/refinement-chips・同じキャッシュ変数を使い回す
+  // (二重フェッチや辞書の二重管理を避ける)
+  assert.match(appSource, /if\(!advancedSearchGroups\)advancedSearchGroups=await loadRefinementChips\(\);\s*const colorGroup=\(advancedSearchGroups\|\|\[\]\)\.find\(group=>group\?\.dimension==='color'\)/);
+  // タップした色は他の絞り込みチップと同じ " / " 区切りでクエリへ追加し、
+  // 同じ検索経路(runKnowledgeSearch)を通す
+  assert.match(appSource, /elements\.query\.value=\[base,picked\]\.filter\(Boolean\)\.join\(' \/ '\)/);
+  assert.match(appSource, /submit\.addEventListener\('click',\(\)=>\{[\s\S]{0,300}runKnowledgeSearch\(\)/);
+  // 言語を変えたら詳細検索と一緒にこのパネルも取り直す
+  assert.match(appSource, /advancedSearchGroups=null;renderAdvancedSearch\(\);renderColorSearch\(\)/);
+  ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
+    assert.match(appSource, new RegExp(`${language}:\\{toggle:'[^']+',toggleClose:'[^']+',body:'[^']+',submit:'[^']+'\\}`));
+  });
+
+  assert.match(css, /\.color-search-toggle\{[^}]*min-height:48px/);
+  assert.match(css, /\.color-search-panel\{/);
 });
 
 // 商品提示中も検索窓を画面に残す (2026-08-07 request)。

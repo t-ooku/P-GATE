@@ -53,11 +53,19 @@ test('hero-marketplace-coverage.mjsは既存のmarketplace-coverage.mjsの文言
   assert.match(base, /export function applyMarketplaceCoverage\(language = selectedLanguage\(\)\) \{\s*applyMarketplaceCoverageToNodes\(nodes, language\);\s*\}/);
 });
 
-test('ヒーローウィジェットは各ブラウザで初回訪問時だけ開き、2回目以降は閉じている', async () => {
+// 2026-08-16更新: 実データ(/admin/promotion)で訪問68件中、検索開始まで
+// 到達したのは21件(離脱69%)と判明した。離脱のほとんどは初回訪問者の
+// はずのセッションに集中していると考えられ、このウィジェットを初回だけ
+// 開いた状態で見せると、検索窓の前に13モール分のリストが挟まり、一番
+// 見せたい初回訪問者ほど検索窓まで遠くなってしまう。そのため大隆さんの
+// 判断で「初回訪問時も閉じたまま」に変更した(検索窓を最優先で見せ、
+// モール一覧は見たい人だけタップで開く)。
+test('ヒーローウィジェットは初回訪問時も含め常に閉じた状態で表示する(検索窓を優先)', async () => {
   const app = await read('app.js');
   assert.match(app, /const heroMarketplaceCoverageDetails=document\.querySelector\('#heroMarketplaceCoverage'\);/);
-  assert.match(app, /heroMarketplaceCoverageDetails\.open=!localStorage\.getItem\('hoshilu_hero_coverage_seen'\)/);
-  assert.match(app, /localStorage\.setItem\('hoshilu_hero_coverage_seen','1'\)/);
+  assert.match(app, /if\(heroMarketplaceCoverageDetails\)heroMarketplaceCoverageDetails\.open=false;/);
+  // 初回だけ開く挙動は廃止したので、専用のlocalStorageキーはもう使わない
+  assert.doesNotMatch(app, /hoshilu_hero_coverage_seen/);
 });
 
 test('service-workerがhero-marketplace-coverage.mjsをプリキャッシュ対象に含む', async () => {

@@ -15,7 +15,11 @@ test("suggests ten relevant one-tap chips by default", () => {
     "ja",
   );
   assert.equal(chips.length, 10);
-  assert.ok(chips.every((chip) => chip.dimension !== "appearance"));
+  // color_package means the query already states a color, so "color" itself
+  // is the one dimension that should be suppressed - not "appearance", which
+  // now only covers shape words (round/foldable/transparent) since color
+  // moved into its own dimension (2026-08-15, dedicated color-swatch picker).
+  assert.ok(chips.every((chip) => chip.dimension !== "color"));
 });
 
 test("uses candidate category branches first", () => {
@@ -70,6 +74,7 @@ test("builds a continuation request linked to the prior search", () => {
 // appended to the same query string the AI search reads.
 test("条件検索の見出しラベルを4言語ぶん返す", () => {
   assert.equal(refinementDimensionLabel("power", "ja"), "電源");
+  assert.equal(refinementDimensionLabel("color", "ja"), "色");
   assert.equal(refinementDimensionLabel("scene", "en"), "Where you use it");
   assert.equal(refinementDimensionLabel("size", "zh"), "大小");
   assert.equal(refinementDimensionLabel("category", "ko"), "종류");
@@ -79,11 +84,35 @@ test("条件検索の見出しラベルを4言語ぶん返す", () => {
 test("既に条件が入っている軸は再提示しない", () => {
   assert.deepEqual(knownRefinementDimensions("ワイヤレスイヤホン", "ja"), []);
   assert.deepEqual(knownRefinementDimensions("モバイル充電器 / USB充電", "ja"), ["power"]);
-  assert.deepEqual(knownRefinementDimensions("バッグ / 旅行中 / 黒", "ja"), ["scene", "appearance"]);
+  // "黒" is now a color-dimension label (moved out of "appearance" so color
+  // gets its own dedicated swatch picker, 2026-08-15) - order follows
+  // DIMENSION_ORDER, where "color" sits right after "category".
+  assert.deepEqual(knownRefinementDimensions("バッグ / 旅行中 / 黒", "ja"), ["color", "scene"]);
   assert.deepEqual(knownRefinementDimensions("", "ja"), []);
   // 検出する語は applyRefinementChips が追加しうる語と同一なので、
   // チップで足した条件はそのまま「決定済み」として扱われる
   const refined = applyRefinementChips("充電器", [{ dimension: "power", value: "usb" }], "ja");
   assert.equal(refined, "充電器 / USB充電");
   assert.deepEqual(knownRefinementDimensions(refined, "ja"), ["power"]);
+});
+
+test("色ディメンションが16色ぶん、スウォッチ用hexつきで返る", () => {
+  const chips = suggestRefinementChips(
+    { force_dimensions: ["color"] },
+    "ja",
+    60,
+  );
+  const colorChips = chips.filter((chip) => chip.dimension === "color");
+  assert.equal(colorChips.length, 16);
+  colorChips.forEach((chip) => {
+    assert.match(chip.swatch, /^#[0-9a-f]{6}$/);
+    assert.ok(chip.label.length > 0);
+  });
+  // 選んだ色は他の軸と同じくクエリへ1件だけ追記される
+  const query = applyRefinementChips(
+    "スマホケース",
+    [{ dimension: "color", value: "pink" }],
+    "ja",
+  );
+  assert.equal(query, "スマホケース / ピンク");
 });
