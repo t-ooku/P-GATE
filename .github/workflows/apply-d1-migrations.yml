@@ -64,7 +64,7 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set +e
-          out=$(npx wrangler d1 migrations list PRODUCT_DB --remote 2>&1)
+          out=$(npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote 2>&1)
           status=$?
           echo "$out"
           if [ $status -ne 0 ]; then
@@ -84,7 +84,7 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set +e
-          out=$(npx wrangler d1 migrations apply PRODUCT_DB --remote 2>&1)
+          out=$(npx --yes wrangler@4.121.0 d1 migrations apply PRODUCT_DB --remote 2>&1)
           status=$?
           echo "$out"
           if [ $status -ne 0 ]; then
@@ -100,7 +100,7 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set +e
-          out=$(npx wrangler d1 execute PRODUCT_DB --remote \
+          out=$(npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote \
             --command "SELECT sql FROM sqlite_master WHERE type='table' AND name IN ('social_post_queue','social_post_performance');" 2>&1)
           echo "$out"
           if ! echo "$out" | grep -q "THREADS"; then
