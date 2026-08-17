@@ -27,6 +27,12 @@ test('Instagram投稿はコメント誘導と若者向け必須ハッシュタ�
   for (const tag of ['#ホシル', '#あいまい検索', '#13モール横断', '#ほしっとく']) assert.match(post.caption, new RegExp(tag));
 });
 
+test('Threads投稿は240文字超・400文字以下まで許可し、400文字を超える分は切り詰める', () => {
+  const longCaption = 'ホ'.repeat(450);
+  const post = normalizeSocialPost({ platform: 'THREADS', caption: longCaption, status: 'APPROVED' });
+  assert.equal(post.caption.length, 400);
+});
+
 test('affiliate social posts always include disclosure', () => {
   const post = normalizeSocialPost({
     platform: 'X',
@@ -153,7 +159,14 @@ test('publisher readiness requires platform credentials and TikTok audit', () =>
     INSTAGRAM_ACCOUNT_ID: '1',
     TIKTOK_ACCESS_TOKEN: 'tt',
     TIKTOK_APP_AUDITED: 'false'
-  }), { X: true, INSTAGRAM: true, TIKTOK: false });
+  }), { X: true, INSTAGRAM: true, TIKTOK: false, THREADS: false });
+  assert.equal(socialPublisherReadiness({}).THREADS, false);
+  assert.equal(socialPublisherReadiness({ THREADS_ACCESS_TOKEN: 'token' }).THREADS, false);
+  assert.equal(socialPublisherReadiness({ THREADS_USER_ID: '123' }).THREADS, false);
+  assert.equal(socialPublisherReadiness({
+    THREADS_ACCESS_TOKEN: 'token',
+    THREADS_USER_ID: '123'
+  }).THREADS, true);
   assert.equal(socialPublisherReadiness({
     X_API_KEY: 'key',
     X_API_SECRET: 'secret',
@@ -472,6 +485,221 @@ test('Instagram publisher creates a Stories container when content id is marked 
     media_type: 'STORIES',
     image_url: 'https://hoshilu.app/social/instagram-want-poll-v1.png'
   });
+});
+
+const THREADS_ENV = {
+  THREADS_ACCESS_TOKEN: 'token',
+  THREADS_USER_ID: '123',
+  THREADS_INITIAL_DELAY_MS: 0,
+  THREADS_POLL_DELAY_MS: 0
+};
+
+test('Threads publisher creates a text-only container, waits for processing, then publishes with the UTM link in the body', async () => {
+  const requests = [];
+  let createPayload;
+  const id = await publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU launch post',
+    link: 'https://hoshilu.app/?utm_source=threads',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url, options = {}) => {
+    requests.push(url);
+    if (url.endsWith('/123/threads')) {
+      createPayload = JSON.parse(options.body);
+      return Response.json({ id: 'threads-container-1' });
+    }
+    if (url.includes('/threads-container-1?fields=status')) {
+      const checks = requests.filter(value => value.includes('/threads-container-1?fields=status')).length;
+      return Response.json({ status: checks === 1 ? 'IN_PROGRESS' : 'FINISHED' });
+    }
+    if (url.endsWith('/123/threads_publish')) return Response.json({ id: 'threads-post-1' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'threads-post-1');
+  assert.equal(createPayload.media_type, 'TEXT');
+  assert.match(createPayload.text, /utm_source=threads/);
+  assert.equal('image_url' in createPayload, false);
+  assert.equal('video_url' in createPayload, false);
+  assert.equal(requests.filter(value => value.includes('fields=status')).length, 2);
+  assert.match(requests.at(-1), /threads_publish$/);
+});
+
+test('Threads publisher creates an IMAGE container for a non-video media URL', async () => {
+  let createPayload;
+  const id = await publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU image post',
+    media_url: 'https://hoshilu.app/social/threads-launch.png',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url, options = {}) => {
+    if (url.endsWith('/123/threads')) {
+      createPayload = JSON.parse(options.body);
+      return Response.json({ id: 'threads-image-container' });
+    }
+    if (url.includes('/threads-image-container?fields=status')) return Response.json({ status: 'FINISHED' });
+    if (url.endsWith('/123/threads_publish')) return Response.json({ id: 'threads-image-post' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'threads-image-post');
+  assert.equal(createPayload.media_type, 'IMAGE');
+  assert.equal(createPayload.image_url, 'https://hoshilu.app/social/threads-launch.png');
+  assert.equal('video_url' in createPayload, false);
+});
+
+test('Threads publisher creates a VIDEO container for an MP4 media URL', async () => {
+  let createPayload;
+  const id = await publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU video post',
+    media_url: 'https://hoshilu.app/social/threads-launch.mp4',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url, options = {}) => {
+    if (url.endsWith('/123/threads')) {
+      createPayload = JSON.parse(options.body);
+      return Response.json({ id: 'threads-video-container' });
+    }
+    if (url.includes('/threads-video-container?fields=status')) return Response.json({ status: 'FINISHED' });
+    if (url.endsWith('/123/threads_publish')) return Response.json({ id: 'threads-video-post' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'threads-video-post');
+  assert.equal(createPayload.media_type, 'VIDEO');
+  assert.equal(createPayload.video_url, 'https://hoshilu.app/social/threads-launch.mp4');
+  assert.equal('image_url' in createPayload, false);
+});
+
+test('Threads再試行は保存済みコンテナを再利用して重複作成しない', async () => {
+  let creates = 0;
+  const id = await publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads resume',
+    platform_job_id: 'existing-threads-container',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) {
+      creates += 1;
+      return Response.json({ id: 'unexpected-container' });
+    }
+    if (url.includes('/existing-threads-container?fields=status')) return Response.json({ status: 'FINISHED' });
+    if (url.endsWith('/123/threads_publish')) return Response.json({ id: 'resumed-threads-post' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'resumed-threads-post');
+  assert.equal(creates, 0);
+});
+
+test('Threadsコンテナ作成時にonJobCreatedフックへcreation_idを渡す', async () => {
+  const savedIds = [];
+  await publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads hook test',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({ id: 'hook-container' });
+    if (url.includes('/hook-container?fields=status')) return Response.json({ status: 'FINISHED' });
+    if (url.endsWith('/123/threads_publish')) return Response.json({ id: 'hook-post' });
+    return Response.json({}, { status: 404 });
+  }, { onJobCreated: (id) => savedIds.push(id) });
+  assert.deepEqual(savedIds, ['hook-container']);
+});
+
+test('Threadsコンテナ作成が失敗した場合はTHREADS_CREATE_エラーを投げる', async () => {
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads create failure',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({ error: 'bad request' }, { status: 400 });
+    return Response.json({}, { status: 404 });
+  }), /THREADS_CREATE_400/);
+});
+
+test('Threadsコンテナがcreation_idを返さない場合はTHREADS_CREATION_ID_MISSINGを投げる', async () => {
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads missing id',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({});
+    return Response.json({}, { status: 404 });
+  }), /THREADS_CREATION_ID_MISSING/);
+});
+
+test('Threadsコンテナ状態確認が失敗した場合はTHREADS_STATUS_エラーを投げる', async () => {
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads status failure',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({ id: 'status-fail-container' });
+    if (url.includes('/status-fail-container?fields=status')) return Response.json({ error: 'nope' }, { status: 500 });
+    return Response.json({}, { status: 404 });
+  }), /THREADS_STATUS_500/);
+});
+
+test('Threadsコンテナ処理がERRORED/EXPIREDになった場合はTHREADS_CONTAINER_エラーを投げる', async () => {
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads errored container',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({ id: 'errored-container' });
+    if (url.includes('/errored-container?fields=status')) return Response.json({ status: 'ERRORED' });
+    return Response.json({}, { status: 404 });
+  }), /THREADS_CONTAINER_ERRORED/);
+
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads expired container',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({ id: 'expired-container' });
+    if (url.includes('/expired-container?fields=status')) return Response.json({ status: 'EXPIRED' });
+    return Response.json({}, { status: 404 });
+  }), /THREADS_CONTAINER_EXPIRED/);
+});
+
+test('Threads公開APIが失敗した場合はTHREADS_PUBLISH_エラーを投げる', async () => {
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads publish failure',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({ id: 'publish-fail-container' });
+    if (url.includes('/publish-fail-container?fields=status')) return Response.json({ status: 'FINISHED' });
+    if (url.endsWith('/123/threads_publish')) return Response.json({ error: 'server error' }, { status: 500 });
+    return Response.json({}, { status: 404 });
+  }), /THREADS_PUBLISH_500/);
+});
+
+test('Threads公開APIがidを返さない場合はTHREADS_PUBLISH_ID_MISSINGを投げる', async () => {
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads publish missing id',
+    status: 'APPROVED'
+  }, THREADS_ENV, async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({ id: 'publish-missing-id-container' });
+    if (url.includes('/publish-missing-id-container?fields=status')) return Response.json({ status: 'FINISHED' });
+    if (url.endsWith('/123/threads_publish')) return Response.json({});
+    return Response.json({}, { status: 404 });
+  }), /THREADS_PUBLISH_ID_MISSING/);
+});
+
+test('不正なThreads media_urlはTHREADS_MEDIA_URL_INVALIDを投げる', async () => {
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads invalid media url',
+    media_url: 'not a url',
+    status: 'APPROVED'
+  }, THREADS_ENV, async () => Response.json({}, { status: 404 })), /THREADS_MEDIA_URL_INVALID/);
+});
+
+test('Threads認証情報が未設定の場合はSOCIAL_THREADS_NOT_CONFIGUREDを投げる', async () => {
+  await assert.rejects(() => publishSocialPost({
+    platform: 'THREADS',
+    caption: 'HOSHILU threads not configured',
+    status: 'APPROVED'
+  }, {}, async () => Response.json({}, { status: 404 })), /SOCIAL_THREADS_NOT_CONFIGURED/);
 });
 
 test('公開済みInstagram投稿の正式URLとUTMを計測テーブルへ保存する', async () => {
