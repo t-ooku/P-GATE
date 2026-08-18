@@ -15,6 +15,7 @@ import {
 } from '../public/marketplace-search-keywords-v2.mjs';
 import {
   rakutenApiConfigured,
+  searchRakutenMarketplace,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
 import { fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
@@ -86,7 +87,7 @@ import {
 } from './marketplace-sales.mjs';
 import { runDeepCanaryCycle } from './deep-canary.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
-import { officialStoreForProductUrl } from './official-mall-stores.mjs';
+import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -2259,6 +2260,36 @@ async function handleKnowledgeApi(request, env, ctx) {
           expandedQuery.query
         )
       });
+      // 2026-08-18のユーザー指摘「楽天市場とYahoo!ショッピングしか出ないね」への対応。
+      // 楽天のshopCode / Yahoo!のseller_idでモール公式店を名指しし、そのモールの
+      // 商品を確実に検索結果へ載せる。
+      //
+      // ここで足すだけでよいのは、この直後の合流処理が
+      //   ・Promise.allSettled で個別の失敗を握りつぶす
+      //   ・提供元ごとにラウンドロビンで混ぜてから一度だけ順位付けする
+      // という作りになっているため。1店舗が429や遅延で落ちても本体検索には
+      // 影響せず、順位付けもモール中立のまま(ユーザー指示「提示反映基準は
+      // ルールに基づき平等に」)。
+      //
+      // 検索語は本体と同じ展開後クエリを使い、店舗ごとの絞り込み段階は
+      // 持たない(1店舗あたり必ず1回の呼び出しに収める)。
+      // OFFICIAL_STORE_SEARCH_ENABLED='false' でコード変更なしに止められる。
+      if (env.OFFICIAL_STORE_SEARCH_ENABLED !== 'false') {
+        const officialStoreKeywords = ensureApparelQualifierTerms(
+          input.query,
+          ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
+        ) || expandedQuery.query || input.query;
+        for (const store of OFFICIAL_STORE_SEARCHES) {
+          if (store.platform === 'RAKUTEN' && !rakutenApiConfigured(env)) continue;
+          if (store.platform === 'YAHOO' && !yahooShoppingApiConfigured(env)) continue;
+          marketplaceSearches.push({
+            key: store.key,
+            run: store.platform === 'RAKUTEN'
+              ? searchRakutenMarketplace(env, officialStoreKeywords, fetch, requestId, { shopCode: store.shopCode })
+              : searchYahooShopping(env, officialStoreKeywords, fetch, { sellerId: store.sellerId })
+          });
+        }
+      }
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
       // v3.2 CTO diagnosis: this loop used to call
       // rankMerchantCandidates(...).slice(0, 10) on every iteration, so

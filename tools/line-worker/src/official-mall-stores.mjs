@@ -34,6 +34,26 @@ const YAHOO_OFFICIAL_SELLERS = Object.freeze({
   'cosmecom': { marketplace: 'COSME_JP', label: '@cosme公式 Yahoo!店' }
 });
 
+// 公式店を「名指しで検索する」ための一覧。
+//
+// 2026-08-18のユーザー指摘:「楽天市場とYahoo!ショッピングしか出ないね」。
+// 上のURL判定は、たまたま検索結果に公式店の商品が混ざったときにラベルを
+// 付けるだけなので、「ブラウス」のような一般的な検索では大半が普通の
+// ショップの商品になり、ほとんど出番がなかった。
+// 楽天のshopCode / Yahoo!のseller_idで店舗を名指しすれば、そのモールの商品を
+// 確実に検索結果へ載せられる。
+//
+// 1モール1ソースに絞っている。ハンズ・マツキヨ・@cosmeは楽天とYahoo!の
+// 両方に公式店があるが、両方を毎回叩くと外部API呼び出しが倍になるだけで、
+// 利用者に見える情報はほぼ変わらないため。
+export const OFFICIAL_STORE_SEARCHES = Object.freeze([
+  { key: 'zozotown_official_store', platform: 'YAHOO', sellerId: 'zozo', marketplace: 'ZOZOTOWN_JP' },
+  { key: 'hands_official_store', platform: 'RAKUTEN', shopCode: 'hands-net', marketplace: 'HANDS_JP' },
+  { key: 'matsukiyo_official_store', platform: 'RAKUTEN', shopCode: 'matsukiyo', marketplace: 'MATSUKIYO_JP' },
+  { key: 'cosme_official_store', platform: 'RAKUTEN', shopCode: 'cosmecomonline', marketplace: 'COSME_JP' },
+  { key: 'abcmart_official_store', platform: 'RAKUTEN', shopCode: 'abc-mart', marketplace: 'ABCMART_JP' }
+]);
+
 // 商品URLから公式店を判定する。該当しなければnull。
 // 対応URL形式(どちらも当該APIが返す正規の商品URL):
 //   楽天:  https://item.rakuten.co.jp/{shopCode}/{itemId}/

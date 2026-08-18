@@ -59,7 +59,7 @@ export function normalizeRakutenItems(payload = {}) {
   }).filter((item) => item.product_name && item.offers.length);
 }
 
-export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, requestId = '') {
+export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, requestId = '', options = {}) {
   if (!rakutenApiConfigured(env)) return [];
   const query = String(keywords || '').normalize('NFKC').trim().slice(0, 200);
   if (!query) return [];
@@ -67,7 +67,18 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   url.searchParams.set('applicationId', String(env.RAKUTEN_APPLICATION_ID).trim());
   url.searchParams.set('accessKey', String(env.RAKUTEN_ACCESS_KEY).trim());
   url.searchParams.set('keyword', query);
-  url.searchParams.set('hits', '30');
+  // shopCodeは公式ドキュメントでkeywordと併用可と明記されている
+  // (「検索キーワード・ジャンルID・商品コード・ショップコードのいずれかが必須」)。
+  // 楽天市場内のモール公式店(ハンズ/マツキヨ/@cosme/ABC-MART)を名指しで
+  // 引くために使う。
+  const shopCode = String(options.shopCode || '').trim();
+  if (shopCode) {
+    url.searchParams.set('shopCode', shopCode);
+    // 1店舗内の検索なので30件も要らない。呼び出し1回あたりの負荷を下げる。
+    url.searchParams.set('hits', '10');
+  } else {
+    url.searchParams.set('hits', '30');
+  }
   url.searchParams.set('formatVersion', '2');
   url.searchParams.set('elements', 'itemName,itemCode,itemPrice,itemUrl,affiliateUrl,mediumImageUrls,smallImageUrls,catchcopy,itemCaption,availability,postageFlag');
   const affiliateId = String(env.RAKUTEN_AFFILIATE_ID || '').trim();

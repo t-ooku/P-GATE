@@ -150,7 +150,15 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch, option
   const url = new URL(API_URL);
   url.searchParams.set('appid', String(env.YAHOO_SHOPPING_CLIENT_ID).trim());
   url.searchParams.set('query', query);
-  url.searchParams.set('results', '30');
+  // seller_idを指定すると、その出店者(ストア)内だけを検索する。
+  // Yahoo!ショッピング内のモール公式店(ZOZOTOWN等)を名指しで引くために使う。
+  const sellerId = String(options.sellerId || '').trim();
+  if (sellerId) {
+    url.searchParams.set('seller_id', sellerId);
+    url.searchParams.set('results', '10');
+  } else {
+    url.searchParams.set('results', '30');
+  }
   // 既定のmedium画像は146px。公式APIのimage_size=600を指定すると
   // exImage.urlが600x600で返るため、カード寸法は変えず画像だけ鮮明にする。
   url.searchParams.set('image_size', '600');
