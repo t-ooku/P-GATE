@@ -1307,3 +1307,54 @@ test('クライアント直書きのAmazonアソシエイトタグはwrangler.js
     }
   }
 });
+
+// 訪問68→検索開始21(離脱69%)の切り分けと是正。
+//
+// search_started はフォームのsubmitイベントでしか発火しないが、#consent は
+// required でフォームに novalidate も無いため、同意欄が未チェックのまま
+// 検索ボタンを押すとネイティブ検証がsubmitを止め、search_started は発火
+// しない。つまり「入力して押したのに弾かれた人」は計測上いなかったことに
+// なっており、離脱69%が「関心が無かった」のか「押したが弾かれた」のかを
+// 区別できなかった。さらにiOS Safariはチェックボックスの検証バブルを出さない
+// ので、利用者から見ると押しても何も起きない。
+test('同意欄で止められたことを計測でき、利用者にも理由が見える', () => {
+  const analytics = fs.readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const events = fs.readFileSync(new URL('../src/growth-events.mjs', import.meta.url), 'utf8');
+
+  // 押した瞬間と、弾かれた瞬間を別々に記録する。
+  assert.match(analytics, /send\('search_attempted'\)/);
+  assert.match(analytics, /send\('search_blocked'\)/);
+  // invalid はバブリングしないので capture で拾う必要がある。
+  assert.match(analytics, /addEventListener\('invalid',[\s\S]{0,200}\}, true\)/);
+  // サーバ側で受け付けられること。
+  assert.match(events, /'search_attempted'/);
+  assert.match(events, /'search_blocked'/);
+  // 弾かれた理由を計測イベントの流入元項目へ載せない(traffic_classが
+  // ATTRIBUTEDに化けて流入元計測を汚すため)。
+  assert.doesNotMatch(analytics, /send\('search_blocked',/);
+
+  // 利用者に見える形で理由を出す。
+  assert.match(app, /addEventListener\('invalid'/);
+  assert.match(app, /同意チェック/);
+});
+
+test('検索窓の直下は例示チップを先に出し、登録案内はその後ろに置く', () => {
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const start = app.indexOf('function renderQuickExamples');
+  assert.ok(start > 0);
+  const body = app.slice(start, app.indexOf('function getWatchPreferences'));
+
+  // 何も打たずに1タップで試せる導線が存在すること。以前はこの枠が
+  // 会員登録リンク1個だけに置き換えられていた。
+  assert.match(body, /\.examples/);
+  const chipAt = body.indexOf("className='chip'");
+  const ctaAt = body.indexOf('member-example-cta');
+  assert.ok(chipAt > 0, '例示チップが無い');
+  assert.ok(ctaAt > chipAt, '登録案内が例示チップより前に出ている');
+
+  // チップは検索窓へ入れるだけでなく、そのまま検索まで実行する。
+  assert.match(body, /requestSubmit/);
+  // ログイン会員には検索履歴が別に出るので、この枠ごと隠す(重複表示の回避)。
+  assert.match(body, /elements\.quick\.classList\.toggle\('hidden',Boolean\(memberSession\)\)/);
+});
