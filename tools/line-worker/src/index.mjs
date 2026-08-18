@@ -86,6 +86,7 @@ import {
 } from './marketplace-sales.mjs';
 import { runDeepCanaryCycle } from './deep-canary.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
+import { officialStoreForProductUrl } from './official-mall-stores.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -216,9 +217,18 @@ export function decorateAmazonAssociateDestination(destination, associateTag = '
   try {
     const url = new URL(source);
     const host = url.hostname.toLowerCase().replace(/\.$/, '');
-    const taggablePath = /^\/s\/?$/u.test(url.pathname)
-      || /\/(?:dp|gp\/product)\/[A-Z0-9]{10}(?:\/|$)/iu.test(url.pathname);
-    if (url.protocol !== 'https:' || (host !== 'amazon.co.jp' && !host.endsWith('.amazon.co.jp')) || !taggablePath) {
+    // 2026-08-17: 以前は /s と /dp・/gp/product だけをタグ付け対象にしていた
+    // ため、Amazon公式のセール系ページ(/deals、/gp/goldbox、公式情報フィードが
+    // 収集した各種キャンペーンURL)へ送客してもアフィリエイトタグが付かず、
+    // クリックが発生しても適格販売になりようがなかった。
+    // Amazonアソシエイトは対象ページの種類を限定していないので、
+    // amazon.co.jp 配下は一律でタグ付けする。
+    //
+    // amazon.com は対象外のまま。アソシエイトは国ごとに別アカウントで、
+    // JP用のタグ(hoshilu00-22)を .com へ付けても報酬は発生しない
+    // (跨ぐにはOneLinkと各国アカウントが要る)。付けても無意味なうえ、
+    // 「タグ付き=収益化済み」という誤解を生むので付けない。
+    if (url.protocol !== 'https:' || (host !== 'amazon.co.jp' && !host.endsWith('.amazon.co.jp'))) {
       return source;
     }
     if (!/^[a-z0-9][a-z0-9-]{1,49}$/i.test(tag)) {
@@ -1724,6 +1734,10 @@ function sanitizePublicOffer(offer) {
     || Number(offer?.shipping_fee_confirmed) === 1
     || (offer?.shipping_fee !== undefined && offer?.shipping_fee !== null
       && offer?.total_cost !== undefined && offer?.total_cost !== null);
+  // 楽天/Yahoo!内のモール公式店(ZOZOTOWN・ハンズ・マツキヨ・@cosme・
+  // ABC-MART)なら、その旨をUI表示用に付ける。順位には使わない。
+  // 詳細は official-mall-stores.mjs のコメント参照。
+  const officialStore = officialStoreForProductUrl(offer?.product_url);
   return {
     marketplace: String(offer?.marketplace || ''),
     price: Number(offer?.price || 0),
@@ -1734,7 +1748,8 @@ function sanitizePublicOffer(offer) {
     currency: String(offer?.currency || 'JPY'),
     stock_status: String(offer?.stock_status || 'UNKNOWN'),
     delivery_days: Number(offer?.delivery_days || 0),
-    priority_listing: offer?.priority_listing === true
+    priority_listing: offer?.priority_listing === true,
+    ...(officialStore ? { official_store: officialStore } : {})
   };
 }
 
