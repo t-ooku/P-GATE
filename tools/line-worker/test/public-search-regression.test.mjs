@@ -140,11 +140,17 @@ test('AI product intent analysis runs from the first search when ten-mall candid
 test('first search always checks a configured marketplace API even when an indexed candidate exists', async () => {
   const originalFetch = globalThis.fetch;
   let rakutenCalls = 0;
+  let officialStoreCalls = 0;
   globalThis.fetch = async (url) => {
     const target = String(url);
     if (target.includes('siteverify')) return Response.json({ success: true });
     if (target.includes('openapi.rakuten.co.jp')) {
-      rakutenCalls += 1;
+      // 2026-08-18: モール公式店の名指し検索(shopCode付き)を追加したので、
+      // 本体検索の呼び出し回数だけを数える。このテストの意図は
+      // 「フォールバック段が直列に膨らんでいないこと」の固定なので、
+      // 性質の違う店舗名指し検索は別カウントにする。
+      if (new URL(target).searchParams.get('shopCode')) officialStoreCalls += 1;
+      else rakutenCalls += 1;
       return Response.json({items:[{
         itemName:'送料無料 光るスマホケース',itemCode:'shop:case-1',itemPrice:2980,postageFlag:0,
         itemUrl:'https://item.rakuten.co.jp/shop/case-1/',availability:1
@@ -159,6 +165,9 @@ test('first search always checks a configured marketplace API even when an index
     // Primary and bounded fallback keywords are now checked concurrently so
     // one slow variant does not add another full provider timeout window.
     assert.ok(rakutenCalls >= 1 && rakutenCalls <= 3, `unexpected Rakuten call count: ${rakutenCalls}`);
+    // 公式店は1店舗につき1回だけ。フォールバック段を持たせない
+    // (外部APIの呼び出し回数が店舗数×段数で膨らむのを防ぐ)。
+    assert.ok(officialStoreCalls <= 4, `unexpected official store call count: ${officialStoreCalls}`);
     assert.equal(payload.result.candidates.some(item=>item.offers?.some(offer=>offer.marketplace==='RAKUTEN_JP')),true);
   }finally{globalThis.fetch=originalFetch;}
 });
