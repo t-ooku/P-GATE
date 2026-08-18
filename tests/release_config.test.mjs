@@ -53,7 +53,10 @@ test('release version has one source of truth', () => {
 // 確認したリール第2弾の後処理済みバイト列をR2へ載せ、QA承認までを行う
 // 手動実行専用ワークフロー(confirm: PUBLISH必須)。Instagramの公開キューへ
 // 載せる最終段だけは release: RELEASE の追加入力が無いと実行しない。
-const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml', 'publish-runway-reel-20260818.yml'];
+// 2026-08-19 に generate-runway-persona.yml を追加した。AI女優の参照画像候補を
+// Runway API(gen4_image)で生成しartifactとして取り出す手動実行専用ワークフロー
+// (confirm: GENERATE必須、1〜8枚に制限、D1/R2へは書き込まない)。
+const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml', 'publish-runway-reel-20260818.yml', 'generate-runway-persona.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
