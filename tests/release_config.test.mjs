@@ -49,7 +49,11 @@ test('release version has one source of truth', () => {
 // 字幕合成・ハッシュ照合をローカルで行えるようにする手動実行専用ワークフロー
 // (confirm: FETCH必須、D1へはSELECTのみ、対象job_idのstorage_key配下しか
 // 読めない、R2へはobject getのみでput/deleteは行わない)。
-const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml'];
+// 同日、publish-runway-reel-20260818.yml も追加した。大隆さんが目視・試聴で
+// 確認したリール第2弾の後処理済みバイト列をR2へ載せ、QA承認までを行う
+// 手動実行専用ワークフロー(confirm: PUBLISH必須)。Instagramの公開キューへ
+// 載せる最終段だけは release: RELEASE の追加入力が無いと実行しない。
+const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml', 'publish-runway-reel-20260818.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
