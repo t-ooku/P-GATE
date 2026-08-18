@@ -1059,7 +1059,9 @@ test('商品カードは10モールの実在商品ページを1モール1件だ�
   assert.equal(decorated.candidates[0].offers.length, 10);
   decorated.candidates[0].offers.forEach((offer) => assert.equal(offer.tracking_url.startsWith('https://p-gate.example/go?token='), true));
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.equal(appSource.includes('marketplaceLabel(offer.marketplace)}で見る'), true);
+  // 2026-08-18: 公式モール店ラベル対応で offerMarketplaceLabel(offer) 経由に
+  // なった(official_storeがあればそのラベル、無ければ従来のモール名)。
+  assert.equal(appSource.includes('offerMarketplaceLabel(offer)}で見る'), true);
   assert.equal(appSource.includes("JA:'全部のモールで探す'"), true);
   assert.equal(appSource.includes("document.querySelector('.marketplace-fallback')?.scrollIntoView"), true);
 });
@@ -1357,4 +1359,20 @@ test('検索窓の直下は例示チップを先に出し、登録案内はそ�
   assert.match(body, /requestSubmit/);
   // ログイン会員には検索履歴が別に出るので、この枠ごと隠す(重複表示の回避)。
   assert.match(body, /elements\.quick\.classList\.toggle\('hidden',Boolean\(memberSession\)\)/);
+});
+
+// 2026-08-18方針: 検索したらあらゆるモールの商品が提示されることが最優先。
+// 楽天/Yahoo!内のモール公式店(ZOZOTOWN等5モール)は official_store として
+// クライアントへ渡り、表示ラベルにだけ使われる(順位はモール中立のまま)。
+test('公式モール店のオファーはofficial_storeを持ち、表示だけに使われる', () => {
+  const source = fs.readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  // sanitizePublicOfferが判定を通すこと(これが無いと固定項目に削られて消える)。
+  assert.match(source, /officialStoreForProductUrl\(offer\?\.product_url\)/);
+  assert.match(source, /official_store: officialStore/);
+
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  // クライアントはofficial_storeのラベルを優先し、無ければ従来のモール名。
+  assert.match(app, /function offerMarketplaceLabel\(offer\)\{ return offer\?\.official_store\?\.label\|\|marketplaceLabel\(offer\?\.marketplace\); \}/);
+  // 順位づけ(total_cost昇順のsort)にofficial_storeを使っていないこと。
+  assert.doesNotMatch(app, /sort\([^)]*official_store/);
 });
