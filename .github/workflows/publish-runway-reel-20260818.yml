@@ -1,25 +1,25 @@
 name: Publish Runway reel 20260818 recommend-voice
 
-# 手動実行専用。AI女優リール第2弾(job: runway-hoshilu-recommend-voice-20260818-v1)を
-# 公開するための一連の本番変更をまとめる。
+# 手動実行専用。AI女優リール第2弾(job: runway-hoshilu-recommend-voice-20260818-v1)の
+# 「再公開(repost)」を行う。
+#
+# 経緯: 初回公開(post v1, external_post_id=17902541781477801)は、一部フレームで
+# 合成画面がスマホの左下からはみ出す不具合が残っており、大隆さんがInstagram上の
+# 投稿を削除した。レンダラーのベゼル検出を修正した新しい後処理版
+# (sha256=df4088af..., 全121差し替えフレームを目視再確認済み)を、同じジョブの
+# メディアとして差し替え、新しいpost_id (v2) で公開をやり直す。
 #
 # 公開するバイト列は、大隆さんが実際に再生して確認した
-# ops/runway/media/reel_20260818_recommend_voice_v1.mp4 そのものをアップロードする。
-# CI内で再レンダリングはしない。再レンダリングすると、確認した映像と1バイトも
-# 違わない保証が無くなるため(レンダラーは同一環境ならバイト単位で再現するが、
-# ランナーのffmpeg/OpenCVのビルドが違えば結果は変わりうる)。
-#
-# 生成された偽のHOSHILU画面を実画面へ差し替えた経緯とレンダラーは
-# ops/runway/render_reel_20260818_recommend_voice.py と
-# reel_screen_track_20260818_recommend_voice.json に固定してあり、
-# 同一環境なら誰でも同じバイト列を再現できる。
+# ops/runway/media/reel_20260818_recommend_voice_v5.mp4 そのものをアップロードする。
+# CI内で再レンダリングはしない(確認した映像と1バイトも違わない保証のため)。
+# レンダラーと追跡データは ops/runway/render_reel_20260818_recommend_voice.py /
+# reel_screen_track_20260818_recommend_voice.json に固定してある。
 #
 # 安全弁:
 #  - confirm に PUBLISH の入力必須
-#  - 公開キューを APPROVED にする最終段だけは release に RELEASE を追加入力
-#    しない限り実行しない(承認と公開を分離する)
-#  - 書き込み前に読み取り専用のプリフライトを行い、重複投稿・競合する
-#    Instagram投稿・資格情報の期限切れがあれば中止する
+#  - 公開キューを APPROVED にする最終段は release に RELEASE を追加入力しない限り実行しない
+#  - 書き込み前に読み取り専用プリフライト(v1が「公開済み・削除済み」の想定状態で
+#    あること、資格情報、競合投稿の不在を確認)
 #  - R2アップロード後に往復ダウンロードでバイト一致を確認してからD1を触る
 #  - D1のtime-travelブックマークを書き込み前に記録する
 
@@ -27,11 +27,11 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type PUBLISH to upload the reviewed media and run the QA approval'
+        description: 'Type PUBLISH to upload the corrected media and stage the repost'
         required: true
         default: ''
       release:
-        description: 'Type RELEASE to also queue it for Instagram publication (leave empty to stop after approval)'
+        description: 'Type RELEASE to also queue it for Instagram publication (leave empty to stop after staging)'
         required: false
         default: ''
 
@@ -40,10 +40,12 @@ permissions:
 
 env:
   JOB_ID: runway-hoshilu-recommend-voice-20260818-v1
-  POST_ID: hoshilu-runway-recommend-voice-20260818-v1
-  MEDIA_SHA256: 9c012c8e7675a740f5f608a9dac57684dc8ddee7725eda3baa1e26847ef66dd2
-  MEDIA_SIZE: '2946863'
-  MEDIA_FILE: ops/runway/media/reel_20260818_recommend_voice_v1.mp4
+  POST_ID: hoshilu-runway-recommend-voice-20260818-v2
+  OLD_POST_ID: hoshilu-runway-recommend-voice-20260818-v1
+  OLD_EXTERNAL_POST_ID: '17902541781477801'
+  MEDIA_SHA256: df4088af79c3ce7a3dd72ccc53448f1db07cf3f9b8610b9496e0005e374b1c5c
+  MEDIA_SIZE: '2878075'
+  MEDIA_FILE: ops/runway/media/reel_20260818_recommend_voice_v5.mp4
   BUCKET: hoshilu-social-media
 
 jobs:
@@ -105,58 +107,54 @@ jobs:
           ffmpeg -v error -i "${MEDIA_FILE}" -f null -
 
       - name: Read production state before any write
-        id: preflight
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
-          curl --fail-with-body --silent --show-error 'https://hoshilu.app/health?runway-reel-publish=1' > reel-health.json
+          curl --fail-with-body --silent --show-error 'https://hoshilu.app/health?runway-reel-repost=1' > reel-health.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
-            "SELECT job_id,post_id,status,qa_status,storage_key,storage_size_bytes,storage_content_type,rights_confirmed,ai_disclosure_confirmed,expected_credits,attempt_count,max_attempts FROM runway_generation_jobs WHERE job_id='${JOB_ID}';" > reel-job.json
+            "SELECT job_id,post_id,status,qa_status,storage_key,storage_size_bytes,storage_content_type,rights_confirmed,ai_disclosure_confirmed FROM runway_generation_jobs WHERE job_id='${JOB_ID}';" > reel-job.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
-            "SELECT post_id,platform,campaign_id,content_id,status,link,media_url,affiliate,external_post_id,platform_job_id,published_at FROM social_post_queue WHERE post_id='${POST_ID}';" > reel-queue.json
+            "SELECT post_id,status,external_post_id,platform_job_id,published_at FROM social_post_queue WHERE post_id IN ('${OLD_POST_ID}','${POST_ID}');" > reel-queue.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
-            "SELECT (SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'${POST_ID}' AND platform='INSTAGRAM' AND (content_id='${JOB_ID}' OR media_url='https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4') AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'' OR platform_job_id<>'')) AS duplicate_count,(SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'${POST_ID}' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS competing_due_count;" > reel-collision.json
+            "SELECT (SELECT COUNT(*) FROM social_post_queue WHERE post_id NOT IN ('${OLD_POST_ID}','${POST_ID}') AND platform='INSTAGRAM' AND (content_id='${JOB_ID}' OR media_url='https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4') AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'' OR platform_job_id<>'')) AS duplicate_count,(SELECT COUNT(*) FROM social_post_queue WHERE post_id NOT IN ('${OLD_POST_ID}','${POST_ID}') AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS competing_due_count;" > reel-collision.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
             "SELECT account_id,scopes,expires_at,status FROM instagram_oauth_credentials WHERE platform='INSTAGRAM';" > reel-credential.json
-          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
-            "SELECT initial_cap_credits,monthly_cap_credits,enabled,kill_switch,initial_test_completed FROM runway_budget_policy WHERE policy_id=1;" > reel-policy.json
-          node <<'NODE' >> "$GITHUB_OUTPUT"
+          node <<'NODE'
           const fs = require('node:fs');
           const rows = (f) => { const d = JSON.parse(fs.readFileSync(f, 'utf8'));
             return (Array.isArray(d) ? d : [d]).flatMap((x) => x.results || x.result?.results || []); };
           const one = (f, label) => { const r = rows(f); if (r.length !== 1) throw new Error(`${label}: ${r.length} rows`); return r[0]; };
-          const job = one('reel-job.json', 'job'), post = one('reel-queue.json', 'queue');
+          const job = one('reel-job.json', 'job');
+          const queueRows = rows('reel-queue.json');
           const collision = one('reel-collision.json', 'collision');
           const oauth = one('reel-credential.json', 'instagram credential');
-          const policy = one('reel-policy.json', 'budget policy');
           const health = JSON.parse(fs.readFileSync('reel-health.json', 'utf8'));
           const fail = [];
           if (health?.ok !== true) fail.push('health not ok');
           if (health?.checks?.social_publishers?.INSTAGRAM !== true) fail.push('instagram publisher not ready');
+          if (job.status !== 'APPROVED_FOR_POST' || job.qa_status !== 'PASSED') fail.push(`job state ${job.status}/${job.qa_status}`);
+          if (Number(job.rights_confirmed) !== 1 || Number(job.ai_disclosure_confirmed) !== 1) fail.push('rights/ai disclosure flags');
+          const v1 = queueRows.find((r) => r.post_id === process.env.OLD_POST_ID);
+          if (!v1 || v1.status !== 'PUBLISHED' || v1.external_post_id !== process.env.OLD_EXTERNAL_POST_ID) {
+            fail.push(`v1 row not in the expected published-then-deleted state: ${JSON.stringify(v1 || null)}`);
+          }
+          const v2 = queueRows.find((r) => r.post_id === process.env.POST_ID);
+          if (v2 && v2.status !== 'REVIEW_REQUIRED') fail.push(`v2 row already progressed: ${v2.status}`);
+          if (v2 && (String(v2.external_post_id || '') || String(v2.platform_job_id || '') || String(v2.published_at || ''))) fail.push('v2 row has publication state');
           if (Number(collision.duplicate_count) !== 0) fail.push('duplicate publication exists');
           if (Number(collision.competing_due_count) !== 0) fail.push('another Instagram post is already due');
           if (oauth.status !== 'ACTIVE') fail.push('instagram credential not active');
           if (!String(oauth.scopes || '').split(',').map((s) => s.trim()).includes('instagram_business_content_publish')) fail.push('publish scope missing');
           if (!Number.isFinite(Date.parse(oauth.expires_at)) || Date.parse(oauth.expires_at) <= Date.now() + 5 * 60 * 1000) fail.push('instagram credential expiring');
-          if (Number(policy.kill_switch) !== 0 || Number(policy.enabled) !== 1) fail.push('runway policy disabled');
-          if (Number(job.rights_confirmed) !== 1 || Number(job.ai_disclosure_confirmed) !== 1) fail.push('rights/ai disclosure flags');
-          if (post.platform !== 'INSTAGRAM' || post.campaign_id !== 'hoshilu-runway-video' || post.content_id !== process.env.JOB_ID) fail.push('queue row identity');
-          if (String(post.external_post_id || '') || String(post.platform_job_id || '') || String(post.published_at || '')) fail.push('queue already has publication state');
-          let mode;
-          if (job.status === 'GENERATED_REVIEW_REQUIRED' && job.qa_status === 'PENDING' && post.status === 'REVIEW_REQUIRED') mode = 'review';
-          else if (job.status === 'APPROVED_FOR_POST' && job.qa_status === 'PASSED' && post.status === 'REVIEW_REQUIRED') mode = 'approved';
-          else fail.push(`unexpected state job=${job.status}/${job.qa_status} queue=${post.status}`);
           if (fail.length) throw new Error(fail.join(' / '));
-          console.log(`mode=${mode}`);
-          console.error(`::notice::PREFLIGHT mode=${mode} job=${job.status}/${job.qa_status} queue=${post.status} duplicate=0 competing_due=0 initial_test_completed=${policy.initial_test_completed}`);
+          console.error(`::notice::PREFLIGHT job=${job.status}/${job.qa_status} v1=PUBLISHED(deleted on IG) v2=${v2 ? v2.status : 'absent'} duplicate=0 competing_due=0`);
           NODE
 
       - name: Capture a D1 restore point
         working-directory: tools/line-worker
         run: npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > reel-recovery-bookmark.json
 
-      - name: Upload the reviewed media to R2 and verify the round trip
-        if: steps.preflight.outputs.mode == 'review'
+      - name: Upload the corrected media to R2 and verify the round trip
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
@@ -167,18 +165,14 @@ jobs:
           cmp "${MEDIA_FILE}" roundtrip.mp4
           echo "::notice::R2 object ${key} matches the reviewed file byte for byte"
 
-      - name: Stage the reviewed bytes and the corrected caption
-        if: steps.preflight.outputs.mode == 'review'
+      - name: Stage the corrected bytes and the v2 queue row
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
-            --file ops/runway/stage_reel_20260818_recommend_voice.sql --yes > reel-stage-result.json
-          # --file はD1のimport経路で実行されるため、文ごとの meta.changes は
-          # 返らない(まとめた実行サマリだけが返る)。件数を数えるのではなく、
-          # 実際に書き込まれた行をSELECTで読み直して確認する。
+            --file ops/runway/stage_reel_20260818_recommend_voice_repost.sql --yes > reel-stage-result.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
-            "SELECT j.storage_key,j.storage_etag,j.storage_size_bytes,j.storage_content_type,j.caption AS job_caption,j.status,j.qa_status,q.caption AS queue_caption,q.status AS queue_status FROM runway_generation_jobs j JOIN social_post_queue q ON q.post_id=j.post_id WHERE j.job_id='${JOB_ID}';" > reel-staged-state.json
+            "SELECT j.storage_key,j.storage_etag,j.storage_size_bytes,j.storage_content_type,j.status,j.qa_status,q.status AS v2_status,q.caption AS v2_caption,q.affiliate AS v2_affiliate,(SELECT COUNT(*) FROM runway_audit_log WHERE audit_id='runway-recommend-voice-qa-approved-20260819-v2') AS qa_audit,(SELECT COUNT(*) FROM runway_audit_log WHERE audit_id='runway-recommend-voice-ig-deleted-20260819') AS del_audit FROM runway_generation_jobs j LEFT JOIN social_post_queue q ON q.post_id='${POST_ID}' WHERE j.job_id='${JOB_ID}';" > reel-staged-state.json
           MEDIA_SHA256="${MEDIA_SHA256}" MEDIA_SIZE="${MEDIA_SIZE}" JOB_ID="${JOB_ID}" node <<'NODE'
           const fs = require('node:fs');
           const data = JSON.parse(fs.readFileSync('reel-staged-state.json', 'utf8'));
@@ -191,46 +185,22 @@ jobs:
           if (Number(row.storage_size_bytes) !== Number(process.env.MEDIA_SIZE)) problems.push(`size=${row.storage_size_bytes}`);
           if (row.storage_content_type !== 'video/mp4') problems.push(`content_type=${row.storage_content_type}`);
           if (row.storage_etag !== null) problems.push('storage_etag must be SQL NULL');
-          if (row.job_caption !== row.queue_caption) problems.push('job and queue captions differ');
-          if (!String(row.job_caption || '').includes('AI生成')) problems.push('caption lacks the AI disclosure');
-          if (!String(row.job_caption || '').includes('最大13モールで探せます')) problems.push('caption was not corrected');
-          if (row.status !== 'GENERATED_REVIEW_REQUIRED' || row.qa_status !== 'PENDING') problems.push(`job moved to ${row.status}/${row.qa_status}`);
-          if (row.queue_status !== 'REVIEW_REQUIRED') problems.push(`queue moved to ${row.queue_status}`);
+          if (row.status !== 'APPROVED_FOR_POST' || row.qa_status !== 'PASSED') problems.push(`job moved to ${row.status}/${row.qa_status}`);
+          if (row.v2_status !== 'REVIEW_REQUIRED') problems.push(`v2 queue status=${row.v2_status}`);
+          if (Number(row.v2_affiliate) !== 0) problems.push('v2 affiliate flag');
+          if (!String(row.v2_caption || '').includes('AI生成')) problems.push('v2 caption lacks the AI disclosure');
+          if (Number(row.qa_audit) !== 1) problems.push('v2 QA audit row missing');
+          if (Number(row.del_audit) !== 1) problems.push('IG deletion audit row missing');
           if (problems.length) throw new Error(problems.join(' / '));
-          console.log('::notice::staged: both rows now point at the reviewed bytes and the corrected caption, both gates still closed');
+          console.log('::notice::staged: the job now serves the corrected bytes; v2 queue row is REVIEW_REQUIRED; deletion and QA audits recorded');
           NODE
 
-      - name: Run the QA approval
-        if: steps.preflight.outputs.mode == 'review'
-        working-directory: tools/line-worker
-        run: |
-          set -euo pipefail
-          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
-            --file ops/runway/approve_reel_20260818_recommend_voice.sql --yes > reel-approve-result.json
-          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
-            "SELECT j.status,j.qa_status,q.status AS queue_status,q.external_post_id,q.published_at,(SELECT COUNT(*) FROM runway_audit_log WHERE audit_id='runway-recommend-voice-qa-approved-20260818' AND job_id='${JOB_ID}' AND event='QA_APPROVED_FOR_POST') AS audit_count FROM runway_generation_jobs j JOIN social_post_queue q ON q.post_id=j.post_id WHERE j.job_id='${JOB_ID}';" > reel-approved-state.json
-          node <<'NODE'
-          const fs = require('node:fs');
-          const data = JSON.parse(fs.readFileSync('reel-approved-state.json', 'utf8'));
-          const rows = (Array.isArray(data) ? data : [data]).flatMap((x) => x.results || x.result?.results || []);
-          if (rows.length !== 1) throw new Error(`expected 1 joined row, got ${rows.length}`);
-          const row = rows[0];
-          const problems = [];
-          if (row.status !== 'APPROVED_FOR_POST') problems.push(`job status=${row.status}`);
-          if (row.qa_status !== 'PASSED') problems.push(`qa_status=${row.qa_status}`);
-          if (Number(row.audit_count) !== 1) problems.push(`audit rows=${row.audit_count}`);
-          if (row.queue_status !== 'REVIEW_REQUIRED') problems.push(`queue must stay REVIEW_REQUIRED, got ${row.queue_status}`);
-          if (String(row.external_post_id || '') || String(row.published_at || '')) problems.push('queue already has publication state');
-          if (problems.length) throw new Error(problems.join(' / '));
-          console.log('::notice::job is APPROVED_FOR_POST / qa_status PASSED; the publication queue is still REVIEW_REQUIRED');
-          NODE
-
-      - name: Verify the approved media route serves exactly the reviewed bytes
+      - name: Verify the media route serves exactly the corrected bytes
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
           # 経路上のキャッシュではなく、いま配信される実体を確認する。
-          url="https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4?publish-check=${{ github.run_id }}"
+          url="https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4?repost-check=${{ github.run_id }}"
           curl --fail-with-body --silent --show-error --dump-header route-headers.txt --output route-body.mp4 "$url"
           grep -iq '^content-type: video/mp4' route-headers.txt
           echo "${MEDIA_SHA256}  route-body.mp4" | sha256sum -c -
@@ -238,7 +208,7 @@ jobs:
             --dump-header route-range-headers.txt --output route-range.bin "$url"
           grep -iq '^HTTP/.* 206' route-range-headers.txt
           test "$(stat -c%s route-range.bin)" = "100"
-          echo "::notice::the media route returns the reviewed bytes and supports range requests"
+          echo "::notice::the media route returns the corrected bytes and supports range requests"
 
       - name: Release for Instagram publication
         if: github.event.inputs.release == 'RELEASE'
@@ -246,7 +216,7 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
-            --file ops/runway/release_reel_20260818_recommend_voice.sql --yes > reel-release-result.json
+            --file ops/runway/release_reel_20260818_recommend_voice_repost.sql --yes > reel-release-result.json
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
             "SELECT status,scheduled_at,approved_at,last_error FROM social_post_queue WHERE post_id='${POST_ID}';" > reel-released-state.json
           node <<'NODE'
@@ -269,17 +239,17 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
-            "SELECT j.status AS job_status,j.qa_status,q.status AS queue_status,q.scheduled_at,q.external_post_id,q.published_at,q.last_error FROM runway_generation_jobs j LEFT JOIN social_post_queue q ON q.post_id=j.post_id WHERE j.job_id='${JOB_ID}';" > reel-final-state.json
+            "SELECT j.status AS job_status,j.qa_status,q.post_id,q.status AS queue_status,q.scheduled_at,q.external_post_id,q.published_at,q.last_error FROM runway_generation_jobs j LEFT JOIN social_post_queue q ON q.post_id='${POST_ID}' WHERE j.job_id='${JOB_ID}';" > reel-final-state.json
           node -e "
           const d=require('./reel-final-state.json');
           const r=(Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0]||{};
-          console.log('::notice::FINAL job='+r.job_status+'/'+r.qa_status+' queue='+r.queue_status+' scheduled_at='+(r.scheduled_at||'')+' external_post_id='+(r.external_post_id||'')+' published_at='+(r.published_at||'')+' last_error='+(r.last_error||''));
+          console.log('::notice::FINAL job='+r.job_status+'/'+r.qa_status+' v2_queue='+r.queue_status+' scheduled_at='+(r.scheduled_at||'')+' external_post_id='+(r.external_post_id||'')+' published_at='+(r.published_at||'')+' last_error='+(r.last_error||''));
           "
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: runway-reel-publish-evidence-${{ github.run_id }}
+          name: runway-reel-repost-evidence-${{ github.run_id }}
           path: |
             tools/line-worker/reel-*.json
             tools/line-worker/route-headers.txt
