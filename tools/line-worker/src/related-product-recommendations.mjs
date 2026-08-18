@@ -1,4 +1,5 @@
 import { expandSearchQuery } from './query-expansion.mjs';
+import { relatedProductExpansionQueries } from './related-product-expansion.mjs';
 
 const AI_TIMEOUT_MS = 4000;
 
@@ -122,9 +123,27 @@ export function relatedProductRecommendationQueries(rawQuery) {
     .filter(({query:itemQuery})=>!sourceCompact.includes(clean(itemQuery).toLocaleLowerCase().replace(/[\s・/_-]+/gu, '')));
 }
 
+// 2026-08-18のユーザー指示:
+//   「『その商品と一緒に使うもの』と横展開どちらも提示して良いよ」
+//
+// 従来は補完提案(一緒に使うもの)だけを返し、静的ルールに当たった時点で
+// 打ち切っていた。そのため『天然石 ピアス』にはアクセサリーケース・
+// ピアスキャッチ・ジュエリークロスしか出ず、『天然石 指輪』『シルバー ピアス』
+// のような横展開が一切出なかった。
+//
+// 横展開(related-product-expansion.mjs)を先に並べ、そのあとに補完提案を足す。
+// 横展開を先にするのは、利用者が今探している物により近く、外したときの
+// 損失が小さいため。どちらの提案も、実在確認は後段のモールAPIが行う。
 export async function resolveRelatedProductRecommendationQueries(rawQuery, language = 'JA', env = {}, fetchImpl = fetch) {
-  const staticSuggestions = relatedProductRecommendationQueries(rawQuery);
-  if (staticSuggestions.length) return staticSuggestions;
+  const merged = [];
+  const seen = new Set();
+  for (const item of [...relatedProductExpansionQueries(rawQuery, language), ...relatedProductRecommendationQueries(rawQuery)]) {
+    const key = String(item?.query || '').toLocaleLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(item);
+  }
+  if (merged.length) return merged;
   const query = expandSearchQuery(rawQuery).query;
   if (!query || AI_FALLBACK_BLOCKLIST.test(query)) return [];
   return requestAiRelatedQueries(query, language, env, fetchImpl);

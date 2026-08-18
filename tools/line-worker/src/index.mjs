@@ -2495,7 +2495,13 @@ async function handleRelatedRecommendationsApi(request, env) {
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     const requestId = crypto.randomUUID();
     const sessionHash = await hashUser(input.session_id);
-    const groups = (await resolveRelatedProductRecommendationQueries(input.query, input.language, env)).slice(0, 3);
+    // 3→6。2026-08-18のユーザー指示「『その商品と一緒に使うもの』と横展開
+    // どちらも提示して良いよ」「レコメンド30商品の中に織り交ぜて」に対応。
+    // 横展開が最大3件、補完提案が最大3件なので、3のままだと横展開だけで
+    // 埋まって補完提案が一件も出ない。両方を通したうえで、下の
+    // interleaveCandidatesBySource が提案元をラウンドロビンで混ぜ、
+    // 30件の中に交互に並ぶようにする。
+    const groups = (await resolveRelatedProductRecommendationQueries(input.query, input.language, env)).slice(0, 6);
     const categories = await decoratedRelatedCategoryGroups(groups, {
       env, origin: ownOrigin, sessionHash, seed: requestId, category: 'related_product',
       trafficClass: 'UNATTRIBUTED'
