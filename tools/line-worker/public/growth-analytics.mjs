@@ -8,14 +8,56 @@ try {
   if (stored?.article_id && Date.now() - Number(stored.created_at || 0) < 30 * 60 * 1000) seoContext = stored;
   else sessionStorage.removeItem('hoshilu_seo_context');
 } catch {}
+// params.has() ではなく実値で判定する。?utm_source= のように空値で付いてくる
+// URLだと has() が真になり、UTMが実質無いのにSEO文脈のフォールバックまで
+// 止まって、流入元が丸ごと不明になっていた。
 const hasUrlAttribution = ['utm_source', 'utm_medium', 'utm_campaign', 'campaign', 'utm_content']
-  .some((name) => params.has(name));
-const attribution = {
+  .some((name) => String(params.get(name) || '').trim() !== '');
+const urlAttribution = {
   source: params.get('utm_source') || (!hasUrlAttribution && seoContext ? `seo_${seoContext.content_kind === 'hub' ? 'hub' : 'article'}` : ''),
   medium: params.get('utm_medium') || (!hasUrlAttribution && seoContext ? 'internal' : ''),
   campaign: params.get('utm_campaign') || params.get('campaign') || (!hasUrlAttribution && seoContext ? String(seoContext.search_intent || '').slice(0, 80) : ''),
   content: params.get('utm_content') || (!hasUrlAttribution && seoContext ? String(seoContext.article_id).slice(0, 64) : '')
 };
+
+// 流入元はセッションが続く限り引き継ぐ。
+//
+// これが無かったため、UTM付きで着地しても2ページ目以降のイベントは
+// source='' になっていた。セッションIDは growth-identity.mjs が30分の
+// スライディングTTLで維持するので、リロード・戻る・/privacy等への遷移・
+// インストール済みPWAの再起動(start_urlにUTMは付かない)のたびに、同じ
+// セッションの残りのイベントが「直接・不明」へ落ちる。
+// 特に socialPromotionSummary はセッションではなく生イベントを数えるので、
+// X/Instagramのファネルは初回ページ以降が丸ごと欠測していた。
+//
+// 内部SEO文脈(hoshilu_seo_context)は既にこの方式で引き継がれており、
+// 外部からのUTMだけが引き継がれていなかった。この非対称は意図した設計
+// ではなく実装漏れと判断して揃える。
+//
+// 個人を特定する情報は入れない(UTMの4項目のみ)。sessionStorageなので
+// タブを閉じれば消える。
+const ATTRIBUTION_KEY = 'hoshilu_growth_attribution';
+const ATTRIBUTION_TTL_MS = 30 * 60 * 1000;
+function storedAttribution() {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(ATTRIBUTION_KEY) || 'null');
+    if (!stored || Date.now() - Number(stored.created_at || 0) >= ATTRIBUTION_TTL_MS) return null;
+    if (!stored.source && !stored.medium && !stored.campaign && !stored.content) return null;
+    return {
+      source: String(stored.source || ''), medium: String(stored.medium || ''),
+      campaign: String(stored.campaign || ''), content: String(stored.content || '')
+    };
+  } catch { return null; }
+}
+const hasUrlValue = Boolean(urlAttribution.source || urlAttribution.medium
+  || urlAttribution.campaign || urlAttribution.content);
+// 新しいUTMで着地したなら、そちらが最新の流入元。保存済みより優先する。
+const attribution = hasUrlValue ? urlAttribution : (storedAttribution() || urlAttribution);
+if (hasUrlValue) {
+  try {
+    sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify({ ...attribution, created_at: Date.now() }));
+  } catch {}
+}
 window.HoshiluGrowthAttribution = Object.freeze({ ...attribution });
 const locale = () => String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
 const visitorId = growthVisitorId();

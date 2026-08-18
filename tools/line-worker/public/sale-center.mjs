@@ -45,7 +45,13 @@ const settingsCopy={
 };
 
 const officialUpdates=[
-  {marketplace_label:'Amazon',title:'公式セール・キャンペーン情報',summary:'Amazon公式のセール、タイムセール、キャンペーンを確認できます。',source_url:'https://www.amazon.co.jp/deals',official:true},
+  // Amazonだけtagを付けている。これが無いと、セール情報からAmazonへ何件
+  // 送客しても適格販売にならない(2027-02-09までに3件が必要)。ここは/goを
+  // 通らない静的リンクなので、サーバ側のdecorateAmazonAssociateDestinationが
+  // 効かず、URLに直接持たせる必要がある。値がwrangler.jsoncの
+  // AMAZON_ASSOCIATE_TAGと一致していることはtest/index.test.mjsで固定して
+  // いるので、片方だけ古くなることはない。
+  {marketplace_label:'Amazon',title:'公式セール・キャンペーン情報',summary:'Amazon公式のセール、タイムセール、キャンペーンを確認できます。',source_url:'https://www.amazon.co.jp/deals?tag=hoshilu00-22',official:true},
   {marketplace_label:'楽天市場',title:'公式キャンペーン情報',summary:'楽天市場公式のお得なキャンペーンやポイント情報を確認できます。',source_url:'https://event.rakuten.co.jp/incentive/client/',official:true},
   {marketplace_label:'Yahoo!ショッピング',title:'公式キャンペーン情報',summary:'Yahoo!ショッピング公式のセール、クーポン、ポイント情報を確認できます。',source_url:'https://shopping.yahoo.co.jp/promotion/campaign/',official:true},
   {marketplace_label:'Qoo10',title:'公式セール・特集情報',summary:'Qoo10公式のセール、クーポン、特集を確認できます。',source_url:'https://www.qoo10.jp/gmkt.inc/Events/Promotion.aspx',official:true},
