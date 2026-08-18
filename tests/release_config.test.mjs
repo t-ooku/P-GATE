@@ -39,7 +39,12 @@ test('release version has one source of truth', () => {
 // 手動ワークフローは名前を列挙して明示的に許可し、そのうえで「自動トリガーを
 // 持たないこと」を下のテストで固定する。これを外すと、手動のつもりの
 // ワークフローが後から push で走るようになっても気づけない。
-const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml'];
+// 2026-08-18 に submit-runway-job.yml を追加した。Runwayの動画生成ジョブを
+// ops/runway/*.sql から本番D1へ投入する手動実行専用ワークフロー
+// (confirm: SUBMIT必須、INSERT OR IGNORE INTO runway_* 以外のSQL文が
+// 混ざっていたら実行前に拒否)。生成後はGENERATED_REVIEW_REQUIREDで停止し、
+// QA承認なしにSNSへは公開されない。
+const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
