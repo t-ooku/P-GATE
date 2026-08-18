@@ -1,0 +1,163 @@
+name: Generate Runway persona candidates
+
+# 手動実行専用。AI女優(第3弾以降のペルソナ)の参照画像候補を、RunwayのAPI
+# (gen4_image)で生成し、GitHub Actionsのartifactとして取り出す。
+#
+# 経緯(2026-08-19): 現行の参照画像 hoshilu-approved-model-reference-v1.jpg は
+# 20代後半〜30歳前後に見える。大隆さんの指示は「22歳想定の若い顔へ変更、
+# 作成はClaude担当」。このセッションから直接画像生成サービスへは到達
+# できないため、RUNWAYML_API_SECRET(GitHub Secretに登録済み)を使う
+# 手動ワークフローとして実装した。
+#
+# 生成するのは実在しない架空の人物。特定の実在人物・有名人に似せない。
+# 候補は大隆さんがチャットで選び、選ばれた1枚を権利台帳へ記録して
+# 本番へ配置し、以後の全リールの identity_consistent 基準として固定する。
+#
+# 安全弁:
+#  - confirm に GENERATE の入力必須
+#  - 生成枚数は1〜8枚に制限(1080p縦=8クレジット/枚、8枚でも64クレジット≒$0.64)
+#  - D1・R2には一切書き込まない(Runway APIとartifactのみ)
+#  - シークレットはログへ出力しない
+
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: '生成する候補数 (1-8)'
+        required: true
+        default: '6'
+      confirm:
+        description: 'Type GENERATE to confirm spending Runway credits (8 credits per image)'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: runway-persona-generate
+      cancel-in-progress: false
+    steps:
+      - name: Require explicit confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "GENERATE" ]; then
+            echo "::error::confirm input must be exactly GENERATE. Nothing was executed."
+            exit 1
+          fi
+          if ! [[ "${{ github.event.inputs.count }}" =~ ^[1-8]$ ]]; then
+            echo "::error::count must be an integer between 1 and 8."
+            exit 1
+          fi
+          if [ -z "${{ secrets.RUNWAYML_API_SECRET }}" ]; then
+            echo "::error::RUNWAYML_API_SECRET is not set."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate persona candidates
+        env:
+          RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
+          COUNT: ${{ github.event.inputs.count }}
+        run: |
+          set -euo pipefail
+          mkdir -p persona
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const BASE = 'https://api.dev.runwayml.com';
+          const VERSION = '2024-11-06'; // src/runway-client.mjs と同じ版
+          const HEADERS = {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            authorization: `Bearer ${process.env.RUNWAYML_API_SECRET}`,
+            'X-Runway-Version': VERSION
+          };
+          const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+          // 実在しない22歳想定の日本人女性。既存リールの世界観(自然光の
+          // リビング・スマホ・親しみやすさ)に合わせる。候補ごとに髪型と
+          // 服装だけを変え、それ以外の条件は固定する。
+          const COMMON = 'Photorealistic vertical portrait of a fictional Japanese woman, 22 years old, '
+            + 'youthful fresh face with soft rounded features, clear skin, natural light makeup, '
+            + 'sitting on a sofa in a bright modern living room with soft natural daylight, '
+            + 'holding a smartphone in one hand, smiling warmly at the camera, '
+            + 'shot on 85mm lens with soft depth of field, realistic photography. '
+            + 'She is an entirely fictional AI-generated person and must not resemble any real individual or celebrity.';
+          const VARIANTS = [
+            'Shoulder-length dark brown hair with see-through bangs, wearing a cream knit top.',
+            'Long straight black hair, wearing a white blouse.',
+            'Chin-length bob with bangs, dark brown hair, wearing a light blue shirt.',
+            'Loose low ponytail, brown hair, wearing a beige cardigan.',
+            'Medium wavy dark hair tucked behind one ear, wearing a soft pink top.',
+            'Half-up hairstyle, dark brown hair, wearing a light grey sweater.',
+            'Short layered dark hair, wearing a white collared shirt.',
+            'Long brown hair with curtain bangs, wearing a navy top.'
+          ];
+
+          async function createTask(prompt, seed) {
+            const response = await fetch(`${BASE}/v1/text_to_image`, {
+              method: 'POST',
+              headers: HEADERS,
+              body: JSON.stringify({ model: 'gen4_image', promptText: prompt, ratio: '1080:1920', seed })
+            });
+            const payload = await response.json();
+            if (!response.ok) throw new Error(`text_to_image ${response.status}: ${JSON.stringify(payload).slice(0, 300)}`);
+            return payload.id;
+          }
+
+          async function waitTask(id) {
+            const deadline = Date.now() + 5 * 60 * 1000;
+            while (Date.now() < deadline) {
+              await sleep(5000 + Math.random() * 1000);
+              const response = await fetch(`${BASE}/v1/tasks/${id}`, { headers: HEADERS });
+              const payload = await response.json();
+              if (!response.ok) throw new Error(`tasks ${response.status}`);
+              if (payload.status === 'SUCCEEDED') return payload.output;
+              if (['FAILED', 'CANCELLED'].includes(payload.status)) {
+                throw new Error(`task ${payload.status}: ${payload.failure || ''} ${payload.failureCode || ''}`);
+              }
+            }
+            throw new Error('task timed out');
+          }
+
+          // Node 22.23+はrequireとトップレベルawaitの混在を拒否するため、
+          // async関数に包んで実行する。
+          async function main() {
+            const count = Number(process.env.COUNT);
+            const made = [];
+            for (let index = 0; index < count; index += 1) {
+              const prompt = `${COMMON} ${VARIANTS[index % VARIANTS.length]}`;
+              const seed = 20260819 + index;
+              const id = await createTask(prompt, seed);
+              console.log(`candidate ${index + 1}/${count}: task ${id} submitted (seed ${seed})`);
+              const output = await waitTask(id);
+              const url = Array.isArray(output) ? output[0] : null;
+              if (!url) throw new Error('task succeeded but returned no output URL');
+              const media = await fetch(url);
+              if (!media.ok) throw new Error(`download failed: ${media.status}`);
+              const bytes = Buffer.from(await media.arrayBuffer());
+              const file = `persona/persona_candidate_${String(index + 1).padStart(2, '0')}.png`;
+              fs.writeFileSync(file, bytes);
+              console.log(`saved ${file} (${bytes.length} bytes)`);
+              made.push(file);
+            }
+            console.log(`::notice::generated ${made.length} persona candidates (~${made.length * 8} credits). Download the artifact and review.`);
+          }
+          main().catch((error) => {
+            console.error(`::error::${String(error && error.message || error)}`);
+            process.exit(1);
+          });
+          NODE
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runway-persona-candidates-${{ github.run_id }}
+          path: persona/
+          retention-days: 7
