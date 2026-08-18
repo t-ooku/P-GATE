@@ -1,0 +1,133 @@
+name: Fetch Runway raw media
+
+# Manual-only, read-only. QA承認(12項目チェック)の前段として、Runwayが生成した
+# 生の動画(GENERATED_REVIEW_REQUIRED時点のstorage_key)をR2からダウンロードし、
+# GitHub Actionsのartifactとして取り出す。
+#
+# 2026-08-13の初回リール承認では、字幕焼き込み(ffmpeg+.ass)・SHA256・
+# ffprobe(コーデック/解像度/フレームレート)・SSIM/PSNR比較を経てから
+# approve_initial_reel_20260813_v4.sql を書いた。この工程はraw動画の実体が
+# 無いと再現できない。R2バケット(hoshilu-social-media)はWorker経由でしか
+# 公開されず(GENERATED_REVIEW_REQUIRED中は/api/social/media/runway/*が404を
+# 返す設計、social-media-r2.mjs参照)、D1にもファイル本体は無いため、
+# このワークフローがR2から直接取り出す唯一の経路になる。
+#
+# 安全弁:
+#  - confirm に FETCH の入力必須
+#  - job_id は英数字・ハイフン・アンダースコアのみ(D1のCHECK制約と同じ形式)
+#  - D1へは SELECT のみ(書き込みなし)
+#  - 取得対象は当該job_idのstorage_keyのみ(runway/{job_id}/ 配下でない
+#    storage_keyは拒否し、他ジョブのメディアを取れないようにする)
+#  - ダウンロード後、ローカルのファイルサイズをD1のstorage_size_bytesと
+#    突き合わせて一致しなければ失敗させる(取り違え検知)
+#  - R2へは object get のみ(put/deleteなし)
+#  - artifactの保持期間は3日のみ
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: '対象の runway_generation_jobs.job_id'
+        required: true
+        default: ''
+      confirm:
+        description: 'Type FETCH to confirm reading production R2 media'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: cloudflare-runway-media-fetch
+      cancel-in-progress: false
+    steps:
+      - name: Require explicit confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "FETCH" ]; then
+            echo "::error::confirm input must be exactly FETCH. Nothing was executed."
+            exit 1
+          fi
+
+      - name: Validate job_id format
+        run: |
+          if ! [[ "${{ github.event.inputs.job_id }}" =~ ^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$ ]]; then
+            echo "::error::job_id must match ^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check Cloudflare credentials are configured
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID are not set."
+            exit 1
+          fi
+
+      - name: Read the job's storage key from production D1 (read-only)
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT job_id,status,storage_key,storage_size_bytes,storage_content_type,provider_task_id FROM runway_generation_jobs WHERE job_id='${{ github.event.inputs.job_id }}';" \
+            > job.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const data = JSON.parse(fs.readFileSync('job.json', 'utf8'));
+          const row = (Array.isArray(data) ? data : [data]).flatMap((x) => x.results || x.result?.results || [])[0];
+          if (!row) throw new Error('job row not found - check job_id');
+          const jobId = process.env.JOB_ID;
+          if (row.job_id !== jobId) throw new Error('job_id mismatch');
+          if (!['GENERATED_REVIEW_REQUIRED', 'APPROVED_FOR_POST', 'PUBLISHED'].includes(row.status)) {
+            throw new Error(`job has no generated media yet: status=${row.status}`);
+          }
+          const key = String(row.storage_key || '');
+          const prefix = `runway/${jobId}/`;
+          if (!key.startsWith(prefix) || key.includes('..') || /[^A-Za-z0-9/_.-]/.test(key)) {
+            throw new Error(`storage_key outside expected prefix or contains unsafe characters: ${key}`);
+          }
+          const size = Number(row.storage_size_bytes);
+          if (!Number.isInteger(size) || size <= 0 || size > 50 * 1024 * 1024) {
+            throw new Error(`storage_size_bytes invalid or too large: ${row.storage_size_bytes}`);
+          }
+          fs.writeFileSync('storage-key.txt', key);
+          fs.writeFileSync('storage-size.txt', String(size));
+          console.log(`::notice::job ${jobId} status=${row.status} storage_key=${key} storage_size_bytes=${size} storage_content_type=${row.storage_content_type} provider_task_id=${row.provider_task_id}`);
+          NODE
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          JOB_ID: ${{ github.event.inputs.job_id }}
+
+      - name: Download the raw media object from R2 (read-only)
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          storage_key="$(cat storage-key.txt)"
+          expected_size="$(cat storage-size.txt)"
+          npx --yes wrangler@4.121.0 r2 object get "hoshilu-social-media/${storage_key}" \
+            --file "raw-media.mp4" --remote
+          actual_size="$(stat -c%s raw-media.mp4)"
+          if [ "${actual_size}" != "${expected_size}" ]; then
+            echo "::error::downloaded size ${actual_size} does not match D1 storage_size_bytes ${expected_size}"
+            exit 1
+          fi
+          sha256sum raw-media.mp4
+          echo "::notice::downloaded $(basename "${storage_key}") (${actual_size} bytes), size verified against D1"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runway-raw-media-${{ github.event.inputs.job_id }}
+          path: tools/line-worker/raw-media.mp4
+          retention-days: 3
