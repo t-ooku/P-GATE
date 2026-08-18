@@ -118,7 +118,40 @@ function updateDiscoveryExample(){const language=elements.language.value||'JA';c
 // 2026-08-08: 履歴由来の「次の検索例」は検索履歴と同じ文字列を×なしで
 // 直下に再掲していた。利用者には消せない検索履歴に見えるため、会員時は
 // この重複欄を表示せず、×付きの正式な履歴だけを残す。
-function renderQuickExamples(language=elements.language.value||'JA'){elements.quick.replaceChildren();elements.quick.classList.toggle('hidden',Boolean(memberSession));if(memberSession)return;const link=document.createElement('a');link.className='chip member-example-cta';link.href='/login.html';link.textContent={JA:'無料会員登録で検索履歴を保存',EN:'Sign up free to save search history',ZH:'免费注册后保存搜索历史',KO:'무료 가입 후 검색 기록 저장'}[language]||'無料会員登録で検索履歴を保存';elements.quick.append(link);}
+// 検索窓のすぐ下の枠。ここは「何も打たずに1タップで試せる」唯一の場所なのに、
+// 以前は setLanguage が組み立てた例示チップをこの関数が丸ごと消して、
+// 会員登録リンク1個だけに置き換えていた。訪問68→検索開始21(離脱69%)という
+// 実測に対して、初回訪問者に最初に見せるものが登録の案内だけ、という状態
+// だった。例示チップを戻し、登録の案内はその後ろへ回す。
+//
+// チップは検索窓へ入れるだけでなく、そのまま検索を実行する。入れるだけだと
+// 利用者は結局、同意欄を探して送信ボタンを押す必要があり、「1タップで
+// 試せる」という利点が消えるため。
+function renderQuickExamples(language=elements.language.value||'JA'){
+  elements.quick.replaceChildren();
+  // ログイン会員には検索履歴が別途出るので、この枠ごと隠す(重複表示を避ける)。
+  elements.quick.classList.toggle('hidden',Boolean(memberSession));
+  if(memberSession)return;
+  const examples=(copy[language]||copy.JA).examples||[];
+  for(const example of examples){
+    const chip=document.createElement('button');
+    chip.type='button';chip.className='chip';chip.textContent=example;
+    chip.addEventListener('click',()=>{
+      elements.query.value=example;
+      elements.clear.classList.remove('hidden');
+      // 同意欄が未チェックなら、送信は止まったうえで理由が表示される
+      // (form の invalid ハンドラ)。勝手に同意扱いにはしない。
+      if(typeof elements.form.requestSubmit==='function')elements.form.requestSubmit();
+      else elements.form.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
+    });
+    elements.quick.append(chip);
+  }
+  const link=document.createElement('a');
+  link.className='chip member-example-cta';
+  link.href='/login.html';
+  link.textContent={JA:'無料会員登録で検索履歴を保存',EN:'Sign up free to save search history',ZH:'免费注册后保存搜索历史',KO:'무료 가입 후 검색 기록 저장'}[language]||'無料会員登録で検索履歴を保存';
+  elements.quick.append(link);
+}
 function getWatchPreferences(){try{const value=JSON.parse(localStorage.getItem('hoshilu_watch_preferences')||'[]');return Array.isArray(value)?value:[];}catch{return[];}}
 function watchOptionsFor(query){const item=getWatchPreferences().find(saved=>saved.query===query);return Array.isArray(item?.options)&&item.options.length===4?item.options.map(Boolean):[true,true,false,false];}
 function watchFrequencyFor(query){const item=getWatchPreferences().find(saved=>saved.query===query);return['INSTANT','DAILY','WEEKLY','MUTED'].includes(item?.frequency)?item.frequency:'INSTANT';}
@@ -1152,6 +1185,22 @@ document.querySelector('#stickyMarketplaceJump')?.addEventListener('click',()=>{
   document.querySelector('#marketplaceFallback')?.scrollIntoView({behavior:'smooth',block:'start'});
 });
 window.HoshiluSearch={run:runKnowledgeSearch};
+// 同意欄が未チェックのまま検索ボタンが押されたとき、利用者に見える形で理由を出す。
+// #consent は required なのでブラウザのネイティブ検証が submit を止めるが、
+// iOS Safari はチェックボックスの検証バブルを表示しない。そのため「押しても
+// 何も起きない」だけの状態になっており、サイト側のstatus行にも何も出ていなかった。
+// invalid はバブリングしないので capture で拾う。
+elements.form.addEventListener('invalid',event=>{
+  if(event.target!==elements.consent)return;
+  elements.status.className='status error';
+  elements.status.textContent=window.HoshiluI18n?.t('search.consentRequired')||'検索するには、下の同意チェックを入れてください。';
+  elements.consent.scrollIntoView({behavior:'smooth',block:'center'});
+},true);
+elements.consent.addEventListener('change',()=>{
+  if(elements.consent.checked&&elements.status.classList.contains('error')){
+    elements.status.className='status';elements.status.textContent='';
+  }
+});
 elements.form.addEventListener('submit',event=>{event.preventDefault();const query=String(elements.query.value||'').trim();if(!isUsableProductQuery(query)){elements.query.focus();elements.status.textContent='商品名・ジャンル・覚えている特徴を入力してください。';return;}if(currentSearchMode()==='identify'&&typeof window.HoshiluIdentifySearch?.open==='function'){window.HoshiluIdentifySearch.open(query,elements.language.value);return;}runKnowledgeSearch();});
 function returnFromRankingToSearch(){
   rankingRequestSequence+=1;rankingCategorySelection=null;rankingConfirmationFlow=null;

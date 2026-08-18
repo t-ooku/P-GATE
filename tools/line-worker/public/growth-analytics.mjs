@@ -105,6 +105,29 @@ document.addEventListener('submit', event => {
   if (event.target?.id === 'knowledgeForm') send('search_started');
 });
 
+// search_started は submit でしか発火しない。ところが #consent は required で
+// フォームに novalidate も無いため、同意欄が未チェックのまま検索ボタンを
+// 押すとブラウザのネイティブ検証が submit を止め、search_started は発火しない。
+// しかも iOS Safari はチェックボックスの検証バブルを出さないので、利用者から
+// 見ると「押したのに何も起きない」状態になる。
+//
+// つまり「入力して押したのに弾かれた人」は計測上いなかったことになっており、
+// 訪問68→検索開始21 という数字が「関心が無かった」のか「押したが弾かれた」
+// のかを区別できない。押した瞬間と、弾かれた瞬間を別々に記録して切り分ける。
+// captureフェーズで拾うのは、ネイティブ検証より先に確実に走らせるため。
+document.addEventListener('click', event => {
+  const target = event.target?.closest?.('#submitButton, button[type=submit]');
+  if (target && target.form?.id === 'knowledgeForm') send('search_attempted');
+}, true);
+
+// 検証で止められたことを記録する。invalid はバブリングしないので capture で拾う。
+// どのフィールドで止まったかは送らない: extraで content 等を渡すと流入元の
+// 項目を上書きしてしまい、traffic_class が ATTRIBUTED に化けて流入元計測を
+// 汚す。検索文も従来どおり一切送らない。
+document.addEventListener('invalid', event => {
+  if (event.target?.form?.id === 'knowledgeForm') send('search_blocked');
+}, true);
+
 document.addEventListener('hoshilu:search-execution-started', startSearchWatch);
 document.addEventListener('hoshilu:search-cancelled', event => clearSearchWatch(event.detail?.executionId));
 document.addEventListener('hoshilu:search-completed', event => { clearSearchWatch(event.detail?.executionId); send('search_completed'); });
