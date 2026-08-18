@@ -1280,3 +1280,30 @@ test('AIチャットの失敗はコンソールで診断でき、画面には内
   // Turnstileが取れていないことを、通信失敗と区別して止める
   assert.match(chatUi, /if \(!token\) throw new Error\('TURNSTILE_TOKEN_UNAVAILABLE'\)/);
 });
+
+// クライアント側に直書きされたアフィリエイトタグが、wrangler.jsoncの
+// AMAZON_ASSOCIATE_TAG からずれないように固定する。
+//
+// 直書きが残っているのは意図的:
+//  - public/app.js の緊急フォールバックは「APIが落ちている」ときに動く経路
+//    なので、タグを /api/config から取りに行く設計にすると、まさに必要な
+//    ときに取れない
+//  - public/sale-center.mjs の公式セール行は /go を通らない静的リンクなので、
+//    サーバ側の decorateAmazonAssociateDestination が効かない
+//
+// 二重管理そのものは避けられないが、ずれたらCIで落ちるようにしておく。
+// タグが違うと、送客が発生しても承認済みアカウントに計上されない。
+test('クライアント直書きのAmazonアソシエイトタグはwrangler.jsoncと一致する', () => {
+  const wrangler = fs.readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
+  const expected = wrangler.match(/"AMAZON_ASSOCIATE_TAG"\s*:\s*"([^"]+)"/)?.[1];
+  assert.ok(expected, 'wrangler.jsoncにAMAZON_ASSOCIATE_TAGが無い');
+
+  for (const file of ['app.js', 'sale-center.mjs']) {
+    const source = fs.readFileSync(new URL(`../public/${file}`, import.meta.url), 'utf8');
+    const tags = [...source.matchAll(/[?&]tag=([a-z0-9][a-z0-9-]{1,49})/gi)].map((m) => m[1]);
+    assert.ok(tags.length, `${file}にAmazonタグ付きURLが見つからない`);
+    for (const tag of tags) {
+      assert.equal(tag, expected, `${file}のタグ(${tag})がwrangler.jsonc(${expected})とずれている`);
+    }
+  }
+});

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  normalizeSocialPost,
+  normalizeSocialPost, xWeightedLength,
   publishSocialPost,
   runDueSocialPosts,
   socialPublisherReadiness,
@@ -959,4 +959,29 @@ test('公開情報APIはThreadsのpublic_url未取得時にインサイト取り
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('X投稿はPR表記とリンクを足してもXの重み付き280を超えない', () => {
+  // Xの280は文字数ではなく重み付き文字数(日本語は1文字=2)で、URLは実長に
+  // 関わらず常に23として数えられる。従来の「240文字で切る」だけでは
+  // 日本語240文字=480相当となり上限の倍近くまで通ってしまっていた。
+  const longJapanese = 'あ'.repeat(300);
+  const post = normalizeSocialPost({
+    post_id: 'x-long', platform: 'X', caption: longJapanese,
+    link: 'https://hoshilu.app/?utm_source=x&utm_medium=social&utm_campaign=c&utm_content=d&q=' + encodeURIComponent('とても長い検索語'),
+    affiliate: true, scheduled_at: '2026-08-18T03:30:00.000Z', status: 'APPROVED'
+  });
+  // publish時の本文は caption + '\n' + link (social-publisher の publishX と同じ組み立て)
+  const weighted = xWeightedLength(post.caption) + 1 + 23;
+  assert.ok(weighted <= 280, `重み付き${weighted}で280を超えている`);
+  assert.match(post.caption, /アフィリエイト/, 'PR表記は落とさない');
+});
+
+test('X以外のプラットフォームはXの重み付き上限に巻き込まれない', () => {
+  const caption = 'あ'.repeat(300);
+  const threads = normalizeSocialPost({
+    post_id: 't-long', platform: 'THREADS', caption,
+    scheduled_at: '2026-08-18T03:30:00.000Z', status: 'APPROVED'
+  });
+  assert.equal(threads.caption.length, 300, 'THREADSは400文字までそのまま');
 });
