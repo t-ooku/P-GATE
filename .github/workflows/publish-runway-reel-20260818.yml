@@ -174,15 +174,30 @@ jobs:
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
             --file ops/runway/stage_reel_20260818_recommend_voice.sql --yes > reel-stage-result.json
-          node <<'NODE'
+          # --file はD1のimport経路で実行されるため、文ごとの meta.changes は
+          # 返らない(まとめた実行サマリだけが返る)。件数を数えるのではなく、
+          # 実際に書き込まれた行をSELECTで読み直して確認する。
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT j.storage_key,j.storage_etag,j.storage_size_bytes,j.storage_content_type,j.caption AS job_caption,j.status,j.qa_status,q.caption AS queue_caption,q.status AS queue_status FROM runway_generation_jobs j JOIN social_post_queue q ON q.post_id=j.post_id WHERE j.job_id='${JOB_ID}';" > reel-staged-state.json
+          MEDIA_SHA256="${MEDIA_SHA256}" MEDIA_SIZE="${MEDIA_SIZE}" JOB_ID="${JOB_ID}" node <<'NODE'
           const fs = require('node:fs');
-          const entries = JSON.parse(fs.readFileSync('reel-stage-result.json', 'utf8'));
-          const changes = (Array.isArray(entries) ? entries : [entries])
-            .map((e) => Number(e?.meta?.changes ?? e?.result?.meta?.changes));
-          if (JSON.stringify(changes) !== JSON.stringify([1, 1])) {
-            throw new Error(`stage changed ${JSON.stringify(changes)} rows, expected [1,1]`);
-          }
-          console.log('::notice::staged the postprocessed media and caption on both rows');
+          const data = JSON.parse(fs.readFileSync('reel-staged-state.json', 'utf8'));
+          const rows = (Array.isArray(data) ? data : [data]).flatMap((x) => x.results || x.result?.results || []);
+          if (rows.length !== 1) throw new Error(`expected 1 joined row, got ${rows.length}`);
+          const row = rows[0];
+          const expectedKey = `runway/${process.env.JOB_ID}/postprocessed-${process.env.MEDIA_SHA256}.mp4`;
+          const problems = [];
+          if (row.storage_key !== expectedKey) problems.push(`storage_key=${row.storage_key}`);
+          if (Number(row.storage_size_bytes) !== Number(process.env.MEDIA_SIZE)) problems.push(`size=${row.storage_size_bytes}`);
+          if (row.storage_content_type !== 'video/mp4') problems.push(`content_type=${row.storage_content_type}`);
+          if (row.storage_etag !== null) problems.push('storage_etag must be SQL NULL');
+          if (row.job_caption !== row.queue_caption) problems.push('job and queue captions differ');
+          if (!String(row.job_caption || '').includes('AI生成')) problems.push('caption lacks the AI disclosure');
+          if (!String(row.job_caption || '').includes('最大13モールで探せます')) problems.push('caption was not corrected');
+          if (row.status !== 'GENERATED_REVIEW_REQUIRED' || row.qa_status !== 'PENDING') problems.push(`job moved to ${row.status}/${row.qa_status}`);
+          if (row.queue_status !== 'REVIEW_REQUIRED') problems.push(`queue moved to ${row.queue_status}`);
+          if (problems.length) throw new Error(problems.join(' / '));
+          console.log('::notice::staged: both rows now point at the reviewed bytes and the corrected caption, both gates still closed');
           NODE
 
       - name: Run the QA approval
@@ -192,13 +207,21 @@ jobs:
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
             --file ops/runway/approve_reel_20260818_recommend_voice.sql --yes > reel-approve-result.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT j.status,j.qa_status,q.status AS queue_status,q.external_post_id,q.published_at,(SELECT COUNT(*) FROM runway_audit_log WHERE audit_id='runway-recommend-voice-qa-approved-20260818' AND job_id='${JOB_ID}' AND event='QA_APPROVED_FOR_POST') AS audit_count FROM runway_generation_jobs j JOIN social_post_queue q ON q.post_id=j.post_id WHERE j.job_id='${JOB_ID}';" > reel-approved-state.json
           node <<'NODE'
           const fs = require('node:fs');
-          const entries = JSON.parse(fs.readFileSync('reel-approve-result.json', 'utf8'));
-          const changes = (Array.isArray(entries) ? entries : [entries])
-            .map((e) => Number(e?.meta?.changes ?? e?.result?.meta?.changes));
-          if (changes[0] !== 1) throw new Error(`approval updated ${changes[0]} job rows, expected 1`);
-          if (changes[1] !== 1) throw new Error(`approval wrote ${changes[1]} audit rows, expected 1`);
+          const data = JSON.parse(fs.readFileSync('reel-approved-state.json', 'utf8'));
+          const rows = (Array.isArray(data) ? data : [data]).flatMap((x) => x.results || x.result?.results || []);
+          if (rows.length !== 1) throw new Error(`expected 1 joined row, got ${rows.length}`);
+          const row = rows[0];
+          const problems = [];
+          if (row.status !== 'APPROVED_FOR_POST') problems.push(`job status=${row.status}`);
+          if (row.qa_status !== 'PASSED') problems.push(`qa_status=${row.qa_status}`);
+          if (Number(row.audit_count) !== 1) problems.push(`audit rows=${row.audit_count}`);
+          if (row.queue_status !== 'REVIEW_REQUIRED') problems.push(`queue must stay REVIEW_REQUIRED, got ${row.queue_status}`);
+          if (String(row.external_post_id || '') || String(row.published_at || '')) problems.push('queue already has publication state');
+          if (problems.length) throw new Error(problems.join(' / '));
           console.log('::notice::job is APPROVED_FOR_POST / qa_status PASSED; the publication queue is still REVIEW_REQUIRED');
           NODE
 
@@ -206,7 +229,8 @@ jobs:
         working-directory: tools/line-worker
         run: |
           set -euo pipefail
-          url="https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4"
+          # 経路上のキャッシュではなく、いま配信される実体を確認する。
+          url="https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4?publish-check=${{ github.run_id }}"
           curl --fail-with-body --silent --show-error --dump-header route-headers.txt --output route-body.mp4 "$url"
           grep -iq '^content-type: video/mp4' route-headers.txt
           echo "${MEDIA_SHA256}  route-body.mp4" | sha256sum -c -
@@ -223,13 +247,20 @@ jobs:
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
             --file ops/runway/release_reel_20260818_recommend_voice.sql --yes > reel-release-result.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT status,scheduled_at,approved_at,last_error FROM social_post_queue WHERE post_id='${POST_ID}';" > reel-released-state.json
           node <<'NODE'
           const fs = require('node:fs');
-          const entries = JSON.parse(fs.readFileSync('reel-release-result.json', 'utf8'));
-          const changes = (Array.isArray(entries) ? entries : [entries])
-            .map((e) => Number(e?.meta?.changes ?? e?.result?.meta?.changes));
-          if (changes[0] !== 1) throw new Error(`release updated ${changes[0]} queue rows, expected 1`);
-          console.log('::notice::queued for Instagram - the existing publisher cron will post it');
+          const data = JSON.parse(fs.readFileSync('reel-released-state.json', 'utf8'));
+          const rows = (Array.isArray(data) ? data : [data]).flatMap((x) => x.results || x.result?.results || []);
+          if (rows.length !== 1) throw new Error(`expected 1 queue row, got ${rows.length}`);
+          const row = rows[0];
+          if (!['APPROVED', 'PUBLISHING', 'PUBLISHED'].includes(row.status)) {
+            throw new Error(`queue status=${row.status}, expected APPROVED`);
+          }
+          if (!Number.isFinite(Date.parse(row.approved_at))) throw new Error('approved_at was not set');
+          if (String(row.last_error || '')) throw new Error(`queue carries an error: ${row.last_error}`);
+          console.log(`::notice::queued for Instagram (status=${row.status}, scheduled_at=${row.scheduled_at}) - the existing publisher cron will post it`);
           NODE
 
       - name: Report the final state
