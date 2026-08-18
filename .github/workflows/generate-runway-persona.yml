@@ -127,25 +127,33 @@ jobs:
             throw new Error('task timed out');
           }
 
-          const count = Number(process.env.COUNT);
-          const made = [];
-          for (let index = 0; index < count; index += 1) {
-            const prompt = `${COMMON} ${VARIANTS[index % VARIANTS.length]}`;
-            const seed = 20260819 + index;
-            const id = await createTask(prompt, seed);
-            console.log(`candidate ${index + 1}/${count}: task ${id} submitted (seed ${seed})`);
-            const output = await waitTask(id);
-            const url = Array.isArray(output) ? output[0] : null;
-            if (!url) throw new Error('task succeeded but returned no output URL');
-            const media = await fetch(url);
-            if (!media.ok) throw new Error(`download failed: ${media.status}`);
-            const bytes = Buffer.from(await media.arrayBuffer());
-            const file = `persona/persona_candidate_${String(index + 1).padStart(2, '0')}.png`;
-            fs.writeFileSync(file, bytes);
-            console.log(`saved ${file} (${bytes.length} bytes)`);
-            made.push(file);
+          // Node 22.23+はrequireとトップレベルawaitの混在を拒否するため、
+          // async関数に包んで実行する。
+          async function main() {
+            const count = Number(process.env.COUNT);
+            const made = [];
+            for (let index = 0; index < count; index += 1) {
+              const prompt = `${COMMON} ${VARIANTS[index % VARIANTS.length]}`;
+              const seed = 20260819 + index;
+              const id = await createTask(prompt, seed);
+              console.log(`candidate ${index + 1}/${count}: task ${id} submitted (seed ${seed})`);
+              const output = await waitTask(id);
+              const url = Array.isArray(output) ? output[0] : null;
+              if (!url) throw new Error('task succeeded but returned no output URL');
+              const media = await fetch(url);
+              if (!media.ok) throw new Error(`download failed: ${media.status}`);
+              const bytes = Buffer.from(await media.arrayBuffer());
+              const file = `persona/persona_candidate_${String(index + 1).padStart(2, '0')}.png`;
+              fs.writeFileSync(file, bytes);
+              console.log(`saved ${file} (${bytes.length} bytes)`);
+              made.push(file);
+            }
+            console.log(`::notice::generated ${made.length} persona candidates (~${made.length * 8} credits). Download the artifact and review.`);
           }
-          console.log(`::notice::generated ${made.length} persona candidates (~${made.length * 8} credits). Download the artifact and review.`);
+          main().catch((error) => {
+            console.error(`::error::${String(error && error.message || error)}`);
+            process.exit(1);
+          });
           NODE
 
       - uses: actions/upload-artifact@v4
