@@ -1,5 +1,15 @@
 const EVENTS = new Set([
   'landing_view',
+  // 2026-08-17追加。search_started はフォームのsubmitイベントでしか発火しない
+  // が、#consent は required でフォームに novalidate も無いため、同意欄が
+  // 未チェックのまま検索ボタンを押すとブラウザのネイティブ検証がsubmitを
+  // 止める = search_started が発火しない。つまり「入力して押したのに弾かれた
+  // 人」は、計測上まったく存在しないことになっていた。
+  // 訪問68→検索開始21(離脱69%)が「関心が無かった」のか「押したが弾かれた」
+  // のかを切り分けるため、押した瞬間(search_attempted)と検証で止められた
+  // 瞬間(search_blocked)を別々に記録する。検索文そのものは従来どおり保存しない。
+  'search_attempted',
+  'search_blocked',
   'search_started',
   'search_completed',
   'search_failed',
