@@ -1,0 +1,127 @@
+name: Submit Runway generation job
+
+# Manual-only. Runwayの動画生成ジョブは runway_generation_jobs テーブルへの
+# INSERTで投入する設計(ops/runway/*.sql)だが、本番D1への書き込みは
+# docs/HOSHILU_COMMAND_GOVERNANCE_2026-08-02.md により明示承認+手動実行が
+# 必要。初回テスト時はci.ymlにコミットメッセージマーカー起動の専用ジョブを
+# 作ったが、以後のジョブ投入ごとにci.ymlを書き換えるのは筋が悪いので、
+# 対象SQLファイルを入力で指定する汎用の手動ワークフローに一般化した。
+#
+# 安全弁:
+#  - 対象は tools/line-worker/ops/runway/ 配下の .sql のみ(パス検証)
+#  - SQL文はコメントを除き INSERT OR IGNORE INTO runway_* だけを許可
+#    (UPDATE/DELETE/DROP/他テーブルへのINSERTが混ざっていたら実行前に拒否)
+#  - confirm に SUBMIT の入力必須
+#  - 実行後、expected_job_id の行が存在し、予算・権利・AI開示のフラグが
+#    正しいことを検証する
+#  - このワークフローが投入するのは「生成まで」。生成後は
+#    GENERATED_REVIEW_REQUIRED で止まり、QA承認なしにSNSへは公開されない
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_file:
+        description: 'ops/runway/ 配下のSQLファイル名 (例: reel_job_20260818_recommend_voice_v1.sql)'
+        required: true
+        default: ''
+      expected_job_id:
+        description: '投入されるはずの job_id (実行後に存在検証する)'
+        required: true
+        default: ''
+      confirm:
+        description: 'Type SUBMIT to confirm writing to the production D1 database'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: cloudflare-runway-job-submit
+      cancel-in-progress: false
+    steps:
+      - name: Require explicit confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "SUBMIT" ]; then
+            echo "::error::confirm input must be exactly SUBMIT. Nothing was executed."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate the job file path and statement whitelist
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          file="ops/runway/${{ github.event.inputs.job_file }}"
+          case "${{ github.event.inputs.job_file }}" in
+            (*/*|*..*|"") echo "::error::job_file must be a bare filename under ops/runway/"; exit 1;;
+            (*.sql) ;;
+            (*) echo "::error::job_file must end with .sql"; exit 1;;
+          esac
+          test -f "$file" || { echo "::error::$file not found"; exit 1; }
+          JOB_FILE="$file" node <<'NODE'
+          const fs = require('node:fs');
+          const source = fs.readFileSync(process.env.JOB_FILE, 'utf8');
+          // コメントと空白を除いた実文だけを検査する。
+          const withoutComments = source.replace(/--[^\n]*/g, '');
+          const statements = withoutComments.split(';').map((s) => s.trim()).filter(Boolean);
+          if (!statements.length) throw new Error('no statements');
+          for (const statement of statements) {
+            if (!/^INSERT\s+OR\s+IGNORE\s+INTO\s+runway_[a-z_]+\s*\(/i.test(statement)) {
+              throw new Error(`disallowed statement: ${statement.slice(0, 120)}`);
+            }
+          }
+          console.log(`::notice::${statements.length} INSERT OR IGNORE statements into runway_* tables only`);
+          NODE
+
+      - name: Check Cloudflare credentials are configured
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ] || [ -z "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID are not set."
+            exit 1
+          fi
+
+      - name: Execute the job file against production D1
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote \
+            --file "ops/runway/${{ github.event.inputs.job_file }}" --yes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Verify the inserted job row
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT job_id,status,recipe,recipe_version,ratio,duration_seconds,audio,expected_credits,rights_confirmed,ai_disclosure_confirmed,max_attempts,caption FROM runway_generation_jobs WHERE job_id='${{ github.event.inputs.expected_job_id }}';" \
+            > runway-job-check.json
+          node <<'NODE'
+          const data = require('./runway-job-check.json');
+          const row = (Array.isArray(data) ? data : [data]).flatMap((x) => x.results || x.result?.results || [])[0];
+          if (!row) throw new Error('job row not found - check expected_job_id');
+          const problems = [];
+          if (!['APPROVED','BUDGET_RESERVED','SUBMITTING','PROCESSING','GENERATED_REVIEW_REQUIRED'].includes(row.status)) problems.push(`status=${row.status}`);
+          if (row.recipe !== 'product_ugc' || row.recipe_version !== '2026-06' || row.ratio !== '720:1280') problems.push('recipe/ratio not approved');
+          const d = Number(row.duration_seconds);
+          const expectedCredits = 192 + ((d - 4) * 36); // calculateProductUgcCredits(720:1280)
+          if (!(d >= 4 && d <= 15) || Number(row.expected_credits) !== expectedCredits) problems.push(`credits mismatch: expected ${expectedCredits}, got ${row.expected_credits}`);
+          if (Number(row.rights_confirmed) !== 1) problems.push('rights_confirmed!=1');
+          if (Number(row.ai_disclosure_confirmed) !== 1) problems.push('ai_disclosure_confirmed!=1');
+          if (!String(row.caption || '').includes('AI生成')) problems.push('caption lacks AI disclosure');
+          if (problems.length) throw new Error(problems.join(' / '));
+          console.log(`::notice::job ${row.job_id} status=${row.status} credits=${row.expected_credits} - generation will start on the next 15-minute cron; publishing still requires QA approval.`);
+          NODE
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
