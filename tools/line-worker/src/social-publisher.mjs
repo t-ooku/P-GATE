@@ -14,10 +14,47 @@ const clean = (value, max = 2000) => String(value || '')
   .trim()
   .slice(0, max);
 
+// Xの280は「文字数」ではなく重み付き文字数で、日本語(CJK・かな・全角記号)は
+// 1文字が2としてカウントされる。URLは実際の長さに関係なく常に23。
+// https://developer.x.com/en/docs/counting-characters
+function xCharWeight(code) {
+  const light = code <= 4351 || (code >= 8192 && code <= 8205)
+    || (code >= 8208 && code <= 8223) || (code >= 8242 && code <= 8247);
+  return light ? 1 : 2;
+}
+
+export function xWeightedLength(value) {
+  let total = 0;
+  for (const char of String(value || '')) total += xCharWeight(char.codePointAt(0));
+  return total;
+}
+
+function truncateToXWeight(value, budget) {
+  if (xWeightedLength(value) <= budget) return value;
+  let total = 0;
+  let out = '';
+  for (const char of String(value || '')) {
+    const next = total + xCharWeight(char.codePointAt(0));
+    if (next > budget) break;
+    total = next;
+    out += char;
+  }
+  return out;
+}
+
 export function normalizeSocialPost(input = {}) {
   const platform = clean(input.platform, 20).toUpperCase();
   if (!PLATFORMS.has(platform)) throw new Error('SOCIAL_PLATFORM_INVALID');
   let caption = clean(input.caption, platform === 'X' ? 240 : platform === 'THREADS' ? 400 : 1800);
+  if (platform === 'X') {
+    // 2026-08-17: 従来は「240文字」で切っていたが、Xが数えるのは重み付き
+    // 文字数なので、日本語240文字は480相当で上限280の倍近くあった。さらに
+    // publish時にPR表記(重み54)とリンク(常に23)が後から連結されるため、
+    // その分を引いておかないとX側で弾かれる(実際に失敗3件が出ていた)。
+    const reserve = (input.affiliate === true ? 1 + xWeightedLength(DISCLOSURE) : 0)
+      + (clean(input.link, 1000) ? 1 + 23 : 0);
+    caption = truncateToXWeight(caption, 280 - reserve);
+  }
   if (caption.length < 5) throw new Error('SOCIAL_CAPTION_INVALID');
   if (INVALID_HOSHILU_OWNER_CLAIM.test(caption)) throw new Error('SOCIAL_ENTITY_CLAIM_INVALID');
   if (platform === 'INSTAGRAM') {
