@@ -1,0 +1,22 @@
+[Script Info]
+Title: HOSHILU Runway recommend-voice reel overlay 2026-08-18
+ScriptType: v4.00+
+PlayResX: 720
+PlayResY: 1280
+ScaledBorderAndShadow: yes
+WrapStyle: 2
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Brand,Noto Sans CJK JP Bold,31,&H00FFFFFF,&H00FFFFFF,&H00000000,&H604C1D95,-1,0,0,0,100,100,0,0,3,17,0,8,28,28,42,1
+Style: Disclosure,Noto Sans CJK JP Regular,19,&H00FFFFFF,&H00FFFFFF,&H00000000,&H70351A5F,0,0,0,0,100,100,0,0,3,11,0,8,28,28,101,1
+Style: Subtitle,Noto Sans CJK JP Bold,46,&H00FFFFFF,&H00FFFFFF,&H00000000,&H780F0920,-1,0,0,0,100,100,0,0,3,18,0,2,42,42,174,1
+Style: SubtitleWide,Noto Sans CJK JP Bold,40,&H00FFFFFF,&H00FFFFFF,&H00000000,&H780F0920,-1,0,0,0,100,100,0,0,3,18,0,2,42,42,174,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:08.06,Brand,,0,0,0,,HOSHILU  |  hoshilu.app
+Dialogue: 0,0:00:00.00,0:00:08.06,Disclosure,,0,0,0,,AI生成・AI加工映像
+Dialogue: 0,0:00:00.00,0:00:02.60,Subtitle,,0,0,0,,名前が分からなくても、
+Dialogue: 0,0:00:02.60,0:00:05.30,Subtitle,,0,0,0,,覚えている特徴から探せる。
+Dialogue: 0,0:00:05.30,0:00:08.06,SubtitleWide,,0,0,0,,2モールの価格を比較。\N最大13モールで探せる。
