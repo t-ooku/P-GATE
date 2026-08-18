@@ -44,7 +44,12 @@ test('release version has one source of truth', () => {
 // (confirm: SUBMIT必須、INSERT OR IGNORE INTO runway_* 以外のSQL文が
 // 混ざっていたら実行前に拒否)。生成後はGENERATED_REVIEW_REQUIREDで停止し、
 // QA承認なしにSNSへは公開されない。
-const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml'];
+// 同日、fetch-runway-raw-media.yml も追加した。GENERATED_REVIEW_REQUIRED時点の
+// 生動画(字幕焼き込み前)をR2から読み取り専用で取り出し、QA承認に必要な
+// 字幕合成・ハッシュ照合をローカルで行えるようにする手動実行専用ワークフロー
+// (confirm: FETCH必須、D1へはSELECTのみ、対象job_idのstorage_key配下しか
+// 読めない、R2へはobject getのみでput/deleteは行わない)。
+const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
