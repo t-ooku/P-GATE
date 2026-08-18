@@ -40,12 +40,17 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   assert.match(css, /grid-template-columns: repeat\(13, minmax\(82px, 1fr\)\)/);
   assert.match(css, /@media \(max-width: 760px\)/);
   assert.match(css, /\.marketplace-mobile-line \{\s*display: block/);
-  assert.match(css, /#marketplaceCoverageLead \.marketplace-mobile-line:nth-child\(2\)[\s\S]*white-space: nowrap/);
+  // 2026-08-18: nowrapの固定をやめた。1行に押し込むために文字が
+  // clamp(7px,...,9px)まで縮み、実機で読めないという指摘を受けたため、
+  // 折り返しを許して文字サイズを優先する方針へ変更した。
+  // 代わりに「小さすぎる文字が復活しないこと」を固定する。
+  assert.doesNotMatch(css, /font-size: clamp\((?:[0-9]|10)(?:\.\d+)?px,/);
   assert.match(css, /\.marketplace-group > p \{\s*display: none/s);
   assert.match(css, /grid-template-columns: repeat\(13, minmax\(0, 1fr\)\)/);
   assert.match(css, /overflow-x: auto/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)[\s\S]*overflow-x: hidden/);
-  assert.match(css, /\.marketplace-group-direct li \{[\s\S]*white-space: nowrap/);
+  // 同上。モール名も折り返し可にして11.5px以上を確保する。
+  assert.match(css, /\.marketplace-group-direct li \{[\s\S]*font-size: clamp\(11\.5px/);
   assert.doesNotMatch(layout, /item\.setAttribute\('role', 'button'\)/);
   assert.doesNotMatch(layout, /document\.querySelectorAll\('\.marketplace-group li'\)/);
   // UI v3: section order comes from static HTML/CSS grid, not a runtime
