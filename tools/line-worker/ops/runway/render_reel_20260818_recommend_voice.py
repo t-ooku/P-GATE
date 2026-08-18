@@ -79,11 +79,24 @@ def physical_screen_mask(frame, quad):
     """
     height, width = frame.shape[:2]
     region = np.zeros((height, width), np.uint8)
-    cv2.fillConvexPoly(region, inset_quad(quad, -0.06).astype(np.int32), 255)
-    value = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)[..., 2]
-    bezel = ((value < 70).astype(np.uint8)) * 255
-    bezel = cv2.morphologyEx(bezel, cv2.MORPH_OPEN, np.ones((9, 9), np.uint8))
-    candidate = cv2.bitwise_and(region, cv2.bitwise_not(bezel))
+    cv2.fillConvexPoly(region, inset_quad(quad, -0.03).astype(np.int32), 255)
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    hue, saturation, value = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    # 2026-08-19の公開版で、四隅推定がスマホの左端を超えていたフレーム(f85前後)
+    # にて、9x9の開き処理が8〜16pxの細いベゼルを消してしまい、明るい画面と
+    # 明るいソファが繋がって画面がスマホの外へ塗られた(公開後に大隆さんが発見、
+    # 当該Instagram投稿は削除済み)。対策は3つ:
+    #  (1) しきい値を70→90へ上げてベゼルの陰影勾配まで拾う
+    #  (2) 開き処理のカーネルを9x9→3x3へ縮め、細いベゼルを保存する
+    #  (3) 暖色で明るい領域(ベージュのソファ)を画面候補から直接除外する。
+    #      画面は白〜ラベンダー(無彩色または寒色)なので、暖色(H<=30)かつ
+    #      彩度がある(S>=30)明部は画面ではありえない
+    bezel = ((value < 90).astype(np.uint8)) * 255
+    bezel = cv2.morphologyEx(bezel, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    warm = (((hue <= 30) & (saturation >= 30) & (value >= 120)).astype(np.uint8)) * 255
+    warm = cv2.morphologyEx(warm, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    blocked = cv2.bitwise_or(bezel, warm)
+    candidate = cv2.bitwise_and(region, cv2.bitwise_not(blocked))
     count, labels, stats, _ = cv2.connectedComponentsWithStats(candidate, 8)
     if count < 2:
         return region
@@ -113,14 +126,11 @@ def compose(frame, quad, screen):
     mask = cv2.GaussianBlur(mask, (9, 9), 0)
     alpha = (mask.astype(np.float32) / 255.0)[..., None]
     # 実画面はスクリーンショットなので、動画側の露出に合わせないと貼り込みが
-    # 光って見える。貼り込む領域の明度平均を合わせるだけの補正に留める。
-    solid = mask > 200
-    if solid.sum() > 2000:
-        original = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)[..., 0][solid].astype(np.float32)
-        replacement = cv2.cvtColor(warped, cv2.COLOR_BGR2LAB)[..., 0][solid].astype(np.float32)
-        gain = float(np.clip(original.mean() / max(replacement.mean(), 1e-3), 0.55, 1.25))
-    else:
-        gain = 1.0
+    # 光って見える。当初はフレームごとに明度平均を合わせていたが、係数が
+    # フレーム間で0.67〜0.71と揺れ、貼り込みだけが明滅して「揺れ」の一因に
+    # なった(2026-08-19の大隆さん指摘)。照明はカット内で一定なので、実測値の
+    # 中央値0.70に固定する。
+    gain = 0.70
     adjusted = cv2.GaussianBlur(np.clip(warped.astype(np.float32) * gain, 0, 255), (3, 3), 0.8)
     return np.clip(frame.astype(np.float32) * (1 - alpha) + adjusted * alpha, 0, 255).astype(np.uint8)
 
