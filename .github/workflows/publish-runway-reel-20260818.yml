@@ -1,0 +1,256 @@
+name: Publish Runway reel 20260818 recommend-voice
+
+# 手動実行専用。AI女優リール第2弾(job: runway-hoshilu-recommend-voice-20260818-v1)を
+# 公開するための一連の本番変更をまとめる。
+#
+# 公開するバイト列は、大隆さんが実際に再生して確認した
+# ops/runway/media/reel_20260818_recommend_voice_v1.mp4 そのものをアップロードする。
+# CI内で再レンダリングはしない。再レンダリングすると、確認した映像と1バイトも
+# 違わない保証が無くなるため(レンダラーは同一環境ならバイト単位で再現するが、
+# ランナーのffmpeg/OpenCVのビルドが違えば結果は変わりうる)。
+#
+# 生成された偽のHOSHILU画面を実画面へ差し替えた経緯とレンダラーは
+# ops/runway/render_reel_20260818_recommend_voice.py と
+# reel_screen_track_20260818_recommend_voice.json に固定してあり、
+# 同一環境なら誰でも同じバイト列を再現できる。
+#
+# 安全弁:
+#  - confirm に PUBLISH の入力必須
+#  - 公開キューを APPROVED にする最終段だけは release に RELEASE を追加入力
+#    しない限り実行しない(承認と公開を分離する)
+#  - 書き込み前に読み取り専用のプリフライトを行い、重複投稿・競合する
+#    Instagram投稿・資格情報の期限切れがあれば中止する
+#  - R2アップロード後に往復ダウンロードでバイト一致を確認してからD1を触る
+#  - D1のtime-travelブックマークを書き込み前に記録する
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PUBLISH to upload the reviewed media and run the QA approval'
+        required: true
+        default: ''
+      release:
+        description: 'Type RELEASE to also queue it for Instagram publication (leave empty to stop after approval)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  JOB_ID: runway-hoshilu-recommend-voice-20260818-v1
+  POST_ID: hoshilu-runway-recommend-voice-20260818-v1
+  MEDIA_SHA256: 9c012c8e7675a740f5f608a9dac57684dc8ddee7725eda3baa1e26847ef66dd2
+  MEDIA_SIZE: '2946863'
+  MEDIA_FILE: ops/runway/media/reel_20260818_recommend_voice_v1.mp4
+  BUCKET: hoshilu-social-media
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: runway-reel-publish
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Require explicit confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "PUBLISH" ]; then
+            echo "::error::confirm input must be exactly PUBLISH. Nothing was executed."
+            exit 1
+          fi
+          if [ -n "${{ github.event.inputs.release }}" ] && [ "${{ github.event.inputs.release }}" != "RELEASE" ]; then
+            echo "::error::release input must be empty or exactly RELEASE."
+            exit 1
+          fi
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify the reviewed media file
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg
+          echo "${MEDIA_SHA256}  ${MEDIA_FILE}" | sha256sum -c -
+          actual_size="$(stat -c%s "${MEDIA_FILE}")"
+          test "${actual_size}" = "${MEDIA_SIZE}"
+          ffprobe -v error -show_entries stream=codec_type,codec_name,profile,width,height,pix_fmt,r_frame_rate,sample_rate,channels -of json "${MEDIA_FILE}" > media-probe.json
+          ffprobe -v error -show_entries format=duration -of csv=p=0 "${MEDIA_FILE}" > media-duration.txt
+          node <<'NODE'
+          const fs = require('node:fs');
+          const streams = JSON.parse(fs.readFileSync('media-probe.json', 'utf8')).streams || [];
+          const video = streams.find((s) => s.codec_type === 'video');
+          const audio = streams.find((s) => s.codec_type === 'audio');
+          const problems = [];
+          if (streams.length !== 2) problems.push(`stream count ${streams.length}`);
+          if (!video || video.codec_name !== 'h264' || video.profile !== 'High') problems.push('video codec/profile');
+          if (!video || video.width !== 720 || video.height !== 1280) problems.push('resolution');
+          if (!video || video.pix_fmt !== 'yuv420p' || video.r_frame_rate !== '24/1') problems.push('pix_fmt/frame rate');
+          if (!audio || audio.codec_name !== 'aac' || Number(audio.sample_rate) !== 44100 || Number(audio.channels) !== 2) problems.push('audio');
+          const duration = Number(fs.readFileSync('media-duration.txt', 'utf8').trim());
+          if (!(duration > 7.9 && duration < 8.2)) problems.push(`duration ${duration}`);
+          if (problems.length) throw new Error(problems.join(' / '));
+          console.log(`::notice::reviewed media verified: h264 High 720x1280 24fps + aac 44100 stereo, ${duration}s`);
+          NODE
+          # 動画が実際に最後までデコードできること(コンテナだけ正しい破損ファイルを弾く)
+          ffmpeg -v error -i "${MEDIA_FILE}" -f null -
+
+      - name: Read production state before any write
+        id: preflight
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error 'https://hoshilu.app/health?runway-reel-publish=1' > reel-health.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT job_id,post_id,status,qa_status,storage_key,storage_size_bytes,storage_content_type,rights_confirmed,ai_disclosure_confirmed,expected_credits,attempt_count,max_attempts FROM runway_generation_jobs WHERE job_id='${JOB_ID}';" > reel-job.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,platform,campaign_id,content_id,status,link,media_url,affiliate,external_post_id,platform_job_id,published_at FROM social_post_queue WHERE post_id='${POST_ID}';" > reel-queue.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT (SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'${POST_ID}' AND platform='INSTAGRAM' AND (content_id='${JOB_ID}' OR media_url='https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4') AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'' OR platform_job_id<>'')) AS duplicate_count,(SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'${POST_ID}' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS competing_due_count;" > reel-collision.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT account_id,scopes,expires_at,status FROM instagram_oauth_credentials WHERE platform='INSTAGRAM';" > reel-credential.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT initial_cap_credits,monthly_cap_credits,enabled,kill_switch,initial_test_completed FROM runway_budget_policy WHERE policy_id=1;" > reel-policy.json
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('node:fs');
+          const rows = (f) => { const d = JSON.parse(fs.readFileSync(f, 'utf8'));
+            return (Array.isArray(d) ? d : [d]).flatMap((x) => x.results || x.result?.results || []); };
+          const one = (f, label) => { const r = rows(f); if (r.length !== 1) throw new Error(`${label}: ${r.length} rows`); return r[0]; };
+          const job = one('reel-job.json', 'job'), post = one('reel-queue.json', 'queue');
+          const collision = one('reel-collision.json', 'collision');
+          const oauth = one('reel-credential.json', 'instagram credential');
+          const policy = one('reel-policy.json', 'budget policy');
+          const health = JSON.parse(fs.readFileSync('reel-health.json', 'utf8'));
+          const fail = [];
+          if (health?.ok !== true) fail.push('health not ok');
+          if (health?.checks?.social_publishers?.INSTAGRAM !== true) fail.push('instagram publisher not ready');
+          if (Number(collision.duplicate_count) !== 0) fail.push('duplicate publication exists');
+          if (Number(collision.competing_due_count) !== 0) fail.push('another Instagram post is already due');
+          if (oauth.status !== 'ACTIVE') fail.push('instagram credential not active');
+          if (!String(oauth.scopes || '').split(',').map((s) => s.trim()).includes('instagram_business_content_publish')) fail.push('publish scope missing');
+          if (!Number.isFinite(Date.parse(oauth.expires_at)) || Date.parse(oauth.expires_at) <= Date.now() + 5 * 60 * 1000) fail.push('instagram credential expiring');
+          if (Number(policy.kill_switch) !== 0 || Number(policy.enabled) !== 1) fail.push('runway policy disabled');
+          if (Number(job.rights_confirmed) !== 1 || Number(job.ai_disclosure_confirmed) !== 1) fail.push('rights/ai disclosure flags');
+          if (post.platform !== 'INSTAGRAM' || post.campaign_id !== 'hoshilu-runway-video' || post.content_id !== process.env.JOB_ID) fail.push('queue row identity');
+          if (String(post.external_post_id || '') || String(post.platform_job_id || '') || String(post.published_at || '')) fail.push('queue already has publication state');
+          let mode;
+          if (job.status === 'GENERATED_REVIEW_REQUIRED' && job.qa_status === 'PENDING' && post.status === 'REVIEW_REQUIRED') mode = 'review';
+          else if (job.status === 'APPROVED_FOR_POST' && job.qa_status === 'PASSED' && post.status === 'REVIEW_REQUIRED') mode = 'approved';
+          else fail.push(`unexpected state job=${job.status}/${job.qa_status} queue=${post.status}`);
+          if (fail.length) throw new Error(fail.join(' / '));
+          console.log(`mode=${mode}`);
+          console.error(`::notice::PREFLIGHT mode=${mode} job=${job.status}/${job.qa_status} queue=${post.status} duplicate=0 competing_due=0 initial_test_completed=${policy.initial_test_completed}`);
+          NODE
+
+      - name: Capture a D1 restore point
+        working-directory: tools/line-worker
+        run: npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > reel-recovery-bookmark.json
+
+      - name: Upload the reviewed media to R2 and verify the round trip
+        if: steps.preflight.outputs.mode == 'review'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          key="runway/${JOB_ID}/postprocessed-${MEDIA_SHA256}.mp4"
+          npx --yes wrangler@4.121.0 r2 object put "${BUCKET}/${key}" \
+            --file "${MEDIA_FILE}" --content-type video/mp4 --remote
+          npx --yes wrangler@4.121.0 r2 object get "${BUCKET}/${key}" --file roundtrip.mp4 --remote
+          cmp "${MEDIA_FILE}" roundtrip.mp4
+          echo "::notice::R2 object ${key} matches the reviewed file byte for byte"
+
+      - name: Stage the reviewed bytes and the corrected caption
+        if: steps.preflight.outputs.mode == 'review'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
+            --file ops/runway/stage_reel_20260818_recommend_voice.sql --yes > reel-stage-result.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const entries = JSON.parse(fs.readFileSync('reel-stage-result.json', 'utf8'));
+          const changes = (Array.isArray(entries) ? entries : [entries])
+            .map((e) => Number(e?.meta?.changes ?? e?.result?.meta?.changes));
+          if (JSON.stringify(changes) !== JSON.stringify([1, 1])) {
+            throw new Error(`stage changed ${JSON.stringify(changes)} rows, expected [1,1]`);
+          }
+          console.log('::notice::staged the postprocessed media and caption on both rows');
+          NODE
+
+      - name: Run the QA approval
+        if: steps.preflight.outputs.mode == 'review'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
+            --file ops/runway/approve_reel_20260818_recommend_voice.sql --yes > reel-approve-result.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const entries = JSON.parse(fs.readFileSync('reel-approve-result.json', 'utf8'));
+          const changes = (Array.isArray(entries) ? entries : [entries])
+            .map((e) => Number(e?.meta?.changes ?? e?.result?.meta?.changes));
+          if (changes[0] !== 1) throw new Error(`approval updated ${changes[0]} job rows, expected 1`);
+          if (changes[1] !== 1) throw new Error(`approval wrote ${changes[1]} audit rows, expected 1`);
+          console.log('::notice::job is APPROVED_FOR_POST / qa_status PASSED; the publication queue is still REVIEW_REQUIRED');
+          NODE
+
+      - name: Verify the approved media route serves exactly the reviewed bytes
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          url="https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4"
+          curl --fail-with-body --silent --show-error --dump-header route-headers.txt --output route-body.mp4 "$url"
+          grep -iq '^content-type: video/mp4' route-headers.txt
+          echo "${MEDIA_SHA256}  route-body.mp4" | sha256sum -c -
+          curl --fail-with-body --silent --show-error --header 'range: bytes=0-99' \
+            --dump-header route-range-headers.txt --output route-range.bin "$url"
+          grep -iq '^HTTP/.* 206' route-range-headers.txt
+          test "$(stat -c%s route-range.bin)" = "100"
+          echo "::notice::the media route returns the reviewed bytes and supports range requests"
+
+      - name: Release for Instagram publication
+        if: github.event.inputs.release == 'RELEASE'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json \
+            --file ops/runway/release_reel_20260818_recommend_voice.sql --yes > reel-release-result.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const entries = JSON.parse(fs.readFileSync('reel-release-result.json', 'utf8'));
+          const changes = (Array.isArray(entries) ? entries : [entries])
+            .map((e) => Number(e?.meta?.changes ?? e?.result?.meta?.changes));
+          if (changes[0] !== 1) throw new Error(`release updated ${changes[0]} queue rows, expected 1`);
+          console.log('::notice::queued for Instagram - the existing publisher cron will post it');
+          NODE
+
+      - name: Report the final state
+        if: always()
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT j.status AS job_status,j.qa_status,q.status AS queue_status,q.scheduled_at,q.external_post_id,q.published_at,q.last_error FROM runway_generation_jobs j LEFT JOIN social_post_queue q ON q.post_id=j.post_id WHERE j.job_id='${JOB_ID}';" > reel-final-state.json
+          node -e "
+          const d=require('./reel-final-state.json');
+          const r=(Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0]||{};
+          console.log('::notice::FINAL job='+r.job_status+'/'+r.qa_status+' queue='+r.queue_status+' scheduled_at='+(r.scheduled_at||'')+' external_post_id='+(r.external_post_id||'')+' published_at='+(r.published_at||'')+' last_error='+(r.last_error||''));
+          "
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runway-reel-publish-evidence-${{ github.run_id }}
+          path: |
+            tools/line-worker/reel-*.json
+            tools/line-worker/route-headers.txt
+            tools/line-worker/route-range-headers.txt
+          retention-days: 30
