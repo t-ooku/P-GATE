@@ -67,6 +67,9 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   const sectionMarkers = [
     ['hoshiluSearch', 'id="hoshiluSearch"'],
     ['MATCHES', 'class="section-title"><div><p class="step">MATCHES'],
+    // 2026-08-19 大隆さん指示: HOSHILU BUZZは目立つ箇所へ。検索・結果の直下
+    // (SALE RADARより上)の一等地に置き、バズ目当ての若者流入の受け口にする。
+    ['HOSHILU BUZZ', '<p class="step">HOSHILU BUZZ'],
     ['SALE RADAR', '<p class="step">HOSHILU SALE RADAR'],
     ['INSIGHT', '<p class="step">HOSHILU INSIGHT'],
     ['NEWS', '<p class="step">HOSHILU NEWS'],
@@ -100,7 +103,7 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   assert.match(module, /最多支持13个商城/);
   assert.match(module, /최대 13개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v389/);
+  assert.match(serviceWorker, /hoshilu-shell-v390/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

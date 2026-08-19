@@ -209,6 +209,25 @@ test('workerは/api/buzz/shelfをGET・5分キャッシュで公開する', () =
   assert.match(route.slice(0, 2000), /signedMarketplaceSearchLinks\(shelf\.search_keyword, buzzLinkContext\)\.catch\(\(\) => \[\]\)/u);
 });
 
+test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導線と出典注記を持つ', () => {
+  const html = fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8');
+  const script = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
+  assert.match(html, /<section id="buzzHome" class="buzz-home"/u);
+  assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
+  assert.match(html, /順位はモール公式ランキングが根拠/u);
+  assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs"><\/script>/u);
+  // 配置: MATCHES(結果)の後、SALE RADARの前。
+  const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
+  assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
+  assert.ok(buzz < html.indexOf('<p class="step">HOSHILU SALE RADAR'));
+  // 実データのみ表示。取得失敗時は枠ごと隠す(空箱・創作値を出さない)。
+  assert.match(script, /fetch\('\/api\/buzz\/shelf'/u);
+  assert.match(script, /classList\.add\('hidden'\)/u);
+  assert.doesNotMatch(script, /Math\.random/u);
+  assert.doesNotMatch(script, /購入/u);
+});
+
 test('/buzzページは出典と注意書きを持ち、断定表現を使わない', () => {
   const html = fs.readFileSync(path.join(worker, 'public', 'buzz.html'), 'utf8');
   const script = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');

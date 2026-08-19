@@ -388,3 +388,25 @@ test('自動運用の1サイクルはThreadsインサイト取り込みも実行
   assert.deepEqual(result.threadsInsights, { checked: 0, saved: 0, failed: 0 });
   assert.equal(threadsInsightsQueried, true);
 });
+
+// 2026-08-19 大隆さん指示: HOSHILU BUZZ(/buzz)をSNS定常投稿へ織り交ぜる。
+test('X定常ローテーションはHOSHILU BUZZ紹介を含み、/buzzへUTM付きで送客する', () => {
+  // 30日分でX非動画枠の全ローテーション(6本)が一巡することを確認する。
+  const posts = buildSocialAutopilotPosts(new Date('2026-08-20T00:00:00.000Z'), 30)
+    .filter(post => post.platform === 'X' && /-x-guide-/.test(post.post_id));
+  const buzzPosts = posts.filter(post => /^buzz-/.test(post.content_id));
+  assert.ok(buzzPosts.length >= 2, 'BUZZ posts must appear in the rotation');
+  for (const post of buzzPosts) {
+    const url = new URL(post.link);
+    assert.equal(url.hostname, 'hoshilu.app');
+    assert.equal(url.pathname, '/buzz');
+    assert.equal(url.searchParams.get('q'), null, 'BUZZ posts must not carry a search query');
+    assert.match(url.searchParams.get('utm_campaign'), /13mall/);
+    assert.match(post.caption, /モール公式ランキング|価格を確認できた商品/u);
+    assert.doesNotMatch(post.caption, /No\.?1|最安|バズって|Z世代/u);
+  }
+  // 既存の検索ガイド投稿は従来どおりホーム(/)へ。
+  const guidePosts = posts.filter(post => !/^buzz-/.test(post.content_id));
+  assert.ok(guidePosts.length > 0);
+  for (const post of guidePosts) assert.equal(new URL(post.link).pathname, '/');
+});
