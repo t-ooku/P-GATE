@@ -25,6 +25,7 @@ import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
+import { buzzShelfResult, recordBuzzSnapshots } from './buzz-shelf.mjs';
 import { filterRankingCategoryCandidates } from './ranking-category-eligibility.mjs';
 import {
   relatedProductRecommendationQueries, resolveRelatedProductRecommendationQueries
@@ -2730,6 +2731,29 @@ export default {
     if (request.method === 'POST' && url.pathname === '/api/rankings') return handleRankingApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/hoshilu-rankings') return handleHoshiluRankingApi(request, env);
     if (request.method === 'GET' && url.pathname === '/api/ranking-capabilities') return Response.json({ ok: true, marketplaces: MARKETPLACE_RANKING_CAPABILITIES }, { headers: { 'cache-control': 'public, max-age=3600' } });
+    if (request.method === 'GET' && url.pathname === '/api/buzz/shelf') {
+      // HOSHILU BUZZ棚(Phase 1)。順位根拠はモール公式ランキングAPIのみ。
+      // 上流はmarketplace_ranking_cache(D1・5分)で保護し、レスポンスも5分キャッシュ。
+      try {
+        const result = await buzzShelfResult(env, fetch);
+        // v3.1 §11-14/§17/§30: 商品の発見と購入先の解決を分離する。各ジャンル棚へ
+        // 「◯◯で探す」検索フォールバック(署名付き/goリンク=モールクリック計測§33)
+        // を付与。検索語は検証済み小ジャンル名。「見る」(直接商品URL)とは表示を
+        // 混同しない(§14はラベル生成側で「◯◯で探す」固定)。
+        const buzzLinkContext = {
+          env, origin: url.origin, sessionHash: 'BUZZ_SHELF', seed: 'buzz-shelf',
+          asin: '', category: 'BUZZ_SHELF', trafficClass: undefined, sort: undefined
+        };
+        for (const shelf of result.shelves) {
+          if (!shelf.search_keyword) continue;
+          // 署名Secret未設定等でリンクを作れなくても、棚表示自体は止めない。
+          shelf.search_links = await signedMarketplaceSearchLinks(shelf.search_keyword, buzzLinkContext).catch(() => []);
+        }
+        return Response.json({ ok: true, result }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
+      } catch (error) {
+        return Response.json({ ok: false, error: String(error?.message || 'BUZZ_SHELF_FAILED').slice(0, 80) }, { status: 502, headers: { 'cache-control': 'no-store' } });
+      }
+    }
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
     if (request.method === 'GET' && url.pathname === '/api/refinement-chips') {
       // Condition search moved into the search panel (2026-08-07 request):
@@ -2800,7 +2824,10 @@ export default {
         // 定期実行できる。1回あたりの件数上限は insight-routes.mjs 側で管理。
         runInsightScan(env, scheduledAt.toISOString()),
         // APIで確認できた価格だけを購入希望額と比較する。AI推定価格は使わない。
-        runTargetPriceScan(env, scheduledAt.toISOString())
+        runTargetPriceScan(env, scheduledAt.toISOString()),
+        // HOSHILU BUZZ「急上昇」用の公式ランキング順位スナップショット。
+        // 6時間ごとに1回だけ実記録し、migration 0057 未適用なら静かにスキップ。
+        recordBuzzSnapshots(env, fetch, scheduledAt.getTime())
       ])
     ));
   }
