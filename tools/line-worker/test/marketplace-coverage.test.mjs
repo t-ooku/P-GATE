@@ -61,20 +61,19 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   assert.match(html, /class="hoshilu-primary"/);
   // UI v5 (2026-08-07): every section lives in one static column, in the
   // exact same order at every breakpoint - ホシル検索 -> MATCHES -> SALE
-  // RADAR -> INSIGHT -> NEWS -> MARKETPLACE COVERAGE -> SEARCH AGENT ->
+  // RADAR -> INSIGHT -> NEWS -> SEARCH AGENT -> MARKETPLACE COVERAGE ->
   // DISCOVERY -> OFFICIAL. Assert the canonical order directly so a future
   // edit can't silently reintroduce a per-breakpoint split.
   const sectionMarkers = [
     ['hoshiluSearch', 'id="hoshiluSearch"'],
     ['MATCHES', 'class="section-title"><div><p class="step">MATCHES'],
-    // 2026-08-07: MARKETPLACE COVERAGE moved above SALE RADAR on request -
-    // which malls HOSHILU can search is what a first-time visitor needs to
-    // know before any sale feed makes sense.
-    ['MARKETPLACE COVERAGE', '<p class="step">MARKETPLACE COVERAGE'],
     ['SALE RADAR', '<p class="step">HOSHILU SALE RADAR'],
     ['INSIGHT', '<p class="step">HOSHILU INSIGHT'],
     ['NEWS', '<p class="step">HOSHILU NEWS'],
     ['SEARCH AGENT', '<p class="step">HOSHILU SEARCH AGENT'],
+    // 2026-08-19 大隆さん指示: MARKETPLACE COVERAGE は検索直下から
+    // HOSHILU SEARCH AGENT の直後へ移動(探し方の説明→対応モール一覧の順)。
+    ['MARKETPLACE COVERAGE', '<p class="step">MARKETPLACE COVERAGE'],
     ['DISCOVERY', '<p class="step">HOSHILU DISCOVERY'],
     ['OFFICIAL', '<p class="step">HOSHILU OFFICIAL'],
   ];
