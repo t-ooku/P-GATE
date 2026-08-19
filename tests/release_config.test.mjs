@@ -56,7 +56,11 @@ test('release version has one source of truth', () => {
 // 2026-08-19 に generate-runway-persona.yml を追加した。AI女優の参照画像候補を
 // Runway API(gen4_image)で生成しartifactとして取り出す手動実行専用ワークフロー
 // (confirm: GENERATE必須、1〜8枚に制限、D1/R2へは書き込まない)。
-const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml', 'publish-runway-reel-20260818.yml', 'generate-runway-persona.yml'];
+// 同日、publish-runway-reel.yml(汎用版)を追加した。従来のリールごとの
+// 専用ワークフロー+SQL3本を、入力パラメータ(job_id/media_file/media_sha256)で
+// 汎用化した(confirm: PUBLISH と release: RELEASE の二段確認は同じ)。
+// publish-runway-reel-20260818.yml は第2弾(公開済み)の記録として残す。
+const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml', 'publish-runway-reel-20260818.yml', 'publish-runway-reel.yml', 'generate-runway-persona.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
