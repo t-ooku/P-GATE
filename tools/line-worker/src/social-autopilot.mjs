@@ -67,6 +67,19 @@ const X_NON_VIDEO_POSTS = Object.freeze([
     id: 'search-example-memory',
     caption: '検索例：「動画で見た、バッグにつける小さいぬいぐるみ」。正式名を知らなくても、覚えている特徴から探せます。',
     query: '動画で見た、バッグにつける小さいぬいぐるみ'
+  },
+  // 2026-08-19 大隆さん指示: 若者向けにHOSHILU BUZZ(/buzz)もSNS投稿へ
+  // 織り交ぜる。数値・人気の断定はせず、順位根拠(モール公式ランキング)を
+  // 本文に明記する。link_pathは/buzzへ直接送る(検索qは付けない)。
+  {
+    id: 'buzz-shelves-intro',
+    caption: '「今、これ来てる」を小ジャンル別にまとめたHOSHILU BUZZができました。順位はモール公式ランキングだけが根拠。欲しい商品が決まっていなくても、開けば何か見つかるかも。',
+    link_path: '/buzz'
+  },
+  {
+    id: 'buzz-budget-shelves',
+    caption: '3,000円以下・5,000円以下で、いま売れている商品だけを集めた棚をHOSHILU BUZZに用意しました。価格を確認できた商品だけを載せています。予算から探したい日はこちら。',
+    link_path: '/buzz'
   }
 ]);
 
@@ -242,7 +255,7 @@ function scheduledAt(parts, hour, minute) {
   return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, hour - 9, minute)).toISOString();
 }
 
-function campaignLink(platform, date, content = date, searchQuery = '') {
+function campaignLink(platform, date, content = date, searchQuery = '', path = '/') {
   const params = new URLSearchParams({
     utm_source: platform === 'X' ? 'x' : 'instagram',
     utm_medium: 'social',
@@ -250,7 +263,7 @@ function campaignLink(platform, date, content = date, searchQuery = '') {
     utm_content: content
   });
   if (searchQuery) params.set('q', searchQuery);
-  return `https://hoshilu.app/?${params}`;
+  return `https://hoshilu.app${path}?${params}`;
 }
 
 // query を持たない=非アフィリエイト枠。リンクを付けない。
@@ -335,7 +348,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         platform: 'X',
         campaign_id: CAMPAIGN_ID,
         caption: content.caption,
-        link: campaignLink('X', key, content.id, content.query),
+        link: campaignLink('X', key, content.id, content.query, content.link_path || '/'),
         scheduled_at: scheduledAt(parts, 20, 0),
         status: 'APPROVED'
       }));
