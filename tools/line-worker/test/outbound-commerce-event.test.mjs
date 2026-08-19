@@ -103,13 +103,31 @@ test('Amazon送客URLだけに現在のアソシエイトIDを付け、既存の
     decorateAmazonAssociateDestination('https://search.rakuten.co.jp/search/mall/test/', 'hoshilu00-22'),
     'https://search.rakuten.co.jp/search/mall/test/'
   );
+  // 2026-08-17: セール系ページもタグ付け対象になった。HOSHILU自身のサイトから
+  // 出ていく送客なので、他人のタグが載っていてもHOSHILUのタグへ差し替える
+  // (/dp と同じ扱い)。これが無いと、Amazonのセールページへ何件送客しても
+  // 適格販売にならない。
   assert.equal(
-    decorateAmazonAssociateDestination('https://www.amazon.co.jp/deals?tag=other-22', 'hoshilu00-22'),
-    'https://www.amazon.co.jp/deals?tag=other-22'
+    new URL(decorateAmazonAssociateDestination(
+      'https://www.amazon.co.jp/deals?tag=other-22', 'hoshilu00-22'
+    )).searchParams.get('tag'),
+    'hoshilu00-22'
   );
+  assert.equal(
+    new URL(decorateAmazonAssociateDestination(
+      'https://www.amazon.co.jp/gp/goldbox', 'hoshilu00-22'
+    )).searchParams.get('tag'),
+    'hoshilu00-22'
+  );
+  // amazon.com は対象外のまま。アソシエイトは国ごとに別アカウントで、
+  // JP用タグ(hoshilu00-22)を .com へ付けても報酬は発生しないため。
   assert.equal(
     decorateAmazonAssociateDestination('https://www.amazon.com/dp/B000000ABC?tag=other-20', 'hoshilu00-22'),
     'https://www.amazon.com/dp/B000000ABC?tag=other-20'
+  );
+  assert.equal(
+    decorateAmazonAssociateDestination('https://www.amazon.com/deals', 'hoshilu00-22'),
+    'https://www.amazon.com/deals'
   );
   assert.equal(
     new URL(decorateAmazonAssociateDestination(
