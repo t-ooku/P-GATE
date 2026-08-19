@@ -94,11 +94,20 @@ jobs:
 
       - name: Verify the reviewed media file
         working-directory: tools/line-worker
+        # 2026-08-19: run #3がapt(ffmpegインストール)のミラー不調で30分無応答に
+        # なった。ステップ全体に10分の上限を置き、apt自体もタイムアウト+リトライで
+        # 数分以内に確実に成否を返す。
+        timeout-minutes: 10
         run: |
           set -euo pipefail
           media="ops/runway/media/${MEDIA_NAME}"
           test -f "$media" || { echo "::error::$media not found"; exit 1; }
-          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg
+          export DEBIAN_FRONTEND=noninteractive
+          install_ffmpeg() {
+            sudo timeout 120 apt-get update -qq -o Acquire::Retries=3 &&
+            sudo timeout 180 apt-get install -y --no-install-recommends -o Acquire::Retries=3 ffmpeg
+          }
+          install_ffmpeg || { echo "::warning::apt attempt 1 failed or timed out; retrying"; sleep 10; install_ffmpeg; }
           echo "${MEDIA_SHA256}  ${media}" | sha256sum -c -
           stat -c%s "$media" > media-size.txt
           ffprobe -v error -show_entries stream=codec_type,codec_name,profile,width,height,pix_fmt,r_frame_rate,sample_rate,channels -of json "$media" > media-probe.json
