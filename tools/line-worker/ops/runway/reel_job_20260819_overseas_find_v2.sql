@@ -49,6 +49,6 @@ INSERT OR IGNORE INTO runway_audit_log (
   'runway-overseas-find-job-approved-20260819-v2',
   'runway-hoshilu-overseas-find-20260819-v2',
   'JOB_APPROVED',
-  '{"expected_credits":336,"rights_confirmed":true,"ai_disclosure_confirmed":true,"external_publish":false,"approved_by":"USER_EXPLICIT_2026-08-19","persona":"hoshilu-approved-model-reference-v2","audience":"10-20s","structure":"cut_a_only_no_screen_shown","retry_of":"runway-hoshilu-overseas-find-20260819-v1","retry_reason":"character image 404 at submit time (deploy was blocked by a stale test file); no credits were charged"}',
+  '{"expected_credits":336,"rights_confirmed":true,"ai_disclosure_confirmed":true,"external_publish":false,"approved_by":"USER_EXPLICIT_2026-08-19","persona":"hoshilu-approved-model-reference-v2","audience":"10-20s","structure":"cut_a_only_no_screen_shown","retry_of":"runway-hoshilu-overseas-find-20260819-v1","retry_reason":"character image 404 at submit time (deploy was blocked by a stale test file) - no credits were charged"}',
   '2026-08-19T06:30:00.000Z'
 );
