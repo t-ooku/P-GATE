@@ -29,6 +29,35 @@ test('ホームはcanonicalに一致する言語指定と全ガイドへの明�
   assert.match(styles, /\.shopping-guides-all a:hover,\.shopping-guides-all a:focus-visible/);
 });
 
+// AI Overview/検索スニペット品質: UIクローム(ナビ・ダイアログ・通知設定・
+// 会員ハブ・お知らせ・フッター)の文言が本文スニペットへ混入しないよう
+// data-nosnippetを固定する。根拠: claude/hoshilu_ai_overview_seo_findings_20260818.md
+// (全ソースで「本文以外の混入あり」を実測)。一方で価値提案の本文(ヒーロー・
+// 検索パネル・FAQ・ガイド)はスニペット対象のまま残す。
+test('UIクロームはdata-nosnippet、本文セクションはスニペット対象のまま', async () => {
+  const html = await read('index.html');
+  const chrome = [
+    /<header class="topbar" data-nosnippet>/,
+    /<dialog id="installDialog"[^>]* data-nosnippet>/,
+    /<dialog id="notificationSettingsDialog"[^>]* data-nosnippet>/,
+    /<nav id="searchModeSwitch"[^>]* data-nosnippet>/,
+    /<aside class="sale-notice-card"[^>]* data-nosnippet>/,
+    /<section id="insight"[^>]* data-nosnippet>/,
+    /<section id="announcements"[^>]* data-nosnippet>/,
+    /<footer data-nosnippet>/
+  ];
+  for (const pattern of chrome) assert.match(html, pattern);
+  const snippetable = [
+    /<section class="hero"(?![^>]*data-nosnippet)[^>]*>/,
+    /<section id="hoshiluSearch"(?![^>]*data-nosnippet)[^>]*>/,
+    /<section id="faq"(?![^>]*data-nosnippet)[^>]*>/,
+    /<section class="shopping-guides"(?![^>]*data-nosnippet)[^>]*>/
+  ];
+  for (const pattern of snippetable) assert.match(html, pattern);
+  // metaタグでのnosnippet全面禁止はしない(ページ全体が対象外になるため)。
+  assert.doesNotMatch(html, /<meta[^>]+nosnippet/);
+});
+
 test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを案内する', async () => {
   const [i18n, sitemap, robots, worker] = await Promise.all([
     read('site-i18n.js'), read('sitemap.xml'), read('robots.txt'), read('service-worker.js')
@@ -40,5 +69,5 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 31);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v387/);
+  assert.match(worker, /hoshilu-shell-v388/);
 });
