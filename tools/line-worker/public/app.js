@@ -774,6 +774,35 @@ const relatedCategoryShelfCopy={
 };
 function relatedCategoryCard(item){const language=elements.language.value||'JA';const labels=relatedCategoryShelfCopy[language]||relatedCategoryShelfCopy.JA;const card=document.createElement('article');card.className='product-card unverified-card related-category-card';card.append(textElement('span','unverified-badge',labels.badge),textElement('h3','',String(item?.query||'')),textElement('div','recommendation-reason',`${labels.reason}：${String(item?.reason||'検索内容と一緒に使えるカテゴリ')}`));const links=marketplaceLinks(item?.marketplace_search_links,true);if(links)card.append(links);return card;}
 function recommendationRowFor(result,t,query,fallbackProducts={candidates:[],confirmed:false}){const products=(Array.isArray(result?.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);const copy=resultRowCopyFor(elements.language.value);if(products.length){const row=resultRow(products.map((candidate,index)=>productCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const verifiedFallback=(Array.isArray(fallbackProducts?.candidates)?fallbackProducts.candidates:[]).slice(0,RESULT_ROW_LIMIT);if(verifiedFallback.length){const confirmed=Boolean(fallbackProducts.confirmed);const row=resultRow(verifiedFallback.map((candidate,index)=>productCard(candidate,index,t,confirmed,query)),confirmed?copy.verifiedRecommendationTitle:copy.unconfirmedTitle,confirmed?copy.verifiedRecommendationNote:copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}
+const marketplaceQuickStripCopy={
+  JA:{heading:'他のモールでも同じ条件で探せます',jump:'13モールすべて見る'},
+  EN:{heading:'Search the same terms on other marketplaces',jump:'See all 13 marketplaces'},
+  ZH:{heading:'也可在其他商城以相同条件搜索',jump:'查看全部13个商城'},
+  KO:{heading:'다른 쇼핑몰에서도 같은 조건으로 찾을 수 있습니다',jump:'13개 쇼핑몰 모두 보기'}
+};
+// 2026-08-19 マスター優先順位の実装: 13モール横断カードは結果一覧の最後尾に
+// あり、商品カードを全部スクロールし切った人しか到達しなかった(実測の
+// 訪問→送客の細り方から到達者はごく少数)。Amazon 180日3件の適格販売に
+// 直結するため、確認済み商品の直後へ「先頭6モール(サーバー側の並びで
+// Amazonが先頭)」の小型ストリップを挿入する。順位・リンク生成は変えず、
+// 既存の署名付き/goリンクをそのまま使う。完全版カードは従来どおり最後尾に
+// 残し、ストリップからスクロールで飛べるようにする。
+function marketplaceQuickStrip(result){
+  const links=(Array.isArray(result?.marketplace_search_links)?result.marketplace_search_links:[]).filter(item=>item?.url).slice(0,6);
+  if(!links.length)return null;
+  const copy=marketplaceQuickStripCopy[elements.language.value]||marketplaceQuickStripCopy.JA;
+  const card=document.createElement('article');
+  card.className='refinement-card marketplace-quick-strip';
+  card.append(textElement('strong','marketplace-quick-strip-heading',copy.heading));
+  const linksNode=marketplaceLinks(links);
+  if(linksNode)card.append(linksNode);
+  const jump=document.createElement('button');
+  jump.type='button';jump.className='marketplace-fallback-search-jump marketplace-quick-strip-jump';
+  jump.textContent=copy.jump;
+  jump.addEventListener('click',()=>{document.querySelector('#marketplaceFallback')?.scrollIntoView({behavior:'smooth',block:'start'});});
+  card.append(jump);
+  return card;
+}
 function renderResults(result,requestId){
   // resultCarouselは検索ごとに新しいtrackを作るため、DOMから外す前に旧tickerの
   // interval・アニメーション・イベントを明示解除する。
@@ -797,7 +826,10 @@ function renderResults(result,requestId){
     const resultCards=[];
     const clarification=clarificationCard(result);
     if(clarification)resultCards.push(clarification);
-    resultCards.push(...rows);
+    resultCards.push(rows[0]);
+    const quickStrip=marketplaceQuickStrip(result);
+    if(quickStrip)resultCards.push(quickStrip);
+    resultCards.push(...rows.slice(1));
     const relatedKeywords=relatedKeywordCard(result);
     if(relatedKeywords)resultCards.push(relatedKeywords);
     const marketplaceFallback=marketplaceFallbackCard(result);
