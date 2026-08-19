@@ -282,7 +282,9 @@ test('検索結果の有無に関わらずモール横断フォールバック�
     appSource,
     /const marketplaceFallback=marketplaceFallbackCard\(result\);\s*if\(marketplaceFallback\)resultCards\.push\(marketplaceFallback\);/
   );
-  assert.match(appSource, /resultCards\.push\(\.\.\.rows\)/);
+  // 2026-08-19: rowsは先頭行→クイックストリップ→残りの行の順で挿入される。
+  assert.match(appSource, /resultCards\.push\(rows\[0\]\)/);
+  assert.match(appSource, /resultCards\.push\(\.\.\.rows\.slice\(1\)\)/);
   assert.doesNotMatch(appSource, /function refinementCard\(/);
   assert.match(appSource, /elements\.cards\.replaceChildren\(\.\.\.resultCards\);/);
   assert.match(
@@ -524,7 +526,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v386/);
+  assert.match(serviceWorker, /hoshilu-shell-v387/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1375,4 +1377,32 @@ test('公式モール店のオファーはofficial_storeを持ち、表示だけ
   assert.match(app, /function offerMarketplaceLabel\(offer\)\{ return offer\?\.official_store\?\.label\|\|marketplaceLabel\(offer\?\.marketplace\); \}/);
   // 順位づけ(total_cost昇順のsort)にofficial_storeを使っていないこと。
   assert.doesNotMatch(app, /sort\([^)]*official_store/);
+});
+
+test('検索成功時、確認済み商品の直後に13モール横断のクイックストリップが挟まる', async () => {
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  // 2026-08-19 マスター優先順位: 13モール横断カードは最後尾にしか無く、
+  // 到達者がごく少数だった。確認済み商品の直後に先頭6モール(サーバー並びで
+  // Amazonが先頭)の小型ストリップを挿入し、順位・リンク生成は変えない。
+  assert.match(app, /function marketplaceQuickStrip\(result\)/);
+  assert.match(app, /\.slice\(0,6\)/);
+  // 挿入位置: rows[0](確認済み) → ストリップ → 残りの行、の順。
+  assert.match(app, /resultCards\.push\(rows\[0\]\);\s*const quickStrip=marketplaceQuickStrip\(result\);\s*if\(quickStrip\)resultCards\.push\(quickStrip\);\s*resultCards\.push\(\.\.\.rows\.slice\(1\)\)/);
+  // ストリップから最後尾の完全版カードへ飛べる。
+  assert.match(app, /marketplace-quick-strip-jump/);
+  assert.match(app, /#marketplaceFallback'\)\?\.scrollIntoView/);
+});
+
+test('セール欄の補足文は短文化された若者向けコピーになっている', async () => {
+  const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  const saleCenter = fs.readFileSync(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
+  // 2026-08-19 大隆さん指示「セール通知機能の欄の補足文章の文字数が多すぎる。
+  // 若者向けにもう少し端的に」。長文の旧コピーへ戻さないことを固定する。
+  for (const source of [html, saleCenter]) {
+    assert.doesNotMatch(source, /本当に安い購入先/);
+    assert.doesNotMatch(source, /おすすめ記事や一般ニュースは通知しません/);
+  }
+  assert.match(html, /13モールのセール、始まる前に通知。/);
+  assert.match(html, /届くのはセール通知だけ。開始前と開始時のみ。/);
+  assert.match(saleCenter, /13モールのセール、始まる前に通知。/);
 });

@@ -40,7 +40,7 @@ test('LP・検索フォールバック・SALE RADARは13モール表記で一致
   assert.match(html, /最大13モール/);
   assert.match(app, /marketplace:'YAHOO_JP'.+shopping\.yahoo\.co\.jp\/search/);
   assert.match(coverage, /Up to 13 marketplaces/);
-  assert.match(sales, /13モールのセール情報を横断/);
+  assert.match(sales, /13モールのセール、始まる前に通知/);
   assert.match(sales, /\['YAHOO_JP','Yahoo!ショッピング'\]/);
   assert.match(sales, /preference\.marketplaces==='ALL'\?marketplaces\.map/);
   assert.equal(SALE_MARKETPLACES.length, 13);

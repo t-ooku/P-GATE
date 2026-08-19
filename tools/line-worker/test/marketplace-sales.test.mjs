@@ -67,7 +67,7 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   ]);
   assert.match(html, /HOSHILU SALE RADAR/);
   assert.match(html, /全てのセールを、<br>先回りチェックしよう/);
-  assert.match(html, /13モールのセール情報を横断。開始前にもお知らせし/);
+  assert.match(html, /13モールのセール、始まる前に通知。/);
   assert.match(html, /セール専用通知/);
   assert.match(html, /id="notificationSettingsDialog"/);
   assert.match(html, /id="settingsInfoTypes"/);
@@ -86,11 +86,11 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   assert.match(css, /\.sale-center-heading>\*\{min-width:0;max-width:100%\}/);
   assert.match(css, /\.sale-center-lead\{[^}]*overflow-wrap:anywhere/);
   assert.match(css, /@media\(max-width:760px\)\{[^}]*\.sale-center\{[^}]*max-width:100%/);
-  assert.match(client, /13モールのセール情報を横断/);
+  assert.match(client, /13モールのセール、始まる前に通知/);
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v386/);
+  assert.match(sw, /hoshilu-shell-v387/);
   assert.match(css, /\.sale-rail\{[^}]*overflow-y:auto/);
   assert.doesNotMatch(css, /\.sale-card\{/);
   assert.match(sw, /sale-center\.mjs/);
