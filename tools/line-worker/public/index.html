@@ -45,7 +45,7 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://hoshilu.app/#website","url":"https://hoshilu.app/","name":"ホシル｜HOSHILU","inLanguage":["ja","en","zh","ko"],"potentialAction":{"@type":"SearchAction","target":"https://hoshilu.app/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"WebApplication","@id":"https://hoshilu.app/#app","name":"ホシル","alternateName":"HOSHILU","url":"https://hoshilu.app/","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"商品名が分からなくても用途や特徴から探せる無料の商品検索サービス。楽天市場とYahoo!ショッピングの商品候補をまとめて確認し、Amazonなど11モールにも同じ条件で探しに行けます。","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}},{"@type":"Organization","@id":"https://hoshilu.app/#organization","name":"HOSHILU","url":"https://hoshilu.app/","logo":{"@type":"ImageObject","url":"https://hoshilu.app/icons/hoshilu-v2-512.png"}},{"@type":"FAQPage","@id":"https://hoshilu.app/#faq","mainEntity":[{"@type":"Question","name":"ホシルでは何を検索できますか？","acceptedAnswer":{"@type":"Answer","text":"商品名が分からなくても、見た目・用途・見た場所などの手がかりから商品を探せます。まとめて検索2モールと個別検索11モールの最大13モールに対応しています。"}},{"@type":"Question","name":"ホシルは無料で使えますか？","acceptedAnswer":{"@type":"Answer","text":"商品検索はログインなしで無料で利用できます。検索履歴の保存や通知機能は無料会員向けに提供しています。"}},{"@type":"Question","name":"表示価格は実際の販売価格ですか？","acceptedAnswer":{"@type":"Answer","text":"接続済みモールで確認できた送料込み価格と、AIによる参考推定価格を区別して表示します。購入前に必ずリンク先モールで最新価格・送料・在庫を確認してください。"}},{"@type":"Question","name":"InstagramやTikTokでも同じ検索語を使えますか？","acceptedAnswer":{"@type":"Answer","text":"検索語をコピーしてInstagramまたはTikTokを開く導線を用意しています。アプリの検索欄が空の場合は、コピーした検索語を貼り付けてください。"}}]}]}</script>
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar" data-nosnippet>
     <a class="brand" href="#top" aria-label="ホシル ホーム">
       <img src="/icons/icon.svg" width="42" height="42" alt="">
       <span>HOSHILU<small>ホシル</small></span>
@@ -56,7 +56,7 @@
     <nav class="account-nav" aria-label="Account"><a id="memberLink" href="/login.html">マイページ</a><button id="memberLogout" class="account-logout hidden" type="button" data-i18n="nav.logout">ログアウト</button><a class="business-link" href="/seller" data-i18n="nav.business">メーカー＆セラー専用</a></nav>
   </header>
 
-  <dialog id="installDialog" class="install-dialog" aria-labelledby="installDialogTitle">
+  <dialog id="installDialog" class="install-dialog" aria-labelledby="installDialogTitle" data-nosnippet>
     <div class="install-dialog-card">
       <button id="installDialogClose" class="install-dialog-close" type="button" aria-label="Close">&times;</button>
       <img src="/icons/icon.svg" width="64" height="64" alt="">
@@ -67,7 +67,7 @@
     </div>
   </dialog>
 
-  <dialog id="notificationSettingsDialog" class="notification-settings-dialog" aria-labelledby="notificationSettingsTitle">
+  <dialog id="notificationSettingsDialog" class="notification-settings-dialog" aria-labelledby="notificationSettingsTitle" data-nosnippet>
     <form id="notificationSettingsForm" class="notification-settings-card" method="dialog">
       <div class="settings-header">
         <div><p class="step">NOTIFICATION SETTINGS</p><h2 id="notificationSettingsTitle">通知設定</h2></div>
@@ -115,7 +115,7 @@
     </form>
   </dialog>
 
-  <nav id="searchModeSwitch" class="search-mode-switch" data-mode="identify" aria-label="検索方法">
+  <nav id="searchModeSwitch" class="search-mode-switch" data-mode="identify" aria-label="検索方法" data-nosnippet>
     <button id="searchModeIdentify" class="search-mode-button active" type="button" aria-pressed="true">AIに確認して探す</button>
     <button id="searchModeDirect" class="search-mode-button" type="button" aria-pressed="false">すぐ検索</button>
   </nav>
@@ -240,7 +240,7 @@
                 <h2 id="saleCenterTitle">全てのセールを、<br>先回りチェックしよう</h2>
             <p id="saleCenterLead" class="sale-center-lead">13モールのセール、始まる前に通知。</p>
               </div>
-              <aside class="sale-notice-card" aria-label="無料会員のセール通知設定">
+              <aside class="sale-notice-card" aria-label="無料会員のセール通知設定" data-nosnippet>
                 <strong id="saleNoticeTitle">無料会員限定・セール専用通知</strong>
                 <p id="saleNoticeBody">届くのはセール通知だけ。開始前と開始時のみ。</p>
                 <label class="sale-preference"><input id="saleOnlyToggle" type="checkbox" checked><span id="saleToggleLabel">全モールのセール通知を受け取る</span></label>
@@ -254,7 +254,7 @@
             <div id="saleRailMore"></div>
           </section>
 
-          <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle">
+          <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle" data-nosnippet>
             <p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">保存した検索条件を振り返る。</h2>
             <p id="insightSummary">保存した検索条件と、新着通知のオン・オフをまとめて確認できます。</p>
             <ul class="insight-diff-note">
@@ -273,7 +273,7 @@
             </div>
           </section>
 
-          <section id="announcements" class="announcements-panel" aria-labelledby="announcementsTitle">
+          <section id="announcements" class="announcements-panel" aria-labelledby="announcementsTitle" data-nosnippet>
             <div class="announcements-heading">
               <p class="step">HOSHILU NEWS</p>
               <h2 id="announcementsTitle">お知らせ</h2>
@@ -362,7 +362,7 @@
         </div>
       </div>
     </div></main>
-  <footer><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイトのリンクからも収入を得る場合があります。</span><span><a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></span></footer>
+  <footer data-nosnippet><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイトのリンクからも収入を得る場合があります。</span><span><a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></span></footer>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=2"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=92"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=4"></script><script type="module" src="/app.js?v=137"></script><script type="module" src="/ai-search-ui.mjs?v=10"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=86"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>
