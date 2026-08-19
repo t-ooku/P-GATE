@@ -349,7 +349,10 @@ async function submitApprovedJob(env, job, policy, provider, now, fetchImpl) {
       duration: integer(job.duration_seconds),
       audio: integer(job.audio) === 1,
       productInfo: clean(job.product_info, 2500),
-      userConcept: `${clean(job.user_concept, 3400)} The performer is an adult woman, age 22.`.trim()
+      // 成人であることは全ジョブ共通の安全弁として付加する。具体的な年齢・
+      // 雰囲気は2ペルソナ運用(2026-08-19: v2=22歳想定の若者向け/v1=30〜50代向け)
+      // に伴い、各ジョブのuser_concept側で指定する。
+      userConcept: `${clean(job.user_concept, 3400)} The performer is an adult woman.`.trim()
     }, fetchImpl);
     const taskId = clean(task?.id, 200);
     if (!taskId) throw new Error('RUNWAY_TASK_ID_MISSING');
