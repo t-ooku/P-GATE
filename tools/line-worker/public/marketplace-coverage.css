@@ -272,20 +272,17 @@
     justify-content: flex-start;
   }
 
+  /* 2026-08-19: 楽天・Yahoo!だけ中央寄せ・小さい点になっていて、下の11モール
+     と縦の位置がズレて見えるとの指摘。個別に探す側と同じ左寄せ・同じ点の
+     大きさに統一する。 */
   .marketplace-group-integrated li {
     gap: 4px;
-    justify-content: center;
-  }
-
-  .marketplace-group-integrated li::before {
-    width: 5px;
-    height: 5px;
-    flex-basis: 5px;
+    justify-content: flex-start;
   }
 
   .marketplace-yahoo span {
     line-height: 1.2;
-    text-align: center;
+    text-align: left;
   }
 
   .marketplace-coverage-note {
