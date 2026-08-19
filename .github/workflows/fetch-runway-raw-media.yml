@@ -77,7 +77,7 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
-            "SELECT job_id,status,storage_key,storage_size_bytes,storage_content_type,provider_task_id FROM runway_generation_jobs WHERE job_id='${{ github.event.inputs.job_id }}';" \
+            "SELECT job_id,status,storage_key,storage_size_bytes,storage_content_type,provider_task_id,last_error_code,last_error_stage,last_error_detail,attempt_count,max_attempts,updated_at FROM runway_generation_jobs WHERE job_id='${{ github.event.inputs.job_id }}';" \
             > job.json
           node <<'NODE'
           const fs = require('node:fs');
@@ -86,6 +86,8 @@ jobs:
           if (!row) throw new Error('job row not found - check job_id');
           const jobId = process.env.JOB_ID;
           if (row.job_id !== jobId) throw new Error('job_id mismatch');
+          // まだ生成前でも、なぜ止まっているかが分かるように状態を必ず表示する。
+          console.log(`::notice::job ${row.job_id} status=${row.status} attempts=${row.attempt_count}/${row.max_attempts} last_error_code=${row.last_error_code || '(none)'} last_error_stage=${row.last_error_stage || '(none)'} last_error_detail=${String(row.last_error_detail || '').slice(0, 200) || '(none)'} updated_at=${row.updated_at}`);
           if (!['GENERATED_REVIEW_REQUIRED', 'APPROVED_FOR_POST', 'PUBLISHED'].includes(row.status)) {
             throw new Error(`job has no generated media yet: status=${row.status}`);
           }
