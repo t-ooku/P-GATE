@@ -1,107 +1,114 @@
-// v4.2 項目15・16: 「主要5モール/ファッション5モール」という分け方は、
-// SHOPLIST/MUSINSAが標準検索から外れ新規5モールが加わったことで実態と
-// ずれるため廃止。/api/knowledge のレスポンスが持つ integrated(=HOSHILUが
-// 商品データを取得できる) / direct(=検索結果ページへ案内するだけ) という
-// 区分に統一する(src/index.mjs の searchModeForMarketplace が唯一の判定元)。
-// 2026-08-08: ヒーロー直下に置く2つ目のMARKETPLACE COVERAGEウィジェット
-// (hero-marketplace-coverage.mjs)が同じ文言・同じ判定を再利用できるよう、
-// COPYとレンダリング本体(applyMarketplaceCoverageToNodes)をここからexport
-// する。この節の下にある既存のnodes/applyMarketplaceCoverage自体の挙動は
-// 一切変えていない(id・出力とも従来通り)。
-export const COPY = {
-  JA: {
-    title: '探せるモールが、ひと目で分かる。',
-    lead: 'まとめて検索2モールと、個別に探す11モールに対応。',
-    count: '最大13モール対応',
-    core: 'まとめて検索',
-    coreAria: 'HOSHILUが商品をまとめて探して比較する2モール',
-    fashion: '個別に探す',
-    fashionAria: 'HOSHILUの検索結果には含まれない、個別に探す11モール',
-    note: '出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。'
-  },
-  EN: {
-    title: 'See where HOSHILU can search.',
-    lead: 'HOSHILU compares 2 integrated marketplaces and links out to 11 more you can search directly.',
-    count: 'Up to 13 marketplaces',
-    core: 'Search together',
-    coreAria: 'Two marketplaces HOSHILU compares directly',
-    fashion: 'Search individually',
-    fashionAria: 'Eleven marketplaces not included in HOSHILU results, searchable directly',
-    note: 'Verified listings open the product page. Otherwise, HOSHILU opens marketplace results, then lets you continue on Instagram, X, TikTok, and YouTube.'
-  },
-  ZH: {
-    title: '一眼看懂可搜索的商城。',
-    lead: 'HOSHILU可比较2个整合商城，并可另外前往11个商城单独搜索。',
-    count: '最多支持13个商城',
-    core: '一起搜索',
-    coreAria: 'HOSHILU可整合比较的2个商城',
-    fashion: '单独搜索',
-    fashionAria: '不包含在HOSHILU结果中、可单独搜索的11个商城',
-    note: '已确认在售的商品会直接打开商品页；尚未找到时，还可继续在 Instagram、X、TikTok 和 YouTube 搜索。'
-  },
-  KO: {
-    title: '검색 가능한 쇼핑몰을 한눈에.',
-    lead: 'HOSHILU가 2개 통합 쇼핑몰을 비교하고, 11개 쇼핑몰은 개별 검색으로 연결합니다.',
-    count: '최대 13개 쇼핑몰',
-    core: '한번에 검색',
-    coreAria: 'HOSHILU가 상품을 모아 비교하는 2개 쇼핑몰',
-    fashion: '개별 검색',
-    fashionAria: 'HOSHILU 검색 결과에는 포함되지 않는, 개별 검색용 11개 쇼핑몰',
-    note: '판매가 확인된 상품은 상품 페이지로 안내하고, 찾지 못하면 Instagram, X, TikTok, YouTube에서도 계속 검색할 수 있습니다.'
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+const read = name => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
+
+// v4.2 項目14・15・16: 「主要5モール/ファッション5モール」を廃止し、実際の
+// integrated/direct区分に合わせて「まとめて検索2モール/個別に探す11モール」
+// へ統一。SHOPLIST/MUSINSAは個別に探すリストから外れ、ロフト・ハンズ・
+// マツキヨココカラ・@cosme・ABC-MARTを追加。
+test('トップ画面でまとめて検索2モール・個別に探す最大13モールを表示する', async () => {
+  const [html, css, module, layout, serviceWorker, app] = await Promise.all([
+    read('index.html'),
+    read('marketplace-coverage.css'),
+    read('marketplace-coverage.mjs'),
+    read('lp-layout.mjs'),
+    read('service-worker.js'),
+    read('app.js')
+  ]);
+
+  assert.match(html, /MARKETPLACE COVERAGE/);
+  assert.match(html, /まとめて検索/);
+  assert.match(html, /個別に探す/);
+  for (const mall of ['Amazon', '楽天市場', 'Qoo10', 'SHEIN', 'ZOZOTOWN', 'ロフト', 'ハンズ', 'マツキヨココカラ', '@cosme', 'ABC-MART', 'BUYMA', 'SNKRDUNK']) {
+    assert.match(html, new RegExp(`>${mall}<`));
   }
-};
+  assert.doesNotMatch(html, />SHOPLIST</);
+  assert.doesNotMatch(html, />MUSINSA</);
+  assert.match(html, /最大13モール対応/);
+  assert.match(html, /まとめて検索2モールと、個別に探す11モールに対応/);
+  assert.match(html, /heroMarketplaceIntegratedList[^]*?<li>楽天市場<\/li><li class="marketplace-yahoo"/);
+  assert.match(html, /heroMarketplaceDirectList[^]*?<li>Amazon<\/li>/);
+  assert.match(html, /class="marketplace-yahoo"><span>Yahoo!ショッピング<\/span>/);
+  assert.match(html, /出品を確認できた商品は商品ページへ/);
+  assert.match(html, /HOSHILUが商品をまとめて探して比較します。/);
+  assert.match(html, /HOSHILUの検索結果には含まれません。各ショップでも同じ条件で探せます。/);
+  assert.doesNotMatch(html, /すべてのジャンルで8モール/);
 
-const nodes = {
-  title: document.querySelector('#marketplaceCoverageTitle'),
-  lead: document.querySelector('#marketplaceCoverageLead'),
-  count: document.querySelector('#marketplaceCoverageCount'),
-  core: document.querySelector('#marketplaceIntegratedLabel'),
-  coreList: document.querySelector('#marketplaceIntegratedList'),
-  fashion: document.querySelector('#marketplaceDirectLabel'),
-  fashionList: document.querySelector('#marketplaceDirectList'),
-  note: document.querySelector('#marketplaceCoverageNote')
-};
-
-export function selectedLanguage() {
-  const saved = localStorage.getItem('mygate_language');
-  return COPY[saved] ? saved : 'JA';
-}
-
-// nodesを引数として受け取る形にし、同じ文言・同じ分岐ロジックをヒーロー側
-// ウィジェット(hero-marketplace-coverage.mjs)からも再利用できるようにした
-// 以外、中身はapplyMarketplaceCoverageの元実装と同一。
-export function applyMarketplaceCoverageToNodes(targetNodes, language = selectedLanguage()) {
-  const copy = COPY[language] || COPY.JA;
-  if (!targetNodes.title) return;
-  const responsiveCopy = (node, parts) => {
-    node.replaceChildren(...parts.map((part) => {
-      const line = document.createElement('span');
-      line.className = 'marketplace-mobile-line';
-      line.textContent = part;
-      return line;
-    }));
-  };
-  if (language === 'JA') {
-    responsiveCopy(targetNodes.title, ['探せるモールが、', 'ひと目で分かる。']);
-    responsiveCopy(targetNodes.lead, ['まとめて検索2モールと、', '個別に探す11モールに対応。']);
-  } else {
-    targetNodes.title.textContent = copy.title;
-    targetNodes.lead.textContent = copy.lead;
+  assert.match(css, /\.marketplace-groups/);
+  assert.match(css, /grid-template-columns: repeat\(13, minmax\(82px, 1fr\)\)/);
+  assert.match(css, /@media \(max-width: 760px\)/);
+  assert.match(css, /\.marketplace-mobile-line \{\s*display: block/);
+  // 2026-08-18: nowrapの固定をやめた。1行に押し込むために文字が
+  // clamp(7px,...,9px)まで縮み、実機で読めないという指摘を受けたため、
+  // 折り返しを許して文字サイズを優先する方針へ変更した。
+  // 代わりに「小さすぎる文字が復活しないこと」を固定する。
+  assert.doesNotMatch(css, /font-size: clamp\((?:[0-9]|10)(?:\.\d+)?px,/);
+  assert.match(css, /\.marketplace-group > p \{\s*display: none/s);
+  assert.match(css, /grid-template-columns: repeat\(13, minmax\(0, 1fr\)\)/);
+  assert.match(css, /overflow-x: auto/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)[\s\S]*overflow-x: hidden/);
+  // 同上。モール名も折り返し可にして11.5px以上を確保する。
+  assert.match(css, /\.marketplace-group-direct li \{[\s\S]*font-size: clamp\(11\.5px/);
+  assert.doesNotMatch(layout, /item\.setAttribute\('role', 'button'\)/);
+  assert.doesNotMatch(layout, /document\.querySelectorAll\('\.marketplace-group li'\)/);
+  // UI v3: section order comes from static HTML/CSS grid, not a runtime
+  // reorder, to avoid a layout shift after first paint.
+  assert.doesNotMatch(layout, /insight\.before\(saleRadar\)/);
+  assert.doesNotMatch(layout, /saleRadar\.after\(benefits\)/);
+  assert.match(layout, /検索方法/);
+  assert.match(html, /class="hoshilu-primary"/);
+  // UI v5 (2026-08-07): every section lives in one static column, in the
+  // exact same order at every breakpoint - ホシル検索 -> MATCHES -> SALE
+  // RADAR -> INSIGHT -> NEWS -> SEARCH AGENT -> MARKETPLACE COVERAGE ->
+  // DISCOVERY -> OFFICIAL. Assert the canonical order directly so a future
+  // edit can't silently reintroduce a per-breakpoint split.
+  const sectionMarkers = [
+    ['hoshiluSearch', 'id="hoshiluSearch"'],
+    ['MATCHES', 'class="section-title"><div><p class="step">MATCHES'],
+    ['SALE RADAR', '<p class="step">HOSHILU SALE RADAR'],
+    ['INSIGHT', '<p class="step">HOSHILU INSIGHT'],
+    ['NEWS', '<p class="step">HOSHILU NEWS'],
+    ['SEARCH AGENT', '<p class="step">HOSHILU SEARCH AGENT'],
+    // 2026-08-19 大隆さん指示: MARKETPLACE COVERAGE は検索直下から
+    // HOSHILU SEARCH AGENT の直後へ移動(探し方の説明→対応モール一覧の順)。
+    ['MARKETPLACE COVERAGE', '<p class="step">MARKETPLACE COVERAGE'],
+    ['DISCOVERY', '<p class="step">HOSHILU DISCOVERY'],
+    ['OFFICIAL', '<p class="step">HOSHILU OFFICIAL'],
+  ];
+  const positions = sectionMarkers.map(([name, marker]) => {
+    const index = html.indexOf(marker);
+    assert.notEqual(index, -1, `missing section marker for ${name}: ${marker}`);
+    return index;
+  });
+  for (let i = 1; i < positions.length; i += 1) {
+    assert.ok(
+      positions[i - 1] < positions[i],
+      `${sectionMarkers[i - 1][0]} should come before ${sectionMarkers[i][0]} in the static section order`
+    );
   }
-  targetNodes.count.textContent = copy.count;
-  targetNodes.core.textContent = copy.core;
-  targetNodes.coreList.setAttribute('aria-label', copy.coreAria);
-  targetNodes.fashion.textContent = copy.fashion;
-  targetNodes.fashionList.setAttribute('aria-label', copy.fashionAria);
-  targetNodes.note.textContent = copy.note;
-}
 
-export function applyMarketplaceCoverage(language = selectedLanguage()) {
-  applyMarketplaceCoverageToNodes(nodes, language);
-}
+  for (const language of ['JA', 'EN', 'ZH', 'KO']) {
+    assert.match(module, new RegExp(`${language}: \\{`));
+  }
+  assert.match(module, /hoshilu:languagechange/);
+  assert.match(module, /\['探せるモールが、', 'ひと目で分かる。'\]/);
+  assert.match(module, /\['まとめて検索2モールと、', '個別に探す11モールに対応。'\]/);
+  assert.match(module, /Up to 13 marketplaces/);
+  assert.match(module, /Instagram, X, TikTok, and YouTube/);
+  assert.match(module, /最多支持13个商城/);
+  assert.match(module, /최대 13개 쇼핑몰/);
 
-document.addEventListener('hoshilu:languagechange', event => {
-  applyMarketplaceCoverage(event.detail?.language);
+  assert.match(serviceWorker, /hoshilu-shell-v389/);
+  assert.match(app, /AIが見つけた可能性のある商品/);
+  assert.match(app, /AI_DISCOVERY|ai_discovery/);
+  assert.match(serviceWorker, /marketplace-coverage\.css/);
+  assert.match(serviceWorker, /marketplace-coverage\.mjs/);
+  assert.match(app, /個別に探す/);
+  assert.match(app, /※まとめて検索する場合は、ホシル検索へ。/);
+  assert.match(app, /marketplaceFallbackGroup\(directLabel,marketplaceLinks\(allLinks\),directBody,searchJump\)/);
+  assert.match(app, /marketplace-fallback-search-jump/);
+  assert.match(app, /querySelector\('#hoshiluSearch'\)\?\.scrollIntoView/);
+  assert.doesNotMatch(html, /<em>BETA<\/em>|PUBLIC BETA|ベータ版/);
 });
-
-applyMarketplaceCoverage();
