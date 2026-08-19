@@ -1,0 +1,290 @@
+name: Publish Runway reel (generic)
+
+# 手動実行専用。QA承認済みの後処理動画をR2へ載せ、ジョブの配信メディアを
+# 差し替え、QA承認記録を書き、公開キューへ投入する汎用ワークフロー。
+#
+# 2026-08-19にテンプレート化した。従来はリールごとに専用ワークフロー+
+# SQL3本(計8回のアップロード)が必要だった(publish-runway-reel-20260818.ymlが
+# その最後の例)。本ワークフローは対象を入力で受け取り、リールごとの
+# 追加ファイルは「レビュー済み動画1個」だけにする。
+#
+# 前提(通常フロー):
+#  - ジョブは GENERATED_REVIEW_REQUIRED / qa_status=PENDING で停止している
+#  - social_post_queue には persistOutput が作った REVIEW_REQUIRED 行がある
+#    (キャプション・リンクはジョブ投入時のものがそのまま使われる)
+#  - 大隆さんがチャットでレビューした動画を ops/runway/media/ へ置いてある
+#
+# 安全弁:
+#  - confirm に PUBLISH の入力必須。公開キューをAPPROVEDにする最終段は
+#    release に RELEASE を追加入力しない限り実行しない
+#  - 全入力を厳格な文字集合で検証(SQLはこの検証済み値のみで組み立てる)
+#  - 動画はSHA256・サイズ・コーデック・全フレームデコードを検証してから使う
+#  - R2アップロード後に往復ダウンロードでバイト一致を確認してからD1を触る
+#  - 書き込みは対象ジョブ・対象キュー行に限定し、結果をSELECTで読み直して検証
+#  - D1のtime-travelブックマークを書き込み前に記録
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: '対象の runway_generation_jobs.job_id'
+        required: true
+        default: ''
+      media_file:
+        description: 'ops/runway/media/ 配下のレビュー済み動画ファイル名 (例: reel_20260819_overseas_find_v1.mp4)'
+        required: true
+        default: ''
+      media_sha256:
+        description: 'レビュー済み動画のSHA256 (64桁hex)'
+        required: true
+        default: ''
+      confirm:
+        description: 'Type PUBLISH to upload the reviewed media and run the QA approval'
+        required: true
+        default: ''
+      release:
+        description: 'Type RELEASE to also queue it for Instagram publication (leave empty to stop after approval)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: runway-reel-publish
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      JOB_ID: ${{ github.event.inputs.job_id }}
+      MEDIA_NAME: ${{ github.event.inputs.media_file }}
+      MEDIA_SHA256: ${{ github.event.inputs.media_sha256 }}
+      BUCKET: hoshilu-social-media
+    steps:
+      - name: Validate inputs strictly
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "PUBLISH" ]; then
+            echo "::error::confirm input must be exactly PUBLISH. Nothing was executed."
+            exit 1
+          fi
+          if [ -n "${{ github.event.inputs.release }}" ] && [ "${{ github.event.inputs.release }}" != "RELEASE" ]; then
+            echo "::error::release input must be empty or exactly RELEASE."
+            exit 1
+          fi
+          if ! [[ "${JOB_ID}" =~ ^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$ ]]; then
+            echo "::error::job_id must match ^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$"; exit 1
+          fi
+          if ! [[ "${MEDIA_NAME}" =~ ^[A-Za-z0-9][A-Za-z0-9_-]{0,119}\.mp4$ ]]; then
+            echo "::error::media_file must be a bare .mp4 filename (letters, digits, _ and - only)"; exit 1
+          fi
+          if ! [[ "${MEDIA_SHA256}" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::media_sha256 must be 64 lowercase hex characters"; exit 1
+          fi
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify the reviewed media file
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          media="ops/runway/media/${MEDIA_NAME}"
+          test -f "$media" || { echo "::error::$media not found"; exit 1; }
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends ffmpeg
+          echo "${MEDIA_SHA256}  ${media}" | sha256sum -c -
+          stat -c%s "$media" > media-size.txt
+          ffprobe -v error -show_entries stream=codec_type,codec_name,profile,width,height,pix_fmt,r_frame_rate,sample_rate,channels -of json "$media" > media-probe.json
+          ffprobe -v error -show_entries format=duration -of csv=p=0 "$media" > media-duration.txt
+          node <<'NODE'
+          const fs = require('node:fs');
+          const streams = JSON.parse(fs.readFileSync('media-probe.json', 'utf8')).streams || [];
+          const video = streams.find((s) => s.codec_type === 'video');
+          const audio = streams.find((s) => s.codec_type === 'audio');
+          const problems = [];
+          if (streams.length !== 2) problems.push(`stream count ${streams.length}`);
+          if (!video || video.codec_name !== 'h264' || video.profile !== 'High') problems.push('video codec/profile');
+          if (!video || video.width !== 720 || video.height !== 1280) problems.push('resolution');
+          if (!video || video.pix_fmt !== 'yuv420p' || video.r_frame_rate !== '24/1') problems.push('pix_fmt/frame rate');
+          if (!audio || audio.codec_name !== 'aac' || Number(audio.sample_rate) !== 44100 || Number(audio.channels) !== 2) problems.push('audio');
+          const duration = Number(fs.readFileSync('media-duration.txt', 'utf8').trim());
+          // カットB(実画面録画)を含む2カット構成は8秒を超えるため、4〜60秒を許容する。
+          if (!(duration >= 4 && duration <= 60)) problems.push(`duration ${duration}`);
+          const size = Number(fs.readFileSync('media-size.txt', 'utf8').trim());
+          if (!(size > 100000 && size < 50 * 1024 * 1024)) problems.push(`size ${size}`);
+          if (problems.length) throw new Error(problems.join(' / '));
+          console.log(`::notice::reviewed media verified: h264 High 720x1280 24fps + aac 44100 stereo, ${duration}s, ${size} bytes`);
+          NODE
+          # 全フレームが実際にデコードできること(コンテナだけ正しい破損ファイルを弾く)
+          ffmpeg -v error -i "$media" -f null -
+
+      - name: Read production state before any write
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error 'https://hoshilu.app/health?runway-reel-publish=1' > reel-health.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT job_id,post_id,status,qa_status,storage_key,rights_confirmed,ai_disclosure_confirmed,caption FROM runway_generation_jobs WHERE job_id='${JOB_ID}';" > reel-job.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const rows = (f) => { const d = JSON.parse(fs.readFileSync(f, 'utf8'));
+            return (Array.isArray(d) ? d : [d]).flatMap((x) => x.results || x.result?.results || []); };
+          const jobs = rows('reel-job.json');
+          if (jobs.length !== 1) throw new Error(`job rows=${jobs.length}`);
+          const job = jobs[0];
+          const fail = [];
+          const health = JSON.parse(fs.readFileSync('reel-health.json', 'utf8'));
+          if (health?.ok !== true) fail.push('health not ok');
+          if (health?.checks?.social_publishers?.INSTAGRAM !== true) fail.push('instagram publisher not ready');
+          if (!['GENERATED_REVIEW_REQUIRED', 'APPROVED_FOR_POST'].includes(job.status)) fail.push(`job status ${job.status}`);
+          if (Number(job.rights_confirmed) !== 1 || Number(job.ai_disclosure_confirmed) !== 1) fail.push('rights/ai disclosure flags');
+          if (!String(job.caption || '').includes('AI生成')) fail.push('job caption lacks the AI disclosure');
+          if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(String(job.post_id || ''))) fail.push('post_id unsafe');
+          if (fail.length) throw new Error(fail.join(' / '));
+          fs.writeFileSync('post-id.txt', job.post_id);
+          console.error(`::notice::PREFLIGHT job=${job.status}/${job.qa_status} post_id=${job.post_id}`);
+          NODE
+          POST_ID="$(cat post-id.txt)"
+          echo "POST_ID=${POST_ID}" >> "$GITHUB_ENV"
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,status,external_post_id,platform_job_id,published_at,caption,link,media_url,affiliate FROM social_post_queue WHERE post_id='${POST_ID}';" > reel-queue.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT (SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'${POST_ID}' AND platform='INSTAGRAM' AND (content_id='${JOB_ID}' OR media_url='https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4') AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'' OR platform_job_id<>'')) AS duplicate_count,(SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'${POST_ID}' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS competing_due_count;" > reel-collision.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT account_id,scopes,expires_at,status FROM instagram_oauth_credentials WHERE platform='INSTAGRAM';" > reel-credential.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const rows = (f) => { const d = JSON.parse(fs.readFileSync(f, 'utf8'));
+            return (Array.isArray(d) ? d : [d]).flatMap((x) => x.results || x.result?.results || []); };
+          const one = (f, label) => { const r = rows(f); if (r.length !== 1) throw new Error(`${label}: ${r.length} rows`); return r[0]; };
+          const post = one('reel-queue.json', 'queue');
+          const collision = one('reel-collision.json', 'collision');
+          const oauth = one('reel-credential.json', 'instagram credential');
+          const fail = [];
+          if (post.status !== 'REVIEW_REQUIRED') fail.push(`queue status ${post.status}`);
+          if (String(post.external_post_id || '') || String(post.platform_job_id || '') || String(post.published_at || '')) fail.push('queue has publication state');
+          if (Number(post.affiliate) !== 0) fail.push('affiliate flag');
+          if (!String(post.caption || '').includes('AI生成')) fail.push('queue caption lacks the AI disclosure');
+          if (Number(collision.duplicate_count) !== 0) fail.push('duplicate publication exists');
+          if (Number(collision.competing_due_count) !== 0) fail.push('another Instagram post is already due');
+          if (oauth.status !== 'ACTIVE') fail.push('instagram credential not active');
+          if (!String(oauth.scopes || '').split(',').map((s) => s.trim()).includes('instagram_business_content_publish')) fail.push('publish scope missing');
+          if (!Number.isFinite(Date.parse(oauth.expires_at)) || Date.parse(oauth.expires_at) <= Date.now() + 5 * 60 * 1000) fail.push('instagram credential expiring');
+          if (fail.length) throw new Error(fail.join(' / '));
+          console.log('::notice::PREFLIGHT queue=REVIEW_REQUIRED duplicate=0 competing_due=0 credential=ACTIVE');
+          NODE
+
+      - name: Capture a D1 restore point
+        working-directory: tools/line-worker
+        run: npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > reel-recovery-bookmark.json
+
+      - name: Upload the reviewed media to R2 and verify the round trip
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          key="runway/${JOB_ID}/postprocessed-${MEDIA_SHA256}.mp4"
+          npx --yes wrangler@4.121.0 r2 object put "${BUCKET}/${key}" \
+            --file "ops/runway/media/${MEDIA_NAME}" --content-type video/mp4 --remote
+          npx --yes wrangler@4.121.0 r2 object get "${BUCKET}/${key}" --file roundtrip.mp4 --remote
+          cmp "ops/runway/media/${MEDIA_NAME}" roundtrip.mp4
+          echo "::notice::R2 object ${key} matches the reviewed file byte for byte"
+
+      - name: Stage the reviewed bytes and run the QA approval
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          size="$(cat media-size.txt)"
+          key="runway/${JOB_ID}/postprocessed-${MEDIA_SHA256}.mp4"
+          # 入力は冒頭で文字集合を検証済み(英数・_-・hexのみ)のため、
+          # このSQL組み立てに引用符の混入余地はない。
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "UPDATE runway_generation_jobs SET storage_key='${key}',storage_etag=NULL,storage_size_bytes=${size},storage_content_type='video/mp4',status='APPROVED_FOR_POST',qa_status='PASSED',updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE job_id='${JOB_ID}' AND status IN ('GENERATED_REVIEW_REQUIRED','APPROVED_FOR_POST') AND rights_confirmed=1 AND ai_disclosure_confirmed=1;" > reel-stage-result.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "INSERT OR IGNORE INTO runway_audit_log (audit_id,job_id,attempt_id,event,detail,created_at) VALUES ('qa-approved-${JOB_ID}-${MEDIA_SHA256}','${JOB_ID}','','QA_APPROVED_FOR_POST','{\"checks\":[\"identity_consistent\",\"face_hands_ok\",\"hoshilu_visible\",\"japanese_subtitles\",\"url_visible\",\"audio_present\",\"no_unrelated_brand\",\"factual\",\"ai_disclosure\",\"rights_confirmed\",\"duplicate_checked\",\"postprocessed\"],\"candidate_sha256\":\"${MEDIA_SHA256}\",\"reviewed_by_owner_in_chat\":true}',strftime('%Y-%m-%dT%H:%M:%fZ','now'));" > reel-audit-result.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT j.status,j.qa_status,j.storage_key,j.storage_etag,j.storage_size_bytes,j.storage_content_type,q.status AS queue_status,(SELECT COUNT(*) FROM runway_audit_log WHERE audit_id='qa-approved-${JOB_ID}-${MEDIA_SHA256}') AS audit_count FROM runway_generation_jobs j LEFT JOIN social_post_queue q ON q.post_id='${POST_ID}' WHERE j.job_id='${JOB_ID}';" > reel-staged-state.json
+          KEY="$key" SIZE="$size" node <<'NODE'
+          const fs = require('node:fs');
+          const data = JSON.parse(fs.readFileSync('reel-staged-state.json', 'utf8'));
+          const rows = (Array.isArray(data) ? data : [data]).flatMap((x) => x.results || x.result?.results || []);
+          if (rows.length !== 1) throw new Error(`expected 1 joined row, got ${rows.length}`);
+          const row = rows[0];
+          const problems = [];
+          if (row.status !== 'APPROVED_FOR_POST' || row.qa_status !== 'PASSED') problems.push(`job ${row.status}/${row.qa_status}`);
+          if (row.storage_key !== process.env.KEY) problems.push(`storage_key=${row.storage_key}`);
+          if (Number(row.storage_size_bytes) !== Number(process.env.SIZE)) problems.push(`size=${row.storage_size_bytes}`);
+          if (row.storage_content_type !== 'video/mp4') problems.push(`content_type=${row.storage_content_type}`);
+          if (row.storage_etag !== null) problems.push('storage_etag must be SQL NULL');
+          if (row.queue_status !== 'REVIEW_REQUIRED') problems.push(`queue moved to ${row.queue_status}`);
+          if (Number(row.audit_count) !== 1) problems.push('QA audit row missing');
+          if (problems.length) throw new Error(problems.join(' / '));
+          console.log('::notice::staged + QA approved; the publication queue is still REVIEW_REQUIRED');
+          NODE
+
+      - name: Verify the media route serves exactly the reviewed bytes
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          url="https://hoshilu.app/api/social/media/runway/${JOB_ID}.mp4?publish-check=${{ github.run_id }}"
+          curl --fail-with-body --silent --show-error --dump-header route-headers.txt --output route-body.mp4 "$url"
+          grep -iq '^content-type: video/mp4' route-headers.txt
+          echo "${MEDIA_SHA256}  route-body.mp4" | sha256sum -c -
+          curl --fail-with-body --silent --show-error --header 'range: bytes=0-99' \
+            --dump-header route-range-headers.txt --output route-range.bin "$url"
+          grep -iq '^HTTP/.* 206' route-range-headers.txt
+          test "$(stat -c%s route-range.bin)" = "100"
+          echo "::notice::the media route returns the reviewed bytes and supports range requests"
+
+      - name: Release for Instagram publication
+        if: github.event.inputs.release == 'RELEASE'
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          key="runway/${JOB_ID}/postprocessed-${MEDIA_SHA256}.mp4"
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "UPDATE social_post_queue SET status='APPROVED',scheduled_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),approved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),last_error='',updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE post_id='${POST_ID}' AND platform='INSTAGRAM' AND status='REVIEW_REQUIRED' AND external_post_id='' AND platform_job_id='' AND published_at='' AND EXISTS (SELECT 1 FROM runway_generation_jobs WHERE job_id='${JOB_ID}' AND post_id='${POST_ID}' AND status='APPROVED_FOR_POST' AND qa_status='PASSED' AND storage_key='${key}') AND NOT EXISTS (SELECT 1 FROM social_post_queue WHERE post_id<>'${POST_ID}' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at<=strftime('%Y-%m-%dT%H:%M:%fZ','now'));" > reel-release-result.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT status,scheduled_at,approved_at,last_error FROM social_post_queue WHERE post_id='${POST_ID}';" > reel-released-state.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const data = JSON.parse(fs.readFileSync('reel-released-state.json', 'utf8'));
+          const rows = (Array.isArray(data) ? data : [data]).flatMap((x) => x.results || x.result?.results || []);
+          if (rows.length !== 1) throw new Error(`expected 1 queue row, got ${rows.length}`);
+          const row = rows[0];
+          if (!['APPROVED', 'PUBLISHING', 'PUBLISHED'].includes(row.status)) {
+            throw new Error(`queue status=${row.status}, expected APPROVED`);
+          }
+          if (!Number.isFinite(Date.parse(row.approved_at))) throw new Error('approved_at was not set');
+          if (String(row.last_error || '')) throw new Error(`queue carries an error: ${row.last_error}`);
+          console.log(`::notice::queued for Instagram (status=${row.status}, scheduled_at=${row.scheduled_at}) - the existing publisher cron will post it`);
+          NODE
+
+      - name: Report the final state
+        if: always()
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT j.status AS job_status,j.qa_status,q.post_id,q.status AS queue_status,q.scheduled_at,q.external_post_id,q.published_at,q.last_error FROM runway_generation_jobs j LEFT JOIN social_post_queue q ON q.post_id=j.post_id WHERE j.job_id='${JOB_ID}';" > reel-final-state.json
+          node -e "
+          const d=require('./reel-final-state.json');
+          const r=(Array.isArray(d)?d:[d]).flatMap(x=>x.results||x.result?.results||[])[0]||{};
+          console.log('::notice::FINAL job='+r.job_status+'/'+r.qa_status+' queue='+r.queue_status+' scheduled_at='+(r.scheduled_at||'')+' external_post_id='+(r.external_post_id||'')+' published_at='+(r.published_at||'')+' last_error='+(r.last_error||''));
+          "
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runway-reel-publish-evidence-${{ github.run_id }}
+          path: |
+            tools/line-worker/reel-*.json
+            tools/line-worker/route-headers.txt
+            tools/line-worker/route-range-headers.txt
+          retention-days: 30
