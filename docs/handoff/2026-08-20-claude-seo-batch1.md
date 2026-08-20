@@ -89,3 +89,71 @@ npm run build → dist/Project_GATE_Complete.gs の差分なし（再現性OK）
 
 バッチ2 = クラスタA テーマ6〜10（画像しか手がかりがない / 友達が使っていた商品 / 店頭で見た商品 / CMで見た商品 / 「あれ何て名前？」の変換）。
 本日の上限は2バッチ（10ページ）。
+
+---
+
+# SEO記事量産 バッチ2 完了報告 (2026-08-20)
+
+対象: クラスタA（曖昧検索）テーマ 6〜10
+
+## 追加slug一覧（5本・すべて日本語のみ）
+
+| # | テーマ | slug | intent | cluster |
+|---|---|---|---|---|
+| 6 | 商品の画像しか手がかりがない時の探し方 | `find-a-product-from-a-photo-or-screenshot` | `find_product_from_photo` | `ai-discovery` |
+| 7 | 友達が使っていた商品をさりげなく特定する方法 | `identify-a-product-someone-else-is-using` | `identify_product_someone_uses` | `offline-discovery` |
+| 8 | 店頭で見た商品を家に帰ってから探す方法 | `find-a-product-you-saw-in-a-store` | `find_product_seen_in_store` | `offline-discovery` |
+| 9 | CMで見た商品の探し方 | `find-a-product-you-saw-in-a-tv-commercial` | `find_product_seen_in_tv_commercial` | `offline-discovery` |
+| 10 | 「あれ何て名前？」を検索語に変換するコツ | `turn-vague-words-into-search-terms` | `turn_vague_words_into_search_terms` | `ai-discovery` |
+
+## 品質スコア
+
+```
+100 find-a-product-from-a-photo-or-screenshot
+100 identify-a-product-someone-else-is-using
+100 find-a-product-you-saw-in-a-store
+100 find-a-product-you-saw-in-a-tv-commercial
+100 turn-vague-words-into-search-terms
+---
+既存を含む全38パスの最小スコア: 100
+```
+
+## テスト結果
+
+```
+npm test (リポジトリルート)
+  tests 5 / 1717 / 6  → 合計 1728 PASS / 0 FAIL
+npm run build → dist/Project_GATE_Complete.gs の差分なし（再現性OK）
+```
+
+ピン更新: `seoPagePaths.length` 33→38、日本語ページ数 28→33、sitemap `<url>` 数 38→43（`seo-pages.test.mjs` / `home-faq-seo.test.mjs`）。
+
+## ハブ構成の変更
+
+- 新グループ **`offline`（お店・テレビ・人づてで見た商品を探す）** を新設し、テーマ7・8・9を収容。
+- テーマ6・10は既存グループ `discover` に追加。
+- 全33記事が重複なく1回ずつ掲載（テストで検証済み）。
+
+## スキップしたテーマと理由
+
+なし（テーマ6〜10すべて実装）。ただし意図の重複を検討した項目が2件ある:
+
+- **テーマ6・10 vs 既存 `how-to-search-by-description`（特徴から商品を探す方法）**
+  既存ページは「条件の設計」＝何を含めるか（種類・使う人・場面・予算・除外）を扱う。対して:
+  - テーマ6 = **画像という媒体の読み解き手順**（写り込んだ文字→大きさの比較対象→形の分解、の順序）
+  - テーマ10 = **語彙そのものの変換**（指示語→種類、擬音語→動作・仕組み、感覚語→比較対象・数値）
+  3本とも手順が別物で、図解手順の一意性検証も通過。
+  **要観察**: 「商品 特徴 探し方」系のクエリでこの3本が食い合わないか、インデックス後にSearch Consoleで確認を推奨。バッチ1のテーマ1と合わせ、計4本が要観察。
+
+## 事実性・安全性で特に配慮した点
+
+- **テーマ7（人の持ち物）**: 無断撮影や持ち物を調べる行為を明確に非推奨とし、「聞ける関係なら本人に聞くのが最も確実」を結論の第一文に置いた。FAQでも撮影について明示的に注意喚起。
+- **テーマ9（CM）**: 実在のCM・企業・出演者は一切記載していない。放送時期からの特定は「HOSHILUでは扱っていない」と正直に記載し、できないことをできると書かないようにした。CM表現は特徴の一部の強調である旨をFAQで明示。
+- **テーマ8（店頭）**: 「販売終了」と断定させず、取り扱いは販売先ごとに異なる旨へ誘導。リニューアルでパッケージが変わる可能性にも言及。
+- **テーマ6（画像）**: 画像検索機能があるかのような誤解を避けるため、「HOSHILUは文章で入力した条件から候補を探す」とFAQで明記。
+
+## 本日の進捗と次バッチ
+
+本日は上限どおり2バッチ・10ページを実装（テーマ1〜10、クラスタA完了）。
+残り20本: クラスタB（韓流・若者、テーマ11〜18／8本）、クラスタC（中年層、テーマ19〜25／7本）、クラスタD（比較・実務、テーマ26〜30／5本）。
+次回はバッチ3 = テーマ11〜15から着手。
