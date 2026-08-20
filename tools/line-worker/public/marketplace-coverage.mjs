@@ -17,7 +17,7 @@ export const COPY = {
     coreAria: 'HOSHILUが商品をまとめて探して比較する2モール',
     fashion: '個別に探す',
     fashionAria: 'HOSHILUの検索結果には含まれない、個別に探す11モール',
-    note: '出品を確認できた商品は商品ページへ。未確認の場合は各モールの検索結果へ案内し、見つからなければInstagram・X・TikTok・YouTubeでも探せます。'
+    note: '出品を確認できた商品は商品ページへ、それ以外は各モールの検索結果へ案内します。'
   },
   EN: {
     title: 'See where HOSHILU can search.',
@@ -27,7 +27,7 @@ export const COPY = {
     coreAria: 'Two marketplaces HOSHILU compares directly',
     fashion: 'Search individually',
     fashionAria: 'Eleven marketplaces not included in HOSHILU results, searchable directly',
-    note: 'Verified listings open the product page. Otherwise, HOSHILU opens marketplace results, then lets you continue on Instagram, X, TikTok, and YouTube.'
+    note: 'Verified listings open the product page; everything else opens each marketplace\'s search results.'
   },
   ZH: {
     title: '一眼看懂可搜索的商城。',
@@ -37,7 +37,7 @@ export const COPY = {
     coreAria: 'HOSHILU可整合比较的2个商城',
     fashion: '单独搜索',
     fashionAria: '不包含在HOSHILU结果中、可单独搜索的11个商城',
-    note: '已确认在售的商品会直接打开商品页；尚未找到时，还可继续在 Instagram、X、TikTok 和 YouTube 搜索。'
+    note: '已确认在售的商品直接打开商品页，其余打开各商城的搜索结果。'
   },
   KO: {
     title: '검색 가능한 쇼핑몰을 한눈에.',
@@ -47,7 +47,7 @@ export const COPY = {
     coreAria: 'HOSHILU가 상품을 모아 비교하는 2개 쇼핑몰',
     fashion: '개별 검색',
     fashionAria: 'HOSHILU 검색 결과에는 포함되지 않는, 개별 검색용 11개 쇼핑몰',
-    note: '판매가 확인된 상품은 상품 페이지로 안내하고, 찾지 못하면 Instagram, X, TikTok, YouTube에서도 계속 검색할 수 있습니다.'
+    note: '판매가 확인된 상품은 상품 페이지로, 그 외에는 각 쇼핑몰 검색 결과로 안내합니다.'
   }
 };
 

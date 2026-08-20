@@ -57,10 +57,10 @@ test('app members can combine app, LINE, and email notifications',async()=>{
     readFile(new URL('../public/sale-center.mjs',import.meta.url),'utf8')
   ]);
   assert.match(page,/通知方法：アプリ・LINE・メール/);
-  assert.match(client,/アプリ利用者もLINE・メールを追加でき/);
-  assert.match(client,/App users can also add LINE and email/);
-  assert.match(client,/应用用户也可以添加 LINE 和电子邮件/);
-  assert.match(client,/앱 이용자도 LINE과 이메일을 추가/);
+  assert.match(client,/SMSは使いません。/);
+  assert.match(client,/SMS is not used\./);
+  assert.match(client,/不使用短信。/);
+  assert.match(client,/SMS는 사용하지 않습니다./);
 });
 
 test('login codes and member alerts share the approved HOSHILU sender',async()=>{

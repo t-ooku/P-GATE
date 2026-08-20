@@ -23,7 +23,8 @@
 //   公式ランキングの過去順位と現在順位の差だけを根拠にする。テーブルが
 //   未適用・履歴不足なら棚ごと出さない (架空の急上昇を作らない)。
 
-import { MARKETPLACE_RANKING_CAPABILITIES, RAKUTEN_RANKING_CATEGORIES, marketplaceRankingResult } from './marketplace-ranking.mjs';
+import { MARKETPLACE_RANKING_CAPABILITIES, RAKUTEN_RANKING_CATEGORIES, fetchRakutenReviewRanking, marketplaceRankingResult, readRankingCache, writeRankingCache } from './marketplace-ranking.mjs';
+import { fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
 
 export const BUZZ_SHELF_ITEM_LIMIT = 6;
 
@@ -42,6 +43,24 @@ const RISING_WINDOW_MIN_MS = 20 * 60 * 60 * 1000;   // 20時間
 const RISING_WINDOW_MAX_MS = 96 * 60 * 60 * 1000;   // 96時間
 const SNAPSHOT_INTERVAL_MS = 6 * 60 * 60 * 1000;    // 6時間ごと
 const SNAPSHOT_RETENTION_MS = 14 * 24 * 60 * 60 * 1000; // 14日
+
+// 2026-08-19 大隆さん報告: レディーススニーカー棚にイヤホンが並んだ。
+// ジャンルID(206906)自体は正しいことを外部確認済みのため、楽天リアルタイム
+// ランキングAPIがジャンル階層によって期待通りに絞らないケースへの防御を置く。
+const BUZZ_CATEGORY_SANITY = Object.freeze({
+  wireless_earphones: /イヤホン|ヘッドホン|earbuds?|earphones?/iu,
+  womens_sneakers: /スニーカー|シューズ|靴|sneakers?/iu,
+  handheld_fan: /ファン|扇風機|fan/iu,
+  mobile_battery: /バッテリー|充電|power\s*bank/iu,
+  face_lotion: /化粧水|ローション|スキンケア|toner|lotion/iu
+});
+
+export function shelfItemsMatchCategory(categoryId, items = []) {
+  const pattern = BUZZ_CATEGORY_SANITY[categoryId];
+  if (!pattern || !items.length) return true;
+  const matched = items.filter((item) => pattern.test(String(item.name || item.product_name || item.display_name || ''))).length;
+  return matched / items.length >= 0.5;
+}
 
 function sanitizeShelfItem(candidate = {}, index) {
   const offer = (candidate.offers || [])[0] || {};
@@ -65,16 +84,33 @@ async function buildShelf(env, category, fetcher) {
     id: category.id, genre_id: category.genre_id
   });
   if (result.mode === 'clarification') return null;
-  const allItems = (result.candidates || [])
+  let allItems = (result.candidates || [])
     .map(sanitizeShelfItem)
     .filter((item) => item.name && item.product_url);
   if (!allItems.length) return null;
+  let realtime = Boolean(result.ranking_type?.includes('リアルタイム'));
+  // 商品名とジャンルが過半一致しない棚は信用せず、ジャンル厳密な
+  // Item Search(口コミ件数順)で作り直す。それでも不一致なら棚を出さない。
+  if (!shelfItemsMatchCategory(category.id, allItems)) {
+    let reviewItems = [];
+    try {
+      reviewItems = (await fetchRakutenReviewRanking(env, category, fetcher))
+        .map(sanitizeShelfItem)
+        .filter((item) => item.name && item.product_url);
+    } catch {
+      reviewItems = [];
+    }
+    if (!reviewItems.length || !shelfItemsMatchCategory(category.id, reviewItems)) return null;
+    allItems = reviewItems;
+    realtime = false;
+  }
   return {
     shelf_id: category.id,
     label: category.label,
+    emoji: realtime ? '👑' : '💬',
     // 楽天リアルタイムランキングが根拠のときだけ「いま売れてる」。
     // 404で口コミ件数順へ縮退した場合はラベルもそのまま言い換える (§43)。
-    headline: result.ranking_type?.includes('リアルタイム') ? 'いま売れてる。' : '口コミが多い。',
+    headline: realtime ? 'いま売れてる。' : '口コミが多い。',
     ranking_type: String(result.ranking_type || ''),
     ranking_mode: String(result.mode || ''),
     marketplace: 'RAKUTEN_JP',
@@ -118,6 +154,7 @@ export function buildBudgetShelves(genreShelves) {
     return {
       shelf_id: budget.shelf_id,
       label: budget.label,
+      emoji: '💰',
       headline: `${budget.label}で、いま売れてる。`,
       ranking_type: '楽天市場公式ランキング(掲載ジャンル内・価格確認済みのみ)',
       ranking_mode: 'derived_from_official',
@@ -208,6 +245,7 @@ export async function buildRisingShelf(env, genreShelves, now = Date.now()) {
     return {
       shelf_id: 'rising',
       label: '急上昇',
+      emoji: '🚀',
       headline: '順位が上がってる。',
       ranking_type: '楽天市場公式ランキングの順位変化(実測)',
       ranking_mode: 'derived_from_official',
@@ -219,20 +257,93 @@ export async function buildRisingShelf(env, genreShelves, now = Date.now()) {
   } catch { return null; }
 }
 
+// ---- 韓国コスメ棚 (2026-08-19 大隆さん指示: 韓流に繋がる棚を必ず1つ置く) ----
+// 順位根拠はYahoo!ショッピング公式の高評価トレンドランキングAPI(検索語「韓国コスメ」)。
+// 一時障害時は同公式の商品検索(口コミ件数順)へ縮退し、ラベルも言い換える。
+// どちらも取得できない時だけ棚を出さない(架空データ禁止)。
+const KOREAN_SHELF = Object.freeze({ shelf_id: 'korean_beauty', label: '韓国コスメ', query: '韓国コスメ' });
+
+export async function buildKoreanShelf(env, fetcher = fetch) {
+  if (!yahooShoppingApiConfigured(env)) return null;
+  let rankingType = 'HIGH_RATING_TREND';
+  let headline = '高評価トレンド。';
+  let rankingLabel = 'Yahoo!ショッピング 高評価トレンドランキング(「韓国コスメ」)';
+  let candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType);
+  const cached = Boolean(candidates);
+  if (!candidates) {
+    try {
+      candidates = await fetchYahooHighRatingRanking(env, KOREAN_SHELF.query, fetcher);
+    } catch {
+      candidates = null;
+    }
+    if (!candidates || !candidates.length) {
+      rankingType = 'REVIEW_COUNT';
+      headline = '口コミが多い。';
+      rankingLabel = 'Yahoo!ショッピング 口コミ件数順(「韓国コスメ」)';
+      candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType);
+      if (!candidates) {
+        try {
+          candidates = await searchYahooShopping(env, KOREAN_SHELF.query, fetcher, { sort: '-review_count' });
+        } catch {
+          candidates = [];
+        }
+      }
+    }
+    if (candidates?.length && !cached) {
+      await writeRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType, candidates);
+    }
+  }
+  const items = (candidates || [])
+    .map(sanitizeShelfItem)
+    .filter((item) => item.name && item.product_url)
+    .slice(0, BUZZ_SHELF_ITEM_LIMIT)
+    .map((item) => ({ ...item, marketplace: 'YAHOO_JP' }));
+  if (!items.length) return null;
+  return {
+    shelf_id: KOREAN_SHELF.shelf_id,
+    label: KOREAN_SHELF.label,
+    emoji: '❤️',
+    headline,
+    ranking_type: rankingLabel,
+    ranking_mode: 'native_api',
+    marketplace: 'YAHOO_JP',
+    marketplace_label: 'Yahoo!ショッピング',
+    source: 'YAHOO_OFFICIAL_RANKING_API',
+    search_keyword: KOREAN_SHELF.query,
+    items
+  };
+}
+
 function publicShelf({ all_items, ...shelf }) { return shelf; }
 
 export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
   const genreShelves = await buildGenreShelves(env, fetcher);
-  const risingShelf = await buildRisingShelf(env, genreShelves, now);
+  const [risingShelf, koreanShelf] = await Promise.all([
+    buildRisingShelf(env, genreShelves, now),
+    buildKoreanShelf(env, fetcher)
+  ]);
   const budgetShelves = buildBudgetShelves(genreShelves);
+  // 同一商品が過半重複する棚を2つ並べない(誤ラベルの「同じ中身の棚」防止)。
+  const seenUrlSets = [];
+  const distinctShelf = (shelf) => {
+    const urls = new Set((shelf.items || []).map((item) => item.product_url));
+    const duplicated = seenUrlSets.some((prev) => {
+      const overlap = [...urls].filter((url) => prev.has(url)).length;
+      return urls.size > 0 && overlap / urls.size > 0.5;
+    });
+    if (duplicated) return false;
+    seenUrlSets.push(urls);
+    return true;
+  };
   const shelves = [
     ...(risingShelf ? [risingShelf] : []),
-    ...genreShelves.map(publicShelf),
-    ...budgetShelves
-  ];
+    // 2026-08-19 大隆さん指示: 韓流に繋がる棚を必ず上位に1つ置く。
+    ...(koreanShelf ? [koreanShelf] : []),
+    ...genreShelves.map(publicShelf)
+  ].filter(distinctShelf).concat(budgetShelves);
   return {
     generated_for: 'HOSHILU BUZZ',
-    methodology: '順位はモール公式ランキングAPI(楽天市場)と、その順位の実測変化のみを根拠にしています。SNS指標や推定値では並べ替えません。',
+    methodology: '順位はモール公式ランキングAPI(楽天市場・Yahoo!ショッピング)と、その順位の実測変化のみを根拠にしています。SNS指標や推定値では並べ替えません。',
     disclaimer: '価格・送料・在庫は変動します。購入前に各販売ページで最新の条件を確認してください。',
     marketplace_scope: MARKETPLACE_RANKING_CAPABILITIES.map(({ marketplace_id, label }) => ({ marketplace_id, label })),
     shelf_count: shelves.length,

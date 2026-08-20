@@ -80,6 +80,12 @@ const X_NON_VIDEO_POSTS = Object.freeze([
     id: 'buzz-budget-shelves',
     caption: '3,000円以下・5,000円以下で、いま売れている商品だけを集めた棚をHOSHILU BUZZに用意しました。価格を確認できた商品だけを載せています。予算から探したい日はこちら。',
     link_path: '/buzz'
+  },
+  // 2026-08-19 大隆さん指示: 韓流に繋がるBUZZ棚の常設に合わせて紹介投稿も追加。
+  {
+    id: 'buzz-korean-beauty',
+    caption: '韓国コスメの高評価トレンドをまとめた棚がHOSHILU BUZZにあります。順位はYahoo!ショッピング公式ランキングだけが根拠。気になった商品はQoo10など他モールへの横断検索にもつながります。',
+    link_path: '/buzz'
   }
 ]);
 

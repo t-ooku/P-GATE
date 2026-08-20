@@ -1,5 +1,7 @@
-// HOSHILU BUZZ ページ (Phase 1)。/api/buzz/shelf の内容だけを表示する。
+// HOSHILU BUZZ ページ。/api/buzz/shelf の内容だけを表示する。
 // クライアント側で順位・価格・レビュー数を作らない(サーバーが返した実データのみ)。
+// 2026-08-19: 大隆さん指示でHOSHILU本体のトンマナへ全面刷新。棚ごとの出典表記は
+// 出さない(根拠はAPIレスポンスとページ最下部の注記に集約)。
 const shelvesRoot = document.querySelector('#buzzShelves');
 const note = document.querySelector('#buzzNote');
 
@@ -44,7 +46,7 @@ function itemCard(item) {
 // シェア文を組み立てる(数値や人気の創作はしない)。
 function shelfShareText(shelf) {
   const names = (shelf.items || []).slice(0, 5).map((item, index) => `${index + 1}. ${item.name.slice(0, 30)}`);
-  return `${shelf.label}、${shelf.headline}\n（出典: ${shelf.ranking_type}）\n${names.join('\n')}\n#ホシル`;
+  return `${shelf.label}、${shelf.headline}\n${names.join('\n')}\n#ホシル #HOSHILUBUZZ`;
 }
 
 async function shareShelf(shelf, button) {
@@ -62,19 +64,20 @@ function renderShelves(result) {
   for (const shelf of result.shelves || []) {
     const section = el('section', 'shelf');
     const head = el('div', 'shelf-head');
-    head.append(el('h2', '', text(shelf.label)), el('span', 'headline', text(shelf.headline)));
+    const title = shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label);
+    head.append(el('h2', '', title), el('span', 'headline', text(shelf.headline)));
     const shelfShare = el('button', 'shelf-share', '友達に送る');
     shelfShare.type = 'button';
     shelfShare.addEventListener('click', () => shareShelf(shelf, shelfShare));
     head.append(shelfShare);
-    const source = el('p', 'shelf-source', `出典: ${text(shelf.ranking_type)}`);
     const rail = el('div', 'rail');
     for (const item of shelf.items || []) rail.append(itemCard(item));
-    section.append(head, source, rail);
+    section.append(head, rail);
     // v3.1 §11-14: 「◯◯で探す」= 検索結果へのフォールバック。商品ページ直行の
     // 「見る」とは別物なので、サーバーが返したラベルをそのまま使う(創作しない)。
     if (Array.isArray(shelf.search_links) && shelf.search_links.length) {
       const chips = el('div', 'search-chips');
+      chips.append(el('span', 'search-chips-label', '他モールで探す:'));
       for (const link of shelf.search_links) {
         const chip = el('a', 'search-chip', text(link.label));
         chip.href = text(link.url);

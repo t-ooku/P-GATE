@@ -31,9 +31,9 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   assert.match(html, /heroMarketplaceIntegratedList[^]*?<li>楽天市場<\/li><li class="marketplace-yahoo"/);
   assert.match(html, /heroMarketplaceDirectList[^]*?<li>Amazon<\/li>/);
   assert.match(html, /class="marketplace-yahoo"><span>Yahoo!ショッピング<\/span>/);
-  assert.match(html, /出品を確認できた商品は商品ページへ/);
-  assert.match(html, /HOSHILUが商品をまとめて探して比較します。/);
-  assert.match(html, /HOSHILUの検索結果には含まれません。各ショップでも同じ条件で探せます。/);
+  // 2026-08-19 大隆さん指示: 注記は1行に圧縮(長い説明はダサい)。
+  assert.match(html, /出品を確認できた商品は商品ページへ、それ以外は各モールの検索結果へ案内します。/);
+  assert.doesNotMatch(html, /HOSHILUが商品をまとめて探して比較します。/);
   assert.doesNotMatch(html, /すべてのジャンルで8モール/);
 
   assert.match(css, /\.marketplace-groups/);
@@ -99,11 +99,11 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   assert.match(module, /\['探せるモールが、', 'ひと目で分かる。'\]/);
   assert.match(module, /\['まとめて検索2モールと、', '個別に探す11モールに対応。'\]/);
   assert.match(module, /Up to 13 marketplaces/);
-  assert.match(module, /Instagram, X, TikTok, and YouTube/);
+  assert.match(module, /everything else opens each marketplace/);
   assert.match(module, /最多支持13个商城/);
   assert.match(module, /최대 13개 쇼핑몰/);
 
-  assert.match(serviceWorker, /hoshilu-shell-v390/);
+  assert.match(serviceWorker, /hoshilu-shell-v391/);
   assert.match(app, /AIが見つけた可能性のある商品/);
   assert.match(app, /AI_DISCOVERY|ai_discovery/);
   assert.match(serviceWorker, /marketplace-coverage\.css/);

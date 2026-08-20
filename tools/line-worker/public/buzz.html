@@ -1,47 +1,68 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#7357ff"><link rel="icon" href="/icons/icon.svg">
-<title>HOSHILU BUZZ｜いま売れてるを、小ジャンルで見る</title>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#7357ff"><link rel="icon" href="/icons/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="/icons/hoshilu-v2-180.png">
+<title>HOSHILU BUZZ｜今、これ来てる。</title>
 <meta name="description" content="モール公式ランキングを根拠に、小ジャンルごとの「いま売れてる」をまとめてチェック。SNS指標や推定値では並べ替えません。">
 <link rel="canonical" href="https://hoshilu.app/buzz">
-<meta property="og:type" content="website"><meta property="og:site_name" content="HOSHILU">
-<meta property="og:title" content="HOSHILU BUZZ｜いま売れてるを、小ジャンルで見る">
+<meta property="og:type" content="website"><meta property="og:site_name" content="ホシル｜HOSHILU">
+<meta property="og:title" content="HOSHILU BUZZ｜今、これ来てる。">
 <meta property="og:description" content="モール公式ランキングを根拠に、小ジャンルごとの「いま売れてる」をまとめてチェック。">
 <meta property="og:url" content="https://hoshilu.app/buzz">
+<meta property="og:image" content="https://hoshilu.app/og/hoshilu-x-v3.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
-:root{--ink:#241b4d;--muted:#6f6a8a;--accent:#7357ff;--bg:#f7f5ff;--card:#ffffff}
-*{box-sizing:border-box}body{margin:0;font-family:"Hiragino Sans","Noto Sans CJK JP",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
-a{color:inherit;text-decoration:none}
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700}.brand img{width:36px;height:36px}
-.brand small{display:block;font-size:11px;color:var(--muted);font-weight:500}
-.share-button{border:0;background:var(--accent);color:#fff;font-weight:700;font-size:13px;padding:10px 16px;border-radius:999px;cursor:pointer}
-.hero{padding:6px 16px 2px}.hero .step{margin:0;font-size:11px;letter-spacing:.14em;color:var(--accent);font-weight:700}
-.hero h1{margin:4px 0 6px;font-size:24px;line-height:1.3}
-.hero p{margin:0;font-size:13px;color:var(--muted);line-height:1.7}
-.shelf{margin:18px 0 0}
-.shelf-head{display:flex;align-items:baseline;gap:10px;padding:0 16px 8px}
-.shelf-head h2{margin:0;font-size:18px}.shelf-head .headline{font-size:13px;color:var(--accent);font-weight:700}
-.shelf-source{margin:0;padding:0 16px 6px;font-size:11px;color:var(--muted)}
-.rail{display:flex;gap:12px;overflow-x:auto;padding:4px 16px 14px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
-.card{scroll-snap-align:start;flex:0 0 156px;background:var(--card);border-radius:16px;padding:10px;box-shadow:0 4px 14px rgba(36,27,77,.08);display:flex;flex-direction:column;gap:6px}
-.card .thumb{position:relative;width:100%;aspect-ratio:1/1;border-radius:12px;background:#efecff;overflow:hidden}
-.card .thumb img{width:100%;height:100%;object-fit:cover}
-.card .rank{position:absolute;top:6px;left:6px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
-.card .name{font-size:12px;line-height:1.45;max-height:3.6em;overflow:hidden}
-.card .price{font-size:14px;font-weight:700}
-.card .price small{font-size:10px;color:var(--muted);font-weight:500}
-.card .review{font-size:11px;color:var(--muted)}
-.card .move{margin:0;font-size:11px;font-weight:700;color:#d1327f}
-.card .context{margin:0;font-size:10px;color:var(--muted)}
-.shelf-head .shelf-share{margin-left:auto;border:1px solid var(--accent);background:#fff;color:var(--accent);font-size:11px;font-weight:700;padding:6px 12px;border-radius:999px;cursor:pointer}
-.search-chips{display:flex;gap:8px;overflow-x:auto;padding:0 16px 6px;-webkit-overflow-scrolling:touch}
-.search-chip{flex:0 0 auto;border:1px solid #d9d3f5;background:#fff;color:var(--ink);font-size:11px;font-weight:600;padding:7px 12px;border-radius:999px;white-space:nowrap}
-.status{padding:24px 16px;font-size:13px;color:var(--muted)}
-.note{padding:18px 16px 8px;font-size:11px;color:var(--muted);line-height:1.8}
-.cta{display:block;margin:10px 16px 34px;text-align:center;background:linear-gradient(90deg,#7357ff,#b44cf0);color:#fff;font-weight:700;font-size:14px;padding:14px;border-radius:14px}
+/* HOSHILU本体(styles.css)と同じデザイントークンでトンマナを揃える */
+:root{color-scheme:light;--ink:#17172b;--muted:#6d6b80;--violet:#7357ff;--pink:#ff4f9a;--cyan:#23b8ff;--soft:#f4f0ff;--line:#e9e5f5;--paper:#fff;--canvas:#f8f7fc;font-family:Inter,"Noto Sans JP","Hiragino Kaku Gothic ProN",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);background:radial-gradient(circle at 72% 0,#eee8ff 0,transparent 32%),var(--canvas)}
+a{-webkit-tap-highlight-color:transparent}
+.topbar{min-height:74px;padding:10px max(18px,env(safe-area-inset-left));display:flex;align-items:center;justify-content:space-between;gap:18px;background:rgba(255,255,255,.88);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10;backdrop-filter:blur(18px)}
+.brand{display:flex;gap:9px;align-items:center;color:var(--ink);text-decoration:none;font-weight:950;letter-spacing:.08em}
+.brand img{border-radius:12px}
+.brand small{display:block;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.brand em{padding:3px 6px;border-radius:99px;background:var(--soft);color:var(--violet);font-size:9px;font-style:normal;letter-spacing:.12em}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.share-button{border:0;background:linear-gradient(100deg,var(--pink),var(--violet));color:#fff;font-weight:800;font-size:12px;padding:10px 16px;border-radius:999px;cursor:pointer;box-shadow:0 10px 24px #7357ff30}
+.home-link{color:var(--muted);text-decoration:none;font-size:12px;font-weight:800;padding:9px 13px;border-radius:10px;background:#f1eff7}
+main{width:min(100% - 32px,1080px);margin:0 auto}
+.buzz-hero{padding:34px 4px 8px}
+.step{margin:0 0 10px;color:var(--violet);font-size:11px;font-weight:900;letter-spacing:.16em}
+.buzz-hero h1{margin:0;font-size:clamp(34px,7.5vw,60px);line-height:1.05;letter-spacing:-.05em}
+.buzz-hero h1 span{background:linear-gradient(100deg,var(--pink),var(--violet),var(--cyan));background-clip:text;-webkit-background-clip:text;color:transparent}
+.buzz-hero p{max-width:680px;margin:14px 0 0;color:var(--muted);font-size:13px;line-height:1.8}
+.status{padding:28px 4px;color:var(--muted);font-size:13px}
+.shelf{position:relative;overflow:hidden;margin:18px 0;padding:clamp(18px,3vw,26px);border:1px solid #ded7ff;border-radius:26px;background:radial-gradient(circle at 92% 8%,#ff3ca514 0 18%,transparent 19%),linear-gradient(135deg,#fff 0%,#f8f5ff 58%,#f2f8ff 100%);box-shadow:0 18px 50px #3023660d}
+.shelf-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.shelf-head h2{margin:0;font-size:clamp(19px,3vw,24px);letter-spacing:-.035em}
+.shelf-head .headline{color:var(--violet);font-size:13px;font-weight:900}
+.shelf-share{margin-left:auto;border:1px solid #d9d3f5;background:#fff;color:var(--violet);font-size:11px;font-weight:800;padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.rail{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 12px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.card{scroll-snap-align:start;flex:0 0 158px;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:0 6px 20px #22184a0f;display:flex;flex-direction:column;gap:6px;color:var(--ink);text-decoration:none;transition:transform .15s ease}
+.card:active{transform:scale(.98)}
+.thumb{position:relative;width:100%;aspect-ratio:1/1;border-radius:13px;background:var(--soft);overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.rank{position:absolute;top:6px;left:6px;background:linear-gradient(100deg,var(--pink),var(--violet));color:#fff;font-size:10.5px;font-weight:900;padding:3px 9px;border-radius:999px;box-shadow:0 4px 10px #7357ff40}
+.move{margin:0;color:var(--pink);font-size:11px;font-weight:900}
+.context{margin:0;color:var(--muted);font-size:10px;font-weight:600}
+.name{margin:0;font-size:12px;line-height:1.45;max-height:3.6em;overflow:hidden}
+.price{margin:0;font-size:14.5px;font-weight:900;letter-spacing:-.02em}
+.review{margin:0;color:var(--muted);font-size:11px}
+.search-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.search-chips-label{flex:0 0 auto;align-self:center;color:var(--muted);font-size:10.5px;font-weight:800;white-space:nowrap}
+.search-chip{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:11px;font-weight:700;padding:8px 13px;border-radius:999px;white-space:nowrap;text-decoration:none}
+.note{margin:22px 4px 10px;color:var(--muted);font-size:11px;line-height:1.8}
+.cta{display:block;margin:8px 0 40px;text-align:center;background:linear-gradient(100deg,var(--pink),var(--violet),var(--cyan));color:#fff;font-weight:900;font-size:14px;padding:16px;border-radius:16px;text-decoration:none;box-shadow:0 14px 34px #7357ff35;letter-spacing:.02em}
+footer{padding:22px 16px calc(24px + env(safe-area-inset-bottom));text-align:center;color:var(--muted);font-size:11px;border-top:1px solid var(--line);background:#fff}
+footer a{color:var(--muted)}
+@media (max-width:760px){.buzz-hero{padding-top:24px}.shelf{margin:12px 0;border-radius:20px}}
 </style></head><body>
-<header class="top"><a class="brand" href="/"><img src="/icons/icon.svg" alt=""><span>HOSHILU BUZZ<small>いま売れてるを、小ジャンルで。</small></span></a><button id="shareBuzz" class="share-button" type="button">シェア</button></header>
-<section class="hero"><p class="step">HOSHILU BUZZ</p><h1>今、これ来てる。</h1><p>順位はモール公式ランキングだけが根拠。SNS指標や推定値では並べ替えません。</p></section>
-<main id="buzzShelves"><p class="status">ランキングを読み込んでいます…</p></main>
-<p class="note" id="buzzNote"></p>
-<a class="cta" href="/">名前が分からない商品も、HOSHILUで探す →</a>
-<script type="module" src="/buzz.mjs"></script></body></html>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="ホシル ホーム"><img src="/icons/icon.svg" width="42" height="42" alt=""><span>HOSHILU<small>ホシル</small></span><em>BUZZ</em></a>
+  <div class="topbar-actions"><a class="home-link" href="/">検索へ</a><button id="shareBuzz" class="share-button" type="button">シェア</button></div>
+</header>
+<main>
+  <section class="buzz-hero"><p class="step">HOSHILU BUZZ</p><h1><span>今、これ来てる。</span></h1><p>開けば、何か欲しくなる。小ジャンルごとの「いま」をまとめてチェック。</p></section>
+  <div id="buzzShelves"><p class="status">ランキングを読み込んでいます…</p></div>
+  <p class="note" id="buzzNote">順位はモール公式ランキングが根拠です。SNS指標や推定値では並べ替えません。価格・送料・在庫は変動するため、購入前に各販売ページで最新の条件を確認してください。</p>
+  <a class="cta" href="/">名前が分からない商品も、HOSHILUで探す →</a>
+</main>
+<footer><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span> ・ <a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></footer>
+<script type="module" src="/buzz.mjs?v=2"></script></body></html>

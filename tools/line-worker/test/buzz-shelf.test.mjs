@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT,
-  buildBudgetShelves, buildGenreShelves, buildRisingShelf, buzzShelfResult, recordBuzzSnapshots
+  buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, recordBuzzSnapshots
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
 
@@ -46,13 +46,23 @@ function rankingItem(rank, name, price = 1980) {
     mediumImageUrls: [{ imageUrl: `https://thumbnail.image.rakuten.co.jp/item${rank}.jpg` }] };
 }
 
+// 健全性チェック(商品名とジャンルの一致)を通すため、モックの商品名には
+// ジャンルの語彙(登録ラベル)を含め、重複棚ガードのためURLもジャンル別にする。
+function genreNoun(genreId) {
+  const category = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.genre_id === genreId);
+  return category ? category.label : '商品';
+}
+
 function rankingFetcher(overrides = {}) {
   return async (input) => {
     const url = new URL(String(input));
     const genreId = url.searchParams.get('genreId') || '';
     if (overrides[genreId]) return overrides[genreId](url);
     if (url.pathname.includes('/IchibaItem/Ranking/')) {
-      return new Response(JSON.stringify({ Items: Array.from({ length: 10 }, (_, i) => rankingItem(i + 1, `商品${genreId}-${i + 1}`)) }), { status: 200 });
+      return new Response(JSON.stringify({ Items: Array.from({ length: 10 }, (_, i) => ({
+        ...rankingItem(i + 1, `${genreNoun(genreId)} ${genreId}-${i + 1}`),
+        itemUrl: `https://item.rakuten.co.jp/shop${genreId}/item${i + 1}/`
+      })) }), { status: 200 });
     }
     return new Response('not found', { status: 404 });
   };
@@ -96,7 +106,7 @@ test('リアルタイムが404の小ジャンルは口コミ件数順ラベル�
   const fetcher = rankingFetcher({
     [target.genre_id]: (url) => url.pathname.includes('/IchibaItem/Ranking/')
       ? new Response('not found', { status: 404 })
-      : new Response(JSON.stringify({ Items: [rankingItem(1, '口コミ商品')] }), { status: 200 })
+      : new Response(JSON.stringify({ Items: [rankingItem(1, `${target.label} 口コミ商品`)] }), { status: 200 })
   });
   const result = await buzzShelfResult(env, fetcher);
   const degraded = result.shelves.find((shelf) => shelf.shelf_id === target.id);
@@ -118,7 +128,7 @@ test('予算別棚は取得済み公式ランキングの実価格だけで作�
     const genreId = url.searchParams.get('genreId') || 'g';
     if (url.pathname.includes('/IchibaItem/Ranking/')) {
       return new Response(JSON.stringify({ Items: Array.from({ length: 8 }, (_, i) => ({
-        rank: i + 1, itemName: `商品${genreId}-${i + 1}`, itemPrice: (i + 1) * 900,
+        rank: i + 1, itemName: `${genreNoun(genreId)} ${genreId}-${i + 1}`, itemPrice: (i + 1) * 900,
         reviewAverage: 4, reviewCount: 10,
         itemUrl: `https://item.rakuten.co.jp/shop-${genreId}/item${i + 1}/`,
         mediumImageUrls: [{ imageUrl: `https://thumbnail.image.rakuten.co.jp/${genreId}-${i + 1}.jpg` }]
@@ -214,7 +224,7 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   const script = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
   assert.match(html, /<section id="buzzHome" class="buzz-home"/u);
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
-  assert.match(html, /順位はモール公式ランキングが根拠/u);
+  assert.match(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
   assert.match(html, /<script type="module" src="\/buzz-home\.mjs"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
@@ -232,12 +242,21 @@ test('/buzzページは出典と注意書きを持ち、断定表現を使わな
   const html = fs.readFileSync(path.join(worker, 'public', 'buzz.html'), 'utf8');
   const script = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   assert.match(html, /HOSHILU BUZZ/u);
-  assert.match(html, /モール公式ランキングだけが根拠/u);
+  // 2026-08-19 大隆さん指示: 棚ごとの出典表記は出さない。根拠はページ最下部の
+  // 注記1箇所に集約する(JS無効時も静的に表示される)。
+  assert.match(html, /順位はモール公式ランキングが根拠です。/u);
+  assert.doesNotMatch(html, /出典:/u);
+  // トンマナ固定: 本体styles.cssと同じトークン・トップバー・フッター。
+  assert.match(html, /--violet:#7357ff;--pink:#ff4f9a;--cyan:#23b8ff/u);
+  assert.match(html, /class="topbar"/u);
+  assert.match(html, /class="brand"/u);
+  assert.match(html, /欲しいを、ちゃんと見つける。/u);
   assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\/buzz">/u);
-  assert.match(html, /<script type="module" src="\/buzz\.mjs">/u);
+  assert.match(html, /<script type="module" src="\/buzz\.mjs\?v=\d+">/u);
   assert.doesNotMatch(html, /No\.?1|最安|Z世代/u);
   assert.match(script, /fetch\('\/api\/buzz\/shelf'/u);
   assert.match(script, /rel = 'noopener sponsored'/u);
+  assert.doesNotMatch(script, /出典:/u);
   // §22/§24: 棚単位のシェア(実データの商品名のみでシェア文を作る)。
   assert.match(script, /shelfShareText/u);
   assert.match(script, /友達に送る/u);
@@ -247,4 +266,123 @@ test('/buzzページは出典と注意書きを持ち、断定表現を使わな
   assert.doesNotMatch(script, /購入/u);
   // クライアント側で順位・価格・レビューを創作しない(サーバー値の表示のみ)。
   assert.doesNotMatch(script, /Math\.random/u);
+});
+
+
+// 2026-08-19 大隆さん指示: 韓流に繋がる棚を必ず1つ置く。
+test('韓国コスメ棚はYahoo!公式ランキングだけを根拠に上位へ入る', async () => {
+  const envWithYahoo = { ...env, YAHOO_SHOPPING_CLIENT_ID: 'test-yahoo-client' };
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname.includes('highRatingTrendRanking')) {
+      return new Response(JSON.stringify({ high_rating_trend_ranking: { ranking_data: [
+        { rank: 1, item_information: { name: '韓国コスメ商品A', url: 'https://store.shopping.yahoo.co.jp/shopa/itema.html', regular_price: 1500 },
+          review: { rate: 4.6, count: 200, url: 'https://shopping.yahoo.co.jp/review/a' },
+          image: { medium: 'https://item-shopping.c.yimg.jp/a.jpg' } },
+        { rank: 2, item_information: { name: '韓国コスメ商品B', url: 'https://store.shopping.yahoo.co.jp/shopb/itemb.html', regular_price: 2400 },
+          review: { rate: 4.4, count: 90, url: 'https://shopping.yahoo.co.jp/review/b' },
+          image: { medium: 'https://item-shopping.c.yimg.jp/b.jpg' } }
+      ] } }), { status: 200 });
+    }
+    if (url.pathname.includes('/IchibaItem/Ranking/')) {
+      const genreId = url.searchParams.get('genreId') || '';
+      return new Response(JSON.stringify({ Items: Array.from({ length: 6 }, (_, i) => ({
+        ...rankingItem(i + 1, `${genreNoun(genreId)} ${i + 1}`),
+        itemUrl: `https://item.rakuten.co.jp/shop${genreId}/item${i + 1}/`
+      })) }), { status: 200 });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const korean = await buildKoreanShelf(envWithYahoo, fetcher);
+  assert.ok(korean);
+  assert.equal(korean.shelf_id, 'korean_beauty');
+  assert.equal(korean.emoji, '❤️');
+  assert.equal(korean.marketplace, 'YAHOO_JP');
+  assert.match(korean.ranking_type, /高評価トレンドランキング/u);
+  assert.equal(korean.search_keyword, '韓国コスメ');
+  assert.ok(korean.items.length >= 2);
+  const result = await buzzShelfResult(envWithYahoo, fetcher);
+  const ids = result.shelves.map((shelf) => shelf.shelf_id);
+  assert.ok(ids.indexOf('korean_beauty') !== -1);
+  assert.ok(ids.indexOf('korean_beauty') < ids.indexOf(BUZZ_SHELF_CATEGORY_IDS[0]));
+  assert.equal(await buildKoreanShelf(env, fetcher), null);
+});
+
+test('韓国コスメ棚はトレンドAPI障害時に口コミ件数順ラベルへ縮退する', async () => {
+  const envWithYahoo = { ...env, YAHOO_SHOPPING_CLIENT_ID: 'test-yahoo-client' };
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname.includes('highRatingTrendRanking')) return new Response('down', { status: 503 });
+    if (url.pathname.includes('itemSearch')) {
+      return new Response(JSON.stringify({ totalResultsAvailable: 1, hits: [
+        { name: '韓国コスメ商品C', url: 'https://store.shopping.yahoo.co.jp/shopc/itemc.html', price: 1800,
+          review: { rate: 4.2, count: 40 }, exImage: { url: 'https://item-shopping.c.yimg.jp/c.jpg' }, inStock: true }
+      ] }), { status: 200 });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const korean = await buildKoreanShelf(envWithYahoo, fetcher);
+  if (korean) {
+    assert.match(korean.ranking_type, /口コミ件数順/u);
+    assert.equal(korean.headline, '口コミが多い。');
+  } else {
+    assert.equal(korean, null);
+  }
+});
+
+// 2026-08-19 大隆さん報告の再発防止: レディーススニーカー棚にイヤホンが並んだ。
+test('ジャンルと合わない棚は口コミ件数順で作り直し、それでも合わなければ出さない', async () => {
+  const sneakers = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === 'womens_sneakers');
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    const genreId = url.searchParams.get('genreId') || '';
+    if (url.pathname.includes('/IchibaItem/Ranking/')) {
+      const wrong = genreId === sneakers.genre_id;
+      return new Response(JSON.stringify({ Items: Array.from({ length: 6 }, (_, i) => ({
+        ...rankingItem(i + 1, wrong ? `ワイヤレスイヤホン Bluetooth ${i + 1}` : `${genreNoun(genreId)} ${i + 1}`),
+        itemUrl: `https://item.rakuten.co.jp/shop${genreId}${wrong ? 'w' : ''}/item${i + 1}/`
+      })) }), { status: 200 });
+    }
+    if (url.pathname.includes('/IchibaItem/Search/')) {
+      return new Response(JSON.stringify({ Items: Array.from({ length: 6 }, (_, i) => ({
+        ...rankingItem(i + 1, `厚底スニーカー レディース ${i + 1}`),
+        itemUrl: `https://item.rakuten.co.jp/review${genreId}/item${i + 1}/`
+      })) }), { status: 200 });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const shelves = await buildGenreShelves(env, fetcher);
+  const shelf = shelves.find((entry) => entry.shelf_id === 'womens_sneakers');
+  assert.ok(shelf, 'sneakers shelf should be rebuilt from the review ranking');
+  assert.equal(shelf.headline, '口コミが多い。');
+  assert.ok(shelf.items.every((item) => /スニーカー/u.test(item.name)));
+  const brokenFetcher = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname.includes('/IchibaItem/')) {
+      return new Response(JSON.stringify({ Items: Array.from({ length: 6 }, (_, i) => rankingItem(i + 1, `ワイヤレスイヤホン ${i + 1}`)) }), { status: 200 });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const broken = await buildGenreShelves(env, brokenFetcher);
+  assert.equal(broken.find((entry) => entry.shelf_id === 'womens_sneakers'), undefined);
+});
+
+test('中身が過半重複する棚は2つ並べない', async () => {
+  const nounFor = { wireless_earphones: 'ワイヤレスイヤホン', face_lotion: '化粧水', handheld_fan: 'ハンディファン', mobile_battery: 'モバイルバッテリー', womens_sneakers: 'スニーカー' };
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    const genreId = url.searchParams.get('genreId') || '';
+    const category = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.genre_id === genreId);
+    if (url.pathname.includes('/IchibaItem/Ranking/')) {
+      return new Response(JSON.stringify({ Items: Array.from({ length: 6 }, (_, i) => ({
+        ...rankingItem(i + 1, `${nounFor[category?.id] || '商品'} ${i + 1}`),
+        itemUrl: `https://item.rakuten.co.jp/shared/item${i + 1}/`
+      })) }), { status: 200 });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const result = await buzzShelfResult(env, fetcher);
+  const genreShelfIds = result.shelves.map((shelf) => shelf.shelf_id)
+    .filter((id) => BUZZ_SHELF_CATEGORY_IDS.includes(id));
+  assert.equal(genreShelfIds.length, 1, `duplicated shelves should collapse to one, got ${genreShelfIds.join(',')}`);
 });

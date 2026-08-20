@@ -306,7 +306,7 @@ export async function fetchRakutenRanking(env, category, fetcher = fetch) {
   return normalizeRakutenRanking(await response.json());
 }
 
-async function readRankingCache(env, marketplaceId, categoryId, rankingType, now = Date.now()) {
+export async function readRankingCache(env, marketplaceId, categoryId, rankingType, now = Date.now()) {
   if (!env.PRODUCT_DB) return null;
   try {
     const row = await env.PRODUCT_DB.prepare('SELECT payload_json, expires_at FROM marketplace_ranking_cache WHERE marketplace_id=?1 AND category_id=?2 AND ranking_type=?3').bind(marketplaceId, categoryId, rankingType).first();
@@ -315,7 +315,7 @@ async function readRankingCache(env, marketplaceId, categoryId, rankingType, now
   } catch { return null; }
 }
 
-async function writeRankingCache(env, marketplaceId, categoryId, rankingType, candidates, now = Date.now(), ttlMs = 5 * 60 * 1000) {
+export async function writeRankingCache(env, marketplaceId, categoryId, rankingType, candidates, now = Date.now(), ttlMs = 5 * 60 * 1000) {
   if (!env.PRODUCT_DB) return;
   try {
     const updatedAt = new Date(now).toISOString();

@@ -46,13 +46,14 @@ function render(result) {
   for (const shelf of shelves) {
     const block = el('div', 'buzz-home-shelf');
     const head = el('div', 'buzz-home-shelf-head');
-    head.append(el('h3', '', text(shelf.label)), el('span', 'buzz-home-headline', text(shelf.headline)));
+    head.append(el('h3', '', shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label)), el('span', 'buzz-home-headline', text(shelf.headline)));
     const rail = el('div', 'buzz-home-rail');
     for (const item of (shelf.items || []).slice(0, 6)) rail.append(itemCard(item));
     const more = el('a', 'buzz-home-railmore', 'もっと見る →');
     more.href = '/buzz';
     rail.append(more);
-    block.append(head, el('p', 'buzz-home-source', `出典: ${text(shelf.ranking_type)}`), rail);
+    // 2026-08-19 大隆さん指示: 棚ごとの出典表記は出さない(枠下の注記に集約)。
+    block.append(head, rail);
     root.append(block);
   }
 }
