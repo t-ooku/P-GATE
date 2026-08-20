@@ -172,6 +172,36 @@
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/compare-delivery-and-return-conditions"/>
     <changefreq>weekly</changefreq><priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-products-seen-on-social-media</loc>
+    <lastmod>2026-08-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-products-seen-on-social-media"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-products-seen-on-tiktok</loc>
+    <lastmod>2026-08-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-products-seen-on-tiktok"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-fashion-items-seen-on-instagram</loc>
+    <lastmod>2026-08-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-fashion-items-seen-on-instagram"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-products-introduced-on-youtube</loc>
+    <lastmod>2026-08-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-products-introduced-on-youtube"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/identify-correct-product-name-from-vague-memory</loc>
+    <lastmod>2026-08-20</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/identify-correct-product-name-from-vague-memory"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
   <url><loc>https://hoshilu.app/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://hoshilu.app/terms</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>
