@@ -252,9 +252,10 @@ test('/buzzページは出典と注意書きを持ち、断定表現を使わな
   assert.match(html, /<link rel="stylesheet" href="\/buzz\.css\?v=\d+">/u);
   assert.doesNotMatch(html, /<style>/u);
   assert.match(css, /--violet:#7357ff;--pink:#ff4f9a;--cyan:#23b8ff/u);
-  assert.match(css, /\.card:nth-child\(1\) \.rank/u);
-  assert.match(css, /\.card:nth-child\(2\) \.rank/u);
-  assert.match(css, /\.card:nth-child\(3\) \.rank/u);
+  assert.match(css, /\.rank\.rank-1/u);
+  assert.match(css, /\.rank\.rank-2/u);
+  assert.match(css, /\.rank\.rank-3/u);
+  assert.match(script, /rankNumber >= 1 && rankNumber <= 3/u);
   assert.match(serviceWorker, /SHELL\.push\('\/buzz\.html', '\/buzz\.css', '\/buzz\.mjs'\)/u);
   assert.match(html, /class="topbar"/u);
   assert.match(html, /class="brand"/u);
@@ -382,6 +383,31 @@ test('韓国コスメ棚は公式APIと縮退検索がともにカテゴリ不�
     return new Response('not found', { status: 404 });
   };
   assert.equal(await buildKoreanShelf(envWithYahoo, fetcher), null);
+});
+
+test('口コミ順も不一致なら公式ランキング内の個別確認済み韓国コスメだけを元順位で残す', async () => {
+  const envWithYahoo = { ...env, YAHOO_SHOPPING_CLIENT_ID: 'test-yahoo-client' };
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname.includes('highRatingTrendRanking')) {
+      return Response.json({ high_rating_trend_ranking: { ranking_data: [
+        { rank: 1, item_information: { name: 'コシヒカリ 白米 10kg', url: 'https://store.shopping.yahoo.co.jp/rice/a.html', regular_price: 5999 } },
+        { rank: 4, item_information: { name: '韓国コスメ ファンデーション', url: 'https://store.shopping.yahoo.co.jp/beauty/foundation.html', regular_price: 1800 } },
+        { rank: 6, item_information: { name: 'rom&nd ロムアンド リップティント', url: 'https://store.shopping.yahoo.co.jp/beauty/romand.html', regular_price: 1320 } }
+      ] } });
+    }
+    if (url.pathname.includes('itemSearch')) {
+      return Response.json({ totalResultsAvailable: 1, hits: [
+        { name: 'ひとめぼれ 白米 5kg', url: 'https://store.shopping.yahoo.co.jp/rice/b.html', price: 3299 }
+      ] });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const korean = await buildKoreanShelf(envWithYahoo, fetcher);
+  assert.ok(korean);
+  assert.equal(korean.headline, '高評価トレンド。');
+  assert.deepEqual(korean.items.map((item) => item.rank), [4, 6]);
+  assert.ok(korean.items.every((item) => !/米|コシヒカリ|ひとめぼれ/u.test(item.name)));
 });
 
 // 2026-08-19 大隆さん報告の再発防止: レディーススニーカー棚にイヤホンが並んだ。

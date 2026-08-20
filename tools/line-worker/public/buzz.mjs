@@ -28,7 +28,9 @@ function itemCard(item) {
     img.loading = 'lazy';
     thumb.append(img);
   }
-  thumb.append(el('span', 'rank', `${Number(item.rank) || ''}位`));
+  const rankNumber = Number(item.rank) || 0;
+  const rankClass = rankNumber >= 1 && rankNumber <= 3 ? `rank rank-${rankNumber}` : 'rank';
+  thumb.append(el('span', rankClass, `${rankNumber || ''}位`));
   card.append(thumb);
   if (item.movement) card.append(el('p', 'move', text(item.movement)));
   if (item.context_label) card.append(el('p', 'context', text(item.context_label)));

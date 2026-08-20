@@ -276,6 +276,13 @@ function categorySafeKoreanCandidates(candidates = []) {
     .map(({ candidate }) => candidate);
 }
 
+function individuallyVerifiedKoreanCandidates(candidates = []) {
+  return candidates.filter((candidate, index) => {
+    const item = sanitizeShelfItem(candidate, index);
+    return item.name && item.product_url && shelfItemsMatchCategory(KOREAN_SHELF.shelf_id, [item]);
+  });
+}
+
 export async function buildKoreanShelf(env, fetcher = fetch) {
   if (!yahooShoppingApiConfigured(env)) return null;
   let rankingType = 'HIGH_RATING_TREND';
@@ -283,14 +290,17 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
   let rankingLabel = 'Yahoo!ショッピング 高評価トレンドランキング(「韓国コスメ」)';
   let candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType);
   let shouldWriteCache = false;
+  let fetchedHighRating = false;
   if (!candidates) {
     try {
       candidates = await fetchYahooHighRatingRanking(env, KOREAN_SHELF.query, fetcher);
       shouldWriteCache = true;
+      fetchedHighRating = true;
     } catch {
       candidates = null;
     }
   }
+  const verifiedHighRatingCandidates = individuallyVerifiedKoreanCandidates(candidates || []);
   // 検索語を無視した総合ランキング(今回の「米」など)は採用しない。
   // 過半が韓国コスメと確認できない場合は、検索語が効く商品検索へ縮退する。
   candidates = categorySafeKoreanCandidates(candidates || []);
@@ -309,6 +319,15 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
       }
     }
     candidates = categorySafeKoreanCandidates(candidates || []);
+    // 検索APIもカテゴリ不一致なら、元の公式高評価ランキングに含まれていた
+    // 個別確認済み韓国コスメだけを、元順位を変えずに表示する。米などは含めない。
+    if (!candidates.length && verifiedHighRatingCandidates.length) {
+      rankingType = 'HIGH_RATING_TREND';
+      headline = '高評価トレンド。';
+      rankingLabel = 'Yahoo!ショッピング 高評価トレンドランキング(「韓国コスメ」)';
+      candidates = verifiedHighRatingCandidates;
+      shouldWriteCache = fetchedHighRating;
+    }
   }
   if (!candidates.length) return null;
   if (shouldWriteCache) {

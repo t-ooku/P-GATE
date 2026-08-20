@@ -38,9 +38,9 @@ main{width:min(100% - 32px,1120px);margin:0 auto}
 .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .25s ease}
 .card:hover .thumb img{transform:scale(1.035)}
 .rank{position:absolute;top:7px;left:7px;min-width:42px;text-align:center;background:linear-gradient(110deg,var(--pink),var(--violet));color:#fff;font-size:11px;font-weight:950;padding:5px 10px;border:1px solid #ffffff80;border-radius:999px;box-shadow:0 6px 14px #7357ff46}
-.card:nth-child(1) .rank{background:linear-gradient(135deg,#ffdc72,var(--gold) 55%,#f18a20);color:#3d2500;box-shadow:0 6px 16px #ffbc2f55}
-.card:nth-child(2) .rank{background:linear-gradient(135deg,#eef2f8,var(--silver) 60%,#758197);color:#1f2937;box-shadow:0 6px 16px #9ba6ba4d}
-.card:nth-child(3) .rank{background:linear-gradient(135deg,#efbe99,var(--bronze) 58%,#9c5638);color:#fff;box-shadow:0 6px 16px #c9825552}
+.rank.rank-1{background:linear-gradient(135deg,#ffdc72,var(--gold) 55%,#f18a20);color:#3d2500;box-shadow:0 6px 16px #ffbc2f55}
+.rank.rank-2{background:linear-gradient(135deg,#eef2f8,var(--silver) 60%,#758197);color:#1f2937;box-shadow:0 6px 16px #9ba6ba4d}
+.rank.rank-3{background:linear-gradient(135deg,#efbe99,var(--bronze) 58%,#9c5638);color:#fff;box-shadow:0 6px 16px #c9825552}
 .move{margin:0;color:var(--pink);font-size:11px;font-weight:900}
 .context{margin:0;color:var(--muted);font-size:10px;font-weight:650}
 .name{margin:0;font-size:12px;line-height:1.5;max-height:4.5em;overflow:hidden;font-weight:720}
