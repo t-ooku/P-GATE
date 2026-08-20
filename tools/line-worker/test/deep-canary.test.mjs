@@ -42,6 +42,7 @@ function sqliteEnvironment(overrides = {}) {
     env: {
       GEMINI_API_KEY: 'g'.repeat(32),
       OPENAI_API_KEY: 'o'.repeat(32),
+      OPENAI_BACKUP_ENABLED: 'true',
       RAKUTEN_APPLICATION_ID: 'app',
       RAKUTEN_ACCESS_KEY: 'access',
       YAHOO_SHOPPING_CLIENT_ID: 'yahoo',
@@ -165,6 +166,10 @@ test('provider status classification retries only transient HTTP failures', () =
     'CANARY_PROVIDER_TIMEOUT');
   assert.equal(deepCanaryTest.failureCode({ status: 429, message: 'OPENAI_CHAT_INTENT_FAILED' }),
     'CANARY_PROVIDER_RATE_LIMITED');
+  assert.equal(deepCanaryTest.failureCode({ status: 429, providerCode: 'insufficient_quota' }),
+    'CANARY_PROVIDER_BILLING_UNAVAILABLE');
+  assert.equal(deepCanaryTest.failureCode({ status: 429, providerCode: 'billing_hard_limit_reached' }),
+    'CANARY_PROVIDER_BILLING_UNAVAILABLE');
   assert.equal(deepCanaryTest.failureCode({ status: 503, message: 'OPENAI_CHAT_INTENT_FAILED' }),
     'CANARY_PROVIDER_UPSTREAM_5XX');
   assert.equal(deepCanaryTest.failureCode({ status: 400, message: 'OPENAI_CHAT_INTENT_FAILED' }),
@@ -458,7 +463,7 @@ test('monthly five-dollar cap rejects the next reservation before any AI call', 
   assert.equal(result.monthly_micro_usd, 4_900_001);
 });
 
-test('missing usage keeps the maximum reservation instead of releasing budget', async (t) => {
+test('provider failure releases its reservation instead of poisoning the monthly budget', async (t) => {
   const { sqlite, env } = sqliteEnvironment();
   t.after(() => sqlite.close());
   seedPriorResults(sqlite);
@@ -469,9 +474,9 @@ test('missing usage keeps the maximum reservation instead of releasing budget', 
   const held = sqlite.prepare(`SELECT campaign,content,marketplace FROM growth_events
     WHERE event_type='deep_canary_budget' AND medium='query_structurer'`).get();
   assert.deepEqual({ ...held }, {
-    campaign: 'RESERVED', content: '0100000', marketplace: '0100000'
+    campaign: 'RELEASED', content: '0000000', marketplace: '0100000'
   });
-  assert.equal(result.monthly_micro_usd, 600_000);
+  assert.equal(result.monthly_micro_usd, 0);
 });
 
 test('a semantically corrupted budget row fails closed before any paid provider call', async (t) => {

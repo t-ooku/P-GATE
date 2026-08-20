@@ -2,7 +2,11 @@ import test, { beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { aiProductDiscoveryTest, discoverProductsWithAi } from '../src/ai-product-discovery.mjs';
 
-const ENV = { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32) };
+const ENV = {
+  GEMINI_API_KEY: 'g'.repeat(32),
+  OPENAI_API_KEY: 'o'.repeat(32),
+  OPENAI_BACKUP_ENABLED: 'true',
+};
 
 beforeEach(() => aiProductDiscoveryTest.resetCircuitBreaker());
 

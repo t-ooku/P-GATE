@@ -276,6 +276,7 @@ export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRow
   const nowMs = Number(now);
   assert(Number.isFinite(nowMs), 'DEEP_CANARY_TIME_INVALID');
   const resultKeys = new Set();
+  let optionalOpenAiReservationCode = '';
   const grouped = new Map(Object.keys(CANARY_MAX_AGE_MINUTES).map((component) => [component, []]));
   for (const row of Array.isArray(rows) ? rows : []) {
     const component = String(row?.component || '');
@@ -285,7 +286,7 @@ export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRow
     const occurredAt = String(row?.occurred_at || '');
     const timestamp = Date.parse(occurredAt);
     const runId = String(row?.event_id || '').match(/^deep-canary:(\d+):/u)?.[1] || '';
-    if (!['PASS', 'FAIL'].includes(status) || !/^[A-Z][A-Z0-9_]{2,79}$/u.test(code)
+    if (!['PASS', 'DEGRADED', 'FAIL'].includes(status) || !/^[A-Z][A-Z0-9_]{2,79}$/u.test(code)
       || !runId || !Number.isFinite(timestamp) || timestamp > nowMs + 5 * 60000) {
       throw new Error(`DEEP_CANARY_RESULT_INVALID:${component || 'UNKNOWN'}`);
     }
@@ -317,19 +318,43 @@ export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRow
       .some((item) => item.timestamp > timestamp);
     if (nowMs - timestamp > CANARY_RESERVATION_GRACE_MS
       && !resultKeys.has(`${runId}:${component}`) && !recoveredByNewerResult) {
-      throw new Error(`DEEP_CANARY_RESERVATION_STUCK:${component.toUpperCase()}`);
+      if (component === 'openai_backup') {
+        optionalOpenAiReservationCode = 'CANARY_OPTIONAL_BACKUP_RESERVATION_STUCK';
+      } else {
+        throw new Error(`DEEP_CANARY_RESERVATION_STUCK:${component.toUpperCase()}`);
+      }
     }
   }
   const summary = {};
   for (const [component, items] of grouped) {
     items.sort((left, right) => right.timestamp - left.timestamp);
     const latest = items[0];
+    if (component === 'openai_backup' && optionalOpenAiReservationCode) {
+      summary[component] = { status: 'DEGRADED', code: optionalOpenAiReservationCode,
+        occurred_at: latest?.occurred_at || '' };
+      continue;
+    }
     if (!latest && nowMs < CANARY_BOOTSTRAP_DEADLINE_MS) {
       summary[component] = { status: 'PENDING', code: 'CANARY_BOOTSTRAP_PENDING', occurred_at: '' };
       continue;
     }
     if (!latest || nowMs - latest.timestamp > CANARY_MAX_AGE_MINUTES[component] * 60000) {
+      if (component === 'openai_backup') {
+        summary[component] = { status: 'DEGRADED', code: 'CANARY_OPTIONAL_BACKUP_STALE',
+          occurred_at: latest?.occurred_at || '' };
+        continue;
+      }
       throw new Error(`DEEP_CANARY_STALE:${component.toUpperCase()}`);
+    }
+    if (latest.status === 'DEGRADED' || latest.code === 'CANARY_MONTHLY_BUDGET_LIMIT') {
+      summary[component] = { status: 'DEGRADED', code: latest.code, occurred_at: latest.occurred_at };
+      continue;
+    }
+    // OpenAI is an optional backup. Its failure is operational degradation,
+    // never evidence that real-user search itself failed.
+    if (component === 'openai_backup' && latest.status === 'FAIL') {
+      summary[component] = { status: 'DEGRADED', code: latest.code, occurred_at: latest.occurred_at };
+      continue;
     }
     if (latest.status === 'FAIL' && ['query_structurer', 'ai_chat_primary'].includes(component)
       && !CANARY_PRIMARY_TRANSIENT_CODES.has(latest.code)) {

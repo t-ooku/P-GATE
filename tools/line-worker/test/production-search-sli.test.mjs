@@ -286,7 +286,7 @@ test('deep canary confirms transient query structurer failures before alerting',
     /DEEP_CANARY_QUERY_STRUCTURER_CONSECUTIVE:QUERY_STRUCTURER:CANARY_PROVIDER_TIMEOUT/u);
 });
 
-test('deep canary immediately alerts on non-transient control failures', () => {
+test('optional OpenAI control failures are degraded rather than search failures', () => {
   const now = Date.now();
   const codes = [
     'OPENAI_NOT_CONFIGURED',
@@ -302,22 +302,18 @@ test('deep canary immediately alerts on non-transient control failures', () => {
   for (const code of codes) {
     const rows = healthyCanaryRows(now).map((row) => row.component === 'openai_backup'
       ? { ...row, status:'FAIL', code } : row);
-    assert.throws(
-      () => evaluateDeepCanary(rows, { now }),
-      new RegExp(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:OPENAI_BACKUP:${code}`, 'u')
-    );
+    assert.equal(evaluateDeepCanary(rows, { now }).openai_backup.status, 'DEGRADED');
   }
 });
 
-test('deep canary immediately alerts when a provider rejects the request contract', () => {
+test('optional OpenAI request rejection is degraded rather than a search failure', () => {
   const now = Date.now();
   const rows = healthyCanaryRows(now).map((row) => row.component === 'openai_backup'
     ? { ...row, status:'FAIL', code:'CANARY_PROVIDER_REQUEST_REJECTED' } : row);
-  assert.throws(() => evaluateDeepCanary(rows, { now }),
-    /DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:OPENAI_BACKUP:CANARY_PROVIDER_REQUEST_REJECTED/u);
+  assert.equal(evaluateDeepCanary(rows, { now }).openai_backup.status, 'DEGRADED');
 });
 
-test('deep canary keeps transient OpenAI backup failures on a distinct two-run warning', () => {
+test('optional OpenAI transient failures remain degraded across repeated runs', () => {
   const now = Date.now();
   const base = healthyCanaryRows(now).filter((row) => row.component !== 'openai_backup');
   const failed = [0, 360].map((minutes, index) => ({
@@ -325,10 +321,7 @@ test('deep canary keeps transient OpenAI backup failures on a distinct two-run w
     code:'OPENAI_CHAT_INTENT_FAILED', occurred_at:new Date(now-minutes*60000).toISOString()
   }));
   assert.doesNotThrow(() => evaluateDeepCanary([...base, failed[0]], { now }));
-  assert.throws(
-    () => evaluateDeepCanary([...base, ...failed], { now }),
-    /DEEP_CANARY_OPENAI_BACKUP_WARNING:OPENAI_BACKUP:OPENAI_CHAT_INTENT_FAILED/u
-  );
+  assert.equal(evaluateDeepCanary([...base, ...failed], { now }).openai_backup.status, 'DEGRADED');
 });
 
 test('deep canary requires two distinct failed marketplace runs and resets on pass', () => {
@@ -351,7 +344,11 @@ test('deep canary detects missed 15m marketplaces, 1h Gemini, and 6h backup runs
     assert.doesNotThrow(() => evaluateDeepCanary(atBoundary, { now }));
     const stale = atBoundary.map((row) => row.component === component
       ? { ...row, occurred_at:new Date(now-(minutes+1)*60000).toISOString() } : row);
-    assert.throws(() => evaluateDeepCanary(stale, { now }), new RegExp(`DEEP_CANARY_STALE:${component.toUpperCase()}`, 'u'));
+    if (component === 'openai_backup') {
+      assert.equal(evaluateDeepCanary(stale, { now }).openai_backup.status, 'DEGRADED');
+    } else {
+      assert.throws(() => evaluateDeepCanary(stale, { now }), new RegExp(`DEEP_CANARY_STALE:${component.toUpperCase()}`, 'u'));
+    }
   }
 });
 

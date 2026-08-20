@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   analyzeChatTurn,
   chatIntentConfigured,
+  probeChatIntentProvider,
   refineMarketplaceSearchQuery,
   sanitizeChatHistory,
   normalizeChatTurnResult
@@ -11,7 +12,8 @@ import {
 test('chatIntentConfigured accepts either Gemini or OpenAI configuration', () => {
   assert.equal(chatIntentConfigured({}), false);
   assert.equal(chatIntentConfigured({ GEMINI_API_KEY: 'g'.repeat(32) }), true);
-  assert.equal(chatIntentConfigured({ OPENAI_API_KEY: 'o'.repeat(32) }), true);
+  assert.equal(chatIntentConfigured({ OPENAI_API_KEY: 'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true' }), true);
+  assert.equal(chatIntentConfigured({ OPENAI_API_KEY: 'o'.repeat(32) }), false);
 });
 
 test('sanitizeChatHistory keeps only user/assistant turns with text, capped at 8 for three NO turns', () => {
@@ -114,6 +116,33 @@ test('全プロバイダ失敗時も直近のユーザー発言で検索へフ�
   assert.equal(result.refined_query, '軽いモバイルバッテリー');
 });
 
+test('OpenAIキーがあっても課金有効化フラグが無ければ待たずに元検索文へ進む', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(String(url));
+    return new Response('unavailable', { status:503 });
+  };
+  const result = await analyzeChatTurn(
+    [{ role:'user', text:'旅行で荷物を小さくしたい' }], 'JA',
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) }, fetchImpl
+  );
+  assert.equal(result.refined_query, '旅行で荷物を小さくしたい');
+  assert.equal(calls.length, 1);
+  assert.match(calls[0], /generativelanguage/u);
+});
+
+test('OpenAIのquota不足をrate limitと混同せず固定コードで通知する', async () => {
+  const fetchImpl = async () => new Response(JSON.stringify({
+    error:{ code:'insufficient_quota', type:'insufficient_quota' }
+  }), { status:429, headers:{ 'content-type':'application/json' } });
+  await assert.rejects(
+    () => probeChatIntentProvider('openai', {
+      OPENAI_API_KEY:'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true'
+    }, fetchImpl),
+    (error) => error?.status === 429 && error?.providerCode === 'insufficient_quota'
+  );
+});
+
 test('GeminiからOpenAIへ切替成功した時だけ匿名primary degradationを1件通知する', async () => {
   const degradations = [];
   const fetchImpl = async (url) => String(url).includes('generativelanguage.googleapis.com')
@@ -123,7 +152,7 @@ test('GeminiからOpenAIへ切替成功した時だけ匿名primary degradation�
     }] }], usage:{ input_tokens:10, output_tokens:5 } });
   const result = await analyzeChatTurn(
     [{ role:'user', text:'軽いイヤホン' }], 'JA',
-    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) }, fetchImpl,
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true' }, fetchImpl,
     { onProviderDegraded:(item) => degradations.push(item), telemetryComponent:'ai_chat' }
   );
   assert.equal(result.provider, 'openai');
@@ -142,7 +171,7 @@ test('provider JSON parse SyntaxErrorは固定INVALID_JSON codeへ分類する',
     }] }], usage:{ input_tokens:10, output_tokens:5 } });
   const result = await analyzeChatTurn(
     [{ role:'user', text:'検索本文' }], 'JA',
-    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) }, fetchImpl,
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true' }, fetchImpl,
     { onProviderDegraded:(item) => degradations.push(item) }
   );
   assert.equal(result.provider, 'openai');
@@ -156,7 +185,7 @@ test('全provider失敗はprimaryと重複せず匿名all degradationを1件だ�
   const degradations = [];
   const result = await analyzeChatTurn(
     [{ role:'user', text:'会話本文は通知禁止' }], 'JA',
-    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) },
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true' },
     async () => new Response('外部応答は通知禁止', { status:503 }),
     { onProviderDegraded:(item) => degradations.push(item), telemetryComponent:'ai_chat' }
   );
@@ -182,7 +211,7 @@ test('provider未設定は構造的all degradationを1件だけ通知する', as
 test('telemetry callbackの同期例外でもall-provider fallbackを維持する', async () => {
   const result = await analyzeChatTurn(
     [{ role:'user', text:'軽いモバイルバッテリー' }], 'JA',
-    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32) },
+    { GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true' },
     async () => new Response('unavailable', { status:503 }),
     { onProviderDegraded:() => { throw new Error('TELEMETRY_CALLBACK_FAILED'); } }
   );
@@ -219,7 +248,7 @@ test('Query Structurer全provider未設定はallとして即時通知する', as
 test('GeminiなしOpenAI-onlyのQuery Structurer失敗はallとして即時通知する', async () => {
   const degradations = [];
   const result = await refineMarketplaceSearchQuery(
-    '軽いイヤホン', 'JA', { OPENAI_API_KEY:'o'.repeat(32) },
+    '軽いイヤホン', 'JA', { OPENAI_API_KEY:'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true' },
     async () => new Response('unavailable', { status:503 }),
     { onProviderDegraded:(item) => degradations.push(item) }
   );
@@ -253,7 +282,7 @@ test('Gemini timeout leaves a bounded budget for the OpenAI backup', async () =>
     const result = await analyzeChatTurn(
       [{ role: 'user', text: 'LBっていうメーカーの眉毛描き' }],
       'JA',
-      { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32) },
+      { GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true' },
       fetchImpl
     );
     assert.equal(calls, 2);
@@ -318,7 +347,8 @@ test('AI候補メタデータを長さ・件数・スコア範囲内へ正規化
 
 test('OpenAIの通常経路もreasoning込み出力を128 tokenに制限する',async()=>{
   let body;const fetchImpl=async(_url,options)=>{body=JSON.parse(options.body);return Response.json({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({needs_clarification:false,refined_query:'軽い イヤホン'})}]}],usage:{input_tokens:40,output_tokens:20}});};
-  const result=await analyzeChatTurn([{role:'user',text:'軽いイヤホン'}],'JA',{OPENAI_API_KEY:'o'.repeat(32)},fetchImpl);
+  const result=await analyzeChatTurn([{role:'user',text:'軽いイヤホン'}],'JA',
+    {OPENAI_API_KEY:'o'.repeat(32),OPENAI_BACKUP_ENABLED:'true'},fetchImpl);
   assert.equal(result.provider,'openai');assert.equal(body.max_output_tokens,128);
   assert.equal('_canaryUsage' in result,false);
 });

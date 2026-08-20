@@ -1,3 +1,5 @@
+import { openAiBackupEnabled } from './ai-provider-availability.mjs';
+
 const MAX_AI_CANDIDATES = 5;
 // 通常検索候補が0件の時だけ走る補助経路。長時間待たせるよりモールへの
 // 直接検索導線を早く返すことを優先し、各プロバイダを短い上限で打ち切る。
@@ -164,7 +166,7 @@ async function callOpenAi(query, language, env, fetchImpl) {
 }
 
 export function aiProductDiscoveryConfigured(env = {}) {
-  return String(env.GEMINI_API_KEY || '').length >= 20 || String(env.OPENAI_API_KEY || '').length >= 20;
+  return String(env.GEMINI_API_KEY || '').length >= 20 || openAiBackupEnabled(env);
 }
 
 export async function discoverProductsWithAi(query, language, env = {}, fetchImpl = fetch) {
@@ -172,7 +174,7 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
     return { triggered: false, configured: false, candidates: [], analysis: null };
   }
   const geminiConfigured = String(env.GEMINI_API_KEY || '').length >= 20;
-  const openAiConfigured = String(env.OPENAI_API_KEY || '').length >= 20;
+  const openAiConfigured = openAiBackupEnabled(env);
   const providers = [];
   if (geminiConfigured && Date.now() >= geminiBlockedUntil) providers.push('gemini');
   if (openAiConfigured) providers.push('openai');

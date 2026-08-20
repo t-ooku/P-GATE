@@ -10,7 +10,8 @@ import {
 test('AI discovery accepts either Gemini or OpenAI configuration', () => {
   assert.equal(aiProductDiscoveryConfigured({}), false);
   assert.equal(aiProductDiscoveryConfigured({ GEMINI_API_KEY: 'g'.repeat(32) }), true);
-  assert.equal(aiProductDiscoveryConfigured({ OPENAI_API_KEY: 'o'.repeat(32) }), true);
+  assert.equal(aiProductDiscoveryConfigured({ OPENAI_API_KEY: 'o'.repeat(32), OPENAI_BACKUP_ENABLED:'true' }), true);
+  assert.equal(aiProductDiscoveryConfigured({ OPENAI_API_KEY: 'o'.repeat(32) }), false);
 });
 
 test('normalizes product candidates and multilingual search keywords', () => {
@@ -93,10 +94,24 @@ test('falls back to OpenAI when Gemini fails', async () => {
   const result = await discoverProductsWithAi('透明イヤホン', 'JA', {
     GEMINI_API_KEY: 'g'.repeat(32),
     OPENAI_API_KEY: 'o'.repeat(32),
+    OPENAI_BACKUP_ENABLED: 'true',
     OPENAI_PRODUCT_DISCOVERY_MODEL: 'gpt-test'
   }, fetchImpl);
   assert.equal(result.provider, 'OPENAI_PRODUCT_INTENT');
   assert.equal(result.analysis.product_candidates[0].name, 'SoundPEATS Clear');
+});
+
+test('OpenAI課金有効化フラグが無ければGemini失敗後にOpenAIへ接続しない', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(String(url));
+    return new Response('unavailable', { status:503 });
+  };
+  await assert.rejects(() => discoverProductsWithAi('韓国っぽいバッグ', 'JA', {
+    GEMINI_API_KEY:'g'.repeat(32), OPENAI_API_KEY:'o'.repeat(32)
+  }, fetchImpl), /GEMINI_PRODUCT_INTENT_FAILED/u);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0], /generativelanguage/u);
 });
 
 test('prompt explicitly requests candidate names and short marketplace terms', () => {

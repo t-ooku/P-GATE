@@ -764,7 +764,11 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(getEnvironmentReadiness({ ...base, AMAZON_ASSOCIATE_TAG: 'hoshilu-22' }).checks.amazon_associate_link_configured, false);
   assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_chat_configured, true);
   assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_price_comparison_configured, true);
-  assert.equal(getEnvironmentReadiness({ ...base, OPENAI_API_KEY: 'o'.repeat(20) }).checks.ai_chat_configured, true);
+  assert.equal(getEnvironmentReadiness({
+    ...base,
+    OPENAI_API_KEY: 'o'.repeat(20),
+    OPENAI_BACKUP_ENABLED: 'true',
+  }).checks.ai_chat_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.admin_auth_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.admin_credentials_distinct, true);
   assert.equal(getEnvironmentReadiness(base).checks.seller_auth_configured, true);

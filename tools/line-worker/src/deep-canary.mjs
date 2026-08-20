@@ -1,4 +1,5 @@
 import { probeChatIntentProvider } from './ai-chat-intent.mjs';
+import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 import { searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
 import { searchYahooShopping } from './yahoo-shopping-api.mjs';
 
@@ -118,6 +119,10 @@ const billingNow = (clock) => {
 
 const failureCode = (error) => {
   const status = Number(error?.status || 0);
+  const providerCode = String(error?.providerCode || '').toLowerCase();
+  if (['insufficient_quota', 'billing_hard_limit_reached', 'billing_not_active',
+    'billing_disabled'].includes(providerCode)) return 'CANARY_PROVIDER_BILLING_UNAVAILABLE';
+  if (providerCode === 'rate_limit_exceeded') return 'CANARY_PROVIDER_RATE_LIMITED';
   if (status === 401 || status === 403) return 'CANARY_PROVIDER_AUTH_FAILED';
   if (status === 408) return 'CANARY_PROVIDER_TIMEOUT';
   if (status === 429) return 'CANARY_PROVIDER_RATE_LIMITED';
@@ -158,7 +163,7 @@ async function reserveBudget(env, now, runId, component, pricing) {
           AND occurred_at>=?7 AND occurred_at<?8
           AND (length(content)<>7 OR content GLOB '*[^0-9]*'
             OR length(marketplace)<>7 OR marketplace GLOB '*[^0-9]*'
-            OR campaign NOT IN ('RESERVED','SETTLED')
+            OR campaign NOT IN ('RESERVED','SETTLED','RELEASED')
             OR medium NOT IN ('query_structurer','ai_chat_primary','openai_backup')
             OR marketplace<>CASE medium
               WHEN 'query_structurer' THEN '0100000'
@@ -166,9 +171,11 @@ async function reserveBudget(env, now, runId, component, pricing) {
               WHEN 'openai_backup' THEN '0007000' ELSE '' END
             OR (campaign='RESERVED' AND content<>marketplace)
             OR (campaign='SETTLED' AND (CAST(content AS INTEGER)<=0
-              OR CAST(content AS INTEGER)>CAST(marketplace AS INTEGER)))))
+              OR CAST(content AS INTEGER)>CAST(marketplace AS INTEGER)))
+            OR (campaign='RELEASED' AND content<>'0000000')))
       AND ?6 + COALESCE((SELECT SUM(CAST(content AS INTEGER))
         FROM growth_events WHERE event_type=?2 AND source='worker' AND traffic_class='QA'
+          AND campaign IN ('RESERVED','SETTLED')
           AND occurred_at>=?7 AND occurred_at<?8),0) <= ?9`)
     .bind(eventId, BUDGET_EVENT_TYPE, component, reserved, now.toISOString(),
       pricing.reservation, start, end, MONTHLY_LIMIT_MICRO_USD).run();
@@ -187,11 +194,21 @@ async function settleBudget(env, eventId, cost, reservation) {
   if (Number(result?.meta?.changes) !== 1) throw new Error('CANARY_BUDGET_SETTLEMENT_FAILED');
 }
 
+async function releaseBudget(env, eventId, reservation) {
+  const reserved = String(reservation).padStart(7, '0');
+  const result = await env.PRODUCT_DB.prepare(`UPDATE growth_events
+    SET campaign='RELEASED',content='0000000'
+    WHERE event_id=?1 AND event_type=?2 AND campaign='RESERVED' AND marketplace=?3 AND content=?3`)
+    .bind(eventId, BUDGET_EVENT_TYPE, reserved).run();
+  if (Number(result?.meta?.changes) !== 1) throw new Error('CANARY_BUDGET_RELEASE_FAILED');
+}
+
 async function monthlyBudgetSpend(env, now) {
   const { start, end } = monthBounds(now);
   const row = await env.PRODUCT_DB.prepare(`SELECT COALESCE(SUM(CASE WHEN length(content)=7
     AND content NOT GLOB '*[^0-9]*' THEN CAST(content AS INTEGER) ELSE 0 END),0) AS micro_usd
     FROM growth_events WHERE event_type=?1 AND source='worker' AND traffic_class='QA'
+      AND campaign IN ('RESERVED','SETTLED')
       AND occurred_at>=?2 AND occurred_at<?3`).bind(BUDGET_EVENT_TYPE, start, end).first();
   return Math.max(0, Number(row?.micro_usd) || 0);
 }
@@ -214,7 +231,8 @@ async function writeResult(env, runId, component, status, code, occurredAt) {
     ON CONFLICT(event_id) DO UPDATE SET campaign=excluded.campaign,
       content=excluded.content,occurred_at=excluded.occurred_at`)
     .bind(`deep-canary:${runId}:${component}`, EVENT_TYPE, component,
-      status === 'PASS' ? 'PASS' : 'FAIL', safeCode(code, status === 'PASS' ? 'CANARY_OK' : 'CANARY_FAILED'), occurredAt)
+      ['PASS','DEGRADED'].includes(status) ? status : 'FAIL',
+      safeCode(code, status === 'PASS' ? 'CANARY_OK' : 'CANARY_FAILED'), occurredAt)
     .run();
 }
 
@@ -263,10 +281,17 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
     const reservation = await reserveBudget(env, chargedAt, runId, component, pricing);
     if (reservation.duplicate) return { duplicate: true };
     if (!reservation.reserved) throw new Error('CANARY_MONTHLY_BUDGET_LIMIT');
-    const result = await probeChatIntentProvider(provider, probeEnv, fetchImpl, {
-      mode, timeoutMs: component === 'query_structurer' ? 1500 : 5000
-    });
-    const actualCost = costFromUsage(result?._canaryUsage, pricing);
+    let result;
+    let actualCost;
+    try {
+      result = await probeChatIntentProvider(provider, probeEnv, fetchImpl, {
+        mode, timeoutMs: component === 'query_structurer' ? 1500 : 5000
+      });
+      actualCost = costFromUsage(result?._canaryUsage, pricing);
+    } catch (error) {
+      await releaseBudget(env, reservation.eventId, pricing.reservation);
+      throw error;
+    }
     await settleBudget(env, reservation.eventId, actualCost, pricing.reservation);
     validateAi(result, mode);
     return { duplicate: false };
@@ -279,7 +304,9 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
       return paidProbe('query_structurer', 'gemini', probeEnv, 'REFINE');
     },
     ai_chat_primary: async () => paidProbe('ai_chat_primary', 'gemini', env, 'IDENTIFY'),
-    openai_backup: async () => paidProbe('openai_backup', 'openai', env, 'IDENTIFY'),
+    openai_backup: async () => openAiBackupEnabled(env)
+      ? paidProbe('openai_backup', 'openai', env, 'IDENTIFY')
+      : ({ degraded: true, code: 'CANARY_PROVIDER_BILLING_DISABLED' }),
     rakuten: async () => validateMarketplace(
       await searchRakutenMarketplace(env, 'ワイヤレスイヤホン', fetchImpl, runId), 'RAKUTEN_JP'),
     yahoo: async () => validateMarketplace(
@@ -294,12 +321,15 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
     try {
       const outcome = await probes[component]();
       if (outcome?.duplicate) continue;
-      await writeResult(env, runId, component, 'PASS', 'CANARY_OK', occurredAt);
-      results.push({ component, status: 'PASS', code: 'CANARY_OK' });
+      const status = outcome?.degraded ? 'DEGRADED' : 'PASS';
+      const code = outcome?.degraded ? outcome.code : 'CANARY_OK';
+      await writeResult(env, runId, component, status, code, occurredAt);
+      results.push({ component, status, code });
     } catch (error) {
       const code = failureCode(error);
-      await writeResult(env, runId, component, 'FAIL', code, occurredAt);
-      results.push({ component, status: 'FAIL', code });
+      const status = code === 'CANARY_MONTHLY_BUDGET_LIMIT' ? 'DEGRADED' : 'FAIL';
+      await writeResult(env, runId, component, status, code, occurredAt);
+      results.push({ component, status, code });
     }
   }
   console.info('DEEP_CANARY_CYCLE', {

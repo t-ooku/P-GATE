@@ -18,6 +18,7 @@
 // instruction) - never open-ended chat.
 
 import { expandSearchQuery } from './query-expansion.mjs';
+import { openAiBackupEnabled } from './ai-provider-availability.mjs';
 
 // One provider must not consume the whole request deadline. Gemini is still
 // primary, but a timeout leaves a bounded slice for the OpenAI backup before
@@ -36,6 +37,10 @@ function providerFailureCode(error) {
   const status = Number(error?.status || 0);
   const name = String(error?.name || '');
   const message = String(error?.message || '');
+  const providerCode = String(error?.providerCode || '').toLowerCase();
+  if (['insufficient_quota', 'billing_hard_limit_reached', 'billing_not_active',
+    'billing_disabled'].includes(providerCode)) return 'AI_PROVIDER_BILLING_UNAVAILABLE';
+  if (providerCode === 'rate_limit_exceeded') return 'AI_PROVIDER_RATE_LIMITED';
   if (status === 401 || status === 403) return 'AI_PROVIDER_AUTH_FAILED';
   if (status === 408 || name === 'TimeoutError' || name === 'AbortError'
     || /timed?\s*out|timeout/iu.test(message)) return 'AI_PROVIDER_TIMEOUT';
@@ -174,6 +179,11 @@ async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_PR
   if (!response.ok) {
     const error = new Error('OPENAI_CHAT_INTENT_FAILED');
     error.status = response.status;
+    try {
+      const failure = await response.clone().json();
+      error.providerCode = cleanString(failure?.error?.code, 80).toLowerCase();
+      error.providerType = cleanString(failure?.error?.type, 80).toLowerCase();
+    } catch {}
     throw error;
   }
   const payload = await response.json();
@@ -204,7 +214,7 @@ export function normalizeChatTurnResult(payload = {}) {
 }
 
 export function chatIntentConfigured(env = {}) {
-  return String(env.GEMINI_API_KEY || '').length >= 20 || String(env.OPENAI_API_KEY || '').length >= 20;
+  return String(env.GEMINI_API_KEY || '').length >= 20 || openAiBackupEnabled(env);
 }
 
 // Falls back to the newest user message as refined_query when every
@@ -228,7 +238,7 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
   const history = sanitizeChatHistory(rawHistory);
   const mode = options.mode === 'IDENTIFY' ? 'IDENTIFY' : 'REFINE';
   const geminiConfigured = String(env.GEMINI_API_KEY || '').length >= 20;
-  const openAiConfigured = String(env.OPENAI_API_KEY || '').length >= 20;
+  const openAiConfigured = openAiBackupEnabled(env);
   const primaryProvider = geminiConfigured ? 'gemini' : (openAiConfigured ? 'openai' : 'gemini');
   if (!history.length) return { ...fallbackResult(history, mode), configured: chatIntentConfigured(env) };
   if (!chatIntentConfigured(env)) {
@@ -288,7 +298,7 @@ export async function analyzeChatTurn(rawHistory, language, env = {}, fetchImpl 
       console.warn('AI_CHAT_TURN_PROVIDER_FAILED', {
         provider,
         status: Number(error?.status || 0),
-        provider_code: cleanString(error?.name || error?.message, 120)
+        provider_code: providerFailureCode(error)
       });
     }
   }
@@ -344,7 +354,7 @@ export async function probeChatIntentProvider(provider, env = {}, fetchImpl = fe
     return callGemini(history, 'JA', env, fetchImpl, timeoutMs, mode);
   }
   if (provider === 'openai') {
-    if (String(env.OPENAI_API_KEY || '').length < 20) throw new Error('OPENAI_NOT_CONFIGURED');
+    if (!openAiBackupEnabled(env)) throw new Error('OPENAI_BACKUP_DISABLED');
     return callOpenAi(history, 'JA', env, fetchImpl, timeoutMs, mode, mode === 'IDENTIFY' ? 256 : 128);
   }
   throw new Error('CANARY_PROVIDER_INVALID');

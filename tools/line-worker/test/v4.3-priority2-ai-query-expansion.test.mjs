@@ -150,7 +150,12 @@ test('v4.3項目9: AIプロバイダが両方とも失敗しても検索全体�
     }
     return Response.json({ ok: true, result: { query_id: 'gas-2', candidates: [], message: '' } });
   };
-  const env = { ...environment(), GEMINI_API_KEY: 'g'.repeat(32), OPENAI_API_KEY: 'o'.repeat(32) };
+  const env = {
+    ...environment(),
+    GEMINI_API_KEY: 'g'.repeat(32),
+    OPENAI_API_KEY: 'o'.repeat(32),
+    OPENAI_BACKUP_ENABLED: 'true',
+  };
   try {
     const response = await worker.fetch(request('未知の商品名不明クエリ'), env, context);
     const payload = await response.json();
