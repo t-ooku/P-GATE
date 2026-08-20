@@ -447,11 +447,10 @@ test('production SLI reports the safe AI chat stage, code and request ID', async
   );
 });
 
-test('production SLI fails when repeated degradation crosses the rate threshold', () => {
-  assert.throws(
-    () => evaluateSearchSli({ started: 10, completed: 7, hard_failed: 0, degraded: 3 }),
-    /SEARCH_SLI_DEGRADED:3\/10:0\.300/u
-  );
+test('検索継続できたdegradedは全面障害にせず警告として返す', () => {
+  const result = evaluateSearchSli({ started: 10, completed: 7, hard_failed: 0, degraded: 3 });
+  assert.equal(result.status, 'DEGRADED');
+  assert.equal(result.code, 'SEARCH_SLI_DEGRADED:3/10:0.300');
 });
 
 test('production SLI fails closed when the D1 aggregate cannot be read', async () => {

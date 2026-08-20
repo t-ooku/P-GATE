@@ -397,10 +397,11 @@ export function evaluateSearchSli(row = {}, {
   const degradedLimit = boundedRate(degradedRateLimit, 0.2);
   assert(counts.hard_failed <= hardLimit, `SEARCH_SLI_HARD_FAILURES:${counts.hard_failed}`);
   assert(counts.backend_failed <= backendLimit, `SEARCH_SLI_BACKEND_FAILURES:${counts.backend_failed}`);
-  assert(!(counts.degraded >= degradedFloor && degradedRate >= degradedLimit),
-    `SEARCH_SLI_DEGRADED:${counts.degraded}/${finished}:${degradedRate.toFixed(3)}`);
+  const degraded = counts.degraded >= degradedFloor && degradedRate >= degradedLimit;
   return {
     ok: true,
+    status: degraded ? 'DEGRADED' : 'PASS',
+    code: degraded ? `SEARCH_SLI_DEGRADED:${counts.degraded}/${finished}:${degradedRate.toFixed(3)}` : 'SEARCH_SLI_OK',
     checked_at: new Date().toISOString(),
     window_minutes: boundedInteger(windowMinutes, 15, 5, 60),
     ...counts,
@@ -588,7 +589,8 @@ async function main() {
   try {
     const result = await runProductionSearchSli(cliOptions(process.argv.slice(2)));
     const summary = [
-      '## HOSHILU real-user search SLI: PASS', '',
+      `## HOSHILU real-user search SLI: ${result.status}`, '',
+      `Status code: ${result.code}`,
       `Checked: ${result.checked_at}`,
       `Window: ${result.window_minutes} minutes`,
       `- started: ${result.started}`,
