@@ -410,6 +410,13 @@ export function evaluateSearchSli(row = {}, {
   };
 }
 
+// Degraded searches still preserve a usable fallback, so report them as
+// DEGRADED instead of FAIL in the diagnostic. They nevertheless exceed the
+// acute SLI and must keep the production incident/check open until recovery.
+export function searchSliRequiresIncident(status) {
+  return String(status || '') !== 'PASS';
+}
+
 export function evaluateSearchSlo(row = {}, { minimumFinished = 100, degradedRateLimit = 0.01 } = {}) {
   const finished = Math.max(0, Number(row?.finished) || 0);
   const degraded = Math.max(0, Number(row?.degraded) || 0);
@@ -607,6 +614,7 @@ async function main() {
     ].join('\n');
     console.log(summary);
     if (process.env.GITHUB_STEP_SUMMARY) await import('node:fs/promises').then(({ appendFile }) => appendFile(process.env.GITHUB_STEP_SUMMARY, summary));
+    if (searchSliRequiresIncident(result.status)) process.exitCode = 1;
   } catch (error) {
     const pendingOutput = cliOptions(process.argv.slice(2)).pendingOutput;
     if (pendingOutput && Array.isArray(error?.pendingIncidents)) {

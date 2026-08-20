@@ -5,7 +5,7 @@ import { deepCanaryReservationSql, deepCanarySql, evaluateDeepCanary, evaluateMo
   evaluateSearchSli, evaluateSearchSlo,
   inspectProductionSearchSli, reliabilityHeartbeatSql, reliabilityPendingIncidentSql,
   searchBackendFailureSql, searchMonthlySloSql, searchProviderDegradationSql,
-  searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
+  searchSliRequiresIncident, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
 
 function healthyCanaryRows(now = Date.now()) {
   const iso = new Date(now - 60000).toISOString();
@@ -451,6 +451,8 @@ test('検索継続できたdegradedは全面障害にせず警告として返す
   const result = evaluateSearchSli({ started: 10, completed: 7, hard_failed: 0, degraded: 3 });
   assert.equal(result.status, 'DEGRADED');
   assert.equal(result.code, 'SEARCH_SLI_DEGRADED:3/10:0.300');
+  assert.equal(searchSliRequiresIncident(result.status), true);
+  assert.equal(searchSliRequiresIncident('PASS'), false);
 });
 
 test('production SLI fails closed when the D1 aggregate cannot be read', async () => {
