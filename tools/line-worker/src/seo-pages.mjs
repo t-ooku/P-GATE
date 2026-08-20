@@ -1,5 +1,6 @@
 const ORIGIN = 'https://hoshilu.app';
 const UPDATED_AT = '2026-08-13';
+const HUB_UPDATED_AT = '2026-08-21';
 
 const jaDefaults = {
   audience: [
@@ -390,6 +391,7 @@ const pages = {
   'find-products-seen-on-social-media': {
     ja: guide('ja', {
       title: 'SNSで見た商品を探す方法',
+      updatedAt: '2026-08-21',
       description: 'SNSで見かけた商品の名前が分からないとき、投稿に残った手がかりを集めて検索条件へ変え、購入先を探す手順を解説します。',
       conclusion: 'SNSで見た商品は、記憶から書き起こす前に、投稿そのものに残っている手がかりを集めるのが近道です。保存やいいねの履歴から投稿をたどり、説明文、コメント欄、投稿者の他の投稿に商品名やブランド名がないか確認します。手がかりが集まらない場合は、見た目・用途・使っていた場面を文章にしてHOSHILUに入力してください。',
       query: 'SNSで見た、水に浮かべると色が変わる小さなライト',
@@ -419,6 +421,7 @@ const pages = {
   'find-products-seen-on-tiktok': {
     ja: guide('ja', {
       title: 'TikTokで見た商品の名前が分からない時の探し方',
+      updatedAt: '2026-08-21',
       description: 'TikTokの動画で見かけた商品を、動画に残った手がかりと覚えている特徴から探し、購入先を確認する手順を解説します。',
       conclusion: '流れてきた動画も、いいねや保存の履歴からたどり直せることがあります。動画の説明文、コメント欄、投稿者の他の動画に商品名が出ていないか確認してください。名前が分からない場合は、「何をする物か」「どんな動きをしていたか」「どの場面で使っていたか」を文章にしてHOSHILUに入力します。',
       query: 'TikTokで見た、押すと泡が出てくる小さい洗顔ブラシ',
@@ -448,6 +451,7 @@ const pages = {
   'find-fashion-items-seen-on-instagram': {
     ja: guide('ja', {
       title: 'Instagramで見た服・バッグを探す方法',
+      updatedAt: '2026-08-21',
       description: 'Instagramで見かけた服やバッグを、投稿に残る手がかりと形・素材・色の特徴から探し、購入先を確認する手順を解説します。',
       conclusion: 'ファッションは同じ形でもブランドや価格帯が大きく異なります。まず投稿の説明文、タグ、コメント欄にブランド名が残っていないか確認してください。分からない場合は「アイテムの種類・丈・襟や持ち手の形・素材の見え方・色」を分けて入力します。似た形の候補が出たら、サイズ表記と素材を販売ページで確認してください。',
       query: 'Instagramで見た、肩掛けできる細長い黒のナイロンバッグ',
@@ -477,6 +481,7 @@ const pages = {
   'find-products-introduced-on-youtube': {
     ja: guide('ja', {
       title: 'YouTubeで紹介されていた商品を後から探す方法',
+      updatedAt: '2026-08-21',
       description: 'YouTubeの動画で紹介されていた商品を、概要欄や再生履歴に残る手がかりと覚えている特徴から探す手順を解説します。',
       conclusion: '動画で紹介された商品は、概要欄に商品名や購入先が書かれていることがあります。まず再生履歴から動画をたどり、概要欄、コメント欄、画面内の表示を確認してください。名前が見つからない場合は、紹介されていた用途、形、他の商品との比較点を文章にしてHOSHILUに入力します。',
       query: 'YouTubeで紹介されていた、静かに動く小型の卓上加湿器',
@@ -506,6 +511,7 @@ const pages = {
   'identify-correct-product-name-from-vague-memory': {
     ja: guide('ja', {
       title: 'うろ覚えの商品名から正しい商品名を調べる方法',
+      updatedAt: '2026-08-21',
       description: '商品名を一部だけ覚えている、聞き間違えたかもしれないときに、表記ゆれや似た名称を切り分けて正しい商品名を確認する方法を解説します。',
       conclusion: 'うろ覚えの名前をそのまま検索すると、名称が近いだけの別商品に行き着くことがあります。覚えている音や文字を推測で補わずに入力し、そこへ商品の種類と用途を足してください。候補が出たら、別ブランドやシリーズ違い・世代違いが混ざっていないかを型番と仕様で確認します。',
       query: 'たしか「モ」から始まる名前の、折りたためる小型の踏み台',
@@ -538,6 +544,7 @@ const pages = {
   'find-a-product-from-a-photo-or-screenshot': {
     ja: guide('ja', {
       title: '写真やスクリーンショットしか手がかりがない時の商品の探し方',
+      updatedAt: '2026-08-21',
       description: '手元にある画像から、写り込んだ文字・大きさ・形・使用場面を言葉に置き換えて商品検索の条件を作る手順を解説します。',
       conclusion: '画像は、見えているものを順番に言葉へ置き換えると検索条件になります。写り込んだ文字やロゴ、隣に写る物と比べた大きさ、置かれている場所、形と素材の見え方を分けて書き出してください。文字が読み取れる場合はその表記を最優先で使い、読み取れない場合は形と用途を中心に入力します。',
       query: '手のひらに載る大きさの、上面に丸いボタンが1つある白い箱型の機器',
@@ -567,6 +574,7 @@ const pages = {
   'identify-a-product-someone-else-is-using': {
     ja: guide('ja', {
       title: '友達が使っていた商品をさりげなく特定する方法',
+      updatedAt: '2026-08-21',
       description: '人が使っていた商品を、失礼にならない範囲で見えた特徴や聞き方から探し、購入先を確認する手順を解説します。',
       conclusion: '一番確実なのは本人に聞くことです。聞きにくい場合でも、無断で撮影したり持ち物を詳しく調べたりせず、その場で見えた範囲の特徴（種類・大きさ・色・使い方）だけを後から書き出してください。その特徴をHOSHILUに入力すれば、候補と購入先を確認できます。',
       query: '友人が使っていた、片手で開ける細長いステンレスの水筒',
@@ -596,6 +604,7 @@ const pages = {
   'find-a-product-you-saw-in-a-store': {
     ja: guide('ja', {
       title: '店頭で見た商品を家に帰ってから探す方法',
+      updatedAt: '2026-08-21',
       description: '店で見かけた商品を、店の種類・売り場・パッケージ・値札の表記などの手がかりから後で探す方法を解説します。',
       conclusion: '店頭の商品は、商品名以外に「どの店の・どの売り場で・どんなパッケージだったか」という手がかりが残ります。店の種類、置かれていた棚の分類、パッケージの色と形、値札に書かれていた表記を思い出して書き出してください。取り扱いが店舗によって異なることもあるため、候補が見つかった場合も販売ページで取り扱いと在庫を確認します。',
       query: 'ドラッグストアの日用品売り場にあった、青いパッケージの詰め替え用洗剤',
@@ -625,6 +634,7 @@ const pages = {
   'find-a-product-you-saw-in-a-tv-commercial': {
     ja: guide('ja', {
       title: 'CMで見た商品の探し方',
+      updatedAt: '2026-08-21',
       description: 'テレビCMで見かけた商品を、聞き取れた言葉・企業名・示されていた用途などの手がかりから探す方法を解説します。',
       conclusion: 'CMは商品名が音声だけで流れることが多く、うろ覚えになりやすい形式です。覚えている言い回し、画面に出ていた企業名やロゴ、示されていた用途や場面を書き出してください。企業名が分かる場合は、その企業の商品情報から確認するのが確実です。CMの表現は商品の特徴の一部を強調したものなので、仕様は商品情報や販売ページで確認します。',
       query: 'CMで見た、片手で押すだけで泡が出る台所用の洗剤',
@@ -654,6 +664,7 @@ const pages = {
   'turn-vague-words-into-search-terms': {
     ja: guide('ja', {
       title: '「あれ何て名前？」を検索語に変換するコツ',
+      updatedAt: '2026-08-21',
       description: '指示語や擬音語、感覚的な表現しか出てこないときに、それを具体的な検索語へ置き換える方法を解説します。',
       conclusion: '「あれ」「例のやつ」のままでは検索できません。指示語は商品の種類に、擬音語は動作や仕組みに、感覚的な表現は比較対象や数値に置き換えてください。置き換えられない部分は無理に言葉を作らず、「何をする物か」をそのまま書けば検索を始められます。',
       query: 'カチッと押すと中身が少しずつ出てくる、片手で使える容器',
@@ -1020,7 +1031,7 @@ function guideHubStructuredData(canonical) {
       '@type': 'CollectionPage', '@id': `${canonical}#page`, url: canonical,
       name: '商品選び・比較・探し方ガイド一覧',
       description: '商品名が分からないときの探し方から、同一商品・送料・口コミ・ランキングの確認までを目的別にまとめたHOSHILUの買い物ガイド一覧です。',
-      inLanguage: 'ja', dateModified: UPDATED_AT,
+      inLanguage: 'ja', dateModified: HUB_UPDATED_AT,
       isPartOf: { '@type': 'WebSite', '@id': `${ORIGIN}/#website`, url: `${ORIGIN}/`, name: 'HOSHILU' }
     },
     {
@@ -1055,12 +1066,12 @@ function renderGuideHub() {
 <link rel="stylesheet" href="/seo-article.css"><script type="application/ld+json">${guideHubStructuredData(canonical)}</script></head>
 <body data-seo-article-id="shopping-guides-hub" data-seo-intent="shopping_guides_hub" data-seo-cluster="content-hub" data-seo-article-type="hub" data-seo-content-kind="hub"><header class="seo-header"><a href="/" aria-label="HOSHILUホーム">HOSHILU <small>ホシル</small></a></header>
 <main class="seo-shell"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><span>買い物ガイド</span></nav>
-<article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDES</p><h1>商品選び・比較・探し方ガイド</h1><p class="lead">欲しい物の状態に合わせて、探し方・見分け方・比較方法を選べます。AIは条件を整理し、HOSHILUは実在する商品候補と購入先を探します。</p><p class="updated"><time datetime="${UPDATED_AT}">最終更新: ${UPDATED_AT}</time></p></header>
+<article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDES</p><h1>商品選び・比較・探し方ガイド</h1><p class="lead">欲しい物の状態に合わせて、探し方・見分け方・比較方法を選べます。AIは条件を整理し、HOSHILUは実在する商品候補と購入先を探します。</p><p class="updated"><time datetime="${HUB_UPDATED_AT}">最終更新: ${HUB_UPDATED_AT}</time></p></header>
 <nav class="article-toc guide-hub-toc" aria-label="ガイドの分類"><strong>目的から選ぶ</strong><div>${guideHubGroups.map((group) => `<a href="#${group.id}">${esc(group.title)}</a>`).join('')}<a href="#hub-search">HOSHILUで探す</a></div></nav>
 <section class="answer"><h2>今の状況に近い項目から選んでください</h2><p>商品名が分からない場合は「名前・特徴・予算から探す」、候補が決まっている場合は「同じ商品・使える商品を見分ける」、購入直前なら「購入先・総額・口コミを比較する」から始められます。</p></section>
 ${groups}
-<aside class="mid-cta" id="hub-search"><h2>覚えている条件からHOSHILUで探す</h2><p>商品名が分からなくても、用途・見た目・使う人・予算を文章で入力できます。</p><form action="/" method="get" data-seo-search-form><label for="guide-hub-search">探したい商品の条件</label><textarea id="guide-hub-search" name="q" required maxlength="200" placeholder="例：一人暮らしの部屋で使う、収納しやすい小さなテーブル"></textarea><input type="hidden" name="utm_source" value="seo_hub"><input type="hidden" name="utm_medium" value="internal"><input type="hidden" name="utm_campaign" value="shopping_guides"><input type="hidden" name="utm_content" value="shopping-guides-hub"><button type="submit">この条件でHOSHILU検索へ</button></form></aside>
-<p class="bottom-cta"><a href="/?utm_source=seo_hub&amp;utm_medium=internal&amp;utm_campaign=shopping_guides&amp;utm_content=shopping-guides-hub" data-seo-search-link>HOSHILUの検索画面を開く</a></p></article></main>
+<aside class="mid-cta" id="hub-search"><h2>覚えている条件からHOSHILUで探す</h2><p>商品名が分からなくても、用途・見た目・使う人・予算を文章で入力できます。</p><form action="/" method="get" data-seo-search-form><label for="guide-hub-search">探したい商品の条件</label><textarea id="guide-hub-search" name="q" required maxlength="200" placeholder="例：一人暮らしの部屋で使う、収納しやすい小さなテーブル"></textarea><button type="submit">この条件でHOSHILU検索へ</button></form></aside>
+<p class="bottom-cta"><a href="/" data-seo-search-link>HOSHILUの検索画面を開く</a></p></article></main>
 <footer><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>
 <script type="module" src="/seo-article-analytics.mjs"></script></body></html>`;
 }
@@ -1069,7 +1080,7 @@ function structuredData(page, locale, slug, canonical) {
   const graph = [
     {
       '@type': 'Article', '@id': `${canonical}#article`, headline: page.title,
-      description: page.description, dateModified: UPDATED_AT, inLanguage: locale,
+      description: page.description, dateModified: page.updatedAt || UPDATED_AT, inLanguage: locale,
       mainEntityOfPage: canonical, author: { '@type': 'Organization', name: 'HOSHILU', url: ORIGIN },
       publisher: { '@type': 'Organization', name: 'HOSHILU', url: ORIGIN }
     },
@@ -1140,7 +1151,7 @@ export function renderSeoPage(pathname) {
 <link rel="stylesheet" href="/seo-article.css"><script type="application/ld+json">${structuredData(page, locale, slug, canonical)}</script></head>
 <body data-seo-article-id="${esc(slug)}" data-seo-intent="${esc(profile.intent)}" data-seo-cluster="${esc(profile.cluster)}" data-seo-article-type="${esc(profile.articleType)}"><header class="seo-header"><a href="/" aria-label="${isJa ? 'HOSHILUホーム' : 'HOSHILU home'}">HOSHILU <small>${isJa ? 'ホシル' : 'product discovery'}</small></a></header>
 <main class="seo-shell"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><span>${esc(page.title)}</span></nav>
-<article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDE</p><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p><p class="updated"><time datetime="${UPDATED_AT}">${isJa ? '最終更新' : 'Last updated'}: ${UPDATED_AT}</time></p></header>
+<article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDE</p><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p><p class="updated"><time datetime="${page.updatedAt || UPDATED_AT}">${isJa ? '最終更新' : 'Last updated'}: ${page.updatedAt || UPDATED_AT}</time></p></header>
 <nav class="article-toc" aria-label="${labels.toc}"><strong>${labels.toc}</strong><div><a href="#answer">${labels.conclusion}</a><a href="#visual-guide">${labels.visual}</a><a href="#comparison">${labels.comparison}</a><a href="#search-with-hoshilu">${labels.try}</a><a href="#sources">${labels.sources}</a></div></nav>
 <section class="answer" id="answer"><h2>${labels.conclusion}</h2><p>${esc(page.conclusion)}</p></section>
 <section id="visual-guide"><h2>${labels.visual}</h2>${guideVisual(profile, page, isJa)}</section>
@@ -1152,7 +1163,7 @@ export function renderSeoPage(pathname) {
 <section id="reviews" data-seo-section-event="seo_review_guide_view"><h2>${labels.reviews}</h2>${reviewChecks(isJa)}<p>${esc(page.review)}</p></section>
 <section id="identity" data-seo-section-event="seo_identity_guide_view"><h2>${labels.identity}</h2>${identityGuide(isJa)}<p>${esc(page.identity)}</p></section>
 <section id="faq"><h2>${labels.faq}</h2>${page.faq.map(([question, answer]) => `<details><summary>${esc(question)}</summary><p>${esc(answer)}</p></details>`).join('')}</section>
-<section class="source-note" id="sources"><h2>${labels.sources}</h2><p>${esc(labels.sourceText)}</p><p>${isJa ? '最終更新日' : 'Last updated'}: <time datetime="${UPDATED_AT}">${UPDATED_AT}</time></p></section>
+<section class="source-note" id="sources"><h2>${labels.sources}</h2><p>${esc(labels.sourceText)}</p><p>${isJa ? '最終更新日' : 'Last updated'}: <time datetime="${page.updatedAt || UPDATED_AT}">${page.updatedAt || UPDATED_AT}</time></p></section>
 <nav class="related" aria-label="${labels.related}"><h2>${labels.related}</h2><ul class="related-grid">${relatedLinks(locale, slug)}</ul></nav>
 <p class="bottom-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a></p></article></main>
 <footer><a href="/privacy">${isJa ? 'プライバシー' : 'Privacy'}</a><a href="/terms">${isJa ? '利用上の注意' : 'Terms'}</a></footer>
