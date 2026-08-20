@@ -1,4 +1,5 @@
 import { handleSellerRoutes } from './seller-auth.mjs';
+import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
 import { handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
 import { purgeAdminAuthRecords } from './admin-login-guard.mjs';
@@ -109,7 +110,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
 const RELEASE = '1.19.0';
 const CANONICAL_HOST = 'hoshilu.app';
-const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths]);
+const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, '/for-sellers']);
 const DOCUMENT_SECURITY_HEADERS = Object.freeze({
   'content-security-policy': "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'",
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
@@ -2650,7 +2651,8 @@ export function canonicalRequestRedirect(requestUrl) {
     changed = true;
   }
   const cleanLegacyPaths = new Map([
-    ['/index.html', '/'], ['/privacy.html', '/privacy'], ['/terms.html', '/terms']
+    ['/index.html', '/'], ['/privacy.html', '/privacy'], ['/terms.html', '/terms'],
+    ['/for-sellers.html', '/for-sellers']
   ]);
   if (cleanLegacyPaths.has(target.pathname)) {
     target.pathname = cleanLegacyPaths.get(target.pathname);
@@ -2723,6 +2725,8 @@ export default {
     if (memberResponse) return memberResponse;
     const sellerResponse = await handleSellerRoutes(request, env);
     if (sellerResponse) return sellerResponse;
+    const sellerBusinessInquiryResponse = await handleSellerBusinessInquiryRoutes(request, env);
+    if (sellerBusinessInquiryResponse) return sellerBusinessInquiryResponse;
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/related-recommendations') return handleRelatedRecommendationsApi(request, env);
