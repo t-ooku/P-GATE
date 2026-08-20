@@ -309,7 +309,14 @@ export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRow
       || !Number.isFinite(timestamp) || timestamp > nowMs + 5 * 60000) {
       throw new Error(`DEEP_CANARY_RESERVATION_INVALID:${CANARY_PAID_COMPONENTS.has(component) ? component.toUpperCase() : 'UNKNOWN'}`);
     }
-    if (nowMs - timestamp > CANARY_RESERVATION_GRACE_MS && !resultKeys.has(`${runId}:${component}`)) {
+    // A Worker termination can leave one conservative cost reservation without
+    // its matching result. Keep alerting until this component completes a
+    // newer probe, but do not let a recovered historical slot poison every
+    // monitor run for the full seven-day query window.
+    const recoveredByNewerResult = grouped.get(component)
+      .some((item) => item.timestamp > timestamp);
+    if (nowMs - timestamp > CANARY_RESERVATION_GRACE_MS
+      && !resultKeys.has(`${runId}:${component}`) && !recoveredByNewerResult) {
       throw new Error(`DEEP_CANARY_RESERVATION_STUCK:${component.toUpperCase()}`);
     }
   }

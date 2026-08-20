@@ -371,6 +371,16 @@ test('deep canary alerts when a paid reservation has no terminal result after tw
   const withTerminal = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'
     ? { ...row, event_id:`deep-canary:${now}:query_structurer` } : row);
   assert.doesNotThrow(() => evaluateDeepCanary(withTerminal, { now, reservationRows:[reservation] }));
+
+  const interruptedRun = now-10*60000;
+  const recoveredLater = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'
+    ? { ...row, event_id:`deep-canary:${now-1000}:query_structurer`,
+      occurred_at:new Date(now-1000).toISOString() } : row);
+  assert.doesNotThrow(() => evaluateDeepCanary(recoveredLater, { now, reservationRows:[{
+    ...reservation,
+    event_id:`deep-canary-budget:${interruptedRun}:query_structurer`,
+    occurred_at:new Date(interruptedRun).toISOString()
+  }] }));
 });
 
 test('deep canary rejects a reservation amount that does not match its component', () => {
