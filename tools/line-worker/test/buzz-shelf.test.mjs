@@ -118,6 +118,16 @@ test('各ランキング棚はAPIの配列順に依存せず公式順位の昇�
   }
 });
 
+test('公開する各棚は元の公式順位を残してHOSHILU BUZZ順位を1位から振り直す', async () => {
+  const result = await buzzShelfResult(env, rankingFetcher());
+  for (const shelf of result.shelves) {
+    assert.deepEqual(shelf.items.map((item) => item.rank),
+      shelf.items.map((_, index) => index + 1));
+    assert.ok(shelf.items.every((item) => Number(item.source_rank) >= 1));
+  }
+  assert.match(result.methodology, /各棚の掲載順を1位から表示/u);
+});
+
 test('リアルタイムが404の小ジャンルは口コミ件数順ラベルへ縮退する', async () => {
   const target = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === BUZZ_SHELF_CATEGORY_IDS[0]);
   const fetcher = rankingFetcher({

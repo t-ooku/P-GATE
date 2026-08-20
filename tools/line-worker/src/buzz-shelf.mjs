@@ -364,6 +364,20 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
 
 function publicShelf({ all_items, ...shelf }) { return shelf; }
 
+// カテゴリ不一致商品を除いた後の棚内表示は、若者が直感的に追える
+// HOSHILU BUZZ順位として1位から連番にする。根拠のモール公式順位は
+// source_rankへ残し、急上昇のmovementも元順位の実測値を維持する。
+function withBuzzRanks(shelf) {
+  return {
+    ...shelf,
+    items: (shelf.items || []).map((item, index) => ({
+      ...item,
+      source_rank: item.rank,
+      rank: index + 1
+    }))
+  };
+}
+
 export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
   const genreShelves = await buildGenreShelves(env, fetcher);
   const [risingShelf, koreanShelf] = await Promise.all([
@@ -388,10 +402,10 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
     // 2026-08-19 大隆さん指示: 韓流に繋がる棚を必ず上位に1つ置く。
     ...(koreanShelf ? [koreanShelf] : []),
     ...genreShelves.map(publicShelf)
-  ].filter(distinctShelf).concat(budgetShelves);
+  ].filter(distinctShelf).concat(budgetShelves).map(withBuzzRanks);
   return {
     generated_for: 'HOSHILU BUZZ',
-    methodology: '順位はモール公式ランキングAPI(楽天市場・Yahoo!ショッピング)と、その順位の実測変化のみを根拠にしています。SNS指標や推定値では並べ替えません。',
+    methodology: 'HOSHILU BUZZ順位は、モール公式ランキングAPI(楽天市場・Yahoo!ショッピング)と順位の実測変化を根拠に商品を選び、各棚の掲載順を1位から表示しています。SNS指標や推定値では並べ替えません。',
     disclaimer: '価格・送料・在庫は変動します。購入前に各販売ページで最新の条件を確認してください。',
     marketplace_scope: MARKETPLACE_RANKING_CAPABILITIES.map(({ marketplace_id, label }) => ({ marketplace_id, label })),
     shelf_count: shelves.length,
