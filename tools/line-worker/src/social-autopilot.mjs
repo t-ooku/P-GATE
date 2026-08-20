@@ -86,6 +86,16 @@ const X_NON_VIDEO_POSTS = Object.freeze([
     id: 'buzz-korean-beauty',
     caption: '韓国コスメの高評価トレンドをまとめた棚がHOSHILU BUZZにあります。順位はYahoo!ショッピング公式ランキングだけが根拠。気になった商品はQoo10など他モールへの横断検索にもつながります。',
     link_path: '/buzz'
+  },
+  {
+    id: 'buzz-open-first',
+    caption: '欲しい商品が決まってない夜ほど、ランキングから。HOSHILU BUZZはモール公式ランキングをもとに、小ジャンルごとに1位から見られます。次に欲しくなるもの、先に見つけよう。',
+    link_path: '/buzz'
+  },
+  {
+    id: 'search-no-name-needed',
+    caption: '名前が分からない。それ、検索できない理由じゃない。見た目・使い方・見かけた場所をそのままHOSHILUへ。',
+    query: '韓国っぽい、透明で小さいワイヤレスイヤホン'
   }
 ]);
 
@@ -107,6 +117,18 @@ const INSTAGRAM_GUIDE_POSTS = Object.freeze([
     caption: '操作案内③ 気になる商品は保存して値下がり通知へ。買いたい価格を決めて、確認済み価格の変化を待てます。@hoshilu.app',
     query: '軽くて持ち運べる小型写真プリンター',
     media_url: 'https://hoshilu.app/social/instagram-want-poll-v1.png'
+  },
+  {
+    id: 'buzz-ranking-portrait',
+    caption: '今、これ来てる。HOSHILU BUZZなら、小ジャンルごとのランキングを1位からチェック。欲しいものが決まってない日も、開けば何か見つかる。@hoshilu.app #HOSHILUBUZZ #ホシル',
+    link_path: '/buzz',
+    media_url: 'https://hoshilu.app/social/hoshilu-buzz-ranking-v1.jpg'
+  },
+  {
+    id: 'buzz-discovery-portrait',
+    caption: '検索するものが決まってなくてもいい。ランキングから見つけるか、覚えている特徴から探すか。買い物の入口を、もっと今っぽく。@hoshilu.app #HOSHILUBUZZ #商品検索',
+    link_path: '/buzz',
+    media_url: 'https://hoshilu.app/social/hoshilu-buzz-ranking-v1.jpg'
   }
 ]);
 
@@ -396,7 +418,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         platform: 'INSTAGRAM',
         campaign_id: CAMPAIGN_ID,
         caption: content.caption,
-        link: campaignLink('INSTAGRAM', key, content.id, content.query),
+        link: campaignLink('INSTAGRAM', key, content.id, content.query, content.link_path || '/'),
         media_url: content.media_url,
         scheduled_at: scheduledAt(parts, 20, 15),
         status: 'APPROVED'

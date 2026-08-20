@@ -84,7 +84,8 @@ test('サイトマップはガイドハブ・全SEOページ・canonicalの法�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 32);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 33);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
 });
 
 test('既存SEO記事から今回の新規5記事へ内部リンクがある', () => {

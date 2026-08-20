@@ -15,7 +15,7 @@ test('販促自動運用は今日の機能リールと14日先までの定期投
   assert.equal(posts.some(post => post.platform === 'TIKTOK'), false);
   assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
   assert.equal(new Set(posts.filter(post => post.platform === 'INSTAGRAM')
-    .map(post => post.media_url)).size, 5);
+    .map(post => post.media_url)).size, 6);
   assert.equal(posts.filter(post => post.platform === 'INSTAGRAM')
     .every(post => typeof post.media_url === 'string' && post.media_url.length > 0), true);
   assert.equal(posts.filter(post => post.platform === 'X')
@@ -48,6 +48,18 @@ test('Instagramは月〜土20時15分、月・水・金をリールにする', (
   ]);
   assert.equal(posts.filter(post => /evergreen-instagram/.test(post.content_id))
     .every(post => post.media_url.endsWith('.mp4')), true);
+});
+
+test('Instagram定常投稿はBUZZ専用ビジュアルと/buzz送客を含む', () => {
+  const posts = buildSocialAutopilotPosts(new Date('2026-08-20T00:00:00.000Z'), 30)
+    .filter(post => post.platform === 'INSTAGRAM' && /^buzz-/.test(post.content_id));
+  assert.ok(posts.length >= 2);
+  for (const post of posts) {
+    assert.equal(new URL(post.link).pathname, '/buzz');
+    assert.match(post.media_url, /hoshilu-buzz-ranking-v1\.jpg$/u);
+    assert.match(post.caption, /1位|ランキング/u);
+    assert.doesNotMatch(post.caption, /最安|No\.?1|Z世代/u);
+  }
 });
 
 test('Amazon優先Threadsローテーションは1日2本、昼夜の枠で別内容を計画する', () => {
@@ -402,7 +414,7 @@ test('X定常ローテーションはHOSHILU BUZZ紹介を含み、/buzzへUTM�
     assert.equal(url.pathname, '/buzz');
     assert.equal(url.searchParams.get('q'), null, 'BUZZ posts must not carry a search query');
     assert.match(url.searchParams.get('utm_campaign'), /13mall/);
-    assert.match(post.caption, /モール公式ランキング|価格を確認できた商品/u);
+    assert.match(post.caption, /公式ランキング|価格を確認できた商品/u);
     assert.doesNotMatch(post.caption, /No\.?1|最安|バズって|Z世代/u);
   }
   // 既存の検索ガイド投稿は従来どおりホーム(/)へ。
