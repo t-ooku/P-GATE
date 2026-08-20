@@ -134,6 +134,19 @@ test('Yahoo!高評価API障害時は口コミ件数順へ縮退する', async ()
   assert.equal(result.candidates[0].review_count, 700);
 });
 
+test('Yahoo!ランキングと商品検索が同時に失敗しても検索リンク用の縮退結果を返す', async () => {
+  const result = await marketplaceRankingResult(
+    { YAHOO_SHOPPING_CLIENT_ID:'client' }, 'ワイヤレスイヤホン', 'YAHOO_JP',
+    async () => new Response('{"Error":{"Message":"forbidden"}}', {
+      status: 403, headers: { 'content-type':'application/json' }
+    })
+  );
+  assert.equal(result.mode, 'direct_link');
+  assert.equal(result.provider_unavailable, true);
+  assert.equal(result.ranking_type, 'Yahoo!ショッピングで検索');
+  assert.deepEqual(result.candidates, []);
+});
+
 test('Genre Search応答は公式の親子階層だけを正規化する', () => {
   assert.deepEqual(normalizeRakutenGenre({ genre:{genreId:'123456',nameJa:'ドッグフード',level:3}, ancestors:[{genreId:'1',nameJa:'ペット用品',level:1},{genreId:'2',nameJa:'犬用品',level:2}] }), {
     genre_id:'123456', label:'ドッグフード', level:3, path:['ペット用品','犬用品','ドッグフード']

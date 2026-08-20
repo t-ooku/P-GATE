@@ -392,7 +392,24 @@ export async function marketplaceRankingResult(env, rawQuery, marketplaceId, fet
           code: String(error?.message || 'YAHOO_HIGH_RATING_RANKING_FAILED').slice(0, 80)
         });
         candidates = await readRankingCache(env, marketplaceId, resolution.category.id, 'REVIEW_COUNT');
-        if (!candidates) candidates = await searchYahooShopping(env, categoryQuery, fetcher, { sort: '-review_count' });
+        if (!candidates) {
+          try {
+            candidates = await searchYahooShopping(env, categoryQuery, fetcher, { sort: '-review_count' });
+          } catch (fallbackError) {
+            // 公式ランキングAPIと商品検索APIが同時に利用不能でも502で終わらせず、
+            // 呼び出し元が検証済みのYahoo!検索リンクを返せるdirect_linkへ縮退する。
+            // 認証・課金設定には触れず、監視canaryは別経路で失敗を継続検知する。
+            console.warn('YAHOO_RANKING_DIRECT_LINK_FALLBACK', {
+              status: Number(fallbackError?.status) || 0,
+              code: String(fallbackError?.message || 'YAHOO_SHOPPING_SEARCH_FAILED').slice(0, 80)
+            });
+            return {
+              mode: 'direct_link', marketplace: capability, category: resolution.category,
+              ranking_type: 'Yahoo!ショッピングで検索', cache_hit: false,
+              provider_unavailable: true, candidates: []
+            };
+          }
+        }
         mode = 'derived_api';
         rankingLabel = 'Yahoo!ショッピング 口コミ件数順';
       }
