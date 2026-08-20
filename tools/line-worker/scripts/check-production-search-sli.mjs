@@ -51,7 +51,9 @@ export function searchProviderDegradationSql() {
 export function searchSloSql() {
   return `SELECT
     COALESCE(SUM(CASE WHEN event_type IN ('search_completed','search_dead_end','search_degraded') THEN 1 ELSE 0 END),0) AS finished,
-    COALESCE(SUM(CASE WHEN event_type='search_degraded' THEN 1 ELSE 0 END),0) AS degraded
+    COALESCE(SUM(CASE WHEN event_type='search_degraded' THEN 1 ELSE 0 END),0) AS degraded,
+    MAX(CASE WHEN event_type='search_degraded' THEN occurred_at END) AS latest_degraded_at,
+    MAX(CASE WHEN event_type='search_completed' THEN occurred_at END) AS latest_completed_at
   FROM growth_events
   WHERE traffic_class<>'QA'
     AND event_type IN ('search_completed','search_dead_end','search_degraded')
@@ -417,7 +419,12 @@ export function searchSliRequiresIncident(status) {
   return String(status || '') !== 'PASS';
 }
 
-export function evaluateSearchSlo(row = {}, { minimumFinished = 100, degradedRateLimit = 0.01 } = {}) {
+export function evaluateSearchSlo(row = {}, {
+  minimumFinished = 100,
+  degradedRateLimit = 0.01,
+  recoveryDegradedMinimum = 3,
+  recoveryDegradedRateLimit = 0.2
+} = {}) {
   const finished = Math.max(0, Number(row?.finished) || 0);
   const degraded = Math.max(0, Number(row?.degraded) || 0);
   const minimum = boundedInteger(minimumFinished, 100, 1, 1000000);
@@ -425,7 +432,23 @@ export function evaluateSearchSlo(row = {}, { minimumFinished = 100, degradedRat
   const degradedRate = finished > 0 ? degraded / finished : 0;
   assert(!(finished >= minimum && degradedRate > limit),
     `SEARCH_SLO_DEGRADED:${degraded}/${finished}:${degradedRate.toFixed(3)}`);
-  return { finished, degraded, degraded_rate: Number(degradedRate.toFixed(4)), minimum_finished: minimum };
+  const recoveryMinimum = boundedInteger(recoveryDegradedMinimum, 3, 1, 1000);
+  const recoveryRateLimit = boundedRate(recoveryDegradedRateLimit, 0.2);
+  const recoveryRequired = degraded >= recoveryMinimum && degradedRate >= recoveryRateLimit;
+  const latestDegradedAt = Date.parse(String(row?.latest_degraded_at || ''));
+  const latestCompletedAt = Date.parse(String(row?.latest_completed_at || ''));
+  const recoveryVerified = !recoveryRequired || (Number.isFinite(latestDegradedAt)
+    && Number.isFinite(latestCompletedAt) && latestCompletedAt > latestDegradedAt);
+  return {
+    status: recoveryVerified ? 'PASS' : 'DEGRADED',
+    code: recoveryVerified ? 'SEARCH_SLO_OK'
+      : `SEARCH_SLO_RECOVERY_UNVERIFIED:${degraded}/${finished}:${degradedRate.toFixed(3)}`,
+    finished,
+    degraded,
+    degraded_rate: Number(degradedRate.toFixed(4)),
+    minimum_finished: minimum,
+    recovery_verified: recoveryVerified
+  };
 }
 
 export function evaluateMonthlyContinuity(row = {}, { minimumFinished = 1000, unavailableRateLimit = 0.0005 } = {}) {
@@ -533,7 +556,12 @@ export async function inspectProductionSearchSli({
     throw error;
   }
   const sloRow = await queryD1(fetcher, endpoint, apiToken, searchSloSql(), [new Date(now - sloMinutes * 60000).toISOString()]);
-  const slo = evaluateSearchSlo(sloRow, { minimumFinished: sloMinimumFinished, degradedRateLimit: sloDegradedRateLimit });
+  const slo = evaluateSearchSlo(sloRow, {
+    minimumFinished: sloMinimumFinished,
+    degradedRateLimit: sloDegradedRateLimit,
+    recoveryDegradedMinimum: degradedMinimum,
+    recoveryDegradedRateLimit: degradedRateLimit
+  });
   const monthlyRow = await queryD1(fetcher, endpoint, apiToken, searchMonthlySloSql(), [new Date(now - 30 * 86400000).toISOString()]);
   const monthly = evaluateMonthlyContinuity(monthlyRow, {
     minimumFinished: monthlyMinimumFinished, unavailableRateLimit: monthlyUnavailableRateLimit
@@ -547,7 +575,9 @@ export async function inspectProductionSearchSli({
   const deepCanary = evaluateDeepCanary(canaryRows, { now, reservationRows });
   const heartbeatRows = await queryD1Rows(fetcher, endpoint, apiToken, reliabilityHeartbeatSql());
   const reliabilityHeartbeats = evaluateReliabilityHeartbeats(heartbeatRows, { now });
-  return { ...acute, provider_degradation: providerDegradation,
+  const status = acute.status === 'DEGRADED' || slo.status === 'DEGRADED' ? 'DEGRADED' : 'PASS';
+  const code = acute.status === 'DEGRADED' ? acute.code : slo.status === 'DEGRADED' ? slo.code : acute.code;
+  return { ...acute, status, code, provider_degradation: providerDegradation,
     slo_window_minutes: sloMinutes, slo, monthly, deep_canary: deepCanary,
     reliability_heartbeats: reliabilityHeartbeats };
 }

@@ -20,7 +20,12 @@ function healthyHeartbeatRows(now = Date.now()) {
   }));
 }
 
-function d1Fetch(row, sloRow = { finished: 10, degraded: 1 }, diagnosticRow = {}, providerRows = []) {
+function d1Fetch(row, sloRow = {
+  finished: 10,
+  degraded: 1,
+  latest_degraded_at: '2026-08-20T00:00:00.000Z',
+  latest_completed_at: '2026-08-20T00:01:00.000Z'
+}, diagnosticRow = {}, providerRows = []) {
   return async (_url, init) => {
     assert.equal(init.headers.authorization, 'Bearer test-token');
     const body = JSON.parse(init.body);
@@ -138,8 +143,49 @@ test('production SLO enforces a thirty-day 99.95 percent continuity budget', () 
 test('production SLO checks a six-hour one-percent quality budget', () => {
   const sql = searchSloSql();
   assert.match(sql, /occurred_at>=\?1/u);
+  assert.match(sql, /latest_degraded_at/u);
+  assert.match(sql, /latest_completed_at/u);
+  assert.doesNotMatch(sql, /query_text|visitor_id|session_id|content/iu);
   assert.throws(() => evaluateSearchSlo({ finished: 100, degraded: 2 }), /SEARCH_SLO_DEGRADED:2\/100:0\.020/u);
   assert.equal(evaluateSearchSlo({ finished: 99, degraded: 99 }).finished, 99);
+});
+
+test('quiet acute windows do not claim recovery while the last sampled searches remain degraded', async () => {
+  const unverified = evaluateSearchSlo({
+    finished: 6,
+    degraded: 6,
+    latest_degraded_at: '2026-08-20T07:00:00.000Z',
+    latest_completed_at: null
+  });
+  assert.equal(unverified.status, 'DEGRADED');
+  assert.equal(unverified.code, 'SEARCH_SLO_RECOVERY_UNVERIFIED:6/6:1.000');
+
+  const result = await inspectProductionSearchSli({
+    accountId: 'account', apiToken: 'test-token',
+    fetcher: d1Fetch(
+      { started: 0, completed: 0, hard_failed: 0, backend_failed: 0, degraded: 0 },
+      {
+        finished: 6,
+        degraded: 6,
+        latest_degraded_at: '2026-08-20T07:00:00.000Z',
+        latest_completed_at: null
+      }
+    )
+  });
+  assert.equal(result.status, 'DEGRADED');
+  assert.equal(result.code, 'SEARCH_SLO_RECOVERY_UNVERIFIED:6/6:1.000');
+  assert.equal(searchSliRequiresIncident(result.status), true);
+});
+
+test('a healthy search after the last degradation is valid recovery evidence', () => {
+  const recovered = evaluateSearchSlo({
+    finished: 7,
+    degraded: 6,
+    latest_degraded_at: '2026-08-20T07:00:00.000Z',
+    latest_completed_at: '2026-08-20T07:05:00.000Z'
+  });
+  assert.equal(recovered.status, 'PASS');
+  assert.equal(recovered.recovery_verified, true);
 });
 
 test('deep canary SQL selects only fixed operational fields', () => {
