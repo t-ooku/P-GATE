@@ -2,12 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   normalizeRakutenItems,
+  RAKUTEN_REQUEST_TIMEOUT_MS,
   rakutenApiConfigured,
   searchRakutenMarketplace,
   searchRakutenMarketplaceWithFallback
 } from '../src/rakuten-marketplace-api.mjs';
 
 const env = { RAKUTEN_APPLICATION_ID: 'app-id', RAKUTEN_ACCESS_KEY: 'access-key', RAKUTEN_AFFILIATE_ID: 'affiliate-id' };
+
+test('楽天APIの応答上限は公開検索の15秒枠内で移行後の遅延を許容する', () => {
+  assert.equal(RAKUTEN_REQUEST_TIMEOUT_MS, 7000);
+  assert.ok(RAKUTEN_REQUEST_TIMEOUT_MS < 15000);
+});
 
 test('楽天市場APIはApplication IDとAccess Keyの両方を必須にする', () => {
   assert.equal(rakutenApiConfigured(env), true);

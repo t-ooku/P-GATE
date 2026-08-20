@@ -5,6 +5,11 @@ import {
 import { filterCategoryMismatches } from './knowledge-search.mjs';
 
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
+// The migrated Rakuten endpoint regularly needs more than 2.5 seconds before
+// the first response byte (live observations on 2026-08-20: 3.8-6.5s). Keep
+// the provider budget below the public /api/knowledge 15s fetch deadline, but
+// long enough that a healthy Rakuten response is not discarded as a timeout.
+export const RAKUTEN_REQUEST_TIMEOUT_MS = 7000;
 
 export function rakutenApiConfigured(env = {}) {
   return Boolean(String(env.RAKUTEN_APPLICATION_ID || '').trim() && String(env.RAKUTEN_ACCESS_KEY || '').trim());
@@ -93,7 +98,7 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   const request = async (requestUrl) => {
     const response = await fetcher(requestUrl.toString(), {
       headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
-      signal: AbortSignal.timeout(2500)
+      signal: AbortSignal.timeout(RAKUTEN_REQUEST_TIMEOUT_MS)
     });
     if (response.ok) return response.json();
     let providerCode = '';
