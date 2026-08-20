@@ -240,14 +240,22 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
 
 test('/buzzページは出典と注意書きを持ち、断定表現を使わない', () => {
   const html = fs.readFileSync(path.join(worker, 'public', 'buzz.html'), 'utf8');
+  const css = fs.readFileSync(path.join(worker, 'public', 'buzz.css'), 'utf8');
   const script = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
+  const serviceWorker = fs.readFileSync(path.join(worker, 'public', 'service-worker.js'), 'utf8');
   assert.match(html, /HOSHILU BUZZ/u);
   // 2026-08-19 大隆さん指示: 棚ごとの出典表記は出さない。根拠はページ最下部の
   // 注記1箇所に集約する(JS無効時も静的に表示される)。
   assert.match(html, /順位はモール公式ランキングが根拠です。/u);
   assert.doesNotMatch(html, /出典:/u);
-  // トンマナ固定: 本体styles.cssと同じトークン・トップバー・フッター。
-  assert.match(html, /--violet:#7357ff;--pink:#ff4f9a;--cyan:#23b8ff/u);
+  // 本番CSP(style-src 'self')で拒否されない外部CSSに、ホシルの3色とランキング表現を置く。
+  assert.match(html, /<link rel="stylesheet" href="\/buzz\.css\?v=\d+">/u);
+  assert.doesNotMatch(html, /<style>/u);
+  assert.match(css, /--violet:#7357ff;--pink:#ff4f9a;--cyan:#23b8ff/u);
+  assert.match(css, /\.card:nth-child\(1\) \.rank/u);
+  assert.match(css, /\.card:nth-child\(2\) \.rank/u);
+  assert.match(css, /\.card:nth-child\(3\) \.rank/u);
+  assert.match(serviceWorker, /SHELL\.push\('\/buzz\.html', '\/buzz\.css', '\/buzz\.mjs'\)/u);
   assert.match(html, /class="topbar"/u);
   assert.match(html, /class="brand"/u);
   assert.match(html, /欲しいを、ちゃんと見つける。/u);
@@ -328,6 +336,52 @@ test('韓国コスメ棚はトレンドAPI障害時に口コミ件数順ラベ�
   } else {
     assert.equal(korean, null);
   }
+});
+
+test('韓国コスメ棚は検索語を無視した米ランキングを除外し、口コミ件数順へ縮退する', async () => {
+  const envWithYahoo = { ...env, YAHOO_SHOPPING_CLIENT_ID: 'test-yahoo-client' };
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname.includes('highRatingTrendRanking')) {
+      return Response.json({ high_rating_trend_ranking: { ranking_data: [
+        { rank: 1, item_information: { name: '令和7年産 コシヒカリ 白米 10kg', url: 'https://store.shopping.yahoo.co.jp/rice/a.html', regular_price: 5999 } },
+        { rank: 2, item_information: { name: 'ひとめぼれ 白米 5kg', url: 'https://store.shopping.yahoo.co.jp/rice/b.html', regular_price: 3299 } },
+        { rank: 3, item_information: { name: '韓国コスメ ファンデーション', url: 'https://store.shopping.yahoo.co.jp/beauty/c.html', regular_price: 1800 } }
+      ] } });
+    }
+    if (url.pathname.includes('itemSearch')) {
+      return Response.json({ totalResultsAvailable: 2, hits: [
+        { name: 'TIRTIR 韓国コスメ クッションファンデ', url: 'https://store.shopping.yahoo.co.jp/beauty/tirtir.html', price: 2970, review: { rate: 4.5, count: 300 } },
+        { name: 'rom&nd ロムアンド リップティント', url: 'https://store.shopping.yahoo.co.jp/beauty/romand.html', price: 1320, review: { rate: 4.4, count: 210 } }
+      ] });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  const korean = await buildKoreanShelf(envWithYahoo, fetcher);
+  assert.ok(korean);
+  assert.equal(korean.headline, '口コミが多い。');
+  assert.match(korean.ranking_type, /口コミ件数順/u);
+  assert.ok(korean.items.every((item) => !/米|コシヒカリ|ひとめぼれ/u.test(item.name)));
+  assert.ok(korean.items.every((item) => /韓国|TIRTIR|rom&nd|ロムアンド/iu.test(item.name)));
+});
+
+test('韓国コスメ棚は公式APIと縮退検索がともにカテゴリ不一致なら表示しない', async () => {
+  const envWithYahoo = { ...env, YAHOO_SHOPPING_CLIENT_ID: 'test-yahoo-client' };
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname.includes('highRatingTrendRanking')) {
+      return Response.json({ high_rating_trend_ranking: { ranking_data: [
+        { rank: 1, item_information: { name: 'コシヒカリ 白米 10kg', url: 'https://store.shopping.yahoo.co.jp/rice/a.html', regular_price: 5999 } }
+      ] } });
+    }
+    if (url.pathname.includes('itemSearch')) {
+      return Response.json({ totalResultsAvailable: 1, hits: [
+        { name: 'ひとめぼれ 白米 5kg', url: 'https://store.shopping.yahoo.co.jp/rice/b.html', price: 3299 }
+      ] });
+    }
+    return new Response('not found', { status: 404 });
+  };
+  assert.equal(await buildKoreanShelf(envWithYahoo, fetcher), null);
 });
 
 // 2026-08-19 大隆さん報告の再発防止: レディーススニーカー棚にイヤホンが並んだ。

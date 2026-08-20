@@ -52,7 +52,10 @@ const BUZZ_CATEGORY_SANITY = Object.freeze({
   womens_sneakers: /スニーカー|シューズ|靴|sneakers?/iu,
   handheld_fan: /ファン|扇風機|fan/iu,
   mobile_battery: /バッテリー|充電|power\s*bank/iu,
-  face_lotion: /化粧水|ローション|スキンケア|toner|lotion/iu
+  face_lotion: /化粧水|ローション|スキンケア|toner|lotion/iu,
+  // Yahoo!高評価トレンドAPIは検索語と無関係な総合ランキングを返すことがある。
+  // 「韓国コスメ」明記または代表的なK-beautyブランドを商品名で確認できる物だけ通す。
+  korean_beauty: /韓国(?:コスメ|化粧品|スキンケア)?|k\s*[-‐‑]?\s*beauty|rom&nd|ロムアンド|clio|クリオ|tirtir|ティルティル|vt(?:\s+cosmetics)?|cosrx|コスアールエックス|anua|アヌア|mediheal|メディヒール|laneige|ラネージュ|etude|エチュード|missha|ミシャ|innisfree|イニスフリー|hince|ヒンス|dasique|デイジーク|jung\s*saem\s*mool|ジョンセンムル|numbuzin|ナンバーズイン/iu
 });
 
 export function shelfItemsMatchCategory(categoryId, items = []) {
@@ -263,35 +266,53 @@ export async function buildRisingShelf(env, genreShelves, now = Date.now()) {
 // どちらも取得できない時だけ棚を出さない(架空データ禁止)。
 const KOREAN_SHELF = Object.freeze({ shelf_id: 'korean_beauty', label: '韓国コスメ', query: '韓国コスメ' });
 
+function categorySafeKoreanCandidates(candidates = []) {
+  const normalized = candidates
+    .map((candidate, index) => ({ candidate, item: sanitizeShelfItem(candidate, index) }))
+    .filter(({ item }) => item.name && item.product_url);
+  if (!normalized.length || !shelfItemsMatchCategory(KOREAN_SHELF.shelf_id, normalized.map(({ item }) => item))) return [];
+  return normalized
+    .filter(({ item }) => shelfItemsMatchCategory(KOREAN_SHELF.shelf_id, [item]))
+    .map(({ candidate }) => candidate);
+}
+
 export async function buildKoreanShelf(env, fetcher = fetch) {
   if (!yahooShoppingApiConfigured(env)) return null;
   let rankingType = 'HIGH_RATING_TREND';
   let headline = '高評価トレンド。';
   let rankingLabel = 'Yahoo!ショッピング 高評価トレンドランキング(「韓国コスメ」)';
   let candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType);
-  const cached = Boolean(candidates);
+  let shouldWriteCache = false;
   if (!candidates) {
     try {
       candidates = await fetchYahooHighRatingRanking(env, KOREAN_SHELF.query, fetcher);
+      shouldWriteCache = true;
     } catch {
       candidates = null;
     }
-    if (!candidates || !candidates.length) {
-      rankingType = 'REVIEW_COUNT';
-      headline = '口コミが多い。';
-      rankingLabel = 'Yahoo!ショッピング 口コミ件数順(「韓国コスメ」)';
-      candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType);
-      if (!candidates) {
-        try {
-          candidates = await searchYahooShopping(env, KOREAN_SHELF.query, fetcher, { sort: '-review_count' });
-        } catch {
-          candidates = [];
-        }
+  }
+  // 検索語を無視した総合ランキング(今回の「米」など)は採用しない。
+  // 過半が韓国コスメと確認できない場合は、検索語が効く商品検索へ縮退する。
+  candidates = categorySafeKoreanCandidates(candidates || []);
+  if (!candidates.length) {
+    rankingType = 'REVIEW_COUNT';
+    headline = '口コミが多い。';
+    rankingLabel = 'Yahoo!ショッピング 口コミ件数順(「韓国コスメ」)';
+    candidates = await readRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType);
+    shouldWriteCache = false;
+    if (!candidates) {
+      try {
+        candidates = await searchYahooShopping(env, KOREAN_SHELF.query, fetcher, { sort: '-review_count' });
+        shouldWriteCache = true;
+      } catch {
+        candidates = [];
       }
     }
-    if (candidates?.length && !cached) {
-      await writeRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType, candidates);
-    }
+    candidates = categorySafeKoreanCandidates(candidates || []);
+  }
+  if (!candidates.length) return null;
+  if (shouldWriteCache) {
+    await writeRankingCache(env, 'YAHOO_JP', `buzz_${KOREAN_SHELF.shelf_id}`, rankingType, candidates);
   }
   const items = (candidates || [])
     .map(sanitizeShelfItem)
