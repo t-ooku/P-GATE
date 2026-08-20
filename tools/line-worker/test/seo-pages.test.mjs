@@ -50,6 +50,7 @@ test('日本語ガイドハブは33記事を重複なく分類し全記事から
   assert.match(html, /<h1>商品選び・比較・探し方ガイド<\/h1>/);
   assert.match(html, /"@type":"CollectionPage"/);
   assert.match(html, /"@type":"ItemList"/);
+  assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
   assert.equal(japanesePaths.length, 33);
@@ -77,10 +78,25 @@ test('新規5テーマは商品・価格・口コミ・順位を根拠なく断�
   }
 });
 
+test('2026-08-21公開の10記事は正しい更新日を表示・構造化データへ反映する', () => {
+  const published = [
+    'find-products-seen-on-social-media', 'find-products-seen-on-tiktok',
+    'find-fashion-items-seen-on-instagram', 'find-products-introduced-on-youtube',
+    'identify-correct-product-name-from-vague-memory', 'find-a-product-from-a-photo-or-screenshot',
+    'identify-a-product-someone-else-is-using', 'find-a-product-you-saw-in-a-store',
+    'find-a-product-you-saw-in-a-tv-commercial', 'turn-vague-words-into-search-terms'
+  ];
+  for (const slug of published) {
+    const html = renderSeoPage(`/ja/${slug}`);
+    assert.match(html, /datetime="2026-08-21"/);
+    assert.match(html, /"dateModified":"2026-08-21"/);
+  }
+});
+
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
-  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-13<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-21<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
