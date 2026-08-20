@@ -82,6 +82,10 @@ function sanitizeShelfItem(candidate = {}, index) {
   };
 }
 
+function byOfficialRank(left, right) {
+  return Number(left?.rank || Number.MAX_SAFE_INTEGER) - Number(right?.rank || Number.MAX_SAFE_INTEGER);
+}
+
 async function buildShelf(env, category, fetcher) {
   const result = await marketplaceRankingResult(env, category.label, 'RAKUTEN_JP', fetcher, {
     id: category.id, genre_id: category.genre_id
@@ -107,6 +111,7 @@ async function buildShelf(env, category, fetcher) {
     allItems = reviewItems;
     realtime = false;
   }
+  allItems.sort(byOfficialRank);
   return {
     shelf_id: category.id,
     label: category.label,
@@ -243,7 +248,9 @@ export async function buildRisingShelf(env, genreShelves, now = Date.now()) {
       }
     }
     if (!risers.length) return null;
-    const items = risers.sort((a, b) => b.improvement - a.improvement).slice(0, BUZZ_SHELF_ITEM_LIMIT)
+    // 「急上昇」もカード左上の公式現在順位で昇順表示する。上昇幅はmovementへ残す。
+    const items = risers.sort((a, b) => byOfficialRank(a, b) || b.improvement - a.improvement)
+      .slice(0, BUZZ_SHELF_ITEM_LIMIT)
       .map(({ improvement, ...item }) => item);
     return {
       shelf_id: 'rising',
@@ -336,6 +343,7 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
   const items = (candidates || [])
     .map(sanitizeShelfItem)
     .filter((item) => item.name && item.product_url)
+    .sort(byOfficialRank)
     .slice(0, BUZZ_SHELF_ITEM_LIMIT)
     .map((item) => ({ ...item, marketplace: 'YAHOO_JP' }));
   if (!items.length) return null;

@@ -101,6 +101,23 @@ test('BUZZ棚は定義順の小ジャンルを公式ランキングだけで返�
   assert.match(result.disclaimer, /変動します/u);
 });
 
+test('各ランキング棚はAPIの配列順に依存せず公式順位の昇順で表示する', async () => {
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    const genreId = url.searchParams.get('genreId') || '';
+    if (!url.pathname.includes('/IchibaItem/Ranking/')) return new Response('not found', { status: 404 });
+    return new Response(JSON.stringify({ Items: [7, 9, 4, 2, 1].map((rank) => ({
+      ...rankingItem(rank, `${genreNoun(genreId)} ${genreId}-${rank}`),
+      itemUrl: `https://item.rakuten.co.jp/shop${genreId}/item${rank}/`
+    })) }), { status: 200 });
+  };
+  const shelves = await buildGenreShelves(env, fetcher);
+  assert.ok(shelves.length > 0);
+  for (const shelf of shelves) {
+    assert.deepEqual(shelf.items.map((item) => item.rank), [1, 2, 4, 7, 9]);
+  }
+});
+
 test('リアルタイムが404の小ジャンルは口コミ件数順ラベルへ縮退する', async () => {
   const target = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === BUZZ_SHELF_CATEGORY_IDS[0]);
   const fetcher = rankingFetcher({
