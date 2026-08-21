@@ -1,6 +1,6 @@
 const ORIGIN = 'https://hoshilu.app';
 const UPDATED_AT = '2026-08-13';
-const HUB_UPDATED_AT = '2026-08-21';
+const HUB_UPDATED_AT = '2026-08-22';
 
 const jaDefaults = {
   audience: [
@@ -690,6 +690,116 @@ const pages = {
         ['候補が違った時はどうしますか？', '候補のどこが違ったかを次の検索条件に加えてください。違いを足すほど条件が具体的になります。']
       ]
     })
+  },
+  'find-korean-cosmetics-without-product-name': {
+    ja: guide('ja', {
+      title: '名前が分からない韓国コスメを特徴から探す方法',
+      updatedAt: '2026-08-22',
+      description: '商品名を読めない・覚えていない韓国コスメを、用途・容器・色・表示から検索条件へ変える方法を解説します。',
+      conclusion: '韓国コスメは、商品名を推測するより、何に使う商品か、容器の形、色、読めた文字や数字を分けて整理するほうが安全です。画像の文字を読めない場合は無理に補わず、用途と見た目を文章にしてください。候補が出たら、ブランドの公式商品情報と販売ページで正式名称、内容量、色番号、使用上の注意を確認します。',
+      query: '韓国コスメで、丸い薄紫の容器に入った持ち歩き用のフェイスパウダー',
+      audience: ['SNSで韓国コスメを見たが商品名を覚えていない人', 'パッケージの文字を正確に読めない人', '似た容器の商品を区別して探したい人'],
+      tips: ['用途、容器の形、色、読めた文字や数字を別々に書き出す', '読めない表記を推測で商品名にしない', '候補は公式商品情報と販売ページで内容量・色番号まで照合する'],
+      comparison: [
+        ['用途が分かる', '下地・リップ・パウダーなど使う場所と役割を書く', '商品カテゴリを先に絞る'],
+        ['容器を覚えている', '丸型・チューブ・ポンプなど形と色を書く', '見た目だけで同一商品と断定しない'],
+        ['文字や数字が読める', '読めた部分だけをそのまま入力する', '公式表記・内容量・色番号と照合する']
+      ],
+      faq: [
+        ['韓国語を読めなくても探せますか？', 'はい。用途、容器の形、色、見た場所などを日本語で入力して検索を始められます。'],
+        ['画像をHOSHILUへ送れば特定できますか？', 'HOSHILUは文章で入力した条件から候補を探します。画像に写る内容を言葉へ置き換えてください。'],
+        ['似たパッケージは同じ商品ですか？', '外観が近くても内容量、色番号、仕様が異なる場合があります。公式商品情報と販売ページで確認してください。'],
+        ['口コミが多い商品なら安心ですか？', '件数だけで判断せず、投稿日、利用条件、低評価で繰り返される指摘を確認してください。']
+      ]
+    })
+  },
+  'find-korean-style-fashion-by-features': {
+    ja: guide('ja', {
+      title: '韓国っぽい服をシルエットや特徴から探す方法',
+      updatedAt: '2026-08-22',
+      description: 'ブランド名が分からない韓国風ファッションを、服の種類・丈・形・素材・着る場面から探す手順を解説します。',
+      conclusion: '「韓国っぽい」だけでは候補が広すぎるため、服の種類、シルエット、丈、首元や袖の形、素材の見え方へ分解します。着用画像の印象だけでサイズを決めず、候補が出たら実寸、素材、透け感、返品条件を販売ページで確認してください。',
+      query: '韓国っぽい、短め丈で袖が長い、白系のゆったりしたトップス',
+      audience: ['SNSで見た韓国風の服を探したい人', 'ブランド名より雰囲気や形を重視する人', '似たデザインから自分に合うサイズを選びたい人'],
+      tips: ['トップス・スカートなど服の種類を最初に1つ決める', '丈・幅・袖・首元を分けて具体的に書く', '着用画像だけで判断せず販売ページの実寸と素材を確認する'],
+      comparison: [
+        ['雰囲気だけ覚えている', 'かわいい等の印象を色・丈・形へ分解', '広い表現を具体的な条件へ変える'],
+        ['シルエットが分かる', '短め丈・ゆったり・袖長めなどを書く', '候補の形を絞り込む'],
+        ['候補が見つかった', '実寸・素材・透け感・返品条件を確認', '着用画像と自分の条件を分けて判断する']
+      ],
+      faq: [
+        ['「韓国っぽい」だけでも検索できますか？', '検索は始められますが、服の種類、色、丈、形を加えると比較しやすくなります。'],
+        ['写真と同じ色に見えますか？', '撮影や画面環境で色の見え方は変わります。販売ページのカラー名と説明を確認してください。'],
+        ['サイズ表記が同じなら実寸も同じですか？', 'ブランドや商品で実寸は異なります。肩幅、身幅、着丈など必要な寸法を確認してください。'],
+        ['返品できるかはどこで分かりますか？', '返品期限、試着・開封後の扱い、返送料を購入前に販売ページで確認してください。']
+      ]
+    })
+  },
+  'find-products-used-by-favorite-idol': {
+    ja: guide('ja', {
+      title: '推しやアイドルが使っていた商品を探す方法',
+      updatedAt: '2026-08-22',
+      description: '推しやアイドルが公開情報の中で使っていた商品を、投稿・映像・特徴から安全に探して確認する方法を解説します。',
+      conclusion: '最初に、公式投稿、公開映像、番組や企画のクレジットなど、誰でも確認できる情報へ戻ります。商品名の記載がなければ、種類、色、形、ロゴや文字、使われていた場面を整理してください。似た商品を本人使用品と断定せず、公式な記載を確認できない候補は「似ている商品」として分けます。',
+      query: '公開動画で推しが使っていた、黒くて細長い持ち歩き用のヘアブラシ',
+      audience: ['公開投稿で見た推しの使用アイテムを探したい人', '商品名は不明だが形や使用場面を覚えている人', '本人使用品と似た商品を区別したい人'],
+      tips: ['公式投稿・公開映像・クレジットなど公開情報を確認する', '商品名がなければ種類・色・形・文字・使用場面を書く', '公式根拠がない候補を本人使用品と断定しない'],
+      comparison: [
+        ['公式に商品名がある', '公式表記とブランド・型番を確認する', '同一商品の照合へ進める'],
+        ['公開画像だけがある', '見える範囲の種類・形・色を整理する', '似た候補として比較する'],
+        ['第三者の投稿だけがある', '出典と根拠を確認する', '確認できなければ断定せず保留する']
+      ],
+      faq: [
+        ['ファンの投稿だけで本人使用品と判断できますか？', '出典を確認できない投稿だけでは断定できません。公式情報がなければ似た候補として扱ってください。'],
+        ['本人の非公開情報を調べてもよいですか？', '非公開情報や私生活を追跡せず、誰でも確認できる公開情報の範囲で探してください。'],
+        ['同じ見た目なら同じ商品ですか？', '色や形が近くても別商品があります。ロゴ、型番、寸法などを確認してください。'],
+        ['提供品や広告の可能性はどう確認しますか？', '投稿や映像に広告・提供・タイアップの表示があるか確認してください。']
+      ]
+    })
+  },
+  'find-fan-activity-goods-by-purpose': {
+    ja: guide('ja', {
+      title: '推し活グッズを用途と持ち運び条件から探す方法',
+      updatedAt: '2026-08-22',
+      description: 'ライブ・イベント・自宅保管などの用途に合わせ、推し活グッズをサイズ・持ち運び・会場条件から探す方法を解説します。',
+      conclusion: '推し活グッズは、何を入れる・飾る・持ち運ぶのかを先に決めます。次に、対象物の実寸、会場や交通手段で許容できる大きさ、重さ、電池や使用ルールを条件へ加えてください。イベントで使う場合は、最新の公式案内を確認し、持ち込み可能と確認できない商品を購入しないようにします。',
+      query: 'A4のボードを曲げずに入れられて、電車で持ち運びやすい軽いバッグ',
+      audience: ['ライブやイベント用の持ち物を探している人', '手持ちのグッズに合う収納用品を選びたい人', '会場ルールと持ち運びやすさを両立したい人'],
+      tips: ['入れる・飾る・持ち運ぶ対象物の実寸を測る', '移動時の大きさ・重さ・手の空き方を条件にする', 'イベント利用は最新の公式持ち込みルールを確認する'],
+      comparison: [
+        ['自宅で保管する', '対象物の縦横厚さと保護方法を確認', '収納場所に収まる外寸も見る'],
+        ['移動して使う', '重さ・持ち手・開閉・雨対策を確認', '移動時間と混雑を想定する'],
+        ['会場で使う', '公式のサイズ・電池・持ち込みルールを確認', '確認できない条件は購入前に保留する']
+      ],
+      faq: [
+        ['会場で使える商品をHOSHILUが保証しますか？', '会場や公演ごとにルールが異なるため保証できません。最新の公式案内を確認してください。'],
+        ['収納用品は表記サイズだけ見ればよいですか？', '内寸と外寸が異なるため、入れる物の実寸と商品の内寸を照合してください。'],
+        ['電池を使う商品は何を確認しますか？', '使用できる電池、連続使用条件、会場への持ち込み可否を確認してください。'],
+        ['安い物を選べば十分ですか？', '価格だけでなく、寸法、耐久性、使用条件、返品条件を販売ページで確認してください。']
+      ]
+    })
+  },
+  'shopping-guide-for-students-on-a-budget': {
+    ja: guide('ja', {
+      title: '学生が予算内で商品を探すための買い物ガイド',
+      updatedAt: '2026-08-22',
+      description: '学生が用途と上限予算を整理し、送料・セット数・返品条件まで含めて無理なく商品を比較する方法を解説します。',
+      conclusion: '予算は商品価格だけでなく、送料、必要な付属品、セット数を含む支払総額で決めます。学校・通学・自宅など使う場面と必須条件を先に書き、流行や高評価だけで候補を決めないでください。購入直前に、最新価格、配送予定、返品条件、保護者確認が必要な支払い方法を確認します。',
+      query: '通学で毎日使う、送料込み五千円以内で軽くてA4が入るバッグ',
+      audience: ['限られた予算で必要な商品を探す学生', '通学や学校生活の条件に合う物を比較したい人', '商品価格以外の費用も含めて判断したい人'],
+      tips: ['使う場面と絶対に必要な条件を先に決める', '商品価格ではなく送料・付属品を含む総額で比べる', '未成年者は必要に応じて保護者と支払い条件を確認する'],
+      comparison: [
+        ['予算上限がある', '送料・付属品・セット数を含む総額を確認', '表示価格だけで予算内と判断しない'],
+        ['毎日使う', '重さ・サイズ・手入れ・耐久性を確認', '用途に合う必須条件を優先する'],
+        ['候補が複数ある', '返品条件・配送予定・口コミの利用条件を見る', '人気だけで順位を決めない']
+      ],
+      faq: [
+        ['表示価格が予算内なら購入できますか？', '送料や必要な付属品で総額が変わるため、注文直前の支払総額を確認してください。'],
+        ['口コミ評価が高い商品を選べばよいですか？', '件数、投稿日、自分と近い用途、低評価の内容も確認してください。'],
+        ['未成年でも購入できますか？', '販売先や支払い方法の条件を確認し、必要に応じて保護者へ相談してください。'],
+        ['セール価格はいつでも同じですか？', '価格や在庫、販売条件は変わります。購入時点の販売ページで確認してください。']
+      ]
+    })
   }
 };
 
@@ -859,6 +969,31 @@ const visualProfiles = {
       intent: 'turn_vague_words_into_search_terms', cluster: 'ai-discovery', articleType: 'how-to',
       headings: ['出てくる言葉', '置き換え方', '入力での扱い'],
       steps: [['種類を1つ決める', '「あれ」で指していたものが、どの種類の商品かを先に決めます。'], ['音や感覚を動作に直す', '擬音語は動作や仕組みへ、感覚語は比較対象や数値へ置き換えます。'], ['残りはそのまま書く', '置き換えられない部分は言葉を作らず、何をする物かをそのまま入力します。']]
+    },
+    'find-korean-cosmetics-without-product-name': {
+      intent: 'find_korean_cosmetics_without_name', cluster: 'youth-korean-discovery', articleType: 'how-to',
+      headings: ['分かっている手がかり', '検索条件への変え方', '候補の確認方法'],
+      steps: [['用途を決める', '何に使うコスメかを先に決め、商品カテゴリを絞ります。'], ['容器と表示を書く', '形・色・読めた文字や数字を、推測せずそのまま整理します。'], ['公式情報で照合する', '正式名称、内容量、色番号、注意事項を公式情報と販売ページで確認します。']]
+    },
+    'find-korean-style-fashion-by-features': {
+      intent: 'find_korean_style_fashion_by_features', cluster: 'youth-korean-discovery', articleType: 'how-to',
+      headings: ['覚えている印象', '具体化する条件', '購入前の確認'],
+      steps: [['服の種類を決める', 'トップス、スカートなど、探すカテゴリを1つに絞ります。'], ['形を分解する', '丈・幅・袖・首元・素材の見え方を別々の条件にします。'], ['実寸を確かめる', '候補の実寸、素材、透け感、返品条件を販売ページで確認します。']]
+    },
+    'find-products-used-by-favorite-idol': {
+      intent: 'find_products_used_by_favorite_idol', cluster: 'youth-korean-discovery', articleType: 'evidence-guide',
+      headings: ['情報の出所', '手がかりの整理', '断定してよい範囲'],
+      steps: [['公開情報へ戻る', '公式投稿、公開映像、クレジットなど確認できる出所を探します。'], ['特徴を整理する', '種類・色・形・文字・使われた場面を検索条件にします。'], ['根拠で分ける', '公式確認できる商品と、見た目が似ている候補を分けて扱います。']]
+    },
+    'find-fan-activity-goods-by-purpose': {
+      intent: 'find_fan_activity_goods_by_purpose', cluster: 'youth-korean-discovery', articleType: 'shopping-guide',
+      headings: ['使う場面', '必要な条件', '最終確認'],
+      steps: [['用途と対象物を決める', '入れる・飾る・持ち運ぶ物の実寸を確認します。'], ['移動条件を加える', '大きさ、重さ、持ち手、電池など必要条件を整理します。'], ['公式ルールを確認する', 'イベント利用は最新の持ち込み条件を公式案内で確認します。']]
+    },
+    'shopping-guide-for-students-on-a-budget': {
+      intent: 'shopping_guide_for_students_on_budget', cluster: 'student-shopping', articleType: 'shopping-guide',
+      headings: ['予算の考え方', '用途別の確認', '購入前の判断'],
+      steps: [['支払総額を決める', '商品価格、送料、必要な付属品を含む予算上限を決めます。'], ['必須条件を優先する', '学校・通学・自宅など使う場面から必要な条件を絞ります。'], ['販売条件を確認する', '最新価格、配送予定、返品、支払い条件を購入直前に確認します。']]
     }
   },
   en: {
@@ -931,6 +1066,16 @@ const guideHubGroups = [
     slugs: [
       'find-products-seen-on-social-media', 'find-products-seen-on-tiktok',
       'find-fashion-items-seen-on-instagram', 'find-products-introduced-on-youtube'
+    ]
+  },
+  {
+    id: 'youth',
+    title: '韓流・推し活・学生生活から探す',
+    description: '韓国コスメや韓国風ファッション、推し活、学生の予算など、若年層の具体的な利用場面から探すガイドです。',
+    slugs: [
+      'find-korean-cosmetics-without-product-name', 'find-korean-style-fashion-by-features',
+      'find-products-used-by-favorite-idol', 'find-fan-activity-goods-by-purpose',
+      'shopping-guide-for-students-on-a-budget'
     ]
   },
   {
@@ -1018,8 +1163,14 @@ function relatedLinks(locale, currentSlug) {
   const preferred = locale === 'ja'
     ? ['find-product-without-name', 'how-to-search-by-description', 'how-to-check-size-and-installation-space', 'check-device-compatibility-before-buying', 'find-products-for-small-spaces', 'shopping-guide-for-living-alone', 'compare-delivery-and-return-conditions', 'search-products-by-budget-and-purpose', 'compare-total-price-with-shipping', 'how-to-read-shopping-reviews', 'how-to-use-shopping-rankings', 'find-a-gift-by-recipient-and-occasion', 'compare-amazon-rakuten-yahoo-shopping', 'how-to-compare-the-same-product']
     : ['find-product-without-name', 'how-to-search-by-description', 'shopping-in-japan', 'american-products-in-japan'];
-  const links = preferred.filter((slug) => slug !== currentSlug && pages[slug]?.[locale]).slice(0, 3)
-    .map((slug) => `<li><a href="${pathFor(locale, slug)}">${esc(pages[slug][locale].title)}</a></li>`);
+  const cluster = visualProfiles[locale]?.[currentSlug]?.cluster;
+  const sameCluster = Object.keys(pages).filter((slug) =>
+    slug !== currentSlug && pages[slug]?.[locale] && visualProfiles[locale]?.[slug]?.cluster === cluster
+  );
+  const ordered = [...new Set([...sameCluster, ...preferred])]
+    .filter((slug) => slug !== currentSlug && pages[slug]?.[locale])
+    .slice(0, 3);
+  const links = ordered.map((slug) => `<li><a href="${pathFor(locale, slug)}">${esc(pages[slug][locale].title)}</a></li>`);
   if (locale === 'ja') links.push('<li class="all-guides-link"><a href="/ja/guides">買い物ガイドをすべて見る</a></li>');
   return links.join('');
 }
