@@ -140,7 +140,7 @@ test('新規5記事はハブと同一クラスタの関連記事へ重複なく�
   for (const slug of published) {
     const html = renderSeoPage('/ja/' + slug);
     assert.match(html, /href="\/ja\/guides"/);
-    const nav = html.match(/<nav class="related-guides"[\s\S]*?<\/nav>/)?.[0] || '';
+    const nav = html.match(/<nav class="related"[\s\S]*?<\/nav>/)?.[0] || '';
     const articleLinks = [...nav.matchAll(/href="(\/ja\/(?!guides)[^"]+)"/g)].map((match) => match[1]);
     assert.equal(articleLinks.length, 3);
     assert.equal(new Set(articleLinks).size, 3);
