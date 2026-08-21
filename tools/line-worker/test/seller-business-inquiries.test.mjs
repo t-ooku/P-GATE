@@ -68,3 +68,11 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /コスメ<\/td><td>38円/u);
   assert.doesNotMatch(html, /name="(?:password|api_key|secret|access_token)"/iu);
 });
+
+test('公開LPはスマホで見出しを3行以上に崩さず余白を圧縮する', () => {
+  const css = readFileSync(new URL('../public/for-sellers-pricing.css', import.meta.url), 'utf8');
+  assert.match(css, /\.hero h1,\.hero h1 span\{white-space:nowrap\}/u);
+  assert.match(css, /\.hero\{min-height:auto;padding:36px 4px 42px\}/u);
+  assert.match(css, /\.values\{gap:10px;margin-bottom:38px\}/u);
+  assert.match(css, /\.form-shell\{margin:38px 0/u);
+});
