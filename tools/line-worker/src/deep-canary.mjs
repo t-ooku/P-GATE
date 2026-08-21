@@ -26,6 +26,7 @@ const AI_RETRYABLE_CODES = new Set([
   'OPENAI_CHAT_INTENT_INVALID_JSON',
   'CANARY_AI_RESPONSE_INVALID'
 ]);
+const AI_MISSED_SLOT_CATCHUP_WINDOW_MS = 3 * 60 * 60 * 1000;
 
 const safeCode = (value, fallback = 'CANARY_FAILED') => {
   const code = String(value || '').toUpperCase();
@@ -45,11 +46,14 @@ const isTransientAiFailureCode = (value) => {
 };
 
 // :07 is the regular Query Structurer/AI-primary/OpenAI slot. A transient
-// failure may be confirmed once at the first later deep-canary offset that
-// actually runs (:22/:37/:52).
+// failure, or a recently missed hourly Gemini result, may be confirmed once
+// at the first later deep-canary offset that actually runs (:22/:37/:52).
 // Requiring the newest row to remain the exact :07 row makes the first retry
 // self-closing: its own PASS/FAIL row prevents every later offset from paying
-// for another request.
+// for another request. A row older than the expected :07 slot is the safe
+// evidence that the regular slot never persisted a result and needs catch-up.
+// The bounded window prevents ancient/corrupt state from authorizing a paid
+// request, and the optional six-hour OpenAI backup stays fail-closed.
 const regularAiSlot = (date, component) => {
   if (![22, 37, 52].includes(date.getUTCMinutes())) return null;
   if (component === 'openai_backup' && date.getUTCHours() % 6 !== 0) return null;
@@ -76,6 +80,16 @@ async function scheduledAiRetries(env, date) {
       && String(row?.occurred_at || '') === expectedOccurredAt
       && String(row?.status || '') === 'FAIL'
       && isTransientAiFailureCode(row?.code)) retries.push(component);
+    else {
+      const latestOccurredAt = Date.parse(String(row?.occurred_at || ''));
+      const catchupFloor = regularSlot.getTime() - AI_MISSED_SLOT_CATCHUP_WINDOW_MS;
+      if (component !== 'openai_backup'
+        && Number.isFinite(latestOccurredAt)
+        && latestOccurredAt >= catchupFloor
+        && latestOccurredAt < regularSlot.getTime()) {
+        retries.push(component);
+      }
+    }
   }
   return retries;
 }

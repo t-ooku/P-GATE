@@ -161,6 +161,30 @@ test('only transient OpenAI result codes are eligible for the one delayed retry'
   ]) assert.equal(deepCanaryTest.isTransientOpenAiFailureCode(code), false, code);
 });
 
+test('a missed hourly Gemini slot is caught up once at the next deep-canary offset', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite, '2026-08-13T10:07:00.000Z');
+  seedBudget(sqlite, 5_000_000, '2026-08-13T10:08:00.000Z');
+  const { fetcher, calls } = providerHarness();
+
+  const catchup = await runDeepCanaryCycle(env, new Date('2026-08-13T11:22:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T11:22:01.000Z')
+  });
+  assert.deepEqual(catchup.results.map((row) => row.component),
+    ['rakuten', 'yahoo', 'query_structurer', 'ai_chat_primary']);
+  for (const component of ['query_structurer', 'ai_chat_primary']) {
+    assert.equal(catchup.results.find((row) => row.component === component)?.code,
+      'CANARY_MONTHLY_BUDGET_LIMIT');
+  }
+  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 0);
+
+  const laterOffset = await runDeepCanaryCycle(env, new Date('2026-08-13T11:37:00.000Z'), fetcher, {
+    clock: () => new Date('2026-08-13T11:37:01.000Z')
+  });
+  assert.deepEqual(laterOffset.results.map((row) => row.component), ['rakuten', 'yahoo']);
+});
+
 test('provider status classification retries only transient HTTP failures', () => {
   assert.equal(deepCanaryTest.failureCode({ status: 408, message: 'OPENAI_CHAT_INTENT_FAILED' }),
     'CANARY_PROVIDER_TIMEOUT');
