@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語33ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 38);
+test('検索意図が異なる日本語38ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 43);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\//);
@@ -41,7 +41,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは33記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは38記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -53,7 +53,7 @@ test('日本語ガイドハブは33記事を重複なく分類し全記事から
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 33);
+  assert.equal(japanesePaths.length, 38);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -93,32 +93,65 @@ test('2026-08-21公開の10記事は正しい更新日を表示・構造化デ�
   }
 });
 
+
+test('2026-08-22公開の5記事は固有の意図・図解・更新日・品質基準を満たす', () => {
+  const published = [
+    'find-korean-cosmetics-without-product-name',
+    'find-korean-style-fashion-by-features',
+    'find-products-used-by-favorite-idol',
+    'find-fan-activity-goods-by-purpose',
+    'shopping-guide-for-students-on-a-budget'
+  ];
+  const intents = new Set();
+  for (const slug of published) {
+    const path = '/ja/' + slug;
+    const html = renderSeoPage(path);
+    assert.match(html, /datetime="2026-08-22"/);
+    assert.match(html, /"dateModified":"2026-08-22"/);
+    assert.match(html, /<figure class="guide-visual"/);
+    assert.match(html, /data-seo-section-event="seo_comparison_view"/);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    const intent = html.match(/data-seo-intent="([^"]+)"/)?.[1];
+    assert.ok(intent);
+    intents.add(intent);
+  }
+  assert.equal(intents.size, published.length);
+});
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
-  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-21<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-22<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 44);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 49);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });
 
-test('既存SEO記事から今回の新規5記事へ内部リンクがある', () => {
-  const newPaths = new Set([
-    '/ja/how-to-check-size-and-installation-space',
-    '/ja/check-device-compatibility-before-buying',
-    '/ja/find-products-for-small-spaces',
-    '/ja/shopping-guide-for-living-alone',
-    '/ja/compare-delivery-and-return-conditions'
-  ]);
-  for (const path of seoPagePaths.filter((candidate) => candidate.startsWith('/ja/') && !newPaths.has(candidate))) {
-    const html = renderSeoPage(path);
-    assert.ok([...newPaths].some((newPath) => html.includes(`href="${newPath}"`)), `${path} should link to a new article`);
+test('新規5記事はハブと同一クラスタの関連記事へ重複なくつながる', () => {
+  const youth = [
+    'find-korean-cosmetics-without-product-name',
+    'find-korean-style-fashion-by-features',
+    'find-products-used-by-favorite-idol',
+    'find-fan-activity-goods-by-purpose'
+  ];
+  const published = [...youth, 'shopping-guide-for-students-on-a-budget'];
+  for (const slug of published) {
+    const html = renderSeoPage('/ja/' + slug);
+    assert.match(html, /href="\/ja\/guides"/);
+    const nav = html.match(/<nav class="related-guides"[\s\S]*?<\/nav>/)?.[0] || '';
+    const articleLinks = [...nav.matchAll(/href="(\/ja\/(?!guides)[^"]+)"/g)].map((match) => match[1]);
+    assert.equal(articleLinks.length, 3);
+    assert.equal(new Set(articleLinks).size, 3);
+  }
+  for (const slug of youth) {
+    const html = renderSeoPage('/ja/' + slug);
+    for (const candidate of youth.filter((other) => other !== slug)) {
+      assert.ok(html.includes('href="/ja/' + candidate + '"'));
+    }
   }
 });
-
 test('スマホ比較表は横スクロールではなく行カードへ変換するCSSを持つ', () => {
   const css = readFileSync(new URL('../public/seo-article.css', import.meta.url), 'utf8');
   assert.match(css, /td::before\s*\{\s*content:\s*attr\(data-label\)/);
