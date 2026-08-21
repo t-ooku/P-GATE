@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { hasThreeConsecutivePostIncidentSuccesses } from '../scripts/production-monitor-recovery.mjs';
 
 const workflow = await readFile(new URL('../../../.github/workflows/production-monitor.yml', import.meta.url), 'utf8');
 const wrangler = JSON.parse(await readFile(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
@@ -42,7 +43,33 @@ test('Worker logs are explicitly enabled for trace-ID root-cause analysis', () =
 test('production monitor deduplicates incidents and waits for stable recovery', () => {
   assert.match(workflow, /\[AUTO\]\[HOSHILU\] Production reliability incident/u);
   assert.match(workflow, /issues\.find/u);
-  assert.match(workflow, /slice\(0, 2\)/u);
+  assert.match(workflow, /hasThreeConsecutivePostIncidentSuccesses/u);
   assert.match(workflow, /three consecutive successful checks/u);
   assert.match(workflow, /Search text and personal data are not recorded/u);
+});
+
+test('a rerun cannot count successes that happened before the incident', () => {
+  const issueBody = '- First detected: `2026-08-21T18:34:47.727Z`';
+  const runs = [
+    { id: 60, created_at: '2026-08-21T18:34:21Z', conclusion: 'success' },
+    { id: 59, created_at: '2026-08-21T17:59:25Z', conclusion: 'success' },
+    { id: 58, created_at: '2026-08-21T17:35:23Z', conclusion: 'success' }
+  ];
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(runs, 60, issueBody), false);
+});
+
+test('recovery requires two prior successful runs after first detection', () => {
+  const issueBody = '- First detected: `2026-08-21T18:34:47.727Z`';
+  const recovered = [
+    { id: 63, created_at: '2026-08-21T19:12:00Z', conclusion: 'success' },
+    { id: 62, created_at: '2026-08-21T19:07:00Z', conclusion: 'success' },
+    { id: 61, created_at: '2026-08-21T19:02:00Z', conclusion: 'success' },
+    { id: 60, created_at: '2026-08-21T18:34:21Z', conclusion: 'success' }
+  ];
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, issueBody), true);
+
+  const interrupted = recovered.map((run) => run.id === 62
+    ? { ...run, conclusion: 'failure' } : run);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(interrupted, 63, issueBody), false);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, ''), false);
 });
