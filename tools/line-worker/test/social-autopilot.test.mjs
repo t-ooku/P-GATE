@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import {
   buildSocialAutopilotPosts,
@@ -197,6 +198,56 @@ test('公開履歴がある完成動画の後日再利用はREVIEW_REQUIREDへ�
   assert.match(insert, /THEN 'REVIEW_REQUIRED' ELSE \?12/u);
   assert.match(insert, /MEDIA_REUSE_REVIEW_REQUIRED/u);
   assert.match(insert, /social_post_queue\.status IN \('APPROVED','REVIEW_REQUIRED'\)/u);
+});
+
+test('完成動画は同時クロスポストだけを承認し、後日の既存APPROVED再利用も隔離する', async (t) => {
+  const sqlite = new DatabaseSync(':memory:');
+  t.after(() => sqlite.close());
+  sqlite.exec(`CREATE TABLE social_post_queue (
+    post_id TEXT PRIMARY KEY, platform TEXT NOT NULL, campaign_id TEXT NOT NULL DEFAULT '',
+    content_id TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL, link TEXT NOT NULL DEFAULT '',
+    media_url TEXT NOT NULL DEFAULT '', scheduled_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'REVIEW_REQUIRED', affiliate INTEGER NOT NULL DEFAULT 0,
+    external_post_id TEXT NOT NULL DEFAULT '', last_error TEXT NOT NULL DEFAULT '',
+    approved_at TEXT NOT NULL DEFAULT '', published_at TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL, updated_at TEXT NOT NULL, platform_job_id TEXT NOT NULL DEFAULT ''
+  )`);
+  class Statement {
+    constructor(sql) { this.statement = sqlite.prepare(sql); this.values = []; }
+    bind(...values) { this.values = values; return this; }
+    async run() {
+      const result = this.statement.run(...this.values);
+      return { meta: { changes: result.changes } };
+    }
+    async first() { return this.statement.get(...this.values) || null; }
+    async all() { return { results: this.statement.all(...this.values) }; }
+  }
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    X_USER_ACCESS_TOKEN: 'x-token',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    X_EXPECTED_USERNAME: 'HOSHILUOfficial',
+    PRODUCT_DB: { prepare(sql) { return new Statement(sql); } }
+  };
+  const now = new Date('2026-08-10T00:00:00.000Z');
+  await seedSocialAutopilotQueue(env, now);
+  const videoRows = sqlite.prepare(`SELECT post_id,platform,scheduled_at,status,last_error,approved_at
+    FROM social_post_queue WHERE media_url LIKE '%.mp4' ORDER BY scheduled_at,platform`).all();
+  assert.deepEqual(videoRows.slice(0, 2).map(row => row.status), ['APPROVED', 'APPROVED']);
+  assert.equal(videoRows.slice(2).every(row => row.status === 'REVIEW_REQUIRED'), true);
+
+  const replay = videoRows[2];
+  sqlite.prepare(`UPDATE social_post_queue SET status='APPROVED',approved_at=?2 WHERE post_id=?1`)
+    .run(replay.post_id, now.toISOString());
+  await seedSocialAutopilotQueue(env, now);
+  const quarantined = sqlite.prepare(`SELECT status,last_error,approved_at
+    FROM social_post_queue WHERE post_id=?1`).get(replay.post_id);
+  assert.deepEqual({ ...quarantined }, {
+    status: 'REVIEW_REQUIRED',
+    last_error: 'MEDIA_REUSE_REVIEW_REQUIRED',
+    approved_at: ''
+  });
 });
 
 test('販促自動運用は認証未設定の媒体をキューへ入れない', async () => {
