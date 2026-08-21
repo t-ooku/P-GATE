@@ -165,6 +165,38 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
   assert.deepEqual(result, { enabled: true, planned: 27, inserted: 27 });
   assert.equal(rows.some(row => row[1] === 'TIKTOK'), false);
   assert.equal(rows.every(row => row[2] === 'hoshilu-official-13mall-v2'), true);
+  assert.equal(rows.filter(row => /\.mp4$/u.test(row[6])).every(row => row[10] === 1), true);
+  assert.equal(rows.filter(row => !/\.mp4$/u.test(row[6])).every(row => row[10] === 0), true);
+  assert.equal(rows.every(row => row[11] === 'APPROVED'), true);
+});
+
+test('公開履歴がある完成動画の後日再利用はREVIEW_REQUIREDへ隔離するSQLを使う', async () => {
+  const statements = [];
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    X_USER_ACCESS_TOKEN: 'x-token',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    X_EXPECTED_USERNAME: 'HOSHILUOfficial',
+    PRODUCT_DB: {
+      prepare(sql) {
+        statements.push(sql);
+        return {
+          bind() {
+            return { async run() { return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  await seedSocialAutopilotQueue(env, new Date('2026-08-10T00:00:00.000Z'));
+  const insert = statements.find(sql => /INSERT INTO social_post_queue/.test(sql));
+  assert.ok(insert);
+  assert.match(insert, /previous\.media_url=\?7/u);
+  assert.match(insert, /previous\.scheduled_at<\?8/u);
+  assert.match(insert, /THEN 'REVIEW_REQUIRED' ELSE \?12/u);
+  assert.match(insert, /MEDIA_REUSE_REVIEW_REQUIRED/u);
+  assert.match(insert, /social_post_queue\.status IN \('APPROVED','REVIEW_REQUIRED'\)/u);
 });
 
 test('販促自動運用は認証未設定の媒体をキューへ入れない', async () => {
