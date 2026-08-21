@@ -108,7 +108,7 @@ async function sellerIdentity(env) {
   return {
     account: String(env.SELLER_ACCOUNT_NAME || env.SELLER_AUTH_ID || 'Seller').slice(0, 100),
     tenants: configuredSellerTenants(env),
-    plan: ['PARTNER', 'PRO', 'GROWTH', 'LITE'].includes(plan) ? plan : 'LITE',
+    plan: ['BUSINESS', 'SELLER', 'PARTNER', 'PRO', 'GROWTH', 'LITE'].includes(plan) ? plan : 'SELLER',
     seller_key: await sellerAccountKey(env)
   };
 }

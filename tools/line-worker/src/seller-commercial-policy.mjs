@@ -1,52 +1,23 @@
 export const SELLER_COMMERCIAL_PLANS = Object.freeze({
-  LAUNCH_PERFORMANCE: Object.freeze({
-    monthlyFeeJpy: 0,
-    qualifiedReferralMultiplier: 1,
-    treasureMapDelayHours: 168,
-    insightDepth: "FULL_KPI_PILOT",
-    catalogLimit: 50_000,
-  }),
-  STARTER: Object.freeze({
-    monthlyFeeJpy: 9_800,
-    qualifiedReferralMultiplier: 1,
-    treasureMapDelayHours: 72,
-    insightDepth: "CATEGORY",
-    catalogLimit: 500,
-  }),
-  GROWTH: Object.freeze({
-    monthlyFeeJpy: 29_800,
-    qualifiedReferralMultiplier: 0.85,
-    treasureMapDelayHours: 24,
-    insightDepth: "QUERY_CLUSTER",
-    catalogLimit: 5_000,
-  }),
-  SCALE: Object.freeze({
-    monthlyFeeJpy: 79_800,
-    qualifiedReferralMultiplier: 0.7,
-    treasureMapDelayHours: 0,
-    insightDepth: "PRODUCT_REALTIME",
-    catalogLimit: 50_000,
-  }),
-  ENTERPRISE: Object.freeze({
-    monthlyFeeJpy: null,
-    qualifiedReferralMultiplier: null,
-    treasureMapDelayHours: 0,
-    insightDepth: "API_CUSTOM",
-    catalogLimit: Infinity,
-  }),
-  PERFORMANCE_ONLY: Object.freeze({
+  SELLER: Object.freeze({
     monthlyFeeJpy: 0,
     qualifiedReferralMultiplier: 1.5,
-    treasureMapDelayHours: 168,
-    insightDepth: "MONTHLY_SUMMARY",
-    catalogLimit: 50_000,
+    insightDepth: "BASIC",
+    searchApiMonthlyRequests: 0,
+    searchApiOverageJpy: null,
+  }),
+  BUSINESS: Object.freeze({
+    monthlyFeeJpy: 9_800,
+    promotionalFreeMonths: 3,
+    initialFeeJpy: 0,
+    cancellationFeeJpy: 0,
+    qualifiedReferralMultiplier: 1,
+    insightDepth: "ADVANCED_DEMAND",
+    searchApiMonthlyRequests: 10_000,
+    searchApiOverageJpy: 4,
+    billingUnit: "BUSINESS_ACCOUNT",
   }),
 });
-
-function nonNegativeNumber(value) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-}
 
 export function sellerLifecycleMonth(startedAt, now = new Date()) {
   const start = new Date(startedAt);
@@ -66,18 +37,9 @@ export function sellerLifecycleMonth(startedAt, now = new Date()) {
 }
 
 export function recommendedSellerPlan({
-  lifecycleMonth,
-  catalogCount = 0,
-  requiresEnterpriseIntegration = false,
+  subscription = true,
 } = {}) {
-  if (nonNegativeNumber(lifecycleMonth) <= 3) return "LAUNCH_PERFORMANCE";
-  if (requiresEnterpriseIntegration) return "ENTERPRISE";
-
-  const catalog = nonNegativeNumber(catalogCount);
-  if (catalog <= SELLER_COMMERCIAL_PLANS.STARTER.catalogLimit) return "STARTER";
-  if (catalog <= SELLER_COMMERCIAL_PLANS.GROWTH.catalogLimit) return "GROWTH";
-  if (catalog <= SELLER_COMMERCIAL_PLANS.SCALE.catalogLimit) return "SCALE";
-  return "ENTERPRISE";
+  return subscription ? "BUSINESS" : "SELLER";
 }
 
 export function commercialTerms(planName) {

@@ -143,7 +143,8 @@ test('セラー画面は自社クリック・確定消化額・残高だけを�
   assert.match(html, /商品数や表示回数ではありません/);
   assert.match(html, /購入完了を意味しません/);
   assert.match(html, /優先順の基準日時/);
-  assert.match(html, /料金は未確定で、ここから契約や請求は開始されません/);
+  assert.match(html, /Business<\/span><strong>月額9,800円/);
+  assert.match(html, /ジャンル別単価の有効クリック/);
   assert.match(html, /商品数が多いため、商品1件ずつの操作は設けていません/);
 });
 

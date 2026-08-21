@@ -1,4 +1,22 @@
 const PLANS = Object.freeze({
+  SELLER: {
+    catalog_sync: true,
+    basic_insight: true,
+    performance_attribution: true,
+    advanced_demand_report: false,
+    target_price_demand: true,
+    scheduled_alert_report: false,
+    api_priority_support: false
+  },
+  BUSINESS: {
+    catalog_sync: true,
+    basic_insight: true,
+    performance_attribution: true,
+    advanced_demand_report: true,
+    target_price_demand: true,
+    scheduled_alert_report: true,
+    api_priority_support: true
+  },
   LITE: {
     catalog_sync: true,
     basic_insight: true,
@@ -69,6 +87,8 @@ export function rankWithoutPaidPlacement(candidates = []) {
 }
 
 const OFFER_PLAN_PRIORITY = Object.freeze({
+  BUSINESS: 1,
+  SELLER: 5,
   ENTERPRISE: 0,
   PARTNER: 0,
   SCALE: 1,
@@ -162,6 +182,6 @@ export const sellerPricingPrinciples = Object.freeze({
   scheduled_reports: 'SUBSCRIPTION_OPTION',
   paid_search_ranking: 'CONTRACTED_DIRECT_LINKS_AFTER_RELEVANCE_GATE',
   same_product_offer_priority:
-    'ENTERPRISE_SCALE_GROWTH_STARTER_LAUNCH_PERFORMANCE_ONLY_UNCONTRACTED',
+    'BUSINESS_SELLER_UNCONTRACTED_WITH_LEGACY_PLAN_COMPATIBILITY',
   product_identity: 'MARKETPLACE_PRODUCT_ID_AND_VARIANT_ID'
 });

@@ -7,65 +7,50 @@ import {
   settledQualifiedReferralChargeJpy,
 } from "../src/seller-qualified-referral-pricing.mjs";
 
-test("表示商品価格へジャンル固定料率とプラン倍率だけを適用する", () => {
+test("Businessの有効クリック単価は商品価格ではなくジャンルごとに固定する", () => {
   assert.equal(qualifiedReferralUnitPriceJpy({
     category: "FASHION",
-    plan: "STARTER",
+    plan: "BUSINESS",
     displayedProductPriceJpy: 8_000,
-  }), 6.4);
+  }), 25);
   assert.equal(qualifiedReferralUnitPriceJpy({
-    category: "FASHION",
-    plan: "GROWTH",
-    displayedProductPriceJpy: 8_000,
-  }), 5.44);
+    category: "COSMETICS",
+    plan: "BUSINESS",
+    displayedProductPriceJpy: 500,
+  }), 38);
   assert.equal(qualifiedReferralUnitPriceJpy({
     category: "GADGET",
-    plan: "SCALE",
+    plan: "BUSINESS",
     displayedProductPriceJpy: 100_000,
-  }), 42);
+  }), 19);
   assert.equal(qualifiedReferralUnitPriceJpy({
-    category: "FOOD",
-    plan: "PERFORMANCE_ONLY",
-    displayedProductPriceJpy: 500,
-  }), 0.75);
+    category: "AUTOMOTIVE",
+    plan: "BUSINESS",
+  }), 13);
 });
 
-test("クリック単位で丸めず合計時に一度だけ円へ丸める", () => {
-  assert.equal(settledQualifiedReferralChargeJpy([0.75, 0.75, 6.4]), 8);
+test("月額なしの優先掲載はジャンル単価の1.5倍を円単位で確定する", () => {
+  assert.equal(qualifiedReferralUnitPriceJpy({ category: "FASHION", plan: "SELLER" }), 38);
+  assert.equal(qualifiedReferralUnitPriceJpy({ category: "COSMETICS", plan: "SELLER" }), 57);
+  assert.equal(settledQualifiedReferralChargeJpy([38, 57, 19]), 114);
 });
 
 test("ジャンル判定不能はOTHERを使用する", () => {
   assert.equal(normalizedReferralCategory("unknown"), "OTHER");
   assert.equal(qualifiedReferralUnitPriceJpy({
     category: "unknown",
-    plan: "STARTER",
-    displayedProductPriceJpy: 6_000,
-  }), 4.2);
+    plan: "BUSINESS",
+  }), 22);
 });
 
-test("表示価格なしでは料率課金しない", () => {
+test("未定義の契約プランでは課金しない", () => {
   assert.throws(
     () => qualifiedReferralUnitPriceJpy({
       category: "FASHION",
-      plan: "STARTER",
+      plan: "UNKNOWN",
     }),
-    /displayedProductPriceJpy/,
+    /unknown qualified referral plan/,
   );
-});
-
-test("Enterpriseは契約単価を必須にする", () => {
-  assert.throws(
-    () => qualifiedReferralUnitPriceJpy({
-      category: "FOOD",
-      plan: "ENTERPRISE",
-    }),
-    /enterpriseUnitPriceJpy/,
-  );
-  assert.equal(qualifiedReferralUnitPriceJpy({
-    category: "FOOD",
-    plan: "ENTERPRISE",
-    enterpriseUnitPriceJpy: 17.2,
-  }), 17.2);
 });
 
 test("出品セラーを固定・照合できた送客だけ課金する", () => {

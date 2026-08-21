@@ -62,5 +62,9 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /相談・登録申請/u);
   assert.match(html, /カード・銀行振込・請求書払い/u);
   assert.match(html, /フォーム送信だけで課金されることはありません/u);
+  assert.match(html, /月額9,800円/u);
+  assert.match(html, /1法人単位ではなく、1事業者アカウント単位/u);
+  assert.match(html, /ファッション<\/td><td>25円/u);
+  assert.match(html, /コスメ<\/td><td>38円/u);
   assert.doesNotMatch(html, /name="(?:password|api_key|secret|access_token)"/iu);
 });

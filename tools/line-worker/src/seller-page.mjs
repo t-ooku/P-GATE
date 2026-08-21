@@ -485,9 +485,9 @@ export async function sellerPageResponse(
   <p>現在のプラン: <strong>${publicPlan}</strong>。有料契約によって商品そのものの検索順位は変わりません。</p>
   <div class="seller-grid">
     <article class="seller-panel"><span>Seller</span><strong>月額0円</strong><span>自然検索への商品掲載、優先出品の対象指定、クリック・流入・消化額の確認を扱う基本プランです。前払いチャージは決済機能の接続後に利用可能になり、優先出品クリックの成果課金は月額とは別です。</span></article>
-    <article class="seller-panel"><span>Business</span><strong>料金設計中</strong><span>Seller機能に加え、AI分析、市場分析、未充足需要、Search APIを提供する予定のプランです。料金は未確定で、ここから契約や請求は開始されません。</span></article>
+    <article class="seller-panel"><span>Business</span><strong>月額9,800円</strong><span>1事業者アカウント単位。Seller機能に加え、商品・流入・未充足需要の分析とSearch API月10,000回を利用できます。初期費用・解約金は0円です。</span></article>
   </div>
-  <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たした有効クリックだけです。</p></section>
+  <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たしたジャンル別単価の有効クリックだけです。<a href="/for-sellers#pricing">料金を確認</a></p></section>
   </main><script type="module" src="/seller.js"></script></body></html>`;
 
   return new Response(html, { headers: {

@@ -1,23 +1,26 @@
 export const QUALIFIED_REFERRAL_PRICE_RULES = Object.freeze({
-  FASHION: Object.freeze({ rate: 0.0008 }),
-  COSMETICS: Object.freeze({ rate: 0.0012 }),
-  GADGET: Object.freeze({ rate: 0.0006 }),
-  LIFESTYLE: Object.freeze({ rate: 0.0008 }),
-  FOOD: Object.freeze({ rate: 0.001 }),
-  HOBBY: Object.freeze({ rate: 0.0008 }),
-  BABY: Object.freeze({ rate: 0.0008 }),
-  PET: Object.freeze({ rate: 0.0008 }),
-  SPORTS: Object.freeze({ rate: 0.0006 }),
-  AUTOMOTIVE: Object.freeze({ rate: 0.0004 }),
-  OTHER: Object.freeze({ rate: 0.0007 }),
+  FASHION: Object.freeze({ businessUnitPriceJpy: 25 }),
+  COSMETICS: Object.freeze({ businessUnitPriceJpy: 38 }),
+  GADGET: Object.freeze({ businessUnitPriceJpy: 19 }),
+  LIFESTYLE: Object.freeze({ businessUnitPriceJpy: 25 }),
+  FOOD: Object.freeze({ businessUnitPriceJpy: 31 }),
+  HOBBY: Object.freeze({ businessUnitPriceJpy: 25 }),
+  BABY: Object.freeze({ businessUnitPriceJpy: 25 }),
+  PET: Object.freeze({ businessUnitPriceJpy: 25 }),
+  SPORTS: Object.freeze({ businessUnitPriceJpy: 19 }),
+  AUTOMOTIVE: Object.freeze({ businessUnitPriceJpy: 13 }),
+  OTHER: Object.freeze({ businessUnitPriceJpy: 22 }),
 });
 
 const PLAN_MULTIPLIER = Object.freeze({
+  BUSINESS: 1,
+  SELLER: 1.5,
+  // Historical contract names remain readable for existing charge records.
   LAUNCH_PERFORMANCE: 1,
   PERFORMANCE_ONLY: 1.5,
   STARTER: 1,
-  GROWTH: 0.85,
-  SCALE: 0.7,
+  GROWTH: 1,
+  SCALE: 1,
 });
 
 export function normalizedReferralCategory(category) {
@@ -28,30 +31,15 @@ export function normalizedReferralCategory(category) {
 export function qualifiedReferralUnitPriceJpy({
   category,
   plan,
-  displayedProductPriceJpy,
-  enterpriseUnitPriceJpy,
 } = {}) {
   const normalizedPlan = String(plan || "").trim().toUpperCase();
-  if (normalizedPlan === "ENTERPRISE") {
-    const custom = Number(enterpriseUnitPriceJpy);
-    if (!Number.isFinite(custom) || custom <= 0) {
-      throw new Error("enterpriseUnitPriceJpy is required");
-    }
-    return custom;
-  }
-
-  const displayedPrice = Number(displayedProductPriceJpy);
-  if (!Number.isFinite(displayedPrice) || displayedPrice <= 0) {
-    throw new Error("displayedProductPriceJpy is required");
-  }
   const multiplier = PLAN_MULTIPLIER[normalizedPlan];
   if (!multiplier) throw new Error("unknown qualified referral plan");
 
   const rule = QUALIFIED_REFERRAL_PRICE_RULES[
     normalizedReferralCategory(category)
   ];
-  const charge = displayedPrice * rule.rate * multiplier;
-  return Math.round(charge * 1_000_000) / 1_000_000;
+  return Math.round(rule.businessUnitPriceJpy * multiplier);
 }
 
 export function settledQualifiedReferralChargeJpy(charges = []) {
