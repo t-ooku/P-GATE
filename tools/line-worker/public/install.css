@@ -1,0 +1,8 @@
+.install-dialog{width:min(92vw,560px);padding:0;border:0;border-radius:26px;background:transparent}
+.install-dialog::backdrop{background:#17172ba8;backdrop-filter:blur(5px)}
+.install-dialog-card{position:relative;padding:32px;border:1px solid var(--line);border-radius:26px;background:#fff;box-shadow:0 28px 90px #17172b55}
+.install-dialog-card>img{border-radius:18px}
+.install-dialog-card h2{margin-bottom:18px}
+.install-dialog-close{position:absolute;top:14px;right:16px;width:38px;height:38px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);font-size:25px;cursor:pointer}
+.install-instructions{display:grid;gap:10px;margin:0 0 22px}
+.install-instructions p{margin:0;padding:12px 14px;border:1px solid var(--line);border-radius:13px;color:var(--muted);font-size:13px;line-height:1.65}

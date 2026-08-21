@@ -18,6 +18,9 @@ const order = [
   'ValidationEngine.gs',
   'HashEngine.gs',
   'DatabaseEngine.gs',
+  'ProductIndexSyncEngine.gs',
+  'UnmetDemandEngine.gs',
+  'SocialKnowledgeEngine.gs',
   'OpportunityEngine.gs',
   'MeasurementEngine.gs',
   'MarketplaceMeasurementEngine.gs',
@@ -29,7 +32,8 @@ const order = [
   'KnowledgeEngine.gs',
   'LineIntegration.gs',
   'PreflightEngine.gs',
-  'Main.gs'
+  'Main.gs',
+  'DriveMaintenanceEngine.gs'
 ];
 
 const output = order

@@ -36,15 +36,15 @@ var KnowledgeEngine = (function () {
     for (var i = 0; i < japanese.length; i += 1) {
       var segment = japanese[i];
       tokens.push(segment);
-      for (var j = 0; j < segment.length - 1; j += 1) {
-        tokens.push(segment.slice(j, j + 2));
+      for (var j = 0; j < segment.length - 2; j += 1) {
+        tokens.push(segment.slice(j, j + 3));
       }
     }
     var korean = text.match(/[\uac00-\ud7af]{2,}/g) || [];
     for (var k = 0; k < korean.length; k += 1) {
       tokens.push(korean[k]);
-      for (var h = 0; h < korean[k].length - 1; h += 1) {
-        tokens.push(korean[k].slice(h, h + 2));
+      for (var h = 0; h < korean[k].length - 2; h += 1) {
+        tokens.push(korean[k].slice(h, h + 3));
       }
     }
     var seen = {};
@@ -87,9 +87,12 @@ var KnowledgeEngine = (function () {
         matched.push(queryTokens[i]);
       }
     }
+    var exactQueryMatch = normalizedQuery.length >= 2 && searchable.indexOf(normalizedQuery) >= 0;
     var relevance = queryTokens.length > 0 ? matched.length / queryTokens.length : 0;
-    if (normalizedQuery.length >= 2 && searchable.indexOf(normalizedQuery) >= 0) {
+    if (exactQueryMatch) {
       relevance = 1;
+    } else if (/[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/.test(normalizedQuery) && matched.length < 2) {
+      relevance = 0;
     }
     var info = informationScore(record);
     var matchScore = Math.round((relevance * 85 + (info / 100) * 15) * 100) / 100;
@@ -187,7 +190,10 @@ var KnowledgeEngine = (function () {
     var allRecords = DatabaseEngine.getAllRecords();
     var tenantRecords = filterRecordsByTenant(allRecords, contract.tenant);
     var offerSheet = MarketplaceEngine.ensureSheet();
-    var offerMap = MarketplaceEngine.loadApprovedOffers(offerSheet, contract.tenant);
+    // Product records remain tenant-isolated. Only operator-approved outbound
+    // offers are pooled globally by ASIN so contracted sellers can compete
+    // under the shared plan/registration priority policy.
+    var offerMap = MarketplaceEngine.loadApprovedOffers(offerSheet);
     tenantRecords = MarketplaceEngine.attachOffers(tenantRecords, offerMap);
     var aliasSheets = MultilingualSeoEngine.ensureSheets();
     var aliasMap = MultilingualSeoEngine.loadApprovedAliases(aliasSheets.aliases, contract.tenant);

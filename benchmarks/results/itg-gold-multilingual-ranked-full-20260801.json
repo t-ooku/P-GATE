@@ -1,0 +1,4932 @@
+{
+  "schema_version": "1.0",
+  "label": "multilingual-ranked-full-20260801",
+  "generated_at": "2026-08-01T04:32:25.098Z",
+  "dataset": {
+    "targets": 30,
+    "cases": 105,
+    "tenant": "itg"
+  },
+  "overall": {
+    "cases": 105,
+    "top1": 0.41904761904761906,
+    "top3": 0.5714285714285714,
+    "top10": 0.6095238095238096,
+    "category_match": 0.6476190476190476,
+    "mrr": 0.491111111111111,
+    "ndcg_at_3": 0.5077075955782341,
+    "ndcg_at_10": 0.5202903541208849,
+    "no_answer_rate": 0.11428571428571428,
+    "wrong_answer_rate": 0.009523809523809525,
+    "clarification_rate": 0.7428571428571429,
+    "mywish_offer_rate": 0.17142857142857143,
+    "safe_response_rate": 0.9904761904761905
+  },
+  "by_locale": {
+    "ja": {
+      "cases": 90,
+      "top1": 0.3888888888888889,
+      "top3": 0.5,
+      "top10": 0.5444444444444444,
+      "category_match": 0.5888888888888889,
+      "mrr": 0.4433333333333334,
+      "ndcg_at_3": 0.45317309468254163,
+      "ndcg_at_10": 0.46785297964896755,
+      "no_answer_rate": 0.13333333333333333,
+      "wrong_answer_rate": 0.011111111111111112,
+      "clarification_rate": 0.7333333333333333,
+      "mywish_offer_rate": 0.2,
+      "safe_response_rate": 0.9888888888888889
+    },
+    "en": {
+      "cases": 5,
+      "top1": 0.6,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 0.8,
+      "ndcg_at_3": 0.8523719014285831,
+      "ndcg_at_10": 0.8523719014285831,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "zh": {
+      "cases": 5,
+      "top1": 0.6,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 0.7666666666666667,
+      "ndcg_at_3": 0.8261859507142916,
+      "ndcg_at_10": 0.8261859507142916,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "ko": {
+      "cases": 5,
+      "top1": 0.6,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 0.7666666666666667,
+      "ndcg_at_3": 0.8261859507142916,
+      "ndcg_at_10": 0.8261859507142916,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    }
+  },
+  "by_information_level": {
+    "rich": {
+      "cases": 30,
+      "top1": 0.7,
+      "top3": 0.8333333333333334,
+      "top10": 0.8333333333333334,
+      "category_match": 0.8333333333333334,
+      "mrr": 0.7555555555555556,
+      "ndcg_at_3": 0.7753953169047638,
+      "ndcg_at_10": 0.7753953169047638,
+      "no_answer_rate": 0.03333333333333333,
+      "wrong_answer_rate": 0.03333333333333333,
+      "clarification_rate": 0.3,
+      "mywish_offer_rate": 0.03333333333333333,
+      "safe_response_rate": 0.9666666666666667
+    },
+    "ambiguous": {
+      "cases": 45,
+      "top1": 0.4,
+      "top3": 0.6,
+      "top10": 0.6222222222222222,
+      "category_match": 0.7111111111111111,
+      "mrr": 0.49111111111111116,
+      "ndcg_at_3": 0.5174573004761943,
+      "ndcg_at_10": 0.5238809632832585,
+      "no_answer_rate": 0.06666666666666667,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8666666666666667,
+      "mywish_offer_rate": 0.08888888888888889,
+      "safe_response_rate": 1
+    },
+    "ultra_ambiguous": {
+      "cases": 30,
+      "top1": 0.16666666666666666,
+      "top3": 0.26666666666666666,
+      "top10": 0.36666666666666664,
+      "category_match": 0.36666666666666664,
+      "mrr": 0.22666666666666666,
+      "ndcg_at_3": 0.22539531690476386,
+      "ndcg_at_10": 0.25979947759344557,
+      "no_answer_rate": 0.26666666666666666,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0.43333333333333335,
+      "safe_response_rate": 1
+    }
+  },
+  "by_query_type": {
+    "category_branch": {
+      "cases": 24,
+      "top1": 0.25,
+      "top3": 0.2916666666666667,
+      "top10": 0.3333333333333333,
+      "category_match": 0.4583333333333333,
+      "mrr": 0.2722222222222222,
+      "ndcg_at_3": 0.2708333333333333,
+      "ndcg_at_10": 0.28695220030143925,
+      "no_answer_rate": 0.25,
+      "wrong_answer_rate": 0.041666666666666664,
+      "clarification_rate": 0.8333333333333334,
+      "mywish_offer_rate": 0.3333333333333333,
+      "safe_response_rate": 0.9583333333333334
+    },
+    "color_package": {
+      "cases": 30,
+      "top1": 0.5,
+      "top3": 0.7,
+      "top10": 0.7333333333333333,
+      "category_match": 0.7333333333333333,
+      "mrr": 0.5944444444444446,
+      "ndcg_at_3": 0.6174573004761944,
+      "ndcg_at_10": 0.6293308733797951,
+      "no_answer_rate": 0.1,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.7666666666666667,
+      "mywish_offer_rate": 0.13333333333333333,
+      "safe_response_rate": 1
+    },
+    "compatibility": {
+      "cases": 24,
+      "top1": 0.20833333333333334,
+      "top3": 0.4166666666666667,
+      "top10": 0.4166666666666667,
+      "category_match": 0.5,
+      "mrr": 0.3125,
+      "ndcg_at_3": 0.3397770319940537,
+      "ndcg_at_10": 0.3397770319940537,
+      "no_answer_rate": 0.08333333333333333,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8333333333333334,
+      "mywish_offer_rate": 0.16666666666666666,
+      "safe_response_rate": 1
+    },
+    "memory": {
+      "cases": 3,
+      "top1": 0.6666666666666666,
+      "top3": 0.6666666666666666,
+      "top10": 0.6666666666666666,
+      "category_match": 0.6666666666666666,
+      "mrr": 0.6666666666666666,
+      "ndcg_at_3": 0.6666666666666666,
+      "ndcg_at_10": 0.6666666666666666,
+      "no_answer_rate": 0.3333333333333333,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.6666666666666666,
+      "mywish_offer_rate": 0.3333333333333333,
+      "safe_response_rate": 1
+    },
+    "place_context": {
+      "cases": 3,
+      "top1": 1,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "sensory": {
+      "cases": 9,
+      "top1": 0.7777777777777778,
+      "top3": 0.7777777777777778,
+      "top10": 0.7777777777777778,
+      "category_match": 0.7777777777777778,
+      "mrr": 0.7777777777777778,
+      "ndcg_at_3": 0.7777777777777778,
+      "ndcg_at_10": 0.7777777777777778,
+      "no_answer_rate": 0.2222222222222222,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.7777777777777778,
+      "mywish_offer_rate": 0.2222222222222222,
+      "safe_response_rate": 1
+    },
+    "shape_function": {
+      "cases": 63,
+      "top1": 0.38095238095238093,
+      "top3": 0.6349206349206349,
+      "top10": 0.6984126984126984,
+      "category_match": 0.6984126984126984,
+      "mrr": 0.5010582010582011,
+      "ndcg_at_3": 0.528719008503406,
+      "ndcg_at_10": 0.5496902727411573,
+      "no_answer_rate": 0.09523809523809523,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.746031746031746,
+      "mywish_offer_rate": 0.14285714285714285,
+      "safe_response_rate": 1
+    },
+    "social_context": {
+      "cases": 18,
+      "top1": 0.5,
+      "top3": 0.5,
+      "top10": 0.5,
+      "category_match": 0.6666666666666666,
+      "mrr": 0.5,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0.05555555555555555,
+      "clarification_rate": 0.6111111111111112,
+      "mywish_offer_rate": 0.1111111111111111,
+      "safe_response_rate": 0.9444444444444444
+    },
+    "usage_scene": {
+      "cases": 36,
+      "top1": 0.4722222222222222,
+      "top3": 0.5833333333333334,
+      "top10": 0.6388888888888888,
+      "category_match": 0.6388888888888888,
+      "mrr": 0.5194444444444444,
+      "ndcg_at_3": 0.5314147153769849,
+      "ndcg_at_10": 0.5474738723946453,
+      "no_answer_rate": 0.1111111111111111,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.6388888888888888,
+      "mywish_offer_rate": 0.16666666666666666,
+      "safe_response_rate": 1
+    }
+  },
+  "evaluations": [
+    {
+      "case_id": "T01-1",
+      "target_id": "T01",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "Klein Toolsの全長12インチ、軸長12インチのキーストーン型マイナスドライバー",
+      "expected_asins": [
+        "B000G1VER6"
+      ],
+      "fts_query": "(\"screwdriver\"* OR \"driver\"*) AND (\"klein\"* OR \"tools\"*)",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B0000BYEPS",
+          "product_name": "Klein Tools631Nut Driver Set-7PC NUT DRIVER SET",
+          "manufacturer": "KLEIN TOOLS",
+          "text_rank": -33.11226428948818
+        },
+        {
+          "asin": "B000G1VER6",
+          "product_name": "Klein Tools 600-12 1/2-Inch Keystone Screwdriver 12-Inch Shank",
+          "manufacturer": "KLEIN TOOLS",
+          "text_rank": -29.142456053145505
+        },
+        {
+          "asin": "B07RK333X1",
+          "product_name": "Klein Tools 32799 Impact Driver Bit Set 26 Piece Nut Driver Bit Set with Case 141［並行輸入］",
+          "manufacturer": "KLEIN TOOLS",
+          "text_rank": -29.099135084690438
+        }
+      ]
+    },
+    {
+      "case_id": "T01-2",
+      "target_id": "T01",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "黄色と黒の持ち手で長い軸のマイナスドライバー",
+      "expected_asins": [
+        "B000G1VER6"
+      ],
+      "fts_query": "(\"screwdriver\"* OR \"driver\"*) AND (\"black\"* OR \"yellow\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00J5IJ7XE",
+          "product_name": "20V MAX DRILL DRIVER AUTO",
+          "manufacturer": "BLACK+DECKER",
+          "text_rank": -16.19963313174363
+        },
+        {
+          "asin": "B000TV6X74",
+          "product_name": "Shure SCL2 Sound Isolating Earphones with Single Dynamic Driver Black by Shure",
+          "manufacturer": "Shure",
+          "text_rank": -14.29322400808797
+        },
+        {
+          "asin": "B09BXWXQ9K",
+          "product_name": "Makita XPH15ZB 18V LXT Lithium-Ion Sub-Compact Brushless Cordless 1/2 Hammer Driver-Drill Tool Only Black",
+          "manufacturer": "Makita",
+          "text_rank": -12.524526762080857
+        }
+      ]
+    },
+    {
+      "case_id": "T01-3",
+      "target_id": "T01",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "工具みたいな細長いやつ",
+      "expected_asins": [
+        "B000G1VER6"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T02-1",
+      "target_id": "T02",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "category_branch",
+        "social_context"
+      ],
+      "query": "LEGOの40周年限定40370、188ピースの蒸気機関車セット",
+      "expected_asins": [
+        "B085CMYZ6B"
+      ],
+      "fts_query": "(\"lego\"* OR \"brick\"* OR \"building\"*) AND (\"lego\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000EXH3PS",
+          "product_name": "LEGO 7905　Building Crane （レゴ　ビルディング　クレーン）",
+          "manufacturer": "LEGO",
+          "text_rank": -34.89982438288221
+        },
+        {
+          "asin": "B01IFXVTDU",
+          "product_name": "LEGO Creator Expert Volkswagen Beetle 10252 Building Kit",
+          "manufacturer": "LEGO",
+          "text_rank": -34.24192514814597
+        },
+        {
+          "asin": "B00WHZ57LI",
+          "product_name": "LEGO Friends 41100 Heartlake Private Jet Building Kit",
+          "manufacturer": "LEGO",
+          "text_rank": -34.24192514814597
+        }
+      ]
+    },
+    {
+      "case_id": "T02-2",
+      "target_id": "T02",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "category_branch",
+        "social_context"
+      ],
+      "query": "黒い蒸気機関車を組み立てる限定レゴ",
+      "expected_asins": [
+        "B085CMYZ6B"
+      ],
+      "fts_query": "(\"lego\"* OR \"brick\"* OR \"building\"*) AND (\"black\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00C8526S4",
+          "product_name": "LEGO Superheroes 76009 Superman Black Zero Escape 並行輸入品",
+          "manufacturer": "LEGO",
+          "text_rank": -16.86178238745193
+        }
+      ]
+    },
+    {
+      "case_id": "T02-3",
+      "target_id": "T02",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "category_branch",
+        "social_context"
+      ],
+      "query": "SNSで見た黒い乗り物のおもちゃ",
+      "expected_asins": [
+        "B085CMYZ6B"
+      ],
+      "fts_query": "\"black\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00BPIFSC6",
+          "product_name": "Blackhawk!BHコンパクトメディカルポーチCT",
+          "manufacturer": "BLACKHAWK!",
+          "text_rank": -6.4852427079146295
+        },
+        {
+          "asin": "B0001MQW72",
+          "product_name": "Blackburn Helmet Bike Mirror by Blackburn",
+          "manufacturer": "Blackburn",
+          "text_rank": -6.47452827816902
+        },
+        {
+          "asin": "B003COG3MK",
+          "product_name": "(Black) - Black Ops Torqlite UL Pedals - 1.4cm  Black",
+          "manufacturer": "Black Ops",
+          "text_rank": -6.413320131847197
+        }
+      ]
+    },
+    {
+      "case_id": "T03-1",
+      "target_id": "T03",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "Mrs. Meyers Clean Dayのラベンダー香、7.2オンスのソイキャンドル2個セット",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "(\"candle\"* OR \"soy\"*) AND (\"mrs\"* OR \"meyers\"* OR \"clean\"* OR \"day\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -65.34937346618166
+        }
+      ]
+    },
+    {
+      "case_id": "T03-2",
+      "target_id": "T03",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "ラベンダーの香りがする大豆ワックスのキャンドル",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T03-3",
+      "target_id": "T03",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "いい匂いの容器に入った火をつけるやつ",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T03-en-1",
+      "target_id": "T03",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "a lavender scented soy candle in a glass jar",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T03-zh-1",
+      "target_id": "T03",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "玻璃罐装的薰衣草香味大豆蜡烛",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T03-ko-1",
+      "target_id": "T03",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "유리병에 담긴 라벤더 향 소이 캔들",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T04-1",
+      "target_id": "T04",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "HamiltonBuhlの耳に入れるタイプのイヤーバッドヘッドホン",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T04-2",
+      "target_id": "T04",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "小さくて耳に入れる有線ヘッドホン",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T04-3",
+      "target_id": "T04",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "音を聞く小さいやつ",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T04-en-1",
+      "target_id": "T04",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "small wired earbuds that fit inside the ear",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T04-zh-1",
+      "target_id": "T04",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "小巧的有线入耳式耳机",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T04-ko-1",
+      "target_id": "T04",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "귀에 넣는 작은 유선 이어폰",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T05-1",
+      "target_id": "T05",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "usage_scene",
+        "shape_function"
+      ],
+      "query": "Evoc FR TRAIL BLACKLINE、20Lで背中のプロテクター付きサイクリング用バックパック",
+      "expected_asins": [
+        "B00NNEL72K"
+      ],
+      "fts_query": "(\"backpack\"* OR \"rucksack\"*) AND (\"black\"*) AND (\"evoc\"* OR \"trail\"* OR \"blackline\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00NNEL72K",
+          "product_name": "(XL-20 L Black) - Evoc FR TRAIL BLACKLINE 20l - Backpack for cycling with back protector 20 Litres",
+          "manufacturer": "EVOC",
+          "text_rank": -49.92523593969353
+        }
+      ]
+    },
+    {
+      "case_id": "T05-2",
+      "target_id": "T05",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "usage_scene",
+        "shape_function"
+      ],
+      "query": "自転車用で背中を守る黒い20Lリュック",
+      "expected_asins": [
+        "B00NNEL72K"
+      ],
+      "fts_query": "(\"backpack\"* OR \"rucksack\"*) AND (\"black\"*)",
+      "rank": 10,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.1,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.2890648263178879,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01HCOK0FQ",
+          "product_name": "(Medium/30 Litre Black / Black) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "text_rank": -17.992061736721812
+        },
+        {
+          "asin": "B01HCOKA24",
+          "product_name": "(Medium/45 Litre Purple/Black) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "text_rank": -16.946091698556007
+        },
+        {
+          "asin": "B01HCOKA6A",
+          "product_name": "(Medium/45 Litre Evergreen/Black) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "text_rank": -16.946091698556007
+        }
+      ]
+    },
+    {
+      "case_id": "T05-3",
+      "target_id": "T05",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "usage_scene",
+        "shape_function"
+      ],
+      "query": "外で背負う黒いやつ",
+      "expected_asins": [
+        "B00NNEL72K"
+      ],
+      "fts_query": "(\"backpack\"* OR \"rucksack\"*) AND (\"black\"*)",
+      "rank": 10,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.1,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.2890648263178879,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01HCOK0FQ",
+          "product_name": "(Medium/30 Litre Black / Black) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "text_rank": -17.992061736721812
+        },
+        {
+          "asin": "B01HCOKA24",
+          "product_name": "(Medium/45 Litre Purple/Black) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "text_rank": -16.946091698556007
+        },
+        {
+          "asin": "B01HCOKA6A",
+          "product_name": "(Medium/45 Litre Evergreen/Black) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "text_rank": -16.946091698556007
+        }
+      ]
+    },
+    {
+      "case_id": "T06-1",
+      "target_id": "T06",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "color_package",
+        "social_context"
+      ],
+      "query": "FossilのメンズFS4813 Grant、ステンレスケースと茶色レザーバンドの腕時計",
+      "expected_asins": [
+        "B00AFTTQ8I"
+      ],
+      "fts_query": "(\"watch\"* OR \"wristwatch\"*) AND (\"brown\"*) AND (\"fossil\"* OR \"fs4813\"* OR \"grant\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00AFTTQ8I",
+          "product_name": "Fossil Mens FS4813 Grant Stainless Steel Watch with Brown Leather Band",
+          "manufacturer": "Fossil",
+          "text_rank": -60.769117957834396
+        }
+      ]
+    },
+    {
+      "case_id": "T06-2",
+      "target_id": "T06",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "color_package",
+        "social_context"
+      ],
+      "query": "茶色い革ベルトと金属ケースの男性用時計",
+      "expected_asins": [
+        "B00AFTTQ8I"
+      ],
+      "fts_query": "(\"watch\"* OR \"wristwatch\"*) AND (\"brown\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00AFTTQ8I",
+          "product_name": "Fossil Mens FS4813 Grant Stainless Steel Watch with Brown Leather Band",
+          "manufacturer": "Fossil",
+          "text_rank": -18.738644542810267
+        }
+      ]
+    },
+    {
+      "case_id": "T06-3",
+      "target_id": "T06",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "color_package",
+        "social_context"
+      ],
+      "query": "インスタで見た茶色と銀色のアクセサリー",
+      "expected_asins": [
+        "B00AFTTQ8I"
+      ],
+      "fts_query": "\"silver\"* OR \"brown\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B003E1SHCA",
+          "product_name": "BrownellボートStands Motorboatスタンドベースのみ54  mb0 Xベース",
+          "manufacturer": "Brownells",
+          "text_rank": -11.605931564587172
+        },
+        {
+          "asin": "B00AFSCBM2",
+          "product_name": "Browne ( 80293480 ) 5 ノンスティック溝付きキッシュパン",
+          "manufacturer": "Browne Foodservice",
+          "text_rank": -11.2270171491288
+        },
+        {
+          "asin": "B0006J3CL4",
+          "product_name": "Brown & Sharpe 598-291-500 サインバーライザーセット",
+          "manufacturer": "Brown & Sharpe",
+          "text_rank": -10.872062346414925
+        }
+      ]
+    },
+    {
+      "case_id": "T07-1",
+      "target_id": "T07",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "TITANflex Thor Grip、黒、8mil、ダイヤモンド凹凸付きの使い捨てニトリル手袋100枚",
+      "expected_asins": [
+        "B0BSSVR7HZ"
+      ],
+      "fts_query": "(\"glove\"* OR \"nitrile\"*) AND (\"black\"*) AND (\"titanflex\"* OR \"thor\"* OR \"grip\"* OR \"mil\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B0BSSVR7HZ",
+          "product_name": "[Yirui] LXL a94TitanFlex Thor Grip Heavy Duty Black Industrial Nitrile Gloves with Raised Diamond Texture 8-mil Latex Free 100-ct Box",
+          "manufacturer": "TitanFlex",
+          "text_rank": -53.067363609512505
+        }
+      ]
+    },
+    {
+      "case_id": "T07-2",
+      "target_id": "T07",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "黒くて表面に滑り止めの凹凸がある厚手作業手袋",
+      "expected_asins": [
+        "B0BSSVR7HZ"
+      ],
+      "fts_query": "(\"glove\"* OR \"nitrile\"*) AND (\"black\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B0BSSVR7HZ",
+          "product_name": "[Yirui] LXL a94TitanFlex Thor Grip Heavy Duty Black Industrial Nitrile Gloves with Raised Diamond Texture 8-mil Latex Free 100-ct Box",
+          "manufacturer": "TitanFlex",
+          "text_rank": -21.60364794347679
+        },
+        {
+          "asin": "B00ZA21JMQ",
+          "product_name": "(Large/X-Large Black) - Glacier Glove Polypropylene Glove Liner",
+          "manufacturer": "Glacier Glove",
+          "text_rank": -17.1464800017163
+        },
+        {
+          "asin": "B0792H4JBV",
+          "product_name": "(Large Blue/Black) - Cuda Brand Fishing Products Gloves Offshore Gloves",
+          "manufacturer": "Cuda",
+          "text_rank": -16.369298712393203
+        }
+      ]
+    },
+    {
+      "case_id": "T07-3",
+      "target_id": "T07",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "手につける黒い消耗品",
+      "expected_asins": [
+        "B0BSSVR7HZ"
+      ],
+      "fts_query": "\"black\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00BPIFSC6",
+          "product_name": "Blackhawk!BHコンパクトメディカルポーチCT",
+          "manufacturer": "BLACKHAWK!",
+          "text_rank": -6.4852427079146295
+        },
+        {
+          "asin": "B0001MQW72",
+          "product_name": "Blackburn Helmet Bike Mirror by Blackburn",
+          "manufacturer": "Blackburn",
+          "text_rank": -6.47452827816902
+        },
+        {
+          "asin": "B003COG3MK",
+          "product_name": "(Black) - Black Ops Torqlite UL Pedals - 1.4cm  Black",
+          "manufacturer": "Black Ops",
+          "text_rank": -6.413320131847197
+        }
+      ]
+    },
+    {
+      "case_id": "T08-1",
+      "target_id": "T08",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "compatibility",
+        "usage_scene"
+      ],
+      "query": "Spectralink 8400用デュアル充電器キット",
+      "expected_asins": [
+        "B00B4R8HW6"
+      ],
+      "fts_query": "(\"charger\"* OR \"charging\"*) AND (\"spectralink\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00B4R8HW6",
+          "product_name": "Spectralink SPL 8400 DUAL CHARGER KIT",
+          "manufacturer": "Spectralink",
+          "text_rank": -32.393495984837884
+        }
+      ]
+    },
+    {
+      "case_id": "T08-2",
+      "target_id": "T08",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "usage_scene"
+      ],
+      "query": "機器を2台置ける黒い充電台",
+      "expected_asins": [
+        "B00B4R8HW6"
+      ],
+      "fts_query": "(\"charger\"* OR \"charging\"*) AND (\"black\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01MU0JOXG",
+          "product_name": "Zebra CBL-TC51-USB1-01 Charging cable Black",
+          "manufacturer": "Zebra Technologies",
+          "text_rank": -16.536360573992948
+        },
+        {
+          "asin": "B004BC59WM",
+          "product_name": "WFCO WF8975ANPB Black 75 Amps Power Center Converter Charger",
+          "manufacturer": "WFCO",
+          "text_rank": -15.267497807939325
+        },
+        {
+          "asin": "B00T28F4X4",
+          "product_name": "TT20W T3 LAD CHARGER POLY POLO BLACK L",
+          "manufacturer": "Team 365",
+          "text_rank": -14.890404252069072
+        }
+      ]
+    },
+    {
+      "case_id": "T08-3",
+      "target_id": "T08",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "compatibility",
+        "usage_scene"
+      ],
+      "query": "職場で機械を置いていた黒いやつ",
+      "expected_asins": [
+        "B00B4R8HW6"
+      ],
+      "fts_query": "\"black\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00BPIFSC6",
+          "product_name": "Blackhawk!BHコンパクトメディカルポーチCT",
+          "manufacturer": "BLACKHAWK!",
+          "text_rank": -6.4852427079146295
+        },
+        {
+          "asin": "B0001MQW72",
+          "product_name": "Blackburn Helmet Bike Mirror by Blackburn",
+          "manufacturer": "Blackburn",
+          "text_rank": -6.47452827816902
+        },
+        {
+          "asin": "B003COG3MK",
+          "product_name": "(Black) - Black Ops Torqlite UL Pedals - 1.4cm  Black",
+          "manufacturer": "Black Ops",
+          "text_rank": -6.413320131847197
+        }
+      ]
+    },
+    {
+      "case_id": "T09-1",
+      "target_id": "T09",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "AXIS P5655-E、型番01682-001のPTZネットワークカメラ",
+      "expected_asins": [
+        "B07WW7QP26"
+      ],
+      "fts_query": "(\"camera\"*) AND (\"axis\"* OR \"p5655-e\"* OR \"ptz\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07WW7QP26",
+          "product_name": "AXIS P5655-E PTZ Network Camera 01682-001",
+          "manufacturer": "AXIS",
+          "text_rank": -50.51385417011398
+        },
+        {
+          "asin": "B00BL1KRNW",
+          "product_name": "Axis - 0515-001 M3007-PV Fixed Mini Dome Network Camera 5 MP Digital PTZ by Axis",
+          "manufacturer": "AXIS",
+          "text_rank": -29.40216088206652
+        },
+        {
+          "asin": "B0787BL59Z",
+          "product_name": "PTZOptics 20X-NDI-GY 20x Lens NDI Camera Gray",
+          "manufacturer": "PTZOptics",
+          "text_rank": -22.65404748133028
+        }
+      ]
+    },
+    {
+      "case_id": "T09-2",
+      "target_id": "T09",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "首振りできる白いドーム型ネットワークカメラ",
+      "expected_asins": [
+        "B07WW7QP26"
+      ],
+      "fts_query": "(\"camera\"*) AND (\"white\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B0787G38SZ",
+          "product_name": "PTZOptics 20X-NDI-WH 20x Lens NDI Camera White",
+          "manufacturer": "PTZOptics",
+          "text_rank": -16.159189386221172
+        },
+        {
+          "asin": "B0DTTKX1TK",
+          "product_name": "Polaroid Now 第3世代 I-Type インスタントカメラ + フィルムバンドル - Pebble White Camera + 16カラー写真 (6561)",
+          "manufacturer": "Polaroid",
+          "text_rank": -15.018199618382296
+        },
+        {
+          "asin": "B079HJRGKS",
+          "product_name": "Ubiquiti Networks G3-PRO IP security camera Indoor Bullet White 1920 x 1080 pixels",
+          "manufacturer": "Ubiquiti Networks",
+          "text_rank": -13.725958388477595
+        }
+      ]
+    },
+    {
+      "case_id": "T09-3",
+      "target_id": "T09",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "天井についていた白い丸いやつ",
+      "expected_asins": [
+        "B07WW7QP26"
+      ],
+      "fts_query": "\"white\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00MYTKCRG",
+          "product_name": "Whitecapチーク材62322トイレティッシュラック",
+          "manufacturer": "Whitecap",
+          "text_rank": -9.625060252791458
+        },
+        {
+          "asin": "B0070IA15O",
+          "product_name": "Whiteline BSF20Z",
+          "manufacturer": "Whiteline",
+          "text_rank": -9.456962928818012
+        },
+        {
+          "asin": "B07DF77BN8",
+          "product_name": "Whitecap 3228BC",
+          "manufacturer": "Whitecap",
+          "text_rank": -9.456962928818012
+        }
+      ]
+    },
+    {
+      "case_id": "T10-1",
+      "target_id": "T10",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "compatibility",
+        "social_context"
+      ],
+      "query": "Logitech G105 Call of Duty MW3 Editionのゲーミングキーボード",
+      "expected_asins": [
+        "B00BBUCCKO"
+      ],
+      "fts_query": "(\"keyboard\"*) AND (\"logitech\"* OR \"g105\"* OR \"call\"* OR \"duty\"* OR \"mw3\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00BBUCCKO",
+          "product_name": "Logitech Gaming Keyboard G105 Call of Duty: MW3 Edition【並行輸入品】",
+          "manufacturer": "Logitech G",
+          "text_rank": -71.60660306739989
+        },
+        {
+          "asin": "B00UHRPPH4",
+          "product_name": "ID Tech WCR3237-700US Omni Heavy Duty Slot Reader USB Bar Code Only Infrared and Keyboard Emulation - Color Black",
+          "manufacturer": "Id Tech",
+          "text_rank": -14.51610054071291
+        }
+      ]
+    },
+    {
+      "case_id": "T10-2",
+      "target_id": "T10",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "social_context"
+      ],
+      "query": "ゲーム用の黒いLogitechキーボード",
+      "expected_asins": [
+        "B00BBUCCKO"
+      ],
+      "fts_query": "(\"keyboard\"*) AND (\"black\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00BF7Q3Y4",
+          "product_name": "Kendall Howard Rack Keyboard Shelf - 2-Post - Black - 1U - 19",
+          "manufacturer": "Kendall Howard",
+          "text_rank": -14.508405295581566
+        },
+        {
+          "asin": "B0758KN1SQ",
+          "product_name": "LogicKeyboard Astra Series Blackmagic DaVinci Resolve 14 BETA Backlit PC Keyboard (American English)",
+          "manufacturer": "Logickeyboard",
+          "text_rank": -14.174781291142777
+        },
+        {
+          "asin": "B09LT361GV",
+          "product_name": "CableMod Pro Coiled Keyboard Cable (Midnight Black USB A to USB Type C 150cm)",
+          "manufacturer": "CableMod",
+          "text_rank": -13.85615590637894
+        }
+      ]
+    },
+    {
+      "case_id": "T10-3",
+      "target_id": "T10",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "compatibility",
+        "social_context"
+      ],
+      "query": "配信で見た光る入力する板",
+      "expected_asins": [
+        "B00BBUCCKO"
+      ],
+      "fts_query": "(\"led\"* OR \"light\"* OR \"glow\"* OR \"luminous\"*) AND (\"keyboard\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07V8MXJB1",
+          "product_name": "Alienware Low-Profile RGB Gaming Keyboard AW510K: Alienfx Per Key RGB LED - Media CONTROLS & USB Passthrough - Cherry MX Low Profile Red Switches",
+          "manufacturer": "Alienware",
+          "text_rank": -13.06888992885078
+        }
+      ]
+    },
+    {
+      "case_id": "T11-1",
+      "target_id": "T11",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "Logitech G PRO X Superlight、黒のワイヤレスゲーミングマウス",
+      "expected_asins": [
+        "B08RMZKYTL"
+      ],
+      "fts_query": "(\"mouse\"* OR \"trackball\"*) AND (\"black\"*)",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01NAMG6CH",
+          "product_name": "KENSINGTON FOAM MOUSEPAD BLACK 62384",
+          "manufacturer": "Kensington",
+          "text_rank": -18.480257469355198
+        },
+        {
+          "asin": "B002NU5O74",
+          "product_name": "Targus Compact - Mouse - optical - wired - USB - gray black",
+          "manufacturer": "Targus",
+          "text_rank": -17.03976202037218
+        },
+        {
+          "asin": "B08RMZKYTL",
+          "product_name": "Logitech G PRO X Superlight Wireless Gaming Mouse - Black",
+          "manufacturer": "Logitech G",
+          "text_rank": -15.807594755273273
+        }
+      ]
+    },
+    {
+      "case_id": "T11-2",
+      "target_id": "T11",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "すごく軽い黒い無線ゲーミングマウス",
+      "expected_asins": [
+        "B08RMZKYTL"
+      ],
+      "fts_query": "(\"mouse\"* OR \"trackball\"*) AND (\"black\"*)",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01NAMG6CH",
+          "product_name": "KENSINGTON FOAM MOUSEPAD BLACK 62384",
+          "manufacturer": "Kensington",
+          "text_rank": -18.480257469355198
+        },
+        {
+          "asin": "B002NU5O74",
+          "product_name": "Targus Compact - Mouse - optical - wired - USB - gray black",
+          "manufacturer": "Targus",
+          "text_rank": -17.03976202037218
+        },
+        {
+          "asin": "B08RMZKYTL",
+          "product_name": "Logitech G PRO X Superlight Wireless Gaming Mouse - Black",
+          "manufacturer": "Logitech G",
+          "text_rank": -15.807594755273273
+        }
+      ]
+    },
+    {
+      "case_id": "T11-3",
+      "target_id": "T11",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "パソコンで動かす黒い小さいやつ",
+      "expected_asins": [
+        "B08RMZKYTL"
+      ],
+      "fts_query": "(\"mouse\"* OR \"trackball\"*) AND (\"black\"*)",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01NAMG6CH",
+          "product_name": "KENSINGTON FOAM MOUSEPAD BLACK 62384",
+          "manufacturer": "Kensington",
+          "text_rank": -18.480257469355198
+        },
+        {
+          "asin": "B002NU5O74",
+          "product_name": "Targus Compact - Mouse - optical - wired - USB - gray black",
+          "manufacturer": "Targus",
+          "text_rank": -17.03976202037218
+        },
+        {
+          "asin": "B08RMZKYTL",
+          "product_name": "Logitech G PRO X Superlight Wireless Gaming Mouse - Black",
+          "manufacturer": "Logitech G",
+          "text_rank": -15.807594755273273
+        }
+      ]
+    },
+    {
+      "case_id": "T12-1",
+      "target_id": "T12",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "social_context"
+      ],
+      "query": "Dicky Chug Big、20オンスで暗闇で光るスポーツボトル",
+      "expected_asins": [
+        "B076DLN9BM"
+      ],
+      "fts_query": "(\"led\"* OR \"light\"* OR \"glow\"* OR \"luminous\"*) AND (\"bottle\"*) AND (\"dicky\"* OR \"chug\"* OR \"big\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B076DLN9BM",
+          "product_name": "Dicky Chug Big Sports Bottle - 20 oz Glow in the Dark",
+          "manufacturer": "Hott Products",
+          "text_rank": -55.48938194784509
+        }
+      ]
+    },
+    {
+      "case_id": "T12-2",
+      "target_id": "T12",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "social_context"
+      ],
+      "query": "暗い場所で光る大きめの水筒",
+      "expected_asins": [
+        "B076DLN9BM"
+      ],
+      "fts_query": "(\"led\"* OR \"light\"* OR \"glow\"* OR \"luminous\"*) AND (\"bottle\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B076DLN9BM",
+          "product_name": "Dicky Chug Big Sports Bottle - 20 oz Glow in the Dark",
+          "manufacturer": "Hott Products",
+          "text_rank": -19.963343479001985
+        },
+        {
+          "asin": "B0161OJYCS",
+          "product_name": "EyezOff Burst Ultra Lightweight Aluminum Bottle Cage - White/Red Edition by EyezOff",
+          "manufacturer": "EyezOff",
+          "text_rank": -15.861000114197088
+        }
+      ]
+    },
+    {
+      "case_id": "T12-3",
+      "target_id": "T12",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "social_context"
+      ],
+      "query": "TikTokで見た光るボトル",
+      "expected_asins": [
+        "B076DLN9BM"
+      ],
+      "fts_query": "(\"led\"* OR \"light\"* OR \"glow\"* OR \"luminous\"*) AND (\"bottle\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B076DLN9BM",
+          "product_name": "Dicky Chug Big Sports Bottle - 20 oz Glow in the Dark",
+          "manufacturer": "Hott Products",
+          "text_rank": -19.963343479001985
+        },
+        {
+          "asin": "B0161OJYCS",
+          "product_name": "EyezOff Burst Ultra Lightweight Aluminum Bottle Cage - White/Red Edition by EyezOff",
+          "manufacturer": "EyezOff",
+          "text_rank": -15.861000114197088
+        }
+      ]
+    },
+    {
+      "case_id": "T13-1",
+      "target_id": "T13",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "color_package",
+        "shape_function"
+      ],
+      "query": "Lite Source Pepita LS-20073AQUA、アクア色ガラスと布シェードのテーブルランプ",
+      "expected_asins": [
+        "B000V6IO9M"
+      ],
+      "fts_query": "(\"lamp\"* OR \"light\"*) AND (\"blue\"* OR \"aqua\"*) AND (\"lite\"* OR \"source\"* OR \"pepita\"* OR \"ls-20073aqua\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000V6IO9M",
+          "product_name": "Lite Source LS-20073AQUA Pepita Table Lamp Aqua Glass with Fabric Shade by Lite Source",
+          "manufacturer": "Lite Source",
+          "text_rank": -64.61103372181134
+        }
+      ]
+    },
+    {
+      "case_id": "T13-2",
+      "target_id": "T13",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "color_package",
+        "shape_function"
+      ],
+      "query": "水色のガラス土台と布の傘がある卓上ライト",
+      "expected_asins": [
+        "B000V6IO9M"
+      ],
+      "fts_query": "(\"lamp\"* OR \"light\"*) AND (\"umbrella\"* OR \"folding\"*) AND (\"blue\"* OR \"aqua\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T13-3",
+      "target_id": "T13",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "color_package",
+        "shape_function"
+      ],
+      "query": "部屋に置く青っぽく光るやつ",
+      "expected_asins": [
+        "B000V6IO9M"
+      ],
+      "fts_query": "(\"led\"* OR \"light\"* OR \"glow\"* OR \"luminous\"*) AND (\"blue\"* OR \"aqua\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07DFBPYLW",
+          "product_name": "Aqualuma 6シリーズ Gen 4 アップグレード ホワイト",
+          "manufacturer": "Aqualuma LED Lighting",
+          "text_rank": -22.40672086980104
+        },
+        {
+          "asin": "B07D5QP71V",
+          "product_name": "Aqualuma 6シリーズ Gen 4 アップグレード - ブルー",
+          "manufacturer": "Aqualuma LED Lighting",
+          "text_rank": -22.40672086980104
+        },
+        {
+          "asin": "B07DF7GJX4",
+          "product_name": "Aqualuma 18 シリーズ Gen 4 アップグレード - ホワイト",
+          "manufacturer": "Aqualuma LED Lighting",
+          "text_rank": -21.96008114479089
+        }
+      ]
+    },
+    {
+      "case_id": "T14-1",
+      "target_id": "T14",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "HEATGENE、角型バー8本の浴室用加熱タオルウォーマー乾燥ラック",
+      "expected_asins": [
+        "B0778VN76T"
+      ],
+      "fts_query": "(\"towel\"* OR \"warmer\"* OR \"heated\"*) AND (\"heatgene\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B0778VN76T",
+          "product_name": "HEATGENE Hot Towel Warmer for Bath Heated Drying Rack 8 Square Bar Brush Finish",
+          "manufacturer": "HEATGENE",
+          "text_rank": -49.351040092116385
+        }
+      ]
+    },
+    {
+      "case_id": "T14-2",
+      "target_id": "T14",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "浴室でタオルを掛けて温める銀色のラック",
+      "expected_asins": [
+        "B0778VN76T"
+      ],
+      "fts_query": "\"silver\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00DL4BMRC",
+          "product_name": "SilverStone Miloシリーズ HTPCケース SST-ML04B",
+          "manufacturer": "SilverStone",
+          "text_rank": -10.409832370200089
+        },
+        {
+          "asin": "B00ENLBPW4",
+          "product_name": "Silver King 35442 電子メッド温度制御",
+          "manufacturer": "Silver King",
+          "text_rank": -10.239900489867038
+        },
+        {
+          "asin": "B00ENLLEAM",
+          "product_name": "Silver King 10327-59 Solenoid Portion Control Kit by Silver King",
+          "manufacturer": "Silver King",
+          "text_rank": -10.114185389055617
+        }
+      ]
+    },
+    {
+      "case_id": "T14-3",
+      "target_id": "T14",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "お風呂場の壁にある温かくなる棒",
+      "expected_asins": [
+        "B0778VN76T"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T15-1",
+      "target_id": "T15",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "category_branch",
+        "usage_scene"
+      ],
+      "query": "Suave Men 3-in-1、シャンプー・コンディショナー・ボディウォッシュ28ozの2本組",
+      "expected_asins": [
+        "B005LFO2DA"
+      ],
+      "fts_query": "(\"shampoo\"* OR \"hair wash\"*) AND (\"suave\"* OR \"men\"* OR \"in-1\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B005LFO2DA",
+          "product_name": "Suave Men 3-in-1 Shampoo Conditioner & Body Wash 28 oz 2 pk by Suave [並行輸入品]",
+          "manufacturer": "Suave",
+          "text_rank": -44.34621459532829
+        }
+      ]
+    },
+    {
+      "case_id": "T15-2",
+      "target_id": "T15",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "category_branch",
+        "usage_scene"
+      ],
+      "query": "男性用で髪と体を一本で洗える大きなボトル2本",
+      "expected_asins": [
+        "B005LFO2DA"
+      ],
+      "fts_query": "(\"bottle\"*) AND (\"shampoo\"* OR \"hair wash\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T15-3",
+      "target_id": "T15",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "category_branch",
+        "usage_scene"
+      ],
+      "query": "お風呂で使う男性用の液体",
+      "expected_asins": [
+        "B005LFO2DA"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T16-1",
+      "target_id": "T16",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "sensory",
+        "memory"
+      ],
+      "query": "Prince Matchabelli Wind Song、4オンスの香り付きダスティングパウダー",
+      "expected_asins": [
+        "B00K5F816K"
+      ],
+      "fts_query": "(\"powder\"* OR \"perfumed\"*) AND (\"prince\"* OR \"matchabelli\"* OR \"wind\"* OR \"song\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00K5F816K",
+          "product_name": "WIND SONG 4 OZ PERFUMED DUSTING POWDER by Prince Matchabelli",
+          "manufacturer": "Prince Matchabelli",
+          "text_rank": -75.55684639180419
+        }
+      ]
+    },
+    {
+      "case_id": "T16-2",
+      "target_id": "T16",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "memory"
+      ],
+      "query": "香水みたいな香りのする粉状ボディパウダー",
+      "expected_asins": [
+        "B00K5F816K"
+      ],
+      "fts_query": "\"powder\"* OR \"perfumed\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00K5F816K",
+          "product_name": "WIND SONG 4 OZ PERFUMED DUSTING POWDER by Prince Matchabelli",
+          "manufacturer": "Prince Matchabelli",
+          "text_rank": -25.011681822074355
+        },
+        {
+          "asin": "B00A77VQEK",
+          "product_name": "McCormick Onion Powder 22 oz",
+          "manufacturer": "McCormick",
+          "text_rank": -12.371887355840665
+        },
+        {
+          "asin": "B01943TCMU",
+          "product_name": "Whopper Plopper 90 21 Powder",
+          "manufacturer": "River2Sea",
+          "text_rank": -12.371887355840665
+        }
+      ]
+    },
+    {
+      "case_id": "T16-3",
+      "target_id": "T16",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "sensory",
+        "memory"
+      ],
+      "query": "母が使っていたいい匂いの粉",
+      "expected_asins": [
+        "B00K5F816K"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T17-1",
+      "target_id": "T17",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "category_branch",
+        "social_context"
+      ],
+      "query": "Diamond Select Toysのインディ・ジョーンズ、1:6スケール胸像",
+      "expected_asins": [
+        "B0C1ZZ9L2W"
+      ],
+      "fts_query": "(\"figure\"* OR \"bust\"* OR \"collectible\"*) AND (\"diamond\"* OR \"select\"* OR \"toys\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": true,
+      "results": [
+        {
+          "asin": "B00ZYD0QYS",
+          "product_name": "Diamond Select Toys Batman The Animated Series: Poison Ivy Resin Bust Statue",
+          "manufacturer": "Diamond Select Toys",
+          "text_rank": -41.2183482363437
+        },
+        {
+          "asin": "B01FFEI5K2",
+          "product_name": "Ghostbusters Select Slimer Action Figure",
+          "manufacturer": "Diamond Select Toys",
+          "text_rank": -39.97532487847755
+        },
+        {
+          "asin": "B01N3XCJKN",
+          "product_name": "Ghostbusters Select Library Ghost Action Figure",
+          "manufacturer": "Diamond Select Toys",
+          "text_rank": -39.0886409687007
+        }
+      ]
+    },
+    {
+      "case_id": "T17-2",
+      "target_id": "T17",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "category_branch",
+        "social_context"
+      ],
+      "query": "映画の男性キャラクターの上半身だけの置物",
+      "expected_asins": [
+        "B0C1ZZ9L2W"
+      ],
+      "fts_query": "\"figure\"* OR \"bust\"* OR \"collectible\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00JX07DQM",
+          "product_name": "DC Collectibles DC Comics Super Heroes: The Flash Bust",
+          "manufacturer": "DC Collectibles",
+          "text_rank": -23.8187297949703
+        },
+        {
+          "asin": "B014LQSV9A",
+          "product_name": "Flash TV: Reverse Flash Action Figure",
+          "manufacturer": "DC Collectibles",
+          "text_rank": -20.90836705679034
+        },
+        {
+          "asin": "B01CUAG7BI",
+          "product_name": "DC Comics Blueline Superman Action Figure",
+          "manufacturer": "DC Collectibles",
+          "text_rank": -20.90836705679034
+        }
+      ]
+    },
+    {
+      "case_id": "T17-3",
+      "target_id": "T17",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "category_branch",
+        "social_context"
+      ],
+      "query": "SNSで見た茶色い帽子の人形",
+      "expected_asins": [
+        "B0C1ZZ9L2W"
+      ],
+      "fts_query": "(\"hat\"* OR \"cap\"*) AND (\"brown\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00H241REA",
+          "product_name": "Msa 454-454672 Brown Skullgard Hat with St",
+          "manufacturer": "MSA",
+          "text_rank": -18.885081172120103
+        },
+        {
+          "asin": "B00XOCAZ4C",
+          "product_name": "Skull Hooker - Brown Skull Cap",
+          "manufacturer": "Skull Hooker",
+          "text_rank": -16.91003130231828
+        },
+        {
+          "asin": "B07R9PT7HG",
+          "product_name": "Monarch Specialties I I 3237 TABLE-2PCS Set/Cappuccino/Gold Metal Nesting Table Brown",
+          "manufacturer": "Monarch Specialties",
+          "text_rank": -13.636227487149371
+        }
+      ]
+    },
+    {
+      "case_id": "T18-1",
+      "target_id": "T18",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "color_package",
+        "category_branch"
+      ],
+      "query": "HEYE 29693 Marino Degano Funky Zoo Nile Habitat、1000ピースパズル",
+      "expected_asins": [
+        "B00OUXQW2I"
+      ],
+      "fts_query": "(\"puzzle\"*) AND (\"heye\"* OR \"marino\"* OR \"degano\"* OR \"funky\"* OR \"zoo\"* OR \"nile\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00OUXQW2I",
+          "product_name": "HEYE Puzzle ヘイパズル 29693 Marino Degano : Funky Zoo Nile Habitat (1000 pieces)",
+          "manufacturer": "Heye",
+          "text_rank": -93.43906659333628
+        },
+        {
+          "asin": "B00H9Y6SDI",
+          "product_name": "HEYE Puzzle ヘイパズル 29639 Marino Degano : Funky Zoo African Habitat (1000 pieces)",
+          "manufacturer": "Heye",
+          "text_rank": -80.82538251830971
+        },
+        {
+          "asin": "B00H9Y7F6M",
+          "product_name": "HEYE Puzzle ヘイパズル 29638 Marino Degano : Funky Zoo Black Forest Habitat (1000 pieces)",
+          "manufacturer": "Heye",
+          "text_rank": -79.11542650217426
+        }
+      ]
+    },
+    {
+      "case_id": "T18-2",
+      "target_id": "T18",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "color_package",
+        "category_branch"
+      ],
+      "query": "動物園とナイルが描かれた1000ピースのパズル",
+      "expected_asins": [
+        "B00OUXQW2I"
+      ],
+      "fts_query": "\"puzzle\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B09QRB6VMB",
+          "product_name": "大人用木製ジグソーパズル - 大聖堂の猫 - 372 木製ピースアメリカ製Nautilus Puzzles製",
+          "manufacturer": "Nautilus Puzzles",
+          "text_rank": -15.395434932192916
+        },
+        {
+          "asin": "B0176R2LJM",
+          "product_name": "Something s Amiss 。1000ピースジグソーパズル ? Downtown St Paul by PuzzleTwist",
+          "manufacturer": "PuzzleTwist",
+          "text_rank": -14.91626564109811
+        },
+        {
+          "asin": "B00189MNPW",
+          "product_name": "Puzzler Collection / Game",
+          "manufacturer": "Ubisoft",
+          "text_rank": -14.311430116923976
+        }
+      ]
+    },
+    {
+      "case_id": "T18-3",
+      "target_id": "T18",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "color_package",
+        "category_branch"
+      ],
+      "query": "動物がたくさん描いてある箱の遊ぶもの",
+      "expected_asins": [
+        "B00OUXQW2I"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T19-1",
+      "target_id": "T19",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "Super Slim Wallet、Jet Blackの超薄型財布",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "(\"wallet\"*) AND (\"black\"*)",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -21.296100681004138
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -21.271962789133404
+        },
+        {
+          "asin": "B07HYD338R",
+          "product_name": "[パックセーフ] 三つ折り財布 Z50 TRIFOLD WALLET BLACK",
+          "manufacturer": "Pacsafe",
+          "text_rank": -20.68896634759008
+        }
+      ]
+    },
+    {
+      "case_id": "T19-2",
+      "target_id": "T19",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "とても薄い真っ黒な財布",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "(\"wallet\"*) AND (\"black\"*)",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -21.296100681004138
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -21.271962789133404
+        },
+        {
+          "asin": "B07HYD338R",
+          "product_name": "[パックセーフ] 三つ折り財布 Z50 TRIFOLD WALLET BLACK",
+          "manufacturer": "Pacsafe",
+          "text_rank": -20.68896634759008
+        }
+      ]
+    },
+    {
+      "case_id": "T19-3",
+      "target_id": "T19",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "ポケットに入れる黒い薄いやつ",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "(\"wallet\"*) AND (\"black\"*)",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -21.296100681004138
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -21.271962789133404
+        },
+        {
+          "asin": "B07HYD338R",
+          "product_name": "[パックセーフ] 三つ折り財布 Z50 TRIFOLD WALLET BLACK",
+          "manufacturer": "Pacsafe",
+          "text_rank": -20.68896634759008
+        }
+      ]
+    },
+    {
+      "case_id": "T19-en-1",
+      "target_id": "T19",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "a very slim jet black wallet that fits in a pocket",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "(\"wallet\"*) AND (\"black\"*)",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -21.296100681004138
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -21.271962789133404
+        },
+        {
+          "asin": "B07HYD338R",
+          "product_name": "[パックセーフ] 三つ折り財布 Z50 TRIFOLD WALLET BLACK",
+          "manufacturer": "Pacsafe",
+          "text_rank": -20.68896634759008
+        }
+      ]
+    },
+    {
+      "case_id": "T19-zh-1",
+      "target_id": "T19",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "能放进口袋的超薄黑色钱包",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "\"wallet\"*",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -16.926116955084655
+        },
+        {
+          "asin": "B07NYBD3WH",
+          "product_name": "Frye Melissa Wallet Carbon",
+          "manufacturer": "Frye",
+          "text_rank": -16.505081966426783
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -16.039983619213867
+        }
+      ]
+    },
+    {
+      "case_id": "T19-ko-1",
+      "target_id": "T19",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "주머니에 들어가는 아주 얇은 검정 지갑",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "\"wallet\"*",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -16.926116955084655
+        },
+        {
+          "asin": "B07NYBD3WH",
+          "product_name": "Frye Melissa Wallet Carbon",
+          "manufacturer": "Frye",
+          "text_rank": -16.505081966426783
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -16.039983619213867
+        }
+      ]
+    },
+    {
+      "case_id": "T20-1",
+      "target_id": "T20",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "24インチ、幅4mmの14Kイエローゴールドフィルド・フィガロチェーンネックレス",
+      "expected_asins": [
+        "B0768NT3RW"
+      ],
+      "fts_query": "(\"necklace\"* OR \"jewelry chain\"*) AND (\"gold\"* OR \"yellow\"*)",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07DLF298W",
+          "product_name": "14k Yellow Gold Lariet Style Necklace 24",
+          "manufacturer": "Jewelry Affairs",
+          "text_rank": -28.917581225483733
+        },
+        {
+          "asin": "B004EF6IC6",
+          "product_name": "10k Yellow Gold Curb Hollow Chain Necklace 4.4mm 22",
+          "manufacturer": "Jewelry Affairs",
+          "text_rank": -26.875729774874408
+        },
+        {
+          "asin": "B0768NT3RW",
+          "product_name": "(24.0 inches) - 14K Yellow Gold Filled Solid Figaro Chain Necklace 4.0 mm Wide",
+          "manufacturer": "Jewelry Affairs",
+          "text_rank": -24.04594865954282
+        }
+      ]
+    },
+    {
+      "case_id": "T20-2",
+      "target_id": "T20",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "金色で太め、フィガロ型の長いチェーン",
+      "expected_asins": [
+        "B0768NT3RW"
+      ],
+      "fts_query": "\"gold\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00FAU2LUW",
+          "product_name": "Golden High Flow Acrylic 119ml (4oz) Bottles Iridescent Gold (Fine)",
+          "manufacturer": "GOLDEN",
+          "text_rank": -10.02012337338137
+        },
+        {
+          "asin": "B08W79S2PX",
+          "product_name": "Golden SoFlat 59ml 6640 ターコイズ 13182640",
+          "manufacturer": "GOLDEN",
+          "text_rank": -9.817528914308223
+        },
+        {
+          "asin": "B08W7CF2VL",
+          "product_name": "Golden SoFlat 59ml 6745 ブラック 13182745",
+          "manufacturer": "GOLDEN",
+          "text_rank": -9.817528914308223
+        }
+      ]
+    },
+    {
+      "case_id": "T20-3",
+      "target_id": "T20",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "首につける金色の長いやつ",
+      "expected_asins": [
+        "B0768NT3RW"
+      ],
+      "fts_query": "(\"necklace\"* OR \"jewelry chain\"*) AND (\"gold\"*)",
+      "rank": 5,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.2,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.38685280723454163,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07DLF298W",
+          "product_name": "14k Yellow Gold Lariet Style Necklace 24",
+          "manufacturer": "Jewelry Affairs",
+          "text_rank": -20.78034948659164
+        },
+        {
+          "asin": "B003YTNO3E",
+          "product_name": "14k White Solid Gold Figaro Chain Necklace 3.9mm 22",
+          "manufacturer": "Jewelry Affairs",
+          "text_rank": -19.313062633914836
+        },
+        {
+          "asin": "B004EF6IC6",
+          "product_name": "10k Yellow Gold Curb Hollow Chain Necklace 4.4mm 22",
+          "manufacturer": "Jewelry Affairs",
+          "text_rank": -19.313062633914836
+        }
+      ]
+    },
+    {
+      "case_id": "T21-1",
+      "target_id": "T21",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "color_package",
+        "social_context"
+      ],
+      "query": "NS NoveltiesのStamina Rings、3色アソートセット",
+      "expected_asins": [
+        "B00IXEW7CE"
+      ],
+      "fts_query": "(\"ring\"* OR \"stamina\"*) AND (\"novelties\"* OR \"stamina\"* OR \"rings\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00IXEW7CE",
+          "product_name": "Stamina Rings Set 3 Assorted Colors by NS Novelties",
+          "manufacturer": "NS Novelties",
+          "text_rank": -62.191955926803324
+        },
+        {
+          "asin": "B000JC2ZHA",
+          "product_name": "Stamina 36インチ 折りたたみ式トランポリン",
+          "manufacturer": "Stamina",
+          "text_rank": -36.58793019343324
+        },
+        {
+          "asin": "B000VICRO8",
+          "product_name": "スタミナinMotion楕円トレーナージムマシン",
+          "manufacturer": "Stamina",
+          "text_rank": -33.84811161567433
+        }
+      ]
+    },
+    {
+      "case_id": "T21-2",
+      "target_id": "T21",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "color_package",
+        "social_context"
+      ],
+      "query": "色違いが3個入った運動用リング",
+      "expected_asins": [
+        "B00IXEW7CE"
+      ],
+      "fts_query": "\"ring\"* OR \"stamina\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00IXEW7CE",
+          "product_name": "Stamina Rings Set 3 Assorted Colors by NS Novelties",
+          "manufacturer": "NS Novelties",
+          "text_rank": -22.052950907463963
+        },
+        {
+          "asin": "B000JC2ZHA",
+          "product_name": "Stamina 36インチ 折りたたみ式トランポリン",
+          "manufacturer": "Stamina",
+          "text_rank": -18.29396509671662
+        },
+        {
+          "asin": "B000VICRO8",
+          "product_name": "スタミナinMotion楕円トレーナージムマシン",
+          "manufacturer": "Stamina",
+          "text_rank": -16.924055807837163
+        }
+      ]
+    },
+    {
+      "case_id": "T21-3",
+      "target_id": "T21",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "color_package",
+        "social_context"
+      ],
+      "query": "動画で見た輪っか3つの運動道具",
+      "expected_asins": [
+        "B00IXEW7CE"
+      ],
+      "fts_query": "\"ring\"* OR \"stamina\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00IXEW7CE",
+          "product_name": "Stamina Rings Set 3 Assorted Colors by NS Novelties",
+          "manufacturer": "NS Novelties",
+          "text_rank": -22.052950907463963
+        },
+        {
+          "asin": "B000JC2ZHA",
+          "product_name": "Stamina 36インチ 折りたたみ式トランポリン",
+          "manufacturer": "Stamina",
+          "text_rank": -18.29396509671662
+        },
+        {
+          "asin": "B000VICRO8",
+          "product_name": "スタミナinMotion楕円トレーナージムマシン",
+          "manufacturer": "Stamina",
+          "text_rank": -16.924055807837163
+        }
+      ]
+    },
+    {
+      "case_id": "T22-1",
+      "target_id": "T22",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "Vivitar 52mm、赤・黄・青・オレンジ・グレー・紫の回転グラデーションカラーフィルター6点セット",
+      "expected_asins": [
+        "B00DH4EFW0"
+      ],
+      "fts_query": "(\"blue\"* OR \"aqua\"* OR \"gray\"*) AND (\"vivitar\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T22-2",
+      "target_id": "T22",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "カメラにつける52mmの色付き丸いフィルター6枚",
+      "expected_asins": [
+        "B00DH4EFW0"
+      ],
+      "fts_query": "(\"camera\"*) AND (\"filter\"* OR \"color\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00X8SHET6",
+          "product_name": "Genaray LED-7100T 312 LED Variable-Color On-Camera Light",
+          "manufacturer": "Genaray",
+          "text_rank": -17.056651816570664
+        },
+        {
+          "asin": "B0047E3DE0",
+          "product_name": "Califone Diggiditto DC596 - Document camera - color - optical zoom: 3 x - audio - Hi-Speed USB by Califone",
+          "manufacturer": "Califone",
+          "text_rank": -14.855191992998707
+        },
+        {
+          "asin": "B07HH2DC45",
+          "product_name": "Breakthrough Photography X4 GND 100x150mm / 3-stop hard reverse Camera Filter",
+          "manufacturer": "Breakthrough Photography",
+          "text_rank": -14.586347945376433
+        }
+      ]
+    },
+    {
+      "case_id": "T22-3",
+      "target_id": "T22",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "写真の色を変える丸い板",
+      "expected_asins": [
+        "B00DH4EFW0"
+      ],
+      "fts_query": "\"filter\"* OR \"color\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B003PGROGO",
+          "product_name": "Justrite 28224 Color Changing Combination Coalescing/Carbon Filter For 28202 Or 28222",
+          "manufacturer": "Justrite",
+          "text_rank": -13.891871176320366
+        },
+        {
+          "asin": "B00DH4EFW0",
+          "product_name": "Vivitar 6点multi-coated回転Graduated Color Filterセット(52 mm) Includes :レッド、イエロー、ブルー、オレンジ、グレー&パープル",
+          "manufacturer": "Vivitar",
+          "text_rank": -13.267339099566485
+        },
+        {
+          "asin": "B003GD0EPY",
+          "product_name": "Coloraid Full Set 314 Colors 6 X 9",
+          "manufacturer": "Coloraid",
+          "text_rank": -11.015821566377552
+        }
+      ]
+    },
+    {
+      "case_id": "T23-1",
+      "target_id": "T23",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "color_package",
+        "place_context"
+      ],
+      "query": "Moleskine Extra Large、罫線入り、Myrtle Greenのハードカバーノート7.5×9.75インチ",
+      "expected_asins": [
+        "B07J3KHV76"
+      ],
+      "fts_query": "(\"notebook\"* OR \"ruled\"*) AND (\"green\"*) AND (\"moleskine\"* OR \"extra\"* OR \"large\"* OR \"myrtle\"* OR \"green\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07J3KHV76",
+          "product_name": "Moleskine Notebook Extra Large Ruled Myrtle Green Hard Cover (7.5 x 9.75)",
+          "manufacturer": "Moleskine",
+          "text_rank": -82.7854649019491
+        },
+        {
+          "asin": "B07BH7T3QX",
+          "product_name": "Itoya Profolio Oasis Notebook Avocado Green Large B5 6.9 x 9.8 inches OA-LG-AV",
+          "manufacturer": "PROFOLIO",
+          "text_rank": -27.8597307867145
+        }
+      ]
+    },
+    {
+      "case_id": "T23-2",
+      "target_id": "T23",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "color_package",
+        "place_context"
+      ],
+      "query": "深い緑色で大きめの硬い表紙の罫線ノート",
+      "expected_asins": [
+        "B07J3KHV76"
+      ],
+      "fts_query": "(\"notebook\"* OR \"ruled\"*) AND (\"green\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07J3KHV76",
+          "product_name": "Moleskine Notebook Extra Large Ruled Myrtle Green Hard Cover (7.5 x 9.75)",
+          "manufacturer": "Moleskine",
+          "text_rank": -29.430103516907977
+        },
+        {
+          "asin": "B07BH7T3QX",
+          "product_name": "Itoya Profolio Oasis Notebook Avocado Green Large B5 6.9 x 9.8 inches OA-LG-AV",
+          "manufacturer": "PROFOLIO",
+          "text_rank": -16.2852902103427
+        }
+      ]
+    },
+    {
+      "case_id": "T23-3",
+      "target_id": "T23",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "color_package",
+        "place_context"
+      ],
+      "query": "文房具屋で見た緑の四角いやつ",
+      "expected_asins": [
+        "B07J3KHV76"
+      ],
+      "fts_query": "(\"notebook\"* OR \"ruled\"*) AND (\"green\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07J3KHV76",
+          "product_name": "Moleskine Notebook Extra Large Ruled Myrtle Green Hard Cover (7.5 x 9.75)",
+          "manufacturer": "Moleskine",
+          "text_rank": -29.430103516907977
+        },
+        {
+          "asin": "B07BH7T3QX",
+          "product_name": "Itoya Profolio Oasis Notebook Avocado Green Large B5 6.9 x 9.8 inches OA-LG-AV",
+          "manufacturer": "PROFOLIO",
+          "text_rank": -16.2852902103427
+        }
+      ]
+    },
+    {
+      "case_id": "T24-1",
+      "target_id": "T24",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "compatibility",
+        "category_branch"
+      ],
+      "query": "Hohner PentaHarp Cマイナー、ジップケース・説明書・クロス付きハーモニカセット",
+      "expected_asins": [
+        "B0B6216WKJ"
+      ],
+      "fts_query": "\"harmonica\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B0002F6SFE",
+          "product_name": "Harmonicas lee oskar harmonica diatonique si bemol majeur divers",
+          "manufacturer": "Lee Oskar",
+          "text_rank": -14.307704531006902
+        },
+        {
+          "asin": "B004ACM1CO",
+          "product_name": "Other Harmonica (1072-S)",
+          "manufacturer": "SUZUKI",
+          "text_rank": -13.744367785262583
+        },
+        {
+          "asin": "B07PJ516JB",
+          "product_name": "Hohner ROCKET AMP HARP Harmonica Model M2015BX-A Harmonica in the Key of A",
+          "manufacturer": "Hohner",
+          "text_rank": -13.687955420738902
+        }
+      ]
+    },
+    {
+      "case_id": "T24-2",
+      "target_id": "T24",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "category_branch"
+      ],
+      "query": "ケースとクロスが付いたCマイナーのハーモニカ",
+      "expected_asins": [
+        "B0B6216WKJ"
+      ],
+      "fts_query": "\"harmonica\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B0002F6SFE",
+          "product_name": "Harmonicas lee oskar harmonica diatonique si bemol majeur divers",
+          "manufacturer": "Lee Oskar",
+          "text_rank": -14.307704531006902
+        },
+        {
+          "asin": "B004ACM1CO",
+          "product_name": "Other Harmonica (1072-S)",
+          "manufacturer": "SUZUKI",
+          "text_rank": -13.744367785262583
+        },
+        {
+          "asin": "B07PJ516JB",
+          "product_name": "Hohner ROCKET AMP HARP Harmonica Model M2015BX-A Harmonica in the Key of A",
+          "manufacturer": "Hohner",
+          "text_rank": -13.687955420738902
+        }
+      ]
+    },
+    {
+      "case_id": "T24-3",
+      "target_id": "T24",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "compatibility",
+        "category_branch"
+      ],
+      "query": "口で音を出す銀色の小さい楽器",
+      "expected_asins": [
+        "B0B6216WKJ"
+      ],
+      "fts_query": "(\"harmonica\"*) AND (\"silver\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T25-1",
+      "target_id": "T25",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "compatibility",
+        "usage_scene"
+      ],
+      "query": "Master Cables製、Sony VMCUAM2交換用USBアダプターケーブル",
+      "expected_asins": [
+        "B07STMN9KM"
+      ],
+      "fts_query": "(\"cable\"* OR \"usb\"*) AND (\"adapter\"* OR \"usb\"*) AND (\"master\"* OR \"cables\"* OR \"sony\"* OR \"vmcuam2\"* OR \"usb\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07STMN9KM",
+          "product_name": "Master Cables 交換用 ソニー VMCUAM2 USBアダプターケーブル",
+          "manufacturer": "Master Cables",
+          "text_rank": -70.82353156790418
+        },
+        {
+          "asin": "B000A4AWAE",
+          "product_name": "Cables To Go 39998 JETLAN USB 2.0 FAST ETHERNET ADAPTER",
+          "manufacturer": "C2G",
+          "text_rank": -45.45094450222981
+        },
+        {
+          "asin": "B07X2Z6BL4",
+          "product_name": "TV Remote (3rd) Cable USB C to USB Cable for Siri Remote (3rd Generation) Charging Cord-124661",
+          "manufacturer": "Smartech Cables",
+          "text_rank": -39.536811711166486
+        }
+      ]
+    },
+    {
+      "case_id": "T25-2",
+      "target_id": "T25",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "usage_scene"
+      ],
+      "query": "ソニー機器用の交換USB変換ケーブル",
+      "expected_asins": [
+        "B07STMN9KM"
+      ],
+      "fts_query": "\"cable\"* OR \"usb\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B09LT1ZXKQ",
+          "product_name": "CableMod Pro Coiled Keyboard Cable (Orangesicle USB A to USB Type C 150cm)",
+          "manufacturer": "CableMod",
+          "text_rank": -17.626593887135968
+        },
+        {
+          "asin": "B09LT2VCZ8",
+          "product_name": "CableMod Pro Coiled Keyboard Cable (Lime Sorbet USB A to USB Type C 150cm)",
+          "manufacturer": "CableMod",
+          "text_rank": -17.407925571867136
+        },
+        {
+          "asin": "B09LT2YD2S",
+          "product_name": "CableMod Pro Coiled Keyboard Cable (Strawberry Cream USB A to USB Type C 150cm)",
+          "manufacturer": "CableMod",
+          "text_rank": -17.407925571867136
+        }
+      ]
+    },
+    {
+      "case_id": "T25-3",
+      "target_id": "T25",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "compatibility",
+        "usage_scene"
+      ],
+      "query": "機械とパソコンをつなぐ黒い線",
+      "expected_asins": [
+        "B07STMN9KM"
+      ],
+      "fts_query": "(\"cable\"* OR \"usb\"*) AND (\"black\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B09LT361GV",
+          "product_name": "CableMod Pro Coiled Keyboard Cable (Midnight Black USB A to USB Type C 150cm)",
+          "manufacturer": "CableMod",
+          "text_rank": -21.581449441724804
+        },
+        {
+          "asin": "B000FW7L4Q",
+          "product_name": "C2G 2m USB 2.0 A to B Cable for Printers and USB Devices - Black (6.5ft) - USB cable - USB (M) to 4 pin USB Type B (M) - 6.6 ft ( USB / USB 2.0 ) - black",
+          "manufacturer": "C2G",
+          "text_rank": -19.58469934279569
+        },
+        {
+          "asin": "B01MU0JOXG",
+          "product_name": "Zebra CBL-TC51-USB1-01 Charging cable Black",
+          "manufacturer": "Zebra Technologies",
+          "text_rank": -18.718653636947202
+        }
+      ]
+    },
+    {
+      "case_id": "T26-1",
+      "target_id": "T26",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "color_package",
+        "shape_function"
+      ],
+      "query": "Pillow Perfect、クリスマスの森柄、グレー、12×18インチの装飾腰枕",
+      "expected_asins": [
+        "B07HYWQVLX"
+      ],
+      "fts_query": "(\"pillow\"* OR \"cushion\"*) AND (\"gray\"*) AND (\"pillow\"* OR \"perfect\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01ALRK93E",
+          "product_name": "PlutusホームデコレーションOcosingo ZestハンドメイドThrow Pillow ? Double Sided 12 x 20 GrayCitrineIvory",
+          "manufacturer": "HomeRoots",
+          "text_rank": -29.43279009349742
+        },
+        {
+          "asin": "B07D4KJ51R",
+          "product_name": "Plutus Wild Gray Wolf Gray White Handmade Luxury Pillow - Double Sided 20 x 20",
+          "manufacturer": "Plutus Brands",
+          "text_rank": -27.307007444836113
+        },
+        {
+          "asin": "B000YTNKK4",
+          "product_name": "Kensington Modular Platform with SmartFit System - Keyboard and mouse platform with wrist pillow - gray",
+          "manufacturer": "Kensington",
+          "text_rank": -26.12479052877969
+        }
+      ]
+    },
+    {
+      "case_id": "T26-2",
+      "target_id": "T26",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "color_package",
+        "shape_function"
+      ],
+      "query": "冬の森が描かれた灰色の横長クッション",
+      "expected_asins": [
+        "B07HYWQVLX"
+      ],
+      "fts_query": "(\"pillow\"* OR \"cushion\"*) AND (\"gray\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "CATEGORY_DIVERGENCE",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01ALRK93E",
+          "product_name": "PlutusホームデコレーションOcosingo ZestハンドメイドThrow Pillow ? Double Sided 12 x 20 GrayCitrineIvory",
+          "manufacturer": "HomeRoots",
+          "text_rank": -19.170933520211157
+        },
+        {
+          "asin": "B07D4KJ51R",
+          "product_name": "Plutus Wild Gray Wolf Gray White Handmade Luxury Pillow - Double Sided 20 x 20",
+          "manufacturer": "Plutus Brands",
+          "text_rank": -18.59036869849172
+        },
+        {
+          "asin": "B000YTNKK4",
+          "product_name": "Kensington Modular Platform with SmartFit System - Keyboard and mouse platform with wrist pillow - gray",
+          "manufacturer": "Kensington",
+          "text_rank": -17.016280850904696
+        }
+      ]
+    },
+    {
+      "case_id": "T26-3",
+      "target_id": "T26",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "color_package",
+        "shape_function"
+      ],
+      "query": "ソファに置く冬っぽいふわふわ",
+      "expected_asins": [
+        "B07HYWQVLX"
+      ],
+      "fts_query": "\"pillow\"* OR \"cushion\"*",
+      "rank": 6,
+      "top1": false,
+      "top3": false,
+      "top10": true,
+      "reciprocal_rank": 0.16666666666666666,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0.3562071871080222,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B07T57PKDR",
+          "product_name": "Pillowtex 軽量銅&竹シーツセット クイーンとキングサイズ クイーン ホワイト",
+          "manufacturer": "Pillowtex",
+          "text_rank": -13.229530760752152
+        },
+        {
+          "asin": "B079SGP59M",
+          "product_name": "Pillow CoversThrow Pillow Covers 18x21 Square Pillow Protectors for Sofa Bedroom Car Office",
+          "manufacturer": "Winsome",
+          "text_rank": -13.067112015089386
+        },
+        {
+          "asin": "B00K2OKHVQ",
+          "product_name": "[リーフ] Cushion Breeze",
+          "manufacturer": "REEF",
+          "text_rank": -12.975047111188385
+        }
+      ]
+    },
+    {
+      "case_id": "T27-1",
+      "target_id": "T27",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "ロックバック機構付きの折りたたみナイフ",
+      "expected_asins": [
+        "B000HSCOJA"
+      ],
+      "fts_query": "\"knife\"* OR \"folding\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000HSCOJA",
+          "product_name": "KNIFE FOLDING LOCK BACK",
+          "manufacturer": "IRWIN",
+          "text_rank": -28.66754166536419
+        },
+        {
+          "asin": "B0001Q2VPA",
+          "product_name": "UTILITY KNIFE CARBON BLADE (100/PKG)",
+          "manufacturer": "IRWIN",
+          "text_rank": -14.687888417161508
+        },
+        {
+          "asin": "B000ECO8V6",
+          "product_name": "COGHLANS 5 FUNCTION ARMY KNIFE (C9505)",
+          "manufacturer": "Coghlans",
+          "text_rank": -14.687888417161508
+        }
+      ]
+    },
+    {
+      "case_id": "T27-2",
+      "target_id": "T27",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "刃を折りたためて背中側でロックするナイフ",
+      "expected_asins": [
+        "B000HSCOJA"
+      ],
+      "fts_query": "\"knife\"* OR \"folding\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000HSCOJA",
+          "product_name": "KNIFE FOLDING LOCK BACK",
+          "manufacturer": "IRWIN",
+          "text_rank": -28.66754166536419
+        },
+        {
+          "asin": "B0001Q2VPA",
+          "product_name": "UTILITY KNIFE CARBON BLADE (100/PKG)",
+          "manufacturer": "IRWIN",
+          "text_rank": -14.687888417161508
+        },
+        {
+          "asin": "B000ECO8V6",
+          "product_name": "COGHLANS 5 FUNCTION ARMY KNIFE (C9505)",
+          "manufacturer": "Coghlans",
+          "text_rank": -14.687888417161508
+        }
+      ]
+    },
+    {
+      "case_id": "T27-3",
+      "target_id": "T27",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "キャンプで使う折りたためる刃物",
+      "expected_asins": [
+        "B000HSCOJA"
+      ],
+      "fts_query": "\"knife\"* OR \"folding\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000HSCOJA",
+          "product_name": "KNIFE FOLDING LOCK BACK",
+          "manufacturer": "IRWIN",
+          "text_rank": -28.66754166536419
+        },
+        {
+          "asin": "B0001Q2VPA",
+          "product_name": "UTILITY KNIFE CARBON BLADE (100/PKG)",
+          "manufacturer": "IRWIN",
+          "text_rank": -14.687888417161508
+        },
+        {
+          "asin": "B000ECO8V6",
+          "product_name": "COGHLANS 5 FUNCTION ARMY KNIFE (C9505)",
+          "manufacturer": "Coghlans",
+          "text_rank": -14.687888417161508
+        }
+      ]
+    },
+    {
+      "case_id": "T28-1",
+      "target_id": "T28",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "InterDesign、10×5×6インチ、透明のパントリー・冷蔵庫・冷凍庫用収納オーガナイザービン",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"storage\"* OR \"cleaning\"*) AND (\"clear\"* OR \"transparent\"*) AND (\"interdesign\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -27.569870652545347
+        }
+      ]
+    },
+    {
+      "case_id": "T28-2",
+      "target_id": "T28",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "冷蔵庫にも使える透明で細長い収納ケース",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"organizer\"* OR \"storage\"* OR \"container\"*) AND (\"refrigerator\"* OR \"freezer\"* OR \"pantry\"*) AND (\"clear\"* OR \"transparent\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -59.76794025834866
+        }
+      ]
+    },
+    {
+      "case_id": "T28-3",
+      "target_id": "T28",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "台所で物を分ける透明な箱",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"kitchen\"* OR \"cooking\"*) AND (\"clear\"* OR \"transparent\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -15.813615805341223
+        },
+        {
+          "asin": "B0CHHZ84Z4",
+          "product_name": "om Light Fixtures Matte Black Modern Vanity Lights Over Mirror with Clear Glass Shade Bathroom Wall Lamp for Mirror Kitchen Living Room Hallway Cabinet Porch Bedroom Reading room",
+          "manufacturer": "Zarbitta",
+          "text_rank": -12.839469442749737
+        }
+      ]
+    },
+    {
+      "case_id": "T28-en-1",
+      "target_id": "T28",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "a clear narrow organizer bin for the refrigerator",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"organizer\"* OR \"storage\"* OR \"container\"*) AND (\"refrigerator\"* OR \"freezer\"* OR \"pantry\"*) AND (\"clear\"* OR \"transparent\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -59.76794025834866
+        }
+      ]
+    },
+    {
+      "case_id": "T28-zh-1",
+      "target_id": "T28",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "冰箱里用的透明细长收纳盒",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"organizer\"* OR \"storage\"* OR \"container\"*) AND (\"refrigerator\"* OR \"freezer\"* OR \"pantry\"*) AND (\"clear\"* OR \"transparent\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -59.76794025834866
+        }
+      ]
+    },
+    {
+      "case_id": "T28-ko-1",
+      "target_id": "T28",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "냉장고에 쓰는 투명하고 긴 수납함",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"organizer\"* OR \"storage\"* OR \"container\"*) AND (\"refrigerator\"* OR \"freezer\"* OR \"pantry\"*) AND (\"clear\"* OR \"transparent\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -59.76794025834866
+        }
+      ]
+    },
+    {
+      "case_id": "T29-1",
+      "target_id": "T29",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "j5create JCA374 USB Type-Cマルチアダプター",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "(\"adapter\"* OR \"usb\"*) AND (\"j5create\"* OR \"jca374\"* OR \"usb\"* OR \"type-c\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -67.30881964276959
+        },
+        {
+          "asin": "B015U1L16K",
+          "product_name": "USB 3.1 Type - C to Typeアダプタjucx05",
+          "manufacturer": "j5create",
+          "text_rank": -39.55323555805754
+        },
+        {
+          "asin": "B07D42ZV9D",
+          "product_name": "j5 create JCD381 USB Type-C Dual HDMI ミニドック",
+          "manufacturer": "j5create",
+          "text_rank": -37.549895690278035
+        }
+      ]
+    },
+    {
+      "case_id": "T29-2",
+      "target_id": "T29",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "USB-Cに複数の端子を増やす小型アダプター",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    },
+    {
+      "case_id": "T29-3",
+      "target_id": "T29",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "ノートPCにつなぐ端子がたくさんあるやつ",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"laptop\"* OR \"notebook computer\"*",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01L1Y3A3C",
+          "product_name": "FP140W9 LAPTOP PRIVACY SCREEN",
+          "manufacturer": "Kensington",
+          "text_rank": -12.641545944362617
+        },
+        {
+          "asin": "B003CP0LEU",
+          "product_name": "KENSINGTON LAPTOP PRIVACY SCREEN 15.6IN",
+          "manufacturer": "Kensington",
+          "text_rank": -11.948617287592423
+        },
+        {
+          "asin": "B00D06KQUU",
+          "product_name": "Pelican - iM2370 Storm Laptop Case by Pelican",
+          "manufacturer": "Pelican",
+          "text_rank": -11.629879499683323
+        }
+      ]
+    },
+    {
+      "case_id": "T29-en-1",
+      "target_id": "T29",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "a compact USB-C hub with multiple ports for a laptop",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    },
+    {
+      "case_id": "T29-zh-1",
+      "target_id": "T29",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "笔记本电脑用的小型多接口USB-C转接器",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    },
+    {
+      "case_id": "T29-ko-1",
+      "target_id": "T29",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "노트북에 연결하는 포트가 여러 개인 소형 USB-C 어댑터",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    },
+    {
+      "case_id": "T30-1",
+      "target_id": "T30",
+      "locale": "ja",
+      "information_level": "rich",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "Livex Lighting 50685-91 Midtown、ブラッシュドニッケルの6灯バスライト",
+      "expected_asins": [
+        "B00LEVNMS6"
+      ],
+      "fts_query": "(\"bath\"* OR \"light\"*) AND (\"livex\"* OR \"lighting\"* OR \"midtown\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00LEVNMS6",
+          "product_name": "Livex Lighting 50685-91 Midtown 6-Light Bath Light Brushed Nickel by Livex Lighting",
+          "manufacturer": "Livex",
+          "text_rank": -48.14712592231346
+        },
+        {
+          "asin": "B008N00FCW",
+          "product_name": "Livex Lighting 1335-91 Astoria Bath Light by Livex Lighting",
+          "manufacturer": "Livex",
+          "text_rank": -35.32796849220159
+        },
+        {
+          "asin": "B0058ZXRBG",
+          "product_name": "Livex Lighting 4203-91 Somerset Bath Light by Livex Lighting",
+          "manufacturer": "Livex",
+          "text_rank": -35.32796849220159
+        }
+      ]
+    },
+    {
+      "case_id": "T30-2",
+      "target_id": "T30",
+      "locale": "ja",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "銀色の横長バーにライトが6個付いた浴室用照明",
+      "expected_asins": [
+        "B00LEVNMS6"
+      ],
+      "fts_query": "(\"bath\"* OR \"light\"*) AND (\"silver\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B08R6MYDDY",
+          "product_name": "Lucas + McKearn Lighting Collection BB1002S-2 Star Bathroom Vanity Light Silver Leaf",
+          "manufacturer": "ZOUXO",
+          "text_rank": -22.352993123156335
+        },
+        {
+          "asin": "B00976M03I",
+          "product_name": "Light Mirage Silver White",
+          "manufacturer": "Lumitec",
+          "text_rank": -15.825804592211686
+        },
+        {
+          "asin": "B00976M9R0",
+          "product_name": "Light Mirage Silver Dims White",
+          "manufacturer": "Lumitec",
+          "text_rank": -15.379847669724152
+        }
+      ]
+    },
+    {
+      "case_id": "T30-3",
+      "target_id": "T30",
+      "locale": "ja",
+      "information_level": "ultra_ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "洗面所の鏡の上にある銀色で光るやつ",
+      "expected_asins": [
+        "B00LEVNMS6"
+      ],
+      "fts_query": "(\"led\"* OR \"light\"* OR \"glow\"* OR \"luminous\"*) AND (\"bath\"* OR \"light\"*) AND (\"silver\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B08R6MYDDY",
+          "product_name": "Lucas + McKearn Lighting Collection BB1002S-2 Star Bathroom Vanity Light Silver Leaf",
+          "manufacturer": "ZOUXO",
+          "text_rank": -29.25608103897014
+        },
+        {
+          "asin": "B00976M03I",
+          "product_name": "Light Mirage Silver White",
+          "manufacturer": "Lumitec",
+          "text_rank": -22.557179081369423
+        },
+        {
+          "asin": "B00976M9R0",
+          "product_name": "Light Mirage Silver Dims White",
+          "manufacturer": "Lumitec",
+          "text_rank": -21.92153808728826
+        }
+      ]
+    }
+  ]
+}
