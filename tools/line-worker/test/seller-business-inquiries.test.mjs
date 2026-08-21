@@ -70,9 +70,23 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
 });
 
 test('公開LPはスマホで見出しを3行以上に崩さず余白を圧縮する', () => {
+  const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/for-sellers-pricing.css', import.meta.url), 'utf8');
   assert.match(css, /\.hero h1,\.hero h1 span\{white-space:nowrap\}/u);
   assert.match(css, /\.hero\{min-height:auto;padding:36px 4px 42px\}/u);
   assert.match(css, /\.values\{gap:10px;margin-bottom:38px\}/u);
   assert.match(css, /\.form-shell\{margin:38px 0/u);
+  assert.match(css, /\.flow h2\{[^}]*white-space:nowrap/u);
+  assert.match(css, /\.price-table-wrap table\{min-width:0;table-layout:fixed\}/u);
+  assert.match(html, /Businessあり/u);
+  assert.match(html, /Businessなし/u);
+});
+
+test('値下げ待ちと見つからなかった検索を匿名需要としてBusinessへ届ける', () => {
+  const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
+  assert.match(html, /値下げ通知に登録された商品条件/u);
+  assert.match(html, /見つからなかった需要/u);
+  assert.match(html, /仕入れ・商品開発・価格判断/u);
+  assert.match(html, /検索文そのものや個人情報は共有しません/u);
+  assert.match(html, /匿名需要が5件以上/u);
 });
