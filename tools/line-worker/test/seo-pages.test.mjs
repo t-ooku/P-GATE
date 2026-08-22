@@ -202,6 +202,7 @@ test('スマホ比較表は横スクロールではなく行カードへ変換�
   assert.match(css, /table, tbody, tr, td\s*\{\s*display:\s*block/);
   assert.doesNotMatch(css, /margin-right:\s*-1rem/);
   assert.match(css, /:focus-visible/);
+  assert.match(css, /\.breadcrumbs a\s*\{[^}]*display:\s*inline-flex[^}]*min-height:\s*44px/s);
   assert.match(css, /\.guide-hub-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/s);
   assert.match(css, /\.guide-hub-grid a\s*\{[^}]*min-height:\s*108px[^}]*overflow-wrap:\s*anywhere/s);
   assert.match(css, /@media \(max-width:\s*700px\)[\s\S]*\.guide-hub-grid\s*\{\s*grid-template-columns:\s*1fr/);
