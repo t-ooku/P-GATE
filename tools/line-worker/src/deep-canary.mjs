@@ -17,6 +17,7 @@ const COMPONENTS = new Set([
   'query_structurer', 'ai_chat_primary', 'openai_backup', 'rakuten', 'yahoo'
 ]);
 const MARKETPLACE_COMPONENTS = new Set(['rakuten', 'yahoo']);
+const PRIMARY_AI_COMPONENTS = new Set(['ai_chat_primary', 'query_structurer']);
 const MARKETPLACE_CATCHUP_AFTER_MS = 12 * 60 * 1000;
 const AI_RETRYABLE_CODES = new Set([
   'CANARY_PROVIDER_TIMEOUT',
@@ -351,10 +352,21 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
   };
 
   const results = [];
+  // Record the two primary AI contracts before network-bound marketplace
+  // probes. If a scheduled Worker is interrupted, the user-facing AI path
+  // must not be the last result left unwritten. Keep paid probes sequential so
+  // the monthly fuse remains deterministic; the optional OpenAI backup stays
+  // last because it is not required for the live search path.
+  const primaryAiComponents = ['ai_chat_primary', 'query_structurer']
+    .filter((component) => components.includes(component));
+  for (const component of primaryAiComponents) {
+    const result = await executeComponent(component);
+    if (result) results.push(result);
+  }
+
   // Marketplace probes are free and independent. Launching them together
   // prevents a delayed/terminated first provider from starving the second
-  // provider's result row. Paid probes stay sequential so the monthly fuse
-  // remains deterministic.
+  // provider's result row. The regular cron also has a free-only catch-up.
   const marketplaceComponents = components.filter((component) => MARKETPLACE_COMPONENTS.has(component));
   const marketplaceResults = await Promise.allSettled(
     marketplaceComponents.map((component) => executeComponent(component))
@@ -363,7 +375,8 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
     if (outcome.status === 'fulfilled' && outcome.value) results.push(outcome.value);
     else if (outcome.status === 'rejected') console.error('DEEP_CANARY_RESULT_WRITE_FAILED');
   }
-  for (const component of components.filter((item) => !MARKETPLACE_COMPONENTS.has(item))) {
+  for (const component of components.filter((item) =>
+    !MARKETPLACE_COMPONENTS.has(item) && !PRIMARY_AI_COMPONENTS.has(item))) {
     const result = await executeComponent(component);
     if (result) results.push(result);
   }

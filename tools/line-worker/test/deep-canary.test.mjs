@@ -500,6 +500,21 @@ test('paid probes atomically reserve, settle from provider usage, and persist no
   assert.doesNotMatch(stored, /軽い|ワイヤレス|イヤホン|api-key|authorization|response/iu);
 });
 
+test('primary AI contracts run before marketplace probes so termination cannot starve the live path', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  const { fetcher, calls } = providerHarness();
+  await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher);
+
+  assert.match(calls[0].target, /generativelanguage\.googleapis\.com/u);
+  assert.equal(calls[0].body?.generationConfig?.maxOutputTokens, 256);
+  assert.match(calls[1].target, /generativelanguage\.googleapis\.com/u);
+  assert.equal(calls[1].body?.generationConfig?.maxOutputTokens, 128);
+  assert.deepEqual(calls.slice(2).map((call) => call.target.includes('rakuten') ? 'rakuten' : 'yahoo'),
+    ['rakuten', 'yahoo']);
+});
+
 test('same paid slot cannot call AI twice even when two cron invocations overlap', async (t) => {
   const { sqlite, env } = sqliteEnvironment({
     GEMINI_PRODUCT_DISCOVERY_MODEL: 'primary-disabled-for-query-test'
@@ -716,7 +731,7 @@ test('deep canary uses the production marketplace and query structurer deadlines
   } finally {
     AbortSignal.timeout = originalTimeout;
   }
-  assert.deepEqual(timeouts, [7000, 2500, 1500]);
+  assert.deepEqual(timeouts, [1500, 7000, 2500]);
 });
 
 test('public growth endpoint cannot forge deep canary result or budget rows', () => {
