@@ -22,7 +22,7 @@ import {
 import { fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
-import { discoverProductsWithAi } from './ai-product-discovery.mjs';
+import { discoverProductsWithAi, shouldGroundProductDiscovery } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
@@ -2213,12 +2213,13 @@ async function handleKnowledgeApi(request, env, ctx) {
     result = await applyD1ContractPolicy(env, result, input.query, requestId);
     const confirmedDiscovery = confirmedAiCandidateDiscovery(input.ai_candidate_fallback, input.query);
     let aiDiscoveryPromise = null;
-    if (!confirmedDiscovery && !(result?.candidates || []).length) {
+    const groundedIdentificationRequired = shouldGroundProductDiscovery(originalQuery);
+    if (!confirmedDiscovery && (groundedIdentificationRequired || !(result?.candidates || []).length)) {
       // When local/GAS data has no candidate, start AI fallback while Rakuten
       // and Yahoo are searched. This removes a full AI round-trip from the
       // zero-result critical path without spending AI calls when local data
       // already has products.
-      aiDiscoveryPromise = safeAiProductDiscovery(input.query, input.language, env);
+      aiDiscoveryPromise = safeAiProductDiscovery(originalQuery, input.language, env);
     }
     // 2026-08-10正式運用: 公開検索でAPI取得するのは楽天・Yahoo!のみ。
     // Amazon Creators API実装は接続審査後に再有効化できる形で残すが、
@@ -2417,6 +2418,10 @@ async function handleKnowledgeApi(request, env, ctx) {
       }
       result.ai_discovery = confirmedDiscovery
         || await (aiDiscoveryPromise || safeAiProductDiscovery(input.query, input.language, env));
+    } else if (groundedIdentificationRequired && aiDiscoveryPromise) {
+      // 「SNSで見た」等の識別検索では、一般カテゴリの商品が先に見つかっても
+      // Geminiの公開Web検索結果を捨てない。候補名ごとの13モール導線へ渡す。
+      result.ai_discovery = await aiDiscoveryPromise;
     } else if (aiDiscoveryPromise) {
       // The marketplace search found products after the fallback had already
       // started. Keep the Promise attached to the request lifecycle.

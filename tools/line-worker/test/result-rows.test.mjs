@@ -6,6 +6,7 @@ import {
   RESULT_ROW_LIMIT,
   candidateHasConfirmedPrice,
   candidateOffers,
+  excludePresentedCandidates,
   fallbackRecommendationCandidates,
   resultRowCopy,
   resultRowCopyFor,
@@ -72,21 +73,31 @@ test('2段目の横展開レコメンドは選定理由を表示できる', () =
   assert.equal(resultRowCopy.JA.unconfirmedTitle,'HOSHILU AI選定レコメンド');
 });
 
-test('関連APIが失敗しても主検索の実在商品から横レコメンドを必ず作る', () => {
+test('関連APIが失敗しても主結果の商品をレコメンドへ重複表示しない', () => {
   const confirmed = [
     { asin: 'TOP', offers: [priced('RAKUTEN_JP', 1000)] },
     { asin: 'NEXT', offers: [priced('YAHOO_JP', 1200)] }
   ];
   assert.deepEqual(fallbackRecommendationCandidates({ confirmed, unconfirmed: [] }), {
-    candidates: [confirmed[1]], confirmed: true
+    candidates: [], confirmed: false
   });
   assert.deepEqual(fallbackRecommendationCandidates({ confirmed: [confirmed[0]], unconfirmed: [] }), {
-    candidates: [confirmed[0]], confirmed: true
+    candidates: [], confirmed: false
   });
   const unconfirmed = [{ asin: 'REAL', offers: [unpriced('ZOZOTOWN')] }];
   assert.deepEqual(fallbackRecommendationCandidates({ confirmed, unconfirmed }), {
     candidates: unconfirmed, confirmed: false
   });
+});
+
+test('商品ID・ASIN・正規化商品名の一致を主結果との重複として除外する', () => {
+  const presented = [{ asin: 'ABC123', product_name: 'コアラ マットレス' }];
+  const related = [
+    { asin: 'abc123', product_name: '別表記' },
+    { product_name: 'コアラ・マットレス' },
+    { asin: 'OTHER', product_name: '高反発マットレス' }
+  ];
+  assert.deepEqual(excludePresentedCandidates(related, presented), [related[2]]);
 });
 
 test('各段は最大30件、合計60件までを取り込む', () => {

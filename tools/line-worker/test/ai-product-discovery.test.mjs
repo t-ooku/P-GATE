@@ -4,7 +4,8 @@ import {
   aiProductDiscoveryConfigured,
   aiProductDiscoveryTest,
   discoverProductsWithAi,
-  normalizeAiIntent
+  normalizeAiIntent,
+  shouldGroundProductDiscovery
 } from '../src/ai-product-discovery.mjs';
 
 test('AI discovery accepts either Gemini or OpenAI configuration', () => {
@@ -71,6 +72,25 @@ test('Gemini returns candidate names and keywords without product URLs', async (
   const requestBody = JSON.parse(calls[0].options.body);
   assert.equal(requestBody.generationConfig.responseMimeType, 'application/json');
   assert.doesNotMatch(requestBody.contents[0].parts[0].text, /direct public product detail pages/i);
+});
+
+test('SNSで見た商品はGeminiのGoogle Searchで公開情報を確認する', async () => {
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    calls.push({ url: String(url), body: JSON.parse(options.body) });
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+      category: 'マットレス', features: ['大きい'],
+      product_candidates: [{ name: 'コアラマットレス', brand: 'Koala', match_score: 80, reason: '公開検索で確認した有力候補', search_keywords: ['コアラマットレス'] }],
+      search_keywords: ['コアラマットレス'], multilingual_keywords: { ja: [], en: [], zh: [], ko: [] }
+    }) }] } }] });
+  };
+  const result = await discoverProductsWithAi('インスタで見た、大きなマットレス', 'JA', {
+    GEMINI_API_KEY: 'g'.repeat(32), GEMINI_PRODUCT_DISCOVERY_MODEL: 'gemini-test'
+  }, fetchImpl);
+  assert.equal(shouldGroundProductDiscovery('インスタで見た、大きなマットレス'), true);
+  assert.deepEqual(calls[0].body.tools, [{ googleSearch: {} }]);
+  assert.equal('responseMimeType' in calls[0].body.generationConfig, false);
+  assert.equal(result.analysis.product_candidates[0].name, 'コアラマットレス');
 });
 
 test('falls back to OpenAI when Gemini fails', async () => {

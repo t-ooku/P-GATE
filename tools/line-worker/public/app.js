@@ -1,6 +1,6 @@
 import { campaignContext } from './campaign-attribution.mjs';
 import { buildMarketplaceSearchKeywords } from './marketplace-search-keywords-v2.mjs';
-import { RESULT_ROW_LIMIT, fallbackRecommendationCandidates, resultRowCopyFor, splitCandidateRows } from './result-rows.mjs';
+import { RESULT_ROW_LIMIT, excludePresentedCandidates, fallbackRecommendationCandidates, resultRowCopyFor, splitCandidateRows } from './result-rows.mjs';
 import { localizedWishLabel } from './wish-localization.mjs';
 import { safeDiscoverySearchQuery, socialDiscoverySearchLinks, swippittDiscoveryMatch, gmailShareLink } from './discovery-actions.mjs';
 import { attachVerticalTicker, detachVerticalTicker } from './vertical-ticker.mjs';
@@ -774,7 +774,7 @@ const relatedCategoryShelfCopy={
   KO:{badge:'관련 상품 검색 후보',title:'함께 찾을 관련 상품',note:'관련 카테고리를 가로로 보고 최대 13개 쇼핑몰에서 실제 상품을 확인할 수 있습니다.',reason:'관련 후보 이유'}
 };
 function relatedCategoryCard(item){const language=elements.language.value||'JA';const labels=relatedCategoryShelfCopy[language]||relatedCategoryShelfCopy.JA;const card=document.createElement('article');card.className='product-card unverified-card related-category-card';card.append(textElement('span','unverified-badge',labels.badge),textElement('h3','',String(item?.query||'')),textElement('div','recommendation-reason',`${labels.reason}：${String(item?.reason||'検索内容と一緒に使えるカテゴリ')}`));const links=marketplaceLinks(item?.marketplace_search_links,true);if(links)card.append(links);return card;}
-function recommendationRowFor(result,t,query,fallbackProducts={candidates:[],confirmed:false}){const products=(Array.isArray(result?.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);const copy=resultRowCopyFor(elements.language.value);if(products.length){const row=resultRow(products.map((candidate,index)=>productCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const verifiedFallback=(Array.isArray(fallbackProducts?.candidates)?fallbackProducts.candidates:[]).slice(0,RESULT_ROW_LIMIT);if(verifiedFallback.length){const confirmed=Boolean(fallbackProducts.confirmed);const row=resultRow(verifiedFallback.map((candidate,index)=>productCard(candidate,index,t,confirmed,query)),confirmed?copy.verifiedRecommendationTitle:copy.unconfirmedTitle,confirmed?copy.verifiedRecommendationNote:copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}
+function recommendationRowFor(result,t,query,fallbackProducts={candidates:[],confirmed:false},presented=[]){const products=excludePresentedCandidates(result?.related_recommendations,presented).slice(0,RESULT_ROW_LIMIT);const copy=resultRowCopyFor(elements.language.value);if(products.length){const row=resultRow(products.map((candidate,index)=>productCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const verifiedFallback=excludePresentedCandidates(fallbackProducts?.candidates,presented).slice(0,RESULT_ROW_LIMIT);if(verifiedFallback.length){const confirmed=Boolean(fallbackProducts.confirmed);const row=resultRow(verifiedFallback.map((candidate,index)=>productCard(candidate,index,t,confirmed,query)),confirmed?copy.verifiedRecommendationTitle:copy.unconfirmedTitle,confirmed?copy.verifiedRecommendationNote:copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}
 const marketplaceQuickStripCopy={
   JA:{heading:'他のモールでも同じ条件で探せます',jump:'13モールすべて見る'},
   EN:{heading:'Search the same terms on other marketplaces',jump:'See all 13 marketplaces'},
@@ -821,7 +821,7 @@ function renderResults(result,requestId){
   const sharedSearchQuery=String(result?.search_keywords||result?.amazon_search_keywords||elements.query.value||'');
   const rows=[
     resultRow(confirmed.map((candidate,index)=>productCard(candidate,index,t,true,sharedSearchQuery)),copy.confirmedTitle,copy.confirmedNote,'confirmed'),
-    recommendationRowFor(result,t,sharedSearchQuery,fallbackProducts)
+    recommendationRowFor(result,t,sharedSearchQuery,fallbackProducts,confirmed)
   ].filter(Boolean);
   if(rows.length){
     const resultCards=[];

@@ -5,13 +5,21 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
-  BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT,
-  buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, recordBuzzSnapshots
+  BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT, BUZZ_THEME_ROTATIONS,
+  buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, recordBuzzSnapshots
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
 
 const worker = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const env = { RAKUTEN_APPLICATION_ID: 'test-app-id', RAKUTEN_ACCESS_KEY: 'test-access-key' };
+
+test('BUZZテーマは火曜・金曜JSTに週2回切り替わり韓国軸を含む', () => {
+  const tuesday = Date.parse('2026-08-25T00:00:00+09:00');
+  const friday = Date.parse('2026-08-28T00:00:00+09:00');
+  assert.equal(buzzThemeFor(tuesday).id, BUZZ_THEME_ROTATIONS[0].id);
+  assert.equal(buzzThemeFor(friday).id, BUZZ_THEME_ROTATIONS[1].id);
+  assert.match(BUZZ_THEME_ROTATIONS[0].label,/韓国/u);
+});
 
 // buzz_ranking_snapshots と marketplace_ranking_cache の最小D1スタブ。
 function d1Stub({ snapshots = [], maxCapturedAt = null } = {}) {
@@ -69,11 +77,12 @@ function rankingFetcher(overrides = {}) {
 }
 
 test('BUZZ棚は定義順の小ジャンルを公式ランキングだけで返す', async () => {
-  const result = await buzzShelfResult(env, rankingFetcher());
+  const now = Date.parse('2026-08-25T00:00:00+09:00');
+  const result = await buzzShelfResult(env, rankingFetcher(), now);
   // 履歴なし(急上昇なし)の構成: ジャンル棚(定義順) + 予算別棚。
   assert.deepEqual(
     result.shelves.map((shelf) => shelf.shelf_id),
-    [...BUZZ_SHELF_CATEGORY_IDS, ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
+    [...buzzThemeFor(now).category_ids, ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
   );
   assert.equal(result.shelf_count, result.shelves.length);
   // v3.1 §13: ジャンル棚は「◯◯で探す」用の安全な検索語(検証済み小ジャンル名)を持つ。
@@ -217,9 +226,9 @@ test('スナップショット記録はテーブル未適用なら静かにス�
   // 記録可能 → 棚数ぶんINSERT + prune DELETE
   const stale = d1Stub({ maxCapturedAt: '2026-08-19T02:00:00Z' });
   const outcome = await recordBuzzSnapshots({ ...env, PRODUCT_DB: stale }, rankingFetcher(), now);
-  assert.equal(outcome.recorded, BUZZ_SHELF_CATEGORY_IDS.length);
+  assert.equal(outcome.recorded, buzzThemeFor(now).category_ids.length);
   const inserts = stale.executed.filter((entry) => /INSERT OR IGNORE INTO buzz_ranking_snapshots/u.test(entry.sql));
-  assert.equal(inserts.length, BUZZ_SHELF_CATEGORY_IDS.length);
+  assert.equal(inserts.length, buzzThemeFor(now).category_ids.length);
   assert.equal(stale.executed.filter((entry) => /DELETE FROM buzz_ranking_snapshots/u.test(entry.sql)).length, 1);
   // 公開レスポンスへ内部フィールドall_itemsを漏らさない。
   const result = await buzzShelfResult(env, rankingFetcher());
@@ -458,7 +467,8 @@ test('ジャンルと合わない棚は口コミ件数順で作り直し、そ�
     }
     return new Response('not found', { status: 404 });
   };
-  const shelves = await buildGenreShelves(env, fetcher);
+  const themeNow = Date.parse('2026-08-25T00:00:00+09:00');
+  const shelves = await buildGenreShelves(env, fetcher, themeNow);
   const shelf = shelves.find((entry) => entry.shelf_id === 'womens_sneakers');
   assert.ok(shelf, 'sneakers shelf should be rebuilt from the review ranking');
   assert.equal(shelf.headline, '口コミが多い。');
@@ -470,7 +480,7 @@ test('ジャンルと合わない棚は口コミ件数順で作り直し、そ�
     }
     return new Response('not found', { status: 404 });
   };
-  const broken = await buildGenreShelves(env, brokenFetcher);
+  const broken = await buildGenreShelves(env, brokenFetcher, themeNow);
   assert.equal(broken.find((entry) => entry.shelf_id === 'womens_sneakers'), undefined);
 });
 

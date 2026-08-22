@@ -35,14 +35,31 @@ export function splitCandidateRows(candidates, limit = RESULT_ROW_LIMIT) {
   return { confirmed, unconfirmed };
 }
 
+function candidateIdentityKeys(candidate = {}) {
+  const keys = [];
+  for (const value of [candidate.hoshilu_product_id, candidate.record_key, candidate.asin]) {
+    const key = String(value || '').normalize('NFKC').trim().toLocaleLowerCase();
+    if (key) keys.push(`id:${key}`);
+  }
+  const name = String(candidate.display_name || candidate.product_name || candidate.name || '')
+    .normalize('NFKC').replace(/[\s\p{P}\p{S}]+/gu, '').toLocaleLowerCase();
+  if (name) keys.push(`name:${name}`);
+  return keys;
+}
+
+export function excludePresentedCandidates(candidates, presented) {
+  const blocked = new Set((Array.isArray(presented) ? presented : []).flatMap(candidateIdentityKeys));
+  return (Array.isArray(candidates) ? candidates : []).filter(
+    (candidate) => !candidateIdentityKeys(candidate).some((key) => blocked.has(key))
+  );
+}
+
 // 関連商品APIが一時的に使えなくても、主検索ですでに実在確認できた商品を
 // 横レコメンドへ回し、「関連キーワードだけで商品カードが無い」状態を作らない。
 export function fallbackRecommendationCandidates(rows, limit = RESULT_ROW_LIMIT) {
   const unconfirmed = (Array.isArray(rows?.unconfirmed) ? rows.unconfirmed : []).slice(0, limit);
   if (unconfirmed.length) return { candidates: unconfirmed, confirmed: false };
-  const confirmed = (Array.isArray(rows?.confirmed) ? rows.confirmed : []).slice(0, limit);
-  const secondary = confirmed.slice(1, limit + 1);
-  return { candidates: secondary.length ? secondary : confirmed.slice(0, 1), confirmed: true };
+  return { candidates: [], confirmed: false };
 }
 
 export function recommendationReason(candidate) {
