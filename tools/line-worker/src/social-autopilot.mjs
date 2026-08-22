@@ -97,6 +97,26 @@ const X_NON_VIDEO_POSTS = Object.freeze([
     caption: '名前が分からない。それ、検索できない理由じゃない。見た目・使い方・見かけた場所をそのままHOSHILUへ。',
     query: '韓国っぽい、透明で小さいワイヤレスイヤホン'
   }
+
+// 2026-08-22 大隆さん承認済み。ユーザー向け投稿を主役のまま保つため、
+// セラー向けはX非動画枠の6回に1回だけ差し込む。自然掲載を先に伝え、
+// 架空の成果・需要件数・売上は書かない。
+const X_SELLER_POSTS = Object.freeze([
+  {
+    id: 'seller-natural-listing',
+    caption: '商品を探している人に、ちゃんと見つけてもらう。HOSHILUは自然掲載を無料から始められます。広告だけで検索結果を埋めず、探している条件との一致を優先します。',
+    link_path: '/for-sellers'
+  },
+  {
+    id: 'seller-demand-insight',
+    caption: '値下げを待っている人と、探したけれど見つけられなかった商品。その匿名需要を、仕入れ・商品開発・価格判断に使える形で確認できます。検索文や個人情報は共有しません。',
+    link_path: '/for-sellers'
+  },
+  {
+    id: 'seller-business-simple',
+    caption: 'HOSHILU Businessは月額9,800円。商品・流入・未充足需要の分析、優先掲載の管理、Search APIをひとつのプランにまとめています。自然掲載だけなら無料から始められます。',
+    link_path: '/for-sellers'
+  }
 ]);
 
 const INSTAGRAM_GUIDE_POSTS = Object.freeze([
@@ -368,8 +388,10 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         status: 'APPROVED'
       }));
     } else {
-      const content = X_NON_VIDEO_POSTS[Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS)
-        % X_NON_VIDEO_POSTS.length];
+      const rotationDay = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
+      const content = rotationDay % 6 === 0
+        ? X_SELLER_POSTS[Math.floor(rotationDay / 6) % X_SELLER_POSTS.length]
+        : X_NON_VIDEO_POSTS[rotationDay % X_NON_VIDEO_POSTS.length];
       posts.push(normalizeSocialPost({
         post_id: `${CAMPAIGN_ID}-x-guide-${key}`,
         content_id: content.id,

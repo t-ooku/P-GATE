@@ -63,6 +63,25 @@ test('Instagram定常投稿はBUZZ専用ビジュアルと/buzz送客を含む',
   }
 });
 
+test('承認済みセラー投稿はX非動画枠へ少量だけ入り/for-sellersへ送客する', () => {
+  const posts = buildSocialAutopilotPosts(new Date('2026-08-22T00:00:00.000Z'), 180)
+    .filter(post => post.platform === 'X');
+  const sellerPosts = posts.filter(post => /^seller-/u.test(post.content_id));
+  assert.ok(sellerPosts.length > 0);
+  assert.ok(sellerPosts.length / posts.length >= 0.1);
+  assert.ok(sellerPosts.length / posts.length <= 0.2);
+  assert.deepEqual(new Set(sellerPosts.map(post => post.content_id)), new Set([
+    'seller-natural-listing', 'seller-demand-insight', 'seller-business-simple'
+  ]));
+  for (const post of sellerPosts) {
+    const url = new URL(post.link);
+    assert.equal(url.pathname, '/for-sellers');
+    assert.equal(url.searchParams.get('utm_source'), 'x');
+    assert.match(url.searchParams.get('utm_campaign'), /13mall/u);
+    assert.doesNotMatch(post.caption, /No\\.?1|最安|必ず売れる|売上アップ/u);
+  }
+});
+
 test('Amazon優先Threadsローテーションは1日2本、昼夜の枠で別内容を計画する', () => {
   const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'));
   // 14日 × 昼夜2枠。当日12:30 JST(03:00 UTC時点では未到来)も含む。
@@ -500,8 +519,11 @@ test('X定常ローテーションはHOSHILU BUZZ紹介を含み、/buzzへUTM�
     assert.match(post.caption, /公式ランキング|価格を確認できた商品/u);
     assert.doesNotMatch(post.caption, /No\.?1|最安|バズって|Z世代/u);
   }
-  // 既存の検索ガイド投稿は従来どおりホーム(/)へ。
-  const guidePosts = posts.filter(post => !/^buzz-/.test(post.content_id));
+  // 承認済みセラー投稿だけは公開LPへ送り、既存の検索ガイドはホーム(/)へ。
+  const sellerPosts = posts.filter(post => /^seller-/.test(post.content_id));
+  assert.ok(sellerPosts.length > 0);
+  for (const post of sellerPosts) assert.equal(new URL(post.link).pathname, '/for-sellers');
+  const guidePosts = posts.filter(post => !/^(?:buzz|seller)-/.test(post.content_id));
   assert.ok(guidePosts.length > 0);
   for (const post of guidePosts) assert.equal(new URL(post.link).pathname, '/');
 });
