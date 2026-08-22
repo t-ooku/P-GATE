@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
 test('検索意図が異なる日本語38ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 43);
+  assert.equal(seoPagePaths.length, 49);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\//);
@@ -53,7 +53,7 @@ test('日本語ガイドハブは38記事を重複なく分類し全記事から
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 38);
+  assert.equal(japanesePaths.length, 44);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -124,7 +124,7 @@ test('サイトマップはガイドハブ・全SEOページ・canonicalの法�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 49);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 55);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });
