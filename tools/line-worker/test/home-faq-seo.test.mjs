@@ -34,6 +34,20 @@ test('ホームはcanonicalに一致する言語指定と全ガイドへの明�
 // data-nosnippetを固定する。根拠: claude/hoshilu_ai_overview_seo_findings_20260818.md
 // (全ソースで「本文以外の混入あり」を実測)。一方で価値提案の本文(ヒーロー・
 // 検索パネル・FAQ・ガイド)はスニペット対象のまま残す。
+
+test('ホームは3本柱とブランド原則をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
+  const [html, styles] = await Promise.all([read('index.html'), read('styles.css')]);
+  const description = 'ホシルは、モール横断検索、AI探索、おすすめ・口コミ・ランキングからの発見を一つにした無料の商品検索サービス。商品名が分からなくても、用途や特徴から実在する候補と購入先を探せます。';
+  assert.match(html, /<title>ホシル｜モール横断検索・AI探索で欲しい物を探す<\/title>/);
+  assert.ok(html.includes('<meta name="description" content="' + description + '">'));
+  assert.match(html, /<meta property="og:title" content="ホシル｜モール横断検索・AI探索で欲しい物を探す">/);
+  assert.match(html, /<p class="hero-promise">AIは理解、HOSHILUは探す。モール横断検索、AI探索、おすすめ・口コミ・ランキングからの発見を、ひとつの買い物体験に。<\/p>/);
+  const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
+  const data = JSON.parse(match[1]);
+  assert.equal(data['@graph'].find((item) => item['@type'] === 'WebApplication').description, description);
+  assert.match(styles, /\.hero-copy \.hero-promise\{[^}]*font-size:clamp\(14px,2\.1vw,18px\)[^}]*line-height:1\.75/);
+  assert.match(styles, /@media\(max-width:760px\)\{\.hero-copy \.hero-promise\{[^}]*font-size:14px[^}]*line-height:1\.65/);
+});
 test('UIクロームはdata-nosnippet、本文セクションはスニペット対象のまま', async () => {
   const html = await read('index.html');
   const chrome = [
@@ -67,7 +81,7 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   }
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 49);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 54);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
   assert.match(worker, /hoshilu-shell-v393/);
 });
