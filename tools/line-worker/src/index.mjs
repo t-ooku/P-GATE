@@ -87,7 +87,7 @@ import {
 import {
   runMarketplaceContentCycle, handleMarketplaceSaleRoutes
 } from './marketplace-sales.mjs';
-import { runDeepCanaryCycle } from './deep-canary.mjs';
+import { runDeepCanaryCycle, runMarketplaceCanaryCatchup } from './deep-canary.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
 const encoder = new TextEncoder();
@@ -2807,7 +2807,18 @@ export default {
     ctx.waitUntil(runReliabilityControlledCron(
       env,
       'cloudflare_regular',
-      () => Promise.allSettled([
+      async () => {
+        // If the isolated deep cron is delayed, retry only stale free
+        // marketplace canaries before the regular fanout. Paid AI probes are
+        // never authorized by this catch-up path.
+        try {
+          await runMarketplaceCanaryCatchup(env, scheduledAt);
+        } catch {
+          // A diagnostic retry must never suppress the established production
+          // jobs. Keep the log privacy-safe: no provider response or request data.
+          console.error('MARKETPLACE_CANARY_CATCHUP_FAILED');
+        }
+        return Promise.allSettled([
         // 大隆さんの2026-08-09承認に基づく販促自動運用。先に14日先までの
         // 権利確認済み投稿を冪等補充し、その後に期限到来分を配信する。
         runSocialAutopilotCycle(env, scheduledAt),
@@ -2837,7 +2848,8 @@ export default {
         // HOSHILU BUZZ「急上昇」用の公式ランキング順位スナップショット。
         // 6時間ごとに1回だけ実記録し、migration 0057 未適用なら静かにスキップ。
         recordBuzzSnapshots(env, fetch, scheduledAt.getTime())
-      ])
+        ]);
+      }
     ));
   }
 };

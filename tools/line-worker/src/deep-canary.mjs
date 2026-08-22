@@ -16,6 +16,8 @@ const PRICING = Object.freeze({
 const COMPONENTS = new Set([
   'query_structurer', 'ai_chat_primary', 'openai_backup', 'rakuten', 'yahoo'
 ]);
+const MARKETPLACE_COMPONENTS = new Set(['rakuten', 'yahoo']);
+const MARKETPLACE_CATCHUP_AFTER_MS = 12 * 60 * 1000;
 const AI_RETRYABLE_CODES = new Set([
   'CANARY_PROVIDER_TIMEOUT',
   'CANARY_PROVIDER_RATE_LIMITED',
@@ -267,24 +269,29 @@ function validateMarketplace(rows, marketplace) {
 }
 
 export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImpl = fetch, {
-  clock = () => new Date()
+  clock = () => new Date(), componentsOverride = null
 } = {}) {
   if (!env?.PRODUCT_DB) return { skipped: true, reason: 'DATABASE_NOT_CONFIGURED' };
   const now = scheduledAt instanceof Date ? scheduledAt : new Date(scheduledAt);
   if (!Number.isFinite(now.getTime())) throw new Error('CANARY_TIME_INVALID');
   const occurredAt = now.toISOString();
   const runId = String(now.getTime());
-  let retryComponents = [];
-  try {
-    retryComponents = await scheduledAiRetries(env, now);
-  } catch (error) {
-    // A retry lookup failure must not stop regular checks, and must never
-    // default to an extra paid provider request.
-    console.warn('DEEP_CANARY_AI_RETRY_LOOKUP_FAILED', { code: failureCode(error) });
+  let components;
+  if (Array.isArray(componentsOverride)) {
+    components = [...new Set(componentsOverride.filter((component) => COMPONENTS.has(component)))];
+  } else {
+    let retryComponents = [];
+    try {
+      retryComponents = await scheduledAiRetries(env, now);
+    } catch (error) {
+      // A retry lookup failure must not stop regular checks, and must never
+      // default to an extra paid provider request.
+      console.warn('DEEP_CANARY_AI_RETRY_LOOKUP_FAILED', { code: failureCode(error) });
+    }
+    components = [...new Set([
+      ...scheduledComponents(now), ...retryComponents, ...await missingComponents(env)
+    ])];
   }
-  const components = [...new Set([
-    ...scheduledComponents(now), ...retryComponents, ...await missingComponents(env)
-  ])];
 
   const paidProbe = async (component, provider, probeEnv, mode) => {
     const pricing = pricingFor(component, probeEnv);
@@ -327,25 +334,40 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
       await searchYahooShopping(env, 'ワイヤレスイヤホン', fetchImpl), 'YAHOO_JP')
   };
 
-  const results = [];
-  // Sequential paid probes make the local monthly fuse deterministic. Free
-  // marketplace probes remain short and the whole cron stays far below its
-  // 15-minute platform wall-time.
-  for (const component of components) {
+  const executeComponent = async (component) => {
     try {
       const outcome = await probes[component]();
-      if (outcome?.duplicate) continue;
+      if (outcome?.duplicate) return null;
       const status = outcome?.degraded ? 'DEGRADED' : 'PASS';
       const code = outcome?.degraded ? outcome.code : 'CANARY_OK';
       await writeResult(env, runId, component, status, code, occurredAt);
-      results.push({ component, status, code });
+      return { component, status, code };
     } catch (error) {
       const code = failureCode(error);
       const status = code === 'CANARY_MONTHLY_BUDGET_LIMIT' ? 'DEGRADED' : 'FAIL';
       await writeResult(env, runId, component, status, code, occurredAt);
-      results.push({ component, status, code });
+      return { component, status, code };
     }
+  };
+
+  const results = [];
+  // Marketplace probes are free and independent. Launching them together
+  // prevents a delayed/terminated first provider from starving the second
+  // provider's result row. Paid probes stay sequential so the monthly fuse
+  // remains deterministic.
+  const marketplaceComponents = components.filter((component) => MARKETPLACE_COMPONENTS.has(component));
+  const marketplaceResults = await Promise.allSettled(
+    marketplaceComponents.map((component) => executeComponent(component))
+  );
+  for (const outcome of marketplaceResults) {
+    if (outcome.status === 'fulfilled' && outcome.value) results.push(outcome.value);
+    else if (outcome.status === 'rejected') console.error('DEEP_CANARY_RESULT_WRITE_FAILED');
   }
+  for (const component of components.filter((item) => !MARKETPLACE_COMPONENTS.has(item))) {
+    const result = await executeComponent(component);
+    if (result) results.push(result);
+  }
+  results.sort((left, right) => components.indexOf(left.component) - components.indexOf(right.component));
   console.info('DEEP_CANARY_CYCLE', {
     scheduled_at: occurredAt,
     results: results.map(({ component, status, code }) => ({ component, status, code }))
@@ -355,7 +377,27 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
     pricing_revision: PRICING_REVISION };
 }
 
+export async function runMarketplaceCanaryCatchup(
+  env, scheduledAt = new Date(), fetchImpl = fetch, { clock = () => new Date() } = {}
+) {
+  if (!env?.PRODUCT_DB) return { skipped: true, reason: 'DATABASE_NOT_CONFIGURED' };
+  const now = scheduledAt instanceof Date ? scheduledAt : new Date(scheduledAt);
+  if (!Number.isFinite(now.getTime())) throw new Error('CANARY_TIME_INVALID');
+  const rows = await env.PRODUCT_DB.prepare(`SELECT medium AS component,MAX(occurred_at) AS occurred_at
+    FROM growth_events WHERE event_type=?1 AND source='worker' AND traffic_class='QA'
+      AND medium IN ('rakuten','yahoo') GROUP BY medium`).bind(EVENT_TYPE).all();
+  const latest = new Map((rows?.results || []).map((row) => [
+    String(row.component || ''), Date.parse(String(row.occurred_at || ''))
+  ]));
+  const stale = [...MARKETPLACE_COMPONENTS].filter((component) => {
+    const occurredAt = latest.get(component);
+    return !Number.isFinite(occurredAt) || now.getTime() - occurredAt > MARKETPLACE_CATCHUP_AFTER_MS;
+  });
+  if (!stale.length) return { skipped: true, reason: 'MARKETPLACE_CANARY_FRESH' };
+  return runDeepCanaryCycle(env, now, fetchImpl, { clock, componentsOverride: stale });
+}
+
 export const deepCanaryTest = { scheduledComponents, safeCode, validateMarketplace, costFromUsage, monthBounds,
   billingNow, wallClockNow, failureCode, isTransientAiFailureCode, isTransientOpenAiFailureCode,
   scheduledAiRetries, scheduledOpenAiRetry,
-  PRICING_REVISION, PRICING_REVIEW_DEADLINE_MS };
+  MARKETPLACE_CATCHUP_AFTER_MS, PRICING_REVISION, PRICING_REVIEW_DEADLINE_MS };

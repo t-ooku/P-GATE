@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { deepCanaryTest, runDeepCanaryCycle } from '../src/deep-canary.mjs';
+import {
+  deepCanaryTest, runDeepCanaryCycle, runMarketplaceCanaryCatchup
+} from '../src/deep-canary.mjs';
 import { normalizeGrowthEvent } from '../src/growth-events.mjs';
 
 const migration = (name) => readFileSync(
@@ -432,8 +434,50 @@ test('deep canary has an offset cron and is isolated from the existing job fanou
   assert.match(wrangler, /"7,22,37,52 \* \* \* \*"/u);
   assert.match(worker,
     /controller\.cron === '7,22,37,52 \* \* \* \*'[\s\S]*?runDeepCanaryCycle\(env, scheduledAt\)[\s\S]*?return;/u);
-  const regularFanout = worker.match(/ctx\.waitUntil\(Promise\.allSettled\(\[([\s\S]*?)\]\)\);/u)?.[1] || '';
-  assert.doesNotMatch(regularFanout, /runDeepCanaryCycle/u);
+  assert.match(worker, /'cloudflare_regular'[\s\S]*?runMarketplaceCanaryCatchup\(env, scheduledAt\)[\s\S]*?Promise\.allSettled\(\[/u);
+  assert.doesNotMatch(worker.match(/'cloudflare_regular'([\s\S]*?)\)\);/u)?.[1] || '', /runDeepCanaryCycle/u);
+});
+
+test('marketplace probes run independently so one provider cannot starve the other result', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite);
+  const { fetcher: providerFetch } = providerHarness();
+  let yahooStarted = false;
+  let yahooStartedBeforeRakutenFinished = false;
+  const fetcher = async (url, options) => {
+    if (String(url).includes('openapi.rakuten.co.jp')) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      yahooStartedBeforeRakutenFinished = yahooStarted;
+    }
+    if (String(url).includes('shopping.yahooapis.jp')) yahooStarted = true;
+    return providerFetch(url, options);
+  };
+  const result = await runDeepCanaryCycle(
+    env,
+    new Date('2026-08-13T01:22:00.000Z'),
+    fetcher,
+    { componentsOverride: ['rakuten', 'yahoo'] }
+  );
+  assert.equal(yahooStartedBeforeRakutenFinished, true);
+  assert.deepEqual(result.results.map((row) => row.component), ['rakuten', 'yahoo']);
+});
+
+test('regular-cron catch-up retries only stale free marketplace canaries', async (t) => {
+  const { sqlite, env } = sqliteEnvironment();
+  t.after(() => sqlite.close());
+  seedPriorResults(sqlite, '2026-08-13T00:52:00.000Z');
+  sqlite.prepare(`UPDATE growth_events SET occurred_at='2026-08-13T01:07:00.000Z'
+    WHERE medium='rakuten' AND event_type='deep_canary_result'`).run();
+  const { fetcher, calls } = providerHarness();
+  const result = await runMarketplaceCanaryCatchup(
+    env, new Date('2026-08-13T01:15:00.000Z'), fetcher
+  );
+  assert.deepEqual(result.results, [{ component: 'yahoo', status: 'PASS', code: 'CANARY_OK' }]);
+  assert.equal(callsTo(calls, 'shopping.yahooapis.jp').length, 1);
+  assert.equal(callsTo(calls, 'openapi.rakuten.co.jp').length, 0);
+  assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 0);
+  assert.equal(callsTo(calls, 'api.openai.com').length, 0);
 });
 
 test('paid probes atomically reserve, settle from provider usage, and persist no query or product payload', async (t) => {
