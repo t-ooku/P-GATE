@@ -44,6 +44,13 @@ test('商品名詞を特定できない検索語では何も返さない', () =>
   assert.deepEqual(relatedProductExpansionQueries(''), []);
 });
 
+test('マットレスは寝具小物ではなく本体の別候補へ横展開する', () => {
+  const queries = relatedProductExpansionQueries('大きなマットレス').map((item) => item.query);
+  assert.ok(queries.length > 0);
+  assert.ok(queries.every((query) => query.includes('マットレス')), queries.join(' / '));
+  assert.ok(!queries.includes('ベッドシーツ'));
+});
+
 test('横展開と補完提案の両方が、横展開を先にして返る', async () => {
   const merged = await resolveRelatedProductRecommendationQueries('天然石 ピアス', 'JA', {});
   const queries = merged.map((item) => item.query);
