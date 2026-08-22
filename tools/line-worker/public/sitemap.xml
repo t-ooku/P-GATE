@@ -6,7 +6,7 @@
 <url><loc>https://hoshilu.app/for-sellers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://hoshilu.app/ja/guides</loc>
-    <lastmod>2026-08-22</lastmod>
+    <lastmod>2026-08-23</lastmod>
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/guides"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://hoshilu.app/ja/guides"/>
     <changefreq>weekly</changefreq><priority>0.9</priority>
@@ -261,6 +261,36 @@
     <loc>https://hoshilu.app/ja/shopping-guide-for-students-on-a-budget</loc>
     <lastmod>2026-08-22</lastmod>
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/shopping-guide-for-students-on-a-budget"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/read-korean-cosmetics-reviews-by-skin-type</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/read-korean-cosmetics-reviews-by-skin-type"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/read-korean-fashion-size-reviews</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/read-korean-fashion-size-reviews"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/use-korean-cosmetics-rankings-safely</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/use-korean-cosmetics-rankings-safely"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/use-fan-goods-rankings-by-purpose</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/use-fan-goods-rankings-by-purpose"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/use-student-commute-item-rankings</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/use-student-commute-item-rankings"/>
     <changefreq>weekly</changefreq><priority>0.8</priority>
   </url>
   <url><loc>https://hoshilu.app/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
