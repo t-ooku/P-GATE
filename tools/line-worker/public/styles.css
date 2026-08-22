@@ -69,3 +69,6 @@
 .journey-fold summary{display:inline-flex;align-items:center;gap:6px;margin:6px 0 0;padding:9px 14px;border:1px solid #ded7ff;border-radius:999px;background:#fff;color:#5140ba;font-size:12px;font-weight:850;cursor:pointer;list-style:none}
 .journey-fold summary::-webkit-details-marker{display:none}
 .journey-fold[open] summary{margin-bottom:12px}
+
+.hero-copy .hero-promise{max-width:780px;margin:20px 0 0;color:var(--muted);font-size:clamp(14px,2.1vw,18px);line-height:1.75;font-weight:700}
+@media(max-width:760px){.hero-copy .hero-promise{margin-top:14px;font-size:14px;line-height:1.65}}
