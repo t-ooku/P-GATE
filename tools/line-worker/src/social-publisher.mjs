@@ -754,6 +754,15 @@ export async function handleSocialAdminRoutes(request, env) {
       await syncThreadsInsights(env, new Date(), fetch, postId);
       published = await selectPublished();
     }
+    // X does not provide a permalink lookup equivalent to Instagram/Threads.
+    // A numeric tweet ID is sufficient for X's stable /i/web/status route, so
+    // expose that public URL instead of leaving an otherwise successful post
+    // unverifiable to the audit contract.
+    const publicUrl = published.public_url || (
+      published.platform === 'X' && /^\d+$/u.test(String(published.external_post_id || ''))
+        ? `https://x.com/i/web/status/${published.external_post_id}`
+        : null
+    );
     return Response.json({
       ok: true,
       post_id: published.post_id,
@@ -761,9 +770,9 @@ export async function handleSocialAdminRoutes(request, env) {
       status: published.status,
       external_post_id: published.external_post_id,
       published_at: published.published_at,
-      public_url: published.public_url || null
+      public_url: publicUrl
     }, {
-      status: published.public_url ? 200 : 202,
+      status: publicUrl ? 200 : 202,
       headers: { 'cache-control': 'no-store' }
     });
   }

@@ -135,8 +135,10 @@ const INSTAGRAM_GUIDE_POSTS = Object.freeze([
   },
   {
     id: 'guide-save-alert',
-    caption: '操作案内③ 気になる商品は保存して値下がり通知へ。買いたい価格を決めて、確認済み価格の変化を待てます。@hoshilu.app',
-    query: '軽くて持ち運べる小型写真プリンター',
+    // This approved creative asks viewers to describe the item they want. Keep
+    // the caption aligned with the visible card; it is not a price-alert screen.
+    caption: '操作案内③ 商品名が分からなくても大丈夫。見た場所・色・形・使い方を、そのままHOSHILUへ入力してみて。@hoshilu.app',
+    query: '動画で見た、軽くて持ち運べる小型写真プリンター',
     media_url: 'https://hoshilu.app/social/instagram-want-poll-v1.png'
   },
   {

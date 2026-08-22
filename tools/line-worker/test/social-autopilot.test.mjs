@@ -51,6 +51,15 @@ test('Instagramは月〜土20時15分、月・水・金をリールにする', (
     .every(post => post.media_url.endsWith('.mp4')), true);
 });
 
+test('土曜の操作案内は承認済み質問カードと同じ検索説明をする', () => {
+  const post = buildSocialAutopilotPosts(new Date('2026-08-22T10:59:00.000Z'), 1)
+    .find(item => item.platform === 'INSTAGRAM');
+  assert.ok(post);
+  assert.equal(post.media_url, 'https://hoshilu.app/social/instagram-want-poll-v1.png');
+  assert.match(post.caption, /商品名が分からなくても|見た場所・色・形・使い方/u);
+  assert.doesNotMatch(post.caption, /値下がり通知|買いたい価格/u);
+});
+
 test('Instagram定常投稿はBUZZ専用ビジュアルと/buzz送客を含む', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-20T00:00:00.000Z'), 30)
     .filter(post => post.platform === 'INSTAGRAM' && /^buzz-/.test(post.content_id));

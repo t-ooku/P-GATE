@@ -789,6 +789,37 @@ test('公開済み投稿APIはInstagram正式URLを即時保存して公開情�
   }
 });
 
+test('公開済みX投稿APIは数値post IDから検証可能な公開URLを返す', async () => {
+  const env = {
+    PRODUCT_DB: {
+      prepare(sql) {
+        assert.match(sql, /SELECT q\.post_id,q\.platform,q\.status/u);
+        return { bind: () => ({ first: async () => ({
+          post_id: 'daily-x-20260822',
+          platform: 'X',
+          status: 'PUBLISHED',
+          external_post_id: '2091118236762878262',
+          published_at: '2026-08-22T11:00:01.000Z',
+          public_url: null
+        }) }) };
+      }
+    }
+  };
+  const response = await handleSocialAdminRoutes(
+    new Request('https://hoshilu.app/api/social/posts/daily-x-20260822'), env
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    ok: true,
+    post_id: 'daily-x-20260822',
+    platform: 'X',
+    status: 'PUBLISHED',
+    external_post_id: '2091118236762878262',
+    published_at: '2026-08-22T11:00:01.000Z',
+    public_url: 'https://x.com/i/web/status/2091118236762878262'
+  });
+});
+
 test('Threadsインサイト取り込みはpermalinkと指標をJST日次スナップショットへ保存する', async () => {
   const writes = [];
   const env = {
