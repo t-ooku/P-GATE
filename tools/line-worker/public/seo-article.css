@@ -63,7 +63,13 @@ a:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-vis
   font-size: .86rem;
   white-space: nowrap;
 }
-.breadcrumbs a { color: var(--brand-dark); }
+.breadcrumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-block: .5rem;
+  color: var(--brand-dark);
+}
 .breadcrumbs span:last-child { overflow: hidden; text-overflow: ellipsis; }
 
 .seo-hero {
