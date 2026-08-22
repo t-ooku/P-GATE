@@ -5,6 +5,7 @@ import { localizedWishLabel } from './wish-localization.mjs';
 import { safeDiscoverySearchQuery, socialDiscoverySearchLinks, swippittDiscoveryMatch, gmailShareLink } from './discovery-actions.mjs';
 import { attachVerticalTicker, detachVerticalTicker } from './vertical-ticker.mjs';
 import { createRankingConfirmationFlow, currentRankingCategoryProposal, rejectRankingCategoryProposal } from './ranking-confirmation-flow.mjs';
+import { clientSearchFailureTelemetry } from './search-failure-telemetry.mjs';
 const KNOWLEDGE_HTTP_TIMEOUT_MS = 15000;
 const timedAbortController = timeoutMs => {
   const controller = new AbortController();
@@ -1035,12 +1036,13 @@ async function runKnowledgeSearch(options={}){
     scheduleRelatedRecommendations(effectiveQuery||submittedQuery,sequence);
     return{ok:true,result,requestId:lastRequestId};
   }catch(error){
-    const safeError=String(error?.message||error).slice(0,80);lastRequestId=String(error?.requestId||lastRequestId||'');
-    if(!isCurrentRun()||safeError==='SEARCH_SUPERSEDED'){
+    const rawError=String(error?.message||error).slice(0,80);lastRequestId=String(error?.requestId||lastRequestId||'');
+    if(!isCurrentRun()||rawError==='SEARCH_SUPERSEDED'){
       document.dispatchEvent(new CustomEvent('hoshilu:search-cancelled',{detail:{executionId}}));
       return{ok:false,cancelled:true,error:'SEARCH_SUPERSEDED'};
     }
-    console.warn('HOSHILU_SEARCH_DEGRADED',{error:safeError,requestId:lastRequestId});rememberMemberSearch(elements.query.value);
+    const failureTelemetry=clientSearchFailureTelemetry(error,lastRequestId);
+    console.warn('HOSHILU_SEARCH_DEGRADED',{error:failureTelemetry.error_code,requestId:failureTelemetry.request_id});rememberMemberSearch(elements.query.value);
     const fallback=withAiCandidateFallback(emergencyMarketplaceFallback(elements.query.value),options.aiCandidateFallback);
     const language=elements.language.value||'JA';
     const trace=lastRequestId?` (${({JA:'追跡ID',EN:'Tracking ID',ZH:'追踪ID',KO:'추적 ID'}[language]||'Tracking ID')}: ${lastRequestId})`:'';
@@ -1050,9 +1052,9 @@ async function runKnowledgeSearch(options={}){
     // related-product carousel. It obtains a fresh Turnstile token and shows
     // only products verified by marketplace APIs.
     scheduleRelatedRecommendations(submittedQuery,sequence);
-    document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId,requestId:lastRequestId}}));
+    document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId,errorCode:failureTelemetry.error_code,requestId:failureTelemetry.request_id}}));
     elements.status.className='status';elements.status.textContent='';
-    return{ok:false,degraded:true,error:safeError,result:fallback,requestId:lastRequestId};
+    return{ok:false,degraded:true,error:failureTelemetry.error_code,result:fallback,requestId:failureTelemetry.request_id};
   }finally{if(isCurrentRun())elements.submit.disabled=false;}
 }
 

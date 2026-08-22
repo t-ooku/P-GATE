@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   classifyGrowthTraffic, handleGrowthEvent, normalizeGrowthEvent,
-  recordSearchOperationalFailure, recordSearchProviderDegradation
+  recordSearchClientDegradation, recordSearchOperationalFailure, recordSearchProviderDegradation
 } from '../src/growth-events.mjs';
 
 test('accepts only anonymous allowlisted growth dimensions', () => {
@@ -31,6 +31,25 @@ test('accepts only random anonymous visitor and session identifiers', () => {
   const event = normalizeGrowthEvent({ event_type: 'landing_view', visitor_id: '550e8400-e29b-41d4-a716-446655440000', session_id: 'bad' });
   assert.equal(event.visitor_id, '550e8400-e29b-41d4-a716-446655440000');
   assert.equal(event.session_id, '');
+});
+
+test('search_degraded accepts only a bounded code and UUID-shaped request ID', () => {
+  assert.deepEqual(normalizeGrowthEvent({
+    event_type: 'search_degraded',
+    failure_code: 'turnstile_token_unavailable',
+    request_id: 'E309D1AD-2A34-4F2F-913B-47FCCDBBE24C',
+    query: '保存禁止の検索文'
+  }), {
+    event_type: 'search_degraded', locale: 'JA', source: '', medium: '', campaign: '', content: '',
+    marketplace: '', visitor_id: '', session_id: '', failure_code: 'TURNSTILE_TOKEN_UNAVAILABLE',
+    request_id: 'e309d1ad-2a34-4f2f-913b-47fccdbbe24c'
+  });
+  const sanitized = normalizeGrowthEvent({
+    event_type: 'search_degraded', failure_code: '検索本文を含む例外', request_id: 'invalid'
+  });
+  assert.equal(sanitized.failure_code, 'SEARCH_CLIENT_FAILURE');
+  assert.equal(sanitized.request_id, '');
+  assert.equal('query' in sanitized, false);
 });
 
 test('rejects unknown event types and marketplace values', () => {
@@ -110,6 +129,26 @@ test('provider degradation uses a fixed code allowlist and rejects forged dimens
     component:'ai_chat_all', provider:'all', code:'AI_ALL_PROVIDERS_FAILED'
   }), false);
   assert.equal(calls.length, 2);
+});
+
+test('client degradation diagnostic stores no query, visitor, or session data', async () => {
+  const calls = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };
+  assert.equal(await recordSearchClientDegradation(env, {
+    requestId: 'e309d1ad-2a34-4f2f-913b-47fccdbbe249',
+    code: 'TURNSTILE_TOKEN_UNAVAILABLE',
+    trafficClass: 'ATTRIBUTED',
+    query: '保存禁止の検索文', visitor_id: '保存禁止', session_id: '保存禁止'
+  }), true);
+  assert.equal(calls[0].values[1], 'search_client_degraded');
+  assert.equal(calls[0].values[3], 'browser');
+  assert.equal(calls[0].values[4], 'knowledge');
+  assert.equal(calls[0].values[5], 'TURNSTILE_TOKEN_UNAVAILABLE');
+  assert.equal(calls[0].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe249');
+  assert.equal(calls[0].values[9], 'ATTRIBUTED');
+  assert.equal(calls[0].values[10], '');
+  assert.equal(calls[0].values[11], '');
+  assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
 });
 
 test('accepts anonymous registration and inquiry events across all ten marketplaces', () => {
@@ -208,4 +247,32 @@ test('rejects cross-origin events and uncorrelated public dead-end signals', asy
     })
   }), env);
   assert.equal(deadEnd.status, 400);
+});
+
+test('correlated degraded event preserves attribution and adds a separate safe diagnostic', async () => {
+  const writes = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({
+    first: async () => ({ found: 1 }),
+    run: async () => { writes.push({ sql, values }); return { success: true }; }
+  }) }) } };
+  const response = await handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+    method: 'POST', headers: { origin: 'https://hoshilu.app', 'content-type': 'application/json' },
+    body: JSON.stringify({
+      event_type: 'search_degraded', source: 'instagram', medium: 'organic_social',
+      campaign: 'reel', content: 'creative_01',
+      session_id: '550e8400-e29b-41d4-a716-446655440000',
+      failure_code: 'SEARCH_TIMEOUT', request_id: 'e309d1ad-2a34-4f2f-913b-47fccdbbe250',
+      query: '保存禁止の検索文'
+    })
+  }), env);
+  assert.equal(response.status, 202);
+  assert.equal(writes.length, 2);
+  assert.equal(writes[0].values[1], 'search_degraded');
+  assert.equal(writes[0].values[3], 'instagram');
+  assert.equal(writes[0].values[5], 'reel');
+  assert.equal(writes[1].values[1], 'search_client_degraded');
+  assert.equal(writes[1].values[4], 'knowledge');
+  assert.equal(writes[1].values[5], 'SEARCH_TIMEOUT');
+  assert.equal(writes[1].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe250');
+  assert.doesNotMatch(JSON.stringify(writes), /保存禁止/u);
 });

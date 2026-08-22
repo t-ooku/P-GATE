@@ -1,6 +1,7 @@
 import { pathToFileURL } from 'node:url';
 
 const DEFAULT_DATABASE_ID = '17629324-b771-4348-982c-c25da48c29b2';
+const CLIENT_SEARCH_FAILURE_CODE_PATTERN = /^(?:AI|CONSENT|KNOWLEDGE|ORIGIN|REQUEST|SEARCH|TURNSTILE)_[A-Z0-9_]{2,72}$/u;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -46,6 +47,14 @@ export function searchProviderDegradationSql() {
   WHERE traffic_class<>'QA' AND source='worker'
     AND event_type='search_provider_degraded' AND occurred_at>=?1
   ORDER BY occurred_at DESC LIMIT 128`;
+}
+
+export function searchClientDegradationSql() {
+  return `SELECT medium AS component,campaign AS code,content AS request_id,occurred_at
+  FROM growth_events
+  WHERE traffic_class<>'QA' AND source='browser'
+    AND event_type='search_client_degraded' AND occurred_at>=?1
+  ORDER BY occurred_at DESC LIMIT 16`;
 }
 
 export function searchSloSql() {
@@ -562,6 +571,18 @@ export async function inspectProductionSearchSli({
     recoveryDegradedMinimum: degradedMinimum,
     recoveryDegradedRateLimit: degradedRateLimit
   });
+  const clientRows = slo.degraded > 0
+    ? await queryD1Rows(fetcher, endpoint, apiToken, searchClientDegradationSql(), [
+      new Date(now - sloMinutes * 60000).toISOString()
+    ]) : [];
+  const clientDegradation = clientRows.map((row) => ({
+    component: ['knowledge', 'turnstile', 'network', 'timeout', 'response', 'client'].includes(String(row.component || ''))
+      ? String(row.component) : 'client',
+    code: CLIENT_SEARCH_FAILURE_CODE_PATTERN.test(String(row.code || ''))
+      ? String(row.code) : 'SEARCH_CLIENT_FAILURE',
+    request_id: /^[a-f0-9-]{20,64}$/iu.test(String(row.request_id || '')) ? String(row.request_id) : '',
+    occurred_at: /^\d{4}-\d{2}-\d{2}T/u.test(String(row.occurred_at || '')) ? String(row.occurred_at) : ''
+  }));
   const monthlyRow = await queryD1(fetcher, endpoint, apiToken, searchMonthlySloSql(), [new Date(now - 30 * 86400000).toISOString()]);
   const monthly = evaluateMonthlyContinuity(monthlyRow, {
     minimumFinished: monthlyMinimumFinished, unavailableRateLimit: monthlyUnavailableRateLimit
@@ -578,6 +599,7 @@ export async function inspectProductionSearchSli({
   const status = acute.status === 'DEGRADED' || slo.status === 'DEGRADED' ? 'DEGRADED' : 'PASS';
   const code = acute.status === 'DEGRADED' ? acute.code : slo.status === 'DEGRADED' ? slo.code : acute.code;
   return { ...acute, status, code, provider_degradation: providerDegradation,
+    client_degradation: clientDegradation,
     slo_window_minutes: sloMinutes, slo, monthly, deep_canary: deepCanary,
     reliability_heartbeats: reliabilityHeartbeats };
 }
@@ -637,6 +659,7 @@ async function main() {
       `- backend failed: ${result.backend_failed}`,
       `- degraded rate: ${(result.degraded_rate * 100).toFixed(1)}%`, ''
       ,`Provider degradation: AI chat primary transient=${result.provider_degradation.ai_chat_primary_transient_requests}, query structurer primary transient=${result.provider_degradation.query_structurer_primary_transient_requests}, all-provider=0`, ''
+      ,`Client degradation: ${result.client_degradation.length ? result.client_degradation.map((item) => `${item.component}=${item.code} request_id=${item.request_id || 'none'} at ${item.occurred_at || 'unknown'}`).join(', ') : 'none recorded'}`, ''
       ,`Six-hour quality window: ${result.slo.finished} finished / ${result.slo.degraded} degraded (${(result.slo.degraded_rate * 100).toFixed(1)}%)`, ''
       ,`Thirty-day continuity: ${result.monthly.finished} finished / ${result.monthly.unavailable} unavailable (${(result.monthly.unavailable_rate * 100).toFixed(3)}%)`, ''
       ,`Deep canary: ${Object.entries(result.deep_canary).map(([component, value]) => `${component}=${value.status}(${value.code}) at ${value.occurred_at || 'pending'}`).join(', ')}`, ''

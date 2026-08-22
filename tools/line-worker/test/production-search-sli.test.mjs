@@ -4,7 +4,7 @@ import { deepCanaryReservationSql, deepCanarySql, evaluateDeepCanary, evaluateMo
   evaluatePendingReliabilityIncidents, evaluateReliabilityHeartbeats, evaluateSearchProviderDegradation,
   evaluateSearchSli, evaluateSearchSlo,
   inspectProductionSearchSli, reliabilityHeartbeatSql, reliabilityPendingIncidentSql,
-  searchBackendFailureSql, searchMonthlySloSql, searchProviderDegradationSql,
+  searchBackendFailureSql, searchClientDegradationSql, searchMonthlySloSql, searchProviderDegradationSql,
   searchSliRequiresIncident, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
 
 function healthyCanaryRows(now = Date.now()) {
@@ -48,6 +48,9 @@ function d1Fetch(row, sloRow = {
     if (body.sql.includes("event_type='search_provider_degraded'")) {
       return Response.json({ success: true, result: [{ success: true, results: providerRows }] });
     }
+    if (body.sql.includes("event_type='search_client_degraded'")) {
+      return Response.json({ success: true, result: [{ success: true, results: [] }] });
+    }
     const result = body.sql.includes("WHERE traffic_class<>'QA' AND event_type='search_backend_failed'") ? diagnosticRow
       : body.sql.includes('AS unavailable') ? { finished: 10, unavailable: 0 }
         : body.sql.includes('WITH recent AS') ? row : sloRow;
@@ -71,6 +74,15 @@ test('provider degradation query selects only fixed anonymous operational fields
   assert.match(sql, /event_type='search_provider_degraded'/u);
   assert.match(sql, /source='worker'/u);
   assert.match(sql, /medium AS component/u);
+  assert.match(sql, /content AS request_id/u);
+  assert.doesNotMatch(sql, /query|prompt|history|response|visitor_id|session_id|authorization/iu);
+});
+
+test('client degradation query selects only safe operational dimensions', () => {
+  const sql = searchClientDegradationSql();
+  assert.match(sql, /event_type='search_client_degraded'/u);
+  assert.match(sql, /source='browser'/u);
+  assert.match(sql, /campaign AS code/u);
   assert.match(sql, /content AS request_id/u);
   assert.doesNotMatch(sql, /query|prompt|history|response|visitor_id|session_id|authorization/iu);
 });

@@ -102,8 +102,8 @@ test('AIチャットは本検索失敗時もAI候補と13モールの縮退結�
   assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch\}/);
   assert.match(app, /async function runKnowledgeSearch\(options=\{\}\)/);
   assert.match(app, /return\{ok:true,result,requestId:lastRequestId\}/);
-  assert.match(app, /const safeError=String\(error\?\.message\|\|error\)\.slice\(0,80\)/);
-  assert.match(app, /return\{ok:false,degraded:true,error:safeError,result:fallback,requestId:lastRequestId\}/);
+  assert.match(app, /const failureTelemetry=clientSearchFailureTelemetry\(error,lastRequestId\)/);
+  assert.match(app, /return\{ok:false,degraded:true,error:failureTelemetry\.error_code,result:fallback,requestId:failureTelemetry\.request_id\}/);
   assert.match(app, /AI候補と13モールの検索先を表示しています/);
   assert.match(script, /window\.HoshiluSearch\?\.run/);
   assert.doesNotMatch(script, /submitButton\.click\(\)/);

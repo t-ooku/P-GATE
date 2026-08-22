@@ -46,6 +46,7 @@ const SEARCH_PROVIDER_DEGRADATION_CODES = new Set([
   'AI_PROVIDER_NETWORK_FAILED', 'AI_PROVIDER_FAILED', 'AI_PROVIDER_NOT_CONFIGURED',
   'AI_PROVIDERS_NOT_CONFIGURED', 'AI_ALL_PROVIDERS_FAILED'
 ]);
+const CLIENT_SEARCH_FAILURE_CODE_PATTERN = /^(?:AI|CONSENT|KNOWLEDGE|ORIGIN|REQUEST|SEARCH|TURNSTILE)_[A-Z0-9_]{2,72}$/u;
 const MARKETPLACES = new Set([
   '', 'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
   'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP',
@@ -61,6 +62,11 @@ function clean(value, length = 80) {
 function anonymousId(value) {
   const normalized = String(value || '').trim().toLowerCase();
   return /^[a-f0-9-]{20,64}$/.test(normalized) ? normalized : '';
+}
+
+function clientSearchFailureCode(value) {
+  const code = String(value || '').trim().toUpperCase();
+  return CLIENT_SEARCH_FAILURE_CODE_PATTERN.test(code) ? code : 'SEARCH_CLIENT_FAILURE';
 }
 
 export function classifyGrowthTraffic(event = {}) {
@@ -83,7 +89,7 @@ export function normalizeGrowthEvent(input = {}) {
   if (!EVENTS.has(eventType)) throw new Error('GROWTH_EVENT_INVALID');
   const locale = String(input.locale || 'JA').trim().toUpperCase();
   const marketplace = String(input.marketplace || '').trim().toUpperCase();
-  return {
+  const event = {
     event_type: eventType,
     locale: LOCALES.has(locale) ? locale : 'JA',
     source: clean(input.source),
@@ -94,6 +100,11 @@ export function normalizeGrowthEvent(input = {}) {
     visitor_id: anonymousId(input.visitor_id),
     session_id: anonymousId(input.session_id)
   };
+  if (eventType === 'search_degraded') {
+    event.failure_code = clientSearchFailureCode(input.failure_code);
+    event.request_id = anonymousId(input.request_id);
+  }
+  return event;
 }
 
 // Internal-only operational telemetry. This event type is intentionally not
@@ -172,6 +183,44 @@ export async function recordSearchProviderDegradation(env, {
   return true;
 }
 
+// Browser degradation details are stored as a separate operational row so
+// campaign attribution on the public search_degraded event remains intact.
+// The event type is internal-only and every dimension is fixed or allowlisted.
+export async function recordSearchClientDegradation(env, {
+  requestId = '', code = '', trafficClass = 'UNATTRIBUTED'
+} = {}) {
+  if (!env?.PRODUCT_DB) return false;
+  const safeRequestId = anonymousId(requestId);
+  const safeCode = clientSearchFailureCode(code);
+  const safeTrafficClass = ['QA', 'ATTRIBUTED', 'UNATTRIBUTED'].includes(trafficClass)
+    ? trafficClass : 'UNATTRIBUTED';
+  const component = safeRequestId ? 'knowledge'
+    : safeCode.startsWith('TURNSTILE_') ? 'turnstile'
+      : safeCode === 'SEARCH_NETWORK_FAILED' ? 'network'
+        : ['SEARCH_TIMEOUT', 'SEARCH_DEADLINE_EXCEEDED'].includes(safeCode) ? 'timeout'
+          : safeCode === 'SEARCH_RESPONSE_INVALID' ? 'response' : 'client';
+  const values = [
+    crypto.randomUUID(), 'search_client_degraded', 'JA', 'browser', component,
+    safeCode, safeRequestId, '', new Date().toISOString(), safeTrafficClass, '', ''
+  ];
+  try {
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
+    ).bind(...values).run();
+  } catch (error) {
+    const message = String(error?.message || error);
+    if (!/(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(message)) throw error;
+    await env.PRODUCT_DB.prepare(
+      `INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    ).bind(...values.slice(0, 10)).run();
+  }
+  return true;
+}
+
 export async function handleGrowthEvent(request, env) {
   const url = new URL(request.url);
   if (request.method !== 'POST' || url.pathname !== '/api/events') return null;
@@ -185,7 +234,7 @@ export async function handleGrowthEvent(request, env) {
     return Response.json({ ok: false, error: 'EVENT_INVALID' }, { status: 400 });
   }
   const trafficClass = classifyGrowthTraffic(event);
-  if (event.event_type === 'search_dead_end') {
+  if (event.event_type === 'search_dead_end' || event.event_type === 'search_degraded') {
     // Advisory RUM can be forged by a browser, so correlate it to a recent
     // search_started from the same anonymous session before accepting it.
     if (!event.session_id) return Response.json({ ok: false, error: 'EVENT_CORRELATION_REQUIRED' }, { status: 400 });
@@ -225,6 +274,19 @@ export async function handleGrowthEvent(request, env) {
       (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
       VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
     ).bind(...values.slice(0, 10)).run();
+  }
+  if (event.event_type === 'search_degraded') {
+    try {
+      await recordSearchClientDegradation(env, {
+        requestId: event.request_id,
+        code: event.failure_code,
+        trafficClass
+      });
+    } catch (error) {
+      console.warn('SEARCH_CLIENT_DEGRADATION_DIAGNOSTIC_FAILED', {
+        code: String(error?.name || 'Error').slice(0, 40)
+      });
+    }
   }
   return Response.json({ ok: true, identity_recorded: identityRecorded }, {
     status: 202,

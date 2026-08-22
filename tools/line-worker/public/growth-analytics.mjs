@@ -134,9 +134,12 @@ document.addEventListener('hoshilu:search-completed', event => { clearSearchWatc
 document.addEventListener('hoshilu:search-failed', event => { clearSearchWatch(event.detail?.executionId); send('search_dead_end'); });
 document.addEventListener('hoshilu:search-degraded', event => {
   clearSearchWatch(event.detail?.executionId);
-  // Attribution is preserved. The search text, request ID and exception
-  // message never enter the public analytics event.
-  send('search_degraded');
+  // Attribution is preserved. Only an allowlisted code and UUID-shaped
+  // request ID accompany the event; query text and exception bodies do not.
+  send('search_degraded', {
+    failure_code: event.detail?.errorCode,
+    request_id: event.detail?.requestId
+  });
 });
 
 document.addEventListener('click', event => {
