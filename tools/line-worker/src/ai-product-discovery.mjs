@@ -98,7 +98,14 @@ function openAiText(payload) {
 }
 
 function providerPrompt(query, language) {
-  return `You are HOSHILU's product-intent analysis engine. Understand the user's vague memory or wish and convert it into product candidates and short marketplace search terms.\n\nUser input: ${query}\nDisplay language: ${language}\n\nReturn JSON only with this exact structure:\n{\n  "category": "",\n  "intent_summary": "",\n  "features": [""],\n  "product_candidates": [\n    {\n      "name": "",\n      "brand": "",\n      "model": "",\n      "match_score": 1,\n      "reason": "",\n      "matched_features": [""],\n      "search_keywords": [""]\n    }\n  ],\n  "search_keywords": [""],\n  "multilingual_keywords": {\n    "ja": [""],\n    "en": [""],\n    "zh": [""],\n    "ko": [""]\n  }\n}\n\nRules:\n- Return 3 to ${MAX_AI_CANDIDATES} realistic product candidates when possible.\n- Do not return URLs.\n- Do not invent exact model numbers when uncertain; use a product family or descriptive candidate instead.\n- Convert long vague sentences into multiple short marketplace-friendly search terms.\n- Keep the original meaning, visual clues, use case, style, place seen, and brand clues.\n- Include Japanese and English terms; include Chinese and Korean when useful.\n- match_score must be 1-100 and reason must explain why the candidate matches.\n- JSON only, no markdown.`;
+  return `You are HOSHILU's product-intent analysis engine. Understand the user's vague memory or wish and convert it into product candidates and short marketplace search terms.\n\nUser input: ${query}\nDisplay language: ${language}\n\nReturn JSON only with this exact structure:\n{\n  "category": "",\n  "intent_summary": "",\n  "features": [""],\n  "product_candidates": [\n    {\n      "name": "",\n      "brand": "",\n      "model": "",\n      "match_score": 1,\n      "reason": "",\n      "matched_features": [""],\n      "search_keywords": [""]\n    }\n  ],\n  "search_keywords": [""],\n  "multilingual_keywords": {\n    "ja": [""],\n    "en": [""],\n    "zh": [""],\n    "ko": [""]\n  }\n}\n\nRules:\n- Return 3 to ${MAX_AI_CANDIDATES} realistic product candidates when possible.\n- Do not return URLs.\n- Do not invent exact model numbers when uncertain; use a product family or descriptive candidate instead.\n- Convert long vague sentences into multiple short marketplace-friendly search terms.\n- Keep the original meaning, visual clues, use case, style, place seen, and brand clues.\n- When the user says they saw it on Instagram, TikTok, YouTube, social media, or an ad, use the available Google Search tool to identify plausible public product names before answering. Do not identify a brand from memory alone.\n- Include Japanese and English terms; include Chinese and Korean when useful.\n- match_score must be 1-100 and reason must explain why the candidate matches.\n- JSON only, no markdown.`;
+}
+
+// 「SNSで見た」のように見た場所が識別の主要手掛かりなら、モデルの
+// 学習済み知識だけで推測せずGoogle Searchで公開情報を確認する。
+export function shouldGroundProductDiscovery(query) {
+  return /(?:インスタ(?:グラム)?|instagram|tiktok|youtube|SNS|広告|CM|動画|投稿).{0,40}(?:見た|見かけた|流れてきた|出てきた)|(?:見た|見かけた).{0,40}(?:インスタ(?:グラム)?|instagram|tiktok|youtube|SNS|広告|CM|動画|投稿)/iu
+    .test(String(query || '').normalize('NFKC'));
 }
 
 async function providerFetch(fetchImpl, url, options, timeoutMs) {
@@ -107,6 +114,10 @@ async function providerFetch(fetchImpl, url, options, timeoutMs) {
 
 async function callGemini(query, language, env, fetchImpl) {
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
+  const grounded = shouldGroundProductDiscovery(query);
+  const generationConfig = grounded
+    ? { temperature: 0.2 }
+    : { temperature: 0.25, responseMimeType: 'application/json' };
   const response = await providerFetch(
     fetchImpl,
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -115,10 +126,8 @@ async function callGemini(query, language, env, fetchImpl) {
       headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: providerPrompt(query, language) }] }],
-        generationConfig: {
-          temperature: 0.25,
-          responseMimeType: 'application/json'
-        }
+        ...(grounded ? { tools: [{ googleSearch: {} }] } : {}),
+        generationConfig
       })
     },
     GEMINI_TIMEOUT_MS
