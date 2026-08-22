@@ -25,6 +25,11 @@ test('主要カテゴリはカラコン以外も固定ルールで高速に横�
   assert.deepEqual(relatedProductRecommendationQueries('ベビーカー 軽量').map(item=>item.query),['ベビーカー レインカバー','ベビーカーフック','ベビーカーシート']);
   assert.deepEqual(relatedProductRecommendationQueries('天然石 ピアス').map(item=>item.query),['アクセサリーケース','ピアスキャッチ','ジュエリークロス']);
 });
+test('マットレス検索はシーツではなくマットレス本体を優先する',()=>{
+  const queries = relatedProductRecommendationQueries('インスタで見た、大きなマットレス').map(item=>item.query);
+  assert.deepEqual(queries,['ポケットコイルマットレス','高反発マットレス','低反発マットレス']);
+  assert.ok(!queries.includes('ベッドシーツ'));
+});
 test('固定ルールにないカテゴリは同期判定では創作しない',()=>assert.deepEqual(relatedProductRecommendationQueries('未知の商品XYZ'),[]));
 
 test('LB 3in1 アイブロウは眉メイクの関連商品カテゴリを返す',()=>assert.deepEqual(
