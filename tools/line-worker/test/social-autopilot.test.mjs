@@ -78,7 +78,7 @@ test('承認済みセラー投稿はX非動画枠へ少量だけ入り/for-selle
     assert.equal(url.pathname, '/for-sellers');
     assert.equal(url.searchParams.get('utm_source'), 'x');
     assert.match(url.searchParams.get('utm_campaign'), /13mall/u);
-    assert.doesNotMatch(post.caption, /No\\.?1|最安|必ず売れる|売上アップ/u);
+    assert.doesNotMatch(post.caption, /No\.?1|最安|必ず売れる|売上アップ/u);
   }
 });
 
