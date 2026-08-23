@@ -7,6 +7,7 @@ test('検索意図が異なる日本語48ページと英語5ページを提供�
   assert.equal(seoPagePaths.length, 53);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
+    assert.ok(html, path);
     assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\//);
     assert.match(html, /hreflang="x-default"/);
     assert.match(html, /<form action="\/" method="get" data-seo-search-form>/);
