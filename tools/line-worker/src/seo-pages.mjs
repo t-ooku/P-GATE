@@ -948,7 +948,7 @@ const pages = {
       ]
     })
   },
-  'compare-qoo10-shein-rankings-for-korean-trends': {
+  'compare-qoo-and-shein-rankings-for-korean-trends': {
     ja: guide('ja', {
       title: 'Qoo10・SHEINのランキングを比べて韓国トレンド商品を探す方法',
       updatedAt: '2026-08-24',
@@ -1240,7 +1240,7 @@ const visualProfiles = {
       headings: ['順位条件を確認する', 'アイテム別に比べる', '自分の条件で絞る'],
       steps: [['カテゴリを固定する', 'トップス、ボトムス、バッグなど同じアイテムへそろえます。'], ['根拠を確認する', '集計元、期間、更新日、広告表示を確認します。'], ['適合条件を加える', '実寸、素材、季節、返品条件で候補を絞ります。']]
     },
-    'compare-qoo10-shein-rankings-for-korean-trends': {
+    'compare-qoo-and-shein-rankings-for-korean-trends': {
       intent: 'compare_qoo10_shein_rankings_for_korean_trends', cluster: 'reviews-rankings', articleType: 'ranking-guide',
       headings: ['各順位の条件', '横断支持の見方', '同一商品確認'],
       steps: [['同じ用途へそろえる', 'コスメ、服、小物など比較するカテゴリを固定します。'], ['順位条件を分ける', '各サービスの集計期間、更新時点、広告表示を確認します。'], ['HOSHILUで探す', '商品名や特徴を入力し、同一商品と類似商品を分けます。']]
@@ -1347,7 +1347,7 @@ const guideHubGroups = [
       'read-korean-cosmetics-reviews-by-skin-type', 'read-korean-fashion-size-reviews',
       'use-korean-cosmetics-rankings-safely', 'use-fan-goods-rankings-by-purpose',
       'use-student-commute-item-rankings', 'read-wireless-earphone-reviews-by-use',
-      'use-korean-fashion-rankings-by-item', 'compare-qoo10-shein-rankings-for-korean-trends'
+      'use-korean-fashion-rankings-by-item', 'compare-qoo-and-shein-rankings-for-korean-trends'
     ]
   },
   {
