@@ -165,7 +165,7 @@ test('2026-08-23の新規記事はハブと同一検索意図クラスタへつ�
 
 test('2026-08-24公開の口コミ1記事・ランキング2記事・購入先比較2記事は固有意図と安全基準を満たす', () => {
   const reviews = ['read-wireless-earphone-reviews-by-use'];
-  const rankings = ['use-korean-fashion-rankings-by-item', 'compare-qoo10-shein-rankings-for-korean-trends'];
+  const rankings = ['use-korean-fashion-rankings-by-item', 'compare-qoo-and-shein-rankings-for-korean-trends'];
   const comparisons = ['compare-korean-cosmetics-across-malls', 'compare-korean-fashion-purchase-sites'];
   const intents = new Set();
   for (const slug of [...reviews, ...rankings, ...comparisons]) {
