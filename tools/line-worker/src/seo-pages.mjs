@@ -1367,7 +1367,8 @@ const guideHubGroups = [
       'compare-multiple-shops', 'find-cheapest-across-malls',
       'compare-amazon-rakuten-yahoo-shopping', 'compare-total-price-with-shipping',
       'compare-delivery-and-return-conditions', 'how-to-read-shopping-reviews',
-      'how-to-use-shopping-rankings'
+      'how-to-use-shopping-rankings', 'compare-korean-cosmetics-across-malls',
+      'compare-korean-fashion-purchase-sites'
     ]
   },
   {
