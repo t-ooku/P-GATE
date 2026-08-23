@@ -1523,7 +1523,7 @@ function structuredData(page, locale, slug, canonical) {
 }
 
 export function evaluateSeoPageQuality(pathname) {
-  const match = /^\/(ja|en)\/([a-z-]+)\/?$/.exec(pathname);
+  const match = /^\/(ja|en)\/([a-z0-9-]+)\/?$/.exec(pathname);
   if (!match) return null;
   const [, locale, slug] = match;
   const page = pages[slug]?.[locale];
