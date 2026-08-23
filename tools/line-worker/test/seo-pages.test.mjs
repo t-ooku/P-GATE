@@ -188,7 +188,7 @@ test('2026-08-24公開の口コミ1記事・ランキング2記事・購入先�
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
-  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-23<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-24<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
