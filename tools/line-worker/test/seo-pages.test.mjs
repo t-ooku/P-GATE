@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語43ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 48);
+test('検索意図が異なる日本語48ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 53);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
+    assert.ok(html, path);
     assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\//);
     assert.match(html, /hreflang="x-default"/);
     assert.match(html, /<form action="\/" method="get" data-seo-search-form>/);
@@ -41,7 +42,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは43記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは48記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -53,7 +54,7 @@ test('日本語ガイドハブは43記事を重複なく分類し全記事から
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 43);
+  assert.equal(japanesePaths.length, 48);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -161,14 +162,38 @@ test('2026-08-23の新規記事はハブと同一検索意図クラスタへつ�
     for (const candidate of rankings.filter((other) => other !== slug)) assert.ok(html.includes('href="/ja/' + candidate + '"'));
   }
 });
+
+test('2026-08-24公開の口コミ1記事・ランキング2記事・購入先比較2記事は固有意図と安全基準を満たす', () => {
+  const reviews = ['read-wireless-earphone-reviews-by-use'];
+  const rankings = ['use-korean-fashion-rankings-by-item', 'compare-qoo-and-shein-rankings-for-korean-trends'];
+  const comparisons = ['compare-korean-cosmetics-across-malls', 'compare-korean-fashion-purchase-sites'];
+  const intents = new Set();
+  for (const slug of [...reviews, ...rankings, ...comparisons]) {
+    const path = '/ja/' + slug;
+    const html = renderSeoPage(path);
+    assert.match(html, /datetime="2026-08-24"/);
+    assert.match(html, /"dateModified":"2026-08-24"/);
+    assert.match(html, /<figure class="guide-visual"/);
+    assert.match(html, /data-seo-section-event="seo_review_guide_view"/);
+    assert.doesNotMatch(html, /Premium|月額980円|人気No\.1|絶対おすすめ|最安(?:値)?です/);
+    assert.doesNotMatch(html, /https?:\/\/[^"']+\.(?:jpg|jpeg|webp)/i);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    intents.add(html.match(/data-seo-intent="([^"]+)"/)?.[1]);
+  }
+  assert.equal(intents.size, 5);
+  for (const slug of reviews) assert.match(renderSeoPage('/ja/' + slug), /data-seo-article-type="review-guide"/);
+  for (const slug of rankings) assert.match(renderSeoPage('/ja/' + slug), /data-seo-article-type="ranking-guide"/);
+  for (const slug of comparisons) assert.match(renderSeoPage('/ja/' + slug), /data-seo-article-type="comparison-guide"/);
+});
+
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
-  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-23<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-24<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 54);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 59);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });

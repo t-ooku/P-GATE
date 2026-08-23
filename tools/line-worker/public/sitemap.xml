@@ -6,7 +6,7 @@
 <url><loc>https://hoshilu.app/for-sellers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://hoshilu.app/ja/guides</loc>
-    <lastmod>2026-08-23</lastmod>
+    <lastmod>2026-08-24</lastmod>
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/guides"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://hoshilu.app/ja/guides"/>
     <changefreq>weekly</changefreq><priority>0.9</priority>
@@ -295,4 +295,9 @@
   </url>
   <url><loc>https://hoshilu.app/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://hoshilu.app/terms</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://hoshilu.app/ja/read-wireless-earphone-reviews-by-use</loc><lastmod>2026-08-24</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/use-korean-fashion-rankings-by-item</loc><lastmod>2026-08-24</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-qoo-and-shein-rankings-for-korean-trends</loc><lastmod>2026-08-24</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-korean-cosmetics-across-malls</loc><lastmod>2026-08-24</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-korean-fashion-purchase-sites</loc><lastmod>2026-08-24</lastmod></url>
 </urlset>
