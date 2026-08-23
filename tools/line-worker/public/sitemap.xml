@@ -293,6 +293,42 @@
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/use-student-commute-item-rankings"/>
     <changefreq>weekly</changefreq><priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-items-for-a-korean-style-room</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-items-for-a-korean-style-room"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-affordable-items-that-look-expensive</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-affordable-items-that-look-expensive"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/check-whether-a-viral-product-suits-you</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/check-whether-a-viral-product-suits-you"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-alternatives-to-discontinued-cosmetics</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-alternatives-to-discontinued-cosmetics"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-the-name-of-an-old-household-tool</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-the-name-of-an-old-household-tool"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hoshilu.app/ja/find-the-name-of-a-kitchen-tool</loc>
+    <lastmod>2026-08-23</lastmod>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/find-the-name-of-a-kitchen-tool"/>
+    <changefreq>weekly</changefreq><priority>0.8</priority>
+  </url>
   <url><loc>https://hoshilu.app/privacy</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://hoshilu.app/terms</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>
