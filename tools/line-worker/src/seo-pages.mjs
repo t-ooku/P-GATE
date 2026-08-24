@@ -1549,7 +1549,9 @@ const guideHubGroups = [
     description: '子ども、高齢者、一人暮らし、狭い部屋など、実際の利用条件から候補を絞るガイドです。',
     slugs: [
       'shopping-guide-for-parents', 'shopping-guide-for-seniors',
-      'shopping-guide-for-living-alone', 'find-products-for-small-spaces'
+      'shopping-guide-for-living-alone', 'find-products-for-small-spaces',
+      'choose-commute-backpack-by-load-and-size', 'choose-desk-light-by-space-and-adjustment',
+      'choose-storage-box-by-space-and-opening'
     ]
   },
   {
