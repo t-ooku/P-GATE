@@ -1,6 +1,6 @@
 const ORIGIN = 'https://hoshilu.app';
 const UPDATED_AT = '2026-08-13';
-const HUB_UPDATED_AT = '2026-08-25';
+const HUB_UPDATED_AT = '2026-08-26';
 
 const jaDefaults = {
   audience: [
@@ -1155,6 +1155,202 @@ const pages = {
         ['完成品と組み立て品はどちらが良いですか？', '搬入経路、必要工具、作業人数、設置場所、返品条件を含めて判断してください。']
       ]
     })
+  },
+
+  'use-hoshilu-buzz-for-product-discovery': {
+    ja: guide('ja', {
+      title: 'HOSHILU BUZZから商品候補を見つける方法',
+      description: 'HOSHILU BUZZの公開ランキングを入口に、順位・口コミ件数・商品条件を確認して、自分に合う候補へ絞る手順を解説します。',
+      conclusion: 'HOSHILU BUZZは、モール公式ランキングをもとにした公開中の発見ページです。順位だけで購入を決めず、カテゴリ、更新時点、口コミ件数、商品仕様を見て候補を作り、必要なら同じ検索条件を他の購入先へ引き継いでください。',
+      query: 'ランキングで見つけたワイヤレスイヤホンを用途と型番で比較したい',
+      updatedAt: '2026-08-26',
+      featurePath: '/buzz',
+      featureLabel: 'HOSHILU BUZZを開く',
+      audience: [
+        '検索語が決まっておらず、今注目されているカテゴリから候補を知りたい人',
+        'ランキング順位だけでなく、件数や商品条件も確認して選びたい人',
+        '見つけた候補を別の購入先でも探して比較したい人'
+      ],
+      criteria: [
+        ['ランキングの対象', '急上昇やカテゴリ別など、どの棚の順位かを確認します。別カテゴリの順位は同じ基準で比べません。'],
+        ['更新時点と母数', '順位の変化、評価、口コミ件数は表示時点の情報として見て、販売ページで最新状態を確認します。'],
+        ['自分の用途との一致', '人気だけで決めず、型番、仕様、サイズ、用途が自分の条件に合うかを確認します。']
+      ],
+      comparison: [
+        ['急上昇', '順位変化と経過時間を確認', '変化を知る入口として使い、仕様へ戻る'],
+        ['カテゴリ別順位', '同じカテゴリ内の候補を確認', '用途・サイズ・型番で絞り直す'],
+        ['他モールで探す', '同じ検索語を購入先へ引き継ぐ', '同一商品と類似商品を分けて確認']
+      ],
+      evidence: [
+        '2026年8月26日にHOSHILU本番の公開ページ「/buzz」と、モール公式ランキング由来の表示を確認しました。',
+        '表示順位、価格、口コミ件数は変動するため、記事内へ固定値として転載していません。',
+        '商品画像や口コミ原文は掲載せず、候補の見方と販売ページでの確認手順だけを説明します。'
+      ],
+      review: 'BUZZ上の評価と件数は候補を知る手掛かりです。評価点だけで決めず、販売ページで投稿時期、利用条件、低評価の反復、商品型番を確認してください。',
+      identity: '同じ商品名に見えても、型番、世代、色、容量、セット内容が違えば別商品です。BUZZから他モールへ移るときも、完全一致と類似候補を分けてください。',
+      tips: ['まず興味のある棚を一つに絞る', '順位・件数・更新時点をセットで見る', '候補が決まったら型番を使って購入先を比較する'],
+      faq: [
+        ['HOSHILU BUZZの順位はHOSHILU独自順位ですか？', '公開画面ではモール公式ランキングがもとと案内されています。表示された棚と更新時点を確認し、総合的な品質順位とは分けて見てください。'],
+        ['順位が高ければ自分にも合いますか？', '順位だけでは判断できません。用途、仕様、サイズ、口コミの利用条件を確認して、自分の条件で絞り直してください。'],
+        ['表示価格のまま購入できますか？', '価格、送料、在庫、クーポン条件は変わります。購入前に必ず販売ページで最新条件を確認してください。']
+      ]
+    })
+  },
+  'use-hoshilu-sale-radar-before-shopping': {
+    ja: guide('ja', {
+      title: 'HOSHILU SALE RADARでセール情報を確認する方法',
+      description: 'HOSHILU SALE RADARの公開情報から対象モールと日付を確認し、予定買いの商品を買う前に販売条件を見直す手順を解説します。',
+      conclusion: 'SALE RADARは、複数モールのセール情報を確認する公開中の入口です。セール名や割引表示だけで購入を決めず、対象商品、期間、送料、クーポン条件、通常時の価格を各公式ページで確認してください。',
+      query: '収納ボックスをセール前にサイズと送料込み総額で比較したい',
+      updatedAt: '2026-08-26',
+      featurePath: '/',
+      featureLabel: 'HOSHILUのSALE RADARを見る',
+      audience: [
+        '買う物は決まっているが、セール時期と購入条件を確認したい人',
+        '複数モールのセール情報を一か所から見始めたい人',
+        '割引率ではなく支払総額と商品同一性で判断したい人'
+      ],
+      criteria: [
+        ['対象期間', '開始・終了日時と、表示を確認した日を分けて記録します。'],
+        ['対象商品と条件', '全商品対象とは限らないため、カテゴリ、対象者、最低購入額、クーポン条件を確認します。'],
+        ['支払総額', '商品価格、送料、適用できる値引き、ポイント条件を分け、購入直前の総額を見ます。']
+      ],
+      comparison: [
+        ['セール情報', '対象モール・期間・キャンペーン名', '公式ページで開催条件を確認'],
+        ['商品候補', '型番・容量・色・セット数', '同一商品だけを比較'],
+        ['購入条件', '送料・値引き・ポイント・返品', '自分に適用される支払総額で判断']
+      ],
+      evidence: [
+        '2026年8月26日にHOSHILU本番トップでSALE RADARと、複数モールの公開セール情報へのリンクを確認しました。',
+        'セール内容と期間は変わるため、記事内に固定の割引率や終了日時を掲載していません。',
+        '割引の有利さを断定せず、モール公式ページと販売ページで確認する手順を示します。'
+      ],
+      review: 'セール中の口コミでも、型番と投稿日、購入時の条件が自分と同じかを確認します。値引きの大きさと商品の評価は別に判断してください。',
+      identity: 'セール対象の名称が似ていても、容量、色、セット数、旧型・新型が違えば価格は直接比較できません。商品識別条件を固定してから総額を見てください。',
+      tips: ['欲しい商品条件を先に固定する', 'セール期間と対象条件を公式ページで確認する', '割引率ではなく購入直前の総額で判断する'],
+      faq: [
+        ['SALE RADARの情報だけで購入判断できますか？', 'いいえ。セールを知る入口として使い、対象商品、期間、送料、在庫、適用条件は各公式ページと販売ページで確認してください。'],
+        ['通知設定は誰でも保存できますか？', '公開画面では、ログインすると設定を保存できると案内されています。保存前に通知内容、頻度、対象モールを確認してください。'],
+        ['割引率が大きい商品ほど得ですか？', '割引率だけでは判断できません。通常時の価格、送料、セット内容、適用条件をそろえて支払総額を確認してください。']
+      ]
+    })
+  },
+  'install-hoshilu-as-a-web-app': {
+    ja: guide('ja', {
+      title: 'HOSHILUをアプリとしてホーム画面から使う方法',
+      description: 'HOSHILUの公開PWA案内に沿って、iPhone・Android・PCからホーム画面やアプリ一覧へ追加する手順と注意点を解説します。',
+      conclusion: 'HOSHILUは本番でWebアプリ用マニフェストと「アプリとして使う」案内を公開しています。端末の標準機能から追加し、非公式アプリや不明なインストーラーは使わないでください。追加後も価格や在庫は販売ページで確認します。',
+      query: '通勤中に使う軽いワイヤレスイヤホンを探したい',
+      updatedAt: '2026-08-26',
+      featurePath: '/',
+      featureLabel: 'HOSHILUの「アプリとして使う」を開く',
+      audience: [
+        'HOSHILUへホーム画面からすぐ戻れるようにしたい人',
+        'iPhone・Android・PCの標準機能でWebアプリを追加したい人',
+        'アプリストア以外の不明な配布物を避けたい人'
+      ],
+      criteria: [
+        ['公式URL', '追加前にアドレスがhoshilu.appであることを確認します。'],
+        ['端末別の操作', 'iPhone・iPadはSafariの共有、AndroidはChromeのメニュー、PCは対応ブラウザの案内を使います。'],
+        ['権限と通知', '追加だけで不要な権限を許可せず、通知は必要な内容と頻度を確認して設定します。']
+      ],
+      comparison: [
+        ['iPhone・iPad', 'Safariの共有からホーム画面に追加', '表示名と公式URLを確認'],
+        ['Android', 'Chromeのメニューからインストールまたは追加', 'ブラウザの標準案内だけを使う'],
+        ['PC', 'Chrome・Edgeのインストール案内を利用', '共有PCでは追加先とログイン状態を確認']
+      ],
+      evidence: [
+        '2026年8月26日にHOSHILU本番で「アプリとして使う」ボタン、端末別案内、manifest-v2.webmanifestを確認しました。',
+        '第三者のアプリストア画像や端末画面は転載せず、HOSHILU本番に表示される操作名だけを文章化しました。',
+        'PWA追加はサイトへの入口を作る操作であり、価格・在庫・販売条件を保証するものではありません。'
+      ],
+      review: 'ホーム画面へ追加しても、商品口コミの確認方法は変わりません。評価点、件数、投稿日、利用条件を見て、必要なら販売ページの原文を確認してください。',
+      identity: 'ホーム画面のアイコンは公式URLがhoshilu.appであることを確認します。商品比較では、追加方法に関係なく型番、容量、色、セット数を照合してください。',
+      tips: ['追加前に公式URLを確認する', '端末標準の共有・インストール機能を使う', '通知は内容と頻度を確認してから設定する'],
+      faq: [
+        ['アプリストアからダウンロードしますか？', '公開画面では、ブラウザの標準機能からホーム画面またはアプリ一覧へ追加する方法を案内しています。不明な配布物は使わないでください。'],
+        ['ホーム画面へ追加すると有料になりますか？', 'Webアプリへの入口を追加する操作です。料金や契約条件は、実際に表示される公式案内を確認してください。'],
+        ['追加できない場合はどうしますか？', '対応ブラウザでhoshilu.appを開き、ブラウザの共有・メニュー・アドレスバーに追加案内があるか確認してください。']
+      ]
+    })
+  },
+  'choose-ai-check-or-quick-search-in-hoshilu': {
+    ja: guide('ja', {
+      title: 'HOSHILUの「AIに確認」と「すぐ検索」を使い分ける方法',
+      description: '商品名が曖昧なときの「AIに確認して探す」と、条件が固まっているときの「すぐ検索」を使い分ける手順を解説します。',
+      conclusion: '商品名が分からず記憶や用途から始めるなら「AIに確認して探す」、商品名・型番・必須条件が固まっているなら「すぐ検索」が向きます。どちらも候補が出た後は、商品同一性と販売ページの最新条件を確認してください。',
+      query: '机に挟めて明るさを変えられる小さいデスクライト',
+      updatedAt: '2026-08-26',
+      featurePath: '/',
+      featureLabel: 'HOSHILUの検索画面を開く',
+      audience: [
+        '商品名が分からず、見た目や用途しか説明できない人',
+        '型番や条件が決まり、短い手順で候補を見たい人',
+        '最初の検索結果が合わないときに入力方法を切り替えたい人'
+      ],
+      criteria: [
+        ['記憶が中心', '見た場所、用途、形、色など断片的ならAI確認を使います。'],
+        ['識別条件が中心', '商品名、型番、容量、対応機種が分かるならすぐ検索を使います。'],
+        ['検索後の照合', '入口に関係なく、候補の型番・仕様・販売条件を確認します。']
+      ],
+      comparison: [
+        ['AIに確認して探す', '曖昧な文章・用途・見た目', '条件を整理しながら候補へ進む'],
+        ['すぐ検索', '商品名・型番・必須条件が明確', '入力条件で直接候補を確認'],
+        ['切り替える', '候補が広すぎる・狭すぎる', '不足条件を足すか表現を簡潔にする']
+      ],
+      evidence: [
+        '2026年8月26日にHOSHILU本番トップで「AIに確認して探す」と「すぐ検索」の切替を確認しました。',
+        'AIは検索条件の整理を担い、商品・価格・在庫の事実を作るものではありません。',
+        '検索結果の正しさは、型番・仕様・取得状態と販売ページの最新情報で確認します。'
+      ],
+      review: '口コミを探す場合も、検索方法だけで信頼性は決まりません。自分と近い利用条件、投稿時期、件数、低評価の共通点を確認してください。',
+      identity: '型番が分かる場合は省略せず入力します。曖昧検索から出た候補は、商品名が近くても型番、容量、色、対応機種が違えば別商品として扱います。',
+      tips: ['曖昧な記憶なら用途と見た目を文章にする', '型番が分かるなら記号まで省略しない', '候補が合わなければ違った点を次の条件へ加える'],
+      faq: [
+        ['商品名が分からない場合はどちらを使いますか？', '「AIに確認して探す」で、用途、見た場所、形、色など覚えていることを文章にしてください。'],
+        ['型番が分かる場合もAI確認が必要ですか？', '型番と商品条件が固まっている場合は「すぐ検索」から始められます。候補では末尾記号や世代まで照合してください。'],
+        ['検索方法を途中で変えてもよいですか？', 'はい。候補が広すぎる場合は条件を追加し、狭すぎる場合は表現を整理して別の入口から試してください。']
+      ]
+    })
+  },
+  'use-hoshilu-mall-coverage-to-continue-searching': {
+    ja: guide('ja', {
+      title: 'HOSHILUの対応モールを使って横断検索を続ける方法',
+      description: 'HOSHILUの公開中の対応モール表示を確認し、まとめて検索する購入先と、同じ条件を引き継いで個別に探す購入先を使い分ける方法を解説します。',
+      conclusion: 'HOSHILU本番では、楽天市場とYahoo!ショッピングをまとめて検索する対象、AmazonやQoo10などを同じ条件で個別に探す対象として分けて案内しています。表示範囲を混同せず、各購入先で同一商品と最新条件を確認してください。',
+      query: '同じ型番のモバイルバッテリーを複数モールで比較したい',
+      updatedAt: '2026-08-26',
+      featurePath: '/',
+      featureLabel: 'HOSHILUの対応モールを見る',
+      audience: [
+        '一つの検索条件を複数の購入先へ引き継ぎたい人',
+        'HOSHILU内でまとめて表示される範囲を正しく理解したい人',
+        '個別検索先でも同一商品を見分けて比較したい人'
+      ],
+      criteria: [
+        ['まとめて検索する範囲', 'HOSHILU内で商品候補をまとめて確認する購入先を、公開中の対応モール表示で確認します。'],
+        ['個別に探す範囲', '検索結果に含まれない購入先は、同じ検索語を引き継いで各検索先で確認します。'],
+        ['比較条件', '型番、容量、色、セット数、送料、販売者をそろえてから購入条件を比較します。']
+      ],
+      comparison: [
+        ['まとめて検索', '楽天市場・Yahoo!ショッピングの取得候補', 'HOSHILU内の確認状態を見て販売ページへ'],
+        ['個別に探す', 'Amazon・Qoo10などへの検索導線', '検索先で同一商品と最新条件を確認'],
+        ['購入先比較', '同一商品・送料・在庫・販売者', '確認できない項目は保留して判断']
+      ],
+      evidence: [
+        '2026年8月26日にHOSHILU本番のMARKETPLACE COVERAGEで、まとめて検索2モールと個別に探す11モールの区分を確認しました。',
+        '対応範囲は変わり得るため、記事の利用時にはHOSHILU本番の最新表示を確認します。',
+        '個別検索先の価格・在庫・販売条件はHOSHILUが保証せず、各販売ページで最終確認します。'
+      ],
+      review: '購入先が変わると口コミの母数や投稿条件も変わります。同じ型番の口コミだけを見て、件数、投稿日、利用条件、販売者への指摘を分けて確認してください。',
+      identity: '同じ検索語の結果でも、型番、容量、色、セット数、付属品が一致しなければ別商品です。まとめて検索と個別検索の候補をそのまま同一商品として扱わないでください。',
+      tips: ['本番の対応モール区分を先に確認する', '個別検索先へも同じ型番と条件を引き継ぐ', '送料・在庫・販売者は購入直前に再確認する'],
+      faq: [
+        ['13モールの商品がすべてHOSHILU内に同時表示されますか？', 'いいえ。公開画面では、まとめて検索する2モールと、同じ条件で個別に探す11モールを分けて案内しています。'],
+        ['個別検索先でも条件は引き継げますか？', '公開画面では、同じ検索条件で各モールを探す導線が案内されています。移動後は型番と販売条件を確認してください。'],
+        ['対応モール数は固定ですか？', '対応範囲は変わる可能性があります。利用時にHOSHILU本番のMARKETPLACE COVERAGEで最新表示を確認してください。']
+      ]
+    })
   }
 };
 
@@ -1424,6 +1620,32 @@ const visualProfiles = {
       intent: 'compare_home_office_desks_by_size_and_cable_routing', cluster: 'category-comparison', articleType: 'comparison-guide',
       headings: ['設置・作業条件', '構造と配線', '搬入・購入確認'],
       steps: [['部屋と機器を測る', '設置面、椅子の動作、モニターや書類の配置を確認します。'], ['脚と配線を照合', '補強材、クランプ位置、配線穴やトレーの干渉を見ます。'], ['搬入条件を確認', '梱包寸法、組み立て方法、返品条件を販売ページで確認します。']]
+    },
+
+    'use-hoshilu-buzz-for-product-discovery': {
+      intent: 'use_hoshilu_buzz_for_product_discovery', cluster: 'hoshilu-feature-use', articleType: 'feature-guide',
+      headings: ['BUZZの入口', '確認する根拠', '次の操作'],
+      steps: [['棚を一つ選ぶ', '急上昇やカテゴリ別など、見たいランキングの対象を固定します。'], ['順位の条件を見る', '更新時点、順位変化、評価件数を確認し、人気だけで決めません。'], ['候補を検索へ渡す', '商品名や型番を使い、他モールでも同一商品を確認します。']]
+    },
+    'use-hoshilu-sale-radar-before-shopping': {
+      intent: 'use_hoshilu_sale_radar_before_shopping', cluster: 'hoshilu-feature-use', articleType: 'feature-guide',
+      headings: ['SALE RADARの入口', '確認する条件', '購入前の判断'],
+      steps: [['予定商品を決める', '買う物の型番、仕様、予算を先に固定します。'], ['セール条件を見る', '対象モール、期間、商品、クーポン条件を公式ページで確認します。'], ['総額を再確認', '送料、値引き、在庫、返品条件を購入直前に確認します。']]
+    },
+    'install-hoshilu-as-a-web-app': {
+      intent: 'install_hoshilu_as_a_web_app', cluster: 'hoshilu-feature-use', articleType: 'feature-guide',
+      headings: ['使う端末', '追加方法', '追加前後の確認'],
+      steps: [['公式URLを開く', 'hoshilu.appであることを確認し、「アプリとして使う」を開きます。'], ['端末標準機能で追加', 'Safari、Chrome、Edgeの共有・メニュー・インストール案内を使います。'], ['必要な設定だけ選ぶ', '表示名と追加先を確認し、通知は内容と頻度を見て設定します。']]
+    },
+    'choose-ai-check-or-quick-search-in-hoshilu': {
+      intent: 'choose_ai_check_or_quick_search_in_hoshilu', cluster: 'hoshilu-feature-use', articleType: 'feature-guide',
+      headings: ['入力の状態', '選ぶ検索方法', '候補の確認'],
+      steps: [['分かる情報を整理', '商品名・型番があるか、用途や見た目だけかを確認します。'], ['入口を選ぶ', '曖昧ならAI確認、条件が明確ならすぐ検索を選びます。'], ['違いを次へ反映', '候補の型番と仕様を照合し、違った点を検索条件へ加えます。']]
+    },
+    'use-hoshilu-mall-coverage-to-continue-searching': {
+      intent: 'use_hoshilu_mall_coverage_to_continue_searching', cluster: 'hoshilu-feature-use', articleType: 'feature-guide',
+      headings: ['対応モール区分', '検索の続け方', '購入前の確認'],
+      steps: [['区分を確認', 'まとめて検索する購入先と、個別に探す購入先を本番表示で確認します。'], ['同じ条件を引き継ぐ', '商品名、型番、容量、色、セット数を変えずに各購入先へ進みます。'], ['販売条件を照合', '送料、在庫、販売者、返品条件を販売ページで確認します。']]
     }
   },
   en: {
@@ -1552,6 +1774,16 @@ const guideHubGroups = [
       'shopping-guide-for-living-alone', 'find-products-for-small-spaces',
       'choose-commute-backpack-by-load-and-size', 'choose-desk-light-by-space-and-adjustment',
       'choose-storage-box-by-space-and-opening'
+    ]
+  },
+  {
+    id: 'features',
+    title: 'HOSHILUの公開機能を使う',
+    description: 'HOSHILU BUZZ、SALE RADAR、PWA、2種類の検索、対応モール表示を、公開中の画面に沿って使うガイドです。',
+    slugs: [
+      'use-hoshilu-buzz-for-product-discovery', 'use-hoshilu-sale-radar-before-shopping',
+      'install-hoshilu-as-a-web-app', 'choose-ai-check-or-quick-search-in-hoshilu',
+      'use-hoshilu-mall-coverage-to-continue-searching'
     ]
   },
   {
@@ -1730,6 +1962,7 @@ export function renderSeoPage(pathname) {
   const isJa = locale === 'ja';
   const searchLabel = isJa ? '探したい商品の条件' : 'Product conditions';
   const submit = isJa ? 'この条件でHOSHILU検索へ' : 'Search these conditions with HOSHILU';
+  const featureEntry = page.featurePath ? `<p class="bottom-cta feature-entry"><a href="${esc(page.featurePath)}" data-seo-feature-link>${esc(page.featureLabel || (isJa ? 'HOSHILUの公開機能を開く' : 'Open the HOSHILU feature'))}</a></p>` : '';
   const labels = isJa ? {
     conclusion: '結論', audience: 'この方法が向く人', criteria: '選ぶ条件と注意点', comparison: '候補を比較するときの見方',
     evidence: 'おすすめ・比較の根拠', reviews: '口コミを確認するときのポイント', identity: '同一商品と類似商品の違い',
@@ -1751,7 +1984,7 @@ export function renderSeoPage(pathname) {
 <main class="seo-shell"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><span>${esc(page.title)}</span></nav>
 <article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDE</p><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p><p class="updated"><time datetime="${page.updatedAt || UPDATED_AT}">${isJa ? '最終更新' : 'Last updated'}: ${page.updatedAt || UPDATED_AT}</time></p></header>
 <nav class="article-toc" aria-label="${labels.toc}"><strong>${labels.toc}</strong><div><a href="#answer">${labels.conclusion}</a><a href="#visual-guide">${labels.visual}</a><a href="#comparison">${labels.comparison}</a><a href="#search-with-hoshilu">${labels.try}</a><a href="#sources">${labels.sources}</a></div></nav>
-<section class="answer" id="answer"><h2>${labels.conclusion}</h2><p>${esc(page.conclusion)}</p></section>
+<section class="answer" id="answer"><h2>${labels.conclusion}</h2><p>${esc(page.conclusion)}</p></section>${featureEntry}
 <section id="visual-guide"><h2>${labels.visual}</h2>${guideVisual(profile, page, isJa)}</section>
 <section id="audience"><h2>${labels.audience}</h2>${list(page.audience, 'audience-list')}</section>
 <section id="criteria"><h2>${labels.criteria}</h2><dl class="criteria-grid">${page.criteria.map(([term, description]) => `<div><dt>${esc(term)}</dt><dd>${esc(description)}</dd></div>`).join('')}</dl>${page.tips ? list(page.tips, 'check-list') : ''}</section>
