@@ -25,6 +25,7 @@ const EVENTS = new Set([
   'share_started',
   'seo_article_view',
   'seo_search_transition',
+  'seo_feature_transition',
   'seo_hub_view',
   'seo_hub_search_transition',
   'seo_comparison_view',
