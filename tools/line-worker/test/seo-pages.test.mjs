@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語53ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 58);
+test('検索意図が異なる日本語58ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 63);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.ok(html, path);
@@ -42,7 +42,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは53記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは58記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -54,7 +54,7 @@ test('日本語ガイドハブは53記事を重複なく分類し全記事から
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 53);
+  assert.equal(japanesePaths.length, 58);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -215,14 +215,42 @@ test('2026-08-25公開のカテゴリ選び方3記事・比較2記事は固有�
   for (const slug of comparisons) assert.match(renderSeoPage('/ja/' + slug), /data-seo-article-type="comparison-guide"/);
 });
 
+
+test('2026-08-26公開のHOSHILU機能活用5記事は本番導線・固有意図・安全基準を満たす', () => {
+  const published = [
+    'use-hoshilu-buzz-for-product-discovery',
+    'use-hoshilu-sale-radar-before-shopping',
+    'install-hoshilu-as-a-web-app',
+    'choose-ai-check-or-quick-search-in-hoshilu',
+    'use-hoshilu-mall-coverage-to-continue-searching'
+  ];
+  const intents = new Set();
+  for (const slug of published) {
+    const path = '/ja/' + slug;
+    const html = renderSeoPage(path);
+    assert.match(html, /datetime="2026-08-26"/);
+    assert.match(html, /"dateModified":"2026-08-26"/);
+    assert.match(html, /<figure class="guide-visual"/);
+    assert.match(html, /data-seo-article-type="feature-guide"/);
+    assert.match(html, /data-seo-feature-link/);
+    assert.match(html, /販売ページ/);
+    assert.doesNotMatch(html, /Premium|月額980円|人気No\.1|売れ筋No\.1|絶対おすすめ|最安(?:値)?です/);
+    assert.doesNotMatch(html, /https?:\/\/[^"']+\.(?:jpg|jpeg|webp)/i);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    intents.add(html.match(/data-seo-intent="([^"]+)"/)?.[1]);
+  }
+  assert.equal(intents.size, 5);
+  assert.match(renderSeoPage('/ja/use-hoshilu-buzz-for-product-discovery'), /href="\/buzz" data-seo-feature-link/);
+});
+
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
-  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-25<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-26<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 64);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 69);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });
@@ -287,4 +315,5 @@ test('受け入れ検証アクセスは記事の実KPIではなくQAへ分類で
   assert.match(analytics, /eventMedium = isQaVisit \? 'qa' : 'internal'/);
   assert.match(analytics, /campaign: searchIntent/);
   assert.match(analytics, /IntersectionObserver/);
+  assert.match(analytics, /seo_feature_transition/);
 });
