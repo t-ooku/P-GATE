@@ -30,18 +30,19 @@ function send(event_type) {
   fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
 }
 
-function preserveArticleContext() {
+function preserveArticleContext(eventType = transitionEvent) {
   try {
     sessionStorage.setItem('hoshilu_seo_context', JSON.stringify({
       article_id: articleId, search_intent: searchIntent, content_kind: contentKind, created_at: Date.now()
     }));
   } catch {}
-  send(transitionEvent);
+  send(eventType);
 }
 
 send(viewEvent);
 document.querySelectorAll('[data-seo-search-form]').forEach((form) => form.addEventListener('submit', preserveArticleContext));
 document.querySelectorAll('[data-seo-search-link]').forEach((link) => link.addEventListener('click', preserveArticleContext));
+document.querySelectorAll('[data-seo-feature-link]').forEach((link) => link.addEventListener('click', () => preserveArticleContext('seo_feature_transition')));
 
 if ('IntersectionObserver' in window) {
   const observedEvents = new Set();
