@@ -519,19 +519,33 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
         caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
         scheduled_at=excluded.scheduled_at,affiliate=excluded.affiliate,
         status=CASE
+          WHEN social_post_queue.status='CANCELLED'
+            AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
+            THEN excluded.status
           WHEN excluded.status='REVIEW_REQUIRED' AND social_post_queue.status='APPROVED'
             THEN 'REVIEW_REQUIRED'
           ELSE social_post_queue.status END,
         approved_at=CASE
+          WHEN social_post_queue.status='CANCELLED'
+            AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
+            THEN excluded.approved_at
           WHEN excluded.status='REVIEW_REQUIRED' AND social_post_queue.status='APPROVED'
             THEN ''
           ELSE social_post_queue.approved_at END,
         last_error=CASE
+          WHEN social_post_queue.status='CANCELLED'
+            AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
+            THEN CASE WHEN excluded.status='REVIEW_REQUIRED'
+              THEN 'MEDIA_REUSE_REVIEW_REQUIRED' ELSE '' END
           WHEN excluded.status='REVIEW_REQUIRED' AND social_post_queue.status='APPROVED'
             THEN 'MEDIA_REUSE_REVIEW_REQUIRED'
           ELSE social_post_queue.last_error END,
         updated_at=excluded.updated_at
-      WHERE social_post_queue.status IN ('APPROVED','REVIEW_REQUIRED')`)
+      WHERE social_post_queue.status IN ('APPROVED','REVIEW_REQUIRED')
+        OR (social_post_queue.status='CANCELLED'
+          AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
+          AND social_post_queue.external_post_id=''
+          AND social_post_queue.published_at='')`)
       .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption,
         post.link, post.media_url, post.scheduled_at, post.affiliate ? 1 : 0, now.toISOString(),
         completedVideo, post.status).run();

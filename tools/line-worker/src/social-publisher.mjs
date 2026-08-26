@@ -752,7 +752,8 @@ export async function handleSocialAdminRoutes(request, env) {
       // a missing queue row from a rights review or publisher failure without
       // granting access to the protected admin queue.
       const audit = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,status,
-        CASE WHEN last_error='MEDIA_REUSE_REVIEW_REQUIRED'
+        CASE WHEN last_error IN ('MEDIA_REUSE_REVIEW_REQUIRED',
+          'SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813')
           THEN last_error ELSE '' END AS safe_error_code
         FROM social_post_queue WHERE post_id=?1 LIMIT 1`).bind(postId).first();
       if (!audit) return Response.json({ ok: false, error: 'SOCIAL_POST_NOT_FOUND' }, { status: 404 });

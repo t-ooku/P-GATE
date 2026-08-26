@@ -827,7 +827,7 @@ test('公開投稿APIは本文を出さずREVIEW_REQUIREDと安全な再利用�
         if (sql.includes("q.status='PUBLISHED'")) {
           return { bind: () => ({ first: async () => null }) };
         }
-        assert.match(sql, /CASE WHEN last_error='MEDIA_REUSE_REVIEW_REQUIRED'/u);
+        assert.match(sql, /CASE WHEN last_error IN \('MEDIA_REUSE_REVIEW_REQUIRED'/u);
         return { bind: () => ({ first: async () => ({
           post_id: 'reel-x-20260826',
           platform: 'X',
@@ -849,6 +849,36 @@ test('公開投稿APIは本文を出さずREVIEW_REQUIREDと安全な再利用�
     status: 'REVIEW_REQUIRED',
     error: 'SOCIAL_POST_REVIEW_REQUIRED',
     safe_error_code: 'MEDIA_REUSE_REVIEW_REQUIRED'
+  });
+});
+
+test('公開投稿APIは過去の一時隔離理由を固定安全コードとして返す', async () => {
+  const env = {
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes("q.status='PUBLISHED'")) {
+          return { bind: () => ({ first: async () => null }) };
+        }
+        return { bind: () => ({ first: async () => ({
+          post_id: 'daily-x-20260826',
+          platform: 'X',
+          status: 'CANCELLED',
+          safe_error_code: 'SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
+        }) }) };
+      }
+    }
+  };
+  const response = await handleSocialAdminRoutes(
+    new Request('https://hoshilu.app/api/social/posts/daily-x-20260826'), env
+  );
+  assert.equal(response.status, 410);
+  assert.deepEqual(await response.json(), {
+    ok: false,
+    post_id: 'daily-x-20260826',
+    platform: 'X',
+    status: 'CANCELLED',
+    error: 'SOCIAL_POST_CANCELLED',
+    safe_error_code: 'SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
   });
 });
 

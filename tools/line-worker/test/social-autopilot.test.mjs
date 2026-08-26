@@ -226,6 +226,9 @@ test('公開履歴がある完成動画の後日再利用はREVIEW_REQUIREDへ�
   assert.match(insert, /THEN 'REVIEW_REQUIRED' ELSE \?12/u);
   assert.match(insert, /MEDIA_REUSE_REVIEW_REQUIRED/u);
   assert.match(insert, /social_post_queue\.status IN \('APPROVED','REVIEW_REQUIRED'\)/u);
+  assert.match(insert, /SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813/u);
+  assert.match(insert, /social_post_queue\.external_post_id=''/u);
+  assert.match(insert, /social_post_queue\.published_at=''/u);
 });
 
 test('完成動画は同時クロスポストだけを承認し、後日の既存APPROVED再利用も隔離する', async (t) => {
@@ -276,6 +279,55 @@ test('完成動画は同時クロスポストだけを承認し、後日の既�
     last_error: 'MEDIA_REUSE_REVIEW_REQUIRED',
     approved_at: ''
   });
+});
+
+test('過去の一時隔離行だけを再評価し、完成動画の再利用はAPPROVEDへ戻さない', async (t) => {
+  const sqlite = new DatabaseSync(':memory:');
+  t.after(() => sqlite.close());
+  sqlite.exec(`CREATE TABLE social_post_queue (
+    post_id TEXT PRIMARY KEY, platform TEXT NOT NULL, campaign_id TEXT NOT NULL DEFAULT '',
+    content_id TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL, link TEXT NOT NULL DEFAULT '',
+    media_url TEXT NOT NULL DEFAULT '', scheduled_at TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'REVIEW_REQUIRED', affiliate INTEGER NOT NULL DEFAULT 0,
+    external_post_id TEXT NOT NULL DEFAULT '', last_error TEXT NOT NULL DEFAULT '',
+    approved_at TEXT NOT NULL DEFAULT '', published_at TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL, updated_at TEXT NOT NULL, platform_job_id TEXT NOT NULL DEFAULT ''
+  )`);
+  class Statement {
+    constructor(sql) { this.statement = sqlite.prepare(sql); this.values = []; }
+    bind(...values) { this.values = values; return this; }
+    async run() {
+      const result = this.statement.run(...this.values);
+      return { meta: { changes: result.changes } };
+    }
+    async first() { return this.statement.get(...this.values) || null; }
+  }
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    X_USER_ACCESS_TOKEN: 'x-token',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    X_EXPECTED_USERNAME: 'HOSHILUOfficial',
+    PRODUCT_DB: { prepare(sql) { return new Statement(sql); } }
+  };
+  const now = new Date('2026-08-10T00:00:00.000Z');
+  await seedSocialAutopilotQueue(env, now);
+  const firstVideo = sqlite.prepare(`SELECT post_id,media_url FROM social_post_queue
+    WHERE media_url LIKE '%.mp4' ORDER BY scheduled_at,platform LIMIT 1`).get();
+  sqlite.prepare(`UPDATE social_post_queue SET status='CANCELLED',
+    last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'`).run();
+  // A previous publication of this media makes any later replay require review.
+  sqlite.prepare(`UPDATE social_post_queue SET status='PUBLISHED',external_post_id='123',
+    published_at='2026-08-09T11:15:01.000Z' WHERE post_id=?1`).run(firstVideo.post_id);
+  await seedSocialAutopilotQueue(env, now);
+  const rows = sqlite.prepare(`SELECT status,last_error,media_url FROM social_post_queue
+    WHERE post_id<>?1 ORDER BY scheduled_at,platform`).all(firstVideo.post_id);
+  const staticRows = rows.filter(row => !/\.mp4$/u.test(row.media_url));
+  const repeatedVideoRows = rows.filter(row => row.media_url === firstVideo.media_url);
+  assert.equal(staticRows.every(row => row.status === 'APPROVED' && row.last_error === ''), true);
+  assert.equal(repeatedVideoRows.length > 0, true);
+  assert.equal(repeatedVideoRows.every(row => row.status === 'REVIEW_REQUIRED'
+    && row.last_error === 'MEDIA_REUSE_REVIEW_REQUIRED'), true);
 });
 
 test('販促自動運用は認証未設定の媒体をキューへ入れない', async () => {
