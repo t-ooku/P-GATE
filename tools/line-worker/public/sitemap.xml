@@ -6,7 +6,7 @@
 <url><loc>https://hoshilu.app/for-sellers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://hoshilu.app/ja/guides</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-27</lastmod>
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/guides"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://hoshilu.app/ja/guides"/>
     <changefreq>weekly</changefreq><priority>0.9</priority>
@@ -311,4 +311,9 @@
   <url><loc>https://hoshilu.app/ja/install-hoshilu-as-a-web-app</loc><lastmod>2026-08-26</lastmod></url>
   <url><loc>https://hoshilu.app/ja/choose-ai-check-or-quick-search-in-hoshilu</loc><lastmod>2026-08-26</lastmod></url>
   <url><loc>https://hoshilu.app/ja/use-hoshilu-mall-coverage-to-continue-searching</loc><lastmod>2026-08-26</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/choose-reusable-water-bottle-by-capacity-and-cleaning</loc><lastmod>2026-08-27</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/choose-folding-umbrella-by-open-size-and-weight</loc><lastmod>2026-08-27</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/choose-frying-pan-by-heat-source-size-and-weight</loc><lastmod>2026-08-27</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-carry-on-suitcases-by-size-weight-and-wheels</loc><lastmod>2026-08-27</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-cordless-vacuums-by-floor-weight-and-maintenance</loc><lastmod>2026-08-27</lastmod></url>
 </urlset>
