@@ -820,6 +820,67 @@ test('公開済みX投稿APIは数値post IDから検証可能な公開URLを返
   });
 });
 
+test('公開投稿APIは本文を出さずREVIEW_REQUIREDと安全な再利用コードを返す', async () => {
+  const env = {
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes("q.status='PUBLISHED'")) {
+          return { bind: () => ({ first: async () => null }) };
+        }
+        assert.match(sql, /CASE WHEN last_error='MEDIA_REUSE_REVIEW_REQUIRED'/u);
+        return { bind: () => ({ first: async () => ({
+          post_id: 'reel-x-20260826',
+          platform: 'X',
+          status: 'REVIEW_REQUIRED',
+          safe_error_code: 'MEDIA_REUSE_REVIEW_REQUIRED'
+        }) }) };
+      }
+    }
+  };
+  const response = await handleSocialAdminRoutes(
+    new Request('https://hoshilu.app/api/social/posts/reel-x-20260826'), env
+  );
+  assert.equal(response.status, 409);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(await response.json(), {
+    ok: false,
+    post_id: 'reel-x-20260826',
+    platform: 'X',
+    status: 'REVIEW_REQUIRED',
+    error: 'SOCIAL_POST_REVIEW_REQUIRED',
+    safe_error_code: 'MEDIA_REUSE_REVIEW_REQUIRED'
+  });
+});
+
+test('公開投稿APIは任意のpublisherエラー本文を公開せずFAILEDだけ返す', async () => {
+  const env = {
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes("q.status='PUBLISHED'")) {
+          return { bind: () => ({ first: async () => null }) };
+        }
+        return { bind: () => ({ first: async () => ({
+          post_id: 'guide-instagram-20260826',
+          platform: 'INSTAGRAM',
+          status: 'FAILED',
+          safe_error_code: ''
+        }) }) };
+      }
+    }
+  };
+  const response = await handleSocialAdminRoutes(
+    new Request('https://hoshilu.app/api/social/posts/guide-instagram-20260826'), env
+  );
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), {
+    ok: false,
+    post_id: 'guide-instagram-20260826',
+    platform: 'INSTAGRAM',
+    status: 'FAILED',
+    error: 'SOCIAL_POST_FAILED'
+  });
+});
+
 test('Threadsインサイト取り込みはpermalinkと指標をJST日次スナップショットへ保存する', async () => {
   const writes = [];
   const env = {

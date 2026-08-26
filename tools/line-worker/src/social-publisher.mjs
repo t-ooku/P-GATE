@@ -745,7 +745,40 @@ export async function handleSocialAdminRoutes(request, env) {
       ORDER BY p.snapshot_at DESC LIMIT 1`).bind(postId).first();
     if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'PRODUCT_DB_NOT_CONFIGURED' }, { status: 503 });
     let published = await selectPublished();
-    if (!published) return Response.json({ ok: false, error: 'SOCIAL_POST_NOT_FOUND' }, { status: 404 });
+    if (!published) {
+      // The public audit endpoint must make a scheduled post's safe lifecycle
+      // state observable without exposing captions, links, provider responses,
+      // tokens, or arbitrary last_error text. This lets an operator distinguish
+      // a missing queue row from a rights review or publisher failure without
+      // granting access to the protected admin queue.
+      const audit = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,status,
+        CASE WHEN last_error='MEDIA_REUSE_REVIEW_REQUIRED'
+          THEN last_error ELSE '' END AS safe_error_code
+        FROM social_post_queue WHERE post_id=?1 LIMIT 1`).bind(postId).first();
+      if (!audit) return Response.json({ ok: false, error: 'SOCIAL_POST_NOT_FOUND' }, { status: 404 });
+      const status = clean(audit.status, 30).toUpperCase();
+      const diagnostic = {
+        ok: false,
+        post_id: clean(audit.post_id, 100),
+        platform: clean(audit.platform, 20).toUpperCase(),
+        status,
+        error: status === 'REVIEW_REQUIRED'
+          ? 'SOCIAL_POST_REVIEW_REQUIRED'
+          : status === 'FAILED'
+            ? 'SOCIAL_POST_FAILED'
+            : status === 'CANCELLED'
+              ? 'SOCIAL_POST_CANCELLED'
+              : 'SOCIAL_POST_PENDING'
+      };
+      if (audit.safe_error_code) diagnostic.safe_error_code = audit.safe_error_code;
+      const responseStatus = status === 'REVIEW_REQUIRED' || status === 'FAILED'
+        ? 409
+        : status === 'CANCELLED' ? 410 : 202;
+      return Response.json(diagnostic, {
+        status: responseStatus,
+        headers: { 'cache-control': 'no-store' }
+      });
+    }
     if (published.platform === 'INSTAGRAM' && !published.public_url) {
       await syncInstagramPublishedPermalinks(env, new Date(), fetch, postId);
       published = await selectPublished();
