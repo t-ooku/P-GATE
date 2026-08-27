@@ -226,19 +226,20 @@ async function uploadXVideo(mediaUrl, accessToken, env, fetchImpl) {
   const safeUrl = new URL(safeXMediaUrl(mediaUrl));
   const runwayMatch = /^\/api\/social\/media\/runway\/([A-Za-z0-9][A-Za-z0-9_-]{0,119})\.mp4$/.exec(safeUrl.pathname);
   let bytes;
+  const contentType = 'video/mp4';
   if (runwayMatch && env.PRODUCT_DB && env.SOCIAL_MEDIA_BUCKET) {
     const job = await env.PRODUCT_DB.prepare(`SELECT storage_key FROM runway_generation_jobs
       WHERE job_id=?1 AND status IN ('APPROVED_FOR_POST','PUBLISHED') LIMIT 1`).bind(runwayMatch[1]).first();
     const object = job?.storage_key ? await env.SOCIAL_MEDIA_BUCKET.get(job.storage_key) : null;
     if (!object) throw new Error('X_MEDIA_R2_NOT_FOUND');
-    const contentType = String(object.httpMetadata?.contentType || '').split(';')[0].toLowerCase();
-    if (contentType !== 'video/mp4') throw new Error('X_MEDIA_TYPE_INVALID');
+    const objectContentType = String(object.httpMetadata?.contentType || '').split(';')[0].toLowerCase();
+    if (objectContentType !== contentType) throw new Error('X_MEDIA_TYPE_INVALID');
     bytes = new Uint8Array(await object.arrayBuffer());
   } else {
     const mediaResponse = await fetchImpl(safeUrl.toString());
     if (!mediaResponse.ok) throw new Error(`X_MEDIA_FETCH_${mediaResponse.status}`);
-    const contentType = String(mediaResponse.headers.get('content-type') || '').split(';')[0].toLowerCase();
-    if (contentType !== 'video/mp4') throw new Error('X_MEDIA_TYPE_INVALID');
+    const responseContentType = String(mediaResponse.headers.get('content-type') || '').split(';')[0].toLowerCase();
+    if (responseContentType !== contentType) throw new Error('X_MEDIA_TYPE_INVALID');
     bytes = new Uint8Array(await mediaResponse.arrayBuffer());
   }
   const maxBytes = Math.min(512 * 1024 * 1024, Math.max(1, Number(env.X_MAX_VIDEO_BYTES || 100 * 1024 * 1024)));
