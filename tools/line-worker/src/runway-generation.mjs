@@ -126,6 +126,41 @@ async function verifyPostprocessedMedia(env, job) {
   };
 }
 
+async function promoteReviewedMedia(env, job, now = new Date()) {
+  if (isPostprocessedStorageKey(job.job_id, job.storage_key)) return job;
+  if (job.storage_key !== `runway/${job.job_id}/output.mp4`
+    || typeof env.SOCIAL_MEDIA_BUCKET?.get !== 'function') return job;
+  const size = integer(job.storage_size_bytes);
+  if (!env.SOCIAL_MEDIA_BUCKET || !job.storage_key || size <= 0 || size > 25 * 1024 * 1024) {
+    throw new Error('RUNWAY_REVIEWED_MEDIA_UNAVAILABLE');
+  }
+  const object = await env.SOCIAL_MEDIA_BUCKET.get(job.storage_key);
+  if (!object || String(object.httpMetadata?.contentType || '').toLowerCase() !== 'video/mp4') {
+    throw new Error('RUNWAY_REVIEWED_MEDIA_INVALID');
+  }
+  const bytes = await object.arrayBuffer();
+  if (bytes.byteLength !== size) throw new Error('RUNWAY_REVIEWED_MEDIA_SIZE_MISMATCH');
+  const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)))
+    .map(value => value.toString(16).padStart(2, '0')).join('');
+  const storageKey = `runway/${job.job_id}/postprocessed-${digest}.mp4`;
+  await env.SOCIAL_MEDIA_BUCKET.put(storageKey, bytes, {
+    httpMetadata: { contentType: 'video/mp4', cacheControl: 'public, max-age=3600, stale-while-revalidate=86400' },
+    customMetadata: { jobId: job.job_id, reviewedInAdmin: 'true', sha256: digest }
+  });
+  const timestamp = now.toISOString();
+  await env.PRODUCT_DB.batch([
+    env.PRODUCT_DB.prepare(`UPDATE runway_generation_jobs SET storage_key=?2,storage_etag=NULL,
+      storage_size_bytes=?3,storage_content_type='video/mp4',updated_at=?4
+      WHERE job_id=?1 AND status='GENERATED_REVIEW_REQUIRED' AND storage_key=?5`)
+      .bind(job.job_id, storageKey, bytes.byteLength, timestamp, job.storage_key),
+    auditStatement(env, 'ADMIN_REVIEWED_MEDIA_PROMOTED', job.job_id, {
+      storage_key: storageKey, size_bytes: bytes.byteLength, sha256: digest
+    }, timestamp)
+  ]);
+  return { ...job, storage_key: storageKey, storage_etag: null,
+    storage_size_bytes: bytes.byteLength, storage_content_type: 'video/mp4' };
+}
+
 function auditStatement(env, eventType, jobId, details, timestamp) {
   return env.PRODUCT_DB.prepare(`INSERT INTO runway_audit_log
     (audit_id,event,job_id,attempt_id,detail,created_at)
@@ -580,13 +615,18 @@ export async function handleRunwayGenerationRoutes(request, env) {
     if (failedChecks.length) {
       return Response.json({ ok: false, error: 'RUNWAY_QA_INCOMPLETE', failed_checks: failedChecks }, { status: 409 });
     }
-    const job = await env.PRODUCT_DB.prepare(`SELECT job_id,post_id,status,storage_key,storage_etag,
+    let job = await env.PRODUCT_DB.prepare(`SELECT job_id,post_id,status,storage_key,storage_etag,
       storage_size_bytes,storage_content_type,rights_confirmed,ai_disclosure_confirmed
       FROM runway_generation_jobs WHERE job_id=?1`)
       .bind(jobId).first();
     if (!job || job.status !== 'GENERATED_REVIEW_REQUIRED' || !job.storage_key
       || integer(job.rights_confirmed) !== 1 || integer(job.ai_disclosure_confirmed) !== 1) {
       return Response.json({ ok: false, error: 'RUNWAY_JOB_NOT_REVIEWABLE' }, { status: 409 });
+    }
+    try {
+      job = await promoteReviewedMedia(env, job);
+    } catch (error) {
+      return Response.json({ ok: false, error: clean(error?.message || error, 100) }, { status: 409 });
     }
     const mediaVerification = await verifyPostprocessedMedia(env, job);
     if (!mediaVerification.ok) {
