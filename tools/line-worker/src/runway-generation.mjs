@@ -702,7 +702,10 @@ export async function handleRunwayGenerationRoutes(request, env) {
       JOIN runway_generation_jobs j ON j.post_id=q.post_id
       WHERE j.job_id=?1 AND j.status IN ('APPROVED_FOR_POST','PUBLISHED')
       AND NOT EXISTS (SELECT 1 FROM social_post_queue x WHERE x.platform='X'
-        AND x.content_id=?1 AND (x.status IN ('APPROVED','PUBLISHING','PUBLISHED') OR x.external_post_id<>''))`)
+        AND x.content_id=?1 AND (x.status IN ('APPROVED','PUBLISHING','PUBLISHED') OR x.external_post_id<>''))
+      ON CONFLICT(post_id) DO UPDATE SET status='APPROVED',scheduled_at=excluded.scheduled_at,
+        approved_at=excluded.approved_at,updated_at=excluded.updated_at,last_error=''
+      WHERE social_post_queue.status='FAILED' AND social_post_queue.external_post_id=''`)
       .bind(jobId, timestamp).run();
     return Response.json({ ok: true, job_id: jobId, queued: changes(result) });
   }
