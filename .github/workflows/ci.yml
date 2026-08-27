@@ -642,3 +642,72 @@ jobs:
             tools/line-worker/initial-reel-policy-reconciled.json
             tools/line-worker/initial-reel-published-audit.json
           retention-days: 30
+
+  # X上で削除済みとなったRunway動画2本の再投稿は、通常のpushでは動かさない。
+  # 確認待ち登録と公開承認を別々のcommit markerへ固定し、どちらも正本CIの
+  # テストと本番デプロイが成功した後にだけ実行する。
+  hoshilu-x-reposts-stage-20260827:
+    needs: [test, deploy]
+    if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deploy.result == 'success' &&
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[stage-hoshilu-x-reposts-20260827-approved]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: hoshilu-x-reposts-20260827
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Stage two X reposts as review-required
+        working-directory: tools/line-worker
+        run: node ops/runway/x_repost_20260827_ci.mjs stage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hoshilu-x-reposts-stage-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: tools/line-worker/x-repost-*.json
+          retention-days: 30
+
+  hoshilu-x-reposts-release-20260827:
+    needs: [test, deploy]
+    if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deploy.result == 'success' &&
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[release-hoshilu-x-reposts-20260827-approved]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: hoshilu-x-reposts-20260827
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Release exactly two X reposts for publication
+        working-directory: tools/line-worker
+        run: node ops/runway/x_repost_20260827_ci.mjs release
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hoshilu-x-reposts-release-${{ github.run_id }}
+          if-no-files-found: ignore
+          path: tools/line-worker/x-repost-*.json
+          retention-days: 30
