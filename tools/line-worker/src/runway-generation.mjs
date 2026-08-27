@@ -663,6 +663,14 @@ export async function handleRunwayGenerationRoutes(request, env) {
         AND EXISTS (SELECT 1 FROM runway_generation_jobs WHERE job_id=?4 AND post_id=?1
           AND status='APPROVED_FOR_POST' AND qa_status='PASSED')`)
         .bind(job.post_id, new Date(scheduledAt).toISOString(), timestamp, jobId),
+      env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
+        (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
+         affiliate,created_at,updated_at,approved_at)
+        SELECT ?2,'X',campaign_id,content_id,caption,link,media_url,?3,'APPROVED',affiliate,?4,?4,?4
+        FROM social_post_queue WHERE post_id=?1
+        AND NOT EXISTS (SELECT 1 FROM social_post_queue x WHERE x.platform='X'
+          AND x.content_id=?5 AND (x.status IN ('APPROVED','PUBLISHING','PUBLISHED') OR x.external_post_id<>''))`)
+        .bind(job.post_id, `${job.post_id}-x`, new Date(scheduledAt).toISOString(), timestamp, jobId),
       auditStatement(env, 'QA_APPROVED_FOR_POST', jobId, {
         checks: requiredChecks,
         scheduled_at: new Date(scheduledAt).toISOString()
@@ -678,6 +686,25 @@ export async function handleRunwayGenerationRoutes(request, env) {
       status: 'APPROVED_FOR_POST',
       scheduled_at: new Date(scheduledAt).toISOString()
     });
+  }
+  if (request.method === 'POST' && url.pathname === '/api/internal/runway/crosspost-x') {
+    const input = await request.json();
+    const jobId = clean(input?.job_id, 120);
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(jobId)) {
+      return Response.json({ ok: false, error: 'RUNWAY_CROSSPOST_INVALID' }, { status: 400 });
+    }
+    const timestamp = new Date().toISOString();
+    const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
+      (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
+       affiliate,created_at,updated_at,approved_at)
+      SELECT q.post_id||'-x','X',q.campaign_id,q.content_id,q.caption,q.link,q.media_url,?2,
+       'APPROVED',q.affiliate,?2,?2,?2 FROM social_post_queue q
+      JOIN runway_generation_jobs j ON j.post_id=q.post_id
+      WHERE j.job_id=?1 AND j.status IN ('APPROVED_FOR_POST','PUBLISHED')
+      AND NOT EXISTS (SELECT 1 FROM social_post_queue x WHERE x.platform='X'
+        AND x.content_id=?1 AND (x.status IN ('APPROVED','PUBLISHING','PUBLISHED') OR x.external_post_id<>''))`)
+      .bind(jobId, timestamp).run();
+    return Response.json({ ok: true, job_id: jobId, queued: changes(result) });
   }
   return Response.json({ ok: false, error: 'NOT_FOUND' }, { status: 404 });
 }
