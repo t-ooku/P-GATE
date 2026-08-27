@@ -42,7 +42,7 @@ export function adminPromotionPageResponse() {
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">BUSINESS KPI</p><h1>HOSHILU 経営ダッシュボード</h1></div>
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
-  <nav class="admin-nav"><a class="active" href="/admin/promotion">経営KPI</a><a href="/admin/sp-api">認証監査</a></nav>
+  <nav class="admin-nav"><a class="active" href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a href="/admin/sp-api">認証監査</a></nav>
   <div class="dashboard-actions"><p id="promotionStatus" role="status"></p>
   <button id="refreshPromotion" class="ghost-button" type="button">最新状態に更新</button></div></section>
   <section class="auth-card kpi-overview"><div class="kpi-period-head"><div><p class="eyebrow">NORTH STAR &amp; GROWTH</p><h2>事業の現在地</h2></div>
@@ -67,4 +67,19 @@ export function adminPromotionPageResponse() {
   <div class="section-head social-section-head"><div><p class="eyebrow">SOCIAL OPERATIONS</p><h2>SNS投稿運用</h2></div></div>
   <section id="channelGrid" class="promotion-channel-grid" aria-live="polite"></section>
   </main><script type="module" src="/admin-promotion.js"></script></body></html>`, { headers });
+}
+
+export function adminReelsPageResponse() {
+  return new Response(`<!doctype html><html lang="ja"><head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/admin-sp-api.css">
+  <link rel="stylesheet" href="/admin-promotion.css"><title>AIリール管理 | HOSHILU</title></head><body>
+  <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
+  <p class="eyebrow">AI REELS</p><h1>AIリール管理</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
+  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a class="active" href="/admin/reels">AIリール管理</a><a href="/admin/sp-api">認証監査</a></nav>
+  <p>自動投稿を基本とし、確認が必要な動画だけここで公開できます。</p>
+  <div class="dashboard-actions"><p id="reelStatus" role="status"></p><button id="refreshReels" class="ghost-button" type="button">最新状態に更新</button></div></section>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">PENDING &amp; HISTORY</p><h2>動画一覧</h2></div></div>
+  <div id="reelGrid" class="promotion-channel-grid" aria-live="polite"></div></section>
+  </main><script type="module" src="/admin-reels.js"></script></body></html>`, { headers });
 }

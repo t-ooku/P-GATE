@@ -1,5 +1,5 @@
 import {
-  adminLoginPageResponse, adminPromotionPageResponse, adminSpApiPageResponse
+  adminLoginPageResponse, adminPromotionPageResponse, adminReelsPageResponse, adminSpApiPageResponse
 } from './admin-sp-api-page.mjs';
 import {
   adminLoginFingerprint, adminLoginLocked, recordAdminLoginFailure,
@@ -122,6 +122,10 @@ export async function handleAdminAuthRoutes(request, env) {
       return noStoreRedirect(`${url.origin}/admin-login`);
     }
     return adminPromotionPageResponse();
+  }
+  if (request.method === 'GET' && url.pathname === '/admin/reels') {
+    if (!await readAdminSession(request, env)) return noStoreRedirect(`${url.origin}/admin-login`);
+    return adminReelsPageResponse();
   }
   if (url.pathname.startsWith('/admin-shell')) return new Response('not found', { status: 404 });
   if (!url.pathname.startsWith('/api/admin/')) return null;

@@ -2,6 +2,7 @@ import {
   getInstagramPublishCredentials, instagramOAuthReadiness
 } from './instagram-oauth.mjs';
 import { getXPublishCredentials, xOAuthReadiness } from './x-oauth.mjs';
+import { authorizeAdminRequest } from './admin-auth.mjs';
 
 const PLATFORMS = new Set(['X', 'INSTAGRAM', 'TIKTOK', 'THREADS']);
 const DISCLOSURE = '※リンク先にはアフィリエイト広告を含む場合があります。';
@@ -724,10 +725,11 @@ export async function syncThreadsInsights(env, now = new Date(), fetchImpl = fet
   return { checked: rows.length, saved, failed };
 }
 
-function authorized(request, env) {
+async function authorized(request, env) {
   const expected = String(env.SOCIAL_ADMIN_SECRET || '');
   const received = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  return expected.length >= 32 && received === expected;
+  if (expected.length >= 32 && received === expected) return true;
+  return Boolean(await authorizeAdminRequest(request, env));
 }
 
 export async function handleSocialAdminRoutes(request, env) {
@@ -811,7 +813,7 @@ export async function handleSocialAdminRoutes(request, env) {
     });
   }
   if (!url.pathname.startsWith('/api/internal/social/')) return null;
-  if (!authorized(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+  if (!await authorized(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
   if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'PRODUCT_DB_NOT_CONFIGURED' }, { status: 503 });
   if (request.method === 'GET' && url.pathname === '/api/internal/social/queue') {
     const result = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,caption,link,media_url,

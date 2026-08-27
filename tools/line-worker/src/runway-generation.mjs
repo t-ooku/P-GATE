@@ -5,6 +5,7 @@ import {
   getRunwayOrganizationUsage,
   getRunwayTask
 } from './runway-client.mjs';
+import { authorizeAdminRequest } from './admin-auth.mjs';
 
 const ACTIVE_STATUSES = new Set([
   'BUDGET_RESERVED', 'SUBMITTING', 'PROCESSING', 'AMBIGUOUS_SUBMISSION'
@@ -533,16 +534,17 @@ function constantTimeEqual(left, right) {
   return difference === 0;
 }
 
-function authorized(request, env) {
+async function authorized(request, env) {
   const expected = String(env.SOCIAL_ADMIN_SECRET || '');
   const received = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  return expected.length >= 32 && constantTimeEqual(received, expected);
+  if (expected.length >= 32 && constantTimeEqual(received, expected)) return true;
+  return Boolean(await authorizeAdminRequest(request, env));
 }
 
 export async function handleRunwayGenerationRoutes(request, env) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/internal/runway/')) return null;
-  if (!authorized(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+  if (!await authorized(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
   if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'PRODUCT_DB_NOT_CONFIGURED' }, { status: 503 });
   if (request.method === 'GET' && url.pathname === '/api/internal/runway/status') {
     const policy = await env.PRODUCT_DB.prepare(`SELECT enabled,kill_switch,initial_cap_credits,
