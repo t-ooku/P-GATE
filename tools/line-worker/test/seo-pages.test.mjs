@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語63ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 68);
+test('検索意図が異なる日本語68ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 73);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.ok(html, path);
@@ -42,7 +42,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは63記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは68記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -54,7 +54,7 @@ test('日本語ガイドハブは63記事を重複なく分類し全記事から
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 63);
+  assert.equal(japanesePaths.length, 68);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -272,14 +272,43 @@ test('2026-08-27公開のカテゴリ選び方3記事・比較2記事は固有�
   for (const slug of comparisons) assert.match(renderSeoPage('/ja/' + slug), /data-seo-article-type="comparison-guide"/);
 });
 
+test('2026-08-28公開のカテゴリ選び方3記事・比較2記事は固有意図と安全基準を満たす', () => {
+  const selection = [
+    'choose-rice-cooker-by-servings-size-and-cleaning',
+    'choose-office-chair-by-desk-body-and-adjustments',
+    'choose-hair-dryer-by-weight-controls-and-storage'
+  ];
+  const comparisons = [
+    'compare-air-purifiers-by-room-filter-and-maintenance',
+    'compare-robot-vacuums-by-floor-threshold-and-maintenance'
+  ];
+  const intents = new Set();
+  for (const slug of [...selection, ...comparisons]) {
+    const path = '/ja/' + slug;
+    const html = renderSeoPage(path);
+    assert.match(html, /datetime="2026-08-28"/);
+    assert.match(html, /"dateModified":"2026-08-28"/);
+    assert.match(html, /<figure class="guide-visual"/);
+    assert.match(html, /data-seo-section-event="seo_comparison_view"/);
+    assert.match(html, /販売ページ/);
+    assert.doesNotMatch(html, /Premium|月額980円|人気No\.1|売れ筋No\.1|絶対おすすめ|最安(?:値)?です/);
+    assert.doesNotMatch(html, /https?:\/\/[^"']+\.(?:jpg|jpeg|webp)/i);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    intents.add(html.match(/data-seo-intent="([^"]+)"/)?.[1]);
+  }
+  assert.equal(intents.size, 5);
+  for (const slug of selection) assert.match(renderSeoPage('/ja/' + slug), /data-seo-article-type="shopping-guide"/);
+  for (const slug of comparisons) assert.match(renderSeoPage('/ja/' + slug), /data-seo-article-type="comparison-guide"/);
+});
+
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
-  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-27<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-28<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 74);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 79);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });
