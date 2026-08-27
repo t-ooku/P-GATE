@@ -46,7 +46,8 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
   // 代わりに「小さすぎる文字が復活しないこと」を固定する。
   assert.doesNotMatch(css, /font-size: clamp\((?:[0-9]|10)(?:\.\d+)?px,/);
   assert.match(css, /\.marketplace-group > p \{\s*display: none/s);
-  assert.match(css, /grid-template-columns: repeat\(13, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(min-width: 1024px\)[\s\S]*grid-template-columns: repeat\(13, max-content\)/);
+  assert.match(css, /@media \(min-width: 1024px\)[\s\S]*justify-content: space-between/);
   assert.match(css, /overflow-x: auto/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)[\s\S]*overflow-x: hidden/);
   // 同上。モール名も折り返し可にして11.5px以上を確保する。

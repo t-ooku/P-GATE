@@ -135,8 +135,8 @@
   line-height: 1.6;
 }
 
-/* 13モールを同じ重みで1行表示する。PCは均等13列、狭い画面は1行のまま
-   横スクロール可能にし、名称を不自然に2行へ割らない。 */
+/* 13モールを同じ重みで1行表示する。狭い画面は1行のまま横スクロール可能にし、
+   名称を不自然に2行へ割らない。 */
 .marketplace-groups {
   grid-template-columns: repeat(13, minmax(82px, 1fr));
   gap: 6px;
@@ -166,10 +166,13 @@
   }
 
   .marketplace-groups {
-    grid-template-columns: repeat(13, minmax(0, 1fr));
-    gap: 4px;
+    /* 等幅13列では長い「Yahoo!ショッピング」が隣の列へはみ出す。
+       各名称の実幅を確保し、残りの横幅だけを項目間へ均等配分する。 */
+    grid-template-columns: repeat(13, max-content);
+    justify-content: space-between;
+    column-gap: 8px;
     min-width: 0;
-    overflow-x: visible;
+    overflow-x: auto;
   }
 
   .marketplace-group {
@@ -181,7 +184,7 @@
   }
 
   .marketplace-group li {
-    min-width: 0;
+    min-width: max-content;
     padding: 6px 2px;
     font-size: clamp(11px, .9vw, 13px);
     letter-spacing: -.035em;

@@ -9,7 +9,9 @@ test('13モール名は1行を維持しYahoo!ショッピングも改行しな�
   ]);
   assert.match(html, /class="marketplace-yahoo"><span>Yahoo!ショッピング<\/span>/);
   assert.match(css, /grid-template-columns: repeat\(13, minmax\(82px, 1fr\)\)/);
-  assert.match(css, /@media \(min-width: 1024px\)[\s\S]*grid-template-columns: repeat\(13, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(min-width: 1024px\)[\s\S]*grid-template-columns: repeat\(13, max-content\)/);
+  assert.match(css, /@media \(min-width: 1024px\)[\s\S]*justify-content: space-between/);
+  assert.match(css, /@media \(min-width: 1024px\)[\s\S]*min-width: max-content/);
   assert.match(css, /\.marketplace-yahoo span \{\s*white-space: nowrap/);
   assert.match(css, /overflow-x: auto/);
 });
