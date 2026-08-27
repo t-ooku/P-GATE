@@ -131,4 +131,5 @@ test('completed quarantine workflow stays removed when explicitly approved X aut
   assert.doesNotMatch(workflow, /x-oauth-infra-and-queue-quarantine/);
   assert.match(wrangler, /"X_PUBLISHING_ENABLED": "true"/);
   assert.match(wrangler, /"X_EVERGREEN_AUTOPILOT_ENABLED": "true"/);
+  assert.match(wrangler, /"X_EXPECTED_USERNAME": "hoshilu_app"/);
 });

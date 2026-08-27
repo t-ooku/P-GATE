@@ -39,7 +39,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
-  assert.match(html, /href="https:\/\/x\.com\/iCHMR81Lv4VYJYG"/);
+  assert.match(html, /href="https:\/\/x\.com\/hoshilu_app"/);
   assert.match(styles, /\.official-social-link\.line\{grid-column:1\/-1;background:#06c755\}/);
   assert.match(styles, /\.official-social-link\.instagram\{background:linear-gradient/);
   assert.match(styles, /\.official-social-link\.x\{background:#000\}/);

@@ -14,7 +14,7 @@ const {
 } = await import('../src/x-oauth.mjs');
 
 const ACCOUNT_ID = '1234567890123456789';
-const USERNAME = 'iCHMR81Lv4VYJYG';
+const USERNAME = 'hoshilu_app';
 const SCOPES = X_OAUTH_REQUIRED_SCOPES.join(' ');
 
 function createDatabase() {

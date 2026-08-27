@@ -68,14 +68,14 @@ export function buildYouthSearchPost(index, platform = 'X') {
     ? '見つけたい商品をコメントで教えて。次の検索動画で試します。'
     : '名前が分からない「欲しいもの」をコメントで教えて。';
   const focusMessage = focus ? `\n${focus.message}` : '';
-  const focusHashtags = focus ? ` ${focus.hashtags}` : '';
+  const hashtags = focus ? `#HOSHILU ${focus.hashtags}` : '#HOSHILU #Qoo10 #SHEIN #購入品紹介';
   return {
     content_id: theme.id,
     platform: normalizedPlatform,
     campaign_pillar: theme.pillar,
     marketplace_focus: theme.marketplace_focus || 'ALL',
     content_format: theme.format,
-    caption: `${platformHook}\n${PILLAR_COPY[theme.pillar]}${focusMessage}\n${commentCta}\n${MARKETPLACE_MESSAGE}\n#ホシル #あいまい検索 #13モール横断 #ほしっとく${focusHashtags}`,
+    caption: `${platformHook}\n${PILLAR_COPY[theme.pillar]}${focusMessage}\n${commentCta}\n${MARKETPLACE_MESSAGE}\n${hashtags}`,
     link: `https://hoshilu.app/?q=${encodeURIComponent(theme.refined)}&utm_source=${source}&utm_medium=organic_social&utm_campaign=${campaign}&utm_content=${theme.id}`,
     prefill_query: theme.refined,
     reel_script: reelScript(theme),

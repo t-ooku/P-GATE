@@ -171,7 +171,7 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
     X_USER_ACCESS_TOKEN: 'x-token',
     X_PUBLISHING_ENABLED: 'true',
     X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
-    X_EXPECTED_USERNAME: 'HOSHILUOfficial',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
     INSTAGRAM_ACCESS_TOKEN: 'ig-token',
     INSTAGRAM_ACCOUNT_ID: 'ig-account',
     PRODUCT_DB: {
@@ -206,7 +206,7 @@ test('公開履歴がある完成動画の後日再利用はREVIEW_REQUIREDへ�
     X_USER_ACCESS_TOKEN: 'x-token',
     X_PUBLISHING_ENABLED: 'true',
     X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
-    X_EXPECTED_USERNAME: 'HOSHILUOfficial',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
     PRODUCT_DB: {
       prepare(sql) {
         statements.push(sql);
@@ -258,7 +258,7 @@ test('完成動画は同時クロスポストだけを承認し、後日の既�
     X_USER_ACCESS_TOKEN: 'x-token',
     X_PUBLISHING_ENABLED: 'true',
     X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
-    X_EXPECTED_USERNAME: 'HOSHILUOfficial',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
     PRODUCT_DB: { prepare(sql) { return new Statement(sql); } }
   };
   const now = new Date('2026-08-10T00:00:00.000Z');
@@ -307,7 +307,7 @@ test('過去の一時隔離行だけを再評価し、完成動画の再利用�
     X_USER_ACCESS_TOKEN: 'x-token',
     X_PUBLISHING_ENABLED: 'true',
     X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
-    X_EXPECTED_USERNAME: 'HOSHILUOfficial',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
     PRODUCT_DB: { prepare(sql) { return new Statement(sql); } }
   };
   const now = new Date('2026-08-10T00:00:00.000Z');
@@ -337,7 +337,7 @@ test('販促自動運用は認証未設定の媒体をキューへ入れない',
     X_USER_ACCESS_TOKEN: 'x-token',
     X_PUBLISHING_ENABLED: 'true',
     X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
-    X_EXPECTED_USERNAME: 'HOSHILUOfficial',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
     PRODUCT_DB: {
       prepare() {
         return {
@@ -378,7 +378,7 @@ test('X投稿接続を有効にしても定期シリーズを別承認しなけ�
   const env = {
     SOCIAL_AUTOPILOT_ENABLED: 'true',
     X_PUBLISHING_ENABLED: 'true',
-    X_EXPECTED_USERNAME: 'iCHMR81Lv4VYJYG',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
     X_USER_ACCESS_TOKEN: 'x-token',
     PRODUCT_DB: {
       prepare() {

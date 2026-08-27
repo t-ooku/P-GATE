@@ -11,7 +11,7 @@ import {
   handleSocialAdminRoutes
 } from '../src/social-publisher.mjs';
 
-const X_EXPECTED_USERNAME = 'HOSHILUOfficial';
+const X_EXPECTED_USERNAME = 'hoshilu_app';
 
 function xBearerEnv(overrides = {}) {
   return {
@@ -22,10 +22,55 @@ function xBearerEnv(overrides = {}) {
   };
 }
 
-test('Instagram投稿はコメント誘導と若者向け必須ハッシュタグを公開前に補完する', () => {
+test('Instagram投稿はコメント誘導とQoo10・SHEIN検索タグを公開前に補完する', () => {
   const post = normalizeSocialPost({ platform: 'INSTAGRAM', caption: '名前が分からなくても探せる', media_url: 'https://hoshilu.app/social/post.png', status: 'APPROVED' });
   assert.match(post.caption, /コメントで教えて/);
-  for (const tag of ['#ホシル', '#あいまい検索', '#13モール横断', '#ほしっとく']) assert.match(post.caption, new RegExp(tag));
+  for (const tag of ['#HOSHILU', '#Qoo10', '#SHEIN', '#購入品紹介']) assert.match(post.caption, new RegExp(tag));
+  assert.doesNotMatch(post.caption, /#ホシル|#あいまい検索|#13モール横断|#ほしっとく/u);
+});
+
+test('Instagram投稿は内容に合わせてQoo10・SHEINの検索タグを選ぶ', () => {
+  const qoo10 = normalizeSocialPost({
+    platform: 'INSTAGRAM',
+    caption: 'Qoo10で見た韓国コスメのリップを探したい。 #ホシル',
+    status: 'APPROVED'
+  });
+  for (const tag of ['#HOSHILU', '#Qoo10', '#Qoo10購入品', '#韓国コスメ']) {
+    assert.match(qoo10.caption, new RegExp(tag));
+  }
+
+  const shein = normalizeSocialPost({
+    platform: 'INSTAGRAM',
+    caption: 'SHEINで見たバッグの韓国コーデを探したい。 #あいまい検索',
+    status: 'APPROVED'
+  });
+  for (const tag of ['#HOSHILU', '#SHEIN', '#SHEIN購入品', '#韓国ファッション']) {
+    assert.match(shein.caption, new RegExp(tag));
+  }
+});
+
+test('X投稿はInstagram用の誤メンションを消して本文リンクへ案内する', () => {
+  const post = normalizeSocialPost({
+    platform: 'X',
+    caption: 'Qoo10やSHEINで見た商品を探せる。続きは @hoshilu.app のプロフィールから。 #ホシル #AI生成',
+    link: 'https://hoshilu.app/?utm_source=x',
+    status: 'APPROVED'
+  });
+  assert.doesNotMatch(post.caption, /@hoshilu(?:\.app)?/iu);
+  assert.match(post.caption, /詳しくは投稿内のリンクから。/u);
+  assert.match(post.caption, /#Qoo10 #SHEIN/u);
+  assert.match(post.caption, /#AI生成/u);
+  assert.doesNotMatch(post.caption, /#ホシル/u);
+});
+
+test('Instagramから複製したX投稿の計測リンクはutm_source=xへ補正する', () => {
+  const post = normalizeSocialPost({
+    platform: 'X',
+    caption: '海外で見た商品をHOSHILUで探せる。',
+    link: 'https://hoshilu.app/?utm_source=instagram&utm_medium=organic_social&utm_campaign=runway',
+    status: 'APPROVED'
+  });
+  assert.equal(new URL(post.link).searchParams.get('utm_source'), 'x');
 });
 
 test('Threads投稿は240文字超・400文字以下まで許可し、400文字を超える分は切り詰める', () => {
@@ -428,7 +473,9 @@ test('Instagram publisher creates a Reels container for an MP4 media URL', async
   assert.equal(createPayload.share_to_feed, true);
   assert.equal(createPayload.hide_like_and_view_counts, true);
   assert.equal('image_url' in createPayload, false);
-  assert.match(createPayload.caption, /#13モール横断/);
+  assert.match(createPayload.caption, /#HOSHILU/);
+  assert.match(createPayload.caption, /#Qoo10/);
+  assert.match(createPayload.caption, /#SHEIN/);
   assert.match(createPayload.caption, /@hoshilu\.app のプロフィールリンクから/);
   assert.doesNotMatch(createPayload.caption, /utm_source=/);
 });
@@ -1097,6 +1144,8 @@ test('X投稿はPR表記とリンクを足してもXの重み付き280を超え�
   const weighted = xWeightedLength(post.caption) + 1 + 23;
   assert.ok(weighted <= 280, `重み付き${weighted}で280を超えている`);
   assert.match(post.caption, /アフィリエイト/, 'PR表記は落とさない');
+  assert.match(post.caption, /#Qoo10 #SHEIN/u, '検索タグは途中で切らない');
+  assert.doesNotMatch(post.caption, /#(?:Qoo1|SHEI)$/u, '不完全なタグを残さない');
 });
 
 test('X以外のプラットフォームはXの重み付き上限に巻き込まれない', () => {

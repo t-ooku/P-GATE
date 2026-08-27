@@ -24,10 +24,11 @@ test('投稿はまとめて比較3モール・個別に探す最大13モール�
     assert.match(post.caption, /Qoo10/);
     assert.match(post.caption, /SHEIN/);
     assert.match(post.caption, /コメント/);
-    assert.match(post.caption, /#ホシル/);
+    assert.match(post.caption, /#HOSHILU/);
     assert.match(post.caption, /楽天市場・Yahoo!ショッピングをまとめて比較/);
     assert.match(post.caption, /最大13モール/);
-    assert.match(post.caption, /#13モール横断/);
+    assert.match(post.caption, /#(?:Qoo10|SHEIN)/);
+    assert.doesNotMatch(post.caption, /#ホシル|#あいまい検索|#13モール横断|#ほしっとく/u);
   }
 });
 

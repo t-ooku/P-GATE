@@ -6,6 +6,10 @@ import { authorizeAdminRequest } from './admin-auth.mjs';
 
 const PLATFORMS = new Set(['X', 'INSTAGRAM', 'TIKTOK', 'THREADS']);
 const DISCLOSURE = '※リンク先にはアフィリエイト広告を含む場合があります。';
+const LEGACY_DISCOVERY_HASHTAGS = new Set([
+  '#ホシル', '#あいまい検索', '#13モール横断', '#ほしっとく'
+]);
+const HASHTAG_PATTERN = /#[\p{L}\p{N}_ー]+/gu;
 const INVALID_HOSHILU_OWNER_CLAIM = /(?:ITG(?:グループ株式会社)?[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}(?:HOSHILU|ホシル)|(?:HOSHILU|ホシル)[^。\n]{0,20}(?:所有|運営))|(?:HOSHILU|ホシル)[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}ITG(?:グループ株式会社)?|ITG(?:グループ株式会社)?[^。\n]{0,20}(?:所有|運営)))/i;
 
 const clean = (value, max = 2000) => String(value || '')
@@ -43,33 +47,144 @@ function truncateToXWeight(value, budget) {
   return out;
 }
 
+function captionAndHashtags(value) {
+  const hashtags = [...String(value || '').matchAll(HASHTAG_PATTERN)]
+    .map(match => match[0])
+    .filter(tag => !LEGACY_DISCOVERY_HASHTAGS.has(tag));
+  const caption = String(value || '')
+    .replace(HASHTAG_PATTERN, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return { caption, hashtags };
+}
+
+function uniqueHashtags(...groups) {
+  const seen = new Set();
+  return groups.flat().filter((tag) => {
+    const normalized = String(tag || '').toLowerCase();
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
+function youthSearchHashtags(value, platform) {
+  const source = String(value || '');
+  const qoo10Focused = /Qoo\s*10で|Qoo\s*10の商品|#Qoo10購入品/iu.test(source);
+  const sheinFocused = /SHEINで|SHIENで|SHEINの商品|SHIENの商品|#SHEIN購入品/iu.test(source);
+  const qoo10Mentioned = /Qoo\s*10|キューテン/iu.test(source);
+  const sheinMentioned = /SHEIN|SHIEN|シーイン/iu.test(source);
+  const beauty = /韓国コスメ|コスメ|リップ|ティント|スキンケア|メイク|美容/iu.test(source);
+  const fashion = /韓国ファッション|ファッション|コーデ|バッグ|アクセ|ネックレス|トップス|スカート|Y2K/iu.test(source);
+  const qoo10PurchaseTag = /#Qoo10購入品/iu.test(source);
+  const sheinPurchaseTag = /#SHEIN購入品/iu.test(source);
+  const purchasePair = qoo10PurchaseTag && sheinPurchaseTag;
+
+  if (purchasePair) {
+    return platform === 'X'
+      ? ['#Qoo10購入品', '#SHEIN購入品']
+      : ['#HOSHILU', '#Qoo10購入品', '#SHEIN購入品', '#購入品紹介'];
+  }
+  if (qoo10PurchaseTag && !sheinPurchaseTag) {
+    return platform === 'X'
+      ? ['#Qoo10購入品', beauty ? '#韓国コスメ' : '#購入品紹介']
+      : ['#HOSHILU', '#Qoo10', '#Qoo10購入品', beauty ? '#韓国コスメ' : '#購入品紹介'];
+  }
+  if (sheinPurchaseTag && !qoo10PurchaseTag) {
+    return platform === 'X'
+      ? ['#SHEIN購入品', fashion ? '#韓国ファッション' : '#購入品紹介']
+      : ['#HOSHILU', '#SHEIN', '#SHEIN購入品', fashion ? '#韓国ファッション' : '#購入品紹介'];
+  }
+  if (qoo10Mentioned && sheinMentioned) {
+    return platform === 'X'
+      ? ['#Qoo10', '#SHEIN']
+      : ['#HOSHILU', '#Qoo10', '#SHEIN', '#購入品紹介'];
+  }
+  if (qoo10Focused && !sheinFocused) {
+    return platform === 'X'
+      ? ['#Qoo10購入品', beauty ? '#韓国コスメ' : '#購入品紹介']
+      : ['#HOSHILU', '#Qoo10', '#Qoo10購入品', beauty ? '#韓国コスメ' : '#購入品紹介'];
+  }
+  if (sheinFocused && !qoo10Focused) {
+    return platform === 'X'
+      ? ['#SHEIN購入品', fashion ? '#韓国ファッション' : '#購入品紹介']
+      : ['#HOSHILU', '#SHEIN', '#SHEIN購入品', fashion ? '#韓国ファッション' : '#購入品紹介'];
+  }
+  if (qoo10Mentioned && !sheinMentioned) {
+    return platform === 'X'
+      ? ['#Qoo10購入品', beauty ? '#韓国コスメ' : '#購入品紹介']
+      : ['#HOSHILU', '#Qoo10', '#Qoo10購入品', beauty ? '#韓国コスメ' : '#購入品紹介'];
+  }
+  if (sheinMentioned && !qoo10Mentioned) {
+    return platform === 'X'
+      ? ['#SHEIN購入品', fashion ? '#韓国ファッション' : '#購入品紹介']
+      : ['#HOSHILU', '#SHEIN', '#SHEIN購入品', fashion ? '#韓国ファッション' : '#購入品紹介'];
+  }
+  return platform === 'X'
+    ? ['#Qoo10', '#SHEIN']
+    : ['#HOSHILU', '#Qoo10', '#SHEIN', '#購入品紹介'];
+}
+
+function sanitizeXCaption(value, hasLink) {
+  const linkCta = hasLink ? '詳しくは投稿内のリンクから。' : '詳しくはHOSHILUで検索。';
+  return String(value || '')
+    .replace(/続きは\s*@hoshilu\.app\s*のプロフィール(?:リンク)?から[。.!！]?/giu, linkCta)
+    .replace(/@hoshilu\.app/giu, 'HOSHILU');
+}
+
+function fitXHashtags(hashtags, budget) {
+  const fitted = [];
+  // 本文を最低5文字残し、ハッシュタグは途中で切らず、入るものだけを採用する。
+  const tagBudget = Math.max(0, budget - 10);
+  for (const tag of hashtags) {
+    const candidate = [...fitted, tag].join(' ');
+    if (xWeightedLength(candidate) <= tagBudget) fitted.push(tag);
+  }
+  return fitted;
+}
+
 export function normalizeSocialPost(input = {}) {
   const platform = clean(input.platform, 20).toUpperCase();
   if (!PLATFORMS.has(platform)) throw new Error('SOCIAL_PLATFORM_INVALID');
-  let caption = clean(input.caption, platform === 'X' ? 240 : platform === 'THREADS' ? 400 : 1800);
+  let caption = clean(input.caption, platform === 'THREADS' ? 400 : 1800);
   if (platform === 'X') {
+    caption = sanitizeXCaption(caption, Boolean(clean(input.link, 1000)));
+    const parts = captionAndHashtags(caption);
+    const recommendedTags = youthSearchHashtags(caption, platform);
+    const hashtags = fitXHashtags(
+      uniqueHashtags(recommendedTags, parts.hashtags).slice(0, 4),
+      280 - (input.affiliate === true ? 1 + xWeightedLength(DISCLOSURE) : 0)
+        - (clean(input.link, 1000) ? 1 + 23 : 0)
+    );
     // 2026-08-17: 従来は「240文字」で切っていたが、Xが数えるのは重み付き
     // 文字数なので、日本語240文字は480相当で上限280の倍近くあった。さらに
     // publish時にPR表記(重み54)とリンク(常に23)が後から連結されるため、
     // その分を引いておかないとX側で弾かれる(実際に失敗3件が出ていた)。
     const reserve = (input.affiliate === true ? 1 + xWeightedLength(DISCLOSURE) : 0)
       + (clean(input.link, 1000) ? 1 + 23 : 0);
-    caption = truncateToXWeight(caption, 280 - reserve);
+    const hashtagBlock = hashtags.join(' ');
+    const separatorWeight = parts.caption && hashtagBlock ? 1 : 0;
+    const bodyBudget = 280 - reserve - separatorWeight - xWeightedLength(hashtagBlock);
+    const body = truncateToXWeight(parts.caption, Math.max(0, bodyBudget)).trim();
+    caption = [body, hashtagBlock].filter(Boolean).join(' ');
+  }
+  if (platform === 'INSTAGRAM') {
+    const parts = captionAndHashtags(caption);
+    if (!/コメント/.test(parts.caption)) parts.caption += ' 気になった商品をコメントで教えてね。';
+    const hashtags = uniqueHashtags(youthSearchHashtags(caption, platform), parts.hashtags);
+    caption = [parts.caption, hashtags.join(' ')].filter(Boolean).join(' ');
   }
   if (caption.length < 5) throw new Error('SOCIAL_CAPTION_INVALID');
   if (INVALID_HOSHILU_OWNER_CLAIM.test(caption)) throw new Error('SOCIAL_ENTITY_CLAIM_INVALID');
-  if (platform === 'INSTAGRAM') {
-    if (!/コメント/.test(caption)) caption += ' 気になった商品をコメントで教えてね。';
-    const requiredTags = ['#ホシル', '#あいまい検索', '#13モール横断', '#ほしっとく'];
-    const missingTags = requiredTags.filter(tag => !caption.includes(tag));
-    if (missingTags.length) caption += ` ${missingTags.join(' ')}`;
-  }
   let link = clean(input.link, 1000);
   if (link) {
     const url = new URL(link);
     if (url.protocol !== 'https:' || !['hoshilu.app', 'www.hoshilu.app'].includes(url.hostname)) {
       throw new Error('SOCIAL_LINK_INVALID');
     }
+    // Runway動画はInstagramの承認済み行をXへ複製するため、保存済みリンクの
+    // utm_sourceがinstagramでも、実際の公開媒体に合わせて計測値を補正する。
+    if (platform === 'X') url.searchParams.set('utm_source', 'x');
     // Social platforms split raw spaces and non-ASCII query text when detecting URLs.
     // Serialize through URL so the complete search phrase remains inside `q`.
     link = url.toString();
