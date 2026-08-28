@@ -104,7 +104,7 @@ function providerPrompt(query, language) {
 }
 
 async function providerFetch(fetchImpl, url, options, timeoutMs) {
-  return fetchImpl(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(timeoutMs) });
+  return fetchImpl(url, { ...options, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
 }
 
 async function callGemini(query, language, env, fetchImpl) {

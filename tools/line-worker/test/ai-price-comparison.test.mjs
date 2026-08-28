@@ -105,7 +105,7 @@ test('v4.3項目9: GeminiとOpenAIを同時実行せず、Geminiが成功すれ�
   let geminiCalls = 0;
   let openAiCalls = 0;
   const fetchImpl = async (url, options) => {
-    assert.equal(options.redirect, 'error');
+    assert.equal(options.redirect, 'manual');
     const target = String(url);
     if (target.includes('generativelanguage.googleapis.com')) {
       geminiCalls += 1;
@@ -163,7 +163,7 @@ test('Geminiが一部だけ推定した場合は未取得モールだけOpenAI�
   assert.match(calls[0].prompt, /1848 JPY/);
   assert.doesNotMatch(calls[1].prompt, /LOFT_JP/);
   assert.match(calls[1].prompt, /HANDS_JP/);
-  assert.ok(calls.every((call) => call.redirect === 'error'));
+  assert.ok(calls.every((call) => call.redirect === 'manual'));
 });
 
 test('v4.3項目19・20: 同一商品と判定できないオファーはsimilarへ分離される', () => {

@@ -30,8 +30,10 @@ test('credential-bearing Worker fetches disable automatic redirects', async () =
   ]);
   for (const [name, minimum] of minimumPolicies) {
     const contents = await source(name);
-    const policies = contents.match(/redirect\s*:\s*['"]error['"]/gu) || [];
+    const policies = contents.match(/redirect\s*:\s*['"]manual['"]/gu) || [];
     assert.ok(policies.length >= minimum, `${name} must retain every credentialed redirect policy`);
+    assert.doesNotMatch(contents, /redirect\s*:\s*['"]error['"]/u,
+      `${name} must use the redirect mode supported by Cloudflare Workers`);
   }
 });
 

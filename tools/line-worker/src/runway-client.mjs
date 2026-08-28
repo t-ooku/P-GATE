@@ -51,7 +51,7 @@ async function runwayRequest(env, fetchImpl, operation, path, { method = 'GET', 
     authorization: `Bearer ${secret}`,
     'X-Runway-Version': RUNWAY_API_VERSION
   };
-  const options = { method, headers, redirect: 'error' };
+  const options = { method, headers, redirect: 'manual' };
   if (body !== undefined) {
     headers['content-type'] = 'application/json';
     options.body = JSON.stringify(body);

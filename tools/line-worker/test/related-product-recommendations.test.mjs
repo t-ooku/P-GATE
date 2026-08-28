@@ -51,7 +51,7 @@ test('固定ルールにない検索はAIが理解した別カテゴリへ横展
   assert.deepEqual(result.map(item=>item.query),['収納ボックス','ラベルシール','棚用滑り止めシート']);
   assert.equal(calls.length,1);
   assert.match(calls[0].body,/complementary-product category planner/);
-  assert.equal(calls[0].redirect,'error');
+  assert.equal(calls[0].redirect,'manual');
 });
 
 test('OpenAI関連カテゴリ通信も認証情報付きリダイレクトを追従しない',async()=>{
@@ -67,7 +67,7 @@ test('OpenAI関連カテゴリ通信も認証情報付きリダイレクトを�
     }
   );
   assert.deepEqual(result.map(item=>item.query),['収納ボックス']);
-  assert.equal(requestOptions.redirect,'error');
+  assert.equal(requestOptions.redirect,'manual');
 });
 
 test('AI提案は重複・元商品・URL・理由なしを除外する',()=>{

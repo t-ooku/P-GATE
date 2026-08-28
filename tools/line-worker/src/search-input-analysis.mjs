@@ -297,7 +297,7 @@ export async function analyzeSearchInput({ query = '', social_url = '', image = 
               ? { temperature: 0.1, maxOutputTokens: 384 }
               : { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: 384 }
           }),
-          redirect: 'error',
+          redirect: 'manual',
           signal: AbortSignal.timeout(ANALYSIS_TIMEOUT_MS)
         }
       );

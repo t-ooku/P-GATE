@@ -192,7 +192,7 @@ async function exchangeAuthorizationCode(code, request, env, fetchImpl) {
   });
   const shortResponse = await fetchImpl('https://api.instagram.com/oauth/access_token', {
     method: 'POST',
-    redirect: 'error',
+    redirect: 'manual',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: form.toString()
   });
@@ -205,7 +205,7 @@ async function exchangeAuthorizationCode(code, request, env, fetchImpl) {
   const profileUrl = new URL('https://graph.instagram.com/me');
   profileUrl.searchParams.set('fields', 'user_id,username');
   profileUrl.searchParams.set('access_token', shortToken);
-  const profileResponse = await fetchImpl(profileUrl.toString(), { redirect: 'error' });
+  const profileResponse = await fetchImpl(profileUrl.toString(), { redirect: 'manual' });
   if (!profileResponse.ok) throw new Error(`INSTAGRAM_OAUTH_PROFILE_${profileResponse.status}`);
   const profile = await profileResponse.json();
   const profileAccountId = clean(profile?.user_id || profile?.id, 80);
@@ -218,7 +218,7 @@ async function exchangeAuthorizationCode(code, request, env, fetchImpl) {
   longUrl.searchParams.set('grant_type', 'ig_exchange_token');
   longUrl.searchParams.set('client_secret', current.appSecret);
   longUrl.searchParams.set('access_token', shortToken);
-  const longResponse = await fetchImpl(longUrl.toString(), { redirect: 'error' });
+  const longResponse = await fetchImpl(longUrl.toString(), { redirect: 'manual' });
   if (!longResponse.ok) throw new Error(`INSTAGRAM_OAUTH_LONG_TOKEN_${longResponse.status}`);
   const long = await longResponse.json();
   const accessToken = String(long?.access_token || '').trim();
@@ -247,7 +247,7 @@ async function refreshCredential(row, env, fetchImpl) {
   const refreshUrl = new URL('https://graph.instagram.com/refresh_access_token');
   refreshUrl.searchParams.set('grant_type', 'ig_refresh_token');
   refreshUrl.searchParams.set('access_token', accessToken);
-  const response = await fetchImpl(refreshUrl.toString(), { redirect: 'error' });
+  const response = await fetchImpl(refreshUrl.toString(), { redirect: 'manual' });
   if (!response.ok) {
     if (Number.isFinite(expiresAt) && expiresAt > Date.now()) {
       return { accountId: row.account_id, accessToken };

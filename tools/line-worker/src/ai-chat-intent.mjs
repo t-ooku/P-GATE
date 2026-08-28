@@ -126,7 +126,7 @@ function chatPrompt(history, language, mode = 'REFINE') {
 }
 
 async function providerFetch(fetchImpl, url, options, timeoutMs) {
-  return fetchImpl(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(timeoutMs) });
+  return fetchImpl(url, { ...options, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
 }
 
 async function callGemini(history, language, env, fetchImpl, timeoutMs = CHAT_PROVIDER_TIMEOUT_MS, mode = 'REFINE') {

@@ -96,7 +96,7 @@ function aiPrompt(query, language) {
 }
 
 async function providerFetch(fetchImpl, url, options) {
-  return fetchImpl(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(AI_TIMEOUT_MS) });
+  return fetchImpl(url, { ...options, redirect: 'manual', signal: AbortSignal.timeout(AI_TIMEOUT_MS) });
 }
 
 async function requestAiRelatedQueries(query, language, env, fetchImpl) {

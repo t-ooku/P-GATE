@@ -294,7 +294,7 @@ test('X publisher uses official create-post endpoint after approval', async () =
   ]);
   assert.match(requests[0].options.headers.authorization, /^Bearer /);
   assert.match(requests[1].options.headers.authorization, /^Bearer /);
-  assert.ok(requests.every(({ options }) => options.redirect === 'error'));
+  assert.ok(requests.every(({ options }) => options.redirect === 'manual'));
 });
 
 test('social links percent-encode the complete Japanese search query', async () => {
@@ -393,7 +393,7 @@ test('Instagram publisher waits for media processing and rejects authenticated r
   assert.equal(id, 'ig-post-1');
   assert.equal(requests.filter(request => request.url.includes('status_code')).length, 2);
   assert.match(requests.at(-1).url, /media_publish$/);
-  assert.ok(requests.every(({ options }) => options.redirect === 'error'));
+  assert.ok(requests.every(({ options }) => options.redirect === 'manual'));
 });
 
 test('TikTok publisher rejects redirects on authenticated creator and publish requests', async () => {
@@ -415,7 +415,7 @@ test('TikTok publisher rejects redirects on authenticated creator and publish re
   });
   assert.equal(id, 'tiktok-post-1');
   assert.equal(requests.length, 2);
-  assert.ok(requests.every(({ options }) => options.redirect === 'error'));
+  assert.ok(requests.every(({ options }) => options.redirect === 'manual'));
 });
 
 test('Instagramリールの処理が10回を超えても完了まで待機する', async () => {
@@ -594,7 +594,7 @@ test('Threads publisher creates a text-only container and rejects authenticated 
   assert.equal('video_url' in createPayload, false);
   assert.equal(requests.filter(request => request.url.includes('fields=status')).length, 2);
   assert.match(requests.at(-1).url, /threads_publish$/);
-  assert.ok(requests.every(({ options }) => options.redirect === 'error'));
+  assert.ok(requests.every(({ options }) => options.redirect === 'manual'));
 });
 
 test('Threads publisher creates an IMAGE container for a non-video media URL', async () => {
@@ -802,7 +802,7 @@ test('公開済みInstagram投稿の正式URLとUTMを計測テーブルへ保�
   const result = await syncInstagramPublishedPermalinks(env, new Date('2026-08-12T14:46:00.000Z'), async (url, options) => {
     assert.match(url, /ig-media-1\?fields=id,permalink,is_ai_generated$/);
     assert.equal(options.headers.authorization, 'Bearer token');
-    assert.equal(options.redirect, 'error');
+    assert.equal(options.redirect, 'manual');
     return Response.json({ id: 'ig-media-1', permalink: 'https://www.instagram.com/reel/ExampleCode/', is_ai_generated: true });
   });
   assert.deepEqual(result, { checked: 1, saved: 1, failed: 0 });
@@ -1012,7 +1012,7 @@ test('Threadsインサイト取り込みはpermalinkと指標をJST日次スナ�
   const result = await syncThreadsInsights(env, new Date('2026-08-17T12:00:00.000Z'), async (url, options) => {
     requests.push(url);
     assert.equal(options.headers.authorization, 'Bearer token');
-    assert.equal(options.redirect, 'error');
+    assert.equal(options.redirect, 'manual');
     if (url.includes('fields=permalink')) {
       return Response.json({ permalink: 'https://www.threads.com/@hoshilu.app/post/ExampleCode' });
     }

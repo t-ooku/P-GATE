@@ -134,7 +134,7 @@ export async function fetchYahooHighRatingRanking(env, query, fetcher = fetch) {
   url.searchParams.set('limit', '30');
   const response = await fetcher(url.toString(), {
     headers: { accept: 'application/json' },
-    redirect: 'error',
+    redirect: 'manual',
     signal: AbortSignal.timeout(2500)
   });
   if (!response.ok) {
@@ -168,7 +168,7 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch, option
   url.searchParams.set('in_stock', 'true');
   const response = await fetcher(url.toString(), {
     headers: { accept: 'application/json' },
-    redirect: 'error',
+    redirect: 'manual',
     signal: AbortSignal.timeout(2500)
   });
   if (!response.ok) {

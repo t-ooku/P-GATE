@@ -595,7 +595,7 @@ async function verifyTurnstile(token, env, remoteIp) {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: token, remoteip: remoteIp || undefined }),
-      redirect: 'error',
+      redirect: 'manual',
       signal: AbortSignal.timeout(5000)
     });
   } catch (error) {
@@ -727,7 +727,7 @@ async function replyToLine(replyToken, messages, env) {
       'content-type': 'application/json'
     },
     body: JSON.stringify({ replyToken, messages }),
-    redirect: 'error'
+    redirect: 'manual'
   });
   if (!response.ok) throw new Error(`LINE_REPLY_${response.status}`);
 }
@@ -741,7 +741,7 @@ async function pushToLine(userId, messages, env) {
       'content-type': 'application/json'
     },
     body: JSON.stringify({ to: userId, messages: messages.slice(0, 5) }),
-    redirect: 'error'
+    redirect: 'manual'
   });
   if (!response.ok) throw new Error(`LINE_PUSH_${response.status}`);
 }

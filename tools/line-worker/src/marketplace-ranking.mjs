@@ -67,7 +67,7 @@ function rakutenApiUrl(endpoint, env) {
 function rakutenRequestOptions(timeout = 5000) {
   return {
     headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
-    redirect: 'error',
+    redirect: 'manual',
     signal: AbortSignal.timeout(timeout)
   };
 }
@@ -172,7 +172,7 @@ function parseAiCategoryIds(payload, allowedIds) {
 }
 
 async function aiProviderFetch(fetcher, url, options) {
-  return fetcher(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(4000) });
+  return fetcher(url, { ...options, redirect: 'manual', signal: AbortSignal.timeout(4000) });
 }
 
 export async function suggestRankingCategoriesWithAi(env, rawQuery, options, fetcher = fetch) {

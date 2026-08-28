@@ -112,7 +112,7 @@ test('Instagram Business Login stores only an encrypted long-lived token', async
   });
   assert.equal(callback.status, 200);
   assert.equal(calls.length, 3);
-  assert.ok(calls.every(({ options }) => options.redirect === 'error'));
+  assert.ok(calls.every(({ options }) => options.redirect === 'manual'));
   assert.equal(database.row.account_id, ACCOUNT_ID);
   assert.equal(database.row.access_token_ciphertext.includes('long-lived-token'), false);
   assert.equal(database.row.access_token_iv.includes('long-lived-token'), false);
@@ -147,7 +147,7 @@ test('expired Instagram credentials reject redirects while refreshing the access
 
   const credential = await getInstagramPublishCredentials(env, async (url, options = {}) => {
     assert.match(url, /^https:\/\/graph\.instagram\.com\/refresh_access_token\?/);
-    assert.equal(options.redirect, 'error');
+    assert.equal(options.redirect, 'manual');
     return Response.json({ access_token: 'refreshed-token', expires_in: 5184000 });
   });
   assert.deepEqual(credential, { accountId: ACCOUNT_ID, accessToken: 'refreshed-token' });

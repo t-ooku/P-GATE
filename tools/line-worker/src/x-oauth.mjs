@@ -163,7 +163,7 @@ async function tokenRequest(form, env, fetchImpl, errorCode) {
   const current = config(env);
   const response = await fetchImpl('https://api.x.com/2/oauth2/token', {
     method: 'POST',
-    redirect: 'error',
+    redirect: 'manual',
     headers: {
       authorization: tokenAuthorization(current),
       'content-type': 'application/x-www-form-urlencoded'
@@ -182,7 +182,7 @@ async function tokenRequest(form, env, fetchImpl, errorCode) {
 
 async function authenticatedProfile(accessToken, env, fetchImpl) {
   const response = await fetchImpl('https://api.x.com/2/users/me?user.fields=username', {
-    redirect: 'error',
+    redirect: 'manual',
     headers: { authorization: `Bearer ${accessToken}` }
   });
   if (!response.ok) throw new Error(`X_OAUTH_PROFILE_${response.status}`);

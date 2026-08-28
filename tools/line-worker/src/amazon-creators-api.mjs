@@ -54,7 +54,7 @@ async function accessToken(env, fetcher = fetch, now = Date.now) {
     body: isV3
       ? JSON.stringify({ grant_type: 'client_credentials', client_id: id, client_secret: secret, scope: 'creatorsapi::default' })
       : new URLSearchParams({ grant_type: 'client_credentials', client_id: id, client_secret: secret, scope: 'creatorsapi/default' }),
-    redirect: 'error'
+    redirect: 'manual'
   });
   if (!response.ok) throw new Error('AMAZON_CREATORS_TOKEN_FAILED');
   const payload = await response.json();
@@ -251,7 +251,7 @@ export async function searchAmazonCreators(env, keywords, fetcher = fetch, optio
           'offersV2.listings.price'
         ]
       }),
-      redirect: 'error'
+      redirect: 'manual'
     });
     if (response.status === 401 && !authRetried) {
       authRetried = true;

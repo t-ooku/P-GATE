@@ -98,7 +98,7 @@ test('スクショと公開投稿URLはGeminiへprompt→inlineData順で渡しU
   }, 'JA', ENV, async (url, options) => {
     assert.match(String(url), /gemini-test:generateContent$/u);
     assert.equal(options.headers['x-goog-api-key'], ENV.GEMINI_API_KEY);
-    assert.equal(options.redirect, 'error');
+    assert.equal(options.redirect, 'manual');
     requestBody = JSON.parse(options.body);
     return Response.json({ candidates: [{
       content: { parts: [{ text: JSON.stringify({

@@ -167,7 +167,7 @@ function candidatePricePrompt(targets, language) {
 }
 
 async function providerFetch(fetchImpl, url, options, timeoutMs) {
-  return fetchImpl(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(timeoutMs) });
+  return fetchImpl(url, { ...options, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
 }
 
 // 価格比較は購入直前の操作なので、長いAI待機を許容しない。Geminiを4.5秒、

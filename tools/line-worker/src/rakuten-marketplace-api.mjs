@@ -99,7 +99,7 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   const request = async (requestUrl) => {
     const response = await fetcher(requestUrl.toString(), {
       headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
-      redirect: 'error',
+      redirect: 'manual',
       signal: AbortSignal.timeout(RAKUTEN_REQUEST_TIMEOUT_MS)
     });
     if (response.ok) return response.json();
