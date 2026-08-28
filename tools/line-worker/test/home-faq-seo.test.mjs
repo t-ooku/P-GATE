@@ -81,7 +81,7 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   }
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 74);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 79);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
   assert.match(worker, /hoshilu-shell-v394/);
 });
