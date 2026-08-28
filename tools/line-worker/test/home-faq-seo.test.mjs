@@ -42,7 +42,7 @@ test('ホームはcanonicalに一致する言語指定と全ガイドへの明�
 
 test('ホームは3入力とAI/HOSHILUの責任境界をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
   const [html, styles] = await Promise.all([read('index.html'), read('styles.css')]);
-  const description = 'ホシルは、スクショ・公開SNS投稿URL・うろ覚えの一言から商品候補を整理し、確認できた商品ページや最大13モールの検索先へ案内する無料の商品検索サービスです。';
+  const description = 'ホシルは、スクショ・公開SNS投稿URL・うろ覚えの一言から商品を探す無料サービス。検索条件を預けると、新しく一致する実在商品が見つかるまで探し続けます。';
   assert.match(html, /<title>ホシル｜スクショ・投稿URL・一言から商品を探す<\/title>/);
   assert.ok(html.includes('<meta name="description" content="' + description + '">'));
   assert.match(html, /<meta property="og:title" content="ホシル｜スクショ・投稿URL・一言から商品を探す">/);
@@ -89,5 +89,5 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 79);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v398/);
+  assert.match(worker, /hoshilu-shell-v399/);
 });
