@@ -683,6 +683,7 @@ async function main() {
     const summary = [
       `## HOSHILU real-user search SLI: ${monitorStatus}`, '',
       `Status code: ${monitorCode}`,
+      `Observed search SLI code: ${result.code}`,
       `Checked: ${result.checked_at}`,
       `Window: ${result.window_minutes} minutes`,
       `- started: ${result.started}`,
