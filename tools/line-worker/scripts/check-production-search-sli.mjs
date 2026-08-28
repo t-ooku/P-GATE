@@ -529,11 +529,23 @@ export async function inspectProductionSearchSli({
   assert(String(apiToken || '').trim(), 'CLOUDFLARE_API_TOKEN_MISSING');
   const endpoint = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/d1/database/${encodeURIComponent(databaseId)}/query`;
   const now = Date.now();
-  // Persisted control-plane incidents take precedence over current quality
-  // checks. Otherwise a separate SLI failure could hide the outbox forever
-  // and prevent the recovered GitHub monitor from recording and ACKing it.
+  // Capture persisted control-plane incidents first so they can always be
+  // recorded and ACKed, but continue through the privacy-safe SLI queries.
+  // A long-lived control incident must not blind the monitor to a real-user
+  // search failure that happens while the control plane is degraded.
   const pendingIncidents = await queryD1Rows(fetcher, endpoint, apiToken, reliabilityPendingIncidentSql());
-  evaluatePendingReliabilityIncidents(pendingIncidents);
+  let pendingControl = null;
+  try {
+    evaluatePendingReliabilityIncidents(pendingIncidents);
+  } catch (error) {
+    if (!Array.isArray(error?.pendingIncidents)) throw error;
+    pendingControl = {
+      code: String(error.message),
+      incidents: error.pendingIncidents,
+      cutoff: error.pendingCutoff
+    };
+  }
+  try {
   const acuteMinutes = boundedInteger(windowMinutes, 15, 5, 60);
   const sloMinutes = boundedInteger(sloWindowMinutes, 360, 60, 1440);
   const acuteCutoff = new Date(now - acuteMinutes * 60000).toISOString();
@@ -601,7 +613,15 @@ export async function inspectProductionSearchSli({
   return { ...acute, status, code, provider_degradation: providerDegradation,
     client_degradation: clientDegradation,
     slo_window_minutes: sloMinutes, slo, monthly, deep_canary: deepCanary,
-    reliability_heartbeats: reliabilityHeartbeats };
+    reliability_heartbeats: reliabilityHeartbeats, pending_control: pendingControl };
+  } catch (error) {
+    if (pendingControl) {
+      error.message = `${String(error?.message || error)};${pendingControl.code}`;
+      error.pendingIncidents = pendingControl.incidents;
+      error.pendingCutoff = pendingControl.cutoff;
+    }
+    throw error;
+  }
 }
 
 export async function runProductionSearchSli(options = {}) {
@@ -645,11 +665,24 @@ function cliOptions(argv) {
 }
 
 async function main() {
+  const options = cliOptions(process.argv.slice(2));
   try {
-    const result = await runProductionSearchSli(cliOptions(process.argv.slice(2)));
+    const result = await runProductionSearchSli(options);
+    const pendingControl = result.pending_control;
+    const monitorStatus = pendingControl ? 'FAIL' : result.status;
+    const monitorCode = pendingControl?.code || result.code;
+    if (options.pendingOutput && pendingControl) {
+      const payload = {
+        cutoff: pendingControl.cutoff,
+        incident_ids: pendingControl.incidents.map((item) => item.event_id)
+      };
+      await import('node:fs/promises').then(({ writeFile }) => writeFile(
+        options.pendingOutput, `${JSON.stringify(payload)}\n`, { mode: 0o600 }
+      ));
+    }
     const summary = [
-      `## HOSHILU real-user search SLI: ${result.status}`, '',
-      `Status code: ${result.code}`,
+      `## HOSHILU real-user search SLI: ${monitorStatus}`, '',
+      `Status code: ${monitorCode}`,
       `Checked: ${result.checked_at}`,
       `Window: ${result.window_minutes} minutes`,
       `- started: ${result.started}`,
@@ -664,12 +697,13 @@ async function main() {
       ,`Thirty-day continuity: ${result.monthly.finished} finished / ${result.monthly.unavailable} unavailable (${(result.monthly.unavailable_rate * 100).toFixed(3)}%)`, ''
       ,`Deep canary: ${Object.entries(result.deep_canary).map(([component, value]) => `${component}=${value.status}(${value.code}) at ${value.occurred_at || 'pending'}`).join(', ')}`, ''
       ,`Control heartbeats: ${Object.entries(result.reliability_heartbeats).map(([component, value]) => `${component}=${value.status} at ${value.occurred_at || 'pending'}`).join(', ')}`, ''
+      ,`Pending control incident: ${pendingControl?.code || 'none'}`, ''
     ].join('\n');
     console.log(summary);
     if (process.env.GITHUB_STEP_SUMMARY) await import('node:fs/promises').then(({ appendFile }) => appendFile(process.env.GITHUB_STEP_SUMMARY, summary));
-    if (searchSliRequiresIncident(result.status)) process.exitCode = 1;
+    if (pendingControl || searchSliRequiresIncident(result.status)) process.exitCode = 1;
   } catch (error) {
-    const pendingOutput = cliOptions(process.argv.slice(2)).pendingOutput;
+    const pendingOutput = options.pendingOutput;
     if (pendingOutput && Array.isArray(error?.pendingIncidents)) {
       const payload = { cutoff: error.pendingCutoff, incident_ids: error.pendingIncidents.map((item) => item.event_id) };
       await import('node:fs/promises').then(({ writeFile }) => writeFile(pendingOutput, `${JSON.stringify(payload)}\n`, { mode: 0o600 }));

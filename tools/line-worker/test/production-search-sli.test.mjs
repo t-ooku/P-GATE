@@ -25,7 +25,7 @@ function d1Fetch(row, sloRow = {
   degraded: 1,
   latest_degraded_at: '2026-08-20T00:00:00.000Z',
   latest_completed_at: '2026-08-20T00:01:00.000Z'
-}, diagnosticRow = {}, providerRows = []) {
+}, diagnosticRow = {}, providerRows = [], pendingRows = []) {
   return async (_url, init) => {
     assert.equal(init.headers.authorization, 'Bearer test-token');
     const body = JSON.parse(init.body);
@@ -43,7 +43,7 @@ function d1Fetch(row, sloRow = {
       return Response.json({ success: true, result: [{ success: true, results: healthyHeartbeatRows() }] });
     }
     if (body.sql.includes("event_type='reliability_incident'")) {
-      return Response.json({ success: true, result: [{ success: true, results: [] }] });
+      return Response.json({ success: true, result: [{ success: true, results: pendingRows }] });
     }
     if (body.sql.includes("event_type='search_provider_degraded'")) {
       return Response.json({ success: true, result: [{ success: true, results: providerRows }] });
@@ -268,23 +268,48 @@ test('every pending reliability code is recorded before the matching ids are ack
   });
 });
 
-test('persisted control incident is surfaced before an unrelated current SLI failure', async () => {
-  let calls = 0;
+test('persisted control incident does not suppress current SLI evidence', async () => {
   const pending = {
     event_id:'reliability-incident:GITHUB_SCHEDULE_HEARTBEAT_STALE',
     component:'github_schedule', code:'GITHUB_SCHEDULE_HEARTBEAT_STALE',
     occurred_at:'2026-08-13T11:00:00.000Z'
   };
-  const fetcher = async (_url, init) => {
-    calls += 1;
-    const body = JSON.parse(init.body);
-    assert.match(body.sql, /event_type='reliability_incident'/u);
-    return Response.json({ success:true, result:[{ success:true, results:[pending] }] });
+  const result = await inspectProductionSearchSli({
+    accountId:'account', apiToken:'test-token',
+    fetcher:d1Fetch(
+      { started:2, completed:2, hard_failed:0, backend_failed:0, degraded:0 },
+      { finished:2, degraded:0, latest_degraded_at:null,
+        latest_completed_at:'2026-08-28T11:00:00.000Z' },
+      {}, [], [pending]
+    )
+  });
+  assert.equal(result.code, 'SEARCH_SLI_OK');
+  assert.equal(result.started, 2);
+  assert.equal(result.completed, 2);
+  assert.equal(result.pending_control.code,
+    'RELIABILITY_INCIDENT_PENDING:github_schedule:GITHUB_SCHEDULE_HEARTBEAT_STALE');
+  assert.deepEqual(result.pending_control.incidents, [pending]);
+});
+
+test('current SLI failure preserves pending control incident ids for acknowledgement', async () => {
+  const pending = {
+    event_id:'reliability-incident:GITHUB_SCHEDULE_HEARTBEAT_STALE',
+    component:'github_schedule', code:'GITHUB_SCHEDULE_HEARTBEAT_STALE',
+    occurred_at:'2026-08-13T11:00:00.000Z'
   };
   await assert.rejects(inspectProductionSearchSli({
-    accountId:'account', apiToken:'token', fetcher
-  }), /RELIABILITY_INCIDENT_PENDING:github_schedule:GITHUB_SCHEDULE_HEARTBEAT_STALE/u);
-  assert.equal(calls, 1);
+    accountId:'account', apiToken:'test-token',
+    fetcher:d1Fetch(
+      { started:1, completed:0, hard_failed:1, backend_failed:0, degraded:0 },
+      undefined, {}, [], [pending]
+    )
+  }), (error) => {
+    assert.match(error.message, /SEARCH_SLI_HARD_FAILURES:1/u);
+    assert.match(error.message,
+      /RELIABILITY_INCIDENT_PENDING:github_schedule:GITHUB_SCHEDULE_HEARTBEAT_STALE/u);
+    assert.deepEqual(error.pendingIncidents, [pending]);
+    return true;
+  });
 });
 
 test('deep canary accepts fresh passing components', () => {
