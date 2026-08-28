@@ -149,7 +149,7 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
   assert.match(app, /fetch\('\/api\/related-recommendations'/);
   assert.match(app, /function scheduleRelatedRecommendations/);
   assert.match(app, /scheduleRelatedRecommendations\(effectiveQuery\|\|submittedQuery,sequence\)/);
-  assert.match(app, /renderResults\(fallback,lastRequestId\);[\s\S]*?scheduleRelatedRecommendations\(submittedQuery,sequence\)/);
+  assert.match(app, /renderResults\(fallback,lastRequestId,submittedQuery,executionId\);[\s\S]*?scheduleRelatedRecommendations\(submittedQuery,sequence\)/);
   assert.match(app, /async function loadRelatedRecommendations[\s\S]*?takeReadyTurnstileToken\(\)/);
   assert.match(app, /related_category_recommendations/);
   assert.match(app, /function relatedCategoryCard/);
@@ -175,5 +175,5 @@ test('下段の文言は価格を推測しないと明言し、未確認バッ�
 test('新しいモジュールはService Workerのプリキャッシュに含まれる', async () => {
   const sw = await readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8');
   assert.match(sw, /'\/result-rows\.mjs'/);
-  assert.match(sw, /hoshilu-shell-v397/);
+  assert.match(sw, /hoshilu-shell-v398/);
 });

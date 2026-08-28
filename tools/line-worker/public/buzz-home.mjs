@@ -19,6 +19,7 @@ function itemCard(item) {
   card.href = text(item.product_url);
   card.target = '_blank';
   card.rel = 'noopener sponsored';
+  card.dataset.marketplace = text(item.marketplace);
   const thumb = el('div', 'buzz-home-thumb');
   if (item.image_url) {
     const img = document.createElement('img');

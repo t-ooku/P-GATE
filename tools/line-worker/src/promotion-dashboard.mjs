@@ -323,8 +323,13 @@ async function periodSummary(env, now, days) {
 async function businessKpiSummary(env, now) {
   let registeredMembers = 0;
   try {
-    const row = await env.PRODUCT_DB.prepare(`SELECT COUNT(DISTINCT member_id) AS total
-      FROM member_notification_destinations WHERE verified_at<>''`).first();
+    const row = await env.PRODUCT_DB.prepare(`SELECT COUNT(DISTINCT destination.member_id) AS total
+      FROM member_notification_destinations destination
+      WHERE destination.verified_at<>'' AND destination.channel IN ('LINE','EMAIL')
+      AND NOT EXISTS (
+        SELECT 1 FROM member_notification_destinations alias
+        WHERE alias.member_id=destination.member_id AND alias.channel='IDENTITY_ALIAS' AND alias.verified_at<>''
+      )`).first();
     registeredMembers = safeCount(row?.total);
   } catch {}
   try {

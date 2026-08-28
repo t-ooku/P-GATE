@@ -23,10 +23,10 @@ const chatCopy = {
   KO: { title: 'AI 채팅', placeholder: '답장을 입력…', send: '보내기', searching: '찾고 있습니다…', finding: '조건에 맞는 상품을 찾고 있습니다…', error: '통신에 실패했습니다. 다시 시도해 주세요.', searchError: '검색에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기', ready: '검색 준비가 되었습니다.', searchCta: '이 조건으로 찾기' }
 };
 const identifyCopy={
-  JA:{title:'AIに確認して探す',thinking:'商品を1つに絞っています…',question:name=>`この商品ですか？\n${name}`,yes:'YES、この商品を探す',no:'NO、別の候補',other:'他モールで探す',error:'候補を確認できませんでした。',finding:'確認した商品を各モールで探しています…',rejected:'違います。別の商品候補を1つ提示してください。',close:'閉じる'},
-  EN:{title:'Confirm with AI',thinking:'Narrowing it to one product…',question:name=>`Is this the product?\n${name}`,yes:'YES, search for it',no:'NO, another option',other:'Search other marketplaces',error:'Could not confirm a candidate.',finding:'Searching marketplaces for the confirmed product…',rejected:'No. Suggest one different product candidate.',close:'Close'},
-  ZH:{title:'先让 AI 确认',thinking:'正在缩小到一个商品…',question:name=>`是这个商品吗？\n${name}`,yes:'YES，搜索此商品',no:'NO，换一个候选',other:'前往其他商城搜索',error:'无法确认候选商品。',finding:'正在各商城搜索已确认的商品…',rejected:'不是。请再提出一个不同的商品候选。',close:'关闭'},
-  KO:{title:'AI 확인 후 찾기',thinking:'상품을 하나로 좁히는 중…',question:name=>`이 상품인가요?\n${name}`,yes:'YES, 이 상품 찾기',no:'NO, 다른 후보',other:'다른 쇼핑몰에서 찾기',error:'상품 후보를 확인하지 못했습니다.',finding:'확인한 상품을 각 쇼핑몰에서 찾는 중…',rejected:'아닙니다. 다른 상품 후보를 하나 제시해 주세요.',close:'닫기'}
+  JA:{title:'AIに確認して探す',thinking:'商品を1つに絞っています…',question:name=>`この商品ですか？\n${name}`,yes:'YES、この商品を探す',no:'NO、別の候補',other:'他モールで探す',browseNow:'待たずにモールで探す',error:'候補を確認できませんでした。',finding:'確認した商品を各モールで探しています…',rejected:'違います。別の商品候補を1つ提示してください。',close:'閉じる'},
+  EN:{title:'Confirm with AI',thinking:'Narrowing it to one product…',question:name=>`Is this the product?\n${name}`,yes:'YES, search for it',no:'NO, another option',other:'Search other marketplaces',browseNow:'Search marketplaces now',error:'Could not confirm a candidate.',finding:'Searching marketplaces for the confirmed product…',rejected:'No. Suggest one different product candidate.',close:'Close'},
+  ZH:{title:'先让 AI 确认',thinking:'正在缩小到一个商品…',question:name=>`是这个商品吗？\n${name}`,yes:'YES，搜索此商品',no:'NO，换一个候选',other:'前往其他商城搜索',browseNow:'无需等待，立即前往商城搜索',error:'无法确认候选商品。',finding:'正在各商城搜索已确认的商品…',rejected:'不是。请再提出一个不同的商品候选。',close:'关闭'},
+  KO:{title:'AI 확인 후 찾기',thinking:'상품을 하나로 좁히는 중…',question:name=>`이 상품인가요?\n${name}`,yes:'YES, 이 상품 찾기',no:'NO, 다른 후보',other:'다른 쇼핑몰에서 찾기',browseNow:'기다리지 않고 쇼핑몰에서 찾기',error:'상품 후보를 확인하지 못했습니다.',finding:'확인한 상품을 각 쇼핑몰에서 찾는 중…',rejected:'아닙니다. 다른 상품 후보를 하나 제시해 주세요.',close:'닫기'}
 };
 
 const channelNames = [
@@ -114,27 +114,40 @@ async function postChatTurn(history, language, mode = 'REFINE') {
   throw lastError;
 }
 
-function openIdentifyDialog(originalQuery,language){
+function openIdentifyDialog(originalQuery,language,options={}){
   if(!originalQuery)return;
   const copy=identifyCopy[language]||identifyCopy.JA;
+  const executionId=String(options.executionId||'');
+  let dialogDisposed=false;let handoffSettled=false;
+  const settleHandoff=outcome=>{if(handoffSettled)return;handoffSettled=true;window.HoshiluSearch?.endIdentify?.(executionId,outcome);};
+  const runIdentifiedSearch=(query,candidate=null,searchOptions={})=>{
+    settleHandoff('searching');
+    return runFinalSearch(query,candidate,{...searchOptions,...(executionId?{executionId}:{})});
+  };
   const dialog=document.createElement('dialog');dialog.className='ai-chat-dialog ai-identify-dialog';
   const panel=document.createElement('div');panel.className='ai-chat-dialog-card';
   const close=document.createElement('button');close.type='button';close.className='ai-chat-dialog-close';close.setAttribute('aria-label',copy.close);close.textContent='✕';close.addEventListener('click',()=>dialog.close());
   const title=document.createElement('strong');title.textContent=copy.title;
   const messages=document.createElement('div');messages.className='ai-chat-messages';
-  panel.append(close,title,messages);dialog.append(panel);document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());
+  panel.append(close,title,messages);dialog.append(panel);document.body.append(dialog);
+  dialog.addEventListener('close',()=>{dialogDisposed=true;settleHandoff('handoff');dialog.remove();document.querySelector('#submitButton')?.focus({preventScroll:true});});
   const history=[{role:'user',text:originalQuery}];let noCount=0;let otherMallsButton=null;
-  messages.append(chatMessageRow('user',originalQuery));
+  const browseNow=document.createElement('button');browseNow.type='button';browseNow.className='ai-chat-other-malls ai-chat-browse-now';browseNow.textContent=copy.browseNow;
+  browseNow.addEventListener('click',()=>{settleHandoff('handoff');dialog.close();window.setTimeout(()=>document.querySelector('#instantMarketplaceFallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});
+  messages.append(chatMessageRow('user',originalQuery),browseNow);
   const showOtherMalls=()=>{
-    if(otherMallsButton?.isConnected)return;
+    if(otherMallsButton?.isConnected||dialogDisposed)return;
     const button=document.createElement('button');otherMallsButton=button;button.type='button';button.className='ai-chat-other-malls';button.textContent=copy.other;
-    button.addEventListener('click',async()=>{button.disabled=true;const status=chatMessageRow('assistant',copy.finding);status.classList.add('ai-chat-message-status');messages.append(status);await runFinalSearch(originalQuery);dialog.close();window.setTimeout(()=>document.querySelector('#marketplaceFallback,.marketplace-fallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});
+    button.addEventListener('click',async()=>{button.disabled=true;const status=chatMessageRow('assistant',copy.finding);status.classList.add('ai-chat-message-status');messages.append(status);const outcome=await runIdentifiedSearch(originalQuery);if(dialogDisposed)return;if(outcome.ok||outcome.degraded)dialog.close();else button.disabled=false;window.setTimeout(()=>document.querySelector('#marketplaceFallback,.marketplace-fallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});
     messages.append(button);
   };
   const ask=async()=>{
+    if(dialogDisposed)return;
     const status=chatMessageRow('assistant',copy.thinking);status.classList.add('ai-chat-message-status');messages.append(status);
     try{
-      const result=await postChatTurn(history,language,'IDENTIFY');status.remove();
+      const result=await postChatTurn(history,language,'IDENTIFY');
+      if(dialogDisposed){status.remove();return;}
+      status.remove();
       const candidate=String(result.candidate_name||result.refined_query||'').trim();if(!candidate)throw new Error('CANDIDATE_EMPTY');
       const aiCandidateFallback={name:candidate,brand:String(result.candidate_brand||''),reason:String(result.candidate_reason||''),matched_features:Array.isArray(result.matched_features)?result.matched_features:[],match_score:Number(result.match_score||0),search_keywords:[String(result.refined_query||candidate)],marketplace_search_links:Array.isArray(result.marketplace_search_links)?result.marketplace_search_links:[]};
       history.push({role:'assistant',text:candidate});
@@ -142,14 +155,15 @@ function openIdentifyDialog(originalQuery,language){
       const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';
       const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
       const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;
-      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runFinalSearch(result.refined_query||candidate,aiCandidateFallback);finding.remove();if(outcome.ok||outcome.degraded)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
+      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runIdentifiedSearch(result.refined_query||candidate,aiCandidateFallback);finding.remove();if(dialogDisposed)return;if(outcome.ok||outcome.degraded)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
       no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});
       actions.append(yes,no);messages.append(actions);
     }catch(error){
-      const code=String(error?.message||'CHAT_FAILED');console.error('HOSHILU_IDENTIFY_FAILED',code,error);status.textContent=copy.error;
-      status.textContent=copy.finding;
-      const outcome=await runFinalSearch(originalQuery,null,{tokenCallbackTimeoutMs:AI_TOKEN_CALLBACK_TIMEOUT_MS,maxAttempts:1});
+      if(dialogDisposed){status.remove();return;}
+      const code=String(error?.message||'CHAT_FAILED');console.error('HOSHILU_IDENTIFY_FAILED',code,error);status.textContent=copy.finding;
+      const outcome=await runIdentifiedSearch(originalQuery,null,{tokenCallbackTimeoutMs:AI_TOKEN_CALLBACK_TIMEOUT_MS,maxAttempts:1});
       status.remove();
+      if(dialogDisposed)return;
       if(outcome.ok||outcome.degraded){dialog.close();return;}
       messages.append(chatMessageRow('assistant',copy.error));showOtherMalls();
     }

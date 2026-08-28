@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v397/);
+  assert.match(worker, /hoshilu-shell-v398/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /link\.dataset\.marketplace = destination\.dataset\.marketplace/);
@@ -99,7 +99,7 @@ test('WHY HOSHILU is concise and official social labels are not duplicated', asy
 // only closing after a confirmed result or a usable degraded result.
 test('AIチャットは本検索失敗時も最大13モールの縮退結果を表示してダイアログを閉じる', async () => {
   const [app, script] = await Promise.all([read('app.js'), read('ai-search-ui.mjs')]);
-  assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch\}/);
+  assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch,beginIdentify:beginIdentifySearch,endIdentify:endIdentifySearch\}/);
   assert.match(app, /async function runKnowledgeSearch\(options=\{\}\)/);
   assert.match(app, /return\{ok:true,result,requestId:lastRequestId\}/);
   assert.match(app, /const failureTelemetry=clientSearchFailureTelemetry\(error,lastRequestId\)/);
@@ -134,7 +134,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/assets-v139\/app\.js\?v=139"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=10"><\/script>/);
+  assert.match(html, /<script type="module" src="\/assets-v140\/app\.js\?v=140"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=11"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -150,16 +150,16 @@ test('AI確認モードは一時的なTurnstile・Worker失敗を別トークン
   assert.match(script, /await new Promise\(\(resolve\) => setTimeout\(resolve, 150\)\)/);
   assert.match(script, /HOSHILU_IDENTIFY_FAILED/);
   assert.match(script, /retry\.addEventListener\('click'/);
-  assert.match(script, /status\.textContent=copy\.error/);
+  assert.match(script, /status\.textContent=copy\.finding/);
   assert.doesNotMatch(script, /status\.textContent=`\$\{copy\.error\}（\$\{code\}）`/);
 });
 
 test('AI確認候補は販売確認前と明示して本検索へ引き継ぎ、他モール導線を重複させない', async () => {
   const [app, script, css] = await Promise.all([read('app.js'), read('ai-search-ui.mjs'), read('ai-search-layout-fix.css')]);
-  assert.match(script, /runFinalSearch\(result\.refined_query\|\|candidate,aiCandidateFallback\)/);
+  assert.match(script, /runIdentifiedSearch\(result\.refined_query\|\|candidate,aiCandidateFallback\)/);
   assert.match(script, /return searchRunner\(\{ aiCandidateFallback, \.\.\.searchOptions \}\)/);
   assert.doesNotMatch(script.slice(script.indexOf('async function runFinalSearch'), script.indexOf('function chatMessageRow')), /requestToken/);
-  assert.match(script, /if\(otherMallsButton\?\.isConnected\)return/);
+  assert.match(script, /if\(otherMallsButton\?\.isConnected\|\|dialogDisposed\)return/);
   assert.match(app, /function withAiCandidateFallback\(result,candidate\)/);
   assert.match(app, /function aiCandidateRequestPayload\(candidate\)/);
   assert.match(app, /ai_candidate_fallback:aiCandidatePayload/);

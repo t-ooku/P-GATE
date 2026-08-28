@@ -31,7 +31,9 @@ test('BUZZテーマは火曜・金曜JSTに週2回切り替わり韓国軸を含
 test('BUZZは共有流入・共有開始・商品送客を匿名成長計測へ接続する', () => {
   const html = fs.readFileSync(path.join(worker, 'public', 'buzz.html'), 'utf8');
   const client = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
-  assert.match(html, /growth-analytics\.mjs\?v=6/);
+  const homeClient = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
+  const analytics = fs.readFileSync(path.join(worker, 'public', 'growth-analytics.mjs'), 'utf8');
+  assert.match(html, /growth-analytics\.mjs\?v=7/);
   assert.match(html, /buzz\.mjs\?v=4/);
   assert.match(html, /share-button share-discovery-button/);
   assert.match(client, /utm_campaign: 'hoshilu_buzz'/);
@@ -39,6 +41,9 @@ test('BUZZは共有流入・共有開始・商品送客を匿名成長計測へ�
   assert.match(client, /shelf-share share-discovery-button/);
   assert.match(client, /card product-primary-link ranking-product-card/);
   assert.match(client, /card\.dataset\.marketplace = text\(marketplace\)/);
+  assert.match(homeClient, /card\.dataset\.marketplace = text\(item\.marketplace\)/);
+  assert.match(analytics, /price-compare-search-link,\.buzz-home-card/);
+  assert.match(analytics, /closest\('\.ranking-product-card,\.buzz-home-card'\)/);
 });
 
 // buzz_ranking_snapshots と marketplace_ranking_cache の最小D1スタブ。
@@ -285,7 +290,7 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
   assert.match(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
-  assert.match(html, /<script type="module" src="\/buzz-home\.mjs"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=2"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
   const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
   assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
@@ -315,7 +320,7 @@ test('/buzzページは出典と注意書きを持ち、断定表現を使わな
   assert.match(css, /\.rank\.rank-2/u);
   assert.match(css, /\.rank\.rank-3/u);
   assert.match(script, /rankNumber >= 1 && rankNumber <= 3/u);
-  assert.match(serviceWorker, /SHELL\.push\('\/buzz\.html', '\/buzz\.css', '\/buzz\.mjs'\)/u);
+  assert.match(serviceWorker, /SHELL\.push\('\/buzz\.html', '\/buzz\.css', '\/buzz\.mjs', '\/buzz-home\.css', '\/buzz-home\.mjs'\)/u);
   assert.match(html, /class="topbar"/u);
   assert.match(html, /class="brand"/u);
   assert.match(html, /欲しいを、ちゃんと見つける。/u);

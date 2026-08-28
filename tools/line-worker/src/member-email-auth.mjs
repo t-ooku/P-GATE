@@ -1,4 +1,4 @@
-import { storeMemberNotificationDestination, storeMemberRegistrationDestination } from './member-notification-delivery.mjs';
+import { linkMemberNotificationIdentity, resolveMemberIdentityAlias, storeMemberRegistrationDestination } from './member-notification-delivery.mjs';
 const encoder = new TextEncoder();
 function b64(bytes) { let binary=''; for(const byte of bytes) binary+=String.fromCharCode(byte); return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,''); }
 async function digest(value) { return b64(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value)))); }
@@ -33,21 +33,35 @@ async function consumeEmailCode(request,env,now=Math.floor(Date.now()/1000)) {
   if(!row||Number(row.expires_at)<now||Number(row.attempts)>=5) return Response.json({ok:false,error:'CODE_EXPIRED'},{status:401});
   const expected=await digest(`code:${emailHash}:${code}:${secret(env)}`);
   if(expected!==row.code_hash){await env.PRODUCT_DB.prepare('UPDATE member_email_challenges SET attempts=attempts+1 WHERE email_hash=?').bind(emailHash).run();return Response.json({ok:false,error:'CODE_INVALID'},{status:401});}
-  await env.PRODUCT_DB.prepare('DELETE FROM member_email_challenges WHERE email_hash=?').bind(emailHash).run();
+  const consumed=await env.PRODUCT_DB.prepare('DELETE FROM member_email_challenges WHERE email_hash=? AND code_hash=?').bind(emailHash,expected).run();
+  if(Number(consumed?.meta?.changes||0)!==1)return Response.json({ok:false,error:'CODE_EXPIRED'},{status:401,headers:{'cache-control':'no-store'}});
   return {email,emailHash,registrationContext:input.registration_context};
 }
 export async function verifyEmailCode(request,env,issueSession,now=Math.floor(Date.now()/1000)) {
   const verified=await consumeEmailCode(request,env,now);if(verified instanceof Response)return verified;
   const {email,emailHash,registrationContext}=verified;
-  await storeMemberRegistrationDestination(env,emailHash,'EMAIL',email,registrationContext);
-  return issueSession({id:emailHash,name:email.split('@')[0].slice(0,40),picture:'',provider:'EMAIL'},env);
+  let canonicalMemberId;
+  try{canonicalMemberId=await resolveMemberIdentityAlias(env,emailHash);}
+  catch(error){return Response.json({ok:false,error:String(error?.message||'IDENTITY_ALIAS_UNAVAILABLE')},{status:503,headers:{'cache-control':'no-store'}});}
+  try{await storeMemberRegistrationDestination(env,canonicalMemberId,'EMAIL',email,registrationContext);}
+  catch(error){
+    if(String(error?.message||'')!=='MEMBER_IDENTITY_ALIAS_CHANGED')return Response.json({ok:false,error:'MEMBER_REGISTRATION_UNAVAILABLE'},{status:503,headers:{'cache-control':'no-store'}});
+    try{
+      const reboundMemberId=await resolveMemberIdentityAlias(env,emailHash);
+      if(reboundMemberId===emailHash||reboundMemberId===canonicalMemberId)throw new Error('IDENTITY_ALIAS_UNAVAILABLE');
+      await storeMemberRegistrationDestination(env,reboundMemberId,'EMAIL',email,registrationContext);
+      canonicalMemberId=reboundMemberId;
+    }catch{return Response.json({ok:false,error:'IDENTITY_ALIAS_UNAVAILABLE'},{status:503,headers:{'cache-control':'no-store'}});}
+  }
+  return issueSession({id:canonicalMemberId,name:email.split('@')[0].slice(0,40),picture:'',provider:'EMAIL'},env);
 }
 export async function linkEmailDestination(request,env,memberId,now=Math.floor(Date.now()/1000)) {
   if(!memberId)return Response.json({ok:false,error:'MEMBER_REQUIRED'},{status:401});
   const verified=await consumeEmailCode(request,env,now);if(verified instanceof Response)return verified;
-  await storeMemberNotificationDestination(env,memberId,'EMAIL',verified.email);
-  // Also mark the privacy-safe email identity as already verified. If this
-  // user later chooses email login, it must not be counted as a second person.
-  await storeMemberNotificationDestination(env,verified.emailHash,'EMAIL',verified.email);
+  // Keep the privacy-safe email hash as an alias to the existing
+  // member. A later email login reuses the same canonical session/member ID
+  // instead of creating a second registered person.
+  try{await linkMemberNotificationIdentity(env,verified.emailHash,memberId,'EMAIL',verified.email);}
+  catch(error){const code=String(error?.message||'IDENTITY_LINK_UNAVAILABLE');return Response.json({ok:false,error:code},{status:code==='IDENTITY_ALIAS_CONFLICT'?409:503,headers:{'cache-control':'no-store'}});}
   return Response.json({ok:true,channel:'EMAIL'},{headers:{'cache-control':'no-store'}});
 }

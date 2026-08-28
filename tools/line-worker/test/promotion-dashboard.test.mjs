@@ -39,7 +39,7 @@ function d1(db) {
 
 function setup() {
   const db = new DatabaseSync(':memory:'); db.exec(migration); db.exec(unmetMigration); db.exec(growthMigration); db.exec(trafficMigration); db.exec(visitorMigration);
-  db.exec(`CREATE TABLE member_notification_destinations(member_id TEXT,channel TEXT,verified_at TEXT); INSERT INTO member_notification_destinations VALUES('m1','LINE','2026-08-01'),('m1','EMAIL','2026-08-02'),('m2','EMAIL','2026-08-03');`);
+  db.exec(`CREATE TABLE member_notification_destinations(member_id TEXT,channel TEXT,verified_at TEXT); INSERT INTO member_notification_destinations VALUES('m1','LINE','2026-08-01'),('m1','EMAIL','2026-08-02'),('m2','EMAIL','2026-08-03'),('email-alias','EMAIL','2026-08-04'),('email-alias','IDENTITY_ALIAS','2026-08-04');`);
   const insert = db.prepare(`INSERT INTO social_post_queue
     (post_id,platform,caption,scheduled_at,status,published_at,external_post_id,last_error,created_at,updated_at)
     VALUES (?,?,?,?,?,?,?,?,?,?)`);

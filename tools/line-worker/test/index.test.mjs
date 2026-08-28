@@ -590,7 +590,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v397/);
+  assert.match(serviceWorker, /hoshilu-shell-v398/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1336,9 +1336,9 @@ test('主検索CTAは処理告知の直後かつ補助情報・絞り込みよ�
 test('テキスト検索は外部検索先を即時かつ安定表示し確認済み結果を別領域へ追加する', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  const provisionalIndex = appSource.indexOf('renderInstantMarketplaceHandoff(submittedQuery,hasSupplementalInput)');
+  const provisionalIndex = appSource.indexOf('renderInstantMarketplaceHandoff(submittedQuery,hasSupplementalInput,executionId)');
   const tokenIndex = appSource.indexOf('const token=await waitForTurnstileToken', provisionalIndex);
-  const finalIndex = appSource.indexOf('renderResults(result,lastRequestId)', tokenIndex);
+  const finalIndex = appSource.indexOf('renderResults(result,lastRequestId,submittedQuery,executionId)', tokenIndex);
   assert.ok(provisionalIndex > -1 && provisionalIndex < tokenIndex, 'Turnstile待機前に検索先を表示');
   assert.ok(tokenIndex < finalIndex, '確認済み結果を後から追加');
   assert.match(html, /id="instantMarketplaceHandoff"/);
@@ -1348,10 +1348,34 @@ test('テキスト検索は外部検索先を即時かつ安定表示し確認�
   assert.match(appSource, /待たずに最大13モールで同じ条件を探せます/);
   assert.match(appSource, /入力した文章で最大13モールを検索できます/);
   assert.match(appSource, /setSearchMode\(localStorage\.getItem\('hoshilu_search_mode'\)\|\|'direct'/);
-  assert.match(appSource, /currentSearchMode\(\)==='identify'[\s\S]{0,180}renderInstantMarketplaceHandoff\(query,false\);window\.HoshiluIdentifySearch\.open/);
+  assert.match(appSource, /currentSearchMode\(\)==='identify'[\s\S]{0,220}const executionId=beginIdentifySearch\(query\);window\.HoshiluIdentifySearch\.open\(query,elements\.language\.value,\{executionId\}\)/);
   assert.match(appSource, /この端末に条件を保存しました（通知は無料会員登録後）/);
   assert.match(html, /id="resultMessage"[^>]*role="status"[^>]*aria-live="polite"/);
-  assert.match(html, /id="resultsSection"[^>]*aria-busy="false"/);
+  assert.doesNotMatch(html, /id="instantMarketplaceHandoff"[^>]*(?:role="status"|aria-live=|aria-atomic=)/);
+  assert.match(appSource, /liveStatus\.setAttribute\('role','status'\);liveStatus\.setAttribute\('aria-live','polite'\);liveStatus\.setAttribute\('aria-atomic','true'\)/);
+  assert.match(appSource, /querySelector\('#instantMarketplaceFallback'\)\|\|document\.querySelector\('#marketplaceFallback'\)/);
+  assert.match(html, /id="resultCards"[^>]*aria-busy="false"/);
+});
+
+test('再検索・AI確認・共有は同じexecutionへ相関し未確認結果を成功共有しない', () => {
+  const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const analytics = fs.readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
+  const ai = fs.readFileSync(new URL('../public/ai-search-ui.mjs', import.meta.url), 'utf8');
+  assert.match(appSource, /prepareResultsForNewSearch\(\);[\s\S]{0,700}hoshilu:search-execution-started/);
+  assert.match(appSource, /suppliedExecutionId\?'hoshilu:search-knowledge-started':'hoshilu:search-execution-started'/);
+  assert.match(appSource, /renderInstantMarketplaceHandoff\(query,false,executionId\)/);
+  assert.match(appSource, /elements\.instantMarketplace\.dataset\.searchExecutionId/);
+  assert.match(appSource, /elements\.cards\.dataset\.searchExecutionId/);
+  assert.match(analytics, /event\.detail\?\.watchdog === false/);
+  assert.match(analytics, /hoshilu:search-knowledge-started/);
+  assert.match(analytics, /clickedExecutionId===lastCompletedSearch\.executionId/);
+  assert.match(ai, /runFinalSearch\(query,candidate,\{\.\.\.searchOptions,\.\.\.\(executionId\?\{executionId\}:\{\}\)\}\)/);
+  assert.match(ai, /dialogDisposed=true;settleHandoff\('handoff'\)/);
+  assert.match(ai, /#instantMarketplaceFallback/);
+  assert.match(appSource, /shareDiscoveryReady=confirmed\.length>0/);
+  assert.match(appSource, /hasProductDestination=Boolean/);
+  assert.match(appSource, /const raw=shareDiscoveryQuery\.trim\(\)/);
+  assert.doesNotMatch(appSource, /shareObserver|new MutationObserver\(\(\)=>\{if\(shareDiscoveryReady/);
 });
 
 test('会員通知は保存成功後だけ成功表示とCVを送る', () => {

@@ -105,15 +105,9 @@ const clearSearchWatch = executionId => {
   searchWatches.delete(String(executionId));
   return watch;
 };
-const startSearchWatch = event => {
-  const executionId = String(event.detail?.executionId || '');
-  if (!/^[a-f0-9-]{20,64}$/iu.test(executionId)) return;
-  const inputType = String(event.detail?.inputType || '');
-  const inputEvent = SEARCH_INPUT_EVENT[inputType];
-  if (inputEvent) send(inputEvent, { execution_id: executionId });
+const armSearchWatch = (executionId, inputType) => {
   clearSearchWatch(executionId);
-  lastCompletedSearch = inputEvent ? { executionId, inputType, outboundSent: false } : null;
-  const watch = { inputType: inputEvent ? inputType : '', timer: 0 };
+  const watch = { inputType, timer: 0 };
   watch.timer = setTimeout(() => {
     if (searchWatches.get(executionId) !== watch) return;
     searchWatches.delete(executionId);
@@ -122,6 +116,29 @@ const startSearchWatch = event => {
     send('search_dead_end');
   }, SEARCH_WATCHDOG_MS);
   searchWatches.set(executionId, watch);
+};
+const startSearchWatch = event => {
+  const executionId = String(event.detail?.executionId || '');
+  if (!/^[a-f0-9-]{20,64}$/iu.test(executionId)) return;
+  const inputType = String(event.detail?.inputType || '');
+  const inputEvent = SEARCH_INPUT_EVENT[inputType];
+  if (inputEvent) send(inputEvent, { execution_id: executionId });
+  clearSearchWatch(executionId);
+  lastCompletedSearch = inputEvent ? { executionId, inputType, outboundSent: false } : null;
+  // AI確認の即時モール導線はattemptだけを記録する。本検索へ進むまで
+  // dead-end監視を始めず、通常のダイアログ終了を失敗扱いしない。
+  if (event.detail?.watchdog === false) return;
+  armSearchWatch(executionId, inputEvent ? inputType : '');
+};
+const resumeSearchWatch = event => {
+  const executionId = String(event.detail?.executionId || '');
+  if (!lastCompletedSearch || lastCompletedSearch.executionId !== executionId) return;
+  armSearchWatch(executionId, lastCompletedSearch.inputType);
+};
+const cancelSearchWatch = event => {
+  const executionId = String(event.detail?.executionId || '');
+  clearSearchWatch(executionId);
+  if (lastCompletedSearch?.executionId === executionId) lastCompletedSearch = null;
 };
 const completeSearchWatch = event => {
   const executionId = String(event.detail?.executionId || '');
@@ -167,7 +184,8 @@ document.addEventListener('invalid', event => {
 }, true);
 
 document.addEventListener('hoshilu:search-execution-started', startSearchWatch);
-document.addEventListener('hoshilu:search-cancelled', event => clearSearchWatch(event.detail?.executionId));
+document.addEventListener('hoshilu:search-knowledge-started', resumeSearchWatch);
+document.addEventListener('hoshilu:search-cancelled', cancelSearchWatch);
 document.addEventListener('hoshilu:search-completed', completeSearchWatch);
 document.addEventListener('hoshilu:search-failed', event => { clearSearchWatch(event.detail?.executionId); send('search_dead_end'); });
 document.addEventListener('hoshilu:search-degraded', event => {
@@ -188,16 +206,18 @@ document.addEventListener('click', event => {
   if (target.classList.contains('share-discovery-button') || target.classList.contains('share-copy-button')
     || target.classList.contains('share-gmail-button') || target.classList.contains('social-target')
     || target.dataset.channel === 'line') send('share_started');
-  if (target.matches('.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link') && target.tagName === 'A') {
+  if (target.matches('.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link,.buzz-home-card') && target.tagName === 'A') {
     // LINE is a share handoff, not a product-result click. It was previously
     // misclassified as ai_result_clicked because it reuses the buy-link style.
     if (target.dataset.channel === 'line') return;
     const marketplace = growthMarketplace(target.dataset.marketplace, target.textContent);
-    send(target.closest('.ranking-product-card') ? 'ranking_result_clicked' : 'ai_result_clicked', marketplace ? { marketplace } : {});
+    send(target.closest('.ranking-product-card,.buzz-home-card') ? 'ranking_result_clicked' : 'ai_result_clicked', marketplace ? { marketplace } : {});
     if (marketplace) {
       send('marketplace_click', { marketplace });
       // Count one conversion per completed search, not every shop click.
-      if (!target.closest('.ranking-product-card') && lastCompletedSearch && !lastCompletedSearch.outboundSent) {
+      const clickedExecutionId=String(target.closest('[data-search-execution-id]')?.dataset.searchExecutionId||'');
+      if (!target.closest('.ranking-product-card,.buzz-home-card') && lastCompletedSearch
+        && clickedExecutionId===lastCompletedSearch.executionId && !lastCompletedSearch.outboundSent) {
         const outboundEvent = SEARCH_OUTBOUND_INPUT_EVENT[lastCompletedSearch.inputType];
         if (outboundEvent) {
           send(outboundEvent, { execution_id: lastCompletedSearch.executionId });
