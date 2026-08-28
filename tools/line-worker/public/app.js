@@ -1,6 +1,6 @@
 // Root-absolute imports keep this module valid from both /app.js and the
-// atomic rollout path /assets-v140/app.js. Relative specifiers from the latter
-// would incorrectly resolve to /assets-v140/*.mjs and stop the whole UI.
+// atomic rollout path /assets-v141/app.js. Relative specifiers from the latter
+// would incorrectly resolve to /assets-v141/*.mjs and stop the whole UI.
 import { campaignContext } from '/campaign-attribution.mjs';
 import { buildMarketplaceSearchKeywords } from '/marketplace-search-keywords-v2.mjs';
 import { RESULT_ROW_LIMIT, excludePresentedCandidates, fallbackRecommendationCandidates, resultRowCopyFor, splitCandidateRows } from '/result-rows.mjs';
@@ -16,7 +16,7 @@ const timedAbortController = timeoutMs => {
   return { controller, clear: () => clearTimeout(timer) };
 };
 const copy = {
-  JA: { hero:'商品名が分からなくても、|欲しい物を探せる。', userView:'ユーザー体験', sellerView:'セラー体験', languageLabel:'表示言語', title:'商品名が分からなくても、うまく説明できなくても大丈夫。\n見た目、見た場所、使い方。覚えていることから話してください。', titleSummary:'使い方を見る', placeholder:'例：インスタで見た、ピンクで小さいカメラみたいなもの', submit:'一緒に見つける', results:'ホシルからの提案', loading:'候補を探しています…', buy:'販売ページで確認', total:'合計', shipping:'送料', delivery:'配送目安', days:'日', error:'現在検索できません。入力内容または通信状態を確認して、もう一度お試しください。', examples:['TikTokで見た光るスマホケース','推し活で使える小さな写真プリンター','韓国っぽい透明のワイヤレスイヤホン'], wish:'この条件で新着を通知', wishSaved:'新着通知を設定しました', emptyWish:'新着通知を設定した検索条件はまだありません。', filteredEmptyWish:'一致する保存条件はありません。', wishTitle:'保存した検索条件', wishDescription:'お気に入りではありません。\n保存した検索条件に新しく一致する商品が見つかったらお知らせします。', watchSavedStatus:'購入希望価格ウォッチ中', watchTitle:'購入希望価格ウォッチ', watchDescription:'希望価格を設定すると、対象商品のAPI確認価格を定期確認し、条件を満たした場合にお知らせします。', sellerTitle:'欲しいを、|売上機会に。', sellerDescription:'米国Amazon仕入れの並行輸入商品を、在日外国人と米国商品を探す日本人へ届けます。' },
+  JA: { hero:'商品名が分からなくても、|欲しい物を探せる。', userView:'ユーザー体験', sellerView:'セラー体験', languageLabel:'表示言語', title:'商品名が分からなくても、うまく説明できなくても大丈夫。\n見た目、見た場所、使い方。覚えていることから話してください。', titleSummary:'使い方を見る', placeholder:'例：インスタで見た、ピンクで小さいカメラみたいなもの', submit:'一緒に見つける', results:'ホシルからの提案', loading:'候補を探しています…', buy:'販売ページで確認', total:'合計', shipping:'送料', delivery:'配送目安', days:'日', error:'現在検索できません。入力内容または通信状態を確認して、もう一度お試しください。', examples:['TikTokで見た光るスマホケース','推し活で使える小さな写真プリンター','韓国っぽい透明のワイヤレスイヤホン'], wish:'この条件を見つかるまで探す', wishSaved:'HOSHILUがこの条件を探し続けます', emptyWish:'見つかるまで探す検索条件はまだありません。', filteredEmptyWish:'一致する保存条件はありません。', wishTitle:'見つかるまで探す条件', wishDescription:'条件を一度預けると、HOSHILUが定期的に探し続けます。\n新しく一致する実在商品が見つかったときだけお知らせします。', watchSavedStatus:'購入希望価格ウォッチ中', watchTitle:'購入希望価格ウォッチ', watchDescription:'希望価格を設定すると、対象商品のAPI確認価格を定期確認し、条件を満たした場合にお知らせします。', sellerTitle:'欲しいを、|売上機会に。', sellerDescription:'米国Amazon仕入れの並行輸入商品を、在日外国人と米国商品を探す日本人へ届けます。' },
   EN: { hero:'What are you |looking for today?', userView:'Shopper', sellerView:'Seller', languageLabel:'Language', title:'You do not need to know the product name.\nAppearance, where you saw it, and how it is used. Tell us whatever you remember.', titleSummary:'How it works', placeholder:'Example: a small US car part whose name I do not know in Japanese', submit:'Find it with me', results:'Suggestions from HOSHILU', loading:'Looking for matches…', buy:'View product page', total:'Total', shipping:'Shipping', delivery:'Delivery estimate', days:'days', error:'Search is unavailable. Check your input or connection and try again.', examples:['a US-exclusive collectible figure','a small US appliance that works in Japan','a small car part whose name I forgot'], wish:'Notify me of new matches', wishSaved:'Notifications set', emptyWish:'No saved search conditions with notifications yet.', filteredEmptyWish:'No saved conditions match your search.', wishTitle:'Saved search conditions', wishDescription:'This is not a favorites list.\nWe will let you know when a new product matches a condition you saved.', watchSavedStatus:'Target price watch on', watchTitle:'Target price watch', watchDescription:'Set a target price. We periodically check marketplace API prices and notify you when the condition is met.', sellerTitle:'Turn demand into |sales opportunities.', sellerDescription:'Connect US Amazon imports with international residents in Japan and Japanese shoppers seeking American products.' },
   ZH: { hero:'今天，您想找|什么？', userView:'买家体验', sellerView:'卖家体验', languageLabel:'显示语言', title:'不知道商品名称也没关系。\n外观、看到它的地方、用途。请告诉我们您记得的内容。', titleSummary:'查看使用方法', placeholder:'例如：不知道日语名称的美国小型汽车零件', submit:'一起寻找', results:'HOSHILU 的推荐', loading:'正在寻找候选商品…', buy:'前往销售页面确认', total:'合计', shipping:'运费', delivery:'配送预计', days:'天', error:'目前无法搜索。请确认输入或网络后重试。', examples:['美国限定收藏手办','可在日本使用的美国小家电','忘记名称的小型汽车零件'], wish:'为此条件开启新品提醒', wishSaved:'已设置新品提醒', emptyWish:'还没有设置新品提醒的搜索条件。', filteredEmptyWish:'没有符合条件的保存条件。', wishTitle:'已保存的搜索条件', wishDescription:'这不是收藏夹。\n当有新商品符合您保存的搜索条件时，我们会通知您。', watchSavedStatus:'目标价监控中', watchTitle:'目标价监控', watchDescription:'设置目标价后，我们会定期检查商城API价格，并在达到条件时通知您。', sellerTitle:'把需求变成|销售机会。', sellerDescription:'将美国亚马逊进口商品带给在日外国人及寻找美国商品的日本消费者。' },
   KO: { hero:'오늘은 무엇을|찾고 있나요?', userView:'구매자', sellerView:'판매자', languageLabel:'표시 언어', title:'상품명을 몰라도 괜찮습니다.\n생김새, 본 장소, 사용법. 기억나는 것을 말해 주세요.', titleSummary:'사용법 보기', placeholder:'예: 일본어 이름을 모르는 미국산 소형 자동차 부품', submit:'함께 찾기', results:'HOSHILU 추천', loading:'후보를 찾고 있습니다…', buy:'판매 페이지에서 확인', total:'합계', shipping:'배송비', delivery:'배송 예상', days:'일', error:'현재 검색할 수 없습니다. 입력이나 연결 상태를 확인하고 다시 시도해 주세요.', examples:['미국 한정 피규어','일본에서 쓸 수 있는 미국 소형 가전','이름을 잊은 작은 자동차 부품'], wish:'이 조건으로 새 상품 알림 받기', wishSaved:'새 상품 알림을 설정했습니다', emptyWish:'새 상품 알림을 설정한 검색 조건이 아직 없습니다.', filteredEmptyWish:'검색과 일치하는 저장된 조건이 없습니다.', wishTitle:'저장한 검색 조건', wishDescription:'즐겨찾기가 아닙니다.\n저장한 검색 조건에 새로 일치하는 상품을 찾으면 알려드립니다.', watchSavedStatus:'목표 가격 감시 중', watchTitle:'목표 가격 감시', watchDescription:'목표 가격을 설정하면 쇼핑몰 API 가격을 정기적으로 확인하고 조건 충족 시 알려드립니다.', sellerTitle:'원하는 마음을|판매 기회로.', sellerDescription:'미국 Amazon 병행수입 상품을 일본 거주 외국인과 미국 상품을 찾는 일본인에게 연결합니다.' }
@@ -27,7 +27,7 @@ Object.assign(copy.ZH,{hero:'从截图、帖子链接或一句描述，|寻找�
 Object.assign(copy.KO,{hero:'스크린샷·게시물 URL·한마디로,|원하는 상품을 찾아요.',title:'상품명을 몰라도 괜찮습니다.\n스크린샷, 공개 게시물 URL, 기억나는 한마디로 찾아보세요.',placeholder:'예: 인스타에서 본 분홍색 작은 카메라 같은 것'});
 
 const actionCopy = {
-  JA:{advancedSearch:'詳細検索',advancedSearchClose:'詳細検索を閉じる',deleteWishAria:'この検索条件を削除',deleteAllWishes:'すべて削除',deleteAllConfirm:'保存した検索条件をすべて削除しますか？この操作は取り消せません。',clear:'クリア',searchAgain:'もう一度検索',updateWish:'変更を保存',updated:'変更を保存しました',deleteWish:'削除',deleteConfirm:'この検索条件の新着通知を解除しますか？',insightTitle:'保存した検索条件を振り返る。',insightTemplate:'保存した検索条件 {count}件、新着通知オン {enabled}件。',saveWish:'この検索条件を保存',wishSaved:'新着通知を設定しました',insightToggleLabel:'この条件で新着を通知',insightToggleDescription:'この検索条件に合う商品が新しく見つかったらお知らせします。',saveWatch:'購入希望価格を保存',watchSaved:'購入希望価格を保存しました',bundleNote:'対象商品のAPI確認価格を定期確認し、希望価格以下になった場合にお知らせします。',discoveryTitle:'名前が分からなくても、\n記憶から探せる。',discoveryBody:'見た目、見た場所、使い方。覚えていることから話してください。',discoveryExample:'SNSで見た、ピンクの小さいカメラみたいなもの',journey:['検索する前に、|ホシルに話す。','曖昧な「欲しい」を、|見つかる検索へ変換します。','思い出せるまま話す','名前が分からなくても、見た目・用途・見た場所だけで大丈夫。','検索条件を精密化','ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。','購入先まで案内','商品ページへ直接リンク。HOSHILUがまとめて比較する2モールに加え、最大13モールで探せます。'],copyKeywords:'検索ワードをコピー',copiedKeywords:'コピーしました'},
+  JA:{advancedSearch:'詳細検索',advancedSearchClose:'詳細検索を閉じる',deleteWishAria:'この検索条件を削除',deleteAllWishes:'すべて削除',deleteAllConfirm:'保存した検索条件をすべて削除しますか？この操作は取り消せません。',clear:'クリア',searchAgain:'もう一度検索',updateWish:'変更を保存',updated:'変更を保存しました',deleteWish:'削除',deleteConfirm:'この条件の継続検索を解除しますか？',insightTitle:'見つかるまで探す条件。',insightTemplate:'保存条件 {count}件、継続検索オン {enabled}件。',saveWish:'この条件を見つかるまで探す',wishSaved:'HOSHILUがこの条件を探し続けます',insightToggleLabel:'この条件を見つかるまで探す',insightToggleDescription:'HOSHILUが定期的に検索し、新しく一致する実在商品が見つかったときだけお知らせします。',saveWatch:'購入希望価格を保存',watchSaved:'購入希望価格を保存しました',bundleNote:'対象商品のAPI確認価格を定期確認し、希望価格以下になった場合にお知らせします。',discoveryTitle:'名前が分からなくても、\n記憶から探せる。',discoveryBody:'見た目、見た場所、使い方。覚えていることから話してください。',discoveryExample:'SNSで見た、ピンクの小さいカメラみたいなもの',journey:['検索する前に、|ホシルに話す。','曖昧な「欲しい」を、|見つかる検索へ変換します。','思い出せるまま話す','名前が分からなくても、見た目・用途・見た場所だけで大丈夫。','検索条件を精密化','ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。','購入先まで案内','商品ページへ直接リンク。HOSHILUがまとめて比較する2モールに加え、最大13モールで探せます。'],copyKeywords:'検索ワードをコピー',copiedKeywords:'コピーしました'},
   EN:{advancedSearch:'Advanced search',advancedSearchClose:'Close advanced search',deleteWishAria:'Delete this saved condition',deleteAllWishes:'Delete all',deleteAllConfirm:'Delete every saved search condition? This cannot be undone.',clear:'Clear',searchAgain:'Search again',updateWish:'Save changes',updated:'Changes saved',deleteWish:'Delete',deleteConfirm:'Turn off new-match notifications for this condition?',insightTitle:'Review your saved search conditions.',insightTemplate:'{count} saved conditions, {enabled} with notifications on.',saveWish:'Save this search condition',wishSaved:'Notifications set',insightToggleLabel:'Notify me of new matches',insightToggleDescription:'We will let you know when a new product matches this search condition.',saveWatch:'Save target price',watchSaved:'Target price saved',bundleNote:'We periodically check marketplace API prices and notify you when the product reaches your target price.',discoveryTitle:'Find it from what you remember—\neven without the name.',discoveryBody:'Appearance, where you saw it, and how it is used. Tell us whatever you remember.',discoveryExample:'A small pink camera-like thing I saw on social media',journey:['Talk to HOSHILU before you search.','Turn a vague want into a search that finds it.','Describe what you remember','A look, a use, or where you saw it is enough.','Sharpen the search','HOSHILU turns clues into product categories and precise terms.','Continue to purchase','Link directly to product pages. HOSHILU compares 2 marketplaces together, plus up to 13 in total.'],copyKeywords:'Copy search terms',copiedKeywords:'Copied'},
   ZH:{advancedSearch:'详细搜索',advancedSearchClose:'关闭详细搜索',deleteWishAria:'删除此保存条件',deleteAllWishes:'全部删除',deleteAllConfirm:'要删除所有已保存的搜索条件吗？此操作无法撤销。',clear:'清空',searchAgain:'再次搜索',updateWish:'保存更改',updated:'更改已保存',deleteWish:'删除',deleteConfirm:'要关闭此条件的新品提醒吗？',insightTitle:'回顾已保存的搜索条件。',insightTemplate:'已保存条件 {count} 项，已开启新品提醒 {enabled} 项。',saveWish:'保存此搜索条件',wishSaved:'已设置新品提醒',insightToggleLabel:'为此条件开启新品提醒',insightToggleDescription:'当有新商品符合此搜索条件时，我们会通知您。',saveWatch:'保存目标价',watchSaved:'目标价已保存',bundleNote:'我们会定期检查商城API价格，并在商品达到目标价时通知您。',discoveryTitle:'不知道名字，\n也能从记忆中寻找。',discoveryBody:'外观、看到它的地方、用途。请告诉我们您记得的内容。',discoveryExample:'在社交媒体上看到的粉色小相机一样的东西',journey:['搜索之前，先告诉 HOSHILU。','把模糊的“想要”变成更容易找到的搜索。','说出记得的线索','不知道名称也没关系，外观、用途或看到的地方即可。','优化搜索条件','HOSHILU 将线索整理为商品类别和准确关键词。','引导至购买页面','直接链接商品页面。HOSHILU可整合比较2个商城，最多可在13个商城查找。'],copyKeywords:'复制搜索词',copiedKeywords:'已复制'},
   KO:{advancedSearch:'상세 검색',advancedSearchClose:'상세 검색 닫기',deleteWishAria:'이 저장된 조건 삭제',deleteAllWishes:'전체 삭제',deleteAllConfirm:'저장한 검색 조건을 모두 삭제할까요? 되돌릴 수 없습니다.',clear:'전체 삭제',searchAgain:'다시 검색',updateWish:'변경 저장',updated:'변경을 저장했습니다',deleteWish:'삭제',deleteConfirm:'이 조건의 새 상품 알림을 해제할까요?',insightTitle:'저장한 검색 조건을 돌아보기.',insightTemplate:'저장한 조건 {count}건, 새 상품 알림 켬 {enabled}건.',saveWish:'이 검색 조건 저장',wishSaved:'새 상품 알림을 설정했습니다',insightToggleLabel:'이 조건으로 새 상품 알림 받기',insightToggleDescription:'이 검색 조건에 맞는 상품을 새로 찾으면 알려드립니다.',saveWatch:'목표 가격 저장',watchSaved:'목표 가격을 저장했습니다',bundleNote:'쇼핑몰 API 가격을 정기적으로 확인하고 상품이 목표 가격에 도달하면 알려드립니다.',discoveryTitle:'이름을 몰라도,\n기억에서 찾을 수 있어요.',discoveryBody:'생김새, 본 장소, 사용법. 기억나는 것을 말해 주세요.',discoveryExample:'SNS에서 본 분홍색 작은 카메라 같은 것',journey:['검색하기 전에 HOSHILU에게 말하세요.','막연한 원하는 것을 찾을 수 있는 검색으로 바꿉니다.','기억나는 대로 말하기','이름을 몰라도 생김새, 용도, 본 장소만으로 충분합니다.','검색 조건 정밀화','HOSHILU가 단서를 상품 분류와 정확한 검색어로 바꿉니다.','구매처까지 안내','상품 페이지로 바로 연결합니다. HOSHILU가 함께 비교하는 2개 쇼핑몰을 포함해 최대 13개 쇼핑몰에서 찾을 수 있습니다.'],copyKeywords:'검색어 복사',copiedKeywords:'복사했습니다'}
@@ -909,6 +909,45 @@ function cancelInstantMarketplaceHandoff(){
   const language=elements.language.value||'JA';
   status.textContent=({JA:'AI確認を終了しました。下のモール検索はそのまま利用できます。',EN:'AI confirmation ended. The marketplace links below remain available.',ZH:'AI 确认已结束，仍可使用下方商城搜索链接。',KO:'AI 확인을 종료했습니다. 아래 쇼핑몰 검색 링크는 계속 이용할 수 있습니다.'}[language]||'The marketplace links remain available.');
 }
+const continuousSearchCopy={
+  JA:{badge:'NEW ・ 無料',title:'この条件、見つかるまで探します。',body:'一度預ければ、HOSHILUが定期的に検索。新しく一致する実在商品が見つかったときだけお知らせします。',note:'値下げ通知ではなく、検索条件に合う新しい商品の発見通知です。',action:'無料で探し続ける',active:'この条件を探し続けています',local:'条件を保存しました',login:'無料会員登録して通知を受け取る'},
+  EN:{badge:'NEW · FREE',title:'Let HOSHILU keep looking until it finds a match.',body:'Save this once and HOSHILU will search it regularly. We only alert you when a newly matched real product is found.',note:'This is a new-product discovery alert, separate from price-drop alerts.',action:'Keep looking for free',active:'HOSHILU is continuing this search',local:'Search saved on this device',login:'Sign up free to receive alerts'},
+  ZH:{badge:'NEW · 免费',title:'让 HOSHILU 持续寻找，直到发现匹配商品。',body:'只需保存一次，HOSHILU 就会定期搜索。只在发现新匹配的真实商品时通知。',note:'这是新商品发现通知，与降价通知不同。',action:'免费继续寻找',active:'HOSHILU 正在继续寻找',local:'条件已保存到设备',login:'免费注册后接收通知'},
+  KO:{badge:'NEW · 무료',title:'일치하는 상품을 찾을 때까지 HOSHILU가 계속 찾아요.',body:'한 번 저장하면 HOSHILU가 정기적으로 검색합니다. 새로 일치하는 실제 상품을 찾았을 때만 알려드려요.',note:'가격 인하 알림과는 다른 새 상품 발견 알림입니다.',action:'무료로 계속 찾기',active:'HOSHILU가 이 조건을 계속 찾고 있어요',local:'이 기기에 조건을 저장했어요',login:'무료 회원 가입 후 알림 받기'}
+};
+function continuousSearchCard(query){
+  const value=String(query||'').trim();
+  if(!value)return null;
+  const labels=continuousSearchCopy[elements.language.value]||continuousSearchCopy.JA;
+  const card=document.createElement('article');
+  card.className='continuous-search-card';
+  card.dataset.continuousSearch='true';
+  const copyWrap=document.createElement('div');
+  copyWrap.className='continuous-search-copy';
+  copyWrap.append(textElement('span','continuous-search-badge',labels.badge),textElement('h3','',labels.title),textElement('p','',labels.body),textElement('small','',labels.note));
+  const queryChip=textElement('span','continuous-search-query',value);
+  const actions=document.createElement('div');
+  actions.className='continuous-search-actions';
+  const button=document.createElement('button');
+  button.type='button';button.className='continuous-search-button';
+  const login=document.createElement('a');
+  login.className='continuous-search-login hidden';login.href='/login.html?source=continuous_search';login.textContent=labels.login;
+  const alreadySaved=getWishes().includes(value);
+  button.textContent=alreadySaved?(memberSession?labels.active:labels.local):labels.action;
+  button.disabled=alreadySaved&&Boolean(memberSession);
+  if(alreadySaved&&!memberSession)login.classList.remove('hidden');
+  button.addEventListener('click',async()=>{
+    button.disabled=true;
+    const saved=await saveInsightWatch(value);
+    if(!saved){button.textContent=wishSaveFailedCopy();button.disabled=false;return;}
+    document.dispatchEvent(new CustomEvent('hoshilu:wish-saved',{detail:{source:'continuous_search'}}));
+    button.textContent=memberSession?labels.active:labels.local;
+    if(!memberSession){login.classList.remove('hidden');button.disabled=false;}
+  });
+  actions.append(button,login);
+  card.append(copyWrap,queryChip,actions);
+  return card;
+}
 function renderResults(result,requestId,shareQuery=elements.query.value,executionId=''){
   const preserveInstantPosition=Boolean(elements.instantMarketplace&&!elements.instantMarketplace.classList.contains('hidden'));
   // resultCarouselは検索ごとに新しいtrackを作るため、DOMから外す前に旧tickerの
@@ -941,6 +980,8 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
     resultCards.push(rows[0]);
     const quickStrip=marketplaceQuickStrip(result);
     if(quickStrip)resultCards.push(quickStrip);
+    const continuous=continuousSearchCard(elements.query.value);
+    if(continuous)resultCards.push(continuous);
     resultCards.push(...rows.slice(1));
     const relatedKeywords=relatedKeywordCard(result);
     if(relatedKeywords)resultCards.push(relatedKeywords);
@@ -954,11 +995,9 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
     const empty=document.createElement('article');
     empty.className='empty-result';
     empty.append(textElement('p','',elements.query.value));
-    const wish=document.createElement('button');
-    wish.type='button';wish.className='wish-button';wish.textContent=t.wish;
-    wish.addEventListener('click',async()=>{wish.disabled=true;const saved=await saveInsightWatch(elements.query.value);if(!saved){wish.textContent=wishSaveFailedCopy();wish.disabled=false;return;}document.dispatchEvent(new CustomEvent('hoshilu:wish-saved'));wish.textContent=wishSavedCopy();});
-    empty.append(wish);
     emptyCards.push(empty);
+    const continuous=continuousSearchCard(elements.query.value);
+    if(continuous)emptyCards.push(continuous);
     const emptyRelatedKeywords=relatedKeywordCard(result);
     if(emptyRelatedKeywords)emptyCards.push(emptyRelatedKeywords);
     const aiCard=aiDiscoveryCard(result);
