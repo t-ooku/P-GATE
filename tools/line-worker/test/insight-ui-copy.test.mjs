@@ -5,12 +5,11 @@ import { readFile } from 'node:fs/promises';
 // HOSHILU INSIGHT 通知仕様変更指示書 v1.0 section5・9・10・11・12・18の
 // UIテキスト要件をソース上で確認する。
 
-test('section5: 登録UIの文言は指示書どおり「この条件で新着を通知」+補足文', async () => {
+test('section5: 新着通知を「見つかるまで探す」価値として説明する', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(app, /insightToggleLabel:'この条件で新着を通知'/);
-  assert.match(app, /insightToggleDescription:'この検索条件に合う商品が新しく見つかったらお知らせします。'/);
-  // 検索結果ページの空状態CTA(「この条件で新着を通知」ボタン)も同じ文言
-  assert.match(app, /wish:'この条件で新着を通知'/);
+  assert.match(app, /insightToggleLabel:'この条件を見つかるまで探す'/);
+  assert.match(app, /insightToggleDescription:'HOSHILUが定期的に検索し、新しく一致する実在商品が見つかったときだけお知らせします。'/);
+  assert.match(app, /wish:'この条件を見つかるまで探す'/);
 });
 
 test('section3・5: HOSHILU INSIGHTの文言から「値下げ通知」の概念が除かれている', async () => {
