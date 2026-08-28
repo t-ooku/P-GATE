@@ -6,7 +6,7 @@
 <url><loc>https://hoshilu.app/for-sellers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://hoshilu.app/ja/guides</loc>
-    <lastmod>2026-08-28</lastmod>
+    <lastmod>2026-08-29</lastmod>
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/guides"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://hoshilu.app/ja/guides"/>
     <changefreq>weekly</changefreq><priority>0.9</priority>
@@ -321,4 +321,9 @@
   <url><loc>https://hoshilu.app/ja/choose-hair-dryer-by-weight-controls-and-storage</loc><lastmod>2026-08-28</lastmod></url>
   <url><loc>https://hoshilu.app/ja/compare-air-purifiers-by-room-filter-and-maintenance</loc><lastmod>2026-08-28</lastmod></url>
   <url><loc>https://hoshilu.app/ja/compare-robot-vacuums-by-floor-threshold-and-maintenance</loc><lastmod>2026-08-28</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/choose-electric-kettle-by-capacity-pouring-and-cleaning</loc><lastmod>2026-08-29</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/choose-curtains-by-window-size-hanging-and-care</loc><lastmod>2026-08-29</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/choose-laptop-stand-by-desk-device-and-adjustment</loc><lastmod>2026-08-29</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-computer-monitors-by-space-ports-and-stand</loc><lastmod>2026-08-29</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-wireless-headphones-by-fit-controls-and-charging</loc><lastmod>2026-08-29</lastmod></url>
 </urlset>
