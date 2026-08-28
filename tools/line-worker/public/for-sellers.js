@@ -35,7 +35,7 @@ form?.addEventListener('submit', async event => {
     marketplaces: data.getAll('marketplaces'), monthly_order_range: data.get('monthly_order_range'),
     plan_interest: data.get('plan_interest'), payment_preference: data.get('payment_preference'),
     message: data.get('message'), company_website: data.get('company_website'),
-    privacy_consent: data.get('privacy_consent') === 'on', turnstile_token: turnstileToken
+    privacy_consent: true, turnstile_token: turnstileToken
   };
   button.disabled = true;
   status.textContent = '送信しています…';

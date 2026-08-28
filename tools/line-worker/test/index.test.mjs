@@ -590,7 +590,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v398/);
+  assert.match(serviceWorker, /hoshilu-shell-v399/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1382,8 +1382,8 @@ test('会員通知は保存成功後だけ成功表示とCVを送る', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   const analytics = fs.readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
   assert.match(appSource, /if\(memberSession\)return Boolean\(await persistInsightWatch/);
-  assert.match(appSource, /if\(!saved\)\{wish\.textContent=wishSaveFailedCopy\(\);wish\.disabled=false;return;\}/);
-  assert.match(appSource, /CustomEvent\('hoshilu:wish-saved'\)/);
+  assert.match(appSource, /if\(!saved\)\{button\.textContent=wishSaveFailedCopy\(\);button\.disabled=false;return;\}/);
+  assert.match(appSource, /CustomEvent\('hoshilu:wish-saved',\{detail:\{source:'continuous_search'\}\}\)/);
   assert.match(analytics, /addEventListener\('hoshilu:wish-saved', \(\) => send\('wish_saved'\)\)/);
   assert.doesNotMatch(analytics, /classList\.contains\('wish-button'\).*send\('wish_saved'\)/);
 });
@@ -1532,8 +1532,8 @@ test('検索成功時、確認済み商品の直後に13モール横断のクイ
   // Amazonが先頭)の小型ストリップを挿入し、順位・リンク生成は変えない。
   assert.match(app, /function marketplaceQuickStrip\(result\)/);
   assert.match(app, /\.slice\(0,6\)/);
-  // 挿入位置: rows[0](確認済み) → ストリップ → 残りの行、の順。
-  assert.match(app, /resultCards\.push\(rows\[0\]\);\s*const quickStrip=marketplaceQuickStrip\(result\);\s*if\(quickStrip\)resultCards\.push\(quickStrip\);\s*resultCards\.push\(\.\.\.rows\.slice\(1\)\)/);
+  // 挿入位置: rows[0](確認済み) → ストリップ → 継続検索CTA → 残りの行、の順。
+  assert.match(app, /resultCards\.push\(rows\[0\]\);\s*const quickStrip=marketplaceQuickStrip\(result\);\s*if\(quickStrip\)resultCards\.push\(quickStrip\);\s*const continuous=continuousSearchCard\(elements\.query\.value\);\s*if\(continuous\)resultCards\.push\(continuous\);\s*resultCards\.push\(\.\.\.rows\.slice\(1\)\)/);
   // ストリップから最後尾の完全版カードへ飛べる。
   assert.match(app, /marketplace-quick-strip-jump/);
   assert.match(app, /#marketplaceFallback'\)\?\.scrollIntoView/);
