@@ -8,17 +8,23 @@
 <meta property="og:url" content="https://hoshilu.app/buzz">
 <meta property="og:image" content="https://hoshilu.app/og/hoshilu-x-v3.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="/buzz.css?v=1">
+<link rel="stylesheet" href="/buzz.css?v=2">
 </head><body>
 <header class="topbar">
   <a class="brand" href="/" aria-label="ホシル ホーム"><img src="/icons/icon.svg" width="42" height="42" alt=""><span>HOSHILU<small>ホシル</small></span><em>BUZZ</em></a>
   <div class="topbar-actions"><a class="home-link" href="/">検索へ</a><button id="shareBuzz" class="share-button" type="button">シェア</button></div>
 </header>
 <main>
-  <section class="buzz-hero"><p class="hero-kicker">OFFICIAL MALL RANKING</p><p class="step">HOSHILU BUZZ</p><h1><span>今、これ来てる。</span></h1><p>開けば、何か欲しくなる。小ジャンルごとの「いま」をまとめてチェック。</p></section>
+  <section class="buzz-hero"><p class="hero-kicker">OFFICIAL MALL RANKING</p><p class="step">HOSHILU BUZZ</p><h1><span>今、これ来てる。</span></h1><p>開けば、何か欲しくなる。小ジャンルごとの「いま」をまとめてチェック。</p><p id="buzzThemeLabel" class="theme-label">今のテーマを読み込んでいます…</p></section>
+  <section class="buzz-notify" aria-labelledby="buzzNotifyTitle">
+    <div><p class="step">FREE MEMBER</p><h2 id="buzzNotifyTitle">テーマが変わったら、知らせます。</h2><p>HOSHILU BUZZは火曜・金曜に更新。無料会員は、テーマが切り替わった時だけ通知を受け取れます。</p></div>
+    <label id="buzzNotifyControl" class="buzz-notify-switch" hidden><input id="buzzNotifyToggle" type="checkbox"><span>テーマ更新通知を受け取る</span></label>
+    <a id="buzzNotifyLogin" class="buzz-notify-login" href="/login.html">無料会員登録して通知を受け取る</a>
+    <p id="buzzNotifyStatus" class="buzz-notify-status" role="status" aria-live="polite"></p>
+  </section>
   <div id="buzzShelves"><p class="status">ランキングを読み込んでいます…</p></div>
   <p class="note" id="buzzNote">順位はモール公式ランキングが根拠です。SNS指標や推定値では並べ替えません。価格・送料・在庫は変動するため、購入前に各販売ページで最新の条件を確認してください。</p>
   <a class="cta" href="/">名前が分からない商品も、HOSHILUで探す →</a>
 </main>
 <footer><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span> ・ <a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></footer>
-<script type="module" src="/buzz.mjs?v=2"></script></body></html>
+<script type="module" src="/buzz.mjs?v=3"></script></body></html>

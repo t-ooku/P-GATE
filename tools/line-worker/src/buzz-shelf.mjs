@@ -35,14 +35,41 @@ export const BUZZ_SHELF_CATEGORY_IDS = Object.freeze([
 
 export const BUZZ_THEME_ROTATIONS = Object.freeze([
   Object.freeze({ id: 'beauty_and_style', label: '韓国ビューティー＆今っぽコーデ', category_ids: Object.freeze(['face_lotion', 'womens_sneakers', 'wireless_earphones']) }),
-  Object.freeze({ id: 'campus_and_oshikatsu', label: '通学・推し活の持ち歩きトレンド', category_ids: Object.freeze(['mobile_battery', 'wireless_earphones', 'handheld_fan']) })
+  Object.freeze({ id: 'campus_and_oshikatsu', label: '通学・推し活の持ち歩きトレンド', category_ids: Object.freeze(['mobile_battery', 'wireless_earphones', 'handheld_fan']) }),
+  Object.freeze({ id: 'korean_pouch_refresh', label: '韓国っぽポーチの中身アップデート', category_ids: Object.freeze(['face_lotion', 'mobile_battery', 'wireless_earphones']) }),
+  Object.freeze({ id: 'weekend_style', label: '週末おでかけ＆今っぽ足元', category_ids: Object.freeze(['womens_sneakers', 'wireless_earphones', 'handheld_fan']) }),
+  Object.freeze({ id: 'campus_beauty', label: '通学バッグの韓国ビューティー', category_ids: Object.freeze(['face_lotion', 'mobile_battery', 'handheld_fan']) }),
+  Object.freeze({ id: 'oshikatsu_ready', label: '推し活・遠征の持ち物アップデート', category_ids: Object.freeze(['mobile_battery', 'wireless_earphones', 'womens_sneakers']) })
 ]);
 
-export function buzzThemeFor(now = Date.now()) {
-  const jst = new Date(now + 9 * 60 * 60 * 1000);
+const BUZZ_ROTATION_EPOCH_MONDAY_UTC = Date.UTC(2026, 7, 24);
+
+function positiveModulo(value, length) { return ((value % length) + length) % length; }
+
+export function buzzThemeStateFor(now = Date.now()) {
+  const timestamp = now instanceof Date ? now.getTime() : Number(now);
+  const jst = new Date(timestamp + 9 * 60 * 60 * 1000);
   const day = jst.getUTCDay();
-  // 火〜木と金〜月で切り替え、毎週火曜・金曜(JST)の週2回更新にする。
-  return BUZZ_THEME_ROTATIONS[(day >= 2 && day <= 4) ? 0 : 1];
+  const localMidnight = Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate());
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  const monday = localMidnight + mondayOffset * 24 * 60 * 60 * 1000;
+  const weekIndex = Math.floor((monday - BUZZ_ROTATION_EPOCH_MONDAY_UTC) / (7 * 24 * 60 * 60 * 1000));
+  // 火〜木はその週の火曜枠、金〜日は金曜枠、月曜は前週金曜枠。
+  const slotIndex = day === 1 ? weekIndex * 2 - 1 : weekIndex * 2 + (day >= 5 || day === 0 ? 1 : 0);
+  const updatedLocalMidnight = day === 1
+    ? monday - 3 * 24 * 60 * 60 * 1000
+    : monday + (day >= 5 || day === 0 ? 4 : 1) * 24 * 60 * 60 * 1000;
+  const updated = new Date(updatedLocalMidnight);
+  const updatedKey = `${updated.getUTCFullYear()}-${String(updated.getUTCMonth() + 1).padStart(2, '0')}-${String(updated.getUTCDate()).padStart(2, '0')}`;
+  return {
+    theme: BUZZ_THEME_ROTATIONS[positiveModulo(slotIndex, BUZZ_THEME_ROTATIONS.length)],
+    slot_index: slotIndex,
+    updated_key: updatedKey
+  };
+}
+
+export function buzzThemeFor(now = Date.now()) {
+  return buzzThemeStateFor(now).theme;
 }
 
 // 予算別棚 (§19)。上限額は指示書の刻みから、現5ジャンルで商品が集まりやすい2つ。
@@ -374,6 +401,22 @@ export async function buildKoreanShelf(env, fetcher = fetch) {
   };
 }
 
+function koreanShelfAvailabilityPlaceholder() {
+  return {
+    shelf_id: KOREAN_SHELF.shelf_id,
+    label: KOREAN_SHELF.label,
+    emoji: '❤️',
+    headline: '公式ランキングを確認中。',
+    ranking_type: 'Yahoo!ショッピング公式ランキング確認中',
+    ranking_mode: 'official_data_unavailable',
+    marketplace: 'YAHOO_JP',
+    marketplace_label: 'Yahoo!ショッピング',
+    source: 'YAHOO_OFFICIAL_RANKING_API',
+    search_keyword: KOREAN_SHELF.query,
+    items: []
+  };
+}
+
 function publicShelf({ all_items, ...shelf }) { return shelf; }
 
 // カテゴリ不一致商品を除いた後の棚内表示は、若者が直感的に追える
@@ -391,7 +434,8 @@ function withBuzzRanks(shelf) {
 }
 
 export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
-  const theme = buzzThemeFor(now);
+  const themeState = buzzThemeStateFor(now);
+  const theme = themeState.theme;
   const genreShelves = await buildGenreShelves(env, fetcher, now);
   const [risingShelf, koreanShelf] = await Promise.all([
     buildRisingShelf(env, genreShelves, now),
@@ -413,12 +457,14 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
   const shelves = [
     ...(risingShelf ? [risingShelf] : []),
     // 2026-08-19 大隆さん指示: 韓流に繋がる棚を必ず上位に1つ置く。
-    ...(koreanShelf ? [koreanShelf] : []),
+    // API一時障害でも韓国関連の入口自体は消さない。商品・順位は作らず、
+    // 公式データ確認中の空棚と安全な横断検索リンクだけを表示する。
+    ...(koreanShelf ? [koreanShelf] : [koreanShelfAvailabilityPlaceholder()]),
     ...genreShelves.map(publicShelf)
   ].filter(distinctShelf).concat(budgetShelves).map(withBuzzRanks);
   return {
     generated_for: 'HOSHILU BUZZ',
-    theme: { id: theme.id, label: theme.label, rotation: '火曜・金曜更新（JST）' },
+    theme: { id: theme.id, label: theme.label, rotation: '火曜・金曜更新（JST）', updated_key: themeState.updated_key },
     methodology: 'HOSHILU BUZZ順位は、モール公式ランキングAPI(楽天市場・Yahoo!ショッピング)と順位の実測変化を根拠に商品を選び、各棚の掲載順を1位から表示しています。SNS指標や推定値では並べ替えません。',
     disclaimer: '価格・送料・在庫は変動します。購入前に各販売ページで最新の条件を確認してください。',
     marketplace_scope: MARKETPLACE_RANKING_CAPABILITIES.map(({ marketplace_id, label }) => ({ marketplace_id, label })),

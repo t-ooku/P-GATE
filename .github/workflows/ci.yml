@@ -711,3 +711,30 @@ jobs:
           if-no-files-found: ignore
           path: tools/line-worker/x-repost-*.json
           retention-days: 30
+
+  hoshilu-x-reposts-prioritize-20260827:
+    needs: [test, deploy]
+    if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deploy.result == 'success' &&
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[prioritize-hoshilu-x-reposts-20260827-approved]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Move only the two approved X reposts to the front of the due queue
+        working-directory: tools/line-worker
+        shell: bash
+        run: |
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "UPDATE social_post_queue SET scheduled_at='2000-01-01T00:00:00.000Z',updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE post_id IN ('hoshilu-runway-name-forgotten-20260819-v1-x-repost-20260827','hoshilu-runway-overseas-find-20260819-v2-x-repost-20260827') AND platform='X' AND campaign_id='hoshilu-runway-video' AND status='APPROVED' AND external_post_id='' AND platform_job_id='' AND published_at='';"
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,status,scheduled_at,external_post_id,published_at FROM social_post_queue WHERE post_id IN ('hoshilu-runway-name-forgotten-20260819-v1-x-repost-20260827','hoshilu-runway-overseas-find-20260819-v2-x-repost-20260827') ORDER BY post_id;" > x-repost-prioritized.json
+          node -e "const fs=require('fs');const data=JSON.parse(fs.readFileSync('x-repost-prioritized.json','utf8'));const rows=data.flatMap(x=>x.results||[]);if(rows.length!==2||rows.some(r=>r.status!=='APPROVED'||r.scheduled_at!=='2000-01-01T00:00:00.000Z'||r.external_post_id||r.published_at))throw new Error(JSON.stringify(rows));"

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import {
   BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT, BUZZ_THEME_ROTATIONS,
-  buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, recordBuzzSnapshots
+  buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
 
@@ -19,6 +19,13 @@ test('BUZZテーマは火曜・金曜JSTに週2回切り替わり韓国軸を含
   assert.equal(buzzThemeFor(tuesday).id, BUZZ_THEME_ROTATIONS[0].id);
   assert.equal(buzzThemeFor(friday).id, BUZZ_THEME_ROTATIONS[1].id);
   assert.match(BUZZ_THEME_ROTATIONS[0].label,/韓国/u);
+  const updates = [
+    '2026-08-25T00:00:00+09:00', '2026-08-28T00:00:00+09:00',
+    '2026-09-01T00:00:00+09:00', '2026-09-04T00:00:00+09:00',
+    '2026-09-08T00:00:00+09:00', '2026-09-11T00:00:00+09:00'
+  ].map((value) => buzzThemeStateFor(Date.parse(value)));
+  assert.deepEqual(updates.map((state) => state.theme.id), BUZZ_THEME_ROTATIONS.map((theme) => theme.id));
+  assert.equal(new Set(updates.map((state) => state.updated_key)).size, updates.length);
 });
 
 // buzz_ranking_snapshots と marketplace_ranking_cache の最小D1スタブ。
@@ -82,14 +89,14 @@ test('BUZZ棚は定義順の小ジャンルを公式ランキングだけで返�
   // 履歴なし(急上昇なし)の構成: ジャンル棚(定義順) + 予算別棚。
   assert.deepEqual(
     result.shelves.map((shelf) => shelf.shelf_id),
-    [...buzzThemeFor(now).category_ids, ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
+    ['korean_beauty', ...buzzThemeFor(now).category_ids, ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
   );
   assert.equal(result.shelf_count, result.shelves.length);
   // v3.1 §13: ジャンル棚は「◯◯で探す」用の安全な検索語(検証済み小ジャンル名)を持つ。
-  for (const shelf of result.shelves.filter((entry) => entry.ranking_mode !== 'derived_from_official')) {
+  for (const shelf of result.shelves.filter((entry) => !['derived_from_official', 'official_data_unavailable'].includes(entry.ranking_mode))) {
     assert.equal(shelf.search_keyword, shelf.label);
   }
-  for (const shelf of result.shelves.filter((entry) => entry.ranking_mode !== 'derived_from_official')) {
+  for (const shelf of result.shelves.filter((entry) => !['derived_from_official', 'official_data_unavailable'].includes(entry.ranking_mode))) {
     assert.equal(shelf.source, 'RAKUTEN_OFFICIAL_RANKING_API');
     assert.equal(shelf.marketplace, 'RAKUTEN_JP');
     assert.equal(shelf.headline, 'いま売れてる。');
@@ -151,10 +158,13 @@ test('リアルタイムが404の小ジャンルは口コミ件数順ラベル�
   assert.match(degraded.ranking_type, /口コミ件数順/u);
 });
 
-test('全滅時も架空の棚を作らず空で返す', async () => {
+test('公式データ全滅時も商品や順位を作らず韓国コスメの検索入口だけは残す', async () => {
   const result = await buzzShelfResult({}, rankingFetcher());
-  assert.equal(result.shelf_count, 0);
-  assert.deepEqual(result.shelves, []);
+  assert.equal(result.shelf_count, 1);
+  assert.equal(result.shelves[0].shelf_id, 'korean_beauty');
+  assert.equal(result.shelves[0].ranking_mode, 'official_data_unavailable');
+  assert.deepEqual(result.shelves[0].items, []);
+  assert.equal(result.shelves[0].search_keyword, '韓国コスメ');
 });
 
 test('予算別棚は取得済み公式ランキングの実価格だけで作り、重複URLを混ぜない', async () => {

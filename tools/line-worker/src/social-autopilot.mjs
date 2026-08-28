@@ -6,6 +6,7 @@ import {
   syncThreadsInsights,
   xPublishingSafetyReadiness
 } from './social-publisher.mjs';
+import { buzzThemeFor } from './buzz-shelf.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
 const FEATURE_LAUNCH_DATE = '2026-08-09';
@@ -28,6 +29,7 @@ const APPROVED_MODEL_REEL = Object.freeze({
 });
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const SOCIAL_ROTATION_EPOCH_MONDAY_UTC = Date.UTC(2026, 7, 24);
 
 const X_POSTS = [
   '「名前は分からないけど、こんな商品が欲しい」をそのまま検索。覚えている色・大きさ・使う場所から、探せる言葉に整理します。',
@@ -154,6 +156,11 @@ const INSTAGRAM_GUIDE_POSTS = Object.freeze([
     media_url: 'https://hoshilu.app/social/hoshilu-buzz-ranking-v1.jpg'
   }
 ]);
+
+const INSTAGRAM_NON_BUZZ_GUIDE_POSTS = Object.freeze(
+  INSTAGRAM_GUIDE_POSTS.filter((post) => !post.link_path || post.link_path !== '/buzz')
+);
+const BUZZ_MEDIA_URL = 'https://hoshilu.app/social/hoshilu-buzz-ranking-v1.jpg';
 
 const FEATURE_LAUNCH = Object.freeze({
   X: 'HOSHILU正式版を公開。説明から検索語を整理し、楽天市場・Yahoo!ショッピングをまとめて比較。Amazonを含む最大13モールへ同じ検索語でつなぎます。ランキング、AI最安比較、値下がり通知にも対応。 #ホシル #商品検索',
@@ -306,6 +313,26 @@ function scheduledAt(parts, hour, minute) {
   return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, hour - 9, minute)).toISOString();
 }
 
+function mediaSlotNumber(parts, weekdays) {
+  const localMidnight = Date.UTC(parts.year, parts.month - 1, parts.day);
+  const weekday = new Date(localMidnight).getUTCDay();
+  const mondayOffset = weekday === 0 ? -6 : 1 - weekday;
+  const monday = localMidnight + mondayOffset * DAY_MS;
+  const weekIndex = Math.floor((monday - SOCIAL_ROTATION_EPOCH_MONDAY_UTC) / (7 * DAY_MS));
+  return weekIndex * weekdays.length + weekdays.indexOf(parts.weekday);
+}
+
+function isBuzzMediaSlot(parts, weekdays) {
+  return mediaSlotNumber(parts, weekdays) % 2 === 0;
+}
+
+function buzzCaption(platform, themeLabel) {
+  if (platform === 'X') {
+    return `今週のHOSHILU BUZZは「${themeLabel}」。モール公式ランキングを小ジャンル別にチェック。無料会員なら火・金のテーマ更新も通知。韓国コスメやQoo10・SHEINで探したい商品の入口に。 #韓国コスメ #Qoo10 #SHEIN`;
+  }
+  return `今週のHOSHILU BUZZは「${themeLabel}」。モール公式ランキングを根拠に、小ジャンル別の今をチェックできます。無料会員なら、火曜・金曜にテーマが変わった時も通知。韓国コスメやQoo10・SHEINで探したい商品の入口に。@hoshilu.app #韓国コスメ #Qoo10購入品 #SHEIN購入品 #HOSHILUBUZZ`;
+}
+
 function campaignLink(platform, date, content = date, searchQuery = '', path = '/') {
   const params = new URLSearchParams({
     utm_source: platform === 'X' ? 'x' : 'instagram',
@@ -379,13 +406,15 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
     if (weekdayContent.has(parts.weekday)) {
       const contentIndex = weekdayContent.get(parts.weekday);
       const content = INSTAGRAM_POSTS[contentIndex];
+      const buzz = isBuzzMediaSlot(parts, [1, 3, 5]);
+      const theme = buzzThemeFor(day);
       posts.push(normalizeSocialPost({
         post_id: `${CAMPAIGN_ID}-x-${key}`,
-        content_id: `evergreen-x-${contentIndex + 1}`,
+        content_id: buzz ? `buzz-video-${theme.id}` : `evergreen-x-${contentIndex + 1}`,
         platform: 'X',
         campaign_id: CAMPAIGN_ID,
-        caption: key === FEATURE_LAUNCH_DATE ? FEATURE_LAUNCH.X : X_POSTS[contentIndex],
-        link: campaignLink('X', key),
+        caption: key === FEATURE_LAUNCH_DATE ? FEATURE_LAUNCH.X : (buzz ? buzzCaption('X', theme.label) : X_POSTS[contentIndex]),
+        link: campaignLink('X', key, buzz ? `buzz-video-${theme.id}` : key, '', buzz ? '/buzz' : '/'),
         media_url: content.media_url,
         scheduled_at: scheduledAt(parts, 20, 15),
         status: 'APPROVED'
@@ -423,20 +452,29 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
     if (weekdayContent.has(parts.weekday)) {
       const contentIndex = weekdayContent.get(parts.weekday);
       const content = INSTAGRAM_POSTS[contentIndex];
+      const buzz = isBuzzMediaSlot(parts, [1, 3, 5]);
+      const theme = buzzThemeFor(day);
       posts.push(normalizeSocialPost({
         post_id: `${CAMPAIGN_ID}-instagram-${key}`,
-        content_id: `evergreen-instagram-${contentIndex + 1}`,
+        content_id: buzz ? `buzz-video-${theme.id}` : `evergreen-instagram-${contentIndex + 1}`,
         platform: 'INSTAGRAM',
         campaign_id: CAMPAIGN_ID,
-        caption: content.caption,
-        link: campaignLink('INSTAGRAM', key),
+        caption: buzz ? buzzCaption('INSTAGRAM', theme.label) : content.caption,
+        link: campaignLink('INSTAGRAM', key, buzz ? `buzz-video-${theme.id}` : key, '', buzz ? '/buzz' : '/'),
         media_url: content.media_url,
         scheduled_at: scheduledAt(parts, 20, 15),
         status: 'APPROVED'
       }));
     } else if ([2, 4, 6].includes(parts.weekday)) {
-      const content = INSTAGRAM_GUIDE_POSTS[Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS)
-        % INSTAGRAM_GUIDE_POSTS.length];
+      const rotationDay = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
+      const buzz = isBuzzMediaSlot(parts, [2, 4, 6]);
+      const theme = buzzThemeFor(day);
+      const content = buzz ? {
+        id: `buzz-image-${theme.id}`,
+        caption: buzzCaption('INSTAGRAM', theme.label),
+        link_path: '/buzz',
+        media_url: BUZZ_MEDIA_URL
+      } : INSTAGRAM_NON_BUZZ_GUIDE_POSTS[rotationDay % INSTAGRAM_NON_BUZZ_GUIDE_POSTS.length];
       posts.push(normalizeSocialPost({
         post_id: `${CAMPAIGN_ID}-instagram-guide-${key}`,
         content_id: content.id,

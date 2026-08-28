@@ -62,6 +62,8 @@ async function shareShelf(shelf, button) {
 }
 
 function renderShelves(result) {
+  const themeLabel = document.querySelector('#buzzThemeLabel');
+  if (themeLabel && result.theme?.label) themeLabel.textContent = `今のテーマ：${text(result.theme.label)}｜${text(result.theme.rotation)}`;
   shelvesRoot.textContent = '';
   for (const shelf of result.shelves || []) {
     const section = el('section', 'shelf');
@@ -74,6 +76,7 @@ function renderShelves(result) {
     head.append(shelfShare);
     const rail = el('div', 'rail');
     for (const item of shelf.items || []) rail.append(itemCard(item));
+    if (!(shelf.items || []).length) rail.append(el('p', 'status', '公式ランキングを確認中です。韓国コスメの検索入口はそのまま利用できます。'));
     section.append(head, rail);
     // v3.1 §11-14: 「◯◯で探す」= 検索結果へのフォールバック。商品ページ直行の
     // 「見る」とは別物なので、サーバーが返したラベルをそのまま使う(創作しない)。
@@ -96,6 +99,46 @@ function renderShelves(result) {
   }
   note.textContent = `${text(result.methodology)} ${text(result.disclaimer)}`;
 }
+
+async function loadBuzzNotificationPreference() {
+  const login = document.querySelector('#buzzNotifyLogin');
+  const control = document.querySelector('#buzzNotifyControl');
+  const toggle = document.querySelector('#buzzNotifyToggle');
+  const status = document.querySelector('#buzzNotifyStatus');
+  const next = '/buzz?member=logged-in&buzz_notify=1';
+  if (login) login.href = `/login.html?${new URLSearchParams({ next })}`;
+  try {
+    const session = await fetch('/api/member/session', { cache: 'no-store' });
+    if (!session.ok) return;
+    const response = await fetch('/api/member/buzz-preferences', { cache: 'no-store' });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (login) login.hidden = true;
+    if (control) control.hidden = false;
+    if (toggle) toggle.checked = Boolean(data.preference?.enabled);
+    const requested = new URL(location.href).searchParams.get('buzz_notify') === '1';
+    if (requested && status && !toggle.checked) status.textContent = '「テーマ更新通知を受け取る」をオンにすると設定が完了します。';
+  } catch {}
+}
+
+document.querySelector('#buzzNotifyToggle')?.addEventListener('change', async (event) => {
+  const toggle = event.currentTarget;
+  const status = document.querySelector('#buzzNotifyStatus');
+  toggle.disabled = true;
+  try {
+    const response = await fetch('/api/member/buzz-preferences', {
+      method: 'PATCH', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ enabled: toggle.checked, language: 'JA' })
+    });
+    if (!response.ok) throw new Error('SAVE_FAILED');
+    status.textContent = toggle.checked
+      ? '設定しました。次のテーマ更新から通知します。'
+      : 'テーマ更新通知を停止しました。';
+  } catch {
+    toggle.checked = !toggle.checked;
+    status.textContent = '設定を保存できませんでした。もう一度お試しください。';
+  } finally { toggle.disabled = false; }
+});
 
 async function load() {
   try {
@@ -120,3 +163,4 @@ document.querySelector('#shareBuzz')?.addEventListener('click', async () => {
 });
 
 load();
+loadBuzzNotificationPreference();

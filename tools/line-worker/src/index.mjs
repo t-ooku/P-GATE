@@ -27,6 +27,7 @@ import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementC
 import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
 import { buzzShelfResult, recordBuzzSnapshots } from './buzz-shelf.mjs';
+import { handleBuzzNotificationRoutes, queueBuzzThemeNotifications } from './buzz-notifications.mjs';
 import { filterRankingCategoryCandidates } from './ranking-category-eligibility.mjs';
 import {
   relatedProductRecommendationQueries, resolveRelatedProductRecommendationQueries
@@ -2589,7 +2590,7 @@ function handlePublicConfig(env) {
 const CORE_D1_TABLES = [
   'mywatch_notifications', 'import_restriction_knowledge',
   'sp_api_listings', 'sp_api_sync_audit', 'marketplace_sale_events',
-  'member_sale_preferences',
+  'member_sale_preferences', 'member_buzz_preferences',
   'contracts', 'contract_decisions',
   'product_aliases', 'localized_product_content',
   'kpi_events', 'kpi_summary', 'kpi_uplift',
@@ -2722,6 +2723,8 @@ export default {
     if (wishResponse) return wishResponse;
     const saleResponse = await handleMarketplaceSaleRoutes(request, env);
     if (saleResponse) return saleResponse;
+    const buzzNotificationResponse = await handleBuzzNotificationRoutes(request, env);
+    if (buzzNotificationResponse) return buzzNotificationResponse;
     const mywatchResponse = await handleMywatchRoutes(request, env);
     if (mywatchResponse) return mywatchResponse;
     const insightResponse = await handleInsightRoutes(request, env);
@@ -2826,8 +2829,10 @@ export default {
         // to R2 and stops at REVIEW_REQUIRED. It never bypasses the existing APPROVED
         // publication gate, and a failure cannot block either Instagram or X.
         runRunwayGenerationCycle(env, scheduledAt),
-        deliverDueWebNotifications(env, scheduledAt),
-        deliverDueMemberNotifications(env, scheduledAt),
+        queueBuzzThemeNotifications(env, scheduledAt).then(() => Promise.all([
+          deliverDueWebNotifications(env, scheduledAt),
+          deliverDueMemberNotifications(env, scheduledAt)
+        ])),
         runMarketplaceContentCycle(env, scheduledAt),
         runSpApiScheduledSync(env, scheduledAt),
         purgeAdminAuthRecords(env, scheduledAt),

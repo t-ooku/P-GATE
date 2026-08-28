@@ -15,8 +15,8 @@ test('販促自動運用は今日の機能リールと14日先までの定期投
   assert.equal(posts.filter(post => post.platform === 'INSTAGRAM').length, 13);
   assert.equal(posts.some(post => post.platform === 'TIKTOK'), false);
   assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
-  assert.equal(new Set(posts.filter(post => post.platform === 'INSTAGRAM')
-    .map(post => post.media_url)).size, 6);
+  assert.ok(new Set(posts.filter(post => post.platform === 'INSTAGRAM')
+    .map(post => post.media_url)).size >= 5);
   assert.equal(posts.filter(post => post.platform === 'INSTAGRAM')
     .every(post => typeof post.media_url === 'string' && post.media_url.length > 0), true);
   assert.equal(posts.filter(post => post.platform === 'X')
@@ -62,7 +62,7 @@ test('土曜の操作案内は承認済み質問カードと同じ検索説明�
 
 test('Instagram定常投稿はBUZZ専用ビジュアルと/buzz送客を含む', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-20T00:00:00.000Z'), 30)
-    .filter(post => post.platform === 'INSTAGRAM' && /^buzz-/.test(post.content_id));
+    .filter(post => post.platform === 'INSTAGRAM' && /^buzz-image-/.test(post.content_id));
   assert.ok(posts.length >= 2);
   for (const post of posts) {
     assert.equal(new URL(post.link).pathname, '/buzz');
@@ -70,6 +70,26 @@ test('Instagram定常投稿はBUZZ専用ビジュアルと/buzz送客を含む',
     assert.match(post.caption, /1位|ランキング/u);
     assert.doesNotMatch(post.caption, /最安|No\.?1|Z世代/u);
   }
+});
+
+test('AI動画と画像投稿は2週間単位で半分をBUZZにし、毎回テーマと通知を訴求する', () => {
+  const posts = buildSocialAutopilotPosts(new Date('2026-08-24T00:00:00.000Z'), 28);
+  for (const platform of ['X', 'INSTAGRAM']) {
+    const videos = posts.filter((post) => post.platform === platform && /\.mp4$/u.test(post.media_url));
+    const buzzVideos = videos.filter((post) => new URL(post.link).pathname === '/buzz');
+    assert.equal(buzzVideos.length * 2, videos.length, `${platform} video BUZZ ratio`);
+    for (const post of buzzVideos) {
+      assert.match(post.caption, /今週のHOSHILU BUZZ/u);
+      assert.match(post.caption, /無料会員.*(?:火・金|火曜・金曜).*通知/u);
+      assert.match(post.caption, /韓国コスメ/u);
+      assert.match(post.caption, /Qoo10/u);
+      assert.match(post.caption, /SHEIN/u);
+    }
+  }
+  const images = posts.filter((post) => post.platform === 'INSTAGRAM' && /\.(?:jpg|png)$/u.test(post.media_url));
+  const buzzImages = images.filter((post) => new URL(post.link).pathname === '/buzz');
+  assert.equal(buzzImages.length * 2, images.length, 'Instagram image BUZZ ratio');
+  assert.ok(buzzImages.every((post) => /hoshilu-buzz-ranking-v1\.jpg$/u.test(post.media_url)));
 });
 
 test('承認済みセラー投稿はX非動画枠へ少量だけ入り/for-sellersへ送客する', () => {
