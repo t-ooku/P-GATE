@@ -54,15 +54,24 @@ function setup() {
   const s1 = '650e8400-e29b-41d4-a716-446655440000';
   const s2 = '850e8400-e29b-41d4-a716-446655440000';
   const s3 = '950e8400-e29b-41d4-a716-446655440000';
+  const typed1 = `search_${'a'.repeat(64)}`;
+  const typed2 = `search_${'b'.repeat(64)}`;
+  const typedOrphan = `search_${'c'.repeat(64)}`;
   for (const [id, type, at, marketplace = '', visitor = v1, session = s1] of [
     ['e0', 'landing_view', '2026-08-09T11:59:00Z'],
     ['e1', 'search_started', '2026-08-09T12:00:00Z'],
+    [`${typed1}:input`, 'search_input_text', '2026-08-09T12:00:00Z'],
+    [`${typed1}:completed`, 'search_completed_text', '2026-08-09T12:01:00Z'],
+    [`${typed1}:outbound`, 'search_outbound_text', '2026-08-09T12:02:00Z'],
     ['e2', 'search_completed', '2026-08-09T12:01:00Z'],
+    ['registered1', 'member_registered', '2026-08-09T12:03:00Z'],
     ['e3', 'price_comparison_opened', '2026-08-09T12:01:30Z'],
     ['e4', 'marketplace_click', '2026-08-09T12:02:00Z', 'RAKUTEN_JP'],
     ['e5', 'landing_view', '2026-08-09T13:00:00Z', '', v2, s2],
     ['e6', 'search_started', '2026-08-09T13:01:00Z', '', v2, s2],
-    ['e7', 'search_failed', '2026-08-09T13:01:10Z', '', v2, s2],
+    [`${typed2}:input`, 'search_input_screenshot_social_url', '2026-08-09T13:01:00Z', '', v2, s2],
+    [`${typedOrphan}:completed`, 'search_completed_text', '2026-08-09T13:01:05Z', '', v2, s2],
+    ['e7', 'search_dead_end', '2026-08-09T13:01:10Z', '', v2, s2],
     ['e8', 'landing_view', '2026-08-09T14:00:00Z', '', v1, s3]
   ]) event.run(id, type, 'JA', 'instagram', 'social', 'campaign', '', marketplace, at, 'ATTRIBUTED', visitor, session);
   const oldSession = 'a50e8400-e29b-41d4-a716-446655440000';
@@ -103,6 +112,8 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(period.current.repeat_visitors, 1);
   assert.equal(period.current.search_sessions, 2);
   assert.equal(period.current.completed_search_sessions, 1);
+  assert.equal(period.current.registration_sessions, 1);
+  assert.equal(period.current.rates.registration, 33.3);
   assert.equal(period.current.failed_search_sessions, 1);
   assert.equal(period.current.value_sessions, 1);
   assert.equal(period.current.outbound_sessions, 1);
@@ -112,6 +123,23 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(period.sources[0].source, 'instagram');
   assert.equal(period.marketplaces[0].marketplace, 'RAKUTEN_JP');
   assert.equal(period.daily.at(-1).value_sessions, 1);
+  assert.equal(period.search_input_mix.total_searches, 2);
+  assert.equal(period.search_input_mix.counts.TEXT, 1);
+  assert.equal(period.search_input_mix.counts.SCREENSHOT_SOCIAL_URL, 1);
+  assert.equal(period.search_input_mix.counts.TEXT_SCREENSHOT_SOCIAL_URL, 0);
+  assert.equal(period.search_input_mix.rates.TEXT, 50);
+  assert.equal(period.search_input_mix.rates.SCREENSHOT_SOCIAL_URL, 50);
+  assert.equal(period.search_input_mix.performance.TEXT.attempts, 1);
+  assert.equal(period.search_input_mix.performance.TEXT.completed, 1);
+  assert.equal(period.search_input_mix.performance.TEXT.outbound, 1);
+  assert.equal(period.search_input_mix.performance.TEXT.success_rate, 100);
+  assert.equal(period.search_input_mix.performance.TEXT.outbound_rate, 100);
+  assert.equal(period.search_input_mix.performance.SCREENSHOT_SOCIAL_URL.success_rate, 0);
+  assert.equal(period.search_input_mix.performance.SCREENSHOT_SOCIAL_URL.outbound_rate, 0);
+  assert.match(period.search_input_mix.rate_definition, /成功率=成功÷受理/);
+  assert.match(period.search_input_mix.rate_definition, /送客CVR=送客した検索÷受理/);
+  assert.deepEqual(summary.business_kpis.search_input_mix['7d'], period.search_input_mix);
+  assert.equal(summary.business_kpis.search_input_mix['30d'].total_searches, 2);
 });
 
 test('経営KPIが未移行でもSNS運用部分は表示できる', async () => {

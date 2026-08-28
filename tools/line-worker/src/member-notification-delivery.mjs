@@ -1,3 +1,4 @@
+import { buildMemberRegistrationEvent } from './member-registration-telemetry.mjs';
 const encoder=new TextEncoder(),decoder=new TextDecoder();
 function b64(bytes){let value='';for(const byte of bytes)value+=String.fromCharCode(byte);return btoa(value).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,'');}
 function unb64(value){const text=String(value||'').replace(/-/g,'+').replace(/_/g,'/');const raw=atob(text+'='.repeat((4-text.length%4)%4));return Uint8Array.from(raw,char=>char.charCodeAt(0));}
@@ -5,6 +6,48 @@ async function key(env){const secret=String(env.MEMBER_SESSION_SECRET||env.LINK_
 async function encrypt(value,env){const iv=crypto.getRandomValues(new Uint8Array(12));const data=await crypto.subtle.encrypt({name:'AES-GCM',iv},await key(env),encoder.encode(String(value)));return`${b64(iv)}.${b64(new Uint8Array(data))}`;}
 async function decrypt(value,env){const[iv,data]=String(value||'').split('.');if(!iv||!data)throw new Error('DESTINATION_INVALID');return decoder.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(iv)},await key(env),unb64(data)));}
 export async function storeMemberNotificationDestination(env,memberId,channel,destination){if(!env.PRODUCT_DB||!['LINE','EMAIL'].includes(channel)||!memberId||!destination)return;const now=new Date().toISOString();await env.PRODUCT_DB.prepare(`INSERT INTO member_notification_destinations(member_id,channel,encrypted_destination,verified_at,updated_at) VALUES(?1,?2,?3,?4,?4) ON CONFLICT(member_id,channel) DO UPDATE SET encrypted_destination=excluded.encrypted_destination,verified_at=excluded.verified_at,updated_at=excluded.updated_at`).bind(memberId,channel,await encrypt(destination,env),now).run();}
+export async function storeMemberRegistrationDestination(env,memberId,channel,destination,registrationContext={}){
+  if(!env.PRODUCT_DB||!['LINE','EMAIL'].includes(channel)||!memberId||!destination)throw new Error('MEMBER_REGISTRATION_DESTINATION_INVALID');
+  const now=new Date(),at=now.toISOString(),event=await buildMemberRegistrationEvent(env,memberId,registrationContext,now);
+  const encryptedDestination=await encrypt(destination,env);
+  const destinationStatement=()=>env.PRODUCT_DB.prepare(`INSERT INTO member_notification_destinations(member_id,channel,encrypted_destination,verified_at,updated_at) VALUES(?1,?2,?3,?4,?4) ON CONFLICT(member_id,channel) DO UPDATE SET encrypted_destination=excluded.encrypted_destination,verified_at=excluded.verified_at,updated_at=excluded.updated_at`).bind(memberId,channel,encryptedDestination,at);
+  const identityRegistrationStatement=()=>env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    SELECT ?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12
+    WHERE NOT EXISTS (SELECT 1 FROM member_notification_destinations WHERE member_id=?13 AND verified_at<>'')`).bind(
+    event.event_id,event.event_type,event.locale,event.source,event.medium,event.campaign,event.content,
+    event.marketplace,event.occurred_at,event.traffic_class,event.visitor_id,event.session_id,memberId
+  );
+  // D1 batch order is intentional: the event checks for a pre-existing verified
+  // destination before the upsert, and both writes commit or roll back together.
+  // The deterministic event PK also makes concurrent first registrations safe.
+  let results;
+  try{
+    results=await env.PRODUCT_DB.batch([identityRegistrationStatement(),destinationStatement()]);
+  }catch(error){
+    const message=String(error?.message||error);
+    if(/(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/iu.test(message)){
+      // Production migrations are intentionally independent from Worker deploys.
+      // If identity columns are still pending, preserve registration availability
+      // and the exact-once aggregate without pretending attribution was recorded.
+      const legacyRegistration=env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO growth_events
+        (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+        SELECT ?1,?2,?3,?4,?5,?6,?7,?8,?9,?10
+        WHERE NOT EXISTS (SELECT 1 FROM member_notification_destinations WHERE member_id=?11 AND verified_at<>'')`).bind(
+        event.event_id,event.event_type,event.locale,event.source,event.medium,event.campaign,event.content,
+        event.marketplace,event.occurred_at,event.traffic_class,memberId
+      );
+      try{results=await env.PRODUCT_DB.batch([legacyRegistration,destinationStatement()]);}
+      catch{await destinationStatement().run();return{registered:false,telemetry_recorded:false};}
+    }else{
+      // Growth telemetry is advisory and must never make an otherwise valid
+      // LINE/email authentication fail. The destination write remains required.
+      await destinationStatement().run();
+      return{registered:false,telemetry_recorded:false};
+    }
+  }
+  return{registered:Number(results?.[0]?.meta?.changes||0)===1,telemetry_recorded:true};
+}
 export function safeMemberNotificationCopy(title,body){
   const broken=value=>(String(value||'').match(/�/g)||[]).length>=2;
   const safeTitle=broken(title)?'HOSHILUからのお知らせ':String(title||'HOSHILU');

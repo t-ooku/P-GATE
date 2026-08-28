@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v396/);
+  assert.match(worker, /hoshilu-shell-v397/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /link\.dataset\.marketplace = destination\.dataset\.marketplace/);
@@ -97,14 +97,14 @@ test('WHY HOSHILU is concise and official social labels are not duplicated', asy
 // to it) was already removed from the DOM. Fixed by running the real search
 // directly (window.HoshiluSearch.run, awaited for a real ok/fail result) and
 // only closing after a confirmed result or a usable degraded result.
-test('AIチャットは本検索失敗時もAI候補と13モールの縮退結果を表示してダイアログを閉じる', async () => {
+test('AIチャットは本検索失敗時も最大13モールの縮退結果を表示してダイアログを閉じる', async () => {
   const [app, script] = await Promise.all([read('app.js'), read('ai-search-ui.mjs')]);
   assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch\}/);
   assert.match(app, /async function runKnowledgeSearch\(options=\{\}\)/);
   assert.match(app, /return\{ok:true,result,requestId:lastRequestId\}/);
   assert.match(app, /const failureTelemetry=clientSearchFailureTelemetry\(error,lastRequestId\)/);
   assert.match(app, /return\{ok:false,degraded:true,error:failureTelemetry\.error_code,result:fallback,requestId:failureTelemetry\.request_id\}/);
-  assert.match(app, /AI候補と13モールの検索先を表示しています/);
+  assert.match(app, /最大13モールの検索先を表示しています/);
   assert.match(script, /window\.HoshiluSearch\?\.run/);
   assert.doesNotMatch(script, /submitButton\.click\(\)/);
   // dialog.close() must only appear guarded behind a successful outcome,
@@ -134,7 +134,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/assets-v138\/app\.js\?v=138"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=10"><\/script>/);
+  assert.match(html, /<script type="module" src="\/assets-v139\/app\.js\?v=139"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=10"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 

@@ -13,7 +13,11 @@ export function socialDiscoverySearchLinks(value, origin = 'https://hoshilu.app'
   const query = safeDiscoverySearchQuery(value);
   if (!query) return [];
   const encoded = encodeURIComponent(query);
-  const hoshiluUrl = `${String(origin).replace(/\/$/, '')}/?q=${encoded}`;
+  const hoshiluUrl = new URL('/', String(origin));
+  hoshiluUrl.search = new URLSearchParams({
+    q: query, utm_source: 'user_share', utm_medium: 'line',
+    utm_campaign: 'found_with_hoshilu', utm_content: 'share_line'
+  }).toString();
   // `channel` drives the brand-colour CSS in ai-search-ui.css
   // (.marketplace-search-link[data-channel="..."]). Without it these render
   // with no background at all - i.e. as plain blue default-link text, which
@@ -26,7 +30,7 @@ export function socialDiscoverySearchLinks(value, origin = 'https://hoshilu.app'
     { channel: 'x', label: 'Xで探す', url: `https://x.com/search?q=${encoded}&src=typed_query` },
     { channel: 'tiktok', label: 'TikTokで探す', url: `https://www.tiktok.com/search/video?q=${encoded}`, search_query: query, copy_query: true },
     { channel: 'youtube', label: 'YouTubeで探す', url: `https://www.youtube.com/results?search_query=${encoded}` },
-    { channel: 'line', label: 'LINEで共有', url: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(hoshiluUrl)}` }
+    { channel: 'line', label: 'LINEで共有', url: `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(hoshiluUrl.toString())}` }
   ];
 }
 

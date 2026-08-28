@@ -14,6 +14,30 @@ const FUNNEL_EVENTS = Object.freeze([
 ]);
 const emptyFunnel = () => Object.fromEntries(FUNNEL_EVENTS.map(event => [event, 0]));
 const VALUE_EVENT_SQL = "'ai_result_clicked','ranking_result_clicked','price_comparison_opened','wish_saved','share_started','marketplace_click'";
+const SEARCH_INPUT_EVENTS = Object.freeze({
+  search_input_text: ['TEXT', 'attempts'],
+  search_input_screenshot: ['SCREENSHOT', 'attempts'],
+  search_input_social_url: ['SOCIAL_URL', 'attempts'],
+  search_input_text_screenshot: ['TEXT_SCREENSHOT', 'attempts'],
+  search_input_text_social_url: ['TEXT_SOCIAL_URL', 'attempts'],
+  search_input_screenshot_social_url: ['SCREENSHOT_SOCIAL_URL', 'attempts'],
+  search_input_text_screenshot_social_url: ['TEXT_SCREENSHOT_SOCIAL_URL', 'attempts'],
+  search_completed_text: ['TEXT', 'completed'],
+  search_completed_screenshot: ['SCREENSHOT', 'completed'],
+  search_completed_social_url: ['SOCIAL_URL', 'completed'],
+  search_completed_text_screenshot: ['TEXT_SCREENSHOT', 'completed'],
+  search_completed_text_social_url: ['TEXT_SOCIAL_URL', 'completed'],
+  search_completed_screenshot_social_url: ['SCREENSHOT_SOCIAL_URL', 'completed'],
+  search_completed_text_screenshot_social_url: ['TEXT_SCREENSHOT_SOCIAL_URL', 'completed'],
+  search_outbound_text: ['TEXT', 'outbound'],
+  search_outbound_screenshot: ['SCREENSHOT', 'outbound'],
+  search_outbound_social_url: ['SOCIAL_URL', 'outbound'],
+  search_outbound_text_screenshot: ['TEXT_SCREENSHOT', 'outbound'],
+  search_outbound_text_social_url: ['TEXT_SOCIAL_URL', 'outbound'],
+  search_outbound_screenshot_social_url: ['SCREENSHOT_SOCIAL_URL', 'outbound'],
+  search_outbound_text_screenshot_social_url: ['TEXT_SCREENSHOT_SOCIAL_URL', 'outbound']
+});
+const SEARCH_INPUT_EVENT_SQL = Object.keys(SEARCH_INPUT_EVENTS).map(value => `'${value}'`).join(',');
 const ANNUAL_TRAFFIC_TARGET = Object.freeze({
   start_at: '2026-08-13T15:00:00.000Z',
   end_at: '2027-08-13T15:00:00.000Z',
@@ -45,7 +69,7 @@ const SESSION_METRICS_SQL = `WITH base AS (
     MAX(CASE WHEN event_type='landing_view' THEN 1 ELSE 0 END) AS landed,
     MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS searched,
     MAX(CASE WHEN event_type='search_completed' THEN 1 ELSE 0 END) AS completed,
-    MAX(CASE WHEN event_type='search_failed' THEN 1 ELSE 0 END) AS failed,
+    MAX(CASE WHEN event_type IN ('search_failed','search_dead_end') THEN 1 ELSE 0 END) AS failed,
     MAX(CASE WHEN event_type IN (${VALUE_EVENT_SQL}) THEN 1 ELSE 0 END) AS valued,
     MAX(CASE WHEN event_type='price_comparison_opened' THEN 1 ELSE 0 END) AS compared,
     MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS outbound,
@@ -74,7 +98,7 @@ SELECT
   SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions,
   SUM(CASE WHEN completed=1 AND wished=1 THEN 1 ELSE 0 END) AS wish_sessions,
   SUM(CASE WHEN completed=1 AND shared=1 THEN 1 ELSE 0 END) AS share_sessions,
-  SUM(registered) AS registration_sessions,
+  SUM(CASE WHEN landed=1 AND registered=1 THEN 1 ELSE 0 END) AS registration_sessions,
   SUM(attributed) AS attributed_sessions,
   ROUND(AVG(CASE WHEN search_at IS NOT NULL AND completed_at>=search_at
     THEN (julianday(completed_at)-julianday(search_at))*86400 END),1) AS avg_search_seconds,
@@ -126,6 +150,17 @@ SELECT day,COUNT(DISTINCT CASE WHEN visitor_id<>'' THEN visitor_id END) AS visit
   SUM(CASE WHEN completed=1 AND valued=1 THEN 1 ELSE 0 END) AS value_sessions,
   SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions
 FROM sessions GROUP BY day ORDER BY day`;
+
+const SEARCH_INPUT_MIX_SQL = `WITH typed AS (
+    SELECT event_type,SUBSTR(event_id,1,71) AS execution_key
+    FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
+      AND event_type IN (${SEARCH_INPUT_EVENT_SQL})
+      AND event_id LIKE 'search_%'
+  ), attempts AS (
+    SELECT DISTINCT execution_key FROM typed WHERE event_type LIKE 'search_input_%'
+  )
+  SELECT typed.event_type,COUNT(DISTINCT typed.execution_key) AS searches
+  FROM typed JOIN attempts USING(execution_key) GROUP BY typed.event_type`;
 
 function normalizedMetrics(row = {}) {
   const fields = [
@@ -181,6 +216,31 @@ function sourceRows(rows = []) {
 
 function marketplaceRows(rows = []) {
   return rows.map(row => ({ marketplace: String(row.marketplace || ''), outbound_sessions: safeCount(row.outbound_sessions) }));
+}
+
+function searchInputMix(rows = []) {
+  const types = [...new Set(Object.values(SEARCH_INPUT_EVENTS).map(([type]) => type))];
+  const performance = Object.fromEntries(types.map(type => [type, { attempts: 0, completed: 0, outbound: 0 }]));
+  for (const row of rows) {
+    const [type, stage] = SEARCH_INPUT_EVENTS[String(row.event_type || '')] || [];
+    if (type && stage) performance[type][stage] = safeCount(row.searches);
+  }
+  const counts = Object.fromEntries(types.map(type => [type, performance[type].attempts]));
+  const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
+  for (const type of types) {
+    const row = performance[type];
+    row.mix_rate = percentage(row.attempts, total);
+    row.success_rate = percentage(row.completed, row.attempts);
+    row.outbound_rate = percentage(row.outbound, row.attempts);
+    row.attempt_to_outbound_rate = percentage(row.outbound, row.attempts);
+  }
+  return {
+    total_searches: total,
+    rate_definition: '構成比=受理検索内、成功率=成功÷受理、送客CVR=送客した検索÷受理（同一検索の複数クリックは1件）',
+    counts,
+    rates: Object.fromEntries(types.map(type => [type, performance[type].mix_rate])),
+    performance
+  };
 }
 
 function comparison(current, previous) {
@@ -239,11 +299,12 @@ async function periodSummary(env, now, days) {
     env.PRODUCT_DB.prepare(SESSION_METRICS_SQL).bind(iso(previousStart), iso(start)),
     env.PRODUCT_DB.prepare(SOURCE_BREAKDOWN_SQL).bind(iso(start), iso(end)),
     env.PRODUCT_DB.prepare(MARKETPLACE_BREAKDOWN_SQL).bind(iso(start), iso(end)),
-    env.PRODUCT_DB.prepare(DAILY_SQL).bind(iso(start), iso(end))
+    env.PRODUCT_DB.prepare(DAILY_SQL).bind(iso(start), iso(end)),
+    env.PRODUCT_DB.prepare(SEARCH_INPUT_MIX_SQL).bind(iso(start), iso(end))
   ];
   const results = typeof env.PRODUCT_DB.batch === 'function'
     ? await env.PRODUCT_DB.batch(statements)
-    : await Promise.all([statements[0].first(), statements[1].first(), statements[2].all(), statements[3].all(), statements[4].all()]);
+    : await Promise.all([statements[0].first(), statements[1].first(), statements[2].all(), statements[3].all(), statements[4].all(), statements[5].all()]);
   const first = result => Array.isArray(result?.results) ? result.results[0] || {} : result || {};
   const rows = result => Array.isArray(result?.results) ? result.results : [];
   const current = normalizedMetrics(first(results[0]));
@@ -254,6 +315,7 @@ async function periodSummary(env, now, days) {
     days, start_at: iso(start), end_at: iso(end), current, previous,
     comparison: comparison(current, previous),
     daily: fillDaily(start, end, rows(results[4])), sources, marketplaces,
+    search_input_mix: searchInputMix(rows(results[5])),
     insights: improvementInsights(current, previous, sources)
   };
 }
@@ -284,6 +346,7 @@ async function businessKpiSummary(env, now) {
         remaining_visitors: Math.max(0, ANNUAL_TRAFFIC_TARGET.visitors - annualVisitors),
         progress_percent: Math.round((annualVisitors / ANNUAL_TRAFFIC_TARGET.visitors) * 10000) / 100
       },
+      search_input_mix: { '7d': period7d.search_input_mix, '30d': period30d.search_input_mix },
       periods: { '7d': period7d, '30d': period30d }
     };
   } catch (error) {

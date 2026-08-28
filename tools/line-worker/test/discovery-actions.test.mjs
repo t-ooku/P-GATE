@@ -20,6 +20,11 @@ test('social actions search public platforms and share through LINE', () => {
   assert.doesNotMatch(links[0].url, /google\.com\/search/);
   assert.doesNotMatch(links[2].url, /google\.com\/search/);
   assert.match(links[4].url, /^https:\/\/social-plugins\.line\.me\/lineit\/share\?/);
+  const lineDestination = new URL(new URL(links[4].url).searchParams.get('url'));
+  assert.equal(lineDestination.searchParams.get('q'), '丸く光るライト');
+  assert.equal(lineDestination.searchParams.get('utm_source'), 'user_share');
+  assert.equal(lineDestination.searchParams.get('utm_medium'), 'line');
+  assert.equal(lineDestination.searchParams.get('utm_content'), 'share_line');
 });
 
 test('Gmail sharing is a separate helper for the share area, not the social search links', () => {

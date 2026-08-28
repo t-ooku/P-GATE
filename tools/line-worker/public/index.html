@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="/mywatch.css">
   <link rel="stylesheet" href="/hero-fixes.css?v=88">
   <link rel="stylesheet" href="/hero-slides.css?v=82">
-  <link rel="stylesheet" href="/marketplace-coverage.css?v=91">
+  <link rel="stylesheet" href="/marketplace-coverage.css?v=92">
   <link rel="stylesheet" href="/buzz-home.css?v=1">
   <link rel="stylesheet" href="/sale-center.css?v=84">
   <link rel="stylesheet" href="/hero-collage-overlay.css">
@@ -116,9 +116,9 @@
     </form>
   </dialog>
 
-  <nav id="searchModeSwitch" class="search-mode-switch" data-mode="identify" aria-label="検索方法" data-nosnippet>
-    <button id="searchModeIdentify" class="search-mode-button active" type="button" aria-pressed="true">AIに確認して探す</button>
-    <button id="searchModeDirect" class="search-mode-button" type="button" aria-pressed="false">すぐ検索</button>
+  <nav id="searchModeSwitch" class="search-mode-switch" data-mode="direct" aria-label="検索方法" data-nosnippet>
+    <button id="searchModeIdentify" class="search-mode-button" type="button" aria-pressed="false">AIに確認して探す</button>
+    <button id="searchModeDirect" class="search-mode-button active" type="button" aria-pressed="true">すぐ検索</button>
   </nav>
 
   <main id="top">
@@ -178,6 +178,7 @@
               </div>
               <label id="socialUrlField" class="social-url-field hidden" for="socialUrl"><span id="socialUrlLabel">Instagram・TikTok・Xなどの公開投稿URL</span><input id="socialUrl" type="url" maxlength="500" inputmode="url" autocomplete="url" placeholder="https://www.instagram.com/p/..."></label>
               <p id="searchInputNotice" class="search-input-notice">スクショ・投稿URLはHOSHILUのサーバーに保存しません。候補抽出にはGoogle Gemini APIを使います。</p>
+              <div class="search-mode-actions"><button id="submitButton" class="primary" type="submit"><span id="submitText">すぐ検索</span><span aria-hidden="true">→</span></button><button id="rankingSearchButton" class="ranking-search-button" type="button">ランキングで探す</button></div>
               <div id="searchHintsSection" class="search-hints">
                 <div id="searchHistorySection" class="search-history-section hidden">
                   <div class="search-history-toolbar"><h3 id="searchHistoryTitle">検索履歴</h3></div>
@@ -196,7 +197,6 @@
               <button id="advancedSearchToggle" type="button" class="advanced-search-toggle" aria-expanded="false" aria-controls="advancedSearchPanel">詳細検索</button>
               <div id="advancedSearchPanel" class="advanced-search-panel hidden"></div>
               <div id="turnstileContainer" class="turnstile-container"></div>
-              <div class="search-mode-actions"><button id="submitButton" class="primary" type="submit"><span id="submitText">一緒に見つける</span><span aria-hidden="true">→</span></button><button id="rankingSearchButton" class="ranking-search-button" type="button">ランキングで探す</button></div>
             </form>
             <details class="panel-heading-details"><summary id="searchTitleSummary">使い方を見る</summary><h2 id="searchTitle"><span>商品名が分からなくても大丈夫。</span><span>スクショ、公開投稿URL、覚えている一言から探せます。</span></h2></details>
             <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -212,9 +212,10 @@
             <button id="stickyMarketplaceJump" type="button" class="sticky-marketplace-jump">モールで直接探す</button>
           </form>
 
-          <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle">
+          <section id="resultsSection" class="results hidden" aria-labelledby="resultsTitle" aria-busy="false">
             <div class="section-title"><div><p class="step">MATCHES</p><h2 id="resultsTitle">ホシルからの提案</h2></div></div>
-            <p id="resultMessage" class="result-message"></p>
+            <p id="resultMessage" class="result-message" role="status" aria-live="polite"></p>
+            <div id="instantMarketplaceHandoff" class="instant-marketplace-handoff hidden"></div>
             <p class="affiliate-link-note" data-i18n="affiliate.searchNotice">広告：AmazonへのリンクはAmazonアソシエイトリンクです。楽天市場へのリンクにもアフィリエイトリンクが含まれる場合があります。購入価格や検索順位には影響しません。</p>
             <div id="resultCards" class="result-grid"></div>
           </section>
@@ -393,6 +394,6 @@
       </div>
     </div></main>
   <footer data-nosnippet><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイトのリンクからも収入を得る場合があります。</span><span><a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=3"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=93"></script><script type="module" src="/buzz-home.mjs"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=5"></script><script type="module" src="/assets-v138/app.js?v=138"></script><script type="module" src="/ai-search-ui.mjs?v=10"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=86"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=3"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=93"></script><script type="module" src="/buzz-home.mjs"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=6"></script><script type="module" src="/assets-v139/app.js?v=139"></script><script type="module" src="/ai-search-ui.mjs?v=10"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=86"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>

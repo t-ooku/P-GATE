@@ -13,8 +13,12 @@ test('PC共有にX・Instagram・TikTokの明示ボタンを追加する', async
   assert.match(source, /Instagram用にコピー/);
   assert.match(source, /TikTok用にコピー/);
   assert.match(source, /include && query/);
-  assert.match(source, /\/x-card-v3\?/);
-  assert.match(source, /utm_content=x_card_v3/);
+  assert.doesNotMatch(source, /\/x-card-v3\?/);
+  assert.match(source, /utm_content: `share_\$\{destination\}`/);
+  assert.match(source, /payload\('x'\)/);
+  assert.match(source, /'instagram', status/);
+  assert.match(source, /'tiktok', status/);
+  assert.match(source, /safeDiscoverySearchQuery/);
   assert.match(source, /card\.querySelector\('\.share-discovery-actions'\)/);
   assert.match(css, /\.share-discovery-actions \{[\s\S]*grid-template-columns: repeat\(6, minmax\(0, 1fr\)\)/);
   assert.match(css, /\.direct-social-targets \{\s*display: contents/);

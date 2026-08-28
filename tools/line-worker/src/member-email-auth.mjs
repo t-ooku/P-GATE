@@ -1,4 +1,4 @@
-import { storeMemberNotificationDestination } from './member-notification-delivery.mjs';
+import { storeMemberNotificationDestination, storeMemberRegistrationDestination } from './member-notification-delivery.mjs';
 const encoder = new TextEncoder();
 function b64(bytes) { let binary=''; for(const byte of bytes) binary+=String.fromCharCode(byte); return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,''); }
 async function digest(value) { return b64(new Uint8Array(await crypto.subtle.digest('SHA-256',encoder.encode(value)))); }
@@ -34,17 +34,20 @@ async function consumeEmailCode(request,env,now=Math.floor(Date.now()/1000)) {
   const expected=await digest(`code:${emailHash}:${code}:${secret(env)}`);
   if(expected!==row.code_hash){await env.PRODUCT_DB.prepare('UPDATE member_email_challenges SET attempts=attempts+1 WHERE email_hash=?').bind(emailHash).run();return Response.json({ok:false,error:'CODE_INVALID'},{status:401});}
   await env.PRODUCT_DB.prepare('DELETE FROM member_email_challenges WHERE email_hash=?').bind(emailHash).run();
-  return {email,emailHash};
+  return {email,emailHash,registrationContext:input.registration_context};
 }
 export async function verifyEmailCode(request,env,issueSession,now=Math.floor(Date.now()/1000)) {
   const verified=await consumeEmailCode(request,env,now);if(verified instanceof Response)return verified;
-  const {email,emailHash}=verified;
-  await storeMemberNotificationDestination(env,emailHash,'EMAIL',email);
+  const {email,emailHash,registrationContext}=verified;
+  await storeMemberRegistrationDestination(env,emailHash,'EMAIL',email,registrationContext);
   return issueSession({id:emailHash,name:email.split('@')[0].slice(0,40),picture:'',provider:'EMAIL'},env);
 }
 export async function linkEmailDestination(request,env,memberId,now=Math.floor(Date.now()/1000)) {
   if(!memberId)return Response.json({ok:false,error:'MEMBER_REQUIRED'},{status:401});
   const verified=await consumeEmailCode(request,env,now);if(verified instanceof Response)return verified;
   await storeMemberNotificationDestination(env,memberId,'EMAIL',verified.email);
+  // Also mark the privacy-safe email identity as already verified. If this
+  // user later chooses email login, it must not be counted as a second person.
+  await storeMemberNotificationDestination(env,verified.emailHash,'EMAIL',verified.email);
   return Response.json({ok:true,channel:'EMAIL'},{headers:{'cache-control':'no-store'}});
 }

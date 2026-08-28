@@ -72,17 +72,49 @@ const send = (event_type, extra = {}) => {
 };
 const SEARCH_WATCHDOG_MS = 75000;
 const searchWatches = new Map();
+// One enum event is emitted per accepted search execution. The enum contains
+// presence flags only; the query, URL and image never enter analytics.
+const SEARCH_INPUT_EVENT = Object.freeze({
+  TEXT: 'search_input_text',
+  SCREENSHOT: 'search_input_screenshot',
+  SOCIAL_URL: 'search_input_social_url',
+  TEXT_SCREENSHOT: 'search_input_text_screenshot',
+  TEXT_SOCIAL_URL: 'search_input_text_social_url',
+  SCREENSHOT_SOCIAL_URL: 'search_input_screenshot_social_url',
+  TEXT_SCREENSHOT_SOCIAL_URL: 'search_input_text_screenshot_social_url'
+});
+const SEARCH_COMPLETED_INPUT_EVENT = Object.freeze({
+  TEXT: 'search_completed_text', SCREENSHOT: 'search_completed_screenshot',
+  SOCIAL_URL: 'search_completed_social_url', TEXT_SCREENSHOT: 'search_completed_text_screenshot',
+  TEXT_SOCIAL_URL: 'search_completed_text_social_url',
+  SCREENSHOT_SOCIAL_URL: 'search_completed_screenshot_social_url',
+  TEXT_SCREENSHOT_SOCIAL_URL: 'search_completed_text_screenshot_social_url'
+});
+const SEARCH_OUTBOUND_INPUT_EVENT = Object.freeze({
+  TEXT: 'search_outbound_text', SCREENSHOT: 'search_outbound_screenshot',
+  SOCIAL_URL: 'search_outbound_social_url', TEXT_SCREENSHOT: 'search_outbound_text_screenshot',
+  TEXT_SOCIAL_URL: 'search_outbound_text_social_url',
+  SCREENSHOT_SOCIAL_URL: 'search_outbound_screenshot_social_url',
+  TEXT_SCREENSHOT_SOCIAL_URL: 'search_outbound_text_screenshot_social_url'
+});
+let lastCompletedSearch = null;
 const clearSearchWatch = executionId => {
   const watch = searchWatches.get(String(executionId || ''));
   if (!watch) return;
-  clearTimeout(watch);
+  clearTimeout(watch.timer);
   searchWatches.delete(String(executionId));
+  return watch;
 };
 const startSearchWatch = event => {
   const executionId = String(event.detail?.executionId || '');
   if (!/^[a-f0-9-]{20,64}$/iu.test(executionId)) return;
+  const inputType = String(event.detail?.inputType || '');
+  const inputEvent = SEARCH_INPUT_EVENT[inputType];
+  if (inputEvent) send(inputEvent, { execution_id: executionId });
   clearSearchWatch(executionId);
-  const watch = setTimeout(() => {
+  lastCompletedSearch = inputEvent ? { executionId, inputType, outboundSent: false } : null;
+  const watch = { inputType: inputEvent ? inputType : '', timer: 0 };
+  watch.timer = setTimeout(() => {
     if (searchWatches.get(executionId) !== watch) return;
     searchWatches.delete(executionId);
     // No query text or exception body is sent. A timeout means the real
@@ -90,6 +122,18 @@ const startSearchWatch = event => {
     send('search_dead_end');
   }, SEARCH_WATCHDOG_MS);
   searchWatches.set(executionId, watch);
+};
+const completeSearchWatch = event => {
+  const executionId = String(event.detail?.executionId || '');
+  const watch = clearSearchWatch(executionId);
+  const completedEvent = SEARCH_COMPLETED_INPUT_EVENT[watch?.inputType];
+  if (completedEvent) {
+    send(completedEvent, { execution_id: executionId });
+    if (!lastCompletedSearch || lastCompletedSearch.executionId !== executionId) {
+      lastCompletedSearch = { executionId, inputType: watch.inputType, outboundSent: false };
+    }
+  }
+  send('search_completed');
 };
 
 send('landing_view');
@@ -124,7 +168,7 @@ document.addEventListener('invalid', event => {
 
 document.addEventListener('hoshilu:search-execution-started', startSearchWatch);
 document.addEventListener('hoshilu:search-cancelled', event => clearSearchWatch(event.detail?.executionId));
-document.addEventListener('hoshilu:search-completed', event => { clearSearchWatch(event.detail?.executionId); send('search_completed'); });
+document.addEventListener('hoshilu:search-completed', completeSearchWatch);
 document.addEventListener('hoshilu:search-failed', event => { clearSearchWatch(event.detail?.executionId); send('search_dead_end'); });
 document.addEventListener('hoshilu:search-degraded', event => {
   clearSearchWatch(event.detail?.executionId);
@@ -135,18 +179,31 @@ document.addEventListener('hoshilu:search-degraded', event => {
     request_id: event.detail?.requestId
   });
 });
+document.addEventListener('hoshilu:wish-saved', () => send('wish_saved'));
 
 document.addEventListener('click', event => {
   const target = event.target.closest('a,button');
   if (!target) return;
-  if (target.classList.contains('wish-button')) send('wish_saved');
   if (target.classList.contains('price-compare-button') || target.classList.contains('ai-price-compare-button')) send('price_comparison_opened');
-  if (target.classList.contains('share-discovery-button') || target.classList.contains('share-copy-button')) send('share_started');
+  if (target.classList.contains('share-discovery-button') || target.classList.contains('share-copy-button')
+    || target.classList.contains('share-gmail-button') || target.classList.contains('social-target')
+    || target.dataset.channel === 'line') send('share_started');
   if (target.matches('.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link') && target.tagName === 'A') {
+    // LINE is a share handoff, not a product-result click. It was previously
+    // misclassified as ai_result_clicked because it reuses the buy-link style.
+    if (target.dataset.channel === 'line') return;
     const marketplace = growthMarketplace(target.dataset.marketplace, target.textContent);
     send(target.closest('.ranking-product-card') ? 'ranking_result_clicked' : 'ai_result_clicked', marketplace ? { marketplace } : {});
     if (marketplace) {
       send('marketplace_click', { marketplace });
+      // Count one conversion per completed search, not every shop click.
+      if (!target.closest('.ranking-product-card') && lastCompletedSearch && !lastCompletedSearch.outboundSent) {
+        const outboundEvent = SEARCH_OUTBOUND_INPUT_EVENT[lastCompletedSearch.inputType];
+        if (outboundEvent) {
+          send(outboundEvent, { execution_id: lastCompletedSearch.executionId });
+          lastCompletedSearch.outboundSent = true;
+        }
+      }
       if (target.dataset.measurementContext === 'BROWSER_EMERGENCY_FALLBACK') {
         send('marketplace_fallback_click', { marketplace, medium: 'fallback', campaign: 'browser_emergency' });
       }

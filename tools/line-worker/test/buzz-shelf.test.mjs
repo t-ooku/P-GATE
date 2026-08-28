@@ -28,6 +28,19 @@ test('BUZZテーマは火曜・金曜JSTに週2回切り替わり韓国軸を含
   assert.equal(new Set(updates.map((state) => state.updated_key)).size, updates.length);
 });
 
+test('BUZZは共有流入・共有開始・商品送客を匿名成長計測へ接続する', () => {
+  const html = fs.readFileSync(path.join(worker, 'public', 'buzz.html'), 'utf8');
+  const client = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
+  assert.match(html, /growth-analytics\.mjs\?v=6/);
+  assert.match(html, /buzz\.mjs\?v=4/);
+  assert.match(html, /share-button share-discovery-button/);
+  assert.match(client, /utm_campaign: 'hoshilu_buzz'/);
+  assert.match(client, /utm_content: content/);
+  assert.match(client, /shelf-share share-discovery-button/);
+  assert.match(client, /card product-primary-link ranking-product-card/);
+  assert.match(client, /card\.dataset\.marketplace = text\(marketplace\)/);
+});
+
 // buzz_ranking_snapshots と marketplace_ranking_cache の最小D1スタブ。
 function d1Stub({ snapshots = [], maxCapturedAt = null } = {}) {
   const executed = [];

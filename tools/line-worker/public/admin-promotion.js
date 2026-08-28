@@ -26,6 +26,12 @@ const sourceLabels = {
   direct: '直接・不明', instagram: 'Instagram', x: 'X', tiktok: 'TikTok',
   google: 'Google', yahoo: 'Yahoo!', bing: 'Bing', line: 'LINE'
 };
+const searchInputLabels = {
+  TEXT: '一言', SCREENSHOT: 'スクショ', SOCIAL_URL: '投稿URL',
+  TEXT_SCREENSHOT: '一言＋スクショ', TEXT_SOCIAL_URL: '一言＋投稿URL',
+  SCREENSHOT_SOCIAL_URL: 'スクショ＋投稿URL',
+  TEXT_SCREENSHOT_SOCIAL_URL: '一言＋スクショ＋投稿URL'
+};
 const element = (tag, value = '', className = '') => {
   const node = document.createElement(tag);
   node.textContent = value;
@@ -192,13 +198,22 @@ function renderMarketplaces(data) {
 
 function renderDetailKpis(data) {
   const current = data.current;
+  const mix = data.search_input_mix || { total_searches: 0, counts: {}, rates: {}, performance: {} };
+  const mixNote = Object.keys(searchInputLabels).map(type => {
+    const row = mix.performance[type] || {};
+    return `${searchInputLabels[type]} 受理${formatNumber(row.attempts)}・成功${formatNumber(row.completed)}（${rate(row.success_rate)}）・送客${formatNumber(row.outbound)}（CVR ${rate(row.outbound_rate)}）`;
+  }).join(' / ');
   businessGrid.replaceChildren(
     metric('匿名訪問者', formatNumber(current.visitors)), metric('訪問セッション', formatNumber(current.sessions)),
     metric('再訪ユーザー率', rate(current.rates.repeat_visitor)), metric('検索開始率', rate(current.rates.visit_to_search)),
     metric('検索成功率', rate(current.rates.search_completion)), metric('価格比較到達率', rate(current.rates.comparison_reach)),
     metric('モール送客率', rate(current.rates.marketplace_outbound), 'success'),
-    metric('お気に入り', formatNumber(current.wish_sessions)), metric('共有', formatNumber(current.share_sessions)),
-    metric('平均価値到達時間', seconds(current.avg_value_seconds))
+    metric('無料会員登録率', rate(current.rates.registration), '',
+      `${formatNumber(current.registration_sessions)}登録 ÷ 着地セッション`),
+    metric('お気に入り', formatNumber(current.wish_sessions)), metric('共有開始', formatNumber(current.share_sessions)),
+    metric('平均価値到達時間', seconds(current.avg_value_seconds)),
+    metric('受理検索の入力構成', `${formatNumber(mix.total_searches)}件`, '',
+      `${mixNote}｜${mix.rate_definition || '割合は受理検索に占める構成比'}`)
   );
 }
 

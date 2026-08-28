@@ -33,6 +33,66 @@ test('accepts only random anonymous visitor and session identifiers', () => {
   assert.equal(event.session_id, '');
 });
 
+test('search input mix accepts only fixed enums and never stores raw inputs', () => {
+  const execution_id = '450e8400-e29b-41d4-a716-446655440000';
+  const session_id = '650e8400-e29b-41d4-a716-446655440000';
+  for (const event_type of [
+    'search_input_text', 'search_input_screenshot', 'search_input_social_url',
+    'search_input_text_screenshot', 'search_input_text_social_url',
+    'search_input_screenshot_social_url', 'search_input_text_screenshot_social_url',
+    'search_completed_text', 'search_completed_screenshot', 'search_completed_social_url',
+    'search_completed_text_screenshot', 'search_completed_text_social_url',
+    'search_completed_screenshot_social_url', 'search_completed_text_screenshot_social_url',
+    'search_outbound_text', 'search_outbound_screenshot', 'search_outbound_social_url',
+    'search_outbound_text_screenshot', 'search_outbound_text_social_url',
+    'search_outbound_screenshot_social_url', 'search_outbound_text_screenshot_social_url'
+  ]) {
+    const event = normalizeGrowthEvent({
+      event_type, query: '保存禁止の検索文', social_url: 'https://example.invalid/private',
+      image: '保存禁止のbase64', execution_id, session_id
+    });
+    assert.equal(event.event_type, event_type);
+    assert.equal(event.execution_id, execution_id);
+    assert.equal('query' in event, false);
+    assert.equal('social_url' in event, false);
+    assert.equal('image' in event, false);
+    assert.doesNotMatch(JSON.stringify(event), /保存禁止|example\.invalid/u);
+  }
+  assert.throws(() => normalizeGrowthEvent({
+    event_type: 'search_input_text', session_id
+  }), /GROWTH_EVENT_CORRELATION_INVALID/u);
+});
+
+test('typed search stages use one deduplicated execution key without storing the raw id', async () => {
+  const writes = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({
+    run: async () => { writes.push({ sql, values }); return { success: true }; }
+  }) }) } };
+  const body = {
+    event_type: 'search_input_text',
+    execution_id: '450e8400-e29b-41d4-a716-446655440000',
+    session_id: '650e8400-e29b-41d4-a716-446655440000'
+  };
+  for (let index = 0; index < 2; index += 1) {
+    const response = await handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+      method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hoshilu.app' },
+      body: JSON.stringify(body)
+    }), env);
+    assert.equal(response.status, 202);
+  }
+  const completed = await handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+    method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hoshilu.app' },
+    body: JSON.stringify({ ...body, event_type: 'search_completed_text' })
+  }), env);
+  assert.equal(completed.status, 202);
+  assert.equal(writes[0].values[0], writes[1].values[0]);
+  assert.match(writes[0].values[0], /^search_[a-f0-9]{64}:input$/u);
+  assert.equal(writes[0].values[0].slice(0, 71), writes[2].values[0].slice(0, 71));
+  assert.match(writes[2].values[0], /:completed$/u);
+  assert.match(writes[0].sql, /INSERT OR IGNORE INTO growth_events/u);
+  assert.doesNotMatch(JSON.stringify(writes), /450e8400-e29b-41d4-a716-446655440000/u);
+});
+
 test('search_degraded accepts only a bounded code and UUID-shaped request ID', () => {
   assert.deepEqual(normalizeGrowthEvent({
     event_type: 'search_degraded',
@@ -166,9 +226,9 @@ test('client degradation diagnostic stores no query, visitor, or session data', 
   assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
 });
 
-test('accepts anonymous registration and inquiry events across all ten marketplaces', () => {
-  assert.equal(normalizeGrowthEvent({ event_type: 'member_registered' }).event_type, 'member_registered');
-  assert.equal(normalizeGrowthEvent({ event_type: 'inquiry_submitted' }).event_type, 'inquiry_submitted');
+test('rejects server-owned conversions and accepts commerce events across all ten marketplaces', () => {
+  assert.throws(() => normalizeGrowthEvent({ event_type: 'member_registered' }), /GROWTH_EVENT_INVALID/u);
+  assert.throws(() => normalizeGrowthEvent({ event_type: 'inquiry_submitted' }), /GROWTH_EVENT_INVALID/u);
   for (const marketplace of [
     'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP',
     'ZOZOTOWN_JP', 'SHOPLIST_JP', 'MUSINSA_JP', 'BUYMA_JP', 'SNKRDUNK_JP'

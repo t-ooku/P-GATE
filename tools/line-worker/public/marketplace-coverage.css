@@ -199,6 +199,11 @@
 
 .search-journey { margin-top: clamp(2rem, 5vw, 4rem); }
 .search-panel { margin-top: 18px; }
+.search-panel .panel-heading { margin-bottom: 12px; }
+.search-panel .query-field textarea { min-height: 110px; }
+.instant-marketplace-handoff { display: grid; gap: 10px; margin: 14px 0 18px; }
+.instant-marketplace-status { margin: 0; color: #5140ba; font-weight: 800; line-height: 1.65; }
+.instant-marketplace-fallback { border-color: #cfc5ff; background: linear-gradient(135deg, #fff, #f7f4ff); }
 .lp-compact-copy { text-wrap: pretty; }
 
 @media (min-width: 900px) {

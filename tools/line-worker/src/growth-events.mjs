@@ -6,6 +6,29 @@ const EVENTS = new Set([
   'search_attempted',
   'search_blocked',
   'search_started',
+  // Privacy-safe input mix: each accepted execution emits exactly one fixed
+  // enum event. Raw query text, social URLs and image data are not accepted.
+  'search_input_text',
+  'search_input_screenshot',
+  'search_input_social_url',
+  'search_input_text_screenshot',
+  'search_input_text_social_url',
+  'search_input_screenshot_social_url',
+  'search_input_text_screenshot_social_url',
+  'search_completed_text',
+  'search_completed_screenshot',
+  'search_completed_social_url',
+  'search_completed_text_screenshot',
+  'search_completed_text_social_url',
+  'search_completed_screenshot_social_url',
+  'search_completed_text_screenshot_social_url',
+  'search_outbound_text',
+  'search_outbound_screenshot',
+  'search_outbound_social_url',
+  'search_outbound_text_screenshot',
+  'search_outbound_text_social_url',
+  'search_outbound_screenshot_social_url',
+  'search_outbound_text_screenshot_social_url',
   'search_completed',
   'search_failed',
   'search_dead_end',
@@ -27,10 +50,15 @@ const EVENTS = new Set([
   'seo_evidence_view',
   'seo_review_guide_view',
   'seo_identity_guide_view',
-  'member_registered',
-  'inquiry_submitted'
+  // Registration and inquiry conversions are server-owned events. They must
+  // never be accepted from the anonymous browser endpoint because doing so
+  // would let anyone inflate business KPIs.
 ]);
 const LOCALES = new Set(['JA', 'EN', 'ZH', 'KO']);
+const SEARCH_INPUT_SUFFIXES = new Set([
+  'text', 'screenshot', 'social_url', 'text_screenshot', 'text_social_url',
+  'screenshot_social_url', 'text_screenshot_social_url'
+]);
 const SEARCH_PROVIDER_DEGRADATION_COMPONENTS = new Set([
   'ai_chat_primary', 'ai_chat_all',
   'query_structurer_primary', 'query_structurer_all',
@@ -68,6 +96,21 @@ function clientSearchFailureCode(value) {
   return CLIENT_SEARCH_FAILURE_CODE_PATTERN.test(code) ? code : 'SEARCH_CLIENT_FAILURE';
 }
 
+function searchInputStage(eventType) {
+  const match = String(eventType || '').match(/^search_(input|completed|outbound)_(.+)$/u);
+  if (!match || !SEARCH_INPUT_SUFFIXES.has(match[2])) return null;
+  return { stage: match[1], suffix: match[2] };
+}
+
+async function searchExecutionEventId(event) {
+  const stage = searchInputStage(event.event_type);
+  if (!stage) return crypto.randomUUID();
+  const bytes = new TextEncoder().encode(`hoshilu-growth-search:${event.session_id}:${event.execution_id}`);
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  const executionKey = `search_${Array.from(digest, byte => byte.toString(16).padStart(2, '0')).join('')}`;
+  return `${executionKey}:${stage.stage}`;
+}
+
 export function classifyGrowthTraffic(event = {}) {
   const source = clean(event.source).toLowerCase();
   const medium = clean(event.medium).toLowerCase();
@@ -102,6 +145,10 @@ export function normalizeGrowthEvent(input = {}) {
   if (eventType === 'search_degraded') {
     event.failure_code = clientSearchFailureCode(input.failure_code);
     event.request_id = anonymousId(input.request_id);
+  }
+  if (searchInputStage(eventType)) {
+    event.execution_id = anonymousId(input.execution_id);
+    if (!event.execution_id || !event.session_id) throw new Error('GROWTH_EVENT_CORRELATION_INVALID');
   }
   return event;
 }
@@ -251,15 +298,16 @@ export async function handleGrowthEvent(request, env) {
       return Response.json({ ok: false, error: 'EVENT_CORRELATION_UNAVAILABLE' }, { status: 503 });
     }
   }
+  const typedInputEvent = searchInputStage(event.event_type);
   const values = [
-    crypto.randomUUID(), event.event_type, event.locale, event.source, event.medium,
+    await searchExecutionEventId(event), event.event_type, event.locale, event.source, event.medium,
     event.campaign, event.content, event.marketplace, new Date().toISOString(), trafficClass,
     event.visitor_id, event.session_id
   ];
   let identityRecorded = true;
   try {
     await env.PRODUCT_DB.prepare(
-      `INSERT INTO growth_events
+      `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
       (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
       VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
     ).bind(...values).run();
@@ -272,7 +320,7 @@ export async function handleGrowthEvent(request, env) {
     // visitor/session retention metrics are connected.
     identityRecorded = false;
     await env.PRODUCT_DB.prepare(
-      `INSERT INTO growth_events
+      `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
       (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
       VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
     ).bind(...values.slice(0, 10)).run();

@@ -40,6 +40,11 @@ test('販促管理画面は各SNSを独立表示し管理Secretを公開しな�
   assert.match(client, /\/api\/admin\/promotion-dashboard/);
   assert.match(client, /North Star｜商品発見/);
   assert.match(client, /直前期間/);
+  assert.match(client, /受理検索の入力構成/);
+  assert.match(client, /TEXT_SCREENSHOT_SOCIAL_URL/);
+  assert.match(client, /無料会員登録率/);
+  assert.match(client, /current\.rates\.registration/);
+  assert.match(client, /共有開始/);
 });
 
 test('検索成功と失敗は検索ごとに別イベントとして計測する', () => {
@@ -59,6 +64,14 @@ test('検索成功と失敗は検索ごとに別イベントとして計測す�
   assert.doesNotMatch(analytics, /dataset\.measured/);
   assert.match(app, /CustomEvent\('hoshilu:search-completed'/);
   assert.match(app, /CustomEvent\('hoshilu:search-degraded'/);
+  assert.match(app, /detail:\{executionId,inputType\}/);
+  assert.match(analytics, /SEARCH_INPUT_EVENT/);
+  assert.match(analytics, /SEARCH_COMPLETED_INPUT_EVENT/);
+  assert.match(analytics, /SEARCH_OUTBOUND_INPUT_EVENT/);
+  assert.match(analytics, /send\(inputEvent, \{ execution_id: executionId \}\)/);
+  assert.match(analytics, /send\(completedEvent, \{ execution_id: executionId \}\)/);
+  assert.match(analytics, /outboundSent = true/);
+  assert.match(analytics, /target\.dataset\.channel === 'line'/);
   assert.match(app, /clientSearchFailureTelemetry/);
 });
 

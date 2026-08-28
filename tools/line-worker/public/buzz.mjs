@@ -15,11 +15,12 @@ function el(tag, className, textContent) {
   return node;
 }
 
-function itemCard(item) {
-  const card = el('a', 'card');
+function itemCard(item, marketplace) {
+  const card = el('a', 'card product-primary-link ranking-product-card');
   card.href = text(item.product_url);
   card.target = '_blank';
   card.rel = 'noopener sponsored';
+  card.dataset.marketplace = text(marketplace);
   const thumb = el('div', 'thumb');
   if (item.image_url) {
     const img = document.createElement('img');
@@ -51,8 +52,18 @@ function shelfShareText(shelf) {
   return `${shelf.label}、${shelf.headline}\n${names.join('\n')}\n#ホシル #HOSHILUBUZZ`;
 }
 
+function buzzShareUrl(content) {
+  const url = new URL('/buzz', location.origin);
+  url.search = new URLSearchParams({
+    utm_source: 'user_share', utm_medium: 'social',
+    utm_campaign: 'hoshilu_buzz', utm_content: content
+  }).toString();
+  return url.toString();
+}
+
 async function shareShelf(shelf, button) {
-  const shareData = { title: `HOSHILU BUZZ｜${shelf.label}`, text: shelfShareText(shelf), url: 'https://hoshilu.app/buzz' };
+  const shelfId = text(shelf.shelf_id).replace(/[^a-z0-9_-]/giu, '').slice(0, 48) || 'unknown';
+  const shareData = { title: `HOSHILU BUZZ｜${shelf.label}`, text: shelfShareText(shelf), url: buzzShareUrl(`shelf_${shelfId}`) };
   try {
     if (navigator.share) { await navigator.share(shareData); return; }
     await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
@@ -70,12 +81,12 @@ function renderShelves(result) {
     const head = el('div', 'shelf-head');
     const title = shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label);
     head.append(el('h2', '', title), el('span', 'headline', text(shelf.headline)));
-    const shelfShare = el('button', 'shelf-share', '友達に送る');
+    const shelfShare = el('button', 'shelf-share share-discovery-button', '友達に送る');
     shelfShare.type = 'button';
     shelfShare.addEventListener('click', () => shareShelf(shelf, shelfShare));
     head.append(shelfShare);
     const rail = el('div', 'rail');
-    for (const item of shelf.items || []) rail.append(itemCard(item));
+    for (const item of shelf.items || []) rail.append(itemCard(item, shelf.marketplace));
     if (!(shelf.items || []).length) rail.append(el('p', 'status', '公式ランキングを確認中です。韓国コスメの検索入口はそのまま利用できます。'));
     section.append(head, rail);
     // v3.1 §11-14: 「◯◯で探す」= 検索結果へのフォールバック。商品ページ直行の
@@ -153,7 +164,7 @@ async function load() {
 }
 
 document.querySelector('#shareBuzz')?.addEventListener('click', async () => {
-  const shareData = { title: 'HOSHILU BUZZ', text: '今、これ来てる。小ジャンル別の「いま売れてる」まとめ', url: 'https://hoshilu.app/buzz' };
+  const shareData = { title: 'HOSHILU BUZZ', text: '今、これ来てる。小ジャンル別の「いま売れてる」まとめ', url: buzzShareUrl('buzz_page') };
   try {
     if (navigator.share) { await navigator.share(shareData); return; }
     await navigator.clipboard.writeText(shareData.url);
