@@ -731,6 +731,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Apply only BUZZ notification migration 0059
+        working-directory: tools/line-worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .migration-buzz-0059
+          cp migrations/0059_buzz_theme_notifications.sql .migration-buzz-0059/
+          cat > wrangler-buzz-0059.jsonc <<JSON
+          {
+            "name": "project-gate-line-bridge",
+            "compatibility_date": "2026-07-14",
+            "d1_databases": [{
+              "binding": "PRODUCT_DB",
+              "database_name": "hoshilu-products",
+              "database_id": "17629324-b771-4348-982c-c25da48c29b2",
+              "migrations_dir": ".migration-buzz-0059"
+            }]
+          }
+          JSON
+          npx --yes wrangler@4.121.0 d1 migrations apply PRODUCT_DB --remote --config wrangler-buzz-0059.jsonc
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS table_count FROM sqlite_master WHERE type='table' AND name='member_buzz_preferences';" > buzz-notification-table.json
+          node -e "const d=JSON.parse(require('fs').readFileSync('buzz-notification-table.json','utf8'));const row=d.flatMap(x=>x.results||[])[0];if(Number(row?.table_count)!==1)throw new Error(JSON.stringify(row));"
       - name: Move only the two approved X reposts to the front of the due queue
         working-directory: tools/line-worker
         shell: bash
