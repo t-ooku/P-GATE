@@ -15,6 +15,11 @@ test('ホームFAQは利用者に見える回答とFAQPage構造化データを�
     assert.ok(html.includes(item.name));
     assert.ok(html.includes(item.acceptedAnswer.text));
   }
+  const social = faq.mainEntity.find((item) => item.name === 'スクショやSNS投稿URLから探せますか？');
+  assert.ok(social);
+  assert.doesNotMatch(social.acceptedAnswer.text, /YouTube/u);
+  // YouTube動画URLはURL Context非対応。一方、既存のYouTube検索リンクは別機能として維持する。
+  assert.match(html, /Instagram・X・TikTok・YouTubeでも探せます/u);
   assert.match(html, /class="hoshilu-faq"/);
 });
 
@@ -35,13 +40,13 @@ test('ホームはcanonicalに一致する言語指定と全ガイドへの明�
 // (全ソースで「本文以外の混入あり」を実測)。一方で価値提案の本文(ヒーロー・
 // 検索パネル・FAQ・ガイド)はスニペット対象のまま残す。
 
-test('ホームは3本柱とブランド原則をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
+test('ホームは3入力とAI/HOSHILUの責任境界をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
   const [html, styles] = await Promise.all([read('index.html'), read('styles.css')]);
-  const description = 'ホシルは、モール横断検索、AI探索、おすすめ・口コミ・ランキングからの発見を一つにした無料の商品検索サービス。商品名が分からなくても、用途や特徴から実在する候補と購入先を探せます。';
-  assert.match(html, /<title>ホシル｜モール横断検索・AI探索で欲しい物を探す<\/title>/);
+  const description = 'ホシルは、スクショ・公開SNS投稿URL・うろ覚えの一言から商品候補を整理し、確認できた商品ページや最大13モールの検索先へ案内する無料の商品検索サービスです。';
+  assert.match(html, /<title>ホシル｜スクショ・投稿URL・一言から商品を探す<\/title>/);
   assert.ok(html.includes('<meta name="description" content="' + description + '">'));
-  assert.match(html, /<meta property="og:title" content="ホシル｜モール横断検索・AI探索で欲しい物を探す">/);
-  assert.match(html, /<p class="hero-promise">AIは理解、HOSHILUは探す。モール横断検索、AI探索、おすすめ・口コミ・ランキングからの発見を、ひとつの買い物体験に。<\/p>/);
+  assert.match(html, /<meta property="og:title" content="ホシル｜スクショ・投稿URL・一言から商品を探す">/);
+  assert.match(html, /<p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。確認できた商品ページや最大13モールの検索先へ案内します。<\/p>/);
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
   const data = JSON.parse(match[1]);
   assert.equal(data['@graph'].find((item) => item['@type'] === 'WebApplication').description, description);
@@ -79,9 +84,10 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   for (const language of ['JA', 'EN', 'ZH', 'KO']) {
     assert.match(i18n, new RegExp(`Object\\.assign\\(messages\\.${language},\\{'faq\\.title'`));
   }
+  assert.doesNotMatch(i18n, /faq\.social\.answer'[^\n]*YouTube/u);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 79);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v394/);
+  assert.match(worker, /hoshilu-shell-v396/);
 });

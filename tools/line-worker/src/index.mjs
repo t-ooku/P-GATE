@@ -22,9 +22,16 @@ import {
 import { fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
-import { discoverProductsWithAi, shouldGroundProductDiscovery } from './ai-product-discovery.mjs';
+import { discoverProductsWithAi } from './ai-product-discovery.mjs';
 import { knownRefinementDimensions, refinementDimensionLabel, suggestRefinementChips } from './search-refinement-policy.mjs';
 import { analyzeChatTurn, chatIntentConfigured, refineMarketplaceSearchQuery } from './ai-chat-intent.mjs';
+import {
+  analyzeSearchInput, normalizeInlineSearchImage, normalizeSocialPostUrl,
+  searchInputAnalysisConfigured, isIndependentSearchText as isIndependentSearchInputText
+} from './search-input-analysis.mjs';
+import { sanitizeAiOutputList, sanitizeAiOutputText } from './ai-output-safety.mjs';
+import { readBoundedJson } from './bounded-json.mjs';
+import { safeProviderErrorCode } from './provider-error-code.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
 import { buzzShelfResult, recordBuzzSnapshots } from './buzz-shelf.mjs';
 import { handleBuzzNotificationRoutes, queueBuzzThemeNotifications } from './buzz-notifications.mjs';
@@ -109,7 +116,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // 各リンクの mode を載せる(signedMarketplaceSearchLinks参照)。
 // marketplace-search-mode.mjs がここが唯一の判定元(v4.3のAI最安比較
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
-const RELEASE = '1.19.0';
+const RELEASE = '1.20.0';
 const CANONICAL_HOST = 'hoshilu.app';
 const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, '/for-sellers']);
 const DOCUMENT_SECURITY_HEADERS = Object.freeze({
@@ -123,6 +130,7 @@ const DOCUMENT_SECURITY_HEADERS = Object.freeze({
 const REQUIRED_ENV = [
   'GAS_BACKEND_URL', 'GAS_BRIDGE_SECRET', 'LINK_SIGNING_SECRET',
   'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY',
+  'GEMINI_API_KEY',
   'ADMIN_AUTH_ID', 'ADMIN_AUTH_PASSWORD', 'ADMIN_SESSION_SECRET',
   'SELLER_AUTH_ID', 'SELLER_AUTH_PASSWORD', 'AUTH_SESSION_SECRET',
   'SELLER_ALLOWED_TENANTS'
@@ -355,13 +363,47 @@ export function isUsableProductQuery(query) {
   return value.length >= 2 || /^[\p{Script=Han}\p{Script=Katakana}]$/u.test(value);
 }
 
+// A deictic phrase such as "これ" only makes sense together with the image or
+// post. If multimodal interpretation fails, searching that phrase across
+// marketplaces would look like success while returning unrelated products.
+export function isIndependentSearchText(query) {
+  return isIndependentSearchInputText(query);
+}
+
+// General shopper APIs only need proof that the processing notice was shown;
+// they do not collect an affirmative consent checkbox. `consent: true` remains
+// accepted during the rolling upgrade so an older cached PWA can still search.
+// Seller and measurement consent use separate validators and must not call this.
+export function requireProcessingNotice(payload = {}) {
+  const input = payload && typeof payload === 'object' ? payload : {};
+  if (input.processing_notice_shown === true || input.consent === true) return true;
+  throw new Error('PROCESSING_NOTICE_REQUIRED');
+}
+
+async function readPublicApiJson(request, maximumBytes) {
+  const parsed = await readBoundedJson(request, maximumBytes);
+  if (parsed.ok) return parsed.value;
+  throw new Error(parsed.error === 'REQUEST_TOO_LARGE'
+    ? 'REQUEST_TOO_LARGE' : 'REQUEST_JSON_INVALID');
+}
+
+function publicApiErrorStatus(code, clientErrors, fallbackStatus = 500) {
+  if (code === 'REQUEST_TOO_LARGE') return 413;
+  if (code === 'REQUEST_JSON_INVALID' || clientErrors.includes(code)) return 400;
+  return fallbackStatus;
+}
+
 export function validateKnowledgeRequest(payload) {
   payload = payload || {};
   const query = String(payload.query || '').trim();
+  const socialUrl = normalizeSocialPostUrl(payload.social_url);
+  const searchImage = normalizeInlineSearchImage(payload.image);
   const sessionId = String(payload.session_id || '').trim();
   const turnstileToken = String(payload.turnstile_token || '').trim();
-  if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
-  if (!isUsableProductQuery(query) || query.length > 200) throw new Error('QUERY_LENGTH_INVALID');
+  requireProcessingNotice(payload);
+  if (query.length > 200 || (!isUsableProductQuery(query) && !socialUrl && !searchImage)) {
+    throw new Error('QUERY_LENGTH_INVALID');
+  }
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
   if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
   const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
@@ -377,22 +419,25 @@ export function validateKnowledgeRequest(payload) {
   };
   const rawAiCandidate = payload.ai_candidate_fallback && typeof payload.ai_candidate_fallback === 'object'
     ? payload.ai_candidate_fallback : null;
-  const cleanCandidateText = (value, max) => redactSearchPersonalData(String(value || ''))
-    .replace(/https?:\/\/\S+/giu, ' ')
-    .replace(/(?:[¥$€£]\s*\d[\d,.]*|\d[\d,]*(?:円|ドル|usd|jpy))/giu, ' ')
-    .replace(/\s+/gu, ' ').trim().slice(0, max);
+  const cleanCandidateText = (value, max) => sanitizeAiOutputText(
+    redactSearchPersonalData(String(value || '')), max
+  );
   const aiCandidateName = cleanCandidateText(rawAiCandidate?.name, 160);
   const aiCandidateFallback = aiCandidateName ? {
     name: aiCandidateName,
     brand: cleanCandidateText(rawAiCandidate?.brand, 120),
     reason: cleanCandidateText(rawAiCandidate?.reason, 300),
-    matched_features: (Array.isArray(rawAiCandidate?.matched_features) ? rawAiCandidate.matched_features : [])
-      .map((value) => cleanCandidateText(value, 100)).filter(Boolean).slice(0, 8),
+    matched_features: sanitizeAiOutputList(
+      (Array.isArray(rawAiCandidate?.matched_features) ? rawAiCandidate.matched_features : [])
+        .map((value) => redactSearchPersonalData(String(value || ''))),
+      8, 100
+    ),
     match_score: Math.max(0, Math.min(100, Math.round(Number(rawAiCandidate?.match_score) || 0)))
   } : null;
   return {
     query, session_id: sessionId, turnstile_token: turnstileToken, language, search_attempt: searchAttempt,
-    consent: true, attribution, ai_candidate_fallback: aiCandidateFallback,
+    processing_notice_shown: true, attribution, ai_candidate_fallback: aiCandidateFallback,
+    social_url: socialUrl, search_image: searchImage,
     traffic_class: classifyGrowthTraffic(attribution)
   };
 }
@@ -401,27 +446,31 @@ export function mergeAiRefinedSearchQuery(originalQuery, refinedQuery) {
   const original = redactSearchPersonalData(originalQuery).replace(/\s+/gu, ' ').trim().slice(0, 200);
   const refined = redactSearchPersonalData(refinedQuery).replace(/\s+/gu, ' ').trim().slice(0, 200);
   if (refined.length < 2 || refined.toLocaleLowerCase() === original.toLocaleLowerCase()) return original;
-  // AIが元条件を落としても検索条件を失わないよう、原文を必ず併記する。
+  // 「これ」「it」のような指示語は画像・投稿URLが解析できた後には検索条件に
+  // ならない。解析結果へ併記するとモールのAND検索を狭めるため、意味を単独で
+  // 持たない原文だけは捨てる。色・サイズなど独立した制約は従来どおり残す。
+  if (!isIndependentSearchText(original)) return refined;
+  // AIが元条件を落としても検索条件を失わないよう、意味のある原文を併記する。
   if (refined.toLocaleLowerCase().includes(original.toLocaleLowerCase())) return refined;
   const refinedBudget = Math.max(0, 199 - original.length);
   const prefix = refined.slice(0, refinedBudget).trim();
   return prefix ? `${prefix} ${original}` : original;
 }
 
-// HOSHILU AI Chat (2026-08-05): shares the same session/Turnstile/consent
-// gate as /api/knowledge rather than inventing a separate auth path.
+// HOSHILU AI Chat (2026-08-05): shares the same session/Turnstile/processing-
+// notice gate as /api/knowledge rather than inventing a separate auth path.
 export function validateChatRequest(payload) {
   payload = payload || {};
   const sessionId = String(payload.session_id || '').trim();
   const turnstileToken = String(payload.turnstile_token || '').trim();
-  if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
+  requireProcessingNotice(payload);
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
   if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
   const history = Array.isArray(payload.history) ? payload.history.slice(0, 8) : [];
   if (!history.length) throw new Error('CHAT_HISTORY_EMPTY');
   const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
   const mode = payload.mode === 'IDENTIFY' ? 'IDENTIFY' : 'REFINE';
-  return { history, session_id: sessionId, turnstile_token: turnstileToken, language, mode, consent: true };
+  return { history, session_id: sessionId, turnstile_token: turnstileToken, language, mode, processing_notice_shown: true };
 }
 
 export function getEnvironmentReadiness(env = {}) {
@@ -457,9 +506,8 @@ export function getEnvironmentReadiness(env = {}) {
   }
   let backendUrlValid = false;
   try {
-    const url = new URL(String(env.GAS_BACKEND_URL || ''));
-    backendUrlValid = url.protocol === 'https:' && !url.username && !url.password &&
-      !unsafeExampleValue(url.href);
+    const url = trustedGasUrl(env.GAS_BACKEND_URL);
+    backendUrlValid = !unsafeExampleValue(url.href);
   } catch {}
   const lineSecret = Boolean(String(env.LINE_CHANNEL_SECRET || '').trim());
   const lineToken = Boolean(String(env.LINE_CHANNEL_ACCESS_TOKEN || '').trim());
@@ -487,8 +535,12 @@ export function getEnvironmentReadiness(env = {}) {
   ].filter((value) => Boolean(String(value || ''))).map(String);
   const adminCredentialsDistinct = adminConfigured &&
     new Set(adminValues).size === adminValues.length;
+  const searchInputConfigured = searchInputAnalysisConfigured(env);
+  if (env.GEMINI_API_KEY && !searchInputConfigured && !weak.includes('GEMINI_API_KEY')) {
+    weak.push('GEMINI_API_KEY');
+  }
   const ready = missing.length === 0 && weak.length === 0 && backendUrlValid &&
-    !linePartial && !sellerAuthPartial && adminCredentialsDistinct;
+    !linePartial && !sellerAuthPartial && adminCredentialsDistinct && searchInputConfigured;
   return {
     ready,
     release: RELEASE,
@@ -496,7 +548,9 @@ export function getEnvironmentReadiness(env = {}) {
     weak,
     checks: {
       gas_backend_https: backendUrlValid,
-      pwa_configured: missing.length === 0 && weak.length === 0 && backendUrlValid,
+      gas_backend_trusted: backendUrlValid,
+      pwa_configured: missing.length === 0 && weak.length === 0 && backendUrlValid &&
+        searchInputConfigured,
       line_configured: lineConfigured,
       line_partial: linePartial,
       mywatch_configured: mywatchSecret.length >= 32,
@@ -526,6 +580,7 @@ export function getEnvironmentReadiness(env = {}) {
       // 未設定だとAIチャット系エンドポイントが全件HTTP 500になる。この仮説を
       // /health だけで即座に確認できるようにする。
       turnstile_configured: Boolean(String(env.TURNSTILE_SECRET_KEY || '').trim()),
+      search_input_analysis_configured: searchInputConfigured,
       ai_chat_configured: chatIntentConfigured(env),
       ai_price_comparison_configured: priceComparisonConfigured(env)
     }
@@ -540,6 +595,7 @@ async function verifyTurnstile(token, env, remoteIp) {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: token, remoteip: remoteIp || undefined }),
+      redirect: 'error',
       signal: AbortSignal.timeout(5000)
     });
   } catch (error) {
@@ -590,9 +646,41 @@ async function recordMeasurementEventsToD1(env, channel, events) {
   }
 }
 
+const TRUSTED_GAS_HOSTS = new Set(['script.google.com', 'script.googleusercontent.com']);
+const GAS_REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const GAS_MAX_REDIRECTS = 2;
+
+function trustedGasUrl(value) {
+  let url;
+  try { url = new URL(String(value || '')); } catch { throw new Error('GAS_URL_INVALID'); }
+  if (url.protocol !== 'https:' || url.port || url.username || url.password ||
+      !TRUSTED_GAS_HOSTS.has(url.hostname.toLowerCase())) {
+    throw new Error('GAS_URL_NOT_TRUSTED');
+  }
+  if (!url.pathname.startsWith('/macros/')) throw new Error('GAS_URL_NOT_TRUSTED');
+  return url;
+}
+
+export async function fetchTrustedGasBackend(urlValue, init, fetchImpl = fetch) {
+  let url = trustedGasUrl(urlValue);
+  const options = { ...init, redirect: 'manual' };
+  for (let redirectCount = 0; ; redirectCount += 1) {
+    const response = await fetchImpl(url.toString(), options);
+    if (!GAS_REDIRECT_STATUSES.has(response.status)) return response;
+    if (redirectCount >= GAS_MAX_REDIRECTS) throw new Error('GAS_REDIRECT_LIMIT');
+    const location = response.headers.get('location');
+    if (!location) throw new Error('GAS_REDIRECT_INVALID');
+    try {
+      url = trustedGasUrl(new URL(location, url).toString());
+    } catch {
+      throw new Error('GAS_REDIRECT_NOT_TRUSTED');
+    }
+  }
+}
+
 async function callGas(env, action, body) {
   const timeoutMs = action === 'KNOWLEDGE' ? 1500 : action === 'EVENT' ? 3000 : 5000;
-  const response = await fetch(env.GAS_BACKEND_URL, {
+  const response = await fetchTrustedGasBackend(env.GAS_BACKEND_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ bridge_secret: env.GAS_BRIDGE_SECRET, action, ...body }),
@@ -638,7 +726,8 @@ async function replyToLine(replyToken, messages, env) {
       authorization: `Bearer ${env.LINE_CHANNEL_ACCESS_TOKEN}`,
       'content-type': 'application/json'
     },
-    body: JSON.stringify({ replyToken, messages })
+    body: JSON.stringify({ replyToken, messages }),
+    redirect: 'error'
   });
   if (!response.ok) throw new Error(`LINE_REPLY_${response.status}`);
 }
@@ -651,7 +740,8 @@ async function pushToLine(userId, messages, env) {
       authorization: `Bearer ${env.LINE_CHANNEL_ACCESS_TOKEN}`,
       'content-type': 'application/json'
     },
-    body: JSON.stringify({ to: userId, messages: messages.slice(0, 5) })
+    body: JSON.stringify({ to: userId, messages: messages.slice(0, 5) }),
+    redirect: 'error'
   });
   if (!response.ok) throw new Error(`LINE_PUSH_${response.status}`);
 }
@@ -1654,7 +1744,7 @@ function mergeObservedRankingCandidates(groups = []) {
 
 async function handleHoshiluRankingApi(request, env) {
   try {
-    const payload = await request.json();
+    const payload = await readPublicApiJson(request, 4000);
     const input = validateRankingRequest({ ...payload, marketplace: 'RAKUTEN_JP' });
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     if (input.confirmation_only && !input.category_selection) {
@@ -1728,8 +1818,9 @@ async function handleHoshiluRankingApi(request, env) {
       sponsors: []
     } }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
   } catch (error) {
-    const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_CATEGORY_SELECTION_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
-    return Response.json({ ok: false, error: error.message || 'HOSHILU_RANKING_FAILED' }, { status: client.includes(error.message) ? 400 : 502 });
+    const code = String(error.message || 'HOSHILU_RANKING_FAILED');
+    const client = ['PROCESSING_NOTICE_REQUIRED','CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_CATEGORY_SELECTION_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
+    return Response.json({ ok: false, error: code }, { status: publicApiErrorStatus(code, client, 502) });
   }
 }
 
@@ -1797,15 +1888,7 @@ async function handleAiChatApi(request, env, ctx) {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
     if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
-    const length = Number(request.headers.get('content-length') || 0);
-    if (length > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
-    let body;
-    try { body = await request.json(); }
-    catch {
-      return Response.json({ ok: false, error: 'REQUEST_JSON_INVALID', request_id: requestId }, {
-        status: 400, headers: { 'cache-control': 'no-store', 'x-request-id': requestId }
-      });
-    }
+    const body = await readPublicApiJson(request, 4000);
     const input = validateChatRequest(body);
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     let result = await analyzeChatTurn(input.history, input.language, env, fetch, {
@@ -1829,9 +1912,9 @@ async function handleAiChatApi(request, env, ctx) {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
     });
   } catch (error) {
-    const clientErrors = ['CONSENT_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'CHAT_HISTORY_EMPTY', 'TURNSTILE_VERIFICATION_FAILED'];
-    const status = clientErrors.includes(error.message) ? 400 : 500;
     const code = String(error.message || 'CHAT_FAILED').slice(0, 80);
+    const clientErrors = ['PROCESSING_NOTICE_REQUIRED', 'CONSENT_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'CHAT_HISTORY_EMPTY', 'TURNSTILE_VERIFICATION_FAILED'];
+    const status = publicApiErrorStatus(code, clientErrors, 500);
     console.error('AI_CHAT_REQUEST_FAILED', { requestId, code, status });
     if (status >= 500) {
       const record = recordSearchOperationalFailure(env, { requestId, code, component: 'ai_chat' }).catch((telemetryError) => {
@@ -1881,7 +1964,7 @@ export function validatePriceComparisonRequest(payload) {
   payload = payload || {};
   const sessionId = String(payload.session_id || '').trim();
   const turnstileToken = String(payload.turnstile_token || '').trim();
-  if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
+  requireProcessingNotice(payload);
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
   if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
   const title = String(payload.product?.title || '').trim().slice(0, 200);
@@ -1903,7 +1986,8 @@ export function validatePriceComparisonRequest(payload) {
     direct_marketplaces: directMarketplaces,
     language,
     session_id: sessionId,
-    turnstile_token: turnstileToken
+    turnstile_token: turnstileToken,
+    processing_notice_shown: true
   };
 }
 
@@ -1926,9 +2010,7 @@ async function handlePriceComparisonApi(request, env) {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
     if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
-    const length = Number(request.headers.get('content-length') || 0);
-    if (length > 6000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
-    const input = validatePriceComparisonRequest(await request.json());
+    const input = validatePriceComparisonRequest(await readPublicApiJson(request, 6000));
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     const real = realPriceRows(input.real_offers);
     // 既に実価格が確認できているDirectモールは無い(realPriceRowsはIntegrated
@@ -1973,14 +2055,15 @@ async function handlePriceComparisonApi(request, env) {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
     });
   } catch (error) {
-    const clientErrors = ['CONSENT_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'TURNSTILE_VERIFICATION_FAILED', 'PRICE_COMPARISON_PRODUCT_TITLE_REQUIRED'];
-    const status = clientErrors.includes(error.message) ? 400 : 500;
-    return Response.json({ ok: false, error: error.message || 'PRICE_COMPARISON_FAILED' }, { status });
+    const code = String(error.message || 'PRICE_COMPARISON_FAILED');
+    const clientErrors = ['PROCESSING_NOTICE_REQUIRED', 'CONSENT_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'TURNSTILE_VERIFICATION_FAILED', 'PRICE_COMPARISON_PRODUCT_TITLE_REQUIRED'];
+    const status = publicApiErrorStatus(code, clientErrors, 500);
+    return Response.json({ ok: false, error: code }, { status });
   }
 }
 
 export function validateRankingRequest(payload = {}) {
-  if (payload.consent !== true) throw new Error('CONSENT_REQUIRED');
+  requireProcessingNotice(payload);
   const query = redactSearchPersonalData(payload.query).slice(0, 200).trim();
   if (!isUsableProductQuery(query)) throw new Error('RANKING_QUERY_REQUIRED');
   const marketplace = String(payload.marketplace || '').trim().toUpperCase();
@@ -1999,15 +2082,16 @@ export function validateRankingRequest(payload = {}) {
     if (!/^\d{3,12}$/u.test(genreId) || !/^[a-z0-9_]{3,80}$/u.test(id) || label.length < 1 || !['STATIC_REGISTRY','RAKUTEN_GENRE_API'].includes(source)) throw new Error('RANKING_CATEGORY_SELECTION_INVALID');
     categorySelection = { genre_id: genreId, id, label, source };
   }
-  return { query, marketplace, session_id: sessionId, turnstile_token: turnstileToken, category_selection: categorySelection, confirmation_only: payload.confirmation_only === true };
+  return { query, marketplace, session_id: sessionId, turnstile_token: turnstileToken,
+    processing_notice_shown: true, category_selection: categorySelection,
+    confirmation_only: payload.confirmation_only === true };
 }
 
 async function handleRankingApi(request, env) {
   try {
     const origin = request.headers.get('origin');
     if (origin && origin !== new URL(request.url).origin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
-    if (Number(request.headers.get('content-length') || 0) > 4000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
-    const input = validateRankingRequest(await request.json());
+    const input = validateRankingRequest(await readPublicApiJson(request, 4000));
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     let result = await marketplaceRankingResult(env, input.query, input.marketplace, fetch, input.category_selection);
     // 専用ランキングAPI/ページを確認できないモールは、架空順位や未検証URLを
@@ -2018,8 +2102,9 @@ async function handleRankingApi(request, env) {
     }
     return Response.json({ ok: true, result }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
   } catch (error) {
-    const client = ['CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_MARKETPLACE_INVALID','RANKING_CATEGORY_SELECTION_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
-    return Response.json({ ok: false, error: error.message || 'RANKING_FAILED' }, { status: client.includes(error.message) ? 400 : 502 });
+    const code = String(error.message || 'RANKING_FAILED');
+    const client = ['PROCESSING_NOTICE_REQUIRED','CONSENT_REQUIRED','RANKING_QUERY_REQUIRED','RANKING_MARKETPLACE_INVALID','RANKING_CATEGORY_SELECTION_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
+    return Response.json({ ok: false, error: code }, { status: publicApiErrorStatus(code, client, 502) });
   }
 }
 
@@ -2092,13 +2177,36 @@ function confirmedAiCandidateDiscovery(candidate, query) {
   };
 }
 
+export function interpretedSearchInputDiscovery(candidate, query, provider = 'GEMINI_MULTIMODAL_SEARCH_INPUT') {
+  if (!candidate?.name) return null;
+  return {
+    triggered: true,
+    configured: true,
+    provider,
+    candidates: [],
+    analysis: {
+      category: '',
+      intent_summary: '',
+      features: candidate.matched_features || [],
+      product_candidates: [{
+        ...candidate,
+        search_keywords: [query || candidate.name],
+        selected_by_user: false,
+        identification_status: 'AI_HYPOTHESIS'
+      }],
+      search_keywords: [query || candidate.name],
+      multilingual_keywords: { ja: [], en: [], zh: [], ko: [] }
+    }
+  };
+}
+
 async function safeAiProductDiscovery(query, language, env) {
   try {
     return await discoverProductsWithAi(query, language, env);
   } catch (error) {
     console.warn('AI_PRODUCT_DISCOVERY_UNAVAILABLE', {
       status: Number(error?.status) || 0,
-      provider_code: String(error?.providerCode || '').slice(0, 80)
+      provider_code: safeProviderErrorCode(error?.providerCode, error?.status)
     });
     return { triggered: true, configured: true, candidates: [], unavailable: true };
   }
@@ -2112,24 +2220,67 @@ async function handleKnowledgeApi(request, env, ctx) {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
     if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED', request_id: requestId }, { status: 403, headers: { 'x-request-id': requestId } });
-    const length = Number(request.headers.get('content-length') || 0);
-    if (length > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE', request_id: requestId }, { status: 413, headers: { 'x-request-id': requestId } });
-    let body;
-    try { body = await request.json(); }
-    catch {
-      return Response.json({ ok: false, error: 'REQUEST_JSON_INVALID', request_id: requestId }, {
-        status: 400, headers: { 'cache-control': 'no-store', 'x-request-id': requestId }
+    // One client-compressed screenshot may be included as base64. The image
+    // validator still caps decoded bytes at 2 MiB; this ceiling only accounts
+    // for base64 and JSON overhead.
+    const parsedBody = await readBoundedJson(request, 3100000);
+    if (!parsedBody.ok) {
+      const tooLarge = parsedBody.error === 'REQUEST_TOO_LARGE';
+      return Response.json({ ok: false, error: tooLarge ? 'REQUEST_TOO_LARGE' : 'REQUEST_JSON_INVALID', request_id: requestId }, {
+        status: tooLarge ? 413 : 400,
+        headers: { 'cache-control': 'no-store', 'x-request-id': requestId }
       });
     }
+    const body = parsedBody.value;
     const validatedInput = validateKnowledgeRequest(body);
+    await verifyTurnstile(validatedInput.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    const submittedQuery = validatedInput.query;
+    const hasMultimodalInput = Boolean(validatedInput.social_url || validatedInput.search_image);
+    let searchInputAnalysis = null;
+    if (hasMultimodalInput) {
+      try {
+        searchInputAnalysis = await analyzeSearchInput({
+          query: submittedQuery,
+          social_url: validatedInput.social_url,
+          image: validatedInput.search_image
+        }, validatedInput.language, env, fetch);
+      } catch (error) {
+        // An independently meaningful phrase can still reach the real
+        // marketplace search if vision/grounding is temporarily unavailable.
+        // Screenshot/URL-only requests and deictic text such as "これ" cannot
+        // be interpreted without that evidence, so they fail explicitly.
+        if (!isIndependentSearchText(submittedQuery)) throw error;
+        queueSearchProviderDegradation(env, ctx, requestId, {
+          component: 'search_input_analysis', provider: 'gemini',
+          code: String(error?.message || 'SEARCH_INPUT_ANALYSIS_FAILED').slice(0, 80)
+        });
+      }
+    }
+    const analyzedQuery = searchInputAnalysis?.refined_query || '';
+    const originalQuery = analyzedQuery
+      ? mergeAiRefinedSearchQuery(submittedQuery, analyzedQuery) : submittedQuery;
+    const analysisCandidate = searchInputAnalysis?.candidate_name ? {
+      name: searchInputAnalysis.candidate_name,
+      brand: searchInputAnalysis.candidate_brand,
+      reason: searchInputAnalysis.candidate_reason,
+      matched_features: searchInputAnalysis.matched_features,
+      match_score: searchInputAnalysis.match_score
+    } : null;
     // v4.2 項目1・2・3: 商品名を知らなくても探せる検索。ここで1回だけ展開
     // すれば、D1検索・3モールのキーワード生成・filterCategoryMismatches・
     // semanticSearchGroups が下流ですべて自動的に恩恵を受ける(詳細は
     // query-expansion.mjs のコメント参照)。該当ルールが無ければ
     // input.query は元のまま変わらない。
-    const originalQuery = validatedInput.query;
     const expandedQuery = expandSearchQuery(originalQuery);
-    let input = { ...validatedInput, query: expandedQuery.query };
+    // Do not retain or pass the raw inline image/social URL farther down the
+    // product-search pipeline after it has been interpreted.
+    let input = {
+      ...validatedInput,
+      query: expandedQuery.query,
+      social_url: '',
+      search_image: null,
+      ai_candidate_fallback: validatedInput.ai_candidate_fallback
+    };
     // v3.4 CTO instruction: every checkpoint in the marketplace search trace
     // (API送信/レスポンス件数/accepted件数/Teacher Dataset補正件数/ranking
     // 入力・出力件数/モール別件数/UI送信件数) must share one requestId so the
@@ -2143,17 +2294,20 @@ async function handleKnowledgeApi(request, env, ctx) {
       stage: '0_request_received',
       query_length: input.query.length,
       query_expanded: expandedQuery.expanded,
-      query_expansion_rule: expandedQuery.expansion?.rule_id || null
+      query_expansion_rule: expandedQuery.expansion?.rule_id || null,
+      input_text: Boolean(submittedQuery),
+      input_social_url: Boolean(validatedInput.social_url),
+      input_image: Boolean(validatedInput.search_image),
+      input_image_bytes: validatedInput.search_image?.byte_length || 0
     });
-    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     // 通常検索でもAIを検索語変換器として使う。ただし既存DB/GAS検索と並列に
     // 走らせるため、Gemini待ちを丸ごと検索時間へ上乗せしない。
-    const aiRefinementTask = input.ai_candidate_fallback
+    const aiRefinementTask = input.ai_candidate_fallback || searchInputAnalysis
       ? Promise.resolve({
         needs_clarification: false,
         refined_query: input.query,
         configured: true,
-        provider: 'AI_CHAT_CONFIRMED'
+        provider: searchInputAnalysis ? searchInputAnalysis.provider : 'AI_CHAT_CONFIRMED'
       })
       : refineMarketplaceSearchQuery(originalQuery, input.language, env, fetch, {
         onProviderDegraded: (degradation) => queueSearchProviderDegradation(
@@ -2208,14 +2362,35 @@ async function handleKnowledgeApi(request, env, ctx) {
       provider: queryWasAiRefined ? String(aiRefinement?.provider || '') : '',
       configured: aiRefinement?.configured === true,
       // 同じ利用者の画面へだけ返し、検索窓と実際のAPI送信語を一致させる。
-      effective_query: input.query !== originalQuery ? input.query : ''
+      effective_query: input.query !== submittedQuery ? input.query : ''
     } };
+    if (searchInputAnalysis) {
+      result.search_input_analysis = {
+        applied: true,
+        provider: searchInputAnalysis.provider,
+        candidate_name: searchInputAnalysis.candidate_name,
+        candidate_brand: searchInputAnalysis.candidate_brand,
+        candidate_reason: searchInputAnalysis.candidate_reason,
+        matched_features: searchInputAnalysis.matched_features,
+        match_score: searchInputAnalysis.match_score,
+        sources: {
+          text: Boolean(submittedQuery),
+          social_url: Boolean(validatedInput.social_url),
+          image: Boolean(validatedInput.search_image)
+        }
+      };
+    }
     result = await applyD1MultilingualContent(env, result, input.language);
     result = await applyD1ContractPolicy(env, result, input.query, requestId);
     const confirmedDiscovery = confirmedAiCandidateDiscovery(input.ai_candidate_fallback, input.query);
+    const interpretedDiscovery = interpretedSearchInputDiscovery(
+      analysisCandidate,
+      input.query,
+      searchInputAnalysis?.provider
+    );
     let aiDiscoveryPromise = null;
-    const groundedIdentificationRequired = shouldGroundProductDiscovery(originalQuery);
-    if (!confirmedDiscovery && (groundedIdentificationRequired || !(result?.candidates || []).length)) {
+    if (!confirmedDiscovery && !interpretedDiscovery
+      && !(result?.candidates || []).length) {
       // When local/GAS data has no candidate, start AI fallback while Rakuten
       // and Yahoo are searched. This removes a full AI round-trip from the
       // zero-result critical path without spending AI calls when local data
@@ -2321,7 +2496,7 @@ async function handleKnowledgeApi(request, env, ctx) {
             requestId,
             source: source.key,
             status: Number(outcome.reason?.status) || 0,
-            provider_code: String(outcome.reason?.providerCode || '').slice(0, 80)
+            provider_code: safeProviderErrorCode(outcome.reason?.providerCode, outcome.reason?.status)
           });
           perSourceCandidates.push({ key: source.key, candidates: [] });
           acceptedCounts.push(0);
@@ -2417,12 +2592,8 @@ async function handleKnowledgeApi(request, env, ctx) {
           KO: '라쿠텐 또는 Yahoo! 쇼핑에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'
         }[input.language] || 'Marketplace connection failed. Please try again later.';
       }
-      result.ai_discovery = confirmedDiscovery
+      result.ai_discovery = confirmedDiscovery || interpretedDiscovery
         || await (aiDiscoveryPromise || safeAiProductDiscovery(input.query, input.language, env));
-    } else if (groundedIdentificationRequired && aiDiscoveryPromise) {
-      // 「SNSで見た」等の識別検索では、一般カテゴリの商品が先に見つかっても
-      // Geminiの公開Web検索結果を捨てない。候補名ごとの13モール導線へ渡す。
-      result.ai_discovery = await aiDiscoveryPromise;
     } else if (aiDiscoveryPromise) {
       // The marketplace search found products after the fallback had already
       // started. Keep the Promise attached to the request lifecycle.
@@ -2473,8 +2644,14 @@ async function handleKnowledgeApi(request, env, ctx) {
     });
   } catch (error) {
     const code = String(error.message || error);
-    const clientErrors = ['CONSENT_REQUIRED', 'QUERY_LENGTH_INVALID', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'TURNSTILE_VERIFICATION_FAILED'];
-    const status = clientErrors.includes(code) ? 400 : 500;
+    const clientErrors = [
+      'PROCESSING_NOTICE_REQUIRED', 'CONSENT_REQUIRED', 'QUERY_LENGTH_INVALID', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID',
+      'TURNSTILE_VERIFICATION_FAILED', 'SOCIAL_URL_INVALID', 'SOCIAL_URL_UNSUPPORTED',
+      'SEARCH_IMAGE_INVALID', 'SEARCH_IMAGE_TYPE_UNSUPPORTED', 'SEARCH_IMAGE_SIGNATURE_INVALID',
+      'SEARCH_IMAGE_TOO_LARGE'
+    ];
+    const status = clientErrors.includes(code) ? 400
+      : code.startsWith('SEARCH_INPUT_ANALYSIS_') ? 503 : 500;
     console.error('KNOWLEDGE_SEARCH_FAILED', { requestId, code: code.slice(0, 80), status });
     if (status >= 500) {
       const record = recordSearchOperationalFailure(env, { requestId, code }).catch((telemetryError) => {
@@ -2493,7 +2670,7 @@ async function handleKnowledgeApi(request, env, ctx) {
 export function validateRelatedRecommendationsRequest(payload = {}) {
   const input = validateKnowledgeRequest({ ...payload, search_attempt: 1 });
   return { query: input.query, language: input.language, session_id: input.session_id,
-    turnstile_token: input.turnstile_token, consent: true };
+    turnstile_token: input.turnstile_token, processing_notice_shown: true };
 }
 
 // 関連商品は本検索の「価格不明品」ではない。スマホカバー→充電器・
@@ -2517,7 +2694,7 @@ async function searchRelatedCategory(env, query, requestId) {
     } catch (error) {
       console.warn('RELATED_RECOMMENDATION_PROVIDER_FAILED', {
         requestId, status: Number(error?.status) || 0,
-        provider_code: String(error?.providerCode || '').slice(0, 80)
+        provider_code: safeProviderErrorCode(error?.providerCode, error?.status)
       });
     }
   }
@@ -2529,8 +2706,7 @@ async function handleRelatedRecommendationsApi(request, env) {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
     if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
-    if (Number(request.headers.get('content-length') || 0) > 10000) return Response.json({ ok: false, error: 'REQUEST_TOO_LARGE' }, { status: 413 });
-    const input = validateRelatedRecommendationsRequest(await request.json());
+    const input = validateRelatedRecommendationsRequest(await readPublicApiJson(request, 10000));
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     const requestId = crypto.randomUUID();
     const sessionHash = await hashUser(input.session_id);
@@ -2563,9 +2739,9 @@ async function handleRelatedRecommendationsApi(request, env) {
     } }, { headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId } });
   } catch (error) {
     const code = String(error.message || error);
-    const clientErrors = ['CONSENT_REQUIRED','QUERY_LENGTH_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
+    const clientErrors = ['PROCESSING_NOTICE_REQUIRED','CONSENT_REQUIRED','QUERY_LENGTH_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
     return Response.json({ ok: false, error: code }, {
-      status: clientErrors.includes(code) ? 400 : 502,
+      status: publicApiErrorStatus(code, clientErrors, 502),
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
     });
   }

@@ -21,7 +21,8 @@ const {
   buildQoo10SearchDestination, buildQoo10SearchKeywords, buildSheinSearchDestination,
   buildAmazonSearchKeywords, buildRakutenSearchKeywords,
   buildRakutenSearchKeywordCandidates, trackingEventsForPayload, rankSellerOffers,
-  mergeAiRefinedSearchQuery, buildLineFallbackMessages
+  mergeAiRefinedSearchQuery, buildLineFallbackMessages, interpretedSearchInputDiscovery,
+  isIndependentSearchText
 } = workerModule;
 
 test('AI検索語は元の条件を落とさずモール検索へ渡す', () => {
@@ -32,6 +33,59 @@ test('AI検索語は元の条件を落とさずモール検索へ渡す', () => 
   assert.equal(mergeAiRefinedSearchQuery('軽い 扇風機', ''), '軽い 扇風機');
   const longOriginal = `限定条件${'あ'.repeat(190)}`;
   assert.ok(mergeAiRefinedSearchQuery(longOriginal, '推定ブランド'.repeat(40)).endsWith(longOriginal));
+});
+
+test('画像・投稿解析後は指示語を検索語へ足さず、意味のある色・サイズ条件だけ残す', () => {
+  assert.equal(
+    mergeAiRefinedSearchQuery('これ', 'New Balance 996 スニーカー'),
+    'New Balance 996 スニーカー'
+  );
+  assert.equal(
+    mergeAiRefinedSearchQuery('it', 'transparent wireless earbuds'),
+    'transparent wireless earbuds'
+  );
+  assert.equal(
+    mergeAiRefinedSearchQuery('赤 24cm', 'New Balance 996 スニーカー'),
+    'New Balance 996 スニーカー 赤 24cm'
+  );
+});
+
+test('スクショ・投稿URLからの候補は確認済み商品ではなくAI仮説として扱う', () => {
+  const discovery = interpretedSearchInputDiscovery({
+    name: '小型デジタルカメラ',
+    reason: 'ピンクで小さい外観',
+    matched_features: ['ピンク', '小型'],
+    match_score: 72
+  }, 'ピンク 小型 デジタルカメラ');
+  assert.equal(discovery.provider, 'GEMINI_MULTIMODAL_SEARCH_INPUT');
+  assert.equal(discovery.analysis.product_candidates[0].selected_by_user, false);
+  assert.equal(discovery.analysis.product_candidates[0].identification_status, 'AI_HYPOTHESIS');
+});
+
+test('マルチモーダル解析失敗時は指示語だけで無関係な商品検索へ進まない', () => {
+  [
+    'これ', 'それです！', 'これ何？', 'これを探して', 'この画像の商品',
+    'この投稿の商品', 'これ欲しい', 'this one', 'what is this?', 'find this',
+    'this product', 'please find this', 'what is this product?', 'can you find this',
+    'show me this', 'それの名前', 'この写真の物を探して', '这个', '이거',
+    'これの名前を教えて', 'これは何の商品', 'この商品を教えて', 'この画像は何',
+    'これ買いたい', 'これを特定して', '写真のこれ', 'what is this thing',
+    'tell me what this is', 'find me this', 'I want this one', 'search for this',
+    'look for this', 'this thing', '这个是什么', '帮我找这个', '이거 찾아줘', '이게 뭐야',
+    'これの商品名', 'これどこで買える', 'where can I buy this', '이거 뭐예요', '이 제품', '이 상품'
+    , 'what is this called', 'where is this sold', 'where can this be found',
+    'これどこに売ってる', 'これどこで手に入る', 'これどこにある',
+    '这个哪里可以买', '这个哪里有卖', '那件商品是什么', '这张图片里的商品',
+    '이거 어디서 사요', '그거 어디서 사요', '그 상품 찾아줘', '이게 어디서 팔아요',
+    '그 제품 찾아 주세요', '저 제품 찾아 주세요', '그 상품', '저 상품',
+    '그 물건 뭐예요', '저 사진 상품명', '그 게시물의 제품', '그 이미지 제품'
+  ].forEach((query) => {
+    assert.equal(isIndependentSearchText(query), false, query);
+  });
+  ['ピンクのこれ', '24cmのこれ', '軽い扇風機', '靴', 'small pink camera',
+    'find this pink camera', '这个粉色相机', '이거 핑크 카메라'].forEach((query) => {
+    assert.equal(isIndependentSearchText(query), true, query);
+  });
 });
 
 test('Rakuten search keeps Japanese conditions separate from Amazon aliases', () => {
@@ -467,30 +521,30 @@ test('LINE緊急検索3候補は全て署名済み送客URLと標準計測schema
   }
 });
 
-test('PWA公開質問は同意・文字数・匿名セッション・Turnstileを必須にする', () => {
+test('PWA公開検索は文章・公開投稿URL・画像のいずれかと匿名セッション・Turnstileを必須にする', () => {
   const valid = validateKnowledgeRequest({
-    query: ' breakfast cereal ', consent: true,
+    query: ' breakfast cereal ', processing_notice_shown: true,
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token'
   });
   assert.equal(valid.query, 'breakfast cereal');
   assert.equal(valid.search_attempt, 1);
   assert.equal(valid.traffic_class, 'UNATTRIBUTED');
   assert.equal(validateKnowledgeRequest({
-    query: 'breakfast cereal', consent: true, search_attempt: 2,
+    query: 'breakfast cereal', processing_notice_shown: true, search_attempt: 2,
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token'
   }).search_attempt, 2);
   assert.equal(validateKnowledgeRequest({
-    query: 'breakfast cereal', consent: true,
+    query: 'breakfast cereal', processing_notice_shown: true,
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token',
     source: 'codex_acceptance', medium: 'qa', campaign: 'search_test'
   }).traffic_class, 'QA');
   assert.equal(validateKnowledgeRequest({
-    query: 'breakfast cereal', consent: true,
+    query: 'breakfast cereal', processing_notice_shown: true,
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token',
     source: 'instagram', medium: 'organic_social', campaign: 'itg_brand_reel'
   }).traffic_class, 'ATTRIBUTED');
   const withAiCandidate = validateKnowledgeRequest({
-    query: '天然石 ピアス', consent: true,
+    query: '天然石 ピアス', processing_notice_shown: true,
     session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token',
     ai_candidate_fallback: {
       name: '【studio CLIP】天然石ピアス https://evil.example/item ¥1,890',
@@ -500,13 +554,23 @@ test('PWA公開質問は同意・文字数・匿名セッション・Turnstile�
       match_score: 999
     }
   }).ai_candidate_fallback;
-  assert.equal(withAiCandidate.name, '【studio CLIP】天然石ピアス');
-  assert.equal(withAiCandidate.brand, 'studio CLIP');
-  assert.equal(withAiCandidate.reason, '天然石という特徴に一致');
-  assert.deepEqual(withAiCandidate.matched_features, ['天然石', '小ぶり']);
-  assert.equal(withAiCandidate.match_score, 100);
-  assert.doesNotMatch(JSON.stringify(withAiCandidate), /https?:|1,890|\$25/u);
-  assert.throws(() => validateKnowledgeRequest({ ...valid, consent: false }), /CONSENT_REQUIRED/);
+  // Price/stock/purchase claims invalidate an AI candidate as a whole. A
+  // partially trimmed name must not be mistaken for a verified suggestion.
+  assert.equal(withAiCandidate, null);
+  const withSocialUrl = validateKnowledgeRequest({
+    query: '', social_url: 'https://www.instagram.com/p/ABC123/?igsh=tracking', processing_notice_shown: true,
+    session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token'
+  });
+  assert.equal(withSocialUrl.query, '');
+  assert.equal(withSocialUrl.social_url, 'https://www.instagram.com/p/ABC123/');
+  const withImage = validateKnowledgeRequest({
+    query: '', image: { mime_type: 'image/jpeg', data: '/9j/4AAQ' }, processing_notice_shown: true,
+    session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: 'verified-token'
+  });
+  assert.equal(withImage.search_image.byte_length, 6);
+  assert.throws(() => validateKnowledgeRequest({
+    ...valid, processing_notice_shown: false
+  }), /PROCESSING_NOTICE_REQUIRED/);
   assert.throws(() => validateKnowledgeRequest({ ...valid, query: 'x' }), /QUERY_LENGTH_INVALID/);
   assert.equal(validateKnowledgeRequest({ ...valid, query: '靴' }).query, '靴');
   assert.equal(validateKnowledgeRequest({ ...valid, query: '枕' }).query, '枕');
@@ -526,7 +590,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v394/);
+  assert.match(serviceWorker, /hoshilu-shell-v396/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -717,7 +781,7 @@ test('PWA公開設定はSite Keyだけを返し、無効な質問をAPI境界で
   const invalidResponse = await workerModule.default.fetch(
     new Request('https://p-gate.example/api/knowledge', {
       method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://p-gate.example' },
-      body: JSON.stringify({ query: 'x', consent: false, session_id: 'bad', turnstile_token: '' })
+      body: JSON.stringify({ query: 'x', processing_notice_shown: false, session_id: 'bad', turnstile_token: '' })
     }), {}, ctx
   );
   assert.equal(invalidResponse.status, 400);
@@ -728,6 +792,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     GAS_BACKEND_URL: 'https://script.google.com/macros/s/example/exec',
     GAS_BRIDGE_SECRET: 'g'.repeat(32), LINK_SIGNING_SECRET: 'l'.repeat(32),
     TURNSTILE_SITE_KEY: 'site-key', TURNSTILE_SECRET_KEY: 'turnstile-secret',
+    GEMINI_API_KEY: 'm'.repeat(32),
     ADMIN_AUTH_ID: 'owner@example.com', ADMIN_AUTH_PASSWORD: 'A1b2C3d4',
     ADMIN_SESSION_SECRET: 'a'.repeat(64),
     SELLER_AUTH_ID: 'seller-admin',
@@ -737,6 +802,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   };
   assert.equal(getEnvironmentReadiness(base).ready, true);
   assert.equal(getEnvironmentReadiness({ ...base, GAS_BACKEND_URL: 'http://example.com' }).ready, false);
+  assert.equal(getEnvironmentReadiness({ ...base, GAS_BACKEND_URL: 'https://example.com/macros/s/id/exec' }).checks.gas_backend_trusted, false);
   assert.deepEqual(getEnvironmentReadiness({ ...base, LINK_SIGNING_SECRET: 'short' }).weak, ['LINK_SIGNING_SECRET']);
   assert.equal(getEnvironmentReadiness({ ...base, ADMIN_AUTH_PASSWORD: 'short' }).ready, false);
   assert.equal(getEnvironmentReadiness({ ...base, ADMIN_AUTH_PASSWORD: 'short' }).checks.admin_auth_weak, true);
@@ -754,21 +820,32 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     ...base, ADMIN_SESSION_SECRET: base.LINK_SIGNING_SECRET
   }).checks.admin_credentials_distinct, false);
   assert.equal(getEnvironmentReadiness(base).checks.turnstile_configured, true);
+  assert.equal(getEnvironmentReadiness(base).checks.search_input_analysis_configured, true);
+  const withoutGemini = { ...base, GEMINI_API_KEY: '' };
+  assert.equal(getEnvironmentReadiness(withoutGemini).ready, false);
+  assert.equal(getEnvironmentReadiness(withoutGemini).checks.search_input_analysis_configured, false);
+  assert.ok(getEnvironmentReadiness(withoutGemini).missing.includes('GEMINI_API_KEY'));
+  assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'short' }).ready, false);
+  assert.ok(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'short' }).weak.includes('GEMINI_API_KEY'));
   assert.equal(getEnvironmentReadiness(base).checks.social_autopilot_enabled, false);
   assert.equal(getEnvironmentReadiness({ ...base, SOCIAL_AUTOPILOT_ENABLED: 'true' }).checks.social_autopilot_enabled, true);
   assert.equal(getEnvironmentReadiness({ ...base, TURNSTILE_SECRET_KEY: '' }).checks.turnstile_configured, false);
-  assert.equal(getEnvironmentReadiness(base).checks.ai_chat_configured, false);
-  assert.equal(getEnvironmentReadiness(base).checks.ai_price_comparison_configured, false);
+  assert.equal(getEnvironmentReadiness(base).checks.ai_chat_configured, true);
+  assert.equal(getEnvironmentReadiness(base).checks.ai_price_comparison_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.amazon_associate_link_configured, false);
   assert.equal(getEnvironmentReadiness({ ...base, AMAZON_ASSOCIATE_TAG: 'hoshilu00-22' }).checks.amazon_associate_link_configured, true);
   assert.equal(getEnvironmentReadiness({ ...base, AMAZON_ASSOCIATE_TAG: 'hoshilu-22' }).checks.amazon_associate_link_configured, false);
   assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_chat_configured, true);
+  assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.search_input_analysis_configured, true);
   assert.equal(getEnvironmentReadiness({ ...base, GEMINI_API_KEY: 'g'.repeat(20) }).checks.ai_price_comparison_configured, true);
-  assert.equal(getEnvironmentReadiness({
-    ...base,
+  const openAiOnly = getEnvironmentReadiness({
+    ...base, GEMINI_API_KEY: '',
     OPENAI_API_KEY: 'o'.repeat(20),
     OPENAI_BACKUP_ENABLED: 'true',
-  }).checks.ai_chat_configured, true);
+  });
+  assert.equal(openAiOnly.checks.ai_chat_configured, true);
+  assert.equal(openAiOnly.checks.search_input_analysis_configured, false);
+  assert.equal(openAiOnly.ready, false);
   assert.equal(getEnvironmentReadiness(base).checks.admin_auth_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.admin_credentials_distinct, true);
   assert.equal(getEnvironmentReadiness(base).checks.seller_auth_configured, true);
@@ -838,7 +915,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const payload = await response.json();
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
-  assert.equal(payload.release, '1.19.0');
+  assert.equal(payload.release, '1.20.0');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
   // §3移行(ContractPolicy/MultilingualSeo/Measurement/SocialKnowledge/ProductIdentifier)で
   // 追加したD1テーブルもgas/PreflightEngine.gsの「必須シート」チェック相当として含まれる。
@@ -1316,18 +1393,10 @@ test('クライアント直書きのAmazonアソシエイトタグはwrangler.js
   }
 });
 
-// 訪問68→検索開始21(離脱69%)の切り分けと是正。
-//
-// search_started はフォームのsubmitイベントでしか発火しないが、#consent は
-// required でフォームに novalidate も無いため、同意欄が未チェックのまま
-// 検索ボタンを押すとネイティブ検証がsubmitを止め、search_started は発火
-// しない。つまり「入力して押したのに弾かれた人」は計測上いなかったことに
-// なっており、離脱69%が「関心が無かった」のか「押したが弾かれた」のかを
-// 区別できなかった。さらにiOS Safariはチェックボックスの検証バブルを出さない
-// ので、利用者から見ると押しても何も起きない。
-test('同意欄で止められたことを計測でき、利用者にも理由が見える', () => {
+test('同意チェックを廃止し、検索試行と入力エラーだけを計測する', () => {
   const analytics = fs.readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
   const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   const events = fs.readFileSync(new URL('../src/growth-events.mjs', import.meta.url), 'utf8');
 
   // 押した瞬間と、弾かれた瞬間を別々に記録する。
@@ -1342,9 +1411,12 @@ test('同意欄で止められたことを計測でき、利用者にも理由�
   // ATTRIBUTEDに化けて流入元計測を汚すため)。
   assert.doesNotMatch(analytics, /send\('search_blocked',/);
 
-  // 利用者に見える形で理由を出す。
-  assert.match(app, /addEventListener\('invalid'/);
-  assert.match(app, /同意チェック/);
+  assert.doesNotMatch(html, /id="consent"|class="consent"/);
+  assert.doesNotMatch(app, /elements\.consent|consent\.checked|同意チェック/);
+  assert.match(app, /processing_notice_shown:true/);
+  assert.match(html, /id="searchScreenshot"/);
+  assert.match(html, /id="socialUrl"/);
+  assert.match(app, /selectedSearchInputCopy\(\)\.missing/);
 });
 
 test('検索窓の直下は例示チップを先に出し、登録案内はその後ろに置く', () => {

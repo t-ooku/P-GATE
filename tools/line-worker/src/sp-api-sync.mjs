@@ -96,6 +96,7 @@ export async function exchangeRefreshToken({
       client_id: clientId,
       client_secret: clientSecret,
     }),
+    redirect: "error",
   });
   const payload = safeJson(await response.text());
   if (!response.ok || !payload.access_token) {
@@ -133,6 +134,7 @@ export async function spApiRequest({
         "user-agent": "HOSHILU/1.0 (Language=JavaScript; Platform=Cloudflare-Workers)",
         accept: "application/json",
       },
+      redirect: "error",
     });
     const payload = safeJson(await response.text());
     if (response.ok) {

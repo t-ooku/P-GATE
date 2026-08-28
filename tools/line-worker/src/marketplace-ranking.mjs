@@ -65,7 +65,11 @@ function rakutenApiUrl(endpoint, env) {
 }
 
 function rakutenRequestOptions(timeout = 5000) {
-  return { headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' }, signal: AbortSignal.timeout(timeout) };
+  return {
+    headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
+    redirect: 'error',
+    signal: AbortSignal.timeout(timeout)
+  };
 }
 
 function arrayOfItems(payload = {}) {
@@ -167,6 +171,10 @@ function parseAiCategoryIds(payload, allowedIds) {
   } catch { return []; }
 }
 
+async function aiProviderFetch(fetcher, url, options) {
+  return fetcher(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(4000) });
+}
+
 export async function suggestRankingCategoriesWithAi(env, rawQuery, options, fetcher = fetch) {
   const allowedIds = new Set(options.map((option) => option.value));
   const prompt = `HOSHILUのランキング検索で、広い検索語から近い小分類候補を並べます。\n検索語: ${String(rawQuery || '').slice(0, 200)}\n選択可能: ${options.map((option) => `${option.value}=${option.label}`).join(', ')}\n適切な候補だけを最大3件、JSON {"category_ids":[""]} で返してください。選択肢にない分類は作らず、該当なしなら空配列にしてください。`;
@@ -177,15 +185,13 @@ export async function suggestRankingCategoriesWithAi(env, rawQuery, options, fet
   for (const provider of providers) {
     try {
       const response = provider === 'gemini'
-        ? await fetcher(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash'))}:generateContent`, {
+        ? await aiProviderFetch(fetcher, `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash'))}:generateContent`, {
           method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } }),
-          signal: AbortSignal.timeout(4000)
+          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } })
         })
-        : await fetcher('https://api.openai.com/v1/responses', {
+        : await aiProviderFetch(fetcher, 'https://api.openai.com/v1/responses', {
           method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.OPENAI_API_KEY}` },
-          body: JSON.stringify({ model: String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5'), input: prompt, reasoning: { effort: 'low' }, text: { format: { type: 'json_object' } } }),
-          signal: AbortSignal.timeout(4000)
+          body: JSON.stringify({ model: String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5'), input: prompt, reasoning: { effort: 'low' }, text: { format: { type: 'json_object' } } })
         });
       if (!response.ok) continue;
       const ids = parseAiCategoryIds(await response.json(), allowedIds);

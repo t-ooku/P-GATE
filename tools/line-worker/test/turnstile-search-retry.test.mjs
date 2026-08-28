@@ -42,7 +42,8 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /await recoverTurnstileWidget\(\)/);
   assert.match(app, /x-request-id/);
   assert.match(app, /hoshilu:search-degraded/);
-  assert.match(app, /timedAbortController\(Math\.min\(KNOWLEDGE_HTTP_TIMEOUT_MS,remainingBeforeFetch\)\)/);
+  assert.match(app, /const requestTimeoutMs=hasSupplementalInput\?30000:KNOWLEDGE_HTTP_TIMEOUT_MS/);
+  assert.match(app, /timedAbortController\(Math\.min\(requestTimeoutMs,remainingBeforeFetch\)\)/);
   assert.match(app, /activeKnowledgeFetch\?\.abort\(\)/);
   assert.match(app, /SEARCH_SUPERSEDED/);
   assert.match(app, /SEARCH_DEADLINE_EXCEEDED/);

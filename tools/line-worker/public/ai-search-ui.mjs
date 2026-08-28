@@ -87,7 +87,7 @@ async function postChatTurn(history, language, mode = 'REFINE') {
       const response = await fetch('/api/ai-chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ history, language, mode, session_id: auth?.sessionId || '', consent: true, turnstile_token: token }),
+        body: JSON.stringify({ history, language, mode, session_id: auth?.sessionId || '', processing_notice_shown: true, turnstile_token: token }),
         signal: AbortSignal.timeout(AI_CHAT_HTTP_TIMEOUT_MS)
       });
       const payload = await response.json().catch(() => ({}));

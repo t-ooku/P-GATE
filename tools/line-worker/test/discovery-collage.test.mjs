@@ -14,7 +14,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
     stat(new URL('../public/hoshilu-discovery-collage-mobile.webp', import.meta.url)),
   ]);
   assert.match(html, /id="discoveryTitle"><span>名前が分からなくても、<\/span><span>記憶から探せる。<\/span>/);
-  assert.match(html, /id="heroTitle"><span class="hero-title-line">商品名が分からなくても、<\/span><span class="hero-title-line hero-title-accent">欲しい物を探せる。<\/span>/);
+  assert.match(html, /id="heroTitle"><span class="hero-title-line">スクショ・投稿URL・一言から、<\/span><span class="hero-title-line hero-title-accent">欲しい物を探せる。<\/span>/);
   assert.match(app, /first\.className='hero-title-line'/);
   assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
   assert.match(heroFixes, /html:lang\(ja\) #heroTitle \.hero-title-line \{ white-space: nowrap; \}/);
@@ -35,7 +35,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v394/);
+  assert.match(sw, /hoshilu-shell-v396/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);
@@ -98,7 +98,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /これですか？↓/);
   assert.match(discoveryActions, /static\.wixstatic\.com\/media\/494321_/);
   assert.match(html, /id="journeyStep4Title">比較・通知・SNSへつなぐ/);
-  assert.match(html, /ランキング・AI最安比較・AIウォッチを使い/);
+  assert.match(html, /ランキング・AI最安比較・購入希望価格ウォッチを使い/);
   assert.match(css, /font-size: clamp\(28px, 7\.4vw, 34px\)/);
   assert.match(css, /minmax\(280px, 34%\)/);
   assert.match(css, /font-size: clamp\(44px, 5vw, 68px\)/);
@@ -123,8 +123,8 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /copySearchKeywords/);
   assert.match(app, /検索ワードをコピー/);
   assert.match(app, /Find this product on Amazon/);
-  assert.match(app, /features:\['HOSHILU 搜索','AI监控'\]/);
-  assert.match(app, /features:\['HOSHILU 검색','AI 워치'\]/);
+  assert.match(app, /features:\['HOSHILU 搜索','目标价监控'\]/);
+  assert.match(app, /features:\['HOSHILU 검색','목표 가격 감시'\]/);
   assert.match(html, /class="language-label header-language"/);
   assert.match(html, /Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。/);
   assert.match(html, /広告：AmazonへのリンクはAmazonアソシエイトリンクです。/);

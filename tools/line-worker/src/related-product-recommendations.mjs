@@ -1,5 +1,8 @@
 import { expandSearchQuery } from './query-expansion.mjs';
 import { relatedProductExpansionQueries } from './related-product-expansion.mjs';
+import {
+  containsUnsafeAiOutputContent, sanitizeAiOutputText
+} from './ai-output-safety.mjs';
 
 const AI_TIMEOUT_MS = 4000;
 
@@ -69,11 +72,18 @@ export function normalizeAiRelatedQueries(payload = {}, sourceQuery = '') {
   const seen = new Set();
   const output = [];
   for (const item of items) {
-    const query = clean(item?.query || item?.category, 60);
-    const reason = clean(item?.reason, 100);
+    const rawQuery = clean(item?.query || item?.category, 60);
+    const rawReason = clean(item?.reason, 100);
+    // Related-category text is both rendered and turned into signed
+    // marketplace searches. Any AI-invented URL/price/stock/seller claim
+    // invalidates the whole suggestion; silently trimming it could leave a
+    // misleading query or reason attached to a real marketplace link.
+    if (containsUnsafeAiOutputContent(rawQuery) || containsUnsafeAiOutputContent(rawReason)) continue;
+    const query = sanitizeAiOutputText(rawQuery, 60);
+    const reason = sanitizeAiOutputText(rawReason, 100);
     const key = query.toLocaleLowerCase().replace(/[\s・/_-]+/gu, '');
     if (query.length < 2 || !reason || !key || key === sourceCompact || seen.has(key)) continue;
-    if (/https?:|¥|￥|\b(?:amazon|楽天市場|yahoo!?ショッピング)\b/iu.test(query) || AI_FALLBACK_BLOCKLIST.test(query)) continue;
+    if (/\b(?:amazon|楽天市場|yahoo!?ショッピング)\b/iu.test(query) || AI_FALLBACK_BLOCKLIST.test(query)) continue;
     seen.add(key);
     output.push({ query, reason });
     if (output.length >= 3) break;
@@ -85,6 +95,10 @@ function aiPrompt(query, language) {
   return `You are HOSHILU's complementary-product category planner.\nSearch query: ${clean(query, 200)}\nDisplay language: ${clean(language, 10) || 'JA'}\n\nSuggest up to 3 DIFFERENT product categories commonly used together with the searched product. HOSHILU will separately search marketplace APIs and display only verified real products.\nReturn JSON only: {"categories":[{"query":"short Japanese marketplace category","reason":"short reason in the display language"}]}\nRules:\n- Recommend complements or accessories, not another brand/model of the searched product.\n- Use a short generic Japanese marketplace search term for query.\n- Never invent a product, brand, model, price, stock, seller, URL, medical effect, or compatibility.\n- Do not suggest medicine, supplements, alcohol, tobacco, weapons, or age-restricted products.\n- If a safe and useful complement cannot be inferred, return {"categories":[]}.`;
 }
 
+async function providerFetch(fetchImpl, url, options) {
+  return fetchImpl(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(AI_TIMEOUT_MS) });
+}
+
 async function requestAiRelatedQueries(query, language, env, fetchImpl) {
   const providers = [
     String(env.GEMINI_API_KEY || '').length >= 20 && 'gemini',
@@ -94,15 +108,13 @@ async function requestAiRelatedQueries(query, language, env, fetchImpl) {
   for (const provider of providers) {
     try {
       const response = provider === 'gemini'
-        ? await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash'))}:generateContent`, {
+        ? await providerFetch(fetchImpl, `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash'))}:generateContent`, {
           method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } }),
-          signal: AbortSignal.timeout(AI_TIMEOUT_MS)
+          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } })
         })
-        : await fetchImpl('https://api.openai.com/v1/responses', {
+        : await providerFetch(fetchImpl, 'https://api.openai.com/v1/responses', {
           method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.OPENAI_API_KEY}` },
-          body: JSON.stringify({ model: String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5'), input: prompt, reasoning: { effort: 'low' }, text: { format: { type: 'json_object' } } }),
-          signal: AbortSignal.timeout(AI_TIMEOUT_MS)
+          body: JSON.stringify({ model: String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5'), input: prompt, reasoning: { effort: 'low' }, text: { format: { type: 'json_object' } } })
         });
       if (!response.ok) continue;
       const suggestions = normalizeAiRelatedQueries(parseJsonText(providerText(await response.json())) || {}, query);

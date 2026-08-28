@@ -308,6 +308,7 @@ async function verifyXPublishingAccount(expectedUsername, env, fetchImpl) {
   const authorization = await xAuthorization('GET', endpoint, env);
   const response = await fetchImpl(endpoint, {
     method: 'GET',
+    redirect: 'error',
     headers: { authorization }
   });
   if (!response.ok) throw new Error(`X_ACCOUNT_VERIFY_${response.status}`);
@@ -331,6 +332,7 @@ function safeXMediaUrl(value) {
 async function xMediaRequest(url, accessToken, options, fetchImpl, errorCode) {
   const response = await fetchImpl(url, {
     ...options,
+    redirect: 'error',
     headers: { authorization: `Bearer ${accessToken}`, ...(options.headers || {}) }
   });
   if (!response.ok) throw new Error(`${errorCode}_${response.status}`);
@@ -427,6 +429,7 @@ async function publishX(post, env, fetchImpl) {
     : await xAuthorization('POST', endpoint, env);
   const response = await fetchImpl(endpoint, {
     method: 'POST',
+    redirect: 'error',
     headers: { authorization, 'content-type': 'application/json' },
     body: JSON.stringify({
       text: [post.caption, post.link].filter(Boolean).join('\n'),
@@ -479,6 +482,7 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
   if (!creationId) {
     const create = await fetchImpl(`https://graph.instagram.com/v24.0/${account}/media`, {
       method: 'POST',
+      redirect: 'error',
       headers,
       body: JSON.stringify(mediaPayload)
     });
@@ -492,7 +496,9 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
   }
   let statusCode = '';
   for (let attempt = 0; attempt < 90; attempt += 1) {
-    const status = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(creationId)}?fields=status_code`, { headers });
+    const status = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(creationId)}?fields=status_code`, {
+      redirect: 'error', headers
+    });
     if (!status.ok) {
       const detail = clean(await status.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
       throw new Error(`INSTAGRAM_STATUS_${status.status}${detail ? `_${detail}` : ''}`);
@@ -508,6 +514,7 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const publish = await fetchImpl(`https://graph.instagram.com/v24.0/${account}/media_publish`, {
       method: 'POST',
+      redirect: 'error',
       headers,
       body: JSON.stringify({ creation_id: creationId })
     });
@@ -533,12 +540,15 @@ async function publishTikTok(post, env, fetchImpl) {
   if (env.TIKTOK_APP_AUDITED !== 'true') throw new Error('TIKTOK_APP_AUDIT_REQUIRED');
   if (!post.media_url) throw new Error('TIKTOK_MEDIA_REQUIRED');
   const headers = { authorization: `Bearer ${env.TIKTOK_ACCESS_TOKEN}`, 'content-type': 'application/json; charset=UTF-8' };
-  const creator = await fetchImpl('https://open.tiktokapis.com/v2/post/publish/creator_info/query/', { method: 'POST', headers });
+  const creator = await fetchImpl('https://open.tiktokapis.com/v2/post/publish/creator_info/query/', {
+    method: 'POST', redirect: 'error', headers
+  });
   if (!creator.ok) throw new Error(`TIKTOK_CREATOR_${creator.status}`);
   const levels = (await creator.json())?.data?.privacy_level_options || [];
   if (!levels.includes('PUBLIC_TO_EVERYONE')) throw new Error('TIKTOK_PUBLIC_NOT_ALLOWED');
   const publish = await fetchImpl('https://open.tiktokapis.com/v2/post/publish/content/init/', {
     method: 'POST',
+    redirect: 'error',
     headers,
     body: JSON.stringify({
       post_info: { title: post.caption.slice(0, 90), description: [post.caption, post.link].filter(Boolean).join('\n'), privacy_level: 'PUBLIC_TO_EVERYONE', disable_comment: false },
@@ -579,6 +589,7 @@ async function publishThreads(post, env, fetchImpl, hooks = {}) {
   if (!creationId) {
     const create = await fetchImpl(`https://graph.threads.net/v1.0/${userId}/threads`, {
       method: 'POST',
+      redirect: 'error',
       headers,
       body: JSON.stringify(mediaPayload)
     });
@@ -594,7 +605,9 @@ async function publishThreads(post, env, fetchImpl, hooks = {}) {
   if (initialDelay) await new Promise(resolve => setTimeout(resolve, initialDelay));
   let statusCode = '';
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const status = await fetchImpl(`https://graph.threads.net/v1.0/${encodeURIComponent(creationId)}?fields=status`, { headers });
+    const status = await fetchImpl(`https://graph.threads.net/v1.0/${encodeURIComponent(creationId)}?fields=status`, {
+      redirect: 'error', headers
+    });
     if (!status.ok) {
       const detail = clean(await status.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
       throw new Error(`THREADS_STATUS_${status.status}${detail ? `_${detail}` : ''}`);
@@ -608,6 +621,7 @@ async function publishThreads(post, env, fetchImpl, hooks = {}) {
   if (statusCode !== 'FINISHED') throw new Error(`THREADS_CONTAINER_${statusCode || 'TIMEOUT'}`);
   const publish = await fetchImpl(`https://graph.threads.net/v1.0/${userId}/threads_publish`, {
     method: 'POST',
+    redirect: 'error',
     headers,
     body: JSON.stringify({ creation_id: creationId })
   });
@@ -730,7 +744,9 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
   let failed = 0;
   for (const row of rows) {
     try {
-      const response = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(row.external_post_id)}?fields=id,permalink,is_ai_generated`, { headers });
+      const response = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(row.external_post_id)}?fields=id,permalink,is_ai_generated`, {
+        redirect: 'error', headers
+      });
       if (!response.ok) throw new Error(`INSTAGRAM_PERMALINK_${response.status}`);
       const payload = await response.json();
       const permalink = instagramPermalink(payload?.permalink);
@@ -821,10 +837,14 @@ export async function syncThreadsInsights(env, now = new Date(), fetchImpl = fet
   for (const row of rows) {
     try {
       const mediaId = encodeURIComponent(row.external_post_id);
-      const metaResponse = await fetchImpl(`https://graph.threads.net/v1.0/${mediaId}?fields=permalink`, { headers });
+      const metaResponse = await fetchImpl(`https://graph.threads.net/v1.0/${mediaId}?fields=permalink`, {
+        redirect: 'error', headers
+      });
       if (!metaResponse.ok) throw new Error(`THREADS_PERMALINK_${metaResponse.status}`);
       const permalink = threadsPermalink((await metaResponse.json())?.permalink);
-      const insightsResponse = await fetchImpl(`https://graph.threads.net/v1.0/${mediaId}/insights?metric=views,likes,replies,reposts,quotes,shares`, { headers });
+      const insightsResponse = await fetchImpl(`https://graph.threads.net/v1.0/${mediaId}/insights?metric=views,likes,replies,reposts,quotes,shares`, {
+        redirect: 'error', headers
+      });
       if (!insightsResponse.ok) throw new Error(`THREADS_INSIGHTS_${insightsResponse.status}`);
       const insightsPayload = await insightsResponse.json();
       const views = threadsMetricValue(insightsPayload, 'views');

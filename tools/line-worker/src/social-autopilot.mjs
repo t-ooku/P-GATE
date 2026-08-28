@@ -32,15 +32,15 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const SOCIAL_ROTATION_EPOCH_MONDAY_UTC = Date.UTC(2026, 7, 24);
 
 const X_POSTS = [
-  '「名前は分からないけど、こんな商品が欲しい」をそのまま検索。覚えている色・大きさ・使う場所から、探せる言葉に整理します。',
+  'スクショ、公開SNS投稿のURL、うろ覚えの一言。どれか1つを手がかりに、HOSHILUが商品候補を整理し、確認できた商品ページや最大13モールの検索先へ案内します。候補・価格・在庫はリンク先で確認してください。',
   '楽天市場・Yahoo!ショッピングをまとめて比較。Amazonを含む最大13モールへ同じ検索語を引き継ぎ、見比べられます。',
   '送料込み価格を確認できた商品と、まだ価格・在庫を確認できていない候補を分けて表示。比較の根拠が分かる商品検索です。',
-  '気になる商品は「値下がり通知☑」へ。購入したい価格を保存して、確認済み価格の値下がりを待てます。'
+  '気になる商品は「購入希望価格ウォッチ☑」へ。希望価格を保存し、APIで確認できた価格がその金額以下になった時に通知を受け取れます。'
 ];
 
 const INSTAGRAM_POSTS = [
   {
-    caption: '名前が分からない商品も、覚えている特徴を話すだけ。HOSHILUが検索語に整理して、最大13モールの入口をまとめます。気になった商品をコメントで教えてね。@hoshilu.app',
+    caption: 'スクショ、公開SNS投稿のURL、うろ覚えの一言。どれか1つをHOSHILUへ。商品候補を整理し、確認できた商品ページや最大13モールの検索先へ案内します。候補・価格・在庫はリンク先で確認してください。@hoshilu.app',
     media_url: 'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4'
   },
   {
@@ -51,8 +51,8 @@ const INSTAGRAM_POSTS = [
 
 const X_NON_VIDEO_POSTS = Object.freeze([
   {
-    id: 'howto-description-search',
-    caption: '商品名が分からなくても大丈夫。色・形・用途・見た場所を文章で入力すると、HOSHILUが探せる検索語に整理します。',
+    id: 'howto-three-input-search',
+    caption: '検索の手がかりは3つ。スクショ、Instagram・TikTok・Xなどの公開投稿URL、うろ覚えの一言。どれか1つから商品候補と検索語を整理します。非公開・削除済み投稿はスクショや一言を足してください。',
     query: '名前は分からないけど、通勤バッグの中で自立する本革トートバッグ'
   },
   {
@@ -62,7 +62,7 @@ const X_NON_VIDEO_POSTS = Object.freeze([
   },
   {
     id: 'howto-price-alert',
-    caption: '今すぐ買わない商品は「値下がり通知☑」へ。希望価格を保存し、APIで確認できた価格が条件を満たした時に知らせます。',
+    caption: '今すぐ買わない商品は「購入希望価格ウォッチ☑」へ。希望価格を保存し、APIで確認できた価格がその金額以下になった時に知らせます。',
     query: '軽くて持ち運べる小型写真プリンター'
   },
   {
@@ -112,7 +112,7 @@ const X_SELLER_POSTS = Object.freeze([
   },
   {
     id: 'seller-demand-insight',
-    caption: '値下げを待っている人と、探したけれど見つけられなかった商品。その匿名需要を、仕入れ・商品開発・価格判断に使える形で確認できます。検索文や個人情報は共有しません。',
+    caption: '購入希望価格を設定した人と、探したけれど見つけられなかった商品。その匿名需要を、仕入れ・商品開発・価格判断に使える形で確認できます。検索文や個人情報は共有しません。',
     link_path: '/for-sellers'
   },
   {
@@ -125,9 +125,9 @@ const X_SELLER_POSTS = Object.freeze([
 const INSTAGRAM_GUIDE_POSTS = Object.freeze([
   {
     id: 'guide-search-screen',
-    caption: '操作案内① 検索欄へ、商品名ではなく覚えている特徴をそのまま入力。色・形・用途・見た場所を足すほど候補を絞れます。@hoshilu.app',
+    caption: '操作案内① スクショを追加、公開SNS投稿URLを追加、または覚えている一言を入力。どれか1つから商品候補と検索語を整理できます。スクショと投稿URLはHOSHILUのサーバーに保存せず、候補抽出にGoogle Gemini APIを使います。@hoshilu.app',
     query: '名前は分からないけど、床に置いても自立する本革トートバッグ',
-    media_url: 'https://hoshilu.app/social/runway/hoshilu-product-screen-v1.jpg'
+    media_url: 'https://hoshilu.app/social/instagram-ambiguous-four-market-v1.png'
   },
   {
     id: 'guide-cross-market',
@@ -163,8 +163,8 @@ const INSTAGRAM_NON_BUZZ_GUIDE_POSTS = Object.freeze(
 const BUZZ_MEDIA_URL = 'https://hoshilu.app/social/hoshilu-buzz-ranking-v1.jpg';
 
 const FEATURE_LAUNCH = Object.freeze({
-  X: 'HOSHILU正式版を公開。説明から検索語を整理し、楽天市場・Yahoo!ショッピングをまとめて比較。Amazonを含む最大13モールへ同じ検索語でつなぎます。ランキング、AI最安比較、値下がり通知にも対応。 #ホシル #商品検索',
-  INSTAGRAM: 'HOSHILU正式版の機能を12秒で紹介します。\n① 説明から検索語を整理\n② 最大13モールを同じ検索語で横断\n③ ランキングとAI最安比較\n④ 値下がり通知☑で購入したい価格を保存\n\n名前が分からない「欲しいもの」をコメントで教えてください。次の検索動画で試します。@hoshilu.app\n#商品検索 #価格比較 #ネットショッピング #買い物好きな人と繋がりたい',
+  X: 'HOSHILU正式版を公開。説明から検索語を整理し、楽天市場・Yahoo!ショッピングをまとめて比較。Amazonを含む最大13モールへ同じ検索語でつなぎます。ランキング、AI最安比較、購入希望価格ウォッチにも対応。 #ホシル #商品検索',
+  INSTAGRAM: 'HOSHILU正式版の機能を12秒で紹介します。\n① 説明から検索語を整理\n② 最大13モールを同じ検索語で横断\n③ ランキングとAI最安比較\n④ 購入希望価格ウォッチで希望額を保存\n\n名前が分からない「欲しいもの」をコメントで教えてください。次の検索動画で試します。@hoshilu.app\n#商品検索 #価格比較 #ネットショッピング #買い物好きな人と繋がりたい',
   media_url: 'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4'
 });
 
@@ -186,39 +186,40 @@ const FEATURE_LAUNCH = Object.freeze({
 // 非アフィリエイト枠は query を持たない=リンクを付けない。affiliate:false の
 // ときは social-publisher.mjs の normalizeSocialPost がPR表記を付けないので、
 // 「広告ではないのにPR表記がある」という逆向きの不正確さも起きない。
+const AMAZON_SEARCH_ONLY_NOTICE = 'HOSHILUからAmazonを含む検索先を開けます。Amazonの商品候補・価格・在庫・レビューはリンク先で確認してください。';
 const THREADS_AMAZON_POSTS = Object.freeze([
   {
     id: 'amazon-boost-books',
-    caption: '読みたかったのに、正式なタイトルを忘れてしまった本。覚えている表紙の色やあらすじの断片からHOSHILUで検索すると、Amazonを含む複数モールを一度に見比べられます。',
+    caption: `読みたかったのに、正式なタイトルを忘れてしまった本。覚えている表紙の色やあらすじの断片をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '表紙が青くてタイトルを忘れた海外小説'
   },
   {
     id: 'amazon-boost-appliances',
-    caption: '地味に助かる小型家電ほど、正式名称が分からないもの。使う場所や機能の特徴で検索すれば、Amazonの在庫・レビューも他モールと一緒に比較できます。',
+    caption: `地味に助かる小型家電ほど、正式名称が分からないもの。使う場所や機能の特徴をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '布団を素早く乾かす小型の家電'
   },
   {
     id: 'amazon-boost-daily-goods',
-    caption: '切れてから気づく日用品のストック。置き場所や見た目の特徴でHOSHILUに入力すると、Amazonを含めた対応モールをまとめて確認できます。',
+    caption: `切れてから気づく日用品のストック。置き場所や見た目の特徴をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: 'キッチンの排水溝に使う小さいゴミ受けネット'
   },
   {
     id: 'trust-how-to-describe',
-    caption: '商品名が分からないときは、名前をひねり出そうとしなくて大丈夫です。「どこで使うか」「何に困っているか」をそのまま入れたほうが、たいてい早く見つかります。'
+    caption: '商品名が分からないときは、名前をひねり出さなくて大丈夫です。スクショ、公開SNS投稿URL、覚えている一言のどれか1つを手がかりに探せます。非公開投稿はスクショか一言を足してください。'
   },
   {
     id: 'amazon-boost-reviews',
-    caption: '「これAmazonにあるかな」も、HOSHILUで検索すれば他モールの選択肢と一緒に確認できます。レビュー件数や評価も比較の参考にどうぞ。',
+    caption: `「これAmazonにあるかな」と思ったら、覚えている特徴をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '軽くて持ち運べる小型写真プリンター'
   },
   {
     id: 'amazon-boost-kitchen',
-    caption: '作り置きを始めると急に足りなくなる保存容器。冷凍したいのか、そのまま温めたいのかで選ぶものが変わります。用途で検索すると、Amazonを含む各モールの候補を並べて見られます。',
+    caption: `作り置きを始めると急に足りなくなる保存容器。冷凍したいのか、そのまま温めたいのか、用途をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '冷凍してそのままレンジで温められる保存容器'
   },
   {
     id: 'amazon-boost-storage',
-    caption: 'クローゼットの上の段を、あと少しだけ使いこなしたい。奥行きや高さの条件から探すと、Amazonを含む複数モールの収納用品をまとめて比較できます。',
+    caption: `クローゼットの上の段を、あと少しだけ使いこなしたい。奥行きや高さの条件をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: 'クローゼット上段の奥行きが深い場所に置く収納ケース'
   },
   {
@@ -227,17 +228,17 @@ const THREADS_AMAZON_POSTS = Object.freeze([
   },
   {
     id: 'amazon-boost-stationery',
-    caption: '書き心地が気に入っていたペン、軸の色しか覚えていない。特徴を言葉にして検索すると、Amazonを含む取扱モールの候補から絞り込めます。',
+    caption: `書き心地が気に入っていたペン、軸の色しか覚えていない。覚えている特徴をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: 'インクが早く乾く細字のボールペン'
   },
   {
     id: 'amazon-boost-hobby',
-    caption: '久しぶりに趣味を再開すると、消耗品の名前を忘れているもの。何をするための道具かで検索すれば、Amazonを含む各モールの在庫を確認できます。',
+    caption: `久しぶりに趣味を再開すると、消耗品の名前を忘れているもの。何をするための道具かをHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '刺繍で使う輪っかの形をした固定する道具'
   },
   {
     id: 'amazon-boost-pet',
-    caption: 'うちの子にちょうどいいサイズが分からない。体格や使う場所の条件で探すと、Amazonを含む複数モールのペット用品を見比べられます。',
+    caption: `うちの子にちょうどいいサイズが分からない。体格や使う場所の条件をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '小型犬用の折りたためる移動用キャリー'
   },
   {
@@ -246,17 +247,17 @@ const THREADS_AMAZON_POSTS = Object.freeze([
   },
   {
     id: 'amazon-boost-baby',
-    caption: '育児用品は「いつ使うものか」で名前がまるで違います。月齢や場面から検索すると、Amazonを含む各モールの候補を一度に確認できます。',
+    caption: `育児用品は「いつ使うものか」で名前がまるで違います。月齢や使う場面をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '寝返りを始めた赤ちゃんの転落を防ぐベッド用の柵'
   },
   {
     id: 'amazon-boost-car',
-    caption: '車内のちょっとした不便は、たいてい既に解決する道具があります。困っている場面をそのまま入れると、Amazonを含む取扱モールから候補が出てきます。',
+    caption: `車内のちょっとした不便。困っている場面をそのままHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '運転席のドリンクホルダーを増やす後付けの台'
   },
   {
     id: 'amazon-boost-tools',
-    caption: '一度きりの作業のために工具を買うのは気が引ける。何をしたいかで検索すると、Amazonを含む複数モールで手頃な選択肢を比較できます。',
+    caption: `一度きりの作業で使う工具の名前が分からない。何をしたいかをHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '家具の組み立てに使う小さい電動ドライバー'
   },
   {
@@ -265,17 +266,17 @@ const THREADS_AMAZON_POSTS = Object.freeze([
   },
   {
     id: 'amazon-boost-health',
-    caption: '肩や腰のつらさを和らげる道具は種類が多くて選びにくいもの。どこがどうつらいかで検索すると、Amazonを含む各モールの候補を並べて確認できます。',
+    caption: `肩や腰を支える道具は種類が多くて選びにくいもの。使う場所や形の希望をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '座ったまま腰を支えるクッション'
   },
   {
     id: 'amazon-boost-cable',
-    caption: 'ケーブル類は規格の名前が覚えづらい。つなぎたい機器の組み合わせで検索すれば、Amazonを含む取扱モールから合うものを絞り込めます。',
+    caption: `ケーブル類は規格の名前が覚えづらい。つなぎたい機器の組み合わせをHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: 'ノートパソコンとテレビをつなぐ映像用のケーブル'
   },
   {
     id: 'amazon-boost-seasonal',
-    caption: '季節家電は、必要になってから探すと選ぶ時間がありません。置き場所や使い方の条件で先に見ておくと、Amazonを含む各モールの在庫を落ち着いて比較できます。',
+    caption: `季節家電を早めに探すなら、置き場所や使い方の条件をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: '狭い部屋でも使える静かな衣類乾燥用の除湿機'
   },
   {

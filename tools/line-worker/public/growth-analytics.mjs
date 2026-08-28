@@ -105,16 +105,10 @@ document.addEventListener('submit', event => {
   if (event.target?.id === 'knowledgeForm') send('search_started');
 });
 
-// search_started は submit でしか発火しない。ところが #consent は required で
-// フォームに novalidate も無いため、同意欄が未チェックのまま検索ボタンを
-// 押すとブラウザのネイティブ検証が submit を止め、search_started は発火しない。
-// しかも iOS Safari はチェックボックスの検証バブルを出さないので、利用者から
-// 見ると「押したのに何も起きない」状態になる。
-//
-// つまり「入力して押したのに弾かれた人」は計測上いなかったことになっており、
-// 訪問68→検索開始21 という数字が「関心が無かった」のか「押したが弾かれた」
-// のかを区別できない。押した瞬間と、弾かれた瞬間を別々に記録して切り分ける。
-// captureフェーズで拾うのは、ネイティブ検証より先に確実に走らせるため。
+// search_started is emitted only after the browser accepts a submit. Keep a
+// separate attempt signal so malformed optional URL input and any future
+// native validation can be distinguished from a user who never pressed the
+// button. Capture runs before native validation and never includes input data.
 document.addEventListener('click', event => {
   const target = event.target?.closest?.('#submitButton, button[type=submit]');
   if (target && target.form?.id === 'knowledgeForm') send('search_attempted');

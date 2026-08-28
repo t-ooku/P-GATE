@@ -151,7 +151,7 @@ test('v4.3項目27: GET /go は既存どおり302リダイレクトしつつ、�
     const env = {
       LINK_SIGNING_SECRET: secret,
       AMAZON_ASSOCIATE_TAG: 'hoshilu00-22',
-      GAS_BACKEND_URL: 'https://gas.example.test/exec',
+      GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec',
       GAS_BRIDGE_SECRET: 'g'.repeat(32),
       PRODUCT_DB: db
     };

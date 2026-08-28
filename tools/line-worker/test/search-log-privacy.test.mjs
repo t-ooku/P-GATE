@@ -4,9 +4,8 @@ import { readFile } from 'node:fs/promises';
 
 // v4.2 項目12: プライバシー監査。
 //
-// 同意チェックボックスの文言(app.js copy.consent, 4言語)は「質問本文は
-// サーバーログへ保存しません」(EN: "The raw question is not stored in
-// server logs.")と明示している。ところが handleKnowledgeApi の
+// 検索フォームとプライバシー方針は、質問・投稿URL・画像をHOSHILUへ
+// 保存しないと明示している。ところが handleKnowledgeApi の
 // SEARCH_TRACE と rakuten-marketplace-api.mjs の RAKUTEN_PIPELINE_TRACE は
 // console.info経由でCloudflare Workersログへ出力されており、以前は
 // query: input.query / keywords: query という形でユーザーの検索文その
@@ -32,8 +31,17 @@ test('v4.2項目12: RAKUTEN_PIPELINE_TRACEはユーザーの検索文そのも�
   assert.equal(keywordLogCount, 4);
 });
 
-test('v4.2項目12: 同意文言(4言語)は「質問本文はサーバーログへ保存しません」という約束を維持している', async () => {
-  const app = await read('../public/app.js');
-  assert.match(app, /質問本文はサーバーログへ保存しません/);
-  assert.match(app, /raw question is not stored in server logs/i);
+test('検索入力の非保存と外部AI処理を、チェックボックスなしで正確に開示する', async () => {
+  const [app, html, privacy, analysis] = await Promise.all([
+    read('../public/app.js'), read('../public/index.html'), read('../public/privacy.html'),
+    read('../src/search-input-analysis.mjs')
+  ]);
+  assert.doesNotMatch(html, /id="consent"|type="checkbox" required/);
+  assert.match(app, /スクショ・投稿URLはHOSHILUのサーバーに保存しません/);
+  assert.match(app, /HOSHILU does not store screenshots or post URLs on its servers/i);
+  assert.match(app, /Google Gemini API/);
+  assert.match(privacy, /Google Gemini API/);
+  assert.match(privacy, /データベース、オブジェクトストレージには質問本文、投稿URL、スクリーンショットを保存せず/);
+  assert.match(privacy, /整理された検索語を端末内の検索履歴へ保存/);
+  assert.doesNotMatch(analysis, /console\.(?:info|log|warn)\([^)]*(?:query|socialUrl|data)/u);
 });

@@ -104,7 +104,8 @@ test('実価格が1モールだけなら最安と断定せず、確認できた�
 test('v4.3項目9: GeminiとOpenAIを同時実行せず、Geminiが成功すればOpenAIは呼ばれない', async () => {
   let geminiCalls = 0;
   let openAiCalls = 0;
-  const fetchImpl = async (url) => {
+  const fetchImpl = async (url, options) => {
+    assert.equal(options.redirect, 'error');
     const target = String(url);
     if (target.includes('generativelanguage.googleapis.com')) {
       geminiCalls += 1;
@@ -141,7 +142,7 @@ test('Geminiが一部だけ推定した場合は未取得モールだけOpenAI�
     const prompt = target.includes('generativelanguage.googleapis.com')
       ? JSON.parse(options.body).contents[0].parts[0].text
       : JSON.parse(options.body).input;
-    calls.push({ target, prompt });
+    calls.push({ target, prompt, redirect: options.redirect });
     if (target.includes('generativelanguage.googleapis.com')) {
       return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
         estimates: [{ marketplace: 'LOFT_JP', range_min: 1700, range_max: 2300, confidence: 'MEDIUM' }]
@@ -162,6 +163,7 @@ test('Geminiが一部だけ推定した場合は未取得モールだけOpenAI�
   assert.match(calls[0].prompt, /1848 JPY/);
   assert.doesNotMatch(calls[1].prompt, /LOFT_JP/);
   assert.match(calls[1].prompt, /HANDS_JP/);
+  assert.ok(calls.every((call) => call.redirect === 'error'));
 });
 
 test('v4.3項目19・20: 同一商品と判定できないオファーはsimilarへ分離される', () => {

@@ -11,7 +11,7 @@ function environment(rows) {
   return {
     TURNSTILE_SECRET_KEY: 'turnstile-secret',
     TURNSTILE_SITE_KEY: 'site-key',
-    GAS_BACKEND_URL: 'https://gas.example.test/exec',
+    GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec',
     GAS_BRIDGE_SECRET: 'g'.repeat(32),
     LINK_SIGNING_SECRET: 'l'.repeat(32),
     PRODUCT_DB: {
@@ -30,7 +30,7 @@ function request(query, language = 'JA', searchAttempt = 1) {
       query,
       language,
       search_attempt: searchAttempt,
-      consent: true,
+      processing_notice_shown: true,
       session_id: 'anonymous_session_123456',
       turnstile_token: 'verified-token'
     })

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  amazonCreatorsCacheTest,
   creatorsApiConfigured,
   normalizeCreatorsItems,
   resetCreatorsTokenForTest,
@@ -183,6 +184,38 @@ test('OAuth token and offer-bearing product response are reused from cache', asy
   assert.equal(tokenCalls, 1);
   assert.equal(searchCalls, 1);
   assert.deepEqual(second, first);
+});
+
+test('商品cacheは検索文を保持せず期限切れを除去してLRU上限内に収める', async () => {
+  resetCreatorsTokenForTest();
+  let currentTime = 1_000;
+  const fetcher = async (url, options) => {
+    if (url.includes('/oauth2/token')) return Response.json({ access_token: 'token', expires_in: 7200 });
+    const query = JSON.parse(options.body).keywords;
+    return Response.json({ itemsResult: { items: [{
+      asin: `B${String(query.length).padStart(9, '0')}`.slice(0, 10),
+      detailPageURL: 'https://www.amazon.co.jp/dp/B012345678',
+      itemInfo: { title: { displayValue: '確認済み商品' } },
+      offersV2: { listings: [{ availability: { type: 'IN_STOCK' } }] }
+    }] } });
+  };
+  const rawQueries = Array.from(
+    { length: amazonCreatorsCacheTest.maxEntries + 9 },
+    (_, index) => `秘密の検索語-${index}`
+  );
+  for (const query of rawQueries) {
+    await searchAmazonCreators(env, query, fetcher, { now: () => currentTime });
+    currentTime += 1;
+  }
+  let snapshot = amazonCreatorsCacheTest.snapshot();
+  assert.equal(snapshot.length, amazonCreatorsCacheTest.maxEntries);
+  assert.ok(snapshot.every(({ key }) => /^[a-f0-9]{64}$/u.test(key)));
+  assert.ok(rawQueries.every((query) => snapshot.every(({ key }) => !key.includes(query))));
+
+  currentTime += 60 * 60 * 1000 + 1;
+  amazonCreatorsCacheTest.prune(currentTime);
+  snapshot = amazonCreatorsCacheTest.snapshot();
+  assert.deepEqual(snapshot, []);
 });
 
 test('HTTP 200 payload errors are rejected as partial failures', async () => {

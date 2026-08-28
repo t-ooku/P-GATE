@@ -187,9 +187,19 @@ test('Rakuten API errors retain only safe status metadata', async () => {
     (error) => {
       assert.equal(error.message, 'RAKUTEN_MARKETPLACE_SEARCH_FAILED');
       assert.equal(error.status, 429);
-      assert.equal(error.providerCode, 'too_many_requests');
+      assert.equal(error.providerCode, 'HTTP_429');
       return true;
     }
+  );
+});
+
+test('Rakuten provider自由文はqueryを含めずHTTP固定コードへ畳む', async () => {
+  await assert.rejects(
+    searchRakutenMarketplace(env, '秘密の検索語', async () => Response.json(
+      { error: 'invalid keyword: 秘密の検索語' }, { status: 400 }
+    )),
+    (error) => error.providerCode === 'HTTP_400'
+      && !String(error.providerCode).includes('秘密の検索語')
   );
 });
 

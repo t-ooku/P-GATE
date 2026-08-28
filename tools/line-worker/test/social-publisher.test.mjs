@@ -294,6 +294,7 @@ test('X publisher uses official create-post endpoint after approval', async () =
   ]);
   assert.match(requests[0].options.headers.authorization, /^Bearer /);
   assert.match(requests[1].options.headers.authorization, /^Bearer /);
+  assert.ok(requests.every(({ options }) => options.redirect === 'error'));
 });
 
 test('social links percent-encode the complete Japanese search query', async () => {
@@ -367,7 +368,7 @@ test('X publisher prefers OAuth 1.0a when a stale bearer token is also configure
   assert.doesNotMatch(authorization, /^Bearer /);
 });
 
-test('Instagram publisher waits for media processing before publishing', async () => {
+test('Instagram publisher waits for media processing and rejects authenticated redirects', async () => {
   const requests = [];
   const id = await publishSocialPost({
     platform: 'INSTAGRAM',
@@ -379,19 +380,42 @@ test('Instagram publisher waits for media processing before publishing', async (
     INSTAGRAM_ACCESS_TOKEN: 'token',
     INSTAGRAM_ACCOUNT_ID: '123',
     INSTAGRAM_POLL_DELAY_MS: 0
-  }, async (url) => {
-    requests.push(url);
+  }, async (url, options = {}) => {
+    requests.push({ url, options });
     if (url.endsWith('/123/media')) return Response.json({ id: 'container-1' });
     if (url.includes('/container-1?fields=status_code')) {
-      const checks = requests.filter(value => value.includes('/container-1?fields=status_code')).length;
+      const checks = requests.filter(request => request.url.includes('/container-1?fields=status_code')).length;
       return Response.json({ status_code: checks === 1 ? 'IN_PROGRESS' : 'FINISHED' });
     }
     if (url.endsWith('/123/media_publish')) return Response.json({ id: 'ig-post-1' });
     return Response.json({}, { status: 404 });
   });
   assert.equal(id, 'ig-post-1');
-  assert.equal(requests.filter(value => value.includes('status_code')).length, 2);
-  assert.match(requests.at(-1), /media_publish$/);
+  assert.equal(requests.filter(request => request.url.includes('status_code')).length, 2);
+  assert.match(requests.at(-1).url, /media_publish$/);
+  assert.ok(requests.every(({ options }) => options.redirect === 'error'));
+});
+
+test('TikTok publisher rejects redirects on authenticated creator and publish requests', async () => {
+  const requests = [];
+  const id = await publishSocialPost({
+    platform: 'TIKTOK',
+    caption: 'HOSHILU TikTok post',
+    media_url: 'https://hoshilu.app/social/tiktok-post.png',
+    status: 'APPROVED'
+  }, {
+    TIKTOK_ACCESS_TOKEN: 'token',
+    TIKTOK_APP_AUDITED: 'true'
+  }, async (url, options = {}) => {
+    requests.push({ url, options });
+    if (url.includes('/creator_info/query/')) {
+      return Response.json({ data: { privacy_level_options: ['PUBLIC_TO_EVERYONE'] } });
+    }
+    return Response.json({ data: { publish_id: 'tiktok-post-1' }, error: { code: 'ok' } });
+  });
+  assert.equal(id, 'tiktok-post-1');
+  assert.equal(requests.length, 2);
+  assert.ok(requests.every(({ options }) => options.redirect === 'error'));
 });
 
 test('Instagramリールの処理が10回を超えても完了まで待機する', async () => {
@@ -542,7 +566,7 @@ const THREADS_ENV = {
   THREADS_POLL_DELAY_MS: 0
 };
 
-test('Threads publisher creates a text-only container, waits for processing, then publishes with the UTM link in the body', async () => {
+test('Threads publisher creates a text-only container and rejects authenticated redirects', async () => {
   const requests = [];
   let createPayload;
   const id = await publishSocialPost({
@@ -551,13 +575,13 @@ test('Threads publisher creates a text-only container, waits for processing, the
     link: 'https://hoshilu.app/?utm_source=threads',
     status: 'APPROVED'
   }, THREADS_ENV, async (url, options = {}) => {
-    requests.push(url);
+    requests.push({ url, options });
     if (url.endsWith('/123/threads')) {
       createPayload = JSON.parse(options.body);
       return Response.json({ id: 'threads-container-1' });
     }
     if (url.includes('/threads-container-1?fields=status')) {
-      const checks = requests.filter(value => value.includes('/threads-container-1?fields=status')).length;
+      const checks = requests.filter(request => request.url.includes('/threads-container-1?fields=status')).length;
       return Response.json({ status: checks === 1 ? 'IN_PROGRESS' : 'FINISHED' });
     }
     if (url.endsWith('/123/threads_publish')) return Response.json({ id: 'threads-post-1' });
@@ -568,8 +592,9 @@ test('Threads publisher creates a text-only container, waits for processing, the
   assert.match(createPayload.text, /utm_source=threads/);
   assert.equal('image_url' in createPayload, false);
   assert.equal('video_url' in createPayload, false);
-  assert.equal(requests.filter(value => value.includes('fields=status')).length, 2);
-  assert.match(requests.at(-1), /threads_publish$/);
+  assert.equal(requests.filter(request => request.url.includes('fields=status')).length, 2);
+  assert.match(requests.at(-1).url, /threads_publish$/);
+  assert.ok(requests.every(({ options }) => options.redirect === 'error'));
 });
 
 test('Threads publisher creates an IMAGE container for a non-video media URL', async () => {
@@ -777,6 +802,7 @@ test('公開済みInstagram投稿の正式URLとUTMを計測テーブルへ保�
   const result = await syncInstagramPublishedPermalinks(env, new Date('2026-08-12T14:46:00.000Z'), async (url, options) => {
     assert.match(url, /ig-media-1\?fields=id,permalink,is_ai_generated$/);
     assert.equal(options.headers.authorization, 'Bearer token');
+    assert.equal(options.redirect, 'error');
     return Response.json({ id: 'ig-media-1', permalink: 'https://www.instagram.com/reel/ExampleCode/', is_ai_generated: true });
   });
   assert.deepEqual(result, { checked: 1, saved: 1, failed: 0 });
@@ -986,6 +1012,7 @@ test('Threadsインサイト取り込みはpermalinkと指標をJST日次スナ�
   const result = await syncThreadsInsights(env, new Date('2026-08-17T12:00:00.000Z'), async (url, options) => {
     requests.push(url);
     assert.equal(options.headers.authorization, 'Bearer token');
+    assert.equal(options.redirect, 'error');
     if (url.includes('fields=permalink')) {
       return Response.json({ permalink: 'https://www.threads.com/@hoshilu.app/post/ExampleCode' });
     }

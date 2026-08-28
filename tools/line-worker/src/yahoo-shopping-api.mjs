@@ -1,4 +1,5 @@
 import { isMarketplaceProductUrl } from './marketplace-product-url-policy.mjs';
+import { safeProviderErrorCode } from './provider-error-code.mjs';
 
 const API_URL = 'https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch';
 const HIGH_RATING_TREND_RANKING_API = 'https://shopping.yahooapis.jp/ShoppingWebService/V1/highRatingTrendRanking';
@@ -133,6 +134,7 @@ export async function fetchYahooHighRatingRanking(env, query, fetcher = fetch) {
   url.searchParams.set('limit', '30');
   const response = await fetcher(url.toString(), {
     headers: { accept: 'application/json' },
+    redirect: 'error',
     signal: AbortSignal.timeout(2500)
   });
   if (!response.ok) {
@@ -164,16 +166,16 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch, option
   url.searchParams.set('image_size', '600');
   if (['-review_count', '-score'].includes(options.sort)) url.searchParams.set('sort', options.sort);
   url.searchParams.set('in_stock', 'true');
-  const response = await fetcher(url.toString(), { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(2500) });
+  const response = await fetcher(url.toString(), {
+    headers: { accept: 'application/json' },
+    redirect: 'error',
+    signal: AbortSignal.timeout(2500)
+  });
   if (!response.ok) {
-    let providerCode = '';
-    try {
-      const payload = await response.json();
-      providerCode = String(payload?.Error?.Message || payload?.error || '').slice(0, 80);
-    } catch {}
     const error = new Error('YAHOO_SHOPPING_SEARCH_FAILED');
     error.status = Number(response.status) || 0;
-    error.providerCode = providerCode;
+    // Never inspect/log provider error prose; it may echo the search query.
+    error.providerCode = safeProviderErrorCode('', response.status, 'YAHOO_PROVIDER_FAILED');
     throw error;
   }
   return normalizeYahooShoppingItems(await response.json());

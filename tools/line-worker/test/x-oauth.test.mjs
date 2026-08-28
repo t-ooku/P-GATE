@@ -88,6 +88,7 @@ async function connect(env, tokenPayload = {}, profilePayload = {}) {
   ), env, async (url, options = {}) => {
     if (url === 'https://api.x.com/2/oauth2/token') {
       assert.equal(options.method, 'POST');
+      assert.equal(options.redirect, 'error');
       assert.match(options.headers.authorization, /^Basic /);
       assert.doesNotMatch(options.body, /x-client-secret/);
       assert.match(options.body, /code_verifier=/);
@@ -101,6 +102,7 @@ async function connect(env, tokenPayload = {}, profilePayload = {}) {
       });
     }
     if (url === 'https://api.x.com/2/users/me?user.fields=username') {
+      assert.equal(options.redirect, 'error');
       assert.equal(options.headers.authorization, `Bearer ${tokenPayload.access_token || 'x-access-token'}`);
       return Response.json({ data: { id: ACCOUNT_ID, username: USERNAME, ...profilePayload } });
     }
@@ -203,6 +205,7 @@ test('expired X access tokens refresh, rotate and re-verify the same account', a
     return Response.json({ data: { id: ACCOUNT_ID, username: USERNAME } });
   });
   assert.equal(calls.length, 2);
+  assert.ok(calls.every(({ options }) => options.redirect === 'error'));
   assert.deepEqual(credential, {
     accountId: ACCOUNT_ID,
     username: USERNAME,

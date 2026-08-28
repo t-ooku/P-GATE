@@ -426,7 +426,10 @@ function safeOutputUrl(value) {
 
 async function persistOutput(env, job, task, now, fetchImpl) {
   const outputUrl = safeOutputUrl(task?.output?.[0]);
-  const response = await fetchImpl(outputUrl, { headers: { accept: 'video/*,application/octet-stream' } });
+  const response = await fetchImpl(outputUrl, {
+    headers: { accept: 'video/*,application/octet-stream' },
+    redirect: 'error'
+  });
   if (!response.ok || !response.body) throw new Error(`RUNWAY_OUTPUT_DOWNLOAD_${response.status || 'FAILED'}`);
   const maxBytes = Math.max(1, integer(env.RUNWAY_MAX_OUTPUT_BYTES, OUTPUT_LIMIT_DEFAULT));
   const announcedSize = integer(response.headers.get('content-length'), -1);

@@ -1,4 +1,5 @@
 import { openAiBackupEnabled } from './ai-provider-availability.mjs';
+import { sanitizeAiOutputList, sanitizeAiOutputText } from './ai-output-safety.mjs';
 
 const MAX_AI_CANDIDATES = 5;
 // 通常検索候補が0件の時だけ走る補助経路。長時間待たせるよりモールへの
@@ -12,18 +13,19 @@ function cleanString(value, max = 160) {
   return String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function providerDiagnosticCode(error) {
+  const providerCode = String(error?.providerCode || '').trim().toUpperCase();
+  if (/^[A-Z][A-Z0-9_.-]{1,79}$/u.test(providerCode)) return providerCode;
+  const status = Number(error?.status || 0);
+  if (status >= 400 && status <= 599) return `HTTP_${status}`;
+  if (error?.name === 'TimeoutError' || error?.name === 'AbortError') return 'AI_PROVIDER_TIMEOUT';
+  if (error instanceof SyntaxError) return 'AI_PROVIDER_INVALID_JSON';
+  if (error instanceof TypeError) return 'AI_PROVIDER_NETWORK_FAILED';
+  return 'AI_PROVIDER_FAILED';
+}
+
 function cleanStringList(value, maxItems = 12, maxLength = 100) {
-  const seen = new Set();
-  const output = [];
-  for (const item of Array.isArray(value) ? value : []) {
-    const cleaned = cleanString(item, maxLength);
-    const key = cleaned.toLocaleLowerCase();
-    if (!cleaned || seen.has(key)) continue;
-    seen.add(key);
-    output.push(cleaned);
-    if (output.length >= maxItems) break;
-  }
-  return output;
+  return sanitizeAiOutputList(value, maxItems, maxLength);
 }
 
 function parseJsonText(text) {
@@ -39,15 +41,15 @@ function parseJsonText(text) {
 }
 
 function normalizeCandidate(candidate, index) {
-  const name = cleanString(candidate?.name || candidate?.product_name || candidate?.title, 140);
+  const name = sanitizeAiOutputText(candidate?.name || candidate?.product_name || candidate?.title, 140);
   if (!name) return null;
   const score = Math.max(1, Math.min(100, Math.round(Number(candidate?.match_score || candidate?.score || (95 - index * 7)) || 0)));
   return {
     name,
-    brand: cleanString(candidate?.brand, 80),
-    model: cleanString(candidate?.model, 100),
+    brand: sanitizeAiOutputText(candidate?.brand, 80),
+    model: sanitizeAiOutputText(candidate?.model, 100),
     match_score: score,
-    reason: cleanString(candidate?.reason || candidate?.reasoning, 240),
+    reason: sanitizeAiOutputText(candidate?.reason || candidate?.reasoning, 240),
     matched_features: cleanStringList(candidate?.matched_features || candidate?.features, 8, 80),
     search_keywords: cleanStringList(candidate?.search_keywords || [name], 8, 100)
   };
@@ -62,8 +64,8 @@ export function normalizeAiIntent(payload = {}) {
     .filter(Boolean)
     .slice(0, MAX_AI_CANDIDATES);
   return {
-    category: cleanString(payload?.category, 100),
-    intent_summary: cleanString(payload?.intent_summary || payload?.summary, 240),
+    category: sanitizeAiOutputText(payload?.category, 100),
+    intent_summary: sanitizeAiOutputText(payload?.intent_summary || payload?.summary, 240),
     features: cleanStringList(payload?.features, 12, 80),
     product_candidates: productCandidates,
     search_keywords: cleanStringList(payload?.search_keywords, 16, 100),
@@ -98,26 +100,15 @@ function openAiText(payload) {
 }
 
 function providerPrompt(query, language) {
-  return `You are HOSHILU's product-intent analysis engine. Understand the user's vague memory or wish and convert it into product candidates and short marketplace search terms.\n\nUser input: ${query}\nDisplay language: ${language}\n\nReturn JSON only with this exact structure:\n{\n  "category": "",\n  "intent_summary": "",\n  "features": [""],\n  "product_candidates": [\n    {\n      "name": "",\n      "brand": "",\n      "model": "",\n      "match_score": 1,\n      "reason": "",\n      "matched_features": [""],\n      "search_keywords": [""]\n    }\n  ],\n  "search_keywords": [""],\n  "multilingual_keywords": {\n    "ja": [""],\n    "en": [""],\n    "zh": [""],\n    "ko": [""]\n  }\n}\n\nRules:\n- Return 3 to ${MAX_AI_CANDIDATES} realistic product candidates when possible.\n- Do not return URLs.\n- Do not invent exact model numbers when uncertain; use a product family or descriptive candidate instead.\n- Convert long vague sentences into multiple short marketplace-friendly search terms.\n- Keep the original meaning, visual clues, use case, style, place seen, and brand clues.\n- When the user says they saw it on Instagram, TikTok, YouTube, social media, or an ad, use the available Google Search tool to identify plausible public product names before answering. Do not identify a brand from memory alone.\n- Include Japanese and English terms; include Chinese and Korean when useful.\n- match_score must be 1-100 and reason must explain why the candidate matches.\n- JSON only, no markdown.`;
-}
-
-// 「SNSで見た」のように見た場所が識別の主要手掛かりなら、モデルの
-// 学習済み知識だけで推測せずGoogle Searchで公開情報を確認する。
-export function shouldGroundProductDiscovery(query) {
-  return /(?:インスタ(?:グラム)?|instagram|tiktok|youtube|SNS|広告|CM|動画|投稿).{0,40}(?:見た|見かけた|流れてきた|出てきた)|(?:見た|見かけた).{0,40}(?:インスタ(?:グラム)?|instagram|tiktok|youtube|SNS|広告|CM|動画|投稿)/iu
-    .test(String(query || '').normalize('NFKC'));
+  return `You are HOSHILU's product-intent analysis engine. Understand the user's vague memory or wish and convert it into product candidates and short marketplace search terms.\n\nUser input: ${query}\nDisplay language: ${language}\n\nReturn JSON only with this exact structure:\n{\n  "category": "",\n  "intent_summary": "",\n  "features": [""],\n  "product_candidates": [\n    {\n      "name": "",\n      "brand": "",\n      "model": "",\n      "match_score": 1,\n      "reason": "",\n      "matched_features": [""],\n      "search_keywords": [""]\n    }\n  ],\n  "search_keywords": [""],\n  "multilingual_keywords": {\n    "ja": [""],\n    "en": [""],\n    "zh": [""],\n    "ko": [""]\n  }\n}\n\nRules:\n- Return 3 to ${MAX_AI_CANDIDATES} realistic product candidates when possible.\n- Do not return URLs.\n- Do not invent exact model numbers when uncertain; use a product family or descriptive candidate instead.\n- Convert long vague sentences into multiple short marketplace-friendly search terms.\n- Keep the original meaning, visual clues, use case, style, place seen, and brand clues.\n- When the user says they saw it on social media or in an ad, treat that only as an unverified clue. Do not identify a brand or exact product from the platform name or memory alone; prefer a generic product category.\n- Include Japanese and English terms; include Chinese and Korean when useful.\n- match_score must be 1-100 and reason must explain why the candidate matches.\n- JSON only, no markdown.`;
 }
 
 async function providerFetch(fetchImpl, url, options, timeoutMs) {
-  return fetchImpl(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
+  return fetchImpl(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(timeoutMs) });
 }
 
 async function callGemini(query, language, env, fetchImpl) {
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
-  const grounded = shouldGroundProductDiscovery(query);
-  const generationConfig = grounded
-    ? { temperature: 0.2 }
-    : { temperature: 0.25, responseMimeType: 'application/json' };
   const response = await providerFetch(
     fetchImpl,
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -126,8 +117,7 @@ async function callGemini(query, language, env, fetchImpl) {
       headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: providerPrompt(query, language) }] }],
-        ...(grounded ? { tools: [{ googleSearch: {} }] } : {}),
-        generationConfig
+        generationConfig: { temperature: 0.25, responseMimeType: 'application/json' }
       })
     },
     GEMINI_TIMEOUT_MS
@@ -138,7 +128,7 @@ async function callGemini(query, language, env, fetchImpl) {
     error.status = response.status;
     try {
       const failure = await response.clone().json();
-      error.providerCode = cleanString(failure?.error?.status || failure?.error?.code || failure?.error?.message, 120);
+      error.providerCode = cleanString(failure?.error?.status || failure?.error?.code, 80);
     } catch {}
     throw error;
   }
@@ -165,7 +155,7 @@ async function callOpenAi(query, language, env, fetchImpl) {
     error.status = response.status;
     try {
       const failure = await response.clone().json();
-      error.providerCode = cleanString(failure?.error?.code || failure?.error?.type || failure?.error?.message, 120);
+      error.providerCode = cleanString(failure?.error?.code || failure?.error?.type, 80);
     } catch {}
     throw error;
   }
@@ -203,7 +193,7 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
         model: result.model,
         candidates: candidateCount,
         keywords: keywordCount,
-        category: result.analysis.category
+        category_present: Boolean(result.analysis.category)
       });
       if (candidateCount || keywordCount || provider === providers.at(-1)) {
         return {
@@ -220,7 +210,7 @@ export async function discoverProductsWithAi(query, language, env = {}, fetchImp
       console.warn('AI_PRODUCT_DISCOVERY_PROVIDER_FAILED', {
         provider,
         status: Number(error?.status || 0),
-        provider_code: cleanString(error?.providerCode || error?.name || error?.message, 120),
+        provider_code: providerDiagnosticCode(error),
         timeout_ms: provider === 'gemini' ? GEMINI_TIMEOUT_MS : OPENAI_TIMEOUT_MS
       });
     }

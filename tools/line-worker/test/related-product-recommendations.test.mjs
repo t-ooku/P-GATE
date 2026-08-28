@@ -40,7 +40,7 @@ test('LB 3in1 アイブロウは眉メイクの関連商品カテゴリを返す
 test('固定ルールにない検索はAIが理解した別カテゴリへ横展開できる',async()=>{
   const calls=[];
   const fetchImpl=async(url,options)=>{
-    calls.push({url:String(url),body:String(options?.body||'')});
+    calls.push({url:String(url),body:String(options?.body||''),redirect:options?.redirect});
     return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify({categories:[
       {query:'収納ボックス',reason:'小物の整理に関連'},
       {query:'ラベルシール',reason:'収納物の分類に関連'},
@@ -51,6 +51,23 @@ test('固定ルールにない検索はAIが理解した別カテゴリへ横展
   assert.deepEqual(result.map(item=>item.query),['収納ボックス','ラベルシール','棚用滑り止めシート']);
   assert.equal(calls.length,1);
   assert.match(calls[0].body,/complementary-product category planner/);
+  assert.equal(calls[0].redirect,'error');
+});
+
+test('OpenAI関連カテゴリ通信も認証情報付きリダイレクトを追従しない',async()=>{
+  let requestOptions;
+  const result=await resolveRelatedProductRecommendationQueries(
+    'アクセサリー収納棚','JA',{OPENAI_API_KEY:'o'.repeat(20)},
+    async(url,options)=>{
+      assert.equal(String(url),'https://api.openai.com/v1/responses');
+      requestOptions=options;
+      return Response.json({output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({categories:[
+        {query:'収納ボックス',reason:'小物の整理に関連'}
+      ]})}]}]});
+    }
+  );
+  assert.deepEqual(result.map(item=>item.query),['収納ボックス']);
+  assert.equal(requestOptions.redirect,'error');
 });
 
 test('AI提案は重複・元商品・URL・理由なしを除外する',()=>{
@@ -68,6 +85,16 @@ test('AI提案は重複・元商品・URL・理由なしを除外する',()=>{
   ]);
 });
 
+test('AI関連カテゴリはqueryまたはreasonに創作価格・在庫・購入先・URLがあれば提案ごと捨てる',()=>{
+  assert.deepEqual(normalizeAiRelatedQueries({categories:[
+    {query:'USB充電器 在庫あり',reason:'イヤホンの充電に関連'},
+    {query:'USB充電器',reason:'Amazonで1,000円、在庫あり。evil.com/item'},
+    {query:'収納ボックス',reason:'小物の整理に関連'}
+  ]},'イヤホン'),[
+    {query:'収納ボックス',reason:'小物の整理に関連'}
+  ]);
+});
+
 test('検索した商品そのものは固定ルールの関連商品へ再掲しない',()=>{
   assert.deepEqual(relatedProductRecommendationQueries('テレビ台').map(item=>item.query),['HDMIケーブル','画面クリーナー']);
   assert.deepEqual(relatedProductRecommendationQueries('ベビーカーフック').map(item=>item.query),['ベビーカー レインカバー','ベビーカーシート']);
@@ -80,9 +107,9 @@ test('医薬品など安全性の高い検索はAI自動補完しない',async()
   assert.equal(called,false);
 });
 
-test('関連商品APIも本検索と同じ同意・session・Turnstile境界を使う',()=>{
-  assert.equal(validateRelatedRecommendationsRequest({query:'スマホカバー',consent:true,session_id:'anonymous_session_123456',turnstile_token:'token',language:'JA'}).query,'スマホカバー');
-  assert.throws(()=>validateRelatedRecommendationsRequest({query:'スマホカバー',consent:false,session_id:'anonymous_session_123456',turnstile_token:'token'}),/CONSENT_REQUIRED/);
+test('関連商品APIも本検索と同じ処理告知・session・Turnstile境界を使う',()=>{
+  assert.equal(validateRelatedRecommendationsRequest({query:'スマホカバー',processing_notice_shown:true,session_id:'anonymous_session_123456',turnstile_token:'token',language:'JA'}).query,'スマホカバー');
+  assert.throws(()=>validateRelatedRecommendationsRequest({query:'スマホカバー',processing_notice_shown:false,session_id:'anonymous_session_123456',turnstile_token:'token'}),/PROCESSING_NOTICE_REQUIRED/);
 });
 
 test('本検索は非同期商品取得前にも署名済み関連カテゴリ棚を返す',()=>{

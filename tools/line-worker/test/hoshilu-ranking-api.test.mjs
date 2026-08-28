@@ -17,7 +17,7 @@ test('ランキング初回は商品を取得せず小ジャンルを1件ずつY
   };
   const request = new Request('https://hoshilu.app/api/hoshilu-rankings', {
     method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ query: 'ハンディファン', confirmation_only: true, consent: true, session_id: 'ranking_session_123456', turnstile_token: 'verified-token' })
+    body: JSON.stringify({ query: 'ハンディファン', confirmation_only: true, processing_notice_shown: true, session_id: 'ranking_session_123456', turnstile_token: 'verified-token' })
   });
   try {
     const response = await worker.fetch(request, {
@@ -47,7 +47,7 @@ test('総合人気ランキング応答に、価格根拠を分けたHOSHILU最�
   };
   const request = new Request('https://hoshilu.app/api/hoshilu-rankings', {
     method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ query: 'ハンディファン', consent: true, session_id: 'ranking_session_123456', turnstile_token: 'verified-token' })
+    body: JSON.stringify({ query: 'ハンディファン', processing_notice_shown: true, session_id: 'ranking_session_123456', turnstile_token: 'verified-token' })
   });
   try {
     const response = await worker.fetch(request, {
@@ -79,7 +79,7 @@ test('公式Genre Searchで確認した固定辞書外の小分類から総合�
   const request = new Request('https://hoshilu.app/api/hoshilu-rankings', {
     method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({
       query:'炊飯器', category_selection:{id:'rakuten_204586',label:'炊飯器',genre_id:'204586',source:'RAKUTEN_GENRE_API'},
-      consent:true, session_id:'ranking_session_123456', turnstile_token:'verified-token'
+      processing_notice_shown:true, session_id:'ranking_session_123456', turnstile_token:'verified-token'
     })
   });
   try {
@@ -95,7 +95,7 @@ test('クライアントが作った未確認ジャンル指定はAPI境界で�
   const request = new Request('https://hoshilu.app/api/hoshilu-rankings', {
     method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({
       query:'炊飯器', category_selection:{id:'rakuten_204586',label:'炊飯器',genre_id:'204586',source:'UNVERIFIED'},
-      consent:true, session_id:'ranking_session_123456', turnstile_token:'verified-token'
+      processing_notice_shown:true, session_id:'ranking_session_123456', turnstile_token:'verified-token'
     })
   });
   const response = await worker.fetch(request, {}, {waitUntil(){}});
@@ -113,7 +113,7 @@ test('固定辞書にない入力へ楽天公式小分類の選択肢を返す',
     throw new Error(`UNEXPECTED_FETCH:${target}`);
   };
   const request = new Request('https://hoshilu.app/api/hoshilu-rankings', {
-    method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({query:'炊飯器',consent:true,session_id:'ranking_session_123456',turnstile_token:'verified-token'})
+    method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({query:'炊飯器',processing_notice_shown:true,session_id:'ranking_session_123456',turnstile_token:'verified-token'})
   });
   try {
     const response = await worker.fetch(request, {TURNSTILE_SECRET_KEY:'turnstile-secret',RAKUTEN_APPLICATION_ID:'app',RAKUTEN_ACCESS_KEY:'access'}, {waitUntil(){}});

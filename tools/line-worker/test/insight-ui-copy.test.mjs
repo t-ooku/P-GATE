@@ -25,25 +25,25 @@ test('section3・5: HOSHILU INSIGHTの文言から「値下げ通知」の概念
   assert.match(wishItemMatch[0], /actions\.insightToggleLabel/);
 });
 
-test('section9・10: AIウォッチの説明文は変更されない(値下げ・クーポン・再入荷・販売開始の4種別を維持)', async () => {
+test('購入希望価格ウォッチは実装済みのAPI価格閾値だけを案内する', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(app, /watchDescription:'AIがこの商品の価格・在庫・クーポンを24時間監視します。'/);
-  assert.match(app, /watchLabels:\['値下げ','クーポン','再入荷','販売開始'\]/);
-  // createWatchOptions(🔔ダイアログ)は今までどおりwatchLabelsの4チェック
-  // ボックスを描画する
+  assert.match(app, /watchDescription:'希望価格を設定すると、対象商品のAPI確認価格を定期確認し、条件を満たした場合にお知らせします。'/);
+  assert.doesNotMatch(app, /watchLabels:/);
   const bellMatch = app.match(/function createWatchOptions\(candidate,t\)\{[\s\S]*?\n(?=function saveWatchChoice)/);
   assert.ok(bellMatch, 'createWatchOptions関数が見つかりません');
-  assert.match(bellMatch[0], /t\.watchLabels\.map/);
+  assert.doesNotMatch(bellMatch[0], /watch-options|inputs\.map|return\{bell,dialog,inputs\}/);
+  assert.match(bellMatch[0], /\[false,true,false,false\]/);
+  assert.match(bellMatch[0], /targetInput\.required=true/);
   assert.match(bellMatch[0], /t\.watchTitle/);
   assert.match(bellMatch[0], /t\.watchDescription/);
 });
 
-test('section11・12: 3つの責務(HOSHILU INSIGHT/AIウォッチ/SALE RADAR)を明示的に分けた説明文になっている', async () => {
+test('3つの責務(HOSHILU INSIGHT/購入希望価格ウォッチ/SALE RADAR)を明示的に分ける', async () => {
   const i18n = await readFile(new URL('../public/site-i18n.js', import.meta.url), 'utf8');
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   for (const source of [i18n, html]) {
     assert.match(source, /HOSHILU INSIGHT/);
-    assert.match(source, /AIウォッチ/);
+    assert.match(source, /購入希望価格ウォッチ/);
     assert.match(source, /SALE RADAR/);
   }
 });
@@ -55,7 +55,13 @@ test('section18: index.htmlの#insightセクションから「AIウォッチ中�
   assert.match(insightSection, /保存した検索条件/);
 });
 
-test('section18: AIウォッチ自身の🔔ダイアログ関連の値下げ表記は維持される(このリストのみ除去する)', async () => {
-  const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(app, /値下げ/); // createWatchOptions/watchLabels側には残る
+test('未実装の在庫・クーポン・販売開始監視を現行機能として表示しない', async () => {
+  const sources = await Promise.all([
+    '../public/app.js', '../public/index.html', '../public/site-i18n.js',
+    '../public/login.html', '../public/terms.html', '../src/social-autopilot.mjs'
+  ].map((path) => readFile(new URL(path, import.meta.url), 'utf8')));
+  const combined = sources.join('\n');
+  assert.doesNotMatch(combined, /価格[・、,]\s*在庫[・、,]\s*クーポン.{0,30}(?:24時間|around the clock|监控|지켜봅니다)/iu);
+  assert.doesNotMatch(combined, /watchLabels:\s*\[/u);
+  assert.match(combined, /API(?:で)?確認(?:できた)?価格|API prices|API价格|API 가격/iu);
 });

@@ -24,7 +24,7 @@ test('HOSHILU AI action stays onsite and marketplace buttons use accessible bran
   assert.match(styles, /focus-visible/);
   assert.match(layout, /\.marketplace-fallback-group \.marketplace-links\{/);
   assert.match(layout, /@media\(max-width:760px\)/);
-  assert.match(worker, /hoshilu-shell-v394/);
+  assert.match(worker, /hoshilu-shell-v396/);
   assert.match(script, /function linkDisplayedProducts\(\)/);
   assert.match(script, /product-primary-link/);
   assert.match(script, /link\.dataset\.marketplace = destination\.dataset\.marketplace/);
@@ -134,7 +134,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/app\.js\?v=137"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=10"><\/script>/);
+  assert.match(html, /<script type="module" src="\/assets-v138\/app\.js\?v=138"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=10"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -192,7 +192,8 @@ test('AIチャット500は会話本文を保存せず追跡IDと安全なコー�
   assert.match(handler, /recordSearchOperationalFailure\(env, \{ requestId, code, component: 'ai_chat' \}\)/);
   assert.match(handler, /AI_CHAT_OPERATIONAL_TELEMETRY_FAILED/);
   assert.match(handler, /if \(ctx\?\.waitUntil\) ctx\.waitUntil\(record\)/);
-  assert.match(handler, /REQUEST_JSON_INVALID/);
+  assert.match(handler, /readPublicApiJson\(request, 4000\)/);
+  assert.match(worker, /parsed\.error === 'REQUEST_TOO_LARGE'[\s\S]{0,160}'REQUEST_JSON_INVALID'/);
   assert.doesNotMatch(handler, /recordSearchOperationalFailure\([^\n]*(?:history|input)/);
 });
 
@@ -278,7 +279,8 @@ test('検索方法はスライド式2モードで、AI確認は3回目のNO後�
 
 test('購入希望価格は検索文ではなく商品単位で保存し、ログイン同期でも希望額を保持する',async()=>{
   const app=await readFile(new URL('../public/app.js',import.meta.url),'utf8');
-  assert.match(app,/const wishQuery=amount\?productName:elements\.query\.value/);
-  assert.match(app,/saveWish\(wishQuery,inputs\.map/);
+  assert.match(app,/const wishQuery=productName/);
+  assert.match(app,/saveWish\(wishQuery,\[false,true,false,false\],target\)/);
+  assert.match(app,/targetInput\.required=true/);
   assert.match(app,/const saved=getWatchPreferences\(\)\.find\(item=>item\.query===query\)\|\|\{\};await persistMemberWish\(query,watchOptionsFor\(query\),saved\)/);
 });

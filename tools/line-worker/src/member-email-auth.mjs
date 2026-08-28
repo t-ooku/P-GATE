@@ -6,7 +6,7 @@ function secret(env) { const value=String(env.MEMBER_SESSION_SECRET||env.LINK_SI
 function normalizeEmail(value) { const email=String(value||'').trim().toLowerCase(); return /^[^\s@]{1,64}@[^\s@.]{1,190}\.[^\s@]{2,24}$/.test(email)?email:''; }
 export function emailLoginConfigured(env={}) { return Boolean(env.PRODUCT_DB&&String(env.RESEND_API_KEY||'').startsWith('re_')&&normalizeEmail(env.MEMBER_EMAIL_FROM)); }
 async function sendCode(email,code,env) {
-  const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{authorization:`Bearer ${env.RESEND_API_KEY}`,'content-type':'application/json'},body:JSON.stringify({from:`HOSHILU <${env.MEMBER_EMAIL_FROM}>`,to:[email],subject:'HOSHILU ログインコード',text:`HOSHILUのログインコードは ${code} です。10分以内に入力してください。心当たりがない場合は、このメールを無視してください。`})});
+  const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{authorization:`Bearer ${env.RESEND_API_KEY}`,'content-type':'application/json'},body:JSON.stringify({from:`HOSHILU <${env.MEMBER_EMAIL_FROM}>`,to:[email],subject:'HOSHILU ログインコード',text:`HOSHILUのログインコードは ${code} です。10分以内に入力してください。心当たりがない場合は、このメールを無視してください。`}),redirect:'error'});
   if(!response.ok) throw new Error('EMAIL_SEND_FAILED');
 }
 export async function requestEmailCode(request,env,now=Math.floor(Date.now()/1000)) {

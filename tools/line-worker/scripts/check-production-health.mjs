@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 const DEFAULT_BASE_URL = 'https://hoshilu.app/';
 const REQUIRED_HEALTH_CHECKS = [
   'turnstile_configured',
+  'search_input_analysis_configured',
   'ai_chat_configured',
   'amazon_associate_link_configured',
   'rakuten_marketplace_configured',
@@ -57,7 +58,7 @@ function probeRequest(baseUrl, pathname, turnstileToken = '', requestTimeoutMs =
     body: JSON.stringify({
       query: 'monitor probe',
       history: [{ role: 'user', content: 'monitor probe' }],
-      consent: true,
+      processing_notice_shown: true,
       session_id: 'monitor_session_20260813',
       turnstile_token: turnstileToken
     }),

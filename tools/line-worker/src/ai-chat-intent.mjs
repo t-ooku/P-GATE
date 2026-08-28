@@ -19,6 +19,7 @@
 
 import { expandSearchQuery } from './query-expansion.mjs';
 import { openAiBackupEnabled } from './ai-provider-availability.mjs';
+import { sanitizeAiOutputList, sanitizeAiOutputText } from './ai-output-safety.mjs';
 
 // One provider must not consume the whole request deadline. Gemini is still
 // primary, but a timeout leaves a bounded slice for the OpenAI backup before
@@ -69,10 +70,7 @@ function emitProviderDegradation(options, suffix, provider, code) {
 }
 
 function cleanRefinedQuery(value) {
-  return cleanString(value, MAX_MESSAGE_LENGTH * MAX_HISTORY_MESSAGES)
-    .replace(/https?:\/\/\S+/giu, ' ')
-    .replace(/(?:[¥$€£]\s*\d[\d,.]*|\d[\d,]*(?:円|ドル|usd|jpy))/giu, ' ')
-    .replace(/\s+/gu, ' ').trim();
+  return sanitizeAiOutputText(value, MAX_MESSAGE_LENGTH * MAX_HISTORY_MESSAGES);
 }
 
 function parseJsonText(text) {
@@ -128,7 +126,7 @@ function chatPrompt(history, language, mode = 'REFINE') {
 }
 
 async function providerFetch(fetchImpl, url, options, timeoutMs) {
-  return fetchImpl(url, { ...options, signal: AbortSignal.timeout(timeoutMs) });
+  return fetchImpl(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(timeoutMs) });
 }
 
 async function callGemini(history, language, env, fetchImpl, timeoutMs = CHAT_PROVIDER_TIMEOUT_MS, mode = 'REFINE') {
@@ -198,16 +196,15 @@ async function callOpenAi(history, language, env, fetchImpl, timeoutMs = CHAT_PR
 
 export function normalizeChatTurnResult(payload = {}) {
   const needsClarification = payload?.needs_clarification === true;
-  const matchedFeatures = (Array.isArray(payload?.matched_features) ? payload.matched_features : [])
-    .map((value) => cleanString(value, 100)).filter(Boolean).slice(0, 8);
+  const matchedFeatures = sanitizeAiOutputList(payload?.matched_features, 8, 100);
   const matchScore = Math.max(0, Math.min(100, Math.round(Number(payload?.match_score) || 0)));
   return {
     needs_clarification: needsClarification,
-    clarifying_question: needsClarification ? cleanString(payload?.clarifying_question, 200) : '',
+    clarifying_question: needsClarification ? sanitizeAiOutputText(payload?.clarifying_question, 200) : '',
     refined_query: !needsClarification ? cleanRefinedQuery(payload?.refined_query) : '',
     candidate_name: !needsClarification ? cleanRefinedQuery(payload?.candidate_name).slice(0, 160) : '',
-    candidate_brand: !needsClarification ? cleanString(payload?.candidate_brand, 120) : '',
-    candidate_reason: !needsClarification ? cleanString(payload?.candidate_reason, 300) : '',
+    candidate_brand: !needsClarification ? sanitizeAiOutputText(payload?.candidate_brand, 120) : '',
+    candidate_reason: !needsClarification ? sanitizeAiOutputText(payload?.candidate_reason, 300) : '',
     matched_features: !needsClarification ? matchedFeatures : [],
     match_score: !needsClarification ? matchScore : 0
   };

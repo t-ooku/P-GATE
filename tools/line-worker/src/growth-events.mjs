@@ -1,13 +1,8 @@
 const EVENTS = new Set([
   'landing_view',
-  // 2026-08-17追加。search_started はフォームのsubmitイベントでしか発火しない
-  // が、#consent は required でフォームに novalidate も無いため、同意欄が
-  // 未チェックのまま検索ボタンを押すとブラウザのネイティブ検証がsubmitを
-  // 止める = search_started が発火しない。つまり「入力して押したのに弾かれた
-  // 人」は、計測上まったく存在しないことになっていた。
-  // 訪問68→検索開始21(離脱69%)が「関心が無かった」のか「押したが弾かれた」
-  // のかを切り分けるため、押した瞬間(search_attempted)と検証で止められた
-  // 瞬間(search_blocked)を別々に記録する。検索文そのものは従来どおり保存しない。
+  // 検索開始前にブラウザの入力検証で止まる場合もあるため、押した瞬間
+  // (search_attempted)と検証で止められた瞬間(search_blocked)を分けて記録する。
+  // 検索文そのものは保存しない。
   'search_attempted',
   'search_blocked',
   'search_started',
@@ -38,14 +33,17 @@ const EVENTS = new Set([
 const LOCALES = new Set(['JA', 'EN', 'ZH', 'KO']);
 const SEARCH_PROVIDER_DEGRADATION_COMPONENTS = new Set([
   'ai_chat_primary', 'ai_chat_all',
-  'query_structurer_primary', 'query_structurer_all'
+  'query_structurer_primary', 'query_structurer_all',
+  'search_input_analysis'
 ]);
 const SEARCH_PROVIDER_DEGRADATION_CODES = new Set([
   'AI_PROVIDER_TIMEOUT', 'AI_PROVIDER_RATE_LIMITED', 'AI_PROVIDER_UPSTREAM_5XX',
   'AI_PROVIDER_REQUEST_REJECTED', 'AI_PROVIDER_AUTH_FAILED',
   'AI_PROVIDER_INVALID_JSON', 'AI_PROVIDER_OUTPUT_LIMIT',
   'AI_PROVIDER_NETWORK_FAILED', 'AI_PROVIDER_FAILED', 'AI_PROVIDER_NOT_CONFIGURED',
-  'AI_PROVIDERS_NOT_CONFIGURED', 'AI_ALL_PROVIDERS_FAILED'
+  'AI_PROVIDERS_NOT_CONFIGURED', 'AI_ALL_PROVIDERS_FAILED',
+  'SEARCH_INPUT_ANALYSIS_FAILED', 'SEARCH_INPUT_ANALYSIS_NOT_CONFIGURED',
+  'SEARCH_INPUT_ANALYSIS_EMPTY', 'SEARCH_INPUT_ANALYSIS_NO_PUBLIC_EVIDENCE'
 ]);
 const CLIENT_SEARCH_FAILURE_CODE_PATTERN = /^(?:AI|CONSENT|KNOWLEDGE|ORIGIN|REQUEST|SEARCH|TURNSTILE)_[A-Z0-9_]{2,72}$/u;
 const MARKETPLACES = new Set([
@@ -152,13 +150,16 @@ export async function recordSearchProviderDegradation(env, {
   const safeComponent = String(component || '');
   const safeProvider = String(provider || '').toLowerCase();
   const safeRequestId = anonymousId(requestId);
-  const providerMatchesComponent = safeComponent.endsWith('_primary')
+  const providerMatchesComponent = safeComponent === 'search_input_analysis'
     ? safeProvider === 'gemini'
-    : safeComponent.endsWith('_all') && safeProvider === 'all';
+    : safeComponent.endsWith('_primary')
+      ? safeProvider === 'gemini'
+      : safeComponent.endsWith('_all') && safeProvider === 'all';
   if (!SEARCH_PROVIDER_DEGRADATION_COMPONENTS.has(safeComponent)
     || !providerMatchesComponent || !safeRequestId) return false;
-  const fallbackCode = safeComponent.endsWith('_all')
-    ? 'AI_ALL_PROVIDERS_FAILED' : 'AI_PROVIDER_FAILED';
+  const fallbackCode = safeComponent === 'search_input_analysis'
+    ? 'SEARCH_INPUT_ANALYSIS_FAILED'
+    : safeComponent.endsWith('_all') ? 'AI_ALL_PROVIDERS_FAILED' : 'AI_PROVIDER_FAILED';
   const safeCode = SEARCH_PROVIDER_DEGRADATION_CODES.has(String(code || ''))
     ? String(code) : fallbackCode;
   const values = [

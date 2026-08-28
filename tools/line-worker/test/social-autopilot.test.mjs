@@ -27,13 +27,30 @@ test('販促自動運用は今日の機能リールと14日先までの定期投
   const launchReel = posts.find(post => post.content_id === 'feature-launch-reel-20260809');
   assert.equal(launchReel.scheduled_at, '2026-08-09T11:15:00.000Z');
   assert.match(launchReel.caption, /ランキングとAI最安比較/);
-  assert.match(launchReel.caption, /値下がり通知/);
+  assert.match(launchReel.caption, /購入希望価格ウォッチ/);
   for (const post of posts) {
     assert.match(post.caption, /13モール|検索|商品|条件|価格/);
     assert.doesNotMatch(post.caption, /(?:9|10)モール/);
     assert.equal(new URL(post.link).hostname, 'hoshilu.app');
     assert.match(new URL(post.link).searchParams.get('utm_campaign'), /13mall/);
   }
+});
+
+test('非BUZZ販促はスクショ・公開投稿URL・一言検索を過剰表現なしで訴求する', () => {
+  const posts = buildSocialAutopilotPosts(new Date('2026-08-24T00:00:00.000Z'), 28);
+  for (const platform of ['X', 'INSTAGRAM']) {
+    const campaign = posts.filter((post) => post.platform === platform && new URL(post.link).pathname === '/');
+    assert.ok(campaign.some((post) => /スクショ/u.test(post.caption)), `${platform}: screenshot copy`);
+    assert.ok(campaign.some((post) => /公開(?:SNS)?投稿.*URL|公開SNS投稿のURL/u.test(post.caption)), `${platform}: URL copy`);
+    assert.ok(campaign.some((post) => /一言/u.test(post.caption)), `${platform}: remembered phrase copy`);
+    assert.ok(campaign.every((post) => !/必ず(?:特定|見つかる)|全SNS対応/u.test(post.caption)));
+  }
+  const threads = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'), 10);
+  assert.ok(threads.some((post) => /スクショ.*公開SNS投稿URL.*一言/u.test(post.caption)));
+  const searchGuide = posts.find((post) => post.content_id === 'guide-search-screen');
+  assert.ok(searchGuide, '3入力のInstagram操作案内が計画されていない');
+  assert.doesNotMatch(searchGuide.media_url, /hoshilu-product-screen-v1\.jpg/u);
+  assert.match(searchGuide.media_url, /instagram-ambiguous-four-market-v1\.png/u);
 });
 
 test('Instagramは月〜土20時15分、月・水・金をリールにする', () => {
@@ -57,7 +74,15 @@ test('土曜の操作案内は承認済み質問カードと同じ検索説明�
   assert.ok(post);
   assert.equal(post.media_url, 'https://hoshilu.app/social/instagram-want-poll-v1.png');
   assert.match(post.caption, /商品名が分からなくても|見た場所・色・形・使い方/u);
-  assert.doesNotMatch(post.caption, /値下がり通知|買いたい価格/u);
+  assert.doesNotMatch(post.caption, /値下がり通知|購入希望価格|買いたい価格/u);
+});
+
+test('価格通知の販促は希望価格閾値とAPI確認価格だけを説明する', () => {
+  const posts = buildSocialAutopilotPosts(new Date('2026-08-24T00:00:00.000Z'), 28);
+  const targetPricePosts = posts.filter((post) => /購入希望価格/u.test(post.caption));
+  assert.ok(targetPricePosts.length > 0);
+  assert.ok(targetPricePosts.some((post) => /APIで確認できた価格.*(?:以下|条件)/u.test(post.caption)));
+  assert.ok(posts.every((post) => !/値下がり通知|24時間監視|クーポン.*再入荷/u.test(post.caption)));
 });
 
 test('Instagram定常投稿はBUZZ専用ビジュアルと/buzz送客を含む', () => {
@@ -132,6 +157,18 @@ test('Amazon優先Threadsローテーションは1日2本、昼夜の枠で別�
   // 同じ日の昼と夜は別内容。翌日も次のローテーションへ進む。
   assert.notEqual(posts[0].content_id, posts[1].content_id);
   assert.notEqual(posts[0].content_id, posts[2].content_id);
+});
+
+test('Amazon優先Threads文面は検索先を開くだけと全投稿で明示する', () => {
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'), 10);
+  const affiliate = posts.filter((post) => post.affiliate);
+  assert.ok(affiliate.length > 0);
+  for (const post of affiliate) {
+    assert.match(post.caption, /HOSHILUからAmazonを含む検索先を開けます/u, post.content_id);
+    assert.match(post.caption, /Amazonの商品候補・価格・在庫・レビューはリンク先で確認してください/u, post.content_id);
+    assert.doesNotMatch(post.caption, /Amazonを含む(?:複数|各|取扱|対応)[^。]*(?:見比べ|まとめて|比較|確認|候補|在庫)/u, post.content_id);
+    assert.doesNotMatch(post.caption, /これAmazon[^。]*他モール[^。]*一緒に確認/u, post.content_id);
+  }
 });
 
 test('Amazon優先Threadsローテーションはリンク付きのみをアフィリエイトとして扱う', () => {

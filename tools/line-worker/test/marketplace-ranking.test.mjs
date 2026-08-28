@@ -19,8 +19,19 @@ test('曖昧なカテゴリは広い順位を捏造せず確認質問を返す',
 test('AIは登録済み小分類だけを候補として返し、分類を勝手に確定しない', async () => {
   const options = resolveRankingCategory('靴').clarification.options;
   const ids = await suggestRankingCategoriesWithAi({ GEMINI_API_KEY: 'g'.repeat(32) }, '靴', options, async (_url, init) => {
+    assert.equal(init.redirect, 'error');
     assert.match(JSON.parse(init.body).contents[0].parts[0].text, /選択肢にない分類は作らず/);
     return Response.json({ candidates: [{ content: { parts: [{ text: '{"category_ids":["womens_sneakers","not_allowed"]}' }] } }] });
+  });
+  assert.deepEqual(ids, ['womens_sneakers']);
+});
+
+test('OpenAIランキング分類通信も認証情報付きリダイレクトを追従しない', async () => {
+  const options = resolveRankingCategory('靴').clarification.options;
+  const ids = await suggestRankingCategoriesWithAi({ OPENAI_API_KEY: 'o'.repeat(32) }, '靴', options, async (url, init) => {
+    assert.equal(String(url), 'https://api.openai.com/v1/responses');
+    assert.equal(init.redirect, 'error');
+    return Response.json({ output: [{ type: 'message', content: [{ type: 'output_text', text: '{"category_ids":["womens_sneakers"]}' }] }] });
   });
   assert.deepEqual(ids, ['womens_sneakers']);
 });

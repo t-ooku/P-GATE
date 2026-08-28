@@ -3,6 +3,7 @@ import {
   isRakutenDirectProductUrl
 } from './rakuten-url-policy.mjs';
 import { filterCategoryMismatches } from './knowledge-search.mjs';
+import { safeProviderErrorCode } from './provider-error-code.mjs';
 
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 // The migrated Rakuten endpoint regularly needs more than 2.5 seconds before
@@ -98,17 +99,14 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   const request = async (requestUrl) => {
     const response = await fetcher(requestUrl.toString(), {
       headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
+      redirect: 'error',
       signal: AbortSignal.timeout(RAKUTEN_REQUEST_TIMEOUT_MS)
     });
     if (response.ok) return response.json();
-    let providerCode = '';
-    try {
-      const payload = await response.json();
-      providerCode = String(payload?.error || '').slice(0, 80);
-    } catch {}
     const error = new Error('RAKUTEN_MARKETPLACE_SEARCH_FAILED');
     error.status = Number(response.status) || 0;
-    error.providerCode = providerCode;
+    // Never inspect/log provider error prose; it may echo the search query.
+    error.providerCode = safeProviderErrorCode('', response.status, 'RAKUTEN_PROVIDER_FAILED');
     throw error;
   };
   // v3.2/v3.4 CTO instruction: 楽天だけの①API送信/②レスポンス件数を、同一

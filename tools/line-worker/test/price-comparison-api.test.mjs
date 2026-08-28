@@ -33,7 +33,7 @@ function request(body) {
       direct_marketplaces: ['LOFT_JP', 'HANDS_JP'],
       search_query: '携帯扇風機',
       language: 'JA',
-      consent: true,
+      processing_notice_shown: true,
       session_id: 'anonymous_session_123456',
       turnstile_token: 'verified-token',
       ...body
@@ -43,10 +43,10 @@ function request(body) {
 
 const context = { waitUntil() {} };
 
-test('validatePriceComparisonRequest: 未知のモールや不正な同意は弾く', () => {
-  assert.throws(() => validatePriceComparisonRequest({ consent: false }), /CONSENT_REQUIRED/);
+test('validatePriceComparisonRequest: 未知のモールや未提示の処理告知は弾く', () => {
+  assert.throws(() => validatePriceComparisonRequest({ processing_notice_shown: false }), /PROCESSING_NOTICE_REQUIRED/);
   const result = validatePriceComparisonRequest({
-    product: { title: '商品' }, consent: true, session_id: 'a'.repeat(20), turnstile_token: 't',
+    product: { title: '商品' }, processing_notice_shown: true, session_id: 'a'.repeat(20), turnstile_token: 't',
     direct_marketplaces: ['LOFT_JP', 'NOT_A_REAL_MALL', 'AMAZON_JP']
   });
   // NOT_A_REAL_MALLは未知のモールとして弾かれる。

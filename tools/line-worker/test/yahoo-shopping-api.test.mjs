@@ -7,6 +7,13 @@ import {
   searchYahooShopping,
   yahooShoppingApiConfigured
 } from '../src/yahoo-shopping-api.mjs';
+import { safeProviderErrorCode } from '../src/provider-error-code.mjs';
+
+test('provider log codeは既知allowlist以外のtoken風本文・key風本文も拒否する', () => {
+  assert.equal(safeProviderErrorCode('PRIVATE_MEDICAL_QUERY', 400), 'HTTP_400');
+  assert.equal(safeProviderErrorCode('AKIAIOSFODNN7EXAMPLE', 0), 'PROVIDER_REQUEST_FAILED');
+  assert.equal(safeProviderErrorCode('insufficient_quota', 429), 'INSUFFICIENT_QUOTA');
+});
 
 test('Yahoo Shopping API requires an explicit client ID', () => {
   assert.equal(yahooShoppingApiConfigured({}), false);
@@ -44,6 +51,18 @@ test('searches the official endpoint without exposing the client ID in output da
   assert.equal(url.searchParams.get('query'), '光る スマホケース');
   assert.equal(url.searchParams.get('image_size'), '600');
   assert.deepEqual(results, []);
+});
+
+test('Yahoo provider自由文はqueryを含めずHTTP固定コードへ畳む', async () => {
+  await assert.rejects(
+    searchYahooShopping(
+      { YAHOO_SHOPPING_CLIENT_ID: 'secret-client-id' }, '秘密の検索語',
+      async () => Response.json({ Error: { Message: 'invalid query: 秘密の検索語' } }, { status: 400 })
+    ),
+    (error) => error.message === 'YAHOO_SHOPPING_SEARCH_FAILED'
+      && error.providerCode === 'HTTP_400'
+      && !String(error.providerCode).includes('秘密の検索語')
+  );
 });
 
 test('高評価トレンドランキングは公式順位・評価集計・レビューURLだけを保持する', () => {

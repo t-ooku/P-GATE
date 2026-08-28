@@ -33,7 +33,7 @@ async function verifyTurnstile(request, env, token) {
   const timer = setTimeout(() => controller.abort(), 5000);
   try {
     const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST', body, signal: controller.signal
+      method: 'POST', body, redirect: 'error', signal: controller.signal
     });
     const result = await response.json();
     return response.ok && result.success === true;

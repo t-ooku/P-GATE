@@ -17,8 +17,9 @@ test('会員同期とMYWATCHの実装内容をプライバシー方針へ明記�
 });
 
 test('利用上の注意は通知を体験表示と誤記しない', () => {
-  assert.match(terms, /通知種別と通知頻度の変更/);
-  assert.match(terms, /必ず検知または即時配信することを保証しません/);
+  assert.match(terms, /新着通知、通知頻度の変更/);
+  assert.match(terms, /モールAPIで確認できた価格を定期確認/);
+  assert.match(terms, /即時配信やすべての価格変動の検知は保証しません/);
   assert.match(terms, /在庫・価格情報には同期の遅延/);
   assert.doesNotMatch(terms, /ホシっといて.*体験表示/);
 });

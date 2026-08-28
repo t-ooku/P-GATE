@@ -6,6 +6,7 @@ const TOKEN_ENDPOINTS = {
 };
 const VALID_CREDENTIAL_VERSIONS = new Set(Object.keys(TOKEN_ENDPOINTS));
 const PRODUCT_CACHE_TTL_MS = 60 * 60 * 1000;
+const PRODUCT_CACHE_MAX_ENTRIES = 32;
 const MAX_TRANSIENT_RETRIES = 2;
 
 let cachedToken = { key: '', value: '', expiresAt: 0 };
@@ -52,7 +53,8 @@ async function accessToken(env, fetcher = fetch, now = Date.now) {
     headers: { 'content-type': isV3 ? 'application/json' : 'application/x-www-form-urlencoded' },
     body: isV3
       ? JSON.stringify({ grant_type: 'client_credentials', client_id: id, client_secret: secret, scope: 'creatorsapi::default' })
-      : new URLSearchParams({ grant_type: 'client_credentials', client_id: id, client_secret: secret, scope: 'creatorsapi/default' })
+      : new URLSearchParams({ grant_type: 'client_credentials', client_id: id, client_secret: secret, scope: 'creatorsapi/default' }),
+    redirect: 'error'
   });
   if (!response.ok) throw new Error('AMAZON_CREATORS_TOKEN_FAILED');
   const payload = await response.json();
@@ -151,14 +153,37 @@ function retryAfterMs(response, now = Date.now) {
   return Number.isFinite(timestamp) ? Math.max(0, timestamp - now()) : 0;
 }
 
-function productCacheKey(env, version, query) {
-  return [
+async function productCacheKey(env, version, query) {
+  const material = [
     String(env.AMAZON_CREATORS_CREDENTIAL_ID || '').trim(),
     version,
     String(env.AMAZON_ASSOCIATE_TAG || '').trim(),
     MARKETPLACE,
     query
   ].join('|');
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(material));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function pruneProductCache(nowValue) {
+  for (const [key, cached] of productCache) {
+    if (!cached || cached.expiresAt <= nowValue) productCache.delete(key);
+  }
+  while (productCache.size > PRODUCT_CACHE_MAX_ENTRIES) {
+    productCache.delete(productCache.keys().next().value);
+  }
+}
+
+function cacheProducts(cacheKey, items, nowValue) {
+  pruneProductCache(nowValue);
+  productCache.delete(cacheKey);
+  while (productCache.size >= PRODUCT_CACHE_MAX_ENTRIES) {
+    productCache.delete(productCache.keys().next().value);
+  }
+  productCache.set(cacheKey, {
+    items: structuredClone(items),
+    expiresAt: nowValue + PRODUCT_CACHE_TTL_MS
+  });
 }
 
 function validateCreatorsPayload(payload) {
@@ -182,9 +207,16 @@ export async function searchAmazonCreators(env, keywords, fetcher = fetch, optio
   const sleep = typeof options.sleep === 'function'
     ? options.sleep
     : (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  const cacheKey = productCacheKey(env, version, query);
+  const cacheNow = now();
+  pruneProductCache(cacheNow);
+  const cacheKey = await productCacheKey(env, version, query);
   const cached = productCache.get(cacheKey);
-  if (cached && cached.expiresAt > now()) return structuredClone(cached.items);
+  if (cached && cached.expiresAt > cacheNow) {
+    // Map insertion order is the LRU order; touching a hit moves it newest.
+    productCache.delete(cacheKey);
+    productCache.set(cacheKey, cached);
+    return structuredClone(cached.items);
+  }
 
   let authRetried = false;
   let transientRetries = 0;
@@ -218,7 +250,8 @@ export async function searchAmazonCreators(env, keywords, fetcher = fetch, optio
           'offersV2.listings.availability',
           'offersV2.listings.price'
         ]
-      })
+      }),
+      redirect: 'error'
     });
     if (response.status === 401 && !authRetried) {
       authRetried = true;
@@ -234,10 +267,7 @@ export async function searchAmazonCreators(env, keywords, fetcher = fetch, optio
     if (!response.ok) throw new Error('AMAZON_CREATORS_SEARCH_FAILED');
     const items = normalizeCreatorsItems(validateCreatorsPayload(await response.json()));
     if (items.some((item) => item.offers.length)) {
-      productCache.set(cacheKey, {
-        items: structuredClone(items),
-        expiresAt: now() + PRODUCT_CACHE_TTL_MS
-      });
+      cacheProducts(cacheKey, items, now());
     }
     return items;
   }
@@ -247,3 +277,9 @@ export function resetCreatorsTokenForTest() {
   cachedToken = { key: '', value: '', expiresAt: 0 };
   productCache.clear();
 }
+
+export const amazonCreatorsCacheTest = {
+  maxEntries: PRODUCT_CACHE_MAX_ENTRIES,
+  snapshot: () => [...productCache].map(([key, value]) => ({ key, expiresAt: value.expiresAt })),
+  prune: pruneProductCache
+};

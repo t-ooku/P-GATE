@@ -107,6 +107,21 @@ test('provider degradation stores only fixed dimensions and a Worker request ID'
   assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
 });
 
+test('multimodal input degradation is recorded without storing the image, URL, or query', async () => {
+  const calls = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };
+  assert.equal(await recordSearchProviderDegradation(env, {
+    requestId:'e309d1ad-2a34-4f2f-913b-47fccdbbe250',
+    component:'search_input_analysis', provider:'gemini', code:'SEARCH_INPUT_ANALYSIS_NO_PUBLIC_EVIDENCE',
+    query:'保存禁止の検索文', social_url:'https://example.invalid/private', image:'保存禁止のbase64'
+  }), true);
+  assert.equal(calls[0].values[4], 'search_input_analysis');
+  assert.equal(calls[0].values[5], 'SEARCH_INPUT_ANALYSIS_NO_PUBLIC_EVIDENCE');
+  assert.equal(calls[0].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe250');
+  assert.equal(calls[0].values[7], 'GEMINI');
+  assert.doesNotMatch(JSON.stringify(calls), /保存禁止|example\.invalid/u);
+});
+
 test('provider degradation uses a fixed code allowlist and rejects forged dimensions', async () => {
   const calls = [];
   const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };

@@ -61,7 +61,7 @@ async function fetchComparison(candidate, language) {
       direct_marketplaces: DEFAULT_DIRECT_MARKETPLACES,
       language,
       session_id: auth?.sessionId || '',
-      consent: true,
+      processing_notice_shown: true,
       turnstile_token: token
     })
   });

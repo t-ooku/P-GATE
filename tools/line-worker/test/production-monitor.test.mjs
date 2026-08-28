@@ -22,6 +22,7 @@ const guideSecurityHeaders = {
 
 function mockFetch({
   healthOk = true,
+  searchInputConfigured = true,
   yahooAvailable = true,
   appMarkers = true,
   redirectStatus = 308,
@@ -43,7 +44,8 @@ function mockFetch({
     }
     if (url.pathname === '/sitemap.xml') return new Response('<urlset><url><loc>https://hoshilu.app/ja/guides</loc></url></urlset>');
     if (url.pathname === '/health') return Response.json({ ok: healthOk, checks: {
-      turnstile_configured: true, ai_chat_configured: true,
+      turnstile_configured: true, search_input_analysis_configured: searchInputConfigured,
+      ai_chat_configured: true,
       amazon_associate_link_configured: true,
       rakuten_marketplace_configured: true, yahoo_shopping_configured: true
     } });
@@ -109,6 +111,17 @@ test('production monitor rejects stale assets without reliability markers', asyn
   await assert.rejects(
     inspectProduction({ baseUrl: 'https://hoshilu.app/', fetcher: mockFetch({ appMarkers: false }), expectedIndexHtml }),
     /PRODUCTION_ASSET_MARKER_MISSING:app\.js:KNOWLEDGE_HTTP_TIMEOUT_MS/u
+  );
+});
+
+test('production monitor requires Gemini for screenshot and public-post URL analysis', async () => {
+  await assert.rejects(
+    inspectProduction({
+      baseUrl: 'https://hoshilu.app/',
+      fetcher: mockFetch({ searchInputConfigured: false }),
+      expectedIndexHtml
+    }),
+    /HEALTH_CHECK_FALSE:search_input_analysis_configured/u
   );
 });
 

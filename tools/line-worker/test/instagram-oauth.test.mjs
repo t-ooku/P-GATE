@@ -112,6 +112,7 @@ test('Instagram Business Login stores only an encrypted long-lived token', async
   });
   assert.equal(callback.status, 200);
   assert.equal(calls.length, 3);
+  assert.ok(calls.every(({ options }) => options.redirect === 'error'));
   assert.equal(database.row.account_id, ACCOUNT_ID);
   assert.equal(database.row.access_token_ciphertext.includes('long-lived-token'), false);
   assert.equal(database.row.access_token_iv.includes('long-lived-token'), false);
@@ -121,6 +122,35 @@ test('Instagram Business Login stores only an encrypted long-lived token', async
   });
   assert.deepEqual(credential, { accountId: ACCOUNT_ID, accessToken: 'long-lived-token' });
   assert.deepEqual(await instagramOAuthReadiness(env), { configured: true, connected: true });
+});
+
+test('expired Instagram credentials reject redirects while refreshing the access token', async () => {
+  const database = createDatabase();
+  const env = testEnvironment(database);
+  const start = await handleInstagramOAuthRoutes(
+    new Request('https://hoshilu.app/api/oauth/instagram/start'), env
+  );
+  const state = new URL(start.headers.get('location')).searchParams.get('state');
+  await handleInstagramOAuthRoutes(new Request(
+    `${env.INSTAGRAM_OAUTH_REDIRECT_URI}?code=code&state=${encodeURIComponent(state)}`,
+    { headers: { cookie: cookieFrom(start) } }
+  ), env, async (url) => {
+    if (url.startsWith('https://api.instagram.com/')) {
+      return Response.json({ access_token: 'short-token', user_id: OAUTH_SCOPED_ID });
+    }
+    if (url.startsWith('https://graph.instagram.com/me?')) {
+      return Response.json({ user_id: ACCOUNT_ID, username: 'hoshilu.app' });
+    }
+    return Response.json({ access_token: 'long-token', expires_in: 5184000 });
+  });
+  database.row.expires_at = '2000-01-01T00:00:00.000Z';
+
+  const credential = await getInstagramPublishCredentials(env, async (url, options = {}) => {
+    assert.match(url, /^https:\/\/graph\.instagram\.com\/refresh_access_token\?/);
+    assert.equal(options.redirect, 'error');
+    return Response.json({ access_token: 'refreshed-token', expires_in: 5184000 });
+  });
+  assert.deepEqual(credential, { accountId: ACCOUNT_ID, accessToken: 'refreshed-token' });
 });
 
 test('OAuth callback rejects a different Instagram account before storage', async () => {
