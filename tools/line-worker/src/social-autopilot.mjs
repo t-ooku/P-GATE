@@ -633,9 +633,59 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
             AND social_post_queue.campaign_id='hoshilu-ai-actress-daily-v1'
             AND social_post_queue.creative_policy='DAILY_AI_ACTRESS_22'
             AND strftime('%s',social_post_queue.scheduled_at) IS NOT NULL
-            AND strftime('%s',excluded.scheduled_at) IS NOT NULL
-            AND CAST(strftime('%s',social_post_queue.scheduled_at) AS INTEGER)
-              < CAST(strftime('%s',excluded.scheduled_at) AS INTEGER)
+            AND (
+              social_post_queue.scheduled_at='2000-01-01T00:00:00.000Z'
+              OR social_post_queue.last_error IN (
+                'INSTAGRAM_CONTAINER_IN_PROGRESS','INSTAGRAM_CONTAINER_TIMEOUT',
+                'INSTAGRAM_CONTAINER_EXPIRED','X_MEDIA_ASSET_FETCH_FAILED',
+                'X_MEDIA_PROCESSING_TIMEOUT')
+              OR social_post_queue.last_error LIKE 'Too many subrequests by single Worker invocation.%'
+              OR social_post_queue.last_error='X_PUBLISH_429'
+              OR social_post_queue.last_error GLOB 'X_PUBLISH_429_*'
+              OR social_post_queue.last_error='INSTAGRAM_PUBLISH_429'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_PUBLISH_429_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FETCH_40[8]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FETCH_40[8]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FETCH_42[59]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FETCH_42[59]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FETCH_5[0-9][0-9]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FETCH_5[0-9][0-9]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_INIT_40[8]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_INIT_40[8]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_INIT_42[59]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_INIT_42[59]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_INIT_5[0-9][0-9]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_INIT_5[0-9][0-9]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_APPEND_40[8]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_APPEND_40[8]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_APPEND_42[59]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_APPEND_42[59]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_APPEND_5[0-9][0-9]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_APPEND_5[0-9][0-9]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FINALIZE_40[8]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FINALIZE_40[8]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FINALIZE_42[59]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FINALIZE_42[59]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FINALIZE_5[0-9][0-9]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_FINALIZE_5[0-9][0-9]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_STATUS_40[8]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_STATUS_40[8]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_STATUS_42[59]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_STATUS_42[59]_*'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_STATUS_5[0-9][0-9]'
+              OR social_post_queue.last_error GLOB 'X_MEDIA_STATUS_5[0-9][0-9]_*'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_CREATE_40[8]'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_CREATE_40[8]_*'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_CREATE_42[59]'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_CREATE_42[59]_*'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_CREATE_5[0-9][0-9]'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_CREATE_5[0-9][0-9]_*'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_STATUS_40[8]'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_STATUS_40[8]_*'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_STATUS_42[59]'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_STATUS_42[59]_*'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_STATUS_5[0-9][0-9]'
+              OR social_post_queue.last_error GLOB 'INSTAGRAM_STATUS_5[0-9][0-9]_*')
             THEN social_post_queue.scheduled_at
           ELSE excluded.scheduled_at END,
         affiliate=excluded.affiliate,

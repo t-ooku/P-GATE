@@ -456,6 +456,18 @@ test('台帳承認済み7曜日AI女優だけは週次再利用をAPPROVEDで維
   assert.equal(retry.scheduled_at, '2026-08-10T00:05:00.000Z');
   assert.equal(retry.last_error, 'X_MEDIA_PROCESSING_TIMEOUT');
 
+  sqlite.prepare(`UPDATE social_post_queue SET scheduled_at='2026-08-10T11:20:00.000Z',
+    last_error='X_MEDIA_PROCESSING_TIMEOUT' WHERE post_id=?1`).run(expedited.post_id);
+  await seedSocialAutopilotQueue(env, now);
+  assert.equal(sqlite.prepare(`SELECT scheduled_at FROM social_post_queue WHERE post_id=?1`)
+    .get(expedited.post_id).scheduled_at, '2026-08-10T11:20:00.000Z');
+
+  sqlite.prepare(`UPDATE social_post_queue SET scheduled_at='2026-08-12T11:20:00.000Z',
+    last_error='' WHERE post_id=?1`).run(expedited.post_id);
+  await seedSocialAutopilotQueue(env, now);
+  assert.equal(sqlite.prepare(`SELECT scheduled_at FROM social_post_queue WHERE post_id=?1`)
+    .get(expedited.post_id).scheduled_at, expedited.scheduled_at);
+
   const replay = videoRows.at(-1);
   sqlite.prepare(`UPDATE social_post_queue SET status='REVIEW_REQUIRED',approved_at='',
     last_error='MEDIA_REUSE_REVIEW_REQUIRED' WHERE post_id=?1`).run(replay.post_id);

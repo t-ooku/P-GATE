@@ -5,33 +5,21 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
+import { buildSocialAutopilotPosts } from '../src/social-autopilot.mjs';
 
 const script = fileURLToPath(new URL('../scripts/verify-ai-actress-daily-release.mjs', import.meta.url));
 const expeditedAt = '2000-01-01T00:00:00.000Z';
 
 function queueRow(platform) {
-  const source = platform === 'X' ? 'x' : 'instagram';
-  const caption = platform === 'X'
-    ? '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 #Qoo10 #SHEIN #AI生成'
-    : '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 気になった商品をコメントで教えてね。 #HOSHILU #Qoo10 #SHEIN #購入品紹介 #AI生成';
+  const generated = buildSocialAutopilotPosts(new Date('2026-08-28T15:00:00.000Z'))
+    .find((post) => post.platform === platform
+      && post.content_id === 'hoshilu-ai-actress-daily-2026-08-29');
+  assert.ok(generated, `autopilot row missing for ${platform}`);
   return {
-    post_id: `hoshilu-ai-actress-daily-v1-${source}-2026-08-29`,
-    platform,
-    campaign_id: 'hoshilu-ai-actress-daily-v1',
-    content_id: 'hoshilu-ai-actress-daily-2026-08-29',
-    caption,
-    link: `https://hoshilu.app/buzz?utm_source=${source}&utm_medium=social&utm_campaign=hoshilu-ai-actress-daily-v1&utm_content=hoshilu-ai-actress-daily-2026-08-29`,
-    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4',
+    ...generated,
     scheduled_at: expeditedAt,
-    status: 'APPROVED',
     external_post_id: '',
     published_at: '',
-    creative_asset_id: 'hoshilu_ai_actress_daily_sat_v1',
-    content_format: 'REEL',
-    creative_policy: 'DAILY_AI_ACTRESS_22',
-    jst_publish_date: '2026-08-29',
-    ai_generated: 1,
-    crosspost_group_id: 'hoshilu-ai-actress-daily-2026-08-29',
     error_code: ''
   };
 }
