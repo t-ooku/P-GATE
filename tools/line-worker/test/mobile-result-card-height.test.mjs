@@ -41,7 +41,7 @@ test('Turnstileは初回トークン待機中にwidgetをリセットしない',
   const [app, html] = await Promise.all([read('app.js'), read('index.html')]);
   assert.match(app, /async function waitForTurnstileApi\(\)/);
   assert.doesNotMatch(app, /window\.turnstile\.ready\(/);
-  assert.match(app, /retry:'auto','retry-interval':3000,'refresh-expired':'manual'/);
+  assert.match(app, /retry:'auto','retry-interval':3000,'refresh-expired':'auto','refresh-timeout':'auto'/);
   assert.match(app, /callback:onTurnstileToken/);
   assert.match(app, /if\(lastIssuedTurnstileToken\)await resetTurnstileWidget\(\)/);
   assert.doesNotMatch(app, /turnstile\?\.getResponse|turnstile\.getResponse/);

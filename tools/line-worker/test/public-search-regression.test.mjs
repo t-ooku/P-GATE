@@ -37,6 +37,23 @@ function request(query, language = 'JA', searchAttempt = 1) {
   });
 }
 
+function imageRequest(query = 'これ何？', aiCandidateFallback = null) {
+  return new Request('https://hoshilu.app/api/knowledge', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      query,
+      language: 'JA',
+      search_attempt: 1,
+      processing_notice_shown: true,
+      session_id: 'anonymous_session_123456',
+      turnstile_token: 'verified-token',
+      image: { mime_type: 'image/jpeg', data: '/9j/4AAQ' },
+      ...(aiCandidateFallback ? { ai_candidate_fallback: aiCandidateFallback } : {})
+    })
+  });
+}
+
 const context = { waitUntil() {} };
 
 test('public search API attempts product presentation from the first search and suggests MYWISH', async () => {
@@ -170,6 +187,110 @@ test('first search always checks a configured marketplace API even when an index
     assert.ok(officialStoreCalls <= 4, `unexpected official store call count: ${officialStoreCalls}`);
     assert.equal(payload.result.candidates.some(item=>item.offers?.some(offer=>offer.marketplace==='RAKUTEN_JP')),true);
   }finally{globalThis.fetch=originalFetch;}
+});
+
+test('画像特定はライブモールAPIを待たず、DB候補があってもAI仮説と13モール導線を返す', async () => {
+  const originalFetch = globalThis.fetch;
+  let rakutenCalls = 0;
+  const gasCandidate = {
+    asin: 'B000PUGBEI',
+    product_name: 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ',
+    manufacturer: 'アミューズ',
+    image_url: 'https://images.example.test/pugbei.jpg',
+    stock: 1
+  };
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    if (target.includes('generativelanguage.googleapis.com')) {
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        refined_query: 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ',
+        candidate_name: '豆しば三兄弟 パグ兵衛',
+        candidate_brand: 'アミューズ',
+        candidate_reason: 'パグの外観と緑の唐草模様バンダナが一致',
+        matched_features: ['パグ', '緑の唐草模様バンダナ'],
+        match_score: 91
+      }) }] } }] });
+    }
+    if (target.includes('openapi.rakuten.co.jp')) {
+      rakutenCalls += 1;
+      throw new Error('multimodal search must not wait for Rakuten');
+    }
+    return Response.json({ ok: true, result: {
+      query_id: 'gas-image-fast', candidates: [gasCandidate], message: ''
+    } });
+  };
+  const env = {
+    ...environment([gasCandidate]),
+    GEMINI_API_KEY: 'g'.repeat(32),
+    RAKUTEN_APPLICATION_ID: 'app',
+    RAKUTEN_ACCESS_KEY: 'key'
+  };
+  try {
+    const response = await worker.fetch(imageRequest(), env, context);
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    assert.equal(rakutenCalls, 0);
+    assert.equal(payload.result.candidates.some(item => item.asin === gasCandidate.asin), true);
+    assert.equal(payload.result.search_input_analysis.candidate_name, '豆しば三兄弟 パグ兵衛');
+    assert.match(payload.result.ai_query_refinement.effective_query, /パグ兵衛/u);
+    assert.equal(payload.result.ai_discovery.analysis.product_candidates[0].identification_status, 'AI_HYPOTHESIS');
+    assert.equal(payload.result.ai_discovery.analysis.product_candidates[0].selected_by_user, false);
+    assert.equal(payload.result.ai_discovery.analysis.product_candidates[0].marketplace_search_links.length, 13);
+    for (const link of payload.result.ai_discovery.analysis.product_candidates[0].marketplace_search_links) {
+      const destination = new URL(link.url);
+      assert.equal(destination.origin, 'https://hoshilu.app');
+      assert.equal(destination.pathname, '/go');
+    }
+    const confirmed = {
+      name: '利用者が確認した パグ兵衛 限定版',
+      brand: 'アミューズ',
+      reason: '利用者がAI候補から選択済み',
+      matched_features: ['パグ', '緑のバンダナ'],
+      match_score: 97
+    };
+    const confirmedResponse = await worker.fetch(imageRequest('これ何？', confirmed), env, context);
+    const confirmedPayload = await confirmedResponse.json();
+    assert.equal(confirmedResponse.status, 200, JSON.stringify(confirmedPayload));
+    assert.equal(confirmedPayload.result.ai_discovery.provider, 'AI_CHAT_CONFIRMED');
+    assert.equal(confirmedPayload.result.ai_discovery.analysis.product_candidates[0].name, confirmed.name);
+    assert.equal(confirmedPayload.result.ai_discovery.analysis.product_candidates[0].selected_by_user, true);
+    assert.equal(rakutenCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('画像解析が失敗しても意味のある検索文ならライブモール検索を続ける', async () => {
+  const originalFetch = globalThis.fetch;
+  let rakutenCalls = 0;
+  globalThis.fetch = async (url) => {
+    const target = String(url);
+    if (target.includes('siteverify')) return Response.json({ success: true });
+    if (target.includes('generativelanguage.googleapis.com')) {
+      return new Response('visual analysis unavailable', { status: 503 });
+    }
+    if (target.includes('openapi.rakuten.co.jp')) {
+      rakutenCalls += 1;
+      return Response.json({ items: [] });
+    }
+    return Response.json({ ok: true, result: {
+      query_id: 'gas-image-text-fallback', candidates: [], message: ''
+    } });
+  };
+  const env = {
+    ...environment([]),
+    GEMINI_API_KEY: 'g'.repeat(32),
+    RAKUTEN_APPLICATION_ID: 'app',
+    RAKUTEN_ACCESS_KEY: 'key'
+  };
+  try {
+    const response = await worker.fetch(imageRequest('緑のバンダナを付けたパグのぬいぐるみ'), env, context);
+    assert.equal(response.status, 200, await response.text());
+    assert.ok(rakutenCalls >= 1, '画像解析失敗後もライブモール検索が必要');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('public search API can return an ITG indexed result without an unapproved outbound URL', async () => {

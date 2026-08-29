@@ -22,7 +22,7 @@ const {
   buildAmazonSearchKeywords, buildRakutenSearchKeywords,
   buildRakutenSearchKeywordCandidates, trackingEventsForPayload, rankSellerOffers,
   mergeAiRefinedSearchQuery, buildLineFallbackMessages, interpretedSearchInputDiscovery,
-  isIndependentSearchText
+  isIndependentSearchText, shouldRunLiveMarketplaceSearch
 } = workerModule;
 
 test('AI検索語は元の条件を落とさずモール検索へ渡す', () => {
@@ -60,6 +60,19 @@ test('スクショ・投稿URLからの候補は確認済み商品ではなくAI
   assert.equal(discovery.provider, 'GEMINI_MULTIMODAL_SEARCH_INPUT');
   assert.equal(discovery.analysis.product_candidates[0].selected_by_user, false);
   assert.equal(discovery.analysis.product_candidates[0].identification_status, 'AI_HYPOTHESIS');
+});
+
+test('画像・投稿URLで商品を特定できた時だけライブモール照会を待たない', () => {
+  const configured = {
+    RAKUTEN_APPLICATION_ID: 'rakuten-app',
+    RAKUTEN_ACCESS_KEY: 'rakuten-key',
+    YAHOO_SHOPPING_CLIENT_ID: 'yahoo-client'
+  };
+  assert.equal(shouldRunLiveMarketplaceSearch(true, configured), false);
+  // 画像が添付されていても特定に失敗した場合はfalseを渡し、意味のある
+  // テキストから従来どおりライブ検索を続ける。
+  assert.equal(shouldRunLiveMarketplaceSearch(false, configured), true);
+  assert.equal(shouldRunLiveMarketplaceSearch(false, {}), false);
 });
 
 test('マルチモーダル解析失敗時は指示語だけで無関係な商品検索へ進まない', () => {
@@ -590,7 +603,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v402/);
+  assert.match(serviceWorker, /hoshilu-shell-v403/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });

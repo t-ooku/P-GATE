@@ -6,7 +6,12 @@ test('Turnstile uses callback delivery, serializes token requests, and rebuilds 
   const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /callback:onTurnstileToken/);
   assert.match(app, /'expired-callback':clearTurnstileToken/);
+  assert.match(app, /'refresh-expired':'auto'/);
+  assert.match(app, /'refresh-timeout':'auto'/);
+  assert.match(app, /'timeout-callback':clearTurnstileToken/);
+  assert.match(app, /'unsupported-callback':onTurnstileUnsupported/);
   assert.match(app, /'error-callback':code=>/);
+  assert.match(app, /'error-callback':code=>\{[^}]*return false;/);
   assert.match(app, /window\.turnstile\?\.remove\?\.\(turnstileWidget\)/);
   assert.match(app, /typeof window\.turnstile\?\.render==='function'/);
   assert.match(app, /async function waitForTurnstileApi\(\)/);
@@ -19,6 +24,14 @@ test('Turnstile uses callback delivery, serializes token requests, and rebuilds 
   assert.match(app, /lastIssuedTurnstileToken/);
   assert.match(app, /function issueTurnstileToken\(token\)/);
   assert.match(app, /token&&token!==lastIssuedTurnstileToken/);
+  assert.match(app, /function onTurnstileUnsupported\(\)\{[^}]*waiter\.reject\(new Error\('TURNSTILE_UNSUPPORTED'\)\)/);
+  assert.match(app, /if\(turnstileUnsupported\)return Promise\.reject\(new Error\('TURNSTILE_UNSUPPORTED'\)\)/);
+  const acquireBlock = app.slice(
+    app.indexOf('async function acquireTurnstileToken'),
+    app.indexOf('// Turnstile tokens are single-use')
+  );
+  assert.equal((acquireBlock.match(/waitForTurnstileCallback/gu) || []).length, 1);
+  assert.doesNotMatch(acquireBlock, /recoverTurnstileWidget/);
   assert.doesNotMatch(app, /turnstile\?\.getResponse|turnstile\.getResponse/);
   assert.doesNotMatch(app, /finally\{elements\.submit\.disabled=false;if\(turnstileWidget!==null\).*reset/);
 });
@@ -61,8 +74,13 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /degraded:true/);
   assert.match(app, /const requestedMaxAttempts=Math\.max\(1,Math\.min\(2,Number\(options\.maxAttempts\)\|\|2\)\)/);
   assert.match(app, /const maxAttempts=submittedImage\?1:requestedMaxAttempts/);
-  assert.match(app, /Math\.floor\(\(remainingBeforeToken-1000\)\/2\)/);
+  assert.match(app, /Math\.max\(1000,remainingBeforeToken-1000\)/);
   assert.match(app, /waitForTurnstileToken\(tokenWaitBudget\)/);
+  assert.match(app, /failureTelemetry\.error_code==='TURNSTILE_TOKEN_UNAVAILABLE'/);
+  assert.match(app, /セキュリティ確認を完了して、もう一度「検索する」を押してください。/);
+  assert.match(app, /failureTelemetry\.error_code==='TURNSTILE_UNSUPPORTED'/);
+  assert.match(app, /コンテンツブロッカーを一時解除して再読み込みしてください。/);
+  assert.match(app, /code!==\'TURNSTILE_UNSUPPORTED\'/);
 });
 
 test('AI chat failure automatically continues to the resilient main search', () => {

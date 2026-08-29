@@ -2203,6 +2203,17 @@ export function interpretedSearchInputDiscovery(candidate, query, provider = 'GE
   };
 }
 
+// A photo or social-post search has already paid the latency cost of Vision
+// and Gemini to identify the product. Waiting for every Rakuten/Yahoo catalog
+// and official-store request after that regularly pushes the response past the
+// mobile browser budget. Return the identification plus HOSHILU's signed
+// marketplace search links first; normal text searches keep the live catalog
+// fan-out and therefore preserve their verified product-card behavior.
+export function shouldRunLiveMarketplaceSearch(hasInterpretedDiscovery, env = {}) {
+  return !hasInterpretedDiscovery
+    && (rakutenApiConfigured(env) || yahooShoppingApiConfigured(env));
+}
+
 async function safeAiProductDiscovery(query, language, env) {
   try {
     return await discoverProductsWithAi(query, language, env);
@@ -2411,7 +2422,10 @@ async function handleKnowledgeApi(request, env, ctx) {
     // 2026-08-10正式運用: 公開検索でAPI取得するのは楽天・Yahoo!のみ。
     // Amazon Creators API実装は接続審査後に再有効化できる形で残すが、
     // 未接続の現在はAmazonを他の外部モールと同じ検索リンクとして扱う。
-    const shouldSearchMarketplaces = rakutenApiConfigured(env) || yahooShoppingApiConfigured(env);
+    // Only take the low-latency handoff after Vision/Gemini produced a usable
+    // product hypothesis. If image/social analysis failed but the visitor also
+    // supplied independent text, preserve the normal live catalog search.
+    const shouldSearchMarketplaces = shouldRunLiveMarketplaceSearch(Boolean(interpretedDiscovery), env);
     if (shouldSearchMarketplaces) {
       const marketplaceSearches = [];
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
@@ -2593,6 +2607,12 @@ async function handleKnowledgeApi(request, env, ctx) {
         product_presentation_required: true,
         product_presentation_met: result.candidates.length > 0
       };
+    }
+    // Keep the selected or interpreted identification visible even when
+    // D1/GAS also found products. A user-confirmed AI candidate has precedence
+    // over a new image hypothesis and must never be silently overwritten.
+    if (confirmedDiscovery || interpretedDiscovery) {
+      result.ai_discovery = confirmedDiscovery || interpretedDiscovery;
     }
     if (!result.candidates.length) {
       if (result.marketplace_search_status?.all_requests_failed) {
