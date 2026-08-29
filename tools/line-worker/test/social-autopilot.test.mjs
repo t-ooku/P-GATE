@@ -72,10 +72,63 @@ test('22歳v2 AI女優はJST14日連続で毎日X・Instagramの同一Reelペア
     && /SHEIN/u.test(post.caption) && new URL(post.link).pathname === '/buzz'));
 });
 
-test('非BUZZ販促はスクショ・公開投稿URL・一言検索を過剰表現なしで訴求する', () => {
+test('日次AI女優の投稿文は写真・スクショ・投稿URL・BUZZ・曖昧検索を毎日組み合わせる', () => {
+  const daily = buildSocialAutopilotPosts(new Date('2026-08-30T00:00:00.000Z'), 7)
+    .filter(post => post.creative_policy === 'DAILY_AI_ACTRESS_22');
+  const expectedTopics = new Set([
+    'PHOTO_SEARCH',
+    'SCREENSHOT_SEARCH',
+    'SOCIAL_POST_URL_SEARCH',
+    'HOSHILU_BUZZ',
+    'AMBIGUOUS_SEARCH'
+  ]);
+  const topicPatterns = new Map([
+    ['PHOTO_SEARCH', /撮った写真|カメラで撮/u],
+    ['SCREENSHOT_SEARCH', /スクショ/u],
+    ['SOCIAL_POST_URL_SEARCH', /公開(?:SNS)?投稿URL/u],
+    ['HOSHILU_BUZZ', /HOSHILU BUZZ/u],
+    ['AMBIGUOUS_SEARCH', /名前が分からない|名前の分からない|うろ覚え/u]
+  ]);
+  const topicDates = new Map([...expectedTopics].map(topic => [topic, new Set()]));
+  const dates = new Set(daily.map(post => post.jst_publish_date));
+
+  assert.equal(daily.length, 14);
+  assert.equal(dates.size, 7);
+  for (const date of dates) {
+    const pair = daily.filter(post => post.jst_publish_date === date);
+    assert.equal(pair.length, 2);
+    assert.deepEqual(pair[0].caption_topics, pair[1].caption_topics);
+    assert.ok(pair[0].caption_topics.length >= 2, `${date}: two or more topics`);
+    for (const post of pair) {
+      for (const topic of post.caption_topics) {
+        assert.ok(expectedTopics.has(topic), `${date}: unknown topic ${topic}`);
+        assert.match(post.caption, topicPatterns.get(topic), `${date}/${post.platform}: ${topic}`);
+      }
+    }
+    for (const topic of pair[0].caption_topics) topicDates.get(topic).add(date);
+  }
+  assert.deepEqual(new Set(daily.flatMap(post => post.caption_topics)), expectedTopics);
+  assert.equal(topicDates.get('PHOTO_SEARCH').size, 3);
+  assert.equal(topicDates.get('SCREENSHOT_SEARCH').size, 3);
+  assert.equal(topicDates.get('SOCIAL_POST_URL_SEARCH').size, 3);
+  assert.equal(topicDates.get('HOSHILU_BUZZ').size, 5);
+  assert.equal(topicDates.get('AMBIGUOUS_SEARCH').size, 5);
+  assert.equal(daily.filter(post => new URL(post.link).pathname === '/buzz').length, 10,
+    'BUZZ直行は映像内容と一致する7日中5日のX/Instagramペア');
+
+  const yearBoundary = buildSocialAutopilotPosts(new Date('2026-12-29T00:00:00.000Z'), 7)
+    .filter(post => post.creative_policy === 'DAILY_AI_ACTRESS_22');
+  assert.equal(new Set(yearBoundary.map(post => post.jst_publish_date)).size, 7);
+  assert.deepEqual(new Set(yearBoundary.flatMap(post => post.caption_topics)), expectedTopics,
+    '年をまたぐ7日間も全5テーマを維持する');
+  assert.equal(yearBoundary.filter(post => new URL(post.link).pathname === '/buzz').length, 10);
+});
+
+test('非BUZZ販促は写真・スクショ・公開投稿URL・一言検索を過剰表現なしで訴求する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-24T00:00:00.000Z'), 28);
   for (const platform of ['X', 'INSTAGRAM']) {
     const campaign = posts.filter((post) => post.platform === platform && new URL(post.link).pathname === '/');
+    assert.ok(campaign.some((post) => /撮った写真|写真・スクショ|カメラで撮/u.test(post.caption)), `${platform}: photo copy`);
     assert.ok(campaign.some((post) => /スクショ/u.test(post.caption)), `${platform}: screenshot copy`);
     assert.ok(campaign.some((post) => /公開(?:SNS)?投稿.*URL|公開SNS投稿のURL/u.test(post.caption)), `${platform}: URL copy`);
     assert.ok(campaign.some((post) => /一言/u.test(post.caption)), `${platform}: remembered phrase copy`);
@@ -143,6 +196,22 @@ test('日次AI動画は7曜日の内容と送客先を素材に合わせ、補�
   const buzzImages = images.filter((post) => new URL(post.link).pathname === '/buzz');
   assert.equal(buzzImages.length * 2, images.length, 'Instagram image BUZZ ratio');
   assert.ok(buzzImages.every((post) => /hoshilu-buzz-ranking-v1\.jpg$/u.test(post.media_url)));
+  for (const platform of ['X', 'INSTAGRAM']) {
+    const platformPosts = posts.filter(post => post.platform === platform);
+    const buzzPosts = platformPosts.filter(post => new URL(post.link).pathname === '/buzz');
+    assert.ok(buzzPosts.length / platformPosts.length >= 0.5, `${platform}: BUZZ is at least half`);
+  }
+});
+
+test('X全投稿は任意の連続7日でもBUZZ送客を半分以上に保つ', () => {
+  const start = Date.parse('2026-08-30T00:00:00.000Z');
+  for (let offset = 0; offset < 90; offset += 1) {
+    const now = new Date(start + offset * 24 * 60 * 60 * 1000);
+    const posts = buildSocialAutopilotPosts(now, 7).filter(post => post.platform === 'X');
+    const buzz = posts.filter(post => new URL(post.link).pathname === '/buzz');
+    assert.ok(buzz.length * 2 >= posts.length,
+      `${now.toISOString().slice(0, 10)}: BUZZ ${buzz.length}/${posts.length}`);
+  }
 });
 
 test('承認済みセラー投稿はX非動画枠へ少量だけ入り/for-sellersへ送客する', () => {
