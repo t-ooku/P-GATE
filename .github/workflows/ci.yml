@@ -935,3 +935,160 @@ jobs:
           path: tools/line-worker/approved-reel-*.json
           if-no-files-found: ignore
           retention-days: 30
+
+  release-ai-actress-daily-reel-20260829:
+    needs: [test, deploy]
+    if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deploy.result == 'success' &&
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[release-ai-actress-daily-20260829]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: hoshilu-social-release
+      cancel-in-progress: false
+    env:
+      AI_ACTRESS_MIGRATION_SHA256: c91b6b15431da8f5fd0731a0ff8f08179053035bd9c3d83bc40d2cdbc5b5488c
+      AI_ACTRESS_MEDIA_SHA256: 04dc93f703b34c35cefaa14a9cf9c7e9c5d5d5b2080c93793e1ec9cb2bcf8641
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify exact migration and Saturday Reel
+        working-directory: tools/line-worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/verify-ai-actress-daily-release.mjs migration \
+            migrations/0061_social_ai_actress_daily.sql "${AI_ACTRESS_MIGRATION_SHA256}"
+          if ! command -v ffprobe >/dev/null 2>&1; then
+            sudo timeout 180 apt-get update -qq
+            sudo timeout 180 apt-get install -y --no-install-recommends ffmpeg
+          fi
+          ffprobe -v error \
+            -show_entries stream=index,codec_type,codec_name,profile,width,height,pix_fmt,r_frame_rate,sample_rate,channels:format=duration,size \
+            -of json public/social/hoshilu-ai-actress-daily-sat-v1.mp4 > ai-actress-daily-media-probe.json
+          node scripts/verify-ai-actress-daily-release.mjs media \
+            public/social/hoshilu-ai-actress-daily-sat-v1.mp4 \
+            ai-actress-daily-media-probe.json "${AI_ACTRESS_MEDIA_SHA256}"
+          curl --fail-with-body --silent --show-error --retry 6 --retry-all-errors \
+            --retry-delay 5 --max-time 120 \
+            --output ai-actress-daily-deployed.mp4 \
+            'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4?release-check=20260829'
+          cmp public/social/hoshilu-ai-actress-daily-sat-v1.mp4 ai-actress-daily-deployed.mp4
+          sha256sum public/social/hoshilu-ai-actress-daily-sat-v1.mp4 \
+            ai-actress-daily-deployed.mp4 > ai-actress-daily-media-sha256.txt
+      - name: Apply only migration 0061 and capture recovery evidence
+        working-directory: tools/line-worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json \
+            > ai-actress-daily-recovery-before.json
+          mkdir -p .migration-ai-actress-daily-0061
+          cp migrations/0061_social_ai_actress_daily.sql .migration-ai-actress-daily-0061/
+          cat > wrangler-ai-actress-daily-0061.jsonc <<'JSON'
+          {
+            "name": "project-gate-line-bridge",
+            "main": "src/index.mjs",
+            "compatibility_date": "2026-07-14",
+            "d1_databases": [{
+              "binding": "PRODUCT_DB",
+              "database_name": "hoshilu-products",
+              "database_id": "17629324-b771-4348-982c-c25da48c29b2",
+              "migrations_dir": ".migration-ai-actress-daily-0061"
+            }]
+          }
+          JSON
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote \
+            --config wrangler-ai-actress-daily-0061.jsonc > ai-actress-daily-pending-before.txt
+          pending_count="$(grep -c '0061_social_ai_actress_daily.sql' ai-actress-daily-pending-before.txt || true)"
+          test "${pending_count}" -le 1
+          npx --yes wrangler@4.121.0 d1 migrations apply PRODUCT_DB --remote \
+            --config wrangler-ai-actress-daily-0061.jsonc
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote \
+            --config wrangler-ai-actress-daily-0061.jsonc > ai-actress-daily-pending-after.txt
+          if grep -Fq '0061_social_ai_actress_daily.sql' ai-actress-daily-pending-after.txt; then
+            echo '::error::0061 is still pending'
+            exit 1
+          fi
+          node scripts/verify-ai-actress-daily-release.mjs seed-sql \
+            migrations/0061_social_ai_actress_daily.sql > ai-actress-daily-seed.sql
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --yes \
+            --file ai-actress-daily-seed.sql > /dev/null
+      - name: Verify the exact asset and idempotently seeded cross-post rows
+        working-directory: tools/line-worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT asset_id,media_url,media_sha256,content_format,creative_policy,jst_publish_date,persona_id,persona_age,ai_actress_present,audio_confirmed,rights_confirmed,rights_ledger_id,qa_status,ai_generated,ai_disclosure_confirmed,approved_at FROM social_creative_assets WHERE asset_id='hoshilu_ai_actress_daily_sat_v1';" \
+            > ai-actress-daily-asset.json
+          node scripts/verify-ai-actress-daily-release.mjs asset \
+            ai-actress-daily-asset.json "${AI_ACTRESS_MEDIA_SHA256}"
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,external_post_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,CASE WHEN last_error='' THEN '' WHEN last_error IN ('INSTAGRAM_CONTAINER_IN_PROGRESS','INSTAGRAM_CONTAINER_EXPIRED','INSTAGRAM_CONTAINER_TIMEOUT') THEN last_error WHEN last_error LIKE 'X_%' THEN substr(last_error,1,80) WHEN last_error LIKE 'INSTAGRAM_%' THEN substr(last_error,1,80) ELSE 'PUBLISHER_ERROR_REDACTED' END AS error_code FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-29','hoshilu-ai-actress-daily-v1-instagram-2026-08-29') ORDER BY platform;" \
+            > ai-actress-daily-queued.json
+          node scripts/verify-ai-actress-daily-release.mjs queue ai-actress-daily-queued.json queued
+      - name: Wait up to 30 minutes for both five-minute publishers
+        working-directory: tools/line-worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+              "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,external_post_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,CASE WHEN last_error='' THEN '' WHEN last_error IN ('INSTAGRAM_CONTAINER_IN_PROGRESS','INSTAGRAM_CONTAINER_EXPIRED','INSTAGRAM_CONTAINER_TIMEOUT') THEN last_error WHEN last_error LIKE 'X_%' THEN substr(last_error,1,80) WHEN last_error LIKE 'INSTAGRAM_%' THEN substr(last_error,1,80) ELSE 'PUBLISHER_ERROR_REDACTED' END AS error_code FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-29','hoshilu-ai-actress-daily-v1-instagram-2026-08-29') ORDER BY platform;" \
+              > ai-actress-daily-final.json
+            if node scripts/verify-ai-actress-daily-release.mjs queue \
+              ai-actress-daily-final.json published; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 60 ]; then sleep 30; fi
+          done
+          echo '::error::Both AI actress posts were not published within 30 minutes'
+          exit 1
+      - name: Verify both public post URLs
+        working-directory: tools/line-worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            curl --fail-with-body --silent --show-error \
+              'https://hoshilu.app/api/social/posts/hoshilu-ai-actress-daily-v1-x-2026-08-29' \
+              > ai-actress-daily-x-public.json || true
+            curl --fail-with-body --silent --show-error \
+              'https://hoshilu.app/api/social/posts/hoshilu-ai-actress-daily-v1-instagram-2026-08-29' \
+              > ai-actress-daily-instagram-public.json || true
+            if node scripts/verify-ai-actress-daily-release.mjs public \
+              ai-actress-daily-x-public.json ai-actress-daily-instagram-public.json \
+              ai-actress-daily-final.json; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 12 ]; then sleep 10; fi
+          done
+          echo '::error::Published IDs exist, but public URLs were not verified'
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-actress-daily-release-${{ github.run_id }}
+          path: |
+            tools/line-worker/ai-actress-daily-*.json
+            tools/line-worker/ai-actress-daily-*.txt
+          if-no-files-found: ignore
+          retention-days: 30

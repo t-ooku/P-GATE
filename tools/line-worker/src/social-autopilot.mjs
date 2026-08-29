@@ -9,7 +9,10 @@ import {
 import { buzzThemeFor } from './buzz-shelf.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
-const FEATURE_LAUNCH_DATE = '2026-08-09';
+const DAILY_AI_ACTRESS_CAMPAIGN_ID = 'hoshilu-ai-actress-daily-v1';
+const DAILY_AI_ACTRESS_POLICY = 'DAILY_AI_ACTRESS_22';
+const DAILY_AI_ACTRESS_PERSONA_ID = 'hoshilu-approved-model-reference-v2';
+const DAILY_AI_DISCLOSURE = '※この動画はAI生成・AI加工映像です。 #AI生成';
 // Amazonアソシエイトはアカウント作成から180日以内に適格販売3件が必要
 // (期限2027-02-09)。現状のペースでは届かない試算のため、Threadsの投稿は
 // 汎用の13モール訴求ではなく、Amazonが強いカテゴリ(本・家電・日用品)の
@@ -31,23 +34,61 @@ const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOCIAL_ROTATION_EPOCH_MONDAY_UTC = Date.UTC(2026, 7, 24);
 
-const X_POSTS = [
-  'スクショ、公開SNS投稿のURL、うろ覚えの一言。どれか1つを手がかりに、HOSHILUが商品候補を整理し、確認できた商品ページや最大13モールの検索先へ案内します。候補・価格・在庫はリンク先で確認してください。',
-  '楽天市場・Yahoo!ショッピングをまとめて比較。Amazonを含む最大13モールへ同じ検索語を引き継ぎ、見比べられます。',
-  '送料込み価格を確認できた商品と、まだ価格・在庫を確認できていない候補を分けて表示。比較の根拠が分かる商品検索です。',
-  '気になる商品は「購入希望価格ウォッチ☑」へ。希望価格を保存し、APIで確認できた価格がその金額以下になった時に通知を受け取れます。'
-];
-
-const INSTAGRAM_POSTS = [
-  {
-    caption: 'スクショ、公開SNS投稿のURL、うろ覚えの一言。どれか1つをHOSHILUへ。商品候補を整理し、確認できた商品ページや最大13モールの検索先へ案内します。候補・価格・在庫はリンク先で確認してください。@hoshilu.app',
-    media_url: 'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4'
-  },
-  {
-    caption: '色・大きさ・電源・使う場所。覚えている条件を少し足すと、欲しい商品に近づきます。HOSHILUで最大13モールを見比べてみて。気になった商品をコメントで教えてね。@hoshilu.app',
-    media_url: 'https://hoshilu.app/social/instagram-reel-cross-market-audio-v2.mp4'
-  }
-];
+// The seven reels are deliberately scoped as a weekly owned series. The
+// creative-assets ledger validates persona v2, age 22, actress presence, audio,
+// rights and QA before a queue row using this policy can be published.
+const DAILY_AI_ACTRESS_REELS = Object.freeze([
+  Object.freeze({
+    weekday: 'sun',
+    creative_asset_id: 'hoshilu_ai_actress_daily_sun_v1',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sun-v1.mp4',
+    caption: '日曜日は次に欲しいもの探し。HOSHILU BUZZのランキングから韓国トレンドも横断検索へ。',
+    link_path: '/buzz'
+  }),
+  Object.freeze({
+    weekday: 'mon',
+    creative_asset_id: 'hoshilu_ai_actress_daily_mon_v1',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-mon-v1.mp4',
+    caption: '月曜日は、スクショ・公開SNS投稿URL・うろ覚えの一言から欲しい商品をHOSHILUで検索。'
+  }),
+  Object.freeze({
+    weekday: 'tue',
+    creative_asset_id: 'hoshilu_ai_actress_daily_tue_v1',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-tue-v1.mp4',
+    caption: '火曜日は韓国トレンド枠。名前が分からなくても、HOSHILUからQoo10・SHEINを含む検索先へ。',
+    link_path: '/buzz'
+  }),
+  Object.freeze({
+    weekday: 'wed',
+    creative_asset_id: 'hoshilu_ai_actress_daily_wed_v1',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-wed-v1.mp4',
+    caption: '水曜日は「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を探そう。',
+    link_path: '/buzz'
+  }),
+  Object.freeze({
+    weekday: 'thu',
+    creative_asset_id: 'hoshilu_ai_actress_daily_thu_v1',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-thu-v1.mp4',
+    caption: '木曜日は、見つけた商品を同じ検索語で最大13モールへ。購入先はリンク先で比較しよう。'
+  }),
+  Object.freeze({
+    weekday: 'fri',
+    creative_asset_id: 'hoshilu_ai_actress_daily_fri_v1',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-fri-v1.mp4',
+    caption: '金曜日のHOSHILU BUZZをチェック。気になるランキングから、週末に欲しい商品を探そう。',
+    link_path: '/buzz'
+  }),
+  Object.freeze({
+    weekday: 'sat',
+    creative_asset_id: 'hoshilu_ai_actress_daily_sat_v1',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4',
+    caption: '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。',
+    link_path: '/buzz'
+  })
+]);
+const DAILY_AI_ACTRESS_ASSETS = new Map(
+  DAILY_AI_ACTRESS_REELS.map((reel) => [reel.creative_asset_id, reel])
+);
 
 // The owner explicitly approved both 2026-08-28 cross-post rows for release
 // after they were held as completed-video replays. Keep the exception scoped to
@@ -170,12 +211,6 @@ const INSTAGRAM_NON_BUZZ_GUIDE_POSTS = Object.freeze(
   INSTAGRAM_GUIDE_POSTS.filter((post) => !post.link_path || post.link_path !== '/buzz')
 );
 const BUZZ_MEDIA_URL = 'https://hoshilu.app/social/hoshilu-buzz-ranking-v1.jpg';
-
-const FEATURE_LAUNCH = Object.freeze({
-  X: 'HOSHILU正式版を公開。説明から検索語を整理し、楽天市場・Yahoo!ショッピングをまとめて比較。Amazonを含む最大13モールへ同じ検索語でつなぎます。ランキング、AI最安比較、購入希望価格ウォッチにも対応。 #ホシル #商品検索',
-  INSTAGRAM: 'HOSHILU正式版の機能を12秒で紹介します。\n① 説明から検索語を整理\n② 最大13モールを同じ検索語で横断\n③ ランキングとAI最安比較\n④ 購入希望価格ウォッチで希望額を保存\n\n名前が分からない「欲しいもの」をコメントで教えてください。次の検索動画で試します。@hoshilu.app\n#商品検索 #価格比較 #ネットショッピング #買い物好きな人と繋がりたい',
-  media_url: 'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4'
-});
 
 // Amazonが強い(在庫・レビューが厚い)カテゴリの検索例に絞った、Threads専用の
 // 常設ローテーション。1日2枠(昼・夜)で先頭から順番に消費する。
@@ -354,6 +389,67 @@ function campaignLink(platform, date, content = date, searchQuery = '', path = '
   return `https://hoshilu.app${path}?${params}`;
 }
 
+function dailyAiActressLink(platform, date, path = '/') {
+  const params = new URLSearchParams({
+    utm_source: platform === 'X' ? 'x' : 'instagram',
+    utm_medium: 'social',
+    utm_campaign: DAILY_AI_ACTRESS_CAMPAIGN_ID,
+    utm_content: `hoshilu-ai-actress-daily-${date}`
+  });
+  return `https://hoshilu.app${path}?${params}`;
+}
+
+function dailyAiActressCrossposts(parts) {
+  const reel = DAILY_AI_ACTRESS_REELS[parts.weekday];
+  const publishDate = dateKey(parts);
+  const crosspostGroupId = `hoshilu-ai-actress-daily-${publishDate}`;
+  return ['X', 'INSTAGRAM'].map((platform) => ({
+    ...normalizeSocialPost({
+      post_id: `${DAILY_AI_ACTRESS_CAMPAIGN_ID}-${platform.toLowerCase()}-${publishDate}`,
+      content_id: crosspostGroupId,
+      platform,
+      campaign_id: DAILY_AI_ACTRESS_CAMPAIGN_ID,
+      caption: `${reel.caption} ${DAILY_AI_DISCLOSURE}`,
+      link: dailyAiActressLink(platform, publishDate, reel.link_path || '/'),
+      media_url: reel.media_url,
+      scheduled_at: scheduledAt(parts, 20, 15),
+      status: 'APPROVED'
+    }),
+    creative_asset_id: reel.creative_asset_id,
+    content_format: 'REEL',
+    creative_policy: DAILY_AI_ACTRESS_POLICY,
+    jst_publish_date: publishDate,
+    ai_generated: 1,
+    crosspost_group_id: crosspostGroupId,
+    // These mirror the immutable asset-ledger contract and make the generated
+    // plan self-describing in tests and audit output. Publication still checks
+    // the authoritative social_creative_assets row.
+    persona_id: DAILY_AI_ACTRESS_PERSONA_ID,
+    persona_age: 22,
+    ai_actress_present: 1,
+    ai_disclosure_confirmed: 1
+  }));
+}
+
+function isCertifiedDailyAiActressPost(post) {
+  const asset = DAILY_AI_ACTRESS_ASSETS.get(String(post.creative_asset_id || ''));
+  const expectedGroup = `hoshilu-ai-actress-daily-${post.jst_publish_date}`;
+  return Boolean(asset)
+    && post.campaign_id === DAILY_AI_ACTRESS_CAMPAIGN_ID
+    && post.content_id === expectedGroup
+    && post.crosspost_group_id === expectedGroup
+    && post.media_url === asset.media_url
+    && post.content_format === 'REEL'
+    && post.creative_policy === DAILY_AI_ACTRESS_POLICY
+    && post.ai_generated === 1
+    && post.persona_id === DAILY_AI_ACTRESS_PERSONA_ID
+    && post.persona_age === 22
+    && post.ai_actress_present === 1
+    && post.ai_disclosure_confirmed === 1
+    && post.caption.includes('※この動画はAI生成・AI加工映像です。')
+    && post.caption.includes('#AI生成');
+}
+
 // query を持たない=非アフィリエイト枠。リンクを付けない。
 function threadsAmazonLink(content) {
   if (!content.query) return '';
@@ -405,31 +501,19 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
   const posts = [];
   const start = new Date(now.getTime() + JST_OFFSET_MS);
   start.setUTCHours(0, 0, 0, 0);
-  // InstagramとXは月・水・金の週3回。同じ訴求動画を両方へ配信し、
-  // 動画生成費を二重に発生させない。
-  const weekdayContent = new Map([[1, 0], [3, 1], [5, 0]]);
 
   for (let offset = 0; offset < days; offset += 1) {
     const day = new Date(start.getTime() + offset * DAY_MS - JST_OFFSET_MS);
     const parts = jstDateParts(day);
     const key = dateKey(parts);
-    if (weekdayContent.has(parts.weekday)) {
-      const contentIndex = weekdayContent.get(parts.weekday);
-      const content = INSTAGRAM_POSTS[contentIndex];
-      const buzz = isBuzzMediaSlot(parts, [1, 3, 5]);
-      const theme = buzzThemeFor(day);
-      posts.push(normalizeSocialPost({
-        post_id: `${CAMPAIGN_ID}-x-${key}`,
-        content_id: buzz ? `buzz-video-${theme.id}` : `evergreen-x-${contentIndex + 1}`,
-        platform: 'X',
-        campaign_id: CAMPAIGN_ID,
-        caption: key === FEATURE_LAUNCH_DATE ? FEATURE_LAUNCH.X : (buzz ? buzzCaption('X', theme.label) : X_POSTS[contentIndex]),
-        link: campaignLink('X', key, buzz ? `buzz-video-${theme.id}` : key, '', buzz ? '/buzz' : '/'),
-        media_url: content.media_url,
-        scheduled_at: scheduledAt(parts, 20, 15),
-        status: 'APPROVED'
-      }));
-    } else {
+    // One owned 22-year-old v2 actress reel is cross-posted to both platforms
+    // every JST day. The same group and asset make cross-post identity explicit;
+    // the old actress-less M/W/F videos are no longer part of the daily slot.
+    posts.push(...dailyAiActressCrossposts(parts));
+
+    // Preserve the useful non-video X rotation as a supplementary 20:00 post on
+    // the days where it already ran. It never substitutes for the daily actress.
+    if (![1, 3, 5].includes(parts.weekday)) {
       const rotationDay = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
       const content = rotationDay % 6 === 0
         ? X_SELLER_POSTS[Math.floor(rotationDay / 6) % X_SELLER_POSTS.length]
@@ -445,37 +529,10 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         status: 'APPROVED'
       }));
     }
-    if (key === FEATURE_LAUNCH_DATE) {
-      posts.push(normalizeSocialPost({
-        post_id: `${CAMPAIGN_ID}-instagram-${key}`,
-        content_id: 'feature-launch-reel-20260809',
-        platform: 'INSTAGRAM',
-        campaign_id: CAMPAIGN_ID,
-        caption: FEATURE_LAUNCH.INSTAGRAM,
-        link: campaignLink('INSTAGRAM', key),
-        media_url: FEATURE_LAUNCH.media_url,
-        scheduled_at: scheduledAt(parts, 20, 15),
-        status: 'APPROVED'
-      }));
-      continue;
-    }
-    if (weekdayContent.has(parts.weekday)) {
-      const contentIndex = weekdayContent.get(parts.weekday);
-      const content = INSTAGRAM_POSTS[contentIndex];
-      const buzz = isBuzzMediaSlot(parts, [1, 3, 5]);
-      const theme = buzzThemeFor(day);
-      posts.push(normalizeSocialPost({
-        post_id: `${CAMPAIGN_ID}-instagram-${key}`,
-        content_id: buzz ? `buzz-video-${theme.id}` : `evergreen-instagram-${contentIndex + 1}`,
-        platform: 'INSTAGRAM',
-        campaign_id: CAMPAIGN_ID,
-        caption: buzz ? buzzCaption('INSTAGRAM', theme.label) : content.caption,
-        link: campaignLink('INSTAGRAM', key, buzz ? `buzz-video-${theme.id}` : key, '', buzz ? '/buzz' : '/'),
-        media_url: content.media_url,
-        scheduled_at: scheduledAt(parts, 20, 15),
-        status: 'APPROVED'
-      }));
-    } else if ([2, 4, 6].includes(parts.weekday)) {
+
+    // Static Instagram guides remain supplementary; put them at 20:00 so the
+    // daily 20:15 Reel has its own deterministic publishing slot.
+    if ([2, 4, 6].includes(parts.weekday)) {
       const rotationDay = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
       const buzz = isBuzzMediaSlot(parts, [2, 4, 6]);
       const theme = buzzThemeFor(day);
@@ -493,7 +550,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         caption: content.caption,
         link: campaignLink('INSTAGRAM', key, content.id, content.query, content.link_path || '/'),
         media_url: content.media_url,
-        scheduled_at: scheduledAt(parts, 20, 15),
+        scheduled_at: scheduledAt(parts, 20, 0),
         status: 'APPROVED'
       }));
     }
@@ -536,15 +593,19 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
   const statements = [];
   for (const post of posts) {
     // A finished video may be shared to Instagram and X in the same slot, but it
-    // must not silently become a new APPROVED post on a later date.  The rights
-    // ledger requires a fresh human review for every completed-video replay.
+    // must not silently become a new APPROVED post on a later date. The only
+    // recurring exception is the exact seven-asset DAILY_AI_ACTRESS_22 series:
+    // its asset-ledger rows explicitly approve weekday repetition and the strict
+    // predicate below prevents unrelated media from inheriting that exception.
     // Keep this decision inside the INSERT so concurrent cron invocations see
     // the same D1 history and cannot both approve a later replay.
     const completedVideo = /\.mp4(?:$|[?#])/iu.test(post.media_url) ? 1 : 0;
-    const userApprovedReplay = USER_APPROVED_REPLAY_POST_IDS.has(post.post_id) ? 1 : 0;
+    const approvedCompletedVideoReuse = USER_APPROVED_REPLAY_POST_IDS.has(post.post_id)
+      || isCertifiedDailyAiActressPost(post) ? 1 : 0;
     statements.push(env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
-       affiliate,approved_at,created_at,updated_at)
+       affiliate,creative_asset_id,content_format,creative_policy,jst_publish_date,
+       ai_generated,crosspost_group_id,approved_at,created_at,updated_at)
       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,
         CASE WHEN ?11=1 AND ?13=0 AND EXISTS (
           SELECT 1 FROM social_post_queue previous
@@ -555,6 +616,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
               OR previous.external_post_id<>'' OR previous.published_at<>'')
         ) THEN 'REVIEW_REQUIRED' ELSE ?12 END,
         ?9,
+        ?14,?15,?16,?17,?18,?19,
         CASE WHEN ?11=1 AND ?13=0 AND EXISTS (
           SELECT 1 FROM social_post_queue previous
           WHERE previous.post_id<>?1
@@ -567,6 +629,12 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
       ON CONFLICT(post_id) DO UPDATE SET content_id=excluded.content_id,
         caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
         scheduled_at=excluded.scheduled_at,affiliate=excluded.affiliate,
+        creative_asset_id=excluded.creative_asset_id,
+        content_format=excluded.content_format,
+        creative_policy=excluded.creative_policy,
+        jst_publish_date=excluded.jst_publish_date,
+        ai_generated=excluded.ai_generated,
+        crosspost_group_id=excluded.crosspost_group_id,
         status=CASE
           WHEN ?13=1 AND social_post_queue.status='REVIEW_REQUIRED'
             AND social_post_queue.last_error='MEDIA_REUSE_REVIEW_REQUIRED'
@@ -606,7 +674,10 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
           AND social_post_queue.published_at='')`)
       .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption,
         post.link, post.media_url, post.scheduled_at, post.affiliate ? 1 : 0, now.toISOString(),
-        completedVideo, post.status, userApprovedReplay));
+        completedVideo, post.status, approvedCompletedVideoReuse,
+        String(post.creative_asset_id || ''), String(post.content_format || ''),
+        String(post.creative_policy || ''), String(post.jst_publish_date || ''),
+        post.ai_generated === 1 ? 1 : 0, String(post.crosspost_group_id || '')));
   }
   if (approvedModelReel.length) {
     statements.push(env.PRODUCT_DB.prepare(`UPDATE social_post_queue

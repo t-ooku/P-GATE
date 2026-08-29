@@ -12,6 +12,7 @@ test('five-minute production monitor checks the live feature branch without depl
   assert.match(workflow, /persist-credentials: false/u);
   assert.match(workflow, /--asset-policy live/u);
   assert.match(workflow, /check-production-search-sli\.mjs/u);
+  assert.match(workflow, /check-social-ai-actress-sla\.mjs/u);
   assert.match(workflow, /production-monitor-control\.mjs heartbeat --status STARTED/u);
   assert.match(workflow, /production-monitor-control\.mjs heartbeat --status COMPLETED/u);
   assert.match(workflow, /production-monitor-control\.mjs heartbeat --status BOOTSTRAP/u);
@@ -22,7 +23,7 @@ test('five-minute production monitor checks the live feature branch without depl
   assert.match(workflow, /branches: \[main\]/u);
   assert.match(workflow, /actions: read/u);
   assert.match(workflow, /issues: write/u);
-  assert.match(workflow, /timeout-minutes: 6/u);
+  assert.match(workflow, /timeout-minutes: 9/u);
   assert.match(workflow, /cancel-in-progress: false/u);
   assert.doesNotMatch(workflow, /cancel-in-progress: true/u);
 });
@@ -46,6 +47,16 @@ test('production monitor deduplicates incidents and waits for stable recovery', 
   assert.match(workflow, /hasThreeConsecutivePostIncidentSuccesses/u);
   assert.match(workflow, /three consecutive successful checks/u);
   assert.match(workflow, /Search text and personal data are not recorded/u);
+});
+
+test('daily AI actress SLA participates in the shared incident and final workflow result', () => {
+  assert.match(workflow, /id: social_ai/u);
+  assert.match(workflow, /SOCIAL_AI_OUTCOME: \$\{\{ steps\.social_ai\.outcome \}\}/u);
+  assert.match(workflow, /externalFailed \|\| sliFailed \|\| socialAiFailed/u);
+  assert.match(workflow, /Daily AI-actress social SLA/u);
+  assert.match(workflow, /hoshilu-social-ai-actress-sla\.log/u);
+  assert.match(workflow, /steps\.social_ai\.outcome != 'success'/u);
+  assert.match(workflow, /--attempts 3 --retry-ms 5000/u);
 });
 
 test('a rerun cannot count successes that happened before the incident', () => {

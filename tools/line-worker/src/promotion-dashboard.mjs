@@ -3,8 +3,8 @@ import { socialPublisherReadiness } from './social-publisher.mjs';
 
 const PLATFORMS = ['X', 'INSTAGRAM', 'TIKTOK'];
 const SCHEDULES = Object.freeze({
-  X: '毎日（火・木・土・日20:00、月・水・金はInstagramリールと同時刻20:15）',
-  INSTAGRAM: '月〜土 20:15（月・水・金リール、火・木・土操作案内）',
+  X: '毎日20:15（22歳設定v2 AI女優リール。20:00の非動画枠は追加投稿）',
+  INSTAGRAM: '毎日20:15（22歳設定v2 AI女優リール）',
   TIKTOK: '未接続'
 });
 const SOURCE_BY_PLATFORM = Object.freeze({ X: 'x', INSTAGRAM: 'instagram', TIKTOK: 'tiktok' });
