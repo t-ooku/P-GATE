@@ -33,56 +33,100 @@ const APPROVED_MODEL_REEL = Object.freeze({
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SOCIAL_ROTATION_EPOCH_MONDAY_UTC = Date.UTC(2026, 7, 24);
+const DAILY_CONTENT_TOPICS = Object.freeze({
+  PHOTO: 'PHOTO_SEARCH',
+  SCREENSHOT: 'SCREENSHOT_SEARCH',
+  SOCIAL_POST_URL: 'SOCIAL_POST_URL_SEARCH',
+  BUZZ: 'HOSHILU_BUZZ',
+  AMBIGUOUS_SEARCH: 'AMBIGUOUS_SEARCH'
+});
 
 // The seven reels are deliberately scoped as a weekly owned series. The
 // creative-assets ledger validates persona v2, age 22, actress presence, audio,
-// rights and QA before a queue row using this policy can be published.
+// rights and QA before a queue row using this policy can be published. Caption
+// topics are explicit plan metadata: the approved video keeps its primary
+// visual theme, while the post copy combines at least two truthful product
+// features each day. Every seven-day cycle covers all five caption topics, and
+// the five BUZZ-led videos keep their matching /buzz destination.
 const DAILY_AI_ACTRESS_REELS = Object.freeze([
   Object.freeze({
     weekday: 'sun',
     creative_asset_id: 'hoshilu_ai_actress_daily_sun_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sun-v1.mp4',
-    caption: '日曜日は次に欲しいもの探し。HOSHILU BUZZのランキングから韓国トレンドも横断検索へ。',
+    caption: '日曜日は、撮った写真から名前の分からない商品を探すか、HOSHILU BUZZの韓国トレンドをチェック。',
+    topics: Object.freeze([
+      DAILY_CONTENT_TOPICS.PHOTO,
+      DAILY_CONTENT_TOPICS.BUZZ,
+      DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
+    ]),
     link_path: '/buzz'
   }),
   Object.freeze({
     weekday: 'mon',
     creative_asset_id: 'hoshilu_ai_actress_daily_mon_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-mon-v1.mp4',
-    caption: '月曜日は、スクショ・公開SNS投稿URL・うろ覚えの一言から欲しい商品をHOSHILUで検索。'
+    caption: '月曜日は、スクショ・公開SNS投稿URL・うろ覚えの一言から、名前の分からない商品をHOSHILUで検索。',
+    topics: Object.freeze([
+      DAILY_CONTENT_TOPICS.SCREENSHOT,
+      DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
+      DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
+    ])
   }),
   Object.freeze({
     weekday: 'tue',
     creative_asset_id: 'hoshilu_ai_actress_daily_tue_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-tue-v1.mp4',
-    caption: '火曜日は韓国トレンド枠。名前が分からなくても、HOSHILUからQoo10・SHEINを含む検索先へ。',
+    caption: '火曜日は韓国トレンド枠。名前が分からない商品を撮った写真から探すか、HOSHILU BUZZからQoo10・SHEINを含む検索先へ。',
+    topics: Object.freeze([
+      DAILY_CONTENT_TOPICS.PHOTO,
+      DAILY_CONTENT_TOPICS.BUZZ,
+      DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
+    ]),
     link_path: '/buzz'
   }),
   Object.freeze({
     weekday: 'wed',
     creative_asset_id: 'hoshilu_ai_actress_daily_wed_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-wed-v1.mp4',
-    caption: '水曜日は「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を探そう。',
+    caption: '水曜日はHOSHILU BUZZをチェック。ランキングで気になった商品は、スクショからも探せます。',
+    topics: Object.freeze([
+      DAILY_CONTENT_TOPICS.SCREENSHOT,
+      DAILY_CONTENT_TOPICS.BUZZ
+    ]),
     link_path: '/buzz'
   }),
   Object.freeze({
     weekday: 'thu',
     creative_asset_id: 'hoshilu_ai_actress_daily_thu_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-thu-v1.mp4',
-    caption: '木曜日は、見つけた商品を同じ検索語で最大13モールへ。購入先はリンク先で比較しよう。'
+    caption: '木曜日は、Instagram・TikTok・Xなどの公開投稿URLか、うろ覚えの一言から検索。見つけた商品を最大13モールへ。',
+    topics: Object.freeze([
+      DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
+      DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
+    ])
   }),
   Object.freeze({
     weekday: 'fri',
     creative_asset_id: 'hoshilu_ai_actress_daily_fri_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-fri-v1.mp4',
-    caption: '金曜日のHOSHILU BUZZをチェック。気になるランキングから、週末に欲しい商品を探そう。',
+    caption: '金曜日はHOSHILU BUZZをチェック。ランキングで気になった商品は、撮った写真やスクショからも探せます。',
+    topics: Object.freeze([
+      DAILY_CONTENT_TOPICS.PHOTO,
+      DAILY_CONTENT_TOPICS.SCREENSHOT,
+      DAILY_CONTENT_TOPICS.BUZZ
+    ]),
     link_path: '/buzz'
   }),
   Object.freeze({
     weekday: 'sat',
     creative_asset_id: 'hoshilu_ai_actress_daily_sat_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4',
-    caption: '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。',
+    caption: '土曜日は、公開SNS投稿URLとうろ覚えの一言から、名前の分からない商品を検索。迷ったらHOSHILU BUZZもチェック。',
+    topics: Object.freeze([
+      DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
+      DAILY_CONTENT_TOPICS.BUZZ,
+      DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
+    ]),
     link_path: '/buzz'
   })
 ]);
@@ -102,7 +146,7 @@ const USER_APPROVED_REPLAY_POST_IDS = new Set([
 const X_NON_VIDEO_POSTS = Object.freeze([
   {
     id: 'howto-three-input-search',
-    caption: '検索の手がかりは3つ。スクショ、Instagram・TikTok・Xなどの公開投稿URL、うろ覚えの一言。どれか1つから商品候補と検索語を整理します。非公開・削除済み投稿はスクショや一言を足してください。',
+    caption: '検索の手がかりは4つ。撮った写真、スクショ、Instagram・TikTok・Xなどの公開投稿URL、うろ覚えの一言。どれか1つから商品候補と検索語を整理します。非公開・削除済み投稿は画像や一言を足してください。',
     query: '名前は分からないけど、通勤バッグの中で自立する本革トートバッグ'
   },
   {
@@ -150,6 +194,12 @@ const X_NON_VIDEO_POSTS = Object.freeze([
     query: '韓国っぽい、透明で小さいワイヤレスイヤホン'
   }
 ]);
+const X_BUZZ_POSTS = Object.freeze(
+  X_NON_VIDEO_POSTS.filter(post => post.link_path === '/buzz')
+);
+const X_SEARCH_GUIDE_POSTS = Object.freeze(
+  X_NON_VIDEO_POSTS.filter(post => post.link_path !== '/buzz')
+);
 
 // 2026-08-22 大隆さん承認済み。ユーザー向け投稿を主役のまま保つため、
 // セラー向けはX非動画枠の6回に1回だけ差し込む。自然掲載を先に伝え、
@@ -175,7 +225,7 @@ const X_SELLER_POSTS = Object.freeze([
 const INSTAGRAM_GUIDE_POSTS = Object.freeze([
   {
     id: 'guide-search-screen',
-    caption: '操作案内① スクショを追加、公開SNS投稿URLを追加、または覚えている一言を入力。どれか1つから商品候補と検索語を整理できます。スクショと投稿URLはHOSHILUのサーバーに保存せず、候補抽出にGoogle Gemini APIを使います。@hoshilu.app',
+    caption: '操作案内① カメラで撮る、写真・スクショを追加、公開SNS投稿URLを追加、または覚えている一言を入力。どれか1つから商品候補と検索語を整理できます。写真・画像・投稿URLはHOSHILUのサーバーに保存しません。@hoshilu.app',
     query: '名前は分からないけど、床に置いても自立する本革トートバッグ',
     media_url: 'https://hoshilu.app/social/instagram-ambiguous-four-market-v1.png'
   },
@@ -249,7 +299,7 @@ const THREADS_AMAZON_POSTS = Object.freeze([
   },
   {
     id: 'trust-how-to-describe',
-    caption: '商品名が分からないときは、名前をひねり出さなくて大丈夫です。スクショ、公開SNS投稿URL、覚えている一言のどれか1つを手がかりに探せます。非公開投稿はスクショか一言を足してください。'
+    caption: '商品名が分からないときは、名前をひねり出さなくて大丈夫です。撮った写真、スクショ、公開SNS投稿URL、覚えている一言のどれか1つを手がかりに探せます。非公開投稿は画像か一言を足してください。'
   },
   {
     id: 'amazon-boost-reviews',
@@ -340,6 +390,10 @@ const THREADS_AMAZON_SLOTS = Object.freeze([
 
 const pad = value => String(value).padStart(2, '0');
 
+function positiveModulo(value, size) {
+  return ((value % size) + size) % size;
+}
+
 function jstDateParts(date) {
   const shifted = new Date(date.getTime() + JST_OFFSET_MS);
   return {
@@ -427,7 +481,8 @@ function dailyAiActressCrossposts(parts) {
     persona_id: DAILY_AI_ACTRESS_PERSONA_ID,
     persona_age: 22,
     ai_actress_present: 1,
-    ai_disclosure_confirmed: 1
+    ai_disclosure_confirmed: 1,
+    caption_topics: reel.topics
   }));
 }
 
@@ -514,10 +569,15 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
     // Preserve the useful non-video X rotation as a supplementary 20:00 post on
     // the days where it already ran. It never substitutes for the daily actress.
     if (![1, 3, 5].includes(parts.weekday)) {
-      const rotationDay = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
-      const content = rotationDay % 6 === 0
-        ? X_SELLER_POSTS[Math.floor(rotationDay / 6) % X_SELLER_POSTS.length]
-        : X_NON_VIDEO_POSTS[rotationDay % X_NON_VIDEO_POSTS.length];
+      const slot = mediaSlotNumber(parts, [0, 2, 4, 6]);
+      // Keep BUZZ on every even supplementary slot. The seller slot is always
+      // odd, so any seven JST days retain at least two BUZZ guides while seller
+      // copy remains one sixth of the supplementary X rotation.
+      const content = positiveModulo(slot, 6) === 5
+        ? X_SELLER_POSTS[positiveModulo(Math.floor(slot / 6), X_SELLER_POSTS.length)]
+        : positiveModulo(slot, 2) === 0
+          ? X_BUZZ_POSTS[positiveModulo(Math.floor(slot / 2), X_BUZZ_POSTS.length)]
+          : X_SEARCH_GUIDE_POSTS[positiveModulo(Math.floor(slot / 2), X_SEARCH_GUIDE_POSTS.length)];
       posts.push(normalizeSocialPost({
         post_id: `${CAMPAIGN_ID}-x-guide-${key}`,
         content_id: content.id,

@@ -9,6 +9,10 @@ import { buildSocialAutopilotPosts } from '../src/social-autopilot.mjs';
 
 const script = fileURLToPath(new URL('../scripts/verify-ai-actress-daily-release.mjs', import.meta.url));
 const expeditedAt = '2000-01-01T00:00:00.000Z';
+const historicalCaptions = Object.freeze({
+  X: '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 #Qoo10 #SHEIN #AI生成',
+  INSTAGRAM: '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 気になった商品をコメントで教えてね。 #HOSHILU #Qoo10 #SHEIN #購入品紹介 #AI生成'
+});
 
 function queueRow(platform) {
   const generated = buildSocialAutopilotPosts(new Date('2026-08-28T15:00:00.000Z'))
@@ -17,6 +21,10 @@ function queueRow(platform) {
   assert.ok(generated, `autopilot row missing for ${platform}`);
   return {
     ...generated,
+    // The one-shot verifier is an immutable audit of what was approved and
+    // published on 2026-08-29. Future rotation copy must not rewrite it.
+    caption: historicalCaptions[platform],
+    link: `https://hoshilu.app/buzz?utm_source=${platform === 'X' ? 'x' : 'instagram'}&utm_medium=social&utm_campaign=hoshilu-ai-actress-daily-v1&utm_content=hoshilu-ai-actress-daily-2026-08-29`,
     scheduled_at: expeditedAt,
     external_post_id: '',
     published_at: '',
