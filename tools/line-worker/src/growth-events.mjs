@@ -10,25 +10,37 @@ const EVENTS = new Set([
   // enum event. Raw query text, social URLs and image data are not accepted.
   'search_input_text',
   'search_input_screenshot',
+  'search_input_camera',
   'search_input_social_url',
   'search_input_text_screenshot',
+  'search_input_text_camera',
   'search_input_text_social_url',
   'search_input_screenshot_social_url',
+  'search_input_camera_social_url',
   'search_input_text_screenshot_social_url',
+  'search_input_text_camera_social_url',
   'search_completed_text',
   'search_completed_screenshot',
+  'search_completed_camera',
   'search_completed_social_url',
   'search_completed_text_screenshot',
+  'search_completed_text_camera',
   'search_completed_text_social_url',
   'search_completed_screenshot_social_url',
+  'search_completed_camera_social_url',
   'search_completed_text_screenshot_social_url',
+  'search_completed_text_camera_social_url',
   'search_outbound_text',
   'search_outbound_screenshot',
+  'search_outbound_camera',
   'search_outbound_social_url',
   'search_outbound_text_screenshot',
+  'search_outbound_text_camera',
   'search_outbound_text_social_url',
   'search_outbound_screenshot_social_url',
+  'search_outbound_camera_social_url',
   'search_outbound_text_screenshot_social_url',
+  'search_outbound_text_camera_social_url',
   'search_completed',
   'search_failed',
   'search_dead_end',
@@ -56,8 +68,9 @@ const EVENTS = new Set([
 ]);
 const LOCALES = new Set(['JA', 'EN', 'ZH', 'KO']);
 const SEARCH_INPUT_SUFFIXES = new Set([
-  'text', 'screenshot', 'social_url', 'text_screenshot', 'text_social_url',
-  'screenshot_social_url', 'text_screenshot_social_url'
+  'text', 'screenshot', 'camera', 'social_url', 'text_screenshot', 'text_camera',
+  'text_social_url', 'screenshot_social_url', 'camera_social_url',
+  'text_screenshot_social_url', 'text_camera_social_url'
 ]);
 const SEARCH_PROVIDER_DEGRADATION_COMPONENTS = new Set([
   'ai_chat_primary', 'ai_chat_all',

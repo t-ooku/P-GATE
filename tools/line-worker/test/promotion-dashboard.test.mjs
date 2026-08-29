@@ -142,6 +142,66 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(summary.business_kpis.search_input_mix['30d'].total_searches, 2);
 });
 
+test('カメラ検索の固定入力区分ごとに受理・成功・送客CVを分離して集計する', async () => {
+  const db = setup();
+  const event = db.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const visitor = '750e8400-e29b-41d4-a716-446655440000';
+  const session = '850e8400-e29b-41d4-a716-446655440000';
+  const cameraExecutions = [
+    [`search_${'d'.repeat(64)}`, [
+      ['input', 'search_input_camera'],
+      ['completed', 'search_completed_camera'],
+      ['outbound', 'search_outbound_camera']
+    ]],
+    [`search_${'e'.repeat(64)}`, [
+      ['input', 'search_input_text_camera'],
+      ['completed', 'search_completed_text_camera']
+    ]],
+    [`search_${'f'.repeat(64)}`, [
+      ['input', 'search_input_camera_social_url'],
+      ['outbound', 'search_outbound_camera_social_url']
+    ]],
+    [`search_${'1'.repeat(64)}`, [
+      ['input', 'search_input_text_camera_social_url']
+    ]]
+  ];
+  for (const [executionKey, stages] of cameraExecutions) {
+    for (const [stage, type] of stages) {
+      event.run(`${executionKey}:${stage}`, type, 'JA', 'instagram', 'social', 'camera-search', '', '',
+        '2026-08-09T15:00:00Z', 'ATTRIBUTED', visitor, session);
+    }
+  }
+
+  const summary = await promotionDashboardSummary({
+    PRODUCT_DB: d1(db), SOCIAL_AUTOPILOT_ENABLED: 'false'
+  }, new Date('2026-08-10T00:00:00.000Z'));
+  const mix = summary.business_kpis.periods['7d'].search_input_mix;
+
+  assert.equal(mix.total_searches, 6);
+  assert.equal(mix.counts.CAMERA, 1);
+  assert.equal(mix.counts.TEXT_CAMERA, 1);
+  assert.equal(mix.counts.CAMERA_SOCIAL_URL, 1);
+  assert.equal(mix.counts.TEXT_CAMERA_SOCIAL_URL, 1);
+  assert.deepEqual(mix.performance.CAMERA, {
+    attempts: 1, completed: 1, outbound: 1,
+    mix_rate: 16.7, success_rate: 100, outbound_rate: 100, attempt_to_outbound_rate: 100
+  });
+  assert.deepEqual(mix.performance.TEXT_CAMERA, {
+    attempts: 1, completed: 1, outbound: 0,
+    mix_rate: 16.7, success_rate: 100, outbound_rate: 0, attempt_to_outbound_rate: 0
+  });
+  assert.deepEqual(mix.performance.CAMERA_SOCIAL_URL, {
+    attempts: 1, completed: 0, outbound: 1,
+    mix_rate: 16.7, success_rate: 0, outbound_rate: 100, attempt_to_outbound_rate: 100
+  });
+  assert.deepEqual(mix.performance.TEXT_CAMERA_SOCIAL_URL, {
+    attempts: 1, completed: 0, outbound: 0,
+    mix_rate: 16.7, success_rate: 0, outbound_rate: 0, attempt_to_outbound_rate: 0
+  });
+});
+
 test('経営KPIが未移行でもSNS運用部分は表示できる', async () => {
   const db = setup();
   db.exec('DROP TABLE growth_events');

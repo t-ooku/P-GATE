@@ -37,15 +37,18 @@ test('search input mix accepts only fixed enums and never stores raw inputs', ()
   const execution_id = '450e8400-e29b-41d4-a716-446655440000';
   const session_id = '650e8400-e29b-41d4-a716-446655440000';
   for (const event_type of [
-    'search_input_text', 'search_input_screenshot', 'search_input_social_url',
-    'search_input_text_screenshot', 'search_input_text_social_url',
-    'search_input_screenshot_social_url', 'search_input_text_screenshot_social_url',
-    'search_completed_text', 'search_completed_screenshot', 'search_completed_social_url',
-    'search_completed_text_screenshot', 'search_completed_text_social_url',
-    'search_completed_screenshot_social_url', 'search_completed_text_screenshot_social_url',
-    'search_outbound_text', 'search_outbound_screenshot', 'search_outbound_social_url',
-    'search_outbound_text_screenshot', 'search_outbound_text_social_url',
-    'search_outbound_screenshot_social_url', 'search_outbound_text_screenshot_social_url'
+    'search_input_text', 'search_input_screenshot', 'search_input_camera', 'search_input_social_url',
+    'search_input_text_screenshot', 'search_input_text_camera', 'search_input_text_social_url',
+    'search_input_screenshot_social_url', 'search_input_camera_social_url',
+    'search_input_text_screenshot_social_url', 'search_input_text_camera_social_url',
+    'search_completed_text', 'search_completed_screenshot', 'search_completed_camera', 'search_completed_social_url',
+    'search_completed_text_screenshot', 'search_completed_text_camera', 'search_completed_text_social_url',
+    'search_completed_screenshot_social_url', 'search_completed_camera_social_url',
+    'search_completed_text_screenshot_social_url', 'search_completed_text_camera_social_url',
+    'search_outbound_text', 'search_outbound_screenshot', 'search_outbound_camera', 'search_outbound_social_url',
+    'search_outbound_text_screenshot', 'search_outbound_text_camera', 'search_outbound_text_social_url',
+    'search_outbound_screenshot_social_url', 'search_outbound_camera_social_url',
+    'search_outbound_text_screenshot_social_url', 'search_outbound_text_camera_social_url'
   ]) {
     const event = normalizeGrowthEvent({
       event_type, query: '保存禁止の検索文', social_url: 'https://example.invalid/private',

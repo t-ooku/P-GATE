@@ -92,7 +92,7 @@ test('一般APIクライアント・運用probe・生成ツールは処理告知
     readFile(new URL('../public/ai-search-ui.mjs', import.meta.url), 'utf8'),
     readFile(new URL('../public/ai-price-comparison-ui.mjs', import.meta.url), 'utf8'),
     readFile(new URL('../public/app.js', import.meta.url), 'utf8'),
-    readFile(new URL('../public/assets-v142/app.js', import.meta.url), 'utf8'),
+    readFile(new URL('../public/assets-v143/app.js', import.meta.url), 'utf8'),
     readFile(new URL('../scripts/check-production-health.mjs', import.meta.url), 'utf8'),
     readFile(new URL('../tools/apply-ai-search-v2-step2.mjs', import.meta.url), 'utf8')
   ]);

@@ -27,10 +27,12 @@ const sourceLabels = {
   google: 'Google', yahoo: 'Yahoo!', bing: 'Bing', line: 'LINE'
 };
 const searchInputLabels = {
-  TEXT: '一言', SCREENSHOT: 'スクショ', SOCIAL_URL: '投稿URL',
-  TEXT_SCREENSHOT: '一言＋スクショ', TEXT_SOCIAL_URL: '一言＋投稿URL',
-  SCREENSHOT_SOCIAL_URL: 'スクショ＋投稿URL',
-  TEXT_SCREENSHOT_SOCIAL_URL: '一言＋スクショ＋投稿URL'
+  TEXT: '一言', SCREENSHOT: '画像選択', CAMERA: 'カメラ導線', SOCIAL_URL: '投稿URL',
+  TEXT_SCREENSHOT: '一言＋画像選択', TEXT_CAMERA: '一言＋カメラ導線', TEXT_SOCIAL_URL: '一言＋投稿URL',
+  SCREENSHOT_SOCIAL_URL: '画像選択＋投稿URL',
+  CAMERA_SOCIAL_URL: 'カメラ導線＋投稿URL',
+  TEXT_SCREENSHOT_SOCIAL_URL: '一言＋画像選択＋投稿URL',
+  TEXT_CAMERA_SOCIAL_URL: '一言＋カメラ導線＋投稿URL'
 };
 const element = (tag, value = '', className = '') => {
   const node = document.createElement(tag);

@@ -17,25 +17,37 @@ const VALUE_EVENT_SQL = "'ai_result_clicked','ranking_result_clicked','price_com
 const SEARCH_INPUT_EVENTS = Object.freeze({
   search_input_text: ['TEXT', 'attempts'],
   search_input_screenshot: ['SCREENSHOT', 'attempts'],
+  search_input_camera: ['CAMERA', 'attempts'],
   search_input_social_url: ['SOCIAL_URL', 'attempts'],
   search_input_text_screenshot: ['TEXT_SCREENSHOT', 'attempts'],
+  search_input_text_camera: ['TEXT_CAMERA', 'attempts'],
   search_input_text_social_url: ['TEXT_SOCIAL_URL', 'attempts'],
   search_input_screenshot_social_url: ['SCREENSHOT_SOCIAL_URL', 'attempts'],
+  search_input_camera_social_url: ['CAMERA_SOCIAL_URL', 'attempts'],
   search_input_text_screenshot_social_url: ['TEXT_SCREENSHOT_SOCIAL_URL', 'attempts'],
+  search_input_text_camera_social_url: ['TEXT_CAMERA_SOCIAL_URL', 'attempts'],
   search_completed_text: ['TEXT', 'completed'],
   search_completed_screenshot: ['SCREENSHOT', 'completed'],
+  search_completed_camera: ['CAMERA', 'completed'],
   search_completed_social_url: ['SOCIAL_URL', 'completed'],
   search_completed_text_screenshot: ['TEXT_SCREENSHOT', 'completed'],
+  search_completed_text_camera: ['TEXT_CAMERA', 'completed'],
   search_completed_text_social_url: ['TEXT_SOCIAL_URL', 'completed'],
   search_completed_screenshot_social_url: ['SCREENSHOT_SOCIAL_URL', 'completed'],
+  search_completed_camera_social_url: ['CAMERA_SOCIAL_URL', 'completed'],
   search_completed_text_screenshot_social_url: ['TEXT_SCREENSHOT_SOCIAL_URL', 'completed'],
+  search_completed_text_camera_social_url: ['TEXT_CAMERA_SOCIAL_URL', 'completed'],
   search_outbound_text: ['TEXT', 'outbound'],
   search_outbound_screenshot: ['SCREENSHOT', 'outbound'],
+  search_outbound_camera: ['CAMERA', 'outbound'],
   search_outbound_social_url: ['SOCIAL_URL', 'outbound'],
   search_outbound_text_screenshot: ['TEXT_SCREENSHOT', 'outbound'],
+  search_outbound_text_camera: ['TEXT_CAMERA', 'outbound'],
   search_outbound_text_social_url: ['TEXT_SOCIAL_URL', 'outbound'],
   search_outbound_screenshot_social_url: ['SCREENSHOT_SOCIAL_URL', 'outbound'],
-  search_outbound_text_screenshot_social_url: ['TEXT_SCREENSHOT_SOCIAL_URL', 'outbound']
+  search_outbound_camera_social_url: ['CAMERA_SOCIAL_URL', 'outbound'],
+  search_outbound_text_screenshot_social_url: ['TEXT_SCREENSHOT_SOCIAL_URL', 'outbound'],
+  search_outbound_text_camera_social_url: ['TEXT_CAMERA_SOCIAL_URL', 'outbound']
 });
 const SEARCH_INPUT_EVENT_SQL = Object.keys(SEARCH_INPUT_EVENTS).map(value => `'${value}'`).join(',');
 const ANNUAL_TRAFFIC_TARGET = Object.freeze({

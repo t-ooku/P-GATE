@@ -77,25 +77,35 @@ const searchWatches = new Map();
 const SEARCH_INPUT_EVENT = Object.freeze({
   TEXT: 'search_input_text',
   SCREENSHOT: 'search_input_screenshot',
+  CAMERA: 'search_input_camera',
   SOCIAL_URL: 'search_input_social_url',
   TEXT_SCREENSHOT: 'search_input_text_screenshot',
+  TEXT_CAMERA: 'search_input_text_camera',
   TEXT_SOCIAL_URL: 'search_input_text_social_url',
   SCREENSHOT_SOCIAL_URL: 'search_input_screenshot_social_url',
-  TEXT_SCREENSHOT_SOCIAL_URL: 'search_input_text_screenshot_social_url'
+  CAMERA_SOCIAL_URL: 'search_input_camera_social_url',
+  TEXT_SCREENSHOT_SOCIAL_URL: 'search_input_text_screenshot_social_url',
+  TEXT_CAMERA_SOCIAL_URL: 'search_input_text_camera_social_url'
 });
 const SEARCH_COMPLETED_INPUT_EVENT = Object.freeze({
   TEXT: 'search_completed_text', SCREENSHOT: 'search_completed_screenshot',
-  SOCIAL_URL: 'search_completed_social_url', TEXT_SCREENSHOT: 'search_completed_text_screenshot',
+  CAMERA: 'search_completed_camera', SOCIAL_URL: 'search_completed_social_url',
+  TEXT_SCREENSHOT: 'search_completed_text_screenshot', TEXT_CAMERA: 'search_completed_text_camera',
   TEXT_SOCIAL_URL: 'search_completed_text_social_url',
   SCREENSHOT_SOCIAL_URL: 'search_completed_screenshot_social_url',
-  TEXT_SCREENSHOT_SOCIAL_URL: 'search_completed_text_screenshot_social_url'
+  CAMERA_SOCIAL_URL: 'search_completed_camera_social_url',
+  TEXT_SCREENSHOT_SOCIAL_URL: 'search_completed_text_screenshot_social_url',
+  TEXT_CAMERA_SOCIAL_URL: 'search_completed_text_camera_social_url'
 });
 const SEARCH_OUTBOUND_INPUT_EVENT = Object.freeze({
   TEXT: 'search_outbound_text', SCREENSHOT: 'search_outbound_screenshot',
-  SOCIAL_URL: 'search_outbound_social_url', TEXT_SCREENSHOT: 'search_outbound_text_screenshot',
+  CAMERA: 'search_outbound_camera', SOCIAL_URL: 'search_outbound_social_url',
+  TEXT_SCREENSHOT: 'search_outbound_text_screenshot', TEXT_CAMERA: 'search_outbound_text_camera',
   TEXT_SOCIAL_URL: 'search_outbound_text_social_url',
   SCREENSHOT_SOCIAL_URL: 'search_outbound_screenshot_social_url',
-  TEXT_SCREENSHOT_SOCIAL_URL: 'search_outbound_text_screenshot_social_url'
+  CAMERA_SOCIAL_URL: 'search_outbound_camera_social_url',
+  TEXT_SCREENSHOT_SOCIAL_URL: 'search_outbound_text_screenshot_social_url',
+  TEXT_CAMERA_SOCIAL_URL: 'search_outbound_text_camera_social_url'
 });
 let lastCompletedSearch = null;
 const clearSearchWatch = executionId => {
