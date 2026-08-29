@@ -35,7 +35,7 @@ Turnstileで自動送信を抑止し、アプリ側では生IP・IP由来識別�
 - 費用承認を記録する。Web Detectionは月初1,000画像まで無料で、その後は
   1,000画像あたり3.50米ドル（料金は有効化時に公式ページで再確認）
 - Google Cloud側でAPIをCloud Vision APIだけに制限したキーを発行する
-- `0061_google_visual_web_detection_budget.sql`を適用し、アプリ側の月次上限を
+- `0062_google_visual_web_detection_budget.sql`を適用し、アプリ側の月次上限を
   承認済みの値に固定する。無料運用の既定値は900画像
 - 無料枠・段階料金は同じCloud Billingアカウントの対象利用量と合算されるため、
   他サービスでWeb Detectionを使う場合は900より十分低い上限へ変更する

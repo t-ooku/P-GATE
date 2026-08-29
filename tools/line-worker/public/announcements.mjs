@@ -23,6 +23,17 @@ const badgeCopy = {
 const announcements = [
   {
     type: 'NEW',
+    date: '2026-08-29',
+    url: '/',
+    text: {
+      JA: '写真からWeb上の一致候補も照合する商品検索を追加',
+      EN: 'Added product search that checks matching images on the web',
+      ZH: '新增通过照片匹配网页图片候选的商品搜索',
+      KO: '사진으로 웹의 일치 이미지 후보까지 확인하는 상품 검색 추가'
+    }
+  },
+  {
+    type: 'NEW',
     date: '2026-08-09',
     url: '/',
     text: {

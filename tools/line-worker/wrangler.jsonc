@@ -31,7 +31,7 @@
     "INSTAGRAM_EXPECTED_USERNAME": "hoshilu.app",
     "INSTAGRAM_OAUTH_REDIRECT_URI": "https://hoshilu.app/api/oauth/instagram/callback",
     "MEMBER_EMAIL_FROM": "notification@auth.hoshilu.app",
-    "GOOGLE_VISUAL_SEARCH_ENABLED": "false",
+    "GOOGLE_VISUAL_SEARCH_ENABLED": "true",
     "GOOGLE_VISUAL_SEARCH_MONTHLY_REQUEST_LIMIT": "900",
     "RUNWAY_GENERATION_ENABLED": "true",
     "RUNWAY_INITIAL_TEST_CREDIT_LIMIT": "1000",
