@@ -645,3 +645,34 @@ test('X定常ローテーションはHOSHILU BUZZ紹介を含み、/buzzへUTM�
   assert.ok(guidePosts.length > 0);
   for (const post of guidePosts) assert.equal(new URL(post.link).pathname, '/');
 });
+
+
+test('2026-08-28にユーザーが明示承認したX・Instagramの再利用行だけを再承認対象にする', async () => {
+  const rows = [];
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    X_USER_ACCESS_TOKEN: 'x-token',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
+    INSTAGRAM_ACCESS_TOKEN: 'ig-token',
+    INSTAGRAM_ACCOUNT_ID: 'ig-account',
+    PRODUCT_DB: {
+      prepare() {
+        return {
+          bind(...values) {
+            return { async run() { rows.push(values); return { meta: { changes: 1 } }; } };
+          }
+        };
+      }
+    }
+  };
+  await seedSocialAutopilotQueue(env, new Date('2026-08-27T15:00:00.000Z'));
+  const approved = rows.filter(row => row[0] === 'hoshilu-official-13mall-v2-x-2026-08-28'
+    || row[0] === 'hoshilu-official-13mall-v2-instagram-2026-08-28');
+  assert.equal(approved.length, 2);
+  assert.deepEqual(new Set(approved.map(row => row[1])), new Set(['X', 'INSTAGRAM']));
+  assert.equal(approved.every(row => row[12] === 1), true);
+  assert.equal(rows.filter(row => !approved.includes(row)).every(row => row[12] === 0), true);
+});
