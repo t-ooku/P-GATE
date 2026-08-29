@@ -299,6 +299,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # This job bundles Worker imports again after installing the provider secret.
+      # Keep dependencies available even though the preceding deploy job succeeded.
       - name: Install Worker dependencies
         run: npm ci --prefix tools/line-worker
       - name: Require dedicated provider key and Cloudflare credentials
