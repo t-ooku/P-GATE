@@ -819,6 +819,17 @@ function socialPublishRetryAt(now, env) {
 
 export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch) {
   if (!env.PRODUCT_DB) return { checked: 0, published: 0 };
+  const resumableAfter = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  // A previous invocation can be terminated after persisting Meta's container
+  // ID but before it records the transient retry. Resume only those already
+  // isolated FAILED rows on the next cron. Keeping platform_job_id means the
+  // publisher polls the existing container instead of creating a duplicate.
+  await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='APPROVED',
+    scheduled_at=?1,last_error='STALE_PUBLISHING_RESUME',updated_at=?1
+    WHERE status='FAILED' AND last_error='STALE_PUBLISHING_RECOVERED'
+    AND platform IN ('INSTAGRAM','THREADS') AND platform_job_id<>''
+    AND external_post_id='' AND published_at='' AND scheduled_at>=?2`)
+    .bind(now.toISOString(), resumableAfter).run();
   const staleBefore = new Date(now.getTime() - 30 * 60 * 1000).toISOString();
   await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='FAILED',
     last_error='STALE_PUBLISHING_RECOVERED',updated_at=?2

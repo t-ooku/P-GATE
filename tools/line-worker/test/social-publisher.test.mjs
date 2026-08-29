@@ -368,6 +368,47 @@ test('1件の公開失敗が同時刻の次の承認済み投稿を止めない'
   assert.ok(updates.some((item) => item.sql.includes("status='PUBLISHED'") && item.values[0] === 'post-succeeds'));
 });
 
+test('停止したMetaコンテナは次回cronで同じjob IDを使う再開対象へ戻す', async () => {
+  const statements = [];
+  const env = {
+    PRODUCT_DB: {
+      prepare(sql) {
+        return {
+          bind(...values) {
+            if (sql.includes('SELECT * FROM social_post_queue')) {
+              return { all: async () => ({ results: [] }) };
+            }
+            return {
+              run: async () => {
+                statements.push({ sql, values });
+                return { meta: { changes: 0 } };
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+
+  const result = await runDueSocialPosts(env, new Date('2026-08-29T12:00:00.000Z'));
+  assert.deepEqual(result, { checked: 0, published: 0 });
+  const recoveryIndex = statements.findIndex(item => item.sql.includes("last_error='STALE_PUBLISHING_RESUME'"));
+  const isolationIndex = statements.findIndex(item => item.sql.includes("SET status='FAILED'")
+    && item.sql.includes("last_error='STALE_PUBLISHING_RECOVERED'"));
+  assert.equal(recoveryIndex, 0);
+  assert.ok(isolationIndex > recoveryIndex);
+  const recovery = statements[recoveryIndex];
+  assert.match(recovery.sql, /status='FAILED' AND last_error='STALE_PUBLISHING_RECOVERED'/u);
+  assert.match(recovery.sql, /platform IN \('INSTAGRAM','THREADS'\) AND platform_job_id<>''/u);
+  assert.match(recovery.sql, /external_post_id='' AND published_at=''/u);
+  assert.deepEqual(recovery.values, [
+    '2026-08-29T12:00:00.000Z',
+    '2026-08-28T12:00:00.000Z'
+  ]);
+  const setClause = recovery.sql.slice(0, recovery.sql.indexOf('WHERE'));
+  assert.doesNotMatch(setClause, /platform_job_id/u);
+});
+
 test('一時的な公開障害はFAILEDで止めず5分後のAPPROVED再試行へ戻す', async () => {
   const row = {
     post_id: 'transient-instagram-post', platform: 'INSTAGRAM', caption: 'retry approved Reel',
@@ -408,7 +449,8 @@ test('一時的な公開障害はFAILEDで止めず5分後のAPPROVED再試行�
   });
   assert.deepEqual(result, { checked: 1, published: 0 });
   assert.equal(checks, 12);
-  const retry = updates.find(item => item.sql.includes("SET status='APPROVED'"));
+  const retry = updates.find(item => item.sql.includes("SET status='APPROVED'")
+    && item.values[0] === row.post_id);
   assert.ok(retry);
   assert.equal(retry.values[0], row.post_id);
   assert.equal(retry.values[1], 'INSTAGRAM_CONTAINER_IN_PROGRESS');
