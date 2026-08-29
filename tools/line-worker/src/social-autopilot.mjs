@@ -49,6 +49,17 @@ const INSTAGRAM_POSTS = [
   }
 ];
 
+// These two completed videos are HOSHILU-owned/derived assets whose music and
+// repeated organic-social use are explicitly APPROVED in
+// marketing/social/HOSHILU_REELS_RIGHTS_LEDGER_2026-08.csv. They are the
+// evergreen Monday/Wednesday/Friday rotation, so their later scheduled reuse
+// is covered by that standing approval and must not be sent back to manual
+// review on every date.
+const RIGHTS_APPROVED_EVERGREEN_MEDIA_URLS = new Set([
+  'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4',
+  'https://hoshilu.app/social/instagram-reel-cross-market-audio-v2.mp4'
+]);
+
 const X_NON_VIDEO_POSTS = Object.freeze([
   {
     id: 'howto-three-input-search',
@@ -532,11 +543,12 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
     // Keep this decision inside the INSERT so concurrent cron invocations see
     // the same D1 history and cannot both approve a later replay.
     const completedVideo = /\.mp4(?:$|[?#])/iu.test(post.media_url) ? 1 : 0;
+    const rightsApprovedEvergreen = RIGHTS_APPROVED_EVERGREEN_MEDIA_URLS.has(post.media_url) ? 1 : 0;
     const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
        affiliate,approved_at,created_at,updated_at)
       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,
-        CASE WHEN ?11=1 AND EXISTS (
+        CASE WHEN ?11=1 AND ?13=0 AND EXISTS (
           SELECT 1 FROM social_post_queue previous
           WHERE previous.post_id<>?1
             AND previous.media_url=?7
@@ -545,7 +557,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
               OR previous.external_post_id<>'' OR previous.published_at<>'')
         ) THEN 'REVIEW_REQUIRED' ELSE ?12 END,
         ?9,
-        CASE WHEN ?11=1 AND EXISTS (
+        CASE WHEN ?11=1 AND ?13=0 AND EXISTS (
           SELECT 1 FROM social_post_queue previous
           WHERE previous.post_id<>?1
             AND previous.media_url=?7
@@ -558,6 +570,9 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
         caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
         scheduled_at=excluded.scheduled_at,affiliate=excluded.affiliate,
         status=CASE
+          WHEN ?13=1 AND social_post_queue.status='REVIEW_REQUIRED'
+            AND social_post_queue.last_error='MEDIA_REUSE_REVIEW_REQUIRED'
+            THEN 'APPROVED'
           WHEN social_post_queue.status='CANCELLED'
             AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
             THEN excluded.status
@@ -565,6 +580,9 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
             THEN 'REVIEW_REQUIRED'
           ELSE social_post_queue.status END,
         approved_at=CASE
+          WHEN ?13=1 AND social_post_queue.status='REVIEW_REQUIRED'
+            AND social_post_queue.last_error='MEDIA_REUSE_REVIEW_REQUIRED'
+            THEN excluded.approved_at
           WHEN social_post_queue.status='CANCELLED'
             AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
             THEN excluded.approved_at
@@ -572,6 +590,9 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
             THEN ''
           ELSE social_post_queue.approved_at END,
         last_error=CASE
+          WHEN ?13=1 AND social_post_queue.status='REVIEW_REQUIRED'
+            AND social_post_queue.last_error='MEDIA_REUSE_REVIEW_REQUIRED'
+            THEN ''
           WHEN social_post_queue.status='CANCELLED'
             AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
             THEN CASE WHEN excluded.status='REVIEW_REQUIRED'
@@ -587,7 +608,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
           AND social_post_queue.published_at='')`)
       .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption,
         post.link, post.media_url, post.scheduled_at, post.affiliate ? 1 : 0, now.toISOString(),
-        completedVideo, post.status).run();
+        completedVideo, post.status, rightsApprovedEvergreen).run();
     inserted += Number(result?.meta?.changes || 0);
   }
   if (approvedModelReel.length) {
