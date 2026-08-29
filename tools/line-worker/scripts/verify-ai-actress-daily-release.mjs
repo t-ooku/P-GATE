@@ -12,6 +12,8 @@ const MEDIA_URL = 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp
 const POLICY = 'DAILY_AI_ACTRESS_22';
 const PUBLISH_DATE = '2026-08-29';
 const SCHEDULED_AT = '2026-08-29T11:15:00.000Z';
+const EXPEDITED_AT = '2000-01-01T00:00:00.000Z';
+const EXPEDITED_SCHEDULE_POLICY = 'expedited-before-regular';
 const CAPTION = '今日のバズ、もう見た？気になるランキングから次に欲しいものを見つけよう。※この動画はAI生成・AI加工映像です。 #HOSHILU #AI生成';
 const POSTS = Object.freeze({
   X: 'hoshilu-ai-actress-daily-v1-x-2026-08-29',
@@ -44,6 +46,20 @@ function d1Rows(path) {
 
 function nonEmpty(value) {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function validQueueSchedule(row, expectedScheduledAt, phase) {
+  if (expectedScheduledAt !== EXPEDITED_SCHEDULE_POLICY) {
+    return row.scheduled_at === expectedScheduledAt;
+  }
+  const scheduled = Date.parse(row.scheduled_at);
+  const expedited = Date.parse(EXPEDITED_AT);
+  const regular = Date.parse(SCHEDULED_AT);
+  if (!Number.isFinite(scheduled) || scheduled < expedited || scheduled >= regular) return false;
+  if (phase === 'queued' && row.status === 'APPROVED' && !nonEmpty(row.error_code)) {
+    return row.scheduled_at === EXPEDITED_AT;
+  }
+  return true;
 }
 
 function executableSql(sql) {
@@ -155,7 +171,7 @@ function verifyAsset(path, expectedMediaSha256) {
   console.log('AI_ACTRESS_DAILY_ASSET_OK');
 }
 
-function verifyQueue(path, phase) {
+function verifyQueue(path, phase, expectedScheduledAt = SCHEDULED_AT) {
   const rows = d1Rows(path);
   const expectedPlatforms = new Set(Object.keys(POSTS));
   if (rows.length !== expectedPlatforms.size) fail('QUEUE_ROW_COUNT', String(rows.length));
@@ -171,7 +187,7 @@ function verifyQueue(path, phase) {
       || row.caption !== CAPTION
       || row.link !== LINKS[row.platform]
       || row.media_url !== MEDIA_URL
-      || row.scheduled_at !== SCHEDULED_AT
+      || !validQueueSchedule(row, expectedScheduledAt, phase)
       || row.creative_asset_id !== CREATIVE_ASSET_ID
       || row.content_format !== 'REEL'
       || row.creative_policy !== POLICY
@@ -187,7 +203,9 @@ function verifyQueue(path, phase) {
       if (row.status !== 'PUBLISHED' && (nonEmpty(row.external_post_id) || nonEmpty(row.published_at))) {
         fail('QUEUE_AMBIGUOUS_PUBLICATION', row.platform);
       }
-      if (row.status !== 'PUBLISHED' && nonEmpty(row.error_code)) {
+      const expeditedRetry = expectedScheduledAt === EXPEDITED_SCHEDULE_POLICY
+        && row.status === 'APPROVED' && nonEmpty(row.error_code);
+      if (row.status !== 'PUBLISHED' && nonEmpty(row.error_code) && !expeditedRetry) {
         fail('QUEUE_ERROR', `${row.platform}:${row.error_code}`);
       }
     } else if (phase === 'published') {
@@ -241,10 +259,10 @@ if (command === 'migration' && (args.length === 1 || args.length === 2)) {
   verifyMedia(args[0], args[1], args[2]);
 } else if (command === 'asset' && args.length === 2) {
   verifyAsset(args[0], args[1]);
-} else if (command === 'queue' && args.length === 2) {
-  verifyQueue(args[0], args[1]);
+} else if (command === 'queue' && (args.length === 2 || args.length === 3)) {
+  verifyQueue(args[0], args[1], args[2] || SCHEDULED_AT);
 } else if (command === 'public' && args.length === 3) {
   verifyPublic(args[0], args[1], args[2]);
 } else {
-  fail('USAGE', 'migration <sql> [sha256] | seed-sql <sql> | media <mp4> <ffprobe.json> <sha256> | asset <d1.json> <media-sha256> | queue <d1.json> <queued|published> | public <x.json> <instagram.json> <queue.json>');
+  fail('USAGE', 'migration <sql> [sha256] | seed-sql <sql> | media <mp4> <ffprobe.json> <sha256> | asset <d1.json> <media-sha256> | queue <d1.json> <queued|published> [expected-scheduled-at] | public <x.json> <instagram.json> <queue.json>');
 }

@@ -1242,3 +1242,116 @@ jobs:
             tools/line-worker/ai-actress-daily-*.txt
           if-no-files-found: ignore
           retention-days: 30
+
+  expedite-ai-actress-daily-reel-20260829:
+    needs: [test, deploy]
+    if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deploy.result == 'success' &&
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[expedite-ai-actress-daily-20260829]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: hoshilu-social-expedite-20260829
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prioritize only the two owner-approved daily actress rows
+        working-directory: tools/line-worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json \
+            > ai-actress-expedite-recovery-before.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,platform,campaign_id,content_id,media_url,scheduled_at,status,external_post_id,platform_job_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,last_error FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-29','hoshilu-ai-actress-daily-v1-instagram-2026-08-29') ORDER BY platform;" \
+            > ai-actress-expedite-before.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const data = JSON.parse(fs.readFileSync('ai-actress-expedite-before.json', 'utf8'));
+          const rows = data.flatMap((entry) => entry.results || entry.result?.results || []);
+          const ids = new Map([
+            ['hoshilu-ai-actress-daily-v1-x-2026-08-29', 'X'],
+            ['hoshilu-ai-actress-daily-v1-instagram-2026-08-29', 'INSTAGRAM']
+          ]);
+          const valid = rows.length === 2 && rows.every((row) =>
+            ids.get(row.post_id) === row.platform && ids.delete(row.post_id) &&
+            ['APPROVED', 'PUBLISHING', 'PUBLISHED'].includes(row.status) &&
+            row.campaign_id === 'hoshilu-ai-actress-daily-v1' &&
+            row.content_id === 'hoshilu-ai-actress-daily-2026-08-29' &&
+            row.media_url === 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4' &&
+            row.creative_asset_id === 'hoshilu_ai_actress_daily_sat_v1' &&
+            row.content_format === 'REEL' &&
+            row.creative_policy === 'DAILY_AI_ACTRESS_22' &&
+            row.jst_publish_date === '2026-08-29' &&
+            Number(row.ai_generated) === 1 &&
+            row.crosspost_group_id === 'hoshilu-ai-actress-daily-2026-08-29' &&
+            (row.status === 'PUBLISHED' || (!row.external_post_id && !row.published_at))
+          );
+          if (!valid || ids.size) throw new Error(JSON.stringify(rows));
+          NODE
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --yes --command \
+            "UPDATE social_post_queue SET scheduled_at='2000-01-01T00:00:00.000Z',approved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),last_error='',updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-29','hoshilu-ai-actress-daily-v1-instagram-2026-08-29') AND campaign_id='hoshilu-ai-actress-daily-v1' AND content_id='hoshilu-ai-actress-daily-2026-08-29' AND media_url='https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4' AND creative_asset_id='hoshilu_ai_actress_daily_sat_v1' AND content_format='REEL' AND creative_policy='DAILY_AI_ACTRESS_22' AND jst_publish_date='2026-08-29' AND ai_generated=1 AND crosspost_group_id='hoshilu-ai-actress-daily-2026-08-29' AND scheduled_at='2026-08-29T11:15:00.000Z' AND status='APPROVED' AND external_post_id='' AND platform_job_id='' AND published_at='' AND last_error='';"
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,external_post_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,CASE WHEN last_error='' THEN '' ELSE 'PUBLISHER_ERROR_REDACTED' END AS error_code FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-29','hoshilu-ai-actress-daily-v1-instagram-2026-08-29') ORDER BY platform;" \
+            > ai-actress-expedite-queued.json
+          node scripts/verify-ai-actress-daily-release.mjs queue \
+            ai-actress-expedite-queued.json queued expedited-before-regular
+      - name: Wait for both expedited publishers
+        working-directory: tools/line-worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+              "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,external_post_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,CASE WHEN last_error='' THEN '' WHEN last_error IN ('INSTAGRAM_CONTAINER_IN_PROGRESS','INSTAGRAM_CONTAINER_EXPIRED','INSTAGRAM_CONTAINER_TIMEOUT') THEN last_error WHEN last_error LIKE 'X_%' THEN substr(last_error,1,80) WHEN last_error LIKE 'INSTAGRAM_%' THEN substr(last_error,1,80) ELSE 'PUBLISHER_ERROR_REDACTED' END AS error_code FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-29','hoshilu-ai-actress-daily-v1-instagram-2026-08-29') ORDER BY platform;" \
+              > ai-actress-expedite-final.json
+            if node scripts/verify-ai-actress-daily-release.mjs queue \
+              ai-actress-expedite-final.json published expedited-before-regular; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 60 ]; then sleep 30; fi
+          done
+          exit 1
+      - name: Verify both expedited public URLs
+        working-directory: tools/line-worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            curl --fail-with-body --silent --show-error \
+              'https://hoshilu.app/api/social/posts/hoshilu-ai-actress-daily-v1-x-2026-08-29' \
+              > ai-actress-expedite-x-public.json || true
+            curl --fail-with-body --silent --show-error \
+              'https://hoshilu.app/api/social/posts/hoshilu-ai-actress-daily-v1-instagram-2026-08-29' \
+              > ai-actress-expedite-instagram-public.json || true
+            if node scripts/verify-ai-actress-daily-release.mjs public \
+              ai-actress-expedite-x-public.json ai-actress-expedite-instagram-public.json \
+              ai-actress-expedite-final.json; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 12 ]; then sleep 10; fi
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-actress-expedite-${{ github.run_id }}
+          path: |
+            tools/line-worker/ai-actress-expedite-*.json
+          if-no-files-found: ignore
+          retention-days: 30
