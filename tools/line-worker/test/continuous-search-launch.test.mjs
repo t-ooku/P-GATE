@@ -28,7 +28,7 @@ test('home hero uses the shorter purchase-destination copy and tighter mobile ty
   assert.match(html, new RegExp(copy, 'u'));
   assert.match(app, new RegExp(copy, 'u'));
   assert.doesNotMatch(html, /確認できた商品ページや最大13モールの検索先/u);
-  assert.match(css, /font-size: clamp\(23px, 6\.2vw, 27px\)/u);
+  assert.match(css, /font-size: clamp\(22px, 6\.1vw, 26px\)/u);
   assert.match(css, /\.hero-copy \.hero-promise \{[\s\S]*?font-size: 13px;[\s\S]*?line-height: 1\.5;/u);
 });
 

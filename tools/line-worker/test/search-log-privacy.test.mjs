@@ -37,11 +37,12 @@ test('検索入力の非保存と外部AI処理を、チェックボックスな
     read('../src/search-input-analysis.mjs')
   ]);
   assert.doesNotMatch(html, /id="consent"|type="checkbox" required/);
-  assert.match(app, /スクショ・投稿URLはHOSHILUのサーバーに保存しません/);
-  assert.match(app, /HOSHILU does not store screenshots or post URLs on its servers/i);
+  assert.match(app, /写真・画像・投稿URLはHOSHILUに保存しません/);
+  assert.match(app, /HOSHILU does not store photos, images, or post URLs/i);
   assert.match(app, /Google Gemini API/);
   assert.match(privacy, /Google Gemini API/);
-  assert.match(privacy, /データベース、オブジェクトストレージには質問本文、投稿URL、スクリーンショットを保存せず/);
+  assert.match(privacy, /データベース、オブジェクトストレージには質問本文、投稿URL、撮影写真・画像を保存せず/);
+  assert.match(privacy, /元画像のEXIF・位置情報を引き継ぎません/);
   assert.match(privacy, /整理された検索語を端末内の検索履歴へ保存/);
   assert.doesNotMatch(analysis, /console\.(?:info|log|warn)\([^)]*(?:query|socialUrl|data)/u);
 });

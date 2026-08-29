@@ -14,11 +14,11 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
     stat(new URL('../public/hoshilu-discovery-collage-mobile.webp', import.meta.url)),
   ]);
   assert.match(html, /id="discoveryTitle"><span>名前が分からなくても、<\/span><span>記憶から探せる。<\/span>/);
-  assert.match(html, /id="heroTitle"><span class="hero-title-line">スクショ・投稿URL・一言から、<\/span><span class="hero-title-line hero-title-accent">欲しい物を探せる。<\/span>/);
+  assert.match(html, /id="heroTitle"><span class="hero-title-line">写真・スクショ・一言から、<\/span><span class="hero-title-line hero-title-accent">欲しい物を探せる。<\/span>/);
   assert.match(app, /first\.className='hero-title-line'/);
   assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
-  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \.hero-title-line \{ white-space: nowrap; \}/);
-  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{[\s\S]*?font-size: clamp\(23px, 6\.2vw, 27px\);/);
+  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \.hero-title-line \{[\s\S]*?white-space: normal;/);
+  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{[\s\S]*?font-size: clamp\(22px, 6\.1vw, 26px\);/);
   assert.match(html, /loading="lazy"/);
   assert.match(html, /hoshilu-discovery-collage-mobile\.webp/);
   assert.match(html, /見た目、見た場所、使い方。覚えていることから話してください。/);
@@ -35,7 +35,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v400/);
+  assert.match(sw, /hoshilu-shell-v401/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);

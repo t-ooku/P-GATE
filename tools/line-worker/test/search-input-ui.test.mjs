@@ -5,29 +5,49 @@ import fs from 'node:fs';
 const publicDir = new URL('../public/', import.meta.url);
 const read = (name) => fs.readFileSync(new URL(name, publicDir), 'utf8');
 
-test('同意チェックなしで3種類の検索手掛かりを送信する', () => {
+test('同意チェックなしで一言・カメラ・画像・投稿URLを検索手掛かりにできる', () => {
   const html = read('index.html');
   const app = read('app.js');
   assert.doesNotMatch(html, /id="consent"|class="consent"/u);
   assert.match(html, /id="query"/u);
+  const camera = html.match(/<input id="searchCamera"[^>]+>/u)?.[0] || '';
+  const screenshot = html.match(/<input id="searchScreenshot"[^>]+>/u)?.[0] || '';
+  assert.match(camera, /type="file"/u);
+  assert.match(camera, /accept="image\/jpeg,image\/png,image\/webp"/u);
+  assert.match(camera, /capture="environment"/u);
+  assert.match(camera, /aria-describedby="searchInputNotice"/u);
+  assert.doesNotMatch(screenshot, /capture=/u);
   assert.match(html, /id="searchScreenshot"/u);
   assert.match(html, /id="socialUrl"/u);
+  assert.match(app, /elements\.camera\?\.addEventListener\('change',\(\)=>handleSearchImageSelection\(elements\.camera,'CAMERA'\)\)/u);
+  assert.match(app, /submittedImageSource==='CAMERA'\?'CAMERA':'SCREENSHOT'/u);
   assert.match(app, /processing_notice_shown:true/u);
   assert.doesNotMatch(app, /consent:true|elements\.consent|consent\.checked/u);
 });
 
-test('削除・画像差し替え後に古い非同期変換結果を復活させない', () => {
+test('取消・削除・画像差し替えで既存画像を失わず古い非同期変換結果も復活させない', () => {
   const app = read('app.js');
   const clearStart = app.indexOf('function clearPreparedSearchImage');
-  const handlerStart = app.indexOf("elements.screenshot?.addEventListener('change'", clearStart);
+  const handlerStart = app.indexOf('async function handleSearchImageSelection', clearStart);
   const handlerEnd = app.indexOf("elements.removeScreenshot?.addEventListener", handlerStart);
   const clear = app.slice(clearStart, app.indexOf('function hasSupplementalSearchInput', clearStart));
   const handler = app.slice(handlerStart, handlerEnd);
   assert.match(clear, /searchImageGeneration\+=1/u);
+  assert.match(clear, /elements\.camera\.value=''/u);
   assert.match(handler, /const generation=\+\+searchImageGeneration/u);
-  assert.match(handler, /if\(generation!==searchImageGeneration\)return;preparedSearchImage=/u);
-  assert.match(handler, /catch\(error\)\{if\(generation!==searchImageGeneration\)return;/u);
-  assert.match(handler, /finally\{if\(generation===searchImageGeneration\)searchImagePreparing=false/u);
+  assert.match(handler, /const file=input\?\.files\?\.\[0\];if\(!file\)return;/u);
+  assert.match(handler, /previous=\{payload:preparedSearchImage,source:preparedSearchImageSource/u);
+  assert.match(handler, /if\(generation!==searchImageGeneration\)return;\s*const labels=selectedSearchInputCopy\(\);\s*preparedSearchImage=/u);
+  assert.match(handler, /catch\(error\)\{\s*if\(generation!==searchImageGeneration\)return;/u);
+  assert.match(handler, /preparedSearchImage=previous\.payload;preparedSearchImageSource=previous\.source/u);
+  assert.match(handler, /finally\{if\(generation===searchImageGeneration\)\{searchImagePreparing=false/u);
+});
+
+test('画像準備中の言語切替は準備中表示を保ち、完了時は最新言語を使う', () => {
+  const app = read('app.js');
+  assert.match(app, /screenshotPreviewStatus\.textContent=searchImagePreparing\?inputLabels\.preparing:inputLabels\.imageReady/u);
+  assert.match(app, /const prepared=await prepareSearchImage\(file\);if\(generation!==searchImageGeneration\)return;\s*const labels=selectedSearchInputCopy\(\)/u);
+  assert.match(app, /catch\(error\)\{\s*if\(generation!==searchImageGeneration\)return;const labels=selectedSearchInputCopy\(\)/u);
 });
 
 test('投稿URLの入力欄を閉じると値も消え、旧HTMLでも新appが壊れない', () => {
@@ -35,9 +55,18 @@ test('投稿URLの入力欄を閉じると値も消え、旧HTMLでも新appが�
   const toggleStart = app.indexOf("elements.socialUrlToggle?.addEventListener('click'");
   const toggle = app.slice(toggleStart, app.indexOf("elements.socialUrl?.addEventListener('input'", toggleStart));
   assert.match(toggle, /else\{elements\.socialUrl\.value=''/u);
-  for (const optionalNode of ['heroPromise', 'queryLabel', 'searchInputActions', 'screenshotActionLabel']) {
+  for (const optionalNode of ['heroPromise', 'queryLabel', 'searchInputActions', 'cameraActionLabel', 'screenshotActionLabel']) {
     assert.match(app, new RegExp(`if\\(elements\\.${optionalNode}\\)`));
   }
+});
+
+test('V1カメラ検索はライブ映像権限を開けず、端末の撮影UIだけを使う', () => {
+  const app = read('app.js');
+  const headers = read('_headers');
+  const css = read('ai-search-layout-fix.css');
+  assert.doesNotMatch(app, /getUserMedia|MediaStream/u);
+  assert.match(headers, /Permissions-Policy: camera=\(\), microphone=\(\), geolocation=\(\)/u);
+  assert.match(css, /\.screenshot-preview img:not\(\[src\]\)\{visibility:hidden\}/u);
 });
 
 test('ブラウザ側も公開投稿URLだけをサーバーと同じ境界で許可する', () => {

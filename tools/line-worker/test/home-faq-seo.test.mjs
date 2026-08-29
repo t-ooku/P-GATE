@@ -15,8 +15,9 @@ test('ホームFAQは利用者に見える回答とFAQPage構造化データを�
     assert.ok(html.includes(item.name));
     assert.ok(html.includes(item.acceptedAnswer.text));
   }
-  const social = faq.mainEntity.find((item) => item.name === 'スクショやSNS投稿URLから探せますか？');
+  const social = faq.mainEntity.find((item) => item.name === '写真やSNS投稿URLから探せますか？');
   assert.ok(social);
+  assert.match(social.acceptedAnswer.text, /スマホで撮影/u);
   assert.doesNotMatch(social.acceptedAnswer.text, /YouTube/u);
   // YouTube動画URLはURL Context非対応。一方、既存のYouTube検索リンクは別機能として維持する。
   assert.match(html, /Instagram・X・TikTok・YouTubeでも探せます/u);
@@ -40,12 +41,12 @@ test('ホームはcanonicalに一致する言語指定と全ガイドへの明�
 // (全ソースで「本文以外の混入あり」を実測)。一方で価値提案の本文(ヒーロー・
 // 検索パネル・FAQ・ガイド)はスニペット対象のまま残す。
 
-test('ホームは3入力とAI/HOSHILUの責任境界をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
+test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
   const [html, styles] = await Promise.all([read('index.html'), read('styles.css')]);
-  const description = 'ホシルは、スクショ・公開SNS投稿URL・うろ覚えの一言から商品を探す無料サービス。検索条件を預けると、新しく一致する実在商品が見つかるまで探し続けます。';
-  assert.match(html, /<title>ホシル｜スクショ・投稿URL・一言から商品を探す<\/title>/);
+  const description = 'ホシルは、撮った写真・スクショ・公開SNS投稿URL・うろ覚えの一言から商品を探す無料サービス。AIが手がかりを理解し、実在する購入先を探します。';
+  assert.match(html, /<title>ホシル｜写真・スクショ・一言から商品を探す<\/title>/);
   assert.ok(html.includes('<meta name="description" content="' + description + '">'));
-  assert.match(html, /<meta property="og:title" content="ホシル｜スクショ・投稿URL・一言から商品を探す">/);
+  assert.match(html, /<meta property="og:title" content="ホシル｜写真・スクショ・一言から商品を探す">/);
   assert.match(html, /<p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。見つけた商品ページやショップモールの検索ページへ案内します。<\/p>/);
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
   const data = JSON.parse(match[1]);
@@ -89,5 +90,5 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 84);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v400/);
+  assert.match(worker, /hoshilu-shell-v401/);
 });
