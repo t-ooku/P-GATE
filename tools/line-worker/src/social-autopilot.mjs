@@ -533,7 +533,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
       && (post.platform !== 'X' || (
         xPublishingSafety.ready && env.X_EVERGREEN_AUTOPILOT_ENABLED === 'true'
       )));
-  let inserted = 0;
+  const statements = [];
   for (const post of posts) {
     // A finished video may be shared to Instagram and X in the same slot, but it
     // must not silently become a new APPROVED post on a later date.  The rights
@@ -542,7 +542,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
     // the same D1 history and cannot both approve a later replay.
     const completedVideo = /\.mp4(?:$|[?#])/iu.test(post.media_url) ? 1 : 0;
     const userApprovedReplay = USER_APPROVED_REPLAY_POST_IDS.has(post.post_id) ? 1 : 0;
-    const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
+    statements.push(env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
        affiliate,approved_at,created_at,updated_at)
       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,
@@ -606,23 +606,35 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
           AND social_post_queue.published_at='')`)
       .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption,
         post.link, post.media_url, post.scheduled_at, post.affiliate ? 1 : 0, now.toISOString(),
-        completedVideo, post.status, userApprovedReplay).run();
-    inserted += Number(result?.meta?.changes || 0);
+        completedVideo, post.status, userApprovedReplay));
   }
   if (approvedModelReel.length) {
-    const retry = await env.PRODUCT_DB.prepare(`UPDATE social_post_queue
+    statements.push(env.PRODUCT_DB.prepare(`UPDATE social_post_queue
       SET status='APPROVED',last_error='',updated_at=?2
       WHERE post_id=?1 AND status='FAILED'
       AND last_error IN ('INSTAGRAM_CONTAINER_IN_PROGRESS','INSTAGRAM_CONTAINER_TIMEOUT')`)
-      .bind(APPROVED_MODEL_REEL.post_id, now.toISOString()).run();
-    inserted += Number(retry?.meta?.changes || 0);
+      .bind(APPROVED_MODEL_REEL.post_id, now.toISOString()));
   }
+  let results = [];
+  if (statements.length && typeof env.PRODUCT_DB.batch === 'function') {
+    // Keep the 14-day X/Instagram/Threads plan in one ordered D1 round trip.
+    // Internal-service limits are separate from the external publishing limit,
+    // but batching still avoids dozens of sequential database calls.
+    results = await env.PRODUCT_DB.batch(statements);
+  } else {
+    // Lightweight test adapters and local repositories may not implement batch.
+    // Preserve statement order because replay review checks depend on earlier rows.
+    for (const statement of statements) results.push(await statement.run());
+  }
+  const inserted = results.reduce((total, result) => total + Number(result?.meta?.changes || 0), 0);
   return { enabled: true, planned: posts.length, inserted };
 }
 
 export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl = fetch) {
-  const seeded = await seedSocialAutopilotQueue(env, now);
+  // Publishing is first: queue maintenance and metric sync can never consume
+  // the invocation budget before an already-approved due post is attempted.
   const published = await runDueSocialPosts(env, now, fetchImpl);
+  const seeded = await seedSocialAutopilotQueue(env, now);
   const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
   const threadsInsights = await syncThreadsInsights(env, now, fetchImpl);
   return { seeded, published, permalinks, threadsInsights };

@@ -2983,6 +2983,13 @@ export default {
       ));
       return;
     }
+    // Publishing gets its own five-minute trigger. Instagram container polling
+    // and X video upload therefore cannot exhaust the regular fanout's shared
+    // outbound-request budget, and transient retries do not wait 15 minutes.
+    if (controller.cron === '2,7,12,17,22,27,32,37,42,47,52,57 * * * *') {
+      ctx.waitUntil(runSocialAutopilotCycle(env, scheduledAt));
+      return;
+    }
     ctx.waitUntil(runReliabilityControlledCron(
       env,
       'cloudflare_regular',
@@ -2998,9 +3005,6 @@ export default {
           console.error('MARKETPLACE_CANARY_CATCHUP_FAILED');
         }
         return Promise.allSettled([
-        // 大隆さんの2026-08-09承認に基づく販促自動運用。先に14日先までの
-        // 権利確認済み投稿を冪等補充し、その後に期限到来分を配信する。
-        runSocialAutopilotCycle(env, scheduledAt),
         // Runway is isolated from publishing: a successful generation is persisted
         // to R2 and stops at REVIEW_REQUIRED. It never bypasses the existing APPROVED
         // publication gate, and a failure cannot block either Instagram or X.

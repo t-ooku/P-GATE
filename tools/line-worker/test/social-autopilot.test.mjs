@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import {
@@ -254,6 +255,39 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
   assert.equal(rows.filter(row => /\.mp4$/u.test(row[6])).every(row => row[10] === 1), true);
   assert.equal(rows.filter(row => !/\.mp4$/u.test(row[6])).every(row => row[10] === 0), true);
   assert.equal(rows.every(row => row[11] === 'APPROVED'), true);
+});
+
+test('14日分が50件を超えてもキュー補充は1回のD1 batchにまとめる', async () => {
+  let batchCalls = 0;
+  let batchedStatements = 0;
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    X_USER_ACCESS_TOKEN: 'x-token',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
+    INSTAGRAM_ACCESS_TOKEN: 'ig-token',
+    INSTAGRAM_ACCOUNT_ID: 'ig-account',
+    INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    THREADS_ACCESS_TOKEN: 'threads-token',
+    THREADS_USER_ID: '123',
+    THREADS_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    PRODUCT_DB: {
+      prepare(sql) {
+        return { bind(...values) { return { sql, values }; } };
+      },
+      async batch(statements) {
+        batchCalls += 1;
+        batchedStatements = statements.length;
+        return statements.map(() => ({ meta: { changes: 1 } }));
+      }
+    }
+  };
+  const result = await seedSocialAutopilotQueue(env, new Date('2026-08-29T03:00:00.000Z'));
+  assert.ok(result.planned > 50);
+  assert.equal(result.inserted, result.planned);
+  assert.equal(batchCalls, 1);
+  assert.equal(batchedStatements, result.planned);
 });
 
 test('公開履歴がある完成動画の後日再利用はREVIEW_REQUIREDへ隔離するSQLを使う', async () => {
@@ -675,4 +709,19 @@ test('2026-08-28にユーザーが明示承認したX・Instagramの再利用行
   assert.deepEqual(new Set(approved.map(row => row[1])), new Set(['X', 'INSTAGRAM']));
   assert.equal(approved.every(row => row[12] === 1), true);
   assert.equal(rows.filter(row => !approved.includes(row)).every(row => row[12] === 0), true);
+});
+
+test('8月28日再公開CIは既知の技術障害2件だけを復旧しInstagramコンテナを保持する', () => {
+  const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /\[retry-approved-reel-20260828\]/);
+  const update = workflow.split('\n').find(line => line.includes('UPDATE social_post_queue')
+    && line.includes('hoshilu-official-13mall-v2-x-2026-08-28')
+    && line.includes('hoshilu-official-13mall-v2-instagram-2026-08-28')
+    && line.includes('X_MEDIA_FETCH_522')) || '';
+  assert.match(update, /status='FAILED'/);
+  assert.match(update, /last_error LIKE 'Too many subrequests by single Worker invocation\.%'/);
+  assert.match(update, /external_post_id=''/);
+  assert.match(update, /published_at=''/);
+  assert.doesNotMatch(update.slice(0, update.indexOf(' WHERE ')), /platform_job_id/);
+  assert.match(workflow, /Verify both public post URLs/);
 });

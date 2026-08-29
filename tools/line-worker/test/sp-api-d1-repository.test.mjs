@@ -73,9 +73,14 @@ test('購入可能なSP-API出品だけを公開検索候補へ接続する', as
   assert.equal(candidate.offers[0].source, 'amazon_sp_api');
 });
 
-test('cronの各処理は一つの失敗で他処理を中断しない', async () => {
+test('SNS公開を独立cronへ分離し、通常cronの各処理も相互に中断しない', async () => {
   const fs = await import('node:fs');
   const source = fs.readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
-  assert.match(source, /Promise\.allSettled\(\[[\s\S]{0,300}runSocialAutopilotCycle/);
+  const wrangler = fs.readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
+  assert.match(wrangler, /"2,7,12,17,22,27,32,37,42,47,52,57 \* \* \* \*"/);
+  const socialCron = source.match(/controller\.cron === '2,7,12,17,22,27,32,37,42,47,52,57 \* \* \* \*'([\s\S]*?)return;/)?.[1] || '';
+  assert.match(socialCron, /runSocialAutopilotCycle\(env, scheduledAt\)/);
+  const regularCron = source.slice(source.indexOf("'cloudflare_regular'"));
+  assert.doesNotMatch(regularCron, /runSocialAutopilotCycle/);
   assert.match(source, /Promise\.allSettled\(\[[\s\S]{0,800}runRunwayGenerationCycle/);
 });

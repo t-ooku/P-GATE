@@ -8,7 +8,8 @@ import {
   xPublishingSafetyReadiness,
   syncInstagramPublishedPermalinks,
   syncThreadsInsights,
-  handleSocialAdminRoutes
+  handleSocialAdminRoutes,
+  socialPublisherTest
 } from '../src/social-publisher.mjs';
 
 const X_EXPECTED_USERNAME = 'hoshilu_app';
@@ -157,6 +158,56 @@ test('1件の公開失敗が同時刻の次の承認済み投稿を止めない'
   assert.equal(publishes, 2);
   assert.ok(updates.some((item) => item.sql.includes("status='FAILED'") && item.values[0] === 'post-fails'));
   assert.ok(updates.some((item) => item.sql.includes("status='PUBLISHED'") && item.values[0] === 'post-succeeds'));
+});
+
+test('一時的な公開障害はFAILEDで止めず5分後のAPPROVED再試行へ戻す', async () => {
+  const row = {
+    post_id: 'transient-instagram-post', platform: 'INSTAGRAM', caption: 'retry approved Reel',
+    media_url: 'https://hoshilu.app/social/retry-reel.mp4', platform_job_id: 'saved-container',
+    status: 'APPROVED', scheduled_at: '2026-08-29T03:00:00.000Z'
+  };
+  const updates = [];
+  const env = {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0,
+    PRODUCT_DB: {
+      prepare(sql) {
+        return {
+          bind(...values) {
+            if (sql.includes('SELECT * FROM social_post_queue')) {
+              assert.match(sql, /LIMIT 1/);
+              return { all: async () => ({ results: [row] }) };
+            }
+            return {
+              run: async () => {
+                updates.push({ sql, values });
+                return { meta: { changes: sql.includes("status='PUBLISHING'") ? 1 : 0 } };
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+  let checks = 0;
+  const result = await runDueSocialPosts(env, new Date('2026-08-29T03:00:00.000Z'), async (url) => {
+    if (url.includes('/saved-container?fields=status_code')) {
+      checks += 1;
+      return Response.json({ status_code: 'IN_PROGRESS' });
+    }
+    return Response.json({}, { status: 404 });
+  });
+  assert.deepEqual(result, { checked: 1, published: 0 });
+  assert.equal(checks, 12);
+  const retry = updates.find(item => item.sql.includes("SET status='APPROVED'"));
+  assert.ok(retry);
+  assert.equal(retry.values[0], row.post_id);
+  assert.equal(retry.values[1], 'INSTAGRAM_CONTAINER_IN_PROGRESS');
+  assert.equal(retry.values[2], '2026-08-29T03:05:00.000Z');
+  assert.equal(retry.values[4], 0);
+  assert.equal(updates.some(item => item.sql.includes("SET status='FAILED'")
+    && item.values[0] === row.post_id), false);
 });
 
 test('X公開停止中は既存APPROVED行をclaimもFAILED化もしない', async () => {
@@ -440,6 +491,121 @@ test('Instagramリールの処理が10回を超えても完了まで待機する
   });
   assert.equal(id, 'slow-ig-reel');
   assert.equal(checks, 12);
+});
+
+test('Instagramの長時間処理は12回で中断し保存済みコンテナの再試行へ渡す', async () => {
+  let checks = 0;
+  const created = [];
+  await assert.rejects(() => publishSocialPost({
+    platform: 'INSTAGRAM',
+    caption: 'HOSHILU slow reel',
+    media_url: 'https://hoshilu.app/social/slow-reel.mp4',
+    status: 'APPROVED'
+  }, {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0
+  }, async (url) => {
+    if (url.endsWith('/123/media')) return Response.json({ id: 'slow-container' });
+    if (url.includes('/slow-container?fields=status_code')) {
+      checks += 1;
+      return Response.json({ status_code: 'IN_PROGRESS' });
+    }
+    return Response.json({}, { status: 404 });
+  }, { onJobCreated: id => created.push(id) }), /INSTAGRAM_CONTAINER_IN_PROGRESS/);
+  assert.equal(checks, 12);
+  assert.deepEqual(created, ['slow-container']);
+});
+
+test('XはHOSHILU静的Reelを公開Worker経由で自己取得せずASSETSから読む', async () => {
+  const assetRequests = [];
+  const apiRequests = [];
+  const mediaId = await socialPublisherTest.uploadXVideo(
+    'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4',
+    'x-access-token',
+    {
+      ASSETS: {
+        async fetch(request) {
+          assetRequests.push(request);
+          return new Response(new Uint8Array([0, 1, 2, 3]), {
+            headers: { 'content-type': 'video/mp4' }
+          });
+        }
+      }
+    },
+    async (url) => {
+      assert.doesNotMatch(String(url), /^https:\/\/hoshilu\.app\/social\//);
+      apiRequests.push(String(url));
+      if (String(url).endsWith('/initialize')) return Response.json({ data: { id: 'media-1' } });
+      if (String(url).endsWith('/append')) return new Response(null, { status: 204 });
+      if (String(url).endsWith('/finalize')) return Response.json({ data: {} });
+      return Response.json({}, { status: 404 });
+    }
+  );
+  assert.equal(mediaId, 'media-1');
+  assert.equal(assetRequests.length, 1);
+  assert.equal(new URL(assetRequests[0].url).pathname,
+    '/social/hoshilu-feature-reel-13mall-v1.mp4');
+  assert.deepEqual(apiRequests.map(url => new URL(url).pathname), [
+    '/2/media/upload/initialize',
+    '/2/media/upload/media-1/append',
+    '/2/media/upload/media-1/finalize'
+  ]);
+});
+
+test('XはASSETS未設定や未対応の自サイト動画を公開Workerへフォールバックしない', async () => {
+  let publicFetches = 0;
+  const fetchImpl = async () => {
+    publicFetches += 1;
+    return Response.json({});
+  };
+  await assert.rejects(() => socialPublisherTest.uploadXVideo(
+    'https://hoshilu.app/social/approved-reel.mp4', 'token', {}, fetchImpl
+  ), /X_MEDIA_ASSETS_NOT_CONFIGURED/);
+  await assert.rejects(() => socialPublisherTest.uploadXVideo(
+    'https://hoshilu.app/api/other-video.mp4', 'token', {
+      ASSETS: { fetch: async () => Response.json({}) }
+    }, fetchImpl
+  ), /X_MEDIA_SOURCE_UNSUPPORTED/);
+  assert.equal(publicFetches, 0);
+});
+
+test('Xは上限超過がcontent-lengthで分かる動画をbufferへ読み込まない', async () => {
+  let buffered = false;
+  let xRequests = 0;
+  await assert.rejects(() => socialPublisherTest.uploadXVideo(
+    'https://hoshilu.app/social/oversized-reel.mp4', 'token', {
+      X_MAX_VIDEO_BYTES: 10,
+      ASSETS: {
+        async fetch() {
+          return {
+            ok: true,
+            headers: new Headers({
+              'content-type': 'video/mp4',
+              'content-length': '11'
+            }),
+            async arrayBuffer() {
+              buffered = true;
+              return new ArrayBuffer(11);
+            }
+          };
+        }
+      }
+    },
+    async () => {
+      xRequests += 1;
+      return Response.json({});
+    }
+  ), /X_MEDIA_SIZE_INVALID/);
+  assert.equal(buffered, false);
+  assert.equal(xRequests, 0);
+});
+
+test('投稿結果が曖昧な5xxは重複防止のため自動再投稿しない', () => {
+  assert.equal(socialPublisherTest.isTransientSocialPublishError('X_MEDIA_FETCH_522'), true);
+  assert.equal(socialPublisherTest.isTransientSocialPublishError('INSTAGRAM_CONTAINER_EXPIRED'), true);
+  assert.equal(socialPublisherTest.isTransientSocialPublishError('X_PUBLISH_503'), false);
+  assert.equal(socialPublisherTest.isTransientSocialPublishError('INSTAGRAM_PUBLISH_500'), false);
 });
 
 test('Instagram再試行は保存済みコンテナを再利用して重複作成しない', async () => {
