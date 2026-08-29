@@ -49,15 +49,13 @@ const INSTAGRAM_POSTS = [
   }
 ];
 
-// These two completed videos are HOSHILU-owned/derived assets whose music and
-// repeated organic-social use are explicitly APPROVED in
-// marketing/social/HOSHILU_REELS_RIGHTS_LEDGER_2026-08.csv. They are the
-// evergreen Monday/Wednesday/Friday rotation, so their later scheduled reuse
-// is covered by that standing approval and must not be sent back to manual
-// review on every date.
-const RIGHTS_APPROVED_EVERGREEN_MEDIA_URLS = new Set([
-  'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4',
-  'https://hoshilu.app/social/instagram-reel-cross-market-audio-v2.mp4'
+// The owner explicitly approved both 2026-08-28 cross-post rows for release
+// after they were held as completed-video replays. Keep the exception scoped to
+// those exact queue identities; later replays still require a newly varied and
+// reviewed creative under HOSHILU_REELS_AUDIO_DIRECTION_v1.0.
+const USER_APPROVED_REPLAY_POST_IDS = new Set([
+  'hoshilu-official-13mall-v2-x-2026-08-28',
+  'hoshilu-official-13mall-v2-instagram-2026-08-28'
 ]);
 
 const X_NON_VIDEO_POSTS = Object.freeze([
@@ -543,7 +541,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
     // Keep this decision inside the INSERT so concurrent cron invocations see
     // the same D1 history and cannot both approve a later replay.
     const completedVideo = /\.mp4(?:$|[?#])/iu.test(post.media_url) ? 1 : 0;
-    const rightsApprovedEvergreen = RIGHTS_APPROVED_EVERGREEN_MEDIA_URLS.has(post.media_url) ? 1 : 0;
+    const userApprovedReplay = USER_APPROVED_REPLAY_POST_IDS.has(post.post_id) ? 1 : 0;
     const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
        affiliate,approved_at,created_at,updated_at)
@@ -608,7 +606,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
           AND social_post_queue.published_at='')`)
       .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption,
         post.link, post.media_url, post.scheduled_at, post.affiliate ? 1 : 0, now.toISOString(),
-        completedVideo, post.status, rightsApprovedEvergreen).run();
+        completedVideo, post.status, userApprovedReplay).run();
     inserted += Number(result?.meta?.changes || 0);
   }
   if (approvedModelReel.length) {
