@@ -460,6 +460,52 @@ test('一時的な公開障害はFAILEDで止めず5分後のAPPROVED再試行�
     && item.values[0] === row.post_id), false);
 });
 
+test('Instagramコンテナが次のcronでも処理中なら未公開job IDを破棄する', async () => {
+  const row = {
+    post_id: 'stalled-instagram-post', platform: 'INSTAGRAM', caption: 'approved image',
+    media_url: 'https://hoshilu.app/social/guide.png', platform_job_id: 'stalled-container',
+    last_error: 'INSTAGRAM_CONTAINER_IN_PROGRESS', status: 'APPROVED',
+    scheduled_at: '2026-08-29T03:05:00.000Z'
+  };
+  const updates = [];
+  const env = {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0,
+    PRODUCT_DB: {
+      prepare(sql) {
+        return {
+          bind(...values) {
+            if (sql.includes('SELECT * FROM social_post_queue')) {
+              return { all: async () => ({ results: [row] }) };
+            }
+            return {
+              run: async () => {
+                updates.push({ sql, values });
+                return { meta: { changes: sql.includes("status='PUBLISHING'") ? 1 : 0 } };
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+
+  const result = await runDueSocialPosts(env, new Date('2026-08-29T03:05:00.000Z'), async (url) => {
+    if (url.includes('/stalled-container?fields=status_code')) {
+      return Response.json({ status_code: 'IN_PROGRESS' });
+    }
+    return Response.json({}, { status: 404 });
+  });
+  assert.deepEqual(result, { checked: 1, published: 0 });
+  const retry = updates.find(item => item.sql.includes("SET status='APPROVED'")
+    && item.values[0] === row.post_id);
+  assert.ok(retry);
+  assert.equal(retry.values[1], 'INSTAGRAM_CONTAINER_IN_PROGRESS');
+  assert.equal(retry.values[4], 1);
+  assert.match(retry.sql, /platform_job_id=CASE WHEN \?5=1 THEN ''/u);
+});
+
 test('X公開停止中は既存APPROVED行をclaimもFAILED化もしない', async () => {
   const rows = [{
     post_id: 'paused-x-post', platform: 'X', caption: 'approved but paused',

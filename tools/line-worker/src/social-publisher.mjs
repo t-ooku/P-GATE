@@ -863,8 +863,16 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
           updated_at=?3 WHERE post_id=?1 AND status IN ('APPROVED','PUBLISHING')`)
           .bind(row.post_id, DAILY_AI_ACTRESS_POLICY_ERROR, now.toISOString()).run();
       } else if (isTransientSocialPublishError(message)) {
-        const resetPlatformJob = ['INSTAGRAM_CONTAINER_EXPIRED', 'THREADS_CONTAINER_EXPIRED']
-          .includes(message) ? 1 : 0;
+        // A Meta container that is still processing on the following cron has
+        // already had at least five minutes plus two bounded polling windows.
+        // It cannot publish by itself, so discard only that unpublished job ID
+        // and let the next cron create a fresh container. This avoids an
+        // indefinite APPROVED loop without risking a duplicate public post.
+        const repeatedInstagramInProgress = message === 'INSTAGRAM_CONTAINER_IN_PROGRESS'
+          && clean(row.platform_job_id, 120)
+          && row.last_error === 'INSTAGRAM_CONTAINER_IN_PROGRESS';
+        const resetPlatformJob = (['INSTAGRAM_CONTAINER_EXPIRED', 'THREADS_CONTAINER_EXPIRED']
+          .includes(message) || repeatedInstagramInProgress) ? 1 : 0;
         await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='APPROVED',last_error=?2,
           scheduled_at=?3,updated_at=?4,
           platform_job_id=CASE WHEN ?5=1 THEN '' ELSE platform_job_id END
