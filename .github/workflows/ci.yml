@@ -827,7 +827,8 @@ jobs:
       needs.deploy.result == 'success' &&
       github.ref == 'refs/heads/feature/ui-search-v2' &&
       github.event_name == 'push' &&
-      contains(github.event.head_commit.message, '[release-approved-reel-20260828]')
+      (contains(github.event.head_commit.message, '[release-approved-reel-20260828]') ||
+       contains(github.event.head_commit.message, '[retry-approved-reel-20260828]'))
     runs-on: ubuntu-latest
     timeout-minutes: 35
     concurrency:
@@ -859,8 +860,12 @@ jobs:
             !expected.delete(row.platform) ||
             row.campaign_id !== 'hoshilu-official-13mall-v2' ||
             row.media_url !== 'https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4' ||
-            !['REVIEW_REQUIRED', 'APPROVED', 'PUBLISHING', 'PUBLISHED'].includes(row.status) ||
+            !['REVIEW_REQUIRED', 'APPROVED', 'PUBLISHING', 'PUBLISHED', 'FAILED'].includes(row.status) ||
             (row.status === 'REVIEW_REQUIRED' && row.last_error !== 'MEDIA_REUSE_REVIEW_REQUIRED') ||
+            (row.status === 'FAILED' && !(
+              (row.platform === 'X' && row.last_error === 'X_MEDIA_FETCH_522' && !row.platform_job_id) ||
+              (row.platform === 'INSTAGRAM' && String(row.last_error).startsWith('Too many subrequests by single Worker invocation.'))
+            )) ||
             (row.status !== 'PUBLISHED' && (row.external_post_id || row.published_at))
           );
           if (fail || expected.size) throw new Error(JSON.stringify(rows));
@@ -870,7 +875,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "UPDATE social_post_queue SET status='APPROVED',scheduled_at='2000-01-01T00:00:00.000Z',approved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),last_error='',updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE post_id IN ('hoshilu-official-13mall-v2-x-2026-08-28','hoshilu-official-13mall-v2-instagram-2026-08-28') AND platform IN ('X','INSTAGRAM') AND campaign_id='hoshilu-official-13mall-v2' AND media_url='https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4' AND status='REVIEW_REQUIRED' AND last_error='MEDIA_REUSE_REVIEW_REQUIRED' AND external_post_id='' AND platform_job_id='' AND published_at='';"
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "UPDATE social_post_queue SET status='APPROVED',scheduled_at='2000-01-01T00:00:00.000Z',approved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),last_error='',updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE post_id IN ('hoshilu-official-13mall-v2-x-2026-08-28','hoshilu-official-13mall-v2-instagram-2026-08-28') AND platform IN ('X','INSTAGRAM') AND campaign_id='hoshilu-official-13mall-v2' AND media_url='https://hoshilu.app/social/hoshilu-feature-reel-13mall-v1.mp4' AND external_post_id='' AND published_at='' AND ((status='REVIEW_REQUIRED' AND last_error='MEDIA_REUSE_REVIEW_REQUIRED' AND platform_job_id='') OR (status='FAILED' AND ((platform='X' AND last_error='X_MEDIA_FETCH_522' AND platform_job_id='') OR (platform='INSTAGRAM' AND last_error LIKE 'Too many subrequests by single Worker invocation.%'))));"
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT post_id,platform,status,scheduled_at,approved_at,last_error,external_post_id,published_at FROM social_post_queue WHERE post_id IN ('hoshilu-official-13mall-v2-x-2026-08-28','hoshilu-official-13mall-v2-instagram-2026-08-28') ORDER BY platform;" > approved-reel-released.json
           node <<'NODE'
           const fs = require('node:fs');
@@ -896,6 +901,32 @@ jobs:
             sleep 30
           done
           cat approved-reel-final.json
+          exit 1
+      - name: Verify both public post URLs
+        working-directory: tools/line-worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            curl --fail-with-body --silent --show-error 'https://hoshilu.app/api/social/posts/hoshilu-official-13mall-v2-x-2026-08-28' > approved-reel-x-public.json || true
+            curl --fail-with-body --silent --show-error 'https://hoshilu.app/api/social/posts/hoshilu-official-13mall-v2-instagram-2026-08-28' > approved-reel-instagram-public.json || true
+            if node <<'NODE'
+          const fs = require('node:fs');
+          const read = (path) => {
+            try { return JSON.parse(fs.readFileSync(path, 'utf8')); } catch { return {}; }
+          };
+          const x = read('approved-reel-x-public.json');
+          const instagram = read('approved-reel-instagram-public.json');
+          const valid = x.status === 'PUBLISHED' && /^https:\/\/x\.com\/i\/web\/status\/\d+$/.test(x.public_url || '')
+            && instagram.status === 'PUBLISHED' && /^https:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\//.test(instagram.public_url || '');
+          process.exit(valid ? 0 : 1);
+          NODE
+            then
+              exit 0
+            fi
+            sleep 10
+          done
+          cat approved-reel-x-public.json approved-reel-instagram-public.json
           exit 1
       - uses: actions/upload-artifact@v4
         if: always()

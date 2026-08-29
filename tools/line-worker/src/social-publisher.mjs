@@ -11,6 +11,8 @@ const LEGACY_DISCOVERY_HASHTAGS = new Set([
 ]);
 const HASHTAG_PATTERN = /#[\p{L}\p{N}_ー]+/gu;
 const INVALID_HOSHILU_OWNER_CLAIM = /(?:ITG(?:グループ株式会社)?[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}(?:HOSHILU|ホシル)|(?:HOSHILU|ホシル)[^。\n]{0,20}(?:所有|運営))|(?:HOSHILU|ホシル)[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}ITG(?:グループ株式会社)?|ITG(?:グループ株式会社)?[^。\n]{0,20}(?:所有|運営)))/i;
+const INSTAGRAM_STATUS_CHECKS_PER_INVOCATION = 12;
+const SOCIAL_PUBLISH_RETRY_DELAY_MS = 5 * 60 * 1000;
 
 const clean = (value, max = 2000) => String(value || '')
   .normalize('NFKC')
@@ -342,24 +344,47 @@ async function xMediaRequest(url, accessToken, options, fetchImpl, errorCode) {
 async function uploadXVideo(mediaUrl, accessToken, env, fetchImpl) {
   const safeUrl = new URL(safeXMediaUrl(mediaUrl));
   const runwayMatch = /^\/api\/social\/media\/runway\/([A-Za-z0-9][A-Za-z0-9_-]{0,119})\.mp4$/.exec(safeUrl.pathname);
+  const staticAsset = /^\/social\/[A-Za-z0-9][A-Za-z0-9._-]{0,199}\.mp4$/.test(safeUrl.pathname);
   let bytes;
   const contentType = 'video/mp4';
-  if (runwayMatch && env.PRODUCT_DB && env.SOCIAL_MEDIA_BUCKET) {
+  const maxBytes = Math.min(512 * 1024 * 1024,
+    Math.max(1, Number(env.X_MAX_VIDEO_BYTES || 100 * 1024 * 1024)));
+  if (runwayMatch) {
+    if (!env.PRODUCT_DB || !env.SOCIAL_MEDIA_BUCKET) throw new Error('X_MEDIA_R2_NOT_CONFIGURED');
     const job = await env.PRODUCT_DB.prepare(`SELECT storage_key FROM runway_generation_jobs
       WHERE job_id=?1 AND status IN ('APPROVED_FOR_POST','PUBLISHED') LIMIT 1`).bind(runwayMatch[1]).first();
     const object = job?.storage_key ? await env.SOCIAL_MEDIA_BUCKET.get(job.storage_key) : null;
     if (!object) throw new Error('X_MEDIA_R2_NOT_FOUND');
+    if (Number.isFinite(Number(object.size)) && Number(object.size) > maxBytes) {
+      throw new Error('X_MEDIA_SIZE_INVALID');
+    }
     const objectContentType = String(object.httpMetadata?.contentType || '').split(';')[0].toLowerCase();
     if (objectContentType !== contentType) throw new Error('X_MEDIA_TYPE_INVALID');
     bytes = new Uint8Array(await object.arrayBuffer());
-  } else {
-    const mediaResponse = await fetchImpl(safeUrl.toString());
+  } else if (staticAsset) {
+    // HOSHILU's own static media must not loop through the public Worker route.
+    // The asset binding reads the deployed file directly and avoids transient
+    // 52x responses caused by a Worker fetching its own custom domain.
+    if (!env.ASSETS?.fetch) throw new Error('X_MEDIA_ASSETS_NOT_CONFIGURED');
+    let mediaResponse;
+    try {
+      mediaResponse = await env.ASSETS.fetch(new Request(safeUrl.toString(), {
+        method: 'GET', redirect: 'manual'
+      }));
+    } catch {
+      throw new Error('X_MEDIA_ASSET_FETCH_FAILED');
+    }
     if (!mediaResponse.ok) throw new Error(`X_MEDIA_FETCH_${mediaResponse.status}`);
+    const declaredBytes = Number(mediaResponse.headers.get('content-length'));
+    if (Number.isFinite(declaredBytes) && declaredBytes > maxBytes) {
+      throw new Error('X_MEDIA_SIZE_INVALID');
+    }
     const responseContentType = String(mediaResponse.headers.get('content-type') || '').split(';')[0].toLowerCase();
     if (responseContentType !== contentType) throw new Error('X_MEDIA_TYPE_INVALID');
     bytes = new Uint8Array(await mediaResponse.arrayBuffer());
+  } else {
+    throw new Error('X_MEDIA_SOURCE_UNSUPPORTED');
   }
-  const maxBytes = Math.min(512 * 1024 * 1024, Math.max(1, Number(env.X_MAX_VIDEO_BYTES || 100 * 1024 * 1024)));
   if (!bytes.byteLength || bytes.byteLength > maxBytes) throw new Error('X_MEDIA_SIZE_INVALID');
 
   const initialized = await xMediaRequest(
@@ -495,7 +520,15 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
     await hooks.onJobCreated?.(creationId);
   }
   let statusCode = '';
-  for (let attempt = 0; attempt < 90; attempt += 1) {
+  // Keep each invocation comfortably below the Worker subrequest ceiling. A
+  // slow container is resumed by the next isolated social cron using the
+  // persisted platform_job_id, so this never creates a duplicate container.
+  const requestedChecks = Number(env.INSTAGRAM_STATUS_CHECKS_PER_INVOCATION
+    ?? INSTAGRAM_STATUS_CHECKS_PER_INVOCATION);
+  const statusChecks = Number.isFinite(requestedChecks)
+    ? Math.max(1, Math.min(INSTAGRAM_STATUS_CHECKS_PER_INVOCATION, Math.trunc(requestedChecks)))
+    : INSTAGRAM_STATUS_CHECKS_PER_INVOCATION;
+  for (let attempt = 0; attempt < statusChecks; attempt += 1) {
     const status = await fetchImpl(`https://graph.instagram.com/v24.0/${encodeURIComponent(creationId)}?fields=status_code`, {
       redirect: 'manual', headers
     });
@@ -509,7 +542,7 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
     const delay = Math.max(0, Number(env.INSTAGRAM_POLL_DELAY_MS ?? 2000));
     if (delay) await new Promise(resolve => setTimeout(resolve, delay));
   }
-  if (statusCode !== 'FINISHED') throw new Error(`INSTAGRAM_CONTAINER_${statusCode || 'TIMEOUT'}`);
+  if (statusCode !== 'FINISHED') throw new Error('INSTAGRAM_CONTAINER_IN_PROGRESS');
   let publishPayload;
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const publish = await fetchImpl(`https://graph.instagram.com/v24.0/${account}/media_publish`, {
@@ -651,6 +684,31 @@ export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}
   return publishTikTok(normalized, env, fetchImpl);
 }
 
+function isTransientSocialPublishError(value) {
+  const message = clean(value, 300);
+  if ([
+    'INSTAGRAM_CONTAINER_IN_PROGRESS',
+    'INSTAGRAM_CONTAINER_TIMEOUT',
+    'INSTAGRAM_CONTAINER_EXPIRED',
+    'X_MEDIA_ASSET_FETCH_FAILED',
+    'X_MEDIA_PROCESSING_TIMEOUT',
+    'THREADS_CONTAINER_IN_PROGRESS',
+    'THREADS_CONTAINER_TIMEOUT',
+    'THREADS_CONTAINER_EXPIRED'
+  ].includes(message)) return true;
+  if (/Too many subrequests by single Worker invocation/i.test(message)) return true;
+  if (/^(?:X_PUBLISH|INSTAGRAM_PUBLISH|THREADS_PUBLISH)_429(?:_|$)/.test(message)) return true;
+  return /^(?:X_MEDIA_FETCH|X_MEDIA_INIT|X_MEDIA_APPEND|X_MEDIA_FINALIZE|X_MEDIA_STATUS|INSTAGRAM_CREATE|INSTAGRAM_STATUS|THREADS_CREATE|THREADS_STATUS)_(?:408|425|429|5\d\d)(?:_|$)/.test(message);
+}
+
+function socialPublishRetryAt(now, env) {
+  const requested = Number(env.SOCIAL_PUBLISH_RETRY_DELAY_MS ?? SOCIAL_PUBLISH_RETRY_DELAY_MS);
+  const delay = Number.isFinite(requested)
+    ? Math.max(60_000, Math.min(15 * 60 * 1000, Math.trunc(requested)))
+    : SOCIAL_PUBLISH_RETRY_DELAY_MS;
+  return new Date(now.getTime() + delay).toISOString();
+}
+
 export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch) {
   if (!env.PRODUCT_DB) return { checked: 0, published: 0 };
   const staleBefore = new Date(now.getTime() - 30 * 60 * 1000).toISOString();
@@ -660,7 +718,7 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
   const xReady = xPublishingSafetyReadiness(env).ready ? 1 : 0;
   const due = await env.PRODUCT_DB.prepare(`SELECT * FROM social_post_queue
     WHERE status='APPROVED' AND scheduled_at<=?1
-    AND (platform<>'X' OR ?2=1) ORDER BY scheduled_at ASC LIMIT 5`)
+    AND (platform<>'X' OR ?2=1) ORDER BY scheduled_at ASC,post_id ASC LIMIT 1`)
     .bind(now.toISOString(), xReady).all();
   const dueRows = (due.results || []).filter(row => row.platform !== 'X' || xReady === 1);
   let published = 0;
@@ -680,12 +738,28 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
         .bind(row.post_id, externalId, now.toISOString()).run();
       published += 1;
     } catch (error) {
-      await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='FAILED',last_error=?2,
-        updated_at=?3 WHERE post_id=?1`).bind(row.post_id, clean(error?.message || error, 300), now.toISOString()).run();
+      const message = clean(error?.message || error, 300);
+      if (isTransientSocialPublishError(message)) {
+        const resetPlatformJob = ['INSTAGRAM_CONTAINER_EXPIRED', 'THREADS_CONTAINER_EXPIRED']
+          .includes(message) ? 1 : 0;
+        await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='APPROVED',last_error=?2,
+          scheduled_at=?3,updated_at=?4,
+          platform_job_id=CASE WHEN ?5=1 THEN '' ELSE platform_job_id END
+          WHERE post_id=?1 AND status='PUBLISHING'`)
+          .bind(row.post_id, message, socialPublishRetryAt(now, env), now.toISOString(), resetPlatformJob).run();
+      } else {
+        await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='FAILED',last_error=?2,
+          updated_at=?3 WHERE post_id=?1`).bind(row.post_id, message, now.toISOString()).run();
+      }
     }
   }
   return { checked: dueRows.length, published };
 }
+
+export const socialPublisherTest = Object.freeze({
+  uploadXVideo,
+  isTransientSocialPublishError
+});
 
 function instagramPermalink(value) {
   try {
@@ -724,7 +798,7 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
       AND q.external_post_id<>''
       AND NOT EXISTS (SELECT 1 FROM social_post_performance p
         WHERE p.post_id=q.post_id AND p.public_url IS NOT NULL AND p.public_url<>'')
-      ORDER BY q.published_at DESC LIMIT 10`).bind(requestedPostId).all();
+      ORDER BY q.published_at DESC LIMIT 3`).bind(requestedPostId).all();
   } catch (error) {
     console.error('INSTAGRAM_PERMALINK_SYNC_QUERY_FAILED', clean(error?.message || error, 200));
     return { checked: 0, saved: 0, failed: 1 };
@@ -822,7 +896,7 @@ export async function syncThreadsInsights(env, now = new Date(), fetchImpl = fet
       WHERE (?1='' OR post_id=?1)
       AND platform='THREADS' AND status='PUBLISHED'
       AND external_post_id<>''
-      ORDER BY published_at DESC LIMIT 10`).bind(requestedPostId).all();
+      ORDER BY published_at DESC LIMIT 3`).bind(requestedPostId).all();
   } catch (error) {
     console.error('THREADS_INSIGHTS_SYNC_QUERY_FAILED', clean(error?.message || error, 200));
     return { checked: 0, saved: 0, failed: 1 };
