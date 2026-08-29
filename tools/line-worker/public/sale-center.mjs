@@ -1,7 +1,7 @@
-import { attachVerticalTicker } from './vertical-ticker.mjs';
+import { attachVerticalTicker, detachVerticalTicker } from './vertical-ticker.mjs';
 
 const copy = {
-  JA:{title:'全てのセールを、\n先回りチェックしよう',lead:'13モールのセール、始まる前に通知。',notice:'無料会員限定・セール専用通知',noticeBody:'届くのはセール通知だけ。開始前と開始時のみ。',toggle:'全モールのセール通知を受け取る',login:'ログインすると設定を保存できます。',empty:'確認済みのセール情報を準備中です。未確認情報は掲載しません。',starts:'開始',ends:'終了',updated:'更新',detail:'公式情報を見る',saved:'セール通知だけを受け取る設定を保存しました。',off:'セール通知を停止しました。'},
+  JA:{title:'お気に入りのショップモールだけ、セール通知が届くと',notice:'無料会員限定・セール専用通知',toggle:'全モールのセール通知を受け取る',login:'ログインすると設定を保存できます。',empty:'確認済みのセール情報を準備中です。未確認情報は掲載しません。',starts:'開始',ends:'終了',updated:'更新',detail:'公式情報を見る',saved:'セール通知だけを受け取る設定を保存しました。',off:'セール通知を停止しました。'},
   EN:{title:'Only real sales, before they start.',lead:'Sales across 13 marketplaces. Get notified before they start.',notice:'Free members · sale-only alerts',noticeBody:'Sale alerts only - before and when they start.',toggle:'Receive sale alerts from all marketplaces',login:'Sign in to save this setting.',empty:'Verified sale updates are being prepared. Unverified information is not published.',starts:'Starts',ends:'Ends',updated:'Updated',detail:'View official details',saved:'Sale-only notifications are enabled.',off:'Sale notifications are disabled.'},
   ZH:{title:'只推送促销，并提前通知。',lead:'13个商城的促销，开始前先通知。',notice:'免费会员专享・仅促销通知',noticeBody:'只推送促销通知：开始前和开始时。',toggle:'接收所有商城的促销通知',login:'登录后可保存此设置。',empty:'正在准备已验证的促销信息。未经确认的信息不会发布。',starts:'开始',ends:'结束',updated:'更新',detail:'查看官方信息',saved:'已开启仅促销通知。',off:'已关闭促销通知。'},
   KO:{title:'세일만, 시작 전에 알려드려요.',lead:'13개 쇼핑몰 세일, 시작 전에 알림.',notice:'무료 회원 전용 · 세일 알림만',noticeBody:'세일 알림만 보냅니다. 시작 전과 시작 시에만.',toggle:'모든 쇼핑몰 세일 알림 받기',login:'로그인하면 설정을 저장할 수 있습니다.',empty:'확인된 세일 정보를 준비 중입니다. 미확인 정보는 게시하지 않습니다.',starts:'시작',ends:'종료',updated:'업데이트',detail:'공식 정보 보기',saved:'세일 알림만 받도록 설정했습니다.',off:'세일 알림을 중지했습니다.'}
@@ -77,8 +77,8 @@ function date(value){return new Intl.DateTimeFormat(language()==='JA'?'ja-JP':la
 function dateTime(value){return new Intl.DateTimeFormat(language()==='JA'?'ja-JP':language()==='KO'?'ko-KR':language()==='ZH'?'zh-CN':'en-US',{dateStyle:'short',timeStyle:'short'}).format(new Date(value));}
 
 const ROW_PAGE_SIZE=8;
-const moreCopy={JA:'もっと見る',EN:'Show more',ZH:'查看更多',KO:'더 보기'};
-let visibleRowCount=ROW_PAGE_SIZE;
+const moreCopy={JA:['もっと見る','閉じる'],EN:['Show more','Show less'],ZH:['查看更多','收起'],KO:['더 보기','접기']};
+let rowsExpanded=false;
 
 function sortedByNewest(items){
   return [...items].sort((a,b)=>{
@@ -94,7 +94,7 @@ function render(sales=[]){
   const officialText=officialCopy[language()]||officialCopy.JA;
   const covered=new Set(sales.map((sale)=>sale.marketplace_label));
   const items=sortedByNewest([...sales,...officialUpdates.filter((item)=>!covered.has(item.marketplace_label))]);
-  const visible=items.slice(0,visibleRowCount);
+  const visible=rowsExpanded?items:items.slice(0,ROW_PAGE_SIZE);
   const rows=visible.map(sale=>{
     const row=document.createElement('a');
     row.className='info-row';
@@ -118,16 +118,19 @@ function render(sales=[]){
     return row;
   });
   rail.replaceChildren(...rows);
-  attachVerticalTicker(rail);
+  rail.classList.toggle('sale-rail-expanded',rowsExpanded);
+  if(rowsExpanded)detachVerticalTicker(rail);else attachVerticalTicker(rail);
   const moreWrap=document.querySelector('#saleRailMore');
   if(moreWrap){
     moreWrap.replaceChildren();
-    if(items.length>visibleRowCount){
+    if(items.length>ROW_PAGE_SIZE){
       const button=document.createElement('button');
       button.type='button';
       button.className='info-row-more-button';
-      button.textContent=moreCopy[language()]||moreCopy.JA;
-      button.addEventListener('click',()=>{visibleRowCount+=ROW_PAGE_SIZE;render(sales);});
+      button.textContent=(moreCopy[language()]||moreCopy.JA)[rowsExpanded?1:0];
+      button.setAttribute('aria-expanded',String(rowsExpanded));
+      button.setAttribute('aria-controls','saleRail');
+      button.addEventListener('click',()=>{rowsExpanded=!rowsExpanded;render(sales);});
       moreWrap.append(button);
     }
   }
@@ -136,9 +139,7 @@ function render(sales=[]){
 function renderCopy(){
   const t=copy[language()]||copy.JA;
   document.querySelector('#saleCenterTitle').textContent=t.title;
-  document.querySelector('#saleCenterLead').textContent=t.lead;
   document.querySelector('#saleNoticeTitle').textContent=t.notice;
-  document.querySelector('#saleNoticeBody').textContent=t.noticeBody;
   document.querySelector('#saleToggleLabel').textContent=t.toggle;
   if(!status?.textContent||status.dataset.untouched!=='false')status.textContent=t.login;
   renderSettingsCopy();

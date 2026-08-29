@@ -46,7 +46,7 @@ test('ホームは3入力とAI/HOSHILUの責任境界をtitle・説明・OG・�
   assert.match(html, /<title>ホシル｜スクショ・投稿URL・一言から商品を探す<\/title>/);
   assert.ok(html.includes('<meta name="description" content="' + description + '">'));
   assert.match(html, /<meta property="og:title" content="ホシル｜スクショ・投稿URL・一言から商品を探す">/);
-  assert.match(html, /<p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。確認できた商品ページや最大13モールの検索先へ案内します。<\/p>/);
+  assert.match(html, /<p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。見つけた商品ページやショップモールの検索ページへ案内します。<\/p>/);
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
   const data = JSON.parse(match[1]);
   assert.equal(data['@graph'].find((item) => item['@type'] === 'WebApplication').description, description);
@@ -89,5 +89,5 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
   assert.equal((sitemap.match(/<url>/g) || []).length, 84);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v399/);
+  assert.match(worker, /hoshilu-shell-v400/);
 });

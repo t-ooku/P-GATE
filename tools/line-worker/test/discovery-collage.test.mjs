@@ -18,7 +18,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(app, /first\.className='hero-title-line'/);
   assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
   assert.match(heroFixes, /html:lang\(ja\) #heroTitle \.hero-title-line \{ white-space: nowrap; \}/);
-  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{[\s\S]*?font-size: clamp\(25px, 6\.85vw, 29px\);/);
+  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{[\s\S]*?font-size: clamp\(23px, 6\.2vw, 27px\);/);
   assert.match(html, /loading="lazy"/);
   assert.match(html, /hoshilu-discovery-collage-mobile\.webp/);
   assert.match(html, /見た目、見た場所、使い方。覚えていることから話してください。/);
@@ -35,7 +35,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(css, /h2 span \{ display: block; \}/);
   assert.match(css, /mask-image: radial-gradient/);
   assert.match(css, /white-space: nowrap/);
-  assert.match(sw, /hoshilu-shell-v399/);
+  assert.match(sw, /hoshilu-shell-v400/);
   assert.match(sw, /discovery-actions\.mjs/);
   assert.match(html, /href="https:\/\/lin\.ee\/xKS56YM"[^>]+rel="noopener noreferrer"/);
   assert.match(html, /href="https:\/\/www\.instagram\.com\/hoshilu\.app\/"/);

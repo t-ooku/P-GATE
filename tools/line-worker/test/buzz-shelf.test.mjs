@@ -283,12 +283,12 @@ test('workerは/api/buzz/shelfをGET・5分キャッシュで公開する', () =
   assert.match(route.slice(0, 2000), /signedMarketplaceSearchLinks\(shelf\.search_keyword, buzzLinkContext\)\.catch\(\(\) => \[\]\)/u);
 });
 
-test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導線と出典注記を持つ', () => {
+test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導線を持つ', () => {
   const html = fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8');
   const script = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
   assert.match(html, /<section id="buzzHome" class="buzz-home"/u);
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
-  assert.match(html, /※順位はモール公式ランキングがもと。/u);
+  assert.doesNotMatch(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
   assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=2"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
