@@ -75,7 +75,7 @@ const SEARCH_INPUT_SUFFIXES = new Set([
 const SEARCH_PROVIDER_DEGRADATION_COMPONENTS = new Set([
   'ai_chat_primary', 'ai_chat_all',
   'query_structurer_primary', 'query_structurer_all',
-  'search_input_analysis'
+  'search_input_analysis', 'visual_web_detection'
 ]);
 const SEARCH_PROVIDER_DEGRADATION_CODES = new Set([
   'AI_PROVIDER_TIMEOUT', 'AI_PROVIDER_RATE_LIMITED', 'AI_PROVIDER_UPSTREAM_5XX',
@@ -84,7 +84,10 @@ const SEARCH_PROVIDER_DEGRADATION_CODES = new Set([
   'AI_PROVIDER_NETWORK_FAILED', 'AI_PROVIDER_FAILED', 'AI_PROVIDER_NOT_CONFIGURED',
   'AI_PROVIDERS_NOT_CONFIGURED', 'AI_ALL_PROVIDERS_FAILED',
   'SEARCH_INPUT_ANALYSIS_FAILED', 'SEARCH_INPUT_ANALYSIS_NOT_CONFIGURED',
-  'SEARCH_INPUT_ANALYSIS_EMPTY', 'SEARCH_INPUT_ANALYSIS_NO_PUBLIC_EVIDENCE'
+  'SEARCH_INPUT_ANALYSIS_EMPTY', 'SEARCH_INPUT_ANALYSIS_NO_PUBLIC_EVIDENCE',
+  'GOOGLE_VISUAL_WEB_DETECTION_FAILED',
+  'GOOGLE_VISUAL_WEB_DETECTION_MONTHLY_LIMIT_REACHED',
+  'GOOGLE_VISUAL_WEB_DETECTION_BUDGET_GUARD_UNAVAILABLE'
 ]);
 const CLIENT_SEARCH_FAILURE_CODE_PATTERN = /^(?:AI|CONSENT|KNOWLEDGE|ORIGIN|REQUEST|SEARCH|TURNSTILE)_[A-Z0-9_]{2,72}$/u;
 const MARKETPLACES = new Set([
@@ -210,16 +213,19 @@ export async function recordSearchProviderDegradation(env, {
   const safeComponent = String(component || '');
   const safeProvider = String(provider || '').toLowerCase();
   const safeRequestId = anonymousId(requestId);
-  const providerMatchesComponent = safeComponent === 'search_input_analysis'
-    ? safeProvider === 'gemini'
-    : safeComponent.endsWith('_primary')
-      ? safeProvider === 'gemini'
-      : safeComponent.endsWith('_all') && safeProvider === 'all';
+  let providerMatchesComponent = false;
+  if (safeComponent === 'search_input_analysis') providerMatchesComponent = safeProvider === 'gemini';
+  else if (safeComponent === 'visual_web_detection') {
+    providerMatchesComponent = safeProvider === 'google_cloud_vision';
+  } else if (safeComponent.endsWith('_primary')) providerMatchesComponent = safeProvider === 'gemini';
+  else if (safeComponent.endsWith('_all')) providerMatchesComponent = safeProvider === 'all';
   if (!SEARCH_PROVIDER_DEGRADATION_COMPONENTS.has(safeComponent)
     || !providerMatchesComponent || !safeRequestId) return false;
-  const fallbackCode = safeComponent === 'search_input_analysis'
-    ? 'SEARCH_INPUT_ANALYSIS_FAILED'
-    : safeComponent.endsWith('_all') ? 'AI_ALL_PROVIDERS_FAILED' : 'AI_PROVIDER_FAILED';
+  let fallbackCode = 'AI_PROVIDER_FAILED';
+  if (safeComponent === 'search_input_analysis') fallbackCode = 'SEARCH_INPUT_ANALYSIS_FAILED';
+  else if (safeComponent === 'visual_web_detection') {
+    fallbackCode = 'GOOGLE_VISUAL_WEB_DETECTION_FAILED';
+  } else if (safeComponent.endsWith('_all')) fallbackCode = 'AI_ALL_PROVIDERS_FAILED';
   const safeCode = SEARCH_PROVIDER_DEGRADATION_CODES.has(String(code || ''))
     ? String(code) : fallbackCode;
   const values = [

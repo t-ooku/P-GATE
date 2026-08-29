@@ -821,6 +821,17 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   }).checks.admin_credentials_distinct, false);
   assert.equal(getEnvironmentReadiness(base).checks.turnstile_configured, true);
   assert.equal(getEnvironmentReadiness(base).checks.search_input_analysis_configured, true);
+  assert.equal(getEnvironmentReadiness(base).checks.google_visual_web_detection_configured, false);
+  assert.equal(getEnvironmentReadiness({
+    ...base,
+    GOOGLE_VISUAL_SEARCH_ENABLED: 'true',
+    GOOGLE_CLOUD_VISION_API_KEY: 'v'.repeat(32)
+  }).checks.google_visual_web_detection_configured, true);
+  assert.equal(getEnvironmentReadiness({
+    ...base,
+    GOOGLE_VISUAL_SEARCH_ENABLED: 'false',
+    GOOGLE_CLOUD_VISION_API_KEY: 'v'.repeat(32)
+  }).checks.google_visual_web_detection_configured, false);
   const withoutGemini = { ...base, GEMINI_API_KEY: '' };
   assert.equal(getEnvironmentReadiness(withoutGemini).ready, false);
   assert.equal(getEnvironmentReadiness(withoutGemini).checks.search_input_analysis_configured, false);
@@ -925,6 +936,8 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(payload.checks.database_features.product_identifiers, false);
   assert.equal(payload.checks.database_features.instagram_oauth_credentials, false);
   assert.equal(payload.checks.database_features.x_oauth_credentials, false);
+  assert.equal(payload.checks.database_features.google_visual_web_detection_usage_monthly, false);
+  assert.equal(payload.checks.google_visual_web_detection_budget_ready, false);
   assert.equal(payload.checks.database_features.runway_generation_jobs, false);
   assert.deepEqual(payload.checks.social_publishers, {
     X: false,
@@ -940,6 +953,25 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     enabled: false,
     ready: false
   });
+  const budgetFeatureDb = {
+    prepare: (sql) => ({
+      bind: () => ({
+        all: async () => ({
+          results: String(sql).includes('sqlite_master')
+            ? [{ name: 'google_visual_web_detection_usage_monthly' }] : []
+        }),
+        first: async () => null
+      })
+    })
+  };
+  const budgetHealthResponse = await workerModule.default.fetch(
+    new Request('https://p-gate.example/health'),
+    { ...base, PRODUCT_DB: budgetFeatureDb },
+    ctx
+  );
+  const budgetHealth = await budgetHealthResponse.json();
+  assert.equal(budgetHealth.checks.database_features.google_visual_web_detection_usage_monthly, true);
+  assert.equal(budgetHealth.checks.google_visual_web_detection_budget_ready, true);
   assert.equal(JSON.stringify(payload).includes(base.GAS_BRIDGE_SECRET), false);
   assert.equal(JSON.stringify(payload).includes(base.TURNSTILE_SECRET_KEY), false);
 

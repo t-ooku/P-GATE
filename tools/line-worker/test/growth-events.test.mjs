@@ -185,6 +185,29 @@ test('multimodal input degradation is recorded without storing the image, URL, o
   assert.doesNotMatch(JSON.stringify(calls), /保存禁止|example\.invalid/u);
 });
 
+test('Web画像一致providerの障害は固定区分だけを匿名記録する', async () => {
+  const calls = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };
+  const codes = [
+    'GOOGLE_VISUAL_WEB_DETECTION_FAILED',
+    'GOOGLE_VISUAL_WEB_DETECTION_MONTHLY_LIMIT_REACHED',
+    'GOOGLE_VISUAL_WEB_DETECTION_BUDGET_GUARD_UNAVAILABLE'
+  ];
+  for (const [index, code] of codes.entries()) {
+    assert.equal(await recordSearchProviderDegradation(env, {
+      requestId:`e309d1ad-2a34-4f2f-913b-47fccdbbe25${index + 1}`,
+      component:'visual_web_detection', provider:'google_cloud_vision', code,
+      query:'保存禁止の検索文', image:'保存禁止のbase64', response:'保存禁止の外部応答'
+    }), true);
+  }
+  for (const [index, call] of calls.entries()) {
+    assert.equal(call.values[4], 'visual_web_detection');
+    assert.equal(call.values[5], codes[index]);
+    assert.equal(call.values[7], 'GOOGLE_CLOUD_VISION');
+  }
+  assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
+});
+
 test('provider degradation uses a fixed code allowlist and rejects forged dimensions', async () => {
   const calls = [];
   const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };

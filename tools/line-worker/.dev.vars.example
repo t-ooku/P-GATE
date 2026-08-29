@@ -42,6 +42,12 @@ AMAZON_CREATORS_CREDENTIAL_SECRET=
 AMAZON_CREATORS_CREDENTIAL_VERSION=2.3
 AMAZON_ASSOCIATE_TAG=
 
+# Optional public-web image matching. Keep disabled until Cloud Vision billing,
+# quota, privacy copy, and cost approval are complete. Never commit a real key.
+GOOGLE_VISUAL_SEARCH_ENABLED=false
+GOOGLE_VISUAL_SEARCH_MONTHLY_REQUEST_LIMIT=900
+GOOGLE_CLOUD_VISION_API_KEY=
+
 # AI Watch verification-only test notifications (POST/DELETE
 # /api/member/notifications/test-seed). Set to "1" only during a QA/RC
 # verification window, then back to "0" - it lets any logged-in member seed

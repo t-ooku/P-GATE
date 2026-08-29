@@ -32,9 +32,9 @@ test('v4.2項目12: RAKUTEN_PIPELINE_TRACEはユーザーの検索文そのも�
 });
 
 test('検索入力の非保存と外部AI処理を、チェックボックスなしで正確に開示する', async () => {
-  const [app, html, privacy, analysis] = await Promise.all([
+  const [app, html, privacy, analysis, visualWebDetection] = await Promise.all([
     read('../public/app.js'), read('../public/index.html'), read('../public/privacy.html'),
-    read('../src/search-input-analysis.mjs')
+    read('../src/search-input-analysis.mjs'), read('../src/google-visual-web-detection.mjs')
   ]);
   assert.doesNotMatch(html, /id="consent"|type="checkbox" required/);
   assert.match(app, /写真・画像・投稿URLはHOSHILUに保存しません/);
@@ -45,4 +45,7 @@ test('検索入力の非保存と外部AI処理を、チェックボックスな
   assert.match(privacy, /元画像のEXIF・位置情報を引き継ぎません/);
   assert.match(privacy, /整理された検索語を端末内の検索履歴へ保存/);
   assert.doesNotMatch(analysis, /console\.(?:info|log|warn)\([^)]*(?:query|socialUrl|data)/u);
+  assert.doesNotMatch(visualWebDetection, /console\.(?:info|log|warn)/u);
+  assert.doesNotMatch(visualWebDetection, /return\s+.*(?:page\?\.url|image\?\.url|image\.data)/u);
+  assert.doesNotMatch(visualWebDetection, /cf-connecting-ip|fingerprint_hash|session_id/iu);
 });

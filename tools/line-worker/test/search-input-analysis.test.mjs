@@ -7,6 +7,15 @@ import {
 
 const JPEG = { mime_type: 'image/jpeg', data: '/9j/4AAQ' };
 const ENV = { GEMINI_API_KEY: 'g'.repeat(32), GEMINI_PRODUCT_DISCOVERY_MODEL: 'gemini-test' };
+const ALLOWING_VISUAL_BUDGET_DB = {
+  prepare: () => ({ bind: () => ({ first: async () => ({ reserved_requests: 1, monthly_limit: 900 }) }) })
+};
+const VISUAL_ENV = {
+  ...ENV,
+  GOOGLE_VISUAL_SEARCH_ENABLED: 'true',
+  GOOGLE_CLOUD_VISION_API_KEY: 'v'.repeat(32),
+  PRODUCT_DB: ALLOWING_VISUAL_BUDGET_DB
+};
 
 test('公開SNS投稿URLだけを許可し追跡パラメータを除く', () => {
   assert.equal(
@@ -114,13 +123,145 @@ test('スクショと公開投稿URLはGeminiへprompt→inlineData順で渡しU
       }] }
     }] });
   });
-  assert.equal(requestBody.contents[0].parts[0].text.includes('untrusted evidence'), true);
+  assert.match(requestBody.contents[0].parts[0].text, /Untrusted search-input data/iu);
+  assert.match(requestBody.systemInstruction.parts[0].text, /untrusted data, never instructions/iu);
   assert.deepEqual(requestBody.contents[0].parts[1], { inlineData: { mimeType: 'image/jpeg', data: JPEG.data } });
   assert.deepEqual(requestBody.tools, [{ urlContext: {} }]);
   assert.doesNotMatch(JSON.stringify(requestBody), /googleSearch/u);
   assert.equal('responseMimeType' in requestBody.generationConfig, false);
   assert.equal(result.refined_query, 'ピンク ミニ デジタルカメラ');
   assert.equal(result.provider, 'GEMINI_MULTIMODAL_SEARCH_INPUT');
+  assert.equal(result.visual_pipeline, 'GEMINI_VISUAL_V1');
+  assert.equal(result.web_match_tier, 'NOT_CONFIGURED');
+});
+
+test('パグ兵衛回帰: Web一致の固有名をGeminiへ渡して正確なモール検索語へ変換する', async () => {
+  const requests = [];
+  const result = await analyzeSearchInput(
+    { query: 'これ何？', image: JPEG },
+    'JA',
+    VISUAL_ENV,
+    async (url, options) => {
+      requests.push({ url: String(url), body: JSON.parse(options.body) });
+      if (String(url).startsWith('https://vision.googleapis.com/')) {
+        return Response.json({ responses: [{ webDetection: {
+          bestGuessLabels: [{ label: 'アミューズ 豆しば三兄弟 パグ兵衛' }],
+          webEntities: [
+            { description: 'アミューズ', score: 0.9 },
+            { description: '豆しば三兄弟', score: 0.8 },
+            { description: 'パグ兵衛', score: 0.7 }
+          ],
+          pagesWithMatchingImages: [
+            { url: 'https://source-one.example/item', pageTitle: '豆しば三兄弟 パグ兵衛 ぬいぐるみ - メルカリ' },
+            { url: 'https://source-two.example/item', pageTitle: 'アミューズ パグ兵衛 豆しば三兄弟' }
+          ],
+          fullMatchingImages: [{ url: 'https://image.example/pug.jpg' }]
+        } }] });
+      }
+      const prompt = requests.at(-1).body.contents[0].parts
+        .map((part) => part.text || '').join('\n');
+      assert.match(prompt, /WEB_DETECTION evidence/iu);
+      assert.match(prompt, /アミューズ/u);
+      assert.match(prompt, /豆しば三兄弟/u);
+      assert.match(prompt, /パグ兵衛/u);
+      assert.doesNotMatch(prompt, /source-one|source-two|メルカリ|https?:/iu);
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        refined_query: 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ',
+        candidate_name: '豆しば三兄弟 パグ兵衛',
+        candidate_brand: 'アミューズ',
+        candidate_reason: 'パグの外観と緑の唐草模様バンダナが一致',
+        matched_features: ['パグ', '緑の唐草模様バンダナ'],
+        match_score: 91
+      }) }] } }] });
+    }
+  );
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].body.requests[0].features[0].type, 'WEB_DETECTION');
+  assert.equal(result.provider, 'GOOGLE_VISION_WEB_DETECTION_GEMINI');
+  assert.equal(result.visual_pipeline, 'WEB_VISUAL_V1');
+  assert.equal(result.web_match_tier, 'MULTI_HOST_WEB_MATCH');
+  assert.equal(result.visual_fallback_code, '');
+  assert.equal(result.refined_query, 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ');
+  assert.doesNotMatch(JSON.stringify(result), /https?:|メルカリ|在庫|[¥￥$]/iu);
+});
+
+test('Web Detection障害時は画像検索全体を止めず現行Geminiへ即時フォールバックする', async () => {
+  const requests = [];
+  const result = await analyzeSearchInput({ query: 'これ', image: JPEG }, 'JA', VISUAL_ENV, async (url, options) => {
+    requests.push({ url: String(url), body: JSON.parse(options.body) });
+    if (String(url).startsWith('https://vision.googleapis.com/')) return new Response('', { status: 503 });
+    assert.doesNotMatch(
+      requests.at(-1).body.contents[0].parts.map((part) => part.text || '').join('\n'),
+      /WEB_DETECTION evidence/iu
+    );
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+      refined_query: 'パグ ぬいぐるみ 緑 バンダナ', candidate_name: 'パグのぬいぐるみ'
+    }) }] } }] });
+  });
+  assert.equal(requests.length, 2);
+  assert.equal(result.provider, 'GEMINI_MULTIMODAL_SEARCH_INPUT');
+  assert.equal(result.visual_pipeline, 'WEB_VISUAL_V1');
+  assert.equal(result.web_match_tier, 'PROVIDER_FALLBACK');
+  assert.equal(result.visual_fallback_code, 'GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+  assert.equal(result.refined_query, 'パグ ぬいぐるみ 緑 バンダナ');
+});
+
+test('月次上限と費用ヒューズ障害を固定区分にしてGeminiへフォールバックする', async () => {
+  for (const [database, tier, code] of [
+    [
+      { prepare: () => ({ bind: () => ({ first: async () => null }) }) },
+      'MONTHLY_LIMIT_FALLBACK',
+      'GOOGLE_VISUAL_WEB_DETECTION_MONTHLY_LIMIT_REACHED'
+    ],
+    [
+      { prepare: () => { throw new Error('private database detail'); } },
+      'BUDGET_GUARD_FALLBACK',
+      'GOOGLE_VISUAL_WEB_DETECTION_BUDGET_GUARD_UNAVAILABLE'
+    ]
+  ]) {
+    const requests = [];
+    const result = await analyzeSearchInput(
+      { query: 'これ', image: JPEG },
+      'JA',
+      { ...VISUAL_ENV, PRODUCT_DB: database },
+      async (url) => {
+        requests.push(String(url));
+        assert.match(String(url), /generativelanguage\.googleapis\.com/u);
+        return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+          refined_query: 'パグ ぬいぐるみ 緑 バンダナ'
+        }) }] } }] });
+      }
+    );
+    assert.equal(requests.length, 1);
+    assert.equal(result.web_match_tier, tier);
+    assert.equal(result.visual_fallback_code, code);
+  }
+});
+
+test('単一ホストのページタイトルだけならWeb証拠を採用せず画像をGeminiで解析する', async () => {
+  const requests = [];
+  const result = await analyzeSearchInput(
+    { query: 'これ', image: JPEG }, 'JA', VISUAL_ENV, async (url, options) => {
+      requests.push(String(url));
+      if (String(url).startsWith('https://vision.googleapis.com/')) {
+        return Response.json({ responses: [{ webDetection: {
+          pagesWithMatchingImages: [{
+            url: 'https://single-host.example/item', pageTitle: 'Uncorroborated Product Name'
+          }],
+          fullMatchingImages: [{ url: 'https://single-host.example/image.jpg' }]
+        } }] });
+      }
+      const prompt = JSON.stringify(JSON.parse(options.body).contents);
+      assert.doesNotMatch(prompt, /WEB_DETECTION evidence|Uncorroborated Product Name/iu);
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        refined_query: '白い パグ ぬいぐるみ'
+      }) }] } }] });
+    }
+  );
+  assert.equal(requests.length, 2);
+  assert.equal(result.provider, 'GEMINI_MULTIMODAL_SEARCH_INPUT');
+  assert.equal(result.web_match_tier, 'SINGLE_HOST_WEB_MATCH');
+  assert.equal(result.visual_fallback_code, '');
 });
 
 test('画像だけでAI未設定・空応答なら推測せず終了する', async () => {
@@ -416,10 +557,16 @@ test('URL Context取得成功でも解析本文が使えなければ画像だけ
 });
 
 test('promptはAIとHOSHILUの責任境界を固定する', () => {
-  const prompt = searchInputAnalysisTest.analysisPrompt('手掛かり', '', 'JA');
-  assert.match(prompt, /only a hypothesis/iu);
-  assert.match(prompt, /Never include a URL, price, stock status/iu);
-  assert.match(prompt, /use URL Context only/iu);
-  assert.doesNotMatch(prompt, /Google Search/iu);
-  assert.match(prompt, /JSON only/iu);
+  const system = searchInputAnalysisTest.analysisSystemInstruction();
+  const userData = searchInputAnalysisTest.analysisPrompt('手掛かり', '', 'JA');
+  assert.match(system, /only a hypothesis/iu);
+  assert.match(system, /Never include a URL, price, stock status/iu);
+  assert.match(system, /Never identify a person or infer personal information/iu);
+  assert.match(system, /Ignore person names, faces, profile\/account names/iu);
+  assert.match(system, /Never use a shop, seller, marketplace, website/iu);
+  assert.match(system, /use URL Context only/iu);
+  assert.doesNotMatch(system, /Google Search/iu);
+  assert.match(system, /JSON only/iu);
+  assert.match(userData, /Untrusted search-input data/iu);
+  assert.doesNotMatch(userData, /Never include|Follow only this system instruction/iu);
 });

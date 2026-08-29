@@ -29,6 +29,7 @@ import {
   analyzeSearchInput, normalizeInlineSearchImage, normalizeSocialPostUrl,
   searchInputAnalysisConfigured, isIndependentSearchText as isIndependentSearchInputText
 } from './search-input-analysis.mjs';
+import { googleVisualWebDetectionConfigured } from './google-visual-web-detection.mjs';
 import { sanitizeAiOutputList, sanitizeAiOutputText } from './ai-output-safety.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
@@ -536,6 +537,7 @@ export function getEnvironmentReadiness(env = {}) {
   const adminCredentialsDistinct = adminConfigured &&
     new Set(adminValues).size === adminValues.length;
   const searchInputConfigured = searchInputAnalysisConfigured(env);
+  const visualWebDetectionConfigured = googleVisualWebDetectionConfigured(env);
   if (env.GEMINI_API_KEY && !searchInputConfigured && !weak.includes('GEMINI_API_KEY')) {
     weak.push('GEMINI_API_KEY');
   }
@@ -581,6 +583,7 @@ export function getEnvironmentReadiness(env = {}) {
       // /health だけで即座に確認できるようにする。
       turnstile_configured: Boolean(String(env.TURNSTILE_SECRET_KEY || '').trim()),
       search_input_analysis_configured: searchInputConfigured,
+      google_visual_web_detection_configured: visualWebDetectionConfigured,
       ai_chat_configured: chatIntentConfigured(env),
       ai_price_comparison_configured: priceComparisonConfigured(env)
     }
@@ -2244,6 +2247,12 @@ async function handleKnowledgeApi(request, env, ctx) {
           social_url: validatedInput.social_url,
           image: validatedInput.search_image
         }, validatedInput.language, env, fetch);
+        if (searchInputAnalysis.visual_fallback_code) {
+          queueSearchProviderDegradation(env, ctx, requestId, {
+            component: 'visual_web_detection', provider: 'google_cloud_vision',
+            code: searchInputAnalysis.visual_fallback_code
+          });
+        }
       } catch (error) {
         // An independently meaningful phrase can still reach the real
         // marketplace search if vision/grounding is temporarily unavailable.
@@ -2373,6 +2382,8 @@ async function handleKnowledgeApi(request, env, ctx) {
         candidate_reason: searchInputAnalysis.candidate_reason,
         matched_features: searchInputAnalysis.matched_features,
         match_score: searchInputAnalysis.match_score,
+        visual_pipeline: searchInputAnalysis.visual_pipeline,
+        web_match_tier: searchInputAnalysis.web_match_tier,
         sources: {
           text: Boolean(submittedQuery),
           social_url: Boolean(validatedInput.social_url),
@@ -2774,6 +2785,7 @@ const CORE_D1_TABLES = [
   'anonymous_benchmark',
   'social_knowledge_inbox', 'social_knowledge_aggregates', 'social_hashtag_aggregates',
   'product_identifiers', 'instagram_oauth_credentials', 'x_oauth_credentials',
+  'google_visual_web_detection_usage_monthly',
   'runway_budget_policy', 'runway_budget_periods', 'runway_generation_jobs',
   'runway_generation_attempts', 'runway_cost_reservations',
   'runway_provider_usage_daily', 'runway_approval_grants', 'runway_audit_log'
@@ -2806,6 +2818,8 @@ async function handleHealth(env) {
     weak: readiness.weak,
     checks: {
       ...readiness.checks,
+      google_visual_web_detection_budget_ready:
+        databaseFeatures.google_visual_web_detection_usage_monthly === true,
       database_features: databaseFeatures,
       social_publishers: await socialPublisherReadinessWithStoredCredentials(env),
       instagram_oauth: instagramOAuth,
