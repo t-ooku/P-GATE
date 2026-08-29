@@ -1494,3 +1494,206 @@ jobs:
             tools/line-worker/ai-actress-expedite-*.json
           if-no-files-found: ignore
           retention-days: 30
+
+  catchup-ai-actress-daily-reel-20260828:
+    needs: [test, deploy]
+    if: >-
+      always() &&
+      needs.test.result == 'success' &&
+      needs.deploy.result == 'success' &&
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[catchup-ai-actress-daily-20260828]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: hoshilu-social-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify and enqueue only the missed August 28 daily actress pair
+        working-directory: tools/line-worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID}"
+          test "$(sha256sum public/social/hoshilu-ai-actress-daily-fri-v1.mp4 | cut -d' ' -f1)" = \
+            '2367256ef25f806dc636b61ee2651c302165d62f082060bf5af01f1243e3fbf6'
+          curl --fail-with-body --silent --show-error --retry 6 --retry-all-errors \
+            --retry-delay 5 --max-time 120 \
+            --output .ai-actress-catchup-production-friday.mp4 \
+            'https://hoshilu.app/social/hoshilu-ai-actress-daily-fri-v1.mp4'
+          test "$(sha256sum .ai-actress-catchup-production-friday.mp4 | cut -d' ' -f1)" = \
+            '2367256ef25f806dc636b61ee2651c302165d62f082060bf5af01f1243e3fbf6'
+          cmp public/social/hoshilu-ai-actress-daily-fri-v1.mp4 \
+            .ai-actress-catchup-production-friday.mp4
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json \
+            > ai-actress-catchup-recovery-before.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT asset_id,media_url,media_sha256,content_format,creative_policy,jst_publish_date,persona_id,persona_age,ai_actress_present,audio_confirmed,rights_confirmed,rights_ledger_id,qa_status,ai_generated,ai_disclosure_confirmed,approved_at FROM social_creative_assets WHERE asset_id='hoshilu_ai_actress_daily_fri_v1';" \
+            > ai-actress-catchup-asset.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,external_post_id,platform_job_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,last_error FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-28','hoshilu-ai-actress-daily-v1-instagram-2026-08-28') OR ((creative_policy='DAILY_AI_ACTRESS_22' OR campaign_id='hoshilu-ai-actress-daily-v1') AND jst_publish_date='2026-08-28') ORDER BY platform,post_id;" \
+            > .ai-actress-catchup-private-before.json
+          node scripts/verify-ai-actress-daily-catchup.mjs preflight \
+            ai-actress-catchup-asset.json .ai-actress-catchup-private-before.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const data = JSON.parse(fs.readFileSync('.ai-actress-catchup-private-before.json', 'utf8'));
+          const envelopes = Array.isArray(data) ? data : [data];
+          const rows = envelopes.flatMap((entry) => entry.results || entry.result?.results || []);
+          const safeRows = rows.map((row) => ({
+            ...row,
+            platform_job_id: row.platform_job_id ? 'PRESENT_REDACTED' : '',
+            last_error: row.last_error ? 'PUBLISHER_ERROR_REDACTED' : ''
+          }));
+          fs.writeFileSync('ai-actress-catchup-before.json', JSON.stringify({ results: safeRows }));
+          NODE
+          cat > ai-actress-catchup-insert.sql <<'SQL'
+          INSERT INTO social_post_queue
+            (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,
+             status,affiliate,approved_at,created_at,updated_at,creative_asset_id,
+             content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id)
+          SELECT
+            'hoshilu-ai-actress-daily-v1-x-2026-08-28','X','hoshilu-ai-actress-daily-v1',
+            'hoshilu-ai-actress-daily-2026-08-28',
+            '金曜日のHOSHILU BUZZをチェック。気になるランキングから、週末に欲しい商品を探そう。 ※この動画はAI生成・AI加工映像です。 #Qoo10 #SHEIN #AI生成',
+            'https://hoshilu.app/buzz?utm_source=x&utm_medium=social&utm_campaign=hoshilu-ai-actress-daily-v1&utm_content=hoshilu-ai-actress-daily-2026-08-28',
+            a.media_url,'2000-01-01T00:00:00.000Z','APPROVED',0,
+            strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now'),
+            strftime('%Y-%m-%dT%H:%M:%fZ','now'),a.asset_id,'REEL','DAILY_AI_ACTRESS_22',
+            '2026-08-28',1,'hoshilu-ai-actress-daily-2026-08-28'
+          FROM social_creative_assets a
+          WHERE a.asset_id='hoshilu_ai_actress_daily_fri_v1'
+            AND a.media_url='https://hoshilu.app/social/hoshilu-ai-actress-daily-fri-v1.mp4'
+            AND a.media_sha256='2367256ef25f806dc636b61ee2651c302165d62f082060bf5af01f1243e3fbf6'
+            AND a.content_format='REEL' AND a.creative_policy='DAILY_AI_ACTRESS_22'
+            AND a.persona_id='hoshilu-approved-model-reference-v2' AND a.persona_age=22
+            AND a.ai_actress_present=1 AND a.audio_confirmed=1 AND a.rights_confirmed=1
+            AND a.rights_ledger_id='hoshilu_ai_actress_daily_fri_v1'
+            AND a.qa_status='PASSED' AND a.ai_generated=1 AND a.ai_disclosure_confirmed=1
+            AND strftime('%s',a.approved_at) IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM social_post_queue q
+              WHERE (q.creative_policy='DAILY_AI_ACTRESS_22'
+                  OR q.campaign_id='hoshilu-ai-actress-daily-v1')
+                AND q.jst_publish_date='2026-08-28'
+                AND q.post_id NOT IN (
+                  'hoshilu-ai-actress-daily-v1-x-2026-08-28',
+                  'hoshilu-ai-actress-daily-v1-instagram-2026-08-28'))
+          UNION ALL
+          SELECT
+            'hoshilu-ai-actress-daily-v1-instagram-2026-08-28','INSTAGRAM',
+            'hoshilu-ai-actress-daily-v1','hoshilu-ai-actress-daily-2026-08-28',
+            '金曜日のHOSHILU BUZZをチェック。気になるランキングから、週末に欲しい商品を探そう。 ※この動画はAI生成・AI加工映像です。 気になった商品をコメントで教えてね。 #HOSHILU #Qoo10 #SHEIN #購入品紹介 #AI生成',
+            'https://hoshilu.app/buzz?utm_source=instagram&utm_medium=social&utm_campaign=hoshilu-ai-actress-daily-v1&utm_content=hoshilu-ai-actress-daily-2026-08-28',
+            a.media_url,'2000-01-01T00:00:00.000Z','APPROVED',0,
+            strftime('%Y-%m-%dT%H:%M:%fZ','now'),strftime('%Y-%m-%dT%H:%M:%fZ','now'),
+            strftime('%Y-%m-%dT%H:%M:%fZ','now'),a.asset_id,'REEL','DAILY_AI_ACTRESS_22',
+            '2026-08-28',1,'hoshilu-ai-actress-daily-2026-08-28'
+          FROM social_creative_assets a
+          WHERE a.asset_id='hoshilu_ai_actress_daily_fri_v1'
+            AND a.media_url='https://hoshilu.app/social/hoshilu-ai-actress-daily-fri-v1.mp4'
+            AND a.media_sha256='2367256ef25f806dc636b61ee2651c302165d62f082060bf5af01f1243e3fbf6'
+            AND a.content_format='REEL' AND a.creative_policy='DAILY_AI_ACTRESS_22'
+            AND a.persona_id='hoshilu-approved-model-reference-v2' AND a.persona_age=22
+            AND a.ai_actress_present=1 AND a.audio_confirmed=1 AND a.rights_confirmed=1
+            AND a.rights_ledger_id='hoshilu_ai_actress_daily_fri_v1'
+            AND a.qa_status='PASSED' AND a.ai_generated=1 AND a.ai_disclosure_confirmed=1
+            AND strftime('%s',a.approved_at) IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM social_post_queue q
+              WHERE (q.creative_policy='DAILY_AI_ACTRESS_22'
+                  OR q.campaign_id='hoshilu-ai-actress-daily-v1')
+                AND q.jst_publish_date='2026-08-28'
+                AND q.post_id NOT IN (
+                  'hoshilu-ai-actress-daily-v1-x-2026-08-28',
+                  'hoshilu-ai-actress-daily-v1-instagram-2026-08-28'))
+          ON CONFLICT(post_id) DO NOTHING;
+
+          UPDATE social_post_queue
+          SET scheduled_at='2000-01-01T00:00:00.000Z',
+              approved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),
+              updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')
+          WHERE status='APPROVED' AND external_post_id='' AND published_at=''
+            AND last_error='' AND platform_job_id=''
+            AND campaign_id='hoshilu-ai-actress-daily-v1'
+            AND content_id='hoshilu-ai-actress-daily-2026-08-28'
+            AND media_url='https://hoshilu.app/social/hoshilu-ai-actress-daily-fri-v1.mp4'
+            AND creative_asset_id='hoshilu_ai_actress_daily_fri_v1'
+            AND content_format='REEL' AND creative_policy='DAILY_AI_ACTRESS_22'
+            AND jst_publish_date='2026-08-28' AND ai_generated=1
+            AND crosspost_group_id='hoshilu-ai-actress-daily-2026-08-28'
+            AND (
+              (post_id='hoshilu-ai-actress-daily-v1-x-2026-08-28' AND platform='X'
+                AND caption='金曜日のHOSHILU BUZZをチェック。気になるランキングから、週末に欲しい商品を探そう。 ※この動画はAI生成・AI加工映像です。 #Qoo10 #SHEIN #AI生成'
+                AND link='https://hoshilu.app/buzz?utm_source=x&utm_medium=social&utm_campaign=hoshilu-ai-actress-daily-v1&utm_content=hoshilu-ai-actress-daily-2026-08-28')
+              OR
+              (post_id='hoshilu-ai-actress-daily-v1-instagram-2026-08-28'
+                AND platform='INSTAGRAM'
+                AND caption='金曜日のHOSHILU BUZZをチェック。気になるランキングから、週末に欲しい商品を探そう。 ※この動画はAI生成・AI加工映像です。 気になった商品をコメントで教えてね。 #HOSHILU #Qoo10 #SHEIN #購入品紹介 #AI生成'
+                AND link='https://hoshilu.app/buzz?utm_source=instagram&utm_medium=social&utm_campaign=hoshilu-ai-actress-daily-v1&utm_content=hoshilu-ai-actress-daily-2026-08-28'));
+          SQL
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --yes \
+            --file ai-actress-catchup-insert.sql
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,external_post_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,CASE WHEN last_error='' THEN '' WHEN status IN ('APPROVED','PUBLISHING') THEN 'TRANSIENT_RETRY_REDACTED' ELSE 'PUBLISHER_ERROR_REDACTED' END AS error_code FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-28','hoshilu-ai-actress-daily-v1-instagram-2026-08-28') ORDER BY platform;" \
+            > ai-actress-catchup-queued.json
+          node scripts/verify-ai-actress-daily-catchup.mjs queue \
+            ai-actress-catchup-queued.json queued
+      - name: Wait for both catch-up publishers
+        working-directory: tools/line-worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+              "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,external_post_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,CASE WHEN last_error='' THEN '' WHEN status IN ('APPROVED','PUBLISHING') THEN 'TRANSIENT_RETRY_REDACTED' ELSE 'PUBLISHER_ERROR_REDACTED' END AS error_code FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-28','hoshilu-ai-actress-daily-v1-instagram-2026-08-28') ORDER BY platform;" \
+              > ai-actress-catchup-final.json
+            if node scripts/verify-ai-actress-daily-catchup.mjs queue \
+              ai-actress-catchup-final.json published; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 60 ]; then sleep 30; fi
+          done
+          echo '::error::Both August 28 AI actress catch-up posts were not published within 30 minutes'
+          exit 1
+      - name: Verify both catch-up public URLs
+        working-directory: tools/line-worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            curl --fail-with-body --silent --show-error \
+              'https://hoshilu.app/api/social/posts/hoshilu-ai-actress-daily-v1-x-2026-08-28' \
+              > ai-actress-catchup-x-public.json || true
+            curl --fail-with-body --silent --show-error \
+              'https://hoshilu.app/api/social/posts/hoshilu-ai-actress-daily-v1-instagram-2026-08-28' \
+              > ai-actress-catchup-instagram-public.json || true
+            if node scripts/verify-ai-actress-daily-catchup.mjs public \
+              ai-actress-catchup-x-public.json ai-actress-catchup-instagram-public.json \
+              ai-actress-catchup-final.json; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 12 ]; then sleep 10; fi
+          done
+          echo '::error::Catch-up post IDs exist, but both public URLs were not verified'
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ai-actress-catchup-${{ github.run_id }}
+          path: |
+            tools/line-worker/ai-actress-catchup-*.json
+          if-no-files-found: ignore
+          retention-days: 30
