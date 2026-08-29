@@ -63,6 +63,6 @@ test('記事と検索画面は共通ID、Beacon拒否時fallback、SEO文脈の�
   }
   assert.match(growth, /marketplace_fallback_click/);
   assert.match(growth, /BROWSER_EMERGENCY_FALLBACK/);
-  assert.match(worker, /hoshilu-shell-v401/);
+  assert.match(worker, /hoshilu-shell-v402/);
   assert.match(worker, /growth-identity\.mjs/);
 });

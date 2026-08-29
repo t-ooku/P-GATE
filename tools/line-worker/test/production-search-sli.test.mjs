@@ -131,6 +131,26 @@ test('one non-transient primary failure alerts and unknown codes fail closed', (
   );
 });
 
+test('search-input and visual fallback telemetry is valid advisory degradation', () => {
+  const occurred_at = new Date().toISOString();
+  const input = {
+    component:'search_input_analysis', provider:'GEMINI', code:'SEARCH_INPUT_ANALYSIS_FAILED',
+    request_id:'e309d1ad-2a34-4f2f-913b-47fccdbbe245', occurred_at
+  };
+  const visual = {
+    component:'visual_web_detection', provider:'GOOGLE_CLOUD_VISION',
+    code:'GOOGLE_VISUAL_WEB_DETECTION_FAILED',
+    request_id:'e309d1ad-2a34-4f2f-913b-47fccdbbe246', occurred_at
+  };
+  const result = evaluateSearchProviderDegradation([input, visual, visual]);
+  assert.equal(result.search_input_analysis_degraded_requests, 1);
+  assert.equal(result.visual_web_detection_degraded_requests, 1);
+  assert.throws(
+    () => evaluateSearchProviderDegradation([{ ...visual, provider:'GEMINI' }]),
+    /SEARCH_PROVIDER_DEGRADATION_INVALID/u
+  );
+});
+
 test('provider degradation flows through the existing SLI failure and Issue lifecycle', async () => {
   const providerRows = [{
     component:'ai_chat_all', provider:'ALL', code:'AI_ALL_PROVIDERS_FAILED',

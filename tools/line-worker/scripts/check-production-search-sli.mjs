@@ -146,7 +146,8 @@ const RELIABILITY_HEARTBEAT_STARTED_MAX_AGE_MS = 20 * 60000;
 const RELIABILITY_BOOTSTRAP_DEADLINE_MS = Date.parse('2026-08-13T12:30:00.000Z');
 const SEARCH_PROVIDER_COMPONENTS = new Set([
   'ai_chat_primary', 'ai_chat_all',
-  'query_structurer_primary', 'query_structurer_all'
+  'query_structurer_primary', 'query_structurer_all',
+  'search_input_analysis', 'visual_web_detection'
 ]);
 const SEARCH_PROVIDER_TRANSIENT_CODES = new Set([
   'AI_PROVIDER_TIMEOUT',
@@ -163,6 +164,15 @@ const SEARCH_PROVIDER_PRIMARY_CODES = new Set([
 const SEARCH_PROVIDER_ALL_CODES = new Set([
   'AI_PROVIDERS_NOT_CONFIGURED', 'AI_ALL_PROVIDERS_FAILED'
 ]);
+const SEARCH_INPUT_ANALYSIS_DEGRADATION_CODES = new Set([
+  'SEARCH_INPUT_ANALYSIS_FAILED', 'SEARCH_INPUT_ANALYSIS_NOT_CONFIGURED',
+  'SEARCH_INPUT_ANALYSIS_EMPTY', 'SEARCH_INPUT_ANALYSIS_NO_PUBLIC_EVIDENCE'
+]);
+const VISUAL_WEB_DETECTION_DEGRADATION_CODES = new Set([
+  'GOOGLE_VISUAL_WEB_DETECTION_FAILED',
+  'GOOGLE_VISUAL_WEB_DETECTION_MONTHLY_LIMIT_REACHED',
+  'GOOGLE_VISUAL_WEB_DETECTION_BUDGET_GUARD_UNAVAILABLE'
+]);
 
 export function evaluateSearchProviderDegradation(rows = []) {
   const normalized = [];
@@ -175,10 +185,16 @@ export function evaluateSearchProviderDegradation(rows = []) {
     const timestamp = Date.parse(occurredAt);
     const providerMatchesComponent = component.endsWith('_primary')
       ? provider === 'GEMINI'
-      : component.endsWith('_all') && provider === 'ALL';
+      : component.endsWith('_all') ? provider === 'ALL'
+        : component === 'search_input_analysis' ? provider === 'GEMINI'
+          : component === 'visual_web_detection' && provider === 'GOOGLE_CLOUD_VISION';
     const codeMatchesComponent = component.endsWith('_primary')
       ? SEARCH_PROVIDER_PRIMARY_CODES.has(code)
-      : component.endsWith('_all') && SEARCH_PROVIDER_ALL_CODES.has(code);
+      : component.endsWith('_all') ? SEARCH_PROVIDER_ALL_CODES.has(code)
+        : component === 'search_input_analysis'
+          ? SEARCH_INPUT_ANALYSIS_DEGRADATION_CODES.has(code)
+          : component === 'visual_web_detection'
+            && VISUAL_WEB_DETECTION_DEGRADATION_CODES.has(code);
     if (!SEARCH_PROVIDER_COMPONENTS.has(component) || !providerMatchesComponent
       || !codeMatchesComponent
       || !/^[a-f0-9-]{20,64}$/u.test(requestId) || !Number.isFinite(timestamp)) {
@@ -195,7 +211,15 @@ export function evaluateSearchProviderDegradation(rows = []) {
     ['ai_chat_primary', new Map()],
     ['query_structurer_primary', new Map()]
   ]);
+  const advisoryRequests = new Map([
+    ['search_input_analysis', new Map()],
+    ['visual_web_detection', new Map()]
+  ]);
   for (const item of normalized) {
+    if (advisoryRequests.has(item.component)) {
+      advisoryRequests.get(item.component).set(item.request_id, item);
+      continue;
+    }
     if (!SEARCH_PROVIDER_TRANSIENT_CODES.has(item.code)) {
       throw new Error(`SEARCH_PROVIDER_PRIMARY_NON_TRANSIENT:${item.component.toUpperCase()}:${item.code}:${item.request_id}`);
     }
@@ -212,7 +236,9 @@ export function evaluateSearchProviderDegradation(rows = []) {
   return {
     all_provider_failures: 0,
     ai_chat_primary_transient_requests: primaryRequests.get('ai_chat_primary').size,
-    query_structurer_primary_transient_requests: primaryRequests.get('query_structurer_primary').size
+    query_structurer_primary_transient_requests: primaryRequests.get('query_structurer_primary').size,
+    search_input_analysis_degraded_requests: advisoryRequests.get('search_input_analysis').size,
+    visual_web_detection_degraded_requests: advisoryRequests.get('visual_web_detection').size
   };
 }
 
@@ -692,7 +718,7 @@ async function main() {
       `- hard failed: ${result.hard_failed}`,
       `- backend failed: ${result.backend_failed}`,
       `- degraded rate: ${(result.degraded_rate * 100).toFixed(1)}%`, ''
-      ,`Provider degradation: AI chat primary transient=${result.provider_degradation.ai_chat_primary_transient_requests}, query structurer primary transient=${result.provider_degradation.query_structurer_primary_transient_requests}, all-provider=0`, ''
+      ,`Provider degradation: AI chat primary transient=${result.provider_degradation.ai_chat_primary_transient_requests}, query structurer primary transient=${result.provider_degradation.query_structurer_primary_transient_requests}, search input advisory=${result.provider_degradation.search_input_analysis_degraded_requests}, visual web advisory=${result.provider_degradation.visual_web_detection_degraded_requests}, all-provider=0`, ''
       ,`Client degradation: ${result.client_degradation.length ? result.client_degradation.map((item) => `${item.component}=${item.code} request_id=${item.request_id || 'none'} at ${item.occurred_at || 'unknown'}`).join(', ') : 'none recorded'}`, ''
       ,`Six-hour quality window: ${result.slo.finished} finished / ${result.slo.degraded} degraded (${(result.slo.degraded_rate * 100).toFixed(1)}%)`, ''
       ,`Thirty-day continuity: ${result.monthly.finished} finished / ${result.monthly.unavailable} unavailable (${(result.monthly.unavailable_rate * 100).toFixed(3)}%)`, ''

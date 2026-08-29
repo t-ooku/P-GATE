@@ -42,7 +42,9 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /await recoverTurnstileWidget\(\)/);
   assert.match(app, /x-request-id/);
   assert.match(app, /hoshilu:search-degraded/);
-  assert.match(app, /const requestTimeoutMs=hasSupplementalInput\?30000:KNOWLEDGE_HTTP_TIMEOUT_MS/);
+  assert.match(app, /const KNOWLEDGE_HTTP_TIMEOUT_MS = 25000/);
+  assert.match(app, /const SUPPLEMENTAL_KNOWLEDGE_HTTP_TIMEOUT_MS = 45000/);
+  assert.match(app, /const requestTimeoutMs=hasSupplementalInput\?SUPPLEMENTAL_KNOWLEDGE_HTTP_TIMEOUT_MS:KNOWLEDGE_HTTP_TIMEOUT_MS/);
   assert.match(app, /timedAbortController\(Math\.min\(requestTimeoutMs,remainingBeforeFetch\)\)/);
   assert.match(app, /activeKnowledgeFetch\?\.abort\(\)/);
   assert.match(app, /SEARCH_SUPERSEDED/);
@@ -57,7 +59,8 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /hoshilu:search-execution-started/);
   assert.match(app, /Math\.min\(15000,Number\(options\.tokenCallbackTimeoutMs\)\|\|15000\)/);
   assert.match(app, /degraded:true/);
-  assert.match(app, /const maxAttempts=Math\.max\(1,Math\.min\(2,Number\(options\.maxAttempts\)\|\|2\)\)/);
+  assert.match(app, /const requestedMaxAttempts=Math\.max\(1,Math\.min\(2,Number\(options\.maxAttempts\)\|\|2\)\)/);
+  assert.match(app, /const maxAttempts=submittedImage\?1:requestedMaxAttempts/);
   assert.match(app, /Math\.floor\(\(remainingBeforeToken-1000\)\/2\)/);
   assert.match(app, /waitForTurnstileToken\(tokenWaitBudget\)/);
 });

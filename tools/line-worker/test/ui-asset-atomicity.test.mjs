@@ -8,7 +8,7 @@ const read = (name) => readFile(new URL(name, publicRoot), 'utf8');
 test('versioned UI assets are exact copies of their canonical files', async () => {
   const [app, versionedApp, layoutCss, versionedLayoutCss] = await Promise.all([
     read('app.js'),
-    read('assets-v143/app.js'),
+    read('assets-v144/app.js'),
     read('ai-search-layout-fix.css'),
     read('assets-v126/ai-search-layout-fix.css')
   ]);
@@ -21,18 +21,18 @@ test('index loads the atomic versioned app and layout assets', async () => {
   const html = await read('index.html');
 
   assert.ok(html.includes('href="/assets-v126/ai-search-layout-fix.css?v=126"'));
-  assert.ok(html.includes('src="/assets-v143/app.js?v=143"'));
+  assert.ok(html.includes('src="/assets-v144/app.js?v=144"'));
   assert.equal(html.includes('href="/ai-search-layout-fix.css?v=126"'), false);
-  assert.equal(html.includes('src="/app.js?v=143"'), false);
+  assert.equal(html.includes('src="/app.js?v=144"'), false);
 });
 
 test('service worker precaches canonical and versioned UI assets', async () => {
   const worker = await read('service-worker.js');
 
-  assert.match(worker, /hoshilu-shell-v401/);
+  assert.match(worker, /hoshilu-shell-v402/);
   for (const asset of [
     '/app.js',
-    '/assets-v143/app.js',
+    '/assets-v144/app.js',
     '/continuous-search.css',
     '/ai-search-layout-fix.css',
     '/assets-v126/ai-search-layout-fix.css'
@@ -43,7 +43,7 @@ test('service worker precaches canonical and versioned UI assets', async () => {
 
 test('versioned app imports only existing root modules and the offline shell caches them', async () => {
   const [versionedApp, worker] = await Promise.all([
-    read('assets-v143/app.js'),
+    read('assets-v144/app.js'),
     read('service-worker.js')
   ]);
   const imports = [...versionedApp.matchAll(/^import\s+[^;]+\s+from\s+'([^']+)'/gmu)]
@@ -51,7 +51,7 @@ test('versioned app imports only existing root modules and the offline shell cac
   assert.ok(imports.length >= 8, 'app dependency imports were not detected');
   for (const specifier of imports) {
     assert.ok(specifier.startsWith('/'), `${specifier} must resolve from the public root`);
-    assert.doesNotMatch(specifier, /^\/assets-v143\//u);
+    assert.doesNotMatch(specifier, /^\/assets-v144\//u);
     await assert.doesNotReject(() => read(specifier.slice(1)), `${specifier} is not deployed`);
     assert.ok(worker.includes(`'${specifier}'`), `${specifier} must be available offline`);
   }
