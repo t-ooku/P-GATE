@@ -590,7 +590,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v399/);
+  assert.match(serviceWorker, /hoshilu-shell-v400/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1539,7 +1539,7 @@ test('検索成功時、確認済み商品の直後に13モール横断のクイ
   assert.match(app, /#marketplaceFallback'\)\?\.scrollIntoView/);
 });
 
-test('セール欄の補足文は短文化された若者向けコピーになっている', async () => {
+test('セール欄は指定コピーだけを残して補足文を削除している', async () => {
   const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   const saleCenter = fs.readFileSync(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
   // 2026-08-19 大隆さん指示「セール通知機能の欄の補足文章の文字数が多すぎる。
@@ -1548,7 +1548,10 @@ test('セール欄の補足文は短文化された若者向けコピーにな�
     assert.doesNotMatch(source, /本当に安い購入先/);
     assert.doesNotMatch(source, /おすすめ記事や一般ニュースは通知しません/);
   }
-  assert.match(html, /13モールのセール、始まる前に通知。/);
-  assert.match(html, /届くのはセール通知だけ。開始前と開始時のみ。/);
-  assert.match(saleCenter, /13モールのセール、始まる前に通知。/);
+  assert.match(html, /お気に入りのショップモールだけ、セール通知が届くと/);
+  assert.match(saleCenter, /お気に入りのショップモールだけ、セール通知が届くと/);
+  assert.doesNotMatch(html, /13モールのセール、始まる前に通知。/);
+  assert.doesNotMatch(html, /届くのはセール通知だけ。開始前と開始時のみ。/);
+  assert.doesNotMatch(saleCenter, /13モールのセール、始まる前に通知。/);
+  assert.doesNotMatch(saleCenter, /届くのはセール通知だけ。開始前と開始時のみ。/);
 });
