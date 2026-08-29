@@ -531,3 +531,54 @@ test('中身が過半重複する棚は2つ並べない', async () => {
     .filter((id) => BUZZ_SHELF_CATEGORY_IDS.includes(id));
   assert.equal(genreShelfIds.length, 1, `duplicated shelves should collapse to one, got ${genreShelfIds.join(',')}`);
 });
+
+test('急上昇と商品がちょうど半数重複するジャンル棚は並べない', async () => {
+  const now = Date.parse('2026-08-29T12:00:00Z');
+  const genreShelves = await buildGenreShelves(env, rankingFetcher(), now);
+  const target = genreShelves.find((shelf) => shelf.shelf_id === 'wireless_earphones');
+  assert.ok(target);
+  assert.equal(target.items.length, 6);
+  const capturedAt = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+  const snapshot = {
+    shelf_id: target.shelf_id,
+    captured_at: capturedAt,
+    payload_json: JSON.stringify(target.all_items.map((item, index) => ({
+      rank: index < 3 ? item.rank + 3 : item.rank,
+      name: item.name,
+      product_url: item.product_url
+    })))
+  };
+  const result = await buzzShelfResult({ ...env, PRODUCT_DB: d1Stub({ snapshots: [snapshot] }) }, rankingFetcher(), now);
+  const rising = result.shelves.find((shelf) => shelf.shelf_id === 'rising');
+  assert.ok(rising);
+  assert.equal(rising.items.length, 3);
+  const targetUrls = new Set(target.items.map((item) => item.product_url));
+  assert.equal(rising.items.filter((item) => targetUrls.has(item.product_url)).length, 3);
+  assert.deepEqual(rising.items.map((item) => item.source_rank), [1, 2, 3]);
+  assert.ok(rising.items.every((item) => /^\d+位→\d+位\(24時間\)$/u.test(item.movement)));
+  assert.equal(result.shelves.some((shelf) => shelf.shelf_id === target.shelf_id), false);
+});
+
+test('急上昇との商品重複が半数未満ならジャンル棚を残す', async () => {
+  const now = Date.parse('2026-08-29T12:00:00Z');
+  const genreShelves = await buildGenreShelves(env, rankingFetcher(), now);
+  const target = genreShelves.find((shelf) => shelf.shelf_id === 'wireless_earphones');
+  assert.ok(target);
+  assert.equal(target.items.length, 6);
+  const capturedAt = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+  const snapshot = {
+    shelf_id: target.shelf_id,
+    captured_at: capturedAt,
+    payload_json: JSON.stringify(target.all_items.map((item, index) => ({
+      rank: index < 2 ? item.rank + 3 : item.rank,
+      name: item.name,
+      product_url: item.product_url
+    })))
+  };
+  const result = await buzzShelfResult({ ...env, PRODUCT_DB: d1Stub({ snapshots: [snapshot] }) }, rankingFetcher(), now);
+  const rising = result.shelves.find((shelf) => shelf.shelf_id === 'rising');
+  assert.ok(rising);
+  const targetUrls = new Set(target.items.map((item) => item.product_url));
+  assert.equal(rising.items.filter((item) => targetUrls.has(item.product_url)).length, 2);
+  assert.ok(result.shelves.some((shelf) => shelf.shelf_id === target.shelf_id));
+});
