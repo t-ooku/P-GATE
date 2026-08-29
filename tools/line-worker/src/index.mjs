@@ -117,7 +117,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // 各リンクの mode を載せる(signedMarketplaceSearchLinks参照)。
 // marketplace-search-mode.mjs がここが唯一の判定元(v4.3のAI最安比較
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
-const RELEASE = '1.21.0';
+const RELEASE = '1.22.0';
 const CANONICAL_HOST = 'hoshilu.app';
 const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, '/for-sellers']);
 const DOCUMENT_SECURITY_HEADERS = Object.freeze({
@@ -3024,6 +3024,24 @@ export default {
       ctx.waitUntil(runSocialAutopilotCycle(env, scheduledAt));
       return;
     }
+    // One trigger alternates two isolated invocation types. Minutes 5/20/35/50
+    // scan INSIGHT; minutes 1/16/31/46 deliver notifications. They never share
+    // a Worker invocation, but one composite expression preserves account-level
+    // Cron Trigger headroom on both Free and Paid plans.
+    if (controller.cron === '1,5,16,20,31,35,46,50 * * * *') {
+      if ([5, 20, 35, 50].includes(scheduledAt.getUTCMinutes())) {
+        ctx.waitUntil(runInsightScan(env, scheduledAt.toISOString()));
+      } else {
+        // Keep WEB and LINE/email sequential. On conservative Free defaults
+        // their combined worst case remains below both invocation limits.
+        ctx.waitUntil((async () => {
+          const web = await deliverDueWebNotifications(env, scheduledAt);
+          const member = await deliverDueMemberNotifications(env, scheduledAt);
+          return { web, member };
+        })());
+      }
+      return;
+    }
     ctx.waitUntil(runReliabilityControlledCron(
       env,
       'cloudflare_regular',
@@ -3043,10 +3061,8 @@ export default {
         // to R2 and stops at REVIEW_REQUIRED. It never bypasses the existing APPROVED
         // publication gate, and a failure cannot block either Instagram or X.
         runRunwayGenerationCycle(env, scheduledAt),
-        queueBuzzThemeNotifications(env, scheduledAt).then(() => Promise.all([
-          deliverDueWebNotifications(env, scheduledAt),
-          deliverDueMemberNotifications(env, scheduledAt)
-        ])),
+        // Delivery runs one and three minutes later in isolated invocations.
+        queueBuzzThemeNotifications(env, scheduledAt),
         runMarketplaceContentCycle(env, scheduledAt),
         runSpApiScheduledSync(env, scheduledAt),
         purgeAdminAuthRecords(env, scheduledAt),
@@ -3057,11 +3073,6 @@ export default {
         // ここで別途refreshKpiSummary(env)を並列実行すると、同じkpi_summaryテーブルへの
         // DELETE+INSERTが競合しPRIMARY KEY衝突を起こすため呼ばない。
         refreshAnonymousBenchmark(env),
-        // HOSHILU INSIGHT v1.0 (2026-08-08 cron配線): 保存した検索条件の新着
-        // スキャン。D1索引検索のみでAI呼び出しは発生しないため、mywatchの
-        // 価格監視(まだ存在しない外部パイプライン頼み)と違い自己完結して
-        // 定期実行できる。1回あたりの件数上限は insight-routes.mjs 側で管理。
-        runInsightScan(env, scheduledAt.toISOString()),
         // APIで確認できた価格だけを購入希望額と比較する。AI推定価格は使わない。
         runTargetPriceScan(env, scheduledAt.toISOString()),
         // HOSHILU BUZZ「急上昇」用の公式ランキング順位スナップショット。

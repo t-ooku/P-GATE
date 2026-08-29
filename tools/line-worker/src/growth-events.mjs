@@ -50,6 +50,7 @@ const EVENTS = new Set([
   'price_comparison_opened',
   'returning_visit',
   'wish_saved',
+  'continuous_search_saved',
   'marketplace_click',
   'marketplace_fallback_click',
   'share_started',
@@ -198,6 +199,27 @@ export async function recordSearchOperationalFailure(env, {
       VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
     ).bind(...values.slice(0, 10)).run();
   }
+  return true;
+}
+
+// Server-owned conversion: only an authenticated member-wish state change may
+// call this helper. Every dimension is fixed and no member ID, saved query,
+// URL, image, visitor ID or session ID is stored.
+export async function recordContinuousSearchEnabled(env, { locale = 'JA', deduplicationKey = '' } = {}) {
+  if (!env?.PRODUCT_DB || !deduplicationKey) return false;
+  const safeLocale = LOCALES.has(String(locale || '').toUpperCase())
+    ? String(locale).toUpperCase() : 'JA';
+  const digest = new Uint8Array(await crypto.subtle.digest(
+    'SHA-256', new TextEncoder().encode(`hoshilu-continuous-search:${deduplicationKey}`)
+  ));
+  const eventId = `continuous_search_enabled:${Array.from(
+    digest, byte => byte.toString(16).padStart(2, '0')
+  ).join('')}`;
+  await env.PRODUCT_DB.prepare(
+    `INSERT OR IGNORE INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+    VALUES(?1,'continuous_search_enabled',?2,'worker','member_wish','authenticated_enable','','',?3,'UNATTRIBUTED')`
+  ).bind(eventId, safeLocale, new Date().toISOString()).run();
   return true;
 }
 

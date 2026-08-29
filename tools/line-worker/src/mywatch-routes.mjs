@@ -71,16 +71,35 @@ async function enqueue(request, env) {
 // は既に sale-center.mjs/#saleRail が marketplace_sale_events から独立して
 // 表示しているため、AIウォッチ通知パネル(このAPI)からは除外し、実際に商品を
 // 指す個別イベントだけを返す。
+function safeNotificationResultUrl(row) {
+  if (String(row?.event_type || '') !== 'INSIGHT_NEW_MATCH') return '';
+  const wishId = String(row?.wish_id || '');
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(wishId)) return '';
+  const expected = `/?search_watch=${encodeURIComponent(wishId)}#hoshiluSearch`;
+  return String(row?.result_url || '') === expected ? expected : '';
+}
+
 async function list(request, env, member) {
-  const result = await env.PRODUCT_DB.prepare(
+  const select = (resultUrlColumn) => env.PRODUCT_DB.prepare(
     `SELECT n.notification_id,n.wish_id,n.event_type,n.title,n.body,n.status,
-      n.delivered_at,n.read_at,n.created_at,n.asin,n.marketplace,n.image_url
+      n.delivered_at,n.read_at,n.created_at,n.asin,n.marketplace,n.image_url,${resultUrlColumn}
     FROM mywatch_notifications n
     WHERE n.member_id=?1 AND n.status='DELIVERED' AND n.dismissed_at IS NULL
+      AND n.channel IN ('WEB','APP')
       AND n.wish_id NOT IN ('MARKETPLACE_SALES','AI_WATCH_TEST')
     ORDER BY n.created_at DESC LIMIT 50`
   ).bind(member.id).all();
-  return Response.json({ ok: true, notifications: result?.results || [] }, {
+  let result;
+  try {
+    result = await select('n.result_url');
+  } catch (error) {
+    if (!/no such column.*result_url|has no column named result_url/iu.test(String(error?.message || error))) throw error;
+    result = await select("'' AS result_url");
+  }
+  const notifications = (result?.results || []).map((row) => ({
+    ...row, result_url: safeNotificationResultUrl(row)
+  }));
+  return Response.json({ ok: true, notifications }, {
     headers: { 'cache-control': 'no-store' }
   });
 }
@@ -201,22 +220,72 @@ async function deleteTestNotifications(request, env, member) {
   return Response.json({ ok: true, deleted: ids.length });
 }
 
-export async function deliverDueWebNotifications(env, now = new Date()) {
+export async function deliverDueWebNotifications(env, _scheduledTime = new Date(), wallClock = () => new Date()) {
   if (!env.PRODUCT_DB) return { delivered: 0 };
-  const occurredAt = new Date(now).toISOString();
-  const due = await env.PRODUCT_DB.prepare(
-    `SELECT notification_id,channel FROM mywatch_notifications
-    WHERE channel IN ('WEB','APP') AND status='PENDING' AND next_attempt_at<=?1
-    ORDER BY next_attempt_at ASC LIMIT 100`
-  ).bind(occurredAt).all();
+  // A delayed cron keeps its scheduled timestamp. Delivery eligibility and
+  // audit timestamps use the actual invocation clock instead.
+  const occurredAt = new Date(wallClock()).toISOString();
+  // WEB and external delivery share one dedicated invocation. Its combined
+  // Free budget is fixed 3 + 3 * (9 WEB + 6 external) = 48 statements.
+  const limit = String(env.MEMBER_NOTIFICATION_D1_QUERY_TIER || '').toUpperCase() === 'PAID' ? 100 : 9;
+  const selectDue = (withExplicitOptIn) => env.PRODUCT_DB.prepare(
+    `SELECT n.notification_id,n.channel,n.event_type,w.notify_new_match,w.watch_frequency,
+      ${withExplicitOptIn ? 'w.insight_enabled_at' : 'NULL AS insight_enabled_at'}
+    FROM mywatch_notifications n
+    LEFT JOIN member_wishes w ON w.member_id=n.member_id AND w.wish_id=n.wish_id
+    WHERE n.channel IN ('WEB','APP') AND n.status='PENDING' AND n.next_attempt_at<=?1
+    ORDER BY n.next_attempt_at ASC LIMIT ?2`
+  ).bind(occurredAt, limit).all();
+  let due, hasExplicitOptInSchema = true;
+  try { due = await selectDue(true); }
+  catch (error) {
+    if (!/(?:no such column|has no column named).*insight_enabled_at/iu.test(String(error?.message || error))) throw error;
+    hasExplicitOptInSchema = false;
+    due = await selectDue(false);
+  }
   let delivered = 0;
   for (const row of due?.results || []) {
+    const insightDisabled = row.event_type === 'INSIGHT_NEW_MATCH' && (
+      Number(row.notify_new_match) !== 1
+      || String(row.watch_frequency || 'MUTED').toUpperCase() === 'MUTED'
+      || !String(row.insight_enabled_at || '').trim()
+    );
+    if (insightDisabled) {
+      const cancelled = await env.PRODUCT_DB.prepare(
+        `UPDATE mywatch_notifications SET status='CANCELLED',last_error_code='INSIGHT_DISABLED',updated_at=?2
+        WHERE notification_id=?1 AND channel IN ('WEB','APP') AND status='PENDING'`
+      ).bind(row.notification_id, occurredAt).run();
+      if (Number(cancelled?.meta?.changes || 0) === 1) await env.PRODUCT_DB.prepare(
+        `INSERT INTO mywatch_delivery_audit
+        (audit_id,notification_id,action,channel,result,error_code,occurred_at)
+        VALUES(?1,?2,'CANCEL',?3,'SUCCESS','INSIGHT_DISABLED',?4)`
+      ).bind(crypto.randomUUID(), row.notification_id, row.channel, occurredAt).run();
+      continue;
+    }
+    const activeGate = hasExplicitOptInSchema
+      ? `AND (event_type<>'INSIGHT_NEW_MATCH' OR EXISTS(
+          SELECT 1 FROM member_wishes w
+          WHERE w.member_id=mywatch_notifications.member_id AND w.wish_id=mywatch_notifications.wish_id
+            AND w.insight_enabled_at IS NOT NULL AND w.notify_new_match=1 AND w.watch_frequency<>'MUTED'
+        ))`
+      : "AND event_type<>'INSIGHT_NEW_MATCH'";
     const result = await env.PRODUCT_DB.prepare(
       `UPDATE mywatch_notifications
       SET status='DELIVERED',attempts=attempts+1,delivered_at=?2,updated_at=?2
-      WHERE notification_id=?1 AND channel IN ('WEB','APP') AND status='PENDING'`
+      WHERE notification_id=?1 AND channel IN ('WEB','APP') AND status='PENDING' ${activeGate}`
     ).bind(row.notification_id, occurredAt).run();
-    if (!Number(result?.meta?.changes || 0)) continue;
+    if (!Number(result?.meta?.changes || 0)) {
+      const cancelled = await env.PRODUCT_DB.prepare(
+        `UPDATE mywatch_notifications SET status='CANCELLED',last_error_code='INSIGHT_DISABLED',updated_at=?2
+        WHERE notification_id=?1 AND channel IN ('WEB','APP') AND status='PENDING' AND event_type='INSIGHT_NEW_MATCH'`
+      ).bind(row.notification_id, occurredAt).run();
+      if (Number(cancelled?.meta?.changes || 0) === 1) await env.PRODUCT_DB.prepare(
+        `INSERT INTO mywatch_delivery_audit
+        (audit_id,notification_id,action,channel,result,error_code,occurred_at)
+        VALUES(?1,?2,'CANCEL',?3,'SUCCESS','INSIGHT_DISABLED',?4)`
+      ).bind(crypto.randomUUID(), row.notification_id, row.channel, occurredAt).run();
+      continue;
+    }
     delivered += 1;
     await env.PRODUCT_DB.prepare(
       `INSERT INTO mywatch_delivery_audit

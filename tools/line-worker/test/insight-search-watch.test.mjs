@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  INSIGHT_EVENT_TYPE, buildConditionSnapshot, serializeConditionSnapshot, parseConditionSnapshot,
+  INSIGHT_EVENT_TYPE, INSIGHT_MAX_NEW_MATCHES_PER_WISH,
+  buildConditionSnapshot, serializeConditionSnapshot, parseConditionSnapshot,
   candidateIdentityKey, filterNewMatches, buildInsightMatchNotification, detectNewMatchesForWish
 } from '../src/insight-search-watch.mjs';
 
@@ -91,6 +92,18 @@ test('section17: 0件マッチは正常系であり、何も通知しない', ()
   });
   assert.equal(notification, null);
   assert.deepEqual(newMatches, []);
+});
+
+test('1条件の新着記録はD1予算保護のため上位5件までに制限する', () => {
+  const candidates = Array.from({ length: 8 }, (_, index) => ({
+    asin: `B000${index}`, marketplace: 'AMAZON_JP', display_name: `商品${index}`
+  }));
+  const { notification, newMatches } = detectNewMatchesForWish({
+    memberId: 'm1', wishId: 'w1', queryText: '商品', candidates, alreadyMatchedKeys: new Set()
+  });
+  assert.equal(INSIGHT_MAX_NEW_MATCHES_PER_WISH, 5);
+  assert.equal(newMatches.length, 5);
+  assert.equal(notification.match_count, 5);
 });
 
 test('section3: INSIGHTの通知種別はAIウォッチの4種別(値下げ/クーポン/再入荷/販売開始)と重複しない', () => {

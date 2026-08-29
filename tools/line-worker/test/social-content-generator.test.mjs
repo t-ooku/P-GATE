@@ -11,7 +11,7 @@ test('若者向け投稿は12種類の検索テーマを提供する', () => {
 // v4.2 項目14: SHOPLIST/MUSINSAは検索導線から外れ、最大モール数は13になった。
 // 「主要5モール」表記も、HOSHILUがまとめて比較できるAmazon・楽天市場・
 // 正式運用では楽天市場・Yahoo!ショッピングだけをAPI連携表示する。
-test('投稿はまとめて比較3モール・個別に探す最大13モール対応、コメント誘導、自然なハッシュタグを含む', () => {
+test('投稿はまとめて比較2モール＋個別11モール＝合計最大13モールと正確に案内する', () => {
   for (let index = 0; index < youthSearchThemes.length; index += 1) {
     const post = buildYouthSearchPost(index, ['X', 'INSTAGRAM', 'TIKTOK'][index % 3]);
     const url = new URL(post.link);
@@ -25,8 +25,9 @@ test('投稿はまとめて比較3モール・個別に探す最大13モール�
     assert.match(post.caption, /SHEIN/);
     assert.match(post.caption, /コメント/);
     assert.match(post.caption, /#HOSHILU/);
-    assert.match(post.caption, /楽天市場・Yahoo!ショッピングをまとめて比較/);
-    assert.match(post.caption, /最大13モール/);
+    assert.match(post.caption, /楽天市場・Yahoo!ショッピングの2モールをまとめて比較/);
+    assert.match(post.caption, /11モールを個別に検索。合計最大13モール/);
+    assert.doesNotMatch(post.caption, /個別(?:に探せる|にも探せます).*最大13モール/u);
     assert.match(post.caption, /#(?:Qoo10|SHEIN)/);
     assert.doesNotMatch(post.caption, /#ホシル|#あいまい検索|#13モール横断|#ほしっとく/u);
   }
@@ -48,11 +49,11 @@ test('Qoo10・SHEIN専用テーマは別キャンペーンで効果測定でき�
   });
 });
 
-test('投稿ローテーションは横断・あいまい検索・人気商品と定期リールを含む', () => {
+test('投稿ローテーションは横断・写真検索・見つかるまで探すと定期リールを含む', () => {
   const posts = youthSearchThemes.map((_, index) => buildYouthSearchPost(index, 'INSTAGRAM'));
   assert.deepEqual(
     new Set(posts.map((post) => post.campaign_pillar)),
-    new Set(['CROSS_MARKET', 'AMBIGUOUS_TREND', 'POPULAR_WISH'])
+    new Set(['CROSS_MARKET', 'AMBIGUOUS_TREND', 'CONTINUOUS_SEARCH'])
   );
   const reels = posts.filter((post) => post.content_format === 'REEL');
   assert.equal(reels.length, 4);
@@ -61,8 +62,11 @@ test('投稿ローテーションは横断・あいまい検索・人気商品�
     assert.equal(post.reel_script.scenes.length, 4);
     assert.match(post.reel_script.asset_policy, /権利確認済み/);
   });
-  assert.ok(posts.some((post) => /ほしっとく/.test(post.caption)));
-  assert.ok(posts.some((post) => /あいまい検索/.test(post.caption)));
+  assert.ok(posts.some((post) => /見つかるまで探す/.test(post.caption)));
+  assert.ok(posts.some((post) => /写真・保存画像・公開投稿URL/.test(post.caption)));
+  assert.ok(posts.some((post) => /HOSHILU対応形式に合う投稿単体URL/.test(post.caption)));
+  assert.ok(posts.every((post) => !/SNSで流行って|韓国で人気/.test(post.caption)));
+  assert.ok(posts.every((post) => !/100点/.test(post.caption)));
 });
 
 test('Qoo10・SHEIN強化キューは全件レビュー必須でリールを含む', async () => {

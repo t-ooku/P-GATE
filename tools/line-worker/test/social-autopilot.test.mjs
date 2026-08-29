@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import {
   buildSocialAutopilotPosts,
@@ -8,6 +9,7 @@ import {
   seedSocialAutopilotQueue,
   runSocialAutopilotCycle
 } from '../src/social-autopilot.mjs';
+import { xWeightedLength } from '../src/social-publisher.mjs';
 
 test('販促自動運用は14日先までの日次AI女優リールと補助投稿を計画する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-09T03:00:00.000Z'));
@@ -32,7 +34,13 @@ test('販促自動運用は14日先までの日次AI女優リールと補助投�
     assert.match(post.caption, /13モール|検索|商品|条件|価格/);
     assert.doesNotMatch(post.caption, /(?:9|10)モール/);
     assert.equal(new URL(post.link).hostname, 'hoshilu.app');
-    assert.match(new URL(post.link).searchParams.get('utm_campaign'), /13mall/);
+    const utmCampaign = new URL(post.link).searchParams.get('utm_campaign');
+    if (['howto-four-input-search', 'continuous-search', 'guide-search-screen', 'guide-continuous-search']
+      .includes(post.content_id)) {
+      assert.equal(utmCampaign, 'hoshilu-new-search-launch-20260829');
+    } else {
+      assert.match(utmCampaign, /13mall/);
+    }
   }
 });
 
@@ -108,7 +116,7 @@ test('日次AI女優の投稿文は写真・スクショ・投稿URL・BUZZ・�
     for (const topic of pair[0].caption_topics) topicDates.get(topic).add(date);
   }
   assert.deepEqual(new Set(daily.flatMap(post => post.caption_topics)), expectedTopics);
-  assert.equal(topicDates.get('PHOTO_SEARCH').size, 3);
+  assert.equal(topicDates.get('PHOTO_SEARCH').size, 4);
   assert.equal(topicDates.get('SCREENSHOT_SEARCH').size, 3);
   assert.equal(topicDates.get('SOCIAL_POST_URL_SEARCH').size, 3);
   assert.equal(topicDates.get('HOSHILU_BUZZ').size, 5);
@@ -124,22 +132,91 @@ test('日次AI女優の投稿文は写真・スクショ・投稿URL・BUZZ・�
   assert.equal(yearBoundary.filter(post => new URL(post.link).pathname === '/buzz').length, 10);
 });
 
-test('非BUZZ販促は写真・スクショ・公開投稿URL・一言検索を過剰表現なしで訴求する', () => {
+test('非BUZZ販促はカメラ・画像・公開投稿URL・一言・継続検索を過剰表現なしで訴求する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-24T00:00:00.000Z'), 28);
   for (const platform of ['X', 'INSTAGRAM']) {
     const campaign = posts.filter((post) => post.platform === platform && new URL(post.link).pathname === '/');
-    assert.ok(campaign.some((post) => /撮った写真|写真・スクショ|カメラで撮/u.test(post.caption)), `${platform}: photo copy`);
+    assert.ok(campaign.some((post) => /撮った写真|写真・スクショ|カメラで撮/u.test(post.caption)), `${platform}: camera copy`);
     assert.ok(campaign.some((post) => /スクショ/u.test(post.caption)), `${platform}: screenshot copy`);
     assert.ok(campaign.some((post) => /公開(?:SNS)?投稿.*URL|公開SNS投稿のURL/u.test(post.caption)), `${platform}: URL copy`);
     assert.ok(campaign.some((post) => /一言/u.test(post.caption)), `${platform}: remembered phrase copy`);
+    assert.ok(campaign.some((post) => /見つかるまで探す/u.test(post.caption)), `${platform}: continuous search copy`);
     assert.ok(campaign.every((post) => !/必ず(?:特定|見つかる)|全SNS対応/u.test(post.caption)));
   }
   const threads = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'), 10);
-  assert.ok(threads.some((post) => /スクショ.*公開SNS投稿URL.*一言/u.test(post.caption)));
+  assert.ok(threads.some((post) => /カメラで撮る.*スクショ.*公開SNS投稿URL.*一言/u.test(post.caption)));
   const searchGuide = posts.find((post) => post.content_id === 'guide-search-screen');
-  assert.ok(searchGuide, '3入力のInstagram操作案内が計画されていない');
+  assert.ok(searchGuide, '4入力のInstagram操作案内が計画されていない');
   assert.doesNotMatch(searchGuide.media_url, /hoshilu-product-screen-v1\.jpg/u);
-  assert.match(searchGuide.media_url, /instagram-ambiguous-four-market-v1\.png/u);
+  assert.match(searchGuide.media_url, /hoshilu-visual-search-launch-v1\.png/u);
+  assert.match(searchGuide.caption, /EXIF・位置情報/u);
+  assert.match(searchGuide.caption, /Google Cloud Vision.*Google Gemini API.*場合/u);
+  assert.equal(new URL(searchGuide.link).searchParams.get('q'), null, '写真検索の送客先に他人の検索語を入れない');
+  const visualX = posts.find((post) => post.content_id === 'howto-four-input-search');
+  assert.ok(visualX, '4入力のX投稿が計画されていない');
+  assert.equal(new URL(visualX.link).searchParams.get('q'), null, '写真検索の送客先に他人の検索語を入れない');
+  assert.match(visualX.caption, /非対応・非公開投稿は画像か一言を追加。.*#HOSHILU/u,
+    'Xの文字数調整で最後の注意書きを途中切れにしない');
+  assert.ok(xWeightedLength(visualX.caption) + 1 + 23 <= 280,
+    'Xの本文・改行・固定長URLを合わせて重み付き280以内');
+  const continuousGuide = posts.find((post) => post.content_id === 'guide-continuous-search');
+  assert.ok(continuousGuide, '見つかるまで探すのInstagram操作案内が計画されていない');
+  assert.match(continuousGuide.media_url, /hoshilu-continuous-search-v1\.png/u);
+  for (const post of posts.filter((item) => [
+    'howto-four-input-search', 'continuous-search', 'guide-search-screen', 'guide-continuous-search'
+  ].includes(item.content_id))) {
+    assert.equal(new URL(post.link).searchParams.get('utm_campaign'), 'hoshilu-new-search-launch-20260829');
+    assert.equal(new URL(post.link).searchParams.get('q'), null,
+      '機能紹介から無関係な例示検索語へ着地させない');
+  }
+});
+
+test('新検索ローンチ4投稿は初回14日キューへ正しい日付・UTM・画像で入る', () => {
+  const posts = buildSocialAutopilotPosts(new Date('2026-08-29T17:00:00.000Z'), 14);
+  const launch = posts.filter((post) => [
+    'howto-four-input-search', 'continuous-search', 'guide-search-screen', 'guide-continuous-search'
+  ].includes(post.content_id));
+  assert.deepEqual(launch.map((post) => [post.scheduled_at, post.platform, post.content_id]), [
+    ['2026-08-30T11:00:00.000Z', 'X', 'howto-four-input-search'],
+    ['2026-09-01T11:00:00.000Z', 'X', 'continuous-search'],
+    ['2026-09-01T11:00:00.000Z', 'INSTAGRAM', 'guide-search-screen'],
+    ['2026-09-05T11:00:00.000Z', 'INSTAGRAM', 'guide-continuous-search'],
+    ['2026-09-10T11:00:00.000Z', 'INSTAGRAM', 'guide-search-screen']
+  ]);
+  assert.ok(launch.every((post) => new URL(post.link).searchParams.get('utm_campaign')
+    === 'hoshilu-new-search-launch-20260829'));
+  assert.ok(launch.every((post) => post.campaign_id === 'hoshilu-new-search-launch-20260829'));
+});
+
+test('新検索のInstagram画像は実在する1080x1350 PNGである', () => {
+  const assets = [
+    {
+      filename: 'hoshilu-visual-search-launch-v1.png',
+      svg: 'hoshilu_visual_search_launch_1080x1350.svg',
+      pngSha256: '412e277b9cc46b0b04a0a320e3025d7c98848da24d714d3526b0bb8aa5d1b6be',
+      svgSha256: 'de202de23787c29670ab921c7aa09cc4eccfeceb7869ba7c6b60e733809cf536',
+      required: ['カメラで撮る', '画像を選ぶ', '投稿URLを追加', '一言を入力', 'AIが特徴理解を補助', '購入先候補へ']
+    },
+    {
+      filename: 'hoshilu-continuous-search-v1.png',
+      svg: 'hoshilu_continuous_search_1080x1350.svg',
+      pngSha256: 'b5458ab8d0c2f992aaa74775bc2b1d4779d7b3fe8e9708636055786cc14ed398',
+      svgSha256: 'd45a988c93516e9d5325b9df70205fbc69752ac26213470b8bd95f5147ceb369',
+      required: ['無料会員で有効にすると', '新しく一致', '無料会員で探し続ける']
+    }
+  ];
+  for (const asset of assets) {
+    const { filename } = asset;
+    const png = readFileSync(new URL(`../public/social/${filename}`, import.meta.url));
+    const svg = readFileSync(new URL(`../../../marketing/social/creatives/${asset.svg}`, import.meta.url));
+    assert.deepEqual([...png.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
+    assert.equal(png.readUInt32BE(16), 1080, `${filename}: width`);
+    assert.equal(png.readUInt32BE(20), 1350, `${filename}: height`);
+    assert.ok(png.length > 100_000, `${filename}: unexpectedly small`);
+    assert.equal(createHash('sha256').update(png).digest('hex'), asset.pngSha256, `${filename}: stale PNG`);
+    assert.equal(createHash('sha256').update(svg).digest('hex'), asset.svgSha256, `${asset.svg}: unexpected source change`);
+    for (const copy of asset.required) assert.match(svg.toString('utf8'), new RegExp(copy, 'u'));
+  }
 });
 
 test('Instagramは日曜を含む毎日20時15分にAI女優リールを計画する', () => {
@@ -230,6 +307,21 @@ test('承認済みセラー投稿はX非動画枠へ少量だけ入り/for-selle
     assert.equal(url.searchParams.get('utm_source'), 'x');
     assert.match(url.searchParams.get('utm_campaign'), /13mall/u);
     assert.doesNotMatch(post.caption, /No\.?1|最安|必ず売れる|売上アップ/u);
+  }
+});
+
+test('X補助枠はBUZZ比率とセラー差し込みを守りながら各テーマを公平に循環する', () => {
+  const groups = [
+    ['buzz-shelves-intro', 'buzz-budget-shelves', 'buzz-korean-beauty', 'buzz-open-first'],
+    ['howto-price-compare', 'howto-four-input-search', 'continuous-search', 'howto-price-alert', 'search-no-name-needed'],
+    ['seller-natural-listing', 'seller-demand-insight', 'seller-business-simple']
+  ];
+  const posts = buildSocialAutopilotPosts(new Date('2026-09-14T00:00:00.000Z'), 630)
+    .filter((post) => post.platform === 'X' && /-x-guide-/u.test(post.post_id));
+  for (const ids of groups) {
+    const counts = ids.map((id) => posts.filter((post) => post.content_id === id).length);
+    assert.ok(counts.every((count) => count > 0), JSON.stringify(counts));
+    assert.ok(Math.max(...counts) - Math.min(...counts) <= 1, JSON.stringify(counts));
   }
 });
 
@@ -348,7 +440,8 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
   assert.deepEqual(result, { enabled: true, planned: 42, inserted: 42 });
   assert.equal(rows.some(row => row[1] === 'TIKTOK'), false);
   assert.deepEqual(new Set(rows.map(row => row[2])), new Set([
-    'hoshilu-official-13mall-v2', 'hoshilu-ai-actress-daily-v1'
+    'hoshilu-official-13mall-v2', 'hoshilu-ai-actress-daily-v1',
+    'hoshilu-new-search-launch-20260829'
   ]));
   assert.equal(rows.filter(row => /\.mp4$/u.test(row[6])).every(row => row[10] === 1), true);
   assert.equal(rows.filter(row => !/\.mp4$/u.test(row[6])).every(row => row[10] === 0), true);

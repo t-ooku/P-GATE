@@ -9,6 +9,13 @@ import {
 import { buzzThemeFor } from './buzz-shelf.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
+const NEW_SEARCH_LAUNCH_UTM_CAMPAIGN = 'hoshilu-new-search-launch-20260829';
+const NEW_SEARCH_PROMO_CONTENT_IDS = new Set([
+  'howto-four-input-search',
+  'continuous-search',
+  'guide-search-screen',
+  'guide-continuous-search'
+]);
 const DAILY_AI_ACTRESS_CAMPAIGN_ID = 'hoshilu-ai-actress-daily-v1';
 const DAILY_AI_ACTRESS_POLICY = 'DAILY_AI_ACTRESS_22';
 const DAILY_AI_ACTRESS_PERSONA_ID = 'hoshilu-approved-model-reference-v2';
@@ -65,8 +72,9 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'mon',
     creative_asset_id: 'hoshilu_ai_actress_daily_mon_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-mon-v1.mp4',
-    caption: '月曜日は、スクショ・公開SNS投稿URL・うろ覚えの一言から、名前の分からない商品をHOSHILUで検索。',
+    caption: '月曜日は「撮ってホシル」。カメラで撮る、保存画像・スクショ、HOSHILU対応の公開SNS投稿URL（投稿単体）、一言。名前が分からない欲しい物を手がかりから探そう。',
     topics: Object.freeze([
+      DAILY_CONTENT_TOPICS.PHOTO,
       DAILY_CONTENT_TOPICS.SCREENSHOT,
       DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
       DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
@@ -99,7 +107,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'thu',
     creative_asset_id: 'hoshilu_ai_actress_daily_thu_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-thu-v1.mp4',
-    caption: '木曜日は、Instagram・TikTok・Xなどの公開投稿URLか、うろ覚えの一言から検索。見つけた商品を最大13モールへ。',
+    caption: '木曜日は、Instagram・TikTok・XなどHOSHILU対応の公開SNS投稿URL（投稿単体）か、うろ覚えの一言から検索。見つけた商品を最大13モールへ。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
       DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
@@ -121,7 +129,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'sat',
     creative_asset_id: 'hoshilu_ai_actress_daily_sat_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4',
-    caption: '土曜日は、公開SNS投稿URLとうろ覚えの一言から、名前の分からない商品を検索。迷ったらHOSHILU BUZZもチェック。',
+    caption: '土曜日は、HOSHILU対応の公開SNS投稿URL（投稿単体）とうろ覚えの一言から、名前の分からない商品を検索。迷ったらHOSHILU BUZZもチェック。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
       DAILY_CONTENT_TOPICS.BUZZ,
@@ -143,11 +151,13 @@ const USER_APPROVED_REPLAY_POST_IDS = new Set([
   'hoshilu-official-13mall-v2-instagram-2026-08-28'
 ]);
 
+// BUZZ、検索操作、価格通知を一つの補助枠で循環させる。新機能ローンチの
+// 2投稿は初週に出る位置へ置き、その後も非セラー枠だけで均等に回す。
 const X_NON_VIDEO_POSTS = Object.freeze([
   {
-    id: 'howto-three-input-search',
-    caption: '検索の手がかりは4つ。撮った写真、スクショ、Instagram・TikTok・Xなどの公開投稿URL、うろ覚えの一言。どれか1つから商品候補と検索語を整理します。非公開・削除済み投稿は画像や一言を足してください。',
-    query: '名前は分からないけど、通勤バッグの中で自立する本革トートバッグ'
+    id: 'buzz-shelves-intro',
+    caption: '「今、これ来てる」を小ジャンル別にまとめたHOSHILU BUZZができました。順位はモール公式ランキングだけが根拠。欲しい商品が決まっていなくても、開けば何か見つかるかも。',
+    link_path: '/buzz'
   },
   {
     id: 'howto-price-compare',
@@ -155,22 +165,17 @@ const X_NON_VIDEO_POSTS = Object.freeze([
     query: 'スモーキークォーツのおしゃれなリング'
   },
   {
+    id: 'howto-four-input-search',
+    caption: '検索の手がかりは4通り。カメラで撮る、保存画像・スクショ、Instagram・TikTok・XなどHOSHILU対応の公開SNS投稿URL（投稿単体）、うろ覚えの一言。どれか1つから候補と検索語を整理します。非対応・非公開投稿は画像か一言を追加。'
+  },
+  {
+    id: 'continuous-search',
+    caption: '1回で見つからなくても、そこで終わりじゃない。「見つかるまで探す」を無料会員で有効にするとHOSHILUが定期的に検索し、新しく一致する実在商品が見つかった時だけお知らせします。値下げ通知とは別機能です。'
+  },
+  {
     id: 'howto-price-alert',
     caption: '今すぐ買わない商品は「購入希望価格ウォッチ☑」へ。希望価格を保存し、APIで確認できた価格がその金額以下になった時に知らせます。',
     query: '軽くて持ち運べる小型写真プリンター'
-  },
-  {
-    id: 'search-example-memory',
-    caption: '検索例：「動画で見た、バッグにつける小さいぬいぐるみ」。正式名を知らなくても、覚えている特徴から探せます。',
-    query: '動画で見た、バッグにつける小さいぬいぐるみ'
-  },
-  // 2026-08-19 大隆さん指示: 若者向けにHOSHILU BUZZ(/buzz)もSNS投稿へ
-  // 織り交ぜる。数値・人気の断定はせず、順位根拠(モール公式ランキング)を
-  // 本文に明記する。link_pathは/buzzへ直接送る(検索qは付けない)。
-  {
-    id: 'buzz-shelves-intro',
-    caption: '「今、これ来てる」を小ジャンル別にまとめたHOSHILU BUZZができました。順位はモール公式ランキングだけが根拠。欲しい商品が決まっていなくても、開けば何か見つかるかも。',
-    link_path: '/buzz'
   },
   {
     id: 'buzz-budget-shelves',
@@ -200,6 +205,14 @@ const X_BUZZ_POSTS = Object.freeze(
 const X_SEARCH_GUIDE_POSTS = Object.freeze(
   X_NON_VIDEO_POSTS.filter(post => post.link_path !== '/buzz')
 );
+const X_NON_VIDEO_POST_BY_ID = new Map(X_NON_VIDEO_POSTS.map(post => [post.id, post]));
+const X_INITIAL_DATE_OVERRIDES = new Map([
+  ['2026-08-30', X_NON_VIDEO_POST_BY_ID.get('howto-four-input-search')],
+  ['2026-09-01', X_NON_VIDEO_POST_BY_ID.get('continuous-search')],
+  // Avoid repeating continuous-search on X four days after its launch; the
+  // same evening already carries the dedicated Instagram guide.
+  ['2026-09-05', X_NON_VIDEO_POST_BY_ID.get('buzz-shelves-intro')]
+]);
 
 // 2026-08-22 大隆さん承認済み。ユーザー向け投稿を主役のまま保つため、
 // セラー向けはX非動画枠の6回に1回だけ差し込む。自然掲載を先に伝え、
@@ -225,15 +238,13 @@ const X_SELLER_POSTS = Object.freeze([
 const INSTAGRAM_GUIDE_POSTS = Object.freeze([
   {
     id: 'guide-search-screen',
-    caption: '操作案内① カメラで撮る、写真・スクショを追加、公開SNS投稿URLを追加、または覚えている一言を入力。どれか1つから商品候補と検索語を整理できます。写真・画像・投稿URLはHOSHILUのサーバーに保存しません。@hoshilu.app',
-    query: '名前は分からないけど、床に置いても自立する本革トートバッグ',
-    media_url: 'https://hoshilu.app/social/instagram-ambiguous-four-market-v1.png'
+    caption: '操作案内① カメラ、保存画像・スクショ、HOSHILU対応形式の公開SNS投稿単体URL、または一言を入力。どれか1つから商品候補と検索語を整理できます。写真・画像・投稿URLはHOSHILUに保存しません。画像はブラウザ内でJPEGへ再変換するため、元画像のEXIF・位置情報を引き継ぎません。商品特定の補助にGoogle Cloud VisionのWeb画像照合とGoogle Gemini APIを使う場合があります。顔・住所・伝票などは写さないでください。@hoshilu.app',
+    media_url: 'https://hoshilu.app/social/hoshilu-visual-search-launch-v1.png'
   },
   {
-    id: 'guide-cross-market',
-    caption: '操作案内② HOSHILUで検索語を整理したら、対応モールを同じ条件で見比べます。検索結果の根拠と価格確認状況も分けて表示します。@hoshilu.app',
-    query: 'スモーキークォーツのおしゃれなリング',
-    media_url: 'https://hoshilu.app/social/instagram-ambiguous-four-market-v1.png'
+    id: 'guide-continuous-search',
+    caption: '操作案内② 1回で見つからなくても、そこで終わりじゃない。「見つかるまで探す」を無料会員で有効にするとHOSHILUが定期的に検索し、新しく一致する実在商品が見つかった時だけお知らせします。値下げ通知ではなく、新しい商品の発見通知です。@hoshilu.app',
+    media_url: 'https://hoshilu.app/social/hoshilu-continuous-search-v1.png'
   },
   {
     id: 'guide-save-alert',
@@ -299,7 +310,7 @@ const THREADS_AMAZON_POSTS = Object.freeze([
   },
   {
     id: 'trust-how-to-describe',
-    caption: '商品名が分からないときは、名前をひねり出さなくて大丈夫です。撮った写真、スクショ、公開SNS投稿URL、覚えている一言のどれか1つを手がかりに探せます。非公開投稿は画像か一言を足してください。'
+    caption: '商品名が分からないときは、カメラで撮る、保存画像・スクショ、HOSHILU対応の公開SNS投稿URL（投稿単体）、一言のどれかを手がかりに探せます。非対応・非公開投稿は画像か一言を追加してください。'
   },
   {
     id: 'amazon-boost-reviews',
@@ -432,11 +443,17 @@ function buzzCaption(platform, themeLabel) {
   return `今週のHOSHILU BUZZは「${themeLabel}」。モール公式ランキングを根拠に、小ジャンル別の今をチェックできます。無料会員なら、火曜・金曜にテーマが変わった時も通知。韓国コスメやQoo10・SHEINで探したい商品の入口に。@hoshilu.app #韓国コスメ #Qoo10購入品 #SHEIN購入品 #HOSHILUBUZZ`;
 }
 
+function campaignIdForContent(content) {
+  return NEW_SEARCH_PROMO_CONTENT_IDS.has(content)
+    ? NEW_SEARCH_LAUNCH_UTM_CAMPAIGN
+    : CAMPAIGN_ID;
+}
+
 function campaignLink(platform, date, content = date, searchQuery = '', path = '/') {
   const params = new URLSearchParams({
     utm_source: platform === 'X' ? 'x' : 'instagram',
     utm_medium: 'social',
-    utm_campaign: CAMPAIGN_ID,
+    utm_campaign: campaignIdForContent(content),
     utm_content: content
   });
   if (searchQuery) params.set('q', searchQuery);
@@ -570,19 +587,25 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
     // the days where it already ran. It never substitutes for the daily actress.
     if (![1, 3, 5].includes(parts.weekday)) {
       const slot = mediaSlotNumber(parts, [0, 2, 4, 6]);
-      // Keep BUZZ on every even supplementary slot. The seller slot is always
-      // odd, so any seven JST days retain at least two BUZZ guides while seller
-      // copy remains one sixth of the supplementary X rotation.
-      const content = positiveModulo(slot, 6) === 5
-        ? X_SELLER_POSTS[positiveModulo(Math.floor(slot / 6), X_SELLER_POSTS.length)]
-        : positiveModulo(slot, 2) === 0
-          ? X_BUZZ_POSTS[positiveModulo(Math.floor(slot / 2), X_BUZZ_POSTS.length)]
-          : X_SEARCH_GUIDE_POSTS[positiveModulo(Math.floor(slot / 2), X_SEARCH_GUIDE_POSTS.length)];
+      // Even supplementary slots remain BUZZ so any seven JST days keep the
+      // approved BUZZ share. Odd slots are search guides, except every third
+      // odd slot reserved for sellers. Search and seller ordinals advance
+      // independently so the insertion never starves a consumer theme.
+      const buzzSlot = positiveModulo(slot, 2) === 0;
+      const oddOrdinal = Math.floor(slot / 2);
+      const sellerSlot = !buzzSlot && positiveModulo(oddOrdinal, 3) === 2;
+      const sellerOrdinal = Math.floor(oddOrdinal / 3);
+      const searchOrdinal = oddOrdinal - Math.floor(oddOrdinal / 3);
+      const content = X_INITIAL_DATE_OVERRIDES.get(key) || (buzzSlot
+        ? X_BUZZ_POSTS[positiveModulo(Math.floor(slot / 2), X_BUZZ_POSTS.length)]
+        : sellerSlot
+          ? X_SELLER_POSTS[positiveModulo(sellerOrdinal, X_SELLER_POSTS.length)]
+          : X_SEARCH_GUIDE_POSTS[positiveModulo(searchOrdinal, X_SEARCH_GUIDE_POSTS.length)]);
       posts.push(normalizeSocialPost({
         post_id: `${CAMPAIGN_ID}-x-guide-${key}`,
         content_id: content.id,
         platform: 'X',
-        campaign_id: CAMPAIGN_ID,
+        campaign_id: campaignIdForContent(content.id),
         caption: content.caption,
         link: campaignLink('X', key, content.id, content.query, content.link_path || '/'),
         scheduled_at: scheduledAt(parts, 20, 0),
@@ -606,7 +629,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         post_id: `${CAMPAIGN_ID}-instagram-guide-${key}`,
         content_id: content.id,
         platform: 'INSTAGRAM',
-        campaign_id: CAMPAIGN_ID,
+        campaign_id: campaignIdForContent(content.id),
         caption: content.caption,
         link: campaignLink('INSTAGRAM', key, content.id, content.query, content.link_path || '/'),
         media_url: content.media_url,
@@ -686,7 +709,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
               OR previous.external_post_id<>'' OR previous.published_at<>'')
         ) THEN '' ELSE ?10 END,
         ?10,?10)
-      ON CONFLICT(post_id) DO UPDATE SET content_id=excluded.content_id,
+      ON CONFLICT(post_id) DO UPDATE SET campaign_id=excluded.campaign_id,content_id=excluded.content_id,
         caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
         scheduled_at=CASE
           WHEN social_post_queue.status='APPROVED'

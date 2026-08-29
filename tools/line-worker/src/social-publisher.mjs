@@ -18,6 +18,10 @@ const DAILY_AI_ACTRESS_CAMPAIGN = 'hoshilu-ai-actress-daily-v1';
 const DAILY_AI_ACTRESS_PERSONA = 'hoshilu-approved-model-reference-v2';
 const DAILY_AI_ACTRESS_DISCLOSURE = '※この動画はAI生成・AI加工映像です。';
 const DAILY_AI_ACTRESS_POLICY_ERROR = 'SOCIAL_AI_ACTRESS_POLICY_REQUIRED';
+const NEW_SEARCH_LAUNCH_CONTENT_IDS = new Set([
+  'howto-four-input-search', 'continuous-search',
+  'guide-search-screen', 'guide-continuous-search'
+]);
 
 const clean = (value, max = 2000) => String(value || '')
   .normalize('NFKC')
@@ -75,8 +79,14 @@ function uniqueHashtags(...groups) {
   });
 }
 
-function youthSearchHashtags(value, platform) {
+function youthSearchHashtags(value, platform, contentId = '') {
   const source = String(value || '');
+  if (NEW_SEARCH_LAUNCH_CONTENT_IDS.has(String(contentId || ''))) {
+    const continuous = /continuous/u.test(String(contentId || ''));
+    return continuous
+      ? ['#HOSHILU', '#商品検索', '#見つかるまで探す']
+      : ['#HOSHILU', '#画像検索', '#商品検索'];
+  }
   const qoo10Focused = /Qoo\s*10で|Qoo\s*10の商品|#Qoo10購入品/iu.test(source);
   const sheinFocused = /SHEINで|SHIENで|SHEINの商品|SHIENの商品|#SHEIN購入品/iu.test(source);
   const qoo10Mentioned = /Qoo\s*10|キューテン/iu.test(source);
@@ -157,7 +167,7 @@ export function normalizeSocialPost(input = {}) {
   if (platform === 'X') {
     caption = sanitizeXCaption(caption, Boolean(clean(input.link, 1000)));
     const parts = captionAndHashtags(caption);
-    const recommendedTags = youthSearchHashtags(caption, platform);
+    const recommendedTags = youthSearchHashtags(caption, platform, input.content_id);
     const hashtags = fitXHashtags(
       uniqueHashtags(recommendedTags, parts.hashtags).slice(0, 4),
       280 - (input.affiliate === true ? 1 + xWeightedLength(DISCLOSURE) : 0)
@@ -178,7 +188,7 @@ export function normalizeSocialPost(input = {}) {
   if (platform === 'INSTAGRAM') {
     const parts = captionAndHashtags(caption);
     if (!/コメント/.test(parts.caption)) parts.caption += ' 気になった商品をコメントで教えてね。';
-    const hashtags = uniqueHashtags(youthSearchHashtags(caption, platform), parts.hashtags);
+    const hashtags = uniqueHashtags(youthSearchHashtags(caption, platform, input.content_id), parts.hashtags);
     caption = [parts.caption, hashtags.join(' ')].filter(Boolean).join(' ');
   }
   if (caption.length < 5) throw new Error('SOCIAL_CAPTION_INVALID');
@@ -577,7 +587,7 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
   const isReel = /\.(?:mp4|mov|m4v)$/.test(mediaPath);
   const isStory = /(?:^|[-_])story(?:$|[-_])/i.test(post.content_id);
   const profileCta = '続きは @hoshilu.app のプロフィールリンクから。';
-  const instagramCaption = post.caption.includes('@hoshilu.app')
+  const instagramCaption = /@hoshilu\.app\s*のプロフィール(?:の)?リンクから/iu.test(post.caption)
     ? post.caption
     : `${post.caption}\n${profileCta}`;
   const mediaPayload = isStory

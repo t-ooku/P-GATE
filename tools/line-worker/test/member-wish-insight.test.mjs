@@ -29,14 +29,18 @@ async function memberCookie(profile, secret = MEMBER_SESSION_SECRET) {
 }
 
 const MIGRATIONS = [
+  '0004_unmet_demand_events.sql', '0012_growth_events.sql',
+  '0013_growth_event_traffic_class.sql', '0047_growth_visitor_sessions.sql',
   '0002_member_wishes.sql', '0003_member_wish_preferences.sql',
   '0005_mywatch_notifications.sql', '0036_mywatch_notification_product_fields.sql',
-  '0044_insight_search_watch.sql'
+  '0044_insight_search_watch.sql',
+  '0065_member_wish_insight_explicit_opt_in.sql'
 ];
 
-function sqliteD1() {
+function sqliteD1({ explicitOptInColumn = true } = {}) {
   const sqlite = new DatabaseSync(':memory:');
-  for (const name of MIGRATIONS) {
+  for (const name of MIGRATIONS.filter((migration) => explicitOptInColumn
+    || migration !== '0065_member_wish_insight_explicit_opt_in.sql')) {
     sqlite.exec(readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8'));
   }
   const db = {
@@ -82,7 +86,8 @@ test('section15: AIウォッチ(🔔)が保存した4フラグは、INSIGHT側�
   const bellWish = (await bellSave.json()).wish;
   assert.equal(bellWish.watch_coupon, 1);
   assert.equal(bellWish.watch_restock, 1);
-  assert.equal(bellWish.notify_new_match, 1); // 新規行なのでデフォルトでオン
+  assert.equal(bellWish.notify_new_match, 0); // 通常保存は継続検索へ暗黙opt-inしない
+  assert.equal(bellWish.insight_enabled_at, null);
 
   // 2) 同じ検索条件をHOSHILU INSIGHT側(notify_new_matchのトグルだけ)で
   //    更新する。watch_*キーは一切送らない。
@@ -129,9 +134,75 @@ test('section15: HOSHILU INSIGHT側の新規保存(POSTでnotify_new_matchのみ
   const merged = (await insightSave.json()).wish;
   assert.equal(merged.wish_id, bellWish.wish_id);
   assert.equal(merged.notify_new_match, 1);
+  assert.ok(merged.insight_enabled_at);
   // AIウォッチが既に設定していた値は上書きされない
   assert.equal(merged.watch_sale, 0);
   assert.equal(merged.watch_coupon, 1);
+});
+
+test('継続検索の有効化CVは認証済みPOSTとOFF→ONだけをサーバーで一度ずつ記録する', async () => {
+  const { sqlite, db } = sqliteD1();
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET };
+  const cookie = await memberCookie({ id: 'member-growth', name: 'テスト', provider: 'EMAIL' });
+  const query = '青い小型のコードレス掃除機';
+
+  const created = await requestFor(env, 'POST', '/api/member/wishes', cookie, { query, language: 'JA' });
+  assert.equal(created.status, 200);
+  const wish = (await created.json()).wish;
+  assert.equal(wish.notify_new_match, 0);
+  assert.equal(wish.insight_enabled_at, null);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM growth_events WHERE event_type='continuous_search_enabled'").get().total, 0);
+
+  const enabled = await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+    query, language: 'JA', notify_new_match: true
+  });
+  assert.equal(enabled.status, 200);
+  assert.ok((await enabled.json()).wish.insight_enabled_at);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM growth_events WHERE event_type='continuous_search_enabled'").get().total, 1);
+
+  const unchanged = await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+    query, language: 'JA', notify_new_match: true
+  });
+  assert.equal(unchanged.status, 200);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM growth_events WHERE event_type='continuous_search_enabled'").get().total, 1);
+
+  assert.equal((await requestFor(env, 'PATCH', `/api/member/wishes/${wish.wish_id}`, cookie, {
+    notify_new_match: false
+  })).status, 200);
+  const reenabled = await requestFor(env, 'PATCH', `/api/member/wishes/${wish.wish_id}`, cookie, {
+    notify_new_match: true
+  });
+  assert.equal(reenabled.status, 200);
+  assert.equal((await reenabled.json()).wish.notify_new_match, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM growth_events WHERE event_type='continuous_search_enabled'").get().total, 2);
+  const rows = sqlite.prepare("SELECT source,medium,campaign,content,marketplace,visitor_id,session_id FROM growth_events WHERE event_type='continuous_search_enabled'").all();
+  assert.deepEqual(rows.map(row => ({ ...row })), Array(2).fill({
+    source: 'worker', medium: 'member_wish', campaign: 'authenticated_enable',
+    content: '', marketplace: '', visitor_id: '', session_id: ''
+  }));
+  assert.doesNotMatch(JSON.stringify(rows), /青い|member-growth/u);
+});
+
+test('同じOFF状態への並行有効化は決定的transition IDで一度だけ計測し、localeを保持する', async () => {
+  const { sqlite, db } = sqliteD1();
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET };
+  const cookie = await memberCookie({ id: 'member-concurrent', name: 'Test', provider: 'EMAIL' });
+  const created = await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+    query: 'compact blue vacuum', language: 'EN', notify_new_match: false
+  });
+  const wish = (await created.json()).wish;
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM growth_events WHERE event_type='continuous_search_enabled'").get().total, 0);
+
+  const responses = await Promise.all([
+    requestFor(env, 'PATCH', `/api/member/wishes/${wish.wish_id}`, cookie, { notify_new_match: true }),
+    requestFor(env, 'PATCH', `/api/member/wishes/${wish.wish_id}`, cookie, { notify_new_match: true })
+  ]);
+  assert.deepEqual(responses.map(response => response.status), [200, 200]);
+  const events = sqlite.prepare("SELECT event_id,locale,source,medium FROM growth_events WHERE event_type='continuous_search_enabled'").all();
+  assert.equal(events.length, 1);
+  assert.equal(events[0].locale, 'EN');
+  assert.match(events[0].event_id, /^continuous_search_enabled:[a-f0-9]{64}$/u);
+  assert.doesNotMatch(events[0].event_id, /member-concurrent|compact/u);
 });
 
 test('section15: 既存データのマイグレーション安全性 - 既存行はwatch_*列を保持したままnotify_new_match=1へ移行する', async () => {
@@ -145,10 +216,95 @@ test('section15: 既存データのマイグレーション安全性 - 既存行
     VALUES('legacy-member','legacy-wish','旧いカットソー','JA',1,1,0,0,'INSTANT',?,?)`
   ).run(now, now);
   const row = sqlite.prepare('SELECT * FROM member_wishes WHERE wish_id=?').get('legacy-wish');
-  assert.equal(row.notify_new_match, 1); // 実害なく移行 (既存の自動検出処理が存在しないため安全)
+  assert.equal(row.notify_new_match, 1); // 0044のlegacy defaultは残る
+  assert.equal(row.insight_enabled_at, null); // 0065の明示同意がないためscan対象外
   assert.equal(row.condition_snapshot, null);
   assert.equal(row.watch_sale, 1);
   assert.equal(row.watch_price, 1);
+});
+
+test('0065適用前は通常保存をOFFで継続できるが、明示ONは503でfail closedする', async () => {
+  const { db } = sqliteD1({ explicitOptInColumn: false });
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET };
+  const cookie = await memberCookie({ id: 'member-old-schema', name: 'Test', provider: 'EMAIL' });
+  const generic = await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+    query: 'legacy schema camera', language: 'EN', watch_price: true
+  });
+  assert.equal(generic.status, 200);
+  const wish = (await generic.json()).wish;
+  assert.equal(wish.notify_new_match, 0);
+  assert.equal(wish.insight_enabled_at, null);
+
+  const explicit = await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+    query: 'legacy schema camera', language: 'EN', notify_new_match: true, watch_frequency: 'INSTANT'
+  });
+  assert.equal(explicit.status, 503);
+  assert.equal((await explicit.json()).error, 'INSIGHT_OPT_IN_TEMPORARILY_UNAVAILABLE');
+  const explicitPatch = await requestFor(env, 'PATCH', `/api/member/wishes/${wish.wish_id}`, cookie, {
+    notify_new_match: true, watch_frequency: 'INSTANT'
+  });
+  assert.equal(explicitPatch.status, 503);
+  assert.equal((await explicitPatch.json()).error, 'INSIGHT_OPT_IN_TEMPORARILY_UNAVAILABLE');
+});
+
+test('OFFまたはMUTEDへ変更すると全channelのPENDING INSIGHT通知を即時取消し、再ONでも復活しない', async () => {
+  const { sqlite, db } = sqliteD1();
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET };
+  const cookie = await memberCookie({ id: 'member-cancel', name: 'Test', provider: 'EMAIL' });
+  const create = async (query) => (await (await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+    query, language: 'EN', notify_new_match: true, watch_frequency: 'DAILY'
+  })).json()).wish;
+  const insertPending = (wish, suffix) => {
+    const now = '2026-08-29T00:00:00.000Z';
+    for (const channel of ['WEB', 'LINE', 'EMAIL']) sqlite.prepare(
+      `INSERT INTO mywatch_notifications
+      (notification_id,member_id,wish_id,event_key,event_type,channel,title,body,status,attempts,next_attempt_at,created_at,updated_at)
+      VALUES(?,?,?,?,? ,?,?,'','PENDING',0,?,?,?)`
+    ).run(`${suffix}-${channel}`, 'member-cancel', wish.wish_id, `${suffix}-event`, 'INSIGHT_NEW_MATCH', channel, 'New match', now, now, now);
+  };
+
+  const offWish = await create('camera cancel off');
+  insertPending(offWish, 'off');
+  const off = await requestFor(env, 'PATCH', `/api/member/wishes/${offWish.wish_id}`, cookie, {
+    notify_new_match: false
+  });
+  assert.equal(off.status, 200);
+
+  const mutedWish = await create('camera cancel muted');
+  insertPending(mutedWish, 'muted');
+  const muted = await requestFor(env, 'PATCH', `/api/member/wishes/${mutedWish.wish_id}`, cookie, {
+    notify_new_match: true, watch_frequency: 'MUTED'
+  });
+  assert.equal(muted.status, 200);
+  assert.equal((await muted.json()).wish.insight_enabled_at, null);
+
+  const cancelled = sqlite.prepare(
+    "SELECT notification_id,status FROM mywatch_notifications ORDER BY notification_id"
+  ).all();
+  assert.equal(cancelled.length, 6);
+  assert.ok(cancelled.every((row) => row.status === 'CANCELLED'));
+
+  const resumed = await requestFor(env, 'PATCH', `/api/member/wishes/${offWish.wish_id}`, cookie, {
+    notify_new_match: true, watch_frequency: 'INSTANT'
+  });
+  assert.equal(resumed.status, 200);
+  assert.ok((await resumed.json()).wish.insight_enabled_at);
+  assert.equal(sqlite.prepare(
+    "SELECT COUNT(*) AS total FROM mywatch_notifications WHERE notification_id LIKE 'off-%' AND status='PENDING'"
+  ).get().total, 0);
+
+  // 検索結果CTAはPOSTでMUTEDをINSTANTへ明示的に戻して再開する。
+  const resumedFromResult = await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+    query: 'camera cancel muted', language: 'EN', notify_new_match: true, watch_frequency: 'INSTANT'
+  });
+  assert.equal(resumedFromResult.status, 200);
+  const resumedMuted = (await resumedFromResult.json()).wish;
+  assert.equal(resumedMuted.wish_id, mutedWish.wish_id);
+  assert.equal(resumedMuted.watch_frequency, 'INSTANT');
+  assert.ok(resumedMuted.insight_enabled_at);
+  assert.equal(sqlite.prepare(
+    "SELECT COUNT(*) AS total FROM mywatch_notifications WHERE notification_id LIKE 'muted-%' AND status='PENDING'"
+  ).get().total, 0);
 });
 
 test('DELETE時にsearch_watch_matchesの重複防止台帳も一緒に削除される(section4の台帳がゴミとして残らない)', async () => {

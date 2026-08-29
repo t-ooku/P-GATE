@@ -75,6 +75,20 @@ APIキーは設定ファイルやGitへ書かず、Cloudflare Worker Secret
 
 Secret値、画像、検索語、Web一致URLはヘルスチェックやログへ出さない。
 
+## 本番受入確認のQA分離
+
+自動ブラウザやCodexで本番検索を確認する場合は、必ず次のQA専用パラメーターを
+付けてから操作する。
+
+```text
+https://hoshilu.app/?utm_source=codex_qa&utm_medium=qa&utm_campaign=acceptance_search
+```
+
+`utm_source=codex_qa`または`utm_medium=qa`は`traffic_class=QA`に分類され、
+実ユーザーの検索SLIから除外される。QAパラメーターなしの検証は、
+Turnstileが自動ブラウザを拒否した結果を実ユーザー障害として記録するため禁止する。
+カメラ検索の最終受入は、自動ブラウザだけではなく非ヘッドレスの実スマホでも行う。
+
 ## 停止とフォールバック
 
 緊急停止は`GOOGLE_VISUAL_SEARCH_ENABLED=false`で行う。Visionのタイムアウト、

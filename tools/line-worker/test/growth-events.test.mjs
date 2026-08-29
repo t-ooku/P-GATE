@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   classifyGrowthTraffic, handleGrowthEvent, normalizeGrowthEvent,
-  recordSearchClientDegradation, recordSearchOperationalFailure, recordSearchProviderDegradation
+  recordContinuousSearchEnabled, recordSearchClientDegradation,
+  recordSearchOperationalFailure, recordSearchProviderDegradation
 } from '../src/growth-events.mjs';
 
 test('accepts only anonymous allowlisted growth dimensions', () => {
@@ -31,6 +32,30 @@ test('accepts only random anonymous visitor and session identifiers', () => {
   const event = normalizeGrowthEvent({ event_type: 'landing_view', visitor_id: '550e8400-e29b-41d4-a716-446655440000', session_id: 'bad' });
   assert.equal(event.visitor_id, '550e8400-e29b-41d4-a716-446655440000');
   assert.equal(event.session_id, '');
+});
+
+test('continuous search save is public but member enablement is server-owned', async () => {
+  const saved = normalizeGrowthEvent({
+    event_type: 'continuous_search_saved', query: '保存してはいけない検索条件',
+    social_url: 'https://example.invalid/private', image: '保存してはいけないbase64'
+  });
+  assert.equal(saved.event_type, 'continuous_search_saved');
+  assert.equal('query' in saved, false);
+  assert.doesNotMatch(JSON.stringify(saved), /保存してはいけない|example\.invalid/u);
+  assert.throws(() => normalizeGrowthEvent({ event_type: 'continuous_search_enabled' }), /GROWTH_EVENT_INVALID/u);
+
+  const writes = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({
+    run: async () => { writes.push({ sql, values }); }
+  }) }) } };
+  await recordContinuousSearchEnabled(env, { locale: 'EN', deduplicationKey: 'opaque-transition-1' });
+  await recordContinuousSearchEnabled(env, { locale: 'EN', deduplicationKey: 'opaque-transition-1' });
+  assert.match(writes[0].sql, /INSERT OR IGNORE INTO growth_events/u);
+  assert.match(writes[0].sql, /'continuous_search_enabled',\?2,'worker','member_wish','authenticated_enable'/u);
+  assert.equal(writes[0].values.length, 3);
+  assert.equal(writes[0].values[0], writes[1].values[0]);
+  assert.equal(writes[0].values[1], 'EN');
+  assert.doesNotMatch(JSON.stringify(writes), /query|member[_-]?id|visitor|session/iu);
 });
 
 test('search input mix accepts only fixed enums and never stores raw inputs', () => {

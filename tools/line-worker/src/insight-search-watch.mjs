@@ -17,6 +17,7 @@
 import { productIdentityKey } from './seller-pricing-policy.mjs';
 
 export const INSIGHT_EVENT_TYPE = 'INSIGHT_NEW_MATCH';
+export const INSIGHT_MAX_NEW_MATCHES_PER_WISH = 5;
 
 function clip(value, max) {
   return String(value || '').slice(0, max);
@@ -152,7 +153,8 @@ export function buildInsightMatchNotification({
 export function detectNewMatchesForWish({
   memberId, wishId, queryText, candidates = [], alreadyMatchedKeys = new Set(), language = 'JA', resultUrl = ''
 } = {}) {
-  const newMatches = filterNewMatches(candidates, alreadyMatchedKeys);
+  const newMatches = filterNewMatches(candidates, alreadyMatchedKeys)
+    .slice(0, INSIGHT_MAX_NEW_MATCHES_PER_WISH);
   if (!newMatches.length) return { notification: null, newMatches: [] };
   const notification = buildInsightMatchNotification({ memberId, wishId, queryText, newMatches, language, resultUrl });
   return { notification, newMatches };

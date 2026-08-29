@@ -207,7 +207,16 @@ document.addEventListener('hoshilu:search-degraded', event => {
     request_id: event.detail?.requestId
   });
 });
-document.addEventListener('hoshilu:wish-saved', () => send('wish_saved'));
+document.addEventListener('hoshilu:wish-saved', event => {
+  if (event.detail?.source !== 'continuous_search') {
+    send('wish_saved');
+    return;
+  }
+  // A guest save is a browser-observable conversion. Notification enablement
+  // is recorded only by the authenticated member-wish endpoint, so a browser
+  // cannot forge that business KPI.
+  send('continuous_search_saved');
+});
 
 document.addEventListener('click', event => {
   const target = event.target.closest('a,button');
