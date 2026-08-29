@@ -25,7 +25,7 @@ concurrency:
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 9
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,6 +95,21 @@ jobs:
             --attempts 3 --retry-ms 5000 \
             2>&1 | tee /tmp/hoshilu-search-sli.log
 
+      - name: Check daily AI actress approval, publication and inventory SLA
+        id: social_ai
+        continue-on-error: true
+        timeout-minutes: 2
+        working-directory: tools/line-worker
+        shell: bash
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -o pipefail
+          node scripts/check-social-ai-actress-sla.mjs \
+            --attempts 3 --retry-ms 5000 \
+            2>&1 | tee /tmp/hoshilu-social-ai-actress-sla.log
+
       - name: Reconcile production incident
         id: incident
         if: always()
@@ -102,6 +117,7 @@ jobs:
         env:
           EXTERNAL_OUTCOME: ${{ steps.external.outcome }}
           SLI_OUTCOME: ${{ steps.sli.outcome }}
+          SOCIAL_AI_OUTCOME: ${{ steps.social_ai.outcome }}
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
         with:
           script: |
@@ -115,7 +131,8 @@ jobs:
             };
             const externalFailed = process.env.EXTERNAL_OUTCOME !== 'success';
             const sliFailed = process.env.SLI_OUTCOME !== 'success';
-            const failed = externalFailed || sliFailed;
+            const socialAiFailed = process.env.SOCIAL_AI_OUTCOME !== 'success';
+            const failed = externalFailed || sliFailed || socialAiFailed;
             const { owner, repo } = context.repo;
             const issues = await github.paginate(github.rest.issues.listForRepo, {
               owner, repo, state: 'open', per_page: 100
@@ -134,6 +151,7 @@ jobs:
                 `- Last detected: \`${now}\``,
                 `- External contract check: **${externalFailed ? 'FAIL' : 'PASS'}**`,
                 `- Real-user search SLI: **${sliFailed ? 'FAIL' : 'PASS'}**`,
+                `- Daily AI-actress social SLA: **${socialAiFailed ? 'FAIL' : 'PASS'}**`,
                 `- Production source: \`${process.env.SOURCE_SHA || 'unknown'}\``,
                 `- Workflow run: ${runUrl}`,
                 '',
@@ -141,7 +159,10 @@ jobs:
                 '', '```text', readLog('/tmp/hoshilu-external-monitor.log'), '```', '</details>',
                 '',
                 '<details><summary>Sanitized real-user SLI check</summary>',
-                '', '```text', readLog('/tmp/hoshilu-search-sli.log'), '```', '</details>'
+                '', '```text', readLog('/tmp/hoshilu-search-sli.log'), '```', '</details>',
+                '',
+                '<details><summary>Sanitized daily AI-actress social SLA</summary>',
+                '', '```text', readLog('/tmp/hoshilu-social-ai-actress-sla.log'), '```', '</details>'
               ].join('\n');
               if (existing) {
                 await github.rest.issues.update({ owner, repo, issue_number: existing.number, body });
@@ -197,6 +218,6 @@ jobs:
         run: node scripts/production-monitor-control.mjs heartbeat --status COMPLETED --run-id "$GITHUB_RUN_ID"
 
       - name: Mark monitor run failed
-        if: always() && (steps.external.outcome != 'success' || steps.sli.outcome != 'success' || (github.event_name == 'schedule' && (steps.heartbeat_start.outcome != 'success' || steps.heartbeat_complete.outcome != 'success')) || (github.event_name == 'push' && steps.heartbeat_bootstrap.outcome != 'success'))
+        if: always() && (steps.external.outcome != 'success' || steps.sli.outcome != 'success' || steps.social_ai.outcome != 'success' || (github.event_name == 'schedule' && (steps.heartbeat_start.outcome != 'success' || steps.heartbeat_complete.outcome != 'success')) || (github.event_name == 'push' && steps.heartbeat_bootstrap.outcome != 'success'))
         shell: bash
         run: exit 1

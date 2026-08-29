@@ -9,15 +9,16 @@ import {
   runSocialAutopilotCycle
 } from '../src/social-autopilot.mjs';
 
-test('販促自動運用は今日の機能リールと14日先までの定期投稿を計画する', () => {
+test('販促自動運用は14日先までの日次AI女優リールと補助投稿を計画する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-09T03:00:00.000Z'));
-  assert.equal(posts.length, 27);
-  assert.equal(posts.filter(post => post.platform === 'X').length, 14);
-  assert.equal(posts.filter(post => post.platform === 'INSTAGRAM').length, 13);
+  const daily = posts.filter(post => post.creative_policy === 'DAILY_AI_ACTRESS_22');
+  assert.equal(posts.length, 42);
+  assert.equal(posts.filter(post => post.platform === 'X').length, 22);
+  assert.equal(posts.filter(post => post.platform === 'INSTAGRAM').length, 20);
+  assert.equal(daily.length, 28);
   assert.equal(posts.some(post => post.platform === 'TIKTOK'), false);
   assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
-  assert.ok(new Set(posts.filter(post => post.platform === 'INSTAGRAM')
-    .map(post => post.media_url)).size >= 5);
+  assert.equal(new Set(daily.map(post => post.creative_asset_id)).size, 7);
   assert.equal(posts.filter(post => post.platform === 'INSTAGRAM')
     .every(post => typeof post.media_url === 'string' && post.media_url.length > 0), true);
   assert.equal(posts.filter(post => post.platform === 'X')
@@ -25,16 +26,50 @@ test('販促自動運用は今日の機能リールと14日先までの定期投
   assert.equal(posts.some(post => post.platform === 'X' && !post.media_url), true);
   assert.equal(posts.some(post => post.platform === 'INSTAGRAM'
     && /guide-/.test(post.post_id) && /\.(?:jpg|png)$/.test(post.media_url)), true);
-  const launchReel = posts.find(post => post.content_id === 'feature-launch-reel-20260809');
-  assert.equal(launchReel.scheduled_at, '2026-08-09T11:15:00.000Z');
-  assert.match(launchReel.caption, /ランキングとAI最安比較/);
-  assert.match(launchReel.caption, /購入希望価格ウォッチ/);
-  for (const post of posts) {
+  assert.equal(posts.some(post => /hoshilu-feature-reel-13mall-v1\.mp4|instagram-reel-cross-market-audio-v2\.mp4/u
+    .test(post.media_url)), false, '女優なし旧動画は日次枠から除外する');
+  for (const post of posts.filter(post => post.campaign_id === 'hoshilu-official-13mall-v2')) {
     assert.match(post.caption, /13モール|検索|商品|条件|価格/);
     assert.doesNotMatch(post.caption, /(?:9|10)モール/);
     assert.equal(new URL(post.link).hostname, 'hoshilu.app');
     assert.match(new URL(post.link).searchParams.get('utm_campaign'), /13mall/);
   }
+});
+
+test('22歳v2 AI女優はJST14日連続で毎日X・Instagramの同一Reelペアを作る', () => {
+  const daily = buildSocialAutopilotPosts(new Date('2026-08-29T03:00:00.000Z'), 14)
+    .filter(post => post.creative_policy === 'DAILY_AI_ACTRESS_22');
+  assert.equal(daily.length, 28);
+  assert.equal(new Set(daily.map(post => post.jst_publish_date)).size, 14);
+  assert.equal(new Set(daily.map(post => post.creative_asset_id)).size, 7);
+  for (const date of new Set(daily.map(post => post.jst_publish_date))) {
+    const pair = daily.filter(post => post.jst_publish_date === date);
+    assert.deepEqual(new Set(pair.map(post => post.platform)), new Set(['X', 'INSTAGRAM']));
+    assert.equal(new Set(pair.map(post => post.media_url)).size, 1);
+    assert.equal(new Set(pair.map(post => post.creative_asset_id)).size, 1);
+    assert.equal(new Set(pair.map(post => post.scheduled_at)).size, 1);
+    assert.equal(new Set(pair.map(post => post.crosspost_group_id)).size, 1);
+    assert.equal(pair[0].content_id, `hoshilu-ai-actress-daily-${date}`);
+    assert.equal(pair[0].crosspost_group_id, pair[0].content_id);
+  }
+  for (const post of daily) {
+    assert.equal(post.campaign_id, 'hoshilu-ai-actress-daily-v1');
+    assert.equal(post.content_format, 'REEL');
+    assert.equal(post.ai_generated, 1);
+    assert.equal(post.persona_id, 'hoshilu-approved-model-reference-v2');
+    assert.equal(post.persona_age, 22);
+    assert.equal(post.ai_actress_present, 1);
+    assert.match(post.caption, /※この動画はAI生成・AI加工映像です。/u);
+    assert.match(post.caption, /#AI生成/u);
+    assert.match(post.scheduled_at, /T11:15:00\.000Z$/u);
+  }
+  const sundays = daily.filter(post => post.creative_asset_id === 'hoshilu_ai_actress_daily_sun_v1');
+  assert.equal(sundays.length, 4);
+  assert.ok(sundays.every(post => /daily-sun-v1\.mp4$/u.test(post.media_url)));
+  const korean = daily.filter(post => post.creative_asset_id === 'hoshilu_ai_actress_daily_tue_v1');
+  assert.equal(korean.length, 4);
+  assert.ok(korean.every(post => /韓国/u.test(post.caption) && /Qoo10/u.test(post.caption)
+    && /SHEIN/u.test(post.caption) && new URL(post.link).pathname === '/buzz'));
 });
 
 test('非BUZZ販促はスクショ・公開投稿URL・一言検索を過剰表現なしで訴求する', () => {
@@ -54,24 +89,24 @@ test('非BUZZ販促はスクショ・公開投稿URL・一言検索を過剰表�
   assert.match(searchGuide.media_url, /instagram-ambiguous-four-market-v1\.png/u);
 });
 
-test('Instagramは月〜土20時15分、月・水・金をリールにする', () => {
+test('Instagramは日曜を含む毎日20時15分にAI女優リールを計画する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-10T00:00:00.000Z'), 7)
-    .filter(post => post.platform === 'INSTAGRAM');
+    .filter(post => post.platform === 'INSTAGRAM' && post.content_format === 'REEL');
   assert.deepEqual(posts.map(post => post.scheduled_at), [
     '2026-08-10T11:15:00.000Z',
     '2026-08-11T11:15:00.000Z',
     '2026-08-12T11:15:00.000Z',
     '2026-08-13T11:15:00.000Z',
     '2026-08-14T11:15:00.000Z',
-    '2026-08-15T11:15:00.000Z'
+    '2026-08-15T11:15:00.000Z',
+    '2026-08-16T11:15:00.000Z'
   ]);
-  assert.equal(posts.filter(post => /evergreen-instagram/.test(post.content_id))
-    .every(post => post.media_url.endsWith('.mp4')), true);
+  assert.equal(posts.every(post => post.media_url.endsWith('.mp4')), true);
 });
 
 test('土曜の操作案内は承認済み質問カードと同じ検索説明をする', () => {
   const post = buildSocialAutopilotPosts(new Date('2026-08-22T10:59:00.000Z'), 1)
-    .find(item => item.platform === 'INSTAGRAM');
+    .find(item => item.platform === 'INSTAGRAM' && /instagram-guide/u.test(item.post_id));
   assert.ok(post);
   assert.equal(post.media_url, 'https://hoshilu.app/social/instagram-want-poll-v1.png');
   assert.match(post.caption, /商品名が分からなくても|見た場所・色・形・使い方/u);
@@ -98,20 +133,12 @@ test('Instagram定常投稿はBUZZ専用ビジュアルと/buzz送客を含む',
   }
 });
 
-test('AI動画と画像投稿は2週間単位で半分をBUZZにし、毎回テーマと通知を訴求する', () => {
+test('日次AI動画は7曜日の内容と送客先を素材に合わせ、補助画像はBUZZを織り交ぜる', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-24T00:00:00.000Z'), 28);
-  for (const platform of ['X', 'INSTAGRAM']) {
-    const videos = posts.filter((post) => post.platform === platform && /\.mp4$/u.test(post.media_url));
-    const buzzVideos = videos.filter((post) => new URL(post.link).pathname === '/buzz');
-    assert.equal(buzzVideos.length * 2, videos.length, `${platform} video BUZZ ratio`);
-    for (const post of buzzVideos) {
-      assert.match(post.caption, /今週のHOSHILU BUZZ/u);
-      assert.match(post.caption, /無料会員.*(?:火・金|火曜・金曜).*通知/u);
-      assert.match(post.caption, /韓国コスメ/u);
-      assert.match(post.caption, /Qoo10/u);
-      assert.match(post.caption, /SHEIN/u);
-    }
-  }
+  const videos = posts.filter((post) => post.creative_policy === 'DAILY_AI_ACTRESS_22');
+  assert.equal(videos.length, 56);
+  assert.equal(new Set(videos.map(post => post.creative_asset_id)).size, 7);
+  assert.equal(videos.some(post => /hoshilu-feature-reel|instagram-reel-cross-market/u.test(post.media_url)), false);
   const images = posts.filter((post) => post.platform === 'INSTAGRAM' && /\.(?:jpg|png)$/u.test(post.media_url));
   const buzzImages = images.filter((post) => new URL(post.link).pathname === '/buzz');
   assert.equal(buzzImages.length * 2, images.length, 'Instagram image BUZZ ratio');
@@ -120,7 +147,7 @@ test('AI動画と画像投稿は2週間単位で半分をBUZZにし、毎回テ�
 
 test('承認済みセラー投稿はX非動画枠へ少量だけ入り/for-sellersへ送客する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-22T00:00:00.000Z'), 180)
-    .filter(post => post.platform === 'X');
+    .filter(post => post.platform === 'X' && /-x-guide-/u.test(post.post_id));
   const sellerPosts = posts.filter(post => /^seller-/u.test(post.content_id));
   assert.ok(sellerPosts.length > 0);
   assert.ok(sellerPosts.length / posts.length >= 0.1);
@@ -249,12 +276,55 @@ test('販促自動運用は設定済み媒体だけをAPPROVEDで冪等登録す
     }
   };
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
-  assert.deepEqual(result, { enabled: true, planned: 27, inserted: 27 });
+  assert.deepEqual(result, { enabled: true, planned: 42, inserted: 42 });
   assert.equal(rows.some(row => row[1] === 'TIKTOK'), false);
-  assert.equal(rows.every(row => row[2] === 'hoshilu-official-13mall-v2'), true);
+  assert.deepEqual(new Set(rows.map(row => row[2])), new Set([
+    'hoshilu-official-13mall-v2', 'hoshilu-ai-actress-daily-v1'
+  ]));
   assert.equal(rows.filter(row => /\.mp4$/u.test(row[6])).every(row => row[10] === 1), true);
   assert.equal(rows.filter(row => !/\.mp4$/u.test(row[6])).every(row => row[10] === 0), true);
   assert.equal(rows.every(row => row[11] === 'APPROVED'), true);
+  const daily = rows.filter(row => row[2] === 'hoshilu-ai-actress-daily-v1');
+  assert.equal(daily.length, 28);
+  assert.equal(daily.every(row => row[12] === 1), true);
+  assert.equal(daily.every(row => /^hoshilu_ai_actress_daily_(?:sun|mon|tue|wed|thu|fri|sat)_v1$/u
+    .test(row[13])), true);
+  assert.equal(daily.every(row => row[14] === 'REEL'
+    && row[15] === 'DAILY_AI_ACTRESS_22' && row[17] === 1), true);
+  assert.equal(daily.every(row => row[3] === row[18]), true);
+});
+
+test('14日分が50件を超えてもキュー補充は1回のD1 batchにまとめる', async () => {
+  let batchCalls = 0;
+  let batchedStatements = 0;
+  const env = {
+    SOCIAL_AUTOPILOT_ENABLED: 'true',
+    X_USER_ACCESS_TOKEN: 'x-token',
+    X_PUBLISHING_ENABLED: 'true',
+    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    X_EXPECTED_USERNAME: 'hoshilu_app',
+    INSTAGRAM_ACCESS_TOKEN: 'ig-token',
+    INSTAGRAM_ACCOUNT_ID: 'ig-account',
+    INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    THREADS_ACCESS_TOKEN: 'threads-token',
+    THREADS_USER_ID: '123',
+    THREADS_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+    PRODUCT_DB: {
+      prepare(sql) {
+        return { bind(...values) { return { sql, values }; } };
+      },
+      async batch(statements) {
+        batchCalls += 1;
+        batchedStatements = statements.length;
+        return statements.map(() => ({ meta: { changes: 1 } }));
+      }
+    }
+  };
+  const result = await seedSocialAutopilotQueue(env, new Date('2026-08-29T03:00:00.000Z'));
+  assert.ok(result.planned > 50);
+  assert.equal(result.inserted, result.planned);
+  assert.equal(batchCalls, 1);
+  assert.equal(batchedStatements, result.planned);
 });
 
 test('14日分が50件を超えてもキュー補充は1回のD1 batchにまとめる', async () => {
@@ -320,9 +390,11 @@ test('公開履歴がある完成動画の後日再利用はREVIEW_REQUIREDへ�
   assert.match(insert, /SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813/u);
   assert.match(insert, /social_post_queue\.external_post_id=''/u);
   assert.match(insert, /social_post_queue\.published_at=''/u);
+  assert.match(insert, /creative_asset_id,content_format,creative_policy,jst_publish_date/u);
+  assert.match(insert, /ai_generated,crosspost_group_id/u);
 });
 
-test('完成動画は同時クロスポストだけを承認し、後日の既存APPROVED再利用も隔離する', async (t) => {
+test('台帳承認済み7曜日AI女優だけは週次再利用をAPPROVEDで維持する', async (t) => {
   const sqlite = new DatabaseSync(':memory:');
   t.after(() => sqlite.close());
   sqlite.exec(`CREATE TABLE social_post_queue (
@@ -330,6 +402,9 @@ test('完成動画は同時クロスポストだけを承認し、後日の既�
     content_id TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL, link TEXT NOT NULL DEFAULT '',
     media_url TEXT NOT NULL DEFAULT '', scheduled_at TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'REVIEW_REQUIRED', affiliate INTEGER NOT NULL DEFAULT 0,
+    creative_asset_id TEXT NOT NULL DEFAULT '', content_format TEXT NOT NULL DEFAULT '',
+    creative_policy TEXT NOT NULL DEFAULT '', jst_publish_date TEXT NOT NULL DEFAULT '',
+    ai_generated INTEGER NOT NULL DEFAULT 0, crosspost_group_id TEXT NOT NULL DEFAULT '',
     external_post_id TEXT NOT NULL DEFAULT '', last_error TEXT NOT NULL DEFAULT '',
     approved_at TEXT NOT NULL DEFAULT '', published_at TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL, updated_at TEXT NOT NULL, platform_job_id TEXT NOT NULL DEFAULT ''
@@ -354,25 +429,28 @@ test('完成動画は同時クロスポストだけを承認し、後日の既�
   };
   const now = new Date('2026-08-10T00:00:00.000Z');
   await seedSocialAutopilotQueue(env, now);
-  const videoRows = sqlite.prepare(`SELECT post_id,platform,scheduled_at,status,last_error,approved_at
+  const videoRows = sqlite.prepare(`SELECT post_id,platform,scheduled_at,status,last_error,approved_at,
+      creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,content_id
     FROM social_post_queue WHERE media_url LIKE '%.mp4' ORDER BY scheduled_at,platform`).all();
-  assert.deepEqual(videoRows.slice(0, 2).map(row => row.status), ['APPROVED', 'APPROVED']);
-  assert.equal(videoRows.slice(2).every(row => row.status === 'REVIEW_REQUIRED'), true);
+  assert.equal(videoRows.length, 14);
+  assert.equal(videoRows.every(row => row.status === 'APPROVED'), true);
+  assert.equal(new Set(videoRows.map(row => row.creative_asset_id)).size, 7);
+  assert.equal(videoRows.every(row => row.content_format === 'REEL'
+    && row.creative_policy === 'DAILY_AI_ACTRESS_22' && row.ai_generated === 1), true);
+  assert.equal(videoRows.every(row => row.content_id === row.crosspost_group_id), true);
 
-  const replay = videoRows[2];
-  sqlite.prepare(`UPDATE social_post_queue SET status='APPROVED',approved_at=?2 WHERE post_id=?1`)
-    .run(replay.post_id, now.toISOString());
+  const replay = videoRows.at(-1);
+  sqlite.prepare(`UPDATE social_post_queue SET status='REVIEW_REQUIRED',approved_at='',
+    last_error='MEDIA_REUSE_REVIEW_REQUIRED' WHERE post_id=?1`).run(replay.post_id);
   await seedSocialAutopilotQueue(env, now);
-  const quarantined = sqlite.prepare(`SELECT status,last_error,approved_at
+  const restored = sqlite.prepare(`SELECT status,last_error,approved_at
     FROM social_post_queue WHERE post_id=?1`).get(replay.post_id);
-  assert.deepEqual({ ...quarantined }, {
-    status: 'REVIEW_REQUIRED',
-    last_error: 'MEDIA_REUSE_REVIEW_REQUIRED',
-    approved_at: ''
-  });
+  assert.equal(restored.status, 'APPROVED');
+  assert.equal(restored.last_error, '');
+  assert.equal(restored.approved_at, now.toISOString());
 });
 
-test('過去の一時隔離行だけを再評価し、完成動画の再利用はAPPROVEDへ戻さない', async (t) => {
+test('台帳承認済み日次女優以外の完成動画再利用はREVIEW_REQUIREDのままにする', async (t) => {
   const sqlite = new DatabaseSync(':memory:');
   t.after(() => sqlite.close());
   sqlite.exec(`CREATE TABLE social_post_queue (
@@ -380,6 +458,9 @@ test('過去の一時隔離行だけを再評価し、完成動画の再利用�
     content_id TEXT NOT NULL DEFAULT '', caption TEXT NOT NULL, link TEXT NOT NULL DEFAULT '',
     media_url TEXT NOT NULL DEFAULT '', scheduled_at TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'REVIEW_REQUIRED', affiliate INTEGER NOT NULL DEFAULT 0,
+    creative_asset_id TEXT NOT NULL DEFAULT '', content_format TEXT NOT NULL DEFAULT '',
+    creative_policy TEXT NOT NULL DEFAULT '', jst_publish_date TEXT NOT NULL DEFAULT '',
+    ai_generated INTEGER NOT NULL DEFAULT 0, crosspost_group_id TEXT NOT NULL DEFAULT '',
     external_post_id TEXT NOT NULL DEFAULT '', last_error TEXT NOT NULL DEFAULT '',
     approved_at TEXT NOT NULL DEFAULT '', published_at TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL, updated_at TEXT NOT NULL, platform_job_id TEXT NOT NULL DEFAULT ''
@@ -395,30 +476,35 @@ test('過去の一時隔離行だけを再評価し、完成動画の再利用�
   }
   const env = {
     SOCIAL_AUTOPILOT_ENABLED: 'true',
-    X_USER_ACCESS_TOKEN: 'x-token',
-    X_PUBLISHING_ENABLED: 'true',
-    X_EVERGREEN_AUTOPILOT_ENABLED: 'true',
-    X_EXPECTED_USERNAME: 'hoshilu_app',
+    APPROVED_MODEL_REEL_REPLAY_ENABLED: 'true',
+    INSTAGRAM_ACCESS_TOKEN: 'ig-token',
+    INSTAGRAM_ACCOUNT_ID: 'ig-account',
     PRODUCT_DB: { prepare(sql) { return new Statement(sql); } }
   };
-  const now = new Date('2026-08-10T00:00:00.000Z');
+  const now = new Date('2026-08-12T14:01:00.000Z');
+  const mediaUrl = 'https://hoshilu.app/social/hoshilu-approved-model-reel-20260812.mp4';
+  sqlite.prepare(`INSERT INTO social_post_queue
+    (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
+     external_post_id,published_at,created_at,updated_at)
+    VALUES ('previous-generic-video','INSTAGRAM','manual','manual','previous caption','',?1,
+      '2026-08-12T13:00:00.000Z','PUBLISHED','external-1','2026-08-12T13:01:00.000Z',?2,?2)`)
+    .run(mediaUrl, now.toISOString());
   await seedSocialAutopilotQueue(env, now);
-  const firstVideo = sqlite.prepare(`SELECT post_id,media_url FROM social_post_queue
-    WHERE media_url LIKE '%.mp4' ORDER BY scheduled_at,platform LIMIT 1`).get();
-  sqlite.prepare(`UPDATE social_post_queue SET status='CANCELLED',
-    last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'`).run();
-  // A previous publication of this media makes any later replay require review.
-  sqlite.prepare(`UPDATE social_post_queue SET status='PUBLISHED',external_post_id='123',
-    published_at='2026-08-09T11:15:01.000Z' WHERE post_id=?1`).run(firstVideo.post_id);
+  const held = sqlite.prepare(`SELECT status,last_error,approved_at FROM social_post_queue
+    WHERE post_id='hoshilu-approved-model-reel-20260812'`).get();
+  assert.equal(held.status, 'REVIEW_REQUIRED');
+  assert.equal(held.approved_at, '');
+
+  sqlite.prepare(`UPDATE social_post_queue SET status='APPROVED',approved_at=?2
+    WHERE post_id=?1`).run('hoshilu-approved-model-reel-20260812', now.toISOString());
   await seedSocialAutopilotQueue(env, now);
-  const rows = sqlite.prepare(`SELECT status,last_error,media_url FROM social_post_queue
-    WHERE post_id<>?1 ORDER BY scheduled_at,platform`).all(firstVideo.post_id);
-  const staticRows = rows.filter(row => !/\.mp4$/u.test(row.media_url));
-  const repeatedVideoRows = rows.filter(row => row.media_url === firstVideo.media_url);
-  assert.equal(staticRows.every(row => row.status === 'APPROVED' && row.last_error === ''), true);
-  assert.equal(repeatedVideoRows.length > 0, true);
-  assert.equal(repeatedVideoRows.every(row => row.status === 'REVIEW_REQUIRED'
-    && row.last_error === 'MEDIA_REUSE_REVIEW_REQUIRED'), true);
+  const quarantined = sqlite.prepare(`SELECT status,last_error,approved_at FROM social_post_queue
+    WHERE post_id='hoshilu-approved-model-reel-20260812'`).get();
+  assert.deepEqual({ ...quarantined }, {
+    status: 'REVIEW_REQUIRED',
+    last_error: 'MEDIA_REUSE_REVIEW_REQUIRED',
+    approved_at: ''
+  });
 });
 
 test('販促自動運用は認証未設定の媒体をキューへ入れない', async () => {
@@ -440,7 +526,7 @@ test('販促自動運用は認証未設定の媒体をキューへ入れない',
     }
   };
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
-  assert.equal(result.planned, 14);
+  assert.equal(result.planned, 22);
   assert.deepEqual(new Set(platforms), new Set(['X']));
 });
 
@@ -515,7 +601,7 @@ test('D1に保存したInstagram OAuth接続も自動投稿の接続済み媒体
     }
   };
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
-  assert.equal(result.planned, 13);
+  assert.equal(result.planned, 20);
   assert.deepEqual(new Set(platforms), new Set(['INSTAGRAM']));
 });
 
@@ -681,7 +767,7 @@ test('X定常ローテーションはHOSHILU BUZZ紹介を含み、/buzzへUTM�
 });
 
 
-test('2026-08-28にユーザーが明示承認したX・Instagramの再利用行だけを再承認対象にする', async () => {
+test('明示承認済み日次AI女優行だけが週次再利用の例外メタデータを持つ', async () => {
   const rows = [];
   const env = {
     SOCIAL_AUTOPILOT_ENABLED: 'true',
@@ -702,13 +788,35 @@ test('2026-08-28にユーザーが明示承認したX・Instagramの再利用行
       }
     }
   };
-  await seedSocialAutopilotQueue(env, new Date('2026-08-27T15:00:00.000Z'));
-  const approved = rows.filter(row => row[0] === 'hoshilu-official-13mall-v2-x-2026-08-28'
-    || row[0] === 'hoshilu-official-13mall-v2-instagram-2026-08-28');
-  assert.equal(approved.length, 2);
-  assert.deepEqual(new Set(approved.map(row => row[1])), new Set(['X', 'INSTAGRAM']));
-  assert.equal(approved.every(row => row[12] === 1), true);
-  assert.equal(rows.filter(row => !approved.includes(row)).every(row => row[12] === 0), true);
+  await seedSocialAutopilotQueue(env, new Date('2026-08-29T03:00:00.000Z'));
+  const daily = rows.filter(row => row[2] === 'hoshilu-ai-actress-daily-v1');
+  assert.equal(daily.length, 28);
+  assert.equal(daily.every(row => row[12] === 1), true);
+  assert.equal(rows.filter(row => !daily.includes(row)).every(row => row[12] === 0), true);
+  const today = daily.filter(row => row[16] === '2026-08-29');
+  assert.equal(today.length, 2);
+  assert.deepEqual(new Set(today.map(row => row[1])), new Set(['X', 'INSTAGRAM']));
+  assert.equal(today.every(row => row[3] === 'hoshilu-ai-actress-daily-2026-08-29'
+    && row[13] === 'hoshilu_ai_actress_daily_sat_v1'
+    && row[14] === 'REEL'
+    && row[15] === 'DAILY_AI_ACTRESS_22'
+    && row[17] === 1
+    && row[18] === row[3]), true);
+});
+
+test('8月28日再公開CIは既知の技術障害2件だけを復旧しInstagramコンテナを保持する', () => {
+  const workflow = readFileSync(new URL('../../../.github/workflows/ci.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /\[retry-approved-reel-20260828\]/);
+  const update = workflow.split('\n').find(line => line.includes('UPDATE social_post_queue')
+    && line.includes('hoshilu-official-13mall-v2-x-2026-08-28')
+    && line.includes('hoshilu-official-13mall-v2-instagram-2026-08-28')
+    && line.includes('X_MEDIA_FETCH_522')) || '';
+  assert.match(update, /status='FAILED'/);
+  assert.match(update, /last_error LIKE 'Too many subrequests by single Worker invocation\.%'/);
+  assert.match(update, /external_post_id=''/);
+  assert.match(update, /published_at=''/);
+  assert.doesNotMatch(update.slice(0, update.indexOf(' WHERE ')), /platform_job_id/);
+  assert.match(workflow, /Verify both public post URLs/);
 });
 
 test('8月28日再公開CIは既知の技術障害2件だけを復旧しInstagramコンテナを保持する', () => {

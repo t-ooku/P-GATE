@@ -13,6 +13,71 @@ import {
 } from '../src/social-publisher.mjs';
 
 const X_EXPECTED_USERNAME = 'hoshilu_app';
+const DAILY_AI_ACTRESS_CAPTION =
+  '今日のバズを見てみよう。※この動画はAI生成・AI加工映像です。 #AI生成';
+
+function dailyAiActressPost(overrides = {}) {
+  return {
+    post_id: 'hoshilu-ai-actress-daily-v1-instagram-2026-08-29',
+    platform: 'INSTAGRAM',
+    campaign_id: 'hoshilu-ai-actress-daily-v1',
+    content_id: 'hoshilu-ai-actress-daily-2026-08-29',
+    caption: DAILY_AI_ACTRESS_CAPTION,
+    link: 'https://hoshilu.app/buzz?utm_source=instagram',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4',
+    scheduled_at: '2026-08-29T11:15:00.000Z',
+    status: 'APPROVED',
+    creative_asset_id: 'hoshilu_ai_actress_daily_sat_v1',
+    content_format: 'REEL',
+    creative_policy: 'DAILY_AI_ACTRESS_22',
+    jst_publish_date: '2026-08-29',
+    ai_generated: 1,
+    crosspost_group_id: 'hoshilu-ai-actress-daily-2026-08-29',
+    ...overrides
+  };
+}
+
+function dailyAiActressEvidence(overrides = {}) {
+  return {
+    asset_id: 'hoshilu_ai_actress_daily_sat_v1',
+    media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4',
+    media_sha256: '04dc93f703b34c35cefaa14a9cf9c7e9c5d5d5b2080c93793e1ec9cb2bcf8641',
+    content_format: 'REEL',
+    creative_policy: 'DAILY_AI_ACTRESS_22',
+    persona_id: 'hoshilu-approved-model-reference-v2',
+    persona_age: 22,
+    ai_actress_present: 1,
+    audio_confirmed: 1,
+    rights_confirmed: 1,
+    rights_ledger_id: 'hoshilu_ai_actress_daily_sat_v1',
+    qa_status: 'PASSED',
+    ai_generated: 1,
+    ai_disclosure_confirmed: 1,
+    approved_at: '2026-08-29T00:00:00.000Z',
+    x_crosspost_count: 1,
+    instagram_crosspost_count: 1,
+    ...overrides
+  };
+}
+
+function dailyAiActressDb(evidence = dailyAiActressEvidence()) {
+  return {
+    prepare(sql) {
+      assert.match(sql, /FROM social_creative_assets/u);
+      return {
+        bind(...values) {
+          assert.deepEqual(values, [
+            'hoshilu_ai_actress_daily_sat_v1',
+            'hoshilu-ai-actress-daily-2026-08-29',
+            '2026-08-29',
+            'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4'
+          ]);
+          return { first: async () => evidence };
+        }
+      };
+    }
+  };
+}
 
 function xBearerEnv(overrides = {}) {
   return {
@@ -113,6 +178,131 @@ test('unapproved posts can never be published', async () => {
     caption: 'TikTokで見た光るスマホケースを探してみた。',
     status: 'REVIEW_REQUIRED'
   }, { X_USER_ACCESS_TOKEN: 'token' }), /NOT_APPROVED/);
+});
+
+test('22歳v2 AI女優ポリシーは公開直前に人物・音源・権利・QA・AI開示と両媒体割当を全件検証する', async () => {
+  const invalidEvidence = [
+    { persona_id: 'abstract-video' },
+    { persona_age: 21 },
+    { ai_actress_present: 0 },
+    { audio_confirmed: 0 },
+    { rights_confirmed: 0 },
+    { rights_ledger_id: '' },
+    { qa_status: 'PENDING' },
+    { ai_generated: 0 },
+    { ai_disclosure_confirmed: 0 },
+    { media_sha256: 'not-a-sha256' },
+    { x_crosspost_count: 0 },
+    { instagram_crosspost_count: 0 }
+  ];
+  let externalRequests = 0;
+  for (const invalid of invalidEvidence) {
+    await assert.rejects(() => publishSocialPost(
+      dailyAiActressPost(),
+      {
+        PRODUCT_DB: dailyAiActressDb(dailyAiActressEvidence(invalid)),
+        INSTAGRAM_ACCESS_TOKEN: 'token',
+        INSTAGRAM_ACCOUNT_ID: '123'
+      },
+      async () => {
+        externalRequests += 1;
+        return Response.json({ id: 'must-not-publish' });
+      }
+    ), /SOCIAL_AI_ACTRESS_POLICY_REQUIRED/u);
+  }
+  assert.equal(externalRequests, 0);
+
+  await assert.rejects(() => publishSocialPost(
+    dailyAiActressPost({ caption: 'AI女優の動画です。 #AI生成' }),
+    { PRODUCT_DB: dailyAiActressDb(), INSTAGRAM_ACCESS_TOKEN: 'token', INSTAGRAM_ACCOUNT_ID: '123' },
+    async () => {
+      externalRequests += 1;
+      return Response.json({ id: 'must-not-publish' });
+    }
+  ), /SOCIAL_AI_ACTRESS_POLICY_REQUIRED/u);
+  assert.equal(externalRequests, 0);
+
+  await assert.rejects(() => publishSocialPost(
+    dailyAiActressPost({ creative_policy: '' }),
+    { PRODUCT_DB: dailyAiActressDb(), INSTAGRAM_ACCESS_TOKEN: 'token', INSTAGRAM_ACCOUNT_ID: '123' },
+    async () => {
+      externalRequests += 1;
+      return Response.json({ id: 'must-not-publish' });
+    }
+  ), /SOCIAL_AI_ACTRESS_POLICY_REQUIRED/u);
+  assert.equal(externalRequests, 0);
+});
+
+test('適格な毎日AI女優Reelはqueue metadataからInstagram AI生成ラベルを設定する', async () => {
+  let createPayload;
+  const id = await publishSocialPost(dailyAiActressPost(), {
+    PRODUCT_DB: dailyAiActressDb(),
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    INSTAGRAM_POLL_DELAY_MS: 0
+  }, async (url, options = {}) => {
+    if (url.endsWith('/123/media')) {
+      createPayload = JSON.parse(options.body);
+      return Response.json({ id: 'daily-ai-actress-container' });
+    }
+    if (url.includes('/daily-ai-actress-container?fields=status_code')) {
+      return Response.json({ status_code: 'FINISHED' });
+    }
+    if (url.endsWith('/123/media_publish')) return Response.json({ id: 'daily-ai-actress-reel' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.equal(id, 'daily-ai-actress-reel');
+  assert.equal(createPayload.media_type, 'REELS');
+  assert.equal(createPayload.is_ai_generated, true);
+  assert.match(createPayload.caption, /※この動画はAI生成・AI加工映像です。/u);
+  assert.match(createPayload.caption, /#AI生成/u);
+});
+
+test('毎日AI女優ゲート不合格はFAILED放置せずREVIEW_REQUIREDへ戻し外部投稿しない', async () => {
+  const row = dailyAiActressPost({
+    post_id: 'daily-ai-actress-invalid',
+    qa_status: 'PENDING'
+  });
+  const updates = [];
+  const env = {
+    INSTAGRAM_ACCESS_TOKEN: 'token',
+    INSTAGRAM_ACCOUNT_ID: '123',
+    PRODUCT_DB: {
+      prepare(sql) {
+        if (sql.includes('SELECT * FROM social_post_queue')) {
+          return { bind: () => ({ all: async () => ({ results: [row] }) }) };
+        }
+        if (sql.includes('FROM social_creative_assets')) {
+          return { bind: () => ({ first: async () => dailyAiActressEvidence({ qa_status: 'PENDING' }) }) };
+        }
+        return {
+          bind(...values) {
+            return {
+              run: async () => {
+                updates.push({ sql, values });
+                return { meta: { changes: sql.includes("status='PUBLISHING'") ? 1 : 0 } };
+              }
+            };
+          }
+        };
+      }
+    }
+  };
+  let externalRequests = 0;
+  const result = await runDueSocialPosts(env, new Date('2026-08-29T11:15:00.000Z'), async () => {
+    externalRequests += 1;
+    return Response.json({ id: 'must-not-publish' });
+  });
+  assert.deepEqual(result, { checked: 1, published: 0 });
+  assert.equal(externalRequests, 0);
+  const review = updates.find(item => item.sql.includes("status='REVIEW_REQUIRED'"));
+  assert.ok(review);
+  assert.deepEqual(review.values, [
+    'daily-ai-actress-invalid', 'SOCIAL_AI_ACTRESS_POLICY_REQUIRED',
+    '2026-08-29T11:15:00.000Z'
+  ]);
+  assert.equal(updates.some(item => item.sql.includes("status='FAILED'")
+    && item.values[0] === row.post_id), false);
 });
 
 test('1件の公開失敗が同時刻の次の承認済み投稿を止めない', async () => {

@@ -13,6 +13,11 @@ const HASHTAG_PATTERN = /#[\p{L}\p{N}_ー]+/gu;
 const INVALID_HOSHILU_OWNER_CLAIM = /(?:ITG(?:グループ株式会社)?[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}(?:HOSHILU|ホシル)|(?:HOSHILU|ホシル)[^。\n]{0,20}(?:所有|運営))|(?:HOSHILU|ホシル)[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}ITG(?:グループ株式会社)?|ITG(?:グループ株式会社)?[^。\n]{0,20}(?:所有|運営)))/i;
 const INSTAGRAM_STATUS_CHECKS_PER_INVOCATION = 12;
 const SOCIAL_PUBLISH_RETRY_DELAY_MS = 5 * 60 * 1000;
+const DAILY_AI_ACTRESS_POLICY = 'DAILY_AI_ACTRESS_22';
+const DAILY_AI_ACTRESS_CAMPAIGN = 'hoshilu-ai-actress-daily-v1';
+const DAILY_AI_ACTRESS_PERSONA = 'hoshilu-approved-model-reference-v2';
+const DAILY_AI_ACTRESS_DISCLOSURE = '※この動画はAI生成・AI加工映像です。';
+const DAILY_AI_ACTRESS_POLICY_ERROR = 'SOCIAL_AI_ACTRESS_POLICY_REQUIRED';
 
 const clean = (value, max = 2000) => String(value || '')
   .normalize('NFKC')
@@ -206,8 +211,99 @@ export function normalizeSocialPost(input = {}) {
     platform_job_id: clean(input.platform_job_id, 120),
     scheduled_at: clean(input.scheduled_at, 40),
     status: clean(input.status || 'REVIEW_REQUIRED', 30).toUpperCase(),
-    affiliate
+    affiliate,
+    creative_asset_id: clean(input.creative_asset_id, 120),
+    content_format: clean(input.content_format, 20).toUpperCase(),
+    creative_policy: clean(input.creative_policy, 80).toUpperCase(),
+    jst_publish_date: clean(input.jst_publish_date, 10),
+    ai_generated: input.ai_generated === true || Number(input.ai_generated) === 1,
+    crosspost_group_id: clean(input.crosspost_group_id, 140)
   };
+}
+
+function expectedDailyAiActressAssetId(jstPublishDate) {
+  const value = String(jstPublishDate || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(value)) return '';
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) return '';
+  const weekday = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getUTCDay()];
+  return `hoshilu_ai_actress_daily_${weekday}_v1`;
+}
+
+function failDailyAiActressPolicy() {
+  throw new Error(DAILY_AI_ACTRESS_POLICY_ERROR);
+}
+
+async function assertDailyAiActressPolicy(post, env) {
+  const applies = post.creative_policy === DAILY_AI_ACTRESS_POLICY
+    || post.campaign_id === DAILY_AI_ACTRESS_CAMPAIGN;
+  if (!applies) return post;
+  const expectedAssetId = expectedDailyAiActressAssetId(post.jst_publish_date);
+  const expectedCrosspostGroup = `hoshilu-ai-actress-daily-${post.jst_publish_date}`;
+  if (!env.PRODUCT_DB
+    || post.creative_policy !== DAILY_AI_ACTRESS_POLICY
+    || post.campaign_id !== DAILY_AI_ACTRESS_CAMPAIGN
+    || !['X', 'INSTAGRAM'].includes(post.platform)
+    || post.content_format !== 'REEL'
+    || !post.ai_generated
+    || !expectedAssetId
+    || post.creative_asset_id !== expectedAssetId
+    || post.crosspost_group_id !== expectedCrosspostGroup
+    || post.content_id !== expectedCrosspostGroup
+    || !post.media_url
+    || !Number.isFinite(Date.parse(post.scheduled_at))
+    || !post.caption.includes(DAILY_AI_ACTRESS_DISCLOSURE)
+    || !post.caption.includes('#AI生成')) {
+    failDailyAiActressPolicy();
+  }
+
+  let evidence;
+  try {
+    evidence = await env.PRODUCT_DB.prepare(`SELECT
+      a.asset_id,a.media_url,a.media_sha256,a.content_format,a.creative_policy,
+      a.persona_id,a.persona_age,a.ai_actress_present,a.audio_confirmed,
+      a.rights_confirmed,a.rights_ledger_id,a.qa_status,a.ai_generated,
+      a.ai_disclosure_confirmed,a.approved_at,
+      (SELECT COUNT(*) FROM social_post_queue q
+        WHERE q.crosspost_group_id=?2 AND q.content_id=?2
+          AND q.jst_publish_date=?3 AND q.campaign_id='hoshilu-ai-actress-daily-v1'
+          AND q.creative_policy='DAILY_AI_ACTRESS_22' AND q.content_format='REEL'
+          AND q.creative_asset_id=?1 AND q.media_url=?4 AND q.ai_generated=1
+          AND q.platform='X' AND q.status<>'CANCELLED') AS x_crosspost_count,
+      (SELECT COUNT(*) FROM social_post_queue q
+        WHERE q.crosspost_group_id=?2 AND q.content_id=?2
+          AND q.jst_publish_date=?3 AND q.campaign_id='hoshilu-ai-actress-daily-v1'
+          AND q.creative_policy='DAILY_AI_ACTRESS_22' AND q.content_format='REEL'
+          AND q.creative_asset_id=?1 AND q.media_url=?4 AND q.ai_generated=1
+          AND q.platform='INSTAGRAM' AND q.status<>'CANCELLED') AS instagram_crosspost_count
+      FROM social_creative_assets a WHERE a.asset_id=?1 LIMIT 1`)
+      .bind(post.creative_asset_id, post.crosspost_group_id,
+        post.jst_publish_date, post.media_url).first();
+  } catch {
+    failDailyAiActressPolicy();
+  }
+
+  if (!evidence
+    || evidence.asset_id !== post.creative_asset_id
+    || evidence.media_url !== post.media_url
+    || !/^[0-9a-f]{64}$/u.test(String(evidence.media_sha256 || ''))
+    || evidence.content_format !== 'REEL'
+    || evidence.creative_policy !== DAILY_AI_ACTRESS_POLICY
+    || evidence.persona_id !== DAILY_AI_ACTRESS_PERSONA
+    || Number(evidence.persona_age) !== 22
+    || Number(evidence.ai_actress_present) !== 1
+    || Number(evidence.audio_confirmed) !== 1
+    || Number(evidence.rights_confirmed) !== 1
+    || !String(evidence.rights_ledger_id || '').trim()
+    || evidence.qa_status !== 'PASSED'
+    || Number(evidence.ai_generated) !== 1
+    || Number(evidence.ai_disclosure_confirmed) !== 1
+    || !Number.isFinite(Date.parse(String(evidence.approved_at || '')))
+    || Number(evidence.x_crosspost_count) < 1
+    || Number(evidence.instagram_crosspost_count) < 1) {
+    failDailyAiActressPolicy();
+  }
+  return post;
 }
 
 export function socialPublisherReadiness(env = {}) {
@@ -494,7 +590,8 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
         media_type: 'REELS',
         video_url: post.media_url,
         caption: instagramCaption,
-        ...(post.campaign_id === 'hoshilu-runway-video' ? { is_ai_generated: true } : {}),
+        ...((post.ai_generated || post.campaign_id === 'hoshilu-runway-video')
+          ? { is_ai_generated: true } : {}),
         share_to_feed: true,
         hide_like_and_view_counts: true
       }
@@ -670,6 +767,7 @@ async function publishThreads(post, env, fetchImpl, hooks = {}) {
 export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}) {
   const normalized = normalizeSocialPost(post);
   if (normalized.status !== 'APPROVED') throw new Error('SOCIAL_POST_NOT_APPROVED');
+  await assertDailyAiActressPolicy(normalized, env);
   if (normalized.platform === 'INSTAGRAM') {
     const credential = await getInstagramPublishCredentials(env, fetchImpl);
     return publishInstagram(normalized, {
@@ -739,7 +837,11 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
       published += 1;
     } catch (error) {
       const message = clean(error?.message || error, 300);
-      if (isTransientSocialPublishError(message)) {
+      if (message.includes(DAILY_AI_ACTRESS_POLICY_ERROR)) {
+        await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='REVIEW_REQUIRED',last_error=?2,
+          updated_at=?3 WHERE post_id=?1 AND status IN ('APPROVED','PUBLISHING')`)
+          .bind(row.post_id, DAILY_AI_ACTRESS_POLICY_ERROR, now.toISOString()).run();
+      } else if (isTransientSocialPublishError(message)) {
         const resetPlatformJob = ['INSTAGRAM_CONTAINER_EXPIRED', 'THREADS_CONTAINER_EXPIRED']
           .includes(message) ? 1 : 0;
         await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='APPROVED',last_error=?2,
@@ -758,7 +860,8 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
 
 export const socialPublisherTest = Object.freeze({
   uploadXVideo,
-  isTransientSocialPublishError
+  isTransientSocialPublishError,
+  assertDailyAiActressPolicy
 });
 
 function instagramPermalink(value) {
@@ -791,7 +894,7 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
   const requestedPostId = clean(onlyPostId, 100);
   let due;
   try {
-    due = await env.PRODUCT_DB.prepare(`SELECT q.post_id,q.campaign_id,q.external_post_id,q.published_at,q.link
+    due = await env.PRODUCT_DB.prepare(`SELECT q.post_id,q.campaign_id,q.external_post_id,q.published_at,q.link,q.ai_generated
       FROM social_post_queue q
       WHERE (?1='' OR q.post_id=?1)
       AND q.platform='INSTAGRAM' AND q.status='PUBLISHED'
@@ -825,7 +928,9 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
       const payload = await response.json();
       const permalink = instagramPermalink(payload?.permalink);
       if (!permalink) throw new Error('INSTAGRAM_PERMALINK_INVALID');
-      if (row.campaign_id === 'hoshilu-runway-video' && payload?.is_ai_generated !== true) {
+      const expectsAiLabel = Number(row.ai_generated) === 1
+        || row.campaign_id === 'hoshilu-runway-video';
+      if (expectsAiLabel && payload?.is_ai_generated !== true) {
         throw new Error('INSTAGRAM_AI_LABEL_NOT_CONFIRMED');
       }
       const utm = trackingFields(row.link);
@@ -838,7 +943,7 @@ export async function syncInstagramPublishedPermalinks(env, now = new Date(), fe
           updated_at=excluded.updated_at`)
         .bind(`published:${row.post_id}`, row.post_id, publishedAt, publishedAt,
           permalink, utm.source, utm.medium, utm.campaign, utm.content, timestamp).run();
-      if (row.campaign_id === 'hoshilu-runway-video') {
+      if (expectsAiLabel) {
         console.log('INSTAGRAM_AI_LABEL_CONFIRMED', row.post_id);
       }
       saved += 1;
@@ -978,6 +1083,7 @@ export async function handleSocialAdminRoutes(request, env) {
       // granting access to the protected admin queue.
       const audit = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,status,
         CASE WHEN last_error IN ('MEDIA_REUSE_REVIEW_REQUIRED',
+          'SOCIAL_AI_ACTRESS_POLICY_REQUIRED',
           'SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813')
           THEN last_error ELSE '' END AS safe_error_code
         FROM social_post_queue WHERE post_id=?1 LIMIT 1`).bind(postId).first();
@@ -1040,7 +1146,8 @@ export async function handleSocialAdminRoutes(request, env) {
   if (!env.PRODUCT_DB) return Response.json({ ok: false, error: 'PRODUCT_DB_NOT_CONFIGURED' }, { status: 503 });
   if (request.method === 'GET' && url.pathname === '/api/internal/social/queue') {
     const result = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,caption,link,media_url,
-      scheduled_at,status,affiliate,external_post_id,last_error,updated_at
+      scheduled_at,status,affiliate,external_post_id,last_error,updated_at,
+      creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id
       FROM social_post_queue ORDER BY scheduled_at ASC LIMIT 100`).all();
     return Response.json({ ok: true, posts: result.results || [], readiness: await socialPublisherReadinessWithStoredCredentials(env) });
   }
@@ -1066,6 +1173,7 @@ export async function handleSocialAdminRoutes(request, env) {
     try {
       const post = normalizeSocialPost(existing);
       if (post.platform !== 'X' && post.platform !== 'THREADS' && !post.media_url) throw new Error(`${post.platform}_MEDIA_REQUIRED`);
+      await assertDailyAiActressPolicy(post, env);
       if (post.platform === 'INSTAGRAM') await getInstagramPublishCredentials(env);
       else if (post.platform === 'X') {
         assertXPublishingConfiguration(env);

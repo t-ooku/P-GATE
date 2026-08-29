@@ -95,7 +95,8 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(summary.channels[1].counts.published, 1);
   assert.equal(summary.channels[1].counts.failed, 1);
   assert.equal(summary.channels[2].configured, false);
-  assert.match(summary.channels[1].schedule, /月〜土 20:15/);
+  assert.match(summary.channels[0].schedule, /毎日20:15.*22歳設定v2 AI女優/);
+  assert.match(summary.channels[1].schedule, /毎日20:15.*22歳設定v2 AI女優/);
   assert.equal(summary.channels[1].funnel_7d.search_started, 2);
   assert.equal(summary.channels[1].funnel_7d.marketplace_click, 1);
   assert.equal(summary.channels[1].funnel_rates_7d.search_completion, 50);
