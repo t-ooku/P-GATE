@@ -1,6 +1,6 @@
 // Root-absolute imports keep this module valid from both /app.js and the
-// atomic rollout path /assets-v141/app.js. Relative specifiers from the latter
-// would incorrectly resolve to /assets-v141/*.mjs and stop the whole UI.
+// atomic rollout path /assets-v142/app.js. Relative specifiers from the latter
+// would incorrectly resolve to /assets-v142/*.mjs and stop the whole UI.
 import { campaignContext } from '/campaign-attribution.mjs';
 import { buildMarketplaceSearchKeywords } from '/marketplace-search-keywords-v2.mjs';
 import { RESULT_ROW_LIMIT, excludePresentedCandidates, fallbackRecommendationCandidates, resultRowCopyFor, splitCandidateRows } from '/result-rows.mjs';
@@ -51,7 +51,7 @@ const searchInputCopy={
   ZH:{screenshotAction:'添加截图',socialAction:'添加帖子链接',socialLabel:'Instagram、TikTok、X 等公开帖子链接',notice:'HOSHILU 不会在服务器保存截图或帖子链接。商品线索由 Google Gemini API 提取。',imageReady:'仅用于提取商品线索',removeImage:'删除截图',missing:'请添加一句描述、公开帖子链接或截图。',imageType:'请选择 JPEG、PNG 或 WebP 截图。',imageLarge:'图片过大，请选择其他截图。',urlUnsupported:'请输入 Instagram、TikTok、X、Threads、Facebook 或 Pinterest 的公开帖子链接。'},
   KO:{screenshotAction:'스크린샷 추가',socialAction:'게시물 URL 추가',socialLabel:'Instagram·TikTok·X 등 공개 게시물 URL',notice:'HOSHILU 서버에는 스크린샷과 게시물 URL을 저장하지 않습니다. 상품 단서는 Google Gemini API로 추출합니다.',imageReady:'상품 단서 추출에만 사용합니다',removeImage:'스크린샷 삭제',missing:'한마디, 공개 게시물 URL, 스크린샷 중 하나를 추가해 주세요.',imageType:'JPEG·PNG·WebP 스크린샷을 선택해 주세요.',imageLarge:'이미지가 너무 큽니다. 다른 스크린샷을 선택해 주세요.',urlUnsupported:'Instagram·TikTok·X·Threads·Facebook·Pinterest의 공개 게시물 URL을 입력해 주세요.'}
 };
-Object.assign(searchInputCopy.JA,{socialActionClose:'投稿URLを削除',actionsLabel:'検索の手がかりを追加',queryLabel:'欲しいものについて話す',previewAlt:'追加したスクリーンショットのプレビュー',preparing:'スクショを準備しています。少し待ってからもう一度押してください。',heroPromise:'AIは手がかりを理解し、HOSHILUは実際の購入先を探す。確認できた商品ページや最大13モールの検索先へ案内します。'});
+Object.assign(searchInputCopy.JA,{socialActionClose:'投稿URLを削除',actionsLabel:'検索の手がかりを追加',queryLabel:'欲しいものについて話す',previewAlt:'追加したスクリーンショットのプレビュー',preparing:'スクショを準備しています。少し待ってからもう一度押してください。',heroPromise:'AIは手がかりを理解し、HOSHILUは実際の購入先を探す。見つけた商品ページやショップモールの検索ページへ案内します。'});
 Object.assign(searchInputCopy.EN,{socialActionClose:'Remove post URL',actionsLabel:'Add a search clue',queryLabel:'Describe what you want',previewAlt:'Preview of the added screenshot',preparing:'Preparing the screenshot. Please wait a moment and try again.',heroPromise:'AI interprets your clues; HOSHILU searches real purchase destinations. Continue to verified product pages or searches across up to 13 marketplaces.'});
 Object.assign(searchInputCopy.ZH,{socialActionClose:'删除帖子链接',actionsLabel:'添加搜索线索',queryLabel:'描述您想找的商品',previewAlt:'已添加截图的预览',preparing:'正在处理截图，请稍候再试。',heroPromise:'AI 负责理解线索，HOSHILU 负责寻找真实购买处，并引导至已确认的商品页面或最多13个商城的搜索结果。'});
 Object.assign(searchInputCopy.KO,{socialActionClose:'게시물 URL 삭제',actionsLabel:'검색 단서 추가',queryLabel:'원하는 상품 설명하기',previewAlt:'추가한 스크린샷 미리보기',preparing:'스크린샷을 준비하고 있습니다. 잠시 후 다시 시도해 주세요.',heroPromise:'AI는 단서를 이해하고 HOSHILU는 실제 구매처를 찾습니다. 확인된 상품 페이지 또는 최대 13개 쇼핑몰 검색으로 안내합니다.'});
@@ -910,10 +910,10 @@ function cancelInstantMarketplaceHandoff(){
   status.textContent=({JA:'AI確認を終了しました。下のモール検索はそのまま利用できます。',EN:'AI confirmation ended. The marketplace links below remain available.',ZH:'AI 确认已结束，仍可使用下方商城搜索链接。',KO:'AI 확인을 종료했습니다. 아래 쇼핑몰 검색 링크는 계속 이용할 수 있습니다.'}[language]||'The marketplace links remain available.');
 }
 const continuousSearchCopy={
-  JA:{badge:'NEW ・ 無料',title:'この条件、見つかるまで探します。',body:'一度預ければ、HOSHILUが定期的に検索。新しく一致する実在商品が見つかったときだけお知らせします。',note:'値下げ通知ではなく、検索条件に合う新しい商品の発見通知です。',action:'無料で探し続ける',active:'この条件を探し続けています',local:'条件を保存しました',login:'無料会員登録して通知を受け取る'},
-  EN:{badge:'NEW · FREE',title:'Let HOSHILU keep looking until it finds a match.',body:'Save this once and HOSHILU will search it regularly. We only alert you when a newly matched real product is found.',note:'This is a new-product discovery alert, separate from price-drop alerts.',action:'Keep looking for free',active:'HOSHILU is continuing this search',local:'Search saved on this device',login:'Sign up free to receive alerts'},
-  ZH:{badge:'NEW · 免费',title:'让 HOSHILU 持续寻找，直到发现匹配商品。',body:'只需保存一次，HOSHILU 就会定期搜索。只在发现新匹配的真实商品时通知。',note:'这是新商品发现通知，与降价通知不同。',action:'免费继续寻找',active:'HOSHILU 正在继续寻找',local:'条件已保存到设备',login:'免费注册后接收通知'},
-  KO:{badge:'NEW · 무료',title:'일치하는 상품을 찾을 때까지 HOSHILU가 계속 찾아요.',body:'한 번 저장하면 HOSHILU가 정기적으로 검색합니다. 새로 일치하는 실제 상품을 찾았을 때만 알려드려요.',note:'가격 인하 알림과는 다른 새 상품 발견 알림입니다.',action:'무료로 계속 찾기',active:'HOSHILU가 이 조건을 계속 찾고 있어요',local:'이 기기에 조건을 저장했어요',login:'무료 회원 가입 후 알림 받기'}
+  JA:{title:'この条件、見つかるまで探します。',body:'一度預ければ、HOSHILUが定期的に検索。新しく一致する実在商品が見つかったときだけお知らせします。',note:'値下げ通知ではなく、検索条件に合う新しい商品の発見通知です。',action:'無料で探し続ける',active:'この条件を探し続けています',local:'条件を保存しました',login:'無料会員登録して通知を受け取る'},
+  EN:{title:'Let HOSHILU keep looking until it finds a match.',body:'Save this once and HOSHILU will search it regularly. We only alert you when a newly matched real product is found.',note:'This is a new-product discovery alert, separate from price-drop alerts.',action:'Keep looking for free',active:'HOSHILU is continuing this search',local:'Search saved on this device',login:'Sign up free to receive alerts'},
+  ZH:{title:'让 HOSHILU 持续寻找，直到发现匹配商品。',body:'只需保存一次，HOSHILU 就会定期搜索。只在发现新匹配的真实商品时通知。',note:'这是新商品发现通知，与降价通知不同。',action:'免费继续寻找',active:'HOSHILU 正在继续寻找',local:'条件已保存到设备',login:'免费注册后接收通知'},
+  KO:{title:'일치하는 상품을 찾을 때까지 HOSHILU가 계속 찾아요.',body:'한 번 저장하면 HOSHILU가 정기적으로 검색합니다. 새로 일치하는 실제 상품을 찾았을 때만 알려드려요.',note:'가격 인하 알림과는 다른 새 상품 발견 알림입니다.',action:'무료로 계속 찾기',active:'HOSHILU가 이 조건을 계속 찾고 있어요',local:'이 기기에 조건을 저장했어요',login:'무료 회원 가입 후 알림 받기'}
 };
 function continuousSearchCard(query){
   const value=String(query||'').trim();
@@ -924,7 +924,7 @@ function continuousSearchCard(query){
   card.dataset.continuousSearch='true';
   const copyWrap=document.createElement('div');
   copyWrap.className='continuous-search-copy';
-  copyWrap.append(textElement('span','continuous-search-badge',labels.badge),textElement('h3','',labels.title),textElement('p','',labels.body),textElement('small','',labels.note));
+  copyWrap.append(textElement('h3','',labels.title),textElement('p','',labels.body),textElement('small','',labels.note));
   const queryChip=textElement('span','continuous-search-query',value);
   const actions=document.createElement('div');
   actions.className='continuous-search-actions';
