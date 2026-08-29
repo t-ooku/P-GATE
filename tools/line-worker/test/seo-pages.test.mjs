@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語78ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 83);
+test('検索意図が異なる日本語83ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 88);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.ok(html, path);
@@ -42,7 +42,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは78記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは83記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -54,7 +54,7 @@ test('日本語ガイドハブは78記事を重複なく分類し全記事から
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 78);
+  assert.equal(japanesePaths.length, 83);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -398,6 +398,78 @@ test('2026-08-29公開の新機能5記事は画像・投稿URL・継続検索の
   assert.match(persistent, /保証しません/);
 });
 
+test('2026-08-30公開の新機能5記事はSNS別URL・画像絞り込み・保存条件管理の本番仕様に一致する', () => {
+  const socialSlugs = [
+    'search-products-from-instagram-post-urls',
+    'search-products-from-tiktok-video-urls',
+    'search-products-from-x-post-urls'
+  ];
+  const imageSlug = 'search-one-product-from-photo-with-multiple-items';
+  const managementSlug = 'manage-hoshilu-search-until-found-conditions';
+  const published = [...socialSlugs, imageSlug, managementSlug];
+  const intents = new Set();
+
+  for (const slug of published) {
+    const path = '/ja/' + slug;
+    const html = renderSeoPage(path);
+    assert.ok(html);
+    assert.match(html, /datetime="2026-08-30"/);
+    assert.match(html, /"dateModified":"2026-08-30"/);
+    assert.match(html, /data-seo-article-type="feature-guide"/);
+    assert.match(html, /href="\/#hoshiluSearch" data-seo-feature-link/);
+    assert.match(html, /販売ページ/);
+    assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/);
+    assert.doesNotMatch(html, /Premium|月額980円|最安(?:値)?です|人気No\.1|売れ筋No\.1|絶対おすすめ/);
+    assert.doesNotMatch(html, /https?:\/\/[^"']+\.(?:jpg|jpeg|webp)/i);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    intents.add(html.match(/data-seo-intent="([^"]+)"/)?.[1]);
+  }
+  assert.equal(intents.size, published.length);
+
+  const instagram = renderSeoPage('/ja/search-products-from-instagram-post-urls');
+  assert.match(instagram, /Instagram/);
+  assert.match(instagram, /公開投稿またはリール/);
+  assert.match(instagram, /プロフィールURL/);
+  assert.match(instagram, /非公開・削除済み・取得不能/);
+  assert.match(instagram, /投稿URLはHOSHILUへ保存せず/);
+  assert.match(instagram, /Google Gemini API/);
+  assert.doesNotMatch(instagram, /Google Cloud Vision/);
+
+  const tiktok = renderSeoPage('/ja/search-products-from-tiktok-video-urls');
+  assert.match(tiktok, /TikTok/);
+  assert.match(tiktok, /動画URLまたは共有URL/);
+  assert.match(tiktok, /非公開・削除済み・取得不能/);
+  assert.match(tiktok, /YouTube動画URL/);
+  assert.match(tiktok, /投稿URLは保存せず/);
+  assert.match(tiktok, /Google Gemini API/);
+
+  const xPost = renderSeoPage('/ja/search-products-from-x-post-urls');
+  assert.match(xPost, /status ID/);
+  assert.match(xPost, /保護されたアカウント/);
+  assert.match(xPost, /削除済み・取得不能/);
+  assert.match(xPost, /投稿URLは保存せず/);
+  assert.match(xPost, /Google Gemini API/);
+
+  const image = renderSeoPage('/ja/' + imageSlug);
+  for (const format of ['JPEG', 'PNG', 'WebP', 'HEIC', 'EXIF']) assert.match(image, new RegExp(format));
+  assert.match(image, /位置情報/);
+  assert.match(image, /HOSHILUにも保存されません/);
+  assert.match(image, /Google Cloud Vision/);
+  assert.match(image, /Google Gemini API/);
+  assert.match(image, /端末の編集機能/);
+
+  const management = renderSeoPage('/ja/' + managementSlug);
+  assert.match(management, /「見つかるまで探す条件」の一覧/);
+  assert.match(management, /ON・OFF/);
+  assert.match(management, /条件の変更/);
+  assert.match(management, /解除/);
+  assert.match(management, /15分ごとの確認処理/);
+  assert.match(management, /15分以内に完了する保証はありません/);
+  assert.match(management, /初回確認では現在の候補を基準/);
+  assert.match(management, /新しく一致した実在商品/);
+  assert.match(management, /アプリ内と接続済みのLINE・メール/);
+});
+
 test('既存の写真記事は直接画像入力と競合せず補足の一言に特化し、新しい3ガイドへ案内する', () => {
   const path = '/ja/find-a-product-from-a-photo-or-screenshot';
   const html = renderSeoPage(path);
@@ -443,11 +515,11 @@ test('旧記事にも直接画像入力を反映し、文章入力だけとい�
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
-  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-29<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-08-30<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 89);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 94);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });
