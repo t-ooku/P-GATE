@@ -15,6 +15,8 @@ const SCHEDULED_AT = '2026-08-29T11:15:00.000Z';
 const EXPEDITED_AT = '2000-01-01T00:00:00.000Z';
 const EXPEDITED_SCHEDULE_POLICY = 'expedited-before-regular';
 const CAPTION = '今日のバズ、もう見た？気になるランキングから次に欲しいものを見つけよう。※この動画はAI生成・AI加工映像です。 #HOSHILU #AI生成';
+const SCHEDULED_SATURDAY_CAPTION = '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 #AI生成';
+const ALLOWED_CAPTIONS = new Set([CAPTION, SCHEDULED_SATURDAY_CAPTION]);
 const POSTS = Object.freeze({
   X: 'hoshilu-ai-actress-daily-v1-x-2026-08-29',
   INSTAGRAM: 'hoshilu-ai-actress-daily-v1-instagram-2026-08-29'
@@ -184,7 +186,7 @@ function verifyQueue(path, phase, expectedScheduledAt = SCHEDULED_AT) {
     expectedPlatforms.delete(row.platform);
     const invalidContract = row.campaign_id !== CAMPAIGN_ID
       || row.content_id !== CROSSPOST_GROUP
-      || row.caption !== CAPTION
+      || !ALLOWED_CAPTIONS.has(row.caption)
       || row.link !== LINKS[row.platform]
       || row.media_url !== MEDIA_URL
       || !validQueueSchedule(row, expectedScheduledAt, phase)

@@ -75,3 +75,23 @@ test('緊急投稿だけ明示された即時時刻を検証し、通常枠の�
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('土曜日の自動生成済み本文でも即時公開の契約を満たす', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'ai-actress-expedite-saturday-'));
+  const fixture = join(directory, 'queue.json');
+  try {
+    const rows = [queueRow('X'), queueRow('INSTAGRAM')].map((row) => ({
+      ...row,
+      caption: '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 #AI生成'
+    }));
+    writeFileSync(fixture, JSON.stringify([{ results: rows }]));
+
+    const result = spawnSync(process.execPath, [
+      script, 'queue', fixture, 'queued', 'expedited-before-regular'
+    ], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /AI_ACTRESS_DAILY_QUEUE_QUEUED_OK/u);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
