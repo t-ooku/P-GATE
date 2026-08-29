@@ -1285,6 +1285,23 @@ jobs:
             ['hoshilu-ai-actress-daily-v1-x-2026-08-29', 'X'],
             ['hoshilu-ai-actress-daily-v1-instagram-2026-08-29', 'INSTAGRAM']
           ]);
+          const safeApprovedState = (row) => {
+            const error = String(row.last_error || '');
+            if (!error) return !row.platform_job_id;
+            if (row.platform === 'INSTAGRAM') {
+              if (['INSTAGRAM_CONTAINER_IN_PROGRESS', 'INSTAGRAM_CONTAINER_TIMEOUT'].includes(error)) {
+                return Boolean(row.platform_job_id);
+              }
+              if (error === 'INSTAGRAM_CONTAINER_EXPIRED') return !row.platform_job_id;
+              if (/^Too many subrequests by single Worker invocation\./u.test(error)) return true;
+              if (/^INSTAGRAM_PUBLISH_429(?:_|$)/u.test(error)) return true;
+              return /^(?:INSTAGRAM_CREATE|INSTAGRAM_STATUS)_(?:408|425|429|5\d\d)(?:_|$)/u.test(error);
+            }
+            if (row.platform !== 'X' || row.platform_job_id) return false;
+            if (['X_MEDIA_ASSET_FETCH_FAILED', 'X_MEDIA_PROCESSING_TIMEOUT'].includes(error)) return true;
+            if (/^X_PUBLISH_429(?:_|$)/u.test(error)) return true;
+            return /^(?:X_MEDIA_FETCH|X_MEDIA_INIT|X_MEDIA_APPEND|X_MEDIA_FINALIZE|X_MEDIA_STATUS)_(?:408|425|429|5\d\d)(?:_|$)/u.test(error);
+          };
           const valid = rows.length === 2 && rows.every((row) =>
             ids.get(row.post_id) === row.platform && ids.delete(row.post_id) &&
             ['APPROVED', 'PUBLISHING', 'PUBLISHED'].includes(row.status) &&
@@ -1297,12 +1314,69 @@ jobs:
             row.jst_publish_date === '2026-08-29' &&
             Number(row.ai_generated) === 1 &&
             row.crosspost_group_id === 'hoshilu-ai-actress-daily-2026-08-29' &&
-            (row.status === 'PUBLISHED' || (!row.external_post_id && !row.published_at))
+            (row.status === 'PUBLISHED' || (
+              !row.external_post_id && !row.published_at &&
+              (row.status === 'PUBLISHING' || safeApprovedState(row))
+            ))
           );
           if (!valid || ids.size) throw new Error(JSON.stringify(rows));
           NODE
-          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --yes --command \
-            "UPDATE social_post_queue SET scheduled_at='2000-01-01T00:00:00.000Z',approved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),last_error='',updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-29','hoshilu-ai-actress-daily-v1-instagram-2026-08-29') AND campaign_id='hoshilu-ai-actress-daily-v1' AND content_id='hoshilu-ai-actress-daily-2026-08-29' AND media_url='https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4' AND creative_asset_id='hoshilu_ai_actress_daily_sat_v1' AND content_format='REEL' AND creative_policy='DAILY_AI_ACTRESS_22' AND jst_publish_date='2026-08-29' AND ai_generated=1 AND crosspost_group_id='hoshilu-ai-actress-daily-2026-08-29' AND scheduled_at='2026-08-29T11:15:00.000Z' AND status='APPROVED' AND external_post_id='' AND platform_job_id='' AND published_at='' AND last_error='';"
+          cat > ai-actress-expedite-resume.sql <<'SQL'
+          UPDATE social_post_queue
+          SET scheduled_at='2000-01-01T00:00:00.000Z',
+              approved_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),
+              updated_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')
+          WHERE post_id IN (
+              'hoshilu-ai-actress-daily-v1-x-2026-08-29',
+              'hoshilu-ai-actress-daily-v1-instagram-2026-08-29')
+            AND campaign_id='hoshilu-ai-actress-daily-v1'
+            AND content_id='hoshilu-ai-actress-daily-2026-08-29'
+            AND media_url='https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4'
+            AND creative_asset_id='hoshilu_ai_actress_daily_sat_v1'
+            AND content_format='REEL'
+            AND creative_policy='DAILY_AI_ACTRESS_22'
+            AND jst_publish_date='2026-08-29'
+            AND ai_generated=1
+            AND crosspost_group_id='hoshilu-ai-actress-daily-2026-08-29'
+            AND scheduled_at<='2026-08-29T11:15:00.000Z'
+            AND status='APPROVED'
+            AND external_post_id=''
+            AND published_at=''
+            AND (
+              (last_error='' AND platform_job_id='')
+              OR (platform='INSTAGRAM' AND (
+                (last_error IN ('INSTAGRAM_CONTAINER_IN_PROGRESS','INSTAGRAM_CONTAINER_TIMEOUT')
+                  AND platform_job_id<>'')
+                OR (last_error='INSTAGRAM_CONTAINER_EXPIRED' AND platform_job_id='')
+                OR last_error LIKE 'Too many subrequests by single Worker invocation.%'
+                OR last_error LIKE 'INSTAGRAM_PUBLISH_429%'
+                OR last_error GLOB 'INSTAGRAM_CREATE_40[8]*'
+                OR last_error GLOB 'INSTAGRAM_CREATE_42[59]*'
+                OR last_error GLOB 'INSTAGRAM_CREATE_5[0-9][0-9]*'
+                OR last_error GLOB 'INSTAGRAM_STATUS_40[8]*'
+                OR last_error GLOB 'INSTAGRAM_STATUS_42[59]*'
+                OR last_error GLOB 'INSTAGRAM_STATUS_5[0-9][0-9]*'))
+              OR (platform='X' AND platform_job_id='' AND (
+                last_error IN ('X_MEDIA_ASSET_FETCH_FAILED','X_MEDIA_PROCESSING_TIMEOUT')
+                OR last_error LIKE 'X_PUBLISH_429%'
+                OR last_error GLOB 'X_MEDIA_FETCH_40[8]*'
+                OR last_error GLOB 'X_MEDIA_FETCH_42[59]*'
+                OR last_error GLOB 'X_MEDIA_FETCH_5[0-9][0-9]*'
+                OR last_error GLOB 'X_MEDIA_INIT_40[8]*'
+                OR last_error GLOB 'X_MEDIA_INIT_42[59]*'
+                OR last_error GLOB 'X_MEDIA_INIT_5[0-9][0-9]*'
+                OR last_error GLOB 'X_MEDIA_APPEND_40[8]*'
+                OR last_error GLOB 'X_MEDIA_APPEND_42[59]*'
+                OR last_error GLOB 'X_MEDIA_APPEND_5[0-9][0-9]*'
+                OR last_error GLOB 'X_MEDIA_FINALIZE_40[8]*'
+                OR last_error GLOB 'X_MEDIA_FINALIZE_42[59]*'
+                OR last_error GLOB 'X_MEDIA_FINALIZE_5[0-9][0-9]*'
+                OR last_error GLOB 'X_MEDIA_STATUS_40[8]*'
+                OR last_error GLOB 'X_MEDIA_STATUS_42[59]*'
+                OR last_error GLOB 'X_MEDIA_STATUS_5[0-9][0-9]*')));
+          SQL
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --yes \
+            --file ai-actress-expedite-resume.sql
           npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
             "SELECT post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,external_post_id,published_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id,CASE WHEN last_error='' THEN '' ELSE 'PUBLISHER_ERROR_REDACTED' END AS error_code FROM social_post_queue WHERE post_id IN ('hoshilu-ai-actress-daily-v1-x-2026-08-29','hoshilu-ai-actress-daily-v1-instagram-2026-08-29') ORDER BY platform;" \
             > ai-actress-expedite-queued.json

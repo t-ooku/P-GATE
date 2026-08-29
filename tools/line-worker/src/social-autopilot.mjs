@@ -628,7 +628,17 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
         ?10,?10)
       ON CONFLICT(post_id) DO UPDATE SET content_id=excluded.content_id,
         caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
-        scheduled_at=excluded.scheduled_at,affiliate=excluded.affiliate,
+        scheduled_at=CASE
+          WHEN social_post_queue.status='APPROVED'
+            AND social_post_queue.campaign_id='hoshilu-ai-actress-daily-v1'
+            AND social_post_queue.creative_policy='DAILY_AI_ACTRESS_22'
+            AND strftime('%s',social_post_queue.scheduled_at) IS NOT NULL
+            AND strftime('%s',excluded.scheduled_at) IS NOT NULL
+            AND CAST(strftime('%s',social_post_queue.scheduled_at) AS INTEGER)
+              < CAST(strftime('%s',excluded.scheduled_at) AS INTEGER)
+            THEN social_post_queue.scheduled_at
+          ELSE excluded.scheduled_at END,
+        affiliate=excluded.affiliate,
         creative_asset_id=excluded.creative_asset_id,
         content_format=excluded.content_format,
         creative_policy=excluded.creative_policy,
