@@ -299,6 +299,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install Worker dependencies
+        run: npm ci --prefix tools/line-worker
       - name: Require dedicated provider key and Cloudflare credentials
         env:
           GOOGLE_CLOUD_VISION_API_KEY: ${{ secrets.GOOGLE_CLOUD_VISION_API_KEY }}

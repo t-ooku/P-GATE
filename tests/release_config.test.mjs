@@ -71,6 +71,11 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
   assert.doesNotMatch(ci, /Project_GATE_Complete_v\d+\.\d+/);
   assert.match(ci, /Require Cloudflare credentials for production deploy/u);
   assert.match(ci, /CLOUDFLARE_API_TOKEN\/CLOUDFLARE_ACCOUNT_ID are required for the production deploy/u);
+  assert.match(
+    ci,
+    /google-visual-activate:[\s\S]*Install Worker dependencies[\s\S]*npm ci --prefix tools\/line-worker[\s\S]*Deploy enabled Worker/u,
+    'Google visual activation must install Worker dependencies before deployment'
+  );
   assert.doesNotMatch(ci, /skipping deploy/u);
   assert.doesNotMatch(ci, /steps\.creds\.outputs\.configured/u);
 });
