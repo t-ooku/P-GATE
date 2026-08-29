@@ -82,7 +82,9 @@ test('土曜日の自動生成済み本文でも即時公開の契約を満た�
   try {
     const rows = [queueRow('X'), queueRow('INSTAGRAM')].map((row) => ({
       ...row,
-      caption: '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 #AI生成'
+      caption: row.platform === 'X'
+        ? '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 #Qoo10 #SHEIN #AI生成'
+        : '土曜日も「今日のバズ」をチェック。HOSHILU BUZZのランキングから気になる商品を見にいこう。 ※この動画はAI生成・AI加工映像です。 気になった商品をコメントで教えてね。 #HOSHILU #Qoo10 #SHEIN #購入品紹介 #AI生成'
     }));
     writeFileSync(fixture, JSON.stringify([{ results: rows }]));
 
@@ -91,6 +93,14 @@ test('土曜日の自動生成済み本文でも即時公開の契約を満た�
     ], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /AI_ACTRESS_DAILY_QUEUE_QUEUED_OK/u);
+
+    rows[0].caption += ' 改変';
+    writeFileSync(fixture, JSON.stringify([{ results: rows }]));
+    const tampered = spawnSync(process.execPath, [
+      script, 'queue', fixture, 'queued', 'expedited-before-regular'
+    ], { encoding: 'utf8' });
+    assert.notEqual(tampered.status, 0);
+    assert.match(tampered.stderr, /AI_ACTRESS_DAILY_RELEASE_QUEUE_CONTRACT/u);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
