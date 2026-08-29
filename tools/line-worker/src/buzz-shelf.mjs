@@ -442,13 +442,14 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
     buildKoreanShelf(env, fetcher)
   ]);
   const budgetShelves = buildBudgetShelves(genreShelves);
-  // 同一商品が過半重複する棚を2つ並べない(誤ラベルの「同じ中身の棚」防止)。
+  // 同一商品が半数以上重複する棚を2つ並べない(誤ラベルの「同じ中身の棚」防止)。
+  // 6件中3件の重複でも、横スクロール上は同じランキングに見えるため除外する。
   const seenUrlSets = [];
   const distinctShelf = (shelf) => {
     const urls = new Set((shelf.items || []).map((item) => item.product_url));
     const duplicated = seenUrlSets.some((prev) => {
       const overlap = [...urls].filter((url) => prev.has(url)).length;
-      return urls.size > 0 && overlap / urls.size > 0.5;
+      return urls.size > 0 && overlap / urls.size >= 0.5;
     });
     if (duplicated) return false;
     seenUrlSets.push(urls);
