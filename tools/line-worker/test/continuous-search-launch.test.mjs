@@ -10,12 +10,26 @@ test('continuous search is promoted on the home page and every result path', asy
     read('public/index.html'), read('public/app.js'), read('public/continuous-search.css')
   ]);
   assert.match(html, /検索は、1回で終わらない。/u);
-  assert.match(html, /continuous-search\.css\?v=1/u);
+  assert.match(html, /continuous-search\.css\?v=2/u);
   assert.match(app, /function continuousSearchCard\(query\)/u);
   assert.match(app, /if\(continuous\)resultCards\.push\(continuous\)/u);
   assert.match(app, /if\(continuous\)emptyCards\.push\(continuous\)/u);
   assert.match(app, /source:'continuous_search'/u);
   assert.match(css, /\.continuous-search-card/u);
+  assert.doesNotMatch(html, /NEW ・ 無料/u);
+  assert.doesNotMatch(app, /badge:'NEW ・ 無料'/u);
+});
+
+test('home hero uses the shorter purchase-destination copy and tighter mobile type', async () => {
+  const [html, app, css] = await Promise.all([
+    read('public/index.html'), read('public/app.js'), read('public/hero-fixes.css')
+  ]);
+  const copy = 'AIは手がかりを理解し、HOSHILUは実際の購入先を探す。見つけた商品ページやショップモールの検索ページへ案内します。';
+  assert.match(html, new RegExp(copy, 'u'));
+  assert.match(app, new RegExp(copy, 'u'));
+  assert.doesNotMatch(html, /確認できた商品ページや最大13モールの検索先/u);
+  assert.match(css, /font-size: clamp\(23px, 6\.2vw, 27px\)/u);
+  assert.match(css, /\.hero-copy \.hero-promise \{[\s\S]*?font-size: 13px;[\s\S]*?line-height: 1\.5;/u);
 });
 
 test('continuous search copy promises only the implemented new-match behavior', async () => {
