@@ -939,7 +939,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const payload = await response.json();
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
-  assert.equal(payload.release, '1.22.0');
+  assert.equal(payload.release, '1.22.1');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
   // §3移行(ContractPolicy/MultilingualSeo/Measurement/SocialKnowledge/ProductIdentifier)で
   // 追加したD1テーブルもgas/PreflightEngine.gsの「必須シート」チェック相当として含まれる。

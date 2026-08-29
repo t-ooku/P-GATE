@@ -171,7 +171,7 @@ test('非BUZZ販促はカメラ・画像・公開投稿URL・一言・継続検�
   }
 });
 
-test('新検索ローンチ4投稿は初回14日キューへ正しい日付・UTM・画像で入る', () => {
+test('新検索ローンチ投稿は初回14日キューへ正しい日付・UTM・画像で入る', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-29T17:00:00.000Z'), 14);
   const launch = posts.filter((post) => [
     'howto-four-input-search', 'continuous-search', 'guide-search-screen', 'guide-continuous-search'
@@ -186,6 +186,20 @@ test('新検索ローンチ4投稿は初回14日キューへ正しい日付・UT
   assert.ok(launch.every((post) => new URL(post.link).searchParams.get('utm_campaign')
     === 'hoshilu-new-search-launch-20260829'));
   assert.ok(launch.every((post) => post.campaign_id === 'hoshilu-new-search-launch-20260829'));
+});
+
+test('8月29日夕方の本番反映でも同じXローンチ文を2夜連続で予約しない', () => {
+  const posts = buildSocialAutopilotPosts(new Date('2026-08-29T08:42:00.000Z'), 14);
+  const xLaunch = posts.filter((post) => post.platform === 'X'
+    && post.campaign_id === 'hoshilu-new-search-launch-20260829');
+  assert.deepEqual(xLaunch.map((post) => [post.scheduled_at, post.content_id]), [
+    ['2026-08-30T11:00:00.000Z', 'howto-four-input-search'],
+    ['2026-09-01T11:00:00.000Z', 'continuous-search']
+  ]);
+  const tonight = posts.find((post) => post.post_id
+    === 'hoshilu-official-13mall-v2-x-guide-2026-08-29');
+  assert.equal(tonight?.content_id, 'buzz-shelves-intro');
+  assert.equal(tonight?.campaign_id, 'hoshilu-official-13mall-v2');
 });
 
 test('新検索のInstagram画像は実在する1080x1350 PNGである', () => {
