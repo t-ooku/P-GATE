@@ -11,6 +11,27 @@ import {
 } from '../src/social-autopilot.mjs';
 import { xWeightedLength } from '../src/social-publisher.mjs';
 
+function jpegDimensions(bytes) {
+  assert.equal(bytes.readUInt16BE(0), 0xffd8, 'JPEG SOI');
+  for (let offset = 2; offset + 8 < bytes.length;) {
+    if (bytes[offset] !== 0xff) {
+      offset += 1;
+      continue;
+    }
+    const marker = bytes[offset + 1];
+    const segmentLength = bytes.readUInt16BE(offset + 2);
+    if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]
+      .includes(marker)) {
+      return {
+        height: bytes.readUInt16BE(offset + 5),
+        width: bytes.readUInt16BE(offset + 7)
+      };
+    }
+    offset += 2 + segmentLength;
+  }
+  throw new Error('JPEG_DIMENSIONS_NOT_FOUND');
+}
+
 test('販促自動運用は14日先までの日次AI女優リールと補助投稿を計画する', () => {
   const posts = buildSocialAutopilotPosts(new Date('2026-08-09T03:00:00.000Z'));
   const daily = posts.filter(post => post.creative_policy === 'DAILY_AI_ACTRESS_22');
@@ -275,6 +296,15 @@ test('Instagram定常投稿はBUZZ専用ビジュアルと/buzz送客を含む',
     assert.match(post.caption, /1位|ランキング/u);
     assert.doesNotMatch(post.caption, /最安|No\.?1|Z世代/u);
   }
+});
+
+test('Instagram BUZZ画像はMeta公開APIの4:5〜1.91:1範囲内に収まる', () => {
+  const bytes = readFileSync(new URL('../public/social/hoshilu-buzz-ranking-v1.jpg', import.meta.url));
+  const { width, height } = jpegDimensions(bytes);
+  const aspectRatio = width / height;
+  assert.equal(width, 1255);
+  assert.equal(height, 1568);
+  assert.ok(aspectRatio >= 4 / 5 && aspectRatio <= 1.91, `aspect ratio: ${aspectRatio}`);
 });
 
 test('日次AI動画は7曜日の内容と送客先を素材に合わせ、補助画像はBUZZを織り交ぜる', () => {
