@@ -1,5 +1,5 @@
 .hero h1 {
-  font-size: clamp(30px, 7vw, 72px);
+  font-size: clamp(28px, 6.5vw, 64px);
   line-height: 1.08;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -90,13 +90,23 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
 
 @media (max-width: 420px) {
   html:lang(ja) #heroTitle {
-    font-size: clamp(25px, 6.85vw, 29px);
+    font-size: clamp(23px, 6.2vw, 27px);
     letter-spacing: -0.06em;
   }
 
   .hero h1 {
-    font-size: clamp(28px, 8vw, 34px);
+    font-size: clamp(25px, 7vw, 30px);
     letter-spacing: -0.06em;
+  }
+
+  html:lang(ja) #heroTitle .hero-title-line {
+    white-space: nowrap;
+  }
+
+  .hero-copy .hero-promise {
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.5;
   }
 
   .search-panel h2 {
