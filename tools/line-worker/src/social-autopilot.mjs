@@ -207,6 +207,10 @@ const X_SEARCH_GUIDE_POSTS = Object.freeze(
 );
 const X_NON_VIDEO_POST_BY_ID = new Map(X_NON_VIDEO_POSTS.map(post => [post.id, post]));
 const X_INITIAL_DATE_OVERRIDES = new Map([
+  // The 1.22.0 deploy completed during the evening of 2026-08-29 JST. Keep
+  // that pre-launch slot on the established BUZZ series so the dedicated
+  // four-input launch copy does not publish on two consecutive evenings.
+  ['2026-08-29', X_NON_VIDEO_POST_BY_ID.get('buzz-shelves-intro')],
   ['2026-08-30', X_NON_VIDEO_POST_BY_ID.get('howto-four-input-search')],
   ['2026-09-01', X_NON_VIDEO_POST_BY_ID.get('continuous-search')],
   // Avoid repeating continuous-search on X four days after its launch; the

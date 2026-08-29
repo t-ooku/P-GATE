@@ -117,7 +117,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
 // 各リンクの mode を載せる(signedMarketplaceSearchLinks参照)。
 // marketplace-search-mode.mjs がここが唯一の判定元(v4.3のAI最安比較
 // (ai-price-comparison.mjs)も同じ定義を再利用する)。
-const RELEASE = '1.22.0';
+const RELEASE = '1.22.1';
 const CANONICAL_HOST = 'hoshilu.app';
 const CANONICAL_CONTENT_PATHS = new Set([...seoPagePaths, ...seoHubPaths, '/for-sellers']);
 const DOCUMENT_SECURITY_HEADERS = Object.freeze({
