@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <linearGradient id="brand" x1="120" y1="80" x2="960" y2="1270" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F238B5"/>
+      <stop offset=".48" stop-color="#8A4CF4"/>
+      <stop offset="1" stop-color="#258CFF"/>
+    </linearGradient>
+    <linearGradient id="soft" x1="160" y1="300" x2="930" y2="1110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF0FB"/>
+      <stop offset=".52" stop-color="#F5F0FF"/>
+      <stop offset="1" stop-color="#EAF5FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#4E3A8B" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="1350" fill="#F7F5FF"/>
+  <circle cx="930" cy="140" r="300" fill="#F238B5" opacity=".08"/>
+  <circle cx="90" cy="1230" r="360" fill="#258CFF" opacity=".08"/>
+
+  <g transform="translate(72 62)">
+    <rect width="68" height="68" rx="20" fill="url(#brand)"/>
+    <path d="M20 19v30M48 19v30M20 34h9c4 0 6 2 9 7 3-5 5-7 10-7" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="90" y="46" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="34" font-weight="900" fill="#111C4E" letter-spacing="2">HOSHILU</text>
+    <text x="275" y="45" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="23" font-weight="800" fill="#8A4CF4">ホシル</text>
+  </g>
+
+  <text x="72" y="210" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="27" font-weight="900" fill="#8A4CF4" letter-spacing="3">NEW HOSHILU SEARCH</text>
+  <text x="72" y="300" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="73" font-weight="900" fill="#111C4E">その「欲しい」、</text>
+  <text x="72" y="388" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="84" font-weight="900" fill="url(#brand)">撮ってホシル。</text>
+  <text x="74" y="448" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="30" font-weight="700" fill="#555E7D">名前が分からなくても、写真が手がかりになる。</text>
+
+  <g filter="url(#shadow)">
+    <rect x="72" y="510" width="936" height="650" rx="58" fill="#fff"/>
+  </g>
+  <rect x="112" y="550" width="856" height="310" rx="38" fill="url(#soft)"/>
+  <rect x="158" y="592" width="360" height="226" rx="26" fill="#fff" stroke="#D9D2F6" stroke-width="3"/>
+  <circle cx="338" cy="705" r="78" fill="#FFE3F6"/>
+  <path d="M296 739h84l-12-81h-60z" fill="#fff" stroke="#8A4CF4" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="320" y="627" width="36" height="34" rx="12" fill="#F238B5"/>
+  <path d="M182 621h31M182 621v31M494 621h-31M494 621v31M182 789h31M182 789v-31M494 789h-31M494 789v-31" fill="none" stroke="#258CFF" stroke-width="7" stroke-linecap="round"/>
+
+  <g transform="translate(570 592)">
+    <rect width="350" height="52" rx="18" fill="#fff" stroke="#E1DCF5" stroke-width="3"/>
+    <circle cx="38" cy="26" r="14" fill="#F238B5"/>
+    <path d="M31 24h14v10H31zM34 21l3-3h3l4 3" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+    <text x="66" y="35" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="23" font-weight="900" fill="#111C4E">カメラで撮る</text>
+    <rect y="58" width="350" height="52" rx="18" fill="#fff" stroke="#E1DCF5" stroke-width="3"/>
+    <rect x="25" y="70" width="27" height="27" rx="6" fill="#8A4CF4"/>
+    <circle cx="38.5" cy="83.5" r="7" fill="#fff"/>
+    <text x="66" y="93" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="23" font-weight="900" fill="#111C4E">画像を選ぶ</text>
+    <rect y="116" width="350" height="52" rx="18" fill="#fff" stroke="#E1DCF5" stroke-width="3"/>
+    <path d="M28 151l22-22M37 128h15v15" fill="none" stroke="#258CFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="66" y="151" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="23" font-weight="900" fill="#111C4E">投稿URLを追加</text>
+    <rect y="174" width="350" height="52" rx="18" fill="#fff" stroke="#E1DCF5" stroke-width="3"/>
+    <path d="M26 187h27v19H39l-8 7v-7h-5z" fill="none" stroke="#8A4CF4" stroke-width="4" stroke-linejoin="round"/>
+    <text x="66" y="209" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="23" font-weight="900" fill="#111C4E">一言を入力</text>
+  </g>
+
+  <g transform="translate(112 902)">
+    <circle cx="28" cy="30" r="28" fill="#F238B5"/>
+    <text x="28" y="41" text-anchor="middle" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="28" font-weight="900" fill="#fff">1</text>
+    <text x="72" y="41" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="30" font-weight="900" fill="#111C4E">AIが特徴理解を補助</text>
+    <path d="M570 30h70" fill="none" stroke="#C7BCEB" stroke-width="7" stroke-linecap="round"/>
+    <path d="M630 16l18 14-18 14" fill="none" stroke="#C7BCEB" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="708" cy="30" r="28" fill="#258CFF"/>
+    <text x="708" y="41" text-anchor="middle" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="28" font-weight="900" fill="#fff">2</text>
+    <text x="752" y="41" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="30" font-weight="900" fill="#111C4E">購入先候補へ</text>
+  </g>
+
+  <rect x="112" y="1002" width="856" height="100" rx="30" fill="#F7F5FF"/>
+  <text x="540" y="1046" text-anchor="middle" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="25" font-weight="800" fill="#5A6281">写真・画像・投稿URLはHOSHILUに保存しません</text>
+  <text x="540" y="1082" text-anchor="middle" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="21" font-weight="700" fill="#747B98">顔・住所・伝票などは写さないでください</text>
+
+  <rect x="208" y="1210" width="664" height="94" rx="47" fill="url(#brand)"/>
+  <text x="540" y="1271" text-anchor="middle" font-family="'Noto Sans CJK JP','Noto Sans JP',Arial,sans-serif" font-size="36" font-weight="900" fill="#fff">カメラで探してみる →</text>
+</svg>

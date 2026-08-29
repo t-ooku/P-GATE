@@ -28,6 +28,27 @@ test('LINE Login開始はPKCE・state・nonceとHttpOnly Cookieを使う', async
   assert.match(response.headers.get('set-cookie'), /HttpOnly; Secure; SameSite=Lax/);
 });
 
+test('通知deep linkのallowlist済みhashをLINE Login完了後まで安全に保持する', async () => {
+  const wishId = '0123456789abcdef0123456789abcdef';
+  const next = `/?search_watch=${wishId}#hoshiluSearch`;
+  const response = await handleMemberRoutes(new Request(
+    `https://hoshilu.app/api/member/line/start?next=${encodeURIComponent(next)}`
+  ), env);
+  assert.equal(response.status, 302);
+  const packed = decodeURIComponent(response.headers.get('set-cookie').match(/hoshilu_line_oauth=([^;]+)/)[1]);
+  const body = packed.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+  const flow = JSON.parse(Buffer.from(body, 'base64').toString('utf8'));
+  assert.equal(flow.return_to, next);
+
+  const unsafe = await handleMemberRoutes(new Request(
+    `https://hoshilu.app/api/member/line/start?next=${encodeURIComponent('/?search_watch=' + wishId + '#not-allowed')}`
+  ), env);
+  const unsafePacked = decodeURIComponent(unsafe.headers.get('set-cookie').match(/hoshilu_line_oauth=([^;]+)/)[1]);
+  const unsafeBody = unsafePacked.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+  const unsafeFlow = JSON.parse(Buffer.from(unsafeBody, 'base64').toString('utf8'));
+  assert.equal(unsafeFlow.return_to, `/?search_watch=${wishId}`);
+});
+
 test('workers.devからのLINE Login開始は正式ドメインへ移動する', async () => {
   const response = await handleMemberRoutes(
     new Request('https://project-gate-line-bridge.mygate-jp.workers.dev/api/member/line/start'),

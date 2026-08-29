@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { classifyGrowthTraffic } from '../src/growth-events.mjs';
+import { searchSliSql } from '../scripts/check-production-search-sli.mjs';
 
 test('Turnstile uses callback delivery, serializes token requests, and rebuilds an invalid widget', () => {
   const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
@@ -80,7 +82,25 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /セキュリティ確認を完了して、もう一度「検索する」を押してください。/);
   assert.match(app, /failureTelemetry\.error_code==='TURNSTILE_UNSUPPORTED'/);
   assert.match(app, /コンテンツブロッカーを一時解除して再読み込みしてください。/);
-  assert.match(app, /code!==\'TURNSTILE_UNSUPPORTED\'/);
+  assert.match(app, /\['TURNSTILE_TOKEN_UNAVAILABLE','TURNSTILE_UNSUPPORTED'\]\.includes\(value\)/);
+});
+
+test('Turnstile token acquisition failure does not repeat the bounded visible-widget wait', () => {
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(app, /function retryableOuterTurnstileFailure\(code\)/);
+  assert.match(app, /!\['TURNSTILE_TOKEN_UNAVAILABLE','TURNSTILE_UNSUPPORTED'\]\.includes\(value\)/);
+  assert.match(app, /const retryableTurnstileFailure=retryableOuterTurnstileFailure\(code\)/);
+  assert.match(app, /attempt\+1<maxAttempts&&\(retryableTurnstileFailure\|\|code==='Failed to fetch'/);
+  assert.match(app, /if\(retryableTurnstileFailure\)await recoverTurnstileWidget\(\)/);
+});
+
+test('production browser acceptance guidance classifies Codex audits as QA and keeps them out of real-user SLI', () => {
+  const runbook = fs.readFileSync(new URL('../docs/VISUAL_WEB_SEARCH_RUNBOOK.md', import.meta.url), 'utf8');
+  assert.match(runbook, /utm_source=codex_qa&utm_medium=qa&utm_campaign=acceptance_search/u);
+  assert.equal(classifyGrowthTraffic({
+    source: 'codex_qa', medium: 'qa', campaign: 'acceptance_search'
+  }), 'QA');
+  assert.match(searchSliSql(), /traffic_class<>'QA'/u);
 });
 
 test('AI chat failure automatically continues to the resilient main search', () => {

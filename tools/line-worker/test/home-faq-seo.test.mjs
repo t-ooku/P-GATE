@@ -18,6 +18,7 @@ test('ホームFAQは利用者に見える回答とFAQPage構造化データを�
   const social = faq.mainEntity.find((item) => item.name === '写真やSNS投稿URLから探せますか？');
   assert.ok(social);
   assert.match(social.acceptedAnswer.text, /スマホで撮影/u);
+  assert.match(social.acceptedAnswer.text, /HOSHILU対応形式の公開投稿単体URL/u);
   assert.doesNotMatch(social.acceptedAnswer.text, /YouTube/u);
   // YouTube動画URLはURL Context非対応。一方、既存のYouTube検索リンクは別機能として維持する。
   assert.match(html, /Instagram・X・TikTok・YouTubeでも探せます/u);
@@ -43,7 +44,7 @@ test('ホームはcanonicalに一致する言語指定と全ガイドへの明�
 
 test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
   const [html, styles] = await Promise.all([read('index.html'), read('styles.css')]);
-  const description = 'ホシルは、撮った写真・スクショ・公開SNS投稿URL・うろ覚えの一言から商品を探す無料サービス。AIが手がかりを理解し、実在する購入先を探します。';
+  const description = 'ホシルは、撮った写真・スクショ・HOSHILU対応形式の公開SNS投稿単体URL・うろ覚えの一言から商品を探す無料サービス。AIが手がかりを理解し、実在する購入先を探します。';
   assert.match(html, /<title>ホシル｜写真・スクショ・一言から商品を探す<\/title>/);
   assert.ok(html.includes('<meta name="description" content="' + description + '">'));
   assert.match(html, /<meta property="og:title" content="ホシル｜写真・スクショ・一言から商品を探す">/);
@@ -51,6 +52,7 @@ test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle�
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
   const data = JSON.parse(match[1]);
   assert.equal(data['@graph'].find((item) => item['@type'] === 'WebApplication').description, description);
+  assert.match(html, /商品特定の補助にGoogle Cloud VisionのWeb画像照合とGoogle Gemini APIを使う場合があります。/u);
   assert.match(styles, /\.hero-copy \.hero-promise\{[^}]*font-size:clamp\(14px,2\.1vw,18px\)[^}]*line-height:1\.75/);
   assert.match(styles, /@media\(max-width:760px\)\{\.hero-copy \.hero-promise\{[^}]*font-size:14px[^}]*line-height:1\.65/);
 });
@@ -88,7 +90,25 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.doesNotMatch(i18n, /faq\.social\.answer'[^\n]*YouTube/u);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 84);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 89);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
-  assert.match(worker, /hoshilu-shell-v403/);
+  assert.match(worker, /hoshilu-shell-v404/);
+});
+
+test('SNS URL FAQは静的表示とruntime上書きで対応形式の公開単体URLに統一する', async () => {
+  const [html, i18n] = await Promise.all([read('index.html'), read('site-i18n.js')]);
+  const visible = html.match(
+    /<p data-i18n="faq\.social\.answer">([^<]+)<\/p>/u
+  )?.[1];
+  const runtimeJa = i18n.match(
+    /Object\.assign\(messages\.JA,\{'faq\.social\.question':'写真やSNS投稿URLから探せますか？','faq\.social\.answer':'([^']+)'\}\);/u
+  )?.[1];
+  assert.ok(visible);
+  assert.equal(runtimeJa, visible);
+  for (const copy of [
+    'HOSHILU対応形式の公開投稿単体URL',
+    'HOSHILU-supported public single-post URL',
+    'HOSHILU 支持格式公开单帖链接',
+    'HOSHILU 지원 형식 공개 단일 게시물 URL'
+  ]) assert.ok(i18n.includes(copy), `runtime FAQに対応形式の説明がない: ${copy}`);
 });

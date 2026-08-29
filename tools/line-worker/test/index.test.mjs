@@ -603,7 +603,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v403/);
+  assert.match(serviceWorker, /hoshilu-shell-v404/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -939,7 +939,7 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   const payload = await response.json();
   assert.equal(response.status, 200);
   assert.equal(payload.ok, true);
-  assert.equal(payload.release, '1.21.0');
+  assert.equal(payload.release, '1.22.0');
   assert.equal(payload.checks.database_features.mywatch_notifications, false);
   // §3移行(ContractPolicy/MultilingualSeo/Measurement/SocialKnowledge/ProductIdentifier)で
   // 追加したD1テーブルもgas/PreflightEngine.gsの「必須シート」チェック相当として含まれる。
@@ -1394,7 +1394,7 @@ test('テキスト検索は外部検索先を即時かつ安定表示し確認�
   assert.match(appSource, /入力した文章で最大13モールを検索できます/);
   assert.match(appSource, /setSearchMode\(localStorage\.getItem\('hoshilu_search_mode'\)\|\|'direct'/);
   assert.match(appSource, /currentSearchMode\(\)==='identify'[\s\S]{0,220}const executionId=beginIdentifySearch\(query\);window\.HoshiluIdentifySearch\.open\(query,elements\.language\.value,\{executionId\}\)/);
-  assert.match(appSource, /この端末に条件を保存しました（通知は無料会員登録後）/);
+  assert.match(appSource, /この端末に条件を保存しました（登録後、通知を明示的に有効化できます）/);
   assert.match(html, /id="resultMessage"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.doesNotMatch(html, /id="instantMarketplaceHandoff"[^>]*(?:role="status"|aria-live=|aria-atomic=)/);
   assert.match(appSource, /liveStatus\.setAttribute\('role','status'\);liveStatus\.setAttribute\('aria-live','polite'\);liveStatus\.setAttribute\('aria-atomic','true'\)/);
@@ -1423,13 +1423,28 @@ test('再検索・AI確認・共有は同じexecutionへ相関し未確認結果
   assert.doesNotMatch(appSource, /shareObserver|new MutationObserver\(\(\)=>\{if\(shareDiscoveryReady/);
 });
 
-test('会員通知は保存成功後だけ成功表示とCVを送る', () => {
+test('ゲスト保存と会員ON/OFFを分け、通知有効化CVはブラウザから送らない', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   const analytics = fs.readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
-  assert.match(appSource, /if\(memberSession\)return Boolean\(await persistInsightWatch/);
-  assert.match(appSource, /if\(!saved\)\{button\.textContent=wishSaveFailedCopy\(\);button\.disabled=false;return;\}/);
+  assert.match(appSource, /const resumeFrequency=currentFrequency==='MUTED'\?'INSTANT':currentFrequency/);
+  assert.match(appSource, /persistInsightWatch\(value,true,resumeFrequency\)/);
+  assert.match(appSource, /const memberPersistenceRequired=Boolean\(memberSession\);/);
+  assert.match(appSource, /function insightEnabledFor\(query\)\{const record=recordFor\(query\);return Boolean\(record\?\.notify_new_match\)&&Boolean\(record\?\.insight_enabled_at\)&&String\(record\?\.watch_frequency\|\|'MUTED'\)\.toUpperCase\(\)!=='MUTED';\}/);
+  assert.match(appSource, /const memberActive=Boolean\(memberSession\)&&insightEnabledFor\(value\);/);
+  assert.match(appSource, /button\.disabled=memberActive;/);
+  assert.match(appSource, /storeWatchPreference\(merged\.query_text[^\n]+merged\.watch_frequency/);
+  assert.match(appSource, /無料会員登録後に通知を有効にする/);
+  assert.match(appSource, /login\.href='\/login\.html\?source=continuous_search&next=%2F%23wishTitle'/);
+  assert.doesNotMatch(appSource, /source=continuous_search[^'\n]*[?&]q=/);
+  assert.match(appSource, /memberSession\?labels\.action:labels\.localAction/);
   assert.match(appSource, /CustomEvent\('hoshilu:wish-saved',\{detail:\{source:'continuous_search'\}\}\)/);
-  assert.match(analytics, /addEventListener\('hoshilu:wish-saved', \(\) => send\('wish_saved'\)\)/);
+  const conditionSavedEvent = appSource.indexOf("CustomEvent('hoshilu:wish-saved',{detail:{source:'continuous_search'");
+  const memberFailure = appSource.indexOf('if(memberPersistenceRequired&&!saved)', conditionSavedEvent);
+  assert.ok(conditionSavedEvent > -1 && memberFailure > conditionSavedEvent,
+    '会員DB保存失敗時も、先に端末への条件保存を計測する');
+  assert.match(analytics, /send\('continuous_search_saved'\);/);
+  assert.doesNotMatch(analytics, /send\('continuous_search_saved',\s*\{[^}]*query/);
+  assert.doesNotMatch(analytics, /send\('continuous_search_enabled'/);
   assert.doesNotMatch(analytics, /classList\.contains\('wish-button'\).*send\('wish_saved'\)/);
 });
 
@@ -1599,4 +1614,56 @@ test('セール欄は指定コピーだけを残して補足文を削除して�
   assert.doesNotMatch(html, /届くのはセール通知だけ。開始前と開始時のみ。/);
   assert.doesNotMatch(saleCenter, /13モールのセール、始まる前に通知。/);
   assert.doesNotMatch(saleCenter, /届くのはセール通知だけ。開始前と開始時のみ。/);
+});
+
+test('公開投稿URLの対応形式・6サービスと継続検索の初回基準化を4言語で正確に案内する', () => {
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const versioned = fs.readFileSync(new URL('../public/assets-v146/app.js', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.equal(versioned, app, 'canonical app.jsとassets-v146を完全同期する');
+
+  for (const copy of [
+    'HOSHILU対応形式の公開SNS投稿単体URL（Instagram・TikTok・X・Threads・Facebook・Pinterest）',
+    'HOSHILU-supported public single-post URL (Instagram, TikTok, X, Threads, Facebook, or Pinterest)',
+    'HOSHILU 支持格式的公开社交平台单帖链接（Instagram、TikTok、X、Threads、Facebook 或 Pinterest）',
+    'HOSHILU 지원 형식의 공개 SNS 단일 게시물 URL(Instagram·TikTok·X·Threads·Facebook·Pinterest)'
+  ]) assert.match(app, new RegExp(copy.replace(/[()]/g, '\\$&')));
+  assert.match(html, /id="socialUrlLabel">HOSHILU対応形式の公開SNS投稿単体URL（Instagram・TikTok・X・Threads・Facebook・Pinterest）/u);
+  assert.match(html, /撮った写真、画像、HOSHILU対応形式の公開SNS投稿単体URL、覚えている一言から探せます。/u);
+
+  for (const copy of [
+    '初回確認では現在の候補を基準として記録し、この時点では通知しません。以後、新しく一致する実在商品が見つかったときだけ、アプリ内と接続済みのLINE・メールへお知らせします。',
+    'the first check records current candidates as the baseline and sends no alert. After that, only newly matched real products trigger alerts in the app and through connected LINE or email.',
+    '首次检查会将当前候选商品记录为基准，此时不发送通知。之后，仅在发现新匹配的真实商品时，通过应用内通知及已连接的 LINE 或电子邮件提醒您。',
+    '첫 확인에서 현재 후보를 기준으로 기록하고 이때는 알림을 보내지 않습니다. 이후 새로 일치하는 실제 상품을 찾았을 때만 앱과 연결된 LINE·이메일로 알려드립니다.'
+  ]) assert.ok(app.includes(copy), `継続検索説明が不足: ${copy}`);
+
+  // generic/local saveは通知の明示同意ではない。
+  assert.match(app, /wishSaved:'検索条件を保存しました'/u);
+  assert.doesNotMatch(app, /wishSaved:'[^']*(?:探し続け|keep looking|持续寻找|계속 찾)/iu);
+});
+
+test('保存条件一覧は初回baseline説明と通知頻度を4言語のactionCopyから描画する', () => {
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const versioned = fs.readFileSync(new URL('../public/assets-v146/app.js', import.meta.url), 'utf8');
+  assert.equal(versioned, app);
+
+  for (const copy of [
+    "frequencyLabel:'通知頻度',frequencyInstant:'すぐに通知',frequencyDaily:'1日1回',frequencyWeekly:'週1回',frequencyMuted:'通知を停止'",
+    "frequencyLabel:'Notification frequency',frequencyInstant:'Immediately',frequencyDaily:'Once a day',frequencyWeekly:'Once a week',frequencyMuted:'Pause notifications'",
+    "frequencyLabel:'通知频率',frequencyInstant:'立即通知',frequencyDaily:'每天一次',frequencyWeekly:'每周一次',frequencyMuted:'暂停通知'",
+    "frequencyLabel:'알림 빈도',frequencyInstant:'즉시 알림',frequencyDaily:'하루 한 번',frequencyWeekly:'주 1회',frequencyMuted:'알림 중지'"
+  ]) assert.ok(app.includes(copy), `通知頻度copyが不足: ${copy}`);
+
+  for (const copy of [
+    '有効にすると、初回確認では現在の候補を基準として記録し、この時点では通知しません。以後、新しく一致する実在商品が見つかったときだけ、アプリ内と接続済みのLINE・メールへお知らせします。',
+    'When enabled, the first check records current candidates as the baseline and sends no alert. After that, only newly matched real products trigger alerts in the app and through connected LINE or email.',
+    '启用后，首次检查会将当前候选商品记录为基准，此时不发送通知。之后，仅在发现新匹配的真实商品时，通过应用内通知及已连接的 LINE 或电子邮件提醒您。',
+    '활성화하면 첫 확인에서 현재 후보를 기준으로 기록하고 이때는 알림을 보내지 않습니다. 이후 새로 일치하는 실제 상품을 찾았을 때만 앱과 연결된 LINE·이메일로 알려드립니다.'
+  ]) assert.ok(app.includes(`insightToggleDescription:'${copy}`));
+
+  const wishItem = app.slice(app.indexOf('function wishItem'), app.indexOf('function wishCycle'));
+  assert.match(wishItem, /frequency\.setAttribute\('aria-label',actions\.frequencyLabel\)/u);
+  assert.match(wishItem, /\[\['INSTANT',actions\.frequencyInstant\],\['DAILY',actions\.frequencyDaily\],\['WEEKLY',actions\.frequencyWeekly\],\['MUTED',actions\.frequencyMuted\]\]/u);
+  assert.doesNotMatch(wishItem, /'通知頻度'|'すぐに通知'|'1日1回'|'週1回'|'通知を停止'/u);
 });

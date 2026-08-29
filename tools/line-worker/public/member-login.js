@@ -2,7 +2,7 @@ import { growthSessionId, growthVisitorId } from './growth-identity.mjs';
 
 const lineButton=document.querySelector('#memberLineLogin'),requestForm=document.querySelector('#emailRequestForm'),verifyForm=document.querySelector('#emailVerifyForm'),status=document.querySelector('#emailAuthStatus');
 const requestedNext=new URL(location.href).searchParams.get('next');
-const safeNext=(()=>{try{const url=new URL(requestedNext||'/',location.origin);return url.origin===location.origin&&url.pathname.startsWith('/')?`${url.pathname}${url.search}`:'/?member=logged-in';}catch{return'/?member=logged-in';}})();
+const safeNext=(()=>{try{const url=new URL(requestedNext||'/',location.origin);if(url.origin!==location.origin||!url.pathname.startsWith('/')||url.pathname.startsWith('//'))return'/?member=logged-in';const safeHash=['#hoshiluSearch','#wishTitle'].includes(url.hash)?url.hash:'';return`${url.pathname}${url.search}${safeHash}`;}catch{return'/?member=logged-in';}})();
 const registrationContext=(()=>{const params=new URLSearchParams(location.search);let stored={};try{const value=JSON.parse(sessionStorage.getItem('hoshilu_growth_attribution')||'null');if(value&&Date.now()-Number(value.created_at||0)<30*60*1000)stored=value;}catch{}return{locale:String(document.documentElement.lang||'ja').split('-')[0].toUpperCase(),visitor_id:growthVisitorId(),session_id:growthSessionId(),source:params.get('utm_source')||stored.source||'',medium:params.get('utm_medium')||stored.medium||'',campaign:params.get('utm_campaign')||params.get('campaign')||stored.campaign||'',content:params.get('utm_content')||stored.content||''};})();
 let emailEnabled=false;
 fetch('/api/config',{cache:'no-store'}).then(response=>response.json()).then(config=>{

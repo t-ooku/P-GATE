@@ -10,7 +10,7 @@ const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'
 // (integrated/direct)に置き換えた。
 test('公開UIは4言語でまとめて検索2・個別に探す最大13モールへ統一する', () => {
   for (const copy of [
-    'HOSHILUがまとめて比較する2モールに加え、最大13モールで探せます',
+    'HOSHILUが2モールをまとめて比較し、その他11を含む合計最大13モールで探せます',
     'HOSHILU compares 2 marketplaces together, plus up to 13 in total',
     'HOSHILU可整合比较2个商城，最多可在13个商城查找',
     'HOSHILU가 함께 비교하는 2개 쇼핑몰을 포함해 최대 13개 쇼핑몰'

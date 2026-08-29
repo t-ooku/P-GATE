@@ -212,7 +212,10 @@ function renderDetailKpis(data) {
     metric('モール送客率', rate(current.rates.marketplace_outbound), 'success'),
     metric('無料会員登録率', rate(current.rates.registration), '',
       `${formatNumber(current.registration_sessions)}登録 ÷ 着地セッション`),
-    metric('お気に入り', formatNumber(current.wish_sessions)), metric('共有開始', formatNumber(current.share_sessions)),
+    metric('検索成功後の保存', formatNumber(current.wish_sessions)),
+    metric('継続検索の条件保存', formatNumber(current.continuous_search_save_sessions), '', '端末または会員DBへの保存'),
+    metric('継続検索の有効化回数', formatNumber(current.continuous_search_enabled_count), '', '認証済み会員DBのOFF→ON・新規有効化'),
+    metric('共有開始', formatNumber(current.share_sessions)),
     metric('平均価値到達時間', seconds(current.avg_value_seconds)),
     metric('受理検索の入力構成', `${formatNumber(mix.total_searches)}件`, '',
       `${mixNote}｜${mix.rate_definition || '割合は受理検索に占める構成比'}`)

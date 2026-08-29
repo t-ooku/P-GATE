@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
 import { safeMemberNotificationCopy, storeMemberNotificationDestination } from '../src/member-notification-delivery.mjs';
 
 test('verified destinations are encrypted before storage', async()=>{
@@ -23,8 +24,67 @@ test('SMS is excluded and app notifications use the service worker',async()=>{
   assert.doesNotMatch(sales,/NOTIFICATION_DELIVERY_CHANNELS[^\n]+SMS/);
   assert.match(app,/Notification\.permission!=='granted'/);
   assert.match(app,/HOSHILU_NOTIFY/);
+  assert.match(app,/url:safeNotificationDestination\(item\)/);
   assert.match(worker,/showNotification/);
   assert.match(worker,/notificationclick/);
+  assert.match(worker,/existing\.navigate\(target\)/);
+});
+
+test('端末通知は安全なINSIGHT内部リンクを既存画面へnavigateし、新規画面でも同じURLを開く',async()=>{
+  const worker=await readFile(new URL('../public/service-worker.js',import.meta.url),'utf8');
+  const listeners={};let shown=null,navigated='',focused=0,opened='';
+  const existing={url:'https://hoshilu.app/',async navigate(url){navigated=url;},async focus(){focused+=1;}};
+  const clientsMock={
+    async matchAll(){return[existing];},
+    async openWindow(url){opened=url;return null;},
+    async claim(){}
+  };
+  const context={
+    URL,Promise,
+    self:{
+      location:{origin:'https://hoshilu.app'},
+      registration:{async showNotification(title,options){shown={title,options};}},
+      addEventListener(type,handler){listeners[type]=handler;},
+      async skipWaiting(){},clients:clientsMock
+    },
+    clients:clientsMock,
+    caches:{},
+    fetch:async()=>new Response('')
+  };
+  runInNewContext(worker,context);
+  const safe='/?search_watch=0123456789abcdef0123456789abcdef#hoshiluSearch';
+  let pending;
+  listeners.message({
+    data:{type:'HOSHILU_NOTIFY',id:'n1',title:'新着',body:'見つかりました',url:safe},
+    waitUntil(promise){pending=promise;}
+  });
+  await pending;
+  assert.equal(shown.options.data.url,safe);
+
+  let closed=false;
+  listeners.notificationclick({
+    notification:{data:{url:safe},close(){closed=true;}},
+    waitUntil(promise){pending=promise;}
+  });
+  await pending;
+  assert.equal(closed,true);
+  assert.equal(navigated,safe);
+  assert.equal(focused,1);
+
+  clientsMock.matchAll=async()=>[];
+  listeners.notificationclick({
+    notification:{data:{url:safe},close(){}},
+    waitUntil(promise){pending=promise;}
+  });
+  await pending;
+  assert.equal(opened,safe);
+
+  listeners.message({
+    data:{type:'HOSHILU_NOTIFY',id:'n2',url:`/?search_watch=0123456789abcdef0123456789abcdef&q=${encodeURIComponent('白 長袖')}#hoshiluSearch`},
+    waitUntil(promise){pending=promise;}
+  });
+  await pending;
+  assert.equal(shown.options.data.url,'/#mywatchTitle');
 });
 
 test('LINE and email cannot be selected until a verified destination exists',async()=>{

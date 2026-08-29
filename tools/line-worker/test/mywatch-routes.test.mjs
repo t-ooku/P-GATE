@@ -1,8 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { runInNewContext } from 'node:vm';
 import {
   deliverDueWebNotifications, handleMywatchRoutes
 } from '../src/mywatch-routes.mjs';
+
+test('INSIGHT deep link parserはopaqueな単一search_watchと正規hash以外を実際に拒否する', async () => {
+  const fs = await import('node:fs');
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const source = app.match(/function parseInsightResultUrl[\s\S]*?(?=\nfunction safeNotificationDestination)/u)?.[0];
+  assert.ok(source);
+  const wishId = '0123456789abcdef0123456789abcdef';
+  const context = { URL, location: { origin: 'https://hoshilu.app' }, result: null };
+  runInNewContext(`${source};result={
+    good:parseInsightResultUrl('/?search_watch=${wishId}#hoshiluSearch','${wishId}')?.path||'',
+    extra:parseInsightResultUrl('/?search_watch=${wishId}&q=raw-query#hoshiluSearch','${wishId}'),
+    duplicate:parseInsightResultUrl('/?search_watch=${wishId}&search_watch=${wishId}#hoshiluSearch','${wishId}'),
+    hash:parseInsightResultUrl('/?search_watch=${wishId}#other','${wishId}'),
+    external:parseInsightResultUrl('https://evil.example/?search_watch=${wishId}#hoshiluSearch','${wishId}')
+  };`, context);
+  assert.equal(context.result.good, `/?search_watch=${wishId}#hoshiluSearch`);
+  assert.equal(context.result.extra, null);
+  assert.equal(context.result.duplicate, null);
+  assert.equal(context.result.hash, null);
+  assert.equal(context.result.external, null);
+});
 
 // Mirrors member-auth.mjs's private pack()/sign()/b64() cookie scheme (not
 // exported) just enough to fabricate a valid hoshilu_member_session cookie
@@ -54,6 +76,12 @@ function fakeD1() {
               return { meta: { changes: 0 } };
             },
             async all() {
+              if (/FROM mywatch_notifications n/.test(sql)) {
+                const [memberId] = values;
+                return { results: rows.filter((row) => row.member_id === memberId
+                  && row.status === 'DELIVERED' && !row.dismissed_at
+                  && !['MARKETPLACE_SALES', 'AI_WATCH_TEST'].includes(row.wish_id)) };
+              }
               if (/^SELECT notification_id FROM mywatch_notifications/.test(sql)) {
                 const [memberId, wishId] = values;
                 return { results: rows.filter((row) => row.member_id === memberId && row.wish_id === wishId) };
@@ -88,6 +116,71 @@ test('MYWATCH会員通知APIは未認証利用者へ情報を返さない', asyn
   assert.equal(response.status, 401);
 });
 
+test('INSIGHT通知一覧は生クエリを含まない本人専用の内部検索リンクを返す', async () => {
+  const secret = 'a-secure-secret-that-is-at-least-32-characters';
+  const cookie = await memberCookie({ id: 'member-1', provider: 'LINE' }, secret);
+  const db = fakeD1();
+  const wishId = '0123456789abcdef0123456789abcdef';
+  db.rows.push({
+    notification_id: 'notification-result-1', member_id: 'member-1', wish_id: wishId,
+    event_type: 'INSIGHT_NEW_MATCH', title: '条件に合う商品が見つかりました', body: '1商品見つかりました。',
+    status: 'DELIVERED', dismissed_at: null,
+    result_url: `/?search_watch=${wishId}#hoshiluSearch`
+  });
+  db.rows.push({
+    notification_id: 'notification-other-member', member_id: 'member-2', wish_id: wishId,
+    event_type: 'INSIGHT_NEW_MATCH', status: 'DELIVERED', dismissed_at: null,
+    result_url: `/?search_watch=${wishId}#hoshiluSearch`
+  });
+  const poisonedWishId = 'fedcba9876543210fedcba9876543210';
+  db.rows.push({
+    notification_id: 'notification-poisoned-url', member_id: 'member-1', wish_id: poisonedWishId,
+    event_type: 'INSIGHT_NEW_MATCH', status: 'DELIVERED', dismissed_at: null,
+    result_url: `/?search_watch=${poisonedWishId}&q=${encodeURIComponent('白 長袖')}#hoshiluSearch`
+  });
+  const response = await handleMywatchRoutes(
+    new Request('https://hoshilu.app/api/member/notifications', { headers: { cookie } }),
+    { LINK_SIGNING_SECRET: secret, PRODUCT_DB: db }
+  );
+  assert.equal(response.status, 200);
+  const payload = await response.json();
+  assert.equal(payload.notifications.length, 2);
+  assert.equal(payload.notifications.find((item) => item.notification_id === 'notification-result-1').result_url,
+    `/?search_watch=${wishId}#hoshiluSearch`);
+  assert.equal(payload.notifications.find((item) => item.notification_id === 'notification-poisoned-url').result_url, '');
+  assert.doesNotMatch(JSON.stringify(payload.notifications), /白 長袖|query=/u);
+});
+
+test('0064適用前の通知一覧は旧schemaへfallbackし、API全体を503にしない', async () => {
+  const secret = 'a-secure-secret-that-is-at-least-32-characters';
+  const cookie = await memberCookie({ id: 'member-legacy', provider: 'EMAIL' }, secret);
+  let modernAttempted = false;
+  const db = {
+    prepare(sql) {
+      return { bind() { return { async all() {
+        if (sql.includes('n.result_url')) {
+          modernAttempted = true;
+          throw new Error('no such column: n.result_url');
+        }
+        return { results: [{
+          notification_id: 'legacy-notification', wish_id: 'legacy-wish',
+          event_type: 'INSIGHT_NEW_MATCH', title: '新着', body: '見つかりました',
+          status: 'DELIVERED', result_url: ''
+        }] };
+      } }; } };
+    }
+  };
+  const response = await handleMywatchRoutes(
+    new Request('https://hoshilu.app/api/member/notifications', { headers: { cookie } }),
+    { LINK_SIGNING_SECRET: secret, PRODUCT_DB: db }
+  );
+  assert.equal(response.status, 200);
+  assert.equal(modernAttempted, true);
+  const payload = await response.json();
+  assert.equal(payload.notifications.length, 1);
+  assert.equal(payload.notifications[0].result_url, '');
+});
+
 test('配信時刻を迎えたWeb通知だけを配信済みにする', async () => {
   const writes = [];
   const db = {
@@ -111,7 +204,8 @@ test('配信時刻を迎えたWeb通知だけを配信済みにする', async ()
   };
   const result = await deliverDueWebNotifications(
     { PRODUCT_DB: db },
-    new Date('2026-07-26T00:00:00.000Z')
+    new Date('2020-01-01T00:00:00.000Z'),
+    () => new Date('2026-07-26T00:00:00.000Z')
   );
   assert.deepEqual(result, { delivered: 1 });
   assert.equal(writes.length, 2);
@@ -134,7 +228,19 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   // removing existing functionality, so both actions - and the row's own
   // product-click-through - were restored as small buttons within the row.
   assert.match(app, /updateNotification\(item\.notification_id,'DISMISS'\)/);
-  assert.match(app, /window\.open\(sourceUrl/);
+  assert.match(app, /window\.open\(destination/);
+  assert.match(app, /safeNotificationDestination/);
+  assert.match(app, /function parseInsightResultUrl/);
+  assert.match(app, /url\.origin!==location\.origin/);
+  assert.match(app, /keys\.length!==1\|\|keys\[0\]!=='search_watch'/);
+  assert.match(app, /consumeInsightResultLink/);
+  assert.match(app, /insightResultLoginUrl/);
+  assert.match(app, /\/login\.html\?next=\$\{encodeURIComponent\(parsed\.path\)\}/);
+  assert.match(app, /!memberSession&&login\)\{location\.replace\(login\)/);
+  assert.match(app, /memberWishRecords\.find\(item=>item\.wish_id===parsed\.wishId\)/);
+  assert.match(app, /history\.replaceState\(null,'',`\$\{parsed\.url\.pathname\}\$\{parsed\.url\.hash\}`\)/);
+  assert.match(app, /elements\.form\.dispatchEvent/);
+  assert.match(app, /JA:\{title:'HOSHILU通知'/);
   assert.match(app, /notificationRow/);
   assert.doesNotMatch(app, /const fallback=body\.match/);
   // 2026-08-05 v3.0: the 3-card-per-page horizontal carousel was replaced by
@@ -147,7 +253,12 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(css, /\.notification-thumb/);
   assert.match(css, /\.notification-row-action/);
   assert.match(serviceWorker, /mywatch\.css/);
-  assert.match(serviceWorker, /hoshilu-shell-v403/);
+  assert.match(serviceWorker, /hoshilu-shell-v404/);
+  assert.match(serviceWorker, /safeNotificationUrl/);
+  assert.match(serviceWorker, /existing\.navigate\(target\)/);
+  const memberLogin = fs.readFileSync(new URL('../public/member-login.js', import.meta.url), 'utf8');
+  assert.match(memberLogin, /\['#hoshiluSearch','#wishTitle'\]\.includes\(url\.hash\)\?url\.hash:''/);
+  assert.match(memberLogin, /`\$\{url\.pathname\}\$\{url\.search\}\$\{safeHash\}`/);
   // RC2で使った投入・削除ボタンは本番UIへ残さない。テスト用API自体は
   // 下記の回帰テストからだけ明示的にフラグを立てて検証する。
   const indexMarkup = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');

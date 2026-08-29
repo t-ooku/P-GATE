@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語73ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 78);
+test('検索意図が異なる日本語78ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 83);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.ok(html, path);
@@ -42,7 +42,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは73記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは78記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -54,7 +54,7 @@ test('日本語ガイドハブは73記事を重複なく分類し全記事から
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 73);
+  assert.equal(japanesePaths.length, 78);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -79,11 +79,11 @@ test('新規5テーマは商品・価格・口コミ・順位を根拠なく断�
   }
 });
 
-test('2026-08-21公開の10記事は正しい更新日を表示・構造化データへ反映する', () => {
+test('2026-08-21公開のうち更新対象外の9記事は正しい更新日を表示・構造化データへ反映する', () => {
   const published = [
     'find-products-seen-on-social-media', 'find-products-seen-on-tiktok',
     'find-fashion-items-seen-on-instagram', 'find-products-introduced-on-youtube',
-    'identify-correct-product-name-from-vague-memory', 'find-a-product-from-a-photo-or-screenshot',
+    'identify-correct-product-name-from-vague-memory',
     'identify-a-product-someone-else-is-using', 'find-a-product-you-saw-in-a-store',
     'find-a-product-you-saw-in-a-tv-commercial', 'turn-vague-words-into-search-terms'
   ];
@@ -330,6 +330,116 @@ test('2026-08-29公開のカテゴリ選び方3記事・比較2記事は固有�
   for (const slug of comparisons) assert.match(renderSeoPage('/ja/' + slug), /data-seo-article-type="comparison-guide"/);
 });
 
+test('2026-08-29公開の新機能5記事は画像・投稿URL・継続検索の本番仕様を正確に案内する', () => {
+  const imageSlugs = [
+    'use-hoshilu-camera-search',
+    'search-products-from-saved-images',
+    'search-products-from-screenshots'
+  ];
+  const socialSlug = 'search-products-from-public-social-post-urls';
+  const persistentSlug = 'use-hoshilu-search-until-found';
+  const published = [...imageSlugs, socialSlug, persistentSlug];
+  const intents = new Set();
+  for (const slug of published) {
+    const path = '/ja/' + slug;
+    const html = renderSeoPage(path);
+    assert.ok(html);
+    assert.match(html, /datetime="2026-08-29"/);
+    assert.match(html, /"dateModified":"2026-08-29"/);
+    assert.match(html, /data-seo-article-type="feature-guide"/);
+    assert.match(html, /href="\/#hoshiluSearch" data-seo-feature-link/);
+    assert.match(html, /販売ページ/);
+    assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/);
+    assert.doesNotMatch(html, /Google Lens|必ず(?:特定|見つか)ります[。！]|100％|完全匿名|最安(?:値)?です|人気No\.1/);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    intents.add(html.match(/data-seo-intent="([^"]+)"/)?.[1]);
+  }
+  assert.equal(intents.size, published.length);
+
+  for (const slug of imageSlugs) {
+    const html = renderSeoPage('/ja/' + slug);
+    assert.match(html, /JPEG/);
+    assert.match(html, /PNG/);
+    assert.match(html, /WebP/);
+    assert.match(html, /HEIC/);
+    assert.match(html, /EXIF/);
+    assert.match(html, /位置情報/);
+    assert.match(html, /保存しません/);
+    assert.match(html, /Google Cloud VisionはWeb画像照合から名称の手がかり/);
+    assert.match(html, /Google Gemini APIは名称・ブランド・特徴・検索語の仮説を整理/);
+    assert.match(html, /価格・在庫・購入URLは生成せず/);
+  }
+  assert.match(renderSeoPage('/ja/search-products-from-screenshots'), /権利と各サービスの利用条件/);
+
+  const social = renderSeoPage('/ja/' + socialSlug);
+  for (const service of ['Instagram', 'TikTok', 'X', 'Threads', 'Facebook', 'Pinterest']) {
+    assert.match(social, new RegExp(service));
+  }
+  assert.match(social, /非公開/);
+  assert.match(social, /削除済み/);
+  assert.match(social, /非対応形式/);
+  assert.match(social, /取得不能/);
+  assert.match(social, /各サービスのHOSHILU対応形式に合う公開投稿単体URL/);
+  assert.match(social, /すべてのURL形式に対応するものではありません/);
+  assert.match(social, /画像/);
+  assert.match(social, /独立して意味の通る一言/);
+  assert.match(social, /投稿URLはHOSHILUへ保存しません/);
+  assert.match(social, /Google Gemini API[^。]*名称・ブランド・特徴・検索語の仮説を整理/);
+  assert.match(social, /価格・在庫・購入URLは生成しません/);
+  assert.doesNotMatch(social, /Google Cloud Vision/);
+
+  const persistent = renderSeoPage('/ja/' + persistentSlug);
+  assert.match(persistent, /15分ごと/);
+  assert.match(persistent, /初回確認[^<。]*現在の候補[^<。]*基準/);
+  assert.match(persistent, /初回確認で得た現在の候補は通知せず/);
+  assert.match(persistent, /新しく条件へ一致した実在商品/);
+  assert.match(persistent, /以前通知した商品を除/);
+  assert.match(persistent, /値下げ通知ではなく/);
+  assert.match(persistent, /保証しません/);
+});
+
+test('既存の写真記事は直接画像入力と競合せず補足の一言に特化し、新しい3ガイドへ案内する', () => {
+  const path = '/ja/find-a-product-from-a-photo-or-screenshot';
+  const html = renderSeoPage(path);
+  assert.ok(html);
+  assert.match(html, /<h1>画像から商品検索を補う一言を作るコツ<\/h1>/);
+  assert.match(html, /datetime="2026-08-29"/);
+  assert.match(html, /"dateModified":"2026-08-29"/);
+  assert.match(html, /data-seo-intent="write_supporting_words_for_image_search"/);
+  assert.match(html, /data-seo-cluster="hoshilu-image-search"/);
+  assert.match(html, /data-seo-article-type="how-to"/);
+  for (const format of ['JPEG', 'PNG', 'WebP']) assert.match(html, new RegExp(format));
+  assert.match(html, /画像の内容をすべて文章へ置き換える必要はありません/);
+  assert.doesNotMatch(html, /HOSHILUは文章で入力した条件から候補を探します/);
+
+  const linkedGuides = [
+    '/ja/use-hoshilu-camera-search',
+    '/ja/search-products-from-saved-images',
+    '/ja/search-products-from-screenshots'
+  ];
+  const related = html.match(/<nav class="related"[\s\S]*?<\/nav>/)?.[0] || '';
+  for (const linkedPath of linkedGuides) {
+    assert.equal((related.match(new RegExp(`href="${linkedPath}"`, 'g')) || []).length, 1);
+  }
+
+  const intents = [path, ...linkedGuides].map((pagePath) =>
+    renderSeoPage(pagePath).match(/data-seo-intent="([^"]+)"/)?.[1]
+  );
+  assert.equal(new Set(intents).size, intents.length);
+});
+
+test('旧記事にも直接画像入力を反映し、文章入力だけという旧説明を残さない', () => {
+  const social = renderSeoPage('/ja/find-products-seen-on-social-media');
+  assert.match(social, /スクリーンショットがあれば画像として直接追加できます/);
+  assert.match(social, /JPEG・PNG・WebP画像をHOSHILUへ直接追加/);
+
+  const cosmetics = renderSeoPage('/ja/find-korean-cosmetics-without-product-name');
+  assert.match(cosmetics, /JPEG・PNG・WebP/);
+  assert.match(cosmetics, /写真やスクリーンショットをHOSHILUへ直接追加/);
+  assert.doesNotMatch(cosmetics, /HOSHILUは文章で入力した条件から候補を探します/);
+  assert.doesNotMatch(cosmetics, /画像に写る内容を言葉へ置き換えてください/);
+});
+
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
@@ -337,7 +447,7 @@ test('サイトマップはガイドハブ・全SEOページ・canonicalの法�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 84);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 89);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });

@@ -13,7 +13,8 @@ const FUNNEL_EVENTS = Object.freeze([
   'ranking_result_clicked', 'price_comparison_opened', 'marketplace_click', 'returning_visit'
 ]);
 const emptyFunnel = () => Object.fromEntries(FUNNEL_EVENTS.map(event => [event, 0]));
-const VALUE_EVENT_SQL = "'ai_result_clicked','ranking_result_clicked','price_comparison_opened','wish_saved','share_started','marketplace_click'";
+const VALUE_EVENT_SQL = "'ai_result_clicked','ranking_result_clicked','price_comparison_opened','wish_saved','continuous_search_saved','share_started','marketplace_click'";
+const IDENTITY_INELIGIBLE_EVENT_SQL = "'continuous_search_enabled','search_backend_failed','search_provider_degraded','search_client_degraded'";
 const SEARCH_INPUT_EVENTS = Object.freeze({
   search_input_text: ['TEXT', 'attempts'],
   search_input_screenshot: ['SCREENSHOT', 'attempts'],
@@ -85,7 +86,8 @@ const SESSION_METRICS_SQL = `WITH base AS (
     MAX(CASE WHEN event_type IN (${VALUE_EVENT_SQL}) THEN 1 ELSE 0 END) AS valued,
     MAX(CASE WHEN event_type='price_comparison_opened' THEN 1 ELSE 0 END) AS compared,
     MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS outbound,
-    MAX(CASE WHEN event_type='wish_saved' THEN 1 ELSE 0 END) AS wished,
+    MAX(CASE WHEN event_type IN ('wish_saved','continuous_search_saved') THEN 1 ELSE 0 END) AS wished,
+    MAX(CASE WHEN event_type='continuous_search_saved' THEN 1 ELSE 0 END) AS continuous_search_saved,
     MAX(CASE WHEN event_type='share_started' THEN 1 ELSE 0 END) AS shared,
     MAX(CASE WHEN event_type='member_registered' THEN 1 ELSE 0 END) AS registered,
     MAX(CASE WHEN traffic_class='ATTRIBUTED' THEN 1 ELSE 0 END) AS attributed,
@@ -109,15 +111,19 @@ SELECT
   SUM(CASE WHEN completed=1 AND compared=1 THEN 1 ELSE 0 END) AS comparison_sessions,
   SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions,
   SUM(CASE WHEN completed=1 AND wished=1 THEN 1 ELSE 0 END) AS wish_sessions,
+  SUM(continuous_search_saved) AS continuous_search_save_sessions,
+  (SELECT COUNT(*) FROM base WHERE event_type='continuous_search_enabled') AS continuous_search_enabled_count,
   SUM(CASE WHEN completed=1 AND shared=1 THEN 1 ELSE 0 END) AS share_sessions,
   SUM(CASE WHEN landed=1 AND registered=1 THEN 1 ELSE 0 END) AS registration_sessions,
   SUM(attributed) AS attributed_sessions,
   ROUND(AVG(CASE WHEN search_at IS NOT NULL AND completed_at>=search_at
     THEN (julianday(completed_at)-julianday(search_at))*86400 END),1) AS avg_search_seconds,
-  ROUND(AVG(CASE WHEN search_at IS NOT NULL AND value_at>=search_at
+  ROUND(AVG(CASE WHEN completed=1 AND search_at IS NOT NULL AND value_at>=search_at
     THEN (julianday(value_at)-julianday(search_at))*86400 END),1) AS avg_value_seconds,
   (SELECT COUNT(*) FROM base) AS events,
-  (SELECT COUNT(*) FROM base WHERE visitor_id<>'' AND session_id<>'') AS identified_events,
+  (SELECT COUNT(*) FROM base WHERE event_type NOT IN (${IDENTITY_INELIGIBLE_EVENT_SQL})) AS identity_eligible_events,
+  (SELECT COUNT(*) FROM base WHERE event_type NOT IN (${IDENTITY_INELIGIBLE_EVENT_SQL})
+    AND visitor_id<>'' AND session_id<>'') AS identified_events,
   (SELECT MAX(occurred_at) FROM base) AS last_event_at
 FROM session_flags`;
 
@@ -178,8 +184,9 @@ function normalizedMetrics(row = {}) {
   const fields = [
     'visitors', 'repeat_visitors', 'sessions', 'landing_sessions', 'search_sessions',
     'completed_search_sessions', 'failed_search_sessions', 'value_sessions',
-    'comparison_sessions', 'outbound_sessions', 'wish_sessions', 'share_sessions',
-    'registration_sessions', 'attributed_sessions', 'events', 'identified_events'
+    'comparison_sessions', 'outbound_sessions', 'wish_sessions', 'continuous_search_save_sessions',
+    'continuous_search_enabled_count', 'share_sessions',
+    'registration_sessions', 'attributed_sessions', 'events', 'identity_eligible_events', 'identified_events'
   ];
   const metrics = Object.fromEntries(fields.map(field => [field, safeCount(row[field])]));
   return {
@@ -197,7 +204,7 @@ function normalizedMetrics(row = {}) {
       repeat_visitor: percentage(metrics.repeat_visitors, metrics.visitors),
       registration: percentage(metrics.registration_sessions, metrics.landing_sessions),
       attributed_sessions: percentage(metrics.attributed_sessions, metrics.sessions),
-      tracking_coverage: percentage(metrics.identified_events, metrics.events)
+      tracking_coverage: percentage(metrics.identified_events, metrics.identity_eligible_events)
     }
   };
 }

@@ -64,6 +64,7 @@ function setup() {
     [`${typed1}:completed`, 'search_completed_text', '2026-08-09T12:01:00Z'],
     [`${typed1}:outbound`, 'search_outbound_text', '2026-08-09T12:02:00Z'],
     ['e2', 'search_completed', '2026-08-09T12:01:00Z'],
+    ['continuous1', 'continuous_search_saved', '2026-08-09T12:02:30Z'],
     ['registered1', 'member_registered', '2026-08-09T12:03:00Z'],
     ['e3', 'price_comparison_opened', '2026-08-09T12:01:30Z'],
     ['e4', 'marketplace_click', '2026-08-09T12:02:00Z', 'RAKUTEN_JP'],
@@ -72,8 +73,17 @@ function setup() {
     [`${typed2}:input`, 'search_input_screenshot_social_url', '2026-08-09T13:01:00Z', '', v2, s2],
     [`${typedOrphan}:completed`, 'search_completed_text', '2026-08-09T13:01:05Z', '', v2, s2],
     ['e7', 'search_dead_end', '2026-08-09T13:01:10Z', '', v2, s2],
+    ['continuous2', 'continuous_search_saved', '2026-08-09T13:02:00Z', '', v2, s2],
     ['e8', 'landing_view', '2026-08-09T14:00:00Z', '', v1, s3]
   ]) event.run(id, type, 'JA', 'instagram', 'social', 'campaign', '', marketplace, at, 'ATTRIBUTED', visitor, session);
+  event.run('continuous-enabled1', 'continuous_search_enabled', 'JA', 'worker', 'member_wish',
+    'authenticated_enable', '', '', '2026-08-09T12:02:31Z', 'UNATTRIBUTED', '', '');
+  for (const [id, type, source] of [
+    ['diagnostic-backend', 'search_backend_failed', 'worker'],
+    ['diagnostic-provider', 'search_provider_degraded', 'worker'],
+    ['diagnostic-client', 'search_client_degraded', 'browser']
+  ]) event.run(id, type, 'JA', source, 'search', 'internal_diagnostic', '', '',
+    '2026-08-09T12:02:32Z', 'UNATTRIBUTED', '', '');
   const oldSession = 'a50e8400-e29b-41d4-a716-446655440000';
   for (const [id, type, at, marketplace = ''] of [
     ['old0', 'landing_view', '2026-08-01T11:59:00Z'], ['old1', 'search_started', '2026-08-01T12:00:00Z'],
@@ -118,6 +128,15 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(period.current.failed_search_sessions, 1);
   assert.equal(period.current.value_sessions, 1);
   assert.equal(period.current.outbound_sessions, 1);
+  assert.equal(period.current.wish_sessions, 1);
+  assert.equal(period.current.continuous_search_save_sessions, 2);
+  assert.equal(period.current.continuous_search_enabled_count, 1);
+  assert.equal(period.current.sessions, 3, 'server-owned enabled event must not create a synthetic session');
+  assert.equal(period.current.rates.tracking_coverage, 100,
+    'server-owned and diagnostic events are not eligible for anonymous browser identity coverage');
+  assert.equal(period.current.identity_eligible_events, period.current.identified_events,
+    'the coverage numerator and denominator exclude the same internal event types');
+  assert.equal(period.current.avg_value_seconds, 90);
   assert.equal(period.current.rates.search_completion, 50);
   assert.equal(period.current.rates.value_realization, 100);
   assert.equal(period.previous.value_sessions, 1);

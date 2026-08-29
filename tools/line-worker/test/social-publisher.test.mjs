@@ -115,6 +115,24 @@ test('Instagram投稿は内容に合わせてQoo10・SHEINの検索タグを選�
   }
 });
 
+test('新検索ローンチ投稿は機能専用タグを使い、無関係なモール購入タグを付けない', () => {
+  const visual = normalizeSocialPost({
+    platform: 'INSTAGRAM', content_id: 'guide-search-screen',
+    caption: '写真・スクショ・公開投稿URL・一言から商品を探せます。 @hoshilu.app',
+    media_url: 'https://hoshilu.app/social/hoshilu-visual-search-launch-v1.png', status: 'APPROVED'
+  });
+  for (const tag of ['#HOSHILU', '#画像検索', '#商品検索']) assert.match(visual.caption, new RegExp(tag, 'u'));
+  assert.doesNotMatch(visual.caption, /#Qoo10|#SHEIN|#購入品紹介/u);
+
+  const continuous = normalizeSocialPost({
+    platform: 'X', content_id: 'continuous-search',
+    caption: '無料会員で有効にすると、HOSHILUが条件を定期的に探します。',
+    link: 'https://hoshilu.app/?utm_source=x', status: 'APPROVED'
+  });
+  for (const tag of ['#HOSHILU', '#商品検索', '#見つかるまで探す']) assert.match(continuous.caption, new RegExp(tag, 'u'));
+  assert.doesNotMatch(continuous.caption, /#Qoo10|#SHEIN|#購入品紹介/u);
+});
+
 test('X投稿はInstagram用の誤メンションを消して本文リンクへ案内する', () => {
   const post = normalizeSocialPost({
     platform: 'X',
@@ -858,6 +876,28 @@ test('Instagram publisher creates a Reels container for an MP4 media URL', async
   assert.match(createPayload.caption, /#SHEIN/);
   assert.match(createPayload.caption, /@hoshilu\.app のプロフィールリンクから/);
   assert.doesNotMatch(createPayload.caption, /utm_source=/);
+});
+
+test('Instagramはbare mentionだけではプロフィールリンクCTAを省略しない', async () => {
+  let createPayload;
+  await publishSocialPost({
+    platform: 'INSTAGRAM', content_id: 'guide-search-screen',
+    caption: '画像から探せます。 @hoshilu.app',
+    media_url: 'https://hoshilu.app/social/hoshilu-visual-search-launch-v1.png',
+    status: 'APPROVED'
+  }, {
+    INSTAGRAM_ACCESS_TOKEN: 'token', INSTAGRAM_ACCOUNT_ID: '123', INSTAGRAM_POLL_DELAY_MS: 0
+  }, async (url, options = {}) => {
+    if (url.endsWith('/123/media')) {
+      createPayload = JSON.parse(options.body);
+      return Response.json({ id: 'launch-container' });
+    }
+    if (url.includes('/launch-container?fields=status_code')) return Response.json({ status_code: 'FINISHED' });
+    if (url.endsWith('/123/media_publish')) return Response.json({ id: 'launch-post' });
+    return Response.json({}, { status: 404 });
+  });
+  assert.match(createPayload.caption, /続きは @hoshilu\.app のプロフィールリンクから。/u);
+  assert.doesNotMatch(createPayload.caption, /#Qoo10|#SHEIN|#購入品紹介/u);
 });
 
 test('Runway Instagram Reels self-disclose AI generation through the platform label', async () => {

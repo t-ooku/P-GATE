@@ -38,7 +38,8 @@ test('MYWATCH通知頻度をAPIと会員画面の両方で変更できる', asyn
   // 今までと同一(常に上書き)のまま。
   assert.match(source, /watch_frequency=COALESCE\(\?9,member_wishes\.watch_frequency\)/);
   assert.match(app, /watchFrequencyFor/);
-  assert.match(app, /\['MUTED','通知を停止'\]/);
+  assert.match(app, /frequency\.setAttribute\('aria-label',actions\.frequencyLabel\)/);
+  assert.match(app, /\['MUTED',actions\.frequencyMuted\]/);
   assert.match(app, /updateInsightWatch\(record,notifyNewMatch,frequency\.value\)/);
 });
 

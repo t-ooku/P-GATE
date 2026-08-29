@@ -239,13 +239,146 @@ jobs:
             tools/line-worker/google-visual-table-after.json
           retention-days: 30
 
+  insight-notifications-d1-setup:
+    needs: test
+    if: >-
+      github.ref == 'refs/heads/feature/ui-search-v2' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[activate-insight-notifications-approved]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: cloudflare-d1-migrations
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify the four approved additive migrations
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          test "$(sha256sum migrations/0063_insight_scan_index.sql | cut -d' ' -f1)" = "136ab4259bd14973790b8192329ce30637b726f5f393bd9c3da5071b407c7da0"
+          test "$(sha256sum migrations/0064_mywatch_notification_result_url.sql | cut -d' ' -f1)" = "c97d2b884275637263799fb8fe1f01e1dc7b3b68b969c62c0a82a0348175e026"
+          test "$(sha256sum migrations/0065_member_wish_insight_explicit_opt_in.sql | cut -d' ' -f1)" = "4f1b2388a9c70ee3b73e40dd6a1bfceee03ab6e0603243c3bca070e055afa2fb"
+          test "$(sha256sum migrations/0066_insight_scan_leases.sql | cut -d' ' -f1)" = "27708122254e2e69ea01e749977ba6aa40e80f055b1e6aee080a6f19aae608b7"
+          if grep -iqE '(^|[[:space:];])(delete|drop|truncate|replace)[[:space:]]' \
+            migrations/0063_insight_scan_index.sql migrations/0064_mywatch_notification_result_url.sql \
+            migrations/0065_member_wish_insight_explicit_opt_in.sql migrations/0066_insight_scan_leases.sql; then
+            echo "::error::Destructive statement found in approved INSIGHT migrations"
+            exit 1
+          fi
+          test "$(grep -Eic '^[[:space:]]*alter[[:space:]]+table' migrations/0064_mywatch_notification_result_url.sql)" -eq 1
+          grep -Fq "ALTER TABLE mywatch_notifications ADD COLUMN result_url TEXT NOT NULL DEFAULT '';" migrations/0064_mywatch_notification_result_url.sql
+          test "$(grep -Eic '^[[:space:]]*alter[[:space:]]+table' migrations/0065_member_wish_insight_explicit_opt_in.sql)" -eq 1
+          grep -Fq "ALTER TABLE member_wishes ADD COLUMN insight_enabled_at TEXT;" migrations/0065_member_wish_insight_explicit_opt_in.sql
+          if grep -iqE 'alter[[:space:]]+table[^;]*(drop|rename)' migrations/0064_mywatch_notification_result_url.sql; then
+            echo "::error::Only the approved ADD COLUMN is permitted in 0064"
+            exit 1
+          fi
+          if grep -iqE 'alter[[:space:]]+table[^;]*(drop|rename)' migrations/0065_member_wish_insight_explicit_opt_in.sql; then
+            echo "::error::Only the approved ADD COLUMN is permitted in 0065"
+            exit 1
+          fi
+      - name: Capture restore point and apply only migrations 0063 through 0066
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json \
+            > insight-notifications-recovery-bookmark-before.json
+          mkdir -p .migration-insight-notifications-0063-0066
+          cp migrations/0063_insight_scan_index.sql .migration-insight-notifications-0063-0066/0063_insight_scan_index.sql
+          cp migrations/0064_mywatch_notification_result_url.sql .migration-insight-notifications-0063-0066/0064_mywatch_notification_result_url.sql
+          cp migrations/0065_member_wish_insight_explicit_opt_in.sql .migration-insight-notifications-0063-0066/0065_member_wish_insight_explicit_opt_in.sql
+          cp migrations/0066_insight_scan_leases.sql .migration-insight-notifications-0063-0066/0066_insight_scan_leases.sql
+          cat > wrangler-insight-notifications-0063-0066.jsonc <<'JSON'
+          {
+            "name": "project-gate-line-bridge",
+            "main": "src/index.mjs",
+            "compatibility_date": "2026-07-14",
+            "d1_databases": [{
+              "binding": "PRODUCT_DB",
+              "database_name": "hoshilu-products",
+              "database_id": "17629324-b771-4348-982c-c25da48c29b2",
+              "migrations_dir": ".migration-insight-notifications-0063-0066"
+            }]
+          }
+          JSON
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote \
+            --config wrangler-insight-notifications-0063-0066.jsonc \
+            > insight-notifications-pending-before.txt
+          for migration in 0063_insight_scan_index.sql 0064_mywatch_notification_result_url.sql 0065_member_wish_insight_explicit_opt_in.sql 0066_insight_scan_leases.sql; do
+            pending_count="$(grep -c "$migration" insight-notifications-pending-before.txt || true)"
+            test "$pending_count" -le 1
+          done
+          npx --yes wrangler@4.121.0 d1 migrations apply PRODUCT_DB --remote \
+            --config wrangler-insight-notifications-0063-0066.jsonc
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT COUNT(*) AS index_count FROM sqlite_master WHERE type='index' AND name IN ('member_wishes_insight_scan','member_wishes_active_insight_scan','insight_scan_leases_expiry');" \
+            > insight-notifications-index-after.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT COUNT(*) AS column_count FROM pragma_table_info('mywatch_notifications') WHERE name='result_url';" \
+            > insight-notifications-column-after.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT COUNT(*) AS column_count FROM pragma_table_info('member_wishes') WHERE name='insight_enabled_at';" \
+            > insight-notifications-opt-in-column-after.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT COUNT(*) AS table_count FROM sqlite_master WHERE type='table' AND name='insight_scan_leases';" \
+            > insight-notifications-lease-table-after.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const rows = (name) => {
+            const data = JSON.parse(fs.readFileSync(name));
+            return (Array.isArray(data) ? data : [data]).flatMap((entry) => entry.results || entry.result?.results || []);
+          };
+          const indexCount = Number(rows('insight-notifications-index-after.json')[0]?.index_count);
+          const resultUrlColumnCount = Number(rows('insight-notifications-column-after.json')[0]?.column_count);
+          const optInColumnCount = Number(rows('insight-notifications-opt-in-column-after.json')[0]?.column_count);
+          const leaseTableCount = Number(rows('insight-notifications-lease-table-after.json')[0]?.table_count);
+          if (indexCount !== 3 || resultUrlColumnCount !== 1 || optInColumnCount !== 1 || leaseTableCount !== 1) {
+            throw new Error(JSON.stringify({ indexCount, resultUrlColumnCount, optInColumnCount, leaseTableCount }));
+          }
+          console.log('::notice::INSIGHT_NOTIFICATIONS_D1_READY indexes=3 result_url=1 explicit_opt_in=1 lease_table=1');
+          NODE
+          npx --yes wrangler@4.121.0 d1 migrations list PRODUCT_DB --remote \
+            --config wrangler-insight-notifications-0063-0066.jsonc \
+            > insight-notifications-pending-after.txt
+          if grep -Eq '0063_insight_scan_index.sql|0064_mywatch_notification_result_url.sql|0065_member_wish_insight_explicit_opt_in.sql|0066_insight_scan_leases.sql' insight-notifications-pending-after.txt; then
+            echo "::error::An approved INSIGHT migration is still pending"
+            exit 1
+          fi
+      - name: Preserve INSIGHT migration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: insight-notifications-d1-${{ github.run_id }}
+          path: |
+            tools/line-worker/insight-notifications-recovery-bookmark-before.json
+            tools/line-worker/insight-notifications-pending-before.txt
+            tools/line-worker/insight-notifications-pending-after.txt
+            tools/line-worker/insight-notifications-index-after.json
+            tools/line-worker/insight-notifications-column-after.json
+            tools/line-worker/insight-notifications-opt-in-column-after.json
+            tools/line-worker/insight-notifications-lease-table-after.json
+          retention-days: 30
+
   deploy:
-    needs: [test, runway-infra-setup, google-visual-d1-setup]
+    needs: [test, runway-infra-setup, google-visual-d1-setup, insight-notifications-d1-setup]
     if: >-
       always() &&
       needs.test.result == 'success' &&
       (needs.runway-infra-setup.result == 'success' || needs.runway-infra-setup.result == 'skipped') &&
       (needs.google-visual-d1-setup.result == 'success' || needs.google-visual-d1-setup.result == 'skipped') &&
+      (needs.insight-notifications-d1-setup.result == 'success' || needs.insight-notifications-d1-setup.result == 'skipped') &&
       github.ref == 'refs/heads/feature/ui-search-v2' &&
       github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -381,7 +514,7 @@ jobs:
           const runway=health?.checks?.runway_video_generation;
           const db=health?.checks?.database_features||{};
           const tables=['runway_budget_policy','runway_budget_periods','runway_generation_jobs','runway_generation_attempts','runway_cost_reservations','runway_provider_usage_daily','runway_approval_grants','runway_audit_log'];
-          if(health.ok!==true||health.release!=='1.21.0'||runway?.api_configured!==true||runway?.database_configured!==true||runway?.media_storage_configured!==true||runway?.enabled!==true||runway?.ready!==true||tables.some(name=>db[name]!==true)) throw new Error(JSON.stringify({ok:health.ok,release:health.release,runway,runway_tables:Object.fromEntries(tables.map(name=>[name,db[name]]))}));
+          if(health.ok!==true||health.release!=='1.22.0'||runway?.api_configured!==true||runway?.database_configured!==true||runway?.media_storage_configured!==true||runway?.enabled!==true||runway?.ready!==true||tables.some(name=>db[name]!==true)) throw new Error(JSON.stringify({ok:health.ok,release:health.release,runway,runway_tables:Object.fromEntries(tables.map(name=>[name,db[name]]))}));
           console.log('::notice::RUNWAY_PRODUCTION_READY secret=present database=ready storage=ready generation=enabled');
           NODE
         env:
