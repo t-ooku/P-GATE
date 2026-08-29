@@ -49,6 +49,15 @@ const INSTAGRAM_POSTS = [
   }
 ];
 
+// The owner explicitly approved both 2026-08-28 cross-post rows for release
+// after they were held as completed-video replays. Keep the exception scoped to
+// those exact queue identities; later replays still require a newly varied and
+// reviewed creative under HOSHILU_REELS_AUDIO_DIRECTION_v1.0.
+const USER_APPROVED_REPLAY_POST_IDS = new Set([
+  'hoshilu-official-13mall-v2-x-2026-08-28',
+  'hoshilu-official-13mall-v2-instagram-2026-08-28'
+]);
+
 const X_NON_VIDEO_POSTS = Object.freeze([
   {
     id: 'howto-three-input-search',
@@ -532,11 +541,12 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
     // Keep this decision inside the INSERT so concurrent cron invocations see
     // the same D1 history and cannot both approve a later replay.
     const completedVideo = /\.mp4(?:$|[?#])/iu.test(post.media_url) ? 1 : 0;
+    const userApprovedReplay = USER_APPROVED_REPLAY_POST_IDS.has(post.post_id) ? 1 : 0;
     const result = await env.PRODUCT_DB.prepare(`INSERT INTO social_post_queue
       (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,
        affiliate,approved_at,created_at,updated_at)
       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,
-        CASE WHEN ?11=1 AND EXISTS (
+        CASE WHEN ?11=1 AND ?13=0 AND EXISTS (
           SELECT 1 FROM social_post_queue previous
           WHERE previous.post_id<>?1
             AND previous.media_url=?7
@@ -545,7 +555,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
               OR previous.external_post_id<>'' OR previous.published_at<>'')
         ) THEN 'REVIEW_REQUIRED' ELSE ?12 END,
         ?9,
-        CASE WHEN ?11=1 AND EXISTS (
+        CASE WHEN ?11=1 AND ?13=0 AND EXISTS (
           SELECT 1 FROM social_post_queue previous
           WHERE previous.post_id<>?1
             AND previous.media_url=?7
@@ -558,6 +568,9 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
         caption=excluded.caption,link=excluded.link,media_url=excluded.media_url,
         scheduled_at=excluded.scheduled_at,affiliate=excluded.affiliate,
         status=CASE
+          WHEN ?13=1 AND social_post_queue.status='REVIEW_REQUIRED'
+            AND social_post_queue.last_error='MEDIA_REUSE_REVIEW_REQUIRED'
+            THEN 'APPROVED'
           WHEN social_post_queue.status='CANCELLED'
             AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
             THEN excluded.status
@@ -565,6 +578,9 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
             THEN 'REVIEW_REQUIRED'
           ELSE social_post_queue.status END,
         approved_at=CASE
+          WHEN ?13=1 AND social_post_queue.status='REVIEW_REQUIRED'
+            AND social_post_queue.last_error='MEDIA_REUSE_REVIEW_REQUIRED'
+            THEN excluded.approved_at
           WHEN social_post_queue.status='CANCELLED'
             AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
             THEN excluded.approved_at
@@ -572,6 +588,9 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
             THEN ''
           ELSE social_post_queue.approved_at END,
         last_error=CASE
+          WHEN ?13=1 AND social_post_queue.status='REVIEW_REQUIRED'
+            AND social_post_queue.last_error='MEDIA_REUSE_REVIEW_REQUIRED'
+            THEN ''
           WHEN social_post_queue.status='CANCELLED'
             AND social_post_queue.last_error='SOCIAL_QUEUE_QUARANTINED_DUPLICATE_CAMPAIGN_20260813'
             THEN CASE WHEN excluded.status='REVIEW_REQUIRED'
@@ -587,7 +606,7 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
           AND social_post_queue.published_at='')`)
       .bind(post.post_id, post.platform, post.campaign_id, post.content_id, post.caption,
         post.link, post.media_url, post.scheduled_at, post.affiliate ? 1 : 0, now.toISOString(),
-        completedVideo, post.status).run();
+        completedVideo, post.status, userApprovedReplay).run();
     inserted += Number(result?.meta?.changes || 0);
   }
   if (approvedModelReel.length) {
