@@ -24,7 +24,9 @@ const run = (command, args, label) => {
     throw new Error(`${label} failed`);
   }
   process.stdout.write(`PASS ${label}\n`);
-  return output;
+  // Commands queried as JSON must not be polluted by harmless npm/wrangler
+  // warnings written to stderr (for example an inherited npm proxy warning).
+  return result.stdout || '';
 };
 
 const runNpx = (args, label) => {
