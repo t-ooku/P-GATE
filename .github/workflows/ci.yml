@@ -527,7 +527,7 @@ jobs:
           const runway=health?.checks?.runway_video_generation;
           const db=health?.checks?.database_features||{};
           const tables=['runway_budget_policy','runway_budget_periods','runway_generation_jobs','runway_generation_attempts','runway_cost_reservations','runway_provider_usage_daily','runway_approval_grants','runway_audit_log'];
-          if(health.ok!==true||health.release!=='1.22.2'||runway?.api_configured!==true||runway?.database_configured!==true||runway?.media_storage_configured!==true||runway?.enabled!==true||runway?.ready!==true||tables.some(name=>db[name]!==true)) throw new Error(JSON.stringify({ok:health.ok,release:health.release,runway,runway_tables:Object.fromEntries(tables.map(name=>[name,db[name]]))}));
+          if(health.ok!==true||health.release!=='1.22.1'||runway?.api_configured!==true||runway?.database_configured!==true||runway?.media_storage_configured!==true||runway?.enabled!==true||runway?.ready!==true||tables.some(name=>db[name]!==true)) throw new Error(JSON.stringify({ok:health.ok,release:health.release,runway,runway_tables:Object.fromEntries(tables.map(name=>[name,db[name]]))}));
           console.log('::notice::RUNWAY_PRODUCTION_READY secret=present database=ready storage=ready generation=enabled');
           NODE
         env:
