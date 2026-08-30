@@ -43,7 +43,7 @@ test('ホームはcanonicalに一致する言語指定と全ガイドへの明�
 // 検索パネル・FAQ・ガイド)はスニペット対象のまま残す。
 
 test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
-  const [html, styles] = await Promise.all([read('index.html'), read('styles.css')]);
+  const [html, styles, speechStyles] = await Promise.all([read('index.html'), read('styles.css'), read('speech-input.css')]);
   const description = 'ホシルは、写真・スクショ・公開SNS投稿URL・一言から商品を探し、最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つける無料サービスです。';
   assert.match(html, /<title>ホシル｜写真・スクショ・一言から商品を探す<\/title>/);
   assert.ok(html.includes('<meta name="description" content="' + description + '">'));
@@ -55,6 +55,8 @@ test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle�
   assert.match(html, /商品特定の補助にGoogle Cloud VisionのWeb画像照合とGoogle Gemini APIを使う場合があります。/u);
   assert.match(styles, /\.hero-copy \.hero-promise\{[^}]*font-size:clamp\(14px,2\.1vw,18px\)[^}]*line-height:1\.75/);
   assert.match(styles, /@media\(max-width:760px\)\{\.hero-copy \.hero-promise\{[^}]*font-size:14px[^}]*line-height:1\.65/);
+  assert.match(speechStyles, /\.speech-input\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/);
+  assert.match(speechStyles, /\.quick-queries \.chip\s*\{[^}]*min-height:\s*44px;/);
 });
 test('UIクロームはdata-nosnippet、本文セクションはスニペット対象のまま', async () => {
   const html = await read('index.html');
