@@ -19,6 +19,7 @@ test('credential-bearing Worker fetches disable automatic redirects', async () =
     ['rakuten-marketplace-api.mjs', 1],
     ['marketplace-ranking.mjs', 2],
     ['yahoo-shopping-api.mjs', 2],
+    ['valuecommerce-product-api.mjs', 1],
     ['x-oauth.mjs', 2],
     ['instagram-oauth.mjs', 4],
     ['social-publisher.mjs', 14],
