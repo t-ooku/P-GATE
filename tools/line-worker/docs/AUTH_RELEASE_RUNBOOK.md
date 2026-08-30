@@ -1,6 +1,6 @@
 # 認証強化リリース手順
 
-対象は Worker release `1.22.2`、`0027_admin_login_guard.sql`、
+対象は Worker release `1.18.1`、`0027_admin_login_guard.sql`、
 `0028_seller_login_guard.sql` です。同期リース／通知状態の0025・0026は別リリースであり、
 この手順の合否条件には含めません。
 
@@ -56,7 +56,7 @@ preflight合格後だけWorkerを公開します。0027、0028は適用済みの
 npx.cmd --yes wrangler@4.113.0 deploy
 ```
 
-公開後は `/health` がHTTP 200、`release` が `1.22.2`、次の値であることを確認します。
+公開後は `/health` がHTTP 200、`release` が `1.18.1`、次の値であることを確認します。
 
 - `admin_auth_configured=true`
 - `admin_auth_weak=false`
