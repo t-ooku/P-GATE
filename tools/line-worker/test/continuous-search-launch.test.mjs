@@ -24,7 +24,7 @@ test('home hero uses the shorter purchase-destination copy and tighter mobile ty
   const [html, app, css] = await Promise.all([
     read('public/index.html'), read('public/app.js'), read('public/hero-fixes.css')
   ]);
-  const copy = 'AIは手がかりを理解し、HOSHILUは実際の購入先を探す。見つけた商品ページやショップモールの検索ページへ案内します。';
+  const copy = 'AIは手がかりを理解し、HOSHILUは実際の購入先を探す。最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つけられます。';
   assert.match(html, new RegExp(copy, 'u'));
   assert.match(app, new RegExp(copy, 'u'));
   assert.doesNotMatch(html, /確認できた商品ページや最大13モールの検索先/u);

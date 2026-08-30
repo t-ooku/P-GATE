@@ -44,11 +44,11 @@ test('ホームはcanonicalに一致する言語指定と全ガイドへの明�
 
 test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle・説明・OG・ファーストビューで一貫表示する', async () => {
   const [html, styles] = await Promise.all([read('index.html'), read('styles.css')]);
-  const description = 'ホシルは、撮った写真・スクショ・HOSHILU対応形式の公開SNS投稿単体URL・うろ覚えの一言から商品を探す無料サービス。AIが手がかりを理解し、実在する購入先を探します。';
+  const description = 'ホシルは、写真・スクショ・公開SNS投稿URL・一言から商品を探し、最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つける無料サービスです。';
   assert.match(html, /<title>ホシル｜写真・スクショ・一言から商品を探す<\/title>/);
   assert.ok(html.includes('<meta name="description" content="' + description + '">'));
   assert.match(html, /<meta property="og:title" content="ホシル｜写真・スクショ・一言から商品を探す">/);
-  assert.match(html, /<p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。見つけた商品ページやショップモールの検索ページへ案内します。<\/p>/);
+  assert.match(html, /<p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つけられます。<\/p>/);
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
   const data = JSON.parse(match[1]);
   assert.equal(data['@graph'].find((item) => item['@type'] === 'WebApplication').description, description);
@@ -90,7 +90,7 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.doesNotMatch(i18n, /faq\.social\.answer'[^\n]*YouTube/u);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 94);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 99);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
   assert.match(worker, /hoshilu-shell-v404/);
 });
