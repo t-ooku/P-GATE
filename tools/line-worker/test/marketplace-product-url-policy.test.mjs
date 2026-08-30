@@ -36,3 +36,13 @@ test('search, category, credentials, and wrong marketplace URLs are rejected', (
   ]) assert.equal(marketplaceForProductUrl(url), '');
   assert.equal(isMarketplaceProductUrl('BUYMA_JP', 'https://snkrdunk.com/products/123456'), false);
 });
+
+test('ValueCommerce affiliate redirects are accepted only for a verified embedded product destination', () => {
+  const yahoo = 'https://ck.jp.ap.valuecommerce.com/servlet/referral?vs=123456&vp=987654&vc_url=https%3A%2F%2Fstore.shopping.yahoo.co.jp%2Fshop%2Fitem-code.html';
+  const qoo10 = 'https://ck.jp.ap.valuecommerce.com/servlet/referral?vs=abc123&vp=def456&vc_url=https%3A%2F%2Fwww.qoo10.jp%2Fgmkt.inc%2FGoods%2FGoods.aspx%3Fgoodscode%3D123456789';
+  assert.equal(marketplaceForProductUrl(yahoo), 'YAHOO_JP');
+  assert.equal(marketplaceForProductUrl(qoo10), 'QOO10_JP');
+  assert.equal(isMarketplaceProductUrl('QOO10_JP', yahoo), false);
+  assert.equal(marketplaceForProductUrl('https://ck.jp.ap.valuecommerce.com/servlet/referral?vs=1&vp=2&vc_url=https%3A%2F%2Fevil.example%2Fproduct'), '');
+  assert.equal(marketplaceForProductUrl('https://ck.jp.ap.valuecommerce.com/servlet/referral?vc_url=https%3A%2F%2Fstore.shopping.yahoo.co.jp%2Fshop%2Fitem-code.html'), '');
+});
