@@ -6,8 +6,8 @@
   position: absolute;
   top: 12px;
   right: 76px;
-  width: 36px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 1px solid #ded7ff;
   border-radius: 50%;
@@ -27,4 +27,8 @@
 .speech-input:focus-visible {
   outline: 3px solid rgba(115, 87, 255, 0.28);
   outline-offset: 2px;
+}
+
+.quick-queries .chip {
+  min-height: 44px;
 }
