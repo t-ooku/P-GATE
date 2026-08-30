@@ -3,8 +3,9 @@ import test from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import {
-  handlePromotionDashboardRoutes, promotionDashboardSummary
+  codexKpiSnapshotSummary, handlePromotionDashboardRoutes, promotionDashboardSummary
 } from '../src/promotion-dashboard.mjs';
+import { assertReadOnlySql, createCloudflareReadOnlyD1 } from '../scripts/read-codex-kpi-snapshot.mjs';
 
 const migration = readFileSync(new URL('../migrations/0006_social_post_queue.sql', import.meta.url), 'utf8');
 const unmetMigration = readFileSync(new URL('../migrations/0004_unmet_demand_events.sql', import.meta.url), 'utf8');
@@ -239,4 +240,49 @@ test('販促ダッシュボードAPIは管理認証が無ければ拒否する',
   );
   assert.equal(response.status, 401);
   assert.equal((await response.json()).error, 'UNAUTHORIZED');
+});
+
+test('Codex KPI snapshotは集計値だけを返し本文・ID・任意UTMを含めない', async () => {
+  const snapshot = await codexKpiSnapshotSummary({ PRODUCT_DB: d1(setup()) }, new Date('2026-08-10T00:00:00.000Z'));
+  assert.equal(snapshot.schema, 'hoshilu.codex-kpi.aggregate.v1');
+  assert.equal(snapshot.privacy.personal_data, false);
+  assert.equal(snapshot.annual_anonymous_visitors.target, 1_000_000);
+  assert.equal(snapshot.periods['7d'].current.counts.visitors, 2);
+  assert.equal(snapshot.periods['7d'].current.counts.search_sessions, 2);
+  assert.equal(snapshot.periods['7d'].current.counts.outbound_sessions, 1);
+  assert.equal(snapshot.social.INSTAGRAM.queue.published, 1);
+  assert.equal(snapshot.social.INSTAGRAM.funnel_7d.search_started, 2);
+  assert.equal(snapshot.improvement_priority.code, 'SAMPLE_GATHERING');
+  const serialized = JSON.stringify(snapshot).toLowerCase();
+  for (const secretValue of ['次のx', '公開済みリール', '失敗リール', 'x-next', 'ig-live',
+    '550e8400-e29b-41d4-a716-446655440000', 'campaign']) {
+    assert.equal(serialized.includes(secretValue.toLowerCase()), false, secretValue);
+  }
+  for (const forbiddenKey of ['visitor_id', 'session_id', 'caption', 'external_post_id', 'post_id', 'source', 'medium', 'campaign', 'content']) {
+    assert.equal(Object.hasOwn(snapshot, forbiddenKey), false);
+    assert.equal(serialized.includes(`\"${forbiddenKey}\":`), false, forbiddenKey);
+  }
+});
+
+test('Codex KPI D1 adapterはSELECT/WITH以外と複文を拒否する', async () => {
+  assert.equal(assertReadOnlySql('SELECT COUNT(*) FROM growth_events'), 'SELECT COUNT(*) FROM growth_events');
+  assert.match(assertReadOnlySql('WITH sample AS (SELECT 1) SELECT * FROM sample'), /^WITH/u);
+  for (const sql of [
+    'UPDATE growth_events SET event_type=\'x\'',
+    'DELETE FROM growth_events',
+    'SELECT 1; SELECT 2',
+    'PRAGMA table_info(growth_events)'
+  ]) assert.throws(() => assertReadOnlySql(sql), /CODEX_KPI_SQL/u);
+
+  const requests = [];
+  const d1Binding = createCloudflareReadOnlyD1({
+    accountId: 'account', apiToken: 'token', databaseId: 'database',
+    fetcher: async (_url, init) => {
+      requests.push(JSON.parse(init.body));
+      return { ok: true, async json() { return { success: true, result: [{ success: true, results: [{ total: 3 }] }] }; } };
+    }
+  });
+  assert.deepEqual(await d1Binding.prepare('SELECT COUNT(*) AS total FROM growth_events WHERE occurred_at>=?1').bind('2026-08-01').first(), { total: 3 });
+  assert.equal(requests.length, 1);
+  assert.deepEqual(requests[0].params, ['2026-08-01']);
 });

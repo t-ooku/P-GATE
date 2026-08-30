@@ -10,6 +10,7 @@
     "check:search-quality": "node scripts/evaluate-search-quality-baseline.mjs --check && node scripts/evaluate-marketplace-query-quality.mjs",
     "check:production": "node scripts/check-production-health.mjs",
     "check:production-sli": "node scripts/check-production-search-sli.mjs",
+    "read:codex-kpi": "node scripts/read-codex-kpi-snapshot.mjs",
     "validate:marketplace-offers": "node scripts/validate-marketplace-offer-feed.mjs",
     "ingest:teacher-dataset": "node scripts/ingest-teacher-dataset-batch.mjs"
   },

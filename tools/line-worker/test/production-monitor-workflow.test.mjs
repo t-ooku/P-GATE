@@ -7,7 +7,8 @@ const workflow = await readFile(new URL('../../../.github/workflows/production-m
 const wrangler = JSON.parse(await readFile(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
 
 test('five-minute production monitor checks the live feature branch without deploy credentials', () => {
-  assert.match(workflow, /2,7,12,17,22,27,32,37,42,47,52,57 \* \* \* \*/u);
+  assert.match(workflow, /2 \* \* \* \*/u);
+  assert.match(workflow, /7,12,17,22,27,32,37,42,47,52,57 \* \* \* \*/u);
   assert.match(workflow, /ref: feature\/ui-search-v2/u);
   assert.match(workflow, /persist-credentials: false/u);
   assert.match(workflow, /--asset-policy live/u);
@@ -26,6 +27,17 @@ test('five-minute production monitor checks the live feature branch without depl
   assert.match(workflow, /timeout-minutes: 9/u);
   assert.match(workflow, /cancel-in-progress: false/u);
   assert.doesNotMatch(workflow, /cancel-in-progress: true/u);
+});
+
+test('Codex KPI snapshot runs hourly, contains aggregates only and is retained briefly', () => {
+  assert.match(workflow, /id: kpi/u);
+  assert.match(workflow, /github\.event\.schedule == '2 \* \* \* \*'/u);
+  assert.match(workflow, /read-codex-kpi-snapshot\.mjs/u);
+  assert.match(workflow, /hoshilu-codex-kpi-snapshot\.json/u);
+  assert.match(workflow, /hoshilu-codex-kpi-\$\{\{ github\.run_id \}\}/u);
+  assert.match(workflow, /retention-days: 7/u);
+  assert.match(workflow, /KPI_OUTCOME: \$\{\{ steps\.kpi\.outcome \}\}/u);
+  assert.match(workflow, /steps\.kpi\.outcome == 'failure'/u);
 });
 
 test('monitor heartbeat is schedule-only and persisted incidents are acknowledged only after Issue recording', () => {

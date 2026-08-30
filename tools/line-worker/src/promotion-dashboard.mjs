@@ -58,6 +58,22 @@ const ANNUAL_TRAFFIC_TARGET = Object.freeze({
   daily_pace: 2740,
   monthly_pace: 83334
 });
+const CODEX_KPI_COUNT_KEYS = Object.freeze([
+  'visitors', 'repeat_visitors', 'sessions', 'landing_sessions', 'search_sessions',
+  'completed_search_sessions', 'failed_search_sessions', 'value_sessions',
+  'comparison_sessions', 'outbound_sessions', 'wish_sessions',
+  'continuous_search_save_sessions', 'continuous_search_enabled_count',
+  'share_sessions', 'registration_sessions', 'events', 'identity_eligible_events',
+  'identified_events'
+]);
+const CODEX_KPI_RATE_KEYS = Object.freeze([
+  'visit_to_search', 'search_completion', 'search_failure', 'value_realization',
+  'comparison_reach', 'marketplace_outbound', 'repeat_visitor', 'registration',
+  'tracking_coverage'
+]);
+const SOCIAL_QUEUE_STATUSES = Object.freeze([
+  'APPROVED', 'PUBLISHING', 'PUBLISHED', 'FAILED', 'CANCELLED', 'REVIEW_REQUIRED'
+]);
 
 function noStoreJson(value, init = {}) {
   const headers = new Headers(init.headers);
@@ -377,6 +393,158 @@ async function businessKpiSummary(env, now) {
     console.error(JSON.stringify({ event: 'promotion_kpi_query_failed', error: String(error?.message || error).slice(0, 120) }));
     return { status: 'UNAVAILABLE', error: 'KPI_DATA_UNAVAILABLE', registered_members: registeredMembers, periods: {} };
   }
+}
+
+function codexMetricSet(metrics = {}) {
+  return {
+    counts: Object.fromEntries(CODEX_KPI_COUNT_KEYS.map(key => [key, safeCount(metrics[key])])),
+    rates_percent: Object.fromEntries(CODEX_KPI_RATE_KEYS.map(key => [key,
+      metrics.rates?.[key] === null || metrics.rates?.[key] === undefined
+        ? null : safeNumber(metrics.rates[key])])),
+    avg_search_seconds: safeNumber(metrics.avg_search_seconds),
+    avg_value_seconds: safeNumber(metrics.avg_value_seconds),
+    last_event_at: String(metrics.last_event_at || '')
+  };
+}
+
+function codexPeriod(period = {}) {
+  const performance = period.search_input_mix?.performance || {};
+  return {
+    start_at: String(period.start_at || ''),
+    end_at: String(period.end_at || ''),
+    current: codexMetricSet(period.current),
+    previous: codexMetricSet(period.previous),
+    change_percent: {
+      counts: Object.fromEntries(CODEX_KPI_COUNT_KEYS
+        .filter(key => Object.hasOwn(period.comparison?.counts || {}, key))
+        .map(key => [key, period.comparison.counts[key]])),
+      rates_points: Object.fromEntries(CODEX_KPI_RATE_KEYS
+        .filter(key => Object.hasOwn(period.comparison?.rates || {}, key))
+        .map(key => [key, period.comparison.rates[key]]))
+    },
+    search_input: Object.fromEntries(Object.keys(SEARCH_INPUT_EVENTS)
+      .map(key => SEARCH_INPUT_EVENTS[key][0]).filter((value, index, values) => values.indexOf(value) === index)
+      .map(type => [type, {
+        attempts: safeCount(performance[type]?.attempts),
+        completed: safeCount(performance[type]?.completed),
+        outbound: safeCount(performance[type]?.outbound),
+        mix_rate_percent: safeNumber(performance[type]?.mix_rate),
+        success_rate_percent: safeNumber(performance[type]?.success_rate),
+        outbound_rate_percent: safeNumber(performance[type]?.outbound_rate)
+      }]))
+  };
+}
+
+function codexPriority(period = {}) {
+  const counts = period.current?.counts || {};
+  const rates = period.current?.rates_percent || {};
+  if ((rates.tracking_coverage ?? 0) < 90) {
+    return { status: 'HOLD', code: 'MEASUREMENT_COVERAGE',
+      evidence: { actual_percent: rates.tracking_coverage ?? 0, required_percent: 90 } };
+  }
+  if ((counts.search_sessions || 0) < 20) {
+    return { status: 'HOLD', code: 'SAMPLE_GATHERING',
+      evidence: { search_sessions: counts.search_sessions || 0, required_search_sessions: 20 } };
+  }
+  const stages = [
+    ['VISIT_TO_SEARCH', counts.landing_sessions, counts.search_sessions, rates.visit_to_search],
+    ['SEARCH_COMPLETION', counts.search_sessions, counts.completed_search_sessions, rates.search_completion],
+    ['VALUE_REALIZATION', counts.completed_search_sessions, counts.value_sessions, rates.value_realization],
+    ['MARKETPLACE_OUTBOUND', counts.value_sessions, counts.outbound_sessions,
+      percentage(counts.outbound_sessions, counts.value_sessions)]
+  ].filter(([, from]) => from > 0)
+    .map(([code, from, to, rate]) => ({ code, from, to, lost: Math.max(0, from - to), rate_percent: rate }))
+    .sort((left, right) => right.lost - left.lost);
+  const priority = stages[0];
+  return priority
+    ? { status: 'ACTION', code: priority.code, evidence: priority }
+    : { status: 'HOLD', code: 'NO_FUNNEL_SAMPLE', evidence: {} };
+}
+
+async function codexSocialKpis(env, now) {
+  const since = shiftDays(now, -7).toISOString();
+  const [queueResult, funnelResult] = await Promise.all([
+    env.PRODUCT_DB.prepare(`SELECT platform,status,COUNT(*) AS total,
+      MAX(CASE WHEN status='PUBLISHED' THEN published_at ELSE '' END) AS last_published_at
+      FROM social_post_queue GROUP BY platform,status`).all(),
+    env.PRODUCT_DB.prepare(`SELECT LOWER(source) AS source,event_type,COUNT(*) AS total
+      FROM growth_events WHERE occurred_at>=?1 AND traffic_class='ATTRIBUTED'
+      AND LOWER(source) IN ('x','instagram','tiktok')
+      AND event_type IN ('landing_view','search_started','search_completed','search_failed',
+        'ai_result_clicked','ranking_result_clicked','price_comparison_opened','marketplace_click','returning_visit')
+      GROUP BY LOWER(source),event_type`).bind(since).all()
+  ]);
+  const channels = new Map(PLATFORMS.map(platform => [platform, {
+    queue: Object.fromEntries(SOCIAL_QUEUE_STATUSES.map(status => [status.toLowerCase(), 0])),
+    last_published_at: '', funnel_7d: emptyFunnel()
+  }]));
+  for (const row of queueResult.results || []) {
+    const channel = channels.get(String(row.platform || ''));
+    const status = String(row.status || '');
+    if (!channel || !SOCIAL_QUEUE_STATUSES.includes(status)) continue;
+    channel.queue[status.toLowerCase()] = safeCount(row.total);
+    if (status === 'PUBLISHED') channel.last_published_at = String(row.last_published_at || '');
+  }
+  for (const row of funnelResult.results || []) {
+    const platform = PLATFORMS.find(value => SOURCE_BY_PLATFORM[value] === String(row.source || '').toLowerCase());
+    const channel = channels.get(platform);
+    if (channel && FUNNEL_EVENTS.includes(row.event_type)) channel.funnel_7d[row.event_type] = safeCount(row.total);
+  }
+  return Object.fromEntries(PLATFORMS.map(platform => {
+    const channel = channels.get(platform);
+    return [platform, {
+      ...channel,
+      rates_percent_7d: {
+        visit_to_search: percentage(channel.funnel_7d.search_started, channel.funnel_7d.landing_view),
+        search_completion: percentage(channel.funnel_7d.search_completed, channel.funnel_7d.search_started),
+        marketplace_outbound: percentage(channel.funnel_7d.marketplace_click, channel.funnel_7d.search_completed)
+      }
+    }];
+  }));
+}
+
+export async function codexKpiSnapshotSummary(env, now = new Date()) {
+  const generatedAt = new Date(now);
+  if (!env.PRODUCT_DB || !Number.isFinite(generatedAt.getTime())) {
+    throw new Error('CODEX_KPI_INPUT_INVALID');
+  }
+  const [business, social] = await Promise.all([
+    businessKpiSummary(env, generatedAt), codexSocialKpis(env, generatedAt)
+  ]);
+  if (business.status !== 'READY') throw new Error('CODEX_KPI_DATA_UNAVAILABLE');
+  const periods = {
+    '7d': codexPeriod(business.periods['7d']),
+    '30d': codexPeriod(business.periods['30d'])
+  };
+  return {
+    schema: 'hoshilu.codex-kpi.aggregate.v1',
+    generated_at: generatedAt.toISOString(),
+    privacy: {
+      scope: 'AGGREGATE_ONLY',
+      personal_data: false,
+      raw_search_text: false,
+      raw_event_ids: false,
+      post_text_or_ids: false,
+      arbitrary_utm_values: false
+    },
+    north_star: {
+      code: 'PRODUCT_DISCOVERY_SESSIONS',
+      actual_7d: periods['7d'].current.counts.value_sessions,
+      actual_30d: periods['30d'].current.counts.value_sessions
+    },
+    annual_anonymous_visitors: {
+      target: safeCount(business.annual_traffic_goal.visitors),
+      actual: safeCount(business.annual_traffic_goal.actual_visitors),
+      remaining: safeCount(business.annual_traffic_goal.remaining_visitors),
+      progress_percent: safeNumber(business.annual_traffic_goal.progress_percent),
+      daily_pace_target: safeCount(business.annual_traffic_goal.daily_pace),
+      monthly_pace_target: safeCount(business.annual_traffic_goal.monthly_pace)
+    },
+    registered_members: safeCount(business.registered_members),
+    periods,
+    social,
+    improvement_priority: codexPriority(periods['7d'])
+  };
 }
 
 async function socialPromotionSummary(env, now) {
