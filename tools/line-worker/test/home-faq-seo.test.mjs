@@ -57,6 +57,7 @@ test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle�
   assert.match(styles, /@media\(max-width:760px\)\{\.hero-copy \.hero-promise\{[^}]*font-size:14px[^}]*line-height:1\.65/);
   assert.match(speechStyles, /\.speech-input\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/);
   assert.match(speechStyles, /\.quick-queries \.chip\s*\{[^}]*min-height:\s*44px;/);
+  assert.match(html, /<link rel="stylesheet" href="\/speech-input\.css\?v=2">/);
 });
 test('UIクロームはdata-nosnippet、本文セクションはスニペット対象のまま', async () => {
   const html = await read('index.html');
