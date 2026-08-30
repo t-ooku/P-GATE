@@ -922,14 +922,23 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
     AMAZON_ASSOCIATE_TAG: 'hoshilu00-22',
     RAKUTEN_APPLICATION_ID: 'rakuten-app',
     RAKUTEN_ACCESS_KEY: 'rakuten-key',
-    YAHOO_SHOPPING_CLIENT_ID: 'yahoo-client-id'
+    RAKUTEN_AFFILIATE_ID: 'rakuten-affiliate',
+    YAHOO_SHOPPING_CLIENT_ID: 'yahoo-client-id',
+    VALUECOMMERCE_PRODUCT_API_TOKEN: 'valuecommerce-token',
+    VALUECOMMERCE_YAHOO_EC_CODE: 'YS001',
+    VALUECOMMERCE_QOO10_EC_CODE: 'Q1001'
   });
   assert.equal(optional.checks.mywatch_configured, true);
   assert.equal(optional.checks.unmet_demand_sync_configured, true);
   assert.deepEqual(optional.checks.sp_api_configured_tenants, ['itg']);
   assert.equal(optional.checks.amazon_creators_configured, true);
   assert.equal(optional.checks.rakuten_marketplace_configured, true);
+  assert.equal(optional.checks.rakuten_affiliate_configured, true);
   assert.equal(optional.checks.yahoo_shopping_configured, true);
+  assert.equal(optional.checks.valuecommerce_product_api_configured, true);
+  assert.deepEqual(optional.checks.valuecommerce_affiliate_marketplaces, ['YAHOO_JP', 'QOO10_JP']);
+  assert.equal(optional.checks.yahoo_affiliate_api_configured, true);
+  assert.equal(optional.checks.qoo10_affiliate_api_configured, true);
   assert.equal(JSON.stringify(optional.checks).includes('refresh'), false);
 
   const ctx = { waitUntil() {} };

@@ -7,7 +7,7 @@ export const PRODUCT_MARKETPLACES = Object.freeze([
 
 const hostMatches = (host, domain) => host === domain || host.endsWith(`.${domain}`);
 
-export function marketplaceForProductUrl(value) {
+function marketplaceForDirectProductUrl(value) {
   try {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.username || url.password) return '';
@@ -32,7 +32,35 @@ export function marketplaceForProductUrl(value) {
   return '';
 }
 
+// ValueCommerce's Product API returns a measured affiliate redirect whose
+// vc_url parameter contains the advertiser's original product URL.  Trust the
+// redirect only when both the tracking endpoint and the embedded destination
+// are exact.  This prevents an arbitrary open redirect from being displayed as
+// a verified marketplace product link.
+export function marketplaceForValueCommerceUrl(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password) return '';
+    if (url.hostname.toLowerCase().replace(/\.$/, '') !== 'ck.jp.ap.valuecommerce.com') return '';
+    if (url.pathname !== '/servlet/referral') return '';
+    if (!/^[A-Za-z0-9_-]{1,64}$/u.test(url.searchParams.get('vs') || '')) return '';
+    if (!/^[A-Za-z0-9_-]{1,64}$/u.test(url.searchParams.get('vp') || '')) return '';
+    const destination = String(url.searchParams.get('vc_url') || '').trim();
+    return marketplaceForDirectProductUrl(destination);
+  } catch {}
+  return '';
+}
+
+export function marketplaceForProductUrl(value) {
+  return marketplaceForDirectProductUrl(value) || marketplaceForValueCommerceUrl(value);
+}
+
 export function isMarketplaceProductUrl(marketplace, value) {
   return PRODUCT_MARKETPLACES.includes(marketplace)
     && marketplaceForProductUrl(value) === marketplace;
+}
+
+export function isValueCommerceAffiliateProductUrl(marketplace, value) {
+  return PRODUCT_MARKETPLACES.includes(marketplace)
+    && marketplaceForValueCommerceUrl(value) === marketplace;
 }

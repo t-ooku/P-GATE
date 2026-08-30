@@ -20,6 +20,11 @@ import {
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
 import { fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
+import {
+  configuredValueCommerceMarketplaces,
+  searchValueCommerceMarketplaceWithFallback,
+  valueCommerceMarketplaceConfigured
+} from './valuecommerce-product-api.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
@@ -574,7 +579,12 @@ export function getEnvironmentReadiness(env = {}) {
       amazon_associate_link_configured: String(env.AMAZON_ASSOCIATE_TAG || '').trim() === 'hoshilu00-22',
       amazon_creators_configured: creatorsApiConfigured(env),
       rakuten_marketplace_configured: rakutenApiConfigured(env),
+      rakuten_affiliate_configured: Boolean(String(env.RAKUTEN_AFFILIATE_ID || '').trim()),
       yahoo_shopping_configured: yahooShoppingApiConfigured(env),
+      valuecommerce_product_api_configured: configuredValueCommerceMarketplaces(env).length > 0,
+      valuecommerce_affiliate_marketplaces: configuredValueCommerceMarketplaces(env),
+      yahoo_affiliate_api_configured: valueCommerceMarketplaceConfigured(env, 'YAHOO_JP'),
+      qoo10_affiliate_api_configured: valueCommerceMarketplaceConfigured(env, 'QOO10_JP'),
       social_autopilot_enabled: env.SOCIAL_AUTOPILOT_ENABLED === 'true',
       // 診断用（2026-08-08追加）: verifyTurnstile()はTURNSTILE_SECRET_KEY未設定だと
       // TURNSTILE_NOT_CONFIGURED を投げるが、そのエラーコードはhandleAiChatApi等の
@@ -2439,27 +2449,62 @@ async function handleKnowledgeApi(request, env, ctx) {
           expandedQuery.query
         )
       });
-      if (yahooShoppingApiConfigured(env)) marketplaceSearches.push({
-        key: 'yahoo_catalog_connected',
-        run: searchMarketplaceApiWithFallback(
-          (keywords) => searchYahooShopping(env, keywords),
-          // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with
-          // no marketplace code collapses "ブラウス" to the broad category
-          // "トップス" alone, dropping the specific noun entirely (reported
-          // 2026-08-07/2026-08-08). Amazon/Rakuten/SHEIN/Yahoo destination
-          // link building already restore it; this is the Yahoo catalog API
-          // search path, which did not.
+      const yahooAffiliateConfigured = valueCommerceMarketplaceConfigured(env, 'YAHOO_JP');
+      if (yahooAffiliateConfigured || yahooShoppingApiConfigured(env)) marketplaceSearches.push({
+        key: yahooAffiliateConfigured ? 'yahoo_affiliate_catalog_connected' : 'yahoo_catalog_connected',
+        run: yahooAffiliateConfigured
+          ? searchValueCommerceMarketplaceWithFallback(
+            env,
+            'YAHOO_JP',
+            buildMarketplaceApiKeywordCandidates(
+              input.query,
+              ensureApparelQualifierTerms(
+                input.query,
+                ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
+              ),
+              ensureApparelQualifierTerms(
+                expandedQuery.query,
+                ensureApparelProductTypeTerm(expandedQuery.query, buildMarketplaceSearchKeywords(expandedQuery.query))
+              )
+            ),
+            fetch,
+            input.query,
+            expandedQuery.query
+          )
+          : searchMarketplaceApiWithFallback(
+            (keywords) => searchYahooShopping(env, keywords),
+            // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with
+            // no marketplace code collapses "ブラウス" to the broad category
+            // "トップス" alone, dropping the specific noun entirely (reported
+            // 2026-08-07/2026-08-08). Amazon/Rakuten/SHEIN/Yahoo destination
+            // link building already restore it; this is the Yahoo catalog API
+            // search path, which did not.
+            buildMarketplaceApiKeywordCandidates(
+              input.query,
+              ensureApparelQualifierTerms(
+                input.query,
+                ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
+              ),
+              ensureApparelQualifierTerms(
+                expandedQuery.query,
+                ensureApparelProductTypeTerm(expandedQuery.query, buildMarketplaceSearchKeywords(expandedQuery.query))
+              )
+            ),
+            input.query,
+            expandedQuery.query
+          )
+      });
+      if (valueCommerceMarketplaceConfigured(env, 'QOO10_JP')) marketplaceSearches.push({
+        key: 'qoo10_affiliate_catalog_connected',
+        run: searchValueCommerceMarketplaceWithFallback(
+          env,
+          'QOO10_JP',
           buildMarketplaceApiKeywordCandidates(
             input.query,
-            ensureApparelQualifierTerms(
-              input.query,
-              ensureApparelProductTypeTerm(input.query, buildMarketplaceSearchKeywords(input.query))
-            ),
-            ensureApparelQualifierTerms(
-              expandedQuery.query,
-              ensureApparelProductTypeTerm(expandedQuery.query, buildMarketplaceSearchKeywords(expandedQuery.query))
-            )
+            ensureApparelQualifierTerms(input.query, buildMarketplaceSearchKeywords(input.query)),
+            ensureApparelQualifierTerms(expandedQuery.query, buildMarketplaceSearchKeywords(expandedQuery.query))
           ),
+          fetch,
           input.query,
           expandedQuery.query
         )
