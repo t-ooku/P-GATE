@@ -1850,24 +1850,3 @@ jobs:
             tools/line-worker/ai-actress-catchup-*.json
           if-no-files-found: ignore
           retention-days: 30
-
-
-  gemini-private-marker-cleanup-20260831:
-    name: Remove completed private Gemini marker
-    needs: deploy
-    if: ${{ always() && needs.deploy.result == 'success' && github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Delete completion marker after Worker path is disabled
-        working-directory: tools/line-worker
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-          npx --yes wrangler@4.121.0 r2 object delete "hoshilu-social-media/gemini-private/20260831-v2/marker.json" --remote
