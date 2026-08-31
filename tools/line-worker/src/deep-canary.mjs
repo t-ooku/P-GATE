@@ -153,6 +153,9 @@ const failureCode = (error) => {
   if (error?.name === 'SyntaxError') return 'CANARY_PROVIDER_INVALID_JSON';
   if (error?.name === 'TypeError') {
     const message = String(error?.message || '');
+    if (message === 'YAHOO_PROVIDER_SIGNAL_TYPE_FAILED') {
+      return 'CANARY_PROVIDER_SIGNAL_TYPE_FAILED';
+    }
     if (message === 'YAHOO_PROVIDER_FETCH_CONTEXT_FAILED') {
       return 'CANARY_PROVIDER_FETCH_CONTEXT_FAILED';
     }

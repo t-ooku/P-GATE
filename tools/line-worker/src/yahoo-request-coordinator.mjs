@@ -165,6 +165,8 @@ export class YahooRequestCoordinator {
     this.clock = options.clock || Date.now;
     this.sleep = options.sleep || abortableSleep;
     this.fetcher = options.fetcher || fetch;
+    this.providerSignalFactory = options.providerSignalFactory
+      || ((milliseconds) => AbortSignal.timeout(milliseconds));
   }
 
   async fetch(request) {
@@ -215,13 +217,14 @@ export class YahooRequestCoordinator {
         reservationMade = true;
         if (request.signal.aborted) return fixedResponse(408, 'control');
         providerStarted = true;
-        providerPhase = 'fetch';
+        providerPhase = 'signal';
         // The inbound Request signal belongs to the internal Worker -> Durable
         // Object hop. Once the crash reservation is persisted and the provider
         // starts, let only the bounded provider timeout control outbound fetch.
         // Reusing the hop signal across the DO boundary can make workerd reject
         // the provider fetch before any network connection is attempted.
-        const providerSignal = AbortSignal.timeout(timeoutMs);
+        const providerSignal = this.providerSignalFactory(timeoutMs);
+        providerPhase = 'fetch';
         const response = await this.fetcher(providerUrl.toString(), {
           headers: { accept: 'application/json' },
           redirect: 'manual',
@@ -254,7 +257,9 @@ export class YahooRequestCoordinator {
         } else {
           result = fixedResponse(502, providerPhase === 'body'
             ? 'provider_body_network'
-            : providerFetchFailureResult(error));
+            : providerPhase === 'signal'
+              ? 'provider_signal_type'
+              : providerFetchFailureResult(error));
         }
       } finally {
         if (providerStarted) {

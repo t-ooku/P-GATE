@@ -249,6 +249,20 @@ test('proxy only calls fixed Yahoo endpoints and never persists request data', a
   }))).status, 400);
 });
 
+test('provider signal construction failures are isolated from outbound fetch failures', async () => {
+  let providerCalled = false;
+  const object = coordinator(fakeState(), {
+    clock: () => 0,
+    providerSignalFactory: () => { throw new TypeError('private signal detail'); },
+    fetcher: async () => { providerCalled = true; return Response.json({ hits: [] }); }
+  });
+  const response = await object.fetch(proxy());
+  assert.equal(response.status, 502);
+  assert.equal(response.headers.get(YAHOO_PROXY_RESULT_HEADER), 'provider_signal_type');
+  assert.equal(await response.text(), '');
+  assert.equal(providerCalled, false);
+});
+
 test('provider fetch and response-body failures use distinct fixed codes', async () => {
   const fetchFailure = coordinator(fakeState(), {
     clock: () => 0,

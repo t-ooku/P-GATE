@@ -81,6 +81,7 @@ function coordinatorOutcomeError(result) {
     error.status = 408;
     return error;
   }
+  if (result === 'provider_signal_type') return new TypeError('YAHOO_PROVIDER_SIGNAL_TYPE_FAILED');
   if (result === 'provider_fetch_context') return new TypeError('YAHOO_PROVIDER_FETCH_CONTEXT_FAILED');
   if (result === 'provider_fetch_url') return new TypeError('YAHOO_PROVIDER_FETCH_URL_FAILED');
   if (result === 'provider_fetch_transport') return new TypeError('YAHOO_PROVIDER_FETCH_TRANSPORT_FAILED');
