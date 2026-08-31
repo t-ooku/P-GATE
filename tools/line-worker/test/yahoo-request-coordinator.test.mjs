@@ -229,6 +229,28 @@ test('proxy only calls fixed Yahoo endpoints and never persists request data', a
   }))).status, 400);
 });
 
+test('provider fetch and response-body failures use distinct fixed codes', async () => {
+  const fetchFailure = coordinator(fakeState(), {
+    clock: () => 0,
+    fetcher: async () => { throw new TypeError('private transport detail'); }
+  });
+  const fetchResponse = await fetchFailure.fetch(proxy());
+  assert.equal(fetchResponse.status, 502);
+  assert.equal(fetchResponse.headers.get(YAHOO_PROXY_RESULT_HEADER), 'provider_fetch_network');
+  assert.equal(await fetchResponse.text(), '');
+
+  const bodyFailure = coordinator(fakeState(), {
+    clock: () => 0,
+    fetcher: async () => new Response(new ReadableStream({
+      pull() { throw new TypeError('private stream detail'); }
+    }), { headers: { 'content-type': 'application/json' } })
+  });
+  const bodyResponse = await bodyFailure.fetch(proxy());
+  assert.equal(bodyResponse.status, 502);
+  assert.equal(bodyResponse.headers.get(YAHOO_PROXY_RESULT_HEADER), 'provider_body_network');
+  assert.equal(await bodyResponse.text(), '');
+});
+
 test('Wrangler binds one SQLite Durable Object coordinator', () => {
   const config = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
   assert.deepEqual(config.durable_objects.bindings, [{
