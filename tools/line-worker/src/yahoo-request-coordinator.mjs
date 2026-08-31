@@ -164,7 +164,7 @@ export class YahooRequestCoordinator {
     this.env = env || {};
     this.clock = options.clock || Date.now;
     this.sleep = options.sleep || abortableSleep;
-    this.fetcher = options.fetcher || fetch;
+    this.fetcher = options.fetcher || null;
     this.providerSignalFactory = options.providerSignalFactory
       || ((milliseconds) => AbortSignal.timeout(milliseconds));
   }
@@ -225,7 +225,11 @@ export class YahooRequestCoordinator {
         // the provider fetch before any network connection is attempted.
         const providerSignal = this.providerSignalFactory(timeoutMs);
         providerPhase = 'fetch';
-        const response = await this.fetcher(providerUrl.toString(), {
+        // Resolve the platform fetch in the active request context. Durable
+        // Objects can outlive one event, so retaining the global I/O function
+        // from construction risks crossing workerd request contexts.
+        const providerFetch = this.fetcher || globalThis.fetch;
+        const response = await providerFetch(providerUrl.toString(), {
           headers: { accept: 'application/json' },
           redirect: 'manual',
           signal: providerSignal

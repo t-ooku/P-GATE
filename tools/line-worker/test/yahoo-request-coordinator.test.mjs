@@ -249,6 +249,23 @@ test('proxy only calls fixed Yahoo endpoints and never persists request data', a
   }))).status, 400);
 });
 
+test('default provider fetch is resolved inside the active request context', async () => {
+  const originalFetch = globalThis.fetch;
+  let constructedCalls = 0;
+  let activeCalls = 0;
+  try {
+    globalThis.fetch = async () => { constructedCalls += 1; return Response.json({ hits: [] }); };
+    const object = coordinator(fakeState(), { clock: () => 0 });
+    globalThis.fetch = async () => { activeCalls += 1; return Response.json({ hits: [] }); };
+    const response = await object.fetch(proxy());
+    assert.equal(response.status, 200);
+    assert.equal(constructedCalls, 0);
+    assert.equal(activeCalls, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('provider signal construction failures are isolated from outbound fetch failures', async () => {
   let providerCalled = false;
   const object = coordinator(fakeState(), {
