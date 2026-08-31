@@ -81,7 +81,7 @@ export async function runGeminiPrivateVideoComparison(env = {}, scheduledAt = ne
     });
     const referenceResponse = env.ASSETS?.fetch
       ? await env.ASSETS.fetch(referenceRequest)
-      : await fetchImpl(referenceRequest, { signal: AbortSignal.timeout(10000) });
+      : await fetchImpl(REFERENCE_URL, { signal: AbortSignal.timeout(10000) });
     if (!referenceResponse.ok) throw new Error('REFERENCE_HTTP_FAILED');
     const reference = new Uint8Array(await referenceResponse.arrayBuffer());
     if (reference.byteLength < 1000 || reference.byteLength > 10 * 1024 * 1024) {
