@@ -81,6 +81,8 @@ function coordinatorOutcomeError(result) {
     error.status = 408;
     return error;
   }
+  if (result === 'provider_fetch_network') return new TypeError('YAHOO_PROVIDER_FETCH_NETWORK_FAILED');
+  if (result === 'provider_body_network') return new TypeError('YAHOO_PROVIDER_BODY_NETWORK_FAILED');
   if (result === 'provider_network') return new TypeError('YAHOO_PROVIDER_NETWORK_FAILED');
   return coordinatorError();
 }
