@@ -217,11 +217,12 @@ jobs:
               status: 'completed', per_page: 10
             });
             if (!hasThreeConsecutivePostIncidentSuccesses(
-              runs.data.workflow_runs, context.runId, existing.body
+              runs.data.workflow_runs, context.runId, existing.body,
+              context.runAttempt, context.eventName
             )) return;
             await github.rest.issues.createComment({
               owner, repo, issue_number: existing.number,
-              body: `Recovered after three consecutive successful checks. Last verification: ${runUrl}`
+              body: `Recovered after three consecutive new scheduled checks. Last verification: ${runUrl}`
             });
             await github.rest.issues.update({
               owner, repo, issue_number: existing.number, state: 'closed', state_reason: 'completed'
