@@ -151,8 +151,15 @@ const failureCode = (error) => {
   if (status >= 500 && status <= 599) return 'CANARY_PROVIDER_UPSTREAM_5XX';
   if (error?.name === 'AbortError' || error?.name === 'TimeoutError') return 'CANARY_PROVIDER_TIMEOUT';
   if (error?.name === 'SyntaxError') return 'CANARY_PROVIDER_INVALID_JSON';
-  if (error?.name === 'TypeError' && /fetch|network|connection|socket/iu.test(String(error?.message || ''))) {
-    return 'CANARY_PROVIDER_NETWORK_FAILED';
+  if (error?.name === 'TypeError') {
+    const message = String(error?.message || '');
+    if (message === 'YAHOO_PROVIDER_FETCH_NETWORK_FAILED') {
+      return 'CANARY_PROVIDER_FETCH_NETWORK_FAILED';
+    }
+    if (message === 'YAHOO_PROVIDER_BODY_NETWORK_FAILED') {
+      return 'CANARY_PROVIDER_BODY_NETWORK_FAILED';
+    }
+    if (/fetch|network|connection|socket/iu.test(message)) return 'CANARY_PROVIDER_NETWORK_FAILED';
   }
   return safeCode(error?.message);
 };
