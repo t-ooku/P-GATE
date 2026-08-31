@@ -326,7 +326,14 @@ test('/buzzページは出典と注意書きを持ち、断定表現を使わな
   assert.match(html, /欲しいを、ちゃんと見つける。/u);
   assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\/buzz">/u);
   assert.match(html, /<script type="module" src="\/buzz\.mjs\?v=\d+">/u);
-  assert.doesNotMatch(html, /No\.?1|最安|Z世代/u);
+  assert.doesNotMatch(html, /No\\.?1|Z世代/u);
+  // 低価格棚から13モール比較へ進めるが、比較前に最安と断定しない。
+  assert.match(html, /class="buzz-compare"/u);
+  assert.match(html, /13モール比較/u);
+  assert.match(html, /最安候補を確認/u);
+  assert.match(html, /値下がり通知/u);
+  assert.match(html, /価格・送料・在庫を比べ/u);
+  assert.doesNotMatch(html, /(?:必ず|絶対|確実に)最安|最安です/u);
   assert.match(script, /fetch\('\/api\/buzz\/shelf'/u);
   assert.match(script, /rel = 'noopener sponsored'/u);
   assert.doesNotMatch(script, /出典:/u);
