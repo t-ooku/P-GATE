@@ -1876,7 +1876,7 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
           out="$RUNNER_TEMP/gemini-private-compare"
           mkdir -p "$out"
-          marker="hoshilu-social-media/gemini-private/20260831/marker.json"
+          marker="hoshilu-social-media/gemini-private/20260831-v2/marker.json"
           ready=0
           for attempt in $(seq 1 60); do
             if npx --yes wrangler@4.121.0 r2 object get "$marker" --remote --file "$out/marker.json" >/dev/null 2>&1; then
@@ -1891,8 +1891,8 @@ jobs:
             sleep 30
           done
           test "$ready" = 1 || { echo "::error::private Gemini comparison did not complete in time"; exit 1; }
-          npx --yes wrangler@4.121.0 r2 object get "hoshilu-social-media/gemini-private/20260831/gemini-omni-1.1-flash-v2.mp4" --remote --file "$out/gemini.mp4"
-          npx --yes wrangler@4.121.0 r2 object get "hoshilu-social-media/gemini-private/20260831/comparison-input.json" --remote --file "$out/generation.json"
+          npx --yes wrangler@4.121.0 r2 object get "hoshilu-social-media/gemini-private/20260831-v2/gemini-omni-1.1-flash-v2.mp4" --remote --file "$out/gemini.mp4"
+          npx --yes wrangler@4.121.0 r2 object get "hoshilu-social-media/gemini-private/20260831-v2/comparison-input.json" --remote --file "$out/generation.json"
           cp ops/runway/media/reel_20260819_overseas_find_normal.mp4 "$out/runway-baseline.mp4"
       - name: Produce bounded technical comparison
         run: |
@@ -1947,5 +1947,5 @@ jobs:
         run: |
           set -euo pipefail
           for key in marker.json comparison-input.json gemini-omni-1.1-flash-v2.mp4; do
-            npx --yes wrangler@4.121.0 r2 object delete "hoshilu-social-media/gemini-private/20260831/$key" --remote
+            npx --yes wrangler@4.121.0 r2 object delete "hoshilu-social-media/gemini-private/20260831-v2/$key" --remote
           done

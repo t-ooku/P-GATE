@@ -25,11 +25,6 @@ test('one private Gemini comparison writes review-required media once', async ()
   const calls = [];
   const fetcher = async (url, options = {}) => {
     calls.push({ url: String(url), options });
-    if (String(url).includes('/social/runway/')) {
-      return new Response(new Uint8Array(2000), {
-        headers: { 'content-type': 'image/jpeg' }
-      });
-    }
     return Response.json({
       output_video: { mime_type: 'video/mp4', data: base64(12000) }
     });
@@ -37,15 +32,24 @@ test('one private Gemini comparison writes review-required media once', async ()
   const env = {
     GEMINI_PRIVATE_COMPARE_ENABLED: 'true',
     GEMINI_API_KEY: 'g'.repeat(32),
-    SOCIAL_MEDIA_BUCKET: storage
+    SOCIAL_MEDIA_BUCKET: storage,
+    ASSETS: {
+      async fetch(request) {
+        assert.equal(new URL(request.url).pathname,
+          '/social/runway/hoshilu-approved-model-reference-v2.jpg');
+        return new Response(new Uint8Array(2000), {
+          headers: { 'content-type': 'image/jpeg' }
+        });
+      }
+    }
   };
   const result = await runGeminiPrivateVideoComparison(
     env, new Date('2026-08-31T06:44:00.000Z'), fetcher
   );
   assert.equal(result.status, 'GENERATED_REVIEW_REQUIRED');
-  assert.equal(calls.length, 2);
-  assert.equal(calls[1].url, 'https://generativelanguage.googleapis.com/v1beta/interactions');
-  const request = JSON.parse(calls[1].options.body);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'https://generativelanguage.googleapis.com/v1beta/interactions');
+  const request = JSON.parse(calls[0].options.body);
   assert.equal(request.model, 'gemini-omni-1.1-flash');
   assert.equal(request.response_format.aspect_ratio, '9:16');
   assert.equal(request.response_format.resolution, '720p');
@@ -63,7 +67,7 @@ test('one private Gemini comparison writes review-required media once', async ()
 
   const repeated = await runGeminiPrivateVideoComparison(env, new Date(), fetcher);
   assert.deepEqual(repeated, { skipped: true, reason: 'ALREADY_ATTEMPTED' });
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 1);
 });
 
 test('provider failure is fixed-code, final, and does not retry', async () => {
