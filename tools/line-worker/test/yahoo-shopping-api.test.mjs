@@ -271,6 +271,25 @@ test('coordinator provider network detail is reduced to a fixed safe error', asy
     error.name === 'TypeError' && error.message === 'YAHOO_PROVIDER_NETWORK_FAILED');
 });
 
+test('coordinator keeps fetch and body network phases distinct without private detail', async () => {
+  for (const [result, message] of [
+    ['provider_fetch_network', 'YAHOO_PROVIDER_FETCH_NETWORK_FAILED'],
+    ['provider_body_network', 'YAHOO_PROVIDER_BODY_NETWORK_FAILED']
+  ]) {
+    await assert.rejects(searchYahooShopping({
+      YAHOO_SHOPPING_CLIENT_ID: 'test-client-id',
+      YAHOO_REQUEST_COORDINATOR: {
+        idFromName: () => 'fixed-object-id',
+        get: () => ({ fetch: async () => new Response(null, {
+          status: 502,
+          headers: { 'x-hoshilu-yahoo-proxy-result': result }
+        }) })
+      }
+    }, 'private query'), (error) =>
+      error.name === 'TypeError' && error.message === message);
+  }
+});
+
 test('an expired caller signal never acquires a coordinator slot or contacts Yahoo', async () => {
   const controller = new AbortController();
   controller.abort();
