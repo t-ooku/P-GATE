@@ -88,6 +88,9 @@ test('検索経路は公式店にshopCode/seller_idを付け、本体検索に�
   const source = fs.readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(source, /shopCode: store\.shopCode/);
   assert.match(source, /sellerId: store\.sellerId/);
+  // Yahoo本体の成功後だけ公式店を呼び、本体結果に同店があれば重複呼出ししない。
+  assert.match(source, /const catalogCandidates = await yahooCatalogRun/);
+  assert.match(source, /containsOfficialMarketplaceCandidate\(catalogCandidates, store\.marketplace\)/);
   // 個別の店舗が落ちても本体検索を巻き込まないこと(既存のallSettled合流に乗せる)。
   assert.match(source, /marketplaceSearches\.push\(\{[\s\S]{0,400}store\.key/);
   // コード変更なしで止められること。

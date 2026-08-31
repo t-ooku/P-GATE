@@ -6,6 +6,11 @@ import {
 
 const AI_TIMEOUT_MS = 4000;
 
+function boundedSignal(signal, timeoutMs = AI_TIMEOUT_MS) {
+  const timeout = AbortSignal.timeout(Math.max(100, Math.min(AI_TIMEOUT_MS, Number(timeoutMs) || AI_TIMEOUT_MS)));
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
+}
+
 const RULES = [
   { match:/スマホ.{0,4}(?:ケース|カバー)|iphone.{0,4}(?:case|ケース|カバー)/iu, items:[['スマホ充電器','一緒に使う充電用品'],['スマホストラップ','持ち歩きや落下防止に関連'],['スマホ保護フィルム','端末保護に関連']] },
   { match:/ハンディファン|携帯扇風機|顔用扇風機/iu, items:[['モバイルバッテリー','外出先での給電に関連'],['冷感タオル','暑さ対策として関連'],['ネッククーラー','同じ利用場面の暑さ対策']] },
@@ -95,31 +100,38 @@ function aiPrompt(query, language) {
   return `You are HOSHILU's complementary-product category planner.\nSearch query: ${clean(query, 200)}\nDisplay language: ${clean(language, 10) || 'JA'}\n\nSuggest up to 3 DIFFERENT product categories commonly used together with the searched product. HOSHILU will separately search marketplace APIs and display only verified real products.\nReturn JSON only: {"categories":[{"query":"short Japanese marketplace category","reason":"short reason in the display language"}]}\nRules:\n- Recommend complements or accessories, not another brand/model of the searched product.\n- Use a short generic Japanese marketplace search term for query.\n- Never invent a product, brand, model, price, stock, seller, URL, medical effect, or compatibility.\n- Do not suggest medicine, supplements, alcohol, tobacco, weapons, or age-restricted products.\n- If a safe and useful complement cannot be inferred, return {"categories":[]}.`;
 }
 
-async function providerFetch(fetchImpl, url, options) {
-  return fetchImpl(url, { ...options, redirect: 'manual', signal: AbortSignal.timeout(AI_TIMEOUT_MS) });
+async function providerFetch(fetchImpl, url, requestOptions, control = {}) {
+  return fetchImpl(url, {
+    ...requestOptions,
+    redirect: 'manual',
+    signal: boundedSignal(control.signal, control.timeoutMs)
+  });
 }
 
-async function requestAiRelatedQueries(query, language, env, fetchImpl) {
+async function requestAiRelatedQueries(query, language, env, fetchImpl, options = {}) {
   const providers = [
     String(env.GEMINI_API_KEY || '').length >= 20 && 'gemini',
     String(env.OPENAI_API_KEY || '').length >= 20 && 'openai'
   ].filter(Boolean);
   const prompt = aiPrompt(query, language);
   for (const provider of providers) {
+    if (options.signal?.aborted) break;
     try {
       const response = provider === 'gemini'
         ? await providerFetch(fetchImpl, `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash'))}:generateContent`, {
           method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
           body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.1, responseMimeType: 'application/json' } })
-        })
+        }, options)
         : await providerFetch(fetchImpl, 'https://api.openai.com/v1/responses', {
           method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.OPENAI_API_KEY}` },
           body: JSON.stringify({ model: String(env.OPENAI_PRODUCT_DISCOVERY_MODEL || 'gpt-5'), input: prompt, reasoning: { effort: 'low' }, text: { format: { type: 'json_object' } } })
-        });
+        }, options);
       if (!response.ok) continue;
       const suggestions = normalizeAiRelatedQueries(parseJsonText(providerText(await response.json())) || {}, query);
       if (suggestions.length) return suggestions;
-    } catch {}
+    } catch {
+      if (options.signal?.aborted) break;
+    }
   }
   return [];
 }
@@ -147,7 +159,9 @@ export function relatedProductRecommendationQueries(rawQuery) {
 // 横展開(related-product-expansion.mjs)を先に並べ、そのあとに補完提案を足す。
 // 横展開を先にするのは、利用者が今探している物により近く、外したときの
 // 損失が小さいため。どちらの提案も、実在確認は後段のモールAPIが行う。
-export async function resolveRelatedProductRecommendationQueries(rawQuery, language = 'JA', env = {}, fetchImpl = fetch) {
+export async function resolveRelatedProductRecommendationQueries(
+  rawQuery, language = 'JA', env = {}, fetchImpl = fetch, options = {}
+) {
   const merged = [];
   const seen = new Set();
   for (const item of [...relatedProductExpansionQueries(rawQuery, language), ...relatedProductRecommendationQueries(rawQuery)]) {
@@ -159,7 +173,7 @@ export async function resolveRelatedProductRecommendationQueries(rawQuery, langu
   if (merged.length) return merged;
   const query = expandSearchQuery(rawQuery).query;
   if (!query || AI_FALLBACK_BLOCKLIST.test(query)) return [];
-  return requestAiRelatedQueries(query, language, env, fetchImpl);
+  return requestAiRelatedQueries(query, language, env, fetchImpl, options);
 }
 
 export const relatedProductRecommendationTest = { aiPrompt, parseJsonText, providerText };

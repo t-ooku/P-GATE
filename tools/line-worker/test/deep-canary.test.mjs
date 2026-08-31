@@ -188,6 +188,10 @@ test('a missed hourly Gemini slot is caught up once at the next deep-canary offs
 });
 
 test('provider status classification retries only transient HTTP failures', () => {
+  assert.equal(deepCanaryTest.failureCode({ status: 401, message: 'YAHOO_SHOPPING_SEARCH_FAILED' }),
+    'CANARY_PROVIDER_UNAUTHORIZED_HTTP_401');
+  assert.equal(deepCanaryTest.failureCode({ status: 403, message: 'YAHOO_SHOPPING_SEARCH_FAILED' }),
+    'CANARY_PROVIDER_FORBIDDEN_HTTP_403');
   assert.equal(deepCanaryTest.failureCode({ status: 408, message: 'OPENAI_CHAT_INTENT_FAILED' }),
     'CANARY_PROVIDER_TIMEOUT');
   assert.equal(deepCanaryTest.failureCode({ status: 429, message: 'OPENAI_CHAT_INTENT_FAILED' }),

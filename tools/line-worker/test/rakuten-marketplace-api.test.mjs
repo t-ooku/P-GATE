@@ -122,6 +122,18 @@ test('楽天市場APIへは登録済みサイトのRefererとOriginを付与す�
   assert.equal(requested.headers.origin, 'https://hoshilu.app');
 });
 
+test('期限切れの楽天検索は外部通信を開始しない', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  let called = false;
+  const result = await searchRakutenMarketplace(
+    env, '期限切れ検索', async () => { called = true; return Response.json({ items: [] }); }, '',
+    { signal: controller.signal, requestTimeoutMs: 100 }
+  );
+  assert.deepEqual(result, []);
+  assert.equal(called, false);
+});
+
 test('複合条件が0件なら主要商品語で一度だけ再検索する', async () => {
   const requestedKeywords = [];
   const candidates = await searchRakutenMarketplaceWithFallback(

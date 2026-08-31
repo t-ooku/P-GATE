@@ -107,6 +107,20 @@ test('医薬品など安全性の高い検索はAI自動補完しない',async()
   assert.equal(called,false);
 });
 
+test('期限切れのAI関連カテゴリ要求は次providerへ進まず外部通信もしない',async()=>{
+  const controller=new AbortController();
+  controller.abort();
+  let called=false;
+  const result=await resolveRelatedProductRecommendationQueries(
+    '未知の収納用品XYZ','JA',
+    {GEMINI_API_KEY:'g'.repeat(20),OPENAI_API_KEY:'o'.repeat(20)},
+    async()=>{called=true;throw new Error('should not call');},
+    {signal:controller.signal,timeoutMs:100}
+  );
+  assert.deepEqual(result,[]);
+  assert.equal(called,false);
+});
+
 test('関連商品APIも本検索と同じ処理告知・session・Turnstile境界を使う',()=>{
   assert.equal(validateRelatedRecommendationsRequest({query:'スマホカバー',processing_notice_shown:true,session_id:'anonymous_session_123456',turnstile_token:'token',language:'JA'}).query,'スマホカバー');
   assert.throws(()=>validateRelatedRecommendationsRequest({query:'スマホカバー',processing_notice_shown:false,session_id:'anonymous_session_123456',turnstile_token:'token'}),/PROCESSING_NOTICE_REQUIRED/);
@@ -116,8 +130,21 @@ test('本検索は非同期商品取得前にも署名済み関連カテゴリ�
   const source=readFileSync(new URL('../src/index.mjs',import.meta.url),'utf8');
   assert.match(source,/related_category_recommendations: await decoratedRelatedCategoryGroups/);
   assert.match(source,/relatedProductRecommendationQueries\(input\.query\)/);
-  assert.match(source,/categories = await decoratedRelatedCategoryGroups\(groups/);
+  assert.match(source,/partialCategories = await decoratedRelatedCategoryGroups\(groups/);
   assert.match(source,/marketplace_search_links: await signedMarketplaceSearchLinks/);
+  assert.match(source,/includeYahoo: index === 0/);
+  assert.match(source,/\{ maxVariants: 1 \}/);
+  assert.match(source,/queueTimeoutMs: Math\.min\(2000/);
+  assert.match(source,/RELATED_RECOMMENDATION_SERVER_BUDGET_MS = 11000/);
+  assert.match(source,/await Promise\.race\(\[buildResult\(\), deadlineResult\]\)/);
+  const relatedHandler=source.slice(source.indexOf('async function handleRelatedRecommendationsApi'));
+  assert.ok(relatedHandler.indexOf('const deadlineTimer = setTimeout')
+    < relatedHandler.indexOf('readPublicApiJson(request, 10000)'),
+  'absolute deadline must be armed before reading a streamed request body');
+  assert.match(relatedHandler,/Promise\.race\(\[\s*readPublicApiJson\(request, 10000\), inputDeadline/);
+  assert.match(relatedHandler,/code === 'RELATED_RECOMMENDATION_DEADLINE'[\s\S]{0,80}\? 408/);
+  assert.match(source,/verifyTurnstile\([\s\S]{0,180}deadlineController\.signal/);
+  assert.match(source,/available <= 3200/);
   assert.match(source,/const hmacKeyPromises = new Map\(\)/);
   assert.match(source,/return Promise\.all\(destinations\.map\(async \(item\)/);
 });

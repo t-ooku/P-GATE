@@ -12,6 +12,12 @@ const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20
 // long enough that a healthy Rakuten response is not discarded as a timeout.
 export const RAKUTEN_REQUEST_TIMEOUT_MS = 7000;
 
+function boundedRequestSignal(signal, timeoutMs = RAKUTEN_REQUEST_TIMEOUT_MS) {
+  const timeout = AbortSignal.timeout(Math.max(100,
+    Math.min(RAKUTEN_REQUEST_TIMEOUT_MS, Number(timeoutMs) || RAKUTEN_REQUEST_TIMEOUT_MS)));
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
+}
+
 export function rakutenApiConfigured(env = {}) {
   return Boolean(String(env.RAKUTEN_APPLICATION_ID || '').trim() && String(env.RAKUTEN_ACCESS_KEY || '').trim());
 }
@@ -67,6 +73,7 @@ export function normalizeRakutenItems(payload = {}) {
 
 export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, requestId = '', options = {}) {
   if (!rakutenApiConfigured(env)) return [];
+  if (options.signal?.aborted) return [];
   const query = String(keywords || '').normalize('NFKC').trim().slice(0, 200);
   if (!query) return [];
   const url = new URL(API_URL);
@@ -100,7 +107,7 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
     const response = await fetcher(requestUrl.toString(), {
       headers: { accept: 'application/json', referer: 'https://hoshilu.app/', origin: 'https://hoshilu.app' },
       redirect: 'manual',
-      signal: AbortSignal.timeout(RAKUTEN_REQUEST_TIMEOUT_MS)
+      signal: boundedRequestSignal(options.signal, options.requestTimeoutMs)
     });
     if (response.ok) return response.json();
     const error = new Error('RAKUTEN_MARKETPLACE_SEARCH_FAILED');
@@ -150,8 +157,10 @@ export async function searchRakutenMarketplaceWithFallback(
   fetcher = fetch,
   query = '',
   requestId = '',
-  fallbackQuery = ''
+  fallbackQuery = '',
+  options = {}
 ) {
+  if (options.signal?.aborted) return [];
   const candidates = [...new Set(
     (Array.isArray(keywordCandidates) ? keywordCandidates : [keywordCandidates])
       .map((value) => String(value || '').normalize('NFKC').trim())
@@ -161,7 +170,7 @@ export async function searchRakutenMarketplaceWithFallback(
   // order. Selection quality is unchanged, while latency is capped at one
   // provider timeout window instead of primary + fallback windows.
   const outcomes = await Promise.allSettled(candidates.map((keywords) =>
-    searchRakutenMarketplace(env, keywords, fetcher, requestId)));
+    searchRakutenMarketplace(env, keywords, fetcher, requestId, options)));
   let firstFailure = null;
   for (const outcome of outcomes) {
     if (outcome.status !== 'fulfilled') {

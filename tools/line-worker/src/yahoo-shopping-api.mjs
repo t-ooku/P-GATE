@@ -1,8 +1,136 @@
 import { isMarketplaceProductUrl } from './marketplace-product-url-policy.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
+import {
+  buildYahooProviderUrl, YAHOO_PROXY_RESULT_HEADER, YAHOO_REQUEST_INTERVAL_MS
+} from './yahoo-request-coordinator.mjs';
 
-const API_URL = 'https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch';
-const HIGH_RATING_TREND_RANKING_API = 'https://shopping.yahooapis.jp/ShoppingWebService/V1/highRatingTrendRanking';
+const YAHOO_REQUEST_GATE = Symbol('YAHOO_REQUEST_GATE');
+// Yahoo! Shopping itemSearch v3 documents both one query per second and 30
+// requests per minute per application ID. Keep every production Yahoo!
+// request in the same Worker invocation on one queue, including catalog, ranking,
+// official-store, watch, and canary traffic. A 2.1-second interval stays below
+// the stricter per-minute ceiling with a scheduling margin.
+const YAHOO_MIN_REQUEST_INTERVAL_MS = YAHOO_REQUEST_INTERVAL_MS;
+const YAHOO_COORDINATOR_OBJECT_NAME = 'yahoo-shopping-application-global';
+const YAHOO_COORDINATOR_URL = 'https://yahoo-request-coordinator.internal/proxy';
+
+function boundedRequestSignal(signal, timeoutMs) {
+  const timeout = AbortSignal.timeout(Math.max(100, Math.min(2500, Number(timeoutMs) || 2500)));
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
+}
+
+function boundedInternalSignal(signal, timeoutMs) {
+  const timeout = AbortSignal.timeout(Math.max(500, Math.min(22000, Number(timeoutMs) || 11000)));
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
+}
+
+function createYahooRequestGate({
+  intervalMs = YAHOO_MIN_REQUEST_INTERVAL_MS,
+  clock = Date.now,
+  sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds))
+} = {}) {
+  let tail = Promise.resolve();
+  let nextStartAt = 0;
+  return async (request) => {
+    const previous = tail;
+    let release;
+    tail = new Promise((resolve) => { release = resolve; });
+    await previous;
+    try {
+      const now = Number(clock());
+      const waitMs = Math.max(0, nextStartAt - (Number.isFinite(now) ? now : Date.now()));
+      if (waitMs > 0) await sleep(waitMs);
+      const startedAt = Number(clock());
+      nextStartAt = (Number.isFinite(startedAt) ? startedAt : Date.now()) + intervalMs;
+      return await request();
+    } finally {
+      release();
+    }
+  };
+}
+
+// Cloudflare request I/O must not leak through module-global promises. Create
+// one gate per fetch/cron invocation and carry it on a private symbol instead
+// of sharing a queue across requests or exposing it in health/log output.
+export function withYahooRequestGate(env = {}, gateOptions = {}) {
+  return { ...env, [YAHOO_REQUEST_GATE]: createYahooRequestGate(gateOptions) };
+}
+
+function coordinatorError() {
+  const error = new Error('YAHOO_REQUEST_COORDINATOR_UNAVAILABLE');
+  // Internal coordination failure is an immediate control failure, not a
+  // provider transient. It remains privacy-safe through canonical code mapping.
+  error.status = 400;
+  return error;
+}
+
+function fixedTransportError(error, failureMessage) {
+  if (error?.name === 'AbortError' || error?.name === 'TimeoutError') {
+    const fixed = new Error('YAHOO_PROVIDER_TIMEOUT');
+    fixed.name = error.name;
+    fixed.status = 408;
+    return fixed;
+  }
+  return new TypeError(`${failureMessage}_NETWORK`);
+}
+
+function coordinatorOutcomeError(result) {
+  if (result === 'provider_timeout') {
+    const error = new Error('YAHOO_PROVIDER_TIMEOUT');
+    error.name = 'TimeoutError';
+    error.status = 408;
+    return error;
+  }
+  if (result === 'provider_network') return new TypeError('YAHOO_PROVIDER_NETWORK_FAILED');
+  return coordinatorError();
+}
+
+async function yahooProviderFetch(env, operation, fetcher, options, failureMessage) {
+  const providerTimeoutMs = Math.max(100,
+    Math.min(2500, Number(options.requestTimeoutMs) || 2500));
+  const namespace = env?.YAHOO_REQUEST_COORDINATOR;
+  if (namespace) {
+    if (options.signal?.aborted) throw coordinatorError();
+    const queueTimeoutMs = Math.max(500,
+      Math.min(10000, Number(options.queueTimeoutMs) || 8000));
+    let response;
+    try {
+      const id = namespace.idFromName(YAHOO_COORDINATOR_OBJECT_NAME);
+      response = await namespace.get(id).fetch(YAHOO_COORDINATOR_URL, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-hoshilu-rate-deadline': String(Date.now() + queueTimeoutMs),
+          'x-hoshilu-provider-timeout-ms': String(providerTimeoutMs)
+        },
+        body: JSON.stringify(operation),
+        signal: boundedInternalSignal(options.signal,
+          queueTimeoutMs + providerTimeoutMs + 500)
+      });
+    } catch {
+      throw coordinatorError();
+    }
+    const result = String(response.headers.get(YAHOO_PROXY_RESULT_HEADER) || '');
+    if (result === 'provider') return response;
+    throw coordinatorOutcomeError(result);
+  }
+  if (env?.YAHOO_REQUEST_COORDINATOR_REQUIRED === 'true') throw coordinatorError();
+  const providerUrl = buildYahooProviderUrl(operation, env?.YAHOO_SHOPPING_CLIENT_ID);
+  if (!providerUrl) throw coordinatorError();
+  const request = async () => {
+    try {
+      return await fetcher(providerUrl.toString(), {
+        headers: { accept: 'application/json' },
+        redirect: 'manual',
+        signal: boundedRequestSignal(options.signal, providerTimeoutMs)
+      });
+    } catch (error) {
+      throw fixedTransportError(error, failureMessage);
+    }
+  };
+  const gate = options.requestGate || env?.[YAHOO_REQUEST_GATE] || null;
+  return gate ? gate(request) : request();
+}
 
 export function yahooShoppingApiConfigured(env = {}) {
   return Boolean(String(env.YAHOO_SHOPPING_CLIENT_ID || '').trim());
@@ -123,54 +251,39 @@ export function normalizeYahooHighRatingRanking(payload = {}) {
     && isMarketplaceProductUrl('YAHOO_JP', item.offers[0].product_url));
 }
 
-export async function fetchYahooHighRatingRanking(env, query, fetcher = fetch) {
+export async function fetchYahooHighRatingRanking(env, query, fetcher = fetch, options = {}) {
   if (!yahooShoppingApiConfigured(env)) return [];
   const normalizedQuery = String(query || '').normalize('NFKC').trim().slice(0, 200);
   if (!normalizedQuery) return [];
-  const url = new URL(HIGH_RATING_TREND_RANKING_API);
-  url.searchParams.set('appid', String(env.YAHOO_SHOPPING_CLIENT_ID).trim());
-  url.searchParams.set('query', normalizedQuery);
-  url.searchParams.set('offset', '1');
-  url.searchParams.set('limit', '30');
-  const response = await fetcher(url.toString(), {
-    headers: { accept: 'application/json' },
-    redirect: 'manual',
-    signal: AbortSignal.timeout(2500)
-  });
+  const response = await yahooProviderFetch(env, {
+    v: 1, op: 'HIGH_RATING_TREND', query: normalizedQuery
+  }, fetcher, options, 'YAHOO_HIGH_RATING_RANKING_FAILED');
   if (!response.ok) {
     const error = new Error('YAHOO_HIGH_RATING_RANKING_FAILED');
     error.status = Number(response.status) || 0;
     throw error;
   }
-  return normalizeYahooHighRatingRanking(await response.json());
+  try {
+    return normalizeYahooHighRatingRanking(await response.json());
+  } catch {
+    throw new SyntaxError('YAHOO_PROVIDER_INVALID_JSON');
+  }
 }
 
 export async function searchYahooShopping(env, keywords, fetcher = fetch, options = {}) {
   if (!yahooShoppingApiConfigured(env)) return [];
   const query = String(keywords || '').normalize('NFKC').trim().slice(0, 200);
   if (!query) return [];
-  const url = new URL(API_URL);
-  url.searchParams.set('appid', String(env.YAHOO_SHOPPING_CLIENT_ID).trim());
-  url.searchParams.set('query', query);
   // seller_idを指定すると、その出店者(ストア)内だけを検索する。
   // Yahoo!ショッピング内のモール公式店(ZOZOTOWN等)を名指しで引くために使う。
   const sellerId = String(options.sellerId || '').trim();
-  if (sellerId) {
-    url.searchParams.set('seller_id', sellerId);
-    url.searchParams.set('results', '10');
-  } else {
-    url.searchParams.set('results', '30');
-  }
-  // 既定のmedium画像は146px。公式APIのimage_size=600を指定すると
-  // exImage.urlが600x600で返るため、カード寸法は変えず画像だけ鮮明にする。
-  url.searchParams.set('image_size', '600');
-  if (['-review_count', '-score'].includes(options.sort)) url.searchParams.set('sort', options.sort);
-  url.searchParams.set('in_stock', 'true');
-  const response = await fetcher(url.toString(), {
-    headers: { accept: 'application/json' },
-    redirect: 'manual',
-    signal: AbortSignal.timeout(2500)
-  });
+  const response = await yahooProviderFetch(env, {
+    v: 1,
+    op: 'ITEM_SEARCH',
+    query,
+    seller_id: sellerId,
+    sort: ['-review_count', '-score'].includes(options.sort) ? options.sort : ''
+  }, fetcher, options, 'YAHOO_SHOPPING_SEARCH_FAILED');
   if (!response.ok) {
     const error = new Error('YAHOO_SHOPPING_SEARCH_FAILED');
     error.status = Number(response.status) || 0;
@@ -178,5 +291,9 @@ export async function searchYahooShopping(env, keywords, fetcher = fetch, option
     error.providerCode = safeProviderErrorCode('', response.status, 'YAHOO_PROVIDER_FAILED');
     throw error;
   }
-  return normalizeYahooShoppingItems(await response.json());
+  try {
+    return normalizeYahooShoppingItems(await response.json());
+  } catch {
+    throw new SyntaxError('YAHOO_PROVIDER_INVALID_JSON');
+  }
 }

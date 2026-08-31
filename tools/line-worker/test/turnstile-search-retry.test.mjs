@@ -113,6 +113,7 @@ test('AI chat failure automatically continues to the resilient main search', () 
 
 test('Turnstile verification is bounded on the Worker', () => {
   const worker = fs.readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
-  assert.match(worker, /siteverify[\s\S]{0,500}signal: AbortSignal\.timeout\(5000\)/);
+  assert.match(worker, /function boundedRequestSignal[\s\S]{0,250}AbortSignal\.timeout/u);
+  assert.match(worker, /siteverify[\s\S]{0,500}signal: boundedRequestSignal\(signal, 5000\)/u);
   assert.match(worker, /throw new Error\('TURNSTILE_TIMEOUT'\)/);
 });

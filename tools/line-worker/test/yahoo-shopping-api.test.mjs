@@ -5,9 +5,31 @@ import {
   normalizeYahooHighRatingRanking,
   normalizeYahooShoppingItems,
   searchYahooShopping,
+  withYahooRequestGate,
   yahooShoppingApiConfigured
 } from '../src/yahoo-shopping-api.mjs';
+import { YahooRequestCoordinator } from '../src/yahoo-request-coordinator.mjs';
 import { safeProviderErrorCode } from '../src/provider-error-code.mjs';
+
+function coordinatorState() {
+  const values = new Map();
+  const writes = [];
+  let tail = Promise.resolve();
+  return {
+    values,
+    writes,
+    storage: {
+      async get(key) { return values.get(key); },
+      async put(key, value) { values.set(key, value); writes.push(value); },
+      async delete(key) { values.delete(key); }
+    },
+    blockConcurrencyWhile(callback) {
+      const run = tail.then(callback);
+      tail = run.then(() => undefined, () => undefined);
+      return run;
+    }
+  };
+}
 
 test('provider log codeは既知allowlist以外のtoken風本文・key風本文も拒否する', () => {
   assert.equal(safeProviderErrorCode('PRIVATE_MEDICAL_QUERY', 400), 'HTTP_400');
@@ -63,6 +85,221 @@ test('Yahoo provider自由文はqueryを含めずHTTP固定コードへ畳む', 
       && error.providerCode === 'HTTP_400'
       && !String(error.providerCode).includes('秘密の検索語')
   );
+});
+
+test('Yahoo transport and JSON failures never expose credential or query prose', async () => {
+  const credential = 'fake-sensitive-client-id';
+  const query = 'private medical query';
+  await assert.rejects(
+    searchYahooShopping({ YAHOO_SHOPPING_CLIENT_ID: credential }, query, async () => {
+      throw new Error(`network failed for appid=${credential}&query=${query}`);
+    }),
+    (error) => error.name === 'TypeError'
+      && error.message === 'YAHOO_SHOPPING_SEARCH_FAILED_NETWORK'
+      && !error.message.includes(credential)
+      && !error.message.includes(query)
+  );
+  await assert.rejects(
+    searchYahooShopping({ YAHOO_SHOPPING_CLIENT_ID: credential }, query,
+      async () => new Response(`invalid JSON for ${credential} ${query}`)),
+    (error) => error.name === 'SyntaxError'
+      && error.message === 'YAHOO_PROVIDER_INVALID_JSON'
+      && !error.message.includes(credential)
+      && !error.message.includes(query)
+  );
+});
+
+test('Yahoo production request gate keeps concurrent calls below 30 per minute', async () => {
+  let now = 0;
+  const waits = [];
+  const starts = [];
+  const timeoutStarts = [];
+  const env = withYahooRequestGate({ YAHOO_SHOPPING_CLIENT_ID: 'client-id' }, {
+    clock: () => now,
+    sleep: async (milliseconds) => {
+      waits.push(milliseconds);
+      now += milliseconds;
+    }
+  });
+  const fetcher = async () => {
+    starts.push(now);
+    return Response.json({ hits: [] });
+  };
+  const originalTimeout = AbortSignal.timeout;
+  AbortSignal.timeout = (milliseconds) => {
+    assert.equal(milliseconds, 2500);
+    timeoutStarts.push(now);
+    return originalTimeout(60000);
+  };
+  try {
+    await Promise.all([
+      searchYahooShopping(env, 'first', fetcher),
+      searchYahooShopping(env, 'second', fetcher),
+      searchYahooShopping(env, 'third', fetcher)
+    ]);
+  } finally {
+    AbortSignal.timeout = originalTimeout;
+  }
+  assert.deepEqual(starts, [0, 2100, 4200]);
+  assert.deepEqual(timeoutStarts, starts, 'provider timeout must start after queue wait');
+  assert.deepEqual(waits, [2100, 2100]);
+});
+
+test('fixed Durable Object proxies separate Worker invocations and spaces actual Yahoo starts', async () => {
+  const initialNow = Date.now();
+  let now = initialNow;
+  const starts = [];
+  const objectNames = [];
+  const proxyRequests = [];
+  const callerReturns = [];
+  let callerFetcherCalled = false;
+  let markSecondReturned;
+  const secondReturned = new Promise((resolve) => { markSecondReturned = resolve; });
+  const state = coordinatorState();
+  const coordinator = new YahooRequestCoordinator(state, {
+    YAHOO_SHOPPING_CLIENT_ID: 'test-client-id'
+  }, {
+    clock: () => now,
+    sleep: async (milliseconds) => { now += milliseconds; },
+    fetcher: async () => {
+      starts.push(now);
+      now += 300;
+      return Response.json({ hits: [] });
+    }
+  });
+  const namespace = {
+    idFromName(name) { objectNames.push(name); return 'fixed-object-id'; },
+    get(id) {
+      assert.equal(id, 'fixed-object-id');
+      return { fetch: async (url, init) => {
+        const request = new Request(url, init);
+        const body = await request.clone().text();
+        proxyRequests.push({
+          url: String(url),
+          method: init.method,
+          headers: Object.fromEntries(request.headers),
+          body
+        });
+        const response = await coordinator.fetch(request);
+        // Simulate PoP/caller jitter that returns the second invocation first.
+        // Provider starts must still be controlled entirely inside the DO.
+        if (JSON.parse(body).query.includes('first')) {
+          await secondReturned;
+          callerReturns.push('first');
+        } else {
+          callerReturns.push('second');
+          markSecondReturned();
+        }
+        return response;
+      } };
+    }
+  };
+  const callerFetcher = async () => {
+    callerFetcherCalled = true;
+    return Response.json({ hits: [] });
+  };
+  await Promise.all([
+    searchYahooShopping({ YAHOO_SHOPPING_CLIENT_ID: 'test-client-id',
+      YAHOO_REQUEST_COORDINATOR: namespace }, 'private first query', callerFetcher),
+    searchYahooShopping({ YAHOO_SHOPPING_CLIENT_ID: 'test-client-id',
+      YAHOO_REQUEST_COORDINATOR: namespace }, 'private second query', callerFetcher)
+  ]);
+  assert.equal(callerFetcherCalled, false, 'production provider fetch must run inside the Durable Object');
+  assert.deepEqual(starts, [initialNow, initialNow + 2400]);
+  assert.ok(starts[1] - starts[0] >= 2100);
+  assert.deepEqual(callerReturns, ['second', 'first'],
+    'caller response jitter must not control provider pacing');
+  assert.deepEqual(objectNames, ['yahoo-shopping-application-global', 'yahoo-shopping-application-global']);
+  assert.equal(proxyRequests.every(({ url }) =>
+    url === 'https://yahoo-request-coordinator.internal/proxy'), true);
+  assert.equal(proxyRequests.every(({ method }) => method === 'POST'), true);
+  assert.equal(proxyRequests.every(({ body }) => JSON.parse(body).op === 'ITEM_SEARCH'), true);
+  const serialized = JSON.stringify(proxyRequests);
+  assert.equal(serialized.includes('test-client-id'), false,
+    'Client ID must come from the Durable Object environment, never its request');
+  assert.equal([...state.values.values()].every(Number.isFinite), true);
+});
+
+test('coordinator rejection stops the Yahoo provider request with a fixed safe code', async () => {
+  let providerCalled = false;
+  const env = {
+    YAHOO_SHOPPING_CLIENT_ID: 'private-client-id',
+    YAHOO_REQUEST_COORDINATOR: {
+      idFromName: () => 'fixed-object-id',
+      get: () => ({ fetch: async () => new Response(null, { status: 408 }) })
+    }
+  };
+  await assert.rejects(
+    searchYahooShopping(env, 'private query', async () => {
+      providerCalled = true;
+      return Response.json({ hits: [] });
+    }),
+    (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_UNAVAILABLE' && error.status === 400
+  );
+  assert.equal(providerCalled, false);
+});
+
+test('coordinator proxy preserves exact Yahoo 401 and 403 classifications', async () => {
+  for (const status of [401, 403]) {
+    await assert.rejects(searchYahooShopping({
+      YAHOO_SHOPPING_CLIENT_ID: 'test-client-id',
+      YAHOO_REQUEST_COORDINATOR: {
+        idFromName: () => 'fixed-object-id',
+        get: () => ({ fetch: async () => new Response(null, {
+          status,
+          headers: { 'x-hoshilu-yahoo-proxy-result': 'provider' }
+        }) })
+      }
+    }, 'private query'), (error) =>
+      error.message === 'YAHOO_SHOPPING_SEARCH_FAILED'
+      && error.status === status
+      && error.providerCode === `HTTP_${status}`);
+  }
+});
+
+test('coordinator provider network detail is reduced to a fixed safe error', async () => {
+  await assert.rejects(searchYahooShopping({
+    YAHOO_SHOPPING_CLIENT_ID: 'test-client-id',
+    YAHOO_REQUEST_COORDINATOR: {
+      idFromName: () => 'fixed-object-id',
+      get: () => ({ fetch: async () => new Response(null, {
+        status: 502,
+        headers: { 'x-hoshilu-yahoo-proxy-result': 'provider_network' }
+      }) })
+    }
+  }, 'private query'), (error) =>
+    error.name === 'TypeError' && error.message === 'YAHOO_PROVIDER_NETWORK_FAILED');
+});
+
+test('an expired caller signal never acquires a coordinator slot or contacts Yahoo', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  let coordinatorCalled = false;
+  let providerCalled = false;
+  await assert.rejects(searchYahooShopping({
+    YAHOO_SHOPPING_CLIENT_ID: 'private-client-id',
+    YAHOO_REQUEST_COORDINATOR: {
+      idFromName() { coordinatorCalled = true; return 'fixed-object-id'; },
+      get: () => ({ fetch: async () => new Response(null, { status: 204 }) })
+    }
+  }, 'private query', async () => {
+    providerCalled = true;
+    return Response.json({ hits: [] });
+  }, { signal: controller.signal }), /YAHOO_REQUEST_COORDINATOR_UNAVAILABLE/u);
+  assert.equal(coordinatorCalled, false);
+  assert.equal(providerCalled, false);
+});
+
+test('production mode fails closed instead of bypassing a missing coordinator binding', async () => {
+  let providerCalled = false;
+  await assert.rejects(searchYahooShopping({
+    YAHOO_SHOPPING_CLIENT_ID: 'private-client-id',
+    YAHOO_REQUEST_COORDINATOR_REQUIRED: 'true'
+  }, 'private query', async () => {
+    providerCalled = true;
+    return Response.json({ hits: [] });
+  }), /YAHOO_REQUEST_COORDINATOR_UNAVAILABLE/u);
+  assert.equal(providerCalled, false);
 });
 
 test('高評価トレンドランキングは公式順位・評価集計・レビューURLだけを保持する', () => {

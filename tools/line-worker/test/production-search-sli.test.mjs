@@ -370,6 +370,19 @@ test('deep canary immediately alerts on one non-transient AI chat failure', () =
     /DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:AI_CHAT_PRIMARY:GEMINI_CHAT_INTENT_FAILED/u);
 });
 
+test('Yahoo 401 and 403 remain immediate incidents after safe classification', () => {
+  const now = Date.now();
+  for (const code of [
+    'CANARY_PROVIDER_UNAUTHORIZED_HTTP_401',
+    'CANARY_PROVIDER_FORBIDDEN_HTTP_403'
+  ]) {
+    const rows = healthyCanaryRows(now).map((row) => row.component === 'yahoo'
+      ? { ...row, status:'FAIL', code } : row);
+    assert.throws(() => evaluateDeepCanary(rows, { now }),
+      new RegExp(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:YAHOO:${code}`, 'u'));
+  }
+});
+
 test('deep canary confirms transient query structurer failures before alerting', () => {
   const now = Date.now();
   const latest = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'

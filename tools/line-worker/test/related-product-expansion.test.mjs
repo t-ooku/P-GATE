@@ -72,5 +72,6 @@ test('横展開が無い語では従来どおり補完提案だけが返る', as
 test('APIは横展開と補完の両方が通る上限でグループを切る', () => {
   const source = fs.readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   // 3のままだと横展開(最大3)で埋まり補完提案が1件も出ない。
-  assert.match(source, /resolveRelatedProductRecommendationQueries\(input\.query, input\.language, env\)\)\.slice\(0, 6\)/);
+  assert.match(source,
+    /resolveRelatedProductRecommendationQueries\([\s\S]{0,300}input\.query, input\.language, env, fetch,[\s\S]{0,300}\)\)\.slice\(0, 6\)/);
 });

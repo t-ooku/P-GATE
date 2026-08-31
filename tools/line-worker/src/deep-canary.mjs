@@ -140,7 +140,11 @@ const failureCode = (error) => {
   if (['insufficient_quota', 'billing_hard_limit_reached', 'billing_not_active',
     'billing_disabled'].includes(providerCode)) return 'CANARY_PROVIDER_BILLING_UNAVAILABLE';
   if (providerCode === 'rate_limit_exceeded') return 'CANARY_PROVIDER_RATE_LIMITED';
-  if (status === 401 || status === 403) return 'CANARY_PROVIDER_AUTH_FAILED';
+  // Keep authentication failure and provider access restriction distinct.
+  // Both remain immediate incidents in the production SLI; only the safe HTTP
+  // class is persisted, never a provider response body or credential value.
+  if (status === 401) return 'CANARY_PROVIDER_UNAUTHORIZED_HTTP_401';
+  if (status === 403) return 'CANARY_PROVIDER_FORBIDDEN_HTTP_403';
   if (status === 408) return 'CANARY_PROVIDER_TIMEOUT';
   if (status === 429) return 'CANARY_PROVIDER_RATE_LIMITED';
   if (status >= 400 && status <= 499) return 'CANARY_PROVIDER_REQUEST_REJECTED';

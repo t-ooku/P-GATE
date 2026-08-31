@@ -20,7 +20,7 @@ import {
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
 import {
-  fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured
+  fetchYahooHighRatingRanking, searchYahooShopping, withYahooRequestGate, yahooShoppingApiConfigured
 } from './yahoo-shopping-api.mjs';
 export { YahooRequestCoordinator } from './yahoo-request-coordinator.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
@@ -599,7 +599,12 @@ export function getEnvironmentReadiness(env = {}) {
   };
 }
 
-async function verifyTurnstile(token, env, remoteIp) {
+function boundedRequestSignal(signal, timeoutMs) {
+  const timeout = AbortSignal.timeout(Math.max(100, Number(timeoutMs) || 5000));
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
+}
+
+async function verifyTurnstile(token, env, remoteIp, signal) {
   if (!env.TURNSTILE_SECRET_KEY) throw new Error('TURNSTILE_NOT_CONFIGURED');
   let response;
   try {
@@ -608,7 +613,7 @@ async function verifyTurnstile(token, env, remoteIp) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ secret: env.TURNSTILE_SECRET_KEY, response: token, remoteip: remoteIp || undefined }),
       redirect: 'manual',
-      signal: AbortSignal.timeout(5000)
+      signal: boundedRequestSignal(signal, 5000)
     });
   } catch (error) {
     if (error?.name === 'TimeoutError' || error?.name === 'AbortError') throw new Error('TURNSTILE_TIMEOUT');
@@ -1267,29 +1272,34 @@ export function summarizeMarketplaceSearchOutcomes(searches = [], outcomes = [],
 // returns some non-empty but entirely category-mismatched results for the
 // first (broadest) keyword candidate would stop the cascade there and never
 // try the cleaner, more specific candidates that follow.
-async function searchMarketplaceApiWithFallback(searcher, keywordCandidates, query = '', fallbackQuery = '') {
-  // Run the bounded three-variant set concurrently, then evaluate responses
-  // in preference order. This preserves primary/fallback selection while
-  // reducing the provider critical path from two timeout windows to one.
+export async function searchMarketplaceApiWithFallback(
+  searcher, keywordCandidates, query = '', fallbackQuery = '', options = {}
+) {
+  // Evaluate the bounded variants in preference order and stop on the first
+  // useful response. Yahoo! documents a one-query-per-second ceiling; firing
+  // every fallback at once both violates that ceiling and spends requests that
+  // cannot affect the selected result. The provider module supplies the shared
+  // provider-rate gate for the occasional second/third attempt.
+  const maxVariants = Math.max(1, Math.min(3, Number(options.maxVariants) || 3));
   const variants = [...new Set((keywordCandidates || [])
     .map((value) => String(value || '').normalize('NFKC').trim())
-    .filter(Boolean))].slice(0, 3);
-  const outcomes = await Promise.allSettled(variants.map((keywords) => searcher(keywords)));
-  let firstFailure = null;
-  for (const outcome of outcomes) {
-    if (outcome.status !== 'fulfilled') {
-      firstFailure ||= outcome.reason;
-      continue;
-    }
-    const candidates = Array.isArray(outcome.value) ? outcome.value : [];
+    .filter(Boolean))].slice(0, maxVariants);
+  for (const keywords of variants) {
+    // A transport/provider rejection is not query-quality feedback. Stop
+    // immediately instead of multiplying auth/rate/upstream failures across
+    // alternate keywords.
+    const response = await searcher(keywords);
+    const candidates = Array.isArray(response) ? response : [];
     if (!candidates.length) continue;
     if (!query || filterSearchCandidatesWithFallback(query, fallbackQuery, candidates).length) return candidates;
   }
-  // Preserve the distinction between a genuine zero-result response and a
-  // provider/network failure.  If every useful variant failed, bubble one
-  // sanitized provider error into marketplace_search_status.
-  if (firstFailure && outcomes.every((outcome) => outcome.status === 'rejected')) throw firstFailure;
   return [];
+}
+
+function containsOfficialMarketplaceCandidate(candidates = [], marketplace = '') {
+  return (Array.isArray(candidates) ? candidates : []).some((candidate) =>
+    (Array.isArray(candidate?.offers) ? candidate.offers : []).some((offer) =>
+      officialStoreForProductUrl(offer?.product_url)?.marketplace === marketplace));
 }
 
 export function buildRakutenSearchDestination(query) {
@@ -2437,6 +2447,7 @@ async function handleKnowledgeApi(request, env, ctx) {
     const shouldSearchMarketplaces = shouldRunLiveMarketplaceSearch(Boolean(interpretedDiscovery), env);
     if (shouldSearchMarketplaces) {
       const marketplaceSearches = [];
+      let yahooCatalogRun = null;
       if (rakutenApiConfigured(env)) marketplaceSearches.push({
         key: 'rakuten_catalog_connected',
         run: searchRakutenMarketplaceWithFallback(
@@ -2448,9 +2459,8 @@ async function handleKnowledgeApi(request, env, ctx) {
           expandedQuery.query
         )
       });
-      if (yahooShoppingApiConfigured(env)) marketplaceSearches.push({
-        key: 'yahoo_catalog_connected',
-        run: searchMarketplaceApiWithFallback(
+      if (yahooShoppingApiConfigured(env)) {
+        yahooCatalogRun = searchMarketplaceApiWithFallback(
           (keywords) => searchYahooShopping(env, keywords),
           // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with
           // no marketplace code collapses "ブラウス" to the broad category
@@ -2471,8 +2481,9 @@ async function handleKnowledgeApi(request, env, ctx) {
           ),
           input.query,
           expandedQuery.query
-        )
-      });
+        );
+        marketplaceSearches.push({ key: 'yahoo_catalog_connected', run: yahooCatalogRun });
+      }
       // 2026-08-18のユーザー指摘「楽天市場とYahoo!ショッピングしか出ないね」への対応。
       // 楽天のshopCode / Yahoo!のseller_idでモール公式店を名指しし、そのモールの
       // 商品を確実に検索結果へ載せる。
@@ -2499,7 +2510,14 @@ async function handleKnowledgeApi(request, env, ctx) {
             key: store.key,
             run: store.platform === 'RAKUTEN'
               ? searchRakutenMarketplace(env, officialStoreKeywords, fetch, requestId, { shopCode: store.shopCode })
-              : searchYahooShopping(env, officialStoreKeywords, fetch, { sellerId: store.sellerId })
+              : (async () => {
+                // Keep the generic and seller-specific requests in one Yahoo
+                // lane. A provider failure stops the lane, and a generic hit
+                // from this official store makes the extra request unnecessary.
+                const catalogCandidates = await yahooCatalogRun;
+                if (containsOfficialMarketplaceCandidate(catalogCandidates, store.marketplace)) return [];
+                return searchYahooShopping(env, officialStoreKeywords, fetch, { sellerId: store.sellerId });
+              })()
           });
         }
       }
@@ -2717,21 +2735,51 @@ export function validateRelatedRecommendationsRequest(payload = {}) {
 // ストラップのような別カテゴリを、主結果描画後に独立取得する。本検索へ
 // 外部API呼び出しを混ぜると初回表示の待ち時間・失敗率・API消費を増やすため、
 // 専用エンドポイントに分離する。
-async function searchRelatedCategory(env, query, requestId) {
+const RELATED_RECOMMENDATION_SERVER_BUDGET_MS = 11000;
+const RELATED_RESPONSE_RESERVE_MS = 200;
+
+function relatedRemainingMs(deadlineAt) {
+  return Math.max(0, Number(deadlineAt) - Date.now());
+}
+
+async function searchRelatedCategory(env, query, requestId, options = {}) {
+  const remaining = () => relatedRemainingMs(options.deadlineAt);
   const providers = [
-    rakutenApiConfigured(env) && (() => searchRakutenMarketplaceWithFallback(
-      env, buildRakutenSearchKeywordCandidates(query), fetch, query, requestId
-    )),
-    yahooShoppingApiConfigured(env) && (() => searchMarketplaceApiWithFallback(
-      (keywords) => searchYahooShopping(env, keywords),
-      buildMarketplaceApiKeywordCandidates(query, buildMarketplaceSearchKeywords(query)), query
+    rakutenApiConfigured(env) && (() => {
+      const available = remaining();
+      if (options.signal?.aborted || available <= RELATED_RESPONSE_RESERVE_MS) return [];
+      return searchRakutenMarketplaceWithFallback(
+        env, buildRakutenSearchKeywordCandidates(query), fetch, query, requestId, '', {
+          signal: options.signal,
+          requestTimeoutMs: Math.min(7000, available - RELATED_RESPONSE_RESERVE_MS)
+        }
+      );
+    }),
+    options.includeYahoo !== false && yahooShoppingApiConfigured(env) && (() => searchMarketplaceApiWithFallback(
+      (keywords) => {
+        const available = remaining();
+        // Keep 2.5s for the provider and 200ms to serialize the partial
+        // response. If that budget is gone, do not consume a global Yahoo slot.
+        if (options.signal?.aborted || available <= 3200) return [];
+        return searchYahooShopping(env, keywords, fetch, {
+          queueTimeoutMs: Math.min(2000, available - 2700),
+          requestTimeoutMs: Math.min(2500, available - RELATED_RESPONSE_RESERVE_MS),
+          signal: options.signal
+        });
+      },
+      buildMarketplaceApiKeywordCandidates(query, buildMarketplaceSearchKeywords(query)), query, '',
+      // AI already supplied a focused related-category query. One variant is
+      // enough here and bounds the optional six-group request fanout.
+      { maxVariants: 1 }
     ))
   ].filter(Boolean);
   for (const run of providers) {
+    if (options.signal?.aborted || remaining() <= RELATED_RESPONSE_RESERVE_MS) return [];
     try {
       const candidates = filterCategoryMismatches(query, await run());
       if (candidates.length) return rankMerchantCandidates([], candidates, query).slice(0, 10);
     } catch (error) {
+      if (options.signal?.aborted) return [];
       console.warn('RELATED_RECOMMENDATION_PROVIDER_FAILED', {
         requestId, status: Number(error?.status) || 0,
         provider_code: safeProviderErrorCode(error?.providerCode, error?.status)
@@ -2742,12 +2790,31 @@ async function searchRelatedCategory(env, query, requestId) {
 }
 
 async function handleRelatedRecommendationsApi(request, env) {
+  const deadlineAt = Date.now() + RELATED_RECOMMENDATION_SERVER_BUDGET_MS;
+  const deadlineController = new AbortController();
+  let partialCategories = [];
+  // Arm the absolute budget before reading a potentially slow streamed body.
+  // No Turnstile, AI, Rakuten, or Yahoo request may begin after this expires.
+  const deadlineTimer = setTimeout(() => deadlineController.abort(),
+    Math.max(1, relatedRemainingMs(deadlineAt)));
   try {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
     if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
-    const input = validateRelatedRecommendationsRequest(await readPublicApiJson(request, 10000));
-    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    const inputDeadline = new Promise((_, reject) => {
+      if (deadlineController.signal.aborted) {
+        reject(new Error('RELATED_RECOMMENDATION_DEADLINE'));
+        return;
+      }
+      deadlineController.signal.addEventListener('abort', () =>
+        reject(new Error('RELATED_RECOMMENDATION_DEADLINE')), { once: true });
+    });
+    const input = validateRelatedRecommendationsRequest(await Promise.race([
+      readPublicApiJson(request, 10000), inputDeadline
+    ]));
+    if (deadlineController.signal.aborted) throw new Error('RELATED_RECOMMENDATION_DEADLINE');
+    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'),
+      deadlineController.signal);
     const requestId = crypto.randomUUID();
     const sessionHash = await hashUser(input.session_id);
     // 3→6。2026-08-18のユーザー指示「『その商品と一緒に使うもの』と横展開
@@ -2756,34 +2823,63 @@ async function handleRelatedRecommendationsApi(request, env) {
     // 埋まって補完提案が一件も出ない。両方を通したうえで、下の
     // interleaveCandidatesBySource が提案元をラウンドロビンで混ぜ、
     // 30件の中に交互に並ぶようにする。
-    const groups = (await resolveRelatedProductRecommendationQueries(input.query, input.language, env)).slice(0, 6);
-    const categories = await decoratedRelatedCategoryGroups(groups, {
-      env, origin: ownOrigin, sessionHash, seed: requestId, category: 'related_product',
-      trafficClass: 'UNATTRIBUTED'
-    });
-    const decoratedGroups = await Promise.all(groups.map(async (group, index) => {
-      const candidates = (await searchRelatedCategory(env, group.query, requestId))
-        .map((candidate) => ({ ...candidate, related_category: group.query, recommendation_reason: group.reason }));
-      if (!candidates.length) return [];
-      const publicResult = await decoratePwaResult(
-        { candidates, query_id: `${requestId}:RELATED:${index}` }, request, env,
-        sessionHash, group.query, input.language
-      );
-      return publicResult.candidates.map((candidate) => ({
-        ...candidate, related_category: group.query, recommendation_reason: group.reason
+    const buildResult = async () => {
+      const groups = (await resolveRelatedProductRecommendationQueries(
+        input.query, input.language, env, fetch, {
+          signal: deadlineController.signal,
+          timeoutMs: Math.max(100, Math.min(4000,
+            relatedRemainingMs(deadlineAt) - RELATED_RESPONSE_RESERVE_MS))
+        }
+      )).slice(0, 6);
+      if (deadlineController.signal.aborted) return { recommendations: [], categories: [] };
+      partialCategories = await decoratedRelatedCategoryGroups(groups, {
+        env, origin: ownOrigin, sessionHash, seed: requestId, category: 'related_product',
+        trafficClass: 'UNATTRIBUTED'
+      });
+      const decoratedGroups = await Promise.all(groups.map(async (group, index) => {
+        // Yahoo is a single optional group and receives the same absolute
+        // server deadline as Turnstile, AI, Rakuten, and response decoration.
+        const candidates = (await searchRelatedCategory(env, group.query, requestId, {
+          includeYahoo: index === 0,
+          deadlineAt,
+          signal: deadlineController.signal
+        }))
+          .map((candidate) => ({ ...candidate, related_category: group.query, recommendation_reason: group.reason }));
+        if (!candidates.length || deadlineController.signal.aborted) return [];
+        const publicResult = await decoratePwaResult(
+          { candidates, query_id: `${requestId}:RELATED:${index}` }, request, env,
+          sessionHash, group.query, input.language
+        );
+        return publicResult.candidates.map((candidate) => ({
+          ...candidate, related_category: group.query, recommendation_reason: group.reason
+        }));
       }));
-    }));
-    return Response.json({ ok: true, result: {
-      recommendations: interleaveCandidatesBySource(decoratedGroups).slice(0, 30),
-      categories
-    } }, { headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId } });
+      return {
+        recommendations: interleaveCandidatesBySource(decoratedGroups).slice(0, 30),
+        categories: partialCategories
+      };
+    };
+    const deadlineResult = new Promise((resolve) => {
+      if (deadlineController.signal.aborted) return resolve({ recommendations: [], categories: partialCategories });
+      deadlineController.signal.addEventListener('abort', () =>
+        resolve({ recommendations: [], categories: partialCategories }), { once: true });
+    });
+    const result = await Promise.race([buildResult(), deadlineResult]);
+    return Response.json({ ok: true, result }, {
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
+    });
   } catch (error) {
     const code = String(error.message || error);
     const clientErrors = ['PROCESSING_NOTICE_REQUIRED','CONSENT_REQUIRED','QUERY_LENGTH_INVALID','SESSION_ID_INVALID','TURNSTILE_TOKEN_INVALID','TURNSTILE_VERIFICATION_FAILED'];
     return Response.json({ ok: false, error: code }, {
-      status: publicApiErrorStatus(code, clientErrors, 502),
+      status: code === 'RELATED_RECOMMENDATION_DEADLINE'
+        ? 408
+        : publicApiErrorStatus(code, clientErrors, 502),
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
     });
+  } finally {
+    clearTimeout(deadlineTimer);
+    deadlineController.abort();
   }
 }
 
@@ -2894,6 +2990,7 @@ export function canonicalRequestRedirect(requestUrl) {
 
 export default {
   async fetch(request, env, ctx) {
+    env = withYahooRequestGate(env);
     const url = new URL(request.url);
     const canonicalTarget = canonicalRequestRedirect(url);
     if (canonicalTarget) return new Response(null, {
@@ -3015,6 +3112,7 @@ export default {
     return new Response('not found', { status: 404, headers: DOCUMENT_SECURITY_HEADERS });
   },
   async scheduled(controller, env, ctx) {
+    env = withYahooRequestGate(env);
     const scheduledAt = new Date(controller.scheduledTime);
     // Deep canary uses its own offset trigger so its provider requests never
     // compete with the existing scheduled jobs for Worker outbound sockets.
