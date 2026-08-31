@@ -199,14 +199,16 @@ export class YahooRequestCoordinator {
         if (request.signal.aborted) return fixedResponse(408, 'control');
         providerStarted = true;
         providerPhase = 'fetch';
-        const signal = AbortSignal.any([
-          request.signal,
-          AbortSignal.timeout(timeoutMs)
-        ]);
+        // The inbound Request signal belongs to the internal Worker -> Durable
+        // Object hop. Once the crash reservation is persisted and the provider
+        // starts, let only the bounded provider timeout control outbound fetch.
+        // Reusing the hop signal across the DO boundary can make workerd reject
+        // the provider fetch before any network connection is attempted.
+        const providerSignal = AbortSignal.timeout(timeoutMs);
         const response = await this.fetcher(providerUrl.toString(), {
           headers: { accept: 'application/json' },
           redirect: 'manual',
-          signal
+          signal: providerSignal
         });
         providerPhase = 'body';
         const status = Number(response?.status) || 502;
@@ -228,7 +230,7 @@ export class YahooRequestCoordinator {
           }
         }
       } catch (error) {
-        if (!providerStarted || request.signal.aborted) {
+        if (!providerStarted) {
           result = fixedResponse(408, 'control');
         } else if (error?.name === 'AbortError' || error?.name === 'TimeoutError') {
           result = fixedResponse(504, 'provider_timeout');

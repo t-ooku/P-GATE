@@ -162,6 +162,26 @@ test('abort during crash-reservation write restores the previous slot', async ()
   assert.deepEqual(state.deletes, ['next_start_at_ms']);
 });
 
+test('provider fetch uses a local timeout signal after the durable reservation', async () => {
+  const controller = new AbortController();
+  const request = proxy(undefined, { signal: controller.signal });
+  let providerSignal;
+  const object = coordinator(fakeState(), {
+    clock: () => 0,
+    fetcher: async (_url, init) => {
+      providerSignal = init.signal;
+      controller.abort();
+      return Response.json({ hits: [] });
+    }
+  });
+  const response = await object.fetch(request);
+  assert.equal(response.status, 200);
+  assert.equal(request.signal.aborted, true);
+  assert.notEqual(providerSignal, request.signal);
+  assert.equal(providerSignal.aborted, false,
+    'the internal caller signal must not cancel an already-reserved provider fetch');
+});
+
 test('provider 401/403 status is preserved but provider body and headers are discarded', async () => {
   const state = fakeState();
   let cancelled = false;
