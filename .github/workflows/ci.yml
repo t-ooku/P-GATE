@@ -1852,104 +1852,22 @@ jobs:
           retention-days: 30
 
 
-  gemini-private-compare:
-    name: Private Gemini vs Runway comparison
+  gemini-private-marker-cleanup-20260831:
+    name: Remove completed private Gemini marker
     needs: deploy
-    if: ${{ always() && needs.deploy.result == 'success' && github.event_name == 'push' }}
+    if: github.ref == 'refs/heads/feature/ui-search-v2' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    concurrency:
-      group: gemini-private-compare-20260831
-      cancel-in-progress: false
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Wait for isolated Worker result
+      - name: Delete completion marker after Worker path is disabled
         working-directory: tools/line-worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
-          out="$RUNNER_TEMP/gemini-private-compare"
-          mkdir -p "$out"
-          marker="hoshilu-social-media/gemini-private/20260831-v2/marker.json"
-          ready=0
-          for attempt in $(seq 1 60); do
-            if npx --yes wrangler@4.121.0 r2 object get "$marker" --remote --file "$out/marker.json" >/dev/null 2>&1; then
-              status=$(MARKER="$out/marker.json" node -e "const x=require(process.env.MARKER);process.stdout.write(String(x.status||''))")
-              if [ "$status" = "GENERATED_REVIEW_REQUIRED" ]; then ready=1; break; fi
-              if [ "$status" = "FAILED_FINAL" ]; then
-                code=$(MARKER="$out/marker.json" node -e "const x=require(process.env.MARKER);process.stdout.write(String(x.error_code||'GEMINI_COMPARE_FAILED'))")
-                echo "::error::private Gemini comparison failed with fixed code $code"
-                exit 1
-              fi
-            fi
-            sleep 30
-          done
-          test "$ready" = 1 || { echo "::error::private Gemini comparison did not complete in time"; exit 1; }
-          npx --yes wrangler@4.121.0 r2 object get "hoshilu-social-media/gemini-private/20260831-v2/gemini-omni-1.1-flash-v2.mp4" --remote --file "$out/gemini.mp4"
-          npx --yes wrangler@4.121.0 r2 object get "hoshilu-social-media/gemini-private/20260831-v2/comparison-input.json" --remote --file "$out/generation.json"
-          cp ops/runway/media/reel_20260819_overseas_find_normal.mp4 "$out/runway-baseline.mp4"
-      - name: Produce bounded technical comparison
-        run: |
-          set -euo pipefail
-          out="$RUNNER_TEMP/gemini-private-compare"
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg
-          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of json "$out/gemini.mp4" > "$out/gemini-ffprobe.json"
-          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of json "$out/runway-baseline.mp4" > "$out/runway-ffprobe.json"
-          OUT="$out" node <<'NODE'
-          const fs = require('node:fs');
-          const path = require('node:path');
-          const out = process.env.OUT;
-          const generation = JSON.parse(fs.readFileSync(path.join(out, 'generation.json')));
-          const gemini = JSON.parse(fs.readFileSync(path.join(out, 'gemini-ffprobe.json')));
-          const runway = JSON.parse(fs.readFileSync(path.join(out, 'runway-ffprobe.json')));
-          const duration = Number(gemini.format?.duration || 0);
-          const video = (gemini.streams || []).find((stream) => stream.width && stream.height);
-          if (!(duration >= 2.5 && duration <= 10.5)) throw new Error('GEMINI_DURATION_OUT_OF_BOUND');
-          if (!video || video.height <= video.width) throw new Error('GEMINI_NOT_PORTRAIT');
-          const report = {
-            schema: 'hoshilu.private-video-compare.result.v1',
-            private_only: true,
-            public_or_social_publish: false,
-            gemini: {
-              model: 'gemini-omni-1.1-flash',
-              elapsed_seconds: generation.elapsed_seconds,
-              estimated_usd_at_720p: Math.round(duration * 0.10 * 100) / 100,
-              ffprobe: gemini
-            },
-            runway_baseline: { file: 'reel_20260819_overseas_find_normal.mp4', ffprobe: runway },
-            rights: generation.rights,
-            human_review_required: ['identity consistency','hands and phone','motion naturalness','9:16 framing','audio and rights'],
-            adoption_decision: 'REVIEW_REQUIRED',
-            adoption_rule: 'Adopt only if quality, elapsed time, estimated cost, and rights review all beat the current Runway fallback.'
-          };
-          fs.writeFileSync(path.join(out, 'comparison.json'), JSON.stringify(report, null, 2));
-          console.log('::notice::private comparison artifact ready; decision=REVIEW_REQUIRED');
-          NODE
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: private-gemini-omni-compare-${{ github.run_id }}
-          path: ${{ runner.temp }}/gemini-private-compare/
-          retention-days: 3
-          if-no-files-found: error
-          compression-level: 0
-      - name: Remove temporary private R2 media after capture
-        if: success()
-        working-directory: tools/line-worker
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-          # Preserve marker.json until the temporary Worker path is disabled;
-          # this prevents any second provider invocation between cleanup deploys.
-          for key in comparison-input.json gemini-omni-1.1-flash-v2.mp4; do
-            npx --yes wrangler@4.121.0 r2 object delete "hoshilu-social-media/gemini-private/20260831-v2/$key" --remote
-          done
+          npx --yes wrangler@4.121.0 r2 object delete "hoshilu-social-media/gemini-private/20260831-v2/marker.json" --remote

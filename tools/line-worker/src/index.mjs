@@ -87,7 +87,6 @@ import {
   handleRunwayGenerationRoutes, runRunwayGenerationCycle, runwayGenerationReadiness
 } from './runway-generation.mjs';
 import { handleRunwayMediaRoute } from './social-media-r2.mjs';
-import { runGeminiPrivateVideoComparison } from './gemini-private-video-compare.mjs';
 import { renderSeoPage, seoHubPaths, seoPagePaths } from './seo-pages.mjs';
 import { searchModeForMarketplace } from './marketplace-search-mode.mjs';
 import {
@@ -3129,16 +3128,7 @@ export default {
     // and X video upload therefore cannot exhaust the regular fanout's shared
     // outbound-request budget, and transient retries do not wait 15 minutes.
     if (controller.cron === '2,7,12,17,22,27,32,37,42,47,52,57 * * * *') {
-      // The private comparison borrows at most one social invocation. Its fixed
-      // R2 marker makes every later call a no-op; after that, the normal
-      // publisher continues on the same five-minute trigger.
-      ctx.waitUntil((async () => {
-        const comparison = await runGeminiPrivateVideoComparison(env, scheduledAt)
-          .catch(() => ({ skipped: false, status: 'FAILED_FINAL',
-            error_code: 'GEMINI_COMPARE_STORAGE_FAILED' }));
-        if (!comparison?.skipped) return comparison;
-        return runSocialAutopilotCycle(env, scheduledAt);
-      })());
+      ctx.waitUntil(runSocialAutopilotCycle(env, scheduledAt));
       return;
     }
     // One trigger alternates two isolated invocation types. Minutes 5/20/35/50
