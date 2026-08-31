@@ -92,12 +92,12 @@ test('recovery requires two prior original scheduled successes after last detect
     { id: 61, event: 'schedule', run_attempt: 1, created_at: '2026-08-21T19:02:00Z', conclusion: 'success' },
     { id: 60, event: 'schedule', run_attempt: 1, created_at: '2026-08-21T18:34:21Z', conclusion: 'success' }
   ];
-  assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, issueBody), true);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, issueBody, 1, 'schedule'), true);
 
   const interrupted = recovered.map((run) => run.id === 62
     ? { ...run, conclusion: 'failure' } : run);
-  assert.equal(hasThreeConsecutivePostIncidentSuccesses(interrupted, 63, issueBody), false);
-  assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, ''), false);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(interrupted, 63, issueBody, 1, 'schedule'), false);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, '', 1, 'schedule'), false);
 });
 
 test('recovery ignores manually rerun jobs and starts after the last detection', () => {
