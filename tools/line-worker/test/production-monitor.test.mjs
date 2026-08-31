@@ -47,7 +47,8 @@ function mockFetch({
       turnstile_configured: true, search_input_analysis_configured: searchInputConfigured,
       ai_chat_configured: true,
       amazon_associate_link_configured: true,
-      rakuten_marketplace_configured: true, yahoo_shopping_configured: true
+      rakuten_marketplace_configured: true, yahoo_shopping_configured: true,
+      yahoo_request_coordinator_configured: true
     } });
     if (url.pathname === '/') return new Response(expectedIndexHtml);
     if (url.pathname === '/app.js') return new Response(`${'x'.repeat(1100)} ${appMarkers ? "KNOWLEDGE_HTTP_TIMEOUT_MS SEARCH_DEADLINE_EXCEEDED SEARCH_SUPERSEDED tokenCallbackTimeoutMs maxAttempts takeReadyTurnstileToken hoshilu00-22 sponsored nofollow noopener noreferrer emergencyRelatedCategoryRecommendations marketplace:'ABCMART_JP'" : 'missing markers'}`);

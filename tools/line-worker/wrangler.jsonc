@@ -3,6 +3,7 @@
   "name": "project-gate-line-bridge",
   "main": "src/index.mjs",
   "compatibility_date": "2026-07-14",
+  "compatibility_flags": ["enable_request_signal"],
   "routes": [
     {
       "pattern": "hoshilu.app",
@@ -21,7 +22,10 @@
   },
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 0.1
+    "head_sampling_rate": 0.1,
+    "traces": {
+      "enabled": false
+    }
   },
   "vars": {
     "AMAZON_ASSOCIATE_TAG": "hoshilu00-22",
@@ -56,6 +60,20 @@
       "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
     ]
   },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "YAHOO_REQUEST_COORDINATOR",
+        "class_name": "YahooRequestCoordinator"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "yahoo-request-coordinator-v1",
+      "new_sqlite_classes": ["YahooRequestCoordinator"]
+    }
+  ],
   "d1_databases": [
     {
       "binding": "PRODUCT_DB",

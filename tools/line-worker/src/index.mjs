@@ -19,7 +19,10 @@ import {
   searchRakutenMarketplace,
   searchRakutenMarketplaceWithFallback
 } from './rakuten-marketplace-api.mjs';
-import { fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
+import {
+  fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured
+} from './yahoo-shopping-api.mjs';
+export { YahooRequestCoordinator } from './yahoo-request-coordinator.mjs';
 import { marketplaceForProductUrl, PRODUCT_MARKETPLACES as PRODUCT_MARKETPLACE_LIST } from './marketplace-product-url-policy.mjs';
 import { marketplaceOfferStats, syncMarketplaceOffers } from './marketplace-offer-feed.mjs';
 import { discoverProductsWithAi } from './ai-product-discovery.mjs';
@@ -538,6 +541,11 @@ export function getEnvironmentReadiness(env = {}) {
     new Set(adminValues).size === adminValues.length;
   const searchInputConfigured = searchInputAnalysisConfigured(env);
   const visualWebDetectionConfigured = googleVisualWebDetectionConfigured(env);
+  const yahooConfigured = yahooShoppingApiConfigured(env);
+  const yahooCoordinatorConfigured = Boolean(
+    env.YAHOO_REQUEST_COORDINATOR?.idFromName && env.YAHOO_REQUEST_COORDINATOR?.get
+  );
+  if (yahooConfigured && !yahooCoordinatorConfigured) missing.push('YAHOO_REQUEST_COORDINATOR');
   if (env.GEMINI_API_KEY && !searchInputConfigured && !weak.includes('GEMINI_API_KEY')) {
     weak.push('GEMINI_API_KEY');
   }
@@ -574,7 +582,8 @@ export function getEnvironmentReadiness(env = {}) {
       amazon_associate_link_configured: String(env.AMAZON_ASSOCIATE_TAG || '').trim() === 'hoshilu00-22',
       amazon_creators_configured: creatorsApiConfigured(env),
       rakuten_marketplace_configured: rakutenApiConfigured(env),
-      yahoo_shopping_configured: yahooShoppingApiConfigured(env),
+      yahoo_shopping_configured: yahooConfigured,
+      yahoo_request_coordinator_configured: yahooCoordinatorConfigured,
       social_autopilot_enabled: env.SOCIAL_AUTOPILOT_ENABLED === 'true',
       // 診断用（2026-08-08追加）: verifyTurnstile()はTURNSTILE_SECRET_KEY未設定だと
       // TURNSTILE_NOT_CONFIGURED を投げるが、そのエラーコードはhandleAiChatApi等の

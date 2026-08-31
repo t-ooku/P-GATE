@@ -18,6 +18,9 @@ jobs:
           node-version: 22
       - name: Install Worker dependencies
         run: npm ci --prefix tools/line-worker
+      - name: Validate exact production Worker bundle and bindings
+        working-directory: tools/line-worker
+        run: npx --yes wrangler@4.121.0 deploy --dry-run --outdir /tmp/hoshilu-worker-dry-run
       - name: Run all regression tests
         run: npm test
       - name: Block deterministic search-quality regressions

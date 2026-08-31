@@ -8,7 +8,8 @@ const REQUIRED_HEALTH_CHECKS = [
   'ai_chat_configured',
   'amazon_associate_link_configured',
   'rakuten_marketplace_configured',
-  'yahoo_shopping_configured'
+  'yahoo_shopping_configured',
+  'yahoo_request_coordinator_configured'
 ];
 const ASSET_MARKERS = Object.freeze({
   'app.js': ['KNOWLEDGE_HTTP_TIMEOUT_MS', 'SEARCH_DEADLINE_EXCEEDED', 'SEARCH_SUPERSEDED', 'tokenCallbackTimeoutMs', 'maxAttempts', 'takeReadyTurnstileToken', 'hoshilu00-22', 'sponsored nofollow noopener noreferrer', 'emergencyRelatedCategoryRecommendations', "marketplace:'ABCMART_JP'"],

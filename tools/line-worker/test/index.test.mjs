@@ -930,7 +930,17 @@ test('公開前ヘルスチェックはSecret値を返さず不足・弱い鍵�
   assert.equal(optional.checks.amazon_creators_configured, true);
   assert.equal(optional.checks.rakuten_marketplace_configured, true);
   assert.equal(optional.checks.yahoo_shopping_configured, true);
+  assert.equal(optional.checks.yahoo_request_coordinator_configured, false);
+  assert.ok(optional.missing.includes('YAHOO_REQUEST_COORDINATOR'));
   assert.equal(JSON.stringify(optional.checks).includes('refresh'), false);
+  const coordinatedYahoo = getEnvironmentReadiness({
+    ...base,
+    YAHOO_SHOPPING_CLIENT_ID: 'yahoo-client-id',
+    YAHOO_REQUEST_COORDINATOR: { idFromName() {}, get() {} }
+  });
+  assert.equal(coordinatedYahoo.ready, true);
+  assert.equal(coordinatedYahoo.checks.yahoo_request_coordinator_configured, true);
+  assert.equal(coordinatedYahoo.missing.includes('YAHOO_REQUEST_COORDINATOR'), false);
 
   const ctx = { waitUntil() {} };
   const response = await workerModule.default.fetch(
