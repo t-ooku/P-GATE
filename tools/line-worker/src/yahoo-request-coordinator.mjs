@@ -141,6 +141,23 @@ export function buildYahooProviderUrl(operation, clientId) {
 // which guarantees provider starts cannot bunch up after caller/PoP jitter.
 // Only a numeric timestamp is persisted; no query, credential, response, or
 // user identifier is logged or stored.
+function providerFetchFailureResult(error) {
+  // Map only known runtime categories to fixed codes. Never return the raw
+  // message because the provider URL contains appid and query parameters.
+  const message = String(error?.message || '');
+  if (/global scope|different request|request context|asynchronous I\/O/iu.test(message)) {
+    return 'provider_fetch_context';
+  }
+  if (/invalid URL|unsupported URL|URL scheme|URL parser/iu.test(message)) {
+    return 'provider_fetch_url';
+  }
+  if (/network connection|fetch failed|socket|TLS|certificate|DNS/iu.test(message)) {
+    return 'provider_fetch_transport';
+  }
+  if (error?.name === 'TypeError') return 'provider_fetch_type';
+  return 'provider_fetch_network';
+}
+
 export class YahooRequestCoordinator {
   constructor(state, env, options = {}) {
     this.state = state;
@@ -235,8 +252,9 @@ export class YahooRequestCoordinator {
         } else if (error?.name === 'AbortError' || error?.name === 'TimeoutError') {
           result = fixedResponse(504, 'provider_timeout');
         } else {
-          result = fixedResponse(502,
-            providerPhase === 'body' ? 'provider_body_network' : 'provider_fetch_network');
+          result = fixedResponse(502, providerPhase === 'body'
+            ? 'provider_body_network'
+            : providerFetchFailureResult(error));
         }
       } finally {
         if (providerStarted) {

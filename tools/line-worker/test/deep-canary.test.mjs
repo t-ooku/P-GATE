@@ -207,6 +207,18 @@ test('provider status classification retries only transient HTTP failures', () =
   assert.equal(deepCanaryTest.failureCode({ status: 404, message: 'OPENAI_CHAT_INTENT_FAILED' }),
     'CANARY_PROVIDER_REQUEST_REJECTED');
   assert.equal(deepCanaryTest.failureCode({
+    name: 'TypeError', message: 'YAHOO_PROVIDER_FETCH_CONTEXT_FAILED'
+  }), 'CANARY_PROVIDER_FETCH_CONTEXT_FAILED');
+  assert.equal(deepCanaryTest.failureCode({
+    name: 'TypeError', message: 'YAHOO_PROVIDER_FETCH_URL_FAILED'
+  }), 'CANARY_PROVIDER_FETCH_URL_FAILED');
+  assert.equal(deepCanaryTest.failureCode({
+    name: 'TypeError', message: 'YAHOO_PROVIDER_FETCH_TRANSPORT_FAILED'
+  }), 'CANARY_PROVIDER_FETCH_TRANSPORT_FAILED');
+  assert.equal(deepCanaryTest.failureCode({
+    name: 'TypeError', message: 'YAHOO_PROVIDER_FETCH_TYPE_FAILED'
+  }), 'CANARY_PROVIDER_FETCH_TYPE_FAILED');
+  assert.equal(deepCanaryTest.failureCode({
     name: 'TypeError', message: 'YAHOO_PROVIDER_FETCH_NETWORK_FAILED'
   }), 'CANARY_PROVIDER_FETCH_NETWORK_FAILED');
   assert.equal(deepCanaryTest.failureCode({

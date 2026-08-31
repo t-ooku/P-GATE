@@ -81,6 +81,10 @@ function coordinatorOutcomeError(result) {
     error.status = 408;
     return error;
   }
+  if (result === 'provider_fetch_context') return new TypeError('YAHOO_PROVIDER_FETCH_CONTEXT_FAILED');
+  if (result === 'provider_fetch_url') return new TypeError('YAHOO_PROVIDER_FETCH_URL_FAILED');
+  if (result === 'provider_fetch_transport') return new TypeError('YAHOO_PROVIDER_FETCH_TRANSPORT_FAILED');
+  if (result === 'provider_fetch_type') return new TypeError('YAHOO_PROVIDER_FETCH_TYPE_FAILED');
   if (result === 'provider_fetch_network') return new TypeError('YAHOO_PROVIDER_FETCH_NETWORK_FAILED');
   if (result === 'provider_body_network') return new TypeError('YAHOO_PROVIDER_BODY_NETWORK_FAILED');
   if (result === 'provider_network') return new TypeError('YAHOO_PROVIDER_NETWORK_FAILED');

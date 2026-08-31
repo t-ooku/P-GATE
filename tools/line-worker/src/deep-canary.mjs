@@ -153,6 +153,18 @@ const failureCode = (error) => {
   if (error?.name === 'SyntaxError') return 'CANARY_PROVIDER_INVALID_JSON';
   if (error?.name === 'TypeError') {
     const message = String(error?.message || '');
+    if (message === 'YAHOO_PROVIDER_FETCH_CONTEXT_FAILED') {
+      return 'CANARY_PROVIDER_FETCH_CONTEXT_FAILED';
+    }
+    if (message === 'YAHOO_PROVIDER_FETCH_URL_FAILED') {
+      return 'CANARY_PROVIDER_FETCH_URL_FAILED';
+    }
+    if (message === 'YAHOO_PROVIDER_FETCH_TRANSPORT_FAILED') {
+      return 'CANARY_PROVIDER_FETCH_TRANSPORT_FAILED';
+    }
+    if (message === 'YAHOO_PROVIDER_FETCH_TYPE_FAILED') {
+      return 'CANARY_PROVIDER_FETCH_TYPE_FAILED';
+    }
     if (message === 'YAHOO_PROVIDER_FETCH_NETWORK_FAILED') {
       return 'CANARY_PROVIDER_FETCH_NETWORK_FAILED';
     }

@@ -256,8 +256,22 @@ test('provider fetch and response-body failures use distinct fixed codes', async
   });
   const fetchResponse = await fetchFailure.fetch(proxy());
   assert.equal(fetchResponse.status, 502);
-  assert.equal(fetchResponse.headers.get(YAHOO_PROXY_RESULT_HEADER), 'provider_fetch_network');
+  assert.equal(fetchResponse.headers.get(YAHOO_PROXY_RESULT_HEADER), 'provider_fetch_type');
   assert.equal(await fetchResponse.text(), '');
+
+  for (const [message, expected] of [
+    ['Disallowed operation called within global scope', 'provider_fetch_context'],
+    ['Invalid URL scheme', 'provider_fetch_url'],
+    ['Network connection lost', 'provider_fetch_transport']
+  ]) {
+    const object = coordinator(fakeState(), {
+      clock: () => 0,
+      fetcher: async () => { throw new TypeError(message); }
+    });
+    const response = await object.fetch(proxy());
+    assert.equal(response.headers.get(YAHOO_PROXY_RESULT_HEADER), expected);
+    assert.equal(await response.text(), '');
+  }
 
   const bodyFailure = coordinator(fakeState(), {
     clock: () => 0,

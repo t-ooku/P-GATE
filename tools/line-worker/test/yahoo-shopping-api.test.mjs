@@ -273,6 +273,10 @@ test('coordinator provider network detail is reduced to a fixed safe error', asy
 
 test('coordinator keeps fetch and body network phases distinct without private detail', async () => {
   for (const [result, message] of [
+    ['provider_fetch_context', 'YAHOO_PROVIDER_FETCH_CONTEXT_FAILED'],
+    ['provider_fetch_url', 'YAHOO_PROVIDER_FETCH_URL_FAILED'],
+    ['provider_fetch_transport', 'YAHOO_PROVIDER_FETCH_TRANSPORT_FAILED'],
+    ['provider_fetch_type', 'YAHOO_PROVIDER_FETCH_TYPE_FAILED'],
     ['provider_fetch_network', 'YAHOO_PROVIDER_FETCH_NETWORK_FAILED'],
     ['provider_body_network', 'YAHOO_PROVIDER_BODY_NETWORK_FAILED']
   ]) {
