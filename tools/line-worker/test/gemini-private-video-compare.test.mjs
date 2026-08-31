@@ -31,9 +31,7 @@ test('one private Gemini comparison writes review-required media once', async ()
       });
     }
     return Response.json({
-      steps: [{ type: 'model_output', content: [{
-        type: 'video', mime_type: 'video/mp4', data: base64(12000)
-      }] }]
+      output_video: { mime_type: 'video/mp4', data: base64(12000) }
     });
   };
   const env = {
@@ -51,6 +49,7 @@ test('one private Gemini comparison writes review-required media once', async ()
   assert.equal(request.model, 'gemini-omni-1.1-flash');
   assert.equal(request.response_format.aspect_ratio, '9:16');
   assert.equal(request.response_format.resolution, '720p');
+  assert.equal(request.generation_config.video_config.task, 'image_to_video');
   assert.equal(request.input.some((item) => item.type === 'text'
     && /No logos, products, text, captions, voice, music/u.test(item.text)), true);
   assert.equal(storage.objects.has(geminiPrivateVideoComparisonTest.VIDEO_KEY), true);

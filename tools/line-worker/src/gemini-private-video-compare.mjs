@@ -45,6 +45,10 @@ const reportBody = (value) => JSON.stringify({
 }, null, 2);
 
 function videoBlock(payload) {
+  if (payload?.output_video?.data
+    && (!payload.output_video.mime_type || payload.output_video.mime_type === 'video/mp4')) {
+    return { type: 'video', mime_type: 'video/mp4', data: payload.output_video.data };
+  }
   for (const step of Array.isArray(payload?.steps) ? payload.steps : []) {
     for (const item of Array.isArray(step?.content) ? step.content : []) {
       if (item?.type === 'video' && item?.mime_type === 'video/mp4' && item?.data) return item;
@@ -103,7 +107,7 @@ export async function runGeminiPrivateVideoComparison(env = {}, scheduledAt = ne
           { type: 'image', data: bytesToBase64(reference), mime_type: 'image/jpeg' },
           { type: 'text', text: prompt }
         ],
-        generation_config: { task: 'image_to_video' },
+        generation_config: { video_config: { task: 'image_to_video' } },
         response_format: { type: 'video', aspect_ratio: '9:16', resolution: '720p' }
       }),
       signal: AbortSignal.timeout(14 * 60 * 1000)
