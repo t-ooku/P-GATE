@@ -1,0 +1,116 @@
+name: Collect private Gemini comparison
+
+on:
+  push:
+    branches:
+      - feature/ui-search-v2
+    paths:
+      - .github/workflows/collect-gemini-private-compare.yml
+      - tools/line-worker/src/gemini-private-video-compare.mjs
+      - tools/line-worker/src/index.mjs
+      - tools/line-worker/wrangler.jsonc
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: gemini-private-compare-20260831
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Wait for the isolated Worker result and read private R2 objects
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+          out="$RUNNER_TEMP/gemini-private-compare"
+          mkdir -p "$out"
+          marker="hoshilu-social-media/gemini-private/20260831/marker.json"
+          video="hoshilu-social-media/gemini-private/20260831/gemini-omni-1.1-flash-v2.mp4"
+          report="hoshilu-social-media/gemini-private/20260831/comparison-input.json"
+          ready=0
+          for attempt in $(seq 1 45); do
+            if npx --yes wrangler@4.121.0 r2 object get "$marker" --remote --file "$out/marker.json" >/dev/null 2>&1; then
+              status=$(MARKER="$out/marker.json" node -e "const x=require(process.env.MARKER);process.stdout.write(String(x.status||''))")
+              if [ "$status" = "GENERATED_REVIEW_REQUIRED" ]; then ready=1; break; fi
+              if [ "$status" = "FAILED_FINAL" ]; then
+                code=$(MARKER="$out/marker.json" node -e "const x=require(process.env.MARKER);process.stdout.write(String(x.error_code||'GEMINI_COMPARE_FAILED'))")
+                echo "::error::private Gemini comparison failed with fixed code $code"
+                exit 1
+              fi
+            fi
+            sleep 30
+          done
+          test "$ready" = 1 || { echo "::error::private Gemini comparison did not complete in time"; exit 1; }
+          npx --yes wrangler@4.121.0 r2 object get "$video" --remote --file "$out/gemini.mp4"
+          npx --yes wrangler@4.121.0 r2 object get "$report" --remote --file "$out/generation.json"
+          cp ops/runway/media/reel_20260819_overseas_find_normal.mp4 "$out/runway-baseline.mp4"
+
+      - name: Produce bounded technical comparison
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/gemini-private-compare"
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of json "$out/gemini.mp4" > "$out/gemini-ffprobe.json"
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of json "$out/runway-baseline.mp4" > "$out/runway-ffprobe.json"
+          OUT="$out" node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const out = process.env.OUT;
+          const generation = JSON.parse(fs.readFileSync(path.join(out, 'generation.json')));
+          const gemini = JSON.parse(fs.readFileSync(path.join(out, 'gemini-ffprobe.json')));
+          const runway = JSON.parse(fs.readFileSync(path.join(out, 'runway-ffprobe.json')));
+          const duration = Number(gemini.format?.duration || 0);
+          const video = (gemini.streams || []).find((stream) => stream.width && stream.height);
+          if (!(duration >= 2.5 && duration <= 10.5)) throw new Error(`GEMINI_DURATION_OUT_OF_BOUND:${duration}`);
+          if (!video || video.height <= video.width) throw new Error('GEMINI_NOT_PORTRAIT');
+          const report = {
+            schema: 'hoshilu.private-video-compare.result.v1',
+            private_only: true, public_or_social_publish: false,
+            gemini: {
+              model: 'gemini-omni-1.1-flash', elapsed_seconds: generation.elapsed_seconds,
+              estimated_usd_at_720p: Math.round(duration * 0.10 * 100) / 100,
+              ffprobe: gemini
+            },
+            runway_baseline: { file: 'reel_20260819_overseas_find_normal.mp4', ffprobe: runway },
+            rights: generation.rights,
+            human_review_required: [
+              'identity consistency','hands and phone','motion naturalness','9:16 framing','audio and rights'
+            ],
+            adoption_decision: 'REVIEW_REQUIRED',
+            adoption_rule: 'Adopt only if quality, elapsed time, estimated cost, and rights review all beat the current Runway fallback.'
+          };
+          fs.writeFileSync(path.join(out, 'comparison.json'), JSON.stringify(report, null, 2));
+          console.log(`::notice::private comparison ready; duration=${duration}s estimate_usd=${report.gemini.estimated_usd_at_720p} decision=REVIEW_REQUIRED`);
+          NODE
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: private-gemini-omni-compare-${{ github.run_id }}
+          path: ${{ runner.temp }}/gemini-private-compare/
+          retention-days: 3
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Remove temporary private R2 objects after artifact capture
+        if: success()
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          for key in marker.json comparison-input.json gemini-omni-1.1-flash-v2.mp4; do
+            npx --yes wrangler@4.121.0 r2 object delete "hoshilu-social-media/gemini-private/20260831/$key" --remote
+          done
