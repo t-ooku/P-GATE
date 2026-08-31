@@ -158,6 +158,8 @@ export class YahooRequestCoordinator {
     if (request.signal.aborted) return fixedResponse(408, 'control');
     return this.state.blockConcurrencyWhile(async () => {
       let providerStarted = false;
+      // Privacy-safe phase only. Never store or log request/response data.
+      let providerPhase = 'control';
       let reservationMade = false;
       let previousStored;
       let result;
@@ -196,6 +198,7 @@ export class YahooRequestCoordinator {
         reservationMade = true;
         if (request.signal.aborted) return fixedResponse(408, 'control');
         providerStarted = true;
+        providerPhase = 'fetch';
         const signal = AbortSignal.any([
           request.signal,
           AbortSignal.timeout(timeoutMs)
@@ -205,6 +208,7 @@ export class YahooRequestCoordinator {
           redirect: 'manual',
           signal
         });
+        providerPhase = 'body';
         const status = Number(response?.status) || 502;
         if (status < 200 || status > 299) {
           // Provider error bodies and headers can echo inputs. Preserve only
@@ -229,7 +233,8 @@ export class YahooRequestCoordinator {
         } else if (error?.name === 'AbortError' || error?.name === 'TimeoutError') {
           result = fixedResponse(504, 'provider_timeout');
         } else {
-          result = fixedResponse(502, 'provider_network');
+          result = fixedResponse(502,
+            providerPhase === 'body' ? 'provider_body_network' : 'provider_fetch_network');
         }
       } finally {
         if (providerStarted) {
