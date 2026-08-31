@@ -326,7 +326,7 @@ test('/buzzページは出典と注意書きを持ち、断定表現を使わな
   assert.match(html, /欲しいを、ちゃんと見つける。/u);
   assert.match(html, /<link rel="canonical" href="https:\/\/hoshilu\.app\/buzz">/u);
   assert.match(html, /<script type="module" src="\/buzz\.mjs\?v=\d+">/u);
-  assert.doesNotMatch(html, /No\\.?1|Z世代/u);
+  assert.doesNotMatch(html, /No\.?1|Z世代/u);
   // 低価格棚から13モール比較へ進めるが、比較前に最安と断定しない。
   assert.match(html, /class="buzz-compare"/u);
   assert.match(html, /13モール比較/u);
