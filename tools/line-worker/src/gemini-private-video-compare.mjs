@@ -6,7 +6,14 @@ const REFERENCE_URL =
 const MODEL = 'gemini-omni-1.1-flash';
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
-const encoder = new TextEncoder();
+const bytesToBase64 = (bytes) => {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+  return btoa(binary);
+};
 const fixedCode = (error) => {
   const status = Number(error?.status || 0);
   if (error?.name === 'TimeoutError' || error?.name === 'AbortError') return 'GEMINI_COMPARE_TIMEOUT';
@@ -93,7 +100,7 @@ export async function runGeminiPrivateVideoComparison(env = {}, scheduledAt = ne
       body: JSON.stringify({
         model: MODEL,
         input: [
-          { type: 'image', data: btoa(String.fromCharCode(...reference)), mime_type: 'image/jpeg' },
+          { type: 'image', data: bytesToBase64(reference), mime_type: 'image/jpeg' },
           { type: 'text', text: prompt }
         ],
         generation_config: { task: 'image_to_video' },
