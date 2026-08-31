@@ -57,7 +57,7 @@ test('production monitor deduplicates incidents and waits for stable recovery', 
   assert.match(workflow, /\[AUTO\]\[HOSHILU\] Production reliability incident/u);
   assert.match(workflow, /issues\.find/u);
   assert.match(workflow, /hasThreeConsecutivePostIncidentSuccesses/u);
-  assert.match(workflow, /three consecutive successful checks/u);
+  assert.match(workflow, /three consecutive new scheduled checks/u);
   assert.match(workflow, /Search text and personal data are not recorded/u);
 });
 
@@ -81,13 +81,16 @@ test('a rerun cannot count successes that happened before the incident', () => {
   assert.equal(hasThreeConsecutivePostIncidentSuccesses(runs, 60, issueBody), false);
 });
 
-test('recovery requires two prior successful runs after first detection', () => {
-  const issueBody = '- First detected: `2026-08-21T18:34:47.727Z`';
+test('recovery requires two prior original scheduled successes after last detection', () => {
+  const issueBody = [
+    '- First detected: `2026-08-21T18:34:47.727Z`',
+    '- Last detected: `2026-08-21T18:55:00.000Z`'
+  ].join('\n');
   const recovered = [
-    { id: 63, created_at: '2026-08-21T19:12:00Z', conclusion: 'success' },
-    { id: 62, created_at: '2026-08-21T19:07:00Z', conclusion: 'success' },
-    { id: 61, created_at: '2026-08-21T19:02:00Z', conclusion: 'success' },
-    { id: 60, created_at: '2026-08-21T18:34:21Z', conclusion: 'success' }
+    { id: 63, event: 'schedule', run_attempt: 1, created_at: '2026-08-21T19:12:00Z', conclusion: 'success' },
+    { id: 62, event: 'schedule', run_attempt: 1, created_at: '2026-08-21T19:07:00Z', conclusion: 'success' },
+    { id: 61, event: 'schedule', run_attempt: 1, created_at: '2026-08-21T19:02:00Z', conclusion: 'success' },
+    { id: 60, event: 'schedule', run_attempt: 1, created_at: '2026-08-21T18:34:21Z', conclusion: 'success' }
   ];
   assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, issueBody), true);
 
@@ -95,4 +98,21 @@ test('recovery requires two prior successful runs after first detection', () => 
     ? { ...run, conclusion: 'failure' } : run);
   assert.equal(hasThreeConsecutivePostIncidentSuccesses(interrupted, 63, issueBody), false);
   assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, ''), false);
+});
+
+test('recovery ignores manually rerun jobs and starts after the last detection', () => {
+  const issueBody = [
+    '- First detected: `2026-08-31T00:37:43.196Z`',
+    '- Last detected: `2026-08-31T11:09:56.065Z`'
+  ].join('\n');
+  const runs = [
+    { id: 664, event: 'schedule', run_attempt: 1, created_at: '2026-08-31T13:59:03Z', conclusion: 'success' },
+    { id: 663, event: 'schedule', run_attempt: 1, created_at: '2026-08-31T13:30:33Z', conclusion: 'success' },
+    { id: 662, event: 'schedule', run_attempt: 2, created_at: '2026-08-31T06:12:00Z', conclusion: 'success' },
+    { id: 661, event: 'schedule', run_attempt: 16, created_at: '2026-08-31T05:19:50Z', conclusion: 'success' }
+  ];
+
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(runs, 664, issueBody), false);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(runs, 664, issueBody, 2, 'schedule'), false);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(runs, 664, issueBody, 1, 'workflow_dispatch'), false);
 });
