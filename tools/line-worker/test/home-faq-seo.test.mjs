@@ -48,6 +48,7 @@ test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle�
   assert.match(html, /<title>ホシル｜写真・スクショ・一言から商品を探す<\/title>/);
   assert.ok(html.includes('<meta name="description" content="' + description + '">'));
   assert.match(html, /<meta property="og:title" content="ホシル｜写真・スクショ・一言から商品を探す">/);
+  assert.match(html, /<meta property="og:url" content="https:\/\/hoshilu\.app\/">/);
   assert.match(html, /<p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つけられます。<\/p>/);
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
   const data = JSON.parse(match[1]);
