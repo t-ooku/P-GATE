@@ -3115,14 +3115,6 @@ export default {
   async scheduled(controller, env, ctx) {
     env = withYahooRequestGate(env);
     const scheduledAt = new Date(controller.scheduledTime);
-    // One-shot private comparison. It writes only to a fixed private R2 prefix,
-    // never D1 or social queues, and the marker makes every later invocation a no-op.
-    if (controller.cron === '4,19,34,49 * * * *') {
-      ctx.waitUntil(runGeminiPrivateVideoComparison(env, scheduledAt).catch(() => ({
-        skipped: false, status: 'FAILED_FINAL', error_code: 'GEMINI_COMPARE_STORAGE_FAILED'
-      })));
-      return;
-    }
     // Deep canary uses its own offset trigger so its provider requests never
     // compete with the existing scheduled jobs for Worker outbound sockets.
     if (controller.cron === '7,22,37,52 * * * *') {
@@ -3137,7 +3129,16 @@ export default {
     // and X video upload therefore cannot exhaust the regular fanout's shared
     // outbound-request budget, and transient retries do not wait 15 minutes.
     if (controller.cron === '2,7,12,17,22,27,32,37,42,47,52,57 * * * *') {
-      ctx.waitUntil(runSocialAutopilotCycle(env, scheduledAt));
+      // The private comparison borrows at most one social invocation. Its fixed
+      // R2 marker makes every later call a no-op; after that, the normal
+      // publisher continues on the same five-minute trigger.
+      ctx.waitUntil((async () => {
+        const comparison = await runGeminiPrivateVideoComparison(env, scheduledAt)
+          .catch(() => ({ skipped: false, status: 'FAILED_FINAL',
+            error_code: 'GEMINI_COMPARE_STORAGE_FAILED' }));
+        if (!comparison?.skipped) return comparison;
+        return runSocialAutopilotCycle(env, scheduledAt);
+      })());
       return;
     }
     // One trigger alternates two isolated invocation types. Minutes 5/20/35/50
