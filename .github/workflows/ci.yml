@@ -1898,6 +1898,8 @@ jobs:
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/gemini-private-compare"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
           ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of json "$out/gemini.mp4" > "$out/gemini-ffprobe.json"
           ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of json "$out/runway-baseline.mp4" > "$out/runway-ffprobe.json"
           OUT="$out" node <<'NODE'
@@ -1938,7 +1940,7 @@ jobs:
           retention-days: 3
           if-no-files-found: error
           compression-level: 0
-      - name: Remove temporary private R2 objects after capture
+      - name: Remove temporary private R2 media after capture
         if: success()
         working-directory: tools/line-worker
         env:
@@ -1946,6 +1948,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          for key in marker.json comparison-input.json gemini-omni-1.1-flash-v2.mp4; do
+          # Preserve marker.json until the temporary Worker path is disabled;
+          # this prevents any second provider invocation between cleanup deploys.
+          for key in comparison-input.json gemini-omni-1.1-flash-v2.mp4; do
             npx --yes wrangler@4.121.0 r2 object delete "hoshilu-social-media/gemini-private/20260831-v2/$key" --remote
           done
