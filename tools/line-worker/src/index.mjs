@@ -3117,7 +3117,7 @@ export default {
     const scheduledAt = new Date(controller.scheduledTime);
     // One-shot private comparison. It writes only to a fixed private R2 prefix,
     // never D1 or social queues, and the marker makes every later invocation a no-op.
-    if (controller.cron === '44 * * * *') {
+    if (controller.cron === '4,19,34,49 * * * *') {
       ctx.waitUntil(runGeminiPrivateVideoComparison(env, scheduledAt).catch(() => ({
         skipped: false, status: 'FAILED_FINAL', error_code: 'GEMINI_COMPARE_STORAGE_FAILED'
       })));
