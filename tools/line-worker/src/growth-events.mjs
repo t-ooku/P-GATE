@@ -347,24 +347,38 @@ export async function handleGrowthEvent(request, env) {
   ];
   let identityRecorded = true;
   try {
-    await env.PRODUCT_DB.prepare(
-      `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
-      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
-      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
-    ).bind(...values).run();
+    try {
+      await env.PRODUCT_DB.prepare(
+        `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
+        (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+        VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
+      ).bind(...values).run();
+    } catch (error) {
+      const message = String(error?.message || error);
+      const visitorColumnsMissing = /(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(message);
+      if (!visitorColumnsMissing) throw error;
+      // Production migrations are intentionally manual. Keep privacy-safe event
+      // counts available while migration 0047 is pending, without pretending
+      // visitor/session retention metrics are connected.
+      identityRecorded = false;
+      await env.PRODUCT_DB.prepare(
+        `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
+        (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+        VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+      ).bind(...values.slice(0, 10)).run();
+    }
   } catch (error) {
-    const message = String(error?.message || error);
-    const visitorColumnsMissing = /(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(message);
-    if (!visitorColumnsMissing) throw error;
-    // Production migrations are intentionally manual. Keep privacy-safe event
-    // counts available while migration 0047 is pending, without pretending
-    // visitor/session retention metrics are connected.
-    identityRecorded = false;
-    await env.PRODUCT_DB.prepare(
-      `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
-      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
-      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
-    ).bind(...values.slice(0, 10)).run();
+    // 列不足以外のD1書き込み失敗を未処理例外(500)のまま外へ漏らさない。
+    // 利用者の入力本文は含めず、原因特定用の短いコードだけを残して503で返す
+    // (docs/INCIDENT_AUTO_REMEDIATION_POLICY.md: 追跡ID・HTTP状態・失敗段階で
+    // 原因を特定する)。監視は非202で引き続き失敗を検知でき、実利用者の
+    // ビーコンは無害に縮退する。
+    const code = String(error?.message || error?.name || 'Error').replace(/[\r\n\t]+/g, ' ').slice(0, 120);
+    console.error('GROWTH_EVENT_STORE_WRITE_FAILED', { code });
+    return Response.json({ ok: false, error: 'EVENT_STORE_WRITE_FAILED', code }, {
+      status: 503,
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+    });
   }
   if (event.event_type === 'search_degraded') {
     try {

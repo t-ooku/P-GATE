@@ -403,3 +403,39 @@ test('correlated degraded event preserves attribution and adds a separate safe d
   assert.equal(writes[1].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe250');
   assert.doesNotMatch(JSON.stringify(writes), /保存禁止/u);
 });
+
+test('D1書き込みが列不足以外で失敗しても500ではなく503と原因コードで縮退する', async () => {
+  const env = { PRODUCT_DB: { prepare: () => ({ bind: () => ({
+    run: async () => { throw new Error('D1_ERROR: database or disk is full'); }
+  }) }) } };
+  const response = await handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+    method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hoshilu.app' },
+    body: JSON.stringify({ event_type: 'landing_view', locale: 'JA', source: 'qa', medium: 'qa' })
+  }), env);
+  assert.equal(response.status, 503);
+  const payload = await response.json();
+  assert.equal(payload.ok, false);
+  assert.equal(payload.error, 'EVENT_STORE_WRITE_FAILED');
+  assert.match(payload.code, /database or disk is full/u);
+  assert.ok(payload.code.length <= 120);
+});
+
+test('visitor列不足の縮退挿入は引き続き202で受理される', async () => {
+  let calls = 0;
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: () => ({
+    run: async () => {
+      calls += 1;
+      if (/visitor_id/u.test(sql)) throw new Error('table growth_events has no column named visitor_id');
+      return { success: true };
+    }
+  }) }) } };
+  const response = await handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+    method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hoshilu.app' },
+    body: JSON.stringify({ event_type: 'landing_view', locale: 'JA', source: 'qa', medium: 'qa' })
+  }), env);
+  assert.equal(response.status, 202);
+  const payload = await response.json();
+  assert.equal(payload.ok, true);
+  assert.equal(payload.identity_recorded, false);
+  assert.equal(calls, 2);
+});

@@ -87,7 +87,12 @@ async function checkAnonymousEventIngestion(fetcher, baseUrl, checks, requestTim
     }),
     signal: AbortSignal.timeout(requestTimeoutMs)
   }));
-  assert(response.status === 202, `/api/events:EXPECTED_202_GOT_${response.status}`);
+  if (response.status !== 202) {
+    // 失敗時は応答本文の先頭だけをログへ残し、原因コード
+    // (例: EVENT_STORE_WRITE_FAILED とそのD1エラー概要) を特定できるようにする。
+    const detail = String(await response.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 300);
+    assert(false, `/api/events:EXPECTED_202_GOT_${response.status}:${detail}`);
+  }
   const payload = await response.json();
   assert(payload?.ok === true, '/api/events:INGESTION_FAILED');
   checks.push('/api/events anonymous QA ingestion');
