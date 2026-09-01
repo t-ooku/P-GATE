@@ -143,6 +143,35 @@ test('OpenAIのquota不足をrate limitと混同せず固定コードで通知�
   );
 });
 
+test('IDENTIFY canary uses sufficient synthetic clues for one stable product hypothesis', async () => {
+  let prompt = '';
+  const result = await probeChatIntentProvider('gemini', {
+    GEMINI_API_KEY: 'g'.repeat(32)
+  }, async (_url, options) => {
+    const body = JSON.parse(options.body);
+    prompt = body.contents[0].parts[0].text;
+    return Response.json({
+      candidates: [{ content: { parts: [{ text: JSON.stringify({
+        needs_clarification: false,
+        candidate_name: 'Apple AirPods Pro 第2世代',
+        candidate_brand: 'Apple',
+        candidate_reason: '固定された合成手掛かりに一致',
+        matched_features: ['Apple', 'Pro', 'ノイズキャンセリング', '第2世代'],
+        match_score: 99,
+        refined_query: 'Apple AirPods Pro 第2世代'
+      }) }] } }],
+      usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 5 }
+    });
+  }, { mode: 'IDENTIFY' });
+
+  assert.match(prompt, /Apple/u);
+  assert.match(prompt, /Pro/u);
+  assert.match(prompt, /ノイズキャンセリング/u);
+  assert.match(prompt, /第2世代/u);
+  assert.equal(result.needs_clarification, false);
+  assert.equal(result.candidate_name, 'Apple AirPods Pro 第2世代');
+});
+
 test('GeminiからOpenAIへ切替成功した時だけ匿名primary degradationを1件通知する', async () => {
   const degradations = [];
   const fetchImpl = async (url) => String(url).includes('generativelanguage.googleapis.com')

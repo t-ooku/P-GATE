@@ -563,7 +563,9 @@ test('monthly five-dollar cap rejects the next reservation before any AI call', 
   seedPriorResults(sqlite);
   seedBudget(sqlite, 4_900_001);
   const { fetcher, calls } = providerHarness();
-  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher);
+  const result = await runDeepCanaryCycle(env, new Date('2026-08-13T01:07:00Z'), fetcher, {
+    clock: () => new Date('2026-08-13T01:07:01Z')
+  });
   assert.equal(result.results.find((row) => row.component === 'query_structurer')?.code,
     'CANARY_MONTHLY_BUDGET_LIMIT');
   assert.equal(callsTo(calls, 'generativelanguage.googleapis.com').length, 0);

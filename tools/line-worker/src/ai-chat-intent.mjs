@@ -340,7 +340,13 @@ export async function refineMarketplaceSearchQuery(rawQuery, language, env = {},
 export async function probeChatIntentProvider(provider, env = {}, fetchImpl = fetch, {
   mode = 'REFINE', timeoutMs = CHAT_PROVIDER_TIMEOUT_MS
 } = {}) {
-  const history = [{ role: 'user', text: '軽いワイヤレスイヤホン' }];
+  // Keep the synthetic probe specific enough that IDENTIFY has one stable,
+  // real-product hypothesis. A generic category can legitimately require a
+  // clarifying question and would turn healthy model caution into an incident.
+  const history = [{
+    role: 'user',
+    text: 'Appleの白い完全ワイヤレスイヤホン。Proモデルで、ノイズキャンセリング付き。第2世代を探している'
+  }];
   const promptBytes = new TextEncoder().encode(chatPrompt(history, 'JA', mode)).byteLength;
   // The canary's monthly reservation assumes these fixed upper bounds. Stop
   // before a paid request if a future prompt edit could exceed that budget.
