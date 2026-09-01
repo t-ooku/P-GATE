@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   analyzeSearchInput, normalizeInlineSearchImage, normalizeSearchInputAnalysis,
-  normalizeSocialPostUrl, searchInputAnalysisTest
+  normalizeSocialPostUrl, searchInputAnalysisTest,
+  strongGoogleVisualWebFallbackAnalysis
 } from '../src/search-input-analysis.mjs';
 
 const JPEG = { mime_type: 'image/jpeg', data: '/9j/4AAQ' };
@@ -78,6 +79,48 @@ test('画像は許可MIME・base64・実ファイル署名を照合する', () =
   assert.throws(() => normalizeInlineSearchImage({ mime_type: 'image/gif', data: 'R0lGODlh' }), /SEARCH_IMAGE_TYPE_UNSUPPORTED/);
   assert.throws(() => normalizeInlineSearchImage({ mime_type: 'image/png', data: JPEG.data }), /SEARCH_IMAGE_SIGNATURE_INVALID/);
   assert.throws(() => normalizeInlineSearchImage({ mime_type: 'image/jpeg', data: 'not-base64!' }), /SEARCH_IMAGE_INVALID/);
+});
+
+test('画像単体は同じ1回のGemini要求で必須JSON schemaと汎用カテゴリ規則を使う', async () => {
+  let requestBody;
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', ENV, async (_url, options) => {
+    requestBody = JSON.parse(options.body);
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+      refined_query: '青い 小型 折りたたみ傘',
+      candidate_name: '折りたたみ傘',
+      candidate_brand: '',
+      candidate_reason: '青色で短い持ち手が見える',
+      matched_features: ['青', '小型'],
+      match_score: 45
+    }) }] } }] });
+  });
+  assert.equal(requestBody.generationConfig.responseMimeType, 'application/json');
+  assert.deepEqual(requestBody.generationConfig.responseSchema.required, [
+    'refined_query', 'candidate_name', 'candidate_brand',
+    'candidate_reason', 'matched_features', 'match_score'
+  ]);
+  assert.equal(requestBody.generationConfig.responseSchema.additionalProperties, false);
+  assert.match(requestBody.systemInstruction.parts[0].text, /refined_query must not be empty/iu);
+  assert.match(requestBody.systemInstruction.parts[0].text, /generic Japanese product category/iu);
+  assert.equal(result.refined_query, '青い 小型 折りたたみ傘');
+});
+
+test('複数ホストの完全・部分一致とbest guessがそろった時だけ安全な検索仮説へ戻す', () => {
+  const strong = strongGoogleVisualWebFallbackAnalysis({
+    distinct_source_host_count: 2,
+    full_matching_image_count: 1,
+    partial_matching_image_count: 0,
+    best_guess_labels: ['アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ'],
+    web_entities: ['アミューズ', '豆しば三兄弟', 'パグ兵衛']
+  });
+  assert.equal(strong.refined_query, 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ');
+  assert.equal(strong.candidate_name, 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ');
+  assert.equal(strong.match_score, 0);
+  for (const weak of [
+    { distinct_source_host_count: 1, full_matching_image_count: 1, best_guess_labels: ['商品名'] },
+    { distinct_source_host_count: 2, full_matching_image_count: 0, partial_matching_image_count: 0, best_guess_labels: ['商品名'] },
+    { distinct_source_host_count: 2, full_matching_image_count: 1, best_guess_labels: [] }
+  ]) assert.equal(strongGoogleVisualWebFallbackAnalysis(weak), null);
 });
 
 test('AI出力のURL・価格・在庫断定を全表示フィールドから除く', () => {
@@ -183,6 +226,32 @@ test('パグ兵衛回帰: Web一致の固有名をGeminiへ渡して正確なモ
   assert.equal(result.visual_fallback_code, '');
   assert.equal(result.refined_query, 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ');
   assert.doesNotMatch(JSON.stringify(result), /https?:|メルカリ|在庫|[¥￥$]/iu);
+});
+
+test('画像単体でGeminiが空でも複数ホストの完全一致best guessを検索仮説として救済する', async () => {
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: {
+        bestGuessLabels: [{ label: 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ' }],
+        webEntities: [
+          { description: 'アミューズ', score: 0.9 },
+          { description: '豆しば三兄弟', score: 0.8 },
+          { description: 'パグ兵衛', score: 0.7 }
+        ],
+        pagesWithMatchingImages: [
+          { url: 'https://source-one.example/item', pageTitle: 'パグ兵衛 - メルカリ' },
+          { url: 'https://source-two.example/item', pageTitle: '豆しば三兄弟 パグ兵衛' }
+        ],
+        fullMatchingImages: [{ url: 'https://image.example/pug.jpg' }]
+      } }] });
+    }
+    return Response.json({ candidates: [] });
+  });
+  assert.equal(result.provider, 'GOOGLE_VISION_WEB_DETECTION_FALLBACK');
+  assert.equal(result.refined_query, 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ');
+  assert.equal(result.candidate_name, 'アミューズ 豆しば三兄弟 パグ兵衛 ぬいぐるみ');
+  assert.equal(result.match_score, 0);
+  assert.doesNotMatch(JSON.stringify(result), /https?:|メルカリ|source-one|source-two/iu);
 });
 
 test('Web Detection障害時は画像検索全体を止めず現行Geminiへ即時フォールバックする', async () => {
