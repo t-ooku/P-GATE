@@ -1427,7 +1427,7 @@ const GENERIC_PRODUCTS = [
   ['リップ', /(?:リップ|口紅|lipstick|lip\s*tint|唇膏|립스틱|립틴트)/iu],
   ['水筒', /(?:水筒|タンブラー|ボトル|water\s*bottle|tumbler|水杯|保温杯|保溫杯|텀블러)/iu],
   ['携帯扇風機', /(?:携帯扇風機|ハンディファン|portable\s*fan|handheld\s*fan|手持风扇|手持風扇|휴대용\s*선풍기)/iu],
-  ['ライト', /(?:ライト|照明|ランプ|\blights?\b|\blamps?\b|灯|燈|조명|램프)/iu],
+  ['ライト', /(?:ライト(?!\s*ブルー)|照明|ランプ|\blights?\b(?!\s*blue\b)|\blamps?\b|灯|燈|조명|램프)/iu],
 ];
 
 const GENERIC_ATTRIBUTES = [
@@ -1445,11 +1445,23 @@ const GENERIC_ATTRIBUTES = [
   ['小型', /(?:小さい|小さな|小型|手のひら|コンパクト|ミニ|small|mini|compact|小巧|소형|작은)/iu],
   ['軽量', /(?:軽い|軽量|lightweight|ultralight|轻量|輕量|轻薄|輕薄|경량|가벼운)/iu],
   ['防水', /(?:防水|waterproof|防水型|방수)/iu],
+  ['チャコール', /(?:チャコール(?:グレー)?|\bcharcoal(?:\s+gr[ae]y)?\b|炭灰色|炭色|차콜(?:\s*그레이)?)/iu],
+  ['アイボリー', /(?:アイボリー(?:\s*(?:ホワイト|ベージュ))?|\bivory(?:\s+(?:white|beige))?\b|象牙色|象牙白|아이보리(?:\s*(?:화이트|베이지))?)/iu],
+  ['クリーム色', /(?:クリーム(?:色|ホワイト|イエロー)|\bcream(?:[- ]colou?red|\s+(?:colou?r|white|yellow|beige))\b|奶油色|乳白色|크림(?:색|\s*(?:화이트|옐로|베이지)))/iu],
+  ['ライトブルー', /(?:ライト\s*ブルー|水色|スカイ\s*ブルー|\b(?:light|sky|baby|pale)\s+blue\b|浅蓝色|淺藍色|天蓝色|天藍色|하늘색|연(?:한\s*)?파랑(?:색)?|라이트\s*블루|스카이\s*블루)/iu],
+  ['ターコイズ', /(?:ターコイズ(?:\s*(?:ブルー|グリーン)){0,2}|青緑|\bturquoise(?:\s+(?:blue|green)){0,2}\b|青绿色|青綠色|蓝绿色|藍綠色|터키석색|터키\s*블루(?:\s*그린)?|청록(?:색)?)/iu],
+  ['ダークグリーン', /(?:ダーク\s*グリーン|深緑|\b(?:dark|deep|forest)\s+green\b|深绿色|深綠色|墨绿色|墨綠色|다크\s*그린|진한\s*초록색|짙은\s*녹색)/iu],
+  ['ミント', /(?:ミント(?:グリーン)?|\bmint(?:\s+green)?\b|薄荷绿|薄荷綠|민트(?:\s*그린)?)/iu],
+  ['オリーブ', /(?:オリーブ(?:グリーン)?|\bolive(?:\s+green)?\b|橄榄绿|橄欖綠|올리브(?:\s*그린)?)/iu],
+  ['マスタード', /(?:マスタード(?:イエロー)?|\bmustard(?:\s+yellow)?\b|芥末黄|芥末黃|머스타드(?:\s*옐로)?)/iu],
+  ['ワイン', /(?:ワイン(?:レッド)?|ボルドー|\b(?:wine\s+red|burgundy|bordeaux)\b|酒红色|酒紅色|와인(?:\s*레드)?|버건디)/iu],
+  ['コーラル', /(?:コーラル(?:ピンク|オレンジ)?|\bcoral(?:\s+(?:pink|orange))?\b|珊瑚色|珊瑚粉|코랄(?:\s*(?:핑크|오렌지))?)/iu],
+  ['ラベンダー', /(?:ラベンダー(?:パープル)?|\blavender(?:\s+purple)?\b|薰衣草色|라벤더(?:\s*퍼플)?)/iu],
   ['黒', /(?:黒|ブラック|\bblack\b|黑色|검정|검은색|블랙)/iu],
   ['白', /(?:白|ホワイト|\bwhite\b|白色|흰색|화이트)/iu],
   ['ピンク', /(?:ピンク|\bpink\b|粉色|분홍|핑크)/iu],
   ['紫', /(?:紫|パープル|\bpurple\b|紫色|보라|퍼플)/iu],
-  ['青', /(?:青|水色|ブルー(?!トゥース)|\bblue\b|蓝色|藍色|파랑|블루(?!투스))/iu],
+  ['青', /(?:青|水色|ブルー(?!トゥース)|\bblue\b|蓝色|藍色|파란색|파랑(?:색)?|블루(?!투스))/iu],
   ['緑', /(?:緑|グリーン|\bgreen\b|绿色|綠色|초록|그린)/iu],
   ['黄', /(?:黄色|イエロー|\byellow\b|黄色|노랑|노란색|옐로)/iu],
   ['グレー', /(?:グレー|灰色|gr[ae]y|灰色|회색|그레이)/iu],
@@ -1463,14 +1475,33 @@ const GENERIC_ATTRIBUTES = [
   ['光る', /불\s*들어오/iu],
   ['光る', /(?:光る|発光|ピカピカ|ピカッ|LED|ライトアップ|lights?\s*up|light[- ]?up|glow(?:ing)?|luminous|发光|發光|灯光|会亮|會亮|亮闪闪|빛나는|발광|불빛\s*나는|불이\s*들어오)/iu],
   ['韓国風', /(?:韓国っぽい|韓国風|韓国系|韓国の|korean\s*(?:style|look)|韩系|韓系|한국풍|한국\s*스타일)/iu],
-  ['メンズ', /(?:男性用|メンズ|\b(?:for\s+men|men'?s)\b|男士(?:用|款)?|남성용|남자용)/iu],
-  ['レディース', /(?:女性用|レディース|\b(?:for\s+women|women'?s)\b|女士(?:用|款)?|여성용|여자용)/iu],
-  ['キッズ', /(?:子供用|子ども用|キッズ|歳(?:児|の子)?(?:用|向け)?|\b(?:for\s+kids|kids?'|children'?s|years?[- ]old)\b|儿童(?:用|款)?|兒童(?:用|款)?|岁(?:儿童|兒童)|歲(?:儿童|兒童)|아동용|어린이용|아이용|세\s*(?:아이|어린이))/iu],
+  ['メンズ', /(?:男性用|メンズ|\b(?:for\s+men|men(?:['’]?s))\b|男士(?:用|款)?|男鞋|남성용|남자용|남성\s*신발)/iu],
+  ['レディース', /(?:女性用|レディース|\b(?:for\s+women|women(?:['’]?s))\b|女士(?:用|款)?|女鞋|여성용|여자용|여성\s*신발)/iu],
+  ['キッズ', /(?:子供用|子ども用|キッズ|ベビー(?:服|靴)?|歳(?:児|の子)?(?:用|向け)?|kids['’]\s*(?:clothing|clothes|shoes?)|\b(?:for\s+kids|kids?|children(?:['’]?s)?|baby(?:\s+(?:clothing|clothes|shoes?))?|years?[- ]old)\b|儿童(?:用|款)?|兒童(?:用|款)?|童装|童裝|婴童鞋|嬰童鞋|婴儿服|嬰兒服|岁(?:儿童|兒童)|歲(?:儿童|兒童)|아동용|어린이용|아이용|아동복|유아(?:·아동)?\s*신발|유아복|세\s*(?:아이|어린이))/iu],
   ['通勤', /(?:通勤用|通勤向け|通勤に|\bfor\s+commut(?:ing|ers?)\b|通勤用|출퇴근용)/iu],
   ['アウトドア', /(?:アウトドア用|屋外用|\bfor\s+(?:outdoor|camping|hiking)\b|户外用|戶外用|야외용|캠핑용)/iu],
   ['浴室用', /(?:浴室用|お風呂用|\bfor\s+(?:the\s+)?bathroom\b|浴室用|욕실용)/iu],
   ['キッチン用', /(?:キッチン用|台所用|\bfor\s+(?:the\s+)?kitchen\b|厨房用|廚房用|주방용)/iu],
 ];
+
+// Specific shades often include a broader color word.  Preserve the shade
+// that the user chose instead of emitting both "ライトブルー 青" or
+// degrading "ワインレッド" to "赤".  This is especially important for
+// Qoo10, whose generated query is capped at three tokens.
+const SPECIFIC_COLOR_ATTRIBUTE_SUPPRESSIONS = new Map([
+  ['チャコール', new Set(['黒', 'グレー'])],
+  ['アイボリー', new Set(['白', 'ベージュ'])],
+  ['クリーム色', new Set(['白', '黄', 'ベージュ'])],
+  ['ライトブルー', new Set(['青'])],
+  ['ターコイズ', new Set(['青', '緑'])],
+  ['ダークグリーン', new Set(['緑'])],
+  ['ミント', new Set(['緑'])],
+  ['オリーブ', new Set(['緑'])],
+  ['マスタード', new Set(['黄'])],
+  ['ワイン', new Set(['赤'])],
+  ['コーラル', new Set(['ピンク', 'オレンジ'])],
+  ['ラベンダー', new Set(['紫'])],
+]);
 
 const GENERIC_MATERIALS = [
   ['革', /(?:革|レザー|\bleather\b|皮革|真皮|가죽)/iu],
@@ -1501,10 +1532,32 @@ function shoeSizeTokens(query) {
       : `${String(match[1]).toUpperCase()}${match[2]}`))];
 }
 
+function metricShoeSizeTokens(query) {
+  const unit = '(?:cm|厘米|センチ(?:メートル)?|센티미터)';
+  const boundaryPattern = new RegExp(`(\\d{1,2}(?:\\.\\d+)?)\\s*${unit}\\s*(以下|以上|及以下|及以上|or\\s+(?:below|above|less|more|under)|and\\s+up|이하|이상)`, 'giu');
+  const rangePattern = new RegExp(`(\\d{1,2}(?:\\.\\d+)?)\\s*${unit}\\s*(?:[・·、〜~–—-]|to)\\s*(\\d{1,2}(?:\\.\\d+)?)\\s*${unit}`, 'giu');
+  const ranges = [...query.matchAll(rangePattern)]
+    .filter((match) => {
+      const escaped = match[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return !isNegatedAttribute(query, new RegExp(escaped, 'iu'));
+    })
+    .map((match) => `${match[1]}cm-${match[2]}cm`);
+  const boundaries = [...query.matchAll(boundaryPattern)]
+    .filter((match) => {
+      const escaped = match[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return !isNegatedAttribute(query, new RegExp(escaped, 'iu'));
+    })
+    .map((match) => {
+      const direction = /(?:以下|及以下|below|less|under|이하)/iu.test(match[2]) ? '以下' : '以上';
+      return `${match[1]}cm${direction}`;
+    });
+  return [...new Set([...ranges, ...boundaries])];
+}
+
 function apparelSizeTokens(query) {
   const matches = [
-    ...query.matchAll(/(?:サイズ\s*|size\s+|in\s+size\s+|尺码\s*|尺碼\s*|사이즈\s*)(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL)/giu),
-    ...query.matchAll(/(XXXS|XXS|XS|S|M|L|XL|XXL|XXXL)\s*(?:サイズ|码|碼|사이즈)/giu),
+    ...query.matchAll(/(?:サイズ\s*|size\s+|in\s+size\s+|尺码\s*|尺碼\s*|사이즈\s*)(4XL|3XL|2XL|XXXXL|XXXL|XXL|XXXS|XXS|XS|XL|S|M|L)/giu),
+    ...query.matchAll(/(4XL|3XL|2XL|XXXXL|XXXL|XXL|XXXS|XXS|XS|XL|S|M|L)\s*(?:サイズ|码|碼|사이즈)/giu),
     ...query.matchAll(/(フリー\s*サイズ|free\s*size|均码|均碼|프리\s*사이즈)/giu),
   ];
   const tokens = matches
@@ -1519,19 +1572,35 @@ function apparelSizeTokens(query) {
   return [...new Set(tokens)];
 }
 
+function isNegatedAttributeOccurrence(query, start, end) {
+  const before = query.slice(Math.max(0, start - 18), start);
+  const after = query.slice(end, end + 14);
+  const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without(?:\s+(?:a|an|the))?|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
+  const negatedAfter = /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける?|而不是|말고|아닌|아니고|제외)/iu.test(after);
+  return negatedBefore || negatedAfter;
+}
+
+function positiveAttributeOccurrences(query, pattern) {
+  const flags = [...new Set(`${pattern.flags}g`.split(''))].join('');
+  const matcher = new RegExp(pattern.source, flags);
+  return [...query.matchAll(matcher)]
+    .map((match) => ({ start: match.index, end: match.index + match[0].length }))
+    .filter(({ start, end }) => !isNegatedAttributeOccurrence(query, start, end));
+}
+
 function isNegatedAttribute(query, pattern) {
   const flags = [...new Set(`${pattern.flags}g`.split(''))].join('');
   const matcher = new RegExp(pattern.source, flags);
   let foundNegated = false;
   for (const match of query.matchAll(matcher)) {
-    const before = query.slice(Math.max(0, match.index - 18), match.index);
-    const after = query.slice(match.index + match[0].length, match.index + match[0].length + 14);
-    const negatedBefore = /(?:not\s+(?:a|an|the)?|no|without(?:\s+(?:a|an|the))?|anything\s+but|不要|不是|不想要|除了|除外)\s*$/iu.test(before);
-    const negatedAfter = /^\s*(?:以外|ではなく|じゃなく|ではない|じゃない|でない|なし|を除く|を避ける?|而不是|말고|아닌|아니고|제외)/iu.test(after);
-    if (!negatedBefore && !negatedAfter) return false;
+    if (!isNegatedAttributeOccurrence(query, match.index, match.index + match[0].length)) return false;
     foundNegated = true;
   }
   return foundNegated;
+}
+
+function attributeOccurrencesOverlap(left, right) {
+  return left.start < right.end && right.start < left.end;
 }
 
 function matchedMaterials(query) {
@@ -1541,10 +1610,18 @@ function matchedMaterials(query) {
 }
 
 function matchedAttributes(query) {
-  return GENERIC_ATTRIBUTES
-    .filter(([, pattern]) => pattern.test(query) && !isNegatedAttribute(query, pattern))
-    .map(([label]) => label)
-    .filter((label, index, values) =>
+  const matches = GENERIC_ATTRIBUTES
+    .map(([label, pattern]) => ({ label, occurrences: positiveAttributeOccurrences(query, pattern) }))
+    .filter(({ occurrences }) => occurrences.length);
+  const labels = matches
+    .filter(({ label, occurrences }) => occurrences.some((occurrence) =>
+      !matches.some(({ label: specificLabel, occurrences: specificOccurrences }) =>
+        SPECIFIC_COLOR_ATTRIBUTE_SUPPRESSIONS.get(specificLabel)?.has(label)
+        && specificOccurrences.some((specific) => attributeOccurrencesOverlap(occurrence, specific))
+      )
+    ))
+    .map(({ label }) => label);
+  return labels.filter((label, index, values) =>
       (label !== 'ワイヤレス' || !values.includes('完全ワイヤレス'))
       && values.indexOf(label) === index
     );
@@ -1758,11 +1835,16 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
     && /(?:電池(?:不要|いらない)|電源不要|battery[- ]?free|no\s+batter(?:y|ies)(?:\s+required)?|无需电池|無需電池|不用(?:装|裝)?电池|不用(?:装|裝)?電池|배터리\s*(?:없는|불필요|필요\s*없는)|전원\s*불필요)/iu.test(normalized)
     ? 'NFC 電池不要' : '';
   const phoneCaseRechargeable = correctedRechargeablePhoneCase ? 'USB充電式' : '';
-  const specifications = specificationTokens(normalized);
+  const metricShoeSizes = products.includes('スニーカー') ? metricShoeSizeTokens(normalized) : [];
+  const metricShoeMeasurements = new Set(metricShoeSizes.flatMap((token) =>
+    [...token.matchAll(/\d{1,2}(?:\.\d+)?cm/giu)].map((match) => match[0].toLowerCase())
+  ));
+  const specifications = specificationTokens(normalized)
+    .filter((token) => !metricShoeMeasurements.has(token.toLowerCase()));
   const sizes = products.some((product) => APPAREL_PRODUCTS.has(product))
     ? apparelSizeTokens(normalized)
     : [];
-  const shoeSizes = products.includes('スニーカー') ? shoeSizeTokens(normalized) : [];
+  const shoeSizes = products.includes('スニーカー') ? [...metricShoeSizes, ...shoeSizeTokens(normalized)] : [];
   const limit = marketplace === 'QOO10_JP' ? 3 : 6;
   const productLimit = Math.min(products.length, 2);
   const attributeLimit = Math.max(0, limit - productLimit);

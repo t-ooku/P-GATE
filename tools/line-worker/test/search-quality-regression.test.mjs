@@ -12,6 +12,7 @@ import {
   buildMarketplaceApiKeywordCandidates
 } from '../src/index.mjs';
 import { isApparelSearch, buildApparelMarketplaceDestinations } from '../src/apparel-marketplaces.mjs';
+import { colorLabelFromEnglishTerms } from '../src/apparel-query-attributes.mjs';
 
 // Regression suite for the カットソー search-quality investigation
 // (2026-08-04/05). Covers the acceptance criteria from section C of the
@@ -459,4 +460,23 @@ test('条件整理検索がAmazon宛て検索語候補に含まれる', () => {
     candidates.some((candidate) => candidate.includes('レディース') && candidate.includes('白')),
     `organized-conditions candidate missing, got ${JSON.stringify(candidates)}`
   );
+});
+
+test('12色のFTS共通色を日本語へ戻し条件整理検索候補に保持する', () => {
+  const cases = [
+    ['charcoal', 'チャコール'], ['ivory', 'アイボリー'], ['cream', 'クリーム色'],
+    ['light blue', 'ライトブルー'], ['turquoise', 'ターコイズ'], ['dark green', 'ダークグリーン'],
+    ['mint', 'ミント'], ['olive', 'オリーブ'], ['mustard', 'マスタード'],
+    ['wine', 'ワイン'], ['coral', 'コーラル'], ['lavender', 'ラベンダー'],
+  ];
+  for (const [english, japanese] of cases) {
+    assert.equal(colorLabelFromEnglishTerms([english]), japanese);
+    const query = `女性向けの${japanese}のTシャツ`;
+    const candidates = buildMarketplaceApiKeywordCandidates(query, '__PRIMARY__');
+    assert.ok(
+      candidates.some((candidate) => candidate.includes('レディース')
+        && candidate.includes('Tシャツ') && candidate.includes(japanese)),
+      `${query}: ${JSON.stringify(candidates)}`,
+    );
+  }
 });

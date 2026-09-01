@@ -603,7 +603,7 @@ test('PWAはインストール可能なmanifestとオフラインshellを持つ'
   ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP'].forEach((marketplace) => assert.match(app, new RegExp(marketplace)));
   assert.match(app, /candidate\.selected_offer/);
   const serviceWorker = fs.readFileSync(new URL('service-worker.js', publicDir), 'utf8');
-  assert.match(serviceWorker, /hoshilu-shell-v404/);
+  assert.match(serviceWorker, /hoshilu-shell-v405/);
   assert.match(serviceWorker, /url\.pathname\.startsWith\('\/admin'\)/);
   assert.doesNotMatch(serviceWorker.match(/const SHELL = \[[\s\S]*?\];/)?.[0] || '', /\/admin/);
 });
@@ -1257,11 +1257,11 @@ test('検索応答に条件検索チップを軸ごとにまとめて返す', as
   );
   assert.deepEqual(
     decorated.refinement_chips.map((group) => group.dimension),
-    ['category', 'color', 'scene', 'size', 'power', 'appearance']
+    ['category', 'color', 'scene', 'size', 'apparel_size', 'mens_shoe_size', 'womens_shoe_size', 'kids_apparel_size', 'baby_kids_shoe_size', 'baby_apparel_size', 'power', 'appearance']
   );
   assert.deepEqual(
     decorated.refinement_chips.map((group) => group.label),
-    ['種類', '色', '使う場所', '大きさ', '電源', '見た目']
+    ['種類', '色', '使う場所', '大きさ', '洋服サイズ', 'メンズ靴サイズ', 'レディース靴サイズ', 'キッズ服サイズ', 'ベビー・キッズ靴サイズ', 'ベビー服サイズ', '電源', '見た目']
   );
   // "appearance" now holds only shape words (round/foldable/transparent)
   // since color moved into its own dimension (2026-08-15), so the generic
@@ -1275,20 +1275,23 @@ test('検索応答に条件検索チップを軸ごとにまとめて返す', as
     });
   });
   const colorGroup = decorated.refinement_chips.find((group) => group.dimension === 'color');
-  assert.equal(colorGroup.values.length, 16);
+  assert.equal(colorGroup.values.length, 28);
   colorGroup.values.forEach((item) => assert.match(item.swatch, /^#[0-9a-f]{6}$/));
+  assert.equal(decorated.refinement_chips.find((group) => group.dimension === 'apparel_size').values.length, 10);
+  assert.equal(decorated.refinement_chips.find((group) => group.dimension === 'mens_shoe_size').values.length, 16);
+  assert.equal(decorated.refinement_chips.find((group) => group.dimension === 'womens_shoe_size').values.length, 16);
 
   // 既に決まっている軸は出し直さない（条件を足すほど絞れる）
   const narrowed = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-narrow', candidates: [] }, request, env, 'session-hash', 'モバイル充電器 / USB充電 / 旅行中', 'JA'
   );
-  assert.deepEqual(narrowed.refinement_chips.map((group) => group.dimension), ['category', 'color', 'size', 'appearance']);
+  assert.deepEqual(narrowed.refinement_chips.map((group) => group.dimension), ['category', 'color', 'size', 'apparel_size', 'mens_shoe_size', 'womens_shoe_size', 'kids_apparel_size', 'baby_kids_shoe_size', 'baby_apparel_size', 'appearance']);
 
   // 表示言語に追従する
   const english = await workerModule.decoratePwaResultForTest(
     { query_id: 'q-en', candidates: [] }, request, env, 'session-hash', 'wireless earbuds', 'EN'
   );
-  assert.deepEqual(english.refinement_chips.map((group) => group.label), ['Type', 'Color', 'Where you use it', 'Size', 'Power', 'Look']);
+  assert.deepEqual(english.refinement_chips.map((group) => group.label), ['Type', 'Color', 'Where you use it', 'Physical size', 'Clothing size', "Men's shoe size", "Women's shoe size", "Kids' clothing size", "Baby/kids' shoe size", 'Baby clothing size', 'Power', 'Look']);
 });
 
 test('条件検索チップはAI検索と同じ1本のクエリ条件に追加される', () => {
@@ -1298,11 +1301,20 @@ test('条件検索チップはAI検索と同じ1本のクエリ条件に追加�
   assert.match(appSource, /textElement\('span','condition-group-label',group\.label\)/);
   assert.match(appSource, /chip\.textContent=item\.label/);
   // AI検索・連想キーワードと同じ " / " 区切りで既存クエリに追加して再検索する
-  assert.match(appSource, /elements\.query\.value=\[base,\.\.\.selected\.values\(\)\]\.filter\(Boolean\)\.join\(' \/ '\)/);
-  assert.match(appSource, /submit\.addEventListener\('click',\(\)=>\{[\s\S]{0,400}runKnowledgeSearch\(\)/);
+  assert.match(appSource, /elements\.query\.value=\[\.\.\.baseParts,\.\.\.selected\.values\(\)\]\.filter\(Boolean\)\.join\(' \/ '\)/);
+  assert.match(appSource, /submit\.addEventListener\('click',\(\)=>\{[\s\S]{0,1800}runKnowledgeSearch\(\)/);
   // 1軸につき1つ（applyRefinementChips のルールと揃える）
   assert.match(appSource, /if\(active\)selected\.delete\(group\.dimension\);/);
   assert.match(appSource, /selected\.set\(group\.dimension,item\.label\)/);
+  // 洋服・男女靴・子ども向けを全部展開せず、種類を先に1つ選ぶ。
+  assert.match(appSource, /const wearableSizeDimensions=new Set\(\['apparel_size','mens_shoe_size','womens_shoe_size','kids_apparel_size','baby_kids_shoe_size','baby_apparel_size'\]\)/);
+  assert.match(appSource, /select\.className='condition-size-type-select'/);
+  assert.match(appSource, /sizeHost\.replaceChildren\(\.\.\.\(chosen\?\[buildGroupRow\(chosen\)\]:\[\]\)\)/);
+  // サイズ種類を切り替えたら前の種類の選択を消し、矛盾条件を作らない。
+  assert.match(appSource, /wearableSizeDimensions\.forEach\(dimension=>selected\.delete\(dimension\)\)/);
+  // 再検索時も、以前クエリへ追加した別のサイズ種別を置き換える。
+  assert.match(appSource, /wearableSizeDimensions\.forEach\(dimension=>replacedDimensions\.add\(dimension\)\)/);
+  assert.match(appSource, /filter\(part=>part&&!replacedLabels\.has\(part\)\)/);
   // 未選択では実行できない
   assert.match(appSource, /submit\.disabled=selected\.size===0/);
   // 2026-08-07: 検索結果側ではなく検索パネル内の「詳細検索」に移動し、
@@ -1317,6 +1329,7 @@ test('条件検索チップはAI検索と同じ1本のクエリ条件に追加�
   ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
     assert.match(appSource, new RegExp(`${language}:\\{title:'[^']+',body:'[^']+',submit:'[^']+'\\}`));
   });
+  for (const copy of ['サイズの種類','Size type','尺码类型','사이즈 종류']) assert.ok(appSource.includes(copy));
   const layoutCss = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
   assert.match(layoutCss, /\.condition-chip\.selected\{/);
   assert.match(layoutCss, /\.condition-chip\{[^}]*min-height:44px/);
@@ -1618,8 +1631,12 @@ test('セール欄は指定コピーだけを残して補足文を削除して�
     assert.doesNotMatch(source, /本当に安い購入先/);
     assert.doesNotMatch(source, /おすすめ記事や一般ニュースは通知しません/);
   }
-  assert.match(html, /お気に入りのショップモールだけ、セール通知が届くと/);
-  assert.match(saleCenter, /お気に入りのショップモールだけ、セール通知が届くと/);
+  assert.match(html, /<h2 id="saleCenterTitle">お気に入りのショップモールだけ、セール通知が届く<\/h2>/);
+  assert.match(saleCenter, /title:'お気に入りのショップモールだけ、セール通知が届く'/);
+  assert.doesNotMatch(html, /お気に入りのショップモールだけ、セール通知が届くと/);
+  assert.doesNotMatch(saleCenter, /お気に入りのショップモールだけ、セール通知が届くと/);
+  assert.match(html, /\/sale-center\.mjs\?v=95/);
+  assert.doesNotMatch(html, /\/sale-center\.mjs\?v=94/);
   assert.doesNotMatch(html, /13モールのセール、始まる前に通知。/);
   assert.doesNotMatch(html, /届くのはセール通知だけ。開始前と開始時のみ。/);
   assert.doesNotMatch(saleCenter, /13モールのセール、始まる前に通知。/);
@@ -1628,9 +1645,9 @@ test('セール欄は指定コピーだけを残して補足文を削除して�
 
 test('公開投稿URLの対応形式・6サービスと継続検索の初回基準化を4言語で正確に案内する', () => {
   const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  const versioned = fs.readFileSync(new URL('../public/assets-v146/app.js', import.meta.url), 'utf8');
+  const versioned = fs.readFileSync(new URL('../public/assets-v147/app.js', import.meta.url), 'utf8');
   const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  assert.equal(versioned, app, 'canonical app.jsとassets-v146を完全同期する');
+  assert.equal(versioned, app, 'canonical app.jsとassets-v147を完全同期する');
 
   for (const copy of [
     'HOSHILU対応形式の公開SNS投稿単体URL（Instagram・TikTok・X・Threads・Facebook・Pinterest）',
@@ -1655,7 +1672,7 @@ test('公開投稿URLの対応形式・6サービスと継続検索の初回基�
 
 test('保存条件一覧は初回baseline説明と通知頻度を4言語のactionCopyから描画する', () => {
   const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  const versioned = fs.readFileSync(new URL('../public/assets-v146/app.js', import.meta.url), 'utf8');
+  const versioned = fs.readFileSync(new URL('../public/assets-v147/app.js', import.meta.url), 'utf8');
   assert.equal(versioned, app);
 
   for (const copy of [
