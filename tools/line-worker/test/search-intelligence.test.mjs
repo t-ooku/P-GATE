@@ -625,6 +625,19 @@ test('韓国美容語を商品カテゴリへ正規化する', () => {
   }
 });
 
+test('化粧品名のクリームを色として誤認せず明示されたクリーム色だけを保持する', () => {
+  for (const input of ['保湿クリーム', 'moisturizing cream', '수분크림', '선크림']) {
+    assert.equal(semanticSearchGroups(input).some((group) => group.category === 'color'), false, input);
+  }
+  for (const input of ['クリーム色のTシャツ', 'cream color t-shirt', '奶油色T恤', '크림색 티셔츠']) {
+    assert.deepEqual(
+      semanticSearchGroups(input).find((group) => group.category === 'color')?.terms,
+      ['cream'],
+      input,
+    );
+  }
+});
+
 test('カテゴリに合う追加キーワードを10件提示する', async () => {
   const cases = [
     ['靴下', /くるぶし丈/, /着圧タイプ/],
@@ -3326,6 +3339,66 @@ test('中国語・韓国語の主要色をFTS共通色へ正規化する', () =>
   ];
   for (const [input, color] of cases) {
     assert.match(intelligentFtsQuery(input), new RegExp(`"${color}"\\*`), input);
+  }
+});
+
+test('12色の具体色を4言語から一般色へ丸めずFTSへ保持する', () => {
+  const cases = [
+    ['charcoal', ['black', 'gray'], ['チャコールグレーのTシャツ', 'charcoal gray t-shirt', '炭灰色T恤', '차콜 그레이 티셔츠']],
+    ['ivory', ['white', 'beige'], ['アイボリーホワイトのTシャツ', 'ivory white t-shirt', '象牙白T恤', '아이보리 화이트 티셔츠']],
+    ['cream', ['white', 'yellow', 'beige'], ['クリームイエローのTシャツ', 'cream yellow t-shirt', '奶油色T恤', '크림 화이트 티셔츠']],
+    ['light blue', ['blue', 'aqua'], ['ライトブルーのTシャツ', 'light blue t-shirt', '浅蓝色T恤', '라이트 블루 티셔츠']],
+    ['turquoise', ['green', 'blue', 'aqua'], ['青緑のTシャツ', 'turquoise blue green t-shirt', '蓝绿色T恤', '터키 블루 티셔츠']],
+    ['dark green', ['green'], ['ダークグリーンのTシャツ', 'dark green t-shirt', '深绿色T恤', '다크 그린 티셔츠']],
+    ['mint', ['green'], ['ミントグリーンのTシャツ', 'mint green t-shirt', '薄荷绿色T恤', '민트 그린 티셔츠']],
+    ['olive', ['green'], ['オリーブグリーンのTシャツ', 'olive green t-shirt', '橄榄绿色T恤', '올리브 그린 티셔츠']],
+    ['mustard', ['yellow'], ['マスタードイエローのTシャツ', 'mustard yellow t-shirt', '芥末黄色T恤', '머스타드 옐로 티셔츠']],
+    ['wine', ['red'], ['ワインレッドのTシャツ', 'wine red t-shirt', '酒红色T恤', '와인 레드 티셔츠']],
+    ['coral', ['pink', 'orange'], ['コーラルピンクのTシャツ', 'coral pink t-shirt', '珊瑚粉色T恤', '코랄 핑크 티셔츠']],
+    ['lavender', ['purple'], ['ラベンダーパープルのTシャツ', 'lavender purple t-shirt', '薰衣草色T恤', '라벤더 퍼플 티셔츠']],
+  ];
+  for (const [specific, suppressed, inputs] of cases) {
+    for (const input of inputs) {
+      const colorGroup = semanticSearchGroups(input).find((group) => group.category === 'color');
+      assert.deepEqual(colorGroup?.terms, [specific], input);
+      const query = intelligentFtsQuery(input);
+      assert.ok(query.includes(`"${specific}"*`), input);
+      for (const broad of suppressed) assert.ok(!query.includes(`"${broad}"*`), `${input}: ${query}`);
+    }
+  }
+});
+
+test('独立指定された一般色と具体色を4言語で両方保持する', () => {
+  const cases = [
+    [['青かターコイズのTシャツ', 'blue or turquoise t-shirt', '蓝色或蓝绿色T恤', '파란색 또는 청록색 티셔츠'], ['turquoise', 'blue', 'aqua'], ['green']],
+    [['白とアイボリーのTシャツ', 'white and ivory t-shirt', '白色和象牙色T恤', '흰색과 아이보리 티셔츠'], ['ivory', 'white'], ['beige']],
+  ];
+  for (const [inputs, expected, absent] of cases) {
+    for (const input of inputs) {
+      const terms = semanticSearchGroups(input).find((group) => group.category === 'color')?.terms || [];
+      for (const term of expected) assert.ok(terms.includes(term), `${input}: ${terms.join(' ')}`);
+      for (const term of absent) assert.ok(!terms.includes(term), `${input}: ${terms.join(' ')}`);
+      const query = intelligentFtsQuery(input);
+      for (const term of expected) assert.ok(query.includes(`"${term}"*`), `${input}: ${query}`);
+    }
+  }
+});
+
+test('具体色の要求は同系統の一般色より完全一致の商品を優先する', () => {
+  const cases = [
+    ['チャコールのカットソー', 'グレー'], ['アイボリーのカットソー', '白'],
+    ['クリーム色のカットソー', 'ベージュ'], ['ライトブルーのカットソー', '青'],
+    ['ターコイズのカットソー', '緑'], ['ダークグリーンのカットソー', '緑'],
+    ['ミントのカットソー', '緑'], ['オリーブのカットソー', '緑'],
+    ['マスタードのカットソー', '黄色'], ['ワインのカットソー', '赤'],
+    ['コーラルのカットソー', 'ピンク'], ['ラベンダーのカットソー', '紫'],
+  ];
+  for (const [query, broadColor] of cases) {
+    const ranked = rankMerchantCandidates([
+      { asin: 'BROAD', product_name: `${broadColor}のカットソー`, offers: [{ seller_id: 's1', marketplace: 'AMAZON_JP', product_url: 'https://example/broad' }] },
+      { asin: 'EXACT', product_name: query, offers: [{ seller_id: 's2', marketplace: 'AMAZON_JP', product_url: 'https://example/exact' }] },
+    ], [], query);
+    assert.equal(ranked[0]?.asin, 'EXACT', query);
   }
 });
 

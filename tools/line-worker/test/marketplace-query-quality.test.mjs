@@ -12,6 +12,7 @@ import {
   buildMarketplaceSearchKeywords,
   buildQoo10SearchKeywords,
 } from "../public/marketplace-search-keywords-v2.mjs";
+import { applyRefinementChips } from "../src/search-refinement-policy.mjs";
 
 const SEARCH_MARKETPLACES = [
   "AMAZON_JP", "RAKUTEN_JP", "QOO10_JP", "SHEIN_JP",
@@ -1897,6 +1898,92 @@ test("4言語の衣類サイズは訂正後のサイズだけを9モール検索
   }
 });
 
+test("詳細検索の全6サイズ種別を4言語から9モールへ商品・対象とともに保持する", () => {
+  const bases = {
+    ja: { apparel: "Tシャツ", shoes: "スニーカー" },
+    en: { apparel: "T-shirt", shoes: "sneakers" },
+    zh: { apparel: "T恤", shoes: "运动鞋" },
+    ko: { apparel: "티셔츠", shoes: "운동화" },
+  };
+  const cases = [
+    { dimension: "apparel_size", value: "m", base: "apparel", size: "サイズM", audience: "" },
+    { dimension: "mens_shoe_size", value: "cm_28_5", base: "shoes", size: "28.5cm", audience: "メンズ" },
+    { dimension: "womens_shoe_size", value: "cm_24", base: "shoes", size: "24cm", audience: "レディース" },
+    { dimension: "kids_apparel_size", value: "cm_120", base: "apparel", size: "120cm", audience: "キッズ" },
+    { dimension: "baby_kids_shoe_size", value: "cm_11_11_5", base: "shoes", size: "11cm-11.5cm", audience: "キッズ" },
+    { dimension: "baby_apparel_size", value: "cm_70", base: "apparel", size: "70cm", audience: "キッズ" },
+  ];
+
+  for (const [locale, localizedBases] of Object.entries(bases)) {
+    for (const sizeCase of cases) {
+      const query = applyRefinementChips(
+        localizedBases[sizeCase.base],
+        [{ dimension: sizeCase.dimension, value: sizeCase.value }],
+        locale,
+      );
+      for (const marketplace of SEARCH_MARKETPLACES) {
+        const keywords = buildMarketplaceSearchKeywords(query, marketplace);
+        const tokens = keywords.split(/\s+/u);
+        const product = sizeCase.base === "shoes" ? "スニーカー" : "Tシャツ";
+        assert.ok(tokens.includes(sizeCase.size), `${locale}/${marketplace}: ${query} -> ${keywords}`);
+        assert.ok(tokens.includes(product), `${locale}/${marketplace}: ${query} -> ${keywords}`);
+        if (sizeCase.audience) {
+          assert.ok(tokens.includes(sizeCase.audience), `${locale}/${marketplace}: ${query} -> ${keywords}`);
+        }
+      }
+    }
+  }
+});
+
+test("詳細検索の靴サイズ上下限とベビー・キッズ靴の組合せ範囲を4言語・9モールで失わない", () => {
+  const bases = {
+    ja: "スニーカー",
+    en: "sneakers",
+    zh: "运动鞋",
+    ko: "운동화",
+  };
+  const cases = [
+    { dimension: "womens_shoe_size", value: "cm_20_or_less", expected: "20cm以下", fragments: ["20cm"] },
+    { dimension: "mens_shoe_size", value: "cm_31_or_more", expected: "31cm以上", fragments: ["31cm"] },
+    { dimension: "baby_kids_shoe_size", value: "cm_11_11_5", expected: "11cm-11.5cm", fragments: ["11cm", "11.5cm"] },
+  ];
+
+  for (const [locale, base] of Object.entries(bases)) {
+    for (const sizeCase of cases) {
+      const query = applyRefinementChips(
+        base,
+        [{ dimension: sizeCase.dimension, value: sizeCase.value }],
+        locale,
+      );
+      for (const marketplace of SEARCH_MARKETPLACES) {
+        const keywords = buildMarketplaceSearchKeywords(query, marketplace);
+        const tokens = keywords.split(/\s+/u);
+        assert.ok(tokens.includes(sizeCase.expected), `${locale}/${marketplace}: ${query} -> ${keywords}`);
+        assert.ok(tokens.includes("スニーカー"), `${locale}/${marketplace}: ${query} -> ${keywords}`);
+        for (const fragment of sizeCase.fragments) {
+          assert.ok(!tokens.includes(fragment), `${locale}/${marketplace}: ${query} -> ${keywords}`);
+        }
+      }
+    }
+  }
+});
+
+test("HOSHILU詳細検索の2XL・3XL・4XL表記を9モール向け検索語へ保持する", () => {
+  const cases = [
+    ['洋服 4XLサイズ（5L以上）の黒いワンピース', 'サイズ4XL'],
+    ['black dress in clothing size 2XL (3L)', 'サイズ2XL'],
+    ['服装尺码 3XL（4L）的黑色连衣裙', 'サイズ3XL'],
+    ['의류 사이즈 4XL (5L) 이상 검정 원피스', 'サイズ4XL'],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [input, expected] of cases) {
+      const keywords = buildMarketplaceSearchKeywords(input, marketplace);
+      assert.ok(keywords.includes(expected), `${marketplace}: ${input} -> ${keywords}`);
+      assert.ok(keywords.includes('ワンピース'), `${marketplace}: ${input} -> ${keywords}`);
+    }
+  }
+});
+
 test("4言語のフリーサイズを9モール向け共通表記へ統一する", () => {
   const cases = [
     'フリーサイズの黒い帽子',
@@ -1957,6 +2044,70 @@ test("パンツ・スカート・Tシャツを4言語から9モール向け共�
       const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
       assert.ok(tokens.includes(product), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
       assert.ok(tokens.includes(color), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+    }
+  }
+});
+
+test("12色の具体色を4言語から一般色へ丸めず9モール検索語へ渡す", () => {
+  const cases = [
+    ['チャコール', ['黒', 'グレー'], ['チャコールグレーのTシャツ', 'charcoal gray t-shirt', '炭灰色T恤', '차콜 그레이 티셔츠']],
+    ['アイボリー', ['白', 'ベージュ'], ['アイボリーホワイトのTシャツ', 'ivory white t-shirt', '象牙白T恤', '아이보리 화이트 티셔츠']],
+    ['クリーム色', ['白', '黄', 'ベージュ'], ['クリームイエローのTシャツ', 'cream yellow t-shirt', '奶油色T恤', '크림 화이트 티셔츠']],
+    ['ライトブルー', ['青'], ['ライトブルーのTシャツ', 'light blue t-shirt', '浅蓝色T恤', '라이트 블루 티셔츠']],
+    ['ターコイズ', ['青', '緑'], ['青緑のTシャツ', 'turquoise blue green t-shirt', '蓝绿色T恤', '터키 블루 티셔츠']],
+    ['ダークグリーン', ['緑'], ['ダークグリーンのTシャツ', 'dark green t-shirt', '深绿色T恤', '다크 그린 티셔츠']],
+    ['ミント', ['緑'], ['ミントグリーンのTシャツ', 'mint green t-shirt', '薄荷绿色T恤', '민트 그린 티셔츠']],
+    ['オリーブ', ['緑'], ['オリーブグリーンのTシャツ', 'olive green t-shirt', '橄榄绿色T恤', '올리브 그린 티셔츠']],
+    ['マスタード', ['黄'], ['マスタードイエローのTシャツ', 'mustard yellow t-shirt', '芥末黄色T恤', '머스타드 옐로 티셔츠']],
+    ['ワイン', ['赤'], ['ワインレッドのTシャツ', 'wine red t-shirt', '酒红色T恤', '와인 레드 티셔츠']],
+    ['コーラル', ['ピンク', 'オレンジ'], ['コーラルピンクのTシャツ', 'coral pink t-shirt', '珊瑚粉色T恤', '코랄 핑크 티셔츠']],
+    ['ラベンダー', ['紫'], ['ラベンダーパープルのTシャツ', 'lavender purple t-shirt', '薰衣草色T恤', '라벤더 퍼플 티셔츠']],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [specific, suppressed, inputs] of cases) {
+      for (const input of inputs) {
+        const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+        assert.ok(tokens.includes(specific), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        assert.ok(tokens.includes('Tシャツ'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        for (const broad of suppressed) {
+          assert.ok(!tokens.includes(broad), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        }
+        if (specific === 'ライトブルー') {
+          assert.ok(!tokens.includes('ライト'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        }
+      }
+    }
+  }
+});
+
+test("独立指定された一般色と具体色を4言語・9モールで両方保持する", () => {
+  const cases = [
+    [['青かターコイズのTシャツ', 'blue or turquoise t-shirt', '蓝色或蓝绿色T恤', '파란색 또는 청록색 티셔츠'], ['青', 'ターコイズ'], ['緑']],
+    [['白とアイボリーのTシャツ', 'white and ivory t-shirt', '白色和象牙色T恤', '흰색과 아이보리 티셔츠'], ['白', 'アイボリー'], ['ベージュ']],
+  ];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const [inputs, expected, absent] of cases) {
+      for (const input of inputs) {
+        const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+        assert.ok(tokens.includes('Tシャツ'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        for (const color of expected) {
+          assert.ok(tokens.includes(color), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        }
+        for (const color of absent) {
+          assert.ok(!tokens.includes(color), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+        }
+      }
+    }
+  }
+});
+
+test("化粧品のcreamは色にせず明示された白だけを9モール検索語へ渡す", () => {
+  const cases = ['白い日焼け止めクリーム', 'white sunscreen cream', '白色防晒霜', '흰색 선크림'];
+  for (const marketplace of SEARCH_MARKETPLACES) {
+    for (const input of cases) {
+      const tokens = buildMarketplaceSearchKeywords(input, marketplace).split(/\s+/u);
+      assert.ok(tokens.includes('白'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
+      assert.ok(!tokens.includes('クリーム色'), `${marketplace}: ${input} -> ${tokens.join(' ')}`);
     }
   }
 });

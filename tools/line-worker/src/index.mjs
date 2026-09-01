@@ -1627,11 +1627,11 @@ function refinementChipsForQuery(query, language) {
   const locale = String(language || 'JA').toLowerCase();
   const context = { known_dimensions: knownRefinementDimensions(query, locale) };
   const groups = new Map();
-  // 2026-08-15: limit raised 40->60. The new "color" dimension alone has 16
-  // values, and category(6)+color(16)+scene(6)+size(5)+power(5)+appearance(3)
-  // = 41 total chips when nothing is already known, which the old 40 cap
-  // would have silently truncated by one color swatch.
-  for (const chip of suggestRefinementChips(context, locale, 60)) {
+  // 2026-09-01: detailed search now exposes 28 colors plus separate apparel,
+  // adult-shoe, kids and baby size groups. There are 115 chips when nothing
+  // is known, so keep headroom rather than silently truncating the final
+  // groups as the earlier 60-chip cap would have done.
+  for (const chip of suggestRefinementChips(context, locale, 160)) {
     if (!groups.has(chip.dimension)) {
       groups.set(chip.dimension, {
         dimension: chip.dimension,
@@ -3086,10 +3086,12 @@ export default {
     if (request.method === 'GET' && url.pathname === '/api/refinement-chips') {
       // Condition search moved into the search panel (2026-08-07 request):
       // the panel is now shown BEFORE a search runs, so its chips can no
-      // longer ride along on the search response. Static per language and
-      // safe to cache.
+      // longer ride along on the search response. Keep this small,
+      // language-specific response uncached so a newly deployed condition set
+      // is available immediately instead of leaving some clients on the old
+      // colors/sizes for up to an hour.
       return new Response(JSON.stringify({ ok: true, groups: refinementChipsForQuery('', url.searchParams.get('language') || 'JA') }), {
-        headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=3600' }
+        headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }
       });
     }
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);

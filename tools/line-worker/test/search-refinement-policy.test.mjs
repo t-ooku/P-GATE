@@ -75,8 +75,12 @@ test("builds a continuation request linked to the prior search", () => {
 test("条件検索の見出しラベルを4言語ぶん返す", () => {
   assert.equal(refinementDimensionLabel("power", "ja"), "電源");
   assert.equal(refinementDimensionLabel("color", "ja"), "色");
+  assert.equal(refinementDimensionLabel("apparel_size", "ja"), "洋服サイズ");
+  assert.equal(refinementDimensionLabel("mens_shoe_size", "en"), "Men's shoe size");
+  assert.equal(refinementDimensionLabel("womens_shoe_size", "zh"), "女鞋尺码");
+  assert.equal(refinementDimensionLabel("baby_kids_shoe_size", "ko"), "유아·아동 신발 사이즈");
   assert.equal(refinementDimensionLabel("scene", "en"), "Where you use it");
-  assert.equal(refinementDimensionLabel("size", "zh"), "大小");
+  assert.equal(refinementDimensionLabel("size", "zh"), "物品大小");
   assert.equal(refinementDimensionLabel("category", "ko"), "종류");
   assert.equal(refinementDimensionLabel("unknown", "ja"), "");
 });
@@ -96,14 +100,18 @@ test("既に条件が入っている軸は再提示しない", () => {
   assert.deepEqual(knownRefinementDimensions(refined, "ja"), ["power"]);
 });
 
-test("色ディメンションが16色ぶん、スウォッチ用hexつきで返る", () => {
+test("色ディメンションが28色ぶん、スウォッチ用hexつきで返る", () => {
   const chips = suggestRefinementChips(
     { force_dimensions: ["color"] },
     "ja",
-    60,
+    160,
   );
   const colorChips = chips.filter((chip) => chip.dimension === "color");
-  assert.equal(colorChips.length, 16);
+  assert.equal(colorChips.length, 28);
+  assert.deepEqual(
+    colorChips.filter((chip) => ["ivory", "light_blue", "mint", "wine", "lavender"].includes(chip.value)).map((chip) => chip.label),
+    ["アイボリー", "ワイン", "ラベンダー", "ライトブルー", "ミント"],
+  );
   colorChips.forEach((chip) => {
     assert.match(chip.swatch, /^#[0-9a-f]{6}$/);
     assert.ok(chip.label.length > 0);
@@ -115,4 +123,52 @@ test("色ディメンションが16色ぶん、スウォッチ用hexつきで返
     "ja",
   );
   assert.equal(query, "スマホケース / ピンク");
+});
+
+test("服・大人靴・子ども向けのサイズを用途別グループで返す", () => {
+  const chips = suggestRefinementChips({}, "ja", 160);
+  const grouped = chips.reduce((result, chip) => {
+    (result[chip.dimension] ||= []).push(chip);
+    return result;
+  }, {});
+
+  assert.equal(grouped.apparel_size.length, 10);
+  assert.equal(grouped.mens_shoe_size.length, 16);
+  assert.equal(grouped.womens_shoe_size.length, 16);
+  assert.equal(grouped.kids_apparel_size.length, 7);
+  assert.equal(grouped.baby_kids_shoe_size.length, 8);
+  assert.equal(grouped.baby_apparel_size.length, 5);
+  assert.equal(grouped.apparel_size.at(-1).label, "洋服 フリーサイズ");
+  assert.equal(grouped.mens_shoe_size[0].label, "メンズ靴 23.5cm以下");
+  assert.equal(grouped.womens_shoe_size.at(-1).label, "レディース靴 27.5cm以上");
+  assert.equal(grouped.baby_kids_shoe_size[1].label, "ベビー・キッズ靴 11cm・11.5cm");
+
+  assert.equal(
+    applyRefinementChips("白いスニーカー", [{ dimension: "womens_shoe_size", value: "cm_24_5" }], "ja"),
+    "白いスニーカー / レディース靴 24.5cm",
+  );
+  assert.equal(
+    applyRefinementChips("白い服や靴", [
+      { dimension: "apparel_size", value: "m" },
+      { dimension: "mens_shoe_size", value: "cm_28" },
+    ], "ja"),
+    "白い服や靴 / 洋服 Mサイズ",
+    "用途が異なるサイズ群は同時に追加しない",
+  );
+});
+
+test("追加した色とサイズは4言語すべてで検索語になる", () => {
+  const cases = [
+    ["ja", "バッグ / アイボリー / 洋服 Mサイズ"],
+    ["en", "bag / Ivory / Clothing size M"],
+    ["zh", "包 / 象牙色 / 服装尺码 M"],
+    ["ko", "가방 / 아이보리 / 의류 사이즈 M"],
+  ];
+  for (const [locale, expected] of cases) {
+    assert.equal(applyRefinementChips(
+      locale === "ja" ? "バッグ" : locale === "en" ? "bag" : locale === "zh" ? "包" : "가방",
+      [{ dimension: "color", value: "ivory" }, { dimension: "apparel_size", value: "m" }],
+      locale,
+    ), expected);
+  }
 });

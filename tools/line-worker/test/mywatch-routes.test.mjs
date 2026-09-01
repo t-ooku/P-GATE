@@ -253,7 +253,7 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(css, /\.notification-thumb/);
   assert.match(css, /\.notification-row-action/);
   assert.match(serviceWorker, /mywatch\.css/);
-  assert.match(serviceWorker, /hoshilu-shell-v404/);
+  assert.match(serviceWorker, /hoshilu-shell-v405/);
   assert.match(serviceWorker, /safeNotificationUrl/);
   assert.match(serviceWorker, /existing\.navigate\(target\)/);
   const memberLogin = fs.readFileSync(new URL('../public/member-login.js', import.meta.url), 'utf8');

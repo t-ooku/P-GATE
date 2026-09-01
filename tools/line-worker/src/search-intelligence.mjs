@@ -155,6 +155,18 @@ const RULES = [
 ];
 
 const COLOR_RULES = [
+  [/(チャコール(?:グレー)?|\bcharcoal(?:\s+gr[ae]y)?\b|炭灰色|炭色|차콜(?:\s*그레이)?)/iu,['charcoal'],['black','gray']],
+  [/(アイボリー(?:\s*(?:ホワイト|ベージュ))?|\bivory(?:\s+(?:white|beige))?\b|象牙色|象牙白|아이보리(?:\s*(?:화이트|베이지))?)/iu,['ivory'],['white','beige']],
+  [/(クリーム(?:色|ホワイト|イエロー)|\bcream(?:[- ]colou?red|\s+(?:colou?r|white|yellow|beige))\b|奶油色|乳白色|크림(?:색|\s*(?:화이트|옐로|베이지)))/iu,['cream'],['white','yellow','beige']],
+  [/(ライト\s*ブルー|水色|スカイ\s*ブルー|\b(?:light|sky|baby|pale)\s+blue\b|浅蓝色|淺藍色|天蓝色|天藍色|하늘색|연(?:한\s*)?파랑(?:색)?|라이트\s*블루|스카이\s*블루)/iu,['light blue'],['blue','aqua']],
+  [/(ターコイズ(?:\s*(?:ブルー|グリーン)){0,2}|青緑|\bturquoise(?:\s+(?:blue|green)){0,2}\b|青绿色|青綠色|蓝绿色|藍綠色|터키석색|터키\s*블루(?:\s*그린)?|청록(?:색)?)/iu,['turquoise'],['green','blue','aqua']],
+  [/(ダーク\s*グリーン|深緑|\b(?:dark|deep|forest)\s+green\b|深绿色|深綠色|墨绿色|墨綠色|다크\s*그린|진한\s*초록색|짙은\s*녹색)/iu,['dark green'],['green']],
+  [/(ミント(?:グリーン)?|\bmint(?:\s+green)?\b|薄荷绿|薄荷綠|민트(?:\s*그린)?)/iu,['mint'],['green']],
+  [/(オリーブ(?:グリーン)?|\bolive(?:\s+green)?\b|橄榄绿|橄欖綠|올리브(?:\s*그린)?)/iu,['olive'],['green']],
+  [/(マスタード(?:イエロー)?|\bmustard(?:\s+yellow)?\b|芥末黄|芥末黃|머스타드(?:\s*옐로)?)/iu,['mustard'],['yellow']],
+  [/(ワイン(?:レッド)?|ボルドー|\b(?:wine\s+red|burgundy|bordeaux)\b|酒红色|酒紅色|와인(?:\s*레드)?|버건디)/iu,['wine'],['red']],
+  [/(コーラル(?:ピンク|オレンジ)?|\bcoral(?:\s+(?:pink|orange))?\b|珊瑚色|珊瑚粉|코랄(?:\s*(?:핑크|오렌지))?)/iu,['coral'],['pink','orange']],
+  [/(ラベンダー(?:パープル)?|\blavender(?:\s+purple)?\b|薰衣草色|라벤더(?:\s*퍼플)?)/iu,['lavender'],['purple']],
   [/(黒|ブラック|black|黑色|검정|검은색|블랙)/iu,['black']],
   [/(白|ホワイト|white|白色|흰색|하얀색|화이트)/iu,['white']],
   [/(緑|グリーン|green|绿色|綠色|초록색|녹색|그린)/iu,['green']],
@@ -171,6 +183,37 @@ const COLOR_RULES = [
   [/(グレー|灰色|gray|grey|회색|그레이)/iu,['gray']],
   [/(透明|クリア|clear|transparent|透明色|투명)/iu,['clear','transparent']]
 ];
+
+function positiveColorOccurrences(text, pattern) {
+  const flags = [...new Set(`${pattern.flags}g`.split(''))].join('');
+  const matcher = new RegExp(pattern.source, flags);
+  return [...text.matchAll(matcher)]
+    .map((match) => ({ start: match.index, end: match.index + match[0].length }))
+    .filter(({ start, end }) => !isNegatedSearchOccurrence(text, start, end));
+}
+
+function occurrencesOverlap(left, right) {
+  return left.start < right.end && right.start < left.end;
+}
+
+// A specific shade can contain the word for its broader color family
+// ("ライトブルー", "dark green", "ワインレッド", etc.).  Suppress a
+// broader match only when that exact occurrence is inside the same compound
+// shade.  A separately requested family color must survive, for example
+// "青かターコイズ" and "白とアイボリー".
+function matchedColorRules(text) {
+  const matches = COLOR_RULES
+    .map((rule) => ({ rule, occurrences: positiveColorOccurrences(text, rule[0]) }))
+    .filter(({ occurrences }) => occurrences.length);
+  return matches
+    .filter(({ rule: [, terms], occurrences }) => occurrences.some((occurrence) =>
+      !matches.some(({ rule: [, , suppresses = []], occurrences: specificOccurrences }) =>
+        terms.every((term) => suppresses.includes(term))
+        && specificOccurrences.some((specific) => occurrencesOverlap(occurrence, specific))
+      )
+    ))
+    .map(({ rule }) => rule);
+}
 
 const MATERIAL_RULES = [
   ['material-leather', /(?:革|レザー|\bleather\b|皮革|真皮|가죽)/iu, ['leather']],
@@ -398,8 +441,7 @@ export function semanticSearchGroups(value) {
     'camera-battery','camera-battery-charger','tool-battery','tool-battery-charger','label-tape','label-maker',
     'air-fryer-liner','air-fryer','vacuum-dust-bag','vacuum-cleaner','dishwasher-detergent-tablet','laundry-detergent-pod'
   ].includes(group.category)) || /(?:マイナス|flathead|slotted).{0,12}(?:ドライバー|screwdriver)|口.*音.*楽器|(?=.*instrument)(?=.*(?:blow|mouth)).*|用嘴.{0,10}(?:吹|发声|發聲).{0,16}(?:乐器|樂器)|입으로.{0,10}(?:불|소리).{0,20}악기/iu.test(text);
-  const colors = specificIntent ? [] : COLOR_RULES
-    .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))
+  const colors = specificIntent ? [] : matchedColorRules(text)
     .flatMap(([, terms]) => terms);
   if (colors.length) groups.push({ category: 'color', terms: [...new Set(colors)] });
   return groups;
@@ -414,8 +456,7 @@ export function semanticSearchGroups(value) {
 // since the live ranking path otherwise has no relevance scoring at all.
 export function requestedColorPatterns(query) {
   const text = String(query || '').normalize('NFKC');
-  return COLOR_RULES
-    .filter(([pattern]) => pattern.test(text) && !isOnlyNegated(text, pattern))
+  return matchedColorRules(text)
     .map(([pattern]) => pattern);
 }
 

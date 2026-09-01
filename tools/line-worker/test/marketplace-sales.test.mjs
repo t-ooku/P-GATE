@@ -66,7 +66,8 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
     readFile(new URL('../public/service-worker.js', import.meta.url), 'utf8')
   ]);
   assert.match(html, /HOSHILU SALE RADAR/);
-  assert.match(html, /お気に入りのショップモールだけ、セール通知が届くと/);
+  assert.match(html, /<h2 id="saleCenterTitle">お気に入りのショップモールだけ、セール通知が届く<\/h2>/);
+  assert.doesNotMatch(html, /お気に入りのショップモールだけ、セール通知が届くと/);
   assert.doesNotMatch(html, /13モールのセール、始まる前に通知。/);
   assert.doesNotMatch(html, /届くのはセール通知だけ。開始前と開始時のみ。/);
   assert.match(html, /セール専用通知/);
@@ -81,7 +82,8 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   assert.match(client, /data-language-select.*addEventListener\('change'/s);
   assert.match(client, /const officialUpdates=\[/);
   assert.match(client, /Amazon.*楽天市場.*Qoo10.*SHEIN.*ZOZOTOWN.*ロフト.*ハンズ.*マツキヨココカラ.*@cosme.*ABC-MART.*BUYMA.*SNKRDUNK/s);
-  assert.match(client, /お気に入りのショップモールだけ、セール通知が届くと/);
+  assert.match(client, /title:'お気に入りのショップモールだけ、セール通知が届く'/);
+  assert.doesNotMatch(client, /お気に入りのショップモールだけ、セール通知が届くと/);
   assert.match(css, /\.sale-center h2\{[^}]*white-space:normal/);
   assert.match(css, /font-size:clamp\(1\.65rem,3\.25vw,3\.1rem\)/);
   assert.match(css, /\.sale-center-heading>\*\{min-width:0;max-width:100%\}/);
@@ -94,7 +96,7 @@ test('LPはセール専用通知・縦スクロール一覧・SEO構造化デー
   assert.doesNotMatch(client, /掲載8モール|eight marketplaces|八个商城|8개 쇼핑몰/);
   assert.match(client, /Unverified information is not published/);
   assert.match(html, /id="settingsChannels"/);
-  assert.match(sw, /hoshilu-shell-v404/);
+  assert.match(sw, /hoshilu-shell-v405/);
   assert.match(css, /\.sale-rail\{[^}]*overflow-y:auto/);
   assert.doesNotMatch(css, /\.sale-card\{/);
   assert.match(sw, /sale-center\.mjs/);

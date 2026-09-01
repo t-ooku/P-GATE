@@ -156,7 +156,10 @@ const COLOR_ENGLISH_TO_JA = {
   black: '黒', white: '白', green: '緑', blue: '青', aqua: '水色', pink: 'ピンク',
   silver: '銀', gold: 'ゴールド', brown: '茶色', yellow: '黄色', red: '赤',
   purple: '紫', orange: 'オレンジ', beige: 'ベージュ', gray: 'グレー',
-  clear: '透明', transparent: '透明'
+  charcoal: 'チャコール', ivory: 'アイボリー', cream: 'クリーム色',
+  'light blue': 'ライトブルー', turquoise: 'ターコイズ', 'dark green': 'ダークグリーン',
+  mint: 'ミント', olive: 'オリーブ', mustard: 'マスタード', wine: 'ワイン',
+  coral: 'コーラル', lavender: 'ラベンダー', clear: '透明', transparent: '透明'
 };
 
 export function colorLabelFromEnglishTerms(terms = []) {
