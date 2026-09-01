@@ -1,0 +1,1239 @@
+[
+  {
+    "query_text": "三輪車から自転車にかわるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペダルなしで足けりするバランスバイクを探している",
+    "ideal_answer": "バランスバイク(ペダルなしキックバイク)",
+    "reason": "三輪車と補助輪付き自転車の中間段階の製品。「かわるやつ」は移行用アイテムへの言い換え。",
+    "category": "balance-bike",
+    "search_terms": {
+      "ja": [
+        "バランスバイク キックバイク",
+        "ペダルなし自転車 子供"
+      ],
+      "en": [
+        "balance bike no pedal"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "三輪車",
+      "補助輪付き自転車"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "お月見にかざるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "十五夜に飾るすすきや月見団子の飾りセットを探している",
+    "ideal_answer": "月見飾りセット(すすき・三方など)",
+    "reason": "季節行事(中秋の名月)の飾り物。ひな人形・こどもの日飾りと同じ季節行事カテゴリの新規事例。",
+    "category": "tsukimi-decoration",
+    "search_terms": {
+      "ja": [
+        "月見飾り セット",
+        "十五夜 すすき 造花"
+      ],
+      "en": [
+        "moon viewing decoration japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "敬老の日に贈る実用的なもの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "敬老の日のプレゼントとして日常使いできる実用品を探している",
+    "ideal_answer": "敬老の日ギフト(実用品・生活雑貨)",
+    "reason": "行事名は明確だが「実用的」の中身は幅広いため、膝掛けや湯呑みなど定番の生活雑貨を提案する想定。",
+    "category": "keirou-no-hi-gift",
+    "search_terms": {
+      "ja": [
+        "敬老の日 プレゼント 実用的",
+        "敬老の日 ギフト 70代"
+      ],
+      "en": [
+        "respect for the aged day gift japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "防災頭巾 学校用",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "小学校で椅子にかけておく防災頭巾を探している",
+    "ideal_answer": "防災頭巾(学校指定サイズ)",
+    "reason": "既存の非常食・防災セットとは別で、学校が指定するサイズや座布団兼用タイプがある物理製品。",
+    "category": "bousai-zukin",
+    "search_terms": {
+      "ja": [
+        "防災頭巾 小学生",
+        "防災ずきん 椅子カバー兼用"
+      ],
+      "en": [
+        "disaster hood school japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ヘルメット",
+      "自転車用ヘルメット"
+    ],
+    "confidence": 0.8,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "自由研究をまとめる大きい紙",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "夏休みの自由研究の発表用に模造紙やスケッチブックを探している",
+    "ideal_answer": "模造紙、または自由研究用のまとめノート・スケッチブック",
+    "reason": "「大きい紙」だけでは模造紙・大判スケッチブック・ボード紙のどれか確定しづらいが、いずれも自由研究発表向けの用途で候補を示せる。",
+    "category": "poster-paper",
+    "search_terms": {
+      "ja": [
+        "模造紙 大判",
+        "自由研究 まとめ スケッチブック"
+      ],
+      "en": [
+        "poster paper for school project"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "コピー用紙",
+      "画用紙 小サイズ"
+    ],
+    "confidence": 0.6,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "地雷系のリボンつきバッグ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "地雷系ファッション(パステルカラー×リボン×レース)のバッグを探している",
+    "ideal_answer": "地雷系ファッション向けリボン付きバッグ",
+    "reason": "若者のファッションサブカルチャー用語。「韓国っぽい」とは系統が異なるジャンル語彙。",
+    "category": "jirai-kei-accessory",
+    "search_terms": {
+      "ja": [
+        "地雷系 バッグ リボン",
+        "量産型 パステル バッグ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "韓国系 シンプルバッグ"
+    ],
+    "confidence": 0.6,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "推しの誕生日にホールケーキみたいな推し活グッズ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "推し活の誕生日会(集合写真用)で使うケーキ型デコレーショングッズを探している",
+    "ideal_answer": "推し活バースデー用デコレーションセット(ケーキ型スタンドなど)",
+    "reason": "オタ活・同人イベント文化で使われるバースデー装飾グッズ。うちわ・トレカ関連とは別の飾り付け需要。",
+    "category": "oshi-birthday-decoration",
+    "search_terms": {
+      "ja": [
+        "推し活 バースデー デコレーション",
+        "オタ活 誕生日 スタンド ケーキ型"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "水を使わなくていいシャンプーみたいなやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗い流さないドライシャンプーを探している",
+    "ideal_answer": "ドライシャンプー(水なしタイプ)",
+    "reason": "「タイパ」志向の若者言葉的ニーズ。介護用の清拭シャンプーとは別文脈だが商品自体は近い場合もある。",
+    "category": "dry-shampoo",
+    "search_terms": {
+      "ja": [
+        "ドライシャンプー 水なし",
+        "洗い流さない シャンプー スプレー"
+      ],
+      "en": [
+        "dry shampoo spray"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "推しの写真を可愛くデコレーションするシール",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "生写真やチェキに貼るデコレーション用のシールを探している",
+    "ideal_answer": "推し活デコレーションシール(チェキ・生写真用)",
+    "reason": "既存のトレカケース・うちわキットとは別で、写真そのものを装飾する消耗品。",
+    "category": "oshi-photo-deco-sticker",
+    "search_terms": {
+      "ja": [
+        "チェキ デコシール",
+        "生写真 デコレーション シール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "麦茶を作るときに使う大きい容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "煮出した麦茶を冷やして保存する耐熱の大容量ポットを探している",
+    "ideal_answer": "麦茶ポット(耐熱・大容量)",
+    "reason": "水出しコーヒーポットとは似て非なる、熱湯を直接入れられる耐熱仕様が必要な製品。",
+    "category": "barley-tea-pot",
+    "search_terms": {
+      "ja": [
+        "麦茶ポット 耐熱",
+        "冷水筒 大容量 熱湯対応"
+      ],
+      "en": [
+        "heat resistant tea pitcher"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "水出しコーヒーポット(非耐熱)"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "コンビニで買った飲み物のふたが開けにくい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットボトルのキャップを開けやすくする補助グッズを探している",
+    "ideal_answer": "ペットボトルキャップオープナー(滑り止めグリップ)",
+    "reason": "瓶のふた用オープナーとは別で、ペットボトルのねじキャップ専用の小型グッズ。",
+    "category": "bottle-cap-opener-assist",
+    "search_terms": {
+      "ja": [
+        "ペットボトル ふた 開けやすい",
+        "キャップオープナー 滑り止め"
+      ],
+      "en": [
+        "bottle cap opener grip"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "瓶のふた用オープナー"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "自転車の前カゴに雨よけをつけるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "自転車の前カゴにかぶせる防水カバーを探している",
+    "ideal_answer": "自転車カゴ用レインカバー",
+    "reason": "カゴ本体ではなく後付けの防水カバー。荷物の中身を雨から守る用途。",
+    "category": "bicycle-basket-rain-cover",
+    "search_terms": {
+      "ja": [
+        "自転車 カゴカバー 防水",
+        "前カゴ 雨よけカバー"
+      ],
+      "en": [
+        "bicycle basket rain cover"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "自転車カゴ本体"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "祖父母の家に持っていく日持ちする手土産",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "常温で日持ちする手土産の菓子折りを探している",
+    "ideal_answer": "日持ちする焼き菓子の詰め合わせ(手土産用)",
+    "reason": "生菓子ではなく賞味期限の長い焼き菓子系という条件が明確な帰省・訪問シーンの手土産需要。",
+    "category": "omiyage-long-lasting-sweets",
+    "search_terms": {
+      "ja": [
+        "手土産 日持ち 焼き菓子",
+        "帰省 手土産 常温"
+      ],
+      "en": [
+        "long lasting japanese sweets gift"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "要冷蔵の生菓子"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "猫がドアを開けてしまうのを防ぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "レバーハンドルのドアを猫が開けられないようにするロックを探している",
+    "ideal_answer": "ドアレバー用ペットいたずら防止ロック",
+    "reason": "子ども用のドアノブロック(child-safety-lock)とは対象が異なり、ペット向けに軽い力でも外れない設計が求められる。",
+    "category": "door-lever-lock-pet",
+    "search_terms": {
+      "ja": [
+        "ドアレバー ロック 猫",
+        "ペット ドア 開けられない 対策"
+      ],
+      "en": [
+        "door lever lock pet proof"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "子ども用ドアノブカバー"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "台風のときに玄関に水が入らないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "大雨・台風時に玄関の隙間から浸水するのを防ぐ止水板を探している",
+    "ideal_answer": "玄関用止水板(簡易浸水防止グッズ)",
+    "reason": "窓ガラスの飛散防止フィルムとは別の、床面の隙間からの浸水を防ぐ製品。台風シーズンに需要が高まる。",
+    "category": "flood-barrier-doorstep",
+    "search_terms": {
+      "ja": [
+        "玄関 浸水防止 止水板",
+        "台風 水よけ 玄関 簡易"
+      ],
+      "en": [
+        "door flood barrier home"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "窓ガラス飛散防止フィルム"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "花火をするときのバケツの代わりになるもの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家庭用花火で使う消火用の水を入れる容器を探している",
+    "ideal_answer": "花火用の折りたたみバケツ(消火用)",
+    "reason": "常設のバケツを持っていない家庭向けに、コンパクトに収納できる折りたたみ式を想定。",
+    "category": "fireworks-fire-bucket",
+    "search_terms": {
+      "ja": [
+        "花火 バケツ 折りたたみ",
+        "花火 消火用 水バケツ"
+      ],
+      "en": [
+        "folding water bucket fireworks"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "つけるだけで涼しく感じるって聞いたやつ、種類がありすぎてわからない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。ネッククーラー・冷感タオル・冷却スプレー・携帯扇風機など候補が多数",
+    "ideal_answer": "首から下げるタイプ、体に貼るシートタイプ、スプレータイプなど色々あります。持ち歩いて使いたいですか、家や職場で使いたいですか？どちらでしょう？",
+    "reason": "「涼しくなるやつ」は複数カテゴリに跨る典型的な超曖昧クエリ。断定回答は誤答リスクが高い。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "窓の下から入る冷気をふせぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "窓のサッシ下の隙間風を防ぐすきまテープ・隙間クッションを探している",
+    "ideal_answer": "隙間風防止クッション(ドラフトストッパー)",
+    "reason": "窓用の断熱フィルムとは別で、サッシの隙間そのものを塞ぐ簡易グッズ。",
+    "category": "draft-stopper",
+    "search_terms": {
+      "ja": [
+        "すきま風防止 窓下",
+        "ドラフトストッパー 隙間クッション"
+      ],
+      "en": [
+        "window draft stopper"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "窓用断熱フィルム"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "貼ってはがせるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。壁掛けフック・メモ・養生テープ・粘着シートなど候補が多岐にわたる",
+    "ideal_answer": "壁に貼る用ですか、それとも紙やメモを貼る用ですか？跡が残らない壁掛けフックと、繰り返し使えるテープタイプがありますが、どちらの用途でしょう？",
+    "reason": "「貼ってはがせる」は対象物(壁/紙/床)が不明で、賃貸壁掛けフックとも文房具用テープとも取れる超曖昧クエリ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "寝つきをよくすると聞いたサプリ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "睡眠の質を意識したサプリメントを探しているが、効果を断定できない",
+    "ideal_answer": "睡眠をサポートする成分(グリシンやGABAなど)を謳うサプリメントはありますが、効果の感じ方には個人差があり、不眠が続く場合はサプリより医療機関への相談が優先されます。今の睡眠でお困りの具体的な症状はありますか？",
+    "reason": "サプリメントの効果を断定するのは医薬品的な誇大表現になり得るため、確定回答を避け受診の目安も添える。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "冷たいデザートを職場に持っていくときに保冷できる小さい容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ゼリーやアイスを保冷しながら持ち運べる小型の保冷容器を探している",
+    "ideal_answer": "小型保冷デザート容器(保冷剤内蔵タイプ)",
+    "reason": "お弁当用の保冷剤とは別で、デザート専用の小さいサイズの保冷容器という具体条件。",
+    "category": "mini-cooler-container",
+    "search_terms": {
+      "ja": [
+        "デザート 保冷容器 小型",
+        "ゼリー 持ち運び 保冷ケース"
+      ],
+      "en": [
+        "mini cooler container dessert"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "大容量クーラーボックス"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "鍵盤ハーモニカのホースをきれいにするやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "学校で使う鍵盤ハーモニカのホースを洗浄する専用ブラシを探している",
+    "ideal_answer": "鍵盤ハーモニカ用ホース洗浄ブラシ",
+    "reason": "リコーダー洗浄キットとは対象楽器が異なる。カビや雑菌対策の学用品需要。",
+    "category": "melodica-hose-cleaner",
+    "search_terms": {
+      "ja": [
+        "鍵盤ハーモニカ ホース 洗浄",
+        "ピアニカ ホース ブラシ"
+      ],
+      "en": [
+        "melodica hose cleaning brush"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "リコーダー洗浄キット"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "習字の道具をひとまとめにしたい",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "小学校の授業で使う習字道具一式(筆・墨・下敷きなど)を探している",
+    "ideal_answer": "習字道具セット(小学生用)",
+    "reason": "個別購入ではなく一式セットを求めている、学校指定に近い定番の学用品。",
+    "category": "calligraphy-set",
+    "search_terms": {
+      "ja": [
+        "習字道具 セット 小学生",
+        "書道 道具一式"
+      ],
+      "en": [
+        "japanese calligraphy set for kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "水がぴゅーって出るおもちゃ 夏",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "夏の水遊びで使う水鉄砲を探している",
+    "ideal_answer": "水鉄砲(水でっぽう)",
+    "reason": "子どもの擬音語表現から水遊び用おもちゃへの言い換え。",
+    "category": "water-gun",
+    "search_terms": {
+      "ja": [
+        "水鉄砲 子供用",
+        "水でっぽう 大容量"
+      ],
+      "en": [
+        "water gun toy"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "ランドセルの中で教科書がぐちゃぐちゃにならないようにするやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ランドセル内で教科書やノートを立てて仕切るブックバンド・ファイルを探している",
+    "ideal_answer": "ランドセル内仕切り(ブックバンド・クリアファイル)",
+    "reason": "ランドセル本体のカバーやフックとは別の、中身を整理する小物。",
+    "category": "backpack-book-divider",
+    "search_terms": {
+      "ja": [
+        "ランドセル 中 仕切り",
+        "教科書 バンド 落ちない"
+      ],
+      "en": [
+        "backpack book divider kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ランドセルカバー",
+      "ランドセルにつけるアクセサリー"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "絵の具のパレットを洗うのがめんどくさい",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "絵の具の乾いた汚れが落ちやすいパレット専用のブラシ・洗浄剤を探している",
+    "ideal_answer": "パレット洗浄ブラシ(絵の具専用)",
+    "reason": "食器用スポンジとは別に、乾いた絵の具に強い専用ブラシがある。",
+    "category": "paint-palette-cleaner",
+    "search_terms": {
+      "ja": [
+        "パレット 洗浄 ブラシ 絵の具",
+        "水彩 パレット 汚れ落とし"
+      ],
+      "en": [
+        "paint palette cleaning brush"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "なわとびの回数を数えてくれるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "縄跳びの回数を自動でカウントする縄跳び本体、またはカウンター付きグリップを探している",
+    "ideal_answer": "カウンター付きなわとび(自動計測グリップ)",
+    "reason": "既存の普通のなわとびとは別で、グリップに回数計測機能が付いた製品。",
+    "category": "jump-rope-counter",
+    "search_terms": {
+      "ja": [
+        "なわとび カウンター付き",
+        "縄跳び 回数計測"
+      ],
+      "en": [
+        "jump rope with counter"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "カウンターなしの普通のなわとび"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "光る棒みたいなやつ 運動会で使う",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。応援グッズの光る棒(ペンライト系)か、運動会の応援メガホンか判別できない",
+    "ideal_answer": "運動会で使う応援グッズには、光る応援スティックと、声を大きくする応援メガホンがあります。夜のイベントで光らせたいのか、応援の声を出したいのか、どちらでしょう？",
+    "reason": "「光る棒」は光るグッズとメガホンのどちらとも取れ、運動会の応援メガホンという既存カテゴリと競合する超曖昧クエリ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "夜運転すると対向車のライトがまぶしい",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "夜間運転用の防眩(アンチグレア)メガネを探している",
+    "ideal_answer": "夜間運転用防眩メガネ(イエローレンズなど)",
+    "reason": "サングラスとは別で、暗い場所でも視界を保ちながら光の乱反射を抑える専用レンズ。",
+    "category": "night-driving-glasses",
+    "search_terms": {
+      "ja": [
+        "夜間 運転用 メガネ 防眩",
+        "ナイトドライブ グラス まぶしさ軽減"
+      ],
+      "en": [
+        "anti glare night driving glasses"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "サングラス(昼用)"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "杖の先っぽがすり減ってきた",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "杖の先端に付ける交換用のラバーキャップを探している",
+    "ideal_answer": "杖先ゴム(交換用キャップ)",
+    "reason": "杖本体の買い替えではなく、消耗品である先端ゴムのみの交換需要。",
+    "category": "cane-tip-rubber",
+    "search_terms": {
+      "ja": [
+        "杖先ゴム 交換",
+        "杖 先端キャップ すり減り"
+      ],
+      "en": [
+        "cane tip replacement rubber"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "杖本体"
+    ],
+    "confidence": 0.75,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "補聴器を寝ている間に乾燥させておくやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "補聴器を保管しながら湿気を取る乾燥ケース(電動または乾燥剤式)を探している",
+    "ideal_answer": "補聴器用乾燥ケース",
+    "reason": "既存の補聴器電池・クリーナーとは別で、汗や湿気による故障を防ぐ保管用品。",
+    "category": "hearing-aid-dryer-case",
+    "search_terms": {
+      "ja": [
+        "補聴器 乾燥ケース",
+        "補聴器 除湿 保管ケース"
+      ],
+      "en": [
+        "hearing aid dryer case"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "高齢の家族が迷子にならないように靴に貼るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "外出先で身元が分かるよう靴に貼るQRコード付き名前シールを探している",
+    "ideal_answer": "見守り用の名前シール(QRコード付き・靴貼付タイプ)",
+    "reason": "GPS発信機とは異なり通信機能を持たない簡易な名前・連絡先タグ。断定的な安全保証はしない。",
+    "category": "shoe-id-tag-elderly",
+    "search_terms": {
+      "ja": [
+        "靴 名前シール 見守り",
+        "徘徊 見守り タグ QRコード"
+      ],
+      "en": [
+        "shoe id tag elderly QR"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "GPS発信機"
+    ],
+    "confidence": 0.55,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "お風呂の浴槽をまたぐのがつらくなってきた",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "浴槽の縁をまたぐときに足をかけられる浴槽用の踏み台・ステップを探している",
+    "ideal_answer": "浴槽またぎ用ステップ台(浴室用)",
+    "reason": "既存の浴室手すり・入浴用椅子とは別の、またぐ動作を補助する踏み台。",
+    "category": "bath-step-stool",
+    "search_terms": {
+      "ja": [
+        "浴槽 またぎ台 高齢者",
+        "お風呂 踏み台 滑り止め"
+      ],
+      "en": [
+        "bath step stool elderly"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "浴室いす",
+      "洗い場の椅子"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "扇風機だと風が強すぎて冷房代わりにしたい",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "室内の空気を緩やかに循環させるサーキュレーターを探している",
+    "ideal_answer": "サーキュレーター(空気循環機能)",
+    "reason": "通常の扇風機とは羽根形状・風の届き方が異なり、部屋全体の空気を回す用途に向く。",
+    "category": "air-circulator",
+    "search_terms": {
+      "ja": [
+        "サーキュレーター 静音",
+        "空気循環 扇風機とは違う"
+      ],
+      "en": [
+        "air circulator fan quiet"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "直接体に風を当てる扇風機"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "テレビのリモコンを探す音を鳴らせるやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "なくしたリモコンを手をたたく音などで探せるリモコンファインダーを探している",
+    "ideal_answer": "リモコンファインダー(音で探せるタグ)",
+    "reason": "文字が大きいボタンのリモコン本体とは別の、紛失防止アクセサリー。",
+    "category": "remote-finder-device",
+    "search_terms": {
+      "ja": [
+        "リモコン 探す 音 鳴らす",
+        "リモコンファインダー 紛失防止"
+      ],
+      "en": [
+        "remote control finder locator"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ボタンが大きいリモコン本体"
+    ],
+    "confidence": 0.6,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "テレビが遠くて字幕が読めない",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "不明。字幕を拡大表示できるテレビ設定の話か、テレビ用の双眼鏡・拡大鏡の話か判別できない",
+    "ideal_answer": "テレビ自体の字幕サイズを変更できる場合があります。設定で大きくできないテレビであれば、テレビ用の拡大鏡や小型双眼鏡もあります。お使いのテレビでリモコンの「字幕」ボタンはお試しになりましたか？",
+    "reason": "買わずに解決できる可能性(設定変更)を先に確認するのが誠実。テレビ用拡大鏡は既存カテゴリと重複しない新規候補。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "furoshiki wrapping cloth japan gift",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "日本の風呂敷(包み布)を英語で探している",
+    "ideal_answer": "風呂敷(ふろしき)",
+    "reason": "訪日客・海外在住者からの日本文化グッズの英語クエリ。",
+    "category": "furoshiki",
+    "search_terms": {
+      "ja": [
+        "風呂敷 ギフト用"
+      ],
+      "en": [
+        "furoshiki wrapping cloth"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "japanese incense sticks gift box",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "日本のお香(スティックタイプ)のギフトセットを英語で探している",
+    "ideal_answer": "お香スティック ギフトセット",
+    "reason": "仏事用の線香とは異なり、リラックス用の香りお香を想定。",
+    "category": "incense-sticks",
+    "search_terms": {
+      "ja": [
+        "お香 スティック ギフト"
+      ],
+      "en": [
+        "japanese incense sticks gift set"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "仏事用線香"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "tatami mat smell fresh care product",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "畳の匂いや湿気をケアするスプレー・掃除用品を英語で探している",
+    "ideal_answer": "畳用消臭・除湿スプレー",
+    "reason": "洋室のカーペットクリーナーとは別で、い草素材向けの専用ケア用品が必要。",
+    "category": "tatami-care-spray",
+    "search_terms": {
+      "ja": [
+        "畳 消臭スプレー",
+        "い草 お手入れ用品"
+      ],
+      "en": [
+        "tatami care spray deodorizer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "カーペット用クリーナー"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "무선청소기 물걸레 겸용 일본",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "掃除機とモップ拭きを兼ねるコードレスの水拭き対応クリーナーを韓国語で探している",
+    "ideal_answer": "水拭き機能付きコードレス掃除機(モップ兼用)",
+    "reason": "既存の軽い掃除機・ロボット掃除機とは別で、乾拭きと水拭きを1台でこなすタイプ。",
+    "category": "wet-dry-vacuum-mop-combo",
+    "search_terms": {
+      "ja": [
+        "水拭き コードレス掃除機",
+        "掃除機 モップ 一体型"
+      ],
+      "en": [
+        "cordless vacuum mop combo"
+      ],
+      "ko": [
+        "무선청소기 물걸레겸용"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ロボット掃除機"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "일본 온천 여행용 미니 세면도구 세트",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "温泉旅行用の小分けの洗面用品セットを韓国語で探している",
+    "ideal_answer": "トラベル用ミニ洗面用品セット(シャンプー・歯ブラシなど)",
+    "reason": "液体持ち込み用の空ボトルとは別で、すでに中身が入った旅行用セット商品を想定。",
+    "category": "travel-toiletry-set",
+    "search_terms": {
+      "ja": [
+        "トラベル 洗面用品 セット",
+        "旅行用 ミニシャンプー セット"
+      ],
+      "en": [
+        "travel toiletry set mini"
+      ],
+      "ko": [
+        "여행용 세면도구 세트"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "空のトラベルボトルのみ"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "여행 캐리어 무게 재는 거",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "スーツケースの重量を測る携帯用の吊り下げ式ラゲッジスケールを韓国語で探している",
+    "ideal_answer": "ラゲッジスケール(スーツケース用はかり)",
+    "reason": "空港での超過料金対策として使う、荷物に引っ掛けるだけの小型はかり。",
+    "category": "luggage-scale",
+    "search_terms": {
+      "ja": [
+        "スーツケース 重さ 量る 携帯",
+        "ラゲッジスケール"
+      ],
+      "en": [
+        "luggage scale digital"
+      ],
+      "ko": [
+        "캐리어 무게 재는 기기"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "日本 药妆 眼药水 干眼 长期使用可以吗",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "ドラッグストアの目薬を長期使用してよいか相談しているが、断定できない",
+    "ideal_answer": "市販の目薬にはドライアイ向けの製品もありますが、防腐剤入りの目薬を長期連用すると刺激になる場合もあります。症状が続く場合は眼科での相談をおすすめします。どのくらいの期間使われていますか？",
+    "reason": "市販薬の長期使用可否や効果を断定するのは医薬品的な効能保証にあたるため避け、受診目安を案内する。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "日本 泡温泉 用的 速干 旅行毛巾",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "温泉旅行で使うすぐ乾くコンパクトなタオルを中国語で探している",
+    "ideal_answer": "速乾タイプのトラベルタオル",
+    "reason": "普通のバスタオルとは別で、コンパクトに収納でき乾きやすい素材が求められる。",
+    "category": "quick-dry-travel-towel",
+    "search_terms": {
+      "ja": [
+        "速乾 トラベルタオル",
+        "温泉 旅行 タオル コンパクト"
+      ],
+      "en": [
+        "quick dry travel towel"
+      ],
+      "ko": [],
+      "zh": [
+        "速干旅行毛巾"
+      ]
+    },
+    "excluded_conditions": [
+      "通常のバスタオル"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "秋田犬 玩偶 日本限定 伴手礼",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "秋田犬をモチーフにした日本限定の縫いぐるみ土産を中国語で探している",
+    "ideal_answer": "秋田犬モチーフのご当地ぬいぐるみ",
+    "reason": "一般的なキャラクターグッズとは別の、地域限定のマスコット土産という具体条件。",
+    "category": "japan-mascot-plush",
+    "search_terms": {
+      "ja": [
+        "秋田犬 ぬいぐるみ ご当地",
+        "秋田犬 グッズ お土産"
+      ],
+      "en": [
+        "akita dog plush japan souvenir"
+      ],
+      "ko": [],
+      "zh": [
+        "秋田犬玩偶 日本限定"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "nihon no natsu matsuri de kiru yukata rentaru",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "夏祭りで着る浴衣のレンタルをローマ字混じりで探している",
+    "ideal_answer": "浴衣レンタル(着付け込みプラン)",
+    "reason": "購入ではなく短期イベント用のレンタルサービスという条件。",
+    "category": "yukata-rental",
+    "search_terms": {
+      "ja": [
+        "浴衣 レンタル 夏祭り",
+        "浴衣 レンタル 着付けセット"
+      ],
+      "en": [
+        "yukata rental summer festival japan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "浴衣 購入のみ"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "kaban no kata himo ga itakunaru node tsukeru mono",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "肩にかけるバッグの持ち手が食い込んで痛いので、緩和するショルダーパッドを探している",
+    "ideal_answer": "バッグ用ショルダーストラップパッド(取り付け式)",
+    "reason": "車のシートベルトパッドとは対象が異なり、旅行かばんなどの肩ひもに巻き付けるタイプ。",
+    "category": "bag-strap-pad-cushion",
+    "search_terms": {
+      "ja": [
+        "ショルダーバッグ 肩紐 パッド",
+        "バッグ 持ち手カバー クッション"
+      ],
+      "en": [
+        "shoulder strap pad bag"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "車のシートベルトパッド"
+    ],
+    "confidence": 0.6,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "contact lens solution japan drugstore travel size",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "ドラッグストアで買える旅行用サイズのコンタクトレンズ洗浄液を英語で探している",
+    "ideal_answer": "コンタクトレンズ用洗浄液(トラベルサイズ)",
+    "reason": "ハードレンズ用・ソフトレンズ用で成分が異なるため、種類の確認が必要な点は注記に留める。",
+    "category": "contact-lens-solution",
+    "search_terms": {
+      "ja": [
+        "コンタクト 洗浄液 トラベルサイズ",
+        "コンタクトレンズ 保存液 小さいサイズ"
+      ],
+      "en": [
+        "contact lens solution travel size"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "ペットボトルのふたが固くて開けにくい高齢の親のために",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "握力が弱くてもペットボトルのキャップを開けやすくする補助グッズを探している",
+    "ideal_answer": "ペットボトルキャップオープナー(握力弱めの方向け・てこ式)",
+    "reason": "一般的な滑り止めグリップ型とは異なり、握力低下がある場合はてこの原理で開けられるレバー式が適する。",
+    "category": "bottle-cap-opener-lever-elderly",
+    "search_terms": {
+      "ja": [
+        "ペットボトル ふた 開けやすい 高齢者",
+        "キャップオープナー 握力弱い"
+      ],
+      "en": [
+        "bottle cap opener for weak grip"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "瓶のふた用オープナー"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  },
+  {
+    "query_text": "魚をさばくときにうろこが飛び散らないやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "うろこを取るときに飛び散りを防ぐカバー付きのウロコ取り器を探している",
+    "ideal_answer": "うろこ取り器(飛び散り防止カバー付き)",
+    "reason": "包丁で代用する人も多いが、専用のうろこ取りは飛散防止フードが付いている点が異なる。",
+    "category": "fish-scaler",
+    "search_terms": {
+      "ja": [
+        "うろこ取り 飛び散らない",
+        "魚 うろこ引き カバー付き"
+      ],
+      "en": [
+        "fish scaler with cover"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "包丁"
+    ],
+    "confidence": 0.65,
+    "authored_date": "2026-08-31",
+    "authored_updated_date": "2026-08-31"
+  }
+]
