@@ -164,6 +164,8 @@ test('v4.3項目9: AIプロバイダが両方とも失敗しても検索全体�
     assert.equal(payload.ok, true);
     assert.deepEqual(payload.result.candidates, []);
     assert.equal(payload.result.ai_discovery.unavailable, true);
+    assert.equal(payload.result.marketplace_search_links.length, 13);
+    assert.equal(new Set(payload.result.marketplace_search_links.map((link) => link.marketplace)).size, 13);
     // 検索語変換のGemini 1回 + 商品意図解析のGemini 1回。
     assert.equal(geminiCalls, 2);
     assert.equal(openAiCalls, 1);
