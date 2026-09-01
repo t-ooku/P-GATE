@@ -5,20 +5,20 @@ EN:{'nav.login':'Log in','nav.member':'Member','nav.business':'For makers & sell
 ZH:{'nav.login':'登录','nav.member':'会员','nav.business':'制造商与卖家专区','nav.install':'安装应用','nav.backSearch':'返回搜索','nav.backPublic':'返回普通页面','nav.logout':'退出登录','install.title':'将 HOSHILU 作为应用使用','common.close':'关闭','member.title':'免费会员登录','member.intro':'无需登录也可搜索。免费会员可使用搜索记录、新品提醒和目标价监控。','member.guest':'免费访客','member.guestDescription':'现在即可搜索商品，并在本设备保存搜索条件。','member.useGuest':'不登录直接使用 →','member.free':'免费会员','member.freeDescription':'可使用安全的 LINE Login。电子邮件认证正在准备中。','member.preparing':'正在确认 LINE Login','member.lineLogin':'使用 LINE 登录','member.notice':'身份验证、找回和注销功能齐备后再启用会员登录。','seller.title':'专用登录','seller.intro':'仅供制造商、卖家及运营人员使用。ID 和密码通过 HTTPS 保护，认证后使用 HttpOnly Cookie。','seller.id':'登录 ID','seller.password':'密码','seller.login':'登录','seller.loginError':'请确认 ID 和密码。','seller.consoleTitle':'把需求变成销售机会。','seller.consoleIntro':'根据合同状态和租户边界显示匿名需求、搜索相关度、禁运原因及替代候选。','seller.tenant':'目标租户','seller.productData':'商品数据','seller.phaseData':'正式搜索索引','seller.alternativeDemand':'禁运商品的替代需求','seller.preparing':'准备中','seller.restrictions':'日本国内替代品、液体、锂电池、大型及危险品','search.evidence':'匹配线索：','search.securityPending':'正在确认公开搜索的安全设置。配置完成后即可搜索。'},
 KO:{'nav.login':'로그인','nav.member':'회원','nav.business':'제조사·판매자 전용','nav.install':'앱으로 사용','nav.backSearch':'검색으로 돌아가기','nav.backPublic':'일반 화면으로','nav.logout':'로그아웃','install.title':'HOSHILU를 앱으로 사용하기','common.close':'닫기','member.title':'무료 회원 로그인','member.intro':'로그인하지 않아도 검색할 수 있습니다. 무료 회원은 검색 기록, 새 상품 알림, 목표 가격 감시를 이용할 수 있습니다.','member.guest':'무료 비회원','member.guestDescription':'지금 바로 상품을 검색하고 이 기기에 검색 조건을 저장할 수 있습니다.','member.useGuest':'로그인 없이 사용 →','member.free':'무료 회원','member.freeDescription':'안전한 LINE Login을 사용할 수 있습니다. 이메일 인증은 준비 중입니다.','member.preparing':'LINE Login 설정 확인 중','member.lineLogin':'LINE으로 로그인','member.notice':'본인 확인, 복구, 탈퇴 기능을 갖춘 뒤 회원 로그인을 활성화합니다.','seller.title':'전용 로그인','seller.intro':'제조사, 판매자, 운영 담당자 전용입니다. ID와 비밀번호는 HTTPS로 보호되며 인증 후 HttpOnly Cookie를 사용합니다.','seller.id':'로그인 ID','seller.password':'비밀번호','seller.login':'로그인','seller.loginError':'ID와 비밀번호를 확인해 주세요.','seller.consoleTitle':'원하는 마음을 판매 기회로.','seller.consoleIntro':'익명 수요, 검색 적합도, 수입 제한 사유와 대체 후보를 계약 상태와 테넌트 경계에 따라 표시합니다.','seller.tenant':'대상 테넌트','seller.productData':'상품 데이터','seller.phaseData':'운영 검색 인덱스','seller.alternativeDemand':'수입 불가 상품의 대체 수요','seller.preparing':'준비 중','seller.restrictions':'일본 국내 대체품·액체·리튬·대형·위험물','search.evidence':'일치한 단서: ','search.securityPending':'공개 검색 보안 설정을 확인하고 있습니다. 설정이 완료되면 검색할 수 있습니다.'}};
 Object.assign(messages.JA,{
-  'affiliate.searchNotice':'広告：AmazonへのリンクはAmazonアソシエイトリンクです。楽天市場へのリンクにもアフィリエイトリンクが含まれる場合があります。購入価格や検索順位には影響しません。',
-  'affiliate.footerDisclosure':'Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイトのリンクからも収入を得る場合があります。'
+  'affiliate.searchNotice':'広告：AmazonへのリンクはAmazonアソシエイトリンクです。楽天市場へのリンクにもアフィリエイトリンクが含まれる場合があります。Qoo10・Yahoo!ショッピング等へのリンクは、バリューコマースのLinkSwitchによりアフィリエイトリンクへ変換される場合があります。購入価格や検索順位には影響しません。',
+  'affiliate.footerDisclosure':'Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイト、およびバリューコマース（Qoo10・Yahoo!ショッピング等）のリンクからも収入を得る場合があります。'
 });
 Object.assign(messages.EN,{
-  'affiliate.searchNotice':'Ad disclosure: Amazon links are Amazon Associate links. Rakuten links may also be affiliate links. This does not affect your purchase price or search ranking.',
-  'affiliate.footerDisclosure':'As an Amazon Associate, HOSHILU earns from qualifying purchases. HOSHILU may also earn through Rakuten Affiliate links.'
+  'affiliate.searchNotice':'Ad disclosure: Amazon links are Amazon Associate links. Rakuten links may also be affiliate links. Links to Qoo10, Yahoo! Shopping and other stores may be converted into affiliate links by ValueCommerce LinkSwitch. This does not affect your purchase price or search ranking.',
+  'affiliate.footerDisclosure':'As an Amazon Associate, HOSHILU earns from qualifying purchases. HOSHILU may also earn through Rakuten Affiliate links and ValueCommerce links (Qoo10, Yahoo! Shopping, etc.).'
 });
 Object.assign(messages.ZH,{
-  'affiliate.searchNotice':'广告说明：Amazon 链接为 Amazon Associate 链接，乐天市场链接也可能包含联盟链接。这不会影响购买价格或搜索排序。',
-  'affiliate.footerDisclosure':'作为 Amazon Associate，HOSHILU 会从符合条件的购买中获得收入，也可能通过乐天联盟链接获得收入。'
+  'affiliate.searchNotice':'广告说明：Amazon 链接为 Amazon Associate 链接，乐天市场链接也可能包含联盟链接。Qoo10、Yahoo! 购物等链接可能通过 ValueCommerce LinkSwitch 转换为联盟链接。这不会影响购买价格或搜索排序。',
+  'affiliate.footerDisclosure':'作为 Amazon Associate，HOSHILU 会从符合条件的购买中获得收入，也可能通过乐天联盟链接以及 ValueCommerce（Qoo10、Yahoo! 购物等）链接获得收入。'
 });
 Object.assign(messages.KO,{
-  'affiliate.searchNotice':'광고 안내: Amazon 링크는 Amazon Associate 링크이며 라쿠텐 링크에도 제휴 링크가 포함될 수 있습니다. 구매 가격이나 검색 순위에는 영향을 주지 않습니다.',
-  'affiliate.footerDisclosure':'Amazon Associate로서 HOSHILU는 적격 구매를 통해 수익을 얻으며, 라쿠텐 제휴 링크에서도 수익을 얻을 수 있습니다.'
+  'affiliate.searchNotice':'광고 안내: Amazon 링크는 Amazon Associate 링크이며 라쿠텐 링크에도 제휴 링크가 포함될 수 있습니다. Qoo10·Yahoo! 쇼핑 등의 링크는 ValueCommerce LinkSwitch에 의해 제휴 링크로 변환될 수 있습니다. 구매 가격이나 검색 순위에는 영향을 주지 않습니다.',
+  'affiliate.footerDisclosure':'Amazon Associate로서 HOSHILU는 적격 구매를 통해 수익을 얻으며, 라쿠텐 제휴 링크와 ValueCommerce(Qoo10·Yahoo! 쇼핑 등) 링크에서도 수익을 얻을 수 있습니다.'
 });
 Object.assign(messages.JA,{'social.officialTitle':'ホシル公式アカウント','social.officialLead':'新機能やお得な情報を、公式アカウントからお届けします。','social.line':'LINE公式','social.instagram':'Instagram公式','social.x':'X公式'});
 Object.assign(messages.EN,{'social.officialTitle':'Official HOSHILU accounts','social.officialLead':'Follow our official accounts for new features and useful updates.','social.line':'Official LINE','social.instagram':'Official Instagram','social.x':'Official X'});
