@@ -328,3 +328,19 @@ test('Wrangler binds one SQLite Durable Object coordinator', () => {
   assert.equal(config.observability.traces.enabled, false,
     'automatic fetch tracing must stay disabled because Yahoo requires appid in its URL');
 });
+
+// 2026-09-02: 写真のバーコード数字(JAN)から一発特定する経路。
+test('JAN形式の検索語は query ではなく jan_code で itemSearch へ渡す', async () => {
+  const { buildYahooProviderUrl } = await import('../src/yahoo-request-coordinator.mjs');
+  const jan = buildYahooProviderUrl({ v: 1, op: 'ITEM_SEARCH', query: '4902175435297', seller_id: '', sort: '' }, 'app-id');
+  assert.equal(jan.searchParams.get('jan_code'), '4902175435297');
+  assert.equal(jan.searchParams.has('query'), false);
+  assert.equal(jan.searchParams.get('in_stock'), 'true');
+  const keyword = buildYahooProviderUrl({ v: 1, op: 'ITEM_SEARCH', query: 'こくうま キムチ', seller_id: '', sort: '' }, 'app-id');
+  assert.equal(keyword.searchParams.get('query'), 'こくうま キムチ');
+  assert.equal(keyword.searchParams.has('jan_code'), false);
+  // ランキングAPIは従来どおりqueryのみ
+  const ranking = buildYahooProviderUrl({ v: 1, op: 'HIGH_RATING_TREND', query: '4902175435297' }, 'app-id');
+  assert.equal(ranking.searchParams.get('query'), '4902175435297');
+  assert.equal(ranking.searchParams.has('jan_code'), false);
+});

@@ -117,7 +117,12 @@ export function buildYahooProviderUrl(operation, clientId) {
   const highRating = normalized.op === 'HIGH_RATING_TREND';
   const url = new URL(highRating ? HIGH_RATING_TREND_RANKING_API : API_URL);
   url.searchParams.set('appid', appId);
-  url.searchParams.set('query', normalized.query);
+  // 検索語がJAN(8桁/13桁の数字だけ)の場合は、キーワードではなく
+  // itemSearch v3 の jan_code で識別子検索する(2026-09-02: 写真の
+  // バーコード数字から一発特定する経路)。ランキングAPIは従来どおり。
+  const janQuery = !highRating && /^\d{8}$|^\d{13}$/u.test(normalized.query) ? normalized.query : '';
+  if (janQuery) url.searchParams.set('jan_code', janQuery);
+  else url.searchParams.set('query', normalized.query);
   if (highRating) {
     url.searchParams.set('offset', '1');
     url.searchParams.set('limit', '30');
