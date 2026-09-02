@@ -50,7 +50,10 @@ test('monitor heartbeat is schedule-only and persisted incidents are acknowledge
 
 test('Worker logs are explicitly enabled for trace-ID root-cause analysis', () => {
   assert.equal(wrangler.observability.enabled, true);
-  assert.equal(wrangler.observability.head_sampling_rate, 0.1);
+  // 2026-09-02: 実機で再現する写真検索の失敗を追跡IDで切り分けるため、
+  // 当面は全リクエストを記録する(1)。原因確定後に0.1へ戻す想定。
+  assert.ok([1, 0.1].includes(wrangler.observability.head_sampling_rate));
+  assert.equal(wrangler.observability.head_sampling_rate, 1);
 });
 
 test('production monitor deduplicates incidents and waits for stable recovery', () => {
