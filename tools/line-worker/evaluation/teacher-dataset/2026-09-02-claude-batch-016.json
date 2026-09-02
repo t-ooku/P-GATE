@@ -1,0 +1,1274 @@
+[
+  {
+    "query_text": "窓に貼るやつ台風の",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。台風対策として窓ガラス飛散防止フィルムか養生テープの両方が候補",
+    "ideal_answer": "ガラス飛散防止フィルムですか、それとも窓を保護する養生テープですか？貼って剥がすタイプ・透明タイプなどご希望はありますか？",
+    "reason": "「窓に貼るやつ」だけでは飛散防止フィルムと養生テープのどちらか確定できないultra_ambiguous例。台風シーズンの季節性クエリ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "停電のとき明るくするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "停電時用の照明器具を探している。防災用LEDランタンを想定",
+    "ideal_answer": "防災用LEDランタン（手回し充電・電池式）",
+    "reason": "「停電のとき明るくするやつ」は防災用LEDランタンへの一般的な言い換え。防災シーズン(9月1日前後)の季節性クエリ。",
+    "category": "emergency-led-lantern",
+    "search_terms": {
+      "ja": [
+        "防災 ランタン",
+        "停電 ライト led"
+      ],
+      "en": [
+        "emergency led lantern"
+      ],
+      "ko": [
+        "정전 랜턴"
+      ],
+      "zh": [
+        "应急led灯"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "衣替えでしまうやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類収納用品を探している。衣装ケース・圧縮袋のどちらか不明",
+    "ideal_answer": "衣類をしまう引き出し式の衣装ケースですか、それとも布団や冬物をコンパクトにする圧縮袋ですか？",
+    "reason": "「しまうやつ」だけでは衣装ケースと圧縮袋のどちらか確定できないultra_ambiguous例。9月の衣替えシーズンクエリ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "2学期に名前つけるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "新学期用の持ち物に記名するためのお名前スタンプセットを探している",
+    "ideal_answer": "お名前スタンプセット（布・上履き対応）",
+    "reason": "「名前つけるやつ」は記名アイテムの中でも布にも押せるお名前スタンプが最も一般的な解釈。2学期スタートの季節性クエリ。",
+    "category": "name-stamp-set",
+    "search_terms": {
+      "ja": [
+        "お名前スタンプ セット",
+        "おなまえスタンプ 布用"
+      ],
+      "en": [
+        "name stamp set"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "窓の結露拭くやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結露取りワイパーを探している",
+    "ideal_answer": "結露取りワイパー(水切りワイパー)",
+    "reason": "「結露拭くやつ」は結露取りワイパーへの一般的な言い換え。カテゴリはほぼ一意に確定できる。",
+    "category": "window-condensation-wiper",
+    "search_terms": {
+      "ja": [
+        "結露取りワイパー",
+        "窓 水切りワイパー"
+      ],
+      "en": [
+        "window condensation wiper"
+      ],
+      "ko": [
+        "창문 결로 와이퍼"
+      ],
+      "zh": [
+        "窗户除水器"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "敬老の日に贈る座って使うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "敬老の日のプレゼント候補。座椅子か低い椅子（座敷椅子）のどちらか不明",
+    "ideal_answer": "床に座ったまま楽な姿勢を保てる背もたれ付き座椅子ですか、それとも正座がつらいときに使う正座椅子ですか？",
+    "reason": "「座って使うやつ」だけでは座椅子と正座椅子の区別がつかないultra_ambiguous例。敬老の日接近の季節性クエリ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "台風の前に補強するやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。窓・カーポート・物干しなど補強対象が特定できない",
+    "ideal_answer": "何を補強したいですか？窓ガラス（飛散防止フィルム）、物干し竿（固定ベルト）、屋外の物（防犯・飛散防止ネット）など教えてください。",
+    "reason": "補強対象が全く特定できないultra_ambiguousな例。台風シーズンの防災系クエリ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "スマホの充電長持ちさせるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "モバイルバッテリーを探している",
+    "ideal_answer": "モバイルバッテリー（大容量タイプ）",
+    "reason": "「充電長持ちさせるやつ」はモバイルバッテリーへの一般的な言い換え。カテゴリはほぼ一意。",
+    "category": "power-bank-large-capacity",
+    "search_terms": {
+      "ja": [
+        "モバイルバッテリー 大容量",
+        "防災 モバイルバッテリー"
+      ],
+      "en": [
+        "large capacity power bank"
+      ],
+      "ko": [
+        "대용량 보조배터리"
+      ],
+      "zh": [
+        "大容量充电宝"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "運動会の場所取りに敷くやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "運動会の観覧席取り用のレジャーシートを探している",
+    "ideal_answer": "運動会観覧用のレジャーシート（大判・防水タイプ）",
+    "reason": "「場所取りに敷くやつ」は運動会シーズンのレジャーシートへの言い換え。季節性が明確でカテゴリはほぼ一意。",
+    "category": "undokai-picnic-sheet",
+    "search_terms": {
+      "ja": [
+        "運動会 レジャーシート",
+        "場所取り シート 大判"
+      ],
+      "en": [
+        "sports day picnic sheet"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "日差しよけるテントみたいなやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "運動会などの屋外イベントで使う折りたたみ式サンシェードテントを探している",
+    "ideal_answer": "折りたたみ式サンシェードテント（屋外イベント用）",
+    "reason": "「日差しよけるテント」は運動会・屋外イベント用の折りたたみサンシェードテントが最も一般的な解釈。",
+    "category": "outdoor-sunshade-tent",
+    "search_terms": {
+      "ja": [
+        "サンシェードテント 折りたたみ",
+        "運動会 テント 日よけ"
+      ],
+      "en": [
+        "folding sunshade tent"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "匂い消すやつトイレの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "トイレ用の消臭芳香剤を探している",
+    "ideal_answer": "トイレ用消臭芳香剤",
+    "reason": "「匂い消すやつ」はトイレという文脈語があるため消臭芳香剤へほぼ一意に絞れる。",
+    "category": "toilet-deodorizer",
+    "search_terms": {
+      "ja": [
+        "トイレ 消臭剤",
+        "トイレ 芳香剤"
+      ],
+      "en": [
+        "toilet deodorizer"
+      ],
+      "ko": [
+        "화장실 탈취제"
+      ],
+      "zh": [
+        "马桶除臭剂"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "避難のとき持っていくやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "非常用持ち出し袋（防災リュック）を探している",
+    "ideal_answer": "非常用持ち出し袋（防災リュック、中身セット済みタイプ）",
+    "reason": "「避難のとき持っていくやつ」は防災リュックへの一般的な言い換え。台風・防災の日を踏まえた季節性クエリ。",
+    "category": "emergency-evacuation-backpack",
+    "search_terms": {
+      "ja": [
+        "非常用持ち出し袋",
+        "防災リュック セット"
+      ],
+      "en": [
+        "emergency evacuation backpack"
+      ],
+      "ko": [
+        "비상용 배낭"
+      ],
+      "zh": [
+        "应急背包"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "水を確保しておくやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "長期保存できる備蓄用の飲料水を探している",
+    "ideal_answer": "長期保存水（備蓄用ペットボトル飲料水）",
+    "reason": "「水を確保しておくやつ」は防災文脈では長期保存水が最も一般的な解釈。給水タンクは別カテゴリのため別クエリで扱う。",
+    "category": "emergency-preserved-water",
+    "search_terms": {
+      "ja": [
+        "長期保存水",
+        "備蓄水 ペットボトル"
+      ],
+      "en": [
+        "long-term preserved water"
+      ],
+      "ko": [
+        "비상용 생수"
+      ],
+      "zh": [
+        "长期保存瓶装水"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "虫よけで貼るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "貼るタイプの虫よけシールを探している",
+    "ideal_answer": "貼るタイプの虫よけシール（ベビーカー・衣類用）",
+    "reason": "「貼るやつ」+虫よけという文脈からシールタイプへほぼ一意に絞れる。",
+    "category": "sticker-insect-repellent-patch",
+    "search_terms": {
+      "ja": [
+        "虫よけシール",
+        "貼る 虫よけ"
+      ],
+      "en": [
+        "insect repellent sticker patch"
+      ],
+      "ko": [
+        "붙이는 모기 패치"
+      ],
+      "zh": [
+        "驱蚊贴片"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "玄関に置く滑らないやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "玄関の段差やタイルで滑らないようにする滑り止めマットを探している",
+    "ideal_answer": "玄関用滑り止めマット",
+    "reason": "「滑らないやつ」+玄関という文脈から滑り止めマットへほぼ一意に絞れる。",
+    "category": "entryway-anti-slip-mat",
+    "search_terms": {
+      "ja": [
+        "玄関 滑り止めマット"
+      ],
+      "en": [
+        "entryway anti-slip mat"
+      ],
+      "ko": [
+        "현관 미끄럼방지 매트"
+      ],
+      "zh": [
+        "玄关防滑垫"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "秋の花粉に効くマスク",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。花粉対応の高機能マスクを探しているが、効果を断定できる情報がない",
+    "ideal_answer": "花粉対応をうたう高機能マスクはございますが、症状や体質により合う・合わないがあるため、まずは花粉対策タイプのマスクからご確認いただくのがおすすめです。合わない場合は医師にご相談ください。",
+    "reason": "医薬品的な効能断定を避けるべき安全配慮例。「効く」という表現に対して断定せず、確認を促す理想回答とした。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "花粉対策 マスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "疲れた喉に良いスプレー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。喉ケア用のスプレーを探しているが「良い」という効果を断定できる情報がない",
+    "ideal_answer": "喉のケアを目的としたスプレーはいくつか種類がありますが、症状や体質による効果の違いがあるため、まずは喉ケア用スプレーの成分表示をご確認いただき、体調がすぐれない場合は医師・薬剤師にご相談ください。",
+    "reason": "「疲れた喉に良い」という効能断定を避けるべき安全配慮例。UNCLASSIFIED・低confidenceで注意喚起を理想回答とした。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "喉ケア スプレー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "ピアニカのくちのとこ洗うブラシ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "鍵盤ハーモニカ（ピアニカ）の吹き口を洗浄するブラシを探している",
+    "ideal_answer": "鍵盤ハーモニカ用吹き口洗浄ブラシ",
+    "reason": "「ピアニカのくちのとこ」は子ども特有の吹き口の言い換え。2学期の学用品需要。",
+    "category": "melodica-mouthpiece-brush",
+    "search_terms": {
+      "ja": [
+        "ピアニカ 吹き口 ブラシ",
+        "鍵盤ハーモニカ 洗浄"
+      ],
+      "en": [
+        "melodica mouthpiece brush"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "きゅうしょくのふくろ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "給食袋（コップ袋・ランチョンマット等を入れる巾着袋）を探している",
+    "ideal_answer": "給食袋（巾着タイプ）",
+    "reason": "ひらがな表記の子ども特有の言い方。2学期の学用品需要で新規カテゴリ。",
+    "category": "school-lunch-drawstring-bag",
+    "search_terms": {
+      "ja": [
+        "給食袋",
+        "コップ袋 巾着"
+      ],
+      "en": [
+        "school lunch drawstring bag"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "さんすうのはこ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "算数セット（おはじき・数え棒等）を収納する箱を探している",
+    "ideal_answer": "算数セット収納ケース",
+    "reason": "「さんすうのはこ」は算数セット教材の子ども特有の呼び方。2学期の学用品需要。",
+    "category": "math-set-storage-case",
+    "search_terms": {
+      "ja": [
+        "算数セット 収納ケース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "うわばきあらうブラシ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "上履き専用の洗浄ブラシを探している",
+    "ideal_answer": "上履き洗い専用ブラシ",
+    "reason": "ひらがな表記の子ども特有の言い方。上履き自体ではなく専用ブラシという新規カテゴリ。",
+    "category": "indoor-shoe-wash-brush",
+    "search_terms": {
+      "ja": [
+        "上履き 洗いブラシ"
+      ],
+      "en": [
+        "indoor shoe wash brush"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "ほうきでこわいゆうれいのふく",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。ハロウィン用の子ども向け仮装衣装を探しているが、キャラクターが特定できない",
+    "ideal_answer": "ハロウィン用の仮装衣装ですね。おばけ・魔女・かぼちゃなど、どのキャラクターの衣装をお探しですか？",
+    "reason": "子ども特有の擬音・説明的表現からハロウィン仮装への意図は読めるが、具体キャラが未確定のultra_ambiguous例。9月後半からのハロウィン需要を先取り。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "ひかるくつのひも",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "光る靴ひも（LED内蔵）を探している",
+    "ideal_answer": "光る靴ひも（LED内蔵タイプ）",
+    "reason": "ひらがな表記の子ども特有の言い方。光る系グッズは子どもに人気の新規カテゴリ。",
+    "category": "light-up-shoelace",
+    "search_terms": {
+      "ja": [
+        "光る 靴ひも",
+        "led 靴ひも"
+      ],
+      "en": [
+        "light up shoelace"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "がっきゅうぶんこにいれるほん立て",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "学級文庫用の卓上ブックスタンドを探している",
+    "ideal_answer": "卓上ブックスタンド（学級文庫用）",
+    "reason": "「がっきゅうぶんこ」は小学校特有の語彙。2学期の学用品需要の新規カテゴリ。",
+    "category": "classroom-library-book-stand",
+    "search_terms": {
+      "ja": [
+        "ブックスタンド 卓上",
+        "学級文庫"
+      ],
+      "en": [
+        "desktop book stand"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "押して歩くやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "シルバーカー（歩行補助手押し車）を探している",
+    "ideal_answer": "シルバーカー（歩行補助手押し車、座れるタイプ）",
+    "reason": "「押して歩くやつ」は高齢者層に多いシルバーカーの言い換え。新規カテゴリ。",
+    "category": "silver-car-walking-aid",
+    "search_terms": {
+      "ja": [
+        "シルバーカー",
+        "歩行器 手押し車"
+      ],
+      "en": [
+        "walking aid rollator"
+      ],
+      "ko": [
+        "실버카 보행보조기"
+      ],
+      "zh": [
+        "老人手推车"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "杖の先のすべらないゴム",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "杖の先端に取り付ける滑り止めゴムキャップを探している",
+    "ideal_answer": "杖先ゴム（交換用滑り止めキャップ）",
+    "reason": "杖の消耗品パーツという具体的な語彙で意図はほぼ一意。新規カテゴリ。",
+    "category": "cane-tip-rubber-cap",
+    "search_terms": {
+      "ja": [
+        "杖先ゴム",
+        "杖 滑り止め キャップ"
+      ],
+      "en": [
+        "cane tip rubber cap"
+      ],
+      "ko": [
+        "지팡이 고무 팁"
+      ],
+      "zh": [
+        "拐杖橡胶头"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "字が大きく出る目覚まし時計",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "大画面・大文字表示の目覚まし時計を探している",
+    "ideal_answer": "大文字表示デジタル目覚まし時計",
+    "reason": "「字が大きく出る」は視認性を求める高齢者特有の表現。新規カテゴリ。",
+    "category": "large-display-alarm-clock",
+    "search_terms": {
+      "ja": [
+        "大文字 目覚まし時計",
+        "見やすい 時計 デジタル"
+      ],
+      "en": [
+        "large display alarm clock"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "敬老の日に贈る花以外の実用品",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "不明。実用品という条件のみで具体的な商品カテゴリが特定できない",
+    "ideal_answer": "実用的な贈り物ですね。日常で使う膝掛け・保温マグ・肩たたき器など、どの用途を優先されますか？",
+    "reason": "「花以外の実用品」という除外条件のみでカテゴリが確定できないultra_ambiguous例。敬老の日接近の季節性クエリ。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "花"
+    ],
+    "confidence": 0.3,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "お風呂で滑らないように敷くやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "浴室用の滑り止めマットを探している",
+    "ideal_answer": "浴室用滑り止めマット（吸盤付き）",
+    "reason": "「敷くやつ」+お風呂という文脈から滑り止めマットへほぼ一意に絞れる。高齢者の転倒防止ニーズ。",
+    "category": "bathroom-anti-slip-mat-suction",
+    "search_terms": {
+      "ja": [
+        "浴室 滑り止めマット",
+        "お風呂 滑り止め 吸盤"
+      ],
+      "en": [
+        "bathroom anti-slip mat"
+      ],
+      "ko": [
+        "욕실 미끄럼방지 매트"
+      ],
+      "zh": [
+        "浴室防滑垫"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "薬を朝昼晩で分けておく入れ物",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "服薬管理用のピルケース（曜日・朝昼晩仕切り付き）を探している",
+    "ideal_answer": "服薬管理ピルケース（朝昼晩・曜日仕切り付き）",
+    "reason": "服薬管理という具体的な用途からピルケースへほぼ一意に絞れる。医薬品そのものではなく収納用品なので断定表現なし。",
+    "category": "pill-case-daily-schedule",
+    "search_terms": {
+      "ja": [
+        "ピルケース 朝昼晩",
+        "薬 収納 曜日"
+      ],
+      "en": [
+        "daily pill organizer"
+      ],
+      "ko": [
+        "요일별 약통"
+      ],
+      "zh": [
+        "分药盒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "肩たたく棒",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "肩たたき器（マッサージ棒）を探している",
+    "ideal_answer": "肩たたき器（マッサージ棒タイプ）",
+    "reason": "「肩たたく棒」は肩たたき器への高齢者層に多い言い換え。敬老の日の定番贈り物カテゴリ。",
+    "category": "shoulder-massage-stick",
+    "search_terms": {
+      "ja": [
+        "肩たたき器",
+        "マッサージ棒"
+      ],
+      "en": [
+        "shoulder massage stick"
+      ],
+      "ko": [
+        "어깨 안마봉"
+      ],
+      "zh": [
+        "敲背棒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "태풍 대비 창문 필름",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "台風対策の窓ガラス飛散防止フィルムを探している（韓国語検索）",
+    "ideal_answer": "窓ガラス飛散防止フィルム（台風対策用）",
+    "reason": "韓国語で台風対策の窓フィルムを検索する例。台風シーズンの季節性クエリ。",
+    "category": "typhoon-window-film",
+    "search_terms": {
+      "ja": [
+        "窓 飛散防止フィルム",
+        "台風 窓 フィルム"
+      ],
+      "en": [
+        "window shatterproof film"
+      ],
+      "ko": [
+        "창문 비산방지 필름",
+        "태풍 대비 필름"
+      ],
+      "zh": [
+        "防台风窗膜"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "추석 선물 실용적인 것",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "秋夕（旧盆、敬老の日と近い時期の贈り物文化）向けの実用的な贈り物を探しているが具体カテゴリ不明",
+    "ideal_answer": "実用的な贈り物ですね。保温マグ・膝掛け・食品ギフトなど、どのジャンルをご希望ですか？",
+    "reason": "「実用的なもの」だけでは具体カテゴリが確定できないultra_ambiguous例。敬老の日前後の季節性を韓国語話者の視点で反映。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "정전 때 밝게 하는 것",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "停電時用のLEDランタンを探している（韓国語検索）",
+    "ideal_answer": "防災用LEDランタン（手回し充電・電池式）",
+    "reason": "韓国語で「停電の時に明るくするもの」を検索する例。日本語版と同一カテゴリの多言語表現。",
+    "category": "emergency-led-lantern",
+    "search_terms": {
+      "ja": [
+        "防災 ランタン"
+      ],
+      "en": [
+        "emergency led lantern"
+      ],
+      "ko": [
+        "정전 랜턴",
+        "비상 led 랜턴"
+      ],
+      "zh": [
+        "应急led灯"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "실버카 노인용 보행기",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "シルバーカー（高齢者用歩行補助手押し車）を探している（韓国語検索）",
+    "ideal_answer": "シルバーカー（歩行補助手押し車、座れるタイプ）",
+    "reason": "韓国語話者による高齢者用歩行器の検索例。カテゴリはほぼ一意。",
+    "category": "silver-car-walking-aid",
+    "search_terms": {
+      "ja": [
+        "シルバーカー"
+      ],
+      "en": [
+        "walking aid rollator"
+      ],
+      "ko": [
+        "실버카",
+        "노인 보행기"
+      ],
+      "zh": [
+        "老人手推车"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "台风前贴窗户的膜",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "台風対策の窓ガラス飛散防止フィルムを探している（中国語検索）",
+    "ideal_answer": "窓ガラス飛散防止フィルム（台風対策用）",
+    "reason": "中国語で台風対策の窓フィルムを検索する例。既存の韓国語版と同一カテゴリの多言語表現。",
+    "category": "typhoon-window-film",
+    "search_terms": {
+      "ja": [
+        "窓 飛散防止フィルム"
+      ],
+      "en": [
+        "window shatterproof film"
+      ],
+      "ko": [
+        "창문 비산방지 필름"
+      ],
+      "zh": [
+        "防台风窗膜",
+        "玻璃防爆膜"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "换季收纳的真空压缩袋",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "衣替え用の真空圧縮袋を探している（中国語検索）",
+    "ideal_answer": "衣類用真空圧縮袋（衣替え収納用）",
+    "reason": "「换季收纳」は季節の変わり目の衣類収納を意味する中国語表現。衣替えシーズンの新規カテゴリ。",
+    "category": "vacuum-storage-compression-bag",
+    "search_terms": {
+      "ja": [
+        "圧縮袋 衣替え",
+        "真空圧縮袋"
+      ],
+      "en": [
+        "vacuum storage compression bag"
+      ],
+      "ko": [
+        "압축팩 옷장정리"
+      ],
+      "zh": [
+        "真空压缩袋",
+        "换季收纳袋"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "防灾用的应急背包里面装什么",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "不明。防災リュックの中身の説明を求めているのか、防災リュック本体を購入したいのか特定できない",
+    "ideal_answer": "防災リュック本体（中身セット済み）をお探しですか、それとも中身のリストや不足品の補充をお探しですか？",
+    "reason": "「里面装什么」は中身の情報を求めている可能性があり、商品購入意図と情報検索意図の両方があり得るultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "敬老节送实用的东西",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "敬老の日向けの実用的な贈り物として保温マグを探している（中国語検索）",
+    "ideal_answer": "保温マグ（ステンレスタンブラー、名入れ可）",
+    "reason": "実用的な贈り物の代表例として保温マグを最も一般的な解釈とした。敬老の日ギフトの中国語表現版。",
+    "category": "insulated-tumbler-gift",
+    "search_terms": {
+      "ja": [
+        "保温マグ 名入れ",
+        "敬老の日 マグ"
+      ],
+      "en": [
+        "insulated tumbler gift"
+      ],
+      "ko": [
+        "보온 텀블러 선물"
+      ],
+      "zh": [
+        "保温杯 礼物"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "typhoon window protection film",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "台風対策の窓ガラス飛散防止フィルムを探している（英語検索）",
+    "ideal_answer": "窓ガラス飛散防止フィルム（台風対策用）",
+    "reason": "英語で台風対策の窓フィルムを検索する例。多言語で同一カテゴリを表現する構成。",
+    "category": "typhoon-window-film",
+    "search_terms": {
+      "ja": [
+        "窓 飛散防止フィルム"
+      ],
+      "en": [
+        "typhoon window protection film",
+        "window shatterproof film"
+      ],
+      "ko": [
+        "창문 비산방지 필름"
+      ],
+      "zh": [
+        "防台风窗膜"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "something to keep phone charged during blackout",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "停電時にスマートフォンを充電し続けるための大容量モバイルバッテリーを探している",
+    "ideal_answer": "大容量モバイルバッテリー（防災用）",
+    "reason": "停電対策の充電手段として大容量モバイルバッテリーを最も一般的な解釈とした。防災シーズンの英語検索。",
+    "category": "power-bank-large-capacity",
+    "search_terms": {
+      "ja": [
+        "モバイルバッテリー 大容量"
+      ],
+      "en": [
+        "large capacity power bank",
+        "emergency phone charger"
+      ],
+      "ko": [
+        "대용량 보조배터리"
+      ],
+      "zh": [
+        "大容量充电宝"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "respectful practical gift for grandparents day japan",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "敬老の日向けの実用的な贈り物として保温マグを探している（英語検索）",
+    "ideal_answer": "保温マグ（ステンレスタンブラー、名入れ可）",
+    "reason": "実用的な贈り物の代表例として保温マグを最も一般的な解釈とした。敬老の日ギフトの英語表現版。",
+    "category": "insulated-tumbler-gift",
+    "search_terms": {
+      "ja": [
+        "保温マグ 名入れ"
+      ],
+      "en": [
+        "insulated tumbler gift",
+        "practical grandparents day gift"
+      ],
+      "ko": [
+        "보온 텀블러 선물"
+      ],
+      "zh": [
+        "保温杯 礼物"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "undokai 応援 うちわ pankeru",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "運動会・ライブ応援用のうちわ型応援パネルを探している（ローマ字と日本語が混在）",
+    "ideal_answer": "応援うちわ（メッセージボード・文字パネル型）",
+    "reason": "ローマ字表記の日本語(undokai/pankeru)が混じるmixedロケール例。運動会・推し活の両方で使える新規カテゴリ。",
+    "category": "fan-message-board-uchiwa",
+    "search_terms": {
+      "ja": [
+        "応援うちわ",
+        "うちわ文字パネル"
+      ],
+      "en": [
+        "fan message board uchiwa"
+      ],
+      "ko": [
+        "응원 부채 팬보드"
+      ],
+      "zh": [
+        "应援扇灯牌"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "keiro no hi present jitsuyou",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "敬老の日向けの実用的な贈り物として保温マグを探している（ローマ字混在）",
+    "ideal_answer": "保温マグ（ステンレスタンブラー、名入れ可）",
+    "reason": "ローマ字表記(keiro no hi/jitsuyou)のmixedロケール例。実用的な贈り物の代表例として保温マグを最も一般的な解釈とした。",
+    "category": "insulated-tumbler-gift",
+    "search_terms": {
+      "ja": [
+        "保温マグ 名入れ"
+      ],
+      "en": [
+        "insulated tumbler gift"
+      ],
+      "ko": [
+        "보온 텀블러 선물"
+      ],
+      "zh": [
+        "保温杯 礼物"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "トレカを守る硬めのケース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "トレーディングカード用の硬質カードケース（スリーブ)を探している",
+    "ideal_answer": "トレカ用硬質カードケース",
+    "reason": "推し活・トレカ文化のトレンド語彙。「守る硬めのケース」は硬質カードケースへの言い換え。",
+    "category": "trading-card-hard-case",
+    "search_terms": {
+      "ja": [
+        "トレカ 硬質ケース",
+        "カードケース 硬い"
+      ],
+      "en": [
+        "trading card hard case"
+      ],
+      "ko": [
+        "포토카드 하드케이스"
+      ],
+      "zh": [
+        "卡套硬壳"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "量産型さんが持ってるキーホルダーみたいなの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "推し活の量産型バッグに付けるアクリルキーホルダーを探している",
+    "ideal_answer": "アクリルキーホルダー（量産型バッグ用、推し活アクセサリー）",
+    "reason": "「量産型」トレンド語彙とキーホルダーという語から、量産型バッグ用アクリルキーホルダーを最も一般的な解釈とした。",
+    "category": "acrylic-keychain-oshikatsu",
+    "search_terms": {
+      "ja": [
+        "アクリルキーホルダー 推し活",
+        "量産型 キーホルダー"
+      ],
+      "en": [
+        "acrylic keychain fandom"
+      ],
+      "ko": [
+        "아크릴 키링"
+      ],
+      "zh": [
+        "亚克力钥匙扣"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "タイパ良く乾かすドライヤー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "速乾機能付きの高性能ドライヤーを探している",
+    "ideal_answer": "速乾機能付きヘアドライヤー（大風量タイプ）",
+    "reason": "「タイパ良く」は若者のタイムパフォーマンス重視語彙。乾かす対象がドライヤーで明確なため確定的回答。",
+    "category": "fast-drying-hair-dryer",
+    "search_terms": {
+      "ja": [
+        "速乾 ドライヤー",
+        "大風量 ドライヤー"
+      ],
+      "en": [
+        "fast drying hair dryer"
+      ],
+      "ko": [
+        "급속건조 드라이기"
+      ],
+      "zh": [
+        "速干吹风机"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "スキマ時間で見返すやつ暗記カード",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "資格試験・学習用の暗記カード（フラッシュカード、リング式）を探している",
+    "ideal_answer": "リング式暗記カード（フラッシュカード）",
+    "reason": "「スキマ時間」は若者・受験生に多いタイパ重視語彙。「暗記カード」で対象は明確。9月からの資格試験シーズンを踏まえた季節性。",
+    "category": "flashcard-ring-study",
+    "search_terms": {
+      "ja": [
+        "暗記カード リング式",
+        "フラッシュカード"
+      ],
+      "en": [
+        "ring flashcards"
+      ],
+      "ko": [
+        "암기카드"
+      ],
+      "zh": [
+        "记忆卡环装"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "推し活の透明のうちわカバー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "うちわを保護する透明カバー（うちわビニールカバー）を探している",
+    "ideal_answer": "うちわ用透明ビニールカバー",
+    "reason": "推し活トレンド語彙。「透明のうちわカバー」で対象は明確。",
+    "category": "uchiwa-clear-cover",
+    "search_terms": {
+      "ja": [
+        "うちわ カバー 透明",
+        "うちわ ビニールカバー"
+      ],
+      "en": [
+        "clear fan cover"
+      ],
+      "ko": [
+        "부채 커버 투명"
+      ],
+      "zh": [
+        "扇子透明保护套"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  },
+  {
+    "query_text": "わきにはさんで測る体温計",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "脇下式の電子体温計を探している",
+    "ideal_answer": "脇下式電子体温計",
+    "reason": "「わきにはさんで測る」は脇下式電子体温計への一般的な言い換え。感染症シーズンを見据えた手薄領域の新規カテゴリ。",
+    "category": "digital-thermometer-underarm",
+    "search_terms": {
+      "ja": [
+        "電子体温計 脇",
+        "体温計 わき"
+      ],
+      "en": [
+        "digital underarm thermometer"
+      ],
+      "ko": [
+        "겨드랑이 체온계"
+      ],
+      "zh": [
+        "腋下电子体温计"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-02",
+    "authored_updated_date": "2026-09-02"
+  }
+]
