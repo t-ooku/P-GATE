@@ -258,6 +258,44 @@ export function decorateAmazonAssociateDestination(destination, associateTag = '
   }
 }
 
+// バリューコマースで提携済み(かつMyLink利用可能)の広告主ドメインだけを、
+// クリック計測用のreferral URLで包む。フロントの直リンクはLinkSwitch
+// (linkswitch-init.js + vcdal.js)がクリック時に変換するが、/go経由の
+// 商品リンクはhrefがhoshilu.appなのでLinkSwitchが効かない。そこで
+// /goのリダイレクト先で同じ変換をサーバー側から行う(2026-09-02)。
+// 追加する場合は、必ずバリューコマース管理画面で提携済みになってから
+// ドメインを足すこと。未提携の広告主を包むとクリックが無効になる。
+// 楽天市場は提携承認待ちのため未追加。Amazonは別プログラム(タグ方式)。
+const VALUE_COMMERCE_PARTNERED_HOSTS = Object.freeze([
+  'shopping.yahoo.co.jp',            // Yahoo!ショッピング(LINEヤフー)
+  'qoo10.jp',                        // Qoo10 (eBay Japan)
+  'hands.net',                       // ハンズ ネットストア
+  'matsukiyococokara-online.com'     // マツキヨココカラオンラインストア
+]);
+
+export function decorateValueCommerceDestination(destination, sid = '', pid = '') {
+  const source = String(destination || '');
+  const siteId = String(sid || '').trim();
+  const adSpaceId = String(pid || '').trim();
+  if (!/^\d{1,12}$/.test(siteId) || !/^\d{1,12}$/.test(adSpaceId)) return source;
+  try {
+    const url = new URL(source);
+    if (url.protocol !== 'https:') return source;
+    const host = url.hostname.toLowerCase().replace(/\.$/, '');
+    const partnered = VALUE_COMMERCE_PARTNERED_HOSTS.some(
+      (allowed) => host === allowed || host.endsWith(`.${allowed}`)
+    );
+    if (!partnered) return source;
+    const referral = new URL('https://ck.jp.ap.valuecommerce.com/servlet/referral');
+    referral.searchParams.set('sid', siteId);
+    referral.searchParams.set('pid', adSpaceId);
+    referral.searchParams.set('vc_url', url.toString());
+    return referral.toString();
+  } catch {
+    return source;
+  }
+}
+
 const SELLER_PLAN_PRIORITY = Object.freeze({
   PARTNER: 0,
   PRO: 1,
@@ -964,7 +1002,13 @@ async function handleRedirect(request, env, ctx) {
     // 記録する。失敗してもリダイレクト自体は絶対に止めない(下のrecord
     // OutboundCommerceEvent内部で例外を握りつぶす設計)。
     ctx.waitUntil(recordOutboundCommerceEvent(env, payload, occurredAt));
-    const destination = decorateAmazonAssociateDestination(payload.d, env.AMAZON_ASSOCIATE_TAG);
+    // Amazonはタグ付与、バリューコマース提携モール(Yahoo!・Qoo10等)は
+    // referral URLで包む。対象ドメインが重ならないため合成しても安全で、
+    // どちらにも該当しないリンクは素通りする。
+    const destination = decorateValueCommerceDestination(
+      decorateAmazonAssociateDestination(payload.d, env.AMAZON_ASSOCIATE_TAG),
+      env.VC_SID, env.VC_PID
+    );
     return Response.redirect(destination, 302);
   } catch (error) {
     return new Response(String(error.message || error), { status: 400 });

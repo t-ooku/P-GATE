@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import cryptoModule from 'node:crypto';
 import { buildOutboundCommerceEvent, recordOutboundCommerceEvent } from '../src/outbound-commerce-event.mjs';
-import worker, { createTrackToken, decorateAmazonAssociateDestination } from '../src/index.mjs';
+import worker, { createTrackToken, decorateAmazonAssociateDestination, decorateValueCommerceDestination } from '../src/index.mjs';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= (value) => Buffer.from(value, 'binary').toString('base64');
@@ -166,6 +166,93 @@ test('v4.3項目27: GET /go は既存どおり302リダイレクトしつつ、�
     assert.equal(rows[0].destination_marketplace, 'AMAZON_JP');
     assert.equal(rows[0].search_intent_id, 'query-intent-999');
     assert.equal(rows[0].session_id, 'session-hash-xyz');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+// 2026-09-02: /go経由の商品リンクもバリューコマース提携モールなら
+// referral URLで包んで収益化する(フロント直リンクのLinkSwitchと対)。
+test('提携済みモールの/go先はバリューコマースreferralで包まれ、元URLを完全保持する', () => {
+  const wrapped = new URL(decorateValueCommerceDestination(
+    'https://www.qoo10.jp/g/123456?banner=abc', '3779199', '892690168'
+  ));
+  assert.equal(wrapped.origin, 'https://ck.jp.ap.valuecommerce.com');
+  assert.equal(wrapped.pathname, '/servlet/referral');
+  assert.equal(wrapped.searchParams.get('sid'), '3779199');
+  assert.equal(wrapped.searchParams.get('pid'), '892690168');
+  assert.equal(wrapped.searchParams.get('vc_url'), 'https://www.qoo10.jp/g/123456?banner=abc');
+  const yahoo = new URL(decorateValueCommerceDestination(
+    'https://store.shopping.yahoo.co.jp/example/item123.html', '3779199', '892690168'
+  ));
+  assert.equal(yahoo.searchParams.get('vc_url'), 'https://store.shopping.yahoo.co.jp/example/item123.html');
+});
+
+test('未提携・対象外のリンクはバリューコマースreferralで包まない', () => {
+  // 楽天は提携承認待ちのため素通り。承認後にVALUE_COMMERCE_PARTNERED_HOSTSへ追加する。
+  assert.equal(
+    decorateValueCommerceDestination('https://search.rakuten.co.jp/search/mall/test/', '3779199', '892690168'),
+    'https://search.rakuten.co.jp/search/mall/test/'
+  );
+  // Amazonは別プログラム(タグ方式)なので包まない。
+  assert.equal(
+    decorateValueCommerceDestination('https://amazon.co.jp/dp/B000000ABC?tag=hoshilu00-22', '3779199', '892690168'),
+    'https://amazon.co.jp/dp/B000000ABC?tag=hoshilu00-22'
+  );
+  // 設定不備(sid/pidが数値でない・空)の場合は素通りして送客自体は止めない。
+  assert.equal(
+    decorateValueCommerceDestination('https://www.qoo10.jp/g/1', '', ''),
+    'https://www.qoo10.jp/g/1'
+  );
+  assert.equal(
+    decorateValueCommerceDestination('https://www.qoo10.jp/g/1', 'abc', '892690168'),
+    'https://www.qoo10.jp/g/1'
+  );
+  // https以外・不正URLも素通り。
+  assert.equal(
+    decorateValueCommerceDestination('http://www.qoo10.jp/g/1', '3779199', '892690168'),
+    'http://www.qoo10.jp/g/1'
+  );
+  // 偽装ドメイン(qoo10.jp.evil.example)は包まない。
+  assert.equal(
+    decorateValueCommerceDestination('https://qoo10.jp.evil.example/g/1', '3779199', '892690168'),
+    'https://qoo10.jp.evil.example/g/1'
+  );
+});
+
+test('GET /go はQoo10先をバリューコマースreferral経由で302し、送客イベントも従来どおり記録する', async () => {
+  const { sqlite, db } = sqliteD1();
+  const secret = 'l'.repeat(32);
+  const token = await createTrackToken({
+    u: 'session-hash-vc1', r: 'query-intent-vc1', a: 'Q000000001', d: 'https://www.qoo10.jp/g/123456',
+    exp: Math.floor(Date.now() / 1000) + 3600, j: 'seed:Q000000001:QOO10_JP', c: 'PWA', m: 'QOO10_JP'
+  }, secret);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ ok: true, result: {} });
+  try {
+    const request = new Request(`https://hoshilu.app/go?token=${encodeURIComponent(token)}`);
+    const env = {
+      LINK_SIGNING_SECRET: secret,
+      AMAZON_ASSOCIATE_TAG: 'hoshilu00-22',
+      VC_SID: '3779199',
+      VC_PID: '892690168',
+      GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec',
+      GAS_BRIDGE_SECRET: 'g'.repeat(32),
+      PRODUCT_DB: db
+    };
+    const waitUntilPromises = [];
+    const context = { waitUntil: (p) => waitUntilPromises.push(p) };
+    const response = await worker.fetch(request, env, context);
+    assert.equal(response.status, 302);
+    const location = new URL(response.headers.get('location'));
+    assert.equal(location.origin, 'https://ck.jp.ap.valuecommerce.com');
+    assert.equal(location.searchParams.get('sid'), '3779199');
+    assert.equal(location.searchParams.get('pid'), '892690168');
+    assert.equal(location.searchParams.get('vc_url'), 'https://www.qoo10.jp/g/123456');
+    await Promise.all(waitUntilPromises);
+    const rows = sqlite.prepare('SELECT * FROM outbound_commerce_events').all();
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].destination_marketplace, 'QOO10_JP');
   } finally {
     globalThis.fetch = originalFetch;
   }
