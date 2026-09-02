@@ -1694,3 +1694,17 @@ test('保存条件一覧は初回baseline説明と通知頻度を4言語のactio
   assert.match(wishItem, /\[\['INSTANT',actions\.frequencyInstant\],\['DAILY',actions\.frequencyDaily\],\['WEEKLY',actions\.frequencyWeekly\],\['MUTED',actions\.frequencyMuted\]\]/u);
   assert.doesNotMatch(wishItem, /'通知頻度'|'すぐに通知'|'1日1回'|'週1回'|'通知を停止'/u);
 });
+
+// 2026-09-02 実機: キムチ写真のJAN(4902175435297)が電話番号除去の正規表現に
+// 内側から食われて「49」になり、キングダム49巻などが提示された。個人情報の
+// 除去は「単独の数字列」だけに限定し、JAN/型番など識別子の内部には触れない。
+test('電話番号の除去はJANや型番の内部を壊さない', () => {
+  assert.equal(mergeAiRefinedSearchQuery('', '4902175435297'), '4902175435297');
+  assert.equal(mergeAiRefinedSearchQuery('', '東海漬物 こくうま キムチ 4902175435297'), '東海漬物 こくうま キムチ 4902175435297');
+  assert.equal(mergeAiRefinedSearchQuery('', '45678901 JAN8'), '45678901 JAN8');
+  assert.equal(mergeAiRefinedSearchQuery('', 'iPhone 15 Pro 256GB'), 'iPhone 15 Pro 256GB');
+  assert.equal(mergeAiRefinedSearchQuery('', 'キムチ 090-1234-5678 送って'), 'キムチ 送って');
+  assert.equal(mergeAiRefinedSearchQuery('', 'キムチ 09012345678'), 'キムチ');
+  assert.equal(mergeAiRefinedSearchQuery('', 'キムチ +81 90 1234 5678'), 'キムチ');
+  assert.equal(mergeAiRefinedSearchQuery('', 'キムチ 03-1234-5678'), 'キムチ');
+});
