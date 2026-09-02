@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   detectGoogleVisualWebEvidence,
   googleVisualWebDetectionConfigured,
@@ -174,7 +175,7 @@ test('Visionの通信・HTTP・JSON・providerエラーは入力断片を含ま�
 
 test('Vision応答はサイズ上限を超えたら解析しない', async () => {
   await assert.rejects(
-    () => detectGoogleVisualWebEvidence(IMAGE, ENV, async () => new Response('x'.repeat((512 * 1024) + 1))),
+    () => detectGoogleVisualWebEvidence(IMAGE, ENV, async () => new Response('x'.repeat((4 * 1024 * 1024) + 1))),
     /GOOGLE_VISUAL_WEB_DETECTION_FAILED/u
   );
 });
@@ -185,7 +186,7 @@ test('Content-Lengthなしの過大chunked応答も上限で読み止めてcance
   const stream = new ReadableStream({
     pull(controller) {
       chunksProduced += 1;
-      controller.enqueue(new Uint8Array(64 * 1024).fill(0x78));
+      controller.enqueue(new Uint8Array(512 * 1024).fill(0x78));
       if (chunksProduced >= 20) controller.close();
     },
     cancel() { cancelled = true; }
@@ -196,7 +197,7 @@ test('Content-Lengthなしの過大chunked応答も上限で読み止めてcance
   );
   assert.equal(cancelled, true);
   // WHATWG streams may pull one chunk ahead; the reader still cancels as soon
-  // as the ninth 64 KiB chunk crosses the 512 KiB cap.
+  // as the ninth 512 KiB chunk crosses the 4 MiB cap.
   assert.ok(chunksProduced <= 10, `read ${chunksProduced} chunks before enforcing the cap`);
 });
 
@@ -270,4 +271,22 @@ test('商品名側の区切りはsourceと一致しない限り削らない', ()
     'アミューズ | 豆しば三兄弟 パグ兵衛',
     '豆しば三兄弟 パグ兵衛'
   ]);
+});
+
+test('Vision失敗は固定語彙のdetailを持ち、文字の多いパッケージ分の上限と時間を確保する', async () => {
+  const source = await readFile(new URL('../src/google-visual-web-detection.mjs', import.meta.url), 'utf8');
+  assert.match(source, /const VISION_TIMEOUT_MS = 6500;/u);
+  assert.match(source, /const MAX_RESPONSE_CHARACTERS = 4 \* 1024 \* 1024;/u);
+  await assert.rejects(
+    () => detectGoogleVisualWebEvidence(IMAGE, ENV, async () => new Response('private body', { status: 403 })),
+    (error) => error.message === 'GOOGLE_VISUAL_WEB_DETECTION_FAILED' && error.detail === 'HTTP_403'
+  );
+  await assert.rejects(
+    () => detectGoogleVisualWebEvidence(IMAGE, ENV, async () => { const e = new Error('x'); e.name = 'TimeoutError'; throw e; }),
+    (error) => error.detail === 'TIMEOUT'
+  );
+  await assert.rejects(
+    () => detectGoogleVisualWebEvidence(IMAGE, ENV, async () => new Response('x'.repeat((4 * 1024 * 1024) + 1))),
+    (error) => error.detail === 'TOO_LARGE'
+  );
 });

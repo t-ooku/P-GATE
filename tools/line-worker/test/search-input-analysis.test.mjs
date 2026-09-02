@@ -831,3 +831,38 @@ test('Gemini成功時もOCRで読めたJANをmatched_featuresへ添える(検索
   assert.equal(result.refined_query, '東海漬物 こくうま キムチ 300g');
   assert.ok(result.matched_features.some((feature) => feature.includes('4902175435297')));
 });
+
+// 2026-09-02 切り分け: 失敗が「Gemini側か・Vision側か・証拠が無いのか」を
+// 固定語彙のコードだけで運用テレメトリに残す(入力断片は含めない)。
+test('失敗時は段階付きの固定診断コードを error.diagnostic に残す', async () => {
+  const leaked = 'private package text';
+  await assert.rejects(
+    () => analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+      if (String(url).startsWith('https://vision.googleapis.com/')) {
+        return new Response(leaked, { status: 400 });
+      }
+      return new Response(leaked, { status: 429 });
+    }),
+    (error) => {
+      assert.equal(error.message, 'SEARCH_INPUT_ANALYSIS_FAILED');
+      assert.match(error.diagnostic, /^[A-Z][A-Z0-9_]{2,79}$/u);
+      assert.match(error.diagnostic, /^SEARCH_INPUT_ANALYSIS_FAILED__G_HTTP_429_VFAIL_HTTP_400_E0_T0_J0_B0$/u);
+      assert.doesNotMatch(String(error.diagnostic), /private/u);
+      return true;
+    }
+  );
+  await assert.rejects(
+    () => analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+      if (String(url).startsWith('https://vision.googleapis.com/')) {
+        return Response.json({ responses: [{ webDetection: { bestGuessLabels: [{ label: 'cartoon' }] } }] });
+      }
+      return Response.json({ candidates: [{ content: { parts: [{ text: '{}' }] } }] });
+    }),
+    (error) => {
+      assert.equal(error.message, 'SEARCH_INPUT_ANALYSIS_EMPTY');
+      assert.match(error.diagnostic, /^SEARCH_INPUT_ANALYSIS_EMPTY__G_OK_V_/u);
+      assert.match(error.diagnostic, /_B1$/u);
+      return true;
+    }
+  );
+});

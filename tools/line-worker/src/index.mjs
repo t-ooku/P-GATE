@@ -2757,9 +2757,13 @@ async function handleKnowledgeApi(request, env, ctx) {
     ];
     const status = clientErrors.includes(code) ? 400
       : code.startsWith('SEARCH_INPUT_ANALYSIS_') ? 503 : 500;
-    console.error('KNOWLEDGE_SEARCH_FAILED', { requestId, code: code.slice(0, 80), status });
+    // 切り分け用の固定語彙コード(入力断片なし)。利用者向けcodeは変えず、
+    // 構造化ログと運用テレメトリだけ段階付きコードで残す。
+    const diagnostic = /^[A-Z][A-Z0-9_]{2,79}$/u.test(String(error?.diagnostic || ''))
+      ? String(error.diagnostic) : '';
+    console.error('KNOWLEDGE_SEARCH_FAILED', { requestId, code: code.slice(0, 80), status, diagnostic });
     if (status >= 500) {
-      const record = recordSearchOperationalFailure(env, { requestId, code }).catch((telemetryError) => {
+      const record = recordSearchOperationalFailure(env, { requestId, code: diagnostic || code }).catch((telemetryError) => {
         console.error('SEARCH_OPERATIONAL_TELEMETRY_FAILED', {
           requestId, code: String(telemetryError?.message || telemetryError).slice(0, 80)
         });
