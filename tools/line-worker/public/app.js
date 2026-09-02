@@ -972,7 +972,7 @@ function finishInstantMarketplaceHandoff(degraded=false){
   const language=elements.language.value||'JA';
   status.textContent=degraded
     ?({JA:'本検索へ接続できませんでした。下のモール検索はそのまま利用できます。',EN:'The main search is unavailable. The marketplace links below remain available.',ZH:'无法连接主搜索。仍可使用下方商城搜索链接。',KO:'본 검색에 연결할 수 없습니다. 아래 쇼핑몰 검색 링크는 계속 이용할 수 있습니다.'}[language]||'The marketplace links remain available.')
-    :({JA:'確認済み結果を下に追加しました。モール検索もそのまま利用できます。',EN:'Verified results were added below. The marketplace links remain available.',ZH:'已在下方添加核实结果，商城搜索链接仍可使用。',KO:'확인된 결과를 아래에 추가했습니다. 쇼핑몰 검색 링크도 계속 이용할 수 있습니다.'}[language]||'Verified results were added below.');
+    :({JA:'商品候補を上に表示しました。モール・SNS検索はこの下で引き続き利用できます。',EN:'Product candidates are shown above. Marketplace and SNS links remain available below.',ZH:'商品候选已显示在上方。下方仍可使用商城和SNS搜索链接。',KO:'상품 후보를 위에 표시했습니다. 쇼핑몰·SNS 검색 링크는 아래에서 계속 이용할 수 있습니다.'}[language]||'Product candidates are shown above.');
 }
 function cancelInstantMarketplaceHandoff(){
   const status=elements.instantMarketplace?.querySelector('.instant-marketplace-status');if(!status)return;

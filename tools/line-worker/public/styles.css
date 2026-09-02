@@ -72,3 +72,13 @@
 
 .hero-copy .hero-promise{max-width:780px;margin:20px 0 0;color:var(--muted);font-size:clamp(14px,2.1vw,18px);line-height:1.75;font-weight:700}
 @media(max-width:760px){.hero-copy .hero-promise{margin-top:14px;font-size:14px;line-height:1.65}}
+/* 2026-09-02 実機フィードバック: 検索後は商品カードを先に見せる。
+   即時ハンドオフ(13モール・SNS導線)は商品の後へ。検索中はカードが
+   空なので、従来どおりメッセージ直下に見える。DOM順は変えないため
+   既存のJS参照・aria・テストには影響しない。 */
+.results{display:flex;flex-direction:column}
+.results .section-title{order:1}
+.results .result-message{order:2}
+.results .affiliate-link-note{order:3}
+.results .result-grid{order:4}
+.results .instant-marketplace-handoff{order:5}
