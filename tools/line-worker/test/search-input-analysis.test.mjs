@@ -797,3 +797,37 @@ test('画像付き解析はタイムアウト1回なら短めに再試行して�
   assert.equal(calls, 2);
   assert.equal(result.refined_query, '赤ちゃんのおしりふき 弱酸性 80枚');
 });
+
+// 2026-09-02: パッケージ商品はバーコード下のJAN数字が最も確実な識別子。
+// OCRで読めたJAN(空白区切り・チェックディジット一致)を最優先の救済にする。
+test('Gemini不通でもOCRで読めたJANコードがあればJAN検索へ縮退する', async () => {
+  const { extractJanCodes } = await import('../src/google-visual-web-detection.mjs');
+  assert.deepEqual(extractJanCodes('こくうま\n4 902175 435297\n0120-623-336\n内容量300g'), ['4902175435297']);
+  // チェックディジット不一致・国番号外は拾わない
+  assert.deepEqual(extractJanCodes('4902175435298\n1234567890128'), []);
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: { bestGuessLabels: [{ label: 'food' }] },
+        textAnnotations: [{ description: 'ごはんに合う\nこくうま\n東海漬物\n4 902175 435297\n300g\n要冷蔵' }] }] });
+    }
+    return new Response('', { status: 503 });
+  });
+  assert.equal(result.provider, 'GOOGLE_VISION_JAN_FALLBACK');
+  assert.equal(result.refined_query, '4902175435297');
+  assert.ok(result.matched_features.some((feature) => feature.includes('4902175435297')));
+  assert.equal(result.candidate_name, '');
+});
+
+test('Gemini成功時もOCRで読めたJANをmatched_featuresへ添える(検索語は変えない)', async () => {
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: {},
+        textAnnotations: [{ description: 'こくうま\n4902175435297' }] }] });
+    }
+    return Response.json({ candidates: [{ content: { parts: [{
+      text: '{"refined_query":"東海漬物 こくうま キムチ 300g","candidate_name":"こくうま キムチ"}'
+    }] } }] });
+  });
+  assert.equal(result.refined_query, '東海漬物 こくうま キムチ 300g');
+  assert.ok(result.matched_features.some((feature) => feature.includes('4902175435297')));
+});

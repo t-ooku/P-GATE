@@ -375,6 +375,19 @@ export function weakGoogleVisualBestGuessAnalysis(evidence = {}) {
 
 // 撮りたての実物写真で最も確実な手がかりは、パッケージに印字された文字。
 // OCRで読めた行(整形済み)から検索語を作る。商品特定は主張しない。
+// バーコード下の数字(JAN)が読めた場合は、商品名の推測より確実な
+// 識別子検索にする。名称の推測はせず、検索語はJANそのもの。
+export function janCodeSearchAnalysis(evidence = {}) {
+  const jan = Array.isArray(evidence?.jan_codes) ? String(evidence.jan_codes[0] || '') : '';
+  if (!/^\d{8}$|^\d{13}$/u.test(jan)) return null;
+  const nameLine = cleanText(String(evidence.detected_text || '').split('\n')[0] || '', 40);
+  return normalizeSearchInputAnalysis({
+    refined_query: jan,
+    matched_features: [`JAN ${jan}`, ...(nameLine ? [nameLine] : [])],
+    match_score: 0
+  });
+}
+
 export function ocrTextSearchAnalysis(evidence = {}) {
   if (!evidence || typeof evidence !== 'object') return null;
   // detected_textは出現頻度順。日本語(かな・漢字)を含む行を優先し、
@@ -518,6 +531,8 @@ export async function analyzeSearchInput({
   // 商品特定は主張しない。証拠が無ければnullを返し、従来どおり失敗する。
   const visionOnlyRescue = () => {
     if (!normalizedImage || isIndependentSearchText(rememberedQuery)) return null;
+    const jan = janCodeSearchAnalysis(visualWebEvidence);
+    if (jan) return { result: jan, provider: 'GOOGLE_VISION_JAN_FALLBACK' };
     const strong = strongGoogleVisualWebFallbackAnalysis(visualWebEvidence);
     if (strong) return { result: strong, provider: 'GOOGLE_VISION_WEB_DETECTION_FALLBACK' };
     const ocr = ocrTextSearchAnalysis(visualWebEvidence);
@@ -613,6 +628,10 @@ export async function analyzeSearchInput({
   if (!result.refined_query) {
     if (isIndependentSearchText(rememberedQuery)) return { configured: true, provider: 'GEMINI_MULTIMODAL_FALLBACK', ...normalizeSearchInputAnalysis({ refined_query: rememberedQuery }) };
     throw new Error('SEARCH_INPUT_ANALYSIS_EMPTY');
+  }
+  const detectedJan = Array.isArray(visualWebEvidence?.jan_codes) ? visualWebEvidence.jan_codes[0] : '';
+  if (detectedJan && !result.matched_features.some((feature) => feature.includes(detectedJan))) {
+    result = { ...result, matched_features: [`JAN ${detectedJan}`, ...result.matched_features].slice(0, 8) };
   }
   return {
     configured: true,
