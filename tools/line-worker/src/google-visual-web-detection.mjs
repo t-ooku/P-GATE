@@ -12,8 +12,17 @@ import { hasValidCheckDigit } from './product-identifier.mjs';
 import { sanitizeAiOutputText } from './ai-output-safety.mjs';
 
 const VISION_ENDPOINT = 'https://vision.googleapis.com/v1/images:annotate';
-const VISION_TIMEOUT_MS = 3500;
-const MAX_RESPONSE_CHARACTERS = 512 * 1024;
+// TEXT_DETECTION同乗後はパッケージ文字量に比例して応答が大きく・遅くなる
+// (文字1つごとに座標付き)。文字の多い食品パッケージでも読み切れる上限に
+// する(2026-09-02 実機: キムチの写真がVision段階で落ちていた疑い)。
+const VISION_TIMEOUT_MS = 6500;
+const MAX_RESPONSE_CHARACTERS = 4 * 1024 * 1024;
+// 失敗理由は入力断片を含まない固定語彙だけを error.detail に残す。
+function visionFailure(detail) {
+  const error = new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+  error.detail = String(detail || 'UNKNOWN').replace(/[^A-Z0-9_]/gu, '').slice(0, 24) || 'UNKNOWN';
+  return error;
+}
 const DEFAULT_MONTHLY_REQUEST_LIMIT = 900;
 const MAX_MONTHLY_REQUEST_LIMIT = 1_000_000;
 const MAX_WEB_ENTITIES = 10;
@@ -183,15 +192,15 @@ async function readResponseTextBounded(response, maxBytes) {
       total += bytes.byteLength;
       if (total > maxBytes) {
         await reader.cancel();
-        throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+        throw visionFailure('TOO_LARGE');
       }
       chunks.push(bytes);
     }
-  } catch {
+  } catch (error) {
     try { await reader.cancel(); } catch {}
-    throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+    throw visionFailure(error?.detail || 'READ_FAILED');
   }
-  if (!total) throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+  if (!total) throw visionFailure('EMPTY');
   const merged = new Uint8Array(total);
   let offset = 0;
   for (const chunk of chunks) {
@@ -268,7 +277,7 @@ export function normalizeDetectedText(value) {
 
 export function normalizeGoogleVisualWebEvidence(payload = {}) {
   const response = Array.isArray(payload?.responses) ? payload.responses[0] : null;
-  if (!response || response.error) throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+  if (!response || response.error) throw visionFailure('API_ERROR');
   const web = response.webDetection || {};
   const pages = (Array.isArray(web.pagesWithMatchingImages) ? web.pagesWithMatchingImages : [])
     .slice(0, 100);
@@ -386,19 +395,21 @@ export async function detectGoogleVisualWebEvidence(
       redirect: 'manual',
       signal: AbortSignal.timeout(VISION_TIMEOUT_MS)
     });
-  } catch { throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED'); }
-  if (!response.ok) throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+  } catch (cause) {
+    throw visionFailure(String(cause?.name || '') === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK');
+  }
+  if (!response.ok) throw visionFailure(`HTTP_${Number(response.status) || 0}`);
   const contentLength = Number(response.headers?.get?.('content-length') || 0);
   if (contentLength > MAX_RESPONSE_CHARACTERS) {
     try { await response.body?.cancel?.(); } catch {}
-    throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED');
+    throw visionFailure('TOO_LARGE');
   }
   let text;
   try { text = await readResponseTextBounded(response, MAX_RESPONSE_CHARACTERS); }
-  catch { throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED'); }
+  catch (error) { throw visionFailure(error?.detail || 'READ_FAILED'); }
   let payload;
   try { payload = JSON.parse(text); }
-  catch { throw new Error('GOOGLE_VISUAL_WEB_DETECTION_FAILED'); }
+  catch { throw visionFailure('INVALID_JSON'); }
   return normalizeGoogleVisualWebEvidence(payload);
 }
 

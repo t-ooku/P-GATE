@@ -433,6 +433,8 @@ export async function analyzeSearchInput({
   if (!searchInputAnalysisConfigured(env)) throw new Error('SEARCH_INPUT_ANALYSIS_NOT_CONFIGURED');
   let visualWebEvidence = null;
   let visualFallbackCode = '';
+  let visualFailureDetail = '';
+  let geminiFailureDetail = '';
   let visualWebStatus = normalizedImage && googleVisualWebDetectionConfigured(env)
     ? 'ATTEMPTED' : 'NOT_CONFIGURED';
   if (visualWebStatus === 'ATTEMPTED') {
@@ -444,6 +446,7 @@ export async function analyzeSearchInput({
       // WEB_DETECTION improves rare-product naming, but it must never make the
       // existing Gemini photo path unavailable or reveal provider errors.
       const code = String(error?.message || '');
+      visualFailureDetail = String(error?.detail || 'UNKNOWN');
       visualWebStatus = code === 'GOOGLE_VISUAL_WEB_DETECTION_MONTHLY_LIMIT_REACHED'
         ? 'MONTHLY_LIMIT_FALLBACK'
         : code === 'GOOGLE_VISUAL_WEB_DETECTION_BUDGET_GUARD_UNAVAILABLE'
@@ -494,15 +497,34 @@ export async function analyzeSearchInput({
       // 再試行に時間を重ねないよう区別できるフラグを残す(値は固定文字)。
       const error = new Error('SEARCH_INPUT_ANALYSIS_FAILED');
       if (String(cause?.name || '') === 'TimeoutError') error.timedOut = true;
+      geminiFailureDetail = error.timedOut ? 'TIMEOUT' : 'NETWORK';
       throw error;
     }
     if (!response.ok) {
       const error = new Error('SEARCH_INPUT_ANALYSIS_FAILED');
       error.status = response.status;
+      geminiFailureDetail = `HTTP_${Number(response.status) || 0}`;
       throw error;
     }
     try { return await response.json(); }
-    catch { throw new Error('SEARCH_INPUT_ANALYSIS_FAILED'); }
+    catch { geminiFailureDetail = 'INVALID_JSON'; throw new Error('SEARCH_INPUT_ANALYSIS_FAILED'); }
+  };
+  // 失敗の切り分け用に、入力断片を含まない固定語彙だけで「どの段階が・何で」
+  // 落ちたかを1コードにまとめる(運用テレメトリと構造化ログにだけ載せ、
+  // 利用者向けエラーコードは従来どおり)。
+  const attachDiagnostic = (error) => {
+    if (!error || typeof error !== 'object') return error;
+    const vision = visualFailureDetail
+      ? `VFAIL_${visualFailureDetail}` : `V_${visualWebStatus}`;
+    const entities = Array.isArray(visualWebEvidence?.web_entities) ? visualWebEvidence.web_entities.length : 0;
+    const textLines = String(visualWebEvidence?.detected_text || '').split('\n').filter(Boolean).length;
+    const jan = Array.isArray(visualWebEvidence?.jan_codes) ? visualWebEvidence.jan_codes.length : 0;
+    const guesses = Array.isArray(visualWebEvidence?.best_guess_labels) ? visualWebEvidence.best_guess_labels.length : 0;
+    const base = String(error.message || 'SEARCH_INPUT_ANALYSIS_FAILED');
+    const gemini = base === 'SEARCH_INPUT_ANALYSIS_FAILED' ? `G_${geminiFailureDetail || 'UNKNOWN'}_` : 'G_OK_';
+    error.diagnostic = `${base}__${gemini}${vision}_E${Math.min(99, entities)}_T${Math.min(99, textLines)}_J${jan}_B${Math.min(9, guesses)}`
+      .replace(/[^A-Z0-9_]/gu, '').slice(0, 80);
+    return error;
   };
   // 単発の429/5xx/瞬断でユーザーの写真検索を即失敗させない。再試行は
   // 1回・短い待機のみで、応答の意味は変えない。URL Context付きの呼び出し
@@ -553,7 +575,7 @@ export async function analyzeSearchInput({
   } catch (error) {
     if (!socialUrl || !normalizedImage) {
       rescuedByVision = visionOnlyRescue();
-      if (!rescuedByVision) throw error;
+      if (!rescuedByVision) throw attachDiagnostic(error);
     } else {
       // A URL Context transport/status/JSON failure must not discard an
       // independently supplied screenshot. Retry with neither URL text nor
@@ -566,7 +588,7 @@ export async function analyzeSearchInput({
         usedUrlContext = false;
       } catch (retryError) {
         rescuedByVision = visionOnlyRescue();
-        if (!rescuedByVision) throw retryError;
+        if (!rescuedByVision) throw attachDiagnostic(retryError);
       }
     }
   }
@@ -627,7 +649,7 @@ export async function analyzeSearchInput({
   }
   if (!result.refined_query) {
     if (isIndependentSearchText(rememberedQuery)) return { configured: true, provider: 'GEMINI_MULTIMODAL_FALLBACK', ...normalizeSearchInputAnalysis({ refined_query: rememberedQuery }) };
-    throw new Error('SEARCH_INPUT_ANALYSIS_EMPTY');
+    throw attachDiagnostic(new Error('SEARCH_INPUT_ANALYSIS_EMPTY'));
   }
   const detectedJan = Array.isArray(visualWebEvidence?.jan_codes) ? visualWebEvidence.jan_codes[0] : '';
   if (detectedJan && !result.matched_features.some((feature) => feature.includes(detectedJan))) {
