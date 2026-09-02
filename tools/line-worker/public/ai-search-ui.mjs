@@ -56,6 +56,11 @@ function decorateLinks(container) {
 // actually succeeded - unlike the previous approach (simulate a click on
 // the submit button, then poll its disabled state), which could not tell
 // "results rendered" apart from "silently did nothing".
+// 検索が結果を描画して閉じた後は、モールリンクではなく「ホシルからの
+// 提案」(結果セクション)へ視点を移す(2026-09-02 実機フィードバック)。
+// 縮退時もモールリンクは結果セクション内に描画されるため同じ移動先で良い。
+const revealResultsSoon=()=>window.setTimeout(()=>window.HoshiluSearch?.revealResults?.(),120);
+
 async function runFinalSearch(refinedQuery, aiCandidateFallback = null, searchOptions = {}) {
   const queryField = document.querySelector('#query');
   const searchRunner = window.HoshiluSearch?.run;
@@ -138,7 +143,7 @@ function openIdentifyDialog(originalQuery,language,options={}){
   const showOtherMalls=()=>{
     if(otherMallsButton?.isConnected||dialogDisposed)return;
     const button=document.createElement('button');otherMallsButton=button;button.type='button';button.className='ai-chat-other-malls';button.textContent=copy.other;
-    button.addEventListener('click',async()=>{button.disabled=true;const status=chatMessageRow('assistant',copy.finding);status.classList.add('ai-chat-message-status');messages.append(status);const outcome=await runIdentifiedSearch(originalQuery);if(dialogDisposed)return;if(outcome.ok||outcome.degraded)dialog.close();else button.disabled=false;window.setTimeout(()=>document.querySelector('#marketplaceFallback,.marketplace-fallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});
+    button.addEventListener('click',async()=>{button.disabled=true;const status=chatMessageRow('assistant',copy.finding);status.classList.add('ai-chat-message-status');messages.append(status);const outcome=await runIdentifiedSearch(originalQuery);if(dialogDisposed)return;if(outcome.ok||outcome.degraded){dialog.close();revealResultsSoon();}else button.disabled=false;});
     messages.append(button);
   };
   const ask=async()=>{
@@ -155,7 +160,7 @@ function openIdentifyDialog(originalQuery,language,options={}){
       const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';
       const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
       const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;
-      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runIdentifiedSearch(result.refined_query||candidate,aiCandidateFallback);finding.remove();if(dialogDisposed)return;if(outcome.ok||outcome.degraded)dialog.close();else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
+      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runIdentifiedSearch(result.refined_query||candidate,aiCandidateFallback);finding.remove();if(dialogDisposed)return;if(outcome.ok||outcome.degraded){dialog.close();revealResultsSoon();}else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
       no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});
       actions.append(yes,no);messages.append(actions);
     }catch(error){
@@ -164,7 +169,7 @@ function openIdentifyDialog(originalQuery,language,options={}){
       const outcome=await runIdentifiedSearch(originalQuery,null,{tokenCallbackTimeoutMs:AI_TOKEN_CALLBACK_TIMEOUT_MS,maxAttempts:1});
       status.remove();
       if(dialogDisposed)return;
-      if(outcome.ok||outcome.degraded){dialog.close();return;}
+      if(outcome.ok||outcome.degraded){dialog.close();revealResultsSoon();return;}
       messages.append(chatMessageRow('assistant',copy.error));showOtherMalls();
     }
   };
@@ -213,7 +218,7 @@ function openChatDialog(originalQuery, language) {
       messages.append(status);
       const outcome = await runFinalSearch(refinedQuery);
       status.remove();
-      if (outcome.ok || outcome.degraded) { dialog.close(); return; }
+      if (outcome.ok || outcome.degraded) { dialog.close(); revealResultsSoon(); return; }
       showSearchError(refinedQuery);
     });
     messages.append(retry);
@@ -239,6 +244,7 @@ function openChatDialog(originalQuery, language) {
       status.remove();
       if (outcome.ok || outcome.degraded) {
         dialog.close();
+        revealResultsSoon();
         return;
       }
       cta.remove();

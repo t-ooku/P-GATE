@@ -1027,8 +1027,9 @@ function continuousSearchCard(query){
 function revealSearchResults(){
   const section=elements.results;if(!section||section.classList.contains('hidden'))return;
   const rect=section.getBoundingClientRect();
-  const viewport=window.innerHeight||document.documentElement.clientHeight||0;
-  if(rect.top>=0&&rect.top<=viewport*0.66)return;
+  // 既に結果の先頭に居る場合だけ動かさない。それ以外は常に結果へ移動する
+  // (2026-09-02 実機フィードバック: 検索したら商品提示欄へ一気に移動)。
+  if(rect.top>=-8&&rect.top<=120)return;
   const reducedMotion=Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
   section.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'});
 }
@@ -1532,7 +1533,7 @@ document.querySelector('#stickySearch')?.addEventListener('submit',event=>{
 document.querySelector('#stickyMarketplaceJump')?.addEventListener('click',()=>{
   (document.querySelector('#instantMarketplaceFallback')||document.querySelector('#marketplaceFallback'))?.scrollIntoView({behavior:'smooth',block:'start'});
 });
-window.HoshiluSearch={run:runKnowledgeSearch,beginIdentify:beginIdentifySearch,endIdentify:endIdentifySearch};
+window.HoshiluSearch={run:runKnowledgeSearch,beginIdentify:beginIdentifySearch,endIdentify:endIdentifySearch,revealResults:revealSearchResults};
 elements.form.addEventListener('submit',event=>{event.preventDefault();const query=String(elements.query.value||'').trim();const supplemental=hasSupplementalSearchInput();if(searchImagePreparing){elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().preparing;return;}if(!isUsableProductQuery(query)&&!supplemental){elements.query.focus();elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().missing;return;}if(currentSearchMode()==='identify'&&!supplemental&&typeof window.HoshiluIdentifySearch?.open==='function'){const executionId=beginIdentifySearch(query);window.HoshiluIdentifySearch.open(query,elements.language.value,{executionId});return;}runKnowledgeSearch();});
 function returnFromRankingToSearch(){
   rankingRequestSequence+=1;rankingCategorySelection=null;rankingConfirmationFlow=null;

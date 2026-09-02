@@ -99,7 +99,7 @@ test('WHY HOSHILU is concise and official social labels are not duplicated', asy
 // only closing after a confirmed result or a usable degraded result.
 test('AIチャットは本検索失敗時も最大13モールの縮退結果を表示してダイアログを閉じる', async () => {
   const [app, script] = await Promise.all([read('app.js'), read('ai-search-ui.mjs')]);
-  assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch,beginIdentify:beginIdentifySearch,endIdentify:endIdentifySearch\}/);
+  assert.match(app, /window\.HoshiluSearch=\{run:runKnowledgeSearch,beginIdentify:beginIdentifySearch,endIdentify:endIdentifySearch,revealResults:revealSearchResults\}/);
   assert.match(app, /async function runKnowledgeSearch\(options=\{\}\)/);
   assert.match(app, /return\{ok:true,result,requestId:lastRequestId\}/);
   assert.match(app, /const failureTelemetry=clientSearchFailureTelemetry\(error,lastRequestId\)/);
