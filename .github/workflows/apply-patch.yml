@@ -1,0 +1,223 @@
+name: Apply patch from issue
+
+# 運用: リポジトリ所有者が「[PATCH] ...」という題名で Issue を作り、本文の
+# ```patch フェンス内に `git format-patch` の出力を貼ると、このワークフローが
+# feature/ui-search-v2 へ 3-way で適用 → CI と同じ検証 → push → 本番デプロイ →
+# ヘルスチェック → 結果を Issue にコメントして閉じる。
+#
+# 安全策:
+# - Issue 作成者がリポジトリ所有者でなければ何もしない
+# - 検証(全テスト・検索品質・wrangler dry-run・GASバンドル再現)が1つでも
+#   落ちたら push しない
+# - GITHUB_TOKEN による push は ci.yml の push イベントを起こさないため、
+#   ci.yml の deploy ジョブと同じ手順をここで実行する
+# - D1 マイグレーション・Secret は扱わない(従来どおり手動)
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number whose body contains the ```patch block'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: cloudflare-deploy
+  cancel-in-progress: false
+
+env:
+  TARGET_BRANCH: feature/ui-search-v2
+
+jobs:
+  apply:
+    if: >-
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.issue.user.login == github.repository_owner &&
+       startsWith(github.event.issue.title, '[PATCH]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Resolve issue number
+        id: issue
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ISSUE: ${{ github.event.issue.number }}
+          INPUT_ISSUE: ${{ github.event.inputs.issue_number }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then n="$INPUT_ISSUE"; else n="$EVENT_ISSUE"; fi
+          echo "number=$n" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch issue and extract patch
+        id: patch
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        with:
+          script: |
+            const fs = require('fs');
+            const number = Number(process.env.ISSUE_NUMBER);
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: number
+            });
+            const owner = context.repo.owner;
+            if (issue.user.login !== owner) {
+              core.setFailed(`Issue #${number} author ${issue.user.login} is not the repository owner`);
+              return;
+            }
+            if (!String(issue.title || '').startsWith('[PATCH]')) {
+              core.setFailed(`Issue #${number} title must start with [PATCH]`);
+              return;
+            }
+            if (issue.state !== 'open') {
+              core.setFailed(`Issue #${number} is not open`);
+              return;
+            }
+            const body = String(issue.body || '').replace(/\r\n/g, '\n');
+            const match = body.match(/```patch\n([\s\S]*?)\n```/);
+            if (!match) {
+              core.setFailed('No ```patch fenced block found in the issue body');
+              return;
+            }
+            const patch = match[1].endsWith('\n') ? match[1] : `${match[1]}\n`;
+            if (!/^From [0-9a-f]{40} /m.test(patch) || !/^diff --git /m.test(patch)) {
+              core.setFailed('Patch block is not a git format-patch mail (missing From/diff headers)');
+              return;
+            }
+            fs.writeFileSync('/tmp/issue.patch', patch);
+            const subject = (patch.match(/^Subject: (?:\[PATCH[^\]]*\] )?(.+)$/m) || [])[1] || '';
+            core.setOutput('subject', subject.slice(0, 200));
+            core.setOutput('bytes', String(Buffer.byteLength(patch)));
+            const sha = require('crypto').createHash('sha256').update(patch).digest('hex');
+            core.setOutput('sha256', sha);
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply patch (3-way)
+        id: am
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "hoshilu-patch-bot"
+          git config user.email "noreply@hoshilu.app"
+          before="$(git rev-parse HEAD)"
+          echo "before=$before" >> "$GITHUB_OUTPUT"
+          if ! git am --3way --committer-date-is-author-date /tmp/issue.patch; then
+            git am --abort || true
+            echo "::error::git am failed against $before"
+            exit 1
+          fi
+          echo "after=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git --no-pager log --oneline "$before..HEAD"
+          git --no-pager diff --stat "$before..HEAD"
+
+      - name: Install Worker dependencies
+        run: npm ci --prefix tools/line-worker
+
+      - name: Validate exact production Worker bundle and bindings
+        working-directory: tools/line-worker
+        run: npx --yes wrangler@4.121.0 deploy --dry-run --outdir /tmp/hoshilu-worker-dry-run
+
+      - name: Run all regression tests
+        run: npm test
+
+      - name: Block deterministic search-quality regressions
+        working-directory: tools/line-worker
+        run: npm run check:search-quality
+
+      - name: Build single-file GAS bundle and verify it is reproducible
+        run: |
+          npm run build
+          git diff --exit-code -- dist/Project_GATE_Complete.gs
+
+      - name: Push to production branch
+        id: push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
+          echo "pushed=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Require Cloudflare credentials for production deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID are required for the production deploy."
+            exit 1
+          fi
+
+      - name: Deploy Worker
+        id: deploy
+        working-directory: tools/line-worker
+        run: npx --yes wrangler@4.121.0 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Verify production health, assets and critical API contracts
+        id: health
+        working-directory: tools/line-worker
+        run: node scripts/check-production-health.mjs --attempts 6 --retry-ms 10000
+
+      - name: Report result on the issue
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          SUBJECT: ${{ steps.patch.outputs.subject }}
+          PATCH_SHA256: ${{ steps.patch.outputs.sha256 }}
+          BEFORE: ${{ steps.am.outputs.before }}
+          AFTER: ${{ steps.am.outputs.after }}
+          PUSHED: ${{ steps.push.outputs.pushed }}
+          JOB_STATUS: ${{ job.status }}
+          O_PATCH: ${{ steps.patch.outcome }}
+          O_AM: ${{ steps.am.outcome }}
+          O_PUSH: ${{ steps.push.outcome }}
+          O_DEPLOY: ${{ steps.deploy.outcome }}
+          O_HEALTH: ${{ steps.health.outcome }}
+        with:
+          script: |
+            const number = Number(process.env.ISSUE_NUMBER);
+            if (!number) return;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const ok = process.env.JOB_STATUS === 'success';
+            const line = (label, outcome) => `- ${label}: ${outcome || 'skipped'}`;
+            const body = [
+              ok ? '✅ **Patch applied, tested, pushed and deployed.**' : '❌ **Patch run failed — nothing was pushed unless "push" below says success.**',
+              '',
+              `- subject: ${process.env.SUBJECT || '(unknown)'}`,
+              `- patch sha256: \`${process.env.PATCH_SHA256 || ''}\``,
+              `- base: \`${process.env.BEFORE || ''}\` → head: \`${process.env.AFTER || ''}\``,
+              line('extract', process.env.O_PATCH),
+              line('git am', process.env.O_AM),
+              line('push', process.env.O_PUSH),
+              line('deploy', process.env.O_DEPLOY),
+              line('health', process.env.O_HEALTH),
+              `- run: ${runUrl}`
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: number, body
+            });
+            if (ok) {
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: number,
+                state: 'closed', state_reason: 'completed'
+              });
+            }

@@ -16,6 +16,14 @@ const ANALYSIS_TIMEOUT_MS = 7000;
 // タイムアウト後の再試行は9秒。クライアントの画像検索予算(45秒)内。
 const IMAGE_ANALYSIS_TIMEOUT_MS = 14000;
 const IMAGE_ANALYSIS_RETRY_TIMEOUT_MS = 9000;
+// Vision(WEB_DETECTION+OCR)はGeminiの手がかりになるが、遅い時にGeminiまで
+// 待たせない。この時間だけ先行させ、間に合わなければ画像だけでGeminiを
+// 始め、Visionは救済・JAN付与のために裏で完走させる(2026-09-02 設計変更:
+// 「認識できませんでした」を構造的に減らす)。
+const VISION_HEAD_START_MS = 2500;
+// 主モデルが(再試行しても)応答しない・空応答の時は、別系統の軽量モデルで
+// もう1回だけ試す。同じモデルへの再試行より回復率が高い。
+const DEFAULT_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 export const MAX_SEARCH_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_IMAGE_BASE64_LENGTH = Math.ceil(MAX_SEARCH_IMAGE_BYTES / 3) * 4;
 const IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -437,12 +445,12 @@ export async function analyzeSearchInput({
   let geminiFailureDetail = '';
   let visualWebStatus = normalizedImage && googleVisualWebDetectionConfigured(env)
     ? 'ATTEMPTED' : 'NOT_CONFIGURED';
-  if (visualWebStatus === 'ATTEMPTED') {
-    try {
-      visualWebEvidence = await detectGoogleVisualWebEvidence(normalizedImage, env, fetchImpl);
-      visualWebStatus = googleVisualWebEvidencePromptBlock(visualWebEvidence)
-        ? 'USED' : visualWebEvidence.match_tier;
-    } catch (error) {
+  let visionSettled = visualWebStatus !== 'ATTEMPTED';
+  const visionPromise = visualWebStatus === 'ATTEMPTED'
+    ? detectGoogleVisualWebEvidence(normalizedImage, env, fetchImpl).then((evidence) => {
+      visualWebEvidence = evidence;
+      visualWebStatus = googleVisualWebEvidencePromptBlock(evidence) ? 'USED' : evidence.match_tier;
+    }).catch((error) => {
       // WEB_DETECTION improves rare-product naming, but it must never make the
       // existing Gemini photo path unavailable or reveal provider errors.
       const code = String(error?.message || '');
@@ -455,10 +463,23 @@ export async function analyzeSearchInput({
       visualFallbackCode = code === 'GOOGLE_VISUAL_WEB_DETECTION_MONTHLY_LIMIT_REACHED'
         || code === 'GOOGLE_VISUAL_WEB_DETECTION_BUDGET_GUARD_UNAVAILABLE'
         ? code : 'GOOGLE_VISUAL_WEB_DETECTION_FAILED';
-    }
+    }).finally(() => { visionSettled = true; })
+    : Promise.resolve();
+  // Visionを少しだけ先行させる。間に合えば証拠ブロック付きでGeminiへ、
+  // 間に合わなければ画像だけで始める(Visionは裏で完走し、救済に使う)。
+  if (!visionSettled) {
+    let headStartTimer = null;
+    await Promise.race([
+      visionPromise,
+      new Promise((resolve) => { headStartTimer = setTimeout(resolve, VISION_HEAD_START_MS); })
+    ]);
+    if (headStartTimer) clearTimeout(headStartTimer);
   }
+  const awaitVision = async () => { if (!visionSettled) await visionPromise; };
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
-  const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS) => {
+  const fallbackModel = String(env.GEMINI_PRODUCT_DISCOVERY_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL);
+  let usedFallbackModel = false;
+  const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS, modelName = model) => {
     const parts = [{ text: analysisPrompt(rememberedQuery, contextUrl, language) }];
     const evidenceBlock = googleVisualWebEvidencePromptBlock(visualWebEvidence);
     if (evidenceBlock) parts.push({ text: evidenceBlock });
@@ -466,7 +487,7 @@ export async function analyzeSearchInput({
     let response;
     try {
       response = await fetchImpl(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent`,
         {
           method: 'POST',
           headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
@@ -539,20 +560,25 @@ export async function analyzeSearchInput({
     } catch (error) {
       const transientStatus = [429, 500, 502, 503, 504].includes(Number(error?.status));
       const quickNetworkFailure = !error?.status && !error?.timedOut;
-      // 画像付きはタイムアウトも1回だけ短めに再試行する(混雑時の救済)。
-      const imageTimeout = Boolean(contextImage) && Boolean(error?.timedOut);
-      if (!transientStatus && !quickNetworkFailure && !imageTimeout) throw error;
+      // 画像付きは失敗の種類を問わず、別系統の軽量モデルで1回だけやり直す
+      // (主モデル固有の4xx・混雑・タイムアウトのいずれでも回復の余地がある)。
+      const imageRetry = Boolean(contextImage);
+      if (!transientStatus && !quickNetworkFailure && !imageRetry) throw error;
       await new Promise((resolve) => setTimeout(resolve, 250));
-      return requestAnalysisOnce(contextUrl, contextImage,
-        imageTimeout ? IMAGE_ANALYSIS_RETRY_TIMEOUT_MS : firstTimeout);
+      const retryModel = imageRetry && fallbackModel && fallbackModel !== model ? fallbackModel : model;
+      const payload = await requestAnalysisOnce(contextUrl, contextImage,
+        imageRetry ? IMAGE_ANALYSIS_RETRY_TIMEOUT_MS : firstTimeout, retryModel);
+      if (retryModel !== model) usedFallbackModel = true;
+      return payload;
     }
   };
   // Geminiが(再試行しても)使えない時、画像単体の検索を丸ごと失敗させる
   // 前に、取得済みのWEB_DETECTION証拠だけで検索仮説を立てられないか試す。
   // 厳格版(複数ホスト完全一致)→カテゴリ級best-guessの順で、どちらも
   // 商品特定は主張しない。証拠が無ければnullを返し、従来どおり失敗する。
-  const visionOnlyRescue = () => {
+  const visionOnlyRescue = async () => {
     if (!normalizedImage || isIndependentSearchText(rememberedQuery)) return null;
+    await awaitVision();
     const jan = janCodeSearchAnalysis(visualWebEvidence);
     if (jan) return { result: jan, provider: 'GOOGLE_VISION_JAN_FALLBACK' };
     const strong = strongGoogleVisualWebFallbackAnalysis(visualWebEvidence);
@@ -574,7 +600,7 @@ export async function analyzeSearchInput({
     responsePayload = await requestAnalysis(socialUrl, normalizedImage);
   } catch (error) {
     if (!socialUrl || !normalizedImage) {
-      rescuedByVision = visionOnlyRescue();
+      rescuedByVision = await visionOnlyRescue();
       if (!rescuedByVision) throw attachDiagnostic(error);
     } else {
       // A URL Context transport/status/JSON failure must not discard an
@@ -587,7 +613,7 @@ export async function analyzeSearchInput({
           : 'GEMINI_MULTIMODAL_IMAGE_FALLBACK';
         usedUrlContext = false;
       } catch (retryError) {
-        rescuedByVision = visionOnlyRescue();
+        rescuedByVision = await visionOnlyRescue();
         if (!rescuedByVision) throw attachDiagnostic(retryError);
       }
     }
@@ -638,10 +664,25 @@ export async function analyzeSearchInput({
     parsed = parseJsonText(geminiText(responsePayload));
     result = normalizeSearchInputAnalysis(parsed || {});
   }
+  if (!result.refined_query && normalizedImage && !usedFallbackModel
+    && fallbackModel && fallbackModel !== model && !isIndependentSearchText(rememberedQuery)) {
+    // 主モデルは応答したが候補を出せなかった。別系統の軽量モデルで1回だけ
+    // 読み直す(Visionが完走していれば証拠ブロックも付く)。
+    await awaitVision();
+    try {
+      responsePayload = await requestAnalysisOnce('', normalizedImage, IMAGE_ANALYSIS_RETRY_TIMEOUT_MS, fallbackModel);
+      usedFallbackModel = true;
+      parsed = parseJsonText(geminiText(responsePayload));
+      const secondary = normalizeSearchInputAnalysis(parsed || {});
+      if (secondary.refined_query) result = secondary;
+    } catch {
+      // 縮退はこの後のVision救済に任せる。
+    }
+  }
   if (!result.refined_query) {
     // Geminiは応答したが候補を出せなかった。厳格Web一致 → OCR文字 →
     // best-guessの順で、throw時と同じ救済を試す。
-    const rescued = visionOnlyRescue();
+    const rescued = await visionOnlyRescue();
     if (rescued) {
       result = rescued.result;
       provider = rescued.provider;
@@ -649,8 +690,10 @@ export async function analyzeSearchInput({
   }
   if (!result.refined_query) {
     if (isIndependentSearchText(rememberedQuery)) return { configured: true, provider: 'GEMINI_MULTIMODAL_FALLBACK', ...normalizeSearchInputAnalysis({ refined_query: rememberedQuery }) };
+    await awaitVision();
     throw attachDiagnostic(new Error('SEARCH_INPUT_ANALYSIS_EMPTY'));
   }
+  await awaitVision();
   const detectedJan = Array.isArray(visualWebEvidence?.jan_codes) ? visualWebEvidence.jan_codes[0] : '';
   if (detectedJan && !result.matched_features.some((feature) => feature.includes(detectedJan))) {
     result = { ...result, matched_features: [`JAN ${detectedJan}`, ...result.matched_features].slice(0, 8) };
@@ -658,7 +701,7 @@ export async function analyzeSearchInput({
   return {
     configured: true,
     provider,
-    model,
+    model: usedFallbackModel ? fallbackModel : model,
     visual_pipeline: normalizedImage
       ? (visualWebStatus === 'NOT_CONFIGURED' ? 'GEMINI_VISUAL_V1' : 'WEB_VISUAL_V1')
       : '',

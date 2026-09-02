@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   analyzeSearchInput, normalizeInlineSearchImage, normalizeSearchInputAnalysis,
   normalizeSocialPostUrl, searchInputAnalysisTest,
@@ -865,4 +866,69 @@ test('失敗時は段階付きの固定診断コードを error.diagnostic に�
       return true;
     }
   );
+});
+
+// 2026-09-02 設計変更: 「認識できませんでした」を構造的に減らす。主モデルが
+// 落ちても・空でも、別系統の軽量モデルで1回読み直し、Visionは先行させるだけで
+// Geminiを待たせない。
+test('画像付きで主モデルが失敗したら別系統の軽量モデルで読み直す(種類を問わず)', async () => {
+  for (const primaryFailure of [
+    () => new Response('bad request', { status: 400 }),
+    () => new Response('', { status: 503 }),
+    () => { const e = new Error('slow'); e.name = 'TimeoutError'; throw e; }
+  ]) {
+    const models = [];
+    const result = await analyzeSearchInput({ image: JPEG }, 'JA', ENV, async (url) => {
+      const model = decodeURIComponent(String(url).split('/models/')[1].split(':')[0]);
+      models.push(model);
+      if (model === 'gemini-test') return primaryFailure();
+      assert.equal(model, 'gemini-3.1-flash-lite');
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+        refined_query: '東海漬物 こくうま キムチ', candidate_name: 'こくうま キムチ', match_score: 40
+      }) }] } }] });
+    });
+    assert.deepEqual(models, ['gemini-test', 'gemini-3.1-flash-lite']);
+    assert.equal(result.model, 'gemini-3.1-flash-lite');
+    assert.equal(result.refined_query, '東海漬物 こくうま キムチ');
+  }
+});
+
+test('主モデルが空応答なら軽量モデルで読み直し、それも空ならVision救済、最後に固定コード', async () => {
+  const models = [];
+  const empty = () => Response.json({ candidates: [{ content: { parts: [{ text: '{}' }] } }] });
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', ENV, async (url) => {
+    const model = decodeURIComponent(String(url).split('/models/')[1].split(':')[0]);
+    models.push(model);
+    if (model === 'gemini-test') return empty();
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+      refined_query: '携帯扇風機', candidate_name: '', match_score: 0
+    }) }] } }] });
+  });
+  assert.deepEqual(models, ['gemini-test', 'gemini-3.1-flash-lite']);
+  assert.equal(result.refined_query, '携帯扇風機');
+  await assert.rejects(
+    () => analyzeSearchInput({ image: JPEG }, 'JA', { ...ENV, GEMINI_PRODUCT_DISCOVERY_FALLBACK_MODEL: 'gemini-test' }, async () => empty()),
+    (error) => error.message === 'SEARCH_INPUT_ANALYSIS_EMPTY'
+  );
+});
+
+test('Visionが遅くてもGeminiは先行時間を過ぎたら待たずに進み、Vision失敗も致命にしない', async () => {
+  const source = await readFile(new URL('../src/search-input-analysis.mjs', import.meta.url), 'utf8');
+  assert.match(source, /const VISION_HEAD_START_MS = 2500;/u);
+  assert.match(source, /Promise\.race\(\[\s*visionPromise,/u);
+  let visionRejected = false;
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      visionRejected = true;
+      return new Response('quota', { status: 429 });
+    }
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({
+      refined_query: 'ハンディファン', candidate_name: '', match_score: 0
+    }) }] } }] });
+  });
+  assert.equal(visionRejected, true);
+  assert.equal(result.refined_query, 'ハンディファン');
+  assert.equal(result.web_match_tier, 'PROVIDER_FALLBACK');
+  assert.equal(result.visual_fallback_code, 'GOOGLE_VISUAL_WEB_DETECTION_FAILED');
 });

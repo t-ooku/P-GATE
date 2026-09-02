@@ -60,11 +60,18 @@ test('release version has one source of truth', () => {
 // 専用ワークフロー+SQL3本を、入力パラメータ(job_id/media_file/media_sha256)で
 // 汎用化した(confirm: PUBLISH と release: RELEASE の二段確認は同じ)。
 // publish-runway-reel-20260818.yml は第2弾(公開済み)の記録として残す。
+// 2026-09-02 に apply-patch.yml を追加した。リポジトリ所有者が「[PATCH] …」
+// 題名のIssueへ貼った git format-patch を feature/ui-search-v2 へ3-way適用し、
+// ci.yml と同じ検証(全テスト・検索品質・wrangler dry-run・GASバンドル再現)を
+// 通した場合だけ push・本番デプロイ・ヘルスチェックを行う。Issueイベントで
+// 起動するため既定ブランチ(main)にも置く。push/PR/schedule では動かない。
+// Claude(Cowork)がGitHubへ直接pushできない制約下で、人手のパッチ転記を
+// なくしつつ、検証なしのコードが本番へ出ない経路として固定する。
 const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml', 'publish-runway-reel-20260818.yml', 'publish-runway-reel.yml', 'generate-runway-persona.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
-  assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)), ['ci.yml', 'production-monitor.yml']);
+  assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)), ['apply-patch.yml', 'ci.yml', 'production-monitor.yml']);
   const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);
@@ -78,6 +85,31 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
   );
   assert.doesNotMatch(ci, /skipping deploy/u);
   assert.doesNotMatch(ci, /steps\.creds\.outputs\.configured/u);
+});
+
+test('apply-patch.yml は所有者のIssueだけを受け、検証を通した場合だけpush・デプロイする', () => {
+  const file = path.join(root, '.github', 'workflows', 'apply-patch.yml');
+  if (!fs.existsSync(file)) return;
+  const source = fs.readFileSync(file, 'utf8');
+  const triggers = source.slice(source.indexOf('\non:'), source.indexOf('\npermissions:'));
+  assert.match(triggers, /^\s{2}issues:\n\s+types: \[opened\]/mu);
+  assert.match(triggers, /^\s{2}workflow_dispatch:/mu);
+  assert.doesNotMatch(triggers, /^\s{2}(?:push|pull_request|schedule):/mu, 'must not run on push/PR/schedule');
+  assert.match(source, /github\.event\.issue\.user\.login == github\.repository_owner/u);
+  assert.match(source, /startsWith\(github\.event\.issue\.title, '\[PATCH\]'\)/u);
+  assert.match(source, /issue\.user\.login !== owner/u, 'script must re-check the author');
+  assert.match(source, /git am --3way/u);
+  const order = ['git am --3way', 'wrangler@4.121.0 deploy --dry-run', 'npm test', 'npm run check:search-quality',
+    'git diff --exit-code -- dist/Project_GATE_Complete.gs', 'git push origin', 'wrangler@4.121.0 deploy\n', 'check-production-health.mjs'];
+  let cursor = -1;
+  for (const step of order) {
+    const index = source.indexOf(step, cursor + 1);
+    assert.ok(index > cursor, `${step} must come after the previous verification step`);
+    cursor = index;
+  }
+  assert.match(source, /group: cloudflare-deploy/u, 'must share the deploy concurrency group with ci.yml');
+  assert.doesNotMatch(source, /d1 (?:execute|migrations apply)/u, 'must not touch D1');
+  assert.doesNotMatch(source, /secret put/u, 'must not write Worker secrets');
 });
 
 test('手動ワークフローは自動トリガーを持たない', () => {

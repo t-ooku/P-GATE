@@ -156,6 +156,20 @@ async function prepareSearchImage(file){
   const dataUrl=await fileAsDataUrl(blob);const data=dataUrl.split(',')[1]||'';if(!data)throw new Error(labels.imageType);
   return {payload:{mime_type:'image/jpeg',data},preview:dataUrl,name:String(file.name||'screenshot').slice(0,100)};
 }
+// 1回目が5xxで落ちた画像検索の再送用。1600px→1024px・低画質で再エンコードし、
+// 解析側(Vision/Gemini)の入力量を1/3程度に減らして同じ写真でもう1回だけ試す
+// (2026-09-02: 「認識できませんでした」を構造的に減らす)。失敗時は元の画像を返す。
+async function shrinkPreparedSearchImage(payload){
+  try{
+    if(!payload?.data)return payload;
+    const image=await new Promise((resolve,reject)=>{const node=new Image();node.onload=()=>resolve(node);node.onerror=()=>reject(new Error('IMAGE_DECODE_FAILED'));node.src=`data:${payload.mime_type||'image/jpeg'};base64,${payload.data}`;});
+    const longest=Math.max(image.naturalWidth,image.naturalHeight);if(longest<=1024)return payload;
+    const scale=1024/longest;const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+    const context=canvas.getContext('2d',{alpha:false});if(!context)return payload;context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
+    const blob=await canvasBlob(canvas,'image/jpeg',.6);if(!blob)return payload;
+    const dataUrl=await fileAsDataUrl(blob);const data=dataUrl.split(',')[1]||'';return data?{mime_type:'image/jpeg',data}:payload;
+  }catch{return payload;}
+}
 function clearPreparedSearchImage(){searchImageGeneration+=1;preparedSearchImage=null;preparedSearchImageSource='';searchImagePreparing=false;searchImagePreparingSource='';if(elements.camera)elements.camera.value='';if(elements.screenshot)elements.screenshot.value='';if(elements.screenshotPreviewImage)elements.screenshotPreviewImage.removeAttribute('src');elements.screenshotPreview?.classList.add('hidden');elements.screenshotPreview?.removeAttribute('aria-busy');if(elements.cameraActionLabel)elements.cameraActionLabel.textContent=selectedSearchInputCopy().cameraAction;}
 function hasSupplementalSearchInput(){return Boolean(preparedSearchImage||String(elements.socialUrl?.value||'').trim());}
 function setSearchMode(mode,persist=true){const value=mode==='direct'?'direct':'identify';const labels=searchModeCopy[elements.language.value]||searchModeCopy.JA;elements.searchModeSwitch.dataset.mode=value;elements.searchModeIdentify.classList.toggle('active',value==='identify');elements.searchModeDirect.classList.toggle('active',value==='direct');elements.searchModeIdentify.setAttribute('aria-pressed',String(value==='identify'));elements.searchModeDirect.setAttribute('aria-pressed',String(value==='direct'));elements.submitText.textContent=value==='identify'?labels.identifySubmit:labels.directSubmit;if(persist)localStorage.setItem('hoshilu_search_mode',value);}
@@ -1267,7 +1281,7 @@ async function runKnowledgeSearch(options={}){
   const t=selectedCopy();
   const submittedQuery=String(elements.query.value||'').trim();
   const submittedSocialUrl=String(elements.socialUrl?.value||'').trim();
-  const submittedImage=preparedSearchImage;
+  let submittedImage=preparedSearchImage;
   const submittedImageSource=preparedSearchImageSource;
   const hasSupplementalInput=Boolean(submittedSocialUrl||submittedImage);
   if(searchImagePreparing){elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().preparing;return{ok:false,error:'SEARCH_IMAGE_PREPARING'};}
@@ -1287,7 +1301,9 @@ async function runKnowledgeSearch(options={}){
   const sequence=++relatedRecommendationSequence;
   const aiCandidatePayload=aiCandidateRequestPayload(options.aiCandidateFallback);
   const requestedMaxAttempts=Math.max(1,Math.min(2,Number(options.maxAttempts)||2));
-  const maxAttempts=submittedImage?1:requestedMaxAttempts;
+  // 画像付きも2回まで。2回目は縮小画像で送り直す(解析側の失敗が入力量に
+  // 依存する場合の救済。1回目が即時に落ちた時だけ予算内で間に合う)。
+  const maxAttempts=requestedMaxAttempts;
   const tokenCallbackTimeoutMs=Math.max(1000,Math.min(15000,Number(options.tokenCallbackTimeoutMs)||15000));
   let lastRequestId='';
   // Analytics receives only this fixed category. Search text, public URL and
@@ -1315,6 +1331,7 @@ async function runKnowledgeSearch(options={}){
         if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
         const remainingBeforeFetch=searchDeadlineAt-Date.now();
         if(remainingBeforeFetch<1000)throw new Error('SEARCH_DEADLINE_EXCEEDED');
+        if(attempt>0&&submittedImage){submittedImage=await shrinkPreparedSearchImage(submittedImage);if(!isCurrentRun())throw new Error('SEARCH_SUPERSEDED');}
         const requestTimeoutMs=hasSupplementalInput?SUPPLEMENTAL_KNOWLEDGE_HTTP_TIMEOUT_MS:KNOWLEDGE_HTTP_TIMEOUT_MS;
         const timed=timedAbortController(Math.min(requestTimeoutMs,remainingBeforeFetch));activeKnowledgeFetch=timed.controller;
         try{response=await fetch('/api/knowledge',{method:'POST',headers:{'content-type':'application/json'},signal:timed.controller.signal,body:JSON.stringify({query:submittedQuery,processing_notice_shown:true,session_id:sessionId,language:elements.language.value,search_attempt:searchAttempt,turnstile_token:token,...(submittedSocialUrl?{social_url:submittedSocialUrl}:{}),...(submittedImage?{image:submittedImage}:{}),...(aiCandidatePayload?{ai_candidate_fallback:aiCandidatePayload}:{}),...(window.HoshiluGrowthAttribution||{})})});}

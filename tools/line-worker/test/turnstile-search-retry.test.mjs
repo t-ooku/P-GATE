@@ -75,7 +75,13 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /Math\.min\(15000,Number\(options\.tokenCallbackTimeoutMs\)\|\|15000\)/);
   assert.match(app, /degraded:true/);
   assert.match(app, /const requestedMaxAttempts=Math\.max\(1,Math\.min\(2,Number\(options\.maxAttempts\)\|\|2\)\)/);
-  assert.match(app, /const maxAttempts=submittedImage\?1:requestedMaxAttempts/);
+  // 2026-09-02: 画像付きも2回目を縮小画像で送り直す(空振りゼロ設計)。
+  assert.match(app, /const maxAttempts=requestedMaxAttempts;/);
+  assert.match(app, /let submittedImage=preparedSearchImage;/);
+  assert.match(app, /if\(attempt>0&&submittedImage\)\{submittedImage=await shrinkPreparedSearchImage\(submittedImage\);/);
+  assert.match(app, /async function shrinkPreparedSearchImage\(payload\)/);
+  assert.match(app, /const scale=1024\/longest/);
+  assert.match(app, /canvasBlob\(canvas,'image\/jpeg',\.6\)/);
   assert.match(app, /Math\.max\(1000,remainingBeforeToken-1000\)/);
   assert.match(app, /waitForTurnstileToken\(tokenWaitBudget\)/);
   assert.match(app, /failureTelemetry\.error_code==='TURNSTILE_TOKEN_UNAVAILABLE'/);
