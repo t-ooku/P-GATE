@@ -639,3 +639,69 @@ test('promptはAIとHOSHILUの責任境界を固定する', () => {
   assert.match(userData, /Untrusted search-input data/iu);
   assert.doesNotMatch(userData, /Never include|Follow only this system instruction/iu);
 });
+
+// 2026-09-02: 実機カメラ検索の信頼性改善。単発の429/5xxで写真検索を
+// 即失敗させず、Gemini不通時は取得済みWEB_DETECTION証拠だけで
+// カテゴリ級の検索仮説へ縮退する。
+test('画像単体はGeminiの単発429を1回だけ再試行して成功させる', async () => {
+  let geminiCalls = 0;
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', ENV, async () => {
+    geminiCalls += 1;
+    if (geminiCalls === 1) return new Response('', { status: 429 });
+    return Response.json({ candidates: [{ content: { parts: [{
+      text: '{"refined_query":"赤ちゃんのおしりふき 80枚"}'
+    }] } }] });
+  });
+  assert.equal(geminiCalls, 2);
+  assert.equal(result.refined_query, '赤ちゃんのおしりふき 80枚');
+});
+
+test('Gemini全滅でも撮りたて写真はbest-guessのカテゴリ級検索仮説へ縮退する', async () => {
+  const urls = [];
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    urls.push(String(url));
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      // 撮りたての実物写真: 完全/部分一致は0件で、labelとentityだけがある。
+      return Response.json({ responses: [{ webDetection: {
+        bestGuessLabels: [{ label: '赤ちゃんのおしりふき' }],
+        webEntities: [
+          { description: 'おしりふき', score: 0.9 },
+          { description: '弱酸性', score: 0.7 }
+        ]
+      } }] });
+    }
+    return new Response('', { status: 503 });
+  });
+  assert.equal(urls.filter((url) => !url.startsWith('https://vision.googleapis.com/')).length, 2);
+  assert.equal(result.provider, 'GOOGLE_VISION_BEST_GUESS_FALLBACK');
+  assert.equal(result.refined_query, '赤ちゃんのおしりふき 弱酸性');
+  assert.equal(result.candidate_name, '');
+  assert.equal(result.match_score, 0);
+});
+
+test('Geminiが空応答でも完全一致証拠が無い写真はbest-guessで救済する', async () => {
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: {
+        bestGuessLabels: [{ label: '携帯扇風機' }],
+        webEntities: [{ description: 'ハンディファン', score: 0.8 }]
+      } }] });
+    }
+    return Response.json({ candidates: [{ content: { parts: [{ text: '{}' }] } }] });
+  });
+  assert.equal(result.provider, 'GOOGLE_VISION_BEST_GUESS_FALLBACK');
+  assert.equal(result.refined_query, '携帯扇風機 ハンディファン');
+  assert.equal(result.candidate_name, '');
+});
+
+test('証拠が何も無ければ従来どおり固定コードで失敗し検索仮説を発明しない', async () => {
+  await assert.rejects(
+    () => analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+      if (String(url).startsWith('https://vision.googleapis.com/')) {
+        return Response.json({ responses: [{ webDetection: {} }] });
+      }
+      return new Response('', { status: 503 });
+    }),
+    /SEARCH_INPUT_ANALYSIS_FAILED/
+  );
+});
