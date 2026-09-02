@@ -349,16 +349,34 @@ export function strongGoogleVisualWebFallbackAnalysis(evidence = {}) {
 // 最後の手段として「カテゴリ級の検索仮説」にだけ使う(2026-09-02)。
 // candidate_nameは設定しない=商品を特定したとは主張せず、実在候補の
 // 探索はこの検索語による下流のモール検索が行う。match_score 0 を維持。
+// Visionのbest-guessは、絵柄中心の商品写真で「cartoon」「illustration」の
+// ような見た目のスタイル語になることがある(2026-09-02 実機事故: おしりふき
+// の写真が"cartoon"で検索された)。スタイル語は商品カテゴリではないため
+// 検索仮説に採用しない。
+const GENERIC_VISUAL_STYLE_LABELS = /^(?:cartoons?|illustrations?|anime|manga|comics?|art|artwork|drawings?|design|patterns?|graphics?|clip ?art|sketch|logos?|fonts?|text|products?|packaging|plastic|paper|blue|pink|white|black|イラスト|アニメ|漫画|マンガ|絵|デザイン|ロゴ|文字|キャラクター|商品|パッケージ)$/iu;
+
 export function weakGoogleVisualBestGuessAnalysis(evidence = {}) {
   if (!evidence || typeof evidence !== 'object') return null;
   const primary = cleanText(evidence.best_guess_labels?.[0], 160);
-  if (!primary) return null;
+  if (!primary || GENERIC_VISUAL_STYLE_LABELS.test(primary)) return null;
   const primaryKey = primary.toLocaleLowerCase();
   const entity = sanitizeAiOutputList(
     (Array.isArray(evidence.web_entities) ? evidence.web_entities : []), 3, 100
   ).find((value) => !primaryKey.includes(String(value).toLocaleLowerCase()));
   const refinedQuery = cleanText(entity ? `${primary} ${entity}` : primary, 200);
   if (!refinedQuery) return null;
+  return normalizeSearchInputAnalysis({ refined_query: refinedQuery, match_score: 0 });
+}
+
+// 撮りたての実物写真で最も確実な手がかりは、パッケージに印字された文字。
+// OCRで読めた行(整形済み)から検索語を作る。商品特定は主張しない。
+export function ocrTextSearchAnalysis(evidence = {}) {
+  if (!evidence || typeof evidence !== 'object') return null;
+  const lines = String(evidence.detected_text || '').split('\n')
+    .map((line) => cleanText(line, 40)).filter(Boolean);
+  if (!lines.length) return null;
+  const refinedQuery = cleanText(lines.slice(0, 3).join(' '), 200);
+  if (refinedQuery.length < 2) return null;
   return normalizeSearchInputAnalysis({ refined_query: refinedQuery, match_score: 0 });
 }
 
@@ -482,6 +500,8 @@ export async function analyzeSearchInput({
     if (!normalizedImage || isIndependentSearchText(rememberedQuery)) return null;
     const strong = strongGoogleVisualWebFallbackAnalysis(visualWebEvidence);
     if (strong) return { result: strong, provider: 'GOOGLE_VISION_WEB_DETECTION_FALLBACK' };
+    const ocr = ocrTextSearchAnalysis(visualWebEvidence);
+    if (ocr) return { result: ocr, provider: 'GOOGLE_VISION_OCR_FALLBACK' };
     const weak = weakGoogleVisualBestGuessAnalysis(visualWebEvidence);
     if (weak) return { result: weak, provider: 'GOOGLE_VISION_BEST_GUESS_FALLBACK' };
     return null;
@@ -561,19 +581,13 @@ export async function analyzeSearchInput({
     parsed = parseJsonText(geminiText(responsePayload));
     result = normalizeSearchInputAnalysis(parsed || {});
   }
-  if (!result.refined_query && normalizedImage && !isIndependentSearchText(rememberedQuery)) {
-    const strongVisualFallback = strongGoogleVisualWebFallbackAnalysis(visualWebEvidence);
-    if (strongVisualFallback) {
-      result = strongVisualFallback;
-      provider = 'GOOGLE_VISION_WEB_DETECTION_FALLBACK';
-    } else {
-      // Geminiは応答したが候補を出せなかった。撮りたて写真では完全一致
-      // 証拠が原理的に無いため、best-guessのカテゴリ級検索仮説で救済する。
-      const weakVisualFallback = weakGoogleVisualBestGuessAnalysis(visualWebEvidence);
-      if (weakVisualFallback) {
-        result = weakVisualFallback;
-        provider = 'GOOGLE_VISION_BEST_GUESS_FALLBACK';
-      }
+  if (!result.refined_query) {
+    // Geminiは応答したが候補を出せなかった。厳格Web一致 → OCR文字 →
+    // best-guessの順で、throw時と同じ救済を試す。
+    const rescued = visionOnlyRescue();
+    if (rescued) {
+      result = rescued.result;
+      provider = rescued.provider;
     }
   }
   if (!result.refined_query) {

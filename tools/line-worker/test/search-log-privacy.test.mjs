@@ -37,10 +37,13 @@ test('検索入力の非保存と外部AI処理を、チェックボックスな
     read('../src/search-input-analysis.mjs'), read('../src/google-visual-web-detection.mjs')
   ]);
   assert.doesNotMatch(html, /id="consent"|type="checkbox" required/);
-  assert.match(app, /写真・画像・投稿URLはHOSHILUに保存しません/);
-  assert.match(app, /HOSHILU does not store photos, images, or post URLs/i);
-  assert.match(app, /Google Gemini API/);
+  assert.match(app, /写真・URLは保存しません/);
+  assert.match(app, /Photos and URLs are not stored/i);
+  // 通知文は短縮版(GoogleのAI利用のみ明示)。API名の完全な開示は
+  // プライバシーページ側で担保する(次のassertion)。
+  assert.match(app, /Google\s?のAI|Google AI/u);
   assert.match(privacy, /Google Gemini API/);
+  assert.match(privacy, /Google Cloud Vision API/);
   assert.match(privacy, /データベース、オブジェクトストレージには質問本文、投稿URL、撮影写真・画像を保存せず/);
   assert.match(privacy, /元画像のEXIF・位置情報を引き継ぎません/);
   assert.match(privacy, /整理された検索語を端末内の検索履歴へ保存/);

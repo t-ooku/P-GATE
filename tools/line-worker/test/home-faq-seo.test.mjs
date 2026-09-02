@@ -53,7 +53,7 @@ test('ホームはカメラを含む4入力とAI/HOSHILUの責任境界をtitle�
   const match = html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/);
   const data = JSON.parse(match[1]);
   assert.equal(data['@graph'].find((item) => item['@type'] === 'WebApplication').description, description);
-  assert.match(html, /商品特定の補助にGoogle Cloud VisionのWeb画像照合とGoogle Gemini APIを使う場合があります。/u);
+  assert.match(html, /候補抽出にGoogleのAIを利用。顔や住所は写さないでください。/u);
   assert.match(styles, /\.hero-copy \.hero-promise\{[^}]*font-size:clamp\(14px,2\.1vw,18px\)[^}]*line-height:1\.75/);
   assert.match(styles, /@media\(max-width:760px\)\{\.hero-copy \.hero-promise\{[^}]*font-size:14px[^}]*line-height:1\.65/);
   assert.match(speechStyles, /\.speech-input\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;/);

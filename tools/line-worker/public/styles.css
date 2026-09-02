@@ -82,3 +82,5 @@
 .results .affiliate-link-note{order:3}
 .results .result-grid{order:4}
 .results .instant-marketplace-handoff{order:5}
+/* 2026-09-02: ヒーローの説明文はMARKETPLACE COVERAGE内へ格納(既定は閉) */
+.hero-marketplace-coverage .hero-promise{margin:12px 0 4px;color:var(--muted);font-size:13px;line-height:1.75}

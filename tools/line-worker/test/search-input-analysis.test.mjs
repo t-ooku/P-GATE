@@ -705,3 +705,58 @@ test('証拠が何も無ければ従来どおり固定コードで失敗し検�
     /SEARCH_INPUT_ANALYSIS_FAILED/
   );
 });
+
+// 2026-09-02 実機事故対応: おしりふきの写真が「cartoon」で検索された。
+// OCRで読めたパッケージ文字を最優先の縮退手がかりにし、見た目のスタイル語
+// (cartoon等)は検索仮説として拒否する。
+test('Gemini不通時はOCRで読めたパッケージ文字から検索語を作る', async () => {
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: {
+        bestGuessLabels: [{ label: 'cartoon' }],
+        webEntities: [{ description: 'Cartoon', score: 0.9 }]
+      }, textAnnotations: [{ description: '弱酸性\n赤ちゃんの\nおしりふき\n純水99%\n80枚入\nOPEN' }] }] });
+    }
+    return new Response('', { status: 503 });
+  });
+  assert.equal(result.provider, 'GOOGLE_VISION_OCR_FALLBACK');
+  assert.match(result.refined_query, /おしりふき/u);
+  assert.doesNotMatch(result.refined_query, /cartoon/iu);
+  assert.equal(result.candidate_name, '');
+  assert.equal(result.match_score, 0);
+});
+
+test('スタイル語だけのbest-guessは検索仮説にせず、文字も無ければ失敗する', async () => {
+  const { weakGoogleVisualBestGuessAnalysis: weak } = await import('../src/search-input-analysis.mjs');
+  assert.equal(weak({ best_guess_labels: ['cartoon'], web_entities: ['Cartoon'] }), null);
+  assert.equal(weak({ best_guess_labels: ['イラスト'], web_entities: [] }), null);
+  assert.notEqual(weak({ best_guess_labels: ['携帯扇風機'], web_entities: [] }), null);
+  await assert.rejects(
+    () => analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+      if (String(url).startsWith('https://vision.googleapis.com/')) {
+        return Response.json({ responses: [{ webDetection: {
+          bestGuessLabels: [{ label: 'cartoon' }]
+        } }] });
+      }
+      return new Response('', { status: 503 });
+    }),
+    /SEARCH_INPUT_ANALYSIS_FAILED/
+  );
+});
+
+test('Geminiが空応答でもOCR文字があれば救済し、証拠ブロックにも文字が載る', async () => {
+  const geminiBodies = [];
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url, options) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: {},
+        textAnnotations: [{ description: 'ハンディファン\n5way\n首掛け' }] }] });
+    }
+    geminiBodies.push(JSON.parse(options.body));
+    return Response.json({ candidates: [{ content: { parts: [{ text: '{}' }] } }] });
+  });
+  assert.equal(result.provider, 'GOOGLE_VISION_OCR_FALLBACK');
+  assert.match(result.refined_query, /ハンディファン/u);
+  const promptText = geminiBodies[0].contents[0].parts.map((part) => part.text || '').join('\n');
+  assert.match(promptText, /detected_text/u);
+  assert.match(promptText, /ハンディファン/u);
+});

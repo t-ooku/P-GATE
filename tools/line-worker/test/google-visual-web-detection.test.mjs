@@ -148,7 +148,7 @@ test('Vision REST要求はWEB_DETECTION一機能だけを使い生画像を結�
   assert.deepEqual(requestBody, {
     requests: [{
       image: { content: IMAGE.data },
-      features: [{ type: 'WEB_DETECTION', maxResults: 20 }]
+      features: [{ type: 'WEB_DETECTION', maxResults: 20 }, { type: 'TEXT_DETECTION', maxResults: 1 }]
     }]
   });
   assert.equal(evidence.match_tier, 'MULTI_HOST_WEB_MATCH');
