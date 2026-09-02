@@ -168,3 +168,36 @@ test('missing bucket binding fails closed', async () => {
   assert.equal(response.status, 503);
   assert.equal(calls.db.length, 0);
 });
+
+// 2026-09-02: 承認前の動画を /admin/reels で再生できるように、管理者だけは
+// GENERATED_REVIEW_REQUIRED の生成物を見られる。匿名は従来どおり404。
+test('review-required media is viewable only with admin authorization and never cached', async () => {
+  const secret = 'S'.repeat(40);
+  const { env, calls } = makeEnv({ status: 'GENERATED_REVIEW_REQUIRED' });
+  env.SOCIAL_ADMIN_SECRET = secret;
+  const anonymous = await handleRunwayMediaRoute(request(), env);
+  assert.equal(anonymous.status, 404);
+  assert.equal(calls.bucket.length, 0);
+  const admin = await handleRunwayMediaRoute(
+    new Request('https://hoshilu.app/api/social/media/runway/job-123.mp4', { headers: { authorization: `Bearer ${secret}` } }),
+    env
+  );
+  assert.equal(admin.status, 200);
+  assert.equal(admin.headers.get('cache-control'), 'private, no-store');
+  assert.equal(await admin.text(), '0123456789');
+  const wrong = await handleRunwayMediaRoute(
+    new Request('https://hoshilu.app/api/social/media/runway/job-123.mp4', { headers: { authorization: 'Bearer nope' } }),
+    env
+  );
+  assert.equal(wrong.status, 404);
+});
+
+test('admin reels page can play same-origin video and shows a preview before approval', async () => {
+  const { readFileSync } = await import('node:fs');
+  const page = readFileSync(new URL('../src/admin-sp-api-page.mjs', import.meta.url), 'utf8');
+  assert.match(page, /media-src 'self'/u);
+  const script = readFileSync(new URL('../public/admin-reels.js', import.meta.url), 'utf8');
+  assert.match(script, /document\.createElement\('video'\)/u);
+  assert.match(script, /\/api\/social\/media\/runway\/\$\{encodeURIComponent\(job\.job_id\)\}\.mp4/u);
+  assert.match(script, /\['GENERATED_REVIEW_REQUIRED','APPROVED_FOR_POST','PUBLISHED'\]\.includes\(job\.status\)/u);
+});

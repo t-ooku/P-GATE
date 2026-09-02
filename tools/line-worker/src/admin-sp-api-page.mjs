@@ -4,7 +4,7 @@ const headers = {
   'referrer-policy': 'no-referrer', 'cross-origin-opener-policy': 'same-origin',
   'cross-origin-resource-policy': 'same-origin',
   'permissions-policy': 'camera=(), geolocation=(), microphone=(), payment=(), usb=()',
-  'content-security-policy': "default-src 'none'; base-uri 'none'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self'; script-src 'self'; style-src 'self'"
+  'content-security-policy': "default-src 'none'; base-uri 'none'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self'; media-src 'self'; script-src 'self'; style-src 'self'"
 };
 export function adminLoginPageResponse() {
   return new Response(`<!doctype html><html lang="ja"><head><meta charset="utf-8">

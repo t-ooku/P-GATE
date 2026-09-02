@@ -1,8 +1,13 @@
+import { authorizeAdminRequest } from './admin-auth.mjs';
+
 const ROUTE = /^\/api\/social\/media\/runway\/([A-Za-z0-9][A-Za-z0-9_-]{0,119})\.mp4$/;
 const PUBLIC_JOB_STATUSES = new Set([
   'APPROVED_FOR_POST',
   'PUBLISHED'
 ]);
+// 2026-09-02: 承認前の生成動画は非公開のまま、管理者セッション(または管理用
+// Bearer)だけが /admin/reels の確認用に再生できる。応答は private/no-store。
+const ADMIN_REVIEW_JOB_STATUSES = new Set(['GENERATED_REVIEW_REQUIRED']);
 const SAFE_STORAGE_KEY = /^runway\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+\.(?:mp4|mov|m4v|webm)$/i;
 
 const jsonError = (status, error, extraHeaders = {}) => Response.json(
@@ -110,7 +115,12 @@ export async function handleRunwayMediaRoute(request, env = {}) {
   } catch {
     return jsonError(503, 'SOCIAL_MEDIA_UNAVAILABLE');
   }
-  if (!job || !PUBLIC_JOB_STATUSES.has(String(job.status || '').toUpperCase())) {
+  const jobStatus = String(job?.status || '').toUpperCase();
+  let adminReview = false;
+  if (job && !PUBLIC_JOB_STATUSES.has(jobStatus) && ADMIN_REVIEW_JOB_STATUSES.has(jobStatus)) {
+    try { adminReview = Boolean(await authorizeAdminRequest(request, env)); } catch { adminReview = false; }
+  }
+  if (!job || (!PUBLIC_JOB_STATUSES.has(jobStatus) && !adminReview)) {
     return jsonError(404, 'SOCIAL_MEDIA_NOT_FOUND');
   }
   const key = safeStorageKey(job.storage_key);
@@ -136,7 +146,7 @@ export async function handleRunwayMediaRoute(request, env = {}) {
   const headers = new Headers();
   applyObjectMetadata(object, headers);
   headers.set('accept-ranges', 'bytes');
-  headers.set('cache-control', 'public, max-age=3600, stale-while-revalidate=86400');
+  headers.set('cache-control', adminReview ? 'private, no-store' : 'public, max-age=3600, stale-while-revalidate=86400');
   headers.set('x-content-type-options', 'nosniff');
 
   if (!('body' in object)) {
