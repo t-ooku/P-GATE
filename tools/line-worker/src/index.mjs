@@ -1005,10 +1005,13 @@ async function handleRedirect(request, env, ctx) {
     // Amazonはタグ付与、バリューコマース提携モール(Yahoo!・Qoo10等)は
     // referral URLで包む。対象ドメインが重ならないため合成しても安全で、
     // どちらにも該当しないリンクは素通りする。
-    const destination = decorateValueCommerceDestination(
-      decorateAmazonAssociateDestination(payload.d, env.AMAZON_ASSOCIATE_TAG),
-      env.VC_SID, env.VC_PID
-    );
+    // 2026-09-02: 実機で「Qoo10のリンクが別モールへ着地する」報告があり、
+    // referral経由の着地先が確認できるまでVC_GO_REFERRAL_ENABLEDで
+    // 無効化中。送客の正しさは収益より常に優先する。
+    const amazonDecorated = decorateAmazonAssociateDestination(payload.d, env.AMAZON_ASSOCIATE_TAG);
+    const destination = String(env.VC_GO_REFERRAL_ENABLED) === 'true'
+      ? decorateValueCommerceDestination(amazonDecorated, env.VC_SID, env.VC_PID)
+      : amazonDecorated;
     return Response.redirect(destination, 302);
   } catch (error) {
     return new Response(String(error.message || error), { status: 400 });

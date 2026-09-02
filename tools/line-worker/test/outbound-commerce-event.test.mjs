@@ -236,6 +236,7 @@ test('GET /go はQoo10先をバリューコマースreferral経由で302し、�
       AMAZON_ASSOCIATE_TAG: 'hoshilu00-22',
       VC_SID: '3779199',
       VC_PID: '892690168',
+      VC_GO_REFERRAL_ENABLED: 'true',
       GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec',
       GAS_BRIDGE_SECRET: 'g'.repeat(32),
       PRODUCT_DB: db
@@ -253,6 +254,35 @@ test('GET /go はQoo10先をバリューコマースreferral経由で302し、�
     const rows = sqlite.prepare('SELECT * FROM outbound_commerce_events').all();
     assert.equal(rows.length, 1);
     assert.equal(rows[0].destination_marketplace, 'QOO10_JP');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('VC_GO_REFERRAL_ENABLEDがtrue以外なら/goは従来どおり直接リダイレクトする', async () => {
+  const { db } = sqliteD1();
+  const secret = 'l'.repeat(32);
+  const token = await createTrackToken({
+    u: 'session-hash-vc2', r: 'query-intent-vc2', a: 'Q000000002', d: 'https://www.qoo10.jp/g/654321',
+    exp: Math.floor(Date.now() / 1000) + 3600, j: 'seed:Q000000002:QOO10_JP', c: 'PWA', m: 'QOO10_JP'
+  }, secret);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ ok: true, result: {} });
+  try {
+    const env = {
+      LINK_SIGNING_SECRET: secret,
+      AMAZON_ASSOCIATE_TAG: 'hoshilu00-22',
+      VC_SID: '3779199',
+      VC_PID: '892690168',
+      VC_GO_REFERRAL_ENABLED: 'false',
+      GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec',
+      GAS_BRIDGE_SECRET: 'g'.repeat(32),
+      PRODUCT_DB: db
+    };
+    const context = { waitUntil: () => {} };
+    const response = await worker.fetch(new Request(`https://hoshilu.app/go?token=${encodeURIComponent(token)}`), env, context);
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get('location'), 'https://www.qoo10.jp/g/654321');
   } finally {
     globalThis.fetch = originalFetch;
   }

@@ -1020,6 +1020,18 @@ function continuousSearchCard(query){
   card.append(copyWrap,queryChip,actions);
   return card;
 }
+// 検索完了時、結果セクションが画面外だと「検索できたのか分からない」ため
+// (2026-09-02 実機フィードバック)、結果の先頭へ視点を移す。既に結果の
+// 先頭が画面内に見えている場合(絞り込みバーからの再検索など)は動かさず、
+// reduced-motion設定ではアニメーションを使わない。
+function revealSearchResults(){
+  const section=elements.results;if(!section||section.classList.contains('hidden'))return;
+  const rect=section.getBoundingClientRect();
+  const viewport=window.innerHeight||document.documentElement.clientHeight||0;
+  if(rect.top>=0&&rect.top<=viewport*0.66)return;
+  const reducedMotion=Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+  section.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'});
+}
 function renderResults(result,requestId,shareQuery=elements.query.value,executionId=''){
   const preserveInstantPosition=Boolean(elements.instantMarketplace&&!elements.instantMarketplace.classList.contains('hidden'));
   // resultCarouselは検索ごとに新しいtrackを作るため、DOMから外す前に旧tickerの
@@ -1324,7 +1336,7 @@ async function runKnowledgeSearch(options={}){
     const effectiveQuery=String(result?.ai_query_refinement?.effective_query||'').trim();
     if(effectiveQuery&&effectiveQuery!==elements.query.value){elements.query.value=effectiveQuery;elements.query.dispatchEvent(new Event('input',{bubbles:true}));}
     if(hasSupplementalInput){clearPreparedSearchImage();if(elements.socialUrl)elements.socialUrl.value='';elements.socialUrlField?.classList.add('hidden');elements.socialUrlToggle?.setAttribute('aria-expanded','false');if(elements.socialUrlActionLabel)elements.socialUrlActionLabel.textContent=selectedSearchInputCopy().socialAction;}
-    rememberMemberSearch(elements.query.value);renderResults(result,lastRequestId,submittedQuery,executionId);finishInstantMarketplaceHandoff(false);
+    rememberMemberSearch(elements.query.value);renderResults(result,lastRequestId,submittedQuery,executionId);finishInstantMarketplaceHandoff(false);revealSearchResults();
     document.dispatchEvent(new CustomEvent('hoshilu:search-completed',{detail:{executionId}}));elements.status.textContent='';
     scheduleRelatedRecommendations(effectiveQuery||submittedQuery,sequence);
     return{ok:true,result,requestId:lastRequestId};
@@ -1343,7 +1355,7 @@ async function runKnowledgeSearch(options={}){
     const language=elements.language.value||'JA';
     const trace=lastRequestId?` (${({JA:'追跡ID',EN:'Tracking ID',ZH:'追踪ID',KO:'추적 ID'}[language]||'Tracking ID')}: ${lastRequestId})`:'';
     fallback.message=({JA:'本検索へ一時的に接続できないため、最大13モールの検索先を表示しています。商品候補がある場合はあわせて表示します。',EN:'The main search is temporarily unavailable, so links to up to 13 marketplaces are shown. Product candidates are included only when available.',ZH:'主搜索暂时不可用，现显示最多13个商城的搜索链接。仅在有商品候选时一并显示。',KO:'본 검색에 일시적으로 연결할 수 없어 최대 13개 쇼핑몰 검색 링크를 표시합니다. 상품 후보가 있을 때만 함께 표시합니다.'}[language]||'The main search is temporarily unavailable. Marketplace links are shown, with product candidates only when available.')+trace;
-    renderResults(fallback,lastRequestId,submittedQuery,executionId);finishInstantMarketplaceHandoff(true);
+    renderResults(fallback,lastRequestId,submittedQuery,executionId);finishInstantMarketplaceHandoff(true);revealSearchResults();
     // Main-search/API failures must not suppress the independently resilient
     // related-product carousel. It obtains a fresh Turnstile token and shows
     // only products verified by marketplace APIs.
