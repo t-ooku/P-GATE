@@ -202,20 +202,50 @@ async function readResponseTextBounded(response, maxBytes) {
 
 // OCR全文から検索の手がかりになる行だけを残す。メール・電話番号様の
 // 並びは防御的に除去し(写り込み対策)、価格・在庫語は既存sanitizerが落とす。
+// パッケージ特有のノイズ(OPEN/PUSHなどのUI語、数量・割合だけの行、
+// 「〜ください」等の注意書き)は除き、丸囲み文字の括弧は外す。
+// 商品名はパッケージに複数回印字されることが多いため、出現頻度の高い
+// 行から順に並べる(2026-09-02 実機: "80枚 OPEN 弱酸"が検索語になった事故)。
+const OCR_NOISE_LINE = /^(?:open|close[d]?|push|pull|peel|here|new|hot|sale|only|qr|jan|lot|made\s+in\s+\w+|www\..*|https?:.*)$/iu;
+const OCR_QUANTITY_LINE = /^[\d\s.,]+\s*(?:枚|個|本|袋|包|入|入り|ml|mL|g|kg|L|%|％|cm|mm)(?:入り?|セット)?$/u;
+const OCR_INSTRUCTION_LINE = /(?:ください|下さい|ないで|しないで|注意|警告|caution|warning)/iu;
 export function normalizeDetectedText(value) {
-  const lines = String(value || '').normalize('NFKC')
+  const cleaned = String(value || '').normalize('NFKC')
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/giu, ' ')
     .replace(/(?:\+?81[-\s]?)?0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4}/gu, ' ')
-    .split(/\n+/u)
-    .map((line) => sanitizeEvidenceText(line))
-    .filter((line) => line.length >= 2 && line.length <= 40
-      && !/^[\d\s%.,:;!?()\/\-+×xX*・]+$/u.test(line));
-  const unique = [];
-  for (const line of lines) {
-    if (!unique.some((existing) => existing.toLocaleLowerCase() === line.toLocaleLowerCase())) unique.push(line);
-    if (unique.length >= 8) break;
+    .replace(/[()（）［］\[\]【】〔〕｛｝{}<>《》「」『』]/gu, '');
+  // 「赤ちゃんの」+「おしりふき」のように助詞で終わる行は次行と一語に
+  // つなぐ(パッケージの改行で商品名が分断される対策)。
+  const rawLines = cleaned.split(/\n+/u).map((line) => line.trim()).filter(Boolean);
+  const joinedLines = [];
+  for (let index = 0; index < rawLines.length; index += 1) {
+    const line = rawLines[index];
+    const next = rawLines[index + 1];
+    if (next && line.length <= 12 && next.length <= 20 && /[のなと]$/u.test(line)
+      && /^[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u.test(next)) {
+      joinedLines.push(`${line}${next}`);
+      index += 1;
+      continue;
+    }
+    joinedLines.push(line);
   }
-  return unique.join('\n').slice(0, 400);
+  const counts = new Map();
+  const order = [];
+  for (const rawLine of joinedLines) {
+    const line = sanitizeEvidenceText(rawLine).replace(/\s+/gu, ' ').trim();
+    if (line.length < 2 || line.length > 40) continue;
+    if (/^[\d\s%.,:;!?\/\-+×xX*・]+$/u.test(line)) continue;
+    if (OCR_NOISE_LINE.test(line) || OCR_QUANTITY_LINE.test(line) || OCR_INSTRUCTION_LINE.test(line)) continue;
+    const key = line.toLocaleLowerCase();
+    if (!counts.has(key)) { counts.set(key, { line, count: 0 }); order.push(key); }
+    counts.get(key).count += 1;
+  }
+  const ranked = order
+    .map((key, index) => ({ ...counts.get(key), index }))
+    .sort((a, b) => (b.count - a.count) || (a.index - b.index))
+    .slice(0, 8)
+    .map((entry) => entry.line);
+  return ranked.join('\n').slice(0, 400);
 }
 
 export function normalizeGoogleVisualWebEvidence(payload = {}) {

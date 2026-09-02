@@ -1057,7 +1057,7 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
   // 質問自体はclarificationCardが担うため、確認済み商品がある時だけ
   // この種のメッセージを出さない。
   const resultMessageText=String(result.message||'');
-  const contradictsShownProducts=confirmed.length>0&&/ほしっとく|特定でき|MYWISH|信息不足|특정하기/u.test(resultMessageText);
+  const contradictsShownProducts=confirmed.length>0&&(/ほしっとく|特定でき|MYWISH|信息不足|특정하기/u.test(resultMessageText)||/[?？]\s*$/u.test(resultMessageText));
   elements.message.textContent=contradictsShownProducts?'':resultMessageText;
   const fallbackProducts=fallbackRecommendationCandidates(candidateRows,RESULT_ROW_LIMIT);
   const recommended=(Array.isArray(result.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);

@@ -760,3 +760,40 @@ test('Geminiが空応答でもOCR文字があれば救済し、証拠ブロッ�
   assert.match(promptText, /detected_text/u);
   assert.match(promptText, /ハンディファン/u);
 });
+
+// 2026-09-02 実機: 検索語が「80枚 OPEN 弱酸」「ちゃんの OPEN (弱) 酸性」に
+// なった。OCR行の頻度順・ノイズ除去・括弧除去と、画像解析のタイムアウト
+// 再試行を固定する。
+test('OCRのUI語・数量行・注意書きは検索語に入らず、頻出する商品名が先頭になる', async () => {
+  const { normalizeDetectedText } = await import('../src/google-visual-web-detection.mjs');
+  const text = normalizeDetectedText('(弱)酸性\n赤ちゃんの\nおしりふき\nOPEN\n純水\n99%\n80枚入\nトイレに流さない\nでください\n弱酸性\n赤ちゃんのおしりふき\n弱酸性\n赤ちゃんのおしりふき');
+  const lines = text.split('\n');
+  assert.equal(lines[0], '弱酸性');
+  assert.equal(lines[1], '赤ちゃんのおしりふき');
+  assert.doesNotMatch(text, /OPEN|80枚|99%|ください/u);
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', VISUAL_ENV, async (url) => {
+    if (String(url).startsWith('https://vision.googleapis.com/')) {
+      return Response.json({ responses: [{ webDetection: { bestGuessLabels: [{ label: 'cartoon' }] },
+        textAnnotations: [{ description: '(弱)酸性\n赤ちゃんの\nおしりふき\nOPEN\n80枚入\n弱酸性\n赤ちゃんのおしりふき\n弱酸性\n赤ちゃんのおしりふき' }] }] });
+    }
+    return new Response('', { status: 503 });
+  });
+  assert.equal(result.provider, 'GOOGLE_VISION_OCR_FALLBACK');
+  assert.equal(result.refined_query, '弱酸性 赤ちゃんのおしりふき');
+});
+
+test('画像付き解析はタイムアウト1回なら短めに再試行して成功させる', async () => {
+  let calls = 0;
+  const result = await analyzeSearchInput({ image: JPEG }, 'JA', ENV, async (_url, options) => {
+    calls += 1;
+    if (calls === 1) {
+      const error = new Error('The operation was aborted due to timeout');
+      error.name = 'TimeoutError';
+      throw error;
+    }
+    assert.ok(options.signal instanceof AbortSignal);
+    return Response.json({ candidates: [{ content: { parts: [{ text: '{"refined_query":"赤ちゃんのおしりふき 弱酸性 80枚"}' }] } }] });
+  });
+  assert.equal(calls, 2);
+  assert.equal(result.refined_query, '赤ちゃんのおしりふき 弱酸性 80枚');
+});

@@ -11,6 +11,11 @@ import {
 } from './google-visual-web-detection.mjs';
 
 const ANALYSIS_TIMEOUT_MS = 7000;
+// 実機のカメラ写真(1600px JPEG)はGeminiの応答が7秒を超えることがあり、
+// 一律7秒ではOCR縮退ばかりが動いてしまう(2026-09-02)。画像付きは14秒、
+// タイムアウト後の再試行は9秒。クライアントの画像検索予算(45秒)内。
+const IMAGE_ANALYSIS_TIMEOUT_MS = 14000;
+const IMAGE_ANALYSIS_RETRY_TIMEOUT_MS = 9000;
 export const MAX_SEARCH_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_IMAGE_BASE64_LENGTH = Math.ceil(MAX_SEARCH_IMAGE_BYTES / 3) * 4;
 const IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -372,10 +377,21 @@ export function weakGoogleVisualBestGuessAnalysis(evidence = {}) {
 // OCRで読めた行(整形済み)から検索語を作る。商品特定は主張しない。
 export function ocrTextSearchAnalysis(evidence = {}) {
   if (!evidence || typeof evidence !== 'object') return null;
+  // detected_textは出現頻度順。日本語(かな・漢字)を含む行を優先し、
+  // 先頭行に含まれる重複行は足さない。最大2行で検索語を作る。
   const lines = String(evidence.detected_text || '').split('\n')
     .map((line) => cleanText(line, 40)).filter(Boolean);
   if (!lines.length) return null;
-  const refinedQuery = cleanText(lines.slice(0, 3).join(' '), 200);
+  const japanese = (line) => /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u.test(line);
+  const ordered = [...lines.filter(japanese), ...lines.filter((line) => !japanese(line))];
+  const picked = [];
+  for (const line of ordered) {
+    const key = line.toLocaleLowerCase();
+    if (picked.some((existing) => existing.toLocaleLowerCase().includes(key) || key.includes(existing.toLocaleLowerCase()))) continue;
+    picked.push(line);
+    if (picked.length >= 2) break;
+  }
+  const refinedQuery = cleanText(picked.join(' '), 200);
   if (refinedQuery.length < 2) return null;
   return normalizeSearchInputAnalysis({ refined_query: refinedQuery, match_score: 0 });
 }
@@ -426,7 +442,7 @@ export async function analyzeSearchInput({
     }
   }
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
-  const requestAnalysisOnce = async (contextUrl, contextImage) => {
+  const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS) => {
     const parts = [{ text: analysisPrompt(rememberedQuery, contextUrl, language) }];
     const evidenceBlock = googleVisualWebEvidencePromptBlock(visualWebEvidence);
     if (evidenceBlock) parts.push({ text: evidenceBlock });
@@ -457,7 +473,7 @@ export async function analyzeSearchInput({
               }
           }),
           redirect: 'manual',
-          signal: AbortSignal.timeout(ANALYSIS_TIMEOUT_MS)
+          signal: AbortSignal.timeout(timeoutMs)
         }
       );
     } catch (cause) {
@@ -482,14 +498,18 @@ export async function analyzeSearchInput({
   // 再試行しても総所要時間が倍になるだけなので対象外。
   const requestAnalysis = async (contextUrl, contextImage) => {
     if (contextUrl) return requestAnalysisOnce(contextUrl, contextImage);
+    const firstTimeout = contextImage ? IMAGE_ANALYSIS_TIMEOUT_MS : ANALYSIS_TIMEOUT_MS;
     try {
-      return await requestAnalysisOnce(contextUrl, contextImage);
+      return await requestAnalysisOnce(contextUrl, contextImage, firstTimeout);
     } catch (error) {
       const transientStatus = [429, 500, 502, 503, 504].includes(Number(error?.status));
       const quickNetworkFailure = !error?.status && !error?.timedOut;
-      if (!transientStatus && !quickNetworkFailure) throw error;
+      // 画像付きはタイムアウトも1回だけ短めに再試行する(混雑時の救済)。
+      const imageTimeout = Boolean(contextImage) && Boolean(error?.timedOut);
+      if (!transientStatus && !quickNetworkFailure && !imageTimeout) throw error;
       await new Promise((resolve) => setTimeout(resolve, 250));
-      return requestAnalysisOnce(contextUrl, contextImage);
+      return requestAnalysisOnce(contextUrl, contextImage,
+        imageTimeout ? IMAGE_ANALYSIS_RETRY_TIMEOUT_MS : firstTimeout);
     }
   };
   // Geminiが(再試行しても)使えない時、画像単体の検索を丸ごと失敗させる
