@@ -1032,6 +1032,13 @@ function revealSearchResults(){
   if(rect.top>=-8&&rect.top<=120)return;
   const reducedMotion=Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
   section.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'});
+  // モバイルではスムーススクロールが描画・通信・慣性で中断されることが
+  // あるため、着地を確認して届いていなければ即時スクロールでやり直す。
+  window.setTimeout(()=>{
+    const after=section.getBoundingClientRect();
+    if(after.top>=-8&&after.top<=120)return;
+    section.scrollIntoView({behavior:'auto',block:'start'});
+  },600);
 }
 function renderResults(result,requestId,shareQuery=elements.query.value,executionId=''){
   const preserveInstantPosition=Boolean(elements.instantMarketplace&&!elements.instantMarketplace.classList.contains('hidden'));
