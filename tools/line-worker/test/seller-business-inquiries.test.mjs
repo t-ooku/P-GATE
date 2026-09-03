@@ -64,8 +64,14 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /フォーム送信だけで課金されることはありません/u);
   assert.match(html, /月額9,800円/u);
   assert.match(html, /1法人単位ではなく、1事業者アカウント単位/u);
-  assert.match(html, /ファッション<\/td><td>25円/u);
-  assert.match(html, /コスメ<\/td><td>38円/u);
+  // 2026-09-03 大隆さん決定: 無料プラン＝定価、Business＝定価の50%＋毎月5,000円分まで0円。
+  assert.match(html, /ファッション<\/td><td>19円<\/td><td>38円/u);
+  assert.match(html, /コスメ<\/td><td>29円<\/td><td>57円/u);
+  assert.match(html, /自動車用品<\/td><td>10円<\/td><td>20円/u);
+  assert.match(html, /毎月5,000円分まで0円/u);
+  assert.match(html, /5,001円から課金、1か月目から適用・4か月目以降も継続/u);
+  assert.match(html, /翌月へ繰り越しません/u);
+  assert.doesNotMatch(html, /Businessあり/u);
   assert.doesNotMatch(html, /name="(?:password|api_key|secret|access_token)"/iu);
 });
 
@@ -78,8 +84,8 @@ test('公開LPはスマホで見出しを3行以上に崩さず余白を圧縮�
   assert.match(css, /\.form-shell\{margin:38px 0/u);
   assert.match(css, /\.flow h2\{[^}]*white-space:nowrap/u);
   assert.match(css, /\.price-table-wrap table\{min-width:0;table-layout:fixed\}/u);
-  assert.match(html, /Businessあり/u);
-  assert.match(html, /Businessなし/u);
+  assert.match(html, /無料プラン<br>（定価）/u);
+  assert.match(html, /Business<br>（定価の50%）/u);
 });
 
 test('値下げ待ちと見つからなかった検索を匿名需要としてBusinessへ届ける', () => {
