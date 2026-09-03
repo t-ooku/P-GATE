@@ -14,8 +14,8 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
     stat(new URL('../public/hoshilu-discovery-collage-mobile.webp', import.meta.url)),
   ]);
   assert.match(html, /id="discoveryTitle"><span>名前が分からなくても、<\/span><span>記憶から探せる。<\/span>/);
-  // 2026-09-03 指示書 §13: 第一画面の言葉「写真・スクショ・SNS・一言から探せます」
-  assert.match(html, /id="heroTitle"><span class="hero-title-line">写真・スクショ・SNS・一言から、<\/span><span class="hero-title-line hero-title-accent">欲しい物を探せます。<\/span>/);
+  // 2026-09-03 方向転換指示書: 第一画面の主訴求は「欲しいもの、まとめて探す。」
+  assert.match(html, /id="heroTitle"><span class="hero-title-line">欲しいもの、<\/span><span class="hero-title-line hero-title-accent">まとめて探す。<\/span>/);
   assert.match(app, /first\.className='hero-title-line'/);
   assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
   // 2026-09-03 大隆さん報告「改行位置が変」: 狭い画面で「写真・スクショ・」/

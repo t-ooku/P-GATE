@@ -1183,3 +1183,7 @@
 .keep-product-button.kept{background:#ff4f9a;border-color:#ff4f9a;color:#fff}
 .keep-product-note,.watch-login-cta{display:block;padding:6px 8px;border-radius:8px;background:#fff0f6;color:#c2185b;font-size:11px;font-weight:800;line-height:1.4;text-decoration:none}
 .watch-login-cta{margin-top:4px;background:var(--soft);color:#5140ba}
+/* 2026-09-03 方向転換: 主訴求「欲しいもの、まとめて探す。」のサブ行 */
+.hero-sub{margin:10px 0 0;color:var(--muted);font-size:clamp(13px,3.6vw,17px);line-height:1.6;font-weight:700}
+.marketplace-quick-strip{border-color:#8b7cf2}
+.marketplace-quick-strip-heading{color:#5140ba}

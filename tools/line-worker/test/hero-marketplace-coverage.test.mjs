@@ -86,13 +86,18 @@ test('index.htmlがhero-marketplace-coverage.mjsを読み込む', async () => {
 });
 
 // 2026-09-03 指示書 §13–17: 第一画面の言葉と、タップで即検索できる検索例6件。
-test('第一画面は「欲しいけど、名前が分からない。」と「何が欲しいの？」、検索例は指示書の6件', async () => {
+// 2026-09-03 方向転換指示書: 主訴求は「欲しいもの、まとめて探す。」、サブは
+// 「Amazon・楽天・Qoo10などを一度に検索。」、差別化として「名前が分からなくても
+// 探せます。」を短く残す。検索欄は「何が欲しいの？」だけ。
+test('第一画面は「欲しいもの、まとめて探す。」とモール名のサブ、検索例は6件', async () => {
   const [html, app] = await Promise.all([read('index.html'), read('app.js')]);
-  assert.match(html, /<p id="heroEyebrow" class="eyebrow">欲しいけど、名前が分からない。<\/p>/);
+  assert.match(html, /<p id="heroEyebrow" class="eyebrow">名前が分からなくても探せます。<\/p>/);
+  assert.match(html, /<p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などを一度に検索。<\/p>/);
+  assert.match(app, /heroSub:'Amazon・楽天・Qoo10などを一度に検索。'/);
   // 例文はプレースホルダではなく下の検索例チップが担う(狭い画面で括弧書きが
   // 語の途中で折り返していた。2026-09-03 大隆さん報告)。
   assert.match(html, /placeholder="何が欲しいの？"/);
-  assert.match(app, /JA:\{eyebrow:'欲しいけど、名前が分からない。'/);
+  assert.match(app, /JA:\{eyebrow:'名前が分からなくても探せます。'/);
   for (const example of ['インスタで見た白いバッグ', '韓国っぽいシルバーリング', 'このスクショのマットレス', '自立する本革トート', 'この靴に似たもの', 'SNSで見たピンクのリップ']) {
     assert.ok(app.includes(`'${example}'`), `example missing: ${example}`);
   }

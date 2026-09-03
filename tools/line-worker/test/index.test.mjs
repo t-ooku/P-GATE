@@ -1608,15 +1608,18 @@ test('公式モール店のオファーはofficial_storeを持ち、表示だけ
   assert.doesNotMatch(app, /sort\([^)]*official_store/);
 });
 
-test('検索成功時、確認済み商品の直後に13モール横断のクイックストリップが挟まる', async () => {
+test('検索成功時、結果の先頭に13モール横断のクイックストリップが出る', async () => {
   const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   // 2026-08-19 マスター優先順位: 13モール横断カードは最後尾にしか無く、
-  // 到達者がごく少数だった。確認済み商品の直後に先頭6モール(サーバー並びで
-  // Amazonが先頭)の小型ストリップを挿入し、順位・リンク生成は変えない。
+  // 到達者がごく少数だった。先頭6モールの小型ストリップを挿入し、順位・
+  // リンク生成は変えない。
+  // 2026-09-03 方向転換指示書 §5/§19: 主訴求が「欲しいもの、まとめて探す。」に
+  // なったため、本命商品(楽天/Yahoo!のAPI由来に偏る)より前へ移動し、Amazon・
+  // Qoo10・SHEIN へも同じ距離で移動できるようにした。
   assert.match(app, /function marketplaceQuickStrip\(result\)/);
   assert.match(app, /\.slice\(0,6\)/);
-  // 挿入位置: rows[0](確認済み) → ストリップ → 継続検索CTA → 残りの行、の順。
-  assert.match(app, /resultCards\.push\(rows\[0\]\);\s*const quickStrip=marketplaceQuickStrip\(result\);\s*if\(quickStrip\)resultCards\.push\(quickStrip\);\s*const continuous=continuousSearchCard\(elements\.query\.value\);\s*if\(continuous\)resultCards\.push\(continuous\);\s*resultCards\.push\(\.\.\.rows\.slice\(1\)\)/);
+  // 挿入位置: ストリップ → rows[0](確認済み) → 継続検索CTA → 残りの行、の順。
+  assert.match(app, /if\(quickStrip\)resultCards\.push\(quickStrip\);\s*resultCards\.push\(rows\[0\]\);/);
   // ストリップから最後尾の完全版カードへ飛べる。
   assert.match(app, /marketplace-quick-strip-jump/);
   assert.match(app, /#marketplaceFallback'\)\?\.scrollIntoView/);
