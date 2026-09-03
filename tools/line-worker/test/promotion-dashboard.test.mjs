@@ -292,3 +292,31 @@ test('Codex KPI D1 adapterはSELECT/WITH以外と複文を拒否する', async (
   assert.equal(requests.length, 1);
   assert.deepEqual(requests[0].params, ['2026-08-01']);
 });
+
+// 2026-09-03 §17: モール別のクリック率を実数で出す。表示の実測が無いモールは
+// 0%ではなく未計測(null)として返し、推測値を実数として扱わない。
+test('モール別内訳は表示回数とクリック率を返し、表示未計測のモールはnullにする', async () => {
+  const db = setup();
+  const event = db.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const v1 = '550e8400-e29b-41d4-a716-446655440000';
+  const s1 = '650e8400-e29b-41d4-a716-446655440000';
+  for (const id of ['shown-rakuten-1', 'shown-rakuten-2', 'shown-rakuten-3', 'shown-rakuten-4']) {
+    event.run(id, 'marketplace_shown', 'JA', 'instagram', 'social', 'campaign', '', 'RAKUTEN_JP',
+      '2026-08-09T12:01:30Z', 'ATTRIBUTED', v1, s1);
+  }
+  const summary = await promotionDashboardSummary(
+    { PRODUCT_DB: d1(db), SOCIAL_AUTOPILOT_ENABLED: 'false' }, new Date('2026-08-10T00:00:00.000Z')
+  );
+  const period = summary.business_kpis.periods['7d'];
+  const rakuten = period.marketplaces.find((row) => row.marketplace === 'RAKUTEN_JP');
+  assert.equal(rakuten.impressions, 4);
+  assert.equal(rakuten.clicks, 1);
+  assert.equal(rakuten.click_rate, 25);
+  assert.equal(rakuten.shown_sessions, 1);
+  const older = summary.business_kpis.periods['30d'].marketplaces
+    .find((row) => row.marketplace === 'AMAZON_JP');
+  assert.equal(older.impressions, 0);
+  assert.equal(older.click_rate, null, '表示の実測が無いモールは率を作らない');
+});

@@ -161,7 +161,35 @@ const completeSearchWatch = event => {
     }
   }
   send('search_completed');
+  collectMarketplaceImpressions(executionId);
 };
+
+// 2026-09-03 §17: モール別の表示率・クリック率を実数で出すため、検索結果に
+// 導線が出たモールを記録する。結果行は非同期に描画されるので、完了直後から
+// 数回だけ画面を見て、実行1回につき1モール1件だけ送る。送るのはモール名の
+// 列挙だけで、検索文・商品名・URL・画像は一切送らない。
+const MARKETPLACE_IMPRESSION_DELAYS_MS = Object.freeze([300, 1500, 4000]);
+const marketplaceImpressions = new Map();
+const MARKETPLACE_LINK_SELECTOR = '.buy-link,.offer-link,.price-offer,.product-primary-link,.price-compare-link,.price-compare-search-link';
+function collectMarketplaceImpressions(executionId) {
+  const key = String(executionId || '');
+  if (!key || marketplaceImpressions.has(key)) return;
+  const seen = new Set();
+  marketplaceImpressions.set(key, seen);
+  if (marketplaceImpressions.size > 20) {
+    marketplaceImpressions.delete(marketplaceImpressions.keys().next().value);
+  }
+  const sweep = () => {
+    for (const link of document.querySelectorAll(MARKETPLACE_LINK_SELECTOR)) {
+      if (link.closest('.ranking-product-card,.buzz-home-card')) continue;
+      const marketplace = growthMarketplace(link.dataset?.marketplace, link.textContent);
+      if (!marketplace || seen.has(marketplace)) continue;
+      seen.add(marketplace);
+      send('marketplace_shown', { marketplace });
+    }
+  };
+  for (const delay of MARKETPLACE_IMPRESSION_DELAYS_MS) setTimeout(sweep, delay);
+}
 
 send('landing_view');
 try {

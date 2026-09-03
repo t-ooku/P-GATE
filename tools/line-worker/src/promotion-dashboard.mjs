@@ -165,10 +165,18 @@ SELECT source,medium,COUNT(*) AS sessions,
 FROM sessions GROUP BY source,medium
 ORDER BY value_sessions DESC,outbound_sessions DESC,sessions DESC LIMIT 10`;
 
-const MARKETPLACE_BREAKDOWN_SQL = `SELECT marketplace,COUNT(DISTINCT session_id) AS outbound_sessions
+// 2026-09-03 §17: モール別に「出た」「押された」を並べる。表示(marketplace_shown)
+// は2026-09-03に計測を開始したため、それ以前の期間は impressions が0になる。
+// 0を「表示されなかった」と読み違えないよう、クリック率は表示が1件以上ある
+// 場合だけ算出し、無い場合は null(未計測)を返す。
+const MARKETPLACE_BREAKDOWN_SQL = `SELECT marketplace,
+    COUNT(DISTINCT CASE WHEN event_type='marketplace_click' THEN session_id END) AS outbound_sessions,
+    COUNT(DISTINCT CASE WHEN event_type='marketplace_shown' THEN session_id END) AS shown_sessions,
+    SUM(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS clicks,
+    SUM(CASE WHEN event_type='marketplace_shown' THEN 1 ELSE 0 END) AS impressions
   FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
-  AND event_type='marketplace_click' AND marketplace<>'' AND session_id<>''
-  GROUP BY marketplace ORDER BY outbound_sessions DESC,marketplace ASC LIMIT 15`;
+  AND event_type IN ('marketplace_click','marketplace_shown') AND marketplace<>'' AND session_id<>''
+  GROUP BY marketplace ORDER BY outbound_sessions DESC,impressions DESC,marketplace ASC LIMIT 15`;
 
 const DAILY_SQL = `WITH sessions AS (
   SELECT substr(occurred_at,1,10) AS day,session_id,MAX(visitor_id) AS visitor_id,
@@ -275,7 +283,19 @@ function sourceRows(rows = []) {
 }
 
 function marketplaceRows(rows = []) {
-  return rows.map(row => ({ marketplace: String(row.marketplace || ''), outbound_sessions: safeCount(row.outbound_sessions) }));
+  return rows.map(row => {
+    const impressions = safeCount(row.impressions);
+    const clicks = safeCount(row.clicks);
+    return {
+      marketplace: String(row.marketplace || ''),
+      outbound_sessions: safeCount(row.outbound_sessions),
+      shown_sessions: safeCount(row.shown_sessions),
+      impressions,
+      clicks,
+      // 表示の実測が無いモールは率を作らない(推測値を実数として出さない)。
+      click_rate: impressions > 0 ? percentage(clicks, impressions) : null
+    };
+  });
 }
 
 function searchInputMix(rows = []) {

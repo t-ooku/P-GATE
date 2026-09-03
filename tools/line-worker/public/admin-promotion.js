@@ -192,9 +192,14 @@ function renderMarketplaces(data) {
     return;
   }
   const total = data.marketplaces.reduce((sum, row) => sum + row.outbound_sessions, 0);
-  marketplaceTable.replaceChildren(table(['モール', '送客', '構成比'], data.marketplaces.map(row => [
+  // 2026-09-03 §17: モール別に「表示」「クリック率」を並べる。表示の計測開始は
+  // 2026-09-03。それ以前の期間はクリック率がnullで返るので「未計測」と表示し、
+  // 0%とは区別する。
+  marketplaceTable.replaceChildren(table(['モール', '送客', '構成比', '表示', 'クリック率'], data.marketplaces.map(row => [
     marketplaceLabels[row.marketplace] || row.marketplace, formatNumber(row.outbound_sessions),
-    rate(total ? Math.round(row.outbound_sessions / total * 1000) / 10 : null)
+    rate(total ? Math.round(row.outbound_sessions / total * 1000) / 10 : null),
+    formatNumber(row.impressions || 0),
+    row.click_rate === null || row.click_rate === undefined ? '未計測' : rate(row.click_rate)
   ])));
 }
 

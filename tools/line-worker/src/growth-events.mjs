@@ -51,6 +51,10 @@ const EVENTS = new Set([
   'returning_visit',
   'wish_saved',
   'continuous_search_saved',
+  // 2026-09-03 §17: モール別のクリック率を出すには「出た回数」が要る。
+  // 検索結果に導線が出たモールを、実行1回につき1モール1件だけ記録する。
+  // 検索文・商品名・URLは送らない(モール名の列挙のみ)。
+  'marketplace_shown',
   'marketplace_click',
   'marketplace_fallback_click',
   'share_started',
