@@ -90,3 +90,57 @@ test('値下げ待ちと見つからなかった検索を匿名需要としてBu
   assert.match(html, /検索文そのものや個人情報は共有しません/u);
   assert.match(html, /匿名需要が5件以上/u);
 });
+
+// 2026-09-03 セラー獲得の運用開始: これまで問い合わせはD1に入るだけで通知が
+// 無く、管理APIを人が見に行かない限り気づけなかった。届いた時点でメールを
+// 1通送る。通知に失敗しても問い合わせ自体は必ず受け付ける。
+test('セラー問い合わせは届いた時点で通知メールを送る', async () => {
+  const { env } = databaseEnv();
+  const sent = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    sent.push({ url: String(url), body: JSON.parse(init.body) });
+    return new Response('{}', { status: 200 });
+  };
+  try {
+    const result = await createSellerBusinessInquiry({
+      ...env, RESEND_API_KEY: 're_test', MEMBER_EMAIL_FROM: 'notification@auth.hoshilu.app',
+      SELLER_INQUIRY_NOTIFY_EMAIL: 'owner@example.com'
+    }, valid, new Date('2026-09-03T00:00:00Z'));
+    assert.equal(result.accepted, true);
+    assert.equal(result.notified, true);
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].url, 'https://api.resend.com/emails');
+    assert.deepEqual(sent[0].body.to, ['owner@example.com']);
+    // そのまま返信できるようにする(対応は手作業のため)。
+    assert.equal(sent[0].body.reply_to, 'sales@example.com');
+    assert.match(sent[0].body.subject, /星商事株式会社/u);
+    assert.match(sent[0].body.text, /sales@example\.com/u);
+    assert.match(sent[0].body.text, /掲載と分析について相談したいです。/u);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('通知先が未設定でも、通知が失敗しても問い合わせは受け付ける', async () => {
+  const { db, env } = databaseEnv();
+  const noConfig = await createSellerBusinessInquiry(env, valid, new Date('2026-09-03T00:00:00Z'));
+  assert.equal(noConfig.accepted, true);
+  assert.equal(noConfig.notified, false);
+
+  const { db: db2, env: env2 } = databaseEnv();
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => { throw new Error('NETWORK_DOWN'); };
+  try {
+    const failed = await createSellerBusinessInquiry({
+      ...env2, RESEND_API_KEY: 're_test', MEMBER_EMAIL_FROM: 'notification@auth.hoshilu.app',
+      SELLER_INQUIRY_NOTIFY_EMAIL: 'owner@example.com'
+    }, valid, new Date('2026-09-03T00:00:00Z'));
+    assert.equal(failed.accepted, true, '通知の失敗で見込み客を落とさない');
+    assert.equal(failed.notified, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assert.equal(db2.prepare('SELECT COUNT(*) AS n FROM seller_business_inquiries').get().n, 1);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM seller_business_inquiries').get().n, 1);
+});

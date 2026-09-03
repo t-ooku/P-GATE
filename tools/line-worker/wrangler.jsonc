@@ -38,6 +38,7 @@
     "INSTAGRAM_EXPECTED_USERNAME": "hoshilu.app",
     "INSTAGRAM_OAUTH_REDIRECT_URI": "https://hoshilu.app/api/oauth/instagram/callback",
     "MEMBER_EMAIL_FROM": "notification@auth.hoshilu.app",
+    "SELLER_INQUIRY_NOTIFY_EMAIL": "t.ookutsu19850613@gmail.com",
     "GOOGLE_VISUAL_SEARCH_ENABLED": "true",
     "GOOGLE_VISUAL_SEARCH_MONTHLY_REQUEST_LIMIT": "900",
     "RUNWAY_GENERATION_ENABLED": "true",

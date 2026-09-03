@@ -80,6 +80,57 @@ export function normalizeSellerBusinessInquiry(input = {}) {
   return { value: result, errors };
 }
 
+// 2026-09-03 セラー獲得の運用開始にあたり追加。これまで問い合わせはD1に入る
+// だけで、誰にも知らされなかった。管理APIを人が見に行かない限り気づけないので、
+// 実運用では見落とす。届いた時点でメールを1通送る。
+// 送信に失敗しても問い合わせ自体は受け付ける(通知の失敗で見込み客を落とさない)。
+export function sellerInquiryNotificationText(id, value, timestamp) {
+  const labels = [
+    ['受付ID', id],
+    ['受付日時(UTC)', timestamp],
+    ['種別', value.inquiry_type === 'ACCOUNT_APPLICATION' ? 'アカウント申請' : '相談'],
+    ['区分', value.organization_type],
+    ['会社・屋号', value.organization_name],
+    ['担当者', value.contact_name],
+    ['メール', value.contact_email],
+    ['ストアURL', value.storefront_url || '(未入力)'],
+    ['出品モール', value.marketplaces.length ? value.marketplaces.join(', ') : '(未入力)'],
+    ['月間注文数', value.monthly_order_range || '(未入力)'],
+    ['関心プラン', value.plan_interest || '(未入力)'],
+    ['支払い希望', value.payment_preference || '(未入力)']
+  ];
+  return [
+    'HOSHILUのセラー相談フォームに新しい問い合わせが届きました。',
+    '',
+    ...labels.map(([key, text]) => `${key}: ${text}`),
+    '',
+    '本文:',
+    value.message || '(本文なし)',
+    '',
+    '一覧: https://hoshilu.app/api/admin/seller-business/inquiries'
+  ].join('\n');
+}
+
+async function notifySellerInquiry(env, id, value, timestamp) {
+  const to = String(env.SELLER_INQUIRY_NOTIFY_EMAIL || '').trim();
+  const from = String(env.MEMBER_EMAIL_FROM || '').trim();
+  if (!to || !from || !String(env.RESEND_API_KEY || '').startsWith('re_')) return false;
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      from: `HOSHILU <${from}>`,
+      to: [to],
+      // 返信するとそのまま相手に届くようにしておく。手作業で対応する前提のため。
+      reply_to: value.contact_email,
+      subject: `【HOSHILU】セラー問い合わせ: ${value.organization_name}`,
+      text: sellerInquiryNotificationText(id, value, timestamp)
+    }),
+    redirect: 'manual'
+  });
+  return response.ok;
+}
+
 export async function createSellerBusinessInquiry(env, input, now = new Date()) {
   const { value, errors } = normalizeSellerBusinessInquiry(input);
   if (value.company_website) return { accepted: true, inquiry_id: '' };
@@ -94,7 +145,9 @@ export async function createSellerBusinessInquiry(env, input, now = new Date()) 
     .bind(id, value.inquiry_type, value.organization_type, value.organization_name,
       value.contact_name, value.contact_email, value.storefront_url, JSON.stringify(value.marketplaces),
       value.monthly_order_range, value.plan_interest, value.payment_preference, value.message, timestamp).run();
-  return { accepted: true, inquiry_id: id };
+  let notified = false;
+  try { notified = await notifySellerInquiry(env, id, value, timestamp); } catch { notified = false; }
+  return { accepted: true, inquiry_id: id, notified };
 }
 
 export async function handleSellerBusinessInquiryRoutes(request, env) {
