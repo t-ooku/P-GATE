@@ -1,0 +1,63 @@
+name: Compile teacher-dataset rules
+
+# Auto-recompiles src/search-quality/teacher-dataset-rules.generated.json
+# whenever a new teacher-dataset batch JSON lands on feature/ui-search-v2.
+#
+# Why this exists: daily teacher-dataset batches (evaluation/teacher-dataset/
+# *-batch-*.json) are small (tens of KB) and easy to push directly, but the
+# compiled artifact that the search pipeline actually reads grows every day
+# and eventually becomes too large for some push paths to handle in one
+# shot. Compiling on GitHub's own runner removes that size ceiling entirely
+# - the large file is produced and committed here, never round-tripped
+# through anything else. See claude/hoshilu_teacher_dataset_daily_ops_guide.md
+# in the HOSHILU.APP project for the day this was added (2026-09-02) and why.
+
+on:
+  push:
+    branches: [feature/ui-search-v2]
+    paths:
+      - 'tools/line-worker/evaluation/teacher-dataset/*.json'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ui-search-v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install line-worker dependencies
+        working-directory: tools/line-worker
+        run: npm ci
+
+      - name: Compile teacher-dataset rules
+        run: node tools/line-worker/scripts/compile-teacher-dataset-rules.mjs
+
+      - name: Run line-worker regression tests (must be green before committing)
+        working-directory: tools/line-worker
+        run: npm test
+
+      - name: Block deterministic search-quality regressions
+        working-directory: tools/line-worker
+        run: npm run check:search-quality
+
+      - name: Commit recompiled rules if changed
+        run: |
+          if git diff --quiet -- tools/line-worker/src/search-quality/teacher-dataset-rules.generated.json; then
+            echo "No changes to teacher-dataset-rules.generated.json; nothing to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add tools/line-worker/src/search-quality/teacher-dataset-rules.generated.json
+            git commit -m "chore(teacher): auto-recompile teacher-dataset-rules.generated.json"
+            git push origin HEAD:feature/ui-search-v2
+          fi
