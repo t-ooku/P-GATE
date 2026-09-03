@@ -57,6 +57,19 @@ test('判定: 期待一致・除外なし・必須5モールのリンクが揃�
   } }, 900);
   assert.equal(clip.pass, false);
   assert.match(clip.code, /_H0_/u);
+  // 2026-09-03 2回目の実例: 本命が正しく、2件目が2wayショルダーでも落とさない
+  const twoWay = evaluateSearchQaResult(tote, { ok: true, result: {
+    candidates: [{ product_name: 'ミニトートバッグ レディース 革 レザー 手提げバッグ' }, { product_name: '本革 トートバッグ 2way ショルダー' }, { product_name: '長財布' }],
+    marketplace_search_links: links(ALL)
+  } }, 900);
+  assert.equal(twoWay.pass, true);
+  const ladle = SEARCH_QA_CANARY_QUERIES.find((f) => f.id === 'shein_one_piece');
+  const otama = evaluateSearchQaResult(ladle, { ok: true, result: {
+    candidates: [{ product_name: 'パール金属 Easy Fit ワンピース お玉 大 G-3131' }],
+    marketplace_search_links: links(ALL)
+  } }, 900);
+  assert.equal(otama.pass, false);
+  assert.match(otama.code, /^C1_E1_R1_H0_/u);
   const failed = evaluateSearchQaResult(tote, { ok: false, error: 'SEARCH_FAILED' }, 50);
   assert.equal(failed.pass, false);
   assert.equal(failed.code, 'C0_E0_R0_H0_L0_T50');

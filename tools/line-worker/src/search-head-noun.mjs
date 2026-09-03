@@ -25,7 +25,10 @@ const PRODUCT_HEADS = Object.freeze([
   // 家具・寝具・生活
   'マットレス', '枕', '布団', '毛布', 'シーツ', 'ソファ', 'テーブル', 'デスク', 'チェア', '椅子', 'ラック', '棚', 'ボックス', 'ケース', 'カゴ', 'かご',
   'ハンガー', 'カーテン', 'ラグ', 'カーペット', 'クッション', 'ミラー', '鏡', '照明', 'ライト', 'ランプ', '加湿器', '扇風機', 'ファン', 'ヒーター',
-  '水筒', 'タンブラー', 'マグカップ', 'ボトル', '弁当箱', 'フライパン', '鍋', '包丁', 'まな板', '食器', '皿', '傘', '収納',
+  '水筒', 'タンブラー', 'マグカップ', 'ボトル', '弁当箱', 'フライパン', '鍋', '包丁', 'まな板', '食器', '皿', '傘', '収納', 'ピロー',
+  // 台所用品(「ワンピース お玉」のように衣類語が形状の修飾語になる商品を見分ける)
+  'お玉', 'おたま', 'ヘラ', 'トング', 'ザル', 'ボウル', 'スプーン', 'フォーク', '箸', '菜箸', '泡立て器', 'ピーラー', 'おろし器',
+  '計量カップ', '保存容器', 'タッパー', '水切り', '鍋敷き', '鍋つかみ', 'エプロン', 'ふきん', 'スポンジ', 'キッチンペーパー', 'ゴミ箱', '洗剤',
   // 家電・ガジェット
   'イヤホン', 'ヘッドホン', 'スピーカー', 'カメラ', 'プリンター', 'モニター', 'キーボード', 'マウス', '充電器', 'ケーブル', 'バッテリー', 'スマホケース',
   'ドライヤー', 'アイロン', 'ヘアアイロン', '掃除機', '炊飯器', 'トースター', 'ケトル', 'ブレンダー', 'ミキサー', 'テレビ', 'タブレット', 'スマートウォッチ',
@@ -37,7 +40,7 @@ const HEAD_ALIASES = Object.freeze({
   '指輪': ['リング'], 'リング': ['指輪'], '靴': ['スニーカー', 'シューズ', 'サンダル', 'ブーツ', 'パンプス'], 'ワンピース': ['ワンピ'],
   '椅子': ['チェア'], 'チェア': ['椅子'], '鏡': ['ミラー'], 'ミラー': ['鏡'], '収納': ['収納ケース', '収納ボックス', '収納ラック'],
   'ファンデ': ['ファンデーション'], '時計': ['ウォッチ', '腕時計'], 'ライト': ['ランプ', '照明'], 'マグカップ': ['マグ'],
-  'キムチ': ['kimchi'], 'リップ': ['ティント', 'リップスティック', 'リップグロス', 'リップバーム']
+  'キムチ': ['kimchi'], 'リップ': ['ティント', 'リップスティック', 'リップグロス', 'リップバーム'], '枕': ['ピロー'], 'ピロー': ['枕']
 });
 // 主名詞が別の語の一部として現れる誤一致(リップ→クリップ)。
 const FALSE_FRIENDS = Object.freeze({
@@ -88,7 +91,20 @@ export function extractHeadNouns(query) {
   return heads;
 }
 
-function occurrenceIsClean(title, head, index) {
+const TOKEN_SPLIT = /[\s、,／/・【】\[\]()（）「」『』〈〉《》|｜]+/u;
+
+// 商品名の語(トークン)が辞書の商品名詞で終わっていればその名詞を返す。
+function productNounOfToken(token) {
+  const value = String(token || '');
+  if (!value) return '';
+  return PRODUCT_HEADS.filter((noun) => value.endsWith(noun)).sort((a, b) => b.length - a.length)[0] || '';
+}
+
+function relatedToHeads(noun, headTerms) {
+  return headTerms.has(noun) || [...headTerms].some((term) => term.includes(noun) || noun.includes(term));
+}
+
+function occurrenceIsClean(title, head, index, headTerms = new Set([head])) {
   const before = title.slice(0, index);
   const after = title.slice(index + head.length);
   // 付属品・用途表記(「ワンピース用」「〜対応」)
@@ -101,25 +117,44 @@ function occurrenceIsClean(title, head, index) {
     const word = `${runStart === -1 ? '' : before.slice(runStart)}${head}${runEnd === -1 ? after : after.slice(0, runEnd)}`;
     if (falseFriends.some((friend) => word.endsWith(friend) || word === friend)) return false;
   }
+  // 短い別名(ワンピ)が長い主名詞(ワンピース)の一部として出ているだけなら、
+  // 判定は長い方の出現に任せる(ここでは一致扱いにしない)。
+  if ([...headTerms].some((term) => term !== head && term.startsWith(head) && after.startsWith(term.slice(head.length)))) return false;
+  // 主名詞の直後に別の商品名詞が来る(「ワンピース お玉」= 一体型のお玉)なら、
+  // 主名詞は形状・種類の修飾語であって商品そのものではない。
+  if (/^\s/u.test(after)) {
+    const nextToken = after.trim().split(TOKEN_SPLIT)[0] || '';
+    const nextNoun = productNounOfToken(nextToken);
+    if (nextNoun && !relatedToHeads(nextNoun, headTerms) && !ACCESSORY_WORDS.test(nextNoun)) return false;
+  }
   return true;
 }
 
 export function headNounScore(query, title, heads = extractHeadNouns(query)) {
-  if (!heads.length) return null;
+  return headNounDetail(query, title, heads).score;
+}
+
+// score: 2=商品そのもの / 1=弱い一致 / 0=カテゴリ違い・付属品 / null=主名詞なし。
+// position: 主名詞が商品名のどの位置にあるか(0=前半、1=後半)。同じスコア内の
+// 並び順にだけ使う(「コアラリフレッシュピロー 枕 … コアラマットレス」より
+// 「コアラマットレス オリジナル」を前へ)。
+export function headNounDetail(query, title, heads = extractHeadNouns(query)) {
+  if (!heads.length) return { score: null, position: 0 };
   const normalizedTitle = normalize(title);
-  if (!normalizedTitle) return 0;
+  if (!normalizedTitle) return { score: 0, position: 1 };
   const normalizedQuery = normalize(query);
   const queryHasAccessory = ACCESSORY_WORDS.test(normalizedQuery);
   const packaged = PACKAGING.test(normalizedTitle)
     && !heads.some(({ term }) => PACKAGING_OK_HEADS.has(term)) && !PACKAGING.test(normalizedQuery);
+  const headTerms = new Set(heads.flatMap(({ term }) => [term, ...(HEAD_ALIASES[term] || [])]));
+  const positionOf = (index) => (index <= Math.max(12, Math.floor(normalizedTitle.length / 3)) ? 0 : 1);
   const evaluate = (term) => {
     let seen = false;
-    let matchIndex = -1;
     for (const candidate of [term, ...(HEAD_ALIASES[term] || [])]) {
       let index = normalizedTitle.indexOf(candidate);
       while (index !== -1) {
         seen = true;
-        if (occurrenceIsClean(normalizedTitle, candidate, index)) {
+        if (occurrenceIsClean(normalizedTitle, candidate, index, headTerms)) {
           const before = normalizedTitle.slice(0, index);
           // 主名詞より前に付属品語が出る商品名(「ハンドルカバー … トートバッグ」)は
           // 付属品とみなす。検索文自体が付属品を求めている時は除外しない。
@@ -130,28 +165,26 @@ export function headNounScore(query, title, heads = extractHeadNouns(query)) {
         index = normalizedTitle.indexOf(candidate, index + 1);
       }
     }
-    return { matched: false, seen, index: matchIndex };
+    return { matched: false, seen, index: -1 };
   };
   const strong = heads.find(({ strength }) => strength === 2);
   const weak = heads.find(({ strength }) => strength === 1);
-  const strongResult = strong ? evaluate(strong.term) : { matched: false, seen: false };
-  if (strongResult.matched) return packaged ? 0 : 2;
+  const strongResult = strong ? evaluate(strong.term) : { matched: false, seen: false, index: -1 };
+  if (strongResult.matched) return { score: packaged ? 0 : 2, position: positionOf(strongResult.index) };
   // 強い主名詞が商品名に出ていながら付属品・別語だった候補は、弱い主名詞
   // (「バッグ」)が別の場所にあっても救わない。
-  if (strongResult.seen) return 0;
-  if (!weak) return 0;
+  if (strongResult.seen) return { score: 0, position: 1 };
+  if (!weak) return { score: 0, position: 1 };
   const weakResult = evaluate(weak.term);
-  if (!weakResult.matched || packaged) return 0;
+  if (!weakResult.matched || packaged) return { score: 0, position: 1 };
   // 弱い一致は、商品名でそれより前に別の商品名詞(「コアラ Tシャツ … マットレス」)
   // が出ていれば、その商品はそちらだとみなす。
-  const headTerms = new Set(heads.flatMap(({ term }) => [term, ...(HEAD_ALIASES[term] || [])]));
   const earlierOther = PRODUCT_HEADS.some((noun) => {
-    if (headTerms.has(noun) || ACCESSORY_WORDS.test(noun)) return false;
-    if (headTerms.has(noun) || [...headTerms].some((term) => term.includes(noun) || noun.includes(term))) return false;
+    if (ACCESSORY_WORDS.test(noun) || relatedToHeads(noun, headTerms)) return false;
     const index = normalizedTitle.indexOf(noun);
     return index !== -1 && index < weakResult.index;
   });
-  return earlierOther ? 0 : 1;
+  return { score: earlierOther ? 0 : 1, position: positionOf(weakResult.index) };
 }
 
 export function applyHeadNounGate(query, candidates = [], { titleOf = defaultTitle } = {}) {
@@ -159,11 +192,11 @@ export function applyHeadNounGate(query, candidates = [], { titleOf = defaultTit
   const list = Array.isArray(candidates) ? candidates : [];
   if (!heads.length || list.length < 2) return list;
   const scored = list.map((candidate, index) => ({
-    candidate, index, score: headNounScore(query, titleOf(candidate), heads)
+    candidate, index, ...headNounDetail(query, titleOf(candidate), heads)
   }));
   if (!scored.some(({ score }) => score > 0)) return list;
   return scored
-    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .sort((a, b) => b.score - a.score || a.position - b.position || a.index - b.index)
     .filter(({ score }) => score > 0)
     .map(({ candidate }) => candidate);
 }

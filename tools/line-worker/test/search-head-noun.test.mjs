@@ -38,7 +38,13 @@ test('カテゴリ違い・別語の一部・付属品・枚数入りを弾き�
     ['マットレス', '【厚さ5cm三つ折りバランスシングルマットレス95N-140N-95N】腰を支える', 2],
     ['iPhone 15 Pro ケース', 'iPhone 15 Pro ケース 耐衝撃 クリア', 2],
     ['マスク', '不織布マスク 50枚入 ふつうサイズ', 2],
-    ['ハンディファン', '携帯扇風機 ハンディファン 手持ち 卓上', 2]
+    ['ハンディファン', '携帯扇風機 ハンディファン 手持ち 卓上', 2],
+    // 2026-09-03 2回目カナリアの実例: 主名詞が形状の修飾語(ワンピース お玉)
+    ['SHEINで見たワンピース', 'パール金属 Easy Fit ワンピース お玉 大 G-3131', 0],
+    ['ワンピース', 'ワンピース レディース ロング 秋 長袖 きれいめ', 2],
+    ['白いバッグ', 'BA112#ミニショルダーバッグ レザーバッグレディース お洒落 白', 2],
+    ['自立する本革トートバッグ', 'ミニトートバッグ レディース おしゃれ 革 レザー 小さめ 軽い 手提げバッグ サブバッグ エコバッグ', 2],
+    ['コアラマットレス', 'コアラリフレッシュピロー 枕 koala コアラマットレス 低反発 定価1万6000円 中古', 2]
   ];
   for (const [query, title, expected] of cases) {
     assert.equal(headNounScore(query, title), expected, `${query} => ${title}`);
@@ -57,4 +63,12 @@ test('ゲートは本命を前に出し、一致ゼロなら元の順序を保�
   assert.deepEqual(applyHeadNounGate('コアラマットレス', unrelated), unrelated);
   assert.deepEqual(applyHeadNounGate('これ', candidates), candidates);
   assert.deepEqual(applyHeadNounGate('コアラマットレス', [candidates[0]]), [candidates[0]], '1件だけなら触らない');
+  // 同じスコアなら主名詞が商品名の前半にある候補(商品そのもの)を、後半にしか
+  // 出ない候補(ブランド名として出るだけ)より前へ。
+  const koala = [
+    { product_name: 'コアラリフレッシュピロー 枕 koala コアラマットレス 低反発 定価1万6000円 中古' },
+    { product_name: 'コアラマットレス オリジナル シングル 中古' }
+  ];
+  assert.deepEqual(applyHeadNounGate('コアラマットレス', koala).map((c) => c.product_name),
+    ['コアラマットレス オリジナル シングル 中古', 'コアラリフレッシュピロー 枕 koala コアラマットレス 低反発 定価1万6000円 中古']);
 });
