@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-31T21:19:19.552Z",
+  "generated_at": "2026-09-03T08:14:49.793Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -15,9 +15,10 @@
     "2026-08-07-batch-012.json",
     "2026-08-07-batch-013.json",
     "2026-08-07-batch-014.json",
-    "2026-08-31-claude-batch-015.json"
+    "2026-08-31-claude-batch-015.json",
+    "2026-09-02-claude-batch-016.json"
   ],
-  "entry_count": 574,
+  "entry_count": 624,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -12704,22 +12705,1178 @@
       ],
       "confidence": 0.65,
       "source_file": "2026-08-31-claude-batch-015.json"
+    },
+    {
+      "content_hash": "2c07fcab0b71d8a85a1bb6809db9d8d401565648b8689e9262c130b984d98af2",
+      "query_text": "窓に貼るやつ台風の",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ガラス飛散防止フィルムですか、それとも窓を保護する養生テープですか？貼って剥がすタイプ・透明タイプなどご希望はありますか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "dc12f643eb28f5930ca4699ebd8b56b54599b7074a09c81c55a7d5c21b66af06",
+      "query_text": "停電のとき明るくするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "emergency-led-lantern",
+      "ideal_answer": "防災用LEDランタン（手回し充電・電池式）",
+      "search_terms": {
+        "ja": [
+          "防災 ランタン",
+          "停電 ライト led"
+        ],
+        "en": [
+          "emergency led lantern"
+        ],
+        "ko": [
+          "정전 랜턴"
+        ],
+        "zh": [
+          "应急led灯"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "ee51dfa9b3d835417be26daac204ddec807eff54363fff47b2d059728e58a3cc",
+      "query_text": "衣替えでしまうやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "衣類をしまう引き出し式の衣装ケースですか、それとも布団や冬物をコンパクトにする圧縮袋ですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "b4d832e7ca7c33bc9c312b1aa2bb9ca7deccb278067b1be762191503bd743039",
+      "query_text": "2学期に名前つけるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "name-stamp-set",
+      "ideal_answer": "お名前スタンプセット（布・上履き対応）",
+      "search_terms": {
+        "ja": [
+          "お名前スタンプ セット",
+          "おなまえスタンプ 布用"
+        ],
+        "en": [
+          "name stamp set"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "3e1fefce98f470d23b230230ccaa2b33db4cfbe661aa9741132a1681197089b6",
+      "query_text": "窓の結露拭くやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "window-condensation-wiper",
+      "ideal_answer": "結露取りワイパー(水切りワイパー)",
+      "search_terms": {
+        "ja": [
+          "結露取りワイパー",
+          "窓 水切りワイパー"
+        ],
+        "en": [
+          "window condensation wiper"
+        ],
+        "ko": [
+          "창문 결로 와이퍼"
+        ],
+        "zh": [
+          "窗户除水器"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "71ee4b61dff51fa14f6f575dabd2e06ae384d21ecac1fd782041616faced69cd",
+      "query_text": "敬老の日に贈る座って使うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "床に座ったまま楽な姿勢を保てる背もたれ付き座椅子ですか、それとも正座がつらいときに使う正座椅子ですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "9a6cf7027344e27135b66353b17fb2b66983ee81434b071ef14b54e92c0590fe",
+      "query_text": "台風の前に補強するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何を補強したいですか？窓ガラス（飛散防止フィルム）、物干し竿（固定ベルト）、屋外の物（防犯・飛散防止ネット）など教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "0e57809e5e48fe771152936b352d13d5c152c09cf069e89fe9d859d0ebeaa8bb",
+      "query_text": "スマホの充電長持ちさせるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "power-bank-large-capacity",
+      "ideal_answer": "モバイルバッテリー（大容量タイプ）",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー 大容量",
+          "防災 モバイルバッテリー"
+        ],
+        "en": [
+          "large capacity power bank"
+        ],
+        "ko": [
+          "대용량 보조배터리"
+        ],
+        "zh": [
+          "大容量充电宝"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "3fb9e8193ec3ad9847ea479390d49a1b7010f6fe165adddd2640b3c13c028a05",
+      "query_text": "運動会の場所取りに敷くやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "undokai-picnic-sheet",
+      "ideal_answer": "運動会観覧用のレジャーシート（大判・防水タイプ）",
+      "search_terms": {
+        "ja": [
+          "運動会 レジャーシート",
+          "場所取り シート 大判"
+        ],
+        "en": [
+          "sports day picnic sheet"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "a819aa17418d4dc897f0ca65a6d12292fa54575b1282353a865586c4b2abf2a7",
+      "query_text": "日差しよけるテントみたいなやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "outdoor-sunshade-tent",
+      "ideal_answer": "折りたたみ式サンシェードテント（屋外イベント用）",
+      "search_terms": {
+        "ja": [
+          "サンシェードテント 折りたたみ",
+          "運動会 テント 日よけ"
+        ],
+        "en": [
+          "folding sunshade tent"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "95b4a045c7fec93e00f11802bd87f41f0253f7691da3031c8a2b91befa8515d8",
+      "query_text": "匂い消すやつトイレの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "toilet-deodorizer",
+      "ideal_answer": "トイレ用消臭芳香剤",
+      "search_terms": {
+        "ja": [
+          "トイレ 消臭剤",
+          "トイレ 芳香剤"
+        ],
+        "en": [
+          "toilet deodorizer"
+        ],
+        "ko": [
+          "화장실 탈취제"
+        ],
+        "zh": [
+          "马桶除臭剂"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "cf769a96e040b28faa06ff20ce8c96cc40fe42c5b4edf1589d1952c1b8ef691f",
+      "query_text": "避難のとき持っていくやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "emergency-evacuation-backpack",
+      "ideal_answer": "非常用持ち出し袋（防災リュック、中身セット済みタイプ）",
+      "search_terms": {
+        "ja": [
+          "非常用持ち出し袋",
+          "防災リュック セット"
+        ],
+        "en": [
+          "emergency evacuation backpack"
+        ],
+        "ko": [
+          "비상용 배낭"
+        ],
+        "zh": [
+          "应急背包"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "f51cc05ace7a0bcc72af8f151ef8d1a104e0335f1d68ed452e7d2e6da042ec03",
+      "query_text": "水を確保しておくやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "emergency-preserved-water",
+      "ideal_answer": "長期保存水（備蓄用ペットボトル飲料水）",
+      "search_terms": {
+        "ja": [
+          "長期保存水",
+          "備蓄水 ペットボトル"
+        ],
+        "en": [
+          "long-term preserved water"
+        ],
+        "ko": [
+          "비상용 생수"
+        ],
+        "zh": [
+          "长期保存瓶装水"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "8f9bfed2d62d13a9aad2aa392bec359e395b7e5ee54aeda3a85c2eb39ba03411",
+      "query_text": "虫よけで貼るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sticker-insect-repellent-patch",
+      "ideal_answer": "貼るタイプの虫よけシール（ベビーカー・衣類用）",
+      "search_terms": {
+        "ja": [
+          "虫よけシール",
+          "貼る 虫よけ"
+        ],
+        "en": [
+          "insect repellent sticker patch"
+        ],
+        "ko": [
+          "붙이는 모기 패치"
+        ],
+        "zh": [
+          "驱蚊贴片"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "84159ae04922596c8378900c1e2ec27ed690346a7bd38af60cc865f0c0177878",
+      "query_text": "玄関に置く滑らないやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "entryway-anti-slip-mat",
+      "ideal_answer": "玄関用滑り止めマット",
+      "search_terms": {
+        "ja": [
+          "玄関 滑り止めマット"
+        ],
+        "en": [
+          "entryway anti-slip mat"
+        ],
+        "ko": [
+          "현관 미끄럼방지 매트"
+        ],
+        "zh": [
+          "玄关防滑垫"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "fbe4ad44d83fa00e18a264afb0abd67894cd0e48b976592fab0a4d953f391434",
+      "query_text": "秋の花粉に効くマスク",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "花粉対応をうたう高機能マスクはございますが、症状や体質により合う・合わないがあるため、まずは花粉対策タイプのマスクからご確認いただくのがおすすめです。合わない場合は医師にご相談ください。",
+      "search_terms": {
+        "ja": [
+          "花粉対策 マスク"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "f927fbf12968deb745e1a867c067c35b615589b7d2165f9edb18e8ed2fd368c9",
+      "query_text": "疲れた喉に良いスプレー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "喉のケアを目的としたスプレーはいくつか種類がありますが、症状や体質による効果の違いがあるため、まずは喉ケア用スプレーの成分表示をご確認いただき、体調がすぐれない場合は医師・薬剤師にご相談ください。",
+      "search_terms": {
+        "ja": [
+          "喉ケア スプレー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "c00de6b1f613f0d0b7d996674c599cd5301b77fb6f1fedc32eee5a7220908e08",
+      "query_text": "ピアニカのくちのとこ洗うブラシ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "melodica-mouthpiece-brush",
+      "ideal_answer": "鍵盤ハーモニカ用吹き口洗浄ブラシ",
+      "search_terms": {
+        "ja": [
+          "ピアニカ 吹き口 ブラシ",
+          "鍵盤ハーモニカ 洗浄"
+        ],
+        "en": [
+          "melodica mouthpiece brush"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "98ef4f8c6dbff70dd067b828ffb769a54f9afca27f0f508367cce922bfd37908",
+      "query_text": "きゅうしょくのふくろ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "school-lunch-drawstring-bag",
+      "ideal_answer": "給食袋（巾着タイプ）",
+      "search_terms": {
+        "ja": [
+          "給食袋",
+          "コップ袋 巾着"
+        ],
+        "en": [
+          "school lunch drawstring bag"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "134c9bff6c83fdf700b7afe3a68f9fdf35364d03fa7e0e255e72e1e8a3bdfdbb",
+      "query_text": "さんすうのはこ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "math-set-storage-case",
+      "ideal_answer": "算数セット収納ケース",
+      "search_terms": {
+        "ja": [
+          "算数セット 収納ケース"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "4729af742aabfa9f76e20b44455324bfe2eb530313774af237cab21f014762e0",
+      "query_text": "うわばきあらうブラシ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "indoor-shoe-wash-brush",
+      "ideal_answer": "上履き洗い専用ブラシ",
+      "search_terms": {
+        "ja": [
+          "上履き 洗いブラシ"
+        ],
+        "en": [
+          "indoor shoe wash brush"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "cf10d172551ad4c541ce6ce28053f93adadbccf530e5c6ea5db936122b2b4f15",
+      "query_text": "ほうきでこわいゆうれいのふく",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "ハロウィン用の仮装衣装ですね。おばけ・魔女・かぼちゃなど、どのキャラクターの衣装をお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "00883c1e6d257944fc939b2b719f887ecd4fef7096fe15e1f7b8677c6b009153",
+      "query_text": "ひかるくつのひも",
+      "locale": "ja",
+      "persona": "child",
+      "category": "light-up-shoelace",
+      "ideal_answer": "光る靴ひも（LED内蔵タイプ）",
+      "search_terms": {
+        "ja": [
+          "光る 靴ひも",
+          "led 靴ひも"
+        ],
+        "en": [
+          "light up shoelace"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "4bce6589edf6a80f7c853e9f0b52125e04ec922c21666dbcd33ebaf8b960861a",
+      "query_text": "がっきゅうぶんこにいれるほん立て",
+      "locale": "ja",
+      "persona": "child",
+      "category": "classroom-library-book-stand",
+      "ideal_answer": "卓上ブックスタンド（学級文庫用）",
+      "search_terms": {
+        "ja": [
+          "ブックスタンド 卓上",
+          "学級文庫"
+        ],
+        "en": [
+          "desktop book stand"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "841fcdfe787bd2f3892b0fb38de92fed28c9c3888071b6ebf7ef7451fc55ba80",
+      "query_text": "押して歩くやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "silver-car-walking-aid",
+      "ideal_answer": "シルバーカー（歩行補助手押し車、座れるタイプ）",
+      "search_terms": {
+        "ja": [
+          "シルバーカー",
+          "歩行器 手押し車"
+        ],
+        "en": [
+          "walking aid rollator"
+        ],
+        "ko": [
+          "실버카 보행보조기"
+        ],
+        "zh": [
+          "老人手推车"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "217c0a960833bfa6119eaa4a46e362624e0c062930e1fe0d681a33fd8dc39c5a",
+      "query_text": "杖の先のすべらないゴム",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "cane-tip-rubber-cap",
+      "ideal_answer": "杖先ゴム（交換用滑り止めキャップ）",
+      "search_terms": {
+        "ja": [
+          "杖先ゴム",
+          "杖 滑り止め キャップ"
+        ],
+        "en": [
+          "cane tip rubber cap"
+        ],
+        "ko": [
+          "지팡이 고무 팁"
+        ],
+        "zh": [
+          "拐杖橡胶头"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "af2ccf816c6f7fb9c39e132c102d1367f8267687a9921a79367429fba9aa8dd0",
+      "query_text": "字が大きく出る目覚まし時計",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "large-display-alarm-clock",
+      "ideal_answer": "大文字表示デジタル目覚まし時計",
+      "search_terms": {
+        "ja": [
+          "大文字 目覚まし時計",
+          "見やすい 時計 デジタル"
+        ],
+        "en": [
+          "large display alarm clock"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "d046cb2e0d57aa20a393e9fb27149e819db070fd2fd5e10ad8ba3849364b160c",
+      "query_text": "敬老の日に贈る花以外の実用品",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "実用的な贈り物ですね。日常で使う膝掛け・保温マグ・肩たたき器など、どの用途を優先されますか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "花"
+      ],
+      "confidence": 0.3,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "f28cc675cf063b96e5fbfd52f89ebabe9e4aedb34f3e7f30c065d68a6492bf61",
+      "query_text": "お風呂で滑らないように敷くやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "bathroom-anti-slip-mat-suction",
+      "ideal_answer": "浴室用滑り止めマット（吸盤付き）",
+      "search_terms": {
+        "ja": [
+          "浴室 滑り止めマット",
+          "お風呂 滑り止め 吸盤"
+        ],
+        "en": [
+          "bathroom anti-slip mat"
+        ],
+        "ko": [
+          "욕실 미끄럼방지 매트"
+        ],
+        "zh": [
+          "浴室防滑垫"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "4fa313f9b61a8e5ffbba79a1cf9708b5001bc739a6acfbe5aadda608691dd458",
+      "query_text": "薬を朝昼晩で分けておく入れ物",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "pill-case-daily-schedule",
+      "ideal_answer": "服薬管理ピルケース（朝昼晩・曜日仕切り付き）",
+      "search_terms": {
+        "ja": [
+          "ピルケース 朝昼晩",
+          "薬 収納 曜日"
+        ],
+        "en": [
+          "daily pill organizer"
+        ],
+        "ko": [
+          "요일별 약통"
+        ],
+        "zh": [
+          "分药盒"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "efed71194851074529dfd8e1cb646635de8b76e769a223da4e4f05505022e54d",
+      "query_text": "肩たたく棒",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "shoulder-massage-stick",
+      "ideal_answer": "肩たたき器（マッサージ棒タイプ）",
+      "search_terms": {
+        "ja": [
+          "肩たたき器",
+          "マッサージ棒"
+        ],
+        "en": [
+          "shoulder massage stick"
+        ],
+        "ko": [
+          "어깨 안마봉"
+        ],
+        "zh": [
+          "敲背棒"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "bbfa869f723b13b6a7411a7a131b40e6a02a87e7c94aa004d27cfb505ef9fcc1",
+      "query_text": "태풍 대비 창문 필름",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "typhoon-window-film",
+      "ideal_answer": "窓ガラス飛散防止フィルム（台風対策用）",
+      "search_terms": {
+        "ja": [
+          "窓 飛散防止フィルム",
+          "台風 窓 フィルム"
+        ],
+        "en": [
+          "window shatterproof film"
+        ],
+        "ko": [
+          "창문 비산방지 필름",
+          "태풍 대비 필름"
+        ],
+        "zh": [
+          "防台风窗膜"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "6c338379727d11e88848e0ff0c6b84050071a3ed1dce9bf440e2d421d34044a9",
+      "query_text": "추석 선물 실용적인 것",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "実用的な贈り物ですね。保温マグ・膝掛け・食品ギフトなど、どのジャンルをご希望ですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "0524d1c140bf1a23403694b989a604b6d9bd5c5a519512207e17a05a4a195e6a",
+      "query_text": "정전 때 밝게 하는 것",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "emergency-led-lantern",
+      "ideal_answer": "防災用LEDランタン（手回し充電・電池式）",
+      "search_terms": {
+        "ja": [
+          "防災 ランタン"
+        ],
+        "en": [
+          "emergency led lantern"
+        ],
+        "ko": [
+          "정전 랜턴",
+          "비상 led 랜턴"
+        ],
+        "zh": [
+          "应急led灯"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "571c823683edd2f6a32acd57b2d51b2c51f4663a858b8cd70e26d1690eac5bdc",
+      "query_text": "실버카 노인용 보행기",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "silver-car-walking-aid",
+      "ideal_answer": "シルバーカー（歩行補助手押し車、座れるタイプ）",
+      "search_terms": {
+        "ja": [
+          "シルバーカー"
+        ],
+        "en": [
+          "walking aid rollator"
+        ],
+        "ko": [
+          "실버카",
+          "노인 보행기"
+        ],
+        "zh": [
+          "老人手推车"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "1b85707d5ac94eb5591588074b74215c14b4803e0d1c5d70dd87e44c3cadef4a",
+      "query_text": "台风前贴窗户的膜",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "typhoon-window-film",
+      "ideal_answer": "窓ガラス飛散防止フィルム（台風対策用）",
+      "search_terms": {
+        "ja": [
+          "窓 飛散防止フィルム"
+        ],
+        "en": [
+          "window shatterproof film"
+        ],
+        "ko": [
+          "창문 비산방지 필름"
+        ],
+        "zh": [
+          "防台风窗膜",
+          "玻璃防爆膜"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "2cdfd9acdcad38b58bc30e73e74a6a93679a798b88a1e7a91026501b528e6297",
+      "query_text": "换季收纳的真空压缩袋",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "vacuum-storage-compression-bag",
+      "ideal_answer": "衣類用真空圧縮袋（衣替え収納用）",
+      "search_terms": {
+        "ja": [
+          "圧縮袋 衣替え",
+          "真空圧縮袋"
+        ],
+        "en": [
+          "vacuum storage compression bag"
+        ],
+        "ko": [
+          "압축팩 옷장정리"
+        ],
+        "zh": [
+          "真空压缩袋",
+          "换季收纳袋"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "fb536bb362abd75c759e01af26e3418056a10e0d05fe77909f85378dd08a775e",
+      "query_text": "防灾用的应急背包里面装什么",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "防災リュック本体（中身セット済み）をお探しですか、それとも中身のリストや不足品の補充をお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "0d92744b77ad5cb9713add3234671f7e27e4c5da7e2fa893bc0f18471a425b13",
+      "query_text": "敬老节送实用的东西",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "insulated-tumbler-gift",
+      "ideal_answer": "保温マグ（ステンレスタンブラー、名入れ可）",
+      "search_terms": {
+        "ja": [
+          "保温マグ 名入れ",
+          "敬老の日 マグ"
+        ],
+        "en": [
+          "insulated tumbler gift"
+        ],
+        "ko": [
+          "보온 텀블러 선물"
+        ],
+        "zh": [
+          "保温杯 礼物"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "cb2f1c015ec6eb6b5f8d2bad29948f07d6e003ad28702311e4ab68d490088a7d",
+      "query_text": "typhoon window protection film",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "typhoon-window-film",
+      "ideal_answer": "窓ガラス飛散防止フィルム（台風対策用）",
+      "search_terms": {
+        "ja": [
+          "窓 飛散防止フィルム"
+        ],
+        "en": [
+          "typhoon window protection film",
+          "window shatterproof film"
+        ],
+        "ko": [
+          "창문 비산방지 필름"
+        ],
+        "zh": [
+          "防台风窗膜"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "d8c7cd26662995a54a7679a51bdc3d7419dff87c556de007138b615423c998b6",
+      "query_text": "something to keep phone charged during blackout",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "power-bank-large-capacity",
+      "ideal_answer": "大容量モバイルバッテリー（防災用）",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー 大容量"
+        ],
+        "en": [
+          "large capacity power bank",
+          "emergency phone charger"
+        ],
+        "ko": [
+          "대용량 보조배터리"
+        ],
+        "zh": [
+          "大容量充电宝"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "1dde76096429fc796d483b83786a69b1a419be6bd8a9bff47cf42b7200154a44",
+      "query_text": "respectful practical gift for grandparents day japan",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "insulated-tumbler-gift",
+      "ideal_answer": "保温マグ（ステンレスタンブラー、名入れ可）",
+      "search_terms": {
+        "ja": [
+          "保温マグ 名入れ"
+        ],
+        "en": [
+          "insulated tumbler gift",
+          "practical grandparents day gift"
+        ],
+        "ko": [
+          "보온 텀블러 선물"
+        ],
+        "zh": [
+          "保温杯 礼物"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "50842ae9b34b7aeb77243fa6c5389bbabcfdff13249ab7f8263bb558fa88124b",
+      "query_text": "undokai 応援 うちわ pankeru",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "fan-message-board-uchiwa",
+      "ideal_answer": "応援うちわ（メッセージボード・文字パネル型）",
+      "search_terms": {
+        "ja": [
+          "応援うちわ",
+          "うちわ文字パネル"
+        ],
+        "en": [
+          "fan message board uchiwa"
+        ],
+        "ko": [
+          "응원 부채 팬보드"
+        ],
+        "zh": [
+          "应援扇灯牌"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "e759754cef38a0fbd7c3c9eccf93ea70f21b249bc4de2b1931d69851a5713850",
+      "query_text": "keiro no hi present jitsuyou",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "insulated-tumbler-gift",
+      "ideal_answer": "保温マグ（ステンレスタンブラー、名入れ可）",
+      "search_terms": {
+        "ja": [
+          "保温マグ 名入れ"
+        ],
+        "en": [
+          "insulated tumbler gift"
+        ],
+        "ko": [
+          "보온 텀블러 선물"
+        ],
+        "zh": [
+          "保温杯 礼物"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "813431d7cf133bba694e05285f4ff818aa8a41df904d379b9c4476fefcc1d411",
+      "query_text": "トレカを守る硬めのケース",
+      "locale": "ja",
+      "persona": "general",
+      "category": "trading-card-hard-case",
+      "ideal_answer": "トレカ用硬質カードケース",
+      "search_terms": {
+        "ja": [
+          "トレカ 硬質ケース",
+          "カードケース 硬い"
+        ],
+        "en": [
+          "trading card hard case"
+        ],
+        "ko": [
+          "포토카드 하드케이스"
+        ],
+        "zh": [
+          "卡套硬壳"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "0be3ab4cc5e361f87df78f1b4d7849c0f14275d231b43310df35a2893afa9f19",
+      "query_text": "量産型さんが持ってるキーホルダーみたいなの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "acrylic-keychain-oshikatsu",
+      "ideal_answer": "アクリルキーホルダー（量産型バッグ用、推し活アクセサリー）",
+      "search_terms": {
+        "ja": [
+          "アクリルキーホルダー 推し活",
+          "量産型 キーホルダー"
+        ],
+        "en": [
+          "acrylic keychain fandom"
+        ],
+        "ko": [
+          "아크릴 키링"
+        ],
+        "zh": [
+          "亚克力钥匙扣"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "2ea8e1056d2fc96041b8c2d7421b96a2eff1bf4278cc1bc81c2cbc636e77a41e",
+      "query_text": "タイパ良く乾かすドライヤー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fast-drying-hair-dryer",
+      "ideal_answer": "速乾機能付きヘアドライヤー（大風量タイプ）",
+      "search_terms": {
+        "ja": [
+          "速乾 ドライヤー",
+          "大風量 ドライヤー"
+        ],
+        "en": [
+          "fast drying hair dryer"
+        ],
+        "ko": [
+          "급속건조 드라이기"
+        ],
+        "zh": [
+          "速干吹风机"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "d44d13e1bcdb40700d9e32523c08425b494421dd37516fde76761c24bd2eea83",
+      "query_text": "スキマ時間で見返すやつ暗記カード",
+      "locale": "ja",
+      "persona": "general",
+      "category": "flashcard-ring-study",
+      "ideal_answer": "リング式暗記カード（フラッシュカード）",
+      "search_terms": {
+        "ja": [
+          "暗記カード リング式",
+          "フラッシュカード"
+        ],
+        "en": [
+          "ring flashcards"
+        ],
+        "ko": [
+          "암기카드"
+        ],
+        "zh": [
+          "记忆卡环装"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "bd4c7400b0144f88d9ea25238e26867d21ba21bdf0c15c1ead82bb7e48f976f5",
+      "query_text": "推し活の透明のうちわカバー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "uchiwa-clear-cover",
+      "ideal_answer": "うちわ用透明ビニールカバー",
+      "search_terms": {
+        "ja": [
+          "うちわ カバー 透明",
+          "うちわ ビニールカバー"
+        ],
+        "en": [
+          "clear fan cover"
+        ],
+        "ko": [
+          "부채 커버 투명"
+        ],
+        "zh": [
+          "扇子透明保护套"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
+    },
+    {
+      "content_hash": "722eebad59a081a77bf2e985e4466daf76566fb93f56d8ab4282e06326287982",
+      "query_text": "わきにはさんで測る体温計",
+      "locale": "ja",
+      "persona": "general",
+      "category": "digital-thermometer-underarm",
+      "ideal_answer": "脇下式電子体温計",
+      "search_terms": {
+        "ja": [
+          "電子体温計 脇",
+          "体温計 わき"
+        ],
+        "en": [
+          "digital underarm thermometer"
+        ],
+        "ko": [
+          "겨드랑이 체온계"
+        ],
+        "zh": [
+          "腋下电子体温计"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-02-claude-batch-016.json"
     }
   ]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
