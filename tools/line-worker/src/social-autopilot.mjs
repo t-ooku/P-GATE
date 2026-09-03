@@ -379,6 +379,69 @@ const CROSS_MARKET_POSTS = Object.freeze([
     id: 'cross-market-phone-tabs',
     caption: 'スマホのタブ、買い物のたびに増えていきませんか。\nHOSHILUで1回検索すると、行き先が1画面に並びます。',
     query: 'スマホスタンド 卓上'
+  },
+  // 2026-09-03: Threadsの投稿枠を1日2本から4本へ増やすにあたり、主訴求
+  // (まとめて探す)の文面を12本から24本へ倍にする。枠だけ増やすと同じ文面が
+  // 5日で再登場して宣伝botに見えるため。送客規模や最安値は書かない。
+  {
+    id: 'cross-market-sale-season',
+    caption: '買い時が重なる時期ほど、どこで買うか決められなくなる。\nHOSHILUで1回検索して、行きたいモールから順に見に行くのが早いです。',
+    query: '掃除機 コードレス 軽量'
+  },
+  {
+    id: 'cross-market-out-of-stock',
+    caption: '欲しかったものが在庫切れ。そこで諦めるのがいちばんもったいない。\nHOSHILUなら同じ言葉のまま、他のモールの検索結果へ続けて行けます。',
+    query: 'ランニングシューズ 幅広'
+  },
+  {
+    id: 'cross-market-shipping',
+    caption: '商品より送料の条件でモールを変えることってありますよね。\nHOSHILUは1回の検索で行き先を並べるので、条件は各モールで確認できます。',
+    query: '米 5kg'
+  },
+  {
+    id: 'cross-market-points',
+    caption: 'ポイントの付き方でどこで買うかが変わる人へ。\nHOSHILUは検索1回で複数モールの入口を出すので、あとは普段使っている所を開くだけです。',
+    query: 'シャンプー 詰め替え 大容量'
+  },
+  {
+    id: 'cross-market-model-number',
+    caption: '家電は型番が分かっていても、扱っている店がモールごとに違う。\nHOSHILUで型番を入れて、各モールの検索結果へそのまま行けます。',
+    query: '電気ケトル 温度調節'
+  },
+  {
+    id: 'cross-market-oshikatsu',
+    caption: '推し活グッズ、公式以外の取り扱いを探すのが大変。\nHOSHILUで特徴を入れれば、複数モールの探し先がまとめて出ます。',
+    query: 'アクリルスタンド ケース'
+  },
+  {
+    id: 'cross-market-outdoor',
+    caption: 'キャンプ用品は同じ用途でも呼び方が店ごとに違う。\nHOSHILUは使いたい場面のまま検索して、各モールへ行けます。',
+    query: '折りたたみ ローチェア 軽量'
+  },
+  {
+    id: 'cross-market-new-life',
+    caption: '引っ越しの買い出し、リストが長いほどアプリを行き来する回数が増える。\nHOSHILUなら1件ずつ検索1回で、行き先が並びます。',
+    query: 'カーテン 遮光 既製サイズ'
+  },
+  {
+    id: 'cross-market-season-change',
+    caption: '衣替えのたびに「あれ、去年どこで買ったっけ」となる。\nHOSHILUで特徴を入れると、扱っているモールをまとめて確認しに行けます。',
+    query: '衣類 圧縮袋 布団用'
+  },
+  {
+    id: 'cross-market-parents-gift',
+    caption: '親に贈るものは、実物の情報が多いところで選びたい。\nHOSHILUで1回検索して、レビューが多いモールから見に行くのもありです。',
+    query: 'マッサージ クッション'
+  },
+  {
+    id: 'cross-market-bulk',
+    caption: 'まとめ買いは、どこで買うかで手間がまるで変わる。\nHOSHILUは検索1回で複数モールの入口を出します。数量や条件は各モールで確認してください。',
+    query: 'トイレットペーパー まとめ買い'
+  },
+  {
+    id: 'cross-market-start-here',
+    caption: 'ネット通販、まずどこを開くか決まっていますか。\nHOSHILUから始めると、1回の検索でAmazon・楽天・Yahoo!・Qoo10・SHEINへ行けます。',
+    query: 'ノートパソコン スタンド 折りたたみ'
   }
 ]);
 
@@ -555,12 +618,18 @@ const THREADS_DAILY_POSTS = Object.freeze((() => {
   return mixed;
 })());
 
+// 2026-09-03: 直近30日の実数で、SNSの流入はThreads 30セッションに対し
+// X 6・Instagram 5。SNSで人が来ているのは実質Threadsだけなので、投稿枠を
+// 1日2本から4本へ増やす。文面プールは60本あり、4本/日でも一巡15日なので、
+// 「10日以内に同じ文面を出さない」条件は維持できる。
+// 既存キューとの互換のため、昼枠のpost_idには接尾辞を付けない。1日1本だった
+// 頃に積まれた `{campaign}-{JST日付}` の行をそのまま更新でき、同じ日に
+// 重複して積まれることがない。
 const THREADS_AMAZON_SLOTS = Object.freeze([
-  // 既存キューとの互換のため、昼枠のpost_idには接尾辞を付けない。1日1本だった
-  // 頃に積まれた `{campaign}-{JST日付}` の行をそのまま更新でき、同じ日に
-  // 2本重複して積まれることがない。
+  { suffix: '-am', hour: 9, minute: 30 },
   { suffix: '', hour: 12, minute: 30 },
-  { suffix: '-pm', hour: 20, minute: 30 }
+  { suffix: '-pm', hour: 20, minute: 30 },
+  { suffix: '-night', hour: 22, minute: 30 }
 ]);
 
 const pad = value => String(value).padStart(2, '0');
@@ -716,8 +785,8 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
     const key = dateKey(parts);
     const dayIndex = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
     THREADS_AMAZON_SLOTS.forEach((slot, slotIndex) => {
-      // 1日2枠なので、通し番号も2枠ぶん進める。20本を2本/日で消費するため
-      // 一巡は10日。同じ文面が再登場するまでの間隔を最大化する。
+      // 枠数ぶん通し番号を進める。文面は60本あるので4枠/日でも一巡15日。
+      // 同じ文面が再登場するまでの間隔を最大化する。
       const rotation = (dayIndex * THREADS_AMAZON_SLOTS.length + slotIndex) % THREADS_DAILY_POSTS.length;
       const content = THREADS_DAILY_POSTS[rotation];
       const link = threadsAmazonLink(content);

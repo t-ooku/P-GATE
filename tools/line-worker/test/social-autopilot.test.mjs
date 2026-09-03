@@ -371,25 +371,34 @@ test('X補助枠はBUZZ比率とセラー差し込みを守りながら各テー
   }
 });
 
-test('Amazon優先Threadsローテーションは1日2本、昼夜の枠で別内容を計画する', () => {
+// 2026-09-03: SNS流入はThreadsだけが実数を出している(30日でThreads 30セッション
+// に対しX 6・Instagram 5)ため、枠を1日2本から4本へ増やした。
+test('Amazon優先Threadsローテーションは1日4本、別々の時刻に別内容を計画する', () => {
   const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'));
-  // 14日 × 昼夜2枠。当日12:30 JST(03:00 UTC時点では未到来)も含む。
-  assert.equal(posts.length, 28);
+  // 14日 × 4枠 - 当日の9:30 JST(03:00 UTC時点で経過済み)1本。
+  assert.equal(posts.length, 55);
   assert.equal(posts.every(post => post.platform === 'THREADS'), true);
   assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
   assert.equal(posts.every(post => post.campaign_id === 'hoshilu-threads-amazon-boost-v1'), true);
   assert.equal(posts.every(post => !/[¥$]\s?\d|\d+\s?円/.test(post.caption)), true, '本文に価格を直書きしない');
 
-  // 昼枠のpost_idは接尾辞なし(1日1本だった頃のキュー行をそのまま更新できる)、
-  // 夜枠は-pm。同じ日に2本重複して積まれないことを固定する。
-  const noon = posts.filter(post => post.scheduled_at.endsWith('T03:30:00.000Z'));
-  const night = posts.filter(post => post.scheduled_at.endsWith('T11:30:00.000Z'));
-  assert.equal(noon.length, 14);
-  assert.equal(night.length, 14);
-  assert.equal(noon.every(post => !post.post_id.endsWith('-pm')), true);
-  assert.equal(night.every(post => post.post_id.endsWith('-pm')), true);
+  // 昼枠のpost_idは接尾辞なし(1日1本だった頃のキュー行をそのまま更新できる)。
+  // 同じ日に同じ枠が重複して積まれないことを固定する。
+  const slots = [
+    ['T00:30:00.000Z', '-am', 13],
+    ['T03:30:00.000Z', '', 14],
+    ['T11:30:00.000Z', '-pm', 14],
+    ['T13:30:00.000Z', '-night', 14]
+  ];
+  for (const [suffixUtc, idSuffix, expected] of slots) {
+    const slotPosts = posts.filter(post => post.scheduled_at.endsWith(suffixUtc));
+    assert.equal(slotPosts.length, expected, suffixUtc);
+    for (const post of slotPosts) {
+      assert.equal(post.post_id.endsWith(idSuffix), true, post.post_id);
+    }
+  }
 
-  // 同じ日の昼と夜は別内容。翌日も次のローテーションへ進む。
+  // 同じ日の各枠は別内容。翌日も次のローテーションへ進む。
   assert.notEqual(posts[0].content_id, posts[1].content_id);
   assert.notEqual(posts[0].content_id, posts[2].content_id);
 });
@@ -433,10 +442,10 @@ test('Amazon優先Threadsローテーションはリンク付きのみをアフ�
 
 test('Threads日次ローテーションは10日間(20本)で同じ文面を繰り返さない', () => {
   const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'), 10);
-  // 1日2本 × 10日 = 20本。2026-09-03 の方向転換でローテ本数は増えたが、
-  // 10日以内に同じ文面が再投稿されないことは維持する。
-  assert.equal(posts.length, 20);
-  assert.equal(new Set(posts.map(post => post.content_id)).size, 20, '10日以内に同じ文面が再投稿されている');
+  // 1日4本 × 10日 = 40本(当日9:30 JSTは経過済みなので39本)。文面プールは60本
+  // あるので、枠を増やしても10日以内に同じ文面が再投稿されないことは維持する。
+  assert.equal(posts.length, 39);
+  assert.equal(new Set(posts.map(post => post.content_id)).size, 39, '10日以内に同じ文面が再投稿されている');
 });
 
 // 2026-09-03 成長戦略・方向転換指示書 §6〜§8: SNSの主訴求を「Amazonも楽天も
@@ -968,9 +977,11 @@ test('THREADS認証とTHREADS_EVERGREEN_AUTOPILOT_ENABLEDが揃うとAmazon優�
   };
   const result = await seedSocialAutopilotQueue(env, new Date('2026-08-09T03:00:00.000Z'));
   const threadsRows = rows.filter(row => row[1] === 'THREADS');
-  assert.equal(threadsRows.length, 28); // 14日 × 昼夜2枠
-  assert.equal(result.planned, 28);
-  assert.equal(result.inserted, 28);
+  // 14日 × 4枠 - 当日の経過済み枠。2026-09-03にThreadsの枠を2本/日から
+  // 4本/日へ増やした(SNSで実数の流入があるのがThreadsだけのため)。
+  assert.equal(threadsRows.length, 55);
+  assert.equal(result.planned, 55);
+  assert.equal(result.inserted, 55);
   assert.equal(threadsRows.every(row => row[2] === 'hoshilu-threads-amazon-boost-v1'), true);
   // affiliateがDBへ0/1として正しく保存される。リンク付きは1、
   // 非アフィリエイト枠(リンク無し)は0で、両方が実際に計画されている。
