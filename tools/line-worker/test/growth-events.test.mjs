@@ -324,6 +324,23 @@ test('separates QA, attributed, and unattributed growth traffic', () => {
   assert.equal(classifyGrowthTraffic({}), 'UNATTRIBUTED');
 });
 
+// 2026-09-03: 有料広告のキャンペーン名 paid_test_202609 が campaign.includes('test')
+// に当たり、広告からの訪問が全件QAとして集計から落ちていた(配信開始前に発見)。
+// 実際にQAで来るのは source/medium 側なので、campaign の判定は先頭一致に絞る。
+test('campaign名にtestを含む有料広告をQAとして落とさない', () => {
+  assert.equal(classifyGrowthTraffic({
+    source: 'google_ads', medium: 'cpc', campaign: 'paid_test_202609', content: 'noq'
+  }), 'ATTRIBUTED', '広告流入をQAに落とすと¥30,000の検証が全て無駄になる');
+  assert.equal(classifyGrowthTraffic({
+    source: 'google_ads', medium: 'cpc', campaign: 'latest_promo'
+  }), 'ATTRIBUTED');
+  // QAの判定は落とさない
+  assert.equal(classifyGrowthTraffic({ source: 'qa_production_monitor', medium: 'qa', campaign: 'reliability_monitor' }), 'QA');
+  assert.equal(classifyGrowthTraffic({ source: 'codex_qa', medium: 'qa', campaign: 'camera_acceptance_20260901' }), 'QA');
+  assert.equal(classifyGrowthTraffic({ source: 'worker', medium: 'rakuten', campaign: 'PASS' }), 'ATTRIBUTED');
+  assert.equal(classifyGrowthTraffic({ source: 'manual', medium: 'browser', campaign: 'test_camera_20260901' }), 'QA');
+});
+
 test('visitor columnsのD1 migration適用前もイベント件数を保存する', async () => {
   const calls = [];
   const env = {

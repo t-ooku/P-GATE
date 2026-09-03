@@ -19,12 +19,14 @@ function trafficClass(context) {
   const medium = context.medium.toLowerCase();
   const campaign = context.campaign.toLowerCase();
   const content = context.content.toLowerCase();
+  // 2026-09-03: growth-events.mjs と同じ理由で campaign は先頭一致に絞る。
+  // paid_test_202609 経由の会員登録が QA として落ちる状態だった。
   const qaSignal = source.startsWith('codex')
     || source.startsWith('test')
     || source.startsWith('qa')
     || medium === 'qa'
     || campaign.includes('acceptance')
-    || campaign.includes('test');
+    || campaign.startsWith('test');
   if (qaSignal) return 'QA';
   return source || medium || campaign || content ? 'ATTRIBUTED' : 'UNATTRIBUTED';
 }

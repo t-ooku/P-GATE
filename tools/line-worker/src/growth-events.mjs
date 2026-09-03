@@ -137,12 +137,17 @@ export function classifyGrowthTraffic(event = {}) {
   const medium = clean(event.medium).toLowerCase();
   const campaign = clean(event.campaign).toLowerCase();
   const content = clean(event.content).toLowerCase();
+  // 2026-09-03: campaign.includes('test') は有料広告のキャンペーン名
+  // paid_test_202609 を QA と誤判定し、広告からの訪問を全件、集計から落として
+  // いた(配信開始前に発見)。QAの実体は source(worker/codex/qa_*)と medium=qa で
+  // 判別できており、campaign 側は補助でしかない。誤爆を避けるため先頭一致に絞る。
+  // これで paid_test_202609 や latest_* のような正規の名前を落とさなくなる。
   const qaSignal = source.startsWith('codex')
     || source.startsWith('test')
     || source.startsWith('qa')
     || medium === 'qa'
     || campaign.includes('acceptance')
-    || campaign.includes('test');
+    || campaign.startsWith('test');
   if (qaSignal) return 'QA';
   return source || medium || campaign || content ? 'ATTRIBUTED' : 'UNATTRIBUTED';
 }
