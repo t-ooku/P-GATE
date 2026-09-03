@@ -1116,3 +1116,25 @@ test('Threads日次枠に「名前クイズ」投稿が入り、事実と開示�
   const ids = new Set(quiz.map((post) => post.content_id));
   assert.ok(ids.size >= 4, '同じクイズばかり出さない');
 });
+
+// 2026-09-03: X・Instagramの日次リールはトップの空欄へ着地していた。
+// トップ着地の曜日は ?q= を付け、着地時点で検索が走る状態にする。
+test('トップへ着地する日次リールは検索語付きリンクを持つ', () => {
+  const seen = new Map();
+  for (let offset = 0; offset < 7; offset += 1) {
+    const date = new Date(Date.UTC(2026, 8, 6 + offset, 3, 0, 0));
+    for (const post of buildSocialAutopilotPosts(date)) {
+      if (!/hoshilu-ai-actress-daily-/.test(post.link || '')) continue;
+      const url = new URL(post.link);
+      seen.set(`${url.pathname}:${post.platform}:${offset}`, url);
+      if (url.pathname === '/') {
+        assert.ok(url.searchParams.get('q'), `${post.link} must carry a prefilled search`);
+        assert.ok(url.searchParams.get('q').length <= 200);
+      } else {
+        assert.equal(url.searchParams.get('q'), null, 'BUZZ着地に検索語は付けない');
+      }
+      assert.ok(['x', 'instagram'].includes(url.searchParams.get('utm_source')));
+    }
+  }
+  assert.ok([...seen.values()].some((url) => url.pathname === '/' && url.searchParams.get('q')));
+});

@@ -73,6 +73,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     creative_asset_id: 'hoshilu_ai_actress_daily_mon_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-mon-v1.mp4',
     caption: '月曜日は1回検索して、まとめて探す。カメラで撮る・スクショ・公開SNS投稿URL・名前が分からない一言のどれでもOK。',
+    query: '軽くて折りたためる小さいサーキュレーター',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.PHOTO,
       DAILY_CONTENT_TOPICS.SCREENSHOT,
@@ -108,6 +109,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     creative_asset_id: 'hoshilu_ai_actress_daily_thu_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-thu-v1.mp4',
     caption: '木曜日は、アプリを何個も開かない買い物。1回検索して複数モールから選ぶだけ。公開SNS投稿URLや名前の分からない一言でも探せます。',
+    query: 'スマホの背面にくっつく薄いモバイルバッテリー',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
       DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
@@ -622,13 +624,17 @@ function campaignLink(platform, date, content = date, searchQuery = '', path = '
   return `https://hoshilu.app${path}?${params}`;
 }
 
-function dailyAiActressLink(platform, date, path = '/') {
+// 2026-09-03: 日次リールの着地はトップの空欄だった。流入元別の実数では
+// X 4人・Instagram 4人の着地から検索開始はほぼ0件。検索語を持てる回
+// (トップ着地の曜日)は ?q= を付け、着地した時点で検索が走る状態にする。
+function dailyAiActressLink(platform, date, path = '/', searchQuery = '') {
   const params = new URLSearchParams({
     utm_source: platform === 'X' ? 'x' : 'instagram',
     utm_medium: 'social',
     utm_campaign: DAILY_AI_ACTRESS_CAMPAIGN_ID,
     utm_content: `hoshilu-ai-actress-daily-${date}`
   });
+  if (path === '/' && searchQuery) params.set('q', searchQuery);
   return `https://hoshilu.app${path}?${params}`;
 }
 
@@ -643,7 +649,7 @@ function dailyAiActressCrossposts(parts) {
       platform,
       campaign_id: DAILY_AI_ACTRESS_CAMPAIGN_ID,
       caption: `${reel.caption} ${DAILY_AI_DISCLOSURE}`,
-      link: dailyAiActressLink(platform, publishDate, reel.link_path || '/'),
+      link: dailyAiActressLink(platform, publishDate, reel.link_path || '/', reel.query || ''),
       media_url: reel.media_url,
       scheduled_at: scheduledAt(parts, 20, 15),
       status: 'APPROVED'

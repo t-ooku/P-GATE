@@ -121,3 +121,17 @@ test('♡ ホシっとく は登録前に端末へ保存し、押した後だけ
   const css = await read('ai-search-layout-fix.css');
   assert.match(css, /\.keep-product-button\.kept\{/);
 });
+
+// 2026-09-03: 流入元別の実数でThreads 29人・X 4人の着地から検索開始が0件
+// だったため、?q= 付き着地はそのまま検索を実行する。
+test('SNS・SEOから ?q= 付きで着地したら、もう一度押させずに検索を実行する', async () => {
+  const app = await read('app.js');
+  const mirrored = await read('assets-v147/app.js');
+  assert.equal(app, mirrored);
+  assert.match(app, /function autoRunInboundSearch\(query\)\{/);
+  assert.match(app, /if\(!text\|\|!isUsableProductQuery\(text\)\)return;/);
+  assert.match(app, /if\(String\(elements\.query\.value\|\|''\)\.trim\(\)!==text\)return;/);
+  assert.match(app, /requestSubmit==='function'\)elements\.form\.requestSubmit\(\)/);
+  assert.match(app, /turnstileInitPromise\.then\(start,\(\)=>\{\}\)/);
+  assert.match(app, /turnstileInitPromise\.catch\([\s\S]{0,400}?autoRunInboundSearch\(inboundCampaign\.query\);/);
+});

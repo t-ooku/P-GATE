@@ -1741,4 +1741,22 @@ const panelHeadingDetails=document.querySelector('.panel-heading-details');if(pa
 // 高いため、大隆さんの判断で「初回訪問時も閉じたまま」に変更(検索窓を
 // 最優先で見せる。モール一覧は見たい人だけタップで開く)。
 const heroMarketplaceCoverageDetails=document.querySelector('#heroMarketplaceCoverage');if(heroMarketplaceCoverageDetails)heroMarketplaceCoverageDetails.open=false;
-const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode(localStorage.getItem('hoshilu_search_mode')||'direct',false);setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(()=>{if(consumeInsightResultLink())return loadNotifications();const login=insightResultLoginUrl();if(!memberSession&&login){location.replace(login);return;}return loadNotifications();});turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
+// 2026-09-03: 流入元別の実数(直近30日)で、Threads 29人・X 4人が着地しても
+// 検索開始は0件だった。SNS・SEOのリンクは ?q= 付きなのに、着地時は検索欄へ
+// 文字が入るだけで、利用者がもう一度ボタンを押さないと検索が始まらなかった。
+// 「1回検索して、欲しい購入先へすぐ行ける」を守るため、条件付きで着地時に
+// そのまま検索を実行する。ユーザーが自分で入力した内容は書き換えない
+// (値が着地時のままの場合だけ実行する)。
+function autoRunInboundSearch(query){
+  const text=String(query||'').trim();
+  if(!text||!isUsableProductQuery(text))return;
+  if(hasSupplementalSearchInput())return;
+  const start=()=>{
+    if(String(elements.query.value||'').trim()!==text)return;
+    if(typeof elements.form.requestSubmit==='function')elements.form.requestSubmit();
+    else elements.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+  };
+  if(turnstileInitPromise&&typeof turnstileInitPromise.then==='function')turnstileInitPromise.then(start,()=>{});
+  else start();
+}
+const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode(localStorage.getItem('hoshilu_search_mode')||'direct',false);setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(()=>{if(consumeInsightResultLink())return loadNotifications();const login=insightResultLoginUrl();if(!memberSession&&login){location.replace(login);return;}return loadNotifications();});turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});autoRunInboundSearch(inboundCampaign.query);if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');
