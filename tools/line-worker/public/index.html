@@ -131,38 +131,11 @@
         <div class="hoshilu-primary">
           <section class="hero" aria-labelledby="heroTitle">
             <div class="hero-copy">
-              <p id="heroEyebrow" class="eyebrow">欲しいを、ちゃんと見つける。</p>
-              <h1 id="heroTitle"><span class="hero-title-line">写真・スクショ・一言から、</span><span class="hero-title-line hero-title-accent">欲しい物を探せる。</span></h1>
+              <p id="heroEyebrow" class="eyebrow">欲しいけど、名前が分からない。</p>
+              <h1 id="heroTitle"><span class="hero-title-line">写真・スクショ・SNS・一言から、</span><span class="hero-title-line hero-title-accent">欲しい物を探せます。</span></h1>
             </div>
             <div class="hero-visual" aria-hidden="true"></div>
           </section>
-
-          <details id="heroMarketplaceCoverage" class="marketplace-coverage hero-marketplace-coverage">
-            <summary class="step hero-marketplace-coverage-summary">MARKETPLACE COVERAGE</summary>
-            <p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つけられます。</p>
-            <div class="marketplace-coverage-heading">
-              <div>
-                <h2 id="heroMarketplaceCoverageTitle">探せるモールが、ひと目で分かる。</h2>
-                <p id="heroMarketplaceCoverageLead">まとめて検索2モールと、個別に探す11モールに対応。</p>
-              </div>
-              <p class="marketplace-count"><strong>13</strong><span id="heroMarketplaceCoverageCount">最大13モール対応</span></p>
-            </div>
-            <div class="marketplace-groups">
-              <article class="marketplace-group marketplace-group-integrated">
-                <p id="heroMarketplaceIntegratedLabel">まとめて検索</p>
-                <ul id="heroMarketplaceIntegratedList" aria-label="HOSHILUが商品をまとめて探して比較する2モール">
-                  <li>楽天市場</li><li class="marketplace-yahoo"><span>Yahoo!ショッピング</span></li>
-                </ul>
-              </article>
-              <article class="marketplace-group marketplace-group-direct">
-                <p id="heroMarketplaceDirectLabel">個別に探す</p>
-                <ul id="heroMarketplaceDirectList" aria-label="HOSHILUの検索結果には含まれない、個別に探す11モール">
-                  <li>Amazon</li><li>Qoo10</li><li>SHEIN</li><li>ZOZOTOWN</li><li>ロフト</li><li>ハンズ</li><li>マツキヨココカラ</li><li>@cosme</li><li>ABC-MART</li><li>BUYMA</li><li>SNKRDUNK</li>
-                </ul>
-              </article>
-            </div>
-            <p id="heroMarketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ、それ以外は各モールの検索結果へ案内します。</p>
-          </details>
 
           <section id="hoshiluSearch" class="search-panel" aria-labelledby="searchTitle">
             <div class="panel-heading">
@@ -170,7 +143,7 @@
             </div>
             <form id="knowledgeForm">
               <label id="queryLabel" class="visually-hidden" for="query">欲しいものについて話す</label>
-              <div class="query-field"><textarea id="query" name="query" minlength="1" maxlength="200" placeholder="例：昔見た、iPhoneの後ろにつける丸い磁石みたいな充電器"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
+              <div class="query-field"><textarea id="query" name="query" minlength="1" maxlength="200" placeholder="何が欲しいの？（例：インスタで見た白いバッグ）"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
               <div id="searchInputActions" class="search-input-actions" aria-label="検索の手がかりを追加">
                 <label class="search-input-action search-camera-action" for="searchCamera"><span aria-hidden="true">📷</span><span id="cameraActionLabel">カメラで撮る</span><input id="searchCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" aria-describedby="searchInputNotice"></label>
                 <label class="search-input-action" for="searchScreenshot"><span aria-hidden="true">▣</span><span id="screenshotActionLabel">画像を選ぶ</span><input id="searchScreenshot" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="searchInputNotice"></label>
@@ -258,6 +231,33 @@
             </div>
             <div id="saleRailMore"></div>
           </section>
+
+          <details id="heroMarketplaceCoverage" class="marketplace-coverage hero-marketplace-coverage">
+            <summary class="step hero-marketplace-coverage-summary">MARKETPLACE COVERAGE</summary>
+            <p id="heroPromise" class="hero-promise">AIは手がかりを理解し、HOSHILUは実際の購入先を探す。最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つけられます。</p>
+            <div class="marketplace-coverage-heading">
+              <div>
+                <h2 id="heroMarketplaceCoverageTitle">探せるモールが、ひと目で分かる。</h2>
+                <p id="heroMarketplaceCoverageLead">まとめて検索2モールと、個別に探す11モールに対応。</p>
+              </div>
+              <p class="marketplace-count"><strong>13</strong><span id="heroMarketplaceCoverageCount">最大13モール対応</span></p>
+            </div>
+            <div class="marketplace-groups">
+              <article class="marketplace-group marketplace-group-integrated">
+                <p id="heroMarketplaceIntegratedLabel">まとめて検索</p>
+                <ul id="heroMarketplaceIntegratedList" aria-label="HOSHILUが商品をまとめて探して比較する2モール">
+                  <li>楽天市場</li><li class="marketplace-yahoo"><span>Yahoo!ショッピング</span></li>
+                </ul>
+              </article>
+              <article class="marketplace-group marketplace-group-direct">
+                <p id="heroMarketplaceDirectLabel">個別に探す</p>
+                <ul id="heroMarketplaceDirectList" aria-label="HOSHILUの検索結果には含まれない、個別に探す11モール">
+                  <li>Amazon</li><li>Qoo10</li><li>SHEIN</li><li>ZOZOTOWN</li><li>ロフト</li><li>ハンズ</li><li>マツキヨココカラ</li><li>@cosme</li><li>ABC-MART</li><li>BUYMA</li><li>SNKRDUNK</li>
+                </ul>
+              </article>
+            </div>
+            <p id="heroMarketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ、それ以外は各モールの検索結果へ案内します。</p>
+          </details>
 
           <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle" data-nosnippet>
             <p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">保存した検索条件を振り返る。</h2>

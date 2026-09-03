@@ -27,10 +27,13 @@ const copy = {
   ZH: { hero:'今天，您想找|什么？', userView:'买家体验', sellerView:'卖家体验', languageLabel:'显示语言', title:'不知道商品名称也没关系。\n外观、看到它的地方、用途。请告诉我们您记得的内容。', titleSummary:'查看使用方法', placeholder:'例如：不知道日语名称的美国小型汽车零件', submit:'一起寻找', results:'HOSHILU 的推荐', loading:'正在寻找候选商品…', buy:'前往销售页面确认', total:'合计', shipping:'运费', delivery:'配送预计', days:'天', error:'目前无法搜索。请确认输入或网络后重试。', examples:['美国限定收藏手办','可在日本使用的美国小家电','忘记名称的小型汽车零件'], wish:'为此条件开启新品提醒', wishSaved:'已保存搜索条件', emptyWish:'还没有设置新品提醒的搜索条件。', filteredEmptyWish:'没有符合条件的保存条件。', wishTitle:'已保存的搜索条件', wishDescription:'HOSHILU 只会定期搜索您明确启用持续搜索的条件。\n仅在发现新匹配的真实商品时通知您。', watchSavedStatus:'目标价监控中', watchTitle:'目标价监控', watchDescription:'设置目标价后，我们会定期检查商城API价格，并在达到条件时通知您。', sellerTitle:'把需求变成|销售机会。', sellerDescription:'将美国亚马逊进口商品带给在日外国人及寻找美国商品的日本消费者。' },
   KO: { hero:'오늘은 무엇을|찾고 있나요?', userView:'구매자', sellerView:'판매자', languageLabel:'표시 언어', title:'상품명을 몰라도 괜찮습니다.\n생김새, 본 장소, 사용법. 기억나는 것을 말해 주세요.', titleSummary:'사용법 보기', placeholder:'예: 일본어 이름을 모르는 미국산 소형 자동차 부품', submit:'함께 찾기', results:'HOSHILU 추천', loading:'후보를 찾고 있습니다…', buy:'판매 페이지에서 확인', total:'합계', shipping:'배송비', delivery:'배송 예상', days:'일', error:'현재 검색할 수 없습니다. 입력이나 연결 상태를 확인하고 다시 시도해 주세요.', examples:['미국 한정 피규어','일본에서 쓸 수 있는 미국 소형 가전','이름을 잊은 작은 자동차 부품'], wish:'이 조건으로 새 상품 알림 받기', wishSaved:'검색 조건을 저장했습니다', emptyWish:'새 상품 알림을 설정한 검색 조건이 아직 없습니다.', filteredEmptyWish:'검색과 일치하는 저장된 조건이 없습니다.', wishTitle:'저장한 검색 조건', wishDescription:'연속 검색을 명시적으로 활성화한 조건만 HOSHILU가 정기적으로 검색합니다.\n새로 일치하는 실제 상품을 찾았을 때만 알려드립니다.', watchSavedStatus:'목표 가격 감시 중', watchTitle:'목표 가격 감시', watchDescription:'목표 가격을 설정하면 쇼핑몰 API 가격을 정기적으로 확인하고 조건 충족 시 알려드립니다.', sellerTitle:'원하는 마음을|판매 기회로.', sellerDescription:'미국 Amazon 병행수입 상품을 일본 거주 외국인과 미국 상품을 찾는 일본인에게 연결합니다.' }
 };
-Object.assign(copy.JA,{hero:'写真・スクショ・一言から、|欲しい物を探せる。',title:'商品名が分からなくても大丈夫。\n撮った写真、画像、公開投稿URL、覚えている一言から探せます。',placeholder:'例：インスタで見た、ピンクで小さいカメラみたいなもの'});
-Object.assign(copy.EN,{hero:'Find it from a |photo, image, or phrase.',title:'You do not need the product name.\nSearch from a photo, image, public post URL, or anything you remember.',placeholder:'Example: a small pink camera-like thing I saw on Instagram'});
-Object.assign(copy.ZH,{hero:'通过照片、图片或一句描述，|寻找想要的商品。',title:'不知道商品名称也没关系。\n可通过照片、图片、公开帖子链接或记得的一句话搜索。',placeholder:'例如：在 Instagram 看到的粉色小相机一样的东西'});
-Object.assign(copy.KO,{hero:'사진·이미지·한마디로,|원하는 상품을 찾아요.',title:'상품명을 몰라도 괜찮습니다.\n촬영한 사진, 이미지, 공개 게시물 URL, 기억나는 한마디로 찾아보세요.',placeholder:'예: 인스타에서 본 분홍색 작은 카메라 같은 것'});
+// 2026-09-03 指示書 §13–17: トップは説明サイトではなく検索開始装置。
+// 第一画面は「欲しいけど、名前が分からない。」→ 探せる手段 → 「何が欲しいの？」。
+// 検索例はタップで即検索(画像が要る例は画像選択を開く)。
+Object.assign(copy.JA,{hero:'写真・スクショ・SNS・一言から、|欲しい物を探せます。',title:'商品名が分からなくても大丈夫。\n撮った写真、画像、公開投稿URL、覚えている一言から探せます。',placeholder:'何が欲しいの？（例：インスタで見た白いバッグ）',examples:['インスタで見た白いバッグ','韓国っぽいシルバーリング','このスクショのマットレス','自立する本革トート','この靴に似たもの','SNSで見たピンクのリップ']});
+Object.assign(copy.EN,{hero:'Find it from a |photo, screenshot, post, or phrase.',title:'You do not need the product name.\nSearch from a photo, image, public post URL, or anything you remember.',placeholder:'What are you looking for? (e.g. a white bag I saw on Instagram)',examples:['a white bag I saw on Instagram','a Korean-style silver ring','the mattress in this screenshot','a leather tote that stands up on its own','something like these shoes','a pink lip tint I saw on social media']});
+Object.assign(copy.ZH,{hero:'通过照片、截图、帖子或一句描述，|寻找想要的商品。',title:'不知道商品名称也没关系。\n可通过照片、图片、公开帖子链接或记得的一句话搜索。',placeholder:'想找什么？（例如：在 Instagram 看到的白色包）',examples:['在 Instagram 看到的白色包','韩系银戒指','这张截图里的床垫','能自立的真皮托特包','和这双鞋相似的','在社交平台看到的粉色唇釉']});
+Object.assign(copy.KO,{hero:'사진·스크린샷·SNS·한마디로,|원하는 상품을 찾아요.',title:'상품명을 몰라도 괜찮습니다.\n촬영한 사진, 이미지, 공개 게시물 URL, 기억나는 한마디로 찾아보세요.',placeholder:'무엇을 찾으세요? (예: 인스타에서 본 흰색 가방)',examples:['인스타에서 본 흰색 가방','한국풍 실버 반지','이 스크린샷 속 매트리스','자립하는 가죽 토트백','이 신발과 비슷한 것','SNS에서 본 핑크 립']});
 
 const actionCopy = {
   JA:{advancedSearch:'詳細検索',advancedSearchClose:'詳細検索を閉じる',deleteWishAria:'この検索条件を削除',deleteAllWishes:'すべて削除',deleteAllConfirm:'保存した検索条件をすべて削除しますか？この操作は取り消せません。',clear:'クリア',searchAgain:'もう一度検索',updateWish:'変更を保存',updated:'変更を保存しました',deleteWish:'削除',deleteConfirm:'この条件の継続検索を解除しますか？',insightTitle:'見つかるまで探す条件。',insightTemplate:'保存条件 {count}件、継続検索オン {enabled}件。',saveWish:'この条件を見つかるまで探す',wishSaved:'検索条件を保存しました',insightToggleLabel:'この条件を見つかるまで探す',insightToggleDescription:'HOSHILUが定期的に検索し、新しく一致する実在商品が見つかったときだけお知らせします。',saveWatch:'購入希望価格を保存',watchSaved:'購入希望価格を保存しました',bundleNote:'対象商品のAPI確認価格を定期確認し、希望価格以下になった場合にお知らせします。',discoveryTitle:'名前が分からなくても、\n記憶から探せる。',discoveryBody:'見た目、見た場所、使い方。覚えていることから話してください。',discoveryExample:'SNSで見た、ピンクの小さいカメラみたいなもの',journey:['検索する前に、|ホシルに話す。','曖昧な「欲しい」を、|見つかる検索へ変換します。','思い出せるまま話す','名前が分からなくても、見た目・用途・見た場所だけで大丈夫。','検索条件を精密化','ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。','購入先まで案内','商品ページへ直接リンク。HOSHILUが2モールをまとめて比較し、その他11を含む合計最大13モールで探せます。'],copyKeywords:'検索ワードをコピー',copiedKeywords:'コピーしました'},
@@ -44,10 +47,10 @@ Object.assign(actionCopy.ZH,{insightToggleDescription:'启用后，首次检查�
 Object.assign(actionCopy.KO,{insightToggleDescription:'활성화하면 첫 확인에서 현재 후보를 기준으로 기록하고 이때는 알림을 보내지 않습니다. 이후 새로 일치하는 실제 상품을 찾았을 때만 앱과 연결된 LINE·이메일로 알려드립니다.',frequencyLabel:'알림 빈도',frequencyInstant:'즉시 알림',frequencyDaily:'하루 한 번',frequencyWeekly:'주 1회',frequencyMuted:'알림 중지'});
 
 const navigationCopy = {
-  JA:{eyebrow:'欲しいを、ちゃんと見つける。',features:['ホシル検索','購入希望価格ウォッチ'],account:'マイページ',candidateAmazon:'Amazonでこの商品を探す'},
-  EN:{eyebrow:'Find what you really want.',features:['HOSHILU Search','Target price watch'],account:'My page',candidateAmazon:'Find this product on Amazon'},
-  ZH:{eyebrow:'找到真正想要的商品。',features:['HOSHILU 搜索','目标价监控'],account:'我的页面',candidateAmazon:'在 Amazon 查找此商品'},
-  KO:{eyebrow:'원하는 것을 제대로 찾기.',features:['HOSHILU 검색','목표 가격 감시'],account:'마이페이지',candidateAmazon:'Amazon에서 이 상품 찾기'}
+  JA:{eyebrow:'欲しいけど、名前が分からない。',features:['ホシル検索','購入希望価格ウォッチ'],account:'マイページ',candidateAmazon:'Amazonでこの商品を探す'},
+  EN:{eyebrow:'You want it, but you do not know its name.',features:['HOSHILU Search','Target price watch'],account:'My page',candidateAmazon:'Find this product on Amazon'},
+  ZH:{eyebrow:'想要，却不知道名字。',features:['HOSHILU 搜索','目标价监控'],account:'我的页面',candidateAmazon:'在 Amazon 查找此商品'},
+  KO:{eyebrow:'갖고 싶은데, 이름을 모르겠다.',features:['HOSHILU 검색','목표 가격 감시'],account:'마이페이지',candidateAmazon:'Amazon에서 이 상품 찾기'}
 };
 const searchModeCopy={
   JA:{step:'検索方法',identify:'AIに確認して探す',direct:'すぐ検索',identifySubmit:'AIに商品を聞く',directSubmit:'すぐ検索'},
@@ -243,6 +246,13 @@ function renderQuickExamples(language=elements.language.value||'JA'){
     chip.addEventListener('click',()=>{
       elements.query.value=example;
       elements.clear.classList.remove('hidden');
+      // 「このスクショの…」「この靴に似た…」のように画像が前提の例は、文字だけで
+      // 検索せず画像選択を開く(選んだ時点で通常の画像検索の流れに乗る)。
+      if(/(?:この|these|this|这|이 )/u.test(example)&&/(?:スクショ|靴|screenshot|shoes|截图|鞋|스크린샷|신발)/u.test(example)&&elements.screenshot){
+        elements.query.focus();
+        elements.screenshot.click();
+        return;
+      }
       // 例示チップは入力だけで止めず、そのまま検索開始まで進める。
       if(typeof elements.form.requestSubmit==='function')elements.form.requestSubmit();
       else elements.form.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
