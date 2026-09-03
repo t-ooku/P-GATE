@@ -84,10 +84,11 @@ export function normalizeSellerBusinessInquiry(input = {}) {
 // だけで、誰にも知らされなかった。管理APIを人が見に行かない限り気づけないので、
 // 実運用では見落とす。届いた時点でメールを1通送る。
 // 送信に失敗しても問い合わせ自体は受け付ける(通知の失敗で見込み客を落とさない)。
-export function sellerInquiryNotificationText(id, value, timestamp) {
+export function sellerInquiryNotificationText(id, value, timestamp, verified = true) {
   const labels = [
     ['受付ID', id],
     ['受付日時(UTC)', timestamp],
+    ['確認欄', verified ? '通過' : '未通過(確認欄が動かない環境からの送信)'],
     ['種別', value.inquiry_type === 'ACCOUNT_APPLICATION' ? 'アカウント申請' : '相談'],
     ['区分', value.organization_type],
     ['会社・屋号', value.organization_name],
@@ -111,7 +112,7 @@ export function sellerInquiryNotificationText(id, value, timestamp) {
   ].join('\n');
 }
 
-async function notifySellerInquiry(env, id, value, timestamp) {
+async function notifySellerInquiry(env, id, value, timestamp, verified = true) {
   const to = String(env.SELLER_INQUIRY_NOTIFY_EMAIL || '').trim();
   const from = String(env.MEMBER_EMAIL_FROM || '').trim();
   if (!to || !from || !String(env.RESEND_API_KEY || '').startsWith('re_')) return false;
@@ -123,31 +124,58 @@ async function notifySellerInquiry(env, id, value, timestamp) {
       to: [to],
       // 返信するとそのまま相手に届くようにしておく。手作業で対応する前提のため。
       reply_to: value.contact_email,
-      subject: `【HOSHILU】セラー問い合わせ: ${value.organization_name}`,
-      text: sellerInquiryNotificationText(id, value, timestamp)
+      subject: `${verified ? '【HOSHILU】' : '【HOSHILU・要確認】'}セラー問い合わせ: ${value.organization_name}`,
+      text: sellerInquiryNotificationText(id, value, timestamp, verified)
     }),
     redirect: 'manual'
   });
   return response.ok;
 }
 
-export async function createSellerBusinessInquiry(env, input, now = new Date()) {
+// 2026-09-03: 実機(iOS Safari)でTurnstileが読み込めず、フォームを一切送信でき
+// ない事象が出た。B2Bの問い合わせ口が塞がるのは、迷惑投稿を通すより損が大きい。
+// Turnstileが通らなかった場合も、同一Origin・ハニーポット空・入力が正しい、
+// という条件を満たすなら受け付ける。ただし件数を厳しく絞り、通常の受付とは
+// 区別できるようにsourceを分け、通知の件名にも明示する。
+const FALLBACK_SOURCE = 'FOR_SELLERS_FALLBACK';
+const FALLBACK_HOURLY_LIMIT = 3;
+const FALLBACK_DAILY_LIMIT = 10;
+
+export async function fallbackInquiryAllowed(env, now = new Date()) {
+  if (!env.PRODUCT_DB) return false;
+  const hourAgo = new Date(now.getTime() - 3600_000).toISOString();
+  const dayAgo = new Date(now.getTime() - 86_400_000).toISOString();
+  const result = await env.PRODUCT_DB.prepare(`SELECT
+      SUM(CASE WHEN created_at>=?2 THEN 1 ELSE 0 END) AS last_hour,
+      COUNT(*) AS last_day
+    FROM seller_business_inquiries WHERE source=?1 AND created_at>=?3`)
+    .bind(FALLBACK_SOURCE, hourAgo, dayAgo).all();
+  const row = (result?.results || [])[0];
+  const lastHour = Number(row?.last_hour || 0);
+  const lastDay = Number(row?.last_day || 0);
+  return lastHour < FALLBACK_HOURLY_LIMIT && lastDay < FALLBACK_DAILY_LIMIT;
+}
+
+export async function createSellerBusinessInquiry(env, input, now = new Date(), options = {}) {
   const { value, errors } = normalizeSellerBusinessInquiry(input);
   if (value.company_website) return { accepted: true, inquiry_id: '' };
   if (errors.length) return { accepted: false, errors };
+  const verified = options.verified !== false;
+  const source = verified ? 'FOR_SELLERS' : FALLBACK_SOURCE;
   const id = `SBI_${crypto.randomUUID()}`;
   const timestamp = now.toISOString();
   await env.PRODUCT_DB.prepare(`INSERT INTO seller_business_inquiries
     (inquiry_id,inquiry_type,organization_type,organization_name,contact_name,contact_email,
      storefront_url,marketplaces,monthly_order_range,plan_interest,payment_preference,message,
      status,source,created_at,updated_at)
-    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,'NEW','FOR_SELLERS',?13,?13)`)
+    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,'NEW',?14,?13,?13)`)
     .bind(id, value.inquiry_type, value.organization_type, value.organization_name,
       value.contact_name, value.contact_email, value.storefront_url, JSON.stringify(value.marketplaces),
-      value.monthly_order_range, value.plan_interest, value.payment_preference, value.message, timestamp).run();
+      value.monthly_order_range, value.plan_interest, value.payment_preference, value.message,
+      timestamp, source).run();
   let notified = false;
-  try { notified = await notifySellerInquiry(env, id, value, timestamp); } catch { notified = false; }
-  return { accepted: true, inquiry_id: id, notified };
+  try { notified = await notifySellerInquiry(env, id, value, timestamp, verified); } catch { notified = false; }
+  return { accepted: true, inquiry_id: id, notified, verified };
 }
 
 export async function handleSellerBusinessInquiryRoutes(request, env) {
@@ -159,12 +187,15 @@ export async function handleSellerBusinessInquiryRoutes(request, env) {
     if (size > 16_384) return json({ ok: false, error: 'REQUEST_TOO_LARGE' }, 413);
     let input;
     try { input = await request.json(); } catch { return json({ ok: false, error: 'INVALID_JSON' }, 400); }
-    if (!await verifyTurnstile(request, env, input.turnstile_token)) {
+    // 確認欄が動かない環境からの送信も、件数を絞ったうえで受け付ける。
+    // 問い合わせ口が完全に塞がる方が、事業上の損失が大きい。
+    let verified = await verifyTurnstile(request, env, input.turnstile_token);
+    if (!verified && !await fallbackInquiryAllowed(env)) {
       return json({ ok: false, error: 'TURNSTILE_FAILED' }, 403);
     }
-    const result = await createSellerBusinessInquiry(env, input);
+    const result = await createSellerBusinessInquiry(env, input, new Date(), { verified });
     if (!result.accepted) return json({ ok: false, error: 'VALIDATION_FAILED', fields: result.errors }, 400);
-    return json({ ok: true, inquiry_id: result.inquiry_id, status: 'RECEIVED' }, 201);
+    return json({ ok: true, inquiry_id: result.inquiry_id, status: 'RECEIVED', verified }, 201);
   }
   if (request.method === 'GET' && url.pathname === '/api/admin/seller-business/inquiries') {
     if (!await authorizeAdminRequest(request, env)) return json({ ok: false, error: 'UNAUTHORIZED' }, 401);

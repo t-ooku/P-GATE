@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { createSellerBusinessInquiry, handleSellerBusinessInquiryRoutes,
+import { createSellerBusinessInquiry, fallbackInquiryAllowed, handleSellerBusinessInquiryRoutes,
   normalizeSellerBusinessInquiry } from '../src/seller-business-inquiries.mjs';
 
 function databaseEnv() {
@@ -143,4 +143,69 @@ test('通知先が未設定でも、通知が失敗しても問い合わせは�
   }
   assert.equal(db2.prepare('SELECT COUNT(*) AS n FROM seller_business_inquiries').get().n, 1);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM seller_business_inquiries').get().n, 1);
+});
+
+// 2026-09-03: 実機(iOS Safari)でTurnstileが読み込めず、フォームを一切送信でき
+// なかった。問い合わせ口が塞がる損失の方が大きいので、確認欄を通らない送信も
+// 件数を絞って受け付ける。通常の受付とはsourceで区別し、通知の件名にも出す。
+test('確認欄を通らない送信も件数を絞って受け付け、sourceで区別する', async () => {
+  const { db, env } = databaseEnv();
+  const result = await createSellerBusinessInquiry(env, valid, new Date('2026-09-03T00:00:00Z'), { verified: false });
+  assert.equal(result.accepted, true);
+  assert.equal(result.verified, false);
+  const row = db.prepare('SELECT * FROM seller_business_inquiries').get();
+  assert.equal(row.source, 'FOR_SELLERS_FALLBACK');
+  assert.equal(row.status, 'NEW');
+
+  const verified = await createSellerBusinessInquiry(env, { ...valid, contact_email: 'a@example.com' },
+    new Date('2026-09-03T00:00:01Z'));
+  assert.equal(verified.verified, true);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM seller_business_inquiries WHERE source='FOR_SELLERS'").get().n, 1);
+});
+
+test('確認欄なしの受付は1時間3件・1日10件で打ち切る', async () => {
+  const { env } = databaseEnv();
+  const now = new Date('2026-09-03T12:00:00Z');
+  assert.equal(await fallbackInquiryAllowed(env, now), true);
+  for (let index = 0; index < 3; index += 1) {
+    await createSellerBusinessInquiry(env, { ...valid, contact_email: `spam${index}@example.com` },
+      new Date(now.getTime() - index * 60_000), { verified: false });
+  }
+  assert.equal(await fallbackInquiryAllowed(env, now), false, '1時間で3件を超えたら受け付けない');
+  // 1時間より前の分は時間枠から外れるが、24時間の上限には残る。
+  const later = new Date(now.getTime() + 2 * 3600_000);
+  assert.equal(await fallbackInquiryAllowed(env, later), true);
+});
+
+test('確認欄を通った受付は件数制限の対象にしない', async () => {
+  const { env } = databaseEnv();
+  const now = new Date('2026-09-03T12:00:00Z');
+  for (let index = 0; index < 12; index += 1) {
+    await createSellerBusinessInquiry(env, { ...valid, contact_email: `ok${index}@example.com` },
+      new Date(now.getTime() - index * 1000));
+  }
+  assert.equal(await fallbackInquiryAllowed(env, now), true, '通常の受付で枠を消費してはいけない');
+});
+
+test('確認欄が通らなくても公開APIは受け付け、通知の件名に要確認と出す', async () => {
+  const { env } = databaseEnv();
+  const sent = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => { sent.push(JSON.parse(init.body)); return new Response('{}', { status: 200 }); };
+  try {
+    const response = await handleSellerBusinessInquiryRoutes(new Request('https://hoshilu.app/api/seller-business/inquiries', {
+      method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hoshilu.app' },
+      body: JSON.stringify({ ...valid, turnstile_token: '' })
+    }), { ...env, RESEND_API_KEY: 're_test', MEMBER_EMAIL_FROM: 'notification@auth.hoshilu.app',
+      SELLER_INQUIRY_NOTIFY_EMAIL: 'owner@example.com' });
+    assert.equal(response.status, 201);
+    const body = await response.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.verified, false);
+    assert.equal(sent.length, 1);
+    assert.match(sent[0].subject, /要確認/u);
+    assert.match(sent[0].text, /未通過/u);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });

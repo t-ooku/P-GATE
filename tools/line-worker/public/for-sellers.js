@@ -20,7 +20,9 @@ if (turnstileContainer) {
 function showTurnstileFailure(reason) {
   turnstileFailure = reason;
   status.className = 'status error';
-  status.textContent = reason;
+  // 確認欄が動かない環境でも送信できる。サーバ側で件数を絞って受け付ける。
+  status.style.whiteSpace = 'pre-line';
+  status.textContent = `${reason}\nこのまま「内容を送信」を押しても受け付けます。`;
   if (!turnstileContainer || turnstileContainer.querySelector('.turnstile-retry')) return;
   const retry = document.createElement('button');
   retry.type = 'button';
@@ -88,10 +90,13 @@ initializeTurnstile().catch(error => showTurnstileFailure(error.message));
 form?.addEventListener('submit', async event => {
   event.preventDefault();
   if (!form.reportValidity()) return;
-  // 読み込みに失敗しているときは「完了してください」ではなく失敗の理由を出す。
-  if (turnstileFailure) { showTurnstileFailure(turnstileFailure); return; }
   status.className = 'status';
-  if (!turnstileToken) { status.textContent = '不正送信防止の確認を完了してください。'; return; }
+  // 確認欄が読み込めていない環境では、トークン無しのまま送る。サーバ側で
+  // 件数を絞って受け付けるので、問い合わせ口が完全に塞がることはない。
+  if (!turnstileToken && !turnstileFailure) {
+    status.textContent = '不正送信防止の確認を完了してください。';
+    return;
+  }
   const button = form.querySelector('button[type="submit"]');
   const data = new FormData(form);
   const payload = {
