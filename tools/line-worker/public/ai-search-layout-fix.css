@@ -1193,3 +1193,7 @@ html:lang(ja) #heroTitle{white-space:nowrap}#heroTitle .hero-title-line{display:
 .watch-settings-button,.product-watch-dialog-card>strong{white-space:nowrap}
 .result-track>.product-card .product-card-media-actions .watch-settings-button,
 .product-card-media-actions .watch-settings-button{font-size:clamp(9px,2.9vw,12px);letter-spacing:-.02em;padding-inline:6px}
+
+/* 2026-09-03 大隆さん指示: 検索欄の文言を「何が欲しい？名前が分からなくても
+   大丈夫」に変更。語の途中で折り返さないよう、幅に合わせて字を詰めて1行に収める。 */
+#query::placeholder{font-size:clamp(12.5px,3.9vw,17px)}

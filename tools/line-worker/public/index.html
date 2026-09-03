@@ -131,7 +131,6 @@
         <div class="hoshilu-primary">
           <section class="hero" aria-labelledby="heroTitle">
             <div class="hero-copy">
-              <p id="heroEyebrow" class="eyebrow">名前が分からなくても探せます。</p>
               <h1 id="heroTitle"><span class="hero-title-line">欲しいもの、</span><span class="hero-title-line hero-title-accent">まとめて探す。</span></h1>
               <p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などの検索をホシル一つで。</p>
             </div>
@@ -144,7 +143,7 @@
             </div>
             <form id="knowledgeForm">
               <label id="queryLabel" class="visually-hidden" for="query">欲しいものについて話す</label>
-              <div class="query-field"><textarea id="query" name="query" minlength="1" maxlength="200" placeholder="何が欲しいの？"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
+              <div class="query-field"><textarea id="query" name="query" minlength="1" maxlength="200" placeholder="何が欲しい？名前が分からなくても大丈夫"></textarea><button id="speechInput" class="speech-input hidden" type="button" aria-label="音声で入力" aria-pressed="false">🎙</button><button id="clearQuery" class="clear-query hidden" type="button" aria-label="入力をすべて消す">クリア</button></div>
               <div id="searchInputActions" class="search-input-actions" aria-label="検索の手がかりを追加">
                 <label class="search-input-action search-camera-action" for="searchCamera"><span aria-hidden="true">📷</span><span id="cameraActionLabel">カメラで撮る</span><input id="searchCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" aria-describedby="searchInputNotice"></label>
                 <label class="search-input-action" for="searchScreenshot"><span aria-hidden="true">▣</span><span id="screenshotActionLabel">画像を選ぶ</span><input id="searchScreenshot" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="searchInputNotice"></label>
@@ -166,13 +165,10 @@
                 </div>
                 <div id="quickQueries" class="quick-queries" aria-label="質問例"></div>
               </div>
-              <div class="color-search-entry">
-                <button id="colorSearchToggle" type="button" class="color-search-toggle" aria-expanded="false" aria-controls="colorSearchPanel">
-                  <span class="color-search-toggle-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-                  <span id="colorSearchToggleLabel">色で探す</span>
-                </button>
-                <div id="colorSearchPanel" class="color-search-panel hidden"></div>
-              </div>
+              <!-- 2026-09-03 大隆さん指示: 独立した「色で探す」ボタンは出さない。
+                   色の絞り込みは「詳細検索」の中(色チップ)から使えるので、そちらへ
+                   まとめ、第一画面は検索窓とCTAを上へ詰める。描画関数は要素が無ければ
+                   何もしないので、JS側はそのまま置いてある。 -->
               <button id="advancedSearchToggle" type="button" class="advanced-search-toggle" aria-expanded="false" aria-controls="advancedSearchPanel">詳細検索</button>
               <div id="advancedSearchPanel" class="advanced-search-panel hidden"></div>
               <div id="turnstileContainer" class="turnstile-container"></div>
@@ -311,31 +307,11 @@
             </details>
           </section>
 
-          <section id="marketplaceCoverage" class="marketplace-coverage" aria-labelledby="marketplaceCoverageTitle">
-            <div class="marketplace-coverage-heading">
-              <div>
-                <p class="step">MARKETPLACE COVERAGE</p>
-                <h2 id="marketplaceCoverageTitle">探せるモールが、ひと目で分かる。</h2>
-                <p id="marketplaceCoverageLead">まとめて検索2モールと、個別に探す11モールに対応。</p>
-              </div>
-              <p class="marketplace-count"><strong>13</strong><span id="marketplaceCoverageCount">最大13モール対応</span></p>
-            </div>
-            <div class="marketplace-groups">
-              <article class="marketplace-group marketplace-group-integrated">
-                <p id="marketplaceIntegratedLabel">まとめて検索</p>
-                <ul id="marketplaceIntegratedList" aria-label="HOSHILUが商品をまとめて探して比較する2モール">
-                  <li>楽天市場</li><li class="marketplace-yahoo"><span>Yahoo!ショッピング</span></li>
-                </ul>
-              </article>
-              <article class="marketplace-group marketplace-group-direct">
-                <p id="marketplaceDirectLabel">個別に探す</p>
-                <ul id="marketplaceDirectList" aria-label="HOSHILUの検索結果には含まれない、個別に探す11モール">
-                  <li>Amazon</li><li>Qoo10</li><li>SHEIN</li><li>ZOZOTOWN</li><li>ロフト</li><li>ハンズ</li><li>マツキヨココカラ</li><li>@cosme</li><li>ABC-MART</li><li>BUYMA</li><li>SNKRDUNK</li>
-                </ul>
-              </article>
-            </div>
-            <p id="marketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ、それ以外は各モールの検索結果へ案内します。
-          </section>
+          <!-- 2026-09-03 大隆さん指示: 対応モール一覧が第一画面(ヒーロー内の折りたたみ
+               #heroMarketplaceCoverage)とここの2か所にあり重複していたので、下側の
+               この節を削除した。文言・判定は marketplace-coverage.mjs のCOPYを
+               ヒーロー側が引き続き使う。applyMarketplaceCoverage は対象要素が無ければ
+               即returnするので、モジュールはそのまま読み込んで良い。 -->
 
           <section class="discovery-collage" aria-labelledby="discoveryTitle">
             <picture class="discovery-collage-media" aria-hidden="true">

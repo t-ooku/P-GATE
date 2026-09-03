@@ -97,8 +97,8 @@ test('SEARCH AGENT→DISCOVERY→OFFICIALの3セクションは順に隣接す�
   const html = await read('index.html');
   // 2026-08-07 指示書 #14: 正式なセクション順は
   // MARKETPLACE COVERAGE(6) -> SEARCH AGENT(7) -> DISCOVERY(8) -> OFFICIAL(9)。
-  // 2026-08-19 大隆さん指示: MARKETPLACE COVERAGE を SEARCH AGENT の直後へ
-  // 移動。SEARCH AGENT と DISCOVERY の間に挟むのは COVERAGE だけに固定する。
+  // 2026-09-03 大隆さん指示: 重複していた下側の MARKETPLACE COVERAGE を削除。
+  // SEARCH AGENT と DISCOVERY の間には何も挟まない。
   const order = ['HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY', 'HOSHILU OFFICIAL'];
   const positions = order.map((label) => {
     const index = html.indexOf(`<p class="step">${label}</p>`);
@@ -108,7 +108,7 @@ test('SEARCH AGENT→DISCOVERY→OFFICIALの3セクションは順に隣接す�
   assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
   const between = html.slice(positions[0], positions[2]);
   const steps = [...between.matchAll(/<p class="step">([^<]+)<\/p>/g)].map((match) => match[1]);
-  assert.deepEqual(steps, ['HOSHILU SEARCH AGENT', 'MARKETPLACE COVERAGE', 'HOSHILU DISCOVERY']);
+  assert.deepEqual(steps, ['HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY']);
 });
 
 test('オフライン時のフォールバックはナビゲーションだけを対象にする', async () => {

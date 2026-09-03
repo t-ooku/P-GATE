@@ -18,7 +18,10 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
     read('app.js')
   ]);
 
+  // MARKETPLACE COVERAGE はヒーロー内の折りたたみ1か所だけに置く。
   assert.match(html, /MARKETPLACE COVERAGE/);
+  assert.equal((html.match(/MARKETPLACE COVERAGE/g) || []).length, 1, 'MARKETPLACE COVERAGEは1か所だけ');
+  assert.doesNotMatch(html, /id="marketplaceCoverage"/);
   assert.match(html, /まとめて検索/);
   assert.match(html, /個別に探す/);
   for (const mall of ['Amazon', '楽天市場', 'Qoo10', 'SHEIN', 'ZOZOTOWN', 'ロフト', 'ハンズ', 'マツキヨココカラ', '@cosme', 'ABC-MART', 'BUYMA', 'SNKRDUNK']) {
@@ -75,9 +78,9 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
     ['INSIGHT', '<p class="step">HOSHILU INSIGHT'],
     ['NEWS', '<p class="step">HOSHILU NEWS'],
     ['SEARCH AGENT', '<p class="step">HOSHILU SEARCH AGENT'],
-    // 2026-08-19 大隆さん指示: MARKETPLACE COVERAGE は検索直下から
-    // HOSHILU SEARCH AGENT の直後へ移動(探し方の説明→対応モール一覧の順)。
-    ['MARKETPLACE COVERAGE', '<p class="step">MARKETPLACE COVERAGE'],
+    // 2026-09-03 大隆さん指示: MARKETPLACE COVERAGE が第一画面(ヒーロー内の
+    // 折りたたみ)とここの2か所にあり重複していたので、下側の節を削除した。
+    // 残るのは #heroMarketplaceCoverage の1つだけ。
     ['DISCOVERY', '<p class="step">HOSHILU DISCOVERY'],
     ['OFFICIAL', '<p class="step">HOSHILU OFFICIAL'],
   ];

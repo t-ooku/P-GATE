@@ -1335,55 +1335,36 @@ test('条件検索チップはAI検索と同じ1本のクエリ条件に追加�
   assert.match(layoutCss, /\.condition-chip\{[^}]*min-height:44px/);
 });
 
-// 独立した「色で探す」ボタン (2026-08-15 request: "最初から見える独立した
-// 「色で探す」ボタンを別途トップに置く")。色の絞り込みは既に詳細検索の
-// 中で使えたが、それだと無関係な「詳細検索」ラベルを開かないと辿り着け
-// なかった。検索パネルの専用ボタンとして置き、タップすると色チップだけが
-// 開く。裏側のチップ辞書・APIは詳細検索と共有する(advancedSearchGroupsを
-// 使い回し、二重取得しない)。
-//
-// 2026-08-17 update: 当初は検索窓より前(検索フォームより前)に置いていたが、
-// 大隆さんの指示で「検索履歴の下、詳細条件ボタンの上」に移動した。検索窓・
-// 検索履歴を先に見せてから、絞り込み手段(色で探す→詳細検索)を並べる導線に
-// 揃えている。
-test('「色で探す」ボタンを検索履歴の下・詳細検索ボタンの上に置く', () => {
+// 「色で探す」は2026-08-15の指示で独立ボタンとしてトップに置いていたが、
+// 2026-09-03の指示で取りやめ、「詳細検索」の中へ戻した。第一画面は検索窓と
+// CTAを上へ詰める。色チップ自体は詳細検索の全軸カード(dimension==='color')に
+// 含まれるので、機能としては失われていない。
+// 描画関数(renderColorSearch)は要素が無ければ何もしないため、JS側は残してある。
+test('「色で探す」は独立ボタンを出さず、詳細検索の中から使う', () => {
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  const css = fs.readFileSync(new URL('../public/ai-search-layout-fix.css', import.meta.url), 'utf8');
 
-  // フォーム内、検索履歴セクションより後・詳細検索ボタンより前に置かれている
+  // 第一画面に独立した「色で探す」ボタンは出さない。
+  assert.doesNotMatch(html, /id="colorSearchToggle"/);
+  assert.doesNotMatch(html, /id="colorSearchPanel"/);
+  assert.doesNotMatch(html, /color-search-entry/);
+
+  // 検索窓 → 検索ヒント → 検索履歴 → 詳細検索、の順に詰める。
   const formIndex = html.indexOf('id="knowledgeForm"');
   const queryIndex = html.indexOf('id="query"');
   const searchHintsIndex = html.indexOf('id="searchHintsSection"');
   const historyIndex = html.indexOf('id="searchHistorySection"');
-  const colorEntryIndex = html.indexOf('id="colorSearchToggle"');
   const advancedToggleIndex = html.indexOf('id="advancedSearchToggle"');
   assert.ok(formIndex > -1 && formIndex < queryIndex, 'フォームは検索窓より前');
   assert.ok(queryIndex < searchHintsIndex, '検索窓は検索ヒントより前');
   assert.ok(searchHintsIndex < historyIndex, '検索ヒントは検索履歴セクションより前');
-  assert.ok(historyIndex > -1 && historyIndex < colorEntryIndex, '色で探すは検索履歴より後');
-  assert.ok(colorEntryIndex > -1 && colorEntryIndex < advancedToggleIndex, '色で探すは詳細検索ボタンより前');
-  assert.match(html, /id="colorSearchToggle"[^>]*aria-controls="colorSearchPanel"/);
-  assert.match(html, /id="colorSearchPanel" class="color-search-panel hidden"/);
+  assert.ok(historyIndex > -1 && historyIndex < advancedToggleIndex, '詳細検索は検索履歴より後');
 
-  // 色チップのみを描画する専用パネル。詳細検索の全軸カードとは別物。
-  assert.match(appSource, /function colorSearchCard\(colorGroup\)/);
-  assert.match(appSource, /async function renderColorSearch\(\)/);
-  // 詳細検索と同じ /api/refinement-chips・同じキャッシュ変数を使い回す
-  // (二重フェッチや辞書の二重管理を避ける)
-  assert.match(appSource, /if\(!advancedSearchGroups\)advancedSearchGroups=await loadRefinementChips\(\);\s*const colorGroup=\(advancedSearchGroups\|\|\[\]\)\.find\(group=>group\?\.dimension==='color'\)/);
-  // タップした色は他の絞り込みチップと同じ " / " 区切りでクエリへ追加し、
-  // 同じ検索経路(runKnowledgeSearch)を通す
-  assert.match(appSource, /elements\.query\.value=\[base,picked\]\.filter\(Boolean\)\.join\(' \/ '\)/);
-  assert.match(appSource, /submit\.addEventListener\('click',\(\)=>\{[\s\S]{0,300}runKnowledgeSearch\(\)/);
-  // 言語を変えたら詳細検索と一緒にこのパネルも取り直す
-  assert.match(appSource, /advancedSearchGroups=null;renderAdvancedSearch\(\);renderColorSearch\(\)/);
-  ['JA', 'EN', 'ZH', 'KO'].forEach((language) => {
-    assert.match(appSource, new RegExp(`${language}:\\{toggle:'[^']+',toggleClose:'[^']+',body:'[^']+',submit:'[^']+'\\}`));
-  });
-
-  assert.match(css, /\.color-search-toggle\{[^}]*min-height:48px/);
-  assert.match(css, /\.color-search-panel\{/);
+  // 色は詳細検索の軸として残す(機能を落としていないことの確認)。
+  assert.match(appSource, /group\?\.dimension==='color'/);
+  // 要素が無いときに描画関数が落ちないこと。
+  assert.match(appSource, /async function renderColorSearch\(\)\{[\s\S]{0,200}?if\(!panel\|\|!toggle\)return;/);
+  assert.match(appSource, /document\.querySelector\('#colorSearchToggle'\)\?\.addEventListener/);
 });
 
 test('主検索CTAは処理告知の直後かつ補助情報・絞り込みより前に置く', () => {
