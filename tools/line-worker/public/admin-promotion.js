@@ -315,3 +315,25 @@ logout.addEventListener('click', async () => {
   }
 });
 load();
+
+// 検索品質カナリア(docs/HOSHILU_SUCCESS_DIRECTIVE_2026-09-03.md §37/§54)を手動実行し、
+// 固定クエリごとの PASS/FAIL・判定コード・本命候補名を表示する。
+const canaryButton = document.querySelector('#runSearchQaCanary');
+const canaryResult = document.querySelector('#searchQaCanaryResult');
+canaryButton?.addEventListener('click', async () => {
+  canaryButton.disabled = true;
+  status.textContent = '検索品質カナリアを実行中です（9件・1〜2分）。';
+  try {
+    const response = await fetch('/api/internal/search/qa-canary', { method: 'POST' });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) throw new Error(payload.error || 'CANARY_FAILED');
+    const lines = (payload.results || []).map((row) => `${row.status === 'PASS' ? '✅' : '❌'} ${row.id} ${row.code}${row.error ? ` ${row.error}` : ''}${row.missing_malls?.length ? ` 欠落:${row.missing_malls.join(',')}` : ''} | ${row.top_marketplace || '-'} | ${row.top_name || '(候補なし)'}`);
+    canaryResult.textContent = `${payload.passed}/${payload.total} PASS\n${lines.join('\n')}`;
+    canaryResult.hidden = false;
+    status.textContent = `検索品質カナリア完了：${payload.passed}/${payload.total} PASS`;
+  } catch (error) {
+    status.textContent = `検索品質カナリアを実行できません：${error.message}`;
+  } finally {
+    canaryButton.disabled = false;
+  }
+});

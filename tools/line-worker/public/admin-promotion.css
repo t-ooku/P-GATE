@@ -18,3 +18,5 @@
 @media(max-width:1000px){.north-star-grid{grid-template-columns:repeat(2,1fr)}.insight-grid{grid-template-columns:repeat(2,1fr)}.promotion-channel-grid{grid-template-columns:1fr}.business-kpi-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:760px){.dashboard-split{grid-template-columns:1fr}.dashboard-actions{align-items:flex-start;flex-direction:column}.funnel-row{grid-template-columns:100px 1fr}.funnel-row small{grid-column:2;text-align:left}.quality-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:520px){.promotion-shell{width:min(100% - 20px,1240px)}.north-star-grid,.insight-grid{grid-template-columns:1fr}.north-star-value{font-size:32px}.business-kpi-grid,.quality-grid{grid-template-columns:repeat(2,1fr)}.kpi-period-head{flex-direction:column}.funnel-steps{grid-template-columns:repeat(2,1fr)}.funnel-rates{grid-template-columns:1fr}.section-note{display:none}}
+
+.search-qa-canary-result{margin:12px 0 0;padding:12px;border-radius:12px;background:#f4f1ff;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:360px;overflow:auto}

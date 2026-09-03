@@ -44,7 +44,9 @@ export function adminPromotionPageResponse() {
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
   <nav class="admin-nav"><a class="active" href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a href="/admin/sp-api">認証監査</a></nav>
   <div class="dashboard-actions"><p id="promotionStatus" role="status"></p>
-  <button id="refreshPromotion" class="ghost-button" type="button">最新状態に更新</button></div></section>
+  <button id="refreshPromotion" class="ghost-button" type="button">最新状態に更新</button>
+  <button id="runSearchQaCanary" class="ghost-button" type="button">検索品質カナリアを今すぐ実行</button></div>
+  <pre id="searchQaCanaryResult" class="search-qa-canary-result" hidden></pre></section>
   <section class="auth-card kpi-overview"><div class="kpi-period-head"><div><p class="eyebrow">NORTH STAR &amp; GROWTH</p><h2>事業の現在地</h2></div>
   <div class="kpi-period-switch" role="group" aria-label="集計期間"><button type="button" data-kpi-period="7d" class="active">7日</button><button type="button" data-kpi-period="30d">30日</button></div></div>
   <p class="funnel-note">QAを除外し、ブラウザ生成の匿名IDで重複を除外。個人情報・検索文は保存しません。</p>

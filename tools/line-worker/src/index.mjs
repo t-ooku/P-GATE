@@ -1,6 +1,6 @@
 import { handleSellerRoutes } from './seller-auth.mjs';
 import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
-import { handleAdminAuthRoutes } from './admin-auth.mjs';
+import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
 import { purgeAdminAuthRecords } from './admin-login-guard.mjs';
 import { purgeSellerAuthRecords } from './seller-login-guard.mjs';
@@ -100,6 +100,7 @@ import {
   runMarketplaceContentCycle, handleMarketplaceSaleRoutes
 } from './marketplace-sales.mjs';
 import { runDeepCanaryCycle, runMarketplaceCanaryCatchup } from './deep-canary.mjs';
+import { runSearchQaCanary, searchQaCanaryDue } from './search-qa-canary.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
 const encoder = new TextEncoder();
@@ -2296,7 +2297,7 @@ async function safeAiProductDiscovery(query, language, env) {
   }
 }
 
-async function handleKnowledgeApi(request, env, ctx) {
+async function handleKnowledgeApi(request, env, ctx, options = {}) {
   // Create this before validation so even rejected requests can be matched
   // to a Worker log without retaining the user's query text.
   const requestId = crypto.randomUUID();
@@ -2317,7 +2318,11 @@ async function handleKnowledgeApi(request, env, ctx) {
     }
     const body = parsedBody.value;
     const validatedInput = validateKnowledgeRequest(body);
-    await verifyTurnstile(validatedInput.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    // 検索品質カナリア(src/search-qa-canary.mjs)だけが options.internalQa で
+    // Turnstile検証を省略できる。公開ルートは常に3引数で呼ばれ、到達不能。
+    if (options.internalQa !== true) {
+      await verifyTurnstile(validatedInput.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    }
     const submittedQuery = validatedInput.query;
     const hasMultimodalInput = Boolean(validatedInput.social_url || validatedInput.search_image);
     let searchInputAnalysis = null;
@@ -3080,6 +3085,14 @@ export default {
     if (productIdentifierSyncResponse) return productIdentifierSyncResponse;
     const runwayGenerationResponse = await handleRunwayGenerationRoutes(request, env);
     if (runwayGenerationResponse) return runwayGenerationResponse;
+    // 検索品質カナリアの手動実行(管理者のみ)。cron と同じ固定クエリを本番経路で
+    // 流し、QA記録を残して結果を返す。利用者入力は受け付けない。
+    if (request.method === 'POST' && url.pathname === '/api/internal/search/qa-canary') {
+      if (!await authorizeAdminRequest(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
+      const outcome = await runSearchQaCanary(env, new Date(),
+        (qaRequest) => handleKnowledgeApi(qaRequest, env, ctx, { internalQa: true }), { force: true });
+      return Response.json({ ok: true, ...outcome }, { headers: { 'cache-control': 'no-store' } });
+    }
     const socialResponse = await handleSocialAdminRoutes(request, env);
     if (socialResponse) return socialResponse;
     const promotionDashboardResponse = await handlePromotionDashboardRoutes(request, env);
@@ -3179,6 +3192,13 @@ export default {
         'cloudflare_deep',
         () => runDeepCanaryCycle(env, scheduledAt)
       ));
+      // 検索品質カナリア: 1日1回(07:22 JST)、代表クエリを本番経路で実行し
+      // QA記録だけ残す。失敗しても他のジョブを止めない。
+      if (searchQaCanaryDue(scheduledAt)) {
+        ctx.waitUntil(runSearchQaCanary(env, scheduledAt,
+          (qaRequest) => handleKnowledgeApi(qaRequest, env, ctx, { internalQa: true }))
+          .catch((error) => { console.error('SEARCH_QA_CANARY_FAILED', { code: String(error?.message || error).slice(0, 80) }); }));
+      }
       return;
     }
     // Publishing gets its own five-minute trigger. Instagram container polling
