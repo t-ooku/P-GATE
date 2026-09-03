@@ -32,7 +32,7 @@ const copy = {
 // 回る面倒を無くすことが主訴求。「名前が分からなくても探せる」は捨てず、強い
 // 差別化としてサブ訴求(eyebrow の1行)に置く。検索欄は「何が欲しいの？」だけ。
 // 検索例はタップで即検索(画像が要る例は画像選択を開く)。
-Object.assign(copy.JA,{hero:'欲しいもの、|まとめて探す。',heroSub:'Amazon・楽天・Qoo10などを一度に検索。',title:'商品名が分からなくても大丈夫。\n撮った写真、画像、公開投稿URL、覚えている一言から探せます。',placeholder:'何が欲しいの？',examples:['インスタで見た白いバッグ','韓国っぽいシルバーリング','このスクショのマットレス','自立する本革トート','この靴に似たもの','SNSで見たピンクのリップ']});
+Object.assign(copy.JA,{hero:'欲しいもの、|まとめて探す。',heroSub:'Amazon・楽天・Qoo10などの検索をホシル一つで。',title:'商品名が分からなくても大丈夫。\n撮った写真、画像、公開投稿URL、覚えている一言から探せます。',placeholder:'何が欲しいの？',examples:['インスタで見た白いバッグ','韓国っぽいシルバーリング','このスクショのマットレス','自立する本革トート','この靴に似たもの','SNSで見たピンクのリップ']});
 Object.assign(copy.EN,{hero:'Everything you want, |searched together.',heroSub:'Search Amazon, Rakuten, Qoo10 and more at once.',title:'You do not need the product name.\nSearch from a photo, image, public post URL, or anything you remember.',placeholder:'What are you looking for?',examples:['a white bag I saw on Instagram','a Korean-style silver ring','the mattress in this screenshot','a leather tote that stands up on its own','something like these shoes','a pink lip tint I saw on social media']});
 Object.assign(copy.ZH,{hero:'想要的商品，|一次搜完。',heroSub:'一次搜索 Amazon、乐天、Qoo10 等多家商城。',title:'不知道商品名称也没关系。\n可通过照片、图片、公开帖子链接或记得的一句话搜索。',placeholder:'想找什么？',examples:['在 Instagram 看到的白色包','韩系银戒指','这张截图里的床垫','能自立的真皮托特包','和这双鞋相似的','在社交平台看到的粉色唇釉']});
 Object.assign(copy.KO,{hero:'원하는 물건을,|한 번에 찾기.',heroSub:'Amazon·라쿠텐·Qoo10 등을 한 번에 검색.',title:'상품명을 몰라도 괜찮습니다.\n촬영한 사진, 이미지, 공개 게시물 URL, 기억나는 한마디로 찾아보세요.',placeholder:'무엇을 찾으세요?',examples:['인스타에서 본 흰색 가방','한국풍 실버 반지','이 스크린샷 속 매트리스','자립하는 가죽 토트백','이 신발과 비슷한 것','SNS에서 본 핑크 립']});

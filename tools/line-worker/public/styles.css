@@ -79,8 +79,10 @@
 .results{display:flex;flex-direction:column}
 .results .section-title{order:1}
 .results .result-message{order:2}
-.results .affiliate-link-note{order:3}
-.results .result-grid{order:4}
-.results .instant-marketplace-handoff{order:5}
+/* 2026-09-03 大隆さん指示: アフィリエイト表記が結果の先頭で邪魔なので、
+   法的表記として残したまま結果の下へ移し、小さく薄くする。 */
+.results .result-grid{order:3}
+.results .instant-marketplace-handoff{order:4}
+.results .affiliate-link-note{order:5;margin:18px 0 0;color:#a3a0b4;font-size:10px;line-height:1.5;opacity:.8}
 /* 2026-09-02: ヒーローの説明文はMARKETPLACE COVERAGE内へ格納(既定は閉) */
 .hero-marketplace-coverage .hero-promise{margin:12px 0 4px;color:var(--muted);font-size:13px;line-height:1.75}

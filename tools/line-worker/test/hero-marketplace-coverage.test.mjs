@@ -87,13 +87,13 @@ test('index.htmlがhero-marketplace-coverage.mjsを読み込む', async () => {
 
 // 2026-09-03 指示書 §13–17: 第一画面の言葉と、タップで即検索できる検索例6件。
 // 2026-09-03 方向転換指示書: 主訴求は「欲しいもの、まとめて探す。」、サブは
-// 「Amazon・楽天・Qoo10などを一度に検索。」、差別化として「名前が分からなくても
+// 「Amazon・楽天・Qoo10などの検索をホシル一つで。」、差別化として「名前が分からなくても
 // 探せます。」を短く残す。検索欄は「何が欲しいの？」だけ。
 test('第一画面は「欲しいもの、まとめて探す。」とモール名のサブ、検索例は6件', async () => {
   const [html, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.match(html, /<p id="heroEyebrow" class="eyebrow">名前が分からなくても探せます。<\/p>/);
-  assert.match(html, /<p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などを一度に検索。<\/p>/);
-  assert.match(app, /heroSub:'Amazon・楽天・Qoo10などを一度に検索。'/);
+  assert.match(html, /<p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などの検索をホシル一つで。<\/p>/);
+  assert.match(app, /heroSub:'Amazon・楽天・Qoo10などの検索をホシル一つで。'/);
   // 例文はプレースホルダではなく下の検索例チップが担う(狭い画面で括弧書きが
   // 語の途中で折り返していた。2026-09-03 大隆さん報告)。
   assert.match(html, /placeholder="何が欲しいの？"/);
@@ -134,4 +134,22 @@ test('SNS・SEOから ?q= 付きで着地したら、もう一度押させずに
   assert.match(app, /requestSubmit==='function'\)elements\.form\.requestSubmit\(\)/);
   assert.match(app, /turnstileInitPromise\.then\(start,\(\)=>\{\}\)/);
   assert.match(app, /turnstileInitPromise\.catch\([\s\S]{0,400}?autoRunInboundSearch\(inboundCampaign\.query\);/);
+});
+
+// 2026-09-03 大隆さん指示: アフィリエイト表記は結果の先頭から下へ移す(法的表記
+// なので消さない)。「購入希望価格ウォッチ」は折り返さず1行に収める。
+test('アフィリエイト表記は結果の下へ、購入希望価格ウォッチは1行に収める', async () => {
+  const [styles, layoutFix, mirrored, html] = await Promise.all([
+    read('styles.css'), read('ai-search-layout-fix.css'),
+    read('assets-v126/ai-search-layout-fix.css'), read('index.html')
+  ]);
+  assert.equal(layoutFix, mirrored);
+  // 結果本体より後ろの並び順にする。
+  assert.match(styles, /\.results \.result-grid\{order:3\}/);
+  assert.match(styles, /\.results \.instant-marketplace-handoff\{order:4\}/);
+  assert.match(styles, /\.results \.affiliate-link-note\{order:5;[^}]*font-size:10px/);
+  // 表記自体は残す(景表法・各ASPの規約上、消してはいけない)。
+  assert.match(html, /class="affiliate-link-note"[^>]*>広告：Amazonへのリンク/);
+  assert.match(layoutFix, /\.watch-settings-button,\.product-watch-dialog-card>strong\{white-space:nowrap\}/);
+  assert.match(layoutFix, /\.watch-settings-button\{font-size:clamp\(9px,2\.9vw,12px\)/);
 });
