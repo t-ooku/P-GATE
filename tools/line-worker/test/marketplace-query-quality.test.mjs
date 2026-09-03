@@ -3095,3 +3095,13 @@ test('TPOはどちらも名乗っていなければ判定しない', async () =>
   // 両方書いてある商品はどちらの場面にも使えるという意味なので競合させない
   assert.equal(apparelTpo('ビジネスにもカジュアルにも使えるブラウス'), null);
 });
+
+test('原産・ブランド圏の「韓国」は商品語として残し、韓国風・韓国で買った は従来どおり', () => {
+  // 2026-09-03 検索品質カナリア: 「韓国リップ」で「韓国」が落ち、国内ブランドの
+  // リップが本命になった。
+  assert.equal(buildMarketplaceSearchKeywords('韓国リップ', 'RAKUTEN_JP'), '韓国 リップ');
+  assert.equal(buildMarketplaceSearchKeywords('韓国コスメ ピンク リップ', 'YAHOO_JP'), 'ピンク 韓国 リップ');
+  assert.equal(buildQoo10SearchKeywords('韓国コスメ ピンク リップ'), 'ピンク 韓国 リップ');
+  assert.equal(buildMarketplaceSearchKeywords('韓国風 ワンピース', 'RAKUTEN_JP'), '韓国風 ワンピース');
+  assert.equal(buildMarketplaceSearchKeywords('韓国で買ったキムチ', 'RAKUTEN_JP'), 'キムチ');
+});
