@@ -11,6 +11,7 @@ import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandida
 import { lookupTeacherDatasetEntry } from './search-quality/teacher-dataset-lookup.mjs';
 import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-api.mjs';
 import {
+  accessoryTargetQuery,
   buildDeviceAccessorySearchKeywords,
   buildMarketplaceSearchKeywords
 } from '../public/marketplace-search-keywords-v2.mjs';
@@ -1114,6 +1115,11 @@ export function buildAmazonSearchKeywords(query) {
   // for any query that is not literally one of the authored teacher entries.
   const teacherEntry = lookupTeacherDatasetEntry(query);
   if (teacherEntry?.search_terms?.ja?.length) return teacherEntry.search_terms.ja.join(' ');
+  // 2026-09-03 実機報告: 「水筒用 洗浄ブラシ」がモールへ「水筒 bottle」として
+  // 渡っていた。「X用 Y」で商品(Y)が落ちている場合は、英語や意味的キーワードを
+  // 足さず、利用者が入力した文をそのままモールへ渡す。
+  const accessoryQuery = accessoryTargetQuery(cleaned);
+  if (accessoryQuery) return accessoryQuery;
   const specializedKeywords = buildMarketplaceSearchKeywords(cleaned, 'AMAZON_JP');
   if (/バラン/u.test(specializedKeywords)) return specializedKeywords;
   const structuredTerms = structuredMarketplaceTerms(cleaned);
@@ -1219,6 +1225,11 @@ export function buildRakutenSearchKeywords(query) {
   // in buildAmazonSearchKeywords above.
   const teacherEntry = lookupTeacherDatasetEntry(query);
   if (teacherEntry?.search_terms?.ja?.length) return teacherEntry.search_terms.ja.join(' ');
+  // 2026-09-03 実機報告: 「水筒用 洗浄ブラシ」がモールへ「水筒 bottle」として
+  // 渡っていた。「X用 Y」で商品(Y)が落ちている場合は、英語や意味的キーワードを
+  // 足さず、利用者が入力した文をそのままモールへ渡す。
+  const accessoryQuery = accessoryTargetQuery(cleaned);
+  if (accessoryQuery) return accessoryQuery;
   const specializedKeywords = buildMarketplaceSearchKeywords(cleaned, 'RAKUTEN_JP');
   if (/バラン/u.test(specializedKeywords)) return specializedKeywords;
   if (/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(cleaned)) {
@@ -1380,6 +1391,11 @@ export function buildQoo10SearchKeywords(query) {
     .replace(/\s+/g, ' ')
     .trim());
   if (!cleaned) return '';
+  // 2026-09-03 実機報告: 「水筒用 洗浄ブラシ」がモールへ「水筒 bottle」として
+  // 渡っていた。「X用 Y」で商品(Y)が落ちている場合は、英語や意味的キーワードを
+  // 足さず、利用者が入力した文をそのままモールへ渡す。
+  const accessoryQuery = accessoryTargetQuery(cleaned);
+  if (accessoryQuery) return accessoryQuery;
   const deviceAccessoryTerms = buildDeviceAccessorySearchKeywords(cleaned);
   if (deviceAccessoryTerms) return deviceAccessoryTerms;
   // ensureApparelProductTypeTerm for the same reason as SHEIN above: the

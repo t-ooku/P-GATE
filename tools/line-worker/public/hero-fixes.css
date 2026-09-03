@@ -14,9 +14,16 @@
   white-space: nowrap;
 }
 
-#heroTitle .hero-title-line { display: block; }
+/* 2026-09-03 大隆さん指示: トップのキャッチは1行。
+   「欲しいもの、まとめて探す。」を2行に割らず、見出し全体を折り返さずに
+   字を縮めて収める。アクセント色は後半だけに残す。 */
+#heroTitle .hero-title-line { display: inline; }
 #heroTitle .hero-title-line:not(.hero-title-accent) { color: var(--ink); background: none; }
-html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
+html:lang(ja) #heroTitle {
+  white-space: nowrap;
+  font-size: clamp(19px, 6.2vw, 34px);
+  letter-spacing: -0.03em;
+}
 
 .search-mode-switch {
   display: grid;
@@ -89,20 +96,15 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
 .journey-steps p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
 
 @media (max-width: 420px) {
+  /* 2026-09-03: 1行のまま最小画面でも溢れないよう、さらに字を詰める。 */
   html:lang(ja) #heroTitle {
-    font-size: clamp(17px, 4.9vw, 26px);
-    letter-spacing: -0.06em;
+    font-size: clamp(17px, 5.9vw, 26px);
+    letter-spacing: -0.05em;
   }
 
   .hero h1 {
     font-size: clamp(25px, 7vw, 30px);
     letter-spacing: -0.06em;
-  }
-
-  /* 2026-09-03: 狭い画面で「写真・スクショ・」/「SNS・一言から、」と
-     語の途中で折り返していた。折り返さず、字を縮めて1行に収める。 */
-  html:lang(ja) #heroTitle .hero-title-line {
-    white-space: nowrap;
   }
 
   .hero-copy .hero-promise {
@@ -142,10 +144,10 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
     white-space: normal;
   }
 
-  /* jaの見出しは2つの span を各1行として扱う。溢れないよう字を縮める。 */
+  /* jaの見出しは1行。溢れないよう字を縮める。 */
   html:lang(ja) #heroTitle {
-    font-size: clamp(17px, 4.9vw, 26px);
-    letter-spacing: -0.06em;
+    font-size: clamp(18px, 6vw, 30px);
+    letter-spacing: -0.04em;
   }
 
   .mywish-copy span {

@@ -71,7 +71,12 @@ const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresec
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
   const workflows = fs.readdirSync(path.join(root, '.github', 'workflows')).filter((name) => name.endsWith('.yml'));
-  assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)), ['apply-patch.yml', 'ci.yml', 'production-monitor.yml']);
+  // compile-teacher-dataset-rules.yml (2026-09-02追加): teacher-datasetのバッチが
+  // feature/ui-search-v2 へ入った時だけ、生成物を GitHub のランナー側で再コンパイル
+  // して同じブランチへコミットする。追加時にこの許可リストの更新が漏れていて、
+  // 以降 npm test が落ちていた(2026-09-03に検知)。
+  assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)),
+    ['apply-patch.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml']);
   const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);

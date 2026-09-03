@@ -1671,7 +1671,7 @@ function buildBentoDividerSearchKeywords(query) {
     ? '弁当 バラン 仕切り' : '';
 }
 
-export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') {
+function buildMarketplaceSearchKeywordsCore(query, marketplace = 'QOO10_JP') {
   // " / " is HOSHILU's INTERNAL condition separator ("カットソー / レディース /
   // 半袖"): runKnowledgeSearch() reads it as "same search root, narrowed", and
   // the AI search, the AI related-keyword chips and the condition chips all
@@ -1869,4 +1869,38 @@ export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') 
 
 export function buildQoo10SearchKeywords(query) {
   return buildMarketplaceSearchKeywords(query, 'QOO10_JP');
+}
+
+// 2026-09-03 実機報告: 「水筒用 洗浄ブラシ」で検索したのに、モールへ渡って
+// いた検索語は「水筒」だった(Amazonでは英語が足されて「水筒 bottle」)。
+// 「X用 Y」「X向け Y」という書き方では、探している商品は Y(洗浄ブラシ)で、
+// X(水筒)は用途の限定でしかない。商品カテゴリ判定が X を掴むと Y が丸ごと
+// 落ち、利用者が入力した物とは別の商品がモールに並ぶ。
+//
+// 商品名を個別に並べて直すことはしない。「X用 Y の形で、組み立て結果から
+// Y が消えていたら、利用者が入力した文をそのまま使う」という一般規則にする。
+// Y が組み立て結果に残っている場合(「子供用 水筒」「業務用 冷蔵庫」など)は
+// 何もしないので、既存の絞り込みは変わらない。
+// 「<語>用 <語>」ちょうど2語の形だけを対象にする。3語以上の絞り込み検索
+// (「ブラウス 夏用 丈長め おしゃれ」など)には触れない。
+const ACCESSORY_TARGET_PATTERN = /^(\S{2,16})(?:用|向け)\s+(\S{2,16})$/u;
+const ACCESSORY_TARGET_PLACEHOLDER = /^(?:もの|物|やつ|奴|の|こと|事|もん)$/u;
+
+export function accessoryTargetQuery(query) {
+  const normalized = String(query || '').normalize('NFKC')
+    .replace(/\s+\/\s+/gu, ' ').replace(/\s+/gu, ' ').trim();
+  const match = ACCESSORY_TARGET_PATTERN.exec(normalized);
+  if (!match) return '';
+  const accessory = String(match[2] || '').trim();
+  // Y が単独で商品として通じる語であることだけ確認する。指示語(「〜用のもの」)
+  // やひらがなだけの語では発火させない。
+  if (!accessory || ACCESSORY_TARGET_PLACEHOLDER.test(accessory)) return '';
+  if (!/[\p{Script=Han}\p{Script=Katakana}]/u.test(accessory)) return '';
+  const built = String(buildMarketplaceSearchKeywordsCore(normalized, 'AMAZON_JP') || '');
+  if (!built || built.includes(accessory)) return '';
+  return normalized;
+}
+
+export function buildMarketplaceSearchKeywords(query, marketplace = 'QOO10_JP') {
+  return accessoryTargetQuery(query) || buildMarketplaceSearchKeywordsCore(query, marketplace);
 }

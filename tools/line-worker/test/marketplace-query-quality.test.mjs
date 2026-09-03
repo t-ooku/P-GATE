@@ -13,6 +13,12 @@ import {
   buildQoo10SearchKeywords,
 } from "../public/marketplace-search-keywords-v2.mjs";
 import { applyRefinementChips } from "../src/search-refinement-policy.mjs";
+// モールへ実際に渡る検索語は src/index.mjs 側の3ビルダーが決める。
+import {
+  buildAmazonSearchKeywords as buildAmazonMallKeywords,
+  buildQoo10SearchKeywords as buildQoo10MallKeywords,
+  buildRakutenSearchKeywords as buildRakutenMallKeywords,
+} from "../src/index.mjs";
 
 const SEARCH_MARKETPLACES = [
   "AMAZON_JP", "RAKUTEN_JP", "QOO10_JP", "SHEIN_JP",
@@ -3104,4 +3110,42 @@ test('原産・ブランド圏の「韓国」は商品語として残し、韓�
   assert.equal(buildQoo10SearchKeywords('韓国コスメ ピンク リップ'), 'ピンク 韓国 リップ');
   assert.equal(buildMarketplaceSearchKeywords('韓国風 ワンピース', 'RAKUTEN_JP'), '韓国風 ワンピース');
   assert.equal(buildMarketplaceSearchKeywords('韓国で買ったキムチ', 'RAKUTEN_JP'), 'キムチ');
+});
+
+// 2026-09-03 実機報告: 「水筒用 洗浄ブラシ」で検索したのに、モールのリンク先は
+// 「水筒 bottle」になっていた。用途の限定(水筒)を商品と誤認し、探している商品
+// (洗浄ブラシ)を丸ごと落としていた。個別の商品名で対処せず、「<語>用 <語>」で
+// 後半が消えるなら利用者の入力をそのまま渡す、という一般規則で直す。
+test('「X用 Y」の検索でモールへ渡る語からYが消えない', () => {
+  const targets = ['水筒', 'スマホケース', '傘', '靴', '革靴', '弁当箱', '炊飯器', '自転車',
+    '眼鏡', '哺乳瓶', '排水口', '浴室', '車', 'ノートパソコン', 'ベッド', 'ギター', '包丁',
+    '鍋', '枕', '布団', '冷蔵庫', '洗濯機', 'キーボード', 'イヤホン', 'ベビーカー',
+    'ゴルフクラブ', 'スーツケース', 'カメラ', '電子レンジ', 'エアコン'];
+  const accessories = ['洗浄ブラシ', 'クリーナー', 'カバー', 'スタンド', 'ホルダー', 'ケース',
+    '替えブラシ', 'パッキン', 'フィルター', '収納袋', 'ストラップ', 'クリーム',
+    '消臭スプレー', '洗剤', 'シート', 'マット', 'ライト', '三脚', '充電器', '保護フィルム'];
+  const builders = [
+    ['AMAZON_JP', buildAmazonMallKeywords],
+    ['RAKUTEN_JP', buildRakutenMallKeywords],
+    ['QOO10_JP', buildQoo10MallKeywords]
+  ];
+  const dropped = [];
+  for (const target of targets) {
+    for (const accessory of accessories) {
+      const query = `${target}用 ${accessory}`;
+      for (const [marketplace, build] of builders) {
+        const keywords = String(build(query) || '');
+        if (!keywords.includes(accessory)) dropped.push(`${marketplace}: ${query} -> ${keywords}`);
+      }
+    }
+  }
+  assert.deepEqual(dropped, [], '利用者が入力した商品語がモール検索語から消えている');
+  assert.equal(buildAmazonMallKeywords('水筒用 洗浄ブラシ'), '水筒用 洗浄ブラシ');
+  assert.equal(buildRakutenMallKeywords('水筒用 洗浄ブラシ'), '水筒用 洗浄ブラシ');
+  assert.equal(buildQoo10MallKeywords('水筒用 洗浄ブラシ'), '水筒用 洗浄ブラシ');
+  // 用途の限定が本当に修飾語である場合(「子供用 水筒」)は従来どおり絞り込む。
+  assert.match(buildRakutenMallKeywords('子供用 水筒'), /水筒/u);
+  assert.match(buildRakutenMallKeywords('業務用 冷蔵庫'), /冷蔵庫/u);
+  // 3語以上の絞り込み検索には触れない。
+  assert.match(buildQoo10MallKeywords('ブラウス 夏用 丈長め おしゃれ'), /ブラウス/u);
 });

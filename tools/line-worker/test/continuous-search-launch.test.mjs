@@ -29,7 +29,9 @@ test('home hero uses the shorter purchase-destination copy and tighter mobile ty
   assert.match(app, new RegExp(copy, 'u'));
   assert.doesNotMatch(html, /確認できた商品ページや最大13モールの検索先/u);
   // 2026-09-03: 狭い画面で見出しが語の途中で折れていたため、折り返さず縮める指定に変更。
-  assert.match(css, /font-size: clamp\(17px, 4\.9vw, 26px\)/u);
+  // 2026-09-03 大隆さん指示: キャッチは1行。狭い画面でも折り返さず字を詰める。
+  assert.match(css, /font-size: clamp\(17px, 5\.9vw, 26px\)/u);
+  assert.match(css, /html:lang\(ja\) #heroTitle \{\n  white-space: nowrap;/u);
   assert.match(css, /\.hero-copy \.hero-promise \{[\s\S]*?font-size: 13px;[\s\S]*?line-height: 1\.5;/u);
 });
 

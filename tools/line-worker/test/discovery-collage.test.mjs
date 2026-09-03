@@ -7,6 +7,7 @@ const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), '
 test('discovery collage is lightweight, localized, accessible, and cached', async () => {
   const styles = await read('styles.css');
   const heroFixes = await read('hero-fixes.css');
+  const layoutFix = await read('ai-search-layout-fix.css');
   const [html, app, discoveryActions, css, wishCss, sw, i18n, desktop, mobile] = await Promise.all([
     read('index.html'), read('app.js'), read('discovery-actions.mjs'), read('discovery.css'),
     read('wish-carousel.css'), read('service-worker.js'), read('site-i18n.js'),
@@ -18,10 +19,12 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(html, /id="heroTitle"><span class="hero-title-line">欲しいもの、<\/span><span class="hero-title-line hero-title-accent">まとめて探す。<\/span>/);
   assert.match(app, /first\.className='hero-title-line'/);
   assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
-  // 2026-09-03 大隆さん報告「改行位置が変」: 狭い画面で「写真・スクショ・」/
-  // 「SNS・一言から、」と語の途中で折れていた。折り返さず字を縮めて1行に収める。
-  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \.hero-title-line \{[\s\S]*?white-space: nowrap;/);
-  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{[\s\S]*?font-size: clamp\(17px, 4\.9vw, 26px\);/);
+  // 2026-09-03 大隆さん指示「トップ画面のキャッチは1行に」: 見出し全体を
+  // 折り返さず、字を縮めて「欲しいもの、まとめて探す。」を1行に収める。
+  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{\n  white-space: nowrap;/);
+  assert.match(heroFixes, /#heroTitle \.hero-title-line \{ display: inline; \}/);
+  assert.doesNotMatch(heroFixes, /#heroTitle \.hero-title-line \{ display: block; \}/);
+  assert.match(layoutFix, /html:lang\(ja\) #heroTitle\{white-space:nowrap\}/);
   assert.match(html, /loading="lazy"/);
   assert.match(html, /hoshilu-discovery-collage-mobile\.webp/);
   assert.match(html, /見た目、見た場所、使い方。覚えていることから話してください。/);
