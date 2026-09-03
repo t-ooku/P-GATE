@@ -8,6 +8,8 @@
 // content=<判定コード列 + 本命候補名(≤80字)>, marketplace=<本命候補のモール>,
 // traffic_class='QA'。KPI集計(traffic_class<>'QA')には含まれない。
 
+import { headNounScore } from './search-head-noun.mjs';
+
 const EVENT_TYPE = 'search_qa_result';
 const REQUIRED_MALL_LINKS = Object.freeze(['AMAZON_JP', 'QOO10_JP', 'SHEIN_JP', 'RAKUTEN_JP', 'YAHOO_JP']);
 const QUERY_TIMEOUT_MS = 40000;
@@ -15,15 +17,15 @@ const QUERY_TIMEOUT_MS = 40000;
 // 期待は「候補の上位3件のいずれかが expect に一致し、reject に一致しない」。
 // 商品名の完全一致は要求しない(モール在庫は日々変わる)。
 export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
-  { id: 'ig_mattress', query: 'Instagramで見たマットレス', expect: /マットレス|mattress/iu, reject: /枕|シーツ|カバー/u },
-  { id: 'koala_mattress', query: 'コアラマットレス', expect: /コアラ|koala/iu, reject: null },
-  { id: 'qoo10_korean_lip', query: 'Qoo10で見た韓国リップ', expect: /リップ|ティント|lip|tint/iu, reject: null },
-  { id: 'korean_pink_lip', query: '韓国コスメ ピンク リップ', expect: /リップ|ティント|lip|tint/iu, reject: null },
-  { id: 'standing_leather_tote', query: '自立する本革トートバッグ', expect: /トート/u, reject: /財布|ショルダー|リュック|合皮|フェイクレザー/u },
-  { id: 'smoky_quartz_ring', query: 'スモーキークォーツ リング', expect: /リング|指輪|ring/iu, reject: /ネックレス|ピアス|ブレスレット/u },
-  { id: 'ig_white_bag', query: 'Instagramで見た白いバッグ', expect: /バッグ|bag/iu, reject: /財布/u },
-  { id: 'shein_one_piece', query: 'SHEINで見たワンピース', expect: /ワンピース|ワンピ|dress/iu, reject: null },
-  { id: 'amazon_storage', query: 'Amazonで見た収納用品', expect: /収納|ケース|ボックス|ラック|storage/iu, reject: null }
+  { id: 'ig_mattress', query: 'Instagramで見たマットレス', expect: /マットレス|mattress/iu, reject: /枕|シーツ|カバー|Tシャツ|パッド/u },
+  { id: 'koala_mattress', query: 'コアラマットレス', expect: /コアラ\s*・?\s*マットレス|koala\s*mattress/iu, reject: /Tシャツ|シャツ|ぬいぐるみ|おもちゃ/u },
+  { id: 'qoo10_korean_lip', query: 'Qoo10で見た韓国リップ', expect: /リップ|ティント|lip|tint/iu, reject: /クリップ|グリップ|ケース|ホルダー/u },
+  { id: 'korean_pink_lip', query: '韓国コスメ ピンク リップ', expect: /リップ|ティント|lip|tint/iu, reject: /クリップ|グリップ|純正|ピストン/u },
+  { id: 'standing_leather_tote', query: '自立する本革トートバッグ', expect: /トート/u, reject: /財布|ショルダー|リュック|合皮|フェイクレザー|カバー|持ち手|ハンドル/u },
+  { id: 'smoky_quartz_ring', query: 'スモーキークォーツ リング', expect: /リング|指輪|ring/iu, reject: /ネックレス|ピアス|ブレスレット|イヤリング/u },
+  { id: 'ig_white_bag', query: 'Instagramで見た白いバッグ', expect: /バッグ|bag/iu, reject: /財布|枚入|枚セット|紙袋|ポリ袋/u },
+  { id: 'shein_one_piece', query: 'SHEINで見たワンピース', expect: /ワンピース|ワンピ|dress/iu, reject: /防虫|カバー|ハンガー|用\b/u },
+  { id: 'amazon_storage', query: 'Amazonで見た収納用品', expect: /収納|ケース|ボックス|ラック|storage/iu, reject: /リモコン|Fire TV|Alexa|交換用/u }
 ]);
 
 function candidateName(candidate) {
@@ -41,6 +43,7 @@ function candidateMarketplace(candidate) {
 //   C<n>   確認済み候補の件数
 //   E1/E0  期待語に一致する候補が上位3件にある/ない
 //   R1/R0  除外語に一致する候補が上位3件にある/ない(R1は失敗)
+//   H<n>   本命(1件目)の主名詞スコア(2=商品そのもの, 1=弱い一致, 0=カテゴリ違い/付属品)
 //   L<n>   必須5モール(Amazon/Qoo10/SHEIN/楽天/Yahoo!)のうち検索リンクが揃った数
 //   T<ms>  応答時間(ms)
 export function evaluateSearchQaResult(fixture, payload, elapsedMs) {
@@ -50,16 +53,18 @@ export function evaluateSearchQaResult(fixture, payload, elapsedMs) {
   const names = top.map(candidateName);
   const expected = names.some((name) => fixture.expect.test(name));
   const rejected = fixture.reject ? names.some((name) => fixture.reject.test(name)) : false;
+  const headScore = names[0] ? (headNounScore(fixture.query, names[0]) ?? 2) : 0;
   const links = Array.isArray(result.marketplace_search_links) ? result.marketplace_search_links : [];
   const presentMalls = new Set(links.map((link) => String(link?.marketplace || '')));
   const mallLinkCount = REQUIRED_MALL_LINKS.filter((mall) => presentMalls.has(mall)).length;
   const missingMalls = REQUIRED_MALL_LINKS.filter((mall) => !presentMalls.has(mall));
-  const pass = payload?.ok === true && candidates.length > 0 && expected && !rejected
+  const pass = payload?.ok === true && candidates.length > 0 && expected && !rejected && headScore >= 1
     && mallLinkCount === REQUIRED_MALL_LINKS.length;
   const code = [
     `C${Math.min(99, candidates.length)}`,
     expected ? 'E1' : 'E0',
     rejected ? 'R1' : 'R0',
+    `H${headScore}`,
     `L${mallLinkCount}`,
     `T${Math.max(0, Math.min(99999, Math.round(elapsedMs)))}`
   ].join('_');

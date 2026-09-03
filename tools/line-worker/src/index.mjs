@@ -101,6 +101,8 @@ import {
 } from './marketplace-sales.mjs';
 import { runDeepCanaryCycle, runMarketplaceCanaryCatchup } from './deep-canary.mjs';
 import { runSearchQaCanary, searchQaCanaryDue } from './search-qa-canary.mjs';
+import { extractSearchOrigin, orderMarketplaceDestinations } from './search-origin.mjs';
+import { applyHeadNounGate } from './search-head-noun.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
 const encoder = new TextEncoder();
@@ -1495,17 +1497,22 @@ export function marketplaceSearchDestinations(query, env = {}, options = {}) {
   if (priceAscending) rakuten.searchParams.set('s', '2');
   const shein = new URL(`https://jp.shein.com/pdsearch/${encodeURIComponent(sharedKeywords)}/`);
   if (priceAscending) shein.searchParams.set('sort', 'price_asc');
-  return destinations.concat([
+  // §7: 出所(Qoo10/SHEIN/Instagram 等)と韓国系の手がかりで先頭モールを変える。
+  // 手がかりが無ければ従来どおり Amazon → 楽天 → Yahoo! → Qoo10 → SHEIN。
+  return orderMarketplaceDestinations(destinations.concat([
     { marketplace: 'RAKUTEN_JP', label: '楽天市場で探す', destination: rakuten.toString(), sort_applied: priceAscending },
     { marketplace: 'YAHOO_JP', label: 'Yahoo!ショッピングで探す', destination: yahoo.toString(), sort_applied: priceAscending },
     { marketplace: 'QOO10_JP', label: 'Qoo10で探す', destination: qoo10.toString(), sort_applied: priceAscending },
     { marketplace: 'SHEIN_JP', label: 'SHEINで探す', destination: shein.toString(), sort_applied: priceAscending }
-  ], buildApparelMarketplaceDestinations(query, sharedKeywords, options));
+  ], buildApparelMarketplaceDestinations(query, sharedKeywords, options)), {
+    origin: options.sourceOrigin || '', korean: options.korean === true
+  });
 }
 
 async function signedMarketplaceSearchLinks(query, context) {
-  const destinations = marketplaceSearchDestinations(query, context.env, { sort: context.sort })
-    .filter((item) => isAllowedDestination(item.destination));
+  const destinations = marketplaceSearchDestinations(query, context.env, {
+    sort: context.sort, sourceOrigin: context.sourceOrigin, korean: context.korean
+  }).filter((item) => isAllowedDestination(item.destination));
   return Promise.all(destinations.map(async (item) => {
     const token = await createTrackToken({
       u: context.sessionHash, r: context.seed, a: context.asin || '', d: item.destination,
@@ -1579,7 +1586,7 @@ export function trackingEventsForPayload(payload, occurredAt) {
   }));
 }
 
-async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA') {
+async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA', originHint = {}) {
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
   const candidates = [];
@@ -1644,7 +1651,8 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
     .find((category) => category && category !== 'color') || 'unclassified';
   const marketplaceSearchLinks = await signedMarketplaceSearchLinks(query, {
     env, origin, sessionHash, seed, category: demandCategory,
-    trafficClass: result.traffic_class || 'UNATTRIBUTED'
+    trafficClass: result.traffic_class || 'UNATTRIBUTED',
+    sourceOrigin: originHint.origin || '', korean: originHint.korean === true
   });
   const amazonSearchUrl = marketplaceSearchLinks
     .find((link) => link.marketplace === 'AMAZON_JP')?.url || '';
@@ -2324,6 +2332,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       await verifyTurnstile(validatedInput.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     }
     const submittedQuery = validatedInput.query;
+    // 「Instagramで見た」「Amazonで見た」等の出所は商品語から外し、モール導線の
+    // 表示順(§7)にだけ使う(2026-09-03, src/search-origin.mjs)。
+    const searchOrigin = extractSearchOrigin(submittedQuery);
     const hasMultimodalInput = Boolean(validatedInput.social_url || validatedInput.search_image);
     let searchInputAnalysis = null;
     if (hasMultimodalInput) {
@@ -2353,7 +2364,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     }
     const analyzedQuery = searchInputAnalysis?.refined_query || '';
     const originalQuery = analyzedQuery
-      ? mergeAiRefinedSearchQuery(submittedQuery, analyzedQuery) : submittedQuery;
+      ? mergeAiRefinedSearchQuery(searchOrigin.query, analyzedQuery) : searchOrigin.query;
     const analysisCandidate = searchInputAnalysis?.candidate_name ? {
       name: searchInputAnalysis.candidate_name,
       brand: searchInputAnalysis.candidate_brand,
@@ -2681,7 +2692,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         gemini_refined_count: refinedCandidates.length,
         hoshilu_original_count: originalLaneCandidates.length
       },
-      candidates: combinedSearchCandidates.slice(0, CLIENT_CANDIDATE_LIMIT)
+      // 汎用の主名詞ゲート(§10/§11): 検索文の主名詞が商品そのものとして出て
+      // いない候補(別カテゴリ・付属品・別語の一部)を後ろへ回す。空にはしない。
+      candidates: applyHeadNounGate(expandedQuery.query, combinedSearchCandidates).slice(0, CLIENT_CANDIDATE_LIMIT)
     };
     if (input.search_attempt >= 2) {
       result.clarification = { ...(result.clarification || {}), required: false, options: [] };
@@ -2720,7 +2733,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       env,
       sessionHash,
       input.query,
-      input.language
+      input.language,
+      { origin: searchOrigin.origin, korean: searchOrigin.korean }
     );
     // A verified-product recommendation request needs a fresh Turnstile token
     // and marketplace call. Put the safe rule-based category shelf in the main

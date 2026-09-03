@@ -28,7 +28,7 @@ test('判定: 期待一致・除外なし・必須5モールのリンクが揃�
     marketplace_search_links: links(ALL)
   } }, 1234);
   assert.equal(pass.pass, true);
-  assert.equal(pass.code, 'C1_E1_R0_L5_T1234');
+  assert.equal(pass.code, 'C1_E1_R0_H2_L5_T1234');
   assert.equal(pass.top_marketplace, 'RAKUTEN_JP');
   assert.deepEqual(pass.missing_malls, []);
   const wrongCategory = evaluateSearchQaResult(tote, { ok: true, result: {
@@ -36,16 +36,30 @@ test('判定: 期待一致・除外なし・必須5モールのリンクが揃�
     marketplace_search_links: links(ALL)
   } }, 900);
   assert.equal(wrongCategory.pass, false);
-  assert.match(wrongCategory.code, /^C1_E0_R1_L5_/u);
+  assert.match(wrongCategory.code, /^C1_E0_R1_H0_L5_/u);
   const hiddenMalls = evaluateSearchQaResult(tote, { ok: true, result: {
     candidates: [{ product_name: '本革 トートバッグ' }],
     marketplace_search_links: links(['RAKUTEN_JP', 'YAHOO_JP'])
   } }, 900);
   assert.equal(hiddenMalls.pass, false);
   assert.deepEqual(hiddenMalls.missing_malls, ['AMAZON_JP', 'QOO10_JP', 'SHEIN_JP']);
+  // 2026-09-03 初回カナリアの実例: 期待語には一致するが商品が別物 → FAIL
+  const koala = SEARCH_QA_CANARY_QUERIES.find((f) => f.id === 'koala_mattress');
+  const tshirt = evaluateSearchQaResult(koala, { ok: true, result: {
+    candidates: [{ product_name: 'コアラ Tシャツ アニマル（ コアラ ファン ） マットレス マーチ' }],
+    marketplace_search_links: links(ALL)
+  } }, 900);
+  assert.equal(tshirt.pass, false);
+  const lip = SEARCH_QA_CANARY_QUERIES.find((f) => f.id === 'korean_pink_lip');
+  const clip = evaluateSearchQaResult(lip, { ok: true, result: {
+    candidates: [{ product_name: '【即納】 94601-13000 ホンダ純正 ピストンピンクリップ JP店' }],
+    marketplace_search_links: links(ALL)
+  } }, 900);
+  assert.equal(clip.pass, false);
+  assert.match(clip.code, /_H0_/u);
   const failed = evaluateSearchQaResult(tote, { ok: false, error: 'SEARCH_FAILED' }, 50);
   assert.equal(failed.pass, false);
-  assert.equal(failed.code, 'C0_E0_R0_L0_T50');
+  assert.equal(failed.code, 'C0_E0_R0_H0_L0_T50');
 });
 
 test('実行は1日1回・QA記録のみ・Turnstile内部迂回のリクエストを検索ハンドラへ渡す', async () => {
