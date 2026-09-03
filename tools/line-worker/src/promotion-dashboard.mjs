@@ -185,6 +185,31 @@ SELECT day,COUNT(DISTINCT CASE WHEN visitor_id<>'' THEN visitor_id END) AS visit
   SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions
 FROM sessions GROUP BY day ORDER BY day`;
 
+// 指示書 §33: 「検索 → モール到達」の時間とタップ数(2026-09-03)。
+// セッションごとに最初の search_started から最初の marketplace_click までの
+// 秒数と、その間の操作回数(候補タップ・価格比較・モールタップ)を出す。
+// タップ1回 = 本命候補の直下の導線からそのままモールへ(P0-1 の実測)。
+const SEARCH_TO_MALL_SQL = `WITH base AS (
+  SELECT session_id,event_type,occurred_at FROM growth_events
+  WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA' AND session_id<>''
+    AND event_type IN ('search_started','marketplace_click','ai_result_clicked','price_comparison_opened')
+), anchors AS (
+  SELECT session_id,
+    MIN(CASE WHEN event_type='search_started' THEN occurred_at END) AS search_at
+  FROM base GROUP BY session_id
+), reached AS (
+  SELECT anchors.session_id,anchors.search_at,MIN(base.occurred_at) AS mall_at
+  FROM anchors JOIN base ON base.session_id=anchors.session_id
+  WHERE base.event_type='marketplace_click' AND anchors.search_at IS NOT NULL AND base.occurred_at>=anchors.search_at
+  GROUP BY anchors.session_id
+)
+SELECT reached.session_id,
+  ROUND((julianday(reached.mall_at)-julianday(reached.search_at))*86400,1) AS seconds,
+  (SELECT COUNT(*) FROM base WHERE base.session_id=reached.session_id
+    AND base.event_type IN ('ai_result_clicked','price_comparison_opened')
+    AND base.occurred_at>=reached.search_at AND base.occurred_at<reached.mall_at) + 1 AS taps
+FROM reached ORDER BY reached.mall_at DESC LIMIT 2000`;
+
 const SEARCH_INPUT_MIX_SQL = `WITH typed AS (
     SELECT event_type,SUBSTR(event_id,1,71) AS execution_key
     FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
@@ -278,6 +303,24 @@ function searchInputMix(rows = []) {
   };
 }
 
+function searchToMall(rows = []) {
+  const seconds = rows.map(row => Number(row.seconds)).filter(value => Number.isFinite(value) && value >= 0).sort((a, b) => a - b);
+  const taps = rows.map(row => safeCount(row.taps)).filter(value => value > 0);
+  const quantile = (values, q) => values.length ? values[Math.min(values.length - 1, Math.floor(values.length * q))] : null;
+  const average = values => values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length * 10) / 10 : null;
+  const oneTap = taps.filter(value => value === 1).length;
+  return {
+    definition: '検索開始から最初のモール遷移まで（QA除外、セッション単位）。タップ=候補タップ・価格比較・モールタップの合計、1タップ=本命候補からそのままモールへ',
+    sessions: rows.length,
+    median_seconds: quantile(seconds, 0.5),
+    p90_seconds: quantile(seconds, 0.9),
+    avg_seconds: average(seconds),
+    avg_taps: average(taps),
+    one_tap_sessions: oneTap,
+    one_tap_rate: percentage(oneTap, taps.length)
+  };
+}
+
 function comparison(current, previous) {
   const countKeys = ['visitors', 'sessions', 'search_sessions', 'completed_search_sessions', 'value_sessions', 'outbound_sessions'];
   const rateKeys = ['visit_to_search', 'search_completion', 'search_failure', 'value_realization', 'marketplace_outbound', 'repeat_visitor'];
@@ -335,11 +378,12 @@ async function periodSummary(env, now, days) {
     env.PRODUCT_DB.prepare(SOURCE_BREAKDOWN_SQL).bind(iso(start), iso(end)),
     env.PRODUCT_DB.prepare(MARKETPLACE_BREAKDOWN_SQL).bind(iso(start), iso(end)),
     env.PRODUCT_DB.prepare(DAILY_SQL).bind(iso(start), iso(end)),
-    env.PRODUCT_DB.prepare(SEARCH_INPUT_MIX_SQL).bind(iso(start), iso(end))
+    env.PRODUCT_DB.prepare(SEARCH_INPUT_MIX_SQL).bind(iso(start), iso(end)),
+    env.PRODUCT_DB.prepare(SEARCH_TO_MALL_SQL).bind(iso(start), iso(end))
   ];
   const results = typeof env.PRODUCT_DB.batch === 'function'
     ? await env.PRODUCT_DB.batch(statements)
-    : await Promise.all([statements[0].first(), statements[1].first(), statements[2].all(), statements[3].all(), statements[4].all(), statements[5].all()]);
+    : await Promise.all([statements[0].first(), statements[1].first(), statements[2].all(), statements[3].all(), statements[4].all(), statements[5].all(), statements[6].all()]);
   const first = result => Array.isArray(result?.results) ? result.results[0] || {} : result || {};
   const rows = result => Array.isArray(result?.results) ? result.results : [];
   const current = normalizedMetrics(first(results[0]));
@@ -351,6 +395,7 @@ async function periodSummary(env, now, days) {
     comparison: comparison(current, previous),
     daily: fillDaily(start, end, rows(results[4])), sources, marketplaces,
     search_input_mix: searchInputMix(rows(results[5])),
+    search_to_mall: searchToMall(rows(results[6])),
     insights: improvementInsights(current, previous, sources)
   };
 }

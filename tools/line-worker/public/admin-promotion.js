@@ -201,6 +201,7 @@ function renderMarketplaces(data) {
 function renderDetailKpis(data) {
   const current = data.current;
   const mix = data.search_input_mix || { total_searches: 0, counts: {}, rates: {}, performance: {} };
+  const mall = data.search_to_mall || { sessions: 0, one_tap_rate: null, definition: '' };
   const mixNote = Object.keys(searchInputLabels).map(type => {
     const row = mix.performance[type] || {};
     return `${searchInputLabels[type]} 受理${formatNumber(row.attempts)}・成功${formatNumber(row.completed)}（${rate(row.success_rate)}）・送客${formatNumber(row.outbound)}（CVR ${rate(row.outbound_rate)}）`;
@@ -217,6 +218,10 @@ function renderDetailKpis(data) {
     metric('継続検索の有効化回数', formatNumber(current.continuous_search_enabled_count), '', '認証済み会員DBのOFF→ON・新規有効化'),
     metric('共有開始', formatNumber(current.share_sessions)),
     metric('平均価値到達時間', seconds(current.avg_value_seconds)),
+    metric('検索→モール到達 時間', mall.sessions ? `中央値 ${seconds(mall.median_seconds)}` : '—', '',
+      mall.sessions ? `${formatNumber(mall.sessions)}セッション・平均 ${seconds(mall.avg_seconds)}・上位90% ${seconds(mall.p90_seconds)}` : 'モール到達セッションなし'),
+    metric('検索→モール到達 タップ数', mall.sessions ? `平均 ${mall.avg_taps}回` : '—', mall.one_tap_rate !== null && mall.one_tap_rate >= 50 ? 'success' : '',
+      mall.sessions ? `1タップで到達 ${formatNumber(mall.one_tap_sessions)}件（${rate(mall.one_tap_rate)}）｜${mall.definition}` : ''),
     metric('受理検索の入力構成', `${formatNumber(mix.total_searches)}件`, '',
       `${mixNote}｜${mix.rate_definition || '割合は受理検索に占める構成比'}`)
   );

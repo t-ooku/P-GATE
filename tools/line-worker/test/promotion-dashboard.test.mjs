@@ -138,6 +138,12 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(period.current.identity_eligible_events, period.current.identified_events,
     'the coverage numerator and denominator exclude the same internal event types');
   assert.equal(period.current.avg_value_seconds, 90);
+  // 指示書 §33: 検索→モール到達の時間とタップ数(s1: 12:00 開始 → 12:01:30 価格比較 → 12:02 モール)
+  assert.equal(period.search_to_mall.sessions, 1);
+  assert.equal(period.search_to_mall.median_seconds, 120);
+  assert.equal(period.search_to_mall.avg_taps, 2);
+  assert.equal(period.search_to_mall.one_tap_sessions, 0);
+  assert.equal(period.search_to_mall.one_tap_rate, 0);
   assert.equal(period.current.rates.search_completion, 50);
   assert.equal(period.current.rates.value_realization, 100);
   assert.equal(period.previous.value_sessions, 1);
