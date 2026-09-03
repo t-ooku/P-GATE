@@ -13,20 +13,28 @@ import { headNounScore } from './search-head-noun.mjs';
 const EVENT_TYPE = 'search_qa_result';
 const REQUIRED_MALL_LINKS = Object.freeze(['AMAZON_JP', 'QOO10_JP', 'SHEIN_JP', 'RAKUTEN_JP', 'YAHOO_JP']);
 const QUERY_TIMEOUT_MS = 40000;
+// 9件を続けて流すとモールAPI(特に楽天は1秒1回)の429で候補ゼロになることが
+// ある(2026-09-03 3回目: smoky_quartz_ring が C0)。クエリ間に間を置き、
+// 候補ゼロの時だけ1回やり直す。
+const FIXTURE_PAUSE_MS = 2500;
+const EMPTY_RETRY_PAUSE_MS = 5000;
 
 // 期待は「候補の上位3件のいずれかが expect に一致し、本命(1件目)が reject に
 // 一致しない」。商品名の完全一致は要求しない(モール在庫は日々変わる)。
 // 2026-09-03 2回目: 上位3件全部に reject を掛けると、本命が正しくても2件目の
 // 「2wayショルダー」で落ちる(standing_leather_tote)ので本命だけに掛ける。
+// 3回目: 「マジックリップ」(クリップ)・「体型カバー」(カバー)のように語の一部や
+// 説明語で正しい本命を落としていた。別語の一部・付属品は H(主名詞スコア)が
+// 判定するので、reject は明確な別商品語だけにする。
 export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   { id: 'ig_mattress', query: 'Instagramで見たマットレス', expect: /マットレス|mattress/iu, reject: /枕|シーツ|カバー|Tシャツ|パッド/u },
   { id: 'koala_mattress', query: 'コアラマットレス', expect: /コアラ\s*・?\s*マットレス|koala\s*mattress/iu, reject: /Tシャツ|シャツ|ぬいぐるみ|おもちゃ|枕|ピロー/u },
-  { id: 'qoo10_korean_lip', query: 'Qoo10で見た韓国リップ', expect: /リップ|ティント|lip|tint/iu, reject: /クリップ|グリップ|ケース|ホルダー/u },
-  { id: 'korean_pink_lip', query: '韓国コスメ ピンク リップ', expect: /リップ|ティント|lip|tint/iu, reject: /クリップ|グリップ|純正|ピストン/u },
+  { id: 'qoo10_korean_lip', query: 'Qoo10で見た韓国リップ', expect: /リップ|ティント|lip|tint/iu, reject: /ケース|ホルダー/u },
+  { id: 'korean_pink_lip', query: '韓国コスメ ピンク リップ', expect: /リップ|ティント|lip|tint/iu, reject: /純正|ピストン/u },
   { id: 'standing_leather_tote', query: '自立する本革トートバッグ', expect: /トート/u, reject: /財布|リュック|合皮|フェイクレザー|カバー|持ち手|ハンドル/u },
   { id: 'smoky_quartz_ring', query: 'スモーキークォーツ リング', expect: /リング|指輪|ring/iu, reject: /ネックレス|ピアス|ブレスレット|イヤリング/u },
   { id: 'ig_white_bag', query: 'Instagramで見た白いバッグ', expect: /バッグ|bag/iu, reject: /財布|枚入|枚セット|紙袋|ポリ袋/u },
-  { id: 'shein_one_piece', query: 'SHEINで見たワンピース', expect: /ワンピース|ワンピ|dress/iu, reject: /防虫|カバー|ハンガー|お玉|おたま|用\b/u },
+  { id: 'shein_one_piece', query: 'SHEINで見たワンピース', expect: /ワンピース|ワンピ|dress/iu, reject: /防虫|ハンガー|お玉|おたま|用\b/u },
   { id: 'amazon_storage', query: 'Amazonで見た収納用品', expect: /収納|ケース|ボックス|ラック|storage/iu, reject: /リモコン|Fire TV|Alexa|交換用/u }
 ]);
 
@@ -106,7 +114,7 @@ export function searchQaCanaryDue(now) {
 }
 
 export async function runSearchQaCanary(env, now, searchHandler, {
-  origin = 'https://hoshilu.app', fixtures = SEARCH_QA_CANARY_QUERIES, force = false
+  origin = 'https://hoshilu.app', fixtures = SEARCH_QA_CANARY_QUERIES, force = false, pauseMs = FIXTURE_PAUSE_MS
 } = {}) {
   if (!env?.PRODUCT_DB) return { skipped: true, reason: 'DATABASE_NOT_CONFIGURED' };
   if (typeof searchHandler !== 'function') return { skipped: true, reason: 'SEARCH_HANDLER_MISSING' };
@@ -119,8 +127,8 @@ export async function runSearchQaCanary(env, now, searchHandler, {
     if (Number(existing?.n || 0) > 0) return { skipped: true, reason: 'ALREADY_RAN_TODAY', run_id: runId };
   }
   const results = [];
-  for (const fixture of fixtures) {
-    const startedAt = Date.now();
+  const sleep = (ms) => (ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve());
+  const runOnce = async (fixture) => {
     let payload = null;
     let error = '';
     try {
@@ -132,6 +140,21 @@ export async function runSearchQaCanary(env, now, searchHandler, {
       if (!payload?.ok) error = String(payload?.error || `HTTP_${response.status}`).slice(0, 40);
     } catch (cause) {
       error = String(cause?.message || cause || 'SEARCH_QA_FAILED').replace(/[^A-Z0-9_]/giu, '_').slice(0, 40);
+    }
+    return { payload, error };
+  };
+  let index = 0;
+  for (const fixture of fixtures) {
+    if (index > 0) await sleep(pauseMs);
+    index += 1;
+    const startedAt = Date.now();
+    let { payload, error } = await runOnce(fixture);
+    const candidateCount = Array.isArray(payload?.result?.candidates) ? payload.result.candidates.length : 0;
+    if (candidateCount === 0) {
+      await sleep(pauseMs > 0 ? EMPTY_RETRY_PAUSE_MS : 0);
+      const retry = await runOnce(fixture);
+      const retryCount = Array.isArray(retry.payload?.result?.candidates) ? retry.payload.result.candidates.length : 0;
+      if (retryCount > 0 || (!retry.error && error)) ({ payload, error } = retry);
     }
     const elapsed = Date.now() - startedAt;
     const evaluation = evaluateSearchQaResult(fixture, payload, elapsed);

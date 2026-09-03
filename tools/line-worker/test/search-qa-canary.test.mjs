@@ -92,7 +92,7 @@ test('実行は1日1回・QA記録のみ・Turnstile内部迂回のリクエス�
     } });
   };
   const outcome = await runSearchQaCanary(env, new Date('2026-09-03T22:22:00Z'), handler,
-    { fixtures: SEARCH_QA_CANARY_QUERIES.slice(0, 2) });
+    { fixtures: SEARCH_QA_CANARY_QUERIES.slice(0, 2), pauseMs: 0 });
   assert.equal(outcome.total, 2);
   assert.equal(outcome.passed, 2);
   assert.equal(requests.length, 2);
@@ -104,9 +104,23 @@ test('実行は1日1回・QA記録のみ・Turnstile内部迂回のリクエス�
   assert.equal(rows[0].values[1], 'search_qa_result');
   assert.doesNotMatch(String(rows[0].values[4]), /Instagramで見た/u, 'クエリ文そのものは content に残さない');
   existing = 1;
-  const again = await runSearchQaCanary(env, new Date('2026-09-03T22:37:00Z'), handler);
+  const again = await runSearchQaCanary(env, new Date('2026-09-03T22:37:00Z'), handler, { pauseMs: 0 });
   assert.equal(again.skipped, true);
   assert.equal(again.reason, 'ALREADY_RAN_TODAY');
+  // 2026-09-03 3回目: 候補ゼロ(モールAPIの429等)は1回だけやり直し、2回目の結果を採る
+  existing = 0;
+  let calls = 0;
+  const flaky = async () => {
+    calls += 1;
+    return Response.json({ ok: true, result: {
+      candidates: calls === 1 ? [] : [{ product_name: 'コアラマットレス オリジナル', offers: [{ marketplace: 'RAKUTEN_JP' }] }],
+      marketplace_search_links: links(ALL)
+    } });
+  };
+  const retried = await runSearchQaCanary(env, new Date('2026-09-04T22:22:00Z'), flaky,
+    { fixtures: SEARCH_QA_CANARY_QUERIES.filter((f) => f.id === 'koala_mattress'), pauseMs: 0 });
+  assert.equal(calls, 2);
+  assert.equal(retried.passed, 1);
   assert.equal(searchQaCanaryDue(new Date('2026-09-03T22:22:00Z')), true);
   assert.equal(searchQaCanaryDue(new Date('2026-09-03T22:37:00Z')), false);
 });
