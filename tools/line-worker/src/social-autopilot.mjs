@@ -60,7 +60,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'sun',
     creative_asset_id: 'hoshilu_ai_actress_daily_sun_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sun-v1.mp4',
-    caption: '日曜日は、撮った写真から名前の分からない商品を探すか、HOSHILU BUZZの韓国トレンドをチェック。',
+    caption: '日曜日は、Amazon・楽天・Qoo10をまとめて検索。撮った写真からでも、名前が分からない物でも探せます。HOSHILU BUZZも。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.PHOTO,
       DAILY_CONTENT_TOPICS.BUZZ,
@@ -72,7 +72,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'mon',
     creative_asset_id: 'hoshilu_ai_actress_daily_mon_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-mon-v1.mp4',
-    caption: '月曜日は「撮ってホシル」。カメラで撮る、保存画像・スクショ、HOSHILU対応の公開SNS投稿URL（投稿単体）、一言。名前が分からない欲しい物を手がかりから探そう。',
+    caption: '月曜日は1回検索して、まとめて探す。カメラで撮る・スクショ・公開SNS投稿URL・名前が分からない一言のどれでもOK。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.PHOTO,
       DAILY_CONTENT_TOPICS.SCREENSHOT,
@@ -84,7 +84,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'tue',
     creative_asset_id: 'hoshilu_ai_actress_daily_tue_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-tue-v1.mp4',
-    caption: '火曜日は韓国トレンド枠。名前が分からない商品を撮った写真から探すか、HOSHILU BUZZからQoo10・SHEINを含む検索先へ。',
+    caption: '火曜日は韓国トレンド。Qoo10やSHEINだけで決める前に、楽天・Amazonもまとめて確認。撮った写真や名前が分からない一言でも。HOSHILU BUZZから。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.PHOTO,
       DAILY_CONTENT_TOPICS.BUZZ,
@@ -96,7 +96,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'wed',
     creative_asset_id: 'hoshilu_ai_actress_daily_wed_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-wed-v1.mp4',
-    caption: '水曜日はHOSHILU BUZZをチェック。ランキングで気になった商品は、スクショからも探せます。',
+    caption: '水曜日はHOSHILU BUZZ。気になった商品は、Amazon・楽天・Qoo10へまとめて探しに行けます。スクショからも探せます。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.SCREENSHOT,
       DAILY_CONTENT_TOPICS.BUZZ
@@ -107,7 +107,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'thu',
     creative_asset_id: 'hoshilu_ai_actress_daily_thu_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-thu-v1.mp4',
-    caption: '木曜日は、Instagram・TikTok・XなどHOSHILU対応の公開SNS投稿URL（投稿単体）か、うろ覚えの一言から検索。見つけた商品を最大13モールへ。',
+    caption: '木曜日は、アプリを何個も開かない買い物。1回検索して複数モールから選ぶだけ。公開SNS投稿URLや名前の分からない一言でも探せます。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
       DAILY_CONTENT_TOPICS.AMBIGUOUS_SEARCH
@@ -117,7 +117,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'fri',
     creative_asset_id: 'hoshilu_ai_actress_daily_fri_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-fri-v1.mp4',
-    caption: '金曜日はHOSHILU BUZZをチェック。ランキングで気になった商品は、撮った写真やスクショからも探せます。',
+    caption: '金曜日はHOSHILU BUZZ。見つけた商品も、Amazon・楽天・Qoo10をまとめて探せます。撮った写真やスクショからも。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.PHOTO,
       DAILY_CONTENT_TOPICS.SCREENSHOT,
@@ -129,7 +129,7 @@ const DAILY_AI_ACTRESS_REELS = Object.freeze([
     weekday: 'sat',
     creative_asset_id: 'hoshilu_ai_actress_daily_sat_v1',
     media_url: 'https://hoshilu.app/social/hoshilu-ai-actress-daily-sat-v1.mp4',
-    caption: '土曜日は、HOSHILU対応の公開SNS投稿URL（投稿単体）とうろ覚えの一言から、名前の分からない商品を検索。迷ったらHOSHILU BUZZもチェック。',
+    caption: '土曜日は、Amazon？楽天？Qoo10？で迷う時間をなくす。公開SNS投稿URLや名前の分からない一言でも探せます。HOSHILU BUZZも。',
     topics: Object.freeze([
       DAILY_CONTENT_TOPICS.SOCIAL_POST_URL,
       DAILY_CONTENT_TOPICS.BUZZ,
@@ -197,6 +197,22 @@ const X_NON_VIDEO_POSTS = Object.freeze([
     id: 'search-no-name-needed',
     caption: '名前が分からない。それ、検索できない理由じゃない。見た目・使い方・見かけた場所をそのままHOSHILUへ。',
     query: '韓国っぽい、透明で小さいワイヤレスイヤホン'
+  },
+  // 2026-09-03 方向転換: X枠にも主訴求「まとめて探す」を入れる。
+  {
+    id: 'x-cross-market-tabs',
+    caption: 'Amazon見て、楽天見て、Qoo10も見て。1個買うのにアプリ何回開いてますか。HOSHILUは1回検索すると、Amazon・楽天・Yahoo!・Qoo10・SHEINへその場で行けます。',
+    query: 'ワイヤレスイヤホン'
+  },
+  {
+    id: 'x-cross-market-which-mall',
+    caption: 'Amazon？楽天？Qoo10？ 迷う前にHOSHILUで検索すると、同じ商品の探し先がまとめて出ます。商品名が分からなくても、見た目や使い道からで大丈夫です。',
+    query: 'モバイルバッテリー 軽い'
+  },
+  {
+    id: 'x-cross-market-first',
+    caption: 'ネットで何か買おうと思ったら、まずHOSHILU。1回検索して、Amazon・楽天・Yahoo!・Qoo10・SHEINから選ぶ。商品を探す時間そのものを減らします。',
+    query: '加湿器 静か'
   }
 ]);
 const X_BUZZ_POSTS = Object.freeze(
@@ -296,6 +312,74 @@ const BUZZ_MEDIA_URL = 'https://hoshilu.app/social/hoshilu-buzz-ranking-v1.jpg';
 // ときは social-publisher.mjs の normalizeSocialPost がPR表記を付けないので、
 // 「広告ではないのにPR表記がある」という逆向きの不正確さも起きない。
 const AMAZON_SEARCH_ONLY_NOTICE = 'HOSHILUからAmazonを含む検索先を開けます。Amazonの商品候補・価格・在庫・レビューはリンク先で確認してください。';
+// 2026-09-03（成長戦略・方向転換指示書 §6〜§8）: SNSの主訴求を変更する。
+// 旧「名前が分からなくてもHOSHILU」中心 → 新「Amazonも楽天もQoo10も見るの、
+// 面倒じゃない？」→「HOSHILUならまとめて探せる。」中心。
+// 比率の目安は まとめて検索60% / BUZZ20% / 写真・スクショ・曖昧検索20%。
+// 事実だけを書く。価格・在庫・順位・「最安」は本文に書かない。
+const CROSS_MARKET_POSTS = Object.freeze([
+  {
+    id: 'cross-market-tired-of-tabs',
+    caption: 'Amazon見て、楽天見て、Qoo10も見て。1個買うのにアプリ何回開いてますか。\nHOSHILUは1回検索すると、Amazon・楽天・Yahoo!・Qoo10・SHEINへその場で行けます。',
+    query: 'ワイヤレスイヤホン'
+  },
+  {
+    id: 'cross-market-one-search',
+    caption: '欲しいものが決まってるのに、どこで買うかで時間が溶ける。\nHOSHILUなら検索は1回。行きたいモールを選んで開くだけです。',
+    query: '折りたたみ 傘 軽量'
+  },
+  {
+    id: 'cross-market-which-mall',
+    caption: 'Amazon？楽天？Qoo10？\n迷う前にHOSHILUで探すと、同じ商品の探し先がまとめて出ます。',
+    query: 'モバイルバッテリー 軽い'
+  },
+  {
+    id: 'cross-market-no-retype',
+    caption: 'モールを移るたびに商品名を打ち直すの、地味に面倒。\nHOSHILUは1回入れた言葉のまま、各モールの検索結果へ飛べます。',
+    query: '珪藻土 バスマット'
+  },
+  {
+    id: 'cross-market-korean',
+    caption: '韓国コスメ、Qoo10だけで決めてませんか。\nHOSHILUなら楽天・Yahoo!・Amazonの取り扱いも同じ検索から見に行けます。',
+    query: '韓国コスメ ティント'
+  },
+  {
+    id: 'cross-market-apparel',
+    caption: '服はSHEIN、雑貨はAmazon、日用品は楽天。アプリを行き来する日常。\nHOSHILUで1回検索すれば、その場でどれにも行けます。',
+    query: 'オーバーサイズ Tシャツ'
+  },
+  {
+    id: 'cross-market-gift',
+    caption: 'プレゼント選び、候補を見るためだけに何個もアプリを開くことになりがち。\nHOSHILUなら1回の検索で、複数モールの探し先が並びます。',
+    query: 'ギフト マグカップ'
+  },
+  {
+    id: 'cross-market-restock',
+    caption: '同じ物をまた買いたいだけなのに、どこで買ったか思い出せない。\nHOSHILUで特徴を入れれば、扱っているモールをまとめて確認できます。',
+    query: '詰め替え 洗剤 大容量'
+  },
+  {
+    id: 'cross-market-compare-habit',
+    caption: 'ネットで何か買おうと思ったら、まずHOSHILU。\n1回検索して、Amazon・楽天・Yahoo!・Qoo10・SHEINから選ぶ。それだけです。',
+    query: '加湿器 静か'
+  },
+  {
+    id: 'cross-market-time',
+    caption: '「探す時間」がいちばんもったいない。\nHOSHILUは検索1回で複数モールの入口を並べます。あとは開くだけ。',
+    query: 'デスクライト 目に優しい'
+  },
+  {
+    id: 'cross-market-not-on-amazon',
+    caption: 'Amazonで見つからない＝売ってない、ではない。\nHOSHILUなら同じ言葉のまま楽天・Yahoo!・Qoo10・SHEINも続けて探せます。',
+    query: '韓国 シルバー リング'
+  },
+  {
+    id: 'cross-market-phone-tabs',
+    caption: 'スマホのタブ、買い物のたびに増えていきませんか。\nHOSHILUで1回検索すると、行き先が1画面に並びます。',
+    query: 'スマホスタンド 卓上'
+  }
+]);
+
 // 2026-09-03 指示書 §SNS「これ、どこの？」。直近14日の実測で自動投稿62件・
 // 1件あたり表示およそ54、着地からの流入はほぼゼロだった。原因は全投稿が
 // 機能説明(「最大13モール」「4通りの手がかり」)で、読む理由が本文に無いこと。
@@ -362,12 +446,6 @@ const THREADS_AMAZON_POSTS = Object.freeze([
     caption: `切れてから気づく日用品のストック。置き場所や見た目の特徴をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: 'キッチンの排水溝に使う小さいゴミ受けネット'
   },
-  // 名前クイズ枠(先に答えを渡す投稿)。Amazon枠と同じ検索導線なので同じ開示文を付ける。
-  ...NAME_QUIZ_POSTS.map(post => ({
-    id: post.id,
-    caption: `${post.caption_body}${AMAZON_SEARCH_ONLY_NOTICE}`,
-    query: post.query
-  })),
   {
     id: 'trust-how-to-describe',
     caption: '商品名が分からないときは、カメラで撮る、保存画像・スクショ、HOSHILU対応の公開SNS投稿URL（投稿単体）、一言のどれかを手がかりに探せます。非対応・非公開投稿は画像か一言を追加してください。'
@@ -451,6 +529,30 @@ const THREADS_AMAZON_POSTS = Object.freeze([
 ]);
 
 // 昼と夜の2枠。投稿量を増やすために夜枠を足した。
+// §8 比率: 「まとめて探す」を主力(目安6割)、残りを Amazon カテゴリ枠・名前クイズ・
+// 信頼枠に割り当てる。配列の並び＝配信順なので、3:2 で交互に組み立てる。
+const THREADS_DAILY_POSTS = Object.freeze((() => {
+  const cross = CROSS_MARKET_POSTS.map(post => ({
+    id: post.id, caption: `${post.caption}${AMAZON_SEARCH_ONLY_NOTICE}`, query: post.query
+  }));
+  const others = [
+    ...NAME_QUIZ_POSTS.map(post => ({
+      id: post.id, caption: `${post.caption_body}${AMAZON_SEARCH_ONLY_NOTICE}`, query: post.query
+    })),
+    ...THREADS_AMAZON_POSTS
+  ];
+  // 3:2 の塊を cross.length 個ちょうど並べる。こうすると主訴求は1周でぴったり
+  // 3巡し、同じ文面の間隔が常に20本(=10日)以上あくので、10日以内に同じ投稿が
+  // 再掲されない。others は足りない分だけ先頭から巡回して埋める。
+  const blocks = cross.length;
+  const mixed = [];
+  for (let block = 0; block < blocks; block += 1) {
+    for (let n = 0; n < 3; n += 1) mixed.push(cross[(block * 3 + n) % cross.length]);
+    for (let n = 0; n < 2; n += 1) mixed.push(others[(block * 2 + n) % others.length]);
+  }
+  return mixed;
+})());
+
 const THREADS_AMAZON_SLOTS = Object.freeze([
   // 既存キューとの互換のため、昼枠のpost_idには接尾辞を付けない。1日1本だった
   // 頃に積まれた `{campaign}-{JST日付}` の行をそのまま更新でき、同じ日に
@@ -610,8 +712,8 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
     THREADS_AMAZON_SLOTS.forEach((slot, slotIndex) => {
       // 1日2枠なので、通し番号も2枠ぶん進める。20本を2本/日で消費するため
       // 一巡は10日。同じ文面が再登場するまでの間隔を最大化する。
-      const rotation = (dayIndex * THREADS_AMAZON_SLOTS.length + slotIndex) % THREADS_AMAZON_POSTS.length;
-      const content = THREADS_AMAZON_POSTS[rotation];
+      const rotation = (dayIndex * THREADS_AMAZON_SLOTS.length + slotIndex) % THREADS_DAILY_POSTS.length;
+      const content = THREADS_DAILY_POSTS[rotation];
       const link = threadsAmazonLink(content);
       posts.push(normalizeSocialPost({
         post_id: `${THREADS_AMAZON_CAMPAIGN_ID}-${key}${slot.suffix}`,

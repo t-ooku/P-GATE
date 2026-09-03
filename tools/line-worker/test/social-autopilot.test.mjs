@@ -164,7 +164,9 @@ test('非BUZZ販促はカメラ・画像・公開投稿URL・一言・継続検�
     assert.ok(campaign.some((post) => /見つかるまで探す/u.test(post.caption)), `${platform}: continuous search copy`);
     assert.ok(campaign.every((post) => !/必ず(?:特定|見つかる)|全SNS対応/u.test(post.caption)));
   }
-  const threads = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'), 10);
+  // 2026-09-03 方向転換で Threads の主訴求は「まとめて探す」になり、4入力の説明は
+  // 副次テーマになった。1周(35日)のどこかで必ず出ることを担保する。
+  const threads = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'), 35);
   assert.ok(threads.some((post) => /カメラで撮る.*スクショ.*公開SNS投稿URL.*一言/u.test(post.caption)));
   const searchGuide = posts.find((post) => post.content_id === 'guide-search-screen');
   assert.ok(searchGuide, '4入力のInstagram操作案内が計画されていない');
@@ -429,11 +431,32 @@ test('Amazon優先Threadsローテーションはリンク付きのみをアフ�
   }
 });
 
-test('Amazon優先Threadsローテーションの文面は20本あり、10日間は重複しない', () => {
+test('Threads日次ローテーションは10日間(20本)で同じ文面を繰り返さない', () => {
   const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'), 10);
-  // 1日2本 × 10日 = 20本ぶんで、ちょうど一巡する。
+  // 1日2本 × 10日 = 20本。2026-09-03 の方向転換でローテ本数は増えたが、
+  // 10日以内に同じ文面が再投稿されないことは維持する。
   assert.equal(posts.length, 20);
   assert.equal(new Set(posts.map(post => post.content_id)).size, 20, '10日以内に同じ文面が再投稿されている');
+});
+
+// 2026-09-03 成長戦略・方向転換指示書 §6〜§8: SNSの主訴求を「Amazonも楽天も
+// Qoo10も見るの、面倒じゃない？」→「HOSHILUならまとめて探せる。」へ。
+// 比率の目安は まとめて検索60% / BUZZ20% / 写真・スクショ・曖昧検索20%。
+test('Threads日次枠の6割前後が「まとめて探す」主訴求になっている', () => {
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-09-04T00:00:00.000Z'), 28);
+  const cross = posts.filter((post) => /^cross-market-/u.test(post.content_id));
+  const share = cross.length / posts.length;
+  assert.ok(share >= 0.5 && share <= 0.7, `主訴求の比率が目安から外れている: ${Math.round(share * 100)}%`);
+  for (const post of cross) {
+    assert.equal(post.platform, 'THREADS');
+    // 価格・在庫・順位・最安は本文に書かない(規約・§47)。
+    assert.doesNotMatch(post.caption, /最安|円|セール|在庫あり|第1位/u);
+    // Amazon導線の開示は他のThreads枠と同じものを必ず付ける。
+    assert.match(post.caption, /HOSHILUからAmazonを含む検索先を開けます/u);
+    assert.ok(new URL(post.link).searchParams.get('q'));
+  }
+  // 差別化(名前クイズ)も残す。
+  assert.ok(posts.some((post) => /^name-quiz-/u.test(post.content_id)));
 });
 
 test('Amazon優先Threadsローテーションは同じ計画対象期間なら毎回同じ投稿を計画する(冪等)', () => {
@@ -1073,10 +1096,12 @@ test('8月28日再公開CIは既知の技術障害2件だけを復旧しInstagra
 // 1件あたり表示およそ54・着地からの流入ほぼゼロ。全投稿が機能説明で読む理由が
 // 無いことが原因なので、先に答え(物の本当の名前)を渡す枠を日次ローテへ入れる。
 test('Threads日次枠に「名前クイズ」投稿が入り、事実と開示文と検索リンクを持つ', () => {
-  const posts = buildThreadsAmazonBoostPosts(new Date('2026-09-03T00:00:00.000Z'), 14);
+  // 2026-09-03 方向転換で主訴求「まとめて探す」が6割を占めるため、名前クイズは
+  // 28日で数本の差別化枠として残す。
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-09-04T00:00:00.000Z'), 28);
   const quiz = posts.filter((post) => /^name-quiz-/u.test(post.content_id));
-  assert.ok(quiz.length >= 6, `名前クイズが少なすぎる: ${quiz.length}/${posts.length}`);
-  assert.ok(quiz.length < posts.length / 2, '機能説明枠を置き換えきらない');
+  assert.ok(quiz.length >= 4, `名前クイズが少なすぎる: ${quiz.length}/${posts.length}`);
+  assert.ok(quiz.length < posts.length / 2, '主訴求を置き換えきらない');
   for (const post of quiz) {
     assert.equal(post.platform, 'THREADS');
     // 答え(名前)を本文に書く。読者はリンクを踏まなくても得をする。
@@ -1089,5 +1114,5 @@ test('Threads日次枠に「名前クイズ」投稿が入り、事実と開示�
     assert.ok(new URL(post.link).searchParams.get('q'));
   }
   const ids = new Set(quiz.map((post) => post.content_id));
-  assert.ok(ids.size >= 6, '同じクイズばかり出さない');
+  assert.ok(ids.size >= 4, '同じクイズばかり出さない');
 });
