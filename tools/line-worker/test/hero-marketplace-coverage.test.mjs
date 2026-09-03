@@ -99,3 +99,18 @@ test('第一画面は「欲しいけど、名前が分からない。」と「�
   const assets = await read('assets-v147/app.js');
   assert.equal(assets, app, 'public/app.js と assets-v147/app.js は同一');
 });
+
+// 2026-09-03 指示書 §18–21「登録は後」: ♡ ホシっとく は登録なしで押せ、押した後に登録導線。
+// 🔔 値下がり通知は未登録でも行き止まりにせず、希望額を端末に残して無料登録へ案内する。
+test('♡ ホシっとく は登録前に端末へ保存し、押した後だけ登録導線を出す。🔔 は未登録でも行き止まりにしない', async () => {
+  const app = await read('app.js');
+  assert.match(app, /const KEPT_PRODUCTS_KEY='hoshilu_kept_products';/);
+  assert.match(app, /JA:\{keep:'♡ ホシっとく',kept:'♥ ホシった'/);
+  assert.match(app, /mediaActions\.append\(createKeepButton\(candidate\)\);/);
+  assert.match(app, /new CustomEvent\('hoshilu:wish-saved',\{detail:\{source:'keep'\}\}\)/, 'ホシっとく は wish_saved として計測');
+  assert.match(app, /localStorage\.setItem\('hoshilu_pending_watch'/);
+  assert.match(app, /cta\.className='watch-login-cta';cta\.href=memberLoginHref\(\)/);
+  assert.match(app, /syncMemberWishes=async function\(\)\{await baseSyncMemberWishes\(\);applyPendingWatch\(\);\};/, '登録して戻ったら希望額をそのまま保存');
+  const css = await read('ai-search-layout-fix.css');
+  assert.match(css, /\.keep-product-button\.kept\{/);
+});

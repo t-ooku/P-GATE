@@ -367,6 +367,61 @@ function unverifiedMarketplaceLinks(offers,language){
 }
 function renderOfferOptions(candidate,t,language){const source=candidate.offers?.length?candidate.offers:[candidate.selected_offer];const linked=source.filter(o=>o?.tracking_url).slice(0,10);if(!linked.length)return null;const priced=linked.filter(o=>Number(o.total_cost)>0).sort((a,b)=>Number(a.total_cost)-Number(b.total_cost));if(!priced.length){const list=document.createElement('div');list.className='offer-list';linked.forEach(offer=>{const link=document.createElement('a');link.className='offer-link';link.dataset.marketplace=String(offer.marketplace||'');link.href=offer.tracking_url;link.target='_blank';link.rel=outboundRel(offer.marketplace);const badge=priorityListingBadge(offer,language);if(badge)link.append(badge);link.append(textElement('strong','',`${offerMarketplaceLabel(offer)}で見る`),textElement('span','',offerDetail(offer,t,language).replace(`${offerMarketplaceLabel(offer)} · `,'')));list.append(link);});return list;}const labels={JA:{button:'価格を比較',heading:`送料込み価格が確認できた${priced.length}モール`,verified:'確認済み送料込み価格',open:'商品ページへ'},EN:{button:'Compare prices',heading:`${priced.length} verified totals including shipping`,verified:'Verified total including shipping',open:'Open product page'},ZH:{button:'比较价格',heading:`已确认${priced.length}个商城的含运费价格`,verified:'已确认含运费价格',open:'前往商品页面'},KO:{button:'가격 비교',heading:`배송비 포함 가격이 확인된 ${priced.length}개 쇼핑몰`,verified:'확인된 배송비 포함 가격',open:'상품 페이지로'}}[language]||null;if(priced.length===1){const offer=priced[0];const link=document.createElement('a');link.className='price-offer single-price-offer';link.dataset.marketplace=String(offer.marketplace||'');link.href=offer.tracking_url;link.target='_blank';link.rel=outboundRel(offer.marketplace);const badge=priorityListingBadge(offer,language);if(badge)link.append(badge);link.append(textElement('span','price-rank',labels.verified),textElement('strong','',offerMarketplaceLabel(offer)),textElement('b','',formatMoney(offer.total_cost,offer.currency,language)),textElement('small','',`${t.shipping} ${formatMoney(offer.shipping_fee||0,offer.currency,language)} · ${labels.open}`));const gap=unverifiedMarketplaceLinks(linked,language);if(!gap)return link;const singleWrap=document.createElement('div');singleWrap.className='price-comparison single-price-comparison';singleWrap.append(link,gap);return singleWrap;}const wrap=document.createElement('div');wrap.className='price-comparison';const button=document.createElement('button');button.type='button';button.className='price-compare-button';button.textContent=labels.button;button.setAttribute('aria-expanded','false');const panel=document.createElement('div');panel.className='price-compare-panel hidden';panel.append(textElement('strong','price-compare-heading',labels.heading));const scroller=document.createElement('div');scroller.className='price-offer-scroll';priced.forEach((offer,index)=>{const link=document.createElement('a');link.className='price-offer';link.dataset.marketplace=String(offer.marketplace||'');link.href=offer.tracking_url;link.target='_blank';link.rel=outboundRel(offer.marketplace);const badge=priorityListingBadge(offer,language);if(badge)link.append(badge);link.append(textElement('span','price-rank',`NO. ${index+1}`),textElement('strong','',offerMarketplaceLabel(offer)),textElement('b','',formatMoney(offer.total_cost,offer.currency,language)),textElement('small','',Number(offer.shipping_fee||0)>0?`${t.shipping} ${formatMoney(offer.shipping_fee,offer.currency,language)} · ${labels.open}`:`${t.shipping} 0 · ${labels.open}`));scroller.append(link);});panel.append(scroller);const gap=unverifiedMarketplaceLinks(linked,language);if(gap)panel.append(gap);button.addEventListener('click',()=>{const open=panel.classList.toggle('hidden')===false;button.setAttribute('aria-expanded',String(open));if(open)panel.scrollIntoView({behavior:'smooth',block:'nearest'});});wrap.append(button,panel);return wrap;}
 function allMarketplacesButton(){const labels={JA:'全部のモールで探す',EN:'Search all marketplaces',ZH:'在所有商城查找',KO:'모든 쇼핑몰에서 찾기'};const link=document.createElement('a');link.href='#marketplaceFallback';link.className='buy-link all-marketplaces-button';link.textContent=labels[elements.language.value]||labels.JA;link.addEventListener('click',event=>{event.preventDefault();document.querySelector('.marketplace-fallback')?.scrollIntoView({behavior:'smooth',block:'center'});});return link;}
+// 2026-09-03 指示書 §18–21「登録は後」: 検索 → 発見 → 欲しい → 保存したい → 登録。
+// 「♡ ホシっとく」は登録なしで即保存(端末内)。押した後に初めて「他の端末にも
+// 残す」「値下がり/新商品を知らせる」で無料登録へ誘う。保存先は商品単位。
+const KEPT_PRODUCTS_KEY='hoshilu_kept_products';
+const keepCopy={
+  JA:{keep:'♡ ホシっとく',kept:'♥ ホシった',keptStatus:'ホシっときました。',guestCta:'無料登録で他の端末にも残す →',memberCta:'マイページで見る →',bellGuest:'🔔 値下がり・新商品を知らせる（無料登録 30秒）→'},
+  EN:{keep:'♡ Keep',kept:'♥ Kept',keptStatus:'Kept on this device.',guestCta:'Sign up free to keep it on every device →',memberCta:'Open my page →',bellGuest:'🔔 Alert me on price drops (free, 30 sec) →'},
+  ZH:{keep:'♡ 先收着',kept:'♥ 已收藏',keptStatus:'已保存到此设备。',guestCta:'免费注册后在其他设备也能看到 →',memberCta:'查看我的页面 →',bellGuest:'🔔 降价·新品通知（免费注册 30 秒）→'},
+  KO:{keep:'♡ 찜해두기',kept:'♥ 찜함',keptStatus:'이 기기에 저장했어요.',guestCta:'무료 가입하면 다른 기기에서도 볼 수 있어요 →',memberCta:'마이페이지 보기 →',bellGuest:'🔔 가격 인하·신상품 알림 (무료 가입 30초) →'}
+};
+function getKeptProducts(){try{const value=JSON.parse(localStorage.getItem(KEPT_PRODUCTS_KEY)||'[]');return Array.isArray(value)?value:[];}catch{return[];}}
+function keptProductKey(candidate){return String(candidate?.record_key||candidate?.asin||candidate?.display_name||candidate?.product_name||'').slice(0,200);}
+function isKeptProduct(candidate){const key=keptProductKey(candidate);return Boolean(key)&&getKeptProducts().some(item=>item.key===key);}
+function toggleKeptProduct(candidate){
+  const key=keptProductKey(candidate);if(!key)return false;
+  const current=getKeptProducts();
+  const exists=current.some(item=>item.key===key);
+  const offer=candidate?.selected_offer||(Array.isArray(candidate?.offers)?candidate.offers[0]:null)||{};
+  const next=exists?current.filter(item=>item.key!==key):[{
+    key,name:String(candidate?.display_name||candidate?.product_name||'').slice(0,160),
+    image:String(candidate?.image_url||candidate?.image||'').slice(0,500),
+    url:String(offer.product_url||candidate?.product_url||'').slice(0,800),
+    marketplace:String(offer.marketplace||candidate?.marketplace||'').slice(0,40),
+    price:Number(offer.total_cost||offer.price||0)||0,
+    kept_at:new Date().toISOString()
+  },...current].slice(0,50);
+  try{localStorage.setItem(KEPT_PRODUCTS_KEY,JSON.stringify(next));}catch{}
+  if(!exists)document.dispatchEvent(new CustomEvent('hoshilu:wish-saved',{detail:{source:'keep'}}));
+  return !exists;
+}
+// 登録前に押した「値下がり通知」の希望額は、登録して戻ってきた時にそのまま保存する。
+function applyPendingWatch(){
+  if(!memberSession)return;
+  let pending=null;try{pending=JSON.parse(localStorage.getItem('hoshilu_pending_watch')||'null');}catch{}
+  if(!pending||!(Number(pending.target_price_jpy)>=100)||Date.now()-Number(pending.saved_at||0)>24*60*60*1000){try{localStorage.removeItem('hoshilu_pending_watch');}catch{}return;}
+  const name=String(pending.target_product_name||'').trim();
+  if(name&&saveWish(name,[false,true,false,false],{target_price_jpy:Number(pending.target_price_jpy),target_product_key:String(pending.target_product_key||''),target_product_name:name})){try{localStorage.removeItem('hoshilu_pending_watch');}catch{}}
+}
+// 会員セッションの同期後に、登録前の希望額を反映する(既存の同期処理は触らない)。
+const baseSyncMemberWishes=syncMemberWishes;
+syncMemberWishes=async function(){await baseSyncMemberWishes();applyPendingWatch();};
+function memberLoginHref(){return `/login.html?next=${encodeURIComponent('/#wishTitle')}`;}
+function createKeepButton(candidate){
+  const copy=keepCopy[elements.language.value]||keepCopy.JA;
+  const wrap=document.createElement('div');wrap.className='keep-product';
+  const button=document.createElement('button');button.type='button';button.className='keep-product-button';
+  const note=document.createElement('a');note.className='keep-product-note hidden';
+  const render=()=>{const kept=isKeptProduct(candidate);button.textContent=kept?copy.kept:copy.keep;button.classList.toggle('kept',kept);button.setAttribute('aria-pressed',kept?'true':'false');};
+  button.addEventListener('click',()=>{
+    const kept=toggleKeptProduct(candidate);render();
+    if(kept){note.textContent=memberSession?copy.memberCta:copy.guestCta;note.href=memberSession?'#wishTitle':memberLoginHref();note.classList.remove('hidden');}
+    else note.classList.add('hidden');
+  });
+  render();wrap.append(button,note);return wrap;
+}
 function createWatchOptions(candidate,t){
   const dialog=document.createElement('dialog');
   dialog.className='product-watch-dialog';
@@ -394,7 +449,13 @@ function createWatchOptions(candidate,t){
   const status=textElement('p','watch-save-status','');
   save.addEventListener('click',()=>{
     const amount=Number(targetInput.value||0);if(!targetInput.value||amount<100||amount>100000000){targetInput.setCustomValidity(priceLabels.required);targetInput.reportValidity();return;}targetInput.setCustomValidity('');
-    if(!memberSession){status.textContent=priceLabels.login;return;}
+    if(!memberSession){
+      // §21: 行き止まりにしない。希望額は端末に残し、無料登録(30秒)へ最短で案内する。
+      try{localStorage.setItem('hoshilu_pending_watch',JSON.stringify({target_price_jpy:amount,target_product_key:productKey,target_product_name:productName,saved_at:Date.now()}));}catch{}
+      status.textContent=priceLabels.login;
+      if(!panel.querySelector('.watch-login-cta')){const cta=document.createElement('a');cta.className='watch-login-cta';cta.href=memberLoginHref();cta.textContent=(keepCopy[elements.language.value]||keepCopy.JA).bellGuest;panel.append(cta);}
+      return;
+    }
     const target={target_price_jpy:amount,target_product_key:productKey,target_product_name:productName};
     // 希望額は検索文ではなく商品単位で保存する。同じ検索結果から複数商品へ
     // 希望額を付けても、同じwish_idへ上書きされないよう商品名を保存キーにする。
@@ -852,6 +913,7 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   if(terms.length)card.append(textElement('div','evidence',`${window.HoshiluI18n?.t('search.evidence',elements.language.value)||'一致した手がかり：'}${terms.slice(0,4).join(' / ')}`));
   const options=renderOfferOptions(candidate,t,elements.language.value);
   if(options)card.append(options);else card.append(allMarketplacesButton());
+  mediaActions.append(createKeepButton(candidate));
   const watch=createWatchOptions(candidate,t);
   mediaActions.append(watch.bell);
   card.append(watch.dialog);
