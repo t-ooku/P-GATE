@@ -1,6 +1,6 @@
 const ORIGIN = 'https://hoshilu.app';
 const UPDATED_AT = '2026-08-13';
-const HUB_UPDATED_AT = '2026-09-01';
+const HUB_UPDATED_AT = '2026-09-03';
 
 const jaDefaults = {
   audience: [
@@ -63,6 +63,274 @@ const enDefaults = {
 const guide = (locale, input) => ({ ...(locale === 'ja' ? jaDefaults : enDefaults), ...input });
 
 const pages = {
+  // 2026-09-03: 主訴求「欲しいもの、まとめて探す。」への転換に合わせ、
+  // 横断検索ニーズ(Amazon 楽天 比較 / 通販サイト 比較 / ECサイト 横断検索 など)
+  // の検索意図をまとめて受ける。各記事は検索者の疑問へ回答したうえで、
+  // 自分で行き来する方法とHOSHILUでまとめて探す方法の両方を示す。
+  'compare-amazon-and-rakuten': {
+    ja: guide('ja', {
+      title: 'Amazonと楽天市場を比較して買う方法',
+      description: '同じ商品をAmazonと楽天市場で比べるときにそろえる条件と、価格以外に確認する項目を解説します。',
+      conclusion: '比べる前に、型番・容量・色・セット数をそろえてください。そのうえで商品価格ではなく送料込みの総額で見比べ、販売者・在庫・返品条件を販売ページで確認します。HOSHILUは1回の入力で楽天市場の商品候補を取得して表示し、Amazonへは同じ検索条件のまま1タップで進めます。',
+      updatedAt: '2026-09-03',
+      query: '同じ型番のワイヤレスイヤホンをAmazonと楽天市場で比較',
+      tips: ['型番・容量・色・セット数が同じ商品だけを並べる', '商品価格ではなく送料込みの総額で見比べる', 'ポイントやクーポンは付与条件と上限を販売ページで確認する'],
+      audience: [
+        'Amazonと楽天市場を毎回開き直して見比べている人',
+        '同じ商品名でも別商品を比べてしまわないか不安な人',
+        '価格だけでなく送料や販売者もそろえて確認したい人'
+      ],
+      criteria: [
+        ['商品の同一性', '型番、容量、色、セット数、対応機種をそろえます。1つでも違えば別商品として分けます。'],
+        ['総額の比べ方', '商品価格に送料と手数料を足した金額で比べます。ポイントは付与条件と上限を確認してから加味します。'],
+        ['販売条件の確認', '販売者、発送元、在庫、返品条件はモールと出品者で異なるため、販売ページで確認します。']
+      ],
+      comparison: [
+        ['楽天市場', '検索1回で商品候補を取得して表示', '価格・送料・在庫・店舗とポイントの付与条件を販売ページで確認'],
+        ['Amazon', '同じ検索条件のまま開く検索先', '検索結果で型番が一致するかを確認し、販売者と発送元を確認'],
+        ['その他のモール', '同じ検索条件のまま開く検索先(合計最大13モール)', '同一商品かどうかを確認してから総額を比べる']
+      ],
+      faq: [
+        ['Amazonと楽天市場はどちらが安いですか？', '商品と時期によって入れ替わるため、どちらが安いとは言えません。同じ型番の商品を送料込みの総額で、その時点の条件で比べてください。'],
+        ['HOSHILUはAmazonの価格も表示しますか？', '現時点でHOSHILUが商品候補を取得して表示しているのは楽天市場とYahoo!ショッピングです。Amazonは同じ検索条件のまま開く検索先として用意しています。'],
+        ['ポイント還元も比較に入れるべきですか？', '入れて構いませんが、付与条件・上限・有効期限がモールごとに異なります。条件を確認したうえで総額の目安に加えてください。']
+      ]
+    })
+  },
+  'compare-amazon-and-qoo10': {
+    ja: guide('ja', {
+      title: 'AmazonとQoo10を比較して買う方法',
+      description: 'AmazonとQoo10で同じ商品を比べるときの条件のそろえ方と、配送・販売者・割引条件の確認点を解説します。',
+      conclusion: 'Qoo10は発送元や割引の適用条件が絡むため、商品価格だけでは比較になりません。内容量・色番・セット数をそろえ、送料と到着までの日数を含めた総額で比べてください。HOSHILUは1回の入力で、AmazonとQoo10のどちらへも同じ検索条件のまま進めます。',
+      updatedAt: '2026-09-03',
+      query: '同じ内容量の韓国コスメのティントをAmazonとQoo10で比較',
+      tips: ['到着までの日数と送料を含めた総額で比べる', '内容量・色番・セット数が同じ商品だけを並べる', '割引は適用範囲と上限を販売ページで確認する'],
+      audience: [
+        '韓国コスメや小物をAmazonとQoo10のどちらで買うか毎回迷う人',
+        '海外発送の日数や送料まで含めて比べたい人',
+        '同じ商品名でも内容量や色番が違わないか確認したい人'
+      ],
+      criteria: [
+        ['商品の同一性', '内容量、色番、セット数、付属品をそろえてから比べます。'],
+        ['受け取りまでの条件', '発送元、到着までの日数、送料、追跡の有無を確認します。'],
+        ['購入前の最終確認', '価格、在庫、販売者、返品条件は変わるため、販売ページで確認します。']
+      ],
+      comparison: [
+        ['Amazon', '同じ検索条件のまま開く検索先', '販売者と発送元、到着予定日、返品条件を確認'],
+        ['Qoo10', '同じ検索条件のまま開く検索先', '発送元と到着日数、割引の適用条件、内容量・色番を確認'],
+        ['楽天市場・Yahoo!ショッピング', '検索1回で商品候補を取得して表示', '同一商品かを確認し、送料込みの総額で比べる']
+      ],
+      faq: [
+        ['Qoo10の商品はHOSHILUに一覧で出ますか？', 'いいえ。現時点でHOSHILUが商品候補を取得して表示しているのは楽天市場とYahoo!ショッピングです。Qoo10は同じ検索条件のまま開く検索先として用意しています。'],
+        ['Qoo10のほうが安いことが多いですか？', '商品と時期によって変わります。送料と到着日数を含めた総額で、その時点の条件を比べてください。'],
+        ['同じ商品名なら同じ商品ですか？', 'いいえ。内容量、色番、セット数、販売者が違えば別商品です。並べる前にそろえてください。']
+      ]
+    })
+  },
+  'compare-qoo10-and-rakuten': {
+    ja: guide('ja', {
+      title: 'Qoo10と楽天市場を比較して買う方法',
+      description: 'Qoo10と楽天市場で同じ商品を比べるときにそろえる条件と、送料・到着日数・割引の確認点を解説します。',
+      conclusion: 'Qoo10と楽天市場は、送料の考え方と割引の適用条件が異なります。内容量・色番・セット数をそろえ、送料と到着までの日数を含めた総額で比べてください。HOSHILUは1回の入力で楽天市場の商品候補を取得して表示し、Qoo10へは同じ検索条件のまま進めます。',
+      updatedAt: '2026-09-03',
+      query: '同じ内容量の韓国コスメをQoo10と楽天市場で比較',
+      tips: ['送料と到着日数を含めた総額で比べる', 'ポイントと割引は付与条件・上限を確認してから加味する', '内容量・色番・セット数が同じ商品だけを並べる'],
+      audience: [
+        '韓国コスメや韓国風ファッションをQoo10と楽天市場で迷っている人',
+        '割引やポイントの条件まで含めて比べたい人',
+        '到着までの日数を確認してから買いたい人'
+      ],
+      criteria: [
+        ['商品の同一性', '内容量、色番、セット数、付属品をそろえます。似ているだけの商品は混ぜません。'],
+        ['総額と受け取り', '送料込みの総額に加え、発送元と到着までの日数を確認します。'],
+        ['割引の条件', '割引やポイントは、対象商品・付与条件・上限・期限を販売ページで確認します。']
+      ],
+      comparison: [
+        ['楽天市場', '検索1回で商品候補を取得して表示', '価格・送料・在庫・店舗とポイントの付与条件を確認'],
+        ['Qoo10', '同じ検索条件のまま開く検索先', '発送元と到着日数、割引の適用条件、内容量・色番を確認'],
+        ['どちらで買うか', '両方を同じ条件で開いて比べる', '送料と到着日数を含めた総額と、返品条件で判断']
+      ],
+      faq: [
+        ['Qoo10と楽天市場ではどちらが早く届きますか？', '発送元と配送方法によって変わります。商品ごとに販売ページの発送元とお届け予定日を確認してください。'],
+        ['HOSHILUはQoo10の価格も表示しますか？', 'いいえ。Qoo10は同じ検索条件のまま開く検索先として用意しています。商品候補を取得して表示しているのは楽天市場とYahoo!ショッピングです。'],
+        ['割引期間中は必ず安くなりますか？', '割引前の価格や対象商品はその都度変わります。割引前の価格を控えておき、実際の値下げ幅を自分で確認してください。']
+      ]
+    })
+  },
+  'compare-online-shopping-sites': {
+    ja: guide('ja', {
+      title: '通販サイトの比較｜どこで買うかを決める基準',
+      description: '通販サイトを比べるときに見る項目を、送料込みの総額・到着日数・販売者・返品条件の順に整理します。',
+      conclusion: '通販サイトの優劣は商品ごとに入れ替わるため、サイト単位で決め打ちしないほうが確実です。欲しい商品ごとに、送料込みの総額、到着までの日数、販売者、返品条件の4点を比べてください。HOSHILUは1回の入力で複数のモールを横断して探し始められます。',
+      updatedAt: '2026-09-03',
+      query: '一人暮らし向けの小さい炊飯器を複数の通販サイトで比較',
+      tips: ['サイト単位ではなく商品単位で比べる', 'ポイント還元は付与条件と上限を確認する', '在庫と価格は変わるため購入直前に販売ページで再確認する'],
+      audience: [
+        'どの通販サイトで買うか毎回迷っている人',
+        '価格以外の条件も含めて購入先を決めたい人',
+        'サイトごとに条件がずれた比較になってしまう人'
+      ],
+      criteria: [
+        ['総額', '商品価格に送料と手数料を足した金額で比べます。'],
+        ['受け取り', '発送元、到着までの日数、時間指定の可否を確認します。'],
+        ['販売者と返品', '販売者、保証、返品条件は同じ商品でも出品者ごとに異なります。']
+      ],
+      comparison: [
+        ['送料込みの総額', '各販売ページの購入手続き直前', '商品価格だけで決めない'],
+        ['到着までの日数', '販売ページの発送元とお届け予定', '必要な日に間に合うかで判断'],
+        ['販売者と返品条件', '販売ページの販売者情報と返品規定', '同じ商品でも出品者ごとに違う']
+      ],
+      faq: [
+        ['どの通販サイトが一番良いですか？', '商品によって入れ替わるため、一つに決めることはおすすめしません。欲しい商品ごとに総額・到着日数・販売者・返品条件で比べてください。'],
+        ['HOSHILUはどのサイトの商品を表示しますか？', '商品候補を取得して表示しているのは楽天市場とYahoo!ショッピングです。Amazon・Qoo10・SHEINなどは、同じ検索条件のまま開く検索先として用意しています。']
+      ]
+    })
+  },
+  'compare-products-across-online-shops': {
+    ja: guide('ja', {
+      title: 'ネットショップの商品比較で失敗しない手順',
+      description: '複数のネットショップで商品を比べるとき、別商品を混ぜないための確認順と、価格以外の比較項目を解説します。',
+      conclusion: '比較の失敗はほとんどが「別商品を並べていた」ことが原因です。先に同一商品かどうかを確認し、次に送料込みの総額、最後に販売条件を見る順番にしてください。HOSHILUは1回の入力で複数のモールへ同じ条件のまま進めるため、条件がずれにくくなります。',
+      updatedAt: '2026-09-03',
+      query: '同じ型番の空気清浄機をネットショップ間で比較',
+      tips: ['先に同一商品かを確認してから価格を並べる', 'セット数や容量違いを同じ表に混ぜない', '販売者と保証条件は商品ごとに販売ページで確認する'],
+      audience: [
+        '複数のネットショップで同じ商品を探している人',
+        '安いと思って買ったら容量やセット数が違った経験がある人',
+        '比較表を作る前に確認すべき項目を知りたい人'
+      ],
+      criteria: [
+        ['同一商品の判定', '型番、容量、色、セット数、対応機種を照合します。'],
+        ['総額', '商品価格に送料と手数料を足した金額で並べます。'],
+        ['販売条件', '販売者、在庫、返品、保証を販売ページで確認します。']
+      ],
+      comparison: [
+        ['1. 同一商品か', '型番・容量・色・セット数・対応機種', '1つでも違えば別商品として分ける'],
+        ['2. 総額', '商品価格と送料と手数料', '表示価格だけで並べない'],
+        ['3. 販売条件', '販売者、在庫、返品、保証', '同じ商品でも出品者ごとに違う']
+      ],
+      faq: [
+        ['同じ商品名なら同じ商品ですか？', 'いいえ。型番、容量、色、セット数、対応機種のいずれかが違えば別商品です。比較表では分けて扱ってください。'],
+        ['価格が極端に安い出品はどう見ればよいですか？', '商品状態、販売者、保証、発送元を販売ページで確認してください。中古品や並行輸入品が混ざっていることがあります。']
+      ]
+    })
+  },
+  'search-products-across-multiple-shopping-sites': {
+    ja: guide('ja', {
+      title: '複数の通販サイトで同じ商品を検索する方法',
+      description: '通販サイトごとに検索し直さず、同じ条件のまま複数サイトで商品を探すための手順を解説します。',
+      conclusion: '検索語をサイトごとに打ち直すと、表記がずれて比較になりません。商品名か型番、無ければ用途と条件を1回だけ決め、その条件のまま各サイトへ渡してください。HOSHILUは1回の入力で楽天市場とYahoo!ショッピングの候補を取得して表示し、Amazon・Qoo10・SHEINなどへは同じ条件のまま1タップで進めます(合計最大13モール)。',
+      updatedAt: '2026-09-03',
+      query: '折りたためる小さいサーキュレーターを複数の通販サイトで検索',
+      tips: ['検索条件は1回だけ決めて、サイトごとに書き換えない', '商品名が分からないときは用途・大きさ・使う場所を書く', '候補が違ったときは「違った点」を条件に足して探し直す'],
+      audience: [
+        'サイトごとに検索語を打ち直している人',
+        '同じ条件のまま複数の通販サイトを見たい人',
+        '商品名が分からないまま複数サイトを探したい人'
+      ],
+      criteria: [
+        ['入力する条件', '商品名か型番。無ければ用途、使う人、大きさ、予算、避けたい条件を書きます。'],
+        ['条件を崩さない', '同じ条件を各サイトへ渡します。サイトごとに言い換えると別商品が並びます。'],
+        ['確認する場所', '価格・送料・在庫・販売者は、遷移先の販売ページで確認します。']
+      ],
+      comparison: [
+        ['サイトを1つずつ開く', 'サイトの数だけ検索し直す', '打ち直すたびに条件がずれやすい'],
+        ['同じ検索語をコピーして貼る', '貼り付けの手間が残る', '語はそろうが表記ゆれは残る'],
+        ['HOSHILUに1回入力する', '入力は1回', '同じ条件のまま各モールへ渡せる']
+      ],
+      faq: [
+        ['何サイトまでまとめて探せますか？', '検索先として開けるのは合計最大13モールです。そのうち商品候補を取得して画面に表示できるのは楽天市場とYahoo!ショッピングです。'],
+        ['商品名が分からなくても複数サイトを探せますか？', 'はい。用途、見た目、使う人、予算などを文章で入力すれば、その条件のまま各モールの検索へ進めます。']
+      ]
+    })
+  },
+  'cross-search-ec-sites': {
+    ja: guide('ja', {
+      title: 'ECサイトを横断検索する方法と、できること・できないこと',
+      description: '複数のECサイトを横断して商品を探す方法と、まとめて表示できる範囲・個別に開く必要がある範囲を整理します。',
+      conclusion: '横断検索は、すべてのECサイトの在庫を1画面に統合するものではありません。各サイトが商品データを外部提供しているかどうかで扱いが変わります。HOSHILUで商品候補を取得して表示できるのは楽天市場とYahoo!ショッピングです。Amazon・Qoo10・SHEINなどは、同じ検索条件のまま開く検索先として1タップで進めます。',
+      updatedAt: '2026-09-03',
+      query: '静音のワイヤレスマウスをECサイト横断で探す',
+      tips: ['「全ECサイトの在庫を統合表示」と書かれた説明はうのみにしない', '取得して表示された候補と、検索先を開く導線を区別して見る', '価格・在庫は取得日時を確認し、販売ページで再確認する'],
+      audience: [
+        '横断検索でどこまで一度に見られるのかを知りたい人',
+        '複数のECサイトを効率よく確認したい人',
+        '表示された情報の取得元を確認したい人'
+      ],
+      criteria: [
+        ['取得できる範囲', 'サイトが商品データを外部提供している場合のみ、商品候補を画面に表示できます。'],
+        ['開くだけの範囲', '外部提供がない場合は、同じ検索条件でそのサイトの検索結果を開きます。'],
+        ['情報の鮮度', '価格と在庫は取得時点の値です。購入前に販売ページで確認します。']
+      ],
+      comparison: [
+        ['商品候補を取得して表示', '楽天市場、Yahoo!ショッピング', '商品名・価格・取得日時を画面で確認できる'],
+        ['同じ条件で検索先を開く', 'Amazon、Qoo10、SHEINなど', '1タップでそのサイトの検索結果へ進む'],
+        ['公式ストアに絞って開く', 'ZOZOTOWN、ハンズ、マツキヨココカラ、@cosme、ABC-MART', 'モール内の公式ストア検索へ進む']
+      ],
+      faq: [
+        ['すべてのECサイトの在庫を1画面で見られますか？', 'いいえ。商品データを外部提供しているサイトのみ候補を表示できます。それ以外は同じ条件で検索先を開く形になります。'],
+        ['Amazonの在庫は横断検索に含まれますか？', '現時点では商品候補としては表示していません。同じ検索条件のまま開く検索先として用意しています。']
+      ]
+    })
+  },
+  'find-products-at-a-lower-price': {
+    ja: guide('ja', {
+      title: '商品を安く探す方法｜総額・時期・商品状態で見直す',
+      description: '同じ商品をより安く買うために、総額の比べ方、セール時期の使い方、商品状態の選び方を順に解説します。',
+      conclusion: '安く買う順番は、(1)同じ商品にそろえる、(2)送料込みの総額で比べる、(3)セールやポイントの条件を確認する、(4)新品以外の選択肢を検討する、の4つです。表示価格だけで決めず、購入直前に販売ページで最新の条件を確認してください。HOSHILUは1回の入力で複数のモールを横断して探し始められます。',
+      updatedAt: '2026-09-03',
+      query: '同じ型番の電気ケトルを安く買えるところを探す',
+      tips: ['同じ商品にそろえてから価格を比べる', 'セール前の価格を控えておき、値下げ幅を自分で確認する', '中古・アウトレットは状態表記と保証を必ず読む'],
+      audience: [
+        '同じ商品をできるだけ安く買いたい人',
+        'セールのときに本当に安いのか判断したい人',
+        '中古やアウトレットも選択肢に入れたい人'
+      ],
+      criteria: [
+        ['同一商品', '型番、容量、色、セット数をそろえます。ここがずれると価格差の意味がなくなります。'],
+        ['総額', '商品価格に送料と手数料を足して比べます。ポイントは付与条件と上限を確認します。'],
+        ['商品状態', '新品、中古、アウトレット、訳あり品は保証と返品条件が異なります。']
+      ],
+      comparison: [
+        ['購入先を横断して比べる', '送料込みの総額', '同じ型番・容量・セット数にそろえる'],
+        ['セールやポイントを使う', '開催期間、付与条件、上限', 'セール価格が通常より安いとは限らない'],
+        ['新品以外を検討する', '中古・アウトレット・訳あり品の状態表記', '保証と返品条件を販売ページで確認する']
+      ],
+      faq: [
+        ['どこで買うのが一番安いですか？', '商品と時期で入れ替わります。同じ商品を送料込みの総額で、その時点の条件で比べてください。'],
+        ['セール中なら買ってよいですか？', 'セール前の価格を控えておき、実際の値下げ幅を確認してから判断してください。割引率の表示だけでは判断できません。']
+      ]
+    })
+  },
+  'stop-checking-shopping-sites-one-by-one': {
+    ja: guide('ja', {
+      title: '通販サイトを何個も見るのが面倒なときの探し方',
+      description: 'Amazon・楽天市場・Qoo10などを順番に開き直す手間を減らし、1回の入力で複数モールを見る手順を解説します。',
+      conclusion: '面倒の正体は、サイトごとに検索語を打ち直していることです。条件を1回決めて、その条件のまま各モールへ渡せば、開き直しと打ち直しはなくなります。HOSHILUは1回の入力で楽天市場とYahoo!ショッピングの候補を表示し、Amazon・Qoo10などへは同じ条件のまま1タップで進めます。',
+      updatedAt: '2026-09-03',
+      query: '在宅で使う静かなデスクライトを何個ものサイトを開かずに探す',
+      tips: ['検索は1回にして、モールは結果画面から開く', 'タブを増やす前に、比べる条件を先に決める', '見た順番ではなく送料込みの総額で判断する'],
+      audience: [
+        'Amazon・楽天市場・Qoo10などを毎回順番に開いている人',
+        'タブが増えてどこまで見たか分からなくなる人',
+        '同じ検索語を何度も打ち直している人'
+      ],
+      criteria: [
+        ['入力の回数', '条件は1回だけ決めます。サイトごとに書き換えないことが前提です。'],
+        ['開く順番', '結果画面からモールを開き、見たモールが分かる状態にします。'],
+        ['判断の基準', '見た順番ではなく、送料込みの総額と到着日数で判断します。']
+      ],
+      comparison: [
+        ['サイトを1つずつ開く', 'タブが増え、どこまで見たか分からなくなる', '検索は1回にして、モールは結果画面から開く'],
+        ['サイトごとに検索語を打ち直す', '表記がずれて別商品が並ぶ', '同じ条件をそのまま各モールへ渡す'],
+        ['価格だけメモして比べる', '送料や到着日数が抜ける', '送料込みの総額と到着日数まで含めて比べる']
+      ],
+      faq: [
+        ['1回の検索で何モールまで進めますか？', '検索先として開けるのは合計最大13モールです。そのうち商品候補を取得して表示できるのは楽天市場とYahoo!ショッピングです。'],
+        ['商品名が分からないときはどうすればよいですか？', '用途、見た目、使う人、予算などを文章で入力してください。その条件のまま各モールの検索へ進めます。']
+      ]
+    })
+  },
   'american-products-in-japan': {
     ja: guide('ja', {
       title: 'アメリカ商品を日本で探す方法',
@@ -2751,6 +3019,51 @@ const pages = {
 
 const visualProfiles = {
   ja: {
+    'compare-amazon-and-rakuten': {
+      intent: 'compare_amazon_and_rakuten', cluster: 'cross-market-search', articleType: 'comparison-guide',
+      headings: ['購入先', 'HOSHILUでの扱い', '購入前に確認すること'],
+      steps: [['条件をそろえる', '型番・容量・色・セット数を決め、同じ条件で比べます。'], ['1回入力して両方へ', 'HOSHILUに1回入力し、楽天市場の候補を見てからAmazonへ同じ条件で進みます。'], ['総額で決める', '送料込みの総額と、販売者・在庫・返品条件を販売ページで確認します。']]
+    },
+    'compare-amazon-and-qoo10': {
+      intent: 'compare_amazon_and_qoo10', cluster: 'cross-market-search', articleType: 'comparison-guide',
+      headings: ['購入先', 'HOSHILUでの扱い', '購入前に確認すること'],
+      steps: [['そろえる項目を決める', '内容量・色番・セット数など、同一商品と言える条件を決めます。'], ['1回入力して両方へ', 'HOSHILUに1回入力し、AmazonとQoo10へ同じ条件のまま進みます。'], ['到着条件まで含めて比べる', '送料と到着日数を足した総額、販売者、返品条件を販売ページで確認します。']]
+    },
+    'compare-qoo10-and-rakuten': {
+      intent: 'compare_qoo10_and_rakuten', cluster: 'cross-market-search', articleType: 'comparison-guide',
+      headings: ['購入先', 'HOSHILUでの扱い', '購入前に確認すること'],
+      steps: [['同一商品にそろえる', '内容量・色番・セット数をそろえ、似ているだけの商品を混ぜません。'], ['候補と検索先を見る', '楽天市場の候補をHOSHILUで確認し、Qoo10へは同じ条件のまま進みます。'], ['総額と到着日数で判断', '送料込みの総額、発送元、到着までの日数を販売ページで確認します。']]
+    },
+    'compare-online-shopping-sites': {
+      intent: 'compare_online_shopping_sites', cluster: 'cross-market-search', articleType: 'comparison-guide',
+      headings: ['比べる項目', '見る場所', '判断の目安'],
+      steps: [['商品単位で考える', 'サイトを先に決めず、欲しい商品ごとに比べる前提にします。'], ['4項目を並べる', '送料込みの総額、到着までの日数、販売者、返品条件を並べます。'], ['購入直前に再確認', '価格と在庫は変わるため、購入直前に販売ページで確認します。']]
+    },
+    'compare-products-across-online-shops': {
+      intent: 'compare_products_across_online_shops', cluster: 'cross-market-search', articleType: 'comparison-guide',
+      headings: ['確認の順番', '確認する内容', '判断の目安'],
+      steps: [['同一商品か確認', '型番・容量・色・セット数・対応機種を照合し、違う商品を分けます。'], ['総額を並べる', '商品価格に送料と手数料を足した金額で並べます。'], ['販売条件を見る', '販売者、在庫、返品、保証を販売ページで確認します。']]
+    },
+    'search-products-across-multiple-shopping-sites': {
+      intent: 'search_across_multiple_shopping_sites', cluster: 'cross-market-search', articleType: 'how-to',
+      headings: ['探し方', '手間', '条件のそろい方'],
+      steps: [['条件を1回決める', '商品名か型番、無ければ用途・大きさ・予算を1回だけ決めます。'], ['そのまま各モールへ', '同じ条件のまま、候補の表示と検索先の表示を受け取ります。'], ['違いを次に足す', '候補が違ったときは、違った点だけを条件に足して探し直します。']]
+    },
+    'cross-search-ec-sites': {
+      intent: 'cross_search_ec_sites', cluster: 'cross-market-search', articleType: 'how-to',
+      headings: ['扱い', '対象', '画面での見え方'],
+      steps: [['取得できる範囲を知る', '商品データを外部提供しているサイトだけ、候補を画面に表示できます。'], ['開く導線を使う', '外部提供がないサイトは、同じ条件で検索結果を開いて確認します。'], ['取得日時を見る', '価格と在庫は取得時点の値です。販売ページで最新の条件を確認します。']]
+    },
+    'find-products-at-a-lower-price': {
+      intent: 'find_products_at_lower_price', cluster: 'cross-market-search', articleType: 'shopping-guide',
+      headings: ['手段', '見る条件', '注意点'],
+      steps: [['同じ商品にそろえる', '型番・容量・色・セット数をそろえ、価格差の意味を保ちます。'], ['総額で比べる', '商品価格に送料と手数料を足した金額で購入先を比べます。'], ['時期と状態を見る', 'セール条件と、中古・アウトレットの状態表記や保証を確認します。']]
+    },
+    'stop-checking-shopping-sites-one-by-one': {
+      intent: 'reduce_shopping_site_switching', cluster: 'cross-market-search', articleType: 'how-to',
+      headings: ['今のやり方', '起きている手間', '減らし方'],
+      steps: [['開き直しをやめる', 'サイトを順番に開かず、検索を1回にまとめます。'], ['結果画面からモールへ', '結果画面からモールを開き、見たモールが分かる状態にします。'], ['総額で決める', '見た順番ではなく、送料込みの総額と到着日数で判断します。']]
+    },
     'american-products-in-japan': {
       intent: 'american_products_in_japan', cluster: 'overseas-shopping', articleType: 'shopping-guide',
       headings: ['確認する情報', '検索・照合方法', '購入前の判断'],
@@ -3296,6 +3609,22 @@ export const seoHubPaths = ['/ja/guides'];
 
 const guideHubGroups = [
   {
+    id: 'cross-search',
+    title: '複数の通販サイトをまとめて探す・比較する',
+    description: 'Amazon・楽天市場・Qoo10などを1つずつ開き直さず、同じ条件のまま横断して探し、送料込みの総額で比べるガイドです。',
+    slugs: [
+      'stop-checking-shopping-sites-one-by-one',
+      'search-products-across-multiple-shopping-sites',
+      'cross-search-ec-sites',
+      'compare-online-shopping-sites',
+      'compare-products-across-online-shops',
+      'compare-amazon-and-rakuten',
+      'compare-amazon-and-qoo10',
+      'compare-qoo10-and-rakuten',
+      'find-products-at-a-lower-price'
+    ]
+  },
+  {
     id: 'discover',
     title: '名前・特徴・予算から探す',
     description: '商品名が分からない状態から、見た目・用途・予算・贈る相手を検索条件へ変えるガイドです。',
@@ -3561,8 +3890,8 @@ function renderGuideHub() {
 <nav class="article-toc guide-hub-toc" aria-label="ガイドの分類"><strong>目的から選ぶ</strong><div>${guideHubGroups.map((group) => `<a href="#${group.id}">${esc(group.title)}</a>`).join('')}<a href="#hub-search">HOSHILUで探す</a></div></nav>
 <section class="answer"><h2>今の状況に近い項目から選んでください</h2><p>商品名が分からない場合は「名前・特徴・予算から探す」、候補が決まっている場合は「同じ商品・使える商品を見分ける」、購入直前なら「購入先・総額・口コミを比較する」から始められます。</p></section>
 ${groups}
-<aside class="mid-cta" id="hub-search"><h2>覚えている条件からHOSHILUで探す</h2><p>商品名が分からなくても、用途・見た目・使う人・予算を文章で入力できます。</p><form action="/" method="get" data-seo-search-form><label for="guide-hub-search">探したい商品の条件</label><textarea id="guide-hub-search" name="q" required maxlength="200" placeholder="例：一人暮らしの部屋で使う、収納しやすい小さなテーブル"></textarea><button type="submit">この条件でHOSHILU検索へ</button></form></aside>
-<p class="bottom-cta"><a href="/" data-seo-search-link>HOSHILUの検索画面を開く</a></p></article></main>
+<aside class="mid-cta" id="hub-search"><h2>HOSHILUでまとめて探す</h2><p>商品名が分からなくても、用途・見た目・使う人・予算を文章で入力できます。</p><form action="/" method="get" data-seo-search-form><label for="guide-hub-search">探したい商品の条件</label><textarea id="guide-hub-search" name="q" required maxlength="200" placeholder="例：一人暮らしの部屋で使う、収納しやすい小さなテーブル"></textarea><button type="submit">この条件でまとめて探す</button></form></aside>
+<p class="bottom-cta"><a href="/" data-seo-search-link>HOSHILUでまとめて探す</a></p></article></main>
 <footer><a href="/privacy">プライバシー</a><a href="/terms">利用上の注意</a></footer>
 <script type="module" src="/seo-article-analytics.mjs"></script></body></html>`;
 }
@@ -3622,12 +3951,12 @@ export function renderSeoPage(pathname) {
   const canonical = `${ORIGIN}${pathFor(locale, slug)}`;
   const isJa = locale === 'ja';
   const searchLabel = isJa ? '探したい商品の条件' : 'Product conditions';
-  const submit = isJa ? 'この条件でHOSHILU検索へ' : 'Search these conditions with HOSHILU';
+  const submit = isJa ? 'この条件でまとめて探す' : 'Search these conditions with HOSHILU';
   const featureEntry = page.featurePath ? `<p class="bottom-cta feature-entry"><a href="${esc(page.featurePath)}" data-seo-feature-link>${esc(page.featureLabel || (isJa ? 'HOSHILUの公開機能を開く' : 'Open the HOSHILU feature'))}</a></p>` : '';
   const labels = isJa ? {
     conclusion: '結論', audience: 'この方法が向く人', criteria: '選ぶ条件と注意点', comparison: '候補を比較するときの見方',
     evidence: 'おすすめ・比較の根拠', reviews: '口コミを確認するときのポイント', identity: '同一商品と類似商品の違い',
-    visual: '図で分かる探し方', toc: 'この記事の要点', try: 'HOSHILUで実際に探す', sources: '情報取得元と更新日', related: '関連記事', faq: 'よくある質問',
+    visual: '図で分かる探し方', toc: 'この記事の要点', try: 'HOSHILUでまとめて探す', sources: '情報取得元と更新日', related: '関連記事', faq: 'よくある質問',
     sourceText: 'HOSHILU本番公開画面・公開機能仕様。価格・在庫・販売条件は各販売ページで確認してください。'
   } : {
     conclusion: 'Conclusion', audience: 'Who this method is for', criteria: 'Selection criteria and cautions', comparison: 'How to compare candidates',
@@ -3650,7 +3979,7 @@ export function renderSeoPage(pathname) {
 <section id="audience"><h2>${labels.audience}</h2>${list(page.audience, 'audience-list')}</section>
 <section id="criteria"><h2>${labels.criteria}</h2><dl class="criteria-grid">${page.criteria.map(([term, description]) => `<div><dt>${esc(term)}</dt><dd>${esc(description)}</dd></div>`).join('')}</dl>${page.tips ? list(page.tips, 'check-list') : ''}</section>
 <section id="comparison" data-seo-section-event="seo_comparison_view"><h2>${labels.comparison}</h2>${table(page.comparison, profile.headings)}</section>
-<aside class="mid-cta" id="search-with-hoshilu"><h2>${labels.try}</h2><p>${isJa ? '例を編集して、現在のHOSHILU検索へ進めます。' : 'Edit the example and continue to the current HOSHILU search.'}</p><form action="/" method="get" data-seo-search-form><label for="seo-search">${searchLabel}</label><textarea id="seo-search" name="q" required maxlength="200">${esc(page.query)}</textarea><button type="submit">${submit}</button></form></aside>
+<aside class="mid-cta" id="search-with-hoshilu"><h2>${labels.try}</h2><p>${isJa ? '1回の入力で、楽天市場とYahoo!ショッピングの候補を確認し、Amazon・Qoo10などへは同じ条件のまま進めます。' : 'Edit the example and continue to the current HOSHILU search.'}</p><form action="/" method="get" data-seo-search-form><label for="seo-search">${searchLabel}</label><textarea id="seo-search" name="q" required maxlength="200">${esc(page.query)}</textarea><button type="submit">${submit}</button></form></aside>
 <section id="evidence" data-seo-section-event="seo_evidence_view"><h2>${labels.evidence}</h2>${list(page.evidence, 'evidence-grid')}</section>
 <section id="reviews" data-seo-section-event="seo_review_guide_view"><h2>${labels.reviews}</h2>${reviewChecks(isJa)}<p>${esc(page.review)}</p></section>
 <section id="identity" data-seo-section-event="seo_identity_guide_view"><h2>${labels.identity}</h2>${identityGuide(isJa)}<p>${esc(page.identity)}</p></section>

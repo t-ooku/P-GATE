@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語100ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 105);
+test('検索意図が異なる日本語109ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 114);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.ok(html, path);
@@ -42,7 +42,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは100記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは109記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -54,7 +54,7 @@ test('日本語ガイドハブは100記事を重複なく分類し全記事か�
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 100);
+  assert.equal(japanesePaths.length, 109);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -571,11 +571,11 @@ test('旧記事にも直接画像入力を反映し、文章入力だけとい�
 test('サイトマップはガイドハブ・全SEOページ・canonicalの法的ページを含む', () => {
   const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
   for (const path of seoPagePaths) assert.match(sitemap, new RegExp(`<loc>https://hoshilu\\.app${path}</loc>`));
-  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-09-01<\/lastmod>/);
+  assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>\s*<lastmod>2026-09-03<\/lastmod>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 111);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 120);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });
@@ -670,4 +670,44 @@ test('2026-09-01公開のセール準備7記事は固有意図と安全基準を
     intents.add(html.match(/data-seo-intent="([^"]+)"/)[1]);
   }
   assert.equal(intents.size, published.length);
+});
+
+test('2026-09-03公開の横断検索9記事は固有意図・まとめて探す導線・誇張なしの表現を満たす', () => {
+  const published = [
+    'stop-checking-shopping-sites-one-by-one',
+    'search-products-across-multiple-shopping-sites',
+    'cross-search-ec-sites',
+    'compare-online-shopping-sites',
+    'compare-products-across-online-shops',
+    'compare-amazon-and-rakuten',
+    'compare-amazon-and-qoo10',
+    'compare-qoo10-and-rakuten',
+    'find-products-at-a-lower-price'
+  ];
+  const intents = new Set();
+  for (const slug of published) {
+    const path = `/ja/${slug}`;
+    const html = renderSeoPage(path);
+    assert.ok(html, path);
+    assert.match(html, /datetime="2026-09-03"/);
+    assert.match(html, /"dateModified":"2026-09-03"/);
+    assert.match(html, /<figure class="guide-visual"/);
+    assert.match(html, /HOSHILUでまとめて探す/, `${slug} must carry the cross-search CTA`);
+    assert.match(html, /この条件でまとめて探す/);
+    assert.match(html, /販売ページ/);
+    assert.match(html, /href="\/ja\/guides"/);
+    assert.doesNotMatch(html, /最安(?:値)?です|人気No\.1|売れ筋No\.1|絶対おすすめ/);
+    assert.doesNotMatch(html, /全(?:て|ての)?(?:通販|EC)サイトを統合/);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85);
+    intents.add(/data-seo-intent="([^"]+)"/.exec(html)[1]);
+    assert.match(html, /data-seo-cluster="cross-market-search"/);
+  }
+  assert.equal(intents.size, published.length);
+});
+
+test('全日本語ガイドが「まとめて探す」導線を持つ', () => {
+  for (const path of seoPagePaths.filter((entry) => entry.startsWith('/ja/'))) {
+    assert.match(renderSeoPage(path), /HOSHILUでまとめて探す/, path);
+  }
+  assert.match(renderSeoPage('/ja/guides'), /HOSHILUでまとめて探す/);
 });

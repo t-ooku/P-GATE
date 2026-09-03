@@ -94,7 +94,7 @@ test('FAQは日英中韓の画面文言を持ち、sitemapは公開ページを�
   assert.doesNotMatch(i18n, /faq\.social\.answer'[^\n]*YouTube/u);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/ja\/guides<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 111);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 120);
   assert.match(robots, /Sitemap: https:\/\/hoshilu\.app\/sitemap\.xml/);
   assert.match(worker, /hoshilu-shell-v405/);
 });

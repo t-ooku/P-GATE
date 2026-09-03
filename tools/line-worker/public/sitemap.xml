@@ -6,7 +6,7 @@
 <url><loc>https://hoshilu.app/for-sellers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url>
     <loc>https://hoshilu.app/ja/guides</loc>
-    <lastmod>2026-09-01</lastmod>
+    <lastmod>2026-09-03</lastmod>
     <xhtml:link rel="alternate" hreflang="ja" href="https://hoshilu.app/ja/guides"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://hoshilu.app/ja/guides"/>
     <changefreq>weekly</changefreq><priority>0.9</priority>
@@ -353,4 +353,13 @@
   <url><loc>https://hoshilu.app/ja/plan-shopping-with-ec-sale-calendar</loc><lastmod>2026-09-01</lastmod></url>
   <url><loc>https://hoshilu.app/ja/check-if-sale-price-is-really-cheaper</loc><lastmod>2026-09-01</lastmod></url>
   <url><loc>https://hoshilu.app/ja/prepare-for-year-end-sale-season</loc><lastmod>2026-09-01</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/stop-checking-shopping-sites-one-by-one</loc><lastmod>2026-09-03</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/search-products-across-multiple-shopping-sites</loc><lastmod>2026-09-03</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/cross-search-ec-sites</loc><lastmod>2026-09-03</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-online-shopping-sites</loc><lastmod>2026-09-03</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-products-across-online-shops</loc><lastmod>2026-09-03</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-amazon-and-rakuten</loc><lastmod>2026-09-03</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-amazon-and-qoo10</loc><lastmod>2026-09-03</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/compare-qoo10-and-rakuten</loc><lastmod>2026-09-03</lastmod></url>
+  <url><loc>https://hoshilu.app/ja/find-products-at-a-lower-price</loc><lastmod>2026-09-03</lastmod></url>
 </urlset>
