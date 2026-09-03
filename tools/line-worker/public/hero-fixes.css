@@ -90,7 +90,7 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
 
 @media (max-width: 420px) {
   html:lang(ja) #heroTitle {
-    font-size: clamp(22px, 6.1vw, 26px);
+    font-size: clamp(17px, 4.9vw, 26px);
     letter-spacing: -0.06em;
   }
 
@@ -99,8 +99,10 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
     letter-spacing: -0.06em;
   }
 
+  /* 2026-09-03: 狭い画面で「写真・スクショ・」/「SNS・一言から、」と
+     語の途中で折り返していた。折り返さず、字を縮めて1行に収める。 */
   html:lang(ja) #heroTitle .hero-title-line {
-    white-space: normal;
+    white-space: nowrap;
   }
 
   .hero-copy .hero-promise {
@@ -138,6 +140,12 @@ html:lang(ja) #heroTitle .hero-title-line { white-space: nowrap; }
 
   .hero h1 {
     white-space: normal;
+  }
+
+  /* jaの見出しは2つの span を各1行として扱う。溢れないよう字を縮める。 */
+  html:lang(ja) #heroTitle {
+    font-size: clamp(17px, 4.9vw, 26px);
+    letter-spacing: -0.06em;
   }
 
   .mywish-copy span {

@@ -18,8 +18,10 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(html, /id="heroTitle"><span class="hero-title-line">写真・スクショ・SNS・一言から、<\/span><span class="hero-title-line hero-title-accent">欲しい物を探せます。<\/span>/);
   assert.match(app, /first\.className='hero-title-line'/);
   assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
-  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \.hero-title-line \{[\s\S]*?white-space: normal;/);
-  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{[\s\S]*?font-size: clamp\(22px, 6\.1vw, 26px\);/);
+  // 2026-09-03 大隆さん報告「改行位置が変」: 狭い画面で「写真・スクショ・」/
+  // 「SNS・一言から、」と語の途中で折れていた。折り返さず字を縮めて1行に収める。
+  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \.hero-title-line \{[\s\S]*?white-space: nowrap;/);
+  assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{[\s\S]*?font-size: clamp\(17px, 4\.9vw, 26px\);/);
   assert.match(html, /loading="lazy"/);
   assert.match(html, /hoshilu-discovery-collage-mobile\.webp/);
   assert.match(html, /見た目、見た場所、使い方。覚えていることから話してください。/);

@@ -89,7 +89,9 @@ test('index.htmlがhero-marketplace-coverage.mjsを読み込む', async () => {
 test('第一画面は「欲しいけど、名前が分からない。」と「何が欲しいの？」、検索例は指示書の6件', async () => {
   const [html, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.match(html, /<p id="heroEyebrow" class="eyebrow">欲しいけど、名前が分からない。<\/p>/);
-  assert.match(html, /placeholder="何が欲しいの？（例：インスタで見た白いバッグ）"/);
+  // 例文はプレースホルダではなく下の検索例チップが担う(狭い画面で括弧書きが
+  // 語の途中で折り返していた。2026-09-03 大隆さん報告)。
+  assert.match(html, /placeholder="何が欲しいの？"/);
   assert.match(app, /JA:\{eyebrow:'欲しいけど、名前が分からない。'/);
   for (const example of ['インスタで見た白いバッグ', '韓国っぽいシルバーリング', 'このスクショのマットレス', '自立する本革トート', 'この靴に似たもの', 'SNSで見たピンクのリップ']) {
     assert.ok(app.includes(`'${example}'`), `example missing: ${example}`);
