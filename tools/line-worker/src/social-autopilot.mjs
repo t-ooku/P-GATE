@@ -296,6 +296,56 @@ const BUZZ_MEDIA_URL = 'https://hoshilu.app/social/hoshilu-buzz-ranking-v1.jpg';
 // ときは social-publisher.mjs の normalizeSocialPost がPR表記を付けないので、
 // 「広告ではないのにPR表記がある」という逆向きの不正確さも起きない。
 const AMAZON_SEARCH_ONLY_NOTICE = 'HOSHILUからAmazonを含む検索先を開けます。Amazonの商品候補・価格・在庫・レビューはリンク先で確認してください。';
+// 2026-09-03 指示書 §SNS「これ、どこの？」。直近14日の実測で自動投稿62件・
+// 1件あたり表示およそ54、着地からの流入はほぼゼロだった。原因は全投稿が
+// 機能説明(「最大13モール」「4通りの手がかり」)で、読む理由が本文に無いこと。
+// この枠は先に読者へ答えを渡す: 誰でも見たことがあるのに名前が出てこない物の
+// 「本当の名前」を書き、その名前で実際に検索できるリンクを添える。
+// 事実だけを書く(商品名・価格・在庫は書かない)。名前は一般名称または
+// 出典が明確な商標のみ。
+const NAME_QUIZ_POSTS = Object.freeze([
+  {
+    id: 'name-quiz-baran',
+    caption_body: 'お弁当に入ってる、緑のギザギザした仕切り。あれ名前あるの？\n→「バラン」。もとは葉蘭（ハラン）という植物の葉で仕切っていた名残です。\n名前が出てこない物は、見た目の説明のまま検索できます。',
+    query: '弁当 バラン 仕切り'
+  },
+  {
+    id: 'name-quiz-bag-closure',
+    caption_body: '食パンの袋を留めてる、あの四角いプラスチック。名前、言えますか。\n→「バッグクロージャー」。袋の口を留めるためだけに作られた専用品です。\n名前を知らない物も、形の説明だけで検索できます。',
+    query: 'バッグクロージャー パン 袋 留め具'
+  },
+  {
+    id: 'name-quiz-aglet',
+    caption_body: '靴ひもの先っぽの、硬い部分。ほつれると通せなくなるあれ。\n→「アグレット」。ひもをまとめて穴に通すための金具・樹脂パーツです。\n分からないのは名前だけ。見た目の説明で商品を検索できます。',
+    query: 'アグレット 靴ひも 先端 補修'
+  },
+  {
+    id: 'name-quiz-lunch-charm',
+    caption_body: 'お弁当に入ってる、魚の形をした醤油の容器。\n→「ランチャーム」。1957年に旭創業が作った容器の名前で、そのまま商標になっています。\n名前が分からない物は、見た目や使い道から検索できます。',
+    query: 'ランチャーム 魚型 醤油 容器'
+  },
+  {
+    id: 'name-quiz-drip-sheet',
+    caption_body: 'スーパーの刺身や肉のトレー、下に白いシートが敷いてありますよね。\n→「ドリップシート」。出てきた水分を吸って、味やにおいが落ちるのを防ぎます。\n用途しか分からない物も、その説明のまま商品を検索できます。',
+    query: 'ドリップシート 吸水シート 冷蔵'
+  },
+  {
+    id: 'name-quiz-coin-pocket',
+    caption_body: 'ジーンズの右前にある、小さすぎるポケット。何を入れる用か知ってますか。\n→「コインポケット」。もとは懐中時計を入れるためのポケットでした。\n名前が出てこない物は、場所と形から検索できます。',
+    query: 'コインポケット 付き デニム'
+  },
+  {
+    id: 'name-quiz-ishizuki',
+    caption_body: '傘のいちばん先、地面に着く金具の部分。\n→「石突き」。もともとは槍や杖の先端を指す言葉で、傘にもそのまま使われています。\n壊れた部品も、名前を知らないまま検索できます。',
+    query: '傘 石突き 交換 部品'
+  },
+  {
+    id: 'name-quiz-air-cushion',
+    caption_body: '荷物に入ってる、つぶすと気持ちいいあれ。「プチプチ」は実は商標です。\n→「気泡緩衝材」が一般名称です。プチプチは川上産業の登録商標です。\n呼び名が人によって違う物も、説明のまま検索できます。',
+    query: '気泡緩衝材 プチプチ ロール'
+  }
+]);
+
 const THREADS_AMAZON_POSTS = Object.freeze([
   {
     id: 'amazon-boost-books',
@@ -312,6 +362,12 @@ const THREADS_AMAZON_POSTS = Object.freeze([
     caption: `切れてから気づく日用品のストック。置き場所や見た目の特徴をHOSHILUへ。${AMAZON_SEARCH_ONLY_NOTICE}`,
     query: 'キッチンの排水溝に使う小さいゴミ受けネット'
   },
+  // 名前クイズ枠(先に答えを渡す投稿)。Amazon枠と同じ検索導線なので同じ開示文を付ける。
+  ...NAME_QUIZ_POSTS.map(post => ({
+    id: post.id,
+    caption: `${post.caption_body}${AMAZON_SEARCH_ONLY_NOTICE}`,
+    query: post.query
+  })),
   {
     id: 'trust-how-to-describe',
     caption: '商品名が分からないときは、カメラで撮る、保存画像・スクショ、HOSHILU対応の公開SNS投稿URL（投稿単体）、一言のどれかを手がかりに探せます。非対応・非公開投稿は画像か一言を追加してください。'

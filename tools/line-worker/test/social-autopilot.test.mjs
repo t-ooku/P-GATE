@@ -1068,3 +1068,26 @@ test('8月28日再公開CIは既知の技術障害2件だけを復旧しInstagra
   assert.doesNotMatch(update.slice(0, update.indexOf(' WHERE ')), /platform_job_id/);
   assert.match(workflow, /Verify both public post URLs/);
 });
+
+// 2026-09-03 指示書 §SNS「これ、どこの？」。直近14日の実測は自動投稿62件・
+// 1件あたり表示およそ54・着地からの流入ほぼゼロ。全投稿が機能説明で読む理由が
+// 無いことが原因なので、先に答え(物の本当の名前)を渡す枠を日次ローテへ入れる。
+test('Threads日次枠に「名前クイズ」投稿が入り、事実と開示文と検索リンクを持つ', () => {
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-09-03T00:00:00.000Z'), 14);
+  const quiz = posts.filter((post) => /^name-quiz-/u.test(post.content_id));
+  assert.ok(quiz.length >= 6, `名前クイズが少なすぎる: ${quiz.length}/${posts.length}`);
+  assert.ok(quiz.length < posts.length / 2, '機能説明枠を置き換えきらない');
+  for (const post of quiz) {
+    assert.equal(post.platform, 'THREADS');
+    // 答え(名前)を本文に書く。読者はリンクを踏まなくても得をする。
+    assert.match(post.caption, /→「[^」]+」/u);
+    // Amazon導線の開示は他のThreads枠と同じものを必ず付ける。
+    assert.match(post.caption, /HOSHILUからAmazonを含む検索先を開けます/u);
+    // 商品名・価格・在庫・レビューの断定は書かない(規約・§47)。
+    assert.doesNotMatch(post.caption, /最安|円|セール|レビュー[0-9]|在庫あり/u);
+    // その名前でそのまま検索できるリンクを持つ。
+    assert.ok(new URL(post.link).searchParams.get('q'));
+  }
+  const ids = new Set(quiz.map((post) => post.content_id));
+  assert.ok(ids.size >= 6, '同じクイズばかり出さない');
+});
