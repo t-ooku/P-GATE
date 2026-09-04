@@ -288,3 +288,15 @@ test('新しい Stripe API の請求書・サブスク形式でも未払い停�
   } } }, '2026-09-04T03:00:00Z');
   assert.equal(paid, 'INVOICE_ACTIVE');
 });
+
+test('管理者ページ /admin/seller-billing は管理セッションが無ければログインへ、あれば登録フォームを返す', async () => {
+  const { adminSellerBillingPageResponse } = await import('../src/admin-sp-api-page.mjs');
+  const html = await adminSellerBillingPageResponse().text();
+  assert.match(html, /id="billingForm"/u);
+  assert.match(html, /admin-seller-billing\.js/u);
+  assert.match(html, /noindex/u);
+  const { handleAdminAuthRoutes } = await import('../src/admin-auth.mjs');
+  const response = await handleAdminAuthRoutes(new Request('https://hoshilu.app/admin/seller-billing'), {});
+  assert.equal(response.status, 302);
+  assert.match(response.headers.get('location'), /\/admin-login$/u);
+});

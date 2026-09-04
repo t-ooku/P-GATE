@@ -1,5 +1,5 @@
 import {
-  adminLoginPageResponse, adminPromotionPageResponse, adminReelsPageResponse, adminSpApiPageResponse
+  adminLoginPageResponse, adminPromotionPageResponse, adminReelsPageResponse, adminSellerBillingPageResponse, adminSpApiPageResponse
 } from './admin-sp-api-page.mjs';
 import {
   adminLoginFingerprint, adminLoginLocked, recordAdminLoginFailure,
@@ -122,6 +122,10 @@ export async function handleAdminAuthRoutes(request, env) {
       return noStoreRedirect(`${url.origin}/admin-login`);
     }
     return adminPromotionPageResponse();
+  }
+  if (request.method === 'GET' && url.pathname === '/admin/seller-billing') {
+    if (!await readAdminSession(request, env)) return noStoreRedirect(`${url.origin}/admin-login`);
+    return adminSellerBillingPageResponse();
   }
   if (request.method === 'GET' && url.pathname === '/admin/reels') {
     if (!await readAdminSession(request, env)) return noStoreRedirect(`${url.origin}/admin-login`);

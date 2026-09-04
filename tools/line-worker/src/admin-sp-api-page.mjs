@@ -42,7 +42,7 @@ export function adminPromotionPageResponse() {
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">BUSINESS KPI</p><h1>HOSHILU 経営ダッシュボード</h1></div>
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
-  <nav class="admin-nav"><a class="active" href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a href="/admin/sp-api">認証監査</a></nav>
+  <nav class="admin-nav"><a class="active" href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a href="/admin/seller-billing">セラー請求</a><a href="/admin/sp-api">認証監査</a></nav>
   <div class="dashboard-actions"><p id="promotionStatus" role="status"></p>
   <button id="refreshPromotion" class="ghost-button" type="button">最新状態に更新</button>
   <button id="runSearchQaCanary" class="ghost-button" type="button">検索品質カナリアを今すぐ実行</button></div>
@@ -78,10 +78,41 @@ export function adminReelsPageResponse() {
   <link rel="stylesheet" href="/admin-promotion.css"><title>AIリール管理 | HOSHILU</title></head><body>
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">AI REELS</p><h1>AIリール管理</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
-  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a class="active" href="/admin/reels">AIリール管理</a><a href="/admin/sp-api">認証監査</a></nav>
+  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a class="active" href="/admin/reels">AIリール管理</a><a href="/admin/seller-billing">セラー請求</a><a href="/admin/sp-api">認証監査</a></nav>
   <p>自動投稿を基本とし、確認が必要な動画だけここで公開できます。</p>
   <div class="dashboard-actions"><p id="reelStatus" role="status"></p><button id="refreshReels" class="ghost-button" type="button">最新状態に更新</button></div></section>
   <section class="auth-card"><div class="section-head"><div><p class="eyebrow">PENDING &amp; HISTORY</p><h2>動画一覧</h2></div></div>
   <div id="reelGrid" class="promotion-channel-grid" aria-live="polite"></div></section>
   </main><script type="module" src="/admin-reels.js"></script></body></html>`, { headers });
 }
+
+// 2026-09-04 請求・決済（前払い・Stripe）: 管理者がセラーの請求アカウントを登録し、
+// 月額登録・チャージ用の Stripe リンクを受け取る。セラー画面のログインが無くても
+// ここからリンクを渡せば決済まで通る。
+export function adminSellerBillingPageResponse() {
+  return new Response(`<!doctype html><html lang="ja"><head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/admin-sp-api.css">
+  <link rel="stylesheet" href="/admin-promotion.css"><title>セラー請求 | HOSHILU</title></head><body>
+  <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
+  <p class="eyebrow">SELLER BILLING</p><h1>セラー請求（前払い）</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
+  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a class="active" href="/admin/seller-billing">セラー請求</a><a href="/admin/sp-api">認証監査</a></nav>
+  <p>無料プラン＝ジャンル定価を前払い残高から消化。Business ¥9,800（3か月0円）＝定価の50%＋毎月5,000円分まで0円。すべて前払い。</p>
+  <div class="dashboard-actions"><p id="billingStatus" role="status"></p><button id="refreshBilling" class="ghost-button" type="button">最新状態に更新</button></div></section>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">REGISTER</p><h2>請求アカウントを登録</h2></div></div>
+  <form id="billingForm" class="auth-form">
+    <label>事業者名 <input name="account_name" required maxlength="100" placeholder="例: ITG GROUP"></label>
+    <label>担当者メール <input name="contact_email" type="email" required placeholder="seller@example.com"></label>
+    <label>プラン <select name="plan"><option value="BUSINESS">Business（¥9,800/月・3か月0円）</option><option value="SELLER">無料プラン（流入課金のみ）</option></select></label>
+    <label>支払い方法 <select name="payment_preference"><option value="CARD">カード（自動引落・自動チャージ可）</option><option value="BANK_TRANSFER">銀行振込（Stripe が専用口座を発行）</option></select></label>
+    <label>テナント（カンマ区切り） <input name="tenants" placeholder="itg,itt,mc2"></label>
+    <label>優先出品のセラーID（1行に「テナント,セラーID」） <textarea name="seller_ids" rows="3" placeholder="itg,A1SELLER"></textarea></label>
+    <label>セラー画面の識別子 seller_key（任意・既存セラーを紐付ける場合だけ） <input name="seller_key" pattern="[A-Za-z0-9_-]{20,120}" placeholder="空欄なら自動発行"></label>
+    <button class="primary-button" type="submit">登録して Stripe リンクを作る</button>
+  </form>
+  <div id="billingResult" class="operation-status" aria-live="polite"></div></section>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">ACCOUNTS</p><h2>登録済みアカウント</h2></div></div>
+  <div id="billingAccounts" class="data-table-wrap" aria-live="polite"></div></section>
+  </main><script type="module" src="/admin-seller-billing.js"></script></body></html>`, { headers });
+}
+
