@@ -77,7 +77,7 @@ import {
 import { handleSpApiAdminRoutes } from './sp-api-admin-routes.mjs';
 import { handleSpApiSellerRoutes } from './sp-api-seller-routes.mjs';
 import { requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
-import { expandSearchQuery } from './query-expansion.mjs';
+import { expandSearchQuery, findExpansionRule } from './query-expansion.mjs';
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
   buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation,
@@ -1124,6 +1124,11 @@ export function buildAmazonSearchKeywords(query) {
   // for any query that is not literally one of the authored teacher entries.
   const teacherEntry = lookupTeacherDatasetEntry(query);
   if (teacherEntry?.search_terms?.ja?.length) return teacherEntry.search_terms.ja.join(' ');
+  // 2026-09-04 大隆さん実機報告（「底開口 水筒」）: query-expansion の正式名詞が
+  // ここで「水筒」まで削られ、展開が無意味になっていた。展開規則が当たったときは
+  // その正式名詞をそのままモールへ渡す。
+  const expansionKeywords = findExpansionRule(query)?.marketplaceKeywords || '';
+  if (expansionKeywords) return expansionKeywords;
   // 2026-09-03 実機報告: 「水筒用 洗浄ブラシ」がモールへ「水筒 bottle」として
   // 渡っていた。「X用 Y」で商品(Y)が落ちている場合は、英語や意味的キーワードを
   // 足さず、利用者が入力した文をそのままモールへ渡す。
@@ -1258,6 +1263,10 @@ export function buildRakutenSearchKeywords(query) {
 }
 
 export function buildRakutenSearchKeywordCandidates(query, fallbackQuery = '') {
+  // 2026-09-04 大隆さん実機報告（「底開口 水筒」→ 楽天へは「水筒」だけが渡っていた）:
+  // query-expansion の正式名詞（例「そこまで洗えるボトル 水筒」）を第1候補にし、
+  // 語を削った一般語は従来どおり後ろの候補に残す。
+  const expansionPrimary = findExpansionRule(query)?.marketplaceKeywords || findExpansionRule(fallbackQuery)?.marketplaceKeywords || '';
   const primary = buildRakutenSearchKeywords(query);
   const rememberedProduct = buildRakutenSearchKeywords(
     String(query || '').split('/')[0]
@@ -1281,7 +1290,7 @@ export function buildRakutenSearchKeywordCandidates(query, fallbackQuery = '') {
   // 再検索は最大3回に抑えつつ、AI変換語・AIが見つけた識別子の次に
   // 必ずAI前の検索条件へ到達できる順序にする。従来の商品語フォールバックは
   // AI変換が無い検索ではこれまでどおり第2候補に残る。
-  return [...new Set([primary, identifier, fallback, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
+  return [...new Set([expansionPrimary, primary, identifier, fallback, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
 }
 
 // "条件整理検索" (organized-conditions) candidate: for apparel-body queries,
@@ -1306,7 +1315,8 @@ export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = ''
   const rakutenCandidates = buildRakutenSearchKeywordCandidates(query);
   const organized = organizedApparelCandidate(query);
   const identifier = String(query || '').normalize('NFKC').match(/\b[A-Za-z][A-Za-z0-9-]{2,}\b/u)?.[0] || '';
-  return [...new Set([primaryKeywords, organized, identifier, fallbackKeywords, ...rakutenCandidates].map((value) =>
+  const expansionPrimary = findExpansionRule(query)?.marketplaceKeywords || '';
+  return [...new Set([expansionPrimary, primaryKeywords, organized, identifier, fallbackKeywords, ...rakutenCandidates].map((value) =>
     String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 5);
 }
 

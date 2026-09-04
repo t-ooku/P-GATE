@@ -53,3 +53,24 @@ test('商品棚の表示順位は候補の旧rankではなく必ずNO.1から振
   assert.match(app, /const safeRank=index\+1/);
   assert.doesNotMatch(app, /Number\(candidate\.rank\)\|\|index\+1/);
 });
+
+// 2026-09-04 大隆さん実機報告: 「底開口 水筒」で底が外せる水筒（ドウシシャ sokomo
+// 「そこまで洗えるボトル」等）が出ない。展開規則の正式名詞がモール検索語の段階で
+// 「水筒」まで削られていた。
+test('底開口 水筒 は「そこまで洗えるボトル 水筒」へ展開され、その語がモールへ第1候補として渡る', async () => {
+  const { buildRakutenSearchKeywordCandidates, buildAmazonSearchKeywords, buildMarketplaceApiKeywordCandidates } = await import('../src/index.mjs');
+  for (const raw of ['底開口 水筒', '底が外せる水筒', '底まで洗えるボトル', '分解して洗える 水筒']) {
+    const expanded = expandSearchQuery(raw);
+    assert.equal(expanded.expansion?.rule_id, 'bottom-removable-bottle', raw);
+    assert.equal(buildRakutenSearchKeywordCandidates(expanded.query, expanded.query)[0], 'そこまで洗えるボトル 水筒', raw);
+    assert.equal(buildAmazonSearchKeywords(expanded.query), 'そこまで洗えるボトル 水筒', raw);
+    assert.equal(buildMarketplaceApiKeywordCandidates(expanded.query, '水筒', '水筒')[0], 'そこまで洗えるボトル 水筒', raw);
+  }
+  // 展開規則の無い検索は従来どおり
+  assert.equal(expandSearchQuery('水筒 500ml').expanded, false);
+  const results = filterCategoryMismatches(expandSearchQuery('底開口 水筒').query, [
+    candidate('SOKOMO', '【そこまで洗えるボトル】ドウシシャ 水筒 ステンレスボトル 1.0L 真空断熱 sokomo'),
+    candidate('BRUSH', '水筒 洗浄ブラシ 底まで届く')
+  ]);
+  assert.ok(results.some((item) => item.asin === 'SOKOMO'));
+});
