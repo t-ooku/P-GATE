@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/hoshilu-v2-180.png">
   <script src="/linkswitch-init.js"></script>
   <script src="https://aml.valuecommerce.com/vcdal.js" async></script>
-  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=5">
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=6">
   <link rel="stylesheet" href="/ai-search-ui.css?v=12">
   <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=126">
   <link rel="stylesheet" href="/ai-price-comparison-ui.css?v=84">
@@ -132,7 +132,7 @@
           <section class="hero" aria-labelledby="heroTitle">
             <div class="hero-copy">
               <h1 id="heroTitle"><span class="hero-title-line">欲しいもの、</span><span class="hero-title-line hero-title-accent">まとめて探す。</span></h1>
-              <p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などの検索をホシル一つで。</p>
+              <p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などを一度に検索。希望価格になったら通知、クーポンも見逃さない。</p>
             </div>
             <div class="hero-visual" aria-hidden="true"></div>
           </section>
@@ -197,6 +197,12 @@
             <div id="instantMarketplaceHandoff" class="instant-marketplace-handoff hidden"></div>
             <p class="affiliate-link-note" data-i18n="affiliate.searchNotice">広告：AmazonへのリンクはAmazonアソシエイトリンクです。楽天市場へのリンクにもアフィリエイトリンクが含まれる場合があります。Qoo10・Yahoo!ショッピング等へのリンクは、バリューコマースの仕組み（LinkSwitch等）によりアフィリエイトリンクへ変換される場合があります。購入価格や検索順位には影響しません。</p>
             <div id="resultCards" class="result-grid" aria-busy="false"></div>
+            <!-- 2026-09-04 大隆さん決定（主婦層25〜40代・差別化は希望価格ウォッチとクーポン通知）:
+                 結果の直下に通知の入口を1つにまとめる。 -->
+            <nav id="resultNoticeStrip" class="result-notice-strip" aria-label="通知の入口">
+              <a href="#mywatchTitle" class="result-notice-link" data-notice="watch"><strong>希望価格になったら教えて</strong><span>登録した商品の価格を定期確認して通知</span></a>
+              <a href="#saleCenterTitle" class="result-notice-link" data-notice="coupon"><strong>クーポン・セールを見逃さない</strong><span>モール公式セール情報とショップのクーポン</span></a>
+            </nav>
           </section>
 
           <details id="heroMarketplaceCoverage" class="marketplace-coverage hero-marketplace-coverage">

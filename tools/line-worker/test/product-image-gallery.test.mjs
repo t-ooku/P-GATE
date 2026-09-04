@@ -43,7 +43,7 @@ test('商品画像はタップで横スワイプ式の拡大ギャラリーを�
   assert.match(app, /mediaActions\.append\(priceComparisonButton\)/);
   assert.match(css, /\.product-card-media-actions/);
   assert.match(css, /\.watch-settings-button/);
-  assert.match(app, /JA:'購入希望価格ウォッチ☑'/);
+  assert.match(app, /JA:'この価格になったら教えて☑'/);
   assert.match(app, /target-price-current/);
   assert.match(app, /current:'現在価格'/);
   assert.match(css, /watch-settings-button\{[\s\S]*background:linear-gradient/);

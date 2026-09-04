@@ -52,3 +52,11 @@
 /* 購入希望価格ウォッチはカード下部（口コミの上）に横一面 */
 .result-track>.product-card>.watch-full-row{grid-column:1 / -1;width:100%;margin:2px 0 0}
 .product-card>.watch-full-row.watch-settings-button{width:100%;min-height:36px}
+
+/* 2026-09-04 大隆さん決定: 結果直下の通知入口（希望価格・クーポン） */
+.result-notice-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 4px}
+.result-notice-link{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid rgba(0,0,0,.12);border-radius:12px;background:#fffaf3;text-decoration:none;color:inherit;min-width:0}
+.result-notice-link strong{font-size:.92rem;line-height:1.3}
+.result-notice-link span{font-size:.76rem;line-height:1.35;opacity:.75}
+.results.hidden .result-notice-strip{display:none}
+@media(max-width:480px){.result-notice-strip{grid-template-columns:1fr}}
