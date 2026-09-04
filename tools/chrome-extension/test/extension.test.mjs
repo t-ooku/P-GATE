@@ -9,6 +9,7 @@ test('Chrome拡張はManifest V3と最小権限だけを使う', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('manifest.json', root), 'utf8'));
   assert.equal(manifest.manifest_version, 3);
   assert.deepEqual(manifest.permissions.sort(), ['activeTab', 'scripting', 'sidePanel', 'storage'].sort());
+  assert.equal(manifest.homepage_url, 'https://hoshilu.app/');
   assert.equal('host_permissions' in manifest, false);
   assert.equal(manifest.background.type, 'module');
 });
@@ -44,4 +45,10 @@ test('現在タブから読み取る内容はタイトルと選択文字に限�
   assert.match(source, /document\.title/);
   assert.match(source, /getSelection/);
   assert.equal(/document\.body|innerText|outerHTML|cookie|localStorage/.test(source), false);
+});
+
+test('設定画面から公開プライバシー方針と利用上の注意を確認できる', () => {
+  const options = fs.readFileSync(new URL('options.html', root), 'utf8');
+  assert.match(options, /https:\/\/hoshilu\.app\/privacy\.html/);
+  assert.match(options, /https:\/\/hoshilu\.app\/terms\.html/);
 });

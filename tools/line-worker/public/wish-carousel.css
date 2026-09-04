@@ -1,0 +1,163 @@
+.insight-wishes {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.insight-wishes h3 {
+  margin: 0 0 11px;
+  color: #5140ba;
+  font-size: 14px;
+}
+
+.wish-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 320px);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.wish-toolbar h3 {
+  margin: 0;
+}
+
+.wish-filter input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 13px;
+  border: 1px solid #ded7ff;
+  border-radius: 999px;
+  outline: 0;
+  color: var(--ink);
+  background: #fff;
+  font-size: 12px;
+}
+
+.wish-filter input:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 4px var(--soft);
+}
+
+@media (max-width: 560px) {
+  .wish-toolbar {
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 46%);
+    gap: 8px;
+  }
+
+  .wish-toolbar h3,
+  .wish-filter input {
+    font-size: 10px;
+  }
+}
+
+.share-discovery {
+  margin-top: 14px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #ded7ff;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #fff, #f4f0ff);
+}
+
+.share-discovery-copy p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.share-include-query {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.share-include-query input {
+  accent-color: var(--violet);
+}
+
+.share-discovery-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  gap: 7px;
+}
+
+.share-discovery-button {
+  color: #fff;
+  background: linear-gradient(105deg, var(--pink), var(--violet), var(--cyan));
+}
+
+.share-discovery-status {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.direct-social-targets {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.social-target {
+  min-height: 38px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.social-target-x { color: #fff; background: #111; }
+.social-target-instagram { color: #fff; border-color: transparent; background: linear-gradient(110deg,#f9ce34,#ee2a7b,#6228d7); }
+.social-target-tiktok { color: #fff; background: #101010; box-shadow: inset 2px 0 #25f4ee,inset -2px 0 #fe2c55; }
+
+.affiliate-link-note {
+  margin: -8px 0 18px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (max-width: 560px) {
+  .share-discovery {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .share-discovery-actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .share-discovery-actions button {
+    flex: 1;
+  }
+}
+
+.wish-list.circular {
+  max-height: 274px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 5px;
+}
+
+.wish-cycle {
+  display: grid;
+  gap: 9px;
+}
+
+.wish-cycle + .wish-cycle {
+  margin-top: 9px;
+}
