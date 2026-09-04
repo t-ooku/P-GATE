@@ -76,7 +76,7 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
   // して同じブランチへコミットする。追加時にこの許可リストの更新が漏れていて、
   // 以降 npm test が落ちていた(2026-09-03に検知)。
   assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)),
-    ['apply-patch.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml']);
+    ['apply-patch.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml']);
   const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);
