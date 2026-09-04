@@ -12,7 +12,10 @@ import { readMemberSession } from './member-auth.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const clean = (value, max) => String(value ?? '').normalize('NFKC').replace(/[-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+// 制御文字（U+0000–U+001F, U+007F）。パッチ運搬でユニコードエスケープが崩れないよう fromCharCode で組む。
+const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]`, 'g');
+const CONTROL_CHARS_KEEP_NEWLINE = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(8)}${String.fromCharCode(11)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]`, 'g');
+const clean = (value, max) => String(value ?? '').normalize('NFKC').replace(CONTROL_CHARS, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 const MARKETPLACES = new Set(['', 'AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP']);
 const MARKETPLACE_LABEL = { AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング', QOO10_JP: 'Qoo10', SHEIN_JP: 'SHEIN' };
 
@@ -42,7 +45,7 @@ export function validateShopInput(input = {}) {
     slug,
     shop_name: shopName,
     tagline: clean(input.tagline, 80),
-    intro: String(input.intro ?? '').normalize('NFKC').replace(/[--]/g, '').replace(/\r\n?/g, '\n').trim().slice(0, 1500),
+    intro: String(input.intro ?? '').normalize('NFKC').replace(CONTROL_CHARS_KEEP_NEWLINE, '').replace(/\r\n?/g, '\n').trim().slice(0, 1500),
     logo_url: httpsUrl(input.logo_url),
     cover_url: httpsUrl(input.cover_url),
     website_url: httpsUrl(input.website_url),
