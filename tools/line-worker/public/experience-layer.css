@@ -1,0 +1,32 @@
+/* 2026-09-04 Experience Layer（経験財）MVP */
+.experience-block{margin:6px 0 12px;padding:11px 12px;border:1px solid var(--line,#e9e5f5);border-radius:14px;background:linear-gradient(135deg,#fff,#f7f4ff)}
+.experience-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.experience-head strong{color:#5140ba;font-size:11px;letter-spacing:.06em}
+.experience-count{color:var(--muted,#6d6b80);font-size:10px}
+.experience-axes{display:grid;gap:5px}
+.experience-axis{display:grid;grid-template-columns:minmax(0,1fr) 84px 38px;align-items:center;gap:8px;font-size:11px}
+.experience-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink,#17172b)}
+.experience-bar{position:relative;height:7px;border-radius:99px;background:#ece8fb;overflow:hidden}
+.experience-bar::before{content:"";position:absolute;inset:0;width:var(--p,0%);border-radius:99px;background:linear-gradient(90deg,#7357ff,#23b8ff)}
+.experience-axis b{text-align:right;font-size:12px;color:#5140ba}
+.experience-again .experience-bar::before{background:linear-gradient(90deg,#ff4f9a,#7357ff)}
+.experience-comments{margin-top:7px;display:grid;gap:3px}
+.experience-comments p{margin:0;color:var(--muted,#6d6b80);font-size:11px;line-height:1.5}
+.experience-none{margin:0 0 6px;color:var(--muted,#6d6b80);font-size:11px}
+.experience-post{margin-top:7px;padding:8px 10px;border:1px solid #ded7ff;border-radius:10px;background:#fff;color:#5140ba;font-size:11px;font-weight:800;cursor:pointer}
+.experience-form{display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed #ded7ff}
+.experience-field{margin:0;padding:0;border:0}
+.experience-field legend{font-size:11px;font-weight:800;color:var(--ink,#17172b);margin-bottom:3px}
+.experience-scale{display:flex;gap:4px}
+.experience-scale label{flex:1;display:grid;place-items:center;min-height:32px;border:1px solid #ded7ff;border-radius:8px;background:#fff;font-size:11px;cursor:pointer}
+.experience-scale input{position:absolute;opacity:0;width:0;height:0}
+.experience-scale label:has(input:checked){background:#7357ff;border-color:#7357ff;color:#fff}
+.experience-again-field{display:flex;align-items:center;gap:6px;font-size:11px}
+.experience-form textarea{min-height:52px;padding:8px 10px;border:1px solid var(--line,#e9e5f5);border-radius:10px;font-size:12px;resize:vertical}
+.experience-actions{display:flex;gap:6px}
+.experience-submit{flex:1;padding:9px;border:0;border-radius:10px;background:#7357ff;color:#fff;font-weight:800;cursor:pointer}
+.experience-cancel{padding:9px 12px;border:1px solid #ded7ff;border-radius:10px;background:#fff;color:#5140ba;cursor:pointer}
+.experience-status{margin:0;color:var(--muted,#6d6b80);font-size:10px;line-height:1.5}
+.experience-saved{color:#18864b}
+.experience-login{color:#5140ba;font-weight:800}
+@media(max-width:480px){.experience-axis{grid-template-columns:minmax(0,1fr) 64px 36px}}

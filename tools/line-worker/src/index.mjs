@@ -52,6 +52,7 @@ import {
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { handleSellerBillingAdminRoutes, handleStripeWebhook, sellerBillingReadiness, settleQualifiedClickCharge } from './seller-billing.mjs';
 import { referralCategoryFor } from './seller-referral-category.mjs';
+import { handleExperienceRoutes } from './experience-layer.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -3127,6 +3128,9 @@ export default {
     if (runwayGenerationResponse) return runwayGenerationResponse;
     // 2026-09-04 Stripe Webhook（署名検証・冪等）と、請求アカウントの管理API。
     if (request.method === 'POST' && url.pathname === '/api/stripe/webhook') return handleStripeWebhook(request, env);
+    // 2026-09-04 Experience Layer（経験財）: 使用感の集計と投稿。
+    const experienceResponse = await handleExperienceRoutes(request, env);
+    if (experienceResponse) return experienceResponse;
     const sellerBillingAdminResponse = await handleSellerBillingAdminRoutes(request, env, authorizeAdminRequest);
     if (sellerBillingAdminResponse) return sellerBillingAdminResponse;
     // 検索品質カナリアの手動実行(管理者のみ)。cron と同じ固定クエリを本番経路で

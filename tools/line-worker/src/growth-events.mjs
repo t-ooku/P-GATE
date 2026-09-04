@@ -1,5 +1,8 @@
 const EVENTS = new Set([
   'landing_view',
+  // 2026-09-04 Experience Layer: 使用感の閲覧・投稿（Worker が記録。/api/events からは受けない想定だが許可リストに置く）
+  'experience_viewed',
+  'experience_posted',
   // 検索開始前にブラウザの入力検証で止まる場合もあるため、押した瞬間
   // (search_attempted)と検証で止められた瞬間(search_blocked)を分けて記録する。
   // 検索文そのものは保存しない。
