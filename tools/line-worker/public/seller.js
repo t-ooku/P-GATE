@@ -169,3 +169,81 @@ document.querySelector('#sellerAutoRecharge')?.addEventListener('change', async 
   }
 });
 loadBilling();
+
+// 2026-09-04 ショップページ・クーポン（Business）。
+const shopStatus = document.querySelector('#sellerShopStatus');
+function showShopStatus(message, error = false) {
+  if (!shopStatus) return;
+  shopStatus.textContent = message;
+  shopStatus.classList.toggle('is-error', error);
+}
+async function shopRequest(path, method = 'GET', payload = null) {
+  const response = await fetch(path, {
+    method, cache: 'no-store', headers: payload ? { 'content-type': 'application/json' } : {}, body: payload ? JSON.stringify(payload) : undefined
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result.ok !== true) throw new Error(result.error || `SHOP_ERROR_${response.status}`);
+  return result;
+}
+function renderShop(data) {
+  const shopUrl = document.querySelector('#sellerShopUrl');
+  const form = document.querySelector('#sellerShopForm');
+  if (!form) return;
+  const kpi = (name) => document.querySelector(`[data-shop-kpi="${name}"]`);
+  kpi('followers').textContent = String(data.kpi?.followers ?? 0);
+  kpi('views').textContent = String(data.kpi?.views_30d ?? 0);
+  kpi('coupons').textContent = String((data.coupons || []).filter((c) => c.live).length);
+  if (data.shop) {
+    const link = document.createElement('a'); link.href = data.shop.url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = `${location.origin}${data.shop.url}`;
+    shopUrl.replaceChildren(link);
+    for (const name of ['shop_name', 'slug', 'tagline', 'intro', 'logo_url', 'website_url']) if (form.elements[name]) form.elements[name].value = data.shop[name] || '';
+    form.elements.hidden.checked = data.shop.status === 'HIDDEN';
+  }
+  const list = document.querySelector('#sellerCouponList');
+  list.replaceChildren();
+  for (const coupon of data.coupons || []) {
+    const item = document.createElement('article'); item.className = 'seller-panel';
+    const title = document.createElement('strong'); title.textContent = `${coupon.title}${coupon.discount_text ? `（${coupon.discount_text}）` : ''}`;
+    const meta = document.createElement('span');
+    meta.textContent = [coupon.code ? `コード ${coupon.code}` : '', coupon.marketplace || '共通', coupon.ends_at ? `${coupon.ends_at} まで` : '', coupon.hoshilu_only ? 'HOSHILU限定' : '', coupon.status === 'ENDED' ? '終了' : coupon.live ? '公開中' : '期間外'].filter(Boolean).join(' ・ ');
+    item.append(title, meta);
+    if (coupon.status !== 'ENDED') {
+      const end = document.createElement('button'); end.type = 'button'; end.className = 'ghost-button'; end.textContent = '終了する';
+      end.addEventListener('click', async () => {
+        end.disabled = true;
+        try { renderShop(await shopRequest(`/api/seller/shop/coupons/${encodeURIComponent(coupon.coupon_id)}`, 'DELETE', {})); showShopStatus('クーポンを終了しました。'); }
+        catch (error) { showShopStatus(`終了できませんでした（${error.message}）`, true); end.disabled = false; }
+      });
+      item.append(end);
+    }
+    list.append(item);
+  }
+  if (data.entitled === false) {
+    showShopStatus(data.reason === 'BUSINESS_PLAN_REQUIRED' ? 'ショップページは Business プランで使えます。' : '請求アカウントの登録後に使えます（HOSHILU 側で登録します）。');
+    document.querySelectorAll('#sellerShopForm button, #sellerCouponForm button').forEach((button) => { button.disabled = true; });
+  }
+}
+async function loadShop() {
+  if (!document.querySelector('#sellerShopForm')) return;
+  try { renderShop(await shopRequest('/api/seller/shop')); }
+  catch (error) { showShopStatus(`ショップ情報を読み込めませんでした（${error.message}）`, true); }
+}
+document.querySelector('#sellerShopForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const payload = Object.fromEntries(['shop_name', 'slug', 'tagline', 'intro', 'logo_url', 'website_url'].map((name) => [name, form.elements[name].value]));
+  payload.status = form.elements.hidden.checked ? 'HIDDEN' : 'ACTIVE';
+  showShopStatus('保存しています…');
+  try { renderShop(await shopRequest('/api/seller/shop', 'PUT', payload)); showShopStatus('ショップページを保存しました。'); }
+  catch (error) { showShopStatus(`保存できませんでした（${error.message}）`, true); }
+});
+document.querySelector('#sellerCouponForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const payload = Object.fromEntries(['title', 'discount_text', 'code', 'marketplace', 'landing_url', 'ends_at', 'terms'].map((name) => [name, form.elements[name].value]));
+  payload.hoshilu_only = form.elements.hoshilu_only.checked;
+  showShopStatus('クーポンを追加しています…');
+  try { renderShop(await shopRequest('/api/seller/shop/coupons', 'POST', payload)); form.reset(); showShopStatus('クーポンを追加しました。'); }
+  catch (error) { showShopStatus(`追加できませんでした（${error.message}）`, true); }
+});
+loadShop();

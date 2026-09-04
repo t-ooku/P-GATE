@@ -481,6 +481,39 @@ export async function sellerPageResponse(
   <article class="seller-panel"><span>公式アカウント</span><strong>${lineMessagingReady ? '接続済み' : '未接続'}</strong><span>通知の送信や受信メッセージへの応答に使うWebhookとアクセストークンの接続状態です。</span></article>
   </div></section>
 
+  <section class="auth-card" id="shop"><p class="eyebrow">SHOP PAGE</p><h2>ショップページとクーポン（Business）</h2>
+  <p>公開URL <strong id="sellerShopUrl">（未作成）</strong>。検索結果の商品カードに「この商品を扱うショップ」として表示され、会員は「ショップをホシる」でフォローできます。HOSHILU限定クーポンがあると商品カードに 🎟 が付きます。</p>
+  <div id="sellerShopStatus" class="operation-status" role="status" aria-live="polite"></div>
+  <div class="seller-grid metric-grid">
+    <article class="seller-panel"><span>ホシってる人</span><strong data-shop-kpi="followers">…</strong><span>フォロー数</span></article>
+    <article class="seller-panel"><span>ショップ閲覧（30日）</span><strong data-shop-kpi="views">…</strong><span>ページ表示回数</span></article>
+    <article class="seller-panel"><span>有効クーポン</span><strong data-shop-kpi="coupons">…</strong><span>期間内・公開中</span></article>
+  </div>
+  <form id="sellerShopForm" class="priority-form">
+    <label>ショップ名 <input name="shop_name" maxlength="60" required placeholder="例: with care"></label>
+    <label>URL（英数字とハイフン） <input name="slug" maxlength="40" pattern="[a-z0-9-]{3,40}" placeholder="例: with-care"></label>
+    <label>ひとこと <input name="tagline" maxlength="80" placeholder="例: 毎日使うものを、少し良く。"></label>
+    <label>紹介文 <textarea name="intro" rows="4" maxlength="1500" placeholder="お店の紹介・こだわり・発送や返品のご案内など"></textarea></label>
+    <label>ロゴ画像URL（https） <input name="logo_url" type="url" maxlength="500" placeholder="https://…/logo.png"></label>
+    <label>公式サイトURL（https） <input name="website_url" type="url" maxlength="500"></label>
+    <label><input type="checkbox" name="hidden"> ページを非公開にする</label>
+    <button type="submit" class="primary-button">ショップページを保存</button>
+  </form>
+  <h3>クーポン</h3>
+  <div id="sellerCouponList" class="seller-grid"></div>
+  <form id="sellerCouponForm" class="priority-form">
+    <label>タイトル <input name="title" maxlength="60" required placeholder="例: 初回10%OFF"></label>
+    <label>割引の表示 <input name="discount_text" maxlength="40" placeholder="例: 10%OFF ／ 500円引き"></label>
+    <label>クーポンコード（任意） <input name="code" maxlength="40" placeholder="例: HOSHILU10"></label>
+    <label>対象モール <select name="marketplace"><option value="">共通</option><option value="AMAZON_JP">Amazon</option><option value="RAKUTEN_JP">楽天市場</option><option value="YAHOO_JP">Yahoo!ショッピング</option><option value="QOO10_JP">Qoo10</option><option value="SHEIN_JP">SHEIN</option></select></label>
+    <label>クーポンの取得・利用ページURL（https、任意） <input name="landing_url" type="url" maxlength="500"></label>
+    <label>終了日（任意） <input name="ends_at" type="date"></label>
+    <label>条件（任意） <input name="terms" maxlength="300" placeholder="例: 3,000円以上のご注文"></label>
+    <label><input type="checkbox" name="hoshilu_only" checked> HOSHILU限定（商品カードに 🎟 を表示）</label>
+    <button type="submit" class="ghost-button">クーポンを追加</button>
+  </form>
+  <p class="data-note">無料プランではショップページは作れません。<a href="/for-sellers#pricing">Business（月額9,800円・登録後3か月0円）</a></p></section>
+
   <section class="auth-card" id="billing"><p class="eyebrow">PREPAID BILLING</p><h2>前払い残高とお支払い</h2>
   <p>料金はすべて前払いです。有効クリックはジャンル単価を無料枠→前払い残高の順に消化し、残高が0円になると優先出品は自動で止まります（請求は発生しません）。</p>
   <div id="sellerBillingStatus" class="operation-status" role="status" aria-live="polite"></div>

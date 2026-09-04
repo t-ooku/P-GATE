@@ -891,6 +891,18 @@ function productImageGallery(candidate){
   gallery.append(lightbox);
   return gallery;
 }
+// 2026-09-04 ショップページ（Business）: 「この商品を扱うショップ」と HOSHILU限定クーポンの 🎟。
+function shopLinkElement(candidate,language){
+  const shop=candidate?.shop;
+  if(!shop||!shop.slug||!shop.name)return null;
+  const link=document.createElement('a');
+  link.className='shop-link';
+  link.href=`/shop/${encodeURIComponent(shop.slug)}`;
+  const label=language==='EN'?'Shop carrying this item: ':language==='ZH'?'销售此商品的店铺：':language==='KO'?'이 상품을 취급하는 숍: ':'この商品を扱うショップ: ';
+  link.append(textElement('span','shop-link-label',label),textElement('strong','',shop.name));
+  if(shop.coupon)link.append(textElement('span','shop-link-coupon',language==='EN'?'🎟 HOSHILU coupon':'🎟 HOSHILU限定クーポン'));
+  return link;
+}
 function productCard(candidate,index,t,confirmed,searchQuery=''){
   const card=document.createElement('article');
   card.className=confirmed?'product-card':'product-card unverified-card';
@@ -916,6 +928,8 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   if(terms.length)card.append(textElement('div','evidence',`${window.HoshiluI18n?.t('search.evidence',elements.language.value)||'一致した手がかり：'}${terms.slice(0,4).join(' / ')}`));
   const options=renderOfferOptions(candidate,t,elements.language.value);
   if(options)card.append(options);else card.append(allMarketplacesButton());
+  const shopLink=shopLinkElement(candidate,elements.language.value);
+  if(shopLink)card.append(shopLink);
   mediaActions.append(createKeepButton(candidate));
   const watch=createWatchOptions(candidate,t);
   mediaActions.append(watch.bell);
