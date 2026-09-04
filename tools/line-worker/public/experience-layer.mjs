@@ -1,11 +1,11 @@
-// 2026-09-04 Experience Layer（経験財）MVP — 総合実行指示書 §16–21。
+// 2026-09-04 Experience Layer（経験財）MVP — 総合実行指示書 §16–21。表示名は「口コミ」（2026-09-04 大隆さん指示）。
 // 検索結果の商品カードに「HOSHILU使用感」を差し込む。app.js には手を入れず、
 // 描画された .product-card を監視して後から足す（既存の検索・購入導線を壊さない）。
 // 表示は「自立する 89%」のように短時間で判断できる形。投稿は会員ログインが必要。
 const LANG = () => document.querySelector('#language')?.value || 'JA';
 const COPY = {
-  JA: { title: 'HOSHILU使用感', none: 'まだ使用感の投稿がありません。', post: '使ってどうだった？投稿する', edit: '自分の投稿を直す', again: 'また買いたい', count: (n) => `${n}件`, submit: '投稿する', cancel: '閉じる', login: '投稿には無料会員ログインが必要です（30秒）→', comment: 'ひとこと（任意・200字まで。個人情報は書かないでください）', buyAgain: 'また買いたい', saved: '投稿しました。ありがとうございます。', failed: '投稿できませんでした', scale: ['合わない', 'いまいち', 'ふつう', 'よい', 'とてもよい'], note: '実際に使った人の投稿だけを集計しています。モールの口コミは転載していません。' },
-  EN: { title: 'HOSHILU experience', none: 'No experience reports yet.', post: 'Used it? Share how it was', edit: 'Edit my report', again: 'Would buy again', count: (n) => `${n}`, submit: 'Post', cancel: 'Close', login: 'Sign in as a free member to post (30 sec) →', comment: 'One line (optional, up to 200 chars, no personal data)', buyAgain: 'Would buy again', saved: 'Posted. Thank you.', failed: 'Could not post', scale: ['Poor', 'Meh', 'OK', 'Good', 'Great'], note: 'Only reports from members who used the product. No marketplace reviews are copied.' }
+  JA: { title: '口コミ', none: 'まだ口コミがありません。', post: '口コミを投稿する', edit: '自分の口コミを直す', again: 'また買いたい', count: (n) => `${n}件`, submit: '投稿する', cancel: '閉じる', login: '投稿には無料会員ログインが必要です（30秒）→', comment: 'ひとこと（任意・200字まで。個人情報は書かないでください）', buyAgain: 'また買いたい', saved: '口コミを投稿しました。ありがとうございます。', failed: '投稿できませんでした', scale: ['合わない', 'いまいち', 'ふつう', 'よい', 'とてもよい'], note: '実際に使った人の口コミだけを集計しています。モールの口コミは転載していません。' },
+  EN: { title: 'Reviews', none: 'No reviews yet.', post: 'Write a review', edit: 'Edit my report', again: 'Would buy again', count: (n) => `${n}`, submit: 'Post', cancel: 'Close', login: 'Sign in as a free member to post (30 sec) →', comment: 'One line (optional, up to 200 chars, no personal data)', buyAgain: 'Would buy again', saved: 'Posted. Thank you.', failed: 'Could not post', scale: ['Poor', 'Meh', 'OK', 'Good', 'Great'], note: 'Only reports from members who used the product. No marketplace reviews are copied.' }
 };
 const copy = () => COPY[LANG()] || COPY.JA;
 const queryText = () => String(document.querySelector('#query')?.value || '').slice(0, 200);
@@ -18,7 +18,9 @@ function renderSummary(block, summary) {
   const c = copy();
   block.replaceChildren();
   const head = el('div', 'experience-head');
-  head.append(el('strong', '', c.title), el('span', 'experience-count', summary.count ? c.count(summary.count) : ''));
+  const button = el('button', 'experience-post', c.post); button.type = 'button';
+  button.addEventListener('click', () => openForm(block, summary));
+  head.append(el('strong', '', c.title), el('span', 'experience-count', summary.count ? c.count(summary.count) : c.none), button);
   block.append(head);
   if (summary.count) {
     const list = el('div', 'experience-axes');
@@ -40,12 +42,7 @@ function renderSummary(block, summary) {
       for (const item of summary.comments) quotes.append(el('p', '', `「${item.text}」`));
       block.append(quotes);
     }
-  } else {
-    block.append(el('p', 'experience-none', c.none));
   }
-  const button = el('button', 'experience-post', c.post); button.type = 'button';
-  button.addEventListener('click', () => openForm(block, summary));
-  block.append(button);
 }
 
 function openForm(block, summary) {
@@ -144,8 +141,8 @@ function mount(card) {
   card.dataset.experienceMounted = '1';
   const block = el('section', 'experience-block');
   block.setAttribute('aria-label', copy().title);
-  const anchor = card.querySelector('.price-comparison, .offer-list, .buy-link');
-  if (anchor) anchor.before(block); else card.append(block);
+  // カードの末尾（スマホの2列グリッドでは両列をまたぐ全幅）。右列の順位・商品名・価格を押し下げない。
+  card.append(block);
   if (!pending.has(title)) pending.set(title, []);
   pending.get(title).push(block);
   if (!timer) timer = setTimeout(flush, 80);

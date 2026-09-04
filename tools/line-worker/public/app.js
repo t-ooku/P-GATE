@@ -998,6 +998,10 @@ function resultCarousel(cards,rowKind='confirmed'){
   }
   return carousel;
 }
+// 2026-09-04 大隆さん指示: 縦の一覧に出すのは10商品まで。11商品目以降は横スワイプの
+// 回転スクロール（recommended と同じ横トラック）にまとめ、ページが縦に伸びすぎないようにする。
+const CONFIRMED_LIST_LIMIT=10;
+const confirmedOverflowCopy={JA:(n)=>`11件目以降（${n}件）— 横にスワイプ`,EN:(n)=>`More results (${n}) — swipe sideways`,ZH:(n)=>`第11件起（${n}件）— 左右滑动`,KO:(n)=>`11번째 이후(${n}건) — 옆으로 스와이프`};
 function resultRow(cards,title,note,rowKind){
   if(!cards.length)return null;
   const row=document.createElement('section');
@@ -1006,7 +1010,17 @@ function resultRow(cards,title,note,rowKind){
   const heading=document.createElement('div');
   heading.className='result-row-heading';
   heading.append(textElement('h3','result-row-title',title),textElement('span','result-row-count',String(cards.length)));
-  row.append(heading,textElement('p','result-row-note',note),resultCarousel(cards,rowKind));
+  const listed=rowKind==='confirmed'?cards.slice(0,CONFIRMED_LIST_LIMIT):cards;
+  const overflow=rowKind==='confirmed'?cards.slice(CONFIRMED_LIST_LIMIT):[];
+  row.append(heading,textElement('p','result-row-note',note),resultCarousel(listed,rowKind));
+  if(overflow.length){
+    const more=document.createElement('div');
+    more.className='result-row result-row-recommended result-row-overflow';
+    more.dataset.row='confirmed-more';
+    const label=(confirmedOverflowCopy[elements.language.value]||confirmedOverflowCopy.JA)(overflow.length);
+    more.append(textElement('h4','result-row-overflow-title',label),resultCarousel(overflow,'recommended'));
+    row.append(more);
+  }
   return row;
 }
 const relatedCategoryShelfCopy={

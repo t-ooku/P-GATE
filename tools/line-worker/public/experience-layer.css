@@ -1,8 +1,11 @@
 /* 2026-09-04 Experience Layer（経験財）MVP */
-.experience-block{margin:6px 0 12px;padding:11px 12px;border:1px solid var(--line,#e9e5f5);border-radius:14px;background:linear-gradient(135deg,#fff,#f7f4ff)}
-.experience-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.experience-block{margin:4px 0 0;padding:8px 10px;border:1px solid var(--line,#e9e5f5);border-radius:12px;background:linear-gradient(135deg,#fff,#f7f4ff)}
+.result-track>.product-card>.experience-block{grid-column:1 / -1;align-self:end}
+.experience-head{display:flex;align-items:center;gap:8px;margin:0}
+.experience-head .experience-post{margin:0 0 0 auto;padding:6px 9px;white-space:nowrap}
+.experience-axes,.experience-comments{margin-top:6px}
 .experience-head strong{color:#5140ba;font-size:11px;letter-spacing:.06em}
-.experience-count{color:var(--muted,#6d6b80);font-size:10px}
+.experience-count{color:var(--muted,#6d6b80);font-size:10px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .experience-axes{display:grid;gap:5px}
 .experience-axis{display:grid;grid-template-columns:minmax(0,1fr) 84px 38px;align-items:center;gap:8px;font-size:11px}
 .experience-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink,#17172b)}
@@ -13,7 +16,7 @@
 .experience-comments{margin-top:7px;display:grid;gap:3px}
 .experience-comments p{margin:0;color:var(--muted,#6d6b80);font-size:11px;line-height:1.5}
 .experience-none{margin:0 0 6px;color:var(--muted,#6d6b80);font-size:11px}
-.experience-post{margin-top:7px;padding:8px 10px;border:1px solid #ded7ff;border-radius:10px;background:#fff;color:#5140ba;font-size:11px;font-weight:800;cursor:pointer}
+.experience-post{padding:8px 10px;border:1px solid #ded7ff;border-radius:10px;background:#fff;color:#5140ba;font-size:11px;font-weight:800;cursor:pointer}
 .experience-form{display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed #ded7ff}
 .experience-field{margin:0;padding:0;border:0}
 .experience-field legend{font-size:11px;font-weight:800;color:var(--ink,#17172b);margin-bottom:3px}
@@ -41,3 +44,6 @@
 .genre-chip.is-active{background:#7357ff;border-color:#7357ff;color:#fff}
 .genre-chip.is-leaf{background:#fff;border-style:dashed}
 .popular-ranking-button{margin-top:10px;padding:9px 14px;border:1px solid #ded7ff;border-radius:999px;background:#fff;color:#5140ba;font-size:12px;font-weight:800;cursor:pointer}
+/* 2026-09-04 11件目以降は横スワイプ（縦一覧は10件まで） */
+.result-row-overflow{margin-top:10px;padding-top:8px;border-top:1px dashed #ded7ff}
+.result-row-overflow-title{margin:0 0 4px;font-size:12px;color:#5140ba}
