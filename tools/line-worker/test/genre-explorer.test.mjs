@@ -10,7 +10,7 @@ test('トップは §52 の並び: 検索 → 結果 → 主要モール → ジ
   const positions = order.map((marker) => { const index = html.indexOf(marker); assert.notEqual(index, -1, marker); return index; });
   for (let i = 1; i < positions.length; i += 1) assert.ok(positions[i - 1] < positions[i], `${order[i - 1]} before ${order[i]}`);
   assert.match(html, /<script type="module" src="\/genre-explorer\.mjs\?v=1"><\/script>/u);
-  assert.match(html, /experience-layer\.css\?v=6/u);
+  assert.match(html, /experience-layer\.css\?v=7/u);
   assert.match(html, /id="genreBreadcrumb"/u);
   assert.match(html, /id="popularRankingButton"/u);
 });
@@ -29,7 +29,8 @@ test('ジャンル探索はファッション → バッグ → トートバッ�
 
 // 2026-09-04 大隆さん決定（主婦層25〜40代・差別化は希望価格ウォッチとクーポン通知）
 test('トップの副文言は通知の価値を含み、結果直下に通知の入口（希望価格・クーポン）が1つにまとまる', () => {
-  assert.match(html, /希望価格になったら通知、クーポンも見逃さない。/u);
+  assert.match(html, /一度に検索。<br>希望価格になったら通知、クーポンも見逃さない。/u);
+  assert.match(readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8'), /\.hero-sub\{white-space:pre-line\}/u);
   assert.match(html, /id="resultNoticeStrip"/u);
   assert.match(html, /href="#mywatchTitle" class="result-notice-link" data-notice="watch"/u);
   assert.match(html, /href="#saleCenterTitle" class="result-notice-link" data-notice="coupon"/u);

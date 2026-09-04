@@ -23,5 +23,5 @@ test('カードは「ホシっとく」→「AI最安比較」、購入希望価
   const css = readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8');
   assert.match(css, /\.result-track>\.product-card>\.watch-full-row\{grid-column:1 \/ -1/u);
   assert.match(css, /\.experience-head strong\{[^}]*white-space:nowrap/u);
-  assert.match(readFileSync(new URL('../public/index.html', import.meta.url), 'utf8'), /experience-layer\.css\?v=6/u);
+  assert.match(readFileSync(new URL('../public/index.html', import.meta.url), 'utf8'), /experience-layer\.css\?v=7/u);
 });

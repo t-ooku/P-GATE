@@ -102,8 +102,9 @@ test('第一画面は「欲しいもの、まとめて探す。」とモール�
   assert.doesNotMatch(html, /heroEyebrow/);
   assert.doesNotMatch(html, /名前が分からなくても探せます。/);
   assert.doesNotMatch(app, /heroEyebrow|nav\.eyebrow|eyebrow:/);
-  assert.match(html, /<p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などを一度に検索。希望価格になったら通知、クーポンも見逃さない。<\/p>/);
-  assert.match(app, /heroSub:'Amazon・楽天・Qoo10などを一度に検索。希望価格になったら通知、クーポンも見逃さない。'/);
+  assert.match(html, /<p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などを一度に検索。<br>希望価格になったら通知、クーポンも見逃さない。<\/p>/);
+  // app.js 側は \n（言語切替時に textContent へ入れ、.hero-sub の pre-line で改行）
+  assert.ok(app.includes(String.raw`heroSub:'Amazon・楽天・Qoo10などを一度に検索。\n希望価格になったら通知、クーポンも見逃さない。'`));
   // 検索欄の文言は1行に収める(語の途中で折り返さない)。
   assert.match(html, /placeholder="何が欲しい？名前が分からなくても大丈夫"/);
   assert.match(app, /placeholder:'何が欲しい？名前が分からなくても大丈夫'/);
