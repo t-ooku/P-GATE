@@ -300,3 +300,17 @@ test('管理者ページ /admin/seller-billing は管理セッションが無け
   assert.equal(response.status, 302);
   assert.match(response.headers.get('location'), /\/admin-login$/u);
 });
+
+// 2026-09-04 本番テスト: 同一 PaymentIntent の通知が並行して届き 10,000円が二重加算された。
+test('同じ入金の加算が並行して走っても残高は1回分しか増えない', async () => {
+  const { env, db } = databaseEnv();
+  await registerAccount(env);
+  const results = await Promise.all([1, 2, 3].map(() =>
+    creditTopup(env.PRODUCT_DB, { sellerKey: KEY_A, amountJpy: 10000, stripeObjectId: 'pi_same' })));
+  assert.equal(results.filter((r) => r.credited).length, 1);
+  assert.equal(results.filter((r) => r.reason === 'DUPLICATE').length, 2);
+  assert.equal((await getWallet(env.PRODUCT_DB, KEY_A)).balance_micros_jpy, 10000 * 1_000_000);
+  const ledger = db.prepare("SELECT balance_after_micros_jpy FROM seller_billing_ledger WHERE stripe_object_id='pi_same'").all();
+  assert.equal(ledger.length, 1);
+  assert.equal(ledger[0].balance_after_micros_jpy, 10000 * 1_000_000);
+});

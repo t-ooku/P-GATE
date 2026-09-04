@@ -176,19 +176,30 @@ async function debitWallet(db, sellerKey, amountMicros, now) {
 }
 
 // 入金を残高へ加算する（Stripe オブジェクト ID で冪等）。
+// 2026-09-04 本番テストで同一 PaymentIntent の通知が並行して届き、二重加算した。
+// 先に台帳へ INSERT（stripe_object_id の UNIQUE 制約で2本目は失敗）し、成功した側だけが
+// 残高を動かす順序にする。台帳の balance_after は残高更新後に埋める。
 export async function creditTopup(db, { sellerKey, amountJpy, stripeObjectId, entryType = 'TOPUP', note = '', now = new Date().toISOString() }) {
   const amount = toMicros(amountJpy);
   if (amount <= 0) return { credited: false, reason: 'AMOUNT_INVALID' };
   const objectId = clean(stripeObjectId, 120);
-  if (objectId) {
-    const existing = await db.prepare('SELECT entry_id FROM seller_billing_ledger WHERE stripe_object_id=?1').bind(objectId).first();
-    if (existing) return { credited: false, reason: 'DUPLICATE' };
+  const entryId = crypto.randomUUID();
+  try {
+    await db.prepare(`INSERT INTO seller_billing_ledger
+      (entry_id,seller_key,entry_type,amount_micros_jpy,balance_after_micros_jpy,stripe_object_id,source_event_id,note,occurred_at)
+      VALUES (?1,?2,?3,?4,0,?5,'',?6,?7)`)
+      .bind(entryId, sellerKey, entryType, amount, objectId, clean(note, 200), now).run();
+  } catch (error) {
+    if (/UNIQUE|constraint/iu.test(String(error?.message || error))) return { credited: false, reason: 'DUPLICATE' };
+    throw error;
   }
   await ensureWallet(db, sellerKey, now);
   await db.prepare(`UPDATE seller_billing_wallets SET balance_micros_jpy=balance_micros_jpy+?2,
     status=CASE WHEN status='PAUSED' THEN 'PAUSED' ELSE 'ACTIVE' END,updated_at=?3 WHERE seller_key=?1`)
     .bind(sellerKey, amount, now).run();
-  await appendLedger(db, { sellerKey, entryType, amountMicros: amount, stripeObjectId: objectId, note, occurredAt: now });
+  const wallet = await getWallet(db, sellerKey);
+  await db.prepare('UPDATE seller_billing_ledger SET balance_after_micros_jpy=?2 WHERE entry_id=?1')
+    .bind(entryId, Number(wallet?.balance_micros_jpy || 0)).run();
   return { credited: true, amount_jpy: yen(amountJpy) };
 }
 
@@ -624,9 +635,13 @@ export async function handleStripeWebhook(request, env) {
   }
   const now = new Date().toISOString();
   const eventId = clean(event?.id, 120);
-  const claimed = await db.prepare(`INSERT INTO stripe_webhook_events (event_id,event_type,processed_at,result) VALUES (?1,?2,?3,'PROCESSING')
-    ON CONFLICT(event_id) DO NOTHING`).bind(eventId, clean(event?.type, 80), now).run();
-  if (claimed?.meta?.changes !== 1) return Response.json({ ok: true, duplicate: true });
+  // 同じイベントが並行して届いても1本だけ処理する。INSERT の changes だけに頼らず、
+  // 自分のトークンが残っているかを読み直して確認する。
+  const claimToken = `PROCESSING:${crypto.randomUUID()}`;
+  await db.prepare(`INSERT INTO stripe_webhook_events (event_id,event_type,processed_at,result) VALUES (?1,?2,?3,?4)
+    ON CONFLICT(event_id) DO NOTHING`).bind(eventId, clean(event?.type, 80), now, claimToken).run();
+  const owner = await db.prepare('SELECT result FROM stripe_webhook_events WHERE event_id=?1').bind(eventId).first();
+  if (owner?.result !== claimToken) return Response.json({ ok: true, duplicate: true });
   let result = 'ERROR';
   try {
     result = await processStripeEvent(env, event, now);
