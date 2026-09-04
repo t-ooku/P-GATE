@@ -1,0 +1,1203 @@
+[
+  {
+    "query_text": "洗濯物を干すときに使う伸びるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "物干し竿またはハンガー式の伸縮する物干し用品を探している",
+    "ideal_answer": "伸縮式の物干し竿・室内干しスタンド",
+    "reason": "「伸びる」「干すとき」からベランダ・室内用の伸縮物干し竿を想定できるrich例。",
+    "category": "clothesline-pole",
+    "search_terms": {
+      "ja": [
+        "伸縮 物干し竿",
+        "室内干し スタンド"
+      ],
+      "en": [
+        "extendable clothesline pole"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "キッチンの油はねを防ぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "コンロ周りの油はねガードを探している",
+    "ideal_answer": "コンロ用の油はねガード（ガードパネル・スプラッタースクリーン）",
+    "reason": "「油はねを防ぐ」でキッチン用品カテゴリがほぼ一意に確定できるrich例。",
+    "category": "splatter-guard",
+    "search_terms": {
+      "ja": [
+        "油はねガード",
+        "コンロ 油はね防止 パネル"
+      ],
+      "en": [
+        "stove splatter guard"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "シンクの三角コーナーの代わりになるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "生ゴミ受け・水切りかごなど三角コーナーに代わるキッチン用品を探している",
+    "ideal_answer": "吊り下げ式または据え置き型の生ゴミ受け・水切りネットホルダー",
+    "reason": "「三角コーナーの代わり」という言い換えから代替キッチン用品カテゴリを特定できる例。",
+    "category": "sink-strainer-holder",
+    "search_terms": {
+      "ja": [
+        "三角コーナー 代わり",
+        "生ゴミ受け 吊り下げ"
+      ],
+      "en": [
+        "sink strainer holder"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "玄関で傘をまとめておくやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "玄関用の傘立てを探している",
+    "ideal_answer": "玄関用の傘立て（スリムタイプ含む）",
+    "reason": "設置場所(玄関)と用途(傘をまとめる)が明確なrich例。",
+    "category": "umbrella-stand",
+    "search_terms": {
+      "ja": [
+        "傘立て スリム",
+        "玄関 傘立て"
+      ],
+      "en": [
+        "umbrella stand"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お弁当を保冷するやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。保冷バッグ・保冷剤・保冷ポーチのいずれも候補になり得る",
+    "ideal_answer": "保冷バッグと保冷剤のどちらをお探しですか？お弁当箱ごと包む保冷ポーチもございます。",
+    "reason": "「保冷するやつ」は保冷バッグ・保冷剤・保冷ポーチのいずれにも該当しうるためカテゴリを一意に確定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "布団を圧縮して収納するやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布団圧縮袋を探している",
+    "ideal_answer": "掃除機対応の布団圧縮袋",
+    "reason": "「圧縮して収納」から布団圧縮袋にほぼ一意に確定できるrich例。",
+    "category": "compression-storage-bag",
+    "search_terms": {
+      "ja": [
+        "布団 圧縮袋",
+        "布団収納 圧縮"
+      ],
+      "en": [
+        "vacuum storage bag for futon"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗面所で歯ブラシを立てておくやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "歯ブラシスタンド・歯ブラシホルダーを探している",
+    "ideal_answer": "壁掛けまたは据え置き型の歯ブラシホルダー",
+    "reason": "設置場所と用途が明確なrich例。",
+    "category": "toothbrush-holder",
+    "search_terms": {
+      "ja": [
+        "歯ブラシスタンド",
+        "歯ブラシホルダー 壁掛け"
+      ],
+      "en": [
+        "toothbrush holder"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "米を量らずに炊けるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "計量不要で目盛り管理できる米びつ・計量カップを探している",
+    "ideal_answer": "目盛り付き計量カップまたは自動計量機能付き米びつ",
+    "reason": "「量らずに」という言い換えから計量補助グッズカテゴリに寄せられるrich寄り例。",
+    "category": "rice-measuring-cup",
+    "search_terms": {
+      "ja": [
+        "米 計量カップ 目盛り",
+        "米びつ 計量機能"
+      ],
+      "en": [
+        "rice measuring cup"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ベランダで植木鉢を置く台",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベランダ用のプランタースタンドを探している",
+    "ideal_answer": "ベランダ用プランタースタンド・鉢置き台",
+    "reason": "設置場所と用途が明確なrich例。",
+    "category": "plant-stand",
+    "search_terms": {
+      "ja": [
+        "プランタースタンド",
+        "鉢置き台 ベランダ"
+      ],
+      "en": [
+        "plant stand for balcony"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "車の中で子供が使うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。チャイルドシート・車内用おもちゃ・サンシェード・タブレットホルダーなど候補が広範",
+    "ideal_answer": "チャイルドシート、車内用おもちゃ、日よけ（サンシェード）のどれをお探しですか？お子さんの年齢も教えてください。",
+    "reason": "対象カテゴリが広範すぎて特定不能なultra_ambiguous例。確認質問が理想回答。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.15,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "冷凍庫の中を仕切るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "冷凍庫内を整理する仕切り・収納ケースを探している",
+    "ideal_answer": "冷凍庫用の仕切りスタンド・薄型収納ケース",
+    "reason": "「仕切る」「冷凍庫」から収納用品カテゴリが明確なrich例。",
+    "category": "freezer-organizer",
+    "search_terms": {
+      "ja": [
+        "冷凍庫 仕切り",
+        "冷凍庫 収納ケース 薄型"
+      ],
+      "en": [
+        "freezer organizer bins"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お風呂の残り湯を洗濯機に運ぶやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "残り湯を洗濯機へ汲み上げるポンプを探している",
+    "ideal_answer": "風呂水ポンプ（電動くみ上げポンプ）",
+    "reason": "用途(残り湯を洗濯に使う)が明確なrich例。",
+    "category": "bathwater-pump",
+    "search_terms": {
+      "ja": [
+        "風呂水 ポンプ",
+        "残り湯 洗濯 くみ上げ"
+      ],
+      "en": [
+        "bath water pump for laundry"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "リビングのコード類を1本にまとめて隠すやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "配線カバー・ケーブルボックスを探している",
+    "ideal_answer": "配線カバー（モール）またはケーブル収納ボックス",
+    "reason": "「まとめて隠す」から配線整理用品カテゴリに寄せられるrich寄り例。",
+    "category": "cable-cover",
+    "search_terms": {
+      "ja": [
+        "配線カバー",
+        "ケーブル収納ボックス"
+      ],
+      "en": [
+        "cable cover cord organizer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "鍵をなくさないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。キーフック・キーケース・紛失防止Bluetoothタグのいずれも候補",
+    "ideal_answer": "壁に掛けるキーフック、持ち歩き用キーケース、スマホで探せる紛失防止タグのどれをお探しですか？",
+    "reason": "対策手段（保管/携帯/探索）が特定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "量産型古着で人気の冬コーデアイテム",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。トップス・スカート・小物のうちどれを探しているか特定できない",
+    "ideal_answer": "トップス、スカート、小物（バッグ・アクセサリー）のどれをお探しですか？「量産型」に近いイメージの画像があれば教えてください。",
+    "reason": "「アイテム」が広すぎて商品タイプを特定できないultra_ambiguous例。「量産型」自体は既存辞書のファッション系統語として認識可能だが対象品目が不明。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "量産型 古着 冬コーデ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "バズってた自動で泡が出るハンドソープボトル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "SNSで話題になった自動発泡ハンドソープディスペンサーを探している",
+    "ideal_answer": "自動検知式のオート泡ハンドソープディスペンサー",
+    "reason": "「自動で泡が出る」「バズってた」からセンサー式ソープディスペンサーに一意に近く確定できる例。",
+    "category": "automatic-foam-soap-dispenser",
+    "search_terms": {
+      "ja": [
+        "オートソープディスペンサー",
+        "自動 泡ハンドソープ センサー"
+      ],
+      "en": [
+        "automatic foaming soap dispenser"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "推し活用のトレカスリーブちょうどいいサイズ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "推しのトレーディングカード保護用スリーブを探している",
+    "ideal_answer": "トレーディングカード用スリーブ（規格サイズ対応）",
+    "reason": "「推し活」「トレカ」から用途カテゴリが明確なrich例。",
+    "category": "trading-card-sleeve",
+    "search_terms": {
+      "ja": [
+        "トレカ スリーブ",
+        "推し活 カードスリーブ"
+      ],
+      "en": [
+        "trading card sleeve"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "TikTokで見た貼るだけで水垢が取れるシート",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室・蛇口の水垢除去用シートを探している",
+    "ideal_answer": "貼って使う水垢除去シート・研磨シート",
+    "reason": "「貼るだけ」「水垢」から掃除用品カテゴリに一意に近く確定できる例。",
+    "category": "limescale-remover-sheet",
+    "search_terms": {
+      "ja": [
+        "水垢取りシート",
+        "蛇口 水垢 シート"
+      ],
+      "en": [
+        "limescale remover sheet"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "韓国コスメで人気のティントリップ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。ブランド・色味・タイプ（グラデーション/ウォーター等）を特定できない",
+    "ideal_answer": "どのブランド、または色味・質感（グラデーション/ウォーターティント等）をお探しですか？人気ランキングからのご案内も可能です。",
+    "reason": "「人気の」だけでは商品を一意に確定できないultra_ambiguous例。カテゴリ(ティントリップ)自体は明確。",
+    "category": "lip-tint",
+    "search_terms": {
+      "ja": [
+        "韓国コスメ ティントリップ 人気"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "便秘にすぐ効くサプリ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "便秘対策のサプリメントを探しているが、効果を断定的に案内すべきではない",
+    "ideal_answer": "お腹の調子を整えるタイプの食品区分のサプリメント（効果には個人差があり、症状が続く場合は医師・薬剤師にご相談ください）",
+    "reason": "効能を断定する表現は使わず、食品区分であることと専門家への相談を明記する安全配慮のideal_answer。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "整腸 サプリ",
+        "お通じ サプリメント"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "効果の断定",
+      "医薬品としての案内"
+    ],
+    "confidence": 0.3,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "花粉の時期に鼻づまりに効く塗り薬",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "花粉症による鼻づまり対策の塗り薬を探しているが、効能を断定的に案内すべきではない",
+    "ideal_answer": "鼻まわりに使うタイプのケア用品はご案内できますが、医薬品の効能に関するご案内はできません。症状がつらい場合は医師・薬剤師にご相談ください。",
+    "reason": "医薬品の効能断定を避け、専門家への相談を促す安全配慮のideal_answer。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "効果の断定",
+      "医薬品の推奨"
+    ],
+    "confidence": 0.3,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "子供服のサイズアウトを整理する収納ボックス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "サイズアウトした子供服を仕分け収納するボックスを探している",
+    "ideal_answer": "ラベル付き衣類収納ボックス（サイズ別仕分け用）",
+    "reason": "用途と対象(子供服の整理)が明確なrich例。",
+    "category": "kids-clothing-storage-box",
+    "search_terms": {
+      "ja": [
+        "衣類収納ボックス ラベル付き",
+        "子供服 サイズ別 収納"
+      ],
+      "en": [
+        "kids clothes storage box"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "冷蔵庫の賞味期限を管理するホワイトボード",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "冷蔵庫に貼るマグネット式ホワイトボードを探している",
+    "ideal_answer": "マグネット式のホワイトボード・メモボード（冷蔵庫用）",
+    "reason": "設置場所と用途が明確なrich例。",
+    "category": "fridge-whiteboard-organizer",
+    "search_terms": {
+      "ja": [
+        "冷蔵庫 マグネット ホワイトボード",
+        "賞味期限 管理 ボード"
+      ],
+      "en": [
+        "fridge magnetic whiteboard"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "毎日のお弁当作りが楽になる仕切りカップ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "お弁当用のシリコン仕切りカップを探している",
+    "ideal_answer": "繰り返し使えるシリコン製お弁当仕切りカップ",
+    "reason": "用途が明確なrich例。",
+    "category": "bento-divider-cups",
+    "search_terms": {
+      "ja": [
+        "お弁当 仕切りカップ シリコン"
+      ],
+      "en": [
+        "silicone bento divider cups"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯槽のカビを掃除するクリーナー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯槽クリーナーを探している",
+    "ideal_answer": "縦型・ドラム式対応の洗濯槽クリーナー",
+    "reason": "用途が明確なrich例。",
+    "category": "washing-machine-tub-cleaner",
+    "search_terms": {
+      "ja": [
+        "洗濯槽クリーナー",
+        "洗濯槽 カビ取り"
+      ],
+      "en": [
+        "washing machine tub cleaner"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "子供の靴を清潔に洗うブラシ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "子供靴専用の洗浄ブラシを探している",
+    "ideal_answer": "靴洗い専用ブラシ（キッズシューズ対応）",
+    "reason": "用途が明確なrich例。",
+    "category": "kids-shoe-cleaning-brush",
+    "search_terms": {
+      "ja": [
+        "靴洗いブラシ",
+        "子供靴 洗浄ブラシ"
+      ],
+      "en": [
+        "shoe cleaning brush for kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ひらひらしてかわいいスカートみたいなやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "チュチュスカートなどふんわりしたキッズ用スカートを探している",
+    "ideal_answer": "チュチュスカート・フリルスカート（キッズ用）",
+    "reason": "「ひらひら」は子ども特有のチュチュ・フリル素材への言い換え。",
+    "category": "kids-tutu-skirt",
+    "search_terms": {
+      "ja": [
+        "チュチュスカート 子供",
+        "フリルスカート キッズ"
+      ],
+      "en": [
+        "kids tutu skirt"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "つけるとひかるゆびわみたいなおもちゃ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "光る指輪型のおもちゃを探している",
+    "ideal_answer": "LEDが光る指輪型おもちゃ",
+    "reason": "「ひかる」「ゆびわ」から玩具カテゴリを特定できるrich例。",
+    "category": "light-up-ring-toy",
+    "search_terms": {
+      "ja": [
+        "光る 指輪 おもちゃ",
+        "led リング おもちゃ"
+      ],
+      "en": [
+        "light up ring toy"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "おふろにはってあそべるシール",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "お風呂用の貼って遊べるシールを探している",
+    "ideal_answer": "お風呂用貼って遊べるシール（バスタイムシール）",
+    "reason": "設置場所と用途が明確なrich例。",
+    "category": "bath-stickers",
+    "search_terms": {
+      "ja": [
+        "お風呂 シール 遊べる",
+        "バスタイムシール"
+      ],
+      "en": [
+        "bath stickers for kids"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "はいはいするときにひざにつけるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "赤ちゃんのハイハイ用ひざ保護パッドを探している",
+    "ideal_answer": "赤ちゃん用ハイハイ膝当てパッド",
+    "reason": "動作(はいはい)と装着部位(ひざ)からカテゴリを特定できるrich例。",
+    "category": "baby-knee-pads",
+    "search_terms": {
+      "ja": [
+        "ハイハイ 膝当て",
+        "赤ちゃん 膝パッド"
+      ],
+      "en": [
+        "baby crawling knee pads"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "なつやすみのしゅくだいでつかうどうぐ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "不明。自由研究キット・工作キット・文房具のいずれも候補になり得る",
+    "ideal_answer": "自由研究キットですか、それとも工作キットや文房具をお探しですか？学年も教えてください。",
+    "reason": "夏休みの宿題という文脈だけでは道具の種類を特定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.25,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "らんどせるにつけるかわいいやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "ランドセルに付けるアクセサリー・キーホルダーを探している",
+    "ideal_answer": "ランドセル用キーホルダー・チャーム",
+    "reason": "装着対象(ランドセル)が明確なrich寄り例。",
+    "category": "school-bag-charm",
+    "search_terms": {
+      "ja": [
+        "ランドセル キーホルダー",
+        "ランドセル チャーム"
+      ],
+      "en": [
+        "school bag charm"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "テレビのリモコンの数字が見えにくいので大きいやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "ボタンが大きく見やすいテレビリモコンを探している",
+    "ideal_answer": "大きなボタン・大きな文字表示のテレビリモコン",
+    "reason": "属性(見えにくい→大きい)と用途が明確なrich例。",
+    "category": "large-button-remote",
+    "search_terms": {
+      "ja": [
+        "リモコン 大きいボタン",
+        "テレビリモコン 見やすい"
+      ],
+      "en": [
+        "large button tv remote"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "せいざしなくてもすわれるいす",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "正座せずに座れる和室用の椅子を探している",
+    "ideal_answer": "脚が楽な和室用座椅子・低座椅子",
+    "reason": "「正座しなくても」という言い換えから座椅子カテゴリを特定できるrich寄り例。",
+    "category": "legless-floor-chair",
+    "search_terms": {
+      "ja": [
+        "座椅子 楽",
+        "和室 椅子 正座しない"
+      ],
+      "en": [
+        "low floor chair for tatami room"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "まごの写真を大きく見られるやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "デジタルフォトフレームを探している",
+    "ideal_answer": "デジタルフォトフレーム（大画面タイプ）",
+    "reason": "「大きく見られる」「写真」からカテゴリを特定できるrich例。",
+    "category": "digital-photo-frame",
+    "search_terms": {
+      "ja": [
+        "デジタルフォトフレーム 大画面",
+        "写真 大きく見る 機械"
+      ],
+      "en": [
+        "digital photo frame"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "冷蔵庫のとびらをあけしめするのがかるくなるやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "不明。冷蔵庫本体の買い替え、ドアパッキンの調整、取っ手カバーなど候補が広範",
+    "ideal_answer": "冷蔵庫の買い替えをお考えですか？それとも今お使いの冷蔵庫の扉が重く感じる原因（パッキンの劣化等）の対処法をお探しですか？",
+    "reason": "「軽くなる」の対象(本体/部品/使い方)が特定できないultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "つえを置くところに困らないやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "杖立て・杖ホルダーを探している",
+    "ideal_answer": "自立式の杖ホルダー・杖立てスタンド",
+    "reason": "用途(杖の置き場所)が明確なrich例。",
+    "category": "cane-holder",
+    "search_terms": {
+      "ja": [
+        "杖立て",
+        "杖ホルダー 自立式"
+      ],
+      "en": [
+        "cane holder stand"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "くつをかがまずにはけるやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "腰をかがめずに靴を履ける長い靴べらを探している",
+    "ideal_answer": "柄の長い靴べら（ロングシューホーン）",
+    "reason": "「かがまずに」から動作補助用品カテゴリを特定できるrich例。",
+    "category": "long-handle-shoehorn",
+    "search_terms": {
+      "ja": [
+        "靴べら 長い",
+        "シューホーン ロング"
+      ],
+      "en": [
+        "long handle shoehorn"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "아기 손수건 세트 선물용",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "出産祝い用の赤ちゃんハンカチ（ガーゼハンカチ）セットを探している（韓国語）",
+    "ideal_answer": "ギフト包装対応のベビーガーゼハンカチセット",
+    "reason": "用途(ギフト)と対象(赤ちゃん)が明確な韓国語話者のrich例。",
+    "category": "baby-handkerchief-set",
+    "search_terms": {
+      "ja": [
+        "ベビー ガーゼハンカチ セット ギフト"
+      ],
+      "en": [
+        "baby handkerchief gift set"
+      ],
+      "ko": [
+        "아기 손수건 세트",
+        "출산선물 손수건"
+      ],
+      "zh": [
+        "婴儿纱布手帕 礼盒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "주방 정리 수납 바구니 항균",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "抗菌加工のキッチン収納バスケットを探している（韓国語）",
+    "ideal_answer": "抗菌加工のキッチン収納バスケット",
+    "reason": "用途と属性(抗菌)が明確な韓国語話者のrich例。",
+    "category": "kitchen-organizer-basket",
+    "search_terms": {
+      "ja": [
+        "キッチン 収納バスケット 抗菌"
+      ],
+      "en": [
+        "antibacterial kitchen storage basket"
+      ],
+      "ko": [
+        "주방 수납 바구니 항균"
+      ],
+      "zh": [
+        "厨房收纳篮 抗菌"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "婴儿辅食收纳盒 冷冻格",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "冷凍保存できる離乳食用の小分け収納ケースを探している（中国語）",
+    "ideal_answer": "冷凍対応の離乳食小分けフリージングトレー",
+    "reason": "用途(離乳食の冷凍保存)が明確な中国語話者のrich例。",
+    "category": "baby-food-storage-box",
+    "search_terms": {
+      "ja": [
+        "離乳食 冷凍 小分け トレー"
+      ],
+      "en": [
+        "baby food freezer tray"
+      ],
+      "ko": [
+        "이유식 냉동 소분 트레이"
+      ],
+      "zh": [
+        "婴儿辅食冷冻盒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "厨房防油贴纸 灶台用",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "コンロ周りに貼る防油シートを探している（中国語）",
+    "ideal_answer": "コンロ周り用の防油・防汚シート",
+    "reason": "用途(コンロの油はね防止)が明確な中国語話者のrich例。",
+    "category": "kitchen-oil-splash-sticker",
+    "search_terms": {
+      "ja": [
+        "コンロ 防油シート"
+      ],
+      "en": [
+        "stove oil splash proof sticker"
+      ],
+      "ko": [
+        "가스레인지 기름 방지 시트"
+      ],
+      "zh": [
+        "灶台防油贴"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "reusable silicone food storage bags dishwasher safe",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "食洗機対応の繰り返し使えるシリコン保存袋を探している（英語）",
+    "ideal_answer": "食洗機対応の繰り返し使えるシリコン製フードストレージバッグ",
+    "reason": "属性(食洗機対応・再利用可能)が明確な英語話者のrich例。",
+    "category": "reusable-silicone-food-bag",
+    "search_terms": {
+      "ja": [
+        "シリコン 保存袋 食洗機対応"
+      ],
+      "en": [
+        "reusable silicone food storage bag"
+      ],
+      "ko": [
+        "실리콘 지퍼백 식기세척기 가능"
+      ],
+      "zh": [
+        "硅胶保鲜袋 可洗碗机"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "baby proof cabinet lock easy install",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "簡単取り付けできる収納棚の赤ちゃん用ロックを探している（英語）",
+    "ideal_answer": "工具不要で取り付けられるベビーセーフティロック（棚・扉用）",
+    "reason": "用途(乳児の安全対策)と属性(簡単取り付け)が明確な英語話者のrich例。",
+    "category": "baby-proof-cabinet-lock",
+    "search_terms": {
+      "ja": [
+        "ベビーセーフティロック 扉 工具不要"
+      ],
+      "en": [
+        "baby proof cabinet lock"
+      ],
+      "ko": [
+        "아기 안전 잠금장치 서랍"
+      ],
+      "zh": [
+        "婴儿安全锁 柜门"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "bentobako no mizu ga morenai yatsu",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "汁漏れしないお弁当箱を探している（ローマ字表記）",
+    "ideal_answer": "パッキン付きで汁漏れしにくいお弁当箱",
+    "reason": "「bentobako」「morenai」はローマ字表記の「弁当箱」「漏れない」。日本語入力に不慣れな利用者を想定した例。",
+    "category": "leakproof-bento-box",
+    "search_terms": {
+      "ja": [
+        "お弁当箱 汁漏れしない",
+        "弁当箱 パッキン付き"
+      ],
+      "en": [
+        "leakproof bento box"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "여름 원피스 30대 여성 데일리룩",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "30代女性向けの夏用デイリーワンピースを探している（韓国語）",
+    "ideal_answer": "30代女性向けの夏用デイリーワンピース",
+    "reason": "対象年齢層・季節・用途が明確な韓国語話者のrich例。",
+    "category": "womens-summer-dress",
+    "search_terms": {
+      "ja": [
+        "夏 ワンピース 30代 デイリー"
+      ],
+      "en": [
+        "summer dress for women in 30s daily"
+      ],
+      "ko": [
+        "여름 원피스 30대 데일리"
+      ],
+      "zh": [
+        "夏季连衣裙 30岁 日常"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "40岁女士 防晒衣 轻薄",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "40代女性向けの薄手UVカットパーカー（羽織り）を探している（中国語）",
+    "ideal_answer": "40代女性向けの薄手UVカットパーカー・羽織り",
+    "reason": "対象年齢層・属性(薄手・UVカット)が明確な中国語話者のrich例。",
+    "category": "sun-protection-clothing",
+    "search_terms": {
+      "ja": [
+        "UVカット パーカー 薄手 レディース"
+      ],
+      "en": [
+        "lightweight UV protection jacket women"
+      ],
+      "ko": [
+        "여성 자외선 차단 얇은 자켓"
+      ],
+      "zh": [
+        "防晒衣 女 轻薄"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "non-toxic baby bottle brush set",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "無害な素材の哺乳瓶洗いブラシセットを探している（英語）",
+    "ideal_answer": "食品グレード素材の哺乳瓶洗いブラシセット",
+    "reason": "属性(無害・食品グレード)と用途が明確な英語話者のrich例。",
+    "category": "baby-bottle-brush",
+    "search_terms": {
+      "ja": [
+        "哺乳瓶 洗いブラシ セット 食品グレード"
+      ],
+      "en": [
+        "non-toxic baby bottle brush set"
+      ],
+      "ko": [
+        "젖병 세척솔 세트 무독성"
+      ],
+      "zh": [
+        "奶瓶清洁刷套装 无毒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "儿童安全座椅 十个月宝宝用",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "生後10か月の赤ちゃん向けチャイルドシートを探している（中国語）",
+    "ideal_answer": "10か月頃の乳児に対応したチャイルドシート",
+    "reason": "対象月齢が明確な中国語話者のrich例。",
+    "category": "child-car-seat",
+    "search_terms": {
+      "ja": [
+        "チャイルドシート 10ヶ月 対応"
+      ],
+      "en": [
+        "car seat for 10 month old baby"
+      ],
+      "ko": [
+        "카시트 10개월 아기용"
+      ],
+      "zh": [
+        "婴儿安全座椅 10个月"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "신생아 속싸개 사계절용 사이즈",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "新生児用のオールシーズン対応おくるみのサイズを探している（韓国語）",
+    "ideal_answer": "オールシーズン対応の新生児用おくるみ（サイズ展開あり）",
+    "reason": "対象(新生児)と属性(オールシーズン)が明確な韓国語話者のrich例。",
+    "category": "newborn-swaddle",
+    "search_terms": {
+      "ja": [
+        "新生児 おくるみ オールシーズン"
+      ],
+      "en": [
+        "newborn swaddle all season"
+      ],
+      "ko": [
+        "신생아 속싸개 사계절"
+      ],
+      "zh": [
+        "新生儿包被 四季款"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  }
+]
