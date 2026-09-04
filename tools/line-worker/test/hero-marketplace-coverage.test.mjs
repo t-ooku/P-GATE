@@ -13,25 +13,31 @@ const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), '
 // MARKETPLACE COVERAGE と長い説明は後ろへ): ウィジェット自体は残し、
 // 置き場所をヒーロー直下から SALE RADAR の直後(13モールの位置)へ移した。
 
-test('折りたたみ式のMARKETPLACE COVERAGE(heroMarketplaceCoverage)は検索窓より後ろ、SALE RADARの直後に置く', async () => {
+test('折りたたみ式のMARKETPLACE COVERAGE(heroMarketplaceCoverage)は検索窓と結果の直後、ジャンル探索より前に置く', async () => {
   const [html,css] = await Promise.all([read('index.html'),read('ai-search-layout-fix.css')]);
   assert.match(html, /<details id="heroMarketplaceCoverage" class="marketplace-coverage hero-marketplace-coverage">/);
   assert.match(html, /<summary class="step hero-marketplace-coverage-summary">MARKETPLACE COVERAGE<\/summary>/);
   assert.match(css, /hero-marketplace-coverage>summary::after\{[\s\S]*content:'（開く）'/);
   assert.match(css, /hero-marketplace-coverage\[open\]>summary::after\{\s*content:'（閉じる）'/);
   assert.match(css, /\.hoshilu-primary>\.hero\{\s*padding-bottom:12px/);
-  // §13–17: ヒーロー → 検索フォーム(#hoshiluSearch) → BUZZ → SALE RADAR → このウィジェット。
+  // 2026-09-04 総合実行指示書 §52: 検索 → 主要モール(このウィジェット) → ジャンル探索 → BUZZ →
+  // セール・クーポン → 人気 → INSIGHT → NEWS。ウィジェットは結果の直後、ジャンル探索より前。
   const heroEnd = html.indexOf('<div class="hero-visual" aria-hidden="true"></div>');
   const widgetStart = html.indexOf('id="heroMarketplaceCoverage"');
   const searchStart = html.indexOf('id="hoshiluSearch"');
+  const resultsStart = html.indexOf('id="resultsSection"');
+  const genreStart = html.indexOf('id="genreExplorer"');
+  const buzzStart = html.indexOf('id="buzzHome"');
   const saleStart = html.indexOf('class="sale-center"');
+  const popularStart = html.indexOf('id="popularGenres"');
   const insightStart = html.indexOf('id="insight"');
   assert.notEqual(heroEnd, -1);
   assert.notEqual(widgetStart, -1);
   assert.notEqual(searchStart, -1);
   assert.ok(heroEnd < searchStart, 'search form directly follows the hero');
-  assert.ok(searchStart < saleStart && saleStart < widgetStart, 'widget comes after search, BUZZ and SALE RADAR');
-  assert.ok(widgetStart < insightStart, 'widget stays above the saved hub / news / journey');
+  assert.ok(searchStart < resultsStart && resultsStart < widgetStart, 'widget comes right after search and results');
+  assert.ok(widgetStart < genreStart && genreStart < buzzStart && buzzStart < saleStart && saleStart < popularStart && popularStart < insightStart,
+    'order: coverage → genres → BUZZ → SALE RADAR → popular → INSIGHT');
   // 既存の#marketplaceCoverageと同じ13モール内訳(integrated 3 / direct 10)。
   for (const mall of ['Amazon', '楽天市場', 'Qoo10', 'SHEIN', 'ZOZOTOWN', 'ロフト', 'ハンズ', 'マツキヨココカラ', '@cosme', 'ABC-MART', 'BUYMA', 'SNKRDUNK']) {
     const widgetSection = html.slice(widgetStart, html.indexOf('</details>', widgetStart));

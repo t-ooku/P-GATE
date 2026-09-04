@@ -34,3 +34,10 @@
 .shop-link{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0 10px;padding:8px 10px;border:1px solid #ded7ff;border-radius:12px;background:#fff;font-size:11px;color:#17172b;text-decoration:none}
 .shop-link-label{color:#6d6b80}.shop-link strong{color:#5140ba}
 .shop-link-coupon{margin-left:auto;padding:2px 8px;border-radius:999px;background:#fff0f7;color:#d1156b;font-weight:800}
+/* 2026-09-04 ジャンル探索・人気ジャンル（トップ §52） */
+.genre-explorer,.popular-genres{margin:0}
+.genre-breadcrumb{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 10px}
+.genre-arrow{color:#6d6b80;font-size:12px}
+.genre-chip.is-active{background:#7357ff;border-color:#7357ff;color:#fff}
+.genre-chip.is-leaf{background:#fff;border-style:dashed}
+.popular-ranking-button{margin-top:10px;padding:9px 14px;border:1px solid #ded7ff;border-radius:999px;background:#fff;color:#5140ba;font-size:12px;font-weight:800;cursor:pointer}
