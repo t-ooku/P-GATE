@@ -1,0 +1,2440 @@
+[
+  {
+    "query_text": "口が広い水筒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "広口で氷が入り洗いやすい水筒",
+    "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+    "reason": "「口が広い」「氷が入る」は商品名では「広口」。 展開規則 wide-mouth-bottle（モール検索語「広口 水筒」）。",
+    "category": "wide-mouth-bottle",
+    "search_terms": {
+      "ja": [
+        "広口 水筒",
+        "広口 ステンレスボトル",
+        "氷が入る 水筒"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "氷が入る 水筒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "広口で氷が入り洗いやすい水筒",
+    "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+    "reason": "「口が広い」「氷が入る」は商品名では「広口」。 展開規則 wide-mouth-bottle（モール検索語「広口 水筒」）。",
+    "category": "wide-mouth-bottle",
+    "search_terms": {
+      "ja": [
+        "広口 水筒",
+        "広口 ステンレスボトル",
+        "氷が入る 水筒"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "手を入れて洗える水筒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "広口で氷が入り洗いやすい水筒",
+    "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+    "reason": "「口が広い」「氷が入る」は商品名では「広口」。 展開規則 wide-mouth-bottle（モール検索語「広口 水筒」）。",
+    "category": "wide-mouth-bottle",
+    "search_terms": {
+      "ja": [
+        "広口 水筒",
+        "広口 ステンレスボトル",
+        "氷が入る 水筒"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "食洗機で洗える水筒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "食洗機対応の水筒",
+    "ideal_answer": "食洗機対応と明記された水筒・ボトル（本体・蓋・パッキンの対応範囲に注意）",
+    "reason": "「食洗機で洗える」は商品名では「食洗機対応」「食洗機OK」。 展開規則 dishwasher-safe-bottle（モール検索語「食洗機対応 水筒」）。",
+    "category": "dishwasher-safe-bottle",
+    "search_terms": {
+      "ja": [
+        "食洗機対応 水筒",
+        "食洗機OK 水筒",
+        "食洗機対応 ステンレスボトル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "食洗機に入れられるボトル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "食洗機対応の水筒",
+    "ideal_answer": "食洗機対応と明記された水筒・ボトル（本体・蓋・パッキンの対応範囲に注意）",
+    "reason": "「食洗機で洗える」は商品名では「食洗機対応」「食洗機OK」。 展開規則 dishwasher-safe-bottle（モール検索語「食洗機対応 水筒」）。",
+    "category": "dishwasher-safe-bottle",
+    "search_terms": {
+      "ja": [
+        "食洗機対応 水筒",
+        "食洗機OK 水筒",
+        "食洗機対応 ステンレスボトル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "片手で開けられる水筒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ワンタッチで開く直飲み水筒",
+    "ideal_answer": "ワンタッチ（ワンプッシュ）オープンの直飲みタイプ水筒",
+    "reason": "「片手で開く」は商品名では「ワンタッチ」「ワンプッシュ」。 展開規則 one-touch-bottle（モール検索語「ワンタッチ 水筒」）。",
+    "category": "one-touch-bottle",
+    "search_terms": {
+      "ja": [
+        "ワンタッチ 水筒",
+        "ワンタッチオープン 水筒",
+        "ワンプッシュ ボトル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ボタンで開く水筒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ワンタッチで開く直飲み水筒",
+    "ideal_answer": "ワンタッチ（ワンプッシュ）オープンの直飲みタイプ水筒",
+    "reason": "「片手で開く」は商品名では「ワンタッチ」「ワンプッシュ」。 展開規則 one-touch-bottle（モール検索語「ワンタッチ 水筒」）。",
+    "category": "one-touch-bottle",
+    "search_terms": {
+      "ja": [
+        "ワンタッチ 水筒",
+        "ワンタッチオープン 水筒",
+        "ワンプッシュ ボトル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "直飲みとコップ両方使える水筒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "直飲みとコップの2通りで使える子供用水筒",
+    "ideal_answer": "2WAY（直飲み・コップ）タイプの子供用水筒",
+    "reason": "「直飲みとコップ両方」は商品名では「2WAY」。 展開規則 kids-2way-bottle（モール検索語「2way 水筒 子供」）。",
+    "category": "kids-2way-bottle",
+    "search_terms": {
+      "ja": [
+        "2way 水筒 子供",
+        "2WAY ボトル キッズ",
+        "コップ付き 直飲み 水筒"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "コップでも飲める子供の水筒",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "直飲みとコップの2通りで使える子供用水筒",
+    "ideal_answer": "2WAY（直飲み・コップ）タイプの子供用水筒",
+    "reason": "「直飲みとコップ両方」は商品名では「2WAY」。 展開規則 kids-2way-bottle（モール検索語「2way 水筒 子供」）。",
+    "category": "kids-2way-bottle",
+    "search_terms": {
+      "ja": [
+        "2way 水筒 子供",
+        "2WAY ボトル キッズ",
+        "コップ付き 直飲み 水筒"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "倒してもこぼれない子供のコップ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "倒してもこぼれない乳幼児用マグ",
+    "ideal_answer": "こぼれないストローマグ・トレーニングマグ（360度飲み口タイプを含む）",
+    "reason": "「倒してもこぼれない」は商品名では「こぼれない」「ストローマグ」。 展開規則 spill-proof-kids-cup（モール検索語「こぼれない マグ ベビー」）。",
+    "category": "spill-proof-kids-cup",
+    "search_terms": {
+      "ja": [
+        "こぼれない マグ ベビー",
+        "ストローマグ こぼれない",
+        "トレーニングマグ 倒れてもこぼれない"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "赤ちゃんが使ってもこぼれないマグ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "倒してもこぼれない乳幼児用マグ",
+    "ideal_answer": "こぼれないストローマグ・トレーニングマグ（360度飲み口タイプを含む）",
+    "reason": "「倒してもこぼれない」は商品名では「こぼれない」「ストローマグ」。 展開規則 spill-proof-kids-cup（モール検索語「こぼれない マグ ベビー」）。",
+    "category": "spill-proof-kids-cup",
+    "search_terms": {
+      "ja": [
+        "こぼれない マグ ベビー",
+        "ストローマグ こぼれない",
+        "トレーニングマグ 倒れてもこぼれない"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汁が漏れない弁当箱",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汁漏れしにくい密閉型の弁当箱",
+    "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+    "reason": "「汁が漏れない」は商品名では「汁漏れしない」「密閉」。 展開規則 leakproof-lunch-box（モール検索語「汁漏れしない 弁当箱」）。",
+    "category": "leakproof-lunch-box",
+    "search_terms": {
+      "ja": [
+        "汁漏れしない 弁当箱",
+        "汁漏れ防止 弁当箱",
+        "密閉 ランチボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "カレー入れても漏れないお弁当箱",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汁漏れしにくい密閉型の弁当箱",
+    "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+    "reason": "「汁が漏れない」は商品名では「汁漏れしない」「密閉」。 展開規則 leakproof-lunch-box（モール検索語「汁漏れしない 弁当箱」）。",
+    "category": "leakproof-lunch-box",
+    "search_terms": {
+      "ja": [
+        "汁漏れしない 弁当箱",
+        "汁漏れ防止 弁当箱",
+        "密閉 ランチボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "横にしても漏れないランチボックス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汁漏れしにくい密閉型の弁当箱",
+    "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+    "reason": "「汁が漏れない」は商品名では「汁漏れしない」「密閉」。 展開規則 leakproof-lunch-box（モール検索語「汁漏れしない 弁当箱」）。",
+    "category": "leakproof-lunch-box",
+    "search_terms": {
+      "ja": [
+        "汁漏れしない 弁当箱",
+        "汁漏れ防止 弁当箱",
+        "密閉 ランチボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "温かいまま食べられる弁当箱",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "保温できる弁当箱・スープジャー",
+    "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+    "reason": "「温かいまま」「冷めない」は商品名では「保温」「ランチジャー」「スープジャー」。 展開規則 insulated-lunch-jar（モール検索語「保温 弁当箱」）。",
+    "category": "insulated-lunch-jar",
+    "search_terms": {
+      "ja": [
+        "保温 弁当箱",
+        "ランチジャー",
+        "スープジャー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お昼に冷めないお弁当",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "保温できる弁当箱・スープジャー",
+    "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+    "reason": "「温かいまま」「冷めない」は商品名では「保温」「ランチジャー」「スープジャー」。 展開規則 insulated-lunch-jar（モール検索語「保温 弁当箱」）。",
+    "category": "insulated-lunch-jar",
+    "search_terms": {
+      "ja": [
+        "保温 弁当箱",
+        "ランチジャー",
+        "スープジャー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "スープを温かいまま持っていくやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "保温できる弁当箱・スープジャー",
+    "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+    "reason": "「温かいまま」「冷めない」は商品名では「保温」「ランチジャー」「スープジャー」。 展開規則 insulated-lunch-jar（モール検索語「保温 弁当箱」）。",
+    "category": "insulated-lunch-jar",
+    "search_terms": {
+      "ja": [
+        "保温 弁当箱",
+        "ランチジャー",
+        "スープジャー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "くっつかないフライパン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "こびりつきにくいコーティングのフライパン",
+    "ideal_answer": "フッ素・ダイヤモンド等コーティングの「こびりつかない」フライパン",
+    "reason": "「くっつかない」は商品名では「こびりつかない」「コーティング」。 展開規則 nonstick-frying-pan（モール検索語「こびりつかない フライパン」）。",
+    "category": "nonstick-frying-pan",
+    "search_terms": {
+      "ja": [
+        "こびりつかない フライパン",
+        "コーティング フライパン",
+        "フッ素加工 フライパン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "油なしで焼けるフライパン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "こびりつきにくいコーティングのフライパン",
+    "ideal_answer": "フッ素・ダイヤモンド等コーティングの「こびりつかない」フライパン",
+    "reason": "「くっつかない」は商品名では「こびりつかない」「コーティング」。 展開規則 nonstick-frying-pan（モール検索語「こびりつかない フライパン」）。",
+    "category": "nonstick-frying-pan",
+    "search_terms": {
+      "ja": [
+        "こびりつかない フライパン",
+        "コーティング フライパン",
+        "フッ素加工 フライパン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "焦げ付かない卵焼き器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "こびりつきにくいコーティングのフライパン",
+    "ideal_answer": "フッ素・ダイヤモンド等コーティングの「こびりつかない」フライパン",
+    "reason": "「くっつかない」は商品名では「こびりつかない」「コーティング」。 展開規則 nonstick-frying-pan（モール検索語「こびりつかない フライパン」）。",
+    "category": "nonstick-frying-pan",
+    "search_terms": {
+      "ja": [
+        "こびりつかない フライパン",
+        "コーティング フライパン",
+        "フッ素加工 フライパン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "分解して洗えるキッチンばさみ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "分解洗浄できるキッチンバサミ",
+    "ideal_answer": "分解式（セパレート）のキッチンバサミ",
+    "reason": "「分解して洗える」は商品名では「分解式」「セパレート」。 展開規則 disassemble-kitchen-scissors（モール検索語「分解式 キッチンバサミ」）。",
+    "category": "disassemble-kitchen-scissors",
+    "search_terms": {
+      "ja": [
+        "分解式 キッチンバサミ",
+        "分解できる キッチンばさみ",
+        "セパレート キッチンバサミ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "バラして洗えるはさみ 料理用",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "分解洗浄できるキッチンバサミ",
+    "ideal_answer": "分解式（セパレート）のキッチンバサミ",
+    "reason": "「分解して洗える」は商品名では「分解式」「セパレート」。 展開規則 disassemble-kitchen-scissors（モール検索語「分解式 キッチンバサミ」）。",
+    "category": "disassemble-kitchen-scissors",
+    "search_terms": {
+      "ja": [
+        "分解式 キッチンバサミ",
+        "分解できる キッチンばさみ",
+        "セパレート キッチンバサミ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "滑らないまな板",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "滑り止め付きのまな板",
+    "ideal_answer": "滑り止め（ゴム足・ラバー）付きのまな板",
+    "reason": "「滑らない」は商品名では「滑り止め付き」。 展開規則 nonslip-cutting-board（モール検索語「滑り止め付き まな板」）。",
+    "category": "nonslip-cutting-board",
+    "search_terms": {
+      "ja": [
+        "滑り止め付き まな板",
+        "滑らない まな板",
+        "すべり止め まな板"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "切ってる時に動かないまな板",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "滑り止め付きのまな板",
+    "ideal_answer": "滑り止め（ゴム足・ラバー）付きのまな板",
+    "reason": "「滑らない」は商品名では「滑り止め付き」。 展開規則 nonslip-cutting-board（モール検索語「滑り止め付き まな板」）。",
+    "category": "nonslip-cutting-board",
+    "search_terms": {
+      "ja": [
+        "滑り止め付き まな板",
+        "滑らない まな板",
+        "すべり止め まな板"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "蓋が立つ鍋",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "蓋を自立させられる鍋",
+    "ideal_answer": "自立する（スタンド式）蓋付きの鍋",
+    "reason": "「蓋が立つ」は商品名では「自立」「スタンド式」。 展開規則 self-standing-lid-pot（モール検索語「自立する蓋 鍋」）。",
+    "category": "self-standing-lid-pot",
+    "search_terms": {
+      "ja": [
+        "自立する蓋 鍋",
+        "スタンド式 蓋 鍋",
+        "蓋が立つ 鍋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ふたを立てて置ける鍋",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "蓋を自立させられる鍋",
+    "ideal_answer": "自立する（スタンド式）蓋付きの鍋",
+    "reason": "「蓋が立つ」は商品名では「自立」「スタンド式」。 展開規則 self-standing-lid-pot（モール検索語「自立する蓋 鍋」）。",
+    "category": "self-standing-lid-pot",
+    "search_terms": {
+      "ja": [
+        "自立する蓋 鍋",
+        "スタンド式 蓋 鍋",
+        "蓋が立つ 鍋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "結露しないコップ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結露しない真空断熱タンブラー",
+    "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+    "reason": "「結露しない」「濡れない」は商品名では「真空断熱」。 展開規則 sweat-free-tumbler（モール検索語「真空断熱 タンブラー」）。",
+    "category": "sweat-free-tumbler",
+    "search_terms": {
+      "ja": [
+        "真空断熱 タンブラー",
+        "結露しない タンブラー",
+        "ステンレス 真空 タンブラー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "テーブルが濡れないタンブラー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結露しない真空断熱タンブラー",
+    "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+    "reason": "「結露しない」「濡れない」は商品名では「真空断熱」。 展開規則 sweat-free-tumbler（モール検索語「真空断熱 タンブラー」）。",
+    "category": "sweat-free-tumbler",
+    "search_terms": {
+      "ja": [
+        "真空断熱 タンブラー",
+        "結露しない タンブラー",
+        "ステンレス 真空 タンブラー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗をかかないグラス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結露しない真空断熱タンブラー",
+    "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+    "reason": "「結露しない」「濡れない」は商品名では「真空断熱」。 展開規則 sweat-free-tumbler（モール検索語「真空断熱 タンブラー」）。",
+    "category": "sweat-free-tumbler",
+    "search_terms": {
+      "ja": [
+        "真空断熱 タンブラー",
+        "結露しない タンブラー",
+        "ステンレス 真空 タンブラー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "温度が選べるケトル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "温度調節機能付きの電気ケトル",
+    "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+    "reason": "「温度が選べる」は商品名では「温度調節」「温度設定」。 展開規則 temperature-kettle（モール検索語「温度調節 電気ケトル」）。",
+    "category": "temperature-kettle",
+    "search_terms": {
+      "ja": [
+        "温度調節 電気ケトル",
+        "温度設定 ケトル",
+        "温度調節機能付き 電気ポット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "70度で止まるケトル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "温度調節機能付きの電気ケトル",
+    "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+    "reason": "「温度が選べる」は商品名では「温度調節」「温度設定」。 展開規則 temperature-kettle（モール検索語「温度調節 電気ケトル」）。",
+    "category": "temperature-kettle",
+    "search_terms": {
+      "ja": [
+        "温度調節 電気ケトル",
+        "温度設定 ケトル",
+        "温度調節機能付き 電気ポット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ミルク用に温度設定できるポット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "温度調節機能付きの電気ケトル",
+    "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+    "reason": "「温度が選べる」は商品名では「温度調節」「温度設定」。 展開規則 temperature-kettle（モール検索語「温度調節 電気ケトル」）。",
+    "category": "temperature-kettle",
+    "search_terms": {
+      "ja": [
+        "温度調節 電気ケトル",
+        "温度設定 ケトル",
+        "温度調節機能付き 電気ポット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "虫がわかない米の保存容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "密閉できる米びつ",
+    "ideal_answer": "密閉タイプの米びつ・ライスストッカー",
+    "reason": "「虫がわかない」「湿気ない」は商品名では「密閉」。 展開規則 sealed-rice-container（モール検索語「密閉 米びつ」）。",
+    "category": "sealed-rice-container",
+    "search_terms": {
+      "ja": [
+        "密閉 米びつ",
+        "密閉 米ストッカー",
+        "虫よけ 米びつ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "湿気ない米びつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "密閉できる米びつ",
+    "ideal_answer": "密閉タイプの米びつ・ライスストッカー",
+    "reason": "「虫がわかない」「湿気ない」は商品名では「密閉」。 展開規則 sealed-rice-container（モール検索語「密閉 米びつ」）。",
+    "category": "sealed-rice-container",
+    "search_terms": {
+      "ja": [
+        "密閉 米びつ",
+        "密閉 米ストッカー",
+        "虫よけ 米びつ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "氷が取り出しやすい製氷皿",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "氷を取り出しやすい製氷皿",
+    "ideal_answer": "シリコン製・蓋付きなど取り出しやすい製氷皿",
+    "reason": "「取り出しやすい」は商品名では「シリコン」「蓋付き」で表現されることが多い。 展開規則 easy-release-ice-tray（モール検索語「シリコン 製氷皿」）。",
+    "category": "easy-release-ice-tray",
+    "search_terms": {
+      "ja": [
+        "シリコン 製氷皿",
+        "取り出しやすい 製氷皿",
+        "蓋付き 製氷皿"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "氷がポロっと取れるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "氷を取り出しやすい製氷皿",
+    "ideal_answer": "シリコン製・蓋付きなど取り出しやすい製氷皿",
+    "reason": "「取り出しやすい」は商品名では「シリコン」「蓋付き」で表現されることが多い。 展開規則 easy-release-ice-tray（モール検索語「シリコン 製氷皿」）。",
+    "category": "easy-release-ice-tray",
+    "search_terms": {
+      "ja": [
+        "シリコン 製氷皿",
+        "取り出しやすい 製氷皿",
+        "蓋付き 製氷皿"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "髪の毛が取りやすい排水口のやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "髪の毛を捨てやすい排水口ゴミ受け",
+    "ideal_answer": "排水口用ヘアキャッチャー（くるっと集まるタイプ等）",
+    "reason": "「髪の毛が取りやすい」は商品名では「ヘアキャッチャー」。 展開規則 drain-hair-catcher（モール検索語「排水口 ヘアキャッチャー」）。",
+    "category": "drain-hair-catcher",
+    "search_terms": {
+      "ja": [
+        "排水口 ヘアキャッチャー",
+        "髪の毛 取りやすい 排水口 ゴミ受け",
+        "くるっとキャッチ 排水口"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お風呂の排水溝の髪が捨てやすいもの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "髪の毛を捨てやすい排水口ゴミ受け",
+    "ideal_answer": "排水口用ヘアキャッチャー（くるっと集まるタイプ等）",
+    "reason": "「髪の毛が取りやすい」は商品名では「ヘアキャッチャー」。 展開規則 drain-hair-catcher（モール検索語「排水口 ヘアキャッチャー」）。",
+    "category": "drain-hair-catcher",
+    "search_terms": {
+      "ja": [
+        "排水口 ヘアキャッチャー",
+        "髪の毛 取りやすい 排水口 ゴミ受け",
+        "くるっとキャッチ 排水口"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "臭わないゴミ箱",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "臭い漏れを防ぐ密閉ゴミ箱",
+    "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+    "reason": "「臭わない」は商品名では「密閉」「防臭」。 展開規則 odor-sealed-trash-can（モール検索語「密閉 ゴミ箱 防臭」）。",
+    "category": "odor-sealed-trash-can",
+    "search_terms": {
+      "ja": [
+        "密閉 ゴミ箱 防臭",
+        "臭わない ゴミ箱",
+        "パッキン付き ゴミ箱"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "生ゴミの臭いが漏れないゴミ箱",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "臭い漏れを防ぐ密閉ゴミ箱",
+    "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+    "reason": "「臭わない」は商品名では「密閉」「防臭」。 展開規則 odor-sealed-trash-can（モール検索語「密閉 ゴミ箱 防臭」）。",
+    "category": "odor-sealed-trash-can",
+    "search_terms": {
+      "ja": [
+        "密閉 ゴミ箱 防臭",
+        "臭わない ゴミ箱",
+        "パッキン付き ゴミ箱"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "匂いが漏れないダストボックス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "臭い漏れを防ぐ密閉ゴミ箱",
+    "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+    "reason": "「臭わない」は商品名では「密閉」「防臭」。 展開規則 odor-sealed-trash-can（モール検索語「密閉 ゴミ箱 防臭」）。",
+    "category": "odor-sealed-trash-can",
+    "search_terms": {
+      "ja": [
+        "密閉 ゴミ箱 防臭",
+        "臭わない ゴミ箱",
+        "パッキン付き ゴミ箱"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "服が落ちないハンガー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類が滑り落ちないハンガー",
+    "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+    "reason": "「服が落ちない」は商品名では「すべらない」「ノンスリップ」。 展開規則 nonslip-hanger（モール検索語「すべらない ハンガー」）。",
+    "category": "nonslip-hanger",
+    "search_terms": {
+      "ja": [
+        "すべらない ハンガー",
+        "滑らない ハンガー",
+        "ノンスリップ ハンガー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "滑らないハンガー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類が滑り落ちないハンガー",
+    "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+    "reason": "「服が落ちない」は商品名では「すべらない」「ノンスリップ」。 展開規則 nonslip-hanger（モール検索語「すべらない ハンガー」）。",
+    "category": "nonslip-hanger",
+    "search_terms": {
+      "ja": [
+        "すべらない ハンガー",
+        "滑らない ハンガー",
+        "ノンスリップ ハンガー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "肩に跡がつかないハンガー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類が滑り落ちないハンガー",
+    "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+    "reason": "「服が落ちない」は商品名では「すべらない」「ノンスリップ」。 展開規則 nonslip-hanger（モール検索語「すべらない ハンガー」）。",
+    "category": "nonslip-hanger",
+    "search_terms": {
+      "ja": [
+        "すべらない ハンガー",
+        "滑らない ハンガー",
+        "ノンスリップ ハンガー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "たためる洗濯かご",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "折りたためる洗濯かご",
+    "ideal_answer": "折りたたみ式のランドリーバスケット",
+    "reason": "「たためる」は商品名では「折りたたみ」。 展開規則 foldable-laundry-basket（モール検索語「折りたたみ ランドリーバスケット」）。",
+    "category": "foldable-laundry-basket",
+    "search_terms": {
+      "ja": [
+        "折りたたみ ランドリーバスケット",
+        "折りたためる 洗濯かご",
+        "たためる ランドリーバッグ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "使わない時に小さくできるランドリーバスケット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "折りたためる洗濯かご",
+    "ideal_answer": "折りたたみ式のランドリーバスケット",
+    "reason": "「たためる」は商品名では「折りたたみ」。 展開規則 foldable-laundry-basket（モール検索語「折りたたみ ランドリーバスケット」）。",
+    "category": "foldable-laundry-basket",
+    "search_terms": {
+      "ja": [
+        "折りたたみ ランドリーバスケット",
+        "折りたためる 洗濯かご",
+        "たためる ランドリーバッグ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "石鹸がぬるぬるしない置き場",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "水切れの良い石鹸置き",
+    "ideal_answer": "水切り（珪藻土・浮かせる）タイプのソープディッシュ",
+    "reason": "「ぬるぬるしない」は商品名では「水切り」「珪藻土」。 展開規則 drainable-soap-dish（モール検索語「水切り ソープディッシュ」）。",
+    "category": "drainable-soap-dish",
+    "search_terms": {
+      "ja": [
+        "水切り ソープディッシュ",
+        "水が溜まらない 石鹸置き",
+        "水切れ 石鹸トレー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水が溜まらない石鹸置き",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "水切れの良い石鹸置き",
+    "ideal_answer": "水切り（珪藻土・浮かせる）タイプのソープディッシュ",
+    "reason": "「ぬるぬるしない」は商品名では「水切り」「珪藻土」。 展開規則 drainable-soap-dish（モール検索語「水切り ソープディッシュ」）。",
+    "category": "drainable-soap-dish",
+    "search_terms": {
+      "ja": [
+        "水切り ソープディッシュ",
+        "水が溜まらない 石鹸置き",
+        "水切れ 石鹸トレー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "音が静かなドライヤー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "静音性の高いドライヤー",
+    "ideal_answer": "静音（低騒音）設計のドライヤー",
+    "reason": "「音が静か」は商品名では「静音」「低騒音」。 展開規則 quiet-hair-dryer（モール検索語「静音 ドライヤー」）。",
+    "category": "quiet-hair-dryer",
+    "search_terms": {
+      "ja": [
+        "静音 ドライヤー",
+        "低騒音 ドライヤー",
+        "静か ドライヤー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "夜でも使えるうるさくないドライヤー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "静音性の高いドライヤー",
+    "ideal_answer": "静音（低騒音）設計のドライヤー",
+    "reason": "「音が静か」は商品名では「静音」「低騒音」。 展開規則 quiet-hair-dryer（モール検索語「静音 ドライヤー」）。",
+    "category": "quiet-hair-dryer",
+    "search_terms": {
+      "ja": [
+        "静音 ドライヤー",
+        "低騒音 ドライヤー",
+        "静か ドライヤー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "軽くて線がない掃除機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "軽量なコードレス掃除機",
+    "ideal_answer": "軽量（1〜1.5kg級）のコードレススティック掃除機",
+    "reason": "「線がない」は商品名では「コードレス」、「軽い」は「軽量」。 展開規則 light-cordless-vacuum（モール検索語「コードレス掃除機 軽量」）。",
+    "category": "light-cordless-vacuum",
+    "search_terms": {
+      "ja": [
+        "コードレス掃除機 軽量",
+        "軽量 スティッククリーナー",
+        "軽い コードレス クリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "片手で持てる軽い掃除機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "軽量なコードレス掃除機",
+    "ideal_answer": "軽量（1〜1.5kg級）のコードレススティック掃除機",
+    "reason": "「線がない」は商品名では「コードレス」、「軽い」は「軽量」。 展開規則 light-cordless-vacuum（モール検索語「コードレス掃除機 軽量」）。",
+    "category": "light-cordless-vacuum",
+    "search_terms": {
+      "ja": [
+        "コードレス掃除機 軽量",
+        "軽量 スティッククリーナー",
+        "軽い コードレス クリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "マスクしても曇らないメガネ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "曇りにくいメガネまたは曇り止め用品",
+    "ideal_answer": "曇り止めコートのレンズ／曇り止めスプレー・クロス",
+    "reason": "「曇らない」は商品名では「曇り止め」。 展開規則 anti-fog-glasses（モール検索語「曇り止め メガネ」）。",
+    "category": "anti-fog-glasses",
+    "search_terms": {
+      "ja": [
+        "曇り止め メガネ",
+        "くもり止め レンズ",
+        "くもり止め スプレー メガネ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "くもらないレンズ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "曇りにくいメガネまたは曇り止め用品",
+    "ideal_answer": "曇り止めコートのレンズ／曇り止めスプレー・クロス",
+    "reason": "「曇らない」は商品名では「曇り止め」。 展開規則 anti-fog-glasses（モール検索語「曇り止め メガネ」）。",
+    "category": "anti-fog-glasses",
+    "search_terms": {
+      "ja": [
+        "曇り止め メガネ",
+        "くもり止め レンズ",
+        "くもり止め スプレー メガネ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "光を通さないカーテン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "遮光性の高いカーテン",
+    "ideal_answer": "遮光1級（完全遮光）のカーテン",
+    "reason": "「光を通さない」は商品名では「遮光1級」「完全遮光」。 展開規則 blackout-curtain（モール検索語「遮光1級 カーテン」）。",
+    "category": "blackout-curtain",
+    "search_terms": {
+      "ja": [
+        "遮光1級 カーテン",
+        "完全遮光 カーテン",
+        "遮光 カーテン 1級"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "朝日で起きないカーテン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "遮光性の高いカーテン",
+    "ideal_answer": "遮光1級（完全遮光）のカーテン",
+    "reason": "「光を通さない」は商品名では「遮光1級」「完全遮光」。 展開規則 blackout-curtain（モール検索語「遮光1級 カーテン」）。",
+    "category": "blackout-curtain",
+    "search_terms": {
+      "ja": [
+        "遮光1級 カーテン",
+        "完全遮光 カーテン",
+        "遮光 カーテン 1級"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "部屋が真っ暗になるカーテン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "遮光性の高いカーテン",
+    "ideal_answer": "遮光1級（完全遮光）のカーテン",
+    "reason": "「光を通さない」は商品名では「遮光1級」「完全遮光」。 展開規則 blackout-curtain（モール検索語「遮光1級 カーテン」）。",
+    "category": "blackout-curtain",
+    "search_terms": {
+      "ja": [
+        "遮光1級 カーテン",
+        "完全遮光 カーテン",
+        "遮光 カーテン 1級"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "蒸れない敷きパッド",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "涼しく寝られる寝具",
+    "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+    "reason": "「蒸れない」「涼しい」は商品名では「接触冷感」「冷感」。 展開規則 cooling-bed-pad（モール検索語「接触冷感 敷きパッド」）。",
+    "category": "cooling-bed-pad",
+    "search_terms": {
+      "ja": [
+        "接触冷感 敷きパッド",
+        "冷感 敷きパッド",
+        "ひんやり 敷きパッド"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "寝るとき涼しいシーツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "涼しく寝られる寝具",
+    "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+    "reason": "「蒸れない」「涼しい」は商品名では「接触冷感」「冷感」。 展開規則 cooling-bed-pad（モール検索語「接触冷感 敷きパッド」）。",
+    "category": "cooling-bed-pad",
+    "search_terms": {
+      "ja": [
+        "接触冷感 敷きパッド",
+        "冷感 敷きパッド",
+        "ひんやり 敷きパッド"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ひんやりする布団のやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "涼しく寝られる寝具",
+    "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+    "reason": "「蒸れない」「涼しい」は商品名では「接触冷感」「冷感」。 展開規則 cooling-bed-pad（モール検索語「接触冷感 敷きパッド」）。",
+    "category": "cooling-bed-pad",
+    "search_terms": {
+      "ja": [
+        "接触冷感 敷きパッド",
+        "冷感 敷きパッド",
+        "ひんやり 敷きパッド"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "光が入らないアイマスク",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "遮光性の高いアイマスク",
+    "ideal_answer": "遮光（立体3D）アイマスク",
+    "reason": "「光が入らない」は商品名では「遮光」「3D立体」。 展開規則 light-blocking-sleep-mask（モール検索語「遮光 アイマスク」）。",
+    "category": "light-blocking-sleep-mask",
+    "search_terms": {
+      "ja": [
+        "遮光 アイマスク",
+        "完全遮光 アイマスク",
+        "立体 アイマスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "飛行機で真っ暗にできるアイマスク",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "遮光性の高いアイマスク",
+    "ideal_answer": "遮光（立体3D）アイマスク",
+    "reason": "「光が入らない」は商品名では「遮光」「3D立体」。 展開規則 light-blocking-sleep-mask（モール検索語「遮光 アイマスク」）。",
+    "category": "light-blocking-sleep-mask",
+    "search_terms": {
+      "ja": [
+        "遮光 アイマスク",
+        "完全遮光 アイマスク",
+        "立体 アイマスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "首が痛くならない枕",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "首に合う高さの枕",
+    "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+    "reason": "「首が痛くならない」は商品名では「高さ調節」「頸椎サポート」。効能は断定しない。 展開規則 neck-support-pillow（モール検索語「高さ調節 枕」）。",
+    "category": "neck-support-pillow",
+    "search_terms": {
+      "ja": [
+        "高さ調節 枕",
+        "首 サポート 枕",
+        "頸椎 枕"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "高さを変えられる枕",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "首に合う高さの枕",
+    "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+    "reason": "「首が痛くならない」は商品名では「高さ調節」「頸椎サポート」。効能は断定しない。 展開規則 neck-support-pillow（モール検索語「高さ調節 枕」）。",
+    "category": "neck-support-pillow",
+    "search_terms": {
+      "ja": [
+        "高さ調節 枕",
+        "首 サポート 枕",
+        "頸椎 枕"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "肩こりにいい枕",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "首に合う高さの枕",
+    "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+    "reason": "「首が痛くならない」は商品名では「高さ調節」「頸椎サポート」。効能は断定しない。 展開規則 neck-support-pillow（モール検索語「高さ調節 枕」）。",
+    "category": "neck-support-pillow",
+    "search_terms": {
+      "ja": [
+        "高さ調節 枕",
+        "首 サポート 枕",
+        "頸椎 枕"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "片手でたためるベビーカー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "片手で折りたためるベビーカー",
+    "ideal_answer": "ワンタッチ（片手）折りたたみのベビーカー",
+    "reason": "「片手でたためる」は商品名では「ワンタッチ折りたたみ」。 展開規則 one-hand-fold-stroller（モール検索語「ワンタッチ折りたたみ ベビーカー」）。",
+    "category": "one-hand-fold-stroller",
+    "search_terms": {
+      "ja": [
+        "ワンタッチ折りたたみ ベビーカー",
+        "片手で折りたたみ ベビーカー",
+        "ワンハンド ベビーカー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "子供を抱っこしたまま閉じられるベビーカー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "片手で折りたためるベビーカー",
+    "ideal_answer": "ワンタッチ（片手）折りたたみのベビーカー",
+    "reason": "「片手でたためる」は商品名では「ワンタッチ折りたたみ」。 展開規則 one-hand-fold-stroller（モール検索語「ワンタッチ折りたたみ ベビーカー」）。",
+    "category": "one-hand-fold-stroller",
+    "search_terms": {
+      "ja": [
+        "ワンタッチ折りたたみ ベビーカー",
+        "片手で折りたたみ ベビーカー",
+        "ワンハンド ベビーカー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "子供が自分で履ける靴",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "子供が自分で脱ぎ履きできる靴",
+    "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+    "reason": "「自分で履ける」は商品名では「マジックテープ」「面ファスナー」。 展開規則 velcro-kids-sneakers（モール検索語「マジックテープ スニーカー キッズ」）。",
+    "category": "velcro-kids-sneakers",
+    "search_terms": {
+      "ja": [
+        "マジックテープ スニーカー キッズ",
+        "面ファスナー キッズ スニーカー",
+        "ひもなし 子供 靴"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "紐なしのキッズスニーカー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "子供が自分で脱ぎ履きできる靴",
+    "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+    "reason": "「自分で履ける」は商品名では「マジックテープ」「面ファスナー」。 展開規則 velcro-kids-sneakers（モール検索語「マジックテープ スニーカー キッズ」）。",
+    "category": "velcro-kids-sneakers",
+    "search_terms": {
+      "ja": [
+        "マジックテープ スニーカー キッズ",
+        "面ファスナー キッズ スニーカー",
+        "ひもなし 子供 靴"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "保育園で脱ぎ履きしやすい靴",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "子供が自分で脱ぎ履きできる靴",
+    "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+    "reason": "「自分で履ける」は商品名では「マジックテープ」「面ファスナー」。 展開規則 velcro-kids-sneakers（モール検索語「マジックテープ スニーカー キッズ」）。",
+    "category": "velcro-kids-sneakers",
+    "search_terms": {
+      "ja": [
+        "マジックテープ スニーカー キッズ",
+        "面ファスナー キッズ スニーカー",
+        "ひもなし 子供 靴"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "おむつが臭わないゴミ箱",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "おむつの臭い対策用品",
+    "ideal_answer": "防臭おむつ処理ポット・防臭袋（BOS等）",
+    "reason": "「臭わない」は商品名では「防臭」「おむつ処理ポット」。 展開規則 diaper-odor-pail（モール検索語「おむつ用ゴミ箱 防臭」）。",
+    "category": "diaper-odor-pail",
+    "search_terms": {
+      "ja": [
+        "おむつ用ゴミ箱 防臭",
+        "おむつ ポット 防臭",
+        "おむつ処理ポット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "オムツの匂い対策のやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "おむつの臭い対策用品",
+    "ideal_answer": "防臭おむつ処理ポット・防臭袋（BOS等）",
+    "reason": "「臭わない」は商品名では「防臭」「おむつ処理ポット」。 展開規則 diaper-odor-pail（モール検索語「おむつ用ゴミ箱 防臭」）。",
+    "category": "diaper-odor-pail",
+    "search_terms": {
+      "ja": [
+        "おむつ用ゴミ箱 防臭",
+        "おむつ ポット 防臭",
+        "おむつ処理ポット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "にじまないマスカラ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "にじみにくいマスカラ",
+    "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+    "reason": "「にじまない」は商品名では「ウォータープルーフ」「にじまない」。 展開規則 smudge-proof-mascara（モール検索語「ウォータープルーフ マスカラ」）。",
+    "category": "smudge-proof-mascara",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ マスカラ",
+        "にじまない マスカラ",
+        "お湯落ち マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "パンダ目にならないマスカラ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "にじみにくいマスカラ",
+    "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+    "reason": "「にじまない」は商品名では「ウォータープルーフ」「にじまない」。 展開規則 smudge-proof-mascara（モール検索語「ウォータープルーフ マスカラ」）。",
+    "category": "smudge-proof-mascara",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ マスカラ",
+        "にじまない マスカラ",
+        "お湯落ち マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗で落ちないマスカラ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "にじみにくいマスカラ",
+    "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+    "reason": "「にじまない」は商品名では「ウォータープルーフ」「にじまない」。 展開規則 smudge-proof-mascara（モール検索語「ウォータープルーフ マスカラ」）。",
+    "category": "smudge-proof-mascara",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ マスカラ",
+        "にじまない マスカラ",
+        "お湯落ち マスカラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "マスクにつかないファンデ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "マスク移りしにくいベースメイク",
+    "ideal_answer": "マスクにつきにくい・崩れにくいファンデーション／下地",
+    "reason": "「マスクにつかない」は商品名では「マスクにつきにくい」「崩れにくい」。 展開規則 mask-proof-foundation（モール検索語「マスクにつきにくい ファンデーション」）。",
+    "category": "mask-proof-foundation",
+    "search_terms": {
+      "ja": [
+        "マスクにつきにくい ファンデーション",
+        "崩れにくい ファンデーション",
+        "マスク 崩れない 下地"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "マスクしても崩れない下地",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "マスク移りしにくいベースメイク",
+    "ideal_answer": "マスクにつきにくい・崩れにくいファンデーション／下地",
+    "reason": "「マスクにつかない」は商品名では「マスクにつきにくい」「崩れにくい」。 展開規則 mask-proof-foundation（モール検索語「マスクにつきにくい ファンデーション」）。",
+    "category": "mask-proof-foundation",
+    "search_terms": {
+      "ja": [
+        "マスクにつきにくい ファンデーション",
+        "崩れにくい ファンデーション",
+        "マスク 崩れない 下地"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "白浮きしない日焼け止め",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "白浮きやベタつきの少ない日焼け止め",
+    "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+    "reason": "「白くならない」は商品名では「白浮きしない」「透明」。 展開規則 no-white-cast-sunscreen（モール検索語「白浮きしない 日焼け止め」）。",
+    "category": "no-white-cast-sunscreen",
+    "search_terms": {
+      "ja": [
+        "白浮きしない 日焼け止め",
+        "白浮きしにくい 日焼け止め",
+        "透明 UV ジェル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "塗っても白くならないUV",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "白浮きやベタつきの少ない日焼け止め",
+    "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+    "reason": "「白くならない」は商品名では「白浮きしない」「透明」。 展開規則 no-white-cast-sunscreen（モール検索語「白浮きしない 日焼け止め」）。",
+    "category": "no-white-cast-sunscreen",
+    "search_terms": {
+      "ja": [
+        "白浮きしない 日焼け止め",
+        "白浮きしにくい 日焼け止め",
+        "透明 UV ジェル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ベタつかない日焼け止め",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "白浮きやベタつきの少ない日焼け止め",
+    "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+    "reason": "「白くならない」は商品名では「白浮きしない」「透明」。 展開規則 no-white-cast-sunscreen（モール検索語「白浮きしない 日焼け止め」）。",
+    "category": "no-white-cast-sunscreen",
+    "search_terms": {
+      "ja": [
+        "白浮きしない 日焼け止め",
+        "白浮きしにくい 日焼け止め",
+        "透明 UV ジェル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ベタつかないヘアオイル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "軽い仕上がりのヘアオイル",
+    "ideal_answer": "さらさら（軽い）タイプのヘアオイル",
+    "reason": "「ベタつかない」は商品名では「さらさら」「軽い」。 展開規則 non-greasy-hair-oil（モール検索語「さらさら ヘアオイル」）。",
+    "category": "non-greasy-hair-oil",
+    "search_terms": {
+      "ja": [
+        "さらさら ヘアオイル",
+        "ベタつかない ヘアオイル",
+        "軽い ヘアオイル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "髪が重くならないオイル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "軽い仕上がりのヘアオイル",
+    "ideal_answer": "さらさら（軽い）タイプのヘアオイル",
+    "reason": "「ベタつかない」は商品名では「さらさら」「軽い」。 展開規則 non-greasy-hair-oil（モール検索語「さらさら ヘアオイル」）。",
+    "category": "non-greasy-hair-oil",
+    "search_terms": {
+      "ja": [
+        "さらさら ヘアオイル",
+        "ベタつかない ヘアオイル",
+        "軽い ヘアオイル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "風でひっくり返らない傘",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "強風に耐える傘",
+    "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+    "reason": "「ひっくり返らない」は商品名では「耐風」。 展開規則 wind-proof-umbrella（モール検索語「耐風 傘」）。",
+    "category": "wind-proof-umbrella",
+    "search_terms": {
+      "ja": [
+        "耐風 傘",
+        "耐風 折りたたみ傘",
+        "風に強い 傘"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "風に強い折りたたみ傘",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "強風に耐える傘",
+    "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+    "reason": "「ひっくり返らない」は商品名では「耐風」。 展開規則 wind-proof-umbrella（モール検索語「耐風 傘」）。",
+    "category": "wind-proof-umbrella",
+    "search_terms": {
+      "ja": [
+        "耐風 傘",
+        "耐風 折りたたみ傘",
+        "風に強い 傘"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "壊れにくい傘",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "強風に耐える傘",
+    "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+    "reason": "「ひっくり返らない」は商品名では「耐風」。 展開規則 wind-proof-umbrella（モール検索語「耐風 傘」）。",
+    "category": "wind-proof-umbrella",
+    "search_terms": {
+      "ja": [
+        "耐風 傘",
+        "耐風 折りたたみ傘",
+        "風に強い 傘"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水筒が入るリュック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ボトルポケット付きのリュック",
+    "ideal_answer": "サイド（ボトル）ポケット付きのリュック",
+    "reason": "「水筒が入る」は商品名では「ボトルポケット」「サイドポケット」。 展開規則 bottle-pocket-backpack（モール検索語「ボトルポケット付き リュック」）。",
+    "category": "bottle-pocket-backpack",
+    "search_terms": {
+      "ja": [
+        "ボトルポケット付き リュック",
+        "サイドポケット リュック 水筒",
+        "ペットボトル 入る リュック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ペットボトルを横に入れられるバッグ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ボトルポケット付きのリュック",
+    "ideal_answer": "サイド（ボトル）ポケット付きのリュック",
+    "reason": "「水筒が入る」は商品名では「ボトルポケット」「サイドポケット」。 展開規則 bottle-pocket-backpack（モール検索語「ボトルポケット付き リュック」）。",
+    "category": "bottle-pocket-backpack",
+    "search_terms": {
+      "ja": [
+        "ボトルポケット付き リュック",
+        "サイドポケット リュック 水筒",
+        "ペットボトル 入る リュック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "脱げない靴下",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "脱げにくい靴下・フットカバー",
+    "ideal_answer": "脱げにくい（かかと滑り止め付き）フットカバー・靴下",
+    "reason": "「脱げない」は商品名では「脱げにくい」「滑り止め」。 展開規則 non-slip-socks（モール検索語「脱げにくい フットカバー」）。",
+    "category": "non-slip-socks",
+    "search_terms": {
+      "ja": [
+        "脱げにくい フットカバー",
+        "脱げない 靴下",
+        "かかと 滑り止め ソックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "かかとがずれないフットカバー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "脱げにくい靴下・フットカバー",
+    "ideal_answer": "脱げにくい（かかと滑り止め付き）フットカバー・靴下",
+    "reason": "「脱げない」は商品名では「脱げにくい」「滑り止め」。 展開規則 non-slip-socks（モール検索語「脱げにくい フットカバー」）。",
+    "category": "non-slip-socks",
+    "search_terms": {
+      "ja": [
+        "脱げにくい フットカバー",
+        "脱げない 靴下",
+        "かかと 滑り止め ソックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "締め付けないブラ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "締め付け感の少ないブラジャー",
+    "ideal_answer": "ノンワイヤー（ワイヤレス）ブラ",
+    "reason": "「締め付けない」は商品名では「ノンワイヤー」「ワイヤレス」。 展開規則 non-wire-bra（モール検索語「ノンワイヤー ブラ」）。",
+    "category": "non-wire-bra",
+    "search_terms": {
+      "ja": [
+        "ノンワイヤー ブラ",
+        "ワイヤレス ブラ",
+        "締め付けない ブラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "楽な下着 ワイヤーなし",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "締め付け感の少ないブラジャー",
+    "ideal_answer": "ノンワイヤー（ワイヤレス）ブラ",
+    "reason": "「締め付けない」は商品名では「ノンワイヤー」「ワイヤレス」。 展開規則 non-wire-bra（モール検索語「ノンワイヤー ブラ」）。",
+    "category": "non-wire-bra",
+    "search_terms": {
+      "ja": [
+        "ノンワイヤー ブラ",
+        "ワイヤレス ブラ",
+        "締め付けない ブラ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "アイロンいらないシャツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "アイロン不要の形態安定シャツ",
+    "ideal_answer": "ノーアイロン（形態安定）シャツ",
+    "reason": "「アイロンいらない」は商品名では「ノーアイロン」「形態安定」。 展開規則 no-iron-shirt（モール検索語「ノーアイロン シャツ」）。",
+    "category": "no-iron-shirt",
+    "search_terms": {
+      "ja": [
+        "ノーアイロン シャツ",
+        "形態安定 シャツ",
+        "アイロン不要 ワイシャツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "シワにならないワイシャツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "アイロン不要の形態安定シャツ",
+    "ideal_answer": "ノーアイロン（形態安定）シャツ",
+    "reason": "「アイロンいらない」は商品名では「ノーアイロン」「形態安定」。 展開規則 no-iron-shirt（モール検索語「ノーアイロン シャツ」）。",
+    "category": "no-iron-shirt",
+    "search_terms": {
+      "ja": [
+        "ノーアイロン シャツ",
+        "形態安定 シャツ",
+        "アイロン不要 ワイシャツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "アイロン不要のブラウス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "アイロン不要の形態安定シャツ",
+    "ideal_answer": "ノーアイロン（形態安定）シャツ",
+    "reason": "「アイロンいらない」は商品名では「ノーアイロン」「形態安定」。 展開規則 no-iron-shirt（モール検索語「ノーアイロン シャツ」）。",
+    "category": "no-iron-shirt",
+    "search_terms": {
+      "ja": [
+        "ノーアイロン シャツ",
+        "形態安定 シャツ",
+        "アイロン不要 ワイシャツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "透けない白いパンツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "透けにくいボトムス",
+    "ideal_answer": "透けない（裏地付き・透け防止）パンツ・スカート",
+    "reason": "「透けない」は商品名では「透けない」「裏地付き」。 展開規則 non-sheer-bottoms（モール検索語「透けない パンツ」）。",
+    "category": "non-sheer-bottoms",
+    "search_terms": {
+      "ja": [
+        "透けない パンツ",
+        "透けにくい スカート",
+        "裏地付き パンツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "下着が透けないスカート",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "透けにくいボトムス",
+    "ideal_answer": "透けない（裏地付き・透け防止）パンツ・スカート",
+    "reason": "「透けない」は商品名では「透けない」「裏地付き」。 展開規則 non-sheer-bottoms（モール検索語「透けない パンツ」）。",
+    "category": "non-sheer-bottoms",
+    "search_terms": {
+      "ja": [
+        "透けない パンツ",
+        "透けにくい スカート",
+        "裏地付き パンツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "雨でも濡れないスニーカー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "防水性のあるスニーカー",
+    "ideal_answer": "防水・撥水のスニーカー（レインスニーカー）",
+    "reason": "「雨でも濡れない」は商品名では「防水」「撥水」。 展開規則 waterproof-sneakers（モール検索語「防水 スニーカー」）。",
+    "category": "waterproof-sneakers",
+    "search_terms": {
+      "ja": [
+        "防水 スニーカー",
+        "撥水 スニーカー",
+        "レイン スニーカー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "雨の日に履ける靴 普通に見える",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "防水性のあるスニーカー",
+    "ideal_answer": "防水・撥水のスニーカー（レインスニーカー）",
+    "reason": "「雨でも濡れない」は商品名では「防水」「撥水」。 展開規則 waterproof-sneakers（モール検索語「防水 スニーカー」）。",
+    "category": "waterproof-sneakers",
+    "search_terms": {
+      "ja": [
+        "防水 スニーカー",
+        "撥水 スニーカー",
+        "レイン スニーカー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "小銭が取りやすい財布",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "小銭を取り出しやすい財布",
+    "ideal_answer": "ボックス型小銭入れ・L字ファスナーの財布",
+    "reason": "「小銭が取りやすい」は商品名では「ボックス型小銭入れ」「L字ファスナー」。 展開規則 coin-visible-wallet（モール検索語「ボックス型小銭入れ 財布」）。",
+    "category": "coin-visible-wallet",
+    "search_terms": {
+      "ja": [
+        "ボックス型小銭入れ 財布",
+        "L字ファスナー 財布",
+        "ガバッと開く 財布"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ガバッと開く財布",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "小銭を取り出しやすい財布",
+    "ideal_answer": "ボックス型小銭入れ・L字ファスナーの財布",
+    "reason": "「小銭が取りやすい」は商品名では「ボックス型小銭入れ」「L字ファスナー」。 展開規則 coin-visible-wallet（モール検索語「ボックス型小銭入れ 財布」）。",
+    "category": "coin-visible-wallet",
+    "search_terms": {
+      "ja": [
+        "ボックス型小銭入れ 財布",
+        "L字ファスナー 財布",
+        "ガバッと開く 財布"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "走っても落ちないイヤホン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "運動中も外れにくいイヤホン",
+    "ideal_answer": "耳掛け（イヤーフック）型・オープンイヤー型のイヤホン",
+    "reason": "「落ちない」は商品名では「耳掛け」「イヤーフック」。 展開規則 earhook-earphones（モール検索語「耳掛け イヤホン」）。",
+    "category": "earhook-earphones",
+    "search_terms": {
+      "ja": [
+        "耳掛け イヤホン",
+        "イヤーフック イヤホン",
+        "落ちない イヤホン スポーツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "耳から外れないイヤホン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "運動中も外れにくいイヤホン",
+    "ideal_answer": "耳掛け（イヤーフック）型・オープンイヤー型のイヤホン",
+    "reason": "「落ちない」は商品名では「耳掛け」「イヤーフック」。 展開規則 earhook-earphones（モール検索語「耳掛け イヤホン」）。",
+    "category": "earhook-earphones",
+    "search_terms": {
+      "ja": [
+        "耳掛け イヤホン",
+        "イヤーフック イヤホン",
+        "落ちない イヤホン スポーツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "寝ながらスマホ見るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "寝ながら使えるスマホ・タブレットのアームスタンド",
+    "ideal_answer": "ベッド用フレキシブルアームのスマホ／タブレットスタンド",
+    "reason": "「寝ながら」は商品名では「アームスタンド」「寝ながら」で表現される。 展開規則 bed-phone-arm-stand（モール検索語「スマホ アームスタンド 寝ながら」）。",
+    "category": "bed-phone-arm-stand",
+    "search_terms": {
+      "ja": [
+        "スマホ アームスタンド 寝ながら",
+        "寝ながら スマホスタンド",
+        "フレキシブルアーム スマホホルダー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ベッドでタブレットを固定するもの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "寝ながら使えるスマホ・タブレットのアームスタンド",
+    "ideal_answer": "ベッド用フレキシブルアームのスマホ／タブレットスタンド",
+    "reason": "「寝ながら」は商品名では「アームスタンド」「寝ながら」で表現される。 展開規則 bed-phone-arm-stand（モール検索語「スマホ アームスタンド 寝ながら」）。",
+    "category": "bed-phone-arm-stand",
+    "search_terms": {
+      "ja": [
+        "スマホ アームスタンド 寝ながら",
+        "寝ながら スマホスタンド",
+        "フレキシブルアーム スマホホルダー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "車で水筒を置くやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車内で大きめボトルを置けるホルダー",
+    "ideal_answer": "車載ドリンクホルダー（大径ボトル対応）",
+    "reason": "「車で置くやつ」は商品名では「車載ドリンクホルダー」。 展開規則 car-bottle-holder（モール検索語「車載 ドリンクホルダー」）。",
+    "category": "car-bottle-holder",
+    "search_terms": {
+      "ja": [
+        "車載 ドリンクホルダー",
+        "車 ドリンクホルダー 大きい",
+        "エアコン吹き出し口 ドリンクホルダー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "運転席で大きいボトルが入るホルダー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車内で大きめボトルを置けるホルダー",
+    "ideal_answer": "車載ドリンクホルダー（大径ボトル対応）",
+    "reason": "「車で置くやつ」は商品名では「車載ドリンクホルダー」。 展開規則 car-bottle-holder（モール検索語「車載 ドリンクホルダー」）。",
+    "category": "car-bottle-holder",
+    "search_terms": {
+      "ja": [
+        "車載 ドリンクホルダー",
+        "車 ドリンクホルダー 大きい",
+        "エアコン吹き出し口 ドリンクホルダー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  }
+]

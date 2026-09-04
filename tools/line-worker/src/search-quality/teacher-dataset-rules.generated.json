@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-04T03:58:48.817Z",
+  "generated_at": "2026-09-04T18:42:32.433Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -18,9 +18,10 @@
     "2026-08-31-claude-batch-015.json",
     "2026-09-02-claude-batch-016.json",
     "2026-09-03-claude-batch-017.json",
-    "2026-09-04-claude-batch-018.json"
+    "2026-09-04-claude-batch-018.json",
+    "2026-09-05-claude-batch-019.json"
   ],
-  "entry_count": 724,
+  "entry_count": 830,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -16038,6 +16039,2232 @@
       "excluded_conditions": [],
       "confidence": 0.15,
       "source_file": "2026-09-04-claude-batch-018.json"
+    },
+    {
+      "content_hash": "48134e508284e7b58fe4fddad471b5fb797fe3636ac8ab33b3ec0cee31cb89b0",
+      "query_text": "口が広い水筒",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wide-mouth-bottle",
+      "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+      "search_terms": {
+        "ja": [
+          "広口 水筒",
+          "広口 ステンレスボトル",
+          "氷が入る 水筒"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "feaca686d58dfeba0fe7b181fb08561df25dcb07504a926de42243c34cd94351",
+      "query_text": "氷が入る 水筒",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wide-mouth-bottle",
+      "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+      "search_terms": {
+        "ja": [
+          "広口 水筒",
+          "広口 ステンレスボトル",
+          "氷が入る 水筒"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "af910223536243fa15eb922e7a8ed319b2c0a4203c37311beac474388098d565",
+      "query_text": "手を入れて洗える水筒",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wide-mouth-bottle",
+      "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+      "search_terms": {
+        "ja": [
+          "広口 水筒",
+          "広口 ステンレスボトル",
+          "氷が入る 水筒"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "87d731bd75c64694ad540648c2e49c0570b024454fc03ffeecb986da3b5b7933",
+      "query_text": "食洗機で洗える水筒",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dishwasher-safe-bottle",
+      "ideal_answer": "食洗機対応と明記された水筒・ボトル（本体・蓋・パッキンの対応範囲に注意）",
+      "search_terms": {
+        "ja": [
+          "食洗機対応 水筒",
+          "食洗機OK 水筒",
+          "食洗機対応 ステンレスボトル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c9c903c111bdf9bce229e904043c1b78d43dec9ff0379cd2d994deb226859384",
+      "query_text": "食洗機に入れられるボトル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dishwasher-safe-bottle",
+      "ideal_answer": "食洗機対応と明記された水筒・ボトル（本体・蓋・パッキンの対応範囲に注意）",
+      "search_terms": {
+        "ja": [
+          "食洗機対応 水筒",
+          "食洗機OK 水筒",
+          "食洗機対応 ステンレスボトル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "261fc4b9c5766a8643be70b2cf48318608f3198a26b65af1e5fc2806c47a7e93",
+      "query_text": "片手で開けられる水筒",
+      "locale": "ja",
+      "persona": "general",
+      "category": "one-touch-bottle",
+      "ideal_answer": "ワンタッチ（ワンプッシュ）オープンの直飲みタイプ水筒",
+      "search_terms": {
+        "ja": [
+          "ワンタッチ 水筒",
+          "ワンタッチオープン 水筒",
+          "ワンプッシュ ボトル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7ab5aff369238972ff6da459417045f134c27b5aa996af07c8c74f50da13d1f6",
+      "query_text": "ボタンで開く水筒",
+      "locale": "ja",
+      "persona": "general",
+      "category": "one-touch-bottle",
+      "ideal_answer": "ワンタッチ（ワンプッシュ）オープンの直飲みタイプ水筒",
+      "search_terms": {
+        "ja": [
+          "ワンタッチ 水筒",
+          "ワンタッチオープン 水筒",
+          "ワンプッシュ ボトル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "5509a254b7cd5d4c2097f48ae80518533ba51c2ae434af7ea872e5380032d0cd",
+      "query_text": "直飲みとコップ両方使える水筒",
+      "locale": "ja",
+      "persona": "general",
+      "category": "kids-2way-bottle",
+      "ideal_answer": "2WAY（直飲み・コップ）タイプの子供用水筒",
+      "search_terms": {
+        "ja": [
+          "2way 水筒 子供",
+          "2WAY ボトル キッズ",
+          "コップ付き 直飲み 水筒"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b78a153e7335105e71da3eac2ec6cbfb1d2c8aa032227fca83c44ee63aad888d",
+      "query_text": "コップでも飲める子供の水筒",
+      "locale": "ja",
+      "persona": "general",
+      "category": "kids-2way-bottle",
+      "ideal_answer": "2WAY（直飲み・コップ）タイプの子供用水筒",
+      "search_terms": {
+        "ja": [
+          "2way 水筒 子供",
+          "2WAY ボトル キッズ",
+          "コップ付き 直飲み 水筒"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "5fe9ae584e62b32deb07146f3a09c4570a9678c609b458c429c94ef1131ca2df",
+      "query_text": "倒してもこぼれない子供のコップ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "spill-proof-kids-cup",
+      "ideal_answer": "こぼれないストローマグ・トレーニングマグ（360度飲み口タイプを含む）",
+      "search_terms": {
+        "ja": [
+          "こぼれない マグ ベビー",
+          "ストローマグ こぼれない",
+          "トレーニングマグ 倒れてもこぼれない"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "bbb6460634a2185bf02b9c81a99051d82cfa466bad4a7319887d49d886e86513",
+      "query_text": "赤ちゃんが使ってもこぼれないマグ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "spill-proof-kids-cup",
+      "ideal_answer": "こぼれないストローマグ・トレーニングマグ（360度飲み口タイプを含む）",
+      "search_terms": {
+        "ja": [
+          "こぼれない マグ ベビー",
+          "ストローマグ こぼれない",
+          "トレーニングマグ 倒れてもこぼれない"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b0c201f4cbb67dc7a5f9e6f469ee05686048b8ab8073851c83fcc0d290a8e741",
+      "query_text": "汁が漏れない弁当箱",
+      "locale": "ja",
+      "persona": "general",
+      "category": "leakproof-lunch-box",
+      "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+      "search_terms": {
+        "ja": [
+          "汁漏れしない 弁当箱",
+          "汁漏れ防止 弁当箱",
+          "密閉 ランチボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a37dc4f4aba7a1bebbb446309b00392631d4f7cc1dd075f40547e51cdff7af8a",
+      "query_text": "カレー入れても漏れないお弁当箱",
+      "locale": "ja",
+      "persona": "general",
+      "category": "leakproof-lunch-box",
+      "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+      "search_terms": {
+        "ja": [
+          "汁漏れしない 弁当箱",
+          "汁漏れ防止 弁当箱",
+          "密閉 ランチボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2f3bcb373d2c081b57f7501b6315a27fc4dcc4421a11691abb7ef059e32630bc",
+      "query_text": "横にしても漏れないランチボックス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "leakproof-lunch-box",
+      "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+      "search_terms": {
+        "ja": [
+          "汁漏れしない 弁当箱",
+          "汁漏れ防止 弁当箱",
+          "密閉 ランチボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e4629c23fea2c935519a2ebd9099fb865c7c66d8dab1f1321b5076390e8e33bd",
+      "query_text": "温かいまま食べられる弁当箱",
+      "locale": "ja",
+      "persona": "general",
+      "category": "insulated-lunch-jar",
+      "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+      "search_terms": {
+        "ja": [
+          "保温 弁当箱",
+          "ランチジャー",
+          "スープジャー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8015b7f692a3fb74c613194636ebd08f56dd843e9f683f2d59367948a2b9f11b",
+      "query_text": "お昼に冷めないお弁当",
+      "locale": "ja",
+      "persona": "general",
+      "category": "insulated-lunch-jar",
+      "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+      "search_terms": {
+        "ja": [
+          "保温 弁当箱",
+          "ランチジャー",
+          "スープジャー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "58abb8c1e9d64ed4a4159451edcdd628c0bbea5c4a8c60bd4b793ff6c29cabf9",
+      "query_text": "スープを温かいまま持っていくやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "insulated-lunch-jar",
+      "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+      "search_terms": {
+        "ja": [
+          "保温 弁当箱",
+          "ランチジャー",
+          "スープジャー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "44c8c2d3ea665333b195d9c3a34733e11792f3e7f1306b009e059e80e9ed837a",
+      "query_text": "くっつかないフライパン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "nonstick-frying-pan",
+      "ideal_answer": "フッ素・ダイヤモンド等コーティングの「こびりつかない」フライパン",
+      "search_terms": {
+        "ja": [
+          "こびりつかない フライパン",
+          "コーティング フライパン",
+          "フッ素加工 フライパン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "45e73278d2307569932c5cf129512c44ae5d07b0dcefa7ed3ea145b8e057ec18",
+      "query_text": "油なしで焼けるフライパン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "nonstick-frying-pan",
+      "ideal_answer": "フッ素・ダイヤモンド等コーティングの「こびりつかない」フライパン",
+      "search_terms": {
+        "ja": [
+          "こびりつかない フライパン",
+          "コーティング フライパン",
+          "フッ素加工 フライパン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a2170399a5308d0cb587888b4602cbc630fc589d272e4698ef46c6dbcec2e60e",
+      "query_text": "焦げ付かない卵焼き器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "nonstick-frying-pan",
+      "ideal_answer": "フッ素・ダイヤモンド等コーティングの「こびりつかない」フライパン",
+      "search_terms": {
+        "ja": [
+          "こびりつかない フライパン",
+          "コーティング フライパン",
+          "フッ素加工 フライパン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b7f4a18389f01de110b363a076e6a4fb2ad26ff436d4e494df01946a5bd0d8ce",
+      "query_text": "分解して洗えるキッチンばさみ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "disassemble-kitchen-scissors",
+      "ideal_answer": "分解式（セパレート）のキッチンバサミ",
+      "search_terms": {
+        "ja": [
+          "分解式 キッチンバサミ",
+          "分解できる キッチンばさみ",
+          "セパレート キッチンバサミ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "de9b8c32700493e02c819cf2a87cd72bcc03c2cdb5659d6519e087e0fa0533d5",
+      "query_text": "バラして洗えるはさみ 料理用",
+      "locale": "ja",
+      "persona": "general",
+      "category": "disassemble-kitchen-scissors",
+      "ideal_answer": "分解式（セパレート）のキッチンバサミ",
+      "search_terms": {
+        "ja": [
+          "分解式 キッチンバサミ",
+          "分解できる キッチンばさみ",
+          "セパレート キッチンバサミ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4319168bf4ae4b92203f31b813a096098f175aed0c11145d0e0d4d5c7db33dc5",
+      "query_text": "滑らないまな板",
+      "locale": "ja",
+      "persona": "general",
+      "category": "nonslip-cutting-board",
+      "ideal_answer": "滑り止め（ゴム足・ラバー）付きのまな板",
+      "search_terms": {
+        "ja": [
+          "滑り止め付き まな板",
+          "滑らない まな板",
+          "すべり止め まな板"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ab2c6f39e455658fa157d56242060c240b22aadbbf49aa04fd2d95fa9bf73a93",
+      "query_text": "切ってる時に動かないまな板",
+      "locale": "ja",
+      "persona": "general",
+      "category": "nonslip-cutting-board",
+      "ideal_answer": "滑り止め（ゴム足・ラバー）付きのまな板",
+      "search_terms": {
+        "ja": [
+          "滑り止め付き まな板",
+          "滑らない まな板",
+          "すべり止め まな板"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "437a8e73d2868c5610ebd62d9d2382c2761f40442a96008feef6d35a3901cc40",
+      "query_text": "蓋が立つ鍋",
+      "locale": "ja",
+      "persona": "general",
+      "category": "self-standing-lid-pot",
+      "ideal_answer": "自立する（スタンド式）蓋付きの鍋",
+      "search_terms": {
+        "ja": [
+          "自立する蓋 鍋",
+          "スタンド式 蓋 鍋",
+          "蓋が立つ 鍋"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ae35a28577e0f741eda4f39bbd2f83ae57347576c2e050a52f1c4b2c0e8739d4",
+      "query_text": "ふたを立てて置ける鍋",
+      "locale": "ja",
+      "persona": "general",
+      "category": "self-standing-lid-pot",
+      "ideal_answer": "自立する（スタンド式）蓋付きの鍋",
+      "search_terms": {
+        "ja": [
+          "自立する蓋 鍋",
+          "スタンド式 蓋 鍋",
+          "蓋が立つ 鍋"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6084ddcd27fdf63454aef5fc9a74b6bb4c4b67bae3efea052240dab5ede28451",
+      "query_text": "結露しないコップ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sweat-free-tumbler",
+      "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+      "search_terms": {
+        "ja": [
+          "真空断熱 タンブラー",
+          "結露しない タンブラー",
+          "ステンレス 真空 タンブラー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2573bc245cf33576ed3057801ffb7cfa96a36cfcd5f7b6f6939bdd4812be194a",
+      "query_text": "テーブルが濡れないタンブラー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sweat-free-tumbler",
+      "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+      "search_terms": {
+        "ja": [
+          "真空断熱 タンブラー",
+          "結露しない タンブラー",
+          "ステンレス 真空 タンブラー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "fad81403560a15f1c80dbf309ade72af3e778675106358ef4162490f6d096743",
+      "query_text": "汗をかかないグラス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sweat-free-tumbler",
+      "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+      "search_terms": {
+        "ja": [
+          "真空断熱 タンブラー",
+          "結露しない タンブラー",
+          "ステンレス 真空 タンブラー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f445f08806d668ee4668963e1a8c232ecde1b8d82f0b46389d75c936630ce3c7",
+      "query_text": "温度が選べるケトル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "temperature-kettle",
+      "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+      "search_terms": {
+        "ja": [
+          "温度調節 電気ケトル",
+          "温度設定 ケトル",
+          "温度調節機能付き 電気ポット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c06660c193834bb89f7c058886c93c656b94172038c7b9d6a177bf8823a5e640",
+      "query_text": "70度で止まるケトル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "temperature-kettle",
+      "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+      "search_terms": {
+        "ja": [
+          "温度調節 電気ケトル",
+          "温度設定 ケトル",
+          "温度調節機能付き 電気ポット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "5dab19024b9607bf37d3f788dbf7193a7c8652d6670b07f007bcc2b01b54d352",
+      "query_text": "ミルク用に温度設定できるポット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "temperature-kettle",
+      "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+      "search_terms": {
+        "ja": [
+          "温度調節 電気ケトル",
+          "温度設定 ケトル",
+          "温度調節機能付き 電気ポット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "65d182daa9478897be9e7c2c9ed230c1b18145954136bc1acfaa32a51e00c81c",
+      "query_text": "虫がわかない米の保存容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sealed-rice-container",
+      "ideal_answer": "密閉タイプの米びつ・ライスストッカー",
+      "search_terms": {
+        "ja": [
+          "密閉 米びつ",
+          "密閉 米ストッカー",
+          "虫よけ 米びつ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7fcacb8074ba62c54e86756126fae89048bcee87464274d216332a55856faaa9",
+      "query_text": "湿気ない米びつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sealed-rice-container",
+      "ideal_answer": "密閉タイプの米びつ・ライスストッカー",
+      "search_terms": {
+        "ja": [
+          "密閉 米びつ",
+          "密閉 米ストッカー",
+          "虫よけ 米びつ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ac61ab282370a1d71a3fec51c15e1af99fba0e7f7032ba2db533fadddd008242",
+      "query_text": "氷が取り出しやすい製氷皿",
+      "locale": "ja",
+      "persona": "general",
+      "category": "easy-release-ice-tray",
+      "ideal_answer": "シリコン製・蓋付きなど取り出しやすい製氷皿",
+      "search_terms": {
+        "ja": [
+          "シリコン 製氷皿",
+          "取り出しやすい 製氷皿",
+          "蓋付き 製氷皿"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0327cfa0a21c087690cb81e8fc30623f617a5725cc1ec0a3b6ebc3bccbaffa86",
+      "query_text": "氷がポロっと取れるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "easy-release-ice-tray",
+      "ideal_answer": "シリコン製・蓋付きなど取り出しやすい製氷皿",
+      "search_terms": {
+        "ja": [
+          "シリコン 製氷皿",
+          "取り出しやすい 製氷皿",
+          "蓋付き 製氷皿"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4db48fa6c9dbb7874ad32d27c762c2aa90f4907f20fcb24e5b2424bb27ee300d",
+      "query_text": "髪の毛が取りやすい排水口のやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "drain-hair-catcher",
+      "ideal_answer": "排水口用ヘアキャッチャー（くるっと集まるタイプ等）",
+      "search_terms": {
+        "ja": [
+          "排水口 ヘアキャッチャー",
+          "髪の毛 取りやすい 排水口 ゴミ受け",
+          "くるっとキャッチ 排水口"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "cd37f738761f2be495c65112e9ac4128ee0098ebe6e8594cbef1e44c99c8a823",
+      "query_text": "お風呂の排水溝の髪が捨てやすいもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "drain-hair-catcher",
+      "ideal_answer": "排水口用ヘアキャッチャー（くるっと集まるタイプ等）",
+      "search_terms": {
+        "ja": [
+          "排水口 ヘアキャッチャー",
+          "髪の毛 取りやすい 排水口 ゴミ受け",
+          "くるっとキャッチ 排水口"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "da30eeef6d0d90a87f3a26297931dd186888856d1c178b75908f2ad4c58f5055",
+      "query_text": "臭わないゴミ箱",
+      "locale": "ja",
+      "persona": "general",
+      "category": "odor-sealed-trash-can",
+      "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+      "search_terms": {
+        "ja": [
+          "密閉 ゴミ箱 防臭",
+          "臭わない ゴミ箱",
+          "パッキン付き ゴミ箱"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "9e696b2ab6e76bf13d64e660bd2ca6c339b213a0afdbb149228db2ac3bb93793",
+      "query_text": "生ゴミの臭いが漏れないゴミ箱",
+      "locale": "ja",
+      "persona": "general",
+      "category": "odor-sealed-trash-can",
+      "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+      "search_terms": {
+        "ja": [
+          "密閉 ゴミ箱 防臭",
+          "臭わない ゴミ箱",
+          "パッキン付き ゴミ箱"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "64aac8a28672275b46b00e5f86d5348a9a0c4f14094c3886f283f936c0e1b9d2",
+      "query_text": "匂いが漏れないダストボックス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "odor-sealed-trash-can",
+      "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+      "search_terms": {
+        "ja": [
+          "密閉 ゴミ箱 防臭",
+          "臭わない ゴミ箱",
+          "パッキン付き ゴミ箱"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "042eaec078bf8bd679b191bcb6dfc755d2e605795e333b9b6734430b8d937c58",
+      "query_text": "服が落ちないハンガー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "nonslip-hanger",
+      "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+      "search_terms": {
+        "ja": [
+          "すべらない ハンガー",
+          "滑らない ハンガー",
+          "ノンスリップ ハンガー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "940905dbdb089ea52c295806fa5530c061cdff69a78a938b54c7a593e8a72ef3",
+      "query_text": "滑らないハンガー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "nonslip-hanger",
+      "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+      "search_terms": {
+        "ja": [
+          "すべらない ハンガー",
+          "滑らない ハンガー",
+          "ノンスリップ ハンガー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e20274e4fdd1d8a5d87acb3133ad3e6b6a8fb61050fad791017e30dc82548d5c",
+      "query_text": "肩に跡がつかないハンガー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "nonslip-hanger",
+      "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+      "search_terms": {
+        "ja": [
+          "すべらない ハンガー",
+          "滑らない ハンガー",
+          "ノンスリップ ハンガー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3a61701b10a36184611db49d06049ef08f33843447b8f47f52e0ee1ba63487a3",
+      "query_text": "たためる洗濯かご",
+      "locale": "ja",
+      "persona": "general",
+      "category": "foldable-laundry-basket",
+      "ideal_answer": "折りたたみ式のランドリーバスケット",
+      "search_terms": {
+        "ja": [
+          "折りたたみ ランドリーバスケット",
+          "折りたためる 洗濯かご",
+          "たためる ランドリーバッグ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c675d4fbcfd62265dc5a7a3a86bb4f2cd51f6819886eb656b52123db3c9f0702",
+      "query_text": "使わない時に小さくできるランドリーバスケット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "foldable-laundry-basket",
+      "ideal_answer": "折りたたみ式のランドリーバスケット",
+      "search_terms": {
+        "ja": [
+          "折りたたみ ランドリーバスケット",
+          "折りたためる 洗濯かご",
+          "たためる ランドリーバッグ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e52467cebc0c8007b28fbc54e72f33bd5582ef43fbbfd75f2a19100086b7ad3b",
+      "query_text": "石鹸がぬるぬるしない置き場",
+      "locale": "ja",
+      "persona": "general",
+      "category": "drainable-soap-dish",
+      "ideal_answer": "水切り（珪藻土・浮かせる）タイプのソープディッシュ",
+      "search_terms": {
+        "ja": [
+          "水切り ソープディッシュ",
+          "水が溜まらない 石鹸置き",
+          "水切れ 石鹸トレー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "9422d93dd9689909e77a6b15aefeb4352fcbc57955f3a517f9fab341d74acb16",
+      "query_text": "水が溜まらない石鹸置き",
+      "locale": "ja",
+      "persona": "general",
+      "category": "drainable-soap-dish",
+      "ideal_answer": "水切り（珪藻土・浮かせる）タイプのソープディッシュ",
+      "search_terms": {
+        "ja": [
+          "水切り ソープディッシュ",
+          "水が溜まらない 石鹸置き",
+          "水切れ 石鹸トレー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1af021db544a46982fa8e0cf0e109315a8b2711f4edadc9a6ea636ed94b6bdd6",
+      "query_text": "音が静かなドライヤー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-hair-dryer",
+      "ideal_answer": "静音（低騒音）設計のドライヤー",
+      "search_terms": {
+        "ja": [
+          "静音 ドライヤー",
+          "低騒音 ドライヤー",
+          "静か ドライヤー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "07e0efc0a70c2b813e81125a199371a8e59eb94111de624440a3b245ded1c8c4",
+      "query_text": "夜でも使えるうるさくないドライヤー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-hair-dryer",
+      "ideal_answer": "静音（低騒音）設計のドライヤー",
+      "search_terms": {
+        "ja": [
+          "静音 ドライヤー",
+          "低騒音 ドライヤー",
+          "静か ドライヤー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "cff5e973ecef6140251a000d5ed6cd638eab9c3a536c66a9a418e8ab4bc2ac76",
+      "query_text": "軽くて線がない掃除機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "light-cordless-vacuum",
+      "ideal_answer": "軽量（1〜1.5kg級）のコードレススティック掃除機",
+      "search_terms": {
+        "ja": [
+          "コードレス掃除機 軽量",
+          "軽量 スティッククリーナー",
+          "軽い コードレス クリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "87c589ac55ae4037282c1b98bd5cd0b605810097a25ea2ba1a6a0a7c4a7a29fa",
+      "query_text": "片手で持てる軽い掃除機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "light-cordless-vacuum",
+      "ideal_answer": "軽量（1〜1.5kg級）のコードレススティック掃除機",
+      "search_terms": {
+        "ja": [
+          "コードレス掃除機 軽量",
+          "軽量 スティッククリーナー",
+          "軽い コードレス クリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "149cadc6aa14b69dea3f7a04682a06cac2c75743cdfe6f58231554366d932ec3",
+      "query_text": "マスクしても曇らないメガネ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "anti-fog-glasses",
+      "ideal_answer": "曇り止めコートのレンズ／曇り止めスプレー・クロス",
+      "search_terms": {
+        "ja": [
+          "曇り止め メガネ",
+          "くもり止め レンズ",
+          "くもり止め スプレー メガネ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4bd70bce003158e95494b6c611ab974a78d93540374a5c79fdf12cd892835418",
+      "query_text": "くもらないレンズ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "anti-fog-glasses",
+      "ideal_answer": "曇り止めコートのレンズ／曇り止めスプレー・クロス",
+      "search_terms": {
+        "ja": [
+          "曇り止め メガネ",
+          "くもり止め レンズ",
+          "くもり止め スプレー メガネ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "dc4fdc1d40c0ea0a27b04eb049ee32cf7159a62d7d10118de1d86a2d39efecfd",
+      "query_text": "光を通さないカーテン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blackout-curtain",
+      "ideal_answer": "遮光1級（完全遮光）のカーテン",
+      "search_terms": {
+        "ja": [
+          "遮光1級 カーテン",
+          "完全遮光 カーテン",
+          "遮光 カーテン 1級"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "899489c4f9596996369f6aa3a8e9cab9259602e4d8e8d93c68cb32ef9b80190b",
+      "query_text": "朝日で起きないカーテン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blackout-curtain",
+      "ideal_answer": "遮光1級（完全遮光）のカーテン",
+      "search_terms": {
+        "ja": [
+          "遮光1級 カーテン",
+          "完全遮光 カーテン",
+          "遮光 カーテン 1級"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e2f597b41b7c97aeb24ad2afdb3f7e939b6f5e120627b84c875ddbdb8c047fbb",
+      "query_text": "部屋が真っ暗になるカーテン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blackout-curtain",
+      "ideal_answer": "遮光1級（完全遮光）のカーテン",
+      "search_terms": {
+        "ja": [
+          "遮光1級 カーテン",
+          "完全遮光 カーテン",
+          "遮光 カーテン 1級"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "900c4e9d0270d7e840fa435b9b3d0b56de45b702245e7993dd8a7c0b8ea5e97c",
+      "query_text": "蒸れない敷きパッド",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cooling-bed-pad",
+      "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+      "search_terms": {
+        "ja": [
+          "接触冷感 敷きパッド",
+          "冷感 敷きパッド",
+          "ひんやり 敷きパッド"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "49dbab8fd1d43ad0a93135d7808ff2815f915d83fdf327b0ecd6d54806de4e5a",
+      "query_text": "寝るとき涼しいシーツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cooling-bed-pad",
+      "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+      "search_terms": {
+        "ja": [
+          "接触冷感 敷きパッド",
+          "冷感 敷きパッド",
+          "ひんやり 敷きパッド"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "5088cd2d519e7ecb65d7d5e5c31c41aa5ecf6017de3e058f24ca18374e7bd8ef",
+      "query_text": "ひんやりする布団のやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cooling-bed-pad",
+      "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+      "search_terms": {
+        "ja": [
+          "接触冷感 敷きパッド",
+          "冷感 敷きパッド",
+          "ひんやり 敷きパッド"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "54a55bdca30b38b9920fdc7530ec2c5d7e746083de1b3861c8ccbb38ddd9a150",
+      "query_text": "光が入らないアイマスク",
+      "locale": "ja",
+      "persona": "general",
+      "category": "light-blocking-sleep-mask",
+      "ideal_answer": "遮光（立体3D）アイマスク",
+      "search_terms": {
+        "ja": [
+          "遮光 アイマスク",
+          "完全遮光 アイマスク",
+          "立体 アイマスク"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f01a31d8564eec0b1b94c75805d64d95be2677cc6f8336560134e34114e3458c",
+      "query_text": "飛行機で真っ暗にできるアイマスク",
+      "locale": "ja",
+      "persona": "general",
+      "category": "light-blocking-sleep-mask",
+      "ideal_answer": "遮光（立体3D）アイマスク",
+      "search_terms": {
+        "ja": [
+          "遮光 アイマスク",
+          "完全遮光 アイマスク",
+          "立体 アイマスク"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "94887ae3bdb70cc93e7e3b2720ea2a2464e166ef890e6dee80008919050d12ef",
+      "query_text": "首が痛くならない枕",
+      "locale": "ja",
+      "persona": "general",
+      "category": "neck-support-pillow",
+      "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+      "search_terms": {
+        "ja": [
+          "高さ調節 枕",
+          "首 サポート 枕",
+          "頸椎 枕"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "68afce547c40253388f9d5d6ae89f1792d1347071b85cfe905643711acee41ce",
+      "query_text": "高さを変えられる枕",
+      "locale": "ja",
+      "persona": "general",
+      "category": "neck-support-pillow",
+      "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+      "search_terms": {
+        "ja": [
+          "高さ調節 枕",
+          "首 サポート 枕",
+          "頸椎 枕"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "097ef33110b67a45756f298687d9ff1e77d5d52a36ff5c2c746047589bb5fe3d",
+      "query_text": "肩こりにいい枕",
+      "locale": "ja",
+      "persona": "general",
+      "category": "neck-support-pillow",
+      "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+      "search_terms": {
+        "ja": [
+          "高さ調節 枕",
+          "首 サポート 枕",
+          "頸椎 枕"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "d4edf7b77c4e8943f50af8d98cd009a7edf4e805100bb29bcfd86d4aa2eaf6cb",
+      "query_text": "片手でたためるベビーカー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "one-hand-fold-stroller",
+      "ideal_answer": "ワンタッチ（片手）折りたたみのベビーカー",
+      "search_terms": {
+        "ja": [
+          "ワンタッチ折りたたみ ベビーカー",
+          "片手で折りたたみ ベビーカー",
+          "ワンハンド ベビーカー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "42a69ffce853e498fc688df6d3f4d4056a4a3eaa85b2ae1b96d142733c752c09",
+      "query_text": "子供を抱っこしたまま閉じられるベビーカー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "one-hand-fold-stroller",
+      "ideal_answer": "ワンタッチ（片手）折りたたみのベビーカー",
+      "search_terms": {
+        "ja": [
+          "ワンタッチ折りたたみ ベビーカー",
+          "片手で折りたたみ ベビーカー",
+          "ワンハンド ベビーカー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "84aa94ce5318f256dd5542b9d27788627db53e25f61d4956accc0ab961798a4d",
+      "query_text": "子供が自分で履ける靴",
+      "locale": "ja",
+      "persona": "general",
+      "category": "velcro-kids-sneakers",
+      "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+      "search_terms": {
+        "ja": [
+          "マジックテープ スニーカー キッズ",
+          "面ファスナー キッズ スニーカー",
+          "ひもなし 子供 靴"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "9c1c77eddd649153d21c76ce919a901e1b0fccdf11e49972c2b3c3186987eba3",
+      "query_text": "紐なしのキッズスニーカー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "velcro-kids-sneakers",
+      "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+      "search_terms": {
+        "ja": [
+          "マジックテープ スニーカー キッズ",
+          "面ファスナー キッズ スニーカー",
+          "ひもなし 子供 靴"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ac0a75d9f41a1d0c963814c1aea4ce7bbd0a1a4f2efb6d7b08237b723a18f2aa",
+      "query_text": "保育園で脱ぎ履きしやすい靴",
+      "locale": "ja",
+      "persona": "general",
+      "category": "velcro-kids-sneakers",
+      "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+      "search_terms": {
+        "ja": [
+          "マジックテープ スニーカー キッズ",
+          "面ファスナー キッズ スニーカー",
+          "ひもなし 子供 靴"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "fbeb7c0ab08edf9f805c39c1844d3380b0347814281e6b80ec2cd69851a2db48",
+      "query_text": "おむつが臭わないゴミ箱",
+      "locale": "ja",
+      "persona": "general",
+      "category": "diaper-odor-pail",
+      "ideal_answer": "防臭おむつ処理ポット・防臭袋（BOS等）",
+      "search_terms": {
+        "ja": [
+          "おむつ用ゴミ箱 防臭",
+          "おむつ ポット 防臭",
+          "おむつ処理ポット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "323b26a94f63f8344ef0e6617b1da4436270bafb7282e7633d1cf1a247eef6de",
+      "query_text": "オムツの匂い対策のやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "diaper-odor-pail",
+      "ideal_answer": "防臭おむつ処理ポット・防臭袋（BOS等）",
+      "search_terms": {
+        "ja": [
+          "おむつ用ゴミ箱 防臭",
+          "おむつ ポット 防臭",
+          "おむつ処理ポット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "cbdacfedcf37600ac2b03db61542463725d29bd69d10d122888429d35a6499e0",
+      "query_text": "にじまないマスカラ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "smudge-proof-mascara",
+      "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ マスカラ",
+          "にじまない マスカラ",
+          "お湯落ち マスカラ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8a18dcb528cb37d7108bb7de09de4cab29b72babdb8e58b25695310c5d8881aa",
+      "query_text": "パンダ目にならないマスカラ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "smudge-proof-mascara",
+      "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ マスカラ",
+          "にじまない マスカラ",
+          "お湯落ち マスカラ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b9e1a24826c5890a5654368a98a0d45922f9d9bfbc8662384bdaa75062ce4169",
+      "query_text": "汗で落ちないマスカラ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "smudge-proof-mascara",
+      "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ マスカラ",
+          "にじまない マスカラ",
+          "お湯落ち マスカラ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "482466e5d18a2ab2bcd67ed158b195f85de77b5a2888479bd329032fe62840ba",
+      "query_text": "マスクにつかないファンデ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mask-proof-foundation",
+      "ideal_answer": "マスクにつきにくい・崩れにくいファンデーション／下地",
+      "search_terms": {
+        "ja": [
+          "マスクにつきにくい ファンデーション",
+          "崩れにくい ファンデーション",
+          "マスク 崩れない 下地"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "52924dd0a555d4941d8bd9c0115969f829aad2206c6c4c4d54f8e4463cfda402",
+      "query_text": "マスクしても崩れない下地",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mask-proof-foundation",
+      "ideal_answer": "マスクにつきにくい・崩れにくいファンデーション／下地",
+      "search_terms": {
+        "ja": [
+          "マスクにつきにくい ファンデーション",
+          "崩れにくい ファンデーション",
+          "マスク 崩れない 下地"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "849f7652942d7d4b9f7612f639e871526a7520ece3ac45d475ed4e155f8aea17",
+      "query_text": "白浮きしない日焼け止め",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-white-cast-sunscreen",
+      "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+      "search_terms": {
+        "ja": [
+          "白浮きしない 日焼け止め",
+          "白浮きしにくい 日焼け止め",
+          "透明 UV ジェル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3e9d8b5afd0740c0ae708efe3db050677ecace4e8e61ff1ab983f3f2d80158ac",
+      "query_text": "塗っても白くならないUV",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-white-cast-sunscreen",
+      "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+      "search_terms": {
+        "ja": [
+          "白浮きしない 日焼け止め",
+          "白浮きしにくい 日焼け止め",
+          "透明 UV ジェル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b33f42d705faa94b1807496aa0eee449b34ecf9edd479b189378afb3770010c0",
+      "query_text": "ベタつかない日焼け止め",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-white-cast-sunscreen",
+      "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+      "search_terms": {
+        "ja": [
+          "白浮きしない 日焼け止め",
+          "白浮きしにくい 日焼け止め",
+          "透明 UV ジェル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c8a6d00baff22976ad86c6b3ea03d37e11479ad15364680bcf715169c05f0b28",
+      "query_text": "ベタつかないヘアオイル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "non-greasy-hair-oil",
+      "ideal_answer": "さらさら（軽い）タイプのヘアオイル",
+      "search_terms": {
+        "ja": [
+          "さらさら ヘアオイル",
+          "ベタつかない ヘアオイル",
+          "軽い ヘアオイル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "97a9d3c9b27db9ef83a6ed54984a93564be5378cbf968058c40cc05df3f72124",
+      "query_text": "髪が重くならないオイル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "non-greasy-hair-oil",
+      "ideal_answer": "さらさら（軽い）タイプのヘアオイル",
+      "search_terms": {
+        "ja": [
+          "さらさら ヘアオイル",
+          "ベタつかない ヘアオイル",
+          "軽い ヘアオイル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c253afe90807f9a639f86cfc96d3b4ae7a89257d9f1a57cce74583a744dae544",
+      "query_text": "風でひっくり返らない傘",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wind-proof-umbrella",
+      "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+      "search_terms": {
+        "ja": [
+          "耐風 傘",
+          "耐風 折りたたみ傘",
+          "風に強い 傘"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "120b3297998e8e477613001830c705a08f7f574dd4fdac18289cd28a15d982ba",
+      "query_text": "風に強い折りたたみ傘",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wind-proof-umbrella",
+      "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+      "search_terms": {
+        "ja": [
+          "耐風 傘",
+          "耐風 折りたたみ傘",
+          "風に強い 傘"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "657bbbcc3d3db0d5ed3c1f3a728d94ebe8ae8685745bfdfdb669c584c5402e5c",
+      "query_text": "壊れにくい傘",
+      "locale": "ja",
+      "persona": "general",
+      "category": "wind-proof-umbrella",
+      "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+      "search_terms": {
+        "ja": [
+          "耐風 傘",
+          "耐風 折りたたみ傘",
+          "風に強い 傘"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ca31542d37936dfe46c06c5ca83eaf79433e90a35df9e11c8e6ee8d2151ce70b",
+      "query_text": "水筒が入るリュック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bottle-pocket-backpack",
+      "ideal_answer": "サイド（ボトル）ポケット付きのリュック",
+      "search_terms": {
+        "ja": [
+          "ボトルポケット付き リュック",
+          "サイドポケット リュック 水筒",
+          "ペットボトル 入る リュック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8523262d04d96ff515d888d0f56f667a7336f6ca8d4e5e2eb610413b8f51a6a5",
+      "query_text": "ペットボトルを横に入れられるバッグ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bottle-pocket-backpack",
+      "ideal_answer": "サイド（ボトル）ポケット付きのリュック",
+      "search_terms": {
+        "ja": [
+          "ボトルポケット付き リュック",
+          "サイドポケット リュック 水筒",
+          "ペットボトル 入る リュック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6c6e986a1df05b5e8a32326c162428cb0234ae4f33b707adf193e75265f448cc",
+      "query_text": "脱げない靴下",
+      "locale": "ja",
+      "persona": "general",
+      "category": "non-slip-socks",
+      "ideal_answer": "脱げにくい（かかと滑り止め付き）フットカバー・靴下",
+      "search_terms": {
+        "ja": [
+          "脱げにくい フットカバー",
+          "脱げない 靴下",
+          "かかと 滑り止め ソックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f16a8d52a05e5ea2f2a17f07595a123b75cc2f985523d4836c74a2c1a63044df",
+      "query_text": "かかとがずれないフットカバー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "non-slip-socks",
+      "ideal_answer": "脱げにくい（かかと滑り止め付き）フットカバー・靴下",
+      "search_terms": {
+        "ja": [
+          "脱げにくい フットカバー",
+          "脱げない 靴下",
+          "かかと 滑り止め ソックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "300840c4498a8ca5c8d78e78a0cde8e8b0046c1046dfae5ce72cab0911871a7a",
+      "query_text": "締め付けないブラ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "non-wire-bra",
+      "ideal_answer": "ノンワイヤー（ワイヤレス）ブラ",
+      "search_terms": {
+        "ja": [
+          "ノンワイヤー ブラ",
+          "ワイヤレス ブラ",
+          "締め付けない ブラ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6d4d5943f56d89c93edbfc88c7844333c7025f733b14febde70cbde51dbfe496",
+      "query_text": "楽な下着 ワイヤーなし",
+      "locale": "ja",
+      "persona": "general",
+      "category": "non-wire-bra",
+      "ideal_answer": "ノンワイヤー（ワイヤレス）ブラ",
+      "search_terms": {
+        "ja": [
+          "ノンワイヤー ブラ",
+          "ワイヤレス ブラ",
+          "締め付けない ブラ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "84529e0250ee9e4eb4b19293ea09a5a1f331881181101d2758bae07433abfcbd",
+      "query_text": "アイロンいらないシャツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-iron-shirt",
+      "ideal_answer": "ノーアイロン（形態安定）シャツ",
+      "search_terms": {
+        "ja": [
+          "ノーアイロン シャツ",
+          "形態安定 シャツ",
+          "アイロン不要 ワイシャツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6352746d6344fb951fdcacd55d478fcae5355895ecd7e1becfe9c8fb0745e34f",
+      "query_text": "シワにならないワイシャツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-iron-shirt",
+      "ideal_answer": "ノーアイロン（形態安定）シャツ",
+      "search_terms": {
+        "ja": [
+          "ノーアイロン シャツ",
+          "形態安定 シャツ",
+          "アイロン不要 ワイシャツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a0df1ea4a6a844296431288846b4502fc41e823e7960a7333613953c5867de0b",
+      "query_text": "アイロン不要のブラウス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-iron-shirt",
+      "ideal_answer": "ノーアイロン（形態安定）シャツ",
+      "search_terms": {
+        "ja": [
+          "ノーアイロン シャツ",
+          "形態安定 シャツ",
+          "アイロン不要 ワイシャツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "46427b3745d3afdf60f7b036346934c3d8cf305e1875909f66da5130ce8b3383",
+      "query_text": "透けない白いパンツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "non-sheer-bottoms",
+      "ideal_answer": "透けない（裏地付き・透け防止）パンツ・スカート",
+      "search_terms": {
+        "ja": [
+          "透けない パンツ",
+          "透けにくい スカート",
+          "裏地付き パンツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a47b28beb9b1fbd1ed389956c9bfd737f90dbcd7376977de3b0cf09e920c9c29",
+      "query_text": "下着が透けないスカート",
+      "locale": "ja",
+      "persona": "general",
+      "category": "non-sheer-bottoms",
+      "ideal_answer": "透けない（裏地付き・透け防止）パンツ・スカート",
+      "search_terms": {
+        "ja": [
+          "透けない パンツ",
+          "透けにくい スカート",
+          "裏地付き パンツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "076594789f8ce3928ca0dea7939bce3f76c6d07fc20b2c4321646d0755594a5f",
+      "query_text": "雨でも濡れないスニーカー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-sneakers",
+      "ideal_answer": "防水・撥水のスニーカー（レインスニーカー）",
+      "search_terms": {
+        "ja": [
+          "防水 スニーカー",
+          "撥水 スニーカー",
+          "レイン スニーカー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a84909b5e90bb4544af74874c3da716d1e565da8ca7b7366a437f7e248bee75b",
+      "query_text": "雨の日に履ける靴 普通に見える",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-sneakers",
+      "ideal_answer": "防水・撥水のスニーカー（レインスニーカー）",
+      "search_terms": {
+        "ja": [
+          "防水 スニーカー",
+          "撥水 スニーカー",
+          "レイン スニーカー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "d0b6cca84aadb44cdf723dde6b9c800240fcd47d2d513b85bdaf3daded22be18",
+      "query_text": "小銭が取りやすい財布",
+      "locale": "ja",
+      "persona": "general",
+      "category": "coin-visible-wallet",
+      "ideal_answer": "ボックス型小銭入れ・L字ファスナーの財布",
+      "search_terms": {
+        "ja": [
+          "ボックス型小銭入れ 財布",
+          "L字ファスナー 財布",
+          "ガバッと開く 財布"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "d070f8496b7f9ab38fe5a0f55727a8f822b4727cb0069b7a1f07d5bd7726c691",
+      "query_text": "ガバッと開く財布",
+      "locale": "ja",
+      "persona": "general",
+      "category": "coin-visible-wallet",
+      "ideal_answer": "ボックス型小銭入れ・L字ファスナーの財布",
+      "search_terms": {
+        "ja": [
+          "ボックス型小銭入れ 財布",
+          "L字ファスナー 財布",
+          "ガバッと開く 財布"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e4e542adca946529f64b643abf583a8c763a8bf1595fcd1ec6036111ac96d3a5",
+      "query_text": "走っても落ちないイヤホン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "earhook-earphones",
+      "ideal_answer": "耳掛け（イヤーフック）型・オープンイヤー型のイヤホン",
+      "search_terms": {
+        "ja": [
+          "耳掛け イヤホン",
+          "イヤーフック イヤホン",
+          "落ちない イヤホン スポーツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e26f2e74c0d1149ca6d00860afc1c701f1b558d58cb711be92cc354718ad5f69",
+      "query_text": "耳から外れないイヤホン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "earhook-earphones",
+      "ideal_answer": "耳掛け（イヤーフック）型・オープンイヤー型のイヤホン",
+      "search_terms": {
+        "ja": [
+          "耳掛け イヤホン",
+          "イヤーフック イヤホン",
+          "落ちない イヤホン スポーツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e58b69715d6a336e17ca930b7e017b0315d0720a06b694d4592b30d3b6a730bc",
+      "query_text": "寝ながらスマホ見るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bed-phone-arm-stand",
+      "ideal_answer": "ベッド用フレキシブルアームのスマホ／タブレットスタンド",
+      "search_terms": {
+        "ja": [
+          "スマホ アームスタンド 寝ながら",
+          "寝ながら スマホスタンド",
+          "フレキシブルアーム スマホホルダー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1a3ddecc6b78b29347d442894031cbdfa7315daff861612080c27327fcbf7344",
+      "query_text": "ベッドでタブレットを固定するもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bed-phone-arm-stand",
+      "ideal_answer": "ベッド用フレキシブルアームのスマホ／タブレットスタンド",
+      "search_terms": {
+        "ja": [
+          "スマホ アームスタンド 寝ながら",
+          "寝ながら スマホスタンド",
+          "フレキシブルアーム スマホホルダー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "434d38a8522220a1e87167e2bf36f303d499419dceae4cd0d0ce608f5e1bb390",
+      "query_text": "車で水筒を置くやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "car-bottle-holder",
+      "ideal_answer": "車載ドリンクホルダー（大径ボトル対応）",
+      "search_terms": {
+        "ja": [
+          "車載 ドリンクホルダー",
+          "車 ドリンクホルダー 大きい",
+          "エアコン吹き出し口 ドリンクホルダー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8ffb33afa73ccf3f65f68fe69df97847c1a1956d6ac2bb063167d38c3ed0e0da",
+      "query_text": "運転席で大きいボトルが入るホルダー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "car-bottle-holder",
+      "ideal_answer": "車載ドリンクホルダー（大径ボトル対応）",
+      "search_terms": {
+        "ja": [
+          "車載 ドリンクホルダー",
+          "車 ドリンクホルダー 大きい",
+          "エアコン吹き出し口 ドリンクホルダー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
     }
   ]
 }
