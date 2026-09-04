@@ -53,6 +53,7 @@ import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { handleSellerBillingAdminRoutes, handleStripeWebhook, sellerBillingReadiness, settleQualifiedClickCharge } from './seller-billing.mjs';
 import { referralCategoryFor } from './seller-referral-category.mjs';
 import { handleExperienceRoutes } from './experience-layer.mjs';
+import { activeShops, handleSellerShopAdminRoutes, handleShopRoutes, publicShopRef, shopForOffer } from './seller-shop.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -1614,6 +1615,8 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
   const candidates = [];
   const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT);
   const priorityContext = await sellerPriorityContext(env, displayCandidates);
+  // 2026-09-04 ショップページ（Business）: 商品カードに「この商品を扱うショップ」を出す。
+  const shops = await activeShops(env);
   const demandCategory = semanticSearchGroups(query)
     .map((group) => group.category)
     .find((category) => category && category !== 'color') || 'unclassified';
@@ -1657,6 +1660,11 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
           tracking_url: `${origin}/go?token=${encodeURIComponent(leadToken)}`
         });
       }
+    }
+    if (shops.length) {
+      const shop = productOffers.map((offer) => shopForOffer(shops, { tenant: offer.tenant, sellerId: offer.seller_id })).find(Boolean)
+        || shopForOffer(shops, { tenant: candidate.source_tenant || candidate.tenant || '' });
+      if (shop) copy.shop = publicShopRef(shop);
     }
     copy.selected_offer = selected.offer ? copy.offers[0] || sanitizePublicOffer(selected.offer) : null;
     if (!copy.selected_offer && copy.offers.length) copy.selected_offer = copy.offers[0];
@@ -2263,7 +2271,9 @@ async function applyD1ContractPolicy(env, result, query, requestId) {
 async function applyD1MultilingualContent(env, result, language) {
   const candidates = Array.isArray(result?.candidates) ? result.candidates : [];
   const enriched = candidates.length ? await attachMultilingualContent(env, candidates, language) : candidates;
-  const cleaned = enriched.map(({ tenant, ...candidate }) => candidate);
+  // 2026-09-04 ショップページ: どの事業者の商品かは検索結果の「この商品を扱うショップ」に
+  // 必要なので source_tenant として残す（sanitizePublicCandidate の許可リスト外＝公開JSONには出ない）。
+  const cleaned = enriched.map(({ tenant, ...candidate }) => (tenant ? { ...candidate, source_tenant: tenant } : candidate));
   return candidates.length ? { ...result, candidates: cleaned } : result;
 }
 
@@ -3133,6 +3143,11 @@ export default {
     if (experienceResponse) return experienceResponse;
     const sellerBillingAdminResponse = await handleSellerBillingAdminRoutes(request, env, authorizeAdminRequest);
     if (sellerBillingAdminResponse) return sellerBillingAdminResponse;
+    // 2026-09-04 ショップページ（公開 /shop/<slug>・フォロー・クーポン遷移）と管理者代行API。
+    const sellerShopAdminResponse = await handleSellerShopAdminRoutes(request, env, authorizeAdminRequest);
+    if (sellerShopAdminResponse) return sellerShopAdminResponse;
+    const shopResponse = await handleShopRoutes(request, env, { createTrackToken, hashUser });
+    if (shopResponse) return shopResponse;
     // 検索品質カナリアの手動実行(管理者のみ)。cron と同じ固定クエリを本番経路で
     // 流し、QA記録を残して結果を返す。利用者入力は受け付けない。
     if (request.method === 'POST' && url.pathname === '/api/internal/search/qa-canary') {

@@ -1,5 +1,6 @@
 import { sellerPageResponse } from './seller-page.mjs';
 import { handleSellerBillingRoutes } from './seller-billing.mjs';
+import { handleSellerShopRoutes } from './seller-shop.mjs';
 import { spApiSellerPageResponse } from './sp-api-seller-page.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import {
@@ -257,6 +258,14 @@ export async function handleSellerRoutes(request, env) {
     }
     const seller = await readSellerSession(request, env);
     return handleSellerBillingRoutes(request, env, seller);
+  }
+  // 2026-09-04 ショップページ・クーポン（Business のみ）。
+  if (url.pathname.startsWith('/api/seller/shop')) {
+    if (request.method !== 'GET' && request.headers.get('origin') !== url.origin) {
+      return sellerJson({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+    }
+    const seller = await readSellerSession(request, env);
+    return handleSellerShopRoutes(request, env, seller);
   }
   if (request.method === 'GET' && (url.pathname === '/seller' || url.pathname === '/seller.html')) {
     const seller = await readSellerSession(request, env);
