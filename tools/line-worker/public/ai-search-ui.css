@@ -7,3 +7,11 @@
 /* ダイアログは横方向を固定し、本文だけ縦にスクロールする。閉じる操作は常に上部へ残す。 */
 .ai-chat-dialog{max-width:92vw;overflow:hidden;overscroll-behavior:contain}.ai-chat-dialog-card{max-height:80dvh;overflow-x:hidden;overscroll-behavior-x:none;touch-action:pan-y}.ai-chat-dialog-close{position:sticky;z-index:5;top:0;justify-self:end;margin-bottom:-40px}
 .ai-chat-identify-question{white-space:pre-line;font-size:14px;font-weight:800}.ai-chat-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ai-chat-confirm-actions button,.ai-chat-other-malls{min-height:44px;padding:10px 12px;border-radius:12px;font-weight:850;cursor:pointer}.ai-chat-confirm-yes{border:0;background:linear-gradient(105deg,#ff4f9a,#7357ff,#23b8ff);color:#fff}.ai-chat-confirm-no,.ai-chat-other-malls{border:1px solid #7357ff;background:#fff;color:#5140ba}.ai-chat-confirm-actions button:disabled,.ai-chat-other-malls:disabled{cursor:wait;opacity:.55}
+/* 2026-09-04 AI確認チャット: 候補名と一緒に参考画像（楽天上位3件） */
+.ai-chat-preview-strip{display:grid;gap:6px;margin:4px 0 8px}
+.ai-chat-preview-label{font-size:10px;color:#6d6b80}
+.ai-chat-preview-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ai-chat-preview-item{display:grid;gap:4px;padding:6px;border:1px solid #e9e5f5;border-radius:12px;background:#fff;color:#17172b;text-decoration:none;min-width:0}
+.ai-chat-preview-item img{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:8px;background:#f3f1fa}
+.ai-chat-preview-name{font-size:10px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ai-chat-preview-item b{font-size:12px;color:#c90000}

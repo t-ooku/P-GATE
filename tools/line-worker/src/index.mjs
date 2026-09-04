@@ -55,6 +55,7 @@ import { referralCategoryFor } from './seller-referral-category.mjs';
 import { handleExperienceRoutes } from './experience-layer.mjs';
 import { activeShops, handleSellerShopAdminRoutes, handleShopRoutes, publicShopRef, shopForOffer } from './seller-shop.mjs';
 import { handleCreatorKpiRoutes } from './creator-kpi.mjs';
+import { aiChatCandidatePreviews } from './ai-chat-preview.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -2019,11 +2020,16 @@ async function handleAiChatApi(request, env, ctx) {
       const candidateQuery = result.refined_query || result.candidate_name;
       const category = semanticSearchGroups(candidateQuery)
         .map((group) => group.category).find((value) => value && value !== 'color') || 'unclassified';
-      const marketplaceSearchLinks = await signedMarketplaceSearchLinks(candidateQuery, {
-        env, origin: ownOrigin, sessionHash: await hashUser(input.session_id),
-        seed: `AI_CHAT:${crypto.randomUUID()}`, category, trafficClass: 'UNATTRIBUTED'
-      });
-      result = { ...result, marketplace_search_links: marketplaceSearchLinks };
+      const sessionHash = await hashUser(input.session_id);
+      const seed = `AI_CHAT:${crypto.randomUUID()}`;
+      // 2026-09-04 大隆さん指示: 候補名と一緒に参考画像（楽天上位3件）も出す。
+      const [marketplaceSearchLinks, candidatePreviews] = await Promise.all([
+        signedMarketplaceSearchLinks(candidateQuery, {
+          env, origin: ownOrigin, sessionHash, seed, category, trafficClass: 'UNATTRIBUTED'
+        }),
+        aiChatCandidatePreviews(env, candidateQuery, { requestId, createTrackToken, origin: ownOrigin, sessionHash, seed })
+      ]);
+      result = { ...result, marketplace_search_links: marketplaceSearchLinks, candidate_previews: candidatePreviews };
     }
     return Response.json({ ok: true, result, request_id: requestId }, {
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }

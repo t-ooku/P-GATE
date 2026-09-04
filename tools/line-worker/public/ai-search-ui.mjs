@@ -23,10 +23,10 @@ const chatCopy = {
   KO: { title: 'AI 채팅', placeholder: '답장을 입력…', send: '보내기', searching: '찾고 있습니다…', finding: '조건에 맞는 상품을 찾고 있습니다…', error: '통신에 실패했습니다. 다시 시도해 주세요.', searchError: '검색에 실패했습니다. 다시 시도해 주세요.', retry: '다시 시도', close: '닫기', ready: '검색 준비가 되었습니다.', searchCta: '이 조건으로 찾기' }
 };
 const identifyCopy={
-  JA:{title:'AIに確認して探す',thinking:'商品を1つに絞っています…',question:name=>`この商品ですか？\n${name}`,yes:'YES、この商品を探す',no:'NO、別の候補',other:'他モールで探す',browseNow:'待たずにモールで探す',error:'候補を確認できませんでした。',finding:'確認した商品を各モールで探しています…',rejected:'違います。別の商品候補を1つ提示してください。',close:'閉じる'},
-  EN:{title:'Confirm with AI',thinking:'Narrowing it to one product…',question:name=>`Is this the product?\n${name}`,yes:'YES, search for it',no:'NO, another option',other:'Search other marketplaces',browseNow:'Search marketplaces now',error:'Could not confirm a candidate.',finding:'Searching marketplaces for the confirmed product…',rejected:'No. Suggest one different product candidate.',close:'Close'},
-  ZH:{title:'先让 AI 确认',thinking:'正在缩小到一个商品…',question:name=>`是这个商品吗？\n${name}`,yes:'YES，搜索此商品',no:'NO，换一个候选',other:'前往其他商城搜索',browseNow:'无需等待，立即前往商城搜索',error:'无法确认候选商品。',finding:'正在各商城搜索已确认的商品…',rejected:'不是。请再提出一个不同的商品候选。',close:'关闭'},
-  KO:{title:'AI 확인 후 찾기',thinking:'상품을 하나로 좁히는 중…',question:name=>`이 상품인가요?\n${name}`,yes:'YES, 이 상품 찾기',no:'NO, 다른 후보',other:'다른 쇼핑몰에서 찾기',browseNow:'기다리지 않고 쇼핑몰에서 찾기',error:'상품 후보를 확인하지 못했습니다.',finding:'확인한 상품을 각 쇼핑몰에서 찾는 중…',rejected:'아닙니다. 다른 상품 후보를 하나 제시해 주세요.',close:'닫기'}
+  JA:{title:'AIに確認して探す',thinking:'商品を1つに絞っています…',question:name=>`この商品ですか？\n${name}`,yes:'YES、この商品を探す',no:'NO、別の候補',other:'他モールで探す',browseNow:'待たずにモールで探す',error:'候補を確認できませんでした。',finding:'確認した商品を各モールで探しています…',rejected:'違います。別の商品候補を1つ提示してください。',previewLabel:'参考画像（楽天市場の検索上位）',close:'閉じる'},
+  EN:{title:'Confirm with AI',thinking:'Narrowing it to one product…',question:name=>`Is this the product?\n${name}`,yes:'YES, search for it',no:'NO, another option',other:'Search other marketplaces',browseNow:'Search marketplaces now',error:'Could not confirm a candidate.',finding:'Searching marketplaces for the confirmed product…',rejected:'No. Suggest one different product candidate.',previewLabel:'Reference images (top Rakuten results)',close:'Close'},
+  ZH:{title:'先让 AI 确认',thinking:'正在缩小到一个商品…',question:name=>`是这个商品吗？\n${name}`,yes:'YES，搜索此商品',no:'NO，换一个候选',other:'前往其他商城搜索',browseNow:'无需等待，立即前往商城搜索',error:'无法确认候选商品。',finding:'正在各商城搜索已确认的商品…',rejected:'不是。请再提出一个不同的商品候选。',previewLabel:'参考图片（乐天市场搜索靠前）',close:'关闭'},
+  KO:{title:'AI 확인 후 찾기',thinking:'상품을 하나로 좁히는 중…',question:name=>`이 상품인가요?\n${name}`,yes:'YES, 이 상품 찾기',no:'NO, 다른 후보',other:'다른 쇼핑몰에서 찾기',browseNow:'기다리지 않고 쇼핑몰에서 찾기',error:'상품 후보를 확인하지 못했습니다.',finding:'확인한 상품을 각 쇼핑몰에서 찾는 중…',rejected:'아닙니다. 다른 상품 후보를 하나 제시해 주세요.',previewLabel:'참고 이미지(라쿠텐 상위 결과)',close:'닫기'}
 };
 
 const channelNames = [
@@ -157,6 +157,23 @@ function openIdentifyDialog(originalQuery,language,options={}){
       const aiCandidateFallback={name:candidate,brand:String(result.candidate_brand||''),reason:String(result.candidate_reason||''),matched_features:Array.isArray(result.matched_features)?result.matched_features:[],match_score:Number(result.match_score||0),search_keywords:[String(result.refined_query||candidate)],marketplace_search_links:Array.isArray(result.marketplace_search_links)?result.marketplace_search_links:[]};
       history.push({role:'assistant',text:candidate});
       const question=chatMessageRow('assistant',copy.question(candidate));question.classList.add('ai-chat-identify-question');messages.append(question);
+      // 2026-09-04 大隆さん指示: 名前だけでは合っているか分からないので、参考画像を同じ流れで見せる。
+      const previews=Array.isArray(result.candidate_previews)?result.candidate_previews.filter(item=>item?.image&&item?.name):[];
+      if(previews.length){
+        const strip=document.createElement('div');strip.className='ai-chat-preview-strip';
+        strip.append(Object.assign(document.createElement('span'),{className:'ai-chat-preview-label',textContent:copy.previewLabel}));
+        const list=document.createElement('div');list.className='ai-chat-preview-list';
+        for(const item of previews){
+          const node=document.createElement(item.tracking_url?'a':'div');node.className='ai-chat-preview-item';
+          if(item.tracking_url){node.href=item.tracking_url;node.target='_blank';node.rel='noopener nofollow';}
+          const img=document.createElement('img');img.src=item.image;img.alt='';img.loading='lazy';
+          const name=document.createElement('span');name.className='ai-chat-preview-name';name.textContent=item.name;
+          node.append(img,name);
+          if(item.price>0){const price=document.createElement('b');price.textContent=`¥${Number(item.price).toLocaleString('ja-JP')}`;node.append(price);}
+          list.append(node);
+        }
+        strip.append(list);messages.append(strip);
+      }
       const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';
       const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
       const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;
