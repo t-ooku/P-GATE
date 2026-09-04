@@ -46,6 +46,7 @@
 ## 2-a. 希望価格ウォッチ推しリール（v1）— 2026-09-04 作成済み
 
 - `scripts/build-watch-reel.py` が v1 参照画像＋既存音源から ffmpeg で 9 秒の縦動画を作る（Runway 課金なし）。`.github/workflows/build-social-reel.yml` がスクリプトの push で MP4 を再生成し `public/social/hoshilu-ai-actress-watch-v1.mp4` としてコミット・デプロイする。
+- **注意（2026-09-04 に実際に起きた）**: スクリプトの push は ci.yml も起動する。build-social-reel.yml が MP4 をコミット・デプロイした後に、ci.yml の deploy（MP4 を含まない元の commit）が後から走ると、hoshilu.app/social/ から MP4 が消える。リール生成後は、ブランチ先頭を含む push（文書更新でよい）をもう1回行って再デプロイすること。恒久対応（ci.yml の deploy がブランチ先頭を取り直す）は Codex 作業。
 - 投稿文（X / Instagram 共通）: 「今すぐ買わないものは、『この価格になったら教えて』に入れておくだけ。Amazon・楽天・Qoo10などの価格をHOSHILUが定期確認して、希望価格になったら通知します。セールを待つあいだ、何度も見に行かなくて大丈夫。」 リンクは `/#mywatchTitle` に utm_campaign=watch_reel_v1。
 - Codex 作業: social-autopilot の DAILY 枠に `hoshilu_ai_actress_watch_v1`（media_url https://hoshilu.app/social/hoshilu-ai-actress-watch-v1.mp4、topic=希望価格ウォッチ）を追加し、配分 10/50/40 の「希望価格ウォッチ」枠の初回素材にする。
 
