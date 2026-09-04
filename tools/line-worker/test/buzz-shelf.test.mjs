@@ -33,7 +33,7 @@ test('BUZZは共有流入・共有開始・商品送客を匿名成長計測へ�
   const client = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   const homeClient = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
   const analytics = fs.readFileSync(path.join(worker, 'public', 'growth-analytics.mjs'), 'utf8');
-  assert.match(html, /growth-analytics\.mjs\?v=7/);
+  assert.match(html, /growth-analytics\.mjs\?v=10/);
   assert.match(html, /buzz\.mjs\?v=4/);
   assert.match(html, /share-button share-discovery-button/);
   assert.match(client, /utm_campaign: 'hoshilu_buzz'/);

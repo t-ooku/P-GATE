@@ -54,6 +54,7 @@ import { handleSellerBillingAdminRoutes, handleStripeWebhook, sellerBillingReadi
 import { referralCategoryFor } from './seller-referral-category.mjs';
 import { handleExperienceRoutes } from './experience-layer.mjs';
 import { activeShops, handleSellerShopAdminRoutes, handleShopRoutes, publicShopRef, shopForOffer } from './seller-shop.mjs';
+import { handleCreatorKpiRoutes } from './creator-kpi.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -3146,6 +3147,9 @@ export default {
     // 2026-09-04 ショップページ（公開 /shop/<slug>・フォロー・クーポン遷移）と管理者代行API。
     const sellerShopAdminResponse = await handleSellerShopAdminRoutes(request, env, authorizeAdminRequest);
     if (sellerShopAdminResponse) return sellerShopAdminResponse;
+    // 2026-09-04 Creator 別計測URL（管理者）。
+    const creatorKpiResponse = await handleCreatorKpiRoutes(request, env);
+    if (creatorKpiResponse) return creatorKpiResponse;
     const shopResponse = await handleShopRoutes(request, env, { createTrackToken, hashUser });
     if (shopResponse) return shopResponse;
     // 検索品質カナリアの手動実行(管理者のみ)。cron と同じ固定クエリを本番経路で

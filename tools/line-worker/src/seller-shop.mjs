@@ -262,7 +262,7 @@ ${couponHtml}
   });
   document.querySelectorAll('.coupon-code').forEach(function(node){node.addEventListener('click',function(){navigator.clipboard&&navigator.clipboard.writeText(node.dataset.code).then(function(){node.textContent='コピーしました';setTimeout(function(){node.textContent=node.dataset.code;},1200);});});});
 })();
-</script></body></html>`;
+</script><script type="module" src="/growth-analytics.mjs?v=10"></script></body></html>`;
 }
 
 // ---- ルーティング ----------------------------------------------------------------

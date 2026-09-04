@@ -115,6 +115,13 @@ function clean(value, length = 80) {
   return String(value || '').trim().replace(/[^\p{L}\p{N}_.-]/gu, '').slice(0, length);
 }
 
+// 2026-09-04 Creator 別計測URL: creator_id / campaign_id / creative_id。
+// 値の文法は campaign-attribution.mjs の SAFE_ID と同じ（英数字で始まり、英数字・_・- のみ、64文字まで）。
+export function creatorSafeId(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  return /^[a-z0-9][a-z0-9_-]{0,63}$/.test(normalized) ? normalized : '';
+}
+
 function anonymousId(value) {
   const normalized = String(value || '').trim().toLowerCase();
   return /^[a-f0-9-]{20,64}$/.test(normalized) ? normalized : '';
@@ -157,6 +164,8 @@ export function classifyGrowthTraffic(event = {}) {
     || campaign.includes('acceptance')
     || campaign.startsWith('test');
   if (qaSignal) return 'QA';
+  // 2026-09-04 Creator 別計測URL で着地した訪問は、UTM が無くても流入元あり。
+  if (creatorSafeId(event.creator_id)) return 'ATTRIBUTED';
   return source || medium || campaign || content ? 'ATTRIBUTED' : 'UNATTRIBUTED';
 }
 
@@ -174,7 +183,10 @@ export function normalizeGrowthEvent(input = {}) {
     content: clean(input.content),
     marketplace: MARKETPLACES.has(marketplace) ? marketplace : '',
     visitor_id: anonymousId(input.visitor_id),
-    session_id: anonymousId(input.session_id)
+    session_id: anonymousId(input.session_id),
+    creator_id: creatorSafeId(input.creator_id),
+    campaign_id: creatorSafeId(input.campaign_id),
+    creative_id: creatorSafeId(input.creative_id)
   };
   if (eventType === 'search_degraded') {
     event.failure_code = clientSearchFailureCode(input.failure_code);
@@ -360,16 +372,28 @@ export async function handleGrowthEvent(request, env) {
   const values = [
     await searchExecutionEventId(event), event.event_type, event.locale, event.source, event.medium,
     event.campaign, event.content, event.marketplace, new Date().toISOString(), trafficClass,
-    event.visitor_id, event.session_id
+    event.visitor_id, event.session_id, event.creator_id, event.campaign_id, event.creative_id
   ];
   let identityRecorded = true;
   try {
     try {
-      await env.PRODUCT_DB.prepare(
-        `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
-        (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
-        VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
-      ).bind(...values).run();
+      // 2026-09-04 Creator 別計測: creator_id/campaign_id/creative_id（migration 0070）。
+      // 列が無い環境では従来の12列へ縮退する。
+      try {
+        await env.PRODUCT_DB.prepare(
+          `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
+          (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id,creator_id,campaign_id,creative_id)
+          VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)`
+        ).bind(...values).run();
+      } catch (error) {
+        const message = String(error?.message || error);
+        if (!/(?:no column named|has no column named|no such column).*(?:creator_id|campaign_id|creative_id)/i.test(message)) throw error;
+        await env.PRODUCT_DB.prepare(
+          `INSERT ${typedInputEvent ? 'OR IGNORE ' : ''}INTO growth_events
+          (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+          VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
+        ).bind(...values.slice(0, 12)).run();
+      }
     } catch (error) {
       const message = String(error?.message || error);
       const visitorColumnsMissing = /(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(message);

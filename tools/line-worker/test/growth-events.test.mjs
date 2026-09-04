@@ -24,7 +24,7 @@ test('accepts only anonymous allowlisted growth dimensions', () => {
     campaign: 'ambiguoussearch',
     content: 'reel_01',
     marketplace: 'QOO10_JP'
-    ,visitor_id: '', session_id: ''
+    ,visitor_id: '', session_id: '', creator_id: '', campaign_id: '', creative_id: ''
   });
 });
 
@@ -129,7 +129,7 @@ test('search_degraded accepts only a bounded code and UUID-shaped request ID', (
     query: '保存禁止の検索文'
   }), {
     event_type: 'search_degraded', locale: 'JA', source: '', medium: '', campaign: '', content: '',
-    marketplace: '', visitor_id: '', session_id: '', failure_code: 'TURNSTILE_TOKEN_UNAVAILABLE',
+    marketplace: '', visitor_id: '', session_id: '', creator_id: '', campaign_id: '', creative_id: '', failure_code: 'TURNSTILE_TOKEN_UNAVAILABLE',
     request_id: 'e309d1ad-2a34-4f2f-913b-47fccdbbe24c'
   });
   const sanitized = normalizeGrowthEvent({

@@ -24,7 +24,7 @@ export function adminSpApiPageResponse() {
   <title>認証監査 | HOSHILU</title></head><body><main class="admin-shell">
   <section class="auth-card"><div class="admin-head"><div><p class="eyebrow">SECURITY</p><h1>認証監査</h1></div>
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
-  <nav class="admin-nav"><a href="/admin/promotion">販促一覧</a><a class="active" href="/admin/sp-api">認証監査</a></nav>
+  <nav class="admin-nav"><a href="/admin/promotion">販促一覧</a><a href="/admin/creators">Creator計測</a><a class="active" href="/admin/sp-api">認証監査</a></nav>
   <button id="refreshAdminStatus" class="ghost-button" type="button">状態を更新</button>
   <p id="adminPageStatus" role="status"></p></section>
   <section class="auth-card"><h2>管理ログイン監査（24時間）</h2><p id="adminAuthSummaryStatus"></p>
@@ -42,7 +42,7 @@ export function adminPromotionPageResponse() {
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">BUSINESS KPI</p><h1>HOSHILU 経営ダッシュボード</h1></div>
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
-  <nav class="admin-nav"><a class="active" href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a href="/admin/seller-billing">セラー請求</a><a href="/admin/sp-api">認証監査</a></nav>
+  <nav class="admin-nav"><a class="active" href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a href="/admin/seller-billing">セラー請求</a><a href="/admin/creators">Creator計測</a><a href="/admin/sp-api">認証監査</a></nav>
   <div class="dashboard-actions"><p id="promotionStatus" role="status"></p>
   <button id="refreshPromotion" class="ghost-button" type="button">最新状態に更新</button>
   <button id="runSearchQaCanary" class="ghost-button" type="button">検索品質カナリアを今すぐ実行</button></div>
@@ -78,7 +78,7 @@ export function adminReelsPageResponse() {
   <link rel="stylesheet" href="/admin-promotion.css"><title>AIリール管理 | HOSHILU</title></head><body>
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">AI REELS</p><h1>AIリール管理</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
-  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a class="active" href="/admin/reels">AIリール管理</a><a href="/admin/seller-billing">セラー請求</a><a href="/admin/sp-api">認証監査</a></nav>
+  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a class="active" href="/admin/reels">AIリール管理</a><a href="/admin/seller-billing">セラー請求</a><a href="/admin/creators">Creator計測</a><a href="/admin/sp-api">認証監査</a></nav>
   <p>自動投稿を基本とし、確認が必要な動画だけここで公開できます。</p>
   <div class="dashboard-actions"><p id="reelStatus" role="status"></p><button id="refreshReels" class="ghost-button" type="button">最新状態に更新</button></div></section>
   <section class="auth-card"><div class="section-head"><div><p class="eyebrow">PENDING &amp; HISTORY</p><h2>動画一覧</h2></div></div>
@@ -96,7 +96,7 @@ export function adminSellerBillingPageResponse() {
   <link rel="stylesheet" href="/admin-promotion.css"><title>セラー請求 | HOSHILU</title></head><body>
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">SELLER BILLING</p><h1>セラー請求（前払い）</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
-  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a class="active" href="/admin/seller-billing">セラー請求</a><a href="/admin/sp-api">認証監査</a></nav>
+  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a class="active" href="/admin/seller-billing">セラー請求</a><a href="/admin/creators">Creator計測</a><a href="/admin/sp-api">認証監査</a></nav>
   <p>無料プラン＝ジャンル定価を前払い残高から消化。Business ¥9,800（3か月0円）＝定価の50%＋毎月5,000円分まで0円。すべて前払い。</p>
   <div class="dashboard-actions"><p id="billingStatus" role="status"></p><button id="refreshBilling" class="ghost-button" type="button">最新状態に更新</button></div></section>
   <section class="auth-card"><div class="section-head"><div><p class="eyebrow">REGISTER</p><h2>請求アカウントを登録</h2></div></div>
@@ -116,3 +116,34 @@ export function adminSellerBillingPageResponse() {
   </main><script type="module" src="/admin-seller-billing.js"></script></body></html>`, { headers });
 }
 
+
+// 2026-09-04 総合実行指示書 §66–70: Creator 別計測URL の発行と実数KPI。
+export function adminCreatorsPageResponse() {
+  return new Response(`<!doctype html><html lang="ja"><head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/admin-sp-api.css">
+  <link rel="stylesheet" href="/admin-promotion.css"><title>Creator計測 | HOSHILU</title></head><body>
+  <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
+  <p class="eyebrow">CREATOR TRACKING</p><h1>Creator 別計測URLと実数KPI</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
+  <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a href="/admin/seller-billing">セラー請求</a><a class="active" href="/admin/creators">Creator計測</a><a href="/admin/sp-api">認証監査</a></nav>
+  <p>インフルエンサーごとに URL を発行し、着地した訪問者のイベント（検索・モール遷移・ホシっとく・再訪）を Creator → 施策 → クリエイティブで数えます。QA は除外、すべて実数。</p>
+  <div class="dashboard-actions"><label>期間 <select id="creatorDays"><option value="7">7日</option><option value="30" selected>30日</option><option value="90">90日</option></select></label><p id="creatorStatus" role="status"></p><button id="refreshCreators" class="ghost-button" type="button">最新状態に更新</button></div></section>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">URL BUILDER</p><h2>計測URLを発行</h2></div></div>
+  <form id="creatorUrlForm" class="auth-form">
+    <label>creator_id（英数字・_・-、例: toridori_ai_001） <input name="creator_id" required pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" placeholder="creator_001"></label>
+    <label>campaign_id（任意、例: sep_launch） <input name="campaign_id" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label>
+    <label>creative_id（任意、例: reel_a） <input name="creative_id" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}"></label>
+    <label>掲載先（utm_source、任意） <select name="utm_source"><option value="">指定しない</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="x">X</option><option value="youtube">YouTube</option><option value="threads">Threads</option></select></label>
+    <label>着地先 <select name="path"><option value="/">トップ（横断検索）</option><option value="/shop/with-care">ショップ with care</option><option value="/buzz.html">BUZZ</option></select></label>
+    <label>検索語を入れておく（任意） <input name="q" maxlength="80" placeholder="例: 自立するトートバッグ"></label>
+    <button class="primary-button" type="submit">URLを作る</button>
+  </form>
+  <div id="creatorUrlResult" class="operation-status" aria-live="polite"></div></section>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">CREATORS</p><h2>Creator 別（クリックで施策・クリエイティブ内訳）</h2></div></div>
+  <div id="creatorTotals" class="promotion-metrics"></div>
+  <div id="creatorTable" class="data-table-wrap" aria-live="polite"></div></section>
+  <section class="auth-card" id="creatorDetail" hidden><div class="section-head"><div><p class="eyebrow">BREAKDOWN</p><h2 id="creatorDetailTitle">内訳</h2></div></div>
+  <h3>施策（campaign_id）</h3><div id="campaignTable" class="data-table-wrap"></div>
+  <h3>クリエイティブ（creative_id）</h3><div id="creativeTable" class="data-table-wrap"></div></section>
+  </main><script type="module" src="/admin-creators.js"></script></body></html>`, { headers });
+}

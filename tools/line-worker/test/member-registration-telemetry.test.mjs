@@ -464,7 +464,7 @@ test('member login page sends only anonymous growth context to both verified reg
   const client = readFileSync(new URL('../public/member-login.js', import.meta.url), 'utf8');
   const page = readFileSync(new URL('../public/login.html', import.meta.url), 'utf8');
   assert.match(page, /<script type="module" src="\/member-login\.js"><\/script>/u);
-  assert.match(page, /growth-analytics\.mjs\?v=7/u);
+  assert.match(page, /growth-analytics\.mjs\?v=10/u);
   assert.match(client, /growthVisitorId\(\)/u);
   assert.match(client, /growthSessionId\(\)/u);
   assert.match(client, /registration_context:registrationContext/u);

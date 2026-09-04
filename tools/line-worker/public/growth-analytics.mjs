@@ -58,6 +58,36 @@ if (hasUrlValue) {
     sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify({ ...attribution, created_at: Date.now() }));
   } catch {}
 }
+// 2026-09-04 総合実行指示書 §66–70: Creator 別計測URL。
+// ?creator_id=&campaign_id=&creative_id=（短縮 cr / cp / cv も可）で着地したら、この訪問者の
+// イベント全部に Creator・施策・クリエイティブを付ける。UTM より長く（30日・localStorage）
+// 引き継ぐのは、SNS で見て後日ふらっと戻る動きを Creator の成果として数えるため。
+// 新しい Creator URL で着地したらそちらが優先（ラストタッチ）。個人を特定する情報は入れない。
+const CREATOR_KEY = 'hoshilu_creator_attribution';
+const CREATOR_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const creatorSafeId = (value) => { const v = String(value || '').trim().toLowerCase(); return /^[a-z0-9][a-z0-9_-]{0,63}$/.test(v) ? v : ''; };
+const urlCreator = {
+  creator_id: creatorSafeId(params.get('creator_id') || params.get('creator') || params.get('cr')),
+  campaign_id: creatorSafeId(params.get('campaign_id') || params.get('cp')),
+  creative_id: creatorSafeId(params.get('creative_id') || params.get('creative') || params.get('cv'))
+};
+function storedCreator() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(CREATOR_KEY) || 'null');
+    if (!stored?.creator_id || Date.now() - Number(stored.created_at || 0) >= CREATOR_TTL_MS) return null;
+    return { creator_id: creatorSafeId(stored.creator_id), campaign_id: creatorSafeId(stored.campaign_id), creative_id: creatorSafeId(stored.creative_id) };
+  } catch { return null; }
+}
+const creator = urlCreator.creator_id ? urlCreator : (storedCreator() || { creator_id: '', campaign_id: '', creative_id: '' });
+if (urlCreator.creator_id) {
+  try { localStorage.setItem(CREATOR_KEY, JSON.stringify({ ...creator, created_at: Date.now() })); } catch {}
+  // UTM が無い Creator URL でも、既存の流入元集計（source/medium）に載るよう補う。
+  if (!attribution.source) attribution.source = 'creator';
+  if (!attribution.medium) attribution.medium = 'influencer';
+  if (!attribution.campaign) attribution.campaign = creator.campaign_id || creator.creator_id;
+  try { sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify({ ...attribution, created_at: Date.now() })); } catch {}
+}
+if (creator.creator_id) Object.assign(attribution, creator);
 window.HoshiluGrowthAttribution = Object.freeze({ ...attribution });
 const locale = () => String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
 const visitorId = growthVisitorId();
