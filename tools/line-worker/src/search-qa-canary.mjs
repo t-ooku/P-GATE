@@ -35,7 +35,10 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   { id: 'smoky_quartz_ring', query: 'スモーキークォーツ リング', expect: /リング|指輪|ring/iu, reject: /ネックレス|ピアス|ブレスレット|イヤリング/u },
   { id: 'ig_white_bag', query: 'Instagramで見た白いバッグ', expect: /バッグ|bag/iu, reject: /財布|枚入|枚セット|紙袋|ポリ袋/u },
   { id: 'shein_one_piece', query: 'SHEINで見たワンピース', expect: /ワンピース|ワンピ|dress/iu, reject: /防虫|ハンガー|お玉|おたま|用\b/u },
-  { id: 'amazon_storage', query: 'Amazonで見た収納用品', expect: /収納|ケース|ボックス|ラック|storage/iu, reject: /リモコン|Fire TV|Alexa|交換用/u }
+  { id: 'amazon_storage', query: 'Amazonで見た収納用品', expect: /収納|ケース|ボックス|ラック|storage/iu, reject: /リモコン|Fire TV|Alexa|交換用/u },
+  // 2026-09-04 大隆さん実機報告: 「底開口 水筒」で sokomo「そこまで洗えるボトル」（楽天に在庫あり）が出ない。
+  // 本番経路で毎日確かめる（期待: 上位3件に底が外せる水筒、本命がブラシ等の付属品でない）。
+  { id: 'bottom_removable_bottle', query: '底開口 水筒', expect: /そこまで洗える|底.{0,4}(?:取り外|外せ|外れ)|sokomo|ソコモ|底ヂカラ|分解.{0,4}洗/iu, reject: /ブラシ|スポンジ|洗剤|パッキン|替え|交換用/u }
 ]);
 
 function candidateName(candidate) {

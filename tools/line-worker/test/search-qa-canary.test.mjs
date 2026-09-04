@@ -11,8 +11,13 @@ import {
 const links = (malls) => malls.map((marketplace) => ({ marketplace, url: `https://hoshilu.app/go?token=${marketplace}` }));
 const ALL = ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP', 'ZOZOTOWN_JP'];
 
-test('固定クエリは指示書 §54 の9件で、利用者入力を含まない', () => {
-  assert.equal(SEARCH_QA_CANARY_QUERIES.length, 9);
+test('固定クエリは指示書 §54 の9件＋2026-09-04 の「底開口 水筒」で、利用者入力を含まない', () => {
+  assert.equal(SEARCH_QA_CANARY_QUERIES.length, 10);
+  assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'bottom_removable_bottle' && f.query === '底開口 水筒'));
+  const bottle = SEARCH_QA_CANARY_QUERIES.find((f) => f.id === 'bottom_removable_bottle');
+  assert.match('＼ポイント10倍／【公式通販】sokomo（ソコモ）そこまで洗えるボトル 500ml', bottle.expect);
+  assert.match('【そこまで洗えるボトル】ドウシシャ 水筒 底が取り外せる', bottle.expect);
+  assert.doesNotMatch('moz マグボトル 500ml ステンレスボトル ハンドル付き', bottle.expect);
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.query === 'コアラマットレス'));
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.query === '自立する本革トートバッグ'));
   for (const fixture of SEARCH_QA_CANARY_QUERIES) {
