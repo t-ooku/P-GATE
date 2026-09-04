@@ -11,12 +11,19 @@ name: Compile teacher-dataset rules
 # - the large file is produced and committed here, never round-tripped
 # through anything else. See claude/hoshilu_teacher_dataset_daily_ops_guide.md
 # in the HOSHILU.APP project for the day this was added (2026-09-02) and why.
+#
+# 2026-09-05: 機能語→売り手の語の展開規則（src/query-expansion-feature-rules.mjs）から
+# 教師データ batch-019 を生成する工程を追加。規則ファイルの push でも起動し、生成した
+# バッチ JSON と再コンパイル結果をまとめてコミットする（規則が唯一の元）。
 
 on:
   push:
     branches: [feature/ui-search-v2]
     paths:
       - 'tools/line-worker/evaluation/teacher-dataset/*.json'
+      - 'tools/line-worker/src/query-expansion-feature-rules.mjs'
+      - 'tools/line-worker/scripts/build-feature-teacher-batch.mjs'
+      - '.github/workflows/compile-teacher-dataset-rules.yml'
   workflow_dispatch: {}
 
 permissions:
@@ -39,6 +46,10 @@ jobs:
         working-directory: tools/line-worker
         run: npm ci
 
+      - name: Build feature-rule teacher batch (batch-019) from the expansion rules
+        working-directory: tools/line-worker
+        run: node scripts/build-feature-teacher-batch.mjs
+
       - name: Compile teacher-dataset rules
         run: node tools/line-worker/scripts/compile-teacher-dataset-rules.mjs
 
@@ -50,14 +61,14 @@ jobs:
         working-directory: tools/line-worker
         run: npm run check:search-quality
 
-      - name: Commit recompiled rules if changed
+      - name: Commit generated batch and recompiled rules if changed
         run: |
-          if git diff --quiet -- tools/line-worker/src/search-quality/teacher-dataset-rules.generated.json; then
-            echo "No changes to teacher-dataset-rules.generated.json; nothing to commit."
+          git add tools/line-worker/evaluation/teacher-dataset/2026-09-05-claude-batch-019.json tools/line-worker/src/search-quality/teacher-dataset-rules.generated.json
+          if git diff --cached --quiet; then
+            echo "No changes to the generated batch or teacher-dataset-rules.generated.json; nothing to commit."
           else
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add tools/line-worker/src/search-quality/teacher-dataset-rules.generated.json
-            git commit -m "chore(teacher): auto-recompile teacher-dataset-rules.generated.json"
+            git commit -m "chore(teacher): auto-generate batch-019 from feature rules and recompile teacher-dataset-rules.generated.json"
             git push origin HEAD:feature/ui-search-v2
           fi
