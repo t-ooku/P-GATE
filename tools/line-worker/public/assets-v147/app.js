@@ -932,11 +932,14 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   if(shopLink)card.append(shopLink);
   mediaActions.append(createKeepButton(candidate));
   const watch=createWatchOptions(candidate,t);
-  mediaActions.append(watch.bell);
   card.append(watch.dialog);
   window.HoshiluPriceComparison?.attach(card,{...candidate,search_query:searchQuery||candidate.search_query||'',search_category:searchQuery||candidate.search_category||candidate.related_category||''});
   const priceComparisonButton=card.querySelector(':scope > .ai-price-compare-button');
+  // 2026-09-04 大隆さん指示: 画像の下は「ホシっとく」→「AI最安比較」。購入希望価格ウォッチは
+  // カード下部（口コミの上）に横一面で置く。
   if(priceComparisonButton)mediaActions.append(priceComparisonButton);
+  watch.bell.classList.add('watch-full-row');
+  card.append(watch.bell);
   return card;
 }
 function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popularity'){
@@ -998,10 +1001,13 @@ function resultCarousel(cards,rowKind='confirmed'){
   }
   return carousel;
 }
-// 2026-09-04 大隆さん指示: 縦の一覧に出すのは10商品まで。11商品目以降は横スワイプの
-// 回転スクロール（recommended と同じ横トラック）にまとめ、ページが縦に伸びすぎないようにする。
-const CONFIRMED_LIST_LIMIT=10;
-const confirmedOverflowCopy={JA:(n)=>`11件目以降（${n}件）— 横にスワイプ`,EN:(n)=>`More results (${n}) — swipe sideways`,ZH:(n)=>`第11件起（${n}件）— 左右滑动`,KO:(n)=>`11번째 이후(${n}건) — 옆으로 스와이프`};
+// 2026-09-04 大隆さん指示: 確認済み商品（最大30件）は縦の回転スクロール（vertical-ticker、
+// スマホは固定高さの枠内を自動で1枚ずつ送り、触ると止まる）。レコメンドだけ横の回転。
+const VERTICAL_TICKER_QUERY='(max-width:760px)';
+function attachConfirmedTicker(track){
+  if(!track||typeof matchMedia!=='function'||!matchMedia(VERTICAL_TICKER_QUERY).matches)return;
+  attachVerticalTicker(track,{intervalMs:6000,rowSelector:':scope > .product-card',useRowOffsets:true});
+}
 function resultRow(cards,title,note,rowKind){
   if(!cards.length)return null;
   const row=document.createElement('section');
@@ -1010,16 +1016,13 @@ function resultRow(cards,title,note,rowKind){
   const heading=document.createElement('div');
   heading.className='result-row-heading';
   heading.append(textElement('h3','result-row-title',title),textElement('span','result-row-count',String(cards.length)));
-  const listed=rowKind==='confirmed'?cards.slice(0,CONFIRMED_LIST_LIMIT):cards;
-  const overflow=rowKind==='confirmed'?cards.slice(CONFIRMED_LIST_LIMIT):[];
-  row.append(heading,textElement('p','result-row-note',note),resultCarousel(listed,rowKind));
-  if(overflow.length){
-    const more=document.createElement('div');
-    more.className='result-row result-row-recommended result-row-overflow';
-    more.dataset.row='confirmed-more';
-    const label=(confirmedOverflowCopy[elements.language.value]||confirmedOverflowCopy.JA)(overflow.length);
-    more.append(textElement('h4','result-row-overflow-title',label),resultCarousel(overflow,'recommended'));
-    row.append(more);
+  const carousel=resultCarousel(cards,rowKind);
+  row.append(heading,textElement('p','result-row-note',note),carousel);
+  if(rowKind==='confirmed'&&cards.length>1){
+    const track=carousel.querySelector(':scope > .result-track');
+    track.classList.add('result-track-vertical-ticker');
+    // 描画が終わって高さが決まってから回転を始める（描画前に付けると1枚目の高さが0で止まる）。
+    setTimeout(()=>attachConfirmedTicker(track),300);
   }
   return row;
 }

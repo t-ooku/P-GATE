@@ -2,24 +2,26 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-test('確認済み商品の縦一覧は10件まで、11件目以降は横スワイプの回転スクロールへ', () => {
+test('確認済み商品（最大30件）は縦の回転スクロール、レコメンドだけ横の回転', () => {
   const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(app, /const CONFIRMED_LIST_LIMIT=10;/u);
-  assert.match(app, /cards\.slice\(0,CONFIRMED_LIST_LIMIT\)/u);
-  assert.match(app, /result-row result-row-recommended result-row-overflow/u);
-  assert.match(app, /resultCarousel\(overflow,'recommended'\)/u);
+  assert.match(app, /function attachConfirmedTicker\(track\)/u);
+  assert.match(app, /attachVerticalTicker\(track,\{intervalMs:6000,rowSelector:':scope > \.product-card',useRowOffsets:true\}\)/u);
+  assert.match(app, /result-track-vertical-ticker/u);
+  assert.doesNotMatch(app, /CONFIRMED_LIST_LIMIT|result-row-overflow/u);
   assert.equal(app, readFileSync(new URL('../public/assets-v147/app.js', import.meta.url), 'utf8'));
   const css = readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8');
-  assert.match(css, /\.result-row-overflow\{/u);
+  assert.match(css, /\.result-row-confirmed \.result-track\.result-track-vertical-ticker\{max-height:min\(82vh,760px\);overflow-y:auto/u);
 });
 
-test('口コミ（Experience）はカード末尾の全幅に置き、見出し行に投稿ボタンをまとめる', () => {
+test('カードは「ホシっとく」→「AI最安比較」、購入希望価格ウォッチは口コミの上に横一面、口コミの見出しは改行しない', () => {
+  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.match(app, /if\(priceComparisonButton\)mediaActions\.append\(priceComparisonButton\);\s*watch\.bell\.classList\.add\('watch-full-row'\);\s*card\.append\(watch\.bell\);/u);
+  assert.doesNotMatch(app, /mediaActions\.append\(watch\.bell\)/u);
   const client = readFileSync(new URL('../public/experience-layer.mjs', import.meta.url), 'utf8');
   assert.match(client, /title: '口コミ'/u);
-  assert.match(client, /post: '口コミを投稿する'/u);
   assert.match(client, /card\.append\(block\)/u);
-  assert.doesNotMatch(client, /anchor\.before\(block\)/u);
   const css = readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8');
-  assert.match(css, /\.result-track>\.product-card>\.experience-block\{grid-column:1 \/ -1/u);
-  assert.match(readFileSync(new URL('../public/index.html', import.meta.url), 'utf8'), /experience-layer\.mjs\?v=2/u);
+  assert.match(css, /\.result-track>\.product-card>\.watch-full-row\{grid-column:1 \/ -1/u);
+  assert.match(css, /\.experience-head strong\{[^}]*white-space:nowrap/u);
+  assert.match(readFileSync(new URL('../public/index.html', import.meta.url), 'utf8'), /experience-layer\.css\?v=5/u);
 });

@@ -38,7 +38,8 @@ test('商品画像はタップで横スワイプ式の拡大ギャラリーを�
   assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.match(css, /grid-template-columns:minmax\(126px,40%\) minmax\(0,1fr\)/);
   assert.match(css, /\.result-track>\.product-card \.price-offer b\{[^}]*color:#c90000/);
-  assert.match(app, /mediaActions\.append\(watch\.bell\)/);
+  // 2026-09-04 大隆さん指示: 購入希望価格ウォッチは画像下ではなくカード下部（口コミの上）の横一面
+  assert.match(app, /card\.append\(watch\.bell\)/);
   assert.match(app, /mediaActions\.append\(priceComparisonButton\)/);
   assert.match(css, /\.product-card-media-actions/);
   assert.match(css, /\.watch-settings-button/);
