@@ -3,7 +3,9 @@
 // evaluation/teacher-dataset のバッチ JSON を生成する（規則と教師データを1つの元から作り、
 // ずれないようにする）。
 //
-// 使い方: node scripts/build-feature-teacher-batch.mjs 2026-09-05 019
+// 使い方: node scripts/build-feature-teacher-batch.mjs [YYYY-MM-DD] [NNN]
+// 既定は 2026-09-05 / 019 に固定（.github/workflows/compile-teacher-dataset-rules.yml が
+// 規則の push ごとに同じファイルを再生成・上書きしてコミットするため、日付を動かさない）。
 import { writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,8 +13,9 @@ import { FEATURE_EXPANSION_RULES } from '../src/query-expansion-feature-rules.mj
 import { validateTeacherDatasetBatch } from '../src/search-quality/teacher-dataset-ingest.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const date = process.argv[2] || new Date().toISOString().slice(0, 10);
-const serial = String(process.argv[3] || '019').padStart(3, '0');
+export const FEATURE_TEACHER_BATCH = Object.freeze({ date: '2026-09-05', serial: '019' });
+const date = process.argv[2] || FEATURE_TEACHER_BATCH.date;
+const serial = String(process.argv[3] || FEATURE_TEACHER_BATCH.serial).padStart(3, '0');
 
 export function buildFeatureTeacherEntries(rules = FEATURE_EXPANSION_RULES, authoredDate = date) {
   const entries = [];
