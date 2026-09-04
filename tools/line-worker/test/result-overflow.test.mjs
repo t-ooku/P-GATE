@@ -23,5 +23,8 @@ test('カードは「ホシっとく」→「AI最安比較」、購入希望価
   const css = readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8');
   assert.match(css, /\.result-track>\.product-card>\.watch-full-row\{grid-column:1 \/ -1/u);
   assert.match(css, /\.experience-head strong\{[^}]*white-space:nowrap/u);
-  assert.match(readFileSync(new URL('../public/index.html', import.meta.url), 'utf8'), /experience-layer\.css\?v=7/u);
+  // 2026-09-04 大隆さん指示: 「この価格になったら教えて」が一番目立つ（グラデーション）、AI最安比較は控えめ
+  assert.match(css, /\.watch-full-row\.watch-settings-button\{[^}]*background:linear-gradient/u);
+  assert.match(css, /\.result-row \.result-track>\.product-card \.product-card-media-actions \.ai-price-compare-button\{[^}]*background:#fff/u);
+  assert.match(readFileSync(new URL('../public/index.html', import.meta.url), 'utf8'), /experience-layer\.css\?v=8/u);
 });

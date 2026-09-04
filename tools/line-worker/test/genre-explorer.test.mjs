@@ -10,7 +10,7 @@ test('トップは §52 の並び: 検索 → 結果 → 主要モール → ジ
   const positions = order.map((marker) => { const index = html.indexOf(marker); assert.notEqual(index, -1, marker); return index; });
   for (let i = 1; i < positions.length; i += 1) assert.ok(positions[i - 1] < positions[i], `${order[i - 1]} before ${order[i]}`);
   assert.match(html, /<script type="module" src="\/genre-explorer\.mjs\?v=1"><\/script>/u);
-  assert.match(html, /experience-layer\.css\?v=7/u);
+  assert.match(html, /experience-layer\.css\?v=8/u);
   assert.match(html, /id="genreBreadcrumb"/u);
   assert.match(html, /id="popularRankingButton"/u);
 });

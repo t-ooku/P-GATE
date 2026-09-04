@@ -63,3 +63,21 @@
 
 /* 2026-09-04 大隆さん指示: トップ副文言は「希望価格になったら」から改行（言語切替の \n も改行として出す） */
 .hero-sub{white-space:pre-line}
+
+/* 2026-09-04 大隆さん指示: 「この価格になったら教えて」を一番目立たせる（AI最安比較とデザインを交換） */
+.result-track>.product-card>.watch-full-row.watch-settings-button{
+  min-height:48px;padding:10px 14px;border:0;border-radius:14px;
+  background:linear-gradient(90deg,#ff2d9b 0%,#7b3dff 55%,#12b3ff 100%);
+  color:#fff;font-size:clamp(13px,3.9vw,16px);font-weight:900;letter-spacing:.01em;
+  box-shadow:0 8px 22px rgba(123,61,255,.28);text-shadow:0 1px 2px rgba(0,0,0,.18);
+  position:relative;overflow:hidden
+}
+.result-track>.product-card>.watch-full-row.watch-settings-button::after{
+  content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 55%);pointer-events:none
+}
+.result-track>.product-card>.watch-full-row.watch-settings-button:hover,
+.result-track>.product-card>.watch-full-row.watch-settings-button:focus-visible{filter:brightness(1.06);outline:3px solid #23b8ff;outline-offset:2px}
+.result-row .result-track>.product-card .product-card-media-actions .ai-price-compare-button{
+  border:1px solid #8b7cf2;background:#fff;color:#5140ba;font-weight:700;border-radius:8px;box-shadow:none
+}
+

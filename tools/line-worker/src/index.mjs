@@ -1266,6 +1266,17 @@ export function buildRakutenSearchKeywords(query) {
 // sokomo そこまで洗えるボトル」）も、この後の組み立てで「水筒」1語まで削られていた。
 // AI 変換があった検索（query と fallbackQuery が異なる）では、AI の短い検索語を
 // そのまま第1候補にする。長すぎる文・句読点混じりは対象外（AND 検索で0件になるだけ）。
+export function dedupeQueryTokens(query) {
+  const seen = new Set();
+  return String(query || '').split(/\s+/u).filter((token) => {
+    if (!token) return false;
+    const key = token.normalize('NFKC').toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).join(' ');
+}
+
 export function verbatimRefinedQueryCandidate(query, fallbackQuery = '') {
   const refined = stripSentencePunctuation(redactSearchPersonalData(query)).replace(/\s+/gu, ' ').trim();
   const original = String(fallbackQuery || '').normalize('NFKC').replace(/\s+/gu, ' ').trim();
@@ -2506,7 +2517,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       ? redactSearchPersonalData(aiRefinement.refined_query).replace(/\s+/gu, ' ').trim().slice(0, 200) : '';
     const aiExpandedQuery = expandSearchQuery(aiRefinedQuery || originalQuery);
     const queryWasAiRefined = aiExpandedQuery.query !== expandedQuery.query;
-    input = { ...input, query: queryWasAiRefined ? aiExpandedQuery.query : expandedQuery.query };
+    // 2026-09-04 大隆さん実機報告: 検索窓に「そこまで洗えるボトル 水筒 底が外せる 水筒 洗いやすい」の
+    // ように同じ語が重複して出ていた（展開の正式名詞＋AI変換語の連結）。重複語は落として渡す。
+    input = { ...input, query: dedupeQueryTokens(queryWasAiRefined ? aiExpandedQuery.query : expandedQuery.query) };
     const gasResult = gasOutcome.status === 'fulfilled' ? gasOutcome.value : { candidates: [], message: '' };
     let result = indexedOutcome.status === 'fulfilled' ? indexedOutcome.value : gasResult;
     if (indexedOutcome.status === 'fulfilled' && (gasResult?.candidates || []).length) {

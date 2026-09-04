@@ -91,3 +91,22 @@ test('AI が直した短い検索語は、そのまま楽天/Yahoo の候補に�
   assert.equal(verbatimRefinedQueryCandidate('底が取り外せて分解して丸洗いできる真空断熱のステンレス製の大容量の水筒 1リットル 子ども用', '底開口 水筒'), '');
   assert.equal(verbatimRefinedQueryCandidate('底が外せる水筒、ありますか？', '底開口 水筒'), '');
 });
+
+// 2026-09-04 大隆さん実機報告②: 「底開口 水筒」で、検索窓が「そこまで洗えるボトル 水筒 底が外せる 水筒 洗いやすい」
+// と語が重複し、NO.1 が底の外せない普通の水筒（moz）だった。
+test('検索窓へ返す検索語は重複語を落とし、展開規則の語に一致する商品を先に並べる', async () => {
+  const { dedupeQueryTokens } = await import('../src/index.mjs');
+  const { rankMerchantCandidates, expansionMatchScore } = await import('../src/knowledge-search.mjs');
+  assert.equal(dedupeQueryTokens('そこまで洗えるボトル 水筒 底が外せる 水筒 洗いやすい'), 'そこまで洗えるボトル 水筒 底が外せる 洗いやすい');
+  assert.equal(dedupeQueryTokens('水筒 500ml'), '水筒 500ml');
+  const query = 'そこまで洗えるボトル 水筒 底が外せる 洗いやすい';
+  const moz = candidate('MOZ', 'moz マグボトル 500ml ステンレスボトル ハンドル付き 送料無料');
+  const sokomo = candidate('SOKOMO', '【そこまで洗えるボトル】ドウシシャ 水筒 底が取り外せる 1.0L');
+  const gorilla = candidate('GORILLA', 'ゴリラの底ヂカラ 水筒 ステンレス');
+  assert.equal(expansionMatchScore(query, sokomo), 1);
+  assert.equal(expansionMatchScore(query, gorilla), 0.8);
+  assert.equal(expansionMatchScore(query, moz), 0);
+  assert.equal(expansionMatchScore('水筒 500ml', sokomo), 0);
+  const ranked = rankMerchantCandidates([moz, gorilla, sokomo], [], query);
+  assert.deepEqual(ranked.map((item) => item.asin), ['SOKOMO', 'GORILLA', 'MOZ']);
+});

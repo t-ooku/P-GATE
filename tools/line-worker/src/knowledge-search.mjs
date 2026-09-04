@@ -2,6 +2,7 @@ import { searchProductsAcrossTenantsWithDecision } from './product-index-v2.mjs'
 import { inferCandidateCategory, requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
 import { scoreApparelAttributeMatch } from './apparel-query-attributes.mjs';
 import { lookupTeacherDatasetEntry } from './search-quality/teacher-dataset-lookup.mjs';
+import { QUERY_EXPANSION_WEIGHTS, findExpansionRule } from './query-expansion.mjs';
 
 const COPY = {
   JA: {
@@ -3051,6 +3052,24 @@ function candidateMinPrice(candidate) {
 // apparelRelevanceScore's ②category component - this checks the specific
 // GPT/human-authored vocabulary (evaluation/teacher-dataset/*.json), not the
 // general ~150-category RULES classifier.
+// 2026-09-04 大隆さん実機報告（「底開口 水筒」で moz の普通の水筒が NO.1）: 展開規則が
+// 当たった検索では、規則の語（正式名詞・同義語・関連語）や規則の正規表現そのものに
+// 商品名が一致する候補を先に出す。一致しない候補は従来どおりの順序（0点）。
+export function expansionMatchScore(query, candidate) {
+  const rule = query ? findExpansionRule(query) : null;
+  if (!rule) return 0;
+  const text = `${candidate?.product_name || ''} ${candidate?.manufacturer || ''} ${candidate?.summary || ''}`
+    .normalize('NFKC').toLowerCase();
+  if (!text.trim()) return 0;
+  const tokensPresent = (phrase) => String(phrase || '').normalize('NFKC').toLowerCase().split(/\s+/u)
+    .filter(Boolean).every((token) => text.includes(token));
+  if (rule.match.test(text) || tokensPresent(rule.primary)) return QUERY_EXPANSION_WEIGHTS.primary;
+  if ((rule.synonyms || []).some(tokensPresent)) return QUERY_EXPANSION_WEIGHTS.synonym;
+  if ((rule.related || []).some((phrase) => String(phrase || '').normalize('NFKC').toLowerCase().split(/\s+/u)
+    .filter((token) => token.length >= 3).some((token) => text.includes(token)))) return QUERY_EXPANSION_WEIGHTS.related;
+  return 0;
+}
+
 function teacherDatasetMatchScore(query, candidate) {
   const entry = query ? lookupTeacherDatasetEntry(query) : null;
   if (!entry) return 0;
@@ -3109,12 +3128,14 @@ export function rankMerchantCandidates(baseCandidates = [], indexedCandidates = 
       candidate,
       position,
       score: relevanceScore(candidate),
-      teacherMatch: teacherDatasetMatchScore(query, candidate)
+      teacherMatch: teacherDatasetMatchScore(query, candidate),
+      expansionMatch: expansionMatchScore(query, candidate)
     }))
     .filter(({ score }) => !apparelDomainRequested || score.breakdown.category > 0)
     .sort((left, right) =>
       (right.score.breakdown.category - left.score.breakdown.category) ||          // ②カテゴリ一致
       (right.teacherMatch - left.teacherMatch) ||                                  // ③Teacher Dataset一致
+      (right.expansionMatch - left.expansionMatch) ||                              // ③' 展開規則の語への一致（底が外せる水筒 等）
       (Number(hasMerchantOffer(right.candidate)) - Number(hasMerchantOffer(left.candidate))) || // ④商品品質(購入可否)
       ((right.score.total - right.score.breakdown.category) - (left.score.total - left.score.breakdown.category)) || // ④品質(属性一致度の残り)
       0 ||                                                                         // ⑤スポンサー補正(ライブデータなし、no-op)
