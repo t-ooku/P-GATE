@@ -74,3 +74,20 @@ test('底開口 水筒 は「そこまで洗えるボトル 水筒」へ展開�
   ]);
   assert.ok(results.some((item) => item.asin === 'SOKOMO'));
 });
+
+// 2026-09-04 大隆さん実機報告（続き）: AI が「底開口 水筒」を「ドウシシャ sokomo そこまで洗えるボトル 水筒」
+// へ直しても、その後の組み立てで「水筒」1語まで削られ AI 変換が無駄になっていた。
+test('AI が直した短い検索語は、そのまま楽天/Yahoo の候補に残る', async () => {
+  const { verbatimRefinedQueryCandidate, buildRakutenSearchKeywordCandidates, buildMarketplaceApiKeywordCandidates } = await import('../src/index.mjs');
+  const refined = 'ドウシシャ sokomo そこまで洗えるボトル 水筒';
+  assert.equal(verbatimRefinedQueryCandidate(refined, '底開口 水筒'), refined);
+  assert.ok(buildRakutenSearchKeywordCandidates(refined, '底開口 水筒').includes(refined));
+  assert.ok(buildMarketplaceApiKeywordCandidates(refined, '水筒', '水筒', '底開口 水筒').includes(refined));
+  // 一般語「水筒」は後段の候補として残る
+  assert.ok(buildRakutenSearchKeywordCandidates(refined, '底開口 水筒').includes('水筒'));
+  // AI 変換が無い（元の語と同じ）／長文／句読点入りは対象外
+  assert.equal(verbatimRefinedQueryCandidate('水筒 500ml', '水筒 500ml'), '');
+  assert.equal(verbatimRefinedQueryCandidate('水筒 500ml', ''), '');
+  assert.equal(verbatimRefinedQueryCandidate('底が取り外せて分解して丸洗いできる真空断熱のステンレス製の大容量の水筒 1リットル 子ども用', '底開口 水筒'), '');
+  assert.equal(verbatimRefinedQueryCandidate('底が外せる水筒、ありますか？', '底開口 水筒'), '');
+});

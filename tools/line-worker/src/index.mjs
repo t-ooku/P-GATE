@@ -1262,11 +1262,28 @@ export function buildRakutenSearchKeywords(query) {
   return missingPriceConstraint ? `${rakutenKeywords} ${missingPriceConstraint}` : rakutenKeywords;
 }
 
+// 2026-09-04 大隆さん実機報告（「底開口 水筒」）: AI が検索語へ直した結果（例「ドウシシャ
+// sokomo そこまで洗えるボトル」）も、この後の組み立てで「水筒」1語まで削られていた。
+// AI 変換があった検索（query と fallbackQuery が異なる）では、AI の短い検索語を
+// そのまま第1候補にする。長すぎる文・句読点混じりは対象外（AND 検索で0件になるだけ）。
+export function verbatimRefinedQueryCandidate(query, fallbackQuery = '') {
+  const refined = stripSentencePunctuation(redactSearchPersonalData(query)).replace(/\s+/gu, ' ').trim();
+  const original = String(fallbackQuery || '').normalize('NFKC').replace(/\s+/gu, ' ').trim();
+  if (!refined || !original || refined === original) return '';
+  if (lookupTeacherDatasetEntry(query)) return '';
+  const tokens = refined.split(' ');
+  if (tokens.length > 6 || refined.length > 40) return '';
+  // 文（句読点・「ありますか」「ください」等）はそのまま渡さない（AND 検索で0件になるだけ）。
+  if (/[。、！？!?]/u.test(String(query || '')) || /(ですか|ますか|ください|下さい|欲しい|ほしい|探して|教えて)$/u.test(refined)) return '';
+  return refined;
+}
+
 export function buildRakutenSearchKeywordCandidates(query, fallbackQuery = '') {
   // 2026-09-04 大隆さん実機報告（「底開口 水筒」→ 楽天へは「水筒」だけが渡っていた）:
   // query-expansion の正式名詞（例「そこまで洗えるボトル 水筒」）を第1候補にし、
   // 語を削った一般語は従来どおり後ろの候補に残す。
   const expansionPrimary = findExpansionRule(query)?.marketplaceKeywords || findExpansionRule(fallbackQuery)?.marketplaceKeywords || '';
+  const verbatimRefined = verbatimRefinedQueryCandidate(query, fallbackQuery);
   const primary = buildRakutenSearchKeywords(query);
   const rememberedProduct = buildRakutenSearchKeywords(
     String(query || '').split('/')[0]
@@ -1290,7 +1307,7 @@ export function buildRakutenSearchKeywordCandidates(query, fallbackQuery = '') {
   // 再検索は最大3回に抑えつつ、AI変換語・AIが見つけた識別子の次に
   // 必ずAI前の検索条件へ到達できる順序にする。従来の商品語フォールバックは
   // AI変換が無い検索ではこれまでどおり第2候補に残る。
-  return [...new Set([expansionPrimary, primary, identifier, fallback, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
+  return [...new Set([expansionPrimary, verbatimRefined, primary, identifier, fallback, rememberedProduct, broadProduct].filter(Boolean))].slice(0, 3);
 }
 
 // "条件整理検索" (organized-conditions) candidate: for apparel-body queries,
@@ -1311,12 +1328,13 @@ function organizedApparelCandidate(query) {
   return buildOrganizedApparelQuery(query, { categoryLabel, colorLabel });
 }
 
-export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = '', fallbackKeywords = '') {
-  const rakutenCandidates = buildRakutenSearchKeywordCandidates(query);
+export function buildMarketplaceApiKeywordCandidates(query, primaryKeywords = '', fallbackKeywords = '', originalQuery = '') {
+  const rakutenCandidates = buildRakutenSearchKeywordCandidates(query, originalQuery);
+  const verbatimRefined = verbatimRefinedQueryCandidate(query, originalQuery);
   const organized = organizedApparelCandidate(query);
   const identifier = String(query || '').normalize('NFKC').match(/\b[A-Za-z][A-Za-z0-9-]{2,}\b/u)?.[0] || '';
   const expansionPrimary = findExpansionRule(query)?.marketplaceKeywords || '';
-  return [...new Set([expansionPrimary, primaryKeywords, organized, identifier, fallbackKeywords, ...rakutenCandidates].map((value) =>
+  return [...new Set([expansionPrimary, verbatimRefined, primaryKeywords, organized, identifier, fallbackKeywords, ...rakutenCandidates].map((value) =>
     String(value || '').normalize('NFKC').trim()).filter(Boolean))].slice(0, 5);
 }
 
@@ -2597,7 +2615,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
             ensureApparelQualifierTerms(
               expandedQuery.query,
               ensureApparelProductTypeTerm(expandedQuery.query, buildMarketplaceSearchKeywords(expandedQuery.query))
-            )
+            ),
+            expandedQuery.query
           ),
           input.query,
           expandedQuery.query
