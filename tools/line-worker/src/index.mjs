@@ -50,6 +50,8 @@ import {
   priceComparisonConfigured, requestAiCandidatePriceEstimates, requestAiPriceEstimates
 } from './ai-price-comparison.mjs';
 import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
+import { handleSellerBillingAdminRoutes, handleStripeWebhook, sellerBillingReadiness, settleQualifiedClickCharge } from './seller-billing.mjs';
+import { referralCategoryFor } from './seller-referral-category.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
@@ -1006,6 +1008,9 @@ async function handleRedirect(request, env, ctx) {
     // 記録する。失敗してもリダイレクト自体は絶対に止めない(下のrecord
     // OutboundCommerceEvent内部で例外を握りつぶす設計)。
     ctx.waitUntil(recordOutboundCommerceEvent(env, payload, occurredAt));
+    // 2026-09-04 前払い送客料: 優先出品(sp)・セラーID付きの有効クリックだけ、
+    // ジャンル単価を無料枠→前払い残高の順に消化する。失敗してもリダイレクトは止めない。
+    ctx.waitUntil(settleQualifiedClickCharge(env, payload, occurredAt));
     // Amazonはタグ付与、バリューコマース提携モール(Yahoo!・Qoo10等)は
     // referral URLで包む。対象ドメインが重ならないため合成しても安全で、
     // どちらにも該当しないリンクは素通りする。
@@ -1608,6 +1613,11 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
   const candidates = [];
   const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT);
   const priorityContext = await sellerPriorityContext(env, displayCandidates);
+  const demandCategory = semanticSearchGroups(query)
+    .map((group) => group.category)
+    .find((category) => category && category !== 'color') || 'unclassified';
+  // 送客料のジャンル（/for-sellers の価格表と同じ11区分）。トークンに入れて /go で単価を決める。
+  const referralCategory = referralCategoryFor(demandCategory, query);
   for (const candidate of displayCandidates) {
     const copy = sanitizePublicCandidate(candidate);
     const productOffers = productMarketplaceOffers(
@@ -1624,7 +1634,8 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
         j: `${seed}:${candidate.asin}:${offer.marketplace || offerIndex}`, c: 'PWA',
         m: offer.marketplace || marketplaceForDestination(offer.product_url),
         sid: offer.seller_id || '', hpid: candidate.hoshilu_product_id || '',
-        sp: offer.priority_listing === true, so: 'HOSHILU'
+        sp: offer.priority_listing === true, so: 'HOSHILU',
+        tn: offer.tenant || '', rc: referralCategory
       }, env.LINK_SIGNING_SECRET);
       publicOffer.tracking_url = `${origin}/go?token=${encodeURIComponent(offerToken)}`;
       copy.offers.push(publicOffer);
@@ -1656,15 +1667,13 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
         j: `${seed}:${candidate.asin}`, c: 'PWA',
         m: selected.offer?.marketplace || marketplaceForDestination(destination),
         sid: selected.offer?.seller_id || '', hpid: candidate.hoshilu_product_id || '',
-        sp: selected.offer?.priority_listing === true, so: 'HOSHILU'
+        sp: selected.offer?.priority_listing === true, so: 'HOSHILU',
+        tn: selected.offer?.tenant || '', rc: referralCategory
       }, env.LINK_SIGNING_SECRET);
       copy.tracking_url = `${origin}/go?token=${encodeURIComponent(token)}`;
     }
     candidates.push(copy);
   }
-  const demandCategory = semanticSearchGroups(query)
-    .map((group) => group.category)
-    .find((category) => category && category !== 'color') || 'unclassified';
   const marketplaceSearchLinks = await signedMarketplaceSearchLinks(query, {
     env, origin, sessionHash, seed, category: demandCategory,
     trafficClass: result.traffic_class || 'UNATTRIBUTED',
@@ -3039,7 +3048,8 @@ async function handleHealth(env) {
       social_publishers: await socialPublisherReadinessWithStoredCredentials(env),
       instagram_oauth: instagramOAuth,
       x_oauth: xOAuth,
-      runway_video_generation: runwayGenerationReadiness(env)
+      runway_video_generation: runwayGenerationReadiness(env),
+      seller_billing: sellerBillingReadiness(env)
     }
   }, {
     status: readiness.ready ? 200 : 503,
@@ -3115,6 +3125,10 @@ export default {
     if (productIdentifierSyncResponse) return productIdentifierSyncResponse;
     const runwayGenerationResponse = await handleRunwayGenerationRoutes(request, env);
     if (runwayGenerationResponse) return runwayGenerationResponse;
+    // 2026-09-04 Stripe Webhook（署名検証・冪等）と、請求アカウントの管理API。
+    if (request.method === 'POST' && url.pathname === '/api/stripe/webhook') return handleStripeWebhook(request, env);
+    const sellerBillingAdminResponse = await handleSellerBillingAdminRoutes(request, env, authorizeAdminRequest);
+    if (sellerBillingAdminResponse) return sellerBillingAdminResponse;
     // 検索品質カナリアの手動実行(管理者のみ)。cron と同じ固定クエリを本番経路で
     // 流し、QA記録を残して結果を返す。利用者入力は受け付けない。
     if (request.method === 'POST' && url.pathname === '/api/internal/search/qa-canary') {

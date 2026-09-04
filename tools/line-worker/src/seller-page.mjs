@@ -481,11 +481,32 @@ export async function sellerPageResponse(
   <article class="seller-panel"><span>公式アカウント</span><strong>${lineMessagingReady ? '接続済み' : '未接続'}</strong><span>通知の送信や受信メッセージへの応答に使うWebhookとアクセストークンの接続状態です。</span></article>
   </div></section>
 
+  <section class="auth-card" id="billing"><p class="eyebrow">PREPAID BILLING</p><h2>前払い残高とお支払い</h2>
+  <p>料金はすべて前払いです。有効クリックはジャンル単価を無料枠→前払い残高の順に消化し、残高が0円になると優先出品は自動で止まります（請求は発生しません）。</p>
+  <div id="sellerBillingStatus" class="operation-status" role="status" aria-live="polite"></div>
+  <div class="seller-grid metric-grid" id="sellerBillingSummary">
+    <article class="seller-panel"><span>利用可能残高</span><strong data-billing="available">…</strong><span data-billing="wallet-note">読み込み中</span></article>
+    <article class="seller-panel"><span>今月の無料枠（Business）</span><strong data-billing="allowance">…</strong><span data-billing="allowance-note">Businessは毎月5,000円分まで0円</span></article>
+    <article class="seller-panel"><span>月額プラン</span><strong data-billing="plan">…</strong><span data-billing="plan-note"></span></article>
+  </div>
+  <div class="priority-actions" id="sellerBillingActions">
+    <div class="topup-row">
+      <label>チャージ額 <select id="sellerTopupAmount">
+        <option value="5000">5,000円</option><option value="10000" selected>10,000円</option>
+        <option value="30000">30,000円</option><option value="50000">50,000円</option></select></label>
+      <button type="button" class="primary-button" data-billing-action="topup">前払いチャージへ進む</button>
+    </div>
+    <button type="button" class="ghost-button" data-billing-action="subscribe" hidden>Business 月額のお支払い方法を登録</button>
+    <button type="button" class="ghost-button" data-billing-action="portal">お支払い方法・領収書・請求書</button>
+    <label class="auto-recharge"><input type="checkbox" id="sellerAutoRecharge"> 残高が <span data-billing="threshold">2,000</span>円を下回ったら保存済みカードへ自動チャージ（<span data-billing="auto-amount">10,000</span>円）</label>
+  </div>
+  <p class="data-note">チャージはカードまたは銀行振込（Stripe が専用の振込先を発行し、入金を自動で照合します）。残高の増減は<a href="/api/seller/billing/ledger">台帳</a>で確認できます。</p></section>
+
   <section class="auth-card" id="plan"><p class="eyebrow">SELLER PLAN</p><h2>契約プラン</h2>
   <p>現在のプラン: <strong>${publicPlan}</strong>。有料契約によって商品そのものの検索順位は変わりません。</p>
   <div class="seller-grid">
-    <article class="seller-panel"><span>Seller</span><strong>月額0円</strong><span>自然検索への商品掲載、優先出品の対象指定、クリック・流入・消化額の確認を扱う基本プランです。前払いチャージは決済機能の接続後に利用可能になり、優先出品クリックの成果課金は月額とは別です。</span></article>
-    <article class="seller-panel"><span>Business</span><strong>月額9,800円</strong><span>1事業者アカウント単位。Seller機能に加え、商品・流入・未充足需要の分析とSearch API月10,000回を利用できます。初期費用・解約金は0円です。</span></article>
+    <article class="seller-panel"><span>無料プラン</span><strong>月額0円</strong><span>自然検索への商品掲載と優先出品の対象指定。有効クリックはジャンル定価を前払い残高から消化します。ショップページはありません。</span></article>
+    <article class="seller-panel"><span>Business</span><strong>月額9,800円</strong><span>登録後3か月は月額0円。有効クリックは定価の50%、毎月5,000円分まで0円（1か月目から・4か月目以降も）。1事業者アカウント単位、初期費用・解約金0円。</span></article>
   </div>
   <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たしたジャンル別単価の有効クリックだけです。<a href="/for-sellers#pricing">料金を確認</a></p></section>
   </main><script type="module" src="/seller.js"></script></body></html>`;

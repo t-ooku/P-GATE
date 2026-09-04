@@ -1,4 +1,5 @@
 import { sellerPageResponse } from './seller-page.mjs';
+import { handleSellerBillingRoutes } from './seller-billing.mjs';
 import { spApiSellerPageResponse } from './sp-api-seller-page.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import {
@@ -248,6 +249,14 @@ export async function handleSellerRoutes(request, env) {
   }
   if (request.method === 'POST' && url.pathname === '/api/seller/priority-rules') {
     return handlePriorityMutation(request, env);
+  }
+  // 2026-09-04 請求・決済（前払い）: 残高・チャージ・月額・自動チャージ。
+  if (url.pathname.startsWith('/api/seller/billing')) {
+    if (request.method !== 'GET' && request.headers.get('origin') !== url.origin) {
+      return sellerJson({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+    }
+    const seller = await readSellerSession(request, env);
+    return handleSellerBillingRoutes(request, env, seller);
   }
   if (request.method === 'GET' && (url.pathname === '/seller' || url.pathname === '/seller.html')) {
     const seller = await readSellerSession(request, env);

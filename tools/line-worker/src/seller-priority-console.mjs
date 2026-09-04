@@ -3,6 +3,9 @@ const ALLOWED_SCOPES = new Set([
 ]);
 const TEXT_SCOPES = new Set(['CATEGORY', 'BRAND', 'MANUFACTURER']);
 
+function jstMonthKey(date = new Date()) {
+  return new Date(date.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 7);
+}
 function clean(value, limit = 120) {
   return String(value || '').normalize('NFKC').replace(/\s+/gu, ' ').trim().slice(0, limit);
 }
@@ -193,14 +196,21 @@ export async function sellerPriorityContext(env, candidates = []) {
     for (let offset = 0; offset < sellerIds.length; offset += 50) {
       const batch = sellerIds.slice(offset, offset + 50);
       const placeholders = batch.map((_, index) => `?${index + 1}`).join(',');
+      // 2026-09-04 前払い: Business は毎月5,000円分の無料枠があるので、残高0でも
+      // 枠が残っていれば優先出品を続ける。無料プランは残高>0 のときだけ。
+      const monthPlaceholder = `?${batch.length + 1}`;
       const result = await env.PRODUCT_DB.prepare(`SELECT m.tenant,m.seller_id,r.scope_type,
         r.scope_value,r.priority_started_at,w.status AS wallet_status,
-        COALESCE(w.balance_micros_jpy,0)-COALESCE(w.reserved_micros_jpy,0) AS available_micros_jpy
+        COALESCE(w.balance_micros_jpy,0)-COALESCE(w.reserved_micros_jpy,0) AS available_micros_jpy,
+        CASE WHEN a.plan='BUSINESS' AND a.status='ACTIVE'
+          THEN COALESCE(al.granted_micros_jpy,5000000000)-COALESCE(al.consumed_micros_jpy,0) ELSE 0 END AS allowance_remaining_micros_jpy
         FROM seller_priority_memberships m
         JOIN seller_priority_rules r ON r.seller_key=m.seller_key AND r.tenant=m.tenant AND r.active=1
         LEFT JOIN seller_billing_wallets w ON w.seller_key=m.seller_key
+        LEFT JOIN seller_billing_accounts a ON a.seller_key=m.seller_key
+        LEFT JOIN seller_billing_allowance_months al ON al.seller_key=m.seller_key AND al.month=${monthPlaceholder}
         WHERE m.seller_id IN (${placeholders})
-        ORDER BY r.priority_started_at,r.rule_id`).bind(...batch).all();
+        ORDER BY r.priority_started_at,r.rule_id`).bind(...batch, jstMonthKey()).all();
       for (const row of result.results || []) {
         const key = `${clean(row.tenant, 32).toLowerCase()}\n${clean(row.seller_id, 160)}`;
         if (!context.has(key)) context.set(key, []);
@@ -225,7 +235,8 @@ export function applySellerPriority(candidate = {}, offers = [], context = new M
     const rules = exact.length ? exact : fallback;
     if (!rules.length) return offer;
     const walletReady = rules.some((rule) =>
-      rule.wallet_status === 'ACTIVE' && Number(rule.available_micros_jpy || 0) > 0
+      rule.wallet_status === 'ACTIVE'
+        && (Number(rule.available_micros_jpy || 0) > 0 || Number(rule.allowance_remaining_micros_jpy || 0) > 0)
     );
     if (!walletReady) return offer;
     const minimumStock = rules

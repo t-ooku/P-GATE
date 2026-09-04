@@ -19,7 +19,8 @@ function database() {
     '../migrations/0011_marketplace_offers.sql',
     '../migrations/0028_seller_login_guard.sql',
     '../migrations/0043_outbound_commerce_events.sql',
-    '../migrations/0048_seller_priority_console.sql'
+    '../migrations/0048_seller_priority_console.sql',
+    '../migrations/0067_seller_billing_stripe.sql'
   ]) sqlite.exec(readFileSync(new URL(migration, import.meta.url), 'utf8'));
   const wrap = (statement, values = []) => ({
     bind: (...next) => wrap(statement, next),
