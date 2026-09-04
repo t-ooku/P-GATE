@@ -110,3 +110,31 @@ test('検索窓へ返す検索語は重複語を落とし、展開規則の語�
   const ranked = rankMerchantCandidates([moz, gorilla, sokomo], [], query);
   assert.deepEqual(ranked.map((item) => item.asin), ['SOKOMO', 'GORILLA', 'MOZ']);
 });
+
+// 2026-09-05 大隆さん指示: 「底開口 水筒」に限らず、利用者の機能語≠売り手の語の型を大量に用意する。
+test('機能語→売り手の語の展開規則は、規則ごとにモール検索語と順位付けが効き、教師データにも書き出される', async () => {
+  const { FEATURE_EXPANSION_RULES } = await import('../src/query-expansion-feature-rules.mjs');
+  const { buildRakutenSearchKeywordCandidates, buildAmazonSearchKeywords } = await import('../src/index.mjs');
+  const { expansionMatchScore } = await import('../src/knowledge-search.mjs');
+  const { buildFeatureTeacherEntries } = await import('../scripts/build-feature-teacher-batch.mjs');
+  assert.ok(FEATURE_EXPANSION_RULES.length >= 40, `rules: ${FEATURE_EXPANSION_RULES.length}`);
+  for (const rule of FEATURE_EXPANSION_RULES) {
+    assert.ok(rule.match.test(rule.sample), `${rule.id}: sample should match`);
+    assert.ok(rule.teacher.queries.length >= 2, `${rule.id}: teacher queries`);
+    for (const query of rule.teacher.queries) {
+      const expanded = expandSearchQuery(query);
+      assert.equal(expanded.expansion?.rule_id, rule.id, `${rule.id}: ${query}`);
+      assert.equal(buildRakutenSearchKeywordCandidates(expanded.query, expanded.query)[0], rule.marketplaceKeywords, `${rule.id}: rakuten ${query}`);
+      assert.equal(buildAmazonSearchKeywords(expanded.query), rule.marketplaceKeywords, `${rule.id}: amazon ${query}`);
+    }
+    // 売り手の語で書かれた商品名は、規則の語で順位が上がる
+    assert.ok(expansionMatchScore(expandSearchQuery(rule.sample).query, candidate('X', rule.marketplaceKeywords)) >= 0.8, `${rule.id}: ranking`);
+  }
+  const entries = buildFeatureTeacherEntries(FEATURE_EXPANSION_RULES, '2026-09-05');
+  assert.ok(entries.length >= 100, `teacher entries: ${entries.length}`);
+  assert.ok(entries.every((entry) => entry.search_terms.ja.length >= 1 && entry.ideal_answer && entry.category));
+  // 汎用語だけの検索は規則に当たらない（誤爆防止）
+  for (const plain of ['水筒', '弁当箱', 'ハンガー', 'カーテン', 'マスカラ', 'スニーカー', '掃除機', '枕', 'イヤホン', 'リュック']) {
+    assert.equal(expandSearchQuery(plain).expanded, false, plain);
+  }
+});

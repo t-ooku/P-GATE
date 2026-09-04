@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { FEATURE_RULE_SAMPLES } from '../src/query-expansion-feature-rules.mjs';
 import {
   expandSearchQuery,
   findExpansionRule,
@@ -143,7 +144,8 @@ test('各展開ルールはsynonym/related/broadを持つ', () => {
       'garment-steamer': '服のシワ取るやつ',
       'compression-pouch': '旅行で服を小さくするやつ',
       'streaming-device': 'テレビにYouTube映すやつ',
-      'wireless-earphones': '耳につける線ないやつ'
+      'wireless-earphones': '耳につける線ないやつ',
+      ...FEATURE_RULE_SAMPLES
     }[ruleId];
     assert.ok(sample, `sample query missing for rule ${ruleId}`);
     const result = expandSearchQuery(sample);

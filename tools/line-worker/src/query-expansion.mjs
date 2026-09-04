@@ -33,7 +33,9 @@ export const QUERY_EXPANSION_WEIGHTS = Object.freeze({
 // 際は、既存ルールと意図せず重複マッチしないよう、なるべく具体的なフレーズ
 // にすること。「◯◯っぽい」「◯◯系」のようなスタイル修飾だけの語や、既に
 // 正式名詞そのもの（「ワイヤレスイヤホン」等）には反応させない。
-const EXPANSION_RULES = [
+import { FEATURE_EXPANSION_RULES } from './query-expansion-feature-rules.mjs';
+
+const HAND_WRITTEN_RULES = [
   {
     id: 'bottom-removable-bottle',
     // 2026-09-04 大隆さん実機報告: 「底開口 水筒」で底が外せる水筒（ドウシシャ sokomo
@@ -126,6 +128,10 @@ const EXPANSION_RULES = [
     broad: ['オーディオ機器']
   }
 ];
+
+// 2026-09-05: 機能語→売り手の語の規則（query-expansion-feature-rules.mjs）を後ろに足す。
+// 手書き規則が先に評価される（既存の挙動を変えない）。
+const EXPANSION_RULES = [...HAND_WRITTEN_RULES, ...FEATURE_EXPANSION_RULES];
 
 function normalize(value) {
   return String(value || '').normalize('NFKC');
