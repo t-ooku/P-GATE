@@ -747,3 +747,24 @@ test('出品者向け6記事は相談フォームへ落とし、集客効果を�
   const hub = renderSeoPage('/ja/guides');
   assert.match(hub, /<h2>出品者・メーカー向け<\/h2>/);
 });
+
+// 2026-09-04: 直近30日の実数でSEO記事152閲覧(107人)に対し検索導線の利用が0件、
+// 記事中盤の比較セクション到達も19件だった。CTAが記事の約7割地点にしかなく、
+// 大半の読者は見ずに離脱している。結論直後にも ?q= 付きCTAを置き、
+// ?q= 着地の自動検索(#147)へつなぐ。
+test('全記事で結論の直後に ?q= 付きの検索CTAが正確な文言と共に出る', () => {
+  for (const path of seoPagePaths) {
+    const html = renderSeoPage(path);
+    const topCta = html.match(/<section class="answer" id="answer">[\s\S]*?<\/section>\s*<p class="top-cta">([\s\S]*?)<\/p>/)?.[1] || '';
+    assert.ok(topCta, `${path} must place a top CTA right after the answer section`);
+    const query = topCta.match(/href="\/\?q=([^"]+)" data-seo-search-link/)?.[1] || '';
+    assert.ok(query, `${path} top CTA must carry a prefilled ?q=`);
+    assert.ok(decodeURIComponent(query).length <= 200);
+    if (path.startsWith('/ja/')) {
+      assert.match(topCta, /楽天市場とYahoo!ショッピングは候補を表示/);
+      assert.match(topCta, /Amazon・Qoo10などは同じ条件のまま検索先を開けます/);
+    } else {
+      assert.match(topCta, /Shows candidates from Rakuten and Yahoo! Shopping/);
+    }
+  }
+});

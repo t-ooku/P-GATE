@@ -4189,6 +4189,11 @@ export function renderSeoPage(pathname) {
   const isJa = locale === 'ja';
   const searchLabel = isJa ? '探したい商品の条件' : 'Product conditions';
   const submit = isJa ? 'この条件でまとめて探す' : 'Search these conditions with HOSHILU';
+  // 2026-09-04: 直近30日の実数で、SEO記事は152閲覧(107人)に対して検索導線の
+  // 利用(seo_search_transition)が0件、記事中盤の比較セクション到達も19件だった。
+  // 検索CTAが比較セクションの後ろ(記事の約7割地点)にしかなく、大半の読者は
+  // 見ずに離脱している。結論セクションの直後(ファーストビュー圏)にも ?q= 付きの
+  // CTAを置く。?q= 着地は #147 の修正でそのまま検索が実行される。
   const featureEntry = page.featurePath ? `<p class="bottom-cta feature-entry"><a href="${esc(page.featurePath)}" data-seo-feature-link>${esc(page.featureLabel || (isJa ? 'HOSHILUの公開機能を開く' : 'Open the HOSHILU feature'))}</a></p>` : '';
   const labels = isJa ? {
     conclusion: '結論', audience: 'この方法が向く人', criteria: '選ぶ条件と注意点', comparison: '候補を比較するときの見方',
@@ -4211,7 +4216,8 @@ export function renderSeoPage(pathname) {
 <main class="seo-shell"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">HOSHILU</a><span aria-hidden="true">›</span><span>${esc(page.title)}</span></nav>
 <article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDE</p><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p><p class="updated"><time datetime="${page.updatedAt || UPDATED_AT}">${isJa ? '最終更新' : 'Last updated'}: ${page.updatedAt || UPDATED_AT}</time></p></header>
 <nav class="article-toc" aria-label="${labels.toc}"><strong>${labels.toc}</strong><div><a href="#answer">${labels.conclusion}</a><a href="#visual-guide">${labels.visual}</a><a href="#comparison">${labels.comparison}</a><a href="#search-with-hoshilu">${labels.try}</a><a href="#sources">${labels.sources}</a></div></nav>
-<section class="answer" id="answer"><h2>${labels.conclusion}</h2><p>${esc(page.conclusion)}</p></section>${featureEntry}
+<section class="answer" id="answer"><h2>${labels.conclusion}</h2><p>${esc(page.conclusion)}</p></section>
+<p class="top-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a><small>${isJa ? '楽天市場とYahoo!ショッピングは候補を表示。Amazon・Qoo10などは同じ条件のまま検索先を開けます。' : 'Shows candidates from Rakuten and Yahoo! Shopping; opens Amazon, Qoo10 and others with the same query.'}</small></p>${featureEntry}
 <section id="visual-guide"><h2>${labels.visual}</h2>${guideVisual(profile, page, isJa)}</section>
 <section id="audience"><h2>${labels.audience}</h2>${list(page.audience, 'audience-list')}</section>
 <section id="criteria"><h2>${labels.criteria}</h2><dl class="criteria-grid">${page.criteria.map(([term, description]) => `<div><dt>${esc(term)}</dt><dd>${esc(description)}</dd></div>`).join('')}</dl>${page.tips ? list(page.tips, 'check-list') : ''}</section>
