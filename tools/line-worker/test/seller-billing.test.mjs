@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
   adjustBalance, createBillingAccount, creditTopup, getAllowanceForMonth, getBillingAccount, getWallet,
-  handleSellerBillingRoutes, handleStripeWebhook, jstMonthKey, processStripeEvent, sellerBillingReadiness,
-  settleQualifiedClickCharge, trialEndUnix, validTopupAmount
+  handleSellerBillingRoutes, handleStripeWebhook, invoiceSubscriptionId, jstMonthKey, processStripeEvent, sellerBillingReadiness,
+  settleQualifiedClickCharge, subscriptionPeriodEnd, trialEndUnix, validTopupAmount
 } from '../src/seller-billing.mjs';
 import { computeStripeSignature, encodeStripeForm, verifyStripeWebhook } from '../src/stripe-client.mjs';
 import { referralCategoryFor } from '../src/seller-referral-category.mjs';
@@ -260,4 +260,31 @@ test('優先出品は Business の無料枠が残っていれば残高0でも出
   assert.equal(applySellerPriority(candidate, offers, empty)[0].priority_listing, undefined);
   const paused = new Map([['itg\nA', [{ ...rule, wallet_status: 'PAUSED', available_micros_jpy: 9_000_000, allowance_remaining_micros_jpy: 5_000_000_000 }]]]);
   assert.equal(applySellerPriority(candidate, offers, paused)[0].priority_listing, undefined);
+});
+
+// 2026-09-04 Stripe API 2026-07-29（サンドボックスの既定）では invoice.subscription が
+// invoice.parent.subscription_details.subscription に、current_period_end が items 側に移っている。
+test('新しい Stripe API の請求書・サブスク形式でも未払い停止／入金復帰と期間終了を読む', async () => {
+  assert.equal(invoiceSubscriptionId({ subscription: 'sub_old' }), 'sub_old');
+  assert.equal(invoiceSubscriptionId({ parent: { subscription_details: { subscription: 'sub_new' } } }), 'sub_new');
+  assert.equal(invoiceSubscriptionId({ parent: { type: 'invoice_item_details' } }), '');
+  assert.equal(subscriptionPeriodEnd({ current_period_end: 5 }), 5);
+  assert.equal(subscriptionPeriodEnd({ items: { data: [{ current_period_end: 7 }, { current_period_end: 9 }] } }), 9);
+  const { env } = databaseEnv();
+  await registerAccount(env);
+  await processStripeEvent(env, { type: 'customer.subscription.created', data: { object: {
+    id: 'sub_new', status: 'trialing', trial_end: 1_800_000_000, items: { data: [{ current_period_end: 1_800_000_000 }] }, metadata: { seller_key: KEY_A }
+  } } }, '2026-09-04T01:00:00Z');
+  const created = await getBillingAccount(env.PRODUCT_DB, KEY_A);
+  assert.equal(created.status, 'ACTIVE');
+  assert.equal(created.current_period_end_at, new Date(1_800_000_000 * 1000).toISOString());
+  const failed = await processStripeEvent(env, { type: 'invoice.payment_failed', data: { object: {
+    parent: { subscription_details: { subscription: 'sub_new' } }, metadata: { seller_key: KEY_A }
+  } } }, '2026-09-04T02:00:00Z');
+  assert.equal(failed, 'INVOICE_SUSPENDED_UNPAID');
+  assert.equal((await getWallet(env.PRODUCT_DB, KEY_A)).status, 'PAUSED');
+  const paid = await processStripeEvent(env, { type: 'invoice.paid', data: { object: {
+    parent: { subscription_details: { subscription: 'sub_new' } }, metadata: { seller_key: KEY_A }
+  } } }, '2026-09-04T03:00:00Z');
+  assert.equal(paid, 'INVOICE_ACTIVE');
 });

@@ -318,10 +318,29 @@ function accountStatusFromSubscription(status) {
   return 'PENDING_PAYMENT';
 }
 
+// 2026-09-04 Stripe API 2025-03 以降: current_period_end は subscription.items.data[].current_period_end、
+// invoice.subscription は invoice.parent.subscription_details.subscription に移った。新旧どちらの形でも読む。
+export function subscriptionPeriodEnd(subscription = {}) {
+  const direct = Number(subscription.current_period_end || 0);
+  if (direct) return direct;
+  const items = subscription.items?.data || [];
+  return items.reduce((max, item) => Math.max(max, Number(item?.current_period_end || 0)), 0);
+}
+export function invoiceSubscriptionId(invoice = {}) {
+  const legacy = invoice.subscription;
+  if (typeof legacy === 'string' && legacy) return legacy;
+  if (legacy && typeof legacy === 'object' && legacy.id) return String(legacy.id);
+  const modern = invoice.parent?.subscription_details?.subscription;
+  if (typeof modern === 'string' && modern) return modern;
+  if (modern && typeof modern === 'object' && modern.id) return String(modern.id);
+  return '';
+}
+
 async function applySubscriptionState(env, account, subscription, now) {
   const status = accountStatusFromSubscription(subscription.status);
   const trialEnd = subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : '';
-  const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : '';
+  const periodEndUnix = subscriptionPeriodEnd(subscription);
+  const periodEnd = periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : '';
   await updateAccount(env.PRODUCT_DB, account.seller_key, {
     stripe_subscription_id: subscription.id, subscription_status: String(subscription.status || ''),
     trial_end_at: trialEnd, current_period_end_at: periodEnd, status
@@ -579,7 +598,7 @@ export async function processStripeEvent(env, event, now = new Date().toISOStrin
     }
     case 'invoice.paid':
     case 'invoice.payment_failed': {
-      if (!object.subscription) return 'IGNORED';
+      if (!invoiceSubscriptionId(object)) return 'IGNORED';
       const account = await accountForObject(db, object);
       if (!account) return 'NO_ACCOUNT';
       const status = type === 'invoice.paid' ? 'ACTIVE' : 'SUSPENDED_UNPAID';
