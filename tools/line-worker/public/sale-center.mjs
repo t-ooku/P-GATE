@@ -141,7 +141,7 @@ function renderCopy(){
   // 2026-09-05 大隆さん指示: 「無料会員限定・セール専用通知」カード(トグル/保存文言)は撤去。
   // 見出しは「好みの割引セールだけ受け取ろう」、モールのロゴタイル＋「受け取るセールを選ぶ」で設定画面へ。
   document.querySelector('#saleCenterTitle').textContent=t.title;
-  if(status&&(!status.textContent||status.dataset.untouched!=='false'))status.textContent=t.login;
+  // 2026-09-05 夜: 状態欄は操作した後だけ出す（未操作時にログイン案内を常時出さない。9/5朝の指示で常設カードは撤去済み）。
   renderSettingsCopy();
 }
 
@@ -192,7 +192,7 @@ function fillSettings(preference=defaultPreference(),availableChannels=['APP']){
 }
 
 const toggle=document.querySelector('#saleOnlyToggle');
-const status=document.querySelector('#salePreferenceStatus');
+const status=document.querySelector('#saleSettingsResult');
 const settingsDialog=document.querySelector('#notificationSettingsDialog');
 const settingsStatus=document.querySelector('#notificationSettingsStatus');
 const settingsEmailStatus=document.querySelector('#settingsEmailStatus');
@@ -238,6 +238,7 @@ document.querySelector('#settingsDisableAll')?.addEventListener('click',async()=
   if(toggle)toggle.checked=false;
   settingsStatus.textContent=t.stopped;
   if(status){status.textContent=t.stopped;status.dataset.untouched='false';}
+  settingsDialog.close();
 });
 document.querySelector('#settingsEmailSend')?.addEventListener('click',async()=>{
   const labels=emailLinkCopy[language()]||emailLinkCopy.JA;
@@ -265,10 +266,9 @@ document.querySelector('#notificationSettingsForm')?.addEventListener('submit',a
   const malls=selectedValues('marketplace');
   const channels=selectedValues('deliveryChannel');
   const installed=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
-  if(!installed&&!channels.some((value)=>value==='LINE'||value==='EMAIL')){
-    settingsStatus.textContent=(settingsCopy[language()]||settingsCopy.JA).externalRequired;
-    return;
-  }
+  // 2026-09-05 夜 大隆さん指示: 「設定を保存」を押したら必ず閉じる。ブラウザ利用でLINE/メール未選択の
+  // 場合も保存は通し、注意文は閉じた後にSALE RADAR側の状態欄へ出す（ダイアログに留めない）。
+  const externalWarning=!installed&&!channels.some((value)=>value==='LINE'||value==='EMAIL')?(settingsCopy[language()]||settingsCopy.JA).externalRequired:'';
   if(channels.includes('APP')&&'Notification'in window&&Notification.permission==='default')await Notification.requestPermission();
   const payload={
     enabled:types.length>0,advance_notice:document.querySelector('#settingsAdvance').checked,
@@ -278,9 +278,11 @@ document.querySelector('#notificationSettingsForm')?.addEventListener('submit',a
     quiet_end:document.querySelector('#settingsQuietEnd').value
   };
   const response=await fetch('/api/member/sale-preferences',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
-  if(!response.ok){settingsStatus.textContent=(settingsCopy[language()]||settingsCopy.JA).login;return;}
+  const t=settingsCopy[language()]||settingsCopy.JA;
+  if(!response.ok){settingsDialog.close();if(status){status.textContent=t.login;status.dataset.untouched='false';}return;}
   const data=await response.json();memberPreference=data.preference;availableDeliveryChannels=data.available_delivery_channels||availableDeliveryChannels;
-  toggle.checked=Boolean(memberPreference.enabled)&&String(memberPreference.info_types||'').split(',').includes('SALE');
-  settingsStatus.textContent=(settingsCopy[language()]||settingsCopy.JA).saved;
+  if(toggle)toggle.checked=Boolean(memberPreference.enabled)&&String(memberPreference.info_types||'').split(',').includes('SALE');
+  settingsStatus.textContent=t.saved;
   settingsDialog.close();
+  if(status){status.textContent=externalWarning?`${t.saved} ${externalWarning}`:t.saved;status.dataset.untouched='false';}
 });

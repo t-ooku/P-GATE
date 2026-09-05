@@ -68,3 +68,4 @@
 /* 2026-09-05 夜 大隆さん指摘: 通知をすべて解除するボタン */
 .settings-actions .settings-disable-all{margin-right:auto;background:#fff0f3;color:#b3226d;border:1px solid #ffc2dd}
 @media(max-width:620px){.settings-actions{grid-template-columns:1fr 1fr}.settings-actions .settings-disable-all{grid-column:1/-1}}
+.sale-preference-status{min-height:0;margin:6px 0 0;color:#5a3fff;font-size:12px;font-weight:800;line-height:1.5}.sale-preference-status:empty{display:none}
