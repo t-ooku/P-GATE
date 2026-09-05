@@ -1,3 +1,6 @@
+// 2026-09-05 大隆さん指示: クリエイター募集6本＋値下げ・クーポン10本を別ファイルから取り込む。
+import { creatorGuideInputs, creatorGuideProfiles, dealGuideInputs, dealGuideProfiles } from './seo-pages-2026-09-05.mjs';
+
 const ORIGIN = 'https://hoshilu.app';
 const UPDATED_AT = '2026-08-13';
 const HUB_UPDATED_AT = '2026-09-03';
@@ -3208,11 +3211,14 @@ const pages = {
         ['準備はいつから始めればよいですか？', '欲しい物リストと価格の控えは早いほど値動きを確認できます。開催情報の確認は時期が近づいてからで十分です。']
       ]
     })
-  }
+  },
+  ...Object.fromEntries(Object.entries({ ...creatorGuideInputs, ...dealGuideInputs }).map(([slug, input]) => [slug, { ja: guide('ja', input) }]))
 };
 
 const visualProfiles = {
   ja: {
+    ...creatorGuideProfiles,
+    ...dealGuideProfiles,
     'sell-more-on-ec-malls': {
       intent: 'seller_grow_mall_sales', cluster: 'seller-growth', articleType: 'seller-guide',
       headings: ['起きていること', '考えられる原因', '直す順番'],
@@ -3843,6 +3849,19 @@ const guideHubGroups = [
       'find-unmet-demand-for-your-products',
       'compare-ec-mall-fees-for-sellers',
       'parallel-import-selling-in-japan'
+    ]
+  },
+  {
+    id: 'creators',
+    title: 'クリエイター・投稿で紹介したい人向け',
+    description: 'HOSHILUを紹介する投稿で報酬を受け取りたい人向けに、#PRの表記、報酬の仕組み、請求書、スクショの撮り方を整理したガイドです。',
+    slugs: [
+      'earn-with-shopping-app-review-posts',
+      'pr-post-rules-for-influencers',
+      'influencer-recruitment-for-small-accounts',
+      'what-to-write-in-price-drop-alert-review',
+      'screenshot-tips-for-app-review-posts',
+      'how-to-report-and-invoice-creator-rewards'
     ]
   },
   {
