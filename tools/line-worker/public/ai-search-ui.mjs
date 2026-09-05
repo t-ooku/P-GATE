@@ -119,6 +119,25 @@ async function postChatTurn(history, language, mode = 'REFINE') {
   throw lastError;
 }
 
+// 2026-09-05 大隆さん指示: チャットで提示した商品には画像を必ず添える（両モード共通の描画）。
+function candidatePreviews(result){return Array.isArray(result?.candidate_previews)?result.candidate_previews.filter(item=>item?.image&&item?.name):[];}
+function appendPreviewStrip(messages,previews,copy){
+  if(!previews.length)return null;
+  const strip=document.createElement('div');strip.className='ai-chat-preview-strip';
+  strip.append(Object.assign(document.createElement('span'),{className:'ai-chat-preview-label',textContent:copy.previewLabel||chatCopy.JA.previewLabel||'参考画像'}));
+  const list=document.createElement('div');list.className='ai-chat-preview-list';
+  for(const item of previews){
+    const node=document.createElement(item.tracking_url?'a':'div');node.className='ai-chat-preview-item';
+    if(item.tracking_url){node.href=item.tracking_url;node.target='_blank';node.rel='noopener nofollow';}
+    const img=document.createElement('img');img.src=item.image;img.alt='';img.loading='lazy';
+    const name=document.createElement('span');name.className='ai-chat-preview-name';name.textContent=item.name;
+    node.append(img,name);
+    if(item.price>0){const price=document.createElement('b');price.textContent=`¥${Number(item.price).toLocaleString('ja-JP')}`;node.append(price);}
+    list.append(node);
+  }
+  strip.append(list);messages.append(strip);return strip;
+}
+
 function openIdentifyDialog(originalQuery,language,options={}){
   if(!originalQuery)return;
   const copy=identifyCopy[language]||identifyCopy.JA;
@@ -158,22 +177,9 @@ function openIdentifyDialog(originalQuery,language,options={}){
       history.push({role:'assistant',text:candidate});
       const question=chatMessageRow('assistant',copy.question(candidate));question.classList.add('ai-chat-identify-question');messages.append(question);
       // 2026-09-04 大隆さん指示: 名前だけでは合っているか分からないので、参考画像を同じ流れで見せる。
-      const previews=Array.isArray(result.candidate_previews)?result.candidate_previews.filter(item=>item?.image&&item?.name):[];
-      if(previews.length){
-        const strip=document.createElement('div');strip.className='ai-chat-preview-strip';
-        strip.append(Object.assign(document.createElement('span'),{className:'ai-chat-preview-label',textContent:copy.previewLabel}));
-        const list=document.createElement('div');list.className='ai-chat-preview-list';
-        for(const item of previews){
-          const node=document.createElement(item.tracking_url?'a':'div');node.className='ai-chat-preview-item';
-          if(item.tracking_url){node.href=item.tracking_url;node.target='_blank';node.rel='noopener nofollow';}
-          const img=document.createElement('img');img.src=item.image;img.alt='';img.loading='lazy';
-          const name=document.createElement('span');name.className='ai-chat-preview-name';name.textContent=item.name;
-          node.append(img,name);
-          if(item.price>0){const price=document.createElement('b');price.textContent=`¥${Number(item.price).toLocaleString('ja-JP')}`;node.append(price);}
-          list.append(node);
-        }
-        strip.append(list);messages.append(strip);
-      }
+      const previews=candidatePreviews(result);
+      appendPreviewStrip(messages,previews,copy);
+      if(previews[0]?.image){aiCandidateFallback.image=previews[0].image;aiCandidateFallback.previews=previews;}
       const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';
       const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
       const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;
@@ -292,6 +298,7 @@ function openChatDialog(originalQuery, language) {
       // showSearchCta above and v4.3 spec section 6).
       const refinedQuery = result.refined_query || originalQuery;
       status.remove();
+      appendPreviewStrip(messages,candidatePreviews(result),copy);
       showSearchCta(refinedQuery);
     } catch (error) {
       // Technical details stay in the console for diagnosis. The customer

@@ -34,7 +34,7 @@ test('チャット画面は candidate_previews を吹き出しの直後に描画
   const css = readFileSync(new URL('../public/ai-search-ui.css', import.meta.url), 'utf8');
   assert.match(css, /\.ai-chat-preview-list\{/u);
   const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  assert.match(html, /ai-search-ui\.mjs\?v=12/u);
+  assert.match(html, /ai-search-ui\.mjs\?v=13/u);
   assert.match(html, /ai-search-ui\.css\?v=12/u);
   const server = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(server, /candidate_previews: candidatePreviews/u);

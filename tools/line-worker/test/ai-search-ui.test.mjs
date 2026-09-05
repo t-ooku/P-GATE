@@ -134,7 +134,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=147"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=12"><\/script>/);
+  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=147"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=13"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -178,7 +178,9 @@ test('IDENTIFY APIは知識検索が失敗しても使える13モール署名リ
   const start = worker.indexOf('async function handleAiChatApi');
   const end = worker.indexOf('// v4.3 指示書 Priority 3', start);
   const handler = worker.slice(start, end);
-  assert.match(handler, /input\.mode === 'IDENTIFY' && result\.candidate_name/);
+  assert.match(handler, /input\.mode === 'IDENTIFY'[\s\S]{0,120}result\.candidate_name/);
+  // 2026-09-05: 自由会話モードでも refined_query が固まったら参考画像(candidate_previews)を返す
+  assert.match(handler, /!result\.needs_clarification && result\.refined_query/);
   assert.match(handler, /signedMarketplaceSearchLinks\(candidateQuery/);
   assert.match(handler, /marketplace_search_links: marketplaceSearchLinks/);
 });

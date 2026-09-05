@@ -2055,8 +2055,12 @@ async function handleAiChatApi(request, env, ctx) {
         env, ctx, requestId, degradation
       )
     });
-    if (input.mode === 'IDENTIFY' && result.candidate_name) {
-      const candidateQuery = result.refined_query || result.candidate_name;
+    // 2026-09-05 大隆さん指示: 自由会話モードで条件が固まった時(refined_query)も参考画像を出す。
+    const previewQuery = input.mode === 'IDENTIFY'
+      ? (result.candidate_name ? (result.refined_query || result.candidate_name) : '')
+      : (!result.needs_clarification && result.refined_query ? result.refined_query : '');
+    if (previewQuery) {
+      const candidateQuery = previewQuery;
       const category = semanticSearchGroups(candidateQuery)
         .map((group) => group.category).find((value) => value && value !== 'color') || 'unclassified';
       const sessionHash = await hashUser(input.session_id);
