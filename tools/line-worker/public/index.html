@@ -28,18 +28,18 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/hoshilu-v2-180.png">
   <script src="/linkswitch-init.js"></script>
   <script src="https://aml.valuecommerce.com/vcdal.js" async></script>
-  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=8">
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=9">
   <link rel="stylesheet" href="/ai-search-ui.css?v=12">
   <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=126">
   <link rel="stylesheet" href="/ai-price-comparison-ui.css?v=84">
-  <link rel="stylesheet" href="/wish-carousel.css?v=3">
+  <link rel="stylesheet" href="/wish-carousel.css?v=4">
   <link rel="stylesheet" href="/mywatch.css">
   <link rel="stylesheet" href="/continuous-search.css?v=2">
   <link rel="stylesheet" href="/hero-fixes.css?v=90">
   <link rel="stylesheet" href="/hero-slides.css?v=82">
   <link rel="stylesheet" href="/marketplace-coverage.css?v=92">
   <link rel="stylesheet" href="/buzz-home.css?v=1">
-  <link rel="stylesheet" href="/sale-center.css?v=85">
+  <link rel="stylesheet" href="/sale-center.css?v=86">
   <link rel="stylesheet" href="/hero-collage-overlay.css">
   <link rel="stylesheet" href="/discovery.css">
   <link rel="stylesheet" href="/sticky-nav.css">
@@ -120,12 +120,12 @@
     </form>
   </dialog>
 
-  <nav id="searchModeSwitch" class="search-mode-switch" data-mode="direct" aria-label="検索方法" data-nosnippet>
+
+    <nav id="searchModeSwitch" class="search-mode-switch" data-mode="direct" aria-label="検索方法" data-nosnippet>
     <button id="searchModeIdentify" class="search-mode-button" type="button" aria-pressed="false">AIに確認して探す</button>
     <button id="searchModeDirect" class="search-mode-button active" type="button" aria-pressed="true">すぐ検索</button>
   </nav>
-
-  <main id="top">
+<main id="top">
     <div id="userView">
       <div class="hoshilu-layout">
         <div class="hoshilu-primary">
@@ -234,7 +234,7 @@
 
           <section id="genreExplorer" class="insight-card genre-explorer" aria-labelledby="genreExplorerTitle">
             <p class="step">HOSHILU GENRES</p>
-            <div class="section-title"><div><h2 id="genreExplorerTitle">ジャンルから探す。</h2><p>大きなジャンルから小ジャンルへ。最後の一押しで Amazon・楽天・Qoo10 などをまとめて検索します。</p></div></div>
+            <div class="section-title"><div><h2 id="genreExplorerTitle">ジャンルから探す。</h2></div></div>
             <nav id="genreBreadcrumb" class="genre-breadcrumb" aria-label="選んだジャンル"></nav>
             <div id="genreChips" class="quick-queries genre-chips" aria-live="polite"></div>
           </section>
@@ -254,14 +254,14 @@
             <div class="sale-center-heading">
               <div>
                 <p class="step">HOSHILU SALE RADAR</p>
-                <h2 id="saleCenterTitle">お気に入りのショップモールだけ、セール通知が届く</h2>
+                <h2 id="saleCenterTitle">好みの割引セールだけ受け取ろう</h2>
               </div>
-              <aside class="sale-notice-card" aria-label="無料会員のセール通知設定" data-nosnippet>
-                <strong id="saleNoticeTitle">無料会員限定・セール専用通知</strong>
-                <label class="sale-preference"><input id="saleOnlyToggle" type="checkbox" checked><span id="saleToggleLabel">全モールのセール通知を受け取る</span></label>
-                <small id="salePreferenceStatus" class="sale-preference-status" aria-live="polite">ログインすると設定を保存できます。</small>
-                <button id="openNotificationSettings" class="sale-settings-button" type="button">通知設定を開く</button>
-              </aside>
+              <div class="sale-mall-strip" aria-label="大型セールのある主なモール" data-nosnippet>
+                <button class="sale-mall-tile" type="button" data-marketplace="AMAZON_JP" data-sale-open><span class="sale-mall-logo sale-mall-logo-amazon">Amazon</span><span class="sale-mall-events">プライムデー・タイムセール祭り</span></button>
+                <button class="sale-mall-tile" type="button" data-marketplace="RAKUTEN_JP" data-sale-open><span class="sale-mall-logo sale-mall-logo-rakuten">楽天市場</span><span class="sale-mall-events">スーパーSALE・お買い物マラソン</span></button>
+                <button class="sale-mall-tile" type="button" data-marketplace="QOO10_JP" data-sale-open><span class="sale-mall-logo sale-mall-logo-qoo10">Qoo10</span><span class="sale-mall-events">メガ割・メガポ</span></button>
+                <button id="openNotificationSettings" class="sale-settings-button" type="button" data-sale-open>受け取るセールを選ぶ</button>
+              </div>
             </div>
             <div id="saleRail" class="sale-rail" aria-label="掲載モールの最新セール情報">
               <p class="sale-empty">確認済みのセール情報を読み込んでいます。</p>
@@ -397,6 +397,6 @@
       </div>
     </div></main>
   <footer data-nosnippet><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイト、およびバリューコマース（Qoo10・Yahoo!ショッピング等）のリンクからも収入を得る場合があります。</span><span><a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=6"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=95"></script><script type="module" src="/buzz-home.mjs?v=2"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=10"></script><script type="module" src="/assets-v147/app.js?v=147"></script><script type="module" src="/ai-search-ui.mjs?v=12"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=86"></script><script type="module" src="/experience-layer.mjs?v=2"></script><script type="module" src="/genre-explorer.mjs?v=1"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=6"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=96"></script><script type="module" src="/buzz-home.mjs?v=2"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=10"></script><script type="module" src="/assets-v147/app.js?v=147"></script><script type="module" src="/ai-search-ui.mjs?v=12"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=86"></script><script type="module" src="/experience-layer.mjs?v=2"></script><script type="module" src="/genre-explorer.mjs?v=2"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>

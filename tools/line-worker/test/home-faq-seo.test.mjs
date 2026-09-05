@@ -66,8 +66,7 @@ test('UIクロームはdata-nosnippet、本文セクションはスニペット�
     /<header class="topbar" data-nosnippet>/,
     /<dialog id="installDialog"[^>]* data-nosnippet>/,
     /<dialog id="notificationSettingsDialog"[^>]* data-nosnippet>/,
-    /<nav id="searchModeSwitch"[^>]* data-nosnippet>/,
-    /<aside class="sale-notice-card"[^>]* data-nosnippet>/,
+    /<div class="sale-mall-strip"[^>]* data-nosnippet>/,
     /<section id="insight"[^>]* data-nosnippet>/,
     /<section id="announcements"[^>]* data-nosnippet>/,
     /<footer data-nosnippet>/

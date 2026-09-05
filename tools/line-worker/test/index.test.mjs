@@ -1615,12 +1615,18 @@ test('セール欄は指定コピーだけを残して補足文を削除して�
     assert.doesNotMatch(source, /本当に安い購入先/);
     assert.doesNotMatch(source, /おすすめ記事や一般ニュースは通知しません/);
   }
-  assert.match(html, /<h2 id="saleCenterTitle">お気に入りのショップモールだけ、セール通知が届く<\/h2>/);
-  assert.match(saleCenter, /title:'お気に入りのショップモールだけ、セール通知が届く'/);
-  assert.doesNotMatch(html, /お気に入りのショップモールだけ、セール通知が届くと/);
-  assert.doesNotMatch(saleCenter, /お気に入りのショップモールだけ、セール通知が届くと/);
-  assert.match(html, /\/sale-center\.mjs\?v=95/);
-  assert.doesNotMatch(html, /\/sale-center\.mjs\?v=94/);
+  // 2026-09-05 大隆さん指示: 見出しは「好みの割引セールだけ受け取ろう」。通知カード(無料会員限定/トグル/保存文言)は撤去し、
+  // モールのタイル(プライムデー/スーパーSALE/メガ割)と「受け取るセールを選ぶ」から通知設定を開く。
+  assert.match(html, /<h2 id="saleCenterTitle">好みの割引セールだけ受け取ろう<\/h2>/);
+  assert.match(saleCenter, /title:'好みの割引セールだけ受け取ろう'/);
+  assert.doesNotMatch(html, /無料会員限定・セール専用通知|id="saleOnlyToggle"|id="salePreferenceStatus"/);
+  assert.match(html, /class="sale-mall-tile" type="button" data-marketplace="AMAZON_JP" data-sale-open>[\s\S]{0,200}プライムデー/);
+  assert.match(html, /data-marketplace="RAKUTEN_JP" data-sale-open>[\s\S]{0,200}スーパーSALE/);
+  assert.match(html, /data-marketplace="QOO10_JP" data-sale-open>[\s\S]{0,200}メガ割/);
+  assert.match(html, /id="openNotificationSettings" class="sale-settings-button" type="button" data-sale-open>受け取るセールを選ぶ/);
+  assert.match(saleCenter, /document\.querySelectorAll\('\[data-sale-open\]'\)\.forEach\(button=>button\.addEventListener\('click',\(\)=>openSaleSettings\(button\.dataset\.marketplace/);
+  assert.match(html, /\/sale-center\.mjs\?v=96/);
+  assert.doesNotMatch(html, /\/sale-center\.mjs\?v=95/);
   assert.doesNotMatch(html, /13モールのセール、始まる前に通知。/);
   assert.doesNotMatch(html, /届くのはセール通知だけ。開始前と開始時のみ。/);
   assert.doesNotMatch(saleCenter, /13モールのセール、始まる前に通知。/);

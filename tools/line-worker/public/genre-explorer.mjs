@@ -53,7 +53,51 @@ const TREE = [
   { label: 'スポーツ・アウトドア', en: 'Sports', children: [
     { label: 'ランニング', q: 'ランニング', children: [{ label: 'シューズ', q: 'ランニングシューズ' }, { label: 'ウェア', q: 'ランニングウェア' }] },
     { label: 'キャンプ', q: 'キャンプ用品', children: [{ label: 'テント', q: 'テント' }, { label: 'チェア', q: 'アウトドアチェア' }] },
-    { label: 'ヨガ', q: 'ヨガ', children: [{ label: 'ヨガマット', q: 'ヨガマット' }, { label: 'ウェア', q: 'ヨガウェア' }] }
+    { label: 'ヨガ', q: 'ヨガ', children: [{ label: 'ヨガマット', q: 'ヨガマット' }, { label: 'ウェア', q: 'ヨガウェア' }] },
+    { label: 'ゴルフ', q: 'ゴルフ用品', children: [{ label: 'ゴルフボール', q: 'ゴルフボール' }, { label: 'グローブ', q: 'ゴルフグローブ' }, { label: 'ウェア', q: 'ゴルフウェア' }] }
+  ] },
+  // 2026-09-05 大隆さん指示: ジャンルの選択肢を増やす（主婦層25〜40代の日常買いを中心に）。
+  { label: '食品・飲料', en: 'Food', children: [
+    { label: 'コーヒー・お茶', q: 'コーヒー', children: [{ label: 'ドリップコーヒー', q: 'ドリップコーヒー' }, { label: 'コーヒー豆', q: 'コーヒー豆' }, { label: '緑茶', q: '緑茶 ティーバッグ' }, { label: '紅茶', q: '紅茶 ティーバッグ' }] },
+    { label: 'お菓子', q: 'お菓子', children: [{ label: 'チョコレート', q: 'チョコレート' }, { label: 'グミ', q: 'グミ' }, { label: 'せんべい', q: 'せんべい' }, { label: 'お菓子詰め合わせ', q: 'お菓子 詰め合わせ' }] },
+    { label: '水・炭酸水', q: 'ミネラルウォーター', children: [{ label: '炭酸水', q: '炭酸水 500ml' }, { label: '2L 水', q: 'ミネラルウォーター 2L' }] },
+    { label: 'ご飯・レトルト', q: 'レトルト食品', children: [{ label: 'パックご飯', q: 'パックご飯' }, { label: 'カレー', q: 'レトルトカレー' }, { label: '冷凍食品', q: '冷凍食品' }] },
+    { label: '調味料', q: '調味料', children: [{ label: 'オリーブオイル', q: 'オリーブオイル' }, { label: 'だし', q: 'だしパック' }, { label: 'ドレッシング', q: 'ドレッシング' }] },
+    { label: 'プロテイン', q: 'プロテイン', children: [{ label: 'ホエイ', q: 'ホエイプロテイン' }, { label: 'ソイ', q: 'ソイプロテイン' }] }
+  ] },
+  { label: '日用品・消耗品', en: 'Daily', children: [
+    { label: '洗剤', q: '洗剤', children: [{ label: '洗濯洗剤', q: '洗濯洗剤' }, { label: '食器用洗剤', q: '食器用洗剤' }, { label: '柔軟剤', q: '柔軟剤' }] },
+    { label: 'トイレ・紙', q: 'トイレットペーパー', children: [{ label: 'トイレットペーパー', q: 'トイレットペーパー' }, { label: 'ティッシュ', q: 'ティッシュペーパー' }, { label: 'キッチンペーパー', q: 'キッチンペーパー' }] },
+    { label: '掃除', q: '掃除用品', children: [{ label: 'フロアワイパー', q: 'フロアワイパー' }, { label: 'カビ取り', q: 'カビ取り剤' }, { label: '排水口', q: '排水口 ネット' }] },
+    { label: 'オーラルケア', q: '歯ブラシ', children: [{ label: '電動歯ブラシ', q: '電動歯ブラシ' }, { label: '歯磨き粉', q: '歯磨き粉' }, { label: 'フロス', q: 'デンタルフロス' }] },
+    { label: 'マスク', q: 'マスク', children: [{ label: '不織布', q: '不織布マスク' }, { label: '子ども用', q: '子供用 マスク' }] }
+  ] },
+  { label: '健康・サプリ', en: 'Health', children: [
+    { label: 'サプリ', q: 'サプリメント', children: [{ label: 'ビタミン', q: 'ビタミン サプリ' }, { label: '鉄分', q: '鉄分 サプリ' }, { label: '乳酸菌', q: '乳酸菌 サプリ' }] },
+    { label: '睡眠', q: '睡眠', children: [{ label: '枕', q: '枕' }, { label: 'アイマスク', q: 'アイマスク' }, { label: '入浴剤', q: '入浴剤' }] },
+    { label: '計測', q: '体重計', children: [{ label: '体重計', q: '体重計' }, { label: '体温計', q: '体温計' }, { label: '血圧計', q: '血圧計' }] },
+    { label: 'マッサージ', q: 'マッサージ機', children: [{ label: 'マッサージガン', q: 'マッサージガン' }, { label: 'フットマッサージャー', q: 'フットマッサージャー' }] }
+  ] },
+  { label: 'ペット', en: 'Pets', children: [
+    { label: '犬', q: '犬用品', children: [{ label: 'ドッグフード', q: 'ドッグフード' }, { label: 'おやつ', q: '犬 おやつ' }, { label: 'ハーネス', q: '犬 ハーネス' }, { label: 'トイレシート', q: 'ペットシーツ' }] },
+    { label: '猫', q: '猫用品', children: [{ label: 'キャットフード', q: 'キャットフード' }, { label: '猫砂', q: '猫砂' }, { label: 'おもちゃ', q: '猫 おもちゃ' }, { label: 'キャットタワー', q: 'キャットタワー' }] },
+    { label: 'ケア', q: 'ペット ケア', children: [{ label: 'ブラシ', q: 'ペット ブラシ' }, { label: '自動給水器', q: 'ペット 自動給水器' }] }
+  ] },
+  { label: '本・文具・ホビー', en: 'Hobby', children: [
+    { label: '文具', q: '文房具', children: [{ label: 'ボールペン', q: 'ボールペン' }, { label: 'ノート', q: 'ノート' }, { label: '手帳', q: '手帳' }] },
+    { label: 'ゲーム', q: 'ゲーム', children: [{ label: 'Switch ソフト', q: 'Switch ソフト' }, { label: 'コントローラー', q: 'ゲーム コントローラー' }, { label: 'ボードゲーム', q: 'ボードゲーム' }] },
+    { label: 'ハンドメイド', q: 'ハンドメイド', children: [{ label: '毛糸', q: '毛糸' }, { label: 'ビーズ', q: 'ビーズ' }, { label: 'レジン', q: 'レジン' }] },
+    { label: 'フィギュア・プラモ', q: 'フィギュア', children: [{ label: 'プラモデル', q: 'プラモデル' }, { label: 'ぬいぐるみ', q: 'ぬいぐるみ' }] }
+  ] },
+  { label: 'カー・自転車', en: 'Car & Bike', children: [
+    { label: 'カー用品', q: 'カー用品', children: [{ label: 'ドライブレコーダー', q: 'ドライブレコーダー' }, { label: 'スマホホルダー', q: '車 スマホホルダー' }, { label: '芳香剤', q: '車 芳香剤' }, { label: 'チャイルドシート', q: 'チャイルドシート' }] },
+    { label: '自転車', q: '自転車', children: [{ label: '電動アシスト', q: '電動アシスト自転車' }, { label: 'ヘルメット', q: '自転車 ヘルメット' }, { label: 'チャイルドシート', q: '自転車 チャイルドシート' }] }
+  ] },
+  { label: '旅行・季節', en: 'Travel', children: [
+    { label: '旅行', q: '旅行用品', children: [{ label: 'スーツケース', q: 'スーツケース' }, { label: 'パッキング', q: 'トラベルポーチ' }, { label: 'ネックピロー', q: 'ネックピロー' }] },
+    { label: '夏', q: '暑さ対策', children: [{ label: '日傘', q: '日傘' }, { label: '冷感', q: '冷感 タオル' }, { label: '虫よけ', q: '虫よけ' }] },
+    { label: '冬', q: '防寒', children: [{ label: 'カイロ', q: 'カイロ' }, { label: '手袋', q: '手袋' }, { label: '加湿器', q: '加湿器' }] },
+    { label: 'ギフト', q: 'ギフト', children: [{ label: '誕生日', q: '誕生日 プレゼント' }, { label: '出産祝い', q: '出産祝い' }, { label: '内祝い', q: '内祝い' }] }
   ] }
 ];
 
@@ -65,7 +109,7 @@ const POPULAR = [
 ];
 
 const $ = (selector) => document.querySelector(selector);
-const isEnglish = () => ($('#language')?.value || 'JA') === 'EN';
+const isEnglish = () => ($('#languageSelect')?.value || 'JA') === 'EN';
 
 function chip(label, { active = false, leaf = false } = {}) {
   const button = document.createElement('button');
@@ -135,4 +179,4 @@ function renderPopular() {
 
 render();
 renderPopular();
-$('#language')?.addEventListener('change', render);
+$('#languageSelect')?.addEventListener('change', render);

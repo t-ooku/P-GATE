@@ -47,3 +47,15 @@
 @media(max-width:760px){.sale-center{width:auto;min-width:0;max-width:100%;margin:1rem .75rem 1.7rem;padding:.9rem;border-radius:22px}.sale-center-heading,.benefit-grid{grid-template-columns:minmax(0,1fr);gap:.8rem}.sale-center h2{max-width:100%;font-size:clamp(1.28rem,6.2vw,1.72rem);line-height:1.12;white-space:normal;overflow-wrap:anywhere}.sale-center-lead{max-width:100%;font-size:.9rem}.sale-notice-card{width:100%;padding:.8rem}.sale-preference{margin-top:.65rem;padding-top:.65rem}.sale-rail,.info-row-list{height:198px;max-height:198px}.info-row:not(.notification-row){grid-template-columns:auto auto minmax(0,1fr);row-gap:.2rem;padding:.6rem .75rem;scroll-snap-align:start;flex-shrink:0}.info-row>.info-row-mall{grid-column:1/-1;order:3}.info-row>.info-row-title{grid-column:1/-1;order:4}}
 .sale-rail.sale-rail-expanded{height:auto;max-height:none;overflow-y:visible;scroll-snap-type:none}
 @media(max-width:620px){.settings-grid,.settings-malls,.settings-row{grid-template-columns:1fr 1fr}.settings-email-row{grid-template-columns:1fr}.notification-settings-dialog{width:calc(100% - .6rem)}.settings-actions{display:grid;grid-template-columns:1fr 1fr}}
+
+/* 2026-09-05 大隆さん指示: 通知カードを撤去し、モールのロゴタイル(プライムデー/メガ割など)から設定画面へ */
+.sale-mall-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;align-content:start}
+.sale-mall-tile{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:.7rem .5rem;border:1px solid rgba(255,255,255,.22);border-radius:16px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer;text-align:center;min-height:44px}
+.sale-mall-tile:hover,.sale-mall-tile:focus-visible{background:rgba(255,255,255,.18)}
+.sale-mall-logo{display:inline-block;width:100%;padding:.45rem .3rem;border-radius:10px;font-weight:900;font-size:.95rem;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sale-mall-logo-amazon{background:#ff9900;color:#111}
+.sale-mall-logo-rakuten{background:#bf0000;color:#fff}
+.sale-mall-logo-qoo10{background:#e60012;color:#fff}
+.sale-mall-events{font-size:.68rem;line-height:1.3;color:#e6e0ff;font-weight:700}
+.sale-mall-strip .sale-settings-button{grid-column:1 / -1;margin-top:.1rem}
+@media(max-width:760px){.sale-mall-strip{gap:.45rem}.sale-mall-logo{font-size:.85rem}.sale-mall-events{font-size:.62rem}}

@@ -170,8 +170,10 @@
     text-overflow: ellipsis;
   }
 
+  /* 2026-09-05 大隆さん指示: Gmailで送るも他のボタンと同じ幅にし、
+     6ボタンを2列×3段に揃える（TikTok用にコピーが空いた位置に収まる）。 */
   .share-gmail-button {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 }
 

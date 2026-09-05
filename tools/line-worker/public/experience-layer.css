@@ -81,3 +81,17 @@
   border:1px solid #8b7cf2;background:#fff;color:#5140ba;font-weight:700;border-radius:8px;box-shadow:none
 }
 
+
+/* 2026-09-05 大隆さん指示: ジャンル欄をコンパクトに（補足文は削除、余白・チップを小さく） */
+.genre-explorer.insight-card{margin:12px 0 20px;padding:14px 16px 12px}
+.genre-explorer .step{margin:0 0 2px;font-size:10px}
+.genre-explorer .section-title{margin-bottom:6px}
+.genre-explorer h2{font-size:18px;margin:0}
+.genre-explorer .genre-breadcrumb{margin:0 0 6px;gap:4px}
+.genre-explorer .quick-queries{margin:0;gap:6px}
+.genre-explorer .quick-queries .chip{min-height:34px;padding:6px 10px;font-size:12px}
+
+/* 2026-09-05 大隆さん指示: AIチャットで提示した商品候補に画像を添える */
+.ai-candidate-image{width:96px;height:96px;margin:6px 0 8px;border-radius:12px;overflow:hidden;background:#f4f0ff;border:1px solid #e6e0ff}
+.ai-candidate-image img{width:100%;height:100%;object-fit:contain;display:block}
+
