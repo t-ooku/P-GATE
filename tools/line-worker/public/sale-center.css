@@ -64,3 +64,7 @@
 .sale-center h2#saleCenterTitle{white-space:nowrap;text-wrap:nowrap;overflow-wrap:normal;letter-spacing:-.045em;font-size:clamp(1.25rem,2.6vw,2.4rem)}
 @media(max-width:760px){.sale-center h2#saleCenterTitle{font-size:clamp(1rem,5.1vw,1.45rem);letter-spacing:-.05em}}
 @media(max-width:360px){.sale-center h2#saleCenterTitle{font-size:clamp(.95rem,5.2vw,1.2rem)}}
+
+/* 2026-09-05 夜 大隆さん指摘: 通知をすべて解除するボタン */
+.settings-actions .settings-disable-all{margin-right:auto;background:#fff0f3;color:#b3226d;border:1px solid #ffc2dd}
+@media(max-width:620px){.settings-actions{grid-template-columns:1fr 1fr}.settings-actions .settings-disable-all{grid-column:1/-1}}

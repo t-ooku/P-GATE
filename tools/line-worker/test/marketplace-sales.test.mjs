@@ -186,3 +186,15 @@ test('13 marketplace content and notification runs are recorded for monitoring',
   assert.match(writes[0].sql,/marketplace_content_run_audit/);
   assert.deepEqual(writes[0].values.slice(1),['2026-08-01T00:00:00.000Z',3,2,0]);
 });
+
+// 2026-09-05 夜 大隆さん指摘: 通知を全部やめる方法が無かった。
+test('通知設定に「通知をすべて解除」があり、enabled=false・info_types=[] を直接保存する', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const client = await readFile(new URL('../public/sale-center.mjs', import.meta.url), 'utf8');
+  assert.match(html, /id="settingsDisableAll"[^>]*>通知をすべて解除</);
+  assert.match(html, /sale-center\.mjs\?v=97/);
+  assert.match(client, /#settingsDisableAll/);
+  assert.match(client, /enabled:false,advance_notice:false,info_types:\[\]/);
+  assert.match(client, /stopAll:'通知をすべて解除'/);
+  assert.match(client, /stopped:'セール通知をすべて解除しました/);
+});

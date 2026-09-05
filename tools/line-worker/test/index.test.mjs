@@ -1632,7 +1632,7 @@ test('セール欄は指定コピーだけを残して補足文を削除して�
   assert.match(html, /data-marketplace="QOO10_JP" data-sale-open>[\s\S]{0,200}メガ割/);
   assert.match(html, /id="openNotificationSettings" class="sale-settings-button" type="button" data-sale-open>受け取るセールを選ぶ/);
   assert.match(saleCenter, /document\.querySelectorAll\('\[data-sale-open\]'\)\.forEach\(button=>button\.addEventListener\('click',\(\)=>openSaleSettings\(button\.dataset\.marketplace/);
-  assert.match(html, /\/sale-center\.mjs\?v=96/);
+  assert.match(html, /\/sale-center\.mjs\?v=97/);
   assert.doesNotMatch(html, /\/sale-center\.mjs\?v=95/);
   assert.doesNotMatch(html, /13モールのセール、始まる前に通知。/);
   assert.doesNotMatch(html, /届くのはセール通知だけ。開始前と開始時のみ。/);

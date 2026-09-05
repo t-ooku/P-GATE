@@ -38,10 +38,10 @@ const emailLinkCopy={
   KO:{title:'이메일 알림 주소 추가',send:'인증 코드 보내기',verify:'인증 후 추가',address:'이메일 주소',code:'6자리 코드',sending:'인증 코드를 보내는 중…',sent:'이메일로 받은 6자리 코드를 입력하세요.',linked:'이메일 알림 주소를 추가했습니다. 이메일을 선택하고 설정을 저장하세요.',failed:'이메일 주소 또는 인증 코드를 확인하세요.'}
 };
 const settingsCopy={
-  JA:{open:'受け取るセールを選ぶ',title:'通知設定',lead:'セールだけ最初からON。通知方法と必要な情報を選べます。',info:'受け取る情報',channel:'通知方法：アプリ・LINE・メール',channelNote:'SMSは使いません。',externalRequired:'ブラウザで受け取るには、連携済みのLINEまたはメールを1つ以上選択してください。',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
-  EN:{open:'Choose your sales',title:'Notification settings',lead:'Sales are on by default. Choose how and what to receive.',info:'Updates to receive',channel:'Notification methods: App, LINE, Email',channelNote:'SMS is not used.',externalRequired:'To receive browser-user alerts, select at least one connected LINE or email destination.',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
-  ZH:{open:'选择要接收的促销',title:'通知设置',lead:'默认只开启促销，并可选择通知方式。',info:'接收的信息',channel:'通知方式：应用、LINE、电子邮件',channelNote:'不使用短信。',externalRequired:'浏览器用户必须至少选择一个已连接的 LINE 或电子邮件地址。',mall:'目标商城',frequency:'通知频率',language:'通知语言',timing:'通知时间',advance:'促销开始前提醒',quietStart:'免打扰开始',quietEnd:'免打扰结束',privacy:'设置将与会员ID关联保存。',reset:'恢复默认',save:'保存设置',saved:'通知设置已保存。',login:'免费会员登录后可设置。'},
-  KO:{open:'받을 세일 고르기',title:'알림 설정',lead:'세일만 기본 ON이며 알림 방법을 선택할 수 있습니다.',info:'받을 정보',channel:'알림 방법: 앱, LINE, 이메일',channelNote:'SMS는 사용하지 않습니다.',externalRequired:'브라우저에서 알림을 받으려면 연결된 LINE 또는 이메일을 하나 이상 선택하세요.',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
+  JA:{stopAll:'通知をすべて解除',stopped:'セール通知をすべて解除しました。また受け取りたくなったら、受け取る情報にチェックを入れて保存してください。',stopConfirm:'セール・クーポン・値下げなど、すべての通知を止めます。よろしいですか？',open:'受け取るセールを選ぶ',title:'通知設定',lead:'セールだけ最初からON。通知方法と必要な情報を選べます。',info:'受け取る情報',channel:'通知方法：アプリ・LINE・メール',channelNote:'SMSは使いません。',externalRequired:'ブラウザで受け取るには、連携済みのLINEまたはメールを1つ以上選択してください。',mall:'対象モール',frequency:'通知頻度',language:'通知言語',timing:'通知する時間',advance:'セール開始前にも知らせる',quietStart:'おやすみ開始',quietEnd:'おやすみ終了',privacy:'通知設定は会員IDに紐づけて保存します。',reset:'初期設定に戻す',save:'設定を保存',saved:'通知設定を保存しました。',login:'無料会員でログインすると設定できます。'},
+  EN:{stopAll:'Turn off all notifications',stopped:'All sale notifications are off. To receive them again, tick the information you want and save.',stopConfirm:'Stop all sale, coupon and price notifications?',open:'Choose your sales',title:'Notification settings',lead:'Sales are on by default. Choose how and what to receive.',info:'Updates to receive',channel:'Notification methods: App, LINE, Email',channelNote:'SMS is not used.',externalRequired:'To receive browser-user alerts, select at least one connected LINE or email destination.',mall:'Marketplaces',frequency:'Frequency',language:'Notification language',timing:'Delivery time',advance:'Notify me before sales start',quietStart:'Quiet hours start',quietEnd:'Quiet hours end',privacy:'Settings are stored with your member ID.',reset:'Restore defaults',save:'Save settings',saved:'Notification settings saved.',login:'Sign in as a free member to change settings.'},
+  ZH:{stopAll:'关闭所有通知',stopped:'已关闭全部促销通知。想再次接收时，勾选要接收的信息并保存即可。',stopConfirm:'要停止全部促销、优惠券和降价通知吗？',open:'选择要接收的促销',title:'通知设置',lead:'默认只开启促销，并可选择通知方式。',info:'接收的信息',channel:'通知方式：应用、LINE、电子邮件',channelNote:'不使用短信。',externalRequired:'浏览器用户必须至少选择一个已连接的 LINE 或电子邮件地址。',mall:'目标商城',frequency:'通知频率',language:'通知语言',timing:'通知时间',advance:'促销开始前提醒',quietStart:'免打扰开始',quietEnd:'免打扰结束',privacy:'设置将与会员ID关联保存。',reset:'恢复默认',save:'保存设置',saved:'通知设置已保存。',login:'免费会员登录后可设置。'},
+  KO:{stopAll:'알림 모두 해제',stopped:'모든 세일 알림을 해제했습니다. 다시 받으려면 받을 정보에 체크하고 저장하세요.',stopConfirm:'세일·쿠폰·가격 인하 알림을 모두 중지할까요?',open:'받을 세일 고르기',title:'알림 설정',lead:'세일만 기본 ON이며 알림 방법을 선택할 수 있습니다.',info:'받을 정보',channel:'알림 방법: 앱, LINE, 이메일',channelNote:'SMS는 사용하지 않습니다.',externalRequired:'브라우저에서 알림을 받으려면 연결된 LINE 또는 이메일을 하나 이상 선택하세요.',mall:'대상 쇼핑몰',frequency:'알림 빈도',language:'알림 언어',timing:'알림 시간',advance:'세일 시작 전에도 알림',quietStart:'방해 금지 시작',quietEnd:'방해 금지 종료',privacy:'설정은 회원 ID와 연결해 저장합니다.',reset:'기본값 복원',save:'설정 저장',saved:'알림 설정을 저장했습니다.',login:'무료 회원으로 로그인하면 설정할 수 있습니다.'}
 };
 
 const officialUpdates=[
@@ -155,7 +155,7 @@ function renderSettingsCopy(){
     settingsFrequencyLabel:t.frequency,settingsLanguageLabel:t.language,
     settingsTimingLegend:t.timing,settingsAdvanceLabel:t.advance,
     settingsQuietStartLabel:t.quietStart,settingsQuietEndLabel:t.quietEnd,
-    settingsPrivacyText:t.privacy,settingsReset:t.reset,settingsSave:t.save
+    settingsPrivacyText:t.privacy,settingsReset:t.reset,settingsSave:t.save,settingsDisableAll:t.stopAll
   };
   Object.entries(values).forEach(([id,value])=>{const element=document.querySelector(`#${id}`);if(element)element.textContent=value;});
   document.querySelector('#settingsEmailLinkTitle').textContent=email.title;
@@ -224,6 +224,21 @@ function openSaleSettings(marketplace){
 document.querySelectorAll('[data-sale-open]').forEach(button=>button.addEventListener('click',()=>openSaleSettings(button.dataset.marketplace||'')));
 document.querySelector('#notificationSettingsClose')?.addEventListener('click',()=>settingsDialog.close());
 document.querySelector('#settingsReset')?.addEventListener('click',()=>fillSettings(defaultPreference(),availableDeliveryChannels));
+// 2026-09-05 夜 大隆さん指摘: 通知を全部やめる方法が無かった。チェックを全部外す操作は
+// 通知方法の必須チェック(externalRequired)に引っかかって保存できないことがあるので、
+// 「通知をすべて解除」ボタンを別に置き、enabled=false・info_types=[] を直接保存する。
+document.querySelector('#settingsDisableAll')?.addEventListener('click',async()=>{
+  const t=settingsCopy[language()]||settingsCopy.JA;
+  if(!memberPreference){settingsStatus.textContent=t.login;return;}
+  if(!window.confirm(t.stopConfirm))return;
+  const response=await fetch('/api/member/sale-preferences',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({enabled:false,advance_notice:false,info_types:[],marketplaces:[],delivery_channels:String(memberPreference.delivery_channels||'APP').split(','),frequency:memberPreference.frequency||'INSTANT',language:memberPreference.language||language(),quiet_start:memberPreference.quiet_start||'21:00',quiet_end:memberPreference.quiet_end||'08:00'})});
+  if(!response.ok){settingsStatus.textContent=t.login;return;}
+  const data=await response.json();memberPreference=data.preference;availableDeliveryChannels=data.available_delivery_channels||availableDeliveryChannels;
+  fillSettings(memberPreference,availableDeliveryChannels);
+  if(toggle)toggle.checked=false;
+  settingsStatus.textContent=t.stopped;
+  if(status){status.textContent=t.stopped;status.dataset.untouched='false';}
+});
 document.querySelector('#settingsEmailSend')?.addEventListener('click',async()=>{
   const labels=emailLinkCopy[language()]||emailLinkCopy.JA;
   const email=document.querySelector('#settingsEmailAddress').value.trim();
