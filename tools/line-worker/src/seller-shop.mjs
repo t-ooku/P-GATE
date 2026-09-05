@@ -140,7 +140,44 @@ async function liveCoupons(db, sellerKey) {
   return (rows.results || []).filter((c) => couponIsLive(c, today));
 }
 
-async function shopProducts(env, shop, query = '') {
+// 2026-09-05 夜 大隆さん指摘: 「提示商品が少なすぎる」「Amazon同レベルの詳細検索を」。
+// 1ページ96件・ページ送り、メーカー（ブランド）絞り込み、並び順（新着/名前）を付ける。
+export const SHOP_PAGE_SIZE = 96;
+const brandCache = new Map(); // tenant -> { at, brands }
+const countCache = new Map(); // `${tenant}|${brand}` -> { at, n }（13万行の COUNT を毎回走らせない）
+
+export async function shopBrands(env, shop, { now = Date.now() } = {}) {
+  const db = env.PRODUCT_DB;
+  const merged = new Map();
+  for (const tenant of shop.tenants.slice(0, 5)) {
+    const cached = brandCache.get(tenant);
+    let brands = cached && now - cached.at < 600000 ? cached.brands : null;
+    if (!brands) {
+      try {
+        const rows = await db.prepare(`SELECT manufacturer AS brand, COUNT(*) AS n FROM products
+          WHERE tenant=?1 AND manufacturer<>'' AND image_url<>'' AND stock>0 AND amazon_jp_url<>''
+          GROUP BY manufacturer ORDER BY n DESC LIMIT 40`).bind(tenant).all();
+        brands = (rows.results || []).map((row) => ({ brand: clean(row.brand, 60), count: Number(row.n) || 0 })).filter((b) => b.brand);
+      } catch { brands = []; }
+      brandCache.set(tenant, { at: now, brands });
+    }
+    for (const b of brands) merged.set(b.brand, (merged.get(b.brand) || 0) + b.count);
+  }
+  return [...merged.entries()].map(([brand, count]) => ({ brand, count })).sort((a, b) => b.count - a.count).slice(0, 40);
+}
+
+export function shopFilters(searchParams) {
+  const get = (name) => searchParams?.get?.(name) ?? '';
+  const sort = String(get('sort') || '').toLowerCase();
+  return {
+    query: clean(get('q'), 80),
+    brand: clean(get('brand'), 60),
+    sort: ['new', 'name'].includes(sort) ? sort : 'new',
+    page: Math.max(1, Math.min(200, Number(get('page')) || 1))
+  };
+}
+
+async function shopProducts(env, shop, filters = {}) {
   const db = env.PRODUCT_DB;
   const items = [];
   const seen = new Set();
@@ -148,31 +185,52 @@ async function shopProducts(env, shop, query = '') {
     const url = httpsUrl(item.url);
     if (!url || !item.name || seen.has(url)) return;
     seen.add(url);
-    items.push({ name: clean(item.name, 160), image: httpsUrl(item.image), url, price: Number(item.price) > 0 ? Number(item.price) : 0, marketplace: item.marketplace || 'AMAZON_JP', asin: clean(item.asin, 20), tenant: item.tenant || '' });
+    items.push({ name: clean(item.name, 160), image: httpsUrl(item.image), url, price: Number(item.price) > 0 ? Number(item.price) : 0, marketplace: item.marketplace || 'AMAZON_JP', asin: clean(item.asin, 20), tenant: item.tenant || '', brand: clean(item.brand, 60) });
   };
-  const q = clean(query, 80);
+  const q = clean(typeof filters === 'string' ? filters : filters.query, 80);
+  const brand = clean(filters.brand, 60);
+  const page = Math.max(1, Number(filters.page) || 1);
+  const order = filters.sort === 'name' ? 'product_name ASC' : 'imported_at DESC, record_key DESC';
+  const offset = (page - 1) * SHOP_PAGE_SIZE;
+  let total = 0;
   for (const tenant of shop.tenants.slice(0, 5)) {
     if (q) {
       try {
-        for (const row of await searchProductsV2(env, tenant, q, 24)) {
-          push({ name: row.product_name, image: row.image_url, url: row.amazon_jp_url, asin: row.asin, tenant });
-        }
+        const rows = await searchProductsV2(env, tenant, q, 100);
+        const filtered = brand ? rows.filter((row) => clean(row.manufacturer, 60).toLowerCase() === brand.toLowerCase()) : rows;
+        total += filtered.length;
+        for (const row of filtered) push({ name: row.product_name, image: row.image_url, url: row.amazon_jp_url, asin: row.asin, tenant, brand: row.manufacturer });
       } catch {}
       continue;
     }
+    try {
+      const where = `tenant=?1 AND image_url<>'' AND stock>0 AND amazon_jp_url<>''${brand ? ' AND manufacturer=?2' : ''}`;
+      const binds = brand ? [tenant, brand] : [tenant];
+      const countKey = `${tenant}|${brand}`;
+      const cachedCount = countCache.get(countKey);
+      let count = cachedCount && Date.now() - cachedCount.at < 600000 ? cachedCount.n : null;
+      if (count === null) {
+        const countRow = await db.prepare(`SELECT COUNT(*) AS n FROM products WHERE ${where}`).bind(...binds).first();
+        count = Number(countRow?.n || 0);
+        countCache.set(countKey, { at: Date.now(), n: count });
+      }
+      total += count;
+      const rows = await db.prepare(`SELECT product_name,image_url,amazon_jp_url,asin,manufacturer FROM products
+        WHERE ${where} ORDER BY ${order} LIMIT ${SHOP_PAGE_SIZE} OFFSET ${offset}`).bind(...binds).all();
+      for (const row of rows.results || []) push({ name: row.product_name, image: row.image_url, url: row.amazon_jp_url, asin: row.asin, tenant, brand: row.manufacturer });
+    } catch {}
+    if (items.length >= SHOP_PAGE_SIZE) continue;
     try {
       const listings = await db.prepare(`SELECT product_name,image_url,product_url,price,asin FROM sp_api_listings
         WHERE tenant=?1 AND buyable=1 AND image_url<>'' ORDER BY updated_at DESC LIMIT 48`).bind(tenant).all();
       for (const row of listings.results || []) push({ name: row.product_name, image: row.image_url, url: row.product_url, price: row.price, asin: row.asin, tenant });
     } catch {}
-    if (items.length >= 24) continue;
-    try {
-      const rows = await db.prepare(`SELECT product_name,image_url,amazon_jp_url,asin FROM products
-        WHERE tenant=?1 AND image_url<>'' AND stock>0 AND amazon_jp_url<>'' LIMIT 48`).bind(tenant).all();
-      for (const row of rows.results || []) push({ name: row.product_name, image: row.image_url, url: row.amazon_jp_url, asin: row.asin, tenant });
-    } catch {}
   }
-  return items.slice(0, 48);
+  const result = q ? items.slice(offset, offset + SHOP_PAGE_SIZE) : items.slice(0, SHOP_PAGE_SIZE);
+  result.total = total;
+  result.page = page;
+  result.pages = Math.max(1, Math.ceil(total / SHOP_PAGE_SIZE));
+  return result;
 }
 
 async function followerCount(db, sellerKey) {
@@ -193,8 +251,18 @@ export function amazonStorefrontUrl(sellerIds = [], tag = 'hoshilu00-22') {
   return url.toString();
 }
 
+function shopHref(slug, filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.query) params.set('q', filters.query);
+  if (filters.brand) params.set('brand', filters.brand);
+  if (filters.sort && filters.sort !== 'new') params.set('sort', filters.sort);
+  if (Number(filters.page) > 1) params.set('page', String(filters.page));
+  const qs = params.toString();
+  return `/shop/${slug}${qs ? `?${qs}` : ''}#products`;
+}
+
 // ---- 公開ページ ----------------------------------------------------------------
-function renderShopHtml({ shop, coupons, products, followers, following, query, origin }) {
+function renderShopHtml({ shop, coupons, products, followers, following, query, origin, filters = {}, brands = [], total = 0, page = 1, pages = 1 }) {
   const title = `${shop.shop_name} | HOSHILU ショップ`;
   const description = clean(shop.tagline || shop.intro || `${shop.shop_name} の商品とクーポンを HOSHILU でまとめて見る。`, 150);
   const initial = esc(clean(shop.shop_name, 1).toUpperCase());
@@ -206,7 +274,7 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
     ${c.terms ? `<small class="coupon-terms">${esc(c.terms)}</small>` : ''}
     ${c.landing_url ? `<a class="coupon-link" rel="nofollow sponsored" href="/shop/${esc(shop.slug)}/coupon/${esc(c.coupon_id)}">クーポンを使う →</a>` : ''}</article>`).join('')}</div></section>` : '';
   const productHtml = products.length ? products.map((p) => `
-    <a class="shop-product" rel="nofollow sponsored" href="${esc(p.tracking_url)}" target="_blank">
+    <a class="shop-product" rel="nofollow sponsored noopener" href="${esc(p.direct_url || p.url)}" data-track="${esc(p.tracking_url !== (p.direct_url || p.url) ? p.tracking_url : '')}">
       ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : '<span class="shop-product-noimage"></span>'}
       <span class="shop-product-name">${esc(p.name)}</span>
       <span class="shop-product-meta">${p.price ? `¥${Number(p.price).toLocaleString('ja-JP')} ・ ` : ''}${esc(MARKETPLACE_LABEL[p.marketplace] || p.marketplace)} で見る</span></a>`).join('')
@@ -224,7 +292,17 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 .hero{display:flex;gap:14px;align-items:center;padding:16px;background:#fff;border:1px solid var(--line);border-radius:18px}
 .shop-logo{width:72px;height:72px;border-radius:18px;object-fit:cover;flex:none;background:#ece8fb}
 .shop-logo-text{display:grid;place-items:center;font-size:30px;font-weight:900;color:var(--accent)}
-.storefront-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid #ffb84d;border-radius:12px;background:#fff7e6;color:#8a5200;font-weight:800;font-size:13px;text-decoration:none}
+.storefront-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid var(--accent);border-radius:12px;background:#f4f0ff;color:#4f36b5;font-weight:800;font-size:13px;text-decoration:none}
+.shop-filters{margin:0 0 10px;padding:8px 12px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.shop-filters summary{cursor:pointer;font-weight:800;font-size:13px;color:var(--accent)}
+.shop-filter-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.shop-filter-label{width:100%;font-size:11px;color:var(--muted);font-weight:800}
+.shop-chip{padding:6px 10px;border:1px solid #ded7ff;border-radius:999px;background:#f8f6ff;color:#4f36b5;font-size:12px;text-decoration:none}
+.shop-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.shop-chip small{opacity:.75;font-size:10px}
+.shop-count{margin:0 0 8px;color:var(--muted);font-size:12px}
+.shop-pager{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.shop-pager a{padding:10px 14px;border:1px solid var(--accent);border-radius:12px;color:var(--accent);font-weight:800;text-decoration:none;background:#fff}
 .hero h1{margin:0;font-size:20px}.hero p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .hero-body{min-width:0;flex:1}
 .follow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
@@ -256,13 +334,21 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 ${shop.intro ? `<p class="intro">${esc(shop.intro)}</p>` : ''}
 ${couponHtml}
 <section class="shop-section" id="products"><h2>商品</h2>
-<form class="search" action="/shop/${esc(shop.slug)}" method="get"><input type="search" name="q" value="${esc(query)}" placeholder="このショップの中で探す" maxlength="80"><button type="submit">探す</button></form>
-<div class="grid">${productHtml}</div></section>
+<form class="search" action="/shop/${esc(shop.slug)}" method="get"><input type="search" name="q" value="${esc(query)}" placeholder="このショップの中で探す" maxlength="80">${filters.brand ? `<input type="hidden" name="brand" value="${esc(filters.brand)}">` : ''}<button type="submit">探す</button></form>
+<details class="shop-filters"${filters.brand || filters.sort === 'name' ? ' open' : ''}><summary>☰ 詳細検索${filters.brand ? `：${esc(filters.brand)}` : ''}</summary>
+<div class="shop-filter-row"><span class="shop-filter-label">並び順</span>${[['new', '新着順'], ['name', '名前順']].map(([value, label]) => `<a class="shop-chip${filters.sort === value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, sort: value, page: 1 }))}">${label}</a>`).join('')}</div>
+${brands.length ? `<div class="shop-filter-row"><span class="shop-filter-label">メーカー・ブランド</span><a class="shop-chip${filters.brand ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, brand: '', page: 1 }))}">すべて</a>${brands.map((b) => `<a class="shop-chip${filters.brand === b.brand ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, brand: b.brand, page: 1 }))}">${esc(b.brand)} <small>${b.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>` : ''}
+</details>
+<p class="shop-count">${total ? `${total.toLocaleString('ja-JP')}件${pages > 1 ? `（${page}/${pages}ページ）` : ''}` : ''}</p>
+<div class="grid">${productHtml}</div>
+${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a href="${esc(shopHref(shop.slug, { ...filters, page: page - 1 }))}">← 前の${SHOP_PAGE_SIZE}件</a>` : '<span></span>'}${page < pages ? `<a href="${esc(shopHref(shop.slug, { ...filters, page: page + 1 }))}">次の${SHOP_PAGE_SIZE}件 →</a>` : ''}</nav>` : ''}</section>
 <p class="foot">商品リンクは各モールの商品ページへ移動します。HOSHILU は送客に対して事業者から料金を受け取る場合がありますが、検索順位は変わりません。${shop.website_url ? `<br><a href="${esc(shop.website_url)}" rel="nofollow noopener" target="_blank">公式サイト</a>` : ''}</p>
 </main>
 <script>
 (function(){
   var slug=document.querySelector('main').dataset.slug;
+  // 商品リンクは直接モールへ。計測だけ /go をビーコンで叩く（失敗しても遷移は止めない）。
+  document.querySelectorAll('a.shop-product[data-track]').forEach(function(a){a.addEventListener('click',function(){var t=a.getAttribute('data-track');if(!t)return;try{fetch(t,{mode:'no-cors',keepalive:true,redirect:'manual',credentials:'omit'}).catch(function(){});}catch(e){}});});
   var button=document.getElementById('followButton');var status=document.getElementById('followStatus');var count=document.getElementById('followerCount');
   button.addEventListener('click',function(){
     var following=button.dataset.following==='1';button.disabled=true;
@@ -318,10 +404,11 @@ export async function handleShopRoutes(request, env, { createTrackToken, readMem
     return new Response(null, { status: 302, headers: { location: coupon.landing_url, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' } });
   }
 
-  const query = clean(url.searchParams.get('q'), 80);
+  const filters = shopFilters(url.searchParams);
+  const query = filters.query;
   const member = await readMember(request, env);
-  const [coupons, rawProducts, followers] = await Promise.all([
-    liveCoupons(db, shop.seller_key), shopProducts(env, shop, query), followerCount(db, shop.seller_key)
+  const [coupons, rawProducts, followers, brands] = await Promise.all([
+    liveCoupons(db, shop.seller_key), shopProducts(env, shop, filters), followerCount(db, shop.seller_key), shopBrands(env, shop)
   ]);
   const following = member?.id
     ? Boolean(await db.prepare(`SELECT 1 AS f FROM member_shop_follows WHERE member_id=?1 AND seller_key=?2`).bind(member.id, shop.seller_key).first())
@@ -340,10 +427,14 @@ export async function handleShopRoutes(request, env, { createTrackToken, readMem
       }, env.LINK_SIGNING_SECRET);
       trackingUrl = `${url.origin}/go?token=${encodeURIComponent(token)}`;
     }
-    products.push({ ...product, tracking_url: trackingUrl });
+    // 2026-09-05 夜 大隆さん報告: 商品タップで真っ白。/go の302を経由せず商品ページへ直接飛ばし、
+    // 計測は別途ビーコン（fetch keepalive）で /go を叩く。Amazon はタグ付きURLにする。
+    let directUrl = product.url;
+    try { const u = new URL(product.url); if (/(^|\.)amazon\.co\.jp$/i.test(u.hostname) && env.AMAZON_ASSOCIATE_TAG) { u.searchParams.set('tag', env.AMAZON_ASSOCIATE_TAG); directUrl = u.toString(); } } catch {}
+    products.push({ ...product, tracking_url: trackingUrl, direct_url: directUrl });
   }
   await recordShopEvent(env, 'shop_viewed', shop.slug, { content: query ? 'search' : 'view' });
-  const html = renderShopHtml({ shop, coupons, products, followers, following, query, origin: url.origin });
+  const html = renderShopHtml({ shop, coupons, products, followers, following, query, origin: url.origin, filters, brands, total: rawProducts.total || 0, page: rawProducts.page || 1, pages: rawProducts.pages || 1 });
   return new Response(html, { headers: {
     'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store',
     'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin'

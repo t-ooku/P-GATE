@@ -82,7 +82,11 @@ test('Business だけがショップを作れ、公開ページ・検索結果�
   assert.match(html, /with care/u);
   assert.match(html, /自立する本革トートバッグ/u);
   assert.doesNotMatch(html, /在庫なし商品/u);
-  assert.match(html, /\/go\?token=tok\.B000000001/u);
+  // 2026-09-05 夜: 商品リンクはモールへ直接（真っ白対策）。/go は data-track のビーコンだけ。
+  assert.match(html, /<a class="shop-product"[^>]*href="https:\/\/www\.amazon\.co\.jp\/dp\/B000000001[^"]*"[^>]*data-track="[^"]*\/go\?token=tok\.B000000001"/u);
+  assert.doesNotMatch(html, /class="shop-product"[^>]*target="_blank"/u);
+  assert.match(html, /☰ 詳細検索/u);
+  assert.match(html, /並び順/u);
   assert.match(html, /HOSHILU10/u);
   assert.match(html, /☆ ショップをホシる/u);
   assert.doesNotMatch(html, new RegExp(SELLER_KEY, 'u'));

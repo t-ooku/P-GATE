@@ -18,4 +18,4 @@
 .shop-directory-arrow { color: var(--violet, #7357ff); font-weight: 900; }
 #shopSearchButton.hidden { display: none; }
 .shop-directory-item { display: grid; gap: 6px; }
-.shop-directory-amazon { justify-self: start; padding: 7px 12px; border: 1px solid #ffb84d; border-radius: 12px; background: #fff7e6; color: #8a5200; font-size: 12px; font-weight: 800; text-decoration: none; }
+.shop-directory-amazon { justify-self: start; padding: 7px 12px; border: 1px solid var(--violet, #7357ff); border-radius: 12px; background: #f4f0ff; color: #4f36b5; font-size: 12px; font-weight: 800; text-decoration: none; }

@@ -32,7 +32,7 @@ test('トップに「ショップから探す」ボタンと一覧欄があり�
   assert.match(html, /<button id="rankingSearchButton"[^>]*>ランキングで探す<\/button><button id="shopSearchButton"[^>]*>ショップから探す<\/button>/);
   assert.match(html, /id="shopDirectory"/);
   assert.match(html, /shop-directory\.mjs\?v=2/);
-  assert.match(html, /shop-directory\.css\?v=2/);
+  assert.match(html, /shop-directory\.css\?v=3/);
   assert.ok(html.indexOf('id="shopDirectory"') < html.indexOf('id="buzzHome"'));
   const client = readFileSync(new URL('../public/shop-directory.mjs', import.meta.url), 'utf8');
   assert.match(client, /\/api\/shops/);
