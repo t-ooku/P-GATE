@@ -95,3 +95,9 @@
 .ai-candidate-image{width:96px;height:96px;margin:6px 0 8px;border-radius:12px;overflow:hidden;background:#f4f0ff;border:1px solid #e6e0ff}
 .ai-candidate-image img{width:100%;height:100%;object-fit:contain;display:block}
 
+/* 2026-09-05 大隆さん指示: 上部の切替を撤去し、「AIに商品を聞く」「すぐ検索」を常設、その下に「ランキングで探す」 */
+#knowledgeForm .search-mode-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#knowledgeForm .search-mode-actions>button{width:100%;min-height:52px}
+#knowledgeForm .search-mode-actions .ranking-search-button{grid-column:1 / -1}
+#knowledgeForm .search-mode-actions .direct-search-button{background:#2b1d6b;background-image:none;color:#fff}
+@media(max-width:640px){#knowledgeForm .search-mode-actions{grid-template-columns:1fr 1fr}#knowledgeForm .search-mode-actions>button{font-size:15px;padding:12px 10px}}

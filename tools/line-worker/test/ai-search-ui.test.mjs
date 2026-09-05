@@ -273,8 +273,11 @@ test('検索方法はスライド式2モードで、AI確認は3回目のNO後�
   const app=await readFile(new URL('../public/app.js',import.meta.url),'utf8');
   const script=await readFile(new URL('../public/ai-search-ui.mjs',import.meta.url),'utf8');
   const css=await readFile(new URL('../public/sticky-nav.css',import.meta.url),'utf8');
-  assert.doesNotMatch(html,/id="goSearch"|id="goWish"/);assert.match(html,/id="searchModeIdentify"/);assert.match(html,/id="searchModeDirect"/);
-  assert.match(css,/search-mode-switch\[data-mode="direct"\]::before/);assert.match(css,/opacity: \.42/);
+  // 2026-09-05 大隆さん指示: 上部のスライド式切替は撤去し、検索欄の下に「AIに商品を聞く」「すぐ検索」を常設。
+  assert.doesNotMatch(html,/id="goSearch"|id="goWish"|id="searchModeSwitch"|id="searchModeIdentify"|id="searchModeDirect"/);
+  assert.match(html,/<button id="askAiButton" class="primary ask-ai-button" type="button">AIに商品を聞く<\/button><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">すぐ検索<\/span>/);
+  assert.match(app,/elements\.askAiButton\?\.addEventListener\('click',\(\)=>\{requestedSearchMode='identify';/);
+  assert.ok(css.length>0);
   assert.match(app,/HoshiluIdentifySearch\?\.open/);assert.match(script,/mode, session_id/);assert.match(script,/mode = 'REFINE'/);
   assert.match(script,/noCount>=3/);assert.match(script,/ai-chat-other-malls/);assert.match(script,/window\.HoshiluIdentifySearch=\{open:openIdentifyDialog\}/);
 });

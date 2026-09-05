@@ -34,9 +34,11 @@ test('ランキングで探すは小分類をYES確認後に人気・最安値�
 test('曖昧検索向けの従来2モードはランキング導線と分離して維持する', async () => {
   const html = await readFile(new URL('index.html', root), 'utf8');
   const app = await readFile(new URL('app.js', root), 'utf8');
-  assert.match(html, /AIに確認して探す/);
+  // 2026-09-05: 上部切替は撤去。常設ボタン「AIに商品を聞く」「すぐ検索」→ その下に「ランキングで探す」
+  assert.match(html, /id="askAiButton"[^>]*>AIに商品を聞く</);
   assert.match(html, /すぐ検索/);
-  assert.match(app, /currentSearchMode\(\)==='identify'/);
+  assert.match(html, /id="askAiButton"[\s\S]{0,400}id="rankingSearchButton"/);
+  assert.match(app, /const identifyRequested=currentSearchMode\(\)==='identify';requestedSearchMode='direct';/);
   assert.match(app, /window\.HoshiluIdentifySearch\.open/);
 });
 

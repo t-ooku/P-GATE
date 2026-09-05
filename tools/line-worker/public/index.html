@@ -121,11 +121,7 @@
   </dialog>
 
 
-    <nav id="searchModeSwitch" class="search-mode-switch" data-mode="direct" aria-label="検索方法" data-nosnippet>
-    <button id="searchModeIdentify" class="search-mode-button" type="button" aria-pressed="false">AIに確認して探す</button>
-    <button id="searchModeDirect" class="search-mode-button active" type="button" aria-pressed="true">すぐ検索</button>
-  </nav>
-<main id="top">
+  <main id="top">
     <div id="userView">
       <div class="hoshilu-layout">
         <div class="hoshilu-primary">
@@ -156,7 +152,7 @@
               </div>
               <label id="socialUrlField" class="social-url-field hidden" for="socialUrl"><span id="socialUrlLabel">HOSHILU対応形式の公開SNS投稿単体URL（Instagram・TikTok・X・Threads・Facebook・Pinterest）</span><input id="socialUrl" type="url" maxlength="500" inputmode="url" autocomplete="url" placeholder="https://www.instagram.com/p/..."></label>
               <p id="searchInputNotice" class="search-input-notice">候補抽出にGoogleのAIを利用。顔や住所は写さないでください。</p>
-              <div class="search-mode-actions"><button id="submitButton" class="primary" type="submit"><span id="submitText">すぐ検索</span><span aria-hidden="true">→</span></button><button id="rankingSearchButton" class="ranking-search-button" type="button">ランキングで探す</button></div>
+              <div class="search-mode-actions"><button id="askAiButton" class="primary ask-ai-button" type="button">AIに商品を聞く</button><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">すぐ検索</span><span aria-hidden="true">→</span></button><button id="rankingSearchButton" class="ranking-search-button" type="button">ランキングで探す</button></div>
               <div id="searchHintsSection" class="search-hints">
                 <div id="searchHistorySection" class="search-history-section hidden">
                   <div class="search-history-toolbar"><h3 id="searchHistoryTitle">検索履歴</h3></div>
