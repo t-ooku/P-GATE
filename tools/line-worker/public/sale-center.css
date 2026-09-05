@@ -59,3 +59,8 @@
 .sale-mall-events{font-size:.68rem;line-height:1.3;color:#e6e0ff;font-weight:700}
 .sale-mall-strip .sale-settings-button{grid-column:1 / -1;margin-top:.1rem}
 @media(max-width:760px){.sale-mall-strip{gap:.45rem}.sale-mall-logo{font-size:.85rem}.sale-mall-events{font-size:.62rem}}
+
+/* 2026-09-05 大隆さん指示: 見出し「好みの割引セールだけ受け取ろう」(13字)は文字サイズを調整して一行に */
+.sale-center h2#saleCenterTitle{white-space:nowrap;text-wrap:nowrap;overflow-wrap:normal;letter-spacing:-.045em;font-size:clamp(1.25rem,2.6vw,2.4rem)}
+@media(max-width:760px){.sale-center h2#saleCenterTitle{font-size:clamp(1rem,5.1vw,1.45rem);letter-spacing:-.05em}}
+@media(max-width:360px){.sale-center h2#saleCenterTitle{font-size:clamp(.95rem,5.2vw,1.2rem)}}
