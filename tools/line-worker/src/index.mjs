@@ -1,6 +1,7 @@
 import { handleSellerRoutes } from './seller-auth.mjs';
 import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
 import { handleCreatorInquiryRoutes } from './creator-inquiries.mjs';
+import { handlePriceWatchDemandRoute } from './price-watch-demand.mjs';
 import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
 import { purgeAdminAuthRecords } from './admin-login-guard.mjs';
@@ -3240,6 +3241,9 @@ export default {
     const sellerBusinessInquiryResponse = await handleSellerBusinessInquiryRoutes(request, env);
     if (sellerBusinessInquiryResponse) return sellerBusinessInquiryResponse;
     // 2026-09-05 大隆さん指示: クリエイター（インフルエンサー）直接募集の応募・報告フォーム。
+    // 2026-09-05 夜: 値下がり待ちリスト（5人以上の匿名集計）を公開。
+    const priceWatchDemandResponse = await handlePriceWatchDemandRoute(request, env);
+    if (priceWatchDemandResponse) return priceWatchDemandResponse;
     const creatorInquiryResponse = await handleCreatorInquiryRoutes(request, env);
     if (creatorInquiryResponse) return creatorInquiryResponse;
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
