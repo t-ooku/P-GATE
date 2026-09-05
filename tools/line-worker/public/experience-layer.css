@@ -127,3 +127,9 @@
 /* 2026-09-05 大隆さん指示: 公式アカウント欄にクリエイター募集の入口 */
 .official-social-link.creators{grid-column:1/-1;background:linear-gradient(90deg,#ff2d9b 0%,#7b3dff 55%,#12b3ff 100%);color:#fff;border:0}
 .official-social-link.creators:hover,.official-social-link.creators:focus-visible{filter:brightness(1.06)}
+
+/* 2026-09-05 夜 大隆さん決定「逆ウォッチ」: ウォッチ画面の「もう買った」切替 */
+.watch-mode-toggle{display:flex;align-items:flex-start;gap:8px;padding:9px 11px;border:1px solid #ded7ff;border-radius:11px;background:#f7f5ff;color:#5140ba;font-size:11.5px;font-weight:800;line-height:1.5;cursor:pointer}
+.watch-mode-toggle input{margin-top:2px;accent-color:#7357ff}
+.product-watch-dialog-card.post-purchase .watch-mode-toggle{background:#ffeef6;border-color:#ffc2dd;color:#b3226d}
+.product-watch-dialog-card.post-purchase .watch-save-button{background:linear-gradient(90deg,#ff3ca5,#7357ff)}

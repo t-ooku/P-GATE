@@ -324,3 +324,16 @@ test('DELETE時にsearch_watch_matchesの重複防止台帳も一緒に削除さ
   assert.equal(del.status, 200);
   assert.equal(sqlite.prepare('SELECT COUNT(*) AS c FROM search_watch_matches WHERE wish_id=?').get(wish.wish_id).c, 0);
 });
+
+// 2026-09-05 夜 大隆さん決定「逆ウォッチ」: 買った値段より安くなったら30日以内に通知。
+test('逆ウォッチ: 買った価格を送ると希望価格=購入価格-1・30日期限で保存し、不正な金額は拒否する',async()=>{
+  const {db}=sqliteD1();const env={PRODUCT_DB:db,MEMBER_SESSION_SECRET};
+  const cookie=await memberCookie({id:'member-post',name:'テスト',provider:'EMAIL'});
+  const before=Date.now();
+  const response=await requestFor(env,'POST','/api/member/wishes',cookie,{query:'コンビ ベビーカー スゴカル',language:'JA',watch_price:true,watch_kind:'POST_PURCHASE',purchase_price_jpy:32800,target_product_key:'RAKUTEN:combi-1',target_product_name:'コンビ ベビーカー スゴカル'});
+  assert.equal(response.status,200);const wish=(await response.json()).wish;
+  assert.equal(wish.watch_kind,'POST_PURCHASE');assert.equal(wish.purchase_price_jpy,32800);assert.equal(wish.target_price_jpy,32799);
+  const expires=Date.parse(wish.expires_at);assert.ok(expires>=before+29*86_400_000&&expires<=before+31*86_400_000);
+  const invalid=await requestFor(env,'POST','/api/member/wishes',cookie,{query:'コンビ ベビーカー',watch_kind:'POST_PURCHASE',purchase_price_jpy:50});
+  assert.equal(invalid.status,400);assert.equal((await invalid.json()).error,'PURCHASE_PRICE_INVALID');
+});

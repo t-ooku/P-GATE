@@ -27,6 +27,7 @@ export async function publicPriceWatchDemand(env, options = {}) {
       max(updated_at) AS last_updated_at
     FROM member_wishes
     WHERE watch_price=1
+      AND coalesce(json_extract(condition_snapshot,'$.price_condition.kind'),'')<>'POST_PURCHASE'
       AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100
       AND length(trim(coalesce(json_extract(condition_snapshot,'$.price_condition.target_product_name'),'')))>0
     GROUP BY json_extract(condition_snapshot,'$.price_condition.target_product_name')

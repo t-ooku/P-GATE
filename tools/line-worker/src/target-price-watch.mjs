@@ -36,6 +36,12 @@ function pricedOffers(wish,candidates){
   return rows.sort((left,right)=>left.price-right.price);
 }
 function notificationText(wish,best,target){
+  // 逆ウォッチ（買った後の値下がり）: 「希望価格以下」ではなく「買った価格より安い」と伝える。
+  if(String(wish.watch_kind||'')==='POST_PURCHASE'){
+    const paid=Number(wish.purchase_price_jpy)||target+1;
+    const values={JA:{title:'買った後に値下がりしました',body:`${best.name}：API確認価格 ¥${best.price.toLocaleString('ja-JP')}（買った価格 ¥${paid.toLocaleString('ja-JP')}より安い）。返金・価格保証の条件は購入先で確認してください。`},EN:{title:'Price dropped after your purchase',body:`${best.name}: API-confirmed price JPY ${best.price.toLocaleString('en-US')} (lower than the JPY ${paid.toLocaleString('en-US')} you paid). Check the seller for refund or price-guarantee terms.`},ZH:{title:'购买后降价了',body:`${best.name}：API确认价格 ¥${best.price.toLocaleString('zh-CN')}（低于您购买时的 ¥${paid.toLocaleString('zh-CN')}）。退款或价格保证条件请向购买店铺确认。`},KO:{title:'구매 후 가격이 내렸습니다',body:`${best.name}: API 확인 가격 ¥${best.price.toLocaleString('ko-KR')} (구매 가격 ¥${paid.toLocaleString('ko-KR')}보다 저렴). 환불·가격 보장 조건은 구매처에서 확인하세요.`}};
+    return values[String(wish.language||'JA').toUpperCase()]||values.JA;
+  }
   const values={JA:{title:'購入したい価格になりました',body:`${best.name}：API確認価格 ¥${best.price.toLocaleString('ja-JP')}（希望価格 ¥${target.toLocaleString('ja-JP')}以下）`},EN:{title:'Your target price has been reached',body:`${best.name}: API-confirmed price JPY ${best.price.toLocaleString('en-US')} (at or below your target of JPY ${target.toLocaleString('en-US')})`},ZH:{title:'商品已达到您的目标价格',body:`${best.name}：API确认价格 ¥${best.price.toLocaleString('zh-CN')}（不高于目标价 ¥${target.toLocaleString('zh-CN')}）`},KO:{title:'원하는 구매 가격에 도달했습니다',body:`${best.name}: API 확인 가격 ¥${best.price.toLocaleString('ko-KR')} (희망 가격 ¥${target.toLocaleString('ko-KR')} 이하)`}};
   return values[String(wish.language||'JA').toUpperCase()]||values.JA;
 }
@@ -97,9 +103,13 @@ export async function runTargetPriceScan(env,now=new Date().toISOString(),fetche
     CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER) AS target_price_jpy,
     COALESCE(json_extract(condition_snapshot,'$.price_condition.target_product_key'),'') AS target_product_key,
     COALESCE(json_extract(condition_snapshot,'$.price_condition.target_product_name'),'') AS target_product_name,
+    COALESCE(json_extract(condition_snapshot,'$.price_condition.kind'),'') AS watch_kind,
+    CAST(COALESCE(json_extract(condition_snapshot,'$.price_condition.purchase_price_jpy'),0) AS INTEGER) AS purchase_price_jpy,
     EXISTS(SELECT 1 FROM search_watch_matches reached WHERE reached.wish_id=member_wishes.wish_id AND reached.product_identity_key='TARGET_PRICE_REACHED') AS target_price_notified
     FROM member_wishes WHERE watch_price=1
       AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100
+      AND (json_extract(condition_snapshot,'$.price_condition.expires_at') IS NULL
+        OR datetime(json_extract(condition_snapshot,'$.price_condition.expires_at'))>datetime(?1))
       AND NOT EXISTS(SELECT 1 FROM search_watch_matches checked WHERE checked.wish_id=member_wishes.wish_id
         AND checked.product_identity_key='TARGET_PRICE_CHECK' AND datetime(checked.matched_at)>datetime(?1,?2))
     ORDER BY updated_at ASC LIMIT ?3`).bind(now,`-${CHECK_INTERVAL_HOURS} hours`,BATCH_LIMIT).all();

@@ -61,6 +61,7 @@ const targetPriceOrUnset = (value) => {
   return Number.isInteger(amount) && amount >= 100 && amount <= 100000000 ? amount : false;
 };
 const targetTextOrUnset = (value, max = 200) => value === undefined ? null : clean(value).slice(0, max);
+export const POST_PURCHASE_WATCH_DAYS = 30;
 
 const LEGACY_WISH_SELECT_COLUMNS = 'wish_id,query_text,language,watch_sale,watch_price,watch_coupon,watch_restock,watch_frequency,notify_new_match,condition_snapshot,created_at,updated_at';
 const WISH_SELECT_COLUMNS = `${LEGACY_WISH_SELECT_COLUMNS},insight_enabled_at`;
@@ -119,7 +120,10 @@ function decorateWishRow(row) {
   return { ...row, condition_snapshot: conditionSnapshot,
     target_price_jpy:Number(price.target_price_jpy)||null,
     target_product_key:String(price.target_product_key||''),
-    target_product_name:String(price.target_product_name||'') };
+    target_product_name:String(price.target_product_name||''),
+    watch_kind:String(price.kind||'TARGET_PRICE'),
+    purchase_price_jpy:Number(price.purchase_price_jpy)||null,
+    expires_at:String(price.expires_at||'') };
 }
 
 export async function handleMemberWishRoutes(request, env) {
@@ -137,11 +141,22 @@ export async function handleMemberWishRoutes(request, env) {
     if (query.length < 2) return Response.json({ ok: false, error: 'WISH_QUERY_INVALID' }, { status: 400 });
     const wishId = await makeId(member.id, query), now = new Date().toISOString(), watch = prefs(payload);
     const previousEnablement = await selectWishEnablement(env, member.id, wishId);
-    const targetPrice = targetPriceOrUnset(payload.target_price_jpy);
+    // 2026-09-05 夜 大隆さん決定「逆ウォッチ」: 買った直後の値下がりが一番悔しい。
+    // watch_kind='POST_PURCHASE' と purchase_price_jpy を受けたら、買った価格より
+    // 1円でも安くなったら通知する希望価格（購入価格-1）として同じ監視経路に乗せ、
+    // 30日で自動的に期限切れにする（expires_at）。値下がり待ちの公開集計からは除く。
+    const postPurchase = String(payload.watch_kind || '').toUpperCase() === 'POST_PURCHASE';
+    const purchasePrice = postPurchase ? targetPriceOrUnset(payload.purchase_price_jpy) : null;
+    if (postPurchase && (purchasePrice === null || purchasePrice === false || purchasePrice < 101)) {
+      return Response.json({ ok: false, error: 'PURCHASE_PRICE_INVALID' }, { status: 400 });
+    }
+    const targetPrice = postPurchase ? purchasePrice - 1 : targetPriceOrUnset(payload.target_price_jpy);
     if (targetPrice === false) return Response.json({ ok: false, error: 'TARGET_PRICE_INVALID' }, { status: 400 });
     const targetProductKey = targetTextOrUnset(payload.target_product_key, 160);
     const targetProductName = targetTextOrUnset(payload.target_product_name, 200);
-    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:targetProductKey||'',target_product_name:targetProductName||query}};
+    const postPurchaseCondition = postPurchase ? { kind: 'POST_PURCHASE', purchase_price_jpy: purchasePrice,
+      expires_at: new Date(Date.parse(now) + POST_PURCHASE_WATCH_DAYS * 86_400_000).toISOString() } : {};
+    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:targetProductKey||'',target_product_name:targetProductName||query,...postPurchaseCondition}};
     const conditionSnapshot = conditionSnapshotFor(targetPayload, query);
     // 0044のnotify_new_match DEFAULT 1だけでは、本人が新着通知を明示的に
     // 有効化したか判別できない。新規の通常保存はOFFにし、明示ONかつMUTED

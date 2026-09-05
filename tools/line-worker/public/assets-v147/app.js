@@ -277,7 +277,7 @@ function watchFrequencyFor(query){const item=getWatchPreferences().find(saved=>s
 function storeWatchPreference(query,options,asin='',frequency=watchFrequencyFor(query),target={}){const current=getWatchPreferences();const item={asin:String(asin||''),query:String(query||'').trim(),options:options.map(Boolean),frequency,target_price_jpy:Number(target.target_price_jpy)||null,target_product_key:String(target.target_product_key||''),target_product_name:String(target.target_product_name||''),updatedAt:new Date().toISOString()};localStorage.setItem('hoshilu_watch_preferences',JSON.stringify([item,...current.filter(saved=>saved.query!==item.query)].slice(0,100)));}
 function removeLocalWish(query){setWishes(getWishes().filter(item=>item!==query));localStorage.setItem('hoshilu_watch_preferences',JSON.stringify(getWatchPreferences().filter(item=>item.query!==query)));}
 function recordFor(query){return memberWishRecords.find(item=>item.query_text===query);}
-function payloadFor(query,_options,frequency=watchFrequencyFor(query),target={}){const targetPrice=Number(target.target_price_jpy)||null;return{query,language:elements.language.value,watch_sale:false,watch_price:Boolean(targetPrice),watch_coupon:false,watch_restock:false,watch_frequency:frequency,...(targetPrice?{target_price_jpy:targetPrice,target_product_key:String(target.target_product_key||''),target_product_name:String(target.target_product_name||'')}:{})};}
+function payloadFor(query,_options,frequency=watchFrequencyFor(query),target={}){const targetPrice=Number(target.target_price_jpy)||null;return{query,language:elements.language.value,watch_sale:false,watch_price:Boolean(targetPrice),watch_coupon:false,watch_restock:false,watch_frequency:frequency,...(targetPrice?{target_price_jpy:targetPrice,target_product_key:String(target.target_product_key||''),target_product_name:String(target.target_product_name||''),...(target.watch_kind==='POST_PURCHASE'?{watch_kind:'POST_PURCHASE',purchase_price_jpy:Number(target.purchase_price_jpy)||targetPrice+1}:{})}:{})};}
 function saveWish(query,options=watchOptionsFor(String(query||'').trim()),target={}){const value=String(query||'').trim();if(!value)return false;setWishes([value,...getWishes().filter(item=>item!==value)]);storeWatchPreference(value,options,target.target_product_key||'',watchFrequencyFor(value),target);renderWishes();if(memberSession)persistMemberWish(value,options,target);return true;}
 async function persistMemberWish(query,options=watchOptionsFor(query),target={}){try{const response=await fetch('/api/member/wishes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payloadFor(query,options,watchFrequencyFor(query),target))});if(response.ok){const record=(await response.json()).wish;memberWishRecords=[record,...memberWishRecords.filter(item=>item.wish_id!==record.wish_id)];return record;}}catch{}return null;}
 // HOSHILU INSIGHT v1.0: 保存した検索条件専用の保存/更新経路。AIウォッチ
@@ -409,7 +409,7 @@ function applyPendingWatch(){
   let pending=null;try{pending=JSON.parse(localStorage.getItem('hoshilu_pending_watch')||'null');}catch{}
   if(!pending||!(Number(pending.target_price_jpy)>=100)||Date.now()-Number(pending.saved_at||0)>24*60*60*1000){try{localStorage.removeItem('hoshilu_pending_watch');}catch{}return;}
   const name=String(pending.target_product_name||'').trim();
-  if(name&&saveWish(name,[false,true,false,false],{target_price_jpy:Number(pending.target_price_jpy),target_product_key:String(pending.target_product_key||''),target_product_name:name})){try{localStorage.removeItem('hoshilu_pending_watch');}catch{}}
+  if(name&&saveWish(name,[false,true,false,false],{target_price_jpy:Number(pending.target_price_jpy),target_product_key:String(pending.target_product_key||''),target_product_name:name,...(pending.watch_kind==='POST_PURCHASE'?{watch_kind:'POST_PURCHASE',purchase_price_jpy:Number(pending.purchase_price_jpy)||0}:{})})){try{localStorage.removeItem('hoshilu_pending_watch');}catch{}}
 }
 // 会員セッションの同期後に、登録前の希望額を反映する(既存の同期処理は触らない)。
 const baseSyncMemberWishes=syncMemberWishes;
@@ -450,6 +450,13 @@ function createWatchOptions(candidate,t){
   const targetWrap=document.createElement('label');targetWrap.className='target-price-field';targetWrap.append(textElement('strong','target-price-current',`${priceLabels.current}：${currentPriceText}`),textElement('span','target-price-label',priceLabels.label));
   const targetInput=document.createElement('input');targetInput.type='number';targetInput.inputMode='numeric';targetInput.min='100';targetInput.max='100000000';targetInput.step='100';targetInput.required=true;if(Number.isFinite(currentPrice))targetInput.placeholder=String(Math.max(100,Math.floor(currentPrice*.9/100)*100));const productKey=String(candidate?.record_key||candidate?.asin||'');const productName=String(candidate?.display_name||candidate?.product_name||elements.query.value);const savedTarget=getWatchPreferences().find(item=>(productKey&&item.target_product_key===productKey)||item.target_product_name===productName);if(Number(savedTarget?.target_price_jpy)>=100)targetInput.value=String(savedTarget.target_price_jpy);targetWrap.append(targetInput,textElement('small','',priceLabels.unit));
   const targetNote=textElement('p','watch-save-note',priceLabels.note);
+  // 2026-09-05 夜 大隆さん決定「逆ウォッチ」: 買った直後の値下がりが一番悔しい。
+  // 同じダイアログで「もう買った」に切り替えると、買った値段より安くなったら
+  // 30日以内に通知（サーバ側は購入価格-1 を希望価格として同じ監視に乗せる）。
+  const postCopy={JA:{toggle:'もう買った。買った値段より安くなったら教えて（30日間）',label:'買った値段',note:'30日以内に、Amazon・楽天・Yahoo!のAPI確認価格が買った値段より安くなったら通知します。返金や価格保証の条件は購入先で確認してください。この設定は「みんなが値下がりを待ってる」の集計には入りません。'},EN:{toggle:'Already bought it. Tell me if it gets cheaper (30 days)',label:'Price you paid',note:'For 30 days, we notify you if an API-confirmed price on Amazon, Rakuten or Yahoo! drops below what you paid. Check the seller for refund or price-guarantee terms.'},ZH:{toggle:'已经买了。比购买价便宜时提醒我（30天）',label:'购买价格',note:'30天内，若Amazon・乐天・Yahoo!的API确认价格低于您的购买价将通知您。退款条件请向购买店铺确认。'},KO:{toggle:'이미 샀어요. 구매가보다 싸지면 알려줘 (30일)',label:'구매한 가격',note:'30일 동안 Amazon・라쿠텐・Yahoo!의 API 확인 가격이 구매가보다 낮아지면 알립니다. 환불 조건은 구매처에서 확인하세요.'}}[elements.language.value]||null;
+  const modeWrap=document.createElement('label');modeWrap.className='watch-mode-toggle';const modeInput=document.createElement('input');modeInput.type='checkbox';modeWrap.append(modeInput,textElement('span','',postCopy.toggle));
+  const targetLabelNode=targetWrap.querySelector('.target-price-label');const defaultPlaceholder=targetInput.placeholder;
+  modeInput.addEventListener('change',()=>{const post=modeInput.checked;panel.classList.toggle('post-purchase',post);targetLabelNode.textContent=post?postCopy.label:priceLabels.label;targetNote.textContent=post?postCopy.note:priceLabels.note;targetInput.placeholder=post&&Number.isFinite(currentPrice)?String(Math.round(currentPrice)):defaultPlaceholder;});
   const actions=actionCopy[elements.language.value]||actionCopy.JA;
   const save=document.createElement('button');
   save.type='button';save.className='watch-save-button';save.textContent=actions.saveWatch;
@@ -458,12 +465,12 @@ function createWatchOptions(candidate,t){
     const amount=Number(targetInput.value||0);if(!targetInput.value||amount<100||amount>100000000){targetInput.setCustomValidity(priceLabels.required);targetInput.reportValidity();return;}targetInput.setCustomValidity('');
     if(!memberSession){
       // §21: 行き止まりにしない。希望額は端末に残し、無料登録(30秒)へ最短で案内する。
-      try{localStorage.setItem('hoshilu_pending_watch',JSON.stringify({target_price_jpy:amount,target_product_key:productKey,target_product_name:productName,saved_at:Date.now()}));}catch{}
+      try{localStorage.setItem('hoshilu_pending_watch',JSON.stringify({target_price_jpy:modeInput.checked?Math.max(100,amount-1):amount,target_product_key:productKey,target_product_name:productName,saved_at:Date.now(),...(modeInput.checked?{watch_kind:'POST_PURCHASE',purchase_price_jpy:amount}:{})}));}catch{}
       status.textContent=priceLabels.login;
       if(!panel.querySelector('.watch-login-cta')){const cta=document.createElement('a');cta.className='watch-login-cta';cta.href=memberLoginHref();cta.textContent=(keepCopy[elements.language.value]||keepCopy.JA).bellGuest;panel.append(cta);}
       return;
     }
-    const target={target_price_jpy:amount,target_product_key:productKey,target_product_name:productName};
+    const target=modeInput.checked?{target_price_jpy:Math.max(100,amount-1),target_product_key:productKey,target_product_name:productName,watch_kind:'POST_PURCHASE',purchase_price_jpy:amount}:{target_price_jpy:amount,target_product_key:productKey,target_product_name:productName};
     // 希望額は検索文ではなく商品単位で保存する。同じ検索結果から複数商品へ
     // 希望額を付けても、同じwish_idへ上書きされないよう商品名を保存キーにする。
     const wishQuery=productName;
@@ -473,7 +480,7 @@ function createWatchOptions(candidate,t){
       setTimeout(()=>dialog.close(),700);
     }
   });
-  panel.append(targetWrap,targetNote,save,status);
+  panel.append(modeWrap,targetWrap,targetNote,save,status);
   dialog.append(panel);
   return{bell,dialog};
 }

@@ -46,3 +46,20 @@ test('希望額より高いAPI価格では通知せず、AI推定価格用の入
   assert.equal(sqlite.prepare('SELECT count(*) AS count FROM mywatch_notifications').get().count,0);
   assert.ok(sqlite.prepare("SELECT matched_at FROM search_watch_matches WHERE wish_id='w1' AND product_identity_key='TARGET_PRICE_CHECK'").get().matched_at);
 });
+
+// 2026-09-05 夜 大隆さん決定「逆ウォッチ」
+test('逆ウォッチは買った価格より安い時に「買った後に値下がりしました」で通知し、30日を過ぎた設定は走査しない',async()=>{
+  const {sqlite,env}=envWithDb();const now='2026-09-05T12:00:00.000Z';
+  const insert=sqlite.prepare(`INSERT INTO member_wishes(member_id,wish_id,query_text,language,watch_sale,watch_price,watch_coupon,watch_restock,watch_frequency,notify_new_match,condition_snapshot,created_at,updated_at)
+    VALUES(?1,?2,?3,'JA',0,1,0,0,'INSTANT',0,?4,?5,?5)`);
+  insert.run('m1','w-post','LILMOON リルムーン ワンデー 度あり カラコン',JSON.stringify({price_condition:{kind:'POST_PURCHASE',purchase_price_jpy:3000,target_price_jpy:2999,expires_at:'2026-10-05T12:00:00.000Z',target_product_key:'YAHOO:lilmoon-1',target_product_name:'LILMOON リルムーン 度あり カラコン'}}),'2026-09-05T00:00:00.000Z');
+  insert.run('m2','w-expired','LILMOON リルムーン ワンデー 度あり カラコン',JSON.stringify({price_condition:{kind:'POST_PURCHASE',purchase_price_jpy:3000,target_price_jpy:2999,expires_at:'2026-09-01T00:00:00.000Z',target_product_key:'YAHOO:lilmoon-1',target_product_name:'LILMOON リルムーン 度あり カラコン'}}),'2026-08-01T00:00:00.000Z');
+  const same=await runTargetPriceScan(env,now,yahooFetch(3000));
+  assert.deepEqual(same,{scanned:1,notifications_sent:0});
+  const cheaper=await runTargetPriceScan(env,'2026-09-05T16:00:00.000Z',yahooFetch(2800));
+  assert.deepEqual(cheaper,{scanned:1,notifications_sent:1});
+  const notification=sqlite.prepare("SELECT wish_id,title,body FROM mywatch_notifications WHERE channel='WEB'").get();
+  assert.equal(notification.wish_id,'w-post');
+  assert.equal(notification.title,'買った後に値下がりしました');
+  assert.match(notification.body,/¥2,800/);assert.match(notification.body,/買った価格 ¥3,000より安い/);
+});

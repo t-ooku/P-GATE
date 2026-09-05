@@ -67,3 +67,15 @@ test('トップに値下がり待ちリストの枠と読み込みモジュー�
   assert.match(client, /\/api\/price-watch\/demand/);
   assert.doesNotMatch(client, /innerHTML/);
 });
+
+test('逆ウォッチ（買った後の値下がり待ち）は「みんなが値下がりを待ってる」に数えない', async () => {
+  const { sqlite, env } = envWithDb();
+  for (let i = 0; i < 5; i += 1) insertWatch(sqlite, `m${i}`, `w${i}`, '待っている商品', 1000);
+  for (let i = 0; i < 6; i += 1) {
+    sqlite.prepare(`INSERT INTO member_wishes(member_id,wish_id,query_text,language,watch_sale,watch_price,watch_coupon,watch_restock,watch_frequency,notify_new_match,condition_snapshot,created_at,updated_at)
+      VALUES(?1,?2,'買った商品','JA',0,1,0,0,'INSTANT',0,?3,'2026-09-05T00:00:00.000Z','2026-09-05T00:00:00.000Z')`)
+      .run(`p${i}`, `x${i}`, JSON.stringify({ price_condition: { kind: 'POST_PURCHASE', purchase_price_jpy: 2000, target_price_jpy: 1999, expires_at: '2026-10-05T00:00:00.000Z', target_product_name: '買った商品' } }));
+  }
+  const { items } = await publicPriceWatchDemand(env);
+  assert.deepEqual(items.map(item => item.product_name), ['待っている商品']);
+});
