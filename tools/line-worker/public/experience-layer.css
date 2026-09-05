@@ -123,3 +123,7 @@
 .condition-group-extra .condition-chip-extra[aria-pressed="true"]{background:#3b2a9c;border-color:#3b2a9c;color:#fff}
 .condition-group-brand .condition-chip-extra{border-color:#f0c9c5;background:#fff7f6;color:#8a1d15}
 .condition-group-brand .condition-chip-extra[aria-pressed="true"]{background:#b3261e;border-color:#b3261e;color:#fff}
+
+/* 2026-09-05 大隆さん指示: 公式アカウント欄にクリエイター募集の入口 */
+.official-social-link.creators{grid-column:1/-1;background:linear-gradient(90deg,#ff2d9b 0%,#7b3dff 55%,#12b3ff 100%);color:#fff;border:0}
+.official-social-link.creators:hover,.official-social-link.creators:focus-visible{filter:brightness(1.06)}

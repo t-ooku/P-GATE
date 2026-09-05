@@ -1,0 +1,19 @@
+/* 2026-09-05 大隆さん指示: クリエイター募集ページ(/for-creators)。for-sellers.css を土台に、素材一覧と同意欄だけ足す。 */
+.creator-materials article ul { margin: 8px 0 0; padding-left: 18px; }
+.creator-materials article li { margin: 4px 0; font-size: 13px; line-height: 1.5; }
+.creator-file-list a { color: #5140ba; font-weight: 800; text-decoration: underline; }
+.creator-copy-list li { color: #17142d; }
+.creator-note { margin: 8px 0 0; font-size: 11.5px; color: #6f6a8a; }
+.consent-check { align-items: flex-start; gap: 8px; font-size: 13px; }
+.consent-check input { margin-top: 3px; }
+.consent-check a { color: #5140ba; font-weight: 800; }
+.terms-page { max-width: 820px; margin: 0 auto; padding: 24px 18px 60px; line-height: 1.75; color: #17142d; }
+.terms-page h1 { font-size: 24px; margin: 8px 0 4px; }
+.terms-page h2 { font-size: 17px; margin: 28px 0 8px; padding-left: 10px; border-left: 4px solid #7357ff; }
+.terms-page ol, .terms-page ul { padding-left: 22px; }
+.terms-page li { margin: 6px 0; }
+.terms-page table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+.terms-page th, .terms-page td { border: 1px solid #ded7ff; padding: 8px 10px; text-align: left; vertical-align: top; }
+.terms-page th { background: #f4f0ff; }
+.terms-page .meta { color: #6f6a8a; font-size: 13px; }
+.terms-page .back { display: inline-block; margin-top: 24px; color: #5140ba; font-weight: 800; }
