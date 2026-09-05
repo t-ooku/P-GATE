@@ -98,13 +98,13 @@ export async function activeShops(env, { now = Date.now() } = {}) {
   if (!env?.PRODUCT_DB) return [];
   if (now - shopCache.at < 60000) return shopCache.shops;
   try {
-    const rows = await env.PRODUCT_DB.prepare(`SELECT s.seller_key,s.slug,s.shop_name,s.logo_url,s.tenants,s.seller_ids,
+    const rows = await env.PRODUCT_DB.prepare(`SELECT s.seller_key,s.slug,s.shop_name,s.logo_url,s.tagline,s.tenants,s.seller_ids,
       (SELECT COUNT(*) FROM seller_shop_coupons c WHERE c.seller_key=s.seller_key AND c.status='ACTIVE' AND c.hoshilu_only=1
         AND (c.starts_at='' OR c.starts_at<=?1) AND (c.ends_at='' OR c.ends_at>=?1)) AS live_coupons
       FROM seller_shops s JOIN seller_billing_accounts a ON a.seller_key=s.seller_key
       WHERE s.status='ACTIVE' AND a.plan='BUSINESS' AND a.status='ACTIVE' LIMIT 500`).bind(jstToday()).all();
     const shops = (rows.results || []).map((row) => ({
-      seller_key: row.seller_key, slug: row.slug, name: row.shop_name, logo_url: row.logo_url || '',
+      seller_key: row.seller_key, slug: row.slug, name: row.shop_name, logo_url: row.logo_url || '', tagline: String(row.tagline || ''),
       tenants: safeList(row.tenants).map((t) => t.toLowerCase()), seller_ids: safeList(row.seller_ids),
       coupon: Number(row.live_coupons || 0) > 0
     }));
@@ -439,4 +439,19 @@ export async function handleSellerShopAdminRoutes(request, env, authorize) {
   const sellerKey = match[1];
   const proxied = new Request(`${url.origin}/api/seller/shop${match[2] || ''}`, request);
   return handleShopManagement(proxied, env, sellerKey, { base: '/api/seller/shop' });
+}
+
+// 2026-09-05 夜 大隆さん指示: トップに「ショップから探す」。掲載中ショップ（ACTIVE かつ Business）の一覧を公開する。
+// 先駆者として ITG の3店舗（with-care / tomorrows-smile / find-fun）が並ぶ。seller_key は出さない。
+export async function handlePublicShopDirectoryRoute(request, env) {
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.pathname !== '/api/shops') return null;
+  try {
+    const shops = (await activeShops(env)).map((shop) => ({
+      slug: shop.slug, name: shop.name, logo_url: shop.logo_url, tagline: shop.tagline || '', coupon: Boolean(shop.coupon), url: `/shop/${shop.slug}`
+    }));
+    return Response.json({ ok: true, shops }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
+  } catch (error) {
+    return Response.json({ ok: false, error: String(error?.message || 'SHOP_DIRECTORY_FAILED').slice(0, 80) }, { status: 502, headers: { 'cache-control': 'no-store' } });
+  }
 }

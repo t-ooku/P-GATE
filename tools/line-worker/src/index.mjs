@@ -55,7 +55,7 @@ import { recordOutboundCommerceEvent } from './outbound-commerce-event.mjs';
 import { handleSellerBillingAdminRoutes, handleStripeWebhook, sellerBillingReadiness, settleQualifiedClickCharge } from './seller-billing.mjs';
 import { referralCategoryFor } from './seller-referral-category.mjs';
 import { handleExperienceRoutes } from './experience-layer.mjs';
-import { activeShops, handleSellerShopAdminRoutes, handleShopRoutes, publicShopRef, shopForOffer } from './seller-shop.mjs';
+import { activeShops, handlePublicShopDirectoryRoute, handleSellerShopAdminRoutes, handleShopRoutes, publicShopRef, shopForOffer } from './seller-shop.mjs';
 import { handleCreatorKpiRoutes } from './creator-kpi.mjs';
 import { aiChatCandidatePreviews } from './ai-chat-preview.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
@@ -3244,6 +3244,9 @@ export default {
     // 2026-09-05 夜: 値下がり待ちリスト（5人以上の匿名集計）を公開。
     const priceWatchDemandResponse = await handlePriceWatchDemandRoute(request, env);
     if (priceWatchDemandResponse) return priceWatchDemandResponse;
+    // 2026-09-05 夜: 「ショップから探す」の一覧。
+    const shopDirectoryResponse = await handlePublicShopDirectoryRoute(request, env);
+    if (shopDirectoryResponse) return shopDirectoryResponse;
     const creatorInquiryResponse = await handleCreatorInquiryRoutes(request, env);
     if (creatorInquiryResponse) return creatorInquiryResponse;
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);

@@ -98,7 +98,11 @@
 /* 2026-09-05 大隆さん指示: 上部の切替を撤去し、「AIに商品を聞く」「すぐ検索」を常設、その下に「ランキングで探す」 */
 #knowledgeForm .search-mode-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #knowledgeForm .search-mode-actions>button{width:100%;min-height:52px}
-#knowledgeForm .search-mode-actions .ranking-search-button{grid-column:1 / -1}
+/* 2026-09-05 夜 大隆さん指示: 「ランキングで探す」の隣に「ショップから探す」 */
+#knowledgeForm .search-mode-actions .ranking-search-button{grid-column:auto}
+#knowledgeForm .search-mode-actions .shop-search-button{background:#fff;color:#4f36b5;border:2px solid #7357ff}
+#knowledgeForm .search-mode-actions .shop-search-button.hidden{display:none}
+#knowledgeForm .search-mode-actions .ranking-search-button:has(+ .shop-search-button.hidden){grid-column:1 / -1}
 #knowledgeForm .search-mode-actions .direct-search-button{background:#2b1d6b;background-image:none;color:#fff}
 @media(max-width:640px){#knowledgeForm .search-mode-actions{grid-template-columns:1fr 1fr}#knowledgeForm .search-mode-actions>button{font-size:15px;padding:12px 10px}}
 
