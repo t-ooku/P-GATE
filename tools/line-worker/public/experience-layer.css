@@ -115,10 +115,13 @@
 .search-suggest-kind{font-size:10px;color:#6d6b80;border:1px solid #e6e0ff;border-radius:999px;padding:2px 7px;white-space:nowrap}
 .search-suggest-brand .search-suggest-kind{color:#b3261e;border-color:#f6d3d0;background:#fff5f4}
 #searchInputActions.search-input-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
-#searchInputActions .advanced-search-toggle{justify-content:center}
+/* 2026-09-05 夜 大隆さん指摘: 「投稿URLを追加」が大きすぎ。原因は隣の詳細検索ボタンが持つ下マージン12px(ai-search-layout-fix.css の単独配置時の値)で
+   グリッド行が高くなり、投稿URLボタンだけが行いっぱいに伸びていた。マージンを消して4つのボタンを同じ高さにそろえる。 */
+#searchInputActions .advanced-search-toggle{justify-content:center;margin:0;min-height:46px;padding:10px 13px;font-size:12px}
+#searchInputActions .search-social-action{min-height:46px}
 #searchInputActions .advanced-search-toggle::after{content:none}
 #searchInputActions .advanced-search-toggle[aria-expanded="true"]{background:#efeaff;border-color:#8b7cf2;color:#3b2a9c}
-@media(max-width:480px){#searchInputActions.search-input-actions{grid-template-columns:repeat(2,minmax(0,1fr))}#searchInputActions .search-social-action{grid-column:auto}}
+@media(max-width:480px){#searchInputActions.search-input-actions{grid-template-columns:repeat(2,minmax(0,1fr))}#searchInputActions .search-social-action{grid-column:auto}#searchInputActions .advanced-search-toggle{padding:8px 6px;font-size:11px}}
 #advancedSearchPanel{margin-top:8px}
 .condition-group-extra .condition-chip-extra[aria-pressed="true"]{background:#3b2a9c;border-color:#3b2a9c;color:#fff}
 .condition-group-brand .condition-chip-extra{border-color:#f0c9c5;background:#fff7f6;color:#8a1d15}
