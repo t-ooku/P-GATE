@@ -28,7 +28,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/hoshilu-v2-180.png">
   <script src="/linkswitch-init.js"></script>
   <script src="https://aml.valuecommerce.com/vcdal.js" async></script>
-  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=9">
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=10">
   <link rel="stylesheet" href="/ai-search-ui.css?v=12">
   <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=126">
   <link rel="stylesheet" href="/ai-price-comparison-ui.css?v=84">
@@ -144,7 +144,11 @@
                 <label class="search-input-action search-camera-action" for="searchCamera"><span aria-hidden="true">📷</span><span id="cameraActionLabel">カメラで撮る</span><input id="searchCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" aria-describedby="searchInputNotice"></label>
                 <label class="search-input-action" for="searchScreenshot"><span aria-hidden="true">▣</span><span id="screenshotActionLabel">画像を選ぶ</span><input id="searchScreenshot" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="searchInputNotice"></label>
                 <button id="socialUrlToggle" class="search-input-action search-social-action" type="button" aria-expanded="false" aria-controls="socialUrlField" aria-describedby="searchInputNotice"><span aria-hidden="true">↗</span><span id="socialUrlActionLabel">投稿URLを追加</span></button>
+                <!-- 2026-09-05 大隆さん指示: 「詳細検索」は投稿URLボタンの右へ。押すと価格帯・ブランド/メーカー・
+                     状態・配送・色・サイズなどの条件を選べる(search-suggest.mjs が辞書からブランド行を足す)。 -->
+                <button id="advancedSearchToggle" type="button" class="search-input-action advanced-search-toggle" aria-expanded="false" aria-controls="advancedSearchPanel"><span aria-hidden="true">☰</span><span id="advancedSearchLabel">詳細検索</span></button>
               </div>
+              <div id="advancedSearchPanel" class="advanced-search-panel hidden"></div>
               <div id="screenshotPreview" class="screenshot-preview hidden" role="status" aria-live="polite">
                 <img id="screenshotPreviewImage" alt="追加した画像のプレビュー">
                 <div><strong id="screenshotPreviewName"></strong><small id="screenshotPreviewStatus">この画像を商品候補の抽出に使います</small></div>
@@ -165,8 +169,6 @@
                    色の絞り込みは「詳細検索」の中(色チップ)から使えるので、そちらへ
                    まとめ、第一画面は検索窓とCTAを上へ詰める。描画関数は要素が無ければ
                    何もしないので、JS側はそのまま置いてある。 -->
-              <button id="advancedSearchToggle" type="button" class="advanced-search-toggle" aria-expanded="false" aria-controls="advancedSearchPanel">詳細検索</button>
-              <div id="advancedSearchPanel" class="advanced-search-panel hidden"></div>
               <div id="turnstileContainer" class="turnstile-container"></div>
             </form>
             <details class="panel-heading-details"><summary id="searchTitleSummary">使い方を見る</summary><h2 id="searchTitle"><span>商品名が分からなくても大丈夫。</span><span>撮った写真、画像、HOSHILU対応形式の公開SNS投稿単体URL、覚えている一言から探せます。</span></h2>
@@ -393,6 +395,6 @@
       </div>
     </div></main>
   <footer data-nosnippet><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイト、およびバリューコマース（Qoo10・Yahoo!ショッピング等）のリンクからも収入を得る場合があります。</span><span><a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=6"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=96"></script><script type="module" src="/buzz-home.mjs?v=2"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=10"></script><script type="module" src="/assets-v147/app.js?v=147"></script><script type="module" src="/ai-search-ui.mjs?v=13"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=86"></script><script type="module" src="/experience-layer.mjs?v=2"></script><script type="module" src="/genre-explorer.mjs?v=2"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=6"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=96"></script><script type="module" src="/buzz-home.mjs?v=2"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=10"></script><script type="module" src="/assets-v147/app.js?v=147"></script><script type="module" src="/ai-search-ui.mjs?v=13"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=86"></script><script type="module" src="/experience-layer.mjs?v=2"></script><script type="module" src="/genre-explorer.mjs?v=2"></script><script type="module" src="/search-suggest.mjs?v=1"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>

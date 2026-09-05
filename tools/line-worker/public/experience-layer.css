@@ -101,3 +101,25 @@
 #knowledgeForm .search-mode-actions .ranking-search-button{grid-column:1 / -1}
 #knowledgeForm .search-mode-actions .direct-search-button{background:#2b1d6b;background-image:none;color:#fff}
 @media(max-width:640px){#knowledgeForm .search-mode-actions{grid-template-columns:1fr 1fr}#knowledgeForm .search-mode-actions>button{font-size:15px;padding:12px 10px}}
+
+/* 2026-09-05 大隆さん指示: 入力中の候補(Amazon風ドロップダウン)と、詳細検索ボタンを投稿URLの右へ */
+.query-field{position:relative}
+.search-suggest-list{list-style:none;margin:6px 0 0;padding:4px 0;border:1px solid #ded7ff;border-radius:14px;background:#fff;box-shadow:0 14px 34px rgba(39,27,92,.14);max-height:min(56vh,420px);overflow-y:auto}
+.search-suggest-list.hidden{display:none}
+.search-suggest-item{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:8px;padding:10px 12px;min-height:42px;cursor:pointer;font-size:14px;color:#1f1b3a;border-top:1px solid #f1eefc}
+.search-suggest-item:first-child{border-top:0}
+.search-suggest-item:hover,.search-suggest-item.is-active{background:#f4f0ff}
+.search-suggest-icon{font-size:14px;text-align:center;opacity:.75}
+.search-suggest-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-suggest-text b{font-weight:800;color:#3b2a9c}
+.search-suggest-kind{font-size:10px;color:#6d6b80;border:1px solid #e6e0ff;border-radius:999px;padding:2px 7px;white-space:nowrap}
+.search-suggest-brand .search-suggest-kind{color:#b3261e;border-color:#f6d3d0;background:#fff5f4}
+#searchInputActions.search-input-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
+#searchInputActions .advanced-search-toggle{justify-content:center}
+#searchInputActions .advanced-search-toggle::after{content:none}
+#searchInputActions .advanced-search-toggle[aria-expanded="true"]{background:#efeaff;border-color:#8b7cf2;color:#3b2a9c}
+@media(max-width:480px){#searchInputActions.search-input-actions{grid-template-columns:repeat(2,minmax(0,1fr))}#searchInputActions .search-social-action{grid-column:auto}}
+#advancedSearchPanel{margin-top:8px}
+.condition-group-extra .condition-chip-extra[aria-pressed="true"]{background:#3b2a9c;border-color:#3b2a9c;color:#fff}
+.condition-group-brand .condition-chip-extra{border-color:#f0c9c5;background:#fff7f6;color:#8a1d15}
+.condition-group-brand .condition-chip-extra[aria-pressed="true"]{background:#b3261e;border-color:#b3261e;color:#fff}

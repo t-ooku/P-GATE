@@ -1349,16 +1349,22 @@ test('「色で探す」は独立ボタンを出さず、詳細検索の中か�
   assert.doesNotMatch(html, /id="colorSearchPanel"/);
   assert.doesNotMatch(html, /color-search-entry/);
 
-  // 検索窓 → 検索ヒント → 検索履歴 → 詳細検索、の順に詰める。
+  // 検索窓 → 検索ヒント → 検索履歴 の順に詰める。
+  // 2026-09-05 大隆さん指示: 「詳細検索」は投稿URLボタンの右(#searchInputActions 内)へ移し、
+  // 価格帯・ブランド/メーカー・状態・配送を選べる入口にする(search-suggest.mjs)。
   const formIndex = html.indexOf('id="knowledgeForm"');
   const queryIndex = html.indexOf('id="query"');
   const searchHintsIndex = html.indexOf('id="searchHintsSection"');
   const historyIndex = html.indexOf('id="searchHistorySection"');
+  const socialToggleIndex = html.indexOf('id="socialUrlToggle"');
   const advancedToggleIndex = html.indexOf('id="advancedSearchToggle"');
+  const actionsEndIndex = html.indexOf('id="advancedSearchPanel"');
   assert.ok(formIndex > -1 && formIndex < queryIndex, 'フォームは検索窓より前');
   assert.ok(queryIndex < searchHintsIndex, '検索窓は検索ヒントより前');
   assert.ok(searchHintsIndex < historyIndex, '検索ヒントは検索履歴セクションより前');
-  assert.ok(historyIndex > -1 && historyIndex < advancedToggleIndex, '詳細検索は検索履歴より後');
+  assert.ok(socialToggleIndex > -1 && socialToggleIndex < advancedToggleIndex && advancedToggleIndex < actionsEndIndex, '詳細検索は投稿URLボタンの右(同じ行)');
+  assert.match(html, /<button id="advancedSearchToggle" type="button" class="search-input-action advanced-search-toggle"/);
+  assert.match(html, /search-suggest\.mjs\?v=1/);
 
   // 色は詳細検索の軸として残す(機能を落としていないことの確認)。
   assert.match(appSource, /group\?\.dimension==='color'/);
@@ -1374,11 +1380,12 @@ test('主検索CTAは処理告知の直後かつ補助情報・絞り込みよ�
   const submitIndex = html.indexOf('id="submitButton"');
   const noticeIndex = html.indexOf('id="searchInputNotice"');
   const hintsIndex = html.indexOf('id="searchHintsSection"');
-  const advancedIndex = html.indexOf('id="advancedSearchToggle"');
+  const advancedPanelIndex = html.indexOf('id="advancedSearchPanel"');
   assert.ok(socialUrlIndex > -1 && socialUrlIndex < noticeIndex, '任意の投稿URL入力より後に告知');
   assert.ok(noticeIndex < submitIndex, '処理告知を読める順序でCTAを表示');
   assert.ok(submitIndex < hintsIndex, '検索履歴・例より前');
-  assert.ok(submitIndex < advancedIndex, '詳細検索より前');
+  // 2026-09-05: 詳細検索ボタンは入力欄直下の行に常設(投稿URLの右)。展開パネルはCTAより上に開く。
+  assert.ok(advancedPanelIndex > -1 && advancedPanelIndex < submitIndex, '詳細検索パネルはCTAより前');
   assert.match(css, /\.search-panel \.query-field textarea \{ min-height: 110px; \}/);
 });
 

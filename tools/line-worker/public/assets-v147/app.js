@@ -1536,13 +1536,14 @@ async function renderAdvancedSearch(){
   if(!panel||!toggle)return;
   const actions=actionCopy[elements.language.value]||actionCopy.JA;
   const open=toggle.getAttribute('aria-expanded')==='true';
-  toggle.textContent=open?actions.advancedSearchClose:actions.advancedSearch;
+  // 2026-09-05: ボタンはアイコン+ラベル構成(投稿URLの右に常設)。ラベル部分だけ差し替える。
+  (toggle.querySelector('#advancedSearchLabel')||toggle).textContent=open?actions.advancedSearchClose:actions.advancedSearch;
   if(!open){panel.classList.add('hidden');return;}
   if(!advancedSearchGroups)advancedSearchGroups=await loadRefinementChips();
   const card=conditionSearchCard(advancedSearchGroups);
   // No chips (offline / endpoint down) means nothing to choose, so the panel
   // stays closed rather than opening on an empty box.
-  if(!card){toggle.setAttribute('aria-expanded','false');toggle.textContent=actions.advancedSearch;panel.classList.add('hidden');return;}
+  if(!card){toggle.setAttribute('aria-expanded','false');(toggle.querySelector('#advancedSearchLabel')||toggle).textContent=actions.advancedSearch;panel.classList.add('hidden');return;}
   panel.replaceChildren(card);
   panel.classList.remove('hidden');
 }
