@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-05T21:23:26.811Z",
+  "generated_at": "2026-09-05T23:03:34.656Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -23,7 +23,7 @@
     "2026-09-05-claude-batch-020.json",
     "2026-09-06-claude-batch-021.json"
   ],
-  "entry_count": 930,
+  "entry_count": 945,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -18259,6 +18259,321 @@
           "車載 ドリンクホルダー",
           "車 ドリンクホルダー 大きい",
           "エアコン吹き出し口 ドリンクホルダー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "bd9ae565659fd059cc8e3fd5bb7f04c9a850e663b31bc6bbe0067a150171d79c",
+      "query_text": "部屋干しで臭わない洗剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "room-drying-detergent",
+      "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+      "search_terms": {
+        "ja": [
+          "部屋干し用 洗剤",
+          "部屋干し 洗剤 抗菌",
+          "生乾き臭 洗剤"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "314e804cfc26b0538a4966b42aad52fb61c9075b54f060de9095fe853535cc10",
+      "query_text": "生乾きの臭いがしない洗濯洗剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "room-drying-detergent",
+      "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+      "search_terms": {
+        "ja": [
+          "部屋干し用 洗剤",
+          "部屋干し 洗剤 抗菌",
+          "生乾き臭 洗剤"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f77b855b4d32f08452c5c7d9abd79985a9ff79d14c4983a38887e3bbbfe55995",
+      "query_text": "部屋干しでもくさくならない洗剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "room-drying-detergent",
+      "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+      "search_terms": {
+        "ja": [
+          "部屋干し用 洗剤",
+          "部屋干し 洗剤 抗菌",
+          "生乾き臭 洗剤"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7e8b9e9355849718085ec2d8d026e622c51837e60e5a6292ebea60cfb707baf2",
+      "query_text": "水だけで汚れが落ちるスポンジ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "melamine-sponge",
+      "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+      "search_terms": {
+        "ja": [
+          "メラミンスポンジ",
+          "激落ちくん メラミンスポンジ",
+          "水だけで落ちる スポンジ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "fcf40b124cd147ae160123b4ec62520567c9e82535a14e87260776bb58bddaaa",
+      "query_text": "洗剤なしで茶渋が取れるスポンジ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "melamine-sponge",
+      "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+      "search_terms": {
+        "ja": [
+          "メラミンスポンジ",
+          "激落ちくん メラミンスポンジ",
+          "水だけで落ちる スポンジ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ace2479e079ac1b22177d7b8e27d1d07ac2f2a2ae7a2126a59bb7c5382068616",
+      "query_text": "こするだけで水垢が落ちるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "melamine-sponge",
+      "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+      "search_terms": {
+        "ja": [
+          "メラミンスポンジ",
+          "激落ちくん メラミンスポンジ",
+          "水だけで落ちる スポンジ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ecc52717feb5355223f631eefcaca669dba060053c9db973f1617a72c37bb509",
+      "query_text": "洗っても消えない名前シール",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-name-sticker",
+      "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+      "search_terms": {
+        "ja": [
+          "耐水 お名前シール",
+          "防水 お名前シール",
+          "食洗機対応 名前シール"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e077b84390d7e456264b3e30630ebdb8b8a001299cefd0f0cc9fb38556e8cc2d",
+      "query_text": "食洗機に入れても剥がれないお名前シール",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-name-sticker",
+      "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+      "search_terms": {
+        "ja": [
+          "耐水 お名前シール",
+          "防水 お名前シール",
+          "食洗機対応 名前シール"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7d3bef73d80a59ec1fdb0057f9ce1645ae43244c31f82018fb5787c727327cb1",
+      "query_text": "洗濯しても落ちない名前つけ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-name-sticker",
+      "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+      "search_terms": {
+        "ja": [
+          "耐水 お名前シール",
+          "防水 お名前シール",
+          "食洗機対応 名前シール"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4c241749ddc4b01114737000c277f80437856c39784f4e370f201b20af50835b",
+      "query_text": "猫の抜け毛がごっそり取れるブラシ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-shedding-brush",
+      "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+      "search_terms": {
+        "ja": [
+          "抜け毛取り ブラシ ペット",
+          "ペット 抜け毛 ブラシ",
+          "スリッカーブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "102bb7d5931bb7ced7742feee0af8661b4dbd2bb4b8f7ab7a755527e41a58db3",
+      "query_text": "犬の毛がよく取れるくし",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-shedding-brush",
+      "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+      "search_terms": {
+        "ja": [
+          "抜け毛取り ブラシ ペット",
+          "ペット 抜け毛 ブラシ",
+          "スリッカーブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f8793e1dd3c6e68befa74a168d91eb5a0c7b41dcaffac5cd0285b1af8bf5ccdf",
+      "query_text": "換毛期のペット用ブラシ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-shedding-brush",
+      "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+      "search_terms": {
+        "ja": [
+          "抜け毛取り ブラシ ペット",
+          "ペット 抜け毛 ブラシ",
+          "スリッカーブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "bec6355ac245f8787688783725d57fb3cc808915449aca426498953270da454e",
+      "query_text": "汗染みが目立たないTシャツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sweat-stain-proof-tee",
+      "ideal_answer": "汗染み防止加工のTシャツ・カットソー",
+      "search_terms": {
+        "ja": [
+          "汗染み防止 Tシャツ",
+          "汗じみしない Tシャツ",
+          "汗染み防止 カットソー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "73b47a9a276d08e018f74c717665b3daa85677fbea2f2dd208572c7ff622c9fe",
+      "query_text": "脇汗が目立たないカットソー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sweat-stain-proof-tee",
+      "ideal_answer": "汗染み防止加工のTシャツ・カットソー",
+      "search_terms": {
+        "ja": [
+          "汗染み防止 Tシャツ",
+          "汗じみしない Tシャツ",
+          "汗染み防止 カットソー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a2b689e4f5cc2122bf968a11de43a087b2d1d3af3c6dcb12640624df2c4ebe27",
+      "query_text": "汗をかいてもジミにならないシャツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sweat-stain-proof-tee",
+      "ideal_answer": "汗染み防止加工のTシャツ・カットソー",
+      "search_terms": {
+        "ja": [
+          "汗染み防止 Tシャツ",
+          "汗じみしない Tシャツ",
+          "汗染み防止 カットソー"
         ],
         "en": [],
         "ko": [],

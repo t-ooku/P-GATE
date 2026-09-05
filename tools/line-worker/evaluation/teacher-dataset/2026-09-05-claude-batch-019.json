@@ -2436,5 +2436,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "部屋干しで臭わない洗剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "部屋干し臭・生乾き臭を防ぐ洗濯洗剤",
+    "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+    "reason": "「部屋干しで臭わない」は商品名では「部屋干し用」「抗菌」。 展開規則 room-drying-detergent（モール検索語「部屋干し用 洗剤」）。",
+    "category": "room-drying-detergent",
+    "search_terms": {
+      "ja": [
+        "部屋干し用 洗剤",
+        "部屋干し 洗剤 抗菌",
+        "生乾き臭 洗剤"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "生乾きの臭いがしない洗濯洗剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "部屋干し臭・生乾き臭を防ぐ洗濯洗剤",
+    "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+    "reason": "「部屋干しで臭わない」は商品名では「部屋干し用」「抗菌」。 展開規則 room-drying-detergent（モール検索語「部屋干し用 洗剤」）。",
+    "category": "room-drying-detergent",
+    "search_terms": {
+      "ja": [
+        "部屋干し用 洗剤",
+        "部屋干し 洗剤 抗菌",
+        "生乾き臭 洗剤"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "部屋干しでもくさくならない洗剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "部屋干し臭・生乾き臭を防ぐ洗濯洗剤",
+    "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+    "reason": "「部屋干しで臭わない」は商品名では「部屋干し用」「抗菌」。 展開規則 room-drying-detergent（モール検索語「部屋干し用 洗剤」）。",
+    "category": "room-drying-detergent",
+    "search_terms": {
+      "ja": [
+        "部屋干し用 洗剤",
+        "部屋干し 洗剤 抗菌",
+        "生乾き臭 洗剤"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水だけで汚れが落ちるスポンジ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗剤を使わず汚れを落とせるスポンジ",
+    "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+    "reason": "「水だけで落ちる」は商品名では「メラミンスポンジ」「激落ち」。 展開規則 melamine-sponge（モール検索語「メラミンスポンジ」）。",
+    "category": "melamine-sponge",
+    "search_terms": {
+      "ja": [
+        "メラミンスポンジ",
+        "激落ちくん メラミンスポンジ",
+        "水だけで落ちる スポンジ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗剤なしで茶渋が取れるスポンジ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗剤を使わず汚れを落とせるスポンジ",
+    "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+    "reason": "「水だけで落ちる」は商品名では「メラミンスポンジ」「激落ち」。 展開規則 melamine-sponge（モール検索語「メラミンスポンジ」）。",
+    "category": "melamine-sponge",
+    "search_terms": {
+      "ja": [
+        "メラミンスポンジ",
+        "激落ちくん メラミンスポンジ",
+        "水だけで落ちる スポンジ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "こするだけで水垢が落ちるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗剤を使わず汚れを落とせるスポンジ",
+    "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+    "reason": "「水だけで落ちる」は商品名では「メラミンスポンジ」「激落ち」。 展開規則 melamine-sponge（モール検索語「メラミンスポンジ」）。",
+    "category": "melamine-sponge",
+    "search_terms": {
+      "ja": [
+        "メラミンスポンジ",
+        "激落ちくん メラミンスポンジ",
+        "水だけで落ちる スポンジ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗っても消えない名前シール",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯・食洗機でも消えない名前シール",
+    "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+    "reason": "「洗っても消えない」は商品名では「耐水」「防水」「食洗機対応」。 展開規則 waterproof-name-sticker（モール検索語「耐水 お名前シール」）。",
+    "category": "waterproof-name-sticker",
+    "search_terms": {
+      "ja": [
+        "耐水 お名前シール",
+        "防水 お名前シール",
+        "食洗機対応 名前シール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "食洗機に入れても剥がれないお名前シール",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯・食洗機でも消えない名前シール",
+    "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+    "reason": "「洗っても消えない」は商品名では「耐水」「防水」「食洗機対応」。 展開規則 waterproof-name-sticker（モール検索語「耐水 お名前シール」）。",
+    "category": "waterproof-name-sticker",
+    "search_terms": {
+      "ja": [
+        "耐水 お名前シール",
+        "防水 お名前シール",
+        "食洗機対応 名前シール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯しても落ちない名前つけ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯・食洗機でも消えない名前シール",
+    "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+    "reason": "「洗っても消えない」は商品名では「耐水」「防水」「食洗機対応」。 展開規則 waterproof-name-sticker（モール検索語「耐水 お名前シール」）。",
+    "category": "waterproof-name-sticker",
+    "search_terms": {
+      "ja": [
+        "耐水 お名前シール",
+        "防水 お名前シール",
+        "食洗機対応 名前シール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "猫の抜け毛がごっそり取れるブラシ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットの抜け毛をよく取れるブラシ",
+    "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+    "reason": "「毛がごっそり取れる」は商品名では「抜け毛取り」「スリッカーブラシ」。 展開規則 pet-shedding-brush（モール検索語「抜け毛取り ブラシ ペット」）。",
+    "category": "pet-shedding-brush",
+    "search_terms": {
+      "ja": [
+        "抜け毛取り ブラシ ペット",
+        "ペット 抜け毛 ブラシ",
+        "スリッカーブラシ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "犬の毛がよく取れるくし",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットの抜け毛をよく取れるブラシ",
+    "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+    "reason": "「毛がごっそり取れる」は商品名では「抜け毛取り」「スリッカーブラシ」。 展開規則 pet-shedding-brush（モール検索語「抜け毛取り ブラシ ペット」）。",
+    "category": "pet-shedding-brush",
+    "search_terms": {
+      "ja": [
+        "抜け毛取り ブラシ ペット",
+        "ペット 抜け毛 ブラシ",
+        "スリッカーブラシ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "換毛期のペット用ブラシ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ペットの抜け毛をよく取れるブラシ",
+    "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+    "reason": "「毛がごっそり取れる」は商品名では「抜け毛取り」「スリッカーブラシ」。 展開規則 pet-shedding-brush（モール検索語「抜け毛取り ブラシ ペット」）。",
+    "category": "pet-shedding-brush",
+    "search_terms": {
+      "ja": [
+        "抜け毛取り ブラシ ペット",
+        "ペット 抜け毛 ブラシ",
+        "スリッカーブラシ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗染みが目立たないTシャツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗染みが目立たないトップス",
+    "ideal_answer": "汗染み防止加工のTシャツ・カットソー",
+    "reason": "「汗染みが目立たない」は商品名では「汗染み防止」「汗じみしない」。 展開規則 sweat-stain-proof-tee（モール検索語「汗染み防止 Tシャツ」）。",
+    "category": "sweat-stain-proof-tee",
+    "search_terms": {
+      "ja": [
+        "汗染み防止 Tシャツ",
+        "汗じみしない Tシャツ",
+        "汗染み防止 カットソー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "脇汗が目立たないカットソー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗染みが目立たないトップス",
+    "ideal_answer": "汗染み防止加工のTシャツ・カットソー",
+    "reason": "「汗染みが目立たない」は商品名では「汗染み防止」「汗じみしない」。 展開規則 sweat-stain-proof-tee（モール検索語「汗染み防止 Tシャツ」）。",
+    "category": "sweat-stain-proof-tee",
+    "search_terms": {
+      "ja": [
+        "汗染み防止 Tシャツ",
+        "汗じみしない Tシャツ",
+        "汗染み防止 カットソー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗をかいてもジミにならないシャツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗染みが目立たないトップス",
+    "ideal_answer": "汗染み防止加工のTシャツ・カットソー",
+    "reason": "「汗染みが目立たない」は商品名では「汗染み防止」「汗じみしない」。 展開規則 sweat-stain-proof-tee（モール検索語「汗染み防止 Tシャツ」）。",
+    "category": "sweat-stain-proof-tee",
+    "search_terms": {
+      "ja": [
+        "汗染み防止 Tシャツ",
+        "汗じみしない Tシャツ",
+        "汗染み防止 カットソー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
