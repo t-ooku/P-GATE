@@ -37,10 +37,12 @@ test('検索入力の非保存と外部AI処理を、チェックボックスな
     read('../src/search-input-analysis.mjs'), read('../src/google-visual-web-detection.mjs')
   ]);
   assert.doesNotMatch(html, /id="consent"|type="checkbox" required/);
-  assert.match(app, /写真・URLは保存しません/);
-  assert.match(app, /Photos and URLs are not stored/i);
-  // 通知文は短縮版(GoogleのAI利用のみ明示)。API名の完全な開示は
-  // プライバシーページ側で担保する(次のassertion)。
+  // 2026-09-05 大隆さん指示: 入力欄の注意書きは一行に短縮。「保存しません」の約束は
+  // プライバシーページ側で担保する(下のassertion)。入力欄は外部AI利用と顔・住所の注意のみ。
+  assert.match(app, /候補抽出にGoogleのAIを利用。顔や住所は写さないでください。/);
+  assert.match(app, /Google AI extracts candidates/);
+  assert.doesNotMatch(app, /写真・URLは保存しません/);
+  assert.match(html, /候補抽出にGoogleのAIを利用。顔や住所は写さないでください。/);
   assert.match(app, /Google\s?のAI|Google AI/u);
   assert.match(privacy, /Google Gemini API/);
   assert.match(privacy, /Google Cloud Vision API/);
