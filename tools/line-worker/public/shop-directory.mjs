@@ -30,6 +30,14 @@ function card(shop) {
   if (shop.tagline) body.append(el('small', 'shop-directory-tagline', text(shop.tagline)));
   if (shop.coupon) body.append(el('em', 'shop-directory-coupon', 'HOSHILU限定クーポンあり'));
   link.append(logo, body, el('span', 'shop-directory-arrow', '→'));
+  // 2026-09-05 夜 大隆さん指示: 各ショップの Amazon ストアフロントへの直リンクも掲示。
+  if (/^https:\/\/www\.amazon\.co\.jp\//i.test(text(shop.amazon_url))) {
+    const wrap = el('div', 'shop-directory-item');
+    const amazon = el('a', 'shop-directory-amazon', 'Amazonのショップページを見る →');
+    amazon.href = text(shop.amazon_url); amazon.target = '_blank'; amazon.rel = 'nofollow sponsored noopener';
+    wrap.append(link, amazon);
+    return wrap;
+  }
   return link;
 }
 

@@ -180,6 +180,19 @@ async function followerCount(db, sellerKey) {
   return Number(row?.c || 0);
 }
 
+
+// 2026-09-05 夜 大隆さん指示: 3店舗それぞれの Amazon ストアフロントへ飛ぶリンクを掲示する。
+// seller_ids の先頭（Amazon の出品者ID）から https://www.amazon.co.jp/s?me=<ID> を作る。
+// アソシエイトタグは wrangler.jsonc の AMAZON_ASSOCIATE_TAG と同じ値（静的リンクなので直接持たせる）。
+export function amazonStorefrontUrl(sellerIds = [], tag = 'hoshilu00-22') {
+  const id = (Array.isArray(sellerIds) ? sellerIds : []).map((v) => String(v || '').trim()).find((v) => /^A[A-Z0-9]{8,20}$/.test(v));
+  if (!id) return '';
+  const url = new URL('https://www.amazon.co.jp/s');
+  url.searchParams.set('me', id);
+  if (tag) url.searchParams.set('tag', tag);
+  return url.toString();
+}
+
 // ---- 公開ページ ----------------------------------------------------------------
 function renderShopHtml({ shop, coupons, products, followers, following, query, origin }) {
   const title = `${shop.shop_name} | HOSHILU ショップ`;
@@ -211,6 +224,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 .hero{display:flex;gap:14px;align-items:center;padding:16px;background:#fff;border:1px solid var(--line);border-radius:18px}
 .shop-logo{width:72px;height:72px;border-radius:18px;object-fit:cover;flex:none;background:#ece8fb}
 .shop-logo-text{display:grid;place-items:center;font-size:30px;font-weight:900;color:var(--accent)}
+.storefront-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid #ffb84d;border-radius:12px;background:#fff7e6;color:#8a5200;font-weight:800;font-size:13px;text-decoration:none}
 .hero h1{margin:0;font-size:20px}.hero p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .hero-body{min-width:0;flex:1}
 .follow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
@@ -238,7 +252,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 <header class="top"><a href="/">← HOSHILU で横断検索</a><a href="/for-sellers">ショップページを持つ</a></header>
 <main class="wrap" data-slug="${esc(shop.slug)}">
 <section class="hero">${logo}<div class="hero-body"><h1>${esc(shop.shop_name)}</h1>${shop.tagline ? `<p>${esc(shop.tagline)}</p>` : ''}
-<div class="follow"><button type="button" id="followButton" data-following="${following ? 1 : 0}">${following ? '★ ホシってます' : '☆ ショップをホシる'}</button><small><span id="followerCount">${followers}</span>人がホシってます</small><small id="followStatus"></small></div></div></section>
+<div class="follow"><button type="button" id="followButton" data-following="${following ? 1 : 0}">${following ? '★ ホシってます' : '☆ ショップをホシる'}</button><small><span id="followerCount">${followers}</span>人がホシってます</small><small id="followStatus"></small></div>${amazonStorefrontUrl(shop.seller_ids) ? `<a class="storefront-link" rel="nofollow sponsored noopener" target="_blank" href="${esc(amazonStorefrontUrl(shop.seller_ids))}">Amazonのショップページを見る →</a>` : ''}</div></section>
 ${shop.intro ? `<p class="intro">${esc(shop.intro)}</p>` : ''}
 ${couponHtml}
 <section class="shop-section" id="products"><h2>商品</h2>
@@ -448,7 +462,8 @@ export async function handlePublicShopDirectoryRoute(request, env) {
   if (request.method !== 'GET' || url.pathname !== '/api/shops') return null;
   try {
     const shops = (await activeShops(env)).map((shop) => ({
-      slug: shop.slug, name: shop.name, logo_url: shop.logo_url, tagline: shop.tagline || '', coupon: Boolean(shop.coupon), url: `/shop/${shop.slug}`
+      slug: shop.slug, name: shop.name, logo_url: shop.logo_url, tagline: shop.tagline || '', coupon: Boolean(shop.coupon), url: `/shop/${shop.slug}`,
+      amazon_url: amazonStorefrontUrl(shop.seller_ids, env?.AMAZON_ASSOCIATE_TAG || 'hoshilu00-22')
     }));
     return Response.json({ ok: true, shops }, { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
   } catch (error) {
