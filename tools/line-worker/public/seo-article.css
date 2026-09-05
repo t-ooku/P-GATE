@@ -232,6 +232,38 @@ tr:last-child td { border-bottom: 0; }
 }
 .mid-cta button:hover, .bottom-cta a:hover, .top-cta a:hover { background: var(--brand-dark); }
 
+/* 2026-09-05: 結論直後・中盤・末尾の3箇所にCTAを置いても検索導線クリックが
+   実数0件のままだったため、スクロール位置に関係なく常に見える固定フッター
+   CTAを追加する。閲覧の妨げにならないよう、記事下部に十分な余白を確保する。 */
+body:has(.sticky-cta) .seo-shell { padding-bottom: 6.5rem; }
+.sticky-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  padding: .6rem clamp(1rem, 4vw, 2rem) calc(.6rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(255, 253, 244, .96);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+.sticky-cta a {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: min(100%, 480px);
+  min-height: 48px;
+  padding: .75rem 1.2rem;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}
+.sticky-cta a:hover { background: var(--brand-dark); }
+
 .evidence-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; padding: 0; list-style: none; }
 .evidence-grid li { margin: 0; padding: 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--green-soft); font-size: .9rem; }
 .evidence-grid li::before { content: "確認"; display: block; width: fit-content; margin-bottom: .4rem; padding: .1rem .45rem; border-radius: 999px; background: #16794b; color: #fff; font-size: .68rem; font-weight: 800; }

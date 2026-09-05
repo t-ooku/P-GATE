@@ -768,3 +768,18 @@ test('全記事で結論の直後に ?q= 付きの検索CTAが正確な文言と
     }
   }
 });
+
+// 2026-09-05: 結論直後・記事中盤・末尾の3箇所にCTAを置いた後も、直近30日の
+// 実数で検索導線クリック(seo_search_transition)が依然0件だった。スクロール
+// 位置に関わらず常に見える固定フッターCTAを追加し、既存のdata-seo-search-link
+// 計測(seo-article-analytics.mjs)にそのまま乗せる。
+test('全記事にスクロール追従の固定検索CTAがあり、既存の計測属性を使う', () => {
+  for (const path of seoPagePaths) {
+    const html = renderSeoPage(path);
+    const stickyCta = html.match(/<div class="sticky-cta">([\s\S]*?)<\/div>\s*<script/)?.[1] || '';
+    assert.ok(stickyCta, `${path} must render a sticky footer CTA`);
+    const query = stickyCta.match(/href="\/\?q=([^"]+)" data-seo-search-link/)?.[1] || '';
+    assert.ok(query, `${path} sticky CTA must carry a prefilled ?q= and reuse data-seo-search-link tracking`);
+    assert.ok(decodeURIComponent(query).length <= 200);
+  }
+});

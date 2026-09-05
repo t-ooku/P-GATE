@@ -4195,6 +4195,13 @@ export function renderSeoPage(pathname) {
   // 見ずに離脱している。結論セクションの直後(ファーストビュー圏)にも ?q= 付きの
   // CTAを置く。?q= 着地は #147 の修正でそのまま検索が実行される。
   const featureEntry = page.featurePath ? `<p class="bottom-cta feature-entry"><a href="${esc(page.featurePath)}" data-seo-feature-link>${esc(page.featureLabel || (isJa ? 'HOSHILUの公開機能を開く' : 'Open the HOSHILU feature'))}</a></p>` : '';
+  // 2026-09-05: 実数(直近30日)でSEO記事は184閲覧に対し、結論直後・記事中盤・
+  // 末尾の3箇所にCTAを置いた後も検索導線クリック(seo_search_transition)が
+  // 依然0件だった。読者がスクロール中にCTAへ到達できていない可能性が高いため、
+  // スクロール位置に関わらず常に見える固定フッターCTAを追加する。既存の
+  // data-seo-search-link属性を使うので、既存の計測(seo-article-analytics.mjs)
+  // がそのまま拾う。
+  const stickyCta = `<div class="sticky-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a></div>`;
   const labels = isJa ? {
     conclusion: '結論', audience: 'この方法が向く人', criteria: '選ぶ条件と注意点', comparison: '候補を比較するときの見方',
     evidence: 'おすすめ・比較の根拠', reviews: '口コミを確認するときのポイント', identity: '同一商品と類似商品の違い',
@@ -4231,5 +4238,6 @@ export function renderSeoPage(pathname) {
 <nav class="related" aria-label="${labels.related}"><h2>${labels.related}</h2><ul class="related-grid">${relatedLinks(locale, slug)}</ul></nav>
 <p class="bottom-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a></p></article></main>
 <footer><a href="/privacy">${isJa ? 'プライバシー' : 'Privacy'}</a><a href="/terms">${isJa ? '利用上の注意' : 'Terms'}</a></footer>
+${stickyCta}
 <script type="module" src="/seo-article-analytics.mjs"></script></body></html>`;
 }
