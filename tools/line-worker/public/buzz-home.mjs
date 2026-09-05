@@ -1,8 +1,8 @@
 // ホームのHOSHILU BUZZ棚 (2026-08-19 大隆さん指示: 目立つ箇所=検索直下へ設置)。
 // /api/buzz/shelf の実データだけを表示する。クライアント側で順位・価格・
-// 人気を創作しない。棚は最初の3つ+「すべて見る」導線に絞り、ホームを重くしない。
+// 人気を創作しない。棚は5種類+「すべて見る」導線（2026-09-05 夜 大隆さん訂正: 「3列→5列」は棚の数のこと）。
 const root = document.querySelector('#buzzHomeShelves');
-const HOME_SHELF_LIMIT = 3;
+const HOME_SHELF_LIMIT = 5;
 
 const text = (value) => String(value ?? '');
 const yen = (value) => `¥${Number(value).toLocaleString('ja-JP')}`;
@@ -48,13 +48,14 @@ function render(result) {
     const block = el('div', 'buzz-home-shelf');
     const head = el('div', 'buzz-home-shelf-head');
     head.append(el('h3', '', shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label)), el('span', 'buzz-home-headline', text(shelf.headline)));
-    // 2026-09-05 大隆さん指示: ランキングは常に5列(横スクロールなし・1位〜5位を一画面で)。
+    // 2026-09-05 夜 大隆さん訂正: 横スクロールの棚に戻し、棚の種類を5つに。
     const rail = el('div', 'buzz-home-rail');
-    for (const item of (shelf.items || []).slice(0, 5)) rail.append(itemCard(item));
+    for (const item of (shelf.items || []).slice(0, 6)) rail.append(itemCard(item));
     const more = el('a', 'buzz-home-railmore', 'もっと見る →');
     more.href = '/buzz';
+    rail.append(more);
     // 2026-08-19 大隆さん指示: 棚ごとの出典表記は出さない(枠下の注記に集約)。
-    block.append(head, rail, more);
+    block.append(head, rail);
     root.append(block);
   }
 }

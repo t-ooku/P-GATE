@@ -1,5 +1,6 @@
 // 2026-09-05 夜 大隆さん決定: 「みんなが値下がりを待ってる商品」（値下がり待ちリスト）。
-// /api/price-watch/demand の匿名集計（5人以上の商品だけ）をそのまま出す。
+// /api/price-watch/demand の匿名集計をそのまま出す。待たれている商品が5種類未満の間は
+// 欄ごと出さない（大隆さん訂正 2026-09-05 夜）。1人でも待っていれば商品は載る。
 // クライアント側で人数・価格・順位を作らない。行をタップすると同じ商品名で
 // HOSHILU 検索が開き、自分の「この価格になったら教えて☑」を押せる。
 const root = document.querySelector('#watchDemandList');
@@ -35,15 +36,8 @@ function row(item) {
 function render(result) {
   root.textContent = '';
   const items = Array.isArray(result.items) ? result.items : [];
-  if (!items.length) {
-    // まだ5人以上集まった商品が無い間は、空箱ではなく「1票目」を誘う一行にする。
-    const empty = el('p', 'watch-demand-empty');
-    empty.append(
-      el('span', '', `${Number(result.min_members) || 5}人以上が同じ商品を待つと、ここに出ます。`),
-      el('a', 'watch-demand-empty-link', '欲しいものを検索して「この価格になったら教えて☑」を押す →')
-    );
-    empty.querySelector('a').href = '#query';
-    root.append(empty);
+  if (!items.length || result.visible === false) {
+    section.classList.add('hidden');
     return;
   }
   for (const item of items) root.append(row(item));

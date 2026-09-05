@@ -290,7 +290,7 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
   assert.doesNotMatch(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
-  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=3"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=4"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
   const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
   assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
