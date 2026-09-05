@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { evaluateSeoPageQuality, renderSeoPage, seoHubPaths, seoPagePaths } from '../src/seo-pages.mjs';
 
-test('検索意図が異なる日本語121ページと英語5ページを提供する', () => {
-  assert.equal(seoPagePaths.length, 126);
+test('検索意図が異なる日本語131ページと英語5ページを提供する', () => {
+  assert.equal(seoPagePaths.length, 136);
   for (const path of seoPagePaths) {
     const html = renderSeoPage(path);
     assert.ok(html, path);
@@ -42,7 +42,7 @@ test('各日本語テーマは検索意図別の固有な図解手順を持つ',
   assert.equal(new Set(flows).size, japanesePaths.length);
 });
 
-test('日本語ガイドハブは121記事を重複なく分類し全記事から戻れる', () => {
+test('日本語ガイドハブは131記事を重複なく分類し全記事から戻れる', () => {
   assert.deepEqual(seoHubPaths, ['/ja/guides']);
   const html = renderSeoPage('/ja/guides');
   assert.ok(html);
@@ -54,7 +54,7 @@ test('日本語ガイドハブは121記事を重複なく分類し全記事か�
   assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/, 'internal SEO links must preserve organic attribution');
 
   const japanesePaths = seoPagePaths.filter((path) => path.startsWith('/ja/'));
-  assert.equal(japanesePaths.length, 121);
+  assert.equal(japanesePaths.length, 131);
   for (const path of japanesePaths) {
     assert.equal((html.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, `${path} should appear once in the hub`);
     assert.match(renderSeoPage(path), /href="\/ja\/guides"/);
@@ -575,7 +575,7 @@ test('サイトマップはガイドハブ・全SEOページ・canonicalの法�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/privacy<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/terms<\/loc>/);
   assert.doesNotMatch(sitemap, /<loc>[^<]+\.html<\/loc>/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 134);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 144);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/buzz<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-sellers<\/loc>/);
 });
@@ -781,5 +781,45 @@ test('全記事にスクロール追従の固定検索CTAがあり、既存の�
     const query = stickyCta.match(/href="\/\?q=([^"]+)" data-seo-search-link/)?.[1] || '';
     assert.ok(query, `${path} sticky CTA must carry a prefilled ?q= and reuse data-seo-search-link tracking`);
     assert.ok(decodeURIComponent(query).length <= 200);
+  }
+});
+
+test('2026-09-05公開のクリエイター募集6記事＋値下げ・クーポン10記事は固有意図・導線・誇張なしを満たす', () => {
+  const creators = [
+    'pr-post-rules-for-influencers', 'earn-with-shopping-app-review-posts', 'influencer-recruitment-for-small-accounts',
+    'how-to-report-and-invoice-creator-rewards', 'screenshot-tips-for-app-review-posts', 'what-to-write-in-price-drop-alert-review'
+  ];
+  const deals = [
+    'get-notified-when-price-drops', 'how-to-set-a-target-price', 'find-coupons-before-checkout', 'coupon-conditions-to-check',
+    'sale-notification-only-for-malls-you-use', 'is-it-cheaper-to-wait-for-sale', 'track-price-history-before-buying',
+    'prime-day-vs-rakuten-super-sale-vs-mega-wari', 'avoid-fake-discount-displays', 'budget-shopping-for-families-with-price-alerts'
+  ];
+  const hub = renderSeoPage('/ja/guides');
+  assert.match(hub, /id="creators"/);
+  const intents = new Set();
+  for (const slug of [...creators, ...deals]) {
+    const path = '/ja/' + slug;
+    const html = renderSeoPage(path);
+    assert.ok(html, slug);
+    assert.match(html, /datetime="2026-09-05"/);
+    assert.match(html, /<figure class="guide-visual"/);
+    assert.doesNotMatch(html, /utm_(?:source|medium|campaign|content)/);
+    assert.doesNotMatch(html, /最安(?:値)?です|人気No\.1|売れ筋No\.1|絶対おすすめ/);
+    assert.ok(evaluateSeoPageQuality(path).total >= 85, slug);
+    intents.add(html.match(/data-seo-intent="([^"]+)"/)[1]);
+    assert.equal((hub.match(new RegExp(`href="${path}"`, 'g')) || []).length, 1, slug);
+  }
+  assert.equal(intents.size, creators.length + deals.length);
+  for (const slug of creators) {
+    const html = renderSeoPage('/ja/' + slug);
+    assert.match(html, /data-seo-cluster="creators"/);
+    assert.match(html, /href="\/for-creators" data-seo-feature-link/);
+    assert.match(html, /1,500円/);
+  }
+  for (const slug of deals) {
+    const html = renderSeoPage('/ja/' + slug);
+    assert.match(html, /data-seo-cluster="sale-timing"/);
+    assert.match(html, /href="\/" data-seo-feature-link/);
+    assert.match(html, /販売ページ|キャンペーンページ/);
   }
 });

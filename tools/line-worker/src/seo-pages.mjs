@@ -3991,7 +3991,17 @@ const guideHubGroups = [
       'prepare-for-amazon-sale-events',
       'plan-shopping-with-ec-sale-calendar',
       'check-if-sale-price-is-really-cheaper',
-      'prepare-for-year-end-sale-season'
+      'prepare-for-year-end-sale-season',
+      'get-notified-when-price-drops',
+      'how-to-set-a-target-price',
+      'is-it-cheaper-to-wait-for-sale',
+      'track-price-history-before-buying',
+      'find-coupons-before-checkout',
+      'coupon-conditions-to-check',
+      'sale-notification-only-for-malls-you-use',
+      'prime-day-vs-rakuten-super-sale-vs-mega-wari',
+      'avoid-fake-discount-displays',
+      'budget-shopping-for-families-with-price-alerts'
     ]
   },
   {
