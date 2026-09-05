@@ -99,14 +99,16 @@ test('SEARCH AGENT→DISCOVERY→OFFICIALの3セクションは順に隣接す�
   // MARKETPLACE COVERAGE(6) -> SEARCH AGENT(7) -> DISCOVERY(8) -> OFFICIAL(9)。
   // 2026-09-03 大隆さん指示: 重複していた下側の MARKETPLACE COVERAGE を削除。
   // SEARCH AGENT と DISCOVERY の間には何も挟まない。
-  const order = ['HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY', 'HOSHILU OFFICIAL'];
+  // 2026-09-05 大隆さん指示: OFFICIAL(公式アカウント)は NEWS(お知らせ)の上へ移動。
+  // 並びは OFFICIAL -> NEWS -> SEARCH AGENT -> DISCOVERY。SEARCH AGENT と DISCOVERY は隣接のまま。
+  const order = ['HOSHILU OFFICIAL', 'HOSHILU NEWS', 'HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY'];
   const positions = order.map((label) => {
     const index = html.indexOf(`<p class="step">${label}</p>`);
     assert.notEqual(index, -1, `missing section: ${label}`);
     return index;
   });
   assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
-  const between = html.slice(positions[0], positions[2]);
+  const between = html.slice(positions[2], positions[3] + 40);
   const steps = [...between.matchAll(/<p class="step">([^<]+)<\/p>/g)].map((match) => match[1]);
   assert.deepEqual(steps, ['HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY']);
 });
