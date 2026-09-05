@@ -48,13 +48,13 @@ function render(result) {
     const block = el('div', 'buzz-home-shelf');
     const head = el('div', 'buzz-home-shelf-head');
     head.append(el('h3', '', shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label)), el('span', 'buzz-home-headline', text(shelf.headline)));
+    // 2026-09-05 大隆さん指示: ランキングは常に5列(横スクロールなし・1位〜5位を一画面で)。
     const rail = el('div', 'buzz-home-rail');
-    for (const item of (shelf.items || []).slice(0, 6)) rail.append(itemCard(item));
+    for (const item of (shelf.items || []).slice(0, 5)) rail.append(itemCard(item));
     const more = el('a', 'buzz-home-railmore', 'もっと見る →');
     more.href = '/buzz';
-    rail.append(more);
     // 2026-08-19 大隆さん指示: 棚ごとの出典表記は出さない(枠下の注記に集約)。
-    block.append(head, rail);
+    block.append(head, rail, more);
     root.append(block);
   }
 }
