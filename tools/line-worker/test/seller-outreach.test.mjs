@@ -154,8 +154,10 @@ test('配信停止リンクは OPTED_OUT にして、以後そのアドレスへ
   const bad = await handleSellerOutreachRoutes(new Request('https://hoshilu.app/seller-outreach/unsubscribe?t=zzz'), env);
   assert.equal(bad.status, 200);
   assert.match(await bad.text(), /リンクが無効です/u);
+  assert.match(await (await handleSellerOutreachRoutes(new Request('https://hoshilu.app/seller-outreach/unsubscribe?t=zzz'), env)).text(), /<!-- unsubscribe: token_format -->/u);
   const unknown = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe?t=${'0'.repeat(32)}`), env);
   assert.equal(unknown.status, 200);
+  assert.match(await unknown.text(), /<!-- unsubscribe: not_found len=32 -->/u);
   assert.equal(await handleSellerOutreachRoutes(new Request('https://hoshilu.app/'), env), null);
 });
 
