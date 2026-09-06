@@ -693,7 +693,7 @@ test('2026-09-03公開の横断検索9記事は固有意図・まとめて探す
     assert.match(html, /"dateModified":"2026-09-03"/);
     assert.match(html, /<figure class="guide-visual"/);
     assert.match(html, /HOSHILUでまとめて探す/, `${slug} must carry the cross-search CTA`);
-    assert.match(html, /この条件でまとめて探す/);
+    assert.match(html, /○円になったら知らせてもらう/);
     assert.match(html, /販売ページ/);
     assert.match(html, /href="\/ja\/guides"/);
     assert.doesNotMatch(html, /最安(?:値)?です|人気No\.1|売れ筋No\.1|絶対おすすめ/);
