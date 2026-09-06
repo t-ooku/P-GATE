@@ -77,7 +77,7 @@ test('Main search retries once and returns a traceable 13-mall degraded result',
   assert.match(app, /const requestedMaxAttempts=Math\.max\(1,Math\.min\(2,Number\(options\.maxAttempts\)\|\|2\)\)/);
   // 2026-09-02: 画像付きも2回目を縮小画像で送り直す(空振りゼロ設計)。
   assert.match(app, /const maxAttempts=requestedMaxAttempts;/);
-  assert.match(app, /let submittedImage=preparedSearchImage;/);
+  assert.match(app, /let submittedImage=skipSupplementalInput\?null:preparedSearchImage;/);
   assert.match(app, /if\(attempt>0&&submittedImage\)\{submittedImage=await shrinkPreparedSearchImage\(submittedImage\);/);
   assert.match(app, /async function shrinkPreparedSearchImage\(payload\)/);
   assert.match(app, /const scale=1024\/longest/);

@@ -1404,7 +1404,7 @@ test('テキスト検索は外部検索先を即時かつ安定表示し確認�
   assert.match(appSource, /待たずに最大13モールで同じ条件を探せます/);
   assert.match(appSource, /入力した文章で最大13モールを検索できます/);
   assert.match(appSource, /setSearchMode\('direct'\);/);
-  assert.match(appSource, /if\(identifyRequested&&!supplemental[\s\S]{0,220}const executionId=beginIdentifySearch\(query\);window\.HoshiluIdentifySearch\.open\(query,elements\.language\.value,\{executionId\}\)/);
+  assert.match(appSource, /if\(identifyRequested&&[\s\S]{0,220}const executionId=beginIdentifySearch\(query\);window\.HoshiluIdentifySearch\.open\(query,elements\.language\.value,\{executionId,image:preparedSearchImage,socialUrl:String\(elements\.socialUrl\?\.value\|\|''\)\.trim\(\)\}\)/);
   assert.match(appSource, /この端末に条件を保存しました（登録後、通知を明示的に有効化できます）/);
   assert.match(html, /id="resultMessage"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.doesNotMatch(html, /id="instantMarketplaceHandoff"[^>]*(?:role="status"|aria-live=|aria-atomic=)/);

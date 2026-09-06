@@ -134,7 +134,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=147"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=13"><\/script>/);
+  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=148"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=14"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -156,7 +156,7 @@ test('AI確認モードは一時的なTurnstile・Worker失敗を別トークン
 
 test('AI確認候補は販売確認前と明示して本検索へ引き継ぎ、他モール導線を重複させない', async () => {
   const [app, script, css] = await Promise.all([read('app.js'), read('ai-search-ui.mjs'), read('ai-search-layout-fix.css')]);
-  assert.match(script, /runIdentifiedSearch\(result\.refined_query\|\|candidate,aiCandidateFallback\)/);
+  assert.match(script, /runIdentifiedSearch\(result\.refined_query\|\|candidate,aiCandidateFallback,startedFromMedia\?\{skipSupplementalInput:true\}:\{\}\)/);
   assert.match(script, /return searchRunner\(\{ aiCandidateFallback, \.\.\.searchOptions \}\)/);
   assert.doesNotMatch(script.slice(script.indexOf('async function runFinalSearch'), script.indexOf('function chatMessageRow')), /requestToken/);
   assert.match(script, /if\(otherMallsButton\?\.isConnected\|\|dialogDisposed\)return/);

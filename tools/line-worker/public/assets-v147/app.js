@@ -1456,8 +1456,11 @@ function beginIdentifySearch(query){
 async function runKnowledgeSearch(options={}){
   const t=selectedCopy();
   const submittedQuery=String(elements.query.value||'').trim();
-  const submittedSocialUrl=String(elements.socialUrl?.value||'').trim();
-  let submittedImage=preparedSearchImage;
+  // 2026-09-06 大隆さん指示: 写真・投稿URLは「これですか？」の段階で解析済み。
+  // YES のあとは確定した商品名で探す（同じ画像をもう一度Geminiに送らない＝待たせない）。
+  const skipSupplementalInput=options.skipSupplementalInput===true;
+  const submittedSocialUrl=skipSupplementalInput?'':String(elements.socialUrl?.value||'').trim();
+  let submittedImage=skipSupplementalInput?null:preparedSearchImage;
   const submittedImageSource=preparedSearchImageSource;
   const hasSupplementalInput=Boolean(submittedSocialUrl||submittedImage);
   if(searchImagePreparing){elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().preparing;return{ok:false,error:'SEARCH_IMAGE_PREPARING'};}
@@ -1741,7 +1744,7 @@ document.querySelector('#stickyMarketplaceJump')?.addEventListener('click',()=>{
   (document.querySelector('#instantMarketplaceFallback')||document.querySelector('#marketplaceFallback'))?.scrollIntoView({behavior:'smooth',block:'start'});
 });
 window.HoshiluSearch={run:runKnowledgeSearch,beginIdentify:beginIdentifySearch,endIdentify:endIdentifySearch,revealResults:revealSearchResults};
-elements.form.addEventListener('submit',event=>{event.preventDefault();const identifyRequested=currentSearchMode()==='identify';requestedSearchMode='direct';const query=String(elements.query.value||'').trim();const supplemental=hasSupplementalSearchInput();if(searchImagePreparing){elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().preparing;return;}if(!isUsableProductQuery(query)&&!supplemental){elements.query.focus();elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().missing;return;}if(identifyRequested&&!supplemental&&typeof window.HoshiluIdentifySearch?.open==='function'){const executionId=beginIdentifySearch(query);window.HoshiluIdentifySearch.open(query,elements.language.value,{executionId});return;}runKnowledgeSearch();});
+elements.form.addEventListener('submit',event=>{event.preventDefault();const identifyRequested=currentSearchMode()==='identify';requestedSearchMode='direct';const query=String(elements.query.value||'').trim();const supplemental=hasSupplementalSearchInput();if(searchImagePreparing){elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().preparing;return;}if(!isUsableProductQuery(query)&&!supplemental){elements.query.focus();elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().missing;return;}if(identifyRequested&&typeof window.HoshiluIdentifySearch?.open==='function'){const executionId=beginIdentifySearch(query);window.HoshiluIdentifySearch.open(query,elements.language.value,{executionId,image:preparedSearchImage,socialUrl:String(elements.socialUrl?.value||'').trim()});return;}runKnowledgeSearch();});
 function returnFromRankingToSearch(){
   rankingRequestSequence+=1;rankingCategorySelection=null;rankingConfirmationFlow=null;
   if(elements.rankingDialog.open)elements.rankingDialog.close();

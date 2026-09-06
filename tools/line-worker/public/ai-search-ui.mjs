@@ -119,6 +119,33 @@ async function postChatTurn(history, language, mode = 'REFINE') {
   throw lastError;
 }
 
+// 2026-09-06 大隆さん指示: 写真・投稿URLで検索したときも、先に Gemini が特定して
+// 「これですか？」を出す。ここは候補を1つもらうだけで、在庫・価格は YES の後に探す。
+// 画像は最大14秒かかることがあるので、チャットより長い予算を取る。
+const IDENTIFY_HTTP_TIMEOUT_MS = 30000;
+async function postIdentify({ query, language, image, socialUrl }) {
+  const auth = window.HoshiluChatAuth;
+  const token = await (auth?.requestToken?.(AI_TOKEN_CALLBACK_TIMEOUT_MS) ?? '');
+  if (!token) throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
+  const response = await fetch('/api/identify', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      query: String(query || ''), language, session_id: auth?.sessionId || '',
+      processing_notice_shown: true, turnstile_token: token,
+      ...(image ? { image } : {}), ...(socialUrl ? { social_url: socialUrl } : {})
+    }),
+    signal: AbortSignal.timeout(IDENTIFY_HTTP_TIMEOUT_MS)
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.ok) {
+    const error = new Error(payload.error || `IDENTIFY_HTTP_${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return payload.result;
+}
+
 // 2026-09-05 大隆さん指示: チャットで提示した商品には画像を必ず添える（両モード共通の描画）。
 function candidatePreviews(result){return Array.isArray(result?.candidate_previews)?result.candidate_previews.filter(item=>item?.image&&item?.name):[];}
 function appendPreviewStrip(messages,previews,copy){
@@ -155,7 +182,11 @@ function openIdentifyDialog(originalQuery,language,options={}){
   const messages=document.createElement('div');messages.className='ai-chat-messages';
   panel.append(close,title,messages);dialog.append(panel);document.body.append(dialog);
   dialog.addEventListener('close',()=>{dialogDisposed=true;settleHandoff('handoff');dialog.remove();document.querySelector('#submitButton')?.focus({preventScroll:true});});
-  const history=[{role:'user',text:originalQuery}];let noCount=0;let otherMallsButton=null;
+  // 写真・投稿URLから始まった確認は、YES のあとに同じ画像をもう一度解析させない
+  // （確定した商品名で探す）。文字だけの確認は従来どおり。
+  const identifyImage=options.image||null;const identifySocialUrl=String(options.socialUrl||'');
+  const startedFromMedia=Boolean(identifyImage||identifySocialUrl);
+  const history=[{role:'user',text:originalQuery||(identifySocialUrl?identifySocialUrl:'この写真の商品')}];let noCount=0;let otherMallsButton=null;
   const browseNow=document.createElement('button');browseNow.type='button';browseNow.className='ai-chat-other-malls ai-chat-browse-now';browseNow.textContent=copy.browseNow;
   browseNow.addEventListener('click',()=>{settleHandoff('handoff');dialog.close();window.setTimeout(()=>document.querySelector('#instantMarketplaceFallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});
   messages.append(chatMessageRow('user',originalQuery),browseNow);
@@ -169,7 +200,9 @@ function openIdentifyDialog(originalQuery,language,options={}){
     if(dialogDisposed)return;
     const status=chatMessageRow('assistant',copy.thinking);status.classList.add('ai-chat-message-status');messages.append(status);
     try{
-      const result=await postChatTurn(history,language,'IDENTIFY');
+      const result=startedFromMedia&&noCount===0
+        ? await postIdentify({query:originalQuery,language,image:identifyImage,socialUrl:identifySocialUrl})
+        : await postChatTurn(history,language,'IDENTIFY');
       if(dialogDisposed){status.remove();return;}
       status.remove();
       const candidate=String(result.candidate_name||result.refined_query||'').trim();if(!candidate)throw new Error('CANDIDATE_EMPTY');
@@ -183,7 +216,7 @@ function openIdentifyDialog(originalQuery,language,options={}){
       const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';
       const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
       const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;
-      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runIdentifiedSearch(result.refined_query||candidate,aiCandidateFallback);finding.remove();if(dialogDisposed)return;if(outcome.ok||outcome.degraded){dialog.close();revealResultsSoon();}else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
+      yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runIdentifiedSearch(result.refined_query||candidate,aiCandidateFallback,startedFromMedia?{skipSupplementalInput:true}:{});finding.remove();if(dialogDisposed)return;if(outcome.ok||outcome.degraded){dialog.close();revealResultsSoon();}else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
       no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});
       actions.append(yes,no);messages.append(actions);
     }catch(error){
