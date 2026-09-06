@@ -21,9 +21,25 @@ export function normalizeIdentifyQuery(query) {
 export async function identifyCacheKey(query, language, mode) {
   const normalized = normalizeIdentifyQuery(query);
   if (!normalized) return '';
-  const source = new TextEncoder().encode(`${mode || 'IDENTIFY'}|${language || 'JA'}|${normalized}`);
-  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', source));
+  return sha256Hex(`${mode || 'IDENTIFY'}|${language || 'JA'}|${normalized}`);
+}
+
+async function sha256Hex(text) {
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)));
   return Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+// 画像・投稿URLで特定するときのキー。画像そのものは保存せず、中身のハッシュだけ使う
+// （同じ写真をもう一度上げた人には、Vision も Gemini も呼ばずに同じ候補を即返す）。
+export async function multimodalIdentifyCacheKey({ image = null, socialUrl = '', query = '' } = {}, language = 'JA') {
+  const imageData = String(image?.data || '');
+  const url = String(socialUrl || '').trim();
+  if (!imageData && !url) return '';
+  const parts = [
+    'MULTIMODAL', String(language || 'JA'), normalizeIdentifyQuery(query),
+    url, imageData ? `img:${imageData.length}:${await sha256Hex(imageData)}` : ''
+  ];
+  return sha256Hex(parts.join('|'));
 }
 
 // 保存してよいのは確認カードの表示に必要な項目だけ。想定外のキーは落とす。

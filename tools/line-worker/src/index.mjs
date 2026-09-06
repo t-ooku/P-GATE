@@ -3,6 +3,7 @@ import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.m
 import { handleCreatorInquiryRoutes } from './creator-inquiries.mjs';
 import { handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle } from './seller-outreach.mjs';
 import { bumpIdentifyCacheHit, identifyCacheKey, purgeExpiredIdentifyCache, readIdentifyCache, writeIdentifyCache } from './ai-identify-cache.mjs';
+import { identifyCandidateFromAnalysis, readMultimodalIdentifyCache, storeMultimodalIdentifyCache, withPreviewBudget } from './identify-route.mjs';
 import { handlePriceWatchDemandRoute } from './price-watch-demand.mjs';
 import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
@@ -2043,6 +2044,61 @@ function queueSearchProviderDegradation(env, ctx, requestId, degradation) {
   if (ctx?.waitUntil) ctx.waitUntil(record); else void record;
 }
 
+// 2026-09-06 大隆さん指示: 写真・投稿URLの検索も「まず Gemini が特定 → これですか？ →
+// YES でホシルが探す」の順にする。ここは候補を1つ返すだけで、在庫・価格・購入先は扱わない
+// （それは /api/knowledge の責任）。文字だけの質問は /api/ai-chat（IDENTIFY）が担当する。
+async function handleIdentifyApi(request, env, ctx) {
+  const requestId = crypto.randomUUID();
+  const headers = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId };
+  try {
+    const requestOrigin = request.headers.get('origin');
+    const ownOrigin = new URL(request.url).origin;
+    if (requestOrigin && requestOrigin !== ownOrigin) return Response.json({ ok: false, error: 'ORIGIN_NOT_ALLOWED', request_id: requestId }, { status: 403, headers });
+    const parsedBody = await readBoundedJson(request, 3100000);
+    if (!parsedBody.ok) {
+      const tooLarge = parsedBody.error === 'REQUEST_TOO_LARGE';
+      return Response.json({ ok: false, error: tooLarge ? 'REQUEST_TOO_LARGE' : 'REQUEST_JSON_INVALID', request_id: requestId }, { status: tooLarge ? 413 : 400, headers });
+    }
+    const input = validateKnowledgeRequest(parsedBody.value);
+    if (!input.social_url && !input.search_image) throw new Error('IDENTIFY_INPUT_REQUIRED');
+    await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    const waitUntil = ctx?.waitUntil ? (promise) => ctx.waitUntil(promise) : null;
+    const cacheInput = { image: input.search_image, socialUrl: input.social_url, query: input.query };
+    const { cacheKey, cached } = await readMultimodalIdentifyCache(env, cacheInput, input.language, { waitUntil });
+    if (cached) {
+      return Response.json({ ok: true, result: { ...cached, cached: true }, request_id: requestId }, {
+        headers: { ...headers, 'x-identify-cache': 'hit' }
+      });
+    }
+    const analysis = await analyzeSearchInput({
+      query: input.query, social_url: input.social_url, image: input.search_image
+    }, input.language, env, fetch);
+    const candidate = identifyCandidateFromAnalysis(analysis);
+    if (!candidate) return Response.json({ ok: true, result: { candidate_name: '', candidate_previews: [] }, request_id: requestId }, { headers });
+    const sessionHash = await hashUser(input.session_id);
+    const seed = `AI_IDENTIFY:${crypto.randomUUID()}`;
+    const category = semanticSearchGroups(candidate.refined_query)
+      .map((group) => group.category).find((value) => value && value !== 'color') || 'unclassified';
+    const [marketplaceSearchLinks, candidatePreviews] = await Promise.all([
+      signedMarketplaceSearchLinks(candidate.refined_query, {
+        env, origin: ownOrigin, sessionHash, seed, category, trafficClass: input.traffic_class
+      }).catch(() => []),
+      withPreviewBudget(aiChatCandidatePreviews(env, candidate.refined_query, {
+        requestId, createTrackToken, origin: ownOrigin, sessionHash, seed
+      }))
+    ]);
+    const result = { ...candidate, marketplace_search_links: marketplaceSearchLinks, candidate_previews: candidatePreviews };
+    storeMultimodalIdentifyCache(env, cacheKey, result, input.language, { waitUntil });
+    return Response.json({ ok: true, result, request_id: requestId }, { headers: { ...headers, 'x-identify-cache': cacheKey ? 'miss' : 'off' } });
+  } catch (error) {
+    const code = String(error.message || 'IDENTIFY_FAILED').slice(0, 80);
+    const clientErrors = ['PROCESSING_NOTICE_REQUIRED', 'SESSION_ID_INVALID', 'TURNSTILE_TOKEN_INVALID', 'QUERY_LENGTH_INVALID', 'IDENTIFY_INPUT_REQUIRED', 'TURNSTILE_VERIFICATION_FAILED'];
+    const status = publicApiErrorStatus(code, clientErrors, 500);
+    console.error('IDENTIFY_REQUEST_FAILED', { requestId, code, status });
+    return Response.json({ ok: false, error: code, request_id: requestId }, { status, headers });
+  }
+}
+
 async function handleAiChatApi(request, env, ctx) {
   const requestId = crypto.randomUUID();
   try {
@@ -3287,6 +3343,8 @@ export default {
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/related-recommendations') return handleRelatedRecommendationsApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env, ctx);
+    // 2026-09-06 大隆さん指示: 写真・投稿URLも「Gemini が特定 → これですか？ → YES で検索」の順に。
+    if (request.method === 'POST' && url.pathname === '/api/identify') return handleIdentifyApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/price-comparison') return handlePriceComparisonApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/rankings') return handleRankingApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/hoshilu-rankings') return handleHoshiluRankingApi(request, env);
