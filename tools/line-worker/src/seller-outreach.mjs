@@ -10,8 +10,8 @@
 // 送信者表示（HOSHILU・運営者・住所代わりの問い合わせ先）と配信停止手段を本文に必ず入れる、
 // 同じ文面の大量送信をしない（本文は行ごとに個別化して投入する）、成果保証・ユーザー数の誇張を書かない
 // （投入前に禁止表現を機械チェックし、含む行は SKIPPED にする）。
-import { createHash, randomBytes } from 'node:crypto';
-
+// Cloudflare Workers には node:crypto が無い（nodejs_compat を付けていない）。
+// Web Crypto（Workers・Node 22 の両方でグローバル）だけを使う。
 export const OUTREACH_DAILY_LIMIT_DEFAULT = 10;
 export const OUTREACH_PER_CYCLE_LIMIT = 3;
 export const OUTREACH_FORBIDDEN_PHRASES = ['必ず売れ', '売上が上がり', '多数のユーザー', '多くのユーザー', '成果保証', '業界No.1', '業界ナンバー', '必ず儲か', '確実に'];
@@ -20,12 +20,15 @@ const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const CONTROL_CHARS = new RegExp('[' + String.fromCharCode(0) + '-' + String.fromCharCode(31) + String.fromCharCode(127) + ']', 'g');
 const clean = (value, max) => String(value ?? '').replace(CONTROL_CHARS, '').trim().slice(0, max);
 
-export function emailHash(email) {
-  return createHash('sha256').update(String(email || '').trim().toLowerCase()).digest('hex');
+const toHex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+
+export async function emailHash(email) {
+  const source = new TextEncoder().encode(String(email || '').trim().toLowerCase());
+  return toHex(new Uint8Array(await crypto.subtle.digest('SHA-256', source)));
 }
 
 export function newUnsubscribeToken() {
-  return randomBytes(16).toString('hex');
+  return toHex(crypto.getRandomValues(new Uint8Array(16)));
 }
 
 export function jstBusinessHours(date) {

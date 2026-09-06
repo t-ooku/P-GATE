@@ -22,9 +22,10 @@ function databaseEnv(extra = {}) {
   return { db, env };
 }
 
-function insertContact(db, overrides = {}) {
+async function insertContact(db, overrides = {}) {
+  const email = overrides.contact_email || 'shop@example.com';
   const row = { contact_id: 'c1', shop_name: 'テスト商店', contact_email: 'shop@example.com',
-    email_hash: emailHash('shop@example.com'), subject: '商品を探している人に、見つけてもらいませんか',
+    email_hash: await emailHash(email), subject: '商品を探している人に、見つけてもらいませんか',
     body: 'テスト商店 ご担当者様\n\nHOSHILU では商品・ジャンル・ショップの3方向から見つけてもらえます。',
     status: 'QUEUED', scheduled_at: '2026-09-07T00:00:00.000Z', unsubscribe_token: 'a'.repeat(32),
     sent_at: '', created_at: '2026-09-06T00:00:00.000Z', updated_at: '2026-09-06T00:00:00.000Z', ...overrides };
@@ -58,6 +59,13 @@ test('本文には必ず送信者表示と配信停止リンクが付く（特�
   assert.match(newUnsubscribeToken(), /^[0-9a-f]{32}$/u);
 });
 
+test('emailHash は Web Crypto の SHA-256（大文字小文字と前後空白を無視）', async () => {
+  assert.equal(await emailHash(' Shop@Example.com '), await emailHash('shop@example.com'));
+  assert.match(await emailHash('shop@example.com'), /^[0-9a-f]{64}$/u);
+  const source = readFileSync(new URL('../src/seller-outreach.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /^import .*from '(?:node:|.*node:crypto)/mu, 'Workers に無い node: の組み込みモジュールを import しない');
+});
+
 test('§33 の禁止表現は送信前に落とす', () => {
   assert.deepEqual(findForbiddenPhrases('掲載すれば必ず売れます'), ['必ず売れ']);
   assert.deepEqual(findForbiddenPhrases('多数のユーザーがいます'), ['多数のユーザー']);
@@ -74,8 +82,8 @@ test('未設定・営業時間外では何もしない', async () => {
 
 test('QUEUED を送って SENT にする。禁止表現の行は送らず SKIPPED', async () => {
   const { db, env } = databaseEnv();
-  insertContact(db);
-  insertContact(db, { contact_id: 'c2', contact_email: 'bad@example.com', email_hash: emailHash('bad@example.com'),
+  await insertContact(db);
+  await insertContact(db, { contact_id: 'c2', contact_email: 'bad@example.com',
     body: '掲載すれば必ず売れます。', unsubscribe_token: 'c'.repeat(32) });
   const sent = [];
   const fetchImpl = async (url, init) => { sent.push({ url, body: JSON.parse(init.body) }); return new Response(JSON.stringify({ id: 'resend-1' }), { status: 200 }); };
@@ -95,8 +103,8 @@ test('QUEUED を送って SENT にする。禁止表現の行は送らず SKIPPE
 
 test('同じアドレスへは2回目を送らない。1サイクル・1日の上限を守る', async () => {
   const { db, env } = databaseEnv();
-  insertContact(db, { contact_id: 'sent-1', status: 'SENT', sent_at: '2026-09-07T00:30:00.000Z' });
-  insertContact(db, { contact_id: 'again', unsubscribe_token: 'd'.repeat(32) });
+  await insertContact(db, { contact_id: 'sent-1', status: 'SENT', sent_at: '2026-09-07T00:30:00.000Z' });
+  await insertContact(db, { contact_id: 'again', unsubscribe_token: 'd'.repeat(32) });
   const sent = [];
   const fetchImpl = async (url, init) => { sent.push(JSON.parse(init.body)); return new Response('{}', { status: 200 }); };
   await runSellerOutreachCycle(env, MONDAY_10AM_JST, fetchImpl);
@@ -105,8 +113,7 @@ test('同じアドレスへは2回目を送らない。1サイクル・1日の�
 
   const many = databaseEnv();
   for (let i = 0; i < 5; i += 1) {
-    insertContact(many.db, { contact_id: `m${i}`, contact_email: `m${i}@example.com`,
-      email_hash: emailHash(`m${i}@example.com`), unsubscribe_token: String(i).repeat(32) });
+    await insertContact(many.db, { contact_id: `m${i}`, contact_email: `m${i}@example.com`, unsubscribe_token: String(i).repeat(32) });
   }
   const posts = [];
   const okFetch = async (url, init) => { posts.push(JSON.parse(init.body)); return new Response('{}', { status: 200 }); };
@@ -114,15 +121,15 @@ test('同じアドレスへは2回目を送らない。1サイクル・1日の�
   assert.equal(posts.length, OUTREACH_PER_CYCLE_LIMIT, '1サイクル3通まで');
 
   const capped = databaseEnv({ SELLER_OUTREACH_DAILY_LIMIT: '2' });
-  insertContact(capped.db, { contact_id: 'x1', status: 'SENT', sent_at: '2026-09-07T00:10:00.000Z' });
-  insertContact(capped.db, { contact_id: 'x2', contact_email: 'x2@example.com', email_hash: emailHash('x2@example.com'), status: 'SENT', sent_at: '2026-09-07T00:20:00.000Z', unsubscribe_token: 'e'.repeat(32) });
-  insertContact(capped.db, { contact_id: 'x3', contact_email: 'x3@example.com', email_hash: emailHash('x3@example.com'), unsubscribe_token: 'f'.repeat(32) });
+  await insertContact(capped.db, { contact_id: 'x1', status: 'SENT', sent_at: '2026-09-07T00:10:00.000Z' });
+  await insertContact(capped.db, { contact_id: 'x2', contact_email: 'x2@example.com', status: 'SENT', sent_at: '2026-09-07T00:20:00.000Z', unsubscribe_token: 'e'.repeat(32) });
+  await insertContact(capped.db, { contact_id: 'x3', contact_email: 'x3@example.com', unsubscribe_token: 'f'.repeat(32) });
   assert.deepEqual((await runSellerOutreachCycle(capped.env, MONDAY_10AM_JST, okFetch)), { action: 'skipped', reason: 'daily_limit', sent_today: 2 });
 });
 
 test('Resend が失敗したら FAILED として理由を残す（他の行は止めない）', async () => {
   const { db, env } = databaseEnv();
-  insertContact(db);
+  await insertContact(db);
   const fetchImpl = async () => new Response('{}', { status: 422 });
   await runSellerOutreachCycle(env, MONDAY_10AM_JST, fetchImpl);
   const row = db.prepare(`SELECT status,last_error FROM seller_outreach_contacts WHERE contact_id='c1'`).get();
@@ -132,14 +139,14 @@ test('Resend が失敗したら FAILED として理由を残す（他の行は�
 
 test('配信停止リンクは OPTED_OUT にして、以後そのアドレスへ送らない', async () => {
   const { db, env } = databaseEnv();
-  insertContact(db);
+  await insertContact(db);
   const response = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe?t=${'a'.repeat(32)}`), env);
   assert.equal(response.status, 200);
   assert.match(await response.text(), /配信停止を受け付けました/u);
   assert.equal(db.prepare(`SELECT status FROM seller_outreach_contacts WHERE contact_id='c1'`).get().status, 'OPTED_OUT');
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM seller_outreach_suppressions').get().n, 1);
   // 同じアドレスで新しい行を積んでも送らない
-  insertContact(db, { contact_id: 'later', unsubscribe_token: '9'.repeat(32) });
+  await insertContact(db, { contact_id: 'later', unsubscribe_token: '9'.repeat(32) });
   const sent = [];
   await runSellerOutreachCycle(env, MONDAY_10AM_JST, async (url, init) => { sent.push(init); return new Response('{}', { status: 200 }); });
   assert.equal(sent.length, 0);
