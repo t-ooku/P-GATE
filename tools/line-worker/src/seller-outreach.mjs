@@ -165,10 +165,6 @@ export async function handleSellerOutreachRoutes(request, env) {
   const row = tokenOk && env.PRODUCT_DB
     ? (await env.PRODUCT_DB.prepare(`SELECT contact_id,email_hash,status FROM seller_outreach_contacts WHERE unsubscribe_token=?1`).bind(token).all()).results?.[0]
     : null;
-  // 切り分け用。個人情報は返さない（見つかったかどうかと、ハンドラが実際に受け取った URL の形だけ）。
-  if (url.searchParams.get('debug') === '1') {
-    return new Response(JSON.stringify({ received_url: url.pathname + url.search, method: request.method, token_length: token.length, token_ok: tokenOk, has_database: Boolean(env.PRODUCT_DB), row_found: Boolean(row) }), { status: 200, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
-  }
   if (!tokenOk) return invalid('token_format');
   if (!env.PRODUCT_DB) return invalid('no_database');
   if (!row) return invalid(`not_found len=${token.length}`);
