@@ -1,5 +1,6 @@
 // 2026-09-05 大隆さん指示: クリエイター募集6本＋値下げ・クーポン10本を別ファイルから取り込む。
 import { creatorGuideInputs, creatorGuideProfiles, dealGuideInputs, dealGuideProfiles } from './seo-pages-2026-09-05.mjs';
+import { sellerGuideInputs, sellerGuideProfiles } from './seo-pages-2026-09-06-seller.mjs';
 
 const ORIGIN = 'https://hoshilu.app';
 const UPDATED_AT = '2026-08-13';
@@ -3212,13 +3213,14 @@ const pages = {
       ]
     })
   },
-  ...Object.fromEntries(Object.entries({ ...creatorGuideInputs, ...dealGuideInputs }).map(([slug, input]) => [slug, { ja: guide('ja', input) }]))
+  ...Object.fromEntries(Object.entries({ ...creatorGuideInputs, ...dealGuideInputs, ...sellerGuideInputs }).map(([slug, input]) => [slug, { ja: guide('ja', input) }]))
 };
 
 const visualProfiles = {
   ja: {
     ...creatorGuideProfiles,
     ...dealGuideProfiles,
+    ...sellerGuideProfiles,
     'sell-more-on-ec-malls': {
       intent: 'seller_grow_mall_sales', cluster: 'seller-growth', articleType: 'seller-guide',
       headings: ['起きていること', '考えられる原因', '直す順番'],
@@ -3848,7 +3850,11 @@ const guideHubGroups = [
       'get-found-when-buyers-dont-know-the-product-name',
       'find-unmet-demand-for-your-products',
       'compare-ec-mall-fees-for-sellers',
-      'parallel-import-selling-in-japan'
+      'parallel-import-selling-in-japan',
+      'ec-shukyaku-without-ad-budget',
+      'amazon-shukyaku-outside-amazon',
+      'ec-coupon-strategy',
+      'ec-repeat-customers'
     ]
   },
   {
