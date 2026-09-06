@@ -439,3 +439,59 @@ export async function handleGrowthEvent(request, env) {
     headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
   });
 }
+
+// 2026-09-06 大隆さん指示（成長・SNS自動運用 §27）: 「訪問→Watch Set率」と
+// 「Watch Set の流入元」を実数で出せるようにする。希望価格ウォッチの登録は
+// これまで growth_events に何も残していなかったので、どこから来た人が登録したのか
+// 一切分からなかった。
+//
+// この関数は Worker からしか呼ばない（EVENTS に入れないので、ブラウザから
+// /api/events で偽造できない）。保存するのは流入元と匿名の visitor/session だけで、
+// 会員IDも商品名も金額も入れない。event_id は member:wish のハッシュなので、
+// 同じウォッチを何度保存し直しても1件にしかならない。
+//
+// 内部ユーザー（大隆さん本人・テスト会員）の登録は traffic_class='QA' として書く。
+// 既存の集計はすべて traffic_class<>'QA' で読むので、自動的に数から外れる。
+export async function recordTargetPriceWatchSet(env, {
+  memberId = '', wishId = '', locale = 'JA', attribution = {}, visitorId = '', sessionId = '', now = new Date()
+} = {}) {
+  if (!env?.PRODUCT_DB || !memberId || !wishId) return false;
+  const digest = new Uint8Array(await crypto.subtle.digest(
+    'SHA-256', new TextEncoder().encode(`hoshilu-target-price-watch-set:${memberId}:${wishId}`)
+  ));
+  const eventId = `target_price_watch_set:${Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('')}`;
+  const internal = internalMemberIds(env).has(String(memberId));
+  const event = {
+    source: clean(attribution.source), medium: clean(attribution.medium),
+    campaign: clean(attribution.campaign), content: clean(attribution.content)
+  };
+  const trafficClass = internal ? 'QA' : classifyGrowthTraffic(event);
+  const values = [
+    eventId, 'target_price_watch_set',
+    /^[A-Z]{2}$/.test(String(locale || '').toUpperCase()) ? String(locale).toUpperCase() : 'JA',
+    event.source, event.medium, event.campaign, event.content, '',
+    now.toISOString(), trafficClass, anonymousId(visitorId), anonymousId(sessionId)
+  ];
+  try {
+    await env.PRODUCT_DB.prepare(
+      `INSERT OR IGNORE INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`
+    ).bind(...values).run();
+  } catch (error) {
+    // migration 0047 未適用の環境でも、流入元だけは残す。
+    const message = String(error?.message || error);
+    if (!/(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(message)) throw error;
+    await env.PRODUCT_DB.prepare(
+      `INSERT OR IGNORE INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    ).bind(...values.slice(0, 10)).run();
+  }
+  return true;
+}
+
+// 内部・テスト会員の member_id（カンマ区切り）。設定が無ければ誰も除外しない。
+export function internalMemberIds(env = {}) {
+  return new Set(String(env.INTERNAL_MEMBER_IDS || '').split(',').map((value) => value.trim()).filter(Boolean));
+}

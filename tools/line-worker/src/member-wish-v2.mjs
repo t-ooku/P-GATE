@@ -1,6 +1,6 @@
 import { readMemberSession } from './member-auth.mjs';
 import { buildConditionSnapshot, serializeConditionSnapshot } from './insight-search-watch.mjs';
-import { recordContinuousSearchEnabled } from './growth-events.mjs';
+import { recordContinuousSearchEnabled, recordTargetPriceWatchSet } from './growth-events.mjs';
 const LANGUAGES = new Set(['JA', 'EN', 'ZH', 'KO']);
 const WATCH_FREQUENCIES = new Set(['INSTANT', 'DAILY', 'WEEKLY', 'MUTED']);
 const clean = (value) => String(value || '').normalize('NFKC').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
@@ -213,6 +213,18 @@ export async function handleMemberWishRoutes(request, env) {
     const saved = await selectWish(env, member.id, wishId);
     if (!saved?.insight_enabled_at || !saved?.notify_new_match || saved?.watch_frequency === 'MUTED') {
       await cancelPendingInsightNotifications(env, member.id, wishId, now);
+    }
+    // 2026-09-06 大隆さん指示（§27）: 「訪問→Watch Set率」と流入元を出せるようにする。
+    // 希望価格を入れた保存のときだけ、流入元と匿名の visitor/session を1件残す
+    // （会員ID・商品名・金額は入れない。同じウォッチは何度保存しても1件）。
+    // 失敗しても保存自体は成功として返す（計測が本体を止めない）。
+    if (targetPrice !== null) {
+      try {
+        await recordTargetPriceWatchSet(env, {
+          memberId: member.id, wishId, locale: saved?.language || language,
+          attribution: payload, visitorId: payload.visitor_id, sessionId: payload.session_id
+        });
+      } catch (error) { console.warn('TARGET_PRICE_WATCH_SET_EVENT_FAILED', String(error?.name || 'Error').slice(0, 40)); }
     }
     if (Boolean(saved?.insight_enabled_at) && !Boolean(previousEnablement?.insight_enabled_at)) {
       const deduplicationKey = `${member.id}:${wishId}:${previousEnablement?.updated_at || 'initial'}`;

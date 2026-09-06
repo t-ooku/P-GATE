@@ -63,11 +63,11 @@ const CODEX_KPI_COUNT_KEYS = Object.freeze([
   'completed_search_sessions', 'failed_search_sessions', 'value_sessions',
   'comparison_sessions', 'outbound_sessions', 'wish_sessions',
   'continuous_search_save_sessions', 'continuous_search_enabled_count',
-  'share_sessions', 'registration_sessions', 'events', 'identity_eligible_events',
-  'identified_events'
+  'share_sessions', 'registration_sessions', 'watch_set_sessions', 'watch_set_count',
+  'events', 'identity_eligible_events', 'identified_events'
 ]);
 const CODEX_KPI_RATE_KEYS = Object.freeze([
-  'visit_to_search', 'search_completion', 'search_failure', 'value_realization',
+  'visit_to_search', 'visit_to_watch_set', 'search_completion', 'search_failure', 'value_realization',
   'comparison_reach', 'marketplace_outbound', 'repeat_visitor', 'registration',
   'tracking_coverage'
 ]);
@@ -106,6 +106,7 @@ const SESSION_METRICS_SQL = `WITH base AS (
     MAX(CASE WHEN event_type='continuous_search_saved' THEN 1 ELSE 0 END) AS continuous_search_saved,
     MAX(CASE WHEN event_type='share_started' THEN 1 ELSE 0 END) AS shared,
     MAX(CASE WHEN event_type='member_registered' THEN 1 ELSE 0 END) AS registered,
+    MAX(CASE WHEN event_type='target_price_watch_set' THEN 1 ELSE 0 END) AS watch_set,
     MAX(CASE WHEN traffic_class='ATTRIBUTED' THEN 1 ELSE 0 END) AS attributed,
     MIN(CASE WHEN event_type='search_started' THEN occurred_at END) AS search_at,
     MIN(CASE WHEN event_type='search_completed' THEN occurred_at END) AS completed_at,
@@ -131,6 +132,8 @@ SELECT
   (SELECT COUNT(*) FROM base WHERE event_type='continuous_search_enabled') AS continuous_search_enabled_count,
   SUM(CASE WHEN completed=1 AND shared=1 THEN 1 ELSE 0 END) AS share_sessions,
   SUM(CASE WHEN landed=1 AND registered=1 THEN 1 ELSE 0 END) AS registration_sessions,
+  SUM(watch_set) AS watch_set_sessions,
+  (SELECT COUNT(*) FROM base WHERE event_type='target_price_watch_set') AS watch_set_count,
   SUM(attributed) AS attributed_sessions,
   ROUND(AVG(CASE WHEN search_at IS NOT NULL AND completed_at>=search_at
     THEN (julianday(completed_at)-julianday(search_at))*86400 END),1) AS avg_search_seconds,
@@ -153,7 +156,8 @@ const SOURCE_BREAKDOWN_SQL = `WITH base AS (
     MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS searched,
     MAX(CASE WHEN event_type='search_completed' THEN 1 ELSE 0 END) AS completed,
     MAX(CASE WHEN event_type IN (${VALUE_EVENT_SQL}) THEN 1 ELSE 0 END) AS valued,
-    MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS outbound
+    MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS outbound,
+    MAX(CASE WHEN event_type='target_price_watch_set' THEN 1 ELSE 0 END) AS watch_set
   FROM base GROUP BY session_id
 )
 SELECT source,medium,COUNT(*) AS sessions,
@@ -161,7 +165,8 @@ SELECT source,medium,COUNT(*) AS sessions,
   SUM(searched) AS search_sessions,
   SUM(CASE WHEN searched=1 AND completed=1 THEN 1 ELSE 0 END) AS completed_search_sessions,
   SUM(CASE WHEN completed=1 AND valued=1 THEN 1 ELSE 0 END) AS value_sessions,
-  SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions
+  SUM(CASE WHEN completed=1 AND outbound=1 THEN 1 ELSE 0 END) AS outbound_sessions,
+  SUM(watch_set) AS watch_set_sessions
 FROM sessions GROUP BY source,medium
 ORDER BY value_sessions DESC,outbound_sessions DESC,sessions DESC LIMIT 10`;
 
@@ -235,7 +240,8 @@ function normalizedMetrics(row = {}) {
     'completed_search_sessions', 'failed_search_sessions', 'value_sessions',
     'comparison_sessions', 'outbound_sessions', 'wish_sessions', 'continuous_search_save_sessions',
     'continuous_search_enabled_count', 'share_sessions',
-    'registration_sessions', 'attributed_sessions', 'events', 'identity_eligible_events', 'identified_events'
+    'registration_sessions', 'watch_set_sessions', 'watch_set_count',
+    'attributed_sessions', 'events', 'identity_eligible_events', 'identified_events'
   ];
   const metrics = Object.fromEntries(fields.map(field => [field, safeCount(row[field])]));
   return {
@@ -252,6 +258,9 @@ function normalizedMetrics(row = {}) {
       marketplace_outbound: percentage(metrics.outbound_sessions, metrics.completed_search_sessions),
       repeat_visitor: percentage(metrics.repeat_visitors, metrics.visitors),
       registration: percentage(metrics.registration_sessions, metrics.landing_sessions),
+      // 2026-09-06 大隆さん指示（§27）: 訪問→Watch Set率。内部・テスト会員の登録は
+      // traffic_class='QA' で書くので、この分母・分子の両方から自動的に外れる。
+      visit_to_watch_set: percentage(metrics.watch_set_sessions, metrics.landing_sessions),
       attributed_sessions: percentage(metrics.attributed_sessions, metrics.sessions),
       tracking_coverage: percentage(metrics.identified_events, metrics.identity_eligible_events)
     }
@@ -278,6 +287,9 @@ function sourceRows(rows = []) {
     search_sessions: safeCount(row.search_sessions), completed_search_sessions: safeCount(row.completed_search_sessions),
     value_sessions: safeCount(row.value_sessions),
     outbound_sessions: safeCount(row.outbound_sessions),
+    // 流入元ごとの「希望価格を入れた人」。どのチャネルが本命の行動に繋がったかを見る。
+    watch_set_sessions: safeCount(row.watch_set_sessions),
+    watch_set_rate: percentage(safeCount(row.watch_set_sessions), safeCount(row.sessions)),
     value_rate: percentage(safeCount(row.value_sessions), safeCount(row.completed_search_sessions))
   }));
 }

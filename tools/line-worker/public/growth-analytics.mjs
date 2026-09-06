@@ -89,6 +89,9 @@ if (urlCreator.creator_id) {
 }
 if (creator.creator_id) Object.assign(attribution, creator);
 window.HoshiluGrowthAttribution = Object.freeze({ ...attribution });
+// 2026-09-06 大隆さん指示（§27）: 希望価格ウォッチの登録も「どこから来た人か」を
+// 数えられるようにする。session_id は30分で切り替わるので、値ではなく取得関数を渡す。
+window.HoshiluGrowthIdentity = Object.freeze({ visitorId: () => growthVisitorId(), sessionId: () => growthSessionId() });
 const locale = () => String(document.documentElement.lang || 'ja').split('-')[0].toUpperCase();
 const visitorId = growthVisitorId();
 const send = (event_type, extra = {}) => {
