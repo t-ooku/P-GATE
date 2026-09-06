@@ -1,6 +1,7 @@
 import { handleSellerRoutes } from './seller-auth.mjs';
 import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
 import { handleCreatorInquiryRoutes } from './creator-inquiries.mjs';
+import { handleSellerOutreachRoutes, runSellerOutreachCycle } from './seller-outreach.mjs';
 import { handlePriceWatchDemandRoute } from './price-watch-demand.mjs';
 import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
@@ -3249,6 +3250,9 @@ export default {
     if (shopDirectoryResponse) return shopDirectoryResponse;
     const creatorInquiryResponse = await handleCreatorInquiryRoutes(request, env);
     if (creatorInquiryResponse) return creatorInquiryResponse;
+    // 2026-09-06 大隆さん決定（Seller獲得マスター指示書 §49）: 営業メールの配信停止（ワンクリック）。
+    const sellerOutreachResponse = await handleSellerOutreachRoutes(request, env);
+    if (sellerOutreachResponse) return sellerOutreachResponse;
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/related-recommendations') return handleRelatedRecommendationsApi(request, env);
@@ -3389,6 +3393,9 @@ export default {
         refreshAnonymousBenchmark(env),
         // APIで確認できた価格だけを購入希望額と比較する。AI推定価格は使わない。
         runTargetPriceScan(env, scheduledAt.toISOString()),
+        // 2026-09-06 大隆さん決定: セラー営業メール。平日09-18時JSTに1サイクル最大3通・
+        // 1日最大10通、1アドレス1回だけ。未設定なら何もしない。失敗しても他ジョブを止めない。
+        runSellerOutreachCycle(env, scheduledAt),
         // HOSHILU BUZZ「急上昇」用の公式ランキング順位スナップショット。
         // 6時間ごとに1回だけ実記録し、migration 0057 未適用なら静かにスキップ。
         recordBuzzSnapshots(env, fetch, scheduledAt.getTime())
