@@ -123,7 +123,7 @@ async function postChatTurn(history, language, mode = 'REFINE') {
 // 「これですか？」を出す。ここは候補を1つもらうだけで、在庫・価格は YES の後に探す。
 // 画像は最大14秒かかることがあるので、チャットより長い予算を取る。
 const IDENTIFY_HTTP_TIMEOUT_MS = 30000;
-async function postIdentify({ query, language, image, socialUrl }) {
+async function postIdentify({ query, language, image, socialUrl, rejectedCandidates = [] }) {
   const auth = window.HoshiluChatAuth;
   const token = await (auth?.requestToken?.(AI_TOKEN_CALLBACK_TIMEOUT_MS) ?? '');
   if (!token) throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
@@ -133,6 +133,7 @@ async function postIdentify({ query, language, image, socialUrl }) {
     body: JSON.stringify({
       query: String(query || ''), language, session_id: auth?.sessionId || '',
       processing_notice_shown: true, turnstile_token: token, defer_previews: true,
+      ...(rejectedCandidates.length ? { rejected_candidates: rejectedCandidates } : {}),
       ...(image ? { image } : {}), ...(socialUrl ? { social_url: socialUrl } : {})
     }),
     signal: AbortSignal.timeout(IDENTIFY_HTTP_TIMEOUT_MS)
@@ -194,7 +195,11 @@ function openIdentifyDialog(originalQuery,language,options={}){
   const settleHandoff=outcome=>{if(handoffSettled)return;handoffSettled=true;window.HoshiluSearch?.endIdentify?.(executionId,outcome);};
   const runIdentifiedSearch=(query,candidate=null,searchOptions={})=>{
     settleHandoff('searching');
-    return runFinalSearch(query,candidate,{...searchOptions,...(executionId?{executionId}:{})});
+    // 元の質問文を一緒に送る。YES をもらった答えは D1 に残り、次の同じ質問に使われる。
+    return runFinalSearch(query,candidate,{
+      ...searchOptions,...(executionId?{executionId}:{}),
+      ...(originalQuery?{identifyOriginalQuery:originalQuery}:{})
+    });
   };
   const dialog=document.createElement('dialog');dialog.className='ai-chat-dialog ai-identify-dialog';
   const panel=document.createElement('div');panel.className='ai-chat-dialog-card';
@@ -208,6 +213,9 @@ function openIdentifyDialog(originalQuery,language,options={}){
   const identifyImage=options.image||null;const identifySocialUrl=String(options.socialUrl||'');
   const startedFromMedia=Boolean(identifyImage||identifySocialUrl);
   const history=[{role:'user',text:originalQuery||(identifySocialUrl?identifySocialUrl:'この写真の商品')}];let noCount=0;let otherMallsButton=null;
+  // 2026-09-06 大隆さん指示: 「違う」と言われた候補を覚えておき、次の候補出しに渡す。
+  // 写真から始まった確認は、2問目以降も写真を使ったまま別の候補を出す。
+  const rejectedCandidates=[];
   const browseNow=document.createElement('button');browseNow.type='button';browseNow.className='ai-chat-other-malls ai-chat-browse-now';browseNow.textContent=copy.browseNow;
   browseNow.addEventListener('click',()=>{settleHandoff('handoff');dialog.close();window.setTimeout(()=>document.querySelector('#instantMarketplaceFallback')?.scrollIntoView({behavior:'smooth',block:'start'}),120);});
   messages.append(chatMessageRow('user',originalQuery),browseNow);
@@ -221,8 +229,8 @@ function openIdentifyDialog(originalQuery,language,options={}){
     if(dialogDisposed)return;
     const status=chatMessageRow('assistant',copy.thinking);status.classList.add('ai-chat-message-status');messages.append(status);
     try{
-      const result=startedFromMedia&&noCount===0
-        ? await postIdentify({query:originalQuery,language,image:identifyImage,socialUrl:identifySocialUrl})
+      const result=startedFromMedia
+        ? await postIdentify({query:originalQuery,language,image:identifyImage,socialUrl:identifySocialUrl,rejectedCandidates})
         : await postChatTurn(history,language,'IDENTIFY');
       if(dialogDisposed){status.remove();return;}
       status.remove();
@@ -246,7 +254,7 @@ function openIdentifyDialog(originalQuery,language,options={}){
       const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
       const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;
       yes.addEventListener('click',async()=>{yes.disabled=true;no.disabled=true;const finding=chatMessageRow('assistant',copy.finding);finding.classList.add('ai-chat-message-status');messages.append(finding);const outcome=await runIdentifiedSearch(result.refined_query||candidate,aiCandidateFallback,startedFromMedia?{skipSupplementalInput:true}:{});finding.remove();if(dialogDisposed)return;if(outcome.ok||outcome.degraded){dialog.close();revealResultsSoon();}else{messages.append(chatMessageRow('assistant',copy.error));yes.disabled=false;no.disabled=false;}});
-      no.addEventListener('click',()=>{actions.remove();noCount+=1;history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});
+      no.addEventListener('click',()=>{actions.remove();noCount+=1;if(candidate&&!rejectedCandidates.includes(candidate))rejectedCandidates.push(candidate);history.push({role:'user',text:copy.rejected});messages.append(chatMessageRow('user',copy.no));if(noCount>=3){showOtherMalls();return;}void ask();});
       actions.append(yes,no);messages.append(actions);
     }catch(error){
       if(dialogDisposed){status.remove();return;}

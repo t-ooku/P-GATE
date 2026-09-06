@@ -72,16 +72,14 @@ test('Workerと画面に配線されている（先にカード、あとから�
   assert.match(ui, /if\(!previews\.length&&result\.previews_key\)\{/u);
 });
 
-test('Search grounding は自信が低いときだけ引き直す', () => {
+test('写真からの特定は毎回 Google 検索を引く（見つかることを優先）', () => {
   const analysis = readFileSync(new URL('../src/search-input-analysis.mjs', import.meta.url), 'utf8');
-  assert.match(analysis, /export const IDENTIFY_GROUNDING_MIN_SCORE = 60;/u);
   assert.match(analysis, /grounded \? \{ tools: \[\{ googleSearch: \{\} \}\] \} : \{\}/u);
-  assert.match(analysis, /const groundingEnabled = String\(env\.GEMINI_IDENTIFY_GROUNDING \|\| ''\) === 'true'/u);
-  assert.match(analysis, /const weakCandidate = !result\.candidate_name \|\| result\.match_score < IDENTIFY_GROUNDING_MIN_SCORE/u);
-  // 自信が高いときは足さない（毎回引くと待ち時間が伸びるため）。
-  assert.match(analysis, /if \(groundingEnabled && weakCandidate && !socialUrl && normalizedImage\)/u);
-  // grounding が失敗しても元の候補で確認カードを出す。
-  assert.match(analysis, /groundedResult\.candidate_name && groundedResult\.match_score >= result\.match_score/u);
+  // 写真があるときは既定で grounding 付き（低確信のときだけ、ではない）。
+  assert.match(analysis, /const groundImages = String\(env\.GEMINI_IDENTIFY_GROUNDING \|\| ''\) === 'true'\s*&& Boolean\(normalizedImage\) && !socialUrl;/u);
+  assert.match(analysis, /grounded = groundImages/u);
+  // 候補が出せなかったときの読み直しは grounding 無しにして、別の形で読む。
+  assert.match(analysis, /requestAnalysisOnce\('', normalizedImage, IMAGE_ANALYSIS_RETRY_TIMEOUT_MS, fallbackModel, false\)/u);
   const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
   assert.equal(wrangler.vars.GEMINI_IDENTIFY_GROUNDING, 'true');
 });

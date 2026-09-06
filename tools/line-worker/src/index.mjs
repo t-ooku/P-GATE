@@ -5,6 +5,7 @@ import { handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle }
 import { bumpIdentifyCacheHit, identifyCacheKey, purgeExpiredIdentifyCache, readIdentifyCache, writeIdentifyCache } from './ai-identify-cache.mjs';
 import { identifyCandidateFromAnalysis, isIdentifyPreviewKey, readIdentifyPreviews, readMultimodalIdentifyCache, storeMultimodalIdentifyCache, withPreviewBudget } from './identify-route.mjs';
 import { purgeIdentifyLatencyLog, recordIdentifyLatency } from './identify-latency.mjs';
+import { readIdentifyMemory, rememberIdentifyAnswer } from './identify-memory.mjs';
 import { handlePriceWatchDemandRoute } from './price-watch-demand.mjs';
 import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
@@ -476,6 +477,12 @@ export function validateKnowledgeRequest(payload) {
     content: cleanAttribution(payload.content)
   };
   const deferPreviews = payload.defer_previews === true;
+  // 「これですか？」で利用者が「違う」と答えた候補名。次の候補出しに渡し、D1にも残す。
+  const rejectedCandidates = (Array.isArray(payload.rejected_candidates) ? payload.rejected_candidates : [])
+    .map((value) => sanitizeAiOutputText(redactSearchPersonalData(String(value || '')), 160)).filter(Boolean).slice(0, 8);
+  // YES を押したときに、元の質問文（言い換え後ではなく利用者が入力したもの）を受け取る。
+  // これがあると「同じ質問には前回当たった答えを D1 から返す」ができる。
+  const identifyOriginalQuery = String(payload.identify_original_query || '').trim().slice(0, 200);
   const rawAiCandidate = payload.ai_candidate_fallback && typeof payload.ai_candidate_fallback === 'object'
     ? payload.ai_candidate_fallback : null;
   const cleanCandidateText = (value, max) => sanitizeAiOutputText(
@@ -497,6 +504,7 @@ export function validateKnowledgeRequest(payload) {
     query, session_id: sessionId, turnstile_token: turnstileToken, language, search_attempt: searchAttempt,
     processing_notice_shown: true, attribution, ai_candidate_fallback: aiCandidateFallback,
     social_url: socialUrl, search_image: searchImage, defer_previews: deferPreviews,
+    rejected_candidates: rejectedCandidates, identify_original_query: identifyOriginalQuery,
     traffic_class: classifyGrowthTraffic(attribution)
   };
 }
@@ -2073,8 +2081,20 @@ async function handleIdentifyApi(request, env, ctx) {
     if (!input.social_url && !input.search_image) throw new Error('IDENTIFY_INPUT_REQUIRED');
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     const waitUntil = ctx?.waitUntil ? (promise) => ctx.waitUntil(promise) : null;
+    // 2026-09-06 大隆さん指示: 「違う」と言われた候補は次に出さない。写真からの2問目以降も
+    // 写真を使ったまま、別の候補を出す（文字だけの会話に落とさない）。
+    const rejectedCandidates = input.rejected_candidates;
+    if (rejectedCandidates.length) {
+      const remember = rememberIdentifyAnswer(env, {
+        query: input.query, language: input.language, rejected: rejectedCandidates[0]
+      });
+      if (waitUntil) waitUntil(remember); else void remember;
+    }
     const cacheInput = { image: input.search_image, socialUrl: input.social_url, query: input.query };
-    const { cacheKey, cached } = await readMultimodalIdentifyCache(env, cacheInput, input.language, { waitUntil });
+    // 「違う」のあとは同じ答えを返してはいけないので、キャッシュは使わない。
+    const { cacheKey, cached } = rejectedCandidates.length
+      ? { cacheKey: '', cached: null }
+      : await readMultimodalIdentifyCache(env, cacheInput, input.language, { waitUntil });
     if (cached) {
       logLatency('hit', 0, 0);
       return Response.json({ ok: true, result: { ...cached, cached: true }, request_id: requestId }, {
@@ -2084,7 +2104,7 @@ async function handleIdentifyApi(request, env, ctx) {
     const analysisStartedAt = Date.now();
     const analysis = await analyzeSearchInput({
       query: input.query, social_url: input.social_url, image: input.search_image
-    }, input.language, env, fetch);
+    }, input.language, env, fetch, { rejectedCandidates });
     const analysisMs = Date.now() - analysisStartedAt;
     const candidate = identifyCandidateFromAnalysis(analysis);
     if (!candidate) {
@@ -2146,6 +2166,34 @@ async function handleAiChatApi(request, env, ctx) {
     // 同じ候補になる。2回目以降は Gemini も参考画像も呼ばず、D1 の1回読みだけで即返す。
     // 「いいえ」で候補を変える2問目以降（履歴が伸びた後）は毎回考え直す＝キャッシュしない。
     const cacheable = input.mode === 'IDENTIFY' && input.history.length === 1;
+    // 2026-09-06 大隆さん指示: 一度やった検索は D1 から答える。
+    // 前に YES をもらった候補があれば Gemini を呼ばずにそれを返す。
+    // 「違う」と言われた候補は、次の候補出しに渡して同じ間違いを繰り返さない。
+    const memory = input.mode === 'IDENTIFY'
+      ? await readIdentifyMemory(env, input.history[0]?.text, input.language)
+      : { key: '', confirmed: null, rejected: [] };
+    if (cacheable && memory.confirmed) {
+      const confirmedQuery = memory.confirmed.refined_query || memory.confirmed.candidate_name;
+      const confirmedPreviews = await withPreviewBudget(aiChatCandidatePreviews(env, confirmedQuery, {
+        requestId, createTrackToken, origin: ownOrigin, sessionHash: await hashUser(input.session_id),
+        seed: `AI_CHAT:${crypto.randomUUID()}`
+      }).catch(() => []));
+      return Response.json({
+        ok: true,
+        result: { ...memory.confirmed, candidate_previews: confirmedPreviews, needs_clarification: false, answered_from: 'confirmed' },
+        request_id: requestId
+      }, { headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId, 'x-identify-cache': 'hit' } });
+    }
+    // 会話の履歴に残っている「提示したのに違うと言われた候補」を記憶に残す。
+    if (input.mode === 'IDENTIFY' && input.history.length > 1) {
+      const lastAssistant = [...input.history].reverse().find((turn) => turn.role === 'assistant')?.text || '';
+      if (lastAssistant) {
+        const remember = rememberIdentifyAnswer(env, {
+          query: input.history[0]?.text, language: input.language, rejected: lastAssistant
+        });
+        if (ctx?.waitUntil) ctx.waitUntil(remember); else void remember;
+      }
+    }
     const cacheKey = cacheable ? await identifyCacheKey(input.history[0]?.text, input.language, input.mode) : '';
     if (cacheKey) {
       const cached = await readIdentifyCache(env, cacheKey);
@@ -2539,6 +2587,16 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       await verifyTurnstile(validatedInput.turnstile_token, env, request.headers.get('cf-connecting-ip'));
     }
     const submittedQuery = validatedInput.query;
+    // 2026-09-06 大隆さん指示: 一度当たった答えは D1 に残し、次の同じ質問に使う。
+    // YES を押したときだけ（ai_candidate_fallback が付いているとき）記録する。
+    if (validatedInput.ai_candidate_fallback && validatedInput.identify_original_query) {
+      const remember = rememberIdentifyAnswer(env, {
+        query: validatedInput.identify_original_query,
+        language: validatedInput.language,
+        confirmed: validatedInput.ai_candidate_fallback
+      });
+      if (ctx?.waitUntil) ctx.waitUntil(remember); else void remember;
+    }
     // 「Instagramで見た」「Amazonで見た」等の出所は商品語から外し、モール導線の
     // 表示順(§7)にだけ使う(2026-09-03, src/search-origin.mjs)。
     const searchOrigin = extractSearchOrigin(submittedQuery);

@@ -1425,7 +1425,8 @@ test('再検索・AI確認・共有は同じexecutionへ相関し未確認結果
   assert.match(analytics, /event\.detail\?\.watchdog === false/);
   assert.match(analytics, /hoshilu:search-knowledge-started/);
   assert.match(analytics, /clickedExecutionId===lastCompletedSearch\.executionId/);
-  assert.match(ai, /runFinalSearch\(query,candidate,\{\.\.\.searchOptions,\.\.\.\(executionId\?\{executionId\}:\{\}\)\}\)/);
+  // 2026-09-06: YES のときに元の質問文も一緒に渡す（D1に残して次の同じ質問に使う）。
+  assert.match(ai, /runFinalSearch\(query,candidate,\{[\s\S]{0,200}\.\.\.\(executionId\?\{executionId\}:\{\}\),[\s\S]{0,160}identifyOriginalQuery:originalQuery/);
   assert.match(ai, /dialogDisposed=true;settleHandoff\('handoff'\)/);
   assert.match(ai, /#instantMarketplaceFallback/);
   assert.match(appSource, /shareDiscoveryReady=confirmed\.length>0/);
