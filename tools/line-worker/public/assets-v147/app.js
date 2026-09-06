@@ -344,7 +344,37 @@ function wishRowDeleteButton(value,actions){
 // ウォッチは検索結果カードのダイアログから設定する。
 function wishItem(value,t,actions){const details=document.createElement('details');details.className='wish-item';const summary=document.createElement('summary');summary.append(textElement('span','wish-item-label',localizedWishLabel(value,elements.language.value)),wishRowDeleteButton(value,actions));const editor=document.createElement('div');editor.className='wish-editor';const toggleRow=document.createElement('label');toggleRow.className='insight-toggle';const toggleInput=document.createElement('input');toggleInput.type='checkbox';toggleInput.checked=insightEnabledFor(value);toggleRow.append(toggleInput,document.createTextNode(` ${actions.insightToggleLabel}`));const toggleDescription=textElement('p','insight-toggle-description',actions.insightToggleDescription);const frequency=document.createElement('select');frequency.setAttribute('aria-label',actions.frequencyLabel);[['INSTANT',actions.frequencyInstant],['DAILY',actions.frequencyDaily],['WEEKLY',actions.frequencyWeekly],['MUTED',actions.frequencyMuted]].forEach(([key,label])=>{const option=document.createElement('option');option.value=key;option.textContent=label;frequency.append(option);});frequency.value=watchFrequencyFor(value);const controls=document.createElement('div');controls.className='wish-controls';const search=document.createElement('button');search.type='button';search.textContent=actions.searchAgain;search.addEventListener('click',()=>{elements.query.value=value;elements.clear.classList.remove('hidden');focusSearch();});const update=document.createElement('button');update.type='button';update.textContent=actions.updateWish;const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent=actions.deleteWish;const status=textElement('p','wish-edit-status','');update.addEventListener('click',async()=>{const notifyNewMatch=toggleInput.checked;setWishes([value,...getWishes().filter(item=>item!==value)]);const record=recordFor(value);if(record)await updateInsightWatch(record,notifyNewMatch,frequency.value);else if(memberSession)await persistInsightWatch(value,notifyNewMatch,frequency.value);renderWishes();});remove.addEventListener('click',async()=>{if(!confirm(actions.deleteConfirm))return;await deleteWish(value);renderWishes();});controls.append(search,update,remove);editor.append(toggleRow,toggleDescription,frequency,controls,status);details.append(summary,editor);return details;}
 function wishCycle(wishes,t,actions){const cycle=document.createElement('div');cycle.className='wish-cycle';cycle.append(...wishes.map(value=>wishItem(value,t,actions)));return cycle;}
-function renderWishes(){const allWishes=getWishes(),term=String(elements.wishFilter?.value||'').trim().toLocaleLowerCase(),wishes=term?allWishes.filter(value=>`${value} ${localizedWishLabel(value,elements.language.value)}`.toLocaleLowerCase().includes(term)):allWishes,t=selectedCopy(),actions=actionCopy[elements.language.value]||actionCopy.JA;elements.wishFilter.placeholder=wishSearchCopy[elements.language.value]||wishSearchCopy.JA;const deleteAll=document.querySelector('#deleteAllWishes');if(deleteAll){deleteAll.textContent=actions.deleteAllWishes;deleteAll.classList.toggle('hidden',!allWishes.length);deleteAll.onclick=()=>deleteAllWishes(actionCopy[elements.language.value]||actionCopy.JA);}elements.wishList.classList.remove('circular');elements.wishList.onscroll=null;if(!wishes.length){elements.wishList.replaceChildren(textElement('p','empty',term?t.filteredEmptyWish:t.emptyWish));renderInsight();return;}const first=wishCycle(wishes,t,actions);if(wishes.length<=5){elements.wishList.replaceChildren(first);renderInsight();return;}const second=wishCycle(wishes,t,actions);elements.wishList.classList.add('circular');elements.wishList.replaceChildren(first,second);elements.wishList.onscroll=()=>{const cycleHeight=first.offsetHeight+9;if(elements.wishList.scrollTop>=cycleHeight)elements.wishList.scrollTop-=cycleHeight;};renderInsight();}
+// 2026-09-06 大隆さん指示（§25）: 会員が「いま HOSHILU に何を任せているか」を
+// 一覧で見られるようにする。希望価格を決めた商品だけを、決めた金額と一緒に出す。
+// 価格は保存時の希望額であって、いまの販売価格ではない（現在価格はここに出さない）。
+function entrustedWatchRows(){
+  return (memberWishRecords||[]).filter(item=>Number(item?.target_price_jpy)>0);
+}
+function renderEntrustedWatches(){
+  const list=document.querySelector('#entrustedList');
+  if(!list)return;
+  const rows=entrustedWatchRows();
+  if(!memberSession){list.replaceChildren(textElement('p','empty','無料会員でログインすると、任せている商品を確認できます。'));return;}
+  if(!rows.length){list.replaceChildren(textElement('p','empty','まだありません。検索結果の「この価格になったら教えて」から、欲しい価格を入れてください。'));return;}
+  const yen=value=>`${Number(value).toLocaleString('ja-JP')}円`;
+  list.replaceChildren(...rows.map(item=>{
+    const row=document.createElement('div');row.className='entrusted-row';
+    const name=String(item.target_product_name||item.query_text||'').trim();
+    row.append(textElement('span','entrusted-row-name',name));
+    const postPurchase=String(item.watch_kind||'')==='POST_PURCHASE';
+    row.append(textElement('span','entrusted-row-price',postPurchase
+      ?`買った値段（${yen(item.purchase_price_jpy||Number(item.target_price_jpy)+1)}）より安くなったら知らせます`
+      :`${yen(item.target_price_jpy)}になったら知らせます`));
+    if(postPurchase&&item.expires_at){
+      row.append(textElement('span','entrusted-row-note',`${new Date(item.expires_at).toLocaleDateString('ja-JP')}まで見張ります`));
+    }
+    const again=document.createElement('button');again.type='button';again.className='entrusted-row-search';again.textContent='いまの価格を見る';
+    again.addEventListener('click',()=>{elements.query.value=name;elements.clear.classList.remove('hidden');focusSearch();});
+    row.append(again);
+    return row;
+  }));
+}
+function renderWishes(){const allWishes=getWishes(),term=String(elements.wishFilter?.value||'').trim().toLocaleLowerCase(),wishes=term?allWishes.filter(value=>`${value} ${localizedWishLabel(value,elements.language.value)}`.toLocaleLowerCase().includes(term)):allWishes,t=selectedCopy(),actions=actionCopy[elements.language.value]||actionCopy.JA;elements.wishFilter.placeholder=wishSearchCopy[elements.language.value]||wishSearchCopy.JA;const deleteAll=document.querySelector('#deleteAllWishes');if(deleteAll){deleteAll.textContent=actions.deleteAllWishes;deleteAll.classList.toggle('hidden',!allWishes.length);deleteAll.onclick=()=>deleteAllWishes(actionCopy[elements.language.value]||actionCopy.JA);}elements.wishList.classList.remove('circular');elements.wishList.onscroll=null;if(!wishes.length){elements.wishList.replaceChildren(textElement('p','empty',term?t.filteredEmptyWish:t.emptyWish));renderInsight();renderEntrustedWatches();return;}const first=wishCycle(wishes,t,actions);if(wishes.length<=5){elements.wishList.replaceChildren(first);renderInsight();renderEntrustedWatches();return;}const second=wishCycle(wishes,t,actions);elements.wishList.classList.add('circular');elements.wishList.replaceChildren(first,second);elements.wishList.onscroll=()=>{const cycleHeight=first.offsetHeight+9;if(elements.wishList.scrollTop>=cycleHeight)elements.wishList.scrollTop-=cycleHeight;};renderInsight();renderEntrustedWatches();}
 // AI Lowest-Price Compare gap-fill (Phase C item 12/13, 2026-08-07).
 //
 // The price-comparison panel only lists marketplaces with a CONFIRMED total

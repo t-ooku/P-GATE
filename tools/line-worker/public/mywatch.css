@@ -49,3 +49,16 @@
    26px was well under the 44px minimum touch target; the row is ~69px tall
    on mobile so a full 44px control fits without changing the layout. */
 @media(max-width:760px){.notification-list.info-row-list{height:auto;max-height:300px}.notification-row{grid-template-columns:auto minmax(0,1fr) auto}.notification-row .info-row-date{display:none}.notification-row-action{width:44px;height:44px;font-size:15px}.notification-row-actions{gap:6px}}
+
+/* 2026-09-06 大隆さん指示（§25）: 会員が「いま何を任せているか」を一覧で見られるようにする。
+   出すのは決めた希望価格までで、現在価格はここに出さない（取得時刻の説明が要るため）。 */
+.entrusted-watches{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.entrusted-heading h3{margin:0;font-size:16px}
+#entrustedDescription{margin:6px 0 12px;color:#4a4860;font-size:13px;line-height:1.7}
+.entrusted-list{display:grid;gap:10px;min-width:0}
+.entrusted-list .empty{margin:0;color:#6b6880;font-size:13px}
+.entrusted-row{display:grid;gap:4px;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(115,87,255,.05)}
+.entrusted-row-name{font-weight:800;color:#211b3b;font-size:14px;overflow-wrap:anywhere}
+.entrusted-row-price{color:#5140ba;font-weight:800;font-size:13px}
+.entrusted-row-note{color:#6b6880;font-size:12px}
+.entrusted-row-search{justify-self:start;margin-top:4px;border:0;border-radius:10px;background:var(--soft);color:#5140ba;padding:8px 11px;cursor:pointer;font-weight:800;font-size:13px}

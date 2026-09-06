@@ -134,7 +134,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=148"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=14"><\/script>/);
+  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=149"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=14"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
