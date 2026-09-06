@@ -126,7 +126,11 @@ test('♡ ホシっとく は登録前に端末へ保存し、押した後だけ
   assert.match(app, /mediaActions\.append\(createKeepButton\(candidate\)\);/);
   assert.match(app, /new CustomEvent\('hoshilu:wish-saved',\{detail:\{source:'keep'\}\}\)/, 'ホシっとく は wish_saved として計測');
   assert.match(app, /localStorage\.setItem\('hoshilu_pending_watch'/);
-  assert.match(app, /cta\.className='watch-login-cta';cta\.href=memberLoginHref\(\)/);
+  // 2026-09-06 大隆さん決定（指示書§24）: 会員登録ページへ飛ばさず、ダイアログ内でメール（6桁コード）か LINE だけで完了。
+  assert.match(app, /panel\.append\(createWatchQuickJoin\(amount,/);
+  assert.match(app, /fetch\('\/api\/member\/email\/verify'/);
+  assert.match(app, /\/api\/member\/line\/start\?/);
+  assert.match(app, /watchSavedStatus:'これで毎日見なくてOK。この価格になったら知らせます。'/);
   assert.match(app, /syncMemberWishes=async function\(\)\{await baseSyncMemberWishes\(\);applyPendingWatch\(\);\};/, '登録して戻ったら希望額をそのまま保存');
   const css = await read('ai-search-layout-fix.css');
   assert.match(css, /\.keep-product-button\.kept\{/);

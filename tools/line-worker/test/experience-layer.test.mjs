@@ -94,7 +94,7 @@ test('集計APIは最大12件をまとめて返し、投稿0件でも軸を返�
 test('トップページは experience-layer を読み込み、クライアントは .product-card を監視して差し込む', async () => {
   const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   assert.match(html, /experience-layer\.mjs\?v=2/u);
-  assert.match(html, /experience-layer\.css\?v=14/u);
+  assert.match(html, /experience-layer\.css\?v=15/u);
   const client = readFileSync(new URL('../public/experience-layer.mjs', import.meta.url), 'utf8');
   assert.match(client, /MutationObserver/u);
   assert.match(client, /\/api\/experience\/summaries/u);

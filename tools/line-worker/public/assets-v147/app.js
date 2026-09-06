@@ -22,10 +22,10 @@ const timedAbortController = timeoutMs => {
   return { controller, clear: () => clearTimeout(timer) };
 };
 const copy = {
-  JA: { hero:'商品名が分からなくても、|欲しい物を探せる。', userView:'ユーザー体験', sellerView:'セラー体験', languageLabel:'表示言語', title:'商品名が分からなくても、うまく説明できなくても大丈夫。\n見た目、見た場所、使い方。覚えていることから話してください。', titleSummary:'使い方を見る', placeholder:'例：インスタで見た、ピンクで小さいカメラみたいなもの', submit:'一緒に見つける', results:'ホシルからの提案', loading:'候補を探しています…', buy:'販売ページで確認', total:'合計', shipping:'送料', delivery:'配送目安', days:'日', error:'現在検索できません。入力内容または通信状態を確認して、もう一度お試しください。', examples:['TikTokで見た光るスマホケース','推し活で使える小さな写真プリンター','韓国っぽい透明のワイヤレスイヤホン'], wish:'この条件を見つかるまで探す', wishSaved:'検索条件を保存しました', emptyWish:'見つかるまで探す検索条件はまだありません。', filteredEmptyWish:'一致する保存条件はありません。', wishTitle:'見つかるまで探す条件', wishDescription:'継続検索を明示的に有効にした条件だけ、HOSHILUが定期的に探します。\n新しく一致する実在商品が見つかったときだけお知らせします。', watchSavedStatus:'購入希望価格ウォッチ中', watchTitle:'購入希望価格ウォッチ', watchDescription:'希望価格を設定すると、対象商品のAPI確認価格を定期確認し、条件を満たした場合にお知らせします。', sellerTitle:'欲しいを、|売上機会に。', sellerDescription:'米国Amazon仕入れの並行輸入商品を、在日外国人と米国商品を探す日本人へ届けます。' },
-  EN: { hero:'What are you |looking for today?', userView:'Shopper', sellerView:'Seller', languageLabel:'Language', title:'You do not need to know the product name.\nAppearance, where you saw it, and how it is used. Tell us whatever you remember.', titleSummary:'How it works', placeholder:'Example: a small US car part whose name I do not know in Japanese', submit:'Find it with me', results:'Suggestions from HOSHILU', loading:'Looking for matches…', buy:'View product page', total:'Total', shipping:'Shipping', delivery:'Delivery estimate', days:'days', error:'Search is unavailable. Check your input or connection and try again.', examples:['a US-exclusive collectible figure','a small US appliance that works in Japan','a small car part whose name I forgot'], wish:'Notify me of new matches', wishSaved:'Search condition saved', emptyWish:'No saved search conditions with notifications yet.', filteredEmptyWish:'No saved conditions match your search.', wishTitle:'Saved search conditions', wishDescription:'HOSHILU regularly searches only conditions for which you explicitly enable continuous search.\nWe alert you only when a newly matched real product is found.', watchSavedStatus:'Target price watch on', watchTitle:'Target price watch', watchDescription:'Set a target price. We periodically check marketplace API prices and notify you when the condition is met.', sellerTitle:'Turn demand into |sales opportunities.', sellerDescription:'Connect US Amazon imports with international residents in Japan and Japanese shoppers seeking American products.' },
-  ZH: { hero:'今天，您想找|什么？', userView:'买家体验', sellerView:'卖家体验', languageLabel:'显示语言', title:'不知道商品名称也没关系。\n外观、看到它的地方、用途。请告诉我们您记得的内容。', titleSummary:'查看使用方法', placeholder:'例如：不知道日语名称的美国小型汽车零件', submit:'一起寻找', results:'HOSHILU 的推荐', loading:'正在寻找候选商品…', buy:'前往销售页面确认', total:'合计', shipping:'运费', delivery:'配送预计', days:'天', error:'目前无法搜索。请确认输入或网络后重试。', examples:['美国限定收藏手办','可在日本使用的美国小家电','忘记名称的小型汽车零件'], wish:'为此条件开启新品提醒', wishSaved:'已保存搜索条件', emptyWish:'还没有设置新品提醒的搜索条件。', filteredEmptyWish:'没有符合条件的保存条件。', wishTitle:'已保存的搜索条件', wishDescription:'HOSHILU 只会定期搜索您明确启用持续搜索的条件。\n仅在发现新匹配的真实商品时通知您。', watchSavedStatus:'目标价监控中', watchTitle:'目标价监控', watchDescription:'设置目标价后，我们会定期检查商城API价格，并在达到条件时通知您。', sellerTitle:'把需求变成|销售机会。', sellerDescription:'将美国亚马逊进口商品带给在日外国人及寻找美国商品的日本消费者。' },
-  KO: { hero:'오늘은 무엇을|찾고 있나요?', userView:'구매자', sellerView:'판매자', languageLabel:'표시 언어', title:'상품명을 몰라도 괜찮습니다.\n생김새, 본 장소, 사용법. 기억나는 것을 말해 주세요.', titleSummary:'사용법 보기', placeholder:'예: 일본어 이름을 모르는 미국산 소형 자동차 부품', submit:'함께 찾기', results:'HOSHILU 추천', loading:'후보를 찾고 있습니다…', buy:'판매 페이지에서 확인', total:'합계', shipping:'배송비', delivery:'배송 예상', days:'일', error:'현재 검색할 수 없습니다. 입력이나 연결 상태를 확인하고 다시 시도해 주세요.', examples:['미국 한정 피규어','일본에서 쓸 수 있는 미국 소형 가전','이름을 잊은 작은 자동차 부품'], wish:'이 조건으로 새 상품 알림 받기', wishSaved:'검색 조건을 저장했습니다', emptyWish:'새 상품 알림을 설정한 검색 조건이 아직 없습니다.', filteredEmptyWish:'검색과 일치하는 저장된 조건이 없습니다.', wishTitle:'저장한 검색 조건', wishDescription:'연속 검색을 명시적으로 활성화한 조건만 HOSHILU가 정기적으로 검색합니다.\n새로 일치하는 실제 상품을 찾았을 때만 알려드립니다.', watchSavedStatus:'목표 가격 감시 중', watchTitle:'목표 가격 감시', watchDescription:'목표 가격을 설정하면 쇼핑몰 API 가격을 정기적으로 확인하고 조건 충족 시 알려드립니다.', sellerTitle:'원하는 마음을|판매 기회로.', sellerDescription:'미국 Amazon 병행수입 상품을 일본 거주 외국인과 미국 상품을 찾는 일본인에게 연결합니다.' }
+  JA: { hero:'商品名が分からなくても、|欲しい物を探せる。', userView:'ユーザー体験', sellerView:'セラー体験', languageLabel:'表示言語', title:'商品名が分からなくても、うまく説明できなくても大丈夫。\n見た目、見た場所、使い方。覚えていることから話してください。', titleSummary:'使い方を見る', placeholder:'例：インスタで見た、ピンクで小さいカメラみたいなもの', submit:'一緒に見つける', results:'ホシルからの提案', loading:'候補を探しています…', buy:'販売ページで確認', total:'合計', shipping:'送料', delivery:'配送目安', days:'日', error:'現在検索できません。入力内容または通信状態を確認して、もう一度お試しください。', examples:['TikTokで見た光るスマホケース','推し活で使える小さな写真プリンター','韓国っぽい透明のワイヤレスイヤホン'], wish:'この条件を見つかるまで探す', wishSaved:'検索条件を保存しました', emptyWish:'見つかるまで探す検索条件はまだありません。', filteredEmptyWish:'一致する保存条件はありません。', wishTitle:'見つかるまで探す条件', wishDescription:'継続検索を明示的に有効にした条件だけ、HOSHILUが定期的に探します。\n新しく一致する実在商品が見つかったときだけお知らせします。', watchSavedStatus:'これで毎日見なくてOK。この価格になったら知らせます。', watchTitle:'購入希望価格ウォッチ', watchDescription:'希望価格を設定すると、対象商品のAPI確認価格を定期確認し、条件を満たした場合にお知らせします。', sellerTitle:'欲しいを、|売上機会に。', sellerDescription:'米国Amazon仕入れの並行輸入商品を、在日外国人と米国商品を探す日本人へ届けます。' },
+  EN: { hero:'What are you |looking for today?', userView:'Shopper', sellerView:'Seller', languageLabel:'Language', title:'You do not need to know the product name.\nAppearance, where you saw it, and how it is used. Tell us whatever you remember.', titleSummary:'How it works', placeholder:'Example: a small US car part whose name I do not know in Japanese', submit:'Find it with me', results:'Suggestions from HOSHILU', loading:'Looking for matches…', buy:'View product page', total:'Total', shipping:'Shipping', delivery:'Delivery estimate', days:'days', error:'Search is unavailable. Check your input or connection and try again.', examples:['a US-exclusive collectible figure','a small US appliance that works in Japan','a small car part whose name I forgot'], wish:'Notify me of new matches', wishSaved:'Search condition saved', emptyWish:'No saved search conditions with notifications yet.', filteredEmptyWish:'No saved conditions match your search.', wishTitle:'Saved search conditions', wishDescription:'HOSHILU regularly searches only conditions for which you explicitly enable continuous search.\nWe alert you only when a newly matched real product is found.', watchSavedStatus:'Done. No need to keep checking — we will tell you at this price.', watchTitle:'Target price watch', watchDescription:'Set a target price. We periodically check marketplace API prices and notify you when the condition is met.', sellerTitle:'Turn demand into |sales opportunities.', sellerDescription:'Connect US Amazon imports with international residents in Japan and Japanese shoppers seeking American products.' },
+  ZH: { hero:'今天，您想找|什么？', userView:'买家体验', sellerView:'卖家体验', languageLabel:'显示语言', title:'不知道商品名称也没关系。\n外观、看到它的地方、用途。请告诉我们您记得的内容。', titleSummary:'查看使用方法', placeholder:'例如：不知道日语名称的美国小型汽车零件', submit:'一起寻找', results:'HOSHILU 的推荐', loading:'正在寻找候选商品…', buy:'前往销售页面确认', total:'合计', shipping:'运费', delivery:'配送预计', days:'天', error:'目前无法搜索。请确认输入或网络后重试。', examples:['美国限定收藏手办','可在日本使用的美国小家电','忘记名称的小型汽车零件'], wish:'为此条件开启新品提醒', wishSaved:'已保存搜索条件', emptyWish:'还没有设置新品提醒的搜索条件。', filteredEmptyWish:'没有符合条件的保存条件。', wishTitle:'已保存的搜索条件', wishDescription:'HOSHILU 只会定期搜索您明确启用持续搜索的条件。\n仅在发现新匹配的真实商品时通知您。', watchSavedStatus:'搞定。不用每天看价格了，到价就通知你。', watchTitle:'目标价监控', watchDescription:'设置目标价后，我们会定期检查商城API价格，并在达到条件时通知您。', sellerTitle:'把需求变成|销售机会。', sellerDescription:'将美国亚马逊进口商品带给在日外国人及寻找美国商品的日本消费者。' },
+  KO: { hero:'오늘은 무엇을|찾고 있나요?', userView:'구매자', sellerView:'판매자', languageLabel:'표시 언어', title:'상품명을 몰라도 괜찮습니다.\n생김새, 본 장소, 사용법. 기억나는 것을 말해 주세요.', titleSummary:'사용법 보기', placeholder:'예: 일본어 이름을 모르는 미국산 소형 자동차 부품', submit:'함께 찾기', results:'HOSHILU 추천', loading:'후보를 찾고 있습니다…', buy:'판매 페이지에서 확인', total:'합계', shipping:'배송비', delivery:'배송 예상', days:'일', error:'현재 검색할 수 없습니다. 입력이나 연결 상태를 확인하고 다시 시도해 주세요.', examples:['미국 한정 피규어','일본에서 쓸 수 있는 미국 소형 가전','이름을 잊은 작은 자동차 부품'], wish:'이 조건으로 새 상품 알림 받기', wishSaved:'검색 조건을 저장했습니다', emptyWish:'새 상품 알림을 설정한 검색 조건이 아직 없습니다.', filteredEmptyWish:'검색과 일치하는 저장된 조건이 없습니다.', wishTitle:'저장한 검색 조건', wishDescription:'연속 검색을 명시적으로 활성화한 조건만 HOSHILU가 정기적으로 검색합니다.\n새로 일치하는 실제 상품을 찾았을 때만 알려드립니다.', watchSavedStatus:'끝. 매일 확인하지 않아도 돼요. 이 가격이 되면 알려드릴게요.', watchTitle:'목표 가격 감시', watchDescription:'목표 가격을 설정하면 쇼핑몰 API 가격을 정기적으로 확인하고 조건 충족 시 알려드립니다.', sellerTitle:'원하는 마음을|판매 기회로.', sellerDescription:'미국 Amazon 병행수입 상품을 일본 거주 외국인과 미국 상품을 찾는 일본인에게 연결합니다.' }
 };
 // 2026-09-03（成長戦略・方向転換指示書）: 中心価値を「欲しいもの、まとめて探す。」
 // に変更する。ユーザーが Amazon → 楽天 → Yahoo! → Qoo10 → SHEIN と何個も開いて
@@ -428,6 +428,57 @@ function createKeepButton(candidate){
   });
   render();wrap.append(button,note);return wrap;
 }
+
+// 2026-09-06 大隆さん決定（指示書§24）: 希望価格の設定で会員登録ページを経由させない。
+// ダイアログ内で「通知先のメール（6桁コード）」か「LINE」だけを受け、既存の
+// /api/member/email/request → /verify（セッション発行）を使って、その場で保存まで終える。
+// 保存された希望額は hoshilu_pending_watch → applyPendingWatch で会員に紐づく。
+function watchQuickJoinContext(source){
+  let stored={};try{const value=JSON.parse(sessionStorage.getItem('hoshilu_growth_attribution')||'null');if(value&&Date.now()-Number(value.created_at||0)<30*60*1000)stored=value;}catch{}
+  const params=new URLSearchParams(location.search);
+  return{locale:String(document.documentElement.lang||'ja').split('-')[0].toUpperCase(),source:params.get('utm_source')||stored.source||source||'',medium:params.get('utm_medium')||stored.medium||'watch',campaign:params.get('utm_campaign')||stored.campaign||'price-watch',content:params.get('utm_content')||stored.content||''};
+}
+function createWatchQuickJoin(amount,onDone){
+  const copy={JA:{lead:`¥${Number(amount).toLocaleString('ja-JP')}になったら、どこに知らせる？`,email:'メールアドレス',send:'コードを送る',code:'届いた6桁コード',verify:'これで完了',line:'LINEで受け取る',sent:'6桁コードをメールに送りました（10分有効）。',wrong:'コードが違うか、期限切れです。',retry:'1分後にもう一度送れます。',fail:'送れませんでした。メールアドレスを確認してください。',done:'これで毎日見なくてOK。この価格になったら知らせます。',note:'登録はこれだけ。パスワードは要りません。'},
+    EN:{lead:`Where should we tell you when it hits ¥${Number(amount).toLocaleString('ja-JP')}?`,email:'Email address',send:'Send code',code:'6-digit code from the email',verify:'Done',line:'Get it on LINE',sent:'We emailed a 6-digit code (valid 10 min).',wrong:'Wrong or expired code.',retry:'You can resend in a minute.',fail:'Could not send. Check the address.',done:'That is it. No need to keep checking the price.',note:'No password needed.'}}[elements.language.value]||null;
+  const c=copy||{lead:`¥${Number(amount).toLocaleString('ja-JP')}`,email:'Email',send:'Send',code:'Code',verify:'Done',line:'LINE',sent:'',wrong:'',retry:'',fail:'',done:'',note:''};
+  const wrap=document.createElement('div');wrap.className='watch-quick-join';
+  wrap.append(textElement('strong','watch-quick-lead',c.lead));
+  const emailRow=document.createElement('div');emailRow.className='watch-quick-row';
+  const email=document.createElement('input');email.type='email';email.inputMode='email';email.autocomplete='email';email.placeholder=c.email;email.maxLength=320;
+  const send=document.createElement('button');send.type='button';send.className='watch-quick-send';send.textContent=c.send;
+  emailRow.append(email,send);
+  const codeRow=document.createElement('div');codeRow.className='watch-quick-row hidden';
+  const code=document.createElement('input');code.type='text';code.inputMode='numeric';code.autocomplete='one-time-code';code.placeholder=c.code;code.maxLength=6;code.pattern='[0-9]{6}';
+  const verify=document.createElement('button');verify.type='button';verify.className='watch-quick-verify';verify.textContent=c.verify;
+  codeRow.append(code,verify);
+  const message=textElement('p','watch-quick-status','');
+  const line=document.createElement('a');line.className='watch-quick-line';line.textContent=c.line;
+  line.href=`/api/member/line/start?${new URLSearchParams({next:'/#wishTitle',...watchQuickJoinContext('watch')})}`;
+  wrap.append(emailRow,codeRow,message,line,textElement('small','watch-quick-note',c.note));
+  send.addEventListener('click',async()=>{
+    const value=email.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)){email.reportValidity();return;}
+    send.disabled=true;message.textContent='…';
+    try{const response=await fetch('/api/member/email/request',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:value})});
+      if(response.status===429){message.textContent=c.retry;}
+      else if(!response.ok){message.textContent=c.fail;}
+      else{message.textContent=c.sent;codeRow.classList.remove('hidden');code.focus();}
+    }catch{message.textContent=c.fail;}
+    send.disabled=false;
+  });
+  verify.addEventListener('click',async()=>{
+    const value=email.value.trim(),digits=code.value.trim();if(!/^\d{6}$/.test(digits)){code.reportValidity();return;}
+    verify.disabled=true;message.textContent='…';
+    try{const response=await fetch('/api/member/email/verify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:value,code:digits,registration_context:watchQuickJoinContext('watch')})});
+      if(!response.ok){message.textContent=c.wrong;verify.disabled=false;return;}
+      // セッションが発行された。会員状態を同期すると pending の希望額がそのまま保存される。
+      await syncMemberWishes();
+      message.textContent=c.done;emailRow.classList.add('hidden');codeRow.classList.add('hidden');line.classList.add('hidden');
+      if(typeof onDone==='function')onDone();
+    }catch{message.textContent=c.wrong;verify.disabled=false;}
+  });
+  return wrap;
+}
 function createWatchOptions(candidate,t){
   const dialog=document.createElement('dialog');
   dialog.className='product-watch-dialog';
@@ -464,10 +515,11 @@ function createWatchOptions(candidate,t){
   save.addEventListener('click',()=>{
     const amount=Number(targetInput.value||0);if(!targetInput.value||amount<100||amount>100000000){targetInput.setCustomValidity(priceLabels.required);targetInput.reportValidity();return;}targetInput.setCustomValidity('');
     if(!memberSession){
-      // §21: 行き止まりにしない。希望額は端末に残し、無料登録(30秒)へ最短で案内する。
+      // 2026-09-06 大隆さん決定（指示書§24 登録障壁）: 会員登録ページへ飛ばさない。
+      // 希望額は端末に残し、この場でメールアドレス（6桁コード）か LINE だけで完了させる。
       try{localStorage.setItem('hoshilu_pending_watch',JSON.stringify({target_price_jpy:modeInput.checked?Math.max(100,amount-1):amount,target_product_key:productKey,target_product_name:productName,saved_at:Date.now(),...(modeInput.checked?{watch_kind:'POST_PURCHASE',purchase_price_jpy:amount}:{})}));}catch{}
-      status.textContent=priceLabels.login;
-      if(!panel.querySelector('.watch-login-cta')){const cta=document.createElement('a');cta.className='watch-login-cta';cta.href=memberLoginHref();cta.textContent=(keepCopy[elements.language.value]||keepCopy.JA).bellGuest;panel.append(cta);}
+      status.textContent='';
+      if(!panel.querySelector('.watch-quick-join'))panel.append(createWatchQuickJoin(amount,()=>{status.textContent=t.watchSavedStatus;bell.classList.add('watching');setTimeout(()=>dialog.close(),1200);}));
       return;
     }
     const target=modeInput.checked?{target_price_jpy:Math.max(100,amount-1),target_product_key:productKey,target_product_name:productName,watch_kind:'POST_PURCHASE',purchase_price_jpy:amount}:{target_price_jpy:amount,target_product_key:productKey,target_product_name:productName};
@@ -477,7 +529,7 @@ function createWatchOptions(candidate,t){
     if(saveWish(wishQuery,[false,true,false,false],target)){
       status.textContent=t.watchSavedStatus;
       bell.classList.add('watching');
-      setTimeout(()=>dialog.close(),700);
+      setTimeout(()=>dialog.close(),1400);
     }
   });
   panel.append(modeWrap,targetWrap,targetNote,save,status);
