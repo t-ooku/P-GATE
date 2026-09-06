@@ -710,6 +710,8 @@ export async function analyzeSearchInput({
     throw attachDiagnostic(new Error('SEARCH_INPUT_ANALYSIS_EMPTY'));
   }
   await awaitVision();
+  // grounding を使ったときは、根拠にしたページを一緒に返す（連携先に無かったときの逃げ道）。
+  const referenceUrls = groundImages && !rescuedByVision ? groundedReferenceUrls(responsePayload) : [];
   const detectedJan = Array.isArray(visualWebEvidence?.jan_codes) ? visualWebEvidence.jan_codes[0] : '';
   if (detectedJan && !result.matched_features.some((feature) => feature.includes(detectedJan))) {
     result = { ...result, matched_features: [`JAN ${detectedJan}`, ...result.matched_features].slice(0, 8) };
@@ -725,11 +727,42 @@ export async function analyzeSearchInput({
     // Server-only fixed enum used for anonymous operational telemetry. The
     // API response intentionally omits this field.
     visual_fallback_code: visualFallbackCode,
+    reference_urls: referenceUrls,
     ...result
   };
 }
 
+// 2026-09-06 大隆さん指示: 「Gemini が見つけて、ホシルのAPI連携先に無い場合は、Gemini提示の
+// 商品URLを提示していい。大切なのはユーザーの希望する物が見つかること。その際は、自分の
+// アフィリエイト収入より大切」。
+//
+// grounding（Google 検索）で根拠にしたページを取り出す。ここで返すURLは
+// アフィリエイトを通さない・トラッキングも付けない。価格と在庫は未確認なので、
+// 画面側で「HOSHILU未確認」と明記して出すこと。
+export function groundedReferenceUrls(payload, limit = 3) {
+  const seen = new Set();
+  const references = [];
+  for (const candidate of Array.isArray(payload?.candidates) ? payload.candidates : []) {
+    const chunks = Array.isArray(candidate?.groundingMetadata?.groundingChunks)
+      ? candidate.groundingMetadata.groundingChunks : [];
+    for (const chunk of chunks) {
+      const uri = String(chunk?.web?.uri || '').trim();
+      const title = String(chunk?.web?.title || '').trim().slice(0, 120);
+      if (!uri.startsWith('https://') || uri.length > 1000) continue;
+      let host = '';
+      try { host = new URL(uri).hostname.toLowerCase(); } catch { continue; }
+      // 自社ページを「AIが見つけた外部ページ」として出さない。
+      if (host === 'hoshilu.app' || host.endsWith('.hoshilu.app')) continue;
+      if (seen.has(uri)) continue;
+      seen.add(uri);
+      references.push({ title: title || host, url: uri });
+      if (references.length >= limit) return references;
+    }
+  }
+  return references;
+}
+
 export const searchInputAnalysisTest = {
   analysisPrompt, analysisSystemInstruction, parseJsonText, matchesSocialDomain, publicSocialPostIdentity,
-  hasVerifiedUrlContext, isIndependentSearchText
+  hasVerifiedUrlContext, isIndependentSearchText, groundedReferenceUrls
 };

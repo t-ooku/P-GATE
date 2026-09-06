@@ -60,7 +60,12 @@ export function sanitizeIdentifyPayload(result) {
     match_score: Math.max(0, Math.min(100, Math.round(Number(source.match_score || 0)))),
     matched_features: (Array.isArray(source.matched_features) ? source.matched_features : [])
       .map((item) => text(item, 100)).filter(Boolean).slice(0, 8),
-    candidate_previews: previews
+    candidate_previews: previews,
+    // AIが見つけた参考ページ（連携先に無かったときの逃げ道）。アフィリエイトは通さない。
+    reference_urls: (Array.isArray(source.reference_urls) ? source.reference_urls : [])
+      .filter((item) => String(item?.url || '').startsWith('https://'))
+      .map((item) => ({ title: text(item.title, 120), url: text(item.url, 1000) }))
+      .slice(0, 3)
   };
 }
 

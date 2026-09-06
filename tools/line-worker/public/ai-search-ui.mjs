@@ -235,7 +235,7 @@ function openIdentifyDialog(originalQuery,language,options={}){
       if(dialogDisposed){status.remove();return;}
       status.remove();
       const candidate=String(result.candidate_name||result.refined_query||'').trim();if(!candidate)throw new Error('CANDIDATE_EMPTY');
-      const aiCandidateFallback={name:candidate,brand:String(result.candidate_brand||''),reason:String(result.candidate_reason||''),matched_features:Array.isArray(result.matched_features)?result.matched_features:[],match_score:Number(result.match_score||0),search_keywords:[String(result.refined_query||candidate)],marketplace_search_links:Array.isArray(result.marketplace_search_links)?result.marketplace_search_links:[]};
+      const aiCandidateFallback={name:candidate,brand:String(result.candidate_brand||''),reason:String(result.candidate_reason||''),matched_features:Array.isArray(result.matched_features)?result.matched_features:[],match_score:Number(result.match_score||0),search_keywords:[String(result.refined_query||candidate)],marketplace_search_links:Array.isArray(result.marketplace_search_links)?result.marketplace_search_links:[],reference_urls:Array.isArray(result.reference_urls)?result.reference_urls:[]};
       history.push({role:'assistant',text:candidate});
       const question=chatMessageRow('assistant',copy.question(candidate));question.classList.add('ai-chat-identify-question');messages.append(question);
       // 2026-09-04 大隆さん指示: 名前だけでは合っているか分からないので、参考画像を同じ流れで見せる。

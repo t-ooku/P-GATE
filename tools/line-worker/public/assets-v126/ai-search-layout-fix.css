@@ -1197,3 +1197,10 @@ html:lang(ja) #heroTitle{white-space:nowrap}#heroTitle .hero-title-line{display:
 /* 2026-09-03 大隆さん指示: 検索欄の文言を「何が欲しい？名前が分からなくても
    大丈夫」に変更。語の途中で折り返さないよう、幅に合わせて字を詰めて1行に収める。 */
 #query::placeholder{font-size:clamp(12.5px,3.9vw,17px)}
+
+/* 2026-09-06 大隆さん指示: 連携先に無かったときに出す「AIが見つけたページ」。
+   アフィリエイトを通さないリンクなので、モールボタンとは見た目を分ける。 */
+.ai-candidate-reference-links{display:grid;gap:8px;margin-top:8px}
+.ai-candidate-reference-link{display:grid;gap:2px;padding:10px 12px;border:1px dashed var(--line,#e8e3f4);border-radius:12px;color:#211b3b;text-decoration:none;font-weight:700;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.ai-candidate-reference-link:hover{border-style:solid}
+.ai-candidate-reference-host{font-weight:600;font-size:12px;color:#6b6880}

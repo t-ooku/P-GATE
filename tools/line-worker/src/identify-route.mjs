@@ -23,7 +23,13 @@ export function identifyCandidateFromAnalysis(analysis) {
     refined_query: String(source.refined_query || name).trim().slice(0, 200),
     match_score: Math.max(0, Math.min(100, Math.round(Number(source.match_score) || 0))),
     matched_features: (Array.isArray(source.matched_features) ? source.matched_features : [])
-      .map((item) => String(item || '').trim().slice(0, 100)).filter(Boolean).slice(0, 8)
+      .map((item) => String(item || '').trim().slice(0, 100)).filter(Boolean).slice(0, 8),
+    // 2026-09-06 大隆さん指示: 連携先に無かったときに出す「AIが見つけたページ」。
+    // アフィリエイトは通さない。価格・在庫は未確認。
+    reference_urls: (Array.isArray(source.reference_urls) ? source.reference_urls : [])
+      .filter((item) => String(item?.url || '').startsWith('https://'))
+      .map((item) => ({ title: String(item.title || '').trim().slice(0, 120), url: String(item.url).trim().slice(0, 1000) }))
+      .slice(0, 3)
   };
 }
 
