@@ -141,6 +141,13 @@ function processZipFile_(file) {
     // Master_Databaseには過去バッチ・複数tenantの履歴を保持するため、全件を再採点しない。
     var opportunityResult = OpportunityEngine.refresh(validation.validRecords);
     AppLogger.info('DATABASE_SYNCED', 'Master Databaseを同期しました。', syncResult);
+    try {
+      var indexResult = ProductIndexSyncEngine.sync(tenant, batchId, syncResult.changedRecords);
+      AppLogger.info('PRODUCT_INDEX_SYNCED', 'D1商品検索索引を差分同期しました。', indexResult);
+    } catch (indexError) {
+      // D1は再構築可能な検索索引。失敗してもSpreadsheetの正本取込はロールバックしない。
+      AppLogger.warn('PRODUCT_INDEX_SYNC_DEFERRED', 'D1商品検索索引の同期を保留しました。', { code: indexError.code || 'SYNC_ERROR' });
+    }
     AppLogger.info('OPPORTUNITY_UPDATED', 'Opportunityを更新しました。', opportunityResult);
 
     DriveService.moveFile(file, Config.getRequired('ARCHIVE_FOLDER_ID'));
@@ -220,12 +227,16 @@ function setupProjectGate() {
   MultilingualSeoEngine.ensureSheets();
   ProductIdentifierEngine.ensureSheets();
   KnowledgeEngine.ensureSheet();
+  SocialKnowledgeEngine.ensureSheets();
   LineIntegration.ensureSheet();
   PreflightEngine.ensureSheet();
   Utility.ensureSheet(Config.getSpreadsheet(), 'MVP_Target', ['ASIN', 'Enabled', 'Note']);
-  SpreadsheetApp.getUi().alert(
-    '初期シートを作成しました。Configシートの5つのFolder IDを入力してから、runProjectGateを実行してください。'
-  );
+  var setupMessage = '初期シートを作成しました。Configシートの5つのFolder IDを入力してから、runProjectGateを実行してください。';
+  var spreadsheet = Config.getSpreadsheet();
+  if (spreadsheet && typeof spreadsheet.toast === 'function') {
+    spreadsheet.toast(setupMessage, 'MYGATE / Project GATE', 10);
+  }
+  Logger.log(setupMessage);
 }
 
 /**

@@ -1,0 +1,6 @@
+{
+  "extensionName": { "message": "HOSHILU — Find what you want" },
+  "extensionShortName": { "message": "HOSHILU" },
+  "extensionDescription": { "message": "Ask HOSHILU safely using a product name or selected text from the current page." },
+  "actionTitle": { "message": "Ask HOSHILU" }
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f238b5"/><stop offset=".5" stop-color="#8a4cf4"/><stop offset="1" stop-color="#258cff"/></linearGradient><filter id="sh"><feDropShadow dx="0" dy="15" stdDeviation="18" flood-color="#473a85" flood-opacity=".18"/></filter></defs>
+  <rect width="1080" height="1350" fill="#f7f4ff"/>
+  <text x="540" y="150" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="45" font-weight="800" fill="#7449e9">MYGATE 3 HINTS</text>
+  <text x="540" y="260" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="72" font-weight="900" fill="#111c4e">3つのヒントで当てて</text>
+  <g font-family="Arial,'Noto Sans JP',sans-serif" font-weight="800" filter="url(#sh)">
+    <rect x="110" y="380" width="860" height="190" rx="48" fill="#fff"/><circle cx="225" cy="475" r="58" fill="#f238b5"/><text x="225" y="495" text-anchor="middle" font-size="48" fill="#fff">1</text><text x="330" y="495" font-size="52" fill="#222b54">丸い</text>
+    <rect x="110" y="620" width="860" height="190" rx="48" fill="#fff"/><circle cx="225" cy="715" r="58" fill="#8a4cf4"/><text x="225" y="735" text-anchor="middle" font-size="48" fill="#fff">2</text><text x="330" y="735" font-size="52" fill="#222b54">磁石でつく</text>
+    <rect x="110" y="860" width="860" height="190" rx="48" fill="#fff"/><circle cx="225" cy="955" r="58" fill="#258cff"/><text x="225" y="975" text-anchor="middle" font-size="48" fill="#fff">3</text><text x="330" y="975" font-size="52" fill="#222b54">スマホの背面</text>
+  </g>
+  <text x="540" y="1160" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="44" font-weight="900" fill="url(#g)">正式名称を知らなくても大丈夫。</text>
+  <text x="540" y="1230" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="32" fill="#5b6283">答えはコメントへ</text>
+</svg>
