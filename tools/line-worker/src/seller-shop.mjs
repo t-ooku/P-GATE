@@ -10,6 +10,7 @@
 
 import { readMemberSession } from './member-auth.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
+import { queryWords, shopKeywordFacets, toggleKeywordInQuery } from './shop-facets.mjs';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // 制御文字（U+0000–U+001F, U+007F）。パッチ運搬でユニコードエスケープが崩れないよう fromCharCode で組む。
@@ -166,15 +167,33 @@ export async function shopBrands(env, shop, { now = Date.now() } = {}) {
   return [...merged.entries()].map(([brand, count]) => ({ brand, count })).sort((a, b) => b.count - a.count).slice(0, 40);
 }
 
+// 2026-09-06 大隆さん指摘: 「ショップの中の詳細条件がメルカリやAmazonのようになってない」。
+// ブランドを複数選べるようにする（これまでは1つだけ）。カンマ区切りで最大3つ。
+export const MAX_SHOP_BRANDS = 3;
+
 export function shopFilters(searchParams) {
   const get = (name) => searchParams?.get?.(name) ?? '';
   const sort = String(get('sort') || '').toLowerCase();
+  const brands = clean(get('brand'), 200).split(',')
+    .map((value) => clean(value, 60)).filter(Boolean).slice(0, MAX_SHOP_BRANDS);
   return {
     query: clean(get('q'), 80),
-    brand: clean(get('brand'), 60),
+    brands,
+    // 既存のリンク・テストが1つだけの brand を見ているので、先頭を残す。
+    brand: brands[0] || '',
     sort: ['new', 'name'].includes(sort) ? sort : 'new',
     page: Math.max(1, Math.min(200, Number(get('page')) || 1))
   };
+}
+
+// ブランドチップは押すたびに足す・外す（メルカリの複数選択と同じ動き）。
+export function toggleShopBrand(brands = [], brand = '') {
+  const target = clean(brand, 60);
+  if (!target) return [];
+  const current = (Array.isArray(brands) ? brands : []).map((value) => clean(value, 60)).filter(Boolean);
+  return current.includes(target)
+    ? current.filter((value) => value !== target)
+    : [...current, target].slice(0, MAX_SHOP_BRANDS);
 }
 
 async function shopProducts(env, shop, filters = {}) {
@@ -188,7 +207,9 @@ async function shopProducts(env, shop, filters = {}) {
     items.push({ name: clean(item.name, 160), image: httpsUrl(item.image), url, price: Number(item.price) > 0 ? Number(item.price) : 0, marketplace: item.marketplace || 'AMAZON_JP', asin: clean(item.asin, 20), tenant: item.tenant || '', brand: clean(item.brand, 60) });
   };
   const q = clean(typeof filters === 'string' ? filters : filters.query, 80);
-  const brand = clean(filters.brand, 60);
+  const brands = (Array.isArray(filters.brands) ? filters.brands : [filters.brand])
+    .map((value) => clean(value, 60)).filter(Boolean).slice(0, 3);
+  const brand = brands[0] || '';
   const page = Math.max(1, Number(filters.page) || 1);
   const order = filters.sort === 'name' ? 'product_name ASC' : 'imported_at DESC, record_key DESC';
   const offset = (page - 1) * SHOP_PAGE_SIZE;
@@ -197,16 +218,20 @@ async function shopProducts(env, shop, filters = {}) {
     if (q) {
       try {
         const rows = await searchProductsV2(env, tenant, q, 100);
-        const filtered = brand ? rows.filter((row) => clean(row.manufacturer, 60).toLowerCase() === brand.toLowerCase()) : rows;
+        const lowered = brands.map((value) => value.toLowerCase());
+        const filtered = lowered.length
+          ? rows.filter((row) => lowered.includes(clean(row.manufacturer, 60).toLowerCase()))
+          : rows;
         total += filtered.length;
         for (const row of filtered) push({ name: row.product_name, image: row.image_url, url: row.amazon_jp_url, asin: row.asin, tenant, brand: row.manufacturer });
       } catch {}
       continue;
     }
     try {
-      const where = `tenant=?1 AND image_url<>'' AND stock>0 AND amazon_jp_url<>''${brand ? ' AND manufacturer=?2' : ''}`;
-      const binds = brand ? [tenant, brand] : [tenant];
-      const countKey = `${tenant}|${brand}`;
+      const brandPlaceholders = brands.map((_, index) => `?${index + 2}`).join(',');
+      const where = `tenant=?1 AND image_url<>'' AND stock>0 AND amazon_jp_url<>''${brands.length ? ` AND manufacturer IN (${brandPlaceholders})` : ''}`;
+      const binds = [tenant, ...brands];
+      const countKey = `${tenant}|${brands.join('|')}`;
       const cachedCount = countCache.get(countKey);
       let count = cachedCount && Date.now() - cachedCount.at < 600000 ? cachedCount.n : null;
       if (count === null) {
@@ -219,7 +244,9 @@ async function shopProducts(env, shop, filters = {}) {
         WHERE ${where} ORDER BY ${order} LIMIT ${SHOP_PAGE_SIZE} OFFSET ${offset}`).bind(...binds).all();
       for (const row of rows.results || []) push({ name: row.product_name, image: row.image_url, url: row.amazon_jp_url, asin: row.asin, tenant, brand: row.manufacturer });
     } catch {}
-    if (items.length >= SHOP_PAGE_SIZE) continue;
+    // 2026-09-06 修正: SP-API の在庫は絞り込み・並び順・ページ送りに乗っていないため、
+    // 2ページ目以降で同じ48件が毎回混ざっていた。1ページ目だけの補充にする。
+    if (items.length >= SHOP_PAGE_SIZE || page > 1 || brands.length || q) continue;
     try {
       const listings = await db.prepare(`SELECT product_name,image_url,product_url,price,asin FROM sp_api_listings
         WHERE tenant=?1 AND buyable=1 AND image_url<>'' ORDER BY updated_at DESC LIMIT 48`).bind(tenant).all();
@@ -254,7 +281,9 @@ export function amazonStorefrontUrl(sellerIds = [], tag = 'hoshilu00-22') {
 function shopHref(slug, filters = {}) {
   const params = new URLSearchParams();
   if (filters.query) params.set('q', filters.query);
-  if (filters.brand) params.set('brand', filters.brand);
+  const brandList = (Array.isArray(filters.brands) ? filters.brands : (filters.brand ? [filters.brand] : []))
+    .map((value) => clean(value, 60)).filter(Boolean).slice(0, MAX_SHOP_BRANDS);
+  if (brandList.length) params.set('brand', brandList.join(','));
   if (filters.sort && filters.sort !== 'new') params.set('sort', filters.sort);
   if (Number(filters.page) > 1) params.set('page', String(filters.page));
   const qs = params.toString();
@@ -262,7 +291,7 @@ function shopHref(slug, filters = {}) {
 }
 
 // ---- 公開ページ ----------------------------------------------------------------
-function renderShopHtml({ shop, coupons, products, followers, following, query, origin, filters = {}, brands = [], total = 0, page = 1, pages = 1 }) {
+function renderShopHtml({ shop, coupons, products, followers, following, query, origin, filters = {}, brands = [], keywords = [], total = 0, page = 1, pages = 1 }) {
   const title = `${shop.shop_name} | HOSHILU ショップ`;
   const description = clean(shop.tagline || shop.intro || `${shop.shop_name} の商品とクーポンを HOSHILU でまとめて見る。`, 150);
   const initial = esc(clean(shop.shop_name, 1).toUpperCase());
@@ -273,6 +302,25 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
     <small>${c.marketplace ? esc(MARKETPLACE_LABEL[c.marketplace] || c.marketplace) : '対象モール共通'}${c.ends_at ? ` ・ ${esc(c.ends_at)} まで` : ''}${c.hoshilu_only ? ' ・ HOSHILU限定' : ''}</small>
     ${c.terms ? `<small class="coupon-terms">${esc(c.terms)}</small>` : ''}
     ${c.landing_url ? `<a class="coupon-link" rel="nofollow sponsored" href="/shop/${esc(shop.slug)}/coupon/${esc(c.coupon_id)}">クーポンを使う →</a>` : ''}</article>`).join('')}</div></section>` : '';
+  // 2026-09-06 大隆さん指摘: メルカリ・Amazon のように「いま効いている条件」を上に出し、
+  // ✕ で1つずつ外せるようにする。
+  const appliedChips = [
+    ...queryWords(query).map((word) => ({
+      label: word,
+      href: shopHref(shop.slug, { ...filters, query: toggleKeywordInQuery(query, word), page: 1 })
+    })),
+    ...filters.brands.map((brand) => ({
+      label: brand,
+      href: shopHref(shop.slug, { ...filters, brands: toggleShopBrand(filters.brands, brand), page: 1 })
+    }))
+  ];
+  const appliedHtml = appliedChips.length
+    ? `<div class="shop-applied"><span class="shop-filter-label">絞り込み中</span>${appliedChips.map((chip) => `<a class="shop-applied-chip" href="${esc(chip.href)}">${esc(chip.label)} <span aria-hidden="true">✕</span></a>`).join('')}<a class="shop-applied-clear" href="${esc(shopHref(shop.slug, { sort: filters.sort }))}">すべて解除</a></div>`
+    : '';
+  // 絞り込みワードは、いま表示している商品名から作る（データに無い条件は出さない）。
+  const keywordHtml = keywords.length
+    ? `<div class="shop-filter-row"><span class="shop-filter-label">絞り込みワード（商品名から）</span>${keywords.map((item) => `<a class="shop-chip" href="${esc(shopHref(shop.slug, { ...filters, query: toggleKeywordInQuery(query, item.word), page: 1 }))}">${esc(item.word)} <small>${item.estimated ? '約' : ''}${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
+    : '';
   const productHtml = products.length ? products.map((p) => `
     <a class="shop-product" rel="nofollow sponsored noopener" href="${esc(p.direct_url || p.url)}" data-track="${esc(p.tracking_url !== (p.direct_url || p.url) ? p.tracking_url : '')}">
       ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : '<span class="shop-product-noimage"></span>'}
@@ -300,6 +348,10 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 .shop-chip{padding:6px 10px;border:1px solid #ded7ff;border-radius:999px;background:#f8f6ff;color:#4f36b5;font-size:12px;text-decoration:none}
 .shop-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .shop-chip small{opacity:.75;font-size:10px}
+.shop-filter-note{margin:10px 0 2px;font-size:11px;color:var(--muted);line-height:1.6}
+.shop-applied{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px}
+.shop-applied-chip{padding:6px 10px;border:1px solid var(--accent);border-radius:999px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;text-decoration:none}
+.shop-applied-clear{font-size:12px;color:var(--accent);font-weight:800;text-decoration:underline}
 .shop-count{margin:0 0 8px;color:var(--muted);font-size:12px}
 .shop-pager{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
 .shop-pager a{padding:10px 14px;border:1px solid var(--accent);border-radius:12px;color:var(--accent);font-weight:800;text-decoration:none;background:#fff}
@@ -334,10 +386,13 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 ${shop.intro ? `<p class="intro">${esc(shop.intro)}</p>` : ''}
 ${couponHtml}
 <section class="shop-section" id="products"><h2>商品</h2>
-<form class="search" action="/shop/${esc(shop.slug)}" method="get"><input type="search" name="q" value="${esc(query)}" placeholder="このショップの中で探す" maxlength="80">${filters.brand ? `<input type="hidden" name="brand" value="${esc(filters.brand)}">` : ''}<button type="submit">探す</button></form>
-<details class="shop-filters"${filters.brand || filters.sort === 'name' ? ' open' : ''}><summary>☰ 詳細検索${filters.brand ? `：${esc(filters.brand)}` : ''}</summary>
+<form class="search" action="/shop/${esc(shop.slug)}" method="get"><input type="search" name="q" value="${esc(query)}" placeholder="このショップの中で探す" maxlength="80">${filters.brands.length ? `<input type="hidden" name="brand" value="${esc(filters.brands.join(','))}">` : ''}<button type="submit">探す</button></form>
+${appliedHtml}
+<details class="shop-filters"${filters.brands.length || filters.sort === 'name' ? ' open' : ''}><summary>☰ 詳細検索${filters.brands.length ? `：${esc(filters.brands.join('・'))}` : ''}</summary>
 <div class="shop-filter-row"><span class="shop-filter-label">並び順</span>${[['new', '新着順'], ['name', '名前順']].map(([value, label]) => `<a class="shop-chip${filters.sort === value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, sort: value, page: 1 }))}">${label}</a>`).join('')}</div>
-${brands.length ? `<div class="shop-filter-row"><span class="shop-filter-label">メーカー・ブランド</span><a class="shop-chip${filters.brand ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, brand: '', page: 1 }))}">すべて</a>${brands.map((b) => `<a class="shop-chip${filters.brand === b.brand ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, brand: b.brand, page: 1 }))}">${esc(b.brand)} <small>${b.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>` : ''}
+${keywordHtml}
+${brands.length ? `<div class="shop-filter-row"><span class="shop-filter-label">メーカー・ブランド（複数選べます）</span><a class="shop-chip${filters.brands.length ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, brands: [], page: 1 }))}">すべて</a>${brands.map((b) => `<a class="shop-chip${filters.brands.includes(b.brand) ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, brands: toggleShopBrand(filters.brands, b.brand), page: 1 }))}">${esc(b.brand)} <small>${b.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>` : ''}
+<p class="shop-filter-note">価格や評価での絞り込みは、価格情報の取り込みが終わってから出します（いまは在庫のある商品だけを表示しています）。</p>
 </details>
 <p class="shop-count">${total ? `${total.toLocaleString('ja-JP')}件${pages > 1 ? `（${page}/${pages}ページ）` : ''}` : ''}</p>
 <div class="grid">${productHtml}</div>
@@ -434,7 +489,13 @@ export async function handleShopRoutes(request, env, { createTrackToken, readMem
     products.push({ ...product, tracking_url: trackingUrl, direct_url: directUrl });
   }
   await recordShopEvent(env, 'shop_viewed', shop.slug, { content: query ? 'search' : 'view' });
-  const html = renderShopHtml({ shop, coupons, products, followers, following, query, origin: url.origin, filters, brands, total: rawProducts.total || 0, page: rawProducts.page || 1, pages: rawProducts.pages || 1 });
+  // 2026-09-06 大隆さん指摘への対応: いま出ている商品名から「絞り込みワード」を作る。
+  // 価格・カテゴリ・評価は products に無い（本番で0件）ので、無い条件で絞れるふりをしない。
+  const keywords = shopKeywordFacets(products.map((product) => product.name), {
+    exclude: [...queryWords(query), ...filters.brands, shop.shop_name],
+    total: rawProducts.total || 0
+  });
+  const html = renderShopHtml({ shop, coupons, products, followers, following, query, origin: url.origin, filters, brands, keywords, total: rawProducts.total || 0, page: rawProducts.page || 1, pages: rawProducts.pages || 1 });
   return new Response(html, { headers: {
     'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store',
     'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin'

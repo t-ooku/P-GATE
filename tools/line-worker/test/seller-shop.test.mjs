@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  activeShops, handleSellerShopAdminRoutes, handleSellerShopRoutes, handleShopRoutes, publicShopRef, resetShopCache,
-  shopForOffer, slugify, validateCouponInput, validateShopInput
+  activeShops, handleSellerShopAdminRoutes, handleSellerShopRoutes, handleShopRoutes, MAX_SHOP_BRANDS, publicShopRef,
+  resetShopCache, shopFilters, shopForOffer, slugify, toggleShopBrand, validateCouponInput, validateShopInput
 } from '../src/seller-shop.mjs';
 
 function d1(db) {
@@ -149,4 +149,33 @@ test('セラー画面とトップの資材にショップ導線がある', () =>
   assert.match(app, /shopLinkElement\(candidate/u);
   assert.equal(app, readFileSync(new URL('../public/assets-v147/app.js', import.meta.url), 'utf8'));
   assert.match(readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8'), /\/api\/seller\/shop\/coupons/u);
+});
+
+// 2026-09-06 大隆さん指摘:「ショップの中の詳細条件がメルカリやAmazonのような検索方法に
+// なってない。改善して」。メーカーを複数選べるようにし、選んだ条件は✕で外せるようにした。
+test('ショップの絞り込みは、メーカーを最大3つまで複数選べる', () => {
+  const filters = shopFilters(new URLSearchParams('q=水筒&brand=サーモス,タイガー&page=2'));
+  assert.deepEqual(filters.brands, ['サーモス', 'タイガー']);
+  assert.equal(filters.query, '水筒');
+  assert.equal(filters.page, 2);
+  // 既存のリンクが見ている brand（単数）も残す
+  assert.equal(filters.brand, 'サーモス');
+  // 4つ目は受け取らない（リンクが際限なく伸びないように）
+  assert.equal(shopFilters(new URLSearchParams('brand=a,b,c,d')).brands.length, MAX_SHOP_BRANDS);
+  assert.deepEqual(shopFilters(new URLSearchParams('')).brands, []);
+});
+
+test('メーカーのチップは押すたびに足す・外す', () => {
+  assert.deepEqual(toggleShopBrand([], 'サーモス'), ['サーモス']);
+  assert.deepEqual(toggleShopBrand(['サーモス'], 'タイガー'), ['サーモス', 'タイガー']);
+  assert.deepEqual(toggleShopBrand(['サーモス', 'タイガー'], 'サーモス'), ['タイガー']);
+  assert.deepEqual(toggleShopBrand(['a', 'b', 'c'], 'd'), ['a', 'b', 'c']);
+  assert.deepEqual(toggleShopBrand(['サーモス'], ''), []);
+});
+
+test('価格・評価で絞れないことは、その場で正直に書く（本番D1に価格が入っていないため）', () => {
+  const source = readFileSync(new URL('../src/seller-shop.mjs', import.meta.url), 'utf8');
+  assert.match(source, /価格情報の取り込みが終わってから/u);
+  // 実際には効かない価格帯フィルタを、それらしく置かないこと
+  assert.doesNotMatch(source, /price_min|price_max/u);
 });
