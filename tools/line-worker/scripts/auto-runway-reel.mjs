@@ -21,7 +21,7 @@ import path from 'node:path';
 import process from 'node:process';
 import {
   REQUIRED_QA_CHECKS, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
-  buildPostId, buildRejectSql, d1Rows, evaluateFaces, evaluateTranscript, nextPublishSlot, parseVolume
+  buildPostId, buildRejectSql, buildReplaceDailyReelSql, d1Rows, evaluateFaces, evaluateTranscript, nextPublishSlot, parseVolume
 } from './auto-runway-reel-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -260,10 +260,18 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
   if (!queue || queue.status !== 'REVIEW_REQUIRED') problems.push(`queue_${queue?.status || 'missing'}`);
   if (!String(queue?.caption || '').includes('AI生成')) problems.push('caption_disclosure');
   if (!/^https:\/\/hoshilu\.app\//.test(String(queue?.link || ''))) problems.push('link');
-  const collision = d1(`SELECT (SELECT COUNT(*) FROM social_post_queue WHERE post_id<>'${postId}' AND platform='INSTAGRAM' AND content_id='${jobId}' AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'')) AS duplicate_count,(SELECT COUNT(*) FROM social_post_queue WHERE platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at BETWEEN '${new Date(slot.publish_at.getTime() - 30 * 60 * 1000).toISOString()}' AND '${new Date(slot.publish_at.getTime() + 30 * 60 * 1000).toISOString()}') AS competing_count;`)[0] || {};
-  evidence.collision = collision;
-  if (Number(collision.duplicate_count) !== 0) problems.push('duplicate');
-  if (Number(collision.competing_count) !== 0) problems.push('competing_slot');
+  const windowFrom = new Date(slot.publish_at.getTime() - 30 * 60 * 1000).toISOString();
+  const windowTo = new Date(slot.publish_at.getTime() + 30 * 60 * 1000).toISOString();
+  const duplicateCount = Number(d1(`SELECT COUNT(*) AS n FROM social_post_queue WHERE post_id<>'${postId}' AND platform='INSTAGRAM' AND content_id='${jobId}' AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'');`)[0]?.n || 0);
+  // 同じ枠（20:15 JST）に既存の「AI女優 日次リール（既存素材の再構成）」が入っている。
+  // 2026-09-06 大隆さん決定: 月・水・土は Runway 新規生成に置き換える。承認時にその行を
+  // CANCELLED にしてから本リールを APPROVED にする（他キャンペーンの投稿が重なる場合だけ不合格）。
+  const competing = d1(`SELECT post_id,campaign_id,status FROM social_post_queue WHERE post_id<>'${postId}' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at BETWEEN '${windowFrom}' AND '${windowTo}';`);
+  const replaceable = competing.filter((row) => row.campaign_id === 'hoshilu-ai-actress-daily-v1' && row.status === 'APPROVED').map((row) => row.post_id);
+  const blocking = competing.filter((row) => !replaceable.includes(row.post_id));
+  evidence.collision = { duplicate_count: duplicateCount, replaces_daily_reel: replaceable, blocking: blocking.map((row) => `${row.post_id}=${row.status}`) };
+  if (duplicateCount !== 0) problems.push('duplicate');
+  if (blocking.length) problems.push('competing_slot');
   // 一覧表（証跡用）
   run('ffmpeg', ['-y', '-v', 'error', '-i', out, '-vf', 'fps=1,scale=180:-1,tile=4x4', '-frames:v', '1', path.join(dir, 'contact-sheet.jpg')]);
   evidence.machine_verified = ['video_spec', 'audio_spec', 'duration', 'decode', 'audio_present', 'overlay_burned', 'face_single_clear(vision)', 'speech_matches_script(whisper)', 'caption_ai_disclosure', 'link_hoshilu', 'duplicate', 'competing_slot'];
@@ -280,6 +288,13 @@ function approve(jobId, postId, out, evidence) {
   const back = path.join(path.dirname(out), 'roundtrip.mp4');
   run('npx', [...WRANGLER, 'r2', 'object', 'get', `${BUCKET}/${key}`, '--file', back, '--remote']);
   if (sha256File(back) !== sha) throw new Error('AUTO_REEL_R2_ROUNDTRIP_MISMATCH');
+  const replaceable = Array.isArray(evidence?.collision?.replaces_daily_reel) ? evidence.collision.replaces_daily_reel : [];
+  if (replaceable.length) {
+    const cancelFile = path.join(path.dirname(out), 'replace-daily-reel.sql');
+    writeFileSync(cancelFile, buildReplaceDailyReelSql({ postIds: replaceable, replacedBy: postId, now: new Date() }));
+    d1File(cancelFile);
+    log('daily reel rows cancelled (replaced by Runway reel)', { post_ids: replaceable });
+  }
   const sqlFile = path.join(path.dirname(out), 'approve.sql');
   writeFileSync(sqlFile, buildApprovalSql({ jobId, postId, storageKey: key, sizeBytes: size, sha256: sha, publishAt: slot.publish_at, evidence, now: new Date() }));
   d1File(sqlFile);
@@ -326,8 +341,12 @@ try {
     report[`attempt_${attempt}`] = { job_id: generated.jobId, qa };
     writeFileSync(path.join(dir, 'qa.json'), JSON.stringify(qa, null, 2));
     if (!qa.ok) {
-      reject(generated.jobId, generated.postId, qa.problems.join(','));
+      // 生成物そのものの問題（顔・セリフ・無音・仕様・デコード）だけ FAILED_FINAL にする。
+      // 枠の競合や外部APIの不通など生成物以外の理由では状態を残し、再実行で回復できるようにする。
+      const qualityFailure = qa.problems.some((p) => /^(face_check$|speech_similarity|speech_forbidden|audio_silent|video_spec|audio_spec|decode|duration_|size_)/.test(p));
       outcome = { ok: false, job_id: generated.jobId, reason: `auto_qa:${qa.problems.join(',')}`, evidence: qa.evidence };
+      if (!qualityFailure) { log('non-quality failure; job left as-is for a re-run', { problems: qa.problems }); break; }
+      reject(generated.jobId, generated.postId, qa.problems.join(','));
       const retryable = qa.problems.every((p) => /^(face_check|speech_|audio_silent)/.test(p));
       if (!retryable) break;
       continue;

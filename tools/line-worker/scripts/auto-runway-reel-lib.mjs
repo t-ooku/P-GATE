@@ -257,3 +257,11 @@ export function buildRejectSql({ jobId, postId, reason, now }) {
     `INSERT OR IGNORE INTO runway_audit_log (audit_id,job_id,attempt_id,event,detail,created_at) VALUES (${sqlText(`qa-rejected-${jobId}`)},${sqlText(jobId)},'','QA_REJECTED_AUTO',${sqlText(detail)},${sqlText(ts)});`
   ].join('\n');
 }
+
+// 2026-09-06 大隆さん決定: 月・水・土の 20:15 JST は Runway 新規生成 Reel に置き換える。
+// 同じ枠の「AI女優 日次リール（既存素材の再構成、campaign hoshilu-ai-actress-daily-v1）」を
+// 投稿前に CANCELLED にする。すでに投稿処理に入った行（PUBLISHING/PUBLISHED）は触らない。
+export function buildReplaceDailyReelSql({ postIds, replacedBy, now }) {
+  const ts = now.toISOString();
+  return postIds.map((postId) => `UPDATE social_post_queue SET status='CANCELLED',last_error=${sqlText(`replaced_by:${replacedBy}`)},updated_at=${sqlText(ts)} WHERE post_id=${sqlText(postId)} AND platform='INSTAGRAM' AND campaign_id='hoshilu-ai-actress-daily-v1' AND status='APPROVED' AND external_post_id='' AND platform_job_id='';`).join('\n');
+}

@@ -111,3 +111,13 @@ test('volumedetect の平均音量を読む', () => {
   assert.equal(parseVolume('[Parsed_volumedetect_0 @ 0x1] mean_volume: -21.3 dB\nmax_volume: -3.0 dB'), -21.3);
   assert.equal(parseVolume(''), Number.NEGATIVE_INFINITY);
 });
+
+test('同じ枠のAI女優日次リール（既存素材）は Runway 新規生成に置き換える: APPROVED の行だけ CANCELLED にする', async () => {
+  const { buildReplaceDailyReelSql } = await import('../scripts/auto-runway-reel-lib.mjs');
+  const sql = buildReplaceDailyReelSql({ postIds: ['hoshilu-ai-actress-daily-v1-instagram-2026-09-07'], replacedBy: 'hoshilu-runway-auto-want-at-price-20260907', now: new Date('2026-09-06T03:00:00Z') });
+  assert.match(sql, /^UPDATE social_post_queue SET status='CANCELLED',last_error='replaced_by:hoshilu-runway-auto-want-at-price-20260907'/u);
+  assert.match(sql, /campaign_id='hoshilu-ai-actress-daily-v1' AND status='APPROVED' AND external_post_id='' AND platform_job_id=''/u);
+  const runner = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  assert.match(runner, /replaceable = competing\.filter\(\(row\) => row\.campaign_id === 'hoshilu-ai-actress-daily-v1' && row\.status === 'APPROVED'\)/u);
+  assert.match(runner, /if \(!qualityFailure\) \{ log\('non-quality failure; job left as-is for a re-run'/u, '生成物以外の理由では FAILED_FINAL にしない');
+});
