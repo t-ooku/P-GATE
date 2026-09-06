@@ -2,6 +2,7 @@ import { handleSellerRoutes } from './seller-auth.mjs';
 import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
 import { handleCreatorInquiryRoutes } from './creator-inquiries.mjs';
 import { handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle } from './seller-outreach.mjs';
+import { bumpIdentifyCacheHit, identifyCacheKey, purgeExpiredIdentifyCache, readIdentifyCache, writeIdentifyCache } from './ai-identify-cache.mjs';
 import { handlePriceWatchDemandRoute } from './price-watch-demand.mjs';
 import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
@@ -2051,6 +2052,29 @@ async function handleAiChatApi(request, env, ctx) {
     const body = await readPublicApiJson(request, 4000);
     const input = validateChatRequest(body);
     await verifyTurnstile(input.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+    // 2026-09-06 大隆さん指示（読み込み時間の最短化）: 「これですか？」の1問目は、同じ質問なら
+    // 同じ候補になる。2回目以降は Gemini も参考画像も呼ばず、D1 の1回読みだけで即返す。
+    // 「いいえ」で候補を変える2問目以降（履歴が伸びた後）は毎回考え直す＝キャッシュしない。
+    const cacheable = input.mode === 'IDENTIFY' && input.history.length === 1;
+    const cacheKey = cacheable ? await identifyCacheKey(input.history[0]?.text, input.language, input.mode) : '';
+    if (cacheKey) {
+      const cached = await readIdentifyCache(env, cacheKey);
+      if (cached) {
+        const bump = bumpIdentifyCacheHit(env, cacheKey);
+        if (ctx?.waitUntil) ctx.waitUntil(bump); else void bump;
+        // モール検索リンクは署名付きで毎回作り直す（外部通信なし・キャッシュに署名は残さない）。
+        const cachedQuery = cached.refined_query || cached.candidate_name;
+        const cachedCategory = semanticSearchGroups(cachedQuery)
+          .map((group) => group.category).find((value) => value && value !== 'color') || 'unclassified';
+        const cachedLinks = await signedMarketplaceSearchLinks(cachedQuery, {
+          env, origin: ownOrigin, sessionHash: await hashUser(input.session_id),
+          seed: `AI_CHAT:${crypto.randomUUID()}`, category: cachedCategory, trafficClass: 'UNATTRIBUTED'
+        }).catch(() => []);
+        return Response.json({ ok: true, result: { ...cached, marketplace_search_links: cachedLinks, needs_clarification: false, cached: true }, request_id: requestId }, {
+          headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId, 'x-identify-cache': 'hit' }
+        });
+      }
+    }
     let result = await analyzeChatTurn(input.history, input.language, env, fetch, {
       mode: input.mode,
       telemetryComponent: 'ai_chat',
@@ -2077,8 +2101,12 @@ async function handleAiChatApi(request, env, ctx) {
       ]);
       result = { ...result, marketplace_search_links: marketplaceSearchLinks, candidate_previews: candidatePreviews };
     }
+    if (cacheKey) {
+      const store = writeIdentifyCache(env, cacheKey, result, { language: input.language });
+      if (ctx?.waitUntil) ctx.waitUntil(store); else void store;
+    }
     return Response.json({ ok: true, result, request_id: requestId }, {
-      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId }
+      headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId, 'x-identify-cache': cacheKey ? 'miss' : 'off' }
     });
   } catch (error) {
     const code = String(error.message || 'CHAT_FAILED').slice(0, 80);
@@ -3398,6 +3426,8 @@ export default {
         // 2026-09-06 大隆さん決定: セラー営業メール。平日09-18時JSTに1サイクル最大3通・
         // 1日最大10通、1アドレス1回だけ。未設定なら何もしない。失敗しても他ジョブを止めない。
         runSellerOutreachCycle(env, scheduledAt),
+        // 「これですか？」確認カードのキャッシュ（7日）を掃除する。
+        purgeExpiredIdentifyCache(env, scheduledAt),
         // HOSHILU BUZZ「急上昇」用の公式ランキング順位スナップショット。
         // 6時間ごとに1回だけ実記録し、migration 0057 未適用なら静かにスキップ。
         recordBuzzSnapshots(env, fetch, scheduledAt.getTime())
