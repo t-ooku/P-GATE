@@ -13,7 +13,11 @@ name: Auto Runway reel (generate, post-process, auto QA, queue)
 #
 # GitHub の schedule は既定ブランチ(main)のワークフローだけ動くため、本ファイルは main に
 # 置き、実行時に feature/ui-search-v2（本番）を checkout する（production-monitor.yml と同じ）。
-# 再実行しても job_id が日付で固定なので二重生成・二重投稿にならない。
+# 再実行しても job_id が日付で固定なので二重生成・二重投稿にならない。既に生成済み
+# （GENERATED_REVIEW_REQUIRED）のジョブがあれば、そのまま後処理・自動QA・承認まで進む。
+#
+# 再実行履歴: 2026-09-06 #220/#221（同枠のAI女優日次リールを競合扱いしていた誤判定と、
+# 実画面撮影の networkidle 依存）を修正し、9/7 月曜分の生成物を回収するため再実行。
 
 on:
   schedule:
@@ -141,6 +145,7 @@ jobs:
           if (ev.audio_mean_volume_db !== undefined) lines.push(`- 音量: mean ${ev.audio_mean_volume_db} dB`);
           if (ev.overlay_diff) lines.push(`- 焼き込み差分: ${JSON.stringify(ev.overlay_diff)}`);
           if (ev.ui_cut) lines.push(`- カットB: ${ev.ui_cut}`);
+          if (ev.collision) lines.push(`- 枠の扱い: ${JSON.stringify(ev.collision)}`);
           if (ev.not_biometrically_verified) lines.push(`- 機械で確認していないこと: ${ev.not_biometrically_verified.join(' / ')}`);
           lines.push(`- ログ/成果物: ${process.env.RUN_URL}`);
           lines.push('');
