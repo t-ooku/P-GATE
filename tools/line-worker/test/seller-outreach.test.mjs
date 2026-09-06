@@ -157,7 +157,13 @@ test('配信停止リンクは OPTED_OUT にして、以後そのアドレスへ
 
 test('Workerに配線されている（配信停止ルートと15分cron）', () => {
   const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
-  assert.match(index, /import \{ handleSellerOutreachRoutes, runSellerOutreachCycle \} from '\.\/seller-outreach\.mjs';/u);
+  assert.match(index, /import \{ handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle \} from '\.\/seller-outreach\.mjs';/u);
   assert.match(index, /const sellerOutreachResponse = await handleSellerOutreachRoutes\(request, env\);/u);
   assert.match(index, /runSellerOutreachCycle\(env, scheduledAt\),/u);
+});
+
+test('/health にセラー営業メールの送信可否を出す', () => {
+  const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(index, /seller_outreach: outreachReadiness\(env\)\.ok/u);
+  assert.match(index, /import \{ handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle \}/u);
 });

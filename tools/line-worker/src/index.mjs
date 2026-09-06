@@ -1,7 +1,7 @@
 import { handleSellerRoutes } from './seller-auth.mjs';
 import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
 import { handleCreatorInquiryRoutes } from './creator-inquiries.mjs';
-import { handleSellerOutreachRoutes, runSellerOutreachCycle } from './seller-outreach.mjs';
+import { handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle } from './seller-outreach.mjs';
 import { handlePriceWatchDemandRoute } from './price-watch-demand.mjs';
 import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
@@ -3116,7 +3116,9 @@ async function handleHealth(env) {
       instagram_oauth: instagramOAuth,
       x_oauth: xOAuth,
       runway_video_generation: runwayGenerationReadiness(env),
-      seller_billing: sellerBillingReadiness(env)
+      seller_billing: sellerBillingReadiness(env),
+      // 2026-09-06: セラー営業メールの送信可否（差出人とAPIキーが揃っているか）。
+      seller_outreach: outreachReadiness(env).ok
     }
   }, {
     status: readiness.ready ? 200 : 503,
