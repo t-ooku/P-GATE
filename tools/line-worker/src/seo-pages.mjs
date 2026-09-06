@@ -4223,10 +4223,17 @@ export function renderSeoPage(pathname) {
   const canonical = `${ORIGIN}${pathFor(locale, slug)}`;
   const isJa = locale === 'ja';
   const searchLabel = isJa ? '探したい商品の条件' : 'Product conditions';
-  // 2026-09-06 大隆さん指示（成長・SNS自動運用 §17）: 記事のCTAは「まとめて探す」ではなく
-  // 「欲しい価格になったら、教えます。」を本命にする。探すことが目的の人より、
+  // 2026-09-06 大隆さん指示（成長・SNS自動運用 §17）: 買い物の記事のCTAは「まとめて探す」では
+  // なく「欲しい価格になったら、教えます。」を本命にする。探すことが目的の人より、
   // 「今は高いから待つ」人のほうが多く、その人にとっての次の一歩は希望価格の登録。
-  const submit = isJa ? '○円になったら知らせてもらう' : 'Get notified when it hits your price';
+  // ただし読者が買い手でない記事（セラー向け・クリエイター向け）に買い手のCTAを出すと
+  // 意味が通らないので、同じ検索リンクのまま文言だけ読者に合わせる。
+  // セラー向けの本命導線は /for-sellers、クリエイター向けは /for-creators で、
+  // どちらもこの下の featureEntry が担う。
+  const readerCta = { 'seller-growth': '自分の商品が出るか、この条件で検索してみる', creators: 'HOSHILUの検索画面を実際に見てみる' };
+  const submit = isJa
+    ? (readerCta[profile.cluster] || '○円になったら知らせてもらう')
+    : 'Get notified when it hits your price';
   // 2026-09-04: 直近30日の実数で、SEO記事は152閲覧(107人)に対して検索導線の
   // 利用(seo_search_transition)が0件、記事中盤の比較セクション到達も19件だった。
   // 検索CTAが比較セクションの後ろ(記事の約7割地点)にしかなく、大半の読者は
@@ -4262,7 +4269,7 @@ export function renderSeoPage(pathname) {
 <article><header class="seo-hero"><p class="eyebrow">HOSHILU SHOPPING GUIDE</p><h1>${esc(page.title)}</h1><p class="lead">${esc(page.description)}</p><p class="updated"><time datetime="${page.updatedAt || UPDATED_AT}">${isJa ? '最終更新' : 'Last updated'}: ${page.updatedAt || UPDATED_AT}</time></p></header>
 <nav class="article-toc" aria-label="${labels.toc}"><strong>${labels.toc}</strong><div><a href="#answer">${labels.conclusion}</a><a href="#visual-guide">${labels.visual}</a><a href="#comparison">${labels.comparison}</a><a href="#search-with-hoshilu">${labels.try}</a><a href="#sources">${labels.sources}</a></div></nav>
 <section class="answer" id="answer"><h2>${labels.conclusion}</h2><p>${esc(page.conclusion)}</p></section>
-<p class="top-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a><small>${isJa ? 'まず候補を出し、結果カードの「この価格になったら教えて」に希望額を入れると、その値段まで下がったときに通知します。楽天市場とYahoo!ショッピングは候補を表示。Amazon・Qoo10などは同じ条件のまま検索先を開けます。' : 'See candidates first, then set your price on a result card and we will tell you when it drops. Shows candidates from Rakuten and Yahoo! Shopping; opens Amazon, Qoo10 and others with the same query.'}</small></p>${featureEntry}
+<p class="top-cta"><a href="/?q=${encodeURIComponent(page.query)}" data-seo-search-link>${submit}</a><small>${isJa ? `${readerCta[profile.cluster] ? '買い手にどう見えているかを、同じ条件で確かめられます。' : 'まず候補を出し、結果カードの「この価格になったら教えて」に希望額を入れると、その値段まで下がったときに通知します。'}楽天市場とYahoo!ショッピングは候補を表示。Amazon・Qoo10などは同じ条件のまま検索先を開けます。` : 'See candidates first, then set your price on a result card and we will tell you when it drops. Shows candidates from Rakuten and Yahoo! Shopping; opens Amazon, Qoo10 and others with the same query.'}</small></p>${featureEntry}
 <section id="visual-guide"><h2>${labels.visual}</h2>${guideVisual(profile, page, isJa)}</section>
 <section id="audience"><h2>${labels.audience}</h2>${list(page.audience, 'audience-list')}</section>
 <section id="criteria"><h2>${labels.criteria}</h2><dl class="criteria-grid">${page.criteria.map(([term, description]) => `<div><dt>${esc(term)}</dt><dd>${esc(description)}</dd></div>`).join('')}</dl>${page.tips ? list(page.tips, 'check-list') : ''}</section>
