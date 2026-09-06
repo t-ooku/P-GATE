@@ -59,12 +59,43 @@ function ensureList() {
 }
 function hideSuggestions() { if (list) { list.classList.add('hidden'); list.replaceChildren(); activeIndex = -1; } }
 
+// 実データ（在庫の商品名・教師データ）から来る候補。辞書に無いジャンルでも
+// 「セカンドワード」が出るようにするため。取れなければ黙って辞書だけで動く。
+const dataSuggestions = new Map(); // 入力語 -> [{query, kind}]
+let dataInFlight = '';
+function fetchDataSuggestions(text) {
+  if (!text || dataSuggestions.has(text) || dataInFlight === text) return;
+  dataInFlight = text;
+  fetch(`/api/search/suggest?q=${encodeURIComponent(text)}&language=${encodeURIComponent(language())}`, { headers: { accept: 'application/json' } })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((body) => {
+      const rows = Array.isArray(body?.suggestions) ? body.suggestions : [];
+      dataSuggestions.set(text, rows.filter((row) => row && typeof row.query === 'string').slice(0, 4));
+      if (String($('#query')?.value || '').trim() === text) renderSuggestions(text);
+    })
+    .catch(() => { dataSuggestions.set(text, []); })
+    .finally(() => { if (dataInFlight === text) dataInFlight = ''; });
+}
+
 function renderSuggestions(query) {
   const target = ensureList();
   if (!target) return;
   const text = String(query || '').trim();
   if (text.length < 1) { hideSuggestions(); return; }
-  const items = suggestQueries(text, { limit: 10, extra: readHistory(text) });
+  fetchDataSuggestions(text);
+  // 並び: 履歴 → 辞書（関連ワード・メーカー）→ 在庫と教師データから出た語。
+  // 辞書の枠を実データで潰さないよう、それぞれ上限を持たせてから10件に切る。
+  const merged = [];
+  const seen = new Set([text.toLowerCase()]);
+  for (const group of [readHistory(text).slice(0, 2), suggestQueries(text, { limit: 7 }), (dataSuggestions.get(text) || []).slice(0, 4)]) {
+    for (const item of group) {
+      const value = String(item?.query || '').trim();
+      if (!value || seen.has(value.toLowerCase())) continue;
+      seen.add(value.toLowerCase());
+      merged.push({ query: value, kind: item.kind || 'related' });
+    }
+  }
+  const items = merged.slice(0, 10);
   if (!items.length) { hideSuggestions(); return; }
   const labels = t();
   const lower = text.toLowerCase();

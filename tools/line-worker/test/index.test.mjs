@@ -1364,7 +1364,7 @@ test('「色で探す」は独立ボタンを出さず、詳細検索の中か�
   assert.ok(searchHintsIndex < historyIndex, '検索ヒントは検索履歴セクションより前');
   assert.ok(socialToggleIndex > -1 && socialToggleIndex < advancedToggleIndex && advancedToggleIndex < actionsEndIndex, '詳細検索は投稿URLボタンの右(同じ行)');
   assert.match(html, /<button id="advancedSearchToggle" type="button" class="search-input-action advanced-search-toggle"/);
-  assert.match(html, /search-suggest\.mjs\?v=1/);
+  assert.match(html, /search-suggest\.mjs\?v=2/);
 
   // 色は詳細検索の軸として残す(機能を落としていないことの確認)。
   assert.match(appSource, /group\?\.dimension==='color'/);

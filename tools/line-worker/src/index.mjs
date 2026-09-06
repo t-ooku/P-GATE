@@ -61,6 +61,7 @@ import { handleSellerBillingAdminRoutes, handleStripeWebhook, sellerBillingReadi
 import { referralCategoryFor } from './seller-referral-category.mjs';
 import { handleExperienceRoutes } from './experience-layer.mjs';
 import { activeShops, handlePublicShopDirectoryRoute, handleSellerShopAdminRoutes, handleShopRoutes, publicShopRef, shopForOffer } from './seller-shop.mjs';
+import { handleSearchSuggestRoute } from './search-suggest-api.mjs';
 import { handleCreatorKpiRoutes } from './creator-kpi.mjs';
 import { aiChatCandidatePreviews } from './ai-chat-preview.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
@@ -3431,6 +3432,9 @@ export default {
     // 2026-09-06 大隆さん決定（Seller獲得マスター指示書 §49）: 営業メールの配信停止（ワンクリック）。
     const sellerOutreachResponse = await handleSellerOutreachRoutes(request, env);
     if (sellerOutreachResponse) return sellerOutreachResponse;
+    // 2026-09-06 大隆さん指摘: 検索窓の候補を、辞書だけでなく実際の在庫と教師データからも出す。
+    const searchSuggestResponse = await handleSearchSuggestRoute(request, env);
+    if (searchSuggestResponse) return searchSuggestResponse;
     if (request.method === 'POST' && url.pathname === '/webhook') return handleWebhook(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/knowledge') return handleKnowledgeApi(request, env, ctx);
     if (request.method === 'POST' && url.pathname === '/api/related-recommendations') return handleRelatedRecommendationsApi(request, env);

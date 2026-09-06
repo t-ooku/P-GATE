@@ -50,7 +50,7 @@ test('トップは候補モジュールを読み込み、詳細検索は投稿UR
   const client = readFileSync(new URL('../public/search-suggest.mjs', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8');
   const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(html, /<script type="module" src="\/search-suggest\.mjs\?v=1"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/search-suggest\.mjs\?v=2"><\/script>/u);
   assert.match(html, /id="socialUrlToggle"[\s\S]{0,900}<button id="advancedSearchToggle" type="button" class="search-input-action advanced-search-toggle"/u);
   assert.match(css, /#searchInputActions\.search-input-actions\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/u);
   assert.match(css, /#searchInputActions \.search-social-action\{grid-column:auto\}/u);
@@ -58,7 +58,11 @@ test('トップは候補モジュールを読み込み、詳細検索は投稿UR
   // 候補はタップで即検索、条件チップは #query に足す/外すだけ(検索契約は不変)
   assert.match(client, /form\.requestSubmit\(\)/u);
   assert.match(client, /localStorage\.getItem\(HISTORY_KEY\)/u);
-  assert.doesNotMatch(client, /fetch\(/u);
+  // 2026-09-06: 辞書に無いジャンルでもセカンドワードが出るよう、実データの候補も取りに行く。
+  // 取れなくても辞書の候補で動くこと(catch で握りつぶし、並びは 履歴→辞書→実データ)。
+  assert.match(client, /\/api\/search\/suggest\?q=/u);
+  assert.match(client, /\.catch\(\(\) => \{ dataSuggestions\.set\(text, \[\]\); \}\)/u);
+  assert.match(client, /readHistory\(text\)\.slice\(0, 2\), suggestQueries\(text, \{ limit: 7 \}\)/u);
   assert.match(client, /condition-group-brand/u);
   assert.match(app, /toggle\.querySelector\('#advancedSearchLabel'\)\|\|toggle/u);
 });
