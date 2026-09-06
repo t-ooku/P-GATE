@@ -50,7 +50,9 @@ export function findForbiddenPhrases(text) {
 }
 
 export function unsubscribeUrl(token) {
-  return `https://hoshilu.app/seller-outreach/unsubscribe?t=${encodeURIComponent(token)}`;
+  // 2026-09-06: トークンはパスに置く。クエリの t= は経路のどこかで落ちることが実測で分かったため
+  //（?debug=1 は届くのに ?t= だけ届かない = 追跡パラメータ扱いで除去されている）。
+  return `https://hoshilu.app/seller-outreach/unsubscribe/${encodeURIComponent(token)}`;
 }
 
 // 本文の末尾に、送信者表示と配信停止手段を必ず付ける（本文側に書き忘れても落ちない）。
@@ -149,9 +151,12 @@ const UNSUB_HTML = (message) => `<!doctype html><html lang="ja"><head><meta char
 // GET /seller-outreach/unsubscribe?t=<token> → OPTED_OUT + suppression。POST（List-Unsubscribe-Post）も同じ扱い。
 export async function handleSellerOutreachRoutes(request, env) {
   const url = new URL(request.url);
-  if (url.pathname !== '/seller-outreach/unsubscribe') return null;
+  const UNSUB_PREFIX = '/seller-outreach/unsubscribe';
+  if (url.pathname !== UNSUB_PREFIX && !url.pathname.startsWith(`${UNSUB_PREFIX}/`)) return null;
   if (!['GET', 'POST'].includes(request.method)) return new Response('Method Not Allowed', { status: 405 });
-  const token = clean(url.searchParams.get('t'), 64);
+  // 本命はパス。過去に送った ?token= / ?t= 形式も受ける（届けば動く）。
+  const pathToken = url.pathname.startsWith(`${UNSUB_PREFIX}/`) ? decodeURIComponent(url.pathname.slice(UNSUB_PREFIX.length + 1)) : '';
+  const token = clean(pathToken || url.searchParams.get('token') || url.searchParams.get('t'), 64);
   const headers = { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' };
   // 配信停止のリンクを踏んだ人に 404 を返すと「壊れている」と見える。案内ページとして 200 で返す。
   // reason は運用時の切り分け用（本文には出さず HTML コメントに入れる。個人情報は含めない）。

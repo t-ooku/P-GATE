@@ -93,7 +93,7 @@ test('QUEUED を送って SENT にする。禁止表現の行は送らず SKIPPE
   assert.equal(sent[0].body.to[0], 'shop@example.com');
   assert.match(sent[0].body.from, /^HOSHILU Seller担当 <sellers@auth\.hoshilu\.app>$/u);
   assert.equal(sent[0].body.reply_to, 'owner@example.com');
-  assert.match(sent[0].body.headers['List-Unsubscribe'], /^<https:\/\/hoshilu\.app\/seller-outreach\/unsubscribe\?t=a{32}>$/u);
+  assert.match(sent[0].body.headers['List-Unsubscribe'], /^<https:\/\/hoshilu\.app\/seller-outreach\/unsubscribe\/a{32}>$/u);
   assert.equal(db.prepare(`SELECT status,resend_id FROM seller_outreach_contacts WHERE contact_id='c1'`).get().status, 'SENT');
   assert.equal(db.prepare(`SELECT resend_id FROM seller_outreach_contacts WHERE contact_id='c1'`).get().resend_id, 'resend-1');
   const skipped = db.prepare(`SELECT status,last_error FROM seller_outreach_contacts WHERE contact_id='c2'`).get();
@@ -140,7 +140,7 @@ test('Resend が失敗したら FAILED として理由を残す（他の行は�
 test('配信停止リンクは OPTED_OUT にして、以後そのアドレスへ送らない', async () => {
   const { db, env } = databaseEnv();
   await insertContact(db);
-  const response = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe?t=${'a'.repeat(32)}`), env);
+  const response = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe/${'a'.repeat(32)}`), env);
   assert.equal(response.status, 200);
   assert.match(await response.text(), /配信停止を受け付けました/u);
   assert.equal(db.prepare(`SELECT status FROM seller_outreach_contacts WHERE contact_id='c1'`).get().status, 'OPTED_OUT');
@@ -151,14 +151,27 @@ test('配信停止リンクは OPTED_OUT にして、以後そのアドレスへ
   await runSellerOutreachCycle(env, MONDAY_10AM_JST, async (url, init) => { sent.push(init); return new Response('{}', { status: 200 }); });
   assert.equal(sent.length, 0);
   // 配信停止リンクを踏んだ人に404を見せない（案内ページとして200で返す）。
-  const bad = await handleSellerOutreachRoutes(new Request('https://hoshilu.app/seller-outreach/unsubscribe?t=zzz'), env);
+  const bad = await handleSellerOutreachRoutes(new Request('https://hoshilu.app/seller-outreach/unsubscribe/zzz'), env);
   assert.equal(bad.status, 200);
   assert.match(await bad.text(), /リンクが無効です/u);
-  assert.match(await (await handleSellerOutreachRoutes(new Request('https://hoshilu.app/seller-outreach/unsubscribe?t=zzz'), env)).text(), /<!-- unsubscribe: token_format -->/u);
-  const unknown = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe?t=${'0'.repeat(32)}`), env);
+  assert.match(await (await handleSellerOutreachRoutes(new Request('https://hoshilu.app/seller-outreach/unsubscribe/zzz'), env)).text(), /<!-- unsubscribe: token_format -->/u);
+  const unknown = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe/${'0'.repeat(32)}`), env);
   assert.equal(unknown.status, 200);
   assert.match(await unknown.text(), /<!-- unsubscribe: not_found len=32 -->/u);
   assert.equal(await handleSellerOutreachRoutes(new Request('https://hoshilu.app/'), env), null);
+});
+
+// 2026-09-06: 本番で ?t= だけが経路で除去され、配信停止が常に「リンクが無効」になっていた
+//（?debug=1 は届くのに ?t= は届かない）。トークンはパスに置く。旧形式のリンクも受ける。
+test('配信停止トークンはパスで受け取り、旧クエリ形式も受ける', async () => {
+  const { db, env } = databaseEnv();
+  await insertContact(db);
+  assert.match(unsubscribeUrl('a'.repeat(32)), /\/seller-outreach\/unsubscribe\/a{32}$/u);
+  const legacy = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe?t=${'a'.repeat(32)}`), env);
+  assert.match(await legacy.text(), /配信停止を受け付けました/u);
+  await insertContact(db, { contact_id: 'c2', contact_email: 'c2@example.com', unsubscribe_token: 'b'.repeat(32) });
+  const named = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe?token=${'b'.repeat(32)}`), env);
+  assert.match(await named.text(), /配信停止を受け付けました/u);
 });
 
 test('Workerに配線されている（配信停止ルートと15分cron）', () => {
