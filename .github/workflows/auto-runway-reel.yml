@@ -1,0 +1,170 @@
+name: Auto Runway reel (generate, post-process, auto QA, queue)
+
+# 2026-09-06 大隆さん決定（指示書 2026-09-06 全面再設計版 §A）: 月・水・土の Reel は
+# Runway で新規生成し、人手ゼロで投稿キューまで通す。
+#
+#  06:00 JST（月・水・土）に起動 → tools/line-worker/scripts/auto-runway-reel.mjs が
+#  D1 にジョブ投入 → Worker の 15分 cron が Runway に生成させる → 生成物を R2 から取得 →
+#  Playwright で hoshilu.app の実画面を撮影 → ffmpeg で 字幕/ブランド/AI表記/実画面/URL を
+#  合成 → 自動QA（仕様・全フレーム・音量・顔=Cloud Vision・セリフ=Whisper・焼き込み・
+#  重複・AI開示）→ 合格なら R2 の postprocessed-<sha256>.mp4 へ置き、D1 を
+#  APPROVED_FOR_POST/PASSED、social_post_queue を APPROVED（同日 20:15 JST）にする。
+#  不合格なら別シーンで1回だけ再生成。それでも駄目なら FAILED_FINAL にして Issue で報告。
+#
+# GitHub の schedule は既定ブランチ(main)のワークフローだけ動くため、本ファイルは main に
+# 置き、実行時に feature/ui-search-v2（本番）を checkout する（production-monitor.yml と同じ）。
+# 再実行しても job_id が日付で固定なので二重生成・二重投稿にならない。
+
+on:
+  schedule:
+    # 月・水・土 06:00 JST = 日・火・金 21:00 UTC
+    - cron: '0 21 * * 0,2,5'
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: '枠を固定する場合 mon / wed / sat（空なら次の枠）'
+        required: false
+        default: ''
+      theme:
+        description: '型を固定する場合 want_at_price / stop_chasing_sales / price_drop_notice'
+        required: false
+        default: ''
+      publish_at:
+        description: '投稿時刻を固定する場合 ISO8601（例 2026-09-07T11:15:00Z）'
+        required: false
+        default: ''
+  push:
+    branches: [main]
+    paths: ['.github/workflows/auto-runway-reel.yml']
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: auto-runway-reel
+  cancel-in-progress: false
+
+jobs:
+  reel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GOOGLE_CLOUD_VISION_API_KEY: ${{ secrets.GOOGLE_CLOUD_VISION_API_KEY }}
+      AUTO_REEL_WORKDIR: ${{ github.workspace }}/auto-reel-work
+      PLAYWRIGHT_MODULE: ${{ github.workspace }}/pw/node_modules/playwright/index.mjs
+    steps:
+      - name: Require Cloudflare credentials
+        run: |
+          test -n "${CLOUDFLARE_API_TOKEN}" || { echo "::error::CLOUDFLARE_API_TOKEN missing"; exit 1; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID}" || { echo "::error::CLOUDFLARE_ACCOUNT_ID missing"; exit 1; }
+          test -n "${GOOGLE_CLOUD_VISION_API_KEY}" || echo "::warning::GOOGLE_CLOUD_VISION_API_KEY missing - face check will fail closed"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ui-search-v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install ffmpeg, Noto CJK fonts, Pillow, faster-whisper
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          install_pkgs() {
+            sudo timeout 120 apt-get update -qq -o Acquire::Retries=3 &&
+            sudo timeout 300 apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 ffmpeg fonts-noto-cjk python3-pil
+          }
+          install_pkgs || { echo "::warning::apt attempt 1 failed; retrying"; sleep 10; install_pkgs; }
+          fc-list | grep -qi "Noto Sans CJK JP"
+          python3 -m pip install --quiet --user --break-system-packages faster-whisper
+          python3 - <<'PY'
+          from faster_whisper import WhisperModel
+          WhisperModel("small", device="cpu", compute_type="int8")
+          print("whisper small ready")
+          PY
+
+      - name: Install Playwright Chromium (real hoshilu.app screenshot)
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          mkdir -p pw && cd pw
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund playwright@1.47.2 >/dev/null
+          npx playwright install --with-deps chromium
+
+      - name: Install Worker dependencies (wrangler bindings)
+        run: npm ci --prefix tools/line-worker
+
+      - name: Generate, post-process, auto QA, queue
+        id: reel
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          extra=""
+          [ -n "${{ github.event.inputs.slot }}" ] && extra="$extra --slot=${{ github.event.inputs.slot }}"
+          [ -n "${{ github.event.inputs.theme }}" ] && extra="$extra --theme=${{ github.event.inputs.theme }}"
+          [ -n "${{ github.event.inputs.publish_at }}" ] && extra="$extra --publish_at=${{ github.event.inputs.publish_at }}"
+          node scripts/auto-runway-reel.mjs $extra
+
+      - name: Report to an issue (success = closed record, failure = open for follow-up)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          report="${AUTO_REEL_WORKDIR}/report.json"
+          if [ ! -f "$report" ]; then
+            gh issue create --title "[AUTO-REEL] 実行失敗（report.json なし） run=${{ github.run_id }}" \
+              --body "auto-runway-reel が report.json を残さずに終了しました。ログ: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            exit 0
+          fi
+          node - "$report" <<'NODE' > issue-body.md
+          const fs = require('node:fs');
+          const r = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
+          const o = r.outcome || {};
+          const ev = o.evidence || {};
+          const lines = [];
+          lines.push(`- 結果: ${o.ok ? '合格・投稿キュー済み' : '不合格・投稿していない'}`);
+          lines.push(`- 枠: ${r.slot?.slot} / 型: ${r.slot?.theme} / 投稿予定: ${r.slot?.publish_at}`);
+          lines.push(`- job_id: ${o.job_id || ''} / post_id: ${o.post_id || ''} / 試行: ${o.attempt || ''}`);
+          if (o.sha256) lines.push(`- 後処理済み sha256: ${o.sha256} / ${o.size} bytes / X: ${o.x_status || ''}`);
+          if (o.reason) lines.push(`- 理由: ${String(o.reason).slice(0, 800)}`);
+          if (ev.spec) lines.push(`- 仕様: ${JSON.stringify(ev.spec)}`);
+          if (ev.faces) lines.push(`- 顔(Cloud Vision): ${JSON.stringify({ passed: ev.faces.passed, total: ev.faces.total, skipped: ev.faces.skipped, error: ev.faces.error })}`);
+          if (ev.speech) lines.push(`- セリフ(Whisper): score=${ev.speech.score} forbidden=${JSON.stringify(ev.speech.forbidden || [])} transcript=「${String(ev.speech.transcript || ev.speech.error || '').slice(0, 200)}」`);
+          if (ev.audio_mean_volume_db !== undefined) lines.push(`- 音量: mean ${ev.audio_mean_volume_db} dB`);
+          if (ev.overlay_diff) lines.push(`- 焼き込み差分: ${JSON.stringify(ev.overlay_diff)}`);
+          if (ev.ui_cut) lines.push(`- カットB: ${ev.ui_cut}`);
+          if (ev.not_biometrically_verified) lines.push(`- 機械で確認していないこと: ${ev.not_biometrically_verified.join(' / ')}`);
+          lines.push(`- ログ/成果物: ${process.env.RUN_URL}`);
+          lines.push('');
+          lines.push('自動QAの証跡は Actions の artifact（contact-sheet.jpg, qa.json, reel.mp4）を参照。');
+          process.stdout.write(lines.join('\n'));
+          NODE
+          ok="$(node -e "console.log(require('$report').outcome?.ok ? 'yes' : 'no')")"
+          slot="$(node -e "const r=require('$report');console.log((r.slot?.date_key||'')+' '+(r.slot?.slot||''))")"
+          if [ "$ok" = "yes" ]; then
+            url="$(gh issue create --title "[AUTO-REEL] ${slot} 合格・投稿キュー済み" --body-file issue-body.md)"
+            gh issue close "$url" --reason completed
+          else
+            gh issue create --title "[AUTO-REEL] ${slot} 不合格・要確認" --body-file issue-body.md
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auto-runway-reel-${{ github.run_id }}
+          path: |
+            auto-reel-work/report.json
+            auto-reel-work/**/qa.json
+            auto-reel-work/**/contact-sheet.jpg
+            auto-reel-work/**/reel.mp4
+            auto-reel-work/**/ui.png
+            auto-reel-work/**/*.ass
+          retention-days: 30
