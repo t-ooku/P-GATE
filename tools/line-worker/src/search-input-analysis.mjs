@@ -25,6 +25,8 @@ const VISION_HEAD_START_MS = 2500;
 // もう1回だけ試す。同じモデルへの再試行より回復率が高い。
 const DEFAULT_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 export const MAX_SEARCH_IMAGE_BYTES = 2 * 1024 * 1024;
+// grounding を足すかどうかの境目。これ未満の自信のときだけ、もう1回引き直す。
+export const IDENTIFY_GROUNDING_MIN_SCORE = 60;
 const MAX_IMAGE_BASE64_LENGTH = Math.ceil(MAX_SEARCH_IMAGE_BYTES / 3) * 4;
 const IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const ANALYSIS_RESPONSE_SCHEMA = Object.freeze({
@@ -479,7 +481,7 @@ export async function analyzeSearchInput({
   const model = String(env.GEMINI_PRODUCT_DISCOVERY_MODEL || 'gemini-3.6-flash');
   const fallbackModel = String(env.GEMINI_PRODUCT_DISCOVERY_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL);
   let usedFallbackModel = false;
-  const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS, modelName = model) => {
+  const requestAnalysisOnce = async (contextUrl, contextImage, timeoutMs = ANALYSIS_TIMEOUT_MS, modelName = model, grounded = false) => {
     const parts = [{ text: analysisPrompt(rememberedQuery, contextUrl, language) }];
     const evidenceBlock = googleVisualWebEvidencePromptBlock(visualWebEvidence);
     if (evidenceBlock) parts.push({ text: evidenceBlock });
@@ -499,8 +501,8 @@ export async function analyzeSearchInput({
               }]
             },
             contents: [{ role: 'user', parts }],
-            ...(contextUrl ? { tools: [{ urlContext: {} }] } : {}),
-            generationConfig: contextUrl
+            ...(contextUrl ? { tools: [{ urlContext: {} }] } : (grounded ? { tools: [{ googleSearch: {} }] } : {})),
+            generationConfig: (contextUrl || grounded)
               ? { temperature: 0.1, maxOutputTokens: 384 }
               : {
                 temperature: 0.1,
@@ -677,6 +679,25 @@ export async function analyzeSearchInput({
       if (secondary.refined_query) result = secondary;
     } catch {
       // 縮退はこの後のVision救済に任せる。
+    }
+  }
+  // 2026-09-06 大隆さん指示（Gemini の Search grounding）: 新商品やマイナーな商品は、
+  // モデルの記憶だけだと名前を外す。ただし grounding は毎回1〜数秒かかるので、
+  // 全件に付けると「待たせないこと」に反する。**自信が低い時だけ**もう1回引く。
+  // 引けなかった・空だった場合は元の結果をそのまま使う（劣化させない）。
+  const groundingEnabled = String(env.GEMINI_IDENTIFY_GROUNDING || '') === 'true';
+  const weakCandidate = !result.candidate_name || result.match_score < IDENTIFY_GROUNDING_MIN_SCORE;
+  if (groundingEnabled && weakCandidate && !socialUrl && normalizedImage) {
+    await awaitVision();
+    try {
+      const groundedPayload = await requestAnalysisOnce('', normalizedImage, IMAGE_ANALYSIS_RETRY_TIMEOUT_MS, model, true);
+      const groundedResult = normalizeSearchInputAnalysis(parseJsonText(geminiText(groundedPayload)) || {});
+      if (groundedResult.candidate_name && groundedResult.match_score >= result.match_score) {
+        result = groundedResult;
+        provider = 'GEMINI_SEARCH_GROUNDED';
+      }
+    } catch {
+      // grounding が使えなくても、元の候補で確認カードは出せる。
     }
   }
   if (!result.refined_query) {

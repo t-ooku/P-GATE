@@ -3,7 +3,8 @@ import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.m
 import { handleCreatorInquiryRoutes } from './creator-inquiries.mjs';
 import { handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle } from './seller-outreach.mjs';
 import { bumpIdentifyCacheHit, identifyCacheKey, purgeExpiredIdentifyCache, readIdentifyCache, writeIdentifyCache } from './ai-identify-cache.mjs';
-import { identifyCandidateFromAnalysis, readMultimodalIdentifyCache, storeMultimodalIdentifyCache, withPreviewBudget } from './identify-route.mjs';
+import { identifyCandidateFromAnalysis, isIdentifyPreviewKey, readIdentifyPreviews, readMultimodalIdentifyCache, storeMultimodalIdentifyCache, withPreviewBudget } from './identify-route.mjs';
+import { purgeIdentifyLatencyLog, recordIdentifyLatency } from './identify-latency.mjs';
 import { handlePriceWatchDemandRoute } from './price-watch-demand.mjs';
 import { authorizeAdminRequest, handleAdminAuthRoutes } from './admin-auth.mjs';
 import { handlePromotionDashboardRoutes } from './promotion-dashboard.mjs';
@@ -474,6 +475,7 @@ export function validateKnowledgeRequest(payload) {
     campaign: cleanAttribution(payload.campaign),
     content: cleanAttribution(payload.content)
   };
+  const deferPreviews = payload.defer_previews === true;
   const rawAiCandidate = payload.ai_candidate_fallback && typeof payload.ai_candidate_fallback === 'object'
     ? payload.ai_candidate_fallback : null;
   const cleanCandidateText = (value, max) => sanitizeAiOutputText(
@@ -494,7 +496,7 @@ export function validateKnowledgeRequest(payload) {
   return {
     query, session_id: sessionId, turnstile_token: turnstileToken, language, search_attempt: searchAttempt,
     processing_notice_shown: true, attribution, ai_candidate_fallback: aiCandidateFallback,
-    social_url: socialUrl, search_image: searchImage,
+    social_url: socialUrl, search_image: searchImage, defer_previews: deferPreviews,
     traffic_class: classifyGrowthTraffic(attribution)
   };
 }
@@ -2049,7 +2051,15 @@ function queueSearchProviderDegradation(env, ctx, requestId, degradation) {
 // （それは /api/knowledge の責任）。文字だけの質問は /api/ai-chat（IDENTIFY）が担当する。
 async function handleIdentifyApi(request, env, ctx) {
   const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
   const headers = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-request-id': requestId };
+  // 「これですか？」が出るまで何秒かかっているかを段階ごとに残す（ミリ秒だけ）。
+  const logLatency = (cacheState, aiMs, previewMs) => {
+    const record = recordIdentifyLatency(env, {
+      route: 'identify', cacheState, aiMs, previewMs, totalMs: Date.now() - startedAt
+    });
+    if (ctx?.waitUntil) ctx.waitUntil(record); else void record;
+  };
   try {
     const requestOrigin = request.headers.get('origin');
     const ownOrigin = new URL(request.url).origin;
@@ -2066,29 +2076,53 @@ async function handleIdentifyApi(request, env, ctx) {
     const cacheInput = { image: input.search_image, socialUrl: input.social_url, query: input.query };
     const { cacheKey, cached } = await readMultimodalIdentifyCache(env, cacheInput, input.language, { waitUntil });
     if (cached) {
+      logLatency('hit', 0, 0);
       return Response.json({ ok: true, result: { ...cached, cached: true }, request_id: requestId }, {
         headers: { ...headers, 'x-identify-cache': 'hit' }
       });
     }
+    const analysisStartedAt = Date.now();
     const analysis = await analyzeSearchInput({
       query: input.query, social_url: input.social_url, image: input.search_image
     }, input.language, env, fetch);
+    const analysisMs = Date.now() - analysisStartedAt;
     const candidate = identifyCandidateFromAnalysis(analysis);
-    if (!candidate) return Response.json({ ok: true, result: { candidate_name: '', candidate_previews: [] }, request_id: requestId }, { headers });
+    if (!candidate) {
+      logLatency(cacheKey ? 'miss' : 'off', analysisMs, 0);
+      return Response.json({ ok: true, result: { candidate_name: '', candidate_previews: [] }, request_id: requestId }, { headers });
+    }
     const sessionHash = await hashUser(input.session_id);
     const seed = `AI_IDENTIFY:${crypto.randomUUID()}`;
     const category = semanticSearchGroups(candidate.refined_query)
       .map((group) => group.category).find((value) => value && value !== 'color') || 'unclassified';
-    const [marketplaceSearchLinks, candidatePreviews] = await Promise.all([
-      signedMarketplaceSearchLinks(candidate.refined_query, {
-        env, origin: ownOrigin, sessionHash, seed, category, trafficClass: input.traffic_class
-      }).catch(() => []),
-      withPreviewBudget(aiChatCandidatePreviews(env, candidate.refined_query, {
-        requestId, createTrackToken, origin: ownOrigin, sessionHash, seed
-      }))
-    ]);
+    const previewPromise = aiChatCandidatePreviews(env, candidate.refined_query, {
+      requestId, createTrackToken, origin: ownOrigin, sessionHash, seed
+    }).catch(() => []);
+    const marketplaceSearchLinks = await signedMarketplaceSearchLinks(candidate.refined_query, {
+      env, origin: ownOrigin, sessionHash, seed, category, trafficClass: input.traffic_class
+    }).catch(() => []);
+    // 2026-09-06 大隆さん指示（待たせない）: 参考画像を待たずにカードを出す。
+    // 画像は Worker 側で取り切ってキャッシュへ書き、画面は previews_key で取りに来る。
+    if (input.defer_previews && cacheKey) {
+      const finishPreviews = previewPromise.then((previews) => {
+        storeMultimodalIdentifyCache(env, cacheKey, {
+          ...candidate, marketplace_search_links: marketplaceSearchLinks, candidate_previews: previews
+        }, input.language);
+      });
+      if (waitUntil) waitUntil(finishPreviews); else void finishPreviews;
+      logLatency('miss', analysisMs, 0);
+      return Response.json({
+        ok: true,
+        result: { ...candidate, marketplace_search_links: marketplaceSearchLinks, candidate_previews: [], previews_key: cacheKey },
+        request_id: requestId
+      }, { headers: { ...headers, 'x-identify-cache': 'miss' } });
+    }
+    const previewStartedAt = Date.now();
+    const candidatePreviews = await withPreviewBudget(previewPromise);
+    const previewMs = Date.now() - previewStartedAt;
     const result = { ...candidate, marketplace_search_links: marketplaceSearchLinks, candidate_previews: candidatePreviews };
     storeMultimodalIdentifyCache(env, cacheKey, result, input.language, { waitUntil });
+    logLatency(cacheKey ? 'miss' : 'off', analysisMs, previewMs);
     return Response.json({ ok: true, result, request_id: requestId }, { headers: { ...headers, 'x-identify-cache': cacheKey ? 'miss' : 'off' } });
   } catch (error) {
     const code = String(error.message || 'IDENTIFY_FAILED').slice(0, 80);
@@ -3345,6 +3379,14 @@ export default {
     if (request.method === 'POST' && url.pathname === '/api/ai-chat') return handleAiChatApi(request, env, ctx);
     // 2026-09-06 大隆さん指示: 写真・投稿URLも「Gemini が特定 → これですか？ → YES で検索」の順に。
     if (request.method === 'POST' && url.pathname === '/api/identify') return handleIdentifyApi(request, env, ctx);
+    // 参考画像だけをあとから取りに来る読み取り専用の口。返すのは公開されている
+    // モールの商品画像と名前だけで、鍵は候補のハッシュ（利用者の情報は含まない）。
+    if (request.method === 'GET' && url.pathname === '/api/identify/previews') {
+      const key = url.searchParams.get('key') || '';
+      if (!isIdentifyPreviewKey(key)) return Response.json({ ok: false, error: 'IDENTIFY_PREVIEW_KEY_INVALID' }, { status: 400, headers: { 'cache-control': 'no-store' } });
+      const previews = await readIdentifyPreviews(env, key);
+      return Response.json({ ok: true, ...previews }, { headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } });
+    }
     if (request.method === 'POST' && url.pathname === '/api/price-comparison') return handlePriceComparisonApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/rankings') return handleRankingApi(request, env);
     if (request.method === 'POST' && url.pathname === '/api/hoshilu-rankings') return handleHoshiluRankingApi(request, env);
@@ -3486,6 +3528,8 @@ export default {
         runSellerOutreachCycle(env, scheduledAt),
         // 「これですか？」確認カードのキャッシュ（7日）を掃除する。
         purgeExpiredIdentifyCache(env, scheduledAt),
+        // 「これですか？」の所要時間ログは14日で消す。
+        purgeIdentifyLatencyLog(env, scheduledAt),
         // HOSHILU BUZZ「急上昇」用の公式ランキング順位スナップショット。
         // 6時間ごとに1回だけ実記録し、migration 0057 未適用なら静かにスキップ。
         recordBuzzSnapshots(env, fetch, scheduledAt.getTime())

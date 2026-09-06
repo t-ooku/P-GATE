@@ -132,7 +132,7 @@ async function postIdentify({ query, language, image, socialUrl }) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       query: String(query || ''), language, session_id: auth?.sessionId || '',
-      processing_notice_shown: true, turnstile_token: token,
+      processing_notice_shown: true, turnstile_token: token, defer_previews: true,
       ...(image ? { image } : {}), ...(socialUrl ? { social_url: socialUrl } : {})
     }),
     signal: AbortSignal.timeout(IDENTIFY_HTTP_TIMEOUT_MS)
@@ -144,6 +144,27 @@ async function postIdentify({ query, language, image, socialUrl }) {
     throw error;
   }
   return payload.result;
+}
+
+// 2026-09-06 大隆さん指示（待たせない）: 候補名が分かった時点でカードを出し、
+// 参考画像はあとから差し込む。Worker 側は画像を取り切ってキャッシュへ書くので、
+// ここは同じ鍵で数回だけ取りに行く（見つからなければ画像なしのまま。カードは出たまま）。
+const PREVIEW_POLL_DELAYS_MS = [600, 1200, 2000, 3200];
+async function fetchDeferredPreviews(previewsKey, onReady) {
+  if (!/^[0-9a-f]{64}$/u.test(String(previewsKey || ''))) return;
+  for (const delay of PREVIEW_POLL_DELAYS_MS) {
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    try {
+      const response = await fetch(`/api/identify/previews?key=${encodeURIComponent(previewsKey)}`, {
+        cache: 'no-store', signal: AbortSignal.timeout(4000)
+      });
+      if (!response.ok) continue;
+      const payload = await response.json().catch(() => ({}));
+      const previews = Array.isArray(payload?.candidate_previews) ? payload.candidate_previews : [];
+      if (payload?.ready && previews.length) { onReady(previews); return; }
+      if (payload?.ready) return;
+    } catch { /* 画像が出ないだけで、確認カードは使える */ }
+  }
 }
 
 // 2026-09-05 大隆さん指示: チャットで提示した商品には画像を必ず添える（両モード共通の描画）。
@@ -213,6 +234,14 @@ function openIdentifyDialog(originalQuery,language,options={}){
       const previews=candidatePreviews(result);
       appendPreviewStrip(messages,previews,copy);
       if(previews[0]?.image){aiCandidateFallback.image=previews[0].image;aiCandidateFallback.previews=previews;}
+      // 参考画像を待たずにカードを出したときは、あとから同じ流れに差し込む。
+      if(!previews.length&&result.previews_key){
+        void fetchDeferredPreviews(result.previews_key,(late)=>{
+          if(dialogDisposed)return;
+          appendPreviewStrip(messages,late,copy);
+          if(late[0]?.image){aiCandidateFallback.image=late[0].image;aiCandidateFallback.previews=late;}
+        });
+      }
       const actions=document.createElement('div');actions.className='ai-chat-confirm-actions';
       const yes=document.createElement('button');yes.type='button';yes.className='ai-chat-confirm-yes';yes.textContent=copy.yes;
       const no=document.createElement('button');no.type='button';no.className='ai-chat-confirm-no';no.textContent=copy.no;

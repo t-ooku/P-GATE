@@ -52,3 +52,21 @@ export function storeMultimodalIdentifyCache(env, cacheKey, result, language, { 
   const store = writeIdentifyCache(env, cacheKey, result, { language });
   if (typeof waitUntil === 'function') waitUntil(store); else void store;
 }
+
+// 2026-09-06 大隆さん指示（待たせない）: 参考画像が揃うまでカードを止めない。
+// 候補名が分かった時点でカードを返し、画像はあとから差し込む。
+// 画像取得は Worker 側で続け、結果はキャッシュへ書く。画面はこのキーで取りに来る。
+export function deferredPreviewResponse(cacheKey, cached) {
+  const previews = Array.isArray(cached?.candidate_previews) ? cached.candidate_previews : [];
+  return { ready: Boolean(cached), candidate_previews: previews, previews_key: String(cacheKey || '') };
+}
+
+export function isIdentifyPreviewKey(value) {
+  return /^[0-9a-f]{64}$/.test(String(value || ''));
+}
+
+export async function readIdentifyPreviews(env, cacheKey) {
+  if (!isIdentifyPreviewKey(cacheKey)) return { ready: false, candidate_previews: [] };
+  const cached = await readIdentifyCache(env, cacheKey);
+  return deferredPreviewResponse(cacheKey, cached);
+}
