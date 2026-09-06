@@ -291,6 +291,11 @@ document.addEventListener('click', event => {
     send(target.closest('.ranking-product-card,.buzz-home-card') ? 'ranking_result_clicked' : 'ai_result_clicked', marketplace ? { marketplace } : {});
     if (marketplace) {
       send('marketplace_click', { marketplace });
+      // 2026-09-06: モール遷移(marketplace_click)は直近30日で195件に対し、
+      // 会員登録(member_registered)はD1実測で0件だった。登録導線は「ホシっとく」
+      // 保存操作(月3件)にしか出ておらず、最頻の高意図イベントである本クリックの
+      // 直後には一度も出ていなかった。member-registration-nudge.mjsへ合図する。
+      document.dispatchEvent(new CustomEvent('hoshilu:marketplace-click', { detail: { marketplace } }));
       // Count one conversion per completed search, not every shop click.
       const clickedExecutionId=String(target.closest('[data-search-execution-id]')?.dataset.searchExecutionId||'');
       if (!target.closest('.ranking-product-card,.buzz-home-card') && lastCompletedSearch

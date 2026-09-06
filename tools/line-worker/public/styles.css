@@ -86,3 +86,11 @@
 .results .affiliate-link-note{order:5;margin:18px 0 0;color:#a3a0b4;font-size:10px;line-height:1.5;opacity:.8}
 /* 2026-09-02: ヒーローの説明文はMARKETPLACE COVERAGE内へ格納(既定は閉) */
 .hero-marketplace-coverage .hero-promise{margin:12px 0 4px;color:var(--muted);font-size:13px;line-height:1.75}
+/* 2026-09-06: モール遷移(marketplace_click)は月195件に対し会員登録は0件(D1実測)。
+   .sticky-cta(seo-article.css)と同じ「固定フッターでないと実数0件のまま」という
+   知見に基づき、ゲストのモール遷移直後にだけ出す控えめな固定バー。 */
+.registration-nudge{position:fixed;left:0;right:0;bottom:0;z-index:7;display:flex;align-items:center;gap:10px;padding:.7rem clamp(1rem,4vw,2rem) calc(.7rem + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.97);border-top:1px solid var(--line);backdrop-filter:blur(10px);box-shadow:0 -10px 30px #30236614}
+.registration-nudge-text{flex:1;min-width:0;color:var(--ink);font-size:12px;line-height:1.5}
+.registration-nudge-link{flex-shrink:0;padding:.55rem .9rem;border-radius:999px;background:var(--violet);color:#fff;font-size:12px;font-weight:850;text-decoration:none;white-space:nowrap}
+.registration-nudge-close{flex-shrink:0;width:28px;height:28px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);font-size:14px;line-height:1;cursor:pointer}
+@media(max-width:520px){.registration-nudge-text{font-size:11px}}
