@@ -62,7 +62,7 @@ export function composeOutreachText(body, token, env = {}) {
     String(body || '').trim(),
     '',
     '――',
-    'HOSHILU（ホシル） 運営: 大隆',
+    'HOSHILU（ホシル） 運営: 大久津',
     'https://hoshilu.app/  セラー向け案内: https://hoshilu.app/for-sellers',
     contact ? `ご返信・お問い合わせ: ${contact}（このメールに返信いただいても届きます）` : 'ご返信はこのメールにそのままお願いします。',
     `今後のご案内が不要な場合は、こちらから配信停止できます（ワンクリック）: ${unsubscribeUrl(token)}`,

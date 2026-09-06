@@ -51,7 +51,7 @@ test('本文には必ず送信者表示と配信停止リンクが付く（特�
   const token = 'b'.repeat(32);
   const text = composeOutreachText('本文です。', token, { SELLER_OUTREACH_REPLY_TO: 'owner@example.com' });
   assert.match(text, /本文です。/u);
-  assert.match(text, /HOSHILU（ホシル） 運営: 大隆/u);
+  assert.match(text, /HOSHILU（ホシル） 運営: 大久津/u);
   assert.match(text, /https:\/\/hoshilu\.app\/for-sellers/u);
   assert.match(text, /owner@example\.com/u);
   assert.ok(text.includes(unsubscribeUrl(token)), '配信停止リンク');
