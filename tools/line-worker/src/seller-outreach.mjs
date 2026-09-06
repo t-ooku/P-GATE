@@ -156,9 +156,16 @@ export async function handleSellerOutreachRoutes(request, env) {
   // 配信停止のリンクを踏んだ人に 404 を返すと「壊れている」と見える。案内ページとして 200 で返す。
   // reason は運用時の切り分け用（本文には出さず HTML コメントに入れる。個人情報は含めない）。
   const invalid = (reason) => new Response(`${UNSUB_HTML({ title: 'リンクが無効です', body: 'このリンクは無効か、期限切れです。配信停止をご希望の場合は、届いたメールに「不要」とご返信ください。' })}<!-- unsubscribe: ${reason} -->`, { status: 200, headers });
-  if (!/^[0-9a-f]{32}$/.test(token)) return invalid('token_format');
+  const tokenOk = /^[0-9a-f]{32}$/.test(token);
+  const row = tokenOk && env.PRODUCT_DB
+    ? (await env.PRODUCT_DB.prepare(`SELECT contact_id,email_hash,status FROM seller_outreach_contacts WHERE unsubscribe_token=?1`).bind(token).all()).results?.[0]
+    : null;
+  // 切り分け用。個人情報は返さない（見つかったかどうかと、ハンドラが実際に受け取った URL の形だけ）。
+  if (url.searchParams.get('debug') === '1') {
+    return new Response(JSON.stringify({ received_url: url.pathname + url.search, method: request.method, token_length: token.length, token_ok: tokenOk, has_database: Boolean(env.PRODUCT_DB), row_found: Boolean(row) }), { status: 200, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
+  }
+  if (!tokenOk) return invalid('token_format');
   if (!env.PRODUCT_DB) return invalid('no_database');
-  const row = (await env.PRODUCT_DB.prepare(`SELECT contact_id,email_hash,status FROM seller_outreach_contacts WHERE unsubscribe_token=?1`).bind(token).all()).results?.[0];
   if (!row) return invalid(`not_found len=${token.length}`);
   const timestamp = new Date().toISOString();
   await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO seller_outreach_suppressions (email_hash,reason,created_at) VALUES (?1,'OPTED_OUT',?2)`).bind(row.email_hash, timestamp).run();
