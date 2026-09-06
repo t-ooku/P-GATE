@@ -150,8 +150,12 @@ test('配信停止リンクは OPTED_OUT にして、以後そのアドレスへ
   const sent = [];
   await runSellerOutreachCycle(env, MONDAY_10AM_JST, async (url, init) => { sent.push(init); return new Response('{}', { status: 200 }); });
   assert.equal(sent.length, 0);
+  // 配信停止リンクを踏んだ人に404を見せない（案内ページとして200で返す）。
   const bad = await handleSellerOutreachRoutes(new Request('https://hoshilu.app/seller-outreach/unsubscribe?t=zzz'), env);
-  assert.equal(bad.status, 404);
+  assert.equal(bad.status, 200);
+  assert.match(await bad.text(), /リンクが無効です/u);
+  const unknown = await handleSellerOutreachRoutes(new Request(`https://hoshilu.app/seller-outreach/unsubscribe?t=${'0'.repeat(32)}`), env);
+  assert.equal(unknown.status, 200);
   assert.equal(await handleSellerOutreachRoutes(new Request('https://hoshilu.app/'), env), null);
 });
 

@@ -153,13 +153,11 @@ export async function handleSellerOutreachRoutes(request, env) {
   if (!['GET', 'POST'].includes(request.method)) return new Response('Method Not Allowed', { status: 405 });
   const token = clean(url.searchParams.get('t'), 64);
   const headers = { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' };
-  if (!/^[0-9a-f]{32}$/.test(token) || !env.PRODUCT_DB) {
-    return new Response(UNSUB_HTML({ title: 'リンクが無効です', body: 'このリンクは無効か、期限切れです。配信停止をご希望の場合は、届いたメールに「不要」とご返信ください。' }), { status: 404, headers });
-  }
+  // 配信停止のリンクを踏んだ人に 404 を返すと「壊れている」と見える。案内ページとして 200 で返す。
+  const invalid = () => new Response(UNSUB_HTML({ title: 'リンクが無効です', body: 'このリンクは無効か、期限切れです。配信停止をご希望の場合は、届いたメールに「不要」とご返信ください。' }), { status: 200, headers });
+  if (!/^[0-9a-f]{32}$/.test(token) || !env.PRODUCT_DB) return invalid();
   const row = (await env.PRODUCT_DB.prepare(`SELECT contact_id,email_hash,status FROM seller_outreach_contacts WHERE unsubscribe_token=?1`).bind(token).all()).results?.[0];
-  if (!row) {
-    return new Response(UNSUB_HTML({ title: 'リンクが無効です', body: 'このリンクは無効か、期限切れです。配信停止をご希望の場合は、届いたメールに「不要」とご返信ください。' }), { status: 404, headers });
-  }
+  if (!row) return invalid();
   const timestamp = new Date().toISOString();
   await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO seller_outreach_suppressions (email_hash,reason,created_at) VALUES (?1,'OPTED_OUT',?2)`).bind(row.email_hash, timestamp).run();
   await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='OPTED_OUT',updated_at=?2 WHERE email_hash=?1 AND status IN ('QUEUED','SENT','FAILED','REPLIED','SKIPPED')`).bind(row.email_hash, timestamp).run();
