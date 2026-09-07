@@ -2,6 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyHeadNounGate, extractHeadNouns, headNounScore } from '../src/search-head-noun.mjs';
 
+test('本番で確認した猫砂マットとマットレス保護カバーは単独候補でも本体検索へ戻さない', () => {
+  const cases = [
+    ['猫砂が飛び散らない猫トイレ', '猫 トイレ 砂 飛び散り防止 マット 猫トイレマット 砂取りマット', '猫トイレ フルカバー 飛び散り防止'],
+    ['コアラマットレス', 'コアラマットレス保護カバー マットレスプロテクター シングル', 'コアラマットレス オリジナル シングル']
+  ];
+  for (const [query, accessory, product] of cases) {
+    assert.equal(headNounScore(query, accessory), 0);
+    assert.deepEqual(applyHeadNounGate(query, [{product_name:accessory}]), []);
+    assert.deepEqual(applyHeadNounGate(query, [{product_name:accessory},{product_name:product}]), [{product_name:product}]);
+  }
+  const mat={product_name:'猫トイレマット 砂取りマット'};
+  assert.deepEqual(applyHeadNounGate('猫トイレマット', [mat]), [mat]);
+  const cover={product_name:'コアラマットレス保護カバー'};
+  assert.deepEqual(applyHeadNounGate('マットレス カバー', [cover]), [cover]);
+  const bag={product_name:'シューズバッグ メッシュ 速乾 上履き 収納'};
+  assert.deepEqual(applyHeadNounGate('すぐ乾く上履き', [bag]), []);
+  assert.deepEqual(applyHeadNounGate('上履き シューズバッグ', [bag]), [bag]);
+});
+
 // 2026-09-03 検索品質カナリア初回(9件中7件がカテゴリ違い)への汎用対策。
 // 個別商品ルールではなく、検索文の主名詞が商品そのものとして出ているかで判定する。
 

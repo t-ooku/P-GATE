@@ -106,8 +106,11 @@ function notificationText(wish,best,target){
   const values={JA:{title:'購入したい価格になりました',body:`${best.name}：API確認価格 ¥${best.price.toLocaleString('ja-JP')}（希望価格 ¥${target.toLocaleString('ja-JP')}以下）`},EN:{title:'Your target price has been reached',body:`${best.name}: API-confirmed price JPY ${best.price.toLocaleString('en-US')} (at or below your target of JPY ${target.toLocaleString('en-US')})`},ZH:{title:'商品已达到您的目标价格',body:`${best.name}：API确认价格 ¥${best.price.toLocaleString('zh-CN')}（不高于目标价 ¥${target.toLocaleString('zh-CN')}）`},KO:{title:'원하는 구매 가격에 도달했습니다',body:`${best.name}: API 확인 가격 ¥${best.price.toLocaleString('ko-KR')} (희망 가격 ¥${target.toLocaleString('ko-KR')} 이하)`}};
   return values[String(wish.language||'JA').toUpperCase()]||values.JA;
 }
-async function searchConnectedMarketplaces(env,query,fetcher){
+async function searchConnectedMarketplaces(env,query,fetcher,key=''){
   const calls=[];
+  if (key.startsWith('RAKUTEN:')) {
+    return rakutenApiConfigured(env) ? searchRakutenMarketplace(env,'',fetcher,'',{itemCode:key.slice(8)}) : [];
+  }
   if(creatorsApiConfigured(env))calls.push(searchAmazonCreators(env,query,fetcher));
   if(rakutenApiConfigured(env))calls.push(searchRakutenMarketplace(env,query,fetcher));
   if(yahooShoppingApiConfigured(env))calls.push(searchYahooShopping(env,query,fetcher));
@@ -166,7 +169,7 @@ async function recordObservation(env,wish,best,candidateCount,now){
     await env.PRODUCT_DB.prepare(`INSERT INTO target_price_observations
       (observation_id,wish_id,observed_at,matched,price_jpy,target_price_jpy,marketplace,candidate_count,reason)
       VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)`)
-      .bind(crypto.randomUUID(),String(wish.wish_id||''),now,best?1:0,best?best.price:null,
+      .bind(crypto.randomUUID(),String(wish.wish_id||''),now,best?1:0,best?.marketplace==='RAKUTEN_JP'?best.price:null,
         target,best?String(best.marketplace||''):'',Number(candidateCount)||0,
         observationReason({candidateCount,best,target})).run();
   }catch{/* migration 0076 未適用でも巡回そのものは動かす */}
@@ -174,6 +177,10 @@ async function recordObservation(env,wish,best,candidateCount,now){
 export async function purgeTargetPriceObservations(env,now=new Date()){
   if(!env?.PRODUCT_DB)return{deleted:0};
   try{
+    // The 90-day diagnostic history is not a license to retain API prices.
+    // Rakuten prices expire after 23h; other providers have no verified TTL.
+    const priceCutoff=new Date(new Date(now).getTime()-23*60*60*1000).toISOString();
+    await env.PRODUCT_DB.prepare("UPDATE target_price_observations SET price_jpy=NULL WHERE price_jpy IS NOT NULL AND (marketplace<>'RAKUTEN_JP' OR observed_at<=?1)").bind(priceCutoff).run();
     const cutoff=new Date(now);cutoff.setUTCDate(cutoff.getUTCDate()-OBSERVATION_RETENTION_DAYS);
     const result=await env.PRODUCT_DB.prepare('DELETE FROM target_price_observations WHERE observed_at<?1')
       .bind(cutoff.toISOString()).run();
@@ -184,7 +191,7 @@ export async function purgeTargetPriceObservations(env,now=new Date()){
 export async function scanTargetPriceWish(env,wish,now=new Date().toISOString(),fetcher=fetch){
   if(!wish||Number(wish.watch_price)!==1||Number(wish.target_price_jpy)<100)return{scanned:false,notified:false};
   const query=String(wish.target_product_name||wish.query_text||'').trim();
-  const candidates=await searchConnectedMarketplaces(env,query,fetcher);
+  const candidates=await searchConnectedMarketplaces(env,query,fetcher,String(wish.target_product_key||''));
   const best=pricedOffers(wish,candidates)[0]||null;
   const notified=await persistObservation(env,wish,best,now);
   await recordObservation(env,wish,best,candidates.length,now);

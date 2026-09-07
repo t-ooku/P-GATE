@@ -75,11 +75,14 @@ export async function searchRakutenMarketplace(env, keywords, fetcher = fetch, r
   if (!rakutenApiConfigured(env)) return [];
   if (options.signal?.aborted) return [];
   const query = String(keywords || '').normalize('NFKC').trim().slice(0, 200);
-  if (!query) return [];
+  const itemCode = String(options.itemCode || '').trim();
+  if (itemCode && !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,145}$/.test(itemCode)) return [];
+  if (!query && !itemCode) return [];
   const url = new URL(API_URL);
   url.searchParams.set('applicationId', String(env.RAKUTEN_APPLICATION_ID).trim());
   url.searchParams.set('accessKey', String(env.RAKUTEN_ACCESS_KEY).trim());
-  url.searchParams.set('keyword', query);
+  if (itemCode) url.searchParams.set('itemCode', itemCode);
+  else url.searchParams.set('keyword', query);
   // shopCodeは公式ドキュメントでkeywordと併用可と明記されている
   // (「検索キーワード・ジャンルID・商品コード・ショップコードのいずれかが必須」)。
   // 楽天市場内のモール公式店(ハンズ/マツキヨ/@cosme/ABC-MART)を名指しで

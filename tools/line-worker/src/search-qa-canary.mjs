@@ -28,7 +28,7 @@ const EMPTY_RETRY_PAUSE_MS = 5000;
 // 判定するので、reject は明確な別商品語だけにする。
 export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   { id: 'ig_mattress', query: 'Instagramで見たマットレス', expect: /マットレス|mattress/iu, reject: /枕|シーツ|カバー|Tシャツ|パッド/u },
-  { id: 'koala_mattress', query: 'コアラマットレス', expect: /コアラ\s*・?\s*マットレス|koala\s*mattress/iu, reject: /Tシャツ|シャツ|ぬいぐるみ|おもちゃ|枕|ピロー/u },
+  { id: 'koala_mattress', query: 'コアラマットレス', expect: /コアラ\s*・?\s*マットレス|koala\s*mattress/iu, reject: /Tシャツ|シャツ|ぬいぐるみ|おもちゃ|枕|ピロー|保護カバー|プロテクター/u },
   { id: 'qoo10_korean_lip', query: 'Qoo10で見た韓国リップ', expect: /リップ|ティント|lip|tint/iu, reject: /ケース|ホルダー/u },
   { id: 'korean_pink_lip', query: '韓国コスメ ピンク リップ', expect: /リップ|ティント|lip|tint/iu, reject: /純正|ピストン/u },
   { id: 'standing_leather_tote', query: '自立する本革トートバッグ', expect: /トート/u, reject: /財布|リュック|合皮|フェイクレザー|カバー|持ち手|ハンドル/u },
@@ -45,10 +45,10 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
   { id: 'p0_ready_storage', query: '組み立てがいらない収納ボックス', expect: /(?=.*(?:収納|ボックス|ケース))(?=.*(?:完成品|組立不要|組み立て不要|組立て不要))/u, reject: /要組立|組立式|組み立て式/u },
-  { id: 'p0_litter_toilet', query: '猫砂が飛び散らない猫トイレ', expect: /(?=.*(?:トイレ))(?=.*(?:飛び散|飛散|上から|上入|深型|フルカバー))/u, reject: /スコップのみ|シートのみ|猫砂のみ/u },
-  { id: 'p0_quickdry_shoes', query: 'すぐ乾く上履き', expect: /(?=.*(?:上履|上靴))(?=.*(?:速乾|メッシュ|通気))/u, reject: /中敷きのみ|洗剤|洗濯ネット/u },
+  { id: 'p0_litter_toilet_v2', query: '猫砂が飛び散らない猫トイレ', expect: /(?=.*(?:トイレ))(?=.*(?:飛び散|飛散|上から|上入|深型|フルカバー|フード付き))/u, reject: /スコップのみ|シートのみ|猫砂のみ|マット|キャッチャー/u },
+  { id: 'p0_quickdry_shoes_v2', query: 'すぐ乾く上履き', expect: /(?=.*(?:上履|上靴))(?=.*(?:速乾|メッシュ|通気))/u, reject: /中敷きのみ|洗剤|洗濯ネット|シューズバッグ|シューズケース|靴袋/u },
   { id: 'p0_washable_fan_v2', query: '羽根が外れて洗える扇風機', expect: /(?=.*扇風機)(?=.*(?:分解|丸洗|水洗|羽根.*(?:外|洗)))/u, reject: /交換用|羽根のみ|カバーのみ/u },
-  { id: 'p0_quiet_toothbrush', query: '音が静かな電動歯ブラシ', expect: /(?=.*電動歯ブラシ)(?=.*(?:静音|低騒音|静か))/u, reject: /替えブラシ|交換用|ヘッドのみ/u }
+  { id: 'p0_quiet_toothbrush_v2', query: '音が静かな電動歯ブラシ', expect: /(?=.*電動歯ブラシ)(?=.*(?:静音|低騒音|静か))/u, reject: /替えブラシ(?!付)|交換用|ヘッドのみ/u }
 ]);
 
 export async function runPrioritySearchQaCanary(env, now, handler) {

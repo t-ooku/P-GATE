@@ -143,6 +143,7 @@ export function headNounDetail(query, title, heads = extractHeadNouns(query)) {
   const normalizedTitle = normalize(title);
   if (!normalizedTitle) return { score: 0, position: 1 };
   const normalizedQuery = normalize(query);
+  if (isExplicitAccessoryMismatch(normalizedQuery, normalizedTitle)) return { score: 0, position: 1 };
   const queryHasAccessory = ACCESSORY_WORDS.test(normalizedQuery);
   const packaged = PACKAGING.test(normalizedTitle)
     && !heads.some(({ term }) => PACKAGING_OK_HEADS.has(term)) && !PACKAGING.test(normalizedQuery);
@@ -189,7 +190,10 @@ export function headNounDetail(query, title, heads = extractHeadNouns(query)) {
 
 export function applyHeadNounGate(query, candidates = [], { titleOf = defaultTitle } = {}) {
   const heads = extractHeadNouns(query);
-  const list = Array.isArray(candidates) ? candidates : [];
+  // Explicit accessory mismatches must not reappear through the zero-match
+  // fallback, including when the provider returns just one accessory.
+  const list = (Array.isArray(candidates) ? candidates : [])
+    .filter(candidate => !isExplicitAccessoryMismatch(normalize(query), normalize(titleOf(candidate))));
   if (!heads.length || list.length < 2) return list;
   const scored = list.map((candidate, index) => ({
     candidate, index, ...headNounDetail(query, titleOf(candidate), heads)
@@ -199,6 +203,19 @@ export function applyHeadNounGate(query, candidates = [], { titleOf = defaultTit
     .sort((a, b) => b.score - a.score || a.position - b.position || a.index - b.index)
     .filter(({ score }) => score > 0)
     .map(({ candidate }) => candidate);
+}
+
+function isExplicitAccessoryMismatch(query, title) {
+  if (/上履き|上履|上靴/u.test(query) && !/バッグ|ケース|靴袋|中敷|ネット/u.test(query)) {
+    return /シューズ(?:バッグ|ケース)|靴袋|洗濯ネット|中敷きのみ/u.test(title);
+  }
+  if (/(?:猫.*トイレ|キャットトイレ)/u.test(query) && !/マット|シート|スコップ/u.test(query)) {
+    return /(?:砂取りマット|猫砂マット|トイレマット|滑り止めマット|猫砂キャッチャー|スコップのみ|シートのみ)/u.test(title);
+  }
+  if (/マットレス/u.test(query) && !/カバー|プロテクター|シーツ/u.test(query)) {
+    return /マットレス\s*(?:保護)?\s*(?:カバー|プロテクター|シーツ)/u.test(title);
+  }
+  return false;
 }
 
 function defaultTitle(candidate) {

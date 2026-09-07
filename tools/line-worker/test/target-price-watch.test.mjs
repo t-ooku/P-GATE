@@ -107,9 +107,9 @@ test('巡回の結果（いくらだったか・見つけられたか）を残�
     .run(JSON.stringify({ price_condition: { target_price_jpy: 2500, target_product_key: 'YAHOO:lilmoon-1', target_product_name: 'LILMOON リルムーン 度あり カラコン' } }), now);
   await runTargetPriceScan(env, now, yahooFetch(2800));
   const row = sqlite.prepare('SELECT * FROM target_price_observations WHERE wish_id=?1').get('w1');
-  // 「見つけたが、まだ2,800円だった」ことが残る（これまでは何も残らなかった）
+  // 一致と目標超過は記録する。保存時間未確認のYahoo価格自体は残さない。
   assert.equal(row.matched, 1);
-  assert.equal(row.price_jpy, 2800);
+  assert.equal(row.price_jpy, null);
   assert.equal(row.target_price_jpy, 2500);
   assert.equal(row.reason, 'ABOVE_TARGET');
   assert.equal(row.marketplace, 'YAHOO_JP');
@@ -128,6 +128,28 @@ test('見つからなかった理由も区別して残し、古い記録は90日
   sqlite.prepare("INSERT INTO target_price_observations(observation_id,wish_id,observed_at,matched,price_jpy,target_price_jpy,marketplace,candidate_count,reason) VALUES('o2','w1','2026-09-06T00:00:00.000Z',1,2800,2500,'YAHOO_JP',3,'ABOVE_TARGET')").run();
   assert.deepEqual(await purgeTargetPriceObservations(env, new Date('2026-09-07T00:00:00.000Z')), { deleted: 1 });
   assert.equal(sqlite.prepare('SELECT count(*) AS count FROM target_price_observations').get().count, 1);
+  assert.equal(sqlite.prepare("SELECT price_jpy FROM target_price_observations WHERE observation_id='o2'").get().price_jpy, null);
+});
+
+test('楽天ID付き巡回は商品名を検索せずitemCodeで1回取得し、観測価格は23時間で消す', async () => {
+  const {sqlite,env}=envWithDb(); Object.assign(env,{RAKUTEN_APPLICATION_ID:'app',RAKUTEN_ACCESS_KEY:'key'});
+  const now='2026-09-07T00:00:00.000Z';
+  sqlite.prepare(`INSERT INTO member_wishes(member_id,wish_id,query_text,language,watch_price,watch_frequency,condition_snapshot,created_at,updated_at)
+    VALUES('m1','w-code','長い広告付き商品名','JA',1,'INSTANT',?1,?2,?2)`)
+    .run(JSON.stringify({price_condition:{target_price_jpy:1000,target_product_key:'RAKUTEN:shop:item-1',target_product_name:'古い商品名'}}),now);
+  let calls=0;
+  const fetcher=async input=>{
+    calls++; const url=new URL(input);
+    assert.equal(url.searchParams.get('itemCode'),'shop:item-1');
+    assert.equal(url.searchParams.has('keyword'),false);
+    return Response.json({Items:[{itemName:'名前が変わった同一商品',itemCode:'shop:item-1',itemPrice:2000,itemUrl:'https://item.rakuten.co.jp/shop/item-1/',availability:1,postageFlag:0}]});
+  };
+  assert.deepEqual(await runTargetPriceScan(env,now,fetcher),{scanned:1,notifications_sent:0});
+  assert.equal(calls,1);
+  assert.equal(sqlite.prepare('SELECT price_jpy FROM target_price_observations').get().price_jpy,2000);
+  await purgeTargetPriceObservations(env,new Date('2026-09-07T23:00:00.000Z'));
+  assert.equal(sqlite.prepare('SELECT price_jpy FROM target_price_observations').get().price_jpy,null);
+  assert.equal(sqlite.prepare('SELECT reason FROM target_price_observations').get().reason,'ABOVE_TARGET');
 });
 
 

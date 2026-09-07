@@ -12,6 +12,18 @@ import {
 const links = (malls) => malls.map((marketplace) => ({ marketplace, url: `https://hoshilu.app/go?token=${marketplace}` }));
 const ALL = ['AMAZON_JP', 'RAKUTEN_JP', 'YAHOO_JP', 'QOO10_JP', 'SHEIN_JP', 'ZOZOTOWN_JP'];
 
+test('本番の付属品誤一致と替えブラシ付き本体を区別する', () => {
+  for (const [id, title, pass] of [
+    ['p0_litter_toilet_v2', '猫トイレマット 飛び散り防止 砂取りマット', false],
+    ['p0_quickdry_shoes_v2', 'シューズバッグ メッシュ 速乾 上履き 靴袋', false],
+    ['p0_quiet_toothbrush_v2', '電動歯ブラシ 替えブラシ付 静音設計 乾電池式', true],
+    ['p0_quiet_toothbrush_v2', '電動歯ブラシ 静音 交換用 替えブラシ', false]
+  ]) {
+    const fixture=PRIORITY_SEARCH_QA_QUERIES.find(item=>item.id===id);
+    assert.equal(evaluateSearchQaResult(fixture, {ok:true,result:{candidates:[{product_name:title}],marketplace_search_links:links(ALL)}}, 10).pass, pass, title);
+  }
+});
+
 test('固定クエリは指示書 §54 の9件＋2026-09-04 の「底開口 水筒」で、利用者入力を含まない', () => {
   assert.equal(SEARCH_QA_CANARY_QUERIES.length, 11);
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'pet_shedding_brush' && f.query === '猫の抜け毛がごっそり取れるブラシ'));
