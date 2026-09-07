@@ -168,3 +168,11 @@ test('2文字未満やnull/undefinedでも例外を投げない', () => {
   assert.doesNotThrow(() => expandSearchQuery(undefined));
   assert.equal(expandSearchQuery(null).expanded, false);
 });
+
+
+test('羽根が外れて洗えるという自然な言い方でも分解洗浄の検索語へ展開する', () => {
+  const result = expandSearchQuery('羽根が外れて洗える扇風機');
+  assert.equal(result.expanded, true);
+  assert.equal(result.expansion.rule_id, 'detachable-blade-fan');
+  assert.match(result.query, /分解洗浄.*扇風機/u);
+});

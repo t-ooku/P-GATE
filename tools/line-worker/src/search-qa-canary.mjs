@@ -47,7 +47,7 @@ export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
   { id: 'p0_ready_storage', query: '組み立てがいらない収納ボックス', expect: /(?=.*(?:収納|ボックス|ケース))(?=.*(?:完成品|組立不要|組み立て不要|組立て不要))/u, reject: /要組立|組立式|組み立て式/u },
   { id: 'p0_litter_toilet', query: '猫砂が飛び散らない猫トイレ', expect: /(?=.*(?:トイレ))(?=.*(?:飛び散|飛散|上から|上入|深型|フルカバー))/u, reject: /スコップのみ|シートのみ|猫砂のみ/u },
   { id: 'p0_quickdry_shoes', query: 'すぐ乾く上履き', expect: /(?=.*(?:上履|上靴))(?=.*(?:速乾|メッシュ|通気))/u, reject: /中敷きのみ|洗剤|洗濯ネット/u },
-  { id: 'p0_washable_fan', query: '羽根が外れて洗える扇風機', expect: /(?=.*扇風機)(?=.*(?:分解|丸洗|水洗|羽根.*(?:外|洗)))/u, reject: /交換用|羽根のみ|カバーのみ/u },
+  { id: 'p0_washable_fan_v2', query: '羽根が外れて洗える扇風機', expect: /(?=.*扇風機)(?=.*(?:分解|丸洗|水洗|羽根.*(?:外|洗)))/u, reject: /交換用|羽根のみ|カバーのみ/u },
   { id: 'p0_quiet_toothbrush', query: '音が静かな電動歯ブラシ', expect: /(?=.*電動歯ブラシ)(?=.*(?:静音|低騒音|静か))/u, reject: /替えブラシ|交換用|ヘッドのみ/u }
 ]);
 
