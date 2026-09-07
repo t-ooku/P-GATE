@@ -92,19 +92,20 @@ test('index.htmlがhero-marketplace-coverage.mjsを読み込む', async () => {
 });
 
 // 2026-09-03 指示書 §13–17: 第一画面の言葉と、タップで即検索できる検索例6件。
-// 2026-09-03 方向転換指示書: 主訴求は「欲しいもの、まとめて探す。」、サブは
-// 「Amazon・楽天・Qoo10などの検索をホシル一つで。」。
+// 2026-09-08 最新実行指示: 主訴求は「欲しい価格になったら、教えます。」。
 // 2026-09-03 大隆さん指示: 第一画面の「名前が分からなくても探せます。」の1行は
 // 削除し、その役割は検索欄のプレースホルダ「何が欲しい？名前が分からなくても
 // 大丈夫」へ移す。要素ごと消すので、言語切替の代入も残さない。
-test('第一画面は「欲しいもの、まとめて探す。」とモール名のサブ、検索例は6件', async () => {
+test('第一画面は希望価格通知の主訴求とモール名のサブ、検索例は6件', async () => {
   const [html, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.doesNotMatch(html, /heroEyebrow/);
   assert.doesNotMatch(html, /名前が分からなくても探せます。/);
   assert.doesNotMatch(app, /heroEyebrow|nav\.eyebrow|eyebrow:/);
-  assert.match(html, /<p id="heroSub" class="hero-sub">Amazon・楽天・Qoo10などを一度に検索。<br>希望価格になったら通知、クーポンも見逃さない。<\/p>/);
+  assert.match(html, /<h1 id="heroTitle"><span class="hero-title-line">欲しい価格になったら、<\/span><span class="hero-title-line hero-title-accent">教えます。<\/span><\/h1>/);
+  assert.match(html, /<p id="heroSub" class="hero-sub">希望価格を決めたら、もう何度も見に行かなくて大丈夫。<br>Amazon・楽天・Qoo10などを同じ条件で探せます。<\/p>/);
   // app.js 側は \n（言語切替時に textContent へ入れ、.hero-sub の pre-line で改行）
-  assert.ok(app.includes(String.raw`heroSub:'Amazon・楽天・Qoo10などを一度に検索。\n希望価格になったら通知、クーポンも見逃さない。'`));
+  assert.ok(app.includes(String.raw`hero:'欲しい価格になったら、|教えます。'`));
+  assert.ok(app.includes(String.raw`heroSub:'希望価格を決めたら、もう何度も見に行かなくて大丈夫。\nAmazon・楽天・Qoo10などを同じ条件で探せます。'`));
   // 検索欄の文言は1行に収める(語の途中で折り返さない)。
   assert.match(html, /placeholder="何が欲しい？名前が分からなくても大丈夫"/);
   assert.match(app, /placeholder:'何が欲しい？名前が分からなくても大丈夫'/);

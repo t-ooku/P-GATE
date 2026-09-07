@@ -29,7 +29,7 @@ test('ジャンル探索はファッション → バッグ → トートバッ�
 
 // 2026-09-04 大隆さん決定（主婦層25〜40代・差別化は希望価格ウォッチとクーポン通知）
 test('トップの副文言は通知の価値を含み、結果直下に通知の入口（希望価格・クーポン）が1つにまとまる', () => {
-  assert.match(html, /一度に検索。<br>希望価格になったら通知、クーポンも見逃さない。/u);
+  assert.match(html, /希望価格を決めたら、もう何度も見に行かなくて大丈夫。<br>Amazon・楽天・Qoo10などを同じ条件で探せます。/u);
   assert.match(readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8'), /\.hero-sub\{white-space:pre-line\}/u);
   assert.match(html, /id="resultNoticeStrip"/u);
   assert.match(html, /href="#mywatchTitle" class="result-notice-link" data-notice="watch"/u);

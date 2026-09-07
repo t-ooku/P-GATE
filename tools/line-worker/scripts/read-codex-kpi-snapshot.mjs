@@ -102,12 +102,21 @@ export async function operationalDiagnostics(db, internalIds = []) {
     try { return { status: 'AVAILABLE', rows: (await (params.length ? db.prepare(sql).bind(...params) : db.prepare(sql)).all()).results }; }
     catch { return { status: 'UNAVAILABLE' }; }
   };
-  const [inventory, migrations, outreach, social, funnel, notifications, priceCache, generalWatches, searchQa] = await Promise.all([
+  const internalPlaceholders = internalIds.map((_, i) => `?${i + 1}`).join(',');
+  const [inventory, migrations, outreach, outreachOutcomes, social, funnel, articleJourney, siteJourney,
+    notifications, priceCache, generalWatches, searchQa] = await Promise.all([
     read(`SELECT 'products' AS source,COUNT(*) AS count FROM products
       UNION ALL SELECT 'marketplace_offers',COUNT(*) FROM marketplace_offers
       UNION ALL SELECT 'sp_api_listings',COUNT(*) FROM sp_api_listings`),
     read(`SELECT name,applied_at FROM d1_migrations ORDER BY id DESC LIMIT 5`),
     read(`SELECT status,COUNT(*) AS count,MAX(sent_at) AS last_sent_at FROM seller_outreach_contacts GROUP BY status`),
+    read(`SELECT
+      SUM(CASE WHEN NULLIF(sent_at,'') IS NOT NULL THEN 1 ELSE 0 END) AS sent,
+      SUM(CASE WHEN status='FAILED' THEN 1 ELSE 0 END) AS failed,
+      SUM(CASE WHEN status='OPTED_OUT' THEN 1 ELSE 0 END) AS unsubscribe,
+      SUM(CASE WHEN status='REPLIED' THEN 1 ELSE 0 END) AS response,
+      SUM(CASE WHEN status='QUEUED' THEN 1 ELSE 0 END) AS queued
+      FROM seller_outreach_contacts`),
     read(`SELECT q.post_id,q.platform,q.status,q.external_post_id,q.published_at,q.scheduled_at,
       (SELECT p.public_url FROM social_post_performance p WHERE p.post_id=q.post_id AND p.public_url<>'' ORDER BY p.snapshot_at DESC LIMIT 1) AS public_url,
       CASE WHEN q.last_error='' THEN 'NONE'
@@ -119,24 +128,72 @@ export async function operationalDiagnostics(db, internalIds = []) {
     read(`SELECT event_type,traffic_class,CASE WHEN source LIKE 'seo_%' THEN 'SEO' ELSE 'OTHER' END AS origin,
       COUNT(*) AS count,COUNT(DISTINCT NULLIF(visitor_id,'')) AS observed_visitors
       FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
-      AND event_type IN ('landing_view','target_price_watch_started','target_price_watch_set','marketplace_click','notification_opened')
+      AND event_type IN ('landing_view','seo_article_view','seo_search_transition','search_started',
+        'target_price_watch_started','target_price_watch_set','marketplace_click','notification_opened')
       GROUP BY event_type,traffic_class,origin`),
-    read(`SELECT channel,status,COUNT(*) AS count,MAX(delivered_at) AS last_delivered_at
+    read(`WITH sessions AS (
+      SELECT session_id,
+        MAX(CASE WHEN event_type='seo_article_view' THEN 1 ELSE 0 END) AS article_view,
+        MAX(CASE WHEN event_type='seo_search_transition' THEN 1 ELSE 0 END) AS article_search_click,
+        MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS search_started,
+        MAX(CASE WHEN event_type='target_price_watch_started' THEN 1 ELSE 0 END) AS watch_started,
+        MAX(CASE WHEN event_type='target_price_watch_set' THEN 1 ELSE 0 END) AS watch_set,
+        MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS mall_click
+      FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
+      AND traffic_class<>'QA' AND session_id<>'' GROUP BY session_id
+    ) SELECT
+      SUM(article_view) AS article_sessions,
+      SUM(CASE WHEN article_view=1 AND article_search_click=1 THEN 1 ELSE 0 END) AS article_to_search_click_sessions,
+      SUM(CASE WHEN article_view=1 AND search_started=1 THEN 1 ELSE 0 END) AS article_to_search_started_sessions,
+      SUM(CASE WHEN article_view=1 AND watch_started=1 THEN 1 ELSE 0 END) AS article_to_watch_started_sessions,
+      SUM(CASE WHEN article_view=1 AND watch_set=1 THEN 1 ELSE 0 END) AS article_to_watch_set_sessions,
+      SUM(CASE WHEN article_view=1 AND mall_click=1 THEN 1 ELSE 0 END) AS article_to_mall_click_sessions
+      FROM sessions`),
+    read(`WITH sessions AS (
+      SELECT session_id,
+        MAX(CASE WHEN event_type='landing_view' THEN 1 ELSE 0 END) AS landed,
+        MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS searched,
+        MAX(CASE WHEN event_type='target_price_watch_started' THEN 1 ELSE 0 END) AS watch_started,
+        MAX(CASE WHEN event_type='target_price_watch_set' THEN 1 ELSE 0 END) AS watch_set,
+        MAX(CASE WHEN event_type='notification_opened'
+          OR (event_type='landing_view' AND source='price_watch_notification') THEN 1 ELSE 0 END) AS notification_return,
+        MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS mall_click
+      FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
+      AND traffic_class<>'QA' AND session_id<>'' GROUP BY session_id
+    ) SELECT SUM(landed) AS landing_sessions,SUM(searched) AS search_sessions,
+      SUM(watch_started) AS watch_started_sessions,SUM(watch_set) AS watch_set_sessions,
+      SUM(notification_return) AS notification_return_sessions,
+      SUM(CASE WHEN notification_return=1 AND mall_click=1 THEN 1 ELSE 0 END) AS notification_return_to_mall_click_sessions,
+      SUM(mall_click) AS mall_click_sessions FROM sessions`),
+    internalIds.length ? read(`SELECT channel,status,COUNT(*) AS count,MAX(delivered_at) AS last_delivered_at
       FROM mywatch_notifications WHERE event_type='PRICE_DROP' AND event_key LIKE 'TARGET:%'
-      GROUP BY channel,status`),
+      AND member_id NOT IN (${internalPlaceholders}) GROUP BY channel,status`, internalIds)
+      : { status: 'UNVERIFIED', reason: 'INTERNAL_MEMBER_EXCLUSION_NOT_CONFIGURED' },
     read(`SELECT marketplace,COUNT(*) AS count,SUM(CASE WHEN expires_at>strftime('%Y-%m-%dT%H:%M:%fZ','now') THEN 1 ELSE 0 END) AS fresh,
       MAX(fetched_at) AS last_fetched_at,MIN(expires_at) AS first_expires_at FROM marketplace_price_cache GROUP BY marketplace`),
     internalIds.length ? read(`SELECT COUNT(*) AS watches,COUNT(DISTINCT member_id) AS users FROM member_wishes
       WHERE watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100
-      AND member_id NOT IN (${internalIds.map((_,i)=>`?${i+1}`).join(',')})`, internalIds) : { status: 'UNVERIFIED' },
+      AND member_id NOT IN (${internalPlaceholders})`, internalIds)
+      : { status: 'UNVERIFIED', reason: 'INTERNAL_MEMBER_EXCLUSION_NOT_CONFIGURED' },
     read(`SELECT medium AS query_id,campaign AS outcome,content AS codes,occurred_at
       FROM growth_events WHERE event_type IN ('search_qa_result','search_qa_trace') AND traffic_class='QA'
       AND datetime(occurred_at)>=datetime('now','-24 hours') ORDER BY occurred_at DESC LIMIT 40`)
   ]);
-  return { inventory, migrations, outreach, social, funnel, notifications,
+  const outreachRow = outreachOutcomes.status === 'AVAILABLE' ? (outreachOutcomes.rows[0] || {}) : {};
+  const outreachLifecycle = outreachOutcomes.status === 'AVAILABLE' ? {
+    sent: { status: 'AVAILABLE', count: Number(outreachRow.sent || 0) },
+    delivered: { status: 'UNAVAILABLE', reason: 'RESEND_DELIVERY_EVENT_NOT_CONNECTED' },
+    bounce: { status: 'UNAVAILABLE', reason: 'RESEND_BOUNCE_EVENT_NOT_CONNECTED' },
+    unsubscribe: { status: 'AVAILABLE', count: Number(outreachRow.unsubscribe || 0) },
+    response: { status: 'AVAILABLE', count: Number(outreachRow.response || 0) },
+    failed: { status: 'AVAILABLE', count: Number(outreachRow.failed || 0) },
+    queued: { status: 'AVAILABLE', count: Number(outreachRow.queued || 0) }
+  } : { status: 'UNAVAILABLE' };
+  return { inventory, migrations, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
+    article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney, notifications,
     price_cache: priceCache, search_qa: searchQa,
     general_user_watch_set: { ...generalWatches, classification: 'EXCLUDES_CONFIGURED_INTERNAL_MEMBERS', internal_member_count: internalIds.length },
-    outreach_delivery: { status: 'UNAVAILABLE', reason: 'DELIVERY_AND_BOUNCE_NOT_RECORDED_IN_CONTACT_SCHEMA' } };
+    notification_return_internal_exclusion: { status: 'UNAVAILABLE', reason: 'ANONYMOUS_RETURN_EVENTS_CANNOT_BE_JOINED_TO_INTERNAL_MEMBER_IDS' } };
 }
 
 async function main(argv) {

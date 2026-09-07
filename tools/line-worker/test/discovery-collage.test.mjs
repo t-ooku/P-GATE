@@ -15,12 +15,12 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
     stat(new URL('../public/hoshilu-discovery-collage-mobile.webp', import.meta.url)),
   ]);
   assert.match(html, /id="discoveryTitle"><span>名前が分からなくても、<\/span><span>記憶から探せる。<\/span>/);
-  // 2026-09-03 方向転換指示書: 第一画面の主訴求は「欲しいもの、まとめて探す。」
-  assert.match(html, /id="heroTitle"><span class="hero-title-line">欲しいもの、<\/span><span class="hero-title-line hero-title-accent">まとめて探す。<\/span>/);
+  // 2026-09-08 最新実行指示: 希望価格通知を第一画面の主訴求にする。
+  assert.match(html, /id="heroTitle"><span class="hero-title-line">欲しい価格になったら、<\/span><span class="hero-title-line hero-title-accent">教えます。<\/span>/);
   assert.match(app, /first\.className='hero-title-line'/);
   assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
   // 2026-09-03 大隆さん指示「トップ画面のキャッチは1行に」: 見出し全体を
-  // 折り返さず、字を縮めて「欲しいもの、まとめて探す。」を1行に収める。
+  // 折り返さず、字を縮めて主訴求を1行に収める。
   assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{\n  white-space: nowrap;/);
   assert.match(heroFixes, /#heroTitle \.hero-title-line \{ display: inline; \}/);
   assert.doesNotMatch(heroFixes, /#heroTitle \.hero-title-line \{ display: block; \}/);
