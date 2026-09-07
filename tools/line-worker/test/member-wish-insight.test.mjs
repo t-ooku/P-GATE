@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import cryptoModule from 'node:crypto';
+import { sanitizePublicCandidate } from '../src/index.mjs';
+import { normalizeRakutenItems } from '../src/rakuten-marketplace-api.mjs';
+import { normalizeYahooShoppingItems } from '../src/yahoo-shopping-api.mjs';
+import { sameProduct } from '../src/target-price-watch.mjs';
 import { handleMemberWishRoutes } from '../src/member-wish-v2.mjs';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
@@ -336,4 +340,47 @@ test('逆ウォッチ: 買った価格を送ると希望価格=購入価格-1・
   const expires=Date.parse(wish.expires_at);assert.ok(expires>=before+29*86_400_000&&expires<=before+31*86_400_000);
   const invalid=await requestFor(env,'POST','/api/member/wishes',cookie,{query:'コンビ ベビーカー',watch_kind:'POST_PURCHASE',purchase_price_jpy:50});
   assert.equal(invalid.status,400);assert.equal((await invalid.json()).error,'PURCHASE_PRICE_INVALID');
+});
+
+
+test('楽天・Yahoo!の商品IDは公開検索→会員保存→読戻し→巡回照合まで残る', async () => {
+  const { db } = sqliteD1();
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET };
+  const cookie = await memberCookie({ id: 'identity-regression', provider: 'LINE' });
+  const fixtures = [
+    normalizeRakutenItems({ Items: [{ Item: { itemCode: 'shop:item-1', itemName: 'テスト バッグ 青', itemPrice: 2800, itemUrl: 'https://item.rakuten.co.jp/shop/item-1/' } }] })[0],
+    normalizeYahooShoppingItems({ hits: [{ code: 'shop_item-2', name: 'テスト バッグ 赤', price: 2800, url: 'https://store.shopping.yahoo.co.jp/shop/item-2.html' }] })[0],
+    normalizeYahooShoppingItems({ hits: [{ code: 'shop_item-3', janCode: '4900000000001', name: 'テスト バッグ 黒', price: 2800, url: 'https://store.shopping.yahoo.co.jp/shop/item-3.html' }] })[0]
+  ];
+  for (const candidate of fixtures) {
+    const publicCandidate = sanitizePublicCandidate(candidate);
+    assert.equal(publicCandidate.target_product_key, candidate.record_key);
+    assert.equal('record_key' in publicCandidate, false);
+    const response = await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+      query: publicCandidate.product_name, watch_price: true, target_price_jpy: 2500,
+      target_product_key: publicCandidate.target_product_key, target_product_name: publicCandidate.product_name
+    });
+    assert.equal(response.status, 200);
+    const saved = (await response.json()).wish;
+    assert.equal(saved.target_product_key, candidate.record_key);
+    assert.equal(saved.condition_snapshot.price_condition.target_product_key, candidate.record_key);
+    assert.equal(sameProduct(saved, { ...candidate, display_name: 'キャンペーン文が変更された商品' }), true);
+    assert.equal(sameProduct(saved, { ...candidate, record_key: 'YAHOO:other-item' }), false);
+    const listed = (await (await requestFor(env, 'GET', '/api/member/wishes', cookie)).json()).wishes;
+    assert.equal(listed.find(row => row.wish_id === saved.wish_id).target_product_key, candidate.record_key);
+    // 古い端末の空ID同期と価格だけのPATCHでも既知のIDを消さない。
+    const synced = await requestFor(env, 'POST', '/api/member/wishes', cookie, {
+      query: publicCandidate.product_name, watch_price: true, target_price_jpy: 2400,
+      target_product_key: '', target_product_name: publicCandidate.product_name
+    });
+    assert.equal((await synced.json()).wish.target_product_key, candidate.record_key);
+    const patched = await requestFor(env, 'PATCH', `/api/member/wishes/${saved.wish_id}`, cookie, { target_price_jpy: 2300 });
+    const updated = (await patched.json()).wish;
+    assert.equal(updated.target_product_key, candidate.record_key);
+    assert.equal(updated.target_product_name, publicCandidate.product_name);
+    const changed = await requestFor(env, 'PATCH', `/api/member/wishes/${saved.wish_id}`, cookie, {
+      target_price_jpy: 2300, target_product_name: '別の商品'
+    });
+    assert.equal((await changed.json()).wish.target_product_key, '');
+  }
 });

@@ -61,6 +61,15 @@ const targetPriceOrUnset = (value) => {
   return Number.isInteger(amount) && amount >= 100 && amount <= 100000000 ? amount : false;
 };
 const targetTextOrUnset = (value, max = 200) => value === undefined ? null : clean(value).slice(0, max);
+function savedPriceCondition(row) {
+  try { return JSON.parse(row?.condition_snapshot || 'null')?.price_condition || {}; }
+  catch { return {}; }
+}
+function retainedProductKey(key, name, previous) {
+  // Older clients can still send an empty ID. Retain the known ID only when
+  // they refer to the same product; never attach it to a changed product name.
+  return key || ((!name || name === previous.target_product_name) ? String(previous.target_product_key || '') : '');
+}
 export const POST_PURCHASE_WATCH_DAYS = 30;
 
 const LEGACY_WISH_SELECT_COLUMNS = 'wish_id,query_text,language,watch_sale,watch_price,watch_coupon,watch_restock,watch_frequency,notify_new_match,condition_snapshot,created_at,updated_at';
@@ -154,9 +163,10 @@ export async function handleMemberWishRoutes(request, env) {
     if (targetPrice === false) return Response.json({ ok: false, error: 'TARGET_PRICE_INVALID' }, { status: 400 });
     const targetProductKey = targetTextOrUnset(payload.target_product_key, 160);
     const targetProductName = targetTextOrUnset(payload.target_product_name, 200);
+    const previousPrice = targetPrice === null ? {} : savedPriceCondition(await selectWish(env, member.id, wishId));
     const postPurchaseCondition = postPurchase ? { kind: 'POST_PURCHASE', purchase_price_jpy: purchasePrice,
       expires_at: new Date(Date.parse(now) + POST_PURCHASE_WATCH_DAYS * 86_400_000).toISOString() } : {};
-    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:targetProductKey||'',target_product_name:targetProductName||query,...postPurchaseCondition}};
+    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||query,...postPurchaseCondition}};
     const conditionSnapshot = conditionSnapshotFor(targetPayload, query);
     // 0044のnotify_new_match DEFAULT 1だけでは、本人が新着通知を明示的に
     // 有効化したか判別できない。新規の通常保存はOFFにし、明示ONかつMUTED
@@ -245,9 +255,10 @@ export async function handleMemberWishRoutes(request, env) {
     const existingForSnapshot = (payload.normalized_query_text !== undefined || payload.search_intent !== undefined
       || payload.category !== undefined || payload.key_attributes !== undefined
       || payload.price_condition !== undefined || payload.marketplace_condition !== undefined || targetPrice !== null)
-      ? await env.PRODUCT_DB.prepare('SELECT query_text FROM member_wishes WHERE member_id=?1 AND wish_id=?2').bind(member.id, wishId).first()
+      ? await env.PRODUCT_DB.prepare('SELECT query_text,condition_snapshot FROM member_wishes WHERE member_id=?1 AND wish_id=?2').bind(member.id, wishId).first()
       : null;
-    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:targetProductKey||'',target_product_name:targetProductName||existingForSnapshot?.query_text||''}};
+    const previousPrice = savedPriceCondition(existingForSnapshot);
+    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...previousPrice,...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||existingForSnapshot?.query_text||''}};
     const conditionSnapshot = existingForSnapshot ? conditionSnapshotFor(targetPayload, existingForSnapshot.query_text) : null;
     const insightEnabledAt = nextInsightEnabledAt(watch, previousEnablement, now);
     const updateValues = [member.id, wishId, watch.watch_sale, watch.watch_price,

@@ -1,4 +1,5 @@
 import { handleSellerRoutes } from './seller-auth.mjs';
+import { targetPriceProductKey } from './target-price-product-key.mjs';
 import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
 import { handleCreatorInquiryRoutes } from './creator-inquiries.mjs';
 import { handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle } from './seller-outreach.mjs';
@@ -1830,6 +1831,7 @@ export function sanitizePublicCandidate(candidate) {
   const copy = {
     rank: Math.max(0, Number(source.rank) || 0),
     asin: publicText(source.asin, 32),
+    target_product_key: targetPriceProductKey(source),
     product_name: publicText(source.product_name, 500),
     display_name: publicText(source.display_name, 500),
     manufacturer: publicText(source.manufacturer, 200),

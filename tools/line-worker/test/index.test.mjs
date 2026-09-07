@@ -1706,3 +1706,13 @@ test('電話番号の除去はJANや型番の内部を壊さない', () => {
   assert.equal(mergeAiRefinedSearchQuery('', 'キムチ +81 90 1234 5678'), 'キムチ');
   assert.equal(mergeAiRefinedSearchQuery('', 'キムチ 03-1234-5678'), 'キムチ');
 });
+
+
+test('ウォッチ用公開IDはモール商品ID・JAN・ASINに限定し内部キーやURLを公開しない', () => {
+  for (const record_key of ['TENANT:private-sku', 'RAKUTEN:https://example.com/?token=secret', 'YAHOO:https://example.com', 'JAN:123', 'private']) {
+    const result = sanitizePublicCandidate({ record_key });
+    assert.equal(result.target_product_key, '');
+    assert.equal('record_key' in result, false);
+  }
+  assert.equal(sanitizePublicCandidate({ asin: 'B000000001' }).target_product_key, 'B000000001');
+});

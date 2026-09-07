@@ -128,3 +128,19 @@ test('見つからなかった理由も区別して残し、古い記録は90日
   assert.deepEqual(await purgeTargetPriceObservations(env, new Date('2026-09-07T00:00:00.000Z')), { deleted: 1 });
   assert.equal(sqlite.prepare('SELECT count(*) AS count FROM target_price_observations').get().count, 1);
 });
+
+
+test('保存IDと違う商品は同じタイトル・型番でも通知せず、IDの句読点を同一視しない', async () => {
+  const wish = { target_product_key: 'YAHOO:item-1', target_product_name: 'java バッグ jv1159001' };
+  for (const record_key of ['YAHOO:item_1', 'YAHOO:other', 'RAKUTEN:item-1', '']) {
+    assert.equal(sameProduct(wish, { record_key, display_name: wish.target_product_name }), false);
+  }
+  const { sqlite, env } = envWithDb();
+  const now = '2026-09-07T00:00:00.000Z';
+  sqlite.prepare(`INSERT INTO member_wishes(member_id,wish_id,query_text,language,watch_price,watch_frequency,condition_snapshot,created_at,updated_at)
+    VALUES('m1','w-wrong','LILMOON','JA',1,'INSTANT',?1,?2,?2)`)
+    .run(JSON.stringify({ price_condition: { target_price_jpy: 3000, target_product_key: 'YAHOO:different-product', target_product_name: 'LILMOON リルムーン ワンデー 度あり カラコン' } }), now);
+  assert.deepEqual(await runTargetPriceScan(env, now, yahooFetch(1000)), { scanned: 1, notifications_sent: 0 });
+  assert.equal(sqlite.prepare('SELECT count(*) AS n FROM mywatch_notifications').get().n, 0);
+  assert.equal(sqlite.prepare('SELECT reason FROM target_price_observations').get().reason, 'NO_MATCH');
+});

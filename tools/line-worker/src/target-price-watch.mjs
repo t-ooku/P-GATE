@@ -2,6 +2,7 @@ import { creatorsApiConfigured, searchAmazonCreators } from './amazon-creators-a
 import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
 import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
 import { nextDeliveryAt } from './mywatch-policy.mjs';
+import { targetPriceProductKey } from './target-price-product-key.mjs';
 
 // 購入希望価格は既存member_wishes.condition_snapshot.price_conditionへ保存し、
 // 定期確認/到達済み状態は既存search_watch_matchesへ内部マーカーとして持つ。
@@ -61,9 +62,10 @@ export const IDENTITY_MIN_TOKENS=3;
 export const IDENTITY_MIN_RATIO=0.5;
 export const IDENTITY_STRICT_RATIO=0.7;
 export function sameProduct(wish,candidate){
-  const key=clean(wish.target_product_key);
-  const candidateKeys=[candidate.record_key,candidate.asin].map(clean);
-  if(key&&candidateKeys.includes(key))return true;
+  const key=String(wish.target_product_key||'').trim();
+  // A saved identifier must not fall through to title similarity on mismatch.
+  // Punctuation is significant (item-1 and item_1 are different listings).
+  if(key)return key===targetPriceProductKey(candidate);
   const title=wish.target_product_name||wish.query_text;
   const expected=identityTokens(title);
   const actual=clean(candidate.display_name||candidate.product_name);

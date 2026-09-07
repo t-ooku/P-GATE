@@ -73,6 +73,28 @@ function cliValue(argv, name, fallback = '') {
   return index >= 0 ? argv[index + 1] : fallback;
 }
 
+// Operational totals include internal/test watches. These are diagnostics, not
+// evidence of general-user adoption. No member IDs, wish IDs or titles leave D1.
+export async function targetPriceDiagnostics(PRODUCT_DB) {
+  try {
+    const watches = await PRODUCT_DB.prepare(`SELECT COUNT(*) AS total,
+      COALESCE(SUM(CASE WHEN COALESCE(json_extract(condition_snapshot,'$.price_condition.target_product_key'),'')<>'' THEN 1 ELSE 0 END),0) AS with_product_key
+      FROM member_wishes WHERE watch_price=1
+      AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100`).first();
+    const observations = await PRODUCT_DB.prepare(`SELECT reason,COUNT(*) AS count,MAX(observed_at) AS last_observed_at
+      FROM target_price_observations WHERE datetime(observed_at)>=datetime('now','-24 hours') GROUP BY reason`).all();
+    const lastCheck = await PRODUCT_DB.prepare(`SELECT MAX(matched_at) AS last_checked_at FROM search_watch_matches
+      WHERE product_identity_key='TARGET_PRICE_CHECK'`).first();
+    return { status: 'AVAILABLE', includes_internal_tests: true,
+      watches: { total: Number(watches.total), with_product_key: Number(watches.with_product_key),
+        without_product_key: Number(watches.total)-Number(watches.with_product_key) },
+      observations_last_24h: observations.results.map(row => ({ reason: String(row.reason), count: Number(row.count), last_observed_at: row.last_observed_at })),
+      last_checked_at: lastCheck?.last_checked_at || null };
+  } catch {
+    return { status: 'UNAVAILABLE', includes_internal_tests: true };
+  }
+}
+
 async function main(argv) {
   const output = cliValue(argv, '--output', 'codex-kpi-snapshot.json');
   assert(output && !output.startsWith('-'), 'CODEX_KPI_OUTPUT_INVALID');
@@ -82,6 +104,7 @@ async function main(argv) {
     databaseId: process.env.HOSHILU_D1_DATABASE_ID || DEFAULT_DATABASE_ID
   });
   const snapshot = await codexKpiSnapshotSummary({ PRODUCT_DB });
+  snapshot.target_price_diagnostics = await targetPriceDiagnostics(PRODUCT_DB);
   await writeFile(output, `${JSON.stringify(snapshot, null, 2)}\n`, { mode: 0o600, flag: 'w' });
   await chmod(output, 0o600);
   console.log(`CODEX_KPI_SNAPSHOT_READY:${snapshot.generated_at}:${output}`);
