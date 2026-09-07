@@ -71,6 +71,13 @@ async function main() {
     entry_count: entries.length,
     entries
   };
+  // A timestamp-only rebuild must not advance the production branch after CI.
+  // Preserve the build timestamp when all executable dataset content is equal.
+  const previous = await readFile(OUTPUT_PATH, 'utf8').then(JSON.parse).catch(() => null);
+  if (previous && typeof previous.generated_at === 'string'
+    && JSON.stringify({ ...previous, generated_at: '' }) === JSON.stringify({ ...output, generated_at: '' })) {
+    output.generated_at = previous.generated_at;
+  }
   await writeFile(OUTPUT_PATH, JSON.stringify(output, null, 2) + '\n', 'utf8');
   console.log(`compiled ${entries.length} teacher-dataset entries from ${files.length} batch file(s) -> ${OUTPUT_PATH}`);
   if (skipped.length) console.warn(`skipped ${skipped.length} invalid record(s):`, JSON.stringify(skipped));
