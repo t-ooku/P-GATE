@@ -163,13 +163,14 @@ test('公開する各棚は元の公式順位を残してHOSHILU BUZZ順位を1�
 });
 
 test('リアルタイムが404の小ジャンルは口コミ件数順ラベルへ縮退する', async () => {
+  const now = Date.parse('2026-08-25T00:00:00+09:00');
   const target = RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === BUZZ_SHELF_CATEGORY_IDS[0]);
   const fetcher = rankingFetcher({
     [target.genre_id]: (url) => url.pathname.includes('/IchibaItem/Ranking/')
       ? new Response('not found', { status: 404 })
       : new Response(JSON.stringify({ Items: [rankingItem(1, `${target.label} 口コミ商品`)] }), { status: 200 })
   });
-  const result = await buzzShelfResult(env, fetcher);
+  const result = await buzzShelfResult(env, fetcher, now);
   const degraded = result.shelves.find((shelf) => shelf.shelf_id === target.id);
   assert.ok(degraded);
   assert.equal(degraded.headline, '口コミが多い。');
@@ -351,6 +352,7 @@ test('/buzzページは出典と注意書きを持ち、断定表現を使わな
 
 // 2026-08-19 大隆さん指示: 韓流に繋がる棚を必ず1つ置く。
 test('韓国コスメ棚はYahoo!公式ランキングだけを根拠に上位へ入る', async () => {
+  const now = Date.parse('2026-08-25T00:00:00+09:00');
   const envWithYahoo = { ...env, YAHOO_SHOPPING_CLIENT_ID: 'test-yahoo-client' };
   const fetcher = async (input) => {
     const url = new URL(String(input));
@@ -381,7 +383,7 @@ test('韓国コスメ棚はYahoo!公式ランキングだけを根拠に上位�
   assert.match(korean.ranking_type, /高評価トレンドランキング/u);
   assert.equal(korean.search_keyword, '韓国コスメ');
   assert.ok(korean.items.length >= 2);
-  const result = await buzzShelfResult(envWithYahoo, fetcher);
+  const result = await buzzShelfResult(envWithYahoo, fetcher, now);
   const ids = result.shelves.map((shelf) => shelf.shelf_id);
   assert.ok(ids.indexOf('korean_beauty') !== -1);
   assert.ok(ids.indexOf('korean_beauty') < ids.indexOf(BUZZ_SHELF_CATEGORY_IDS[0]));
