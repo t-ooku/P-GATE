@@ -459,7 +459,7 @@ jobs:
 
   read-operations:
     needs: deploy
-    if: success() && contains(github.event.head_commit.message, '[verify-p0]')
+    if: always() && needs.deploy.result == 'success' && contains(github.event.head_commit.message, '[verify-p0]')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
