@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  SEARCH_QA_CANARY_QUERIES, evaluateSearchQaResult, runSearchQaCanary, searchQaCanaryDue
+  SEARCH_QA_CANARY_QUERIES, evaluateSearchQaResult, runSearchQaCanary, searchQaCanaryDue,
+  PRIORITY_SEARCH_QA_QUERIES, runPrioritySearchQaCanary
 } from '../src/search-qa-canary.mjs';
 
 // 2026-09-03 指示書 §37/§54: 代表クエリを毎日本番経路で流し、候補の正しさと
@@ -135,7 +136,17 @@ test('公開の /api/knowledge は常にTurnstileを検証し、内部迂回は 
   const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(source, /url\.pathname === '\/api\/knowledge'\) return handleKnowledgeApi\(request, env, ctx\);/u);
   assert.match(source, /if \(options\.internalQa !== true\) \{\s*await verifyTurnstile\(/u);
-  assert.equal((source.match(/\{ internalQa: true \}/g) || []).length, 2);
+  assert.equal((source.match(/\{ internalQa: true \}/g) || []).length, 3);
   assert.match(source, /url\.pathname === '\/api\/internal\/search\/qa-canary'\) \{\s*if \(!await authorizeAdminRequest\(request, env\)\)/u);
   assert.match(source, /if \(searchQaCanaryDue\(scheduledAt\)\)/u);
+});
+
+test('優先QAは指定5件・当日だけ実行し、記録済みなら追加検索しない', async () => {
+  assert.equal(PRIORITY_SEARCH_QA_QUERIES.length, 5);
+  let reads = 0, calls = 0;
+  const env = { PRODUCT_DB: { prepare() { reads++; return { all: async () => ({ results: PRIORITY_SEARCH_QA_QUERIES.map(f=>({medium:f.id})) }) }; } } };
+  await runPrioritySearchQaCanary(env, new Date('2026-09-08T00:00:00Z'), async ()=>{calls++;});
+  assert.equal(reads, 0);
+  await runPrioritySearchQaCanary(env, new Date('2026-09-07T00:00:00Z'), async ()=>{calls++;});
+  assert.equal(calls, 0); assert.equal(reads, 1);
 });

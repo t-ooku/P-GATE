@@ -501,7 +501,7 @@ test('Instagramコンテナが次のcronでも処理中なら未公開job IDを�
   const retry = updates.find(item => item.sql.includes("SET status='APPROVED'")
     && item.values[0] === row.post_id);
   assert.ok(retry);
-  assert.equal(retry.values[1], 'INSTAGRAM_CONTAINER_IN_PROGRESS');
+  assert.equal(retry.values[1], 'SOCIAL_RETRY_2:INSTAGRAM_CONTAINER_IN_PROGRESS');
   assert.equal(retry.values[4], 1);
   assert.match(retry.sql, /platform_job_id=CASE WHEN \?5=1 THEN ''/u);
 });

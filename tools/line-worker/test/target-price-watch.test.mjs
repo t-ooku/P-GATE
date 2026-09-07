@@ -12,7 +12,7 @@ globalThis.crypto??=cryptoModule.webcrypto;
 
 function envWithDb(){
   const sqlite=new DatabaseSync(':memory:');
-  for(const name of ['0002_member_wishes.sql','0003_member_wish_preferences.sql','0005_mywatch_notifications.sql','0031_member_notification_destinations.sql','0036_mywatch_notification_product_fields.sql','0044_insight_search_watch.sql','0076_target_price_observations.sql'])sqlite.exec(readFileSync(new URL(`../migrations/${name}`,import.meta.url),'utf8'));
+  for(const name of ['0002_member_wishes.sql','0003_member_wish_preferences.sql','0005_mywatch_notifications.sql','0031_member_notification_destinations.sql','0036_mywatch_notification_product_fields.sql','0044_insight_search_watch.sql','0064_mywatch_notification_result_url.sql','0076_target_price_observations.sql'])sqlite.exec(readFileSync(new URL(`../migrations/${name}`,import.meta.url),'utf8'));
   const db={prepare(sql){const statement=sqlite.prepare(sql);return{bind(...values){return{run:async()=>{const result=statement.run(...values);return{meta:{changes:Number(result.changes||0)}};},first:async()=>statement.get(...values)||null,all:async()=>({results:statement.all(...values)})};}};},batch:async(statements)=>Promise.all(statements.map(statement=>statement.run()))};
   return{sqlite,env:{PRODUCT_DB:db,YAHOO_SHOPPING_CLIENT_ID:'client-id'}};
 }
@@ -26,8 +26,9 @@ test('API確認価格が購入希望額以下になった時だけ一度通知�
   sqlite.prepare("INSERT INTO member_notification_destinations VALUES('m1','EMAIL','encrypted','2026-08-09','2026-08-09')").run();
   const first=await runTargetPriceScan(env,now,yahooFetch(2800));
   assert.deepEqual(first,{scanned:1,notifications_sent:1});
-  const notification=sqlite.prepare("SELECT title,body,marketplace FROM mywatch_notifications WHERE channel='WEB'").get();
+  const notification=sqlite.prepare("SELECT title,body,marketplace,result_url FROM mywatch_notifications WHERE channel='WEB'").get();
   assert.equal(notification.title,'購入したい価格になりました');
+  assert.equal(notification.result_url,'https://store.shopping.yahoo.co.jp/shop/lilmoon-1.html');
   assert.match(notification.body,/¥2,800/);assert.equal(notification.marketplace,'YAHOO_JP');
   const second=await runTargetPriceScan(env,'2026-08-10T04:00:00.000Z',yahooFetch(2700));
   assert.deepEqual(second,{scanned:1,notifications_sent:0});

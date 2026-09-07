@@ -70,6 +70,7 @@ import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
 import { purgeTargetPriceObservations, runTargetPriceScan } from './target-price-watch.mjs';
+import { persistMarketplacePrices, purgeExpiredMarketplacePrices } from './marketplace-price-cache.mjs';
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
@@ -116,7 +117,7 @@ import {
   runMarketplaceContentCycle, handleMarketplaceSaleRoutes
 } from './marketplace-sales.mjs';
 import { runDeepCanaryCycle, runMarketplaceCanaryCatchup } from './deep-canary.mjs';
-import { runSearchQaCanary, searchQaCanaryDue } from './search-qa-canary.mjs';
+import { runSearchQaCanary, runPrioritySearchQaCanary, searchQaCanaryDue } from './search-qa-canary.mjs';
 import { extractSearchOrigin, orderMarketplaceDestinations } from './search-origin.mjs';
 import { applyHeadNounGate } from './search-head-noun.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
@@ -2860,6 +2861,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         }
       }
       const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
+      const priceWrite = persistMarketplacePrices(env, outcomes.flatMap(outcome =>
+        outcome.status === 'fulfilled' && Array.isArray(outcome.value) ? outcome.value : []));
+      if (ctx?.waitUntil) ctx.waitUntil(priceWrite); else await priceWrite;
       // v3.2 CTO diagnosis: this loop used to call
       // rankMerchantCandidates(...).slice(0, 10) on every iteration, so
       // whichever source was processed first (amazon_catalog_connected is
@@ -2908,6 +2912,15 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       result.marketplace_search_status = summarizeMarketplaceSearchOutcomes(
         marketplaceSearches, outcomes, acceptedCounts
       );
+      if (options.internalQa === true) result.qa_trace = {
+        expansion_rule: expandedQuery.expansion?.rule_id || null,
+        expanded_query: expandedQuery.query,
+        effective_query: input.query,
+        rakuten_keyword_candidates: buildRakutenSearchKeywordCandidates(input.query, expandedQuery.query),
+        providers: marketplaceSearches.map((source, index) => ({ source: source.key,
+          returned: outcomes[index].status === 'fulfilled' ? outcomes[index].value.length : null,
+          accepted: acceptedCounts[index] }))
+      };
       // v3.4 CTO diagnosis (real production evidence): amazon_creators_
       // configured was false in production - the live Amazon API never
       // even ran - yet results were still Amazon-only with zero Rakuten,
@@ -3522,6 +3535,9 @@ export default {
       ));
       // 検索品質カナリア: 1日1回(07:22 JST)、代表クエリを本番経路で実行し
       // QA記録だけ残す。失敗しても他のジョブを止めない。
+      ctx.waitUntil(runPrioritySearchQaCanary(env, scheduledAt,
+        (qaRequest) => handleKnowledgeApi(qaRequest, env, ctx, { internalQa: true }))
+        .catch(() => console.error('PRIORITY_SEARCH_QA_FAILED')));
       if (searchQaCanaryDue(scheduledAt)) {
         ctx.waitUntil(runSearchQaCanary(env, scheduledAt,
           (qaRequest) => handleKnowledgeApi(qaRequest, env, ctx, { internalQa: true }))
@@ -3589,6 +3605,7 @@ export default {
         runTargetPriceScan(env, scheduledAt.toISOString()),
         // 希望価格ウォッチの巡回結果（見つかったか・いくらだったか）は90日で消す。
         purgeTargetPriceObservations(env, scheduledAt),
+        purgeExpiredMarketplacePrices(env, scheduledAt),
         // 2026-09-06 大隆さん決定: セラー営業メール。平日09-18時JSTに1サイクル最大3通・
         // 1日最大10通、1アドレス1回だけ。未設定なら何もしない。失敗しても他ジョブを止めない。
         runSellerOutreachCycle(env, scheduledAt),

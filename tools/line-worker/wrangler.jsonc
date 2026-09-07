@@ -28,6 +28,7 @@
     }
   },
   "vars": {
+    "MARKETPLACE_PRICE_CACHE_ENABLED": "true",
     "AMAZON_ASSOCIATE_TAG": "hoshilu00-22",
     "VC_SID": "3779199",
     "VC_PID": "892690168",

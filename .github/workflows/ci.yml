@@ -405,6 +405,35 @@ jobs:
             echo "::error::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID are required for the production deploy. See docs/HOSHILU_WORKER_RELEASE_RUNBOOK_2026-07-26.md."
             exit 1
           fi
+      - name: Apply approved price cache migration 0077
+        if: contains(github.event.head_commit.message, '[price-cache-0077]')
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > price-cache-recovery-before.json
+          mkdir -p .migration-price-cache-0077
+          cp migrations/0077_marketplace_price_cache.sql .migration-price-cache-0077/
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const config = JSON.parse(fs.readFileSync('wrangler.jsonc', 'utf8'));
+          config.d1_databases = config.d1_databases.map(db => ({ ...db, migrations_dir: '.migration-price-cache-0077' }));
+          fs.writeFileSync('wrangler-price-cache-0077.jsonc', JSON.stringify(config));
+          JS
+          npx --yes wrangler@4.121.0 d1 migrations apply PRODUCT_DB --remote --config wrangler-price-cache-0077.jsonc
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command "SELECT COUNT(*) AS cache_rows FROM marketplace_price_cache;" > price-cache-schema-check.json
+      - name: Preserve price cache migration recovery evidence
+        if: always() && contains(github.event.head_commit.message, '[price-cache-0077]')
+        uses: actions/upload-artifact@v4
+        with:
+          name: price-cache-migration-${{ github.run_id }}
+          path: |
+            tools/line-worker/price-cache-recovery-before.json
+            tools/line-worker/price-cache-schema-check.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Deploy Worker
         working-directory: tools/line-worker
         run: npx --yes wrangler@4.121.0 deploy

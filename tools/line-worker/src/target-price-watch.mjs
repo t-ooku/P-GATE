@@ -130,13 +130,15 @@ async function persistObservation(env,wish,best,now){
     return false;
   }
   const nextAt=nextDeliveryAt(wish.watch_frequency,now);const delivered=Date.parse(nextAt)<=Date.parse(now);
-  const status=delivered?'DELIVERED':'PENDING';const {title,body}=notificationText(wish,best,target);
+  const status=delivered?'DELIVERED':'PENDING';const copy=notificationText(wish,best,target);
+  const title=copy.title;
+  const body=`${copy.body}\nHOSHILU: https://hoshilu.app/?utm_source=price_watch_notification&utm_medium=notification#mywatchTitle`;
   const notificationId=crypto.randomUUID();const eventKey=`TARGET:${wish.wish_id}:${crypto.randomUUID()}`;
   let connectedChannels=[];try{const result=await env.PRODUCT_DB.prepare(`SELECT channel FROM member_notification_destinations WHERE member_id=?1 AND channel IN ('LINE','EMAIL')`).bind(wish.member_id).all();connectedChannels=(result?.results||[]).map(row=>String(row.channel||'')).filter(channel=>channel==='LINE'||channel==='EMAIL');}catch{}
   const notificationStatements=[{channel:'WEB',id:notificationId,status,attempts:delivered?1:0,deliveredAt:delivered?now:null},...connectedChannels.map(channel=>({channel,id:crypto.randomUUID(),status:'PENDING',attempts:0,deliveredAt:null}))].map(item=>env.PRODUCT_DB.prepare(`INSERT INTO mywatch_notifications
-    (notification_id,member_id,wish_id,event_key,event_type,channel,title,body,status,attempts,next_attempt_at,delivered_at,created_at,updated_at,asin,marketplace,image_url)
-    VALUES(?1,?2,?3,?4,'PRICE_DROP',?5,?6,?7,?8,?9,?10,?11,?12,?12,'',?13,?14)`)
-    .bind(item.id,wish.member_id,wish.wish_id,eventKey,item.channel,title,body,item.status,item.attempts,nextAt,item.deliveredAt,now,best.marketplace,/^https:\/\//i.test(best.image)?best.image:''));
+    (notification_id,member_id,wish_id,event_key,event_type,channel,title,body,status,attempts,next_attempt_at,delivered_at,created_at,updated_at,asin,marketplace,image_url,result_url)
+    VALUES(?1,?2,?3,?4,'PRICE_DROP',?5,?6,?7,?8,?9,?10,?11,?12,?12,'',?13,?14,?15)`)
+    .bind(item.id,wish.member_id,wish.wish_id,eventKey,item.channel,title,body,item.status,item.attempts,nextAt,item.deliveredAt,now,best.marketplace,/^https:\/\//i.test(best.image)?best.image:'',/^https:\/\//i.test(best.url)?best.url:''));
   await env.PRODUCT_DB.batch([
     ...notificationStatements,
     checkStatement,

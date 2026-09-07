@@ -315,3 +315,12 @@ document.addEventListener('click', event => {
     }
   }
 });
+
+// Funnel entry is client-owned; completion remains server-owned.
+document.addEventListener('click', (event) => {
+  if (event.target instanceof Element && event.target.closest('.watch-settings-button')) send('target_price_watch_started');
+});
+document.addEventListener('notification-destination-opened', (event) => {
+  send('notification_opened');
+  if (event.detail?.marketplace) send('marketplace_click', { marketplace: event.detail.marketplace });
+});

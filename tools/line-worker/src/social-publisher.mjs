@@ -13,6 +13,7 @@ const HASHTAG_PATTERN = /#[\p{L}\p{N}_ー]+/gu;
 const INVALID_HOSHILU_OWNER_CLAIM = /(?:ITG(?:グループ株式会社)?[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}(?:HOSHILU|ホシル)|(?:HOSHILU|ホシル)[^。\n]{0,20}(?:所有|運営))|(?:HOSHILU|ホシル)[^。\n]{0,50}(?:(?:所有|運営)[^。\n]{0,20}ITG(?:グループ株式会社)?|ITG(?:グループ株式会社)?[^。\n]{0,20}(?:所有|運営)))/i;
 const INSTAGRAM_STATUS_CHECKS_PER_INVOCATION = 12;
 const SOCIAL_PUBLISH_RETRY_DELAY_MS = 5 * 60 * 1000;
+const SOCIAL_PUBLISH_MAX_ATTEMPTS = 3;
 const DAILY_AI_ACTRESS_POLICY = 'DAILY_AI_ACTRESS_22';
 const DAILY_AI_ACTRESS_CAMPAIGN = 'hoshilu-ai-actress-daily-v1';
 const DAILY_AI_ACTRESS_PERSONA = 'hoshilu-approved-model-reference-v2';
@@ -207,9 +208,25 @@ export function normalizeSocialPost(input = {}) {
     link = url.toString();
   }
   const affiliate = input.affiliate === true;
-  const disclosedCaption = affiliate && !caption.includes('アフィリエイト')
+  let disclosedCaption = affiliate && !caption.includes('アフィリエイト')
     ? `${caption}\n${DISCLOSURE}`
     : caption;
+  if (platform === 'THREADS') {
+    // Count the actual payload, including the serialized URL and disclosure.
+    // UTF-16 length is conservative for emoji and avoids exceeding the API cap.
+    const budget = 500 - (link ? 1 + link.length : 0);
+    const disclosure = disclosedCaption.includes(DISCLOSURE) ? DISCLOSURE : '';
+    const body = disclosure ? disclosedCaption.replace(DISCLOSURE, '').trim() : disclosedCaption;
+    const bodyBudget = budget - (disclosure ? 1 + disclosure.length : 0);
+    if (bodyBudget < 5) throw new Error('SOCIAL_THREADS_TEXT_TOO_LONG');
+    let fitted = '';
+    for (const char of body) {
+      if (fitted.length + char.length > bodyBudget) break;
+      fitted += char;
+    }
+    disclosedCaption = [fitted.trim(), disclosure].filter(Boolean).join('\n');
+  }
+  assertSocialTextLength(platform, disclosedCaption, link);
   return {
     post_id: clean(input.post_id, 100),
     content_id: clean(input.content_id, 100),
@@ -229,6 +246,27 @@ export function normalizeSocialPost(input = {}) {
     ai_generated: input.ai_generated === true || Number(input.ai_generated) === 1,
     crosspost_group_id: clean(input.crosspost_group_id, 140)
   };
+}
+
+function instagramPostCaption(caption) {
+  return /@hoshilu\.app\s*のプロフィール(?:の)?リンクから/iu.test(caption)
+    ? caption : `${caption}\n続きは @hoshilu.app のプロフィールリンクから。`;
+}
+
+function assertSocialTextLength(platform, caption, link = '') {
+  if (platform === 'THREADS' && [caption, link].filter(Boolean).join('\n').length > 500) {
+    throw new Error('SOCIAL_THREADS_TEXT_TOO_LONG');
+  }
+  if (platform === 'INSTAGRAM' && instagramPostCaption(caption).length > 2200) {
+    throw new Error('SOCIAL_INSTAGRAM_TEXT_TOO_LONG');
+  }
+  if (platform === 'X') {
+    const text = [caption, link].filter(Boolean).join('\n');
+    const urls = text.match(/https?:\/\/\S+/gu) || [];
+    if (xWeightedLength(text.replace(/https?:\/\/\S+/gu, '')) + urls.length * 23 > 280) {
+      throw new Error('SOCIAL_X_TEXT_TOO_LONG');
+    }
+  }
 }
 
 function expectedDailyAiActressAssetId(jstPublishDate) {
@@ -586,10 +624,7 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
   }
   const isReel = /\.(?:mp4|mov|m4v)$/.test(mediaPath);
   const isStory = /(?:^|[-_])story(?:$|[-_])/i.test(post.content_id);
-  const profileCta = '続きは @hoshilu.app のプロフィールリンクから。';
-  const instagramCaption = /@hoshilu\.app\s*のプロフィール(?:の)?リンクから/iu.test(post.caption)
-    ? post.caption
-    : `${post.caption}\n${profileCta}`;
+  const instagramCaption = instagramPostCaption(post.caption);
   const mediaPayload = isStory
     ? {
         media_type: 'STORIES',
@@ -794,6 +829,8 @@ export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}
 
 function isTransientSocialPublishError(value) {
   const message = clean(value, 300);
+  // Meta sometimes returns HTTP 500 for invalid text: retrying cannot fix it.
+  if (/Param text must be at most|text.{0,30}(?:too long|character limit)|invalid (?:parameter|param)|OAuthException.*(?:"code"\s*:\s*(?:100|190))\b/i.test(message)) return false;
   if ([
     'INSTAGRAM_CONTAINER_IN_PROGRESS',
     'INSTAGRAM_CONTAINER_TIMEOUT',
@@ -807,6 +844,13 @@ function isTransientSocialPublishError(value) {
   if (/Too many subrequests by single Worker invocation/i.test(message)) return true;
   if (/^(?:X_PUBLISH|INSTAGRAM_PUBLISH|THREADS_PUBLISH)_429(?:_|$)/.test(message)) return true;
   return /^(?:X_MEDIA_FETCH|X_MEDIA_INIT|X_MEDIA_APPEND|X_MEDIA_FINALIZE|X_MEDIA_STATUS|INSTAGRAM_CREATE|INSTAGRAM_STATUS|THREADS_CREATE|THREADS_STATUS)_(?:408|425|429|5\d\d)(?:_|$)/.test(message);
+}
+
+function previousSocialRetry(value) {
+  const message = clean(value, 300);
+  const wrapped = /^SOCIAL_RETRY_(\d+):(.*)$/u.exec(message);
+  return wrapped ? { count: Number(wrapped[1]), message: wrapped[2] }
+    : { count: isTransientSocialPublishError(message) ? 1 : 0, message };
 }
 
 function socialPublishRetryAt(now, env) {
@@ -858,11 +902,13 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
       published += 1;
     } catch (error) {
       const message = clean(error?.message || error, 300);
+      const previous = previousSocialRetry(row.last_error);
+      const attempts = previous.count + 1;
       if (message.includes(DAILY_AI_ACTRESS_POLICY_ERROR)) {
         await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='REVIEW_REQUIRED',last_error=?2,
           updated_at=?3 WHERE post_id=?1 AND status IN ('APPROVED','PUBLISHING')`)
           .bind(row.post_id, DAILY_AI_ACTRESS_POLICY_ERROR, now.toISOString()).run();
-      } else if (isTransientSocialPublishError(message)) {
+      } else if (isTransientSocialPublishError(message) && attempts < SOCIAL_PUBLISH_MAX_ATTEMPTS) {
         // A Meta container that is still processing on the following cron has
         // already had at least five minutes plus two bounded polling windows.
         // It cannot publish by itself, so discard only that unpublished job ID
@@ -870,17 +916,19 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
         // indefinite APPROVED loop without risking a duplicate public post.
         const repeatedInstagramInProgress = message === 'INSTAGRAM_CONTAINER_IN_PROGRESS'
           && clean(row.platform_job_id, 120)
-          && row.last_error === 'INSTAGRAM_CONTAINER_IN_PROGRESS';
+          && previous.message === 'INSTAGRAM_CONTAINER_IN_PROGRESS';
         const resetPlatformJob = (['INSTAGRAM_CONTAINER_EXPIRED', 'THREADS_CONTAINER_EXPIRED']
           .includes(message) || repeatedInstagramInProgress) ? 1 : 0;
         await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='APPROVED',last_error=?2,
           scheduled_at=?3,updated_at=?4,
           platform_job_id=CASE WHEN ?5=1 THEN '' ELSE platform_job_id END
           WHERE post_id=?1 AND status='PUBLISHING'`)
-          .bind(row.post_id, message, socialPublishRetryAt(now, env), now.toISOString(), resetPlatformJob).run();
+          .bind(row.post_id, attempts === 1 ? message : `SOCIAL_RETRY_${attempts}:${message}`.slice(0, 300), socialPublishRetryAt(now, env), now.toISOString(), resetPlatformJob).run();
       } else {
+        const terminal = isTransientSocialPublishError(message)
+          ? `SOCIAL_RETRY_EXHAUSTED_${attempts}:${message}`.slice(0, 300) : message;
         await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='FAILED',last_error=?2,
-          updated_at=?3 WHERE post_id=?1`).bind(row.post_id, message, now.toISOString()).run();
+          updated_at=?3 WHERE post_id=?1 AND status='PUBLISHING'`).bind(row.post_id, terminal, now.toISOString()).run();
       }
     }
   }

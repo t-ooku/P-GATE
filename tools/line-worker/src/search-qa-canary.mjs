@@ -43,6 +43,24 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   { id: 'pet_shedding_brush', query: '猫の抜け毛がごっそり取れるブラシ', expect: /ブラシ|コーム|くし|ファーミネーター|抜け毛|brush/iu, reject: /シャンプー|爪切り|フード|おやつ|トイレ|首輪|ケージ/u }
 ]);
 
+export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
+  { id: 'p0_ready_storage', query: '組み立てがいらない収納ボックス', expect: /(?=.*(?:収納|ボックス|ケース))(?=.*(?:完成品|組立不要|組み立て不要|組立て不要))/u, reject: /要組立|組立式|組み立て式/u },
+  { id: 'p0_litter_toilet', query: '猫砂が飛び散らない猫トイレ', expect: /(?=.*(?:トイレ))(?=.*(?:飛び散|飛散|上から|上入|深型|フルカバー))/u, reject: /スコップのみ|シートのみ|猫砂のみ/u },
+  { id: 'p0_quickdry_shoes', query: 'すぐ乾く上履き', expect: /(?=.*(?:上履|上靴))(?=.*(?:速乾|メッシュ|通気))/u, reject: /中敷きのみ|洗剤|洗濯ネット/u },
+  { id: 'p0_washable_fan', query: '羽根が外れて洗える扇風機', expect: /(?=.*扇風機)(?=.*(?:分解|丸洗|水洗|羽根.*(?:外|洗)))/u, reject: /交換用|羽根のみ|カバーのみ/u },
+  { id: 'p0_quiet_toothbrush', query: '音が静かな電動歯ブラシ', expect: /(?=.*電動歯ブラシ)(?=.*(?:静音|低騒音|静か))/u, reject: /替えブラシ|交換用|ヘッドのみ/u }
+]);
+
+export async function runPrioritySearchQaCanary(env, now, handler) {
+  // One explicitly requested release audit; it cannot become a recurring bill.
+  if (now.toISOString().slice(0, 10) !== '2026-09-07' || !env.PRODUCT_DB) return;
+  const existing = await env.PRODUCT_DB.prepare(`SELECT medium FROM growth_events WHERE event_type='search_qa_result'
+    AND traffic_class='QA' AND event_id LIKE 'search-qa:2026-09-07:p0_%'`).all();
+  const done = new Set((existing.results || []).map(row => row.medium));
+  const fixtures = PRIORITY_SEARCH_QA_QUERIES.filter(fixture => !done.has(fixture.id));
+  if (fixtures.length) return runSearchQaCanary(env, now, handler, { fixtures, force: true });
+}
+
 function candidateName(candidate) {
   return String(candidate?.product_name || candidate?.display_name || candidate?.name || '').trim();
 }
@@ -174,6 +192,14 @@ export async function runSearchQaCanary(env, now, searchHandler, {
         evaluation.top_marketplace, new Date().toISOString()).run();
     results.push({ id: fixture.id, status, code: evaluation.code, error, elapsed_ms: elapsed,
       missing_malls: evaluation.missing_malls, top_name: evaluation.top_name, top_marketplace: evaluation.top_marketplace });
+    if (PRIORITY_SEARCH_QA_QUERIES.some(item => item.id === fixture.id) && payload?.result?.qa_trace) {
+      await env.PRODUCT_DB.prepare(`INSERT INTO growth_events
+        (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+        VALUES(?1,'search_qa_trace','JA','worker',?2,?3,?4,'',?5,'QA','','')
+        ON CONFLICT(event_id) DO UPDATE SET content=excluded.content,occurred_at=excluded.occurred_at`)
+        .bind(`${runId}:${fixture.id}:trace`, fixture.id, status,
+          JSON.stringify({ ...payload.result.qa_trace, top_names: evaluation.top_names }), new Date().toISOString()).run();
+    }
   }
   return { run_id: runId, results, passed: results.filter((r) => r.status === 'PASS').length, total: results.length };
 }
