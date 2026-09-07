@@ -14,15 +14,74 @@ const CHECK_MARKER='TARGET_PRICE_CHECK';
 const REACHED_MARKER='TARGET_PRICE_REACHED';
 
 function clean(value){return String(value||'').normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu,' ').trim().toLowerCase();}
-function tokens(value){return clean(value).split(/\s+/).filter(token=>token.length>=2).slice(0,12);}
-function sameProduct(wish,candidate){
-  const key=clean(wish.target_product_key);const candidateKeys=[candidate.record_key,candidate.asin].map(clean);
-  if(key&&candidateKeys.includes(key))return true;
-  const expected=tokens(wish.target_product_name||wish.query_text);const actual=clean(candidate.display_name||candidate.product_name);
-  if(!expected.length||!actual)return false;
-  const matched=expected.filter(token=>actual.includes(token));
-  return matched.length>=Math.min(2,expected.length)||matched.some(token=>/^[a-z][a-z0-9-]{3,}$/i.test(token));
+// ---- 同一商品判定 --------------------------------------------------------------
+// 2026-09-07 修正: これまでは「タイトルの先頭12語のうち2語が一致すれば同一商品」
+// だった。実データで確かめたところ、保存されている商品名の先頭はキャンペーン文
+// （「8/16 23:59まで まとめ買いクーポン3点以上で 10%OFF」）で埋まっていて、
+// 型番やブランドは12語の外に落ちていた。その結果
+//   希望: java ジャバ バッグ ... jv1159001（希望価格 2,500円）
+//   候補: 全く別のブランド レディース トートバッグ 大容量 軽量
+// が「バッグ・レディース・トートバッグ」の3語一致で同一商品と判定される。
+// 別商品の値段で「希望価格になりました」と通知するのは、通知しないことより悪い。
+//
+// 直し方: 語を選ぶ前にキャンペーン文を捨て、型番とブランドを必ず見るようにする。
+//   1. 型番（jv1159001 のような英字＋数字）があれば、それが候補名に無いと不一致
+//   2. ブランド語（最初の英字語／カタカナ語）が候補名に無ければ不一致
+//   3. 残りの内容語も半分以上が一致すること
+// 迷ったら通知しない側に倒す。見送った理由は target_price_observations に残すので、
+// 「厳しすぎて誰にも通知が届かない」状態は記録から気づける。
+const NOISE_WORDS=new Set(['特価品','送料無料','あす楽','即納','正規品','新品','限定','数量限定','タイムセール','セール','クーポン','まとめ買い','ポイント','最大','新作','公式','楽天','yahoo','amazon','off','sale','new','set','日本製','対応','選べる','人気','おすすめ','箱','枚','個','本']);
+function isNoiseToken(token){
+  if(NOISE_WORDS.has(token))return true;
+  if(/^\d+$/u.test(token))return true;                 // 「16」「23」など日付・数字だけ
+  if(/(?:まで|以上|以下|off)$/u.test(token)&&/\d/u.test(token))return true; // 「59まで」「3点以上で」
+  if(/クーポン|まとめ買い|ポイント|送料/u.test(token))return true;
+  return false;
 }
+// 型番らしい語: 英字と3桁以上の数字が地続きになっているもの（jv1159001 / se215 など）。
+export function modelCodeTokens(tokens=[]){
+  return tokens.filter((token)=>/^[a-z][a-z0-9-]*\d{3,}[a-z0-9-]*$/iu.test(token));
+}
+// 一番効く語（ブランド）: 最初の英字語、無ければ最初のカタカナ語。
+export function brandToken(tokens=[]){
+  return tokens.find((token)=>/^[a-z][a-z0-9-]{2,}$/iu.test(token))
+    ||tokens.find((token)=>/^[ァ-ヴー]{3,}$/u.test(token))||'';
+}
+// 商品名から、判定に使う語だけを取り出す（キャンペーン文は捨てる。先頭12語で切らない）。
+export function identityTokens(title){
+  const seen=new Set();const out=[];
+  for(const token of clean(title).split(/\s+/u)){
+    if(token.length<2||isNoiseToken(token)||seen.has(token))continue;
+    seen.add(token);out.push(token);
+    if(out.length>=16)break;
+  }
+  return out;
+}
+export const IDENTITY_MIN_TOKENS=3;
+export const IDENTITY_MIN_RATIO=0.5;
+export const IDENTITY_STRICT_RATIO=0.7;
+export function sameProduct(wish,candidate){
+  const key=clean(wish.target_product_key);
+  const candidateKeys=[candidate.record_key,candidate.asin].map(clean);
+  if(key&&candidateKeys.includes(key))return true;
+  const title=wish.target_product_name||wish.query_text;
+  const expected=identityTokens(title);
+  const actual=clean(candidate.display_name||candidate.product_name);
+  if(expected.length<IDENTITY_MIN_TOKENS||!actual)return false;
+  // 1. 型番は商品名のどこにあっても拾う（キャンペーン文が長く、型番は末尾に置かれる）。
+  //    型番が一致すればそれだけで同一商品と見なせる。逆に、型番があるのに候補名に
+  //    無いときは、ブランドと内容語で厳しめに見る（下の 2・3）。
+  const models=modelCodeTokens(clean(title).split(/\s+/u));
+  if(models.some((token)=>actual.includes(token)))return true;
+  // 2. ブランド語が入っていない商品も別物として扱う。
+  const brand=brandToken(expected);
+  if(brand&&!actual.includes(brand))return false;
+  // 3. 残りの内容語も半分以上が一致すること。
+  const ratio=models.length?IDENTITY_STRICT_RATIO:IDENTITY_MIN_RATIO;
+  const matched=expected.filter((token)=>actual.includes(token));
+  return matched.length>=Math.max(IDENTITY_MIN_TOKENS,Math.ceil(expected.length*ratio));
+}
+
 function pricedOffers(wish,candidates){
   const rows=[];
   for(const candidate of candidates){
@@ -88,12 +147,43 @@ async function persistObservation(env,wish,best,now){
   return true;
 }
 
+// 2026-09-07: 巡回の結果を残す。これまでは「調べた」印だけで、いくらだったのか、
+// そもそも同じ商品を見つけられたのかが分からず、直しようがなかった。
+// 残すのは結果の数字だけ（会員IDも検索文も入れない）。書けなくても巡回は止めない。
+export const OBSERVATION_RETENTION_DAYS=90;
+export function observationReason({candidateCount,best,target}){
+  if(!candidateCount)return 'NO_CANDIDATES';   // モールAPIが何も返さなかった
+  if(!best)return 'NO_MATCH';                  // 返ってきたが同じ商品が無かった
+  return best.price<=target?'REACHED':'ABOVE_TARGET';
+}
+async function recordObservation(env,wish,best,candidateCount,now){
+  const target=Number(wish.target_price_jpy)||0;
+  try{
+    await env.PRODUCT_DB.prepare(`INSERT INTO target_price_observations
+      (observation_id,wish_id,observed_at,matched,price_jpy,target_price_jpy,marketplace,candidate_count,reason)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)`)
+      .bind(crypto.randomUUID(),String(wish.wish_id||''),now,best?1:0,best?best.price:null,
+        target,best?String(best.marketplace||''):'',Number(candidateCount)||0,
+        observationReason({candidateCount,best,target})).run();
+  }catch{/* migration 0076 未適用でも巡回そのものは動かす */}
+}
+export async function purgeTargetPriceObservations(env,now=new Date()){
+  if(!env?.PRODUCT_DB)return{deleted:0};
+  try{
+    const cutoff=new Date(now);cutoff.setUTCDate(cutoff.getUTCDate()-OBSERVATION_RETENTION_DAYS);
+    const result=await env.PRODUCT_DB.prepare('DELETE FROM target_price_observations WHERE observed_at<?1')
+      .bind(cutoff.toISOString()).run();
+    return{deleted:Number(result?.meta?.changes||0)};
+  }catch{return{deleted:0};}
+}
+
 export async function scanTargetPriceWish(env,wish,now=new Date().toISOString(),fetcher=fetch){
   if(!wish||Number(wish.watch_price)!==1||Number(wish.target_price_jpy)<100)return{scanned:false,notified:false};
   const query=String(wish.target_product_name||wish.query_text||'').trim();
   const candidates=await searchConnectedMarketplaces(env,query,fetcher);
   const best=pricedOffers(wish,candidates)[0]||null;
   const notified=await persistObservation(env,wish,best,now);
+  await recordObservation(env,wish,best,candidates.length,now);
   return{scanned:true,notified,best_price_jpy:best?.price||null};
 }
 

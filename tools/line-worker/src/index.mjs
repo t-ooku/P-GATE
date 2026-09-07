@@ -68,7 +68,7 @@ import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs'
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
-import { runTargetPriceScan } from './target-price-watch.mjs';
+import { purgeTargetPriceObservations, runTargetPriceScan } from './target-price-watch.mjs';
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
 import { handleUnmetDemandRoutes } from './unmet-demand-routes.mjs';
 import { handleContractPolicySyncRoutes } from './contract-policy-routes.mjs';
@@ -3585,6 +3585,8 @@ export default {
         refreshAnonymousBenchmark(env),
         // APIで確認できた価格だけを購入希望額と比較する。AI推定価格は使わない。
         runTargetPriceScan(env, scheduledAt.toISOString()),
+        // 希望価格ウォッチの巡回結果（見つかったか・いくらだったか）は90日で消す。
+        purgeTargetPriceObservations(env, scheduledAt),
         // 2026-09-06 大隆さん決定: セラー営業メール。平日09-18時JSTに1サイクル最大3通・
         // 1日最大10通、1アドレス1回だけ。未設定なら何もしない。失敗しても他ジョブを止めない。
         runSellerOutreachCycle(env, scheduledAt),
