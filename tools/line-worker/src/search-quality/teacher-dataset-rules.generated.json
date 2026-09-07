@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-07T03:23:48.696Z",
+  "generated_at": "2026-09-07T03:36:54.480Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -24,7 +24,7 @@
     "2026-09-06-claude-batch-021.json",
     "2026-09-07-claude-batch-022.json"
   ],
-  "entry_count": 995,
+  "entry_count": 1010,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -18575,6 +18575,321 @@
           "汗染み防止 Tシャツ",
           "汗じみしない Tシャツ",
           "汗染み防止 カットソー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b2a6b5f4917073edd28764265777564eb0868bc41cdd9cf829ee0ec1705fee5c",
+      "query_text": "組み立てがいらない収納ボックス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-assembly-storage-box",
+      "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+      "search_terms": {
+        "ja": [
+          "組立不要 収納ボックス",
+          "工具不要 収納ラック",
+          "完成品 収納ボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4dfdbfd9f03135f7d453dcd62ba2936e38389a373aa0b539783dea8583cd05c6",
+      "query_text": "工具を使わないで作れる収納ラック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-assembly-storage-box",
+      "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+      "search_terms": {
+        "ja": [
+          "組立不要 収納ボックス",
+          "工具不要 収納ラック",
+          "完成品 収納ボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "78c2154d9683132e7dd7cf34c3a1754ec8d7ec8f2708c311ea11434bdfb25fd3",
+      "query_text": "ドライバーなしで組み立てられるチェスト",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-assembly-storage-box",
+      "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+      "search_terms": {
+        "ja": [
+          "組立不要 収納ボックス",
+          "工具不要 収納ラック",
+          "完成品 収納ボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1e9409027c13f02d6fbe603742fe4baf927b89eef2943000e92326291a67d1e5",
+      "query_text": "猫砂が飛び散らない猫トイレ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "litter-no-scatter-box",
+      "ideal_answer": "飛び散り防止・上蓋(フード)付きなど散らかりにくい設計の猫トイレ",
+      "search_terms": {
+        "ja": [
+          "飛び散り防止 猫トイレ",
+          "猫砂 飛び散らない トイレ",
+          "フード付き 猫トイレ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "19760145d09ce8573a7203c6382dd6e684e808e6275c643ee2418bd1321d6fbc",
+      "query_text": "砂が周りにこぼれない猫のトイレ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "litter-no-scatter-box",
+      "ideal_answer": "飛び散り防止・上蓋(フード)付きなど散らかりにくい設計の猫トイレ",
+      "search_terms": {
+        "ja": [
+          "飛び散り防止 猫トイレ",
+          "猫砂 飛び散らない トイレ",
+          "フード付き 猫トイレ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f69623eb776ccabc6d02416b21efbf7154998faeac167539532d73bf21fed534",
+      "query_text": "掃除のとき散らからない猫トイレ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "litter-no-scatter-box",
+      "ideal_answer": "飛び散り防止・上蓋(フード)付きなど散らかりにくい設計の猫トイレ",
+      "search_terms": {
+        "ja": [
+          "飛び散り防止 猫トイレ",
+          "猫砂 飛び散らない トイレ",
+          "フード付き 猫トイレ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "575b5453ffdf6593dc0a23294c2c93a00acdd3e2e8ebc8304cc111e70f348165",
+      "query_text": "洗ってもすぐ乾く上履き",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-indoor-shoes",
+      "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+      "search_terms": {
+        "ja": [
+          "速乾 上履き",
+          "乾きやすい 上靴",
+          "メッシュ 上履き 速乾"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "641585af7c0efab40adf3bd43fbd2436cf2fea47dd8bb5dd79400915a7ff5d7c",
+      "query_text": "乾きやすい素材の上靴",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-indoor-shoes",
+      "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+      "search_terms": {
+        "ja": [
+          "速乾 上履き",
+          "乾きやすい 上靴",
+          "メッシュ 上履き 速乾"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "51c8a204fe9aff2ef42e7121c9ed849806d0159985feeab0c5a89877468d7d1b",
+      "query_text": "週末に洗ってすぐ乾く上履き",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-indoor-shoes",
+      "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+      "search_terms": {
+        "ja": [
+          "速乾 上履き",
+          "乾きやすい 上靴",
+          "メッシュ 上履き 速乾"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "526ad119e4ec91fbc7dc1e7dc9f583044d6d9b79ed091564a07d840f286d8989",
+      "query_text": "羽根が外して洗える扇風機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "detachable-blade-fan",
+      "ideal_answer": "羽根(ファン)が分解・取り外しできて丸洗いしやすい扇風機・サーキュレーター",
+      "search_terms": {
+        "ja": [
+          "分解洗浄 扇風機",
+          "羽根取り外し 扇風機",
+          "分解できる サーキュレーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "da96ee569fff2a3704fc275be1199d20f6a8abd380386954363d323325ece031",
+      "query_text": "分解して掃除できるサーキュレーター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "detachable-blade-fan",
+      "ideal_answer": "羽根(ファン)が分解・取り外しできて丸洗いしやすい扇風機・サーキュレーター",
+      "search_terms": {
+        "ja": [
+          "分解洗浄 扇風機",
+          "羽根取り外し 扇風機",
+          "分解できる サーキュレーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "bdc51e24fec24997582fcd3597c6fa9fcee13d0faa6f1f298dc7e94c8011fc97",
+      "query_text": "お手入れしやすい羽根が取れる扇風機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "detachable-blade-fan",
+      "ideal_answer": "羽根(ファン)が分解・取り外しできて丸洗いしやすい扇風機・サーキュレーター",
+      "search_terms": {
+        "ja": [
+          "分解洗浄 扇風機",
+          "羽根取り外し 扇風機",
+          "分解できる サーキュレーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "df856992858ea84249450df27bb601cdf927ce4300003c6ec7383979b5fd8153",
+      "query_text": "音が静かな電動歯ブラシ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-electric-toothbrush",
+      "ideal_answer": "静音設計をうたう電動歯ブラシ",
+      "search_terms": {
+        "ja": [
+          "静音 電動歯ブラシ",
+          "静か 電動歯ブラシ",
+          "振動音が小さい 電動歯ブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a511949b6c36463fb50e6442b2c80fc685d29da0e9bf5efa2f90c25c5a8d5d8d",
+      "query_text": "夜使っても振動音が気にならない電動歯ブラシ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-electric-toothbrush",
+      "ideal_answer": "静音設計をうたう電動歯ブラシ",
+      "search_terms": {
+        "ja": [
+          "静音 電動歯ブラシ",
+          "静か 電動歯ブラシ",
+          "振動音が小さい 電動歯ブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a167a683ba6936dcd1797cfceaf90b9a043d73634951ff7d4fe3188899c72285",
+      "query_text": "振動音が小さい電動歯ブラシ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-electric-toothbrush",
+      "ideal_answer": "静音設計をうたう電動歯ブラシ",
+      "search_terms": {
+        "ja": [
+          "静音 電動歯ブラシ",
+          "静か 電動歯ブラシ",
+          "振動音が小さい 電動歯ブラシ"
         ],
         "en": [],
         "ko": [],

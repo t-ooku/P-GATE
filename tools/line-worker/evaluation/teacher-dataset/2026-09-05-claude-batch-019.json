@@ -2781,5 +2781,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "組み立てがいらない収納ボックス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "組み立て工具が不要な収納ボックス・ラック",
+    "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+    "reason": "「組み立てがいらない」は商品名では「組立不要」「工具不要」「完成品」。 展開規則 no-assembly-storage-box（モール検索語「組立不要 収納ボックス」）。",
+    "category": "no-assembly-storage-box",
+    "search_terms": {
+      "ja": [
+        "組立不要 収納ボックス",
+        "工具不要 収納ラック",
+        "完成品 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "工具を使わないで作れる収納ラック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "組み立て工具が不要な収納ボックス・ラック",
+    "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+    "reason": "「組み立てがいらない」は商品名では「組立不要」「工具不要」「完成品」。 展開規則 no-assembly-storage-box（モール検索語「組立不要 収納ボックス」）。",
+    "category": "no-assembly-storage-box",
+    "search_terms": {
+      "ja": [
+        "組立不要 収納ボックス",
+        "工具不要 収納ラック",
+        "完成品 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ドライバーなしで組み立てられるチェスト",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "組み立て工具が不要な収納ボックス・ラック",
+    "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+    "reason": "「組み立てがいらない」は商品名では「組立不要」「工具不要」「完成品」。 展開規則 no-assembly-storage-box（モール検索語「組立不要 収納ボックス」）。",
+    "category": "no-assembly-storage-box",
+    "search_terms": {
+      "ja": [
+        "組立不要 収納ボックス",
+        "工具不要 収納ラック",
+        "完成品 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "猫砂が飛び散らない猫トイレ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "猫砂が飛び散りにくい・散らからない猫用トイレ",
+    "ideal_answer": "飛び散り防止・上蓋(フード)付きなど散らかりにくい設計の猫トイレ",
+    "reason": "「飛び散らない」は商品名では「飛び散り防止」「フード付き」。 展開規則 litter-no-scatter-box（モール検索語「飛び散り防止 猫トイレ」）。",
+    "category": "litter-no-scatter-box",
+    "search_terms": {
+      "ja": [
+        "飛び散り防止 猫トイレ",
+        "猫砂 飛び散らない トイレ",
+        "フード付き 猫トイレ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "砂が周りにこぼれない猫のトイレ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "猫砂が飛び散りにくい・散らからない猫用トイレ",
+    "ideal_answer": "飛び散り防止・上蓋(フード)付きなど散らかりにくい設計の猫トイレ",
+    "reason": "「飛び散らない」は商品名では「飛び散り防止」「フード付き」。 展開規則 litter-no-scatter-box（モール検索語「飛び散り防止 猫トイレ」）。",
+    "category": "litter-no-scatter-box",
+    "search_terms": {
+      "ja": [
+        "飛び散り防止 猫トイレ",
+        "猫砂 飛び散らない トイレ",
+        "フード付き 猫トイレ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "掃除のとき散らからない猫トイレ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "猫砂が飛び散りにくい・散らからない猫用トイレ",
+    "ideal_answer": "飛び散り防止・上蓋(フード)付きなど散らかりにくい設計の猫トイレ",
+    "reason": "「飛び散らない」は商品名では「飛び散り防止」「フード付き」。 展開規則 litter-no-scatter-box（モール検索語「飛び散り防止 猫トイレ」）。",
+    "category": "litter-no-scatter-box",
+    "search_terms": {
+      "ja": [
+        "飛び散り防止 猫トイレ",
+        "猫砂 飛び散らない トイレ",
+        "フード付き 猫トイレ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗ってもすぐ乾く上履き",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯後すぐに乾く素材・機能の上履き",
+    "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+    "reason": "「すぐ乾く」は商品名では「速乾」。 展開規則 quick-dry-indoor-shoes（モール検索語「速乾 上履き」）。",
+    "category": "quick-dry-indoor-shoes",
+    "search_terms": {
+      "ja": [
+        "速乾 上履き",
+        "乾きやすい 上靴",
+        "メッシュ 上履き 速乾"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "乾きやすい素材の上靴",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯後すぐに乾く素材・機能の上履き",
+    "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+    "reason": "「すぐ乾く」は商品名では「速乾」。 展開規則 quick-dry-indoor-shoes（モール検索語「速乾 上履き」）。",
+    "category": "quick-dry-indoor-shoes",
+    "search_terms": {
+      "ja": [
+        "速乾 上履き",
+        "乾きやすい 上靴",
+        "メッシュ 上履き 速乾"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "週末に洗ってすぐ乾く上履き",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯後すぐに乾く素材・機能の上履き",
+    "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+    "reason": "「すぐ乾く」は商品名では「速乾」。 展開規則 quick-dry-indoor-shoes（モール検索語「速乾 上履き」）。",
+    "category": "quick-dry-indoor-shoes",
+    "search_terms": {
+      "ja": [
+        "速乾 上履き",
+        "乾きやすい 上靴",
+        "メッシュ 上履き 速乾"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "羽根が外して洗える扇風機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "羽根を取り外して掃除できる扇風機・サーキュレーター",
+    "ideal_answer": "羽根(ファン)が分解・取り外しできて丸洗いしやすい扇風機・サーキュレーター",
+    "reason": "「羽根が外せる」は商品名では「分解洗浄」「お手入れ簡単」。 展開規則 detachable-blade-fan（モール検索語「分解洗浄 扇風機」）。",
+    "category": "detachable-blade-fan",
+    "search_terms": {
+      "ja": [
+        "分解洗浄 扇風機",
+        "羽根取り外し 扇風機",
+        "分解できる サーキュレーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "分解して掃除できるサーキュレーター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "羽根を取り外して掃除できる扇風機・サーキュレーター",
+    "ideal_answer": "羽根(ファン)が分解・取り外しできて丸洗いしやすい扇風機・サーキュレーター",
+    "reason": "「羽根が外せる」は商品名では「分解洗浄」「お手入れ簡単」。 展開規則 detachable-blade-fan（モール検索語「分解洗浄 扇風機」）。",
+    "category": "detachable-blade-fan",
+    "search_terms": {
+      "ja": [
+        "分解洗浄 扇風機",
+        "羽根取り外し 扇風機",
+        "分解できる サーキュレーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お手入れしやすい羽根が取れる扇風機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "羽根を取り外して掃除できる扇風機・サーキュレーター",
+    "ideal_answer": "羽根(ファン)が分解・取り外しできて丸洗いしやすい扇風機・サーキュレーター",
+    "reason": "「羽根が外せる」は商品名では「分解洗浄」「お手入れ簡単」。 展開規則 detachable-blade-fan（モール検索語「分解洗浄 扇風機」）。",
+    "category": "detachable-blade-fan",
+    "search_terms": {
+      "ja": [
+        "分解洗浄 扇風機",
+        "羽根取り外し 扇風機",
+        "分解できる サーキュレーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "音が静かな電動歯ブラシ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "動作音が小さく夜でも使いやすい電動歯ブラシ",
+    "ideal_answer": "静音設計をうたう電動歯ブラシ",
+    "reason": "「音が静か」は商品名・説明では「静音」と表記される。 展開規則 quiet-electric-toothbrush（モール検索語「静音 電動歯ブラシ」）。",
+    "category": "quiet-electric-toothbrush",
+    "search_terms": {
+      "ja": [
+        "静音 電動歯ブラシ",
+        "静か 電動歯ブラシ",
+        "振動音が小さい 電動歯ブラシ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "夜使っても振動音が気にならない電動歯ブラシ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "動作音が小さく夜でも使いやすい電動歯ブラシ",
+    "ideal_answer": "静音設計をうたう電動歯ブラシ",
+    "reason": "「音が静か」は商品名・説明では「静音」と表記される。 展開規則 quiet-electric-toothbrush（モール検索語「静音 電動歯ブラシ」）。",
+    "category": "quiet-electric-toothbrush",
+    "search_terms": {
+      "ja": [
+        "静音 電動歯ブラシ",
+        "静か 電動歯ブラシ",
+        "振動音が小さい 電動歯ブラシ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "振動音が小さい電動歯ブラシ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "動作音が小さく夜でも使いやすい電動歯ブラシ",
+    "ideal_answer": "静音設計をうたう電動歯ブラシ",
+    "reason": "「音が静か」は商品名・説明では「静音」と表記される。 展開規則 quiet-electric-toothbrush（モール検索語「静音 電動歯ブラシ」）。",
+    "category": "quiet-electric-toothbrush",
+    "search_terms": {
+      "ja": [
+        "静音 電動歯ブラシ",
+        "静か 電動歯ブラシ",
+        "振動音が小さい 電動歯ブラシ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
