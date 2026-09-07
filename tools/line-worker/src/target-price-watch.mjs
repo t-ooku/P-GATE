@@ -109,13 +109,19 @@ function notificationText(wish,best,target){
 async function searchConnectedMarketplaces(env,query,fetcher,key=''){
   const calls=[];
   if (key.startsWith('RAKUTEN:')) {
-    return rakutenApiConfigured(env) ? searchRakutenMarketplace(env,'',fetcher,'',{itemCode:key.slice(8)}) : [];
+    if(rakutenApiConfigured(env))calls.push(searchRakutenMarketplace(env,'',fetcher,'',{itemCode:key.slice(8)}));
+  }else{
+    if(creatorsApiConfigured(env))calls.push(searchAmazonCreators(env,query,fetcher));
+    if(rakutenApiConfigured(env))calls.push(searchRakutenMarketplace(env,query,fetcher));
+    if(yahooShoppingApiConfigured(env))calls.push(searchYahooShopping(env,query,fetcher));
   }
-  if(creatorsApiConfigured(env))calls.push(searchAmazonCreators(env,query,fetcher));
-  if(rakutenApiConfigured(env))calls.push(searchRakutenMarketplace(env,query,fetcher));
-  if(yahooShoppingApiConfigured(env))calls.push(searchYahooShopping(env,query,fetcher));
   const outcomes=await Promise.allSettled(calls);
-  return outcomes.flatMap(outcome=>outcome.status==='fulfilled'&&Array.isArray(outcome.value)?outcome.value:[]);
+  return{
+    candidates:outcomes.flatMap(outcome=>outcome.status==='fulfilled'&&Array.isArray(outcome.value)?outcome.value:[]),
+    provider_count:calls.length,
+    provider_success_count:outcomes.filter(outcome=>outcome.status==='fulfilled').length,
+    provider_failure_count:outcomes.filter(outcome=>outcome.status==='rejected').length
+  };
 }
 async function persistObservation(env,wish,best,now){
   const target=Number(wish.target_price_jpy)||0;
@@ -158,12 +164,15 @@ async function persistObservation(env,wish,best,now){
 // そもそも同じ商品を見つけられたのかが分からず、直しようがなかった。
 // 残すのは結果の数字だけ（会員IDも検索文も入れない）。書けなくても巡回は止めない。
 export const OBSERVATION_RETENTION_DAYS=90;
-export function observationReason({candidateCount,best,target}){
+export function observationReason({candidateCount,best,target,providerCount=1,providerSuccessCount=1,providerFailureCount=0}){
+  if(!providerCount)return 'PROVIDER_UNCONFIGURED';
+  if(!candidateCount&&!providerSuccessCount&&providerFailureCount)return 'API_FAILURE';
+  if(!candidateCount&&providerFailureCount)return 'NO_CANDIDATES_PARTIAL_API_FAILURE';
   if(!candidateCount)return 'NO_CANDIDATES';   // モールAPIが何も返さなかった
   if(!best)return 'NO_MATCH';                  // 返ってきたが同じ商品が無かった
   return best.price<=target?'REACHED':'ABOVE_TARGET';
 }
-async function recordObservation(env,wish,best,candidateCount,now){
+async function recordObservation(env,wish,best,candidateCount,now,providerState={}){
   const target=Number(wish.target_price_jpy)||0;
   try{
     await env.PRODUCT_DB.prepare(`INSERT INTO target_price_observations
@@ -171,7 +180,7 @@ async function recordObservation(env,wish,best,candidateCount,now){
       VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9)`)
       .bind(crypto.randomUUID(),String(wish.wish_id||''),now,best?1:0,best?.marketplace==='RAKUTEN_JP'?best.price:null,
         target,best?String(best.marketplace||''):'',Number(candidateCount)||0,
-        observationReason({candidateCount,best,target})).run();
+        observationReason({candidateCount,best,target,...providerState})).run();
   }catch{/* migration 0076 未適用でも巡回そのものは動かす */}
 }
 export async function purgeTargetPriceObservations(env,now=new Date()){
@@ -191,11 +200,19 @@ export async function purgeTargetPriceObservations(env,now=new Date()){
 export async function scanTargetPriceWish(env,wish,now=new Date().toISOString(),fetcher=fetch){
   if(!wish||Number(wish.watch_price)!==1||Number(wish.target_price_jpy)<100)return{scanned:false,notified:false};
   const query=String(wish.target_product_name||wish.query_text||'').trim();
-  const candidates=await searchConnectedMarketplaces(env,query,fetcher,String(wish.target_product_key||''));
+  const providerResult=await searchConnectedMarketplaces(env,query,fetcher,String(wish.target_product_key||''));
+  const candidates=providerResult.candidates;
   const best=pricedOffers(wish,candidates)[0]||null;
-  const notified=await persistObservation(env,wish,best,now);
-  await recordObservation(env,wish,best,candidates.length,now);
-  return{scanned:true,notified,best_price_jpy:best?.price||null};
+  const providerState={providerCount:providerResult.provider_count,
+    providerSuccessCount:providerResult.provider_success_count,
+    providerFailureCount:providerResult.provider_failure_count};
+  const reason=observationReason({candidateCount:candidates.length,best,target:Number(wish.target_price_jpy)||0,...providerState});
+  // API/control failures are not a completed price check. Record the aggregate
+  // reason, but leave the check marker untouched so the next cron retries.
+  const retryable=reason==='API_FAILURE'||reason==='NO_CANDIDATES_PARTIAL_API_FAILURE';
+  const notified=retryable?false:await persistObservation(env,wish,best,now);
+  await recordObservation(env,wish,best,candidates.length,now,providerState);
+  return{scanned:true,notified,best_price_jpy:best?.price||null,reason,retryable};
 }
 
 export async function runTargetPriceScan(env,now=new Date().toISOString(),fetcher=fetch){

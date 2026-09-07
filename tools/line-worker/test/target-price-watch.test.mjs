@@ -123,12 +123,31 @@ test('見つからなかった理由も区別して残し、古い記録は90日
   assert.equal(observationReason({ candidateCount: 5, best: null, target: 2500 }), 'NO_MATCH');
   assert.equal(observationReason({ candidateCount: 5, best: { price: 2400 }, target: 2500 }), 'REACHED');
   assert.equal(observationReason({ candidateCount: 5, best: { price: 2600 }, target: 2500 }), 'ABOVE_TARGET');
+  assert.equal(observationReason({ candidateCount: 0, best: null, target: 2500,
+    providerCount: 2, providerSuccessCount: 0, providerFailureCount: 2 }), 'API_FAILURE');
+  assert.equal(observationReason({ candidateCount: 0, best: null, target: 2500,
+    providerCount: 2, providerSuccessCount: 1, providerFailureCount: 1 }), 'NO_CANDIDATES_PARTIAL_API_FAILURE');
+  assert.equal(observationReason({ candidateCount: 0, best: null, target: 2500,
+    providerCount: 0, providerSuccessCount: 0, providerFailureCount: 0 }), 'PROVIDER_UNCONFIGURED');
   const { sqlite, env } = envWithDb();
   sqlite.prepare("INSERT INTO target_price_observations(observation_id,wish_id,observed_at,matched,price_jpy,target_price_jpy,marketplace,candidate_count,reason) VALUES('o1','w1','2026-01-01T00:00:00.000Z',0,NULL,2500,'',0,'NO_MATCH')").run();
   sqlite.prepare("INSERT INTO target_price_observations(observation_id,wish_id,observed_at,matched,price_jpy,target_price_jpy,marketplace,candidate_count,reason) VALUES('o2','w1','2026-09-06T00:00:00.000Z',1,2800,2500,'YAHOO_JP',3,'ABOVE_TARGET')").run();
   assert.deepEqual(await purgeTargetPriceObservations(env, new Date('2026-09-07T00:00:00.000Z')), { deleted: 1 });
   assert.equal(sqlite.prepare('SELECT count(*) AS count FROM target_price_observations').get().count, 1);
   assert.equal(sqlite.prepare("SELECT price_jpy FROM target_price_observations WHERE observation_id='o2'").get().price_jpy, null);
+});
+
+test('全API失敗は観測してcheck済みにせず、次回cronで再試行できる', async () => {
+  const {sqlite,env}=envWithDb();const now='2026-09-07T06:00:00.000Z';
+  sqlite.prepare(`INSERT INTO member_wishes(member_id,wish_id,query_text,language,watch_price,watch_frequency,condition_snapshot,created_at,updated_at)
+    VALUES('m1','w-api-failure','LILMOON','JA',1,'INSTANT',?1,?2,?2)`)
+    .run(JSON.stringify({price_condition:{target_price_jpy:2500,target_product_name:'LILMOON リルムーン'}}),now);
+  const result=await runTargetPriceScan(env,now,async()=>{throw new Error('provider unavailable');});
+  assert.deepEqual(result,{scanned:1,notifications_sent:0});
+  const row=sqlite.prepare("SELECT reason,candidate_count FROM target_price_observations WHERE wish_id='w-api-failure'").get();
+  assert.equal(row.reason,'API_FAILURE');
+  assert.equal(row.candidate_count,0);
+  assert.equal(sqlite.prepare("SELECT count(*) AS n FROM search_watch_matches WHERE wish_id='w-api-failure' AND product_identity_key='TARGET_PRICE_CHECK'").get().n,0);
 });
 
 test('楽天ID付き巡回は商品名を検索せずitemCodeで1回取得し、観測価格は23時間で消す', async () => {
