@@ -13,6 +13,10 @@ const READY_STATUSES = new Set(['APPROVED', 'PUBLISHING', 'PUBLISHED']);
 const POLICY = 'DAILY_AI_ACTRESS_22';
 const PERSONA_ID = 'hoshilu-approved-model-reference-v2';
 const CAMPAIGN_ID = 'hoshilu-ai-actress-daily-v1';
+const RUNWAY_CAMPAIGN_ID = 'hoshilu-runway-video';
+const RUNWAY_JOB_PREFIX = 'runway-auto-';
+const RUNWAY_POST_PREFIX = 'hoshilu-runway-auto-';
+const RUNWAY_WEEKDAYS = new Set([1, 3, 6]);
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -86,6 +90,12 @@ function timestampJstDate(value) {
     : '';
 }
 
+function effectiveJstDate(row = {}) {
+  return validJstDate(row.jst_publish_date)
+    ? row.jst_publish_date
+    : timestampJstDate(row.scheduled_at);
+}
+
 export function socialAiActressSlaSql() {
   return `SELECT
     q.post_id,
@@ -119,13 +129,21 @@ export function socialAiActressSlaSql() {
     a.qa_status,
     a.ai_generated AS asset_ai_generated,
     a.ai_disclosure_confirmed,
-    a.approved_at AS asset_approved_at
+    a.approved_at AS asset_approved_at,
+    r.status AS runway_status,
+    r.qa_status AS runway_qa_status,
+    r.rights_confirmed AS runway_rights_confirmed,
+    r.ai_disclosure_confirmed AS runway_ai_disclosure_confirmed
   FROM social_post_queue q
   LEFT JOIN social_creative_assets a ON a.asset_id=q.creative_asset_id
+  LEFT JOIN runway_generation_jobs r ON r.job_id=q.content_id
   WHERE q.platform IN ('X','INSTAGRAM')
-    AND q.creative_policy='DAILY_AI_ACTRESS_22'
-    AND q.jst_publish_date BETWEEN ?1 AND ?2
-  ORDER BY q.jst_publish_date,q.platform,q.post_id`;
+    AND (
+      (q.creative_policy='DAILY_AI_ACTRESS_22' AND q.jst_publish_date BETWEEN ?1 AND ?2)
+      OR (q.campaign_id='hoshilu-runway-video'
+        AND date(datetime(q.scheduled_at,'+9 hours')) BETWEEN ?1 AND ?2)
+    )
+  ORDER BY q.scheduled_at,q.platform,q.post_id`;
 }
 
 export function isEligibleSocialAiActressRow(row = {}, { asOf = Date.now() } = {}) {
@@ -133,8 +151,28 @@ export function isEligibleSocialAiActressRow(row = {}, { asOf = Date.now() } = {
   const platform = String(row.platform || '').toUpperCase();
   const status = String(row.status || '').toUpperCase();
   const scheduledDate = timestampJstDate(row.scheduled_at);
-  const expectedGroup = `hoshilu-ai-actress-daily-${row.jst_publish_date}`;
-  const expectedPostId = `${CAMPAIGN_ID}-${platform.toLowerCase()}-${row.jst_publish_date}`;
+  const rowDate = effectiveJstDate(row);
+  const runway = row.campaign_id === RUNWAY_CAMPAIGN_ID
+    && String(row.content_id || '').startsWith(RUNWAY_JOB_PREFIX);
+  if (runway) {
+    const expectedPostId = String(row.content_id).replace(/^runway-auto-/u, RUNWAY_POST_PREFIX)
+      + (platform === 'X' ? '-x' : '');
+    return PLATFORMS.includes(platform)
+      && RUNWAY_WEEKDAYS.has(new Date(`${rowDate}T00:00:00.000Z`).getUTCDay())
+      && row.post_id === expectedPostId
+      && READY_STATUSES.has(status)
+      && timestampAtOrBefore(row.queue_approved_at, asOfTimestamp)
+      && validJstDate(rowDate)
+      && rowDate === scheduledDate
+      && validHttpsUrl(row.queue_media_url)
+      && new URL(row.queue_media_url).pathname === `/api/social/media/runway/${row.content_id}.mp4`
+      && ['APPROVED_FOR_POST', 'PUBLISHED'].includes(String(row.runway_status || '').toUpperCase())
+      && row.runway_qa_status === 'PASSED'
+      && Number(row.runway_rights_confirmed) === 1
+      && Number(row.runway_ai_disclosure_confirmed) === 1;
+  }
+  const expectedGroup = `hoshilu-ai-actress-daily-${rowDate}`;
+  const expectedPostId = `${CAMPAIGN_ID}-${platform.toLowerCase()}-${rowDate}`;
   return PLATFORMS.includes(platform)
     && row.post_id === expectedPostId
     && row.campaign_id === CAMPAIGN_ID
@@ -148,8 +186,8 @@ export function isEligibleSocialAiActressRow(row = {}, { asOf = Date.now() } = {
     && nonEmpty(row.creative_asset_id)
     && row.creative_asset_id === row.asset_id
     && row.creative_asset_id === expectedAssetId(row.jst_publish_date)
-    && validJstDate(row.jst_publish_date)
-    && row.jst_publish_date === scheduledDate
+    && validJstDate(rowDate)
+    && rowDate === scheduledDate
     && validJstDate(row.asset_jst_publish_date)
     && row.asset_jst_publish_date <= row.jst_publish_date
     && expectedAssetId(row.asset_jst_publish_date) === row.asset_id
@@ -171,9 +209,11 @@ export function isEligibleSocialAiActressRow(row = {}, { asOf = Date.now() } = {
 }
 
 function rowsFor(rows, date, platform, asOf) {
-  return rows.filter((row) => row.jst_publish_date === date
+  const eligible = rows.filter((row) => effectiveJstDate(row) === date
     && String(row.platform || '').toUpperCase() === platform
     && isEligibleSocialAiActressRow(row, { asOf }));
+  const runway = eligible.filter((row) => row.campaign_id === RUNWAY_CAMPAIGN_ID);
+  return runway.length ? runway : eligible;
 }
 
 function safePlatformState(rows, date, platform, asOf) {
@@ -188,6 +228,12 @@ function safePlatformState(rows, date, platform, asOf) {
 
 function pairIsConsistent(xRows, instagramRows) {
   if (xRows.length !== 1 || instagramRows.length !== 1) return false;
+  if (xRows[0].campaign_id === RUNWAY_CAMPAIGN_ID
+    || instagramRows[0].campaign_id === RUNWAY_CAMPAIGN_ID) {
+    return xRows[0].campaign_id === RUNWAY_CAMPAIGN_ID
+      && instagramRows[0].campaign_id === RUNWAY_CAMPAIGN_ID
+      && xRows[0].content_id === instagramRows[0].content_id;
+  }
   return xRows[0].creative_asset_id === instagramRows[0].creative_asset_id
     && xRows[0].crosspost_group_id === instagramRows[0].crosspost_group_id;
 }

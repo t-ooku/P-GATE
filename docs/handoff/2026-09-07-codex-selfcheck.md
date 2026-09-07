@@ -55,3 +55,16 @@ KPI集計の7日間（2026-08-31 13:01～09-07 13:01 JST）は、記録上の訪
   このセッションではその予定自体の設定を再確認していない。
 - 価格保存の設計案は `2026-09-07-codex-price-storage-design.md`。APIの利用条件を含む。
 - 新規会員作成・通知先への実送信・本番D1データ修正を、検証目的で実行してはいない。
+
+## SNS公開監視の誤判定（20:30 JST確認）
+
+- `/health` は引き続き `ok:true`、X/Instagram接続、Runway ready。
+- Issue #106 / production-monitor run 34109750245 の
+  `SOCIAL_AI_ACTRESS_TODAY_NOT_APPROVED` を優先調査。
+- 旧日次Reelは、月曜のRunway新規生成Reelへの置換によりInstagramが`CANCELLED`、
+  Xが`REVIEW_REQUIRED`となっていた。一方、置換先はX/Instagramともexternal post ID・
+  published_at・公開URLが揃い、本番公開を確認した。
+- 原因は `check-social-ai-actress-sla.mjs` が`DAILY_AI_ACTRESS_22`だけをD1から取得し、
+  `hoshilu-runway-video`のQA合格済み置換行を評価していなかったこと。
+- 監視SQLにRunway生成ジョブのQA・権利・AI開示証跡を追加し、同じ日・媒体では
+  QA合格済みRunway行を旧プレースホルダーより優先する。公開処理、cron、本番D1は操作していない。

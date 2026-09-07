@@ -77,6 +77,34 @@ function todayRows(status = 'APPROVED', today = TODAY) {
   return ['X', 'INSTAGRAM'].map((platform) => validRow(today, platform, status));
 }
 
+function runwayRow(date, platform, status = 'APPROVED') {
+  const jobId = `runway-auto-want-at-price-${date.replaceAll('-', '')}`;
+  const postId = `hoshilu-runway-auto-want-at-price-${date.replaceAll('-', '')}`
+    + (platform === 'X' ? '-x' : '');
+  const published = status === 'PUBLISHED';
+  return {
+    post_id: postId,
+    platform,
+    campaign_id: 'hoshilu-runway-video',
+    content_id: jobId,
+    status,
+    scheduled_at: `${date}T11:15:00.000Z`,
+    queue_approved_at: `${date}T00:00:00.000Z`,
+    external_post_id: published ? (platform === 'X' ? '2099999999999999998' : '18099999999999998') : null,
+    published_at: published ? `${date}T11:20:00.000Z` : null,
+    jst_publish_date: '',
+    queue_media_url: `https://hoshilu.app/api/social/media/runway/${jobId}.mp4`,
+    runway_status: published ? 'PUBLISHED' : 'APPROVED_FOR_POST',
+    runway_qa_status: 'PASSED',
+    runway_rights_confirmed: 1,
+    runway_ai_disclosure_confirmed: 1
+  };
+}
+
+function runwayRows(date, status = 'APPROVED') {
+  return ['X', 'INSTAGRAM'].map((platform) => runwayRow(date, platform, status));
+}
+
 function publicPosts(rows) {
   return Object.fromEntries(rows.map((row) => [row.platform, {
     http_status: 200,
@@ -142,6 +170,33 @@ test('D1 publication and both public audit permalinks satisfy the 20:30 gate', (
   assert.equal(result.today.publication, 'PASS');
   assert.equal(result.today.platforms.X.public_verified, true);
   assert.equal(result.today.platforms.INSTAGRAM.public_verified, true);
+});
+
+test('QA-approved Runway replacement is preferred over the cancelled daily Reel on Runway days', () => {
+  const date = '2026-09-07';
+  const runway = runwayRows(date, 'PUBLISHED');
+  const legacy = todayRows('APPROVED', date);
+  legacy[0].status = 'REVIEW_REQUIRED';
+  legacy[1].status = 'CANCELLED';
+  const result = evaluateSocialAiActressSla({
+    rows: [...legacy, ...runway, ...futureRows(date)],
+    publicPosts: publicPosts(runway),
+    now: '2026-09-07T11:30:00.000Z'
+  });
+  assert.equal(result.status, 'PASS');
+  assert.equal(result.today.publication, 'PASS');
+  assert.equal(result.today.platforms.X.post_id, runway[0].post_id);
+  assert.equal(result.today.platforms.INSTAGRAM.post_id, runway[1].post_id);
+});
+
+test('Runway replacement fails closed when QA, rights or disclosure evidence is missing', () => {
+  for (const field of ['runway_qa_status', 'runway_rights_confirmed', 'runway_ai_disclosure_confirmed']) {
+    const row = runwayRow('2026-09-07', 'INSTAGRAM');
+    row[field] = field === 'runway_qa_status' ? 'PENDING' : 0;
+    assert.equal(isEligibleSocialAiActressRow(row), false, field);
+  }
+  assert.equal(isEligibleSocialAiActressRow(runwayRow('2026-09-08', 'INSTAGRAM')), false,
+    'Runway is only a valid replacement on Monday, Wednesday and Saturday');
 });
 
 test('invalid or mismatched public audit response fails closed', () => {
@@ -233,8 +288,13 @@ test('JST date arithmetic crosses year boundaries without using runner timezone'
 test('D1 query joins queue to creative metadata and excludes sensitive post content', () => {
   const sql = socialAiActressSlaSql();
   assert.match(sql, /LEFT JOIN social_creative_assets a ON a\.asset_id=q\.creative_asset_id/u);
+  assert.match(sql, /LEFT JOIN runway_generation_jobs r ON r\.job_id=q\.content_id/u);
   assert.match(sql, /q\.creative_policy='DAILY_AI_ACTRESS_22'/u);
   assert.match(sql, /q\.jst_publish_date BETWEEN \?1 AND \?2/u);
+  assert.match(sql, /q\.campaign_id='hoshilu-runway-video'/u);
+  assert.match(sql, /date\(datetime\(q\.scheduled_at,'\+9 hours'\)\) BETWEEN \?1 AND \?2/u);
+  assert.match(sql, /r\.rights_confirmed AS runway_rights_confirmed/u);
+  assert.match(sql, /r\.ai_disclosure_confirmed AS runway_ai_disclosure_confirmed/u);
   assert.match(sql, /a\.persona_age/u);
   assert.match(sql, /a\.ai_actress_present/u);
   assert.match(sql, /a\.audio_confirmed/u);
