@@ -310,6 +310,12 @@ test('separates SEO article views and transitions from search starts', () => {
   assert.equal(normalizeGrowthEvent({ event_type: 'search_started', source: 'seo_article', medium: 'internal' }).event_type, 'search_started');
 });
 
+test('seller LP views and CTA clicks are accepted without allowing browser-side inquiry conversions', () => {
+  assert.equal(normalizeGrowthEvent({ event_type: 'seller_landing_view', content: 'for-sellers' }).event_type, 'seller_landing_view');
+  assert.equal(normalizeGrowthEvent({ event_type: 'seller_cta_clicked', content: 'hero-inquiry' }).event_type, 'seller_cta_clicked');
+  assert.throws(() => normalizeGrowthEvent({ event_type: 'seller_inquiry_submitted' }), /GROWTH_EVENT_INVALID/u);
+});
+
 test('separates QA, attributed, and unattributed growth traffic', () => {
   assert.equal(classifyGrowthTraffic({
     source: 'codex_acceptance',

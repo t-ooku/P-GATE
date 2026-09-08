@@ -1,6 +1,36 @@
+import { growthSessionId, growthVisitorId } from './growth-identity.mjs';
+
 const form = document.querySelector('#sellerBusinessForm');
 const status = document.querySelector('#formStatus');
 const turnstileContainer = document.querySelector('#turnstile');
+const growthParams = new URLSearchParams(location.search);
+const sellerAttribution = {
+  source: growthParams.get('utm_source') || '',
+  medium: growthParams.get('utm_medium') || '',
+  campaign: growthParams.get('utm_campaign') || '',
+  content: growthParams.get('utm_content') || ''
+};
+
+function sendSellerEvent(event_type, extra = {}) {
+  const body = JSON.stringify({
+    event_type, locale: 'JA', visitor_id: growthVisitorId(), session_id: growthSessionId(),
+    ...sellerAttribution, ...extra
+  });
+  if (typeof navigator.sendBeacon === 'function') {
+    try {
+      if (navigator.sendBeacon('/api/events', new Blob([body], { type: 'application/json' }))) return;
+    } catch {}
+  }
+  fetch('/api/events', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true
+  }).catch(() => {});
+}
+
+sendSellerEvent('seller_landing_view', { content: sellerAttribution.content || 'for-sellers' });
+document.querySelectorAll('[data-seller-cta]').forEach((link) => link.addEventListener('click', () => {
+  sendSellerEvent('seller_cta_clicked', { content: link.dataset.sellerCta || 'unknown' });
+}));
+
 let turnstileToken = '';
 let turnstileWidget = null;
 // 2026-09-03: Turnstileが出ないとフォームは一切送信できず、しかも画面上は

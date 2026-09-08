@@ -1,5 +1,9 @@
 const EVENTS = new Set([
   'landing_view',
+  // セラー獲得LPの上流KPI。問い合わせ完了はブラウザ値を信用せず、
+  // seller_business_inquiries をサーバ側の正本として別集計する。
+  'seller_landing_view',
+  'seller_cta_clicked',
   'target_price_watch_started',
   'notification_opened',
   // 2026-09-04 Experience Layer: 使用感の閲覧・投稿（Worker が記録。/api/events からは受けない想定だが許可リストに置く）

@@ -45,12 +45,15 @@ function setup() {
   };
   sqlite.testTimes = times;
   sqlite.exec(`
-    CREATE TABLE products(id TEXT);
+    CREATE TABLE products(id TEXT,tenant TEXT,record_key TEXT);
     CREATE TABLE marketplace_offers(id TEXT);
     CREATE TABLE sp_api_listings(id TEXT);
     CREATE TABLE d1_migrations(id INTEGER,name TEXT,applied_at TEXT);
     CREATE TABLE seller_outreach_contacts(contact_id TEXT,status TEXT,sent_at TEXT,scheduled_at TEXT,email_hash TEXT);
     CREATE TABLE seller_outreach_suppressions(email_hash TEXT);
+    CREATE TABLE seller_business_inquiries(inquiry_type TEXT,status TEXT,source TEXT);
+    CREATE TABLE seller_billing_accounts(seller_key TEXT);
+    CREATE TABLE seller_shops(seller_key TEXT,slug TEXT,tenants TEXT);
     CREATE TABLE social_post_queue(post_id TEXT,platform TEXT,status TEXT,external_post_id TEXT,published_at TEXT,scheduled_at TEXT,last_error TEXT);
     CREATE TABLE social_post_performance(post_id TEXT,public_url TEXT,snapshot_at TEXT);
     CREATE TABLE growth_events(event_type TEXT,traffic_class TEXT,source TEXT,visitor_id TEXT,session_id TEXT,medium TEXT,campaign TEXT,content TEXT,occurred_at TEXT);
@@ -64,6 +67,16 @@ function setup() {
       ('opted-out','OPTED_OUT','${times.optedOut}','${times.optedOut}','opted-out-hash'),
       ('replied','REPLIED','${times.replied}','${times.replied}','replied-hash'),
       ('failed','FAILED',NULL,'${times.sent}','failed-hash');
+    INSERT INTO seller_business_inquiries VALUES
+      ('CONSULTATION','NEW','FOR_SELLERS'),
+      ('ACCOUNT_APPLICATION','QUALIFIED','FOR_SELLERS');
+    INSERT INTO seller_billing_accounts VALUES ('internal-seller'),('external-seller');
+    INSERT INTO seller_shops VALUES
+      ('internal-seller','with-care','["internal"]'),
+      ('external-seller','outside-brand','["external"]');
+    INSERT INTO products VALUES
+      ('internal-product','internal','i-1'),
+      ('external-product','external','e-1');
     INSERT INTO d1_migrations VALUES
       (1,'0001_initial.sql','2026-09-07T00:00:00Z'),
       (2,'0002_private_name.sql','2026-09-08T00:00:00Z');
@@ -86,6 +99,8 @@ function setup() {
       ('seo_article_view','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','${times.articleClick}'),
       ('seo_article_view','QA','seo_article','visitor-internal','qa-session','','','','${times.article}'),
       ('target_price_watch_set','QA','seo_article','visitor-internal','qa-session','','','','${times.watchSet}'),
+      ('seller_landing_view','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','for-sellers','${times.article}'),
+      ('seller_cta_clicked','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','hero-inquiry','${times.articleClick}'),
       ('search_qa_result','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private product text','${times.qaResult}'),
       ('search_qa_trace','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private trace text','${times.qaTrace}');
     INSERT INTO mywatch_notifications VALUES
@@ -134,6 +149,19 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
     eligible_now: { status: 'AVAILABLE', count: 1 },
     next_scheduled_at: sqlite.testTimes.queued
   });
+  assert.deepEqual(result.seller_acquisition.rows.map(row => ({ ...row })), [{
+    candidate_count: 5,
+    send_target_count: 4,
+    inquiry_total: 2,
+    account_application_total: 1,
+    qualified_lead_total: 1,
+    external_seller_accounts: 1,
+    external_registered_products: 1,
+    seller_landing_views_7d: 1,
+    seller_cta_clicks_7d: 1
+  }]);
+  assert.equal(result.seller_acquisition.exclusions, 'ITG_SELLER_SHOP_SLUGS_AND_QA_TRAFFIC');
+  assert.equal(result.seller_acquisition.meeting_conversion.status, 'UNAVAILABLE');
   assert.deepEqual(result.migrations.rows.map(row => ({ ...row })), [{
     applied_count: 2,
     last_applied_at: '2026-09-08T00:00:00Z'

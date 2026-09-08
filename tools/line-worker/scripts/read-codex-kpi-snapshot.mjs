@@ -104,7 +104,8 @@ export async function operationalDiagnostics(db, internalIds = []) {
   };
   const internalPlaceholders = internalIds.map((_, i) => `?${i + 1}`).join(',');
   const [inventory, migrations, outreach, outreachOutcomes, social, funnel, articleJourney, siteJourney,
-    notifications, priceCache, generalWatches, searchQa, watchProviders, socialRetries, socialFormats] = await Promise.all([
+    notifications, priceCache, generalWatches, searchQa, watchProviders, socialRetries, socialFormats,
+    sellerAcquisition] = await Promise.all([
     read(`SELECT 'products' AS source,COUNT(*) AS count FROM products
       UNION ALL SELECT 'marketplace_offers',COUNT(*) FROM marketplace_offers
       UNION ALL SELECT 'sp_api_listings',COUNT(*) FROM sp_api_listings`),
@@ -216,7 +217,27 @@ export async function operationalDiagnostics(db, internalIds = []) {
       SUM(CASE WHEN status='PUBLISHED' AND external_post_id<>'' AND published_at<>'' THEN 1 ELSE 0 END) AS published_with_id_and_time,
       SUM(CASE WHEN status='PUBLISHED' AND external_post_id<>'' AND published_at<>'' AND has_public_url=1 THEN 1 ELSE 0 END) AS published_with_three_fields,
       MIN(CASE WHEN status IN ('APPROVED','PUBLISHING') THEN scheduled_at END) AS next_scheduled_at
-      FROM classified GROUP BY format,status`)
+      FROM classified GROUP BY format,status`),
+    read(`SELECT
+      (SELECT COUNT(DISTINCT c.email_hash) FROM seller_outreach_contacts c
+        WHERE NOT EXISTS (SELECT 1 FROM seller_outreach_suppressions s WHERE s.email_hash=c.email_hash)) AS candidate_count,
+      (SELECT COUNT(DISTINCT c.email_hash) FROM seller_outreach_contacts c
+        WHERE c.scheduled_at<>'' AND c.status NOT IN ('SKIPPED','OPTED_OUT')
+        AND NOT EXISTS (SELECT 1 FROM seller_outreach_suppressions s WHERE s.email_hash=c.email_hash)) AS send_target_count,
+      (SELECT COUNT(*) FROM seller_business_inquiries) AS inquiry_total,
+      (SELECT COUNT(*) FROM seller_business_inquiries WHERE inquiry_type='ACCOUNT_APPLICATION') AS account_application_total,
+      (SELECT COUNT(*) FROM seller_business_inquiries WHERE status='QUALIFIED') AS qualified_lead_total,
+      (SELECT COUNT(*) FROM seller_billing_accounts a
+        WHERE NOT EXISTS (SELECT 1 FROM seller_shops s WHERE s.seller_key=a.seller_key
+          AND s.slug IN ('with-care','find-fun','tomorrows-smile'))) AS external_seller_accounts,
+      (SELECT COUNT(*) FROM products p WHERE EXISTS (
+        SELECT 1 FROM seller_shops s, json_each(s.tenants) t
+        WHERE t.value=p.tenant AND s.slug NOT IN ('with-care','find-fun','tomorrows-smile')
+      )) AS external_registered_products,
+      (SELECT COUNT(*) FROM growth_events WHERE event_type='seller_landing_view'
+        AND traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_landing_views_7d,
+      (SELECT COUNT(*) FROM growth_events WHERE event_type='seller_cta_clicked'
+        AND traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_cta_clicks_7d`)
   ]);
   const outreachRow = outreachOutcomes.status === 'AVAILABLE' ? (outreachOutcomes.rows[0] || {}) : {};
   const outreachLifecycle = outreachOutcomes.status === 'AVAILABLE' ? {
@@ -231,6 +252,11 @@ export async function operationalDiagnostics(db, internalIds = []) {
     next_scheduled_at: outreachRow.next_scheduled_at || null
   } : { status: 'UNAVAILABLE' };
   return { inventory, migrations, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
+    seller_acquisition: sellerAcquisition.status === 'AVAILABLE' ? {
+      ...sellerAcquisition,
+      exclusions: 'ITG_SELLER_SHOP_SLUGS_AND_QA_TRAFFIC',
+      meeting_conversion: { status: 'UNAVAILABLE', reason: 'DEDICATED_MEETING_STAGE_NOT_CONNECTED' }
+    } : sellerAcquisition,
     article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney, notifications,
     price_cache: priceCache, search_qa: searchQa,
     target_price_providers_24h: watchProviders, threads_retry_audit: socialRetries,

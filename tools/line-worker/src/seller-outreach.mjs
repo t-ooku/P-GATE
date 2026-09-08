@@ -63,7 +63,7 @@ export function composeOutreachText(body, token, env = {}) {
     '',
     '――',
     'HOSHILU（ホシル） 運営: 大久津',
-    'https://hoshilu.app/  セラー向け案内: https://hoshilu.app/for-sellers',
+    'HOSHILU セラー向け案内: https://hoshilu.app/for-sellers?utm_source=seller_outreach&utm_medium=email&utm_campaign=initial_outreach',
     contact ? `ご返信・お問い合わせ: ${contact}（このメールに返信いただいても届きます）` : 'ご返信はこのメールにそのままお願いします。',
     `今後のご案内が不要な場合は、こちらから配信停止できます（ワンクリック）: ${unsubscribeUrl(token)}`,
     'このメールは、公開されている事業者向けの連絡先に、1回だけお送りしています。'

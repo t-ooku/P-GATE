@@ -62,6 +62,12 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /相談・登録申請/u);
   assert.match(html, /カード・銀行振込・請求書払い/u);
   assert.match(html, /フォーム送信だけで課金されることはありません/u);
+  assert.match(html, /HOSHILUはITグループ株式会社のサービスではありません/u);
+  assert.match(html, /ITG以外のメーカー、ブランド、モール出店者、自社EC、D2C事業者/u);
+  assert.match(html, /売上、注文、掲載順位は保証しません/u);
+  assert.match(html, /property="og:url" content="https:\/\/hoshilu\.app\/for-sellers"/u);
+  assert.match(html, /"@type":"FAQPage"/u);
+  assert.match(html, /data-seller-cta="hero-inquiry"/u);
   assert.match(html, /月額9,800円/u);
   assert.match(html, /1法人単位ではなく、1事業者アカウント単位/u);
   // 2026-09-03 大隆さん決定: 無料プラン＝定価、Business＝定価の50%＋毎月5,000円分まで0円。
@@ -73,6 +79,9 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /翌月へ繰り越しません/u);
   assert.doesNotMatch(html, /Businessあり/u);
   assert.doesNotMatch(html, /name="(?:password|api_key|secret|access_token)"/iu);
+  const script = readFileSync(new URL('../public/for-sellers.js', import.meta.url), 'utf8');
+  assert.match(script, /sendSellerEvent\('seller_landing_view'/u);
+  assert.match(script, /sendSellerEvent\('seller_cta_clicked'/u);
 });
 
 test('公開LPはスマホで見出しを3行以上に崩さず余白を圧縮する', () => {
