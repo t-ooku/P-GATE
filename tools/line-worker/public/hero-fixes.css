@@ -6,6 +6,20 @@
   text-wrap: balance;
 }
 
+/* 2026-09-08: ヘッダーはスマホでも指で押せる44pxの操作領域を保つ。 */
+.topbar .brand,
+.topbar .header-language select,
+.topbar .account-nav a,
+.topbar .account-nav button {
+  min-height: 44px;
+}
+
+.topbar .account-nav a,
+.topbar .account-nav button {
+  display: inline-flex;
+  align-items: center;
+}
+
 #heroEyebrow {
   margin-bottom: 14px;
   font-size: clamp(15px, 1.7vw, 19px);
@@ -14,8 +28,8 @@
   white-space: nowrap;
 }
 
-/* 2026-09-03 大隆さん指示: トップのキャッチは1行。
-   「欲しいもの、まとめて探す。」を2行に割らず、見出し全体を折り返さずに
+/* 2026-09-08 最新実行指示: トップのキャッチは1行。
+   「欲しい価格になったら、教えます。」を2行に割らず、見出し全体を折り返さずに
    字を縮めて収める。アクセント色は後半だけに残す。 */
 #heroTitle .hero-title-line { display: inline; }
 #heroTitle .hero-title-line:not(.hero-title-accent) { color: var(--ink); background: none; }

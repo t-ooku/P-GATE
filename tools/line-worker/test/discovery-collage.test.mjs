@@ -24,6 +24,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   assert.match(heroFixes, /html:lang\(ja\) #heroTitle \{\n  white-space: nowrap;/);
   assert.match(heroFixes, /#heroTitle \.hero-title-line \{ display: inline; \}/);
   assert.doesNotMatch(heroFixes, /#heroTitle \.hero-title-line \{ display: block; \}/);
+  assert.match(heroFixes, /\.topbar \.header-language select,[\s\S]*?\.topbar \.account-nav button \{[\s\S]*?min-height: 44px;/);
   assert.match(layoutFix, /html:lang\(ja\) #heroTitle\{white-space:nowrap\}/);
   assert.match(html, /loading="lazy"/);
   assert.match(html, /hoshilu-discovery-collage-mobile\.webp/);
