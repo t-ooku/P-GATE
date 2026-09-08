@@ -100,6 +100,23 @@ test('Turnstile token acquisition failure does not repeat the bounded visible-wi
   assert.match(app, /if\(retryableTurnstileFailure\)await recoverTurnstileWidget\(\)/);
 });
 
+test('Turnstile token-unavailable failure still shows the 13-mall fallback and reports search_degraded', () => {
+  // 2026-09-08: #147's landing auto-search fires before Turnstile can issue a
+  // token, so real traffic concentrates on TURNSTILE_TOKEN_UNAVAILABLE. That
+  // branch used to return with only a status message: no fallback marketplace
+  // links and no telemetry, unlike every other failure branch below it.
+  const app = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  const branch = app.slice(
+    app.indexOf("failureTelemetry.error_code==='TURNSTILE_TOKEN_UNAVAILABLE'"),
+    app.indexOf('!isIndependentSearchText(submittedQuery)&&hasSupplementalInput')
+  );
+  assert.ok(branch.length > 0 && branch.length < 2000, 'TURNSTILE_TOKEN_UNAVAILABLE branch should be isolated');
+  assert.match(branch, /emergencyMarketplaceFallback\(elements\.query\.value\)/);
+  assert.match(branch, /renderResults\(fallback,lastRequestId,submittedQuery,executionId\)/);
+  assert.match(branch, /new CustomEvent\('hoshilu:search-degraded'/);
+  assert.match(branch, /degraded:true/);
+});
+
 test('production browser acceptance guidance classifies Codex audits as QA and keeps them out of real-user SLI', () => {
   const runbook = fs.readFileSync(new URL('../docs/VISUAL_WEB_SEARCH_RUNBOOK.md', import.meta.url), 'utf8');
   assert.match(runbook, /utm_source=codex_qa&utm_medium=qa&utm_campaign=acceptance_search/u);
