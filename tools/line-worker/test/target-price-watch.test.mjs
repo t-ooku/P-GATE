@@ -5,7 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 import cryptoModule from 'node:crypto';
 import {
   brandToken, identityTokens, modelCodeTokens, observationReason, purgeTargetPriceObservations,
-  runTargetPriceScan, sameProduct, targetPriceProviderOutcome
+  runTargetPriceScan, sameProduct, targetPriceProviderOutcome, targetPriceSearchQuery
 } from '../src/target-price-watch.mjs';
 
 globalThis.crypto??=cryptoModule.webcrypto;
@@ -86,6 +86,34 @@ test('逆ウォッチは買った価格より安い時に「買った後に値�
 // 判定される状態だった。別商品の値段で「希望価格になりました」と通知するのは、
 // 通知しないことより悪い。
 const BAG='【8/16 23:59まで まとめ買いクーポン3点以上で 10%OFF 】 java ジャバ バッグ レディース ミニ トートバッグ アウトドア 巾着 メッシュ bag 2WAY 軽量 ショルダー ハンドバッグ シンプル メンズ ユニセックス 大容量 軽量 春 秋 冬 2024 クラシカルエルフ jv1159001';
+
+test('長い販促商品名は128バイト以下の検索語にし、末尾の型番とID厳密照合を保つ',()=>{
+  assert.equal(targetPriceSearchQuery({target_product_name:BAG}),'jv1159001');
+  assert.equal(targetPriceSearchQuery({target_product_name:'THERMOS 水筒 FJO-750'}),'THERMOS 水筒 FJO-750');
+  assert.equal(targetPriceSearchQuery({target_product_name:'送料無料 '.repeat(20)+'THERMOS FJO-750'}),'fjo-750');
+  const withoutModel=targetPriceSearchQuery({target_product_name:'送料無料 '.repeat(20)+'サーモス 水筒 真空断熱 ステンレス ワンタッチ'});
+  assert.ok(new TextEncoder().encode(withoutModel).length<=128);
+  assert.ok(!withoutModel.includes('送料無料'));
+  assert.equal(sameProduct({target_product_key:'RAKUTEN:shop:one',target_product_name:BAG},
+    {record_key:'RAKUTEN:shop:two',display_name:BAG}),false);
+});
+
+test('長い旧ウォッチは検索語だけ短縮して巡回でき、空IDを推測更新しない',async()=>{
+  const {sqlite,env}=envWithDb();
+  env.YAHOO_SHOPPING_CLIENT_ID='';env.RAKUTEN_APPLICATION_ID='app';env.RAKUTEN_ACCESS_KEY='key';
+  const snapshot=JSON.stringify({price_condition:{target_price_jpy:2500,target_product_name:BAG,target_product_key:''}});
+  sqlite.prepare(`INSERT INTO member_wishes(member_id,wish_id,query_text,language,watch_sale,watch_price,watch_coupon,watch_restock,watch_frequency,notify_new_match,condition_snapshot,created_at,updated_at)
+    VALUES('m1','w-long','トートバッグ','JA',0,1,0,0,'INSTANT',0,?1,'2026-09-08','2026-09-08')`).run(snapshot);
+  const result=await runTargetPriceScan(env,'2026-09-08T02:00:00.000Z',async url=>{
+    const query=new URL(url).searchParams.get('keyword');
+    if(new TextEncoder().encode(query).length>128)return new Response('{}',{status:400});
+    assert.equal(query,'jv1159001');
+    return Response.json({items:[{itemCode:'shop:bag1',itemName:'java ジャバ バッグ jv1159001',itemPrice:3000,itemUrl:'https://item.rakuten.co.jp/shop/bag1/',availability:1,postageFlag:0}]});
+  });
+  assert.deepEqual(result,{scanned:1,notifications_sent:0});
+  assert.equal(sqlite.prepare('SELECT reason FROM target_price_observations').get().reason,'ABOVE_TARGET');
+  assert.equal(sqlite.prepare('SELECT condition_snapshot FROM member_wishes').get().condition_snapshot,snapshot);
+});
 
 test('判定に使う語は、キャンペーン文を捨てて型番とブランドを拾う', () => {
   const words = identityTokens(BAG);

@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { operationalDiagnostics } from '../scripts/read-codex-kpi-snapshot.mjs';
+import { operationalDiagnostics, assertReadOnlySql } from '../scripts/read-codex-kpi-snapshot.mjs';
 
 function d1(sqlite) {
   return {
     prepare(sql) {
-      const statement = sqlite.prepare(sql);
+      const statement = sqlite.prepare(assertReadOnlySql(sql));
       const result = values => ({
         async all() { return { results: statement.all(...values) }; }
       });

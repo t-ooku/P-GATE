@@ -59,6 +59,27 @@ export function identityTokens(title){
   }
   return out;
 }
+export function targetPriceSearchQuery(wish={}){
+  const title=String(wish.target_product_name||wish.query_text||'').normalize('NFKC').trim();
+  const bytes=value=>new TextEncoder().encode(value).length;
+  // Rakuten keyword is limited to 128 single-byte characters and ANDs every
+  // term. Campaign-heavy full titles exceed that limit and overconstrain the
+  // lookup. Retrieve candidates with short terms; sameProduct remains the gate.
+  if(bytes(title)<=128 && title.split(/\s+/u).length<=6)return title;
+  const tokens=identityTokens(title);
+  const models=modelCodeTokens(title.toLowerCase().split(/[^a-z0-9-]+/u));
+  const preferred=models.length?[...new Set(models)].slice(0,3):tokens.slice(0,5);
+  let query='';
+  for(const token of preferred){
+    const next=query?`${query} ${token}`:token;
+    if(bytes(next)>128)break;
+    query=next;
+  }
+  // Do not split a model or manufacture a product identifier.
+  if(query)return query;
+  for(const char of title){if(bytes(query+char)>128)break;query+=char;}
+  return query.trim();
+}
 export const IDENTITY_MIN_TOKENS=3;
 export const IDENTITY_MIN_RATIO=0.5;
 export const IDENTITY_STRICT_RATIO=0.7;
@@ -219,7 +240,7 @@ export async function purgeTargetPriceObservations(env,now=new Date()){
 
 export async function scanTargetPriceWish(env,wish,now=new Date().toISOString(),fetcher=fetch){
   if(!wish||Number(wish.watch_price)!==1||Number(wish.target_price_jpy)<100)return{scanned:false,notified:false};
-  const query=String(wish.target_product_name||wish.query_text||'').trim();
+  const query=targetPriceSearchQuery(wish);
   const providerResult=await searchConnectedMarketplaces(env,query,fetcher,String(wish.target_product_key||''));
   await recordProviderDiagnostics(env,providerResult.diagnostics,now);
   const candidates=providerResult.candidates;

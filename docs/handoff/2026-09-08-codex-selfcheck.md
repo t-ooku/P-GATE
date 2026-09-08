@@ -25,3 +25,11 @@ Threadsの全日付再試行監査と、Instagram当日の形式・公開証拠�
 画面検証はQA流入で「サーモス 水筒」→すぐ検索まで操作したが、セキュリティ確認が完了せず候補取得前に停止。未ログインでもあり、新規Watch保存・受信を行っていない。認証やセキュリティ確認を回避しない。
 
 旧3件のIDを推測補完しない。#252/#123は本番証拠確認前に閉じない。SNS・営業ジョブを再実行していない。
+
+## 10:41 JST以降の確認・追加修正
+
+- source `7b37cbc5bc0579ddb7ac80f590f743cd7603eaeb`を本番反映。全Worker 2,282件・検索品質検査PASS。CI https://github.com/t-ooku/P-GATE/actions/runs/34177383383 。
+- artifact 10037744064（10:41:12 JST）で、全日付のThreads `last_error<>'' AND status IN ('APPROVED','PUBLISHING')` は0件。CANCELLED/TEXT_TOO_LONG 1件、FAILED/OTHER_REDACTED 4件は履歴として残る。これを証拠に#252をclose済み。自分で既存投稿をcancelしたとは報告しない。
+- Instagram形式診断はUNAVAILABLEだった。原因は読み取り専用SQLガードが文字列関数REPLACEを更新文として弾くため。ガードは弱めず、同じ境界判定をGLOBへ変更し、テストにも本物のread-onlyガードを通す。
+- [楽天公式仕様](https://webservice.rakuten.co.jp/documentation/ichiba-item-search)はkeyword最大128 single-byte characters・空白区切りAND検索。長い販促文付き商品名を200文字までそのまま送る旧巡回はこれに不適合。検索語だけ128 UTF-8 bytes以内に圧縮し、原文に実在する型番を優先する修正を準備。候補の同一商品判定・IDの完全一致は変えず、旧空IDも更新しない。
+- 長い商品名→API候補→ABOVE_TARGETの回帰テストと、設定スナップショット不変を検証。実際の失敗198件すべてが文字数原因とはまだ断定せず、新しいprovider診断で確認する。

@@ -207,7 +207,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
       GROUP BY status,error_code`),
     read(`WITH classified AS (
       SELECT q.status,q.external_post_id,q.published_at,q.scheduled_at,
-        CASE WHEN ('-' || lower(replace(q.content_id,'_','-')) || '-') LIKE '%-story-%' THEN 'STORY'
+        CASE WHEN ('-' || lower(q.content_id) || '-') GLOB '*[-_]story[-_]*' THEN 'STORY'
           WHEN q.content_format IN ('REEL','IMAGE','CAROUSEL') THEN q.content_format ELSE 'UNSPECIFIED' END AS format,
         EXISTS(SELECT 1 FROM social_post_performance p WHERE p.post_id=q.post_id AND p.public_url LIKE 'https://%') AS has_public_url
       FROM social_post_queue q WHERE q.platform='INSTAGRAM'
