@@ -40,6 +40,14 @@ function setup() {
       ('opted-out','OPTED_OUT','2026-09-08T00:06:00Z','2026-09-08T00:00:00Z','opted-out-hash'),
       ('replied','REPLIED','2026-09-08T00:07:00Z','2026-09-08T00:00:00Z','replied-hash'),
       ('failed','FAILED',NULL,'2026-09-08T00:00:00Z','failed-hash');
+    INSERT INTO d1_migrations VALUES
+      (1,'0001_initial.sql','2026-09-07T00:00:00Z'),
+      (2,'0002_private_name.sql','2026-09-08T00:00:00Z');
+    INSERT INTO social_post_queue VALUES
+      ('private-post-id-1','X','PUBLISHED','private-external-id','2026-09-08T00:05:00Z','2026-09-08T00:00:00Z',''),
+      ('private-post-id-2','X','PUBLISHED','private-external-id-2','2026-09-08T00:06:00Z','2026-09-08T00:01:00Z','');
+    INSERT INTO social_post_performance VALUES
+      ('private-post-id-1','https://example.invalid/private-post','2026-09-08T00:06:00Z');
     INSERT INTO growth_events VALUES
       ('landing_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-07T23:59:00Z'),
       ('seo_article_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:00:00Z'),
@@ -53,7 +61,9 @@ function setup() {
       ('search_started','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','2026-09-08T00:00:00Z'),
       ('seo_article_view','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','2026-09-08T00:01:00Z'),
       ('seo_article_view','QA','seo_article','visitor-internal','qa-session','','','','2026-09-08T00:00:00Z'),
-      ('target_price_watch_set','QA','seo_article','visitor-internal','qa-session','','','','2026-09-08T00:04:00Z');
+      ('target_price_watch_set','QA','seo_article','visitor-internal','qa-session','','','','2026-09-08T00:04:00Z'),
+      ('search_qa_result','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private product text','2026-09-08T00:05:00Z'),
+      ('search_qa_trace','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private trace text','2026-09-08T00:06:00Z');
     INSERT INTO mywatch_notifications VALUES
       ('PRICE_DROP','TARGET:general','general-member','EMAIL','SENT','2026-09-08T00:10:00Z'),
       ('PRICE_DROP','TARGET:internal','internal-1','EMAIL','SENT','2026-09-08T00:11:00Z');
@@ -99,6 +109,22 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
     eligible_now: { status: 'AVAILABLE', count: 1 },
     next_scheduled_at: '2026-09-07T00:00:00Z'
   });
+  assert.deepEqual(result.migrations.rows.map(row => ({ ...row })), [{
+    applied_count: 2,
+    last_applied_at: '2026-09-08T00:00:00Z'
+  }]);
+  assert.deepEqual(result.social.rows.map(row => ({ ...row })), [{
+    platform: 'X', status: 'PUBLISHED', error_code: 'NONE', count: 2,
+    last_published_at: '2026-09-08T00:06:00Z', next_scheduled_at: null
+  }]);
+  assert.deepEqual(result.search_qa.rows.map(row => ({ ...row })), [{
+    outcome: 'PASS', count: 1, last_observed_at: '2026-09-08T00:05:00Z'
+  }]);
+  const serialized = JSON.stringify(result);
+  for (const forbidden of ['private-post-id', 'private-external-id', 'private product text',
+    'private trace text', 'private-query-id', '0002_private_name.sql']) {
+    assert.equal(serialized.includes(forbidden), false, `aggregate diagnostics must omit ${forbidden}`);
+  }
 });
 
 test('内部会員IDがない場合は通知・一般利用者ウォッチを0件に偽装しない', async () => {

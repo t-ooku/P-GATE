@@ -108,7 +108,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
     read(`SELECT 'products' AS source,COUNT(*) AS count FROM products
       UNION ALL SELECT 'marketplace_offers',COUNT(*) FROM marketplace_offers
       UNION ALL SELECT 'sp_api_listings',COUNT(*) FROM sp_api_listings`),
-    read(`SELECT name,applied_at FROM d1_migrations ORDER BY id DESC LIMIT 5`),
+    read(`SELECT COUNT(*) AS applied_count,MAX(applied_at) AS last_applied_at FROM d1_migrations`),
     read(`SELECT status,COUNT(*) AS count,MAX(sent_at) AS last_sent_at FROM seller_outreach_contacts GROUP BY status`),
     read(`SELECT
       SUM(CASE WHEN NULLIF(sent_at,'') IS NOT NULL THEN 1 ELSE 0 END) AS sent,
@@ -124,14 +124,18 @@ export async function operationalDiagnostics(db, internalIds = []) {
           AND p.contact_id<>c.contact_id AND p.status IN ('SENDING','SENT','REPLIED','OPTED_OUT'))
       ) AS eligible_now
       FROM seller_outreach_contacts`),
-    read(`SELECT q.post_id,q.platform,q.status,q.external_post_id,q.published_at,q.scheduled_at,
-      (SELECT p.public_url FROM social_post_performance p WHERE p.post_id=q.post_id AND p.public_url<>'' ORDER BY p.snapshot_at DESC LIMIT 1) AS public_url,
-      CASE WHEN q.last_error='' THEN 'NONE'
-        WHEN q.last_error LIKE 'SOCIAL_RETRY_EXHAUSTED_%' THEN 'RETRY_EXHAUSTED'
-        WHEN q.last_error LIKE '%Param text must be at most%' THEN 'TEXT_TOO_LONG'
-        WHEN q.last_error LIKE 'SOCIAL_%_TEXT_TOO_LONG' THEN 'TEXT_TOO_LONG'
-        ELSE 'OTHER_REDACTED' END AS error_code
-      FROM social_post_queue q WHERE date(q.scheduled_at,'+9 hours')=date('now','+9 hours') ORDER BY q.scheduled_at LIMIT 60`),
+    read(`WITH classified AS (
+      SELECT platform,status,published_at,scheduled_at,
+        CASE WHEN last_error='' THEN 'NONE'
+          WHEN last_error LIKE 'SOCIAL_RETRY_EXHAUSTED_%' THEN 'RETRY_EXHAUSTED'
+          WHEN last_error LIKE '%Param text must be at most%' THEN 'TEXT_TOO_LONG'
+          WHEN last_error LIKE 'SOCIAL_%_TEXT_TOO_LONG' THEN 'TEXT_TOO_LONG'
+          ELSE 'OTHER_REDACTED' END AS error_code
+      FROM social_post_queue WHERE date(scheduled_at,'+9 hours')=date('now','+9 hours')
+    ) SELECT platform,status,error_code,COUNT(*) AS count,
+      MAX(NULLIF(published_at,'')) AS last_published_at,
+      MIN(CASE WHEN status IN ('APPROVED','PUBLISHING') THEN scheduled_at END) AS next_scheduled_at
+      FROM classified GROUP BY platform,status,error_code ORDER BY platform,status,error_code`),
     read(`SELECT event_type,traffic_class,CASE WHEN source LIKE 'seo_%' THEN 'SEO' ELSE 'OTHER' END AS origin,
       COUNT(*) AS count,COUNT(DISTINCT NULLIF(visitor_id,'')) AS observed_visitors
       FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
@@ -185,9 +189,9 @@ export async function operationalDiagnostics(db, internalIds = []) {
       WHERE watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100
       AND member_id NOT IN (${internalPlaceholders})`, internalIds)
       : { status: 'UNVERIFIED', reason: 'INTERNAL_MEMBER_EXCLUSION_NOT_CONFIGURED' },
-    read(`SELECT medium AS query_id,campaign AS outcome,content AS codes,occurred_at
-      FROM growth_events WHERE event_type IN ('search_qa_result','search_qa_trace') AND traffic_class='QA'
-      AND datetime(occurred_at)>=datetime('now','-24 hours') ORDER BY occurred_at DESC LIMIT 40`)
+    read(`SELECT campaign AS outcome,COUNT(*) AS count,MAX(occurred_at) AS last_observed_at
+      FROM growth_events WHERE event_type='search_qa_result' AND traffic_class='QA'
+      AND datetime(occurred_at)>=datetime('now','-24 hours') GROUP BY campaign ORDER BY campaign`)
   ]);
   const outreachRow = outreachOutcomes.status === 'AVAILABLE' ? (outreachOutcomes.rows[0] || {}) : {};
   const outreachLifecycle = outreachOutcomes.status === 'AVAILABLE' ? {
