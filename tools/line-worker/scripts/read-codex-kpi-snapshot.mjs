@@ -104,7 +104,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
   };
   const internalPlaceholders = internalIds.map((_, i) => `?${i + 1}`).join(',');
   const [inventory, migrations, outreach, outreachOutcomes, social, funnel, articleJourney, siteJourney,
-    notifications, priceCache, generalWatches, searchQa] = await Promise.all([
+    notifications, priceCache, generalWatches, searchQa, watchProviders, socialRetries, socialFormats] = await Promise.all([
     read(`SELECT 'products' AS source,COUNT(*) AS count FROM products
       UNION ALL SELECT 'marketplace_offers',COUNT(*) FROM marketplace_offers
       UNION ALL SELECT 'sp_api_listings',COUNT(*) FROM sp_api_listings`),
@@ -191,7 +191,32 @@ export async function operationalDiagnostics(db, internalIds = []) {
       : { status: 'UNVERIFIED', reason: 'INTERNAL_MEMBER_EXCLUSION_NOT_CONFIGURED' },
     read(`SELECT campaign AS outcome,COUNT(*) AS count,MAX(occurred_at) AS last_observed_at
       FROM growth_events WHERE event_type='search_qa_result' AND traffic_class='QA'
-      AND datetime(occurred_at)>=datetime('now','-24 hours') GROUP BY campaign ORDER BY campaign`)
+      AND datetime(occurred_at)>=datetime('now','-24 hours') GROUP BY campaign ORDER BY campaign`),
+    read(`SELECT marketplace AS provider,campaign AS outcome,COUNT(*) AS count,MAX(occurred_at) AS last_observed_at
+      FROM growth_events WHERE event_type='target_price_provider_result' AND traffic_class='QA'
+      AND marketplace IN ('RAKUTEN_JP','YAHOO_JP','AMAZON_JP')
+      AND (campaign IN ('CANDIDATES','EMPTY','TIMEOUT','COORDINATOR_UNAVAILABLE','PROVIDER_REQUEST_FAILED')
+        OR (campaign GLOB 'HTTP_[1-5][0-9][0-9]' AND length(campaign)=8))
+      AND datetime(occurred_at)>=datetime('now','-24 hours') GROUP BY marketplace,campaign`),
+    read(`SELECT status,
+      CASE WHEN last_error LIKE '%Param text must be at most%' OR last_error LIKE 'SOCIAL_%_TEXT_TOO_LONG' THEN 'TEXT_TOO_LONG'
+        WHEN last_error LIKE 'SOCIAL_RETRY_EXHAUSTED_%' THEN 'RETRY_EXHAUSTED' ELSE 'OTHER_REDACTED' END AS error_code,
+      COUNT(*) AS count,MAX(updated_at) AS last_updated_at
+      FROM social_post_queue WHERE platform='THREADS' AND last_error<>''
+      AND status IN ('APPROVED','PUBLISHING','FAILED','CANCELLED')
+      GROUP BY status,error_code`),
+    read(`WITH classified AS (
+      SELECT q.status,q.external_post_id,q.published_at,q.scheduled_at,
+        CASE WHEN ('-' || lower(replace(q.content_id,'_','-')) || '-') LIKE '%-story-%' THEN 'STORY'
+          WHEN q.content_format IN ('REEL','IMAGE','CAROUSEL') THEN q.content_format ELSE 'UNSPECIFIED' END AS format,
+        EXISTS(SELECT 1 FROM social_post_performance p WHERE p.post_id=q.post_id AND p.public_url LIKE 'https://%') AS has_public_url
+      FROM social_post_queue q WHERE q.platform='INSTAGRAM'
+      AND date(q.scheduled_at,'+9 hours')=date('now','+9 hours')
+    ) SELECT format,status,COUNT(*) AS count,
+      SUM(CASE WHEN status='PUBLISHED' AND external_post_id<>'' AND published_at<>'' THEN 1 ELSE 0 END) AS published_with_id_and_time,
+      SUM(CASE WHEN status='PUBLISHED' AND external_post_id<>'' AND published_at<>'' AND has_public_url=1 THEN 1 ELSE 0 END) AS published_with_three_fields,
+      MIN(CASE WHEN status IN ('APPROVED','PUBLISHING') THEN scheduled_at END) AS next_scheduled_at
+      FROM classified GROUP BY format,status`)
   ]);
   const outreachRow = outreachOutcomes.status === 'AVAILABLE' ? (outreachOutcomes.rows[0] || {}) : {};
   const outreachLifecycle = outreachOutcomes.status === 'AVAILABLE' ? {
@@ -208,6 +233,8 @@ export async function operationalDiagnostics(db, internalIds = []) {
   return { inventory, migrations, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
     article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney, notifications,
     price_cache: priceCache, search_qa: searchQa,
+    target_price_providers_24h: watchProviders, threads_retry_audit: socialRetries,
+    instagram_formats_today: socialFormats,
     general_user_watch_set: { ...generalWatches, classification: 'EXCLUDES_CONFIGURED_INTERNAL_MEMBERS', internal_member_count: internalIds.length },
     notification_return_internal_exclusion: { status: 'UNAVAILABLE', reason: 'ANONYMOUS_RETURN_EVENTS_CANNOT_BE_JOINED_TO_INTERNAL_MEMBER_IDS' } };
 }

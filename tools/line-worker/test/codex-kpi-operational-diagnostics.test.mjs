@@ -127,6 +127,32 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
   }
 });
 
+test('過去日付のThreads再試行とStoryを匿名集計し、未接続をゼロとしない', async () => {
+  const sqlite=setup();
+  sqlite.exec(`ALTER TABLE social_post_queue ADD COLUMN content_id TEXT DEFAULT '';
+    ALTER TABLE social_post_queue ADD COLUMN content_format TEXT DEFAULT '';
+    ALTER TABLE social_post_queue ADD COLUMN updated_at TEXT DEFAULT '';
+    ALTER TABLE growth_events ADD COLUMN marketplace TEXT DEFAULT '';
+    INSERT INTO social_post_queue(post_id,platform,status,external_post_id,published_at,scheduled_at,last_error,content_id)
+    VALUES('old-retry','THREADS','APPROVED','','','2026-01-01','THREADS_CREATE_500_Param text must be at most 500 characters','private content'),
+      ('story','INSTAGRAM','APPROVED','','',strftime('%Y-%m-%dT%H:%M:%fZ','now'),'','today_story_example');
+    INSERT INTO growth_events(event_type,traffic_class,campaign,marketplace,occurred_at) VALUES
+      ('target_price_provider_result','QA','HTTP_400','RAKUTEN_JP',strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+      ('target_price_provider_result','QA','PRIVATE_QUERY','RAKUTEN_JP',strftime('%Y-%m-%dT%H:%M:%fZ','now'));`);
+  const result=await operationalDiagnostics(d1(sqlite),['internal-1']);
+  assert.equal(result.threads_retry_audit.status,'AVAILABLE');
+  assert.equal(result.threads_retry_audit.rows[0].error_code,'TEXT_TOO_LONG');
+  assert.equal(result.threads_retry_audit.rows[0].count,1);
+  assert.equal(result.instagram_formats_today.rows.find(r=>r.format==='STORY').published_with_three_fields,0);
+  assert.equal(result.target_price_providers_24h.rows.length,1);
+  assert.equal(result.target_price_providers_24h.rows[0].outcome,'HTTP_400');
+  assert.equal(JSON.stringify(result).includes('PRIVATE_QUERY'),false);
+  assert.equal(JSON.stringify(result).includes('private content'),false);
+  const unavailable=await operationalDiagnostics({prepare(){throw Error('unavailable');}},[]);
+  assert.equal(unavailable.threads_retry_audit.status,'UNAVAILABLE');
+  assert.equal(unavailable.instagram_formats_today.status,'UNAVAILABLE');
+});
+
 test('内部会員IDがない場合は通知・一般利用者ウォッチを0件に偽装しない', async () => {
   const result = await operationalDiagnostics(d1(setup()));
   assert.deepEqual(result.notifications, {

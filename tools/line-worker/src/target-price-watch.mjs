@@ -3,6 +3,7 @@ import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-market
 import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
 import { nextDeliveryAt } from './mywatch-policy.mjs';
 import { targetPriceProductKey } from './target-price-product-key.mjs';
+import { safeProviderErrorCode } from './provider-error-code.mjs';
 
 // 購入希望価格は既存member_wishes.condition_snapshot.price_conditionへ保存し、
 // 定期確認/到達済み状態は既存search_watch_matchesへ内部マーカーとして持つ。
@@ -106,22 +107,41 @@ function notificationText(wish,best,target){
   const values={JA:{title:'購入したい価格になりました',body:`${best.name}：API確認価格 ¥${best.price.toLocaleString('ja-JP')}（希望価格 ¥${target.toLocaleString('ja-JP')}以下）`},EN:{title:'Your target price has been reached',body:`${best.name}: API-confirmed price JPY ${best.price.toLocaleString('en-US')} (at or below your target of JPY ${target.toLocaleString('en-US')})`},ZH:{title:'商品已达到您的目标价格',body:`${best.name}：API确认价格 ¥${best.price.toLocaleString('zh-CN')}（不高于目标价 ¥${target.toLocaleString('zh-CN')}）`},KO:{title:'원하는 구매 가격에 도달했습니다',body:`${best.name}: API 확인 가격 ¥${best.price.toLocaleString('ko-KR')} (희망 가격 ¥${target.toLocaleString('ko-KR')} 이하)`}};
   return values[String(wish.language||'JA').toUpperCase()]||values.JA;
 }
+export function targetPriceProviderOutcome(outcome){
+  if(outcome.status==='fulfilled')return outcome.value?.length?'CANDIDATES':'EMPTY';
+  const error=outcome.reason;
+  if(error?.name==='TimeoutError'||error?.name==='AbortError')return 'TIMEOUT';
+  if(error?.message==='YAHOO_REQUEST_COORDINATOR_UNAVAILABLE')return 'COORDINATOR_UNAVAILABLE';
+  return safeProviderErrorCode('',error?.status,'PROVIDER_REQUEST_FAILED');
+}
 async function searchConnectedMarketplaces(env,query,fetcher,key=''){
-  const calls=[];
+  const calls=[];const providers=[];
+  const add=(provider,call)=>{providers.push(provider);calls.push(call);};
   if (key.startsWith('RAKUTEN:')) {
-    if(rakutenApiConfigured(env))calls.push(searchRakutenMarketplace(env,'',fetcher,'',{itemCode:key.slice(8)}));
+    if(rakutenApiConfigured(env))add('RAKUTEN_JP',searchRakutenMarketplace(env,'',fetcher,'',{itemCode:key.slice(8)}));
   }else{
-    if(creatorsApiConfigured(env))calls.push(searchAmazonCreators(env,query,fetcher));
-    if(rakutenApiConfigured(env))calls.push(searchRakutenMarketplace(env,query,fetcher));
-    if(yahooShoppingApiConfigured(env))calls.push(searchYahooShopping(env,query,fetcher));
+    if(creatorsApiConfigured(env))add('AMAZON_JP',searchAmazonCreators(env,query,fetcher));
+    if(rakutenApiConfigured(env))add('RAKUTEN_JP',searchRakutenMarketplace(env,query,fetcher));
+    if(yahooShoppingApiConfigured(env))add('YAHOO_JP',searchYahooShopping(env,query,fetcher));
   }
   const outcomes=await Promise.allSettled(calls);
   return{
     candidates:outcomes.flatMap(outcome=>outcome.status==='fulfilled'&&Array.isArray(outcome.value)?outcome.value:[]),
     provider_count:calls.length,
     provider_success_count:outcomes.filter(outcome=>outcome.status==='fulfilled').length,
-    provider_failure_count:outcomes.filter(outcome=>outcome.status==='rejected').length
+    provider_failure_count:outcomes.filter(outcome=>outcome.status==='rejected').length,
+    diagnostics:outcomes.map((outcome,index)=>({provider:providers[index],code:targetPriceProviderOutcome(outcome)}))
   };
+}
+async function recordProviderDiagnostics(env,diagnostics,now){
+  // Fixed provider/outcome vocabulary only: never persist the query, product,
+  // member/wish ID, provider response body or credential. Excluded from KPIs.
+  for(const row of diagnostics){
+    try{await env.PRODUCT_DB.prepare(`INSERT INTO growth_events
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+      VALUES(?1,'target_price_provider_result','JA','worker','target_price_scan',?2,'',?3,?4,'QA','','')`)
+      .bind(crypto.randomUUID(),row.code,row.provider,now).run();}catch{}
+  }
 }
 async function persistObservation(env,wish,best,now){
   const target=Number(wish.target_price_jpy)||0;
@@ -201,6 +221,7 @@ export async function scanTargetPriceWish(env,wish,now=new Date().toISOString(),
   if(!wish||Number(wish.watch_price)!==1||Number(wish.target_price_jpy)<100)return{scanned:false,notified:false};
   const query=String(wish.target_product_name||wish.query_text||'').trim();
   const providerResult=await searchConnectedMarketplaces(env,query,fetcher,String(wish.target_product_key||''));
+  await recordProviderDiagnostics(env,providerResult.diagnostics,now);
   const candidates=providerResult.candidates;
   const best=pricedOffers(wish,candidates)[0]||null;
   const providerState={providerCount:providerResult.provider_count,

@@ -5,13 +5,23 @@ import { DatabaseSync } from 'node:sqlite';
 import cryptoModule from 'node:crypto';
 import {
   brandToken, identityTokens, modelCodeTokens, observationReason, purgeTargetPriceObservations,
-  runTargetPriceScan, sameProduct
+  runTargetPriceScan, sameProduct, targetPriceProviderOutcome
 } from '../src/target-price-watch.mjs';
 
 globalThis.crypto??=cryptoModule.webcrypto;
 
+test('巡回APIの診断は固定コードだけを残し、例外本文を漏らさない',()=>{
+  assert.equal(targetPriceProviderOutcome({status:'fulfilled',value:[]}), 'EMPTY');
+  assert.equal(targetPriceProviderOutcome({status:'fulfilled',value:[{}]}), 'CANDIDATES');
+  assert.equal(targetPriceProviderOutcome({status:'rejected',reason:{status:400,message:'private product'}}), 'HTTP_400');
+  assert.equal(targetPriceProviderOutcome({status:'rejected',reason:{name:'TimeoutError',message:'private key'}}), 'TIMEOUT');
+  assert.equal(targetPriceProviderOutcome({status:'rejected',reason:{message:'YAHOO_REQUEST_COORDINATOR_UNAVAILABLE'}}), 'COORDINATOR_UNAVAILABLE');
+  assert.equal(targetPriceProviderOutcome({status:'rejected',reason:{providerCode:'private key',message:'private product'}}), 'PROVIDER_REQUEST_FAILED');
+});
+
 function envWithDb(){
   const sqlite=new DatabaseSync(':memory:');
+  sqlite.exec(`CREATE TABLE growth_events(event_id TEXT PRIMARY KEY,event_type TEXT,locale TEXT,source TEXT,medium TEXT,campaign TEXT,content TEXT,marketplace TEXT,occurred_at TEXT,traffic_class TEXT,visitor_id TEXT,session_id TEXT)`);
   for(const name of ['0002_member_wishes.sql','0003_member_wish_preferences.sql','0005_mywatch_notifications.sql','0031_member_notification_destinations.sql','0036_mywatch_notification_product_fields.sql','0044_insight_search_watch.sql','0064_mywatch_notification_result_url.sql','0076_target_price_observations.sql'])sqlite.exec(readFileSync(new URL(`../migrations/${name}`,import.meta.url),'utf8'));
   const db={prepare(sql){const statement=sqlite.prepare(sql);return{bind(...values){return{run:async()=>{const result=statement.run(...values);return{meta:{changes:Number(result.changes||0)}};},first:async()=>statement.get(...values)||null,all:async()=>({results:statement.all(...values)})};}};},batch:async(statements)=>Promise.all(statements.map(statement=>statement.run()))};
   return{sqlite,env:{PRODUCT_DB:db,YAHOO_SHOPPING_CLIENT_ID:'client-id'}};
@@ -26,6 +36,8 @@ test('API確認価格が購入希望額以下になった時だけ一度通知�
   sqlite.prepare("INSERT INTO member_notification_destinations VALUES('m1','EMAIL','encrypted','2026-08-09','2026-08-09')").run();
   const first=await runTargetPriceScan(env,now,yahooFetch(2800));
   assert.deepEqual(first,{scanned:1,notifications_sent:1});
+  const diagnostic=sqlite.prepare('SELECT campaign,marketplace,traffic_class,content,visitor_id,session_id FROM growth_events').get();
+  assert.deepEqual({...diagnostic},{campaign:'CANDIDATES',marketplace:'YAHOO_JP',traffic_class:'QA',content:'',visitor_id:'',session_id:''});
   const notification=sqlite.prepare("SELECT title,body,marketplace,result_url FROM mywatch_notifications WHERE channel='WEB'").get();
   assert.equal(notification.title,'購入したい価格になりました');
   assert.equal(notification.result_url,'https://store.shopping.yahoo.co.jp/shop/lilmoon-1.html');
