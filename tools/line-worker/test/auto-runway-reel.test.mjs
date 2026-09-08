@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql, buildPostId, buildRejectSql,
-  evaluateFaces, evaluateTranscript, nextPublishSlot, parseVolume, similarity
+  evaluateFaces, evaluateGeneratedText, evaluateTranscript, GENERATED_TEXT_MAX_CHARS_TOTAL,
+  nextPublishSlot, parseVolume, REQUIRED_QA_CHECKS, similarity
 } from '../scripts/auto-runway-reel-lib.mjs';
 
 const themes = JSON.parse(readFileSync(new URL('../ops/runway/auto/themes.json', import.meta.url), 'utf8'));
@@ -120,4 +121,46 @@ test('同じ枠のAI女優日次リール（既存素材）は Runway 新規生�
   const runner = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
   assert.match(runner, /replaceable = competing\.filter\(\(row\) => row\.campaign_id === 'hoshilu-ai-actress-daily-v1' && row\.status === 'APPROVED'\)/u);
   assert.match(runner, /if \(!qualityFailure\) \{ log\('non-quality failure; job left as-is for a re-run'/u, '生成物以外の理由では FAILED_FINAL にしない');
+});
+
+// 2026-09-08 大隆さん指摘（実際に Instagram と X へ公開してしまった）:
+// 生成映像の中でスマホ画面に崩れた日本語が並んでいた。themes.json は既に
+// 「画面内の文字・UI・字幕・テロップは一切生成しない」と指示していたが、
+// 動画モデルは否定指示を守らない。指示ではなく機械で弾く。
+test('生成映像に文字が写っていたら不合格にする（崩れた画面の公開を止める）', () => {
+  // 後処理前のフレーム＝こちらの焼き込み字幕はまだ無い。文字が出たらモデルの捏造。
+  const dirty = [
+    { fullTextAnnotation: { text: 'ちB日ぬ 敵ぴ痛しじ？\nフプリとして使う' } },
+    { textAnnotations: [{ description: '日本本鈎のよい' }] },
+    {}, {}, {}
+  ];
+  const bad = evaluateGeneratedText(dirty);
+  assert.equal(bad.ok, false);
+  assert.ok(bad.total > GENERATED_TEXT_MAX_CHARS_TOTAL);
+
+  // 文字が無いフレームは通る
+  assert.equal(evaluateGeneratedText([{}, {}, {}, {}, {}]).ok, true);
+
+  // 服の柄などの誤検出は少しだけ許容する（1フレーム2文字まで・合計3文字まで）
+  assert.equal(evaluateGeneratedText([{ fullTextAnnotation: { text: 'AB' } }, {}, {}]).ok, true);
+  assert.equal(evaluateGeneratedText([{ fullTextAnnotation: { text: 'ABC' } }, {}, {}]).ok, false);
+  assert.equal(evaluateGeneratedText([
+    { fullTextAnnotation: { text: 'AB' } }, { fullTextAnnotation: { text: 'CD' } }, {}
+  ]).ok, false);
+});
+
+test('自動QAの必須項目に「生成映像に文字なし」が入っている', () => {
+  assert.ok(REQUIRED_QA_CHECKS.includes('no_generated_text'));
+  const runner = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  // 後処理前の生成映像（raw）から取ったフレームを Cloud Vision の TEXT_DETECTION にかけ、
+  // 文字が出たら problems に積む
+  assert.match(runner, /TEXT_DETECTION/u);
+  assert.match(runner, /evaluateGeneratedText\(vision\.responses\)/u);
+  assert.match(runner, /problems\.push\('generated_text_detected'\)/u);
+});
+
+test('生成の指示は、画面のある機器そのものを写さないと言い切る', () => {
+  const config = JSON.parse(readFileSync(new URL('../ops/runway/auto/themes.json', import.meta.url), 'utf8'));
+  assert.match(config.concept_rules, /スマートフォン・タブレット・パソコン・テレビなど画面のある機器を画面内に一切写さない/u);
+  assert.match(config.concept_rules, /画面内の文字・UI・字幕・テロップは一切生成しない/u);
 });

@@ -8,6 +8,7 @@ export const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 export const SLOT_DAYS = { mon: 1, wed: 3, sat: 6 };
 export const REQUIRED_QA_CHECKS = [
   'identity_consistent', 'face_hands_ok', 'hoshilu_visible', 'japanese_subtitles',
+  'no_generated_text',
   'url_visible', 'audio_present', 'no_unrelated_brand', 'factual', 'ai_disclosure',
   'rights_confirmed', 'duplicate_checked', 'postprocessed'
 ];
@@ -222,6 +223,33 @@ export function evaluateFaces(frames, { minConfidence = 0.7, minPassRatio = 0.8 
   const passed = details.filter((d) => d.ok).length;
   const safeSearchFail = details.some((d) => d.problems.includes('safe_search'));
   return { ok: !safeSearchFail && frames.length > 0 && passed / frames.length >= minPassRatio, passed, total: frames.length, details };
+}
+
+// 2026-09-08 大隆さん指摘（実際に公開してしまった）: 生成映像の中でスマホ画面に
+// 崩れた日本語が並び、それが Instagram と X に出た。themes.json の concept_rules は
+// 「画面内の文字・UI・字幕・テロップは一切生成しない」と既に指示していたが、
+// **動画モデルは否定指示を守らない**。指示だけでは防げないので、機械で弾く。
+//
+// 判定は「後処理前の生成映像（カットA）」のフレームに対して行う。こちらの焼き込み
+// 字幕は後工程で足すので、ここで文字が出る＝モデルが勝手に作った文字。
+// 服の柄などを誤検出しないよう、少しだけ許容する（1フレーム2文字まで・合計3文字まで）。
+export const GENERATED_TEXT_MAX_CHARS_PER_FRAME = 2;
+export const GENERATED_TEXT_MAX_CHARS_TOTAL = 3;
+export function evaluateGeneratedText(frames, {
+  maxPerFrame = GENERATED_TEXT_MAX_CHARS_PER_FRAME,
+  maxTotal = GENERATED_TEXT_MAX_CHARS_TOTAL
+} = {}) {
+  let total = 0;
+  const details = (Array.isArray(frames) ? frames : []).map((frame, index) => {
+    // fullTextAnnotation.text か textAnnotations[0].description に全文が入る
+    const text = String(frame?.fullTextAnnotation?.text
+      || frame?.textAnnotations?.[0]?.description || '')
+      .replace(/\s+/gu, '');
+    total += text.length;
+    return { frame: index, chars: text.length, ok: text.length <= maxPerFrame };
+  });
+  const ok = details.every((d) => d.ok) && total <= maxTotal;
+  return { ok, total, details };
 }
 
 export function parseVolume(stderrText) {

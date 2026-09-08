@@ -21,7 +21,7 @@ import path from 'node:path';
 import process from 'node:process';
 import {
   REQUIRED_QA_CHECKS, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
-  buildPostId, buildRejectSql, buildReplaceDailyReelSql, d1Rows, evaluateFaces, evaluateTranscript, nextPublishSlot, parseVolume
+  buildPostId, buildRejectSql, buildReplaceDailyReelSql, d1Rows, evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume
 } from './auto-runway-reel-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -162,10 +162,10 @@ function compose(raw, ui, dir, durationA) {
 }
 
 // ---------- 6. 自動QA ----------
-async function visionFaces(frames) {
+async function visionFrames(frames) {
   const key = process.env.GOOGLE_CLOUD_VISION_API_KEY || '';
   if (!key) return { skipped: 'GOOGLE_CLOUD_VISION_API_KEY missing' };
-  const requests = frames.map((file) => ({ image: { content: readFileSync(file).toString('base64') }, features: [{ type: 'FACE_DETECTION', maxResults: 5 }, { type: 'SAFE_SEARCH_DETECTION' }] }));
+  const requests = frames.map((file) => ({ image: { content: readFileSync(file).toString('base64') }, features: [{ type: 'FACE_DETECTION', maxResults: 5 }, { type: 'SAFE_SEARCH_DETECTION' }, { type: 'TEXT_DETECTION' }] }));
   const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${encodeURIComponent(key)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ requests }) });
   if (!response.ok) return { error: `vision http ${response.status}` };
   const data = await response.json();
@@ -239,11 +239,16 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
     run('ffmpeg', ['-y', '-v', 'error', '-ss', String(Math.min(t, durationA - 0.2)), '-i', raw, '-frames:v', '1', '-q:v', '3', f]);
     frameFiles.push(f);
   }
-  const vision = await visionFaces(frameFiles);
+  const vision = await visionFrames(frameFiles);
   if (vision.responses) {
     const faces = evaluateFaces(vision.responses);
     evidence.faces = { passed: faces.passed, total: faces.total, details: faces.details };
     if (!faces.ok) problems.push('face_check');
+    // 生成映像に文字（崩れた日本語のUIなど）が写っていないこと。
+    // 2026-09-08: これが無かったため、崩れた画面のリールが公開された。
+    const generatedText = evaluateGeneratedText(vision.responses);
+    evidence.generated_text = generatedText;
+    if (!generatedText.ok) problems.push('generated_text_detected');
   } else {
     evidence.faces = vision;
     problems.push('face_check_unavailable');
