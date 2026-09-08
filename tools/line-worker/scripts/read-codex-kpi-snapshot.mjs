@@ -116,6 +116,13 @@ export async function operationalDiagnostics(db, internalIds = []) {
       SUM(CASE WHEN status='OPTED_OUT' THEN 1 ELSE 0 END) AS unsubscribe,
       SUM(CASE WHEN status='REPLIED' THEN 1 ELSE 0 END) AS response,
       SUM(CASE WHEN status='QUEUED' THEN 1 ELSE 0 END) AS queued
+      ,MIN(CASE WHEN status='QUEUED' THEN scheduled_at END) AS next_scheduled_at,
+      (SELECT COUNT(*) FROM seller_outreach_contacts c
+        WHERE c.status='QUEUED' AND datetime(c.scheduled_at)<=datetime('now')
+        AND NOT EXISTS (SELECT 1 FROM seller_outreach_suppressions s WHERE s.email_hash=c.email_hash)
+        AND NOT EXISTS (SELECT 1 FROM seller_outreach_contacts p WHERE p.email_hash=c.email_hash
+          AND p.contact_id<>c.contact_id AND p.status IN ('SENDING','SENT','REPLIED','OPTED_OUT'))
+      ) AS eligible_now
       FROM seller_outreach_contacts`),
     read(`SELECT q.post_id,q.platform,q.status,q.external_post_id,q.published_at,q.scheduled_at,
       (SELECT p.public_url FROM social_post_performance p WHERE p.post_id=q.post_id AND p.public_url<>'' ORDER BY p.snapshot_at DESC LIMIT 1) AS public_url,
@@ -190,7 +197,9 @@ export async function operationalDiagnostics(db, internalIds = []) {
     unsubscribe: { status: 'AVAILABLE', count: Number(outreachRow.unsubscribe || 0) },
     response: { status: 'AVAILABLE', count: Number(outreachRow.response || 0) },
     failed: { status: 'AVAILABLE', count: Number(outreachRow.failed || 0) },
-    queued: { status: 'AVAILABLE', count: Number(outreachRow.queued || 0) }
+    queued: { status: 'AVAILABLE', count: Number(outreachRow.queued || 0) },
+    eligible_now: { status: 'AVAILABLE', count: Number(outreachRow.eligible_now || 0) },
+    next_scheduled_at: outreachRow.next_scheduled_at || null
   } : { status: 'UNAVAILABLE' };
   return { inventory, migrations, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
     article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney, notifications,

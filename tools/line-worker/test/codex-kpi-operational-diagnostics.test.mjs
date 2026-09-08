@@ -25,7 +25,8 @@ function setup() {
     CREATE TABLE marketplace_offers(id TEXT);
     CREATE TABLE sp_api_listings(id TEXT);
     CREATE TABLE d1_migrations(id INTEGER,name TEXT,applied_at TEXT);
-    CREATE TABLE seller_outreach_contacts(status TEXT,sent_at TEXT);
+    CREATE TABLE seller_outreach_contacts(contact_id TEXT,status TEXT,sent_at TEXT,scheduled_at TEXT,email_hash TEXT);
+    CREATE TABLE seller_outreach_suppressions(email_hash TEXT);
     CREATE TABLE social_post_queue(post_id TEXT,platform TEXT,status TEXT,external_post_id TEXT,published_at TEXT,scheduled_at TEXT,last_error TEXT);
     CREATE TABLE social_post_performance(post_id TEXT,public_url TEXT,snapshot_at TEXT);
     CREATE TABLE growth_events(event_type TEXT,traffic_class TEXT,source TEXT,visitor_id TEXT,session_id TEXT,medium TEXT,campaign TEXT,content TEXT,occurred_at TEXT);
@@ -34,7 +35,11 @@ function setup() {
     CREATE TABLE member_wishes(member_id TEXT,watch_price INTEGER,condition_snapshot TEXT);
 
     INSERT INTO seller_outreach_contacts VALUES
-      ('QUEUED',NULL),('SENT','2026-09-08T00:05:00Z'),('OPTED_OUT','2026-09-08T00:06:00Z'),('REPLIED','2026-09-08T00:07:00Z'),('FAILED',NULL);
+      ('queued','QUEUED',NULL,'2026-09-07T00:00:00Z','queued-hash'),
+      ('sent','SENT','2026-09-08T00:05:00Z','2026-09-08T00:00:00Z','sent-hash'),
+      ('opted-out','OPTED_OUT','2026-09-08T00:06:00Z','2026-09-08T00:00:00Z','opted-out-hash'),
+      ('replied','REPLIED','2026-09-08T00:07:00Z','2026-09-08T00:00:00Z','replied-hash'),
+      ('failed','FAILED',NULL,'2026-09-08T00:00:00Z','failed-hash');
     INSERT INTO growth_events VALUES
       ('landing_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-07T23:59:00Z'),
       ('seo_article_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:00:00Z'),
@@ -90,7 +95,9 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
     unsubscribe: { status: 'AVAILABLE', count: 1 },
     response: { status: 'AVAILABLE', count: 1 },
     failed: { status: 'AVAILABLE', count: 1 },
-    queued: { status: 'AVAILABLE', count: 1 }
+    queued: { status: 'AVAILABLE', count: 1 },
+    eligible_now: { status: 'AVAILABLE', count: 1 },
+    next_scheduled_at: '2026-09-07T00:00:00Z'
   });
 });
 
