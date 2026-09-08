@@ -1,0 +1,1207 @@
+{
+  "generated_at": "2026-07-23T17:03:48.889Z",
+  "tenant": "itg",
+  "source": "hoshilu-products D1",
+  "candidates": [
+    {
+      "seed": "screwdriver",
+      "rows": [
+        {
+          "seed": "screwdriver",
+          "asin": "B000G1VER6",
+          "product_name": "Klein Tools 600-12 1/2-Inch Keystone Screwdriver 12-Inch Shank",
+          "manufacturer": "KLEIN TOOLS",
+          "stock": 99
+        },
+        {
+          "seed": "screwdriver",
+          "asin": "B08HR2V8X9",
+          "product_name": "Bosch GSR12V-300HXN 12V Max Brushless 1/4 In. Hex Two-Speed Screwdriver (Bare Tool)",
+          "manufacturer": "Bosch",
+          "stock": 99
+        },
+        {
+          "seed": "screwdriver",
+          "asin": "B000N6K2SQ",
+          "product_name": "Best Way Tools2437936-Piece 3 Power Screwdriver Bit Set-36PC 3 POWER BIT SET (並行輸入品)",
+          "manufacturer": "Mayhew",
+          "stock": 99
+        },
+        {
+          "seed": "screwdriver",
+          "asin": "B01K0RX7VG",
+          "product_name": "パフォーマンスツールw1732 6個Chromaticスクリュードライバーセット 7Pc Stubby Precision Screwdriver W476",
+          "manufacturer": "Performance Tool",
+          "stock": 99
+        },
+        {
+          "seed": "screwdriver",
+          "asin": "B006G4GH92",
+          "product_name": "パフォーマンスツールw30899 Star Screwdriverセット、5ピース",
+          "manufacturer": "Performance Tool",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "lego",
+      "rows": [
+        {
+          "seed": "lego",
+          "asin": "B085CMYZ6B",
+          "product_name": "LEGO 40周年限定 40370 Steam Engine (188 Pcs)",
+          "manufacturer": "LEGO",
+          "stock": 99
+        },
+        {
+          "seed": "lego",
+          "asin": "B07MB9F8YG",
+          "product_name": "BrickHeadz Dragon Dance Guy 40354 170 Pieces",
+          "manufacturer": "LEGO",
+          "stock": 99
+        },
+        {
+          "seed": "lego",
+          "asin": "B07HXRPCTS",
+          "product_name": "LEGO 40274 Mr. & Mrs. Claus",
+          "manufacturer": "LEGO",
+          "stock": 99
+        },
+        {
+          "seed": "lego",
+          "asin": "B07GYTVPCV",
+          "product_name": "LEGO Speed Champions Chevrolet Camaro ZL1 Race Car 75891 Building Kit (198 Pieces)",
+          "manufacturer": "LEGO",
+          "stock": 99
+        },
+        {
+          "seed": "lego",
+          "asin": "B07FKR9C46",
+          "product_name": "レゴ 30407 - ハリーのホグワーツへの旅 ポリ袋入り",
+          "manufacturer": "LEGO",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "candle",
+      "rows": [
+        {
+          "seed": "candle",
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "stock": 99
+        },
+        {
+          "seed": "candle",
+          "asin": "B00UCS7J36",
+          "product_name": "Shunga Desire Mini Candlelight Massage Candle - 1 oz Vanilla",
+          "manufacturer": "Shunga Erotic Art",
+          "stock": 99
+        },
+        {
+          "seed": "candle",
+          "asin": "B007ZQYU7Q",
+          "product_name": "Candle Lite 1-1/4x5 配管キャンドル 1-1/4インチ x 5インチ",
+          "manufacturer": "CANDLE-LITE",
+          "stock": 99
+        },
+        {
+          "seed": "candle",
+          "asin": "B00GP7VCKE",
+          "product_name": "LED Candle 4パック9  by Celebrations mfrpartno 24329 ? 73 A",
+          "manufacturer": "CELEBRATIONS",
+          "stock": 99
+        },
+        {
+          "seed": "candle",
+          "asin": "B00AYNKROM",
+          "product_name": "12.5 in。Candlestickテーブルランプベース",
+          "manufacturer": "Meyda",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "headphones",
+      "rows": [
+        {
+          "seed": "headphones",
+          "asin": "B003TTOYHE",
+          "product_name": "ART HeadAmp6PRO 6-Channel Headphone Amp/ヘッドフォン【並行輸入品】",
+          "manufacturer": "ART",
+          "stock": 99
+        },
+        {
+          "seed": "headphones",
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "stock": 99
+        },
+        {
+          "seed": "headphones",
+          "asin": "B000NMABJK",
+          "product_name": "Califone International 2800-BL Listening First Stereo Headphones - Blue",
+          "manufacturer": "Califone",
+          "stock": 99
+        },
+        {
+          "seed": "headphones",
+          "asin": "B00UWKHE7U",
+          "product_name": "KIDSSAFE HEADPHONES",
+          "manufacturer": "Maxell",
+          "stock": 99
+        },
+        {
+          "seed": "headphones",
+          "asin": "B01213XJ56",
+          "product_name": "Avid教育2 ae0 ? 8stere-o32 Headphone ? Single 3.5 MM。ステレオピン& # 44 ;ブラック",
+          "manufacturer": "Avid",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "backpack",
+      "rows": [
+        {
+          "seed": "backpack",
+          "asin": "B00NNEL72K",
+          "product_name": "(XL-20 L Black) - Evoc FR TRAIL BLACKLINE 20l - Backpack for cycling with back protector 20 Litres",
+          "manufacturer": "EVOC",
+          "stock": 99
+        },
+        {
+          "seed": "backpack",
+          "asin": "B01HCOKA24",
+          "product_name": "(Medium/45 Litre Purple/Black) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "stock": 99
+        },
+        {
+          "seed": "backpack",
+          "asin": "B01HCOKA6A",
+          "product_name": "(Medium/45 Litre Evergreen/Black) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "stock": 99
+        },
+        {
+          "seed": "backpack",
+          "asin": "B01HCOKAHE",
+          "product_name": "(Medium/45 Litre Black / Gold) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "stock": 99
+        },
+        {
+          "seed": "backpack",
+          "asin": "B01HCOKAZQ",
+          "product_name": "(Medium/45 Litre Royal/Gold) - TYR Alliance Backpack",
+          "manufacturer": "TYR",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "watch",
+      "rows": [
+        {
+          "seed": "watch",
+          "asin": "B00AFTTQ8I",
+          "product_name": "Fossil Mens FS4813 Grant Stainless Steel Watch with Brown Leather Band",
+          "manufacturer": "Fossil",
+          "stock": 99
+        },
+        {
+          "seed": "watch",
+          "asin": "B010Q9W6ZG",
+          "product_name": "Digital Watchdog Analog High Definition Bullet Camera (DWC-B7753TIR)",
+          "manufacturer": "Digital Watchdog",
+          "stock": 99
+        },
+        {
+          "seed": "watch",
+          "asin": "B01EHW0IDA",
+          "product_name": "SINISTER MFG SINSDINTEL60 Watch Winder Blender Lamp",
+          "manufacturer": "Sinister Diesel",
+          "stock": 99
+        },
+        {
+          "seed": "watch",
+          "asin": "B00BGHUS58",
+          "product_name": "Watch Dogs (輸入版:北米) - PS3",
+          "manufacturer": "Ubisoft",
+          "stock": 99
+        },
+        {
+          "seed": "watch",
+          "asin": "B08K9FPCH4",
+          "product_name": "Digital WATCHDOG DWC-VAJUNC ジャンクションボックス バンダルボールカメラ用 ブラケット用",
+          "manufacturer": "Digital Watchdog",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "gloves",
+      "rows": [
+        {
+          "seed": "gloves",
+          "asin": "B0BSSVR7HZ",
+          "product_name": "[Yirui] LXL a94TitanFlex Thor Grip Heavy Duty Black Industrial Nitrile Gloves with Raised Diamond Texture 8-mil Latex Free 100-ct Box",
+          "manufacturer": "TitanFlex",
+          "stock": 99
+        },
+        {
+          "seed": "gloves",
+          "asin": "B0BDYR35F4",
+          "product_name": "TITANflex Thor Grip Heavy Duty Industrial Orange Nitrile Gloves 8-mil Gloves Disposable Latex Free with Raised Diamond Texture Grip Powder Free Rubber Gloves Mechanic Gloves1000-ct Case (XL)",
+          "manufacturer": "TitanFlex",
+          "stock": 99
+        },
+        {
+          "seed": "gloves",
+          "asin": "B00OKE5DXQ",
+          "product_name": "Glory Closed Hole C Flute With Case Tuning Rod and ClothJoint Grease and Gloves Light pink -More Colors availableClick to see more colors 141［並行輸入］",
+          "manufacturer": "GLORY",
+          "stock": 99
+        },
+        {
+          "seed": "gloves",
+          "asin": "B01C4KMGKK",
+          "product_name": "(Medium White) - Wilson Clutch Skill Glove",
+          "manufacturer": "WILSON",
+          "stock": 99
+        },
+        {
+          "seed": "gloves",
+          "asin": "B00004WZRJ",
+          "product_name": "Box Handler Gloves 1 Pair Black Medium",
+          "manufacturer": "Ironclad",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "charger",
+      "rows": [
+        {
+          "seed": "charger",
+          "asin": "B09MPZ3Y11",
+          "product_name": "Riddell Mini フットボール ヘルメット - Los Angeles Chargers 1988-06",
+          "manufacturer": "Riddell",
+          "stock": 99
+        },
+        {
+          "seed": "charger",
+          "asin": "B00B4R8HW6",
+          "product_name": "Spectralink SPL 8400 DUAL CHARGER KIT",
+          "manufacturer": "Spectralink",
+          "stock": 99
+        },
+        {
+          "seed": "charger",
+          "asin": "B003FGWF1S",
+          "product_name": "ElInchrom EL 11093 Quadra Battery Car Charger",
+          "manufacturer": "Elinchrom",
+          "stock": 99
+        },
+        {
+          "seed": "charger",
+          "asin": "B00VKNFC7W",
+          "product_name": "Samlex Solar EVO-RC Remote Control for Evolution Series Inverter/Charger by Samlex America",
+          "manufacturer": "Samlex America",
+          "stock": 99
+        },
+        {
+          "seed": "charger",
+          "asin": "B09RND55QM",
+          "product_name": "EGO Power+ ST1623T 16-Inch 56-Volt Lithium-Ion Cordless POWERLOAD? with LINE IQ? Telescopic Carbon Fiber Straight Shaft String Trimmer 4.0Ah Battery and Charger Included",
+          "manufacturer": "EGO Power+",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "camera",
+      "rows": [
+        {
+          "seed": "camera",
+          "asin": "B01ET10WX0",
+          "product_name": "PAC CAM-TY12 Back-Up Camera Retention/Addition Harness for select 2014 - 2016 Toyota and Scion Vehicles by PAC",
+          "manufacturer": "PAC",
+          "stock": 99
+        },
+        {
+          "seed": "camera",
+          "asin": "B016QUBZGK",
+          "product_name": "4V DESIGN LUSSO MEDIUM CAMERA STRAP 4Vデザイン ルッソ ミディアム カメラストラップ (ブラック/シアン)",
+          "manufacturer": "4V Design",
+          "stock": 99
+        },
+        {
+          "seed": "camera",
+          "asin": "B016QUC0V4",
+          "product_name": "4V DESIGN LUSSO MEDIUM CAMERA STRAP 4Vデザイン ルッソ ミディアム カメラストラップ (グリーン/シアン)",
+          "manufacturer": "4V Design",
+          "stock": 99
+        },
+        {
+          "seed": "camera",
+          "asin": "B000K1LHJW",
+          "product_name": "Custom Brackets Camera Anti-Twist Bar [CUSCBAT]",
+          "manufacturer": "Custom Brackets",
+          "stock": 99
+        },
+        {
+          "seed": "camera",
+          "asin": "B07WW7QP26",
+          "product_name": "AXIS P5655-E PTZ Network Camera 01682-001",
+          "manufacturer": "AXIS",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "keyboard",
+      "rows": [
+        {
+          "seed": "keyboard",
+          "asin": "B00BBUCCKO",
+          "product_name": "Logitech Gaming Keyboard G105 Call of Duty: MW3 Edition【並行輸入品】",
+          "manufacturer": "Logitech G",
+          "stock": 99
+        },
+        {
+          "seed": "keyboard",
+          "asin": "B01NBKP9KG",
+          "product_name": "VIC FIRTH （ ビックファース ）VIC-M272 コーマスター・キーボードマレット ”イアン・モイヤー”モデル キーボードマレット Ian Moyer Keyboard Mallets",
+          "manufacturer": "Vic Firth",
+          "stock": 99
+        },
+        {
+          "seed": "keyboard",
+          "asin": "B01NCM7HMQ",
+          "product_name": "VIC FIRTH （ ビックファース ）VIC-M274 コーマスター・キーボードマレット ”イアン・モイヤー”モデル キーボードマレット Ian Moyer Keyboard Mallets",
+          "manufacturer": "Vic Firth",
+          "stock": 99
+        },
+        {
+          "seed": "keyboard",
+          "asin": "B01N0QWS92",
+          "product_name": "VIC FIRTH （ ビックファース ）VIC-M271 コーマスター・キーボードマレット ”イアン・モイヤー”モデル キーボードマレット Ian Moyer Keyboard Mallets",
+          "manufacturer": "Vic Firth",
+          "stock": 99
+        },
+        {
+          "seed": "keyboard",
+          "asin": "B01MRXSWQV",
+          "product_name": "VIC FIRTH （ ビックファース ）VIC-M277 コーマスター・キーボードマレット ”イアン・モイヤー”モデル キーボードマレット Ian Moyer Keyboard Mallets",
+          "manufacturer": "Vic Firth",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "mouse",
+      "rows": [
+        {
+          "seed": "mouse",
+          "asin": "B07P1WQPX6",
+          "product_name": "Kensington Expert Mouse? Wired Trackball",
+          "manufacturer": "Kensington",
+          "stock": 99
+        },
+        {
+          "seed": "mouse",
+          "asin": "B000O3S0PK",
+          "product_name": "Mouse Jiggler Slow Version",
+          "manufacturer": "WiebeTech",
+          "stock": 99
+        },
+        {
+          "seed": "mouse",
+          "asin": "B08RMZKYTL",
+          "product_name": "Logitech G PRO X Superlight Wireless Gaming Mouse - Black",
+          "manufacturer": "Logitech G",
+          "stock": 99
+        },
+        {
+          "seed": "mouse",
+          "asin": "B002NU5O74",
+          "product_name": "Targus Compact - Mouse - optical - wired - USB - gray black",
+          "manufacturer": "Targus",
+          "stock": 99
+        },
+        {
+          "seed": "mouse",
+          "asin": "B01NH57AEA",
+          "product_name": "HC-3003 - 3 BUTTON DESKTOP OPTICAL SCROLL MOUSE (USB)",
+          "manufacturer": "Adesso",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "bottle",
+      "rows": [
+        {
+          "seed": "bottle",
+          "asin": "B0195N91OI",
+          "product_name": "Bring It on Cleaner Water Stain Remover 32 Fl Oz Set of 2 Bottles by Bring It On Cleaner",
+          "manufacturer": "BRING IT ON! CLEANER",
+          "stock": 99
+        },
+        {
+          "seed": "bottle",
+          "asin": "B00LWE9144",
+          "product_name": "Kirkland Sublingual B-12 5000 mcg - 2 Bottles 300 Tablets Each by Kirkland Signature",
+          "manufacturer": "KIRKLAND",
+          "stock": 99
+        },
+        {
+          "seed": "bottle",
+          "asin": "B076DLN9BM",
+          "product_name": "Dicky Chug Big Sports Bottle - 20 oz Glow in the Dark",
+          "manufacturer": "Hott Products",
+          "stock": 99
+        },
+        {
+          "seed": "bottle",
+          "asin": "B0B2WYCY98",
+          "product_name": "SodaStream Terra Sparkling Water Maker (bianco) con CO2 DWS Bottle e Bubly Drop",
+          "manufacturer": "sodastream",
+          "stock": 99
+        },
+        {
+          "seed": "bottle",
+          "asin": "B097TFC15Z",
+          "product_name": "SodaStream Terra Sparkling Water Maker (White) with CO2 and DWS Bottle",
+          "manufacturer": "sodastream",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "lamp",
+      "rows": [
+        {
+          "seed": "lamp",
+          "asin": "B00E3PMEF2",
+          "product_name": "Trend Lighting BA6010 Luminary Table Lamp 9-Inch Roze Bronze Finish by Trend Enterprises Inc",
+          "manufacturer": "Trend Lighting",
+          "stock": 99
+        },
+        {
+          "seed": "lamp",
+          "asin": "B00819G87G",
+          "product_name": "George Kovacs P4308-084 Georges Reading Room Swing Arm Wall Lamp Brushed Nickel by Kovacs",
+          "manufacturer": "GEORGE KOVACS",
+          "stock": 99
+        },
+        {
+          "seed": "lamp",
+          "asin": "B0038E7EZO",
+          "product_name": "Acclaim 95WH Direct-Burial Lamp Posts Collection Smooth Lamp Post 7 Gloss White by Acclaim",
+          "manufacturer": "Acclaim Lighting",
+          "stock": 99
+        },
+        {
+          "seed": "lamp",
+          "asin": "B000V6IO9M",
+          "product_name": "Lite Source LS-20073AQUA Pepita Table Lamp Aqua Glass with Fabric Shade by Lite Source",
+          "manufacturer": "Lite Source",
+          "stock": 99
+        },
+        {
+          "seed": "lamp",
+          "asin": "B088MLD16G",
+          "product_name": "Misc 80 Led Arc Antique Bronze Floor Lamp/Double Shade Brown Transitional Bulbs Included",
+          "manufacturer": "MISC",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "towel",
+      "rows": [
+        {
+          "seed": "towel",
+          "asin": "B0778VN76T",
+          "product_name": "HEATGENE Hot Towel Warmer for Bath Heated Drying Rack 8 Square Bar Brush Finish",
+          "manufacturer": "HEATGENE",
+          "stock": 99
+        },
+        {
+          "seed": "towel",
+          "asin": "B000UCHNM6",
+          "product_name": "Gatco 1508 Floor S-Towel Ring Bronze Towel Ring",
+          "manufacturer": "Gatco",
+          "stock": 99
+        },
+        {
+          "seed": "towel",
+          "asin": "B0088S9BXS",
+          "product_name": "Kleenex Hand Towels - White 60ct by Kleenex",
+          "manufacturer": "Kleenex",
+          "stock": 99
+        },
+        {
+          "seed": "towel",
+          "asin": "B07B5JRZDV",
+          "product_name": "San Jamar Simplicity Essence Roll Towel Dispenser",
+          "manufacturer": "San Jamar",
+          "stock": 99
+        },
+        {
+          "seed": "towel",
+          "asin": "B01M8HKHMO",
+          "product_name": "KOHLER K-73144-CP Composed 60cm Double Towel bar Polished Chrome",
+          "manufacturer": "Kohler",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "shampoo",
+      "rows": [
+        {
+          "seed": "shampoo",
+          "asin": "B005LFO2DA",
+          "product_name": "Suave Men 3-in-1 Shampoo Conditioner & Body Wash 28 oz 2 pk by Suave [並行輸入品]",
+          "manufacturer": "Suave",
+          "stock": 99
+        },
+        {
+          "seed": "shampoo",
+          "asin": "B003WGWFES",
+          "product_name": "Best Shot UltraMax Pro Pet Shampoo by Best Shot",
+          "manufacturer": "Best Shot",
+          "stock": 99
+        },
+        {
+          "seed": "shampoo",
+          "asin": "B000HHQ8BQ",
+          "product_name": "THORNELL 013THL01-8 Skunk-Off Shampooing 8 oz",
+          "manufacturer": "Odorcide",
+          "stock": 99
+        },
+        {
+          "seed": "shampoo",
+          "asin": "B000A6XGG4",
+          "product_name": "Quic Silver Shampoo 16oz by Quic",
+          "manufacturer": "exhibitors",
+          "stock": 99
+        },
+        {
+          "seed": "shampoo",
+          "asin": "B005PX6CWW",
+          "product_name": "PetEdge TP576 17 TP GloCoat conditionn- Shampoo 17 oz",
+          "manufacturer": "Top Performance",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "perfume",
+      "rows": [
+        {
+          "seed": "perfume",
+          "asin": "B08QPQ1P7G",
+          "product_name": "Feminine Wash with Boric Acid Fragrance Free 10 Fl Oz",
+          "manufacturer": "Monistat",
+          "stock": 99
+        },
+        {
+          "seed": "perfume",
+          "asin": "B07ZZWPYD7",
+          "product_name": "ROYALL MUSKE by Royall Fragrances All Purpose Lotion/Cologne 8 oz Men",
+          "manufacturer": "ROYALL LYME",
+          "stock": 99
+        },
+        {
+          "seed": "perfume",
+          "asin": "B004F0E138",
+          "product_name": "ハンドバッグ付きメイクアップセット",
+          "manufacturer": "Assorted Fragrances",
+          "stock": 99
+        },
+        {
+          "seed": "perfume",
+          "asin": "B00K5F816K",
+          "product_name": "WIND SONG 4 OZ PERFUMED DUSTING POWDER by Prince Matchabelli",
+          "manufacturer": "Prince Matchabelli",
+          "stock": 99
+        },
+        {
+          "seed": "perfume",
+          "asin": "B08TLX57DJ",
+          "product_name": "Shampoo and Body Wash - Fragrance Free Tear-Free Bath Time Hypoallergenic Moisturizing Plant-Derived Squalane New Formula 11.8 fl oz",
+          "manufacturer": "Pipette",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "toy",
+      "rows": [
+        {
+          "seed": "toy",
+          "asin": "B0C1ZZ9L2W",
+          "product_name": "Diamond Select Toys インディ・ジョーンズとレイダーズ・オブ・ザ・ロストアーク:インディ1:6スケール バスト",
+          "manufacturer": "Diamond Select Toys",
+          "stock": 99
+        },
+        {
+          "seed": "toy",
+          "asin": "B078XZLXJW",
+          "product_name": "Multipet Lamb Chop Dog Toy Plush (10 (Pack of 1))",
+          "manufacturer": "Multipet",
+          "stock": 99
+        },
+        {
+          "seed": "toy",
+          "asin": "B01N5QG9EX",
+          "product_name": "YEOWWW! DuckyWorld 100% ORGANIC CATNIP Leaf & Flower Cat Toy BANANA 3 PACK 141［並行輸入］",
+          "manufacturer": "Yeowww!",
+          "stock": 99
+        },
+        {
+          "seed": "toy",
+          "asin": "B01ET10WX0",
+          "product_name": "PAC CAM-TY12 Back-Up Camera Retention/Addition Harness for select 2014 - 2016 Toyota and Scion Vehicles by PAC",
+          "manufacturer": "PAC",
+          "stock": 99
+        },
+        {
+          "seed": "toy",
+          "asin": "B018GP66ZS",
+          "product_name": "Multi Pet Lamb Chop Dog Toy 10 [2-Pack] 141［並行輸入］",
+          "manufacturer": "Multipet",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "puzzle",
+      "rows": [
+        {
+          "seed": "puzzle",
+          "asin": "B00OUXQW2I",
+          "product_name": "HEYE Puzzle ヘイパズル 29693 Marino Degano : Funky Zoo Nile Habitat (1000 pieces)",
+          "manufacturer": "Heye",
+          "stock": 99
+        },
+        {
+          "seed": "puzzle",
+          "asin": "B00H9Y6SDI",
+          "product_name": "HEYE Puzzle ヘイパズル 29639 Marino Degano : Funky Zoo African Habitat (1000 pieces)",
+          "manufacturer": "Heye",
+          "stock": 99
+        },
+        {
+          "seed": "puzzle",
+          "asin": "B00H9Y7F6M",
+          "product_name": "HEYE Puzzle ヘイパズル 29638 Marino Degano : Funky Zoo Black Forest Habitat (1000 pieces)",
+          "manufacturer": "Heye",
+          "stock": 99
+        },
+        {
+          "seed": "puzzle",
+          "asin": "B0002HWEFA",
+          "product_name": "HEYE Puzzle ヘイパズル 08793 Marino Degano : Black or White (1000 pieces)",
+          "manufacturer": "Heye",
+          "stock": 99
+        },
+        {
+          "seed": "puzzle",
+          "asin": "B09S3XY35L",
+          "product_name": "Ravensburger Kinderpuzzle 05586 - Glumanda Bisasam und Schiggy - 3x49 Teile Pok?mon Puzzle f?r Kinder ab 5 Jahren",
+          "manufacturer": "Ravensburger",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "wallet",
+      "rows": [
+        {
+          "seed": "wallet",
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "stock": 99
+        },
+        {
+          "seed": "wallet",
+          "asin": "B000NH6B6M",
+          "product_name": "Snopake 12418 A4 CityFile Executive Card Wallet File - Blue (Pack of 5)",
+          "manufacturer": "SII",
+          "stock": 99
+        },
+        {
+          "seed": "wallet",
+          "asin": "B07HYC2J65",
+          "product_name": "[パックセーフ]pacsafe 二つ折り財布 Z100 BIFOLD WALLET BLACK",
+          "manufacturer": "Pacsafe",
+          "stock": 99
+        },
+        {
+          "seed": "wallet",
+          "asin": "B07HYD338R",
+          "product_name": "[パックセーフ] 三つ折り財布 Z50 TRIFOLD WALLET BLACK",
+          "manufacturer": "Pacsafe",
+          "stock": 99
+        },
+        {
+          "seed": "wallet",
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "necklace",
+      "rows": [
+        {
+          "seed": "necklace",
+          "asin": "B0768NT3RW",
+          "product_name": "(24.0 inches) - 14K Yellow Gold Filled Solid Figaro Chain Necklace 4.0 mm Wide",
+          "manufacturer": "Jewelry Affairs",
+          "stock": 99
+        },
+        {
+          "seed": "necklace",
+          "asin": "B07DLF298W",
+          "product_name": "14k Yellow Gold Lariet Style Necklace 24",
+          "manufacturer": "Jewelry Affairs",
+          "stock": 99
+        },
+        {
+          "seed": "necklace",
+          "asin": "B075L4XXQV",
+          "product_name": "Wellingsale 14 KイエローゴールドポリッシュHamsa + Evil Eye Necklace ? 18",
+          "manufacturer": "Wellingsale",
+          "stock": 99
+        },
+        {
+          "seed": "necklace",
+          "asin": "B013TQLWJO",
+          "product_name": "[Jewelry Affairs] 14k White Gold 30mm Side Ways Arrow Necklace 17 To 18 Adjustable",
+          "manufacturer": "Jewelry Affairs",
+          "stock": 99
+        },
+        {
+          "seed": "necklace",
+          "asin": "B003YTNO3E",
+          "product_name": "14k White Solid Gold Figaro Chain Necklace 3.9mm 22",
+          "manufacturer": "Jewelry Affairs",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "ring",
+      "rows": [
+        {
+          "seed": "ring",
+          "asin": "B07FF6J5P1",
+          "product_name": "Code Alarm CAT1 交換用リモートトランスミッターキー FOB H5OT67",
+          "manufacturer": "Enso Rings",
+          "stock": 99
+        },
+        {
+          "seed": "ring",
+          "asin": "B001KAJX20",
+          "product_name": "CueStix RNG07 21.0 Action - Rings - RNG07 21.0 oz",
+          "manufacturer": "Action",
+          "stock": 99
+        },
+        {
+          "seed": "ring",
+          "asin": "B0017DHE8A",
+          "product_name": "Durable EZ-Turn Ring Reference Binder 11 x 8-1/2 1 Capacity Black",
+          "manufacturer": "Avery",
+          "stock": 99
+        },
+        {
+          "seed": "ring",
+          "asin": "B000UCHNM6",
+          "product_name": "Gatco 1508 Floor S-Towel Ring Bronze Towel Ring",
+          "manufacturer": "Gatco",
+          "stock": 99
+        },
+        {
+          "seed": "ring",
+          "asin": "B00IXEW7CE",
+          "product_name": "Stamina Rings Set 3 Assorted Colors by NS Novelties",
+          "manufacturer": "NS Novelties",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "filter",
+      "rows": [
+        {
+          "seed": "filter",
+          "asin": "B01KVU6VG0",
+          "product_name": "Brew Rite Coffee Filter - 700 ct. (1400ct Total) by Brew Rite",
+          "manufacturer": "Brew Rite",
+          "stock": 99
+        },
+        {
+          "seed": "filter",
+          "asin": "B00DH4EFW0",
+          "product_name": "Vivitar 6点multi-coated回転Graduated Color Filterセット(52 mm) Includes :レッド、イエロー、ブルー、オレンジ、グレー&パープル",
+          "manufacturer": "Vivitar",
+          "stock": 99
+        },
+        {
+          "seed": "filter",
+          "asin": "B006BGJ4CC",
+          "product_name": "ブライアント/キャリアez-flexフィルタメディア( expxxfil0016 )",
+          "manufacturer": "fine filters",
+          "stock": 99
+        },
+        {
+          "seed": "filter",
+          "asin": "B003IGNRPI",
+          "product_name": "Honeywell FC100A1029 16 x 25 Media Air Filter (MERV 11) by Honeywell",
+          "manufacturer": "Honeywell Home",
+          "stock": 99
+        },
+        {
+          "seed": "filter",
+          "asin": "B0009H51MG",
+          "product_name": "Fram GroupCA4309Air Filter-AIR FILTER (並行輸入品)",
+          "manufacturer": "Fram",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "cover",
+      "rows": [
+        {
+          "seed": "cover",
+          "asin": "B0B836FZFB",
+          "product_name": "Rael Disposable Underwear for Women Organic Cotton Cover - Incontinence Pads Postpartum Essentials Disposable Underwear Unscented Maximum Coverage (Size L-XL 16 Count)",
+          "manufacturer": "Rael",
+          "stock": 99
+        },
+        {
+          "seed": "cover",
+          "asin": "B091JGY2YP",
+          "product_name": "Rael Disposable Underwear for Women Organic Cotton Cover - Incontinence Pads Postpartum Essentials Disposable Underwear Unscented Maximum Coverage (Size S-M 10 Count)",
+          "manufacturer": "Rael",
+          "stock": 99
+        },
+        {
+          "seed": "cover",
+          "asin": "B07J3KHV76",
+          "product_name": "Moleskine Notebook Extra Large Ruled Myrtle Green Hard Cover (7.5 x 9.75)",
+          "manufacturer": "Moleskine",
+          "stock": 99
+        },
+        {
+          "seed": "cover",
+          "asin": "B078YNJYN8",
+          "product_name": "Lowrance Sun Cover Hook-2 7 Inch",
+          "manufacturer": "Lowrance",
+          "stock": 99
+        },
+        {
+          "seed": "cover",
+          "asin": "B01M8LRH62",
+          "product_name": "Tramontina tri-ply Clad Covered Deep 2 80116/058DS",
+          "manufacturer": "Tramontina",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "case",
+      "rows": [
+        {
+          "seed": "case",
+          "asin": "B0B6216WKJ",
+          "product_name": "Hohner PentaHarp Harmonica - Key of C Minor Bundle with Zip Case Instructional Manual and Austin Bazaar Polishing Cloth",
+          "manufacturer": "Hohner",
+          "stock": 99
+        },
+        {
+          "seed": "case",
+          "asin": "B0985X9FPJ",
+          "product_name": "Hohner Special 20 Harmonica - Key of D Bundle with Zip Case Instructional Manual and Austin Bazaar Polishing Cloth",
+          "manufacturer": "Hohner",
+          "stock": 99
+        },
+        {
+          "seed": "case",
+          "asin": "B09238CFBR",
+          "product_name": "Hohner Golden Melody Harmonica - Key of C Bundle with Zip Case Instructional Manual and Austin Bazaar Polishing Cloth",
+          "manufacturer": "Hohner",
+          "stock": 99
+        },
+        {
+          "seed": "case",
+          "asin": "B09238HMD7",
+          "product_name": "Hohner Special 20 Harmonica - Key of C Bundle with Zip Case Instructional Manual and Austin Bazaar Polishing Cloth",
+          "manufacturer": "Hohner",
+          "stock": 99
+        },
+        {
+          "seed": "case",
+          "asin": "B092393J6K",
+          "product_name": "Hohner Marine Band 1896 Harmonica - Key of A Bundle with Zip Case Instructional Manual and Austin Bazaar Polishing Cloth",
+          "manufacturer": "Hohner",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "cable",
+      "rows": [
+        {
+          "seed": "cable",
+          "asin": "B092DZJG33",
+          "product_name": "Fender CD-60SCE Solid Top Dreadnought Acoustic-Electric Guitar - All Mahogany Bundle with Hard Case Instrument Cable Tuner Strap Strings Picks and Austin Bazaar Instructional DVD",
+          "manufacturer": "Fender",
+          "stock": 99
+        },
+        {
+          "seed": "cable",
+          "asin": "B07STMN9KM",
+          "product_name": "Master Cables 交換用 ソニー VMCUAM2 USBアダプターケーブル",
+          "manufacturer": "Master Cables",
+          "stock": 99
+        },
+        {
+          "seed": "cable",
+          "asin": "B00NC062E8",
+          "product_name": "Thinkware TWA-SH Hardwiring Cable for H50/100 X150/300/500 and F750 Dash Cams by Thinkware",
+          "manufacturer": "THINKWARE",
+          "stock": 99
+        },
+        {
+          "seed": "cable",
+          "asin": "B00MM19LG4",
+          "product_name": "Lindy 41413 HDMI cable 3 m HDMI Type A (Standard) RedWhite",
+          "manufacturer": "Lindy",
+          "stock": 99
+        },
+        {
+          "seed": "cable",
+          "asin": "B00MYTCZVC",
+          "product_name": "Fusion CAB000863 FUSION Non Powered NMEA 2000 Drop Cable f-MS-RA205 to NMEA 2000 T-Connector",
+          "manufacturer": "Fusion",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "pillow",
+      "rows": [
+        {
+          "seed": "pillow",
+          "asin": "B07HYWQVLX",
+          "product_name": "Pillow Perfect Christmas Forest Scene 装飾腰枕 12インチ x 18インチ グレー",
+          "manufacturer": "Pillow Perfect",
+          "stock": 99
+        },
+        {
+          "seed": "pillow",
+          "asin": "B010SCOTQK",
+          "product_name": "Macks Pillow Soft Earplugs Value Pack 48 Count by Macks",
+          "manufacturer": "Macks",
+          "stock": 99
+        },
+        {
+          "seed": "pillow",
+          "asin": "B09JJKFBNY",
+          "product_name": "Madison Park Palisades Comforter Set Modern Faux Suede Pieced Stripe Design All Season Down Alternative Cozy Bedding with Matching Shams Decorative Pillows King(104x92) Black 7 Piece",
+          "manufacturer": "Madison Park",
+          "stock": 99
+        },
+        {
+          "seed": "pillow",
+          "asin": "B07GDFW35L",
+          "product_name": "Contemporary Style Medallion Patterned Set of 2 Throw Pillow Multicolor",
+          "manufacturer": "Benzara",
+          "stock": 99
+        },
+        {
+          "seed": "pillow",
+          "asin": "B07GDJZJGX",
+          "product_name": "Contemporary Style Set of 2 Throw Pillows Purple White",
+          "manufacturer": "Benzara",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "knife",
+      "rows": [
+        {
+          "seed": "knife",
+          "asin": "B08RWS6V97",
+          "product_name": "Ontario ADK ハイピーク マルチ ワンサイズ (8178)",
+          "manufacturer": "Ontario Knife Company",
+          "stock": 99
+        },
+        {
+          "seed": "knife",
+          "asin": "B000HSCOJA",
+          "product_name": "KNIFE FOLDING LOCK BACK",
+          "manufacturer": "IRWIN",
+          "stock": 99
+        },
+        {
+          "seed": "knife",
+          "asin": "B08X21GVJ7",
+          "product_name": "Ontario ML5 ブラックバード マルチカラー ワンサイズ (7502)",
+          "manufacturer": "Ontario Knife Company",
+          "stock": 99
+        },
+        {
+          "seed": "knife",
+          "asin": "B07CTG44Z9",
+          "product_name": "Ontario 0415red Dishwasher Safeレッドポリプロピレンカッティングボード",
+          "manufacturer": "Ontario Knife Company",
+          "stock": 99
+        },
+        {
+          "seed": "knife",
+          "asin": "B07CTHXRRZ",
+          "product_name": "Ontario 0415 Grn食器洗い機グリーンポリプロピレンカッティングボード",
+          "manufacturer": "Ontario Knife Company",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "organizer",
+      "rows": [
+        {
+          "seed": "organizer",
+          "asin": "167692504X",
+          "product_name": "My Amazing Roles: A journal for Goals and Roles: Commit Planner for Setting Goals and Organizer with Inspirational and Motivational Quotes: Good Year Start With Gratitude",
+          "manufacturer": "Majosta",
+          "stock": 99
+        },
+        {
+          "seed": "organizer",
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "stock": 99
+        },
+        {
+          "seed": "organizer",
+          "asin": "B0857HC1V6",
+          "product_name": "Bamboo Drawer Dividers Adjustable & Expandable Kitchen Drawer Organizer Ideal for Silverware Drawer Organizer Dresser Drawer Organizer or Bedroom and Bathroom Drawer Organizer",
+          "manufacturer": "Purawood",
+          "stock": 99
+        },
+        {
+          "seed": "organizer",
+          "asin": "B001KN12PI",
+          "product_name": "Sterilite ClearView 3 Storage Drawer Organizer by STERILITE",
+          "manufacturer": "Sterilite",
+          "stock": 99
+        },
+        {
+          "seed": "organizer",
+          "asin": "B082P21WJ1",
+          "product_name": "[フェールラーベン] バッグインバッグ G-1000素材使用 Kanken Organizer 23508 Fog",
+          "manufacturer": "Fj?llr?ven",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "adapter",
+      "rows": [
+        {
+          "seed": "adapter",
+          "asin": "B00NAZ4GRU",
+          "product_name": "Solarflare Flareon Ultra SFN7142Q Dual-Port 40GbE QSFP+ PCIe 3.0 Server I/O Adapter - PCI Express 3.0 x8-2 Port(s) - Optical Fiber - SFN7142Q",
+          "manufacturer": "SOLARFLARE COMMUNICATIONS",
+          "stock": 99
+        },
+        {
+          "seed": "adapter",
+          "asin": "B0057O7KOI",
+          "product_name": "Chief MAC790 Display Swivel Adapter - Mounting component (mounting adapter) for LCD / plasma panel (Tilt & Swivel) - black - cart mountable floor stand mountable - for Chief MF1 MFCUB MFCUB700 MFC Series MFCUS700 Universal Flat Panel Floor Stand MF1U",
+          "manufacturer": "Chief Mfg.",
+          "stock": 99
+        },
+        {
+          "seed": "adapter",
+          "asin": "B07BT1SG6C",
+          "product_name": "PAC Satellite Antenna Adapter for Aftermarket SXM Tuner",
+          "manufacturer": "PAC",
+          "stock": 99
+        },
+        {
+          "seed": "adapter",
+          "asin": "B005F1PIX8",
+          "product_name": "STINGER 4000 SERIES 1F-2M Y-ADAPTER",
+          "manufacturer": "STINGER",
+          "stock": 99
+        },
+        {
+          "seed": "adapter",
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "stock": 99
+        }
+      ]
+    },
+    {
+      "seed": "brush",
+      "rows": [
+        {
+          "seed": "brush",
+          "asin": "B00LEVNMS6",
+          "product_name": "Livex Lighting 50685-91 Midtown 6-Light Bath Light Brushed Nickel by Livex Lighting",
+          "manufacturer": "Livex",
+          "stock": 99
+        },
+        {
+          "seed": "brush",
+          "asin": "B00E3EG3QE",
+          "product_name": "Livex Lighting 5713-91 Oldwick 3-Light Bath Light Brushed Nickel by Livex Lighting",
+          "manufacturer": "Livex",
+          "stock": 99
+        },
+        {
+          "seed": "brush",
+          "asin": "B00BQAQ8CW",
+          "product_name": "Trans Globe Lighting 70333 BN 3-Light Bath Bar Brushed Nickel by Trans Globe Lighting",
+          "manufacturer": "TRANS GLOBE",
+          "stock": 99
+        },
+        {
+          "seed": "brush",
+          "asin": "B00819G87G",
+          "product_name": "George Kovacs P4308-084 Georges Reading Room Swing Arm Wall Lamp Brushed Nickel by Kovacs",
+          "manufacturer": "GEORGE KOVACS",
+          "stock": 99
+        },
+        {
+          "seed": "brush",
+          "asin": "B001YS0WGE",
+          "product_name": "Trans Globe Lighting Trans Globe Imports 4581 BN Transitional Two Light Wall Lantern from Thomas Collection in Pwt Nckl B/S Slvr. Finish 16-Inch Brushed Nickel",
+          "manufacturer": "TRANS GLOBE",
+          "stock": 99
+        }
+      ]
+    }
+  ]
+}

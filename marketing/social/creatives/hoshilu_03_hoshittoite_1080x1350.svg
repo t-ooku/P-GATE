@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs><linearGradient id="g" x1="100" y1="100" x2="990" y2="1260"><stop stop-color="#f238b5"/><stop offset=".48" stop-color="#8a4cf4"/><stop offset="1" stop-color="#258cff"/></linearGradient></defs>
+  <rect width="1080" height="1350" fill="#f7f5ff"/>
+  <text x="90" y="120" font-family="Arial,'Noto Sans JP',sans-serif" font-size="28" font-weight="800" fill="#8a4cf4">HOSHILU WATCH</text>
+  <text x="90" y="300" font-family="Arial,'Noto Sans JP',sans-serif" font-size="96" font-weight="900" fill="#111c4e">これ、</text>
+  <text x="90" y="420" font-family="Arial,'Noto Sans JP',sans-serif" font-size="96" font-weight="900" fill="url(#g)">ホシっといて。</text>
+  <g font-family="Arial,'Noto Sans JP',sans-serif" font-size="36" font-weight="800" fill="#111c4e">
+    <rect x="90" y="560" width="420" height="120" rx="32" fill="#fff" stroke="#ded7ff" stroke-width="3"/><text x="150" y="635">✓ 販売開始</text>
+    <rect x="570" y="560" width="420" height="120" rx="32" fill="#fff" stroke="#ded7ff" stroke-width="3"/><text x="630" y="635">✓ 値下げ</text>
+    <rect x="90" y="730" width="420" height="120" rx="32" fill="#fff" stroke="#ded7ff" stroke-width="3"/><text x="150" y="805">✓ クーポン</text>
+    <rect x="570" y="730" width="420" height="120" rx="32" fill="#fff" stroke="#ded7ff" stroke-width="3"/><text x="630" y="805">✓ 再入荷</text>
+  </g>
+  <rect x="90" y="1010" width="900" height="120" rx="60" fill="url(#g)"/>
+  <text x="540" y="1085" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="38" font-weight="850" fill="#fff">見つかった瞬間を、知らせる。</text>
+  <text x="90" y="1240" font-family="Arial,'Noto Sans JP',sans-serif" font-size="34" font-weight="800" fill="#8a4cf4">#ホシル　#これホシっといて</text>
+</svg>

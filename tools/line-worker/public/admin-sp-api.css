@@ -1,0 +1,6 @@
+.admin-shell{width:min(920px,calc(100% - 32px));margin:32px auto;display:grid;gap:18px}
+.admin-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.auth-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.auth-summary-item{padding:14px;border:1px solid #ddd8ff;border-radius:14px;display:grid;gap:6px}
+.auth-summary-item strong{font-size:1.7rem}
+@media(max-width:680px){.auth-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-head{align-items:flex-start;flex-direction:column}}

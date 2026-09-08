@@ -9,3 +9,10 @@ outputs/*.pptx
 outputs/*.inspect.ndjson
 outputs/*.zip
 outputs/RELEASE_MANIFEST_*.json
+# Local inspection and reproducible build output
+.tmp-*/
+dist/*-dry-run/
+dist/chrome-headless-icon/
+dist/inspect-assets/
+dist/*.zip
+dist/hoshilu-products-bootstrap.sql

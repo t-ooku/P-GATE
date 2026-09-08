@@ -1,0 +1,20 @@
+stage,metric,canonical_name,data_source,current_connection,join_key,owner,reporting_rule,next_connection
+SNS,投稿日,post_date,SNS投稿記録,PARTIAL,post_id,HOSHILU SNS運用専用,公開済み投稿だけを記録,公開URLと投稿IDを確定
+SNS,リーチ,reach,SNS媒体インサイト,UNCONNECTED,post_id,HOSHILU SNS運用専用,未取得を0にしない,媒体APIまたは手動エクスポートを接続
+SNS,表示回数,impressions,SNS媒体インサイト,UNCONNECTED,post_id,HOSHILU SNS運用専用,未取得を0にしない,媒体APIまたは手動エクスポートを接続
+SNS,プロフィール閲覧,profile_views,SNS媒体インサイト,UNCONNECTED,post_id,HOSHILU SNS運用専用,未取得を0にしない,媒体APIまたは手動エクスポートを接続
+SNS,リンククリック,link_clicks,SNS媒体インサイト,UNCONNECTED,post_id,HOSHILU SNS運用専用,媒体値とHOSHILU到達を別々に保持,媒体APIまたは手動エクスポートを接続
+SNS,投稿別実績保存,social_post_performance,HOSHILU D1,IMPLEMENTED_PENDING_RELEASE,post_id+snapshot_at,HOSHILU SNS運用専用,NULLを未取得として保持,0029 migrationと取込経路を承認済みreleaseで適用
+HOSHILU,到達,landing_view,HOSHILU growth_events,CONNECTED,utm_campaign+utm_content,HOSHILU開発,QAと社内アクセスを除外,内部分類へINTERNALを追加検討
+HOSHILU,検索開始,search_started,HOSHILU growth_events,CONNECTED,utm_campaign+utm_content,HOSHILU開発,イベント数を人数と呼ばない,投稿IDとの照合を週次集計へ追加
+HOSHILU,検索完了,search_completed,HOSHILU growth_events,CONNECTED,utm_campaign+utm_content,HOSHILU開発,検索開始を分母にする,投稿IDとの照合を週次集計へ追加
+HOSHILU,ほしっとく保存,wish_saved,HOSHILU growth_events,CONNECTED,utm_campaign+utm_content,HOSHILU開発,検索完了を分母にする,会員・匿名の区別は個人特定なしで検討
+HOSHILU,モール送客,marketplace_click,HOSHILU growth_events,IMPLEMENTED_PENDING_RELEASE,utm_campaign+utm_content+marketplace,HOSHILU開発,モール不明値を別表示,10モール識別差分のcommitと回帰後にrelease
+HOSHILU,会員登録,member_registered,会員認証イベント,PARTIAL,utm_campaign+utm_content,HOSHILU開発,登録完了だけを数える,イベント受入済み・登録完了側からの送信と帰属継承を接続
+HOSHILU,7日再訪,return_7d,HOSHILU内部計測,UNCONNECTED,anonymous_session,HOSHILU開発,個人を特定しない,セッション一貫性を検証してから接続
+Support,問い合わせ,inquiry_submitted,問い合わせ受付,PARTIAL,utm_campaign+utm_content,HOSHILU統括,受付確認済みだけを数える,イベント受入済み・問い合わせ側からの送信とUTM保存を接続
+Commerce,成約,conversion_confirmed,確認済みモール成果,UNCONNECTED,attribution_id,API・商品データ担当,推測値を使わない,各モールの許可された成果データを接続
+Commerce,費用,cost_confirmed,請求・広告媒体,UNCONNECTED,campaign+content,HOSHILU統括,無料施策も取得済み0円と未取得を区別,承認済み有料施策開始時だけ接続
+Traffic,QAアクセス,traffic_class_qa,HOSHILU growth_events,CONNECTED,utm_medium=qa,HOSHILU開発,本番集客から除外,現行回帰を維持
+Traffic,社内アクセス,traffic_class_internal,HOSHILU growth_events,IMPLEMENTED_PENDING_RELEASE,utm_medium=internal,HOSHILU開発,集計時に明示除外,投稿実績テーブル対応済み・growth_events側の分類範囲を回帰確認
+Traffic,本番集客,traffic_class_attributed,HOSHILU growth_events,CONNECTED,utm_campaign+utm_content,HOSHILU統括,QA・社内・LEGACY_UNKNOWNを混ぜない,週次統括集計へ接続

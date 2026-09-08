@@ -32,17 +32,31 @@ HTTPS以外、認証情報を含むURL、類似ドメインは拒否する。
 | Seller_Name |  | 内部管理用。公開回答には出さない |
 | Approved | ○ | 承認した行だけ`TRUE` |
 | Updated_At |  | 最終確認日時 |
+| Merchant_ID |  | 契約・登録時に取得するEC側マーチャントID。内部管理用 |
+| Seller_SKU |  | 契約セラーの商品SKU。内部管理用 |
+| Offer_Listing_ID |  | Amazon等で特定セラーのオファーへ直接送客する際の識別子 |
+| Seller_Plan | ○ | `PARTNER` / `PRO` / `GROWTH` / `LITE` |
+| Registered_At | ○ | 契約後に初めて登録された日時。運営側で保持し、再取込で上書きしない |
+| Listing_Status | ○ | `ACTIVE` / `INACTIVE` / `SUSPENDED` / `REMOVED` |
 
 ## 選択ルール
 
 商品自体の順位は質問との関連性と確認可能な情報で決める。価格やセラー利益で商品順位は変えない。
 
-同一商品の購入先は次の順で最大3件に絞る。
+送客先は、契約・承認済みセラー／メーカーが登録した Product_URL を最優先する。Amazonの一般商品ページへ無条件に流すのではなく、契約時に Merchant_ID、Seller_SKU、必要に応じて Offer_Listing_ID と特定オファーへ到達する Product_URL を登録し、運営承認後に公開する。マーチャントIDだけでは常に特定セラーのカート投入を保証できないため、最終的な送客先は検証済み Product_URL を正本とする。
 
-1. `OUT_OF_STOCK`以外を優先
-2. `Price + Shipping_Fee`が低い順
-3. `Delivery_Days`が短い順
-4. Marketplace、Offer_IDの順で結果を安定化
+同一ASINの商品は1商品カードに統合し、契約購入先は次の順で最大3件に絞る。
+
+商品マスターと検索対象は従来どおりテナント分離する。一方、運営承認済みの
+購入先オファーだけはテナントをまたいでASIN単位に統合する。これにより、
+同一商品を扱う契約セラー／メーカー全体へ共通の優先ルールを適用する。
+未承認オファーとセラー内部情報は横断公開しない。
+
+1. `Listing_Status=ACTIVE`かつ`OUT_OF_STOCK`以外だけを対象にする
+2. `PARTNER` → `PRO` → `GROWTH` → `LITE`
+3. 同一プランでは`Registered_At`が早い順
+4. 優先出品が停止・在庫切れになった場合は次順位へ自動で繰り上げる
+5. 最後は`Offer_ID`順で結果を安定化する
 
 セラー利益、広告単価、契約単価は選択ロジックへ入れない。
 
