@@ -1215,6 +1215,25 @@ const continuousSearchCopy={
   ZH:{title:'让 HOSHILU 持续寻找，直到发现匹配商品。',memberBody:'启用后，首次检查会将当前候选商品记录为基准，此时不发送通知。之后，仅在发现新匹配的真实商品时，通过应用内通知及已连接的 LINE 或电子邮件提醒您。',guestBody:'可先将条件保存到此设备。免费注册后，请为此条件明确启用通知。',note:'这是新商品发现通知，与降价通知不同。',action:'免费继续寻找',localAction:'保存到此设备',active:'HOSHILU 正在继续寻找',local:'条件已保存到设备',login:'注册后启用通知'},
   KO:{title:'일치하는 상품을 찾을 때까지 HOSHILU가 계속 찾아요.',memberBody:'활성화하면 첫 확인에서 현재 후보를 기준으로 기록하고 이때는 알림을 보내지 않습니다. 이후 새로 일치하는 실제 상품을 찾았을 때만 앱과 연결된 LINE·이메일로 알려드립니다.',guestBody:'먼저 이 기기에 조건을 저장할 수 있어요. 무료 가입 후 이 조건의 알림을 명시적으로 활성화하세요.',note:'가격 인하 알림과는 다른 새 상품 발견 알림입니다.',action:'무료로 계속 찾기',localAction:'이 기기에 저장',active:'HOSHILU가 이 조건을 계속 찾고 있어요',local:'이 기기에 조건을 저장했어요',login:'가입 후 알림 활성화'}
 };
+function showWishSaveFeedback({saved,member,query}){
+  const language=elements.language.value;
+  const labels=continuousSearchCopy[language]||continuousSearchCopy.JA;
+  const titles={JA:saved?'保存しました':'保存を確認できませんでした',EN:saved?'Saved':'Could not confirm saving',ZH:saved?'已保存':'无法确认保存',KO:saved?'저장했습니다':'저장을 확인하지 못했습니다'};
+  const dialog=document.createElement('dialog');
+  dialog.className='product-watch-dialog';
+  dialog.setAttribute('aria-labelledby','wishSaveFeedbackTitle');
+  const panel=document.createElement('div');panel.className='product-watch-dialog-card';
+  const heading=textElement('strong','',titles[language]||titles.EN);heading.id='wishSaveFeedbackTitle';
+  const failure={JA:'通信または端末への保存に問題がありました。もう一度お試しください。',EN:'There was a connection or device storage problem. Please try again.',ZH:'网络或设备保存出现问题，请重试。',KO:'통신 또는 기기 저장에 문제가 있습니다. 다시 시도해 주세요.'};
+  panel.append(heading,textElement('p','watch-save-note',saved?(member?labels.memberBody:wishSavedCopy()):(failure[language]||failure.EN)),textElement('p','watch-save-note',query));
+  if(saved&&!member){
+    const login=document.createElement('a');login.href='/login.html?source=continuous_search&next=%2F%23wishTitle';login.textContent=labels.login;panel.append(login);
+  }
+  const close=document.createElement('button');close.type='button';close.className='watch-save-button';close.textContent='OK';
+  close.addEventListener('click',()=>dialog.close());panel.append(close);dialog.append(panel);
+  dialog.addEventListener('close',()=>dialog.remove(),{once:true});
+  document.body.append(dialog);dialog.showModal();
+}
 function continuousSearchCard(query){
   const value=String(query||'').trim();
   if(!value)return null;
@@ -1240,11 +1259,13 @@ function continuousSearchCard(query){
   button.addEventListener('click',async()=>{
     button.disabled=true;
     const memberPersistenceRequired=Boolean(memberSession);
-    const saved=await saveInsightWatch(value);
+    let saved=false;
+    try{saved=await saveInsightWatch(value);}catch{button.disabled=false;showWishSaveFeedback({saved:false,member:memberPersistenceRequired,query:value});return;}
     document.dispatchEvent(new CustomEvent('hoshilu:wish-saved',{detail:{source:'continuous_search'}}));
-    if(memberPersistenceRequired&&!saved){button.textContent=wishSaveFailedCopy();button.disabled=false;return;}
+    if(memberPersistenceRequired&&!saved){button.textContent=wishSaveFailedCopy();button.disabled=false;showWishSaveFeedback({saved:false,member:memberPersistenceRequired,query:value});return;}
     button.textContent=memberSession?labels.active:labels.local;
     if(!memberSession){login.classList.remove('hidden');button.disabled=false;}
+    showWishSaveFeedback({saved:true,member:memberPersistenceRequired,query:value});
   });
   actions.append(button,login);
   card.append(copyWrap,queryChip,actions);

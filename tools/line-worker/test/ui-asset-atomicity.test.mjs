@@ -21,7 +21,7 @@ test('index loads the atomic versioned app and layout assets', async () => {
   const html = await read('index.html');
 
   assert.ok(html.includes('href="/assets-v126/ai-search-layout-fix.css?v=127"'));
-  assert.ok(html.includes('src="/assets-v147/app.js?v=153"'));
+  assert.ok(html.includes('src="/assets-v147/app.js?v=154"'));
   assert.ok(html.includes('src="/site-i18n.js?v=6"'));
   assert.equal(html.includes('href="/ai-search-layout-fix.css?v=127"'), false);
   assert.equal(html.includes('src="/app.js?v=151"'), false);
@@ -32,7 +32,7 @@ test('index loads the atomic versioned app and layout assets', async () => {
 test('service worker precaches canonical and versioned UI assets', async () => {
   const worker = await read('service-worker.js');
 
-  assert.match(worker, /hoshilu-shell-v405/);
+  assert.match(worker, /hoshilu-shell-v406/);
   for (const asset of [
     '/app.js',
     '/assets-v147/app.js',
