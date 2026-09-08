@@ -133,38 +133,41 @@ export async function operationalDiagnostics(db, internalIds = []) {
       GROUP BY event_type,traffic_class,origin`),
     read(`WITH sessions AS (
       SELECT session_id,
-        MAX(CASE WHEN event_type='seo_article_view' THEN 1 ELSE 0 END) AS article_view,
-        MAX(CASE WHEN event_type='seo_search_transition' THEN 1 ELSE 0 END) AS article_search_click,
-        MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS search_started,
-        MAX(CASE WHEN event_type='target_price_watch_started' THEN 1 ELSE 0 END) AS watch_started,
-        MAX(CASE WHEN event_type='target_price_watch_set' THEN 1 ELSE 0 END) AS watch_set,
-        MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS mall_click
+        MIN(CASE WHEN event_type='seo_article_view' THEN occurred_at END) AS article_view_at,
+        MIN(CASE WHEN event_type='seo_search_transition' THEN occurred_at END) AS article_search_click_at,
+        MIN(CASE WHEN event_type='search_started' THEN occurred_at END) AS search_started_at,
+        MIN(CASE WHEN event_type='target_price_watch_started' THEN occurred_at END) AS watch_started_at,
+        MIN(CASE WHEN event_type='target_price_watch_set' THEN occurred_at END) AS watch_set_at,
+        MIN(CASE WHEN event_type='marketplace_click' THEN occurred_at END) AS mall_click_at
       FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
       AND traffic_class<>'QA' AND session_id<>'' GROUP BY session_id
     ) SELECT
-      SUM(article_view) AS article_sessions,
-      SUM(CASE WHEN article_view=1 AND article_search_click=1 THEN 1 ELSE 0 END) AS article_to_search_click_sessions,
-      SUM(CASE WHEN article_view=1 AND search_started=1 THEN 1 ELSE 0 END) AS article_to_search_started_sessions,
-      SUM(CASE WHEN article_view=1 AND watch_started=1 THEN 1 ELSE 0 END) AS article_to_watch_started_sessions,
-      SUM(CASE WHEN article_view=1 AND watch_set=1 THEN 1 ELSE 0 END) AS article_to_watch_set_sessions,
-      SUM(CASE WHEN article_view=1 AND mall_click=1 THEN 1 ELSE 0 END) AS article_to_mall_click_sessions
+      SUM(CASE WHEN article_view_at IS NOT NULL THEN 1 ELSE 0 END) AS article_sessions,
+      SUM(CASE WHEN article_search_click_at>=article_view_at THEN 1 ELSE 0 END) AS article_to_search_click_sessions,
+      SUM(CASE WHEN search_started_at>=article_view_at THEN 1 ELSE 0 END) AS article_to_search_started_sessions,
+      SUM(CASE WHEN watch_started_at>=search_started_at AND search_started_at>=article_view_at THEN 1 ELSE 0 END) AS article_to_watch_started_sessions,
+      SUM(CASE WHEN watch_set_at>=search_started_at AND search_started_at>=article_view_at THEN 1 ELSE 0 END) AS article_to_watch_set_sessions,
+      SUM(CASE WHEN mall_click_at>=search_started_at AND search_started_at>=article_view_at THEN 1 ELSE 0 END) AS article_to_mall_click_sessions
       FROM sessions`),
     read(`WITH sessions AS (
       SELECT session_id,
-        MAX(CASE WHEN event_type='landing_view' THEN 1 ELSE 0 END) AS landed,
-        MAX(CASE WHEN event_type='search_started' THEN 1 ELSE 0 END) AS searched,
-        MAX(CASE WHEN event_type='target_price_watch_started' THEN 1 ELSE 0 END) AS watch_started,
-        MAX(CASE WHEN event_type='target_price_watch_set' THEN 1 ELSE 0 END) AS watch_set,
-        MAX(CASE WHEN event_type='notification_opened'
-          OR (event_type='landing_view' AND source='price_watch_notification') THEN 1 ELSE 0 END) AS notification_return,
-        MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS mall_click
+        MIN(CASE WHEN event_type='landing_view' THEN occurred_at END) AS landed_at,
+        MIN(CASE WHEN event_type='search_started' THEN occurred_at END) AS searched_at,
+        MIN(CASE WHEN event_type='target_price_watch_started' THEN occurred_at END) AS watch_started_at,
+        MIN(CASE WHEN event_type='target_price_watch_set' THEN occurred_at END) AS watch_set_at,
+        MIN(CASE WHEN event_type='notification_opened'
+          OR (event_type='landing_view' AND source='price_watch_notification') THEN occurred_at END) AS notification_return_at,
+        MIN(CASE WHEN event_type='marketplace_click' THEN occurred_at END) AS mall_click_at
       FROM growth_events WHERE datetime(occurred_at)>=datetime('now','-7 days')
       AND traffic_class<>'QA' AND session_id<>'' GROUP BY session_id
-    ) SELECT SUM(landed) AS landing_sessions,SUM(searched) AS search_sessions,
-      SUM(watch_started) AS watch_started_sessions,SUM(watch_set) AS watch_set_sessions,
-      SUM(notification_return) AS notification_return_sessions,
-      SUM(CASE WHEN notification_return=1 AND mall_click=1 THEN 1 ELSE 0 END) AS notification_return_to_mall_click_sessions,
-      SUM(mall_click) AS mall_click_sessions FROM sessions`),
+    ) SELECT
+      SUM(CASE WHEN landed_at IS NOT NULL THEN 1 ELSE 0 END) AS landing_sessions,
+      SUM(CASE WHEN searched_at>=landed_at THEN 1 ELSE 0 END) AS search_sessions,
+      SUM(CASE WHEN watch_started_at>=searched_at AND searched_at>=landed_at THEN 1 ELSE 0 END) AS watch_started_sessions,
+      SUM(CASE WHEN watch_set_at>=searched_at AND searched_at>=landed_at THEN 1 ELSE 0 END) AS watch_set_sessions,
+      SUM(CASE WHEN notification_return_at IS NOT NULL THEN 1 ELSE 0 END) AS notification_return_sessions,
+      SUM(CASE WHEN mall_click_at>=notification_return_at THEN 1 ELSE 0 END) AS notification_return_to_mall_click_sessions,
+      SUM(CASE WHEN mall_click_at IS NOT NULL THEN 1 ELSE 0 END) AS mall_click_sessions FROM sessions`),
     internalIds.length ? read(`SELECT channel,status,COUNT(*) AS count,MAX(delivered_at) AS last_delivered_at
       FROM mywatch_notifications WHERE event_type='PRICE_DROP' AND event_key LIKE 'TARGET:%'
       AND member_id NOT IN (${internalPlaceholders}) GROUP BY channel,status`, internalIds)

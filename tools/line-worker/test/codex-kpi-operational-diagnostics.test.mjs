@@ -36,6 +36,7 @@ function setup() {
     INSERT INTO seller_outreach_contacts VALUES
       ('QUEUED',NULL),('SENT','2026-09-08T00:05:00Z'),('OPTED_OUT','2026-09-08T00:06:00Z'),('REPLIED','2026-09-08T00:07:00Z'),('FAILED',NULL);
     INSERT INTO growth_events VALUES
+      ('landing_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-07T23:59:00Z'),
       ('seo_article_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:00:00Z'),
       ('seo_search_transition','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:01:00Z'),
       ('search_started','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:02:00Z'),
@@ -44,6 +45,8 @@ function setup() {
       ('marketplace_click','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:05:00Z'),
       ('landing_view','ATTRIBUTED','price_watch_notification','visitor-return','return-session','','','','2026-09-08T00:06:00Z'),
       ('marketplace_click','ATTRIBUTED','price_watch_notification','visitor-return','return-session','','','','2026-09-08T00:07:00Z'),
+      ('search_started','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','2026-09-08T00:00:00Z'),
+      ('seo_article_view','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','2026-09-08T00:01:00Z'),
       ('seo_article_view','QA','seo_article','visitor-internal','qa-session','','','','2026-09-08T00:00:00Z'),
       ('target_price_watch_set','QA','seo_article','visitor-internal','qa-session','','','','2026-09-08T00:04:00Z');
     INSERT INTO mywatch_notifications VALUES
@@ -60,7 +63,7 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
   const result = await operationalDiagnostics(d1(setup()), ['internal-1']);
 
   assert.deepEqual(result.article_watch_journey_7d.rows.map(row => ({ ...row })), [{
-    article_sessions: 1,
+    article_sessions: 2,
     article_to_search_click_sessions: 1,
     article_to_search_started_sessions: 1,
     article_to_watch_started_sessions: 1,
@@ -68,7 +71,7 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
     article_to_mall_click_sessions: 1
   }]);
   assert.deepEqual(result.site_watch_journey_7d.rows.map(row => ({ ...row })), [{
-    landing_sessions: 1,
+    landing_sessions: 2,
     search_sessions: 1,
     watch_started_sessions: 1,
     watch_set_sessions: 1,
