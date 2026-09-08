@@ -33,3 +33,10 @@ Threadsの全日付再試行監査と、Instagram当日の形式・公開証拠�
 - Instagram形式診断はUNAVAILABLEだった。原因は読み取り専用SQLガードが文字列関数REPLACEを更新文として弾くため。ガードは弱めず、同じ境界判定をGLOBへ変更し、テストにも本物のread-onlyガードを通す。
 - [楽天公式仕様](https://webservice.rakuten.co.jp/documentation/ichiba-item-search)はkeyword最大128 single-byte characters・空白区切りAND検索。長い販促文付き商品名を200文字までそのまま送る旧巡回はこれに不適合。検索語だけ128 UTF-8 bytes以内に圧縮し、原文に実在する型番を優先する修正を準備。候補の同一商品判定・IDの完全一致は変えず、旧空IDも更新しない。
 - 長い商品名→API候補→ABOVE_TARGETの回帰テストと、設定スナップショット不変を検証。実際の失敗198件すべてが文字数原因とはまだ断定せず、新しいprovider診断で確認する。
+
+## 2026-09-09 00:08 JST 以降の未コミット監査
+
+- `/health` は `ok:true`、`missing:[]`、`weak:[]`。X/Instagram接続、Runway準備、全database featureを確認した。既知の未設定項目（未充足需要同期、SP-API、Amazon Creators、TikTok）は増えていない。
+- Issue #106 は `SEARCH_SLO_RECOVERY_UNVERIFIED:3/3:1.000` でopen。直近6時間の3件はいずれも `TURNSTILE_TOKEN_UNAVAILABLE` による縮退で、公開契約・AI/Rakuten/Yahoo canary・Cloudflare heartbeatはPASS。最新コードはセキュリティ確認を迂回せず13モール導線を表示する。一般利用者の正常検索がまだ観測されていないため、回復済みとは扱わない。
+- 旧作業ツリーの未push `d7e1d55` は本番反映済み `425f7409` とpatch-idが完全一致。残る有効変更も `85c11a83`、`2a9a1c1c`、`b886de0f`、`c3e5dac8`、`07e4a427` で実装済み。古いアセット版への巻き戻しや匿名集計の削除になる差分は統合しない。
+- KPI運用診断テストが固定日付に依存し、JSTの日付変更後に失敗する問題を発見。テストデータを現在時刻・現在JST日付基準へ変更し、日付をまたいでも同じ契約を検証できるようにした。

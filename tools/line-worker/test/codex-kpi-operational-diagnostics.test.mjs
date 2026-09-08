@@ -20,6 +20,30 @@ function d1(sqlite) {
 
 function setup() {
   const sqlite = new DatabaseSync(':memory:');
+  const now = Date.now();
+  const at = minutes => new Date(now + minutes * 60_000).toISOString();
+  const currentJstDate = new Date(now + 9 * 60 * 60_000).toISOString().slice(0, 10);
+  const jstNoonUtc = Date.parse(`${currentJstDate}T03:00:00.000Z`);
+  const times = {
+    queued: at(-60),
+    sent: at(-55),
+    optedOut: at(-54),
+    replied: at(-53),
+    socialFirst: new Date(jstNoonUtc).toISOString(),
+    socialLast: new Date(jstNoonUtc + 60_000).toISOString(),
+    landing: at(-50),
+    article: at(-49),
+    articleClick: at(-48),
+    search: at(-47),
+    watchStarted: at(-46),
+    watchSet: at(-45),
+    mallClick: at(-44),
+    notificationReturn: at(-43),
+    notificationMallClick: at(-42),
+    qaResult: at(-41),
+    qaTrace: at(-40)
+  };
+  sqlite.testTimes = times;
   sqlite.exec(`
     CREATE TABLE products(id TEXT);
     CREATE TABLE marketplace_offers(id TEXT);
@@ -35,35 +59,35 @@ function setup() {
     CREATE TABLE member_wishes(member_id TEXT,watch_price INTEGER,condition_snapshot TEXT);
 
     INSERT INTO seller_outreach_contacts VALUES
-      ('queued','QUEUED',NULL,'2026-09-07T00:00:00Z','queued-hash'),
-      ('sent','SENT','2026-09-08T00:05:00Z','2026-09-08T00:00:00Z','sent-hash'),
-      ('opted-out','OPTED_OUT','2026-09-08T00:06:00Z','2026-09-08T00:00:00Z','opted-out-hash'),
-      ('replied','REPLIED','2026-09-08T00:07:00Z','2026-09-08T00:00:00Z','replied-hash'),
-      ('failed','FAILED',NULL,'2026-09-08T00:00:00Z','failed-hash');
+      ('queued','QUEUED',NULL,'${times.queued}','queued-hash'),
+      ('sent','SENT','${times.sent}','${times.sent}','sent-hash'),
+      ('opted-out','OPTED_OUT','${times.optedOut}','${times.optedOut}','opted-out-hash'),
+      ('replied','REPLIED','${times.replied}','${times.replied}','replied-hash'),
+      ('failed','FAILED',NULL,'${times.sent}','failed-hash');
     INSERT INTO d1_migrations VALUES
       (1,'0001_initial.sql','2026-09-07T00:00:00Z'),
       (2,'0002_private_name.sql','2026-09-08T00:00:00Z');
     INSERT INTO social_post_queue VALUES
-      ('private-post-id-1','X','PUBLISHED','private-external-id','2026-09-08T00:05:00Z','2026-09-08T00:00:00Z',''),
-      ('private-post-id-2','X','PUBLISHED','private-external-id-2','2026-09-08T00:06:00Z','2026-09-08T00:01:00Z','');
+      ('private-post-id-1','X','PUBLISHED','private-external-id','${times.socialFirst}','${times.socialFirst}',''),
+      ('private-post-id-2','X','PUBLISHED','private-external-id-2','${times.socialLast}','${times.socialLast}','');
     INSERT INTO social_post_performance VALUES
       ('private-post-id-1','https://example.invalid/private-post','2026-09-08T00:06:00Z');
     INSERT INTO growth_events VALUES
-      ('landing_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-07T23:59:00Z'),
-      ('seo_article_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:00:00Z'),
-      ('seo_search_transition','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:01:00Z'),
-      ('search_started','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:02:00Z'),
-      ('target_price_watch_started','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:03:00Z'),
-      ('target_price_watch_set','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:04:00Z'),
-      ('marketplace_click','ATTRIBUTED','seo_article','visitor-general','article-session','','','','2026-09-08T00:05:00Z'),
-      ('landing_view','ATTRIBUTED','price_watch_notification','visitor-return','return-session','','','','2026-09-08T00:06:00Z'),
-      ('marketplace_click','ATTRIBUTED','price_watch_notification','visitor-return','return-session','','','','2026-09-08T00:07:00Z'),
-      ('search_started','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','2026-09-08T00:00:00Z'),
-      ('seo_article_view','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','2026-09-08T00:01:00Z'),
-      ('seo_article_view','QA','seo_article','visitor-internal','qa-session','','','','2026-09-08T00:00:00Z'),
-      ('target_price_watch_set','QA','seo_article','visitor-internal','qa-session','','','','2026-09-08T00:04:00Z'),
-      ('search_qa_result','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private product text','2026-09-08T00:05:00Z'),
-      ('search_qa_trace','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private trace text','2026-09-08T00:06:00Z');
+      ('landing_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.landing}'),
+      ('seo_article_view','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.article}'),
+      ('seo_search_transition','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.articleClick}'),
+      ('search_started','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.search}'),
+      ('target_price_watch_started','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.watchStarted}'),
+      ('target_price_watch_set','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.watchSet}'),
+      ('marketplace_click','ATTRIBUTED','seo_article','visitor-general','article-session','','','','${times.mallClick}'),
+      ('landing_view','ATTRIBUTED','price_watch_notification','visitor-return','return-session','','','','${times.notificationReturn}'),
+      ('marketplace_click','ATTRIBUTED','price_watch_notification','visitor-return','return-session','','','','${times.notificationMallClick}'),
+      ('search_started','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','${times.article}'),
+      ('seo_article_view','ATTRIBUTED','seo_article','visitor-reverse','reverse-session','','','','${times.articleClick}'),
+      ('seo_article_view','QA','seo_article','visitor-internal','qa-session','','','','${times.article}'),
+      ('target_price_watch_set','QA','seo_article','visitor-internal','qa-session','','','','${times.watchSet}'),
+      ('search_qa_result','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private product text','${times.qaResult}'),
+      ('search_qa_trace','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private trace text','${times.qaTrace}');
     INSERT INTO mywatch_notifications VALUES
       ('PRICE_DROP','TARGET:general','general-member','EMAIL','SENT','2026-09-08T00:10:00Z'),
       ('PRICE_DROP','TARGET:internal','internal-1','EMAIL','SENT','2026-09-08T00:11:00Z');
@@ -75,7 +99,8 @@ function setup() {
 }
 
 test('運用診断は記事→希望価格と通知再訪を同一セッションで集計し内部会員を除外する', async () => {
-  const result = await operationalDiagnostics(d1(setup()), ['internal-1']);
+  const sqlite = setup();
+  const result = await operationalDiagnostics(d1(sqlite), ['internal-1']);
 
   assert.deepEqual(result.article_watch_journey_7d.rows.map(row => ({ ...row })), [{
     article_sessions: 2,
@@ -107,7 +132,7 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
     failed: { status: 'AVAILABLE', count: 1 },
     queued: { status: 'AVAILABLE', count: 1 },
     eligible_now: { status: 'AVAILABLE', count: 1 },
-    next_scheduled_at: '2026-09-07T00:00:00Z'
+    next_scheduled_at: sqlite.testTimes.queued
   });
   assert.deepEqual(result.migrations.rows.map(row => ({ ...row })), [{
     applied_count: 2,
@@ -115,10 +140,10 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
   }]);
   assert.deepEqual(result.social.rows.map(row => ({ ...row })), [{
     platform: 'X', status: 'PUBLISHED', error_code: 'NONE', count: 2,
-    last_published_at: '2026-09-08T00:06:00Z', next_scheduled_at: null
+    last_published_at: sqlite.testTimes.socialLast, next_scheduled_at: null
   }]);
   assert.deepEqual(result.search_qa.rows.map(row => ({ ...row })), [{
-    outcome: 'PASS', count: 1, last_observed_at: '2026-09-08T00:05:00Z'
+    outcome: 'PASS', count: 1, last_observed_at: sqlite.testTimes.qaResult
   }]);
   const serialized = JSON.stringify(result);
   for (const forbidden of ['private-post-id', 'private-external-id', 'private product text',
