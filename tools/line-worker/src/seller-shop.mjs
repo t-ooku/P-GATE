@@ -441,6 +441,7 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
   const appliedHtml = appliedChips.length
     ? `<div class="shop-applied"><span class="shop-filter-label">絞り込み中</span>${appliedChips.map((chip) => `<a class="shop-applied-chip" href="${esc(chip.href)}">${esc(chip.label)} <span aria-hidden="true">✕</span></a>`).join('')}<a class="shop-applied-clear" href="${esc(shopHref(shop.slug, { sort: filters.sort }))}">すべて解除</a></div>`
     : '';
+  const filterPanel = (label, selected, content) => `<details class="shop-filter-panel"><summary><span>${esc(label)}</span>${selected ? `<span class="shop-filter-selected">${esc(selected)}</span>` : ''}</summary><div class="shop-filter-content">${content}</div></details>`;
   // 絞り込みワードは、いま表示している商品名から作る（データに無い条件は出さない）。
   const keywordHtml = keywords.length
     ? `<div class="shop-filter-row"><span class="shop-filter-label">絞り込みワード（商品名から）</span>${keywords.map((item) => `<a class="shop-chip" href="${esc(shopHref(shop.slug, { ...filters, query: toggleKeywordInQuery(query, item.word), page: 1 }))}">${esc(item.word)} <small>${item.estimated ? '約' : ''}${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
@@ -453,10 +454,10 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
     ? `<div class="shop-filter-row"><span class="shop-filter-label">${label}</span><a class="shop-chip${filters[kind] ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, [kind]: '', page: 1 }))}">すべて</a>${items.map((item) => `<a class="shop-chip${filters[kind] === item.value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, [kind]: filters[kind] === item.value ? '' : item.value, page: 1 }))}">${esc(item.label)} <small>${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
     : '';
   const attributeHtml = [
-    attributeRow('color', '色', attributes.colors),
-    attributeRow('size', 'サイズ・容量', attributes.sizes),
-    attributeRow('material', '素材', attributes.materials)
-  ].join('');
+    ['color', '色', attributes.colors],
+    ['size', 'サイズ・容量', attributes.sizes],
+    ['material', '素材', attributes.materials]
+  ].map(([kind, label, items]) => items?.length ? filterPanel(label, filters[`${kind}_label`], attributeRow(kind, label, items)) : '').join('');
   const productHtml = products.length ? products.map((p) => `
     <a class="shop-product" rel="nofollow sponsored noopener" href="${esc(p.direct_url || p.url)}" data-track="${esc(p.tracking_url !== (p.direct_url || p.url) ? p.tracking_url : '')}">
       ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : '<span class="shop-product-noimage"></span>'}
@@ -479,6 +480,15 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 .storefront-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid var(--accent);border-radius:12px;background:#f4f0ff;color:#4f36b5;font-weight:800;font-size:13px;text-decoration:none}
 .shop-filters{margin:0 0 10px;padding:8px 12px;background:#fff;border:1px solid var(--line);border-radius:12px}
 .shop-filters summary{cursor:pointer;font-weight:800;font-size:13px;color:var(--accent)}
+.shop-filter-panel{margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.shop-filter-panel>summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:12px;list-style:none;background:#f8f6ff}
+.shop-filter-panel>summary::-webkit-details-marker{display:none}
+.shop-filter-panel>summary::after{content:'＋';margin-left:auto;flex:none;font-size:18px}
+.shop-filter-panel[open]>summary::after{content:'−'}
+.shop-filter-panel>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.shop-filter-selected{min-width:0;max-width:50%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--muted);font-weight:500}
+.shop-filter-content{padding:0 12px 12px}
+.shop-filter-content .shop-filter-label{display:none}
 .shop-genre-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:10px}
 .shop-genre-field{display:grid;gap:4px;font-size:11px;color:var(--muted);font-weight:800}
 .shop-genre-field select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
@@ -530,13 +540,14 @@ ${couponHtml}
 <form class="search" action="/shop/${esc(shop.slug)}" method="get"><input type="search" name="q" value="${esc(query)}" placeholder="商品名・ASINでこのショップ内を探す" maxlength="80">${filters.brands.length ? `<input type="hidden" name="brand" value="${esc(filters.brands.join(','))}">` : ''}${filters.genre ? `<input type="hidden" name="genre" value="${esc(filters.genre)}">` : ''}${filters.subgenre ? `<input type="hidden" name="subgenre" value="${esc(filters.subgenre)}">` : ''}${filters.color ? `<input type="hidden" name="color" value="${esc(filters.color)}">` : ''}${filters.size ? `<input type="hidden" name="size" value="${esc(filters.size)}">` : ''}${filters.material ? `<input type="hidden" name="material" value="${esc(filters.material)}">` : ''}<button type="submit">探す</button></form>
 ${appliedHtml}
 <details class="shop-filters"${filters.brands.length || filters.subgenre || filters.color || filters.size || filters.material || filters.sort === 'name' ? ' open' : ''}><summary>☰ 詳細検索${filters.brands.length || filters.subgenre_label || filters.color_label || filters.size_label || filters.material_label ? `：${esc([...filters.brands, filters.subgenre_label, filters.color_label, filters.size_label, filters.material_label].filter(Boolean).join('・'))}` : ''}</summary>
+<details class="shop-filter-panel"><summary><span>ジャンル</span>${filters.subgenre_label ? `<span class="shop-filter-selected">${esc(filters.genre)} › ${esc(filters.subgenre_label)}</span>` : ''}</summary><div class="shop-filter-content">
 <form class="shop-genre-form" action="/shop/${esc(shop.slug)}" method="get" id="shopGenreForm">${query ? `<input type="hidden" name="q" value="${esc(query)}">` : ''}${filters.brands.length ? `<input type="hidden" name="brand" value="${esc(filters.brands.join(','))}">` : ''}${filters.color ? `<input type="hidden" name="color" value="${esc(filters.color)}">` : ''}${filters.size ? `<input type="hidden" name="size" value="${esc(filters.size)}">` : ''}${filters.material ? `<input type="hidden" name="material" value="${esc(filters.material)}">` : ''}${filters.sort !== 'new' ? `<input type="hidden" name="sort" value="${esc(filters.sort)}">` : ''}
 <label class="shop-genre-field">ジャンル<select name="genre" id="shopGenre" required><option value="">ジャンルを選択</option>${genreOptions}</select></label>
 <label class="shop-genre-field">小ジャンル<select name="subgenre" id="shopSubgenre" required><option value="">小ジャンルを選択</option>${subgenreOptions}</select></label>
-<button type="submit">ジャンルで絞る</button></form>
-<div class="shop-filter-row"><span class="shop-filter-label">並び順</span>${[['new', '新着順'], ['name', '名前順']].map(([value, label]) => `<a class="shop-chip${filters.sort === value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, sort: value, page: 1 }))}">${label}</a>`).join('')}</div>
-${keywordHtml}
-${brands.length ? `<div class="shop-filter-row"><span class="shop-filter-label">メーカー・ブランド（複数選べます）</span><a class="shop-chip${filters.brands.length ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, brands: [], page: 1 }))}">すべて</a>${brands.map((b) => `<a class="shop-chip${filters.brands.includes(b.brand) ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, brands: toggleShopBrand(filters.brands, b.brand), page: 1 }))}">${esc(b.brand)} <small>${b.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>` : ''}
+<button type="submit">ジャンルで絞る</button></form></div></details>
+${filterPanel('並び順', filters.sort === 'name' ? '名前順' : '新着順', `<div class="shop-filter-row">${[['new', '新着順'], ['name', '名前順']].map(([value, label]) => `<a class="shop-chip${filters.sort === value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, sort: value, page: 1 }))}">${label}</a>`).join('')}</div>`)}
+${keywordHtml ? filterPanel('絞り込みワード（商品名から）', query, keywordHtml) : ''}
+${brands.length ? filterPanel('メーカー・ブランド（複数選べます）', filters.brands.join('・'), `<div class="shop-filter-row"><a class="shop-chip${filters.brands.length ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, brands: [], page: 1 }))}">すべて</a>${brands.map((b) => `<a class="shop-chip${filters.brands.includes(b.brand) ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, brands: toggleShopBrand(filters.brands, b.brand), page: 1 }))}">${esc(b.brand)} <small>${b.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`) : ''}
 ${attributeHtml}
 <p class="shop-filter-note">ジャンル・色・サイズ・素材は、商品名に記載された情報でショップ内検索します。価格や評価での絞り込みは、正確なデータの取り込みが終わってから出します（いまは在庫のある商品だけを表示しています）。</p>
 </details>
