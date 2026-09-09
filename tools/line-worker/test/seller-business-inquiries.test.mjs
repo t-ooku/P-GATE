@@ -60,6 +60,7 @@ test('公開問い合わせAPIは同一Originだけを受け付ける', async ()
 test('公開LPは相談・登録・支払い準備を明示し機密情報を要求しない', () => {
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
   assert.match(html, /相談・登録申請/u);
+  assert.match(html, /金額の相談は受け付けていません/u);
   assert.match(html, /カード・銀行振込・請求書払い/u);
   assert.match(html, /フォーム送信だけで課金されることはありません/u);
   assert.match(html, /HOSHILUはITグループ株式会社のサービスではありません/u);
