@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql, buildPostId, buildRejectSql,
-  evaluateFaces, evaluateGeneratedText, evaluateTranscript, GENERATED_TEXT_MAX_CHARS_TOTAL,
+  classifyRunwaySlotCompetition, evaluateFaces, evaluateGeneratedText, evaluateTranscript, GENERATED_TEXT_MAX_CHARS_TOTAL,
   nextPublishSlot, parseVolume, REQUIRED_QA_CHECKS, similarity
 } from '../scripts/auto-runway-reel-lib.mjs';
 
@@ -119,8 +119,24 @@ test('同じ枠のAI女優日次リール（既存素材）は Runway 新規生�
   assert.match(sql, /^UPDATE social_post_queue SET status='CANCELLED',last_error='replaced_by:hoshilu-runway-auto-want-at-price-20260907'/u);
   assert.match(sql, /campaign_id='hoshilu-ai-actress-daily-v1' AND status='APPROVED' AND external_post_id='' AND platform_job_id=''/u);
   const runner = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
-  assert.match(runner, /replaceable = competing\.filter\(\(row\) => row\.campaign_id === 'hoshilu-ai-actress-daily-v1' && row\.status === 'APPROVED'\)/u);
+  const competition = classifyRunwaySlotCompetition([
+    { post_id: 'old-daily', campaign_id: 'hoshilu-ai-actress-daily-v1', status: 'APPROVED' },
+    { post_id: 'other-approved', campaign_id: 'another-campaign', status: 'APPROVED' },
+    { post_id: 'already-live', campaign_id: 'another-campaign', status: 'PUBLISHED' }
+  ]);
+  assert.deepEqual(competition.replaceable, ['old-daily']);
+  assert.deepEqual(competition.blocking.map((row) => row.post_id), ['other-approved', 'already-live']);
+  assert.match(runner, /status IN \('APPROVED','PUBLISHING','PUBLISHED'\)/u);
   assert.match(runner, /if \(!qualityFailure\) \{ log\('non-quality failure; job left as-is for a re-run'/u, '生成物以外の理由では FAILED_FINAL にしない');
+});
+
+test('競合枠は Runway のジョブ投入・336 credits消費より前に固定コードで停止する', () => {
+  const runner = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  const ensureGenerated = runner.slice(runner.indexOf('async function ensureGenerated'));
+  const preflight = ensureGenerated.indexOf('AUTO_REEL_COMPETING_SLOT_PRECHECK');
+  const jobSql = ensureGenerated.indexOf('buildJobSql({');
+  assert.ok(preflight >= 0, '競合枠の生成前チェックが必要');
+  assert.ok(jobSql > preflight, '競合枠を止めてからRunwayジョブを投入する');
 });
 
 // 2026-09-08 大隆さん指摘（実際に Instagram と X へ公開してしまった）:

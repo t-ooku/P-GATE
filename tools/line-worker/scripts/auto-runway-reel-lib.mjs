@@ -57,6 +57,17 @@ export function buildPostId(jobId) {
   return jobId.replace(/^runway-auto-/, 'hoshilu-runway-auto-');
 }
 
+// 同じ Instagram 枠の既存行を、置き換え可能な旧日次Reelと、それ以外の停止対象に分ける。
+// Runwayへ課金リクエストを送る前と、自動QA時の両方で同じ判定を使い、競合検知のずれを防ぐ。
+export function classifyRunwaySlotCompetition(rows = []) {
+  const replaceable = rows
+    .filter((row) => row.campaign_id === 'hoshilu-ai-actress-daily-v1' && row.status === 'APPROVED')
+    .map((row) => row.post_id);
+  const replaceableIds = new Set(replaceable);
+  const blocking = rows.filter((row) => !replaceableIds.has(row.post_id));
+  return { replaceable, blocking };
+}
+
 export function sha256Hex(value) {
   return createHash('sha256').update(String(value)).digest('hex');
 }

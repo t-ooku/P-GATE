@@ -21,7 +21,8 @@ import path from 'node:path';
 import process from 'node:process';
 import {
   REQUIRED_QA_CHECKS, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
-  buildPostId, buildRejectSql, buildReplaceDailyReelSql, d1Rows, evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume
+  buildPostId, buildRejectSql, buildReplaceDailyReelSql, classifyRunwaySlotCompetition, d1Rows,
+  evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume
 } from './auto-runway-reel-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -53,6 +54,13 @@ function ffprobeJson(file) {
   return JSON.parse(run('ffprobe', ['-v', 'error', '-show_entries', 'format=duration,size:stream=codec_type,codec_name,profile,width,height,pix_fmt,r_frame_rate,sample_rate,channels', '-of', 'json', file]));
 }
 
+function runwaySlotCompetition(postId) {
+  const windowFrom = new Date(slot.publish_at.getTime() - 30 * 60 * 1000).toISOString();
+  const windowTo = new Date(slot.publish_at.getTime() + 30 * 60 * 1000).toISOString();
+  const competing = d1(`SELECT post_id,campaign_id,status FROM social_post_queue WHERE post_id<>'${postId}' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING','PUBLISHED') AND scheduled_at BETWEEN '${windowFrom}' AND '${windowTo}';`);
+  return classifyRunwaySlotCompetition(competing);
+}
+
 // ---------- 1. 枠と型 ----------
 const now = new Date();
 const slot = nextPublishSlot(now, themes, { slotOverride: args.slot || '', leadMinutes: Number(args.lead || 90) });
@@ -69,6 +77,12 @@ async function ensureGenerated(attempt) {
   const postId = buildPostId(jobId);
   const existing = d1(`SELECT job_id,status,qa_status,storage_key,storage_size_bytes,last_error_code,last_error_detail FROM runway_generation_jobs WHERE job_id='${jobId}';`);
   if (!existing.length) {
+    // 枠の競合は生成後にも再確認するが、まず課金前に止める。2026-09-09 はこの確認が
+    // 自動QAまで遅れ、公開済み候補がある枠に不要な336 creditsを使ってしまった。
+    const preflight = runwaySlotCompetition(postId);
+    if (preflight.blocking.length) {
+      throw new Error(`AUTO_REEL_COMPETING_SLOT_PRECHECK:${preflight.blocking.map((row) => `${row.post_id}=${row.status}`).join(',')}`);
+    }
     const blockers = d1(`SELECT job_id,status FROM runway_generation_jobs WHERE status IN ('BUDGET_RESERVED','SUBMITTING','PROCESSING','AMBIGUOUS_SUBMISSION','GENERATED_REVIEW_REQUIRED');`);
     if (blockers.length) throw new Error(`AUTO_REEL_PIPELINE_BUSY:${blockers.map((b) => `${b.job_id}=${b.status}`).join(',')}`);
     const month = now.toISOString().slice(0, 7);
@@ -268,15 +282,11 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
   if (!queue || queue.status !== 'REVIEW_REQUIRED') problems.push(`queue_${queue?.status || 'missing'}`);
   if (!String(queue?.caption || '').includes('AI生成')) problems.push('caption_disclosure');
   if (!/^https:\/\/hoshilu\.app\//.test(String(queue?.link || ''))) problems.push('link');
-  const windowFrom = new Date(slot.publish_at.getTime() - 30 * 60 * 1000).toISOString();
-  const windowTo = new Date(slot.publish_at.getTime() + 30 * 60 * 1000).toISOString();
   const duplicateCount = Number(d1(`SELECT COUNT(*) AS n FROM social_post_queue WHERE post_id<>'${postId}' AND platform='INSTAGRAM' AND content_id='${jobId}' AND (status IN ('APPROVED','PUBLISHING','PUBLISHED') OR external_post_id<>'');`)[0]?.n || 0);
   // 同じ枠（20:15 JST）に既存の「AI女優 日次リール（既存素材の再構成）」が入っている。
   // 2026-09-06 大隆さん決定: 月・水・土は Runway 新規生成に置き換える。承認時にその行を
   // CANCELLED にしてから本リールを APPROVED にする（他キャンペーンの投稿が重なる場合だけ不合格）。
-  const competing = d1(`SELECT post_id,campaign_id,status FROM social_post_queue WHERE post_id<>'${postId}' AND platform='INSTAGRAM' AND status IN ('APPROVED','PUBLISHING') AND scheduled_at BETWEEN '${windowFrom}' AND '${windowTo}';`);
-  const replaceable = competing.filter((row) => row.campaign_id === 'hoshilu-ai-actress-daily-v1' && row.status === 'APPROVED').map((row) => row.post_id);
-  const blocking = competing.filter((row) => !replaceable.includes(row.post_id));
+  const { replaceable, blocking } = runwaySlotCompetition(postId);
   evidence.collision = { duplicate_count: duplicateCount, replaces_daily_reel: replaceable, blocking: blocking.map((row) => `${row.post_id}=${row.status}`) };
   if (duplicateCount !== 0) problems.push('duplicate');
   if (blocking.length) problems.push('competing_slot');
