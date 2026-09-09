@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { operationalDiagnostics, assertReadOnlySql } from '../scripts/read-codex-kpi-snapshot.mjs';
+import {
+  operationalDiagnostics, assertReadOnlySql, createCloudflareReadOnlyD1
+} from '../scripts/read-codex-kpi-snapshot.mjs';
 
 function d1(sqlite) {
   return {
@@ -213,4 +215,36 @@ test('内部会員IDがない場合は通知・一般利用者ウォッチを0�
   });
   assert.equal(result.general_user_watch_set.status, 'UNVERIFIED');
   assert.equal(result.general_user_watch_set.reason, 'INTERNAL_MEMBER_EXCLUSION_NOT_CONFIGURED');
+});
+
+
+test('KPI読取は一過性タイムアウトだけを有限回再試行する', async () => {
+  let calls = 0;
+  const db = createCloudflareReadOnlyD1({
+    accountId: 'account', apiToken: 'token', databaseId: 'database', attempts: 3, retryMs: 0,
+    async fetcher() {
+      calls += 1;
+      if (calls === 1) {
+        const error = new Error('The operation was aborted due to timeout');
+        error.name = 'TimeoutError';
+        throw error;
+      }
+      return {
+        ok: true, status: 200,
+        async json() { return { success: true, result: [{ success: true, results: [{ count: 1 }] }] }; }
+      };
+    }
+  });
+  assert.deepEqual(await db.prepare('SELECT COUNT(*) AS count FROM products').first(), { count: 1 });
+  assert.equal(calls, 2);
+});
+
+test('KPI読取は永続的な4xxを再試行しない', async () => {
+  let calls = 0;
+  const db = createCloudflareReadOnlyD1({
+    accountId: 'account', apiToken: 'token', databaseId: 'database', attempts: 3, retryMs: 0,
+    async fetcher() { calls += 1; return { ok: false, status: 400 }; }
+  });
+  await assert.rejects(db.prepare('SELECT 1').all(), /CODEX_KPI_D1_HTTP_400/);
+  assert.equal(calls, 1);
 });
