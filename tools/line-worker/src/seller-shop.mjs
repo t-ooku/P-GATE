@@ -529,12 +529,55 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 .foot{margin:24px 0 40px;color:var(--muted);font-size:11px;line-height:1.6}
 .foot a{color:var(--accent)}
 @media(max-width:640px){.shop-genre-form{grid-template-columns:1fr}.shop-genre-form button{width:100%}}
+/* Storefront: compact identity, quiet controls, product-first layout. */
+:root{--ink:#202322;--muted:#747a76;--line:#e2e5e0;--accent:#353f38}
+body{background:#f7f8f5}
+.top{padding:18px max(20px,calc((100vw - 1080px)/2));background:#f7f8f5;border-bottom:1px solid var(--line);gap:16px}
+.top a{font-size:14px;letter-spacing:.02em;color:var(--ink)}
+.top a:last-child{font-size:11px;font-weight:500;white-space:nowrap;color:var(--muted)}
+.top-sub{font-size:10px;letter-spacing:.15em;font-weight:500;color:var(--muted)}
+.wrap{width:min(1080px,100%);padding:24px 20px}
+.hero{position:relative;align-items:flex-start;gap:24px;padding:30px 0 28px;background:transparent;border:0;border-radius:0;border-bottom:1px solid var(--line)}
+.shop-logo{width:88px;height:88px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid var(--line);padding:8px}
+.shop-eyebrow{display:block;margin-bottom:8px;color:var(--muted);font-size:9px;letter-spacing:.2em}
+.hero h1{font-size:clamp(28px,4vw,44px);font-weight:700;letter-spacing:-.035em;line-height:1.1}
+.hero p{max-width:560px;font-size:13px;line-height:1.7;margin:12px 0 0}
+.follow{gap:12px;margin-top:18px}
+.follow button{border-radius:6px;padding:10px 15px;font-size:12px;background:var(--ink);border-color:var(--ink)}
+.follow small{font-size:10px}.follow small:empty{display:none}
+.storefront-link{margin-top:12px;border:0;border-bottom:1px solid #bdc5bd;border-radius:0;padding:4px 0;background:transparent;color:var(--ink);font-size:11px;font-weight:500}
+.shop-about{margin:0 0 28px}
+.shop-info{border-bottom:1px solid var(--line)}
+.shop-info>summary{display:flex;align-items:center;gap:12px;min-height:54px;padding:14px 0;font-size:12px;font-weight:600;cursor:pointer;list-style:none}
+.shop-info>summary::-webkit-details-marker{display:none}
+.shop-info>summary::after{content:'＋';margin-left:8px;font-size:17px;font-weight:400}
+.shop-info[open]>summary::after{content:'−'}
+.info-caption{margin-left:auto;color:var(--muted);font-size:9px;letter-spacing:.14em;font-weight:400}
+.shop-info>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.intro{margin:0;padding:0 0 22px;border:0;background:transparent;border-radius:0;font-size:13px;line-height:1.9}
+.shop-profile{margin:0 0 20px;font-size:12px;line-height:1.7}
+.shop-profile>div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:16px;padding:10px 0;border-top:1px solid var(--line)}
+.shop-profile dt{color:var(--muted)}.shop-profile dd{margin:0;overflow-wrap:anywhere}.shop-profile a{color:var(--ink)}
+.shop-section h2{font-size:18px;letter-spacing:.04em;margin-bottom:16px}
+.search{gap:8px}.search input{min-width:0;background:#fff;border-radius:6px;font-size:16px;padding:13px 12px}.search button{border-radius:6px;padding:12px 18px}
+.shop-filters{border-radius:6px;padding:12px;background:#fff}.shop-filters>summary{font-size:12px}
+.shop-filter-panel{border-radius:6px}.shop-filter-panel>summary{background:#f7f8f5}
+.shop-chip{border-color:var(--line);background:#fff;color:var(--ink);padding:8px 12px}.shop-chip.on{background:var(--accent)}
+.shop-count{font-size:11px;margin:16px 0}
+.grid{gap:24px 16px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.shop-product{padding:0;background:transparent;border:0;border-radius:0;gap:10px;align-content:start}
+.shop-product img,.shop-product-noimage{border-radius:8px;background:#fff;padding:12px;border:1px solid #eeefeb}
+.shop-product-name{font-size:12px;line-height:1.6}.shop-product-meta{font-size:10px;font-weight:500;color:var(--muted)}
+@media(max-width:640px){.wrap{padding:14px 18px}.top{padding:16px 18px}.hero{gap:16px;padding:20px 0 24px}.shop-logo{width:64px;height:64px;padding:5px}.hero h1{font-size:29px}.hero p{font-size:12px;margin-top:10px}.follow{gap:8px}.follow button{font-size:11px;padding:10px 12px}.follow small{font-size:9px}.shop-eyebrow{font-size:8px;letter-spacing:.13em}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 12px}.shop-profile>div{grid-template-columns:84px minmax(0,1fr);gap:12px}.shop-product img{padding:8px}}
 </style></head><body>
-<header class="top"><a href="/">← HOSHILU で横断検索</a><a href="/for-sellers">ショップページを持つ</a></header>
+<header class="top"><a href="/" aria-label="HOSHILU で横断検索">← HOSHILU<span class="top-sub"> / SHOPS</span></a><a href="/for-sellers">出店のご案内 ↗</a></header>
 <main class="wrap" data-slug="${esc(shop.slug)}">
-<section class="hero">${logo}<div class="hero-body"><h1>${esc(shop.shop_name)}</h1>${shop.tagline ? `<p>${esc(shop.tagline)}</p>` : ''}
+<section class="hero">${logo}<div class="hero-body"><span class="shop-eyebrow">HOSHILU / SHOP</span><h1>${esc(shop.shop_name)}</h1>${shop.tagline ? `<p>${esc(shop.tagline)}</p>` : ''}
 <div class="follow"><button type="button" id="followButton" data-following="${following ? 1 : 0}">${following ? '★ ホシってます' : '☆ ショップをホシる'}</button><small><span id="followerCount">${followers}</span>人がホシってます</small><small id="followStatus"></small></div>${amazonStorefrontUrl(shop.seller_ids) ? `<a class="storefront-link" rel="nofollow sponsored noopener" target="_blank" href="${esc(amazonStorefrontUrl(shop.seller_ids))}">Amazonのショップページを見る →</a>` : ''}</div></section>
-${shop.intro ? `<p class="intro">${esc(shop.intro)}</p>` : ''}
+<div class="shop-about">
+${shop.intro ? `<details class="shop-info"><summary><span>ショップ紹介</span><span class="info-caption">ABOUT</span></summary><p class="intro">${esc(shop.intro)}</p></details>` : ''}
+<details class="shop-info"><summary><span>ショッププロフィール</span><span class="info-caption">PROFILE</span></summary><dl class="shop-profile"><div><dt>ショップ名</dt><dd>${esc(shop.shop_name)}</dd></div>${shop.tagline ? `<div><dt>コンセプト</dt><dd>${esc(shop.tagline)}</dd></div>` : ''}${amazonStorefrontUrl(shop.seller_ids) ? `<div><dt>出店先</dt><dd><a href="${esc(amazonStorefrontUrl(shop.seller_ids))}" rel="nofollow sponsored noopener" target="_blank">Amazon のショップを見る ↗</a></dd></div>` : ''}${shop.website_url ? `<div><dt>ウェブサイト</dt><dd><a href="${esc(shop.website_url)}" rel="nofollow noopener" target="_blank">公式サイトを見る ↗</a></dd></div>` : ''}</dl></details>
+</div>
 ${couponHtml}
 <section class="shop-section" id="products"><h2>商品</h2>
 <form class="search" action="/shop/${esc(shop.slug)}" method="get"><input type="search" name="q" value="${esc(query)}" placeholder="商品名・ASINでこのショップ内を探す" maxlength="80">${filters.brands.length ? `<input type="hidden" name="brand" value="${esc(filters.brands.join(','))}">` : ''}${filters.genre ? `<input type="hidden" name="genre" value="${esc(filters.genre)}">` : ''}${filters.subgenre ? `<input type="hidden" name="subgenre" value="${esc(filters.subgenre)}">` : ''}${filters.color ? `<input type="hidden" name="color" value="${esc(filters.color)}">` : ''}${filters.size ? `<input type="hidden" name="size" value="${esc(filters.size)}">` : ''}${filters.material ? `<input type="hidden" name="material" value="${esc(filters.material)}">` : ''}<button type="submit">探す</button></form>
