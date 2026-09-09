@@ -10,7 +10,11 @@
 
 import { readMemberSession } from './member-auth.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
-import { queryWords, shopKeywordFacets, toggleKeywordInQuery } from './shop-facets.mjs';
+import {
+  queryWords, shopAttributeDefinition, shopAttributeFacets, shopKeywordFacets,
+  shopTitleMatchesAttributes, toggleKeywordInQuery
+} from './shop-facets.mjs';
+import { TREE as HOSHILU_GENRE_TREE } from '../public/genre-explorer.mjs';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // 制御文字（U+0000–U+001F, U+007F）。パッチ運搬でユニコードエスケープが崩れないよう fromCharCode で組む。
@@ -93,7 +97,12 @@ async function recordShopEvent(env, eventType, slug, extra = {}) {
 
 // ---- 検索結果へのショップ付与 -------------------------------------------------
 let shopCache = { at: 0, shops: [] };
-export function resetShopCache() { shopCache = { at: 0, shops: [] }; }
+export function resetShopCache() {
+  shopCache = { at: 0, shops: [] };
+  brandCache.clear();
+  attributeCache.clear();
+  countCache.clear();
+}
 
 export async function activeShops(env, { now = Date.now() } = {}) {
   if (!env?.PRODUCT_DB) return [];
@@ -144,7 +153,19 @@ async function liveCoupons(db, sellerKey) {
 // 2026-09-05 夜 大隆さん指摘: 「提示商品が少なすぎる」「Amazon同レベルの詳細検索を」。
 // 1ページ96件・ページ送り、メーカー（ブランド）絞り込み、並び順（新着/名前）を付ける。
 export const SHOP_PAGE_SIZE = 96;
+export const SHOP_GENRES = HOSHILU_GENRE_TREE.map((genre) => ({
+  label: clean(genre.label, 40),
+  subgenres: (genre.children || []).map((subgenre) => ({
+    label: clean(subgenre.label, 40),
+    query: clean(subgenre.q || subgenre.label, 80),
+    terms: [...new Set([
+      subgenre.label, subgenre.q,
+      ...(subgenre.children || []).flatMap((child) => [child.label, child.q])
+    ].map((value) => clean(value, 80)).filter(Boolean))]
+  })).filter((subgenre) => subgenre.label && subgenre.query)
+})).filter((genre) => genre.label && genre.subgenres.length);
 const brandCache = new Map(); // tenant -> { at, brands }
+const attributeCache = new Map(); // tenant -> { at, titles }
 const countCache = new Map(); // `${tenant}|${brand}` -> { at, n }（13万行の COUNT を毎回走らせない）
 
 export async function shopBrands(env, shop, { now = Date.now() } = {}) {
@@ -167,6 +188,30 @@ export async function shopBrands(env, shop, { now = Date.now() } = {}) {
   return [...merged.entries()].map(([brand, count]) => ({ brand, count })).sort((a, b) => b.count - a.count).slice(0, 40);
 }
 
+export async function shopAttributes(env, shop, { now = Date.now() } = {}) {
+  const titles = [];
+  for (const tenant of shop.tenants.slice(0, 5)) {
+    const cached = attributeCache.get(tenant);
+    let tenantTitles = cached && now - cached.at < 600000 ? cached.titles : null;
+    if (!tenantTitles) {
+      tenantTitles = [];
+      try {
+        const rows = await env.PRODUCT_DB.prepare(`SELECT product_name FROM products
+          WHERE tenant=?1 AND image_url<>'' AND stock>0 AND amazon_jp_url<>'' ORDER BY imported_at DESC LIMIT 1200`).bind(tenant).all();
+        tenantTitles.push(...(rows.results || []).map((row) => clean(row.product_name, 160)).filter(Boolean));
+      } catch {}
+      try {
+        const rows = await env.PRODUCT_DB.prepare(`SELECT product_name FROM sp_api_listings
+          WHERE tenant=?1 AND buyable=1 AND image_url<>'' AND product_url<>'' ORDER BY updated_at DESC LIMIT 300`).bind(tenant).all();
+        tenantTitles.push(...(rows.results || []).map((row) => clean(row.product_name, 160)).filter(Boolean));
+      } catch {}
+      attributeCache.set(tenant, { at: now, titles: tenantTitles });
+    }
+    titles.push(...tenantTitles);
+  }
+  return shopAttributeFacets(titles);
+}
+
 // 2026-09-06 大隆さん指摘: 「ショップの中の詳細条件がメルカリやAmazonのようになってない」。
 // ブランドを複数選べるようにする（これまでは1つだけ）。カンマ区切りで最大3つ。
 export const MAX_SHOP_BRANDS = 3;
@@ -176,14 +221,36 @@ export function shopFilters(searchParams) {
   const sort = String(get('sort') || '').toLowerCase();
   const brands = clean(get('brand'), 200).split(',')
     .map((value) => clean(value, 60)).filter(Boolean).slice(0, MAX_SHOP_BRANDS);
+  const requestedGenre = clean(get('genre'), 40);
+  const genre = SHOP_GENRES.find((item) => item.label === requestedGenre) || null;
+  const requestedSubgenre = clean(get('subgenre'), 80);
+  const subgenre = genre?.subgenres.find((item) => item.query === requestedSubgenre) || null;
+  const color = shopAttributeDefinition('color', clean(get('color'), 32));
+  const size = shopAttributeDefinition('size', clean(get('size'), 24));
+  const material = shopAttributeDefinition('material', clean(get('material'), 32));
   return {
     query: clean(get('q'), 80),
     brands,
     // 既存のリンク・テストが1つだけの brand を見ているので、先頭を残す。
     brand: brands[0] || '',
+    genre: genre?.label || '',
+    subgenre: subgenre?.query || '',
+    subgenre_label: subgenre?.label || '',
+    subgenre_terms: subgenre?.terms || [],
+    color: color?.value || '',
+    color_label: color?.label || '',
+    size: size?.value || '',
+    size_label: size?.label || '',
+    material: material?.value || '',
+    material_label: material?.label || '',
     sort: ['new', 'name'].includes(sort) ? sort : 'new',
     page: Math.max(1, Math.min(200, Number(get('page')) || 1))
   };
+}
+
+export function normalizeShopAsinQuery(value) {
+  const normalized = String(value || '').normalize('NFKC').trim().toUpperCase();
+  return /^[A-Z0-9]{10}$/.test(normalized) ? normalized : '';
 }
 
 // ブランドチップは押すたびに足す・外す（メルカリの複数選択と同じ動き）。
@@ -207,31 +274,74 @@ async function shopProducts(env, shop, filters = {}) {
     items.push({ name: clean(item.name, 160), image: httpsUrl(item.image), url, price: Number(item.price) > 0 ? Number(item.price) : 0, marketplace: item.marketplace || 'AMAZON_JP', asin: clean(item.asin, 20), tenant: item.tenant || '', brand: clean(item.brand, 60) });
   };
   const q = clean(typeof filters === 'string' ? filters : filters.query, 80);
+  const asin = normalizeShopAsinQuery(q);
+  const genreTerms = Array.isArray(filters.subgenre_terms) ? filters.subgenre_terms.map((value) => clean(value, 80)).filter(Boolean) : [];
+  const hasAttributeFilters = Boolean(filters.color || filters.size || filters.material);
+  const hasStructuredFilters = Boolean(genreTerms.length || hasAttributeFilters);
   const brands = (Array.isArray(filters.brands) ? filters.brands : [filters.brand])
     .map((value) => clean(value, 60)).filter(Boolean).slice(0, 3);
-  const brand = brands[0] || '';
   const page = Math.max(1, Number(filters.page) || 1);
   const order = filters.sort === 'name' ? 'product_name ASC' : 'imported_at DESC, record_key DESC';
   const offset = (page - 1) * SHOP_PAGE_SIZE;
   let total = 0;
   for (const tenant of shop.tenants.slice(0, 5)) {
+    // ASIN は商品名用FTSに入っていない。10桁の英数字だけを完全一致で先に探し、
+    // ジャンルやブランドが選ばれたままでも該当商品を取りこぼさない。
+    if (asin) {
+      try {
+        const rows = await db.prepare(`SELECT product_name,image_url,amazon_jp_url,asin,manufacturer FROM products
+          WHERE tenant=?1 AND asin=?2 AND stock>0 AND amazon_jp_url<>'' LIMIT 20`).bind(tenant, asin).all();
+        for (const row of rows.results || []) push({ name: row.product_name, image: row.image_url, url: row.amazon_jp_url, asin: row.asin, tenant, brand: row.manufacturer });
+      } catch {}
+      try {
+        const listings = await db.prepare(`SELECT product_name,image_url,product_url,price,asin FROM sp_api_listings
+          WHERE tenant=?1 AND asin=?2 AND buyable=1 AND product_url<>'' LIMIT 20`).bind(tenant, asin).all();
+        for (const row of listings.results || []) push({ name: row.product_name, image: row.image_url, url: row.product_url, price: row.price, asin: row.asin, tenant });
+      } catch {}
+      continue;
+    }
     if (q) {
       try {
         const rows = await searchProductsV2(env, tenant, q, 100);
         const lowered = brands.map((value) => value.toLowerCase());
-        const filtered = lowered.length
+        const brandFiltered = lowered.length
           ? rows.filter((row) => lowered.includes(clean(row.manufacturer, 60).toLowerCase()))
           : rows;
+        const filtered = brandFiltered.filter((row) => {
+          const title = clean(row.product_name, 160).toLowerCase();
+          return Number(row.stock || 0) > 0
+            && (!genreTerms.length || genreTerms.some((term) => title.includes(term.toLowerCase())))
+            && shopTitleMatchesAttributes(row.product_name, filters);
+        });
         total += filtered.length;
         for (const row of filtered) push({ name: row.product_name, image: row.image_url, url: row.amazon_jp_url, asin: row.asin, tenant, brand: row.manufacturer });
       } catch {}
       continue;
     }
     try {
-      const brandPlaceholders = brands.map((_, index) => `?${index + 2}`).join(',');
-      const where = `tenant=?1 AND image_url<>'' AND stock>0 AND amazon_jp_url<>''${brands.length ? ` AND manufacturer IN (${brandPlaceholders})` : ''}`;
       const binds = [tenant, ...brands];
-      const countKey = `${tenant}|${brands.join('|')}`;
+      const brandPlaceholders = brands.map((_, index) => `?${index + 2}`).join(',');
+      const attributeClauses = [];
+      if (genreTerms.length) {
+        const placeholders = genreTerms.map((term) => {
+          binds.push(`%${term}%`);
+          return `product_name LIKE ?${binds.length}`;
+        });
+        attributeClauses.push(`(${placeholders.join(' OR ')})`);
+      }
+      for (const kind of ['color', 'size', 'material']) {
+        const selected = shopAttributeDefinition(kind, filters[kind]);
+        if (!selected) continue;
+        const placeholders = selected.aliases.map((alias) => {
+          binds.push(`%${kind === 'size' ? alias.replace(/\s+/gu, '') : alias}%`);
+          return kind === 'size'
+            ? `REPLACE(REPLACE(product_name,' ',''),'　','') LIKE ?${binds.length}`
+            : `product_name LIKE ?${binds.length}`;
+        });
+        attributeClauses.push(`(${placeholders.join(' OR ')})`);
+      }
+      const where = `tenant=?1 AND image_url<>'' AND stock>0 AND amazon_jp_url<>''${brands.length ? ` AND manufacturer IN (${brandPlaceholders})` : ''}${attributeClauses.length ? ` AND ${attributeClauses.join(' AND ')}` : ''}`;
+      const countKey = `${tenant}|${brands.join('|')}|${filters.subgenre || ''}|${filters.color || ''}|${filters.size || ''}|${filters.material || ''}`;
       const cachedCount = countCache.get(countKey);
       let count = cachedCount && Date.now() - cachedCount.at < 600000 ? cachedCount.n : null;
       if (count === null) {
@@ -246,13 +356,14 @@ async function shopProducts(env, shop, filters = {}) {
     } catch {}
     // 2026-09-06 修正: SP-API の在庫は絞り込み・並び順・ページ送りに乗っていないため、
     // 2ページ目以降で同じ48件が毎回混ざっていた。1ページ目だけの補充にする。
-    if (items.length >= SHOP_PAGE_SIZE || page > 1 || brands.length || q) continue;
+    if (items.length >= SHOP_PAGE_SIZE || page > 1 || brands.length || q || hasStructuredFilters) continue;
     try {
       const listings = await db.prepare(`SELECT product_name,image_url,product_url,price,asin FROM sp_api_listings
         WHERE tenant=?1 AND buyable=1 AND image_url<>'' ORDER BY updated_at DESC LIMIT 48`).bind(tenant).all();
       for (const row of listings.results || []) push({ name: row.product_name, image: row.image_url, url: row.product_url, price: row.price, asin: row.asin, tenant });
     } catch {}
   }
+  if (asin) total = items.length;
   const result = q ? items.slice(offset, offset + SHOP_PAGE_SIZE) : items.slice(0, SHOP_PAGE_SIZE);
   result.total = total;
   result.page = page;
@@ -284,6 +395,11 @@ function shopHref(slug, filters = {}) {
   const brandList = (Array.isArray(filters.brands) ? filters.brands : (filters.brand ? [filters.brand] : []))
     .map((value) => clean(value, 60)).filter(Boolean).slice(0, MAX_SHOP_BRANDS);
   if (brandList.length) params.set('brand', brandList.join(','));
+  if (filters.genre) params.set('genre', clean(filters.genre, 40));
+  if (filters.subgenre) params.set('subgenre', clean(filters.subgenre, 80));
+  if (filters.color) params.set('color', clean(filters.color, 32));
+  if (filters.size) params.set('size', clean(filters.size, 24));
+  if (filters.material) params.set('material', clean(filters.material, 32));
   if (filters.sort && filters.sort !== 'new') params.set('sort', filters.sort);
   if (Number(filters.page) > 1) params.set('page', String(filters.page));
   const qs = params.toString();
@@ -291,7 +407,7 @@ function shopHref(slug, filters = {}) {
 }
 
 // ---- 公開ページ ----------------------------------------------------------------
-function renderShopHtml({ shop, coupons, products, followers, following, query, origin, filters = {}, brands = [], keywords = [], total = 0, page = 1, pages = 1 }) {
+function renderShopHtml({ shop, coupons, products, followers, following, query, origin, filters = {}, brands = [], attributes = {}, keywords = [], total = 0, page = 1, pages = 1 }) {
   const title = `${shop.shop_name} | HOSHILU ショップ`;
   const description = clean(shop.tagline || shop.intro || `${shop.shop_name} の商品とクーポンを HOSHILU でまとめて見る。`, 150);
   const initial = esc(clean(shop.shop_name, 1).toUpperCase());
@@ -312,6 +428,14 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
     ...filters.brands.map((brand) => ({
       label: brand,
       href: shopHref(shop.slug, { ...filters, brands: toggleShopBrand(filters.brands, brand), page: 1 })
+    })),
+    ...(filters.subgenre ? [{
+      label: `${filters.genre} › ${filters.subgenre_label}`,
+      href: shopHref(shop.slug, { ...filters, genre: '', subgenre: '', page: 1 })
+    }] : []),
+    ...['color', 'size', 'material'].filter((kind) => filters[kind]).map((kind) => ({
+      label: filters[`${kind}_label`],
+      href: shopHref(shop.slug, { ...filters, [kind]: '', page: 1 })
     }))
   ];
   const appliedHtml = appliedChips.length
@@ -321,12 +445,24 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
   const keywordHtml = keywords.length
     ? `<div class="shop-filter-row"><span class="shop-filter-label">絞り込みワード（商品名から）</span>${keywords.map((item) => `<a class="shop-chip" href="${esc(shopHref(shop.slug, { ...filters, query: toggleKeywordInQuery(query, item.word), page: 1 }))}">${esc(item.word)} <small>${item.estimated ? '約' : ''}${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
     : '';
+  const selectedGenre = SHOP_GENRES.find((genre) => genre.label === filters.genre) || null;
+  const genreOptions = SHOP_GENRES.map((genre) => `<option value="${esc(genre.label)}"${filters.genre === genre.label ? ' selected' : ''}>${esc(genre.label)}</option>`).join('');
+  const subgenreOptions = (selectedGenre?.subgenres || []).map((subgenre) => `<option value="${esc(subgenre.query)}"${filters.subgenre === subgenre.query ? ' selected' : ''}>${esc(subgenre.label)}</option>`).join('');
+  const genreJson = JSON.stringify(SHOP_GENRES).replaceAll('<', '\\u003c');
+  const attributeRow = (kind, label, items = []) => items.length
+    ? `<div class="shop-filter-row"><span class="shop-filter-label">${label}</span><a class="shop-chip${filters[kind] ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, [kind]: '', page: 1 }))}">すべて</a>${items.map((item) => `<a class="shop-chip${filters[kind] === item.value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, [kind]: filters[kind] === item.value ? '' : item.value, page: 1 }))}">${esc(item.label)} <small>${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
+    : '';
+  const attributeHtml = [
+    attributeRow('color', '色', attributes.colors),
+    attributeRow('size', 'サイズ・容量', attributes.sizes),
+    attributeRow('material', '素材', attributes.materials)
+  ].join('');
   const productHtml = products.length ? products.map((p) => `
     <a class="shop-product" rel="nofollow sponsored noopener" href="${esc(p.direct_url || p.url)}" data-track="${esc(p.tracking_url !== (p.direct_url || p.url) ? p.tracking_url : '')}">
       ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : '<span class="shop-product-noimage"></span>'}
       <span class="shop-product-name">${esc(p.name)}</span>
       <span class="shop-product-meta">${p.price ? `¥${Number(p.price).toLocaleString('ja-JP')} ・ ` : ''}${esc(MARKETPLACE_LABEL[p.marketplace] || p.marketplace)} で見る</span></a>`).join('')
-    : `<p class="shop-empty">${query ? '該当する商品が見つかりませんでした。' : 'まだ商品が登録されていません。'}</p>`;
+    : `<p class="shop-empty">${query || filters.subgenre || filters.color || filters.size || filters.material || filters.brands.length ? '該当する商品が見つかりませんでした。' : 'まだ商品が登録されていません。'}</p>`;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${esc(origin)}/shop/${esc(shop.slug)}">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}">${shop.logo_url ? `<meta property="og:image" content="${esc(shop.logo_url)}">` : ''}
@@ -343,6 +479,10 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 .storefront-link{display:inline-block;margin-top:8px;padding:8px 12px;border:1px solid var(--accent);border-radius:12px;background:#f4f0ff;color:#4f36b5;font-weight:800;font-size:13px;text-decoration:none}
 .shop-filters{margin:0 0 10px;padding:8px 12px;background:#fff;border:1px solid var(--line);border-radius:12px}
 .shop-filters summary{cursor:pointer;font-weight:800;font-size:13px;color:var(--accent)}
+.shop-genre-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:10px}
+.shop-genre-field{display:grid;gap:4px;font-size:11px;color:var(--muted);font-weight:800}
+.shop-genre-field select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:13px}
+.shop-genre-form button{padding:10px 14px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:800;white-space:nowrap}
 .shop-filter-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
 .shop-filter-label{width:100%;font-size:11px;color:var(--muted);font-weight:800}
 .shop-chip{padding:6px 10px;border:1px solid #ded7ff;border-radius:999px;background:#f8f6ff;color:#4f36b5;font-size:12px;text-decoration:none}
@@ -378,6 +518,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 .shop-empty{color:var(--muted);font-size:13px}
 .foot{margin:24px 0 40px;color:var(--muted);font-size:11px;line-height:1.6}
 .foot a{color:var(--accent)}
+@media(max-width:640px){.shop-genre-form{grid-template-columns:1fr}.shop-genre-form button{width:100%}}
 </style></head><body>
 <header class="top"><a href="/">← HOSHILU で横断検索</a><a href="/for-sellers">ショップページを持つ</a></header>
 <main class="wrap" data-slug="${esc(shop.slug)}">
@@ -386,13 +527,18 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto
 ${shop.intro ? `<p class="intro">${esc(shop.intro)}</p>` : ''}
 ${couponHtml}
 <section class="shop-section" id="products"><h2>商品</h2>
-<form class="search" action="/shop/${esc(shop.slug)}" method="get"><input type="search" name="q" value="${esc(query)}" placeholder="このショップの中で探す" maxlength="80">${filters.brands.length ? `<input type="hidden" name="brand" value="${esc(filters.brands.join(','))}">` : ''}<button type="submit">探す</button></form>
+<form class="search" action="/shop/${esc(shop.slug)}" method="get"><input type="search" name="q" value="${esc(query)}" placeholder="商品名・ASINでこのショップ内を探す" maxlength="80">${filters.brands.length ? `<input type="hidden" name="brand" value="${esc(filters.brands.join(','))}">` : ''}${filters.genre ? `<input type="hidden" name="genre" value="${esc(filters.genre)}">` : ''}${filters.subgenre ? `<input type="hidden" name="subgenre" value="${esc(filters.subgenre)}">` : ''}${filters.color ? `<input type="hidden" name="color" value="${esc(filters.color)}">` : ''}${filters.size ? `<input type="hidden" name="size" value="${esc(filters.size)}">` : ''}${filters.material ? `<input type="hidden" name="material" value="${esc(filters.material)}">` : ''}<button type="submit">探す</button></form>
 ${appliedHtml}
-<details class="shop-filters"${filters.brands.length || filters.sort === 'name' ? ' open' : ''}><summary>☰ 詳細検索${filters.brands.length ? `：${esc(filters.brands.join('・'))}` : ''}</summary>
+<details class="shop-filters"${filters.brands.length || filters.subgenre || filters.color || filters.size || filters.material || filters.sort === 'name' ? ' open' : ''}><summary>☰ 詳細検索${filters.brands.length || filters.subgenre_label || filters.color_label || filters.size_label || filters.material_label ? `：${esc([...filters.brands, filters.subgenre_label, filters.color_label, filters.size_label, filters.material_label].filter(Boolean).join('・'))}` : ''}</summary>
+<form class="shop-genre-form" action="/shop/${esc(shop.slug)}" method="get" id="shopGenreForm">${query ? `<input type="hidden" name="q" value="${esc(query)}">` : ''}${filters.brands.length ? `<input type="hidden" name="brand" value="${esc(filters.brands.join(','))}">` : ''}${filters.color ? `<input type="hidden" name="color" value="${esc(filters.color)}">` : ''}${filters.size ? `<input type="hidden" name="size" value="${esc(filters.size)}">` : ''}${filters.material ? `<input type="hidden" name="material" value="${esc(filters.material)}">` : ''}${filters.sort !== 'new' ? `<input type="hidden" name="sort" value="${esc(filters.sort)}">` : ''}
+<label class="shop-genre-field">ジャンル<select name="genre" id="shopGenre" required><option value="">ジャンルを選択</option>${genreOptions}</select></label>
+<label class="shop-genre-field">小ジャンル<select name="subgenre" id="shopSubgenre" required><option value="">小ジャンルを選択</option>${subgenreOptions}</select></label>
+<button type="submit">ジャンルで絞る</button></form>
 <div class="shop-filter-row"><span class="shop-filter-label">並び順</span>${[['new', '新着順'], ['name', '名前順']].map(([value, label]) => `<a class="shop-chip${filters.sort === value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, sort: value, page: 1 }))}">${label}</a>`).join('')}</div>
 ${keywordHtml}
 ${brands.length ? `<div class="shop-filter-row"><span class="shop-filter-label">メーカー・ブランド（複数選べます）</span><a class="shop-chip${filters.brands.length ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, brands: [], page: 1 }))}">すべて</a>${brands.map((b) => `<a class="shop-chip${filters.brands.includes(b.brand) ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, brands: toggleShopBrand(filters.brands, b.brand), page: 1 }))}">${esc(b.brand)} <small>${b.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>` : ''}
-<p class="shop-filter-note">価格や評価での絞り込みは、価格情報の取り込みが終わってから出します（いまは在庫のある商品だけを表示しています）。</p>
+${attributeHtml}
+<p class="shop-filter-note">ジャンル・色・サイズ・素材は、商品名に記載された情報でショップ内検索します。価格や評価での絞り込みは、正確なデータの取り込みが終わってから出します（いまは在庫のある商品だけを表示しています）。</p>
 </details>
 <p class="shop-count">${total ? `${total.toLocaleString('ja-JP')}件${pages > 1 ? `（${page}/${pages}ページ）` : ''}` : ''}</p>
 <div class="grid">${productHtml}</div>
@@ -402,6 +548,8 @@ ${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a href="${esc(shopHref(sho
 <script>
 (function(){
   var slug=document.querySelector('main').dataset.slug;
+  var genres=${genreJson};var genreSelect=document.getElementById('shopGenre');var subgenreSelect=document.getElementById('shopSubgenre');
+  genreSelect&&genreSelect.addEventListener('change',function(){var selected=genres.find(function(item){return item.label===genreSelect.value;});subgenreSelect.textContent='';var empty=document.createElement('option');empty.value='';empty.textContent='小ジャンルを選択';subgenreSelect.appendChild(empty);(selected?selected.subgenres:[]).forEach(function(item){var option=document.createElement('option');option.value=item.query;option.textContent=item.label;subgenreSelect.appendChild(option);});});
   // 商品リンクは直接モールへ。計測だけ /go をビーコンで叩く（失敗しても遷移は止めない）。
   document.querySelectorAll('a.shop-product[data-track]').forEach(function(a){a.addEventListener('click',function(){var t=a.getAttribute('data-track');if(!t)return;try{fetch(t,{mode:'no-cors',keepalive:true,redirect:'manual',credentials:'omit'}).catch(function(){});}catch(e){}});});
   var button=document.getElementById('followButton');var status=document.getElementById('followStatus');var count=document.getElementById('followerCount');
@@ -462,8 +610,8 @@ export async function handleShopRoutes(request, env, { createTrackToken, readMem
   const filters = shopFilters(url.searchParams);
   const query = filters.query;
   const member = await readMember(request, env);
-  const [coupons, rawProducts, followers, brands] = await Promise.all([
-    liveCoupons(db, shop.seller_key), shopProducts(env, shop, filters), followerCount(db, shop.seller_key), shopBrands(env, shop)
+  const [coupons, rawProducts, followers, brands, attributes] = await Promise.all([
+    liveCoupons(db, shop.seller_key), shopProducts(env, shop, filters), followerCount(db, shop.seller_key), shopBrands(env, shop), shopAttributes(env, shop)
   ]);
   const following = member?.id
     ? Boolean(await db.prepare(`SELECT 1 AS f FROM member_shop_follows WHERE member_id=?1 AND seller_key=?2`).bind(member.id, shop.seller_key).first())
@@ -488,14 +636,14 @@ export async function handleShopRoutes(request, env, { createTrackToken, readMem
     try { const u = new URL(product.url); if (/(^|\.)amazon\.co\.jp$/i.test(u.hostname) && env.AMAZON_ASSOCIATE_TAG) { u.searchParams.set('tag', env.AMAZON_ASSOCIATE_TAG); directUrl = u.toString(); } } catch {}
     products.push({ ...product, tracking_url: trackingUrl, direct_url: directUrl });
   }
-  await recordShopEvent(env, 'shop_viewed', shop.slug, { content: query ? 'search' : 'view' });
+  await recordShopEvent(env, 'shop_viewed', shop.slug, { content: query || filters.subgenre || filters.color || filters.size || filters.material ? 'search' : 'view' });
   // 2026-09-06 大隆さん指摘への対応: いま出ている商品名から「絞り込みワード」を作る。
   // 価格・カテゴリ・評価は products に無い（本番で0件）ので、無い条件で絞れるふりをしない。
   const keywords = shopKeywordFacets(products.map((product) => product.name), {
-    exclude: [...queryWords(query), ...filters.brands, shop.shop_name],
+    exclude: [...queryWords(query), filters.subgenre_label, filters.subgenre, filters.color_label, filters.size_label, filters.material_label, ...filters.brands, shop.shop_name],
     total: rawProducts.total || 0
   });
-  const html = renderShopHtml({ shop, coupons, products, followers, following, query, origin: url.origin, filters, brands, keywords, total: rawProducts.total || 0, page: rawProducts.page || 1, pages: rawProducts.pages || 1 });
+  const html = renderShopHtml({ shop, coupons, products, followers, following, query, origin: url.origin, filters, brands, attributes, keywords, total: rawProducts.total || 0, page: rawProducts.page || 1, pages: rawProducts.pages || 1 });
   return new Response(html, { headers: {
     'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store',
     'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin'

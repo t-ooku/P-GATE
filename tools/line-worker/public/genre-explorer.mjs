@@ -4,7 +4,7 @@
 // 「何を探せばいいか分からない」人の入口にする。検索文は日本語（モール検索に強い語）。
 // 検索は app.js の #knowledgeForm をそのまま使う（別の検索経路を増やさない）。
 
-const TREE = [
+export const TREE = [
   { label: 'ファッション', en: 'Fashion', children: [
     { label: 'バッグ', q: 'バッグ', children: [
       { label: 'トートバッグ', q: 'トートバッグ', children: [
@@ -231,6 +231,8 @@ function renderPopular() {
   $('#popularRankingButton')?.addEventListener('click', () => $('#rankingSearchButton')?.click());
 }
 
-render();
-renderPopular();
-$('#languageSelect')?.addEventListener('change', render);
+if (typeof document !== 'undefined') {
+  render();
+  renderPopular();
+  $('#languageSelect')?.addEventListener('change', render);
+}

@@ -22,6 +22,79 @@ const STOP_WORDS = new Set([
   'その他', '各種', '選べる', 'おしゃれ', 'かわいい', 'シンプル', '人気', 'おすすめ'
 ]);
 
+// Amazon・メルカリで一般的な属性のうち、現在の products にある商品名だけで
+// 誤認を抑えて判定できるもの。専用列がないため、商品名に明記された属性だけを出す。
+export const SHOP_COLOR_FILTERS = Object.freeze([
+  { value: 'black', label: 'ブラック・黒', query: '黒', aliases: ['ブラック', '黒', 'black'] },
+  { value: 'white', label: 'ホワイト・白', query: '白', aliases: ['ホワイト', '白', 'white'] },
+  { value: 'gray', label: 'グレー', query: 'グレー', aliases: ['グレー', '灰色', 'gray', 'grey'] },
+  { value: 'beige', label: 'ベージュ', query: 'ベージュ', aliases: ['ベージュ', 'beige'] },
+  { value: 'brown', label: 'ブラウン・茶', query: 'ブラウン', aliases: ['ブラウン', '茶色', 'brown'] },
+  { value: 'red', label: 'レッド・赤', query: '赤', aliases: ['レッド', '赤', 'red'] },
+  { value: 'pink', label: 'ピンク', query: 'ピンク', aliases: ['ピンク', 'pink'] },
+  { value: 'orange', label: 'オレンジ', query: 'オレンジ', aliases: ['オレンジ', 'orange'] },
+  { value: 'yellow', label: 'イエロー・黄', query: '黄色', aliases: ['イエロー', '黄色', 'yellow'] },
+  { value: 'green', label: 'グリーン・緑', query: '緑', aliases: ['グリーン', '緑', 'green'] },
+  { value: 'blue', label: 'ブルー・青', query: '青', aliases: ['ブルー', '青', 'blue'] },
+  { value: 'purple', label: 'パープル・紫', query: '紫', aliases: ['パープル', '紫', 'purple'] },
+  { value: 'silver', label: 'シルバー・銀', query: 'シルバー', aliases: ['シルバー', '銀', 'silver'] },
+  { value: 'gold', label: 'ゴールド・金', query: 'ゴールド', aliases: ['ゴールド', '金色', 'gold'] },
+  { value: 'clear', label: 'クリア・透明', query: '透明', aliases: ['クリア', '透明', 'clear'] }
+]);
+
+export const SHOP_MATERIAL_FILTERS = Object.freeze([
+  { value: 'leather', label: '本革', query: '本革', aliases: ['本革', '天然皮革', 'genuine leather', 'real leather'] },
+  { value: 'synthetic-leather', label: '合皮', query: '合皮', aliases: ['合皮', '合成皮革', 'PUレザー'] },
+  { value: 'cotton', label: '綿・コットン', query: 'コットン', aliases: ['コットン', '綿100', '綿素材', 'cotton'] },
+  { value: 'nylon', label: 'ナイロン', query: 'ナイロン', aliases: ['ナイロン', 'nylon'] },
+  { value: 'polyester', label: 'ポリエステル', query: 'ポリエステル', aliases: ['ポリエステル', 'polyester'] },
+  { value: 'stainless', label: 'ステンレス', query: 'ステンレス', aliases: ['ステンレス', 'stainless'] },
+  { value: 'steel', label: 'スチール・金属', query: 'スチール', aliases: ['スチール', '金属製', 'steel'] },
+  { value: 'wood', label: '木製', query: '木製', aliases: ['木製', '天然木', 'wood'] },
+  { value: 'glass', label: 'ガラス', query: 'ガラス', aliases: ['ガラス', 'glass'] },
+  { value: 'silicone', label: 'シリコン', query: 'シリコン', aliases: ['シリコン', 'silicone'] }
+]);
+
+const SIZE_PATTERN = /(?:XXS|XS|S|M|L|XL|XXL|3XL)サイズ|サイズ\s*(?:XXS|XS|S|M|L|XL|XXL|3XL)|フリーサイズ|[AB][3-6]|\d{1,4}(?:\.\d{1,2})?\s*(?:mm|cm|ml|L|g|kg|インチ|型|号|合)/giu;
+
+function containsAlias(title, aliases) {
+  const source = String(title || '').normalize('NFKC').toLowerCase().replace(/\s+/gu, '');
+  return aliases.some((alias) => source.includes(String(alias).normalize('NFKC').toLowerCase().replace(/\s+/gu, '')));
+}
+
+export function shopAttributeDefinition(kind, value) {
+  const normalized = String(value || '').normalize('NFKC').trim();
+  if (kind === 'color') return SHOP_COLOR_FILTERS.find((item) => item.value === normalized) || null;
+  if (kind === 'material') return SHOP_MATERIAL_FILTERS.find((item) => item.value === normalized) || null;
+  if (kind === 'size' && normalized.length <= 24 && new RegExp(`^(?:${SIZE_PATTERN.source})$`, 'iu').test(normalized)) {
+    return { value: normalized, label: normalized, query: normalized, aliases: [normalized] };
+  }
+  return null;
+}
+
+export function shopTitleMatchesAttributes(title, filters = {}) {
+  return ['color', 'size', 'material'].every((kind) => {
+    const selected = shopAttributeDefinition(kind, filters[kind]);
+    return !selected || containsAlias(title, selected.aliases);
+  });
+}
+
+export function shopAttributeFacets(titles = [], { limit = 16 } = {}) {
+  const source = titles.map((title) => String(title || '').normalize('NFKC'));
+  const countDefinitions = (definitions) => definitions.map((item) => ({
+    ...item,
+    count: source.reduce((count, title) => count + Number(containsAlias(title, item.aliases)), 0)
+  })).filter((item) => item.count > 0).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'ja')).slice(0, limit);
+  const sizeCounts = new Map();
+  for (const title of source) {
+    const found = new Set((title.match(SIZE_PATTERN) || []).map((value) => value.replace(/\s+/gu, '')));
+    for (const size of found) sizeCounts.set(size, (sizeCounts.get(size) || 0) + 1);
+  }
+  const sizes = [...sizeCounts.entries()].map(([value, count]) => ({ value, label: value, query: value, aliases: [value], count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'ja')).slice(0, limit);
+  return { colors: countDefinitions(SHOP_COLOR_FILTERS), sizes, materials: countDefinitions(SHOP_MATERIAL_FILTERS) };
+}
+
 // 日本語の商品名を、形態素解析なしで「絞り込みに使える語」に割る。
 // カタカナの連続・漢字の連続・英数字の型番・数量表記（500ml など）を拾う。
 const TOKEN_PATTERN = /[ァ-ヴー]{2,12}|[一-龥]{2,6}|[0-9]{1,4}(?:\.[0-9]{1,2})?(?:ml|L|g|kg|cm|mm|m|インチ|枚|個|本|人用|畳|W|V|A)|[A-Za-z][A-Za-z0-9-]{2,15}/gu;

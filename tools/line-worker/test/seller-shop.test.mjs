@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  activeShops, handleSellerShopAdminRoutes, handleSellerShopRoutes, handleShopRoutes, MAX_SHOP_BRANDS, publicShopRef,
-  resetShopCache, shopFilters, shopForOffer, slugify, toggleShopBrand, validateCouponInput, validateShopInput
+  activeShops, handleSellerShopAdminRoutes, handleSellerShopRoutes, handleShopRoutes, MAX_SHOP_BRANDS, normalizeShopAsinQuery,
+  publicShopRef, resetShopCache, SHOP_GENRES, shopFilters, shopForOffer, slugify, toggleShopBrand, validateCouponInput, validateShopInput
 } from '../src/seller-shop.mjs';
 
 function d1(db) {
@@ -25,9 +25,11 @@ function env({ plan = 'BUSINESS', status = 'ACTIVE' } = {}) {
   db.prepare(`INSERT INTO seller_billing_accounts(seller_key,account_name,contact_email,tenants,plan,payment_preference,status,created_at,updated_at)
     VALUES(?1,'ITG GROUP','a@example.com','["itg"]',?2,'CARD',?3,'2026-09-04T00:00:00Z','2026-09-04T00:00:00Z')`).run(SELLER_KEY, plan, status);
   db.prepare(`INSERT INTO products(tenant,record_key,asin,sku,product_name,manufacturer,image_url,stock,amazon_jp_url,amazon_us_url,search_aliases,localized_content,row_hash,imported_at)
-    VALUES('itg','r1','B000000001','sku1','自立する本革トートバッグ','ITG','https://img.example/1.jpg',3,'https://www.amazon.co.jp/dp/B000000001','','','','h','2026-09-01T00:00:00Z')`).run();
+    VALUES('itg','r1','B000000001','sku1','自立する本革トートバッグ ホワイト A4','ITG','https://img.example/1.jpg',3,'https://www.amazon.co.jp/dp/B000000001','','','','h','2026-09-01T00:00:00Z')`).run();
   db.prepare(`INSERT INTO products(tenant,record_key,asin,sku,product_name,manufacturer,image_url,stock,amazon_jp_url,amazon_us_url,search_aliases,localized_content,row_hash,imported_at)
     VALUES('itg','r2','B000000002','sku2','在庫なし商品','ITG','https://img.example/2.jpg',0,'https://www.amazon.co.jp/dp/B000000002','','','','h','2026-09-01T00:00:00Z')`).run();
+  db.prepare(`INSERT INTO products(tenant,record_key,asin,sku,product_name,manufacturer,image_url,stock,amazon_jp_url,amazon_us_url,search_aliases,localized_content,row_hash,imported_at)
+    VALUES('itg','r3','B000000003','sku3','ナイロンリュック ブラック Mサイズ','ITG','https://img.example/3.jpg',2,'https://www.amazon.co.jp/dp/B000000003','','','','h3','2026-09-02T00:00:00Z')`).run();
   resetShopCache();
   return { db, env: { PRODUCT_DB: d1(db), LINK_SIGNING_SECRET: 's'.repeat(64) } };
 }
@@ -87,6 +89,11 @@ test('Business だけがショップを作れ、公開ページ・検索結果�
   assert.doesNotMatch(html, /class="shop-product"[^>]*target="_blank"/u);
   assert.match(html, /☰ 詳細検索/u);
   assert.match(html, /並び順/u);
+  assert.match(html, /ジャンルを選択/u);
+  assert.match(html, /小ジャンルを選択/u);
+  assert.match(html, />色</u);
+  assert.match(html, /サイズ・容量/u);
+  assert.match(html, />素材</u);
   assert.match(html, /HOSHILU10/u);
   assert.match(html, /☆ ショップをホシる/u);
   assert.doesNotMatch(html, new RegExp(SELLER_KEY, 'u'));
@@ -154,10 +161,16 @@ test('セラー画面とトップの資材にショップ導線がある', () =>
 // 2026-09-06 大隆さん指摘:「ショップの中の詳細条件がメルカリやAmazonのような検索方法に
 // なってない。改善して」。メーカーを複数選べるようにし、選んだ条件は✕で外せるようにした。
 test('ショップの絞り込みは、メーカーを最大3つまで複数選べる', () => {
-  const filters = shopFilters(new URLSearchParams('q=水筒&brand=サーモス,タイガー&page=2'));
+  const filters = shopFilters(new URLSearchParams('q=水筒&brand=サーモス,タイガー&genre=ファッション&subgenre=バッグ&color=white&size=A4&material=leather&page=2'));
   assert.deepEqual(filters.brands, ['サーモス', 'タイガー']);
   assert.equal(filters.query, '水筒');
   assert.equal(filters.page, 2);
+  assert.equal(filters.genre, 'ファッション');
+  assert.equal(filters.subgenre, 'バッグ');
+  assert.equal(filters.color, 'white');
+  assert.equal(filters.size, 'A4');
+  assert.equal(filters.material, 'leather');
+  assert.ok(SHOP_GENRES.length >= 10);
   // 既存のリンクが見ている brand（単数）も残す
   assert.equal(filters.brand, 'サーモス');
   // 4つ目は受け取らない（リンクが際限なく伸びないように）
@@ -175,7 +188,41 @@ test('メーカーのチップは押すたびに足す・外す', () => {
 
 test('価格・評価で絞れないことは、その場で正直に書く（本番D1に価格が入っていないため）', () => {
   const source = readFileSync(new URL('../src/seller-shop.mjs', import.meta.url), 'utf8');
-  assert.match(source, /価格情報の取り込みが終わってから/u);
+  assert.match(source, /正確なデータの取り込みが終わってから/u);
   // 実際には効かない価格帯フィルタを、それらしく置かないこと
   assert.doesNotMatch(source, /price_min|price_max/u);
+});
+
+test('ASIN完全一致とジャンル・色・サイズ・素材でショップ内商品を絞れる', async () => {
+  const { env: e, db } = env();
+  await handleSellerShopRoutes(request('/api/seller/shop', 'PUT', { shop_name: 'with care' }), e, seller);
+  db.prepare(`INSERT INTO sp_api_listings(tenant,merchant_id,seller_sku,asin,product_name,image_url,buyable,price,product_url,updated_at)
+    VALUES('itg','A123456789','sku4','B000000004','シリコンボトル 500ml ブルー','https://img.example/4.jpg',1,1980,'https://www.amazon.co.jp/dp/B000000004','2026-09-03T00:00:00Z')`).run();
+  db.prepare(`INSERT INTO products(tenant,record_key,asin,sku,product_name,manufacturer,image_url,stock,amazon_jp_url,amazon_us_url,search_aliases,localized_content,row_hash,imported_at)
+    VALUES('other','o1','B000000001','other','別ショップの商品','OTHER','https://img.example/o.jpg',1,'https://www.amazon.co.jp/dp/B000000001?other=1','','','','oh','2026-09-03T00:00:00Z')`).run();
+  resetShopCache();
+
+  assert.equal(normalizeShopAsinQuery(' b000000001 '), 'B000000001');
+  assert.equal(normalizeShopAsinQuery('B00000001'), '');
+  const asinHtml = await (await handleShopRoutes(request('/shop/with-care?q=b000000001'), e, {})).text();
+  assert.match(asinHtml, /自立する本革トートバッグ/u);
+  assert.doesNotMatch(asinHtml, /ナイロンリュック/u);
+  assert.doesNotMatch(asinHtml, /別ショップの商品/u);
+
+  const spHtml = await (await handleShopRoutes(request('/shop/with-care?q=B000000004'), e, {})).text();
+  assert.match(spHtml, /シリコンボトル/u);
+
+  const genreHtml = await (await handleShopRoutes(request('/shop/with-care?genre=ファッション&subgenre=バッグ'), e, {})).text();
+  assert.match(genreHtml, /自立する本革トートバッグ/u);
+  assert.match(genreHtml, /ナイロンリュック/u);
+
+  const colorHtml = await (await handleShopRoutes(request('/shop/with-care?color=white'), e, {})).text();
+  assert.match(colorHtml, /自立する本革トートバッグ/u);
+  assert.doesNotMatch(colorHtml, /ナイロンリュック/u);
+  const sizeHtml = await (await handleShopRoutes(request('/shop/with-care?size=Mサイズ'), e, {})).text();
+  assert.match(sizeHtml, /ナイロンリュック/u);
+  assert.doesNotMatch(sizeHtml, /自立する本革トートバッグ/u);
+  const materialHtml = await (await handleShopRoutes(request('/shop/with-care?material=leather'), e, {})).text();
+  assert.match(materialHtml, /自立する本革トートバッグ/u);
+  assert.doesNotMatch(materialHtml, /ナイロンリュック/u);
 });
