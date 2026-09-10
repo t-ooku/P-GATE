@@ -1403,7 +1403,7 @@ function scheduleRelatedRecommendations(query,sequence){
   if(!safeQuery)return;
   setTimeout(()=>{loadRelatedRecommendations(safeQuery,sequence).catch(()=>{});},0);
 }
-function onTurnstileToken(token){turnstileUnsupported=false;turnstileToken=String(token||'');const waiter=turnstileTokenWaiter;if(!turnstileToken||!waiter)return;turnstileTokenWaiter=null;clearTimeout(waiter.timeout);waiter.resolve(turnstileToken);}
+function onTurnstileToken(token){turnstileUnsupported=false;turnstileToken=String(token||'');const waiter=turnstileTokenWaiter;if(turnstileToken&&waiter){turnstileTokenWaiter=null;clearTimeout(waiter.timeout);waiter.resolve(turnstileToken);}if(turnstileToken)runPendingInboundSearch();}
 function onTurnstileUnsupported(){turnstileUnsupported=true;clearTurnstileToken();console.warn('TURNSTILE_CLIENT_UNSUPPORTED');const waiter=turnstileTokenWaiter;if(!waiter)return;turnstileTokenWaiter=null;clearTimeout(waiter.timeout);waiter.reject(new Error('TURNSTILE_UNSUPPORTED'));}
 function clearTurnstileToken(){turnstileToken='';}
 function waitForTurnstileCallback(timeoutMs=15000){if(turnstileUnsupported)return Promise.reject(new Error('TURNSTILE_UNSUPPORTED'));if(turnstileToken&&turnstileToken!==lastIssuedTurnstileToken)return Promise.resolve(turnstileToken);return new Promise((resolve,reject)=>{const waiter={resolve,reject,timeout:null};waiter.timeout=setTimeout(()=>{if(turnstileTokenWaiter===waiter)turnstileTokenWaiter=null;resolve('');},timeoutMs);turnstileTokenWaiter=waiter;});}
@@ -1817,7 +1817,7 @@ document.querySelector('#stickyMarketplaceJump')?.addEventListener('click',()=>{
   (document.querySelector('#instantMarketplaceFallback')||document.querySelector('#marketplaceFallback'))?.scrollIntoView({behavior:'smooth',block:'start'});
 });
 window.HoshiluSearch={run:runKnowledgeSearch,beginIdentify:beginIdentifySearch,endIdentify:endIdentifySearch,revealResults:revealSearchResults};
-elements.form.addEventListener('submit',event=>{event.preventDefault();const identifyRequested=currentSearchMode()==='identify';requestedSearchMode='direct';const query=String(elements.query.value||'').trim();const supplemental=hasSupplementalSearchInput();if(searchImagePreparing){elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().preparing;return;}if(!isUsableProductQuery(query)&&!supplemental){elements.query.focus();elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().missing;return;}if(identifyRequested&&typeof window.HoshiluIdentifySearch?.open==='function'){const executionId=beginIdentifySearch(query);window.HoshiluIdentifySearch.open(query,elements.language.value,{executionId,image:preparedSearchImage,socialUrl:String(elements.socialUrl?.value||'').trim()});return;}runKnowledgeSearch();});
+elements.form.addEventListener('submit',event=>{event.preventDefault();pendingInboundSearch='';const identifyRequested=currentSearchMode()==='identify';requestedSearchMode='direct';const query=String(elements.query.value||'').trim();const supplemental=hasSupplementalSearchInput();if(searchImagePreparing){elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().preparing;return;}if(!isUsableProductQuery(query)&&!supplemental){elements.query.focus();elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().missing;return;}if(identifyRequested&&typeof window.HoshiluIdentifySearch?.open==='function'){const executionId=beginIdentifySearch(query);window.HoshiluIdentifySearch.open(query,elements.language.value,{executionId,image:preparedSearchImage,socialUrl:String(elements.socialUrl?.value||'').trim()});return;}runKnowledgeSearch();});
 function returnFromRankingToSearch(){
   rankingRequestSequence+=1;rankingCategorySelection=null;rankingConfirmationFlow=null;
   if(elements.rankingDialog.open)elements.rankingDialog.close();
@@ -1921,16 +1921,50 @@ const heroMarketplaceCoverageDetails=document.querySelector('#heroMarketplaceCov
 // 「1回検索して、欲しい購入先へすぐ行ける」を守るため、条件付きで着地時に
 // そのまま検索を実行する。ユーザーが自分で入力した内容は書き換えない
 // (値が着地時のままの場合だけ実行する)。
+// 2026-09-11 実測（D1 growth_events、30日）: SNS着地（?q= 付き）98人 → 自動検索が始まった50人
+// → 検索が完了したのは 2人。直近48時間は着地のたびに TURNSTILE_TOKEN_UNAVAILABLE で
+// 1件残らず止まっていた。原因は「ウィジェットが描画された」時点で submit していたこと。
+// その時点ではトークンがまだ無く、15秒待ってから「セキュリティ確認を完了して、もう一度
+// 検索を押してください」というエラーで止まる。SNSから来た人はここで離脱する。
+//
+// 直し方: トークンが実際に届いてから submit する。短く待っても届かなければエラーにせず、
+// 検索語を入れたまま「確認が終わると、そのまま検索します」と案内し、届いた瞬間に自動で
+// 検索する（onTurnstileToken → runPendingInboundSearch）。人が押し直す必要をなくす。
+const INBOUND_TOKEN_WAIT_MS=8000;
+let pendingInboundSearch='';
+function submitInboundSearch(text){
+  if(String(elements.query.value||'').trim()!==text)return false;
+  if(typeof elements.form.requestSubmit==='function')elements.form.requestSubmit();
+  else elements.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+  return true;
+}
+function runPendingInboundSearch(){
+  const text=pendingInboundSearch;
+  if(!text)return;
+  // 手動で検索が始まっていたら二重に走らせない
+  if(elements.submit?.disabled||activeKnowledgeFetch||activeIdentifyExecutionId){pendingInboundSearch='';return;}
+  pendingInboundSearch='';
+  if(submitInboundSearch(text)&&elements.status.classList.contains('inbound-waiting')){elements.status.className='status';elements.status.textContent='';}
+}
+function inboundSearchWaitingCopy(){
+  return{JA:'下のセキュリティ確認が終わると、そのまま検索します。',EN:'Search will start automatically once the security check below completes.',ZH:'完成下方的安全验证后将自动开始搜索。',KO:'아래 보안 확인이 끝나면 바로 검색을 시작합니다.'}[elements.language.value]||'下のセキュリティ確認が終わると、そのまま検索します。';
+}
 function autoRunInboundSearch(query){
   const text=String(query||'').trim();
   if(!text||!isUsableProductQuery(text))return;
   if(hasSupplementalSearchInput())return;
-  const start=()=>{
+  (async()=>{
+    try{if(turnstileInitPromise&&typeof turnstileInitPromise.then==='function')await turnstileInitPromise;}catch{return;}
+    if(turnstileToken){submitInboundSearch(text);return;}
+    let token='';
+    try{token=await waitForTurnstileCallback(INBOUND_TOKEN_WAIT_MS);}catch{token='';}
     if(String(elements.query.value||'').trim()!==text)return;
-    if(typeof elements.form.requestSubmit==='function')elements.form.requestSubmit();
-    else elements.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
-  };
-  if(turnstileInitPromise&&typeof turnstileInitPromise.then==='function')turnstileInitPromise.then(start,()=>{});
-  else start();
+    if(token){submitInboundSearch(text);return;}
+    // 届かなかった。エラーにせず、届いた時に自動で検索する。
+    pendingInboundSearch=text;
+    elements.status.className='status inbound-waiting';
+    elements.status.textContent=inboundSearchWaitingCopy();
+    elements.turnstile?.scrollIntoView({behavior:'smooth',block:'center'});
+  })();
 }
 const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode('direct');setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(()=>{if(consumeInsightResultLink())return loadNotifications();const login=insightResultLoginUrl();if(!memberSession&&login){location.replace(login);return;}return loadNotifications();});turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});autoRunInboundSearch(inboundCampaign.query);if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');

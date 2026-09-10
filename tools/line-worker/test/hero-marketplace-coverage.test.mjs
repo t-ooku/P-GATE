@@ -147,8 +147,20 @@ test('SNS・SEOから ?q= 付きで着地したら、もう一度押させずに
   assert.match(app, /if\(!text\|\|!isUsableProductQuery\(text\)\)return;/);
   assert.match(app, /if\(String\(elements\.query\.value\|\|''\)\.trim\(\)!==text\)return;/);
   assert.match(app, /requestSubmit==='function'\)elements\.form\.requestSubmit\(\)/);
-  assert.match(app, /turnstileInitPromise\.then\(start,\(\)=>\{\}\)/);
   assert.match(app, /turnstileInitPromise\.catch\([\s\S]{0,400}?autoRunInboundSearch\(inboundCampaign\.query\);/);
+  // 2026-09-11 実測: 30日で SNS着地98人 → 自動検索50人 → 完了2人。直近48時間は着地のたびに
+  // TURNSTILE_TOKEN_UNAVAILABLE で全件止まっていた。ウィジェット描画直後に submit していたのが原因。
+  // トークンが実際に届いてから submit し、届かなければエラーにせず、届いた瞬間に自動で検索する。
+  assert.doesNotMatch(app, /turnstileInitPromise\.then\(start,\(\)=>\{\}\)/);
+  assert.match(app, /if\(turnstileToken\)\{submitInboundSearch\(text\);return;\}/);
+  assert.match(app, /token=await waitForTurnstileCallback\(INBOUND_TOKEN_WAIT_MS\)/);
+  assert.match(app, /pendingInboundSearch=text;/);
+  assert.match(app, /elements\.status\.className='status inbound-waiting'/);
+  // トークンが届いた瞬間に保留中の着地検索を走らせる。手動検索中なら二重に走らせない。
+  assert.match(app, /if\(turnstileToken\)runPendingInboundSearch\(\);\}/);
+  assert.match(app, /if\(elements\.submit\?\.disabled\|\|activeKnowledgeFetch\|\|activeIdentifyExecutionId\)\{pendingInboundSearch='';return;\}/);
+  // 人が自分で検索したら保留は解除する
+  assert.match(app, /event\.preventDefault\(\);pendingInboundSearch='';/);
 });
 
 // 2026-09-03 大隆さん指示: アフィリエイト表記は結果の先頭から下へ移す(法的表記
