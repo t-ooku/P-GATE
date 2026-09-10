@@ -491,6 +491,9 @@ export async function sellerPageResponse(
   </div>
   <form id="sellerShopForm" class="priority-form">
     <label>ショップ名 <input name="shop_name" maxlength="60" required placeholder="例: with care"></label>
+    <label>事業者名（正式名称） <input name="business_name" maxlength="160" required autocomplete="organization" placeholder="法人登記上の正式な事業者名"></label>
+    <label>登記住所 <input name="registered_address" maxlength="300" required placeholder="郵便番号・都道府県から建物名まで"></label>
+    <p class="muted">事業者名・登記住所はショッププロフィールに公開されます。法人は登記情報と一致する内容を入力してください。個人事業主は公開する事業者名と事業所所在地を入力してください。登録内容は事業者による申告であり、HOSHILUによる登記確認済みを意味しません。</p>
     <label>URL（英数字とハイフン） <input name="slug" maxlength="40" pattern="[a-z0-9-]{3,40}" placeholder="例: with-care"></label>
     <label>ひとこと <input name="tagline" maxlength="80" placeholder="例: 毎日使うものを、少し良く。"></label>
     <label>紹介文 <textarea name="intro" rows="4" maxlength="1500" placeholder="お店の紹介・こだわり・発送や返品のご案内など"></textarea></label>

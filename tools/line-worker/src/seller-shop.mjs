@@ -41,6 +41,12 @@ export function slugify(value) {
 }
 
 export function validateShopInput(input = {}) {
+  const hasIdentity = Object.hasOwn(input, 'business_name') || Object.hasOwn(input, 'registered_address');
+  const businessName = clean(input.business_name, 160);
+  const registeredAddress = clean(input.registered_address, 300);
+  if (hasIdentity && !businessName) throw new Error('SHOP_BUSINESS_NAME_REQUIRED');
+  if (hasIdentity && !registeredAddress) throw new Error('SHOP_REGISTERED_ADDRESS_REQUIRED');
+  if (String(input.business_name || '').length > 160 || String(input.registered_address || '').length > 300) throw new Error('SHOP_BUSINESS_PROFILE_TOO_LONG');
   const shopName = clean(input.shop_name, 60);
   if (shopName.length < 1) throw new Error('SHOP_NAME_REQUIRED');
   const slug = slugify(input.slug || shopName);
@@ -49,6 +55,8 @@ export function validateShopInput(input = {}) {
   return {
     slug,
     shop_name: shopName,
+    business_name: businessName,
+    registered_address: registeredAddress,
     tagline: clean(input.tagline, 80),
     intro: String(input.intro ?? '').normalize('NFKC').replace(CONTROL_CHARS_KEEP_NEWLINE, '').replace(/\r\n?/g, '\n').trim().slice(0, 1500),
     logo_url: httpsUrl(input.logo_url),
@@ -576,7 +584,7 @@ body{background:#f7f8f5}
 <div class="follow"><button type="button" id="followButton" data-following="${following ? 1 : 0}">${following ? '★ ホシってます' : '☆ ショップをホシる'}</button><small><span id="followerCount">${followers}</span>人がホシってます</small><small id="followStatus"></small></div>${amazonStorefrontUrl(shop.seller_ids) ? `<a class="storefront-link" rel="nofollow sponsored noopener" target="_blank" href="${esc(amazonStorefrontUrl(shop.seller_ids))}">Amazonのショップページを見る →</a>` : ''}</div></section>
 <div class="shop-about">
 ${shop.intro ? `<details class="shop-info"><summary><span>ショップ紹介</span><span class="info-caption">ABOUT</span></summary><p class="intro">${esc(shop.intro)}</p></details>` : ''}
-<details class="shop-info"><summary><span>ショッププロフィール</span><span class="info-caption">PROFILE</span></summary><dl class="shop-profile"><div><dt>ショップ名</dt><dd>${esc(shop.shop_name)}</dd></div>${shop.tagline ? `<div><dt>コンセプト</dt><dd>${esc(shop.tagline)}</dd></div>` : ''}${amazonStorefrontUrl(shop.seller_ids) ? `<div><dt>出店先</dt><dd><a href="${esc(amazonStorefrontUrl(shop.seller_ids))}" rel="nofollow sponsored noopener" target="_blank">Amazon のショップを見る ↗</a></dd></div>` : ''}${shop.website_url ? `<div><dt>ウェブサイト</dt><dd><a href="${esc(shop.website_url)}" rel="nofollow noopener" target="_blank">公式サイトを見る ↗</a></dd></div>` : ''}</dl></details>
+<details class="shop-info"><summary><span>ショッププロフィール</span><span class="info-caption">PROFILE</span></summary><dl class="shop-profile"><div><dt>事業者名</dt><dd>${esc(shop.business_name || '未登録')}</dd></div><div><dt>登記住所</dt><dd>${esc(shop.registered_address || '未登録')}</dd></div><div><dt>ショップ名</dt><dd>${esc(shop.shop_name)}</dd></div>${amazonStorefrontUrl(shop.seller_ids) ? `<div><dt>出店先</dt><dd><a href="${esc(amazonStorefrontUrl(shop.seller_ids))}" rel="nofollow sponsored noopener" target="_blank">Amazon のショップを見る ↗</a></dd></div>` : ''}${shop.website_url ? `<div><dt>ウェブサイト</dt><dd><a href="${esc(shop.website_url)}" rel="nofollow noopener" target="_blank">公式サイトを見る ↗</a></dd></div>` : ''}</dl><p class="shop-filter-note">事業者が登録した情報です。HOSHILUによる登記確認済みを示すものではありません。</p></details>
 </div>
 ${couponHtml}
 <section class="shop-section" id="products"><h2>商品</h2>
@@ -736,13 +744,17 @@ async function upsertShop(db, { sellerKey, input, account, now }) {
   if (taken) throw new Error('SHOP_SLUG_TAKEN');
   const tenants = Array.isArray(input.tenants) && input.tenants.length ? input.tenants.map((t) => clean(t, 32).toLowerCase()).filter(Boolean) : account.tenants;
   const sellerIds = Array.isArray(input.seller_ids) ? input.seller_ids.map((s) => clean(s, 160)).filter(Boolean) : null;
-  await db.prepare(`INSERT INTO seller_shops(seller_key,slug,shop_name,tagline,intro,logo_url,cover_url,website_url,tenants,seller_ids,status,created_at,updated_at)
-    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)
+  await db.prepare(`INSERT INTO seller_shops(seller_key,slug,shop_name,tagline,intro,logo_url,cover_url,website_url,tenants,seller_ids,status,created_at,updated_at,business_name,registered_address)
+    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12,?14,?15)
     ON CONFLICT(seller_key) DO UPDATE SET slug=excluded.slug,shop_name=excluded.shop_name,tagline=excluded.tagline,intro=excluded.intro,
       logo_url=excluded.logo_url,cover_url=excluded.cover_url,website_url=excluded.website_url,tenants=excluded.tenants,
-      seller_ids=CASE WHEN ?13=1 THEN excluded.seller_ids ELSE seller_shops.seller_ids END,status=excluded.status,updated_at=excluded.updated_at`)
+      seller_ids=CASE WHEN ?13=1 THEN excluded.seller_ids ELSE seller_shops.seller_ids END,
+      business_name=CASE WHEN ?16=1 THEN excluded.business_name ELSE seller_shops.business_name END,
+      registered_address=CASE WHEN ?16=1 THEN excluded.registered_address ELSE seller_shops.registered_address END,
+      status=excluded.status,updated_at=excluded.updated_at`)
     .bind(sellerKey, data.slug, data.shop_name, data.tagline, data.intro, data.logo_url, data.cover_url, data.website_url,
-      JSON.stringify(tenants.slice(0, 10)), JSON.stringify((sellerIds || []).slice(0, 20)), data.status, now, sellerIds ? 1 : 0).run();
+      JSON.stringify(tenants.slice(0, 10)), JSON.stringify((sellerIds || []).slice(0, 20)), data.status, now, sellerIds ? 1 : 0,
+      data.business_name, data.registered_address, Object.hasOwn(input, 'business_name') || Object.hasOwn(input, 'registered_address') ? 1 : 0).run();
   resetShopCache();
   return data;
 }
