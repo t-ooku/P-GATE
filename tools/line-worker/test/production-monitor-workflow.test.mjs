@@ -40,8 +40,10 @@ test('Codex KPI snapshot runs hourly, contains aggregates only and is retained b
   assert.match(workflow, /steps\.kpi\.outcome == 'failure'/u);
 });
 
-test('monitor heartbeat is schedule-only and persisted incidents are acknowledged only after Issue recording', () => {
-  assert.match(workflow, /if: github\.event_name == 'schedule'/u);
+test('monitor heartbeat is original-schedule-only and persisted incidents are acknowledged only after Issue recording', () => {
+  assert.match(workflow, /if: github\.event_name == 'schedule' && github\.run_attempt == 1/u);
+  assert.match(workflow, /if: always\(\) && github\.event_name == 'schedule' && github\.run_attempt == 1/u);
+  assert.match(workflow, /github\.event_name == 'schedule' && github\.run_attempt == 1 && \(steps\.heartbeat_start\.outcome != 'success'/u);
   assert.match(workflow, /steps\.incident\.outputs\.recorded == 'true'/u);
   assert.match(workflow, /core\.setOutput\('recorded', 'true'\)/u);
   assert.match(workflow, /heartbeat_start\.outcome != 'success'/u);
