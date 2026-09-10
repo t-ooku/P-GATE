@@ -26,10 +26,17 @@ Codex がクレジット切れの間、Cowork（Claude）が主幹。Codex 復�
 「SNS由来 search_started → search_completed の比率」と `TURNSTILE_TOKEN_UNAVAILABLE` 件数を見る。
 判定SQLは §3 に。
 
-### 別件で発見 → **不具合あり・大隆さん操作待ち**
+### OpenAI フォールバック → **大隆さん決定（2026-09-11）: 当面課金しない。Gemini に依存する**
 
 深層カナリア `openai_backup = DEGRADED(CANARY_PROVIDER_BILLING_DISABLED)`。
-**OpenAI フォールバックは課金無効で動いていない。** Gemini が落ちた時の予備が無い。
+これは**想定内の既知状態**として扱う。監視で新規障害として通知しない。
+
+Gemini が落ちた場合の挙動（Codex 9/10 自己点検で回帰テスト8件 PASS を確認済み）:
+HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は残る**。検索が無音停止にはならない。
+ただし「AIが理解して候補を出す」部分は止まる。この前提で運用する。
+
+再検討の条件: Gemini 主系の `CANARY_PROVIDER_TIMEOUT` / 5xx が**連続して**出るようになった時。
+それまでは課金しない。
 
 ### 定期タスク（Cowork側）
 
@@ -78,5 +85,5 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 状態 | 項目 |
 |---|---|
 | 本番確認済み | #263 SNS着地の自動検索をトークン到着後に実行（効果は数字で要確認） |
-| 大隆さん操作待ち | OpenAI 課金の有効化（フォールバック復旧） |
+| 決定済み（対応不要） | OpenAI 課金は当面しない。`openai_backup BILLING_DISABLED` は既知状態 |
 | 未実装 | 上記「未着手」1〜6 |
