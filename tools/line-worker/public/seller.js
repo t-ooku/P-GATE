@@ -196,7 +196,7 @@ function renderShop(data) {
   if (data.shop) {
     const link = document.createElement('a'); link.href = data.shop.url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = `${location.origin}${data.shop.url}`;
     shopUrl.replaceChildren(link);
-    for (const name of ['shop_name', 'slug', 'tagline', 'intro', 'logo_url', 'website_url']) if (form.elements[name]) form.elements[name].value = data.shop[name] || '';
+    for (const name of ['shop_name', 'business_name', 'registered_address', 'slug', 'tagline', 'intro', 'logo_url', 'website_url']) if (form.elements[name]) form.elements[name].value = data.shop[name] || '';
     form.elements.hidden.checked = data.shop.status === 'HIDDEN';
   }
   const list = document.querySelector('#sellerCouponList');
@@ -231,7 +231,7 @@ async function loadShop() {
 document.querySelector('#sellerShopForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
-  const payload = Object.fromEntries(['shop_name', 'slug', 'tagline', 'intro', 'logo_url', 'website_url'].map((name) => [name, form.elements[name].value]));
+  const payload = Object.fromEntries(['shop_name', 'business_name', 'registered_address', 'slug', 'tagline', 'intro', 'logo_url', 'website_url'].filter((name) => form.elements[name]).map((name) => [name, form.elements[name].value]));
   payload.status = form.elements.hidden.checked ? 'HIDDEN' : 'ACTIVE';
   showShopStatus('保存しています…');
   try { renderShop(await shopRequest('/api/seller/shop', 'PUT', payload)); showShopStatus('ショップページを保存しました。'); }

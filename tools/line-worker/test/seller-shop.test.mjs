@@ -17,7 +17,7 @@ function d1(db) {
 const SELLER_KEY = 'IGpFO0_7Xfi6mheMC2-HbGubdYIQPkGlda_gsSFmTKo';
 function env({ plan = 'BUSINESS', status = 'ACTIVE' } = {}) {
   const db = new DatabaseSync(':memory:');
-  for (const file of ['0001_product_search.sql', '0067_seller_billing_stripe.sql', '0069_seller_shops.sql']) {
+  for (const file of ['0001_product_search.sql', '0067_seller_billing_stripe.sql', '0069_seller_shops.sql', '0078_seller_shop_business_profile.sql']) {
     db.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), 'utf8'));
   }
   db.exec(`CREATE TABLE growth_events (event_id TEXT PRIMARY KEY, event_type TEXT, locale TEXT, source TEXT, medium TEXT, campaign TEXT, content TEXT, marketplace TEXT, occurred_at TEXT, traffic_class TEXT)`);
@@ -38,6 +38,24 @@ const request = (path, method = 'GET', body = null, headers = {}) => new Request
 });
 const seller = { seller_key: SELLER_KEY, account: 'ITG', tenants: ['itg'], plan: 'BUSINESS' };
 const fakeToken = async (payload) => `tok.${payload.a}`;
+
+test('公開する事業者情報は保存・再読込でき、旧クライアントによる更新で消えない', async () => {
+  const { env: e } = env();
+  const input = { shop_name: 'Identity Shop', business_name: 'テスト株式会社 <script>', registered_address: '東京都テスト区1-2-3 & 4階' };
+  let response = await handleSellerShopRoutes(request('/api/seller/shop', 'PUT', input), e, seller);
+  assert.equal(response.status, 200);
+  let result = await response.json();
+  assert.equal(result.shop.business_name, input.business_name);
+  assert.equal(result.shop.registered_address, input.registered_address);
+  response = await handleSellerShopRoutes(request('/api/seller/shop', 'PUT', { shop_name: 'Identity Shop', intro: '紹介を更新' }), e, seller);
+  result = await response.json();
+  assert.equal(result.shop.registered_address, input.registered_address);
+  const html = await (await handleShopRoutes(request('/shop/identity-shop'), e, { readMember: async () => null })).text();
+  assert.match(html, /<dt>事業者名<\/dt><dd>テスト株式会社 &lt;script&gt;/u);
+  assert.match(html, /<dt>登記住所<\/dt><dd>東京都テスト区1-2-3 &amp; 4階/u);
+  assert.throws(() => validateShopInput({ ...input, registered_address: '' }), /SHOP_REGISTERED_ADDRESS_REQUIRED/u);
+  assert.throws(() => validateShopInput({ ...input, business_name: '' }), /SHOP_BUSINESS_NAME_REQUIRED/u);
+});
 
 test('slug と入力検証', () => {
   assert.equal(slugify('With Care!! 2026'), 'with-care-2026');
