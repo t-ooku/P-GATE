@@ -25,8 +25,9 @@ test('本番の付属品誤一致と替えブラシ付き本体を区別する',
 });
 
 test('固定クエリは指示書 §54 の9件＋2026-09-04 の「底開口 水筒」で、利用者入力を含まない', () => {
-  assert.equal(SEARCH_QA_CANARY_QUERIES.length, 11);
+  assert.equal(SEARCH_QA_CANARY_QUERIES.length, 12);
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'pet_shedding_brush' && f.query === '猫の抜け毛がごっそり取れるブラシ'));
+  assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'auto_off_humidifier' && f.query === 'つけっぱなしでも安心な加湿器'));
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'bottom_removable_bottle' && f.query === '底開口 水筒'));
   const bottle = SEARCH_QA_CANARY_QUERIES.find((f) => f.id === 'bottom_removable_bottle');
   assert.match('＼ポイント10倍／【公式通販】sokomo（ソコモ）そこまで洗えるボトル 500ml', bottle.expect);

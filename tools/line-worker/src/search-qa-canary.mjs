@@ -40,7 +40,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 本番経路で毎日確かめる（期待: 上位3件に底が外せる水筒、本命がブラシ等の付属品でない）。
   { id: 'bottom_removable_bottle', query: '底開口 水筒', expect: /そこまで洗える|底.{0,4}(?:取り外|外せ|外れ)|sokomo|ソコモ|底ヂカラ|分解.{0,4}洗/iu, reject: /ブラシ|スポンジ|洗剤|パッキン|替え|交換用/u },
   // 2026-09-06 展開規則 pet-shedding-brush の代表クエリ（機能語「ごっそり取れる」→ 売り手の語「抜け毛取り」「スリッカー」）。
-  { id: 'pet_shedding_brush', query: '猫の抜け毛がごっそり取れるブラシ', expect: /ブラシ|コーム|くし|ファーミネーター|抜け毛|brush/iu, reject: /シャンプー|爪切り|フード|おやつ|トイレ|首輪|ケージ/u }
+  { id: 'pet_shedding_brush', query: '猫の抜け毛がごっそり取れるブラシ', expect: /ブラシ|コーム|くし|ファーミネーター|抜け毛|brush/iu, reject: /シャンプー|爪切り|フード|おやつ|トイレ|首輪|ケージ/u },
+  // 2026-09-10 展開規則 auto-off-humidifier の代表クエリ（機能語「つけっぱなしでも安心」→ 売り手の語「自動オフ」）。
+  { id: 'auto_off_humidifier', query: 'つけっぱなしでも安心な加湿器', expect: /加湿器|humidifier/iu, reject: /空気清浄機|除湿機|扇風機|コンセント|フィルターのみ|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([

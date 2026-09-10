@@ -3126,5 +3126,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗をかいても蒸れない抱っこ紐",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "通気性が良く蒸れにくい抱っこ紐(夏向け)",
+    "ideal_answer": "メッシュ素材・通気性を訴求した抱っこ紐・ベビーキャリア",
+    "reason": "「蒸れない」「涼しい」は商品名では「メッシュ」「通気性」。 展開規則 mesh-baby-carrier（モール検索語「メッシュ 抱っこ紐」）。",
+    "category": "mesh-baby-carrier",
+    "search_terms": {
+      "ja": [
+        "メッシュ 抱っこ紐",
+        "メッシュ素材 抱っこひも",
+        "通気性 ベビーキャリア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "夏でも涼しい抱っこひも",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "通気性が良く蒸れにくい抱っこ紐(夏向け)",
+    "ideal_answer": "メッシュ素材・通気性を訴求した抱っこ紐・ベビーキャリア",
+    "reason": "「蒸れない」「涼しい」は商品名では「メッシュ」「通気性」。 展開規則 mesh-baby-carrier（モール検索語「メッシュ 抱っこ紐」）。",
+    "category": "mesh-baby-carrier",
+    "search_terms": {
+      "ja": [
+        "メッシュ 抱っこ紐",
+        "メッシュ素材 抱っこひも",
+        "通気性 ベビーキャリア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "背中が暑くならないベビーキャリア",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "通気性が良く蒸れにくい抱っこ紐(夏向け)",
+    "ideal_answer": "メッシュ素材・通気性を訴求した抱っこ紐・ベビーキャリア",
+    "reason": "「蒸れない」「涼しい」は商品名では「メッシュ」「通気性」。 展開規則 mesh-baby-carrier（モール検索語「メッシュ 抱っこ紐」）。",
+    "category": "mesh-baby-carrier",
+    "search_terms": {
+      "ja": [
+        "メッシュ 抱っこ紐",
+        "メッシュ素材 抱っこひも",
+        "通気性 ベビーキャリア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗をかいても落ちない日焼け止め",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗や水で落ちにくい日焼け止め(ウォータープルーフ)",
+    "ideal_answer": "ウォータープルーフ・ウォーターレジスタントを訴求する日焼け止め",
+    "reason": "「汗・水に強い」は商品名では「ウォータープルーフ」「ウォーターレジスタント」。 展開規則 waterproof-sunscreen（モール検索語「ウォータープルーフ 日焼け止め」）。",
+    "category": "waterproof-sunscreen",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ 日焼け止め",
+        "汗・水に強い 日焼け止め",
+        "ウォーターレジスタント UV"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水に濡れても落ちない日焼け止め",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗や水で落ちにくい日焼け止め(ウォータープルーフ)",
+    "ideal_answer": "ウォータープルーフ・ウォーターレジスタントを訴求する日焼け止め",
+    "reason": "「汗・水に強い」は商品名では「ウォータープルーフ」「ウォーターレジスタント」。 展開規則 waterproof-sunscreen（モール検索語「ウォータープルーフ 日焼け止め」）。",
+    "category": "waterproof-sunscreen",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ 日焼け止め",
+        "汗・水に強い 日焼け止め",
+        "ウォーターレジスタント UV"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "こすれても落ちにくい日焼け止め",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗や水で落ちにくい日焼け止め(ウォータープルーフ)",
+    "ideal_answer": "ウォータープルーフ・ウォーターレジスタントを訴求する日焼け止め",
+    "reason": "「汗・水に強い」は商品名では「ウォータープルーフ」「ウォーターレジスタント」。 展開規則 waterproof-sunscreen（モール検索語「ウォータープルーフ 日焼け止め」）。",
+    "category": "waterproof-sunscreen",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ 日焼け止め",
+        "汗・水に強い 日焼け止め",
+        "ウォーターレジスタント UV"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ドライフードが酸化しない保存容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ドライフード(カリカリ)が酸化・匂い移りしにくい密閉保存容器",
+    "ideal_answer": "密閉性の高いペットフード専用保存容器・ストッカー",
+    "reason": "「酸化しない」「匂わない」は商品名では「密閉」「真空」「ストッカー」。 展開規則 airtight-pet-food-container（モール検索語「密閉 ペットフード 保存容器」）。",
+    "category": "airtight-pet-food-container",
+    "search_terms": {
+      "ja": [
+        "密閉 ペットフード 保存容器",
+        "密閉 ドッグフード ストッカー",
+        "酸化防止 キャットフード 容器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "キャットフードが匂わない密閉ケース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ドライフード(カリカリ)が酸化・匂い移りしにくい密閉保存容器",
+    "ideal_answer": "密閉性の高いペットフード専用保存容器・ストッカー",
+    "reason": "「酸化しない」「匂わない」は商品名では「密閉」「真空」「ストッカー」。 展開規則 airtight-pet-food-container（モール検索語「密閉 ペットフード 保存容器」）。",
+    "category": "airtight-pet-food-container",
+    "search_terms": {
+      "ja": [
+        "密閉 ペットフード 保存容器",
+        "密閉 ドッグフード ストッカー",
+        "酸化防止 キャットフード 容器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "愛猫のカリカリが酸化しないストッカー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ドライフード(カリカリ)が酸化・匂い移りしにくい密閉保存容器",
+    "ideal_answer": "密閉性の高いペットフード専用保存容器・ストッカー",
+    "reason": "「酸化しない」「匂わない」は商品名では「密閉」「真空」「ストッカー」。 展開規則 airtight-pet-food-container（モール検索語「密閉 ペットフード 保存容器」）。",
+    "category": "airtight-pet-food-container",
+    "search_terms": {
+      "ja": [
+        "密閉 ペットフード 保存容器",
+        "密閉 ドッグフード ストッカー",
+        "酸化防止 キャットフード 容器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "自分で結べない子供のための靴紐",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結ばずに履ける伸縮(ゴム)タイプの子供用靴紐",
+    "ideal_answer": "伸びる(ゴム製)靴紐やほどけない・結ばなくていい設計の靴紐",
+    "reason": "「結べない」「ほどけない」は商品名では「伸びる」「ゴム」「結ばない」。 展開規則 elastic-no-tie-shoelace（モール検索語「伸びる 靴紐 ゴム」）。",
+    "category": "elastic-no-tie-shoelace",
+    "search_terms": {
+      "ja": [
+        "伸びる 靴紐 ゴム",
+        "ゴム 靴紐 結ばない",
+        "伸縮 シューレース キッズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ほどけない靴ひも 子供用",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結ばずに履ける伸縮(ゴム)タイプの子供用靴紐",
+    "ideal_answer": "伸びる(ゴム製)靴紐やほどけない・結ばなくていい設計の靴紐",
+    "reason": "「結べない」「ほどけない」は商品名では「伸びる」「ゴム」「結ばない」。 展開規則 elastic-no-tie-shoelace（モール検索語「伸びる 靴紐 ゴム」）。",
+    "category": "elastic-no-tie-shoelace",
+    "search_terms": {
+      "ja": [
+        "伸びる 靴紐 ゴム",
+        "ゴム 靴紐 結ばない",
+        "伸縮 シューレース キッズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "簡単に脱ぎ履きできる靴紐",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "結ばずに履ける伸縮(ゴム)タイプの子供用靴紐",
+    "ideal_answer": "伸びる(ゴム製)靴紐やほどけない・結ばなくていい設計の靴紐",
+    "reason": "「結べない」「ほどけない」は商品名では「伸びる」「ゴム」「結ばない」。 展開規則 elastic-no-tie-shoelace（モール検索語「伸びる 靴紐 ゴム」）。",
+    "category": "elastic-no-tie-shoelace",
+    "search_terms": {
+      "ja": [
+        "伸びる 靴紐 ゴム",
+        "ゴム 靴紐 結ばない",
+        "伸縮 シューレース キッズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "つけっぱなしでも安心な加湿器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけっぱなしにしても自動で止まる安全機能付き加湿器",
+    "ideal_answer": "自動停止(オフ)機能・タイマー機能を搭載した加湿器",
+    "reason": "「つけっぱなしでも安心」「切り忘れ」は商品名では「自動オフ」「自動停止」「タイマー付き」。 展開規則 auto-off-humidifier（モール検索語「自動オフ 加湿器」）。",
+    "category": "auto-off-humidifier",
+    "search_terms": {
+      "ja": [
+        "自動オフ 加湿器",
+        "自動停止 加湿器",
+        "転倒OFF 加湿器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "寝ている間に自動で止まる加湿器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけっぱなしにしても自動で止まる安全機能付き加湿器",
+    "ideal_answer": "自動停止(オフ)機能・タイマー機能を搭載した加湿器",
+    "reason": "「つけっぱなしでも安心」「切り忘れ」は商品名では「自動オフ」「自動停止」「タイマー付き」。 展開規則 auto-off-humidifier（モール検索語「自動オフ 加湿器」）。",
+    "category": "auto-off-humidifier",
+    "search_terms": {
+      "ja": [
+        "自動オフ 加湿器",
+        "自動停止 加湿器",
+        "転倒OFF 加湿器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "切り忘れても大丈夫な加湿器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけっぱなしにしても自動で止まる安全機能付き加湿器",
+    "ideal_answer": "自動停止(オフ)機能・タイマー機能を搭載した加湿器",
+    "reason": "「つけっぱなしでも安心」「切り忘れ」は商品名では「自動オフ」「自動停止」「タイマー付き」。 展開規則 auto-off-humidifier（モール検索語「自動オフ 加湿器」）。",
+    "category": "auto-off-humidifier",
+    "search_terms": {
+      "ja": [
+        "自動オフ 加湿器",
+        "自動停止 加湿器",
+        "転倒OFF 加湿器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]

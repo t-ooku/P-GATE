@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T21:18:52.764Z",
+  "generated_at": "2026-09-10T23:14:11.989Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -26,7 +26,7 @@
     "2026-09-08-claude-batch-023.json",
     "2026-09-10-claude-batch-024.json"
   ],
-  "entry_count": 1110,
+  "entry_count": 1125,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -18892,6 +18892,321 @@
           "静音 電動歯ブラシ",
           "静か 電動歯ブラシ",
           "振動音が小さい 電動歯ブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "110038936166632ad3596a2cbbd606334a0c354c8adbe7f156748021d587f70b",
+      "query_text": "汗をかいても蒸れない抱っこ紐",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mesh-baby-carrier",
+      "ideal_answer": "メッシュ素材・通気性を訴求した抱っこ紐・ベビーキャリア",
+      "search_terms": {
+        "ja": [
+          "メッシュ 抱っこ紐",
+          "メッシュ素材 抱っこひも",
+          "通気性 ベビーキャリア"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1b0ec52be8ab483b23ab9a6748973328779c3981ff0b98d676d5453e36dccb3c",
+      "query_text": "夏でも涼しい抱っこひも",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mesh-baby-carrier",
+      "ideal_answer": "メッシュ素材・通気性を訴求した抱っこ紐・ベビーキャリア",
+      "search_terms": {
+        "ja": [
+          "メッシュ 抱っこ紐",
+          "メッシュ素材 抱っこひも",
+          "通気性 ベビーキャリア"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3dfa326669bc84705524ab1f87e8bc9c0369b3b04f29eb509d62e48c904cd713",
+      "query_text": "背中が暑くならないベビーキャリア",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mesh-baby-carrier",
+      "ideal_answer": "メッシュ素材・通気性を訴求した抱っこ紐・ベビーキャリア",
+      "search_terms": {
+        "ja": [
+          "メッシュ 抱っこ紐",
+          "メッシュ素材 抱っこひも",
+          "通気性 ベビーキャリア"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "44093300bf3aedb0e4ebce617172ac08b0820050f098d0c6deb4568dfa9d0809",
+      "query_text": "汗をかいても落ちない日焼け止め",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-sunscreen",
+      "ideal_answer": "ウォータープルーフ・ウォーターレジスタントを訴求する日焼け止め",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ 日焼け止め",
+          "汗・水に強い 日焼け止め",
+          "ウォーターレジスタント UV"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "bd43a70391880a2c913d062d1c803e5168bfb66e559b5316684e9de6b8e7f7dc",
+      "query_text": "水に濡れても落ちない日焼け止め",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-sunscreen",
+      "ideal_answer": "ウォータープルーフ・ウォーターレジスタントを訴求する日焼け止め",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ 日焼け止め",
+          "汗・水に強い 日焼け止め",
+          "ウォーターレジスタント UV"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1edea160ab00f9c46c65f90cf21c9a47639f3eee8e9d57bc0f22f590dbad28af",
+      "query_text": "こすれても落ちにくい日焼け止め",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-sunscreen",
+      "ideal_answer": "ウォータープルーフ・ウォーターレジスタントを訴求する日焼け止め",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ 日焼け止め",
+          "汗・水に強い 日焼け止め",
+          "ウォーターレジスタント UV"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a03510dd3cb5742a2a9f4952611206e2993487cd648f8a16a7b79f05149e7a4a",
+      "query_text": "ドライフードが酸化しない保存容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "airtight-pet-food-container",
+      "ideal_answer": "密閉性の高いペットフード専用保存容器・ストッカー",
+      "search_terms": {
+        "ja": [
+          "密閉 ペットフード 保存容器",
+          "密閉 ドッグフード ストッカー",
+          "酸化防止 キャットフード 容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "42165fd5f0bbce29fa623c52bf37ff2ca326cb33f68cd7e20fe598e52e982cc8",
+      "query_text": "キャットフードが匂わない密閉ケース",
+      "locale": "ja",
+      "persona": "general",
+      "category": "airtight-pet-food-container",
+      "ideal_answer": "密閉性の高いペットフード専用保存容器・ストッカー",
+      "search_terms": {
+        "ja": [
+          "密閉 ペットフード 保存容器",
+          "密閉 ドッグフード ストッカー",
+          "酸化防止 キャットフード 容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8d8e0166e48e10d18dcc0a7270166560f8876116edc151d618618688649fd1c5",
+      "query_text": "愛猫のカリカリが酸化しないストッカー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "airtight-pet-food-container",
+      "ideal_answer": "密閉性の高いペットフード専用保存容器・ストッカー",
+      "search_terms": {
+        "ja": [
+          "密閉 ペットフード 保存容器",
+          "密閉 ドッグフード ストッカー",
+          "酸化防止 キャットフード 容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4da9e9167b80bb0fef2c5b26c4d879638533629220352e0f83be8a3d960d7f95",
+      "query_text": "自分で結べない子供のための靴紐",
+      "locale": "ja",
+      "persona": "general",
+      "category": "elastic-no-tie-shoelace",
+      "ideal_answer": "伸びる(ゴム製)靴紐やほどけない・結ばなくていい設計の靴紐",
+      "search_terms": {
+        "ja": [
+          "伸びる 靴紐 ゴム",
+          "ゴム 靴紐 結ばない",
+          "伸縮 シューレース キッズ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "59a5e0065f467618a809e4bce99e1f0ecc2c92f34fe991ed22516739ff462d65",
+      "query_text": "ほどけない靴ひも 子供用",
+      "locale": "ja",
+      "persona": "general",
+      "category": "elastic-no-tie-shoelace",
+      "ideal_answer": "伸びる(ゴム製)靴紐やほどけない・結ばなくていい設計の靴紐",
+      "search_terms": {
+        "ja": [
+          "伸びる 靴紐 ゴム",
+          "ゴム 靴紐 結ばない",
+          "伸縮 シューレース キッズ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4f88846cf38535e93e7fa3144b0c168fdff17403e81a4385bc8ca3298c55aa39",
+      "query_text": "簡単に脱ぎ履きできる靴紐",
+      "locale": "ja",
+      "persona": "general",
+      "category": "elastic-no-tie-shoelace",
+      "ideal_answer": "伸びる(ゴム製)靴紐やほどけない・結ばなくていい設計の靴紐",
+      "search_terms": {
+        "ja": [
+          "伸びる 靴紐 ゴム",
+          "ゴム 靴紐 結ばない",
+          "伸縮 シューレース キッズ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "cc049b1d5769bd578396ba0248dbd144ae4d086baa5dc67cb396af9fd1110549",
+      "query_text": "つけっぱなしでも安心な加湿器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "auto-off-humidifier",
+      "ideal_answer": "自動停止(オフ)機能・タイマー機能を搭載した加湿器",
+      "search_terms": {
+        "ja": [
+          "自動オフ 加湿器",
+          "自動停止 加湿器",
+          "転倒OFF 加湿器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "be89eed4ca283f087086e0e3818c591b59316a50b55d37021b72f6cbf52e8700",
+      "query_text": "寝ている間に自動で止まる加湿器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "auto-off-humidifier",
+      "ideal_answer": "自動停止(オフ)機能・タイマー機能を搭載した加湿器",
+      "search_terms": {
+        "ja": [
+          "自動オフ 加湿器",
+          "自動停止 加湿器",
+          "転倒OFF 加湿器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "588f011affc4810ce5bdaff5ded0ec3f58883c6b44846ab8ebc1c58698e52f9a",
+      "query_text": "切り忘れても大丈夫な加湿器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "auto-off-humidifier",
+      "ideal_answer": "自動停止(オフ)機能・タイマー機能を搭載した加湿器",
+      "search_terms": {
+        "ja": [
+          "自動オフ 加湿器",
+          "自動停止 加湿器",
+          "転倒OFF 加湿器"
         ],
         "en": [],
         "ko": [],
