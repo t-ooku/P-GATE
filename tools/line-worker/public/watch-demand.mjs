@@ -24,12 +24,13 @@ function row(item) {
     el('span', 'watch-demand-rank', `${Number(item.rank) || ''}`),
     el('span', 'watch-demand-name', text(item.product_name))
   );
+  // 2026-09-11 大隆さん指示:「○人が待ってる」は載せない（1人だとしょうもない）。
+  // 希望額の平均と同じ基準（5人以上）に達した商品だけ人数を出す。それ未満は人数を出さない。
+  const waiting = Number(item.waiting_members) || 0;
   const meta = el('span', 'watch-demand-meta');
-  meta.append(
-    el('strong', '', `${Number(item.waiting_members) || 0}人が待ってる`),
-    el('small', '', item.average_target_price_jpy ? `希望額の平均 ${yen(item.average_target_price_jpy)}` : '')
-  );
-  link.append(meta);
+  if (waiting >= 5) meta.append(el('strong', '', `${waiting}人が待ってる`));
+  if (item.average_target_price_jpy) meta.append(el('small', '', `希望額の平均 ${yen(item.average_target_price_jpy)}`));
+  if (meta.childNodes.length) link.append(meta);
   return link;
 }
 

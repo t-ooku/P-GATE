@@ -66,7 +66,7 @@ test('トップに値下がり待ちリストの枠と読み込みモジュー�
   const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   assert.match(html, /id="watchDemand"/);
   assert.match(html, /みんなが値下がりを待ってる/);
-  assert.match(html, /watch-demand\.mjs\?v=2/);
+  assert.match(html, /watch-demand\.mjs\?v=3/);
   assert.match(html, /watch-demand\.css\?v=1/);
   assert.ok(html.indexOf('id="buzzHome"') < html.indexOf('id="watchDemand"'));
   assert.ok(html.indexOf('id="watchDemand"') < html.indexOf('id="saleCenterTitle"'));
@@ -74,6 +74,10 @@ test('トップに値下がり待ちリストの枠と読み込みモジュー�
   assert.match(client, /\/api\/price-watch\/demand/);
   assert.doesNotMatch(client, /innerHTML/);
   assert.match(client, /result\.visible === false/);
+  // 2026-09-11 大隆さん指示:「○人が待ってる」は載せない（1人だとしょうもない）。
+  // 希望額の平均と同じ5人以上の基準に達した商品だけ人数を出す。
+  assert.match(client, /if \(waiting >= 5\) meta\.append\(el\('strong', '', `\$\{waiting\}人が待ってる`\)\);/);
+  assert.doesNotMatch(client, /\|\| 0\}人が待ってる/);
 });
 
 test('逆ウォッチ（買った後の値下がり待ち）は「みんなが値下がりを待ってる」に数えない', async () => {

@@ -496,6 +496,8 @@ export async function sellerPageResponse(
     <label>紹介文 <textarea name="intro" rows="4" maxlength="1500" placeholder="お店の紹介・こだわり・発送や返品のご案内など"></textarea></label>
     <label>ロゴ画像URL（https） <input name="logo_url" type="url" maxlength="500" placeholder="https://…/logo.png"></label>
     <label>公式サイトURL（https） <input name="website_url" type="url" maxlength="500"></label>
+    <label>事業者名（ショッププロフィールに表示） <input name="business_name" type="text" maxlength="120" placeholder="例：〇〇株式会社"></label>
+    <label>店舗住所（ショッププロフィールに表示） <input name="business_address" type="text" maxlength="200" placeholder="例：東京都新宿区〇〇1-2-3"></label>
     <label><input type="checkbox" name="hidden"> ページを非公開にする</label>
     <button type="submit" class="primary-button">ショップページを保存</button>
   </form>

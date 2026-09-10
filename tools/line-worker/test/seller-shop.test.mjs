@@ -17,7 +17,7 @@ function d1(db) {
 const SELLER_KEY = 'IGpFO0_7Xfi6mheMC2-HbGubdYIQPkGlda_gsSFmTKo';
 function env({ plan = 'BUSINESS', status = 'ACTIVE' } = {}) {
   const db = new DatabaseSync(':memory:');
-  for (const file of ['0001_product_search.sql', '0067_seller_billing_stripe.sql', '0069_seller_shops.sql']) {
+  for (const file of ['0001_product_search.sql', '0067_seller_billing_stripe.sql', '0069_seller_shops.sql', '0078_seller_shop_business_identity.sql']) {
     db.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), 'utf8'));
   }
   db.exec(`CREATE TABLE growth_events (event_id TEXT PRIMARY KEY, event_type TEXT, locale TEXT, source TEXT, medium TEXT, campaign TEXT, content TEXT, marketplace TEXT, occurred_at TEXT, traffic_class TEXT)`);
@@ -225,4 +225,33 @@ test('ASIN完全一致とジャンル・色・サイズ・素材でショップ�
   const materialHtml = await (await handleShopRoutes(request('/shop/with-care?material=leather'), e, {})).text();
   assert.match(materialHtml, /自立する本革トートバッグ/u);
   assert.doesNotMatch(materialHtml, /ナイロンリュック/u);
+});
+
+// 2026-09-11 大隆さん指示: ショッププロフィールに事業者名と店舗住所を載せる（信用情報）。
+// 空なら表示しない。セラー画面から編集でき、公開ページの PROFILE 折りたたみに出る。
+test('ショッププロフィールに事業者名と店舗住所を載せる（空なら出さない）', async () => {
+  const { env: e } = env();
+  const saved = await handleSellerShopAdminRoutes(request(`/api/admin/seller-shops/${SELLER_KEY}`, 'PUT', {
+    shop_name: 'with care', business_name: 'ITグループ株式会社', business_address: '東京都新宿区西新宿8-5-10'
+  }), e, async () => true);
+  assert.equal(saved.status, 200);
+  const page = await handleShopRoutes(request('/shop/with-care'), e, {});
+  const html = await page.text();
+  assert.match(html, /<dt>事業者名<\/dt><dd>ITグループ株式会社<\/dd>/u);
+  assert.match(html, /<dt>店舗住所<\/dt><dd>東京都新宿区西新宿8-5-10<\/dd>/u);
+  // 空で保存し直したら消える
+  await handleSellerShopAdminRoutes(request(`/api/admin/seller-shops/${SELLER_KEY}`, 'PUT', { shop_name: 'with care' }), e, async () => true);
+  const cleared = await (await handleShopRoutes(request('/shop/with-care'), e, {})).text();
+  assert.doesNotMatch(cleared, /<dt>事業者名<\/dt>/u);
+  assert.doesNotMatch(cleared, /<dt>店舗住所<\/dt>/u);
+  // 入力の検証（長さ上限・制御文字除去）
+  const v = validateShopInput({ shop_name: 'x', business_name: ' ITグループ株式会社 ', business_address: 'a'.repeat(300) });
+  assert.equal(v.business_name, 'ITグループ株式会社');
+  assert.equal(v.business_address.length, 200);
+  // セラー画面のフォームと保存対象に入っている
+  const sellerPage = readFileSync(new URL('../src/seller-page.mjs', import.meta.url), 'utf8');
+  assert.match(sellerPage, /name="business_name"/u);
+  assert.match(sellerPage, /name="business_address"/u);
+  const sellerJs = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
+  assert.equal((sellerJs.match(/'business_name', 'business_address'/g) || []).length, 2);
 });

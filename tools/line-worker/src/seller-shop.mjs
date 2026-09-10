@@ -54,6 +54,9 @@ export function validateShopInput(input = {}) {
     logo_url: httpsUrl(input.logo_url),
     cover_url: httpsUrl(input.cover_url),
     website_url: httpsUrl(input.website_url),
+    // 2026-09-11 大隆さん指示: 事業者名と店舗住所（信用情報。空なら表示しない）
+    business_name: clean(input.business_name, 120),
+    business_address: clean(input.business_address, 200),
     status: input.status === 'HIDDEN' ? 'HIDDEN' : 'ACTIVE'
   };
 }
@@ -576,7 +579,7 @@ body{background:#f7f8f5}
 <div class="follow"><button type="button" id="followButton" data-following="${following ? 1 : 0}">${following ? '★ ホシってます' : '☆ ショップをホシる'}</button><small><span id="followerCount">${followers}</span>人がホシってます</small><small id="followStatus"></small></div>${amazonStorefrontUrl(shop.seller_ids) ? `<a class="storefront-link" rel="nofollow sponsored noopener" target="_blank" href="${esc(amazonStorefrontUrl(shop.seller_ids))}">Amazonのショップページを見る →</a>` : ''}</div></section>
 <div class="shop-about">
 ${shop.intro ? `<details class="shop-info"><summary><span>ショップ紹介</span><span class="info-caption">ABOUT</span></summary><p class="intro">${esc(shop.intro)}</p></details>` : ''}
-<details class="shop-info"><summary><span>ショッププロフィール</span><span class="info-caption">PROFILE</span></summary><dl class="shop-profile"><div><dt>ショップ名</dt><dd>${esc(shop.shop_name)}</dd></div>${shop.tagline ? `<div><dt>コンセプト</dt><dd>${esc(shop.tagline)}</dd></div>` : ''}${amazonStorefrontUrl(shop.seller_ids) ? `<div><dt>出店先</dt><dd><a href="${esc(amazonStorefrontUrl(shop.seller_ids))}" rel="nofollow sponsored noopener" target="_blank">Amazon のショップを見る ↗</a></dd></div>` : ''}${shop.website_url ? `<div><dt>ウェブサイト</dt><dd><a href="${esc(shop.website_url)}" rel="nofollow noopener" target="_blank">公式サイトを見る ↗</a></dd></div>` : ''}</dl></details>
+<details class="shop-info"><summary><span>ショッププロフィール</span><span class="info-caption">PROFILE</span></summary><dl class="shop-profile"><div><dt>ショップ名</dt><dd>${esc(shop.shop_name)}</dd></div>${shop.business_name ? `<div><dt>事業者名</dt><dd>${esc(shop.business_name)}</dd></div>` : ''}${shop.business_address ? `<div><dt>店舗住所</dt><dd>${esc(shop.business_address)}</dd></div>` : ''}${shop.tagline ? `<div><dt>コンセプト</dt><dd>${esc(shop.tagline)}</dd></div>` : ''}${amazonStorefrontUrl(shop.seller_ids) ? `<div><dt>出店先</dt><dd><a href="${esc(amazonStorefrontUrl(shop.seller_ids))}" rel="nofollow sponsored noopener" target="_blank">Amazon のショップを見る ↗</a></dd></div>` : ''}${shop.website_url ? `<div><dt>ウェブサイト</dt><dd><a href="${esc(shop.website_url)}" rel="nofollow noopener" target="_blank">公式サイトを見る ↗</a></dd></div>` : ''}</dl></details>
 </div>
 ${couponHtml}
 <section class="shop-section" id="products"><h2>商品</h2>
@@ -736,13 +739,26 @@ async function upsertShop(db, { sellerKey, input, account, now }) {
   if (taken) throw new Error('SHOP_SLUG_TAKEN');
   const tenants = Array.isArray(input.tenants) && input.tenants.length ? input.tenants.map((t) => clean(t, 32).toLowerCase()).filter(Boolean) : account.tenants;
   const sellerIds = Array.isArray(input.seller_ids) ? input.seller_ids.map((s) => clean(s, 160)).filter(Boolean) : null;
-  await db.prepare(`INSERT INTO seller_shops(seller_key,slug,shop_name,tagline,intro,logo_url,cover_url,website_url,tenants,seller_ids,status,created_at,updated_at)
-    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)
-    ON CONFLICT(seller_key) DO UPDATE SET slug=excluded.slug,shop_name=excluded.shop_name,tagline=excluded.tagline,intro=excluded.intro,
-      logo_url=excluded.logo_url,cover_url=excluded.cover_url,website_url=excluded.website_url,tenants=excluded.tenants,
-      seller_ids=CASE WHEN ?13=1 THEN excluded.seller_ids ELSE seller_shops.seller_ids END,status=excluded.status,updated_at=excluded.updated_at`)
-    .bind(sellerKey, data.slug, data.shop_name, data.tagline, data.intro, data.logo_url, data.cover_url, data.website_url,
-      JSON.stringify(tenants.slice(0, 10)), JSON.stringify((sellerIds || []).slice(0, 20)), data.status, now, sellerIds ? 1 : 0).run();
+  const baseBinds = [sellerKey, data.slug, data.shop_name, data.tagline, data.intro, data.logo_url, data.cover_url, data.website_url,
+    JSON.stringify(tenants.slice(0, 10)), JSON.stringify((sellerIds || []).slice(0, 20)), data.status, now, sellerIds ? 1 : 0];
+  try {
+    await db.prepare(`INSERT INTO seller_shops(seller_key,slug,shop_name,tagline,intro,logo_url,cover_url,website_url,tenants,seller_ids,status,created_at,updated_at,business_name,business_address)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12,?14,?15)
+      ON CONFLICT(seller_key) DO UPDATE SET slug=excluded.slug,shop_name=excluded.shop_name,tagline=excluded.tagline,intro=excluded.intro,
+        logo_url=excluded.logo_url,cover_url=excluded.cover_url,website_url=excluded.website_url,tenants=excluded.tenants,
+        seller_ids=CASE WHEN ?13=1 THEN excluded.seller_ids ELSE seller_shops.seller_ids END,status=excluded.status,updated_at=excluded.updated_at,
+        business_name=excluded.business_name,business_address=excluded.business_address`)
+      .bind(...baseBinds, data.business_name, data.business_address).run();
+  } catch (error) {
+    // migration 0078 未適用の環境では従来の列だけで保存する（事業者名・住所は保存されない）。
+    if (!/(?:no column named|has no column named|no such column).*business_/i.test(String(error?.message || error))) throw error;
+    await db.prepare(`INSERT INTO seller_shops(seller_key,slug,shop_name,tagline,intro,logo_url,cover_url,website_url,tenants,seller_ids,status,created_at,updated_at)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?12)
+      ON CONFLICT(seller_key) DO UPDATE SET slug=excluded.slug,shop_name=excluded.shop_name,tagline=excluded.tagline,intro=excluded.intro,
+        logo_url=excluded.logo_url,cover_url=excluded.cover_url,website_url=excluded.website_url,tenants=excluded.tenants,
+        seller_ids=CASE WHEN ?13=1 THEN excluded.seller_ids ELSE seller_shops.seller_ids END,status=excluded.status,updated_at=excluded.updated_at`)
+      .bind(...baseBinds).run();
+  }
   resetShopCache();
   return data;
 }
