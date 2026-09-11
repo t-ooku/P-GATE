@@ -92,6 +92,24 @@ JS を実行する検索エンジン／SNS のリンク先取得が「読者」�
 人のアプリ内ブラウザ（LINE / Instagram / Threads）は対象外（テストで固定）。
 **以後 `seo_*_view` の件数は大きく下がる。回帰ではなく実数。** 日次レポートはこの注記を付けること。
 
+### 未着手 5「AI女優の同一人物化」→ 原因は参照画像の食い違い。v1 に統一 → **実装済み・本番未確認**（次回生成 9/12 土 06:00 JST で確認）
+
+事実:
+- 2026-09-04 大隆さん決定「今後の AI 女優は最初の女優（v1）」、9/6 指示書「人物は 25〜40代主婦層中心」
+- しかし `tools/line-worker/ops/runway/auto/themes.json`（9/6 作成）は **v2（22歳設定）参照のまま**。
+  `runway_generation_jobs` の 9/2〜9/9 の 5 件すべて `character_image_url = …reference-v2.jpg`
+- 一方、希望価格ウォッチ推しの静止画 Reel（`scripts/build-watch-reel.py`）は v1 → 同じアカウントで顔が2人に割れていた
+- 自動QA の `identity_consistent` は「毎回同じ参照画像を条件にする」だけで顔照合はしていない（証跡に明記あり）。
+  参照が正しければ一貫する仕組みなので、参照を直すのが根本対応
+
+対応（commit `22c6fef`、feature/ui-search-v2 に直接、コード変更なし・デプロイ不要）:
+`persona` / `character_image_url` を v1 に変更、scenes の「若い女性」を「女性（参照画像と同じ人物）」に変更。
+次の自動生成（9/12 土 06:00 JST、price_drop_notice）から v1 で生成される。
+
+**大隆さんの判断が要るもの**: 既に v2 で生成済みの `runway-auto-want-at-price-20260909`（APPROVED_FOR_POST）と
+`runway-auto-stop-chasing-sales-20260909`（GENERATED_REVIEW_REQUIRED）を、そのまま出すか・捨てて v1 で作り直すか
+（作り直しは 336 クレジット×2）。指示があるまで触らない。
+
 ### 今日の SNS 障害（記録）
 
 - `hoshilu-threads-amazon-boost-v1-2026-09-11-am`（09:30 JST）: `THREADS_PUBLISH_500`（Meta 側 `is_transient:true`）で FAILED。
@@ -112,7 +130,7 @@ JS を実行する検索エンジン／SNS のリンク先取得が「読者」�
 2. ~~希望価格ウォッチの検索語~~ → Codex `35fca07`、本番確認済み
 3. ~~#252 Threads 無限リトライの Worker 側修正~~ → Codex `158c6ac`、本番確認済み
 4. ~~保存時の `target_product_key`~~ → Codex `61481ca`、本番確認済み
-5. AI女優の同一人物化（#18 の指摘）: reference/persona/QA を確認
+5. ~~AI女優の同一人物化~~ → themes.json の参照が v2 だったのが原因。v1 に統一（`22c6fef`）、9/12 生成で本番確認
 6. ~~SEO→検索遷移~~ → 原因は人の読者不在。#268 でクローラを除外、本番確認済み。次は「人の読者を作る」施策（SNS からの記事誘導）に置き換える
 
 ---
@@ -154,4 +172,5 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 本番確認済み | 未着手 2〜4 は Codex 既存修正で動作（`35fca07` / `158c6ac` / `61481ca`） |
 | 本番確認済み | #264 ショップ PROFILE に事業者名・店舗住所（ITG 3店に設定済み）／値下がり待ちの人数は5人以上のみ表示 |
 | 決定済み（対応不要） | OpenAI 課金は当面しない。`openai_backup BILLING_DISABLED` は既知状態 |
-| 未実装 | 未着手 5（AI女優の同一人物化）／SEO の人の読者づくり |
+| 実装済み・本番未確認 | AI女優の参照を v1 に統一（`22c6fef`）。9/12 土の自動生成で確認。v2 生成済み2本の扱いは大隆さん判断待ち |
+| 未実装 | SEO の人の読者づくり（SNS からの記事誘導） |
