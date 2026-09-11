@@ -69,8 +69,17 @@ HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は�
   `marketplace` 列に `AUTORUN` / `MANUAL` を入れる
 - `assets-v147/app.js?v=156`、`growth-analytics.mjs?v=11`（本番の growth-analytics.mjs で新コードを確認）
 
-次の判定: 21:30 JST（Threads 20:30 枠後）。`search_inbound_pending` が着地ごとに出るなら
-「その訪問はトークンを取れない環境」で確定。人の着地で `search_completed` が出れば効果あり。
+**判定 2回目（21:30 JST）→ 未判定のまま。ただし「SNS 着地はトークンを一度も取れていない」が数字で確定**
+- Threads 20:32 投稿の着地 2件（61秒後・79秒後、別 visitor）。うち1件が着地40秒後に `search_inbound_pending`
+  （ページは開いたまま、トークン未着）。`search_started` / `search_completed` / 縮退 = 0
+- 朝（45秒後・98秒後）と同じ型。投稿直後に必ず2件、時間帯のばらつきなし → 事前読み込み／bot の疑いが濃い。
+  ただし Threads アプリ内ブラウザで人が開いてもトークンが出ない可能性は残る（決め打ちしない）
+- 対応 #269（head `1f5b40e`、CI ✅ 2026-09-11T12:36Z、テスト 2296）: `search_inbound_pending` を
+  `document.visibilityState` / `navigator.webdriver` で `search_inbound_pending_hidden` と分ける（固定2値、識別子なし）。
+  `app.js?v=157` / `growth-analytics.mjs?v=12`。本番の growth-analytics.mjs で確認 → **本番確認済み**
+- 判定 3回目: 9/12 21:30 JST（send_later 予約済み）。`_hidden` が支配的なら「人の SNS 流入はほぼゼロ」で確定し
+  評価軸を「人の着地（visible）と検索完了」に変える。visible の pending が多ければ Turnstile を
+  `appearance=interaction-only` / `execution=execute` にする案を大隆さんへ提案（監視基準は緩めない）
 
 ### 未着手 2〜4 は Codex の 9/7〜9/10 修正で既に本番動作 → **本番確認済み**（D1 で確認、13:40 JST）
 
@@ -168,6 +177,7 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 |---|---|
 | 本番確認済み | #263 SNS着地の自動検索をトークン到着後に実行（効果は数字で要確認） |
 | 本番確認済み | #267 `search_inbound_pending` ＋ 縮退の autorun/manual 次元（#263 の効果判定はこれで可能になる。判定は 21:30 JST） |
+| 本番確認済み | #269 `search_inbound_pending_hidden`（事前読み込み／bot と人のアプリ内ブラウザの切り分け。判定 9/12 21:30 JST） |
 | 本番確認済み | #268 既知クローラの UA を KPI 除外（`seo_*_view` が下がるのは実数化） |
 | 本番確認済み | 未着手 2〜4 は Codex 既存修正で動作（`35fca07` / `158c6ac` / `61481ca`） |
 | 本番確認済み | #264 ショップ PROFILE に事業者名・店舗住所（ITG 3店に設定済み）／値下がり待ちの人数は5人以上のみ表示 |
