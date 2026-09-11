@@ -98,7 +98,7 @@ test('クライアントは creator パラメータを30日引き継ぎ、管理
   assert.match(analytics, /params\.get\('creator_id'\)/u);
   assert.match(analytics, /30 \* 24 \* 60 \* 60 \* 1000/u);
   for (const page of ['index.html', 'login.html', 'buzz.html']) {
-    assert.match(readFileSync(new URL(`../public/${page}`, import.meta.url), 'utf8'), /growth-analytics\.mjs\?v=10/u);
+    assert.match(readFileSync(new URL(`../public/${page}`, import.meta.url), 'utf8'), /growth-analytics\.mjs\?v=11/u);
   }
   const adminPage = readFileSync(new URL('../src/admin-sp-api-page.mjs', import.meta.url), 'utf8');
   assert.match(adminPage, /export function adminCreatorsPageResponse/u);

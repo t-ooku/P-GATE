@@ -265,9 +265,15 @@ document.addEventListener('hoshilu:search-degraded', event => {
   // request ID accompany the event; query text and exception bodies do not.
   send('search_degraded', {
     failure_code: event.detail?.errorCode,
-    request_id: event.detail?.requestId
+    request_id: event.detail?.requestId,
+    // 2026-09-11 #261: SNS着地の自動実行か手動かの固定値。識別子は含めない。
+    trigger: event.detail?.trigger === 'autorun' ? 'autorun' : 'manual'
   });
 });
+// 2026-09-11 #261: 着地後の自動検索がセキュリティ確認のトークンを待ったまま
+// 始まらなかった訪問を数える（アプリ内ブラウザ／プリフェッチ等の切り分け用）。
+// 流入元はそのまま付く。検索文は送らない。
+document.addEventListener('hoshilu:search-inbound-pending', () => send('search_inbound_pending'));
 document.addEventListener('hoshilu:wish-saved', event => {
   if (event.detail?.source !== 'continuous_search') {
     send('wish_saved');

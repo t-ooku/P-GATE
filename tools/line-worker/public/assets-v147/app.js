@@ -1473,6 +1473,9 @@ async function acquireTurnstileToken(callbackTimeoutMs=15000){await ensureTurnst
 // Token acquisition already gives Cloudflare's visible widget one bounded wait.
 // Repeating a client-side unavailable/unsupported outcome in the outer request
 // loop cannot change the browser state and only delays the actionable guidance.
+// 2026-09-11 #261 切り分け: 検索が「SNS着地の自動実行」か「手で押した」かを固定値で持つ。
+// 検索文や識別子は付けない。縮退イベントの次元にだけ使う。
+let searchTrigger='manual';
 function retryableOuterTurnstileFailure(code){const value=String(code||'');return /^TURNSTILE_/u.test(value)&&!['TURNSTILE_TOKEN_UNAVAILABLE','TURNSTILE_UNSUPPORTED'].includes(value);}
 // Turnstile tokens are single-use. All AI chat/search/ranking callers share
 // one serialized issuer so reset/render cannot race against another request.
@@ -1518,6 +1521,7 @@ function beginIdentifySearch(query){
 }
 async function runKnowledgeSearch(options={}){
   const t=selectedCopy();
+  const trigger=searchTrigger;searchTrigger='manual';
   const submittedQuery=String(elements.query.value||'').trim();
   // 2026-09-06 大隆さん指示: 写真・投稿URLは「これですか？」の段階で解析済み。
   // YES のあとは確定した商品名で探す（同じ画像をもう一度Geminiに送らない＝待たせない）。
@@ -1631,7 +1635,7 @@ async function runKnowledgeSearch(options={}){
     // click 0). Give it the same emergency fallback and telemetry as the
     // other branches so the visitor has something to click and the failure
     // is visible in growth_events as search_degraded.
-    const fallback=withAiCandidateFallback(emergencyMarketplaceFallback(elements.query.value),options.aiCandidateFallback);renderResults(fallback,lastRequestId,submittedQuery,executionId);finishInstantMarketplaceHandoff(true);revealSearchResults();document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId,errorCode:failureTelemetry.error_code,requestId:failureTelemetry.request_id}}));
+    const fallback=withAiCandidateFallback(emergencyMarketplaceFallback(elements.query.value),options.aiCandidateFallback);renderResults(fallback,lastRequestId,submittedQuery,executionId);finishInstantMarketplaceHandoff(true);revealSearchResults();document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId,errorCode:failureTelemetry.error_code,requestId:failureTelemetry.request_id,trigger}}));
     return{ok:false,degraded:true,error:failureTelemetry.error_code,result:fallback,requestId:failureTelemetry.request_id};}
     if(!isIndependentSearchText(submittedQuery)&&hasSupplementalInput){elements.status.className='status error';const supplementalLanguage=elements.language.value||'JA';const supplementalTrace=` (${({JA:'コード',EN:'Code',ZH:'代码',KO:'코드'}[supplementalLanguage]||'Code')}: ${failureTelemetry.error_code||'UNKNOWN'}${failureTelemetry.request_id?` / ${({JA:'追跡ID',EN:'Tracking ID',ZH:'追踪ID',KO:'추적 ID'}[supplementalLanguage]||'Tracking ID')}: ${failureTelemetry.request_id}`:''})`;elements.status.textContent=({JA:'写真・画像・投稿URLから候補を読み取れませんでした。色・形・用途などを一言だけ足して、もう一度お試しください。',EN:'We could not read a product clue from that photo, image, or post. Add a color, shape, or use and try again.',ZH:'无法从照片、图片或帖子中提取商品线索。请补充颜色、形状或用途后重试。',KO:'사진·이미지·게시물에서 상품 단서를 읽지 못했습니다. 색상·모양·용도를 추가해 다시 시도해 주세요.'}[supplementalLanguage]||'Could not analyze this input.')+supplementalTrace;return{ok:false,error:failureTelemetry.error_code,requestId:failureTelemetry.request_id};}
     const fallback=withAiCandidateFallback(emergencyMarketplaceFallback(elements.query.value),options.aiCandidateFallback);
@@ -1643,7 +1647,7 @@ async function runKnowledgeSearch(options={}){
     // related-product carousel. It obtains a fresh Turnstile token and shows
     // only products verified by marketplace APIs.
     scheduleRelatedRecommendations(submittedQuery,sequence);
-    document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId,errorCode:failureTelemetry.error_code,requestId:failureTelemetry.request_id}}));
+    document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId,errorCode:failureTelemetry.error_code,requestId:failureTelemetry.request_id,trigger}}));
     elements.status.className='status';elements.status.textContent='';
     return{ok:false,degraded:true,error:failureTelemetry.error_code,result:fallback,requestId:failureTelemetry.request_id};
   }finally{if(isCurrentRun()){elements.submit.disabled=false;elements.cards.setAttribute('aria-busy','false');}}
@@ -1931,9 +1935,13 @@ const heroMarketplaceCoverageDetails=document.querySelector('#heroMarketplaceCov
 // 検索語を入れたまま「確認が終わると、そのまま検索します」と案内し、届いた瞬間に自動で
 // 検索する（onTurnstileToken → runPendingInboundSearch）。人が押し直す必要をなくす。
 const INBOUND_TOKEN_WAIT_MS=8000;
+// 待ち続けてもトークンが来ない着地（アプリ内ブラウザ／プリフェッチ等）を数えるため、
+// さらにこの時間待っても始まらなければ固定イベントを1回だけ出す。
+const INBOUND_PENDING_REPORT_MS=30000;
 let pendingInboundSearch='';
 function submitInboundSearch(text){
   if(String(elements.query.value||'').trim()!==text)return false;
+  searchTrigger='autorun';
   if(typeof elements.form.requestSubmit==='function')elements.form.requestSubmit();
   else elements.form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
   return true;
@@ -1965,6 +1973,7 @@ function autoRunInboundSearch(query){
     elements.status.className='status inbound-waiting';
     elements.status.textContent=inboundSearchWaitingCopy();
     elements.turnstile?.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(()=>{if(pendingInboundSearch===text)document.dispatchEvent(new CustomEvent('hoshilu:search-inbound-pending'));},INBOUND_PENDING_REPORT_MS);
   })();
 }
 const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode('direct');setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(()=>{if(consumeInsightResultLink())return loadNotifications();const login=insightResultLoginUrl();if(!memberSession&&login){location.replace(login);return;}return loadNotifications();});turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});autoRunInboundSearch(inboundCampaign.query);if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');

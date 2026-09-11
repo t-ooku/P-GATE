@@ -20,6 +20,8 @@ const EVENTS = new Set([
   'search_attempted',
   'search_blocked',
   'search_started',
+  // 2026-09-11 #261: 着地後の自動検索がトークン待ちのまま始まらなかった訪問。
+  'search_inbound_pending',
   // Privacy-safe input mix: each accepted execution emits exactly one fixed
   // enum event. Raw query text, social URLs and image data are not accepted.
   'search_input_text',
@@ -197,6 +199,9 @@ export function normalizeGrowthEvent(input = {}) {
   if (eventType === 'search_degraded') {
     event.failure_code = clientSearchFailureCode(input.failure_code);
     event.request_id = anonymousId(input.request_id);
+    // Fixed two-value dimension: was the search started by the SNS landing
+    // auto-run or by the visitor pressing Search. Anything else is 'manual'.
+    event.trigger = input.trigger === 'autorun' ? 'autorun' : 'manual';
   }
   if (searchInputStage(eventType)) {
     event.execution_id = anonymousId(input.execution_id);
@@ -312,7 +317,7 @@ export async function recordSearchProviderDegradation(env, {
 // campaign attribution on the public search_degraded event remains intact.
 // The event type is internal-only and every dimension is fixed or allowlisted.
 export async function recordSearchClientDegradation(env, {
-  requestId = '', code = '', trafficClass = 'UNATTRIBUTED'
+  requestId = '', code = '', trafficClass = 'UNATTRIBUTED', trigger = 'manual'
 } = {}) {
   if (!env?.PRODUCT_DB) return false;
   const safeRequestId = anonymousId(requestId);
@@ -324,9 +329,13 @@ export async function recordSearchClientDegradation(env, {
       : safeCode === 'SEARCH_NETWORK_FAILED' ? 'network'
         : ['SEARCH_TIMEOUT', 'SEARCH_DEADLINE_EXCEEDED'].includes(safeCode) ? 'timeout'
           : safeCode === 'SEARCH_RESPONSE_INVALID' ? 'response' : 'client';
+  // The otherwise-unused marketplace column carries the fixed trigger value
+  // (AUTORUN / MANUAL) so landing auto-run failures can be separated from
+  // manual ones without adding any identifier to this row.
+  const safeTrigger = trigger === 'autorun' ? 'AUTORUN' : 'MANUAL';
   const values = [
     crypto.randomUUID(), 'search_client_degraded', 'JA', 'browser', component,
-    safeCode, safeRequestId, '', new Date().toISOString(), safeTrafficClass, '', ''
+    safeCode, safeRequestId, safeTrigger, new Date().toISOString(), safeTrafficClass, '', ''
   ];
   try {
     await env.PRODUCT_DB.prepare(
@@ -432,7 +441,8 @@ export async function handleGrowthEvent(request, env) {
       await recordSearchClientDegradation(env, {
         requestId: event.request_id,
         code: event.failure_code,
-        trafficClass
+        trafficClass,
+        trigger: event.trigger
       });
     } catch (error) {
       console.warn('SEARCH_CLIENT_DEGRADATION_DIAGNOSTIC_FAILED', {

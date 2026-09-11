@@ -161,6 +161,16 @@ test('SNS・SEOから ?q= 付きで着地したら、もう一度押させずに
   assert.match(app, /if\(elements\.submit\?\.disabled\|\|activeKnowledgeFetch\|\|activeIdentifyExecutionId\)\{pendingInboundSearch='';return;\}/);
   // 人が自分で検索したら保留は解除する
   assert.match(app, /event\.preventDefault\(\);pendingInboundSearch='';/);
+  // 2026-09-11 #263 判定: 着地2件で search_started も縮退も 0。待ったまま無音で終わる訪問を
+  // 数えるため、30秒待っても始まらなければ固定イベントを出す。縮退には autorun/manual を付ける。
+  assert.match(app, /const INBOUND_PENDING_REPORT_MS=30000;/);
+  assert.match(app, /if\(pendingInboundSearch===text\)document\.dispatchEvent\(new CustomEvent\('hoshilu:search-inbound-pending'\)\)/);
+  assert.match(app, /searchTrigger='autorun';\n  if\(typeof elements\.form\.requestSubmit/);
+  assert.match(app, /const trigger=searchTrigger;searchTrigger='manual';/);
+  assert.equal((app.match(/hoshilu:search-degraded',\{detail:\{executionId,errorCode:failureTelemetry\.error_code,requestId:failureTelemetry\.request_id,trigger\}\}/g) || []).length, 2);
+  const analytics = await read('growth-analytics.mjs');
+  assert.match(analytics, /addEventListener\('hoshilu:search-inbound-pending', \(\) => send\('search_inbound_pending'\)\)/);
+  assert.match(analytics, /trigger: event\.detail\?\.trigger === 'autorun' \? 'autorun' : 'manual'/);
 });
 
 // 2026-09-03 大隆さん指示: アフィリエイト表記は結果の先頭から下へ移す(法的表記

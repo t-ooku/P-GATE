@@ -130,7 +130,7 @@ test('search_degraded accepts only a bounded code and UUID-shaped request ID', (
   }), {
     event_type: 'search_degraded', locale: 'JA', source: '', medium: '', campaign: '', content: '',
     marketplace: '', visitor_id: '', session_id: '', creator_id: '', campaign_id: '', creative_id: '', failure_code: 'TURNSTILE_TOKEN_UNAVAILABLE',
-    request_id: 'e309d1ad-2a34-4f2f-913b-47fccdbbe24c'
+    request_id: 'e309d1ad-2a34-4f2f-913b-47fccdbbe24c', trigger: 'manual'
   });
   const sanitized = normalizeGrowthEvent({
     event_type: 'search_degraded', failure_code: '検索本文を含む例外', request_id: 'invalid'
@@ -271,10 +271,29 @@ test('client degradation diagnostic stores no query, visitor, or session data', 
   assert.equal(calls[0].values[4], 'knowledge');
   assert.equal(calls[0].values[5], 'TURNSTILE_TOKEN_UNAVAILABLE');
   assert.equal(calls[0].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe249');
+  assert.equal(calls[0].values[7], 'MANUAL');
   assert.equal(calls[0].values[9], 'ATTRIBUTED');
   assert.equal(calls[0].values[10], '');
   assert.equal(calls[0].values[11], '');
   assert.doesNotMatch(JSON.stringify(calls), /保存禁止/u);
+});
+
+test('2026-09-11 #261: 縮退診断は autorun/manual の固定値だけを持ち、それ以外は manual に倒す', async () => {
+  const calls = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({ run: async () => { calls.push({ sql, values }); } }) }) } };
+  await recordSearchClientDegradation(env, { code: 'TURNSTILE_TOKEN_UNAVAILABLE', trigger: 'autorun' });
+  await recordSearchClientDegradation(env, { code: 'TURNSTILE_TOKEN_UNAVAILABLE', trigger: 'visitor-123' });
+  assert.equal(calls[0].values[4], 'turnstile');
+  assert.equal(calls[0].values[7], 'AUTORUN');
+  assert.equal(calls[1].values[7], 'MANUAL');
+  const degraded = normalizeGrowthEvent({ event_type: 'search_degraded', trigger: 'autorun' });
+  assert.equal(degraded.trigger, 'autorun');
+  assert.equal(normalizeGrowthEvent({ event_type: 'search_degraded', trigger: 'x' }).trigger, 'manual');
+  // 着地後にトークン待ちのまま始まらなかった訪問は流入元付きの固定イベントとして受ける
+  const pending = normalizeGrowthEvent({ event_type: 'search_inbound_pending', source: 'threads', medium: 'social', campaign: 'hoshilu-deal-daily-v1', query: '保存禁止' });
+  assert.equal(pending.event_type, 'search_inbound_pending');
+  assert.equal(pending.source, 'threads');
+  assert.equal('query' in pending, false);
 });
 
 test('rejects server-owned conversions and accepts commerce events across all ten marketplaces', () => {
@@ -412,7 +431,7 @@ test('correlated degraded event preserves attribution and adds a separate safe d
       campaign: 'reel', content: 'creative_01',
       session_id: '550e8400-e29b-41d4-a716-446655440000',
       failure_code: 'SEARCH_TIMEOUT', request_id: 'e309d1ad-2a34-4f2f-913b-47fccdbbe250',
-      query: '保存禁止の検索文'
+      trigger: 'autorun', query: '保存禁止の検索文'
     })
   }), env);
   assert.equal(response.status, 202);
@@ -424,6 +443,7 @@ test('correlated degraded event preserves attribution and adds a separate safe d
   assert.equal(writes[1].values[4], 'knowledge');
   assert.equal(writes[1].values[5], 'SEARCH_TIMEOUT');
   assert.equal(writes[1].values[6], 'e309d1ad-2a34-4f2f-913b-47fccdbbe250');
+  assert.equal(writes[1].values[7], 'AUTORUN');
   assert.doesNotMatch(JSON.stringify(writes), /保存禁止/u);
 });
 
