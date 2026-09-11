@@ -155,6 +155,17 @@ async function searchExecutionEventId(event) {
   return `${executionKey}:${stage.stage}`;
 }
 
+// 2026-09-11 実測: 7日間で seo_article_view 147件・訪問者146人、記事ごとに同じ日に
+// 6〜11件ずつまとまって入り、その後の検索開始は1人だけ。JSを実行する検索エンジンや
+// SNSのリンク先取得（クローラ）が「読者」として数えられていた。UAが既知のクローラなら
+// KPI から外れる既存の枠（traffic_class='QA'）に入れる。人のブラウザ名（LINEアプリ内
+// ブラウザ等）はここに含めない。UAは保存しない。
+const CRAWLER_USER_AGENT_PATTERN = /(?:googlebot|google-inspectiontool|adsbot-google|mediapartners-google|bingbot|bingpreview|yandex(?:bot|images)|duckduckbot|baiduspider|applebot|petalbot|ahrefsbot|semrushbot|mj12bot|dotbot|gptbot|oai-searchbot|claudebot|anthropic-ai|perplexitybot|bytespider|ccbot|amazonbot|facebookexternalhit|facebookcatalog|meta-externalagent|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|whatsapp\/|pinterestbot|headlesschrome|lighthouse|chrome-lighthouse|gtmetrix|pingdom|uptimerobot|\bbot\b|crawler|spider)/iu;
+export function isCrawlerUserAgent(value) {
+  const ua = String(value || '').slice(0, 512);
+  return ua ? CRAWLER_USER_AGENT_PATTERN.test(ua) : false;
+}
+
 export function classifyGrowthTraffic(event = {}) {
   const source = clean(event.source).toLowerCase();
   const medium = clean(event.medium).toLowerCase();
@@ -367,7 +378,7 @@ export async function handleGrowthEvent(request, env) {
   } catch {
     return Response.json({ ok: false, error: 'EVENT_INVALID' }, { status: 400 });
   }
-  const trafficClass = classifyGrowthTraffic(event);
+  const trafficClass = isCrawlerUserAgent(request.headers.get('user-agent')) ? 'QA' : classifyGrowthTraffic(event);
   if (event.event_type === 'search_dead_end' || event.event_type === 'search_degraded') {
     // Advisory RUM can be forged by a browser, so correlate it to a recent
     // search_started from the same anonymous session before accepting it.

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  classifyGrowthTraffic, handleGrowthEvent, normalizeGrowthEvent,
+  classifyGrowthTraffic, handleGrowthEvent, isCrawlerUserAgent, normalizeGrowthEvent,
   recordContinuousSearchEnabled, recordSearchClientDegradation,
   recordSearchOperationalFailure, recordSearchProviderDegradation
 } from '../src/growth-events.mjs';
@@ -481,4 +481,34 @@ test('visitor列不足の縮退挿入は引き続き202で受理される', asyn
   assert.equal(payload.ok, true);
   assert.equal(payload.identity_recorded, false);
   assert.equal(calls, 2);
+});
+
+test('2026-09-11: 既知クローラのUAで届いた記事閲覧は KPI から外れる枠（QA）に入り、人のブラウザはそのまま', async () => {
+  assert.equal(isCrawlerUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'), true);
+  assert.equal(isCrawlerUserAgent('Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'), true);
+  assert.equal(isCrawlerUserAgent('facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)'), true);
+  assert.equal(isCrawlerUserAgent('Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)'), true);
+  assert.equal(isCrawlerUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/126.0.0.0 Safari/537.36'), true);
+  // 人: iPhone Safari / LINE アプリ内ブラウザ / Instagram アプリ内ブラウザ / Threads アプリ内
+  assert.equal(isCrawlerUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'), false);
+  assert.equal(isCrawlerUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Safari Line/14.8.0'), false);
+  assert.equal(isCrawlerUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 334.0.0.0 (iPhone15,2; iOS 17_5; ja_JP)'), false);
+  assert.equal(isCrawlerUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Barcelona 334.0.0.0'), false);
+  assert.equal(isCrawlerUserAgent(''), false);
+
+  const writes = [];
+  const env = { PRODUCT_DB: { prepare: sql => ({ bind: (...values) => ({
+    run: async () => { writes.push({ sql, values }); return { success: true }; }
+  }) }) } };
+  const post = (ua) => handleGrowthEvent(new Request('https://hoshilu.app/api/events', {
+    method: 'POST', headers: { origin: 'https://hoshilu.app', 'content-type': 'application/json', 'user-agent': ua },
+    body: JSON.stringify({ event_type: 'seo_article_view', source: 'seo_article', medium: 'internal', content: 'get-notified-when-price-drops' })
+  }), env);
+  assert.equal((await post('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')).status, 202);
+  assert.equal(writes[0].values[1], 'seo_article_view');
+  assert.equal(writes[0].values[9], 'QA');
+  assert.equal(writes[0].values[3], 'seo_article');
+  assert.equal((await post('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')).status, 202);
+  assert.equal(writes[1].values[9], 'ATTRIBUTED');
+  assert.doesNotMatch(JSON.stringify(writes), /Googlebot|Safari/u);
 });
