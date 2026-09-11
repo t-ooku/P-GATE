@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T02:38:54.767Z",
+  "generated_at": "2026-09-11T23:58:28.415Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -27,7 +27,7 @@
     "2026-09-10-claude-batch-024.json",
     "2026-09-11-claude-batch-025.json"
   ],
-  "entry_count": 1190,
+  "entry_count": 1205,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -19523,6 +19523,321 @@
           "予測式 体温計",
           "予測式 体温計 すぐ測れる",
           "短時間 検温 体温計"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "428f76ef5e0f164ed907fe63761f108222f8e3aecec6bc4c8c7e04d60ea17224",
+      "query_text": "静電気が起きない柔軟剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "antistatic-fabric-softener",
+      "ideal_answer": "静電気防止効果をうたう柔軟剤",
+      "search_terms": {
+        "ja": [
+          "静電気防止 柔軟剤",
+          "静電気防止スプレー 柔軟剤",
+          "柔軟剤 静電気ケア"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "aed99b7102b493f0863dd3c1a490febcd471d4a02ce67b53a4cc7655bb1e7d00",
+      "query_text": "洗濯物が静電気でバチバチしない柔軟剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "antistatic-fabric-softener",
+      "ideal_answer": "静電気防止効果をうたう柔軟剤",
+      "search_terms": {
+        "ja": [
+          "静電気防止 柔軟剤",
+          "静電気防止スプレー 柔軟剤",
+          "柔軟剤 静電気ケア"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e24f9c251281751ecdea46bc603350a81662778af9040147c8b65c789206a88f",
+      "query_text": "着るとき静電気が起きにくい柔軟剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "antistatic-fabric-softener",
+      "ideal_answer": "静電気防止効果をうたう柔軟剤",
+      "search_terms": {
+        "ja": [
+          "静電気防止 柔軟剤",
+          "静電気防止スプレー 柔軟剤",
+          "柔軟剤 静電気ケア"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "46e78a817d8fdc90c093ac7fa0aaf39c7982c55d7fd132a3584bdab0f757e1fc",
+      "query_text": "揚げ物をしても油が飛び散らないフライパン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "splatter-guard-frying",
+      "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+      "search_terms": {
+        "ja": [
+          "油はねガード",
+          "油はね防止ネット",
+          "スプラッタースクリーン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6b612f193a10bf8813cc65e85da10927a9d743d9961484a0219721b83b7c3bad",
+      "query_text": "天ぷらの油がはねないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "splatter-guard-frying",
+      "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+      "search_terms": {
+        "ja": [
+          "油はねガード",
+          "油はね防止ネット",
+          "スプラッタースクリーン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "be68098c164f2492bd05178a04f462cdfb13cb4aef1310acacf3b09a6e7a640d",
+      "query_text": "コンロ周りに油が飛び散らない鍋のふた",
+      "locale": "ja",
+      "persona": "general",
+      "category": "splatter-guard-frying",
+      "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+      "search_terms": {
+        "ja": [
+          "油はねガード",
+          "油はね防止ネット",
+          "スプラッタースクリーン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0d69fed0f5073d406e67d2d88c3c504483f58e6abc9c7c8751ed0dcc570cd0d9",
+      "query_text": "奥まで洗いやすい哺乳瓶",
+      "locale": "ja",
+      "persona": "general",
+      "category": "easy-clean-baby-bottle",
+      "ideal_answer": "広口タイプでパーツが少なく洗いやすい哺乳瓶",
+      "search_terms": {
+        "ja": [
+          "広口 哺乳瓶",
+          "パーツが少ない 哺乳瓶",
+          "シンプル構造 哺乳瓶"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1a839a62a90c3398920399e128734fb0656c7eb26d9bd7e9c55c4a71f644f247",
+      "query_text": "細かいところまで洗える哺乳瓶",
+      "locale": "ja",
+      "persona": "general",
+      "category": "easy-clean-baby-bottle",
+      "ideal_answer": "広口タイプでパーツが少なく洗いやすい哺乳瓶",
+      "search_terms": {
+        "ja": [
+          "広口 哺乳瓶",
+          "パーツが少ない 哺乳瓶",
+          "シンプル構造 哺乳瓶"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a169335fa525980c1e77e11a8ad34baea765d19a0657f2c555e4802eaa414ecd",
+      "query_text": "パーツが少なくて洗いやすい哺乳びん",
+      "locale": "ja",
+      "persona": "general",
+      "category": "easy-clean-baby-bottle",
+      "ideal_answer": "広口タイプでパーツが少なく洗いやすい哺乳瓶",
+      "search_terms": {
+        "ja": [
+          "広口 哺乳瓶",
+          "パーツが少ない 哺乳瓶",
+          "シンプル構造 哺乳瓶"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3b932fb7da4e72ce3997e912f27a9631151f9a10beda2fecf7146f6b0c9a9e7a",
+      "query_text": "にじまないアイライナー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-eyeliner",
+      "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ アイライナー",
+          "にじまない アイライナー",
+          "よれない アイライナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4465bbb0c023af3234142e782767fe9c31fb0ed599089d6a140c221e6b0a7fcd",
+      "query_text": "汗や涙に強いアイライナー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-eyeliner",
+      "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ アイライナー",
+          "にじまない アイライナー",
+          "よれない アイライナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "32b9962f86ea34b6128806a1975eca3ccdb2d139b9c1da29eb7f9327b9569966",
+      "query_text": "よれないアイライナー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "waterproof-eyeliner",
+      "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+      "search_terms": {
+        "ja": [
+          "ウォータープルーフ アイライナー",
+          "にじまない アイライナー",
+          "よれない アイライナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "34e82685f7cdfaa12b084b484a85d6492c7629d530b18ac3e6bde99391d559e0",
+      "query_text": "肩こりを奥まで揉みほぐしてくれるマッサージ器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "percussion-massage-gun",
+      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+      "search_terms": {
+        "ja": [
+          "マッサージガン",
+          "筋膜リリース ガン",
+          "肩こり マッサージ器 強め"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4571160bb2469122d36782fcc953dece42243049d4f5243c8408f9a03b227d68",
+      "query_text": "強めの刺激で凝りをほぐす肩たたき機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "percussion-massage-gun",
+      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+      "search_terms": {
+        "ja": [
+          "マッサージガン",
+          "筋膜リリース ガン",
+          "肩こり マッサージ器 強め"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "71d88fe7018e546927d1443210ab98d0b78cd04900359715c91b723edc2659b0",
+      "query_text": "コリが楽になるくらい強く効くマッサージ機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "percussion-massage-gun",
+      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+      "search_terms": {
+        "ja": [
+          "マッサージガン",
+          "筋膜リリース ガン",
+          "肩こり マッサージ器 強め"
         ],
         "en": [],
         "ko": [],

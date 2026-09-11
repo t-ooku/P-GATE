@@ -3816,5 +3816,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "静電気が起きない柔軟剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "着用時に静電気が起きにくくなる柔軟剤",
+    "ideal_answer": "静電気防止効果をうたう柔軟剤",
+    "reason": "「静電気が起きない」は商品名では「静電気防止」。 展開規則 antistatic-fabric-softener（モール検索語「静電気防止 柔軟剤」）。",
+    "category": "antistatic-fabric-softener",
+    "search_terms": {
+      "ja": [
+        "静電気防止 柔軟剤",
+        "静電気防止スプレー 柔軟剤",
+        "柔軟剤 静電気ケア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯物が静電気でバチバチしない柔軟剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "着用時に静電気が起きにくくなる柔軟剤",
+    "ideal_answer": "静電気防止効果をうたう柔軟剤",
+    "reason": "「静電気が起きない」は商品名では「静電気防止」。 展開規則 antistatic-fabric-softener（モール検索語「静電気防止 柔軟剤」）。",
+    "category": "antistatic-fabric-softener",
+    "search_terms": {
+      "ja": [
+        "静電気防止 柔軟剤",
+        "静電気防止スプレー 柔軟剤",
+        "柔軟剤 静電気ケア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "着るとき静電気が起きにくい柔軟剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "着用時に静電気が起きにくくなる柔軟剤",
+    "ideal_answer": "静電気防止効果をうたう柔軟剤",
+    "reason": "「静電気が起きない」は商品名では「静電気防止」。 展開規則 antistatic-fabric-softener（モール検索語「静電気防止 柔軟剤」）。",
+    "category": "antistatic-fabric-softener",
+    "search_terms": {
+      "ja": [
+        "静電気防止 柔軟剤",
+        "静電気防止スプレー 柔軟剤",
+        "柔軟剤 静電気ケア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "揚げ物をしても油が飛び散らないフライパン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "揚げ物・炒め物で油はねを防ぎたい",
+    "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+    "reason": "「油が飛び散らない」は商品名では「油はねガード」「スプラッタースクリーン」。 展開規則 splatter-guard-frying（モール検索語「油はねガード」）。",
+    "category": "splatter-guard-frying",
+    "search_terms": {
+      "ja": [
+        "油はねガード",
+        "油はね防止ネット",
+        "スプラッタースクリーン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "天ぷらの油がはねないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "揚げ物・炒め物で油はねを防ぎたい",
+    "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+    "reason": "「油が飛び散らない」は商品名では「油はねガード」「スプラッタースクリーン」。 展開規則 splatter-guard-frying（モール検索語「油はねガード」）。",
+    "category": "splatter-guard-frying",
+    "search_terms": {
+      "ja": [
+        "油はねガード",
+        "油はね防止ネット",
+        "スプラッタースクリーン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "コンロ周りに油が飛び散らない鍋のふた",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "揚げ物・炒め物で油はねを防ぎたい",
+    "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+    "reason": "「油が飛び散らない」は商品名では「油はねガード」「スプラッタースクリーン」。 展開規則 splatter-guard-frying（モール検索語「油はねガード」）。",
+    "category": "splatter-guard-frying",
+    "search_terms": {
+      "ja": [
+        "油はねガード",
+        "油はね防止ネット",
+        "スプラッタースクリーン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "奥まで洗いやすい哺乳瓶",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗浄しやすい（広口・パーツが少ない）哺乳瓶",
+    "ideal_answer": "広口タイプでパーツが少なく洗いやすい哺乳瓶",
+    "reason": "「洗いやすい」「奥まで洗える」は商品名では「広口」「パーツが少ない」。 展開規則 easy-clean-baby-bottle（モール検索語「広口 哺乳瓶」）。",
+    "category": "easy-clean-baby-bottle",
+    "search_terms": {
+      "ja": [
+        "広口 哺乳瓶",
+        "パーツが少ない 哺乳瓶",
+        "シンプル構造 哺乳瓶"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "細かいところまで洗える哺乳瓶",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗浄しやすい（広口・パーツが少ない）哺乳瓶",
+    "ideal_answer": "広口タイプでパーツが少なく洗いやすい哺乳瓶",
+    "reason": "「洗いやすい」「奥まで洗える」は商品名では「広口」「パーツが少ない」。 展開規則 easy-clean-baby-bottle（モール検索語「広口 哺乳瓶」）。",
+    "category": "easy-clean-baby-bottle",
+    "search_terms": {
+      "ja": [
+        "広口 哺乳瓶",
+        "パーツが少ない 哺乳瓶",
+        "シンプル構造 哺乳瓶"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "パーツが少なくて洗いやすい哺乳びん",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗浄しやすい（広口・パーツが少ない）哺乳瓶",
+    "ideal_answer": "広口タイプでパーツが少なく洗いやすい哺乳瓶",
+    "reason": "「洗いやすい」「奥まで洗える」は商品名では「広口」「パーツが少ない」。 展開規則 easy-clean-baby-bottle（モール検索語「広口 哺乳瓶」）。",
+    "category": "easy-clean-baby-bottle",
+    "search_terms": {
+      "ja": [
+        "広口 哺乳瓶",
+        "パーツが少ない 哺乳瓶",
+        "シンプル構造 哺乳瓶"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "にじまないアイライナー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗・涙・皮脂でにじみにくいアイライナー",
+    "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+    "reason": "「にじまない」は商品名では「ウォータープルーフ」。 展開規則 waterproof-eyeliner（モール検索語「ウォータープルーフ アイライナー」）。",
+    "category": "waterproof-eyeliner",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ アイライナー",
+        "にじまない アイライナー",
+        "よれない アイライナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗や涙に強いアイライナー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗・涙・皮脂でにじみにくいアイライナー",
+    "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+    "reason": "「にじまない」は商品名では「ウォータープルーフ」。 展開規則 waterproof-eyeliner（モール検索語「ウォータープルーフ アイライナー」）。",
+    "category": "waterproof-eyeliner",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ アイライナー",
+        "にじまない アイライナー",
+        "よれない アイライナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "よれないアイライナー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汗・涙・皮脂でにじみにくいアイライナー",
+    "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+    "reason": "「にじまない」は商品名では「ウォータープルーフ」。 展開規則 waterproof-eyeliner（モール検索語「ウォータープルーフ アイライナー」）。",
+    "category": "waterproof-eyeliner",
+    "search_terms": {
+      "ja": [
+        "ウォータープルーフ アイライナー",
+        "にじまない アイライナー",
+        "よれない アイライナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "肩こりを奥まで揉みほぐしてくれるマッサージ器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "肩こり・筋肉のコリを強めの刺激でほぐしたい",
+    "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+    "reason": "「奥まで揉みほぐす」「強めに効く」は商品名では「マッサージガン」「筋膜リリース」。 展開規則 percussion-massage-gun（モール検索語「マッサージガン」）。",
+    "category": "percussion-massage-gun",
+    "search_terms": {
+      "ja": [
+        "マッサージガン",
+        "筋膜リリース ガン",
+        "肩こり マッサージ器 強め"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "強めの刺激で凝りをほぐす肩たたき機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "肩こり・筋肉のコリを強めの刺激でほぐしたい",
+    "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+    "reason": "「奥まで揉みほぐす」「強めに効く」は商品名では「マッサージガン」「筋膜リリース」。 展開規則 percussion-massage-gun（モール検索語「マッサージガン」）。",
+    "category": "percussion-massage-gun",
+    "search_terms": {
+      "ja": [
+        "マッサージガン",
+        "筋膜リリース ガン",
+        "肩こり マッサージ器 強め"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "コリが楽になるくらい強く効くマッサージ機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "肩こり・筋肉のコリを強めの刺激でほぐしたい",
+    "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+    "reason": "「奥まで揉みほぐす」「強めに効く」は商品名では「マッサージガン」「筋膜リリース」。 展開規則 percussion-massage-gun（モール検索語「マッサージガン」）。",
+    "category": "percussion-massage-gun",
+    "search_terms": {
+      "ja": [
+        "マッサージガン",
+        "筋膜リリース ガン",
+        "肩こり マッサージ器 強め"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
