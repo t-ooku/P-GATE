@@ -42,7 +42,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-09-06 展開規則 pet-shedding-brush の代表クエリ（機能語「ごっそり取れる」→ 売り手の語「抜け毛取り」「スリッカー」）。
   { id: 'pet_shedding_brush', query: '猫の抜け毛がごっそり取れるブラシ', expect: /ブラシ|コーム|くし|ファーミネーター|抜け毛|brush/iu, reject: /シャンプー|爪切り|フード|おやつ|トイレ|首輪|ケージ/u },
   // 2026-09-10 展開規則 auto-off-humidifier の代表クエリ（機能語「つけっぱなしでも安心」→ 売り手の語「自動オフ」）。
-  { id: 'auto_off_humidifier', query: 'つけっぱなしでも安心な加湿器', expect: /加湿器|humidifier/iu, reject: /空気清浄機|除湿機|扇風機|コンセント|フィルターのみ|交換用/u }
+  { id: 'auto_off_humidifier', query: 'つけっぱなしでも安心な加湿器', expect: /加湿器|humidifier/iu, reject: /空気清浄機|除湿機|扇風機|コンセント|フィルターのみ|交換用/u },
+  // 2026-09-12 展開規則 easy-clean-baby-bottle の代表クエリ（機能語「奥まで洗いやすい」→ 売り手の語「広口」）。
+  { id: 'easy_clean_baby_bottle', query: '奥まで洗いやすい哺乳瓶', expect: /哺乳瓶|哺乳びん|nursing\s*bottle|baby\s*bottle/iu, reject: /乳首のみ|替えパーツ|パーツのみ|ケースのみ|搾乳器|消毒(?:ケース|ボックス)/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
