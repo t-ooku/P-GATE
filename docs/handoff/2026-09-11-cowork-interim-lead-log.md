@@ -54,6 +54,24 @@ HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は�
 本番確認: `https://hoshilu.app/shop/with-care` の PROFILE に「事業者名 ITグループ株式会社」「店舗住所 東京都新宿区西新宿8-5-10」を表示。
 トップの値下がり待ちリストは「1人が待ってる」を出さない（デプロイ済みコードで確認、表示側は次回アクセスで反映）。
 
+### #263 効果判定（13:15 JST）→ **未判定**。計測の穴を #267 で塞いだ → **本番確認済み**
+
+事実（D1、QA/INTERNAL除外、9/11 01:31 JST 以降）:
+- `?q=` 付き SNS 着地は Threads 2件のみ（07:47 投稿「抱っこひも 新生児」から 45秒後・98秒後、別 visitor）
+- その2件で `search_started` / `search_completed` / `search_client_degraded` すべて **0**
+- #263 で「トークン未着＝エラー」が「トークン未着＝静かに待つ」に変わったため、トークンを取れない
+  訪問はイベントを何も残さなくなっていた（着地→無音）。投稿直後の着地は Threads 側の事前読み込み／bot 疑い
+
+対応（#267、head `e115eac`、CI ✅ 2026-09-11T04:30Z、テスト 2295 全通過）:
+- 着地後の自動検索が 30 秒待ってもトークンを得られなければ `search_inbound_pending` を1回だけ送る
+  （流入元付き、検索文・識別子なし、`/api/events` 許可リストに追加）
+- `search_degraded` に `trigger: autorun|manual` を付け、`search_client_degraded` は空だった
+  `marketplace` 列に `AUTORUN` / `MANUAL` を入れる
+- `assets-v147/app.js?v=156`、`growth-analytics.mjs?v=11`（本番の growth-analytics.mjs で新コードを確認）
+
+次の判定: 21:30 JST（Threads 20:30 枠後）。`search_inbound_pending` が着地ごとに出るなら
+「その訪問はトークンを取れない環境」で確定。人の着地で `search_completed` が出れば効果あり。
+
 ### 定期タスク（Cowork側）
 
 9/8 に「Codexへ移管」として停止していた2本を再開した（Codex不在のため）:
@@ -65,7 +83,7 @@ HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は�
 
 ### 未着手（優先順）
 
-1. `search_client_degraded` に識別子を持たない固定次元（autorun / manual）を足す → 着地縮退率を正確に測る
+1. ~~`search_client_degraded` に autorun / manual を足す~~ → #267 で本番確認済み
 2. 希望価格ウォッチの検索語（商品名丸ごと → ブランド＋型番＋主要語）: `NO_CANDIDATES` 3/3 のまま
 3. Issue #252 Threads 無限リトライの Worker 側修正（4xx は即 FAILED）
 4. 希望価格ウォッチ保存時に `target_product_key`（record_key/ASIN）を持たせる
@@ -81,8 +99,13 @@ HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は�
 SELECT substr(occurred_at,1,13) h, event_type, COALESCE(campaign,'') code, COUNT(*) n
 FROM growth_events
 WHERE occurred_at >= datetime('now','-24 hours') AND traffic_class NOT IN ('QA','INTERNAL')
-  AND event_type IN ('search_started','search_completed','search_client_degraded')
+  AND event_type IN ('search_started','search_completed','search_client_degraded','search_inbound_pending')
 GROUP BY h, event_type, code ORDER BY h DESC;
+
+-- #267 以降: 縮退が自動実行か手動か（marketplace 列 = AUTORUN / MANUAL）
+SELECT marketplace trig, campaign code, COUNT(*) n FROM growth_events
+WHERE event_type='search_client_degraded' AND occurred_at >= '2026-09-11T04:30:00'
+GROUP BY trig, code;
 
 -- 30日ファネル（SNS visitor）
 WITH v AS (SELECT DISTINCT visitor_id FROM growth_events
@@ -101,6 +124,7 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 状態 | 項目 |
 |---|---|
 | 本番確認済み | #263 SNS着地の自動検索をトークン到着後に実行（効果は数字で要確認） |
+| 本番確認済み | #267 `search_inbound_pending` ＋ 縮退の autorun/manual 次元（#263 の効果判定はこれで可能になる。判定は 21:30 JST） |
 | 本番確認済み | #264 ショップ PROFILE に事業者名・店舗住所（ITG 3店に設定済み）／値下がり待ちの人数は5人以上のみ表示 |
 | 決定済み（対応不要） | OpenAI 課金は当面しない。`openai_backup BILLING_DISABLED` は既知状態 |
-| 未実装 | 上記「未着手」1〜6 |
+| 未実装 | 上記「未着手」2〜6 |
