@@ -22,6 +22,8 @@ const EVENTS = new Set([
   'search_started',
   // 2026-09-11 #261: 着地後の自動検索がトークン待ちのまま始まらなかった訪問。
   'search_inbound_pending',
+  // 同上。画面が非表示（事前読み込み）または自動化ブラウザだった着地。
+  'search_inbound_pending_hidden',
   // Privacy-safe input mix: each accepted execution emits exactly one fixed
   // enum event. Raw query text, social URLs and image data are not accepted.
   'search_input_text',

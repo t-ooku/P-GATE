@@ -1973,7 +1973,11 @@ function autoRunInboundSearch(query){
     elements.status.className='status inbound-waiting';
     elements.status.textContent=inboundSearchWaitingCopy();
     elements.turnstile?.scrollIntoView({behavior:'smooth',block:'center'});
-    setTimeout(()=>{if(pendingInboundSearch===text)document.dispatchEvent(new CustomEvent('hoshilu:search-inbound-pending'));},INBOUND_PENDING_REPORT_MS);
+    setTimeout(()=>{if(pendingInboundSearch!==text)return;
+      // 2026-09-11 21:30 判定: 着地は投稿の61〜98秒後に2件ずつ、40秒待ってもトークンが来ない。
+      // 人が見ている画面か（visible）、自動化ブラウザか（webdriver）だけを固定値で添える。
+      const hidden=document.visibilityState!=='visible'||navigator.webdriver===true;
+      document.dispatchEvent(new CustomEvent('hoshilu:search-inbound-pending',{detail:{hidden}}));},INBOUND_PENDING_REPORT_MS);
   })();
 }
 const browserLanguage=(navigator.languages?.[0]||navigator.language||'ja').toLowerCase();const initialLanguage=localStorage.getItem('mygate_language')||(/^en/.test(browserLanguage)?'EN':/^zh/.test(browserLanguage)?'ZH':/^ko/.test(browserLanguage)?'KO':'JA');setSearchMode('direct');setLanguage(initialLanguage);const inboundCampaign=campaignContext(location.search);if(inboundCampaign.query){elements.query.value=inboundCampaign.query;elements.clear.classList.remove('hidden');sessionStorage.setItem('hoshilu_campaign_context',JSON.stringify(inboundCampaign));focusSearch();}syncMemberWishes().then(()=>{if(consumeInsightResultLink())return loadNotifications();const login=insightResultLoginUrl();if(!memberSession&&login){location.replace(login);return;}return loadNotifications();});turnstileInitPromise=initializeTurnstile();turnstileInitPromise.catch(()=>{elements.status.className='status error';elements.status.textContent=window.HoshiluI18n?.t('search.securityPending',elements.language.value)||'公開検索のセキュリティ設定を確認中です。設定完了後に検索できます。';});autoRunInboundSearch(inboundCampaign.query);if('serviceWorker'in navigator)navigator.serviceWorker.register('/service-worker.js');

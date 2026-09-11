@@ -273,7 +273,8 @@ document.addEventListener('hoshilu:search-degraded', event => {
 // 2026-09-11 #261: 着地後の自動検索がセキュリティ確認のトークンを待ったまま
 // 始まらなかった訪問を数える（アプリ内ブラウザ／プリフェッチ等の切り分け用）。
 // 流入元はそのまま付く。検索文は送らない。
-document.addEventListener('hoshilu:search-inbound-pending', () => send('search_inbound_pending'));
+// hidden = 画面が表示されていない／自動化ブラウザ（事前読み込み・bot の疑い）。固定2値のみ。
+document.addEventListener('hoshilu:search-inbound-pending', event => send(event.detail?.hidden === true ? 'search_inbound_pending_hidden' : 'search_inbound_pending'));
 document.addEventListener('hoshilu:wish-saved', event => {
   if (event.detail?.source !== 'continuous_search') {
     send('wish_saved');

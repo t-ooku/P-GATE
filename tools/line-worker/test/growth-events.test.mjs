@@ -294,6 +294,7 @@ test('2026-09-11 #261: 縮退診断は autorun/manual の固定値だけを持�
   assert.equal(pending.event_type, 'search_inbound_pending');
   assert.equal(pending.source, 'threads');
   assert.equal('query' in pending, false);
+  assert.equal(normalizeGrowthEvent({ event_type: 'search_inbound_pending_hidden' }).event_type, 'search_inbound_pending_hidden');
 });
 
 test('rejects server-owned conversions and accepts commerce events across all ten marketplaces', () => {
