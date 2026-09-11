@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-10T23:14:11.989Z",
+  "generated_at": "2026-09-11T01:42:34.797Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -26,7 +26,7 @@
     "2026-09-08-claude-batch-023.json",
     "2026-09-10-claude-batch-024.json"
   ],
-  "entry_count": 1125,
+  "entry_count": 1140,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -19207,6 +19207,321 @@
           "自動オフ 加湿器",
           "自動停止 加湿器",
           "転倒OFF 加湿器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "21745c3ad6492a7271f7044ffd80f413e73c500fe60ef023ace75886af11a6e3",
+      "query_text": "そのまま温められる保存容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "microwave-safe-food-container",
+      "ideal_answer": "電子レンジ対応(耐熱)の保存容器・タッパー",
+      "search_terms": {
+        "ja": [
+          "レンジ対応 保存容器",
+          "電子レンジ対応 タッパー",
+          "レンジOK 保存容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c751e035f451c1c376a21c87056af0b51f6afe3a66df56a294e501d886fb99d4",
+      "query_text": "電子レンジで温め直せるタッパー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "microwave-safe-food-container",
+      "ideal_answer": "電子レンジ対応(耐熱)の保存容器・タッパー",
+      "search_terms": {
+        "ja": [
+          "レンジ対応 保存容器",
+          "電子レンジ対応 タッパー",
+          "レンジOK 保存容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ca43da178187c164a1b8e242fea5e5e46a3f3c3d3136766d22f800b480714e53",
+      "query_text": "レンジでそのまま使えるフードコンテナ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "microwave-safe-food-container",
+      "ideal_answer": "電子レンジ対応(耐熱)の保存容器・タッパー",
+      "search_terms": {
+        "ja": [
+          "レンジ対応 保存容器",
+          "電子レンジ対応 タッパー",
+          "レンジOK 保存容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3c29c55de27dccd350f5ee966b749d3f22df41ebf28418320032677457e19674",
+      "query_text": "こすらなくても油汚れが落ちる換気扇の洗剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "soak-only-range-hood-cleaner",
+      "ideal_answer": "つけ置き(浸け置き)タイプの換気扇用洗剤・洗浄剤",
+      "search_terms": {
+        "ja": [
+          "つけ置き 換気扇 洗剤",
+          "つけ置き 換気扇 洗浄剤",
+          "換気扇 油汚れ 浸け置き"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6e7b51ddca21d659c91daa9c9d2cb849e8be8a9b15c7855defffba0325ac2d46",
+      "query_text": "つけ置きするだけの換気扇クリーナー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "soak-only-range-hood-cleaner",
+      "ideal_answer": "つけ置き(浸け置き)タイプの換気扇用洗剤・洗浄剤",
+      "search_terms": {
+        "ja": [
+          "つけ置き 換気扇 洗剤",
+          "つけ置き 換気扇 洗浄剤",
+          "換気扇 油汚れ 浸け置き"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "5f3bd4e709a6dc1594e06f6c13a9856a82b08e1c5c260d64c618ad9dae472823",
+      "query_text": "浸け置きで汚れが浮く換気扇用洗剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "soak-only-range-hood-cleaner",
+      "ideal_answer": "つけ置き(浸け置き)タイプの換気扇用洗剤・洗浄剤",
+      "search_terms": {
+        "ja": [
+          "つけ置き 換気扇 洗剤",
+          "つけ置き 換気扇 洗浄剤",
+          "換気扇 油汚れ 浸け置き"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "fd43a908446fc35185dfbde92a0850b9e4b20a76e2223cc5d8ac774c57c8bd35",
+      "query_text": "重ねても崩れない衣装ケース",
+      "locale": "ja",
+      "persona": "general",
+      "category": "stackable-clothing-case",
+      "ideal_answer": "スタッキング対応の衣装ケース・収納ケース",
+      "search_terms": {
+        "ja": [
+          "スタッキング 衣装ケース",
+          "スタッキング 収納ケース",
+          "重ねられる チェスト"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1001b3d427fff7313f554f294e61576b717221de1182a623d1f7fb432319c8da",
+      "query_text": "積み重ねられる収納ケース",
+      "locale": "ja",
+      "persona": "general",
+      "category": "stackable-clothing-case",
+      "ideal_answer": "スタッキング対応の衣装ケース・収納ケース",
+      "search_terms": {
+        "ja": [
+          "スタッキング 衣装ケース",
+          "スタッキング 収納ケース",
+          "重ねられる チェスト"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "658091317e00737bdbfbf84cbd610fe2d18dc27734138ef14829ac080231b32f",
+      "query_text": "スタッキングできるチェスト",
+      "locale": "ja",
+      "persona": "general",
+      "category": "stackable-clothing-case",
+      "ideal_answer": "スタッキング対応の衣装ケース・収納ケース",
+      "search_terms": {
+        "ja": [
+          "スタッキング 衣装ケース",
+          "スタッキング 収納ケース",
+          "重ねられる チェスト"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "d7261d35616451f30236bff19881ba90718a05b6bd013d3a8f4929c82d8d2af2",
+      "query_text": "毛玉ができにくいニット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pill-resistant-knit",
+      "ideal_answer": "防毛玉加工のニット・セーター",
+      "search_terms": {
+        "ja": [
+          "防毛玉加工 ニット",
+          "毛玉になりにくい セーター",
+          "防毛玉 ニット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f32c505dca6c7f7f8f18ba348733a8dd4647267f44f6f89454145b305fe6774e",
+      "query_text": "毛玉になりにくいセーター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pill-resistant-knit",
+      "ideal_answer": "防毛玉加工のニット・セーター",
+      "search_terms": {
+        "ja": [
+          "防毛玉加工 ニット",
+          "毛玉になりにくい セーター",
+          "防毛玉 ニット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "00d3cf9c46952158db599ab9db6ab72bd9c26c101796265f05cb1913929c767f",
+      "query_text": "毛玉が目立たないニットのトップス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pill-resistant-knit",
+      "ideal_answer": "防毛玉加工のニット・セーター",
+      "search_terms": {
+        "ja": [
+          "防毛玉加工 ニット",
+          "毛玉になりにくい セーター",
+          "防毛玉 ニット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "5ab88774f19aa544039d4460053d65e328b70bb42cc3eb7cc9af73818ddc8808",
+      "query_text": "すぐ測れる体温計",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-read-thermometer",
+      "ideal_answer": "予測式(短時間で測れる)体温計",
+      "search_terms": {
+        "ja": [
+          "予測式 体温計",
+          "予測式 体温計 すぐ測れる",
+          "短時間 検温 体温計"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b9aee693a2e62d438e1c770322b009a7a78005162aecbd706a020e95b2244472",
+      "query_text": "早く検温できる体温計",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-read-thermometer",
+      "ideal_answer": "予測式(短時間で測れる)体温計",
+      "search_terms": {
+        "ja": [
+          "予測式 体温計",
+          "予測式 体温計 すぐ測れる",
+          "短時間 検温 体温計"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ca58476374bdecf221939851e5ff8542f6e828056ee20357e1f95b1f7d15252d",
+      "query_text": "数秒で測れる体温計",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-read-thermometer",
+      "ideal_answer": "予測式(短時間で測れる)体温計",
+      "search_terms": {
+        "ja": [
+          "予測式 体温計",
+          "予測式 体温計 すぐ測れる",
+          "短時間 検温 体温計"
         ],
         "en": [],
         "ko": [],
