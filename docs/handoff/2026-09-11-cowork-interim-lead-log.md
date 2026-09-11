@@ -72,6 +72,31 @@ HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は�
 次の判定: 21:30 JST（Threads 20:30 枠後）。`search_inbound_pending` が着地ごとに出るなら
 「その訪問はトークンを取れない環境」で確定。人の着地で `search_completed` が出れば効果あり。
 
+### 未着手 2〜4 は Codex の 9/7〜9/10 修正で既に本番動作 → **本番確認済み**（D1 で確認、13:40 JST）
+
+- 2 希望価格ウォッチの検索語: `targetPriceSearchQuery`（`35fca07`）で短い検索語に落としている。
+  `target_price_observations` 直近2巡回（00:45Z / 03:45Z）で 5 件すべて `matched=1 / ABOVE_TARGET`
+  （商品を特定し価格比較できている。目標額未達なので通知なし＝正しい）。`NO_CANDIDATES` は解消
+- 3 #252 Threads 無限リトライ: `158c6ac` で `SOCIAL_PUBLISH_MAX_ATTEMPTS` と一時エラー判定を導入済み。
+  現在 `SOCIAL_RETRY_*` の行は 0。publish 段階の 5xx は二重投稿回避のため即 FAILED（設計）
+- 4 保存時の `target_product_key`: `61481ca`。9/8 以降の watch_price=1 wish は 2/2 に key あり
+
+### 未着手 6「SEO→検索遷移 0」の原因 → 人の読者がほぼ居ない。クローラを KPI から外した（#268）→ **本番確認済み**
+
+事実（D1、9/4〜9/11、QA/INTERNAL除外）: `seo_article_view` 147件・146人。記事ごとに同じ日に
+6〜11件ずつまとまって入り、146人のうち検索を始めたのは1人。`seo_search_transition` は30日で0。
+JS を実行する検索エンジン／SNS のリンク先取得が「読者」として数えられていた。
+
+対応（#268、head `da52e34`、CI ✅ 2026-09-11T04:49Z、テスト 2296 全通過）:
+`/api/events` の User-Agent が既知クローラなら `traffic_class='QA'`（既存の KPI 除外枠）。UA は保存しない。
+人のアプリ内ブラウザ（LINE / Instagram / Threads）は対象外（テストで固定）。
+**以後 `seo_*_view` の件数は大きく下がる。回帰ではなく実数。** 日次レポートはこの注記を付けること。
+
+### 今日の SNS 障害（記録）
+
+- `hoshilu-threads-amazon-boost-v1-2026-09-11-am`（09:30 JST）: `THREADS_PUBLISH_500`（Meta 側 `is_transient:true`）で FAILED。
+  publish 段階の 5xx は投稿が成立している可能性があるため再試行しない設計。再投入していない（重複回避）
+
 ### 定期タスク（Cowork側）
 
 9/8 に「Codexへ移管」として停止していた2本を再開した（Codex不在のため）:
@@ -84,11 +109,11 @@ HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は�
 ### 未着手（優先順）
 
 1. ~~`search_client_degraded` に autorun / manual を足す~~ → #267 で本番確認済み
-2. 希望価格ウォッチの検索語（商品名丸ごと → ブランド＋型番＋主要語）: `NO_CANDIDATES` 3/3 のまま
-3. Issue #252 Threads 無限リトライの Worker 側修正（4xx は即 FAILED）
-4. 希望価格ウォッチ保存時に `target_product_key`（record_key/ASIN）を持たせる
+2. ~~希望価格ウォッチの検索語~~ → Codex `35fca07`、本番確認済み
+3. ~~#252 Threads 無限リトライの Worker 側修正~~ → Codex `158c6ac`、本番確認済み
+4. ~~保存時の `target_product_key`~~ → Codex `61481ca`、本番確認済み
 5. AI女優の同一人物化（#18 の指摘）: reference/persona/QA を確認
-6. SEO→検索遷移（記事閲覧はあるが検索開始0）
+6. ~~SEO→検索遷移~~ → 原因は人の読者不在。#268 でクローラを除外、本番確認済み。次は「人の読者を作る」施策（SNS からの記事誘導）に置き換える
 
 ---
 
@@ -125,6 +150,8 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 |---|---|
 | 本番確認済み | #263 SNS着地の自動検索をトークン到着後に実行（効果は数字で要確認） |
 | 本番確認済み | #267 `search_inbound_pending` ＋ 縮退の autorun/manual 次元（#263 の効果判定はこれで可能になる。判定は 21:30 JST） |
+| 本番確認済み | #268 既知クローラの UA を KPI 除外（`seo_*_view` が下がるのは実数化） |
+| 本番確認済み | 未着手 2〜4 は Codex 既存修正で動作（`35fca07` / `158c6ac` / `61481ca`） |
 | 本番確認済み | #264 ショップ PROFILE に事業者名・店舗住所（ITG 3店に設定済み）／値下がり待ちの人数は5人以上のみ表示 |
 | 決定済み（対応不要） | OpenAI 課金は当面しない。`openai_backup BILLING_DISABLED` は既知状態 |
-| 未実装 | 上記「未着手」2〜6 |
+| 未実装 | 未着手 5（AI女優の同一人物化）／SEO の人の読者づくり |
