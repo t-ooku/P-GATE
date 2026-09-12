@@ -62,7 +62,8 @@ test('production monitor deduplicates incidents and waits for stable recovery', 
   assert.match(workflow, /\[AUTO\]\[HOSHILU\] Production reliability incident/u);
   assert.match(workflow, /issues\.find/u);
   assert.match(workflow, /hasThreeConsecutivePostIncidentSuccesses/u);
-  assert.match(workflow, /three consecutive new scheduled checks/u);
+  assert.match(workflow, /three consecutive new scheduled checks within the expected monitor cadence/u);
+  assert.doesNotMatch(workflow, /status: 'completed', per_page: 10/u);
   assert.match(workflow, /Search text and personal data are not recorded/u);
 });
 
@@ -98,6 +99,31 @@ test('recovery requires two prior original scheduled successes after last detect
     { id: 60, event: 'schedule', run_attempt: 1, created_at: '2026-08-21T18:34:21Z', conclusion: 'success' }
   ];
   assert.equal(hasThreeConsecutivePostIncidentSuccesses(recovered, 63, issueBody, 1, 'schedule'), true);
+
+  const completedOnly = recovered.filter((run) => run.id !== 63);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(
+    completedOnly,
+    63,
+    issueBody,
+    1,
+    'schedule',
+    '2026-08-21T19:12:00Z'
+  ), true);
+
+  const delayed = recovered.map((run) => {
+    if (run.id === 62) return { ...run, created_at: '2026-08-21T18:40:00Z' };
+    if (run.id === 61) return { ...run, created_at: '2026-08-21T18:35:00Z' };
+    return run;
+  });
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(delayed, 63, issueBody, 1, 'schedule'), false);
+  assert.equal(hasThreeConsecutivePostIncidentSuccesses(
+    delayed.filter((run) => run.id !== 63),
+    63,
+    issueBody,
+    1,
+    'schedule',
+    '2026-08-21T19:12:00Z'
+  ), false);
 
   const interrupted = recovered.map((run) => run.id === 62
     ? { ...run, conclusion: 'failure' } : run);
