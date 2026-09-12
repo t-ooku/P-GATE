@@ -81,6 +81,33 @@ HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は�
   評価軸を「人の着地（visible）と検索完了」に変える。visible の pending が多ければ Turnstile を
   `appearance=interaction-only` / `execution=execute` にする案を大隆さんへ提案（監視基準は緩めない）
 
+**判定 3回目（9/12 21:30 JST）→ 「人の SNS 流入はほぼゼロ」で確定**
+- 9/11 21:40 以降の Threads 着地 8件（6投稿分）: すべて投稿の約1分後に到着、40秒以内に離脱
+  （`search_inbound_pending` / `_hidden` ともに 0 ＝ 開いたまま待つ訪問がない）。検索開始 0／完了 0／縮退 0
+- 結論: 投稿直後の着地は Threads 側の事前読み込み／bot。#263 の効果は「人が来ていないので測れない」。
+  以後 SNS の評価軸は 着地数ではなく `search_completed` と `target_price_watch_set`（人の行動）だけにする
+- Turnstile の設定変更（interaction-only 等）は、人の visible pending が観測されるまで**行わない**
+
+---
+
+## 2026-09-12
+
+### Runway 自動生成（土 06:00）→ **未生成**（Issue #270、クレジット消費なし）
+
+`AUTO_REEL_COMPETING_SLOT_PRECHECK`: 同じ 20:15 JST 枠に `hoshilu-ai-actress-daily-v1-instagram-2026-09-12`
+が APPROVED だったため二重投稿回避で停止。v1 参照での生成確認は次回（月・水・土）に持ち越し。
+
+### 発見: 22歳設定（v2）の毎日リールが止まっていない → **要判断（大隆さん）**
+
+- キャンペーン `hoshilu-ai-actress-daily-v1`（8/29 作成、権利台帳「承認済み v2 参照画像」）が毎日 20:15 JST に
+  Instagram + X へ PUBLISHED（8/28〜9/12 で各14件）。9/13〜9/25 に APPROVED が **IG 13・X 13 = 26件** 残っている
+- 9/4 の Codex 宛引き継ぎ `docs/handoff/2026-09-04-target-shift-sns-handover.md` §「毎日20:15 JST」は
+  「v1 を毎日1本、v2 の毎日枠は停止」。**Codex 側で未実施のまま**（9/7・9/9 の2日分だけ CANCELLED）
+- Runway 日（月・水・土）にこの行が残っていると precheck で自動生成が毎回止まる
+- 提示した選択肢: (1) 26件すべて CANCELLED（9/4 決定どおり） (2) 月・水・土の 10 件だけ CANCELLED
+  （9/14,16,19,21,23 の IG+X） (3) 何もしない。**既存行 UPDATE は §54 承認事項なので指示待ち**
+- 実行 SQL（承認後）: `UPDATE social_post_queue SET status='CANCELLED', last_error='CANCELLED_BY_TAKAYUKI_2026-09-12', updated_at=<now> WHERE campaign_id='hoshilu-ai-actress-daily-v1' AND status='APPROVED' AND jst_publish_date >= '2026-09-13'`（案2は `AND jst_publish_date IN (...)` を付ける）
+
 ### 未着手 2〜4 は Codex の 9/7〜9/10 修正で既に本番動作 → **本番確認済み**（D1 で確認、13:40 JST）
 
 - 2 希望価格ウォッチの検索語: `targetPriceSearchQuery`（`35fca07`）で短い検索語に落としている。
@@ -182,5 +209,7 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 本番確認済み | 未着手 2〜4 は Codex 既存修正で動作（`35fca07` / `158c6ac` / `61481ca`） |
 | 本番確認済み | #264 ショップ PROFILE に事業者名・店舗住所（ITG 3店に設定済み）／値下がり待ちの人数は5人以上のみ表示 |
 | 決定済み（対応不要） | OpenAI 課金は当面しない。`openai_backup BILLING_DISABLED` は既知状態 |
-| 実装済み・本番未確認 | AI女優の参照を v1 に統一（`22c6fef`）。9/12 土の自動生成で確認。v2 生成済み2本の扱いは大隆さん判断待ち |
+| 実装済み・本番未確認 | AI女優の参照を v1 に統一（`22c6fef`）。9/12 は precheck で未生成（#270）→ 次の月・水・土で確認。v2 生成済み2本の扱いは大隆さん判断待ち |
+| 要判断（大隆さん） | v2 毎日リール（`hoshilu-ai-actress-daily-v1`）の APPROVED 26件の取り消し。9/4 引き継ぎが Codex 側で未実施 |
+| 確定 | SNS 着地は事前読み込み／bot。人の SNS 流入はほぼゼロ。評価軸を検索完了・ウォッチ設定に変更 |
 | 未実装 | SEO の人の読者づくり（SNS からの記事誘導） |
