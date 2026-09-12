@@ -268,3 +268,29 @@ test('KPI読取はD1 RESTリクエストの同時実行数を制限する', asyn
   await Promise.all(Array.from({ length: 8 }, () => db.prepare('SELECT 1').all()));
   assert.equal(maximum, 2);
 });
+
+test('KPI読取は429後の待機を後続リクエストにも共有する', async () => {
+  let clock = 1000;
+  const waits = [];
+  let calls = 0;
+  const db = createCloudflareReadOnlyD1({
+    accountId: 'account', apiToken: 'token', databaseId: 'database',
+    attempts: 2, retryMs: 10, minRequestIntervalMs: 0,
+    now: () => clock,
+    async sleep(ms) { waits.push(ms); clock += ms; },
+    async fetcher() {
+      calls += 1;
+      if (calls === 1) return { ok: false, status: 429, headers: { get: () => '0.025' } };
+      return {
+        ok: true, status: 200,
+        async json() { return { success: true, result: [{ success: true, results: [{ count: 1 }] }] }; }
+      };
+    }
+  });
+  const results = await Promise.all([
+    db.prepare('SELECT 1').first(), db.prepare('SELECT 2').first()
+  ]);
+  assert.deepEqual(results, [{ count: 1 }, { count: 1 }]);
+  assert.equal(calls, 3);
+  assert.deepEqual(waits, [25]);
+});

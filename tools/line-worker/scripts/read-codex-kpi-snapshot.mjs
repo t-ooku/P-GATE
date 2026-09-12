@@ -23,10 +23,16 @@ export function createCloudflareReadOnlyD1(options = {}) {
   const apiToken = String(options.apiToken || '').trim();
   const databaseId = String(options.databaseId || DEFAULT_DATABASE_ID).trim();
   const fetcher = options.fetcher || fetch;
-  const attempts = Math.max(1, Math.min(3, Number(options.attempts) || 3));
+  const attempts = Math.max(1, Math.min(5, Number(options.attempts) || 5));
   const retryMs = Math.max(0, options.retryMs == null ? 1000 : Number(options.retryMs) || 0);
-  const maxConcurrency = Math.max(1, Math.min(4, Number(options.maxConcurrency) || 2));
+  const maxConcurrency = Math.max(1, Math.min(4, Number(options.maxConcurrency) || 1));
+  const minRequestIntervalMs = Math.max(0, Math.min(2000,
+    options.minRequestIntervalMs == null ? 100 : Number(options.minRequestIntervalMs) || 0));
+  const now = options.now || Date.now;
+  const sleep = options.sleep || (ms => new Promise(resolve => setTimeout(resolve, ms)));
   let activeRequests = 0;
+  let nextRequestAt = 0;
+  let lastRequestStartedAt = 0;
   const requestWaiters = [];
   assert(accountId, 'CLOUDFLARE_ACCOUNT_ID_MISSING');
   assert(apiToken, 'CLOUDFLARE_API_TOKEN_MISSING');
@@ -47,8 +53,28 @@ export function createCloudflareReadOnlyD1(options = {}) {
   };
   const withRequestSlot = async operation => {
     await acquireRequestSlot();
-    try { return await operation(); }
+    try {
+      const waitMs = Math.max(nextRequestAt, lastRequestStartedAt + minRequestIntervalMs) - now();
+      if (waitMs > 0) await sleep(waitMs);
+      lastRequestStartedAt = now();
+      return await operation();
+    }
     finally { releaseRequestSlot(); }
+  };
+
+  const retryDelay = (attempt, response) => {
+    const header = response?.headers?.get?.('retry-after');
+    let headerMs = 0;
+    if (/^\d+(?:\.\d+)?$/u.test(String(header || '').trim())) {
+      headerMs = Number(header) * 1000;
+    } else if (header) {
+      const retryAt = Date.parse(header);
+      if (Number.isFinite(retryAt)) headerMs = retryAt - now();
+    }
+    return Math.max(0, Math.min(30000, headerMs || retryMs * (2 ** (attempt - 1))));
+  };
+  const startCooldown = (attempt, response) => {
+    nextRequestAt = Math.max(nextRequestAt, now() + retryDelay(attempt, response));
   };
 
   const execute = async (sql, params = []) => {
@@ -56,20 +82,27 @@ export function createCloudflareReadOnlyD1(options = {}) {
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
       try {
         return await withRequestSlot(async () => {
-          const response = await fetcher(endpoint, {
-            method: 'POST',
-            headers: {
-              authorization: `Bearer ${apiToken}`,
-              'content-type': 'application/json',
-              'user-agent': 'HOSHILU-Codex-KPI-ReadOnly/1.0'
-            },
-            body: JSON.stringify({ sql: statement, params }),
-            signal: AbortSignal.timeout(15000)
-          });
+          let response;
+          try {
+            response = await fetcher(endpoint, {
+              method: 'POST',
+              headers: {
+                authorization: `Bearer ${apiToken}`,
+                'content-type': 'application/json',
+                'user-agent': 'HOSHILU-Codex-KPI-ReadOnly/1.0'
+              },
+              body: JSON.stringify({ sql: statement, params }),
+              signal: AbortSignal.timeout(15000)
+            });
+          } catch (error) {
+            if (['AbortError', 'TimeoutError', 'TypeError'].includes(error?.name)) startCooldown(attempt);
+            throw error;
+          }
           const status = Number(response?.status) || 0;
           if (!response?.ok) {
             const error = new Error(`CODEX_KPI_D1_HTTP_${status}`);
             error.retryable = TRANSIENT_D1_HTTP_STATUS.has(status) || status >= 500;
+            if (error.retryable) startCooldown(attempt, response);
             throw error;
           }
           const payload = await response.json();
@@ -80,7 +113,6 @@ export function createCloudflareReadOnlyD1(options = {}) {
       } catch (error) {
         const transientNetworkError = ['AbortError', 'TimeoutError', 'TypeError'].includes(error?.name);
         if (attempt >= attempts || (!error?.retryable && !transientNetworkError)) throw error;
-        await new Promise(resolve => setTimeout(resolve, retryMs * attempt));
       }
     }
     throw new Error('CODEX_KPI_D1_QUERY_FAILED');
