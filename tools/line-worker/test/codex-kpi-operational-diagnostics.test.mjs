@@ -248,3 +248,23 @@ test('KPI読取は永続的な4xxを再試行しない', async () => {
   await assert.rejects(db.prepare('SELECT 1').all(), /CODEX_KPI_D1_HTTP_400/);
   assert.equal(calls, 1);
 });
+
+test('KPI読取はD1 RESTリクエストの同時実行数を制限する', async () => {
+  let active = 0;
+  let maximum = 0;
+  const db = createCloudflareReadOnlyD1({
+    accountId: 'account', apiToken: 'token', databaseId: 'database', maxConcurrency: 2,
+    async fetcher() {
+      active += 1;
+      maximum = Math.max(maximum, active);
+      await new Promise(resolve => setTimeout(resolve, 5));
+      active -= 1;
+      return {
+        ok: true, status: 200,
+        async json() { return { success: true, result: [{ success: true, results: [{ count: 1 }] }] }; }
+      };
+    }
+  });
+  await Promise.all(Array.from({ length: 8 }, () => db.prepare('SELECT 1').all()));
+  assert.equal(maximum, 2);
+});

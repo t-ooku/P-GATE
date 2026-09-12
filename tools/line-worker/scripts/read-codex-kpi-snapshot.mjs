@@ -25,35 +25,58 @@ export function createCloudflareReadOnlyD1(options = {}) {
   const fetcher = options.fetcher || fetch;
   const attempts = Math.max(1, Math.min(3, Number(options.attempts) || 3));
   const retryMs = Math.max(0, options.retryMs == null ? 1000 : Number(options.retryMs) || 0);
+  const maxConcurrency = Math.max(1, Math.min(4, Number(options.maxConcurrency) || 2));
+  let activeRequests = 0;
+  const requestWaiters = [];
   assert(accountId, 'CLOUDFLARE_ACCOUNT_ID_MISSING');
   assert(apiToken, 'CLOUDFLARE_API_TOKEN_MISSING');
   assert(databaseId, 'HOSHILU_D1_DATABASE_ID_MISSING');
   const endpoint = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/d1/database/${encodeURIComponent(databaseId)}/query`;
 
+  const acquireRequestSlot = async () => {
+    if (activeRequests < maxConcurrency) {
+      activeRequests += 1;
+      return;
+    }
+    await new Promise(resolve => requestWaiters.push(resolve));
+  };
+  const releaseRequestSlot = () => {
+    const next = requestWaiters.shift();
+    if (next) next();
+    else activeRequests -= 1;
+  };
+  const withRequestSlot = async operation => {
+    await acquireRequestSlot();
+    try { return await operation(); }
+    finally { releaseRequestSlot(); }
+  };
+
   const execute = async (sql, params = []) => {
     const statement = assertReadOnlySql(sql);
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
       try {
-        const response = await fetcher(endpoint, {
-          method: 'POST',
-          headers: {
-            authorization: `Bearer ${apiToken}`,
-            'content-type': 'application/json',
-            'user-agent': 'HOSHILU-Codex-KPI-ReadOnly/1.0'
-          },
-          body: JSON.stringify({ sql: statement, params }),
-          signal: AbortSignal.timeout(15000)
+        return await withRequestSlot(async () => {
+          const response = await fetcher(endpoint, {
+            method: 'POST',
+            headers: {
+              authorization: `Bearer ${apiToken}`,
+              'content-type': 'application/json',
+              'user-agent': 'HOSHILU-Codex-KPI-ReadOnly/1.0'
+            },
+            body: JSON.stringify({ sql: statement, params }),
+            signal: AbortSignal.timeout(15000)
+          });
+          const status = Number(response?.status) || 0;
+          if (!response?.ok) {
+            const error = new Error(`CODEX_KPI_D1_HTTP_${status}`);
+            error.retryable = TRANSIENT_D1_HTTP_STATUS.has(status) || status >= 500;
+            throw error;
+          }
+          const payload = await response.json();
+          const result = Array.isArray(payload?.result) ? payload.result[0] : null;
+          assert(payload?.success === true && result?.success !== false, 'CODEX_KPI_D1_QUERY_FAILED');
+          return { results: Array.isArray(result?.results) ? result.results : [] };
         });
-        const status = Number(response?.status) || 0;
-        if (!response?.ok) {
-          const error = new Error(`CODEX_KPI_D1_HTTP_${status}`);
-          error.retryable = TRANSIENT_D1_HTTP_STATUS.has(status) || status >= 500;
-          throw error;
-        }
-        const payload = await response.json();
-        const result = Array.isArray(payload?.result) ? payload.result[0] : null;
-        assert(payload?.success === true && result?.success !== false, 'CODEX_KPI_D1_QUERY_FAILED');
-        return { results: Array.isArray(result?.results) ? result.results : [] };
       } catch (error) {
         const transientNetworkError = ['AbortError', 'TimeoutError', 'TypeError'].includes(error?.name);
         if (attempt >= attempts || (!error?.retryable && !transientNetworkError)) throw error;

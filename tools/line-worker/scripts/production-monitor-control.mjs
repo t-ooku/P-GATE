@@ -3,6 +3,7 @@ import { pathToFileURL } from 'node:url';
 
 const DEFAULT_DATABASE_ID = '17629324-b771-4348-982c-c25da48c29b2';
 const HEARTBEAT_EVENT_ID = 'reliability-heartbeat:github_schedule';
+const TRANSIENT_D1_HTTP_STATUS = new Set([408, 425, 429]);
 
 function assert(condition, code) {
   if (!condition) throw new Error(code);
@@ -14,25 +15,42 @@ function safeRunId(value) {
   return runId;
 }
 
-async function d1Query({ accountId, apiToken, databaseId = DEFAULT_DATABASE_ID, fetcher = fetch }, sql, params) {
+async function d1Query({ accountId, apiToken, databaseId = DEFAULT_DATABASE_ID, fetcher = fetch,
+  attempts: requestedAttempts = 3, retryMs: requestedRetryMs = 2000 }, sql, params) {
   assert(String(accountId || '').trim(), 'CLOUDFLARE_ACCOUNT_ID_MISSING');
   assert(String(apiToken || '').trim(), 'CLOUDFLARE_API_TOKEN_MISSING');
+  const attempts = Math.max(1, Math.min(3, Number(requestedAttempts) || 3));
+  const retryMs = Math.max(0, Math.min(10000, Number(requestedRetryMs) || 0));
   const endpoint = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/d1/database/${encodeURIComponent(databaseId)}/query`;
-  const response = await fetcher(endpoint, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${apiToken}`,
-      'content-type': 'application/json',
-      'user-agent': 'HOSHILU-Production-Monitor-Control/1.0'
-    },
-    body: JSON.stringify({ sql, params }),
-    signal: AbortSignal.timeout(10000)
-  });
-  assert(response?.ok, `MONITOR_CONTROL_D1_HTTP_${Number(response?.status) || 0}`);
-  const payload = await response.json();
-  const result = Array.isArray(payload?.result) ? payload.result[0] : null;
-  assert(payload?.success === true && result?.success !== false, 'MONITOR_CONTROL_D1_QUERY_FAILED');
-  return result;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetcher(endpoint, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${apiToken}`,
+          'content-type': 'application/json',
+          'user-agent': 'HOSHILU-Production-Monitor-Control/1.0'
+        },
+        body: JSON.stringify({ sql, params }),
+        signal: AbortSignal.timeout(10000)
+      });
+      const status = Number(response?.status) || 0;
+      if (!response?.ok) {
+        const error = new Error(`MONITOR_CONTROL_D1_HTTP_${status}`);
+        error.retryable = TRANSIENT_D1_HTTP_STATUS.has(status) || status >= 500;
+        throw error;
+      }
+      const payload = await response.json();
+      const result = Array.isArray(payload?.result) ? payload.result[0] : null;
+      assert(payload?.success === true && result?.success !== false, 'MONITOR_CONTROL_D1_QUERY_FAILED');
+      return result;
+    } catch (error) {
+      const transientNetworkError = ['AbortError', 'TimeoutError', 'TypeError'].includes(error?.name);
+      if (attempt >= attempts || (!error?.retryable && !transientNetworkError)) throw error;
+      await new Promise(resolve => setTimeout(resolve, retryMs * attempt));
+    }
+  }
+  throw new Error('MONITOR_CONTROL_D1_QUERY_FAILED');
 }
 
 export async function writeGithubScheduleHeartbeat(options = {}) {

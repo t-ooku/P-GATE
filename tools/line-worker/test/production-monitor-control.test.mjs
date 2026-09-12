@@ -55,3 +55,24 @@ test('control writer rejects unsafe status, run IDs and incident IDs before D1',
   await assert.rejects(acknowledgeReliabilityIncidents({ payload:{ cutoff:new Date().toISOString(), incident_ids:['unsafe'] } }),
     /MONITOR_CONTROL_ACK_ID_INVALID/u);
 });
+
+test('control writer retries a transient D1 429 but not a permanent 4xx', async () => {
+  let transientCalls = 0;
+  await writeGithubScheduleHeartbeat({
+    accountId:'account', apiToken:'token', status:'COMPLETED', runId:'2',
+    retryMs:0,
+    async fetcher(_url, init) {
+      transientCalls += 1;
+      if (transientCalls === 1) return { ok:false, status:429 };
+      return mockD1(() => {})(_url, init);
+    }
+  });
+  assert.equal(transientCalls, 2);
+
+  let permanentCalls = 0;
+  await assert.rejects(writeGithubScheduleHeartbeat({
+    accountId:'account', apiToken:'token', status:'COMPLETED', runId:'3',
+    async fetcher() { permanentCalls += 1; return { ok:false, status:400 }; }
+  }), /MONITOR_CONTROL_D1_HTTP_400/u);
+  assert.equal(permanentCalls, 1);
+});
