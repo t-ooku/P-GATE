@@ -6,11 +6,11 @@ import { searchYahooShopping } from './yahoo-shopping-api.mjs';
 const EVENT_TYPE = 'deep_canary_result';
 const BUDGET_EVENT_TYPE = 'deep_canary_budget';
 const MONTHLY_LIMIT_MICRO_USD = 5_000_000;
-const PRICING_REVISION = '2026-08-13';
-const PRICING_REVIEW_DEADLINE_MS = Date.parse('2026-09-13T00:00:00.000Z');
+const PRICING_REVISION = '2026-09-13';
+const PRICING_REVIEW_DEADLINE_MS = Date.parse('2026-10-13T00:00:00.000Z');
 const PRICING = Object.freeze({
   query_structurer: Object.freeze({ model: 'gemini-3.1-flash-lite', reservation: 100_000, input: 0.25, output: 1.5 }),
-  ai_chat_primary: Object.freeze({ model: 'gemini-3.6-flash', reservation: 500_000, input: 1.5, output: 7.5 }),
+  ai_chat_primary: Object.freeze({ model: 'gemini-3.6-flash', reservation: 500_000, input: 0.75, output: 3.75 }),
   openai_backup: Object.freeze({ model: 'gpt-5', reservation: 7_000, input: 1.25, output: 10 })
 });
 const COMPONENTS = new Set([

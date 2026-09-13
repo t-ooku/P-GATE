@@ -146,6 +146,12 @@ test('deep canary frequency is 15m marketplaces/1h Gemini/6h backup without a pu
     ['rakuten', 'yahoo']);
 });
 
+test('paid canary pricing is reviewed monthly', () => {
+  assert.equal(deepCanaryTest.PRICING_REVISION, '2026-09-13');
+  assert.equal(deepCanaryTest.PRICING_REVIEW_DEADLINE_MS,
+    Date.parse('2026-10-13T00:00:00.000Z'));
+});
+
 test('only transient OpenAI result codes are eligible for the one delayed retry', () => {
   for (const code of [
     'CANARY_PROVIDER_TIMEOUT', 'CANARY_PROVIDER_RATE_LIMITED', 'CANARY_PROVIDER_UPSTREAM_5XX',
@@ -511,13 +517,13 @@ test('paid probes atomically reserve, settle from provider usage, and persist no
   const { fetcher } = providerHarness();
   const result = await runDeepCanaryCycle(env, new Date('2026-08-13T06:07:00Z'), fetcher);
   assert.equal(result.results.every((row) => row.status === 'PASS'), true);
-  assert.equal(result.monthly_micro_usd, 776);
+  assert.equal(result.monthly_micro_usd, 607);
 
   const budget = sqlite.prepare(`SELECT medium,campaign,content,marketplace
     FROM growth_events WHERE event_type='deep_canary_budget' ORDER BY medium`).all()
     .map((row) => ({ ...row }));
   assert.deepEqual(budget, [
-    { medium: 'ai_chat_primary', campaign: 'SETTLED', content: '0000338', marketplace: '0500000' },
+    { medium: 'ai_chat_primary', campaign: 'SETTLED', content: '0000169', marketplace: '0500000' },
     { medium: 'openai_backup', campaign: 'SETTLED', content: '0000375', marketplace: '0007000' },
     { medium: 'query_structurer', campaign: 'SETTLED', content: '0000063', marketplace: '0100000' }
   ]);
@@ -698,9 +704,9 @@ test('expired pricing revision blocks every paid AI probe while marketplace prob
   const { fetcher, calls } = providerHarness();
   const result = await runDeepCanaryCycle(
     env,
-    new Date('2026-09-13T00:07:00.000Z'),
+    new Date('2026-10-13T00:07:00.000Z'),
     fetcher,
-    { clock: () => new Date('2026-09-13T00:07:01.000Z') }
+    { clock: () => new Date('2026-10-13T00:07:01.000Z') }
   );
   for (const component of ['query_structurer', 'ai_chat_primary', 'openai_backup']) {
     assert.equal(result.results.find((row) => row.component === component)?.code,
