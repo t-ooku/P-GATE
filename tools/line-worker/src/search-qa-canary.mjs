@@ -44,7 +44,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-09-10 展開規則 auto-off-humidifier の代表クエリ（機能語「つけっぱなしでも安心」→ 売り手の語「自動オフ」）。
   { id: 'auto_off_humidifier', query: 'つけっぱなしでも安心な加湿器', expect: /加湿器|humidifier/iu, reject: /空気清浄機|除湿機|扇風機|コンセント|フィルターのみ|交換用/u },
   // 2026-09-12 展開規則 easy-clean-baby-bottle の代表クエリ（機能語「奥まで洗いやすい」→ 売り手の語「広口」）。
-  { id: 'easy_clean_baby_bottle', query: '奥まで洗いやすい哺乳瓶', expect: /哺乳瓶|哺乳びん|nursing\s*bottle|baby\s*bottle/iu, reject: /乳首のみ|替えパーツ|パーツのみ|ケースのみ|搾乳器|消毒(?:ケース|ボックス)/u }
+  { id: 'easy_clean_baby_bottle', query: '奥まで洗いやすい哺乳瓶', expect: /哺乳瓶|哺乳びん|nursing\s*bottle|baby\s*bottle/iu, reject: /乳首のみ|替えパーツ|パーツのみ|ケースのみ|搾乳器|消毒(?:ケース|ボックス)/u },
+  // 2026-09-14 展開規則 energy-saving-kotatsu の代表クエリ（機能語「電気代が気にならない」→ 売り手の語「省エネ」）。
+  { id: 'energy_saving_kotatsu', query: '電気代が気にならないこたつ', expect: /こたつ|コタツ|kotatsu/iu, reject: /ヒーター|電気毛布|扇風機|布団のみ|継ぎ脚のみ|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
