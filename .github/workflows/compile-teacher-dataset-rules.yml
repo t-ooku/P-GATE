@@ -29,6 +29,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: compile-teacher-dataset-rules-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   compile:
     runs-on: ubuntu-latest
@@ -70,5 +74,24 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git commit -m "chore(teacher): auto-generate batch-019 from feature rules and recompile teacher-dataset-rules.generated.json"
-            git push origin HEAD:feature/ui-search-v2
+            for attempt in 1 2 3; do
+              if git push origin HEAD:feature/ui-search-v2; then
+                exit 0
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "::error::Generated rules could not be pushed after 3 fast-forward attempts"
+                exit 1
+              fi
+              echo "::warning::Branch advanced during compilation; rebasing and revalidating generated rules"
+              git fetch origin feature/ui-search-v2
+              git rebase origin/feature/ui-search-v2
+              node tools/line-worker/scripts/build-feature-teacher-batch.mjs
+              node tools/line-worker/scripts/compile-teacher-dataset-rules.mjs
+              git add tools/line-worker/evaluation/teacher-dataset/2026-09-05-claude-batch-019.json tools/line-worker/src/search-quality/teacher-dataset-rules.generated.json
+              if ! git diff --cached --quiet; then
+                git commit --amend --no-edit
+              fi
+              npm test --prefix tools/line-worker
+              npm run check:search-quality --prefix tools/line-worker
+            done
           fi
