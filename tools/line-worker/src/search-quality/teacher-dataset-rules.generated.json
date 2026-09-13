@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T23:58:28.415Z",
+  "generated_at": "2026-09-13T23:48:19.763Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -27,7 +27,7 @@
     "2026-09-10-claude-batch-024.json",
     "2026-09-11-claude-batch-025.json"
   ],
-  "entry_count": 1205,
+  "entry_count": 1235,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -19838,6 +19838,636 @@
           "マッサージガン",
           "筋膜リリース ガン",
           "肩こり マッサージ器 強め"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "45988e25cec2033f0ede31284cd3582a1b341980f3ad2f463ce88282f685ba89",
+      "query_text": "少量だけ炊ける炊飯器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "small-portion-rice-cooker",
+      "ideal_answer": "少量炊きモードに対応した1〜3合の小型炊飯器",
+      "search_terms": {
+        "ja": [
+          "少量炊き 炊飯器",
+          "一人用 炊飯器",
+          "少量モード 炊飯器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "62605099623b5860a46dee19fae5f94e8b28be582d4aab0c4312fa517b533fef",
+      "query_text": "一人分だけ作れる炊飯器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "small-portion-rice-cooker",
+      "ideal_answer": "少量炊きモードに対応した1〜3合の小型炊飯器",
+      "search_terms": {
+        "ja": [
+          "少量炊き 炊飯器",
+          "一人用 炊飯器",
+          "少量モード 炊飯器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "64c85ed94b4189e054c3bf2b50f83c9ecdb427da0aa199c40f47d33294de05a3",
+      "query_text": "少ない量でも美味しく炊ける炊飯器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "small-portion-rice-cooker",
+      "ideal_answer": "少量炊きモードに対応した1〜3合の小型炊飯器",
+      "search_terms": {
+        "ja": [
+          "少量炊き 炊飯器",
+          "一人用 炊飯器",
+          "少量モード 炊飯器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "361186bd38ecdfb08d8fa2bd23dca67e7f29618969d9b36edbfc55176ee27371",
+      "query_text": "投げても割れない子供の食器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "unbreakable-baby-tableware",
+      "ideal_answer": "樹脂やシリコンなど割れにくい素材のベビー・キッズ食器",
+      "search_terms": {
+        "ja": [
+          "割れにくい ベビー食器",
+          "落としても割れない 離乳食 食器",
+          "樹脂製 割れない キッズ食器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c2406156a45feea5962cc3695be133a34c806e85dd8397c8c6c3f58fbcc0d9a6",
+      "query_text": "落としても割れない離乳食用のお皿",
+      "locale": "ja",
+      "persona": "general",
+      "category": "unbreakable-baby-tableware",
+      "ideal_answer": "樹脂やシリコンなど割れにくい素材のベビー・キッズ食器",
+      "search_terms": {
+        "ja": [
+          "割れにくい ベビー食器",
+          "落としても割れない 離乳食 食器",
+          "樹脂製 割れない キッズ食器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4b382ca7ba93f2201e23da66765189c213e47dca01ece14861d36fb9777144a1",
+      "query_text": "赤ちゃんが使っても欠けない茶碗",
+      "locale": "ja",
+      "persona": "general",
+      "category": "unbreakable-baby-tableware",
+      "ideal_answer": "樹脂やシリコンなど割れにくい素材のベビー・キッズ食器",
+      "search_terms": {
+        "ja": [
+          "割れにくい ベビー食器",
+          "落としても割れない 離乳食 食器",
+          "樹脂製 割れない キッズ食器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2e7deac357a154d231560c49e23242a416e0557e291f1d3f017fac0aa7e8f366",
+      "query_text": "黄ばみが落ちる洗濯洗剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "yellowing-stain-remover",
+      "ideal_answer": "酸素系漂白剤や黄ばみ落とし専用の洗濯洗剤",
+      "search_terms": {
+        "ja": [
+          "酸素系漂白剤 黄ばみ",
+          "黄ばみ落とし 漂白剤",
+          "襟の黄ばみ 洗剤"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7d283b95f7fb1fbcc2c80aba036f15596eb846650b8bac207b6d10fa476ffd6f",
+      "query_text": "襟の黄ばみが取れる漂白剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "yellowing-stain-remover",
+      "ideal_answer": "酸素系漂白剤や黄ばみ落とし専用の洗濯洗剤",
+      "search_terms": {
+        "ja": [
+          "酸素系漂白剤 黄ばみ",
+          "黄ばみ落とし 漂白剤",
+          "襟の黄ばみ 洗剤"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7716375889680ff1756c436dc8656e19925c5e3cd8b72684af4a5914fa1a6cc2",
+      "query_text": "白いシャツが黄ばまない洗剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "yellowing-stain-remover",
+      "ideal_answer": "酸素系漂白剤や黄ばみ落とし専用の洗濯洗剤",
+      "search_terms": {
+        "ja": [
+          "酸素系漂白剤 黄ばみ",
+          "黄ばみ落とし 漂白剤",
+          "襟の黄ばみ 洗剤"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "70b3da370f1b45ce6993564823b2f047ec9b7f39e330cd39608a21f0f79bd63a",
+      "query_text": "毛穴を隠してくれる化粧下地",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pore-blur-primer",
+      "ideal_answer": "毛穴カバー・凹凸補正効果をうたう化粧下地・プライマー",
+      "search_terms": {
+        "ja": [
+          "毛穴レス 化粧下地",
+          "毛穴カバー 下地",
+          "凹凸補正 プライマー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "639b69aacfe63068d9bc02a298e916a9cee1fa5f17d588860315c3cafa666a65",
+      "query_text": "毛穴が目立たなくなる下地",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pore-blur-primer",
+      "ideal_answer": "毛穴カバー・凹凸補正効果をうたう化粧下地・プライマー",
+      "search_terms": {
+        "ja": [
+          "毛穴レス 化粧下地",
+          "毛穴カバー 下地",
+          "凹凸補正 プライマー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b7e6cd8041e152e67bccc0b88cd232434d8cc0624a642e6cd6d045c34a76195f",
+      "query_text": "凹凸をカバーしてくれるプライマー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pore-blur-primer",
+      "ideal_answer": "毛穴カバー・凹凸補正効果をうたう化粧下地・プライマー",
+      "search_terms": {
+        "ja": [
+          "毛穴レス 化粧下地",
+          "毛穴カバー 下地",
+          "凹凸補正 プライマー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "dbdb6de0fbacc90e6eca2f04293f1a54bd75ea2b41c01c31998249f3eb913c3d",
+      "query_text": "隙間にぴったり収まる収納ラック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gap-fit-narrow-storage",
+      "ideal_answer": "幅が調整できる、または薄型・スリムな隙間収納ラック・ワゴン",
+      "search_terms": {
+        "ja": [
+          "スリム 隙間収納ラック",
+          "隙間ワゴン スリム",
+          "薄型 隙間収納"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "9b3452099eed8241e51021298b3f7631b4c1edd894b485690e9d15754337bb40",
+      "query_text": "洗濯機横の狭いスペースにも置けるワゴン",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gap-fit-narrow-storage",
+      "ideal_answer": "幅が調整できる、または薄型・スリムな隙間収納ラック・ワゴン",
+      "search_terms": {
+        "ja": [
+          "スリム 隙間収納ラック",
+          "隙間ワゴン スリム",
+          "薄型 隙間収納"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "43c9c407f4f550d0ac50fe95641a3e6d0133d8b1a581079962ac94bca064b0fa",
+      "query_text": "冷蔵庫の隙間にちょうど入るスリムラック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gap-fit-narrow-storage",
+      "ideal_answer": "幅が調整できる、または薄型・スリムな隙間収納ラック・ワゴン",
+      "search_terms": {
+        "ja": [
+          "スリム 隙間収納ラック",
+          "隙間ワゴン スリム",
+          "薄型 隙間収納"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7ad53b44e16a6722c549de36b1adc1a158f06080e7dca80fb38a954f024328ea",
+      "query_text": "重い物を乗せても曲がらない突っ張り棚",
+      "locale": "ja",
+      "persona": "general",
+      "category": "heavy-duty-tension-rack",
+      "ideal_answer": "耐荷重の高い突っ張り棚・つっぱり棒",
+      "search_terms": {
+        "ja": [
+          "耐荷重 突っ張り棚",
+          "耐荷重 つっぱり棒",
+          "頑丈 突っ張りラック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "33a82f4f5ea6f70f9d8abc9f20333de588513724aa5c314b880042a0d68161a5",
+      "query_text": "本をたくさん置いてもたわまないつっぱり棚",
+      "locale": "ja",
+      "persona": "general",
+      "category": "heavy-duty-tension-rack",
+      "ideal_answer": "耐荷重の高い突っ張り棚・つっぱり棒",
+      "search_terms": {
+        "ja": [
+          "耐荷重 突っ張り棚",
+          "耐荷重 つっぱり棒",
+          "頑丈 突っ張りラック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "22cd48796a8bf94a0cbacd10454ccb798d26dedb685ef9b5f9c5792a8348dc36",
+      "query_text": "荷物を乗せてもグラグラしない突っ張りラック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "heavy-duty-tension-rack",
+      "ideal_answer": "耐荷重の高い突っ張り棚・つっぱり棒",
+      "search_terms": {
+        "ja": [
+          "耐荷重 突っ張り棚",
+          "耐荷重 つっぱり棒",
+          "頑丈 突っ張りラック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1aa262370aaa458eabebf7573b7b7b49d87d0f11bf8c30d85250cdaa27c79fff",
+      "query_text": "背負っても肩が痛くならない軽いランドセル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lightweight-school-backpack",
+      "ideal_answer": "超軽量・軽量をうたうランドセルや通学リュック",
+      "search_terms": {
+        "ja": [
+          "超軽量 ランドセル",
+          "軽量 ランドセル",
+          "負担軽減 通学リュック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1a283e42b496fa0e82c778bf7a362d2c80d45f256fb45e0b3fbf19608ba65961",
+      "query_text": "軽くて疲れにくい通学リュック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lightweight-school-backpack",
+      "ideal_answer": "超軽量・軽量をうたうランドセルや通学リュック",
+      "search_terms": {
+        "ja": [
+          "超軽量 ランドセル",
+          "軽量 ランドセル",
+          "負担軽減 通学リュック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a2c1eb81d9054638b1bc9fd3bd3f99c447b60ea7e859f5bbee5fdfde210d1433",
+      "query_text": "低学年でも背負いやすい軽量ランドセル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lightweight-school-backpack",
+      "ideal_answer": "超軽量・軽量をうたうランドセルや通学リュック",
+      "search_terms": {
+        "ja": [
+          "超軽量 ランドセル",
+          "軽量 ランドセル",
+          "負担軽減 通学リュック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1aadea6c47776cefc8c6efc2e26b86d3d8a84715dc42742379992970a42439e3",
+      "query_text": "電気代が気にならないこたつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "energy-saving-kotatsu",
+      "ideal_answer": "省エネ・節電設計のこたつ",
+      "search_terms": {
+        "ja": [
+          "省エネ こたつ",
+          "電気代 安い こたつ",
+          "節電 コタツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7eb4bb4f8fa830bfdcd0590a2e2c1bf32c29359a147cd7318fa160b86c950850",
+      "query_text": "電気代があまりかからないコタツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "energy-saving-kotatsu",
+      "ideal_answer": "省エネ・節電設計のこたつ",
+      "search_terms": {
+        "ja": [
+          "省エネ こたつ",
+          "電気代 安い こたつ",
+          "節電 コタツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "08ca45317543f6b16e475bfac1e5b1a938cccd3e7a4a3572ce0405e3dcdd7b0c",
+      "query_text": "節電できる省エネこたつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "energy-saving-kotatsu",
+      "ideal_answer": "省エネ・節電設計のこたつ",
+      "search_terms": {
+        "ja": [
+          "省エネ こたつ",
+          "電気代 安い こたつ",
+          "節電 コタツ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2941bb251edb962ee5976127422e008a57399ddbc1cf3aa693b4815c3961355e",
+      "query_text": "音が静かな自動給餌器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-auto-pet-feeder",
+      "ideal_answer": "静音設計をうたう自動給餌器・自動餌やり機",
+      "search_terms": {
+        "ja": [
+          "静音 自動給餌器",
+          "静か 自動餌やり機",
+          "静音設計 ペットフィーダー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "76aa66bde15a57c93b961505e4a3fa67e7ce2fcda1a3dd89f49e628d5912d927",
+      "query_text": "夜でも気にならない静かな自動餌やり機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-auto-pet-feeder",
+      "ideal_answer": "静音設計をうたう自動給餌器・自動餌やり機",
+      "search_terms": {
+        "ja": [
+          "静音 自動給餌器",
+          "静か 自動餌やり機",
+          "静音設計 ペットフィーダー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6bafe2d87ccb37acadda4d9556a8bc21ab4638daff1239238d988450dfe68acd",
+      "query_text": "作動音が小さいペットフィーダー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-auto-pet-feeder",
+      "ideal_answer": "静音設計をうたう自動給餌器・自動餌やり機",
+      "search_terms": {
+        "ja": [
+          "静音 自動給餌器",
+          "静か 自動餌やり機",
+          "静音設計 ペットフィーダー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "5929fe06bc6989496d593914072623081af8d0d320998ddcca47f9c633e56507",
+      "query_text": "かぶれにくい絆創膏",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gentle-adhesive-bandage",
+      "ideal_answer": "低刺激・肌に優しいをうたう絆創膏・ばんそうこう",
+      "search_terms": {
+        "ja": [
+          "低刺激 絆創膏",
+          "肌に優しい ばんそうこう",
+          "かぶれにくい バンドエイド"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "d876628e05b389b3bd36d0cd5d9384231212bdc3a9fb150bc35f0307b3a0c4c2",
+      "query_text": "肌に優しいばんそうこう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gentle-adhesive-bandage",
+      "ideal_answer": "低刺激・肌に優しいをうたう絆創膏・ばんそうこう",
+      "search_terms": {
+        "ja": [
+          "低刺激 絆創膏",
+          "肌に優しい ばんそうこう",
+          "かぶれにくい バンドエイド"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "174f74cb936b46820c0e4b5d7ca4fa1de21074b4d2b2db5a46ae8a64b981f743",
+      "query_text": "低刺激で長時間貼っても痛くならないバンドエイド",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gentle-adhesive-bandage",
+      "ideal_answer": "低刺激・肌に優しいをうたう絆創膏・ばんそうこう",
+      "search_terms": {
+        "ja": [
+          "低刺激 絆創膏",
+          "肌に優しい ばんそうこう",
+          "かぶれにくい バンドエイド"
         ],
         "en": [],
         "ko": [],

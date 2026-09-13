@@ -4161,5 +4161,695 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "少量だけ炊ける炊飯器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "少量(1人分程度)でも美味しく炊ける小型炊飯器",
+    "ideal_answer": "少量炊きモードに対応した1〜3合の小型炊飯器",
+    "reason": "「少量だけ」は商品名では「少量炊き」「一人用」。 展開規則 small-portion-rice-cooker（モール検索語「少量炊き 炊飯器」）。",
+    "category": "small-portion-rice-cooker",
+    "search_terms": {
+      "ja": [
+        "少量炊き 炊飯器",
+        "一人用 炊飯器",
+        "少量モード 炊飯器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "一人分だけ作れる炊飯器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "少量(1人分程度)でも美味しく炊ける小型炊飯器",
+    "ideal_answer": "少量炊きモードに対応した1〜3合の小型炊飯器",
+    "reason": "「少量だけ」は商品名では「少量炊き」「一人用」。 展開規則 small-portion-rice-cooker（モール検索語「少量炊き 炊飯器」）。",
+    "category": "small-portion-rice-cooker",
+    "search_terms": {
+      "ja": [
+        "少量炊き 炊飯器",
+        "一人用 炊飯器",
+        "少量モード 炊飯器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "少ない量でも美味しく炊ける炊飯器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "少量(1人分程度)でも美味しく炊ける小型炊飯器",
+    "ideal_answer": "少量炊きモードに対応した1〜3合の小型炊飯器",
+    "reason": "「少量だけ」は商品名では「少量炊き」「一人用」。 展開規則 small-portion-rice-cooker（モール検索語「少量炊き 炊飯器」）。",
+    "category": "small-portion-rice-cooker",
+    "search_terms": {
+      "ja": [
+        "少量炊き 炊飯器",
+        "一人用 炊飯器",
+        "少量モード 炊飯器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "投げても割れない子供の食器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "落としたり投げたりしても割れにくい子供・赤ちゃん用食器",
+    "ideal_answer": "樹脂やシリコンなど割れにくい素材のベビー・キッズ食器",
+    "reason": "「割れない」は商品名では「割れにくい」「樹脂製」。 展開規則 unbreakable-baby-tableware（モール検索語「割れにくい ベビー食器」）。",
+    "category": "unbreakable-baby-tableware",
+    "search_terms": {
+      "ja": [
+        "割れにくい ベビー食器",
+        "落としても割れない 離乳食 食器",
+        "樹脂製 割れない キッズ食器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "落としても割れない離乳食用のお皿",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "落としたり投げたりしても割れにくい子供・赤ちゃん用食器",
+    "ideal_answer": "樹脂やシリコンなど割れにくい素材のベビー・キッズ食器",
+    "reason": "「割れない」は商品名では「割れにくい」「樹脂製」。 展開規則 unbreakable-baby-tableware（モール検索語「割れにくい ベビー食器」）。",
+    "category": "unbreakable-baby-tableware",
+    "search_terms": {
+      "ja": [
+        "割れにくい ベビー食器",
+        "落としても割れない 離乳食 食器",
+        "樹脂製 割れない キッズ食器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "赤ちゃんが使っても欠けない茶碗",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "落としたり投げたりしても割れにくい子供・赤ちゃん用食器",
+    "ideal_answer": "樹脂やシリコンなど割れにくい素材のベビー・キッズ食器",
+    "reason": "「割れない」は商品名では「割れにくい」「樹脂製」。 展開規則 unbreakable-baby-tableware（モール検索語「割れにくい ベビー食器」）。",
+    "category": "unbreakable-baby-tableware",
+    "search_terms": {
+      "ja": [
+        "割れにくい ベビー食器",
+        "落としても割れない 離乳食 食器",
+        "樹脂製 割れない キッズ食器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "黄ばみが落ちる洗濯洗剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類の黄ばみを落とす、または黄ばみを防ぐ洗濯用洗剤・漂白剤",
+    "ideal_answer": "酸素系漂白剤や黄ばみ落とし専用の洗濯洗剤",
+    "reason": "「黄ばみが取れる」は商品名では「酸素系漂白剤」「黄ばみ落とし」。 展開規則 yellowing-stain-remover（モール検索語「酸素系漂白剤 黄ばみ」）。",
+    "category": "yellowing-stain-remover",
+    "search_terms": {
+      "ja": [
+        "酸素系漂白剤 黄ばみ",
+        "黄ばみ落とし 漂白剤",
+        "襟の黄ばみ 洗剤"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "襟の黄ばみが取れる漂白剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類の黄ばみを落とす、または黄ばみを防ぐ洗濯用洗剤・漂白剤",
+    "ideal_answer": "酸素系漂白剤や黄ばみ落とし専用の洗濯洗剤",
+    "reason": "「黄ばみが取れる」は商品名では「酸素系漂白剤」「黄ばみ落とし」。 展開規則 yellowing-stain-remover（モール検索語「酸素系漂白剤 黄ばみ」）。",
+    "category": "yellowing-stain-remover",
+    "search_terms": {
+      "ja": [
+        "酸素系漂白剤 黄ばみ",
+        "黄ばみ落とし 漂白剤",
+        "襟の黄ばみ 洗剤"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "白いシャツが黄ばまない洗剤",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類の黄ばみを落とす、または黄ばみを防ぐ洗濯用洗剤・漂白剤",
+    "ideal_answer": "酸素系漂白剤や黄ばみ落とし専用の洗濯洗剤",
+    "reason": "「黄ばみが取れる」は商品名では「酸素系漂白剤」「黄ばみ落とし」。 展開規則 yellowing-stain-remover（モール検索語「酸素系漂白剤 黄ばみ」）。",
+    "category": "yellowing-stain-remover",
+    "search_terms": {
+      "ja": [
+        "酸素系漂白剤 黄ばみ",
+        "黄ばみ落とし 漂白剤",
+        "襟の黄ばみ 洗剤"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "毛穴を隠してくれる化粧下地",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "毛穴や凹凸を目立たなくするベースメイク下地",
+    "ideal_answer": "毛穴カバー・凹凸補正効果をうたう化粧下地・プライマー",
+    "reason": "「毛穴を隠す」は商品名では「毛穴レス」「毛穴カバー」。 展開規則 pore-blur-primer（モール検索語「毛穴レス 化粧下地」）。",
+    "category": "pore-blur-primer",
+    "search_terms": {
+      "ja": [
+        "毛穴レス 化粧下地",
+        "毛穴カバー 下地",
+        "凹凸補正 プライマー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "毛穴が目立たなくなる下地",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "毛穴や凹凸を目立たなくするベースメイク下地",
+    "ideal_answer": "毛穴カバー・凹凸補正効果をうたう化粧下地・プライマー",
+    "reason": "「毛穴を隠す」は商品名では「毛穴レス」「毛穴カバー」。 展開規則 pore-blur-primer（モール検索語「毛穴レス 化粧下地」）。",
+    "category": "pore-blur-primer",
+    "search_terms": {
+      "ja": [
+        "毛穴レス 化粧下地",
+        "毛穴カバー 下地",
+        "凹凸補正 プライマー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "凹凸をカバーしてくれるプライマー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "毛穴や凹凸を目立たなくするベースメイク下地",
+    "ideal_answer": "毛穴カバー・凹凸補正効果をうたう化粧下地・プライマー",
+    "reason": "「毛穴を隠す」は商品名では「毛穴レス」「毛穴カバー」。 展開規則 pore-blur-primer（モール検索語「毛穴レス 化粧下地」）。",
+    "category": "pore-blur-primer",
+    "search_terms": {
+      "ja": [
+        "毛穴レス 化粧下地",
+        "毛穴カバー 下地",
+        "凹凸補正 プライマー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "隙間にぴったり収まる収納ラック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家具や家電の隙間にぴったり収まる薄型の収納ラック・ワゴン",
+    "ideal_answer": "幅が調整できる、または薄型・スリムな隙間収納ラック・ワゴン",
+    "reason": "「隙間にぴったり入る」は商品名では「隙間収納」「スリムラック」。 展開規則 gap-fit-narrow-storage（モール検索語「スリム 隙間収納ラック」）。",
+    "category": "gap-fit-narrow-storage",
+    "search_terms": {
+      "ja": [
+        "スリム 隙間収納ラック",
+        "隙間ワゴン スリム",
+        "薄型 隙間収納"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯機横の狭いスペースにも置けるワゴン",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家具や家電の隙間にぴったり収まる薄型の収納ラック・ワゴン",
+    "ideal_answer": "幅が調整できる、または薄型・スリムな隙間収納ラック・ワゴン",
+    "reason": "「隙間にぴったり入る」は商品名では「隙間収納」「スリムラック」。 展開規則 gap-fit-narrow-storage（モール検索語「スリム 隙間収納ラック」）。",
+    "category": "gap-fit-narrow-storage",
+    "search_terms": {
+      "ja": [
+        "スリム 隙間収納ラック",
+        "隙間ワゴン スリム",
+        "薄型 隙間収納"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "冷蔵庫の隙間にちょうど入るスリムラック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家具や家電の隙間にぴったり収まる薄型の収納ラック・ワゴン",
+    "ideal_answer": "幅が調整できる、または薄型・スリムな隙間収納ラック・ワゴン",
+    "reason": "「隙間にぴったり入る」は商品名では「隙間収納」「スリムラック」。 展開規則 gap-fit-narrow-storage（モール検索語「スリム 隙間収納ラック」）。",
+    "category": "gap-fit-narrow-storage",
+    "search_terms": {
+      "ja": [
+        "スリム 隙間収納ラック",
+        "隙間ワゴン スリム",
+        "薄型 隙間収納"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "重い物を乗せても曲がらない突っ張り棚",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "重い物を乗せても曲がったり傾いたりしない突っ張り棚",
+    "ideal_answer": "耐荷重の高い突っ張り棚・つっぱり棒",
+    "reason": "「曲がらない/傾かない」は商品名では「耐荷重」。 展開規則 heavy-duty-tension-rack（モール検索語「耐荷重 突っ張り棚」）。",
+    "category": "heavy-duty-tension-rack",
+    "search_terms": {
+      "ja": [
+        "耐荷重 突っ張り棚",
+        "耐荷重 つっぱり棒",
+        "頑丈 突っ張りラック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "本をたくさん置いてもたわまないつっぱり棚",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "重い物を乗せても曲がったり傾いたりしない突っ張り棚",
+    "ideal_answer": "耐荷重の高い突っ張り棚・つっぱり棒",
+    "reason": "「曲がらない/傾かない」は商品名では「耐荷重」。 展開規則 heavy-duty-tension-rack（モール検索語「耐荷重 突っ張り棚」）。",
+    "category": "heavy-duty-tension-rack",
+    "search_terms": {
+      "ja": [
+        "耐荷重 突っ張り棚",
+        "耐荷重 つっぱり棒",
+        "頑丈 突っ張りラック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "荷物を乗せてもグラグラしない突っ張りラック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "重い物を乗せても曲がったり傾いたりしない突っ張り棚",
+    "ideal_answer": "耐荷重の高い突っ張り棚・つっぱり棒",
+    "reason": "「曲がらない/傾かない」は商品名では「耐荷重」。 展開規則 heavy-duty-tension-rack（モール検索語「耐荷重 突っ張り棚」）。",
+    "category": "heavy-duty-tension-rack",
+    "search_terms": {
+      "ja": [
+        "耐荷重 突っ張り棚",
+        "耐荷重 つっぱり棒",
+        "頑丈 突っ張りラック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "背負っても肩が痛くならない軽いランドセル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "背負っても肩の負担が少ない軽量なランドセル・通学リュック",
+    "ideal_answer": "超軽量・軽量をうたうランドセルや通学リュック",
+    "reason": "「肩が痛くならない/軽い」は商品名では「超軽量」「軽量」。 展開規則 lightweight-school-backpack（モール検索語「超軽量 ランドセル」）。",
+    "category": "lightweight-school-backpack",
+    "search_terms": {
+      "ja": [
+        "超軽量 ランドセル",
+        "軽量 ランドセル",
+        "負担軽減 通学リュック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "軽くて疲れにくい通学リュック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "背負っても肩の負担が少ない軽量なランドセル・通学リュック",
+    "ideal_answer": "超軽量・軽量をうたうランドセルや通学リュック",
+    "reason": "「肩が痛くならない/軽い」は商品名では「超軽量」「軽量」。 展開規則 lightweight-school-backpack（モール検索語「超軽量 ランドセル」）。",
+    "category": "lightweight-school-backpack",
+    "search_terms": {
+      "ja": [
+        "超軽量 ランドセル",
+        "軽量 ランドセル",
+        "負担軽減 通学リュック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "低学年でも背負いやすい軽量ランドセル",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "背負っても肩の負担が少ない軽量なランドセル・通学リュック",
+    "ideal_answer": "超軽量・軽量をうたうランドセルや通学リュック",
+    "reason": "「肩が痛くならない/軽い」は商品名では「超軽量」「軽量」。 展開規則 lightweight-school-backpack（モール検索語「超軽量 ランドセル」）。",
+    "category": "lightweight-school-backpack",
+    "search_terms": {
+      "ja": [
+        "超軽量 ランドセル",
+        "軽量 ランドセル",
+        "負担軽減 通学リュック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "電気代が気にならないこたつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけっぱなしでも電気代が気にならない省エネなこたつ",
+    "ideal_answer": "省エネ・節電設計のこたつ",
+    "reason": "「電気代が気にならない」は商品名では「省エネ」。 展開規則 energy-saving-kotatsu（モール検索語「省エネ こたつ」）。",
+    "category": "energy-saving-kotatsu",
+    "search_terms": {
+      "ja": [
+        "省エネ こたつ",
+        "電気代 安い こたつ",
+        "節電 コタツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "電気代があまりかからないコタツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけっぱなしでも電気代が気にならない省エネなこたつ",
+    "ideal_answer": "省エネ・節電設計のこたつ",
+    "reason": "「電気代が気にならない」は商品名では「省エネ」。 展開規則 energy-saving-kotatsu（モール検索語「省エネ こたつ」）。",
+    "category": "energy-saving-kotatsu",
+    "search_terms": {
+      "ja": [
+        "省エネ こたつ",
+        "電気代 安い こたつ",
+        "節電 コタツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "節電できる省エネこたつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけっぱなしでも電気代が気にならない省エネなこたつ",
+    "ideal_answer": "省エネ・節電設計のこたつ",
+    "reason": "「電気代が気にならない」は商品名では「省エネ」。 展開規則 energy-saving-kotatsu（モール検索語「省エネ こたつ」）。",
+    "category": "energy-saving-kotatsu",
+    "search_terms": {
+      "ja": [
+        "省エネ こたつ",
+        "電気代 安い こたつ",
+        "節電 コタツ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "音が静かな自動給餌器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "作動音が小さく夜間でも気にならない自動給餌器",
+    "ideal_answer": "静音設計をうたう自動給餌器・自動餌やり機",
+    "reason": "「音が静か」は商品名では「静音」。 展開規則 quiet-auto-pet-feeder（モール検索語「静音 自動給餌器」）。",
+    "category": "quiet-auto-pet-feeder",
+    "search_terms": {
+      "ja": [
+        "静音 自動給餌器",
+        "静か 自動餌やり機",
+        "静音設計 ペットフィーダー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "夜でも気にならない静かな自動餌やり機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "作動音が小さく夜間でも気にならない自動給餌器",
+    "ideal_answer": "静音設計をうたう自動給餌器・自動餌やり機",
+    "reason": "「音が静か」は商品名では「静音」。 展開規則 quiet-auto-pet-feeder（モール検索語「静音 自動給餌器」）。",
+    "category": "quiet-auto-pet-feeder",
+    "search_terms": {
+      "ja": [
+        "静音 自動給餌器",
+        "静か 自動餌やり機",
+        "静音設計 ペットフィーダー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "作動音が小さいペットフィーダー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "作動音が小さく夜間でも気にならない自動給餌器",
+    "ideal_answer": "静音設計をうたう自動給餌器・自動餌やり機",
+    "reason": "「音が静か」は商品名では「静音」。 展開規則 quiet-auto-pet-feeder（モール検索語「静音 自動給餌器」）。",
+    "category": "quiet-auto-pet-feeder",
+    "search_terms": {
+      "ja": [
+        "静音 自動給餌器",
+        "静か 自動餌やり機",
+        "静音設計 ペットフィーダー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "かぶれにくい絆創膏",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "長時間貼ってもかぶれにくい低刺激な絆創膏",
+    "ideal_answer": "低刺激・肌に優しいをうたう絆創膏・ばんそうこう",
+    "reason": "「かぶれない/肌に優しい」は商品名では「低刺激」。 展開規則 gentle-adhesive-bandage（モール検索語「低刺激 絆創膏」）。",
+    "category": "gentle-adhesive-bandage",
+    "search_terms": {
+      "ja": [
+        "低刺激 絆創膏",
+        "肌に優しい ばんそうこう",
+        "かぶれにくい バンドエイド"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "肌に優しいばんそうこう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "長時間貼ってもかぶれにくい低刺激な絆創膏",
+    "ideal_answer": "低刺激・肌に優しいをうたう絆創膏・ばんそうこう",
+    "reason": "「かぶれない/肌に優しい」は商品名では「低刺激」。 展開規則 gentle-adhesive-bandage（モール検索語「低刺激 絆創膏」）。",
+    "category": "gentle-adhesive-bandage",
+    "search_terms": {
+      "ja": [
+        "低刺激 絆創膏",
+        "肌に優しい ばんそうこう",
+        "かぶれにくい バンドエイド"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "低刺激で長時間貼っても痛くならないバンドエイド",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "長時間貼ってもかぶれにくい低刺激な絆創膏",
+    "ideal_answer": "低刺激・肌に優しいをうたう絆創膏・ばんそうこう",
+    "reason": "「かぶれない/肌に優しい」は商品名では「低刺激」。 展開規則 gentle-adhesive-bandage（モール検索語「低刺激 絆創膏」）。",
+    "category": "gentle-adhesive-bandage",
+    "search_terms": {
+      "ja": [
+        "低刺激 絆創膏",
+        "肌に優しい ばんそうこう",
+        "かぶれにくい バンドエイド"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
