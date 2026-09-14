@@ -188,12 +188,27 @@ test('提携済みモールの/go先はバリューコマースreferralで包ま
   assert.equal(yahoo.searchParams.get('vc_url'), 'https://store.shopping.yahoo.co.jp/example/item123.html');
 });
 
-test('未提携・対象外のリンクはバリューコマースreferralで包まない', () => {
-  // 楽天は提携承認待ちのため素通り。承認後にVALUE_COMMERCE_PARTNERED_HOSTSへ追加する。
+test('承認済み楽天の直リンクだけを包み、既存の楽天アフィリエイトURLは保持する', () => {
+  for (const destination of [
+    'https://search.rakuten.co.jp/search/mall/test/',
+    'https://item.rakuten.co.jp/example/item-123/'
+  ]) {
+    const wrapped = new URL(decorateValueCommerceDestination(destination, '3779199', '892690168'));
+    assert.equal(wrapped.origin, 'https://ck.jp.ap.valuecommerce.com');
+    assert.equal(wrapped.searchParams.get('vc_url'), destination);
+  }
+  const officialAffiliateUrl = 'https://hb.afl.rakuten.co.jp/hgc/example/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fexample%2Fitem-123%2F';
   assert.equal(
-    decorateValueCommerceDestination('https://search.rakuten.co.jp/search/mall/test/', '3779199', '892690168'),
-    'https://search.rakuten.co.jp/search/mall/test/'
+    decorateValueCommerceDestination(officialAffiliateUrl, '3779199', '892690168'),
+    officialAffiliateUrl
   );
+  assert.equal(
+    decorateValueCommerceDestination('https://search.rakuten.co.jp.evil.example/search/mall/test/', '3779199', '892690168'),
+    'https://search.rakuten.co.jp.evil.example/search/mall/test/'
+  );
+});
+
+test('対象外のリンクはバリューコマースreferralで包まない', () => {
   // Amazonは別プログラム(タグ方式)なので包まない。
   assert.equal(
     decorateValueCommerceDestination('https://amazon.co.jp/dp/B000000ABC?tag=hoshilu00-22', '3779199', '892690168'),
@@ -283,6 +298,79 @@ test('VC_GO_REFERRAL_ENABLEDがtrue以外なら/goは従来どおり直接リダ
     const response = await worker.fetch(new Request(`https://hoshilu.app/go?token=${encodeURIComponent(token)}`), env, context);
     assert.equal(response.status, 302);
     assert.equal(response.headers.get('location'), 'https://www.qoo10.jp/g/654321');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('楽天専用フラグは楽天の直リンクだけをreferralで包み、Qoo10には影響しない', async () => {
+  const { db } = sqliteD1();
+  const secret = 'r'.repeat(32);
+  const makeToken = (marketplace, destination, itemId) => createTrackToken({
+    u: 'session-hash-rakuten-vc', r: 'query-intent-rakuten-vc', a: itemId, d: destination,
+    exp: Math.floor(Date.now() / 1000) + 3600, j: `seed:${itemId}:${marketplace}`, c: 'PWA', m: marketplace
+  }, secret);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ ok: true, result: {} });
+  try {
+    const env = {
+      LINK_SIGNING_SECRET: secret,
+      AMAZON_ASSOCIATE_TAG: 'hoshilu00-22',
+      VC_SID: '3779199',
+      VC_PID: '892690168',
+      VC_GO_REFERRAL_ENABLED: 'false',
+      VC_RAKUTEN_GO_REFERRAL_ENABLED: 'true',
+      GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec',
+      GAS_BRIDGE_SECRET: 'g'.repeat(32),
+      PRODUCT_DB: db
+    };
+    const context = { waitUntil: () => {} };
+    const rakutenUrl = 'https://search.rakuten.co.jp/search/mall/%E9%9D%B4/';
+    const rakutenResponse = await worker.fetch(new Request(
+      `https://hoshilu.app/go?token=${encodeURIComponent(await makeToken('RAKUTEN_JP', rakutenUrl, 'R000000001'))}`
+    ), env, context);
+    const rakutenLocation = new URL(rakutenResponse.headers.get('location'));
+    assert.equal(rakutenLocation.origin, 'https://ck.jp.ap.valuecommerce.com');
+    assert.equal(rakutenLocation.searchParams.get('vc_url'), rakutenUrl);
+
+    const qoo10Url = 'https://www.qoo10.jp/g/7654321';
+    const qoo10Response = await worker.fetch(new Request(
+      `https://hoshilu.app/go?token=${encodeURIComponent(await makeToken('QOO10_JP', qoo10Url, 'Q000000003'))}`
+    ), env, context);
+    assert.equal(qoo10Response.headers.get('location'), qoo10Url);
+
+    const mismatchedResponse = await worker.fetch(new Request(
+      `https://hoshilu.app/go?token=${encodeURIComponent(await makeToken('RAKUTEN_JP', qoo10Url, 'Q000000004'))}`
+    ), env, context);
+    assert.equal(mismatchedResponse.headers.get('location'), qoo10Url);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('楽天専用フラグでも楽天APIの既存アフィリエイトURLは二重に包まない', async () => {
+  const { db } = sqliteD1();
+  const secret = 'r'.repeat(32);
+  const affiliateUrl = 'https://hb.afl.rakuten.co.jp/hgc/example/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fexample%2Fitem-123%2F';
+  const token = await createTrackToken({
+    u: 'session-hash-rakuten-affiliate', r: 'query-intent-rakuten-affiliate', a: 'R000000002', d: affiliateUrl,
+    exp: Math.floor(Date.now() / 1000) + 3600, j: 'seed:R000000002:RAKUTEN_JP', c: 'PWA', m: 'RAKUTEN_JP'
+  }, secret);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ ok: true, result: {} });
+  try {
+    const response = await worker.fetch(new Request(`https://hoshilu.app/go?token=${encodeURIComponent(token)}`), {
+      LINK_SIGNING_SECRET: secret,
+      AMAZON_ASSOCIATE_TAG: 'hoshilu00-22',
+      VC_SID: '3779199',
+      VC_PID: '892690168',
+      VC_GO_REFERRAL_ENABLED: 'false',
+      VC_RAKUTEN_GO_REFERRAL_ENABLED: 'true',
+      GAS_BACKEND_URL: 'https://script.google.com/macros/s/test-deployment/exec',
+      GAS_BRIDGE_SECRET: 'g'.repeat(32),
+      PRODUCT_DB: db
+    }, { waitUntil: () => {} });
+    assert.equal(response.headers.get('location'), affiliateUrl);
   } finally {
     globalThis.fetch = originalFetch;
   }

@@ -285,13 +285,30 @@ export function decorateAmazonAssociateDestination(destination, associateTag = '
 // /goのリダイレクト先で同じ変換をサーバー側から行う(2026-09-02)。
 // 追加する場合は、必ずバリューコマース管理画面で提携済みになってから
 // ドメインを足すこと。未提携の広告主を包むとクリックが無効になる。
-// 楽天市場は提携承認待ちのため未追加。Amazonは別プログラム(タグ方式)。
+// 楽天市場販促プログラムは2026-09-14に提携承認を確認済み。
+// search/itemの直リンクだけを対象にし、楽天APIが返す既存の
+// hb.afl.rakuten.co.jpアフィリエイトURLは二重計測を避けるため包まない。
+// Amazonは別プログラム(タグ方式)。
 const VALUE_COMMERCE_PARTNERED_HOSTS = Object.freeze([
   'shopping.yahoo.co.jp',            // Yahoo!ショッピング(LINEヤフー)
   'qoo10.jp',                        // Qoo10 (eBay Japan)
   'hands.net',                       // ハンズ ネットストア
   'matsukiyococokara-online.com'     // マツキヨココカラオンラインストア
 ]);
+const VALUE_COMMERCE_EXACT_PARTNERED_HOSTS = new Set([
+  'search.rakuten.co.jp',            // 楽天市場の商品検索
+  'item.rakuten.co.jp'               // 楽天市場の商品詳細
+]);
+
+function isValueCommerceRakutenDestination(destination) {
+  try {
+    const url = new URL(String(destination || ''));
+    const host = url.hostname.toLowerCase().replace(/\.$/, '');
+    return url.protocol === 'https:' && VALUE_COMMERCE_EXACT_PARTNERED_HOSTS.has(host);
+  } catch {
+    return false;
+  }
+}
 
 export function decorateValueCommerceDestination(destination, sid = '', pid = '') {
   const source = String(destination || '');
@@ -302,9 +319,10 @@ export function decorateValueCommerceDestination(destination, sid = '', pid = ''
     const url = new URL(source);
     if (url.protocol !== 'https:') return source;
     const host = url.hostname.toLowerCase().replace(/\.$/, '');
-    const partnered = VALUE_COMMERCE_PARTNERED_HOSTS.some(
-      (allowed) => host === allowed || host.endsWith(`.${allowed}`)
-    );
+    const partnered = VALUE_COMMERCE_EXACT_PARTNERED_HOSTS.has(host)
+      || VALUE_COMMERCE_PARTNERED_HOSTS.some(
+        (allowed) => host === allowed || host.endsWith(`.${allowed}`)
+      );
     if (!partnered) return source;
     const referral = new URL('https://ck.jp.ap.valuecommerce.com/servlet/referral');
     referral.searchParams.set('sid', siteId);
@@ -1040,7 +1058,13 @@ async function handleRedirect(request, env, ctx) {
     // referral経由の着地先が確認できるまでVC_GO_REFERRAL_ENABLEDで
     // 無効化中。送客の正しさは収益より常に優先する。
     const amazonDecorated = decorateAmazonAssociateDestination(payload.d, env.AMAZON_ASSOCIATE_TAG);
-    const destination = String(env.VC_GO_REFERRAL_ENABLED) === 'true'
+    const valueCommerceEnabled = String(env.VC_GO_REFERRAL_ENABLED) === 'true'
+      || (
+        String(env.VC_RAKUTEN_GO_REFERRAL_ENABLED) === 'true'
+        && String(payload.m || '').toUpperCase() === 'RAKUTEN_JP'
+        && isValueCommerceRakutenDestination(amazonDecorated)
+      );
+    const destination = valueCommerceEnabled
       ? decorateValueCommerceDestination(amazonDecorated, env.VC_SID, env.VC_PID)
       : amazonDecorated;
     return Response.redirect(destination, 302);
