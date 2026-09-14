@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-13T23:48:19.763Z",
+  "generated_at": "2026-09-14T03:51:27.743Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -25,9 +25,10 @@
     "2026-09-07-claude-batch-022.json",
     "2026-09-08-claude-batch-023.json",
     "2026-09-10-claude-batch-024.json",
-    "2026-09-11-claude-batch-025.json"
+    "2026-09-11-claude-batch-025.json",
+    "2026-09-13-claude-batch-026.json"
   ],
-  "entry_count": 1235,
+  "entry_count": 1285,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -26855,6 +26856,1019 @@
       "excluded_conditions": [],
       "confidence": 0.75,
       "source_file": "2026-09-11-claude-batch-025.json"
+    },
+    {
+      "content_hash": "b9edf268e6a5d8e8afced21b7f189892e2e06584f43509595c81cb168d68e378",
+      "query_text": "運動会のとき日陰を作るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pop-up-tent",
+      "ideal_answer": "ワンタッチで設営できるポップアップテント・日よけシェード",
+      "search_terms": {
+        "ja": [
+          "ポップアップテント 運動会",
+          "日よけ シェード 簡易"
+        ],
+        "en": [
+          "pop up canopy tent"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "805845415b69dab5fd51c4581586ea79e8ef68d4814522efede3c138e901df86",
+      "query_text": "自転車を停めるとき倒れないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bicycle-kickstand",
+      "ideal_answer": "自転車用スタンド(倒れ防止の補助スタンド、サイドスタンド)",
+      "search_terms": {
+        "ja": [
+          "自転車 スタンド 倒れ防止",
+          "自転車 サイドスタンド 補助"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "a5236b386e3de5726b3c89d44a93b4680d0ac70b5d36156383f16192667ea2cd",
+      "query_text": "スマホを首から下げるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "phone-neck-strap",
+      "ideal_answer": "スマホ用ネックストラップ(ショルダーストラップ)",
+      "search_terms": {
+        "ja": [
+          "スマホ 首かけ ストラップ",
+          "スマホショルダー"
+        ],
+        "en": [
+          "phone neck strap lanyard"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "28f139715c2f96d3722fdc5e96594da63061bdf41cb17ff9b50508892754a0ef",
+      "query_text": "お米を計るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rice-measuring-cup",
+      "ideal_answer": "お米の計量カップ(1合/2合など目盛り付き)",
+      "search_terms": {
+        "ja": [
+          "米 計量カップ",
+          "お米 一合 カップ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "40dbf95cf5aa606565247a37444aa571511c98d9265765cd0b99cd08ddedf631",
+      "query_text": "布団をぺたんこにしてしまうやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "futon-compression-bag",
+      "ideal_answer": "布団圧縮袋(掃除機対応、バルブ式)",
+      "search_terms": {
+        "ja": [
+          "布団 圧縮袋",
+          "ふとん 圧縮パック 掃除機"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "ac3b7000cd3c468ced2ff9ddf3a210bbaf2a8aad158eb65d5a91ab6a1fa4cfef",
+      "query_text": "宅配便が来たときに置いてもらうやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "delivery-box",
+      "ideal_answer": "宅配ボックス(置き配ボックス)",
+      "search_terms": {
+        "ja": [
+          "宅配ボックス 戸建て",
+          "置き配ボックス 折りたたみ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "0fba86244db791c67aa70e9dbb214f9d231bcc9f964312f268e76c7f9349c669",
+      "query_text": "靴についた泥を落とすやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "shoe-mud-brush",
+      "ideal_answer": "靴底泥落としブラシ(玄関用)",
+      "search_terms": {
+        "ja": [
+          "靴 泥落とし ブラシ",
+          "玄関 泥落とし マット ブラシ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "176e85f51b12cae1482e3bcf10a35b60e4d8db7afa91560cf1cf9b2c25f8ffd4",
+      "query_text": "夜中にスマホ見るときに目に優しいやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blue-light-glasses",
+      "ideal_answer": "ブルーライトカット眼鏡、またはスマホ用ブルーライトカットフィルム(どちらも候補)",
+      "search_terms": {
+        "ja": [
+          "ブルーライトカット 眼鏡",
+          "スマホ 保護フィルム ブルーライトカット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "99d61245cbd196276422eb627b71d1aca0436637b2fd9f86ad93dcadf9724341",
+      "query_text": "洗面台の下をきれいに整理するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "under-sink-organizer",
+      "ideal_answer": "洗面台下用の伸縮・スライド式収納ラック",
+      "search_terms": {
+        "ja": [
+          "洗面台下 収納ラック",
+          "洗面所 収納 伸縮"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "e2c4ac59830f2c47822091b7bf71382cc5ae39f737e4c6f54c66f945c18d0337",
+      "query_text": "車の中で充電するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "car-charger",
+      "ideal_answer": "car充電器(シガーソケット用USB充電器)",
+      "search_terms": {
+        "ja": [
+          "車 充電器 シガーソケット",
+          "car charger usb"
+        ],
+        "en": [
+          "car usb charger"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "cf778e469912df0c0cc8b4a762c17e815b7aea5253024658491ab9ad1c183152",
+      "query_text": "玄関の傘を乾かすやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "umbrella-dryer-stand",
+      "ideal_answer": "傘立て兼用傘乾燥スタンド",
+      "search_terms": {
+        "ja": [
+          "傘 乾燥 スタンド",
+          "傘立て 水切り"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "44840ce99366357f94d9d169f65bf3a9f5f74007ed0875a89d840c6b66e31218",
+      "query_text": "何かに貼るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何に貼りたいですか？(壁、床、車、スマホ など)テープですか、シールですか、それとも滑り止めですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.15,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "4eb07a0a611d1560d8efe3aee24110c2590f0406af4be34c80475c67cc16375a",
+      "query_text": "音が鳴るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どんな場面で使いますか？(防犯ブザー、目覚まし、呼び鈴、ペット用など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "25d7e6f0ba029737b1a3728aff6a3d6a4fa29d97e4458217a849da0093a59710",
+      "query_text": "巻きつけるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何に巻きつけたいですか？(コード、ケーブル、髪、体 など)",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.15,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "c770b9f79c3d204e76bdb577b80389a8c306b391194bba3ccb7284f6e21d231a",
+      "query_text": "カチッとはまるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どんな用途ですか？(スマホケース、収納ケース、パーツ同士の連結 など)もう少し詳しく教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "57169325fdd7e76dc9c6a81de38237911ace399939c25043353ac89969bc852e",
+      "query_text": "ランドセルに引っ掛けるかわいいやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "school-bag-charm",
+      "ideal_answer": "ランドセル用チャーム・キーホルダー",
+      "search_terms": {
+        "ja": [
+          "ランドセル チャーム",
+          "ランドセル キーホルダー かわいい"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "5fcf3fadddec0d8eb0ac777fcf8dc0dfadd66703788dcc5f0e38ccdef44e8358",
+      "query_text": "なわとびの持つとこがくるくる回るやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "jump-rope",
+      "ideal_answer": "ベアリング内蔵の回転グリップ縄跳び",
+      "search_terms": {
+        "ja": [
+          "縄跳び グリップ回転",
+          "なわとび ベアリング"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "e20725a6ca0081edd12e7cec77a58c18281bbe5025a1747df797679c07e642a3",
+      "query_text": "自由研究にちょうどいい虫めがね",
+      "locale": "ja",
+      "persona": "child",
+      "category": "magnifier",
+      "ideal_answer": "観察用ルーペ(虫眼鏡、倍率表示付き)",
+      "search_terms": {
+        "ja": [
+          "虫眼鏡 自由研究 子供用",
+          "ルーペ 観察"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "4d94847a774e3a3df9190aacbe5711e9201492eddc5a55edaf5b2a4af55d0e2e",
+      "query_text": "上履きを消毒するスプレー",
+      "locale": "ja",
+      "persona": "child",
+      "category": "shoe-disinfectant-spray",
+      "ideal_answer": "上履き・靴用除菌消臭スプレー",
+      "search_terms": {
+        "ja": [
+          "上履き 除菌スプレー",
+          "靴 消臭 除菌"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "f5bc06a6a1ccf843fb12fe3b70a65eac56260e5a157f465f84eb4914273f559a",
+      "query_text": "光るやつほしい",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何が光るといいですか？(靴、おもちゃ、文房具、リュックなど)教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "12f6c743f910b4cd1a7f7cc3ab5432907e9659894d3d81a8f87fc19e9a1a6682",
+      "query_text": "牛乳パックで工作するときに使うはさみ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "kids-safety-scissors",
+      "ideal_answer": "子ども用安全はさみ(厚紙対応、指ケガ防止カバー付き)",
+      "search_terms": {
+        "ja": [
+          "こども はさみ 安全",
+          "工作 はさみ 厚紙用"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "190e61b32bb394b3ce5d8377177aae1985393404376ae0c044d1582ef9567026",
+      "query_text": "杖を壁に立てかけておけるやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "cane-holder",
+      "ideal_answer": "杖ホルダー・杖立てスタンド",
+      "search_terms": {
+        "ja": [
+          "杖ホルダー 壁",
+          "杖立て 転倒防止"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "fc4a387aa784572b36b0775e56393f9ab9721416bb596c22546913678a3e0a12",
+      "query_text": "字が大きく見える老眼鏡",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "reading-glasses",
+      "ideal_answer": "高倍率タイプの老眼鏡(リーディンググラス)",
+      "search_terms": {
+        "ja": [
+          "老眼鏡 高倍率",
+          "シニアグラス 拡大"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "0702cb6eceab39e491d798ce0b7f75f21968103dcebcc31681544da37efe48a7",
+      "query_text": "階段を上るときに手をつくやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "階段用の後付け手すり、または歩行を支える杖のどちらかを想定。設置場所(自宅階段か外出先か)を確認するとより正確",
+      "search_terms": {
+        "ja": [
+          "階段 手すり 後付け",
+          "歩行杖 階段"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "2d5c4c95bd5ffe74c560b88316446c69cd73473f1bcdccce0864fc5bbb97be26",
+      "query_text": "敬老の日に贈る肩を揉む機械",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "shoulder-massager",
+      "ideal_answer": "肩たたき・肩もみマッサージ器(ギフト向け)",
+      "search_terms": {
+        "ja": [
+          "肩もみ機 敬老の日 ギフト",
+          "マッサージ器 プレゼント"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "2bde3c1d38a03ab382aa9a6c58e929d10abfcf6ed1236975313fa2c1ff13b6c5",
+      "query_text": "薬を曜日ごとに分けておくケース",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "pill-organizer-case",
+      "ideal_answer": "曜日別お薬カレンダー・ピルケース",
+      "search_terms": {
+        "ja": [
+          "お薬カレンダー 曜日",
+          "ピルケース 一週間"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "beb20bddae5ad54e12f08c95af291fd7fda2ab8c59e05f4824da939f96146951",
+      "query_text": "耳が遠くなってきたときに使うやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "医療機器としての「補聴器」なのか、市販の「集音器」なのかで扱いが異なるため即断せず確認が必要。聴力の相談は耳鼻科や専門店への相談を案内するのが望ましい。",
+      "search_terms": {
+        "ja": [
+          "集音器",
+          "補聴器 相談"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "25d5c147fc2eeebaf69f5d20af3d9a0bb8138244269d842b96acd02aa0e78753",
+      "query_text": "무선 이어폰 배터리 오래가는 거",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "earbuds",
+      "ideal_answer": "장시간 재생 가능한 완전 무선 이어폰(케이스 포함 총 재생시간이 긴 모델)",
+      "search_terms": {
+        "ja": [
+          "ワイヤレスイヤホン 長時間バッテリー"
+        ],
+        "en": [],
+        "ko": [
+          "무선 이어폰 배터리 오래가는",
+          "롱타임 이어폰"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "ad662163374efe42606dfba6a23e9ea5de4b35e70929e14ef3583c944c93dec8",
+      "query_text": "휴대용 선풍기 목에 거는 거",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "neck-fan",
+      "ideal_answer": "넥밴드형 휴대용 선풍기(핸즈프리 넥 선풍기)",
+      "search_terms": {
+        "ja": [
+          "ネックファン 携帯扇風機"
+        ],
+        "en": [],
+        "ko": [
+          "넥 선풍기",
+          "목걸이 선풍기"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "f27f02c6e7bff2c73c31cd390b0ec3ef865c9c160ea09768f24429ac319dec45",
+      "query_text": "손목에 차는 만보기",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "wrist-pedometer",
+      "ideal_answer": "손목 밴드형 만보계(피트니스 트래커)",
+      "search_terms": {
+        "ja": [
+          "腕時計型 歩数計"
+        ],
+        "en": [],
+        "ko": [
+          "손목 만보기",
+          "피트니스 밴드"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "0eb9282088a7e777989cf74c568517e4117f2f27d3c845a068caf2a8390cb99e",
+      "query_text": "可以折叠的雨伞",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "foldable-umbrella",
+      "ideal_answer": "轻量折叠伞(三折或五折收纳款)",
+      "search_terms": {
+        "ja": [
+          "折りたたみ傘 軽量"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "折叠伞",
+          "轻便雨伞"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "3fb4f9e32265c8716d30c27c30cdddaf2ae3b4e07598e9a61e3744f0f6fb395d",
+      "query_text": "婴儿推车用的遮阳罩",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "stroller-sun-shade",
+      "ideal_answer": "婴儿推车专用遮阳罩(防紫外线款)",
+      "search_terms": {
+        "ja": [
+          "ベビーカー 日よけカバー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "婴儿车 遮阳罩",
+          "推车 防晒罩"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "9f5757c4e47366254be9d1a881a62908489a4539849d5258f92113c9cdcc39c7",
+      "query_text": "适合小孩用的安全剪刀",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "kids-safety-scissors",
+      "ideal_answer": "儿童安全剪刀(圆头、防夹手设计)",
+      "search_terms": {
+        "ja": [
+          "子供 安全はさみ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "儿童安全剪刀",
+          "圆头剪刀"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "b9d0dba90a08e57fd8b2098cf33884831dc2c65c7192097bd8b5318a6a29c7a3",
+      "query_text": "portable neck fan for hot weather",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "neck-fan",
+      "ideal_answer": "Neck-worn portable fan (hands-free bladeless neck fan)",
+      "search_terms": {
+        "ja": [
+          "ネックファン"
+        ],
+        "en": [
+          "portable neck fan",
+          "hands free neck fan"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "600818bd126c8953e2b1132e0a3d1a421843162c073cad6b8a7ff08c45defc97",
+      "query_text": "compact umbrella that fits in small bag",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "compact-umbrella",
+      "ideal_answer": "Mini compact folding umbrella (5-fold, ultra-compact size)",
+      "search_terms": {
+        "ja": [
+          "超軽量 折りたたみ傘 コンパクト"
+        ],
+        "en": [
+          "mini compact umbrella",
+          "5 fold umbrella"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "987423a1bf3191b124c9a77489d08cb0bc05ea654a655f1363e25e53738c4bc8",
+      "query_text": "reusable produce bags for grocery shopping",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "reusable-produce-bag",
+      "ideal_answer": "Reusable mesh produce bags (set, washable, drawstring)",
+      "search_terms": {
+        "ja": [
+          "エコバッグ 野菜用 メッシュ"
+        ],
+        "en": [
+          "reusable produce bags",
+          "mesh grocery bags"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "292f0b01feeceb2422ef04aba854ee2a04875536a14c86607d87c75cf49ade0c",
+      "query_text": "モバイルバッテリー おすすめ small size",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "power-bank",
+      "ideal_answer": "小型・軽量タイプのモバイルバッテリー(5000mAh前後)",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー 小型 軽量"
+        ],
+        "en": [
+          "small power bank"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "87d19be0d793fe7928cb09f5f8c40753c31c265f3453eaa84bb83e674ccbcfdc",
+      "query_text": "귀여운 stationery 세트",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "stationery",
+      "ideal_answer": "캐릭터・귀여운 디자인의 문구 세트(펜, 노트, 스티커 등)",
+      "search_terms": {
+        "ja": [
+          "かわいい 文房具 セット"
+        ],
+        "en": [
+          "cute stationery set"
+        ],
+        "ko": [
+          "귀여운 문구 세트"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "6ef7cfde01ad782ab42fddee6fe37fbca206e85d48d9b0e4184632e3205e79d1",
+      "query_text": "秋色 lipstick おすすめ",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "lipstick",
+      "ideal_answer": "秋カラー(テラコッタ・ブラウン系)のリップスティック",
+      "search_terms": {
+        "ja": [
+          "秋色 リップ おすすめ",
+          "テラコッタ リップ"
+        ],
+        "en": [
+          "autumn color lipstick"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "9d159e5c1b51eddc5433dcd10866b9d7f9bf2c3b29c94e56d215937f147785c8",
+      "query_text": "量産型 リュック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "idol-fan-backpack",
+      "ideal_answer": "量産型ファッション向けリュック(リボン・ぬいぐるみクリップ装飾、パステルカラー)",
+      "search_terms": {
+        "ja": [
+          "量産型 リュック",
+          "量産型 バッグ パステル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "b3e1be26bd147e67440ad774ae140bc3faac1a0830ce98eb630f3be4eb39fe72",
+      "query_text": "推し活 うちわ 手作りキット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fan-board-kit",
+      "ideal_answer": "うちわ文字・デコレーション用手作りキット(推し活グッズ)",
+      "search_terms": {
+        "ja": [
+          "うちわ 手作りキット",
+          "推し活 うちわ文字"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "ceac6dc8ddc1d517132e3f1cb6bf57137cbb8e13bf83a83a12275db2deeafe41",
+      "query_text": "地雷系 チョーカー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "choker",
+      "ideal_answer": "地雷系ファッション向けチョーカー(リボン・レース・ハートモチーフ)",
+      "search_terms": {
+        "ja": [
+          "地雷系 チョーカー",
+          "地雷系 アクセサリー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "e8a564752239de9a2d90a6fd681a8fd67f11664d7004cc3906e507d28740111c",
+      "query_text": "タイパ 良い 洗濯洗剤",
+      "locale": "ja",
+      "persona": "general",
+      "category": "laundry-detergent",
+      "ideal_answer": "時短・部屋干し対応の高濃縮洗濯洗剤(すすぎ1回タイプなど)",
+      "search_terms": {
+        "ja": [
+          "すすぎ1回 洗剤",
+          "時短 洗濯洗剤 濃縮"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "0598a0f51a63dd3e47ac32e756683552e211a8cbaddc5e3a32055f10a6fa52e5",
+      "query_text": "SNS映え ドリンクボトル",
+      "locale": "ja",
+      "persona": "general",
+      "category": "water-bottle",
+      "ideal_answer": "デザイン性重視のクリア/カラー水筒(SNS投稿映えするビジュアル)",
+      "search_terms": {
+        "ja": [
+          "おしゃれ 水筒 映え",
+          "デザイン ボトル インスタ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "ace387df2fccdf8b7209dae7b75b0f1515dd818f238bf344adc6f3b257c5bec5",
+      "query_text": "疲れた目に効く目薬",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "目の疲れに対応をうたう目薬にはいくつかの種類があるが、効能・効果には個人差があり断定できません。症状が続く場合は薬剤師や眼科医に相談することをおすすめします。",
+      "search_terms": {
+        "ja": [
+          "目薬 疲れ目 対策"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "724e012f3bd18f6a28b573600b9ac86ca352abd6f524b04e081df84c0d8545ab",
+      "query_text": "肩こりに良いサプリ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "肩こり対策をうたうサプリメントは複数存在しますが、効果を保証するものではありません。症状が重い・長引く場合は整形外科等への相談をおすすめします。",
+      "search_terms": {
+        "ja": [
+          "肩こり サプリ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "2b7814b3b68d8d13f36d53784c3f0f36bf9a4c9b61b88eaf4a94820fbc12450c",
+      "query_text": "秋の運動会用の応援グッズ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sports-day-cheer-goods",
+      "ideal_answer": "運動会向け応援グッズ(応援タオル、メガホン、双眼鏡セットなど)",
+      "search_terms": {
+        "ja": [
+          "運動会 応援グッズ",
+          "運動会 タオル メガホン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "73a64c5cd94287a805bbe8ee9fef29a365b91c05a6c6e4bfa983853d12aa5bdf",
+      "query_text": "デスク下に置く足置き",
+      "locale": "ja",
+      "persona": "general",
+      "category": "footrest",
+      "ideal_answer": "デスク下用フットレスト(高さ調整・角度調整タイプ)",
+      "search_terms": {
+        "ja": [
+          "フットレスト デスク下",
+          "足置き オフィス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "be3bb19153ff900e6d10749f9acea257ef782e0f6d864affe991db8c036e8661",
+      "query_text": "食洗機で洗えるお弁当箱",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dishwasher-safe-lunch-box",
+      "ideal_answer": "食洗機対応弁当箱(パッキン含め丸洗い可能なタイプ)",
+      "search_terms": {
+        "ja": [
+          "お弁当箱 食洗機対応",
+          "食洗機OK 弁当箱"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-13-claude-batch-026.json"
+    },
+    {
+      "content_hash": "a276290b39c19c108c4b913bdb6aba1066c66c32e432334c1d70db9b81ecb7ba",
+      "query_text": "干し柿を作るときのネット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dried-persimmon-net",
+      "ideal_answer": "干し柿・食品乾燥用の吊り下げ式ドライネット",
+      "search_terms": {
+        "ja": [
+          "干し柿 ネット",
+          "食品乾燥ネット 吊り下げ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-13-claude-batch-026.json"
     }
   ]
 }
