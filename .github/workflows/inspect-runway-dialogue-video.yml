@@ -15,4 +15,4 @@ jobs:
           npm install --silent @runwayml/sdk@latest
           f=node_modules/@runwayml/sdk/resources/avatars.d.ts
           line=$(grep -n '^export interface AvatarCreateParams' "$f" | cut -d: -f1)
-          sed -n "${line},$p" "$f" | head -260
+          tail -n +"$line" "$f" | sed -n '1,260p'
