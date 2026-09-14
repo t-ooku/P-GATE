@@ -29,6 +29,9 @@ jobs:
           mkdir -p output
           npm init -y >/dev/null
           npm install --silent @runwayml/sdk@latest
+          python3 -m pip install -q edge-tts
+          edge-tts --voice ja-JP-NanamiNeural --rate=+16% --text '韓国トレンド、今なにが人気？ホシルバズなら、欲しいものをランキングでチェックできるよ。キューテンやシーインの商品も、まとめて探してみてね。無料会員なら、テーマが変わった時にお知らせが届くよ。' --write-media output/avatar-speech.mp3
+          test -s output/avatar-speech.mp3
           node <<'NODE'
           const fs = require('node:fs');
           const RunwayML = require('@runwayml/sdk').default;
@@ -36,29 +39,48 @@ jobs:
           const referenceImage = 'https://hoshilu.app/social/runway/hoshilu-approved-model-reference-v1.jpg';
           const script = '韓国トレンド、今なにが人気？ホシルバズなら、欲しいものをランキングでチェックできるよ。キューテンやシーインの商品も、まとめて探してみてね。無料会員なら、テーマが変わった時にお知らせが届くよ。';
           async function main() {
-            let avatar = await client.avatars.create({
-              name: 'HOSHILU Main Actress 20260914',
-              personality: '明るく親しみやすい日本人女性。買い物のトレンドを自然な日本語で楽しく紹介する。',
-              referenceImage,
-              imageProcessing: 'optimize',
-              voice: {type: 'runway-live-preset', presetId: 'clara'}
-            });
-            fs.writeFileSync('output/avatar-create.json', JSON.stringify(avatar, null, 2));
-            const avatarId = avatar.id;
-            const deadline = Date.now() + 15 * 60 * 1000;
-            while (avatar.status !== 'READY') {
-              if (avatar.status === 'FAILED') throw new Error('avatar failed: '+JSON.stringify(avatar));
-              if (Date.now() > deadline) throw new Error('avatar processing timeout');
-              await new Promise(r=>setTimeout(r,10000));
-              avatar = await client.avatars.retrieve(avatarId);
-              console.log('avatar status', avatar.status);
+            let avatar = null;
+            for await (const item of client.avatars.list({limit: 100})) {
+              if (item.name === 'HOSHILU Main Actress 20260914' && item.status === 'READY') {
+                avatar = item;
+                break;
+              }
             }
-            const task = await client.avatarVideos.create({
-              model: 'gwm1_avatars',
-              avatar: {type: 'custom', avatarId},
-              speech: {type: 'text', text: script, voice: {type: 'preset', presetId: 'clara'}}
-            }).waitForTaskOutput();
-            fs.writeFileSync('output/avatar-video-task.json', JSON.stringify({id:task.id,status:task.status,avatarId,script}, null, 2));
+            if (!avatar) {
+              avatar = await client.avatars.create({
+                name: 'HOSHILU Main Actress 20260914',
+                personality: '明るく親しみやすい日本人女性。買い物のトレンドを自然な日本語で楽しく紹介する。',
+                referenceImage,
+                imageProcessing: 'optimize',
+                voice: {type: 'runway-live-preset', presetId: 'clara'}
+              });
+              const deadline = Date.now() + 15 * 60 * 1000;
+              while (avatar.status !== 'READY') {
+                if (avatar.status === 'FAILED') throw new Error('avatar failed: '+JSON.stringify(avatar));
+                if (Date.now() > deadline) throw new Error('avatar processing timeout');
+                await new Promise(r=>setTimeout(r,10000));
+                avatar = await client.avatars.retrieve(avatar.id);
+                console.log('avatar status', avatar.status);
+              }
+            }
+            fs.writeFileSync('output/avatar-ready.json', JSON.stringify(avatar, null, 2));
+            const audio = 'data:audio/mpeg;base64,' + fs.readFileSync('output/avatar-speech.mp3').toString('base64');
+            let task;
+            for (let attempt=1; attempt<=3; attempt++) {
+              try {
+                task = await client.avatarVideos.create({
+                  model: 'gwm1_avatars',
+                  avatar: {type: 'custom', avatarId: avatar.id},
+                  speech: {type: 'audio', audio}
+                }).waitForTaskOutput();
+                break;
+              } catch (error) {
+                console.error('avatar video attempt', attempt, error.taskDetails || error.message);
+                if (attempt === 3 || error.taskDetails?.failureCode !== 'INTERNAL') throw error;
+                await new Promise(r=>setTimeout(r,15000));
+              }
+            }
+            fs.writeFileSync('output/avatar-video-task.json', JSON.stringify({id:task.id,status:task.status,avatarId:avatar.id,script}, null, 2));
             const url = task.output?.[0];
             if (!url) throw new Error('missing avatar video output');
             const res = await fetch(url);
