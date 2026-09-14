@@ -4851,5 +4851,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "におい移りしない保存容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "におい移りしにくい密閉性の高い保存容器・タッパー",
+    "ideal_answer": "におい移りしにくい素材・密閉構造をうたう保存容器",
+    "reason": "「におい移りしない」は商品名では「におい移りしにくい」「密閉」。 展開規則 odor-free-food-container（モール検索語「におい移りしにくい 保存容器」）。",
+    "category": "odor-free-food-container",
+    "search_terms": {
+      "ja": [
+        "におい移りしにくい 保存容器",
+        "におい移りしない タッパー",
+        "密閉 におい漏れしない 容器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "カレーのにおいが移らないタッパー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "におい移りしにくい密閉性の高い保存容器・タッパー",
+    "ideal_answer": "におい移りしにくい素材・密閉構造をうたう保存容器",
+    "reason": "「におい移りしない」は商品名では「におい移りしにくい」「密閉」。 展開規則 odor-free-food-container（モール検索語「におい移りしにくい 保存容器」）。",
+    "category": "odor-free-food-container",
+    "search_terms": {
+      "ja": [
+        "におい移りしにくい 保存容器",
+        "におい移りしない タッパー",
+        "密閉 におい漏れしない 容器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "中身のにおいがつきにくい密閉容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "におい移りしにくい密閉性の高い保存容器・タッパー",
+    "ideal_answer": "におい移りしにくい素材・密閉構造をうたう保存容器",
+    "reason": "「におい移りしない」は商品名では「におい移りしにくい」「密閉」。 展開規則 odor-free-food-container（モール検索語「におい移りしにくい 保存容器」）。",
+    "category": "odor-free-food-container",
+    "search_terms": {
+      "ja": [
+        "におい移りしにくい 保存容器",
+        "におい移りしない タッパー",
+        "密閉 におい漏れしない 容器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "よだれで濡れてもすぐ乾くスタイ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "よだれで濡れてもすぐ乾く速乾素材のスタイ・よだれかけ",
+    "ideal_answer": "速乾素材・クイックドライをうたうスタイ・よだれかけ・ビブ",
+    "reason": "「すぐ乾く」は商品名では「速乾」「クイックドライ」。 展開規則 quick-dry-baby-bib（モール検索語「速乾 スタイ」）。",
+    "category": "quick-dry-baby-bib",
+    "search_terms": {
+      "ja": [
+        "速乾 スタイ",
+        "速乾 よだれかけ",
+        "クイックドライ ビブ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "よだれかけがすぐ乾きやすい素材",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "よだれで濡れてもすぐ乾く速乾素材のスタイ・よだれかけ",
+    "ideal_answer": "速乾素材・クイックドライをうたうスタイ・よだれかけ・ビブ",
+    "reason": "「すぐ乾く」は商品名では「速乾」「クイックドライ」。 展開規則 quick-dry-baby-bib（モール検索語「速乾 スタイ」）。",
+    "category": "quick-dry-baby-bib",
+    "search_terms": {
+      "ja": [
+        "速乾 スタイ",
+        "速乾 よだれかけ",
+        "クイックドライ ビブ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "よだれでびしょびしょになりにくいビブ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "よだれで濡れてもすぐ乾く速乾素材のスタイ・よだれかけ",
+    "ideal_answer": "速乾素材・クイックドライをうたうスタイ・よだれかけ・ビブ",
+    "reason": "「すぐ乾く」は商品名では「速乾」「クイックドライ」。 展開規則 quick-dry-baby-bib（モール検索語「速乾 スタイ」）。",
+    "category": "quick-dry-baby-bib",
+    "search_terms": {
+      "ja": [
+        "速乾 スタイ",
+        "速乾 よだれかけ",
+        "クイックドライ ビブ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯機の中がカビ臭い時に使うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯機・洗濯槽のカビ臭い・黒カビを落とす洗濯槽クリーナー",
+    "ideal_answer": "洗濯槽の裏側のカビを落とす専用クリーナー(酸素系・塩素系)",
+    "reason": "「洗濯機がカビ臭い」は商品名では「洗濯槽クリーナー」。 展開規則 washer-tub-odor-cleaner（モール検索語「洗濯槽クリーナー」）。",
+    "category": "washer-tub-odor-cleaner",
+    "search_terms": {
+      "ja": [
+        "洗濯槽クリーナー",
+        "洗濯槽 カビ取り",
+        "洗濯槽 塩素系クリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯槽の裏に黒カビが溜まっている気がする",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯機・洗濯槽のカビ臭い・黒カビを落とす洗濯槽クリーナー",
+    "ideal_answer": "洗濯槽の裏側のカビを落とす専用クリーナー(酸素系・塩素系)",
+    "reason": "「洗濯機がカビ臭い」は商品名では「洗濯槽クリーナー」。 展開規則 washer-tub-odor-cleaner（モール検索語「洗濯槽クリーナー」）。",
+    "category": "washer-tub-odor-cleaner",
+    "search_terms": {
+      "ja": [
+        "洗濯槽クリーナー",
+        "洗濯槽 カビ取り",
+        "洗濯槽 塩素系クリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯機のにおいが気になる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯機・洗濯槽のカビ臭い・黒カビを落とす洗濯槽クリーナー",
+    "ideal_answer": "洗濯槽の裏側のカビを落とす専用クリーナー(酸素系・塩素系)",
+    "reason": "「洗濯機がカビ臭い」は商品名では「洗濯槽クリーナー」。 展開規則 washer-tub-odor-cleaner（モール検索語「洗濯槽クリーナー」）。",
+    "category": "washer-tub-odor-cleaner",
+    "search_terms": {
+      "ja": [
+        "洗濯槽クリーナー",
+        "洗濯槽 カビ取り",
+        "洗濯槽 塩素系クリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "食事しても取れにくい口紅",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "食事やマスクでも色落ち・色移りしにくい口紅・リップ・グロス",
+    "ideal_answer": "色移りしにくい・皮脂や汗に強いロングラスティングタイプの口紅・リップ",
+    "reason": "「食事しても取れない」は商品名では「色移りしにくい」「皮脂に強い」。 展開規則 long-lasting-lip-color（モール検索語「色移りしにくい 口紅」）。",
+    "category": "long-lasting-lip-color",
+    "search_terms": {
+      "ja": [
+        "色移りしにくい 口紅",
+        "皮脂に強い リップ",
+        "マスクに色移りしない グロス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "マスクに色移りしないリップ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "食事やマスクでも色落ち・色移りしにくい口紅・リップ・グロス",
+    "ideal_answer": "色移りしにくい・皮脂や汗に強いロングラスティングタイプの口紅・リップ",
+    "reason": "「食事しても取れない」は商品名では「色移りしにくい」「皮脂に強い」。 展開規則 long-lasting-lip-color（モール検索語「色移りしにくい 口紅」）。",
+    "category": "long-lasting-lip-color",
+    "search_terms": {
+      "ja": [
+        "色移りしにくい 口紅",
+        "皮脂に強い リップ",
+        "マスクに色移りしない グロス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "皮脂や汗に強いグロス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "食事やマスクでも色落ち・色移りしにくい口紅・リップ・グロス",
+    "ideal_answer": "色移りしにくい・皮脂や汗に強いロングラスティングタイプの口紅・リップ",
+    "reason": "「食事しても取れない」は商品名では「色移りしにくい」「皮脂に強い」。 展開規則 long-lasting-lip-color（モール検索語「色移りしにくい 口紅」）。",
+    "category": "long-lasting-lip-color",
+    "search_terms": {
+      "ja": [
+        "色移りしにくい 口紅",
+        "皮脂に強い リップ",
+        "マスクに色移りしない グロス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗濯しても縮まないTシャツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯しても縮みにくい防縮加工のTシャツ・ニット・セーター",
+    "ideal_answer": "防縮加工・シュリンク防止をうたうTシャツ・ニット・セーター",
+    "reason": "「洗濯しても縮まない」は商品名では「防縮加工」。 展開規則 shrink-resistant-knit-tee（モール検索語「防縮加工 Tシャツ」）。",
+    "category": "shrink-resistant-knit-tee",
+    "search_terms": {
+      "ja": [
+        "防縮加工 Tシャツ",
+        "縮みにくい ニット",
+        "防縮 セーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "縮みにくいニット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯しても縮みにくい防縮加工のTシャツ・ニット・セーター",
+    "ideal_answer": "防縮加工・シュリンク防止をうたうTシャツ・ニット・セーター",
+    "reason": "「洗濯しても縮まない」は商品名では「防縮加工」。 展開規則 shrink-resistant-knit-tee（モール検索語「防縮加工 Tシャツ」）。",
+    "category": "shrink-resistant-knit-tee",
+    "search_terms": {
+      "ja": [
+        "防縮加工 Tシャツ",
+        "縮みにくい ニット",
+        "防縮 セーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗っても縮み防止のセーター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯しても縮みにくい防縮加工のTシャツ・ニット・セーター",
+    "ideal_answer": "防縮加工・シュリンク防止をうたうTシャツ・ニット・セーター",
+    "reason": "「洗濯しても縮まない」は商品名では「防縮加工」。 展開規則 shrink-resistant-knit-tee（モール検索語「防縮加工 Tシャツ」）。",
+    "category": "shrink-resistant-knit-tee",
+    "search_terms": {
+      "ja": [
+        "防縮加工 Tシャツ",
+        "縮みにくい ニット",
+        "防縮 セーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]

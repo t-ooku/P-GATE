@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-14T03:51:27.743Z",
+  "generated_at": "2026-09-14T23:26:45.972Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -28,7 +28,7 @@
     "2026-09-11-claude-batch-025.json",
     "2026-09-13-claude-batch-026.json"
   ],
-  "entry_count": 1285,
+  "entry_count": 1300,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -20469,6 +20469,321 @@
           "低刺激 絆創膏",
           "肌に優しい ばんそうこう",
           "かぶれにくい バンドエイド"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ce75e343218dba2eb99361da873279102f123cc8497696b416e3aff778e4d51e",
+      "query_text": "におい移りしない保存容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "odor-free-food-container",
+      "ideal_answer": "におい移りしにくい素材・密閉構造をうたう保存容器",
+      "search_terms": {
+        "ja": [
+          "におい移りしにくい 保存容器",
+          "におい移りしない タッパー",
+          "密閉 におい漏れしない 容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "86e9cce8abef01ff0d5ba668067066fabf9b42efd77143093450dbf4d2975270",
+      "query_text": "カレーのにおいが移らないタッパー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "odor-free-food-container",
+      "ideal_answer": "におい移りしにくい素材・密閉構造をうたう保存容器",
+      "search_terms": {
+        "ja": [
+          "におい移りしにくい 保存容器",
+          "におい移りしない タッパー",
+          "密閉 におい漏れしない 容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7f42627783d196958f4d7aa5c8ca206df27237990c60ae301ca52b8b2c87d7c3",
+      "query_text": "中身のにおいがつきにくい密閉容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "odor-free-food-container",
+      "ideal_answer": "におい移りしにくい素材・密閉構造をうたう保存容器",
+      "search_terms": {
+        "ja": [
+          "におい移りしにくい 保存容器",
+          "におい移りしない タッパー",
+          "密閉 におい漏れしない 容器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3591ce0339b477e550b585277825645825a2c682e1dbdac4c0e9c765bd67ff44",
+      "query_text": "よだれで濡れてもすぐ乾くスタイ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-baby-bib",
+      "ideal_answer": "速乾素材・クイックドライをうたうスタイ・よだれかけ・ビブ",
+      "search_terms": {
+        "ja": [
+          "速乾 スタイ",
+          "速乾 よだれかけ",
+          "クイックドライ ビブ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "80cd8c1dba3c97d20ce1365c2cfbe325db9aa71dee1823b02dac0e66ae39ff82",
+      "query_text": "よだれかけがすぐ乾きやすい素材",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-baby-bib",
+      "ideal_answer": "速乾素材・クイックドライをうたうスタイ・よだれかけ・ビブ",
+      "search_terms": {
+        "ja": [
+          "速乾 スタイ",
+          "速乾 よだれかけ",
+          "クイックドライ ビブ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "941f78c4aae511a0f282a81a88decf833808e0479719a9b5ec73b0552e9e22d9",
+      "query_text": "よだれでびしょびしょになりにくいビブ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-baby-bib",
+      "ideal_answer": "速乾素材・クイックドライをうたうスタイ・よだれかけ・ビブ",
+      "search_terms": {
+        "ja": [
+          "速乾 スタイ",
+          "速乾 よだれかけ",
+          "クイックドライ ビブ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "29cb40516b5aae3ce98bd976fea0ad969787defa8516ffcf5de5d353a225cda7",
+      "query_text": "洗濯機の中がカビ臭い時に使うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "washer-tub-odor-cleaner",
+      "ideal_answer": "洗濯槽の裏側のカビを落とす専用クリーナー(酸素系・塩素系)",
+      "search_terms": {
+        "ja": [
+          "洗濯槽クリーナー",
+          "洗濯槽 カビ取り",
+          "洗濯槽 塩素系クリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "98f7b0674e4d9c0c5a42f8cf9efae19d0d8c8a0acbeab0b17e0951784fb13d5d",
+      "query_text": "洗濯槽の裏に黒カビが溜まっている気がする",
+      "locale": "ja",
+      "persona": "general",
+      "category": "washer-tub-odor-cleaner",
+      "ideal_answer": "洗濯槽の裏側のカビを落とす専用クリーナー(酸素系・塩素系)",
+      "search_terms": {
+        "ja": [
+          "洗濯槽クリーナー",
+          "洗濯槽 カビ取り",
+          "洗濯槽 塩素系クリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "673fcf7c58ef7e7f83656c35718b555ca43450912ddfdd6c4527ba430c65fde3",
+      "query_text": "洗濯機のにおいが気になる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "washer-tub-odor-cleaner",
+      "ideal_answer": "洗濯槽の裏側のカビを落とす専用クリーナー(酸素系・塩素系)",
+      "search_terms": {
+        "ja": [
+          "洗濯槽クリーナー",
+          "洗濯槽 カビ取り",
+          "洗濯槽 塩素系クリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e854ad0106ec0ef99370eb05558ab703b0e9fc96f63597e3e871826e342dca38",
+      "query_text": "食事しても取れにくい口紅",
+      "locale": "ja",
+      "persona": "general",
+      "category": "long-lasting-lip-color",
+      "ideal_answer": "色移りしにくい・皮脂や汗に強いロングラスティングタイプの口紅・リップ",
+      "search_terms": {
+        "ja": [
+          "色移りしにくい 口紅",
+          "皮脂に強い リップ",
+          "マスクに色移りしない グロス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "da26ae1e5dc9228aca11945ca109736b38e31091bf6ecc7f17a2fcd39dd0be7d",
+      "query_text": "マスクに色移りしないリップ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "long-lasting-lip-color",
+      "ideal_answer": "色移りしにくい・皮脂や汗に強いロングラスティングタイプの口紅・リップ",
+      "search_terms": {
+        "ja": [
+          "色移りしにくい 口紅",
+          "皮脂に強い リップ",
+          "マスクに色移りしない グロス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "642021d474cb4d0bac99ae600e524057030fe3c173833137a0b5ffd2d489a0f0",
+      "query_text": "皮脂や汗に強いグロス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "long-lasting-lip-color",
+      "ideal_answer": "色移りしにくい・皮脂や汗に強いロングラスティングタイプの口紅・リップ",
+      "search_terms": {
+        "ja": [
+          "色移りしにくい 口紅",
+          "皮脂に強い リップ",
+          "マスクに色移りしない グロス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "de3aa857a60cf6c2856fe30962f0dadf717ecc77cfdb48720f88fa8dfcdbce2f",
+      "query_text": "洗濯しても縮まないTシャツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "shrink-resistant-knit-tee",
+      "ideal_answer": "防縮加工・シュリンク防止をうたうTシャツ・ニット・セーター",
+      "search_terms": {
+        "ja": [
+          "防縮加工 Tシャツ",
+          "縮みにくい ニット",
+          "防縮 セーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "368bc165a0858df2d40d52c8e5e49f1cd644d812f51e623615796dddb9f80a51",
+      "query_text": "縮みにくいニット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "shrink-resistant-knit-tee",
+      "ideal_answer": "防縮加工・シュリンク防止をうたうTシャツ・ニット・セーター",
+      "search_terms": {
+        "ja": [
+          "防縮加工 Tシャツ",
+          "縮みにくい ニット",
+          "防縮 セーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "cd0aaf8ab497d3e7941bb3c081ad526e64ab07295350f03231cac4af17ffed19",
+      "query_text": "洗っても縮み防止のセーター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "shrink-resistant-knit-tee",
+      "ideal_answer": "防縮加工・シュリンク防止をうたうTシャツ・ニット・セーター",
+      "search_terms": {
+        "ja": [
+          "防縮加工 Tシャツ",
+          "縮みにくい ニット",
+          "防縮 セーター"
         ],
         "en": [],
         "ko": [],
