@@ -15,6 +15,17 @@ const FUNNEL_EVENTS = Object.freeze([
 const emptyFunnel = () => Object.fromEntries(FUNNEL_EVENTS.map(event => [event, 0]));
 const VALUE_EVENT_SQL = "'ai_result_clicked','ranking_result_clicked','price_comparison_opened','wish_saved','continuous_search_saved','share_started','marketplace_click'";
 const IDENTITY_INELIGIBLE_EVENT_SQL = "'continuous_search_enabled','search_backend_failed','search_provider_degraded','search_client_degraded'";
+// Keep the management dashboard on the user journey it reports.  In September 2026,
+// crawler-generated shop_viewed rows flooded the event table; scanning unrelated event
+// types made the authenticated 30-day dashboard time out even though the KPI rows were
+// intact.  The event_type + occurred_at index can serve this allow-list directly.
+const BUSINESS_EVENT_SQL = [
+  'landing_view', 'search_started', 'search_completed', 'search_failed', 'search_dead_end',
+  'ai_result_clicked', 'ranking_result_clicked', 'price_comparison_opened', 'wish_saved',
+  'continuous_search_saved', 'share_started', 'marketplace_click', 'member_registered',
+  'target_price_watch_set', 'continuous_search_enabled', 'search_backend_failed',
+  'search_provider_degraded', 'search_client_degraded'
+].map(value => `'${value}'`).join(',');
 const SEARCH_INPUT_EVENTS = Object.freeze({
   search_input_text: ['TEXT', 'attempts'],
   search_input_screenshot: ['SCREENSHOT', 'attempts'],
@@ -92,7 +103,8 @@ const shiftDays = (value, days) => new Date(new Date(value).getTime() + days * 8
 const SESSION_METRICS_SQL = `WITH base AS (
   SELECT visitor_id,session_id,event_type,traffic_class,occurred_at
   FROM growth_events
-  WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
+  WHERE event_type IN (${BUSINESS_EVENT_SQL})
+    AND occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
 ), session_flags AS (
   SELECT session_id,
     MAX(CASE WHEN event_type='landing_view' THEN 1 ELSE 0 END) AS landed,
@@ -148,7 +160,8 @@ FROM session_flags`;
 
 const SOURCE_BREAKDOWN_SQL = `WITH base AS (
   SELECT visitor_id,session_id,event_type,source,medium
-  FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA' AND session_id<>''
+  FROM growth_events WHERE event_type IN (${BUSINESS_EVENT_SQL})
+    AND occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA' AND session_id<>''
 ), sessions AS (
   SELECT session_id,MAX(visitor_id) AS visitor_id,
     COALESCE(NULLIF(MAX(source),''),'DIRECT') AS source,
@@ -189,7 +202,8 @@ const DAILY_SQL = `WITH sessions AS (
     MAX(CASE WHEN event_type='search_completed' THEN 1 ELSE 0 END) AS completed,
     MAX(CASE WHEN event_type IN (${VALUE_EVENT_SQL}) THEN 1 ELSE 0 END) AS valued,
     MAX(CASE WHEN event_type='marketplace_click' THEN 1 ELSE 0 END) AS outbound
-  FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA' AND session_id<>''
+  FROM growth_events WHERE event_type IN (${BUSINESS_EVENT_SQL})
+    AND occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA' AND session_id<>''
   GROUP BY substr(occurred_at,1,10),session_id
 )
 SELECT day,COUNT(DISTINCT CASE WHEN visitor_id<>'' THEN visitor_id END) AS visitors,
@@ -449,7 +463,7 @@ async function businessKpiSummary(env, now) {
       periodSummary(env, now, 7), periodSummary(env, now, 30)
     ]);
     const annualTraffic = await env.PRODUCT_DB.prepare(`SELECT COUNT(DISTINCT visitor_id) AS visitors
-      FROM growth_events WHERE occurred_at>=?1 AND occurred_at<?2
+      FROM growth_events WHERE event_type='landing_view' AND occurred_at>=?1 AND occurred_at<?2
       AND traffic_class<>'QA' AND visitor_id<>''`)
       .bind(ANNUAL_TRAFFIC_TARGET.start_at, ANNUAL_TRAFFIC_TARGET.end_at).first();
     const annualVisitors = safeCount(annualTraffic?.visitors);

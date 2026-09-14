@@ -169,6 +169,26 @@ test('販促ダッシュボードは各チャネルを分離して予定・公�
   assert.equal(summary.business_kpis.search_input_mix['30d'].total_searches, 2);
 });
 
+test('販促ダッシュボードはクローラー由来のshop_viewed洪水を経営KPI集計から外す', async () => {
+  const db = setup();
+  const event = db.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
+  for (let index = 0; index < 1000; index += 1) {
+    event.run(`crawler-shop-${index}`, 'shop_viewed', 'JA', 'worker', 'shop', 'with-care', 'search', '',
+      '2026-08-09T15:00:00Z', 'ATTRIBUTED', `crawler-${index}`, `crawler-session-${index}`);
+  }
+
+  const summary = await promotionDashboardSummary(
+    { PRODUCT_DB: d1(db), SOCIAL_AUTOPILOT_ENABLED: 'false' }, new Date('2026-08-10T00:00:00.000Z')
+  );
+  const current = summary.business_kpis.periods['7d'].current;
+  assert.equal(summary.business_kpis.status, 'READY');
+  assert.equal(current.visitors, 2);
+  assert.equal(current.sessions, 3);
+  assert.equal(current.events, 16, '計測イベントも経営ファネル対象だけを数える');
+});
+
 test('カメラ検索の固定入力区分ごとに受理・成功・送客CVを分離して集計する', async () => {
   const db = setup();
   const event = db.prepare(`INSERT INTO growth_events
