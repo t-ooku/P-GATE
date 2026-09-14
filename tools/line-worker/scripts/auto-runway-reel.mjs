@@ -267,6 +267,15 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
     evidence.faces = vision;
     problems.push('face_check_unavailable');
   }
+  // Cloud Vision の FACE_DETECTION は「顔がある」ことしか判定できず、
+  // 承認済み女優との本人一致は保証しない。2026-09-14 の別人公開事故を受け、
+  // 生体照合を実装・検証するまでは自動承認を必ず停止する（fail closed）。
+  evidence.identity = {
+    ok: false,
+    reference: themes.character_image_url,
+    reason: 'biometric_face_match_not_implemented'
+  };
+  problems.push('identity_check_unavailable');
   // セリフ（Whisper）
   const transcript = transcribe(raw, dir, durationA);
   if (transcript.text !== undefined) {
@@ -293,7 +302,7 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
   // 一覧表（証跡用）
   run('ffmpeg', ['-y', '-v', 'error', '-i', out, '-vf', 'fps=1,scale=180:-1,tile=4x4', '-frames:v', '1', path.join(dir, 'contact-sheet.jpg')]);
   evidence.machine_verified = ['video_spec', 'audio_spec', 'duration', 'decode', 'audio_present', 'overlay_burned', 'face_single_clear(vision)', 'speech_matches_script(whisper)', 'caption_ai_disclosure', 'link_hoshilu', 'duplicate', 'competing_slot'];
-  evidence.not_biometrically_verified = ['identity_consistent: same approved reference image conditions every generation; no face matching performed', 'hands: props excluded by prompt; hand shape not machine-verified'];
+  evidence.not_biometrically_verified = ['hands: props excluded by prompt; hand shape not machine-verified'];
   return { ok: problems.length === 0, problems, evidence };
 }
 
