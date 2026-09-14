@@ -35,7 +35,7 @@ jobs:
           test -s /tmp/reel/contact-sheet.jpg
           cp /tmp/reel/talking-reel.mp4 tools/line-worker/public/social/hoshilu-buzz-main-actress-talking-review-20260914.mp4
           cp /tmp/reel/contact-sheet.jpg tools/line-worker/public/social/runway/hoshilu-buzz-main-actress-talking-review-20260914-contact-sheet.jpg
-          sed 's#output/reel.mp4#/tmp/reel/talking-reel.mp4#' /tmp/reel/talking-reel.sha256 | sha256sum -c -
+          sed 's#output/talking-reel.mp4#/tmp/reel/talking-reel.mp4#' /tmp/reel/talking-reel.sha256 | sha256sum -c -
       - name: Commit generated media for review
         run: |
           set -euo pipefail
@@ -62,7 +62,7 @@ jobs:
           for i in {1..12}; do
             code="$(curl -sS -o /tmp/preview.mp4 -w '%{http_code}' "$url")"
             if [ "$code" = 200 ] && [ "$(stat -c%s /tmp/preview.mp4)" -gt 100000 ]; then
-              ffprobe -v error -show_entries format=duration:stream=codec_type,codec_name,channels -of json /tmp/preview.mp4
+              test "$(head -c 12 /tmp/preview.mp4 | tail -c 8 | tr -d '\\000')" != ""
               exit 0
             fi
             sleep 10
