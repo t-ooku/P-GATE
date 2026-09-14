@@ -1,0 +1,20 @@
+name: Inspect Runway dialogue video interfaces
+on:
+  push:
+    branches: [feature/ui-search-v2]
+    paths: ['.github/workflows/inspect-runway-dialogue-video.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          set -euo pipefail
+          npm init -y >/dev/null
+          npm install --silent @runwayml/sdk@latest
+          find node_modules/@runwayml/sdk/resources -maxdepth 2 -type f -name '*.d.ts' | sort
+          for f in $(find node_modules/@runwayml/sdk/resources -maxdepth 2 -type f -name '*.d.ts' | grep -Ei 'avatar|lip|dialogue|character|performance|video' || true); do
+            echo "FILE:$f"
+            sed -n '1,400p' "$f"
+          done
