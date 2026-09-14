@@ -35,7 +35,7 @@ jobs:
           test -s /tmp/reel/contact-sheet.jpg
           cp /tmp/reel/reel.mp4 tools/line-worker/public/social/hoshilu-buzz-korea-runway-20260914.mp4
           cp /tmp/reel/contact-sheet.jpg tools/line-worker/public/social/runway/hoshilu-buzz-korea-runway-20260914-contact-sheet.jpg
-          sha256sum -c /tmp/reel/reel.sha256
+          sed 's#output/reel.mp4#/tmp/reel/reel.mp4#' /tmp/reel/reel.sha256 | sha256sum -c -
       - name: Commit generated media for review
         run: |
           set -euo pipefail
