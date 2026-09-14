@@ -183,9 +183,22 @@ JS を実行する検索エンジン／SNS のリンク先取得が「読者」�
 - 対応2（#275、head `1881c07`、CI ✅ 2026-09-14T04:29Z、テスト 2304）: `OUTREACH_REQUIRED_SENTENCES`（定型文13文）を
   一字一句そのまま含まない行は Worker が送らず `SKIPPED`（`last_error=template_mismatch:<欠けた文>`）。
   hook の1文（自由文）の誤字は検出できない → 投入側の手順で「hook は常用漢字のみ・INSERT 後に SELECT で読み直す」
+  （Projects `claude/hoshilu_seller_outreach_template_rule_2026-09-14.md`、日次販促ログ冒頭に【必読】を追記）
 - 候補リスト 30 社は 9/14 で投入完了（フォーム限定2社除く28社）。新規候補の調査までは新しい行は発生しない
 - **大隆さんの判断が要るもの**: 誤字のまま届いた 5 社へ訂正・お詫びを再送するか。「1アドレス生涯1回」の仕組み外の手動送信になり、
   2通目は特定電子メール法上も慎重さが要る。Cowork の意見は「再送しない（返信があった相手にだけ丁寧に対応）」
+
+### shop_viewed の洪水（9/8〜、1日 48〜67万件）→ 原因はクローラの絞り込み総当たり。#276 → **本番確認済み**
+
+- 事実: `growth_events.shop_viewed` が `source='worker'` で 9/14 は 14 時間で 320,873 件（ほぼ全部 `with-care` / `content='search'`、
+  1分あたり 370〜480 件）。D1 が 2.6GB まで肥大。日次販促タスクが 9/9 から6日連続で「要注意」と報告していたが未対応だった
+- 原因: ショップページの絞り込みワード（商品名から生成）×ブランド×属性×ページ送りのリンクを検索エンジンのクローラが総当たり
+- 対応（#276、head `2d74620`、CI ✅ 2026-09-14T04:51Z、テスト 2305）: 既知クローラ UA は `shop_viewed` を記録しない／
+  絞り込み・並び順・2ページ目以降は `noindex,nofollow`／チップとページ送りに `rel=nofollow`／`robots.txt` に `Disallow: /shop/*?`
+- 本番確認: robots.txt に反映。D1 の分あたり件数が 04:51 の 384 件 → 04:52 以降 **0〜1 件**（デプロイ直後に止まった）
+- **大隆さんの承認が要るもの**: 既存の約 300 万行の削除（§54 DELETE）。SQL:
+  `DELETE FROM growth_events WHERE event_type='shop_viewed' AND source='worker' AND campaign='with-care' AND content='search' AND occurred_at >= '2026-09-08'`
+  （人の閲覧も一部混ざるが、この期間の with-care/search は 99.9% がクローラ。Seller 向け「Shop 閲覧」KPI は 9/8〜9/14 を欠測扱いにする）
 
 ---
 
@@ -229,6 +242,7 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 決定済み（対応不要） | OpenAI 課金は当面しない。`openai_backup BILLING_DISABLED` は既知状態 |
 | 実装済み・本番未確認 | AI女優の参照を v1 に統一（`22c6fef`）。9/12 は precheck で未生成（#270）→ 次の月・水・土で確認。v2 生成済み2本の扱いは大隆さん判断待ち |
 | 本番確認済み | #275 セラー営業メールの定型文ゲート（template_mismatch）。9/14 投入分 3 通は D1 で訂正済み。誤字のまま届いた 5 社への再送は大隆さん判断待ち |
+| 本番確認済み | #276 クローラのショップ閲覧を記録しない・絞り込み URL を noindex,nofollow・robots Disallow。洪水は停止。既存 300 万行の削除は承認待ち |
 | 要判断（大隆さん） | v2 毎日リール（`hoshilu-ai-actress-daily-v1`）の APPROVED 26件の取り消し。9/4 引き継ぎが Codex 側で未実施 |
 | 確定 | SNS 着地は事前読み込み／bot。人の SNS 流入はほぼゼロ。評価軸を検索完了・ウォッチ設定に変更 |
 | 未実装 | SEO の人の読者づくり（SNS からの記事誘導） |
