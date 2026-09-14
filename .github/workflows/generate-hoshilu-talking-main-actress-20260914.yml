@@ -1,0 +1,95 @@
+name: Generate HOSHILU talking main actress preview 2026-09-14
+
+on:
+  push:
+    branches: [feature/ui-search-v2]
+    paths:
+      - '.github/workflows/generate-hoshilu-talking-main-actress-20260914.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runway-hoshilu-talking-main-actress-20260914
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create main-actress avatar and generate synchronized speech video
+        run: |
+          set -euo pipefail
+          test -n "$RUNWAYML_API_SECRET"
+          mkdir -p output
+          npm init -y >/dev/null
+          npm install --silent @runwayml/sdk@latest
+          node <<'NODE'
+          const fs = require('node:fs');
+          const RunwayML = require('@runwayml/sdk').default;
+          const client = new RunwayML({apiKey: process.env.RUNWAYML_API_SECRET});
+          const referenceImage = 'https://hoshilu.app/social/runway/hoshilu-approved-model-reference-v1.jpg';
+          const script = '韓国トレンド、今なにが人気？ホシルバズなら、欲しいものをランキングでチェックできるよ。キューテンやシーインの商品も、まとめて探してみてね。無料会員なら、テーマが変わった時にお知らせが届くよ。';
+          async function main() {
+            let avatar = await client.avatars.create({
+              name: 'HOSHILU Main Actress 20260914',
+              personality: '明るく親しみやすい日本人女性。買い物のトレンドを自然な日本語で楽しく紹介する。',
+              referenceImage,
+              imageProcessing: 'optimize',
+              voice: {type: 'runway-live-preset', presetId: 'clara'}
+            });
+            fs.writeFileSync('output/avatar-create.json', JSON.stringify(avatar, null, 2));
+            const avatarId = avatar.id;
+            const deadline = Date.now() + 15 * 60 * 1000;
+            while (avatar.status !== 'READY') {
+              if (avatar.status === 'FAILED') throw new Error('avatar failed: '+JSON.stringify(avatar));
+              if (Date.now() > deadline) throw new Error('avatar processing timeout');
+              await new Promise(r=>setTimeout(r,10000));
+              avatar = await client.avatars.retrieve(avatarId);
+              console.log('avatar status', avatar.status);
+            }
+            const task = await client.avatarVideos.create({
+              model: 'gwm1_avatars',
+              avatar: {type: 'custom', avatarId},
+              speech: {type: 'text', text: script, voice: {type: 'preset', presetId: 'clara'}}
+            }).waitForTaskOutput();
+            fs.writeFileSync('output/avatar-video-task.json', JSON.stringify({id:task.id,status:task.status,avatarId,script}, null, 2));
+            const url = task.output?.[0];
+            if (!url) throw new Error('missing avatar video output');
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('download '+res.status);
+            fs.writeFileSync('output/talking-raw.mp4', Buffer.from(await res.arrayBuffer()));
+          }
+          main().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+
+      - name: Add quiet pop BGM and HOSHILU BUZZ text
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-cjk
+          font=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc
+          music=tools/line-worker/public/social/hoshilu-reel-9malls-pop-v1.mp4
+          test -s output/talking-raw.mp4
+          test -s "$music"
+          ffmpeg -y -v error -i output/talking-raw.mp4 -stream_loop -1 -i "$music" \
+            -filter_complex "[0:v]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,fps=24,drawtext=fontfile='$font':text='韓国トレンド、いま何が人気？':fontsize=40:fontcolor=white:x=(w-text_w)/2:y=95:box=1:boxcolor=0x111111@0.62:boxborderw=18:enable='between(t,0.2,4.5)',drawtext=fontfile='$font':text='HOSHILU BUZZでチェック':fontsize=38:fontcolor=white:x=(w-text_w)/2:y=1050:box=1:boxcolor=0x8d2de2@0.74:boxborderw=18:enable='gte(t,3.5)',drawtext=fontfile='$font':text='Qoo10・SHEINもまとめて探せる':fontsize=30:fontcolor=white:x=(w-text_w)/2:y=1120:box=1:boxcolor=0xff4f81@0.76:boxborderw=14:enable='gte(t,5.0)',drawtext=fontfile='$font':text='hoshilu.app/buzz  |  AI生成・AI加工映像':fontsize=23:fontcolor=white:x=(w-text_w)/2:y=1218:box=1:boxcolor=black@0.64:boxborderw=9[v];[0:a]volume=1.18[voice];[1:a]volume=0.16[bgm];[voice][bgm]amix=inputs=2:duration=first:dropout_transition=0,alimiter=limit=0.92[a]" \
+            -map "[v]" -map "[a]" -shortest -c:v libx264 -preset medium -crf 18 -profile:v high -level:v 4.0 -pix_fmt yuv420p -r 24 -c:a aac -b:a 192k -ar 44100 -ac 2 -movflags +faststart output/talking-reel.mp4
+          ffmpeg -v error -i output/talking-reel.mp4 -f null -
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,codec_name,width,height,channels,sample_rate -of json output/talking-reel.mp4 > output/probe.json
+          node -e "const p=require('./output/probe.json');if(!p.streams.some(s=>s.codec_type==='video')||!p.streams.some(s=>s.codec_type==='audio'&&Number(s.channels)>=2))throw Error('missing AV streams')"
+          ffmpeg -hide_banner -i output/talking-reel.mp4 -af volumedetect -f null - 2> output/volume.txt
+          grep -E 'mean_volume|max_volume' output/volume.txt
+          ffmpeg -y -v error -i output/talking-raw.mp4 -vf "fps=1,scale=180:-1,tile=5x2" -frames:v 1 output/contact-sheet.jpg
+          sha256sum output/talking-reel.mp4 > output/talking-reel.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hoshilu-talking-main-actress-preview-20260914-${{ github.run_id }}
+          path: output/
+          retention-days: 7
