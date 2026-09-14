@@ -13,8 +13,7 @@ jobs:
           set -euo pipefail
           npm init -y >/dev/null
           npm install --silent @runwayml/sdk@latest
-          find node_modules/@runwayml/sdk/resources -maxdepth 2 -type f -name '*.d.ts' | sort
-          for f in $(find node_modules/@runwayml/sdk/resources -maxdepth 2 -type f -name '*.d.ts' | grep -Ei 'avatar|lip|dialogue|character|performance|video' || true); do
+          for f in node_modules/@runwayml/sdk/resources/voice-isolation.d.ts node_modules/@runwayml/sdk/resources/voices.d.ts node_modules/@runwayml/sdk/resources/avatars.d.ts node_modules/@runwayml/sdk/resources/avatar-videos.d.ts; do
             echo "FILE:$f"
-            sed -n '1,400p' "$f"
+            sed -n '1,900p' "$f"
           done
