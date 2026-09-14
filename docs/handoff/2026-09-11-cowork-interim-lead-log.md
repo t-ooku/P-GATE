@@ -88,26 +88,6 @@ HTTP 200 を返し、AI候補なしで **13モールの検索リンク導線は�
   以後 SNS の評価軸は 着地数ではなく `search_completed` と `target_price_watch_set`（人の行動）だけにする
 - Turnstile の設定変更（interaction-only 等）は、人の visible pending が観測されるまで**行わない**
 
----
-
-## 2026-09-12
-
-### Runway 自動生成（土 06:00）→ **未生成**（Issue #270、クレジット消費なし）
-
-`AUTO_REEL_COMPETING_SLOT_PRECHECK`: 同じ 20:15 JST 枠に `hoshilu-ai-actress-daily-v1-instagram-2026-09-12`
-が APPROVED だったため二重投稿回避で停止。v1 参照での生成確認は次回（月・水・土）に持ち越し。
-
-### 発見: 22歳設定（v2）の毎日リールが止まっていない → **要判断（大隆さん）**
-
-- キャンペーン `hoshilu-ai-actress-daily-v1`（8/29 作成、権利台帳「承認済み v2 参照画像」）が毎日 20:15 JST に
-  Instagram + X へ PUBLISHED（8/28〜9/12 で各14件）。9/13〜9/25 に APPROVED が **IG 13・X 13 = 26件** 残っている
-- 9/4 の Codex 宛引き継ぎ `docs/handoff/2026-09-04-target-shift-sns-handover.md` §「毎日20:15 JST」は
-  「v1 を毎日1本、v2 の毎日枠は停止」。**Codex 側で未実施のまま**（9/7・9/9 の2日分だけ CANCELLED）
-- Runway 日（月・水・土）にこの行が残っていると precheck で自動生成が毎回止まる
-- 提示した選択肢: (1) 26件すべて CANCELLED（9/4 決定どおり） (2) 月・水・土の 10 件だけ CANCELLED
-  （9/14,16,19,21,23 の IG+X） (3) 何もしない。**既存行 UPDATE は §54 承認事項なので指示待ち**
-- 実行 SQL（承認後）: `UPDATE social_post_queue SET status='CANCELLED', last_error='CANCELLED_BY_TAKAYUKI_2026-09-12', updated_at=<now> WHERE campaign_id='hoshilu-ai-actress-daily-v1' AND status='APPROVED' AND jst_publish_date >= '2026-09-13'`（案2は `AND jst_publish_date IN (...)` を付ける）
-
 ### 未着手 2〜4 は Codex の 9/7〜9/10 修正で既に本番動作 → **本番確認済み**（D1 で確認、13:40 JST）
 
 - 2 希望価格ウォッチの検索語: `targetPriceSearchQuery`（`35fca07`）で短い検索語に落としている。
@@ -171,6 +151,44 @@ JS を実行する検索エンジン／SNS のリンク先取得が「読者」�
 
 ---
 
+## 2026-09-12
+
+### Runway 自動生成（土 06:00）→ **未生成**（Issue #270、クレジット消費なし）
+
+`AUTO_REEL_COMPETING_SLOT_PRECHECK`: 同じ 20:15 JST 枠に `hoshilu-ai-actress-daily-v1-instagram-2026-09-12`
+が APPROVED だったため二重投稿回避で停止。v1 参照での生成確認は次回（月・水・土）に持ち越し。
+
+### 発見: 22歳設定（v2）の毎日リールが止まっていない → **要判断（大隆さん）**
+
+- キャンペーン `hoshilu-ai-actress-daily-v1`（8/29 作成、権利台帳「承認済み v2 参照画像」）が毎日 20:15 JST に
+  Instagram + X へ PUBLISHED（8/28〜9/12 で各14件）。9/13〜9/25 に APPROVED が **IG 13・X 13 = 26件** 残っている
+- 9/4 の Codex 宛引き継ぎ `docs/handoff/2026-09-04-target-shift-sns-handover.md` §「毎日20:15 JST」は
+  「v1 を毎日1本、v2 の毎日枠は停止」。**Codex 側で未実施のまま**（9/7・9/9 の2日分だけ CANCELLED）
+- Runway 日（月・水・土）にこの行が残っていると precheck で自動生成が毎回止まる
+- 提示した選択肢: (1) 26件すべて CANCELLED（9/4 決定どおり） (2) 月・水・土の 10 件だけ CANCELLED
+  （9/14,16,19,21,23 の IG+X） (3) 何もしない。**既存行 UPDATE は §54 承認事項なので指示待ち**
+- 実行 SQL（承認後）: `UPDATE social_post_queue SET status='CANCELLED', last_error='CANCELLED_BY_TAKAYUKI_2026-09-12', updated_at=<now> WHERE campaign_id='hoshilu-ai-actress-daily-v1' AND status='APPROVED' AND jst_publish_date >= '2026-09-13'`（案2は `AND jst_publish_date IN (...)` を付ける）
+
+---
+
+## 2026-09-14
+
+### 事故: セラー営業メールの本文に誤った漢字・カナ → 3通は D1 で訂正、Worker に定型文ゲート（#275）→ **本番確認済み**
+
+- 13:15 JST 大隆さんが配信テスト（自分宛）で発見:「弁然のご連絡失箰いたします」「取り揁って」「リピーグー」「まだ大にありません」
+- 原因: Cowork の日次販促タスク（06:30 JST）が AI で本文を書き、目視確認だけで投入していた。9/7〜9/10 投入分（20通）は正常、
+  **9/11 投入分 5 通**（かばんやさん／スタイルオンバッグ／京童工房／HushTug／ナチュレンピー）は「冒頃なご連絡失祬いたします」
+  「商品情報ヘージ」のまま **9/14 09:15〜09:30 JST に実送信済み**。9/14 投入分 3 通は 9/15 09:05 送信予定で未送信
+- 対応1（大隆さん指示「すぐ訂正して」＝承認済み）: QUEUED 3 行（`seller-outreach-2026-09-14-01〜03`）の `body` / `hook` を正しい定型文に UPDATE し、読み直して確認
+- 対応2（#275、head `1881c07`、CI ✅ 2026-09-14T04:29Z、テスト 2304）: `OUTREACH_REQUIRED_SENTENCES`（定型文13文）を
+  一字一句そのまま含まない行は Worker が送らず `SKIPPED`（`last_error=template_mismatch:<欠けた文>`）。
+  hook の1文（自由文）の誤字は検出できない → 投入側の手順で「hook は常用漢字のみ・INSERT 後に SELECT で読み直す」
+- 候補リスト 30 社は 9/14 で投入完了（フォーム限定2社除く28社）。新規候補の調査までは新しい行は発生しない
+- **大隆さんの判断が要るもの**: 誤字のまま届いた 5 社へ訂正・お詫びを再送するか。「1アドレス生涯1回」の仕組み外の手動送信になり、
+  2通目は特定電子メール法上も慎重さが要る。Cowork の意見は「再送しない（返信があった相手にだけ丁寧に対応）」
+
+---
+
 ## 3. 判定SQL（再利用）
 
 ```sql
@@ -210,6 +228,7 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 本番確認済み | #264 ショップ PROFILE に事業者名・店舗住所（ITG 3店に設定済み）／値下がり待ちの人数は5人以上のみ表示 |
 | 決定済み（対応不要） | OpenAI 課金は当面しない。`openai_backup BILLING_DISABLED` は既知状態 |
 | 実装済み・本番未確認 | AI女優の参照を v1 に統一（`22c6fef`）。9/12 は precheck で未生成（#270）→ 次の月・水・土で確認。v2 生成済み2本の扱いは大隆さん判断待ち |
+| 本番確認済み | #275 セラー営業メールの定型文ゲート（template_mismatch）。9/14 投入分 3 通は D1 で訂正済み。誤字のまま届いた 5 社への再送は大隆さん判断待ち |
 | 要判断（大隆さん） | v2 毎日リール（`hoshilu-ai-actress-daily-v1`）の APPROVED 26件の取り消し。9/4 引き継ぎが Codex 側で未実施 |
 | 確定 | SNS 着地は事前読み込み／bot。人の SNS 流入はほぼゼロ。評価軸を検索完了・ウォッチ設定に変更 |
 | 未実装 | SEO の人の読者づくり（SNS からの記事誘導） |
