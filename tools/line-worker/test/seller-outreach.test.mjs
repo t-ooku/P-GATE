@@ -3,10 +3,30 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  OUTREACH_PER_CYCLE_LIMIT, composeOutreachText, emailHash, findForbiddenPhrases,
+  OUTREACH_PER_CYCLE_LIMIT, OUTREACH_REQUIRED_SENTENCES, composeOutreachText, emailHash, findForbiddenPhrases, findMissingTemplateSentences,
   handleSellerOutreachRoutes, jstBusinessHours, jstDayRange, newUnsubscribeToken,
   outreachReadiness, runSellerOutreachCycle, unsubscribeUrl
 } from '../src/seller-outreach.mjs';
+
+// 本番で実際に送られている型（2026-09-10 投入分）。hook の1文だけを会社ごとに変える。
+const GOOD_BODY = (shop, hook) => `${shop} ご担当者様
+
+突然のご連絡失礼いたします。買い物検索サービス HOSHILU を運営している大久津と申します。楽天商品情報ページに記載の連絡先へお送りしています。
+
+HOSHILU は、Amazon・楽天・Qoo10 などを横断して商品を探すサービスです。${hook}
+
+HOSHILU でできること（すべて現在公開中の機能です）:
+・商品・ジャンル・ショップの3方向から、探している人に見つけてもらう
+・「この価格になったら教えて」（希望価格ウォッチ）とセール通知で、今すぐ買わない人を買い時までつなぐ
+・ショップページ、ショップ発行クーポン、「ショップをホシる」（フォロー）でリピーター候補を残す
+
+料金は Seller 9,800円/月（税込）。最初の3か月は月額0円で、送客料（有効クリック分）のみです。初期費用・解約金はありません。
+先行して掲載中のショップの例: https://hoshilu.app/shop/with-care
+
+ユーザー数はまだ多くありません。だからこそ、最初のセラー様とは「新しい集客チャネルを一緒に作る」つもりで、ショップページの作成や商品の取り込みはこちらで代行します。
+詳細: https://hoshilu.app/for-sellers
+
+ご興味があれば、このメールへの返信でお気軽にご相談ください。`;
 
 function databaseEnv(extra = {}) {
   const db = new DatabaseSync(':memory:');
@@ -26,7 +46,7 @@ async function insertContact(db, overrides = {}) {
   const email = overrides.contact_email || 'shop@example.com';
   const row = { contact_id: 'c1', shop_name: 'テスト商店', contact_email: 'shop@example.com',
     email_hash: await emailHash(email), subject: '商品を探している人に、見つけてもらいませんか',
-    body: 'テスト商店 ご担当者様\n\nHOSHILU では商品・ジャンル・ショップの3方向から見つけてもらえます。',
+    body: GOOD_BODY('テスト商店', 'テスト用の1文です。'),
     status: 'QUEUED', scheduled_at: '2026-09-07T00:00:00.000Z', unsubscribe_token: 'a'.repeat(32),
     sent_at: '', created_at: '2026-09-06T00:00:00.000Z', updated_at: '2026-09-06T00:00:00.000Z', ...overrides };
   db.prepare(`INSERT INTO seller_outreach_contacts (contact_id,shop_name,contact_email,email_hash,subject,body,status,scheduled_at,sent_at,unsubscribe_token,created_at,updated_at)
@@ -185,4 +205,22 @@ test('/health にセラー営業メールの送信可否を出す', () => {
   const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(index, /seller_outreach: outreachReadiness\(env\)\.ok/u);
   assert.match(index, /import \{ handleSellerOutreachRoutes, outreachReadiness, runSellerOutreachCycle \}/u);
+});
+
+test('2026-09-14 事故: 型の文が一字一句そのまま無い本文（誤字・文字化け）は送らず SKIPPED', async () => {
+  assert.deepEqual(findMissingTemplateSentences(GOOD_BODY('良い商店', '雑貨を取り扱っている貴店と相性が良いと思い、ご連絡しました。')), []);
+  assert.ok(OUTREACH_REQUIRED_SENTENCES.length >= 10);
+  const garbled = GOOD_BODY('誤字商店', 'x').replace('突然のご連絡失礼いたします', '弁然のご連絡失箰いたします').replace('リピーター', 'リピーグー');
+  assert.deepEqual(findMissingTemplateSentences(garbled).slice(0, 1), ['突然のご連絡失礼いたします。買い物検索サービス HOSHILU を運営している大久津と申します。']);
+  const { db, env } = databaseEnv();
+  await insertContact(db, { contact_id: 'g1', contact_email: 'g1@example.com', body: garbled, unsubscribe_token: 'g'.repeat(32) });
+  await insertContact(db, { contact_id: 'g2', contact_email: 'g2@example.com', body: GOOD_BODY('良い商店', 'ok'), unsubscribe_token: 'h'.repeat(32) });
+  const sent = [];
+  const fetchImpl = async (url, init) => { sent.push(JSON.parse(init.body)); return new Response(JSON.stringify({ id: 'r' }), { status: 200 }); };
+  await runSellerOutreachCycle(env, MONDAY_10AM_JST, fetchImpl);
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].to[0], 'g2@example.com');
+  const skipped = db.prepare(`SELECT status,last_error FROM seller_outreach_contacts WHERE contact_id='g1'`).get();
+  assert.equal(skipped.status, 'SKIPPED');
+  assert.match(skipped.last_error, /^template_mismatch:突然のご連絡失礼いたします/u);
 });

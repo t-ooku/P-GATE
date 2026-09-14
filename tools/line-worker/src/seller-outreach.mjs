@@ -44,6 +44,31 @@ export function jstDayRange(date) {
   return { from: new Date(start).toISOString(), to: new Date(start + 24 * 60 * 60 * 1000).toISOString() };
 }
 
+// 2026-09-14 事故: AI が書いた本文に「弁然のご連絡失箰いたします」「取り揁って」「リピーグー」
+// 「冒頃なご連絡失祬いたします」「商品情報ヘージ」のような誤った漢字・カナが混ざり、9/11 投入分 5 通は
+// そのまま実送信された。本文は「型を固定し hook の1文だけを会社ごとに変える」約束なので、型の文を
+// 一字一句そのまま含まない行は送らず SKIPPED（template_mismatch）にする。AI が作ったものは
+// 指示ではなく機械検査でしか担保できない。型を変えるときは、この配列と投入側の文面を同時に変える。
+export const OUTREACH_REQUIRED_SENTENCES = [
+  'ご担当者様',
+  '突然のご連絡失礼いたします。買い物検索サービス HOSHILU を運営している大久津と申します。',
+  'に記載の連絡先へお送りしています。',
+  'HOSHILU は、Amazon・楽天・Qoo10 などを横断して商品を探すサービスです。',
+  'HOSHILU でできること（すべて現在公開中の機能です）:',
+  '・商品・ジャンル・ショップの3方向から、探している人に見つけてもらう',
+  '・「この価格になったら教えて」（希望価格ウォッチ）とセール通知で、今すぐ買わない人を買い時までつなぐ',
+  '・ショップページ、ショップ発行クーポン、「ショップをホシる」（フォロー）でリピーター候補を残す',
+  '料金は Seller 9,800円/月（税込）。最初の3か月は月額0円で、送客料（有効クリック分）のみです。初期費用・解約金はありません。',
+  '先行して掲載中のショップの例: https://hoshilu.app/shop/with-care',
+  'ユーザー数はまだ多くありません。だからこそ、最初のセラー様とは「新しい集客チャネルを一緒に作る」つもりで、ショップページの作成や商品の取り込みはこちらで代行します。',
+  '詳細: https://hoshilu.app/for-sellers',
+  'ご興味があれば、このメールへの返信でお気軽にご相談ください。'
+];
+export function findMissingTemplateSentences(body) {
+  const haystack = String(body || '');
+  return OUTREACH_REQUIRED_SENTENCES.filter((sentence) => !haystack.includes(sentence));
+}
+
 export function findForbiddenPhrases(text) {
   const haystack = String(text || '');
   return OUTREACH_FORBIDDEN_PHRASES.filter((phrase) => haystack.includes(phrase));
@@ -119,6 +144,13 @@ export async function runSellerOutreachCycle(env, now = new Date(), fetchImpl = 
       await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SKIPPED',last_error=?2,updated_at=?3 WHERE contact_id=?1 AND status='QUEUED'`)
         .bind(row.contact_id, `forbidden_phrase:${forbidden.join(',')}`, timestamp).run();
       results.push({ contact_id: row.contact_id, status: 'SKIPPED', reason: 'forbidden_phrase' });
+      continue;
+    }
+    const missing = findMissingTemplateSentences(row.body);
+    if (missing.length) {
+      await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SKIPPED',last_error=?2,updated_at=?3 WHERE contact_id=?1 AND status='QUEUED'`)
+        .bind(row.contact_id, clean(`template_mismatch:${missing[0]}`, 200), timestamp).run();
+      results.push({ contact_id: row.contact_id, status: 'SKIPPED', reason: 'template_mismatch' });
       continue;
     }
     // claim（cron が重なっても二重送信しない）
