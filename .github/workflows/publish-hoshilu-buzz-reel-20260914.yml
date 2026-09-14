@@ -29,6 +29,8 @@ jobs:
       - name: Verify exact generated media and identity evidence
         run: |
           set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
           media=tools/line-worker/public/social/hoshilu-buzz-korea-runway-20260914.mp4
           test -s "$media"
           test -s tools/line-worker/public/social/runway/hoshilu-buzz-korea-runway-20260914-contact-sheet.jpg
