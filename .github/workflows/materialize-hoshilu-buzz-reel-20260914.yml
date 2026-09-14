@@ -1,4 +1,4 @@
-name: Materialize generated HOSHILU BUZZ reel 2026-09-14
+name: Materialize corrected HOSHILU BUZZ main-actress preview 2026-09-14
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: materialize-hoshilu-buzz-20260914
+  group: materialize-hoshilu-buzz-main-actress-20260914
   cancel-in-progress: false
 
 jobs:
@@ -28,20 +28,43 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh api repos/${{ github.repository }}/actions/artifacts/10347634965/zip > /tmp/reel.zip
+          gh api repos/${{ github.repository }}/actions/artifacts/10350675270/zip > /tmp/reel.zip
           mkdir -p /tmp/reel
           unzip -q /tmp/reel.zip -d /tmp/reel
           test -s /tmp/reel/reel.mp4
           test -s /tmp/reel/contact-sheet.jpg
-          cp /tmp/reel/reel.mp4 tools/line-worker/public/social/hoshilu-buzz-korea-runway-20260914.mp4
-          cp /tmp/reel/contact-sheet.jpg tools/line-worker/public/social/runway/hoshilu-buzz-korea-runway-20260914-contact-sheet.jpg
+          cp /tmp/reel/reel.mp4 tools/line-worker/public/social/hoshilu-buzz-main-actress-voice-review-20260914.mp4
+          cp /tmp/reel/contact-sheet.jpg tools/line-worker/public/social/runway/hoshilu-buzz-main-actress-voice-review-20260914-contact-sheet.jpg
           sed 's#output/reel.mp4#/tmp/reel/reel.mp4#' /tmp/reel/reel.sha256 | sha256sum -c -
       - name: Commit generated media for review
         run: |
           set -euo pipefail
           git config user.name "hoshilu-patch-bot"
           git config user.email "noreply@hoshilu.app"
-          git add tools/line-worker/public/social/hoshilu-buzz-korea-runway-20260914.mp4 tools/line-worker/public/social/runway/hoshilu-buzz-korea-runway-20260914-contact-sheet.jpg
-          git commit -m "chore(social): add generated HOSHILU BUZZ actress reel candidate"
+          git add tools/line-worker/public/social/hoshilu-buzz-main-actress-voice-review-20260914.mp4 tools/line-worker/public/social/runway/hoshilu-buzz-main-actress-voice-review-20260914-contact-sheet.jpg
+          git commit -m "chore(social): add corrected main-actress voice reel for review"
           git pull --rebase origin feature/ui-search-v2
           git push origin HEAD:refs/heads/feature/ui-search-v2
+
+      - name: Deploy preview media only
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npm ci
+          npx --yes wrangler@4.121.0 deploy
+      - name: Verify preview URL
+        run: |
+          set -euo pipefail
+          url='https://hoshilu.app/social/hoshilu-buzz-main-actress-voice-review-20260914.mp4'
+          for i in {1..12}; do
+            code="$(curl -sS -o /tmp/preview.mp4 -w '%{http_code}' "$url")"
+            if [ "$code" = 200 ] && [ "$(stat -c%s /tmp/preview.mp4)" -gt 100000 ]; then
+              ffprobe -v error -show_entries format=duration:stream=codec_type,codec_name,channels -of json /tmp/preview.mp4
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
