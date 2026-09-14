@@ -383,6 +383,14 @@ test('Yahoo 401 and 403 remain immediate incidents after safe classification', (
   }
 });
 
+test('Yahoo coordinator failures remain immediate and distinct from provider rejection', () => {
+  const now = Date.now();
+  const rows = healthyCanaryRows(now).map((row) => row.component === 'yahoo'
+    ? { ...row, status:'FAIL', code:'CANARY_YAHOO_COORDINATOR_UNAVAILABLE' } : row);
+  assert.throws(() => evaluateDeepCanary(rows, { now }),
+    /DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:YAHOO:CANARY_YAHOO_COORDINATOR_UNAVAILABLE/u);
+});
+
 test('deep canary confirms transient query structurer failures before alerting', () => {
   const now = Date.now();
   const latest = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'

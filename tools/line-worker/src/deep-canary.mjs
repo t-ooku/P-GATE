@@ -137,6 +137,12 @@ const billingNow = (clock) => {
 const failureCode = (error) => {
   const status = Number(error?.status || 0);
   const providerCode = String(error?.providerCode || '').toLowerCase();
+  // A coordinator failure happens before Yahoo! returns a provider response.
+  // Keep it distinct from an actual Yahoo! 4xx so incident triage does not
+  // attribute an internal scheduling/binding failure to the external API.
+  if (error?.message === 'YAHOO_REQUEST_COORDINATOR_UNAVAILABLE') {
+    return 'CANARY_YAHOO_COORDINATOR_UNAVAILABLE';
+  }
   if (['insufficient_quota', 'billing_hard_limit_reached', 'billing_not_active',
     'billing_disabled'].includes(providerCode)) return 'CANARY_PROVIDER_BILLING_UNAVAILABLE';
   if (providerCode === 'rate_limit_exceeded') return 'CANARY_PROVIDER_RATE_LIMITED';
