@@ -29,9 +29,12 @@ jobs:
       - name: Verify exact generated media and identity evidence
         run: |
           set -euo pipefail
-          test -s tools/line-worker/public/social/hoshilu-buzz-korea-runway-20260914.mp4
+          media=tools/line-worker/public/social/hoshilu-buzz-korea-runway-20260914.mp4
+          test -s "$media"
           test -s tools/line-worker/public/social/runway/hoshilu-buzz-korea-runway-20260914-contact-sheet.jpg
-          ffprobe -v error -show_entries format=duration -of csv=p=0 tools/line-worker/public/social/hoshilu-buzz-korea-runway-20260914.mp4 | grep -E '^10(\\.0+)?
+          duration="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$media")"
+          DURATION="$duration" node -e "const d=Number(process.env.DURATION); if(!(d>=9.9&&d<=10.1)) throw Error('duration='+d)"
+          ffmpeg -v error -i "$media" -f null -
 
       - name: Deploy generated video to hoshilu.app
         working-directory: tools/line-worker
