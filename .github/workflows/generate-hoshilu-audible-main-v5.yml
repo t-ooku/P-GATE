@@ -1,0 +1,91 @@
+name: Generate HOSHILU audible main actress reel v5
+
+on:
+  push:
+    branches: [feature/ui-search-v2]
+    paths:
+      - '.github/workflows/generate-hoshilu-audible-main-v5.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runway-hoshilu-audible-main-v5
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate one talking video using the confirmed actress and saved voice
+        run: |
+          set -euo pipefail
+          test -n "$RUNWAYML_API_SECRET"
+          mkdir -p output
+          npm init -y >/dev/null
+          npm install --silent @runwayml/sdk@latest
+          node <<'NODE'
+          const fs = require('node:fs');
+          const RunwayML = require('@runwayml/sdk').default;
+          const client = new RunwayML({apiKey: process.env.RUNWAYML_API_SECRET});
+          async function main(){
+            const script='韓国トレンド、今なにが人気？ホシルバズでランキングをチェック。無料登録で、更新通知も届くよ。';
+            const task=await client.avatarVideos.create({
+              model:'gwm1_avatars',
+              avatar:{type:'custom',avatarId:'0d77327b-6ae1-48b9-aad9-47a27ea0e0d4'},
+              speech:{type:'text',text:script,voice:{type:'custom',id:'e3067b07-2332-422d-b23e-da7da14c0f6a'}}
+            }).waitForTaskOutput();
+            const url=task.output?.[0];
+            if(!url) throw new Error('missing avatar output');
+            const response=await fetch(url);
+            if(!response.ok) throw new Error('download '+response.status);
+            fs.writeFileSync('output/talking-raw.mp4',Buffer.from(await response.arrayBuffer()));
+            fs.writeFileSync('output/generation.json',JSON.stringify({
+              taskId:task.id,status:task.status,cost:task.cost||null,script
+            },null,2));
+          }
+          main().catch(e=>{console.error(e);process.exit(1)});
+          NODE
+
+      - name: Render loud iPhone-compatible spoken reel and enforce audio gates
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-cjk
+          raw=output/talking-raw.mp4
+          music=tools/line-worker/public/social/hoshilu-reel-9malls-pop-v1.mp4
+          font=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc
+          test -s "$raw"
+          test -s "$music"
+
+          ffprobe -v error -select_streams a:0 -show_entries stream=codec_type -of csv=p=0 "$raw" | grep -qx audio
+          ffmpeg -hide_banner -i "$raw" -af volumedetect -f null - 2> output/raw-voice-volume.txt
+          raw_mean=$(grep 'mean_volume:' output/raw-voice-volume.txt | tail -1 | awk '{print $5}')
+          raw_max=$(grep 'max_volume:' output/raw-voice-volume.txt | tail -1 | awk '{print $5}')
+          awk -v m="$raw_mean" -v x="$raw_max" 'BEGIN{if(m+0 < -32 || x+0 < -12) exit 1}'
+
+          ffmpeg -y -v error -i "$raw" -vn -af "highpass=f=90,acompressor=threshold=-20dB:ratio=3:attack=15:release=180:makeup=5,loudnorm=I=-14:LRA=7:TP=-1"             -c:a aac -profile:a aac_low -b:a 256k -ar 48000 -ac 2 output/voice-only-check.m4a
+
+          ffmpeg -y -v error -i "$raw" -stream_loop -1 -i "$music"             -filter_complex "[0:v]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,fps=30,drawtext=fontfile='$font':text='韓国トレンド、いま何が人気？':fontsize=40:fontcolor=white:x=(w-text_w)/2:y=95:box=1:boxcolor=0x111111@0.66:boxborderw=18:enable='between(t,0.1,3.2)',drawtext=fontfile='$font':text='HOSHILU BUZZでランキングをチェック':fontsize=34:fontcolor=white:x=(w-text_w)/2:y=1025:box=1:boxcolor=0x8d2de2@0.78:boxborderw=16:enable='gte(t,2.4)',drawtext=fontfile='$font':text='無料登録でランキング更新を通知':fontsize=30:fontcolor=white:x=(w-text_w)/2:y=1095:box=1:boxcolor=0xff4f81@0.80:boxborderw=14:enable='gte(t,4.0)',drawtext=fontfile='$font':text='hoshilu.app/buzz  |  AI生成・AI加工映像':fontsize=23:fontcolor=white:x=(w-text_w)/2:y=1218:box=1:boxcolor=black@0.68:boxborderw=9[v];[0:a]highpass=f=90,acompressor=threshold=-20dB:ratio=3:attack=15:release=180:makeup=5,volume=1.45[voice];[1:a]volume=0.045,afade=t=in:st=0:d=0.3[bgm];[voice][bgm]amix=inputs=2:duration=first:dropout_transition=0,loudnorm=I=-14:LRA=7:TP=-1[a]"             -map "[v]" -map "[a]" -shortest -c:v libx264 -preset medium -crf 18 -profile:v high -level:v 4.1 -pix_fmt yuv420p -r 30             -c:a aac -profile:a aac_low -b:a 256k -ar 48000 -ac 2 -movflags +faststart output/review.mp4
+
+          ffmpeg -v error -i output/review.mp4 -f null -
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,codec_name,profile,width,height,channels,sample_rate -of json output/review.mp4 > output/probe.json
+          ffmpeg -hide_banner -i output/review.mp4 -af volumedetect -f null - 2> output/final-volume.txt
+          final_mean=$(grep 'mean_volume:' output/final-volume.txt | tail -1 | awk '{print $5}')
+          final_max=$(grep 'max_volume:' output/final-volume.txt | tail -1 | awk '{print $5}')
+          awk -v m="$final_mean" -v x="$final_max" 'BEGIN{if(m+0 < -22 || x+0 < -8) exit 1}'
+          jq -e '.streams[]|select(.codec_type=="audio" and .codec_name=="aac" and .channels==2 and .sample_rate=="48000")' output/probe.json >/dev/null
+          ffmpeg -y -v error -i "$raw" -vf "fps=1,scale=180:-1,tile=5x2" -frames:v 1 output/contact-sheet.jpg
+          sha256sum output/review.mp4 > output/review.sha256
+          grep -E 'mean_volume|max_volume' output/raw-voice-volume.txt output/final-volume.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hoshilu-audible-main-v5-${{ github.run_id }}
+          path: output/
+          retention-days: 7
