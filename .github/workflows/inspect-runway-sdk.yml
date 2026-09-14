@@ -21,4 +21,6 @@ jobs:
             console.log('RESOURCE',k,Object.keys(c[k]||{}));
           }
           NODE
-          grep -RniE "avatar.?video|avatarVideos|characterPerformance|actTwo|act_two" node_modules/@runwayml/sdk --include='*.d.ts' --include='*.js' | head -300
+          sed -n '1,220p' node_modules/@runwayml/sdk/resources/avatar-videos.d.ts
+          sed -n '1,260p' node_modules/@runwayml/sdk/resources/avatars.d.ts
+          sed -n '1,220p' node_modules/@runwayml/sdk/resources/character-performance.d.ts
