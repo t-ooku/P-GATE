@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+# 2026-09-14: ショップページの絞り込み・ページ送り URL は組み合わせが無限に増えるので辿らせない
+Disallow: /shop/*?
 
 Sitemap: https://hoshilu.app/sitemap.xml

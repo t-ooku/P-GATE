@@ -9,6 +9,7 @@
 // - growth_events: shop_viewed / shop_followed / shop_unfollowed / coupon_clicked（Worker 側で記録）。
 
 import { readMemberSession } from './member-auth.mjs';
+import { isCrawlerUserAgent } from './growth-events.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
 import {
   queryWords, shopAttributeDefinition, shopAttributeFacets, shopKeywordFacets,
@@ -411,6 +412,8 @@ function shopHref(slug, filters = {}) {
 
 // ---- 公開ページ ----------------------------------------------------------------
 function renderShopHtml({ shop, coupons, products, followers, following, query, origin, filters = {}, brands = [], attributes = {}, keywords = [], total = 0, page = 1, pages = 1 }) {
+  // 絞り込み・ページ送りの URL は組み合わせが無限に増える。索引させず、クローラに辿らせない。
+  const filtered = Boolean(query || filters.subgenre || filters.color || filters.size || filters.material || (filters.brands || []).length || (filters.sort && filters.sort !== 'new') || Number(page) > 1);
   const title = `${shop.shop_name} | HOSHILU ショップ`;
   const description = clean(shop.tagline || shop.intro || `${shop.shop_name} の商品とクーポンを HOSHILU でまとめて見る。`, 150);
   const initial = esc(clean(shop.shop_name, 1).toUpperCase());
@@ -442,19 +445,19 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
     }))
   ];
   const appliedHtml = appliedChips.length
-    ? `<div class="shop-applied"><span class="shop-filter-label">絞り込み中</span>${appliedChips.map((chip) => `<a class="shop-applied-chip" href="${esc(chip.href)}">${esc(chip.label)} <span aria-hidden="true">✕</span></a>`).join('')}<a class="shop-applied-clear" href="${esc(shopHref(shop.slug, { sort: filters.sort }))}">すべて解除</a></div>`
+    ? `<div class="shop-applied"><span class="shop-filter-label">絞り込み中</span>${appliedChips.map((chip) => `<a rel="nofollow" class="shop-applied-chip" href="${esc(chip.href)}">${esc(chip.label)} <span aria-hidden="true">✕</span></a>`).join('')}<a class="shop-applied-clear" href="${esc(shopHref(shop.slug, { sort: filters.sort }))}">すべて解除</a></div>`
     : '';
   const filterPanel = (label, selected, content) => `<details class="shop-filter-panel"><summary><span>${esc(label)}</span>${selected ? `<span class="shop-filter-selected">${esc(selected)}</span>` : ''}</summary><div class="shop-filter-content">${content}</div></details>`;
   // 絞り込みワードは、いま表示している商品名から作る（データに無い条件は出さない）。
   const keywordHtml = keywords.length
-    ? `<div class="shop-filter-row"><span class="shop-filter-label">絞り込みワード（商品名から）</span>${keywords.map((item) => `<a class="shop-chip" href="${esc(shopHref(shop.slug, { ...filters, query: toggleKeywordInQuery(query, item.word), page: 1 }))}">${esc(item.word)} <small>${item.estimated ? '約' : ''}${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
+    ? `<div class="shop-filter-row"><span class="shop-filter-label">絞り込みワード（商品名から）</span>${keywords.map((item) => `<a rel="nofollow" class="shop-chip" href="${esc(shopHref(shop.slug, { ...filters, query: toggleKeywordInQuery(query, item.word), page: 1 }))}">${esc(item.word)} <small>${item.estimated ? '約' : ''}${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
     : '';
   const selectedGenre = SHOP_GENRES.find((genre) => genre.label === filters.genre) || null;
   const genreOptions = SHOP_GENRES.map((genre) => `<option value="${esc(genre.label)}"${filters.genre === genre.label ? ' selected' : ''}>${esc(genre.label)}</option>`).join('');
   const subgenreOptions = (selectedGenre?.subgenres || []).map((subgenre) => `<option value="${esc(subgenre.query)}"${filters.subgenre === subgenre.query ? ' selected' : ''}>${esc(subgenre.label)}</option>`).join('');
   const genreJson = JSON.stringify(SHOP_GENRES).replaceAll('<', '\\u003c');
   const attributeRow = (kind, label, items = []) => items.length
-    ? `<div class="shop-filter-row"><span class="shop-filter-label">${label}</span><a class="shop-chip${filters[kind] ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, [kind]: '', page: 1 }))}">すべて</a>${items.map((item) => `<a class="shop-chip${filters[kind] === item.value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, [kind]: filters[kind] === item.value ? '' : item.value, page: 1 }))}">${esc(item.label)} <small>${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
+    ? `<div class="shop-filter-row"><span class="shop-filter-label">${label}</span><a rel="nofollow" class="shop-chip${filters[kind] ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, [kind]: '', page: 1 }))}">すべて</a>${items.map((item) => `<a rel="nofollow" class="shop-chip${filters[kind] === item.value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, [kind]: filters[kind] === item.value ? '' : item.value, page: 1 }))}">${esc(item.label)} <small>${item.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`
     : '';
   const attributeHtml = [
     ['color', '色', attributes.colors],
@@ -468,7 +471,7 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
       <span class="shop-product-meta">${p.price ? `¥${Number(p.price).toLocaleString('ja-JP')} ・ ` : ''}${esc(MARKETPLACE_LABEL[p.marketplace] || p.marketplace)} で見る</span></a>`).join('')
     : `<p class="shop-empty">${query || filters.subgenre || filters.color || filters.size || filters.material || filters.brands.length ? '該当する商品が見つかりませんでした。' : 'まだ商品が登録されていません。'}</p>`;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${esc(origin)}/shop/${esc(shop.slug)}">
+<title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${esc(origin)}/shop/${esc(shop.slug)}">${filtered ? '<meta name="robots" content="noindex,nofollow">' : ''}
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}">${shop.logo_url ? `<meta property="og:image" content="${esc(shop.logo_url)}">` : ''}
 <meta name="theme-color" content="#7357ff"><link rel="icon" href="/icons/icon.svg">
 <style>
@@ -591,15 +594,15 @@ ${appliedHtml}
 <label class="shop-genre-field">ジャンル<select name="genre" id="shopGenre" required><option value="">ジャンルを選択</option>${genreOptions}</select></label>
 <label class="shop-genre-field">小ジャンル<select name="subgenre" id="shopSubgenre" required><option value="">小ジャンルを選択</option>${subgenreOptions}</select></label>
 <button type="submit">ジャンルで絞る</button></form></div></details>
-${filterPanel('並び順', filters.sort === 'name' ? '名前順' : '新着順', `<div class="shop-filter-row">${[['new', '新着順'], ['name', '名前順']].map(([value, label]) => `<a class="shop-chip${filters.sort === value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, sort: value, page: 1 }))}">${label}</a>`).join('')}</div>`)}
+${filterPanel('並び順', filters.sort === 'name' ? '名前順' : '新着順', `<div class="shop-filter-row">${[['new', '新着順'], ['name', '名前順']].map(([value, label]) => `<a rel="nofollow" class="shop-chip${filters.sort === value ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, sort: value, page: 1 }))}">${label}</a>`).join('')}</div>`)}
 ${keywordHtml ? filterPanel('絞り込みワード（商品名から）', query, keywordHtml) : ''}
-${brands.length ? filterPanel('メーカー・ブランド（複数選べます）', filters.brands.join('・'), `<div class="shop-filter-row"><a class="shop-chip${filters.brands.length ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, brands: [], page: 1 }))}">すべて</a>${brands.map((b) => `<a class="shop-chip${filters.brands.includes(b.brand) ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, brands: toggleShopBrand(filters.brands, b.brand), page: 1 }))}">${esc(b.brand)} <small>${b.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`) : ''}
+${brands.length ? filterPanel('メーカー・ブランド（複数選べます）', filters.brands.join('・'), `<div class="shop-filter-row"><a rel="nofollow" class="shop-chip${filters.brands.length ? '' : ' on'}" href="${esc(shopHref(shop.slug, { ...filters, brands: [], page: 1 }))}">すべて</a>${brands.map((b) => `<a rel="nofollow" class="shop-chip${filters.brands.includes(b.brand) ? ' on' : ''}" href="${esc(shopHref(shop.slug, { ...filters, brands: toggleShopBrand(filters.brands, b.brand), page: 1 }))}">${esc(b.brand)} <small>${b.count.toLocaleString('ja-JP')}</small></a>`).join('')}</div>`) : ''}
 ${attributeHtml}
 <p class="shop-filter-note">ジャンル・色・サイズ・素材は、商品名に記載された情報でショップ内検索します。価格や評価での絞り込みは、正確なデータの取り込みが終わってから出します（いまは在庫のある商品だけを表示しています）。</p>
 </details>
 <p class="shop-count">${total ? `${total.toLocaleString('ja-JP')}件${pages > 1 ? `（${page}/${pages}ページ）` : ''}` : ''}</p>
 <div class="grid">${productHtml}</div>
-${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a href="${esc(shopHref(shop.slug, { ...filters, page: page - 1 }))}">← 前の${SHOP_PAGE_SIZE}件</a>` : '<span></span>'}${page < pages ? `<a href="${esc(shopHref(shop.slug, { ...filters, page: page + 1 }))}">次の${SHOP_PAGE_SIZE}件 →</a>` : ''}</nav>` : ''}</section>
+${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a rel="nofollow" href="${esc(shopHref(shop.slug, { ...filters, page: page - 1 }))}">← 前の${SHOP_PAGE_SIZE}件</a>` : '<span></span>'}${page < pages ? `<a rel="nofollow" href="${esc(shopHref(shop.slug, { ...filters, page: page + 1 }))}">次の${SHOP_PAGE_SIZE}件 →</a>` : ''}</nav>` : ''}</section>
 <p class="foot">商品リンクは各モールの商品ページへ移動します。HOSHILU は送客に対して事業者から料金を受け取る場合がありますが、検索順位は変わりません。${shop.website_url ? `<br><a href="${esc(shop.website_url)}" rel="nofollow noopener" target="_blank">公式サイト</a>` : ''}</p>
 </main>
 <script>
@@ -693,7 +696,12 @@ export async function handleShopRoutes(request, env, { createTrackToken, readMem
     try { const u = new URL(product.url); if (/(^|\.)amazon\.co\.jp$/i.test(u.hostname) && env.AMAZON_ASSOCIATE_TAG) { u.searchParams.set('tag', env.AMAZON_ASSOCIATE_TAG); directUrl = u.toString(); } } catch {}
     products.push({ ...product, tracking_url: trackingUrl, direct_url: directUrl });
   }
-  await recordShopEvent(env, 'shop_viewed', shop.slug, { content: query || filters.subgenre || filters.color || filters.size || filters.material ? 'search' : 'view' });
+  // 2026-09-14: shop_viewed が 9/8 以降 1日 48〜67万件（ほぼ全部 with-care / content='search'、約6件/秒）。
+  // 絞り込みワード（商品名から作る）×ブランド×属性×ページのリンクを検索エンジンのクローラが総当たりで
+  // たどっていた。人の閲覧ではないので記録しない（KPI と D1 容量の両方を守る）。
+  if (!isCrawlerUserAgent(request.headers.get('user-agent'))) {
+    await recordShopEvent(env, 'shop_viewed', shop.slug, { content: query || filters.subgenre || filters.color || filters.size || filters.material ? 'search' : 'view' });
+  }
   // 2026-09-06 大隆さん指摘への対応: いま出ている商品名から「絞り込みワード」を作る。
   // 価格・カテゴリ・評価は products に無い（本番で0件）ので、無い条件で絞れるふりをしない。
   const keywords = shopKeywordFacets(products.map((product) => product.name), {

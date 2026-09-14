@@ -255,3 +255,23 @@ test('ショッププロフィールに事業者名と店舗住所を載せる�
   const sellerJs = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
   assert.equal((sellerJs.match(/'business_name', 'business_address'/g) || []).length, 2);
 });
+
+test('2026-09-14: クローラのショップ閲覧は記録せず、絞り込み URL は索引・追跡させない', async () => {
+  const { env: e, db } = env();
+  await handleSellerShopAdminRoutes(request(`/api/admin/seller-shops/${SELLER_KEY}`, 'PUT', { shop_name: 'with care' }), e, async () => true);
+  const count = () => db.prepare(`SELECT COUNT(*) AS n FROM growth_events WHERE event_type='shop_viewed'`).get().n;
+  const before = count();
+  const bot = new Request('https://hoshilu.app/shop/with-care?q=%E3%83%9E%E3%82%B9%E3%82%AF', { headers: { 'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' } });
+  const botHtml = await (await handleShopRoutes(bot, e, {})).text();
+  assert.equal(count(), before, 'クローラの閲覧は shop_viewed に入れない');
+  assert.match(botHtml, /<meta name="robots" content="noindex,nofollow">/u, '絞り込み URL は noindex,nofollow');
+  const human = new Request('https://hoshilu.app/shop/with-care?q=%E3%83%9E%E3%82%B9%E3%82%AF', { headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1' } });
+  await handleShopRoutes(human, e, {});
+  assert.equal(count(), before + 1, '人の閲覧は記録する');
+  const base = await (await handleShopRoutes(request('/shop/with-care'), e, {})).text();
+  assert.doesNotMatch(base, /name="robots"/u, 'ショップのトップは索引させる');
+  assert.doesNotMatch(base, /<a class="shop-chip/u);
+  assert.equal((base.match(/<a rel="nofollow" class="shop-chip/g) || []).length > 0, true, '絞り込みチップは nofollow');
+  const robots = readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8');
+  assert.match(robots, /^Disallow: \/shop\/\*\?$/mu);
+});
