@@ -22,5 +22,5 @@ jobs:
           }
           NODE
           sed -n '1,220p' node_modules/@runwayml/sdk/resources/avatar-videos.d.ts
-          sed -n '1,260p' node_modules/@runwayml/sdk/resources/avatars.d.ts
-          sed -n '1,220p' node_modules/@runwayml/sdk/resources/character-performance.d.ts
+          line="$(grep -n '^export interface AvatarCreateParams' node_modules/@runwayml/sdk/resources/avatars.d.ts | cut -d: -f1)"
+          sed -n "${line},$((line+180))p" node_modules/@runwayml/sdk/resources/avatars.d.ts
