@@ -1,0 +1,24 @@
+name: Inspect Runway SDK avatar video interface
+on:
+  push:
+    branches: [feature/ui-search-v2]
+    paths: ['.github/workflows/inspect-runway-sdk.yml']
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          set -euo pipefail
+          npm init -y >/dev/null
+          npm install --silent @runwayml/sdk@latest
+          node - <<'NODE'
+          const RunwayML=require('@runwayml/sdk').default;
+          const c=new RunwayML({apiKey:'placeholder'});
+          console.log('CLIENT_KEYS',Object.keys(c).sort());
+          for(const k of Object.keys(c).filter(k=>/avatar|character/i.test(k))) {
+            console.log('RESOURCE',k,Object.keys(c[k]||{}));
+          }
+          NODE
+          grep -RniE "avatar.?video|avatarVideos|characterPerformance|actTwo|act_two" node_modules/@runwayml/sdk --include='*.d.ts' --include='*.js' | head -300
