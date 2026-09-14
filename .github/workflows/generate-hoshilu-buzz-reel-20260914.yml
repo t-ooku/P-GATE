@@ -1,4 +1,4 @@
-name: Generate HOSHILU BUZZ actress reel 2026-09-14
+name: Generate corrected HOSHILU BUZZ main-actress reel 2026-09-14
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: runway-hoshilu-buzz-20260914
+  group: runway-hoshilu-buzz-main-actress-20260914
   cancel-in-progress: false
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
       - name: Check Runway credential
         run: test -n "${{ secrets.RUNWAYML_API_SECRET }}"
 
-      - name: Generate new moving actress video from approved v2 reference
+      - name: Generate moving video from confirmed main actress v1
         env:
           RUNWAYML_API_SECRET: ${{ secrets.RUNWAYML_API_SECRET }}
         run: |
@@ -41,8 +41,8 @@ jobs:
           };
           const body = {
             model: 'gen4_turbo',
-            promptImage: 'https://hoshilu.app/social/runway/hoshilu-approved-model-reference-v2.jpg',
-            promptText: 'The exact same fictional adult Japanese woman in the source image gently smiles, blinks naturally, nods once, then gestures lightly toward the side as if introducing a shopping trend. Preserve her exact facial identity, hairstyle, age, clothing, and background. Natural subtle motion, locked camera, no phone screen, no text, no logos, no extra people, no face morphing.',
+            promptImage: 'https://hoshilu.app/social/runway/hoshilu-approved-model-reference-v1.jpg',
+            promptText: 'The exact same fictional adult Japanese woman in the source image, with light brown hair, bangs, gold earrings and black patterned blouse, gently smiles, blinks naturally, looks up from her phone toward camera and gestures lightly as if introducing a shopping trend. Preserve her exact facial identity, hair color, bangs, earrings, clothing and background. Natural subtle motion, locked camera, no added text, no logos, no extra people, no face morphing.',
             ratio: '720:1280',
             duration: 10
           };
@@ -84,16 +84,23 @@ jobs:
           font=/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc
           music=tools/line-worker/public/social/hoshilu-reel-9malls-pop-v1.mp4
           test -f "$music"
-          ffmpeg -y -v error -i output/raw.mp4 -stream_loop -1 -i "$music" \
-            -filter_complex "[0:v]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,fps=24,drawtext=fontfile='$font':text='韓国トレンド、いま何が人気？':fontsize=42:fontcolor=white:x=(w-text_w)/2:y=110:box=1:boxcolor=0x111111@0.62:boxborderw=20:enable='between(t,0.2,4.8)',drawtext=fontfile='$font':text='HOSHILU BUZZでランキングをチェック':fontsize=36:fontcolor=white:x=(w-text_w)/2:y=1030:box=1:boxcolor=0x8d2de2@0.72:boxborderw=18:enable='between(t,3.2,8.4)',drawtext=fontfile='$font':text='Qoo10・SHEINもまとめて探せる':fontsize=32:fontcolor=white:x=(w-text_w)/2:y=1100:box=1:boxcolor=0xff4f81@0.75:boxborderw=15:enable='between(t,5.0,9.5)',drawtext=fontfile='$font':text='hoshilu.app/buzz  |  AI生成・AI加工映像':fontsize=24:fontcolor=white:x=(w-text_w)/2:y=1215:box=1:boxcolor=black@0.62:boxborderw=10[v];[1:a]atrim=duration=10,asetpts=PTS-STARTPTS,volume=0.55,afade=t=in:st=0:d=0.2,afade=t=out:st=9.4:d=0.6[a]" \
-            -map "[v]" -map "[a]" -t 10 -c:v libx264 -preset medium -crf 18 -profile:v high -level:v 4.0 -pix_fmt yuv420p -r 24 -c:a aac -b:a 160k -ar 44100 -ac 2 -movflags +faststart output/reel.mp4
+          python3 -m pip install -q edge-tts
+          edge-tts --voice ja-JP-NanamiNeural --rate=+22% --text '韓国トレンド、今なにが人気？ ホシルバズなら、欲しいものをランキングでチェック。キューテンやシーインの商品もまとめて探せるよ。無料会員なら、テーマが変わった時にお知らせが届くよ。' --write-media output/voice.mp3
+          test -s output/voice.mp3
+          ffmpeg -y -v error -i output/raw.mp4 -stream_loop -1 -i "$music" -i output/voice.mp3 \
+            -filter_complex "[0:v]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,fps=24,drawtext=fontfile='$font':text='韓国トレンド、いま何が人気？':fontsize=42:fontcolor=white:x=(w-text_w)/2:y=110:box=1:boxcolor=0x111111@0.62:boxborderw=20:enable='between(t,0.2,4.8)',drawtext=fontfile='$font':text='HOSHILU BUZZでランキングをチェック':fontsize=36:fontcolor=white:x=(w-text_w)/2:y=1030:box=1:boxcolor=0x8d2de2@0.72:boxborderw=18:enable='between(t,3.2,8.4)',drawtext=fontfile='$font':text='Qoo10・SHEINもまとめて探せる':fontsize=32:fontcolor=white:x=(w-text_w)/2:y=1100:box=1:boxcolor=0xff4f81@0.75:boxborderw=15:enable='between(t,5.0,9.5)',drawtext=fontfile='$font':text='hoshilu.app/buzz  |  AI生成・AI加工映像':fontsize=24:fontcolor=white:x=(w-text_w)/2:y=1215:box=1:boxcolor=black@0.62:boxborderw=10[v];[1:a]atrim=duration=10,asetpts=PTS-STARTPTS,volume=0.28,afade=t=in:st=0:d=0.2,afade=t=out:st=9.4:d=0.6[bgm];[2:a]atrim=duration=9.7,asetpts=PTS-STARTPTS,adelay=200|200,volume=1.35[voice];[bgm][voice]amix=inputs=2:duration=longest:dropout_transition=0,alimiter=limit=0.92[a]" \
+            -map "[v]" -map "[a]" -t 10 -c:v libx264 -preset medium -crf 18 -profile:v high -level:v 4.0 -pix_fmt yuv420p -r 24 -c:a aac -b:a 192k -ar 44100 -ac 2 -movflags +faststart output/reel.mp4
           ffmpeg -v error -i output/reel.mp4 -f null -
-          ffprobe -v error -show_entries format=duration,size:stream=codec_type,codec_name,width,height -of json output/reel.mp4 > output/probe.json
+          ffprobe -v error -show_entries format=duration,size:stream=codec_type,codec_name,width,height,channels,sample_rate -of json output/reel.mp4 > output/probe.json
+          ffmpeg -hide_banner -i output/reel.mp4 -af volumedetect -f null - 2> output/volume.txt
+          grep -q 'audio' output/probe.json
+          node -e "const p=require('./output/probe.json'); if(!p.streams.some(s=>s.codec_type==='audio'&&Number(s.channels)>=2)) throw Error('missing stereo audio');"
+          grep -E 'mean_volume|max_volume' output/volume.txt
           ffmpeg -y -v error -i output/raw.mp4 -vf "fps=1,scale=180:-1,tile=5x2" -frames:v 1 output/contact-sheet.jpg
           sha256sum output/reel.mp4 > output/reel.sha256
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hoshilu-buzz-actress-reel-20260914-${{ github.run_id }}
+          name: hoshilu-buzz-main-actress-voice-reel-20260914-${{ github.run_id }}
           path: output/
           retention-days: 7
