@@ -24,8 +24,8 @@ jobs:
                 'X-Runway-Version': '2024-11-06'
               },
               body: JSON.stringify({
-                startDate: '2026-09-14T00:00:00.000Z',
-                beforeDate: '2026-09-15T00:00:00.000Z'
+                startDate: '2026-09-14',
+                beforeDate: '2026-09-15'
               })
             });
             const text = await response.text();
