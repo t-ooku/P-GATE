@@ -54,3 +54,16 @@ test('静的資産は404-pageモードでsoft 404を防ぐ', () => {
   assert.match(notFound, /<meta name="robots" content="noindex,follow">/);
   assert.match(notFound, /href="\/ja\/guides"/);
 });
+
+// 2026-09-16 大隆さん指示: SNS プロフィール欄用の短縮 URL（流入元が判別できる UTM 付きトップへ 302）
+test('短縮 URL /th /ig /x はプロフィール用の UTM 付きトップへ 302 する', async () => {
+  const { profileShortLinkRedirect } = await import('../src/index.mjs');
+  assert.equal(profileShortLinkRedirect('https://hoshilu.app/th'), 'https://hoshilu.app/?utm_source=threads&utm_medium=profile&utm_campaign=hoshilu-profile&utm_content=threads-bio');
+  assert.equal(profileShortLinkRedirect('https://hoshilu.app/IG'), 'https://hoshilu.app/?utm_source=instagram&utm_medium=profile&utm_campaign=hoshilu-profile&utm_content=instagram-bio');
+  assert.equal(profileShortLinkRedirect('https://hoshilu.app/x?foo=1'), 'https://hoshilu.app/?utm_source=x&utm_medium=profile&utm_campaign=hoshilu-profile&utm_content=x-bio');
+  assert.equal(profileShortLinkRedirect('https://hoshilu.app/'), null);
+  assert.equal(profileShortLinkRedirect('https://hoshilu.app/thread'), null);
+  const response = await worker.fetch(new Request('https://hoshilu.app/th'), {}, {});
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get('location'), 'https://hoshilu.app/?utm_source=threads&utm_medium=profile&utm_campaign=hoshilu-profile&utm_content=threads-bio');
+});

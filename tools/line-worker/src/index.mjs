@@ -3342,6 +3342,29 @@ async function handleHealth(env) {
   });
 }
 
+// 2026-09-16 大隆さん指示: SNS プロフィール欄に貼る短縮 URL。流入元が判別できる UTM 付きトップへ 302。
+// 追加は表に 1 行足すだけ。utm_medium=profile で日々の投稿（social）と分けて数える。
+export const PROFILE_SHORT_LINKS = new Map([
+  ['/th', { source: 'threads', content: 'threads-bio' }],
+  ['/ig', { source: 'instagram', content: 'instagram-bio' }],
+  ['/x', { source: 'x', content: 'x-bio' }],
+  ['/tt', { source: 'tiktok', content: 'tiktok-bio' }],
+  ['/yt', { source: 'youtube', content: 'youtube-bio' }],
+  ['/line', { source: 'line', content: 'line-bio' }]
+]);
+
+export function profileShortLinkRedirect(requestUrl) {
+  const url = new URL(requestUrl);
+  const entry = PROFILE_SHORT_LINKS.get(url.pathname.toLowerCase());
+  if (!entry) return null;
+  const target = new URL(`https://${CANONICAL_HOST}/`);
+  target.searchParams.set('utm_source', entry.source);
+  target.searchParams.set('utm_medium', 'profile');
+  target.searchParams.set('utm_campaign', 'hoshilu-profile');
+  target.searchParams.set('utm_content', entry.content);
+  return target.toString();
+}
+
 export function canonicalRequestRedirect(requestUrl) {
   const target = new URL(requestUrl);
   const hostname = target.hostname.toLowerCase().replace(/\.$/u, '');
@@ -3377,6 +3400,11 @@ export default {
   async fetch(request, env, ctx) {
     env = withYahooRequestGate(env);
     const url = new URL(request.url);
+    const shortLinkTarget = profileShortLinkRedirect(url);
+    if (shortLinkTarget) return new Response(null, {
+      status: 302,
+      headers: { location: shortLinkTarget, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+    });
     const canonicalTarget = canonicalRequestRedirect(url);
     if (canonicalTarget) return new Response(null, {
       status: 308,
