@@ -1,0 +1,199 @@
+name: One-time publish - HOSHILU BUZZ 2026-09-15
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-time-hoshilu-buzz-20260915.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    concurrency:
+      group: hoshilu-social-owner-approved-publish
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      EXPECTED_SHA: f7cd8e2347c6586c07c5690e10312f972d6e841880dfed7e90c18e6146f8c557
+      JOB_ID: hoshilu-buzz-20260915-publish-ready
+      MEDIA_KEY: runway/hoshilu-buzz-20260915-publish-ready/postprocessed-f7cd8e2347c6586c07c5690e10312f972d6e841880dfed7e90c18e6146f8c557.mp4
+      MEDIA_URL: https://hoshilu.app/api/social/media/runway/hoshilu-buzz-20260915-publish-ready.mp4
+      X_POST_ID: hoshilu-buzz-owner-approved-x-20260915
+      IG_POST_ID: hoshilu-buzz-owner-approved-instagram-20260915
+    steps:
+      - name: Require production credentials
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/ui-search-v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Reassemble and verify the exact owner-approved video
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          cat ops/handoff/HOSHILU_BUZZ_20260915_publish_ready.mp4.part0{0,1,2,3} > work/HOSHILU_BUZZ_20260915_publish_ready.mp4
+          echo "$EXPECTED_SHA  work/HOSHILU_BUZZ_20260915_publish_ready.mp4" | sha256sum -c -
+          test "$(stat -c%s work/HOSHILU_BUZZ_20260915_publish_ready.mp4)" = 2459397
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffprobe -v error -show_entries stream=codec_type,codec_name,profile,width,height,pix_fmt,r_frame_rate,sample_rate,channels -show_entries format=duration -of json work/HOSHILU_BUZZ_20260915_publish_ready.mp4 > work/probe.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const p = JSON.parse(fs.readFileSync('work/probe.json', 'utf8'));
+          const v = (p.streams || []).find(s => s.codec_type === 'video');
+          const a = (p.streams || []).find(s => s.codec_type === 'audio');
+          const duration = Number(p.format?.duration);
+          const problems = [];
+          if (!v || v.codec_name !== 'h264' || v.profile !== 'High') problems.push('video codec/profile');
+          if (!v || v.width !== 720 || v.height !== 1280 || v.pix_fmt !== 'yuv420p' || v.r_frame_rate !== '24/1') problems.push('video spec');
+          if (!a || a.codec_name !== 'aac' || Number(a.sample_rate) !== 44100 || Number(a.channels) !== 2) problems.push('audio spec');
+          if (!(duration >= 5.80 && duration <= 5.86)) problems.push(`duration ${duration}`);
+          if (problems.length) throw new Error(problems.join(' / '));
+          console.log(`verified ${v.width}x${v.height} ${v.r_frame_rate}, AAC ${a.sample_rate}Hz stereo, ${duration}s`);
+          NODE
+          ffmpeg -v error -i work/HOSHILU_BUZZ_20260915_publish_ready.mp4 -f null -
+
+      - name: Verify production feature and publisher readiness
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error https://hoshilu.app/buzz > work/buzz.html
+          grep -q 'テーマが変わったら、知らせます。' work/buzz.html
+          grep -q '無料会員' work/buzz.html
+          curl --fail-with-body --silent --show-error 'https://hoshilu.app/health?owner-approved-social-publish=20260915' > work/health.json
+          node <<'NODE'
+          const h = require('./work/health.json');
+          const problems = [];
+          if (h.ok !== true) problems.push('health not ok');
+          if (h.checks?.social_publishers?.X !== true) problems.push('X publisher not ready');
+          if (h.checks?.social_publishers?.INSTAGRAM !== true) problems.push('Instagram publisher not ready');
+          if (problems.length) throw new Error(problems.join(' / '));
+          NODE
+
+      - name: Read current publication state before writes
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,platform,status,external_post_id,published_at,last_error FROM social_post_queue WHERE (campaign_id='hoshilu-ai-actress-daily-v1' AND jst_publish_date='2026-09-15') OR post_id IN ('${X_POST_ID}','${IG_POST_ID}') ORDER BY platform,post_id;" > work/preflight-queue.json
+          node <<'NODE'
+          const d = require('./work/preflight-queue.json');
+          const rows = (Array.isArray(d) ? d : [d]).flatMap(x => x.results || x.result?.results || []);
+          const unsafe = rows.filter(r => ['PUBLISHING','PUBLISHED'].includes(r.status));
+          if (unsafe.length) throw new Error(`same-day post already ${unsafe.map(r => `${r.platform}:${r.status}`).join(',')}`);
+          console.log(`preflight rows=${rows.length}; no same-day publication is in flight or complete`);
+          NODE
+
+      - name: Capture recovery bookmark
+        working-directory: tools/line-worker
+        run: npx --yes wrangler@4.121.0 d1 time-travel info PRODUCT_DB --json > work/recovery-bookmark.json
+
+      - name: Upload and byte-verify private R2 object
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 r2 object put "hoshilu-social-media/${MEDIA_KEY}" \
+            --file work/HOSHILU_BUZZ_20260915_publish_ready.mp4 --content-type video/mp4 --remote
+          npx --yes wrangler@4.121.0 r2 object get "hoshilu-social-media/${MEDIA_KEY}" --file work/roundtrip.mp4 --remote
+          echo "$EXPECTED_SHA  work/roundtrip.mp4" | sha256sum -c -
+
+      - name: Replace the pending same-day pair and release now
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          now="$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+          x_caption='韓国トレンド、今なにが人気？👀 ホシルバズでランキングをチェック。無料登録で、ランキング更新のお知らせも届くよ。 #韓国トレンド #Qoo10購入品 #SHEIN購入品 #ホシルバズ'
+          ig_caption='韓国トレンド、今なにが人気？👀 ホシルバズで、いま気になるランキングをチェック。無料登録すると、ランキング更新のお知らせも届くよ。気になったアイテムをコメントで教えてね。続きはプロフィールリンクから。 #韓国トレンド #韓国コスメ #Qoo10購入品 #SHEIN購入品 #ホシルバズ #HOSHILU'
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "INSERT OR REPLACE INTO runway_generation_jobs (job_id,post_id,request_fingerprint,status,recipe,recipe_version,character_image_url,product_image_url,duration_seconds,ratio,audio,product_info,user_concept,caption,link,expected_credits,rights_confirmed,ai_disclosure_confirmed,storage_key,storage_etag,storage_size_bytes,storage_content_type,qa_status,attempt_count,max_attempts,scheduled_at,created_at,updated_at,generated_at) VALUES ('${JOB_ID}','${IG_POST_ID}','${EXPECTED_SHA}','APPROVED_FOR_POST','owner_approved_upload','2026-09-15','https://hoshilu.app/social/runway/hoshilu-approved-model-reference-v2.jpg','https://hoshilu.app/buzz',6,'720:1280',1,'HOSHILU BUZZ','Owner-approved talking reel; no generation in this run','HOSHILU BUZZ','https://hoshilu.app/buzz',1,1,1,'${MEDIA_KEY}',NULL,2459397,'video/mp4','PASSED',0,1,'${now}','${now}','${now}','${now}');
+             INSERT OR IGNORE INTO runway_audit_log (audit_id,job_id,attempt_id,event,detail,created_at) VALUES ('owner-approved-${JOB_ID}-${EXPECTED_SHA}','${JOB_ID}','','OWNER_APPROVED_PUBLISH','Library file hash and audio/video specification verified; no generation or editing performed','${now}');
+             UPDATE social_post_queue SET status='CANCELLED',updated_at='${now}',last_error='REPLACED_BY_OWNER_APPROVED_NOON_POST' WHERE campaign_id='hoshilu-ai-actress-daily-v1' AND jst_publish_date='2026-09-15' AND platform IN ('X','INSTAGRAM') AND status IN ('REVIEW_REQUIRED','APPROVED','FAILED');
+             INSERT INTO social_post_queue (post_id,platform,campaign_id,content_id,caption,link,media_url,scheduled_at,status,affiliate,approved_at,created_at,updated_at,creative_asset_id,content_format,creative_policy,jst_publish_date,ai_generated,crosspost_group_id) VALUES ('${X_POST_ID}','X','hoshilu-buzz-owner-approved-20260915','hoshilu-buzz-20260915','${x_caption}','https://hoshilu.app/buzz','${MEDIA_URL}','${now}','APPROVED',0,'${now}','${now}','${now}','','REEL','','2026-09-15',1,'hoshilu-buzz-owner-approved-20260915'), ('${IG_POST_ID}','INSTAGRAM','hoshilu-buzz-owner-approved-20260915','hoshilu-buzz-20260915','${ig_caption}','https://hoshilu.app/buzz','${MEDIA_URL}','${now}','APPROVED',0,'${now}','${now}','${now}','','REEL','','2026-09-15',1,'hoshilu-buzz-owner-approved-20260915');" > work/release.json
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT post_id,platform,status,caption,link,media_url,scheduled_at,ai_generated FROM social_post_queue WHERE post_id IN ('${X_POST_ID}','${IG_POST_ID}') ORDER BY platform;" > work/released-state.json
+          node <<'NODE'
+          const d = require('./work/released-state.json');
+          const rows = (Array.isArray(d) ? d : [d]).flatMap(x => x.results || x.result?.results || []);
+          if (rows.length !== 2 || rows.some(r => r.status !== 'APPROVED')) throw new Error('release did not produce two approved rows');
+          if (rows.some(r => String(r.caption).includes('AI生成'))) throw new Error('caption contains forbidden phrase');
+          const x = rows.find(r => r.platform === 'X');
+          if (!x || x.caption.includes('@hoshilu.app') || x.link !== 'https://hoshilu.app/buzz') throw new Error('X copy/link mismatch');
+          NODE
+
+      - name: Verify production media route matches approved bytes
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error --output work/route.mp4 "${MEDIA_URL}?sha=${EXPECTED_SHA}"
+          echo "$EXPECTED_SHA  work/route.mp4" | sha256sum -c -
+
+      - name: Wait for both platform publishers and permalink sync
+        working-directory: tools/line-worker
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 34); do
+            npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+              "SELECT q.post_id,q.platform,q.status,q.external_post_id,q.published_at,q.last_error,COALESCE((SELECT p.public_url FROM social_post_performance p WHERE p.post_id=q.post_id AND p.public_url<>'' ORDER BY p.snapshot_at DESC LIMIT 1),'') AS public_url FROM social_post_queue q WHERE q.post_id IN ('${X_POST_ID}','${IG_POST_ID}') ORDER BY q.platform;" > work/final-state.json
+            if node <<'NODE'
+          const d = require('./work/final-state.json');
+          const rows = (Array.isArray(d) ? d : [d]).flatMap(x => x.results || x.result?.results || []);
+          const x = rows.find(r => r.platform === 'X');
+          const ig = rows.find(r => r.platform === 'INSTAGRAM');
+          process.exit(x?.status === 'PUBLISHED' && ig?.status === 'PUBLISHED' && Boolean(ig.public_url) ? 0 : 1);
+          NODE
+            then break; fi
+            sleep 60
+          done
+
+      - name: Report final evidence
+        if: always()
+        working-directory: tools/line-worker
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.121.0 d1 execute PRODUCT_DB --remote --json --command \
+            "SELECT q.post_id,q.platform,q.status,q.external_post_id,q.published_at,q.last_error,COALESCE((SELECT p.public_url FROM social_post_performance p WHERE p.post_id=q.post_id AND p.public_url<>'' ORDER BY p.snapshot_at DESC LIMIT 1),'') AS public_url FROM social_post_queue q WHERE q.post_id IN ('${X_POST_ID}','${IG_POST_ID}') ORDER BY q.platform;" > work/final-state.json
+          node <<'NODE' > work/issue-body.md
+          const fs = require('node:fs');
+          const d = require('./work/final-state.json');
+          const rows = (Array.isArray(d) ? d : [d]).flatMap(x => x.results || x.result?.results || []);
+          const lines = [
+            '- source_sha256: f7cd8e2347c6586c07c5690e10312f972d6e841880dfed7e90c18e6146f8c557',
+            '- source_spec: 720x1280 / 24fps / AAC 44.1kHz stereo / 5.833333s',
+            '- generation_or_edit_cost_this_run: 0',
+            `- run: ${process.env.RUN_URL}`,
+            ''
+          ];
+          for (const r of rows) {
+            const fallback = r.platform === 'X' && /^\d+$/.test(String(r.external_post_id || ''))
+              ? `https://x.com/hoshilu_app/status/${r.external_post_id}` : '';
+            lines.push(`- ${r.platform}: status=${r.status}; post_id=${r.post_id}; external_post_id=${r.external_post_id || ''}; published_at=${r.published_at || ''}; public_url=${r.public_url || fallback}; error=${r.last_error || ''}`);
+          }
+          fs.writeFileSync('work/success.txt', String(rows.length === 2 && rows.every(r => r.status === 'PUBLISHED')));
+          process.stdout.write(lines.join('\n'));
+          NODE
+          url="$(gh issue create --title '[HOSHILU-PUBLISH] 2026-09-15 owner-approved BUZZ reel' --body-file work/issue-body.md)"
+          if [ "$(cat work/success.txt)" = true ]; then gh issue close "$url" --reason completed; fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hoshilu-buzz-publish-evidence-${{ github.run_id }}
+          path: tools/line-worker/work/*.json
+          retention-days: 30
