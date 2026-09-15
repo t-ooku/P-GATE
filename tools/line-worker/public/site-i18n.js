@@ -35,7 +35,7 @@ Object.assign(messages.KO,{'faq.social.question':'사진이나 SNS 게시물 URL
 // HOSHILU INSIGHT(保存した検索条件→新着通知)/購入希望価格ウォッチ(個別商品→
 // API確認価格が希望価格以下になった時の通知)/HOSHILU SALE RADAR
 // (市場全体→セール情報)の責務を4言語で分けて説明する。
-Object.assign(messages.JA,{'insight.diffInsight':'INSIGHT：保存条件に合う新着商品','insight.diffWatch':'購入希望価格ウォッチ：希望価格以下になった時','insight.diffSale':'SALE RADAR：各ショップモールのセール'});
+Object.assign(messages.JA,{'insight.diffInsight':'探しているもの：保存した条件に合う新着商品','insight.diffWatch':'値下がり待ち：希望価格以下になった時','insight.diffSale':'セール：受け取ると決めたモールのセール'});
 Object.assign(messages.EN,{'insight.diffInsight':'INSIGHT: New products matching saved searches','insight.diffWatch':'Target price watch: When an API price reaches your target','insight.diffSale':'SALE RADAR: Marketplace-wide sales'});
 Object.assign(messages.ZH,{'insight.diffInsight':'INSIGHT：符合已保存条件的新品','insight.diffWatch':'目标价监控：API价格达到目标价时通知','insight.diffSale':'SALE RADAR：商城整体促销'});
 Object.assign(messages.KO,{'insight.diffInsight':'INSIGHT: 저장 조건에 맞는 새 상품','insight.diffWatch':'목표 가격 감시: API 가격이 목표가에 도달할 때','insight.diffSale':'SALE RADAR: 쇼핑몰 전체 세일'});

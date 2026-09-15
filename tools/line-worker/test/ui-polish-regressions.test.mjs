@@ -22,5 +22,5 @@ test('INSIGHT補足は短い3項目の箇条書きで表示する', async () => 
   assert.match(html, /<ul class="insight-diff-note">/);
   assert.equal((html.match(/data-i18n="insight\.diff(?:Insight|Watch|Sale)"/g) || []).length, 3);
   assert.doesNotMatch(html, /data-i18n="insight\.diffNote"/);
-  assert.match(i18n, /'insight\.diffInsight':'INSIGHT：保存条件に合う新着商品'/);
+  assert.match(i18n, /'insight\.diffInsight':'探しているもの：保存した条件に合う新着商品'/);
 });

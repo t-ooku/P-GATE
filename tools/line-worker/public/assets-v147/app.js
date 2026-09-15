@@ -1178,7 +1178,7 @@ function resultRow(cards,title,note,rowKind){
   return row;
 }
 const relatedCategoryShelfCopy={
-  JA:{badge:'関連商品の検索候補',title:'一緒に探せる関連商品',note:'関連カテゴリを横スクロールし、最大13モールで実在商品を確認できます。',reason:'関連候補の理由'},
+  JA:{badge:'関連商品の検索候補',title:'こんなのもホシりそう',note:'関連カテゴリを横スクロールし、最大13モールで実在商品を確認できます。',reason:'関連候補の理由'},
   EN:{badge:'Related search idea',title:'Related products to explore',note:'Browse related categories horizontally and verify real products across up to 13 marketplaces.',reason:'Why it is related'},
   ZH:{badge:'相关商品搜索候选',title:'可一起查找的相关商品',note:'可横向浏览相关类别，并在最多13个商城中确认真实商品。',reason:'相关理由'},
   KO:{badge:'관련 상품 검색 후보',title:'함께 찾을 관련 상품',note:'관련 카테고리를 가로로 보고 최대 13개 쇼핑몰에서 실제 상품을 확인할 수 있습니다.',reason:'관련 후보 이유'}

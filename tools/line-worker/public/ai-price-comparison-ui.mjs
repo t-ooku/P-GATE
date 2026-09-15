@@ -14,7 +14,7 @@ const DEFAULT_DIRECT_MARKETPLACES = ['AMAZON_JP', 'LOFT_JP', 'HANDS_JP', 'MATSUK
 
 const copy = {
   JA: {
-    button: 'AI最安比較', title: 'AI最安比較', loading: '比較しています…', error: '比較に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる',
+    button: 'これ、今買う？', title: 'これ、今買う？（AI最安比較）', loading: '比較しています…', error: '比較に失敗しました。もう一度お試しください。', retry: 'もう一度試す', close: '閉じる',
     realLabel: '実価格', estimateLabel: 'AI推定', unavailableLabel: '価格推定できません', search: '価格の安い順で見る', searchDefault: 'この検索語で見る', empty: '比較できる情報がありませんでした。'
   },
   EN: {
