@@ -202,6 +202,63 @@ JS を実行する検索エンジン／SNS のリンク先取得が「読者」�
 
 ---
 
+## 2026-09-15
+
+### 新指示書「HOSHILU 成功戦略・プロダクト再定義 指示書」（探さなくていい。ホシっといて。）→ 保存・着手
+
+- 原文: `docs/handoff/2026-09-15-master-directive-hoshittoku.md`（Projects `claude/hoshilu_master_directive_2026-09-15_hoshittoku.md`）
+- 現状との突き合わせ: Projects `claude/hoshilu_hoshittoku_status_map_2026-09-15.md`（項目別に 本番確認済み／一部実装／未実装 を判定、P0→P1 の順）
+- 大隆さん決定: **A ok**（P0-1 コピー・CTA・0件導線を本番へ）／**B ok**（無料でホシっとく＝メール or LINE→完了）／
+  **C ok**（INSIGHT 巡回を D1 有料枠に合わせる）／**D2**（Codex 復帰まで Cowork が主幹、Codex は検索品質・監視の個別課題）
+- 出発点の実数: 預かっている「欲しい」24 件（内部 3 人）、INSIGHT の一致通知 0 回。§29 に従い、
+  通知が実際に出ることを内部で確認するまで「見つかるまで探します」を SNS・広告で宣伝しない
+
+### P0-1 意味の統一（#279、head `749e3a9`）→ **本番確認済み**
+
+h1「探さなくていい。ホシっといて。」／補足「スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。なければ、見つかるまで探します。」／
+入力欄「何が欲しい？」／主 CTA「ホシっとく」＋直下「今探します。見つからなければ、そのまま探し続けます。」（EN/ZH/KO も更新）。
+`app.js?v=158`。hoshilu.app で表示を確認。
+
+### P0-2 登録前後の導線（#280、head `ca85d96`、CI ✅ 2026-09-15T15:47Z）→ **実装済み・本番未確認（コードは本番、体験の通し確認は次回）**
+
+- 結果末尾と 0 件時に「今は見つかりませんでした。ホシっといて、HOSHILU に探し続けてもらいますか？」→「無料でホシっとく」
+- 未ログインなら、その場で希望価格ウォッチと同じ最短登録（メール 6 桁 or LINE、`createWatchQuickJoin` に `lead` / `source='hoshittoku'`）。
+  検索語を `hoshilu_pending_insight` に保存し、登録完了→`syncMemberWishes()` 後に `applyPendingInsight()` が INSIGHT 保存検索を自動作成（再入力なし、§7）
+- ログイン済みなら即 `saveInsightWatch(query)`→「HOSHILU が探し続けています」
+- `app.js?v=159` / `ai-search-layout-fix.css?v=129`。テスト 2311 全通過。本番 app.js に文言・`hoshilu_pending_insight` を確認
+
+### P0-3 継続探索を効かせる（#281、head `72bec1c`、CI ✅ 2026-09-15T15:50Z、`INSIGHT_D1_QUERY_TIER=PAID`）→ **本番確認済み（デプロイ）**
+
+D1 は 2.6GB＝既に Workers Paid のため新規費用なし（C 承認）。1 巡回 1 件 → 最大 40 件。
+
+**訂正（D1 実測）**: 預かり 24 件のうち INSIGHT の巡回対象（`insight_enabled_at` あり・`notify_new_match=1`）は **2 件だけ**
+（「マルアイ 底部開口 封筒」9/4、「汗染み防止 Tシャツ…」9/8）。残り 22 件は希望価格ウォッチ／通常保存で、継続探索の対象外。
+2 件とも初回巡回で `INSIGHT_BASELINE`（基準の候補集合）を保存済み。以後は知識索引に**新しい候補が入った時だけ**
+「見つかりました」通知が出る仕組みで、9/4・9/8 以降に新候補は出ていない＝通知 0 回は「動いていない」ではなく「新着がない」。
+#280 の「無料でホシっとく」は `saveInsightWatch` → `notify_new_match=1` → `insight_enabled_at` が入る経路なので、
+新規登録はそのまま巡回対象になる（コードで確認）。
+残る確認: 実際に新着候補が索引に入って通知が出る 1 例。これが出るまで外部発信は「今探します」まで（§29）。
+
+### Codex 復帰を検知（9/13〜）→ D2
+
+Codex が feature/ui-search-v2 に直接コミット（self-check `docs/handoff/2026-09-1{3,5}-codex-selfcheck.md`、#278 Threads 一時エラー再試行）。
+Cowork から Codex へのメモ: `docs/handoff/2026-09-15-cowork-note-for-codex.md`（クローラ監査は #276 と整合、#278 の重複除外を文書化、
+大隆さん判断待ちの 3 件には触らない）。
+
+### セラー営業（継続）
+
+- 9/14 投入分 3 通は訂正済み本文で 9/15 09:15 送信（template_mismatch なし）。返信はまだ 0
+- 第 2 候補リスト 13 社（Projects `claude/hoshilu_seller_outreach_candidates_round2_2026-09-15.md`）。#1〜5 を 9/16 09:05 に投入済み、残 8 社
+
+### 次に自動で進めること（P1）
+
+1. `/mywatch` を「探しています／見つかりました／値下がり待ち／あとで見る」の 4 状態にし、ログイン後の最初の画面にする（§8/§9）
+2. 機能名の言い換え（§11）
+3. 計測イベント `want_saved` / `result_top3_clicked` / `result_rejected`（「違う」ボタン、§21）
+4. 日次販促の型を「欲しい瞬間」型（§23、#ホシっといて）に作り直す
+
+---
+
 ## 3. 判定SQL（再利用）
 
 ```sql
@@ -246,3 +303,8 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 要判断（大隆さん） | v2 毎日リール（`hoshilu-ai-actress-daily-v1`）の APPROVED 26件の取り消し。9/4 引き継ぎが Codex 側で未実施 |
 | 確定 | SNS 着地は事前読み込み／bot。人の SNS 流入はほぼゼロ。評価軸を検索完了・ウォッチ設定に変更 |
 | 未実装 | SEO の人の読者づくり（SNS からの記事誘導） |
+| 本番確認済み | #279 P0-1 トップコピー「探さなくていい。ホシっといて。」＋主 CTA「ホシっとく」（9/15 指示書、A 承認） |
+| 実装済み・本番未確認 | #280 P0-2 結果内「無料でホシっとく」→ メール/LINE 最短登録 → INSIGHT 保存検索を自動作成（B 承認）。通し体験の本番確認が残る |
+| 本番確認済み（デプロイ） | #281 P0-3 `INSIGHT_D1_QUERY_TIER=PAID`（C 承認、費用増なし）。巡回対象は現状 2 件のみ（他 22 件は対象外）。通知の実例はまだ 0 |
+| 決定済み | D2: Codex 復帰後も当面 Cowork が主幹。Codex は検索品質・監視の個別課題。メモ `2026-09-15-cowork-note-for-codex.md` |
+| 未実装（P1） | 「ホシってるもの」4 状態画面／名称言い換え／`want_saved` 等の計測／「違う」ボタン／SNS「欲しい瞬間」型 |
