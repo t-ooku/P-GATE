@@ -275,8 +275,12 @@ export function normalizeRakutenRanking(payload = {}) {
     const productUrl = isRakutenAffiliateProductUrl(affiliateUrl) ? affiliateUrl : (isRakutenDirectProductUrl(regularUrl) ? regularUrl : '');
     const images = [...(item.mediumImageUrls || []), ...(item.smallImageUrls || [])]
       .map((image) => String(image?.imageUrl || image || '').trim()).filter((url) => /^https:\/\//i.test(url));
+    const itemCode = String(item.itemCode || '').trim();
     return {
       rank: Math.max(1, Number(item.rank) || index + 1),
+      // 2026-09-16 大隆さん指示「BUZZ にも希望価格ウォッチ」: 商品コードを持たせ、
+      // 希望価格ウォッチが itemCode で同一商品の価格を追えるようにする。
+      record_key: itemCode ? `RAKUTEN:${itemCode}` : '',
       product_name: String(item.itemName || '').trim().slice(0, 300),
       display_name: String(item.itemName || '').trim().slice(0, 300),
       image_url: images[0] || '', image_urls: [...new Set(images)].slice(0, 8),

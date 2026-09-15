@@ -59,3 +59,8 @@ footer{padding:24px 16px calc(26px + env(safe-area-inset-bottom));text-align:cen
 footer a{color:var(--muted)}
 @media (max-width:760px){main{width:min(100% - 20px,1120px)}.topbar{min-height:66px;padding-inline:10px}.brand img{width:38px;height:38px}.brand em{display:none}.home-link{display:none}.buzz-hero{margin-top:10px;padding:26px 20px;border-radius:24px}.buzz-hero::after{right:8px;bottom:-8px}.buzz-compare{grid-template-columns:1fr;padding:20px}.buzz-compare-cta{white-space:normal;text-align:center}.buzz-notify{grid-template-columns:1fr;padding:20px}.buzz-notify-status{grid-column:1}.buzz-notify-switch,.buzz-notify-login{white-space:normal;text-align:center}.shelf{margin:12px 0;padding:18px 14px 18px 17px;border-radius:22px}.shelf-head{align-items:flex-start}.shelf-head .headline{order:3}.shelf-share{padding:8px 11px}.rail{gap:11px}.card{flex-basis:154px;border-radius:18px;padding:9px}.thumb{border-radius:13px}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card,.thumb img{transition:none}}
+
+/* 2026-09-16: 希望価格ウォッチへの入口（トップの検索結果で設定） */
+.ranking-product-item{scroll-snap-align:start;flex:0 0 180px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.ranking-product-item .card{flex:1 1 auto;width:100%}
+.ranking-watch-link{display:block;text-align:center;border:1px solid #d9d3f5;border-radius:999px;background:#f4f1ff;color:#5140ba;font-size:11px;font-weight:800;padding:7px 8px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

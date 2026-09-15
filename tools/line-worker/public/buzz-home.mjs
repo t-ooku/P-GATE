@@ -33,7 +33,25 @@ function itemCard(item) {
   if (item.movement) card.append(el('p', 'buzz-home-move', text(item.movement)));
   card.append(el('p', 'buzz-home-name', text(item.name)));
   card.append(el('p', 'buzz-home-price', item.price_confirmed ? yen(item.price) : '価格はモールで確認'));
-  return card;
+  // 2026-09-16 大隆さん指示「ホシルバズも、希望価格ウォッチが必要」: 検索結果と同じ
+  // 「この価格になったら教えて☑」を各カードに。ダイアログ本体は app.js の HoshiluWatch を使う
+  // （価格が確認できている商品だけ。button は a の中に置けないので、カードを包む）。
+  const wrap = el('div', 'buzz-home-item');
+  wrap.append(card);
+  if (item.price_confirmed && item.price > 0) {
+    const watch = el('button', 'buzz-home-watch watch-settings-button', 'この価格になったら教えて☑');
+    watch.type = 'button';
+    watch.addEventListener('click', (event) => {
+      event.preventDefault();
+      window.HoshiluWatch?.open({
+        display_name: text(item.name), product_name: text(item.name), image_url: text(item.image_url),
+        record_key: text(item.record_key), target_product_key: text(item.record_key),
+        offers: [{ marketplace: text(item.marketplace), product_url: text(item.product_url), price: Number(item.price), total_cost: Number(item.price), currency: 'JPY' }]
+      });
+    });
+    wrap.append(watch);
+  }
+  return wrap;
 }
 
 function render(result) {

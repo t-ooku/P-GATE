@@ -42,7 +42,16 @@ function itemCard(item, marketplace) {
   if (Number(item.review_count) > 0) {
     card.append(el('p', 'review', `★${Number(item.review_average).toFixed(1)}（${Number(item.review_count).toLocaleString('ja-JP')}件）`));
   }
-  return card;
+  // 2026-09-16 大隆さん指示「ホシルバズも、希望価格ウォッチが必要」: /buzz には検索本体（app.js）が
+  // 無いので、トップの同じ商品の検索結果（希望価格ウォッチ付き）へ渡す。
+  const wrap = el('div', 'ranking-product-item');
+  wrap.append(card);
+  if (item.price_confirmed && item.name) {
+    const watch = el('a', 'ranking-watch-link', 'この価格になったら教えて☑');
+    watch.href = `/?q=${encodeURIComponent(text(item.name).slice(0, 80))}#hoshiluSearch`;
+    wrap.append(watch);
+  }
+  return wrap;
 }
 
 // §22/§24: ランキングはそのままSNSコンテンツになる。実データの商品名だけで

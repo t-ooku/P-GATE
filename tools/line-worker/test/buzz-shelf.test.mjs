@@ -34,7 +34,7 @@ test('BUZZは共有流入・共有開始・商品送客を匿名成長計測へ�
   const homeClient = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
   const analytics = fs.readFileSync(path.join(worker, 'public', 'growth-analytics.mjs'), 'utf8');
   assert.match(html, /growth-analytics\.mjs\?v=14/);
-  assert.match(html, /buzz\.mjs\?v=4/);
+  assert.match(html, /buzz\.mjs\?v=5/);
   assert.match(html, /share-button share-discovery-button/);
   assert.match(client, /utm_campaign: 'hoshilu_buzz'/);
   assert.match(client, /utm_content: content/);
@@ -291,7 +291,7 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
   assert.doesNotMatch(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
-  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=4"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=5"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
   const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
   assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
@@ -590,4 +590,21 @@ test('急上昇との商品重複が半数未満ならジャンル棚を残す',
   const targetUrls = new Set(target.items.map((item) => item.product_url));
   assert.equal(rising.items.filter((item) => targetUrls.has(item.product_url)).length, 2);
   assert.ok(result.shelves.some((shelf) => shelf.shelf_id === target.shelf_id));
+});
+
+// 2026-09-16 大隆さん指示「ホシルバズも、希望価格ウォッチが必要」
+test('BUZZ の各カードに「この価格になったら教えて☑」が付き、商品コード（record_key）が棚データに乗る', () => {
+  const home = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
+  assert.match(home, /buzz-home-watch watch-settings-button/);
+  assert.match(home, /window\.HoshiluWatch\?\.open\(/);
+  assert.match(home, /この価格になったら教えて☑/);
+  const app = fs.readFileSync(path.join(worker, 'public', 'app.js'), 'utf8');
+  assert.match(app, /window\.HoshiluWatch=\{open\(candidate\)/);
+  const shelf = fs.readFileSync(path.join(worker, 'src', 'buzz-shelf.mjs'), 'utf8');
+  assert.match(shelf, /record_key: String\(candidate\.record_key \|\| ''\)/);
+  const ranking = fs.readFileSync(path.join(worker, 'src', 'marketplace-ranking.mjs'), 'utf8');
+  assert.match(ranking, /record_key: itemCode \? `RAKUTEN:\$\{itemCode\}` : ''/);
+  const buzz = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
+  assert.match(buzz, /ranking-watch-link/);
+  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=4/);
 });

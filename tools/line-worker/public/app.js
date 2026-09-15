@@ -1884,6 +1884,8 @@ document.querySelector('#stickySearch')?.addEventListener('submit',event=>{
 document.querySelector('#stickyMarketplaceJump')?.addEventListener('click',()=>{
   (document.querySelector('#instantMarketplaceFallback')||document.querySelector('#marketplaceFallback'))?.scrollIntoView({behavior:'smooth',block:'start'});
 });
+// 2026-09-16 大隆さん指示: BUZZ 棚（別モジュール）からも同じ希望価格ウォッチのダイアログを開けるようにする。
+window.HoshiluWatch={open(candidate){const {dialog}=createWatchOptions(candidate||{},selectedCopy());document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());dialog.showModal();}};
 window.HoshiluSearch={run:runKnowledgeSearch,beginIdentify:beginIdentifySearch,endIdentify:endIdentifySearch,revealResults:revealSearchResults};
 elements.form.addEventListener('submit',event=>{event.preventDefault();pendingInboundSearch='';const identifyRequested=currentSearchMode()==='identify';requestedSearchMode='direct';const query=String(elements.query.value||'').trim();const supplemental=hasSupplementalSearchInput();if(searchImagePreparing){elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().preparing;return;}if(!isUsableProductQuery(query)&&!supplemental){elements.query.focus();elements.status.className='status error';elements.status.textContent=selectedSearchInputCopy().missing;return;}if(identifyRequested&&typeof window.HoshiluIdentifySearch?.open==='function'){const executionId=beginIdentifySearch(query);window.HoshiluIdentifySearch.open(query,elements.language.value,{executionId,image:preparedSearchImage,socialUrl:String(elements.socialUrl?.value||'').trim()});return;}runKnowledgeSearch();});
 function returnFromRankingToSearch(){

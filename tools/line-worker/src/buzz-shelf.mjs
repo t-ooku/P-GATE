@@ -116,6 +116,7 @@ function sanitizeShelfItem(candidate = {}, index) {
     currency: 'JPY',
     product_url: String(offer.product_url || '').trim(),
     marketplace: String(offer.marketplace || 'RAKUTEN_JP'),
+    record_key: String(candidate.record_key || '').trim().slice(0, 160),
     review_average: Number(candidate.review_average) || 0,
     review_count: Math.max(0, Number(candidate.review_count) || 0)
   };
