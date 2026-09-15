@@ -1206,3 +1206,7 @@ html:lang(ja) #heroTitle{white-space:nowrap}#heroTitle .hero-title-line{display:
 .ai-candidate-reference-host{font-weight:600;font-size:12px;color:#6b6880}
 /* 2026-09-15 指示書「探さなくていい。ホシっといて。」§3: CTA 直下の一言 */
 .hoshittoku-hint{margin:6px 0 0;font-size:13px;line-height:1.6;color:#6b6880}
+/* 2026-09-15 指示書§6: 結果内「無料でホシっとく」の登録欄（メール6桁 or LINE） */
+.continuous-search-actions .watch-quick-join{margin-top:6px;text-align:left}
+.continuous-search-actions .watch-quick-join .watch-quick-row{display:flex;gap:6px;flex-wrap:wrap}
+.continuous-search-actions .watch-quick-join input{flex:1 1 160px;min-width:0;padding:10px 12px;border:1px solid var(--line,#e8e3f4);border-radius:10px;font-size:15px}

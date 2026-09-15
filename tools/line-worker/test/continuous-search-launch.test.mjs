@@ -11,7 +11,7 @@ test('continuous search is promoted on the home page and every result path', asy
   ]);
   assert.match(html, /検索は、1回で終わらない。/u);
   assert.match(html, /continuous-search\.css\?v=2/u);
-  assert.match(app, /function continuousSearchCard\(query\)/u);
+  assert.match(app, /function continuousSearchCard\(query,options=\{\}\)/u);
   assert.match(app, /if\(continuous\)resultCards\.push\(continuous\)/u);
   assert.match(app, /if\(continuous\)emptyCards\.push\(continuous\)/u);
   assert.match(app, /source:'continuous_search'/u);

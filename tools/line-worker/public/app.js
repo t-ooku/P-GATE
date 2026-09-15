@@ -448,9 +448,19 @@ function applyPendingWatch(){
   const name=String(pending.target_product_name||'').trim();
   if(name&&saveWish(name,[false,true,false,false],{target_price_jpy:Number(pending.target_price_jpy),target_product_key:String(pending.target_product_key||''),target_product_name:name,...(pending.watch_kind==='POST_PURCHASE'?{watch_kind:'POST_PURCHASE',purchase_price_jpy:Number(pending.purchase_price_jpy)||0}:{})})){try{localStorage.removeItem('hoshilu_pending_watch');}catch{}}
 }
+// 2026-09-15 指示書§7: 登録前に「無料でホシっとく」した検索条件は、登録が終わった瞬間に
+// そのまま INSIGHT（見つかるまで探す）として保存する。もう一度入力させない。
+function applyPendingInsight(){
+  if(!memberSession)return;
+  let pending=null;try{pending=JSON.parse(localStorage.getItem('hoshilu_pending_insight')||'null');}catch{}
+  if(!pending||!String(pending.query||'').trim()||Date.now()-Number(pending.saved_at||0)>24*60*60*1000){try{localStorage.removeItem('hoshilu_pending_insight');}catch{}return;}
+  const query=String(pending.query).trim();
+  try{localStorage.removeItem('hoshilu_pending_insight');}catch{}
+  saveInsightWatch(query).catch(()=>{});
+}
 // 会員セッションの同期後に、登録前の希望額を反映する(既存の同期処理は触らない)。
 const baseSyncMemberWishes=syncMemberWishes;
-syncMemberWishes=async function(){await baseSyncMemberWishes();applyPendingWatch();};
+syncMemberWishes=async function(){await baseSyncMemberWishes();applyPendingWatch();applyPendingInsight();};
 function memberLoginHref(){return `/login.html?next=${encodeURIComponent('/#wishTitle')}`;}
 function createKeepButton(candidate){
   const copy=keepCopy[elements.language.value]||keepCopy.JA;
@@ -475,10 +485,13 @@ function watchQuickJoinContext(source){
   const params=new URLSearchParams(location.search);
   return{locale:String(document.documentElement.lang||'ja').split('-')[0].toUpperCase(),source:params.get('utm_source')||stored.source||source||'',medium:params.get('utm_medium')||stored.medium||'watch',campaign:params.get('utm_campaign')||stored.campaign||'price-watch',content:params.get('utm_content')||stored.content||''};
 }
-function createWatchQuickJoin(amount,onDone){
+function createWatchQuickJoin(amount,onDone,options={}){
   const copy={JA:{lead:`¥${Number(amount).toLocaleString('ja-JP')}になったら、どこに知らせる？`,email:'メールアドレス',send:'コードを送る',code:'届いた6桁コード',verify:'これで完了',line:'LINEで受け取る',sent:'6桁コードをメールに送りました（10分有効）。',wrong:'コードが違うか、期限切れです。',retry:'1分後にもう一度送れます。',fail:'送れませんでした。メールアドレスを確認してください。',done:'これで毎日見なくてOK。この価格になったら知らせます。',note:'登録はこれだけ。パスワードは要りません。'},
     EN:{lead:`Where should we tell you when it hits ¥${Number(amount).toLocaleString('ja-JP')}?`,email:'Email address',send:'Send code',code:'6-digit code from the email',verify:'Done',line:'Get it on LINE',sent:'We emailed a 6-digit code (valid 10 min).',wrong:'Wrong or expired code.',retry:'You can resend in a minute.',fail:'Could not send. Check the address.',done:'That is it. No need to keep checking the price.',note:'No password needed.'}}[elements.language.value]||null;
   const c=copy||{lead:`¥${Number(amount).toLocaleString('ja-JP')}`,email:'Email',send:'Send',code:'Code',verify:'Done',line:'LINE',sent:'',wrong:'',retry:'',fail:'',done:'',note:''};
+  // 2026-09-15 指示書§6: 「無料でホシっとく」も同じ最短登録（メール6桁 or LINE）を使う。lead と流入元だけ差し替える。
+  if(options.lead)c.lead=options.lead;
+  const joinSource=options.source||'watch';
   const wrap=document.createElement('div');wrap.className='watch-quick-join';
   wrap.append(textElement('strong','watch-quick-lead',c.lead));
   const emailRow=document.createElement('div');emailRow.className='watch-quick-row';
@@ -491,7 +504,7 @@ function createWatchQuickJoin(amount,onDone){
   codeRow.append(code,verify);
   const message=textElement('p','watch-quick-status','');
   const line=document.createElement('a');line.className='watch-quick-line';line.textContent=c.line;
-  line.href=`/api/member/line/start?${new URLSearchParams({next:'/#wishTitle',...watchQuickJoinContext('watch')})}`;
+  line.href=`/api/member/line/start?${new URLSearchParams({next:'/#wishTitle',...watchQuickJoinContext(joinSource)})}`;
   wrap.append(emailRow,codeRow,message,line,textElement('small','watch-quick-note',c.note));
   send.addEventListener('click',async()=>{
     const value=email.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)){email.reportValidity();return;}
@@ -506,7 +519,7 @@ function createWatchQuickJoin(amount,onDone){
   verify.addEventListener('click',async()=>{
     const value=email.value.trim(),digits=code.value.trim();if(!/^\d{6}$/.test(digits)){code.reportValidity();return;}
     verify.disabled=true;message.textContent='…';
-    try{const response=await fetch('/api/member/email/verify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:value,code:digits,registration_context:watchQuickJoinContext('watch')})});
+    try{const response=await fetch('/api/member/email/verify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:value,code:digits,registration_context:watchQuickJoinContext(joinSource)})});
       if(!response.ok){message.textContent=c.wrong;verify.disabled=false;return;}
       // セッションが発行された。会員状態を同期すると pending の希望額がそのまま保存される。
       await syncMemberWishes();
@@ -1210,10 +1223,10 @@ function cancelInstantMarketplaceHandoff(){
   status.textContent=({JA:'AI確認を終了しました。下のモール検索はそのまま利用できます。',EN:'AI confirmation ended. The marketplace links below remain available.',ZH:'AI 确认已结束，仍可使用下方商城搜索链接。',KO:'AI 확인을 종료했습니다. 아래 쇼핑몰 검색 링크는 계속 이용할 수 있습니다.'}[language]||'The marketplace links remain available.');
 }
 const continuousSearchCopy={
-  JA:{title:'この条件、見つかるまで探します。',memberBody:'有効にすると、初回確認では現在の候補を基準として記録し、この時点では通知しません。以後、新しく一致する実在商品が見つかったときだけ、アプリ内と接続済みのLINE・メールへお知らせします。',guestBody:'まずこの端末に条件を保存できます。無料会員になった後、対象条件の通知を明示的に有効にできます。',note:'値下げ通知ではなく、検索条件に合う新しい商品の発見通知です。',action:'無料で探し続ける',localAction:'この端末に条件を保存',active:'この条件を探し続けています',local:'条件を保存しました',login:'無料会員登録後に通知を有効にする'},
-  EN:{title:'Let HOSHILU keep looking until it finds a match.',memberBody:'When enabled, the first check records current candidates as the baseline and sends no alert. After that, only newly matched real products trigger alerts in the app and through connected LINE or email.',guestBody:'Save the condition on this device first. After signing up, explicitly enable alerts for this condition.',note:'This is a new-product discovery alert, separate from price-drop alerts.',action:'Keep looking for free',localAction:'Save on this device',active:'HOSHILU is continuing this search',local:'Search saved on this device',login:'Sign up, then enable alerts'},
-  ZH:{title:'让 HOSHILU 持续寻找，直到发现匹配商品。',memberBody:'启用后，首次检查会将当前候选商品记录为基准，此时不发送通知。之后，仅在发现新匹配的真实商品时，通过应用内通知及已连接的 LINE 或电子邮件提醒您。',guestBody:'可先将条件保存到此设备。免费注册后，请为此条件明确启用通知。',note:'这是新商品发现通知，与降价通知不同。',action:'免费继续寻找',localAction:'保存到此设备',active:'HOSHILU 正在继续寻找',local:'条件已保存到设备',login:'注册后启用通知'},
-  KO:{title:'일치하는 상품을 찾을 때까지 HOSHILU가 계속 찾아요.',memberBody:'활성화하면 첫 확인에서 현재 후보를 기준으로 기록하고 이때는 알림을 보내지 않습니다. 이후 새로 일치하는 실제 상품을 찾았을 때만 앱과 연결된 LINE·이메일로 알려드립니다.',guestBody:'먼저 이 기기에 조건을 저장할 수 있어요. 무료 가입 후 이 조건의 알림을 명시적으로 활성화하세요.',note:'가격 인하 알림과는 다른 새 상품 발견 알림입니다.',action:'무료로 계속 찾기',localAction:'이 기기에 저장',active:'HOSHILU가 이 조건을 계속 찾고 있어요',local:'이 기기에 조건을 저장했어요',login:'가입 후 알림 활성화'}
+  JA:{title:'この条件、ホシっといて探し続けてもらう？',titleNotFound:'今は見つかりませんでした。ホシっといて、HOSHILUに探し続けてもらいますか？',memberBody:'ホシっとくと、この条件で HOSHILU が探し続けます。新しく一致する実在商品が見つかったときだけ、アプリ内と接続済みのLINE・メールへお知らせします（初回は現在の候補を基準に記録し、この時点では通知しません）。',guestBody:'無料登録（メールの6桁コード か LINE）だけで、この条件を HOSHILU が探し続けます。見つかったら、新しい候補をお知らせします。',note:'値下げ通知ではなく、検索条件に合う新しい商品の発見通知です。',action:'ホシっとく',localAction:'無料でホシっとく',active:'HOSHILU が探し続けています',local:'この端末に保存しました',login:'無料会員登録後に通知を有効にする',lead:'見つかったら、どこに知らせる？'},
+  EN:{title:'Leave it to HOSHILU to keep looking?',titleNotFound:'Nothing yet. Leave it to HOSHILU to keep looking?',lead:'Where should we tell you when it is found?',memberBody:'When enabled, the first check records current candidates as the baseline and sends no alert. After that, only newly matched real products trigger alerts in the app and through connected LINE or email.',guestBody:'Save the condition on this device first. After signing up, explicitly enable alerts for this condition.',note:'This is a new-product discovery alert, separate from price-drop alerts.',action:'Keep looking for free',localAction:'Save on this device',active:'HOSHILU is continuing this search',local:'Search saved on this device',login:'Sign up, then enable alerts'},
+  ZH:{title:'交给 HOSHILU 继续找？',titleNotFound:'现在还没找到。交给 HOSHILU 继续找？',lead:'找到后通知到哪里？',memberBody:'启用后，首次检查会将当前候选商品记录为基准，此时不发送通知。之后，仅在发现新匹配的真实商品时，通过应用内通知及已连接的 LINE 或电子邮件提醒您。',guestBody:'可先将条件保存到此设备。免费注册后，请为此条件明确启用通知。',note:'这是新商品发现通知，与降价通知不同。',action:'免费继续寻找',localAction:'保存到此设备',active:'HOSHILU 正在继续寻找',local:'条件已保存到设备',login:'注册后启用通知'},
+  KO:{title:'HOSHILU에 맡겨서 계속 찾을까요?',titleNotFound:'아직 못 찾았어요. HOSHILU에 맡겨서 계속 찾을까요?',lead:'찾으면 어디로 알릴까요?',memberBody:'활성화하면 첫 확인에서 현재 후보를 기준으로 기록하고 이때는 알림을 보내지 않습니다. 이후 새로 일치하는 실제 상품을 찾았을 때만 앱과 연결된 LINE·이메일로 알려드립니다.',guestBody:'먼저 이 기기에 조건을 저장할 수 있어요. 무료 가입 후 이 조건의 알림을 명시적으로 활성화하세요.',note:'가격 인하 알림과는 다른 새 상품 발견 알림입니다.',action:'무료로 계속 찾기',localAction:'이 기기에 저장',active:'HOSHILU가 이 조건을 계속 찾고 있어요',local:'이 기기에 조건을 저장했어요',login:'가입 후 알림 활성화'}
 };
 function showWishSaveFeedback({saved,member,query}){
   const language=elements.language.value;
@@ -1234,16 +1247,17 @@ function showWishSaveFeedback({saved,member,query}){
   dialog.addEventListener('close',()=>dialog.remove(),{once:true});
   document.body.append(dialog);dialog.showModal();
 }
-function continuousSearchCard(query){
+function continuousSearchCard(query,options={}){
   const value=String(query||'').trim();
   if(!value)return null;
   const labels=continuousSearchCopy[elements.language.value]||continuousSearchCopy.JA;
+  const found=options.found!==false;
   const card=document.createElement('article');
   card.className='continuous-search-card';
   card.dataset.continuousSearch='true';
   const copyWrap=document.createElement('div');
   copyWrap.className='continuous-search-copy';
-  copyWrap.append(textElement('h3','',labels.title),textElement('p','',memberSession?labels.memberBody:labels.guestBody),textElement('small','',labels.note));
+  copyWrap.append(textElement('h3','',found?labels.title:(labels.titleNotFound||labels.title)),textElement('p','',memberSession?labels.memberBody:labels.guestBody),textElement('small','',labels.note));
   const queryChip=textElement('span','continuous-search-query',value);
   const actions=document.createElement('div');
   actions.className='continuous-search-actions';
@@ -1264,7 +1278,13 @@ function continuousSearchCard(query){
     document.dispatchEvent(new CustomEvent('hoshilu:wish-saved',{detail:{source:'continuous_search'}}));
     if(memberPersistenceRequired&&!saved){button.textContent=wishSaveFailedCopy();button.disabled=false;showWishSaveFeedback({saved:false,member:memberPersistenceRequired,query:value});return;}
     button.textContent=memberSession?labels.active:labels.local;
-    if(!memberSession){login.classList.remove('hidden');button.disabled=false;}
+    if(!memberSession){
+      // 2026-09-15 指示書§6/§7: ここで無料登録（メール6桁 or LINE）。登録ページへ飛ばさず、
+      // 検索条件は hoshilu_pending_insight に残して登録直後に INSIGHT として保存する。
+      try{localStorage.setItem('hoshilu_pending_insight',JSON.stringify({query:value,saved_at:Date.now()}));}catch{}
+      if(!card.dataset.quickJoin){card.dataset.quickJoin='shown';actions.append(createWatchQuickJoin(0,()=>{button.textContent=labels.active;button.disabled=true;},{lead:labels.lead,source:'hoshittoku'}));}
+      button.disabled=true;
+    }
     showWishSaveFeedback({saved:true,member:memberPersistenceRequired,query:value});
   });
   actions.append(button,login);
@@ -1332,7 +1352,7 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
     const quickStrip=marketplaceQuickStrip(result);
     if(quickStrip)resultCards.push(quickStrip);
     resultCards.push(rows[0]);
-    const continuous=continuousSearchCard(elements.query.value);
+    const continuous=continuousSearchCard(elements.query.value,{found:true});
     if(continuous)resultCards.push(continuous);
     resultCards.push(...rows.slice(1));
     const relatedKeywords=relatedKeywordCard(result);
@@ -1348,7 +1368,7 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
     empty.className='empty-result';
     empty.append(textElement('p','',elements.query.value));
     emptyCards.push(empty);
-    const continuous=continuousSearchCard(elements.query.value);
+    const continuous=continuousSearchCard(elements.query.value,{found:false});
     if(continuous)emptyCards.push(continuous);
     const emptyRelatedKeywords=relatedKeywordCard(result);
     if(emptyRelatedKeywords)emptyCards.push(emptyRelatedKeywords);

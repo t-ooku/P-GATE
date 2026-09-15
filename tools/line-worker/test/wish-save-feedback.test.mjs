@@ -20,10 +20,11 @@ function setup(member,save){
   const context=vm.createContext({document,memberSession:member?{}:null,elements:{language:{value:'JA'}},getWishes:()=>[],insightEnabledFor:()=>false,
     textElement:(tag,cls,text)=>Object.assign(new Element(tag),{className:cls,textContent:text}),saveInsightWatch:save,
     wishSavedCopy:()=> 'この端末に条件を保存しました（登録後、通知を明示的に有効化できます）',wishSaveFailedCopy:()=> '通知設定に失敗しました',
+    createWatchQuickJoin:()=>Object.assign(new Element('div'),{className:'watch-quick-join'}),localStorage:{setItem(){},removeItem(){}},
     CustomEvent:class{constructor(type,options){this.type=type;this.detail=options.detail;}}});
   vm.runInContext(source,context);
   const card=vm.runInContext("continuousSearchCard('テスト条件')",context);
-  return {document,events,button:card.children[2].children[0]};
+  return {document,events,button:card.children[2].children[0],card};
 }
 test('member success popup waits for saving, then can be dismissed',async()=>{
   let finish;const pending=new Promise(resolve=>{finish=resolve;});
@@ -36,12 +37,14 @@ test('member success popup waits for saving, then can be dismissed',async()=>{
   assert.equal(events.length,1);assert.equal(button.disabled,true);
   panel.children.at(-1).listeners.click();assert.equal(dialog.removed,true);
 });
-test('guest success explicitly says local saving and offers signup',async()=>{
-  const {document,button}=setup(false,async()=>true);await button.listeners.click();
+// 2026-09-15 指示書§6: 登録前はその場でメール6桁 or LINE の登録欄（createWatchQuickJoin）を出す。登録ページへは飛ばさない。
+test('guest success shows the inline signup (email code or LINE) in the card',async()=>{
+  const {document,button,card}=setup(false,async()=>true);await button.listeners.click();
   const panel=document.body.children[0].children[0];
   assert.match(panel.children[1].textContent,/この端末/);
-  assert.match(panel.children.find(e=>e.tag==='a').href,/login.html/);
-  assert.equal(button.disabled,false);
+  assert.equal(card.children[2].children.some(e=>e.className==='watch-quick-join'),true);
+  assert.equal(card.dataset.quickJoin,'shown');
+  assert.equal(button.disabled,true);
 });
 test('failed server save and storage exceptions never show a success popup',async()=>{
   for(const [save,localSavedEvents] of [[async()=>false,1],[async()=>{throw new Error('storage unavailable');},0]]){
