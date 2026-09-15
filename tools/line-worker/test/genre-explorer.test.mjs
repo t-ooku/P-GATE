@@ -29,7 +29,7 @@ test('ジャンル探索はファッション → バッグ → トートバッ�
 
 // 2026-09-04 大隆さん決定（主婦層25〜40代・差別化は希望価格ウォッチとクーポン通知）
 test('トップの副文言は通知の価値を含み、結果直下に通知の入口（希望価格・クーポン）が1つにまとまる', () => {
-  assert.match(html, /スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。<br>なければ、見つかるまで探します。/u);
+  assert.match(html, /スクショでも、SNSでも、うろ覚えでも。<\/span><span class="hero-sub-sentence">HOSHILUが見つけます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">なければ、見つかるまで探します。/u);
   assert.match(readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8'), /\.hero-sub\{white-space:pre-line\}/u);
   assert.match(html, /id="resultNoticeStrip"/u);
   assert.match(html, /href="#mywatchTitle" class="result-notice-link" data-notice="watch"/u);

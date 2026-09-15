@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -103,7 +104,12 @@ test('第一画面は「探さなくていい。ホシっといて。」と補�
   assert.doesNotMatch(html, /名前が分からなくても探せます。/);
   assert.doesNotMatch(app, /heroEyebrow|nav\.eyebrow|eyebrow:/);
   assert.match(html, /<h1 id="heroTitle"><span class="hero-title-line">探さなくていい。<\/span><span class="hero-title-line hero-title-accent">ホシっといて。<\/span><\/h1>/);
-  assert.match(html, /<p id="heroSub" class="hero-sub">スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。<br>なければ、見つかるまで探します。<\/p>/);
+  // 2026-09-16 大隆さん指示: 補足コピーは行ごと・文ごとに span にして、スマホでも文の途中で折り返さない
+  assert.match(html, /<p id="heroSub" class="hero-sub"><span class="hero-sub-line"><span class="hero-sub-sentence">スクショでも、SNSでも、うろ覚えでも。<\/span><span class="hero-sub-sentence">HOSHILUが見つけます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">なければ、見つかるまで探します。<\/span><\/span><\/p>/);
+  assert.match(app, /renderHeroSub\(elements\.heroSub,t\.heroSub\)/);
+  for (const css of ['ai-search-layout-fix.css', 'assets-v126/ai-search-layout-fix.css']) {
+    assert.match(readFileSync(new URL(`../public/${css}`, import.meta.url), 'utf8'), /\.hero-sub-sentence\{display:inline-block;white-space:nowrap\}/);
+  }
   // CTA は「ホシっとく」。直下に「今探します。見つからなければ、そのまま探し続けます。」
   assert.match(html, /<button id="askAiButton" class="primary ask-ai-button" type="button">ホシっとく<\/button>/);
   assert.match(html, /<p id="hoshittokuHint" class="hoshittoku-hint">今探します。見つからなければ、そのまま探し続けます。<\/p>/);

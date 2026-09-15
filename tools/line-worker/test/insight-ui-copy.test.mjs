@@ -51,7 +51,7 @@ test('section18: index.htmlの#insightセクションから「AIウォッチ中�
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   const insightSection = html.match(/<section id="insight"[\s\S]*?<\/section>/)[0];
   assert.doesNotMatch(insightSection, /AIウォッチ中の商品/);
-  assert.match(insightSection, /保存した検索条件/);
+  assert.match(insightSection, /探しているもの/);
 });
 
 test('未実装の在庫・クーポン・販売開始監視を現行機能として表示しない', async () => {

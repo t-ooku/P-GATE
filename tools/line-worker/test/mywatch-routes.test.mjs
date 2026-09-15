@@ -240,7 +240,7 @@ test('会員画面でWeb通知を縦回転ティッカーで一覧・既読操�
   assert.match(app, /memberWishRecords\.find\(item=>item\.wish_id===parsed\.wishId\)/);
   assert.match(app, /history\.replaceState\(null,'',`\$\{parsed\.url\.pathname\}\$\{parsed\.url\.hash\}`\)/);
   assert.match(app, /elements\.form\.dispatchEvent/);
-  assert.match(app, /JA:\{title:'HOSHILU通知'/);
+  assert.match(app, /JA:\{title:'見つかりました・お知らせ'/);
   assert.match(app, /notificationRow/);
   assert.doesNotMatch(app, /const fallback=body\.match/);
   // 2026-08-05 v3.0: the 3-card-per-page horizontal carousel was replaced by
