@@ -5,23 +5,84 @@
 // Dataset・カテゴリマッチング・属性マッチング・ランキング基盤をできる限り
 // 再利用する」を満たすため、これらの実関数をそのまま呼び出す。
 //
-// 既知の制約(誠実に明記する。最終報告にも記載する): 今回のスキャン対象は
-// D1インデックス済みカタログのみで、Amazon/Rakuten/Yahoo等のライブモール
-// APIは呼び出さない。保存済み検索条件×全モールAPIを定期的に呼び出す構成は
-// レート制限・コスト面で別途設計が必要なため、今回のスコープには含めない
-// (index.mjsのhandleKnowledgeApi自体は無傷のまま、通常検索では引き続き
-// 全モールAPIを使う)。
+// 2026-09-16 大隆さん決定「見つかるまで探します、を実現する」（2026-09-15 指示書
+// §17/§19）: これまで巡回は D1 索引済みカタログだけを見ていたため、索引に新しい
+// 商品が入らない限り「見つかりました」が一度も出なかった（本番で 0 回）。
+// ここから、巡回のたびに 楽天市場 API と Yahoo!ショッピング API も実際に呼び、
+// 同じ品質基盤（カテゴリ不一致除去・ランキング）を通した候補を索引結果に足す。
+// ライブ候補は record_key（RAKUTEN:<itemCode> / YAHOO:<code> / JAN:<jan>）から
+// 商品識別子を作り、既存の重複除外（product_identity_key）でそのまま扱える形にする。
+// 保存直後の初回巡回で基準集合（INSIGHT_BASELINE）にライブ候補も入るので、
+// 通知は「その後にモールへ新しく出た商品」だけに出る。
+// INSIGHT_LIVE_MARKETPLACES='0' でライブ呼び出しを止められる（索引のみに戻る）。
 
 import { applyIndexedSearchPolicy, filterCategoryMismatches, rankMerchantCandidates } from './knowledge-search.mjs';
+import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-marketplace-api.mjs';
+import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
 
 const CANDIDATE_LIMIT = 60;
+// 通知の精度優先: ライブ候補は上位だけ。1条件あたり最大 2 API 呼び出し。
+export const INSIGHT_LIVE_CANDIDATE_LIMIT = 20;
 
-export async function searchCandidatesForInsight(env, query, language = 'JA') {
+export function liveMarketplacesEnabled(env = {}) {
+  return String(env?.INSIGHT_LIVE_MARKETPLACES ?? '').trim() !== '0';
+}
+
+// ライブ候補に商品識別子を付ける。record_key の形は各 API モジュールが保証する
+// （RAKUTEN:<itemCode> / YAHOO:<code> / JAN:<jan>）。識別子を作れない候補は
+// 安全側に倒して除外する（通知対象にしない）。
+export function withLiveIdentity(candidate = {}) {
+  const offer = Array.isArray(candidate.offers) ? candidate.offers[0] : null;
+  const key = String(candidate.record_key || '').trim();
+  const separator = key.indexOf(':');
+  if (!offer?.marketplace || separator <= 0) return null;
+  const external = key.slice(separator + 1).trim();
+  if (!external || /^https?:\/\//i.test(external)) return null;
+  return {
+    ...candidate,
+    marketplace: String(candidate.marketplace || offer.marketplace),
+    product_id: String(candidate.product_id || external),
+    external_product_id: external,
+    insight_source: 'LIVE'
+  };
+}
+
+export async function searchLiveCandidatesForInsight(env, query, fetcher = fetch) {
+  const trimmed = String(query || '').trim();
+  if (!trimmed || !liveMarketplacesEnabled(env)) return [];
+  const calls = [];
+  if (rakutenApiConfigured(env)) calls.push(searchRakutenMarketplace(env, trimmed, fetcher, 'insight-scan'));
+  if (yahooShoppingApiConfigured(env)) calls.push(searchYahooShopping(env, trimmed, fetcher));
+  if (!calls.length) return [];
+  const outcomes = await Promise.allSettled(calls);
+  const raw = outcomes.flatMap((outcome) => (outcome.status === 'fulfilled' && Array.isArray(outcome.value) ? outcome.value : []));
+  const identified = raw.map(withLiveIdentity).filter(Boolean);
+  const filtered = filterCategoryMismatches(trimmed, identified);
+  return rankMerchantCandidates([], filtered, trimmed).slice(0, INSIGHT_LIVE_CANDIDATE_LIMIT);
+}
+
+export async function searchCandidatesForInsight(env, query, language = 'JA', fetcher = fetch) {
   const trimmed = String(query || '').trim();
   if (!trimmed) return [];
   const policyResult = await applyIndexedSearchPolicy({ candidates: [] }, env, trimmed, language, {
     force_product_presentation: true
   });
   const candidates = filterCategoryMismatches(trimmed, policyResult?.candidates || []);
-  return rankMerchantCandidates([], candidates, trimmed).slice(0, CANDIDATE_LIMIT);
+  const indexed = rankMerchantCandidates([], candidates, trimmed).slice(0, CANDIDATE_LIMIT);
+  let live = [];
+  try {
+    live = await searchLiveCandidatesForInsight(env, trimmed, fetcher);
+  } catch {
+    live = [];
+  }
+  if (!live.length) return indexed;
+  const seen = new Set(indexed.map((candidate) => String(candidate.record_key || '')).filter(Boolean));
+  const merged = [...indexed];
+  for (const candidate of live) {
+    const key = String(candidate.record_key || '');
+    if (key && seen.has(key)) continue;
+    if (key) seen.add(key);
+    merged.push(candidate);
+  }
+  return merged;
 }
