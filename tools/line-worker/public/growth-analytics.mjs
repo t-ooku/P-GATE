@@ -225,6 +225,7 @@ function collectMarketplaceImpressions(executionId) {
 }
 
 send('landing_view');
+if (location.pathname === '/login.html') send('registration_login_viewed');
 try {
   const visitKey = 'hoshilu_last_visit_at';
   const previous = Number(localStorage.getItem(visitKey) || 0);
@@ -275,6 +276,10 @@ document.addEventListener('hoshilu:search-degraded', event => {
 // 流入元はそのまま付く。検索文は送らない。
 // hidden = 画面が表示されていない／自動化ブラウザ（事前読み込み・bot の疑い）。固定2値のみ。
 document.addEventListener('hoshilu:search-inbound-pending', event => send(event.detail?.hidden === true ? 'search_inbound_pending_hidden' : 'search_inbound_pending'));
+document.addEventListener('hoshilu:registration-nudge-shown', () => send('registration_nudge_shown'));
+document.addEventListener('hoshilu:registration-nudge-clicked', () => send('registration_nudge_clicked'));
+document.addEventListener('hoshilu:registration-line-started', () => send('registration_line_started'));
+document.addEventListener('hoshilu:registration-email-code-requested', () => send('registration_email_code_requested'));
 document.addEventListener('hoshilu:wish-saved', event => {
   if (event.detail?.source !== 'continuous_search') {
     send('wish_saved');

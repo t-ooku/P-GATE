@@ -67,6 +67,14 @@ const EVENTS = new Set([
   'ranking_result_clicked',
   'price_comparison_opened',
   'returning_visit',
+  // Anonymous registration funnel stages. The final conversion remains the
+  // server-owned member_registered event below; these fixed browser events
+  // only show where prospective members leave the flow.
+  'registration_nudge_shown',
+  'registration_nudge_clicked',
+  'registration_login_viewed',
+  'registration_line_started',
+  'registration_email_code_requested',
   'wish_saved',
   'continuous_search_saved',
   // 2026-09-03 §17: モール別のクリック率を出すには「出た回数」が要る。

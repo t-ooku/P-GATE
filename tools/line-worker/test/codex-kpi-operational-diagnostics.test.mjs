@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  operationalDiagnostics, assertReadOnlySql, createCloudflareReadOnlyD1
+  operationalDiagnostics, assertReadOnlySql, createCloudflareReadOnlyD1, readPublicHealth
 } from '../scripts/read-codex-kpi-snapshot.mjs';
 
 function d1(sqlite) {
@@ -114,6 +114,16 @@ function setup() {
   `);
   return sqlite;
 }
+
+test('KPI成果物へ無人取得できる公開healthの最小情報だけを格納する', async () => {
+  const healthy = await readPublicHealth(async () => Response.json({
+    ok: true, release: '1.22.1', missing: [], weak: [], secret_value: 'do-not-copy'
+  }), new Date('2026-09-15T05:00:00.000Z'));
+  assert.deepEqual(healthy, { status: 'HEALTHY', ok: true, release: '1.22.1',
+    missing_count: 0, weak_count: 0, checked_at: '2026-09-15T05:00:00.000Z' });
+  assert.deepEqual(await readPublicHealth(async () => new Response('', { status: 503 })),
+    { status: 'UNAVAILABLE', http_status: 503 });
+});
 
 test('運用診断は記事→希望価格と通知再訪を同一セッションで集計し内部会員を除外する', async () => {
   const sqlite = setup();

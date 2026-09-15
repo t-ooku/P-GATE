@@ -146,6 +146,27 @@ function cliValue(argv, name, fallback = '') {
   return index >= 0 ? argv[index + 1] : fallback;
 }
 
+export async function readPublicHealth(fetcher = fetch, now = new Date()) {
+  try {
+    const response = await fetcher('https://hoshilu.app/health', {
+      headers: { 'user-agent': 'HOSHILU-Codex-KPI-ReadOnly/1.0' },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) return { status: 'UNAVAILABLE', http_status: response.status };
+    const payload = await response.json();
+    return {
+      status: payload?.ok === true ? 'HEALTHY' : 'UNHEALTHY',
+      ok: payload?.ok === true,
+      release: String(payload?.release || '').slice(0, 40),
+      missing_count: Array.isArray(payload?.missing) ? payload.missing.length : null,
+      weak_count: Array.isArray(payload?.weak) ? payload.weak.length : null,
+      checked_at: new Date(now).toISOString()
+    };
+  } catch {
+    return { status: 'UNAVAILABLE' };
+  }
+}
+
 // Operational totals include internal/test watches. These are diagnostics, not
 // evidence of general-user adoption. No member IDs, wish IDs or titles leave D1.
 export async function targetPriceDiagnostics(PRODUCT_DB) {
@@ -160,6 +181,13 @@ export async function targetPriceDiagnostics(PRODUCT_DB) {
     const lastCheck = await PRODUCT_DB.prepare(`SELECT MAX(matched_at) AS last_checked_at FROM search_watch_matches
       WHERE product_identity_key='TARGET_PRICE_CHECK'`).first();
     return { status: 'AVAILABLE', includes_internal_tests: true,
+      reason_definitions: {
+        API_FAILURE: 'ALL_CONFIGURED_PROVIDERS_FAILED_RETRYABLE',
+        NO_CANDIDATES_PARTIAL_API_FAILURE: 'SOME_PROVIDERS_FAILED_AND_NO_CANDIDATES_RETRYABLE',
+        NO_CANDIDATES: 'PROVIDERS_SUCCEEDED_WITH_ZERO_CANDIDATES',
+        NO_MATCH: 'CANDIDATES_RETURNED_BUT_PRODUCT_IDENTITY_DID_NOT_MATCH',
+        ABOVE_TARGET: 'MATCHED_PRICE_ABOVE_TARGET', REACHED: 'MATCHED_PRICE_AT_OR_BELOW_TARGET'
+      },
       watches: { total: Number(watches.total), with_product_key: Number(watches.with_product_key),
         without_product_key: Number(watches.total)-Number(watches.with_product_key) },
       observations_all: observations.results.map(row => ({ reason: String(row.reason), matched: Number(row.matched), count: Number(row.count),
@@ -178,7 +206,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
   const internalPlaceholders = internalIds.map((_, i) => `?${i + 1}`).join(',');
   const [inventory, migrations, outreach, outreachOutcomes, social, funnel, articleJourney, siteJourney,
     notifications, priceCache, generalWatches, searchQa, watchProviders, socialRetries, socialFormats,
-    sellerAcquisition] = await Promise.all([
+    sellerAcquisition, registrationFunnel] = await Promise.all([
     read(`SELECT 'products' AS source,COUNT(*) AS count FROM products
       UNION ALL SELECT 'marketplace_offers',COUNT(*) FROM marketplace_offers
       UNION ALL SELECT 'sp_api_listings',COUNT(*) FROM sp_api_listings`),
@@ -269,7 +297,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
     read(`SELECT marketplace AS provider,campaign AS outcome,COUNT(*) AS count,MAX(occurred_at) AS last_observed_at
       FROM growth_events WHERE event_type='target_price_provider_result' AND traffic_class='QA'
       AND marketplace IN ('RAKUTEN_JP','YAHOO_JP','AMAZON_JP')
-      AND (campaign IN ('CANDIDATES','EMPTY','TIMEOUT','COORDINATOR_UNAVAILABLE','PROVIDER_REQUEST_FAILED')
+      AND (campaign IN ('CANDIDATES','CACHE_HIT','EMPTY','TIMEOUT','COORDINATOR_UNAVAILABLE','PROVIDER_REQUEST_FAILED')
         OR (campaign GLOB 'HTTP_[1-5][0-9][0-9]' AND length(campaign)=8))
       AND datetime(occurred_at)>=datetime('now','-24 hours') GROUP BY marketplace,campaign`),
     read(`SELECT status,
@@ -310,7 +338,13 @@ export async function operationalDiagnostics(db, internalIds = []) {
       (SELECT COUNT(*) FROM growth_events WHERE event_type='seller_landing_view'
         AND traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_landing_views_7d,
       (SELECT COUNT(*) FROM growth_events WHERE event_type='seller_cta_clicked'
-        AND traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_cta_clicks_7d`)
+        AND traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-7 days')) AS seller_cta_clicks_7d`),
+    read(`SELECT event_type,COUNT(*) AS count,COUNT(DISTINCT NULLIF(session_id,'')) AS sessions,
+      MAX(occurred_at) AS last_observed_at FROM growth_events
+      WHERE traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-30 days')
+      AND event_type IN ('registration_nudge_shown','registration_nudge_clicked','registration_login_viewed',
+        'registration_line_started','registration_email_code_requested','member_registered')
+      GROUP BY event_type ORDER BY event_type`)
   ]);
   const outreachRow = outreachOutcomes.status === 'AVAILABLE' ? (outreachOutcomes.rows[0] || {}) : {};
   const outreachLifecycle = outreachOutcomes.status === 'AVAILABLE' ? {
@@ -332,7 +366,8 @@ export async function operationalDiagnostics(db, internalIds = []) {
     } : sellerAcquisition,
     article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney, notifications,
     price_cache: priceCache, search_qa: searchQa,
-    target_price_providers_24h: watchProviders, threads_retry_audit: socialRetries,
+    target_price_providers_24h: watchProviders, registration_funnel_30d: registrationFunnel,
+    threads_retry_audit: socialRetries,
     instagram_formats_today: socialFormats,
     general_user_watch_set: { ...generalWatches, classification: 'EXCLUDES_CONFIGURED_INTERNAL_MEMBERS', internal_member_count: internalIds.length },
     notification_return_internal_exclusion: { status: 'UNAVAILABLE', reason: 'ANONYMOUS_RETURN_EVENTS_CANNOT_BE_JOINED_TO_INTERNAL_MEMBER_IDS' } };
@@ -347,6 +382,7 @@ async function main(argv) {
     databaseId: process.env.HOSHILU_D1_DATABASE_ID || DEFAULT_DATABASE_ID
   });
   const snapshot = await codexKpiSnapshotSummary({ PRODUCT_DB });
+  snapshot.public_health = await readPublicHealth();
   snapshot.target_price_diagnostics = await targetPriceDiagnostics(PRODUCT_DB);
   const config = JSON.parse(await readFile(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
   const internalIds = String(config.vars?.INTERNAL_MEMBER_IDS || '').split(',').map(x=>x.trim()).filter(Boolean);

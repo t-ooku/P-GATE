@@ -22,7 +22,7 @@ test('巡回APIの診断は固定コードだけを残し、例外本文を漏�
 function envWithDb(){
   const sqlite=new DatabaseSync(':memory:');
   sqlite.exec(`CREATE TABLE growth_events(event_id TEXT PRIMARY KEY,event_type TEXT,locale TEXT,source TEXT,medium TEXT,campaign TEXT,content TEXT,marketplace TEXT,occurred_at TEXT,traffic_class TEXT,visitor_id TEXT,session_id TEXT)`);
-  for(const name of ['0002_member_wishes.sql','0003_member_wish_preferences.sql','0005_mywatch_notifications.sql','0031_member_notification_destinations.sql','0036_mywatch_notification_product_fields.sql','0044_insight_search_watch.sql','0064_mywatch_notification_result_url.sql','0076_target_price_observations.sql'])sqlite.exec(readFileSync(new URL(`../migrations/${name}`,import.meta.url),'utf8'));
+  for(const name of ['0002_member_wishes.sql','0003_member_wish_preferences.sql','0005_mywatch_notifications.sql','0031_member_notification_destinations.sql','0036_mywatch_notification_product_fields.sql','0044_insight_search_watch.sql','0064_mywatch_notification_result_url.sql','0076_target_price_observations.sql','0077_marketplace_price_cache.sql'])sqlite.exec(readFileSync(new URL(`../migrations/${name}`,import.meta.url),'utf8'));
   const db={prepare(sql){const statement=sqlite.prepare(sql);return{bind(...values){return{run:async()=>{const result=statement.run(...values);return{meta:{changes:Number(result.changes||0)}};},first:async()=>statement.get(...values)||null,all:async()=>({results:statement.all(...values)})};}};},batch:async(statements)=>Promise.all(statements.map(statement=>statement.run()))};
   return{sqlite,env:{PRODUCT_DB:db,YAHOO_SHOPPING_CLIENT_ID:'client-id'}};
 }
@@ -209,6 +209,21 @@ test('楽天ID付き巡回は商品名を検索せずitemCodeで1回取得し、
   await purgeTargetPriceObservations(env,new Date('2026-09-07T23:00:00.000Z'));
   assert.equal(sqlite.prepare('SELECT price_jpy FROM target_price_observations').get().price_jpy,null);
   assert.equal(sqlite.prepare('SELECT reason FROM target_price_observations').get().reason,'ABOVE_TARGET');
+});
+
+test('楽天ID付き巡回は新鮮な価格キャッシュを優先し、429を起こすAPI呼び出しを省く',async()=>{
+  const {sqlite,env}=envWithDb();Object.assign(env,{RAKUTEN_APPLICATION_ID:'app',RAKUTEN_ACCESS_KEY:'key',MARKETPLACE_PRICE_CACHE_ENABLED:'true'});
+  const now='2026-09-15T05:00:00.000Z';
+  sqlite.prepare(`INSERT INTO member_wishes(member_id,wish_id,query_text,language,watch_price,watch_frequency,condition_snapshot,created_at,updated_at)
+    VALUES('m1','w-cache','商品','JA',1,'INSTANT',?1,?2,?2)`).run(JSON.stringify({price_condition:{target_price_jpy:1500,target_product_key:'RAKUTEN:shop:item-1',target_product_name:'対象商品'}}),now);
+  sqlite.prepare(`INSERT INTO marketplace_price_cache(record_key,marketplace,marketplace_product_id,price,shipping,effective_price,currency,fetched_at,expires_at,source)
+    VALUES('RAKUTEN:shop:item-1','RAKUTEN_JP','shop:item-1',1200,0,1200,'JPY','2026-09-15T04:00:00.000Z','2026-09-16T03:00:00.000Z','rakuten_ichiba_api')`).run();
+  let calls=0;
+  const result=await runTargetPriceScan(env,now,async()=>{calls+=1;return new Response('{}',{status:429});});
+  assert.deepEqual(result,{scanned:1,notifications_sent:1});
+  assert.equal(calls,0);
+  assert.equal(sqlite.prepare("SELECT campaign FROM growth_events WHERE event_type='target_price_provider_result'").get().campaign,'CACHE_HIT');
+  assert.equal(sqlite.prepare('SELECT reason FROM target_price_observations').get().reason,'REACHED');
 });
 
 

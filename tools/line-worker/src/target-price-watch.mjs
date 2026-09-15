@@ -4,6 +4,7 @@ import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shoppin
 import { nextDeliveryAt } from './mywatch-policy.mjs';
 import { targetPriceProductKey } from './target-price-product-key.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
+import { readFreshMarketplacePrice } from './marketplace-price-cache.mjs';
 
 // 購入希望価格は既存member_wishes.condition_snapshot.price_conditionへ保存し、
 // 定期確認/到達済み状態は既存search_watch_matchesへ内部マーカーとして持つ。
@@ -154,6 +155,18 @@ async function searchConnectedMarketplaces(env,query,fetcher,key=''){
     diagnostics:outcomes.map((outcome,index)=>({provider:providers[index],code:targetPriceProviderOutcome(outcome)}))
   };
 }
+async function cachedRakutenCandidate(env,wish,now){
+  const key=String(wish?.target_product_key||'').trim();
+  if(!key.startsWith('RAKUTEN:'))return null;
+  const row=await readFreshMarketplacePrice(env,key,new Date(now));
+  if(!row)return null;
+  const price=Number(row.effective_price||row.price)||0;
+  if(!Number.isSafeInteger(price)||price<=0)return null;
+  return{record_key:key,display_name:String(wish.target_product_name||wish.query_text||''),marketplace_source:'RAKUTEN_ICHIBA_API',offers:[{
+    marketplace:'RAKUTEN_JP',price,total_cost:price,currency:'JPY',stock_status:'IN_STOCK',
+    source:'rakuten_ichiba_api',shipping_fee:row.shipping,shipping_fee_confirmed:row.shipping!==null
+  }]};
+}
 async function recordProviderDiagnostics(env,diagnostics,now){
   // Fixed provider/outcome vocabulary only: never persist the query, product,
   // member/wish ID, provider response body or credential. Excluded from KPIs.
@@ -241,7 +254,10 @@ export async function purgeTargetPriceObservations(env,now=new Date()){
 export async function scanTargetPriceWish(env,wish,now=new Date().toISOString(),fetcher=fetch){
   if(!wish||Number(wish.watch_price)!==1||Number(wish.target_price_jpy)<100)return{scanned:false,notified:false};
   const query=targetPriceSearchQuery(wish);
-  const providerResult=await searchConnectedMarketplaces(env,query,fetcher,String(wish.target_product_key||''));
+  const cached=await cachedRakutenCandidate(env,wish,now);
+  const providerResult=cached?{candidates:[cached],provider_count:1,provider_success_count:1,
+    provider_failure_count:0,diagnostics:[{provider:'RAKUTEN_JP',code:'CACHE_HIT'}]}
+    :await searchConnectedMarketplaces(env,query,fetcher,String(wish.target_product_key||''));
   await recordProviderDiagnostics(env,providerResult.diagnostics,now);
   const candidates=providerResult.candidates;
   const best=pricedOffers(wish,candidates)[0]||null;

@@ -42,6 +42,21 @@ test('member-registration-nudge.mjsはhoshilu:marketplace-clickを購読し、/a
   assert.match(source, /registration-nudge-close/);
   // セッション中1回だけ: 表示前に必ずsessionStorageの既読フラグを立てる
   assert.match(source, /markNudgeShown/);
+  assert.match(source, /hoshilu:registration-nudge-shown/);
+  assert.match(source, /hoshilu:registration-nudge-clicked/);
+});
+
+test('登録ファネルは固定イベントだけを送り、登録完了はサーバー計測のままにする', async () => {
+  const analytics = await readFile(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
+  const login = await readFile(new URL('../public/member-login.js', import.meta.url), 'utf8');
+  assert.match(analytics, /registration_login_viewed/);
+  assert.match(analytics, /registration_nudge_shown/);
+  assert.match(analytics, /registration_nudge_clicked/);
+  assert.match(analytics, /registration_line_started/);
+  assert.match(analytics, /registration_email_code_requested/);
+  assert.match(login, /hoshilu:registration-line-started/);
+  assert.match(login, /hoshilu:registration-email-code-requested/);
+  assert.doesNotMatch(analytics, /send\('member_registered'/);
 });
 
 test('index.htmlはmember-registration-nudge.mjsを読み込む', async () => {

@@ -70,6 +70,9 @@ function renderNudge() {
   link.className = 'registration-nudge-link';
   link.href = loginHrefFor('/');
   link.textContent = copy.cta;
+  link.addEventListener('click', () => document.dispatchEvent(
+    new CustomEvent('hoshilu:registration-nudge-clicked')
+  ));
   const close = document.createElement('button');
   close.type = 'button';
   close.className = 'registration-nudge-close';
@@ -79,6 +82,7 @@ function renderNudge() {
   note.append(text, link, close);
   document.body.append(note);
   markNudgeShown();
+  document.dispatchEvent(new CustomEvent('hoshilu:registration-nudge-shown'));
 }
 
 let memberCheckPromise = null;
