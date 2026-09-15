@@ -1,0 +1,1 @@
+const response=await fetch('/api/seller/session',{cache:'no-store'});if(!response.ok)location.replace('/seller-login.html');document.querySelector('#sellerLogout').addEventListener('click',async()=>{await fetch('/api/seller/logout',{method:'POST'});location.replace('/');});

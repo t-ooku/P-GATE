@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <linearGradient id="brand" x1="120" y1="120" x2="960" y2="1230">
+      <stop stop-color="#f238b5"/>
+      <stop offset=".48" stop-color="#8a4cf4"/>
+      <stop offset="1" stop-color="#258cff"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#3d2c86" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="1350" fill="#f8f5ff"/>
+  <circle cx="945" cy="120" r="230" fill="#f238b5" opacity=".09"/>
+  <circle cx="105" cy="1230" r="270" fill="#258cff" opacity=".09"/>
+  <text x="90" y="120" font-family="Arial,'Noto Sans JP',sans-serif" font-size="30" font-weight="800" fill="#7449e9">HOSHILU QUESTION #01</text>
+  <text x="90" y="285" font-family="Arial,'Noto Sans JP',sans-serif" font-size="84" font-weight="900" fill="#111c4e">今いちばん、</text>
+  <text x="90" y="405" font-family="Arial,'Noto Sans JP',sans-serif" font-size="84" font-weight="900" fill="#111c4e">探したいものは？</text>
+  <rect x="90" y="535" width="900" height="470" rx="62" fill="#fff" filter="url(#shadow)"/>
+  <text x="540" y="675" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="42" font-weight="800" fill="#59617d">名前が分からなくても大丈夫。</text>
+  <text x="540" y="795" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="58" font-weight="900" fill="url(#brand)">見た場所</text>
+  <text x="540" y="875" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="58" font-weight="900" fill="url(#brand)">色・形・使い方</text>
+  <text x="540" y="955" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="34" font-weight="700" fill="#59617d">覚えていることをコメントで教えて。</text>
+  <rect x="190" y="1090" width="700" height="108" rx="54" fill="url(#brand)"/>
+  <text x="540" y="1160" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="40" font-weight="900" fill="#fff">欲しいを、ちゃんと見つける。</text>
+  <text x="540" y="1280" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="28" font-weight="700" fill="#666d8b">回答は匿名集計し、サービス改善に利用します。</text>
+</svg>

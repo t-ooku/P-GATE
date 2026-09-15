@@ -1,0 +1,22 @@
+{
+  "EARPHONES":{"label":"イヤホン","synonyms":{"ja":["イヤホン"],"en":["earbuds","earphones"],"ko":["이어폰"],"zh":["耳机"]}},
+  "PHONE_CASE":{"label":"スマホケース","synonyms":{"ja":["スマホケース","携帯ケース","iphone 15用 ケース"],"en":["phone case","case for iphone"],"ko":["폰케이스","아이폰15 케이스"],"zh":["手机壳"]}},
+  "INSTANT_PHOTO_PRINTER":{"label":"インスタントフォトプリンター","synonyms":{"ja":["写真がその場で","その場で小さく出てくる"],"en":["instant photo printer"],"ko":["즉석 포토프린터"],"zh":["即时照片打印机"]}},
+  "PHOTO_PRINTER":{"label":"写真プリンター","synonyms":{"ja":["写真がすぐ印刷","写真プリンター","写真がその場で"],"en":["photo printer"],"ko":["포토프린터"],"zh":["照片打印机"]}},
+  "CAMERA":{"label":"カメラ","synonyms":{"ja":["ミラーレスカメラ","カメラ 本体"],"en":["camera body"],"ko":["카메라 본체"],"zh":["相机本体"]}},
+  "PARASOL":{"label":"日傘","synonyms":{"ja":["日傘"],"en":["parasol"],"ko":["양산"],"zh":["遮阳伞"]}},
+  "FAN":{"label":"扇風機","synonyms":{"ja":["扇風機"],"en":["desk fan","usb fan"],"ko":["선풍기"],"zh":["风扇"]}},
+  "LAPTOP":{"label":"ノートPC","synonyms":{"ja":["ノートパソコン","ノートpc"],"en":["notebook computer","laptop computer"],"ko":["노트북"],"zh":["笔记本电脑"]}},
+  "MOUSE":{"label":"マウス","synonyms":{"ja":["マウス"],"en":["mouse"],"ko":["마우스"],"zh":["鼠标"]}},
+  "SHOES":{"label":"靴","synonyms":{"ja":["スニーカー","靴"],"en":["sneakers","shoes"],"ko":["운동화"],"zh":["运动鞋"]}},
+  "LIP_COSMETIC":{"label":"リップコスメ","synonyms":{"ja":["リップティント"],"en":["lip tint"],"ko":["립틴트"],"zh":["唇彩","唇釉"]}},
+  "TABLET":{"label":"タブレット","synonyms":{"ja":["タブレット 本体"],"en":["tablet body"],"ko":["태블릿 본체"],"zh":["平板电脑"]}},
+  "SMALL_APPLIANCE":{"label":"小型家電","synonyms":{"ja":["小型家電"],"en":["small appliance"],"ko":["소형 가전"],"zh":["小家电"]}},
+  "SPEAKER":{"label":"スピーカー","synonyms":{"ja":["スピーカー"],"en":["speaker"],"ko":["스피커"],"zh":["音箱"]}},
+  "BACKPACK":{"label":"リュック","synonyms":{"ja":["リュック"],"en":["backpack"],"ko":["백팩"],"zh":["背包"]}},
+  "FOOD":{"label":"食品","synonyms":{"ja":["グミ お菓子","お菓子"],"en":["food"],"ko":["과자"],"zh":["食品"]}},
+  "CHARGER":{"label":"充電器","synonyms":{"ja":["充電器"],"en":["charger"],"ko":["충전기"],"zh":["充电器"]}},
+  "LIGHTING":{"label":"間接照明","synonyms":{"ja":["夕焼けみたいになる丸いライト","サンセットランプ"],"en":["sunset lamp"],"ko":["노을조명"],"zh":["落日灯"]}},
+  "BAG_CHARM":{"label":"バッグチャーム","synonyms":{"ja":["バッグにつける小さいぬいぐるみ"],"en":["plush bag charm"],"ko":["가방 인형 참"],"zh":["玩偶挂件"]}},
+  "ADAPTER":{"label":"変換アダプタ","synonyms":{"ja":["変換アダプタ"],"en":["adapter"],"ko":["변환 어댑터"],"zh":["转换适配器"]}}
+}

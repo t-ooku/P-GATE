@@ -1,0 +1,45 @@
+{
+  "tenant": "itg",
+  "batch_id": "offers-20260729-example-01",
+  "records": [
+    {
+      "record_key": "catalog-product-001",
+      "marketplace": "RAKUTEN_JP",
+      "external_product_id": "shop:item-code",
+      "seller_id": "shop",
+      "product_url": "https://item.rakuten.co.jp/shop/item-code/",
+      "price": 3980,
+      "currency": "JPY",
+      "stock_status": "IN_STOCK",
+      "active": true,
+      "observed_at": "2026-07-29T00:00:00Z",
+      "source": "authorized_partner_feed"
+    },
+    {
+      "record_key": "catalog-product-002",
+      "marketplace": "QOO10_JP",
+      "external_product_id": "123456789",
+      "seller_id": "seller-code",
+      "product_url": "https://www.qoo10.jp/gmkt.inc/Goods/Goods.aspx?goodscode=123456789",
+      "price": 2480,
+      "currency": "JPY",
+      "stock_status": "IN_STOCK",
+      "active": true,
+      "observed_at": "2026-07-29T00:00:00Z",
+      "source": "authorized_partner_feed"
+    },
+    {
+      "record_key": "catalog-product-003",
+      "marketplace": "SHEIN_JP",
+      "external_product_id": "456789",
+      "seller_id": "seller-code",
+      "product_url": "https://jp.shein.com/item-p-456789.html",
+      "price": 1980,
+      "currency": "JPY",
+      "stock_status": "IN_STOCK",
+      "active": true,
+      "observed_at": "2026-07-29T00:00:00Z",
+      "source": "authorized_partner_feed"
+    }
+  ]
+}

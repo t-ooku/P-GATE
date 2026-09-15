@@ -15,6 +15,7 @@ function run(command, args, cwd = root) {
   const result = childProcess.spawnSync(command, args, { cwd, encoding: 'utf8' });
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
+  if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} failed with status ${result.status}`);
 }
 
@@ -32,11 +33,21 @@ function fileRecord(file) {
 
 function zip(output, cwd, entries) {
   if (fs.existsSync(output)) fs.rmSync(output);
-  run('zip', ['-rq', output, ...entries], cwd);
+  if (process.platform === 'win32') {
+    run('tar.exe', ['-a', '-c', '-f', path.relative(cwd, output), ...entries], cwd);
+  } else {
+    run('zip', ['-rq', output, ...entries], cwd);
+  }
 }
 
 fs.mkdirSync(outputs, { recursive: true });
-run('npm', ['test']);
+if (process.platform === 'win32') {
+  run(process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe', [
+    '/d', '/s', '/c', 'npm.cmd test'
+  ]);
+} else {
+  run('npm', ['test']);
+}
 run(process.execPath, ['tools/build_bundle.js']);
 
 const sourceZip = path.join(outputs, `Project_GATE_Source_v${version}.zip`);
@@ -51,11 +62,13 @@ try {
     'docs', 'tests', 'tools', 'package.json'
   ]);
   zip(workerZip, path.join(root, 'tools', 'line-worker'), [
-    'src', 'public', 'test', 'package.json', 'wrangler.jsonc', '.dev.vars.example'
+    'src', 'public', 'test', 'migrations', 'docs',
+    'package.json', 'wrangler.jsonc', '.dev.vars.example'
   ]);
   zip(chromeZip, path.join(root, 'tools', 'chrome-extension'), [
-    'background.js', 'icons', 'manifest.json', 'options.css', 'options.html', 'options.js',
-    'panel.css', 'README.md', 'shared.mjs', 'sidepanel.html', 'sidepanel.js'
+    '_locales', 'background.js', 'i18n.mjs', 'icons', 'manifest.json',
+    'options.css', 'options.html', 'options.js', 'panel.css', 'README.md',
+    'shared.mjs', 'sidepanel.html', 'sidepanel.js'
   ]);
 
   const manifest = {
@@ -67,10 +80,12 @@ try {
     external_actions_remaining: [
       'GitHubへ一意なcommitとして保存',
       `GAS v${version}を反映してsetupProjectGate、Marketplace_Offers登録、公開前チェックを実行`,
-      'Cloudflare WorkerとTurnstileを設定してデプロイ',
-      'LINE Developersを設定して実機試験',
-      'PWAとChrome拡張を実機試験',
-      'ITGパイロット契約と商品コード100件を登録'
+      '本番D1の0010・0011 migrationをバックアップ取得後に適用',
+      'MYWATCH・輸入制限同期のSecretを対話入力しWorkerをデプロイ',
+      'Amazon承認後にSP-APIの5 Secretを設定して3テナント受入試験',
+      'LINE Messaging APIを設定して4言語の実機試験',
+      'PWA通知とChrome拡張v0.4.0を実機試験',
+      'Chrome Web Storeの説明・画像・サポートURL・審査を完了'
     ]
   };
   const manifestPath = path.join(outputs, `RELEASE_MANIFEST_v${version}.json`);
