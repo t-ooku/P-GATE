@@ -206,7 +206,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
   const internalPlaceholders = internalIds.map((_, i) => `?${i + 1}`).join(',');
   const [inventory, migrations, outreach, outreachOutcomes, social, funnel, articleJourney, siteJourney,
     notifications, priceCache, generalWatches, searchQa, watchProviders, socialRetries, socialFormats,
-    sellerAcquisition, registrationFunnel] = await Promise.all([
+    sellerAcquisition, registrationFunnel, shopViewFloodAudit] = await Promise.all([
     read(`SELECT 'products' AS source,COUNT(*) AS count FROM products
       UNION ALL SELECT 'marketplace_offers',COUNT(*) FROM marketplace_offers
       UNION ALL SELECT 'sp_api_listings',COUNT(*) FROM sp_api_listings`),
@@ -344,7 +344,20 @@ export async function operationalDiagnostics(db, internalIds = []) {
       WHERE traffic_class<>'QA' AND datetime(occurred_at)>=datetime('now','-30 days')
       AND event_type IN ('registration_nudge_shown','registration_nudge_clicked','registration_login_viewed',
         'registration_line_started','registration_email_code_requested','member_registered')
-      GROUP BY event_type ORDER BY event_type`)
+      GROUP BY event_type ORDER BY event_type`),
+    read(`SELECT
+      CASE WHEN campaign IN ('with-care','find-fun','tomorrows-smile') THEN campaign ELSE 'OTHER' END AS shop,
+      CASE WHEN content IN ('search','view') THEN content ELSE 'OTHER' END AS view_kind,
+      CASE
+        WHEN datetime(occurred_at)>=datetime('2026-09-08T00:00:00Z')
+          AND datetime(occurred_at)<datetime('2026-09-14T04:00:00Z') THEN 'REPORTED_INCIDENT_WINDOW'
+        WHEN datetime(occurred_at)>=datetime('2026-09-14T04:00:00Z') THEN 'AFTER_REPORTED_WINDOW'
+        ELSE 'BEFORE_REPORTED_WINDOW'
+      END AS period,
+      COUNT(*) AS count,MAX(occurred_at) AS last_observed_at
+      FROM growth_events WHERE event_type='shop_viewed' AND source='worker' AND medium='shop'
+      AND datetime(occurred_at)>=datetime('2026-09-08T00:00:00Z')
+      GROUP BY shop,view_kind,period ORDER BY period,shop,view_kind`)
   ]);
   const outreachRow = outreachOutcomes.status === 'AVAILABLE' ? (outreachOutcomes.rows[0] || {}) : {};
   const outreachLifecycle = outreachOutcomes.status === 'AVAILABLE' ? {
@@ -367,6 +380,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
     article_watch_journey_7d: articleJourney, site_watch_journey_7d: siteJourney, notifications,
     price_cache: priceCache, search_qa: searchQa,
     target_price_providers_24h: watchProviders, registration_funnel_30d: registrationFunnel,
+    shop_view_flood_audit: shopViewFloodAudit,
     threads_retry_audit: socialRetries,
     instagram_formats_today: socialFormats,
     general_user_watch_set: { ...generalWatches, classification: 'EXCLUDES_CONFIGURED_INTERNAL_MEMBERS', internal_member_count: internalIds.length },

@@ -103,6 +103,8 @@ function setup() {
       ('target_price_watch_set','QA','seo_article','visitor-internal','qa-session','','','','${times.watchSet}'),
       ('seller_landing_view','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','for-sellers','${times.article}'),
       ('seller_cta_clicked','ATTRIBUTED','seller_outreach','visitor-seller','seller-session','email','initial_outreach','hero-inquiry','${times.articleClick}'),
+      ('shop_viewed','ATTRIBUTED','worker','','','shop','with-care','search','2026-09-10T00:00:00.000Z'),
+      ('shop_viewed','ATTRIBUTED','worker','','','shop','find-fun','view','2026-09-14T05:00:00.000Z'),
       ('search_qa_result','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private product text','${times.qaResult}'),
       ('search_qa_trace','QA','qa','visitor-internal','qa-session','private-query-id','PASS','private trace text','${times.qaTrace}');
     INSERT INTO mywatch_notifications VALUES
@@ -184,6 +186,13 @@ test('運用診断は記事→希望価格と通知再訪を同一セッショ�
   }]);
   assert.deepEqual(result.search_qa.rows.map(row => ({ ...row })), [{
     outcome: 'PASS', count: 1, last_observed_at: sqlite.testTimes.qaResult
+  }]);
+  assert.deepEqual(result.shop_view_flood_audit.rows.map(row => ({ ...row })), [{
+    shop: 'find-fun', view_kind: 'view', period: 'AFTER_REPORTED_WINDOW', count: 1,
+    last_observed_at: '2026-09-14T05:00:00.000Z'
+  }, {
+    shop: 'with-care', view_kind: 'search', period: 'REPORTED_INCIDENT_WINDOW', count: 1,
+    last_observed_at: '2026-09-10T00:00:00.000Z'
   }]);
   const serialized = JSON.stringify(result);
   for (const forbidden of ['private-post-id', 'private-external-id', 'private product text',
