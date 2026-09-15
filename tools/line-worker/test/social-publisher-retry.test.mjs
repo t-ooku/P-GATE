@@ -65,3 +65,38 @@ test('一時障害はプロセスをまたいで最大3回で停止し、別の�
   assert.match(row.last_error, /^SOCIAL_RETRY_EXHAUSTED_3:/);
   q.db.close();
 });
+
+test('2026-09-14実例: Threads公開時のHTTP500(is_transient:true)は1回で終了せず再試行に回る', async () => {
+  // watch-toiletpaper-price（2026-09-14 Threads 18:45）が THREADS_PUBLISH_500 の
+  // OAuthException（本文に "is_transient":true）を受けて即FAILEDになり、無限リトライ
+  // ではないぶん一見安全に見えたが、実際には一時障害1回で再試行なく終了していた欠陥。
+  // isTransientSocialPublishError が THREADS_PUBLISH の5xxを対象コード名に含んでいな
+  // かったことが原因（429だけ拾っていた）。is_transient:true の明示を安全網として
+  // 追加したので、この形の失敗は最大試行回数まで再試行されることを確認する。
+  const q = queue(); let publishAttempts = 0;
+  const fetcher = async (url) => {
+    if (url.endsWith('/123/threads')) return Response.json({ id: 'job1' });
+    if (url.includes('/job1?')) return Response.json({ status: 'FINISHED' });
+    publishAttempts++;
+    return Response.json({
+      error: {
+        message: 'An unexpected error has occurred. Please retry your request later.',
+        type: 'OAuthException', is_transient: true, code: 2, fbtrace_id: 'AzkI-8o44KOqNC-aTQ4_yqP'
+      }
+    }, { status: 500 });
+  };
+  await runDueSocialPosts({ ...env, PRODUCT_DB: q.PRODUCT_DB }, new Date('2026-09-14T09:45:00Z'), fetcher);
+  let row = q.db.prepare('SELECT * FROM social_post_queue').get();
+  assert.equal(publishAttempts, 1);
+  assert.equal(row.status, 'APPROVED');
+  assert.match(row.last_error, /^THREADS_PUBLISH_500_.*is_transient.*true/);
+  assert.notEqual(row.platform_job_id, '');
+
+  await runDueSocialPosts({ ...env, PRODUCT_DB: q.PRODUCT_DB }, new Date('2026-09-14T09:50:00Z'), fetcher);
+  await runDueSocialPosts({ ...env, PRODUCT_DB: q.PRODUCT_DB }, new Date('2026-09-14T09:55:00Z'), fetcher);
+  row = q.db.prepare('SELECT * FROM social_post_queue').get();
+  assert.equal(publishAttempts, 3);
+  assert.equal(row.status, 'FAILED');
+  assert.match(row.last_error, /^SOCIAL_RETRY_EXHAUSTED_3:THREADS_PUBLISH_500_/);
+  q.db.close();
+});
