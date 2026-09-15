@@ -21,8 +21,10 @@ import { rakutenApiConfigured, searchRakutenMarketplace } from './rakuten-market
 import { yahooShoppingApiConfigured, searchYahooShopping } from './yahoo-shopping-api.mjs';
 
 const CANDIDATE_LIMIT = 60;
-// 通知の精度優先: ライブ候補は上位だけ。1条件あたり最大 2 API 呼び出し。
-export const INSIGHT_LIVE_CANDIDATE_LIMIT = 20;
+// ライブ候補は各 API の 1 ページ（30 件）をそのまま基準集合に入れる。上位だけに絞ると
+// モール側の並び替えで毎回「新着」が漏れ出て通知が続く（2026-09-16 本番で確認）。
+// 1条件あたり最大 2 API 呼び出し。
+export const INSIGHT_LIVE_CANDIDATE_LIMIT = 60;
 
 export function liveMarketplacesEnabled(env = {}) {
   return String(env?.INSIGHT_LIVE_MARKETPLACES ?? '').trim() !== '0';

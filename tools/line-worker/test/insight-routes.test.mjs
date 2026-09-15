@@ -566,13 +566,15 @@ test('候補集合(A,B)と(B,C)の並行scanをwish leaseで直列化し、Bを�
     { PRODUCT_DB: db }, wish, '2026-08-08T03:15:00.000Z',
     async () => [relevantCandidate('B'), relevantCandidate('C')]
   );
-  assert.equal(next.matched, 1);
+  // 2026-09-16: 24 時間の静穏期間内なので C は通知なしで記録される（B は再記録されない）
+  assert.equal(next.matched, 0);
+  assert.equal(next.quiet_recorded, 1);
   const ledger = sqlite.prepare(
     "SELECT product_identity_key,notification_id FROM search_watch_matches WHERE wish_id='w-overlap-race' AND product_identity_key<>'INSIGHT_BASELINE' ORDER BY product_identity_key"
   ).all();
   assert.equal(ledger.length, 3);
   assert.equal(ledger.filter((row) => row.product_identity_key === 'AMAZON_JP:B').length, 1);
-  assert.equal(new Set(ledger.map((row) => row.notification_id)).size, 2);
+  assert.equal(ledger.find((row) => row.product_identity_key === 'AMAZON_JP:C').notification_id, null);
 });
 
 test('cron遅延が10分を超えてもlease expiryはscheduledTimeでなく実取得時刻から計算する', async () => {
@@ -806,4 +808,25 @@ test('scan() HTTPハンドラは複数の保存条件を一度に処理し、結
   // D1索引データを用意していないため実際のマッチ件数は0だが、例外を
   // 投げずに完了することを確認する。
   assert.equal(body.scanned, 1);
+});
+
+// 2026-09-16: 通知は 1 条件につき 24 時間に 1 回まで。静穏期間中の新着は通知なしで記録し、
+// 期間が明けたら「その後の新着」だけを通知する（モール側の並び替えで 15 分おきに通知が続いた本番事故の再発防止）。
+test('同じ条件への INSIGHT 通知は 24 時間に 1 回まで。静穏期間中の新着は通知なしで記録する', async () => {
+  const { sqlite, db } = sqliteD1();
+  insertWish(sqlite, { memberId: 'm-quiet', wishId: 'w-quiet', queryText: '封筒', baselined: false });
+  const wish = sqlite.prepare('SELECT * FROM member_wishes WHERE wish_id=?').get('w-quiet');
+  const base = [relevantCandidate('B000A')];
+  await scanWishForNewMatches({ PRODUCT_DB: db }, wish, '2026-09-16T00:00:00Z', async () => base);
+  const first = await scanWishForNewMatches({ PRODUCT_DB: db }, wish, '2026-09-16T00:15:00Z', async () => [...base, relevantCandidate('B000B')]);
+  assert.equal(first.matched, 1);
+  const second = await scanWishForNewMatches({ PRODUCT_DB: db }, wish, '2026-09-16T00:30:00Z', async () => [...base, relevantCandidate('B000B'), relevantCandidate('B000C')]);
+  assert.equal(second.matched, 0);
+  assert.equal(second.quiet_recorded, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS c FROM mywatch_notifications WHERE channel='WEB'").get().c, 1);
+  assert.equal(sqlite.prepare("SELECT notification_id FROM search_watch_matches WHERE wish_id='w-quiet' AND product_identity_key='AMAZON_JP:B000C'").get().notification_id, null);
+  // 静穏期間が明けても、記録済みの B000C は再通知されない。新しい B000D だけ通知される
+  const third = await scanWishForNewMatches({ PRODUCT_DB: db }, wish, '2026-09-17T01:00:00Z', async () => [...base, relevantCandidate('B000B'), relevantCandidate('B000C'), relevantCandidate('B000D')]);
+  assert.equal(third.matched, 1);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS c FROM mywatch_notifications WHERE channel='WEB'").get().c, 2);
 });

@@ -22,7 +22,7 @@
 // エンドポイントとして両方を提供する。
 
 import { searchCandidatesForInsight } from './insight-catalog-search.mjs';
-import { detectNewMatchesForWish, filterNewMatches } from './insight-search-watch.mjs';
+import { detectNewMatchesForWish, filterNewMatches, INSIGHT_EVENT_TYPE } from './insight-search-watch.mjs';
 import { nextDeliveryAt } from './mywatch-policy.mjs';
 
 function same(a, b) {
@@ -48,6 +48,46 @@ async function loadAlreadyMatchedKeys(env, wishId) {
 }
 
 const INSIGHT_BASELINE_KEY = 'INSIGHT_BASELINE';
+// 2026-09-16: ライブ巡回（楽天・Yahoo!）を入れたところ、モール側の並び替えで
+// 15 分ごとに数件ずつ「新着」が出て、同じ条件に 15 分おきに通知が続いた。
+// 通知は 1 条件につき 24 時間に 1 回まで。静穏期間中に見つかった新着は
+// search_watch_matches に通知なし（notification_id NULL）で記録し、次回以降の
+// 重複除外に使う（取りこぼしではなく「次の通知にまとめない・再通知しない」）。
+export const INSIGHT_NOTIFY_QUIET_MS = 24 * 60 * 60 * 1000;
+
+async function recentlyNotified(env, wishId, now) {
+  const since = new Date(Date.parse(now) - INSIGHT_NOTIFY_QUIET_MS).toISOString();
+  try {
+    const row = await env.PRODUCT_DB.prepare(
+      `SELECT 1 AS hit FROM mywatch_notifications
+       WHERE wish_id=?1 AND event_type=?2 AND channel='WEB' AND created_at>?3 LIMIT 1`
+    ).bind(wishId, INSIGHT_EVENT_TYPE, since).first();
+    return Boolean(row?.hit);
+  } catch {
+    return false;
+  }
+}
+
+async function persistQuietMatches(env, wish, newMatches, now) {
+  const rows = newMatches.map((candidate) => {
+    const offer = Array.isArray(candidate.offers) ? candidate.offers[0] : candidate.selected_offer;
+    return {
+      key: candidate.product_identity_key,
+      asin: String(candidate.asin || '').slice(0, 20),
+      marketplace: String(candidate.marketplace || offer?.marketplace || '').slice(0, 20)
+    };
+  });
+  if (!rows.length) return 0;
+  const result = await env.PRODUCT_DB.prepare(
+    `INSERT OR IGNORE INTO search_watch_matches
+    (member_id,wish_id,product_identity_key,asin,marketplace,matched_at,notification_id)
+    SELECT ?1,?2,
+      json_extract(value,'$.key'),json_extract(value,'$.asin'),
+      json_extract(value,'$.marketplace'),?4,NULL
+    FROM json_each(?3)`
+  ).bind(wish.member_id, wish.wish_id, JSON.stringify(rows), now).run();
+  return Number(result?.meta?.changes || 0);
+}
 const INSIGHT_SCAN_LEASE_MS = 10 * 60 * 1000;
 
 async function acquireInsightScanLease(env, wishId) {
@@ -274,6 +314,10 @@ export async function scanWishForNewMatches(env, wish, now = new Date().toISOStr
       resultUrl: insightResultUrl(wish.wish_id)
     });
     if (!notification) return { scanned: true, matched: 0 };
+    if (await recentlyNotified(env, wish.wish_id, now)) {
+      const quiet = await persistQuietMatches(env, wish, newMatches, now);
+      return { scanned: true, matched: 0, quiet_recorded: quiet };
+    }
     const persisted = await persistNewMatches(env, {
       memberId: wish.member_id, wishId: wish.wish_id, notification, newMatches, now,
       language: wish.language || 'JA', frequency: wish.watch_frequency || 'INSTANT'
