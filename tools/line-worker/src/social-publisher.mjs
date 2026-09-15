@@ -24,9 +24,12 @@ const NEW_SEARCH_LAUNCH_CONTENT_IDS = new Set([
   'guide-search-screen', 'guide-continuous-search'
 ]);
 
+// 制御文字（U+0000-U+001F, U+007F）。パッチ運搬でユニコードエスケープが崩れないよう
+// fromCharCode で組む（seller-shop.mjs の CONTROL_CHARS と同じ理由）。
+const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]`, 'g');
 const clean = (value, max = 2000) => String(value || '')
   .normalize('NFKC')
-  .replace(/[\u0000-\u001f\u007f]/g, ' ')
+  .replace(CONTROL_CHARS, ' ')
   .replace(/\s+/g, ' ')
   .trim()
   .slice(0, max);
@@ -843,6 +846,16 @@ function isTransientSocialPublishError(value) {
   ].includes(message)) return true;
   if (/Too many subrequests by single Worker invocation/i.test(message)) return true;
   if (/^(?:X_PUBLISH|INSTAGRAM_PUBLISH|THREADS_PUBLISH)_429(?:_|$)/.test(message)) return true;
+  // 2026-09-15: 2026-09-14 watch-toiletpaper-price (Threads 18:45) が
+  // THREADS_PUBLISH_500 (OAuthException, "is_transient":true) を受けて1回で
+  // FAILEDになった実例で発覚。PUBLISH段階の素の5xx(詳細不明)はここでは意図的に
+  // 「重複投稿を避けるため再試行しない」ままにする(下のテスト「投稿結果が曖昧な
+  // 5xxは重複防止のため自動再投稿しない」が守っている既存方針)。
+  // 一方でMeta Graph APIが本文で明示する"is_transient":trueは「このリクエスト自体が
+  // 失敗した」という具体的な合図で、素の5xxより情報量が多い。CREATE/PUBLISHどちらの
+  // 段階でも、この明示があるときだけ再試行対象にする（個別コード名の列挙漏れの
+  // 安全網。素のステータスコードのみの5xxは従来どおり対象に含めない）。
+  if (/"is_transient"\s*:\s*true/i.test(message)) return true;
   return /^(?:X_MEDIA_FETCH|X_MEDIA_INIT|X_MEDIA_APPEND|X_MEDIA_FINALIZE|X_MEDIA_STATUS|INSTAGRAM_CREATE|INSTAGRAM_STATUS|THREADS_CREATE|THREADS_STATUS)_(?:408|425|429|5\d\d)(?:_|$)/.test(message);
 }
 
