@@ -96,19 +96,24 @@ test('index.htmlがhero-marketplace-coverage.mjsを読み込む', async () => {
 // 2026-09-03 大隆さん指示: 第一画面の「名前が分からなくても探せます。」の1行は
 // 削除し、その役割は検索欄のプレースホルダ「何が欲しい？名前が分からなくても
 // 大丈夫」へ移す。要素ごと消すので、言語切替の代入も残さない。
-test('第一画面は希望価格通知の主訴求とモール名のサブ、検索例は6件', async () => {
+// 2026-09-15 指示書「探さなくていい。ホシっといて。」§12: 第一画面の言葉を統一。
+test('第一画面は「探さなくていい。ホシっといて。」と補足コピー、検索例は6件', async () => {
   const [html, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.doesNotMatch(html, /heroEyebrow/);
   assert.doesNotMatch(html, /名前が分からなくても探せます。/);
   assert.doesNotMatch(app, /heroEyebrow|nav\.eyebrow|eyebrow:/);
-  assert.match(html, /<h1 id="heroTitle"><span class="hero-title-line">欲しい価格になったら、<\/span><span class="hero-title-line hero-title-accent">教えます。<\/span><\/h1>/);
-  assert.match(html, /<p id="heroSub" class="hero-sub">希望価格を決めたら、もう何度も見に行かなくて大丈夫。<br>Amazon・楽天・Qoo10などを同じ条件で探せます。<\/p>/);
+  assert.match(html, /<h1 id="heroTitle"><span class="hero-title-line">探さなくていい。<\/span><span class="hero-title-line hero-title-accent">ホシっといて。<\/span><\/h1>/);
+  assert.match(html, /<p id="heroSub" class="hero-sub">スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。<br>なければ、見つかるまで探します。<\/p>/);
+  // CTA は「ホシっとく」。直下に「今探します。見つからなければ、そのまま探し続けます。」
+  assert.match(html, /<button id="askAiButton" class="primary ask-ai-button" type="button">ホシっとく<\/button>/);
+  assert.match(html, /<p id="hoshittokuHint" class="hoshittoku-hint">今探します。見つからなければ、そのまま探し続けます。<\/p>/);
+  assert.match(app, /identifySubmit:'ホシっとく'/);
   // app.js 側は \n（言語切替時に textContent へ入れ、.hero-sub の pre-line で改行）
-  assert.ok(app.includes(String.raw`hero:'欲しい価格になったら、|教えます。'`));
-  assert.ok(app.includes(String.raw`heroSub:'希望価格を決めたら、もう何度も見に行かなくて大丈夫。\nAmazon・楽天・Qoo10などを同じ条件で探せます。'`));
+  assert.ok(app.includes(String.raw`hero:'探さなくていい。|ホシっといて。'`));
+  assert.ok(app.includes(String.raw`heroSub:'スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。\nなければ、見つかるまで探します。'`));
   // 検索欄の文言は1行に収める(語の途中で折り返さない)。
-  assert.match(html, /placeholder="何が欲しい？名前が分からなくても大丈夫"/);
-  assert.match(app, /placeholder:'何が欲しい？名前が分からなくても大丈夫'/);
+  // 入力欄の文言は app.js の setLanguage が起動時に上書きする（HTML 側の初期値は据え置き）。
+  assert.match(app, /placeholder:'何が欲しい？'/);
   for (const example of ['インスタで見た白いバッグ', '韓国っぽいシルバーリング', 'このスクショのマットレス', '自立する本革トート', 'この靴に似たもの', 'SNSで見たピンクのリップ']) {
     assert.ok(app.includes(`'${example}'`), `example missing: ${example}`);
   }

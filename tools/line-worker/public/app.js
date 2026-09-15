@@ -33,10 +33,10 @@ const copy = {
 // 2026-09-03 大隆さん指示: 第一画面から「名前が分からなくても探せます。」の
 // 1行を削除し、その役割は検索欄のプレースホルダへ移す。
 // 検索例はタップで即検索(画像が要る例は画像選択を開く)。
-Object.assign(copy.JA,{hero:'欲しい価格になったら、|教えます。',heroSub:'希望価格を決めたら、もう何度も見に行かなくて大丈夫。\nAmazon・楽天・Qoo10などを同じ条件で探せます。',title:'商品名が分からなくても大丈夫。\n撮った写真、画像、公開投稿URL、覚えている一言から探せます。',placeholder:'何が欲しい？名前が分からなくても大丈夫',examples:['インスタで見た白いバッグ','韓国っぽいシルバーリング','このスクショのマットレス','自立する本革トート','この靴に似たもの','SNSで見たピンクのリップ']});
-Object.assign(copy.EN,{hero:'Everything you want, |searched together.',heroSub:'Search Amazon, Rakuten, Qoo10 and more at once.\nGet notified at your target price, and never miss a coupon.',title:'You do not need the product name.\nSearch from a photo, image, public post URL, or anything you remember.',placeholder:'What are you looking for?',examples:['a white bag I saw on Instagram','a Korean-style silver ring','the mattress in this screenshot','a leather tote that stands up on its own','something like these shoes','a pink lip tint I saw on social media']});
-Object.assign(copy.ZH,{hero:'想要的商品，|一次搜完。',heroSub:'一次搜索 Amazon、乐天、Qoo10 等多家商城。\n降到目标价就通知，优惠券也不错过。',title:'不知道商品名称也没关系。\n可通过照片、图片、公开帖子链接或记得的一句话搜索。',placeholder:'想找什么？',examples:['在 Instagram 看到的白色包','韩系银戒指','这张截图里的床垫','能自立的真皮托特包','和这双鞋相似的','在社交平台看到的粉色唇釉']});
-Object.assign(copy.KO,{hero:'원하는 물건을,|한 번에 찾기.',heroSub:'Amazon·라쿠텐·Qoo10 등을 한 번에 검색.\n목표 가격이 되면 알림, 쿠폰도 놓치지 않게.',title:'상품명을 몰라도 괜찮습니다.\n촬영한 사진, 이미지, 공개 게시물 URL, 기억나는 한마디로 찾아보세요.',placeholder:'무엇을 찾으세요?',examples:['인스타에서 본 흰색 가방','한국풍 실버 반지','이 스크린샷 속 매트리스','자립하는 가죽 토트백','이 신발과 비슷한 것','SNS에서 본 핑크 립']});
+Object.assign(copy.JA,{hero:'探さなくていい。|ホシっといて。',heroSub:'スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。\nなければ、見つかるまで探します。',title:'商品名が分からなくても大丈夫。\n撮った写真、画像、公開投稿URL、覚えている一言から探せます。',placeholder:'何が欲しい？',examples:['インスタで見た白いバッグ','韓国っぽいシルバーリング','このスクショのマットレス','自立する本革トート','この靴に似たもの','SNSで見たピンクのリップ']});
+Object.assign(copy.EN,{hero:'Stop searching. |Leave it to HOSHILU.',heroSub:'A screenshot, a social post, a vague memory. HOSHILU finds it.\nIf it is not out there yet, HOSHILU keeps looking.',title:'You do not need the product name.\nSearch from a photo, image, public post URL, or anything you remember.',placeholder:'What are you looking for?',examples:['a white bag I saw on Instagram','a Korean-style silver ring','the mattress in this screenshot','a leather tote that stands up on its own','something like these shoes','a pink lip tint I saw on social media']});
+Object.assign(copy.ZH,{hero:'不用自己找了。|交给 HOSHILU。',heroSub:'截图、社交帖子、模糊的记忆都可以。HOSHILU 帮你找到。\n现在没有的话，会一直找下去。',title:'不知道商品名称也没关系。\n可通过照片、图片、公开帖子链接或记得的一句话搜索。',placeholder:'想找什么？',examples:['在 Instagram 看到的白色包','韩系银戒指','这张截图里的床垫','能自立的真皮托特包','和这双鞋相似的','在社交平台看到的粉色唇釉']});
+Object.assign(copy.KO,{hero:'직접 찾지 않아도 돼요.|HOSHILU에 맡기세요.',heroSub:'스크린샷도, SNS도, 어렴풋한 기억도. HOSHILU가 찾아드립니다.\n없으면 찾을 때까지 계속 찾아요.',title:'상품명을 몰라도 괜찮습니다.\n촬영한 사진, 이미지, 공개 게시물 URL, 기억나는 한마디로 찾아보세요.',placeholder:'무엇을 찾으세요?',examples:['인스타에서 본 흰색 가방','한국풍 실버 반지','이 스크린샷 속 매트리스','자립하는 가죽 토트백','이 신발과 비슷한 것','SNS에서 본 핑크 립']});
 
 const actionCopy = {
   JA:{advancedSearch:'詳細検索',advancedSearchClose:'詳細検索を閉じる',deleteWishAria:'この検索条件を削除',deleteAllWishes:'すべて削除',deleteAllConfirm:'保存した検索条件をすべて削除しますか？この操作は取り消せません。',clear:'クリア',searchAgain:'もう一度検索',updateWish:'変更を保存',updated:'変更を保存しました',deleteWish:'削除',deleteConfirm:'この条件の継続検索を解除しますか？',insightTitle:'見つかるまで探す条件。',insightTemplate:'保存条件 {count}件、継続検索オン {enabled}件。',saveWish:'この条件を見つかるまで探す',wishSaved:'検索条件を保存しました',insightToggleLabel:'この条件を見つかるまで探す',insightToggleDescription:'HOSHILUが定期的に検索し、新しく一致する実在商品が見つかったときだけお知らせします。',saveWatch:'購入希望価格を保存',watchSaved:'購入希望価格を保存しました',bundleNote:'対象商品のAPI確認価格を定期確認し、希望価格以下になった場合にお知らせします。',discoveryTitle:'名前が分からなくても、\n記憶から探せる。',discoveryBody:'見た目、見た場所、使い方。覚えていることから話してください。',discoveryExample:'SNSで見た、ピンクの小さいカメラみたいなもの',journey:['検索する前に、|ホシルに話す。','曖昧な「欲しい」を、|見つかる検索へ変換します。','思い出せるまま話す','名前が分からなくても、見た目・用途・見た場所だけで大丈夫。','検索条件を精密化','ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。','購入先まで案内','商品ページへ直接リンク。HOSHILUが2モールをまとめて比較し、その他11を含む合計最大13モールで探せます。'],copyKeywords:'検索ワードをコピー',copiedKeywords:'コピーしました'},
@@ -56,8 +56,8 @@ const navigationCopy = {
   KO:{features:['HOSHILU 검색','목표 가격 감시'],account:'마이페이지',candidateAmazon:'Amazon에서 이 상품 찾기'}
 };
 const searchModeCopy={
-  JA:{step:'検索方法',identify:'AIに確認して探す',direct:'すぐ検索',identifySubmit:'AIに商品を聞く',directSubmit:'すぐ検索'},
-  EN:{step:'Search mode',identify:'Confirm with AI',direct:'Search now',identifySubmit:'Ask AI which product',directSubmit:'Search now'},
+  JA:{step:'検索方法',identify:'AIに確認して探す',direct:'すぐ検索',identifySubmit:'ホシっとく',directSubmit:'すぐ検索'},
+  EN:{step:'Search mode',identify:'Confirm with AI',direct:'Search now',identifySubmit:'Leave it to HOSHILU',directSubmit:'Search now'},
   ZH:{step:'搜索方式',identify:'先让 AI 确认',direct:'立即搜索',identifySubmit:'询问 AI 商品',directSubmit:'立即搜索'},
   KO:{step:'검색 방법',identify:'AI 확인 후 찾기',direct:'바로 검색',identifySubmit:'AI에게 상품 묻기',directSubmit:'바로 검색'}
 };

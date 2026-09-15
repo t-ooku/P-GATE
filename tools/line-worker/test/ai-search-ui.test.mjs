@@ -134,7 +134,7 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=157"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=16"><\/script>/);
+  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=158"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=16"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 
@@ -275,7 +275,7 @@ test('検索方法はスライド式2モードで、AI確認は3回目のNO後�
   const css=await readFile(new URL('../public/sticky-nav.css',import.meta.url),'utf8');
   // 2026-09-05 大隆さん指示: 上部のスライド式切替は撤去し、検索欄の下に「AIに商品を聞く」「すぐ検索」を常設。
   assert.doesNotMatch(html,/id="goSearch"|id="goWish"|id="searchModeSwitch"|id="searchModeIdentify"|id="searchModeDirect"/);
-  assert.match(html,/<button id="askAiButton" class="primary ask-ai-button" type="button">AIに商品を聞く<\/button><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">すぐ検索<\/span>/);
+  assert.match(html,/<button id="askAiButton" class="primary ask-ai-button" type="button">ホシっとく<\/button><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">すぐ検索<\/span>/);
   assert.match(app,/elements\.askAiButton\?\.addEventListener\('click',\(\)=>\{requestedSearchMode='identify';/);
   assert.ok(css.length>0);
   assert.match(app,/HoshiluIdentifySearch\?\.open/);assert.match(script,/mode, session_id/);assert.match(script,/mode = 'REFINE'/);
