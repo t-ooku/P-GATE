@@ -76,6 +76,10 @@ const EVENTS = new Set([
   'registration_line_started',
   'registration_email_code_requested',
   'wish_saved',
+  // 2026-09-15 指示書 §21/§27: AI の「これですか？」に対する はい／違う。
+  // 候補名・検索文は送らない（固定2値の回数だけ）。「違う率」の分母は result_confirmed + result_rejected。
+  'result_confirmed',
+  'result_rejected',
   'continuous_search_saved',
   // 2026-09-03 §17: モール別のクリック率を出すには「出た回数」が要る。
   // 検索結果に導線が出たモールを、実行1回につき1モール1件だけ記録する。

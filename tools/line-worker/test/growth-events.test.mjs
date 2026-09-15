@@ -513,3 +513,14 @@ test('2026-09-11: 既知クローラのUAで届いた記事閲覧は KPI から�
   assert.equal(writes[1].values[9], 'ATTRIBUTED');
   assert.doesNotMatch(JSON.stringify(writes), /Googlebot|Safari/u);
 });
+
+// 2026-09-15 指示書 §21: 「違う」を固定イベントとして受け付ける（候補名は送らない）
+test('result_confirmed / result_rejected are accepted fixed events', async () => {
+  assert.equal(normalizeGrowthEvent({ event_type: 'result_rejected', query: '候補名は保存しない' }).event_type, 'result_rejected');
+  assert.equal(normalizeGrowthEvent({ event_type: 'result_confirmed' }).event_type, 'result_confirmed');
+  assert.throws(() => normalizeGrowthEvent({ event_type: 'result_maybe' }), /GROWTH_EVENT_INVALID/);
+  const fs = await import('node:fs');
+  const analytics = fs.readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
+  assert.match(analytics, /\.ai-chat-confirm-yes,\.ai-chat-confirm-no/);
+  assert.match(analytics, /'result_rejected' : 'result_confirmed'/);
+});

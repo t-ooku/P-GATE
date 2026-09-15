@@ -280,6 +280,12 @@ document.addEventListener('hoshilu:registration-nudge-shown', () => send('regist
 document.addEventListener('hoshilu:registration-nudge-clicked', () => send('registration_nudge_clicked'));
 document.addEventListener('hoshilu:registration-line-started', () => send('registration_line_started'));
 document.addEventListener('hoshilu:registration-email-code-requested', () => send('registration_email_code_requested'));
+// 2026-09-15 指示書 §21: 「違う」を数える（候補名は送らない）。
+document.addEventListener('click', event => {
+  const target = event.target.closest('.ai-chat-confirm-yes,.ai-chat-confirm-no');
+  if (!target) return;
+  send(target.classList.contains('ai-chat-confirm-no') ? 'result_rejected' : 'result_confirmed');
+});
 document.addEventListener('hoshilu:wish-saved', event => {
   if (event.detail?.source !== 'continuous_search') {
     send('wish_saved');
