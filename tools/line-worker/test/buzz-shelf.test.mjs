@@ -291,7 +291,7 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
   assert.doesNotMatch(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
-  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=5"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=6"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
   const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
   assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
@@ -606,5 +606,5 @@ test('BUZZ の各カードに「この価格になったら教えて☑」が付
   assert.match(ranking, /record_key: itemCode \? `RAKUTEN:\$\{itemCode\}` : ''/);
   const buzz = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   assert.match(buzz, /ranking-watch-link/);
-  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=4/);
+  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=5/);
 });

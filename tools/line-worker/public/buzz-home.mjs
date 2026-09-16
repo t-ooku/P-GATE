@@ -51,6 +51,24 @@ function itemCard(item) {
     });
     wrap.append(watch);
   }
+  // 2026-09-16 大隆さん指示: BUZZ の商品にも「気になる」（ハート）。保存先は検索結果と同じ（HoshiluKeep）。
+  const candidate = {
+    record_key: text(item.record_key), display_name: text(item.name), product_name: text(item.name), image_url: text(item.image_url),
+    marketplace: text(item.marketplace), product_url: text(item.product_url),
+    offers: [{ marketplace: text(item.marketplace), product_url: text(item.product_url), price: Number(item.price) || 0, total_cost: Number(item.price) || 0 }]
+  };
+  const heart = el('button', 'buzz-home-keep');
+  heart.type = 'button';
+  const paint = () => {
+    const kept = Boolean(window.HoshiluKeep?.isKept(candidate));
+    heart.textContent = kept ? '♥ 気になる' : '♡ 気になる';
+    heart.classList.toggle('kept', kept);
+    heart.setAttribute('aria-pressed', kept ? 'true' : 'false');
+  };
+  heart.addEventListener('click', (event) => { event.preventDefault(); window.HoshiluKeep?.toggle(candidate); paint(); });
+  document.addEventListener('hoshilu:kept-changed', paint);
+  paint();
+  wrap.append(heart);
   return wrap;
 }
 

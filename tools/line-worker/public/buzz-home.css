@@ -73,6 +73,8 @@
 
 .buzz-home-item { scroll-snap-align: start; flex: 0 0 128px; display: flex; flex-direction: column; gap: 6px; }
 .buzz-home-item .buzz-home-card { flex: 1 1 auto; }
+.buzz-home-keep{border:1px solid #ffb7d3;border-radius:999px;background:#fff;color:#d1327f;font-size:10.5px;font-weight:800;padding:6px 8px;cursor:pointer;white-space:nowrap}
+.buzz-home-keep.kept{background:#ff4f9a;border-color:#ff4f9a;color:#fff}
 .buzz-home-watch {
   border: 1px solid #d9d3f5;
   border-radius: 999px;

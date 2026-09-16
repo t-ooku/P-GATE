@@ -129,12 +129,15 @@ test('第一画面は「探さなくていい。ホシっといて。」と補�
   assert.equal(assets, app, 'public/app.js と assets-v147/app.js は同一');
 });
 
-// 2026-09-03 指示書 §18–21「登録は後」: ♡ ホシっとく は登録なしで押せ、押した後に登録導線。
+// 2026-09-03 指示書 §18–21「登録は後」: ♡ は登録なしで押せ、押した後に登録導線。
+// 2026-09-16 大隆さん指示: ハートは「♡ 気になる」に改名し、保存先は「ホシる中」の気になる商品一覧。
 // 🔔 値下がり通知は未登録でも行き止まりにせず、希望額を端末に残して無料登録へ案内する。
-test('♡ ホシっとく は登録前に端末へ保存し、押した後だけ登録導線を出す。🔔 は未登録でも行き止まりにしない', async () => {
+test('♡ 気になる は登録前に端末へ保存し、押した後だけ登録導線を出す。🔔 は未登録でも行き止まりにしない', async () => {
   const app = await read('app.js');
   assert.match(app, /const KEPT_PRODUCTS_KEY='hoshilu_kept_products';/);
-  assert.match(app, /JA:\{keep:'♡ ホシっとく',kept:'♥ ホシった'/);
+  assert.match(app, /JA:\{keep:'♡ 気になる',kept:'♥ 気になる'/);
+  assert.match(app, /window\.HoshiluKeep=\{toggle:toggleKeptProduct,isKept:isKeptProduct,remove:removeKeptProduct,list:getKeptProducts\};/);
+  assert.match(app, /document\.addEventListener\('hoshilu:kept-changed',renderKeptProducts\);/);
   assert.match(app, /mediaActions\.append\(createKeepButton\(candidate\)\);/);
   assert.match(app, /new CustomEvent\('hoshilu:wish-saved',\{detail:\{source:'keep'\}\}\)/, 'ホシっとく は wish_saved として計測');
   assert.match(app, /localStorage\.setItem\('hoshilu_pending_watch'/);

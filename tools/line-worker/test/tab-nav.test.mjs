@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 test('トップは tab-nav を読み込み、5 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
   assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=1">/);
-  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=1"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=2"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);
   const nav = read('tab-nav.mjs');
@@ -28,4 +28,24 @@ test('トップは tab-nav を読み込み、5 タブと節の割り当てを持
   assert.match(css, /\.tab-bar\{position:fixed/);
   assert.match(css, /\.view-hidden\{display:none!important\}/);
   assert.match(read('service-worker.js'), /'\/tab-nav\.css', '\/tab-nav\.mjs'/);
+});
+
+// 2026-09-16 大隆さん指示: 「♡ 気になる」で保存した商品を「ホシる中」に横スクロールで一覧（× で外せる）。
+test('気になる商品は「ホシる中」タブに横スクロールで並び、BUZZ にもハートがある', () => {
+  const html = read('index.html');
+  assert.match(html, /<section id="keptProducts" class="insight-card kept-products"/);
+  assert.match(html, /<div id="keptProductList" class="kept-list" aria-live="polite">/);
+  const nav = read('tab-nav.mjs');
+  assert.match(nav, /\['#keptProducts', 'hoshiru'\]/);
+  assert.match(nav, /HOSHIRU_ORDER = \['#insight', '#keptProducts', '#buzzHome', '#watchDemand'\]/);
+  const app = read('app.js');
+  assert.match(app, /function removeKeptProduct\(key\)/);
+  assert.match(app, /function renderKeptProducts\(\)/);
+  assert.match(app, /kept-card-remove/);
+  const css = read('mywatch.css');
+  assert.match(css, /\.kept-list\.kept-rail\{[^}]*overflow-x:auto/);
+  const buzz = read('buzz-home.mjs');
+  assert.match(buzz, /el\('button', 'buzz-home-keep'\)/);
+  assert.match(buzz, /window\.HoshiluKeep\?\.toggle\(candidate\)/);
+  assert.match(read('buzz-home.css'), /\.buzz-home-keep\.kept\{/);
 });

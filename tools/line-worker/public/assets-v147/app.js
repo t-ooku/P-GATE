@@ -313,7 +313,7 @@ function renderHeroSub(target,text){
 }
 function renderMemberState(){if(memberSession){elements.memberLink.textContent=memberSession.name||window.HoshiluI18n?.t('nav.member',elements.language.value)||'無料会員';elements.memberLink.href='#wishTitle';elements.memberLogout.classList.remove('hidden');}else{elements.memberLink.textContent=(navigationCopy[elements.language.value]||navigationCopy.JA).account;elements.memberLink.href='/login.html';elements.memberLogout.classList.add('hidden');}updateDiscoveryExample();renderQuickExamples();renderSearchHistory();}
 async function syncMemberWishes(){try{const sessionResponse=await fetch('/api/member/session',{cache:'no-store'});if(!sessionResponse.ok)return;memberSession=(await sessionResponse.json()).member;renderMemberState();const local=getWishes();for(const query of local){const saved=getWatchPreferences().find(item=>item.query===query)||{};await persistMemberWish(query,watchOptionsFor(query),saved);}const response=await fetch('/api/member/wishes',{cache:'no-store'});if(!response.ok)return;memberWishRecords=(await response.json()).wishes||[];memberWishRecords.forEach(item=>storeWatchPreference(item.query_text,[item.watch_sale,item.watch_price,item.watch_coupon,item.watch_restock].map(Boolean),item.target_product_key||'',item.watch_frequency,item));const merged=[...memberWishRecords.map(item=>item.query_text),...local].filter((value,index,array)=>value&&array.indexOf(value)===index);setWishes(merged);renderWishes();}catch{}}
-function renderInsight(){const actions=actionCopy[elements.language.value]||actionCopy.JA;const wishes=getWishes();const enabled=wishes.filter(query=>insightEnabledFor(query)).length;elements.insightTitle.textContent=actions.insightTitle;elements.insightSummary.textContent=actions.insightTemplate.replace('{count}',String(wishes.length)).replace('{enabled}',String(enabled));renderHoshiStatus();}
+function renderInsight(){const actions=actionCopy[elements.language.value]||actionCopy.JA;const wishes=getWishes();const enabled=wishes.filter(query=>insightEnabledFor(query)).length;elements.insightTitle.textContent=actions.insightTitle;elements.insightSummary.textContent=actions.insightTemplate.replace('{count}',String(wishes.length)).replace('{enabled}',String(enabled));renderHoshiStatus();renderKeptProducts();}
 // 2026-09-15 指示書 §8/§9「ホシってるもの」: 預けている「欲しい」を4状態で見せる。
 // 見つかりました = 未読の INSIGHT_NEW_MATCH / PRICE_DROP 通知がある条件、値下がり待ち = 希望価格あり、
 // 探しています = 継続探索オン、あとで見る = 保存のみ。数字は会員の実データだけから数える。
@@ -459,7 +459,7 @@ function allMarketplacesButton(){const labels={JA:'全部のモールで探す',
 // 残す」「値下がり/新商品を知らせる」で無料登録へ誘う。保存先は商品単位。
 const KEPT_PRODUCTS_KEY='hoshilu_kept_products';
 const keepCopy={
-  JA:{keep:'♡ ホシっとく',kept:'♥ ホシった',keptStatus:'ホシっときました。',guestCta:'無料登録で他の端末にも残す →',memberCta:'マイページで見る →',bellGuest:'🔔 値下がり・新商品を知らせる（無料登録 30秒）→'},
+  JA:{keep:'♡ 気になる',kept:'♥ 気になる',keptStatus:'「ホシる中」に入れました。',guestCta:'無料登録で他の端末にも残す →',memberCta:'ホシる中で見る →',bellGuest:'🔔 値下がり・新商品を知らせる（無料登録 30秒）→'},
   EN:{keep:'♡ Keep',kept:'♥ Kept',keptStatus:'Kept on this device.',guestCta:'Sign up free to keep it on every device →',memberCta:'Open my page →',bellGuest:'🔔 Alert me on price drops (free, 30 sec) →'},
   ZH:{keep:'♡ 先收着',kept:'♥ 已收藏',keptStatus:'已保存到此设备。',guestCta:'免费注册后在其他设备也能看到 →',memberCta:'查看我的页面 →',bellGuest:'🔔 降价·新品通知（免费注册 30 秒）→'},
   KO:{keep:'♡ 찜해두기',kept:'♥ 찜함',keptStatus:'이 기기에 저장했어요.',guestCta:'무료 가입하면 다른 기기에서도 볼 수 있어요 →',memberCta:'마이페이지 보기 →',bellGuest:'🔔 가격 인하·신상품 알림 (무료 가입 30초) →'}
@@ -482,8 +482,34 @@ function toggleKeptProduct(candidate){
   },...current].slice(0,50);
   try{localStorage.setItem(KEPT_PRODUCTS_KEY,JSON.stringify(next));}catch{}
   if(!exists)document.dispatchEvent(new CustomEvent('hoshilu:wish-saved',{detail:{source:'keep'}}));
+  document.dispatchEvent(new CustomEvent('hoshilu:kept-changed'));
   return !exists;
 }
+function removeKeptProduct(key){const next=getKeptProducts().filter(item=>item.key!==key);try{localStorage.setItem(KEPT_PRODUCTS_KEY,JSON.stringify(next));}catch{}document.dispatchEvent(new CustomEvent('hoshilu:kept-changed'));}
+// 2026-09-16 大隆さん指示: 「気になる」（ハート）で保存した商品を「ホシる中」に横スクロールで一覧（削除つき）。
+// 端末内の保存（登録不要）。BUZZ 棚など別モジュールからも同じ保存を使えるよう window.HoshiluKeep を公開。
+const keptRailCopy={JA:{title:'気になる商品',empty:'まだありません。商品の「♡ 気になる」を押すと、ここに並びます。',remove:'外す',open:'見る'},EN:{title:'Saved products',empty:'Nothing yet. Tap the heart on a product to keep it here.',remove:'Remove',open:'Open'},ZH:{title:'感兴趣的商品',empty:'还没有。点商品的心形即可保存到这里。',remove:'移除',open:'查看'},KO:{title:'관심 상품',empty:'아직 없어요. 상품의 하트를 누르면 여기에 모입니다.',remove:'삭제',open:'보기'}};
+function renderKeptProducts(){
+  const list=document.querySelector('#keptProductList');const title=document.querySelector('#keptProductsTitle');if(!list)return;
+  const copy=keptRailCopy[elements.language.value]||keptRailCopy.JA;if(title)title.textContent=copy.title;
+  const items=getKeptProducts();
+  if(!items.length){list.classList.remove('kept-rail');list.replaceChildren(textElement('p','empty',copy.empty));return;}
+  list.classList.add('kept-rail');
+  list.replaceChildren(...items.map(item=>{
+    const card=document.createElement('article');card.className='kept-card';
+    const link=document.createElement('a');link.className='kept-card-link';link.href=item.url||'#';if(item.url){link.target='_blank';link.rel='noopener sponsored';}
+    if(item.marketplace)link.dataset.marketplace=item.marketplace;
+    const thumb=document.createElement('div');thumb.className='kept-card-thumb';
+    if(item.image){const img=document.createElement('img');img.src=item.image;img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';thumb.append(img);}
+    link.append(thumb,textElement('p','kept-card-name',item.name||''));
+    if(item.price>0)link.append(textElement('p','kept-card-price',`¥${Number(item.price).toLocaleString('ja-JP')}`));
+    const remove=document.createElement('button');remove.type='button';remove.className='kept-card-remove';remove.setAttribute('aria-label',copy.remove);remove.textContent='×';
+    remove.addEventListener('click',()=>removeKeptProduct(item.key));
+    card.append(link,remove);return card;
+  }));
+}
+document.addEventListener('hoshilu:kept-changed',renderKeptProducts);
+window.HoshiluKeep={toggle:toggleKeptProduct,isKept:isKeptProduct,remove:removeKeptProduct,list:getKeptProducts};
 // 登録前に押した「値下がり通知」の希望額は、登録して戻ってきた時にそのまま保存する。
 function applyPendingWatch(){
   if(!memberSession)return;
@@ -514,7 +540,7 @@ function createKeepButton(candidate){
   const render=()=>{const kept=isKeptProduct(candidate);button.textContent=kept?copy.kept:copy.keep;button.classList.toggle('kept',kept);button.setAttribute('aria-pressed',kept?'true':'false');};
   button.addEventListener('click',()=>{
     const kept=toggleKeptProduct(candidate);render();
-    if(kept){note.textContent=memberSession?copy.memberCta:copy.guestCta;note.href=memberSession?'#wishTitle':memberLoginHref();note.classList.remove('hidden');}
+    if(kept){note.textContent=memberSession?copy.memberCta:copy.guestCta;note.href=memberSession?'#keptProducts':memberLoginHref();note.classList.remove('hidden');}
     else note.classList.add('hidden');
   });
   render();wrap.append(button,note);return wrap;
