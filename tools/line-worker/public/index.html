@@ -30,10 +30,11 @@
   <script src="https://aml.valuecommerce.com/vcdal.js" async></script>
   <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=15">
   <link rel="stylesheet" href="/ai-search-ui.css?v=12">
-  <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=130">
+  <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=131">
   <link rel="stylesheet" href="/ai-price-comparison-ui.css?v=84">
   <link rel="stylesheet" href="/wish-carousel.css?v=4">
   <link rel="stylesheet" href="/mywatch.css?v=2">
+  <link rel="stylesheet" href="/tab-nav.css?v=1">
   <link rel="stylesheet" href="/continuous-search.css?v=2">
   <link rel="stylesheet" href="/hero-fixes.css?v=91">
   <link rel="stylesheet" href="/hero-slides.css?v=82">
@@ -252,6 +253,13 @@
             <div id="shopDirectoryList" class="shop-directory-list" aria-live="polite"><p class="shop-directory-loading">ショップを読み込んでいます…</p></div>
           </section>
 
+          <!-- 2026-09-16 大隆さん指示: 「ショップから探す」タブ。クーポンはショップページ（各店が発行）にある。
+               ユーザーポイント（ショップ負担）は未実装のため、ここには出さない。 -->
+          <section id="shopCouponsNote" class="insight-card" aria-labelledby="shopCouponsTitle">
+            <p class="step">HOSHILU SHOP COUPON</p>
+            <h2 id="shopCouponsTitle">ショップのクーポン</h2>
+            <p>各ショップが発行したクーポンは、そのショップのページに出ます。「ショップをホシる」（フォロー）しておくと、新しいクーポンが出たときにお知らせします。</p>
+          </section>
           <section id="buzzHome" class="buzz-home" aria-labelledby="buzzHomeTitle">
             <div class="buzz-home-heading">
               <div>
@@ -334,6 +342,17 @@
           </section>
 
           <!-- 2026-09-05 大隆さん指示: ホシル公式アカウントは「お知らせ」の上に置く。 -->
+          <!-- 2026-09-16 大隆さん指示: 「マイアカウント」タブの入口 -->
+          <section id="accountPanel" class="insight-card" aria-labelledby="accountPanelTitle" data-nosnippet>
+            <p class="step">HOSHILU ACCOUNT</p>
+            <h2 id="accountPanelTitle">マイアカウント</h2>
+            <div class="account-links">
+              <a href="/login.html"><span>ログイン／無料登録</span><small>メール6桁 か LINE で。ホシってるものを端末をまたいで引き継ぎます</small></a>
+              <a href="#insight"><span>ホシってるもの</span><small>探しています・見つかりました・値下がり待ち</small></a>
+              <a href="#mywatchTitle"><span>見つかりました・お知らせ</span><small>通知の一覧</small></a>
+              <a href="#saleCenterTitle"><span>受け取るセールを選ぶ</span><small>モールごとのセール通知の設定</small></a>
+            </div>
+          </section>
           <section id="officialSocial" class="official-social" aria-labelledby="officialSocialTitle">
             <div class="official-social-copy">
               <p class="step">HOSHILU OFFICIAL</p>
@@ -435,6 +454,6 @@
       </div>
     </div></main>
   <footer data-nosnippet><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイト、およびバリューコマース（Qoo10・Yahoo!ショッピング等）のリンクからも収入を得る場合があります。</span><span><a href="/for-creators">クリエイター募集</a> ・ <a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=7"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=98"></script><script type="module" src="/buzz-home.mjs?v=5"></script><script type="module" src="/watch-demand.mjs?v=3"></script><script type="module" src="/shop-directory.mjs?v=2"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=14"></script><script type="module" src="/member-registration-nudge.mjs?v=2"></script><script type="module" src="/assets-v147/app.js?v=163"></script><script type="module" src="/ai-search-ui.mjs?v=16"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=87"></script><script type="module" src="/experience-layer.mjs?v=2"></script><script type="module" src="/genre-explorer.mjs?v=3"></script><script type="module" src="/search-suggest.mjs?v=2"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=7"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=98"></script><script type="module" src="/buzz-home.mjs?v=5"></script><script type="module" src="/watch-demand.mjs?v=3"></script><script type="module" src="/shop-directory.mjs?v=2"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=14"></script><script type="module" src="/member-registration-nudge.mjs?v=2"></script><script type="module" src="/tab-nav.mjs?v=1"></script><script type="module" src="/assets-v147/app.js?v=164"></script><script type="module" src="/ai-search-ui.mjs?v=16"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=87"></script><script type="module" src="/experience-layer.mjs?v=2"></script><script type="module" src="/genre-explorer.mjs?v=3"></script><script type="module" src="/search-suggest.mjs?v=2"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script>
 </body>
 </html>

@@ -108,7 +108,7 @@ test('第一画面は「探さなくていい。ホシっといて。」と補�
   assert.match(html, /<p id="heroSub" class="hero-sub"><span class="hero-sub-line"><span class="hero-sub-sentence">スクショでも、SNSでも、うろ覚えでも。<\/span><span class="hero-sub-sentence">HOSHILUが見つけます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">なければ、見つかるまで探します。<\/span><\/span><\/p>/);
   assert.match(app, /renderHeroSub\(elements\.heroSub,t\.heroSub\)/);
   for (const css of ['ai-search-layout-fix.css', 'assets-v126/ai-search-layout-fix.css']) {
-    assert.match(readFileSync(new URL(`../public/${css}`, import.meta.url), 'utf8'), /\.hero-sub-sentence\{display:inline-block;white-space:nowrap\}/);
+    assert.match(readFileSync(new URL(`../public/${css}`, import.meta.url), 'utf8'), /html:lang\(ja\) \.hero-sub-sentence\{white-space:nowrap\}/);
   }
   // CTA は「ホシっとく」。直下に「今探します。見つからなければ、そのまま探し続けます。」
   assert.match(html, /<button id="askAiButton" class="primary ask-ai-button" type="button">ホシっとく<\/button>/);
