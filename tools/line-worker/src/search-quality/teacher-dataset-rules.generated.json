@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T00:11:18.142Z",
+  "generated_at": "2026-09-16T00:45:54.950Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -30,7 +30,7 @@
     "2026-09-14-claude-batch-027.json",
     "2026-09-15-claude-batch-028.json"
   ],
-  "entry_count": 1400,
+  "entry_count": 1415,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -20786,6 +20786,321 @@
           "防縮加工 Tシャツ",
           "縮みにくい ニット",
           "防縮 セーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4f553bfe052b8ab09b17fe45fbdad23261ff25d81aeef32f63ed047646d77979",
+      "query_text": "冷凍しても割れない保存容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "freezer-safe-food-container",
+      "ideal_answer": "冷凍対応(耐冷)をうたう保存容器・タッパー・フリーザーバッグ",
+      "search_terms": {
+        "ja": [
+          "冷凍対応 保存容器",
+          "冷凍OK 保存容器",
+          "耐冷 タッパー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6c429779f26cbd6fe54f419b7d7add748f2c5759f720807f3c9b8cca4c44368f",
+      "query_text": "凍らせても割れにくいタッパー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "freezer-safe-food-container",
+      "ideal_answer": "冷凍対応(耐冷)をうたう保存容器・タッパー・フリーザーバッグ",
+      "search_terms": {
+        "ja": [
+          "冷凍対応 保存容器",
+          "冷凍OK 保存容器",
+          "耐冷 タッパー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8d6539bfbffccfe78495f79e1bc3637e1bee9b02b1d6b31f2f77926a9caf5b41",
+      "query_text": "冷凍対応の密閉容器がほしい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "freezer-safe-food-container",
+      "ideal_answer": "冷凍対応(耐冷)をうたう保存容器・タッパー・フリーザーバッグ",
+      "search_terms": {
+        "ja": [
+          "冷凍対応 保存容器",
+          "冷凍OK 保存容器",
+          "耐冷 タッパー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "e016f0323728cbed15943fcfa624995a7456d219bdb7eaa067a63007bbfabe6d",
+      "query_text": "服についた毛玉を取ってくれる道具",
+      "locale": "ja",
+      "persona": "general",
+      "category": "electric-lint-remover",
+      "ideal_answer": "電動の毛玉取り機・毛玉クリーナー",
+      "search_terms": {
+        "ja": [
+          "毛玉取り機",
+          "電動 毛玉取り",
+          "毛玉クリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "63dbc62129186be0854575903888b7f8401f0fd8fb1529c09f26e55a2c2a6ff7",
+      "query_text": "セーターの毛玉をきれいに除去できる家電",
+      "locale": "ja",
+      "persona": "general",
+      "category": "electric-lint-remover",
+      "ideal_answer": "電動の毛玉取り機・毛玉クリーナー",
+      "search_terms": {
+        "ja": [
+          "毛玉取り機",
+          "電動 毛玉取り",
+          "毛玉クリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3eb6dbb17b081fe5b50bd586c3d905a37b44499dea86a12cb377d8d5915b30d8",
+      "query_text": "ニットの毛玉を落とせる電動シェーバー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "electric-lint-remover",
+      "ideal_answer": "電動の毛玉取り機・毛玉クリーナー",
+      "search_terms": {
+        "ja": [
+          "毛玉取り機",
+          "電動 毛玉取り",
+          "毛玉クリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ba58b8bc44ecf72e6675c8afe526ed0012942b63e7077437cd9a64a7d9d99758",
+      "query_text": "汚れても洗えるレッスンバッグ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "washable-lesson-bag",
+      "ideal_answer": "洗える(丸洗い・水洗い対応)素材のレッスンバッグ・上履き袋・体操着袋",
+      "search_terms": {
+        "ja": [
+          "洗える レッスンバッグ",
+          "丸洗いできる 上履き袋",
+          "水洗いOK 体操着袋"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2354e3a62f6d8d336acf355e8f6594064d129dd3f210e07cac1c938401fbb74d",
+      "query_text": "上履き袋は丸洗いできるものがいい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "washable-lesson-bag",
+      "ideal_answer": "洗える(丸洗い・水洗い対応)素材のレッスンバッグ・上履き袋・体操着袋",
+      "search_terms": {
+        "ja": [
+          "洗える レッスンバッグ",
+          "丸洗いできる 上履き袋",
+          "水洗いOK 体操着袋"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "52a3a3efe932207c01852881e0943bf86d5477c75e8e62d9c656071673440bdf",
+      "query_text": "体操着袋が水洗いできると助かる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "washable-lesson-bag",
+      "ideal_answer": "洗える(丸洗い・水洗い対応)素材のレッスンバッグ・上履き袋・体操着袋",
+      "search_terms": {
+        "ja": [
+          "洗える レッスンバッグ",
+          "丸洗いできる 上履き袋",
+          "水洗いOK 体操着袋"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c07a6f845c9dd2e17fb238c177a4ce0994c921f64766549079f5370815e538aa",
+      "query_text": "においが気にならないペットシーツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "deodorizing-pet-sheet",
+      "ideal_answer": "消臭機能付きのペットシーツ・トイレシート・ケージシート",
+      "search_terms": {
+        "ja": [
+          "消臭 ペットシーツ",
+          "消臭タイプ トイレシート",
+          "消臭 ケージシート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3ba4057f4f5fdb2ce1dc8f37b5b2fe522bff526b9456587b8e91c174e315722a",
+      "query_text": "犬のケージシートは消臭タイプがいい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "deodorizing-pet-sheet",
+      "ideal_answer": "消臭機能付きのペットシーツ・トイレシート・ケージシート",
+      "search_terms": {
+        "ja": [
+          "消臭 ペットシーツ",
+          "消臭タイプ トイレシート",
+          "消臭 ケージシート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "fdd5d50cb4ea191b5bf00f725838d6910e80f665f38a50ce313d14eeabd9561f",
+      "query_text": "トイレシートが臭わないものを探している",
+      "locale": "ja",
+      "persona": "general",
+      "category": "deodorizing-pet-sheet",
+      "ideal_answer": "消臭機能付きのペットシーツ・トイレシート・ケージシート",
+      "search_terms": {
+        "ja": [
+          "消臭 ペットシーツ",
+          "消臭タイプ トイレシート",
+          "消臭 ケージシート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "d0cfe9900a3b1b982c39607f735a075a35b026889c6af0fcff72262d2eb47242",
+      "query_text": "息苦しくないマスク",
+      "locale": "ja",
+      "persona": "general",
+      "category": "breathable-face-mask",
+      "ideal_answer": "立体構造などで呼吸しやすさをうたうマスク",
+      "search_terms": {
+        "ja": [
+          "呼吸しやすい 立体マスク",
+          "息苦しくない マスク",
+          "蒸れない 立体マスク"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "dac337d39b31bef70d7ace94fc3887cfdccc06aeef0e018193845c73141e1219",
+      "query_text": "夏でも蒸れないマスクがほしい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "breathable-face-mask",
+      "ideal_answer": "立体構造などで呼吸しやすさをうたうマスク",
+      "search_terms": {
+        "ja": [
+          "呼吸しやすい 立体マスク",
+          "息苦しくない マスク",
+          "蒸れない 立体マスク"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "244fb55b2911f4b1be0478aaffd78a66ec31244ac0ab9d329e2df0eac8deb24c",
+      "query_text": "長時間つけても呼吸しやすいマスク",
+      "locale": "ja",
+      "persona": "general",
+      "category": "breathable-face-mask",
+      "ideal_answer": "立体構造などで呼吸しやすさをうたうマスク",
+      "search_terms": {
+        "ja": [
+          "呼吸しやすい 立体マスク",
+          "息苦しくない マスク",
+          "蒸れない 立体マスク"
         ],
         "en": [],
         "ko": [],

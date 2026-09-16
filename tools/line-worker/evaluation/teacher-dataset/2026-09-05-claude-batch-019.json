@@ -5196,5 +5196,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "冷凍しても割れない保存容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "冷凍しても割れたり劣化したりしにくい保存容器",
+    "ideal_answer": "冷凍対応(耐冷)をうたう保存容器・タッパー・フリーザーバッグ",
+    "reason": "「冷凍しても割れない」は商品名では「冷凍対応」「耐冷」。 展開規則 freezer-safe-food-container（モール検索語「冷凍対応 保存容器」）。",
+    "category": "freezer-safe-food-container",
+    "search_terms": {
+      "ja": [
+        "冷凍対応 保存容器",
+        "冷凍OK 保存容器",
+        "耐冷 タッパー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "凍らせても割れにくいタッパー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "冷凍しても割れたり劣化したりしにくい保存容器",
+    "ideal_answer": "冷凍対応(耐冷)をうたう保存容器・タッパー・フリーザーバッグ",
+    "reason": "「冷凍しても割れない」は商品名では「冷凍対応」「耐冷」。 展開規則 freezer-safe-food-container（モール検索語「冷凍対応 保存容器」）。",
+    "category": "freezer-safe-food-container",
+    "search_terms": {
+      "ja": [
+        "冷凍対応 保存容器",
+        "冷凍OK 保存容器",
+        "耐冷 タッパー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "冷凍対応の密閉容器がほしい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "冷凍しても割れたり劣化したりしにくい保存容器",
+    "ideal_answer": "冷凍対応(耐冷)をうたう保存容器・タッパー・フリーザーバッグ",
+    "reason": "「冷凍しても割れない」は商品名では「冷凍対応」「耐冷」。 展開規則 freezer-safe-food-container（モール検索語「冷凍対応 保存容器」）。",
+    "category": "freezer-safe-food-container",
+    "search_terms": {
+      "ja": [
+        "冷凍対応 保存容器",
+        "冷凍OK 保存容器",
+        "耐冷 タッパー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "服についた毛玉を取ってくれる道具",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類についた毛玉を取り除きたい",
+    "ideal_answer": "電動の毛玉取り機・毛玉クリーナー",
+    "reason": "「毛玉を取ってくれる」は商品名では「毛玉取り機」。 展開規則 electric-lint-remover（モール検索語「毛玉取り機」）。",
+    "category": "electric-lint-remover",
+    "search_terms": {
+      "ja": [
+        "毛玉取り機",
+        "電動 毛玉取り",
+        "毛玉クリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "セーターの毛玉をきれいに除去できる家電",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類についた毛玉を取り除きたい",
+    "ideal_answer": "電動の毛玉取り機・毛玉クリーナー",
+    "reason": "「毛玉を取ってくれる」は商品名では「毛玉取り機」。 展開規則 electric-lint-remover（モール検索語「毛玉取り機」）。",
+    "category": "electric-lint-remover",
+    "search_terms": {
+      "ja": [
+        "毛玉取り機",
+        "電動 毛玉取り",
+        "毛玉クリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ニットの毛玉を落とせる電動シェーバー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "衣類についた毛玉を取り除きたい",
+    "ideal_answer": "電動の毛玉取り機・毛玉クリーナー",
+    "reason": "「毛玉を取ってくれる」は商品名では「毛玉取り機」。 展開規則 electric-lint-remover（モール検索語「毛玉取り機」）。",
+    "category": "electric-lint-remover",
+    "search_terms": {
+      "ja": [
+        "毛玉取り機",
+        "電動 毛玉取り",
+        "毛玉クリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汚れても洗えるレッスンバッグ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汚れても洗える通園通学用の袋類",
+    "ideal_answer": "洗える(丸洗い・水洗い対応)素材のレッスンバッグ・上履き袋・体操着袋",
+    "reason": "「汚れても洗える」は商品名では「洗える」「丸洗い」。 展開規則 washable-lesson-bag（モール検索語「洗える レッスンバッグ」）。",
+    "category": "washable-lesson-bag",
+    "search_terms": {
+      "ja": [
+        "洗える レッスンバッグ",
+        "丸洗いできる 上履き袋",
+        "水洗いOK 体操着袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "上履き袋は丸洗いできるものがいい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汚れても洗える通園通学用の袋類",
+    "ideal_answer": "洗える(丸洗い・水洗い対応)素材のレッスンバッグ・上履き袋・体操着袋",
+    "reason": "「汚れても洗える」は商品名では「洗える」「丸洗い」。 展開規則 washable-lesson-bag（モール検索語「洗える レッスンバッグ」）。",
+    "category": "washable-lesson-bag",
+    "search_terms": {
+      "ja": [
+        "洗える レッスンバッグ",
+        "丸洗いできる 上履き袋",
+        "水洗いOK 体操着袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "体操着袋が水洗いできると助かる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "汚れても洗える通園通学用の袋類",
+    "ideal_answer": "洗える(丸洗い・水洗い対応)素材のレッスンバッグ・上履き袋・体操着袋",
+    "reason": "「汚れても洗える」は商品名では「洗える」「丸洗い」。 展開規則 washable-lesson-bag（モール検索語「洗える レッスンバッグ」）。",
+    "category": "washable-lesson-bag",
+    "search_terms": {
+      "ja": [
+        "洗える レッスンバッグ",
+        "丸洗いできる 上履き袋",
+        "水洗いOK 体操着袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "においが気にならないペットシーツ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "臭いが気にならない消臭タイプのペットシーツ・トイレシート",
+    "ideal_answer": "消臭機能付きのペットシーツ・トイレシート・ケージシート",
+    "reason": "「においが気にならない」は商品名では「消臭」。 展開規則 deodorizing-pet-sheet（モール検索語「消臭 ペットシーツ」）。",
+    "category": "deodorizing-pet-sheet",
+    "search_terms": {
+      "ja": [
+        "消臭 ペットシーツ",
+        "消臭タイプ トイレシート",
+        "消臭 ケージシート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "犬のケージシートは消臭タイプがいい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "臭いが気にならない消臭タイプのペットシーツ・トイレシート",
+    "ideal_answer": "消臭機能付きのペットシーツ・トイレシート・ケージシート",
+    "reason": "「においが気にならない」は商品名では「消臭」。 展開規則 deodorizing-pet-sheet（モール検索語「消臭 ペットシーツ」）。",
+    "category": "deodorizing-pet-sheet",
+    "search_terms": {
+      "ja": [
+        "消臭 ペットシーツ",
+        "消臭タイプ トイレシート",
+        "消臭 ケージシート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "トイレシートが臭わないものを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "臭いが気にならない消臭タイプのペットシーツ・トイレシート",
+    "ideal_answer": "消臭機能付きのペットシーツ・トイレシート・ケージシート",
+    "reason": "「においが気にならない」は商品名では「消臭」。 展開規則 deodorizing-pet-sheet（モール検索語「消臭 ペットシーツ」）。",
+    "category": "deodorizing-pet-sheet",
+    "search_terms": {
+      "ja": [
+        "消臭 ペットシーツ",
+        "消臭タイプ トイレシート",
+        "消臭 ケージシート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "息苦しくないマスク",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "長時間つけても息苦しくなりにくいマスク",
+    "ideal_answer": "立体構造などで呼吸しやすさをうたうマスク",
+    "reason": "「息苦しくない」は商品名では「呼吸しやすい」「立体」。 展開規則 breathable-face-mask（モール検索語「呼吸しやすい 立体マスク」）。",
+    "category": "breathable-face-mask",
+    "search_terms": {
+      "ja": [
+        "呼吸しやすい 立体マスク",
+        "息苦しくない マスク",
+        "蒸れない 立体マスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "夏でも蒸れないマスクがほしい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "長時間つけても息苦しくなりにくいマスク",
+    "ideal_answer": "立体構造などで呼吸しやすさをうたうマスク",
+    "reason": "「息苦しくない」は商品名では「呼吸しやすい」「立体」。 展開規則 breathable-face-mask（モール検索語「呼吸しやすい 立体マスク」）。",
+    "category": "breathable-face-mask",
+    "search_terms": {
+      "ja": [
+        "呼吸しやすい 立体マスク",
+        "息苦しくない マスク",
+        "蒸れない 立体マスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "長時間つけても呼吸しやすいマスク",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "長時間つけても息苦しくなりにくいマスク",
+    "ideal_answer": "立体構造などで呼吸しやすさをうたうマスク",
+    "reason": "「息苦しくない」は商品名では「呼吸しやすい」「立体」。 展開規則 breathable-face-mask（モール検索語「呼吸しやすい 立体マスク」）。",
+    "category": "breathable-face-mask",
+    "search_terms": {
+      "ja": [
+        "呼吸しやすい 立体マスク",
+        "息苦しくない マスク",
+        "蒸れない 立体マスク"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
