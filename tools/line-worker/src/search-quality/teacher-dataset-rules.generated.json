@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T00:45:54.950Z",
+  "generated_at": "2026-09-16T23:25:46.121Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -30,7 +30,7 @@
     "2026-09-14-claude-batch-027.json",
     "2026-09-15-claude-batch-028.json"
   ],
-  "entry_count": 1415,
+  "entry_count": 1430,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -21101,6 +21101,321 @@
           "呼吸しやすい 立体マスク",
           "息苦しくない マスク",
           "蒸れない 立体マスク"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b85adc06afe1c65d94e6967a60acd09c19844c0427c1f224c0d77630082d0393",
+      "query_text": "生乾き臭くならないハンガー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "arch-shaped-drying-hanger",
+      "ideal_answer": "扇形(アーチ型)に開いて風通しを良くする物干しハンガー",
+      "search_terms": {
+        "ja": [
+          "扇形ハンガー",
+          "アーチ型ハンガー",
+          "扇状ハンガー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a9c00756419ffd6d2f9a51903342b8bee76232ecc45c90403be805092bae26c0",
+      "query_text": "風通しがいいハンガーが欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "arch-shaped-drying-hanger",
+      "ideal_answer": "扇形(アーチ型)に開いて風通しを良くする物干しハンガー",
+      "search_terms": {
+        "ja": [
+          "扇形ハンガー",
+          "アーチ型ハンガー",
+          "扇状ハンガー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "9f34b4203ce2887a9570d9c7b9e7a8a59ef50dc2d92d49fa67baeabff9011cbb",
+      "query_text": "早く乾くように角度がつけられるハンガー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "arch-shaped-drying-hanger",
+      "ideal_answer": "扇形(アーチ型)に開いて風通しを良くする物干しハンガー",
+      "search_terms": {
+        "ja": [
+          "扇形ハンガー",
+          "アーチ型ハンガー",
+          "扇状ハンガー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "a2ffef8753065cb33cc2092e783677855281258f93d7e018d993b95682403766",
+      "query_text": "美容液が入りやすくなる化粧水",
+      "locale": "ja",
+      "persona": "general",
+      "category": "skin-prep-booster-lotion",
+      "ideal_answer": "ブースター(導入液)タイプの化粧水",
+      "search_terms": {
+        "ja": [
+          "ブースター 化粧水",
+          "導入液 化粧水",
+          "プレ化粧水"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "56e5df26d245c52cf19391e8581742db9bafa33188cdeba92a51b570c9396e11",
+      "query_text": "肌に浸透しやすくなる導入化粧水",
+      "locale": "ja",
+      "persona": "general",
+      "category": "skin-prep-booster-lotion",
+      "ideal_answer": "ブースター(導入液)タイプの化粧水",
+      "search_terms": {
+        "ja": [
+          "ブースター 化粧水",
+          "導入液 化粧水",
+          "プレ化粧水"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "184a3e25eef6bbba21647d28140b719ab4a4765dbf4d9d08aab2206726058fc3",
+      "query_text": "その後のケアがしみこみやすくなるローション",
+      "locale": "ja",
+      "persona": "general",
+      "category": "skin-prep-booster-lotion",
+      "ideal_answer": "ブースター(導入液)タイプの化粧水",
+      "search_terms": {
+        "ja": [
+          "ブースター 化粧水",
+          "導入液 化粧水",
+          "プレ化粧水"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0481ab599cd1623ca1d64942fd9655f93b3e846997479b6aea2f29b94c9477e5",
+      "query_text": "布団を圧縮してコンパクトにしまえる袋",
+      "locale": "ja",
+      "persona": "general",
+      "category": "clothes-compression-storage-bag",
+      "ideal_answer": "衣類圧縮袋・布団圧縮袋(掃除機不要タイプを含む)",
+      "search_terms": {
+        "ja": [
+          "衣類圧縮パック",
+          "布団圧縮袋",
+          "衣類圧縮袋"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "4384a93102c2d1a0f7e420b97e3c1cfdb347b2dc5dec48f2f2c141525d147422",
+      "query_text": "毛布がかさばらずにしまえる収納袋",
+      "locale": "ja",
+      "persona": "general",
+      "category": "clothes-compression-storage-bag",
+      "ideal_answer": "衣類圧縮袋・布団圧縮袋(掃除機不要タイプを含む)",
+      "search_terms": {
+        "ja": [
+          "衣類圧縮パック",
+          "布団圧縮袋",
+          "衣類圧縮袋"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3ca15e44e070b796777a2f6a245b552f4768c88d0c938e615a96d7a9959b36b4",
+      "query_text": "手で押すだけで小さくなる衣類の収納パック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "clothes-compression-storage-bag",
+      "ideal_answer": "衣類圧縮袋・布団圧縮袋(掃除機不要タイプを含む)",
+      "search_terms": {
+        "ja": [
+          "衣類圧縮パック",
+          "布団圧縮袋",
+          "衣類圧縮袋"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "58649092b5ff36440c9f33f40fa5b98fd5e7e819d07ea3c90aa7e16c2cd66d32",
+      "query_text": "すぐ暖まる足元用ヒーター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-warm-personal-heater",
+      "ideal_answer": "速暖(即暖)タイプのパーソナルヒーター・セラミックヒーター",
+      "search_terms": {
+        "ja": [
+          "速暖 パーソナルヒーター",
+          "即暖 ヒーター",
+          "速暖 セラミックヒーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b53903e0188337b0c7c792ab3b10119c601a2709846e01bbfd939d07d98aa623",
+      "query_text": "足元がすぐ温かくなる小型ヒーター",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-warm-personal-heater",
+      "ideal_answer": "速暖(即暖)タイプのパーソナルヒーター・セラミックヒーター",
+      "search_terms": {
+        "ja": [
+          "速暖 パーソナルヒーター",
+          "即暖 ヒーター",
+          "速暖 セラミックヒーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "84481f05b2aa1baeec92c9d074c94fa58fad633b715288e71600748a4541b2e9",
+      "query_text": "スイッチ入れてすぐ暖かくなる電気ストーブ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-warm-personal-heater",
+      "ideal_answer": "速暖(即暖)タイプのパーソナルヒーター・セラミックヒーター",
+      "search_terms": {
+        "ja": [
+          "速暖 パーソナルヒーター",
+          "即暖 ヒーター",
+          "速暖 セラミックヒーター"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1c8a24d361f45a75cec125e03b2ff06d4ba564aa2b216814a8b908898e8c6f85",
+      "query_text": "離乳食を小分けで冷凍できる容器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "baby-food-freezer-tray",
+      "ideal_answer": "離乳食用フリージングトレー・小分け冷凍保存容器(キューブタイプ含む)",
+      "search_terms": {
+        "ja": [
+          "離乳食 フリージングトレー",
+          "離乳食 冷凍 保存容器",
+          "離乳食キューブ トレー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0232cb04b0a63d5cb41ca6617dc0398cfaec9fb2fd72b8b30e33dee57288d15d",
+      "query_text": "一食分ずつ冷凍できる離乳食のケース",
+      "locale": "ja",
+      "persona": "general",
+      "category": "baby-food-freezer-tray",
+      "ideal_answer": "離乳食用フリージングトレー・小分け冷凍保存容器(キューブタイプ含む)",
+      "search_terms": {
+        "ja": [
+          "離乳食 フリージングトレー",
+          "離乳食 冷凍 保存容器",
+          "離乳食キューブ トレー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "9066bd89c2c0aee0200f7a9a43df1b5fef6e252d8e35ebb8dbe07ce1850437f8",
+      "query_text": "少量ずつ冷凍保存できる離乳食トレー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "baby-food-freezer-tray",
+      "ideal_answer": "離乳食用フリージングトレー・小分け冷凍保存容器(キューブタイプ含む)",
+      "search_terms": {
+        "ja": [
+          "離乳食 フリージングトレー",
+          "離乳食 冷凍 保存容器",
+          "離乳食キューブ トレー"
         ],
         "en": [],
         "ko": [],

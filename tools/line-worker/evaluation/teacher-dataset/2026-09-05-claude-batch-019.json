@@ -5541,5 +5541,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "生乾き臭くならないハンガー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯物が乾きやすい角度に広げられるハンガー",
+    "ideal_answer": "扇形(アーチ型)に開いて風通しを良くする物干しハンガー",
+    "reason": "「生乾き臭くならない」「風通しがいい」は商品名では「扇形ハンガー」「アーチ型ハンガー」。 展開規則 arch-shaped-drying-hanger（モール検索語「扇形ハンガー」）。",
+    "category": "arch-shaped-drying-hanger",
+    "search_terms": {
+      "ja": [
+        "扇形ハンガー",
+        "アーチ型ハンガー",
+        "扇状ハンガー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "風通しがいいハンガーが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯物が乾きやすい角度に広げられるハンガー",
+    "ideal_answer": "扇形(アーチ型)に開いて風通しを良くする物干しハンガー",
+    "reason": "「生乾き臭くならない」「風通しがいい」は商品名では「扇形ハンガー」「アーチ型ハンガー」。 展開規則 arch-shaped-drying-hanger（モール検索語「扇形ハンガー」）。",
+    "category": "arch-shaped-drying-hanger",
+    "search_terms": {
+      "ja": [
+        "扇形ハンガー",
+        "アーチ型ハンガー",
+        "扇状ハンガー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "早く乾くように角度がつけられるハンガー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗濯物が乾きやすい角度に広げられるハンガー",
+    "ideal_answer": "扇形(アーチ型)に開いて風通しを良くする物干しハンガー",
+    "reason": "「生乾き臭くならない」「風通しがいい」は商品名では「扇形ハンガー」「アーチ型ハンガー」。 展開規則 arch-shaped-drying-hanger（モール検索語「扇形ハンガー」）。",
+    "category": "arch-shaped-drying-hanger",
+    "search_terms": {
+      "ja": [
+        "扇形ハンガー",
+        "アーチ型ハンガー",
+        "扇状ハンガー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "美容液が入りやすくなる化粧水",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "その後の美容液・スキンケアの浸透を高める導入化粧水",
+    "ideal_answer": "ブースター(導入液)タイプの化粧水",
+    "reason": "「浸透しやすくなる」「入りやすくなる」は商品名では「ブースター」「導入液」。 展開規則 skin-prep-booster-lotion（モール検索語「ブースター 化粧水」）。",
+    "category": "skin-prep-booster-lotion",
+    "search_terms": {
+      "ja": [
+        "ブースター 化粧水",
+        "導入液 化粧水",
+        "プレ化粧水"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "肌に浸透しやすくなる導入化粧水",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "その後の美容液・スキンケアの浸透を高める導入化粧水",
+    "ideal_answer": "ブースター(導入液)タイプの化粧水",
+    "reason": "「浸透しやすくなる」「入りやすくなる」は商品名では「ブースター」「導入液」。 展開規則 skin-prep-booster-lotion（モール検索語「ブースター 化粧水」）。",
+    "category": "skin-prep-booster-lotion",
+    "search_terms": {
+      "ja": [
+        "ブースター 化粧水",
+        "導入液 化粧水",
+        "プレ化粧水"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "その後のケアがしみこみやすくなるローション",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "その後の美容液・スキンケアの浸透を高める導入化粧水",
+    "ideal_answer": "ブースター(導入液)タイプの化粧水",
+    "reason": "「浸透しやすくなる」「入りやすくなる」は商品名では「ブースター」「導入液」。 展開規則 skin-prep-booster-lotion（モール検索語「ブースター 化粧水」）。",
+    "category": "skin-prep-booster-lotion",
+    "search_terms": {
+      "ja": [
+        "ブースター 化粧水",
+        "導入液 化粧水",
+        "プレ化粧水"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "布団を圧縮してコンパクトにしまえる袋",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布団や衣類を圧縮してコンパクトに収納する袋",
+    "ideal_answer": "衣類圧縮袋・布団圧縮袋(掃除機不要タイプを含む)",
+    "reason": "「圧縮してコンパクトに」「かさばらずにしまえる」は商品名では「圧縮袋」「圧縮パック」。 展開規則 clothes-compression-storage-bag（モール検索語「衣類圧縮パック」）。",
+    "category": "clothes-compression-storage-bag",
+    "search_terms": {
+      "ja": [
+        "衣類圧縮パック",
+        "布団圧縮袋",
+        "衣類圧縮袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "毛布がかさばらずにしまえる収納袋",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布団や衣類を圧縮してコンパクトに収納する袋",
+    "ideal_answer": "衣類圧縮袋・布団圧縮袋(掃除機不要タイプを含む)",
+    "reason": "「圧縮してコンパクトに」「かさばらずにしまえる」は商品名では「圧縮袋」「圧縮パック」。 展開規則 clothes-compression-storage-bag（モール検索語「衣類圧縮パック」）。",
+    "category": "clothes-compression-storage-bag",
+    "search_terms": {
+      "ja": [
+        "衣類圧縮パック",
+        "布団圧縮袋",
+        "衣類圧縮袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "手で押すだけで小さくなる衣類の収納パック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布団や衣類を圧縮してコンパクトに収納する袋",
+    "ideal_answer": "衣類圧縮袋・布団圧縮袋(掃除機不要タイプを含む)",
+    "reason": "「圧縮してコンパクトに」「かさばらずにしまえる」は商品名では「圧縮袋」「圧縮パック」。 展開規則 clothes-compression-storage-bag（モール検索語「衣類圧縮パック」）。",
+    "category": "clothes-compression-storage-bag",
+    "search_terms": {
+      "ja": [
+        "衣類圧縮パック",
+        "布団圧縮袋",
+        "衣類圧縮袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "すぐ暖まる足元用ヒーター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "スイッチを入れてすぐ暖かくなる小型の足元用ヒーター",
+    "ideal_answer": "速暖(即暖)タイプのパーソナルヒーター・セラミックヒーター",
+    "reason": "「すぐ暖まる」「足元がすぐ温かくなる」は商品名では「速暖」「即暖」。 展開規則 quick-warm-personal-heater（モール検索語「速暖 パーソナルヒーター」）。",
+    "category": "quick-warm-personal-heater",
+    "search_terms": {
+      "ja": [
+        "速暖 パーソナルヒーター",
+        "即暖 ヒーター",
+        "速暖 セラミックヒーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "足元がすぐ温かくなる小型ヒーター",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "スイッチを入れてすぐ暖かくなる小型の足元用ヒーター",
+    "ideal_answer": "速暖(即暖)タイプのパーソナルヒーター・セラミックヒーター",
+    "reason": "「すぐ暖まる」「足元がすぐ温かくなる」は商品名では「速暖」「即暖」。 展開規則 quick-warm-personal-heater（モール検索語「速暖 パーソナルヒーター」）。",
+    "category": "quick-warm-personal-heater",
+    "search_terms": {
+      "ja": [
+        "速暖 パーソナルヒーター",
+        "即暖 ヒーター",
+        "速暖 セラミックヒーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "スイッチ入れてすぐ暖かくなる電気ストーブ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "スイッチを入れてすぐ暖かくなる小型の足元用ヒーター",
+    "ideal_answer": "速暖(即暖)タイプのパーソナルヒーター・セラミックヒーター",
+    "reason": "「すぐ暖まる」「足元がすぐ温かくなる」は商品名では「速暖」「即暖」。 展開規則 quick-warm-personal-heater（モール検索語「速暖 パーソナルヒーター」）。",
+    "category": "quick-warm-personal-heater",
+    "search_terms": {
+      "ja": [
+        "速暖 パーソナルヒーター",
+        "即暖 ヒーター",
+        "速暖 セラミックヒーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "離乳食を小分けで冷凍できる容器",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "離乳食を小分けにして冷凍保存できる容器",
+    "ideal_answer": "離乳食用フリージングトレー・小分け冷凍保存容器(キューブタイプ含む)",
+    "reason": "「小分けで冷凍できる」「一食分ずつ」は商品名では「フリージングトレー」「冷凍保存容器」。 展開規則 baby-food-freezer-tray（モール検索語「離乳食 フリージングトレー」）。",
+    "category": "baby-food-freezer-tray",
+    "search_terms": {
+      "ja": [
+        "離乳食 フリージングトレー",
+        "離乳食 冷凍 保存容器",
+        "離乳食キューブ トレー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "一食分ずつ冷凍できる離乳食のケース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "離乳食を小分けにして冷凍保存できる容器",
+    "ideal_answer": "離乳食用フリージングトレー・小分け冷凍保存容器(キューブタイプ含む)",
+    "reason": "「小分けで冷凍できる」「一食分ずつ」は商品名では「フリージングトレー」「冷凍保存容器」。 展開規則 baby-food-freezer-tray（モール検索語「離乳食 フリージングトレー」）。",
+    "category": "baby-food-freezer-tray",
+    "search_terms": {
+      "ja": [
+        "離乳食 フリージングトレー",
+        "離乳食 冷凍 保存容器",
+        "離乳食キューブ トレー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "少量ずつ冷凍保存できる離乳食トレー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "離乳食を小分けにして冷凍保存できる容器",
+    "ideal_answer": "離乳食用フリージングトレー・小分け冷凍保存容器(キューブタイプ含む)",
+    "reason": "「小分けで冷凍できる」「一食分ずつ」は商品名では「フリージングトレー」「冷凍保存容器」。 展開規則 baby-food-freezer-tray（モール検索語「離乳食 フリージングトレー」）。",
+    "category": "baby-food-freezer-tray",
+    "search_terms": {
+      "ja": [
+        "離乳食 フリージングトレー",
+        "離乳食 冷凍 保存容器",
+        "離乳食キューブ トレー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
