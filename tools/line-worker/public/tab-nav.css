@@ -17,3 +17,22 @@ body.has-tab-bar{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 
 /* 2026-09-17: 「探す」ではページ名の帯を出さない */
 .view-title.view-title-hidden{display:none}
+
+/* 2026-09-17 大隆さん指示: ヘッダーは 1 段（ロゴ・言語・販売者専用）に狭める。会員名・ログアウトはマイアカウントへ。 */
+.topbar{min-height:56px;padding:6px max(14px,env(safe-area-inset-left));gap:8px}
+.topbar .header-language{margin-left:auto}
+.topbar .account-nav{margin:0}
+.topbar .account-nav .business-link{white-space:nowrap;font-size:11px;padding:8px 10px;min-height:38px}
+.topbar .header-language select{min-height:38px}
+.topbar .brand{min-height:38px}
+@media(max-width:760px){
+  .topbar{display:flex;flex-wrap:nowrap;align-items:center}
+  .topbar .header-language{grid-column:auto;grid-row:auto;margin-left:auto}
+  .topbar .account-nav{grid-column:auto;justify-content:flex-end}
+  .topbar .brand img{width:34px;height:34px}
+}
+.account-session{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 12px}
+.account-session a{padding:9px 12px;border-radius:11px;color:#5140ba;background:var(--soft,#f4f0ff);text-decoration:none;font-size:13px;font-weight:850}
+.account-session .account-logout{border:1px solid var(--line,#e9e5f5);border-radius:11px;background:#fff;color:var(--muted,#6d6b80);font-size:12px;font-weight:800;padding:8px 12px;cursor:pointer}
+.account-session .account-logout.hidden{display:none}
+.account-session small{flex-basis:100%;color:var(--muted,#6d6b80);font-size:12px;line-height:1.5}

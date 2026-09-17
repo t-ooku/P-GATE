@@ -7,6 +7,7 @@ const form = document.querySelector('#shopSearchForm');
 const input = document.querySelector('#shopSearchInput');
 const results = document.querySelector('#shopSearchResults');
 const popular = document.querySelector('#shopSearchPopular');
+const filtersBox = document.querySelector('#shopSearchFilters');
 const DEMAND_KEY = 'hoshilu_shop_demands';
 
 const text = (value) => String(value ?? '');
@@ -133,20 +134,31 @@ function render(payload) {
   results.append(summary);
   if (payload.exact?.length) results.append(block('条件に一致する商品', `${payload.exact.length}件。すべての条件が商品名に明記されています。`, payload.exact));
   if (payload.near?.length) results.append(block('近い商品も見つかりました', '一致した条件は ✓、違う条件は △ で示しています。', payload.near));
-  if (!payload.exact?.length) results.append(demandBlock(payload.query, payload.state, payload.conditions || []));
+  if (!payload.exact?.length) results.append(demandBlock(payload.demand_query || payload.query, payload.state, payload.conditions || []));
   results.classList.remove('hidden');
 }
 
 let inflight = 0;
+function filterParams() {
+  const params = new URLSearchParams();
+  if (!form) return params;
+  for (const name of ['genre', 'subgenre', 'color', 'material', 'size', 'brand']) {
+    const value = String(form.elements[name]?.value || '').trim();
+    if (value) params.set(name, value);
+  }
+  return params;
+}
 async function search(query) {
   const value = String(query || '').trim();
-  if (value.length < 2) { input?.focus(); return; }
+  const params = filterParams();
+  if (value.length < 2 && ![...params.keys()].length) { input?.focus(); return; }
+  params.set('q', value);
   const id = ++inflight;
   results.classList.remove('hidden');
   results.replaceChildren(el('p', 'shop-search-summary', '登録ショップの商品を横断検索しています…'));
   document.dispatchEvent(new CustomEvent('hoshilu:shop-search-started', { detail: { query: value } }));
   try {
-    const response = await fetch(`/api/shops/search?q=${encodeURIComponent(value)}`, { headers: { accept: 'application/json' } });
+    const response = await fetch(`/api/shops/search?${params.toString()}`, { headers: { accept: 'application/json' } });
     const payload = await response.json();
     if (id !== inflight) return;
     if (!response.ok || payload.ok !== true) throw new Error(payload.error || 'SHOP_SEARCH_FAILED');
@@ -165,6 +177,29 @@ async function claimDemands() {
     if (response.status === 401) return;
     const payload = await response.json();
     if (response.ok && payload.ok === true) writeDemands([]);
+  } catch {}
+}
+
+let filterCatalog = null;
+async function loadFilters() {
+  if (!form || !filtersBox) return;
+  try {
+    const response = await fetch('/api/shops/filters', { headers: { accept: 'application/json' } });
+    const payload = await response.json();
+    if (!response.ok || payload.ok !== true) return;
+    filterCatalog = payload;
+    const fill = (select, items, valueKey, labelKey) => {
+      if (!select) return;
+      select.replaceChildren(Object.assign(document.createElement('option'), { value: '', textContent: '指定なし' }));
+      for (const item of items) select.append(Object.assign(document.createElement('option'), { value: text(item[valueKey]), textContent: text(item[labelKey]) }));
+    };
+    fill(form.elements.genre, payload.genres || [], 'label', 'label');
+    fill(form.elements.color, payload.colors || [], 'value', 'label');
+    fill(form.elements.material, payload.materials || [], 'value', 'label');
+    form.elements.genre?.addEventListener('change', () => {
+      const genre = (filterCatalog?.genres || []).find((item) => item.label === form.elements.genre.value);
+      fill(form.elements.subgenre, genre?.subgenres || [], 'query', 'label');
+    });
   } catch {}
 }
 
@@ -199,6 +234,7 @@ if (section && form && input && results) {
     search(fromUrl);
   }
   claimDemands();
+  loadFilters();
   loadPopular();
   window.HoshiluShopSearch = { search };
 }

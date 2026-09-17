@@ -9,10 +9,10 @@
 // 原則（§6/§41）: 一致・不一致は商品名に明記された語だけで判定し、何が一致して何が一致していないかを返す。
 // AI の推測で一致率を作らない。商品・価格・URL・ショップ名を推測で生成しない（すべて D1 の取得済みデータ）。
 
-import { activeShops, publicShopRef } from './seller-shop.mjs';
+import { activeShops, publicShopRef, SHOP_GENRES, shopFilters } from './seller-shop.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
 import { readMemberSession } from './member-auth.mjs';
-import { SHOP_COLOR_FILTERS, SHOP_MATERIAL_FILTERS } from './shop-facets.mjs';
+import { SHOP_COLOR_FILTERS, SHOP_MATERIAL_FILTERS, shopAttributeDefinition } from './shop-facets.mjs';
 
 const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]`, 'g');
 const clean = (value, max) => String(value ?? '').normalize('NFKC').replace(CONTROL_CHARS, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -75,6 +75,42 @@ export function demandConditions(query) {
   return conditions;
 }
 
+// 2026-09-17 大隆さん指示: 総合検索にもジャンル・詳細条件（色・サイズ・素材・ブランド）。選んだ条件は
+// 検索文の条件と同じ扱い（商品名に明記されているかで判定）。ジャンルは小ジャンルの語のどれかが入っていれば一致。
+export function filterConditions(filters = {}) {
+  const conditions = [];
+  if (filters.subgenre && Array.isArray(filters.subgenre_terms) && filters.subgenre_terms.length) {
+    conditions.push({ kind: 'genre', label: filters.subgenre_label || filters.subgenre, aliases: [...filters.subgenre_terms] });
+  }
+  for (const kind of ['color', 'material']) {
+    const definition = shopAttributeDefinition(kind, filters[kind]);
+    if (definition) conditions.push({ kind, label: definition.query, aliases: [...definition.aliases] });
+  }
+  const size = shopAttributeDefinition('size', filters.size);
+  if (size) conditions.push({ kind: 'size', label: size.label, aliases: [size.value] });
+  for (const brand of Array.isArray(filters.brands) ? filters.brands.slice(0, 3) : []) {
+    if (brand) conditions.push({ kind: 'brand', label: brand, aliases: [brand] });
+  }
+  return conditions;
+}
+
+export function mergeConditions(base, extra) {
+  const merged = [...base];
+  for (const condition of extra) {
+    if (merged.some((item) => item.label === condition.label || (condition.kind !== 'genre' && item.aliases.some((alias) => condition.aliases.includes(alias))))) continue;
+    merged.push(condition);
+  }
+  return merged.slice(0, 10);
+}
+
+export function shopSearchFilterCatalog() {
+  return {
+    genres: SHOP_GENRES.map((genre) => ({ label: genre.label, subgenres: genre.subgenres.map((item) => ({ label: item.label, query: item.query })) })),
+    colors: SHOP_COLOR_FILTERS.map((item) => ({ value: item.value, label: item.label })),
+    materials: SHOP_MATERIAL_FILTERS.map((item) => ({ value: item.value, label: item.label }))
+  };
+}
+
 export function judgeTitle(title, conditions) {
   const source = normalizeForMatch(title);
   const matched = [];
@@ -117,7 +153,7 @@ function candidateCard(row, shop, verdict) {
 
 // 取り出しは広めに（FTS は全語 AND なので、条件を落とした語でも引く）。判定は judgeTitle が厳密に行う。
 async function retrieveCandidates(env, tenant, text, conditions, limit) {
-  const queries = [text];
+  const queries = text ? [text] : [];
   const keywords = conditions.filter((item) => item.kind === 'keyword').map((item) => item.label);
   if (keywords.length && keywords.join(' ') !== text) queries.push(keywords.join(' '));
   for (const keyword of keywords.slice(0, 3)) if (!queries.includes(keyword)) queries.push(keyword);
@@ -132,7 +168,8 @@ async function retrieveCandidates(env, tenant, text, conditions, limit) {
     if (merged.size >= limit * 2) break;
   }
   // FTS は英語の同義語索引（search_aliases）に依存するので、商品名そのものの部分一致でも拾う（ショップページの絞り込みと同じ方式）。
-  const likeTerms = (keywords.length ? keywords : conditions.map((item) => item.label)).slice(0, 3);
+  const genreTerms = conditions.filter((item) => item.kind === 'genre').flatMap((item) => item.aliases.slice(0, 2));
+  const likeTerms = [...new Set([...keywords, ...genreTerms].length ? [...keywords, ...genreTerms] : conditions.map((item) => item.label))].slice(0, 3);
   if (likeTerms.length && env?.PRODUCT_DB) {
     try {
       const binds = [tenant, ...likeTerms.map((term) => `%${term}%`)];
@@ -147,13 +184,16 @@ async function retrieveCandidates(env, tenant, text, conditions, limit) {
   return [...merged.values()];
 }
 
-export async function searchAcrossShops(env, query, { limitPerTenant = 40, shops = null } = {}) {
+export async function searchAcrossShops(env, query, { limitPerTenant = 40, shops = null, filters = null } = {}) {
   const db = env?.PRODUCT_DB;
   const text = clean(query, DEMAND_QUERY_MAX);
-  const conditions = demandConditions(text);
-  const asin = /^[A-Z0-9]{10}$/u.test(text.toUpperCase()) ? text.toUpperCase() : '';
-  const result = { query: text, conditions: conditionLabels(conditions), exact: [], near: [], shops_searched: 0 };
-  if (!db || text.length < DEMAND_QUERY_MIN) return result;
+  const extra = filters ? filterConditions(filters) : [];
+  const conditions = mergeConditions(demandConditions(text), extra);
+  const asin = /^[A-Z0-9]{10}$/u.test(text.toUpperCase()) && !extra.length ? text.toUpperCase() : '';
+  // 需要として預かる時の文: 入力文＋選んだ条件（再判定でも同じ条件が復元できる）
+  const demandQuery = clean([text, ...extra.map((item) => item.label)].filter(Boolean).join(' '), DEMAND_QUERY_MAX);
+  const result = { query: text, demand_query: demandQuery, conditions: conditionLabels(conditions), exact: [], near: [], shops_searched: 0 };
+  if (!db || !conditions.length) return result;
   const list = shops || await activeShops(env);
   const seen = new Set();
   for (const shop of list) {
@@ -170,7 +210,7 @@ export async function searchAcrossShops(env, query, { limitPerTenant = 40, shops
       } catch { rows = []; }
       for (const row of rows) {
         if (Number(row.stock ?? 1) <= 0) continue;
-        const verdict = asin ? { level: 'EXACT', matched: [asin], unmatched: [] } : judgeTitle(row.product_name, conditions);
+        const verdict = asin ? { level: 'EXACT', matched: [asin], unmatched: [] } : judgeTitle(`${row.product_name} ${row.manufacturer || ''}`, conditions);
         if (verdict.level === 'NONE') continue;
         const card = candidateCard(row, shop, verdict);
         if (!card || seen.has(card.url)) continue;
@@ -318,11 +358,16 @@ export async function handleShopDemandRoutes(request, env, { readMember = readMe
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/shops/')) return null;
   const db = env?.PRODUCT_DB;
+  if (request.method === 'GET' && url.pathname === '/api/shops/filters') {
+    return Response.json({ ok: true, ...shopSearchFilterCatalog() }, { headers: { 'cache-control': 'public, max-age=3600', 'x-content-type-options': 'nosniff' } });
+  }
   if (request.method === 'GET' && url.pathname === '/api/shops/search') {
     const text = clean(url.searchParams.get('q'), DEMAND_QUERY_MAX);
-    if (text.length < DEMAND_QUERY_MIN) return json({ ok: false, error: 'QUERY_TOO_SHORT' }, 400);
-    const result = await searchAcrossShops(env, text);
-    if (db) await logSearch(db, { text, result, visitor: await visitorHash(request, env) });
+    const filters = shopFilters(url.searchParams);
+    const hasFilters = filterConditions(filters).length > 0;
+    if (text.length < DEMAND_QUERY_MIN && !hasFilters) return json({ ok: false, error: 'QUERY_TOO_SHORT' }, 400);
+    const result = await searchAcrossShops(env, text, { filters });
+    if (db) await logSearch(db, { text: result.demand_query, result, visitor: await visitorHash(request, env) });
     return json({ ok: true, ...result, state: resultState(result) });
   }
   if (request.method === 'GET' && url.pathname === '/api/shops/demand/popular') {

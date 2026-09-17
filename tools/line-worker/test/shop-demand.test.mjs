@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  demandConditions, demandKey, demandQueryProblem, handleShopDemandRoutes, judgeTitle, registerDemandOffer,
+  demandConditions, demandKey, demandQueryProblem, filterConditions, handleShopDemandRoutes, judgeTitle, registerDemandOffer,
   rematchDemand, runShopDemandRematch, searchAcrossShops, sellerDemandOverview, SHOP_DEMAND_EVENT_TYPE
 } from '../src/shop-demand.mjs';
 import { handleSellerShopRoutes, resetShopCache } from '../src/seller-shop.mjs';
@@ -150,4 +150,27 @@ test('15分ごとの再判定: 商品が同期で増えていれば OPEN の需�
   const outcome = await rematchDemand(env, demand, { search: async () => ({ exact: [{ name: 'x', url: 'https://www.amazon.co.jp/dp/B1', shop: { slug: 'find-fun', name: 'Find fun' }, matched: [], unmatched: [] }], near: [] }) });
   assert.equal(outcome.matched, true);
   assert.equal(outcome.notified, false, '未ログインの需要は通知先が無いので通知しない（MATCHED にはする）');
+});
+
+test('ジャンル・色・素材・サイズ・ブランドの絞り込みは検索文の条件と同じ扱いで、文なしでも探せる', async () => {
+  const { db, env } = makeEnv();
+  const params = new URLSearchParams({ genre: 'ファッション', subgenre: 'バッグ', color: 'blue', material: 'leather', size: 'A4' });
+  const { shopFilters } = await import('../src/seller-shop.mjs');
+  const conditions = filterConditions(shopFilters(params));
+  assert.deepEqual(conditions.map((c) => [c.kind, c.label]), [['genre', 'バッグ'], ['color', '青'], ['material', '本革'], ['size', 'A4']]);
+  const response = await handleShopDemandRoutes(request(`/api/shops/search?${params.toString()}`), env);
+  const payload = await response.json();
+  assert.equal(payload.ok, true);
+  assert.deepEqual(payload.conditions, ['バッグ', '青', '本革', 'A4']);
+  assert.equal(payload.demand_query, 'バッグ 青 本革 A4');
+  // ネイビーは「青」の別名ではないので近い商品、トートバッグはジャンル「バッグ」の語に含まれる
+  assert.equal(payload.exact.length, 0);
+  assert.equal(payload.near.length, 1);
+  assert.deepEqual(payload.near[0].unmatched, ['青']);
+  assert.equal(db.prepare(`SELECT query_text FROM shop_search_log`).get().query_text, 'バッグ 青 本革 A4');
+  const brand = await handleShopDemandRoutes(request(`/api/shops/search?q=リュック&brand=ITG`), env);
+  const withBrand = await brand.json();
+  assert.equal(withBrand.exact.length, 1, 'ブランドは manufacturer 列でも判定する');
+  const catalog = await (await handleShopDemandRoutes(request('/api/shops/filters'), env)).json();
+  assert.ok(catalog.genres.length > 3 && catalog.colors.length > 5 && catalog.materials.length > 3);
 });

@@ -50,10 +50,10 @@ Object.assign(actionCopy.ZH,{insightToggleDescription:'启用后，首次检查�
 Object.assign(actionCopy.KO,{insightToggleDescription:'활성화하면 첫 확인에서 현재 후보를 기준으로 기록하고 이때는 알림을 보내지 않습니다. 이후 새로 일치하는 실제 상품을 찾았을 때만 앱과 연결된 LINE·이메일로 알려드립니다.',frequencyLabel:'알림 빈도',frequencyInstant:'즉시 알림',frequencyDaily:'하루 한 번',frequencyWeekly:'주 1회',frequencyMuted:'알림 중지'});
 
 const navigationCopy = {
-  JA:{features:['ホシル検索','購入希望価格ウォッチ'],account:'マイページ',candidateAmazon:'Amazonでこの商品を探す'},
-  EN:{features:['HOSHILU Search','Target price watch'],account:'My page',candidateAmazon:'Find this product on Amazon'},
-  ZH:{features:['HOSHILU 搜索','目标价监控'],account:'我的页面',candidateAmazon:'在 Amazon 查找此商品'},
-  KO:{features:['HOSHILU 검색','목표 가격 감시'],account:'마이페이지',candidateAmazon:'Amazon에서 이 상품 찾기'}
+  JA:{features:['ホシル検索','購入希望価格ウォッチ'],account:'ログイン／無料登録',candidateAmazon:'Amazonでこの商品を探す'},
+  EN:{features:['HOSHILU Search','Target price watch'],account:'Log in / Sign up free',candidateAmazon:'Find this product on Amazon'},
+  ZH:{features:['HOSHILU 搜索','目标价监控'],account:'登录／免费注册',candidateAmazon:'在 Amazon 查找此商品'},
+  KO:{features:['HOSHILU 검색','목표 가격 감시'],account:'로그인／무료 가입',candidateAmazon:'Amazon에서 이 상품 찾기'}
 };
 const searchModeCopy={
   JA:{step:'検索方法',identify:'AIに確認して探す',direct:'すぐ検索',identifySubmit:'AIで探す',directSubmit:'すぐ検索'},
