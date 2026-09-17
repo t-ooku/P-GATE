@@ -61,6 +61,8 @@ async function load() {
 }
 
 button?.addEventListener('click', () => {
+  // 2026-09-17: 下部タブ導入後、ショップ一覧は「ショップ」タブの中。先にタブを開いてからスクロールする。
+  window.HoshiluTabs?.activate('shops', { scroll: false });
   section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 

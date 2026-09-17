@@ -59,3 +59,9 @@ test('「いまの価格を見る」は「探す」タブを開いて検索を�
   assert.match(app, /again\.textContent='いまの価格を見る';\n\s*again\.addEventListener\('click',\(\)=>\{elements\.query\.value=name;elements\.clear\.classList\.remove\('hidden'\);submitSearchNow\(\);\}\);/);
   assert.match(read('index.html'), /app\.js\?v=166/);
 });
+
+// 2026-09-17: 検索欄の「ショップから探す」ボタンも、ショップ一覧が「ショップ」タブ内に隠れているので先にタブを開く。
+test('「ショップから探す」ボタンは「ショップ」タブを開いてからスクロールする', () => {
+  assert.match(read('shop-directory.mjs'), /window\.HoshiluTabs\?\.activate\('shops', \{ scroll: false \}\);\n\s*section\?\.scrollIntoView/);
+  assert.match(read('index.html'), /shop-directory\.mjs\?v=3/);
+});
