@@ -49,3 +49,13 @@ test('気になる商品は「ホシる中」タブに横スクロールで並�
   assert.match(buzz, /window\.HoshiluKeep\?\.toggle\(candidate\)/);
   assert.match(read('buzz-home.css'), /\.buzz-home-keep\.kept\{/);
 });
+
+// 2026-09-17 大隆さん報告: 「値下がり待ち」の「いまの価格を見る」を押しても反応しない。
+// 検索欄は「探す」タブの中に隠れているので、先にタブを開いてから検索を実行する。
+test('「いまの価格を見る」は「探す」タブを開いて検索を実行する', () => {
+  const app = read('app.js');
+  assert.match(app, /function focusSearch\(\)\{window\.HoshiluTabs\?\.activate\('search',\{scroll:false\}\);/);
+  assert.match(app, /function submitSearchNow\(\)\{window\.HoshiluTabs\?\.activate\('search',\{scroll:false\}\);/);
+  assert.match(app, /again\.textContent='いまの価格を見る';\n\s*again\.addEventListener\('click',\(\)=>\{elements\.query\.value=name;elements\.clear\.classList\.remove\('hidden'\);submitSearchNow\(\);\}\);/);
+  assert.match(read('index.html'), /app\.js\?v=166/);
+});
