@@ -104,14 +104,33 @@ test('Seller には需要が匿名集計で見え、商品を登録すると HOS
   const seller = { seller_key: SELLER_KEY, account: 'ITG', tenants: ['itg'], plan: 'BUSINESS' };
   await handleShopDemandRoutes(request('/api/shops/demand', 'POST', { query: '黒の本革で自立するA4トートバッグ', result_state: 'NEAR' }), env, { readMember: async () => ({ id: 'm1' }) });
   db.prepare(`INSERT INTO member_notification_destinations(member_id,channel,encrypted_destination,verified_at) VALUES('m1','EMAIL','x','2026-09-01T00:00:00Z')`).run();
-  const overview = await sellerDemandOverview(env, SELLER_KEY);
+  // 2026-09-17 第2指示書: 匿名需要が 5 人未満の項目は Seller に出さない（件数だけ知らせる）
+  const hidden = await sellerDemandOverview(env, SELLER_KEY);
+  assert.equal(hidden.min_people, 5);
+  assert.equal(hidden.items.length, 0);
+  assert.deepEqual(hidden.below_threshold, { groups: 1, people: 1 });
+  const overview = await sellerDemandOverview(env, SELLER_KEY, { minPeople: 1 });
   assert.equal(overview.items.length, 1);
   assert.equal(overview.items[0].people, 1);
   assert.equal(overview.items[0].own_exact, 0);
   assert.equal(overview.items[0].own_near, 1);
   assert.equal(overview.items[0].state, '近い商品あり');
+  // 検索文そのものは Seller に渡さず、正規化した条件だけを見せる
+  assert.deepEqual(overview.items[0].conditions, ['黒', '本革', 'A4', '自立', 'トートバッグ']);
+  assert.equal(overview.items[0].query, '黒・本革・A4・自立・トートバッグ');
+  assert.equal(JSON.stringify(overview).includes('黒の本革で自立するA4トートバッグ'), false);
+  env.SHOP_DEMAND_SELLER_MIN_PEOPLE = '1';
   const page = await handleSellerShopRoutes(request('/api/seller/shop/demand'), env, seller);
-  assert.equal((await page.json()).items[0].query, '黒の本革で自立するA4トートバッグ');
+  const pageBody = await page.json();
+  assert.equal(pageBody.items[0].query, '黒・本革・A4・自立・トートバッグ');
+  assert.equal(pageBody.min_people, 1);
+  // 本人は「探しているもの」で自分の需要を見られ、やめることもできる
+  const mine = await handleShopDemandRoutes(request('/api/shops/demand/mine'), env, { readMember: async () => ({ id: 'm1' }) });
+  const mineBody = await mine.json();
+  assert.equal(mineBody.items.length, 1);
+  assert.equal(mineBody.items[0].query, '黒の本革で自立するA4トートバッグ');
+  assert.equal(mineBody.items[0].status, 'OPEN');
+  assert.equal((await handleShopDemandRoutes(request('/api/shops/demand/mine'), env, { readMember: async () => null })).status, 401);
   // 近い商品（ネイビー）を登録しても、保存時に既に近い商品があった需要には通知しない（自己申告で一致にしない）
   const near = await registerDemandOffer(env, SELLER_KEY, { demand_key: demandKey('黒の本革で自立するA4トートバッグ'), asin: 'B000000001' });
   assert.equal(near.level, 'NEAR');
@@ -130,6 +149,11 @@ test('Seller には需要が匿名集計で見え、商品を登録すると HOS
   assert.equal(db.prepare(`SELECT status,matched_level,matched_shop_slug FROM shop_demand_requests`).get().status, 'MATCHED');
   const unknown = await registerDemandOffer(env, SELLER_KEY, { demand_key: demandKey('黒の本革で自立するA4トートバッグ'), asin: 'B000000099' }).catch((error) => error.message);
   assert.equal(unknown, 'PRODUCT_NOT_IN_YOUR_SHOP');
+  const closed = await handleShopDemandRoutes(request('/api/shops/demand/' + mineBody.items[0].demand_id, 'DELETE'), env, { readMember: async () => ({ id: 'm1' }) });
+  assert.deepEqual(await closed.json(), { ok: true, closed: 1 });
+  assert.equal(db.prepare(`SELECT status FROM shop_demand_requests`).get().status, 'CLOSED');
+  const other = await handleShopDemandRoutes(request('/api/shops/demand/' + mineBody.items[0].demand_id, 'DELETE'), env, { readMember: async () => ({ id: 'm2' }) });
+  assert.deepEqual(await other.json(), { ok: true, closed: 0 });
 });
 
 test('15分ごとの再判定: 商品が同期で増えていれば OPEN の需要を一致させ通知する', async () => {

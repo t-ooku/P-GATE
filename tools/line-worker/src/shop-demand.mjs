@@ -9,7 +9,7 @@
 // 原則（§6/§41）: 一致・不一致は商品名に明記された語だけで判定し、何が一致して何が一致していないかを返す。
 // AI の推測で一致率を作らない。商品・価格・URL・ショップ名を推測で生成しない（すべて D1 の取得済みデータ）。
 
-import { activeShops, publicShopRef, SHOP_GENRES, shopFilters } from './seller-shop.mjs';
+import { activeShops, publicShopRef, recordShopEvent, SHOP_GENRES, shopFilters } from './seller-shop.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
 import { readMemberSession } from './member-auth.mjs';
 import { SHOP_COLOR_FILTERS, SHOP_MATERIAL_FILTERS, shopAttributeDefinition } from './shop-facets.mjs';
@@ -313,6 +313,7 @@ async function markMatched(db, demand, { shop, card, level, notificationId, now 
   await db.prepare(`UPDATE shop_demand_requests SET status='MATCHED',matched_at=?2,matched_seller_key=?3,matched_shop_slug=?4,matched_product_url=?5,matched_level=?6,notification_id=?7,last_checked_at=?2,updated_at=?2
     WHERE demand_id=?1 AND status='OPEN'`)
     .bind(demand.demand_id, now, String(shop?.seller_key || ''), String(shop?.slug || card?.shop?.slug || ''), String(card?.url || ''), level, notificationId || '').run();
+  await recordShopEvent({ PRODUCT_DB: db }, 'shop_demand_matched', String(shop?.slug || card?.shop?.slug || ''), { content: level });
 }
 
 // 1件の探し中需要を再判定する。EXACT はいつでも一致、NEAR は保存時に何も無かった需要だけ「近い商品が追加」として扱う。
@@ -368,6 +369,8 @@ export async function handleShopDemandRoutes(request, env, { readMember = readMe
     if (text.length < DEMAND_QUERY_MIN && !hasFilters) return json({ ok: false, error: 'QUERY_TOO_SHORT' }, 400);
     const result = await searchAcrossShops(env, text, { filters });
     if (db) await logSearch(db, { text: result.demand_query, result, visitor: await visitorHash(request, env) });
+    // §17 KPI: 横断検索の結果区分（EXACT / NEAR / NONE）。campaign に区分、content に一致件数（検索文は入れない）
+    await recordShopEvent(env, 'shop_search_completed', resultState(result), { content: `${result.exact.length}/${result.near.length}` });
     return json({ ok: true, ...result, state: resultState(result) });
   }
   if (request.method === 'GET' && url.pathname === '/api/shops/demand/popular') {
@@ -378,6 +381,21 @@ export async function handleShopDemandRoutes(request, env, { readMember = readMe
       return Response.json({ ok: true, items: (rows.results || []).map((row) => ({ query: String(row.query_text || ''), people: Number(row.people || 0) })) },
         { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
     } catch { return json({ ok: true, items: [] }); }
+  }
+  if (request.method === 'GET' && url.pathname === '/api/shops/demand/mine') {
+    const member = await readMember(request, env);
+    if (!member?.id) return json({ ok: false, error: 'MEMBER_LOGIN_REQUIRED' }, 401);
+    return json({ ok: true, items: await memberDemands(env, member.id) });
+  }
+  const closeMatch = url.pathname.match(/^\/api\/shops\/demand\/(sd-[A-Za-z0-9-]{8,60})$/u);
+  if (request.method === 'DELETE' && closeMatch) {
+    const origin = request.headers.get('origin');
+    if (origin && origin !== url.origin) return json({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, 403);
+    const member = await readMember(request, env);
+    if (!member?.id) return json({ ok: false, error: 'MEMBER_LOGIN_REQUIRED' }, 401);
+    if (!db) return json({ ok: false, error: 'NO_DB' }, 503);
+    const result = await db.prepare(`UPDATE shop_demand_requests SET status='CLOSED',updated_at=?3 WHERE demand_id=?1 AND member_id=?2 AND status<>'CLOSED'`).bind(closeMatch[1], member.id, new Date().toISOString()).run();
+    return json({ ok: true, closed: Number(result?.meta?.changes || 0) });
   }
   if (request.method === 'POST' && (url.pathname === '/api/shops/demand' || url.pathname === '/api/shops/demand/claim')) {
     const origin = request.headers.get('origin');
@@ -409,6 +427,7 @@ export async function handleShopDemandRoutes(request, env, { readMember = readMe
     if (slug) sellerKey = String((await activeShops(env)).find((shop) => shop.slug === slug)?.seller_key || '');
     const state = ['NONE', 'NEAR', 'EXACT'].includes(String(body?.result_state || '')) ? String(body.result_state) : 'NONE';
     const demandId = await saveDemand(db, { text, memberId: member?.id || '', visitor, sellerKey, state, conditions: demandConditions(text) });
+    await recordShopEvent(env, 'shop_demand_saved', state, { content: member?.id ? 'member' : 'guest' });
     return json({ ok: true, demand_id: demandId, member: Boolean(member?.id), conditions: conditionLabels(demandConditions(text)) });
   }
   return null;
@@ -436,7 +455,10 @@ async function ownProductsFor(env, tenants, text, conditions) {
   return { exact: exact.length, near: near.length };
 }
 
-export async function sellerDemandOverview(env, sellerKey, { judgeLimit = 20 } = {}) {
+// §5/§42: Seller に見せるのは 5 人以上集まった需要だけ（既存 Seller ページの基準と同じ）。検索文そのものは出さず、
+// 正規化した条件（色・素材・サイズ・名詞）を表示する。5 人未満は件数だけ。
+export const SELLER_DEMAND_MIN_PEOPLE = 5;
+export async function sellerDemandOverview(env, sellerKey, { judgeLimit = 20, minPeople = Number(env?.SHOP_DEMAND_SELLER_MIN_PEOPLE) || SELLER_DEMAND_MIN_PEOPLE } = {}) {
   const db = env.PRODUCT_DB;
   const tenants = await sellerTenants(db, sellerKey);
   let groups = [];
@@ -465,7 +487,9 @@ export async function sellerDemandOverview(env, sellerKey, { judgeLimit = 20 } =
     for (const row of rows.results || []) if (!offers.has(row.demand_key)) offers.set(row.demand_key, row);
   } catch {}
   const items = [];
-  for (const [index, group] of groups.entries()) {
+  const belowThreshold = groups.filter((group) => Number(group.people || 0) < minPeople);
+  const visibleGroups = groups.filter((group) => Number(group.people || 0) >= minPeople);
+  for (const [index, group] of visibleGroups.entries()) {
     const stats = searchStats.get(group.demand_key) || {};
     let own = { exact: null, near: null };
     if (index < judgeLimit && tenants.length) {
@@ -473,8 +497,9 @@ export async function sellerDemandOverview(env, sellerKey, { judgeLimit = 20 } =
       own = await ownProductsFor(env, tenants, group.query_text, conditions);
     }
     const state = own.exact === null ? '未判定' : own.exact > 0 ? '商品あり' : own.near > 0 ? '近い商品あり' : '不足';
+    const conditions = (() => { try { return JSON.parse(group.conditions_json || '[]'); } catch { return []; } })();
     items.push({
-      demand_key: group.demand_key, query: String(group.query_text || ''), conditions: (() => { try { return JSON.parse(group.conditions_json || '[]'); } catch { return []; } })(),
+      demand_key: group.demand_key, query: conditions.length ? conditions.join('・') : '（条件なし）', conditions,
       people: Number(group.people || 0), open: Number(group.open_count || 0), matched: Number(group.matched_count || 0),
       saved_with_zero: Number(group.none_count || 0), saved_with_near_only: Number(group.near_only_count || 0),
       searches_30d: Number(stats.searches || 0), zero_results_30d: Number(stats.zero_results || 0), near_only_30d: Number(stats.near_only || 0),
@@ -487,7 +512,21 @@ export async function sellerDemandOverview(env, sellerKey, { judgeLimit = 20 } =
     const row = await db.prepare(`SELECT COUNT(*) AS searches, SUM(CASE WHEN result_state='NONE' THEN 1 ELSE 0 END) AS zero_results, SUM(CASE WHEN result_state='NEAR' THEN 1 ELSE 0 END) AS near_only FROM shop_search_log WHERE created_at>=datetime('now','-30 days')`).first();
     totals = { searches: Number(row?.searches || 0), zero_results: Number(row?.zero_results || 0), near_only: Number(row?.near_only || 0) };
   } catch {}
-  return { tenants, items, totals };
+  return { tenants, items, totals, min_people: minPeople, below_threshold: { groups: belowThreshold.length, people: belowThreshold.reduce((sum, group) => sum + Number(group.people || 0), 0) } };
+}
+
+// 会員本人の「探しているもの」（ショップに探してもらっている条件）。本人のものだけ返す。
+export async function memberDemands(env, memberId) {
+  if (!env?.PRODUCT_DB || !memberId) return [];
+  try {
+    const rows = await env.PRODUCT_DB.prepare(`SELECT demand_id,query_text,conditions_json,status,result_state,matched_shop_slug,matched_product_url,matched_level,created_at,matched_at
+      FROM shop_demand_requests WHERE member_id=?1 ORDER BY created_at DESC LIMIT 50`).bind(memberId).all();
+    return (rows.results || []).map((row) => ({
+      demand_id: row.demand_id, query: String(row.query_text || ''), conditions: (() => { try { return JSON.parse(row.conditions_json || '[]'); } catch { return []; } })(),
+      status: row.status, result_state: row.result_state, matched_shop_slug: row.matched_shop_slug || '', matched_product_url: row.matched_product_url || '', matched_level: row.matched_level || '',
+      created_at: row.created_at, matched_at: row.matched_at || ''
+    }));
+  } catch { return []; }
 }
 
 // Seller が「この需要に商品を登録」: 自社 tenant の商品を ASIN か商品URL で指定 → HOSHILU が条件を再判定。

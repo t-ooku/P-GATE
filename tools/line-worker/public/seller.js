@@ -265,15 +265,19 @@ function renderDemand(data) {
   rows.replaceChildren();
   if (select) { select.replaceChildren(); const blank = document.createElement('option'); blank.value = ''; blank.textContent = '選んでください'; select.append(blank); }
   const items = Array.isArray(data.items) ? data.items : [];
+  // 2026-09-17 第2指示書: 5人未満の需要は件数だけ（検索文は Seller に渡さない）
+  const note = document.querySelector('#sellerDemandNote');
+  const minPeople = Number(data.min_people) || 5;
+  const below = data.below_threshold || { groups: 0, people: 0 };
+  if (note) note.textContent = below.groups ? `ほかに ${below.groups}件の需要（のべ ${below.people}人）が集計待ちです。同じ条件を ${minPeople}人以上が探すと表示されます。` : `同じ条件を ${minPeople}人以上が探している需要だけを表示します。`;
   if (!items.length) {
-    const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 6; td.textContent = 'まだありません。ユーザーが横断検索で「ホシっとく」を押すと、ここに並びます。'; tr.append(td); rows.append(tr);
+    const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 6; td.textContent = below.groups ? `集計待ちです。同じ条件を ${minPeople}人以上が探すと、ここに並びます。` : 'まだありません。ユーザーが横断検索で「ホシっとく」を押し、同じ条件が集まると、ここに並びます。'; tr.append(td); rows.append(tr);
     return;
   }
   for (const item of items) {
     const tr = document.createElement('tr');
     const cells = [
-      `${item.query}${item.conditions?.length ? `
-（${item.conditions.join(' / ')}）` : ''}`,
+      item.query,
       `${item.people}人`,
       `${item.searches_30d}回（0件 ${item.zero_results_30d}・近似のみ ${item.near_only_30d}）`,
       item.own_exact === null ? '未判定' : `一致 ${item.own_exact}・近い ${item.own_near}`,

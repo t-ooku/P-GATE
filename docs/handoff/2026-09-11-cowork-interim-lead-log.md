@@ -443,3 +443,7 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 本番確認済み（デプロイ） | #294〜#297 9/17 の画面直し（タブ隠れの導線 2 件、帯・バッジ・モール導線、検索枠・CTA「AIで探す」・通知リンク削除・画像高解像度） |
 | 実装済み・本番未確認 | #298〜#300 SHOP 強化 P0: 横断検索／探し中需要／Seller 需要表示／商品登録の再判定と `SHOP_DEMAND_MATCH` 通知（migration 0079 適用済み）。通し体験の確認が残る |
 | 未実装（P1） | SHOP 強化 P1: 店内検索 0 件→店向けホシっとく、今日のこのショップ（新着から）、ショップをホシる通知、私の棚、`/for-sellers` 文言 |
+| 本番確認済み（デプロイ） | #302 横断検索にジャンル・詳細条件（`/api/shops/filters`）／ヘッダー 1 段（「販売者専用」、会員名・ログアウトはマイアカウントへ） |
+| 本番確認済み（デプロイ） | #303 全ページのページ名帯を削除（`tab-nav.mjs` v5） |
+| 実装済み・本番未確認 | #304 第2指示書（`2026-09-17-shop-kpi-directive.md`）P0: Seller 需要は **同じ条件 5 人以上**だけ・検索文でなく正規化条件を表示（`SHOP_DEMAND_SELLER_MIN_PEOPLE`）／会員の「ショップで探しているもの」一覧＋やめる（`/api/shops/demand/mine`, `DELETE /api/shops/demand/:id`）／KPI イベント `shop_search_completed` `shop_demand_saved` `shop_demand_matched` |
+| 事実 | KPI 低下の調査: 9/11〜13 は検索開始 0（着地は bot のみ）。7 日率の分母が数十件で、日次系列に計測欠落は見つからず。タブ導入後（9/16〜）も `search_started` は記録されている |

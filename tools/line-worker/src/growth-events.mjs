@@ -14,6 +14,10 @@ const EVENTS = new Set([
   'shop_followed',
   'shop_unfollowed',
   'coupon_clicked',
+  // 2026-09-17 SHOP強化 P0 §17: 横断検索・探し中需要・後日マッチ（Worker が記録。検索文は入れない）
+  'shop_search_completed',
+  'shop_demand_saved',
+  'shop_demand_matched',
   // 検索開始前にブラウザの入力検証で止まる場合もあるため、押した瞬間
   // (search_attempted)と検証で止められた瞬間(search_blocked)を分けて記録する。
   // 検索文そのものは保存しない。

@@ -454,7 +454,7 @@ export async function sellerPageResponse(
   <!-- 2026-09-17 大隆さん「HOSHILU SHOP全面強化」指示書 §8〜§10: 探し中需要を Seller に返す（Business）。
        数字はすべて D1 の実データ（shop_demand_requests / shop_search_log）。自社商品の有無は HOSHILU が商品名の条件判定で決める。 -->
   <section class="auth-card" id="shop-demand"><p class="eyebrow">HOSHILU DEMAND</p><h2>HOSHILUで今探されているもの</h2>
-  <p>ユーザーが全ショップ横断検索で「見つからない」「条件どおりではない」と感じて<strong>ホシっといた</strong>欲しいものです。個人は特定できない匿名集計（過去60日）。「自社商品」は、あなたのショップの商品名に検索条件が明記されているかを HOSHILU が判定した件数で、自己申告では変わりません。</p>
+  <p>ユーザーが全ショップ横断検索で「見つからない」「条件どおりではない」と感じて<strong>ホシっといた</strong>欲しいものです。個人は特定できない匿名集計（過去60日）で、<strong>同じ条件を5人以上が探している項目だけ</strong>を、検索文そのものではなく正規化した条件（色・素材・サイズ・名詞）で表示します。「自社商品」は、あなたのショップの商品名に検索条件が明記されているかを HOSHILU が判定した件数で、自己申告では変わりません。</p>
   <div id="sellerDemandStatus" class="operation-status" role="status" aria-live="polite"></div>
   <div class="seller-grid metric-grid">
     <article class="seller-panel"><span>横断検索（30日）</span><strong data-demand-kpi="searches">…</strong><span>全ショップ検索の回数</span></article>
@@ -462,6 +462,7 @@ export async function sellerPageResponse(
     <article class="seller-panel"><span>近い商品しか無かった</span><strong data-demand-kpi="near">…</strong><span>条件どおりが無かった</span></article>
   </div>
   <div class="seller-table-wrap"><table><thead><tr><th>探されているもの</th><th>探している人</th><th>検索（30日）</th><th>自社商品</th><th>状態</th><th>操作</th></tr></thead><tbody id="sellerDemandRows"><tr><td colspan="6">読み込んでいます…</td></tr></tbody></table></div>
+  <p id="sellerDemandNote" class="metric-help"></p>
   <form id="sellerDemandOfferForm" class="priority-form">
     <p><strong>この需要に商品を登録</strong> — あなたのショップにある商品の ASIN か商品URL を指定してください。HOSHILU が条件との一致を判定し、一致（または近い）と判定できた時だけ、ホシっといた人にお知らせします。</p>
     <label>需要 <select name="demand_key" required><option value="">選んでください</option></select></label>

@@ -180,6 +180,48 @@ async function claimDemands() {
   } catch {}
 }
 
+// 2026-09-17 第2指示書 テスト2: ホシっとく → 需要保存 → マイページ「探しているもの」に表示（会員の実データのみ。未ログインは出さない）
+const mineBox = document.querySelector('#shopDemandMine');
+const mineList = document.querySelector('#shopDemandMineList');
+async function stopDemand(item, node) {
+  try {
+    const response = await fetch(`/api/shops/demand/${encodeURIComponent(item.demand_id)}`, { method: 'DELETE' });
+    if (response.ok) { node.remove(); if (!mineList.children.length) mineBox.classList.add('hidden'); }
+  } catch {}
+}
+function mineItem(item) {
+  const node = el('div', 'shop-demand-mine-item');
+  node.append(el('strong', '', text(item.query)));
+  const matched = item.status === 'MATCHED';
+  node.append(el('span', `shop-demand-mine-state${matched ? ' matched' : ''}`, matched ? '見つかりました' : '探しています'));
+  if (matched && item.matched_product_url) {
+    const link = el('a', 'shop-demand-mine-link', `${text(item.matched_shop_slug) || 'ショップ'}の商品を見る →`);
+    link.href = item.matched_product_url; link.target = '_blank'; link.rel = 'noopener';
+    node.append(link);
+  } else {
+    const again = el('a', 'shop-demand-mine-link', 'いま探す');
+    again.href = `/?shop_search=${encodeURIComponent(text(item.query))}#tab-shops`;
+    again.addEventListener('click', (event) => { event.preventDefault(); input.value = text(item.query); window.HoshiluTabs?.activate('shops', { scroll: false }); section.scrollIntoView({ behavior: 'smooth', block: 'start' }); search(text(item.query)); });
+    node.append(again);
+  }
+  const stop = el('button', 'shop-demand-mine-stop', 'やめる');
+  stop.type = 'button';
+  stop.addEventListener('click', () => { stop.disabled = true; stopDemand(item, node); });
+  node.append(stop);
+  return node;
+}
+async function loadMine() {
+  if (!mineBox || !mineList) return;
+  try {
+    const response = await fetch('/api/shops/demand/mine', { headers: { accept: 'application/json' } });
+    if (!response.ok) { mineBox.classList.add('hidden'); return; }
+    const payload = await response.json();
+    const items = (Array.isArray(payload.items) ? payload.items : []).filter((item) => item.status !== 'CLOSED');
+    mineList.replaceChildren(...items.map(mineItem));
+    mineBox.classList.toggle('hidden', !items.length);
+  } catch { mineBox.classList.add('hidden'); }
+}
+
 let filterCatalog = null;
 async function loadFilters() {
   if (!form || !filtersBox) return;
@@ -233,8 +275,9 @@ if (section && form && input && results) {
     history.replaceState(null, '', `${location.pathname}#tab-shops`);
     search(fromUrl);
   }
-  claimDemands();
+  claimDemands().then(loadMine);
   loadFilters();
   loadPopular();
-  window.HoshiluShopSearch = { search };
+  document.addEventListener('hoshilu:wish-saved', (event) => { if (event.detail?.source === 'shop-demand') loadMine(); });
+  window.HoshiluShopSearch = { search, loadMine };
 }

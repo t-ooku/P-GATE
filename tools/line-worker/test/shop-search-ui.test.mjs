@@ -8,8 +8,8 @@ test('トップの「ショップ」タブは横断検索が一覧より上に�
   assert.ok(html.indexOf('id="shopSearch"') < html.indexOf('id="shopDirectory"'));
   assert.match(html, /<form id="shopSearchForm" class="shop-search-form" role="search">/);
   assert.match(html, /<button type="submit" class="shop-search-submit">全ショップから探す<\/button>/);
-  assert.match(html, /<link rel="stylesheet" href="\/shop-search\.css\?v=2">/);
-  assert.match(html, /<script type="module" src="\/shop-search\.mjs\?v=2"><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="\/shop-search\.css\?v=3">/);
+  assert.match(html, /<script type="module" src="\/shop-search\.mjs\?v=3"><\/script>/);
   assert.match(readFileSync(new URL('../public/tab-nav.mjs', import.meta.url), 'utf8'), /\['#shopSearch', 'shops'\]/);
   assert.match(readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'), /\['INSIGHT_NEW_MATCH','PRICE_DROP','SHOP_DEMAND_MATCH'\]/);
   assert.match(readFileSync(new URL('../public/service-worker.js', import.meta.url), 'utf8'), /'\/shop-search\.css', '\/shop-search\.mjs'/);
@@ -39,4 +39,26 @@ test('総合検索にジャンル・詳細条件があり、ヘッダーは言�
   assert.match(readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'), /account:'ログイン／無料登録'/);
   assert.match(readFileSync(new URL('../public/tab-nav.css', import.meta.url), 'utf8'), /\.topbar\{min-height:56px/);
   assert.ok(html.includes('site-i18n.js?v=8') && html.includes('tab-nav.css?v=3') && html.includes('app.js?v=171'));
+});
+
+// 2026-09-17 第2指示書（テスト2・§Seller プライバシー・KPI）: 会員の「ショップで探しているもの」一覧、Seller には 5 人以上の需要だけを条件表示、新 KPI イベント。
+test('会員は「ホシってるもの」でショップ需要を見て「やめる」でき、Seller には 5 人以上の需要だけが条件で見え、KPI イベントが記録される', () => {
+  const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.match(html, /<div id="shopDemandMine" class="shop-demand-mine hidden" aria-live="polite">/);
+  assert.ok(html.indexOf('id="wishList"') < html.indexOf('id="shopDemandMine"') && html.indexOf('id="shopDemandMine"') < html.indexOf('id="entrustedWatches"'));
+  const client = readFileSync(new URL('../public/shop-search.mjs', import.meta.url), 'utf8');
+  assert.match(client, /fetch\('\/api\/shops\/demand\/mine'/);
+  assert.match(client, /method: 'DELETE'/);
+  assert.match(client, /matched \? '見つかりました' : '探しています'/);
+  assert.match(client, /claimDemands\(\)\.then\(loadMine\)/);
+  assert.match(readFileSync(new URL('../public/shop-search.css', import.meta.url), 'utf8'), /\.shop-demand-mine\{/);
+  const sellerJs = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
+  assert.match(sellerJs, /data\.below_threshold/);
+  assert.match(sellerJs, /#sellerDemandNote/);
+  const sellerPage = readFileSync(new URL('../src/seller-page.mjs', import.meta.url), 'utf8');
+  assert.match(sellerPage, /同じ条件を5人以上が探している項目だけ/);
+  assert.match(sellerPage, /<p id="sellerDemandNote" class="metric-help"><\/p>/);
+  const events = readFileSync(new URL('../src/growth-events.mjs', import.meta.url), 'utf8');
+  for (const name of ['shop_search_completed', 'shop_demand_saved', 'shop_demand_matched']) assert.ok(events.includes(`'${name}'`), name);
+  assert.match(readFileSync(new URL('../src/shop-demand.mjs', import.meta.url), 'utf8'), /export const SELLER_DEMAND_MIN_PEOPLE = 5;/);
 });

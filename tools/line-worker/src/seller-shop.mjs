@@ -91,7 +91,7 @@ function couponIsLive(coupon, today = jstToday()) {
 }
 function jstToday() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
 
-async function recordShopEvent(env, eventType, slug, extra = {}) {
+export async function recordShopEvent(env, eventType, slug, extra = {}) {
   if (!env?.PRODUCT_DB) return;
   try {
     await env.PRODUCT_DB.prepare(`INSERT INTO growth_events
