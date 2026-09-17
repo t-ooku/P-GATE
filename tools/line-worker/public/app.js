@@ -414,7 +414,11 @@ function renderEntrustedWatches(){
     }
     const again=document.createElement('button');again.type='button';again.className='entrusted-row-search';again.textContent='いまの価格を見る';
     again.addEventListener('click',()=>{elements.query.value=name;elements.clear.classList.remove('hidden');submitSearchNow();});
-    row.append(again);
+    // 2026-09-17 大隆さん報告「削除ボタンがない」: 値下がり待ちを本人がやめられるようにする（会員 DB の wish を削除）
+    const remove=document.createElement('button');remove.type='button';remove.className='entrusted-row-remove';remove.textContent='やめる';
+    remove.addEventListener('click',async()=>{if(!confirm('この値下がり待ちをやめますか？'))return;remove.disabled=true;await deleteWish(String(item.query_text||name));renderWishes();});
+    const actions=document.createElement('div');actions.className='entrusted-row-actions';actions.append(again,remove);
+    row.append(actions);
     return row;
   }));
 }

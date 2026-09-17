@@ -62,6 +62,8 @@
 .entrusted-row-price{color:#5140ba;font-weight:800;font-size:13px}
 .entrusted-row-note{color:#6b6880;font-size:12px}
 .entrusted-row-search{justify-self:start;margin-top:4px;border:0;border-radius:10px;background:var(--soft);color:#5140ba;padding:8px 11px;cursor:pointer;font-weight:800;font-size:13px}
+.entrusted-row-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.entrusted-row-actions .entrusted-row-search{margin-top:0}
+.entrusted-row-remove{border:1px solid var(--line);border-radius:10px;background:#fff;color:#6d6b80;padding:8px 11px;cursor:pointer;font-size:13px}.entrusted-row-remove:disabled{opacity:.6}
 
 /* 2026-09-15 指示書 §8/§9: ホシってるものの4状態 */
 .hoshi-status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 16px}
