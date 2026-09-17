@@ -1208,8 +1208,13 @@ html:lang(ja) .hero-sub-sentence{white-space:nowrap}
 .ai-candidate-reference-link:hover{border-style:solid}
 .ai-candidate-reference-host{font-weight:600;font-size:12px;color:#6b6880}
 /* 2026-09-15 指示書「探さなくていい。ホシっといて。」§3: CTA 直下の一言 */
-.hoshittoku-hint{margin:6px 0 0;font-size:13px;line-height:1.6;color:#6b6880}
+/* 2026-09-17 大隆さん指示: 1 行に収める（語の途中で折り返さない） */
+.hoshittoku-hint{margin:6px 0 0;font-size:clamp(11.5px,3.5vw,13px);line-height:1.6;color:#6b6880;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* 2026-09-15 指示書§6: 結果内「無料でホシっとく」の登録欄（メール6桁 or LINE） */
 .continuous-search-actions .watch-quick-join{margin-top:6px;text-align:left}
 .continuous-search-actions .watch-quick-join .watch-quick-row{display:flex;gap:6px;flex-wrap:wrap}
 .continuous-search-actions .watch-quick-join input{flex:1 1 160px;min-width:0;padding:10px 12px;border:1px solid var(--line,#e8e3f4);border-radius:10px;font-size:15px}
+
+/* 2026-09-17 大隆さん指示: 検索欄の長方形枠は縦を縮めて、上に寄せる（見出し削除に合わせて枠の上余白も詰める）。 */
+.search-panel{padding-top:14px}
+#query{min-height:92px;padding:12px 52px 12px 15px}

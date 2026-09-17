@@ -110,10 +110,10 @@ test('第一画面は「探さなくていい。ホシっといて。」と補�
   for (const css of ['ai-search-layout-fix.css', 'assets-v126/ai-search-layout-fix.css']) {
     assert.match(readFileSync(new URL(`../public/${css}`, import.meta.url), 'utf8'), /html:lang\(ja\) \.hero-sub-sentence\{white-space:nowrap\}/);
   }
-  // CTA は「ホシっとく」。直下に「今探します。見つからなければ、そのまま探し続けます。」
-  assert.match(html, /<button id="askAiButton" class="primary ask-ai-button" type="button">ホシっとく<\/button>/);
-  assert.match(html, /<p id="hoshittokuHint" class="hoshittoku-hint">今探します。見つからなければ、そのまま探し続けます。<\/p>/);
-  assert.match(app, /identifySubmit:'ホシっとく'/);
+  // 2026-09-17 大隆さん決定: 主 CTA の文言は「AIで探す」（「ホシっとく」から変更）。直下に「見つからなければ、そのまま探し続けます。」
+  assert.match(html, /<button id="askAiButton" class="primary ask-ai-button" type="button">AIで探す<\/button>/);
+  assert.match(html, /<p id="hoshittokuHint" class="hoshittoku-hint">見つからなければ、そのまま探し続けます。<\/p>/);
+  assert.match(app, /identifySubmit:'AIで探す'/);
   // app.js 側は \n（言語切替時に textContent へ入れ、.hero-sub の pre-line で改行）
   assert.ok(app.includes(String.raw`hero:'探さなくていい。|ホシっといて。'`));
   assert.ok(app.includes(String.raw`heroSub:'スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。\nなければ、見つかるまで探します。'`));

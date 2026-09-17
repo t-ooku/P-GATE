@@ -35,7 +35,7 @@ test('曖昧検索向けの従来2モードはランキング導線と分離し�
   const html = await readFile(new URL('index.html', root), 'utf8');
   const app = await readFile(new URL('app.js', root), 'utf8');
   // 2026-09-05: 上部切替は撤去。常設ボタン「AIに商品を聞く」「すぐ検索」→ その下に「ランキングで探す」
-  assert.match(html, /id="askAiButton"[^>]*>ホシっとく</);
+  assert.match(html, /id="askAiButton"[^>]*>AIで探す</);
   assert.match(html, /すぐ検索/);
   assert.match(html, /id="askAiButton"[\s\S]{0,400}id="rankingSearchButton"/);
   assert.match(app, /const identifyRequested=currentSearchMode\(\)==='identify';requestedSearchMode='direct';/);

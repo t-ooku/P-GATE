@@ -23,7 +23,8 @@ function itemCard(item) {
   const thumb = el('div', 'buzz-home-thumb');
   if (item.image_url) {
     const img = document.createElement('img');
-    img.src = text(item.image_url);
+    // 2026-09-17: 楽天 128px サムネは荒いので、画像サーバーに 300px を要求する（app.js の HoshiluImage）。
+    img.src = window.HoshiluImage?.upgrade(text(item.image_url), 300) || text(item.image_url);
     img.alt = '';
     img.loading = 'lazy';
     thumb.append(img);

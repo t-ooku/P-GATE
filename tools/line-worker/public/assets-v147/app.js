@@ -56,7 +56,7 @@ const navigationCopy = {
   KO:{features:['HOSHILU 검색','목표 가격 감시'],account:'마이페이지',candidateAmazon:'Amazon에서 이 상품 찾기'}
 };
 const searchModeCopy={
-  JA:{step:'検索方法',identify:'AIに確認して探す',direct:'すぐ検索',identifySubmit:'ホシっとく',directSubmit:'すぐ検索'},
+  JA:{step:'検索方法',identify:'AIに確認して探す',direct:'すぐ検索',identifySubmit:'AIで探す',directSubmit:'すぐ検索'},
   EN:{step:'Search mode',identify:'Confirm with AI',direct:'Search now',identifySubmit:'Leave it to HOSHILU',directSubmit:'Search now'},
   ZH:{step:'搜索方式',identify:'先让 AI 确认',direct:'立即搜索',identifySubmit:'询问 AI 商品',directSubmit:'立即搜索'},
   KO:{step:'검색 방법',identify:'AI 확인 후 찾기',direct:'바로 검색',identifySubmit:'AI에게 상품 묻기',directSubmit:'바로 검색'}
@@ -185,7 +185,7 @@ function setSearchMode(mode){requestedSearchMode=mode==='identify'?'identify':'d
 function setLanguage(language){
   const t=copy[language]||copy.JA;const nav=navigationCopy[language]||navigationCopy.JA;const modes=searchModeCopy[language]||searchModeCopy.JA;const inputLabels=searchInputCopy[language]||searchInputCopy.JA;
   window.HoshiluI18n?.apply(language);document.documentElement.lang={JA:'ja',EN:'en',ZH:'zh-CN',KO:'ko'}[language]||'ja';localStorage.setItem('mygate_language',language);elements.language.value=language;
-  elements.heroTitle.replaceChildren(splitEmphasis(t.hero));if(elements.heroSub&&t.heroSub)renderHeroSub(elements.heroSub,t.heroSub);elements.languageLabel.textContent=t.languageLabel;elements.searchStep.textContent=modes.step;elements.searchTitleSummary.textContent=t.titleSummary;elements.searchTitle.replaceChildren(...t.title.split('\n').map(line=>{const span=document.createElement('span');span.textContent=line;return span;}));elements.query.placeholder=t.placeholder;
+  elements.heroTitle.replaceChildren(splitEmphasis(t.hero));if(elements.heroSub&&t.heroSub)renderHeroSub(elements.heroSub,t.heroSub);elements.languageLabel.textContent=t.languageLabel;if(elements.searchStep)elements.searchStep.textContent=modes.step;elements.searchTitleSummary.textContent=t.titleSummary;elements.searchTitle.replaceChildren(...t.title.split('\n').map(line=>{const span=document.createElement('span');span.textContent=line;return span;}));elements.query.placeholder=t.placeholder;
   if(elements.heroPromise)elements.heroPromise.textContent=inputLabels.heroPromise;if(elements.queryLabel)elements.queryLabel.textContent=inputLabels.queryLabel;if(elements.searchInputActions)elements.searchInputActions.setAttribute('aria-label',inputLabels.actionsLabel);if(elements.cameraActionLabel)elements.cameraActionLabel.textContent=preparedSearchImageSource==='CAMERA'?inputLabels.cameraRetake:inputLabels.cameraAction;if(elements.screenshotActionLabel)elements.screenshotActionLabel.textContent=inputLabels.screenshotAction;if(elements.socialUrlActionLabel)elements.socialUrlActionLabel.textContent=elements.socialUrlToggle?.getAttribute('aria-expanded')==='true'?inputLabels.socialActionClose:inputLabels.socialAction;if(elements.socialUrlLabel)elements.socialUrlLabel.textContent=inputLabels.socialLabel;if(elements.searchInputNotice)elements.searchInputNotice.textContent=inputLabels.notice;if(elements.screenshotPreviewStatus)elements.screenshotPreviewStatus.textContent=searchImagePreparing?inputLabels.preparing:inputLabels.imageReady;if(searchImagePreparing&&searchImagePreparingSource==='CAMERA'&&elements.screenshotPreviewName)elements.screenshotPreviewName.textContent=inputLabels.cameraPhoto;if(elements.screenshotPreviewImage)elements.screenshotPreviewImage.alt=inputLabels.previewAlt;if(elements.removeScreenshot)elements.removeScreenshot.setAttribute('aria-label',inputLabels.removeImage);
   elements.resultsTitle.textContent=t.results;elements.wishTitle.textContent=t.wishTitle;elements.wishDescription.replaceChildren(...t.wishDescription.split('\n').map(line=>{const span=document.createElement('span');span.textContent=line;return span;}));const actions=actionCopy[language]||actionCopy.JA;elements.clear.setAttribute('aria-label',actions.clear);elements.clear.textContent=actions.clear;elements.discoveryTitle.replaceChildren(...actions.discoveryTitle.split('\n').map(line=>{const span=document.createElement('span');span.textContent=line;return span;}));elements.discoveryBody.textContent=actions.discoveryBody;elements.discoveryExample.textContent=actions.discoveryExample;elements.journey.forEach((node,index)=>{node.replaceChildren(...(index<2?splitLines(actions.journey[index]):[document.createTextNode(actions.journey[index])]));});elements.quick.replaceChildren(...t.examples.map(example=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=example;b.addEventListener('click',()=>{elements.query.value=example;elements.query.focus();});return b;}));setSearchMode(currentSearchMode());renderWishes();
 }
@@ -1009,11 +1009,23 @@ function aiDiscoveryCard(result){const items=(result?.ai_discovery?.candidates||
 // API連携できた商品だけを出すと提示数が極端に少なくなるが、HOSHILUは価格を
 // 推測しない。したがって下段は「価格・在庫は未確認」と明示したうえで、商品
 // ページへのリンクだけを出す。各段の上限は30件（Worker側は合計60件まで返す）。
+// 2026-09-17 大隆さん指摘「提示商品の開いた時の画像が荒すぎる」: 楽天 API の画像は 128x128（_ex=128x128）、
+// Yahoo! は中サイズで届く。同じ画像サーバーが大きいサイズを返せるので、URL のサイズ指定だけを書き換えて
+// カードは 300px、拡大表示は 600px を要求する（画像の差し替えや再取得はしない）。
+function upgradeProductImageUrl(url,size){
+  const value=String(url||'').trim();
+  if(!value)return value;
+  if(/\.rakuten\.co\.jp\//i.test(value)&&/[?&]_ex=\d+x\d+/i.test(value))return value.replace(/([?&])_ex=\d+x\d+/i,`$1_ex=${size}x${size}`);
+  if(/item-shopping\.c\.yimg\.jp\/i\/[a-z]\//i.test(value))return value.replace(/(item-shopping\.c\.yimg\.jp\/i\/)[a-z]\//i,size>=600?'$1l/':'$1g/');
+  return value;
+}
+window.HoshiluImage={upgrade:upgradeProductImageUrl};
 function productImageGallery(candidate){
   const urls=[...(Array.isArray(candidate?.image_urls)?candidate.image_urls:[]),candidate?.image,candidate?.image_url]
     .map(value=>String(value||'').trim())
     .filter((value,index,values)=>/^https:\/\//i.test(value)&&values.indexOf(value)===index)
-    .slice(0,8);
+    .slice(0,8)
+    .map(value=>upgradeProductImageUrl(value,300));
   if(!urls.length)return null;
   const gallery=document.createElement('div');
   gallery.className='product-image-gallery';
@@ -1057,7 +1069,7 @@ function productImageGallery(candidate){
     const slide=document.createElement('div');
     slide.className='product-image-lightbox-slide';
     const expanded=document.createElement('img');
-    expanded.src=url;expanded.alt=`${image.alt} ${index+1}枚目`;expanded.loading='lazy';expanded.referrerPolicy='no-referrer';
+    expanded.src=upgradeProductImageUrl(url,600);expanded.alt=`${image.alt} ${index+1}枚目`;expanded.loading='lazy';expanded.referrerPolicy='no-referrer';
     slide.append(expanded);track.append(slide);
   });
   const lightboxCount=textElement('span','product-image-lightbox-count',`1 / ${urls.length}`);

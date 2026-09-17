@@ -28,12 +28,9 @@ test('ジャンル探索はファッション → バッグ → トートバッ�
 });
 
 // 2026-09-04 大隆さん決定（主婦層25〜40代・差別化は希望価格ウォッチとクーポン通知）
-test('トップの副文言は通知の価値を含み、結果直下に通知の入口（希望価格・クーポン）が1つにまとまる', () => {
+// 2026-09-17 大隆さん指示: 結果直下の通知リンク2つ（希望価格／クーポン・セール）は削除。「ホシる中」タブに集約。
+test('トップの副文言は通知の価値を含み、結果直下の通知リンクは出さない', () => {
+  assert.doesNotMatch(html, /id="resultNoticeStrip"/u);
   assert.match(html, /スクショでも、SNSでも、うろ覚えでも。<\/span><span class="hero-sub-sentence">HOSHILUが見つけます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">なければ、見つかるまで探します。/u);
   assert.match(readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8'), /\.hero-sub\{white-space:pre-line\}/u);
-  assert.match(html, /id="resultNoticeStrip"/u);
-  assert.match(html, /href="#mywatchTitle" class="result-notice-link" data-notice="watch"/u);
-  assert.match(html, /href="#saleCenterTitle" class="result-notice-link" data-notice="coupon"/u);
-  assert.ok(html.indexOf('id="resultCards"') < html.indexOf('id="resultNoticeStrip"'));
-  assert.ok(html.indexOf('id="resultNoticeStrip"') < html.indexOf('id="heroMarketplaceCoverage"'));
 });
