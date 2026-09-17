@@ -275,3 +275,20 @@ test('2026-09-14: クローラのショップ閲覧は記録せず、絞り込�
   const robots = readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8');
   assert.match(robots, /^Disallow: \/shop\/\*\?$/mu);
 });
+
+// 2026-09-17 SHOP指示書 §19: 店内検索 0 件で終わらせず「このショップにホシっとく」（seller_slug 付きの探し中需要）。
+// 「ショップをホシる」の完了文は、まだ出ていない通知を謳わない。
+test('店内検索が 0 件なら「このショップにホシっとく」を出し、ホシるの完了文は通知を謳わない', async () => {
+  const { env: e } = env();
+  await handleSellerShopRoutes(request('/api/seller/shop', 'PUT', { shop_name: 'with care' }), e, seller);
+  resetShopCache();
+  const html = await (await handleShopRoutes(request('/shop/with-care?q=' + encodeURIComponent('赤いシリコン製の犬用知育玩具')), e, {})).text();
+  assert.match(html, /<div class="shop-empty shop-demand" id="shopDemand" data-query="赤いシリコン製の犬用知育玩具">/u);
+  assert.match(html, /<button type="button" id="shopDemandButton">このショップにホシっとく<\/button>/u);
+  assert.match(html, /seller_slug:slug,result_state:'NONE'/u);
+  assert.match(html, /href="\/\?shop_search=%E8%B5%A4/u);
+  assert.doesNotMatch(html, /通知対象になりました/u);
+  assert.match(html, /'ホシりました。'/u);
+  const found = await (await handleShopRoutes(request('/shop/with-care?q=b000000001'), e, {})).text();
+  assert.doesNotMatch(found, /id="shopDemand"/u);
+});

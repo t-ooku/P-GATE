@@ -225,3 +225,13 @@ test('確認欄が通らなくても公開APIは受け付け、通知の件名�
     globalThis.fetch = originalFetch;
   }
 });
+
+// 2026-09-17 SHOP指示書 §30〜31: /for-sellers の中心メッセージは「欲しい人が見える。欲しい人に商品を届けられる。」。成果保証の語は使わない。
+test('/for-sellers の見出しは「欲しい人が見える。欲しい人に商品を届けられる。」で、需要の説明は匿名 5 人以上・条件のみ', () => {
+  const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
+  assert.match(html, /<h1>欲しい人が見える。<br><span>欲しい人に商品を届けられる。<\/span><\/h1>/u);
+  assert.match(html, /<title>ECセラーの方へ｜欲しい人が見える。欲しい人に商品を届けられる。｜HOSHILU<\/title>/u);
+  assert.match(html, /同じ条件を5人以上が探している項目だけを、検索文ではなく正規化した条件/u);
+  assert.match(html, /自己申告で一致にはなりません/u);
+  for (const banned of ['必ず売れ', '売上が上がり', '多数のユーザー', '業界No', '確実に']) assert.ok(!html.includes(banned), banned);
+});

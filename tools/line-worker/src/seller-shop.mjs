@@ -471,7 +471,10 @@ function renderShopHtml({ shop, coupons, products, followers, following, query, 
       ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : '<span class="shop-product-noimage"></span>'}
       <span class="shop-product-name">${esc(p.name)}</span>
       <span class="shop-product-meta">${p.price ? `¥${Number(p.price).toLocaleString('ja-JP')} ・ ` : ''}${esc(MARKETPLACE_LABEL[p.marketplace] || p.marketplace)} で見る</span></a>`).join('')
-    : `<p class="shop-empty">${query || filters.subgenre || filters.color || filters.size || filters.material || filters.brands.length ? '該当する商品が見つかりませんでした。' : 'まだ商品が登録されていません。'}</p>`;
+    : query
+      // 2026-09-17 SHOP指示書 §19: 店内検索 0 件で終わらせない。「このショップにホシっとく」→ 店向けの探し中需要（seller_slug 付き）
+      ? `<div class="shop-empty shop-demand" id="shopDemand" data-query="${esc(query)}"><p>「${esc(query)}」は、このショップではまだ見つかりません。</p><p class="shop-demand-note">ホシっとくと、このショップに商品が入った時に条件に合うか HOSHILU が確かめてお知らせします。</p><button type="button" id="shopDemandButton">このショップにホシっとく</button><p id="shopDemandStatus" role="status"></p><a class="shop-demand-all" href="/?shop_search=${encodeURIComponent(query)}#tab-shops">全ショップから探す →</a></div>`
+      : `<p class="shop-empty">${filters.subgenre || filters.color || filters.size || filters.material || filters.brands.length ? '該当する商品が見つかりませんでした。' : 'まだ商品が登録されていません。'}</p>`;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${esc(origin)}/shop/${esc(shop.slug)}">${filtered ? '<meta name="robots" content="noindex,nofollow">' : ''}
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}">${shop.logo_url ? `<meta property="og:image" content="${esc(shop.logo_url)}">` : ''}
@@ -572,6 +575,7 @@ body{background:#f7f8f5}
 .shop-filter-panel{border-radius:6px}.shop-filter-panel>summary{background:#f7f8f5}
 .shop-chip{border-color:var(--line);background:#fff;color:var(--ink);padding:8px 12px}.shop-chip.on{background:var(--accent)}
 .shop-count{font-size:11px;margin:16px 0}
+.shop-demand{grid-column:1/-1;border:1px dashed var(--line);border-radius:8px;padding:18px;background:#fff;font-size:13px;line-height:1.7}.shop-demand p{margin:0 0 8px}.shop-demand-note{color:var(--muted);font-size:12px}.shop-demand button{border:0;border-radius:6px;padding:12px 18px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}.shop-demand button:disabled{opacity:.6}.shop-demand-all{display:inline-block;margin-top:10px;font-size:12px;color:var(--ink)}
 .grid{gap:24px 16px;grid-template-columns:repeat(4,minmax(0,1fr))}
 .shop-product{padding:0;background:transparent;border:0;border-radius:0;gap:10px;align-content:start}
 .shop-product img,.shop-product-noimage{border-radius:8px;background:#fff;padding:12px;border:1px solid #eeefeb}
@@ -622,8 +626,19 @@ ${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a rel="nofollow" href="${e
       .then(function(res){
         if(res.status===401){status.innerHTML='<a href="/login.html?next='+encodeURIComponent('/shop/'+slug)+'">無料会員ログイン（30秒）でホシれます →</a>';return;}
         if(!res.body||res.body.ok!==true)throw new Error(res.body&&res.body.error||'FAILED');
-        button.dataset.following=res.body.following?'1':'0';button.textContent=res.body.following?'★ ホシってます':'☆ ショップをホシる';count.textContent=res.body.followers;status.textContent=res.body.following?'新着クーポン・商品の通知対象になりました。':'';
+        button.dataset.following=res.body.following?'1':'0';button.textContent=res.body.following?'★ ホシってます':'☆ ショップをホシる';count.textContent=res.body.followers;status.textContent=res.body.following?'ホシりました。':'';
       }).catch(function(e){status.textContent='うまくいきませんでした（'+e.message+'）';}).then(function(){button.disabled=false;});
+  });
+  var demandButton=document.getElementById('shopDemandButton');
+  demandButton&&demandButton.addEventListener('click',function(){
+    var box=document.getElementById('shopDemand');var st=document.getElementById('shopDemandStatus');demandButton.disabled=true;st.textContent='預かっています…';
+    fetch('/api/shops/demand',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:box.dataset.query,seller_slug:slug,result_state:'NONE'})})
+      .then(function(r){return r.json().then(function(b){return {status:r.status,body:b};});})
+      .then(function(res){
+        if(!res.body||res.body.ok!==true)throw new Error(res.body&&res.body.error||'FAILED');
+        try{var key='hoshilu_shop_demands';var list=JSON.parse(localStorage.getItem(key)||'[]');list.push(res.body.demand_id);localStorage.setItem(key,JSON.stringify(list.slice(-20)));}catch(e){}
+        st.innerHTML='ホシっときました。'+(res.body.member?'':' <a href="/login.html?next='+encodeURIComponent('/shop/'+slug)+'">無料登録すると、見つかった時にメール／LINEでお知らせできます →</a>');
+      }).catch(function(e){demandButton.disabled=false;st.textContent=e.message==='QUERY_CONTAINS_CONTACT'?'メールアドレスやURLは預かれません。欲しいものの条件だけを入れてください。':'預かれませんでした。もう一度お試しください。';});
   });
   document.querySelectorAll('.coupon-code').forEach(function(node){node.addEventListener('click',function(){navigator.clipboard&&navigator.clipboard.writeText(node.dataset.code).then(function(){node.textContent='コピーしました';setTimeout(function(){node.textContent=node.dataset.code;},1200);});});});
 })();
