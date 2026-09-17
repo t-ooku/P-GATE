@@ -627,7 +627,7 @@ ${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a rel="nofollow" href="${e
   });
   document.querySelectorAll('.coupon-code').forEach(function(node){node.addEventListener('click',function(){navigator.clipboard&&navigator.clipboard.writeText(node.dataset.code).then(function(){node.textContent='コピーしました';setTimeout(function(){node.textContent=node.dataset.code;},1200);});});});
 })();
-</script><script type="module" src="/growth-analytics.mjs?v=12"></script></body></html>`;
+</script><script type="module" src="/growth-analytics.mjs?v=15"></script></body></html>`;
 }
 
 // ---- ルーティング ----------------------------------------------------------------

@@ -447,3 +447,5 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 本番確認済み（デプロイ） | #303 全ページのページ名帯を削除（`tab-nav.mjs` v5） |
 | 実装済み・本番未確認 | #304 第2指示書（`2026-09-17-shop-kpi-directive.md`）P0: Seller 需要は **同じ条件 5 人以上**だけ・検索文でなく正規化条件を表示（`SHOP_DEMAND_SELLER_MIN_PEOPLE`）／会員の「ショップで探しているもの」一覧＋やめる（`/api/shops/demand/mine`, `DELETE /api/shops/demand/:id`）／KPI イベント `shop_search_completed` `shop_demand_saved` `shop_demand_matched` |
 | 事実 | KPI 低下の調査: 9/11〜13 は検索開始 0（着地は bot のみ）。7 日率の分母が数十件で、日次系列に計測欠落は見つからず。タブ導入後（9/16〜）も `search_started` は記録されている |
+| 実装済み・本番未確認 | #305 KPI ダッシュボード 4 タブ（経営KPI／検索品質／SHOP・Seller／流入・販促、§18）。SHOP・Seller は回数・件数のみ（推定売上・CV なし） |
+| 事実→修正 | §19 流入元: 30 日の着地セッション 572 件のうち 405 件（71%）が「直接・不明」。原因は UTM しか読んでおらず参照元（referrer）を使っていなかったこと。#305 で参照元ホストだけを読み google/yahoo=organic、instagram/threads/x/tiktok/line=social、他=referral に補完（パス・クエリは読まない）。9/17 以前の期間は直接・不明が実態より多い |

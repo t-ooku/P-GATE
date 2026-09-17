@@ -698,14 +698,121 @@ async function socialPromotionSummary(env, now) {
   return { warnings, channels: PLATFORMS.map(platform => grouped.get(platform)) };
 }
 
+// 2026-09-17 第2指示書 §18: KPI ダッシュボードを「経営KPI／検索品質／SHOP・Seller／流入・販促」に分ける。
+// 検索品質と SHOP・Seller は growth_events の回数（QA 除外、検索文なし）と需要テーブルの件数だけ。推定売上・CV は出さない（§23）。
+const TAB_EVENT_TYPES = Object.freeze([
+  'search_started', 'search_completed', 'search_failed', 'search_dead_end', 'search_degraded',
+  'result_confirmed', 'result_rejected', 'wish_saved', 'continuous_search_saved', 'target_price_watch_set', 'notification_opened',
+  'shop_search_completed', 'shop_demand_saved', 'shop_demand_matched',
+  'shop_viewed', 'shop_followed', 'shop_unfollowed', 'coupon_clicked', 'seller_landing_view', 'seller_cta_clicked'
+]);
+const TAB_EVENT_SQL = `SELECT event_type,campaign,content,COUNT(*) AS total FROM growth_events
+  WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
+  AND event_type IN (${TAB_EVENT_TYPES.map(value => `'${value}'`).join(',')})
+  GROUP BY event_type,campaign,content`;
+
+function tabCounts(rows = []) {
+  const byType = {};
+  const byCampaign = {};
+  const byContent = {};
+  for (const row of rows) {
+    const type = String(row.event_type || '');
+    const total = safeCount(row.total);
+    byType[type] = (byType[type] || 0) + total;
+    const campaign = String(row.campaign || '').toUpperCase();
+    const content = String(row.content || '');
+    if (campaign) { byCampaign[type] = byCampaign[type] || {}; byCampaign[type][campaign] = (byCampaign[type][campaign] || 0) + total; }
+    if (content) { byContent[type] = byContent[type] || {}; byContent[type][content] = (byContent[type][content] || 0) + total; }
+  }
+  return { byType, byCampaign, byContent };
+}
+
+function searchQualityPeriod(counts) {
+  const c = counts.byType;
+  const started = c.search_started || 0;
+  const completed = c.search_completed || 0;
+  const failed = (c.search_failed || 0) + (c.search_dead_end || 0);
+  const confirmed = c.result_confirmed || 0;
+  const rejected = c.result_rejected || 0;
+  return {
+    search_started: started, search_completed: completed, search_failed: failed, search_degraded: c.search_degraded || 0,
+    completion_rate: percentage(completed, started), failure_rate: percentage(failed, started),
+    result_confirmed: confirmed, result_rejected: rejected, rejected_rate: percentage(rejected, confirmed + rejected),
+    wish_saved: c.wish_saved || 0, continuous_search_saved: c.continuous_search_saved || 0,
+    target_price_watch_set: c.target_price_watch_set || 0, notification_opened: c.notification_opened || 0
+  };
+}
+
+function shopSellerPeriod(counts) {
+  const c = counts.byType;
+  const states = counts.byCampaign.shop_search_completed || {};
+  const savedBy = counts.byContent.shop_demand_saved || {};
+  const searches = c.shop_search_completed || 0;
+  return {
+    shop_searches: searches,
+    shop_search_exact: states.EXACT || 0, shop_search_near: states.NEAR || 0, shop_search_none: states.NONE || 0,
+    zero_result_rate: percentage(states.NONE || 0, searches),
+    demand_saved: c.shop_demand_saved || 0, demand_saved_member: savedBy.member || 0, demand_saved_guest: savedBy.guest || 0,
+    demand_to_search_rate: percentage(c.shop_demand_saved || 0, (states.NONE || 0) + (states.NEAR || 0)),
+    demand_matched: c.shop_demand_matched || 0,
+    shop_viewed: c.shop_viewed || 0, shop_followed: c.shop_followed || 0, shop_unfollowed: c.shop_unfollowed || 0, coupon_clicked: c.coupon_clicked || 0,
+    seller_landing_view: c.seller_landing_view || 0, seller_cta_clicked: c.seller_cta_clicked || 0,
+    seller_cta_rate: percentage(c.seller_cta_clicked || 0, c.seller_landing_view || 0)
+  };
+}
+
+async function tabPeriods(env, now) {
+  const out = {};
+  for (const days of [7, 30]) {
+    const end = new Date(now);
+    const start = shiftDays(end, -days);
+    const result = await env.PRODUCT_DB.prepare(TAB_EVENT_SQL).bind(iso(start), iso(end)).all();
+    out[`${days}d`] = { days, start_at: iso(start), end_at: iso(end), counts: tabCounts(result?.results || []) };
+  }
+  return out;
+}
+
+async function optionalCount(env, sql) {
+  try { return safeCount((await env.PRODUCT_DB.prepare(sql).first())?.total); } catch { return null; }
+}
+
+async function tabSummaries(env, now) {
+  try {
+    const periods = await tabPeriods(env, now);
+    const searchQuality = { status: 'READY', periods: {} };
+    const shopSeller = { status: 'READY', periods: {}, stock: {} };
+    for (const [key, period] of Object.entries(periods)) {
+      searchQuality.periods[key] = { days: period.days, start_at: period.start_at, end_at: period.end_at, ...searchQualityPeriod(period.counts) };
+      shopSeller.periods[key] = { days: period.days, start_at: period.start_at, end_at: period.end_at, ...shopSellerPeriod(period.counts) };
+    }
+    // 在庫的な数字（今この瞬間）。テーブルが無い環境では null（未計測）
+    shopSeller.stock = {
+      active_shops: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_shops WHERE status='ACTIVE'`),
+      business_sellers: await optionalCount(env, `SELECT COUNT(*) AS total FROM seller_billing_accounts WHERE plan='BUSINESS' AND status='ACTIVE'`),
+      open_demands: await optionalCount(env, `SELECT COUNT(*) AS total FROM shop_demand_requests WHERE status='OPEN'`),
+      matched_demands: await optionalCount(env, `SELECT COUNT(*) AS total FROM shop_demand_requests WHERE status='MATCHED'`),
+      demand_groups_5plus: await optionalCount(env, `SELECT COUNT(*) AS total FROM (SELECT demand_key FROM shop_demand_requests WHERE status<>'CLOSED' GROUP BY demand_key HAVING COUNT(DISTINCT COALESCE(NULLIF(member_id,''),visitor_hash))>=5)`),
+      shop_follows: await optionalCount(env, `SELECT COUNT(*) AS total FROM member_shop_follows`)
+    };
+    return { search_quality: searchQuality, shop_seller: shopSeller };
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'promotion_tab_query_failed', error: String(error?.message || error).slice(0, 120) }));
+    return {
+      search_quality: { status: 'UNAVAILABLE', periods: {} },
+      shop_seller: { status: 'UNAVAILABLE', periods: {}, stock: {} }
+    };
+  }
+}
+
 export async function promotionDashboardSummary(env, now = new Date()) {
-  const [businessKpis, social] = await Promise.all([
-    businessKpiSummary(env, now), socialPromotionSummary(env, now)
+  const [businessKpis, social, tabs] = await Promise.all([
+    businessKpiSummary(env, now), socialPromotionSummary(env, now), tabSummaries(env, now)
   ]);
   return {
     ok: true, generated_at: now.toISOString(),
     autopilot_enabled: env.SOCIAL_AUTOPILOT_ENABLED === 'true',
-    business_kpis: businessKpis, social_warnings: social.warnings, channels: social.channels
+    business_kpis: businessKpis, social_warnings: social.warnings, channels: social.channels,
+    search_quality: tabs.search_quality, shop_seller: tabs.shop_seller
   };
 }
 

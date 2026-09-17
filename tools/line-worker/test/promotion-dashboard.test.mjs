@@ -340,3 +340,46 @@ test('モール別内訳は表示回数とクリック率を返し、表示未�
   assert.equal(older.impressions, 0);
   assert.equal(older.click_rate, null, '表示の実測が無いモールは率を作らない');
 });
+
+// 2026-09-17 第2指示書 §18/§19: KPI を 4 タブに分け、検索品質と SHOP・Seller は回数だけ返す。UTM の無い着地は参照元ホストで流入元を補う。
+test('ダッシュボードは検索品質と SHOP・Seller の集計を返し、画面は 4 タブ、参照元から流入元を補う', async () => {
+  const db = setup();
+  const event = db.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
+  for (const [id, type, campaign, content] of [
+    ['ss1', 'shop_search_completed', 'NONE', '0/0'], ['ss2', 'shop_search_completed', 'NEAR', '0/2'], ['ss3', 'shop_search_completed', 'EXACT', '1/0'],
+    ['sd1', 'shop_demand_saved', 'NONE', 'guest'], ['sd2', 'shop_demand_saved', 'NEAR', 'member'], ['sm1', 'shop_demand_matched', 'find-fun', 'EXACT'],
+    ['rc1', 'result_confirmed', '', ''], ['rr1', 'result_rejected', '', '']
+  ]) event.run(id, type, 'JA', 'worker', 'shop', campaign, content, '', '2026-08-09T12:05:00Z', 'UNATTRIBUTED', '', '');
+  event.run('qa-ss', 'shop_search_completed', 'JA', 'codex', 'qa', 'NONE', '0/0', '', '2026-08-09T12:05:00Z', 'QA', '', '');
+  const summary = await promotionDashboardSummary({ PRODUCT_DB: d1(db) }, new Date('2026-08-10T00:00:00Z'));
+  const shop = summary.shop_seller.periods['7d'];
+  assert.equal(summary.shop_seller.status, 'READY');
+  assert.equal(shop.shop_searches, 3);
+  assert.deepEqual([shop.shop_search_exact, shop.shop_search_near, shop.shop_search_none], [1, 1, 1]);
+  assert.equal(shop.demand_saved, 2);
+  assert.deepEqual([shop.demand_saved_member, shop.demand_saved_guest], [1, 1]);
+  assert.equal(shop.demand_matched, 1);
+  assert.equal(shop.zero_result_rate, 33.3);
+  // 需要テーブルが無い環境では null（未計測）。推定売上・CV のキーは持たない
+  assert.equal(summary.shop_seller.stock.open_demands, null);
+  assert.ok(!JSON.stringify(summary.shop_seller).match(/revenue|sales|conversion/i));
+  const search = summary.search_quality.periods['7d'];
+  assert.equal(search.search_started, 2);
+  assert.equal(search.result_rejected, 1);
+  assert.equal(search.rejected_rate, 50);
+  const html = readFileSync(new URL('../src/admin-sp-api-page.mjs', import.meta.url), 'utf8');
+  for (const tab of ['business', 'search', 'shop', 'acquisition']) assert.ok(html.includes(`data-kpi-tab="${tab}"`) && html.includes(`data-kpi-panel="${tab}"`), tab);
+  for (const label of ['経営KPI', '検索品質', 'SHOP・Seller', '流入・販促']) assert.ok(html.includes(`>${label}</button>`), label);
+  assert.match(html, /admin-promotion\.js\?v=2/);
+  const client = readFileSync(new URL('../public/admin-promotion.js', import.meta.url), 'utf8');
+  assert.match(client, /function renderShopSeller\(\)/);
+  assert.match(client, /function activateTab\(name\)/);
+  assert.match(client, /payload\.search_quality/);
+  const analytics = readFileSync(new URL('../public/growth-analytics.mjs', import.meta.url), 'utf8');
+  assert.match(analytics, /function referrerAttribution\(\)/);
+  assert.match(analytics, /storedAttribution\(\) \|\| referrerAttribution\(\) \|\| urlAttribution/);
+  assert.match(analytics, /new URL\(document\.referrer\)\.hostname/);
+  assert.doesNotMatch(analytics, /document\.referrer\)\.(pathname|search)/);
+});

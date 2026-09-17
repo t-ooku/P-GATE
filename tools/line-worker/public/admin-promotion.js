@@ -11,6 +11,9 @@ const trendChart = document.querySelector('#trendChart');
 const qualityGrid = document.querySelector('#qualityGrid');
 const sourceTable = document.querySelector('#sourceTable');
 const marketplaceTable = document.querySelector('#marketplaceTable');
+const searchQualityGrid = document.querySelector('#searchQualityGrid');
+const shopSellerGrid = document.querySelector('#shopSellerGrid');
+const shopStockGrid = document.querySelector('#shopStockGrid');
 let businessKpis = null;
 let kpiPeriod = '7d';
 
@@ -232,7 +235,67 @@ function renderDetailKpis(data) {
   );
 }
 
+// 2026-09-17 第2指示書 §18: 検索品質タブ。回数だけ（QA 除外、検索文なし）
+let tabData = { search_quality: null, shop_seller: null };
+function renderSearchQuality() {
+  if (!searchQualityGrid) return;
+  const period = tabData.search_quality?.periods?.[kpiPeriod];
+  if (!period) { searchQualityGrid.replaceChildren(element('p', '検索品質データを取得できません。', 'empty-row')); return; }
+  searchQualityGrid.replaceChildren(
+    metric('検索開始', formatNumber(period.search_started), '', `${period.days}日`),
+    metric('検索成功', formatNumber(period.search_completed), '', `成功率 ${rate(period.completion_rate)}`),
+    metric('検索失敗・行き止まり', formatNumber(period.search_failed), period.search_failed ? 'danger' : '', `失敗率 ${rate(period.failure_rate)}`),
+    metric('品質低下（degraded）', formatNumber(period.search_degraded), period.search_degraded ? 'danger' : ''),
+    metric('「これです」', formatNumber(period.result_confirmed)),
+    metric('「違う」', formatNumber(period.result_rejected), period.rejected_rate !== null && period.rejected_rate >= 30 ? 'danger' : '', `違う率 ${rate(period.rejected_rate)}`),
+    metric('ホシっとく（条件保存）', formatNumber(period.wish_saved)),
+    metric('継続検索の条件保存', formatNumber(period.continuous_search_saved)),
+    metric('希望価格ウォッチ', formatNumber(period.target_price_watch_set)),
+    metric('通知を開いた', formatNumber(period.notification_opened))
+  );
+}
+// SHOP・Seller タブ。回数と件数だけ、推定売上・CV は出さない（§23）
+function renderShopSeller() {
+  if (!shopSellerGrid || !shopStockGrid) return;
+  const period = tabData.shop_seller?.periods?.[kpiPeriod];
+  if (!period) { shopSellerGrid.replaceChildren(element('p', 'SHOP・Seller データを取得できません。', 'empty-row')); shopStockGrid.replaceChildren(); return; }
+  shopSellerGrid.replaceChildren(
+    metric('横断検索', formatNumber(period.shop_searches), '', `${period.days}日`),
+    metric('条件に一致', formatNumber(period.shop_search_exact), 'success'),
+    metric('近い商品だけ', formatNumber(period.shop_search_near)),
+    metric('見つからない', formatNumber(period.shop_search_none), period.shop_search_none ? 'danger' : '', `0件率 ${rate(period.zero_result_rate)}`),
+    metric('ホシっとく（需要保存）', formatNumber(period.demand_saved), '', `会員 ${formatNumber(period.demand_saved_member)}・未登録 ${formatNumber(period.demand_saved_guest)}｜近い・0件の検索に対して ${rate(period.demand_to_search_rate)}`),
+    metric('一致して通知', formatNumber(period.demand_matched), period.demand_matched ? 'success' : '', 'Seller 登録・同期で HOSHILU が一致と判定'),
+    metric('ショップ閲覧', formatNumber(period.shop_viewed), '', 'クローラ除外'),
+    metric('ショップをホシる', formatNumber(period.shop_followed), '', `解除 ${formatNumber(period.shop_unfollowed)}`),
+    metric('クーポン押下', formatNumber(period.coupon_clicked)),
+    metric('販売者ページ閲覧', formatNumber(period.seller_landing_view), '', `CTA 押下 ${formatNumber(period.seller_cta_clicked)}（${rate(period.seller_cta_rate)}）`)
+  );
+  const stock = tabData.shop_seller?.stock || {};
+  const count = value => value === null || value === undefined ? '未計測' : formatNumber(value);
+  shopStockGrid.replaceChildren(
+    metric('掲載中ショップ', count(stock.active_shops)),
+    metric('Business 契約', count(stock.business_sellers), '', '有効な有料契約の数'),
+    metric('探し中の需要（OPEN）', count(stock.open_demands)),
+    metric('見つかった需要（MATCHED）', count(stock.matched_demands), stock.matched_demands ? 'success' : ''),
+    metric('Seller に見える需要', count(stock.demand_groups_5plus), '', '同じ条件を 5 人以上が探しているもの'),
+    metric('ショップのホシる', count(stock.shop_follows))
+  );
+}
+const TAB_KEY = 'hoshilu_admin_kpi_tab';
+function activateTab(name) {
+  document.querySelectorAll('[data-kpi-tab]').forEach(button => {
+    const active = button.dataset.kpiTab === name;
+    button.classList.toggle('active', active); button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  document.querySelectorAll('[data-kpi-panel]').forEach(panel => { panel.hidden = panel.dataset.kpiPanel !== name; });
+  try { localStorage.setItem(TAB_KEY, name); } catch {}
+}
+document.querySelectorAll('[data-kpi-tab]').forEach(button => button.addEventListener('click', () => activateTab(button.dataset.kpiTab)));
+try { const saved = localStorage.getItem(TAB_KEY); if (saved && document.querySelector(`[data-kpi-tab="${saved}"]`)) activateTab(saved); } catch {}
+
 function renderBusinessKpis() {
+  renderSearchQuality(); renderShopSeller();
   if (!businessKpis) return;
   if (businessKpis.status !== 'READY') {
     unavailable.hidden = false;
@@ -296,6 +359,7 @@ async function load() {
     if (!response.ok) throw new Error('PROMOTION_STATUS_FAILED');
     const payload = await response.json();
     businessKpis = payload.business_kpis;
+    tabData = { search_quality: payload.search_quality || null, shop_seller: payload.shop_seller || null };
     renderBusinessKpis();
     grid.replaceChildren(...(payload.channels || []).map(renderChannel));
     const warning = payload.social_warnings?.length ? '・SNSデータの一部を取得できません' : '';

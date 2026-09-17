@@ -51,8 +51,33 @@ function storedAttribution() {
 }
 const hasUrlValue = Boolean(urlAttribution.source || urlAttribution.medium
   || urlAttribution.campaign || urlAttribution.content);
-// 新しいUTMで着地したなら、そちらが最新の流入元。保存済みより優先する。
-const attribution = hasUrlValue ? urlAttribution : (storedAttribution() || urlAttribution);
+// 2026-09-17 第2指示書 §19: UTM の無い着地は全部「直接・不明」になっていた（30日で着地セッションの約7割）。
+// 検索エンジン・SNS・他サイトからの参照元（document.referrer）のホストだけを読んで source/medium を補う。
+// パスやクエリは読まない（個人を特定しうる情報を送らない）。自サイト内の遷移は流入元にしない。
+const REFERRER_SOURCES = [
+  [/(^|\.)google\./, 'google', 'organic'], [/(^|\.)yahoo\./, 'yahoo', 'organic'], [/(^|\.)bing\.com$/, 'bing', 'organic'],
+  [/(^|\.)duckduckgo\.com$/, 'duckduckgo', 'organic'], [/(^|\.)instagram\.com$/, 'instagram', 'social'],
+  [/(^|\.)threads\.(net|com)$/, 'threads', 'social'], [/^(t\.co|x\.com|(www\.)?twitter\.com)$/, 'x', 'social'],
+  [/(^|\.)tiktok\.com$/, 'tiktok', 'social'], [/(^|\.)youtube\.com$|^youtu\.be$/, 'youtube', 'social'],
+  [/(^|\.)facebook\.com$|^l\.facebook\.com$|^lm\.facebook\.com$/, 'facebook', 'social'],
+  [/(^|\.)line\.me$|(^|\.)naver\.jp$/, 'line', 'social'], [/(^|\.)pinterest\./, 'pinterest', 'social'],
+  [/(^|\.)note\.com$/, 'note', 'referral'], [/(^|\.)ameblo\.jp$/, 'ameba', 'referral']
+];
+function referrerAttribution() {
+  try {
+    if (!document.referrer) return null;
+    const host = new URL(document.referrer).hostname.toLowerCase();
+    if (!host || host === location.hostname || host.endsWith('.hoshilu.app') || host === 'hoshilu.app') return null;
+    const known = REFERRER_SOURCES.find(([pattern]) => pattern.test(host));
+    if (known) return { source: known[1], medium: known[2], campaign: '', content: '' };
+    return { source: host.replace(/^www\./, '').slice(0, 60), medium: 'referral', campaign: '', content: '' };
+  } catch { return null; }
+}
+// 新しいUTMで着地したなら、そちらが最新の流入元。保存済みより優先する。UTM も保存済みも無ければ参照元。
+const attribution = hasUrlValue ? urlAttribution : (storedAttribution() || referrerAttribution() || urlAttribution);
+if (!hasUrlValue && attribution.source && !storedAttribution()) {
+  try { sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify({ ...attribution, created_at: Date.now() })); } catch {}
+}
 if (hasUrlValue) {
   try {
     sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify({ ...attribution, created_at: Date.now() }));

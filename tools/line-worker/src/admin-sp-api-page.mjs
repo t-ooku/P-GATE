@@ -38,7 +38,7 @@ export function adminPromotionPageResponse() {
   return new Response(`<!doctype html><html lang="ja"><head><meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
   <link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/admin-sp-api.css">
-  <link rel="stylesheet" href="/admin-promotion.css"><title>経営KPI | HOSHILU</title></head><body>
+  <link rel="stylesheet" href="/admin-promotion.css?v=2"><title>経営KPI | HOSHILU</title></head><body>
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">BUSINESS KPI</p><h1>HOSHILU 経営ダッシュボード</h1></div>
   <button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
@@ -47,6 +47,9 @@ export function adminPromotionPageResponse() {
   <button id="refreshPromotion" class="ghost-button" type="button">最新状態に更新</button>
   <button id="runSearchQaCanary" class="ghost-button" type="button">検索品質カナリアを今すぐ実行</button></div>
   <pre id="searchQaCanaryResult" class="search-qa-canary-result" hidden></pre></section>
+  <!-- 2026-09-17 第2指示書 §18: 4 つのタブ（経営KPI／検索品質／SHOP・Seller／流入・販促） -->
+  <nav class="kpi-tabs" role="tablist" aria-label="KPIの区分"><button type="button" role="tab" data-kpi-tab="business" class="active" aria-selected="true">経営KPI</button><button type="button" role="tab" data-kpi-tab="search" aria-selected="false">検索品質</button><button type="button" role="tab" data-kpi-tab="shop" aria-selected="false">SHOP・Seller</button><button type="button" role="tab" data-kpi-tab="acquisition" aria-selected="false">流入・販促</button></nav>
+  <div class="kpi-tab-panel" data-kpi-panel="business">
   <section class="auth-card kpi-overview"><div class="kpi-period-head"><div><p class="eyebrow">NORTH STAR &amp; GROWTH</p><h2>事業の現在地</h2></div>
   <div class="kpi-period-switch" role="group" aria-label="集計期間"><button type="button" data-kpi-period="7d" class="active">7日</button><button type="button" data-kpi-period="30d">30日</button></div></div>
   <p class="funnel-note">QAを除外し、ブラウザ生成の匿名IDで重複を除外。個人情報・検索文は保存しません。</p>
@@ -60,15 +63,32 @@ export function adminPromotionPageResponse() {
   <article class="auth-card"><div class="section-head"><div><p class="eyebrow">TREND</p><h2>日別推移</h2></div></div><div id="trendChart" class="trend-chart" aria-live="polite"></div></article>
   <article class="auth-card"><div class="section-head"><div><p class="eyebrow">DATA TRUST</p><h2>計測品質</h2></div></div><div id="qualityGrid" class="quality-grid" aria-live="polite"></div></article>
   </section>
-  <section class="dashboard-split">
-  <article class="auth-card"><div class="section-head"><div><p class="eyebrow">ACQUISITION QUALITY</p><h2>流入元別の成果</h2></div></div><div id="sourceTable" class="data-table-wrap" aria-live="polite"></div></article>
-  <article class="auth-card"><div class="section-head"><div><p class="eyebrow">COMMERCE</p><h2>モール送客</h2></div></div><div id="marketplaceTable" class="data-table-wrap" aria-live="polite"></div></article>
-  </section>
   <section class="auth-card"><div class="section-head"><div><p class="eyebrow">SUPPORTING METRICS</p><h2>詳細KPI</h2></div></div>
   <div id="businessKpiGrid" class="business-kpi-grid" aria-live="polite"></div></section>
+  </div>
+  <div class="kpi-tab-panel" data-kpi-panel="search" hidden>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">SEARCH QUALITY</p><h2>検索品質</h2></div><span class="section-note">回数（QA除外・検索文なし）</span><div class="kpi-period-switch" role="group" aria-label="集計期間"><button type="button" data-kpi-period="7d" class="active">7日</button><button type="button" data-kpi-period="30d">30日</button></div></div>
+  <p class="funnel-note">「違う率」は結果カードの「これです／違う」の押下だけが分母です。検索の失敗＝失敗イベント＋行き止まり。</p>
+  <div id="searchQualityGrid" class="business-kpi-grid" aria-live="polite"></div></section>
+  </div>
+  <div class="kpi-tab-panel" data-kpi-panel="shop" hidden>
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">SHOP SEARCH &amp; DEMAND</p><h2>SHOP・Seller</h2></div><span class="section-note">回数と件数だけ。推定売上・CVは出しません</span><div class="kpi-period-switch" role="group" aria-label="集計期間"><button type="button" data-kpi-period="7d" class="active">7日</button><button type="button" data-kpi-period="30d">30日</button></div></div>
+  <p class="funnel-note">横断検索の区分（一致／近い／見つからない）→ ホシっとく（需要保存）→ Seller の商品登録で HOSHILU が一致と判定した回数。需要の内容（検索文）は表示しません。</p>
+  <div id="shopSellerGrid" class="business-kpi-grid" aria-live="polite"></div>
+  <div class="section-head"><div><p class="eyebrow">NOW</p><h3>いまの在庫的な数字</h3></div></div>
+  <div id="shopStockGrid" class="business-kpi-grid" aria-live="polite"></div></section>
+  </div>
+  <div class="kpi-tab-panel" data-kpi-panel="acquisition" hidden>
+  <section class="dashboard-split">
+  <article class="auth-card"><div class="section-head"><div><p class="eyebrow">ACQUISITION QUALITY</p><h2>流入元別の成果</h2></div></div>
+  <p class="funnel-note">「直接・不明」には UTM の無い着地が入ります。2026-09-17 までは検索エンジン・SNS からの参照元（referrer）を読んでいなかったため、それ以前の期間は直接・不明が実態より多く出ます。</p>
+  <div id="sourceTable" class="data-table-wrap" aria-live="polite"></div></article>
+  <article class="auth-card"><div class="section-head"><div><p class="eyebrow">COMMERCE</p><h2>モール送客</h2></div></div><div id="marketplaceTable" class="data-table-wrap" aria-live="polite"></div></article>
+  </section>
   <div class="section-head social-section-head"><div><p class="eyebrow">SOCIAL OPERATIONS</p><h2>SNS投稿運用</h2></div></div>
   <section id="channelGrid" class="promotion-channel-grid" aria-live="polite"></section>
-  </main><script type="module" src="/admin-promotion.js"></script></body></html>`, { headers });
+  </div>
+  </main><script type="module" src="/admin-promotion.js?v=2"></script></body></html>`, { headers });
 }
 
 export function adminReelsPageResponse() {

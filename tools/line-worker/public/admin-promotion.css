@@ -20,3 +20,6 @@
 @media(max-width:520px){.promotion-shell{width:min(100% - 20px,1240px)}.north-star-grid,.insight-grid{grid-template-columns:1fr}.north-star-value{font-size:32px}.business-kpi-grid,.quality-grid{grid-template-columns:repeat(2,1fr)}.kpi-period-head{flex-direction:column}.funnel-steps{grid-template-columns:repeat(2,1fr)}.funnel-rates{grid-template-columns:1fr}.section-note{display:none}}
 
 .search-qa-canary-result{margin:12px 0 0;padding:12px;border-radius:12px;background:#f4f1ff;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:360px;overflow:auto}
+
+/* 2026-09-17 第2指示書 §18: KPI タブ */
+.kpi-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px}.kpi-tabs button{padding:10px 16px;border:1px solid #ddd8ff;border-radius:12px;background:#fff;color:#5140ba;font-weight:850;cursor:pointer}.kpi-tabs button.active{background:#7357ff;color:#fff;border-color:#7357ff}.kpi-tab-panel[hidden]{display:none}
