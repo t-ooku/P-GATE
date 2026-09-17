@@ -16,6 +16,8 @@ import {
   shopTitleMatchesAttributes, toggleKeywordInQuery
 } from './shop-facets.mjs';
 import { TREE as HOSHILU_GENRE_TREE } from '../public/genre-explorer.mjs';
+// 2026-09-17 SHOP強化 P0: Seller 向け「HOSHILUで今探されているもの」と「この需要に商品を登録」
+import { registerDemandOffer, sellerDemandOverview } from './shop-demand.mjs';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // 制御文字（U+0000–U+001F, U+007F）。パッチ運搬でユニコードエスケープが崩れないよう fromCharCode で組む。
@@ -797,6 +799,13 @@ async function handleShopManagement(request, env, sellerKey, { base, adminInput 
         .bind(couponId, sellerKey, data.title, data.code, data.discount_text, data.marketplace, data.landing_url, data.terms, data.hoshilu_only, data.starts_at, data.ends_at, now).run();
       resetShopCache();
       return json({ ok: true, coupon_id: couponId, ...(await shopSummary(db, sellerKey)) });
+    }
+    if (request.method === 'GET' && rest === '/demand') {
+      return json({ ok: true, ...(await sellerDemandOverview(env, sellerKey)) });
+    }
+    if (request.method === 'POST' && rest === '/demand/offers') {
+      const offer = await registerDemandOffer(env, sellerKey, body || {}, { now });
+      return json({ ok: true, offer, ...(await sellerDemandOverview(env, sellerKey)) });
     }
     const couponMatch = rest.match(/^\/coupons\/([A-Za-z0-9-]{1,64})$/);
     if (couponMatch && (request.method === 'DELETE' || request.method === 'POST')) {

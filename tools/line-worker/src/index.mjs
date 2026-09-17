@@ -69,6 +69,7 @@ import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs'
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
+import { handleShopDemandRoutes, runShopDemandRematch } from './shop-demand.mjs';
 import { purgeTargetPriceObservations, runTargetPriceScan } from './target-price-watch.mjs';
 import { persistMarketplacePrices, purgeExpiredMarketplacePrices } from './marketplace-price-cache.mjs';
 import { deliverDueMemberNotifications } from './member-notification-delivery.mjs';
@@ -3492,6 +3493,9 @@ export default {
     const priceWatchDemandResponse = await handlePriceWatchDemandRoute(request, env);
     if (priceWatchDemandResponse) return priceWatchDemandResponse;
     // 2026-09-05 夜: 「ショップから探す」の一覧。
+    // 2026-09-17 SHOP強化 P0: 全ショップ横断検索・探し中需要（/api/shops/search, /api/shops/demand…）
+    const shopDemandResponse = await handleShopDemandRoutes(request, env);
+    if (shopDemandResponse) return shopDemandResponse;
     const shopDirectoryResponse = await handlePublicShopDirectoryRoute(request, env);
     if (shopDirectoryResponse) return shopDirectoryResponse;
     const creatorInquiryResponse = await handleCreatorInquiryRoutes(request, env);
@@ -3611,6 +3615,8 @@ export default {
     if (controller.cron === '1,5,16,20,31,35,46,50 * * * *') {
       if ([5, 20, 35, 50].includes(scheduledAt.getUTCMinutes())) {
         ctx.waitUntil(runInsightScan(env, scheduledAt.toISOString()));
+        // 探し中需要の再判定（15 分ごと・最大 15 件）。商品が増えていれば本人に通知する。
+        ctx.waitUntil(runShopDemandRematch(env, scheduledAt.toISOString()).catch(() => console.error('SHOP_DEMAND_REMATCH_FAILED')));
       } else {
         // Keep WEB and LINE/email sequential. On conservative Free defaults
         // their combined worst case remains below both invocation limits.
