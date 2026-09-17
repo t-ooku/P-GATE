@@ -324,7 +324,7 @@ const hoshiStatusCopy={
   KO:{searching:'찾는 중',found:'찾았습니다',waiting:'가격 인하 대기',later:'나중에 보기',hint:{searching:'HOSHILU가 정기적으로 찾습니다',found:'새 후보가 있습니다',waiting:'희망 가격이 되면 알려드립니다',later:'저장만 했습니다'}}
 };
 function hoshiStatusCounts(){
-  const found=new Set((memberNotifications||[]).filter(item=>!item.read_at&&['INSIGHT_NEW_MATCH','PRICE_DROP'].includes(String(item.event_type||''))).map(item=>String(item.wish_id||'')));
+  const found=new Set((memberNotifications||[]).filter(item=>!item.read_at&&['INSIGHT_NEW_MATCH','PRICE_DROP','SHOP_DEMAND_MATCH'].includes(String(item.event_type||''))).map(item=>String(item.wish_id||'')));
   const counts={searching:0,found:0,waiting:0,later:0};
   for(const query of getWishes()){
     const record=recordFor(query);

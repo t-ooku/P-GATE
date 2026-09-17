@@ -247,3 +247,67 @@ document.querySelector('#sellerCouponForm')?.addEventListener('submit', async (e
   catch (error) { showShopStatus(`追加できませんでした（${error.message}）`, true); }
 });
 loadShop();
+
+// 2026-09-17 SHOP強化 P0: 「HOSHILUで今探されているもの」（探し中需要）と「この需要に商品を登録」
+function showDemandStatus(message, error = false) {
+  const node = document.querySelector('#sellerDemandStatus');
+  if (!node) return;
+  node.textContent = message; node.classList.toggle('error', error);
+}
+function renderDemand(data) {
+  const rows = document.querySelector('#sellerDemandRows');
+  const select = document.querySelector('#sellerDemandOfferForm select[name="demand_key"]');
+  if (!rows) return;
+  const kpi = (name) => document.querySelector(`[data-demand-kpi="${name}"]`);
+  kpi('searches').textContent = String(data.totals?.searches ?? 0);
+  kpi('zero').textContent = String(data.totals?.zero_results ?? 0);
+  kpi('near').textContent = String(data.totals?.near_only ?? 0);
+  rows.replaceChildren();
+  if (select) { select.replaceChildren(); const blank = document.createElement('option'); blank.value = ''; blank.textContent = '選んでください'; select.append(blank); }
+  const items = Array.isArray(data.items) ? data.items : [];
+  if (!items.length) {
+    const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = 6; td.textContent = 'まだありません。ユーザーが横断検索で「ホシっとく」を押すと、ここに並びます。'; tr.append(td); rows.append(tr);
+    return;
+  }
+  for (const item of items) {
+    const tr = document.createElement('tr');
+    const cells = [
+      `${item.query}${item.conditions?.length ? `
+（${item.conditions.join(' / ')}）` : ''}`,
+      `${item.people}人`,
+      `${item.searches_30d}回（0件 ${item.zero_results_30d}・近似のみ ${item.near_only_30d}）`,
+      item.own_exact === null ? '未判定' : `一致 ${item.own_exact}・近い ${item.own_near}`,
+      `${item.state}${item.matched ? `（お知らせ済み ${item.matched}）` : ''}${item.offer ? `・登録済み: ${item.offer.level === 'EXACT' ? '一致' : item.offer.level === 'NEAR' ? '近い' : '不一致'}` : ''}`
+    ];
+    for (const value of cells) { const td = document.createElement('td'); td.textContent = value; td.style.whiteSpace = 'pre-line'; tr.append(td); }
+    const action = document.createElement('td');
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'ghost-button'; button.textContent = 'この需要に商品を登録';
+    button.addEventListener('click', () => { if (select) { select.value = item.demand_key; select.closest('form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
+    action.append(button); tr.append(action);
+    rows.append(tr);
+    if (select) { const option = document.createElement('option'); option.value = item.demand_key; option.textContent = `${item.query}（${item.people}人）`; select.append(option); }
+  }
+}
+async function loadDemand() {
+  if (!document.querySelector('#sellerDemandRows')) return;
+  try { renderDemand(await shopRequest('/api/seller/shop/demand')); }
+  catch (error) { showDemandStatus(error.message === 'BUSINESS_PLAN_REQUIRED' ? '探し中需要は Business プランで確認できます。' : `需要を読み込めませんでした（${error.message}）`, true); }
+}
+document.querySelector('#sellerDemandOfferForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const payload = { demand_key: form.elements.demand_key.value, asin: form.elements.asin.value, product_url: form.elements.product_url.value };
+  showDemandStatus('HOSHILU が条件との一致を判定しています…');
+  try {
+    const data = await shopRequest('/api/seller/shop/demand/offers', 'POST', payload);
+    renderDemand(data);
+    const offer = data.offer || {};
+    const label = offer.level === 'EXACT' ? '条件に一致' : offer.level === 'NEAR' ? '近い商品' : '一致しない';
+    showDemandStatus(`判定: ${label}（✓ ${(offer.matched || []).join('・') || 'なし'} ／ △ ${(offer.unmatched || []).join('・') || 'なし'}）。${offer.notified ? `${offer.notified}人にお知らせしました。` : offer.level === 'NONE' ? '商品名に条件が明記されていないため、お知らせはしていません。' : 'お知らせ対象の会員はいませんでした。'}`, offer.level === 'NONE');
+    form.reset();
+  } catch (error) {
+    const messages = { PRODUCT_NOT_IN_YOUR_SHOP: 'その ASIN／URL は、あなたのショップの商品データに見つかりません。', ASIN_OR_URL_REQUIRED: 'ASIN か商品URL を入れてください。', DEMAND_NOT_FOUND: '需要が見つかりません。' };
+    showDemandStatus(messages[error.message] || `登録できませんでした（${error.message}）`, true);
+  }
+});
+loadDemand();
