@@ -7,8 +7,8 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 
 test('トップは tab-nav を読み込み、5 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
-  assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=1">/);
-  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=2"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=2">/);
+  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=3"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);
   const nav = read('tab-nav.mjs');
@@ -57,11 +57,26 @@ test('「いまの価格を見る」は「探す」タブを開いて検索を�
   assert.match(app, /function focusSearch\(\)\{window\.HoshiluTabs\?\.activate\('search',\{scroll:false\}\);/);
   assert.match(app, /function submitSearchNow\(\)\{window\.HoshiluTabs\?\.activate\('search',\{scroll:false\}\);/);
   assert.match(app, /again\.textContent='いまの価格を見る';\n\s*again\.addEventListener\('click',\(\)=>\{elements\.query\.value=name;elements\.clear\.classList\.remove\('hidden'\);submitSearchNow\(\);\}\);/);
-  assert.match(read('index.html'), /app\.js\?v=166/);
+  assert.match(read('index.html'), /app\.js\?v=167/);
 });
 
 // 2026-09-17: 検索欄の「ショップから探す」ボタンも、ショップ一覧が「ショップ」タブ内に隠れているので先にタブを開く。
 test('「ショップから探す」ボタンは「ショップ」タブを開いてからスクロールする', () => {
   assert.match(read('shop-directory.mjs'), /window\.HoshiluTabs\?\.activate\('shops', \{ scroll: false \}\);\n\s*section\?\.scrollIntoView/);
   assert.match(read('index.html'), /shop-directory\.mjs\?v=3/);
+});
+
+// 2026-09-17 大隆さん指示（3 件）: 「探す」の帯からページ名を消す／検索候補の右側の『メーカー』『関連』を消す／
+// 「ホシルからの提案」のモール導線は商品提示の下へ。
+test('「探す」ではページ名の帯を出さず、検索候補に種別バッジが無く、モール導線は商品の下', () => {
+  const nav = read('tab-nav.mjs');
+  assert.match(nav, /titleBar\.classList\.toggle\('view-title-hidden', view\.id === 'search'\);/);
+  assert.match(read('tab-nav.css'), /\.view-title\.view-title-hidden\{display:none\}/);
+  const suggest = read('search-suggest.mjs');
+  assert.doesNotMatch(suggest, /search-suggest-kind/);
+  assert.match(suggest, /li\.append\(icon, label\);/);
+  const app = read('app.js');
+  assert.match(app, /resultCards\.push\(rows\[0\]\);\s*const quickStrip=marketplaceQuickStrip\(result\);\s*if\(quickStrip\)resultCards\.push\(quickStrip\);/);
+  const html = read('index.html');
+  for (const asset of ['tab-nav.css?v=2', 'tab-nav.mjs?v=3', 'search-suggest.mjs?v=3', 'app.js?v=167']) assert.ok(html.includes(asset), asset);
 });

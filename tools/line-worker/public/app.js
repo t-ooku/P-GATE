@@ -1416,12 +1416,11 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
     const resultCards=[];
     const clarification=clarificationCard(result);
     if(clarification)resultCards.push(clarification);
-    // §5 最重要UX: 検索後いちばん先に「どのモールでも1タップで見に行ける」状態を
-    // 見せる。本命商品(楽天/Yahoo!のAPI由来に偏る)より前へ置き、Amazon・Qoo10・
-    // SHEIN へも同じ距離で移動できるようにする。
+    // 2026-09-17 大隆さん指示: 「ホシルからの提案」のモール導線（まとめて探す）は商品提示の下に置く。
+    // 先に商品を見せ、その直下で 13 モールへ 1 タップで行けるようにする。
+    resultCards.push(rows[0]);
     const quickStrip=marketplaceQuickStrip(result);
     if(quickStrip)resultCards.push(quickStrip);
-    resultCards.push(rows[0]);
     const continuous=continuousSearchCard(elements.query.value,{found:true});
     if(continuous)resultCards.push(continuous);
     resultCards.push(...rows.slice(1));

@@ -97,7 +97,6 @@ function renderSuggestions(query) {
   }
   const items = merged.slice(0, 10);
   if (!items.length) { hideSuggestions(); return; }
-  const labels = t();
   const lower = text.toLowerCase();
   target.replaceChildren(...items.map((item, index) => {
     const li = document.createElement('li');
@@ -114,10 +113,8 @@ function renderSuggestions(query) {
     const head = value.toLowerCase().startsWith(lower) ? value.slice(0, text.length) : '';
     const tail = head ? value.slice(text.length) : value;
     label.append(head, Object.assign(document.createElement('b'), { textContent: tail }));
-    const kind = document.createElement('span');
-    kind.className = 'search-suggest-kind';
-    kind.textContent = labels[item.kind] || '';
-    li.append(icon, label, kind);
+    // 2026-09-17 大隆さん指示: 右側の『メーカー』『関連』表示は出さない（アイコンの違いだけ残す）。
+    li.append(icon, label);
     li.addEventListener('mousedown', (event) => { event.preventDefault(); runSearchWith(value); });
     return li;
   }));

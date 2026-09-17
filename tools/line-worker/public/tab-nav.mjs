@@ -73,6 +73,8 @@ if (main && primary) {
       if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
     }
     titleBar.replaceChildren();
+    // 2026-09-17 大隆さん指示: 「探す」ページの帯からページ名を消す（h1「探さなくていい。ホシっといて。」が見出しになる）。
+    titleBar.classList.toggle('view-title-hidden', view.id === 'search');
     const heading = document.createElement('strong');
     heading.textContent = view.title;
     const sub = document.createElement('span');

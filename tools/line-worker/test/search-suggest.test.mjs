@@ -50,7 +50,7 @@ test('トップは候補モジュールを読み込み、詳細検索は投稿UR
   const client = readFileSync(new URL('../public/search-suggest.mjs', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8');
   const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(html, /<script type="module" src="\/search-suggest\.mjs\?v=2"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/search-suggest\.mjs\?v=3"><\/script>/u);
   assert.match(html, /id="socialUrlToggle"[\s\S]{0,900}<button id="advancedSearchToggle" type="button" class="search-input-action advanced-search-toggle"/u);
   assert.match(css, /#searchInputActions\.search-input-actions\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/u);
   assert.match(css, /#searchInputActions \.search-social-action\{grid-column:auto\}/u);

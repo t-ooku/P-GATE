@@ -14,3 +14,6 @@ body.has-tab-bar{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 #accountPanel .account-links a{display:block;padding:14px;border:1px solid #e6e1ff;border-radius:14px;background:#fff;text-decoration:none;color:#241b4d;font-weight:800}
 #accountPanel .account-links a small{display:block;margin-top:4px;color:#6d6b80;font-weight:600;font-size:12px}
 #shopCouponsNote p{margin:6px 0 0;color:#6d6b80;font-size:13px}
+
+/* 2026-09-17: 「探す」ではページ名の帯を出さない */
+.view-title.view-title-hidden{display:none}
