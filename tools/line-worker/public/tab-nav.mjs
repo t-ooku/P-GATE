@@ -41,11 +41,7 @@ if (main && primary) {
     }
   }
 
-  const titleBar = document.createElement('div');
-  titleBar.id = 'viewTitle';
-  titleBar.className = 'view-title';
-  titleBar.setAttribute('aria-live', 'polite');
-  main.prepend(titleBar);
+  // 2026-09-17 大隆さん指示: 全ページともページ名の帯は出さない（各節の見出しがあるため）。上に詰める。
 
   const bar = document.createElement('nav');
   bar.className = 'tab-bar';
@@ -72,14 +68,6 @@ if (main && primary) {
       item.classList.toggle('active', active);
       if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
     }
-    titleBar.replaceChildren();
-    // 2026-09-17 大隆さん指示: 「探す」ページの帯からページ名を消す（h1「探さなくていい。ホシっといて。」が見出しになる）。
-    titleBar.classList.toggle('view-title-hidden', view.id === 'search');
-    const heading = document.createElement('strong');
-    heading.textContent = view.title;
-    const sub = document.createElement('span');
-    sub.textContent = view.sub;
-    titleBar.append(heading, sub);
     document.body.dataset.view = view.id;
     document.dispatchEvent(new CustomEvent('hoshilu:view-changed', { detail: { view: view.id } }));
     if (scroll) window.scrollTo({ top: 0, behavior: 'auto' });
