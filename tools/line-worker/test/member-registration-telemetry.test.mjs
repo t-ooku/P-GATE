@@ -471,3 +471,29 @@ test('member login page sends only anonymous growth context to both verified reg
   assert.match(client, /new URLSearchParams\(\{next:safeNext,\.\.\.registrationContext\}\)/u);
   assert.doesNotMatch(client, /member_id|auth_code/u);
 });
+
+// 2026-09-18 大隆さん指示 P0-2: 本番で 9/17 の新規メール登録は宛先だけ書かれ、member_registered が
+// 0 件のままだった(batch 失敗時の「計測は任意」分岐が無音で通る)。batch が失敗しても、
+// 初回登録なら宛先を書いた後に同じ冪等 event_id で計測行を書き、失敗理由を固定コードで残す。
+test('batch failure still records member_registered once and leaves a fixed-code diagnostic row', async () => {
+  const db = setup();
+  const base = d1(db);
+  let failures = 0;
+  const workerEnv = { PRODUCT_DB: { ...base, async batch() { failures += 1; throw new Error('D1_ERROR: something odd'); } }, MEMBER_SESSION_SECRET: secret };
+  const first = await storeMemberRegistrationDestination(workerEnv, 'batch-member', 'EMAIL', 'person@example.com', context);
+  assert.equal(failures, 1);
+  assert.equal(first.registered, true);
+  assert.equal(first.telemetry_recorded, true);
+  assert.equal(db.prepare("SELECT COUNT(*) AS total FROM member_notification_destinations WHERE member_id='batch-member'").get().total, 1);
+  assert.equal(db.prepare("SELECT COUNT(*) AS total FROM growth_events WHERE event_type='member_registered'").get().total, 1);
+  const diagnostic = db.prepare("SELECT * FROM growth_events WHERE event_type='member_registration_telemetry_failed'").get();
+  assert.equal(diagnostic.campaign, 'D1_ERROR_SOMETHING_ODD');
+  assert.equal(diagnostic.content, 'RECOVERED');
+  assert.equal(diagnostic.source, 'worker');
+  assert.doesNotMatch(JSON.stringify(db.prepare("SELECT * FROM growth_events").all()), /person@example\.com|batch-member/u);
+
+  // 2 回目(既存会員の再ログイン)は batch が失敗しても計測行を増やさない
+  const repeat = await storeMemberRegistrationDestination(workerEnv, 'batch-member', 'EMAIL', 'person@example.com', context);
+  assert.equal(repeat.registered, false);
+  assert.equal(db.prepare("SELECT COUNT(*) AS total FROM growth_events WHERE event_type='member_registered'").get().total, 1);
+});

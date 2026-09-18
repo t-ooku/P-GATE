@@ -97,6 +97,10 @@ export async function storeMemberRegistrationDestination(env,memberId,channel,de
   // D1 batch order is intentional: the event checks for a pre-existing verified
   // destination before the upsert, and both writes commit or roll back together.
   // The deterministic event PK also makes concurrent first registrations safe.
+  // 2026-09-18: batch の前に初回登録かを判定しておく(失敗時の単独書き込みに使う)。
+  let firstRegistration=false;
+  try{const existing=await env.PRODUCT_DB.prepare(`SELECT 1 AS found FROM member_notification_destinations WHERE member_id=?1 AND verified_at<>'' LIMIT 1`).bind(memberId).first();firstRegistration=!existing;}
+  catch{firstRegistration=false;}
   let results;
   try{
     results=await env.PRODUCT_DB.batch([identityRegistrationStatement(),destinationStatement()]);
@@ -118,12 +122,39 @@ export async function storeMemberRegistrationDestination(env,memberId,channel,de
     }else{
       // Growth telemetry is advisory and must never make an otherwise valid
       // LINE/email authentication fail. The destination write remains required.
+      // 2026-09-18 大隆さん指示 P0-2: 本番では 9/17 の新規メール登録で member_notification_destinations
+      // だけが書かれ member_registered が 0 件のままだった(この分岐が無音で通っていた)。
+      // 登録前に「初回か」を判定してあるので、batch が失敗しても宛先を書いた後に同じ
+      // 冪等 event_id で計測行を単独で書き、失敗理由は固定コードとして残す。
       const destinationResult=await destinationStatement().run();ensureDestinationStored(destinationResult);
-      return{registered:false,telemetry_recorded:false};
+      let telemetryRecorded=false;
+      if(firstRegistration){
+        try{const single=await env.PRODUCT_DB.prepare(`INSERT OR IGNORE INTO growth_events
+          (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+          VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`).bind(
+          event.event_id,event.event_type,event.locale,event.source,event.medium,event.campaign,event.content,
+          event.marketplace,event.occurred_at,event.traffic_class,event.visitor_id,event.session_id).run();
+          telemetryRecorded=Number(single?.meta?.changes||0)===1;}
+        catch{telemetryRecorded=false;}
+      }
+      await recordMemberRegistrationTelemetryFailure(env,message,telemetryRecorded?'RECOVERED':'LOST');
+      return{registered:firstRegistration&&telemetryRecorded,telemetry_recorded:telemetryRecorded};
     }
   }
   ensureDestinationStored(results?.[1]);
-  return{registered:Number(results?.[0]?.meta?.changes||0)===1,telemetry_recorded:true};
+  const registered=Number(results?.[0]?.meta?.changes||0)===1;
+  if(firstRegistration&&!registered)await recordMemberRegistrationTelemetryFailure(env,'BATCH_EVENT_NOT_WRITTEN','LOST');
+  return{registered,telemetry_recorded:true};
+}
+// 固定コードだけを残す運用行。会員ID・宛先・visitor は一切書かない。
+// campaign = 失敗理由(英数字と _ のみ 72 文字まで)、content = RECOVERED/LOST。
+async function recordMemberRegistrationTelemetryFailure(env,reason,outcome){
+  const code=String(reason||'UNKNOWN').toUpperCase().replace(/[^A-Z0-9_]+/g,'_').replace(/^_+|_+$/g,'').slice(0,72)||'UNKNOWN';
+  try{await env.PRODUCT_DB.prepare(`INSERT INTO growth_events
+    (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+    VALUES(?1,'member_registration_telemetry_failed','JA','worker','registration',?2,?3,'',?4,'UNATTRIBUTED','','')`)
+    .bind(crypto.randomUUID(),code,outcome==='RECOVERED'?'RECOVERED':'LOST',new Date().toISOString()).run();}
+  catch(error){console.warn('MEMBER_REGISTRATION_TELEMETRY_FAILURE_UNRECORDED',String(error?.message||error).slice(0,80));}
 }
 export function safeMemberNotificationCopy(title,body){
   const broken=value=>(String(value||'').match(/�/g)||[]).length>=2;
