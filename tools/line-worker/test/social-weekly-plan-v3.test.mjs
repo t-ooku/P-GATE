@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import {
-  SOCIAL_PLAN_V3, buildCarouselPosts, carouselSlotIndex, loadCarouselSets, policyV3Allows, seedCarouselQueue
+  SOCIAL_PLAN_V3, buildCarouselPosts, buildReelFallbackPosts, carouselSlotIndex, loadCarouselSets, policyV3Allows, reelFallbackAudience, seedCarouselQueue, seedReelFallbackQueue
 } from '../src/social-weekly-plan-v3.mjs';
 import { mediaUrlList, normalizeMediaUrls, normalizeSocialPost, publishSocialPost, socialPublisherTest } from '../src/social-publisher.mjs';
 
@@ -159,4 +159,59 @@ test('X はカルーセル画像を最大 4 枚 tweet_image としてアップ�
   const publisher = readFileSync(new URL('../src/social-publisher.mjs', import.meta.url), 'utf8');
   assert.match(publisher, /const imageUrls = mediaUrlList\(post\)\.slice\(0, 4\);/u);
   assert.match(publisher, /media: \{ media_ids: mediaId \}/u);
+});
+
+// 2026-09-18 大隆さん指示: AI リールが不合格でも SNS 運用を止めない。リール日（火・金）に 19:30 JST 時点で
+// 承認済みリールが無ければ、同じ 20:15 JST 枠に静止画カルーセル（火=ユーザー向け、金=セラー向け）を入れる。
+test('リール日の代替カルーセルは 19:30 JST 以降・リール未承認の時だけ、対象を合わせて 20:15 JST に入る', async () => {
+  // 2026-09-18 は金曜（JST）。19:29 JST では何も出ない
+  assert.deepEqual(buildReelFallbackPosts(new Date('2026-09-18T10:29:00.000Z')), []);
+  const posts = buildReelFallbackPosts(new Date('2026-09-18T10:31:00.000Z'));
+  assert.equal(posts.length, 2);
+  assert.deepEqual(posts.map((post) => post.platform), ['INSTAGRAM', 'X']);
+  for (const post of posts) {
+    assert.equal(post.scheduled_at, '2026-09-18T11:15:00.000Z');
+    assert.equal(post.campaign_id, SOCIAL_PLAN_V3.campaign_id);
+    assert.equal(post.content_format, 'IMAGE');
+    assert.equal(post.jst_publish_date, '2026-09-18');
+    assert.equal(post.crosspost_group_id, 'hoshilu-carousel-fallback-2026-09-18');
+    assert.match(post.post_id, /^hoshilu-carousel-v3-fallback-(?:instagram|x)-2026-09-18$/u);
+    assert.ok(mediaUrlList(post).length >= 2);
+    assert.ok(policyV3Allows(post));
+    const set = loadCarouselSets().order.find((item) => `carousel-${item.id}` === post.content_id);
+    assert.equal(set.audience, 'seller', '金曜はセラー向け');
+  }
+  // 火曜（2026-09-22）はユーザー向け
+  assert.equal(reelFallbackAudience(2), 'user');
+  const tuesday = buildReelFallbackPosts(new Date('2026-09-22T10:45:00.000Z'));
+  assert.equal(loadCarouselSets().order.find((item) => `carousel-${item.id}` === tuesday[0].content_id).audience, 'user');
+  // 20:15 を過ぎたら入れない。カルーセル日（月曜）には出ない
+  assert.deepEqual(buildReelFallbackPosts(new Date('2026-09-18T11:16:00.000Z')), []);
+  assert.deepEqual(buildReelFallbackPosts(new Date('2026-09-21T10:45:00.000Z')), []);
+
+  // 投入: リールが承認済みなら入れない。未承認なら接続済み媒体分だけ INSERT OR IGNORE
+  const makeEnv = (reelCount) => {
+    const rows = [];
+    const env = {
+      SOCIAL_AUTOPILOT_ENABLED: 'true', INSTAGRAM_EVERGREEN_AUTOPILOT_ENABLED: 'true',
+      INSTAGRAM_ACCESS_TOKEN: 'ig-token', INSTAGRAM_ACCOUNT_ID: 'ig-account',
+      PRODUCT_DB: { prepare(sql) {
+        if (/SELECT COUNT\(\*\) AS n FROM social_post_queue/u.test(sql)) {
+          assert.match(sql, /campaign_id=\?1 AND jst_publish_date=\?2/u);
+          return { bind(campaign, date) { assert.equal(campaign, 'hoshilu-runway-video'); assert.equal(date, '2026-09-18'); return { async first() { return { n: reelCount }; } }; } };
+        }
+        assert.match(sql, /INSERT OR IGNORE INTO social_post_queue/u);
+        return { bind(...values) { return { async run() { rows.push(values); return { meta: { changes: 1 } }; } }; } };
+      } }
+    };
+    return { env, rows };
+  };
+  const ready = makeEnv(1);
+  assert.deepEqual(await seedReelFallbackQueue(ready.env, new Date('2026-09-18T10:31:00.000Z')), { enabled: true, planned: 0, inserted: 0, reel_ready: true });
+  assert.equal(ready.rows.length, 0);
+  const missing = makeEnv(0);
+  assert.deepEqual(await seedReelFallbackQueue(missing.env, new Date('2026-09-18T10:31:00.000Z')), { enabled: true, planned: 1, inserted: 1, reel_ready: false });
+  assert.equal(missing.rows[0][0], 'hoshilu-carousel-v3-fallback-instagram-2026-09-18');
+  assert.equal(missing.rows[0][7], '2026-09-18T11:15:00.000Z');
+  assert.deepEqual(await seedReelFallbackQueue(makeEnv(0).env, new Date('2026-09-18T09:00:00.000Z')), { enabled: true, planned: 0, inserted: 0, reel_ready: false });
 });

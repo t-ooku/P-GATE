@@ -22,6 +22,8 @@ const RUNWAY_POST_PREFIX = 'hoshilu-runway-auto-';
 const POLICY_V3_START = '2026-09-21';
 const RUNWAY_WEEKDAYS = new Set([2, 5]);
 const CAROUSEL_WEEKDAYS = new Set([1, 3, 6]);
+const CAROUSEL_FALLBACK_PREFIX = 'hoshilu-carousel-v3-fallback';
+const FALLBACK_START = '2026-09-18';
 const CAROUSEL_CAMPAIGN_ID = 'hoshilu-carousel-v3';
 function weekdayOf(date) { return new Date(`${date}T00:00:00.000Z`).getUTCDay(); }
 export function expectedFormatForDate(date) {
@@ -173,15 +175,22 @@ export function isEligibleSocialAiActressRow(row = {}, { asOf = Date.now() } = {
   if (row.campaign_id === CAROUSEL_CAMPAIGN_ID) {
     let urls = [];
     try { urls = JSON.parse(String(row.queue_media_urls || '[]')); } catch { urls = []; }
-    return PLATFORMS.includes(platform)
-      && rowDate >= POLICY_V3_START
+    // 2026-09-18 大隆さん指示: リール日（火・金）に承認済みリールが無い時の代替カルーセル
+    // （post_id hoshilu-carousel-v3-fallback-<platform>-<date>、20:15 JST）も当日の投稿として数える。
+    const fallback = RUNWAY_WEEKDAYS.has(weekdayOf(rowDate))
+      && rowDate >= FALLBACK_START
+      && row.post_id === `${CAROUSEL_FALLBACK_PREFIX}-${platform.toLowerCase()}-${rowDate}`
+      && row.crosspost_group_id === `hoshilu-carousel-fallback-${rowDate}`;
+    const regular = rowDate >= POLICY_V3_START
       && CAROUSEL_WEEKDAYS.has(weekdayOf(rowDate))
       && row.post_id === `${CAROUSEL_CAMPAIGN_ID}-${platform.toLowerCase()}-${rowDate}`
+      && row.crosspost_group_id === `hoshilu-carousel-${rowDate}`;
+    return PLATFORMS.includes(platform)
+      && (regular || fallback)
       && READY_STATUSES.has(status)
       && timestampAtOrBefore(row.queue_approved_at, asOfTimestamp)
       && validJstDate(rowDate)
       && rowDate === scheduledDate
-      && row.crosspost_group_id === `hoshilu-carousel-${rowDate}`
       && Array.isArray(urls) && urls.length >= 2 && urls.length <= 10
       && urls.every((url) => validHttpsUrl(url) && /^\/social\/carousel\/[a-z0-9-]+\/\d+\.jpg$/u.test(new URL(url).pathname));
   }

@@ -7,7 +7,7 @@ import {
   xPublishingSafetyReadiness
 } from './social-publisher.mjs';
 import { buzzThemeFor } from './buzz-shelf.mjs';
-import { policyV3Allows, seedCarouselQueue } from './social-weekly-plan-v3.mjs';
+import { policyV3Allows, seedCarouselQueue, seedReelFallbackQueue } from './social-weekly-plan-v3.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
 const NEW_SEARCH_LAUNCH_UTM_CAMPAIGN = 'hoshilu-new-search-launch-20260829';
@@ -1091,7 +1091,9 @@ export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl =
   const published = await runDueSocialPosts(env, now, fetchImpl);
   const seeded = await seedSocialAutopilotQueue(env, now);
   const carousels = await seedCarouselQueue(env, now);
+  // 2026-09-18: リール日に承認済みリールが無ければ 19:30 JST 以降にカルーセルで代替（SNS を止めない）
+  const reelFallback = await seedReelFallbackQueue(env, now);
   const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
   const threadsInsights = await syncThreadsInsights(env, now, fetchImpl);
-  return { seeded, carousels, published, permalinks, threadsInsights };
+  return { seeded, carousels, reelFallback, published, permalinks, threadsInsights };
 }
