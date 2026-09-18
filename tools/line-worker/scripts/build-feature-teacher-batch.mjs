@@ -34,7 +34,9 @@ export function buildFeatureTeacherEntries(rules = FEATURE_EXPANSION_RULES, auth
           ja: [...new Set([rule.marketplaceKeywords, ...(rule.synonyms || []).slice(0, 2)])],
           en: [], ko: [], zh: []
         },
-        excluded_conditions: [],
+        // 2026-09-18 P0-3: 規則が付属品・関連商品(こたつ毛布 等)を明示していれば、知識検索側の
+        // excluded_conditions として本体候補から外す(knowledge-search.mjs が参照する)。
+        excluded_conditions: Array.isArray(teacher.excluded) ? [...teacher.excluded] : [],
         confidence: 0.75,
         authored_date: authoredDate,
         authored_updated_date: authoredDate

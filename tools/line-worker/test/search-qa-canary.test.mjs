@@ -24,6 +24,27 @@ test('本番の付属品誤一致と替えブラシ付き本体を区別する',
   }
 });
 
+// 2026-09-18 大隆さん指示 P0-3: 9/17 の本番カナリアは本命「こたつ中掛け毛布 …」でも PASS(C60_E1_R0_H2_L5)
+// だった。末尾ひらがなの主名詞(こたつ)が取れず判定不能→2扱いになり、「こたつ」を含むだけで正解扱い
+// されていた。本体(こたつ・こたつテーブル・こたつセット)と付属品(毛布・布団・カバー・継ぎ脚)・関連商品を
+// 区別し、付属品を本命にした結果を品質保証として数えない。
+test('省エネこたつ: 本命が「こたつ毛布」なら FAIL、本体なら PASS', () => {
+  const fixture = SEARCH_QA_CANARY_QUERIES.find((item) => item.id === 'energy_saving_kotatsu');
+  for (const [title, pass] of [
+    ['こたつ中掛け毛布 長方形 185×235cm フランネル こたつ毛布 こたつカバー 中掛け 毛布 こたつ布団 こたつ掛け布団', false],
+    ['こたつ布団 セット 長方形 洗える', false],
+    ['こたつカバー 上掛け 撥水', false],
+    ['こたつ用 継ぎ脚 4個セット', false],
+    ['こたつ 長方形 105×75cm 省エネ こたつテーブル ヒーター付', true],
+    ['電気こたつ 一人用 省エネ 正方形 60cm', true],
+    ['コタツ 正方形 75cm 節電 ヒーター付き 布団セット', true]
+  ]) {
+    const verdict = evaluateSearchQaResult(fixture, { ok: true, result: { candidates: [{ product_name: title }], marketplace_search_links: links(ALL) } }, 10);
+    assert.equal(verdict.pass, pass, `${title} → ${verdict.code}`);
+    if (!pass) assert.match(verdict.code, /_(?:R1|H0)_/u, `付属品は R1 か H0 で落ちる: ${verdict.code}`);
+  }
+});
+
 test('固定クエリは指示書 §54 の9件+2026-09-04 の「底開口 水筒」で、利用者入力を含まない', () => {
   assert.equal(SEARCH_QA_CANARY_QUERIES.length, 16);
   assert.ok(SEARCH_QA_CANARY_QUERIES.some((f) => f.id === 'pet_shedding_brush' && f.query === '猫の抜け毛がごっそり取れるブラシ'));

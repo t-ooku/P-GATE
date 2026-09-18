@@ -91,3 +91,30 @@ test('ゲートは本命を前に出し、一致ゼロなら元の順序を保�
   assert.deepEqual(applyHeadNounGate('コアラマットレス', koala).map((c) => c.product_name),
     ['コアラマットレス オリジナル シングル 中古', 'コアラリフレッシュピロー 枕 koala コアラマットレス 低反発 定価1万6000円 中古']);
 });
+
+// 2026-09-18 大隆さん指示 P0-3: ひらがなで終わる主名詞(こたつ)と、主名詞に直接くっついた付属品語
+// (こたつ毛布・こたつ布団・こたつカバー)を区別する。本体を表す語(こたつテーブル)は商品そのもの。
+test('ひらがなの主名詞「こたつ」を取り、こたつ毛布・布団・カバーは付属品として本体から外す', () => {
+  const query = '電気代が気にならないこたつ';
+  assert.deepEqual(extractHeadNouns(query).map((h) => h.term), ['こたつ']);
+  assert.deepEqual(extractHeadNouns('節電できる省エネこたつ').map((h) => h.term), ['こたつ']);
+  assert.deepEqual(extractHeadNouns('欲しいものがある'), []);
+  for (const [title, score] of [
+    ['こたつ中掛け毛布 長方形 185×235cm フランネル こたつ毛布 こたつカバー 中掛け 毛布 こたつ布団', 0],
+    ['こたつ布団 セット 長方形', 0],
+    ['こたつカバー 上掛け', 0],
+    ['こたつ用 継ぎ脚', 0],
+    ['こたつ 長方形 105×75cm 省エネ こたつテーブル', 2],
+    ['こたつテーブル 長方形 120cm', 2],
+    ['電気こたつ 一人用 省エネ', 2],
+    ['コタツ 正方形 75cm ヒーター 省エネ', 2],
+    ['省エネ こたつ 掛け布団付き', 2]
+  ]) assert.equal(headNounScore(query, title), score, title);
+  const body = { product_name: 'こたつ 長方形 省エネ こたつテーブル' };
+  const blanket = { product_name: 'こたつ中掛け毛布 フランネル こたつ毛布' };
+  assert.deepEqual(applyHeadNounGate(query, [blanket, body]), [body]);
+  // 既存の主名詞でも、直接くっついた付属品語は付属品(マットレスカバー・リングケース)。本体語は残す。
+  assert.equal(headNounScore('コアラマットレス', 'コアラマットレスカバー シングル'), 0);
+  assert.equal(headNounScore('スモーキークォーツ リング', 'リングケース 木製'), 0);
+  assert.equal(headNounScore('SHEINで見たワンピース', 'ワンピースセット 2点 春'), 2);
+});

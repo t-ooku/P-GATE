@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T03:05:46.111Z",
+  "generated_at": "2026-09-18T05:50:35.163Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -20310,7 +20310,14 @@
         "ko": [],
         "zh": []
       },
-      "excluded_conditions": [],
+      "excluded_conditions": [
+        "こたつ毛布",
+        "こたつ布団",
+        "こたつカバー",
+        "中掛け",
+        "上掛け",
+        "継ぎ脚のみ"
+      ],
       "confidence": 0.75,
       "source_file": "2026-09-05-claude-batch-019.json"
     },
@@ -20331,7 +20338,14 @@
         "ko": [],
         "zh": []
       },
-      "excluded_conditions": [],
+      "excluded_conditions": [
+        "こたつ毛布",
+        "こたつ布団",
+        "こたつカバー",
+        "中掛け",
+        "上掛け",
+        "継ぎ脚のみ"
+      ],
       "confidence": 0.75,
       "source_file": "2026-09-05-claude-batch-019.json"
     },
@@ -20352,7 +20366,14 @@
         "ko": [],
         "zh": []
       },
-      "excluded_conditions": [],
+      "excluded_conditions": [
+        "こたつ毛布",
+        "こたつ布団",
+        "こたつカバー",
+        "中掛け",
+        "上掛け",
+        "継ぎ脚のみ"
+      ],
       "confidence": 0.75,
       "source_file": "2026-09-05-claude-batch-019.json"
     },

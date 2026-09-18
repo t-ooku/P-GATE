@@ -46,7 +46,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-09-12 展開規則 easy-clean-baby-bottle の代表クエリ(機能語「奥まで洗いやすい」→ 売り手の語「広口」)。
   { id: 'easy_clean_baby_bottle', query: '奥まで洗いやすい哺乳瓶', expect: /哺乳瓶|哺乳びん|nursing\s*bottle|baby\s*bottle/iu, reject: /乳首のみ|替えパーツ|パーツのみ|ケースのみ|搾乳器|消毒(?:ケース|ボックス)/u },
   // 2026-09-14 展開規則 energy-saving-kotatsu の代表クエリ(機能語「電気代が気にならない」→ 売り手の語「省エネ」)。
-  { id: 'energy_saving_kotatsu', query: '電気代が気にならないこたつ', expect: /こたつ|コタツ|kotatsu/iu, reject: /ヒーター|電気毛布|扇風機|布団のみ|継ぎ脚のみ|交換用/u },
+  // 2026-09-18 大隆さん指示 P0-3: 9/17 は本命が「こたつ中掛け毛布」でも PASS(H2) だった(末尾ひらがなで主名詞が
+  // 取れず判定不能→2扱い)。本体(こたつ・こたつテーブル)と付属品(毛布・布団・カバー・継ぎ脚)を分ける。
+  { id: 'energy_saving_kotatsu', query: '電気代が気にならないこたつ', expect: /こたつ|コタツ|kotatsu/iu, reject: /ヒーター(?!付)|電気毛布|扇風機|布団のみ|継ぎ脚のみ|交換用|こたつ(?:中掛け|上掛け|敷き|掛け)?(?:毛布|布団|ふとん|カバー)|コタツ(?:毛布|布団|カバー)|中掛け|上掛け|敷きパッド/u },
   // 2026-09-16 展開規則 freezer-safe-food-container の代表クエリ(機能語「冷凍しても割れない」→ 売り手の語「冷凍対応」)。
   { id: 'freezer_safe_food_container', query: '冷凍しても割れない保存容器', expect: /保存容器|タッパー|フリーザーバッグ|密閉容器/iu, reject: /製氷皿|フタのみ|蓋のみ|パッキンのみ|交換用/u },
   // 2026-09-18 展開規則 oil-free-air-fryer の代表クエリ(機能語「油を使わずに揚げ物ができる」→ 売り手の語「ノンフライヤー」)。

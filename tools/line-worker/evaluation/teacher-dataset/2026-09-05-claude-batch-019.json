@@ -4663,7 +4663,14 @@
       "ko": [],
       "zh": []
     },
-    "excluded_conditions": [],
+    "excluded_conditions": [
+      "こたつ毛布",
+      "こたつ布団",
+      "こたつカバー",
+      "中掛け",
+      "上掛け",
+      "継ぎ脚のみ"
+    ],
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
@@ -4686,7 +4693,14 @@
       "ko": [],
       "zh": []
     },
-    "excluded_conditions": [],
+    "excluded_conditions": [
+      "こたつ毛布",
+      "こたつ布団",
+      "こたつカバー",
+      "中掛け",
+      "上掛け",
+      "継ぎ脚のみ"
+    ],
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
@@ -4709,7 +4723,14 @@
       "ko": [],
       "zh": []
     },
-    "excluded_conditions": [],
+    "excluded_conditions": [
+      "こたつ毛布",
+      "こたつ布団",
+      "こたつカバー",
+      "中掛け",
+      "上掛け",
+      "継ぎ脚のみ"
+    ],
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"

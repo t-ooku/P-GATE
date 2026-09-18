@@ -25,6 +25,9 @@ const PRODUCT_HEADS = Object.freeze([
   // 家具・寝具・生活
   'マットレス', '枕', '布団', '毛布', 'シーツ', 'ソファ', 'テーブル', 'デスク', 'チェア', '椅子', 'ラック', '棚', 'ボックス', 'ケース', 'カゴ', 'かご',
   'ハンガー', 'カーテン', 'ラグ', 'カーペット', 'クッション', 'ミラー', '鏡', '照明', 'ライト', 'ランプ', '加湿器', '扇風機', 'ファン', 'ヒーター',
+  // 2026-09-18 大隆さん指示 P0-3: ひらがなの商品名詞(「こたつ」)。末尾がひらがなだと主名詞が取れず
+  // 判定不能(null→2扱い)になり、「こたつ毛布」が本体として PASS していた。
+  'こたつ', 'コタツ',
   '水筒', 'タンブラー', 'マグカップ', 'ボトル', '弁当箱', 'フライパン', '鍋', '包丁', 'まな板', '食器', '皿', '傘', '収納', 'ピロー',
   // 台所用品(「ワンピース お玉」のように衣類語が形状の修飾語になる商品を見分ける)
   'お玉', 'おたま', 'ヘラ', 'トング', 'ザル', 'ボウル', 'スプーン', 'フォーク', '箸', '菜箸', '泡立て器', 'ピーラー', 'おろし器',
@@ -40,8 +43,17 @@ const HEAD_ALIASES = Object.freeze({
   '指輪': ['リング'], 'リング': ['指輪'], '靴': ['スニーカー', 'シューズ', 'サンダル', 'ブーツ', 'パンプス'], 'ワンピース': ['ワンピ'],
   '椅子': ['チェア'], 'チェア': ['椅子'], '鏡': ['ミラー'], 'ミラー': ['鏡'], '収納': ['収納ケース', '収納ボックス', '収納ラック'],
   'ファンデ': ['ファンデーション'], '時計': ['ウォッチ', '腕時計'], 'ライト': ['ランプ', '照明'], 'マグカップ': ['マグ'],
-  'キムチ': ['kimchi'], 'リップ': ['ティント', 'リップスティック', 'リップグロス', 'リップバーム'], '枕': ['ピロー'], 'ピロー': ['枕']
+  'キムチ': ['kimchi'], 'リップ': ['ティント', 'リップスティック', 'リップグロス', 'リップバーム'], '枕': ['ピロー'], 'ピロー': ['枕'],
+  'こたつ': ['コタツ'], 'コタツ': ['こたつ']
 });
+// 主名詞に直接くっついた別の商品名詞(「こたつ毛布」「こたつ布団」「こたつカバー」)は、主名詞が
+// 用途を表す修飾語になっている付属品・関連商品。ただし「本体そのもの」を表す語(こたつテーブル・
+// こたつ本体)や、主名詞と同種の語は除く。辞書外の一般語も含めて固定で持つ。
+const ATTACHED_ACCESSORY_SUFFIXES = Object.freeze([
+  '毛布', '布団', 'ふとん', '掛け布団', '敷き布団', '中掛け', '上掛け', '敷きパッド', '敷パッド', 'カバー', 'ケース', 'ホルダー', 'スタンド',
+  'コード', 'ヒーターユニット', '継ぎ脚', '継脚', '脚', 'リモコン', 'フィルター', 'ストラップ', '袋'
+]);
+const ATTACHED_BODY_SUFFIXES = Object.freeze(['テーブル', 'デスク', '本体', 'セット']);
 // 主名詞が別の語の一部として現れる誤一致(リップ→クリップ)。
 const FALSE_FRIENDS = Object.freeze({
   'リップ': ['クリップ', 'グリップ', 'スリップ', 'チューリップ', 'フィリップ', 'ストリップ'],
@@ -71,9 +83,15 @@ export function extractHeadNouns(query) {
   let text = normalize(query).replace(TRAILING_PHRASES, '').trim();
   if (!text) return [];
   const last = text.split(/[\s、,／/]+/u).filter(Boolean).pop() || '';
-  const run = last.match(/([\p{Script=Katakana}ー]{2,}|[\p{Script=Han}]{1,6}|[A-Za-z][A-Za-z0-9-]{2,})$/u)?.[1] || '';
+  const run = last.match(/([\p{Script=Katakana}ー]{2,}|[\p{Script=Han}]{1,6}|[A-Za-z][A-Za-z0-9-]{2,}|[\p{Script=Hiragana}]{2,})$/u)?.[1] || '';
   if (!run) return [];
   const heads = [];
+  // ひらがな列は助詞・活用を含む(「にならないこたつ」)ので、辞書の商品名詞で終わる時だけ、
+  // その名詞そのものを強い主名詞にする(列全体は使わない)。
+  if (/^[\p{Script=Hiragana}]+$/u.test(run)) {
+    const hiraganaHead = PRODUCT_HEADS.filter((noun) => run.endsWith(noun)).sort((a, b) => b.length - a.length)[0] || '';
+    return hiraganaHead ? [{ term: hiraganaHead, strength: 2 }] : [];
+  }
   const dictionary = PRODUCT_HEADS.filter((noun) => run.endsWith(noun)).sort((a, b) => b.length - a.length);
   const dictionaryHead = dictionary[0] || '';
   if (dictionaryHead && dictionaryHead !== run) {
@@ -120,6 +138,14 @@ function occurrenceIsClean(title, head, index, headTerms = new Set([head])) {
   // 短い別名(ワンピ)が長い主名詞(ワンピース)の一部として出ているだけなら、
   // 判定は長い方の出現に任せる(ここでは一致扱いにしない)。
   if ([...headTerms].some((term) => term !== head && term.startsWith(head) && after.startsWith(term.slice(head.length)))) return false;
+  // 主名詞に直接くっついた付属品語(「こたつ毛布」「こたつカバー」)。「こたつテーブル」の
+  // ように本体を表す語が続く場合は商品そのもの。
+  if (after && !/^\s/u.test(after)) {
+    const attached = after.split(TOKEN_SPLIT)[0] || '';
+    const bodySuffix = ATTACHED_BODY_SUFFIXES.find((suffix) => attached.startsWith(suffix));
+    const accessorySuffix = ATTACHED_ACCESSORY_SUFFIXES.find((suffix) => attached.startsWith(suffix));
+    if (!bodySuffix && accessorySuffix && !relatedToHeads(accessorySuffix, headTerms)) return false;
+  }
   // 主名詞の直後に別の商品名詞が来る(「ワンピース お玉」= 一体型のお玉)なら、
   // 主名詞は形状・種類の修飾語であって商品そのものではない。
   if (/^\s/u.test(after)) {
