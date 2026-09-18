@@ -5,7 +5,16 @@
 import { createHash } from 'node:crypto';
 
 export const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
-export const SLOT_DAYS = { mon: 1, wed: 3, sat: 6 };
+// 2026-09-17 大隆さん決定: リールは火・金の週2回（themes.json の slots が正本。値は型キーか、週ごとに順送りする型キーの配列）
+export const SLOT_DAYS = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+export function themeKeyForSlot(slots, slot, publishAt) {
+  const value = slots[slot];
+  if (!Array.isArray(value)) return value;
+  if (!value.length) throw new Error('AUTO_REEL_SLOT_EMPTY');
+  // ISO 週番号で順送り（同じ週の火と金は別配列なので、火=ユーザー向け・金=セラー向けが崩れない）
+  const week = Math.floor((publishAt.getTime() + 9 * 3600 * 1000 - Date.UTC(2026, 8, 14)) / (7 * 24 * 3600 * 1000));
+  return value[((week % value.length) + value.length) % value.length];
+}
 export const REQUIRED_QA_CHECKS = [
   'identity_consistent', 'face_hands_ok', 'hoshilu_visible', 'japanese_subtitles',
   'no_generated_text',
@@ -43,7 +52,7 @@ export function nextPublishSlot(now, themes, { leadMinutes = 90, slotOverride = 
     if (slotOverride && slot !== slotOverride) continue;
     const publishAt = jstDateTime(p.y, p.m, p.d, themes.publish_time_jst || '20:15');
     if (publishAt.getTime() - now.getTime() < leadMinutes * 60 * 1000) continue;
-    return { slot, theme_key: slots[slot], publish_at: publishAt, date_key: jstDateKey(publishAt) };
+    return { slot, theme_key: themeKeyForSlot(slots, slot, publishAt), publish_at: publishAt, date_key: jstDateKey(publishAt) };
   }
   throw new Error('AUTO_REEL_NO_SLOT');
 }
@@ -83,7 +92,8 @@ export function buildUserConcept(themes, theme, attempt = 1) {
 }
 
 export function buildLink(theme, dateKey) {
-  const url = new URL('https://hoshilu.app/');
+  // セラー向けの型は /for-sellers へ（theme.link_path）。既定はトップ。
+  const url = new URL(String(theme.link_path || '/').replace(/^\/*/, '/'), 'https://hoshilu.app/');
   url.searchParams.set('utm_source', 'instagram');
   url.searchParams.set('utm_medium', 'organic_social');
   url.searchParams.set('utm_campaign', 'hoshilu_runway_reel');

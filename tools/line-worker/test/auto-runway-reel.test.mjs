@@ -2,16 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql, buildPostId, buildRejectSql,
+  buildApprovalSql, buildAssCutA, buildLink, buildAssCutB, buildJobId, buildJobSql, buildPostId, buildRejectSql,
   classifyRunwaySlotCompetition, evaluateFaces, evaluateGeneratedText, evaluateTranscript, GENERATED_TEXT_MAX_CHARS_TOTAL,
   nextPublishSlot, parseVolume, REQUIRED_QA_CHECKS, similarity
 } from '../scripts/auto-runway-reel-lib.mjs';
 
 const themes = JSON.parse(readFileSync(new URL('../ops/runway/auto/themes.json', import.meta.url), 'utf8'));
 
-test('2026-09-06 大隆さん決定: 月・水・土の型が揃い、セリフに固有名詞・数字がなく、キャプションにAI開示がある', () => {
-  assert.deepEqual(Object.keys(themes.slots), ['mon', 'wed', 'sat']);
-  for (const key of Object.values(themes.slots)) {
+// 2026-09-17 大隆さん決定: リールは火・金の週2回。火=ユーザー向け、金=セラー向け（内容を半々に）。
+test('2026-09-17 大隆さん決定: 火・金の型が揃い、セリフに固有名詞・数字がなく、キャプションにAI開示がある', () => {
+  assert.deepEqual(Object.keys(themes.slots), ['tue', 'fri']);
+  assert.ok(themes.slots.tue.every((key) => themes.themes[key].audience === 'user'));
+  assert.ok(themes.slots.fri.every((key) => themes.themes[key].audience === 'seller'));
+  assert.ok(themes.slots.fri.every((key) => themes.themes[key].link_path === '/for-sellers'));
+  for (const key of Object.values(themes.slots).flat()) {
     const theme = themes.themes[key];
     assert.ok(theme, `theme ${key}`);
     assert.doesNotMatch(theme.spoken_line, /HOSHILU|ホシル|ホスル|Amazon|楽天|\d|円|%/u, `${key} spoken_line`);
@@ -25,16 +29,23 @@ test('2026-09-06 大隆さん決定: 月・水・土の型が揃い、セリフ�
   assert.match(themes.product_image_url, /^https:\/\/hoshilu\.app\/social\/runway\//u);
 });
 
-test('次の投稿枠は月・水・土 20:15 JST。直近すぎる枠は飛ばす', () => {
-  const sunday = new Date('2026-09-06T01:00:00Z'); // JST 日曜 10:00
+test('次の投稿枠は火・金 20:15 JST。直近すぎる枠は飛ばし、型は週ごとに順送り', () => {
+  const sunday = new Date('2026-09-20T01:00:00Z'); // JST 日曜 10:00
   const slot = nextPublishSlot(sunday, themes);
-  assert.equal(slot.slot, 'mon');
-  assert.equal(slot.theme_key, 'want_at_price');
-  assert.equal(slot.publish_at.toISOString(), '2026-09-07T11:15:00.000Z');
-  assert.equal(slot.date_key, '20260907');
-  const mondayLate = new Date('2026-09-07T10:30:00Z'); // JST 月曜 19:30（90分未満）
-  assert.equal(nextPublishSlot(mondayLate, themes).slot, 'wed');
-  assert.equal(nextPublishSlot(sunday, themes, { slotOverride: 'sat' }).date_key, '20260912');
+  assert.equal(slot.slot, 'tue');
+  assert.equal(slot.theme_key, 'stop_chasing_sales'); // 9/14 週=0 → 9/21 週=1
+  assert.equal(slot.publish_at.toISOString(), '2026-09-22T11:15:00.000Z');
+  assert.equal(slot.date_key, '20260922');
+  const tuesdayLate = new Date('2026-09-22T10:30:00Z'); // JST 火曜 19:30（90分未満）
+  const friday = nextPublishSlot(tuesdayLate, themes);
+  assert.equal(friday.slot, 'fri');
+  assert.equal(friday.theme_key, 'seller_shop_entrance');
+  assert.equal(nextPublishSlot(sunday, themes, { slotOverride: 'fri' }).date_key, '20260925');
+  assert.equal(nextPublishSlot(new Date('2026-09-27T01:00:00Z'), themes).theme_key, 'price_drop_notice');
+  assert.equal(nextPublishSlot(new Date('2026-09-27T01:00:00Z'), themes, { slotOverride: 'fri' }).theme_key, 'seller_demand_visible');
+  // セラー向けの型のリンクは /for-sellers
+  assert.match(buildLink(themes.themes.seller_demand_visible, '20260925'), /^https:\/\/hoshilu\.app\/for-sellers\?utm_source=instagram/u);
+  assert.match(buildLink(themes.themes.want_at_price, '20260922'), /^https:\/\/hoshilu\.app\/\?utm_source=instagram/u);
 });
 
 test('job_id / post_id / SQL は既存の ops/runway/reel_job_*.sql と同じ列構成で、再投入しても重複しない', () => {

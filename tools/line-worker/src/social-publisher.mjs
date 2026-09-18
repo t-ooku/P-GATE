@@ -238,6 +238,8 @@ export function normalizeSocialPost(input = {}) {
     caption: disclosedCaption,
     link,
     media_url: clean(input.media_url, 1000),
+    // 2026-09-17 大隆さん決定: カルーセル（複数画像）。JSON 配列の文字列で持つ（列 media_urls、migration 0080）
+    media_urls: normalizeMediaUrls(input.media_urls),
     platform_job_id: clean(input.platform_job_id, 120),
     scheduled_at: clean(input.scheduled_at, 40),
     status: clean(input.status || 'REVIEW_REQUIRED', 30).toUpperCase(),
@@ -249,6 +251,20 @@ export function normalizeSocialPost(input = {}) {
     ai_generated: input.ai_generated === true || Number(input.ai_generated) === 1,
     crosspost_group_id: clean(input.crosspost_group_id, 140)
   };
+}
+
+export function normalizeMediaUrls(value) {
+  let list = value;
+  if (typeof value === 'string') {
+    if (!value.trim()) return '';
+    try { list = JSON.parse(value); } catch { return ''; }
+  }
+  if (!Array.isArray(list)) return '';
+  const urls = list.map((item) => clean(item, 1000)).filter((item) => /^https:\/\/(?:www\.)?hoshilu\.app\//u.test(item)).slice(0, 10);
+  return urls.length ? JSON.stringify(urls) : '';
+}
+export function mediaUrlList(post) {
+  try { const list = JSON.parse(post?.media_urls || '[]'); return Array.isArray(list) ? list : []; } catch { return []; }
 }
 
 function instagramPostCaption(caption) {
@@ -488,13 +504,17 @@ async function xMediaRequest(url, accessToken, options, fetchImpl, errorCode) {
   return response;
 }
 
-async function uploadXVideo(mediaUrl, accessToken, env, fetchImpl) {
+async function uploadXVideo(mediaUrl, accessToken, env, fetchImpl, kind = 'video') {
   const safeUrl = new URL(safeXMediaUrl(mediaUrl));
-  const runwayMatch = /^\/api\/social\/media\/runway\/([A-Za-z0-9][A-Za-z0-9_-]{0,119})\.mp4$/.exec(safeUrl.pathname);
-  const staticAsset = /^\/social\/[A-Za-z0-9][A-Za-z0-9._-]{0,199}\.mp4$/.test(safeUrl.pathname);
+  const image = kind === 'image';
+  const runwayMatch = image ? null : /^\/api\/social\/media\/runway\/([A-Za-z0-9][A-Za-z0-9_-]{0,119})\.mp4$/.exec(safeUrl.pathname);
+  // 2026-09-17: カルーセル画像（/social/carousel/<set>/<n>.jpg）も同じ静的アセット経路で読む
+  const staticAsset = image
+    ? /^\/social\/(?:carousel\/[a-z0-9-]{1,60}\/)?[A-Za-z0-9][A-Za-z0-9._-]{0,199}\.(?:jpg|jpeg|png)$/.test(safeUrl.pathname)
+    : /^\/social\/[A-Za-z0-9][A-Za-z0-9._-]{0,199}\.mp4$/.test(safeUrl.pathname);
   let bytes;
-  const contentType = 'video/mp4';
-  const maxBytes = Math.min(512 * 1024 * 1024,
+  const contentType = image ? (/\.png$/.test(safeUrl.pathname) ? 'image/png' : 'image/jpeg') : 'video/mp4';
+  const maxBytes = image ? 5 * 1024 * 1024 : Math.min(512 * 1024 * 1024,
     Math.max(1, Number(env.X_MAX_VIDEO_BYTES || 100 * 1024 * 1024)));
   if (runwayMatch) {
     if (!env.PRODUCT_DB || !env.SOCIAL_MEDIA_BUCKET) throw new Error('X_MEDIA_R2_NOT_CONFIGURED');
@@ -539,7 +559,7 @@ async function uploadXVideo(mediaUrl, accessToken, env, fetchImpl) {
     {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ media_type: contentType, total_bytes: bytes.byteLength, media_category: 'tweet_video' })
+      body: JSON.stringify({ media_type: contentType, total_bytes: bytes.byteLength, media_category: image ? 'tweet_image' : 'tweet_video' })
     }, fetchImpl, 'X_MEDIA_INIT'
   );
   const mediaId = clean((await initialized.json())?.data?.id, 120);
@@ -549,7 +569,7 @@ async function uploadXVideo(mediaUrl, accessToken, env, fetchImpl) {
   for (let offset = 0, segment = 0; offset < bytes.byteLength; offset += chunkSize, segment += 1) {
     const form = new FormData();
     form.set('segment_index', String(segment));
-    form.set('media', new Blob([bytes.slice(offset, offset + chunkSize)], { type: contentType }), `segment-${segment}.mp4`);
+    form.set('media', new Blob([bytes.slice(offset, offset + chunkSize)], { type: contentType }), `segment-${segment}.${image ? 'jpg' : 'mp4'}`);
     await xMediaRequest(
       `https://api.x.com/2/media/upload/${encodeURIComponent(mediaId)}/append`, accessToken,
       { method: 'POST', body: form }, fetchImpl, 'X_MEDIA_APPEND'
@@ -592,10 +612,16 @@ async function publishX(post, env, fetchImpl) {
     await verifyXPublishingAccount(expectedUsername, env, fetchImpl);
   }
   const endpoint = 'https://api.x.com/2/tweets';
-  if (post.media_url && !accessToken) throw new Error('X_MEDIA_REQUIRES_OAUTH2');
-  const mediaId = post.media_url
-    ? await uploadXVideo(post.media_url, accessToken, env, fetchImpl)
-    : '';
+  const imageUrls = mediaUrlList(post).slice(0, 4);
+  if ((post.media_url || imageUrls.length) && !accessToken) throw new Error('X_MEDIA_REQUIRES_OAUTH2');
+  const mediaIds = [];
+  if (imageUrls.length) {
+    // カルーセルは X では画像最大 4 枚の 1 投稿
+    for (const imageUrl of imageUrls) mediaIds.push(await uploadXVideo(imageUrl, accessToken, env, fetchImpl, 'image'));
+  } else if (post.media_url) {
+    mediaIds.push(await uploadXVideo(post.media_url, accessToken, env, fetchImpl));
+  }
+  const mediaId = mediaIds.length ? mediaIds : '';
   const authorization = accessToken
     ? `Bearer ${accessToken}`
     : await xAuthorization('POST', endpoint, env);
@@ -605,7 +631,7 @@ async function publishX(post, env, fetchImpl) {
     headers: { authorization, 'content-type': 'application/json' },
     body: JSON.stringify({
       text: [post.caption, post.link].filter(Boolean).join('\n'),
-      ...(mediaId ? { media: { media_ids: [mediaId] } } : {})
+      ...(mediaId ? { media: { media_ids: mediaId } } : {})
     })
   });
   if (!response.ok) {
@@ -615,10 +641,48 @@ async function publishX(post, env, fetchImpl) {
   return (await response.json())?.data?.id || '';
 }
 
+// 2026-09-17 大隆さん決定: カルーセル画像フィード投稿（2〜10 枚）。子コンテナ（is_carousel_item）→ 親（CAROUSEL, children）→ 公開。
+// 親の creation_id を platform_job_id に保存し、途中で落ちても同じ親を再開する（子は親に紐付いているので作り直さない）。
+async function publishInstagramCarousel(post, urls, { account, headers }, env, fetchImpl, hooks = {}) {
+  if (urls.length > 10) throw new Error('INSTAGRAM_CAROUSEL_TOO_MANY');
+  const instagramCaption = instagramPostCaption(post.caption);
+  let creationId = clean(post.platform_job_id, 120);
+  if (!creationId) {
+    const children = [];
+    for (const imageUrl of urls) {
+      const child = await fetchImpl(`https://graph.instagram.com/v24.0/${account}/media`, {
+        method: 'POST', redirect: 'manual', headers,
+        body: JSON.stringify({ image_url: imageUrl, is_carousel_item: true })
+      });
+      if (!child.ok) {
+        const detail = clean(await child.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
+        throw new Error(`INSTAGRAM_CAROUSEL_ITEM_${child.status}${detail ? `_${detail}` : ''}`);
+      }
+      const childId = clean((await child.json())?.id, 120);
+      if (!childId) throw new Error('INSTAGRAM_CAROUSEL_ITEM_ID_MISSING');
+      children.push(childId);
+    }
+    const create = await fetchImpl(`https://graph.instagram.com/v24.0/${account}/media`, {
+      method: 'POST', redirect: 'manual', headers,
+      body: JSON.stringify({ media_type: 'CAROUSEL', children, caption: instagramCaption, hide_like_and_view_counts: true })
+    });
+    if (!create.ok) {
+      const detail = clean(await create.text(), 240).replace(/[^\w\s:.,{}[\]"-]/g, '');
+      throw new Error(`INSTAGRAM_CREATE_${create.status}${detail ? `_${detail}` : ''}`);
+    }
+    creationId = clean((await create.json())?.id, 120);
+    if (!creationId) throw new Error('INSTAGRAM_CREATION_ID_MISSING');
+    await hooks.onJobCreated?.(creationId);
+  }
+  return finishInstagramContainer(creationId, { account, headers }, env, fetchImpl);
+}
+
 async function publishInstagram(post, env, fetchImpl, hooks = {}) {
-  if (!post.media_url) throw new Error('INSTAGRAM_MEDIA_REQUIRED');
+  const carouselUrls = mediaUrlList(post);
+  if (!post.media_url && carouselUrls.length < 2) throw new Error('INSTAGRAM_MEDIA_REQUIRED');
   const account = encodeURIComponent(env.INSTAGRAM_ACCOUNT_ID);
   const headers = { authorization: `Bearer ${env.INSTAGRAM_ACCESS_TOKEN}`, 'content-type': 'application/json' };
+  if (carouselUrls.length >= 2) return publishInstagramCarousel(post, carouselUrls, { account, headers }, env, fetchImpl, hooks);
   let mediaPath = '';
   try {
     mediaPath = new URL(post.media_url).pathname.toLowerCase();
@@ -664,6 +728,10 @@ async function publishInstagram(post, env, fetchImpl, hooks = {}) {
     if (!creationId) throw new Error('INSTAGRAM_CREATION_ID_MISSING');
     await hooks.onJobCreated?.(creationId);
   }
+  return finishInstagramContainer(creationId, { account, headers }, env, fetchImpl);
+}
+
+async function finishInstagramContainer(creationId, { account, headers }, env, fetchImpl) {
   let statusCode = '';
   // Keep each invocation comfortably below the Worker subrequest ceiling. A
   // slow container is resumed by the next isolated social cron using the
@@ -1262,7 +1330,7 @@ export async function handleSocialAdminRoutes(request, env) {
     }
     try {
       const post = normalizeSocialPost(existing);
-      if (post.platform !== 'X' && post.platform !== 'THREADS' && !post.media_url) throw new Error(`${post.platform}_MEDIA_REQUIRED`);
+      if (post.platform !== 'X' && post.platform !== 'THREADS' && !post.media_url && mediaUrlList(post).length < 2) throw new Error(`${post.platform}_MEDIA_REQUIRED`);
       await assertDailyAiActressPolicy(post, env);
       if (post.platform === 'INSTAGRAM') await getInstagramPublishCredentials(env);
       else if (post.platform === 'X') {

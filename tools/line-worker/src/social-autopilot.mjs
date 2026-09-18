@@ -7,6 +7,7 @@ import {
   xPublishingSafetyReadiness
 } from './social-publisher.mjs';
 import { buzzThemeFor } from './buzz-shelf.mjs';
+import { policyV3Allows, seedCarouselQueue } from './social-weekly-plan-v3.mjs';
 
 const CAMPAIGN_ID = 'hoshilu-official-13mall-v2';
 const NEW_SEARCH_LAUNCH_UTM_CAMPAIGN = 'hoshilu-new-search-launch-20260829';
@@ -905,7 +906,10 @@ export async function seedSocialAutopilotQueue(env, now = new Date()) {
     env.THREADS_EVERGREEN_AUTOPILOT_ENABLED === 'true'
   ));
   const xPublishingSafety = xPublishingSafetyReadiness(env);
+  // 2026-09-17 大隆さん決定（SNS 方針 v3）: 旧方針の投稿（毎日 v2 女優リール・火木土の Instagram 案内・
+  // リール日/カルーセル日の X 案内）は投入しない。カルーセルは seedCarouselQueue、リールは auto-runway-reel。
   const posts = [...approvedModelReel, ...evergreen, ...threadsAmazonBoost]
+    .filter(post => policyV3Allows(post))
     .filter(post => readiness[post.platform]
       && (post.platform !== 'X' || (
         xPublishingSafety.ready && env.X_EVERGREEN_AUTOPILOT_ENABLED === 'true'
@@ -1086,7 +1090,8 @@ export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl =
   // the invocation budget before an already-approved due post is attempted.
   const published = await runDueSocialPosts(env, now, fetchImpl);
   const seeded = await seedSocialAutopilotQueue(env, now);
+  const carousels = await seedCarouselQueue(env, now);
   const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
   const threadsInsights = await syncThreadsInsights(env, now, fetchImpl);
-  return { seeded, published, permalinks, threadsInsights };
+  return { seeded, carousels, published, permalinks, threadsInsights };
 }
