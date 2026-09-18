@@ -16,7 +16,21 @@ const CAMPAIGN_ID = 'hoshilu-ai-actress-daily-v1';
 const RUNWAY_CAMPAIGN_ID = 'hoshilu-runway-video';
 const RUNWAY_JOB_PREFIX = 'runway-auto-';
 const RUNWAY_POST_PREFIX = 'hoshilu-runway-auto-';
-const RUNWAY_WEEKDAYS = new Set([1, 3, 6]);
+// 2026-09-17 大隆さん決定（SNS 方針 v3）: リールは火・金（Runway 新規生成、当日 06:00 JST に生成）、
+// カルーセルは月・水・土（hoshilu-carousel-v3、画像 2〜10 枚）。木・日は投稿を要求しない。
+// v3 の適用開始日より前の日付は要求しない（旧方針の毎日 v2 女優リールは 9/16 に停止済み）。
+const POLICY_V3_START = '2026-09-21';
+const RUNWAY_WEEKDAYS = new Set([2, 5]);
+const CAROUSEL_WEEKDAYS = new Set([1, 3, 6]);
+const CAROUSEL_CAMPAIGN_ID = 'hoshilu-carousel-v3';
+function weekdayOf(date) { return new Date(`${date}T00:00:00.000Z`).getUTCDay(); }
+export function expectedFormatForDate(date) {
+  if (!validJstDate(date) || date < POLICY_V3_START) return '';
+  const weekday = weekdayOf(date);
+  if (RUNWAY_WEEKDAYS.has(weekday)) return 'REEL';
+  if (CAROUSEL_WEEKDAYS.has(weekday)) return 'CAROUSEL';
+  return '';
+}
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -114,6 +128,7 @@ export function socialAiActressSlaSql() {
     q.ai_generated AS queue_ai_generated,
     q.crosspost_group_id,
     q.media_url AS queue_media_url,
+    q.media_urls AS queue_media_urls,
     a.asset_id,
     a.media_url AS asset_media_url,
     a.media_sha256,
@@ -142,6 +157,7 @@ export function socialAiActressSlaSql() {
       (q.creative_policy='DAILY_AI_ACTRESS_22' AND q.jst_publish_date BETWEEN ?1 AND ?2)
       OR (q.campaign_id='hoshilu-runway-video'
         AND date(datetime(q.scheduled_at,'+9 hours')) BETWEEN ?1 AND ?2)
+      OR (q.campaign_id='hoshilu-carousel-v3' AND q.jst_publish_date BETWEEN ?1 AND ?2)
     )
   ORDER BY q.scheduled_at,q.platform,q.post_id`;
 }
@@ -154,11 +170,27 @@ export function isEligibleSocialAiActressRow(row = {}, { asOf = Date.now() } = {
   const rowDate = effectiveJstDate(row);
   const runway = row.campaign_id === RUNWAY_CAMPAIGN_ID
     && String(row.content_id || '').startsWith(RUNWAY_JOB_PREFIX);
+  if (row.campaign_id === CAROUSEL_CAMPAIGN_ID) {
+    let urls = [];
+    try { urls = JSON.parse(String(row.queue_media_urls || '[]')); } catch { urls = []; }
+    return PLATFORMS.includes(platform)
+      && rowDate >= POLICY_V3_START
+      && CAROUSEL_WEEKDAYS.has(weekdayOf(rowDate))
+      && row.post_id === `${CAROUSEL_CAMPAIGN_ID}-${platform.toLowerCase()}-${rowDate}`
+      && READY_STATUSES.has(status)
+      && timestampAtOrBefore(row.queue_approved_at, asOfTimestamp)
+      && validJstDate(rowDate)
+      && rowDate === scheduledDate
+      && row.crosspost_group_id === `hoshilu-carousel-${rowDate}`
+      && Array.isArray(urls) && urls.length >= 2 && urls.length <= 10
+      && urls.every((url) => validHttpsUrl(url) && /^\/social\/carousel\/[a-z0-9-]+\/\d+\.jpg$/u.test(new URL(url).pathname));
+  }
+  if (rowDate >= POLICY_V3_START && !runway) return false;
   if (runway) {
     const expectedPostId = String(row.content_id).replace(/^runway-auto-/u, RUNWAY_POST_PREFIX)
       + (platform === 'X' ? '-x' : '');
     return PLATFORMS.includes(platform)
-      && RUNWAY_WEEKDAYS.has(new Date(`${rowDate}T00:00:00.000Z`).getUTCDay())
+      && RUNWAY_WEEKDAYS.has(weekdayOf(rowDate))
       && row.post_id === expectedPostId
       && READY_STATUSES.has(status)
       && timestampAtOrBefore(row.queue_approved_at, asOfTimestamp)
@@ -228,6 +260,11 @@ function safePlatformState(rows, date, platform, asOf) {
 
 function pairIsConsistent(xRows, instagramRows) {
   if (xRows.length !== 1 || instagramRows.length !== 1) return false;
+  if (xRows[0].campaign_id === CAROUSEL_CAMPAIGN_ID || instagramRows[0].campaign_id === CAROUSEL_CAMPAIGN_ID) {
+    return xRows[0].campaign_id === CAROUSEL_CAMPAIGN_ID && instagramRows[0].campaign_id === CAROUSEL_CAMPAIGN_ID
+      && xRows[0].crosspost_group_id === instagramRows[0].crosspost_group_id
+      && xRows[0].content_id === instagramRows[0].content_id;
+  }
   if (xRows[0].campaign_id === RUNWAY_CAMPAIGN_ID
     || instagramRows[0].campaign_id === RUNWAY_CAMPAIGN_ID) {
     return xRows[0].campaign_id === RUNWAY_CAMPAIGN_ID
@@ -259,8 +296,9 @@ function validPublicAudit(entry, row, platform) {
 export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = new Date() } = {}) {
   assert(Array.isArray(rows), 'SOCIAL_AI_ACTRESS_ROWS_INVALID');
   const clock = socialAiActressJstClock(now);
-  const approvalRequired = clock.minutes >= APPROVAL_GATE_MINUTES;
-  const publicationRequired = clock.minutes >= PUBLICATION_GATE_MINUTES;
+  const todayRequired = Boolean(expectedFormatForDate(clock.date));
+  const approvalRequired = todayRequired && clock.minutes >= APPROVAL_GATE_MINUTES;
+  const publicationRequired = todayRequired && clock.minutes >= PUBLICATION_GATE_MINUTES;
   const todayStates = Object.fromEntries(PLATFORMS.map((platform) => [
     platform, safePlatformState(rows, clock.date, platform, clock.timestamp)
   ]));
@@ -269,8 +307,11 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
   const futurePairMismatch = [];
   let futureReady = 0;
 
+  const todayFormat = expectedFormatForDate(clock.date);
   for (let offset = 1; offset <= FUTURE_DAYS; offset += 1) {
     const date = addUtcDays(clock.date, offset);
+    // リールは当日 06:00 JST に新規生成するので将来在庫は要求しない。カルーセルだけ将来分の APPROVED を要求する
+    if (expectedFormatForDate(date) !== 'CAROUSEL') continue;
     const xRows = rowsFor(rows, date, 'X', clock.timestamp);
     const instagramRows = rowsFor(rows, date, 'INSTAGRAM', clock.timestamp);
     for (const [platform, eligible] of [['X', xRows], ['INSTAGRAM', instagramRows]]) {
@@ -372,7 +413,9 @@ export function evaluateSocialAiActressSla({ rows = [], publicPosts = {}, now = 
     future: {
       from: addUtcDays(clock.date, 1),
       to: addUtcDays(clock.date, FUTURE_DAYS),
-      required: FUTURE_DAYS * PLATFORMS.length,
+      required: Array.from({ length: FUTURE_DAYS }, (_, i) => addUtcDays(clock.date, i + 1))
+        .filter((date) => expectedFormatForDate(date) === 'CAROUSEL').length * PLATFORMS.length,
+      expected_today: todayFormat || 'NONE',
       ready: futureReady,
       status: futurePassed ? 'PASS' : 'FAIL'
     },
