@@ -1,9 +1,12 @@
 name: Auto Runway reel (generate, post-process, auto QA, queue)
 
-# 2026-09-06 大隆さん決定（指示書 2026-09-06 全面再設計版 §A）: 月・水・土の Reel は
+# 2026-09-06 大隆さん決定（指示書 2026-09-06 全面再設計版 §A）: Reel は
 # Runway で新規生成し、人手ゼロで投稿キューまで通す。
+# 2026-09-17 大隆さん決定（SNS 方針 v3）: リールは週 2 回（火・金 20:15 JST）。必ず AI 女優 v1 の
+# 声付き動画を新規生成する。火=ユーザー向け、金=ショップ・セラー向け（themes.json の slots）。
+# 月・水・土はカルーセル画像（social-weekly-plan-v3.mjs）。
 #
-#  06:00 JST（月・水・土）に起動 → tools/line-worker/scripts/auto-runway-reel.mjs が
+#  06:00 JST（火・金）に起動 → tools/line-worker/scripts/auto-runway-reel.mjs が
 #  D1 にジョブ投入 → Worker の 15分 cron が Runway に生成させる → 生成物を R2 から取得 →
 #  Playwright で hoshilu.app の実画面を撮影 → ffmpeg で 字幕/ブランド/AI表記/実画面/URL を
 #  合成 → 自動QA（仕様・全フレーム・音量・顔=Cloud Vision・セリフ=Whisper・焼き込み・
@@ -21,16 +24,16 @@ name: Auto Runway reel (generate, post-process, auto QA, queue)
 
 on:
   schedule:
-    # 月・水・土 06:00 JST = 日・火・金 21:00 UTC
-    - cron: '0 21 * * 0,2,5'
+    # 火・金 06:00 JST = 月・木 21:00 UTC（2026-09-17 SNS 方針 v3）
+    - cron: '0 21 * * 1,4'
   workflow_dispatch:
     inputs:
       slot:
-        description: '枠を固定する場合 mon / wed / sat（空なら次の枠）'
+        description: '枠を固定する場合 tue / fri（空なら次の枠）'
         required: false
         default: ''
       theme:
-        description: '型を固定する場合 want_at_price / stop_chasing_sales / price_drop_notice'
+        description: '型を固定する場合 want_at_price / stop_chasing_sales / price_drop_notice / seller_demand_visible / seller_shop_entrance'
         required: false
         default: ''
       publish_at:
