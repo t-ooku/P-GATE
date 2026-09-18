@@ -88,7 +88,7 @@ import {
 import { handleSpApiAdminRoutes } from './sp-api-admin-routes.mjs';
 import { handleSpApiSellerRoutes } from './sp-api-seller-routes.mjs';
 import { requestedColorPatterns, semanticSearchGroups } from './search-intelligence.mjs';
-import { expandSearchQuery, findExpansionRule } from './query-expansion.mjs';
+import { expandSearchQuery, findExpansionRule, headNounGateQuery } from './query-expansion.mjs';
 import { APPAREL_CATEGORY_JA_LABELS } from './apparel-vocabulary.mjs';
 import {
   buildOrganizedApparelQuery, colorLabelFromEnglishTerms, stripSentencePunctuation,
@@ -2941,6 +2941,7 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       if (options.internalQa === true) result.qa_trace = {
         expansion_rule: expandedQuery.expansion?.rule_id || null,
         expanded_query: expandedQuery.query,
+        expansion_primary: expandedQuery.expansion?.primary || null,
         effective_query: input.query,
         rakuten_keyword_candidates: buildRakutenSearchKeywordCandidates(input.query, expandedQuery.query),
         providers: marketplaceSearches.map((source, index) => ({ source: source.key,
@@ -3004,7 +3005,10 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       },
       // 汎用の主名詞ゲート(§10/§11): 検索文の主名詞が商品そのものとして出て
       // いない候補(別カテゴリ・付属品・別語の一部)を後ろへ回す。空にはしない。
-      candidates: applyHeadNounGate(expandedQuery.query, combinedSearchCandidates).slice(0, CLIENT_CANDIDATE_LIMIT)
+      // 2026-09-19: ゲート判定には headNounGateQuery(展開規則のprimaryを末尾にも
+      // 足したクエリ)を使う(query-expansion.mjs 参照)。expandedQuery.query 自体は
+      // モール検索語生成等の既存用途があるため変えない。
+      candidates: applyHeadNounGate(headNounGateQuery(expandedQuery), combinedSearchCandidates).slice(0, CLIENT_CANDIDATE_LIMIT)
     };
     if (input.search_attempt >= 2) {
       result.clarification = { ...(result.clarification || {}), required: false, options: [] };

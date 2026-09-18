@@ -167,4 +167,19 @@ export function expandSearchQuery(query) {
   };
 }
 
+// 2026-09-19 oil_free_air_fryer カナリアFAILで発覚: applyHeadNounGate(search-head-noun.mjs)
+// の extractHeadNouns はクエリ文の「末尾」から主名詞を取る(日本語は修飾語→名詞の語順が
+// 多いため)。一方 expandSearchQuery は primary を「先頭」に追加する設計(元の言い回しを
+// 失わないため)なので、展開後クエリの末尾は常に利用者の原文のまま。原文の末尾がカテゴリ
+// 辞書に無い上位語(「調理家電」等)だと、ゲートは本来のカテゴリ主名詞(primary、例:
+// 「ノンフライヤー」)を見つけられない。ゲート判定にだけ使うクエリとして、primary を
+// (既に末尾にある場合を除き)末尾にも足す。expandedQuery.query 自体はモール検索語生成
+// 等の既存用途を変えないためそのまま保持する。
+export function headNounGateQuery(expandedQuery) {
+  const base = String(expandedQuery?.query || '').trim();
+  const primary = expandedQuery?.expanded ? String(expandedQuery?.expansion?.primary || '').trim() : '';
+  if (!primary || base.endsWith(primary)) return base;
+  return `${base} ${primary}`.trim();
+}
+
 export const queryExpansionRuleIds = Object.freeze(EXPANSION_RULES.map((rule) => rule.id));

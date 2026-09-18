@@ -98,7 +98,19 @@ export function evaluateSearchQaResult(fixture, payload, elapsedMs) {
   const names = top.map(candidateName);
   const expected = names.some((name) => fixture.expect.test(name));
   const rejected = fixture.reject && names[0] ? fixture.reject.test(names[0]) : false;
-  const headScore = names[0] ? (headNounScore(fixture.query, names[0]) ?? 2) : 0;
+  // 2026-09-19: 本番の主名詞ゲート(index.mjs)は headNounGateQuery(query-expansion.mjs)で
+  // 展開規則の primary をクエリ末尾にも足した文字列を使う(oil_free_air_fryer カナリアFAILで
+  // 発覚: expandSearchQuery は primary を先頭に足すため、末尾は利用者の原文のまま残り、
+  // 辞書に無い上位語(「調理家電」等)で終わるクエリだと主名詞ゲートが本来のカテゴリ語
+  // (「ノンフライヤー」)を見つけられなかった)。カナリアの自己判定も同じ文字列を使い、
+  // 本番の判定とズレないようにする。
+  const trace = result.qa_trace || null;
+  const traceExpanded = trace?.expanded_query ? String(trace.expanded_query) : '';
+  const tracePrimary = trace?.expansion_primary ? String(trace.expansion_primary) : '';
+  const headNounQuery = traceExpanded
+    ? (tracePrimary && !traceExpanded.endsWith(tracePrimary) ? `${traceExpanded} ${tracePrimary}` : traceExpanded)
+    : fixture.query;
+  const headScore = names[0] ? (headNounScore(headNounQuery, names[0]) ?? 2) : 0;
   const links = Array.isArray(result.marketplace_search_links) ? result.marketplace_search_links : [];
   const presentMalls = new Set(links.map((link) => String(link?.marketplace || '')));
   const mallLinkCount = REQUIRED_MALL_LINKS.filter((mall) => presentMalls.has(mall)).length;
