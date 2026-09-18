@@ -1,0 +1,1158 @@
+[
+  {
+    "query_text": "敬老の日っぽい贈り物のやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "敬老の日に祖父母へ贈る何かを探しているが具体的な商品カテゴリが不明",
+    "ideal_answer": "敬老の日の贈り物とのことですが、健康グッズ、日用品、食べ物・お菓子のどれがご希望ですか？予算感もあれば教えてください。",
+    "reason": "「贈り物っぽいやつ」は用途(敬老の日)のみでカテゴリ情報がなくultra_ambiguous。確認質問が理想回答。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "運動会で応援する時に使うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "運動会の応援グッズを探している。うちわ・メガホン・ハチマキ等が候補",
+    "ideal_answer": "運動会の応援グッズ（応援うちわ・メガホン・ハチマキ）",
+    "reason": "「応援する時に使うやつ」は運動会シーズンの言い換え。候補は複数だが応援グッズという大枠は特定可能なため中程度confidence。",
+    "category": "sports-day-goods",
+    "search_terms": {
+      "ja": [
+        "応援うちわ",
+        "運動会 応援グッズ",
+        "メガホン"
+      ],
+      "en": [
+        "sports day cheering goods"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "台風の時に窓に貼るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "台風対策として窓ガラスの飛散防止をしたい",
+    "ideal_answer": "窓ガラス飛散防止フィルムまたは養生テープ",
+    "reason": "「窓に貼るやつ」はフィルムとテープの両方が候補になり境界例だが、台風対策という文脈で用途はほぼ確定できる。",
+    "category": "disaster-prep",
+    "search_terms": {
+      "ja": [
+        "飛散防止フィルム",
+        "窓 養生テープ 台風"
+      ],
+      "en": [
+        "window shatterproof film"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "傘が壊れた時に直すやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "壊れた傘を自分で修理したい。骨組みパーツか補修テープが候補",
+    "ideal_answer": "傘の骨が折れた場合は交換用骨組みパーツ、生地が破れた場合は傘用補修テープです。どちらの症状ですか？",
+    "reason": "確認質問を返すためcategoryはUNCLASSIFIEDで統一(2択に絞れている分confidenceはultra_ambiguousよりやや高め)。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "傘 骨 交換 パーツ",
+        "傘 補修テープ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "靴が濡れた時に乾かすやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "濡れた靴を乾かす家電・グッズを探している",
+    "ideal_answer": "くつ乾燥機（電動シューズドライヤー）",
+    "reason": "「乾かすやつ」は靴乾燥機という明確なカテゴリに一意に近い形でマッピングできるrich寄り例。",
+    "category": "shoe-dryer",
+    "search_terms": {
+      "ja": [
+        "くつ乾燥機",
+        "シューズドライヤー"
+      ],
+      "en": [
+        "shoe dryer"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "スマホの充電が減らないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "外出先でスマホのバッテリー切れを防ぎたい。モバイルバッテリーが有力候補",
+    "ideal_answer": "モバイルバッテリー（携帯充電器）",
+    "reason": "「充電が減らないように」は省電力ケースの可能性もあるが最頻出の意図はモバイルバッテリー。",
+    "category": "mobile-battery",
+    "search_terms": {
+      "ja": [
+        "モバイルバッテリー",
+        "携帯 充電器"
+      ],
+      "en": [
+        "portable charger"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "据え置き充電器"
+    ],
+    "confidence": 0.6,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "部屋を涼しくするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "残暑の部屋を涼しくしたいが、扇風機・エアコン・冷感マットのどれを探しているか不明",
+    "ideal_answer": "扇風機ですか、エアコンですか、それとも冷感マットや保冷剤タイプの寝具ですか？予算や設置環境も教えてください。",
+    "reason": "「涼しくするやつ」は候補カテゴリが広範(家電〜寝具)でultra_ambiguous。確認質問が理想回答。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "虫よけのやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "虫よけ対策グッズを探している。スプレー・リング・アロマ等が候補",
+    "ideal_answer": "虫よけスプレーまたは虫よけリング（携帯用）",
+    "reason": "「虫よけのやつ」は形状は不明だが用途(虫よけ)は明確なためカテゴリの大枠は特定可能。",
+    "category": "insect-repellent",
+    "search_terms": {
+      "ja": [
+        "虫よけスプレー",
+        "虫よけリング"
+      ],
+      "en": [
+        "insect repellent"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "洗濯物ににおいがつかないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "部屋干し臭を防ぎたいが、洗剤・スプレー・除湿機・室内干しラックのどれが候補か不明",
+    "ideal_answer": "部屋干し用洗剤・部屋干し臭防止スプレー・除湿機・室内物干しラックのどれをお探しですか？室内干しの頻度も教えてください。",
+    "reason": "「におわないようにするやつ」は原因対策手段が複数(洗剤/スプレー/除湿機/物干し)ありultra_ambiguous。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "姿勢を良くするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "姿勢改善グッズを探しているが、矯正ベルト・クッション・椅子のどれか不明",
+    "ideal_answer": "姿勢矯正ベルト、姿勢サポートクッション、姿勢サポートチェアのどれをお探しですか？デスクワーク用か日常使いかも教えてください。",
+    "reason": "「姿勢を良くするやつ」はカテゴリ範囲が広くultra_ambiguous。確認質問が理想回答。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "肩がこったときに使うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "肩こり対策グッズを探しているが、マッサージ器・温熱シート・クッションのどれか不明",
+    "ideal_answer": "マッサージ器、肩用温熱シート、肩こり用クッションのどれをお探しですか？",
+    "reason": "「使うやつ」は手段が複数(マッサージ器/温熱シート/クッション)でultra_ambiguous。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "停電の時に使うやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "台風・災害時の停電対策グッズを探しているが、懐中電灯・ランタン・モバイルバッテリーのどれか不明",
+    "ideal_answer": "懐中電灯、LEDランタン、大容量モバイルバッテリーのどれをお探しですか？停電の想定時間も教えてください。",
+    "reason": "「停電の時に使うやつ」は候補が複数の防災グッズにまたがりultra_ambiguous。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "運転中にスマホを充電するやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車内でスマホ等を充電したい。シガーソケット用充電器が候補",
+    "ideal_answer": "車載用USB充電器（シガーソケット充電器）",
+    "reason": "「車の中で充電する」は用途と場所が明確でカテゴリをほぼ一意に特定できるrich例。",
+    "category": "car-charger",
+    "search_terms": {
+      "ja": [
+        "車載充電器",
+        "シガーソケット usb"
+      ],
+      "en": [
+        "car charger"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "自転車のサドルが濡れないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "雨の日に自転車のサドルが濡れないようにするカバーを探している",
+    "ideal_answer": "自転車サドルカバー（防水タイプ）",
+    "reason": "「サドルが濡れないようにする」は自転車サドルカバーという具体的カテゴリにほぼ一意に対応。",
+    "category": "bicycle-accessory",
+    "search_terms": {
+      "ja": [
+        "自転車 サドルカバー",
+        "サドル 防水カバー"
+      ],
+      "en": [
+        "bicycle saddle cover"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "お米の虫を防ぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "米びつに入れる防虫剤を探している",
+    "ideal_answer": "米びつ用防虫剤",
+    "reason": "「お米の虫を防ぐ」は米びつ用防虫剤という具体的カテゴリにほぼ一意に対応するrich例。",
+    "category": "rice-storage",
+    "search_terms": {
+      "ja": [
+        "米びつ 防虫剤",
+        "お米 虫よけ"
+      ],
+      "en": [
+        "rice storage insect repellent"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "うんどうかいでつかうはちまき",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "運動会の紅白帽・鉢巻など応援用の身につけるものを探している",
+    "ideal_answer": "運動会用の紅白はちまき",
+    "reason": "ひらがな表記は子ども特有の入力パターン。用途(運動会)と形状(はちまき)が明確なrich例。",
+    "category": "sports-day-goods",
+    "search_terms": {
+      "ja": [
+        "運動会 はちまき",
+        "紅白 鉢巻"
+      ],
+      "en": [
+        "sports day headband"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "キラキラしたシールがいっぱいはいってるやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "キラキラ系のシールを探しているが、単体のシールセットかネイル用シールかデコ素材セットか不明",
+    "ideal_answer": "キラキラシールをお探しですか？ノートに貼るタイプ、ネイルに貼るタイプ、デコレーション工作用のどれがご希望ですか？",
+    "reason": "子ども特有の言い換えで用途カテゴリが複数(文具/ネイル/工作)候補ありultra_ambiguous。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "おえかきするどうぐ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "お絵かき用の文房具（クレヨン・色鉛筆・スケッチブック等)を探している",
+    "ideal_answer": "お絵かきセット（クレヨン・色鉛筆・スケッチブックなど）",
+    "reason": "ひらがな表記の子ども特有言い換え。カテゴリは文房具・お絵かき用品で概ね特定可能。",
+    "category": "art-supplies",
+    "search_terms": {
+      "ja": [
+        "おえかきセット",
+        "こども クレヨン",
+        "スケッチブック"
+      ],
+      "en": [
+        "kids drawing set"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "じてんしゃにつけるカゴ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "自転車に取り付けるかごを探している",
+    "ideal_answer": "自転車用後付けかご",
+    "reason": "ひらがな表記だがカテゴリは自転車かごに一意に近く特定できるrich例。",
+    "category": "bicycle-accessory",
+    "search_terms": {
+      "ja": [
+        "自転車 後付け かご",
+        "自転車カゴ"
+      ],
+      "en": [
+        "bicycle basket"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "よるひかるくつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "夜に光る子供靴（光る運動靴）を探している",
+    "ideal_answer": "光る子供靴（LEDライト付きスニーカー）",
+    "reason": "ひらがな表記の子ども特有言い換え。「ひかるくつ」は光る靴という具体的カテゴリにほぼ一意に対応。",
+    "category": "kids-shoes",
+    "search_terms": {
+      "ja": [
+        "光る 子供靴",
+        "led スニーカー キッズ"
+      ],
+      "en": [
+        "light up kids shoes"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "なわとびがはやくとべるようになるくつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "縄跳びが跳びやすくなる子供靴を探している",
+    "ideal_answer": "軽量で屈曲性の高い子供用運動靴（縄跳び・体育向け）",
+    "reason": "ひらがな表記の子ども特有言い換え。「はやくとべる」は運動性能の高い靴という属性に対応するがやや幅がありconfidenceは中程度。",
+    "category": "kids-shoes",
+    "search_terms": {
+      "ja": [
+        "キッズ 運動靴 軽量",
+        "縄跳び 靴"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "立ち上がりやすい椅子用のクッション",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "椅子からの立ち上がりを補助するクッションを探している",
+    "ideal_answer": "立ち上がり補助クッション（反発力の高い椅子用クッション）",
+    "reason": "高齢者特有のニーズ(立ち上がり補助)が明確でカテゴリも一意に近いrich例。",
+    "category": "elderly-care",
+    "search_terms": {
+      "ja": [
+        "立ち上がり補助クッション",
+        "椅子 クッション 高反発"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "杖の先のゴムを交換するやつ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "杖の先端についているゴムキャップの交換用パーツを探している",
+    "ideal_answer": "杖用先ゴム（交換用キャップ）",
+    "reason": "カテゴリが一意に特定できる高齢者向けrich例。",
+    "category": "cane-accessory",
+    "search_terms": {
+      "ja": [
+        "杖 先ゴム",
+        "杖 交換用 ゴムキャップ"
+      ],
+      "en": [
+        "cane tip replacement"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "老眼鏡を拭く布",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "老眼鏡のレンズを拭くクロスを探している",
+    "ideal_answer": "メガネ拭きクロス（マイクロファイバークロス）",
+    "reason": "カテゴリが一意に特定できるrich例。",
+    "category": "eyewear-accessory",
+    "search_terms": {
+      "ja": [
+        "メガネ拭き",
+        "マイクロファイバークロス 眼鏡"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "つまずきにくいスリッパ",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "転倒防止機能のあるスリッパを探している",
+    "ideal_answer": "つまずき防止・滑り止め付きスリッパ",
+    "reason": "高齢者の転倒防止ニーズが明確でカテゴリも一意に近いrich例。",
+    "category": "slippers",
+    "search_terms": {
+      "ja": [
+        "転倒防止 スリッパ",
+        "滑り止め スリッパ"
+      ],
+      "en": [
+        "non-slip slippers for elderly"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [
+      "ヒール",
+      "サンダル"
+    ],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "血圧を測る機械",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "家庭用血圧計を探している",
+    "ideal_answer": "家庭用血圧計（上腕式）",
+    "reason": "カテゴリが一意に特定できるrich例。医療機器のため効果効能の断定は行わない。",
+    "category": "health-device",
+    "search_terms": {
+      "ja": [
+        "血圧計",
+        "上腕式 血圧計"
+      ],
+      "en": [
+        "blood pressure monitor"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "敬老の日に贈る座布団",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "敬老の日の贈り物として座布団を探している",
+    "ideal_answer": "敬老の日ギフト向け座布団（高反発・低反発タイプ含む）",
+    "reason": "用途(敬老の日)とカテゴリ(座布団)がともに明確なrich例。",
+    "category": "cushion",
+    "search_terms": {
+      "ja": [
+        "敬老の日 座布団",
+        "ギフト 座布団"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "태풍 대비 손전등",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "台風など災害時に備えて懐中電灯を探している（韓国語話者）",
+    "ideal_answer": "防災用LED懐中電灯",
+    "reason": "韓国語での台風対策検索例。カテゴリは懐中電灯に一意に近く特定できる。",
+    "category": "disaster-prep",
+    "search_terms": {
+      "ja": [
+        "防災 懐中電灯",
+        "led ライト 防災"
+      ],
+      "en": [
+        "emergency flashlight"
+      ],
+      "ko": [
+        "태풍 손전등",
+        "비상용 손전등"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "운동회 응원 도구",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "運動会の応援グッズを探している（韓国語話者）",
+    "ideal_answer": "運動会応援グッズ（うちわ・メガホン）",
+    "reason": "韓国語での運動会応援グッズ検索例。カテゴリはある程度特定可能。",
+    "category": "sports-day-goods",
+    "search_terms": {
+      "ja": [
+        "運動会 応援グッズ"
+      ],
+      "en": [
+        "sports day cheering goods"
+      ],
+      "ko": [
+        "운동회 응원용품",
+        "응원 부채"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "노인 무릎 담요",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "高齢者向けのひざ掛け毛布を探している（韓国語話者）",
+    "ideal_answer": "高齢者向けひざ掛け毛布",
+    "reason": "韓国語での高齢者向け商品検索例。カテゴリが一意に近く特定できるrich例。",
+    "category": "blanket",
+    "search_terms": {
+      "ja": [
+        "ひざ掛け 高齢者",
+        "ひざ掛け毛布"
+      ],
+      "en": [
+        "lap blanket for elderly"
+      ],
+      "ko": [
+        "무릎 담요",
+        "노인용 담요"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "台风 应急 手电筒",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "台風など災害時の緊急用懐中電灯を探している（中国語話者）",
+    "ideal_answer": "防災用LED懐中電灯",
+    "reason": "中国語での台風対策検索例。カテゴリは懐中電灯に一意に近く特定できる。",
+    "category": "disaster-prep",
+    "search_terms": {
+      "ja": [
+        "防災 懐中電灯"
+      ],
+      "en": [
+        "emergency flashlight"
+      ],
+      "ko": [],
+      "zh": [
+        "台风 手电筒",
+        "应急照明灯"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "老人 防滑拖鞋",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "高齢者向けの滑り止めスリッパを探している（中国語話者）",
+    "ideal_answer": "つまずき防止・滑り止め付きスリッパ",
+    "reason": "中国語での高齢者向け商品検索例。カテゴリが一意に近く特定できるrich例。",
+    "category": "slippers",
+    "search_terms": {
+      "ja": [
+        "滑り止め スリッパ",
+        "転倒防止 スリッパ"
+      ],
+      "en": [
+        "non-slip slippers for elderly"
+      ],
+      "ko": [],
+      "zh": [
+        "防滑拖鞋",
+        "老人拖鞋"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "学生 运动会 加油道具",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "学生の運動会応援グッズを探している（中国語話者）",
+    "ideal_answer": "運動会応援グッズ（うちわ・メガホン）",
+    "reason": "中国語での運動会応援グッズ検索例。カテゴリはある程度特定可能。",
+    "category": "sports-day-goods",
+    "search_terms": {
+      "ja": [
+        "運動会 応援グッズ"
+      ],
+      "en": [
+        "sports day cheering goods"
+      ],
+      "ko": [],
+      "zh": [
+        "运动会加油道具",
+        "应援扇"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "portable phone charger for typhoon",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "台風・停電時に備えたモバイルバッテリーを探している（英語話者）",
+    "ideal_answer": "大容量モバイルバッテリー（防災用）",
+    "reason": "英語での台風対策検索例。カテゴリはモバイルバッテリーに一意に近く特定できる。",
+    "category": "mobile-battery",
+    "search_terms": {
+      "ja": [
+        "モバイルバッテリー 大容量",
+        "防災 モバイルバッテリー"
+      ],
+      "en": [
+        "portable charger power bank"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "kids sports day headband",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "運動会用の子供向けはちまきを探している（英語話者）",
+    "ideal_answer": "運動会用の紅白はちまき（子供用）",
+    "reason": "英語での運動会グッズ検索例。カテゴリは一意に近く特定できるrich例。",
+    "category": "sports-day-goods",
+    "search_terms": {
+      "ja": [
+        "運動会 はちまき 子供用"
+      ],
+      "en": [
+        "kids sports day headband"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "non-slip slippers for elderly",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "高齢者向けの滑り止めスリッパを探している（英語話者）",
+    "ideal_answer": "つまずき防止・滑り止め付きスリッパ",
+    "reason": "英語での高齢者向け商品検索例。カテゴリが一意に近く特定できるrich例。",
+    "category": "slippers",
+    "search_terms": {
+      "ja": [
+        "滑り止め スリッパ",
+        "転倒防止 スリッパ"
+      ],
+      "en": [
+        "non-slip slippers elderly"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "taifuu no toki no kaichuudentou",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "台風の時に使う懐中電灯を探している（ローマ字入力）",
+    "ideal_answer": "防災用LED懐中電灯",
+    "reason": "「kaichuudentou」はローマ字表記の「懐中電灯」。日本語入力に不慣れな利用者を想定。",
+    "category": "disaster-prep",
+    "search_terms": {
+      "ja": [
+        "防災 懐中電灯",
+        "台風 懐中電灯"
+      ],
+      "en": [
+        "emergency flashlight"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "keiro no hi purezento obaachan",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "敬老の日に祖母へ贈るプレゼントを探している（ローマ字入力）",
+    "ideal_answer": "敬老の日プレゼント（実用的な日用品ギフト）とのことですが、健康グッズ・食べ物・日用品のどれがご希望ですか？",
+    "reason": "「purezento obaachan」はローマ字表記。対象(祖母)は明確だが商品カテゴリが未確定のためconfidenceは低め。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [
+        "敬老の日 プレゼント 祖母"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "undoukai ouen guzzu",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "運動会の応援グッズを探している（ローマ字入力）",
+    "ideal_answer": "運動会応援グッズ（うちわ・メガホン）",
+    "reason": "「ouen guzzu」はローマ字表記の「応援グッズ」。カテゴリはある程度特定可能。",
+    "category": "sports-day-goods",
+    "search_terms": {
+      "ja": [
+        "運動会 応援グッズ"
+      ],
+      "en": [
+        "sports day cheering goods"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "量産型 ヘアゴム",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "量産型ファッション系のヘアゴムを探している",
+    "ideal_answer": "量産型系デザインのヘアゴム（リボン・パール付き）",
+    "reason": "「量産型」はSNS由来の若者トレンド語彙で既存辞書には存在しない表現。",
+    "category": "hair-accessory",
+    "search_terms": {
+      "ja": [
+        "量産型 ヘアゴム",
+        "リボン ヘアゴム パール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "韓国コスメ リップティント おすすめ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "韓国コスメのリップティントを探している",
+    "ideal_answer": "韓国コスメブランドのリップティント",
+    "reason": "「韓国コスメ」は若者トレンド語彙かつ具体的カテゴリで特定しやすいrich例。",
+    "category": "cosmetics",
+    "search_terms": {
+      "ja": [
+        "韓国コスメ リップティント",
+        "ティント おすすめ"
+      ],
+      "en": [
+        "korean lip tint"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "タイパ 時短家電",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "時短・効率重視の家電を探しているが具体的な家電カテゴリは不明",
+    "ideal_answer": "タイムパフォーマンス重視の時短家電とのことですが、調理家電・掃除家電・洗濯家電のどれをお探しですか？",
+    "reason": "「タイパ」はSNS由来の若者トレンド語彙(タイムパフォーマンス)。カテゴリが広くultra_ambiguousに近い。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "オタ活 缶バッジ 収納ケース",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "推し活・オタ活で集めた缶バッジを収納するケースを探している",
+    "ideal_answer": "缶バッジ収納ケース（オタ活グッズ収納用）",
+    "reason": "「オタ活」はSNS由来の若者トレンド語彙。カテゴリは具体的で特定しやすいrich例。",
+    "category": "fan-goods",
+    "search_terms": {
+      "ja": [
+        "缶バッジ 収納ケース",
+        "オタ活 グッズ収納"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "地雷系 リュック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "地雷系ファッションに合うリュックを探している",
+    "ideal_answer": "地雷系ファッション系デザインのリュック（リボン・レース付き）",
+    "reason": "「地雷系」はSNS由来の若者ファッション用語で既存辞書には存在しない表現。",
+    "category": "bags",
+    "search_terms": {
+      "ja": [
+        "地雷系 リュック",
+        "リボン リュック 量産型"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "喉の痛みに効くもの",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "喉の痛みを和らげる市販品を探しているが、効果を断定した回答は避ける必要がある",
+    "ideal_answer": "のどあめ・トローチ・のどスプレーなど（効果には個人差があり、症状が続く場合は医療機関の受診をおすすめします）",
+    "reason": "医薬品・健康効果に関する断定表現は避けるべき絶対ルール対象。UNCLASSIFIED寄りの低confidenceで確認・注意喚起を理想回答とする。",
+    "category": "health-otc",
+    "search_terms": {
+      "ja": [
+        "のどあめ",
+        "トローチ",
+        "のどスプレー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "肩こりに効くサプリ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "肩こり対策のサプリメントを探しているが、効果を断定した回答は避ける必要がある",
+    "ideal_answer": "肩こり対策として販売されているサプリメント（効果効能を保証するものではなく、症状が続く場合は医療機関へのご相談をおすすめします）",
+    "reason": "健康効果の断定表現(効く・治る等)を避けるルール対象。低confidenceかつ注意書き付きの理想回答とする。",
+    "category": "health-otc",
+    "search_terms": {
+      "ja": [
+        "肩こり サプリ",
+        "サプリメント 肩こり対策"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "敬老の日 プレゼント 実用的",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "敬老の日に贈る実用的なプレゼントを探している",
+    "ideal_answer": "敬老の日ギフト（座布団・ひざ掛け・血圧計などの実用品）",
+    "reason": "検索語自体に「実用的」という条件が含まれており候補は絞られるrich例。",
+    "category": "gift",
+    "search_terms": {
+      "ja": [
+        "敬老の日 プレゼント 実用的",
+        "敬老の日 ギフト 日用品"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "台風対策 停電時 モバイルバッテリー 大容量",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "台風による停電に備えて大容量のモバイルバッテリーを探している",
+    "ideal_answer": "大容量モバイルバッテリー（防災用、20000mAh以上）",
+    "reason": "用途・容量条件まで含まれ具体的なカテゴリに一意対応するrich例。",
+    "category": "mobile-battery",
+    "search_terms": {
+      "ja": [
+        "モバイルバッテリー 大容量",
+        "防災 モバイルバッテリー 20000mah"
+      ],
+      "en": [
+        "large capacity power bank"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.8,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "運動会 お弁当箱 大きめ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "運動会用の大きめのお弁当箱を探している",
+    "ideal_answer": "運動会向け大容量お弁当箱",
+    "reason": "用途(運動会)とサイズ条件(大きめ)が明確でカテゴリに一意対応するrich例。",
+    "category": "bento-box",
+    "search_terms": {
+      "ja": [
+        "運動会 お弁当箱",
+        "大容量 弁当箱"
+      ],
+      "en": [
+        "large bento box"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  },
+  {
+    "query_text": "秋の運動会用日焼け止め",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "秋の運動会で使う日焼け止めを探している",
+    "ideal_answer": "低刺激・汗に強い日焼け止め（運動会・屋外イベント向け）",
+    "reason": "季節(秋)・用途(運動会)が明確でカテゴリに一意対応するrich例。",
+    "category": "sunscreen",
+    "search_terms": {
+      "ja": [
+        "日焼け止め 運動会",
+        "汗に強い 日焼け止め"
+      ],
+      "en": [
+        "sweat resistant sunscreen"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.7,
+    "authored_date": "2026-09-17",
+    "authored_updated_date": "2026-09-17"
+  }
+]
