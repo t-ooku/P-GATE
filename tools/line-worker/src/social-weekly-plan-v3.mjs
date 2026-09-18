@@ -150,11 +150,15 @@ export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3
 }
 
 // 今日のリール（Runway 新規生成）が承認済み・投稿中・投稿済みなら true。
+// 2026-09-18 本番確認: auto-runway-reel の承認 SQL は jst_publish_date を '' のまま入れる（承認済みの 9/18 行で確認）。
+// そのため日付は scheduled_at（UTC）で JST の当日範囲を見る。
 export async function reelReadyToday(env, now = new Date(), plan = SOCIAL_PLAN_V3) {
-  const key = dateKey(jstParts(now));
+  const parts = jstParts(now);
+  const dayStart = new Date(Date.UTC(parts.year, parts.month - 1, parts.day) - JST_OFFSET_MS).toISOString();
+  const dayEnd = new Date(Date.UTC(parts.year, parts.month - 1, parts.day) - JST_OFFSET_MS + DAY_MS).toISOString();
   const row = await env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS n FROM social_post_queue
-    WHERE platform='INSTAGRAM' AND campaign_id=?1 AND jst_publish_date=?2 AND status IN ('APPROVED','PUBLISHING','PUBLISHED')`)
-    .bind(plan.reel_campaign_id, key).first();
+    WHERE platform='INSTAGRAM' AND campaign_id=?1 AND scheduled_at>=?2 AND scheduled_at<?3 AND status IN ('APPROVED','PUBLISHING','PUBLISHED')`)
+    .bind(plan.reel_campaign_id, dayStart, dayEnd).first();
   return Number(row?.n || 0) > 0;
 }
 

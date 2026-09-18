@@ -197,8 +197,9 @@ test('リール日の代替カルーセルは 19:30 JST 以降・リール未承
       INSTAGRAM_ACCESS_TOKEN: 'ig-token', INSTAGRAM_ACCOUNT_ID: 'ig-account',
       PRODUCT_DB: { prepare(sql) {
         if (/SELECT COUNT\(\*\) AS n FROM social_post_queue/u.test(sql)) {
-          assert.match(sql, /campaign_id=\?1 AND jst_publish_date=\?2/u);
-          return { bind(campaign, date) { assert.equal(campaign, 'hoshilu-runway-video'); assert.equal(date, '2026-09-18'); return { async first() { return { n: reelCount }; } }; } };
+          // 承認 SQL は jst_publish_date を '' のまま入れるので scheduled_at の JST 当日範囲で判定する
+          assert.match(sql, /campaign_id=\?1 AND scheduled_at>=\?2 AND scheduled_at<\?3/u);
+          return { bind(campaign, from, to) { assert.equal(campaign, 'hoshilu-runway-video'); assert.equal(from, '2026-09-17T15:00:00.000Z'); assert.equal(to, '2026-09-18T15:00:00.000Z'); return { async first() { return { n: reelCount }; } }; } };
         }
         assert.match(sql, /INSERT OR IGNORE INTO social_post_queue/u);
         return { bind(...values) { return { async run() { rows.push(values); return { meta: { changes: 1 } }; } }; } };
