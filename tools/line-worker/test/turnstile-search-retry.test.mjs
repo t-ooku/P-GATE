@@ -14,6 +14,9 @@ test('Turnstile uses callback delivery, serializes token requests, and rebuilds 
   assert.match(app, /'unsupported-callback':onTurnstileUnsupported/);
   assert.match(app, /'error-callback':code=>/);
   assert.match(app, /'error-callback':code=>\{[^}]*return false;/);
+  // 2026-09-18: ウィジェットのエラー番号を固定コードに添えて D1 で切り分ける
+  assert.match(app, /lastTurnstileClientError=String\(code\|\|''\)\.replace\(\/\[\^0-9A-Za-z\]\/g,''\)\.slice\(0,12\)\.toUpperCase\(\);/);
+  assert.match(app, /const turnstileTelemetryCode=lastTurnstileClientError\?`TURNSTILE_TOKEN_UNAVAILABLE_E\$\{lastTurnstileClientError\}`:failureTelemetry\.error_code;/);
   assert.match(app, /window\.turnstile\?\.remove\?\.\(turnstileWidget\)/);
   assert.match(app, /typeof window\.turnstile\?\.render==='function'/);
   assert.match(app, /async function waitForTurnstileApi\(\)/);
@@ -32,8 +35,11 @@ test('Turnstile uses callback delivery, serializes token requests, and rebuilds 
     app.indexOf('async function acquireTurnstileToken'),
     app.indexOf('// Turnstile tokens are single-use')
   );
-  assert.equal((acquireBlock.match(/waitForTurnstileCallback/gu) || []).length, 1);
-  assert.doesNotMatch(acquireBlock, /recoverTurnstileWidget/);
+  // 2026-09-18: D1実測(9/16 同一訪問者が5分で6回、毎回 TURNSTILE_TOKEN_UNAVAILABLE)を受け、
+  // トークンが一度も届かない時だけ一度ウィジェットを描き直して短く待つ(上限 8 秒)。
+  assert.equal((acquireBlock.match(/waitForTurnstileCallback/gu) || []).length, 2);
+  assert.match(acquireBlock, /if\(!token&&!turnstileUnsupported\)\{try\{await recoverTurnstileWidget\(\);token=await waitForTurnstileCallback\(TURNSTILE_RERENDER_WAIT_MS\);\}/);
+  assert.match(app, /const TURNSTILE_RERENDER_WAIT_MS=8000;/);
   assert.doesNotMatch(app, /turnstile\?\.getResponse|turnstile\.getResponse/);
   assert.doesNotMatch(app, /finally\{elements\.submit\.disabled=false;if\(turnstileWidget!==null\).*reset/);
 });

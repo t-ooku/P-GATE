@@ -188,7 +188,9 @@ test('SNS・SEOから ?q= 付きで着地したら、もう一度押させずに
   assert.match(app, /new CustomEvent\('hoshilu:search-inbound-pending',\{detail:\{hidden\}\}\)/);
   assert.match(app, /searchTrigger='autorun';\n  if\(typeof elements\.form\.requestSubmit/);
   assert.match(app, /const trigger=searchTrigger;searchTrigger='manual';/);
-  assert.equal((app.match(/hoshilu:search-degraded',\{detail:\{executionId,errorCode:failureTelemetry\.error_code,requestId:failureTelemetry\.request_id,trigger\}\}/g) || []).length, 2);
+  assert.equal((app.match(/hoshilu:search-degraded',\{detail:\{executionId,errorCode:failureTelemetry\.error_code,requestId:failureTelemetry\.request_id,trigger\}\}/g) || []).length, 1);
+  // 2026-09-18: TURNSTILE_TOKEN_UNAVAILABLE の縮退だけはウィジェットのエラー番号を添える
+  assert.equal((app.match(/hoshilu:search-degraded',\{detail:\{executionId,errorCode:turnstileTelemetryCode,requestId:failureTelemetry\.request_id,trigger\}\}/g) || []).length, 1);
   const analytics = await read('growth-analytics.mjs');
   assert.match(analytics, /send\(event\.detail\?\.hidden === true \? 'search_inbound_pending_hidden' : 'search_inbound_pending'\)/);
   assert.match(analytics, /trigger: event\.detail\?\.trigger === 'autorun' \? 'autorun' : 'manual'/);
@@ -211,4 +213,59 @@ test('アフィリエイト表記は結果の下へ、購入希望価格ウォ�
   assert.match(layoutFix, /\.watch-settings-button,\.product-watch-dialog-card>strong\{white-space:nowrap\}/);
   assert.match(layoutFix, /\.watch-settings-button\{font-size:clamp\(9px,2\.9vw,12px\)/);
   assert.match(layoutFix, /#query::placeholder\{font-size:clamp\(12\.5px,3\.9vw,17px\)\}/);
+});
+
+// 2026-09-18 大隆さん指示 P0-1(#170/#249 の再実装): Turnstile 初期化が一度失敗しても
+// 検索が無音で止まらない。(1) ensureTurnstileWidget は失敗した初期化を取り直す(手動検索の復旧)、
+// (2) 着地時の自動検索は初期化失敗で return せず、取り直し→失敗なら TURNSTILE_INIT_FAILED を
+// autorun で記録して検索語を残す、(3) トークンが届かない時は一度描き直す。
+test('Turnstile初期化に失敗しても取り直し、着地の自動検索も無音で終わらない', async () => {
+  const app = await read('app.js');
+  const mirrored = await read('assets-v147/app.js');
+  assert.equal(app, mirrored);
+  assert.match(app, /async function ensureTurnstileWidget\(\)\{if\(!turnstileInitPromise\)turnstileInitPromise=initializeTurnstile\(\);try\{await turnstileInitPromise;\}catch\{turnstileInitPromise=initializeTurnstile\(\);await turnstileInitPromise;\}/);
+  const start = app.indexOf('function autoRunInboundSearch(query){');
+  const end = app.indexOf('\nconst browserLanguage=', start);
+  const source = app.slice(start, end);
+  assert.doesNotMatch(source, /catch\{return;\}/, '初期化失敗で無音終了する実装に戻っています');
+  assert.match(source, /catch\{\s*try\{await ensureTurnstileWidget\(\);\}catch\{document\.dispatchEvent\(new CustomEvent\('hoshilu:search-degraded',\{detail:\{executionId:'',errorCode:'TURNSTILE_INIT_FAILED',requestId:'',trigger:'autorun'\}\}\)\);\}/);
+
+  // 実際に初期化を reject させ、取り直しが成功すればトークン到着後に検索が始まることを検証する。
+  let submitted = 0; let ensured = 0; const dispatched = [];
+  const elements = { query: { value: 'humidifier' }, form: { requestSubmit: () => { submitted += 1; } }, status: { className: '', textContent: '' }, turnstile: null };
+  const globals = {
+    String, setTimeout, console,
+    document: { dispatchEvent: (event) => { dispatched.push(event.detail); }, visibilityState: 'visible' },
+    navigator: { webdriver: false },
+    CustomEvent: class { constructor(type, init) { this.type = type; this.detail = init?.detail; } },
+    isUsableProductQuery: () => true,
+    hasSupplementalSearchInput: () => false,
+    elements,
+    turnstileInitPromise: Promise.reject(new Error('TURNSTILE_UNAVAILABLE')),
+    ensureTurnstileWidget: async () => { ensured += 1; },
+    turnstileToken: '',
+    waitForTurnstileCallback: async () => 'token-after-retry',
+    submitInboundSearch: (text) => { if (elements.query.value !== text) return false; submitted += 1; return true; },
+    pendingInboundSearch: '',
+    inboundSearchWaitingCopy: () => '',
+    INBOUND_TOKEN_WAIT_MS: 10,
+    INBOUND_PENDING_REPORT_MS: 10
+  };
+  globals.turnstileInitPromise.catch(() => {});
+  const factory = new Function(...Object.keys(globals), `${source}\nreturn autoRunInboundSearch;`);
+  factory(...Object.values(globals))('humidifier');
+  for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(ensured, 1, '失敗した初期化を取り直す');
+  assert.equal(submitted, 1, '取り直し後にトークンが届けば検索が始まる');
+  assert.deepEqual(dispatched, []);
+
+  // 取り直しも失敗した場合は固定コードで記録し、検索語は残す(無音で消えない)。
+  submitted = 0; dispatched.length = 0;
+  globals.ensureTurnstileWidget = async () => { throw new Error('TURNSTILE_UNAVAILABLE'); };
+  globals.waitForTurnstileCallback = async () => '';
+  factory(...Object.values(globals))('humidifier');
+  for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(submitted, 0);
+  assert.deepEqual(dispatched, [{ executionId: '', errorCode: 'TURNSTILE_INIT_FAILED', requestId: '', trigger: 'autorun' }]);
+  assert.equal(elements.query.value, 'humidifier');
 });
