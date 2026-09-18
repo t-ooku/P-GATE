@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T00:10:24.641Z",
+  "generated_at": "2026-09-18T03:05:46.111Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -29,9 +29,10 @@
     "2026-09-13-claude-batch-026.json",
     "2026-09-14-claude-batch-027.json",
     "2026-09-15-claude-batch-028.json",
-    "2026-09-16-claude-batch-029.json"
+    "2026-09-16-claude-batch-029.json",
+    "2026-09-17-claude-batch-030.json"
   ],
-  "entry_count": 1480,
+  "entry_count": 1545,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -16056,7 +16057,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "wide-mouth-bottle",
-      "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+      "ideal_answer": "広口タイプの水筒・ステンレスボトル(氷が入る、手や柄付きスポンジで洗える)",
       "search_terms": {
         "ja": [
           "広口 水筒",
@@ -16077,7 +16078,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "wide-mouth-bottle",
-      "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+      "ideal_answer": "広口タイプの水筒・ステンレスボトル(氷が入る、手や柄付きスポンジで洗える)",
       "search_terms": {
         "ja": [
           "広口 水筒",
@@ -16098,7 +16099,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "wide-mouth-bottle",
-      "ideal_answer": "広口タイプの水筒・ステンレスボトル（氷が入る、手や柄付きスポンジで洗える）",
+      "ideal_answer": "広口タイプの水筒・ステンレスボトル(氷が入る、手や柄付きスポンジで洗える)",
       "search_terms": {
         "ja": [
           "広口 水筒",
@@ -16119,7 +16120,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "dishwasher-safe-bottle",
-      "ideal_answer": "食洗機対応と明記された水筒・ボトル（本体・蓋・パッキンの対応範囲に注意）",
+      "ideal_answer": "食洗機対応と明記された水筒・ボトル(本体・蓋・パッキンの対応範囲に注意)",
       "search_terms": {
         "ja": [
           "食洗機対応 水筒",
@@ -16140,7 +16141,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "dishwasher-safe-bottle",
-      "ideal_answer": "食洗機対応と明記された水筒・ボトル（本体・蓋・パッキンの対応範囲に注意）",
+      "ideal_answer": "食洗機対応と明記された水筒・ボトル(本体・蓋・パッキンの対応範囲に注意)",
       "search_terms": {
         "ja": [
           "食洗機対応 水筒",
@@ -16161,7 +16162,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "one-touch-bottle",
-      "ideal_answer": "ワンタッチ（ワンプッシュ）オープンの直飲みタイプ水筒",
+      "ideal_answer": "ワンタッチ(ワンプッシュ)オープンの直飲みタイプ水筒",
       "search_terms": {
         "ja": [
           "ワンタッチ 水筒",
@@ -16182,7 +16183,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "one-touch-bottle",
-      "ideal_answer": "ワンタッチ（ワンプッシュ）オープンの直飲みタイプ水筒",
+      "ideal_answer": "ワンタッチ(ワンプッシュ)オープンの直飲みタイプ水筒",
       "search_terms": {
         "ja": [
           "ワンタッチ 水筒",
@@ -16203,7 +16204,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "kids-2way-bottle",
-      "ideal_answer": "2WAY（直飲み・コップ）タイプの子供用水筒",
+      "ideal_answer": "2WAY(直飲み・コップ)タイプの子供用水筒",
       "search_terms": {
         "ja": [
           "2way 水筒 子供",
@@ -16224,7 +16225,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "kids-2way-bottle",
-      "ideal_answer": "2WAY（直飲み・コップ）タイプの子供用水筒",
+      "ideal_answer": "2WAY(直飲み・コップ)タイプの子供用水筒",
       "search_terms": {
         "ja": [
           "2way 水筒 子供",
@@ -16245,7 +16246,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "spill-proof-kids-cup",
-      "ideal_answer": "こぼれないストローマグ・トレーニングマグ（360度飲み口タイプを含む）",
+      "ideal_answer": "こぼれないストローマグ・トレーニングマグ(360度飲み口タイプを含む)",
       "search_terms": {
         "ja": [
           "こぼれない マグ ベビー",
@@ -16266,7 +16267,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "spill-proof-kids-cup",
-      "ideal_answer": "こぼれないストローマグ・トレーニングマグ（360度飲み口タイプを含む）",
+      "ideal_answer": "こぼれないストローマグ・トレーニングマグ(360度飲み口タイプを含む)",
       "search_terms": {
         "ja": [
           "こぼれない マグ ベビー",
@@ -16287,7 +16288,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "leakproof-lunch-box",
-      "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+      "ideal_answer": "汁漏れ防止・密閉(4点ロック等)の弁当箱",
       "search_terms": {
         "ja": [
           "汁漏れしない 弁当箱",
@@ -16308,7 +16309,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "leakproof-lunch-box",
-      "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+      "ideal_answer": "汁漏れ防止・密閉(4点ロック等)の弁当箱",
       "search_terms": {
         "ja": [
           "汁漏れしない 弁当箱",
@@ -16329,7 +16330,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "leakproof-lunch-box",
-      "ideal_answer": "汁漏れ防止・密閉（4点ロック等）の弁当箱",
+      "ideal_answer": "汁漏れ防止・密閉(4点ロック等)の弁当箱",
       "search_terms": {
         "ja": [
           "汁漏れしない 弁当箱",
@@ -16350,7 +16351,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "insulated-lunch-jar",
-      "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+      "ideal_answer": "保温弁当箱(ランチジャー)またはスープジャー",
       "search_terms": {
         "ja": [
           "保温 弁当箱",
@@ -16371,7 +16372,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "insulated-lunch-jar",
-      "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+      "ideal_answer": "保温弁当箱(ランチジャー)またはスープジャー",
       "search_terms": {
         "ja": [
           "保温 弁当箱",
@@ -16392,7 +16393,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "insulated-lunch-jar",
-      "ideal_answer": "保温弁当箱（ランチジャー）またはスープジャー",
+      "ideal_answer": "保温弁当箱(ランチジャー)またはスープジャー",
       "search_terms": {
         "ja": [
           "保温 弁当箱",
@@ -16476,7 +16477,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "disassemble-kitchen-scissors",
-      "ideal_answer": "分解式（セパレート）のキッチンバサミ",
+      "ideal_answer": "分解式(セパレート)のキッチンバサミ",
       "search_terms": {
         "ja": [
           "分解式 キッチンバサミ",
@@ -16497,7 +16498,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "disassemble-kitchen-scissors",
-      "ideal_answer": "分解式（セパレート）のキッチンバサミ",
+      "ideal_answer": "分解式(セパレート)のキッチンバサミ",
       "search_terms": {
         "ja": [
           "分解式 キッチンバサミ",
@@ -16518,7 +16519,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "nonslip-cutting-board",
-      "ideal_answer": "滑り止め（ゴム足・ラバー）付きのまな板",
+      "ideal_answer": "滑り止め(ゴム足・ラバー)付きのまな板",
       "search_terms": {
         "ja": [
           "滑り止め付き まな板",
@@ -16539,7 +16540,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "nonslip-cutting-board",
-      "ideal_answer": "滑り止め（ゴム足・ラバー）付きのまな板",
+      "ideal_answer": "滑り止め(ゴム足・ラバー)付きのまな板",
       "search_terms": {
         "ja": [
           "滑り止め付き まな板",
@@ -16560,7 +16561,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "self-standing-lid-pot",
-      "ideal_answer": "自立する（スタンド式）蓋付きの鍋",
+      "ideal_answer": "自立する(スタンド式)蓋付きの鍋",
       "search_terms": {
         "ja": [
           "自立する蓋 鍋",
@@ -16581,7 +16582,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "self-standing-lid-pot",
-      "ideal_answer": "自立する（スタンド式）蓋付きの鍋",
+      "ideal_answer": "自立する(スタンド式)蓋付きの鍋",
       "search_terms": {
         "ja": [
           "自立する蓋 鍋",
@@ -16602,7 +16603,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "sweat-free-tumbler",
-      "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+      "ideal_answer": "真空断熱(二重構造)のステンレスタンブラー",
       "search_terms": {
         "ja": [
           "真空断熱 タンブラー",
@@ -16623,7 +16624,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "sweat-free-tumbler",
-      "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+      "ideal_answer": "真空断熱(二重構造)のステンレスタンブラー",
       "search_terms": {
         "ja": [
           "真空断熱 タンブラー",
@@ -16644,7 +16645,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "sweat-free-tumbler",
-      "ideal_answer": "真空断熱（二重構造）のステンレスタンブラー",
+      "ideal_answer": "真空断熱(二重構造)のステンレスタンブラー",
       "search_terms": {
         "ja": [
           "真空断熱 タンブラー",
@@ -16665,7 +16666,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "temperature-kettle",
-      "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+      "ideal_answer": "温度調節(設定)機能付き電気ケトル",
       "search_terms": {
         "ja": [
           "温度調節 電気ケトル",
@@ -16686,7 +16687,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "temperature-kettle",
-      "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+      "ideal_answer": "温度調節(設定)機能付き電気ケトル",
       "search_terms": {
         "ja": [
           "温度調節 電気ケトル",
@@ -16707,7 +16708,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "temperature-kettle",
-      "ideal_answer": "温度調節（設定）機能付き電気ケトル",
+      "ideal_answer": "温度調節(設定)機能付き電気ケトル",
       "search_terms": {
         "ja": [
           "温度調節 電気ケトル",
@@ -16812,7 +16813,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "drain-hair-catcher",
-      "ideal_answer": "排水口用ヘアキャッチャー（くるっと集まるタイプ等）",
+      "ideal_answer": "排水口用ヘアキャッチャー(くるっと集まるタイプ等)",
       "search_terms": {
         "ja": [
           "排水口 ヘアキャッチャー",
@@ -16833,7 +16834,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "drain-hair-catcher",
-      "ideal_answer": "排水口用ヘアキャッチャー（くるっと集まるタイプ等）",
+      "ideal_answer": "排水口用ヘアキャッチャー(くるっと集まるタイプ等)",
       "search_terms": {
         "ja": [
           "排水口 ヘアキャッチャー",
@@ -16854,7 +16855,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "odor-sealed-trash-can",
-      "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+      "ideal_answer": "密閉・防臭タイプのゴミ箱(パッキン付き、おむつ用など)",
       "search_terms": {
         "ja": [
           "密閉 ゴミ箱 防臭",
@@ -16875,7 +16876,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "odor-sealed-trash-can",
-      "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+      "ideal_answer": "密閉・防臭タイプのゴミ箱(パッキン付き、おむつ用など)",
       "search_terms": {
         "ja": [
           "密閉 ゴミ箱 防臭",
@@ -16896,7 +16897,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "odor-sealed-trash-can",
-      "ideal_answer": "密閉・防臭タイプのゴミ箱（パッキン付き、おむつ用など）",
+      "ideal_answer": "密閉・防臭タイプのゴミ箱(パッキン付き、おむつ用など)",
       "search_terms": {
         "ja": [
           "密閉 ゴミ箱 防臭",
@@ -16917,7 +16918,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "nonslip-hanger",
-      "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+      "ideal_answer": "すべらない(ノンスリップ・起毛)ハンガー",
       "search_terms": {
         "ja": [
           "すべらない ハンガー",
@@ -16938,7 +16939,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "nonslip-hanger",
-      "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+      "ideal_answer": "すべらない(ノンスリップ・起毛)ハンガー",
       "search_terms": {
         "ja": [
           "すべらない ハンガー",
@@ -16959,7 +16960,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "nonslip-hanger",
-      "ideal_answer": "すべらない（ノンスリップ・起毛）ハンガー",
+      "ideal_answer": "すべらない(ノンスリップ・起毛)ハンガー",
       "search_terms": {
         "ja": [
           "すべらない ハンガー",
@@ -17022,7 +17023,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "drainable-soap-dish",
-      "ideal_answer": "水切り（珪藻土・浮かせる）タイプのソープディッシュ",
+      "ideal_answer": "水切り(珪藻土・浮かせる)タイプのソープディッシュ",
       "search_terms": {
         "ja": [
           "水切り ソープディッシュ",
@@ -17043,7 +17044,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "drainable-soap-dish",
-      "ideal_answer": "水切り（珪藻土・浮かせる）タイプのソープディッシュ",
+      "ideal_answer": "水切り(珪藻土・浮かせる)タイプのソープディッシュ",
       "search_terms": {
         "ja": [
           "水切り ソープディッシュ",
@@ -17064,7 +17065,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "quiet-hair-dryer",
-      "ideal_answer": "静音（低騒音）設計のドライヤー",
+      "ideal_answer": "静音(低騒音)設計のドライヤー",
       "search_terms": {
         "ja": [
           "静音 ドライヤー",
@@ -17085,7 +17086,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "quiet-hair-dryer",
-      "ideal_answer": "静音（低騒音）設計のドライヤー",
+      "ideal_answer": "静音(低騒音)設計のドライヤー",
       "search_terms": {
         "ja": [
           "静音 ドライヤー",
@@ -17106,7 +17107,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "light-cordless-vacuum",
-      "ideal_answer": "軽量（1〜1.5kg級）のコードレススティック掃除機",
+      "ideal_answer": "軽量(1〜1.5kg級)のコードレススティック掃除機",
       "search_terms": {
         "ja": [
           "コードレス掃除機 軽量",
@@ -17127,7 +17128,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "light-cordless-vacuum",
-      "ideal_answer": "軽量（1〜1.5kg級）のコードレススティック掃除機",
+      "ideal_answer": "軽量(1〜1.5kg級)のコードレススティック掃除機",
       "search_terms": {
         "ja": [
           "コードレス掃除機 軽量",
@@ -17190,7 +17191,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "blackout-curtain",
-      "ideal_answer": "遮光1級（完全遮光）のカーテン",
+      "ideal_answer": "遮光1級(完全遮光)のカーテン",
       "search_terms": {
         "ja": [
           "遮光1級 カーテン",
@@ -17211,7 +17212,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "blackout-curtain",
-      "ideal_answer": "遮光1級（完全遮光）のカーテン",
+      "ideal_answer": "遮光1級(完全遮光)のカーテン",
       "search_terms": {
         "ja": [
           "遮光1級 カーテン",
@@ -17232,7 +17233,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "blackout-curtain",
-      "ideal_answer": "遮光1級（完全遮光）のカーテン",
+      "ideal_answer": "遮光1級(完全遮光)のカーテン",
       "search_terms": {
         "ja": [
           "遮光1級 カーテン",
@@ -17253,7 +17254,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "cooling-bed-pad",
-      "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+      "ideal_answer": "接触冷感(冷感)の敷きパッド・シーツ",
       "search_terms": {
         "ja": [
           "接触冷感 敷きパッド",
@@ -17274,7 +17275,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "cooling-bed-pad",
-      "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+      "ideal_answer": "接触冷感(冷感)の敷きパッド・シーツ",
       "search_terms": {
         "ja": [
           "接触冷感 敷きパッド",
@@ -17295,7 +17296,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "cooling-bed-pad",
-      "ideal_answer": "接触冷感（冷感）の敷きパッド・シーツ",
+      "ideal_answer": "接触冷感(冷感)の敷きパッド・シーツ",
       "search_terms": {
         "ja": [
           "接触冷感 敷きパッド",
@@ -17316,7 +17317,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "light-blocking-sleep-mask",
-      "ideal_answer": "遮光（立体3D）アイマスク",
+      "ideal_answer": "遮光(立体3D)アイマスク",
       "search_terms": {
         "ja": [
           "遮光 アイマスク",
@@ -17337,7 +17338,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "light-blocking-sleep-mask",
-      "ideal_answer": "遮光（立体3D）アイマスク",
+      "ideal_answer": "遮光(立体3D)アイマスク",
       "search_terms": {
         "ja": [
           "遮光 アイマスク",
@@ -17358,7 +17359,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "neck-support-pillow",
-      "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+      "ideal_answer": "高さ調節できる枕・頸椎(首)サポート枕(効果は断定しない)",
       "search_terms": {
         "ja": [
           "高さ調節 枕",
@@ -17379,7 +17380,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "neck-support-pillow",
-      "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+      "ideal_answer": "高さ調節できる枕・頸椎(首)サポート枕(効果は断定しない)",
       "search_terms": {
         "ja": [
           "高さ調節 枕",
@@ -17400,7 +17401,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "neck-support-pillow",
-      "ideal_answer": "高さ調節できる枕・頸椎（首）サポート枕（効果は断定しない）",
+      "ideal_answer": "高さ調節できる枕・頸椎(首)サポート枕(効果は断定しない)",
       "search_terms": {
         "ja": [
           "高さ調節 枕",
@@ -17421,7 +17422,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "one-hand-fold-stroller",
-      "ideal_answer": "ワンタッチ（片手）折りたたみのベビーカー",
+      "ideal_answer": "ワンタッチ(片手)折りたたみのベビーカー",
       "search_terms": {
         "ja": [
           "ワンタッチ折りたたみ ベビーカー",
@@ -17442,7 +17443,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "one-hand-fold-stroller",
-      "ideal_answer": "ワンタッチ（片手）折りたたみのベビーカー",
+      "ideal_answer": "ワンタッチ(片手)折りたたみのベビーカー",
       "search_terms": {
         "ja": [
           "ワンタッチ折りたたみ ベビーカー",
@@ -17463,7 +17464,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "velcro-kids-sneakers",
-      "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+      "ideal_answer": "マジックテープ(面ファスナー)のキッズスニーカー",
       "search_terms": {
         "ja": [
           "マジックテープ スニーカー キッズ",
@@ -17484,7 +17485,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "velcro-kids-sneakers",
-      "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+      "ideal_answer": "マジックテープ(面ファスナー)のキッズスニーカー",
       "search_terms": {
         "ja": [
           "マジックテープ スニーカー キッズ",
@@ -17505,7 +17506,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "velcro-kids-sneakers",
-      "ideal_answer": "マジックテープ（面ファスナー）のキッズスニーカー",
+      "ideal_answer": "マジックテープ(面ファスナー)のキッズスニーカー",
       "search_terms": {
         "ja": [
           "マジックテープ スニーカー キッズ",
@@ -17526,7 +17527,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "diaper-odor-pail",
-      "ideal_answer": "防臭おむつ処理ポット・防臭袋（BOS等）",
+      "ideal_answer": "防臭おむつ処理ポット・防臭袋(BOS等)",
       "search_terms": {
         "ja": [
           "おむつ用ゴミ箱 防臭",
@@ -17547,7 +17548,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "diaper-odor-pail",
-      "ideal_answer": "防臭おむつ処理ポット・防臭袋（BOS等）",
+      "ideal_answer": "防臭おむつ処理ポット・防臭袋(BOS等)",
       "search_terms": {
         "ja": [
           "おむつ用ゴミ箱 防臭",
@@ -17568,7 +17569,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "smudge-proof-mascara",
-      "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+      "ideal_answer": "ウォータープルーフ(にじみにくい)マスカラ",
       "search_terms": {
         "ja": [
           "ウォータープルーフ マスカラ",
@@ -17589,7 +17590,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "smudge-proof-mascara",
-      "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+      "ideal_answer": "ウォータープルーフ(にじみにくい)マスカラ",
       "search_terms": {
         "ja": [
           "ウォータープルーフ マスカラ",
@@ -17610,7 +17611,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "smudge-proof-mascara",
-      "ideal_answer": "ウォータープルーフ（にじみにくい）マスカラ",
+      "ideal_answer": "ウォータープルーフ(にじみにくい)マスカラ",
       "search_terms": {
         "ja": [
           "ウォータープルーフ マスカラ",
@@ -17673,7 +17674,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-white-cast-sunscreen",
-      "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+      "ideal_answer": "白浮きしにくい(透明・ジェル系)日焼け止め",
       "search_terms": {
         "ja": [
           "白浮きしない 日焼け止め",
@@ -17694,7 +17695,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-white-cast-sunscreen",
-      "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+      "ideal_answer": "白浮きしにくい(透明・ジェル系)日焼け止め",
       "search_terms": {
         "ja": [
           "白浮きしない 日焼け止め",
@@ -17715,7 +17716,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-white-cast-sunscreen",
-      "ideal_answer": "白浮きしにくい（透明・ジェル系）日焼け止め",
+      "ideal_answer": "白浮きしにくい(透明・ジェル系)日焼け止め",
       "search_terms": {
         "ja": [
           "白浮きしない 日焼け止め",
@@ -17736,7 +17737,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "non-greasy-hair-oil",
-      "ideal_answer": "さらさら（軽い）タイプのヘアオイル",
+      "ideal_answer": "さらさら(軽い)タイプのヘアオイル",
       "search_terms": {
         "ja": [
           "さらさら ヘアオイル",
@@ -17757,7 +17758,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "non-greasy-hair-oil",
-      "ideal_answer": "さらさら（軽い）タイプのヘアオイル",
+      "ideal_answer": "さらさら(軽い)タイプのヘアオイル",
       "search_terms": {
         "ja": [
           "さらさら ヘアオイル",
@@ -17778,7 +17779,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "wind-proof-umbrella",
-      "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+      "ideal_answer": "耐風(風に強い)構造の傘・折りたたみ傘",
       "search_terms": {
         "ja": [
           "耐風 傘",
@@ -17799,7 +17800,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "wind-proof-umbrella",
-      "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+      "ideal_answer": "耐風(風に強い)構造の傘・折りたたみ傘",
       "search_terms": {
         "ja": [
           "耐風 傘",
@@ -17820,7 +17821,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "wind-proof-umbrella",
-      "ideal_answer": "耐風（風に強い）構造の傘・折りたたみ傘",
+      "ideal_answer": "耐風(風に強い)構造の傘・折りたたみ傘",
       "search_terms": {
         "ja": [
           "耐風 傘",
@@ -17841,7 +17842,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "bottle-pocket-backpack",
-      "ideal_answer": "サイド（ボトル）ポケット付きのリュック",
+      "ideal_answer": "サイド(ボトル)ポケット付きのリュック",
       "search_terms": {
         "ja": [
           "ボトルポケット付き リュック",
@@ -17862,7 +17863,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "bottle-pocket-backpack",
-      "ideal_answer": "サイド（ボトル）ポケット付きのリュック",
+      "ideal_answer": "サイド(ボトル)ポケット付きのリュック",
       "search_terms": {
         "ja": [
           "ボトルポケット付き リュック",
@@ -17883,7 +17884,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "non-slip-socks",
-      "ideal_answer": "脱げにくい（かかと滑り止め付き）フットカバー・靴下",
+      "ideal_answer": "脱げにくい(かかと滑り止め付き)フットカバー・靴下",
       "search_terms": {
         "ja": [
           "脱げにくい フットカバー",
@@ -17904,7 +17905,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "non-slip-socks",
-      "ideal_answer": "脱げにくい（かかと滑り止め付き）フットカバー・靴下",
+      "ideal_answer": "脱げにくい(かかと滑り止め付き)フットカバー・靴下",
       "search_terms": {
         "ja": [
           "脱げにくい フットカバー",
@@ -17925,7 +17926,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "non-wire-bra",
-      "ideal_answer": "ノンワイヤー（ワイヤレス）ブラ",
+      "ideal_answer": "ノンワイヤー(ワイヤレス)ブラ",
       "search_terms": {
         "ja": [
           "ノンワイヤー ブラ",
@@ -17946,7 +17947,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "non-wire-bra",
-      "ideal_answer": "ノンワイヤー（ワイヤレス）ブラ",
+      "ideal_answer": "ノンワイヤー(ワイヤレス)ブラ",
       "search_terms": {
         "ja": [
           "ノンワイヤー ブラ",
@@ -17967,7 +17968,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-iron-shirt",
-      "ideal_answer": "ノーアイロン（形態安定）シャツ",
+      "ideal_answer": "ノーアイロン(形態安定)シャツ",
       "search_terms": {
         "ja": [
           "ノーアイロン シャツ",
@@ -17988,7 +17989,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-iron-shirt",
-      "ideal_answer": "ノーアイロン（形態安定）シャツ",
+      "ideal_answer": "ノーアイロン(形態安定)シャツ",
       "search_terms": {
         "ja": [
           "ノーアイロン シャツ",
@@ -18009,7 +18010,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-iron-shirt",
-      "ideal_answer": "ノーアイロン（形態安定）シャツ",
+      "ideal_answer": "ノーアイロン(形態安定)シャツ",
       "search_terms": {
         "ja": [
           "ノーアイロン シャツ",
@@ -18030,7 +18031,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "non-sheer-bottoms",
-      "ideal_answer": "透けない（裏地付き・透け防止）パンツ・スカート",
+      "ideal_answer": "透けない(裏地付き・透け防止)パンツ・スカート",
       "search_terms": {
         "ja": [
           "透けない パンツ",
@@ -18051,7 +18052,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "non-sheer-bottoms",
-      "ideal_answer": "透けない（裏地付き・透け防止）パンツ・スカート",
+      "ideal_answer": "透けない(裏地付き・透け防止)パンツ・スカート",
       "search_terms": {
         "ja": [
           "透けない パンツ",
@@ -18072,7 +18073,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "waterproof-sneakers",
-      "ideal_answer": "防水・撥水のスニーカー（レインスニーカー）",
+      "ideal_answer": "防水・撥水のスニーカー(レインスニーカー)",
       "search_terms": {
         "ja": [
           "防水 スニーカー",
@@ -18093,7 +18094,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "waterproof-sneakers",
-      "ideal_answer": "防水・撥水のスニーカー（レインスニーカー）",
+      "ideal_answer": "防水・撥水のスニーカー(レインスニーカー)",
       "search_terms": {
         "ja": [
           "防水 スニーカー",
@@ -18156,7 +18157,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "earhook-earphones",
-      "ideal_answer": "耳掛け（イヤーフック）型・オープンイヤー型のイヤホン",
+      "ideal_answer": "耳掛け(イヤーフック)型・オープンイヤー型のイヤホン",
       "search_terms": {
         "ja": [
           "耳掛け イヤホン",
@@ -18177,7 +18178,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "earhook-earphones",
-      "ideal_answer": "耳掛け（イヤーフック）型・オープンイヤー型のイヤホン",
+      "ideal_answer": "耳掛け(イヤーフック)型・オープンイヤー型のイヤホン",
       "search_terms": {
         "ja": [
           "耳掛け イヤホン",
@@ -18240,7 +18241,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "car-bottle-holder",
-      "ideal_answer": "車載ドリンクホルダー（大径ボトル対応）",
+      "ideal_answer": "車載ドリンクホルダー(大径ボトル対応)",
       "search_terms": {
         "ja": [
           "車載 ドリンクホルダー",
@@ -18261,7 +18262,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "car-bottle-holder",
-      "ideal_answer": "車載ドリンクホルダー（大径ボトル対応）",
+      "ideal_answer": "車載ドリンクホルダー(大径ボトル対応)",
       "search_terms": {
         "ja": [
           "車載 ドリンクホルダー",
@@ -18282,7 +18283,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "room-drying-detergent",
-      "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+      "ideal_answer": "部屋干し用(抗菌・生乾き臭対策)と明記された洗濯洗剤",
       "search_terms": {
         "ja": [
           "部屋干し用 洗剤",
@@ -18303,7 +18304,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "room-drying-detergent",
-      "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+      "ideal_answer": "部屋干し用(抗菌・生乾き臭対策)と明記された洗濯洗剤",
       "search_terms": {
         "ja": [
           "部屋干し用 洗剤",
@@ -18324,7 +18325,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "room-drying-detergent",
-      "ideal_answer": "部屋干し用（抗菌・生乾き臭対策）と明記された洗濯洗剤",
+      "ideal_answer": "部屋干し用(抗菌・生乾き臭対策)と明記された洗濯洗剤",
       "search_terms": {
         "ja": [
           "部屋干し用 洗剤",
@@ -18345,7 +18346,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "melamine-sponge",
-      "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+      "ideal_answer": "メラミンスポンジ(激落ちくん等)",
       "search_terms": {
         "ja": [
           "メラミンスポンジ",
@@ -18366,7 +18367,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "melamine-sponge",
-      "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+      "ideal_answer": "メラミンスポンジ(激落ちくん等)",
       "search_terms": {
         "ja": [
           "メラミンスポンジ",
@@ -18387,7 +18388,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "melamine-sponge",
-      "ideal_answer": "メラミンスポンジ（激落ちくん等）",
+      "ideal_answer": "メラミンスポンジ(激落ちくん等)",
       "search_terms": {
         "ja": [
           "メラミンスポンジ",
@@ -18408,7 +18409,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "waterproof-name-sticker",
-      "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+      "ideal_answer": "耐水・防水(食洗機対応)のお名前シール、布用は洗濯対応のネームシール",
       "search_terms": {
         "ja": [
           "耐水 お名前シール",
@@ -18429,7 +18430,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "waterproof-name-sticker",
-      "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+      "ideal_answer": "耐水・防水(食洗機対応)のお名前シール、布用は洗濯対応のネームシール",
       "search_terms": {
         "ja": [
           "耐水 お名前シール",
@@ -18450,7 +18451,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "waterproof-name-sticker",
-      "ideal_answer": "耐水・防水（食洗機対応）のお名前シール、布用は洗濯対応のネームシール",
+      "ideal_answer": "耐水・防水(食洗機対応)のお名前シール、布用は洗濯対応のネームシール",
       "search_terms": {
         "ja": [
           "耐水 お名前シール",
@@ -18471,7 +18472,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "pet-shedding-brush",
-      "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+      "ideal_answer": "抜け毛取り用のペットブラシ(スリッカー・ラバー・ファーミネーター等)",
       "search_terms": {
         "ja": [
           "抜け毛取り ブラシ ペット",
@@ -18492,7 +18493,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "pet-shedding-brush",
-      "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+      "ideal_answer": "抜け毛取り用のペットブラシ(スリッカー・ラバー・ファーミネーター等)",
       "search_terms": {
         "ja": [
           "抜け毛取り ブラシ ペット",
@@ -18513,7 +18514,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "pet-shedding-brush",
-      "ideal_answer": "抜け毛取り用のペットブラシ（スリッカー・ラバー・ファーミネーター等）",
+      "ideal_answer": "抜け毛取り用のペットブラシ(スリッカー・ラバー・ファーミネーター等)",
       "search_terms": {
         "ja": [
           "抜け毛取り ブラシ ペット",
@@ -18597,7 +18598,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-assembly-storage-box",
-      "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+      "ideal_answer": "工具不要・簡単組み立て(または完成品)の収納ボックス・ラック",
       "search_terms": {
         "ja": [
           "組立不要 収納ボックス",
@@ -18618,7 +18619,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-assembly-storage-box",
-      "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+      "ideal_answer": "工具不要・簡単組み立て(または完成品)の収納ボックス・ラック",
       "search_terms": {
         "ja": [
           "組立不要 収納ボックス",
@@ -18639,7 +18640,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "no-assembly-storage-box",
-      "ideal_answer": "工具不要・簡単組み立て（または完成品）の収納ボックス・ラック",
+      "ideal_answer": "工具不要・簡単組み立て(または完成品)の収納ボックス・ラック",
       "search_terms": {
         "ja": [
           "組立不要 収納ボックス",
@@ -18723,7 +18724,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "quick-dry-indoor-shoes",
-      "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+      "ideal_answer": "速乾素材・通気性の良い上履き(メッシュ素材など)",
       "search_terms": {
         "ja": [
           "速乾 上履き",
@@ -18744,7 +18745,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "quick-dry-indoor-shoes",
-      "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+      "ideal_answer": "速乾素材・通気性の良い上履き(メッシュ素材など)",
       "search_terms": {
         "ja": [
           "速乾 上履き",
@@ -18765,7 +18766,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "quick-dry-indoor-shoes",
-      "ideal_answer": "速乾素材・通気性の良い上履き（メッシュ素材など）",
+      "ideal_answer": "速乾素材・通気性の良い上履き(メッシュ素材など)",
       "search_terms": {
         "ja": [
           "速乾 上履き",
@@ -19605,7 +19606,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "splatter-guard-frying",
-      "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+      "ideal_answer": "油はねガード(スプラッタースクリーン)や油はね防止機能付きの鍋・フライパン用ふた",
       "search_terms": {
         "ja": [
           "油はねガード",
@@ -19626,7 +19627,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "splatter-guard-frying",
-      "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+      "ideal_answer": "油はねガード(スプラッタースクリーン)や油はね防止機能付きの鍋・フライパン用ふた",
       "search_terms": {
         "ja": [
           "油はねガード",
@@ -19647,7 +19648,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "splatter-guard-frying",
-      "ideal_answer": "油はねガード（スプラッタースクリーン）や油はね防止機能付きの鍋・フライパン用ふた",
+      "ideal_answer": "油はねガード(スプラッタースクリーン)や油はね防止機能付きの鍋・フライパン用ふた",
       "search_terms": {
         "ja": [
           "油はねガード",
@@ -19731,7 +19732,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "waterproof-eyeliner",
-      "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+      "ideal_answer": "ウォータープルーフ(にじみにくい・よれない)アイライナー",
       "search_terms": {
         "ja": [
           "ウォータープルーフ アイライナー",
@@ -19752,7 +19753,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "waterproof-eyeliner",
-      "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+      "ideal_answer": "ウォータープルーフ(にじみにくい・よれない)アイライナー",
       "search_terms": {
         "ja": [
           "ウォータープルーフ アイライナー",
@@ -19773,7 +19774,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "waterproof-eyeliner",
-      "ideal_answer": "ウォータープルーフ（にじみにくい・よれない）アイライナー",
+      "ideal_answer": "ウォータープルーフ(にじみにくい・よれない)アイライナー",
       "search_terms": {
         "ja": [
           "ウォータープルーフ アイライナー",
@@ -19794,7 +19795,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "percussion-massage-gun",
-      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン(マッサージ器)",
       "search_terms": {
         "ja": [
           "マッサージガン",
@@ -19815,7 +19816,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "percussion-massage-gun",
-      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン(マッサージ器)",
       "search_terms": {
         "ja": [
           "マッサージガン",
@@ -19836,7 +19837,7 @@
       "locale": "ja",
       "persona": "general",
       "category": "percussion-massage-gun",
-      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン（マッサージ器）",
+      "ideal_answer": "強い振動・パワーで奥までほぐせるマッサージガン(マッサージ器)",
       "search_terms": {
         "ja": [
           "マッサージガン",
@@ -21417,6 +21418,321 @@
           "離乳食 フリージングトレー",
           "離乳食 冷凍 保存容器",
           "離乳食キューブ トレー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f135605bbf8057859823ade47534d7727eb718eb3a36e4df23500f1d494ce67c",
+      "query_text": "油を使わずに唐揚げが作れる調理家電",
+      "locale": "ja",
+      "persona": "general",
+      "category": "oil-free-air-fryer",
+      "ideal_answer": "ノンフライヤー(エアフライヤー)",
+      "search_terms": {
+        "ja": [
+          "ノンフライヤー",
+          "エアフライヤー",
+          "ノンオイル フライヤー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "51acaee4329e60dcca7ff9f50aa8ec0ba1e39be3f06a677303ceed4398ed431a",
+      "query_text": "少ない油でフライドポテトが作れるもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "oil-free-air-fryer",
+      "ideal_answer": "ノンフライヤー(エアフライヤー)",
+      "search_terms": {
+        "ja": [
+          "ノンフライヤー",
+          "エアフライヤー",
+          "ノンオイル フライヤー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "94e2c8fc3d71c0cee5932c32958ac4849cfa604a22dd5132e4ad7e04860ea118",
+      "query_text": "油なしで揚げ物ができる調理器具",
+      "locale": "ja",
+      "persona": "general",
+      "category": "oil-free-air-fryer",
+      "ideal_answer": "ノンフライヤー(エアフライヤー)",
+      "search_terms": {
+        "ja": [
+          "ノンフライヤー",
+          "エアフライヤー",
+          "ノンオイル フライヤー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "74bcdb59e4e07f2e0b9c1ade87456d93287523ef9bc4dcd1e4eadae734c70668",
+      "query_text": "保育園児でも履きやすい長靴",
+      "locale": "ja",
+      "persona": "general",
+      "category": "easy-on-kids-rain-boots",
+      "ideal_answer": "履きやすい(イージーオン)キッズ用長靴・レインブーツ",
+      "search_terms": {
+        "ja": [
+          "レインブーツ キッズ 履きやすい",
+          "長靴 履きやすい キッズ",
+          "イージーオン レインブーツ 子供"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8fa6237aad76ccac722a70e671368d84c6a8274192e4eab280d5faf040e4f942",
+      "query_text": "雨の日に一人で楽に履けるレインブーツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "easy-on-kids-rain-boots",
+      "ideal_answer": "履きやすい(イージーオン)キッズ用長靴・レインブーツ",
+      "search_terms": {
+        "ja": [
+          "レインブーツ キッズ 履きやすい",
+          "長靴 履きやすい キッズ",
+          "イージーオン レインブーツ 子供"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "da83fa03e9e72921d792faecc278f991e1d108f5863720bfe45ea3fab7880d27",
+      "query_text": "足を入れやすい雨靴",
+      "locale": "ja",
+      "persona": "general",
+      "category": "easy-on-kids-rain-boots",
+      "ideal_answer": "履きやすい(イージーオン)キッズ用長靴・レインブーツ",
+      "search_terms": {
+        "ja": [
+          "レインブーツ キッズ 履きやすい",
+          "長靴 履きやすい キッズ",
+          "イージーオン レインブーツ 子供"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6c05076d20fb41e03f252d6f22fe717a0a36335c41c32035e6ed1d7802e0e5d0",
+      "query_text": "動物病院に持っていきやすい軽い猫のキャリーバッグ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lightweight-foldable-pet-carrier",
+      "ideal_answer": "折りたたみ式・軽量タイプのペットキャリーバッグ(クレート・ケージ)",
+      "search_terms": {
+        "ja": [
+          "折りたたみ ペットキャリー 軽量",
+          "軽量 ペットキャリーバッグ",
+          "折りたたみ クレート 犬"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2a9a5fc09e94d80b4416407253344f53b63b1514a43aa639710d750c55b5ea62",
+      "query_text": "折りたためる犬のキャリーケース",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lightweight-foldable-pet-carrier",
+      "ideal_answer": "折りたたみ式・軽量タイプのペットキャリーバッグ(クレート・ケージ)",
+      "search_terms": {
+        "ja": [
+          "折りたたみ ペットキャリー 軽量",
+          "軽量 ペットキャリーバッグ",
+          "折りたたみ クレート 犬"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "c35be0555810b798390af1721aa7ca4707677bca484bb9fd530bfb66f494c736",
+      "query_text": "軽量で持ち運びやすいペットケージ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lightweight-foldable-pet-carrier",
+      "ideal_answer": "折りたたみ式・軽量タイプのペットキャリーバッグ(クレート・ケージ)",
+      "search_terms": {
+        "ja": [
+          "折りたたみ ペットキャリー 軽量",
+          "軽量 ペットキャリーバッグ",
+          "折りたたみ クレート 犬"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "7e8a8fa30388da199e1cd6673c89f536631bc9a0cecd4c8d5165b88d2f89787f",
+      "query_text": "ひんやりして涼しいTシャツ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cooling-summer-tshirt",
+      "ideal_answer": "接触冷感(冷感)素材のTシャツ・カットソー・インナー",
+      "search_terms": {
+        "ja": [
+          "接触冷感 Tシャツ",
+          "接触冷感 半袖Tシャツ",
+          "ひんやり インナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ed7915b1bc41b0a79e77ed4afdbd0c48a65e85d6e877bc01e662d57b786f2aa0",
+      "query_text": "ひんやりとした着け心地のインナー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cooling-summer-tshirt",
+      "ideal_answer": "接触冷感(冷感)素材のTシャツ・カットソー・インナー",
+      "search_terms": {
+        "ja": [
+          "接触冷感 Tシャツ",
+          "接触冷感 半袖Tシャツ",
+          "ひんやり インナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "68ba4e29c315f023f82a195b1e1dc3a191765bec2100c31c94d6a399982f59c0",
+      "query_text": "蒸れないカットソー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cooling-summer-tshirt",
+      "ideal_answer": "接触冷感(冷感)素材のTシャツ・カットソー・インナー",
+      "search_terms": {
+        "ja": [
+          "接触冷感 Tシャツ",
+          "接触冷感 半袖Tシャツ",
+          "ひんやり インナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8641ae4e58b83eb915da3d8f081c5686497738480c98789473fdad7fb77c0af5",
+      "query_text": "夕方に脚がむくんで辛いときに使うマッサージ機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "foot-swelling-massager",
+      "ideal_answer": "フットマッサージャー・レッグマッサージャー(効果を保証する表現は使わない)",
+      "search_terms": {
+        "ja": [
+          "フットマッサージャー",
+          "むくみケア フットマッサージャー",
+          "レッグマッサージャー むくみ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f00cf54eb581494a8688de23c5cfade964885fe0afdc8061963b81b1a55e3f7e",
+      "query_text": "足がだるい日に使うマッサージ機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "foot-swelling-massager",
+      "ideal_answer": "フットマッサージャー・レッグマッサージャー(効果を保証する表現は使わない)",
+      "search_terms": {
+        "ja": [
+          "フットマッサージャー",
+          "むくみケア フットマッサージャー",
+          "レッグマッサージャー むくみ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "79a817000785bf9fcf2843ba028010b38870d5b027172ef6770272d68bd957f5",
+      "query_text": "脚のむくみが気になるときのレッグマッサージャー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "foot-swelling-massager",
+      "ideal_answer": "フットマッサージャー・レッグマッサージャー(効果を保証する表現は使わない)",
+      "search_terms": {
+        "ja": [
+          "フットマッサージャー",
+          "むくみケア フットマッサージャー",
+          "レッグマッサージャー むくみ"
         ],
         "en": [],
         "ko": [],
@@ -32058,6 +32374,1062 @@
       "excluded_conditions": [],
       "confidence": 0.75,
       "source_file": "2026-09-16-claude-batch-029.json"
+    },
+    {
+      "content_hash": "c84552ad2661fc5bddcbd31dca86882f35479ea09be06c688ea5b5c22197c71c",
+      "query_text": "敬老の日っぽい贈り物のやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "敬老の日の贈り物とのことですが、健康グッズ、日用品、食べ物・お菓子のどれがご希望ですか？予算感もあれば教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "6a9bbb6eedb5afec67653b2da8df5b5cd5579f4c8c96d37b9ee905120d6752a7",
+      "query_text": "運動会で応援する時に使うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sports-day-goods",
+      "ideal_answer": "運動会の応援グッズ（応援うちわ・メガホン・ハチマキ）",
+      "search_terms": {
+        "ja": [
+          "応援うちわ",
+          "運動会 応援グッズ",
+          "メガホン"
+        ],
+        "en": [
+          "sports day cheering goods"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "e6dc5d234c315d315e84d3f8c57f584219fc6f3e65fb4b2bdf4415b00547d166",
+      "query_text": "台風の時に窓に貼るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "disaster-prep",
+      "ideal_answer": "窓ガラス飛散防止フィルムまたは養生テープ",
+      "search_terms": {
+        "ja": [
+          "飛散防止フィルム",
+          "窓 養生テープ 台風"
+        ],
+        "en": [
+          "window shatterproof film"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "7966bf88d7c74753ee9b6dba98b016fe72172518cb9766c00dd04f07fc102db8",
+      "query_text": "傘が壊れた時に直すやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "傘の骨が折れた場合は交換用骨組みパーツ、生地が破れた場合は傘用補修テープです。どちらの症状ですか？",
+      "search_terms": {
+        "ja": [
+          "傘 骨 交換 パーツ",
+          "傘 補修テープ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.45,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "1ee6dfb50a2c35cdfa7b739bc8c186d7722fcc8ba1c1476aefa86a2169fa44a9",
+      "query_text": "靴が濡れた時に乾かすやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "shoe-dryer",
+      "ideal_answer": "くつ乾燥機（電動シューズドライヤー）",
+      "search_terms": {
+        "ja": [
+          "くつ乾燥機",
+          "シューズドライヤー"
+        ],
+        "en": [
+          "shoe dryer"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "18cfd18740e7838b7ca4d7579b7b94c605c33f8daa5ac2ad14a45c30033a0f2e",
+      "query_text": "スマホの充電が減らないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mobile-battery",
+      "ideal_answer": "モバイルバッテリー（携帯充電器）",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー",
+          "携帯 充電器"
+        ],
+        "en": [
+          "portable charger"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "据え置き充電器"
+      ],
+      "confidence": 0.6,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "b59988b4066aa857d75020f22c0b4e2e309f5a015c780c74b95845db75e32654",
+      "query_text": "部屋を涼しくするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "扇風機ですか、エアコンですか、それとも冷感マットや保冷剤タイプの寝具ですか？予算や設置環境も教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "be413f63f8b478038beace4f10d9f2dfcef7ada291ca1c6f2aed6d9adb5c2c04",
+      "query_text": "虫よけのやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "insect-repellent",
+      "ideal_answer": "虫よけスプレーまたは虫よけリング（携帯用）",
+      "search_terms": {
+        "ja": [
+          "虫よけスプレー",
+          "虫よけリング"
+        ],
+        "en": [
+          "insect repellent"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "a7d7eabee276baa9dc27568c8ca9f3fa24061fd54bf4d409e94c6439f76c188b",
+      "query_text": "洗濯物ににおいがつかないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "部屋干し用洗剤・部屋干し臭防止スプレー・除湿機・室内物干しラックのどれをお探しですか？室内干しの頻度も教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "f5f8ae5b9113922c1d6f1c8e09cd133c53f8fdeaa23f7b71c6d10c4a0b2dc911",
+      "query_text": "姿勢を良くするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "姿勢矯正ベルト、姿勢サポートクッション、姿勢サポートチェアのどれをお探しですか？デスクワーク用か日常使いかも教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "253dac61cf03987d839206a42f61c3d8913fd0e24ea61c8364cc815e48f864b3",
+      "query_text": "肩がこったときに使うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "マッサージ器、肩用温熱シート、肩こり用クッションのどれをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "2c8048c726c90b6028ffd42933fd4997a369e1f8ff655856b83c38d64412ae6f",
+      "query_text": "停電の時に使うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "懐中電灯、LEDランタン、大容量モバイルバッテリーのどれをお探しですか？停電の想定時間も教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "ca31846d56264aecd8a1a14ab30eb6c24afc6454addf6c64cb66aeee939672b7",
+      "query_text": "運転中にスマホを充電するやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "car-charger",
+      "ideal_answer": "車載用USB充電器（シガーソケット充電器）",
+      "search_terms": {
+        "ja": [
+          "車載充電器",
+          "シガーソケット usb"
+        ],
+        "en": [
+          "car charger"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "139a14675f96fbda20a58deb3b64bcaa9ff64624624861d931fbe050750a8464",
+      "query_text": "自転車のサドルが濡れないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bicycle-accessory",
+      "ideal_answer": "自転車サドルカバー（防水タイプ）",
+      "search_terms": {
+        "ja": [
+          "自転車 サドルカバー",
+          "サドル 防水カバー"
+        ],
+        "en": [
+          "bicycle saddle cover"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "47edadcaafd88a6bbef6ab535d8cb6bd33db381c265cee10172a61c286830e59",
+      "query_text": "お米の虫を防ぐやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rice-storage",
+      "ideal_answer": "米びつ用防虫剤",
+      "search_terms": {
+        "ja": [
+          "米びつ 防虫剤",
+          "お米 虫よけ"
+        ],
+        "en": [
+          "rice storage insect repellent"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "877deca1ea781c5380395b462bd5c0213cf16e33ca2361f1f1cf9c2787ee8f74",
+      "query_text": "うんどうかいでつかうはちまき",
+      "locale": "ja",
+      "persona": "child",
+      "category": "sports-day-goods",
+      "ideal_answer": "運動会用の紅白はちまき",
+      "search_terms": {
+        "ja": [
+          "運動会 はちまき",
+          "紅白 鉢巻"
+        ],
+        "en": [
+          "sports day headband"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "182240f5fbbb5fab865ae4e9a4ea84b46c2983ccb416f88ec18b656b9176d465",
+      "query_text": "キラキラしたシールがいっぱいはいってるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "キラキラシールをお探しですか？ノートに貼るタイプ、ネイルに貼るタイプ、デコレーション工作用のどれがご希望ですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "80d961a14da2eeeb572d4a04b7c1d821a1e7b33cb4ac85414054bacd6c41e821",
+      "query_text": "おえかきするどうぐ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "art-supplies",
+      "ideal_answer": "お絵かきセット（クレヨン・色鉛筆・スケッチブックなど）",
+      "search_terms": {
+        "ja": [
+          "おえかきセット",
+          "こども クレヨン",
+          "スケッチブック"
+        ],
+        "en": [
+          "kids drawing set"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "c49dc577c6a7d81583cba711be77391b682893359c41a820d1c44137f2529914",
+      "query_text": "じてんしゃにつけるカゴ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "bicycle-accessory",
+      "ideal_answer": "自転車用後付けかご",
+      "search_terms": {
+        "ja": [
+          "自転車 後付け かご",
+          "自転車カゴ"
+        ],
+        "en": [
+          "bicycle basket"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "4be69fe2c3c7cc94b0e6f44a43b0f95c0378b3e14c1f46f31d2c298212f3f26f",
+      "query_text": "よるひかるくつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "kids-shoes",
+      "ideal_answer": "光る子供靴（LEDライト付きスニーカー）",
+      "search_terms": {
+        "ja": [
+          "光る 子供靴",
+          "led スニーカー キッズ"
+        ],
+        "en": [
+          "light up kids shoes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "1d5053c0cebb5460fb9bbe962090201775a1c9e2744ab13db4553995cf30ad4c",
+      "query_text": "なわとびがはやくとべるようになるくつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "kids-shoes",
+      "ideal_answer": "軽量で屈曲性の高い子供用運動靴（縄跳び・体育向け）",
+      "search_terms": {
+        "ja": [
+          "キッズ 運動靴 軽量",
+          "縄跳び 靴"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "8faeace12c17c16eea45a4b94ffe5639ec3247cf01112d19bc3071f617b13c02",
+      "query_text": "立ち上がりやすい椅子用のクッション",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "elderly-care",
+      "ideal_answer": "立ち上がり補助クッション（反発力の高い椅子用クッション）",
+      "search_terms": {
+        "ja": [
+          "立ち上がり補助クッション",
+          "椅子 クッション 高反発"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "2995eecbd33c92fa142131fe93969a78e8bc19dd329168a7416cea2d81ee108b",
+      "query_text": "杖の先のゴムを交換するやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "cane-accessory",
+      "ideal_answer": "杖用先ゴム（交換用キャップ）",
+      "search_terms": {
+        "ja": [
+          "杖 先ゴム",
+          "杖 交換用 ゴムキャップ"
+        ],
+        "en": [
+          "cane tip replacement"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "93a4b811ce41bcb98ba524002ee7d8bafa71cc2af967d86c64a981f834e26374",
+      "query_text": "老眼鏡を拭く布",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "eyewear-accessory",
+      "ideal_answer": "メガネ拭きクロス（マイクロファイバークロス）",
+      "search_terms": {
+        "ja": [
+          "メガネ拭き",
+          "マイクロファイバークロス 眼鏡"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "36c277a73afe5a41ca950e2eeed19600967a4be00d2252c29a774e88031795d3",
+      "query_text": "つまずきにくいスリッパ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "slippers",
+      "ideal_answer": "つまずき防止・滑り止め付きスリッパ",
+      "search_terms": {
+        "ja": [
+          "転倒防止 スリッパ",
+          "滑り止め スリッパ"
+        ],
+        "en": [
+          "non-slip slippers for elderly"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [
+        "ヒール",
+        "サンダル"
+      ],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "ae38b98f4ff070d44b0e83d1ba3642963868b276fcfdcf784c9eaef969311788",
+      "query_text": "血圧を測る機械",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "health-device",
+      "ideal_answer": "家庭用血圧計（上腕式）",
+      "search_terms": {
+        "ja": [
+          "血圧計",
+          "上腕式 血圧計"
+        ],
+        "en": [
+          "blood pressure monitor"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "ec51921f09101435834f0ed64a4f8616bfb974bd59482c3e42d71740342a8c35",
+      "query_text": "敬老の日に贈る座布団",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "cushion",
+      "ideal_answer": "敬老の日ギフト向け座布団（高反発・低反発タイプ含む）",
+      "search_terms": {
+        "ja": [
+          "敬老の日 座布団",
+          "ギフト 座布団"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "4215c914d8b1dd75fb4a2595af6b04293a98a425665666422b38d22049e08082",
+      "query_text": "태풍 대비 손전등",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "disaster-prep",
+      "ideal_answer": "防災用LED懐中電灯",
+      "search_terms": {
+        "ja": [
+          "防災 懐中電灯",
+          "led ライト 防災"
+        ],
+        "en": [
+          "emergency flashlight"
+        ],
+        "ko": [
+          "태풍 손전등",
+          "비상용 손전등"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "c2437cd82a96a863838d3696134d6c6cfd8b9f6e995add16aadea6cf59e2b325",
+      "query_text": "운동회 응원 도구",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "sports-day-goods",
+      "ideal_answer": "運動会応援グッズ（うちわ・メガホン）",
+      "search_terms": {
+        "ja": [
+          "運動会 応援グッズ"
+        ],
+        "en": [
+          "sports day cheering goods"
+        ],
+        "ko": [
+          "운동회 응원용품",
+          "응원 부채"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "3422aa14dad5458bc1c56c823711eb7dda89bc6e141f1790ae9825fe54203c87",
+      "query_text": "노인 무릎 담요",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "blanket",
+      "ideal_answer": "高齢者向けひざ掛け毛布",
+      "search_terms": {
+        "ja": [
+          "ひざ掛け 高齢者",
+          "ひざ掛け毛布"
+        ],
+        "en": [
+          "lap blanket for elderly"
+        ],
+        "ko": [
+          "무릎 담요",
+          "노인용 담요"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "98dc1d04e7c59a7ec85087b84e3138148e46ade3df9e0fe65f1b3413b305b463",
+      "query_text": "台风 应急 手电筒",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "disaster-prep",
+      "ideal_answer": "防災用LED懐中電灯",
+      "search_terms": {
+        "ja": [
+          "防災 懐中電灯"
+        ],
+        "en": [
+          "emergency flashlight"
+        ],
+        "ko": [],
+        "zh": [
+          "台风 手电筒",
+          "应急照明灯"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "99cdfb9f6944e165586e450a284ec90bed460f92685e2020189e502b6f5ae586",
+      "query_text": "老人 防滑拖鞋",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "slippers",
+      "ideal_answer": "つまずき防止・滑り止め付きスリッパ",
+      "search_terms": {
+        "ja": [
+          "滑り止め スリッパ",
+          "転倒防止 スリッパ"
+        ],
+        "en": [
+          "non-slip slippers for elderly"
+        ],
+        "ko": [],
+        "zh": [
+          "防滑拖鞋",
+          "老人拖鞋"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "1afdd18b9433d7964bb7be7fb8350253dbaa21fbb7deec3a21f742ce4c69e4a4",
+      "query_text": "学生 运动会 加油道具",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "sports-day-goods",
+      "ideal_answer": "運動会応援グッズ（うちわ・メガホン）",
+      "search_terms": {
+        "ja": [
+          "運動会 応援グッズ"
+        ],
+        "en": [
+          "sports day cheering goods"
+        ],
+        "ko": [],
+        "zh": [
+          "运动会加油道具",
+          "应援扇"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "0c377493551c6c69d2eaf2990b00a753dd86a7edfe6ab6f72f64cb4c5c158bdb",
+      "query_text": "portable phone charger for typhoon",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "mobile-battery",
+      "ideal_answer": "大容量モバイルバッテリー（防災用）",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー 大容量",
+          "防災 モバイルバッテリー"
+        ],
+        "en": [
+          "portable charger power bank"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "6ac03453754b8dc3a96fa8b807d3fd7e415f2c12a1fa8ca8279617a186d2e3f7",
+      "query_text": "kids sports day headband",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "sports-day-goods",
+      "ideal_answer": "運動会用の紅白はちまき（子供用）",
+      "search_terms": {
+        "ja": [
+          "運動会 はちまき 子供用"
+        ],
+        "en": [
+          "kids sports day headband"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "f3ac6bc4a28c04991419d75560355c78e5aaa583bb0c930d7d9e87c064ffe87d",
+      "query_text": "non-slip slippers for elderly",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "slippers",
+      "ideal_answer": "つまずき防止・滑り止め付きスリッパ",
+      "search_terms": {
+        "ja": [
+          "滑り止め スリッパ",
+          "転倒防止 スリッパ"
+        ],
+        "en": [
+          "non-slip slippers elderly"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "a4dd28b08c85c756a079902df25e87a5fb460bb8e89d02db3fd1cef885eefc4e",
+      "query_text": "taifuu no toki no kaichuudentou",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "disaster-prep",
+      "ideal_answer": "防災用LED懐中電灯",
+      "search_terms": {
+        "ja": [
+          "防災 懐中電灯",
+          "台風 懐中電灯"
+        ],
+        "en": [
+          "emergency flashlight"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "da11ff46976c54a3b2186ce1d227c06286d260892a786e17d7a2b1070a39f6ae",
+      "query_text": "keiro no hi purezento obaachan",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "敬老の日プレゼント（実用的な日用品ギフト）とのことですが、健康グッズ・食べ物・日用品のどれがご希望ですか？",
+      "search_terms": {
+        "ja": [
+          "敬老の日 プレゼント 祖母"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.4,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "099b05a422023f7273672667c41cf16422ba6a5faadffb1c61b41c50e378b033",
+      "query_text": "undoukai ouen guzzu",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "sports-day-goods",
+      "ideal_answer": "運動会応援グッズ（うちわ・メガホン）",
+      "search_terms": {
+        "ja": [
+          "運動会 応援グッズ"
+        ],
+        "en": [
+          "sports day cheering goods"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "d0e2e54c0d3140edd07f883974040e51dc865d59ad8d00fb9d1f3fe2ead3cd61",
+      "query_text": "量産型 ヘアゴム",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hair-accessory",
+      "ideal_answer": "量産型系デザインのヘアゴム（リボン・パール付き）",
+      "search_terms": {
+        "ja": [
+          "量産型 ヘアゴム",
+          "リボン ヘアゴム パール"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "e9b2a3d50e8f7357b82976f4a8228366b263ba5d2d889ef2e136ad48661d1995",
+      "query_text": "韓国コスメ リップティント おすすめ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cosmetics",
+      "ideal_answer": "韓国コスメブランドのリップティント",
+      "search_terms": {
+        "ja": [
+          "韓国コスメ リップティント",
+          "ティント おすすめ"
+        ],
+        "en": [
+          "korean lip tint"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "be8de2729b3bf7ff32ef3f2393880b5b1b414fedb881df44028f91dd13c48aa0",
+      "query_text": "タイパ 時短家電",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "タイムパフォーマンス重視の時短家電とのことですが、調理家電・掃除家電・洗濯家電のどれをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "963ace9757e101bfc5dc929e98889b46611b1bb7cce0754d131325fe475fce42",
+      "query_text": "オタ活 缶バッジ 収納ケース",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fan-goods",
+      "ideal_answer": "缶バッジ収納ケース（オタ活グッズ収納用）",
+      "search_terms": {
+        "ja": [
+          "缶バッジ 収納ケース",
+          "オタ活 グッズ収納"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "5a72ac37a0b75af3e266976cce975bf248e9c82c19a1c8777c4ca8d8bf6bf3fa",
+      "query_text": "地雷系 リュック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bags",
+      "ideal_answer": "地雷系ファッション系デザインのリュック（リボン・レース付き）",
+      "search_terms": {
+        "ja": [
+          "地雷系 リュック",
+          "リボン リュック 量産型"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "a1bae0a954122efa3cd1528e68e9f7ecf9dba22881080d0721fb69e8c9129a80",
+      "query_text": "喉の痛みに効くもの",
+      "locale": "ja",
+      "persona": "general",
+      "category": "health-otc",
+      "ideal_answer": "のどあめ・トローチ・のどスプレーなど（効果には個人差があり、症状が続く場合は医療機関の受診をおすすめします）",
+      "search_terms": {
+        "ja": [
+          "のどあめ",
+          "トローチ",
+          "のどスプレー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.45,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "cd677ce4cc613740d2787cd682bf596eb849bf9955976062cf08d73cd9b139c0",
+      "query_text": "肩こりに効くサプリ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "health-otc",
+      "ideal_answer": "肩こり対策として販売されているサプリメント（効果効能を保証するものではなく、症状が続く場合は医療機関へのご相談をおすすめします）",
+      "search_terms": {
+        "ja": [
+          "肩こり サプリ",
+          "サプリメント 肩こり対策"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.45,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "7952466da5cc89da36f7f8b3989258362acfca300003f81a501403d43dd04946",
+      "query_text": "敬老の日 プレゼント 実用的",
+      "locale": "ja",
+      "persona": "general",
+      "category": "gift",
+      "ideal_answer": "敬老の日ギフト（座布団・ひざ掛け・血圧計などの実用品）",
+      "search_terms": {
+        "ja": [
+          "敬老の日 プレゼント 実用的",
+          "敬老の日 ギフト 日用品"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "82b4c77ce494e50130be05cca162912a69f61fe08f367a518e275f611f40bb37",
+      "query_text": "台風対策 停電時 モバイルバッテリー 大容量",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mobile-battery",
+      "ideal_answer": "大容量モバイルバッテリー（防災用、20000mAh以上）",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー 大容量",
+          "防災 モバイルバッテリー 20000mah"
+        ],
+        "en": [
+          "large capacity power bank"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "e2c907ba4d553891cc1686c102978513f4224b392bca0c1a9baad4e04942e403",
+      "query_text": "運動会 お弁当箱 大きめ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bento-box",
+      "ideal_answer": "運動会向け大容量お弁当箱",
+      "search_terms": {
+        "ja": [
+          "運動会 お弁当箱",
+          "大容量 弁当箱"
+        ],
+        "en": [
+          "large bento box"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "d9f5dfe8e356a4efe36e9869f1c91f515edf91a13e44d4c25229560224f7e976",
+      "query_text": "秋の運動会用日焼け止め",
+      "locale": "ja",
+      "persona": "general",
+      "category": "sunscreen",
+      "ideal_answer": "低刺激・汗に強い日焼け止め（運動会・屋外イベント向け）",
+      "search_terms": {
+        "ja": [
+          "日焼け止め 運動会",
+          "汗に強い 日焼け止め"
+        ],
+        "en": [
+          "sweat resistant sunscreen"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-17-claude-batch-030.json"
     }
   ]
 }
