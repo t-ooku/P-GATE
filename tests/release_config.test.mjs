@@ -67,6 +67,9 @@ test('release version has one source of truth', () => {
 // 起動するため既定ブランチ(main)にも置く。push/PR/schedule では動かない。
 // Claude(Cowork)がGitHubへ直接pushできない制約下で、人手のパッチ転記を
 // なくしつつ、検証なしのコードが本番へ出ない経路として固定する。
+// 2026-09-17 に build-social-carousels.yml を追加した（SNS 方針 v3）。build-social-reel.yml と同じ型で、
+// カルーセル画像の生成スクリプト/内容 JSON が feature/ui-search-v2 へ入った時だけ Pillow で JPEG を
+// 再生成して同じブランチへコミットし、検証後にデプロイする。
 const MANUAL_ONLY_WORKFLOWS = ['apply-teacher-dataset-d1.yml', 'setcloudflaresecret.yml', 'apply-d1-migrations.yml', 'submit-runway-job.yml', 'fetch-runway-raw-media.yml', 'publish-runway-reel-20260818.yml', 'publish-runway-reel.yml', 'generate-runway-persona.yml'];
 
 test('GitHub Actions uses only the release and production-monitor workflows', () => {
@@ -76,7 +79,7 @@ test('GitHub Actions uses only the release and production-monitor workflows', ()
   // して同じブランチへコミットする。追加時にこの許可リストの更新が漏れていて、
   // 以降 npm test が落ちていた(2026-09-03に検知)。
   assert.deepEqual(workflows.filter((name) => !MANUAL_ONLY_WORKFLOWS.includes(name)),
-    ['apply-patch.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml']);
+    ['apply-patch.yml', 'build-social-carousels.yml', 'build-social-reel.yml', 'ci.yml', 'compile-teacher-dataset-rules.yml', 'production-monitor.yml']);
   const ci = fs.readFileSync(path.join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   assert.match(ci, /npm test/);
   assert.match(ci, /dist\/Project_GATE_Complete\.gs/);
