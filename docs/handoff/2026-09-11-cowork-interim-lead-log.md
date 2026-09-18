@@ -452,3 +452,7 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 本番確認済み（デプロイ） | #305 KPI 4 タブ＋参照元補完（12:05Z） |
 | 実装済み・本番未確認 | #306 SHOP P1: 店内検索 0 件→「このショップにホシっとく」（seller_slug 付き需要）／「ショップをホシる」の完了文から未実装の通知を外す／`/for-sellers` 中心メッセージ「欲しい人が見える。欲しい人に商品を届けられる。」（§30〜31） |
 | 事実（要判断） | 「今日のこのショップ」は作れない: 3 店の `products` は全行 `imported_at=2026-07-22`（約 2 か月、再同期なし）。新着・値下げ・再入荷はデータが無い。商品同期の再開が先 |
+| 本番確認済み（デプロイ） | #307 値下がり待ちの各行に「やめる」 |
+| 決定・実装済み・本番未確認 | SNS 方針 v3（`2026-09-17-sns-policy-v3.md`）: リール火・金（Runway 新規生成・声付き v1）、カルーセル月・水・土（Pillow 画像、IG CAROUSEL / X 画像 4 枚）、ユーザー向け:セラー向け=50:50、X 同日同内容。#308 |
+| 実行済み（承認済み） | 9/9 の v2 女優 Runway ジョブを不採用（FAILED_FINAL）、キュー行 CANCELLED。migration 0080（media_urls）本番適用 |
+| 事実 | production monitor の GITHUB_SCHEDULE_HEARTBEAT_STALE は GitHub 側の schedule 遅延（21:07 JST 検知→22:22 JST 自動 ACK）。Cloudflare 側の監視は正常。AI 女優 SLA の FAIL は 9/16 のリール停止決定によるもの → v3 の監視に置き換え |
