@@ -14,6 +14,12 @@ name: Auto Runway reel (generate, post-process, auto QA, queue)
 #  APPROVED_FOR_POST/PASSED、social_post_queue を APPROVED（同日 20:15 JST）にする。
 #  不合格なら別シーンで1回だけ再生成。それでも駄目なら FAILED_FINAL にして Issue で報告。
 #
+# 2026-09-18 大隆さん決定 (a): 本人一致（承認済み女優と同一人物か）は生体照合が未実装のため
+#  自動実行では必ず不合格（identity_check_unavailable、job は GENERATED_REVIEW_REQUIRED のまま）。
+#  大隆さんが Actions の artifact の contact-sheet.jpg を見て本人一致を確認したら、
+#  「Run workflow」で approve_job_id に [AUTO-REEL] Issue の job_id を入れて再実行する。
+#  本人一致だけ人手確認済みとして通し、他の機械検査はそのまま行う。投稿 20 分前を過ぎると不可。
+#
 # GitHub の schedule は既定ブランチ(main)のワークフローだけ動くため、本ファイルは main に
 # 置き、実行時に feature/ui-search-v2（本番）を checkout する（production-monitor.yml と同じ）。
 # 再実行しても job_id が日付で固定なので二重生成・二重投稿にならない。既に生成済み
@@ -38,6 +44,10 @@ on:
         default: ''
       publish_at:
         description: '投稿時刻を固定する場合 ISO8601（例 2026-09-07T11:15:00Z）'
+        required: false
+        default: ''
+      approve_job_id:
+        description: '大隆さんが contact-sheet で本人一致を確認した job_id（例 runway-auto-seller-demand-visible-20260918）。入れると本人一致だけ人手確認済みとして再実行'
         required: false
         default: ''
   push:
@@ -116,6 +126,12 @@ jobs:
           [ -n "${{ github.event.inputs.slot }}" ] && extra="$extra --slot=${{ github.event.inputs.slot }}"
           [ -n "${{ github.event.inputs.theme }}" ] && extra="$extra --theme=${{ github.event.inputs.theme }}"
           [ -n "${{ github.event.inputs.publish_at }}" ] && extra="$extra --publish_at=${{ github.event.inputs.publish_at }}"
+          if [ -n "${{ github.event.inputs.approve_job_id }}" ]; then
+            case "${{ github.event.inputs.approve_job_id }}" in
+              runway-auto-*) extra="$extra --approve_job_id=${{ github.event.inputs.approve_job_id }}" ;;
+              *) echo "::error::approve_job_id は runway-auto-<型>-<yyyymmdd> の形だけ受け付けます"; exit 1 ;;
+            esac
+          fi
           node scripts/auto-runway-reel.mjs $extra
 
       - name: Report to an issue (success = closed record, failure = open for follow-up)
@@ -149,7 +165,13 @@ jobs:
           if (ev.overlay_diff) lines.push(`- 焼き込み差分: ${JSON.stringify(ev.overlay_diff)}`);
           if (ev.ui_cut) lines.push(`- カットB: ${ev.ui_cut}`);
           if (ev.collision) lines.push(`- 枠の扱い: ${JSON.stringify(ev.collision)}`);
+          if (ev.identity) lines.push(`- 本人一致: ${ev.identity.ok ? `大隆さん確認済み（contact-sheet、run ${ev.identity.confirmed_run_id || ''}）` : '未確認（機械では判定できないため不合格）'}`);
           if (ev.not_biometrically_verified) lines.push(`- 機械で確認していないこと: ${ev.not_biometrically_verified.join(' / ')}`);
+          if (!o.ok && /identity_check_unavailable/.test(String(o.reason || '')) && o.job_id) {
+            lines.push('');
+            lines.push('**大隆さんの操作（本人一致の人手確認）**: 上のログ/成果物 → Artifacts → contact-sheet.jpg を開き、承認済み女優（https://hoshilu.app/social/runway/hoshilu-approved-model-reference-v1.jpg）と同じ人物なら、');
+            lines.push(`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/workflows/auto-runway-reel.yml → 「Run workflow」→ approve_job_id に \`${o.job_id}\` を貼って実行（投稿 20:15 JST の 20 分前まで）。別人なら何もしない（その日はカルーセルが代替投稿されます）。`);
+          }
           lines.push(`- ログ/成果物: ${process.env.RUN_URL}`);
           lines.push('');
           lines.push('自動QAの証跡は Actions の artifact（contact-sheet.jpg, qa.json, reel.mp4）を参照。');
