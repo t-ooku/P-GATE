@@ -350,7 +350,9 @@ test('ダッシュボードは検索品質と SHOP・Seller の集計を返し�
   for (const [id, type, campaign, content] of [
     ['ss1', 'shop_search_completed', 'NONE', '0/0'], ['ss2', 'shop_search_completed', 'NEAR', '0/2'], ['ss3', 'shop_search_completed', 'EXACT', '1/0'],
     ['sd1', 'shop_demand_saved', 'NONE', 'guest'], ['sd2', 'shop_demand_saved', 'NEAR', 'member'], ['sm1', 'shop_demand_matched', 'find-fun', 'EXACT'],
-    ['rc1', 'result_confirmed', '', ''], ['rr1', 'result_rejected', '', '']
+    ['rc1', 'result_confirmed', '', ''], ['rr1', 'result_rejected', '', ''],
+    ['lv1', 'landing_view', '', ''], ['lv2', 'landing_view', '', ''], ['lv3', 'landing_view', '', ''], ['lv4', 'landing_view', '', ''],
+    ['sv1', 'shop_viewed', 'find-fun', 'view'], ['sv2', 'shop_viewed', 'find-fun', 'search'], ['sf1', 'shop_followed', 'find-fun', '']
   ]) event.run(id, type, 'JA', 'worker', 'shop', campaign, content, '', '2026-08-09T12:05:00Z', 'UNATTRIBUTED', '', '');
   event.run('qa-ss', 'shop_search_completed', 'JA', 'codex', 'qa', 'NONE', '0/0', '', '2026-08-09T12:05:00Z', 'QA', '', '');
   const summary = await promotionDashboardSummary({ PRODUCT_DB: d1(db) }, new Date('2026-08-10T00:00:00Z'));
@@ -362,6 +364,14 @@ test('ダッシュボードは検索品質と SHOP・Seller の集計を返し�
   assert.deepEqual([shop.demand_saved_member, shop.demand_saved_guest], [1, 1]);
   assert.equal(shop.demand_matched, 1);
   assert.equal(shop.zero_result_rate, 33.3);
+  // 2026-09-18 大隆さん指示 P1: 計測できる率だけ追加（横断検索開始率・完全一致率・近似率・0件→ホシっとく率・後日マッチ率・ホシる率）
+  assert.equal(shop.landing_view, 7, 'setup の着地 3 件 + 追加 4 件');
+  assert.equal(shop.shop_search_start_rate, 42.9);
+  assert.deepEqual([shop.exact_rate, shop.near_rate], [33.3, 33.3]);
+  assert.equal(shop.zero_to_demand_rate, 100, '0件の検索 1 件に対して 0件から保存された需要 1 件（近い商品からの保存は数えない）');
+  assert.equal(shop.demand_match_rate, 50);
+  assert.equal(shop.shop_follow_rate, 50);
+  assert.ok(!('product_to_shop_rate' in shop) && !('match_notification_return_rate' in shop), '未計測の率は出さない');
   // 需要テーブルが無い環境では null（未計測）。推定売上・CV のキーは持たない
   assert.equal(summary.shop_seller.stock.open_demands, null);
   assert.ok(!JSON.stringify(summary.shop_seller).match(/revenue|sales|conversion/i));
@@ -372,7 +382,7 @@ test('ダッシュボードは検索品質と SHOP・Seller の集計を返し�
   const html = readFileSync(new URL('../src/admin-sp-api-page.mjs', import.meta.url), 'utf8');
   for (const tab of ['business', 'search', 'shop', 'acquisition']) assert.ok(html.includes(`data-kpi-tab="${tab}"`) && html.includes(`data-kpi-panel="${tab}"`), tab);
   for (const label of ['経営KPI', '検索品質', 'SHOP・Seller', '流入・販促']) assert.ok(html.includes(`>${label}</button>`), label);
-  assert.match(html, /admin-promotion\.js\?v=2/);
+  assert.match(html, /admin-promotion\.js\?v=3/);
   const client = readFileSync(new URL('../public/admin-promotion.js', import.meta.url), 'utf8');
   assert.match(client, /function renderShopSeller\(\)/);
   assert.match(client, /function activateTab\(name\)/);

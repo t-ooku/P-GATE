@@ -260,14 +260,14 @@ function renderShopSeller() {
   const period = tabData.shop_seller?.periods?.[kpiPeriod];
   if (!period) { shopSellerGrid.replaceChildren(element('p', 'SHOP・Seller データを取得できません。', 'empty-row')); shopStockGrid.replaceChildren(); return; }
   shopSellerGrid.replaceChildren(
-    metric('横断検索', formatNumber(period.shop_searches), '', `${period.days}日`),
-    metric('条件に一致', formatNumber(period.shop_search_exact), 'success'),
-    metric('近い商品だけ', formatNumber(period.shop_search_near)),
+    metric('横断検索', formatNumber(period.shop_searches), '', `${period.days}日｜着地 ${formatNumber(period.landing_view)} に対して開始率 ${rate(period.shop_search_start_rate)}`),
+    metric('条件に一致', formatNumber(period.shop_search_exact), 'success', `完全一致率 ${rate(period.exact_rate)}`),
+    metric('近い商品だけ', formatNumber(period.shop_search_near), '', `近似商品率 ${rate(period.near_rate)}`),
     metric('見つからない', formatNumber(period.shop_search_none), period.shop_search_none ? 'danger' : '', `0件率 ${rate(period.zero_result_rate)}`),
-    metric('ホシっとく（需要保存）', formatNumber(period.demand_saved), '', `会員 ${formatNumber(period.demand_saved_member)}・未登録 ${formatNumber(period.demand_saved_guest)}｜近い・0件の検索に対して ${rate(period.demand_to_search_rate)}`),
-    metric('一致して通知', formatNumber(period.demand_matched), period.demand_matched ? 'success' : '', 'Seller 登録・同期で HOSHILU が一致と判定'),
+    metric('ホシっとく（需要保存）', formatNumber(period.demand_saved), '', `会員 ${formatNumber(period.demand_saved_member)}・未登録 ${formatNumber(period.demand_saved_guest)}｜0件→ホシっとく率 ${rate(period.zero_to_demand_rate)}｜近い・0件合算 ${rate(period.demand_to_search_rate)}`),
+    metric('一致して通知', formatNumber(period.demand_matched), period.demand_matched ? 'success' : '', `後日マッチ率 ${rate(period.demand_match_rate)}｜Seller 登録・同期で HOSHILU が一致と判定`),
     metric('ショップ閲覧', formatNumber(period.shop_viewed), '', 'クローラ除外'),
-    metric('ショップをホシる', formatNumber(period.shop_followed), '', `解除 ${formatNumber(period.shop_unfollowed)}`),
+    metric('ショップをホシる', formatNumber(period.shop_followed), '', `ホシる率 ${rate(period.shop_follow_rate)}｜解除 ${formatNumber(period.shop_unfollowed)}`),
     metric('クーポン押下', formatNumber(period.coupon_clicked)),
     metric('販売者ページ閲覧', formatNumber(period.seller_landing_view), '', `CTA 押下 ${formatNumber(period.seller_cta_clicked)}（${rate(period.seller_cta_rate)}）`)
   );

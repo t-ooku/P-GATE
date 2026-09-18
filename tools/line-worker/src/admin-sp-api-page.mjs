@@ -88,7 +88,7 @@ export function adminPromotionPageResponse() {
   <div class="section-head social-section-head"><div><p class="eyebrow">SOCIAL OPERATIONS</p><h2>SNS投稿運用</h2></div></div>
   <section id="channelGrid" class="promotion-channel-grid" aria-live="polite"></section>
   </div>
-  </main><script type="module" src="/admin-promotion.js?v=2"></script></body></html>`, { headers });
+  </main><script type="module" src="/admin-promotion.js?v=3"></script></body></html>`, { headers });
 }
 
 export function adminReelsPageResponse() {

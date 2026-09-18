@@ -704,7 +704,9 @@ const TAB_EVENT_TYPES = Object.freeze([
   'search_started', 'search_completed', 'search_failed', 'search_dead_end', 'search_degraded',
   'result_confirmed', 'result_rejected', 'wish_saved', 'continuous_search_saved', 'target_price_watch_set', 'notification_opened',
   'shop_search_completed', 'shop_demand_saved', 'shop_demand_matched',
-  'shop_viewed', 'shop_followed', 'shop_unfollowed', 'coupon_clicked', 'seller_landing_view', 'seller_cta_clicked'
+  'shop_viewed', 'shop_followed', 'shop_unfollowed', 'coupon_clicked', 'seller_landing_view', 'seller_cta_clicked',
+  // 2026-09-18 大隆さん指示 P1（SHOP 強化と KPI の接続）: 横断検索開始率の分母
+  'landing_view'
 ]);
 const TAB_EVENT_SQL = `SELECT event_type,campaign,content,COUNT(*) AS total FROM growth_events
   WHERE occurred_at>=?1 AND occurred_at<?2 AND traffic_class<>'QA'
@@ -757,7 +759,21 @@ function shopSellerPeriod(counts) {
     demand_matched: c.shop_demand_matched || 0,
     shop_viewed: c.shop_viewed || 0, shop_followed: c.shop_followed || 0, shop_unfollowed: c.shop_unfollowed || 0, coupon_clicked: c.coupon_clicked || 0,
     seller_landing_view: c.seller_landing_view || 0, seller_cta_clicked: c.seller_cta_clicked || 0,
-    seller_cta_rate: percentage(c.seller_cta_clicked || 0, c.seller_landing_view || 0)
+    seller_cta_rate: percentage(c.seller_cta_clicked || 0, c.seller_landing_view || 0),
+    // 2026-09-18 大隆さん指示 P1: 追加 KPI（計測できる範囲だけ。推定値は出さない）
+    //   横断検索開始率 = SHOP 横断検索 ÷ 着地（landing_view、クローラ除外は着地側の判定に従う）
+    //   完全一致率・近似商品率 = 横断検索のうち EXACT / NEAR
+    //   0件→ホシっとく率 = 0件の検索から保存された需要 ÷ 0件の検索（従来の demand_to_search_rate は近い・0件の合算）
+    //   後日マッチ率 = 一致して通知 ÷ 需要保存
+    //   ショップをホシる率 = ホシる ÷ ショップ閲覧
+    //   未計測（イベント未実装）: 商品→ショップ遷移率、マッチ通知→再訪率
+    landing_view: c.landing_view || 0,
+    shop_search_start_rate: percentage(searches, c.landing_view || 0),
+    exact_rate: percentage(states.EXACT || 0, searches),
+    near_rate: percentage(states.NEAR || 0, searches),
+    zero_to_demand_rate: percentage((counts.byCampaign.shop_demand_saved || {}).NONE || 0, states.NONE || 0),
+    demand_match_rate: percentage(c.shop_demand_matched || 0, c.shop_demand_saved || 0),
+    shop_follow_rate: percentage(c.shop_followed || 0, c.shop_viewed || 0)
   };
 }
 
