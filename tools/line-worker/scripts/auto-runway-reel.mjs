@@ -22,7 +22,7 @@ import process from 'node:process';
 import {
   REQUIRED_QA_CHECKS, buildApprovalSql, buildAssCutA, buildAssCutB, buildJobId, buildJobSql,
   buildPostId, buildRejectSql, buildReplaceDailyReelSql, classifyRunwaySlotCompetition, d1Rows,
-  evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume
+  evaluateFaces, evaluateGeneratedText, evaluateTranscript, nextPublishSlot, parseVolume, slotFromApprovedJobId
 } from './auto-runway-reel-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -63,9 +63,14 @@ function runwaySlotCompetition(postId) {
 
 // ---------- 1. 枠と型 ----------
 const now = new Date();
-const slot = nextPublishSlot(now, themes, { slotOverride: args.slot || '', leadMinutes: Number(args.lead || 90) });
-if (args.publish_at) slot.publish_at = new Date(args.publish_at);
-const themeKey = args.theme || slot.theme_key;
+// 2026-09-18 大隆さん決定 (a): --approve_job_id=<job_id> は「大隆さんが contact-sheet で本人一致を確認した」
+// 再実行。枠・型・投稿時刻はその job_id から復元し、本人一致だけ人手確認済みとして通す（他の機械検査はそのまま）。
+const approvedJobId = String(args.approve_job_id || '').trim();
+const slot = approvedJobId
+  ? slotFromApprovedJobId(approvedJobId, themes, now)
+  : nextPublishSlot(now, themes, { slotOverride: args.slot || '', leadMinutes: Number(args.lead || 90) });
+if (args.publish_at && !approvedJobId) slot.publish_at = new Date(args.publish_at);
+const themeKey = approvedJobId ? slot.theme_key : (args.theme || slot.theme_key);
 const theme = themes.themes[themeKey];
 if (!theme) throw new Error(`AUTO_REEL_THEME_UNKNOWN:${themeKey}`);
 log('slot selected', { slot: slot.slot, theme: themeKey, publish_at: slot.publish_at.toISOString(), date_key: slot.date_key });
@@ -270,12 +275,25 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
   // Cloud Vision の FACE_DETECTION は「顔がある」ことしか判定できず、
   // 承認済み女優との本人一致は保証しない。2026-09-14 の別人公開事故を受け、
   // 生体照合を実装・検証するまでは自動承認を必ず停止する（fail closed）。
-  evidence.identity = {
-    ok: false,
-    reference: themes.character_image_url,
-    reason: 'biometric_face_match_not_implemented'
-  };
-  problems.push('identity_check_unavailable');
+  // 2026-09-18 大隆さん決定 (a): 生体照合の代わりに、大隆さんが contact-sheet を見て本人一致を確認した
+  // job_id だけ（--approve_job_id と一致する時だけ）通す。確認の記録（run ID）を証跡に残す。
+  if (approvedJobId && approvedJobId === jobId) {
+    evidence.identity = {
+      ok: true,
+      reference: themes.character_image_url,
+      reason: 'owner_confirmed_contact_sheet',
+      confirmed_job_id: approvedJobId,
+      confirmed_run_id: String(process.env.GITHUB_RUN_ID || ''),
+      confirmed_at: new Date().toISOString()
+    };
+  } else {
+    evidence.identity = {
+      ok: false,
+      reference: themes.character_image_url,
+      reason: 'biometric_face_match_not_implemented'
+    };
+    problems.push('identity_check_unavailable');
+  }
   // セリフ（Whisper）
   const transcript = transcribe(raw, dir, durationA);
   if (transcript.text !== undefined) {
@@ -301,6 +319,7 @@ async function autoQa(raw, out, dir, durationA, jobId, postId, uiLive) {
   if (blocking.length) problems.push('competing_slot');
   // 一覧表（証跡用）
   run('ffmpeg', ['-y', '-v', 'error', '-i', out, '-vf', 'fps=1,scale=180:-1,tile=4x4', '-frames:v', '1', path.join(dir, 'contact-sheet.jpg')]);
+  evidence.identity_verified_by = evidence.identity?.ok ? 'owner_contact_sheet' : 'none';
   evidence.machine_verified = ['video_spec', 'audio_spec', 'duration', 'decode', 'audio_present', 'overlay_burned', 'face_single_clear(vision)', 'speech_matches_script(whisper)', 'caption_ai_disclosure', 'link_hoshilu', 'duplicate', 'competing_slot'];
   evidence.not_biometrically_verified = ['hands: props excluded by prompt; hand shape not machine-verified'];
   return { ok: problems.length === 0, problems, evidence };

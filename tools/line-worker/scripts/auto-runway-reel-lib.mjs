@@ -57,6 +57,22 @@ export function nextPublishSlot(now, themes, { leadMinutes = 90, slotOverride = 
   throw new Error('AUTO_REEL_NO_SLOT');
 }
 
+// 2026-09-18 大隆さん決定 (a): 本人一致は大隆さんが Actions の contact-sheet を見て人手で確認する。
+// 確認済みの job_id（[AUTO-REEL] Issue に書かれる runway-auto-<型>-<yyyymmdd>）から、その枠
+// （曜日・型・投稿時刻 20:15 JST）を復元する。投稿時刻まで minLeadMinutes 未満なら承認不可。
+export function slotFromApprovedJobId(jobId, themes, now = new Date(), { minLeadMinutes = 20 } = {}) {
+  const m = /^runway-auto-([a-z0-9-]+?)-(\d{4})(\d{2})(\d{2})(?:-r\d+)?$/u.exec(String(jobId || '').trim());
+  if (!m) throw new Error(`AUTO_REEL_APPROVE_JOB_ID_INVALID:${String(jobId || '').slice(0, 80)}`);
+  const themeKey = Object.keys(themes.themes || {}).find((key) => key.replace(/[^a-z0-9]/gi, '-').toLowerCase() === m[1]);
+  if (!themeKey) throw new Error(`AUTO_REEL_APPROVE_THEME_UNKNOWN:${m[1]}`);
+  const publishAt = jstDateTime(Number(m[2]), Number(m[3]), Number(m[4]), themes.publish_time_jst || '20:15');
+  if (publishAt.getTime() - now.getTime() < minLeadMinutes * 60 * 1000) throw new Error(`AUTO_REEL_APPROVE_TOO_LATE:${publishAt.toISOString()}`);
+  const weekday = jstParts(publishAt).weekday;
+  const slot = Object.keys(themes.slots || {}).find((key) => SLOT_DAYS[key] === weekday) || '';
+  if (!slot) throw new Error(`AUTO_REEL_APPROVE_SLOT_UNKNOWN:${weekday}`);
+  return { slot, theme_key: themeKey, publish_at: publishAt, date_key: jstDateKey(publishAt) };
+}
+
 export function buildJobId(themeKey, dateKey, attempt = 1) {
   const key = String(themeKey).replace(/[^a-z0-9]/gi, '-').toLowerCase();
   return `runway-auto-${key}-${dateKey}${attempt > 1 ? `-r${attempt}` : ''}`;

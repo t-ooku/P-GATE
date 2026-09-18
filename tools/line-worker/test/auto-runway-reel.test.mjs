@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
   buildApprovalSql, buildAssCutA, buildLink, buildAssCutB, buildJobId, buildJobSql, buildPostId, buildRejectSql,
   classifyRunwaySlotCompetition, evaluateFaces, evaluateGeneratedText, evaluateTranscript, GENERATED_TEXT_MAX_CHARS_TOTAL,
-  nextPublishSlot, parseVolume, REQUIRED_QA_CHECKS, similarity
+  nextPublishSlot, parseVolume, REQUIRED_QA_CHECKS, similarity, slotFromApprovedJobId
 } from '../scripts/auto-runway-reel-lib.mjs';
 
 const themes = JSON.parse(readFileSync(new URL('../ops/runway/auto/themes.json', import.meta.url), 'utf8'));
@@ -190,4 +190,27 @@ test('生成の指示は、画面のある機器そのものを写さないと�
   const config = JSON.parse(readFileSync(new URL('../ops/runway/auto/themes.json', import.meta.url), 'utf8'));
   assert.match(config.concept_rules, /スマートフォン・タブレット・パソコン・テレビなど画面のある機器を画面内に一切写さない/u);
   assert.match(config.concept_rules, /画面内の文字・UI・字幕・テロップは一切生成しない/u);
+});
+
+// 2026-09-18 大隆さん決定 (a): 本人一致は大隆さんが contact-sheet を見て人手で確認し、
+// 確認済みの job_id を workflow_dispatch の approve_job_id に入れて再実行する。
+test('approve_job_id から枠・型・20:15 JST を復元し、投稿時刻に近すぎる/不正な ID は拒否する', () => {
+  const now = new Date('2026-09-18T06:20:00.000Z');
+  const slot = slotFromApprovedJobId('runway-auto-seller-demand-visible-20260918', themes, now);
+  assert.equal(slot.slot, 'fri');
+  assert.equal(slot.theme_key, 'seller_demand_visible');
+  assert.equal(slot.publish_at.toISOString(), '2026-09-18T11:15:00.000Z');
+  assert.equal(slot.date_key, '20260918');
+  assert.equal(buildJobId(slot.theme_key, slot.date_key), 'runway-auto-seller-demand-visible-20260918');
+  const retry = slotFromApprovedJobId('runway-auto-want-at-price-20260922-r2', themes, new Date('2026-09-22T01:00:00.000Z'));
+  assert.equal(retry.slot, 'tue');
+  assert.equal(retry.theme_key, 'want_at_price');
+  assert.throws(() => slotFromApprovedJobId('runway-auto-seller-demand-visible-20260918', themes, new Date('2026-09-18T11:00:00.000Z')), /AUTO_REEL_APPROVE_TOO_LATE/u);
+  assert.throws(() => slotFromApprovedJobId('runway-auto-unknown-theme-20260918', themes, now), /AUTO_REEL_APPROVE_THEME_UNKNOWN/u);
+  assert.throws(() => slotFromApprovedJobId("x'; DROP TABLE", themes, now), /AUTO_REEL_APPROVE_JOB_ID_INVALID/u);
+  // スクリプト側: approve_job_id と一致する job だけ本人一致を「大隆さん確認済み」にし、それ以外は fail closed のまま
+  const script = readFileSync(new URL('../scripts/auto-runway-reel.mjs', import.meta.url), 'utf8');
+  assert.match(script, /if \(approvedJobId && approvedJobId === jobId\) \{\s*evidence\.identity = \{\s*ok: true,[\s\S]*?reason: 'owner_confirmed_contact_sheet'/u);
+  assert.match(script, /reason: 'biometric_face_match_not_implemented'[\s\S]*?problems\.push\('identity_check_unavailable'\)/u);
+  assert.match(script, /slotFromApprovedJobId\(approvedJobId, themes, now\)/u);
 });
