@@ -456,3 +456,11 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 決定・実装済み・本番未確認 | SNS 方針 v3（`2026-09-17-sns-policy-v3.md`）: リール火・金（Runway 新規生成・声付き v1）、カルーセル月・水・土（Pillow 画像、IG CAROUSEL / X 画像 4 枚）、ユーザー向け:セラー向け=50:50、X 同日同内容。#308 |
 | 実行済み（承認済み） | 9/9 の v2 女優 Runway ジョブを不採用（FAILED_FINAL）、キュー行 CANCELLED。migration 0080（media_urls）本番適用 |
 | 事実 | production monitor の GITHUB_SCHEDULE_HEARTBEAT_STALE は GitHub 側の schedule 遅延（21:07 JST 検知→22:22 JST 自動 ACK）。Cloudflare 側の監視は正常。AI 女優 SLA の FAIL は 9/16 のリール停止決定によるもの → v3 の監視に置き換え |
+| 本番確認済み（デプロイ） | #313 SHEIN をバリューコマース提携モールとして扱う（大隆さん 9/18 提携承認、プログラム 2173939）。開示文 4 言語・privacy・/go 提携ホスト。フロント直リンクは LinkSwitch が変換。9/30 までの報酬率・バリュポの 200 円はユーザー向け文面に書かない |
+| 事実 | 9/18 D1: `search_client_degraded` 直近 7 日は全件 `TURNSTILE_TOKEN_UNAVAILABLE`（手動）。9/16 同一 JA 訪問者が 5 分で 6 回押し直し、毎回 15 秒後に同じ縮退。#170/#249 は本番未反映だった（現行は `catch{return;}` の無音終了）。threads/x/instagram の「social/profile」着地 62 件は全件 locale=EN・投稿 60〜100 秒後・1 秒未満に 5 件連続で、リンク検査 bot の可能性が高い（人の着地は locale=JA の Instagram プロフィール経由 5 人、うち 2 人は検索開始） |
+| 本番確認済み（デプロイ） | #314 Turnstile: 初期化失敗の取り直し（手動検索の復旧）／着地自動検索は失敗で無音終了せず `TURNSTILE_INIT_FAILED`（autorun）を記録／トークン未到達時は一度だけ描き直して 8 秒待つ／error-callback 番号を `TURNSTILE_TOKEN_UNAVAILABLE_E<番号>` で D1 に残す。app.js v173。#170/#249 は completed で close（内容は #314 に置換） |
+| 事実→修正 | 登録ゼロの分離: `member_notification_destinations` は 9/15 LINE（既存会員の追加連携）・9/17 EMAIL（新規）だが `member_registered` は全期間 0。同じ INSERT を D1 に直接流すと成功 → Worker の batch が失敗し「計測は任意」の catch が無音で通っていた（登録イベントだけ欠落、登録者は 1 人実在）。#315 で batch 失敗時も冪等 event_id で単独書き込み＋ `member_registration_telemetry_failed`（固定コード）を残す。9/17 分の遡及 INSERT は大隆さん判断待ち |
+| 本番確認済み（デプロイ） | #316 品質カナリア偽陽性: 9/17 `energy_saving_kotatsu` は本命「こたつ中掛け毛布」でも PASS（末尾ひらがなで主名詞が取れず null→2）。ひらがな主名詞（こたつ）＋直付き付属品語（毛布・布団・カバー・継ぎ脚）を H0、本体語（テーブル・本体・セット）を H2。カナリア reject・教師データ excluded_conditions・回帰テスト。次回カナリア（22:2x UTC）で再判定 |
+| 事実 | 9/14 の別人公開事故以降、auto-runway-reel は生体照合未実装のため `identity_check_unavailable` で必ず不合格（fail closed）。9/18(金) `seller_demand_visible` も同理由（#312。顔 5/5・セリフ 0.895・禁止語なし）。方針 v3 のリール枠は人が承認するか生体照合を実装しない限り空になる |
+| 本番確認済み（デプロイ） | #317 リール日 19:30 JST 以降に承認済みリールが無ければ 20:15 JST 枠を静止画カルーセル（火=ユーザー／金=セラー）で代替（`hoshilu-carousel-v3-fallback-*`）。9/18 から。SLA も代替行を当日投稿として数える |
+| 本番確認済み（デプロイ） | #318 SHOP タブに横断検索開始率・完全一致率・近似率・0件→ホシっとく率・後日マッチ率・ホシる率（計測できる率だけ）。未計測: 商品→ショップ遷移率、マッチ通知→再訪率 |
