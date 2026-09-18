@@ -188,6 +188,19 @@ test('提携済みモールの/go先はバリューコマースreferralで包ま
   assert.equal(yahoo.searchParams.get('vc_url'), 'https://store.shopping.yahoo.co.jp/example/item123.html');
 });
 
+// 2026-09-18 大隆さん決定「シーインもやろう」: SHEIN(jp.shein.com)を提携モールに追加。
+// バリューコマース管理画面で提携承認済みになってから有効化する(未提携ならクリック無効)。
+test('SHEINの/go先もバリューコマースreferralで包まれる', () => {
+  const destination = 'https://jp.shein.com/pdsearch/%E3%83%96%E3%83%A9%E3%82%A6%E3%82%B9/?sort=price_asc';
+  const wrapped = new URL(decorateValueCommerceDestination(destination, '3779199', '892690168'));
+  assert.equal(wrapped.origin, 'https://ck.jp.ap.valuecommerce.com');
+  assert.equal(wrapped.searchParams.get('vc_url'), destination);
+  assert.equal(
+    decorateValueCommerceDestination('https://jp.shein.com.evil.example/x', '3779199', '892690168'),
+    'https://jp.shein.com.evil.example/x'
+  );
+});
+
 test('承認済み楽天の直リンクだけを包み、既存の楽天アフィリエイトURLは保持する', () => {
   for (const destination of [
     'https://search.rakuten.co.jp/search/mall/test/',

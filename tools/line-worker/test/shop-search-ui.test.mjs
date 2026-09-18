@@ -38,7 +38,7 @@ test('総合検索にジャンル・詳細条件があり、ヘッダーは言�
   assert.match(readFileSync(new URL('../public/site-i18n.js', import.meta.url), 'utf8'), /'nav\.business':'販売者専用'/);
   assert.match(readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'), /account:'ログイン／無料登録'/);
   assert.match(readFileSync(new URL('../public/tab-nav.css', import.meta.url), 'utf8'), /\.topbar\{min-height:56px/);
-  assert.ok(html.includes('site-i18n.js?v=8') && html.includes('tab-nav.css?v=3') && html.includes('app.js?v=172'));
+  assert.ok(html.includes('site-i18n.js?v=9') && html.includes('tab-nav.css?v=3') && html.includes('app.js?v=172'));
 });
 
 // 2026-09-17 第2指示書（テスト2・§Seller プライバシー・KPI）: 会員の「ショップで探しているもの」一覧、Seller には 5 人以上の需要だけを条件表示、新 KPI イベント。

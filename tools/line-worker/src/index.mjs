@@ -294,7 +294,8 @@ const VALUE_COMMERCE_PARTNERED_HOSTS = Object.freeze([
   'shopping.yahoo.co.jp',            // Yahoo!ショッピング(LINEヤフー)
   'qoo10.jp',                        // Qoo10 (eBay Japan)
   'hands.net',                       // ハンズ ネットストア
-  'matsukiyococokara-online.com'     // マツキヨココカラオンラインストア
+  'matsukiyococokara-online.com',    // マツキヨココカラオンラインストア
+  'shein.com'                        // SHEIN (jp.shein.com) 2026-09-18 大隆さん決定・提携承認後に有効
 ]);
 const VALUE_COMMERCE_EXACT_PARTNERED_HOSTS = new Set([
   'search.rakuten.co.jp',            // 楽天市場の商品検索
