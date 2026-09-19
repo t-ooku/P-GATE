@@ -143,6 +143,14 @@ const CANARY_IMMEDIATE_CODE_PATTERN = /(?:^|_)(?:NOT_CONFIGURED|CONFIG(?:URATION
 const RELIABILITY_HEARTBEAT_COMPONENTS = new Set(['cloudflare_regular', 'cloudflare_deep']);
 const RELIABILITY_HEARTBEAT_MAX_AGE_MS = 25 * 60000;
 const RELIABILITY_HEARTBEAT_STARTED_MAX_AGE_MS = 20 * 60000;
+// GitHub scheduled workflows are best-effort and may be delayed or skipped.
+// A stale GitHub heartbeat is therefore a monitor-control advisory, not
+// evidence that the real-user search path failed. Missing and stuck states
+// remain blocking because they indicate an invalid installation or an
+// incomplete delivered run.
+const ADVISORY_PENDING_RELIABILITY_INCIDENTS = new Set([
+  'github_schedule:GITHUB_SCHEDULE_HEARTBEAT_STALE'
+]);
 const RELIABILITY_BOOTSTRAP_DEADLINE_MS = Date.parse('2026-08-13T12:30:00.000Z');
 const SEARCH_PROVIDER_COMPONENTS = new Set([
   'ai_chat_primary', 'ai_chat_all',
@@ -307,6 +315,13 @@ export function evaluatePendingReliabilityIncidents(rows = []) {
     throw error;
   }
   return [];
+}
+
+export function pendingReliabilityRequiresIncident(pendingControl = null) {
+  const incidents = Array.isArray(pendingControl?.incidents) ? pendingControl.incidents : [];
+  return incidents.some((item) => !ADVISORY_PENDING_RELIABILITY_INCIDENTS.has(
+    `${String(item?.component || '')}:${String(item?.code || '')}`
+  ));
 }
 
 export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRows = [] } = {}) {
@@ -695,8 +710,9 @@ async function main() {
   try {
     const result = await runProductionSearchSli(options);
     const pendingControl = result.pending_control;
-    const monitorStatus = pendingControl ? 'FAIL' : result.status;
-    const monitorCode = pendingControl?.code || result.code;
+    const pendingControlBlocks = pendingReliabilityRequiresIncident(pendingControl);
+    const monitorStatus = pendingControlBlocks ? 'FAIL' : result.status;
+    const monitorCode = pendingControlBlocks ? pendingControl.code : result.code;
     if (options.pendingOutput && pendingControl) {
       const payload = {
         cutoff: pendingControl.cutoff,
@@ -724,11 +740,12 @@ async function main() {
       ,`Thirty-day continuity: ${result.monthly.finished} finished / ${result.monthly.unavailable} unavailable (${(result.monthly.unavailable_rate * 100).toFixed(3)}%)`, ''
       ,`Deep canary: ${Object.entries(result.deep_canary).map(([component, value]) => `${component}=${value.status}(${value.code}) at ${value.occurred_at || 'pending'}`).join(', ')}`, ''
       ,`Control heartbeats: ${Object.entries(result.reliability_heartbeats).map(([component, value]) => `${component}=${value.status} at ${value.occurred_at || 'pending'}`).join(', ')}`, ''
-      ,`Pending control incident: ${pendingControl?.code || 'none'}`, ''
+      ,`Pending control incident: ${pendingControlBlocks ? pendingControl.code : 'none'}`, ''
+      ,`Pending control advisory: ${pendingControl && !pendingControlBlocks ? pendingControl.code : 'none'}`, ''
     ].join('\n');
     console.log(summary);
     if (process.env.GITHUB_STEP_SUMMARY) await import('node:fs/promises').then(({ appendFile }) => appendFile(process.env.GITHUB_STEP_SUMMARY, summary));
-    if (pendingControl || searchSliRequiresIncident(result.status)) process.exitCode = 1;
+    if (pendingControlBlocks || searchSliRequiresIncident(result.status)) process.exitCode = 1;
   } catch (error) {
     const pendingOutput = options.pendingOutput;
     if (pendingOutput && Array.isArray(error?.pendingIncidents)) {

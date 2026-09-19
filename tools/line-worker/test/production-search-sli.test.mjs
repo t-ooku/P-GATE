@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { deepCanaryReservationSql, deepCanarySql, evaluateDeepCanary, evaluateMonthlyContinuity,
   evaluatePendingReliabilityIncidents, evaluateReliabilityHeartbeats, evaluateSearchProviderDegradation,
   evaluateSearchSli, evaluateSearchSlo,
-  inspectProductionSearchSli, reliabilityHeartbeatSql, reliabilityPendingIncidentSql,
+  inspectProductionSearchSli, pendingReliabilityRequiresIncident, reliabilityHeartbeatSql,
+  reliabilityPendingIncidentSql,
   searchBackendFailureSql, searchClientDegradationSql, searchMonthlySloSql, searchProviderDegradationSql,
   searchSliRequiresIncident, searchSliSql, searchSloSql } from '../scripts/check-production-search-sli.mjs';
 
@@ -265,6 +266,23 @@ test('pending reliability incident stays actionable until GitHub records it', ()
       && error.pendingIncidents?.[0]?.event_id === incident.event_id
   );
   assert.deepEqual(evaluatePendingReliabilityIncidents([]), []);
+});
+
+test('known GitHub schedule stale is advisory while missing and stuck remain blocking', () => {
+  const incident = (code) => ({ component:'github_schedule', code });
+  assert.equal(pendingReliabilityRequiresIncident(null), false);
+  assert.equal(pendingReliabilityRequiresIncident({
+    incidents:[incident('GITHUB_SCHEDULE_HEARTBEAT_STALE')]
+  }), false);
+  assert.equal(pendingReliabilityRequiresIncident({
+    incidents:[incident('GITHUB_SCHEDULE_HEARTBEAT_MISSING')]
+  }), true);
+  assert.equal(pendingReliabilityRequiresIncident({
+    incidents:[
+      incident('GITHUB_SCHEDULE_HEARTBEAT_STALE'),
+      incident('GITHUB_SCHEDULE_HEARTBEAT_STUCK')
+    ]
+  }), true);
 });
 
 test('every pending reliability code is recorded before the matching ids are acknowledged', () => {
