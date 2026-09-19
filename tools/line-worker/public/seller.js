@@ -112,7 +112,7 @@ async function loadBilling() {
       billingField('allowance').textContent = '対象外';
       billingField('allowance-note').textContent = '無料プランには無料枠はありません';
     }
-    const plan = data.account?.plan === 'BUSINESS' ? 'Business 9,800円/月' : '無料プラン 0円/月';
+    const plan = data.account?.plan === 'BUSINESS' ? 'HOSHILU Seller 4,980円/月' : '無料プラン 0円/月';
     billingField('plan').textContent = data.account ? plan : '未登録';
     const trial = data.account?.trial_end_at ? `トライアル終了 ${data.account.trial_end_at.slice(0, 10)}` : '';
     billingField('plan-note').textContent = data.account

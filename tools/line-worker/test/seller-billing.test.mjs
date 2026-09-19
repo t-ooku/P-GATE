@@ -46,7 +46,10 @@ test('Stripe 未設定でも健全性は「未接続」を返し、課金は行�
   assert.deepEqual(sellerBillingReadiness({ STRIPE_SECRET_KEY: 'sk_test_' + 'a'.repeat(24), STRIPE_WEBHOOK_SECRET: 'whsec_' + 'b'.repeat(24) }),
     { configured: true, mode: 'test', webhook_configured: true });
   const { env } = databaseEnv();
-  const result = await settleQualifiedClickCharge(env, { sp: true, sid: 'X', u: 'sess' }, '2026-09-04T01:00:00Z');
+  // 2026-09-19 大隆さん決定: 通常クリックは月額に含む。旧ジャンル課金は既定で動かない（本番 QUALIFIED_CLICK_CHARGE_ENABLED=false）
+  const included = await settleQualifiedClickCharge(env, { sp: true, sid: 'X', u: 'sess' }, '2026-09-04T01:00:00Z');
+  assert.deepEqual(included, { charged: false, reason: 'NORMAL_CLICKS_INCLUDED' });
+  const result = await settleQualifiedClickCharge({ ...env, QUALIFIED_CLICK_CHARGE_ENABLED: 'true' }, { sp: true, sid: 'X', u: 'sess' }, '2026-09-04T01:00:00Z');
   assert.equal(result.charged, false);
   assert.equal(result.reason, 'SELLER_NOT_BOUND');
 });
@@ -97,8 +100,9 @@ test('管理者がアカウントを作ると財布と優先出品の紐付け�
   assert.equal((await getWallet(env.PRODUCT_DB, KEY_B)).status, 'ACTIVE');
 });
 
+// 旧ジャンル課金の経路は QUALIFIED_CLICK_CHARGE_ENABLED='true' の環境だけで維持する（本番は停止）
 test('Business の有効クリックは定価の50%を無料枠→前払い残高の順に消化し、同一セッション×商品×セラーは1日1回', async () => {
-  const { env, db } = databaseEnv();
+  const { env, db } = databaseEnv({ QUALIFIED_CLICK_CHARGE_ENABLED: 'true' });
   await registerAccount(env);
   // Webhook でサブスク有効化（trialing → ACTIVE）
   await processStripeEvent(env, { type: 'customer.subscription.created', data: { object: {
@@ -137,7 +141,7 @@ test('Business の有効クリックは定価の50%を無料枠→前払い残�
 });
 
 test('無料プランは定価を残高から消化し、無料枠は無い', async () => {
-  const { env } = databaseEnv();
+  const { env } = databaseEnv({ QUALIFIED_CLICK_CHARGE_ENABLED: 'true' });
   await createBillingAccount(env, { seller_key: KEY_B, account_name: '無料店', contact_email: 'free@example.com', plan: 'SELLER',
     seller_ids: [{ tenant: 'mc2', seller_id: 'FREE1' }] }, { origin: 'https://hoshilu.app' });
   await creditTopup(env.PRODUCT_DB, { sellerKey: KEY_B, amountJpy: 3000, stripeObjectId: 'pi_free' });
@@ -213,7 +217,7 @@ test('Stripe へ渡す Checkout / Subscription の中身（カードは自動引
     if (path === '/v1/customers') return respond({ id: 'cus_new' });
     if (path === '/v1/prices' && init.method === 'GET') return respond({ data: [] });
     if (path === '/v1/products') return respond({ id: 'prod_1' });
-    if (path === '/v1/prices') return respond({ id: 'price_9800' });
+    if (path === '/v1/prices') return respond({ id: 'price_4980' });
     if (path === '/v1/checkout/sessions') return respond({ id: 'cs_x', url: 'https://checkout.stripe.com/c/pay/cs_x' });
     if (path === '/v1/subscriptions') return respond({ id: 'sub_bank', status: 'trialing', trial_end: 1_800_000_000, current_period_end: 1_800_000_000 });
     return respond({});
@@ -224,7 +228,7 @@ test('Stripe へ渡す Checkout / Subscription の中身（カードは自動引
   assert.equal(card.links.subscription.mode, 'card_checkout');
   assert.match(card.links.subscription.url, /checkout\.stripe\.com/u);
   const subscriptionCall = calls.find((call) => call.url.endsWith('/checkout/sessions') && call.body.includes('mode=subscription'));
-  assert.match(subscriptionCall.body, /line_items%5B0%5D%5Bprice%5D=price_9800/u);
+  assert.match(subscriptionCall.body, /line_items%5B0%5D%5Bprice%5D=price_4980/u);
   assert.match(subscriptionCall.body, /subscription_data%5Btrial_end%5D=\d+/u);
   assert.match(subscriptionCall.body, /payment_method_collection=always/u);
   const topupCall = calls.find((call) => call.url.endsWith('/checkout/sessions') && call.body.includes('mode=payment'));
@@ -232,7 +236,7 @@ test('Stripe へ渡す Checkout / Subscription の中身（カードは自動引
   assert.match(topupCall.body, /setup_future_usage%5D=off_session/u);
   assert.match(topupCall.body, /purpose%5D=TOPUP/u);
   const priceCall = calls.find((call) => call.url.endsWith('/v1/prices') && call.body);
-  assert.match(priceCall.body, /unit_amount=9800/u);
+  assert.match(priceCall.body, /unit_amount=4980/u);
   assert.match(priceCall.body, /tax_behavior=inclusive/u);
   assert.match(priceCall.body, /recurring%5Binterval%5D=month/u);
 

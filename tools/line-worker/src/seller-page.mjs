@@ -535,7 +535,7 @@ export async function sellerPageResponse(
     <label><input type="checkbox" name="hoshilu_only" checked> HOSHILU限定（商品カードに 🎟 を表示）</label>
     <button type="submit" class="ghost-button">クーポンを追加</button>
   </form>
-  <p class="data-note">無料プランではショップページは作れません。<a href="/for-sellers#pricing">Business（月額9,800円・登録後3か月0円）</a></p></section>
+  <p class="data-note">無料プランではショップページは作れません。<a href="/for-sellers#pricing">HOSHILU Seller（月額4,980円・登録後3か月0円）</a></p></section>
 
   <section class="auth-card" id="billing"><p class="eyebrow">PREPAID BILLING</p><h2>前払い残高とお支払い</h2>
   <p>料金はすべて前払いです。有効クリックはジャンル単価を無料枠→前払い残高の順に消化し、残高が0円になると優先出品は自動で止まります（請求は発生しません）。</p>
@@ -562,7 +562,7 @@ export async function sellerPageResponse(
   <p>現在のプラン: <strong>${publicPlan}</strong>。有料契約によって商品そのものの検索順位は変わりません。</p>
   <div class="seller-grid">
     <article class="seller-panel"><span>無料プラン</span><strong>月額0円</strong><span>自然検索への商品掲載と優先出品の対象指定。有効クリックはジャンル定価を前払い残高から消化します。ショップページはありません。</span></article>
-    <article class="seller-panel"><span>Business</span><strong>月額9,800円</strong><span>登録後3か月は月額0円。有効クリックは定価の50%、毎月5,000円分まで0円（1か月目から・4か月目以降も）。1事業者アカウント単位、初期費用・解約金0円。</span></article>
+    <article class="seller-panel"><span>HOSHILU Seller</span><strong>月額4,980円</strong><span>登録後3か月は月額0円。通常の商品クリック・SHOP掲載・横断検索・需要への商品登録は月額に含まれます。Demand Match Click（探していた人をHOSHILUが呼び戻して商品を開いた時）だけ1有効クリック50円（計測と予算上限が入るまで0円）。1事業者アカウント単位、初期費用・解約金0円。</span></article>
   </div>
   <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たしたジャンル別単価の有効クリックだけです。<a href="/for-sellers#pricing">料金を確認</a></p></section>
   </main><script type="module" src="/seller.js"></script></body></html>`;

@@ -253,7 +253,7 @@ const X_SELLER_POSTS = Object.freeze([
   },
   {
     id: 'seller-business-simple',
-    caption: 'HOSHILU Businessは月額9,800円。商品・流入・未充足需要の分析、優先掲載の管理、Search APIをひとつのプランにまとめています。自然掲載だけなら無料から始められます。',
+    caption: 'HOSHILU Sellerは月額4,980円、最初の3か月は月額0円。探している人が先に見えて、商品を出したらHOSHILUがその人に届けます。今ある販売先はそのまま。',
     link_path: '/for-sellers'
   }
 ]);

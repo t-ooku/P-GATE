@@ -60,7 +60,7 @@ test('seller console never exposes another tenant totals', async () => {
   assert.doesNotMatch(html, /96,125/);
   assert.doesNotMatch(html, /kitchen-appliance/);
   assert.match(html, /Businessで利用できます/);
-  assert.match(html, /月額9,800円/);
+  assert.match(html, /月額4,980円/); // 2026-09-19 大隆さん決定: HOSHILU Seller 4,980円の 1 プラン
   assert.match(html, /1事業者アカウント単位/);
 });
 

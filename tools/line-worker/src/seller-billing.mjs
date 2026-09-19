@@ -2,7 +2,7 @@
 //
 // 料金（2026-09-03 決定・/for-sellers と同じ表）:
 //   無料プラン : 月額0円。有効クリックはジャンル定価。前払い残高から消化。
-//   Business   : 月額¥9,800（登録後3か月は月額0円）。有効クリックは定価の50%。
+//   Business   : 月額¥4,980（登録後3か月は月額0円）。2026-09-19 から通常クリックは月額に含む（ジャンル課金は停止）。
 //                毎月5,000円分（Business単価で積算）まで0円、5,001円から前払い残高を消化。
 //                無料枠は1か月目から、4か月目以降も。翌月繰越なし。
 //
@@ -31,12 +31,13 @@ import {
 import { REFERRAL_CATEGORY_LABELS } from './seller-referral-category.mjs';
 
 export const MICROS = 1_000_000;
-export const BUSINESS_MONTHLY_FEE_JPY = 9800;
+// 2026-09-19 大隆さん決定: HOSHILU Seller は月額 4,980 円の 1 プラン（Growth 9,800 円は表示しない・内部バックログのみ）。
+export const BUSINESS_MONTHLY_FEE_JPY = 4980;
 export const BUSINESS_TRIAL_MONTHS = 3;
 export const TOPUP_PRESETS_JPY = Object.freeze([5000, 10000, 30000, 50000]);
 export const TOPUP_MIN_JPY = 3000;
 export const TOPUP_MAX_JPY = 500000;
-const BUSINESS_PRICE_LOOKUP_KEY = 'hoshilu_business_monthly_9800_jpy';
+const BUSINESS_PRICE_LOOKUP_KEY = 'hoshilu_seller_monthly_4980_jpy';
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 function clean(value, limit = 200) {
@@ -234,6 +235,10 @@ export function qualifiedClickSourceEventId(payload, occurredAt) {
 export async function settleQualifiedClickCharge(env, payload = {}, occurredAt = new Date().toISOString()) {
   const db = env.PRODUCT_DB;
   if (!db) return { charged: false, reason: 'NO_DB' };
+  // 2026-09-19 大隆さん決定: 通常の商品クリック（ジャンル別送客料）は月額に含める。課金するのは
+  // Demand Match Click（探していた人を HOSHILU が呼び戻して商品を開いた時）だけ。旧ジャンル課金は
+  // QUALIFIED_CLICK_CHARGE_ENABLED='true' の環境でしか動かさない（本番は false）。
+  if (String(env.QUALIFIED_CLICK_CHARGE_ENABLED || '') !== 'true') return { charged: false, reason: 'NORMAL_CLICKS_INCLUDED' };
   try {
     if (payload.sp !== true || !payload.sid || !payload.u) return { charged: false, reason: 'NOT_PRIORITY_CLICK' };
     const resolved = await accountForClick(env, payload);
@@ -301,14 +306,14 @@ export async function ensureBusinessPrice(env, now = new Date().toISOString()) {
   let priceId = found?.data?.[0]?.id || '';
   if (!priceId) {
     const product = await stripeRequest(env, 'POST', '/products', {
-      name: 'HOSHILU BUSINESS（月額）', description: 'ショップページ・優先出品・分析・毎月5,000円分の送客料込み。税込。',
+      name: 'HOSHILU Seller（月額）', description: 'HOSHILU SHOP掲載・全ショップ横断検索・通常送客・未充足需要の閲覧・需要への商品登録。税込。',
       metadata: { hoshilu_plan: 'BUSINESS' }
     }, { idempotencyKey: 'product:hoshilu_business' });
     const price = await stripeRequest(env, 'POST', '/prices', {
       product: product.id, currency: 'jpy', unit_amount: BUSINESS_MONTHLY_FEE_JPY,
       recurring: { interval: 'month' }, tax_behavior: 'inclusive',
       lookup_key: BUSINESS_PRICE_LOOKUP_KEY, transfer_lookup_key: 'true'
-    }, { idempotencyKey: 'price:hoshilu_business_9800' });
+    }, { idempotencyKey: 'price:hoshilu_seller_4980' });
     priceId = price.id;
   }
   await db.prepare(`INSERT INTO seller_billing_settings (setting_key,setting_value,updated_at) VALUES (?1,?2,?3)
@@ -520,11 +525,11 @@ export async function createBillingAccount(env, input = {}, { origin, now = new 
   }
   const emailLines = [
     `${accountName} ご担当者様`, '',
-    'HOSHILU のセラーアカウントを作成しました。料金はすべて前払いです。', '',
+    'HOSHILU のセラーアカウントを作成しました。', '',
     plan === 'BUSINESS'
-      ? `■ Business 月額 9,800円（税込）: 登録後3か月は月額0円。${links.subscription?.url ? `お支払い方法の登録: ${links.subscription.url}` : '請求書（振込先つき）を別途お送りします。'}`
-      : '■ 無料プラン: 月額0円。有効クリックごとにジャンル定価を前払い残高から消化します。',
-    links.topup?.url ? `■ 送客料の前払いチャージ（10,000円）: ${links.topup.url}` : '',
+      ? `■ HOSHILU Seller 月額 4,980円（税込）: 登録後3か月は月額0円。通常の商品クリックは月額に含まれます。${links.subscription?.url ? `お支払い方法の登録: ${links.subscription.url}` : '請求書（振込先つき）を別途お送りします。'}`
+      : '■ 無料プラン: 月額0円。通常の商品クリックに課金はありません。',
+    '■ Demand Match Click（探していた人を HOSHILU が呼び戻して商品を開いた時）: 1有効クリック50円。計測と予算上限が契約者画面に入るまでは0円です。',
     '', '料金表: https://hoshilu.app/for-sellers#pricing', 'HOSHILU'
   ].filter((line) => line !== '');
   const emailed = await sendBillingEmail(env, contactEmail, 'HOSHILU セラーアカウントとお支払いのご案内', emailLines.join('\n'));
