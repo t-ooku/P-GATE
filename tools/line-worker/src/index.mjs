@@ -123,6 +123,7 @@ import { extractSearchOrigin, orderMarketplaceDestinations } from './search-orig
 import { applyHeadNounGate } from './search-head-noun.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
+import { searchGoogleMalls, googleMallSearchConfigured } from './google-mall-search.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -130,7 +131,7 @@ const ALLOWED_DESTINATION_DOMAINS = [
   'qoo10.jp', 'shein.com', 'zozo.jp', 'shop-list.com',
   'musinsa.com', 'buyma.com', 'snkrdunk.com',
   // v4.2 項目14: 新規5モール(ロフト/ハンズ/マツキヨココカラ/@cosme/ABC-MART)。
-  'loft.co.jp', 'hands.net', 'matsukiyococokara-online.com',
+  'loft.co.jp', 'hands.net', 'matsukiyococokara-online.com', 'matsukiyo.co.jp',
   'cosme.com', 'abc-mart.net'
 ];
 // v4.2 項目17 / v4.3 項目18: マーケットプレイスごとの検索モード。
@@ -1697,6 +1698,12 @@ export function trackingEventsForPayload(payload, occurredAt) {
 async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA', originHint = {}) {
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
+  // 2026-09-19 大隆さん決定: 楽天・Yahoo! 以外の 11 モールは公式 Google 検索の結果をカードで出す
+  // （楽天・Yahoo! に候補があっても出す）。本検索と並行に走らせ、失敗しても本検索を止めない。
+  const googleMallPromise = googleMallSearchConfigured(env)
+    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '))
+      .catch(() => ({ items: [], source: 'error', reason: 'UNHANDLED' }))
+    : Promise.resolve({ items: [], source: 'disabled', reason: 'NOT_CONFIGURED' });
   const candidates = [];
   const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT);
   const priorityContext = await sellerPriorityContext(env, displayCandidates);
@@ -1779,6 +1786,11 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
     env, origin, sessionHash, seed, category: demandCategory,
     trafficClass: result.traffic_class || 'UNATTRIBUTED'
   });
+  const googleMall = await googleMallPromise;
+  const googleMallResults = await signedGoogleMallResults(googleMall, {
+    env, origin, sessionHash, seed, category: demandCategory,
+    trafficClass: result.traffic_class || 'UNATTRIBUTED'
+  });
   return {
     ...result,
     candidates,
@@ -1787,8 +1799,32 @@ async function decoratePwaResult(result, request, env, sessionHash, query = '', 
     search_keywords: buildAmazonSearchKeywords(query),
     marketplace_search_links: marketplaceSearchLinks,
     refinement_chips: refinementChipsForQuery(query, language),
-    ...(aiDiscovery ? { ai_discovery: aiDiscovery } : {})
+    ...(aiDiscovery ? { ai_discovery: aiDiscovery } : {}),
+    google_mall_results: googleMallResults
   };
+}
+
+// Google 検索の結果を 13 モールの /go 経由リンクに包む（計測・送客先の許可リスト検査は既存と同じ）。
+// 価格は「ページ記載の価格（確認時点）」として listed_price_jpy に残し、API 確認価格と混ぜない。
+async function signedGoogleMallResults(googleMall, context) {
+  const items = Array.isArray(googleMall?.items) ? googleMall.items : [];
+  const decorated = [];
+  for (const [index, item] of items.entries()) {
+    if (!isAllowedDestination(item.url)) continue;
+    const token = await createTrackToken({
+      u: context.sessionHash, r: context.seed, a: '', d: item.url,
+      exp: Math.floor(Date.now() / 1000) + 86400 * 7,
+      j: `${context.seed}:GOOGLE_${index}:${item.marketplace}`,
+      c: 'PWA', m: item.marketplace, t: 'GOOGLE_MALL', g: context.category,
+      x: context.trafficClass, cm: false
+    }, context.env.LINK_SIGNING_SECRET);
+    decorated.push({
+      title: item.title, snippet: item.snippet, marketplace: item.marketplace, mall_label: item.mall_label,
+      image_url: item.image_url, listed_price_jpy: item.listed_price_jpy, product_url: item.url,
+      tracking_url: `${context.origin}/go?token=${encodeURIComponent(token)}`
+    });
+  }
+  return { source: String(googleMall?.source || 'disabled'), items: decorated };
 }
 
 // Condition search (Phase C item 11, 2026-08-07). search-refinement-policy
@@ -3298,7 +3334,7 @@ const CORE_D1_TABLES = [
   'anonymous_benchmark',
   'social_knowledge_inbox', 'social_knowledge_aggregates', 'social_hashtag_aggregates',
   'product_identifiers', 'instagram_oauth_credentials', 'x_oauth_credentials',
-  'google_visual_web_detection_usage_monthly',
+  'google_visual_web_detection_usage_monthly', 'google_mall_search_usage_daily',
   'runway_budget_policy', 'runway_budget_periods', 'runway_generation_jobs',
   'runway_generation_attempts', 'runway_cost_reservations',
   'runway_provider_usage_daily', 'runway_approval_grants', 'runway_audit_log'
