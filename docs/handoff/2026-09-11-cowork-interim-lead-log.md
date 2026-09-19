@@ -464,3 +464,9 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 事実 | 9/14 の別人公開事故以降、auto-runway-reel は生体照合未実装のため `identity_check_unavailable` で必ず不合格（fail closed）。9/18(金) `seller_demand_visible` も同理由（#312。顔 5/5・セリフ 0.895・禁止語なし）。方針 v3 のリール枠は人が承認するか生体照合を実装しない限り空になる |
 | 本番確認済み（デプロイ） | #317 リール日 19:30 JST 以降に承認済みリールが無ければ 20:15 JST 枠を静止画カルーセル（火=ユーザー／金=セラー）で代替（`hoshilu-carousel-v3-fallback-*`）。9/18 から。SLA も代替行を当日投稿として数える |
 | 本番確認済み（デプロイ） | #318 SHOP タブに横断検索開始率・完全一致率・近似率・0件→ホシっとく率・後日マッチ率・ホシる率（計測できる率だけ）。未計測: 商品→ショップ遷移率、マッチ通知→再訪率 |
+| 決定（9/19 大隆さん） | 「HOSHILU Seller収益化・需要マッチ改修」: 料金は **HOSHILU Seller 4,980円/月・最初の3か月 月額0円・Demand Match Click 1有効クリック50円** に統一。Growth 9,800円・上位プランは LP に出さない（内部バックログのみ）。50円は「探していた人を HOSHILU が呼び戻して商品を開いた時だけ」に固定 |
+| 本番確認済み（デプロイ） | #327 `/for-sellers` 全面書き換え（欲しい人が、先に見える。／8 ステップ／「今探されているもの」実データ `/api/shops/demand/public`／1 プラン／FAQ）。#328 9,800→4,980 をコード全体で統一、`QUALIFIED_CLICK_CHARGE_ENABLED=false`（旧ジャンル別クリック課金停止） |
+| 本番確認済み（デプロイ） | #329 Demand Match Click 1/2: Seller 専用商品ページ `/shop/<slug>/product/<asin>`（商品データの事実だけ）、通知リンクを署名付き商品ページに（会員IDはハッシュ・30日失効）、`seller_demand_match_clicks`/`seller_demand_match_budgets`（migration 0081 本番適用済み）、判定 VALID/EXCLUDED（BOT/QA/ADMIN/SELF/NOT_LOGGED_IN/MEMBER_MISMATCH/SELLER_MISMATCH/ACCOUNT_NOT_ACTIVE/BUDGET_CAP/DUPLICATE）、`/api/seller/demand-match`＋`PUT /budget`、growth_events `shop_product_viewed`/`demand_match_click` |
+| 本番確認済み（デプロイ） | #330 Demand Match Click 2/2: 契約者画面 `#demand-match`（通知した需要・有効クリック・今月の利用額・予算上限 0/1,000/3,000/5,000/10,000/任意、初期 3,000円）。seller.js v2。テスト 8 本 |
+| 判断待ち（大隆さん） | `DEMAND_MATCH_CHARGE_ENABLED` は false。判定・件数は本番で記録するが残高からは引かない。true にすると VALID ごとに前払い残高から 50円（REFERRAL_CHARGE）。LP の「準備中・それまで0円」文言は、true にした時に外す |
+| 事実 | 9/19 03:50Z 時点で `shop_demand_requests` は 0 行（探し中需要がまだ 1 件も無い）。完成条件の実データ E2E（検索→0件→ホシっとく→需要一覧→商品登録→再照合→通知→商品ページ→有効クリック 1 件→50円表示）は本番でまだ通せていない。合成テストでは全経路 PASS |
