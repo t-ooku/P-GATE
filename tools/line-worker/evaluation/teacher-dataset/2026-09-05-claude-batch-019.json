@@ -6252,5 +6252,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "浴室の鏡についた白いウロコ汚れが取れない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室・洗面台の鏡についたウロコ状の水垢汚れを落としたい",
+    "ideal_answer": "鏡専用のウロコ取り(水垢取り)パッド・クリーナー(ダイヤモンドパッド等)",
+    "reason": "「ウロコ汚れ/水垢が取れない」は商品名では「ウロコ取り」「水垢取り」。 展開規則 limescale-mirror-polish-pad（モール検索語「鏡 ウロコ取り パッド」）。",
+    "category": "limescale-mirror-polish-pad",
+    "search_terms": {
+      "ja": [
+        "鏡 ウロコ取り パッド",
+        "浴室鏡 くもり取り",
+        "水垢取り 鏡"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "お風呂の鏡の水垢がひどい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室・洗面台の鏡についたウロコ状の水垢汚れを落としたい",
+    "ideal_answer": "鏡専用のウロコ取り(水垢取り)パッド・クリーナー(ダイヤモンドパッド等)",
+    "reason": "「ウロコ汚れ/水垢が取れない」は商品名では「ウロコ取り」「水垢取り」。 展開規則 limescale-mirror-polish-pad（モール検索語「鏡 ウロコ取り パッド」）。",
+    "category": "limescale-mirror-polish-pad",
+    "search_terms": {
+      "ja": [
+        "鏡 ウロコ取り パッド",
+        "浴室鏡 くもり取り",
+        "水垢取り 鏡"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗面台の鏡のくもりが落ちない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "浴室・洗面台の鏡についたウロコ状の水垢汚れを落としたい",
+    "ideal_answer": "鏡専用のウロコ取り(水垢取り)パッド・クリーナー(ダイヤモンドパッド等)",
+    "reason": "「ウロコ汚れ/水垢が取れない」は商品名では「ウロコ取り」「水垢取り」。 展開規則 limescale-mirror-polish-pad（モール検索語「鏡 ウロコ取り パッド」）。",
+    "category": "limescale-mirror-polish-pad",
+    "search_terms": {
+      "ja": [
+        "鏡 ウロコ取り パッド",
+        "浴室鏡 くもり取り",
+        "水垢取り 鏡"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "鼻の黒ずみが気になる毛穴パック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "鼻や毛穴の黒ずみ・角栓を取り除きたい",
+    "ideal_answer": "角栓・黒ずみ除去用の毛穴パック・鼻パック",
+    "reason": "「黒ずみが気になる」「角栓が取れる」は商品名では「角栓クリア」「毛穴パック」。 展開規則 blackhead-removal-nose-pack（モール検索語「角栓クリア 毛穴パック」）。",
+    "category": "blackhead-removal-nose-pack",
+    "search_terms": {
+      "ja": [
+        "角栓クリア 毛穴パック",
+        "黒ずみ 鼻パック",
+        "角栓除去 毛穴パック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "角栓が詰まって取れる鼻パック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "鼻や毛穴の黒ずみ・角栓を取り除きたい",
+    "ideal_answer": "角栓・黒ずみ除去用の毛穴パック・鼻パック",
+    "reason": "「黒ずみが気になる」「角栓が取れる」は商品名では「角栓クリア」「毛穴パック」。 展開規則 blackhead-removal-nose-pack（モール検索語「角栓クリア 毛穴パック」）。",
+    "category": "blackhead-removal-nose-pack",
+    "search_terms": {
+      "ja": [
+        "角栓クリア 毛穴パック",
+        "黒ずみ 鼻パック",
+        "角栓除去 毛穴パック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "毛穴の黒ずみがすっきりする角栓クリアパック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "鼻や毛穴の黒ずみ・角栓を取り除きたい",
+    "ideal_answer": "角栓・黒ずみ除去用の毛穴パック・鼻パック",
+    "reason": "「黒ずみが気になる」「角栓が取れる」は商品名では「角栓クリア」「毛穴パック」。 展開規則 blackhead-removal-nose-pack（モール検索語「角栓クリア 毛穴パック」）。",
+    "category": "blackhead-removal-nose-pack",
+    "search_terms": {
+      "ja": [
+        "角栓クリア 毛穴パック",
+        "黒ずみ 鼻パック",
+        "角栓除去 毛穴パック"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "キャスターが付いていて掃除のときに動かしやすい収納ラック",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "掃除や模様替えのときに動かしやすいキャスター付き収納家具",
+    "ideal_answer": "キャスター付きで移動しやすい収納ラック・収納キャビネット・カラーボックス",
+    "reason": "「動かしやすい/移動できる」は商品名では「キャスター付き」。 展開規則 rolling-caster-storage-cart（モール検索語「キャスター付き 収納ラック」）。",
+    "category": "rolling-caster-storage-cart",
+    "search_terms": {
+      "ja": [
+        "キャスター付き 収納ラック",
+        "移動できる 収納キャビネット",
+        "キャスター付き カラーボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "好きな場所に移動できる収納キャビネット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "掃除や模様替えのときに動かしやすいキャスター付き収納家具",
+    "ideal_answer": "キャスター付きで移動しやすい収納ラック・収納キャビネット・カラーボックス",
+    "reason": "「動かしやすい/移動できる」は商品名では「キャスター付き」。 展開規則 rolling-caster-storage-cart（モール検索語「キャスター付き 収納ラック」）。",
+    "category": "rolling-caster-storage-cart",
+    "search_terms": {
+      "ja": [
+        "キャスター付き 収納ラック",
+        "移動できる 収納キャビネット",
+        "キャスター付き カラーボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "キャスターで簡単に移動できるカラーボックス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "掃除や模様替えのときに動かしやすいキャスター付き収納家具",
+    "ideal_answer": "キャスター付きで移動しやすい収納ラック・収納キャビネット・カラーボックス",
+    "reason": "「動かしやすい/移動できる」は商品名では「キャスター付き」。 展開規則 rolling-caster-storage-cart（モール検索語「キャスター付き 収納ラック」）。",
+    "category": "rolling-caster-storage-cart",
+    "search_terms": {
+      "ja": [
+        "キャスター付き 収納ラック",
+        "移動できる 収納キャビネット",
+        "キャスター付き カラーボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ダニが心配な電気毛布",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ダニの繁殖・アレルギーが心配な人向けの電気毛布",
+    "ideal_answer": "防ダニ加工をうたう電気毛布・電気敷き毛布",
+    "reason": "「ダニが心配」は商品名では「防ダニ」「防ダニ加工」。 展開規則 mite-resistant-electric-blanket（モール検索語「防ダニ 電気毛布」）。",
+    "category": "mite-resistant-electric-blanket",
+    "search_terms": {
+      "ja": [
+        "防ダニ 電気毛布",
+        "防ダニ加工 電気敷き毛布",
+        "アレルギー対策 電気毛布"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "アレルギーが気になるので防ダニの電気敷き毛布が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ダニの繁殖・アレルギーが心配な人向けの電気毛布",
+    "ideal_answer": "防ダニ加工をうたう電気毛布・電気敷き毛布",
+    "reason": "「ダニが心配」は商品名では「防ダニ」「防ダニ加工」。 展開規則 mite-resistant-electric-blanket（モール検索語「防ダニ 電気毛布」）。",
+    "category": "mite-resistant-electric-blanket",
+    "search_terms": {
+      "ja": [
+        "防ダニ 電気毛布",
+        "防ダニ加工 電気敷き毛布",
+        "アレルギー対策 電気毛布"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ダニの繁殖が気になる電気ブランケット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ダニの繁殖・アレルギーが心配な人向けの電気毛布",
+    "ideal_answer": "防ダニ加工をうたう電気毛布・電気敷き毛布",
+    "reason": "「ダニが心配」は商品名では「防ダニ」「防ダニ加工」。 展開規則 mite-resistant-electric-blanket（モール検索語「防ダニ 電気毛布」）。",
+    "category": "mite-resistant-electric-blanket",
+    "search_terms": {
+      "ja": [
+        "防ダニ 電気毛布",
+        "防ダニ加工 電気敷き毛布",
+        "アレルギー対策 電気毛布"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "指を切らないか心配な赤ちゃんの爪切り",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "赤ちゃんの指を誤って切ってしまわないか心配な保護者向けの安全な爪切り",
+    "ideal_answer": "先端が丸く安全設計になっているベビー用爪切り(ハサミ型・クリッパー型)",
+    "reason": "「指を切らないか心配」は商品名では「先端丸型」「安全設計」。効果は断定しない。 展開規則 safe-tip-baby-nail-clipper（モール検索語「先端丸型 ベビー爪切り」）。",
+    "category": "safe-tip-baby-nail-clipper",
+    "search_terms": {
+      "ja": [
+        "先端丸型 ベビー爪切り",
+        "安全設計 ベビー爪切り",
+        "赤ちゃん用 爪切りハサミ 安全"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "誤って皮膚を切らない新生児用の爪切り",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "赤ちゃんの指を誤って切ってしまわないか心配な保護者向けの安全な爪切り",
+    "ideal_answer": "先端が丸く安全設計になっているベビー用爪切り(ハサミ型・クリッパー型)",
+    "reason": "「指を切らないか心配」は商品名では「先端丸型」「安全設計」。効果は断定しない。 展開規則 safe-tip-baby-nail-clipper（モール検索語「先端丸型 ベビー爪切り」）。",
+    "category": "safe-tip-baby-nail-clipper",
+    "search_terms": {
+      "ja": [
+        "先端丸型 ベビー爪切り",
+        "安全設計 ベビー爪切り",
+        "赤ちゃん用 爪切りハサミ 安全"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "安全に切れる乳児用のつめきり",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "赤ちゃんの指を誤って切ってしまわないか心配な保護者向けの安全な爪切り",
+    "ideal_answer": "先端が丸く安全設計になっているベビー用爪切り(ハサミ型・クリッパー型)",
+    "reason": "「指を切らないか心配」は商品名では「先端丸型」「安全設計」。効果は断定しない。 展開規則 safe-tip-baby-nail-clipper（モール検索語「先端丸型 ベビー爪切り」）。",
+    "category": "safe-tip-baby-nail-clipper",
+    "search_terms": {
+      "ja": [
+        "先端丸型 ベビー爪切り",
+        "安全設計 ベビー爪切り",
+        "赤ちゃん用 爪切りハサミ 安全"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]

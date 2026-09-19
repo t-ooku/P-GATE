@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T05:50:35.163Z",
+  "generated_at": "2026-09-19T01:18:57.614Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -30,9 +30,10 @@
     "2026-09-14-claude-batch-027.json",
     "2026-09-15-claude-batch-028.json",
     "2026-09-16-claude-batch-029.json",
-    "2026-09-17-claude-batch-030.json"
+    "2026-09-17-claude-batch-030.json",
+    "2026-09-18-claude-batch-031.json"
   ],
-  "entry_count": 1545,
+  "entry_count": 1610,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -21764,6 +21765,321 @@
       "source_file": "2026-09-05-claude-batch-019.json"
     },
     {
+      "content_hash": "1e727bb8199c1949096fcdf2ae2f976c4dd4f4c502c644258f6770a5c5101945",
+      "query_text": "浴室の鏡についた白いウロコ汚れが取れない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "limescale-mirror-polish-pad",
+      "ideal_answer": "鏡専用のウロコ取り(水垢取り)パッド・クリーナー(ダイヤモンドパッド等)",
+      "search_terms": {
+        "ja": [
+          "鏡 ウロコ取り パッド",
+          "浴室鏡 くもり取り",
+          "水垢取り 鏡"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f0981bbe2df573d8e87c840f26d374d130660635af51180c2deeac5555ee144c",
+      "query_text": "お風呂の鏡の水垢がひどい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "limescale-mirror-polish-pad",
+      "ideal_answer": "鏡専用のウロコ取り(水垢取り)パッド・クリーナー(ダイヤモンドパッド等)",
+      "search_terms": {
+        "ja": [
+          "鏡 ウロコ取り パッド",
+          "浴室鏡 くもり取り",
+          "水垢取り 鏡"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2181ba3d0f6680bf2b5dc88797b2132c48dd0eac6279c29bcbade4249904ac07",
+      "query_text": "洗面台の鏡のくもりが落ちない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "limescale-mirror-polish-pad",
+      "ideal_answer": "鏡専用のウロコ取り(水垢取り)パッド・クリーナー(ダイヤモンドパッド等)",
+      "search_terms": {
+        "ja": [
+          "鏡 ウロコ取り パッド",
+          "浴室鏡 くもり取り",
+          "水垢取り 鏡"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b7635b6f15b5b66db3a57ab0af0d56c5936d745e80c0697b59b983ab90b01fc9",
+      "query_text": "鼻の黒ずみが気になる毛穴パック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blackhead-removal-nose-pack",
+      "ideal_answer": "角栓・黒ずみ除去用の毛穴パック・鼻パック",
+      "search_terms": {
+        "ja": [
+          "角栓クリア 毛穴パック",
+          "黒ずみ 鼻パック",
+          "角栓除去 毛穴パック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f9a9a05eec959a7796d0eda0b636382f07c88604d7ffebf01c3d83170e4a78b3",
+      "query_text": "角栓が詰まって取れる鼻パック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blackhead-removal-nose-pack",
+      "ideal_answer": "角栓・黒ずみ除去用の毛穴パック・鼻パック",
+      "search_terms": {
+        "ja": [
+          "角栓クリア 毛穴パック",
+          "黒ずみ 鼻パック",
+          "角栓除去 毛穴パック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f05d66c64f308363396e390cf146d48a322669f8e2df504f578d4800a3a43280",
+      "query_text": "毛穴の黒ずみがすっきりする角栓クリアパック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blackhead-removal-nose-pack",
+      "ideal_answer": "角栓・黒ずみ除去用の毛穴パック・鼻パック",
+      "search_terms": {
+        "ja": [
+          "角栓クリア 毛穴パック",
+          "黒ずみ 鼻パック",
+          "角栓除去 毛穴パック"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "45e755b31c2f161ee4c3e203f9b1c5ca11c5fda241c9f810df8a098e6564ea72",
+      "query_text": "キャスターが付いていて掃除のときに動かしやすい収納ラック",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rolling-caster-storage-cart",
+      "ideal_answer": "キャスター付きで移動しやすい収納ラック・収納キャビネット・カラーボックス",
+      "search_terms": {
+        "ja": [
+          "キャスター付き 収納ラック",
+          "移動できる 収納キャビネット",
+          "キャスター付き カラーボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "cc80d05076af9f5923589b95c68eb5f8a15d8cbde6e6f261b37eb0451c0c33c9",
+      "query_text": "好きな場所に移動できる収納キャビネット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rolling-caster-storage-cart",
+      "ideal_answer": "キャスター付きで移動しやすい収納ラック・収納キャビネット・カラーボックス",
+      "search_terms": {
+        "ja": [
+          "キャスター付き 収納ラック",
+          "移動できる 収納キャビネット",
+          "キャスター付き カラーボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8105f41229c6233f0ee302653c4ac319430fb1ddda1b52d5f0238da81de3a3b9",
+      "query_text": "キャスターで簡単に移動できるカラーボックス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rolling-caster-storage-cart",
+      "ideal_answer": "キャスター付きで移動しやすい収納ラック・収納キャビネット・カラーボックス",
+      "search_terms": {
+        "ja": [
+          "キャスター付き 収納ラック",
+          "移動できる 収納キャビネット",
+          "キャスター付き カラーボックス"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1d8a30ae7ba31a0dbcf9c56101cac761a340becae169d5a3aeca4cb57acc52b4",
+      "query_text": "ダニが心配な電気毛布",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mite-resistant-electric-blanket",
+      "ideal_answer": "防ダニ加工をうたう電気毛布・電気敷き毛布",
+      "search_terms": {
+        "ja": [
+          "防ダニ 電気毛布",
+          "防ダニ加工 電気敷き毛布",
+          "アレルギー対策 電気毛布"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "261c5732f58e2859740dbfc704db670c0ee0e38c803d560bc82b587611bf7763",
+      "query_text": "アレルギーが気になるので防ダニの電気敷き毛布が欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mite-resistant-electric-blanket",
+      "ideal_answer": "防ダニ加工をうたう電気毛布・電気敷き毛布",
+      "search_terms": {
+        "ja": [
+          "防ダニ 電気毛布",
+          "防ダニ加工 電気敷き毛布",
+          "アレルギー対策 電気毛布"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3248d461c315a4c668d5461385998898f84bdc674ca5573069d55f417dc22945",
+      "query_text": "ダニの繁殖が気になる電気ブランケット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mite-resistant-electric-blanket",
+      "ideal_answer": "防ダニ加工をうたう電気毛布・電気敷き毛布",
+      "search_terms": {
+        "ja": [
+          "防ダニ 電気毛布",
+          "防ダニ加工 電気敷き毛布",
+          "アレルギー対策 電気毛布"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b685e713d4472594ab47f26cfff4f9bbd1ca2d5325f27aff08ab4b1bd70a25b9",
+      "query_text": "指を切らないか心配な赤ちゃんの爪切り",
+      "locale": "ja",
+      "persona": "general",
+      "category": "safe-tip-baby-nail-clipper",
+      "ideal_answer": "先端が丸く安全設計になっているベビー用爪切り(ハサミ型・クリッパー型)",
+      "search_terms": {
+        "ja": [
+          "先端丸型 ベビー爪切り",
+          "安全設計 ベビー爪切り",
+          "赤ちゃん用 爪切りハサミ 安全"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6291cd8beafdbf095cf7e50ed99f3b026464a3842fc4b60e9272bf1d4445d969",
+      "query_text": "誤って皮膚を切らない新生児用の爪切り",
+      "locale": "ja",
+      "persona": "general",
+      "category": "safe-tip-baby-nail-clipper",
+      "ideal_answer": "先端が丸く安全設計になっているベビー用爪切り(ハサミ型・クリッパー型)",
+      "search_terms": {
+        "ja": [
+          "先端丸型 ベビー爪切り",
+          "安全設計 ベビー爪切り",
+          "赤ちゃん用 爪切りハサミ 安全"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "1756fd07686c9fbb9c87e81cb409813552e5e3600ed47d75746b29f2df68031a",
+      "query_text": "安全に切れる乳児用のつめきり",
+      "locale": "ja",
+      "persona": "general",
+      "category": "safe-tip-baby-nail-clipper",
+      "ideal_answer": "先端が丸く安全設計になっているベビー用爪切り(ハサミ型・クリッパー型)",
+      "search_terms": {
+        "ja": [
+          "先端丸型 ベビー爪切り",
+          "安全設計 ベビー爪切り",
+          "赤ちゃん用 爪切りハサミ 安全"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
       "content_hash": "31a7a0358998d668a04b4cef01f5b72519c45c1210b20d69015b3c692661cf74",
       "query_text": "洗濯物を干すときに使う伸びるやつ",
       "locale": "ja",
@@ -33451,6 +33767,1061 @@
       "excluded_conditions": [],
       "confidence": 0.7,
       "source_file": "2026-09-17-claude-batch-030.json"
+    },
+    {
+      "content_hash": "cd77cdb56c1ad7f8cc86dadfbcdfd3597cc8b3bdfc3215051d28767e4b072dcc",
+      "query_text": "秋物をしまうやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何をしまいたいですか？服を入れる収納ケースですか、それとも圧縮袋や防虫剤ですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "b809d5b6a83a5031c43a59c51edc33967f8d0ff9364eb28d1b41330419638e7a",
+      "query_text": "涼しい風を送るやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "涼しい風を送る機器をお探しですね。お部屋用の扇風機・サーキュレーターですか、それとも持ち歩き用のハンディファンですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "67c0b27df23a8674dc087b5e76d6565f55ade1a2404eab1d06d59579652e9262",
+      "query_text": "肌に塗って直すやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "肌のどんな状態を直したいですか？乾燥ですか、日焼け後のケアですか、それとも傷やあれですか？用途によりおすすめの塗るケア用品が変わります。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.25,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "bb9b9ba84744ed3d7836c8418c1b67e5c37002a76400f1b00fb631042f28d35d",
+      "query_text": "音が鳴るのを消すやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何の音を消したいですか？周囲の音を遮りたい(耳栓・イヤーマフ)のか、物が鳴る音を防ぎたい(防音マット・消音シール)のかで商品が変わります。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "e76f2d247e1db995fd27a07ad512716495c5e1021121538e0737f7235fa6d84e",
+      "query_text": "紙をまとめるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "紙を綴じて保管したいですか、それとも一時的にまとめて留めたいだけですか？前者ならファイル・バインダー、後者ならクリップ・ホチキスが候補です。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "54b3d0947302976bf3c2c1eefee0a1bafcb587130dc479912417642ac0850b6a",
+      "query_text": "はっぴょうかいで着るやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "発表会で着る服(衣装)をお探しですか？それとも髪につけるリボンや、履く靴をお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "4316ed992a43611ac8880877e0dcac8e3a02084e0102d0e09e697f83e9fe13b0",
+      "query_text": "おともだちにあげるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "お友達に何をあげたいですか？ちょっとしたプレゼントですか、お菓子ですか、それとも手作りするものの材料ですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "cd1cf12e81ae027e6110815345c0972c37dc0d96bee128e8110a1709f357bbab",
+      "query_text": "からだを温めるやつ",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どこを温めたいですか？お腹や腰などを直接温めるならカイロや腹巻、座っている時に体全体を温めるならひざ掛けや湯たんぽが候補です。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "4fc17d6dc7954a301ebc9197ad120b9b6197cc956df18458e3abbeee45887962",
+      "query_text": "atatakai fuku",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "暖かい上着(ジャケット)をお探しですか、それとも中に着るインナーですか？体を包む毛布・ブランケットの可能性もあります。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "64135a511da4c99a3053d11c34585d87fb9ab89f36d41cb9ac67cd3c2970c9fa",
+      "query_text": "地雷系 秋コーデ 小物",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fashion-accessory",
+      "ideal_answer": "地雷系ファッションに合う黒・リボン系の秋向け小物(チョーカー・リボンクリップ等)",
+      "search_terms": {
+        "ja": [
+          "地雷系 小物",
+          "地雷系 リボン チョーカー"
+        ],
+        "en": [
+          "goth lolita accessories"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "fc4a27bea9c50a42253ba7952dd034ab9bf4c349365e138ecd69742d39255a59",
+      "query_text": "量産型 リボン バレッタ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hair-accessory",
+      "ideal_answer": "リボン付きのヘアバレッタ(量産型スタイル向け)",
+      "search_terms": {
+        "ja": [
+          "量産型 バレッタ",
+          "リボン ヘアクリップ"
+        ],
+        "en": [
+          "ribbon hair clip"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "5599f673675dd7e1323ee83ebc6daab8bb5faa73e20323e96b97f8b74c65851d",
+      "query_text": "タイパ 神アイテム 弁当箱",
+      "locale": "ja",
+      "persona": "general",
+      "category": "lunch-box",
+      "ideal_answer": "食洗機対応・仕切り付きで詰めやすい時短向けお弁当箱",
+      "search_terms": {
+        "ja": [
+          "時短 弁当箱",
+          "食洗機対応 弁当箱"
+        ],
+        "en": [
+          "easy clean bento box"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "2030acc0b24e6089fec0a45412961f69c5b7e2c0ad1b5d81870f53bea018646c",
+      "query_text": "韓国コスメ 秋 リップ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "cosmetics-lip",
+      "ideal_answer": "韓国コスメブランドのくすみブラウン・レッド系リップ",
+      "search_terms": {
+        "ja": [
+          "韓国コスメ リップ",
+          "くすみカラー リップ"
+        ],
+        "en": [],
+        "ko": [
+          "가을 립스틱"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "3662a5cb60f45a85c61f508db739037982b6fbd483bf85c603c6567c87de199f",
+      "query_text": "垢抜け 前髪 コテ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hair-iron",
+      "ideal_answer": "前髪用の細めのカールアイロン(コテ)",
+      "search_terms": {
+        "ja": [
+          "前髪 コテ 細め",
+          "前髪 ヘアアイロン"
+        ],
+        "en": [
+          "mini curling iron for bangs"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "e6b91263599be6dbed2bc91ccf577ab8cb8a1995ac8b642f4b211652d1efde46",
+      "query_text": "パソコン疲れ目に良いとされるサプリ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "目の疲れ対策として販売されているサプリメント(ルテイン・ブルーベリー由来成分等を含む製品)。効果・効能を断定するものではなく、体質により合う・合わないがあります。心配な症状がある場合は医療機関にご相談ください。",
+      "search_terms": {
+        "ja": [
+          "目の疲れ サプリ",
+          "ルテイン サプリ",
+          "パソコン 疲れ目 サプリ"
+        ],
+        "en": [
+          "eye fatigue supplement for screen use"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.42,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "0b8f102889b7902b3a92c74cc69540bf8cff63e4bfb170d762ea83306912f3c7",
+      "query_text": "冷え性に効くお茶",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "生姜や紅茶など「体を温めるとされる」お茶。医薬品ではないため冷え性そのものへの効果を断定するものではありません。症状が気になる場合は医療機関にご相談ください。",
+      "search_terms": {
+        "ja": [
+          "生姜茶",
+          "冷え対策 お茶"
+        ],
+        "en": [
+          "ginger tea"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.42,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "3c29c5e3c708ab9bfe3ba0bee170e156c5d1d61e825f176c8f1411ffe1baac32",
+      "query_text": "衣替え 収納ケース 大容量",
+      "locale": "ja",
+      "persona": "general",
+      "category": "storage-case",
+      "ideal_answer": "大容量の衣類用収納ケース(フタ付き・積み重ね可能タイプ)",
+      "search_terms": {
+        "ja": [
+          "衣替え 収納ケース",
+          "大容量 衣装ケース"
+        ],
+        "en": [
+          "large clothes storage box"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "67dd4d0a4d4abbfa126cc1067e86d4b29f24bea8d942e66dac1948c7b06be808",
+      "query_text": "秋の乾燥対策 加湿器",
+      "locale": "ja",
+      "persona": "general",
+      "category": "humidifier",
+      "ideal_answer": "卓上〜部屋用の加湿器(スチーム式・超音波式など)",
+      "search_terms": {
+        "ja": [
+          "加湿器 卓上",
+          "秋 乾燥対策 加湿器"
+        ],
+        "en": [
+          "humidifier for dry season"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "d72c983a9b8f450abb0b2a9ec291d637c3515e12cff6b0f170e3c13fe997ed0e",
+      "query_text": "読書灯 目に優しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "reading-light",
+      "ideal_answer": "目に優しい調光機能付きのクリップ式読書灯",
+      "search_terms": {
+        "ja": [
+          "読書灯 クリップ式",
+          "調光 読書灯"
+        ],
+        "en": [
+          "led book light dimmable"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "bd9f895ffcdd7ed571ef644b8066362555e9387b01974880add5fc82bbb4e61e",
+      "query_text": "紅葉狩り 双眼鏡",
+      "locale": "ja",
+      "persona": "general",
+      "category": "binoculars",
+      "ideal_answer": "軽量でコンパクトな携帯用双眼鏡",
+      "search_terms": {
+        "ja": [
+          "軽量 双眼鏡",
+          "紅葉狩り 持ち物"
+        ],
+        "en": [
+          "compact binoculars for hiking"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "7995a4bff34554a266f35a07fe680209caadd4cd5a5db042197250b3d7e2fcda",
+      "query_text": "キャンプ用 焚き火台",
+      "locale": "ja",
+      "persona": "general",
+      "category": "camping-gear",
+      "ideal_answer": "折りたたみ式の焚き火台(ソロ〜ファミリー用)",
+      "search_terms": {
+        "ja": [
+          "焚き火台 折りたたみ",
+          "キャンプ 焚き火台"
+        ],
+        "en": [
+          "portable fire pit for camping"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "c0fc2a2f2f0360814f406665a6eca3009eb894c51786484de2832ed4cf4cb645",
+      "query_text": "引っ越し 段ボール 追加",
+      "locale": "ja",
+      "persona": "general",
+      "category": "moving-box",
+      "ideal_answer": "引っ越し用の段ボール箱(サイズ複数展開)",
+      "search_terms": {
+        "ja": [
+          "引っ越し 段ボール",
+          "ダンボール箱 まとめ買い"
+        ],
+        "en": [
+          "moving boxes bulk"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "971e383da7f17ecc2496e2f235156d71363d0c202bb38c2c1a6c6444ec8851b6",
+      "query_text": "秋の模様替え ラグ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "rug",
+      "ideal_answer": "秋冬向けの厚手ラグ・カーペット",
+      "search_terms": {
+        "ja": [
+          "秋冬 ラグ",
+          "厚手 カーペット"
+        ],
+        "en": [
+          "autumn winter area rug"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "be519a6c468424ec993426ea5a0eb67b81ac8bc4c167448ae30d2369a04a0ac2",
+      "query_text": "ペット 秋 防寒ベッド",
+      "locale": "ja",
+      "persona": "general",
+      "category": "pet-bed",
+      "ideal_answer": "犬・猫用の暖かい素材のペットベッド",
+      "search_terms": {
+        "ja": [
+          "ペットベッド 防寒",
+          "犬 猫 あったかベッド"
+        ],
+        "en": [
+          "warm pet bed for autumn"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "2fec7f36198f63d9b78e5780db17884e98ced1f1496d3bf68e08aec04d06a116",
+      "query_text": "衣類の静電気を防ぐスプレー",
+      "locale": "ja",
+      "persona": "general",
+      "category": "static-prevention-spray",
+      "ideal_answer": "衣類用の静電気防止スプレー",
+      "search_terms": {
+        "ja": [
+          "静電気防止スプレー",
+          "衣類 静電気 対策"
+        ],
+        "en": [
+          "anti static spray for clothes"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "9af3f7e73b643559579f5f414674871d9ee92af2b777b5fcb27512c9ce3736af",
+      "query_text": "台風接近時の窓ガラス養生テープ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "protective-tape",
+      "ideal_answer": "窓ガラス飛散防止用の養生テープ",
+      "search_terms": {
+        "ja": [
+          "養生テープ 窓ガラス",
+          "台風対策 飛散防止テープ"
+        ],
+        "en": [
+          "window shatterproof tape typhoon"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "f430cf94e7a18c45e945483eace8b62806fa5a5f40902e919f1ab2c56e920689",
+      "query_text": "車でスマホを立てておくやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "car-phone-holder",
+      "ideal_answer": "車のダッシュボード・エアコン吹き出し口に取り付けるスマホホルダー",
+      "search_terms": {
+        "ja": [
+          "車 スマホホルダー",
+          "エアコン吹き出し口 スマホスタンド"
+        ],
+        "en": [
+          "car phone mount"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "1cdbe95c428bf5964eb7528bf486f312fc8bb5c3ec491e9c90df9992d712d8b7",
+      "query_text": "秋アニメ一気見 ブランケット",
+      "locale": "ja",
+      "persona": "general",
+      "category": "blanket",
+      "ideal_answer": "もこもこ素材の羽織れるブランケット",
+      "search_terms": {
+        "ja": [
+          "羽織れる 毛布",
+          "もこもこ ブランケット"
+        ],
+        "en": [
+          "wearable fleece blanket"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "5654c1aca4c8cfa9304158b66bfc90d5f5fc7cec015b4fe5bbc90e49cc72600b",
+      "query_text": "在宅ワーク 首肩サポート クッション",
+      "locale": "ja",
+      "persona": "general",
+      "category": "support-cushion",
+      "ideal_answer": "デスクワーク向けの首・肩サポートクッション",
+      "search_terms": {
+        "ja": [
+          "首肩 サポートクッション",
+          "デスクワーク クッション"
+        ],
+        "en": [
+          "neck shoulder support cushion desk"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "13cda4b8ba0325520c9bca75887d94155ce39e904df301ebb9f6e1d2352658a1",
+      "query_text": "十三夜 ススキ 花瓶",
+      "locale": "ja",
+      "persona": "general",
+      "category": "vase",
+      "ideal_answer": "ススキなど長い植物も飾れる、口の広い花瓶",
+      "search_terms": {
+        "ja": [
+          "花瓶 ススキ",
+          "十三夜 お供え"
+        ],
+        "en": [
+          "vase for pampas grass"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "8f6f238540644ef0791b2cceb737f2e33d501357ca957680e1a39ffd4f28c8de",
+      "query_text": "ハロウィン仮装 かぼちゃ帽子",
+      "locale": "ja",
+      "persona": "child",
+      "category": "halloween-costume",
+      "ideal_answer": "ハロウィン用のかぼちゃ型コスチューム帽子",
+      "search_terms": {
+        "ja": [
+          "ハロウィン 仮装 帽子",
+          "かぼちゃ 帽子 コスプレ"
+        ],
+        "en": [
+          "pumpkin halloween hat kids"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "30f3010acdf483fc25d875f0fad619c2a1c93337e9be51efc57398fa05a803c6",
+      "query_text": "文化祭で使うカラー画用紙",
+      "locale": "ja",
+      "persona": "child",
+      "category": "craft-paper",
+      "ideal_answer": "文化祭の装飾・工作用のカラー画用紙セット",
+      "search_terms": {
+        "ja": [
+          "カラー画用紙 セット",
+          "文化祭 工作 画用紙"
+        ],
+        "en": [
+          "colored construction paper set"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "2d7dacbc582de0143415c28106d5a325f1e1c240228d9b27b14ba4b950bbf3f0",
+      "query_text": "うんどうぐつ 大きいサイズ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "kids-sneakers",
+      "ideal_answer": "キッズ〜ジュニアサイズの運動靴(大きめサイズ展開)",
+      "search_terms": {
+        "ja": [
+          "キッズ 運動靴 大きいサイズ",
+          "ジュニア スニーカー"
+        ],
+        "en": [
+          "kids sneakers large size"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "477ef7d311d907c6fee68463509510a66f0c46736d49d854620b22e688ffc1d9",
+      "query_text": "こうさくで使うきらきらのり",
+      "locale": "ja",
+      "persona": "child",
+      "category": "craft-glue",
+      "ideal_answer": "ラメ・グリッター入りの工作用のり",
+      "search_terms": {
+        "ja": [
+          "グリッターのり",
+          "きらきら のり 工作"
+        ],
+        "en": [
+          "glitter glue for crafts"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "3dda744d19423ab2da78ddd07979937528605d3593a16d7ebfea1d85e6d4f8d5",
+      "query_text": "敬老の日 補聴器用電池",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "hearing-aid-battery",
+      "ideal_answer": "補聴器用のボタン電池(空気電池)",
+      "search_terms": {
+        "ja": [
+          "補聴器 電池",
+          "補聴器用 空気電池"
+        ],
+        "en": [
+          "hearing aid batteries"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.85,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "af8334c909797f1a8f37d44588cacebb056244c01c0abb789f031bddb26d465b",
+      "query_text": "老眼鏡 首から下げる紐",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "glasses-strap",
+      "ideal_answer": "メガネ用のネックストラップ(老眼鏡向け)",
+      "search_terms": {
+        "ja": [
+          "メガネ ストラップ",
+          "老眼鏡 首かけ紐"
+        ],
+        "en": [
+          "eyeglass neck strap"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "3d1eefd944fb9501595dbe2bb028b934305a167ed911de27792e19c08c888528",
+      "query_text": "杖の握りが痛くない持ち手カバー",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "cane-grip-cover",
+      "ideal_answer": "杖用のクッション性のある持ち手カバー(グリップカバー)",
+      "search_terms": {
+        "ja": [
+          "杖 グリップカバー",
+          "杖 持ち手 クッション"
+        ],
+        "en": [
+          "cane grip cover cushion"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "f646e73d26c904f6e22461f276cdf707f4ee6a32d24f73f960e124b406a8e7ba",
+      "query_text": "階段の滑り止めシール",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "non-slip-sticker",
+      "ideal_answer": "階段用の滑り止め(ノンスリップ)シール",
+      "search_terms": {
+        "ja": [
+          "階段 滑り止め シール",
+          "ノンスリップテープ"
+        ],
+        "en": [
+          "stair non slip strips"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "14a0d0fb3784a45c83edbd19ea9f566aa215c227bc486442fba043d0301b56f6",
+      "query_text": "指先のひび割れに塗るハンドクリーム",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "hand-cream",
+      "ideal_answer": "指先の乾燥・ひび割れ向けの高保湿ハンドクリーム",
+      "search_terms": {
+        "ja": [
+          "ハンドクリーム 高保湿",
+          "指先 ひび割れ クリーム"
+        ],
+        "en": [
+          "hand cream for cracked fingertips"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "588e37cee1e0ba03b9f14d6fae17690aadf84b93a751b971be1c4543e3c4c0c1",
+      "query_text": "경로의 날 선물",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "gift-set",
+      "ideal_answer": "敬老の日向けのギフト(健康グッズ・お菓子詰め合わせ等)",
+      "search_terms": {
+        "ja": [
+          "敬老の日 ギフト"
+        ],
+        "en": [],
+        "ko": [
+          "경로의 날 선물",
+          "효도 선물"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "9f49a66ea8f356fa020331d5e6e21fc2290ff132c3994b5474a41bcb73e5d7ea",
+      "query_text": "태풍 대비 usb 충전 보조배터리",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "power-bank",
+      "ideal_answer": "大容量のUSB充電式モバイルバッテリー(防災用)",
+      "search_terms": {
+        "ja": [
+          "モバイルバッテリー 防災"
+        ],
+        "en": [],
+        "ko": [
+          "태풍 대비 usb 충전 보조배터리",
+          "비상용 보조배터리"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "43b252906464e5c60c97a36e3a32ae5908f04b3057da2ee0a6bcd83388cf472b",
+      "query_text": "가을 환절기 마스크",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "face-mask",
+      "ideal_answer": "秋の季節の変わり目向けの不織布マスク",
+      "search_terms": {
+        "ja": [
+          "不織布マスク"
+        ],
+        "en": [],
+        "ko": [
+          "가을 환절기 마스크",
+          "일회용 마스크"
+        ],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "91cf82406528f99e46f2f94a292ff4112b026e24c28f9c55a284eec5f16abc15",
+      "query_text": "敬老日礼物",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "gift-set",
+      "ideal_answer": "敬老の日向けのギフト(健康グッズ・お菓子詰め合わせ等)",
+      "search_terms": {
+        "ja": [
+          "敬老の日 ギフト"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "敬老日礼物",
+          "长辈 节日礼物"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "d85efa45dd23bf129c3d3f2428fd3109ffa952be3db9af7dbc2f37747f17fae3",
+      "query_text": "秋冬保湿乳液推荐",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "face-lotion",
+      "ideal_answer": "秋冬向けの高保湿乳液(フェイスローション)",
+      "search_terms": {
+        "ja": [
+          "保湿乳液 秋冬"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "秋冬保湿乳液推荐",
+          "秋冬 乳液"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "3912f865fbd25278dd25f6ce211bf25cfc6a1e9cff043981ffdfa2083c300f8d",
+      "query_text": "防台风应急手电筒",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "flashlight",
+      "ideal_answer": "電池式または充電式のLED懐中電灯(防災用)",
+      "search_terms": {
+        "ja": [
+          "懐中電灯 防災"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": [
+          "防台风应急手电筒",
+          "应急手电"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "bc2ad24009af69cd8d73e8d8ee9f85621b70702a353bdf9a6cb55e1718b65fab",
+      "query_text": "warm blanket for autumn",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "blanket",
+      "ideal_answer": "秋冬向けの厚手・あたたかいブランケット",
+      "search_terms": {
+        "ja": [
+          "秋冬 ブランケット"
+        ],
+        "en": [
+          "warm blanket for autumn",
+          "fleece throw blanket"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "c5bc88d4a627370fb7abdffcefa8a3a9d210863998436ceab04948376cd1e071",
+      "query_text": "kids halloween costume pumpkin",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "halloween-costume",
+      "ideal_answer": "ハロウィン用のかぼちゃ型キッズコスチューム",
+      "search_terms": {
+        "ja": [
+          "ハロウィン 仮装 かぼちゃ キッズ"
+        ],
+        "en": [
+          "kids halloween costume pumpkin"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "64329a3ed4407c13dd4046827748bac994e73d2790a7fee16dcd0f1b915e8608",
+      "query_text": "reading light for night",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "reading-light",
+      "ideal_answer": "調光機能付きのクリップ式読書灯",
+      "search_terms": {
+        "ja": [
+          "読書灯"
+        ],
+        "en": [
+          "reading light for night",
+          "clip on book light"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "4173c7cdaff03056ee1ddb292fb448450ac1c55011ec8ebcfe0e1bc66440f29c",
+      "query_text": "koromogae shimau boxu",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "storage-case",
+      "ideal_answer": "衣替え用の大容量衣類収納ケース(フタ付き)",
+      "search_terms": {
+        "ja": [
+          "衣替え 収納ケース",
+          "衣装ケース フタ付き"
+        ],
+        "en": [
+          "clothes storage box with lid"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-18-claude-batch-031.json"
+    },
+    {
+      "content_hash": "234fbc3913e3fa139a6587ded46cdd275ad1330c675aee13b37cb2041fd10fcd",
+      "query_text": "aki no kafun taisaku masuku",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "face-mask",
+      "ideal_answer": "花粉対応の高機能不織布マスク。特定の花粉症状への効果を断定するものではありません。",
+      "search_terms": {
+        "ja": [
+          "花粉対策 マスク",
+          "秋 花粉症 マスク"
+        ],
+        "en": [
+          "pollen mask autumn ragweed"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-18-claude-batch-031.json"
     }
   ]
 }
