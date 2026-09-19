@@ -162,3 +162,22 @@ form?.addEventListener('submit', async event => {
     }
   }
 });
+
+// 2026-09-19 大隆さん指示 §8: LP に「今、HOSHILUで探されています」を実データで出す。
+// 架空件数は出さない。公開できる件数（同じ条件を5人以上）に達した需要だけ、検索文ではなく正規化した条件で表示する。
+(async () => {
+  const box = document.querySelector('#demandNow');
+  if (!box) return;
+  const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const empty = (text) => { box.innerHTML = `<article><h3>まだ公開できる需要がありません</h3><p>${escapeHtml(text)}</p></article>`; };
+  try {
+    const response = await fetch('/api/shops/demand/public', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP_${response.status}`);
+    const data = await response.json();
+    const items = Array.isArray(data?.items) ? data.items.slice(0, 6) : [];
+    if (!items.length) { empty(`同じ条件を${Number(data?.min_people || 5)}人以上が探している需要が集まると、ここに条件と人数を表示します。契約者画面ではそれ未満の需要も件数だけ確認できます。`); return; }
+    box.innerHTML = items.map((item) => `<article><h3>${escapeHtml(item.conditions)}</h3><span class="people">${Number(item.people || 0)}人が探し中</span><span class="state">${item.zero_results > 0 ? `一致商品 0件（${Number(item.zero_results)}回）` : ''}${item.zero_results > 0 && item.near_only > 0 ? '・' : ''}${item.near_only > 0 ? `近い商品だけ（${Number(item.near_only)}回）` : ''}</span></article>`).join('');
+  } catch {
+    empty('今探されているものを読み込めませんでした。時間をおいて再度お試しください。');
+  }
+})();

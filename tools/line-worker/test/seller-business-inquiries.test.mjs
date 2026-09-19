@@ -69,15 +69,25 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /property="og:url" content="https:\/\/hoshilu\.app\/for-sellers"/u);
   assert.match(html, /"@type":"FAQPage"/u);
   assert.match(html, /data-seller-cta="hero-inquiry"/u);
-  assert.match(html, /月額9,800円/u);
+  // 2026-09-19 大隆さん決定（Seller収益化・需要マッチ改修 §1・§15・§18）: 商品は 1 つ。HOSHILU Seller 4,980円/月、
+  // 最初の3か月 月額0円、Demand Match Click 1有効クリック50円。Growth 9,800円・ジャンル別クリック料金表は出さない。
+  assert.match(html, /月額4,980円/u);
+  assert.match(html, /最初の3か月 月額0円/u);
+  assert.match(html, /Demand Match Click <strong>1有効クリック 50円<\/strong>/u);
   assert.match(html, /1法人単位ではなく、1事業者アカウント単位/u);
-  // 2026-09-03 大隆さん決定: 無料プラン＝定価、Business＝定価の50%＋毎月5,000円分まで0円。
-  assert.match(html, /ファッション<\/td><td>19円<\/td><td>38円/u);
-  assert.match(html, /コスメ<\/td><td>29円<\/td><td>57円/u);
-  assert.match(html, /自動車用品<\/td><td>10円<\/td><td>20円/u);
-  assert.match(html, /毎月5,000円分まで0円/u);
-  assert.match(html, /5,001円から課金、1か月目から適用・4か月目以降も継続/u);
-  assert.match(html, /翌月へ繰り越しません/u);
+  assert.match(html, /月額に含まれるもの: HOSHILU SHOP掲載、全ショップ横断検索への露出、通常検索からの商品クリック/u);
+  assert.match(html, /通常のクリックで課金されることはありません/u);
+  assert.match(html, /新しいECモールを増やす必要はありません/u);
+  assert.match(html, /<summary>50円はいつ発生しますか？<\/summary><p>通常のクリックでは発生しません/u);
+  assert.match(html, /<summary>ユーザーの個人情報は見られますか？<\/summary><p>見られません/u);
+  assert.match(html, /<summary>費用が勝手に増えませんか？<\/summary>/u);
+  // 未実装の予算上限・Demand Match 課金は「準備中・それまで0円」と書く（§33）
+  assert.match(html, /計測と予算上限が契約者画面に入ってから始めます（準備中）。それまでは0円です/u);
+  assert.match(html, /id="demandNow"/u);
+  assert.doesNotMatch(html, /9,800/u);
+  assert.doesNotMatch(html, /Growth/u);
+  assert.doesNotMatch(html, /定価の50%/u);
+  assert.doesNotMatch(html, /毎月5,000円分/u);
   assert.doesNotMatch(html, /Businessあり/u);
   assert.doesNotMatch(html, /name="(?:password|api_key|secret|access_token)"/iu);
   const script = readFileSync(new URL('../public/for-sellers.js', import.meta.url), 'utf8');
@@ -94,8 +104,11 @@ test('公開LPはスマホで見出しを3行以上に崩さず余白を圧縮�
   assert.match(css, /\.form-shell\{margin:38px 0/u);
   assert.match(css, /\.flow h2\{[^}]*white-space:nowrap/u);
   assert.match(css, /\.price-table-wrap table\{min-width:0;table-layout:fixed\}/u);
-  assert.match(html, /無料プラン<br>（定価）/u);
-  assert.match(html, /Business<br>（定価の50%）/u);
+  // 2026-09-19: 8 段の流れはスマホで 1 列、タブレットで 2 列
+  assert.match(css, /@media\(max-width:520px\)\{\.dm-flow ol\{grid-template-columns:1fr\}/u);
+  assert.match(html, /<section class="flow dm-flow" id="how">/u);
+  const dmFlow = html.slice(html.indexOf('<section class="flow dm-flow"'), html.indexOf('</section>', html.indexOf('<section class="flow dm-flow"')));
+  assert.equal((dmFlow.match(/<li><span>[1-8]<\/span><div><strong>/gu) || []).length, 8);
 });
 
 test('値下げ待ちと見つからなかった検索を匿名需要としてBusinessへ届ける', () => {
@@ -229,7 +242,12 @@ test('確認欄が通らなくても公開APIは受け付け、通知の件名�
 // 2026-09-17 SHOP指示書 §30〜31: /for-sellers の中心メッセージは「欲しい人が見える。欲しい人に商品を届けられる。」。成果保証の語は使わない。
 test('/for-sellers の見出しは「欲しい人が見える。欲しい人に商品を届けられる。」で、需要の説明は匿名 5 人以上・条件のみ', () => {
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
-  assert.match(html, /<h1>欲しい人が見える。<br><span>欲しい人に商品を届けられる。<\/span><\/h1>/u);
+  // 2026-09-19 大隆さん指示 §5: ファーストビューは「欲しい人が、先に見える。」。title は据え置き。
+  assert.match(html, /<h1>欲しい人が、<br><span>先に見える。<\/span><\/h1>/u);
+  assert.match(html, /商品を出したら、探していた人へHOSHILUが届けます。<br>Amazon・楽天・Yahoo!など、今ある販売先はそのまま。/u);
+  assert.match(html, /検索 → 探し中需要 → 商品マッチ → 再通知 → 送客/u);
+  assert.match(html, /data-seller-cta="hero-inquiry">3か月無料で始める</u);
+  assert.match(html, /data-seller-cta="hero-demand">今HOSHILUで探されているものを見る</u);
   assert.match(html, /<title>ECセラーの方へ｜欲しい人が見える。欲しい人に商品を届けられる。｜HOSHILU<\/title>/u);
   assert.match(html, /同じ条件を5人以上が探している項目だけを、検索文ではなく正規化した条件/u);
   assert.match(html, /自己申告で一致にはなりません/u);

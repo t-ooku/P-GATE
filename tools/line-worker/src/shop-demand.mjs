@@ -373,6 +373,31 @@ export async function handleShopDemandRoutes(request, env, { readMember = readMe
     await recordShopEvent(env, 'shop_search_completed', resultState(result), { content: `${result.exact.length}/${result.near.length}` });
     return json({ ok: true, ...result, state: resultState(result) });
   }
+  // 2026-09-19 大隆さん指示 §8: /for-sellers の「今、HOSHILUで探されています」。同じ条件を SELLER_DEMAND_MIN_PEOPLE（5）人以上が
+  // 探している需要だけを、検索文ではなく正規化した条件で返す（架空件数なし・個人情報なし）。件数未満は個別に出さない。
+  if (request.method === 'GET' && url.pathname === '/api/shops/demand/public') {
+    const minPeople = Number(env?.SHOP_DEMAND_SELLER_MIN_PEOPLE) || SELLER_DEMAND_MIN_PEOPLE;
+    if (!db) return json({ ok: true, items: [], min_people: minPeople });
+    try {
+      const rows = await db.prepare(`SELECT demand_key, MIN(conditions_json) AS conditions_json,
+          COUNT(DISTINCT CASE WHEN member_id<>'' THEN member_id ELSE visitor_hash END) AS people,
+          SUM(CASE WHEN result_state='NONE' THEN 1 ELSE 0 END) AS zero_results,
+          SUM(CASE WHEN result_state='NEAR' THEN 1 ELSE 0 END) AS near_only,
+          MAX(created_at) AS last_at
+        FROM shop_demand_requests WHERE created_at>=datetime('now','-60 days')
+        GROUP BY demand_key HAVING people>=?1 ORDER BY people DESC, last_at DESC LIMIT 12`).bind(minPeople).all();
+      const items = (rows.results || []).map((row) => {
+        let conditions = [];
+        try { conditions = JSON.parse(row.conditions_json || '[]'); } catch { conditions = []; }
+        return {
+          conditions: Array.isArray(conditions) && conditions.length ? conditions.map((item) => clean(item, 40)).filter(Boolean).join('・') : '',
+          people: Number(row.people || 0), zero_results: Number(row.zero_results || 0), near_only: Number(row.near_only || 0)
+        };
+      }).filter((item) => item.conditions);
+      return Response.json({ ok: true, items, min_people: minPeople },
+        { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
+    } catch { return json({ ok: true, items: [], min_people: minPeople }); }
+  }
   if (request.method === 'GET' && url.pathname === '/api/shops/demand/popular') {
     if (!db) return json({ ok: true, items: [] });
     try {

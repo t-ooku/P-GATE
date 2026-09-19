@@ -198,3 +198,20 @@ test('ジャンル・色・素材・サイズ・ブランドの絞り込みは�
   const catalog = await (await handleShopDemandRoutes(request('/api/shops/filters'), env)).json();
   assert.ok(catalog.genres.length > 3 && catalog.colors.length > 5 && catalog.materials.length > 3);
 });
+
+// 2026-09-19 大隆さん指示（Seller収益化・需要マッチ改修 §8）: /for-sellers の「今、HOSHILUで探されています」は実データだけ。
+// 同じ条件を 5 人以上が探している需要だけを、検索文ではなく正規化した条件で返す。5 人未満は個別に出さない。
+test('公開ルート /api/shops/demand/public は 5 人以上の需要だけを条件で返し、検索文・個人情報を出さない', async () => {
+  const { db, env } = makeEnv();
+  const insert = db.prepare(`INSERT INTO shop_demand_requests(demand_id,demand_key,query_text,conditions_json,member_id,visitor_hash,seller_key,result_state,status,last_checked_at,matched_at,matched_seller_key,matched_shop_slug,matched_product_url,matched_level,notification_id,created_at,updated_at)
+    VALUES(?1,?2,?3,?4,?5,?6,'',?7,'OPEN','','','','','','','',datetime('now'),datetime('now'))`);
+  for (let i = 0; i < 5; i += 1) insert.run(`sd-a${i}`, 'k-tote', '黒 本革 A4 自立 トートバッグ 私のメール x@example.com', JSON.stringify(['黒', '本革', 'A4', 'トートバッグ']), '', `v${i}`, i < 4 ? 'NONE' : 'NEAR');
+  for (let i = 0; i < 3; i += 1) insert.run(`sd-b${i}`, 'k-tumbler', '韓国限定 タンブラー', JSON.stringify(['韓国', 'タンブラー']), `m${i}`, `w${i}`, 'NONE');
+  const response = await handleShopDemandRoutes(request('/api/shops/demand/public'), env);
+  const payload = await response.json();
+  assert.equal(payload.ok, true);
+  assert.equal(payload.min_people, 5);
+  assert.deepEqual(payload.items, [{ conditions: '黒・本革・A4・トートバッグ', people: 5, zero_results: 4, near_only: 1 }]);
+  assert.ok(!JSON.stringify(payload).includes('x@example.com') && !JSON.stringify(payload).includes('私のメール'));
+  assert.equal(response.headers.get('cache-control'), 'public, max-age=300');
+});
