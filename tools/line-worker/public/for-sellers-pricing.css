@@ -77,3 +77,6 @@
 .pricing-head h2 span,.shop-copy h2 span{white-space:nowrap}
 @media(max-width:820px){.pricing-head h2,.shop-copy h2{font-size:30px}}
 @media(max-width:520px){.pricing-head h2,.shop-copy h2{font-size:26px}}
+/* 2026-09-19 大隆さん指摘（スマホ）: リード・導線・料金の途中折り返しを止め、読点や項目の切れ目でだけ改行する */
+.hero .nb{white-space:nowrap}
+@media(max-width:520px){.hero .lead{font-size:15px;line-height:1.75}.hero-chain{font-size:13px}}

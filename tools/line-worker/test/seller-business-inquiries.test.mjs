@@ -245,8 +245,8 @@ test('/for-sellers の見出しは「欲しい人が見える。欲しい人に�
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
   // 2026-09-19 大隆さん指示 §5: ファーストビューは「欲しい人が、先に見える。」。title は据え置き。
   assert.match(html, /<h1>欲しい人が、<br class="hero-br"><span>先に見える。<\/span><\/h1>/u, 'PC は 1 行、スマホだけ改行（9/19 大隆さん指摘）');
-  assert.match(html, /商品を出したら、探していた人へHOSHILUが届けます。<br>Amazon・楽天・Yahoo!など、今ある販売先はそのまま。/u);
-  assert.match(html, /検索 → 探し中需要 → 商品マッチ → 再通知 → 送客/u);
+  assert.match(html, /商品を出したら、<\/span><span class="nb">探していた人へHOSHILUが届けます。<\/span><br><span class="nb">Amazon・楽天・Yahoo!など、<\/span><span class="nb">今ある販売先はそのまま。/u, '読点・項目の切れ目だけで改行（9/19 大隆さん指摘）');
+  assert.match(html, /検索 → 探し中需要 →<\/span> <span class="nb">商品マッチ → 再通知 → 送客/u);
   assert.match(html, /data-seller-cta="hero-inquiry">3か月無料で始める</u);
   assert.match(html, /data-seller-cta="hero-demand">今HOSHILUで探されているものを見る</u);
   assert.match(html, /<title>ECセラーの方へ｜欲しい人が見える。欲しい人に商品を届けられる。｜HOSHILU<\/title>/u);
