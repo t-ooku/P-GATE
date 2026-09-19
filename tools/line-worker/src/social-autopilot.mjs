@@ -1,6 +1,7 @@
 import {
   normalizeSocialPost,
   runDueSocialPosts,
+  retractOldPricingPosts,
   socialPublisherReadinessWithStoredCredentials,
   syncInstagramPublishedPermalinks,
   syncThreadsInsights,
@@ -243,12 +244,12 @@ const X_INITIAL_DATE_OVERRIDES = new Map([
 const X_SELLER_POSTS = Object.freeze([
   {
     id: 'seller-natural-listing',
-    caption: '商品を探している人に、ちゃんと見つけてもらう。HOSHILUは自然掲載を無料から始められます。広告だけで検索結果を埋めず、探している条件との一致を優先します。',
+    caption: '欲しい人が、先に見える。HOSHILUで探して見つからなかった「欲しい」が、匿名の需要としてお店に届きます。商品を登録すると、HOSHILUが条件を確かめて探していた本人に知らせます。',
     link_path: '/for-sellers'
   },
   {
     id: 'seller-demand-insight',
-    caption: '購入希望価格を設定した人と、探したけれど見つけられなかった商品。その匿名需要を、仕入れ・商品開発・価格判断に使える形で確認できます。検索文や個人情報は共有しません。',
+    caption: '追加料金は、探していた人をHOSHILUが呼び戻して商品ページを開いた時だけ50円。通常のクリックは月額に含まれ、予算の上限も自分で決められます。売上や掲載順位は保証しません。',
     link_path: '/for-sellers'
   },
   {
@@ -630,7 +631,25 @@ const THREADS_AMAZON_SLOTS = Object.freeze([
   { suffix: '-am', hour: 9, minute: 30 },
   { suffix: '', hour: 12, minute: 30 },
   { suffix: '-pm', hour: 20, minute: 30 },
-  { suffix: '-night', hour: 22, minute: 30 }
+  // 2026-09-19 大隆さん指示「スレッツでもセラー募集は積極的に」: 夜枠(22:30 JST)は毎日セラー向け。
+  { suffix: '-night', hour: 22, minute: 30, seller: true }
+]);
+
+// 2026-09-19 大隆さん指示: Threads の 1 日 4 枠のうち夜枠を毎日セラー募集に充てる（週 7 本）。
+// 文面は実装済みの事実だけ（4,980円/月・最初の 3 か月 0 円・呼び戻せた時だけ 50 円・匿名需要は 5 人以上）。
+// 成果保証・「多数のセラー」・実績の水増しは書かない（§33・§49）。10 本を日替わりで回すので 10 日以内に同じ文面は出ない。
+const THREADS_SELLER_CAMPAIGN_ID = 'hoshilu-threads-seller-v1';
+const THREADS_SELLER_POSTS = Object.freeze([
+  { id: 'seller-first-visible', caption: '欲しい人が、先に見える。\nHOSHILUで探して見つからなかった「欲しい」が、個人を特定できない匿名の需要としてお店に届きます。ネットショップ・メーカーの方へ。' },
+  { id: 'seller-keep-your-mall', caption: '新しいECモールを増やす必要はありません。\nAmazon・楽天・Yahoo!など今ある販売先はそのまま。HOSHILUは受注や発送を移す場所ではなく、探している人と商品をつなぐ入口です。' },
+  { id: 'seller-price-plain', caption: 'HOSHILU Sellerは月額4,980円、最初の3か月は月額0円。初期費用0円。\n通常の検索やショップからの商品クリックは月額に含まれます。相談フォーム送信だけでは課金されません。' },
+  { id: 'seller-demand-match-50', caption: '追加料金は1つだけ。\n探していた人にHOSHILUが通知して、その人が通知から商品ページを開いた時だけ50円。通常のクリックには課金しません。予算の上限も自分で決められます。' },
+  { id: 'seller-anonymous-5', caption: 'Sellerの画面に出るのは、同じ条件を5人以上が探している需要だけ。\n検索文そのものや、メール・LINE・電話番号は出しません。HOSHILUが間に入って、本人にだけ知らせます。' },
+  { id: 'seller-register-judge', caption: '「この需要に商品を登録」を押すと、HOSHILUが商品名と条件を突き合わせて判定します。\n自己申告では一致になりません。一致した時だけ、探していた本人にお知らせします。' },
+  { id: 'seller-real-numbers', caption: 'Sellerの契約者画面にあるのは、確認できた実数だけ。\n横断検索の回数、0件だった検索、近い商品しか無かった検索。推定売上や見込みは出しません。' },
+  { id: 'seller-shop-page', caption: 'お店の入口を、モールの外にも。\nロゴ・紹介文・商品一覧・ショップ内検索・クーポン。HOSHILUのショップページは契約者画面から自分で編集できます。購入先は今の販売先のままです。' },
+  { id: 'seller-no-guarantee', caption: 'HOSHILUは売上や掲載順位を保証しません。\nできるのは、探している人の条件と商品を突き合わせて、一致した時にその人へ届けること。数字は実数だけをお見せします。' },
+  { id: 'seller-start-flow', caption: '始め方は、相談フォーム → 掲載対象の確認 → 支払い方法の登録の3つ。\nパスワードやAPIキーは最初の相談では求めません。最初の3か月は月額0円です。' }
 ]);
 
 const pad = value => String(value).padStart(2, '0');
@@ -785,10 +804,29 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
     const parts = jstDateParts(day);
     const key = dateKey(parts);
     const dayIndex = Math.floor(Date.UTC(parts.year, parts.month - 1, parts.day) / DAY_MS);
-    THREADS_AMAZON_SLOTS.forEach((slot, slotIndex) => {
-      // 枠数ぶん通し番号を進める。文面は60本あるので4枠/日でも一巡15日。
+    const userSlots = THREADS_AMAZON_SLOTS.filter((slot) => !slot.seller);
+    THREADS_AMAZON_SLOTS.forEach((slot) => {
+      if (slot.seller) {
+        // 2026-09-19: 夜枠はセラー募集（日替わり 10 本）。post_id の接頭辞は既存キュー行を上書きするため据え置く。
+        const content = THREADS_SELLER_POSTS[positiveModulo(dayIndex, THREADS_SELLER_POSTS.length)];
+        const params = new URLSearchParams({ utm_source: 'threads', utm_medium: 'social', utm_campaign: THREADS_SELLER_CAMPAIGN_ID, utm_content: content.id });
+        posts.push(normalizeSocialPost({
+          post_id: `${THREADS_AMAZON_CAMPAIGN_ID}-${key}${slot.suffix}`,
+          content_id: content.id,
+          platform: 'THREADS',
+          campaign_id: THREADS_SELLER_CAMPAIGN_ID,
+          caption: content.caption,
+          link: `https://hoshilu.app/for-sellers?${params}`,
+          affiliate: false,
+          scheduled_at: scheduledAt(parts, slot.hour, slot.minute),
+          status: 'APPROVED'
+        }));
+        return;
+      }
+      const slotIndex = userSlots.indexOf(slot);
+      // 枠数ぶん通し番号を進める。文面は60本あるので3枠/日なら一巡20日。
       // 同じ文面が再登場するまでの間隔を最大化する。
-      const rotation = (dayIndex * THREADS_AMAZON_SLOTS.length + slotIndex) % THREADS_DAILY_POSTS.length;
+      const rotation = (dayIndex * userSlots.length + slotIndex) % THREADS_DAILY_POSTS.length;
       const content = THREADS_DAILY_POSTS[rotation];
       const link = threadsAmazonLink(content);
       posts.push(normalizeSocialPost({
@@ -831,9 +869,10 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
       // independently so the insertion never starves a consumer theme.
       const buzzSlot = positiveModulo(slot, 2) === 0;
       const oddOrdinal = Math.floor(slot / 2);
-      const sellerSlot = !buzzSlot && positiveModulo(oddOrdinal, 3) === 2;
-      const sellerOrdinal = Math.floor(oddOrdinal / 3);
-      const searchOrdinal = oddOrdinal - Math.floor(oddOrdinal / 3);
+      // 2026-09-19 大隆さん指示「SNS 含めた全ての販促で積極的にセラー募集」: 奇数枠の 2 回に 1 回をセラー向けに（従来 3 回に 1 回）。
+      const sellerSlot = !buzzSlot && positiveModulo(oddOrdinal, 2) === 1;
+      const sellerOrdinal = Math.floor(oddOrdinal / 2);
+      const searchOrdinal = Math.floor(oddOrdinal / 2);
       const content = X_INITIAL_DATE_OVERRIDES.get(key) || (buzzSlot
         ? X_BUZZ_POSTS[positiveModulo(Math.floor(slot / 2), X_BUZZ_POSTS.length)]
         : sellerSlot
@@ -1095,5 +1134,7 @@ export async function runSocialAutopilotCycle(env, now = new Date(), fetchImpl =
   const reelFallback = await seedReelFallbackQueue(env, now);
   const permalinks = await syncInstagramPublishedPermalinks(env, now, fetchImpl);
   const threadsInsights = await syncThreadsInsights(env, now, fetchImpl);
-  return { seeded, carousels, reelFallback, published, permalinks, threadsInsights };
+  // 2026-09-19 大隆さん指示: 旧料金（9,800円・送客料のみ）の公開済み投稿を取り下げる（SOCIAL_RETRACT_OLD_PRICING=true の間）
+  const retracted = await retractOldPricingPosts(env, now, fetchImpl);
+  return { seeded, carousels, reelFallback, published, permalinks, threadsInsights, retracted };
 }

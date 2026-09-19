@@ -100,3 +100,56 @@ test('2026-09-14実例: Threads公開時のHTTP500(is_transient:true)は1回で�
   assert.match(row.last_error, /^SOCIAL_RETRY_EXHAUSTED_3:THREADS_PUBLISH_500_/);
   q.db.close();
 });
+
+// 2026-09-19 大隆さん指示「9,800円の旧料金体系の記事は取り下げ」: 公開済みの旧料金投稿だけをプラットフォームから削除する
+test('旧料金（9,800円・送客料のみ）の公開済み X/Threads 投稿だけを DELETE し、CANCELLED+RETRACTED_OLD_PRICING で残す', async () => {
+  const { retractOldPricingPosts } = await import('../src/social-publisher.mjs');
+  const q = queue();
+  q.db.exec(`DELETE FROM social_post_queue;
+    INSERT INTO social_post_queue(post_id,platform,caption,status,scheduled_at,updated_at,external_post_id) VALUES
+    ('old-x','X','Seller ¥9,800/月（税込）、最初の3か月は月額0円・送客料のみ。','PUBLISHED','2026-09-18T03:35:00Z','2026-09-18T03:40:00Z','2100792662391460294'),
+    ('old-threads','THREADS','Seller 9,800円/月、最初の3か月は月額0円・送客料のみ。','PUBLISHED','2026-09-17T03:35:00Z','2026-09-17T03:40:00Z','18051652484799935'),
+    ('new-x','X','HOSHILU Sellerは月額4,980円、最初の3か月は月額0円。','PUBLISHED','2026-09-19T03:35:00Z','2026-09-19T03:40:00Z','2101'),
+    ('old-cancelled','X','Business 9,800円','CANCELLED','2026-09-22T11:00:00Z','2026-09-19T00:00:00Z',''),
+    ('old-ig','INSTAGRAM','Seller 9,800円','PUBLISHED','2026-09-10T11:00:00Z','2026-09-10T11:05:00Z','ig1');`);
+  const calls = [];
+  const fetcher = async (url, options) => { calls.push([options.method, url]); return Response.json({ data: { deleted: true } }); };
+  const envRetract = { PRODUCT_DB: q.PRODUCT_DB, THREADS_ACCESS_TOKEN: 'threads-token', X_USER_ACCESS_TOKEN: 'x-token', SOCIAL_RETRACT_OLD_PRICING: 'true' };
+  const off = await retractOldPricingPosts({ ...envRetract, SOCIAL_RETRACT_OLD_PRICING: 'false' }, new Date('2026-09-19T06:00:00Z'), fetcher);
+  assert.deepEqual(off, { checked: 0, retracted: 0, failed: 0, post_ids: [] }, 'フラグが無い間は何もしない');
+  assert.equal(calls.length, 0);
+  const result = await retractOldPricingPosts(envRetract, new Date('2026-09-19T06:00:00Z'), fetcher);
+  assert.deepEqual([result.checked, result.retracted, result.failed], [2, 2, 0]);
+  assert.deepEqual(calls.sort(), [
+    ['DELETE', 'https://api.x.com/2/tweets/2100792662391460294'],
+    ['DELETE', 'https://graph.threads.net/v1.0/18051652484799935']
+  ].sort());
+  const rows = Object.fromEntries(q.db.prepare('SELECT post_id,status,last_error,external_post_id FROM social_post_queue').all().map((r) => [r.post_id, { ...r }]));
+  assert.deepEqual(rows['old-x'], { post_id: 'old-x', status: 'CANCELLED', last_error: 'RETRACTED_OLD_PRICING', external_post_id: '2100792662391460294' }, '監査用に external_post_id は残す');
+  assert.equal(rows['old-threads'].status, 'CANCELLED');
+  assert.equal(rows['new-x'].status, 'PUBLISHED', '新料金の投稿には触れない');
+  assert.equal(rows['old-ig'].status, 'PUBLISHED', 'Instagram は対象外（手動）');
+  assert.equal(rows['old-cancelled'].status, 'CANCELLED');
+  // 2回目は対象が無いので API を呼ばない（冪等）
+  const again = await retractOldPricingPosts(envRetract, new Date('2026-09-19T06:05:00Z'), fetcher);
+  assert.equal(again.checked, 0); assert.equal(calls.length, 2);
+  q.db.close();
+});
+
+test('取り下げに失敗した投稿は PUBLISHED のまま理由を残し、次回また試す', async () => {
+  const { retractOldPricingPosts } = await import('../src/social-publisher.mjs');
+  const q = queue();
+  q.db.exec(`DELETE FROM social_post_queue;
+    INSERT INTO social_post_queue(post_id,platform,caption,status,scheduled_at,updated_at,external_post_id) VALUES
+    ('old-threads','THREADS','Seller 9,800円/月・送客料のみ。','PUBLISHED','2026-09-17T03:35:00Z','2026-09-17T03:40:00Z','18051652484799935');`);
+  let requests = 0;
+  const fetcher = async () => { requests++; return Response.json({ error: { message: 'permission' } }, { status: 403 }); };
+  const envRetract = { PRODUCT_DB: q.PRODUCT_DB, THREADS_ACCESS_TOKEN: 'threads-token', SOCIAL_RETRACT_OLD_PRICING: 'true' };
+  const result = await retractOldPricingPosts(envRetract, new Date('2026-09-19T06:00:00Z'), fetcher);
+  assert.deepEqual([result.checked, result.retracted, result.failed], [1, 0, 1]);
+  const row = { ...q.db.prepare('SELECT status,last_error FROM social_post_queue').get() };
+  assert.deepEqual(row, { status: 'PUBLISHED', last_error: 'RETRACT_FAILED_THREADS_DELETE_403' });
+  await retractOldPricingPosts(envRetract, new Date('2026-09-19T06:05:00Z'), fetcher);
+  assert.equal(requests, 2);
+  q.db.close();
+});

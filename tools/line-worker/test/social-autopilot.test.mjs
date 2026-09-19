@@ -204,6 +204,8 @@ test('新検索ローンチ投稿は初回14日キューへ正しい日付・UTM
     ['2026-09-01T11:00:00.000Z', 'X', 'continuous-search'],
     ['2026-09-01T11:00:00.000Z', 'INSTAGRAM', 'guide-search-screen'],
     ['2026-09-05T11:00:00.000Z', 'INSTAGRAM', 'guide-continuous-search'],
+    // 2026-09-19 セラー枠を奇数枠の 2 回に 1 回へ増やしたため、検索案内の巡回が 1 週間で一巡する（過去日付・記録用）
+    ['2026-09-08T11:00:00.000Z', 'X', 'continuous-search'],
     ['2026-09-10T11:00:00.000Z', 'INSTAGRAM', 'guide-search-screen']
   ]);
   assert.ok(launch.every((post) => new URL(post.link).searchParams.get('utm_campaign')
@@ -217,7 +219,8 @@ test('8月29日夕方の本番反映でも同じXローンチ文を2夜連続で
     && post.campaign_id === 'hoshilu-new-search-launch-20260829');
   assert.deepEqual(xLaunch.map((post) => [post.scheduled_at, post.content_id]), [
     ['2026-08-30T11:00:00.000Z', 'howto-four-input-search'],
-    ['2026-09-01T11:00:00.000Z', 'continuous-search']
+    ['2026-09-01T11:00:00.000Z', 'continuous-search'],
+    ['2026-09-08T11:00:00.000Z', 'continuous-search']
   ]);
   const tonight = posts.find((post) => post.post_id
     === 'hoshilu-official-13mall-v2-x-guide-2026-08-29');
@@ -342,8 +345,9 @@ test('承認済みセラー投稿はX非動画枠へ少量だけ入り/for-selle
     .filter(post => post.platform === 'X' && /-x-guide-/u.test(post.post_id));
   const sellerPosts = posts.filter(post => /^seller-/u.test(post.content_id));
   assert.ok(sellerPosts.length > 0);
-  assert.ok(sellerPosts.length / posts.length >= 0.1);
-  assert.ok(sellerPosts.length / posts.length <= 0.2);
+  // 2026-09-19 大隆さん指示: 全ての販促で積極的にセラー募集 → X 補助枠の約 1/4（奇数枠の 2 回に 1 回）
+  assert.ok(sellerPosts.length / posts.length >= 0.2);
+  assert.ok(sellerPosts.length / posts.length <= 0.3);
   assert.deepEqual(new Set(sellerPosts.map(post => post.content_id)), new Set([
     'seller-natural-listing', 'seller-demand-insight', 'seller-business-simple'
   ]));
@@ -379,8 +383,19 @@ test('Amazon優先Threadsローテーションは1日4本、別々の時刻に�
   assert.equal(posts.length, 55);
   assert.equal(posts.every(post => post.platform === 'THREADS'), true);
   assert.equal(new Set(posts.map(post => post.post_id)).size, posts.length);
-  assert.equal(posts.every(post => post.campaign_id === 'hoshilu-threads-amazon-boost-v1'), true);
-  assert.equal(posts.every(post => !/[¥$]\s?\d|\d+\s?円/.test(post.caption)), true, '本文に価格を直書きしない');
+  // 2026-09-19 大隆さん指示: 夜枠(22:30 JST)は毎日セラー募集（別キャンペーン・非アフィリエイト・/for-sellers）
+  const sellerPosts = posts.filter(post => post.campaign_id === 'hoshilu-threads-seller-v1');
+  const userPosts = posts.filter(post => post.campaign_id !== 'hoshilu-threads-seller-v1');
+  assert.equal(sellerPosts.length, 14);
+  assert.ok(sellerPosts.every(post => post.post_id.endsWith('-night') && post.scheduled_at.endsWith('T13:30:00.000Z') && !post.affiliate && /^seller-/u.test(post.content_id)));
+  assert.ok(sellerPosts.every(post => new URL(post.link).pathname === '/for-sellers' && new URL(post.link).searchParams.get('utm_campaign') === 'hoshilu-threads-seller-v1'));
+  assert.equal(new Set(sellerPosts.slice(0, 10).map(post => post.content_id)).size, 10, 'セラー文面は 10 日以内に繰り返さない');
+  for (const post of sellerPosts) {
+    for (const banned of ['必ず', '売上が上が', '多数の', '業界No', '確実に', '最安']) assert.ok(!post.caption.includes(banned), `${post.content_id}: ${banned}`);
+  }
+  assert.ok(sellerPosts.some(post => /4,980円/u.test(post.caption)), '料金は隠さない（§49）');
+  assert.equal(userPosts.every(post => post.campaign_id === 'hoshilu-threads-amazon-boost-v1'), true);
+  assert.equal(userPosts.every(post => !/[¥$]\s?\d|\d+\s?円/.test(post.caption)), true, '本文に価格を直書きしない');
 
   // 昼枠のpost_idは接尾辞なし(1日1本だった頃のキュー行をそのまま更新できる)。
   // 同じ日に同じ枠が重複して積まれないことを固定する。
@@ -416,7 +431,7 @@ test('Amazon優先Threads文面は検索先を開くだけと全投稿で明示�
 });
 
 test('Amazon優先Threadsローテーションはリンク付きのみをアフィリエイトとして扱う', () => {
-  const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z'));
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-08-17T03:00:00.000Z')).filter(post => post.campaign_id !== 'hoshilu-threads-seller-v1');
   const affiliate = posts.filter(post => post.affiliate);
   const organic = posts.filter(post => !post.affiliate);
 
@@ -452,7 +467,7 @@ test('Threads日次ローテーションは10日間(20本)で同じ文面を繰�
 // Qoo10も見るの、面倒じゃない？」→「HOSHILUならまとめて探せる。」へ。
 // 比率の目安は まとめて検索60% / BUZZ20% / 写真・スクショ・曖昧検索20%。
 test('Threads日次枠の6割前後が「まとめて探す」主訴求になっている', () => {
-  const posts = buildThreadsAmazonBoostPosts(new Date('2026-09-04T00:00:00.000Z'), 28);
+  const posts = buildThreadsAmazonBoostPosts(new Date('2026-09-04T00:00:00.000Z'), 28).filter((post) => post.campaign_id !== 'hoshilu-threads-seller-v1');
   const cross = posts.filter((post) => /^cross-market-/u.test(post.content_id));
   const share = cross.length / posts.length;
   assert.ok(share >= 0.5 && share <= 0.7, `主訴求の比率が目安から外れている: ${Math.round(share * 100)}%`);
@@ -982,7 +997,8 @@ test('THREADS認証とTHREADS_EVERGREEN_AUTOPILOT_ENABLEDが揃うとAmazon優�
   assert.equal(threadsRows.length, 55);
   assert.equal(result.planned, 55);
   assert.equal(result.inserted, 55);
-  assert.equal(threadsRows.every(row => row[2] === 'hoshilu-threads-amazon-boost-v1'), true);
+  assert.equal(threadsRows.every(row => row[2] === 'hoshilu-threads-amazon-boost-v1' || row[2] === 'hoshilu-threads-seller-v1'), true);
+  assert.equal(threadsRows.filter(row => row[2] === 'hoshilu-threads-seller-v1').length, 14, '夜枠は毎日セラー募集（2026-09-19）');
   // affiliateがDBへ0/1として正しく保存される。リンク付きは1、
   // 非アフィリエイト枠(リンク無し)は0で、両方が実際に計画されている。
   assert.equal(threadsRows.every(row => row[8] === 0 || row[8] === 1), true);
@@ -990,7 +1006,7 @@ test('THREADS認証とTHREADS_EVERGREEN_AUTOPILOT_ENABLEDが揃うとAmazon優�
   const organicRows = threadsRows.filter(row => row[8] === 0);
   assert.ok(affiliateRows.length > 0 && organicRows.length > 0);
   assert.equal(affiliateRows.every(row => row[5] !== ''), true, 'affiliate=1はリンクを持つ');
-  assert.equal(organicRows.every(row => row[5] === ''), true, 'affiliate=0はリンクを持たない');
+  assert.equal(organicRows.filter(row => row[2] !== 'hoshilu-threads-seller-v1').every(row => row[5] === ''), true, 'affiliate=0はリンクを持たない（セラー募集の /for-sellers リンクは非アフィリエイト）');
 });
 
 test('自動運用の1サイクルはThreadsインサイト取り込みも実行し結果を返す', async () => {

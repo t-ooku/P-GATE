@@ -942,6 +942,65 @@ function socialPublishRetryAt(now, env) {
   return new Date(now.getTime() + delay).toISOString();
 }
 
+// 2026-09-19 大隆さん指示「9,800円の旧料金体系の記事は取り下げ」。X / Threads に公開済みで、本文に旧料金
+// （Seller 9,800円・送客料のみ）が入っている投稿をプラットフォーム側から削除し、キュー行は CANCELLED +
+// last_error='RETRACTED_OLD_PRICING' で残す（external_post_id は監査用に保持）。削除は不可逆なので、
+// 対象は本文の一致条件で機械的に絞り、他の投稿には触れない。失敗した行は PUBLISHED のまま理由を記録し、次回再試行。
+export const OLD_PRICING_CAPTION_PATTERN = /9,800|9800円|送客料のみ/u;
+async function deletePlatformPost(platform, externalId, env, fetchImpl) {
+  if (platform === 'THREADS') {
+    if (!env.THREADS_ACCESS_TOKEN) throw new Error('THREADS_NOT_CONFIGURED');
+    const response = await fetchImpl(`https://graph.threads.net/v1.0/${encodeURIComponent(externalId)}`, {
+      method: 'DELETE', redirect: 'manual', headers: { authorization: `Bearer ${env.THREADS_ACCESS_TOKEN}` }
+    });
+    if (!response.ok) throw new Error(`THREADS_DELETE_${response.status}`);
+    return;
+  }
+  if (platform === 'X') {
+    const endpoint = `https://api.x.com/2/tweets/${encodeURIComponent(externalId)}`;
+    const oauth2Configured = Boolean(env.X_CLIENT_ID && env.X_CLIENT_SECRET && env.SOCIAL_OAUTH_ENCRYPTION_KEY && env.PRODUCT_DB);
+    let authorization = '';
+    if (oauth2Configured) {
+      try { authorization = `Bearer ${(await getXPublishCredentials(env, fetchImpl)).accessToken}`; } catch {}
+    }
+    if (!authorization) authorization = await xAuthorization('DELETE', endpoint, env);
+    if (!authorization) throw new Error('X_NOT_CONFIGURED');
+    const response = await fetchImpl(endpoint, { method: 'DELETE', redirect: 'manual', headers: { authorization } });
+    if (!response.ok) throw new Error(`X_DELETE_${response.status}`);
+    return;
+  }
+  throw new Error('RETRACT_PLATFORM_UNSUPPORTED');
+}
+
+export async function retractOldPricingPosts(env, now = new Date(), fetchImpl = fetch, { limit = 10 } = {}) {
+  const result = { checked: 0, retracted: 0, failed: 0, post_ids: [] };
+  if (!env.PRODUCT_DB || String(env.SOCIAL_RETRACT_OLD_PRICING || '').toLowerCase() !== 'true') return result;
+  let rows;
+  try {
+    rows = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,external_post_id,caption FROM social_post_queue
+      WHERE status='PUBLISHED' AND external_post_id<>'' AND platform IN ('X','THREADS')
+      AND (caption LIKE '%9,800%' OR caption LIKE '%9800%' OR caption LIKE '%送客料のみ%')
+      ORDER BY scheduled_at DESC LIMIT ?1`).bind(limit).all();
+  } catch { return result; }
+  for (const row of rows.results || []) {
+    if (!OLD_PRICING_CAPTION_PATTERN.test(String(row.caption || ''))) continue;
+    result.checked += 1;
+    const stamp = now.toISOString();
+    try {
+      await deletePlatformPost(row.platform, String(row.external_post_id), env, fetchImpl);
+      await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='CANCELLED',last_error='RETRACTED_OLD_PRICING',updated_at=?2
+        WHERE post_id=?1 AND status='PUBLISHED'`).bind(row.post_id, stamp).run();
+      result.retracted += 1;
+      result.post_ids.push(row.post_id);
+    } catch (error) {
+      result.failed += 1;
+      await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET last_error=?2,updated_at=?3 WHERE post_id=?1`)
+        .bind(row.post_id, `RETRACT_FAILED_${clean(error?.message || error, 60)}`, stamp).run();
+    }
+  }
+  return result;
+}
+
 export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch) {
   if (!env.PRODUCT_DB) return { checked: 0, published: 0 };
   const resumableAfter = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
@@ -1354,6 +1413,9 @@ export async function handleSocialAdminRoutes(request, env) {
       WHERE post_id=?1 AND status IN ('REVIEW_REQUIRED','APPROVED','FAILED')`)
       .bind(postId, new Date().toISOString()).run();
     return Response.json({ ok: true, post_id: postId });
+  }
+  if (request.method === 'POST' && url.pathname === '/api/internal/social/retract-old-pricing') {
+    return Response.json({ ok: true, ...(await retractOldPricingPosts(env, new Date(), fetch, { limit: 20 })) });
   }
   if (request.method === 'POST' && url.pathname === '/api/internal/social/run') {
     return Response.json({ ok: true, result: await runDueSocialPosts(env, new Date()) });
