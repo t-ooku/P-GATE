@@ -950,10 +950,15 @@ export const OLD_PRICING_CAPTION_PATTERN = /9,800|9800円|送客料のみ/u;
 async function deletePlatformPost(platform, externalId, env, fetchImpl) {
   if (platform === 'THREADS') {
     if (!env.THREADS_ACCESS_TOKEN) throw new Error('THREADS_NOT_CONFIGURED');
-    const response = await fetchImpl(`https://graph.threads.net/v1.0/${encodeURIComponent(externalId)}`, {
+    // Threads の削除 API は access_token をクエリで受ける（threads_basic + threads_delete が必要、1日100件まで）。
+    // 9/19 初回は Bearer ヘッダのみで 500 が返ったため、公式どおりクエリで渡し、失敗時は本文の要点を last_error に残す。
+    const response = await fetchImpl(`https://graph.threads.net/v1.0/${encodeURIComponent(externalId)}?access_token=${encodeURIComponent(env.THREADS_ACCESS_TOKEN)}`, {
       method: 'DELETE', redirect: 'manual', headers: { authorization: `Bearer ${env.THREADS_ACCESS_TOKEN}` }
     });
-    if (!response.ok) throw new Error(`THREADS_DELETE_${response.status}`);
+    if (!response.ok) {
+      const detail = clean(await response.text().catch(() => ''), 120).replace(/[^\w\s:.,{}[\]"-]/g, '');
+      throw new Error(`THREADS_DELETE_${response.status}${detail ? `_${detail}` : ''}`);
+    }
     return;
   }
   if (platform === 'X') {
@@ -995,7 +1000,7 @@ export async function retractOldPricingPosts(env, now = new Date(), fetchImpl = 
     } catch (error) {
       result.failed += 1;
       await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET last_error=?2,updated_at=?3 WHERE post_id=?1`)
-        .bind(row.post_id, `RETRACT_FAILED_${clean(error?.message || error, 60)}`, stamp).run();
+        .bind(row.post_id, `RETRACT_FAILED_${clean(error?.message || error, 160)}`, stamp).run();
     }
   }
   return result;

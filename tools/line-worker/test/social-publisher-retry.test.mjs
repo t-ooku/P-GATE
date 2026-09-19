@@ -122,7 +122,7 @@ test('旧料金（9,800円・送客料のみ）の公開済み X/Threads 投稿�
   assert.deepEqual([result.checked, result.retracted, result.failed], [2, 2, 0]);
   assert.deepEqual(calls.sort(), [
     ['DELETE', 'https://api.x.com/2/tweets/2100792662391460294'],
-    ['DELETE', 'https://graph.threads.net/v1.0/18051652484799935']
+    ['DELETE', 'https://graph.threads.net/v1.0/18051652484799935?access_token=threads-token']
   ].sort());
   const rows = Object.fromEntries(q.db.prepare('SELECT post_id,status,last_error,external_post_id FROM social_post_queue').all().map((r) => [r.post_id, { ...r }]));
   assert.deepEqual(rows['old-x'], { post_id: 'old-x', status: 'CANCELLED', last_error: 'RETRACTED_OLD_PRICING', external_post_id: '2100792662391460294' }, '監査用に external_post_id は残す');
@@ -148,7 +148,8 @@ test('取り下げに失敗した投稿は PUBLISHED のまま理由を残し、
   const result = await retractOldPricingPosts(envRetract, new Date('2026-09-19T06:00:00Z'), fetcher);
   assert.deepEqual([result.checked, result.retracted, result.failed], [1, 0, 1]);
   const row = { ...q.db.prepare('SELECT status,last_error FROM social_post_queue').get() };
-  assert.deepEqual(row, { status: 'PUBLISHED', last_error: 'RETRACT_FAILED_THREADS_DELETE_403' });
+  assert.equal(row.status, 'PUBLISHED');
+  assert.match(row.last_error, /^RETRACT_FAILED_THREADS_DELETE_403_/u, '失敗理由に API の本文要点を残す');
   await retractOldPricingPosts(envRetract, new Date('2026-09-19T06:05:00Z'), fetcher);
   assert.equal(requests, 2);
   q.db.close();
