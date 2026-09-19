@@ -1,4 +1,4 @@
-/* 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」。第一画面の行動を1つにする。 */
+/* 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」→ 2026-09-20 検索窓を一番上に戻し、専用入力欄は廃止（見出し・通知の例・折りたたみは残す） */
 .hero-watch{margin:18px 0 0;padding:16px;border:1px solid var(--line,#e9e5f5);border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(115,87,255,.08)}
 .hero-watch-label{display:flex;align-items:baseline;gap:8px;flex-wrap:nowrap;margin:0 0 8px;font-size:15px;font-weight:700;color:var(--ink,#17172b);white-space:nowrap}
 .hero-watch-label-sub{font-size:12px;font-weight:600;color:var(--violet,#7357ff)}
@@ -12,7 +12,7 @@
 .hero-watch-note{margin:10px 0 0;font-size:13px;line-height:1.6;color:var(--muted,#6d6b80)}
 .hero-watch-alt{margin:8px 0 0;font-size:13px}
 .hero-watch-alt a{color:var(--violet,#7357ff);text-decoration:underline;text-underline-offset:3px}
-.hero-watch-example{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:var(--soft,#f4f0ff);border:1px dashed #cfc6ff}
+.hero-watch-example{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:var(--soft,#f4f0ff);border:1px dashed #cfc6ff}
 .hero-watch-example-kicker{margin:0 0 4px;font-size:11px;letter-spacing:.12em;font-weight:700;color:var(--violet,#7357ff)}
 .hero-watch-example-title{margin:0;font-size:15px;font-weight:800;color:var(--ink,#17172b)}
 .hero-watch-example-body{margin:2px 0 0;font-size:13px;color:var(--ink,#17172b)}
@@ -38,3 +38,6 @@
 .watch-quick-line.watch-quick-line-primary{font-size:15px;padding:12px 14px;margin-bottom:6px}
 .watch-quick-or{margin:4px 0 2px;font-size:12px;color:var(--muted,#6d6b80)}
 .watch-quick-or:empty{display:none}
+
+.hero-watch-hint{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted,#6d6b80)}
+.hero-watch-hint strong{color:#b3005f}

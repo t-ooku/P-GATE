@@ -1412,6 +1412,8 @@ function revealSearchResults(){
   },600);
 }
 function renderResults(result,requestId,shareQuery=elements.query.value,executionId=''){
+  // 2026-09-19: 描画した結果を他モジュール（google-mall-results.mjs 等）へ渡す。検索文・個人情報は含めない。
+  try{document.dispatchEvent(new CustomEvent('hoshilu:results-rendered',{detail:{executionId,google_mall_results:result?.google_mall_results||null}}));}catch{}
   const preserveInstantPosition=Boolean(elements.instantMarketplace&&!elements.instantMarketplace.classList.contains('hidden'));
   // resultCarouselは検索ごとに新しいtrackを作るため、DOMから外す前に旧tickerの
   // interval・アニメーション・イベントを明示解除する。

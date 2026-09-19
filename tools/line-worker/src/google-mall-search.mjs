@@ -13,7 +13,7 @@
 
 const DEFAULT_DAILY_LIMIT = 300;
 const MAX_DAILY_LIMIT = 10000;
-const RESULT_LIMIT = 8;
+const RESULT_LIMIT = 20;
 const CACHE_TTL_SECONDS = 86400;
 const REQUEST_TIMEOUT_MS = 3000;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
@@ -276,7 +276,7 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
       signal: controller.signal,
       headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json' },
       // 検索語以外は送らない（userPseudoId 等は付けない）。
-      body: JSON.stringify({ query, pageSize: 10, languageCode: 'ja', safeSearch: true })
+      body: JSON.stringify({ query, pageSize: 20, languageCode: 'ja', safeSearch: true })
     });
     if (!response.ok) return { items: [], source: 'error', reason: `HTTP_${response.status}` };
     const payload = await response.json();

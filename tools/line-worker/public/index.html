@@ -38,8 +38,9 @@
   <link rel="stylesheet" href="/shop-search.css?v=3">
   <link rel="stylesheet" href="/continuous-search.css?v=2">
   <link rel="stylesheet" href="/hero-fixes.css?v=91">
-  <link rel="stylesheet" href="/hero-watch.css?v=2">
+  <link rel="stylesheet" href="/hero-watch.css?v=3">
   <link rel="stylesheet" href="/search-progress.css?v=1">
+  <link rel="stylesheet" href="/google-mall-results.css?v=1">
   <link rel="stylesheet" href="/hero-slides.css?v=82">
   <link rel="stylesheet" href="/marketplace-coverage.css?v=92">
   <link rel="stylesheet" href="/buzz-home.css?v=5"><link rel="stylesheet" href="/watch-demand.css?v=1"><link rel="stylesheet" href="/shop-directory.css?v=3">
@@ -136,24 +137,6 @@
               <!-- 2026-09-15 指示書§12「探さなくていい。ホシっといて。」→ 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」で第一画面の言葉を差し替え（「ホシっといて」は補足行に残す） -->
               <h1 id="heroTitle"><span class="hero-title-line">欲しい値段を、</span><span class="hero-title-line hero-title-accent">先に決めておく。</span></h1>
               <p id="heroSub" class="hero-sub"><span class="hero-sub-line"><span class="hero-sub-sentence">値下がりしたら、HOSHILUが知らせます。</span></span><span class="hero-sub-line"><span class="hero-sub-sentence">探すのはもう終わり。</span><span class="hero-sub-sentence">ホシっといて。</span></span></p>
-              <!-- 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」: 第一画面の行動を1つにする。
-                   入力→既存の「すぐ検索」を実行→結果カードの「この価格になったら教えて☑」を光らせる（hero-watch.mjs）。
-                   値段と通知先（LINE 1タップ／メール6桁）は既存ダイアログ（app.js createWatchOptions）をそのまま使う。 -->
-              <form id="heroWatchForm" class="hero-watch" aria-labelledby="heroWatchLabel">
-                <label id="heroWatchLabel" for="heroWatchQuery" class="hero-watch-label"><span class="hero-watch-label-main">何の値下がりを待つ？</span><span class="hero-watch-label-sub">登録ショップにも知らせるよ。</span></label>
-                <div class="hero-watch-row">
-                  <input id="heroWatchQuery" name="q" type="text" maxlength="200" autocomplete="off" enterkeyhint="search" placeholder="例：子どもの水筒、ダイソンのドライヤー、商品ページURL">
-                  <button id="heroWatchSubmit" type="submit" class="hero-watch-submit">この価格になったら教えて☑</button>
-                </div>
-                <p class="hero-watch-note">商品を選んで値段を入れるだけ。通知はLINE 1タップかメールで。登録は無料、パスワード不要。</p>
-                <p class="hero-watch-alt"><a href="#hoshiluSearch" id="heroWatchAlt">名前が分からない・写真やSNS投稿から探す ↓</a></p>
-              </form>
-              <aside class="hero-watch-example" aria-label="届く通知の例">
-                <p class="hero-watch-example-kicker">届く通知の例</p>
-                <p class="hero-watch-example-title">購入したい価格になりました</p>
-                <p class="hero-watch-example-body">（商品名）：API確認価格 ¥X（希望価格 ¥Y以下）</p>
-                <p class="hero-watch-example-note">Amazon・楽天・Yahoo!のAPIで確認した価格だけを見に行きます。毎日見なくてOK。</p>
-              </aside>
             </div>
             <div class="hero-visual" aria-hidden="true"></div>
           </section>
@@ -183,6 +166,8 @@
               </details>
               <div class="search-mode-actions"><button id="askAiButton" class="primary ask-ai-button" type="button">AIで探す</button><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">すぐ検索</span><span aria-hidden="true">→</span></button><button id="rankingSearchButton" class="ranking-search-button" type="button">ランキングで探す</button><button id="shopSearchButton" class="ranking-search-button shop-search-button" type="button">ショップから探す</button></div>
               <p id="hoshittokuHint" class="hoshittoku-hint">見つからなければ、そのまま探し続けます。</p>
+              <!-- 2026-09-20 大隆さん指示: 検索窓を一番上に戻し、価格を追う専用の入力欄は廃止（入口は 1 つ）。値段は結果カードの「この価格になったら教えて☑」から。 -->
+              <p class="hero-watch-hint">探して → 気になる商品の「<strong>この価格になったら教えて☑</strong>」を押すだけ。値下がりしたらHOSHILUが知らせます。</p>
               <div id="searchHintsSection" class="search-hints">
                 <div id="searchHistorySection" class="search-history-section hidden">
                   <div class="search-history-toolbar"><h3 id="searchHistoryTitle">検索履歴</h3></div>
@@ -204,6 +189,13 @@
             </details>
             <p id="status" class="status" role="status" aria-live="polite"></p>
           </section>
+
+          <aside class="hero-watch-example" aria-label="届く通知の例">
+            <p class="hero-watch-example-kicker">届く通知の例</p>
+            <p class="hero-watch-example-title">購入したい価格になりました</p>
+            <p class="hero-watch-example-body">（商品名）：API確認価格 ¥X（希望価格 ¥Y以下）</p>
+            <p class="hero-watch-example-note">Amazon・楽天・Yahoo!のAPIで確認した価格だけを見に行きます。毎日見なくてOK。</p>
+          </aside>
 
           <dialog id="rankingDialog" class="ranking-dialog" aria-labelledby="rankingDialogTitle">
             <div class="ranking-dialog-card"><div class="ranking-dialog-fixed"><div class="ranking-dialog-fixed-top"><button id="rankingDialogClose" class="ranking-dialog-close" type="button" aria-label="ページを閉じる">✕</button></div><div id="rankingModeList" class="ranking-mode-list"></div></div><div class="ranking-dialog-scroll"><p class="step">RANKING DISCOVERY</p><h2 id="rankingDialogTitle">小ジャンルのランキングで選ぶ</h2><p id="rankingDialogLead">検索文から小ジャンルを1つずつ確認します。YESの後に人気・最安値ランキングを選べます。</p><p id="rankingStatus" class="status" role="status" aria-live="polite"></p><div id="rankingResults" class="ranking-results"></div></div></div>
@@ -511,6 +503,6 @@
       </div>
     </div></main>
   <footer data-nosnippet><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイト、およびバリューコマース（Qoo10・Yahoo!ショッピング・SHEIN等）のリンクからも収入を得る場合があります。</span><span><a href="/for-creators">クリエイター募集</a> ・ <a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=9"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=98"></script><script type="module" src="/buzz-home.mjs?v=7"></script><script type="module" src="/watch-demand.mjs?v=3"></script><script type="module" src="/shop-directory.mjs?v=3"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=15"></script><script type="module" src="/member-registration-nudge.mjs?v=2"></script><script type="module" src="/tab-nav.mjs?v=6"></script><script type="module" src="/assets-v147/app.js?v=174"></script><script type="module" src="/ai-search-ui.mjs?v=16"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=87"></script><script type="module" src="/experience-layer.mjs?v=2"></script><script type="module" src="/genre-explorer.mjs?v=3"></script><script type="module" src="/search-suggest.mjs?v=3"></script><script type="module" src="/shop-search.mjs?v=3"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script><script type="module" src="/hero-watch.mjs?v=1"></script><script type="module" src="/search-progress.mjs?v=1"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=9"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=98"></script><script type="module" src="/buzz-home.mjs?v=7"></script><script type="module" src="/watch-demand.mjs?v=3"></script><script type="module" src="/shop-directory.mjs?v=3"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=15"></script><script type="module" src="/member-registration-nudge.mjs?v=2"></script><script type="module" src="/tab-nav.mjs?v=6"></script><script type="module" src="/assets-v147/app.js?v=175"></script><script type="module" src="/ai-search-ui.mjs?v=16"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=87"></script><script type="module" src="/experience-layer.mjs?v=2"></script><script type="module" src="/genre-explorer.mjs?v=3"></script><script type="module" src="/search-suggest.mjs?v=3"></script><script type="module" src="/shop-search.mjs?v=3"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script><script type="module" src="/search-progress.mjs?v=1"></script><script type="module" src="/google-mall-results.mjs?v=1"></script>
 </body>
 </html>

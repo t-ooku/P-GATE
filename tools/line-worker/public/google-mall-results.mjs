@@ -1,0 +1,99 @@
+// 2026-09-20 GPT 指示書 §12〜§18（大隆さん承認）: 楽天・Yahoo! 以外のモールで HOSHILU の結果が無いものは、
+// 公式 Google Agent Search の結果を「Web検索から発見」として横スライド（カルーセル）で出す。
+// app.js が renderResults の先頭で投げる hoshilu:results-rendered の detail.google_mall_results を描くだけ。
+// 価格は「参考価格・検索時点」と明記し、API 確認価格とは区別する（§19）。
+const COPY = {
+  JA: { kicker: 'WEB検索から発見', title: '他のモールにも、この商品があります。', note: 'Google 検索（Amazon・Qoo10・SHEIN・ZOZOTOWN など）の結果です。価格は各ページに書かれていた参考価格（検索時点）で、HOSHILU が API で確認した価格ではありません。', price: '参考価格・検索時点', open: '商品を見る', prev: '前へ', next: '次へ' },
+  EN: { kicker: 'FOUND VIA WEB SEARCH', title: 'Also available on other marketplaces.', note: 'Google Search results (Amazon, Qoo10, SHEIN, ZOZOTOWN, etc.). Prices are as listed on each page at search time, not API-verified prices.', price: 'Listed price at search time', open: 'View', prev: 'Previous', next: 'Next' },
+  ZH: { kicker: '网页搜索结果', title: '其他商城也有这件商品。', note: 'Google 搜索结果。价格为页面当时标注的参考价，不是 HOSHILU 通过 API 确认的价格。', price: '参考价・搜索时点', open: '查看', prev: '上一页', next: '下一页' },
+  KO: { kicker: '웹 검색 결과', title: '다른 쇼핑몰에도 이 상품이 있어요.', note: 'Google 검색 결과입니다. 가격은 각 페이지에 표시된 참고 가격(검색 시점)이며 API 확인 가격이 아닙니다.', price: '참고 가격・검색 시점', open: '보기', prev: '이전', next: '다음' }
+};
+const lang = () => document.querySelector('#languageSelect')?.value || 'JA';
+const copy = () => COPY[lang()] || COPY.JA;
+const results = document.querySelector('#resultsSection');
+const cards = document.querySelector('#resultCards');
+let section = null;
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function ensureSection() {
+  if (section) return section;
+  section = el('section', 'google-mall-results hidden');
+  section.id = 'googleMallResults';
+  section.setAttribute('aria-labelledby', 'googleMallResultsTitle');
+  cards?.insertAdjacentElement('afterend', section);
+  return section;
+}
+
+function clear() {
+  section?.replaceChildren();
+  section?.classList.add('hidden');
+}
+
+function card(item, c) {
+  const article = el('article', 'google-mall-card');
+  article.setAttribute('role', 'listitem');
+  const link = el('a', 'google-mall-card-link');
+  link.href = item.tracking_url || item.product_url; link.target = '_blank'; link.rel = 'nofollow sponsored noopener';
+  const figure = el('div', 'google-mall-card-image');
+  const fallback = () => figure.replaceChildren(el('span', 'google-mall-card-image-fallback', item.mall_label || ''));
+  if (item.image_url) {
+    const img = document.createElement('img');
+    img.src = item.image_url; img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer'; img.decoding = 'async';
+    img.addEventListener('error', fallback);
+    figure.append(img);
+  } else {
+    fallback();
+  }
+  const body = el('div', 'google-mall-card-body');
+  body.append(el('span', 'google-mall-card-mall', item.mall_label || item.marketplace || ''));
+  body.append(el('strong', 'google-mall-card-title', item.title || ''));
+  if (Number(item.listed_price_jpy) > 0) {
+    body.append(el('span', 'google-mall-card-price', `¥${Number(item.listed_price_jpy).toLocaleString('ja-JP')}`));
+    body.append(el('small', 'google-mall-card-price-note', c.price));
+  }
+  body.append(el('span', 'google-mall-card-open', `${c.open} →`));
+  link.append(figure, body);
+  article.append(link);
+  return article;
+}
+
+function render(payload) {
+  const items = Array.isArray(payload?.items) ? payload.items : [];
+  if (!results || !cards) return;
+  const root = ensureSection();
+  if (!items.length) { clear(); return; }
+  const c = copy();
+  root.replaceChildren();
+  const heading = el('div', 'google-mall-results-heading');
+  heading.append(el('p', 'step', c.kicker));
+  const title = el('h2', '', c.title); title.id = 'googleMallResultsTitle';
+  heading.append(title, el('p', 'google-mall-results-note', c.note));
+  // 横スライド（Google のショッピング枠と同じ）: スマホは指でスワイプ、PC は左右ボタン。scroll-snap で止まる。
+  const slider = el('div', 'google-mall-slider');
+  const track = el('div', 'google-mall-track');
+  track.setAttribute('role', 'list');
+  for (const item of items) track.append(card(item, c));
+  const prev = el('button', 'google-mall-arrow google-mall-arrow-prev', '‹'); prev.type = 'button'; prev.setAttribute('aria-label', c.prev);
+  const next = el('button', 'google-mall-arrow google-mall-arrow-next', '›'); next.type = 'button'; next.setAttribute('aria-label', c.next);
+  const step = () => Math.max(160, Math.floor(track.clientWidth * 0.8));
+  prev.addEventListener('click', () => track.scrollBy({ left: -step(), behavior: 'smooth' }));
+  next.addEventListener('click', () => track.scrollBy({ left: step(), behavior: 'smooth' }));
+  const syncArrows = () => {
+    prev.disabled = track.scrollLeft <= 4;
+    next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+  };
+  track.addEventListener('scroll', syncArrows, { passive: true });
+  slider.append(prev, track, next);
+  root.append(heading, slider);
+  root.classList.remove('hidden');
+  requestAnimationFrame(syncArrows);
+}
+
+document.addEventListener('hoshilu:search-execution-started', clear);
+document.addEventListener('hoshilu:results-rendered', (event) => render(event.detail?.google_mall_results));

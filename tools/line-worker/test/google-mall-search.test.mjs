@@ -118,7 +118,7 @@ test('searchGoogleMalls はトークンを取ってから Discovery Engine に�
   assert.equal(calls[0].url, 'https://oauth2.googleapis.com/token');
   assert.equal(calls[1].url, `https://discoveryengine.googleapis.com/v1/${ENGINE}/servingConfigs/default_search:search`);
   const body = JSON.parse(calls[1].init.body);
-  assert.deepEqual(body, { query: '子ども 水筒', pageSize: 10, languageCode: 'ja', safeSearch: true });
+  assert.deepEqual(body, { query: '子ども 水筒', pageSize: 20, languageCode: 'ja', safeSearch: true });
   assert.equal(calls[1].init.headers.authorization, 'Bearer ya29.test');
   // 上限 1 なので 2 回目は呼ばない
   const limited = await searchGoogleMalls(env, '別の検索', { fetch: fakeGoogle(calls), cache: null });
