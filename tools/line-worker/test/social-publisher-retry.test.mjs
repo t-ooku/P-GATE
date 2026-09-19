@@ -143,7 +143,7 @@ test('取り下げに失敗した投稿は PUBLISHED のまま理由を残し、
     INSERT INTO social_post_queue(post_id,platform,caption,status,scheduled_at,updated_at,external_post_id) VALUES
     ('old-threads','THREADS','Seller 9,800円/月・送客料のみ。','PUBLISHED','2026-09-17T03:35:00Z','2026-09-17T03:40:00Z','18051652484799935');`);
   let requests = 0;
-  const fetcher = async () => { requests++; return Response.json({ error: { message: 'permission' } }, { status: 403 }); };
+  const fetcher = async () => { requests++; return Response.json({ error: { message: 'temporarily unavailable' } }, { status: 403 }); };
   const envRetract = { PRODUCT_DB: q.PRODUCT_DB, THREADS_ACCESS_TOKEN: 'threads-token', SOCIAL_RETRACT_OLD_PRICING: 'true' };
   const result = await retractOldPricingPosts(envRetract, new Date('2026-09-19T06:00:00Z'), fetcher);
   assert.deepEqual([result.checked, result.retracted, result.failed], [1, 0, 1]);
@@ -152,5 +152,23 @@ test('取り下げに失敗した投稿は PUBLISHED のまま理由を残し、
   assert.match(row.last_error, /^RETRACT_FAILED_THREADS_DELETE_403_/u, '失敗理由に API の本文要点を残す');
   await retractOldPricingPosts(envRetract, new Date('2026-09-19T06:05:00Z'), fetcher);
   assert.equal(requests, 2);
+  q.db.close();
+});
+
+test('権限不足で失敗した Threads 行は cron では飛ばし、X を先に処理する。force なら再試行する', async () => {
+  const { retractOldPricingPosts } = await import('../src/social-publisher.mjs');
+  const q = queue();
+  q.db.exec(`DELETE FROM social_post_queue;
+    INSERT INTO social_post_queue(post_id,platform,caption,status,scheduled_at,updated_at,external_post_id,last_error) VALUES
+    ('t1','THREADS','Seller 9,800円/月・送客料のみ。','PUBLISHED','2026-09-18T03:35:00Z','2026-09-19T07:42:00Z','181','RETRACT_FAILED_THREADS_DELETE_500_error message Application does not have permission for this action code 10'),
+    ('x-old','X','Seller 9,800円/月・送客料のみ。','PUBLISHED','2026-09-07T03:35:00Z','2026-09-07T03:40:00Z','2096','');`);
+  const calls = [];
+  const fetcher = async (url, options) => { calls.push([options.method, url]); return Response.json({ data: { deleted: true } }); };
+  const envRetract = { PRODUCT_DB: q.PRODUCT_DB, THREADS_ACCESS_TOKEN: 'threads-token', X_USER_ACCESS_TOKEN: 'x-token', SOCIAL_RETRACT_OLD_PRICING: 'true' };
+  const cron = await retractOldPricingPosts(envRetract, new Date('2026-09-19T08:00:00Z'), fetcher, { limit: 1 });
+  assert.deepEqual([cron.checked, cron.retracted, cron.post_ids], [1, 1, ['x-old']], 'limit 1 でも X の古い行が先に処理される');
+  assert.equal(calls.length, 1); assert.match(calls[0][1], /api\.x\.com/u);
+  const forced = await retractOldPricingPosts(envRetract, new Date('2026-09-19T08:05:00Z'), fetcher, { force: true });
+  assert.deepEqual(forced.post_ids, ['t1']);
   q.db.close();
 });

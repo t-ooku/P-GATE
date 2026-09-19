@@ -977,15 +977,18 @@ async function deletePlatformPost(platform, externalId, env, fetchImpl) {
   throw new Error('RETRACT_PLATFORM_UNSUPPORTED');
 }
 
-export async function retractOldPricingPosts(env, now = new Date(), fetchImpl = fetch, { limit = 10 } = {}) {
+export async function retractOldPricingPosts(env, now = new Date(), fetchImpl = fetch, { limit = 10, force = false } = {}) {
   const result = { checked: 0, retracted: 0, failed: 0, post_ids: [] };
   if (!env.PRODUCT_DB || String(env.SOCIAL_RETRACT_OLD_PRICING || '').toLowerCase() !== 'true') return result;
   let rows;
   try {
+    // 9/19 実測: Threads は権限不足（code 10）で全件失敗し、同じ 10 行が毎 cron 先頭に来て X の残りが処理されなかった。
+    // 権限不足で失敗した行は cron では飛ばし（権限を足した後に手動ルートの force で再実行）、X を先に処理する。
     rows = await env.PRODUCT_DB.prepare(`SELECT post_id,platform,external_post_id,caption FROM social_post_queue
       WHERE status='PUBLISHED' AND external_post_id<>'' AND platform IN ('X','THREADS')
       AND (caption LIKE '%9,800%' OR caption LIKE '%9800%' OR caption LIKE '%送客料のみ%')
-      ORDER BY scheduled_at DESC LIMIT ?1`).bind(limit).all();
+      AND (?2=1 OR last_error NOT LIKE 'RETRACT_FAILED_%permission%')
+      ORDER BY platform DESC, scheduled_at DESC LIMIT ?1`).bind(limit, force ? 1 : 0).all();
   } catch { return result; }
   for (const row of rows.results || []) {
     if (!OLD_PRICING_CAPTION_PATTERN.test(String(row.caption || ''))) continue;
@@ -1420,7 +1423,7 @@ export async function handleSocialAdminRoutes(request, env) {
     return Response.json({ ok: true, post_id: postId });
   }
   if (request.method === 'POST' && url.pathname === '/api/internal/social/retract-old-pricing') {
-    return Response.json({ ok: true, ...(await retractOldPricingPosts(env, new Date(), fetch, { limit: 20 })) });
+    return Response.json({ ok: true, ...(await retractOldPricingPosts(env, new Date(), fetch, { limit: 20, force: true })) });
   }
   if (request.method === 'POST' && url.pathname === '/api/internal/social/run') {
     return Response.json({ ok: true, result: await runDueSocialPosts(env, new Date()) });
