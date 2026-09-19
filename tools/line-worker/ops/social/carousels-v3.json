@@ -1,6 +1,6 @@
 {
   "version": "2026-09-19",
-  "note": "2026-09-17 大隆さん決定: カルーセル画像フィード投稿を週3回（月・水・土 20:00 JST、Instagram と X に同日）。内容はユーザー向けとショップ・セラー向けを半々（6セットを順送り: user, seller, user, seller…）。画像は scripts/build-social-carousels.py が Pillow で決定的に描く（AI 生成なし・実在商品なし・数字は実装済みの事実のみ）。文言は §33 禁止表現（必ず売れる／売上が上がる／多数のユーザー／業界No.1／確実に）を含めない。 2026-09-19: Seller 料金統一（4,980円/月・3か月0円・Demand Match Click 50円）に合わせて seller-demand-visible / seller-shop-entrance を改定。",
+  "note": "2026-09-17 大隆さん決定: カルーセル画像フィード投稿を週3回（月・水・土 20:00 JST、Instagram と X に同日）。内容はユーザー向けとショップ・セラー向けを半々（6セットを順送り: user, seller, user, seller…）。画像は scripts/build-social-carousels.py が Pillow で決定的に描く（AI 生成なし・実在商品なし・数字は実装済みの事実のみ）。文言は §33 禁止表現（必ず売れる／売上が上がる／多数のユーザー／業界No.1／確実に）を含めない。 2026-09-19: Seller 料金統一（4,980円/月・3か月0円・Demand Match Click 50円）に合わせて seller-demand-visible / seller-shop-entrance を改定（画像は 9/19 に再生成）。",
   "size": [
     1080,
     1350
