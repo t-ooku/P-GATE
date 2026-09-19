@@ -470,3 +470,9 @@ SELECT (SELECT COUNT(*) FROM v) visitors,
 | 本番確認済み（デプロイ） | #330 Demand Match Click 2/2: 契約者画面 `#demand-match`（通知した需要・有効クリック・今月の利用額・予算上限 0/1,000/3,000/5,000/10,000/任意、初期 3,000円）。seller.js v2。テスト 8 本 |
 | 判断待ち（大隆さん） | `DEMAND_MATCH_CHARGE_ENABLED` は false。判定・件数は本番で記録するが残高からは引かない。true にすると VALID ごとに前払い残高から 50円（REFERRAL_CHARGE）。LP の「準備中・それまで0円」文言は、true にした時に外す |
 | 事実 | 9/19 03:50Z 時点で `shop_demand_requests` は 0 行（探し中需要がまだ 1 件も無い）。完成条件の実データ E2E（検索→0件→ホシっとく→需要一覧→商品登録→再照合→通知→商品ページ→有効クリック 1 件→50円表示）は本番でまだ通せていない。合成テストでは全経路 PASS |
+| 決定（9/19 大隆さん） | 「ユーザー(ニーズ)とセラー(需要)を近付けて繋ぐプラットフォームだから、SNS 含めた全ての販促で積極的にセラー募集」「9,800円の旧料金体系の記事は取り下げ」 |
+| 本番確認済み（デプロイ） | #332 Demand Match Click 課金開始（ITG 3 アカウントは無料 `DEMAND_MATCH_FREE_SELLER_KEYS`）、LP の「準備中」削除・見出し折り返し修正。#333 残高 50 円未満の Seller は Demand Match 停止（商品登録拒否・再照合対象外・通知なし）。#334 LP スマホ折り返し。#335/#336/#337 クリエイター募集: 表の見切れ修正、素材をカルーセル 6 セットに改定、セラー募集を最優先（上）、ハッシュタグ 8 個、二次利用の注意書き＋規約第 1.1 版。カルーセル画像は t-ooku の PAT 経由の push（037a1f7）で workflow を起動して再生成（040e047） |
+| 本番確認済み（デプロイ） | #339 Threads 22:30 JST を毎日セラー募集（`hoshilu-threads-seller-v1`、10 本日替わり）。X 補助枠のセラー比率 1/6→1/4。旧料金投稿の取り下げ `retractOldPricingPosts`（`SOCIAL_RETRACT_OLD_PRICING=true`）。#340 Threads 削除 API の呼び方修正 |
+| 事実 | 取り下げ対象 20 件（hoshilu-seller-daily-v1 9/7〜9/18、X 10・Threads 10）。X は API で削除済み（9/10 件、残 1 件は次 cron）。Threads は `Application does not have permission for this action (code 10)`＝アプリに `threads_delete` 権限が無い。大隆さんが Threads アプリで手動削除するか、Meta アプリに threads_delete を追加して再認可（トークン再発行）が必要 |
+| 事実 | `hoshilu-seller-daily-v1`（X/Threads 12:35 JST）は Codex 側の日次投入。9/19 以降の行は無い。次に投入する時は料金行を「4,980円/月・最初の 3 か月 0 円・Demand Match Click 50 円」にすること（旧「9,800円・送客料のみ」は禁止） |
+| 実行済み | Seller 営業メール: 9/21 送信予定の 5 件（9/18 投入）の料金行を新料金へ UPDATE（大隆さん「旧料金は取り下げ」に基づく）。新規 12 件を投入（round4: PERENNE／Bag DIRECT／ふとんタウン／ホテルのインテリア／赤ちゃんデパート水谷＝9/21 10:05 JST、CoffeeSAKURA／ばいせん工房／カフェ工房／エコノレッグ／Belle and Sofa／食喜屋／EAST table＝9/22 09:05 JST）。公開メールのみ、1 アドレス生涯 1 回（Style On Bag・ベビーアルテは送信済みのため除外）、必須文・禁止語は機械検査済み |
