@@ -1,6 +1,8 @@
 /* 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」。第一画面の行動を1つにする。 */
 .hero-watch{margin:18px 0 0;padding:16px;border:1px solid var(--line,#e9e5f5);border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(115,87,255,.08)}
-.hero-watch-label{display:block;margin:0 0 8px;font-size:15px;font-weight:700;color:var(--ink,#17172b)}
+.hero-watch-label{display:flex;align-items:baseline;gap:8px;flex-wrap:nowrap;margin:0 0 8px;font-size:15px;font-weight:700;color:var(--ink,#17172b);white-space:nowrap}
+.hero-watch-label-sub{font-size:12px;font-weight:600;color:var(--violet,#7357ff)}
+@media (max-width:360px){.hero-watch-label{font-size:14px}.hero-watch-label-sub{font-size:11px}}
 .hero-watch-row{display:grid;grid-template-columns:1fr;gap:8px}
 @media (min-width:640px){.hero-watch-row{grid-template-columns:1fr auto}}
 .hero-watch-row input{min-width:0;width:100%;padding:14px 14px;border:1.5px solid #cfc6ff;border-radius:12px;font:inherit;font-size:16px;color:var(--ink,#17172b);background:#fff}
@@ -16,7 +18,7 @@
 .hero-watch-example-body{margin:2px 0 0;font-size:13px;color:var(--ink,#17172b)}
 .hero-watch-example-note{margin:6px 0 0;font-size:12px;line-height:1.5;color:var(--muted,#6d6b80)}
 /* 検索パネル: 手がかり4ボタンは折りたたみ（IDと処理はそのまま） */
-.search-clues-details{margin:8px 0 0}
+.search-clues-details{margin:8px 0 12px}
 .search-clues-details>summary{cursor:pointer;list-style:none;padding:10px 12px;border:1px solid var(--line,#e9e5f5);border-radius:12px;font-size:14px;font-weight:600;color:var(--violet,#7357ff);background:#fff}
 .search-clues-details>summary::-webkit-details-marker{display:none}
 .search-clues-details>summary::before{content:'＋ ';font-weight:800}

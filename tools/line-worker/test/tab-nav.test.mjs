@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 test('トップは tab-nav を読み込み、5 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
   assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=3">/);
-  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=5"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
+  assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=6"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);
   const nav = read('tab-nav.mjs');
@@ -78,7 +78,7 @@ test('「探す」ではページ名の帯を出さず、検索候補に種別�
   const app = read('app.js');
   assert.match(app, /resultCards\.push\(rows\[0\]\);\s*const quickStrip=marketplaceQuickStrip\(result\);\s*if\(quickStrip\)resultCards\.push\(quickStrip\);/);
   const html = read('index.html');
-  for (const asset of ['tab-nav.css?v=3', 'tab-nav.mjs?v=5', 'search-suggest.mjs?v=3', 'app.js?v=174']) assert.ok(html.includes(asset), asset);
+  for (const asset of ['tab-nav.css?v=3', 'tab-nav.mjs?v=6', 'search-suggest.mjs?v=3', 'app.js?v=174']) assert.ok(html.includes(asset), asset);
 });
 
 // 2026-09-17 大隆さん指示: 検索枠の「検索方法」見出しを削除し、余白を上に詰める。
