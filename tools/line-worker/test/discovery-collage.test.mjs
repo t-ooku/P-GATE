@@ -16,7 +16,7 @@ test('discovery collage is lightweight, localized, accessible, and cached', asyn
   ]);
   assert.match(html, /id="discoveryTitle"><span>名前が分からなくても、<\/span><span>記憶から探せる。<\/span>/);
   // 2026-09-08 最新実行指示: 希望価格通知を第一画面の主訴求にする。
-  assert.match(html, /id="heroTitle"><span class="hero-title-line">探さなくていい。<\/span><span class="hero-title-line hero-title-accent">ホシっといて。<\/span>/);
+  assert.match(html, /id="heroTitle"><span class="hero-title-line">欲しい値段を、<\/span><span class="hero-title-line hero-title-accent">先に決めておく。<\/span>/);
   assert.match(app, /first\.className='hero-title-line'/);
   assert.match(heroFixes, /#heroEyebrow \{[\s\S]*?font-size: clamp\(15px, 1\.7vw, 19px\);[\s\S]*?white-space: nowrap;/);
   // 2026-09-03 大隆さん指示「トップ画面のキャッチは1行に」: 見出し全体を

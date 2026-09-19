@@ -38,6 +38,18 @@ Object.assign(copy.EN,{hero:'Stop searching. |Leave it to HOSHILU.',heroSub:'A s
 Object.assign(copy.ZH,{hero:'不用自己找了。|交给 HOSHILU。',heroSub:'截图、社交帖子、模糊的记忆都可以。HOSHILU 帮你找到。\n现在没有的话，会一直找下去。',title:'不知道商品名称也没关系。\n可通过照片、图片、公开帖子链接或记得的一句话搜索。',placeholder:'想找什么？',examples:['在 Instagram 看到的白色包','韩系银戒指','这张截图里的床垫','能自立的真皮托特包','和这双鞋相似的','在社交平台看到的粉色唇釉']});
 Object.assign(copy.KO,{hero:'직접 찾지 않아도 돼요.|HOSHILU에 맡기세요.',heroSub:'스크린샷도, SNS도, 어렴풋한 기억도. HOSHILU가 찾아드립니다.\n없으면 찾을 때까지 계속 찾아요.',title:'상품명을 몰라도 괜찮습니다.\n촬영한 사진, 이미지, 공개 게시물 URL, 기억나는 한마디로 찾아보세요.',placeholder:'무엇을 찾으세요?',examples:['인스타에서 본 흰색 가방','한국풍 실버 반지','이 스크린샷 속 매트리스','자립하는 가죽 토트백','이 신발과 비슷한 것','SNS에서 본 핑크 립']});
 
+// 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」（90日計画）: 第一画面の言葉を差し替える。上の Object.assign は
+// 履歴として残し、ここで hero/heroSub だけ上書きする（title/placeholder/examples はそのまま）。
+Object.assign(copy.JA,{hero:'欲しい値段を、|先に決めておく。',heroSub:'値下がりしたら、HOSHILUが知らせます。\n探すのはもう終わり。ホシっといて。'});
+Object.assign(copy.EN,{hero:'Set your price first. |Then forget about it.',heroSub:'When it drops, HOSHILU tells you.\nNo more checking every day. Leave it to HOSHILU.'});
+Object.assign(copy.ZH,{hero:'先定好想要的价格。|然后交给 HOSHILU。',heroSub:'降价时，HOSHILU 会通知你。\n不用每天去看。'});
+Object.assign(copy.KO,{hero:'원하는 가격을 |먼저 정해두세요.',heroSub:'가격이 내리면 HOSHILU가 알려드립니다.\n매일 확인하지 않아도 돼요.'});
+// 2026-09-19 同（転換率）: Turnstile の初期化に失敗しても赤文字「セキュリティ設定を確認中」を即出さず、3/6/9 秒で3回まで静かに
+// やり直す（ページ全体で3回まで。検索ボタン押下時の取り直しは acquireTurnstileToken 側のまま）。関数宣言は再代入できるので、
+// 巨大な起動行(末尾)を触らずにここで包む。
+let turnstileInitRetries=0;const initializeTurnstileBase=initializeTurnstile;
+initializeTurnstile=async function(){for(;;){try{return await initializeTurnstileBase();}catch(error){if(turnstileInitRetries>=3)throw error;turnstileInitRetries+=1;await new Promise(resolve=>setTimeout(resolve,3000*turnstileInitRetries));}}};
+
 const actionCopy = {
   JA:{advancedSearch:'詳細検索',advancedSearchClose:'詳細検索を閉じる',deleteWishAria:'この検索条件を削除',deleteAllWishes:'すべて削除',deleteAllConfirm:'保存した検索条件をすべて削除しますか？この操作は取り消せません。',clear:'クリア',searchAgain:'もう一度検索',updateWish:'変更を保存',updated:'変更を保存しました',deleteWish:'削除',deleteConfirm:'この条件の継続検索を解除しますか？',insightTitle:'ホシってるもの',insightTemplate:'HOSHILUに預けている「欲しい」 {count}件。探し続けている条件 {enabled}件。',saveWish:'この条件を見つかるまで探す',wishSaved:'検索条件を保存しました',insightToggleLabel:'この条件を見つかるまで探す',insightToggleDescription:'HOSHILUが定期的に検索し、新しく一致する実在商品が見つかったときだけお知らせします。',saveWatch:'購入希望価格を保存',watchSaved:'購入希望価格を保存しました',bundleNote:'対象商品のAPI確認価格を定期確認し、希望価格以下になった場合にお知らせします。',discoveryTitle:'名前が分からなくても、\n記憶から探せる。',discoveryBody:'見た目、見た場所、使い方。覚えていることから話してください。',discoveryExample:'SNSで見た、ピンクの小さいカメラみたいなもの',journey:['検索する前に、|ホシルに話す。','曖昧な「欲しい」を、|見つかる検索へ変換します。','思い出せるまま話す','名前が分からなくても、見た目・用途・見た場所だけで大丈夫。','検索条件を精密化','ホシルが商品カテゴリや特徴を整理し、探せる言葉へ変換。','購入先まで案内','商品ページへ直接リンク。HOSHILUが2モールをまとめて比較し、その他11を含む合計最大13モールで探せます。'],copyKeywords:'検索ワードをコピー',copiedKeywords:'コピーしました'},
   EN:{advancedSearch:'Advanced search',advancedSearchClose:'Close advanced search',deleteWishAria:'Delete this saved condition',deleteAllWishes:'Delete all',deleteAllConfirm:'Delete every saved search condition? This cannot be undone.',clear:'Clear',searchAgain:'Search again',updateWish:'Save changes',updated:'Changes saved',deleteWish:'Delete',deleteConfirm:'Turn off new-match notifications for this condition?',insightTitle:'Review your saved search conditions.',insightTemplate:'{count} saved conditions, {enabled} with notifications on.',saveWish:'Save this search condition',wishSaved:'Search condition saved',insightToggleLabel:'Notify me of new matches',insightToggleDescription:'We will let you know when a new product matches this search condition.',saveWatch:'Save target price',watchSaved:'Target price saved',bundleNote:'We periodically check marketplace API prices and notify you when the product reaches your target price.',discoveryTitle:'Find it from what you remember—\neven without the name.',discoveryBody:'Appearance, where you saw it, and how it is used. Tell us whatever you remember.',discoveryExample:'A small pink camera-like thing I saw on social media',journey:['Talk to HOSHILU before you search.','Turn a vague want into a search that finds it.','Describe what you remember','A look, a use, or where you saw it is enough.','Sharpen the search','HOSHILU turns clues into product categories and precise terms.','Continue to purchase','Link directly to product pages. HOSHILU compares 2 marketplaces together, plus up to 13 in total.'],copyKeywords:'Copy search terms',copiedKeywords:'Copied'},
@@ -579,7 +591,9 @@ function createWatchQuickJoin(amount,onDone,options={}){
   const message=textElement('p','watch-quick-status','');
   const line=document.createElement('a');line.className='watch-quick-line';line.textContent=c.line;
   line.href=`/api/member/line/start?${new URLSearchParams({next:'/#wishTitle',...watchQuickJoinContext(joinSource)})}`;
-  wrap.append(emailRow,codeRow,message,line,textElement('small','watch-quick-note',c.note));
+  // 2026-09-19 大隆さん決定: 登録は LINE 1タップを第一候補に（メール6桁は第二）。並びと文言だけ変え、処理は同じ。
+  if(elements.language.value==='JA')line.textContent='LINEで受け取る（1タップ）';line.classList.add('watch-quick-line-primary');
+  wrap.append(line,textElement('p','watch-quick-or',elements.language.value==='JA'?'LINEを使わない方はメールで':''),emailRow,codeRow,message,textElement('small','watch-quick-note',c.note));
   send.addEventListener('click',async()=>{
     const value=email.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)){email.reportValidity();return;}
     send.disabled=true;message.textContent='…';

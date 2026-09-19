@@ -98,14 +98,14 @@ test('index.htmlがhero-marketplace-coverage.mjsを読み込む', async () => {
 // 削除し、その役割は検索欄のプレースホルダ「何が欲しい？名前が分からなくても
 // 大丈夫」へ移す。要素ごと消すので、言語切替の代入も残さない。
 // 2026-09-15 指示書「探さなくていい。ホシっといて。」§12: 第一画面の言葉を統一。
-test('第一画面は「探さなくていい。ホシっといて。」と補足コピー、検索例は6件', async () => {
+test('第一画面は「欲しい値段を、先に決めておく。」と補足コピー（2026-09-19 値下がり待ちを主役に）、検索例は6件', async () => {
   const [html, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.doesNotMatch(html, /heroEyebrow/);
   assert.doesNotMatch(html, /名前が分からなくても探せます。/);
   assert.doesNotMatch(app, /heroEyebrow|nav\.eyebrow|eyebrow:/);
-  assert.match(html, /<h1 id="heroTitle"><span class="hero-title-line">探さなくていい。<\/span><span class="hero-title-line hero-title-accent">ホシっといて。<\/span><\/h1>/);
+  assert.match(html, /<h1 id="heroTitle"><span class="hero-title-line">欲しい値段を、<\/span><span class="hero-title-line hero-title-accent">先に決めておく。<\/span><\/h1>/);
   // 2026-09-16 大隆さん指示: 補足コピーは行ごと・文ごとに span にして、スマホでも文の途中で折り返さない
-  assert.match(html, /<p id="heroSub" class="hero-sub"><span class="hero-sub-line"><span class="hero-sub-sentence">スクショでも、SNSでも、うろ覚えでも。<\/span><span class="hero-sub-sentence">HOSHILUが見つけます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">なければ、見つかるまで探します。<\/span><\/span><\/p>/);
+  assert.match(html, /<p id="heroSub" class="hero-sub"><span class="hero-sub-line"><span class="hero-sub-sentence">値下がりしたら、HOSHILUが知らせます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">探すのはもう終わり。<\/span><span class="hero-sub-sentence">ホシっといて。<\/span><\/span><\/p>/);
   assert.match(app, /renderHeroSub\(elements\.heroSub,t\.heroSub\)/);
   for (const css of ['ai-search-layout-fix.css', 'assets-v126/ai-search-layout-fix.css']) {
     assert.match(readFileSync(new URL(`../public/${css}`, import.meta.url), 'utf8'), /html:lang\(ja\) \.hero-sub-sentence\{white-space:nowrap\}/);
@@ -115,8 +115,8 @@ test('第一画面は「探さなくていい。ホシっといて。」と補�
   assert.match(html, /<p id="hoshittokuHint" class="hoshittoku-hint">見つからなければ、そのまま探し続けます。<\/p>/);
   assert.match(app, /identifySubmit:'AIで探す'/);
   // app.js 側は \n（言語切替時に textContent へ入れ、.hero-sub の pre-line で改行）
-  assert.ok(app.includes(String.raw`hero:'探さなくていい。|ホシっといて。'`));
-  assert.ok(app.includes(String.raw`heroSub:'スクショでも、SNSでも、うろ覚えでも。HOSHILUが見つけます。\nなければ、見つかるまで探します。'`));
+  assert.ok(app.includes(String.raw`hero:'欲しい値段を、|先に決めておく。'`));
+  assert.ok(app.includes(String.raw`heroSub:'値下がりしたら、HOSHILUが知らせます。\n探すのはもう終わり。ホシっといて。'`));
   // 検索欄の文言は1行に収める(語の途中で折り返さない)。
   // 入力欄の文言は app.js の setLanguage が起動時に上書きする（HTML 側の初期値は据え置き）。
   assert.match(app, /placeholder:'何が欲しい？'/);

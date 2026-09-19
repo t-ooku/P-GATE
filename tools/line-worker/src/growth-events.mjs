@@ -5,6 +5,8 @@ const EVENTS = new Set([
   'seller_landing_view',
   'seller_cta_clicked',
   'target_price_watch_started',
+  // 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」: 第一画面の入力→検索実行を数える（検索文は送らない）
+  'hero_price_watch_submitted',
   'notification_opened',
   // 2026-09-04 Experience Layer: 使用感の閲覧・投稿（Worker が記録。/api/events からは受けない想定だが許可リストに置く）
   'experience_viewed',

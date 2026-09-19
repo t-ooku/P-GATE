@@ -21,7 +21,7 @@ test('index loads the atomic versioned app and layout assets', async () => {
   const html = await read('index.html');
 
   assert.ok(html.includes('href="/assets-v126/ai-search-layout-fix.css?v=132"'));
-  assert.ok(html.includes('src="/assets-v147/app.js?v=173"'));
+  assert.ok(html.includes('src="/assets-v147/app.js?v=174"'));
   assert.ok(html.includes('src="/site-i18n.js?v=9"'));
   assert.equal(html.includes('href="/ai-search-layout-fix.css?v=132"'), false);
   assert.equal(html.includes('src="/app.js?v=151"'), false);

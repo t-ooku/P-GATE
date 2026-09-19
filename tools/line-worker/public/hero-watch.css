@@ -1,0 +1,38 @@
+/* 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」。第一画面の行動を1つにする。 */
+.hero-watch{margin:18px 0 0;padding:16px;border:1px solid var(--line,#e9e5f5);border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(115,87,255,.08)}
+.hero-watch-label{display:block;margin:0 0 8px;font-size:15px;font-weight:700;color:var(--ink,#17172b)}
+.hero-watch-row{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:640px){.hero-watch-row{grid-template-columns:1fr auto}}
+.hero-watch-row input{min-width:0;width:100%;padding:14px 14px;border:1.5px solid #cfc6ff;border-radius:12px;font:inherit;font-size:16px;color:var(--ink,#17172b);background:#fff}
+.hero-watch-row input:focus{outline:none;border-color:var(--violet,#7357ff);box-shadow:0 0 0 3px rgba(115,87,255,.18)}
+.hero-watch-submit{padding:14px 18px;border:0;border-radius:12px;background:linear-gradient(90deg,#ff4f9a,#7357ff 55%,#23b8ff);color:#fff;font:inherit;font-size:16px;font-weight:800;cursor:pointer;white-space:nowrap}
+.hero-watch-submit:active{transform:translateY(1px)}
+.hero-watch-note{margin:10px 0 0;font-size:13px;line-height:1.6;color:var(--muted,#6d6b80)}
+.hero-watch-alt{margin:8px 0 0;font-size:13px}
+.hero-watch-alt a{color:var(--violet,#7357ff);text-decoration:underline;text-underline-offset:3px}
+.hero-watch-example{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:var(--soft,#f4f0ff);border:1px dashed #cfc6ff}
+.hero-watch-example-kicker{margin:0 0 4px;font-size:11px;letter-spacing:.12em;font-weight:700;color:var(--violet,#7357ff)}
+.hero-watch-example-title{margin:0;font-size:15px;font-weight:800;color:var(--ink,#17172b)}
+.hero-watch-example-body{margin:2px 0 0;font-size:13px;color:var(--ink,#17172b)}
+.hero-watch-example-note{margin:6px 0 0;font-size:12px;line-height:1.5;color:var(--muted,#6d6b80)}
+/* 検索パネル: 手がかり4ボタンは折りたたみ（IDと処理はそのまま） */
+.search-clues-details{margin:8px 0 0}
+.search-clues-details>summary{cursor:pointer;list-style:none;padding:10px 12px;border:1px solid var(--line,#e9e5f5);border-radius:12px;font-size:14px;font-weight:600;color:var(--violet,#7357ff);background:#fff}
+.search-clues-details>summary::-webkit-details-marker{display:none}
+.search-clues-details>summary::before{content:'＋ ';font-weight:800}
+.search-clues-details[open]>summary::before{content:'－ '}
+.search-clues-details[open]>summary{margin-bottom:8px}
+/* 探し方の説明4節は折りたたみ */
+.lp-more-details{margin:18px 0}
+.lp-more-details>summary{cursor:pointer;list-style:none;padding:14px 16px;border:1px solid var(--line,#e9e5f5);border-radius:14px;background:#fff;font-size:15px;font-weight:700;color:var(--ink,#17172b)}
+.lp-more-details>summary::-webkit-details-marker{display:none}
+.lp-more-details>summary::after{content:' ▾';color:var(--violet,#7357ff)}
+.lp-more-details[open]>summary::after{content:' ▴'}
+/* 結果カードのウォッチボタンを光らせる（第一画面から来た時だけ） */
+.watch-intent-banner{margin:8px 0 12px;padding:10px 12px;border-radius:12px;background:#fff4fa;border:1px solid #ffc6de;color:#b3005f;font-size:14px;font-weight:600;line-height:1.5}
+@keyframes hoshiluWatchPulse{0%{box-shadow:0 0 0 0 rgba(255,79,154,.55)}70%{box-shadow:0 0 0 10px rgba(255,79,154,0)}100%{box-shadow:0 0 0 0 rgba(255,79,154,0)}}
+.results.watch-intent .watch-settings-button{animation:hoshiluWatchPulse 1.6s ease-out infinite;outline:2px solid #ff4f9a;outline-offset:1px}
+/* 登録: LINE を第一候補に */
+.watch-quick-line.watch-quick-line-primary{font-size:15px;padding:12px 14px;margin-bottom:6px}
+.watch-quick-or{margin:4px 0 2px;font-size:12px;color:var(--muted,#6d6b80)}
+.watch-quick-or:empty{display:none}
