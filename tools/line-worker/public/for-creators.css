@@ -23,3 +23,12 @@
 .creator-examples h3 { margin: 0 0 8px; font-size: 15px; }
 .creator-example-text { white-space: pre-wrap; font: inherit; font-size: 13.5px; line-height: 1.7; background: #f7f5ff; border-radius: 12px; padding: 12px; margin: 0; color: #17142d; }
 .creator-example-text strong { color: #5140ba; }
+
+/* 2026-09-19 大隆さん指摘: 投稿ルール表（項目／条件）がスマホで右が見切れて読めない。
+   for-sellers-pricing.css のスマホ用 nowrap は料金表向けなので、このページの表は折り返して全文を見せる。 */
+.price-table-wrap{overflow:visible}
+.price-table-wrap table{min-width:0;table-layout:fixed;width:100%}
+.price-table-wrap th,.price-table-wrap td{white-space:normal;text-align:left;overflow-wrap:anywhere;line-height:1.6}
+.price-table-wrap th:first-child,.price-table-wrap td:first-child{width:30%}
+.price-table-wrap td:nth-child(2){font-weight:600}
+@media(max-width:520px){.price-table-wrap th,.price-table-wrap td{padding:10px 8px;font-size:12px}.price-table-wrap th:first-child,.price-table-wrap td:first-child{width:34%}}
