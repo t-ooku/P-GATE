@@ -329,7 +329,7 @@ function renderDemandMatch(dm) {
   kpi('notified').textContent = String(dm.notified ?? 0);
   kpi('valid').textContent = String(dm.valid_clicks ?? 0);
   kpi('excluded').textContent = String(dm.excluded_clicks ?? 0);
-  kpi('amount').textContent = dm.charge_enabled ? yen(dm.amount_jpy) : `${yen(dm.amount_jpy)}（課金開始前・請求 ¥0）`;
+  kpi('amount').textContent = dm.free_account ? '¥0（無料アカウント）' : dm.charge_enabled ? yen(dm.amount_jpy) : `${yen(dm.amount_jpy)}（課金開始前・請求 ¥0）`;
   kpi('cap').textContent = yen(dm.cap_jpy);
   kpi('cap-note').textContent = dm.cap_reached ? '今月は上限に達しています。追加課金は止まり、掲載・検索流入は止まりません。' : `${dm.month} の利用額 ${yen(dm.amount_jpy)} ／ 上限 ${yen(dm.cap_jpy)}`;
   const form = document.querySelector('#sellerDemandMatchBudgetForm');

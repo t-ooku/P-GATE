@@ -81,8 +81,9 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /<summary>50円はいつ発生しますか？<\/summary><p>通常のクリックでは発生しません/u);
   assert.match(html, /<summary>ユーザーの個人情報は見られますか？<\/summary><p>見られません/u);
   assert.match(html, /<summary>費用が勝手に増えませんか？<\/summary>/u);
-  // 未実装の予算上限・Demand Match 課金は「準備中・それまで0円」と書く（§33）
-  assert.match(html, /計測と予算上限が契約者画面に入ってから始めます（準備中）。それまでは0円です/u);
+  // 2026-09-19 大隆さん決定で課金開始。予算上限は実装済みなので「準備中」と書かない（§33）
+  assert.doesNotMatch(html, /準備中/u);
+  assert.match(html, /月額上限）は契約者画面で設定できます（初期値3,000円）/u);
   assert.match(html, /id="demandNow"/u);
   assert.doesNotMatch(html, /9,800/u);
   assert.doesNotMatch(html, /Growth/u);
@@ -243,7 +244,7 @@ test('確認欄が通らなくても公開APIは受け付け、通知の件名�
 test('/for-sellers の見出しは「欲しい人が見える。欲しい人に商品を届けられる。」で、需要の説明は匿名 5 人以上・条件のみ', () => {
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
   // 2026-09-19 大隆さん指示 §5: ファーストビューは「欲しい人が、先に見える。」。title は据え置き。
-  assert.match(html, /<h1>欲しい人が、<br><span>先に見える。<\/span><\/h1>/u);
+  assert.match(html, /<h1>欲しい人が、<br class="hero-br"><span>先に見える。<\/span><\/h1>/u, 'PC は 1 行、スマホだけ改行（9/19 大隆さん指摘）');
   assert.match(html, /商品を出したら、探していた人へHOSHILUが届けます。<br>Amazon・楽天・Yahoo!など、今ある販売先はそのまま。/u);
   assert.match(html, /検索 → 探し中需要 → 商品マッチ → 再通知 → 送客/u);
   assert.match(html, /data-seller-cta="hero-inquiry">3か月無料で始める</u);

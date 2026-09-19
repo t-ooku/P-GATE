@@ -66,3 +66,14 @@
 .demand-cards article .people{display:block;font-size:22px;font-weight:950;color:#fff;margin:6px 0 4px}.demand-cards article .state{font-size:12px;color:#9fe5ff}
 @media(max-width:820px){.dm-flow ol{grid-template-columns:repeat(2,1fr)}.independent-note+.independent-note{margin-top:-20px}}
 @media(max-width:520px){.dm-flow ol{grid-template-columns:1fr}.hero-actions .ghost{width:100%;text-align:center}}
+
+/* 2026-09-19 大隆さん指摘: トップ見出しは PC で 1 行（改行で左に寄りすぎ）。スマホだけ改行。需要見出しは列幅に収まる大きさに */
+.hero h1{font-size:clamp(40px,6.2vw,72px);white-space:nowrap}.hero-br{display:none}
+.demand-copy h2{font-size:clamp(30px,3.4vw,44px);letter-spacing:-.05em}.demand-copy h2 span{white-space:nowrap}
+@media(max-width:820px){.hero h1{font-size:clamp(38px,11vw,43px)}.hero-br{display:inline}.demand-copy h2{font-size:34px}}
+@media(max-width:520px){.hero h1{font-size:clamp(26px,8.6vw,43px)}}
+/* 2026-09-19 大隆さん指摘: 料金・SHOP PAGE の見出しが途中で折り返す。1 行ずつ列幅に収める */
+.pricing-head h2,.shop-copy h2{font-size:clamp(28px,3vw,40px);line-height:1.1;letter-spacing:-.04em;white-space:nowrap}
+.pricing-head h2 span,.shop-copy h2 span{white-space:nowrap}
+@media(max-width:820px){.pricing-head h2,.shop-copy h2{font-size:30px}}
+@media(max-width:520px){.pricing-head h2,.shop-copy h2{font-size:26px}}

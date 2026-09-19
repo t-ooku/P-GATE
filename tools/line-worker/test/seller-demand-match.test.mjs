@@ -189,9 +189,23 @@ test('/api/seller/demand-match: 集計と予算上限（プリセット・任意
   const bad = await handleSellerDemandMatchRoutes(request('/api/seller/demand-match/budget', { method: 'PUT', body: { monthly_cap_jpy: -1 } }), env, seller);
   assert.equal(bad.status, 400);
   const page = readFileSync(new URL('../src/seller-page.mjs', import.meta.url), 'utf8');
-  for (const label of ['data-dm-kpi="notified"', 'data-dm-kpi="valid"', 'data-dm-kpi="amount"', 'data-dm-kpi="cap"', 'sellerDemandMatchBudgetForm', 'seller.js?v=2']) assert.ok(page.includes(label), label);
+  for (const label of ['data-dm-kpi="notified"', 'data-dm-kpi="valid"', 'data-dm-kpi="amount"', 'data-dm-kpi="cap"', 'sellerDemandMatchBudgetForm', 'seller.js?v=3']) assert.ok(page.includes(label), label);
   const js = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
   assert.match(js, /\/api\/seller\/demand-match\/budget/u);
   const auth = readFileSync(new URL('../src/seller-auth.mjs', import.meta.url), 'utf8');
   assert.match(auth, /handleSellerDemandMatchRoutes/u);
+});
+
+test('無料アカウント（ITG）: 有効クリックは記録するが 0円・残高から引かない（2026-09-19 大隆さん決定）', async () => {
+  const { db, env, token } = await matchedEnv({ DEMAND_MATCH_CHARGE_ENABLED: 'true', DEMAND_MATCH_FREE_SELLER_KEYS: `other-key, ${SELLER_KEY}` });
+  db.prepare(`INSERT INTO seller_billing_wallets(seller_key,balance_micros_jpy,status,updated_at) VALUES(?1,?2,'ACTIVE','2026-09-01T00:00:00Z')`).run(SELLER_KEY, 60 * 1000000);
+  const click = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: NOW });
+  assert.deepEqual([click.status, click.reason, click.amount_jpy, click.settled], ['VALID', 'FREE_ACCOUNT', 0, 'PENDING']);
+  assert.equal(db.prepare(`SELECT balance_micros_jpy FROM seller_billing_wallets WHERE seller_key=?1`).get(SELLER_KEY).balance_micros_jpy, 60 * 1000000);
+  assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM seller_billing_ledger`).get().c, 0);
+  const summary = await demandMatchSummary(env, SELLER_KEY, NOW);
+  assert.deepEqual([summary.free_account, summary.valid_clicks, summary.amount_jpy, summary.charge_enabled], [true, 1, 0, true]);
+  const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
+  assert.equal(wrangler.vars.DEMAND_MATCH_CHARGE_ENABLED, 'true');
+  assert.ok(wrangler.vars.DEMAND_MATCH_FREE_SELLER_KEYS.split(',').includes(SELLER_KEY), 'ITG GROUP は無料');
 });

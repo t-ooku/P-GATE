@@ -490,7 +490,7 @@ export async function sellerPageResponse(
     <label>任意の金額（円） <input name="cap_custom" type="number" min="0" max="300000" step="50" placeholder="例: 20000"></label>
     <button type="submit" class="primary-button">予算上限を保存する</button>
   </form>
-  <p class="data-note">Demand Match Click の課金は、この画面の計測と予算上限が入ったうえで、支払い方法の登録がある契約者から順に始めます。開始前の期間は 0円です。</p></section>
+  <p class="data-note">有効クリックは前払い残高から 50円ずつ消化します。残高が無い場合は件数だけ記録し、まとめて請求します。判定は 1 件ずつ記録し、除外理由も残します。</p></section>
 
   <section class="auth-card" id="demand"><p class="eyebrow">DEMAND</p><h2>契約商品で満たせなかった需要</h2>
   <p>個人を特定しないカテゴリ集計です。QA・流入元なし・過去不明の記録を除外し、流入元付きの匿名セッションが5件以上あるカテゴリだけを表示します。セッション件数は人数を意味しません。</p>
@@ -585,7 +585,7 @@ export async function sellerPageResponse(
     <article class="seller-panel"><span>HOSHILU Seller</span><strong>月額4,980円</strong><span>登録後3か月は月額0円。通常の商品クリック・SHOP掲載・横断検索・需要への商品登録は月額に含まれます。Demand Match Click（探していた人をHOSHILUが呼び戻して商品を開いた時）だけ1有効クリック50円（計測と予算上限が入るまで0円）。1事業者アカウント単位、初期費用・解約金0円。</span></article>
   </div>
   <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たしたジャンル別単価の有効クリックだけです。<a href="/for-sellers#pricing">料金を確認</a></p></section>
-  </main><script type="module" src="/seller.js?v=2"></script></body></html>`;
+  </main><script type="module" src="/seller.js?v=3"></script></body></html>`;
 
   return new Response(html, { headers: {
     'content-type': 'text/html; charset=UTF-8',

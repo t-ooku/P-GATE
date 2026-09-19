@@ -110,6 +110,13 @@ export async function demandMatchMonthUsage(db, sellerKey, month) {
 export function demandMatchChargeEnabled(env = {}) {
   return String(env?.DEMAND_MATCH_CHARGE_ENABLED || '').trim().toLowerCase() === 'true';
 }
+// 2026-09-19 大隆さん決定: ITG（自社）のアカウントは無料。Demand Match Click は判定・件数を記録するが 0円（FREE_ACCOUNT）。
+export function demandMatchFreeSellerKeys(env = {}) {
+  return new Set(String(env?.DEMAND_MATCH_FREE_SELLER_KEYS || '').split(',').map((v) => v.trim()).filter(Boolean));
+}
+export function isDemandMatchFreeSeller(env, sellerKey) {
+  return demandMatchFreeSellerKeys(env).has(String(sellerKey || ''));
+}
 
 export async function demandMatchSummary(env, sellerKey, now = new Date()) {
   const db = env.PRODUCT_DB;
@@ -127,7 +134,7 @@ export async function demandMatchSummary(env, sellerKey, now = new Date()) {
     notified = Number(row?.n || 0);
   } catch {}
   return {
-    month, unit_jpy: DEMAND_MATCH_CLICK_JPY, charge_enabled: demandMatchChargeEnabled(env), notified, valid_clicks: usage.clicks, excluded_clicks: excluded,
+    month, unit_jpy: DEMAND_MATCH_CLICK_JPY, charge_enabled: demandMatchChargeEnabled(env), free_account: isDemandMatchFreeSeller(env, sellerKey), notified, valid_clicks: usage.clicks, excluded_clicks: excluded,
     amount_jpy: usage.amount_jpy, cap_jpy: cap, cap_reached: cap > 0 ? usage.amount_jpy + DEMAND_MATCH_CLICK_JPY > cap : true,
     cap_presets_jpy: [...DEMAND_MATCH_CAP_PRESETS_JPY]
   };
@@ -166,22 +173,24 @@ export async function recordDemandMatchClick(env, {
     if (usage.amount_jpy + DEMAND_MATCH_CLICK_JPY > cap) capReason = 'BUDGET_CAP';
   }
   const status = reasons.length || capReason ? 'EXCLUDED' : 'VALID';
-  const reason = reasons[0] || capReason || '';
+  const free = status === 'VALID' && isDemandMatchFreeSeller(env, claim.seller_key);
+  const reason = reasons[0] || capReason || (free ? 'FREE_ACCOUNT' : '');
+  const amountJpy = status === 'VALID' && !free ? DEMAND_MATCH_CLICK_JPY : 0;
   const clickId = crypto.randomUUID();
   const inserted = await db.prepare(`INSERT INTO seller_demand_match_clicks
     (click_id,source_event_id,seller_key,demand_id,demand_key,asin,product_url,member_hash,notification_id,amount_jpy,status,reason,settled,jst_month,occurred_at)
     VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,'PENDING',?13,?14) ON CONFLICT(source_event_id) DO NOTHING`)
     .bind(clickId, sourceEventId, claim.seller_key, claim.demand_id, String(demand.demand_key || ''), claim.asin, clean(productUrl, 500), claim.member_hash,
-      clean(notificationId || demand.notification_id, 80), status === 'VALID' ? DEMAND_MATCH_CLICK_JPY : 0, status, reason, month, nowIso).run();
+      clean(notificationId || demand.notification_id, 80), amountJpy, status, reason, month, nowIso).run();
   if (Number(inserted?.meta?.changes || 0) !== 1) return { recorded: false, reason: 'DUPLICATE', status: 'EXCLUDED', seller_key: claim.seller_key, demand_id: claim.demand_id };
   let settled = 'PENDING';
   // 課金の開始は大隆さん判断（§54 価格変更）。無効の間も判定・件数は本番データで記録し、残高からは引かない。
-  if (status === 'VALID' && demandMatchChargeEnabled(env)) {
+  if (amountJpy > 0 && demandMatchChargeEnabled(env)) {
     const charged = await chargeReferralFromWallet(db, { sellerKey: claim.seller_key, amountJpy: DEMAND_MATCH_CLICK_JPY, sourceEventId, note: `Demand Match Click ${DEMAND_MATCH_CLICK_JPY}円`, now: nowIso });
     settled = charged ? 'WALLET' : 'PENDING';
     if (charged) await db.prepare(`UPDATE seller_demand_match_clicks SET settled='WALLET' WHERE click_id=?1`).bind(clickId).run();
   }
-  return { recorded: true, status, reason, settled, amount_jpy: status === 'VALID' ? DEMAND_MATCH_CLICK_JPY : 0, seller_key: claim.seller_key, demand_id: claim.demand_id, asin: claim.asin };
+  return { recorded: true, status, reason, settled, amount_jpy: amountJpy, seller_key: claim.seller_key, demand_id: claim.demand_id, asin: claim.asin };
 }
 
 // /api/seller/demand-match（GET: 集計、PUT /budget: 予算上限）
