@@ -229,7 +229,7 @@ jobs:
             });
 
       - name: Acknowledge persisted reliability incidents after GitHub records them
-        if: always() && steps.incident.outputs.recorded == 'true'
+        if: always() && steps.incident.outcome == 'success'
         continue-on-error: true
         working-directory: tools/line-worker
         env:

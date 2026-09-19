@@ -28,6 +28,8 @@ name: Auto Runway reel (generate, post-process, auto QA, queue)
 # 再実行履歴: 2026-09-06 #220/#221（同枠のAI女優日次リールを競合扱いしていた誤判定と、
 # 実画面撮影の networkidle 依存）を修正し、9/7 月曜分の生成物を回収するため再実行。
 
+# Workflow edits must not run a production QA/generation pass. Scheduled and
+# explicitly dispatched runs are the only execution paths.
 on:
   schedule:
     # 火・金 06:00 JST = 月・木 21:00 UTC（2026-09-17 SNS 方針 v3）
@@ -50,9 +52,6 @@ on:
         description: '大隆さんが contact-sheet で本人一致を確認した job_id（例 runway-auto-seller-demand-visible-20260918）。入れると本人一致だけ人手確認済みとして再実行'
         required: false
         default: ''
-  push:
-    branches: [main]
-    paths: ['.github/workflows/auto-runway-reel.yml']
 
 permissions:
   contents: read
