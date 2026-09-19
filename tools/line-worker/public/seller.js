@@ -315,3 +315,47 @@ document.querySelector('#sellerDemandOfferForm')?.addEventListener('submit', asy
   }
 });
 loadDemand();
+
+// 2026-09-19 大隆さん指示「Seller収益化・需要マッチ改修」§3・§4・§14: Demand Match（通知・有効クリック・利用額・予算上限）
+function showDemandMatchStatus(message, error = false) {
+  const node = document.querySelector('#sellerDemandMatchStatus');
+  if (!node) return;
+  node.textContent = message; node.classList.toggle('error', error);
+}
+function renderDemandMatch(dm) {
+  const kpi = (name) => document.querySelector(`[data-dm-kpi="${name}"]`);
+  if (!kpi('valid')) return;
+  const yen = (value) => `¥${Number(value || 0).toLocaleString('ja-JP')}`;
+  kpi('notified').textContent = String(dm.notified ?? 0);
+  kpi('valid').textContent = String(dm.valid_clicks ?? 0);
+  kpi('excluded').textContent = String(dm.excluded_clicks ?? 0);
+  kpi('amount').textContent = dm.charge_enabled ? yen(dm.amount_jpy) : `${yen(dm.amount_jpy)}（課金開始前・請求 ¥0）`;
+  kpi('cap').textContent = yen(dm.cap_jpy);
+  kpi('cap-note').textContent = dm.cap_reached ? '今月は上限に達しています。追加課金は止まり、掲載・検索流入は止まりません。' : `${dm.month} の利用額 ${yen(dm.amount_jpy)} ／ 上限 ${yen(dm.cap_jpy)}`;
+  const form = document.querySelector('#sellerDemandMatchBudgetForm');
+  if (form) {
+    const presets = (dm.cap_presets_jpy || [0, 1000, 3000, 5000, 10000]).map(String);
+    const cap = String(Number(dm.cap_jpy || 0));
+    form.elements.cap_preset.value = presets.includes(cap) ? cap : 'custom';
+    form.elements.cap_custom.value = presets.includes(cap) ? '' : cap;
+  }
+}
+async function loadDemandMatch() {
+  if (!document.querySelector('[data-dm-kpi="valid"]')) return;
+  try { renderDemandMatch((await shopRequest('/api/seller/demand-match')).demand_match || {}); }
+  catch (error) { showDemandMatchStatus(`Demand Match の集計を読み込めませんでした（${error.message}）`, true); }
+}
+document.querySelector('#sellerDemandMatchBudgetForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const preset = form.elements.cap_preset.value;
+  const cap = preset === 'custom' ? Number(form.elements.cap_custom.value) : Number(preset);
+  if (!Number.isFinite(cap) || cap < 0) { showDemandMatchStatus('上限は 0 以上の金額で入れてください。', true); return; }
+  showDemandMatchStatus('予算上限を保存しています…');
+  try {
+    const data = await shopRequest('/api/seller/demand-match/budget', 'PUT', { monthly_cap_jpy: cap });
+    renderDemandMatch(data.demand_match || {});
+    showDemandMatchStatus(`予算上限を ¥${Number(data.monthly_cap_jpy || 0).toLocaleString('ja-JP')} に保存しました。`);
+  } catch (error) { showDemandMatchStatus(`保存できませんでした（${error.message}）`, true); }
+});
+loadDemandMatch();

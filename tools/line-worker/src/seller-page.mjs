@@ -472,6 +472,26 @@ export async function sellerPageResponse(
   </form>
   <p class="data-note">商品の追加・同期後は、15分ごとの再判定でも自動的に照合されます。「近い商品」は、保存時に商品が1件も無かった需要にだけお知らせします。</p></section>
 
+  <!-- 2026-09-19 大隆さん指示「Seller収益化・需要マッチ改修」§3・§4・§14: Demand Match Click は
+       「探していた人を HOSHILU が呼び戻して商品を開いた時だけ 50円」。有効クリック数・50円×件数・今月利用額・予算上限を
+       目立つ位置に。数字は seller_demand_match_clicks / shop_demand_requests の実データのみ。 -->
+  <section class="auth-card" id="demand-match"><p class="eyebrow">DEMAND MATCH</p><h2>Demand Match（今月）</h2>
+  <p>探し中需要にあなたの商品が一致し、HOSHILU がその人へ通知し、<strong>その人が通知から商品ページを実際に開いた時だけ</strong> 1有効クリック 50円です。通常の検索・ショップからの商品クリックは月額に含まれ、課金されません。bot・Seller 本人・管理者・内部テスト・同じ日の同じ需要×商品の重複は有効クリックに数えません。判定結果は 1 件ずつ記録し、除外理由も残します。</p>
+  <div id="sellerDemandMatchStatus" class="operation-status" role="status" aria-live="polite"></div>
+  <div class="seller-grid metric-grid">
+    <article class="seller-panel"><span>通知した需要</span><strong data-dm-kpi="notified">…</strong><span>あなたの商品が一致して HOSHILU が本人へ通知した件数</span></article>
+    <article class="seller-panel"><span>有効クリック</span><strong data-dm-kpi="valid">…</strong><span>通知から商品ページを開いた回数（除外 <span data-dm-kpi="excluded">…</span>）</span></article>
+    <article class="seller-panel"><span>今月の利用額</span><strong data-dm-kpi="amount">…</strong><span>50円 × 有効クリック数</span></article>
+    <article class="seller-panel"><span>予算上限（月）</span><strong data-dm-kpi="cap">…</strong><span data-dm-kpi="cap-note">上限に達すると追加課金は止まり、掲載・検索流入は止まりません</span></article>
+  </div>
+  <form id="sellerDemandMatchBudgetForm" class="priority-form">
+    <p><strong>Demand Match 予算（月額上限）</strong> — 上限に達した月は、それ以上の有効クリックは課金せず「上限到達」として記録します。通常の商品掲載・検索流入・需要への商品登録は止まりません。</p>
+    <label>上限 <select name="cap_preset"><option value="0">0円（Demand Match を使わない）</option><option value="1000">1,000円</option><option value="3000" selected>3,000円（初期値）</option><option value="5000">5,000円</option><option value="10000">10,000円</option><option value="custom">任意の金額</option></select></label>
+    <label>任意の金額（円） <input name="cap_custom" type="number" min="0" max="300000" step="50" placeholder="例: 20000"></label>
+    <button type="submit" class="primary-button">予算上限を保存する</button>
+  </form>
+  <p class="data-note">Demand Match Click の課金は、この画面の計測と予算上限が入ったうえで、支払い方法の登録がある契約者から順に始めます。開始前の期間は 0円です。</p></section>
+
   <section class="auth-card" id="demand"><p class="eyebrow">DEMAND</p><h2>契約商品で満たせなかった需要</h2>
   <p>個人を特定しないカテゴリ集計です。QA・流入元なし・過去不明の記録を除外し、流入元付きの匿名セッションが5件以上あるカテゴリだけを表示します。セッション件数は人数を意味しません。</p>
   <div class="seller-grid">${demandCards}</div></section>
@@ -565,7 +585,7 @@ export async function sellerPageResponse(
     <article class="seller-panel"><span>HOSHILU Seller</span><strong>月額4,980円</strong><span>登録後3か月は月額0円。通常の商品クリック・SHOP掲載・横断検索・需要への商品登録は月額に含まれます。Demand Match Click（探していた人をHOSHILUが呼び戻して商品を開いた時）だけ1有効クリック50円（計測と予算上限が入るまで0円）。1事業者アカウント単位、初期費用・解約金0円。</span></article>
   </div>
   <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たしたジャンル別単価の有効クリックだけです。<a href="/for-sellers#pricing">料金を確認</a></p></section>
-  </main><script type="module" src="/seller.js"></script></body></html>`;
+  </main><script type="module" src="/seller.js?v=2"></script></body></html>`;
 
   return new Response(html, { headers: {
     'content-type': 'text/html; charset=UTF-8',
