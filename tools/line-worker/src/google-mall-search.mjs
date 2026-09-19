@@ -1,24 +1,26 @@
-// 2026-09-19 大隆さん決定「楽天と Yahoo! 以外のモールで 0 件のときだけ公式 Google 検索」→
-// 「楽天と Yahoo! で見つかっても、他のモールで見つかっていなければ Google 検索」。
-// HOSHILU が商品データを持たない 11 モール（Amazon・Qoo10・SHEIN・ZOZOTOWN・BUYMA・SHOPLIST・
-// MUSINSA・SNKRDUNK・ロフト・ハンズ・マツキヨ）は、Google Programmable Search（Custom Search JSON API、
-// 大隆さんが 11 モールのドメインだけを登録した検索エンジン）の結果をカードで出す。
-// SERP スクレイピング業者は使わない。楽天・Yahoo! は従来の API 検索のまま。
+// 2026-09-20 GPT 指示書（大隆さん承認）§12〜§16: 楽天・Yahoo! は API 検索のまま。その他のモールは、
+// 「そのモールから HOSHILU 自身の結果が 0 件」のときだけ Google 公式の Agent Search（Website Search、
+// 大隆さんが 11 モールのドメインを登録した検索アプリ）へフォールバックする。
+// Custom Search JSON API（新規利用停止・2027-01-01 廃止）と SERP スクレイピング業者は使わない。
 //
 // 守ること:
-// - 1 日の上限（既定 95。無料枠 100/日の手前）を D1 で予約してから呼ぶ。超えたら静かに出さない
-// - 同じ検索語は 24 時間 Cache API に置く（上限を消費しない）
-// - 価格は pagemap に載っている時だけ「ページ記載の価格（確認時点）」として返す。API 確認価格と混ぜない
+// - 不足モールをまとめて 1 リクエスト。同じ検索語は 24 時間 Cache API（上限を消費しない）
+// - 1 日の上限（既定 300 ≒ 月 9,000。無料枠 10,000/月の手前）を D1 で予約してから呼ぶ。超えたら静かに出さない
+// - 商品詳細 URL 候補だけ残す（カテゴリ・検索一覧・店舗・ブランド TOP・記事・ランキング等は除外）
+// - 価格は pagemap に載っている時だけ「ページ記載の価格（確認時点）」。API 確認価格と混ぜない。JPY 以外は捨てる
 // - 検索語以外（個人情報・セッション）は Google に送らない
 // - 失敗しても本検索は止めない（呼び出し側は必ず try/catch）
 
-const DEFAULT_DAILY_LIMIT = 95;
+const DEFAULT_DAILY_LIMIT = 300;
 const MAX_DAILY_LIMIT = 10000;
 const RESULT_LIMIT = 8;
 const CACHE_TTL_SECONDS = 86400;
-const REQUEST_TIMEOUT_MS = 2500;
+const REQUEST_TIMEOUT_MS = 3000;
+const TOKEN_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
+const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
+const SEARCH_ENDPOINT = 'https://discoveryengine.googleapis.com/v1';
 
-// 検索エンジンに登録したホストと表示名。ここに無いホストの結果は捨てる（Google 側の設定ミスや
+// 検索アプリに登録したホストと表示名。ここに無いホストの結果は捨てる（Google 側の設定ミスや
 // 広告ドメインが混ざっても、13 モール以外へは送客しない）。
 export const GOOGLE_MALL_HOSTS = Object.freeze([
   { host: 'amazon.co.jp', marketplace: 'AMAZON_JP', label: 'Amazon' },
@@ -35,11 +37,12 @@ export const GOOGLE_MALL_HOSTS = Object.freeze([
   { host: 'matsukiyococokara-online.com', marketplace: 'MATSUKIYO_JP', label: 'マツキヨココカラ' }
 ]);
 
-const NON_PRODUCT_PATH = /(?:\/search|\/s\/?$|\/s\?|\/ranking|\/category|\/categories|\/brand\/?$|\/shop\/?$|\/help|\/guide|\/campaign|\/event|\/news|\/feature|\/tag\/|\/list\/?$)/iu;
+// §16: 商品詳細ページ以外は落とす。パス・クエリの型で判定（店ごとの細かい規則は追って足す）。
+const NON_PRODUCT_PATH = /(?:\/search|\/s\/?$|\/s\?|\/ranking|\/category|\/categories|\/brand\/?$|\/brands?\/|\/shop\/?$|\/help|\/guide|\/campaign|\/event|\/news|\/feature|\/tag\/|\/list\/?$|\/blog|\/magazine|\/article|\/faq|\/about|\/kids-category|\/women-category|\/men-category|[?&](?:k|q|keyword|p|s)=)/iu;
 
 export function googleMallSearchConfigured(env = {}) {
-  return String(env.GOOGLE_CSE_ID || '').trim().length >= 8
-    && String(env.GOOGLE_CSE_KEY || '').trim().length >= 20
+  return String(env.GOOGLE_AGENT_SEARCH_SA_JSON || '').trim().length >= 100
+    && /^projects\/[0-9a-z-]+\/locations\/[a-z0-9-]+\/collections\/[a-z0-9_-]+\/engines\/[a-z0-9_-]+$/iu.test(String(env.GOOGLE_AGENT_SEARCH_ENGINE || '').trim())
     && String(env.GOOGLE_MALL_SEARCH_ENABLED ?? 'true').toLowerCase() !== 'false';
 }
 
@@ -49,7 +52,7 @@ export function googleMallSearchDailyLimit(env = {}) {
     ? configured : DEFAULT_DAILY_LIMIT;
 }
 
-// Google の無料枠は太平洋時間の日付で切り替わる（Cloud の課金日）。UTC で数えると最大 8 時間ずれる。
+// Google Cloud の無料枠は太平洋時間の日付・月で切り替わる（課金日）。UTC で数えると最大 8 時間ずれる。
 export function googleBillingDayKey(now = new Date()) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -66,7 +69,7 @@ export function mallForHost(hostname) {
 }
 
 function cleanText(value, limit) {
-  return String(value || '').normalize('NFKC').replace(/<[^>]*>/gu, ' ').replace(/\s+/gu, ' ').trim().slice(0, limit);
+  return String(value || '').normalize('NFKC').replace(/<[^>]*>/gu, ' ').replace(/&nbsp;/gu, ' ').replace(/\s+/gu, ' ').trim().slice(0, limit);
 }
 
 function firstImage(pagemap = {}) {
@@ -105,12 +108,26 @@ function pageListedPrice(pagemap = {}) {
   return 0;
 }
 
-export function parseGoogleMallItems(payload = {}) {
-  const items = Array.isArray(payload?.items) ? payload.items : [];
+// Agent Search（Discovery Engine）の応答を、{title, link, snippet, pagemap} の並びに揃える。
+export function normalizeAgentSearchResponse(payload = {}) {
+  const results = Array.isArray(payload?.results) ? payload.results : [];
+  return results.map((row) => {
+    const data = row?.document?.derivedStructData || {};
+    return {
+      title: data.title || data.htmlTitle || '',
+      link: data.link || '',
+      snippet: Array.isArray(data.snippets) ? (data.snippets[0]?.snippet || '') : '',
+      pagemap: data.pagemap || {}
+    };
+  });
+}
+
+export function parseGoogleMallItems(rows = []) {
+  const list = Array.isArray(rows) ? rows : Array.isArray(rows?.items) ? rows.items : [];
   const seen = new Set();
   const products = [];
   const others = [];
-  for (const item of items) {
+  for (const item of list) {
     let url;
     try { url = new URL(String(item?.link || '')); } catch { continue; }
     if (url.protocol !== 'https:' || url.username || url.password) continue;
@@ -127,12 +144,14 @@ export function parseGoogleMallItems(payload = {}) {
       marketplace: mall.marketplace,
       mall_label: mall.label,
       image_url: firstImage(item?.pagemap),
-      listed_price_jpy: pageListedPrice(item?.pagemap)
+      listed_price_jpy: pageListedPrice(item?.pagemap),
+      product_page: !NON_PRODUCT_PATH.test(url.pathname + url.search)
     };
     if (!entry.title) continue;
-    (NON_PRODUCT_PATH.test(url.pathname + url.search) ? others : products).push(entry);
+    (entry.product_page ? products : others).push(entry);
   }
-  return products.concat(others).slice(0, RESULT_LIMIT);
+  // §16: 商品詳細 URL 候補だけ残す。商品ページが 1 件も無い時だけ、案内として一覧ページを最大 2 件残す。
+  return (products.length ? products : others.slice(0, 2)).slice(0, RESULT_LIMIT);
 }
 
 export async function reserveGoogleMallSearchRequest(env = {}, now = new Date()) {
@@ -163,14 +182,75 @@ export function normalizeGoogleMallQuery(query) {
 }
 
 function cacheKeyFor(query) {
-  return `https://google-mall-search.hoshilu.internal/v1?q=${encodeURIComponent(query)}`;
+  return `https://google-mall-search.hoshilu.internal/v2?q=${encodeURIComponent(query)}`;
+}
+
+// ---- サービスアカウント → アクセストークン（RS256 JWT → OAuth2）。Worker のメモリに 50 分キャッシュ ----
+const base64url = (input) => {
+  const bytes = typeof input === 'string' ? new TextEncoder().encode(input) : new Uint8Array(input);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/gu, '-').replace(/\//gu, '_').replace(/=+$/u, '');
+};
+
+function pemToArrayBuffer(pem) {
+  const body = String(pem || '').replace(/-----BEGIN [A-Z ]+-----/gu, '').replace(/-----END [A-Z ]+-----/gu, '').replace(/\s+/gu, '');
+  const binary = atob(body);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+export function parseServiceAccount(env = {}) {
+  try {
+    const parsed = JSON.parse(String(env.GOOGLE_AGENT_SEARCH_SA_JSON || ''));
+    if (parsed?.type !== 'service_account') return null;
+    if (!/^[^\s@]+@[^\s@]+\.iam\.gserviceaccount\.com$/u.test(String(parsed.client_email || ''))) return null;
+    if (!/-----BEGIN PRIVATE KEY-----/u.test(String(parsed.private_key || ''))) return null;
+    return { client_email: parsed.client_email, private_key: parsed.private_key, token_uri: parsed.token_uri || TOKEN_ENDPOINT };
+  } catch {
+    return null;
+  }
+}
+
+let cachedToken = { value: '', expiresAt: 0, email: '' };
+
+export function resetGoogleAccessTokenCache() { cachedToken = { value: '', expiresAt: 0, email: '' }; }
+
+export async function googleAccessToken(env = {}, options = {}) {
+  const fetchImpl = options.fetch || fetch;
+  const now = options.now || new Date();
+  const account = parseServiceAccount(env);
+  if (!account) throw new Error('GOOGLE_AGENT_SEARCH_SA_INVALID');
+  if (cachedToken.value && cachedToken.email === account.client_email && cachedToken.expiresAt > now.getTime() + 60000) return cachedToken.value;
+  const issued = Math.floor(now.getTime() / 1000);
+  const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claims = base64url(JSON.stringify({ iss: account.client_email, scope: TOKEN_SCOPE, aud: account.token_uri, iat: issued, exp: issued + 3600 }));
+  const key = await crypto.subtle.importKey('pkcs8', pemToArrayBuffer(account.private_key), { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(`${header}.${claims}`));
+  const assertion = `${header}.${claims}.${base64url(signature)}`;
+  const response = await fetchImpl(account.token_uri, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion }).toString()
+  });
+  if (!response.ok) throw new Error(`GOOGLE_TOKEN_HTTP_${response.status}`);
+  const payload = await response.json();
+  const token = String(payload?.access_token || '');
+  if (!token) throw new Error('GOOGLE_TOKEN_EMPTY');
+  const ttl = Math.max(300, Math.min(3600, Number(payload?.expires_in) || 3600));
+  cachedToken = { value: token, email: account.client_email, expiresAt: now.getTime() + (ttl - 600) * 1000 };
+  return token;
 }
 
 // 戻り値: { items, source: 'cache'|'live'|'disabled'|'limit'|'error', reason }
+// options.excludeMarketplaces: HOSHILU 自身の結果が既にあるモール（§13: モール単位で判定。そのモールは Google で出さない）
 export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
   const fetchImpl = options.fetch || fetch;
   const now = options.now || new Date();
   const query = normalizeGoogleMallQuery(rawQuery);
+  const exclude = new Set((options.excludeMarketplaces || []).map((value) => String(value || '').toUpperCase()));
+  const finish = (items, source, reason = '') => ({ items: items.filter((item) => !exclude.has(item.marketplace)), source, reason });
   if (!query) return { items: [], source: 'disabled', reason: 'EMPTY_QUERY' };
   if (!googleMallSearchConfigured(env)) return { items: [], source: 'disabled', reason: 'NOT_CONFIGURED' };
   const cache = options.cache === null ? null : (options.cache || (globalThis.caches?.default ?? null));
@@ -180,28 +260,27 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
       const hit = await cache.match(cacheRequest);
       if (hit) {
         const cached = await hit.json();
-        if (Array.isArray(cached?.items)) return { items: cached.items, source: 'cache', reason: '' };
+        if (Array.isArray(cached?.items)) return finish(cached.items, 'cache');
       }
     } catch {}
   }
   const budget = await reserveGoogleMallSearchRequest(env, now);
   if (!budget.allowed) return { items: [], source: 'limit', reason: budget.reason };
-  const endpoint = new URL('https://www.googleapis.com/customsearch/v1');
-  endpoint.searchParams.set('key', String(env.GOOGLE_CSE_KEY).trim());
-  endpoint.searchParams.set('cx', String(env.GOOGLE_CSE_ID).trim());
-  endpoint.searchParams.set('q', query);
-  endpoint.searchParams.set('num', '10');
-  endpoint.searchParams.set('hl', 'ja');
-  endpoint.searchParams.set('gl', 'jp');
-  endpoint.searchParams.set('safe', 'active');
-  endpoint.searchParams.set('fields', 'items(title,link,snippet,pagemap(cse_image,cse_thumbnail,metatags,product,offer))');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs || REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetchImpl(endpoint.toString(), { method: 'GET', signal: controller.signal, headers: { accept: 'application/json' } });
+    const token = await googleAccessToken(env, { fetch: fetchImpl, now });
+    const engine = String(env.GOOGLE_AGENT_SEARCH_ENGINE).trim();
+    const response = await fetchImpl(`${SEARCH_ENDPOINT}/${engine}/servingConfigs/default_search:search`, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json' },
+      // 検索語以外は送らない（userPseudoId 等は付けない）。
+      body: JSON.stringify({ query, pageSize: 10, languageCode: 'ja', safeSearch: true })
+    });
     if (!response.ok) return { items: [], source: 'error', reason: `HTTP_${response.status}` };
     const payload = await response.json();
-    const items = parseGoogleMallItems(payload);
+    const items = parseGoogleMallItems(normalizeAgentSearchResponse(payload));
     if (cache) {
       try {
         await cache.put(cacheRequest, new Response(JSON.stringify({ items, cached_at: now.toISOString() }), {
@@ -209,9 +288,10 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
         }));
       } catch {}
     }
-    return { items, source: 'live', reason: '' };
+    return finish(items, 'live');
   } catch (error) {
-    return { items: [], source: 'error', reason: error?.name === 'AbortError' ? 'TIMEOUT' : 'FETCH_FAILED' };
+    const message = String(error?.message || '');
+    return { items: [], source: 'error', reason: error?.name === 'AbortError' ? 'TIMEOUT' : (message.startsWith('GOOGLE_') ? message : 'FETCH_FAILED') };
   } finally {
     clearTimeout(timer);
   }

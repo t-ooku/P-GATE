@@ -1698,10 +1698,19 @@ export function trackingEventsForPayload(payload, occurredAt) {
 async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA', originHint = {}) {
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
-  // 2026-09-19 大隆さん決定: 楽天・Yahoo! 以外の 11 モールは公式 Google 検索の結果をカードで出す
-  // （楽天・Yahoo! に候補があっても出す）。本検索と並行に走らせ、失敗しても本検索を止めない。
+  // 2026-09-20 GPT 指示書 §12〜§13（大隆さん承認）: 楽天・Yahoo! は API 検索のまま。その他のモールは、
+  // 「そのモールから HOSHILU 自身の結果が 0 件」のときだけ公式 Google Agent Search へフォールバック。
+  // モール単位で判定するので、楽天・Yahoo! に候補があっても ZOZO/Qoo10 等が 0 件ならそのモールは Google で出す。
+  // 本検索と並行に走らせ、失敗しても本検索を止めない。
+  const presentMarketplaces = new Set();
+  for (const candidate of Array.isArray(result.candidates) ? result.candidates : []) {
+    for (const offer of Array.isArray(candidate?.offers) ? candidate.offers : []) {
+      const marketplace = String(offer?.marketplace || marketplaceForDestination(offer?.product_url) || '').toUpperCase();
+      if (marketplace) presentMarketplaces.add(marketplace);
+    }
+  }
   const googleMallPromise = googleMallSearchConfigured(env)
-    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '))
+    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '), { excludeMarketplaces: [...presentMarketplaces] })
       .catch(() => ({ items: [], source: 'error', reason: 'UNHANDLED' }))
     : Promise.resolve({ items: [], source: 'disabled', reason: 'NOT_CONFIGURED' });
   const candidates = [];
