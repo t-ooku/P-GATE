@@ -1,4 +1,4 @@
-import { handleSellerRoutes } from './seller-auth.mjs';
+import { handleSellerRoutes, readSellerSession } from './seller-auth.mjs';
 import { targetPriceProductKey } from './target-price-product-key.mjs';
 import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
 import { handleCreatorInquiryRoutes } from './creator-inquiries.mjs';
@@ -3457,7 +3457,8 @@ export default {
     // 2026-09-04 Creator 別計測URL（管理者）。
     const creatorKpiResponse = await handleCreatorKpiRoutes(request, env);
     if (creatorKpiResponse) return creatorKpiResponse;
-    const shopResponse = await handleShopRoutes(request, env, { createTrackToken, hashUser });
+    // 2026-09-19: 商品ページ（/shop/<slug>/product/<asin>）の Demand Match Click 判定で Seller 本人・管理者を除外する。
+    const shopResponse = await handleShopRoutes(request, env, { createTrackToken, hashUser, readSeller: readSellerSession, isAdmin: authorizeAdminRequest });
     if (shopResponse) return shopResponse;
     // 検索品質カナリアの手動実行(管理者のみ)。cron と同じ固定クエリを本番経路で
     // 流し、QA記録を残して結果を返す。利用者入力は受け付けない。

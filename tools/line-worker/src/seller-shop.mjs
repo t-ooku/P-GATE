@@ -17,7 +17,8 @@ import {
 } from './shop-facets.mjs';
 import { TREE as HOSHILU_GENRE_TREE } from '../public/genre-explorer.mjs';
 // 2026-09-17 SHOP強化 P0: Seller 向け「HOSHILUで今探されているもの」と「この需要に商品を登録」
-import { registerDemandOffer, sellerDemandOverview } from './shop-demand.mjs';
+import { registerDemandOffer, sellerDemandOverview, demandConditions, judgeTitle } from './shop-demand.mjs';
+import { recordDemandMatchClick } from './seller-demand-match.mjs';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // 制御文字（U+0000–U+001F, U+007F）。パッチ運搬でユニコードエスケープが崩れないよう fromCharCode で組む。
@@ -645,14 +646,128 @@ ${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a rel="nofollow" href="${e
 </script><script type="module" src="/growth-analytics.mjs?v=15"></script></body></html>`;
 }
 
+// ---- Seller 専用商品ページ（2026-09-19 大隆さん指示 §10〜§11） ------------------------------
+// hoshilu.app/shop/{seller}/product/{asin}。商品データにある事実だけを出す（価格・在庫・URL を AI が作らない）。
+// 探し中需要の本人が署名付きリンク（?dm=）で開いた時は、その需要の条件と一致項目を表示する。
+function renderShopProductHtml({ shop, product, demandView = null, origin }) {
+  const title = `${product.name} | ${shop.shop_name} | HOSHILU`;
+  const description = clean(`${shop.shop_name} の商品「${product.name}」。購入先は ${MARKETPLACE_LABEL[product.marketplace] || product.marketplace || '外部ショップ'} です。`, 150);
+  const canonical = `${origin}/shop/${esc(shop.slug)}/product/${esc(product.asin)}`;
+  const priceHtml = product.price > 0 ? `<p class="pd-price">¥${Number(product.price).toLocaleString('ja-JP')}<small>（購入先の商品データ。最新の価格・在庫は購入先でご確認ください）</small></p>` : `<p class="pd-price pd-price-none">価格・在庫は購入先でご確認ください</p>`;
+  const demandHtml = demandView ? `<section class="pd-demand"><p class="pd-eyebrow">あなたが探していたもの</p><p class="pd-query">「${esc(demandView.query)}」</p>
+    <dl><div><dt>確認できた条件</dt><dd>${demandView.matched.length ? demandView.matched.map((label) => `<span class="pd-tag on">✓ ${esc(label)}</span>`).join('') : '<span class="pd-tag">なし</span>'}</dd></div>
+    <div><dt>確認できなかった条件</dt><dd>${demandView.unmatched.length ? demandView.unmatched.map((label) => `<span class="pd-tag">△ ${esc(label)}</span>`).join('') : '<span class="pd-tag on">なし</span>'}</dd></div></dl>
+    <p class="pd-note">一致の判定は商品名に条件が明記されているかで HOSHILU が行いました（${demandView.level === 'EXACT' ? '条件に一致' : demandView.level === 'NEAR' ? '近い商品' : '一致しない'}）。Seller の自己申告では変わりません。</p></section>` : '';
+  const searchHref = `/?shop_search=${encodeURIComponent(clean(demandView?.query || product.name, 80))}#tab-shops`;
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)}</title><meta name="description" content="${esc(description)}"><meta name="robots" content="noindex,follow"><link rel="canonical" href="${canonical}">
+<style>
+:root{--ink:#1c1c1a;--muted:#6f6f68;--line:#e4e4de;--accent:#2f5d50;--bg:#fbfbf8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;line-height:1.7}
+.top{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);font-size:12px}.top a{color:var(--ink);text-decoration:none}
+.wrap{max-width:960px;margin:0 auto;padding:24px}
+.pd{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px}
+.pd-image,.pd-noimage{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}.pd-noimage{display:grid;place-items:center;color:var(--muted);font-size:12px}
+.pd-shop{font-size:11px;letter-spacing:.12em;color:var(--muted);margin:0 0 8px}.pd-shop a{color:var(--muted)}
+h1{font-size:20px;line-height:1.5;margin:0 0 12px}
+.pd-price{font-size:22px;font-weight:700;margin:0 0 16px}.pd-price small{display:block;font-size:11px;font-weight:400;color:var(--muted)}.pd-price-none{font-size:13px;font-weight:500;color:var(--muted)}
+.pd-actions{display:grid;gap:10px}.pd-actions a{display:block;text-align:center;padding:14px 16px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px}
+.pd-buy{background:var(--accent);color:#fff}.pd-ghost{border:1px solid var(--line);color:var(--ink);background:#fff}
+.pd-meta{margin:16px 0 0;font-size:12px;color:var(--muted)}.pd-meta div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:8px 0;border-top:1px solid var(--line)}.pd-meta dd{margin:0;overflow-wrap:anywhere}
+.pd-demand{grid-column:1/-1;border:1px dashed var(--accent);border-radius:12px;padding:18px 20px;background:#fff;font-size:13px}.pd-eyebrow{margin:0;font-size:10px;letter-spacing:.16em;color:var(--accent);font-weight:700}.pd-query{font-size:16px;font-weight:700;margin:6px 0 12px}
+.pd-demand dl{margin:0}.pd-demand dl div{display:grid;grid-template-columns:140px minmax(0,1fr);gap:12px;padding:8px 0;border-top:1px solid var(--line)}.pd-demand dt{color:var(--muted)}.pd-demand dd{margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.pd-tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12px;background:#fff}.pd-tag.on{border-color:var(--accent);color:var(--accent)}
+.pd-note{margin:12px 0 0;font-size:12px;color:var(--muted)}
+.foot{margin:32px 0 0;font-size:11px;color:var(--muted)}
+@media(max-width:640px){.wrap{padding:16px}.pd{grid-template-columns:1fr;gap:18px}.pd-demand dl div{grid-template-columns:1fr;gap:4px}}
+</style></head><body>
+<header class="top"><a href="/" aria-label="HOSHILU で横断検索">← HOSHILU<span> / SHOPS</span></a><a href="/shop/${esc(shop.slug)}">${esc(shop.shop_name)} のショップへ</a></header>
+<main class="wrap" data-slug="${esc(shop.slug)}" data-asin="${esc(product.asin)}">
+<article class="pd">
+<div>${product.image ? `<img class="pd-image" src="${esc(product.image)}" alt="" loading="eager">` : '<div class="pd-noimage">画像なし</div>'}</div>
+<div><p class="pd-shop">HOSHILU / SHOP · <a href="/shop/${esc(shop.slug)}">${esc(shop.shop_name)}</a></p>
+<h1>${esc(product.name)}</h1>
+${priceHtml}
+<div class="pd-actions"><a class="pd-buy" href="${esc(product.direct_url)}" data-track="${esc(product.tracking_url)}" rel="nofollow sponsored noopener" target="_blank">${esc(MARKETPLACE_LABEL[product.marketplace] || '購入先')}で見る ↗</a><a class="pd-ghost" href="/shop/${esc(shop.slug)}">ショップの他の商品を見る</a><a class="pd-ghost" href="${esc(searchHref)}">条件を変えて探す・ホシっとく</a></div>
+<dl class="pd-meta"><div><dt>ASIN</dt><dd>${esc(product.asin)}</dd></div>${product.brand ? `<div><dt>メーカー</dt><dd>${esc(product.brand)}</dd></div>` : ''}<div><dt>販売・発送</dt><dd>${esc(shop.business_name || shop.shop_name)}（購入・発送は ${esc(MARKETPLACE_LABEL[product.marketplace] || '購入先')} で行われます）</dd></div></dl>
+</div>
+${demandHtml}
+</article>
+<p class="foot">商品リンクは購入先の商品ページへ移動します。HOSHILU は送客に対して事業者から料金を受け取る場合がありますが、検索順位は変わりません。価格・在庫・商品情報は購入先の商品データに基づき、HOSHILU が推定して作ることはありません。</p>
+</main>
+<script>
+(function(){document.querySelectorAll('a[data-track]').forEach(function(a){a.addEventListener('click',function(){var t=a.getAttribute('data-track');if(!t||t===a.getAttribute('href'))return;try{fetch(t,{mode:'no-cors',keepalive:true,redirect:'manual',credentials:'omit'}).catch(function(){});}catch(e){}});});})();
+</script><script type="module" src="/growth-analytics.mjs?v=15"></script></body></html>`;
+}
+
 // ---- ルーティング ----------------------------------------------------------------
-export async function handleShopRoutes(request, env, { createTrackToken, readMember = readMemberSession, hashUser } = {}) {
+export async function handleShopRoutes(request, env, { createTrackToken, readMember = readMemberSession, hashUser, readSeller = null, isAdmin = null } = {}) {
   const url = new URL(request.url);
   const db = env.PRODUCT_DB;
   const pageMatch = url.pathname.match(/^\/shop\/([a-z0-9-]{1,40})(?:\/coupon\/([A-Za-z0-9-]{1,64}))?\/?$/);
   const followMatch = url.pathname.match(/^\/api\/member\/shops\/([a-z0-9-]{1,40})\/follow$/);
-  if (!pageMatch && !followMatch) return null;
+  const productMatch = url.pathname.match(/^\/shop\/([a-z0-9-]{1,40})\/product\/([A-Za-z0-9]{10})\/?$/);
+  if (!pageMatch && !followMatch && !productMatch) return null;
   if (!db) return new Response('shop unavailable', { status: 503 });
+
+  // 2026-09-19 大隆さん指示 §10〜§11: Seller 専用商品ページ。通知（?dm=署名付き）から本人が開いた時だけ
+  // Demand Match Click を判定・記録する。通常のアクセスは表示だけで、課金判定の行は作らない。
+  if (productMatch) {
+    if (!['GET', 'HEAD'].includes(request.method)) return new Response('method not allowed', { status: 405 });
+    const shop = await loadShop(db, productMatch[1]);
+    if (!shop) return new Response('ショップが見つかりません', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } });
+    const asin = productMatch[2].toUpperCase();
+    const found = await shopProducts(env, shop, { query: asin });
+    const raw = found.find((item) => clean(item.asin, 20).toUpperCase() === asin) || found[0];
+    if (!raw) return new Response('この商品はいまショップの商品データにありません', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } });
+    const member = await readMember(request, env);
+    const crawler = isCrawlerUserAgent(request.headers.get('user-agent'));
+    const userHash = hashUser ? await hashUser(member?.id || `shop:${shop.slug}`) : 'shop';
+    let trackingUrl = raw.url;
+    if (typeof createTrackToken === 'function' && env.LINK_SIGNING_SECRET) {
+      const seed = crypto.randomUUID();
+      const token = await createTrackToken({
+        u: userHash, r: seed, a: asin, d: raw.url, exp: Math.floor(Date.now() / 1000) + 86400 * 7,
+        j: `${seed}:${asin}:SHOP_PRODUCT`, c: 'PWA', m: raw.marketplace,
+        sid: shop.seller_ids[0] || '', hpid: '', sp: false, so: 'HOSHILU_SHOP', tn: raw.tenant, rc: 'other', sh: shop.slug
+      }, env.LINK_SIGNING_SECRET);
+      trackingUrl = `${url.origin}/go?token=${encodeURIComponent(token)}`;
+    }
+    let directUrl = raw.url;
+    try { const u = new URL(raw.url); if (/(^|\.)amazon\.co\.jp$/i.test(u.hostname) && env.AMAZON_ASSOCIATE_TAG) { u.searchParams.set('tag', env.AMAZON_ASSOCIATE_TAG); directUrl = u.toString(); } } catch {}
+    const product = { ...raw, asin, tracking_url: trackingUrl, direct_url: directUrl };
+    let demandView = null;
+    const dm = clean(url.searchParams.get('dm'), 600);
+    if (dm) {
+      let viewerSellerKey = '';
+      let viewerIsAdmin = false;
+      try { viewerSellerKey = String((typeof readSeller === 'function' ? await readSeller(request, env) : null)?.seller_key || ''); } catch {}
+      try { viewerIsAdmin = typeof isAdmin === 'function' ? Boolean(await isAdmin(request, env)) : false; } catch {}
+      let click = { recorded: false, reason: 'ERROR' };
+      try {
+        click = await recordDemandMatchClick(env, { token: dm, request, memberId: member?.id || '', viewerSellerKey, viewerIsAdmin, productUrl: raw.url });
+      } catch {}
+      if (!crawler) await recordShopEvent(env, 'demand_match_click', shop.slug, { content: `${click.status || 'NONE'}:${click.reason || ''}`.slice(0, 80), marketplace: raw.marketplace });
+      // 需要の本人にだけ、探していた条件と一致項目を見せる（他人の検索文は出さない）
+      if (member?.id && click.demand_id) {
+        try {
+          const demand = await db.prepare('SELECT query_text FROM shop_demand_requests WHERE demand_id=?1 AND member_id=?2').bind(click.demand_id, member.id).first();
+          if (demand?.query_text) {
+            const conditions = demandConditions(demand.query_text);
+            const verdict = judgeTitle(raw.name, conditions);
+            demandView = { query: demand.query_text, level: verdict.level, matched: verdict.matched, unmatched: verdict.unmatched };
+          }
+        } catch {}
+      }
+    } else if (!crawler && request.method === 'GET') {
+      await recordShopEvent(env, 'shop_product_viewed', shop.slug, { content: asin, marketplace: raw.marketplace });
+    }
+    const html = renderShopProductHtml({ shop, product, demandView, origin: url.origin });
+    return new Response(request.method === 'HEAD' ? null : html, { headers: {
+      'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin'
+    } });
+  }
 
   if (followMatch) {
     if (!['POST', 'DELETE'].includes(request.method)) return json({ ok: false, error: 'METHOD_NOT_ALLOWED' }, 405);

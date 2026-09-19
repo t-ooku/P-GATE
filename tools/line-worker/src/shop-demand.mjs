@@ -12,6 +12,7 @@
 import { activeShops, publicShopRef, recordShopEvent, SHOP_GENRES, shopFilters } from './seller-shop.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
 import { readMemberSession } from './member-auth.mjs';
+import { demandMatchProductUrl } from './seller-demand-match.mjs';
 import { SHOP_COLOR_FILTERS, SHOP_MATERIAL_FILTERS, shopAttributeDefinition } from './shop-facets.mjs';
 
 const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]`, 'g');
@@ -291,7 +292,14 @@ export async function notifyDemandMatch(env, demand, { shop, card, level, now = 
   const shopName = String(shop?.name || card?.shop?.name || 'ショップ');
   const title = '探していた商品が見つかりました';
   const body = `「${demand.query_text}」\n${shopName}に${level === 'EXACT' ? '条件に一致する' : '近い'}商品が追加されました。`;
-  const resultUrl = demandResultUrl(demand.query_text);
+  // 2026-09-19 大隆さん指示 §2・§10・§11: 通知のリンク先は Seller 専用商品ページ（署名付き）。本人が通知から
+  // その商品を開いた時だけ Demand Match Click（50円）。ショップ・ASIN が無い時は従来の検索結果へ。
+  let resultUrl = demandResultUrl(demand.query_text);
+  const slug = String(shop?.slug || card?.shop?.slug || '');
+  const asin = clean(card?.asin, 20).toUpperCase();
+  if (slug && /^[A-Z0-9]{10}$/u.test(asin) && shop?.seller_key) {
+    try { resultUrl = await demandMatchProductUrl(env, { slug, asin, demandId: demand.demand_id, memberId, sellerKey: shop.seller_key }); } catch {}
+  }
   const notificationId = `shopdemand-${String(demand.demand_id).replace(/[^A-Za-z0-9-]/g, '').slice(0, 48)}`;
   const eventKey = `SHOPDEMAND:${demand.demand_id}`.slice(0, 160);
   const statements = [db.prepare(`INSERT OR IGNORE INTO mywatch_notifications

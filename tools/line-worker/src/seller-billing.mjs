@@ -556,6 +556,18 @@ export async function adjustBalance(db, { sellerKey, amountJpy, note, now = new 
   return { credited: false, adjusted_jpy: amount };
 }
 
+// 2026-09-19 Demand Match Click（seller-demand-match.mjs）用: 前払い残高があればその場で消化して台帳に残す。
+// 残高が無ければ false（呼び出し側が INVOICE 待ちにする）。金額は必ず正。
+export async function chargeReferralFromWallet(db, { sellerKey, amountJpy, sourceEventId, note, now = new Date().toISOString() }) {
+  const amount = yen(amountJpy);
+  if (amount <= 0) return false;
+  await ensureWallet(db, sellerKey, now);
+  const ok = await debitWallet(db, sellerKey, toMicros(amount), now);
+  if (!ok) return false;
+  await appendLedger(db, { sellerKey, entryType: 'REFERRAL_CHARGE', amountMicros: -toMicros(amount), sourceEventId, note, occurredAt: now });
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // Webhook
 // ---------------------------------------------------------------------------

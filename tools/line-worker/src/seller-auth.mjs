@@ -1,6 +1,7 @@
 import { sellerPageResponse } from './seller-page.mjs';
 import { handleSellerBillingRoutes } from './seller-billing.mjs';
 import { handleSellerShopRoutes } from './seller-shop.mjs';
+import { handleSellerDemandMatchRoutes } from './seller-demand-match.mjs';
 import { spApiSellerPageResponse } from './sp-api-seller-page.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import {
@@ -266,6 +267,14 @@ export async function handleSellerRoutes(request, env) {
     }
     const seller = await readSellerSession(request, env);
     return handleSellerShopRoutes(request, env, seller);
+  }
+  // 2026-09-19 大隆さん指示 §3・§4・§14: Demand Match（通知数・有効クリック・今月の利用額・予算上限）。
+  if (url.pathname.startsWith('/api/seller/demand-match')) {
+    if (request.method !== 'GET' && request.headers.get('origin') !== url.origin) {
+      return sellerJson({ ok: false, error: 'ORIGIN_NOT_ALLOWED' }, { status: 403 });
+    }
+    const seller = await readSellerSession(request, env);
+    return handleSellerDemandMatchRoutes(request, env, seller);
   }
   if (request.method === 'GET' && (url.pathname === '/seller' || url.pathname === '/seller.html')) {
     const seller = await readSellerSession(request, env);
