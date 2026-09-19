@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
   DEMAND_MATCH_CLICK_JPY, demandMatchProductUrl, demandMatchSummary, handleSellerDemandMatchRoutes, recordDemandMatchClick,
-  setDemandMatchBudget, signDemandMatchToken, verifyDemandMatchToken
+  demandMatchEligibility, setDemandMatchBudget, signDemandMatchToken, verifyDemandMatchToken
 } from '../src/seller-demand-match.mjs';
-import { registerDemandOffer } from '../src/shop-demand.mjs';
+import { registerDemandOffer, rematchDemand } from '../src/shop-demand.mjs';
 import { handleShopRoutes, resetShopCache } from '../src/seller-shop.mjs';
 
 // 2026-09-19 大隆さん指示「HOSHILU Seller収益化・需要マッチ改修」§2〜§4・§10〜§14:
@@ -73,8 +73,9 @@ test('需要に商品を登録 → 通知のリンクは Seller 専用商品ペ�
   assert.deepEqual(demand, { status: 'MATCHED', matched_seller_key: SELLER_KEY });
 });
 
-async function matchedEnv(extra = {}) {
+async function matchedEnv(extra = {}, { fundJpy = 0 } = {}) {
   const made = makeEnv(extra);
+  if (fundJpy > 0) made.db.prepare(`INSERT INTO seller_billing_wallets(seller_key,balance_micros_jpy,status,updated_at) VALUES(?1,?2,'ACTIVE','2026-09-01T00:00:00Z')`).run(SELLER_KEY, fundJpy * 1000000);
   await registerDemandOffer(made.env, SELLER_KEY, { demand_key: '黒の本革で自立するa4トートバッグ', asin: 'B000000001' }, { now: NOW.toISOString() });
   const token = new URL(made.db.prepare(`SELECT result_url FROM mywatch_notifications WHERE member_id='m1' AND channel='WEB'`).get().result_url).searchParams.get('dm');
   return { ...made, token };
@@ -127,8 +128,7 @@ test('予算上限: 上限に達したら BUDGET_CAP で記録し課金しない
 });
 
 test('課金フラグ true: VALID は前払い残高から 50円を引き、台帳に REFERRAL_CHARGE を残す。残高不足は PENDING', async () => {
-  const { db, env, token } = await matchedEnv({ DEMAND_MATCH_CHARGE_ENABLED: 'true' });
-  db.prepare(`INSERT INTO seller_billing_wallets(seller_key,balance_micros_jpy,status,updated_at) VALUES(?1,?2,'ACTIVE','2026-09-01T00:00:00Z')`).run(SELLER_KEY, 60 * 1000000);
+  const { db, env, token } = await matchedEnv({ DEMAND_MATCH_CHARGE_ENABLED: 'true' }, { fundJpy: 60 });
   const click = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: NOW });
   assert.equal(click.settled, 'WALLET');
   assert.equal(db.prepare(`SELECT balance_micros_jpy FROM seller_billing_wallets WHERE seller_key=?1`).get(SELLER_KEY).balance_micros_jpy, 10 * 1000000);
@@ -189,7 +189,7 @@ test('/api/seller/demand-match: 集計と予算上限（プリセット・任意
   const bad = await handleSellerDemandMatchRoutes(request('/api/seller/demand-match/budget', { method: 'PUT', body: { monthly_cap_jpy: -1 } }), env, seller);
   assert.equal(bad.status, 400);
   const page = readFileSync(new URL('../src/seller-page.mjs', import.meta.url), 'utf8');
-  for (const label of ['data-dm-kpi="notified"', 'data-dm-kpi="valid"', 'data-dm-kpi="amount"', 'data-dm-kpi="cap"', 'sellerDemandMatchBudgetForm', 'seller.js?v=3']) assert.ok(page.includes(label), label);
+  for (const label of ['data-dm-kpi="notified"', 'data-dm-kpi="valid"', 'data-dm-kpi="amount"', 'data-dm-kpi="cap"', 'sellerDemandMatchBudgetForm', 'seller.js?v=4']) assert.ok(page.includes(label), label);
   const js = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
   assert.match(js, /\/api\/seller\/demand-match\/budget/u);
   const auth = readFileSync(new URL('../src/seller-auth.mjs', import.meta.url), 'utf8');
@@ -208,4 +208,47 @@ test('無料アカウント（ITG）: 有効クリックは記録するが 0円�
   const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
   assert.equal(wrangler.vars.DEMAND_MATCH_CHARGE_ENABLED, 'true');
   assert.ok(wrangler.vars.DEMAND_MATCH_FREE_SELLER_KEYS.split(',').includes(SELLER_KEY), 'ITG GROUP は無料');
+});
+
+test('残高が無い Seller は課金できるまで Demand Match を止める: 商品登録は拒否、再照合は対象外＝通知しない（2026-09-19 大隆さん指示）', async () => {
+  const charging = { DEMAND_MATCH_CHARGE_ENABLED: 'true' };
+  {
+    const { db, env } = makeEnv(charging);
+    assert.deepEqual(await demandMatchEligibility(env, SELLER_KEY, NOW), { ok: false, reason: 'BALANCE_REQUIRED', available_jpy: 0 });
+    await assert.rejects(registerDemandOffer(env, SELLER_KEY, { demand_key: '黒の本革で自立するa4トートバッグ', asin: 'B000000001' }, { now: NOW.toISOString() }), /DEMAND_MATCH_BALANCE_REQUIRED/u);
+    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM shop_demand_offers`).get().c, 0, '登録も残さない');
+    const demand = db.prepare(`SELECT * FROM shop_demand_requests WHERE demand_id='sd-1'`).get();
+    const outcome = await rematchDemand(env, demand, { now: NOW.toISOString() });
+    assert.equal(outcome.matched, false, '残高の無い Seller の商品には一致させない');
+    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM mywatch_notifications`).get().c, 0, '通知を出さない');
+    assert.equal(db.prepare(`SELECT status FROM shop_demand_requests WHERE demand_id='sd-1'`).get().status, 'OPEN');
+    const summary = await demandMatchSummary(env, SELLER_KEY, NOW);
+    assert.equal(summary.eligibility.reason, 'BALANCE_REQUIRED');
+  }
+  {
+    // チャージすると再開（残高 100円 → 登録・通知できる）
+    const { db, env } = makeEnv(charging);
+    db.prepare(`INSERT INTO seller_billing_wallets(seller_key,balance_micros_jpy,status,updated_at) VALUES(?1,?2,'ACTIVE','2026-09-01T00:00:00Z')`).run(SELLER_KEY, 100 * 1000000);
+    assert.deepEqual(await demandMatchEligibility(env, SELLER_KEY, NOW), { ok: true, reason: 'FUNDED', available_jpy: 100 });
+    const demand = db.prepare(`SELECT * FROM shop_demand_requests WHERE demand_id='sd-1'`).get();
+    const outcome = await rematchDemand(env, demand, { now: NOW.toISOString() });
+    assert.equal(outcome.matched, true);
+    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM mywatch_notifications`).get().c, 1);
+  }
+  {
+    // 無料アカウント（ITG）は残高が無くても止めない
+    const { db, env } = makeEnv({ ...charging, DEMAND_MATCH_FREE_SELLER_KEYS: SELLER_KEY });
+    assert.equal((await demandMatchEligibility(env, SELLER_KEY, NOW)).reason, 'FREE_ACCOUNT');
+    const result = await registerDemandOffer(env, SELLER_KEY, { demand_key: '黒の本革で自立するa4トートバッグ', asin: 'B000000001' }, { now: NOW.toISOString() });
+    assert.equal(result.notified, 1);
+    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM mywatch_notifications`).get().c, 1);
+  }
+  {
+    // 予算 0 円＝Demand Match を使わない設定でも止める
+    const { env } = makeEnv(charging);
+    await setDemandMatchBudget(env.PRODUCT_DB, SELLER_KEY, 0);
+    assert.equal((await demandMatchEligibility(env, SELLER_KEY, NOW)).reason, 'BUDGET_OFF');
+  }
+  const js = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
+  assert.match(js, /DEMAND_MATCH_BALANCE_REQUIRED/u);
 });

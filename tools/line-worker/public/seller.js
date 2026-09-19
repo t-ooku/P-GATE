@@ -310,7 +310,10 @@ document.querySelector('#sellerDemandOfferForm')?.addEventListener('submit', asy
     showDemandStatus(`判定: ${label}（✓ ${(offer.matched || []).join('・') || 'なし'} ／ △ ${(offer.unmatched || []).join('・') || 'なし'}）。${offer.notified ? `${offer.notified}人にお知らせしました。` : offer.level === 'NONE' ? '商品名に条件が明記されていないため、お知らせはしていません。' : 'お知らせ対象の会員はいませんでした。'}`, offer.level === 'NONE');
     form.reset();
   } catch (error) {
-    const messages = { PRODUCT_NOT_IN_YOUR_SHOP: 'その ASIN／URL は、あなたのショップの商品データに見つかりません。', ASIN_OR_URL_REQUIRED: 'ASIN か商品URL を入れてください。', DEMAND_NOT_FOUND: '需要が見つかりません。' };
+    const messages = { PRODUCT_NOT_IN_YOUR_SHOP: 'その ASIN／URL は、あなたのショップの商品データに見つかりません。', ASIN_OR_URL_REQUIRED: 'ASIN か商品URL を入れてください。', DEMAND_NOT_FOUND: '需要が見つかりません。',
+      DEMAND_MATCH_BALANCE_REQUIRED: '前払い残高が 50円未満のため登録できません。「前払い残高とお支払い」からチャージすると、需要への商品登録と通知が再開します。',
+      DEMAND_MATCH_BUDGET_OFF: 'Demand Match の予算上限が 0円です。予算上限を設定すると登録できます。',
+      DEMAND_MATCH_BUDGET_CAP: '今月の予算上限に達しています。予算上限を上げると登録できます。' };
     showDemandStatus(messages[error.message] || `登録できませんでした（${error.message}）`, true);
   }
 });
@@ -331,6 +334,11 @@ function renderDemandMatch(dm) {
   kpi('excluded').textContent = String(dm.excluded_clicks ?? 0);
   kpi('amount').textContent = dm.free_account ? '¥0（無料アカウント）' : dm.charge_enabled ? yen(dm.amount_jpy) : `${yen(dm.amount_jpy)}（課金開始前・請求 ¥0）`;
   kpi('cap').textContent = yen(dm.cap_jpy);
+  const eligibility = dm.eligibility || {};
+  const stopped = { BALANCE_REQUIRED: '前払い残高が 50円未満のため、Demand Match は停止中です。需要への商品登録と再照合・本人への通知は行われません。「前払い残高とお支払い」からチャージすると再開します。', BUDGET_OFF: '予算上限が 0円のため、Demand Match は停止中です（需要への商品登録と通知は行われません）。', BUDGET_CAP: '今月の予算上限に達したため、Demand Match は停止中です。来月に再開するか、予算上限を上げてください。' };
+  if (!eligibility.ok && stopped[eligibility.reason]) showDemandMatchStatus(stopped[eligibility.reason], true);
+  else if (eligibility.reason === 'FUNDED') showDemandMatchStatus(`Demand Match は有効です（前払い残高 ¥${Number(eligibility.available_jpy || 0).toLocaleString('ja-JP')}）。`);
+  else if (eligibility.reason === 'FREE_ACCOUNT') showDemandMatchStatus('無料アカウントのため、Demand Match Click は 0円です。');
   kpi('cap-note').textContent = dm.cap_reached ? '今月は上限に達しています。追加課金は止まり、掲載・検索流入は止まりません。' : `${dm.month} の利用額 ${yen(dm.amount_jpy)} ／ 上限 ${yen(dm.cap_jpy)}`;
   const form = document.querySelector('#sellerDemandMatchBudgetForm');
   if (form) {

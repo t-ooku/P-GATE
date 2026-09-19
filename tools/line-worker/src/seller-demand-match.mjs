@@ -11,7 +11,7 @@
 //   - 同一需要 × 同一商品は JST 1 日 1 回（source_event_id で冪等）
 //   - 予算上限（seller_demand_match_budgets、初期値 3,000円/月）を超える分は課金しない（BUDGET_CAP）
 // 課金判定は seller_demand_match_clicks に必ず行として残す（VALID / EXCLUDED と固定理由）。
-import { chargeReferralFromWallet, getBillingAccount, jstDateKey, jstMonthKey } from './seller-billing.mjs';
+import { chargeReferralFromWallet, getBillingAccount, getWallet, jstDateKey, jstMonthKey } from './seller-billing.mjs';
 import { isCrawlerUserAgent } from './growth-events.mjs';
 
 export const DEMAND_MATCH_CLICK_JPY = 50;
@@ -101,9 +101,11 @@ export async function setDemandMatchBudget(db, sellerKey, capJpy, now = new Date
 }
 
 export async function demandMatchMonthUsage(db, sellerKey, month) {
-  const row = await db.prepare(`SELECT COUNT(*) AS clicks, COALESCE(SUM(amount_jpy),0) AS amount_jpy
-    FROM seller_demand_match_clicks WHERE seller_key=?1 AND jst_month=?2 AND status='VALID'`).bind(sellerKey, month).first();
-  return { clicks: Number(row?.clicks || 0), amount_jpy: Number(row?.amount_jpy || 0) };
+  try {
+    const row = await db.prepare(`SELECT COUNT(*) AS clicks, COALESCE(SUM(amount_jpy),0) AS amount_jpy
+      FROM seller_demand_match_clicks WHERE seller_key=?1 AND jst_month=?2 AND status='VALID'`).bind(sellerKey, month).first();
+    return { clicks: Number(row?.clicks || 0), amount_jpy: Number(row?.amount_jpy || 0) };
+  } catch { return { clicks: 0, amount_jpy: 0 }; }
 }
 
 // 契約者画面 §14: 通知数・有効クリック数・費用・予算を一目で。
@@ -116,6 +118,35 @@ export function demandMatchFreeSellerKeys(env = {}) {
 }
 export function isDemandMatchFreeSeller(env, sellerKey) {
   return demandMatchFreeSellerKeys(env).has(String(sellerKey || ''));
+}
+
+// 2026-09-19 大隆さん指示: 前払い残高が無い Seller は課金できるまで Demand Match を止める
+// （需要への商品登録・再照合・本人への通知を行わない）。無料アカウントと課金停止中は対象外。予算 0 円・上限到達も止める。
+export async function demandMatchEligibility(env, sellerKey, now = new Date()) {
+  const db = env?.PRODUCT_DB;
+  if (!db) return { ok: false, reason: 'NO_DB', available_jpy: 0 };
+  if (isDemandMatchFreeSeller(env, sellerKey)) return { ok: true, reason: 'FREE_ACCOUNT', available_jpy: 0 };
+  const cap = await getDemandMatchBudget(db, sellerKey);
+  if (cap <= 0) return { ok: false, reason: 'BUDGET_OFF', available_jpy: 0 };
+  const usage = await demandMatchMonthUsage(db, sellerKey, jstMonthKey(now));
+  if (usage.amount_jpy + DEMAND_MATCH_CLICK_JPY > cap) return { ok: false, reason: 'BUDGET_CAP', available_jpy: 0 };
+  if (!demandMatchChargeEnabled(env)) return { ok: true, reason: 'CHARGE_DISABLED', available_jpy: 0 };
+  let available = 0;
+  try {
+    const wallet = await getWallet(db, sellerKey);
+    available = wallet ? Math.floor((Number(wallet.balance_micros_jpy || 0) - Number(wallet.reserved_micros_jpy || 0)) / 1000000) : 0;
+  } catch {}
+  if (available < DEMAND_MATCH_CLICK_JPY) return { ok: false, reason: 'BALANCE_REQUIRED', available_jpy: Math.max(0, available) };
+  return { ok: true, reason: 'FUNDED', available_jpy: available };
+}
+
+// 再照合で候補にしてよいショップだけ残す（残高の無い Seller の商品には一致させず、通知も出さない）
+export async function eligibleDemandMatchShops(env, shops, now = new Date()) {
+  const out = [];
+  for (const shop of shops || []) {
+    try { if ((await demandMatchEligibility(env, shop.seller_key, now)).ok) out.push(shop); } catch {}
+  }
+  return out;
 }
 
 export async function demandMatchSummary(env, sellerKey, now = new Date()) {
@@ -136,7 +167,8 @@ export async function demandMatchSummary(env, sellerKey, now = new Date()) {
   return {
     month, unit_jpy: DEMAND_MATCH_CLICK_JPY, charge_enabled: demandMatchChargeEnabled(env), free_account: isDemandMatchFreeSeller(env, sellerKey), notified, valid_clicks: usage.clicks, excluded_clicks: excluded,
     amount_jpy: usage.amount_jpy, cap_jpy: cap, cap_reached: cap > 0 ? usage.amount_jpy + DEMAND_MATCH_CLICK_JPY > cap : true,
-    cap_presets_jpy: [...DEMAND_MATCH_CAP_PRESETS_JPY]
+    cap_presets_jpy: [...DEMAND_MATCH_CAP_PRESETS_JPY],
+    eligibility: await demandMatchEligibility(env, sellerKey, now)
   };
 }
 

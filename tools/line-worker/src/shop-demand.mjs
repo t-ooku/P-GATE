@@ -12,7 +12,7 @@
 import { activeShops, publicShopRef, recordShopEvent, SHOP_GENRES, shopFilters } from './seller-shop.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
 import { readMemberSession } from './member-auth.mjs';
-import { demandMatchProductUrl } from './seller-demand-match.mjs';
+import { demandMatchEligibility, demandMatchProductUrl, eligibleDemandMatchShops } from './seller-demand-match.mjs';
 import { SHOP_COLOR_FILTERS, SHOP_MATERIAL_FILTERS, shopAttributeDefinition } from './shop-facets.mjs';
 
 const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]`, 'g');
@@ -327,8 +327,9 @@ async function markMatched(db, demand, { shop, card, level, notificationId, now 
 // 1件の探し中需要を再判定する。EXACT はいつでも一致、NEAR は保存時に何も無かった需要だけ「近い商品が追加」として扱う。
 export async function rematchDemand(env, demand, { now = new Date().toISOString(), search = searchAcrossShops } = {}) {
   const db = env.PRODUCT_DB;
-  const result = await search(env, demand.query_text);
-  const shops = await activeShops(env);
+  // 2026-09-19 大隆さん指示: 前払い残高が無い Seller（無料アカウント以外）のショップは再照合の対象から外す＝通知も出さない
+  const shops = await eligibleDemandMatchShops(env, await activeShops(env), new Date(now));
+  const result = shops.length ? await search(env, demand.query_text, { shops }) : { exact: [], near: [] };
   const pick = result.exact[0] ? { card: result.exact[0], level: 'EXACT' }
     : (demand.result_state === 'NONE' && result.near[0] ? { card: result.near[0], level: 'NEAR' } : null);
   if (!pick) {
@@ -587,6 +588,9 @@ export async function registerDemandOffer(env, sellerKey, input = {}, { now = ne
     }
   }
   if (!product) throw new Error('PRODUCT_NOT_IN_YOUR_SHOP');
+  // 2026-09-19 大隆さん指示: 残高が無い（または予算 0・上限到達の）Seller は、チャージするまで需要への商品登録と通知を止める
+  const eligibility = await demandMatchEligibility(env, sellerKey, new Date(now));
+  if (!eligibility.ok) throw new Error(`DEMAND_MATCH_${eligibility.reason}`);
   const conditions = demandConditions(queryText);
   const verdict = judgeTitle(product.product_name, conditions);
   const offerId = `so-${crypto.randomUUID()}`;
