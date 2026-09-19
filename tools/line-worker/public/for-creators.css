@@ -32,3 +32,14 @@
 .price-table-wrap th:first-child,.price-table-wrap td:first-child{width:30%}
 .price-table-wrap td:nth-child(2){font-weight:600}
 @media(max-width:520px){.price-table-wrap th,.price-table-wrap td{padding:10px 8px;font-size:12px}.price-table-wrap th:first-child,.price-table-wrap td:first-child{width:34%}}
+
+/* 2026-09-19 素材改定: ハッシュタグ・カルーセル一覧・注意書き */
+.creator-hashtags{margin:8px 0 0;font-size:15px;font-weight:700;line-height:1.8;color:#fff;overflow-wrap:anywhere}
+.creator-carousel-list small{display:block;color:#c8c5d5;font-size:12px}
+.creator-carousel-list small a{margin-right:6px;color:#9fe5ff}
+.creator-notice ul li{font-size:13px;line-height:1.7}
+/* 2026-09-19: 素材カード（濃色背景）の文字が濃色のままで読めなかった → 明るい色に */
+.demand-value .creator-copy-list li{color:#ece9f7}
+.demand-value .creator-file-list a{color:#9fe5ff}
+.demand-value .creator-note{color:#b8b4cc}
+.demand-value .creator-copy-list a,.demand-value .creator-materials p a{color:#9fe5ff}

@@ -93,3 +93,23 @@ test('募集ページと規約ページは報酬・締め支払い・投稿ル�
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/for-creators<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/hoshilu\.app\/creator-terms<\/loc>/);
 });
+
+// 2026-09-19 大隆さん指示: 素材を最新の HOSHILU に改定、セラー募集を特にお願い、ハッシュタグ 8 個、注意書き（二次利用・永久利用）
+test('クリエイター募集: 最新素材（カルーセル 6 セット）・セラー募集・ハッシュタグ 8 個・二次利用の注意書きと規約', () => {
+  const html = readFileSync(new URL('../public/for-creators.html', import.meta.url), 'utf8');
+  const terms = readFileSync(new URL('../public/creator-terms.html', import.meta.url), 'utf8');
+  for (const set of ['user-hoshittoku-basics', 'user-price-watch', 'user-shop-search', 'seller-demand-visible', 'seller-shop-entrance', 'seller-real-numbers']) {
+    for (const n of [1, 2, 3, 4]) assert.ok(html.includes(`/social/carousel/${set}/${n}.jpg`), `${set}/${n}`);
+  }
+  assert.match(html, /#hoshilu #Qoo10 #SHEIN #値下がり待ち #ホシっとく #韓国コスメ #amazon #楽天/u);
+  assert.match(html, /HOSHILU Seller 月額4,980円（税込）、最初の3か月は月額0円/u);
+  assert.match(html, /Demand Match Click 50円/u);
+  assert.match(html, /セラー向け（Instagram／X 共通・特にお願いしたい）/u);
+  for (const line of ['※報酬あり', '※有償の提供はありません。', '※こちらは投稿報酬型となります。', '※投稿の際は、ホームページやSNSの画像をご利用ください。', '「完了報告承認前」にデータ送付', '「永久利用」となります']) assert.ok(html.includes(line), line);
+  assert.match(html, /<tr><td>二次利用<\/td>/u);
+  assert.match(terms, /期間の定めなく（永久に）許諾/u);
+  assert.match(terms, /投稿報酬型です。商品・サービスその他の有償の提供はありません/u);
+  assert.match(terms, /第1\.1版/u);
+  assert.doesNotMatch(html, /HOSHILU BUZZ ランキング/u, '旧素材（BUZZ ランキング画像）は外す');
+  for (const banned of ['必ず売れ', '売上が上がり', '多数のユーザー', '多数のセラーが参加して', '業界No', '確実に']) assert.ok(!html.includes(banned), banned);
+});
