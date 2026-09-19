@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-17",
+  "version": "2026-09-19",
   "size": [
     1080,
     1350
@@ -47,13 +47,13 @@
         },
         {
           "file": "seller-demand-visible/3.jpg",
-          "sha256": "90f2261e05b17d78d03b8d2e58a56c670a97fc7b630b486940dc1e1eeb05331b",
-          "bytes": 87366
+          "sha256": "eb625af092c94cae691ac50d42c50cd843fb57532b4f4a81ab5d70d761b93448",
+          "bytes": 81708
         },
         {
           "file": "seller-demand-visible/4.jpg",
-          "sha256": "fd77cf7a9d8edfba173697a2feb1990147905b3855b07360966c1037cfdba4e5",
-          "bytes": 80782
+          "sha256": "91475ddf95006612a5df83af2f617bd19e59e1ee18b52fc97e8d26d4eaf06d41",
+          "bytes": 93471
         }
       ]
     },
@@ -104,8 +104,8 @@
         },
         {
           "file": "seller-shop-entrance/4.jpg",
-          "sha256": "d3e0122f6c64a97343cd0fcc66821d74ac0c09c2b1eb3abe9f2e248fccb3b7ba",
-          "bytes": 89622
+          "sha256": "827f9acffb591c3709dd9630879c2aa310c866efe4a8e50812904e9225649c6c",
+          "bytes": 98787
         }
       ]
     },
