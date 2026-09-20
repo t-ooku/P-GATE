@@ -16,7 +16,7 @@ function setup(member,save){
     close(){this.open=false;this.listeners.close?.();}
     remove(){this.removed=true;}
   }
-  const document={body:new Element('body'),createElement:tag=>new Element(tag),dispatchEvent:e=>events.push(e)};
+  const document={addEventListener(){},body:new Element('body'),createElement:tag=>new Element(tag),dispatchEvent:e=>events.push(e)};
   const context=vm.createContext({document,memberSession:member?{}:null,elements:{language:{value:'JA'}},getWishes:()=>[],insightEnabledFor:()=>false,
     textElement:(tag,cls,text)=>Object.assign(new Element(tag),{className:cls,textContent:text}),saveInsightWatch:save,
     wishSavedCopy:()=> 'この端末に条件を保存しました（登録後、通知を明示的に有効化できます）',wishSaveFailedCopy:()=> '通知設定に失敗しました',

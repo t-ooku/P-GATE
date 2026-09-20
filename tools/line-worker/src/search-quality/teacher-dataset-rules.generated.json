@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T04:21:32.162Z",
+  "generated_at": "2026-09-20T07:16:23.474Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -32,9 +32,10 @@
     "2026-09-16-claude-batch-029.json",
     "2026-09-17-claude-batch-030.json",
     "2026-09-18-claude-batch-031.json",
-    "2026-09-19-claude-batch-032.json"
+    "2026-09-19-claude-batch-032.json",
+    "2026-09-20-codex-batch-033.json"
   ],
-  "entry_count": 1660,
+  "entry_count": 1663,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -35880,6 +35881,69 @@
       "excluded_conditions": [],
       "confidence": 0.75,
       "source_file": "2026-09-19-claude-batch-032.json"
+    },
+    {
+      "content_hash": "98a03f0d442de89fe47dea70efb203df16924b9619ea1434e3a1895419ad3643",
+      "query_text": "韓国 頭皮ケア リリーブ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "scalp-care",
+      "ideal_answer": "リリーイブ（lilyeve）の頭皮ケア商品",
+      "search_terms": {
+        "ja": [
+          "リリーイブ 頭皮ケア"
+        ],
+        "en": [
+          "lilyeve scalp care"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.9,
+      "source_file": "2026-09-20-codex-batch-033.json"
+    },
+    {
+      "content_hash": "d26a12f088baf15c739fe76399608b1d85f90d396787a77d890bd6cdecfcaee3",
+      "query_text": "韓国 頭皮ケア LILIB リリーブ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "scalp-care",
+      "ideal_answer": "リリーイブ（lilyeve）の頭皮ケア商品",
+      "search_terms": {
+        "ja": [
+          "リリーイブ 頭皮ケア"
+        ],
+        "en": [
+          "lilyeve scalp care"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.9,
+      "source_file": "2026-09-20-codex-batch-033.json"
+    },
+    {
+      "content_hash": "3bcd52f6ae08f2b67d49a6ee647cb858d017219bed1829be8c906d48c54d96e4",
+      "query_text": "韓国 頭皮ケア LILIB リリーブ lilib",
+      "locale": "ja",
+      "persona": "general",
+      "category": "scalp-care",
+      "ideal_answer": "リリーイブ（lilyeve）の頭皮ケア商品",
+      "search_terms": {
+        "ja": [
+          "リリーイブ 頭皮ケア"
+        ],
+        "en": [
+          "lilyeve scalp care"
+        ],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.9,
+      "source_file": "2026-09-20-codex-batch-033.json"
     }
   ]
 }

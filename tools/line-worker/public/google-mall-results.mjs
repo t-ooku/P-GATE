@@ -60,6 +60,11 @@ function card(item, c) {
   body.append(el('span', 'google-mall-card-open', `${c.open} →`));
   link.append(figure, body);
   article.append(link);
+  if(item.product_page===true){
+    const save=el('div','google-mall-card-save');
+    article.append(save);
+    document.dispatchEvent(new CustomEvent('hoshilu:google-mall-save-control',{detail:{item,container:save}}));
+  }
   return article;
 }
 

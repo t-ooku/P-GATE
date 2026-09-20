@@ -1,0 +1,71 @@
+[
+  {
+    "query_text": "韓国 頭皮ケア リリーブ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ユーザーが確認したリリーイブの頭皮ケア商品を探している",
+    "ideal_answer": "リリーイブ（lilyeve）の頭皮ケア商品",
+    "reason": "2026-09-20 引継ぎ書 §6 / Issue #373 とユーザー承認に基づく限定補正。検索文の正規化一致のみ。商品・URL・価格は生成しない。",
+    "category": "scalp-care",
+    "search_terms": {
+      "ja": [
+        "リリーイブ 頭皮ケア"
+      ],
+      "en": [
+        "lilyeve scalp care"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.9,
+    "authored_date": "2026-09-20",
+    "authored_updated_date": "2026-09-20"
+  },
+  {
+    "query_text": "韓国 頭皮ケア LILIB リリーブ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ユーザーが確認したリリーイブの頭皮ケア商品を探している",
+    "ideal_answer": "リリーイブ（lilyeve）の頭皮ケア商品",
+    "reason": "2026-09-20 引継ぎ書 §6 / Issue #373 とユーザー承認に基づく限定補正。検索文の正規化一致のみ。商品・URL・価格は生成しない。",
+    "category": "scalp-care",
+    "search_terms": {
+      "ja": [
+        "リリーイブ 頭皮ケア"
+      ],
+      "en": [
+        "lilyeve scalp care"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.9,
+    "authored_date": "2026-09-20",
+    "authored_updated_date": "2026-09-20"
+  },
+  {
+    "query_text": "韓国 頭皮ケア LILIB リリーブ lilib",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ユーザーが確認したリリーイブの頭皮ケア商品を探している",
+    "ideal_answer": "リリーイブ（lilyeve）の頭皮ケア商品",
+    "reason": "2026-09-20 引継ぎ書 §6 / Issue #373 とユーザー承認に基づく限定補正。検索文の正規化一致のみ。商品・URL・価格は生成しない。",
+    "category": "scalp-care",
+    "search_terms": {
+      "ja": [
+        "リリーイブ 頭皮ケア"
+      ],
+      "en": [
+        "lilyeve scalp care"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.9,
+    "authored_date": "2026-09-20",
+    "authored_updated_date": "2026-09-20"
+  }
+]

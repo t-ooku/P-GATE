@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { generateKeyPairSync } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
+import { runGoogleMallDiagnostic, handleGoogleMallDiagnosticRoute } from '../src/google-mall-diagnostic.mjs';
+import { decoratePwaResult } from '../src/index.mjs';
 import {
   parseGoogleMallItems, normalizeAgentSearchResponse, searchGoogleMalls, googleMallSearchConfigured,
-  googleBillingDayKey, reserveGoogleMallSearchRequest, mallForHost, googleAccessToken, resetGoogleAccessTokenCache, broadenGoogleMallQuery
+  googleBillingDayKey, reserveGoogleMallSearchRequest, mallForHost, googleAccessToken, resetGoogleAccessTokenCache, broadenGoogleMallQuery, summarizeGoogleMallResponse
 } from '../src/google-mall-search.mjs';
 
 function d1() {
@@ -166,9 +168,9 @@ test('同じ検索語は Cache API を優先し、上限を消費しない', asy
   assert.equal(second.source, 'cache');
   assert.equal(second.items.length, 3);
   assert.equal(calls.filter((call) => call.url.includes(':search')).length, 1);
-  // 2026-09-20: キャッシュ鍵は v3。0 件の結果は 10 分だけ（24 時間ではない）。
+  // 2026-09-20: キャッシュ鍵は v4。0 件の結果は 10 分だけ（24 時間ではない）。
   const keys = [...store.keys()];
-  assert.ok(keys.every((key) => key.includes('/v3?q=')));
+  assert.ok(keys.every((key) => key.includes('/v4?q=')));
   const empties = [];
   const emptyCache = { async match() { return undefined; }, async put(request, response) { empties.push(response.headers.get('cache-control')); } };
   const emptyEnv = { ...baseEnv(), GOOGLE_MALL_SEARCH_DAILY_LIMIT: '5' };
@@ -177,11 +179,115 @@ test('同じ検索語は Cache API を優先し、上限を消費しない', asy
 });
 
 test('broadenGoogleMallQuery はブランド名らしい語（カタカナだけ・英数字だけ）を外し、外す語が無い／全部外れる時は null', () => {
-  assert.equal(broadenGoogleMallQuery('韓国 頭皮ケア LILIB リリーブ lilib'), '韓国 頭皮ケア');
-  assert.equal(broadenGoogleMallQuery('ダイソン 掃除機'), '掃除機');
+  assert.deepEqual(broadenGoogleMallQuery('韓国 頭皮ケア LILIB リリーブ lilib'), { query: '韓国 頭皮ケア', droppedTokens: ['LILIB', 'リリーブ', 'lilib'] });
+  assert.deepEqual(broadenGoogleMallQuery('ダイソン 掃除機'), { query: '掃除機', droppedTokens: ['ダイソン'] });
   assert.equal(broadenGoogleMallQuery('子ども 水筒'), null);
   assert.equal(broadenGoogleMallQuery('リリーブ'), null);
   assert.equal(broadenGoogleMallQuery('LILIB リリーブ'), null);
+});
+
+test('broadened results are ranked before caching; rerank metrics contain only hourly aggregate codes', async () => {
+  resetGoogleAccessTokenCache();
+  const env = baseEnv(), store = new Map(), calls = [];
+  const cache = { async match(req) { return store.has(req.url) ? new Response(store.get(req.url)) : undefined; }, async put(req, res) { store.set(req.url, await res.text()); } };
+  const payload = { results: [doc('頭皮ブラシ', 'https://qoo10.jp/item/brush/123'), doc('頭皮美容液', 'https://qoo10.jp/item/lilyeve-serum/456')] };
+  const fake = fakeGoogle(calls, payload);
+  const fetch = (url, init) => String(url).includes(':search') && JSON.parse(init.body).query !== '韓国 頭皮ケア'
+    ? (calls.push({ url, init }), Promise.resolve(Response.json({ results: [] }))) : fake(url, init);
+  const query = '韓国 頭皮ケア LILIB リリーブ lilib';
+  const first = await searchGoogleMalls(env, query, { fetch, cache });
+  const second = await searchGoogleMalls(env, query, { fetch, cache });
+  assert.match(first.items[0].url, /lilyeve/u);
+  assert.deepEqual(second.items, first.items);
+  assert.equal(second.source, 'cache');
+  assert.equal(calls.filter((call) => call.url.includes(':search')).length, 2);
+  const log = await env.PRODUCT_DB.prepare('SELECT * FROM google_mall_search_log ORDER BY reason,source').bind().all();
+  assert.deepEqual(log.results.map((row) => row.reason), ['BROADENED', 'BROADENED_RERANKED', 'SHOWN', 'SHOWN']);
+  for (const row of log.results) assert.deepEqual(Object.keys(row).sort(), ['bucket_at','reason','request_count','source']);
+  assert.doesNotMatch(JSON.stringify(log), /LILIB|リリーブ|lilyeve|query_id|session/iu);
+});
+
+test('Rakuten/Yahoo results never suppress Google; non-product offers do not falsely mark a mall present', async () => {
+  const previousFetch = globalThis.fetch;
+  try {
+    resetGoogleAccessTokenCache();
+    const calls = [];
+    globalThis.fetch = fakeGoogle(calls);
+    const env = { ...baseEnv(), LINK_SIGNING_SECRET: 'test-google-mall-signing-secret-at-least-32-chars' };
+    const result = await decoratePwaResult({ candidates: [{ asin: 'B000000001', product_name: '水筒', offers: [
+      { marketplace: 'RAKUTEN_JP', product_url: 'https://item.rakuten.co.jp/example/bottle/', price: 1980 },
+      { marketplace: 'YAHOO_JP', product_url: 'https://store.shopping.yahoo.co.jp/example/bottle.html', price: 1980 },
+      { marketplace: 'AMAZON_JP', product_url: 'https://www.amazon.co.jp/s?k=bottle', price: 0 }
+    ] }] }, new Request('https://hoshilu.app/api/pwa/recommend'), env, 'qa-session', '水筒');
+    assert.equal(calls.filter((call) => call.url.includes(':search')).length, 1);
+    assert.deepEqual(result.google_mall_results.items.map((row) => row.marketplace), ['ZOZOTOWN_JP','SHEIN_JP','AMAZON_JP']);
+    assert.ok(result.google_mall_results.items.every((row) => row.product_page));
+  } finally { globalThis.fetch = previousFetch; }
+});
+
+test('diagnostic summarizes raw counts without returning query text, documents or IDs', async () => {
+  resetGoogleAccessTokenCache();
+  const env = baseEnv();
+  const calls = [];
+  const result = await runGoogleMallDiagnostic(env, {
+    fetch: fakeGoogle(calls, { ...SAMPLE, correctedQuery: 'PRIVATE_CORRECTION', totalSize: 123, attributionToken: 'PRIVATE_TOKEN' })
+  });
+  assert.equal(result.ok, true);
+  const searches = calls.filter((call) => call.url.includes(':search'));
+  assert.deepEqual(searches.map((call) => JSON.parse(call.init.body).query), [
+    '韓国 頭皮ケア リリーブ', '韓国 頭皮ケア', 'リリーイブ 頭皮', 'lilyeve'
+  ]);
+  assert.deepEqual(result.cases.map((row) => row.result_count), [7, 7, 7, 7]);
+  assert.ok(result.cases.every((row) => row.corrected_query_present && row.total_size === 123 && row.accepted_count === 3));
+  assert.doesNotMatch(JSON.stringify(result), /PRIVATE_|https:|リリーブ|lilyeve|document|attributionToken/u);
+  assert.deepEqual(summarizeGoogleMallResponse({ totalSize: -1 }), { result_count: 0, corrected_query_present: false, total_size: null });
+  const usage = await env.PRODUCT_DB.prepare('SELECT reserved_requests FROM google_mall_search_usage_daily').bind().first();
+  assert.equal(usage.reserved_requests, 4);
+  const log = await env.PRODUCT_DB.prepare('SELECT COUNT(*) AS count FROM google_mall_search_log').bind().first();
+  assert.equal(log.count, 0);
+});
+
+test('diagnostic empty results do not broaden; budget denial is not reported as zero results', async () => {
+  resetGoogleAccessTokenCache();
+  const calls = [];
+  const env = { ...baseEnv(), GOOGLE_MALL_SEARCH_DAILY_LIMIT: '2' };
+  const result = await runGoogleMallDiagnostic(env, { fetch: fakeGoogle(calls, { results: [], totalSize: 0 }) });
+  assert.equal(result.ok, false);
+  assert.equal(calls.filter((call) => call.url.includes(':search')).length, 2);
+  assert.deepEqual(result.cases.map((row) => row.result_count), [0, 0, null, null]);
+  assert.deepEqual(result.cases.map((row) => row.source), ['live', 'live', 'limit', 'limit']);
+  assert.equal(result.cases[2].reason, 'DAILY_LIMIT_REACHED');
+});
+
+test('diagnostic requires admin authorization and POST before using the search budget', async () => {
+  const env = baseEnv();
+  const path = 'https://hoshilu.app/api/internal/search/google-mall-diagnostic';
+  let calls = 0;
+  const options = { fetch: async () => { calls += 1; throw new Error('must not fetch'); } };
+  const denied = await handleGoogleMallDiagnosticRoute(new Request(path, { method: 'POST' }), env, async () => false, options);
+  assert.equal(denied.status, 401);
+  assert.equal(denied.headers.get('cache-control'), 'no-store');
+  const get = await handleGoogleMallDiagnosticRoute(new Request(path), env, async () => true, options);
+  assert.equal(get.status, 405);
+  const missing = await handleGoogleMallDiagnosticRoute(new Request(path, { method: 'POST' }), {}, async () => true, options);
+  assert.equal(missing.status, 503);
+  assert.equal(calls, 0);
+  const usage = await env.PRODUCT_DB.prepare('SELECT COUNT(*) AS count FROM google_mall_search_usage_daily').bind().first();
+  assert.equal(usage.count, 0);
+});
+
+test('token acquisition obeys the search timeout and diagnostics callbacks cannot break search', async () => {
+  resetGoogleAccessTokenCache();
+  const timed = await searchGoogleMalls(baseEnv(), '水筒', { cache: null, timeoutMs: 10,
+    fetch: async (_url, init) => new Promise((resolve, reject) => {
+      init.signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')), { once: true });
+    })
+  });
+  assert.equal(timed.reason, 'TIMEOUT');
+  resetGoogleAccessTokenCache();
+  const result = await searchGoogleMalls(baseEnv(), '水筒', { cache: null, fetch: fakeGoogle([]), onResponse: () => { throw new Error('observer failed'); } });
+  assert.equal(result.source, 'live');
+  assert.equal(result.items.length, 3);
 });
 
 test('0 件のときだけ 1 回、ブランド名らしい語を外して探し直す（要求は +1、予算も +1）。結果はブランド無しの検索語で出る', async () => {
