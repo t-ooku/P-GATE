@@ -38,13 +38,15 @@ const MIGRATIONS = [
   '0002_member_wishes.sql', '0003_member_wish_preferences.sql',
   '0005_mywatch_notifications.sql', '0036_mywatch_notification_product_fields.sql',
   '0044_insight_search_watch.sql',
-  '0065_member_wish_insight_explicit_opt_in.sql'
+  '0065_member_wish_insight_explicit_opt_in.sql',
+  '0084_member_wish_archive.sql'
 ];
 
-function sqliteD1({ explicitOptInColumn = true } = {}) {
+function sqliteD1({ explicitOptInColumn = true, archiveColumn = true } = {}) {
   const sqlite = new DatabaseSync(':memory:');
-  for (const name of MIGRATIONS.filter((migration) => explicitOptInColumn
-    || migration !== '0065_member_wish_insight_explicit_opt_in.sql')) {
+  for (const name of MIGRATIONS.filter((migration) => (explicitOptInColumn
+    || migration !== '0065_member_wish_insight_explicit_opt_in.sql')
+    && (archiveColumn || migration !== '0084_member_wish_archive.sql'))) {
     sqlite.exec(readFileSync(new URL(`../migrations/${name}`, import.meta.url), 'utf8'));
   }
   const db = {
@@ -187,4 +189,64 @@ test('別枠は本人の申告では決まらない。モールの商品ペー�
     assert.equal(usage.external_price_watch, 0, JSON.stringify(priceCondition));
     assert.equal(usage.price_watch, 1, JSON.stringify(priceCondition));
   }
+});
+
+
+// 2026-09-20 GPT 指示書 §5（大隆さん承認）: archive =「もう探さない」で終了。
+// 一覧から消えるが行は残す。「あとで見る」（一時停止）とは別物。
+
+test('archive は一覧から消して枠を返し、探し中も止める。戻すこともできる（行は消さない）', async () => {
+  const { db } = sqliteD1();
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET, WISH_LIMIT_SEARCHING: '1' };
+  const cookie = await memberCookie({ id: 'member-archive', name: 'テスト', provider: 'LINE' });
+  const created = await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: '子ども 水筒 500ml', language: 'JA', notify_new_match: true, watch_frequency: 'INSTANT' });
+  assert.equal(created.status, 200);
+  const before = await (await requestFor(env, 'GET', '/api/member/wishes', cookie)).json();
+  assert.equal(before.wishes.length, 1);
+  assert.equal(before.usage.searching, 1);
+  // 探し中が上限なので次は 409
+  assert.equal((await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: 'レインコート キッズ', language: 'JA', notify_new_match: true, watch_frequency: 'INSTANT' })).status, 409);
+  // archive する
+  const wishId = before.wishes[0].wish_id;
+  const archived = await requestFor(env, 'POST', `/api/member/wishes/${wishId}/archive`, cookie, {});
+  assert.equal(archived.status, 200);
+  const archivedBody = await archived.json();
+  assert.equal(archivedBody.archived, true);
+  assert.equal(archivedBody.usage.searching, 0);
+  assert.equal(archivedBody.usage.saved, 0);
+  // 一覧から消える（行は残っている）
+  const after = await (await requestFor(env, 'GET', '/api/member/wishes', cookie)).json();
+  assert.deepEqual(after.wishes, []);
+  const archivedList = await (await requestFor(env, 'GET', '/api/member/wishes?archived=1', cookie)).json();
+  assert.equal(archivedList.wishes.length, 1);
+  assert.equal(archivedList.wishes[0].query_text, '子ども 水筒 500ml');
+  // 枠が空いたので新しい条件を探し中にできる
+  assert.equal((await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: 'レインコート キッズ', language: 'JA', notify_new_match: true, watch_frequency: 'INSTANT' })).status, 200);
+  // archive は終了状態なので探し中も止まっている
+  const row = await db.prepare('SELECT notify_new_match,insight_enabled_at,archived_at FROM member_wishes WHERE wish_id=?1').bind(wishId).first();
+  assert.equal(row.notify_new_match, 0);
+  assert.equal(row.insight_enabled_at, null);
+  assert.ok(row.archived_at);
+  // 戻せる（探し中は自動では再開しない）
+  const restored = await requestFor(env, 'POST', `/api/member/wishes/${wishId}/archive`, cookie, { archived: false });
+  assert.equal(restored.status, 200);
+  assert.equal((await restored.json()).archived, false);
+  const restoredList = await (await requestFor(env, 'GET', '/api/member/wishes', cookie)).json();
+  assert.equal(restoredList.wishes.length, 2);
+  assert.equal(restoredList.usage.searching, 1);
+});
+
+test('migration 0084 適用前でも落ちない（一覧は出る／archive は 503 で断る）', async () => {
+  const { db } = sqliteD1({ archiveColumn: false });
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET };
+  const cookie = await memberCookie({ id: 'member-pending', name: 'テスト', provider: 'LINE' });
+  assert.equal((await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: '子ども 水筒 500ml', language: 'JA' })).status, 200);
+  const list = await (await requestFor(env, 'GET', '/api/member/wishes', cookie)).json();
+  assert.equal(list.wishes.length, 1);
+  assert.equal(list.usage.saved, 1);
+  const archivedList = await (await requestFor(env, 'GET', '/api/member/wishes?archived=1', cookie)).json();
+  assert.deepEqual(archivedList.wishes, []);
+  const archive = await requestFor(env, 'POST', `/api/member/wishes/${list.wishes[0].wish_id}/archive`, cookie, {});
+  assert.equal(archive.status, 503);
+  assert.equal((await archive.json()).error, 'WISH_ARCHIVE_SCHEMA_PENDING');
 });

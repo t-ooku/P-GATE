@@ -78,6 +78,18 @@ const WISH_SELECT_COLUMNS = `${LEGACY_WISH_SELECT_COLUMNS},insight_enabled_at`;
 const isMissingInsightOptInColumn = (error) => /(?:no such column|has no column named).*insight_enabled_at/iu
   .test(String(error?.message || error));
 
+// 2026-09-20 §5（大隆さん承認）: archived_at（migration 0084）。migration 適用前に Worker が先に
+// 出ても落ちないよう、列が無い環境では「archive は 1 件も無い」として動く。
+const isMissingArchiveColumn = (error) => /(?:no such column|has no column named).*archived_at/iu
+  .test(String(error?.message || error));
+async function withArchiveSchema(primary, legacy) {
+  try { return await primary(); }
+  catch (error) {
+    if (!isMissingArchiveColumn(error)) throw error;
+    return legacy();
+  }
+}
+
 async function withInsightSchema(primary, legacy) {
   try { return await primary(); }
   catch (error) {
@@ -86,10 +98,19 @@ async function withInsightSchema(primary, legacy) {
   }
 }
 
-async function selectWishRows(env, memberId) {
-  return withInsightSchema(
-    () => env.PRODUCT_DB.prepare(`SELECT ${WISH_SELECT_COLUMNS} FROM member_wishes WHERE member_id=?1 ORDER BY updated_at DESC LIMIT 100`).bind(memberId).all(),
-    () => env.PRODUCT_DB.prepare(`SELECT ${LEGACY_WISH_SELECT_COLUMNS},NULL AS insight_enabled_at FROM member_wishes WHERE member_id=?1 ORDER BY updated_at DESC LIMIT 100`).bind(memberId).all()
+// §5: 既定では archive 済みを出さない（archived=true で archive 済みだけを出す）。
+async function selectWishRows(env, memberId, { archived = false } = {}) {
+  const filter = archived ? 'archived_at IS NOT NULL' : 'archived_at IS NULL';
+  return withArchiveSchema(
+    () => withInsightSchema(
+      () => env.PRODUCT_DB.prepare(`SELECT ${WISH_SELECT_COLUMNS},archived_at FROM member_wishes WHERE member_id=?1 AND ${filter} ORDER BY updated_at DESC LIMIT 100`).bind(memberId).all(),
+      () => env.PRODUCT_DB.prepare(`SELECT ${LEGACY_WISH_SELECT_COLUMNS},NULL AS insight_enabled_at,archived_at FROM member_wishes WHERE member_id=?1 AND ${filter} ORDER BY updated_at DESC LIMIT 100`).bind(memberId).all()
+    ),
+    // migration 適用前: archive 済みは存在しないので、要求されたら空、そうでなければ全件。
+    () => archived ? { results: [] } : withInsightSchema(
+      () => env.PRODUCT_DB.prepare(`SELECT ${WISH_SELECT_COLUMNS} FROM member_wishes WHERE member_id=?1 ORDER BY updated_at DESC LIMIT 100`).bind(memberId).all(),
+      () => env.PRODUCT_DB.prepare(`SELECT ${LEGACY_WISH_SELECT_COLUMNS},NULL AS insight_enabled_at FROM member_wishes WHERE member_id=?1 ORDER BY updated_at DESC LIMIT 100`).bind(memberId).all()
+    )
   );
 }
 
@@ -133,16 +154,23 @@ export function wishLimitsFor(env = {}) {
   return { saved: pick('WISH_LIMIT_SAVED', WISH_LIMIT_DEFAULTS.saved), searching: pick('WISH_LIMIT_SEARCHING', WISH_LIMIT_DEFAULTS.searching), price_watch: pick('WISH_LIMIT_PRICE_WATCH', WISH_LIMIT_DEFAULTS.price_watch), external_price_watch: pick('WISH_LIMIT_EXTERNAL_PRICE_WATCH', WISH_LIMIT_DEFAULTS.external_price_watch) };
 }
 export async function wishUsageFor(env, memberId) {
+  // §5: archive（もう探さない）した条件は枠を消費しない。片付ければまた保存できる。
+  return withArchiveSchema(
+    () => wishUsageQuery(env, memberId, 'AND archived_at IS NULL'),
+    () => wishUsageQuery(env, memberId, '')
+  );
+}
+async function wishUsageQuery(env, memberId, archiveFilter) {
   const row = await withInsightSchema(
     () => env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS saved,
       SUM(CASE WHEN notify_new_match=1 AND insight_enabled_at IS NOT NULL AND insight_enabled_at<>'' AND UPPER(COALESCE(watch_frequency,'INSTANT'))<>'MUTED' THEN 1 ELSE 0 END) AS searching,
       SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 AND COALESCE(json_extract(condition_snapshot,'$.price_condition.source'),'')<>'EXTERNAL_URL' THEN 1 ELSE 0 END) AS price_watch,
       SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 AND json_extract(condition_snapshot,'$.price_condition.source')='EXTERNAL_URL' THEN 1 ELSE 0 END) AS external_price_watch
-      FROM member_wishes WHERE member_id=?1`).bind(memberId).first(),
+      FROM member_wishes WHERE member_id=?1 ${archiveFilter}`).bind(memberId).first(),
     () => env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS saved, 0 AS searching,
       SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 AND COALESCE(json_extract(condition_snapshot,'$.price_condition.source'),'')<>'EXTERNAL_URL' THEN 1 ELSE 0 END) AS price_watch,
       SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 AND json_extract(condition_snapshot,'$.price_condition.source')='EXTERNAL_URL' THEN 1 ELSE 0 END) AS external_price_watch
-      FROM member_wishes WHERE member_id=?1`).bind(memberId).first()
+      FROM member_wishes WHERE member_id=?1 ${archiveFilter}`).bind(memberId).first()
   );
   return { saved: Number(row?.saved) || 0, searching: Number(row?.searching) || 0, price_watch: Number(row?.price_watch) || 0, external_price_watch: Number(row?.external_price_watch) || 0 };
 }
@@ -188,7 +216,8 @@ export async function handleMemberWishRoutes(request, env) {
   const member = await readMemberSession(request, env);
   if (!member) return Response.json({ ok: false, error: 'MEMBER_LOGIN_REQUIRED' }, { status: 401 });
   if (request.method === 'GET' && url.pathname === '/api/member/wishes') {
-    const result = await selectWishRows(env, member.id);
+    // §5: 既定は archive されていない条件だけ。?archived=1 で「もう探さない」に片付けたものを見る。
+    const result = await selectWishRows(env, member.id, { archived: url.searchParams.get('archived') === '1' });
     // §P0: 上限と使用数も返す（画面で「探し中 2/10」を出すため。数は本人の実データだけ）。
     const limits = wishLimitsFor(env);
     const usage = await wishUsageFor(env, member.id);
@@ -308,7 +337,9 @@ export async function handleMemberWishRoutes(request, env) {
     }
     return Response.json({ ok: true, wish: decorateWishRow(saved) });
   }
-  const wishId = url.pathname.split('/').pop();
+  // /api/member/wishes/<id> と /api/member/wishes/<id>/archive の両方を受ける。
+  const segments = url.pathname.split('/').filter(Boolean);
+  const wishId = segments[segments.length - 1] === 'archive' ? segments[segments.length - 2] : segments[segments.length - 1];
   if (!validId(wishId)) return Response.json({ ok: false, error: 'WISH_ID_INVALID' }, { status: 400 });
   if (request.method === 'PATCH') {
     const payload = await request.json(), watch = prefs(payload), now = new Date().toISOString();
@@ -394,6 +425,32 @@ export async function handleMemberWishRoutes(request, env) {
       catch (error) { console.warn('CONTINUOUS_SEARCH_ENABLE_EVENT_FAILED', String(error?.name || 'Error').slice(0, 40)); }
     }
     return Response.json({ ok: true, wish: decorateWishRow(saved) });
+  }
+  // 2026-09-20 §5（大隆さん承認）: 本人が「もう探さない」で終わらせる／戻す。
+  // archive は終了状態なので、同時に探し中も止める（notify_new_match=0 / insight_enabled_at NULL）。
+  // 行は消さない（履歴として残す）。削除したい時は既存の DELETE を使う。
+  if (request.method === 'POST' && url.pathname.endsWith('/archive')) {
+    const payload = await request.json().catch(() => ({}));
+    const archived = payload?.archived !== false;
+    const now = new Date().toISOString();
+    try {
+      const result = archived
+        ? await env.PRODUCT_DB.prepare(`UPDATE member_wishes SET archived_at=?3, notify_new_match=0, insight_enabled_at=NULL, updated_at=?3
+            WHERE member_id=?1 AND wish_id=?2 AND archived_at IS NULL`).bind(member.id, wishId, now).run()
+        : await env.PRODUCT_DB.prepare(`UPDATE member_wishes SET archived_at=NULL, updated_at=?3
+            WHERE member_id=?1 AND wish_id=?2 AND archived_at IS NOT NULL`).bind(member.id, wishId, now).run();
+      if (archived && Number(result?.meta?.changes ?? result?.changes ?? 1) > 0) {
+        await cancelPendingInsightNotifications(env, member.id, wishId, now).catch(() => {});
+      }
+    } catch (error) {
+      if (isMissingArchiveColumn(error)) {
+        return Response.json({ ok: false, error: 'WISH_ARCHIVE_SCHEMA_PENDING' }, { status: 503, headers: { 'cache-control': 'no-store' } });
+      }
+      throw error;
+    }
+    const limits = wishLimitsFor(env);
+    const usage = await wishUsageFor(env, member.id);
+    return Response.json({ ok: true, archived, limits, usage }, { headers: { 'cache-control': 'no-store' } });
   }
   if (request.method === 'DELETE') {
     const existing = await env.PRODUCT_DB.prepare('SELECT language,watch_sale,watch_price,watch_coupon,watch_restock FROM member_wishes WHERE member_id=?1 AND wish_id=?2').bind(member.id, wishId).first();
