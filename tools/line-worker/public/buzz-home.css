@@ -166,3 +166,10 @@
 .buzz-home-shelf { scroll-margin-top: calc(var(--topbar-height, 74px) + 12px); }
 .buzz-home-google { margin: 6px 0 2px; padding: 8px 12px; border: 1px dashed #cfc6ff; border-radius: 12px; background: #fff; color: var(--violet, #7357ff); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; text-align: left; }
 .buzz-home-google:hover { background: var(--soft, #f4f0ff); }
+/* 2026-09-20 大隆さん指示: 「今、みんながホシってる。」は 1 行。スマホでは見出しの下に「すべて見る」を置く */
+.buzz-home-heading h2 { white-space: nowrap; }
+@media (max-width: 760px) {
+  .buzz-home-heading { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .buzz-home-heading h2 { font-size: clamp(18px, 5.9vw, 26px); letter-spacing: -.04em; }
+  .buzz-home-more { justify-self: start; }
+}
