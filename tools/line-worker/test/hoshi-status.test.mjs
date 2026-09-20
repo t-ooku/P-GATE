@@ -50,7 +50,7 @@ test('希望価格到達(PRICE_DROP)の未読通知は「見つかりました�
 test('トップの保存ハブは「ホシってるもの」を見出しにし、4状態の枠を持つ',()=>{
   assert.match(html,/<h2 id="insightTitle">ホシってるもの<\/h2>/);
   assert.match(html,/<div id="hoshiStatus" class="hoshi-status"/);
-  assert.ok(html.includes('href="/mywatch.css?v=9"'));
-  assert.ok(html.includes('src="/assets-v147/app.js?v=182"'));
+  assert.ok(html.includes('href="/mywatch.css?v=10"'));
+  assert.ok(html.includes('src="/assets-v147/app.js?v=183"'));
   assert.equal(readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),readFileSync(new URL('../public/assets-v147/app.js',import.meta.url),'utf8'));
 });

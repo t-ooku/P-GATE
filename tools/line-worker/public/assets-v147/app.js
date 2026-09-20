@@ -526,6 +526,12 @@ const keepCopy={
 function getKeptProducts(){try{const value=JSON.parse(localStorage.getItem(KEPT_PRODUCTS_KEY)||'[]');return Array.isArray(value)?value:[];}catch{return[];}}
 function keptProductKey(candidate){return String(candidate?.record_key||candidate?.asin||candidate?.display_name||candidate?.product_name||'').slice(0,200);}
 function isKeptProduct(candidate){const key=keptProductKey(candidate);return Boolean(key)&&getKeptProducts().some(item=>item.key===key);}
+// 2026-09-20 大隆さん報告: 検索結果の商品は画像を image_urls（配列）で持ち image_url が空のことがある。
+function keptImageFrom(candidate){
+  const list=[...(Array.isArray(candidate&&candidate.image_urls)?candidate.image_urls:[]),candidate&&candidate.image_url,candidate&&candidate.image];
+  for(const value of list){const text=String(value||'').trim();if(text.slice(0,8)==='https://')return text;}
+  return '';
+}
 function toggleKeptProduct(candidate){
   const key=keptProductKey(candidate);if(!key)return false;
   const current=getKeptProducts();
@@ -533,8 +539,8 @@ function toggleKeptProduct(candidate){
   const offer=candidate?.selected_offer||(Array.isArray(candidate?.offers)?candidate.offers[0]:null)||{};
   const next=exists?current.filter(item=>item.key!==key):[{
     key,name:String(candidate?.display_name||candidate?.product_name||'').slice(0,160),
-    image:String(candidate?.image_url||candidate?.image||'').slice(0,500),
-    url:String(offer.product_url||candidate?.product_url||'').slice(0,800),
+    image:keptImageFrom(candidate).slice(0,500),
+    url:String(offer.product_url||offer.url||offer.tracking_url||candidate?.product_url||candidate?.url||candidate?.tracking_url||'').slice(0,800),
     marketplace:String(offer.marketplace||candidate?.marketplace||'').slice(0,40),
     price:Number(offer.total_cost||offer.price||0)||0,
     kept_at:new Date().toISOString()
@@ -556,7 +562,12 @@ function renderKeptProducts(){
   list.classList.add('kept-rail');
   list.replaceChildren(...items.map(item=>{
     const card=document.createElement('article');card.className='kept-card';
-    const link=document.createElement('a');link.className='kept-card-link';link.href=item.url||'#';if(item.url){link.target='_blank';link.rel='noopener sponsored';}
+    // 2026-09-20 大隆さん報告「気になる商品をタップしても検索トップに飛ぶだけ」: URL を保存できていない商品は
+    // href="#" で画面の先頭へ飛ぶだけになっていた。URL が無いときは、その商品名で探し直す（値下がり待ちの
+    // 「いまの価格を見る」と同じ動き）。商品 URL を推測で作ることはしない。
+    const link=document.createElement(item.url?'a':'button');link.className='kept-card-link';
+    if(item.url){link.href=item.url;link.target='_blank';link.rel='noopener sponsored';}
+    else{link.type='button';link.addEventListener('click',()=>{const name=String(item.name||'').trim();if(!name)return;elements.query.value=name;elements.clear.classList.remove('hidden');submitSearchNow();});}
     if(item.marketplace)link.dataset.marketplace=item.marketplace;
     const thumb=document.createElement('div');thumb.className='kept-card-thumb';
     if(item.image){const img=document.createElement('img');img.src=item.image;img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';thumb.append(img);}

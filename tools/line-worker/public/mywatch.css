@@ -127,3 +127,6 @@
 #insight #keptProducts.kept-in-insight{margin:18px 0 0;padding:16px 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:none;box-shadow:none}
 #insight #keptProducts.kept-in-insight .step{display:none}
 #insight #keptProducts.kept-in-insight #keptProductsTitle{margin:0 0 6px;font-size:16px;letter-spacing:normal}
+
+/* 2026-09-20: 商品 URL を保存できていない「気になる商品」は button で描くので、見た目を a と揃える。 */
+button.kept-card-link{width:100%;padding:0;border:0;background:none;font:inherit;text-align:left;cursor:pointer}
