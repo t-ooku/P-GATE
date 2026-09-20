@@ -1,0 +1,18 @@
+/* 2026-09-20 指示書 §P0: URL 貼り付け→「この商品ですか？」カード */
+.product-url-card{scroll-margin-top:calc(var(--topbar-height,74px) + 12px);margin:18px 0;padding:16px;border:1px dashed #cfc6ff;border-radius:18px;background:#fff}
+.product-url-card.hidden{display:none}
+.product-url-card h2{margin:2px 0 10px;font-size:18px}
+.product-url-row{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;align-items:start}
+.product-url-media{width:96px;height:96px;border-radius:12px;overflow:hidden;background:var(--soft,#f4f0ff);display:flex;align-items:center;justify-content:center}
+.product-url-media img{width:100%;height:100%;object-fit:cover}
+.product-url-media-fallback{font-size:20px;font-weight:900;color:#5140ba}
+.product-url-body{display:grid;gap:4px;min-width:0}
+.product-url-mall{justify-self:start;align-self:start;padding:2px 8px;border-radius:999px;background:var(--soft,#f4f0ff);color:#5140ba;font-size:11px;font-weight:700}
+.product-url-name{font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.product-url-price{font-size:16px;font-weight:900}
+.product-url-price-missing{font-size:12px;color:#b3005f;font-weight:700}
+.product-url-open{font-size:12px;color:#5140ba;font-weight:700}
+.product-url-actions{display:grid;gap:8px;margin-top:12px}
+.product-url-watch{padding:12px;border:0;border-radius:12px;color:#fff;background:linear-gradient(90deg,#ff4f9a,#7357ff 55%,#23b8ff);font:inherit;font-size:15px;font-weight:800;cursor:pointer}
+.product-url-search{padding:11px;border:1px solid #ded7ff;border-radius:12px;background:#fff;color:#5140ba;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.product-url-note{margin:8px 0 0;font-size:11px;line-height:1.6;color:var(--muted,#6d6b80)}

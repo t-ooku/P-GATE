@@ -124,6 +124,7 @@ import { applyHeadNounGate } from './search-head-noun.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
 import { searchGoogleMalls, googleMallSearchConfigured, purgeGoogleMallSearchLog } from './google-mall-search.mjs';
+import { identifyProductUrl } from './product-url-identify.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -3599,6 +3600,14 @@ export default {
       }
     }
     if (request.method === 'GET' && url.pathname === '/api/config') return handlePublicConfig(env);
+    // 2026-09-20 GPT 指示書 §P0「URL 貼り付け→ホシっとく」: 13 モールの商品ページ URL だけを 1 回取りに行き、
+    // JSON-LD / OG から商品名・画像・価格（JPY のみ）を読んで「この商品ですか？」カードにする。推測はしない。
+    if (request.method === 'POST' && url.pathname === '/api/product-url/identify') {
+      let payload = {};
+      try { payload = await request.json(); } catch { payload = {}; }
+      const result = await identifyProductUrl(env, payload?.url);
+      return Response.json({ ok: result.ok, ...(result.ok ? { product: result.product } : { error: result.reason }) }, { status: result.ok ? 200 : 422, headers: { 'cache-control': 'no-store' } });
+    }
     if (request.method === 'GET' && url.pathname === '/api/refinement-chips') {
       // Condition search moved into the search panel (2026-08-07 request):
       // the panel is now shown BEFORE a search runs, so its chips can no
