@@ -6,21 +6,26 @@
 const VIEWS = [
   { id: 'search', label: '探す', title: '探す', sub: 'メイン検索・ジャンル・人気の小ジャンル', icon: 'M10 3.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm5.6 8.2 4.9 4.9-1.4 1.4-4.9-4.9 1.4-1.4Z' },
   // 2026-09-19 大隆さん指示: 「ホシる中」と「ショップ」の位置を交換（探す → ホシる中 → ショップ → セール → マイアカウント）。
-  { id: 'hoshiru', label: 'ホシる中', title: 'ホシる中', sub: 'ホシってるもの・気になる商品・今みんながホシってる', icon: 'M12 2.5l2.7 6.1 6.6.6-5 4.4 1.5 6.5L12 16.7l-5.8 3.4 1.5-6.5-5-4.4 6.6-.6L12 2.5Z' },
+  { id: 'hoshiru', label: 'ホシる中', title: 'ホシる中', sub: 'ホシってるもの・気になる商品', icon: 'M12 2.5l2.7 6.1 6.6.6-5 4.4 1.5 6.5L12 16.7l-5.8 3.4 1.5-6.5-5-4.4 6.6-.6L12 2.5Z' },
   { id: 'shops', label: 'ショップ', title: 'ショップから探す', sub: '全ショップ横断検索・ショップ・クーポン', icon: 'M4 4h16l1 5a3 3 0 0 1-2.5 3V20H5.5v-8A3 3 0 0 1 3 9l1-5Zm3.5 10v4h3v-4h-3Zm5 0v4h3v-4h-3Z' },
-  { id: 'sale', label: 'セール', title: 'ホシル セールレーダー', sub: '受け取るモールのセールだけ通知', icon: 'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Zm0 2.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Zm0 3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Zm0 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z' },
-  { id: 'account', label: 'マイアカウント', title: 'マイアカウント', sub: 'ログイン・お知らせ・公式アカウント', icon: 'M12 3a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 11c4.4 0 8 2.2 8 5v2H4v-2c0-2.8 3.6-5 8-5Z' }
+  // 2026-09-20 大隆さん指示: 「セール」はマイアカウントへ移し、4番目は「ホシルバズ」（暇な時に覗きに来る場所: ランキング・みんなの値下がり待ち）。
+  { id: 'buzz', label: 'ホシルバズ', title: 'ホシルバズ', sub: '今みんながホシってる・ランキング・みんなの値下がり待ち', icon: 'M3.5 16.6l5.8-5.8 4 4 6.9-6.9V11h2V4.5h-6.5v2h3.1l-5.5 5.5-4-4-7.2 7.2 1.4 1.4Z' },
+  { id: 'account', label: 'マイアカウント', title: 'マイアカウント', sub: 'ログイン・お知らせ・セール通知の設定・公式アカウント', icon: 'M12 3a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 11c4.4 0 8 2.2 8 5v2H4v-2c0-2.8 3.6-5 8-5Z' }
 ];
 
 // 節 → タブ。id かクラスで引く。ここに無い節は「探す」に残す。
 const SECTION_VIEW = [
   ['#shopSearch', 'shops'], ['#shopDirectory', 'shops'], ['#shopCouponsNote', 'shops'],
-  ['#insight', 'hoshiru'], ['#keptProducts', 'hoshiru'], ['#buzzHome', 'hoshiru'], ['#watchDemand', 'hoshiru'],
-  ['.sale-center', 'sale'],
-  ['#accountPanel', 'account'], ['#officialSocial', 'account'], ['#announcements', 'account']
+  ['#insight', 'hoshiru'], ['#keptProducts', 'hoshiru'],
+  ['#buzzHome', 'buzz'], ['#watchDemand', 'buzz'],
+  ['#accountPanel', 'account'], ['.sale-center', 'account'], ['#officialSocial', 'account'], ['#announcements', 'account']
 ];
-// 「ホシる中」の中の並び: ホシってるもの → 値下がり待ち（insight 内）→ 今みんながホシってる → みんなが値下がりを待ってる
-const HOSHIRU_ORDER = ['#insight', '#keptProducts', '#buzzHome', '#watchDemand'];
+// 「ホシる中」の中の並び: ホシってるもの → 値下がり待ち（insight 内）→ 気になる商品
+const HOSHIRU_ORDER = ['#insight', '#keptProducts'];
+// 「マイアカウント」の中の並び: ログイン → 受け取るセール → 公式アカウント → お知らせ
+const ACCOUNT_ORDER = ['#accountPanel', '.sale-center', '#officialSocial', '#announcements'];
+// 旧 URL（#tab-sale）は「マイアカウント」へ
+const VIEW_ALIASES = { sale: 'account' };
 
 const main = document.querySelector('#top');
 const primary = document.querySelector('.hoshilu-primary');
@@ -37,6 +42,14 @@ if (main && primary) {
   if (insight) {
     let cursor = insight;
     for (const selector of HOSHIRU_ORDER.slice(1)) {
+      const node = primary.querySelector(selector);
+      if (node) { cursor.after(node); cursor = node; }
+    }
+  }
+  const account = primary.querySelector('#accountPanel');
+  if (account) {
+    let cursor = account;
+    for (const selector of ACCOUNT_ORDER.slice(1)) {
       const node = primary.querySelector(selector);
       if (node) { cursor.after(node); cursor = node; }
     }
@@ -60,7 +73,7 @@ if (main && primary) {
 
   let current = '';
   function activate(id, { scroll = true } = {}) {
-    const view = VIEWS.find((item) => item.id === id) || VIEWS[0];
+    const view = VIEWS.find((item) => item.id === (VIEW_ALIASES[id] || id)) || VIEWS[0];
     if (current === view.id) return view;
     current = view.id;
     for (const node of primary.children) node.classList.toggle('view-hidden', node.dataset.view !== view.id);

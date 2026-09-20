@@ -291,14 +291,15 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
   assert.doesNotMatch(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
-  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=7"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=8"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
   const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
   assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
   assert.ok(buzz < html.indexOf('<p class="step">HOSHILU SALE RADAR'));
-  // 実データのみ表示。取得失敗時は枠ごと隠す(空箱・創作値を出さない)。
+  // 実データのみ表示。取得失敗時は創作値を出さず「取得できなかった」事実だけ書く（2026-09-20 専用タブ化で枠は畳まない）。
   assert.match(script, /fetch\('\/api\/buzz\/shelf'/u);
-  assert.match(script, /classList\.add\('hidden'\)/u);
+  assert.match(script, /公式ランキングを取得できませんでした/u);
+  assert.doesNotMatch(script, /classList\.add\('hidden'\)/u);
   assert.doesNotMatch(script, /Math\.random/u);
   assert.doesNotMatch(script, /購入/u);
 });
@@ -606,5 +607,5 @@ test('BUZZ の各カードに「この価格になったら教えて☑」が付
   assert.match(ranking, /record_key: itemCode \? `RAKUTEN:\$\{itemCode\}` : ''/);
   const buzz = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   assert.match(buzz, /ranking-watch-link/);
-  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=5/);
+  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=6/);
 });

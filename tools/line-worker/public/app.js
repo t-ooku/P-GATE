@@ -40,7 +40,7 @@ Object.assign(copy.KO,{hero:'직접 찾지 않아도 돼요.|HOSHILU에 맡기�
 
 // 2026-09-19 大隆さん決定「トップの主役は値下がり待ち」（90日計画）: 第一画面の言葉を差し替える。上の Object.assign は
 // 履歴として残し、ここで hero/heroSub だけ上書きする（title/placeholder/examples はそのまま）。
-Object.assign(copy.JA,{hero:'欲しい値段を、|先に決めておく。',heroSub:'値下がりしたら、HOSHILUが知らせます。\n探すのはもう終わり。ホシっといて。'});
+Object.assign(copy.JA,{hero:'欲しい値段を、|先に決めておく。',heroSub:'値下がりしたら、HOSHILUが知らせます。\n探し続けるのはもう終わり。ホシっといて。'});
 Object.assign(copy.EN,{hero:'Set your price first. |Then forget about it.',heroSub:'When it drops, HOSHILU tells you.\nNo more checking every day. Leave it to HOSHILU.'});
 Object.assign(copy.ZH,{hero:'先定好想要的价格。|然后交给 HOSHILU。',heroSub:'降价时，HOSHILU 会通知你。\n不用每天去看。'});
 Object.assign(copy.KO,{hero:'원하는 가격을 |먼저 정해두세요.',heroSub:'가격이 내리면 HOSHILU가 알려드립니다.\n매일 확인하지 않아도 돼요.'});
@@ -351,7 +351,10 @@ function renderHoshiStatus(){
   const box=document.querySelector('#hoshiStatus');if(!box)return;
   const c=hoshiStatusCopy[elements.language.value]||hoshiStatusCopy.JA;
   const counts=hoshiStatusCounts();
-  const targets={searching:'#wishTitle',found:'#mywatchTitle',waiting:'#entrustedTitle',later:'#wishTitle'};
+  // 2026-09-20 大隆さん指示: 停止位置は見出しが見えるように（各ブロックの外枠へ。scroll-margin-top は mywatch.css）。
+  // 「あとで見る」は「探しています」と同じ場所に飛んでいたので、専用ブロック #laterWishes を描いてそこへ。
+  const targets={searching:'#mywish',found:'#mywatch',waiting:'#entrustedWatches',later:'#laterWishes'};
+  renderLaterWishes(c);
   box.replaceChildren(...['searching','found','waiting','later'].map(key=>{
     const tile=document.createElement('button');tile.type='button';tile.className=`hoshi-status-tile ${key}${counts[key]?' active':''}`;tile.dataset.state=key;
     tile.append(textElement('strong','hoshi-status-count',String(counts[key])),textElement('span','hoshi-status-label',c[key]),textElement('small','hoshi-status-hint',c.hint[key]));
@@ -359,6 +362,30 @@ function renderHoshiStatus(){
     return tile;
   }));
 }
+// 「あとで見る」= 保存だけ（継続検索オフ・希望価格なし）の条件。行を押すと「探しているもの」の同じ行を開く。
+function renderLaterWishes(c){
+  const list=document.querySelector('#laterList');if(!list)return;
+  const later=getWishes().filter(query=>{const record=recordFor(query);return !(Number(record?.target_price_jpy)>0)&&!insightEnabledFor(query);});
+  const laterCopy=laterWishesCopy[elements.language.value]||laterWishesCopy.JA;
+  if(!later.length){list.replaceChildren(textElement('p','empty',laterCopy.empty));return;}
+  list.replaceChildren(...later.map(query=>{
+    const row=document.createElement('button');row.type='button';row.className='later-wish-row';
+    row.append(textElement('span','later-wish-label',localizedWishLabel(query,elements.language.value)),textElement('small','later-wish-action',laterCopy.open));
+    row.addEventListener('click',()=>{
+      const label=localizedWishLabel(query,elements.language.value);
+      const item=[...document.querySelectorAll('#wishList .wish-item')].find(node=>node.querySelector('.wish-item-label')?.textContent===label);
+      if(item){item.open=true;item.scrollIntoView({behavior:'smooth',block:'center'});}
+      else document.querySelector('#mywish')?.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    return row;
+  }));
+}
+const laterWishesCopy={
+  JA:{empty:'まだありません。保存だけした条件（継続検索オフ・希望価格なし）がここに並びます。',open:'開いて設定 →'},
+  EN:{empty:'Nothing yet. Saved-only searches (no ongoing search, no target price) appear here.',open:'Open settings →'},
+  ZH:{empty:'暂无。仅保存的条件（未持续搜索、无目标价）会显示在这里。',open:'打开设置 →'},
+  KO:{empty:'아직 없습니다. 저장만 한 조건(계속 찾기 꺼짐·희망 가격 없음)이 여기에 표시됩니다.',open:'열어서 설정 →'}
+};
 // HOSHILU INSIGHT delete controls (2026-08-07 request). Removing an AI Watch
 // item used to mean opening the row's <details>, finding 削除 in the editor
 // and confirming - three interactions to undo one. The same removal now also

@@ -2,7 +2,8 @@
 // /api/buzz/shelf の実データだけを表示する。クライアント側で順位・価格・
 // 人気を創作しない。棚は5種類+「すべて見る」導線（2026-09-05 夜 大隆さん訂正: 「3列→5列」は棚の数のこと）。
 const root = document.querySelector('#buzzHomeShelves');
-const HOME_SHELF_LIMIT = 5;
+// 2026-09-20 大隆さん指示: 「ホシルバズ」が専用タブになったので、棚は届いた分をすべて同時に並べる（順位・商品は API のまま）。
+const HOME_SHELF_LIMIT = Infinity;
 
 const text = (value) => String(value ?? '');
 const yen = (value) => `¥${Number(value).toLocaleString('ja-JP')}`;
@@ -77,8 +78,8 @@ function render(result) {
   root.textContent = '';
   const shelves = (result.shelves || []).slice(0, HOME_SHELF_LIMIT);
   if (!shelves.length) {
-    // 取得できない時は枠ごと畳む(ホームに空箱を残さない)。
-    document.querySelector('#buzzHome')?.classList.add('hidden');
+    // 2026-09-20: 専用タブになったので枠は畳まず、取れていない事実だけを書く（順位は作らない）。
+    root.append(el('p', 'buzz-home-loading', '公式ランキングを取得できませんでした。少し待ってから開き直してください。'));
     return;
   }
   for (const shelf of shelves) {
@@ -104,7 +105,7 @@ async function load() {
     if (!response.ok || payload.ok !== true) throw new Error(payload.error || 'BUZZ_SHELF_FAILED');
     render(payload.result || {});
   } catch {
-    document.querySelector('#buzzHome')?.classList.add('hidden');
+    render({});
   }
 }
 

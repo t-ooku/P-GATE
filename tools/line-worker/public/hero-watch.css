@@ -41,3 +41,7 @@
 
 .hero-watch-hint{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted,#6d6b80)}
 .hero-watch-hint strong{color:#b3005f}
+/* 2026-09-20 大隆さん指示: 🎙は右端へ（クリアはその左）。見出しの上に約3mm（12px）の余白。 */
+.query-field .speech-input{right:12px}
+.query-field .clear-query{right:66px}
+#heroTitle{margin-top:12px}

@@ -157,3 +157,4 @@
 }
 
 /* 2026-09-05 夜 大隆さん訂正: 「5列」は棚の種類数だった。5列グリッドは撤回し、横スクロールの棚に戻した(buzz-home.mjs v4)。 */
+.buzz-home-lead{margin:6px 0 0;font-size:12px;line-height:1.6;color:var(--muted,#6d6b80)}

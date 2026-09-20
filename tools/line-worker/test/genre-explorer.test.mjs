@@ -31,6 +31,6 @@ test('ジャンル探索はファッション → バッグ → トートバッ�
 // 2026-09-17 大隆さん指示: 結果直下の通知リンク2つ（希望価格／クーポン・セール）は削除。「ホシる中」タブに集約。
 test('トップの副文言は通知の価値を含み、結果直下の通知リンクは出さない', () => {
   assert.doesNotMatch(html, /id="resultNoticeStrip"/u);
-  assert.match(html, /値下がりしたら、HOSHILUが知らせます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">探すのはもう終わり。<\/span><span class="hero-sub-sentence">ホシっといて。<\/span><\/span><\/p>/u);
+  assert.match(html, /値下がりしたら、HOSHILUが知らせます。<\/span><\/span><span class="hero-sub-line"><span class="hero-sub-sentence">探し続けるのはもう終わり。<\/span><span class="hero-sub-sentence">ホシっといて。<\/span><\/span><\/p>/u);
   assert.match(readFileSync(new URL('../public/experience-layer.css', import.meta.url), 'utf8'), /\.hero-sub\{white-space:pre-line\}/u);
 });
