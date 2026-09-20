@@ -5,7 +5,7 @@ import { generateKeyPairSync } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import {
   parseGoogleMallItems, normalizeAgentSearchResponse, searchGoogleMalls, googleMallSearchConfigured,
-  googleBillingDayKey, reserveGoogleMallSearchRequest, mallForHost, googleAccessToken, resetGoogleAccessTokenCache
+  googleBillingDayKey, reserveGoogleMallSearchRequest, mallForHost, googleAccessToken, resetGoogleAccessTokenCache, broadenGoogleMallQuery
 } from '../src/google-mall-search.mjs';
 
 function d1() {
@@ -174,4 +174,38 @@ test('同じ検索語は Cache API を優先し、上限を消費しない', asy
   const emptyEnv = { ...baseEnv(), GOOGLE_MALL_SEARCH_DAILY_LIMIT: '5' };
   await searchGoogleMalls(emptyEnv, '無い商品', { fetch: fakeGoogle([], { results: [] }), cache: emptyCache });
   assert.deepEqual(empties, ['public, max-age=600']);
+});
+
+test('broadenGoogleMallQuery はブランド名らしい語（カタカナだけ・英数字だけ）を外し、外す語が無い／全部外れる時は null', () => {
+  assert.equal(broadenGoogleMallQuery('韓国 頭皮ケア LILIB リリーブ lilib'), '韓国 頭皮ケア');
+  assert.equal(broadenGoogleMallQuery('ダイソン 掃除機'), '掃除機');
+  assert.equal(broadenGoogleMallQuery('子ども 水筒'), null);
+  assert.equal(broadenGoogleMallQuery('リリーブ'), null);
+  assert.equal(broadenGoogleMallQuery('LILIB リリーブ'), null);
+});
+
+test('0 件のときだけ 1 回、ブランド名らしい語を外して探し直す（要求は +1、予算も +1）。結果はブランド無しの検索語で出る', async () => {
+  resetGoogleAccessTokenCache();
+  const env = { ...baseEnv(), GOOGLE_MALL_SEARCH_DAILY_LIMIT: '10' };
+  const calls = [];
+  const fetchImpl = async (url, init = {}) => {
+    calls.push({ url: String(url), init });
+    if (String(url).startsWith('https://oauth2.googleapis.com/token')) return new Response(JSON.stringify({ access_token: 'ya29.test', expires_in: 3600 }), { headers: { 'content-type': 'application/json' } });
+    const query = JSON.parse(init.body).query;
+    return new Response(JSON.stringify(query === '韓国 頭皮ケア' ? SAMPLE : { results: [] }), { headers: { 'content-type': 'application/json' } });
+  };
+  const result = await searchGoogleMalls(env, '韓国 頭皮ケア LILIB リリーブ lilib', { fetch: fetchImpl, cache: null });
+  const searches = calls.filter((call) => call.url.includes(':search')).map((call) => JSON.parse(call.init.body).query);
+  assert.deepEqual(searches, ['韓国 頭皮ケア LILIB リリーブ lilib', '韓国 頭皮ケア']);
+  assert.equal(result.source, 'live');
+  assert.ok(result.items.length > 0);
+  const usage = await env.PRODUCT_DB.prepare('SELECT reserved_requests FROM google_mall_search_usage_daily').bind().first();
+  assert.equal(usage.reserved_requests, 2);
+  const log = await env.PRODUCT_DB.prepare('SELECT source, reason, request_count FROM google_mall_search_log ORDER BY reason').bind().all();
+  assert.deepEqual(log.results.map((row) => ({ ...row })), [{ source: 'live', reason: 'BROADENED', request_count: 1 }, { source: 'live', reason: 'SHOWN', request_count: 1 }]);
+  // 外す語が無い検索語は探し直さない（要求は 1 回だけ）
+  const plainCalls = [];
+  const plain = await searchGoogleMalls(env, '子ども 水筒', { fetch: fakeGoogle(plainCalls, { results: [] }), cache: null });
+  assert.equal(plainCalls.filter((call) => call.url.includes(':search')).length, 1);
+  assert.equal(plain.items.length, 0);
 });

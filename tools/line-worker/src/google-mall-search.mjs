@@ -185,6 +185,18 @@ export function normalizeGoogleMallQuery(query) {
   return String(query || '').normalize('NFKC').replace(/\s+/gu, ' ').trim().slice(0, 120);
 }
 
+// 2026-09-20 大隆さん報告「韓国 頭皮ケア リリーブ」: Agent Search（サイト限定）は綴り補正 AUTO でも 0 件だった
+// （live:RAW_0）。0 件のときだけ 1 回、ブランド名らしい語（カタカナだけ・英数字だけの語）を外して探し直す。
+// 「韓国 頭皮ケア LILIB リリーブ lilib」→「韓国 頭皮ケア」。外す語が無い／全部外れる／変わらないときは null。
+export function broadenGoogleMallQuery(query) {
+  const tokens = normalizeGoogleMallQuery(query).split(' ').filter(Boolean);
+  if (tokens.length < 2) return null;
+  const brandLike = (token) => /^[\p{Script=Katakana}ー・]+$/u.test(token) || /^[A-Za-z0-9][A-Za-z0-9&.\-']*$/u.test(token);
+  const kept = tokens.filter((token) => !brandLike(token));
+  if (!kept.length || kept.length === tokens.length) return null;
+  return kept.join(' ');
+}
+
 function cacheKeyFor(query) {
   // v3: 綴り補正・検索語拡張を付けた要求に切り替えたので、v2 の（空を含む）キャッシュは読まない。
   return `https://google-mall-search.hoshilu.internal/v3?q=${encodeURIComponent(query)}`;
@@ -313,7 +325,30 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
     const payload = await response.json();
     const normalized = normalizeAgentSearchResponse(payload);
     rawCount = Array.isArray(normalized) ? normalized.length : 0;
-    const items = parseGoogleMallItems(normalized);
+    let items = parseGoogleMallItems(normalized);
+    // 0 件なら 1 回だけ、ブランド名らしい語を外して探し直す（要求は最大 +1、予算枠を 1 つ余分に使う）。
+    const broadened = rawCount ? null : broadenGoogleMallQuery(query);
+    if (broadened && options.broaden !== false) {
+      const retryBudget = await reserveGoogleMallSearchRequest(env, now);
+      if (retryBudget.allowed) {
+        const retryController = new AbortController();
+        const retryTimer = setTimeout(() => retryController.abort(), options.timeoutMs || REQUEST_TIMEOUT_MS);
+        try {
+        const retry = await fetchImpl(`${SEARCH_ENDPOINT}/${engine}/servingConfigs/default_search:search`, {
+          method: 'POST',
+          signal: retryController.signal,
+          headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ query: broadened, pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
+        });
+        if (retry.ok) {
+          const retryNormalized = normalizeAgentSearchResponse(await retry.json());
+          rawCount = Array.isArray(retryNormalized) ? retryNormalized.length : 0;
+          items = parseGoogleMallItems(retryNormalized);
+          await countGoogleMallOutcome(env, now, 'live', rawCount ? 'BROADENED' : 'BROADENED_0');
+        }
+        } catch {} finally { clearTimeout(retryTimer); }
+      }
+    }
     if (cache) {
       try {
         await cache.put(cacheRequest, new Response(JSON.stringify({ items, cached_at: now.toISOString() }), {
