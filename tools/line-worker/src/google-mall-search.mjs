@@ -246,35 +246,18 @@ export async function googleAccessToken(env = {}, options = {}) {
 
 // 戻り値: { items, source: 'cache'|'live'|'disabled'|'limit'|'error', reason }
 // options.excludeMarketplaces: HOSHILU 自身の結果が既にあるモール（§13: モール単位で判定。そのモールは Google で出さない）
-// 1 検索 1 行のログ（migration 0083）。失敗しても検索を止めない。
-async function logGoogleMallSearch(env, entry) {
-  if (!env.PRODUCT_DB?.prepare || env.GOOGLE_MALL_SEARCH_LOG === 'false') return;
-  try {
-    await env.PRODUCT_DB.prepare(`INSERT INTO google_mall_search_log(log_id,searched_at,query_text,source,reason,raw_count,product_count,kept_count,excluded_marketplaces,latency_ms)
-      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`).bind(
-      crypto.randomUUID(), entry.searched_at, String(entry.query || '').slice(0, 120), String(entry.source || ''), String(entry.reason || '').slice(0, 80),
-      Number(entry.raw_count) || 0, Number(entry.product_count) || 0, Number(entry.kept_count) || 0, String(entry.excluded || '').slice(0, 200), Number(entry.latency_ms) || 0
-    ).run();
-  } catch {}
-}
-export async function purgeGoogleMallSearchLog(env, now = new Date()) {
-  if (!env.PRODUCT_DB?.prepare) return;
-  try { await env.PRODUCT_DB.prepare('DELETE FROM google_mall_search_log WHERE searched_at < ?1').bind(new Date(now.getTime() - 14 * 86_400_000).toISOString()).run(); } catch {}
-}
+// Privacy boundary: 検索本文・検索単位のIDはD1へ記録しない。原因コードは呼び出し元の
+// 集計済みprovider degradationだけで扱い、ここでは結果と固定コードだけを返す。
+// 既存cronとの互換用。過去行の削除は本番D1の破壊的変更になるため自動実行しない。
+export async function purgeGoogleMallSearchLog() {}
 
 export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
   const fetchImpl = options.fetch || fetch;
   const now = options.now || new Date();
   const query = normalizeGoogleMallQuery(rawQuery);
   const exclude = new Set((options.excludeMarketplaces || []).map((value) => String(value || '').toUpperCase()));
-  const startedAt = Date.now();
-  let rawCount = 0;
-  const finish = (items, source, reason = '') => {
-    const kept = items.filter((item) => !exclude.has(item.marketplace));
-    logGoogleMallSearch(env, { searched_at: now.toISOString(), query, source, reason, raw_count: rawCount, product_count: items.length, kept_count: kept.length, excluded: [...exclude].join(','), latency_ms: Date.now() - startedAt });
-    return { items: kept, source, reason };
-  };
-  const fail = (source, reason) => { logGoogleMallSearch(env, { searched_at: now.toISOString(), query, source, reason, raw_count: rawCount, excluded: [...exclude].join(','), latency_ms: Date.now() - startedAt }); return { items: [], source, reason }; };
+  const finish = (items, source, reason = '') => ({ items: items.filter((item) => !exclude.has(item.marketplace)), source, reason });
+  const fail = (source, reason) => ({ items: [], source, reason });
   if (!query) return { items: [], source: 'disabled', reason: 'EMPTY_QUERY' };
   if (!googleMallSearchConfigured(env)) return { items: [], source: 'disabled', reason: 'NOT_CONFIGURED' };
   const cache = options.cache === null ? null : (options.cache || (globalThis.caches?.default ?? null));
@@ -306,9 +289,7 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
     });
     if (!response.ok) return fail('error', `HTTP_${response.status}`);
     const payload = await response.json();
-    const normalized = normalizeAgentSearchResponse(payload);
-    rawCount = Array.isArray(normalized) ? normalized.length : 0;
-    const items = parseGoogleMallItems(normalized);
+    const items = parseGoogleMallItems(normalizeAgentSearchResponse(payload));
     if (cache) {
       try {
         await cache.put(cacheRequest, new Response(JSON.stringify({ items, cached_at: now.toISOString() }), {
