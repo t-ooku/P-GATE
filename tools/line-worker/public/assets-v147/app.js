@@ -1262,7 +1262,9 @@ function resultRow(cards,title,note,rowKind){
   heading.className='result-row-heading';
   heading.append(textElement('h3','result-row-title',title),textElement('span','result-row-count',String(cards.length)));
   const carousel=resultCarousel(cards,rowKind);
-  row.append(heading,textElement('p','result-row-note',note),carousel);
+  // 2026-09-20 大隆さん指示: 「価格まで確認できた商品 N／接続済みモールで…」の見出しは出さず、上に詰める。
+  if(rowKind==='confirmed')row.append(carousel);
+  else row.append(heading,textElement('p','result-row-note',note),carousel);
   if(rowKind==='confirmed'&&cards.length>1){
     const track=carousel.querySelector(':scope > .result-track');
     track.classList.add('result-track-vertical-ticker');
@@ -1282,7 +1284,7 @@ function recommendationRowFor(result,t,query,fallbackProducts={candidates:[],con
 // 2026-09-03（方向転換指示書 §5/§19）: 主訴求は「まとめて探す」。モール導線は
 // 「他のモールでも」という付け足しではなく、検索直後にまず出す本体にする。
 const marketplaceQuickStripCopy={
-  JA:{heading:'まとめて探す（1タップでモールへ）',jump:'13モールすべて見る'},
+  JA:{heading:'ショッピングサイトで探す',jump:'13モールすべて見る'},
   EN:{heading:'Search them together (one tap to each marketplace)',jump:'See all 13 marketplaces'},
   ZH:{heading:'一次搜完（一键前往各商城）',jump:'查看全部13个商城'},
   KO:{heading:'한 번에 찾기(원터치로 쇼핑몰로)',jump:'13개 쇼핑몰 모두 보기'}
@@ -1355,6 +1357,8 @@ const continuousSearchCopy={
   ZH:{title:'交给 HOSHILU 继续找？',titleNotFound:'现在还没找到。交给 HOSHILU 继续找？',lead:'找到后通知到哪里？',memberBody:'启用后，首次检查会将当前候选商品记录为基准，此时不发送通知。之后，仅在发现新匹配的真实商品时，通过应用内通知及已连接的 LINE 或电子邮件提醒您。',guestBody:'可先将条件保存到此设备。免费注册后，请为此条件明确启用通知。',note:'这是新商品发现通知，与降价通知不同。',action:'免费继续寻找',localAction:'保存到此设备',active:'HOSHILU 正在继续寻找',local:'条件已保存到设备',login:'注册后启用通知'},
   KO:{title:'HOSHILU에 맡겨서 계속 찾을까요?',titleNotFound:'아직 못 찾았어요. HOSHILU에 맡겨서 계속 찾을까요?',lead:'찾으면 어디로 알릴까요?',memberBody:'활성화하면 첫 확인에서 현재 후보를 기준으로 기록하고 이때는 알림을 보내지 않습니다. 이후 새로 일치하는 실제 상품을 찾았을 때만 앱과 연결된 LINE·이메일로 알려드립니다.',guestBody:'먼저 이 기기에 조건을 저장할 수 있어요. 무료 가입 후 이 조건의 알림을 명시적으로 활성화하세요.',note:'가격 인하 알림과는 다른 새 상품 발견 알림입니다.',action:'무료로 계속 찾기',localAction:'이 기기에 저장',active:'HOSHILU가 이 조건을 계속 찾고 있어요',local:'이 기기에 조건을 저장했어요',login:'가입 후 알림 활성화'}
 };
+// 2026-09-20 大隆さん指示: 補足は 1 文（会員・未登録とも同じ）。JA の note は出さない。
+Object.assign(continuousSearchCopy.JA,{memberBody:'ホシっとくと、HOSHILU が探し続けます。一致する商品が見つかったときだけ、アプリ・LINE・メールへお知らせします。',guestBody:'ホシっとくと、HOSHILU が探し続けます。一致する商品が見つかったときだけ、アプリ・LINE・メールへお知らせします。',note:''});
 function showWishSaveFeedback({saved,member,query}){
   const language=elements.language.value;
   const labels=continuousSearchCopy[language]||continuousSearchCopy.JA;
@@ -1384,7 +1388,10 @@ function continuousSearchCard(query,options={}){
   card.dataset.continuousSearch='true';
   const copyWrap=document.createElement('div');
   copyWrap.className='continuous-search-copy';
-  copyWrap.append(textElement('h3','',found?labels.title:(labels.titleNotFound||labels.title)),textElement('p','',memberSession?labels.memberBody:labels.guestBody),textElement('small','',labels.note));
+  // 2026-09-20 大隆さん指示: 補足説明は「ホシっとく」ボタンの下に 1 文（note が空の言語は出さない）。
+  copyWrap.append(textElement('h3','',found?labels.title:(labels.titleNotFound||labels.title)));
+  const supplement=textElement('p','continuous-search-supplement',memberSession?labels.memberBody:labels.guestBody);
+  if(labels.note)supplement.append(document.createElement('br'),textElement('small','',labels.note));
   const queryChip=textElement('span','continuous-search-query',value);
   const actions=document.createElement('div');
   actions.className='continuous-search-actions';
@@ -1415,7 +1422,7 @@ function continuousSearchCard(query,options={}){
     showWishSaveFeedback({saved:true,member:memberPersistenceRequired,query:value});
   });
   actions.append(button,login);
-  card.append(copyWrap,queryChip,actions);
+  card.append(copyWrap,queryChip,actions,supplement);
   return card;
 }
 // 検索完了時、結果セクションが画面外だと「検索できたのか分からない」ため
@@ -1458,7 +1465,8 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
   // この種のメッセージを出さない。
   const resultMessageText=String(result.message||'');
   const contradictsShownProducts=confirmed.length>0&&(/ほしっとく|特定でき|MYWISH|信息不足|특정하기/u.test(resultMessageText)||/[?？]\s*$/u.test(resultMessageText));
-  elements.message.textContent=contradictsShownProducts?'':resultMessageText;
+  // 2026-09-20 大隆さん指示: 商品が出ている時の「近い種類・特徴を選んでください。」は出さない（余白を詰める）。
+  elements.message.textContent=(contradictsShownProducts||(confirmed.length>0&&/種類・特徴を選んで/u.test(resultMessageText)))?'':resultMessageText;
   const fallbackProducts=fallbackRecommendationCandidates(candidateRows,RESULT_ROW_LIMIT);
   const recommended=(Array.isArray(result.related_recommendations)?result.related_recommendations:[]).slice(0,RESULT_ROW_LIMIT);
   // 「見つけた」共有は、確認済みまたはモールAPI由来の商品を1件以上表示
@@ -1979,6 +1987,12 @@ document.querySelector('#stickySearch')?.addEventListener('submit',event=>{
 });
 document.querySelector('#stickyMarketplaceJump')?.addEventListener('click',()=>{
   (document.querySelector('#instantMarketplaceFallback')||document.querySelector('#marketplaceFallback'))?.scrollIntoView({behavior:'smooth',block:'start'});
+});
+// 2026-09-20 大隆さん指示: 固定バーに「ホシっとく」。押すと結果内のホシっとく欄へ移動して目立たせる。
+document.querySelector('#stickyHoshittoku')?.addEventListener('click',()=>{
+  const card=document.querySelector('.continuous-search-card');if(!card)return;
+  card.scrollIntoView({behavior:'smooth',block:'center'});
+  card.classList.add('continuous-search-card-flash');setTimeout(()=>card.classList.remove('continuous-search-card-flash'),1800);
 });
 // 2026-09-16 大隆さん指示: BUZZ 棚（別モジュール）からも同じ希望価格ウォッチのダイアログを開けるようにする。
 window.HoshiluWatch={open(candidate){const {dialog}=createWatchOptions(candidate||{},selectedCopy());document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove());dialog.showModal();}};

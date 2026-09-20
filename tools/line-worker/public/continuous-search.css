@@ -44,3 +44,12 @@
   .continuous-search-actions { min-width: 0; }
   .continuous-search-query { grid-column: auto; }
 }
+/* 2026-09-20 大隆さん指示: 補足説明は「ホシっとく」ボタンの下に。固定バーに「ホシっとく」。モールボタンは常に 2 列。 */
+.continuous-search-supplement { margin: 8px 0 0; font-size: 12px; line-height: 1.6; color: var(--muted, #6d6b80); }
+.continuous-search-card-flash { animation: hoshiluCardFlash 1.8s ease-out; }
+@keyframes hoshiluCardFlash { 0% { box-shadow: 0 0 0 0 rgba(255, 79, 154, .6); } 70% { box-shadow: 0 0 0 12px rgba(255, 79, 154, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 79, 154, 0); } }
+.sticky-search .sticky-marketplace-jump { grid-column: 1; }
+.sticky-search .sticky-hoshittoku { grid-column: 2; padding: 0 12px; border: 0; color: #fff; background: linear-gradient(90deg, #ff4f9a, #7357ff 60%, #23b8ff); white-space: nowrap; }
+.marketplace-links.compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 2026-09-20 大隆さん指示: AI特定候補カード内のモールボタン欄は上の「個別に探す」と重複するため出さない（SNSで探すが上に詰まる） */
+.ai-candidate-card .ai-candidate-links-note, .ai-candidate-card .marketplace-links { display: none; }

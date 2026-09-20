@@ -10,7 +10,7 @@ test('continuous search is promoted on the home page and every result path', asy
     read('public/index.html'), read('public/app.js'), read('public/continuous-search.css')
   ]);
   assert.match(html, /検索は、1回で終わらない。/u);
-  assert.match(html, /continuous-search\.css\?v=2/u);
+  assert.match(html, /continuous-search\.css\?v=3/u);
   assert.match(app, /function continuousSearchCard\(query,options=\{\}\)/u);
   assert.match(app, /if\(continuous\)resultCards\.push\(continuous\)/u);
   assert.match(app, /if\(continuous\)emptyCards\.push\(continuous\)/u);
@@ -37,8 +37,8 @@ test('home hero uses the shorter purchase-destination copy and tighter mobile ty
 
 test('continuous search copy promises only the implemented new-match behavior', async () => {
   const app = await read('public/app.js');
-  assert.match(app, /新しく一致する実在商品/u);
-  assert.match(app, /値下げ通知ではなく/u);
+  // 2026-09-20 大隆さん指示: 補足は 1 文（一致する商品が見つかったときだけ通知）。値下げ通知とは別物という説明は結果カード側の「この価格になったら教えて☑」で足りる。
+  assert.match(app, /一致する商品が見つかったときだけ、アプリ・LINE・メールへお知らせします/u);
   assert.doesNotMatch(app, /必ず見つか/u);
 });
 
