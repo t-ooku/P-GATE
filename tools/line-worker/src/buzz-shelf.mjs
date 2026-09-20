@@ -24,9 +24,25 @@
 //   未適用・履歴不足なら棚ごと出さない (架空の急上昇を作らない)。
 
 import { MARKETPLACE_RANKING_CAPABILITIES, RAKUTEN_RANKING_CATEGORIES, fetchRakutenReviewRanking, marketplaceRankingResult, readRankingCache, writeRankingCache } from './marketplace-ranking.mjs';
+
+// 2026-09-20 大隆さん指示「ホシルバズ バージョンアップ」: ジャンルを増やし、同時に出すランキングも増やす。
+// 主婦層（25〜40代）向けの公式ジャンル棚。順位は楽天公式ランキング API のまま（創作しない）。
+// ID は marketplace-ranking.mjs の登録（公式ランキングページで照合済み）を引く。
+export const BUZZ_HOME_GENRE_IDS = Object.freeze([
+  'kids_baby', 'food', 'sweets', 'daily_goods', 'kitchen', 'interior', 'beauty_cosme', 'skincare',
+  'womens_fashion', 'bags', 'pet', 'toys', 'beauty_health_appliance', 'supplement'
+]);
+export const BUZZ_GENRE_EMOJI = Object.freeze({
+  kids_baby: '🧸', food: '🍱', sweets: '🍰', daily_goods: '🧴', kitchen: '🍳', interior: '🛋️', beauty_cosme: '💄', skincare: '🧖',
+  womens_fashion: '👗', bags: '👜', pet: '🐾', toys: '🎲', beauty_health_appliance: '💆', supplement: '💊'
+});
+// BUZZ 棚の D1 キャッシュは 20 分（cron が 15 分ごとに温めるので、訪問時に楽天へ行かない）。
+export const BUZZ_SHELF_CACHE_TTL_MS = 20 * 60 * 1000;
 import { fetchYahooHighRatingRanking, searchYahooShopping, yahooShoppingApiConfigured } from './yahoo-shopping-api.mjs';
 
 export const BUZZ_SHELF_ITEM_LIMIT = 6;
+// 2026-09-20 大隆さん指示: 主婦層ジャンル棚は 10 件ずつ。
+export const BUZZ_HOME_GENRE_ITEM_LIMIT = 10;
 
 // 棚の並び。若者向け(デュアルペルソナv2ライン)を先頭に置く。
 export const BUZZ_SHELF_CATEGORY_IDS = Object.freeze([
@@ -131,6 +147,11 @@ async function buildShelf(env, category, fetcher) {
     id: category.id, genre_id: category.genre_id
   });
   if (result.mode === 'clarification') return null;
+  // 楽天へ実際に行った時だけ、BUZZ 用に長めの TTL で書き直す（内容は同じ公式データ）。
+  if (!result.cache_hit && Array.isArray(result.candidates) && result.candidates.length) {
+    const rankingType = /口コミ件数順/u.test(String(result.ranking_type || '')) ? 'REVIEW_COUNT' : 'REALTIME';
+    await writeRankingCache(env, 'RAKUTEN_JP', category.id, rankingType, result.candidates, Date.now(), BUZZ_SHELF_CACHE_TTL_MS);
+  }
   let allItems = (result.candidates || [])
     .map(sanitizeShelfItem)
     .filter((item) => item.name && item.product_url);
@@ -174,14 +195,44 @@ async function buildShelf(env, category, fetcher) {
   };
 }
 
+// 楽天 API は 1 秒 1 リクエスト。D1 キャッシュに無い棚だけ、1 件ずつ間を空けて取りに行く
+// （キャッシュにある棚は待たない）。間隔は BUZZ_FETCH_GAP_MS（既定 1000ms、テストは 0）。
+async function buildShelvesThrottled(env, categories, fetcher) {
+  const gapMs = Math.max(0, Number(env.BUZZ_FETCH_GAP_MS ?? 1000) || 0);
+  const shelves = [];
+  let lastLiveFetchAt = 0;
+  for (const category of categories) {
+    const cached = await readRankingCache(env, 'RAKUTEN_JP', category.id, 'REALTIME')
+      || await readRankingCache(env, 'RAKUTEN_JP', category.id, 'REVIEW_COUNT');
+    if (!cached && gapMs > 0 && lastLiveFetchAt) {
+      const wait = lastLiveFetchAt + gapMs - Date.now();
+      if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+    }
+    if (!cached) lastLiveFetchAt = Date.now();
+    try {
+      const shelf = await buildShelf(env, category, fetcher);
+      if (shelf) shelves.push(shelf);
+    } catch {
+      // 1 棚の失敗で他の棚を止めない（架空の棚も作らない）。
+    }
+  }
+  return shelves;
+}
+
 export async function buildGenreShelves(env, fetcher = fetch, now = Date.now()) {
   const categories = buzzThemeFor(now).category_ids
     .map((id) => RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === id))
     .filter(Boolean);
-  const outcomes = await Promise.allSettled(categories.map((category) => buildShelf(env, category, fetcher)));
-  return outcomes
-    .filter((outcome) => outcome.status === 'fulfilled' && outcome.value)
-    .map((outcome) => outcome.value);
+  return buildShelvesThrottled(env, categories, fetcher);
+}
+
+// 2026-09-20: 主婦層向けの公式ジャンル棚（テーマ棚の後ろに全部並べる）。
+export async function buildHomeGenreShelves(env, fetcher = fetch) {
+  const categories = BUZZ_HOME_GENRE_IDS
+    .map((id) => RAKUTEN_RANKING_CATEGORIES.find((entry) => entry.id === id))
+    .filter(Boolean);
+  const shelves = await buildShelvesThrottled(env, categories, fetcher);
+  return shelves.map((shelf) => ({ ...shelf, emoji: BUZZ_GENRE_EMOJI[shelf.shelf_id] || shelf.emoji, shelf_group: 'home_genre', items: (shelf.all_items || shelf.items).slice(0, BUZZ_HOME_GENRE_ITEM_LIMIT) }));
 }
 
 // 💰予算別棚 (§19): 追加API呼び出しなし。取得済み公式ランキングの商品を
@@ -246,6 +297,17 @@ export async function recordBuzzSnapshots(env, fetcher = fetch, now = Date.now()
   } catch {
     // テーブル未適用・一時障害。BUZZ表示や他cronを止めない。
     return { recorded: 0, skipped: 'TABLE_UNAVAILABLE' };
+  }
+}
+
+// 2026-09-20: 15 分ごとの cron から呼び、BUZZ 棚の D1 キャッシュ（20 分）を温める。
+// 訪問者が来た時に楽天へ 17 回行かないための予熱。失敗しても他の cron を止めない。
+export async function warmBuzzShelves(env, fetcher = fetch, now = Date.now()) {
+  try {
+    const result = await buzzShelfResult(env, fetcher, now);
+    return { warmed: result.shelf_count };
+  } catch (error) {
+    return { warmed: 0, error: String(error?.message || 'BUZZ_WARM_FAILED').slice(0, 80) };
   }
 }
 
@@ -438,11 +500,13 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
   const themeState = buzzThemeStateFor(now);
   const theme = themeState.theme;
   const genreShelves = await buildGenreShelves(env, fetcher, now);
-  const [risingShelf, koreanShelf] = await Promise.all([
+  const [risingShelf, koreanShelf, homeGenreShelves] = await Promise.all([
     buildRisingShelf(env, genreShelves, now),
-    buildKoreanShelf(env, fetcher)
+    buildKoreanShelf(env, fetcher),
+    buildHomeGenreShelves(env, fetcher)
   ]);
-  const budgetShelves = buildBudgetShelves(genreShelves);
+  // 予算別棚はテーマ棚＋主婦層ジャンル棚の全商品から（追加 API 呼び出しなし）。
+  const budgetShelves = buildBudgetShelves([...genreShelves, ...homeGenreShelves]);
   // 同一商品が半数以上重複する棚を2つ並べない(誤ラベルの「同じ中身の棚」防止)。
   // 6件中3件の重複でも、横スクロール上は同じランキングに見えるため除外する。
   const seenUrlSets = [];
@@ -462,7 +526,8 @@ export async function buzzShelfResult(env, fetcher = fetch, now = Date.now()) {
     // API一時障害でも韓国関連の入口自体は消さない。商品・順位は作らず、
     // 公式データ確認中の空棚と安全な横断検索リンクだけを表示する。
     ...(koreanShelf ? [koreanShelf] : [koreanShelfAvailabilityPlaceholder()]),
-    ...genreShelves.map(publicShelf)
+    ...genreShelves.map(publicShelf),
+    ...homeGenreShelves.map(publicShelf)
   ].filter(distinctShelf).concat(budgetShelves).map(withBuzzRanks);
   return {
     generated_for: 'HOSHILU BUZZ',

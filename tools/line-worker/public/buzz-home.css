@@ -158,3 +158,11 @@
 
 /* 2026-09-05 夜 大隆さん訂正: 「5列」は棚の種類数だった。5列グリッドは撤回し、横スクロールの棚に戻した(buzz-home.mjs v4)。 */
 .buzz-home-lead{margin:6px 0 0;font-size:12px;line-height:1.6;color:var(--muted,#6d6b80)}
+/* 2026-09-20 大隆さん指示「ホシルバズ バージョンアップ」: ジャンルの帯・Google でも探す */
+.buzz-home-genres { display: flex; gap: 6px; margin: 12px 0 4px; padding: 2px 0 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.buzz-home-genres::-webkit-scrollbar { display: none; }
+.buzz-home-genre-chip { flex: 0 0 auto; padding: 7px 12px; border: 1px solid #ded7ff; border-radius: 999px; background: #fff; color: #5140ba; font: inherit; font-size: 12px; font-weight: 800; white-space: nowrap; cursor: pointer; }
+.buzz-home-genre-chip:hover { background: var(--soft, #f4f0ff); }
+.buzz-home-shelf { scroll-margin-top: calc(var(--topbar-height, 74px) + 12px); }
+.buzz-home-google { margin: 6px 0 2px; padding: 8px 12px; border: 1px dashed #cfc6ff; border-radius: 12px; background: #fff; color: var(--violet, #7357ff); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; text-align: left; }
+.buzz-home-google:hover { background: var(--soft, #f4f0ff); }

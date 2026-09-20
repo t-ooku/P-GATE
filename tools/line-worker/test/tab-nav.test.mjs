@@ -111,7 +111,7 @@ test('商品画像はカード 300px・拡大 600px を画像サーバーに要�
   assert.match(app, /window\.HoshiluImage=\{upgrade:upgradeProductImageUrl\};/);
   assert.match(read('buzz-home.mjs'), /window\.HoshiluImage\?\.upgrade\(text\(item\.image_url\), 300\)/);
   const html = read('index.html');
-  assert.ok(html.includes('app.js?v=177') && html.includes('buzz-home.mjs?v=8'));
+  assert.ok(html.includes('app.js?v=177') && html.includes('buzz-home.mjs?v=9'));
 });
 
 // 2026-09-17 大隆さん報告: 「値下がり待ち」に削除ボタンがない。各行に「やめる」（会員 DB の wish を削除）を付ける。

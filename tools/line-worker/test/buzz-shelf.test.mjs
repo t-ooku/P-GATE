@@ -5,13 +5,13 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
-  BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT, BUZZ_THEME_ROTATIONS,
+  BUZZ_BUDGET_SHELVES, BUZZ_SHELF_CATEGORY_IDS, BUZZ_SHELF_ITEM_LIMIT, BUZZ_THEME_ROTATIONS, BUZZ_HOME_GENRE_IDS, BUZZ_HOME_GENRE_ITEM_LIMIT, BUZZ_GENRE_EMOJI,
   buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
 
 const worker = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const env = { RAKUTEN_APPLICATION_ID: 'test-app-id', RAKUTEN_ACCESS_KEY: 'test-access-key' };
+const env = { RAKUTEN_APPLICATION_ID: 'test-app-id', RAKUTEN_ACCESS_KEY: 'test-access-key', BUZZ_FETCH_GAP_MS: '0' };
 
 test('BUZZテーマは火曜・金曜JSTに週2回切り替わり韓国軸を含む', () => {
   const tuesday = Date.parse('2026-08-25T00:00:00+09:00');
@@ -105,10 +105,15 @@ test('BUZZ棚は定義順の小ジャンルを公式ランキングだけで返�
   const now = Date.parse('2026-08-25T00:00:00+09:00');
   const result = await buzzShelfResult(env, rankingFetcher(), now);
   // 履歴なし(急上昇なし)の構成: ジャンル棚(定義順) + 予算別棚。
+  // 2026-09-20 大隆さん指示: テーマ棚の後ろに主婦層向けの公式ジャンル棚（BUZZ_HOME_GENRE_IDS、10 件ずつ）を全部並べる。
   assert.deepEqual(
     result.shelves.map((shelf) => shelf.shelf_id),
-    ['korean_beauty', ...buzzThemeFor(now).category_ids, ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
+    ['korean_beauty', ...buzzThemeFor(now).category_ids, ...BUZZ_HOME_GENRE_IDS, ...BUZZ_BUDGET_SHELVES.map((budget) => budget.shelf_id)]
   );
+  for (const shelf of result.shelves.filter((entry) => entry.shelf_group === 'home_genre')) {
+    assert.ok(shelf.items.length > 0 && shelf.items.length <= BUZZ_HOME_GENRE_ITEM_LIMIT);
+    assert.ok(BUZZ_GENRE_EMOJI[shelf.shelf_id]);
+  }
   assert.equal(result.shelf_count, result.shelves.length);
   // v3.1 §13: ジャンル棚は「◯◯で探す」用の安全な検索語(検証済み小ジャンル名)を持つ。
   for (const shelf of result.shelves.filter((entry) => !['derived_from_official', 'official_data_unavailable'].includes(entry.ranking_mode))) {
@@ -119,7 +124,7 @@ test('BUZZ棚は定義順の小ジャンルを公式ランキングだけで返�
     assert.equal(shelf.marketplace, 'RAKUTEN_JP');
     assert.equal(shelf.headline, 'いま売れてる。');
     assert.match(shelf.ranking_type, /リアルタイムランキング/u);
-    assert.ok(shelf.items.length > 0 && shelf.items.length <= BUZZ_SHELF_ITEM_LIMIT);
+    assert.ok(shelf.items.length > 0 && shelf.items.length <= (shelf.shelf_group === 'home_genre' ? BUZZ_HOME_GENRE_ITEM_LIMIT : BUZZ_SHELF_ITEM_LIMIT));
     for (const item of shelf.items) {
       assert.ok(item.name);
       assert.match(item.product_url, /^https:\/\/item\.rakuten\.co\.jp\//u);
@@ -278,7 +283,9 @@ test('workerは/api/buzz/shelfをGET・5分キャッシュで公開する', () =
   assert.match(source, /url\.pathname === '\/api\/buzz\/shelf'/u);
   const route = source.slice(source.indexOf("'/api/buzz/shelf'"));
   assert.match(route.slice(0, 2000), /max-age=300/u);
-  assert.match(source, /import \{ buzzShelfResult, recordBuzzSnapshots \} from '\.\/buzz-shelf\.mjs';/u);
+  assert.match(source, /import \{ buzzShelfResult, recordBuzzSnapshots, warmBuzzShelves \} from '\.\/buzz-shelf\.mjs';/u);
+  // 2026-09-20: 15 分ごとの cron で棚キャッシュを温める。
+  assert.match(source, /ctx\.waitUntil\(warmBuzzShelves\(env, fetch, scheduledAt\.getTime\(\)\)\);/u);
   // v3.1 §11-14/§33: 「◯◯で探す」検索フォールバックは署名付き/goリンクで付与し、
   // リンク生成失敗でも棚表示を止めない。
   assert.match(route.slice(0, 2000), /signedMarketplaceSearchLinks\(shelf\.search_keyword, buzzLinkContext\)\.catch\(\(\) => \[\]\)/u);
@@ -291,7 +298,7 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
   assert.doesNotMatch(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
-  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=8"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=9"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
   const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
   assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
@@ -607,5 +614,5 @@ test('BUZZ の各カードに「この価格になったら教えて☑」が付
   assert.match(ranking, /record_key: itemCode \? `RAKUTEN:\$\{itemCode\}` : ''/);
   const buzz = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   assert.match(buzz, /ranking-watch-link/);
-  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=6/);
+  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=7/);
 });

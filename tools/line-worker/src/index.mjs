@@ -46,7 +46,7 @@ import { sanitizeAiOutputList, sanitizeAiOutputText } from './ai-output-safety.m
 import { readBoundedJson } from './bounded-json.mjs';
 import { safeProviderErrorCode } from './provider-error-code.mjs';
 import { MARKETPLACE_RANKING_CAPABILITIES, marketplaceRankingResult, rankingCategoryConfirmationResult } from './marketplace-ranking.mjs';
-import { buzzShelfResult, recordBuzzSnapshots } from './buzz-shelf.mjs';
+import { buzzShelfResult, recordBuzzSnapshots, warmBuzzShelves } from './buzz-shelf.mjs';
 import { handleBuzzNotificationRoutes, queueBuzzThemeNotifications } from './buzz-notifications.mjs';
 import { filterRankingCategoryCandidates } from './ranking-category-eligibility.mjs';
 import {
@@ -3650,6 +3650,8 @@ export default {
           (qaRequest) => handleKnowledgeApi(qaRequest, env, ctx, { internalQa: true }))
           .catch((error) => { console.error('SEARCH_QA_CANARY_FAILED', { code: String(error?.message || error).slice(0, 80) }); }));
       }
+      // 2026-09-20 ホシルバズ: 15 分ごとに棚の D1 キャッシュ（20 分）を温める（楽天 1 req/sec を守って順に取得）。
+      ctx.waitUntil(warmBuzzShelves(env, fetch, scheduledAt.getTime()));
       return;
     }
     // Publishing gets its own five-minute trigger. Instagram container polling

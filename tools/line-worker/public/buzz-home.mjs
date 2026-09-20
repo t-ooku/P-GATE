@@ -74,6 +74,34 @@ function itemCard(item) {
   return wrap;
 }
 
+// 2026-09-20 大隆さん指示「Googleも最大限活用」: 棚のジャンル名で HOSHILU 検索を実行する
+// （楽天・Yahoo! の API 結果に加え、他モールは Google（Agent Search）の枠が出る）。ここで新しい API は呼ばない。
+function searchOnHoshilu(keyword) {
+  const query = document.querySelector('#query');
+  const form = document.querySelector('#knowledgeForm');
+  if (!query || !form || !keyword) return;
+  query.value = keyword;
+  query.dispatchEvent(new Event('input', { bubbles: true }));
+  window.HoshiluTabs?.activate('search', { scroll: false });
+  if (typeof form.requestSubmit === 'function') form.requestSubmit();
+  else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+}
+
+// ジャンルの帯（横スクロール）: 押すとその棚へ移動。棚は API が返した分だけ（創作しない）。
+function genreNav(shelves) {
+  const nav = el('nav', 'buzz-home-genres');
+  nav.setAttribute('aria-label', 'ランキングのジャンル');
+  for (const shelf of shelves) {
+    const chip = el('button', 'buzz-home-genre-chip', shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label));
+    chip.type = 'button';
+    chip.addEventListener('click', () => {
+      document.getElementById(`buzzShelf-${text(shelf.shelf_id)}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    nav.append(chip);
+  }
+  return nav;
+}
+
 function render(result) {
   root.textContent = '';
   const shelves = (result.shelves || []).slice(0, HOME_SHELF_LIMIT);
@@ -82,16 +110,26 @@ function render(result) {
     root.append(el('p', 'buzz-home-loading', '公式ランキングを取得できませんでした。少し待ってから開き直してください。'));
     return;
   }
+  if (shelves.length > 3) root.append(genreNav(shelves));
   for (const shelf of shelves) {
     const block = el('div', 'buzz-home-shelf');
+    block.id = `buzzShelf-${text(shelf.shelf_id)}`;
     const head = el('div', 'buzz-home-shelf-head');
     head.append(el('h3', '', shelf.emoji ? `${text(shelf.emoji)} ${text(shelf.label)}` : text(shelf.label)), el('span', 'buzz-home-headline', text(shelf.headline)));
-    // 2026-09-05 夜 大隆さん訂正: 横スクロールの棚に戻し、棚の種類を5つに。
+    // 2026-09-05 夜 大隆さん訂正: 横スクロールの棚に戻す。2026-09-20: 棚が返した件数をそのまま並べる（主婦層ジャンルは 10 件）。
     const rail = el('div', 'buzz-home-rail');
-    for (const item of (shelf.items || []).slice(0, 6)) rail.append(itemCard(item));
+    for (const item of (shelf.items || [])) rail.append(itemCard(item));
     const more = el('a', 'buzz-home-railmore', 'もっと見る →');
     more.href = '/buzz';
     rail.append(more);
+    if (shelf.search_keyword) {
+      const google = el('button', 'buzz-home-google', `${text(shelf.search_keyword)} を他のモール（Google）でも探す →`);
+      google.type = 'button';
+      google.addEventListener('click', () => searchOnHoshilu(text(shelf.search_keyword)));
+      block.append(head, rail, google);
+      root.append(block);
+      continue;
+    }
     // 2026-08-19 大隆さん指示: 棚ごとの出典表記は出さない(枠下の注記に集約)。
     block.append(head, rail);
     root.append(block);

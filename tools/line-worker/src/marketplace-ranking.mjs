@@ -16,7 +16,24 @@ export const RAKUTEN_RANKING_CATEGORIES = Object.freeze([
   { id: 'wireless_earphones', label: 'ワイヤレスイヤホン', genre_id: '502835', patterns: [/ワイヤレスイヤホン|bluetooth\s*イヤホン|イヤホン|earbuds?/iu] },
   { id: 'womens_sneakers', label: 'レディーススニーカー', genre_id: '206906', patterns: [/レディース.{0,4}スニーカー|女性.{0,4}スニーカー|women'?s?\s*sneakers?/iu] },
   { id: 'mobile_battery', label: 'モバイルバッテリー', genre_id: '564277', patterns: [/モバイルバッテリー|携帯充電器|power\s*bank/iu] },
-  { id: 'face_lotion', label: '化粧水・ローション', genre_id: '216307', patterns: [/化粧水|フェイスローション|face\s*lotion|toner/iu] }
+  { id: 'face_lotion', label: '化粧水・ローション', genre_id: '216307', patterns: [/化粧水|フェイスローション|face\s*lotion|toner/iu] },
+  // 2026-09-20 大隆さん指示「ホシルバズのジャンルを増やす」: 主婦層（25〜40代）向けの公式ジャンル。
+  // すべて公式ランキングページ https://ranking.rakuten.co.jp/daily/<genre_id>/ の見出しで ID を照合済み。
+  // patterns はラベル完全一致だけ（ランキング検索の語→分類の解決を広げない。棚は id 指定で引く）。
+  { id: 'kids_baby', label: 'キッズ・ベビー・マタニティ', genre_id: '100533', patterns: [/^キッズ・ベビー・マタニティ$/u] },
+  { id: 'food', label: '食品', genre_id: '100227', patterns: [/^食品$/u] },
+  { id: 'sweets', label: 'スイーツ・お菓子', genre_id: '551167', patterns: [/^スイーツ・お菓子$/u] },
+  { id: 'daily_goods', label: '日用品雑貨・文房具・手芸', genre_id: '215783', patterns: [/^日用品雑貨・文房具・手芸$/u] },
+  { id: 'kitchen', label: 'キッチン用品・食器・調理器具', genre_id: '558944', patterns: [/^キッチン用品・食器・調理器具$/u] },
+  { id: 'interior', label: 'インテリア・寝具・収納', genre_id: '100804', patterns: [/^インテリア・寝具・収納$/u] },
+  { id: 'beauty_cosme', label: '美容・コスメ・香水', genre_id: '100939', patterns: [/^美容・コスメ・香水$/u] },
+  { id: 'skincare', label: 'スキンケア', genre_id: '100944', patterns: [/^スキンケア$/u] },
+  { id: 'womens_fashion', label: 'レディースファッション', genre_id: '100371', patterns: [/^レディースファッション$/u] },
+  { id: 'bags', label: 'バッグ・小物・ブランド雑貨', genre_id: '216131', patterns: [/^バッグ・小物・ブランド雑貨$/u] },
+  { id: 'pet', label: 'ペット・ペットグッズ', genre_id: '101213', patterns: [/^ペット・ペットグッズ$/u] },
+  { id: 'toys', label: 'おもちゃ', genre_id: '215333', patterns: [/^おもちゃ$/u] },
+  { id: 'beauty_health_appliance', label: '美容・健康家電', genre_id: '100191', patterns: [/^美容・健康家電$/u] },
+  { id: 'supplement', label: 'サプリメント', genre_id: '563727', patterns: [/^サプリメント$/u] }
 ]);
 
 export const MARKETPLACE_RANKING_CAPABILITIES = Object.freeze([
