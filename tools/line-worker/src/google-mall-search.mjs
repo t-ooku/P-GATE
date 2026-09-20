@@ -300,7 +300,9 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
       signal: controller.signal,
       headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json' },
       // 検索語以外は送らない（userPseudoId 等は付けない）。
-      body: JSON.stringify({ query, pageSize: 20, languageCode: 'ja', safeSearch: true })
+      // 2026-09-20 大隆さん報告「リリーブ」: 通常の Google は「リリーイブ」に自動補正して出す。Agent Search にも
+      // 綴り補正（AUTO）と、結果が少ない時の検索語拡張（AUTO）を明示して同じ挙動に寄せる。
+      body: JSON.stringify({ query, pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
     });
     if (!response.ok) return fail('error', `HTTP_${response.status}`);
     const payload = await response.json();

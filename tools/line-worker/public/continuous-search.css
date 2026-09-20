@@ -53,3 +53,9 @@
 .marketplace-links.compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 /* 2026-09-20 大隆さん指示: AI特定候補カード内のモールボタン欄は上の「個別に探す」と重複するため出さない（SNSで探すが上に詰まる） */
 .ai-candidate-card .ai-candidate-links-note, .ai-candidate-card .marketplace-links { display: none; }
+/* 2026-09-20 大隆さん指示: 「モールで直接探す」と「ホシっとく」は同じ幅（2 列とも 1fr） */
+.search-results-active .sticky-search, .sticky-search { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.sticky-search #stickySearchInput { grid-column: 1 / 2; min-width: 0; }
+.sticky-search .sticky-search-submit { grid-column: 2 / 3; }
+.sticky-search .sticky-marketplace-jump { grid-column: 1 / 2; }
+.sticky-search .sticky-hoshittoku { grid-column: 2 / 3; padding: 0 8px; }

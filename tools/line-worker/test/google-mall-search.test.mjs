@@ -121,7 +121,7 @@ test('searchGoogleMalls はトークンを取ってから Discovery Engine に�
   assert.equal(calls[0].url, 'https://oauth2.googleapis.com/token');
   assert.equal(calls[1].url, `https://discoveryengine.googleapis.com/v1/${ENGINE}/servingConfigs/default_search:search`);
   const body = JSON.parse(calls[1].init.body);
-  assert.deepEqual(body, { query: '子ども 水筒', pageSize: 20, languageCode: 'ja', safeSearch: true });
+  assert.deepEqual(body, { query: '子ども 水筒', pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } });
   assert.equal(calls[1].init.headers.authorization, 'Bearer ya29.test');
   // 2026-09-20: 1 検索 1 行のログ（何件返り・何件残り・何を除外したか）
   await new Promise((resolve) => setTimeout(resolve, 20));
