@@ -11,13 +11,16 @@ import {
 function d1() {
   const db = new DatabaseSync(':memory:');
   db.exec(readFileSync(new URL('../migrations/0082_google_mall_search.sql', import.meta.url), 'utf8'));
+  db.exec(readFileSync(new URL('../migrations/0083_google_mall_search_log.sql', import.meta.url), 'utf8'));
   return {
     prepare(sql) {
       const statement = db.prepare(sql);
       let params = [];
       return {
         bind(...values) { params = values; return this; },
-        async first() { return statement.get(...params) ?? null; }
+        async first() { return statement.get(...params) ?? null; },
+        async run() { statement.run(...params); return { success: true }; },
+        async all() { return { results: statement.all(...params) }; }
       };
     }
   };
@@ -120,6 +123,15 @@ test('searchGoogleMalls はトークンを取ってから Discovery Engine に�
   const body = JSON.parse(calls[1].init.body);
   assert.deepEqual(body, { query: '子ども 水筒', pageSize: 20, languageCode: 'ja', safeSearch: true });
   assert.equal(calls[1].init.headers.authorization, 'Bearer ya29.test');
+  // 2026-09-20: 1 検索 1 行のログ（何件返り・何件残り・何を除外したか）
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  const log = await env.PRODUCT_DB.prepare('SELECT * FROM google_mall_search_log ORDER BY searched_at DESC').bind().all();
+  assert.equal(log.results.length, 1);
+  assert.equal(log.results[0].source, 'live');
+  assert.equal(log.results[0].raw_count, 7);
+  assert.equal(log.results[0].product_count, 3);
+  assert.equal(log.results[0].kept_count, 2);
+  assert.equal(log.results[0].excluded_marketplaces, 'AMAZON_JP');
   // 上限 1 なので 2 回目は呼ばない
   const limited = await searchGoogleMalls(env, '別の検索', { fetch: fakeGoogle(calls), cache: null });
   assert.equal(limited.source, 'limit');

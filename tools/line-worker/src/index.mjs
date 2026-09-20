@@ -123,7 +123,7 @@ import { extractSearchOrigin, orderMarketplaceDestinations } from './search-orig
 import { applyHeadNounGate } from './search-head-noun.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
-import { searchGoogleMalls, googleMallSearchConfigured } from './google-mall-search.mjs';
+import { searchGoogleMalls, googleMallSearchConfigured, purgeGoogleMallSearchLog } from './google-mall-search.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -3343,7 +3343,7 @@ const CORE_D1_TABLES = [
   'anonymous_benchmark',
   'social_knowledge_inbox', 'social_knowledge_aggregates', 'social_hashtag_aggregates',
   'product_identifiers', 'instagram_oauth_credentials', 'x_oauth_credentials',
-  'google_visual_web_detection_usage_monthly', 'google_mall_search_usage_daily',
+  'google_visual_web_detection_usage_monthly', 'google_mall_search_usage_daily', 'google_mall_search_log',
   'runway_budget_policy', 'runway_budget_periods', 'runway_generation_jobs',
   'runway_generation_attempts', 'runway_cost_reservations',
   'runway_provider_usage_daily', 'runway_approval_grants', 'runway_audit_log'
@@ -3652,6 +3652,7 @@ export default {
       }
       // 2026-09-20 ホシルバズ: 15 分ごとに棚の D1 キャッシュ（20 分）を温める（楽天 1 req/sec を守って順に取得）。
       ctx.waitUntil(warmBuzzShelves(env, fetch, scheduledAt.getTime()));
+      ctx.waitUntil(purgeGoogleMallSearchLog(env, scheduledAt));
       return;
     }
     // Publishing gets its own five-minute trigger. Instagram container polling

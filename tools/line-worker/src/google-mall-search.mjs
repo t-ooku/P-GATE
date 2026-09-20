@@ -15,7 +15,8 @@ const DEFAULT_DAILY_LIMIT = 300;
 const MAX_DAILY_LIMIT = 10000;
 const RESULT_LIMIT = 20;
 const CACHE_TTL_SECONDS = 86400;
-const REQUEST_TIMEOUT_MS = 3000;
+// 2026-09-20: Agent Search の初回応答は 3 秒を超えることがあり TIMEOUT で枠が出なかった。本検索と並行なので 7 秒まで待つ。
+const REQUEST_TIMEOUT_MS = 7000;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const SEARCH_ENDPOINT = 'https://discoveryengine.googleapis.com/v1';
@@ -245,12 +246,35 @@ export async function googleAccessToken(env = {}, options = {}) {
 
 // 戻り値: { items, source: 'cache'|'live'|'disabled'|'limit'|'error', reason }
 // options.excludeMarketplaces: HOSHILU 自身の結果が既にあるモール（§13: モール単位で判定。そのモールは Google で出さない）
+// 1 検索 1 行のログ（migration 0083）。失敗しても検索を止めない。
+async function logGoogleMallSearch(env, entry) {
+  if (!env.PRODUCT_DB?.prepare || env.GOOGLE_MALL_SEARCH_LOG === 'false') return;
+  try {
+    await env.PRODUCT_DB.prepare(`INSERT INTO google_mall_search_log(log_id,searched_at,query_text,source,reason,raw_count,product_count,kept_count,excluded_marketplaces,latency_ms)
+      VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`).bind(
+      crypto.randomUUID(), entry.searched_at, String(entry.query || '').slice(0, 120), String(entry.source || ''), String(entry.reason || '').slice(0, 80),
+      Number(entry.raw_count) || 0, Number(entry.product_count) || 0, Number(entry.kept_count) || 0, String(entry.excluded || '').slice(0, 200), Number(entry.latency_ms) || 0
+    ).run();
+  } catch {}
+}
+export async function purgeGoogleMallSearchLog(env, now = new Date()) {
+  if (!env.PRODUCT_DB?.prepare) return;
+  try { await env.PRODUCT_DB.prepare('DELETE FROM google_mall_search_log WHERE searched_at < ?1').bind(new Date(now.getTime() - 14 * 86_400_000).toISOString()).run(); } catch {}
+}
+
 export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
   const fetchImpl = options.fetch || fetch;
   const now = options.now || new Date();
   const query = normalizeGoogleMallQuery(rawQuery);
   const exclude = new Set((options.excludeMarketplaces || []).map((value) => String(value || '').toUpperCase()));
-  const finish = (items, source, reason = '') => ({ items: items.filter((item) => !exclude.has(item.marketplace)), source, reason });
+  const startedAt = Date.now();
+  let rawCount = 0;
+  const finish = (items, source, reason = '') => {
+    const kept = items.filter((item) => !exclude.has(item.marketplace));
+    logGoogleMallSearch(env, { searched_at: now.toISOString(), query, source, reason, raw_count: rawCount, product_count: items.length, kept_count: kept.length, excluded: [...exclude].join(','), latency_ms: Date.now() - startedAt });
+    return { items: kept, source, reason };
+  };
+  const fail = (source, reason) => { logGoogleMallSearch(env, { searched_at: now.toISOString(), query, source, reason, raw_count: rawCount, excluded: [...exclude].join(','), latency_ms: Date.now() - startedAt }); return { items: [], source, reason }; };
   if (!query) return { items: [], source: 'disabled', reason: 'EMPTY_QUERY' };
   if (!googleMallSearchConfigured(env)) return { items: [], source: 'disabled', reason: 'NOT_CONFIGURED' };
   const cache = options.cache === null ? null : (options.cache || (globalThis.caches?.default ?? null));
@@ -265,7 +289,7 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
     } catch {}
   }
   const budget = await reserveGoogleMallSearchRequest(env, now);
-  if (!budget.allowed) return { items: [], source: 'limit', reason: budget.reason };
+  if (!budget.allowed) return fail('limit', budget.reason);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs || REQUEST_TIMEOUT_MS);
   try {
@@ -278,9 +302,11 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
       // 検索語以外は送らない（userPseudoId 等は付けない）。
       body: JSON.stringify({ query, pageSize: 20, languageCode: 'ja', safeSearch: true })
     });
-    if (!response.ok) return { items: [], source: 'error', reason: `HTTP_${response.status}` };
+    if (!response.ok) return fail('error', `HTTP_${response.status}`);
     const payload = await response.json();
-    const items = parseGoogleMallItems(normalizeAgentSearchResponse(payload));
+    const normalized = normalizeAgentSearchResponse(payload);
+    rawCount = Array.isArray(normalized) ? normalized.length : 0;
+    const items = parseGoogleMallItems(normalized);
     if (cache) {
       try {
         await cache.put(cacheRequest, new Response(JSON.stringify({ items, cached_at: now.toISOString() }), {
@@ -291,7 +317,7 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
     return finish(items, 'live');
   } catch (error) {
     const message = String(error?.message || '');
-    return { items: [], source: 'error', reason: error?.name === 'AbortError' ? 'TIMEOUT' : (message.startsWith('GOOGLE_') ? message : 'FETCH_FAILED') };
+    return fail('error', error?.name === 'AbortError' ? 'TIMEOUT' : (message.startsWith('GOOGLE_') ? message : 'FETCH_FAILED'));
   } finally {
     clearTimeout(timer);
   }
