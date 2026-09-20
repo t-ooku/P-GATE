@@ -80,9 +80,9 @@ async function requestFor(env, method, path, cookie, body) {
 // 11 件目は 409 で「あとで見る」へ促す。既存行は触らない。数は本人の実データだけ。
 
 test('上限は既定で 保存100・探し中10・値下がり待ち10、env で上書きできる', () => {
-  assert.deepEqual(wishLimitsFor({}), { saved: 100, searching: 10, price_watch: 10 });
-  assert.deepEqual(WISH_LIMIT_DEFAULTS, { saved: 100, searching: 10, price_watch: 10 });
-  assert.deepEqual(wishLimitsFor({ WISH_LIMIT_SAVED: '3', WISH_LIMIT_SEARCHING: '2', WISH_LIMIT_PRICE_WATCH: 'x' }), { saved: 3, searching: 2, price_watch: 10 });
+  assert.deepEqual(wishLimitsFor({}), { saved: 100, searching: 10, price_watch: 10, external_price_watch: 5 });
+  assert.deepEqual(WISH_LIMIT_DEFAULTS, { saved: 100, searching: 10, price_watch: 10, external_price_watch: 5 });
+  assert.deepEqual(wishLimitsFor({ WISH_LIMIT_SAVED: '3', WISH_LIMIT_SEARCHING: '2', WISH_LIMIT_PRICE_WATCH: 'x', WISH_LIMIT_EXTERNAL_PRICE_WATCH: '2' }), { saved: 3, searching: 2, price_watch: 10, external_price_watch: 2 });
 });
 
 test('探し中 11 件目は 409 WISH_SEARCHING_LIMIT_REACHED（保存済みの条件は増えず、既存の探し中はそのまま）', async () => {
@@ -105,7 +105,7 @@ test('探し中 11 件目は 409 WISH_SEARCHING_LIMIT_REACHED（保存済みの�
   assert.equal(savedOnly.status, 200);
   const list = await (await requestFor(env, 'GET', '/api/member/wishes', cookie)).json();
   assert.equal(list.wishes.length, 3);
-  assert.deepEqual(list.usage, { saved: 3, searching: 2, price_watch: 0 });
+  assert.deepEqual(list.usage, { saved: 3, searching: 2, price_watch: 0, external_price_watch: 0 });
   assert.equal(list.limits.searching, 2);
   // 既に探し中の条件を再保存（上書き）しても 409 にならない
   const again = await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: '子ども 水筒 500ml', language: 'JA', notify_new_match: true, watch_frequency: 'DAILY' });
@@ -136,4 +136,55 @@ test('保存の上限と値下がり待ちの上限も 409 で返す', async () 
   const third = await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: 'レインコート', language: 'JA' });
   assert.equal(third.status, 409);
   assert.equal((await third.json()).error, 'WISH_SAVE_LIMIT_REACHED');
+});
+
+
+// 2026-09-20 GPT 指示書 §3/§7: 貼り付けた商品ページ URL からの値下がり待ちは別枠 5 件。
+// 通常の値下がり待ち枠を消費せず、逆に通常の枠が埋まっていても外部 URL は登録できる。
+
+test('外部 URL の値下がり待ちは別枠で数える（通常枠が満杯でも登録でき、別枠が満杯なら 409）', async () => {
+  const { db } = sqliteD1();
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET, WISH_LIMIT_PRICE_WATCH: '1', WISH_LIMIT_EXTERNAL_PRICE_WATCH: '1' };
+  const cookie = await memberCookie({ id: 'member-ext', name: 'テスト', provider: 'LINE' });
+  // 通常の値下がり待ちで通常枠を使い切る
+  const normal = await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: '子ども 水筒 500ml', language: 'JA', target_price_jpy: 1980 });
+  assert.equal(normal.status, 200);
+  const normalFull = await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: 'レインコート キッズ', language: 'JA', target_price_jpy: 2500 });
+  assert.equal(normalFull.status, 409);
+  assert.equal((await normalFull.json()).limit_kind, 'price_watch');
+  // 通常枠が満杯でも、貼り付けた商品 URL からの値下がり待ちは別枠なので登録できる
+  const external = await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: '貼り付けた商品', language: 'JA', target_price_jpy: 3000,
+    price_condition: { source_url: 'https://www.amazon.co.jp/dp/B0EXAMPLE1' } });
+  assert.equal(external.status, 200);
+  const list = await (await requestFor(env, 'GET', '/api/member/wishes', cookie)).json();
+  assert.equal(list.usage.price_watch, 1);
+  assert.equal(list.usage.external_price_watch, 1);
+  assert.equal(list.limits.external_price_watch, 1);
+  const externalRow = list.wishes.find((wish) => wish.query_text === '貼り付けた商品');
+  assert.equal(externalRow.watch_source, 'EXTERNAL_URL');
+  assert.equal(externalRow.watch_source_url, 'https://www.amazon.co.jp/dp/B0EXAMPLE1');
+  // 別枠も満杯になったら 409
+  const externalFull = await requestFor(env, 'POST', '/api/member/wishes', cookie, { query: '別の貼り付け商品', language: 'JA', target_price_jpy: 4000,
+    price_condition: { source_url: 'https://item.rakuten.co.jp/shop/item-1/' } });
+  assert.equal(externalFull.status, 409);
+  const body = await externalFull.json();
+  assert.equal(body.error, 'WISH_EXTERNAL_PRICE_WATCH_LIMIT_REACHED');
+  assert.equal(body.limit_kind, 'external_price_watch');
+  assert.match(body.message, /貼り付けた URL の値下がり待ちは 1 件までです/u);
+});
+
+test('別枠は本人の申告では決まらない。モールの商品ページ URL でなければ通常枠として数える', async () => {
+  const { db } = sqliteD1();
+  const env = { PRODUCT_DB: db, MEMBER_SESSION_SECRET, WISH_LIMIT_PRICE_WATCH: '1', WISH_LIMIT_EXTERNAL_PRICE_WATCH: '5' };
+  const cookie = await memberCookie({ id: 'member-fake', name: 'テスト', provider: 'LINE' });
+  // 無関係なサイト・http・source だけの自己申告は外部 URL と認めない
+  for (const priceCondition of [{ source_url: 'https://example.com/item/1' }, { source_url: 'http://www.amazon.co.jp/dp/B0EXAMPLE1' }, { source: 'EXTERNAL_URL' }]) {
+    const { db: fresh } = sqliteD1();
+    const freshEnv = { ...env, PRODUCT_DB: fresh };
+    const first = await requestFor(freshEnv, 'POST', '/api/member/wishes', cookie, { query: '申告だけの商品', language: 'JA', target_price_jpy: 1200, price_condition: priceCondition });
+    assert.equal(first.status, 200);
+    const usage = (await (await requestFor(freshEnv, 'GET', '/api/member/wishes', cookie)).json()).usage;
+    assert.equal(usage.external_price_watch, 0, JSON.stringify(priceCondition));
+    assert.equal(usage.price_watch, 1, JSON.stringify(priceCondition));
+  }
 });

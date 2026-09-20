@@ -1,4 +1,5 @@
 import { readMemberSession } from './member-auth.mjs';
+import { marketplaceForProductUrl } from './marketplace-product-url-policy.mjs';
 import { buildConditionSnapshot, serializeConditionSnapshot } from './insight-search-watch.mjs';
 import { recordContinuousSearchEnabled, recordTargetPriceWatchSet } from './growth-events.mjs';
 const LANGUAGES = new Set(['JA', 'EN', 'ZH', 'KO']);
@@ -118,30 +119,41 @@ const optInSchemaPending = () => new Error('INSIGHT_OPT_IN_SCHEMA_PENDING');
 // 2026-09-20 GPT 指示書（大隆さん承認）§P0: 「ホシっとく＝保存」と「探し中＝HOSHILU が継続処理する状態」を分け、
 // 無料の上限を置く。保存 100 件／同時「探し中」10 件／希望価格 Watch 10 件。11 件目は 409 で「あとで見る」へ促す
 // （既存行は触らない・削除しない。数は会員本人の実データだけ）。env で上書き可（WISH_LIMIT_SAVED 等）。
-export const WISH_LIMIT_DEFAULTS = Object.freeze({ saved: 100, searching: 10, price_watch: 10 });
+export const WISH_LIMIT_DEFAULTS = Object.freeze({ saved: 100, searching: 10, price_watch: 10, external_price_watch: 5 });
+// 2026-09-20 GPT 指示書 §3/§7: 外部 URL（貼り付けた商品ページ）の価格 Watch は別枠 5 件。
+// 「外部 URL からの Watch かどうか」は本人の申告ではなく、送られてきた商品ページ URL が
+// HOSHILU が扱うモールの商品ページかをサーバーで判定して決める（別枠を悪用して枠を増やせないように）。
+export function externalWatchSourceUrl(priceCondition = {}) {
+  const raw = String(priceCondition?.source_url || '').trim();
+  if (!/^https:\/\/\S+$/iu.test(raw) || raw.length > 500) return '';
+  return marketplaceForProductUrl(raw) ? raw : '';
+}
 export function wishLimitsFor(env = {}) {
   const pick = (key, fallback) => { const n = Number(env[key]); return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback; };
-  return { saved: pick('WISH_LIMIT_SAVED', WISH_LIMIT_DEFAULTS.saved), searching: pick('WISH_LIMIT_SEARCHING', WISH_LIMIT_DEFAULTS.searching), price_watch: pick('WISH_LIMIT_PRICE_WATCH', WISH_LIMIT_DEFAULTS.price_watch) };
+  return { saved: pick('WISH_LIMIT_SAVED', WISH_LIMIT_DEFAULTS.saved), searching: pick('WISH_LIMIT_SEARCHING', WISH_LIMIT_DEFAULTS.searching), price_watch: pick('WISH_LIMIT_PRICE_WATCH', WISH_LIMIT_DEFAULTS.price_watch), external_price_watch: pick('WISH_LIMIT_EXTERNAL_PRICE_WATCH', WISH_LIMIT_DEFAULTS.external_price_watch) };
 }
 export async function wishUsageFor(env, memberId) {
   const row = await withInsightSchema(
     () => env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS saved,
       SUM(CASE WHEN notify_new_match=1 AND insight_enabled_at IS NOT NULL AND insight_enabled_at<>'' AND UPPER(COALESCE(watch_frequency,'INSTANT'))<>'MUTED' THEN 1 ELSE 0 END) AS searching,
-      SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 THEN 1 ELSE 0 END) AS price_watch
+      SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 AND COALESCE(json_extract(condition_snapshot,'$.price_condition.source'),'')<>'EXTERNAL_URL' THEN 1 ELSE 0 END) AS price_watch,
+      SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 AND json_extract(condition_snapshot,'$.price_condition.source')='EXTERNAL_URL' THEN 1 ELSE 0 END) AS external_price_watch
       FROM member_wishes WHERE member_id=?1`).bind(memberId).first(),
     () => env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS saved, 0 AS searching,
-      SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 THEN 1 ELSE 0 END) AS price_watch
+      SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 AND COALESCE(json_extract(condition_snapshot,'$.price_condition.source'),'')<>'EXTERNAL_URL' THEN 1 ELSE 0 END) AS price_watch,
+      SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 AND json_extract(condition_snapshot,'$.price_condition.source')='EXTERNAL_URL' THEN 1 ELSE 0 END) AS external_price_watch
       FROM member_wishes WHERE member_id=?1`).bind(memberId).first()
   );
-  return { saved: Number(row?.saved) || 0, searching: Number(row?.searching) || 0, price_watch: Number(row?.price_watch) || 0 };
+  return { saved: Number(row?.saved) || 0, searching: Number(row?.searching) || 0, price_watch: Number(row?.price_watch) || 0, external_price_watch: Number(row?.external_price_watch) || 0 };
 }
 function limitResponse(kind, usage, limits) {
   const messages = {
     saved: `保存できるのは ${limits.saved} 件までです。使わない条件を削除してから、もう一度ホシっといてください。`,
     searching: `${limits.searching} 個を探し中です。新しく探し始めるには、探し中の条件から 1 つを「あとで見る」へ移してください。`,
-    price_watch: `値下がり待ちは ${limits.price_watch} 件までです。終わった値下がり待ちを「やめる」にしてから、もう一度お試しください。`
+    price_watch: `値下がり待ちは ${limits.price_watch} 件までです。終わった値下がり待ちを「やめる」にしてから、もう一度お試しください。`,
+    external_price_watch: `貼り付けた URL の値下がり待ちは ${limits.external_price_watch} 件までです。終わったものを「やめる」にしてから、もう一度お試しください。`
   };
-  const error = { saved: 'WISH_SAVE_LIMIT_REACHED', searching: 'WISH_SEARCHING_LIMIT_REACHED', price_watch: 'WISH_PRICE_WATCH_LIMIT_REACHED' }[kind];
+  const error = { saved: 'WISH_SAVE_LIMIT_REACHED', searching: 'WISH_SEARCHING_LIMIT_REACHED', price_watch: 'WISH_PRICE_WATCH_LIMIT_REACHED', external_price_watch: 'WISH_EXTERNAL_PRICE_WATCH_LIMIT_REACHED' }[kind];
   return Response.json({ ok: false, error, limit_kind: kind, limits, usage, message: messages[kind] }, { status: 409, headers: { 'cache-control': 'no-store' } });
 }
 
@@ -163,6 +175,8 @@ function decorateWishRow(row) {
     watch_kind:String(price.kind||'TARGET_PRICE'),
     // 2026-09-20 大隆さん指示: 値下がり待ちに商品画像を出す（https のみ、クライアントが希望額と一緒に送る）
     target_image_url:/^https:\/\//u.test(String(price.target_image_url||''))?String(price.target_image_url).slice(0,500):'',
+    watch_source:String(price.source||''),
+    watch_source_url:/^https:\/\//u.test(String(price.source_url||''))?String(price.source_url).slice(0,500):'',
     purchase_price_jpy:Number(price.purchase_price_jpy)||null,
     expires_at:String(price.expires_at||'') };
 }
@@ -201,7 +215,11 @@ export async function handleMemberWishRoutes(request, env) {
     const previousPrice = targetPrice === null ? {} : savedPriceCondition(await selectWish(env, member.id, wishId));
     const postPurchaseCondition = postPurchase ? { kind: 'POST_PURCHASE', purchase_price_jpy: purchasePrice,
       expires_at: new Date(Date.parse(now) + POST_PURCHASE_WATCH_DAYS * 86_400_000).toISOString() } : {};
-    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||query,...postPurchaseCondition}};
+    // §7: 貼り付けた商品ページ URL からの値下がり待ちは別枠（source は本人の申告ではなくサーバーで判定）。
+    const externalUrl = targetPrice === null ? '' : (externalWatchSourceUrl(payload.price_condition) || (previousPrice.source === 'EXTERNAL_URL' ? String(previousPrice.source_url || '') : ''));
+    // 外部 URL でないと判定したら、本人が送ってきた source/source_url は必ず捨てる（undefined は JSON 化で消える）。
+    const externalCondition = externalUrl ? { source: 'EXTERNAL_URL', source_url: externalUrl } : { source: undefined, source_url: undefined };
+    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||query,...postPurchaseCondition,...externalCondition}};
     const conditionSnapshot = conditionSnapshotFor(targetPayload, query);
     // 0044のnotify_new_match DEFAULT 1だけでは、本人が新着通知を明示的に
     // 有効化したか判別できない。新規の通常保存はOFFにし、明示ONかつMUTED
@@ -214,7 +232,10 @@ export async function handleMemberWishRoutes(request, env) {
       if (!previousEnablement && usage.saved >= limits.saved) return limitResponse('saved', usage, limits);
       const wasSearching = Boolean(previousEnablement?.insight_enabled_at) && Number(previousEnablement?.notify_new_match) === 1 && String(previousEnablement?.watch_frequency || 'INSTANT').toUpperCase() !== 'MUTED';
       if (insightEnabledAt && watch.notify_new_match === 1 && !wasSearching && usage.searching >= limits.searching) return limitResponse('searching', usage, limits);
-      if (targetPrice !== null && !postPurchase && !(Number(previousPrice?.target_price_jpy) >= 100) && usage.price_watch >= limits.price_watch) return limitResponse('price_watch', usage, limits);
+      if (targetPrice !== null && !postPurchase && !(Number(previousPrice?.target_price_jpy) >= 100)) {
+        const kind = externalUrl ? 'external_price_watch' : 'price_watch';
+        if (usage[kind] >= limits[kind]) return limitResponse(kind, usage, limits);
+      }
     }
     const bindValues = [member.id, wishId, query, language, watch.watch_sale, watch.watch_price,
       watch.watch_coupon, watch.watch_restock, watch.watch_frequency, watch.notify_new_match,
@@ -302,7 +323,11 @@ export async function handleMemberWishRoutes(request, env) {
       ? await env.PRODUCT_DB.prepare('SELECT query_text,condition_snapshot FROM member_wishes WHERE member_id=?1 AND wish_id=?2').bind(member.id, wishId).first()
       : null;
     const previousPrice = savedPriceCondition(existingForSnapshot);
-    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...previousPrice,...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||existingForSnapshot?.query_text||''}};
+    // §7: 別枠（外部 URL）判定は POST と同じ。既に外部 URL の行はその区分を保つ。
+    const externalUrl = targetPrice === null ? '' : (externalWatchSourceUrl(payload.price_condition) || (previousPrice.source === 'EXTERNAL_URL' ? String(previousPrice.source_url || '') : ''));
+    // 外部 URL でないと判定したら、本人が送ってきた source/source_url は必ず捨てる（undefined は JSON 化で消える）。
+    const externalCondition = externalUrl ? { source: 'EXTERNAL_URL', source_url: externalUrl } : { source: undefined, source_url: undefined };
+    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...previousPrice,...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||existingForSnapshot?.query_text||'',...externalCondition}};
     const conditionSnapshot = existingForSnapshot ? conditionSnapshotFor(targetPayload, existingForSnapshot.query_text) : null;
     const insightEnabledAt = nextInsightEnabledAt(watch, previousEnablement, now);
     {
@@ -310,7 +335,10 @@ export async function handleMemberWishRoutes(request, env) {
       const usage = await wishUsageFor(env, member.id);
       const wasSearching = Boolean(previousEnablement?.insight_enabled_at) && Number(previousEnablement?.notify_new_match) === 1 && String(previousEnablement?.watch_frequency || 'INSTANT').toUpperCase() !== 'MUTED';
       if (insightEnabledAt && watch.notify_new_match === 1 && !wasSearching && usage.searching >= limits.searching) return limitResponse('searching', usage, limits);
-      if (targetPrice !== null && !(Number(previousPrice?.target_price_jpy) >= 100) && usage.price_watch >= limits.price_watch) return limitResponse('price_watch', usage, limits);
+      if (targetPrice !== null && !(Number(previousPrice?.target_price_jpy) >= 100)) {
+        const kind = externalUrl ? 'external_price_watch' : 'price_watch';
+        if (usage[kind] >= limits[kind]) return limitResponse(kind, usage, limits);
+      }
     }
     const updateValues = [member.id, wishId, watch.watch_sale, watch.watch_price,
       watch.watch_coupon, watch.watch_restock, watch.watch_frequency, watch.notify_new_match,
