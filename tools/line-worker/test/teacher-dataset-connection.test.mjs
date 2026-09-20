@@ -6,6 +6,15 @@ import { structureSearchQuery } from '../src/search-quality/query-structurer.mjs
 import { filterCategoryMismatches } from '../src/knowledge-search.mjs';
 import { buildAmazonSearchKeywords, buildRakutenSearchKeywords } from '../src/index.mjs';
 
+test('approved scalp-brand spelling corrections are compiled locally and restricted to exact contextual queries', () => {
+  for (const query of ['韓国 頭皮ケア リリーブ', '韓国 頭皮ケア LILIB リリーブ', '韓国 頭皮ケア LILIB リリーブ lilib']) {
+    assert.equal(buildAmazonSearchKeywords(query), 'リリーイブ 頭皮ケア');
+    assert.equal(buildRakutenSearchKeywords(query), 'リリーイブ 頭皮ケア');
+  }
+  assert.equal(lookupTeacherDatasetEntry('リリーブ'), null);
+  assert.equal(lookupTeacherDatasetEntry('韓国 頭皮ケア 未知ブランド'), null);
+});
+
 test('Day1バッチがコンパイル済みアーティファクトへ反映されている', () => {
   const stats = teacherDatasetStats();
   assert.ok(stats.entryCount >= 90, `expected at least 90 compiled entries, got ${stats.entryCount}`);

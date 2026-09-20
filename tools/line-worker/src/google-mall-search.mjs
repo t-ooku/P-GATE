@@ -11,6 +11,8 @@
 // - 検索語以外（個人情報・セッション）は Google に送らない
 // - 失敗しても本検索は止めない（呼び出し側は必ず try/catch）
 
+import { rerankGoogleMallItems } from './google-mall-brand-ranking.mjs';
+
 const DEFAULT_DAILY_LIMIT = 300;
 const MAX_DAILY_LIMIT = 10000;
 const RESULT_LIMIT = 20;
@@ -126,6 +128,21 @@ export function normalizeAgentSearchResponse(payload = {}) {
   });
 }
 
+// Diagnostic output is deliberately aggregate-only. Never expose correctedQuery,
+// document contents, URLs, tokens, or search-unit IDs through this hook.
+export function summarizeGoogleMallResponse(payload = {}) {
+  return {
+    result_count: Array.isArray(payload?.results) ? payload.results.length : 0,
+    corrected_query_present: typeof payload?.correctedQuery === 'string' && Boolean(payload.correctedQuery.trim()),
+    total_size: Number.isSafeInteger(payload?.totalSize) && payload.totalSize >= 0 ? payload.totalSize : null
+  };
+}
+
+async function observeResponse(options, payload, attempt) {
+  if (typeof options.onResponse !== 'function') return;
+  try { await options.onResponse({ attempt, ...summarizeGoogleMallResponse(payload) }); } catch {}
+}
+
 export function parseGoogleMallItems(rows = []) {
   const list = Array.isArray(rows) ? rows : Array.isArray(rows?.items) ? rows.items : [];
   const seen = new Set();
@@ -194,12 +211,12 @@ export function broadenGoogleMallQuery(query) {
   const brandLike = (token) => /^[\p{Script=Katakana}ー・]+$/u.test(token) || /^[A-Za-z0-9][A-Za-z0-9&.\-']*$/u.test(token);
   const kept = tokens.filter((token) => !brandLike(token));
   if (!kept.length || kept.length === tokens.length) return null;
-  return kept.join(' ');
+  return { query: kept.join(' '), droppedTokens: tokens.filter(brandLike) };
 }
 
 function cacheKeyFor(query) {
-  // v3: 綴り補正・検索語拡張を付けた要求に切り替えたので、v2 の（空を含む）キャッシュは読まない。
-  return `https://google-mall-search.hoshilu.internal/v3?q=${encodeURIComponent(query)}`;
+  // v4: discard pre-reranking results so a cached broad search cannot mask this fix.
+  return `https://google-mall-search.hoshilu.internal/v4?q=${encodeURIComponent(query)}`;
 }
 
 // ---- サービスアカウント → アクセストークン（RS256 JWT → OAuth2）。Worker のメモリに 50 分キャッシュ ----
@@ -248,6 +265,7 @@ export async function googleAccessToken(env = {}, options = {}) {
   const assertion = `${header}.${claims}.${base64url(signature)}`;
   const response = await fetchImpl(account.token_uri, {
     method: 'POST',
+    signal: options.signal,
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion }).toString()
   });
@@ -287,10 +305,10 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
   const finish = async (items, source, reason = '') => {
     const kept = items.filter((item) => !exclude.has(item.marketplace));
     const outcome = kept.length ? 'SHOWN' : items.length ? 'ALL_EXCLUDED' : rawCount ? 'NO_PRODUCT_PAGES' : 'RAW_0';
-    await countGoogleMallOutcome(env, now, source, outcome);
+    if (options.recordOutcome !== false) await countGoogleMallOutcome(env, now, source, outcome);
     return { items: kept, source, reason };
   };
-  const fail = async (source, reason) => { await countGoogleMallOutcome(env, now, source, reason); return { items: [], source, reason }; };
+  const fail = async (source, reason) => { if (options.recordOutcome !== false) await countGoogleMallOutcome(env, now, source, reason); return { items: [], source, reason }; };
   let rawCount = 0;
   if (!query) return { items: [], source: 'disabled', reason: 'EMPTY_QUERY' };
   if (!googleMallSearchConfigured(env)) return { items: [], source: 'disabled', reason: 'NOT_CONFIGURED' };
@@ -310,7 +328,7 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs || REQUEST_TIMEOUT_MS);
   try {
-    const token = await googleAccessToken(env, { fetch: fetchImpl, now });
+    const token = await googleAccessToken(env, { fetch: fetchImpl, now, signal: controller.signal });
     const engine = String(env.GOOGLE_AGENT_SEARCH_ENGINE).trim();
     const response = await fetchImpl(`${SEARCH_ENDPOINT}/${engine}/servingConfigs/default_search:search`, {
       method: 'POST',
@@ -323,6 +341,7 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
     });
     if (!response.ok) return await fail('error', `HTTP_${response.status}`);
     const payload = await response.json();
+    await observeResponse(options, payload, 'primary');
     const normalized = normalizeAgentSearchResponse(payload);
     rawCount = Array.isArray(normalized) ? normalized.length : 0;
     let items = parseGoogleMallItems(normalized);
@@ -338,13 +357,23 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
           method: 'POST',
           signal: retryController.signal,
           headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json' },
-          body: JSON.stringify({ query: broadened, pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
+          body: JSON.stringify({ query: broadened.query, pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
         });
         if (retry.ok) {
-          const retryNormalized = normalizeAgentSearchResponse(await retry.json());
+          const retryPayload = await retry.json();
+          await observeResponse(options, retryPayload, 'broadened');
+          const retryNormalized = normalizeAgentSearchResponse(retryPayload);
           rawCount = Array.isArray(retryNormalized) ? retryNormalized.length : 0;
           items = parseGoogleMallItems(retryNormalized);
-          await countGoogleMallOutcome(env, now, 'live', rawCount ? 'BROADENED' : 'BROADENED_0');
+          const ranked = rerankGoogleMallItems(items, broadened.droppedTokens);
+          const visibleBefore = items.filter((item) => !exclude.has(item.marketplace));
+          const reordered = ranked.filter((item) => !exclude.has(item.marketplace))
+            .some((item, index) => item !== visibleBefore[index]);
+          items = ranked;
+          if (options.recordOutcome !== false) {
+            await countGoogleMallOutcome(env, now, 'live', rawCount ? 'BROADENED' : 'BROADENED_0');
+            if (reordered) await countGoogleMallOutcome(env, now, 'live', 'BROADENED_RERANKED');
+          }
         }
         } catch {} finally { clearTimeout(retryTimer); }
       }

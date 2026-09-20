@@ -579,17 +579,22 @@ function applyPendingWatch(){
 }
 // 2026-09-15 指示書§7: 登録前に「無料でホシっとく」した検索条件は、登録が終わった瞬間に
 // そのまま INSIGHT（見つかるまで探す）として保存する。もう一度入力させない。
-function applyPendingInsight(){
+async function applyPendingInsight(){
   if(!memberSession)return;
   let pending=null;try{pending=JSON.parse(localStorage.getItem('hoshilu_pending_insight')||'null');}catch{}
   if(!pending||!String(pending.query||'').trim()||Date.now()-Number(pending.saved_at||0)>24*60*60*1000){try{localStorage.removeItem('hoshilu_pending_insight');}catch{}return;}
   const query=String(pending.query).trim();
-  try{localStorage.removeItem('hoshilu_pending_insight');}catch{}
-  saveInsightWatch(query).catch(()=>{});
+  try{
+    if(await saveInsightWatch(query)){
+      // A newer click can replace the pending item while this request is in flight.
+      const current=JSON.parse(localStorage.getItem('hoshilu_pending_insight')||'null');
+      if(current?.query===pending.query&&current?.saved_at===pending.saved_at)localStorage.removeItem('hoshilu_pending_insight');
+    }
+  }catch{}
 }
 // 会員セッションの同期後に、登録前の希望額を反映する(既存の同期処理は触らない)。
 const baseSyncMemberWishes=syncMemberWishes;
-syncMemberWishes=async function(){await baseSyncMemberWishes();applyPendingWatch();applyPendingInsight();};
+syncMemberWishes=async function(){await baseSyncMemberWishes();applyPendingWatch();await applyPendingInsight();};
 function memberLoginHref(){return `/login.html?next=${encodeURIComponent('/#wishTitle')}`;}
 function createKeepButton(candidate){
   const copy=keepCopy[elements.language.value]||keepCopy.JA;
@@ -1437,15 +1442,26 @@ function continuousSearchCard(query,options={}){
       // 2026-09-15 指示書§6/§7: ここで無料登録（メール6桁 or LINE）。登録ページへ飛ばさず、
       // 検索条件は hoshilu_pending_insight に残して登録直後に INSIGHT として保存する。
       try{localStorage.setItem('hoshilu_pending_insight',JSON.stringify({query:value,saved_at:Date.now()}));}catch{}
-      if(!card.dataset.quickJoin){card.dataset.quickJoin='shown';actions.append(createWatchQuickJoin(0,()=>{button.textContent=labels.active;button.disabled=true;},{lead:labels.lead,source:'hoshittoku'}));}
+      if(!card.dataset.quickJoin){card.dataset.quickJoin='shown';actions.append(createWatchQuickJoin(0,()=>{const active=Boolean(memberSession)&&insightEnabledFor(value);button.textContent=active?labels.active:wishSaveFailedCopy();button.disabled=active;},{lead:labels.lead,source:'hoshittoku'}));}
       button.disabled=true;
     }
     showWishSaveFeedback({saved:true,member:memberPersistenceRequired,query:value});
   });
   actions.append(button,login);
-  card.append(copyWrap,queryChip,actions,supplement);
+  if(options.compact){
+    card.classList.add('continuous-search-card-compact');
+    card.append(actions);
+  }else card.append(copyWrap,queryChip,actions,supplement);
   return card;
 }
+// Reuse the member/guest save flow, limits and feedback for Google product cards.
+// Store only the returned title as a search condition, never a fabricated offer.
+document.addEventListener('hoshilu:google-mall-save-control',(event)=>{
+  const {item,container}=event.detail||{};
+  if(item?.product_page!==true||!container?.append)return;
+  const control=continuousSearchCard(String(item.title||''),{compact:true});
+  if(control)container.append(control);
+});
 // 検索完了時、結果セクションが画面外だと「検索できたのか分からない」ため
 // (2026-09-02 実機フィードバック)、結果の先頭へ視点を移す。既に結果の
 // 先頭が画面内に見えている場合(絞り込みバーからの再検索など)は動かさず、

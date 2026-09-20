@@ -124,6 +124,7 @@ import { applyHeadNounGate } from './search-head-noun.mjs';
 import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
 import { searchGoogleMalls, googleMallSearchConfigured, purgeGoogleMallSearchLog } from './google-mall-search.mjs';
+import { handleGoogleMallDiagnosticRoute } from './google-mall-diagnostic.mjs';
 import { identifyProductUrl } from './product-url-identify.mjs';
 import { runWishIdleStop } from './wish-idle-stop.mjs';
 const encoder = new TextEncoder();
@@ -1697,26 +1698,30 @@ export function trackingEventsForPayload(payload, occurredAt) {
   }));
 }
 
-async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA', originHint = {}) {
+export async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA', originHint = {}) {
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
   // 2026-09-20 GPT 指示書 §12〜§13（大隆さん承認）: 楽天・Yahoo! は API 検索のまま。その他のモールは、
   // 「そのモールから HOSHILU 自身の結果が 0 件」のときだけ公式 Google Agent Search へフォールバック。
   // モール単位で判定するので、楽天・Yahoo! に候補があっても ZOZO/Qoo10 等が 0 件ならそのモールは Google で出す。
   // 本検索と並行に走らせ、失敗しても本検索を止めない。
+  const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT);
   const presentMarketplaces = new Set();
-  for (const candidate of Array.isArray(result.candidates) ? result.candidates : []) {
-    for (const offer of Array.isArray(candidate?.offers) ? candidate.offers : []) {
+  // Count only offers that will actually be shown. Rejected categories,
+  // search-page URLs and candidates beyond the display limit are still zero.
+  for (const candidate of displayCandidates) {
+    const offers = productMarketplaceOffers(candidate.offers);
+    for (const offer of offers) {
       const marketplace = String(offer?.marketplace || marketplaceForDestination(offer?.product_url) || '').toUpperCase();
       if (marketplace) presentMarketplaces.add(marketplace);
     }
+    if (!offers.length && legacyAmazonProductLead(candidate)) presentMarketplaces.add('AMAZON_JP');
   }
   const googleMallPromise = googleMallSearchConfigured(env)
     ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '), { excludeMarketplaces: [...presentMarketplaces] })
       .catch(() => ({ items: [], source: 'error', reason: 'UNHANDLED' }))
     : Promise.resolve({ items: [], source: 'disabled', reason: 'NOT_CONFIGURED' });
   const candidates = [];
-  const displayCandidates = filterCategoryMismatches(query, result.candidates || []).slice(0, CLIENT_CANDIDATE_LIMIT);
   const priorityContext = await sellerPriorityContext(env, displayCandidates);
   // 2026-09-04 ショップページ（Business）: 商品カードに「この商品を扱うショップ」を出す。
   const shops = await activeShops(env);
@@ -1832,7 +1837,8 @@ async function signedGoogleMallResults(googleMall, context) {
     decorated.push({
       title: item.title, snippet: item.snippet, marketplace: item.marketplace, mall_label: item.mall_label,
       image_url: item.image_url, listed_price_jpy: item.listed_price_jpy, product_url: item.url,
-      tracking_url: `${context.origin}/go?token=${encodeURIComponent(token)}`
+      tracking_url: `${context.origin}/go?token=${encodeURIComponent(token)}`,
+      product_page: item.product_page === true
     });
   }
   return { source: String(googleMall?.source || 'disabled'), items: decorated };
@@ -3509,6 +3515,8 @@ export default {
     if (shopResponse) return shopResponse;
     // 検索品質カナリアの手動実行(管理者のみ)。cron と同じ固定クエリを本番経路で
     // 流し、QA記録を残して結果を返す。利用者入力は受け付けない。
+    const googleMallDiagnostic = await handleGoogleMallDiagnosticRoute(request, env, authorizeAdminRequest);
+    if (googleMallDiagnostic) return googleMallDiagnostic;
     if (request.method === 'POST' && url.pathname === '/api/internal/search/qa-canary') {
       if (!await authorizeAdminRequest(request, env)) return Response.json({ ok: false, error: 'UNAUTHORIZED' }, { status: 401 });
       const outcome = await runSearchQaCanary(env, new Date(),
