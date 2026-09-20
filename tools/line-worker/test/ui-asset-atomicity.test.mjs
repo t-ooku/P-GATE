@@ -20,10 +20,10 @@ test('versioned UI assets are exact copies of their canonical files', async () =
 test('index loads the atomic versioned app and layout assets', async () => {
   const html = await read('index.html');
 
-  assert.ok(html.includes('href="/assets-v126/ai-search-layout-fix.css?v=132"'));
-  assert.ok(html.includes('src="/assets-v147/app.js?v=180"'));
+  assert.ok(html.includes('href="/assets-v126/ai-search-layout-fix.css?v=133"'));
+  assert.ok(html.includes('src="/assets-v147/app.js?v=181"'));
   assert.ok(html.includes('src="/site-i18n.js?v=9"'));
-  assert.equal(html.includes('href="/ai-search-layout-fix.css?v=132"'), false);
+  assert.equal(html.includes('href="/ai-search-layout-fix.css?v=133"'), false);
   assert.equal(html.includes('src="/app.js?v=151"'), false);
   assert.equal(html.includes('/assets-v146/app.js'), false);
   assert.equal(html.includes('/site-i18n.js?v=5'), false);

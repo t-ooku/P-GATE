@@ -1258,7 +1258,8 @@ function resultCarousel(cards,rowKind='confirmed'){
   // ticker made the usable result viewport too small on mobile.
   if(cards.length>3){
     const previous=document.createElement('button');
-    const horizontal=rowKind==='recommended';
+    // 2026-09-20 大隆さん指示: 提案（確認済み）商品も横スワイプ。矢印も左右にする。
+    const horizontal=rowKind==='recommended'||rowKind==='confirmed';
     previous.type='button';previous.className='carousel-button previous';previous.setAttribute('aria-label','前の商品を見る');previous.textContent=horizontal?'‹':'↑';
     const next=document.createElement('button');
     next.type='button';next.className='carousel-button next';next.setAttribute('aria-label','次の商品を見る');next.textContent=horizontal?'›':'↓';
@@ -1288,12 +1289,8 @@ function resultRow(cards,title,note,rowKind){
   // 2026-09-20 大隆さん指示: 「価格まで確認できた商品 N／接続済みモールで…」の見出しは出さず、上に詰める。
   if(rowKind==='confirmed')row.append(carousel);
   else row.append(heading,textElement('p','result-row-note',note),carousel);
-  if(rowKind==='confirmed'&&cards.length>1){
-    const track=carousel.querySelector(':scope > .result-track');
-    track.classList.add('result-track-vertical-ticker');
-    // 描画が終わって高さが決まってから回転を始める（描画前に付けると1枚目の高さが0で止まる）。
-    setTimeout(()=>attachConfirmedTicker(track),300);
-  }
+  // 2026-09-20 大隆さん指示: 提案商品は縦回転（result-track-vertical-ticker）をやめて横スワイプへ。
+  // 縦回転のヘルパー（attachConfirmedTicker）は他の棚で使うため残す。
   return row;
 }
 const relatedCategoryShelfCopy={

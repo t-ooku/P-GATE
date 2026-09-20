@@ -51,6 +51,6 @@ test('トップの保存ハブは「ホシってるもの」を見出しにし�
   assert.match(html,/<h2 id="insightTitle">ホシってるもの<\/h2>/);
   assert.match(html,/<div id="hoshiStatus" class="hoshi-status"/);
   assert.ok(html.includes('href="/mywatch.css?v=7"'));
-  assert.ok(html.includes('src="/assets-v147/app.js?v=180"'));
+  assert.ok(html.includes('src="/assets-v147/app.js?v=181"'));
   assert.equal(readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),readFileSync(new URL('../public/assets-v147/app.js',import.meta.url),'utf8'));
 });
