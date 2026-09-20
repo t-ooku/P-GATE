@@ -113,3 +113,11 @@
 .entrusted-row-media-fallback{font-size:18px;font-weight:900;color:#5140ba}
 .entrusted-row-body{display:grid;gap:4px;min-width:0}
 .entrusted-row-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:1.4}
+
+/* 2026-09-20 大隆さん指示: 「気になる商品」の余白が無駄。カードの外側（既定 margin-bottom:64px）と
+   内側を詰める。ID + クラスで styles.css の .insight-card より強くする。 */
+#keptProducts.insight-card,#insight.insight-card{margin:12px 0 14px;padding:16px}
+#keptProducts .step{margin-bottom:6px}
+#keptProducts #keptProductsTitle{margin-bottom:6px}
+#keptProducts .kept-list{margin-top:0}
+#keptProducts .kept-list .empty{margin:2px 0 0;line-height:1.6}

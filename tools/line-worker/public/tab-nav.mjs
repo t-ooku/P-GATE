@@ -21,7 +21,8 @@ const SECTION_VIEW = [
   ['#accountPanel', 'account'], ['.sale-center', 'account'], ['#officialSocial', 'account'], ['#announcements', 'account']
 ];
 // 2026-09-20 大隆さん指示: 「ホシる中」を開いたら、まず気になる商品（♡）→ 値下がり待ち → 追ってるキーワード（insight 内）。
-const HOSHIRU_ORDER = ['#keptProducts', '#insight'];
+// 2026-09-20 大隆さん指示: ホシる中は「ホシってるもの」が先、「気になる商品」が後。
+const HOSHIRU_ORDER = ['#insight', '#keptProducts'];
 // 「マイアカウント」の中の並び: ログイン → 受け取るセール → 公式アカウント → お知らせ
 const ACCOUNT_ORDER = ['#accountPanel', '.sale-center', '#officialSocial', '#announcements'];
 // 旧 URL（#tab-sale）は「マイアカウント」へ
