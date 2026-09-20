@@ -15,6 +15,9 @@ const DEFAULT_DAILY_LIMIT = 300;
 const MAX_DAILY_LIMIT = 10000;
 const RESULT_LIMIT = 20;
 const CACHE_TTL_SECONDS = 86400;
+// 2026-09-20 大隆さん報告で確定: 0 件の結果まで 24 時間キャッシュしていたため、綴り補正を入れた後も
+// 同じ検索語は空のキャッシュに当たり続けた（本番ログ cache:RAW_0=4）。0 件は 10 分だけ。
+const EMPTY_CACHE_TTL_SECONDS = 600;
 // 2026-09-20: Agent Search の初回応答は 3 秒を超えることがあり TIMEOUT で枠が出なかった。本検索と並行なので 7 秒まで待つ。
 const REQUEST_TIMEOUT_MS = 7000;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
@@ -183,7 +186,8 @@ export function normalizeGoogleMallQuery(query) {
 }
 
 function cacheKeyFor(query) {
-  return `https://google-mall-search.hoshilu.internal/v2?q=${encodeURIComponent(query)}`;
+  // v3: 綴り補正・検索語拡張を付けた要求に切り替えたので、v2 の（空を含む）キャッシュは読まない。
+  return `https://google-mall-search.hoshilu.internal/v3?q=${encodeURIComponent(query)}`;
 }
 
 // ---- サービスアカウント → アクセストークン（RS256 JWT → OAuth2）。Worker のメモリに 50 分キャッシュ ----
@@ -313,7 +317,7 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
     if (cache) {
       try {
         await cache.put(cacheRequest, new Response(JSON.stringify({ items, cached_at: now.toISOString() }), {
-          headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${CACHE_TTL_SECONDS}` }
+          headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${items.length ? CACHE_TTL_SECONDS : EMPTY_CACHE_TTL_SECONDS}` }
         }));
       } catch {}
     }

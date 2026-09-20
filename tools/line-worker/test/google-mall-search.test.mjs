@@ -166,4 +166,12 @@ test('同じ検索語は Cache API を優先し、上限を消費しない', asy
   assert.equal(second.source, 'cache');
   assert.equal(second.items.length, 3);
   assert.equal(calls.filter((call) => call.url.includes(':search')).length, 1);
+  // 2026-09-20: キャッシュ鍵は v3。0 件の結果は 10 分だけ（24 時間ではない）。
+  const keys = [...store.keys()];
+  assert.ok(keys.every((key) => key.includes('/v3?q=')));
+  const empties = [];
+  const emptyCache = { async match() { return undefined; }, async put(request, response) { empties.push(response.headers.get('cache-control')); } };
+  const emptyEnv = { ...baseEnv(), GOOGLE_MALL_SEARCH_DAILY_LIMIT: '5' };
+  await searchGoogleMalls(emptyEnv, '無い商品', { fetch: fakeGoogle([], { results: [] }), cache: emptyCache });
+  assert.deepEqual(empties, ['public, max-age=600']);
 });
