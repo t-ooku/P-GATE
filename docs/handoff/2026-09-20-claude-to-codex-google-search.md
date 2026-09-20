@@ -2,6 +2,10 @@
 
 承認者: 大隆さん（2026-09-20 「コーデックスに指示書書いて」）。本書をもって Google 枠の検索品質と本書「3. 積み残し」を Codex 主幹へ移す。Cowork は本日のパッチ投入（#354〜#370）で停止する。
 
+## 0. 使っている検索システム
+- Google Cloud **Vertex AI Search**（Discovery Engine API `discoveryengine.googleapis.com` の `servingConfigs/default_search:search`）。ウェブサイト用データストア（11 モールのホスト限定）、エンジン `hoshilu-malls_*`、サービスアカウントで認証。コード上の呼び名は「Agent Search」（`src/google-mall-search.mjs`）。
+- 旧 Custom Search JSON API は使っていない（新規受付終了、2027-01-01 廃止）。
+
 ## 1. 事象（実機・D1 で確認済み）
 - 大隆さん実機（15:21 JST）: 「韓国 頭皮ケア LILIB リリーブ」で HOSHILU 内の Google 枠（「Google検索から発見」）が出ない。通常の Google は「リリーイブ（lilyeve）」に読み替えて Amazon / 楽天の商品を出す。正解はこれ。
 - D1 `google_mall_search_log`（1 時間バケット集計・検索本文は記録しない）:
@@ -26,8 +30,9 @@
 ### P0-2 綴り揺れ（リリーブ→リリーイブ）をどう当てるか判断する
 選択肢を比較して 1 つ推奨し、大隆さんの承認を取ってから実装:
 - (a) Vertex AI Search の高度なウェブサイトインデックス（ドメイン検証が要る。費用・作業は大隆さん承認事項）
-- (b) Custom Search JSON API（`spelling.correctedQuery` が返る）を 0 件時のフォールバックに併用（日 100 無料、以後課金 → 承認事項）
+- (b) Vertex AI Search のサービング制御「同義語（synonyms）」に「リリーブ ↔ リリーイブ ↔ lilyeve」のようなブランド綴り揺れを登録する（追加費用なし。当たる範囲は登録分だけ）
 - (c) 教師データ（evaluation/teacher-dataset）にブランド綴り揺れの `search_terms` を足す（費用ゼロ、当たる範囲は登録分だけ）
+- ✗ 旧 Custom Search JSON API（Programmable Search Engine）は新規受付終了・2027-01-01 に廃止。併用の選択肢に入れない。
 前提: 日次上限 300 要求（`GOOGLE_MALL_SEARCH_DAILY_LIMIT`）、検索 1 回あたり要求は最大 2、価格は pagemap の「ページ表示価格」扱い（API 確認価格ではない・「確認価格」とは表示しない）。
 
 ### P1 9/20 GPT 指示書の積み残し（Cowork 未着手）
