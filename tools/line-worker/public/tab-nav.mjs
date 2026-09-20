@@ -20,9 +20,9 @@ const SECTION_VIEW = [
   ['#buzzHome', 'buzz'], ['#watchDemand', 'buzz'],
   ['#accountPanel', 'account'], ['.sale-center', 'account'], ['#officialSocial', 'account'], ['#announcements', 'account']
 ];
-// 2026-09-20 大隆さん指示: 「ホシる中」を開いたら、まず気になる商品（♡）→ 値下がり待ち → 追ってるキーワード（insight 内）。
-// 2026-09-20 大隆さん指示: ホシる中は「ホシってるもの」が先、「気になる商品」が後。
-const HOSHIRU_ORDER = ['#insight', '#keptProducts'];
+// 2026-09-20 大隆さん指示: ホシる中は「ホシってるもの」が先。「気になる商品」はその中の
+// 「値下がり待ち」の上に置く（ホシってるもの → 気になる商品 → 値下がり待ち → 追ってるキーワード）。
+const HOSHIRU_ORDER = ['#insight'];
 // 「マイアカウント」の中の並び: ログイン → 受け取るセール → 公式アカウント → お知らせ
 const ACCOUNT_ORDER = ['#accountPanel', '.sale-center', '#officialSocial', '#announcements'];
 // 旧 URL（#tab-sale）は「マイアカウント」へ
@@ -50,6 +50,14 @@ if (main && primary) {
       if (node) { cursor.after(node); cursor = node; }
     }
   }
+  // 2026-09-20 大隆さん指示: 「気になる商品」は「値下がり待ち」の上。ホシってるものの中へ入れ、
+  // 入れ子のカードに見えないよう kept-in-insight を付ける（見た目は CSS 側で落とす）。
+  const kept = primary.querySelector('#keptProducts');
+  const entrusted = primary.querySelector('#entrustedWatches');
+  if (kept && entrusted && kept.nextElementSibling !== entrusted) {
+    entrusted.before(kept);
+  }
+  if (kept && entrusted) kept.classList.add('kept-in-insight');
   const account = primary.querySelector('#accountPanel');
   if (account) {
     let cursor = account;

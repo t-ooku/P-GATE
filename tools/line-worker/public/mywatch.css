@@ -121,3 +121,9 @@
 #keptProducts #keptProductsTitle{margin-bottom:6px}
 #keptProducts .kept-list{margin-top:0}
 #keptProducts .kept-list .empty{margin:2px 0 0;line-height:1.6}
+
+/* 2026-09-20 大隆さん指示: 「気になる商品」は「値下がり待ち」の上（ホシってるものの中）へ。
+   入れ子のカードに見えないよう、枠・背景・影を落として値下がり待ちと同じ見出しの大きさに揃える。 */
+#insight #keptProducts.kept-in-insight{margin:18px 0 0;padding:16px 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:none;box-shadow:none}
+#insight #keptProducts.kept-in-insight .step{display:none}
+#insight #keptProducts.kept-in-insight #keptProductsTitle{margin:0 0 6px;font-size:16px;letter-spacing:normal}
