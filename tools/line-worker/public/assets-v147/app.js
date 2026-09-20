@@ -297,6 +297,8 @@ function watchAttributionPayload(){
   return{...attribution,visitor_id:pick(identity.visitorId),session_id:pick(identity.sessionId)};
 }
 function payloadFor(query,_options,frequency=watchFrequencyFor(query),target={}){const targetPrice=Number(target.target_price_jpy)||null;return{...watchAttributionPayload(),query,language:elements.language.value,watch_sale:false,watch_price:Boolean(targetPrice),watch_coupon:false,watch_restock:false,watch_frequency:frequency,...(targetPrice?{target_price_jpy:targetPrice,target_product_key:String(target.target_product_key||''),target_product_name:String(target.target_product_name||''),...(target.watch_kind==='POST_PURCHASE'?{watch_kind:'POST_PURCHASE',purchase_price_jpy:Number(target.purchase_price_jpy)||targetPrice+1}:{})}:{})};}
+// 2026-09-20 大隆さん指示: 値下がり待ちに商品画像を出す。希望額と一緒に画像 URL（https）を price_condition に添える。
+{const basePayloadFor=payloadFor;payloadFor=function(query,options,frequency,target={}){const payload=basePayloadFor(query,options,frequency,target);const image=String(target?.target_image_url||'');if(payload.target_price_jpy&&/^https:\/\//u.test(image))payload.price_condition={...(payload.price_condition||{}),target_image_url:image.slice(0,500)};return payload;};}
 // 2026-09-20 指示書 §P0: サーバーが上限（保存100／探し中10／値下がり待ち10）で 409 を返した時は、その文言をそのまま見せる。
 // /api/member/wishes への fetch だけを包む（保存・更新の各関数はそのまま。GET の limits/usage もここで受ける）。
 let wishLimitNotice=null,wishUsage=null,lastWishPersist=null;
@@ -450,13 +452,20 @@ function renderEntrustedWatches(){
   list.replaceChildren(...rows.map(item=>{
     const row=document.createElement('div');row.className='entrusted-row';
     const name=String(item.target_product_name||item.query_text||'').trim();
-    row.append(textElement('span','entrusted-row-name',name));
+    // 2026-09-20 大隆さん指示: 楽天のように商品画像＋短い商品名（文字より視認性）。画像が無い行は頭文字のタイルを出す。
+    const media=document.createElement('div');media.className='entrusted-row-media';
+    const imageUrl=String(item.target_image_url||'');
+    if(/^https:\/\//u.test(imageUrl)){const img=document.createElement('img');img.src=window.HoshiluImage?.upgrade?.(imageUrl,300)||imageUrl;img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';media.append(img);}
+    else media.append(textElement('span','entrusted-row-media-fallback',name.slice(0,2)));
+    const body=document.createElement('div');body.className='entrusted-row-body';
+    body.append(textElement('span','entrusted-row-name',name));
+    row.append(media,body);
     const postPurchase=String(item.watch_kind||'')==='POST_PURCHASE';
-    row.append(textElement('span','entrusted-row-price',postPurchase
+    body.append(textElement('span','entrusted-row-price',postPurchase
       ?`買った値段（${yen(item.purchase_price_jpy||Number(item.target_price_jpy)+1)}）より安くなったら知らせます`
       :`${yen(item.target_price_jpy)}になったら知らせます`));
     if(postPurchase&&item.expires_at){
-      row.append(textElement('span','entrusted-row-note',`${new Date(item.expires_at).toLocaleDateString('ja-JP')}まで見張ります`));
+      body.append(textElement('span','entrusted-row-note',`${new Date(item.expires_at).toLocaleDateString('ja-JP')}まで見張ります`));
     }
     const again=document.createElement('button');again.type='button';again.className='entrusted-row-search';again.textContent='いまの価格を見る';
     again.addEventListener('click',()=>{elements.query.value=name;elements.clear.classList.remove('hidden');submitSearchNow();});
@@ -464,7 +473,7 @@ function renderEntrustedWatches(){
     const remove=document.createElement('button');remove.type='button';remove.className='entrusted-row-remove';remove.textContent='やめる';
     remove.addEventListener('click',async()=>{if(!confirm('この値下がり待ちをやめますか？'))return;remove.disabled=true;await deleteWish(String(item.query_text||name));renderWishes();});
     const actions=document.createElement('div');actions.className='entrusted-row-actions';actions.append(again,remove);
-    row.append(actions);
+    body.append(actions);
     return row;
   }));
 }
@@ -694,7 +703,8 @@ function createWatchOptions(candidate,t){
       if(!panel.querySelector('.watch-quick-join'))panel.append(createWatchQuickJoin(amount,()=>{status.textContent=t.watchSavedStatus;bell.classList.add('watching');setTimeout(()=>dialog.close(),1200);}));
       return;
     }
-    const target=modeInput.checked?{target_price_jpy:Math.max(100,amount-1),target_product_key:productKey,target_product_name:productName,watch_kind:'POST_PURCHASE',purchase_price_jpy:amount}:{target_price_jpy:amount,target_product_key:productKey,target_product_name:productName};
+    const targetImage=String(candidate?.image_url||candidate?.image||'');
+    const target=modeInput.checked?{target_price_jpy:Math.max(100,amount-1),target_product_key:productKey,target_product_name:productName,watch_kind:'POST_PURCHASE',purchase_price_jpy:amount,target_image_url:targetImage}:{target_price_jpy:amount,target_product_key:productKey,target_product_name:productName,target_image_url:targetImage};
     // 希望額は検索文ではなく商品単位で保存する。同じ検索結果から複数商品へ
     // 希望額を付けても、同じwish_idへ上書きされないよう商品名を保存キーにする。
     const wishQuery=productName;

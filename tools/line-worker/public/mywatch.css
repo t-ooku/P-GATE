@@ -96,3 +96,20 @@
 /* 2026-09-20 指示書 §P0: 上限（409）の文言 */
 .watch-save-status-limit{color:#b3005f;font-weight:700}
 .watch-save-manage{display:inline-block;margin-top:4px;color:#5140ba;font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+/* 2026-09-20 大隆さん指示: ダッシュボードは折りたたみ（「ホシってるもの」を押すと開く） */
+.insight-dashboard>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.insight-dashboard>summary::-webkit-details-marker{display:none}
+.insight-dashboard>summary .step{margin:0;width:100%}
+.insight-dashboard>summary h2{margin:0}
+.insight-dashboard-toggle{margin-left:auto;padding:6px 12px;border:1px solid #ded7ff;border-radius:999px;background:#fff;color:#5140ba;font-size:12px;font-weight:800}
+.insight-dashboard[open] .insight-dashboard-toggle::before{content:'閉じる '}
+.insight-dashboard:not([open]) .insight-dashboard-toggle{}
+.insight-dashboard{margin:0 0 14px}
+.insight-dashboard>summary+#insightSummary{margin-top:10px}
+/* 2026-09-20 大隆さん指示: 値下がり待ちは商品画像＋短い商品名（楽天のように） */
+.entrusted-row{grid-template-columns:72px minmax(0,1fr);align-items:start;gap:10px}
+.entrusted-row-media{width:72px;height:72px;border-radius:12px;overflow:hidden;background:var(--soft);display:flex;align-items:center;justify-content:center}
+.entrusted-row-media img{width:100%;height:100%;object-fit:cover}
+.entrusted-row-media-fallback{font-size:18px;font-weight:900;color:#5140ba}
+.entrusted-row-body{display:grid;gap:4px;min-width:0}
+.entrusted-row-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:1.4}

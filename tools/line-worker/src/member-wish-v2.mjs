@@ -161,6 +161,8 @@ function decorateWishRow(row) {
     target_product_key:String(price.target_product_key||''),
     target_product_name:String(price.target_product_name||''),
     watch_kind:String(price.kind||'TARGET_PRICE'),
+    // 2026-09-20 大隆さん指示: 値下がり待ちに商品画像を出す（https のみ、クライアントが希望額と一緒に送る）
+    target_image_url:/^https:\/\//u.test(String(price.target_image_url||''))?String(price.target_image_url).slice(0,500):'',
     purchase_price_jpy:Number(price.purchase_price_jpy)||null,
     expires_at:String(price.expires_at||'') };
 }

@@ -20,8 +20,8 @@ const SECTION_VIEW = [
   ['#buzzHome', 'buzz'], ['#watchDemand', 'buzz'],
   ['#accountPanel', 'account'], ['.sale-center', 'account'], ['#officialSocial', 'account'], ['#announcements', 'account']
 ];
-// 「ホシる中」の中の並び: ホシってるもの → 値下がり待ち（insight 内）→ 気になる商品
-const HOSHIRU_ORDER = ['#insight', '#keptProducts'];
+// 2026-09-20 大隆さん指示: 「ホシる中」を開いたら、まず気になる商品（♡）→ 値下がり待ち → 追ってるキーワード（insight 内）。
+const HOSHIRU_ORDER = ['#keptProducts', '#insight'];
 // 「マイアカウント」の中の並び: ログイン → 受け取るセール → 公式アカウント → お知らせ
 const ACCOUNT_ORDER = ['#accountPanel', '.sale-center', '#officialSocial', '#announcements'];
 // 旧 URL（#tab-sale）は「マイアカウント」へ
@@ -38,9 +38,12 @@ if (main && primary) {
     }
     node.dataset.view = view;
   }
-  const insight = primary.querySelector('#insight');
-  if (insight) {
-    let cursor = insight;
+  const hoshiruHead = primary.querySelector(HOSHIRU_ORDER[0]);
+  if (hoshiruHead) {
+    // 先頭は #insight の位置（ホシる中の最初の節）に置き、以降を順に並べる。
+    const insight = primary.querySelector('#insight');
+    if (insight && insight !== hoshiruHead) insight.before(hoshiruHead);
+    let cursor = hoshiruHead;
     for (const selector of HOSHIRU_ORDER.slice(1)) {
       const node = primary.querySelector(selector);
       if (node) { cursor.after(node); cursor = node; }

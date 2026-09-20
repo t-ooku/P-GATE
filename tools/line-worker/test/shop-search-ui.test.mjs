@@ -38,14 +38,15 @@ test('総合検索にジャンル・詳細条件があり、ヘッダーは言�
   assert.match(readFileSync(new URL('../public/site-i18n.js', import.meta.url), 'utf8'), /'nav\.business':'販売者専用'/);
   assert.match(readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'), /account:'ログイン／無料登録'/);
   assert.match(readFileSync(new URL('../public/tab-nav.css', import.meta.url), 'utf8'), /\.topbar\{min-height:56px/);
-  assert.ok(html.includes('site-i18n.js?v=9') && html.includes('tab-nav.css?v=3') && html.includes('app.js?v=178'));
+  assert.ok(html.includes('site-i18n.js?v=9') && html.includes('tab-nav.css?v=3') && html.includes('app.js?v=179'));
 });
 
 // 2026-09-17 第2指示書（テスト2・§Seller プライバシー・KPI）: 会員の「ショップで探しているもの」一覧、Seller には 5 人以上の需要だけを条件表示、新 KPI イベント。
 test('会員は「ホシってるもの」でショップ需要を見て「やめる」でき、Seller には 5 人以上の需要だけが条件で見え、KPI イベントが記録される', () => {
   const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   assert.match(html, /<div id="shopDemandMine" class="shop-demand-mine hidden" aria-live="polite">/);
-  assert.ok(html.indexOf('id="wishList"') < html.indexOf('id="shopDemandMine"') && html.indexOf('id="shopDemandMine"') < html.indexOf('id="entrustedWatches"'));
+  // 2026-09-20 大隆さん指示: 値下がり待ちを先に。ショップ需要は「探しているもの」の中（wishList の直後）に残す。
+  assert.ok(html.indexOf('id="entrustedWatches"') < html.indexOf('id="wishList"') && html.indexOf('id="wishList"') < html.indexOf('id="shopDemandMine"'));
   const client = readFileSync(new URL('../public/shop-search.mjs', import.meta.url), 'utf8');
   assert.match(client, /fetch\('\/api\/shops\/demand\/mine'/);
   assert.match(client, /method: 'DELETE'/);
