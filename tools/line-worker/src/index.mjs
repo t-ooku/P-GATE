@@ -125,6 +125,7 @@ import { runReliabilityControlledCron } from './reliability-control.mjs';
 import { OFFICIAL_STORE_SEARCHES, officialStoreForProductUrl } from './official-mall-stores.mjs';
 import { searchGoogleMalls, googleMallSearchConfigured, purgeGoogleMallSearchLog } from './google-mall-search.mjs';
 import { identifyProductUrl } from './product-url-identify.mjs';
+import { runWishIdleStop } from './wish-idle-stop.mjs';
 const encoder = new TextEncoder();
 const ALLOWED_DESTINATION_DOMAINS = [
   'amazon.co.jp', 'amazon.com', 'rakuten.co.jp',
@@ -3726,6 +3727,8 @@ export default {
         runTargetPriceScan(env, scheduledAt.toISOString()),
         // 希望価格ウォッチの巡回結果（見つかったか・いくらだったか）は90日で消す。
         purgeTargetPriceObservations(env, scheduledAt),
+        // 2026-09-20 指示書 §P0/§6: 90 日無反応の探し中は「まだ探し続けますか？」→ 14 日後に「あとで見る」へ（行は消さない）。
+        runWishIdleStop(env, scheduledAt),
         purgeExpiredMarketplacePrices(env, scheduledAt),
         // 2026-09-06 大隆さん決定: セラー営業メール。平日09-18時JSTに1サイクル最大3通・
         // 1日最大10通、1アドレス1回だけ。未設定なら何もしない。失敗しても他ジョブを止めない。
