@@ -11,6 +11,7 @@ import {
 function d1() {
   const db = new DatabaseSync(':memory:');
   db.exec(readFileSync(new URL('../migrations/0082_google_mall_search.sql', import.meta.url), 'utf8'));
+  db.exec(readFileSync(new URL('../migrations/0083_google_mall_search_log.sql', import.meta.url), 'utf8'));
   return {
     prepare(sql) {
       const statement = db.prepare(sql);
@@ -122,8 +123,10 @@ test('searchGoogleMalls はトークンを取ってから Discovery Engine に�
   const body = JSON.parse(calls[1].init.body);
   assert.deepEqual(body, { query: '子ども 水筒', pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } });
   assert.equal(calls[1].init.headers.authorization, 'Bearer ya29.test');
-  // プライバシー境界: 検索本文・検索単位のIDをD1へ書き込まない。
-  assert.equal(await env.PRODUCT_DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='google_mall_search_log'").bind().first(), null);
+  // プライバシー境界: 検索本文・検索単位のIDは書かない。残すのは 1 時間バケットの結果種別の件数だけ。
+  const buckets = await env.PRODUCT_DB.prepare('SELECT bucket_at, source, reason, request_count FROM google_mall_search_log').bind().all();
+  assert.deepEqual(buckets.results.map((row) => [row.source, row.reason, row.request_count]), [['live', 'SHOWN', 1]]);
+  assert.match(buckets.results[0].bucket_at, /^\d{4}-\d{2}-\d{2}T\d{2}:00:00Z$/u);
   // 上限 1 なので 2 回目は呼ばない
   const limited = await searchGoogleMalls(env, '別の検索', { fetch: fakeGoogle(calls), cache: null });
   assert.equal(limited.source, 'limit');

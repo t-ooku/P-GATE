@@ -250,14 +250,32 @@ export async function googleAccessToken(env = {}, options = {}) {
 // 集計済みprovider degradationだけで扱い、ここでは結果と固定コードだけを返す。
 // 既存cronとの互換用。過去行の削除は本番D1の破壊的変更になるため自動実行しない。
 export async function purgeGoogleMallSearchLog() {}
+// 集計だけ（migration 0083 の bucket_at/source/reason/request_count）。失敗しても検索を止めない。
+export async function countGoogleMallOutcome(env, now, source, reason) {
+  if (!env.PRODUCT_DB?.prepare) return;
+  try {
+    const bucket = new Date(now).toISOString().slice(0, 13) + ':00:00Z';
+    await env.PRODUCT_DB.prepare(`INSERT INTO google_mall_search_log(bucket_at,source,reason,request_count) VALUES(?1,?2,?3,1)
+      ON CONFLICT(bucket_at,source,reason) DO UPDATE SET request_count=request_count+1`).bind(bucket, String(source || ''), String(reason || '').slice(0, 40)).run();
+  } catch {}
+}
 
 export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
   const fetchImpl = options.fetch || fetch;
   const now = options.now || new Date();
   const query = normalizeGoogleMallQuery(rawQuery);
   const exclude = new Set((options.excludeMarketplaces || []).map((value) => String(value || '').toUpperCase()));
-  const finish = (items, source, reason = '') => ({ items: items.filter((item) => !exclude.has(item.marketplace)), source, reason });
-  const fail = (source, reason) => ({ items: [], source, reason });
+  // 2026-09-20: 検索本文・ID は残さない（Codex の privacy boundary に従う）。残すのは 1 時間バケットごとの
+  // 「結果の種類」の件数だけ: SHOWN / ALL_EXCLUDED / NO_PRODUCT_PAGES / RAW_0 / TIMEOUT / HTTP_xxx …。
+  // await する（Workers はレスポンス後の未完了 Promise を打ち切る）。
+  const finish = async (items, source, reason = '') => {
+    const kept = items.filter((item) => !exclude.has(item.marketplace));
+    const outcome = kept.length ? 'SHOWN' : items.length ? 'ALL_EXCLUDED' : rawCount ? 'NO_PRODUCT_PAGES' : 'RAW_0';
+    await countGoogleMallOutcome(env, now, source, outcome);
+    return { items: kept, source, reason };
+  };
+  const fail = async (source, reason) => { await countGoogleMallOutcome(env, now, source, reason); return { items: [], source, reason }; };
+  let rawCount = 0;
   if (!query) return { items: [], source: 'disabled', reason: 'EMPTY_QUERY' };
   if (!googleMallSearchConfigured(env)) return { items: [], source: 'disabled', reason: 'NOT_CONFIGURED' };
   const cache = options.cache === null ? null : (options.cache || (globalThis.caches?.default ?? null));
@@ -267,12 +285,12 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
       const hit = await cache.match(cacheRequest);
       if (hit) {
         const cached = await hit.json();
-        if (Array.isArray(cached?.items)) return finish(cached.items, 'cache');
+        if (Array.isArray(cached?.items)) return await finish(cached.items, 'cache');
       }
     } catch {}
   }
   const budget = await reserveGoogleMallSearchRequest(env, now);
-  if (!budget.allowed) return fail('limit', budget.reason);
+  if (!budget.allowed) return await fail('limit', budget.reason);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), options.timeoutMs || REQUEST_TIMEOUT_MS);
   try {
@@ -287,9 +305,11 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
       // 綴り補正（AUTO）と、結果が少ない時の検索語拡張（AUTO）を明示して同じ挙動に寄せる。
       body: JSON.stringify({ query, pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
     });
-    if (!response.ok) return fail('error', `HTTP_${response.status}`);
+    if (!response.ok) return await fail('error', `HTTP_${response.status}`);
     const payload = await response.json();
-    const items = parseGoogleMallItems(normalizeAgentSearchResponse(payload));
+    const normalized = normalizeAgentSearchResponse(payload);
+    rawCount = Array.isArray(normalized) ? normalized.length : 0;
+    const items = parseGoogleMallItems(normalized);
     if (cache) {
       try {
         await cache.put(cacheRequest, new Response(JSON.stringify({ items, cached_at: now.toISOString() }), {
@@ -297,10 +317,10 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
         }));
       } catch {}
     }
-    return finish(items, 'live');
+    return await finish(items, 'live');
   } catch (error) {
     const message = String(error?.message || '');
-    return fail('error', error?.name === 'AbortError' ? 'TIMEOUT' : (message.startsWith('GOOGLE_') ? message : 'FETCH_FAILED'));
+    return await fail('error', error?.name === 'AbortError' ? 'TIMEOUT' : (message.startsWith('GOOGLE_') ? message : 'FETCH_FAILED'));
   } finally {
     clearTimeout(timer);
   }
