@@ -18,6 +18,7 @@ import {
 import { TREE as HOSHILU_GENRE_TREE } from '../public/genre-explorer.mjs';
 // 2026-09-17 SHOP強化 P0: Seller 向け「HOSHILUで今探されているもの」と「この需要に商品を登録」
 import { registerDemandOffer, sellerDemandOverview, demandConditions, judgeTitle } from './shop-demand.mjs';
+import { searchingDemandOverview } from './searching-demand.mjs';
 import { recordDemandMatchClick } from './seller-demand-match.mjs';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -931,11 +932,12 @@ async function handleShopManagement(request, env, sellerKey, { base, adminInput 
       return json({ ok: true, coupon_id: couponId, ...(await shopSummary(db, sellerKey)) });
     }
     if (request.method === 'GET' && rest === '/demand') {
-      return json({ ok: true, ...(await sellerDemandOverview(env, sellerKey)) });
+      // 2026-09-20 §6: HOSHILU 全体で「いま探し中」の需要（member_wishes の active だけ）を足す。
+      return json({ ok: true, ...(await sellerDemandOverview(env, sellerKey)), searching: await searchingDemandOverview(env) });
     }
     if (request.method === 'POST' && rest === '/demand/offers') {
       const offer = await registerDemandOffer(env, sellerKey, body || {}, { now });
-      return json({ ok: true, offer, ...(await sellerDemandOverview(env, sellerKey)) });
+      return json({ ok: true, offer, ...(await sellerDemandOverview(env, sellerKey)), searching: await searchingDemandOverview(env) });
     }
     const couponMatch = rest.match(/^\/coupons\/([A-Za-z0-9-]{1,64})$/);
     if (couponMatch && (request.method === 'DELETE' || request.method === 'POST')) {
