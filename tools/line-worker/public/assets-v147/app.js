@@ -708,7 +708,11 @@ function createWatchOptions(candidate,t){
       if(!panel.querySelector('.watch-quick-join'))panel.append(createWatchQuickJoin(amount,()=>{status.textContent=t.watchSavedStatus;bell.classList.add('watching');setTimeout(()=>dialog.close(),1200);}));
       return;
     }
-    const targetImage=String(candidate?.image_url||candidate?.image||'');
+    // 2026-09-20 大隆さん報告「値下がり待ちに画像が出ない」: 検索結果の商品は画像を image_urls（配列）で持ち、
+    // image_url が空のことがある。商品カードの画像と同じ順で拾う（https のみ・推測はしない）。
+    const imageCandidates=[...(Array.isArray(candidate&&candidate.image_urls)?candidate.image_urls:[]),candidate&&candidate.image,candidate&&candidate.image_url];
+    let targetImage='';
+    for(const value of imageCandidates){const text=String(value||'').trim();if(text.slice(0,8)==='https://'){targetImage=text;break;}}
     const target=modeInput.checked?{target_price_jpy:Math.max(100,amount-1),target_product_key:productKey,target_product_name:productName,watch_kind:'POST_PURCHASE',purchase_price_jpy:amount,target_image_url:targetImage}:{target_price_jpy:amount,target_product_key:productKey,target_product_name:productName,target_image_url:targetImage};
     // 希望額は検索文ではなく商品単位で保存する。同じ検索結果から複数商品へ
     // 希望額を付けても、同じwish_idへ上書きされないよう商品名を保存キーにする。
