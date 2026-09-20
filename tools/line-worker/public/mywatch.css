@@ -93,3 +93,6 @@
 .later-wish-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:#5140ba;font:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer}
 .later-wish-row:hover{background:var(--soft)}
 .later-wish-action{flex:none;font-size:11px;font-weight:700;color:var(--muted)}
+/* 2026-09-20 指示書 §P0: 上限（409）の文言 */
+.watch-save-status-limit{color:#b3005f;font-weight:700}
+.watch-save-manage{display:inline-block;margin-top:4px;color:#5140ba;font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:3px}

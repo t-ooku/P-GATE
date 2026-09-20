@@ -115,6 +115,36 @@ function nextInsightEnabledAt(watch, previous, now) {
 
 const optInSchemaPending = () => new Error('INSIGHT_OPT_IN_SCHEMA_PENDING');
 
+// 2026-09-20 GPT 指示書（大隆さん承認）§P0: 「ホシっとく＝保存」と「探し中＝HOSHILU が継続処理する状態」を分け、
+// 無料の上限を置く。保存 100 件／同時「探し中」10 件／希望価格 Watch 10 件。11 件目は 409 で「あとで見る」へ促す
+// （既存行は触らない・削除しない。数は会員本人の実データだけ）。env で上書き可（WISH_LIMIT_SAVED 等）。
+export const WISH_LIMIT_DEFAULTS = Object.freeze({ saved: 100, searching: 10, price_watch: 10 });
+export function wishLimitsFor(env = {}) {
+  const pick = (key, fallback) => { const n = Number(env[key]); return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback; };
+  return { saved: pick('WISH_LIMIT_SAVED', WISH_LIMIT_DEFAULTS.saved), searching: pick('WISH_LIMIT_SEARCHING', WISH_LIMIT_DEFAULTS.searching), price_watch: pick('WISH_LIMIT_PRICE_WATCH', WISH_LIMIT_DEFAULTS.price_watch) };
+}
+export async function wishUsageFor(env, memberId) {
+  const row = await withInsightSchema(
+    () => env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS saved,
+      SUM(CASE WHEN notify_new_match=1 AND insight_enabled_at IS NOT NULL AND insight_enabled_at<>'' AND UPPER(COALESCE(watch_frequency,'INSTANT'))<>'MUTED' THEN 1 ELSE 0 END) AS searching,
+      SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 THEN 1 ELSE 0 END) AS price_watch
+      FROM member_wishes WHERE member_id=?1`).bind(memberId).first(),
+    () => env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS saved, 0 AS searching,
+      SUM(CASE WHEN watch_price=1 AND CAST(json_extract(condition_snapshot,'$.price_condition.target_price_jpy') AS INTEGER)>=100 THEN 1 ELSE 0 END) AS price_watch
+      FROM member_wishes WHERE member_id=?1`).bind(memberId).first()
+  );
+  return { saved: Number(row?.saved) || 0, searching: Number(row?.searching) || 0, price_watch: Number(row?.price_watch) || 0 };
+}
+function limitResponse(kind, usage, limits) {
+  const messages = {
+    saved: `保存できるのは ${limits.saved} 件までです。使わない条件を削除してから、もう一度ホシっといてください。`,
+    searching: `${limits.searching} 個を探し中です。新しく探し始めるには、探し中の条件から 1 つを「あとで見る」へ移してください。`,
+    price_watch: `値下がり待ちは ${limits.price_watch} 件までです。終わった値下がり待ちを「やめる」にしてから、もう一度お試しください。`
+  };
+  const error = { saved: 'WISH_SAVE_LIMIT_REACHED', searching: 'WISH_SEARCHING_LIMIT_REACHED', price_watch: 'WISH_PRICE_WATCH_LIMIT_REACHED' }[kind];
+  return Response.json({ ok: false, error, limit_kind: kind, limits, usage, message: messages[kind] }, { status: 409, headers: { 'cache-control': 'no-store' } });
+}
+
 async function cancelPendingInsightNotifications(env, memberId, wishId, now) {
   await env.PRODUCT_DB.prepare(`UPDATE mywatch_notifications
     SET status='CANCELLED',last_error_code='INSIGHT_DISABLED',updated_at=?3
@@ -143,7 +173,10 @@ export async function handleMemberWishRoutes(request, env) {
   if (!member) return Response.json({ ok: false, error: 'MEMBER_LOGIN_REQUIRED' }, { status: 401 });
   if (request.method === 'GET' && url.pathname === '/api/member/wishes') {
     const result = await selectWishRows(env, member.id);
-    return Response.json({ ok: true, wishes: (result.results || []).map(decorateWishRow) }, { headers: { 'cache-control': 'no-store' } });
+    // §P0: 上限と使用数も返す（画面で「探し中 2/10」を出すため。数は本人の実データだけ）。
+    const limits = wishLimitsFor(env);
+    const usage = await wishUsageFor(env, member.id);
+    return Response.json({ ok: true, wishes: (result.results || []).map(decorateWishRow), limits, usage }, { headers: { 'cache-control': 'no-store' } });
   }
   if (request.method === 'POST' && url.pathname === '/api/member/wishes') {
     const payload = await request.json(), query = clean(payload.query), language = LANGUAGES.has(payload.language) ? payload.language : 'JA';
@@ -172,6 +205,15 @@ export async function handleMemberWishRoutes(request, env) {
     // 有効化したか判別できない。新規の通常保存はOFFにし、明示ONかつMUTED
     // 以外のときだけ0065のinsight_enabled_atへ監査可能な時刻を保存する。
     const insightEnabledAt = nextInsightEnabledAt(watch, previousEnablement, now);
+    // §P0 上限: 新規行なら保存 100、探し中を新たに ON にするなら 10、希望価格を新たに付けるなら 10。
+    {
+      const limits = wishLimitsFor(env);
+      const usage = await wishUsageFor(env, member.id);
+      if (!previousEnablement && usage.saved >= limits.saved) return limitResponse('saved', usage, limits);
+      const wasSearching = Boolean(previousEnablement?.insight_enabled_at) && Number(previousEnablement?.notify_new_match) === 1 && String(previousEnablement?.watch_frequency || 'INSTANT').toUpperCase() !== 'MUTED';
+      if (insightEnabledAt && watch.notify_new_match === 1 && !wasSearching && usage.searching >= limits.searching) return limitResponse('searching', usage, limits);
+      if (targetPrice !== null && !postPurchase && !(Number(previousPrice?.target_price_jpy) >= 100) && usage.price_watch >= limits.price_watch) return limitResponse('price_watch', usage, limits);
+    }
     const bindValues = [member.id, wishId, query, language, watch.watch_sale, watch.watch_price,
       watch.watch_coupon, watch.watch_restock, watch.watch_frequency, watch.notify_new_match,
       conditionSnapshot, insightEnabledAt, now];
@@ -261,6 +303,13 @@ export async function handleMemberWishRoutes(request, env) {
     const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...previousPrice,...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||existingForSnapshot?.query_text||''}};
     const conditionSnapshot = existingForSnapshot ? conditionSnapshotFor(targetPayload, existingForSnapshot.query_text) : null;
     const insightEnabledAt = nextInsightEnabledAt(watch, previousEnablement, now);
+    {
+      const limits = wishLimitsFor(env);
+      const usage = await wishUsageFor(env, member.id);
+      const wasSearching = Boolean(previousEnablement?.insight_enabled_at) && Number(previousEnablement?.notify_new_match) === 1 && String(previousEnablement?.watch_frequency || 'INSTANT').toUpperCase() !== 'MUTED';
+      if (insightEnabledAt && watch.notify_new_match === 1 && !wasSearching && usage.searching >= limits.searching) return limitResponse('searching', usage, limits);
+      if (targetPrice !== null && !(Number(previousPrice?.target_price_jpy) >= 100) && usage.price_watch >= limits.price_watch) return limitResponse('price_watch', usage, limits);
+    }
     const updateValues = [member.id, wishId, watch.watch_sale, watch.watch_price,
       watch.watch_coupon, watch.watch_restock, watch.watch_frequency, watch.notify_new_match,
       conditionSnapshot, insightEnabledAt, now];

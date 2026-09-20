@@ -297,7 +297,13 @@ function watchAttributionPayload(){
   return{...attribution,visitor_id:pick(identity.visitorId),session_id:pick(identity.sessionId)};
 }
 function payloadFor(query,_options,frequency=watchFrequencyFor(query),target={}){const targetPrice=Number(target.target_price_jpy)||null;return{...watchAttributionPayload(),query,language:elements.language.value,watch_sale:false,watch_price:Boolean(targetPrice),watch_coupon:false,watch_restock:false,watch_frequency:frequency,...(targetPrice?{target_price_jpy:targetPrice,target_product_key:String(target.target_product_key||''),target_product_name:String(target.target_product_name||''),...(target.watch_kind==='POST_PURCHASE'?{watch_kind:'POST_PURCHASE',purchase_price_jpy:Number(target.purchase_price_jpy)||targetPrice+1}:{})}:{})};}
-function saveWish(query,options=watchOptionsFor(String(query||'').trim()),target={}){const value=String(query||'').trim();if(!value)return false;setWishes([value,...getWishes().filter(item=>item!==value)]);storeWatchPreference(value,options,target.target_product_key||'',watchFrequencyFor(value),target);renderWishes();if(memberSession)persistMemberWish(value,options,target);return true;}
+// 2026-09-20 指示書 §P0: サーバーが上限（保存100／探し中10／値下がり待ち10）で 409 を返した時は、その文言をそのまま見せる。
+// /api/member/wishes への fetch だけを包む（保存・更新の各関数はそのまま。GET の limits/usage もここで受ける）。
+let wishLimitNotice=null,wishUsage=null,lastWishPersist=null;
+async function captureWishLimit(response){if(!response||response.status!==409)return;try{const body=await response.clone().json();if(body?.message)wishLimitNotice={kind:String(body.limit_kind||''),message:String(body.message),usage:body.usage||null,limits:body.limits||null};}catch{}}
+function takeWishLimitNotice(){const notice=wishLimitNotice;wishLimitNotice=null;return notice;}
+{const nativeFetch=window.fetch.bind(window);window.fetch=async(input,init)=>{const response=await nativeFetch(input,init);try{const url=String(typeof input==='string'?input:input?.url||'');if(url.includes('/api/member/wishes')){await captureWishLimit(response);if(response.ok&&String(init?.method||'GET').toUpperCase()==='GET'&&url.endsWith('/api/member/wishes')){const body=await response.clone().json();wishUsage=body?.limits&&body?.usage?{limits:body.limits,usage:body.usage}:wishUsage;}}}catch{}return response;};}
+function saveWish(query,options=watchOptionsFor(String(query||'').trim()),target={}){const value=String(query||'').trim();if(!value)return false;setWishes([value,...getWishes().filter(item=>item!==value)]);storeWatchPreference(value,options,target.target_product_key||'',watchFrequencyFor(value),target);renderWishes();if(memberSession)lastWishPersist=persistMemberWish(value,options,target);return true;}
 async function persistMemberWish(query,options=watchOptionsFor(query),target={}){try{const response=await fetch('/api/member/wishes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payloadFor(query,options,watchFrequencyFor(query),target))});if(response.ok){const record=(await response.json()).wish;memberWishRecords=[record,...memberWishRecords.filter(item=>item.wish_id!==record.wish_id)];return record;}}catch{}return null;}
 // HOSHILU INSIGHT v1.0: 保存した検索条件専用の保存/更新経路。AIウォッチ
 // (🔔)のsaveWish/persistMemberWish/payloadForとは完全に別経路であり、
@@ -357,7 +363,8 @@ function renderHoshiStatus(){
   renderLaterWishes(c);
   box.replaceChildren(...['searching','found','waiting','later'].map(key=>{
     const tile=document.createElement('button');tile.type='button';tile.className=`hoshi-status-tile ${key}${counts[key]?' active':''}`;tile.dataset.state=key;
-    tile.append(textElement('strong','hoshi-status-count',String(counts[key])),textElement('span','hoshi-status-label',c[key]),textElement('small','hoshi-status-hint',c.hint[key]));
+    const limitFor={searching:wishUsage?.limits?.searching,waiting:wishUsage?.limits?.price_watch}[key];
+    tile.append(textElement('strong','hoshi-status-count',limitFor?`${counts[key]}/${limitFor}`:String(counts[key])),textElement('span','hoshi-status-label',c[key]),textElement('small','hoshi-status-hint',c.hint[key]));
     tile.addEventListener('click',()=>document.querySelector(targets[key])?.scrollIntoView({behavior:'smooth',block:'start'}));
     return tile;
   }));
@@ -694,7 +701,8 @@ function createWatchOptions(candidate,t){
     if(saveWish(wishQuery,[false,true,false,false],target)){
       status.textContent=t.watchSavedStatus;
       bell.classList.add('watching');
-      setTimeout(()=>dialog.close(),1400);
+      // §P0: 値下がり待ち 10 件の上限（サーバー 409）はここで見せる（端末には保存済み）。
+      Promise.resolve(typeof lastWishPersist==='undefined'?null:lastWishPersist).then(()=>{const notice=typeof takeWishLimitNotice==='function'?takeWishLimitNotice():null;if(notice){status.textContent=notice.message;status.classList.add('watch-save-status-limit');bell.classList.remove('watching');return;}setTimeout(()=>dialog.close(),1200);});
     }
   });
   panel.append(modeWrap,targetWrap,targetNote,save,status);
@@ -1369,7 +1377,10 @@ function showWishSaveFeedback({saved,member,query}){
   const panel=document.createElement('div');panel.className='product-watch-dialog-card';
   const heading=textElement('strong','',titles[language]||titles.EN);heading.id='wishSaveFeedbackTitle';
   const failure={JA:'通信または端末への保存に問題がありました。もう一度お試しください。',EN:'There was a connection or device storage problem. Please try again.',ZH:'网络或设备保存出现问题，请重试。',KO:'통신 또는 기기 저장에 문제가 있습니다. 다시 시도해 주세요.'};
-  panel.append(heading,textElement('p','watch-save-note',saved?(member?labels.memberBody:wishSavedCopy()):(failure[language]||failure.EN)),textElement('p','watch-save-note',query));
+  const limitNotice=saved?null:(typeof takeWishLimitNotice==='function'?takeWishLimitNotice():null);
+  if(limitNotice){heading.textContent={JA:'上限に達しています',EN:'Limit reached',ZH:'已达上限',KO:'상한에 도달했습니다'}[language]||'Limit reached';}
+  panel.append(heading,textElement('p','watch-save-note',saved?(member?labels.memberBody:wishSavedCopy()):(limitNotice?limitNotice.message:(failure[language]||failure.EN))),textElement('p','watch-save-note',query));
+  if(limitNotice){const manage=document.createElement('a');manage.href='#laterWishes';manage.className='watch-save-manage';manage.textContent={JA:'ホシってるものを整理する →',EN:'Manage saved searches →',ZH:'整理保存的条件 →',KO:'저장한 조건 정리 →'}[language]||'Manage →';manage.addEventListener('click',()=>dialog.close());panel.append(manage);}
   if(saved&&!member){
     const login=document.createElement('a');login.href='/login.html?source=continuous_search&next=%2F%23wishTitle';login.textContent=labels.login;panel.append(login);
   }
