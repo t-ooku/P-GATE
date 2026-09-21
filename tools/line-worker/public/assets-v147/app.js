@@ -1123,7 +1123,9 @@ function productImageGallery(candidate){
     .map(value=>String(value||'').trim())
     .filter((value,index,values)=>/^https:\/\//i.test(value)&&values.indexOf(value)===index)
     .slice(0,8)
-    .map(value=>upgradeProductImageUrl(value,300));
+    // 2026-09-21 大隆さん報告「提示段階の画像が荒い」: カードは 300px 幅で表示するが、スマホは
+    // 2〜3 倍の画素密度があるため 300px の画像では拡大されてぼやける。拡大表示と同じ 600px を要求する。
+    .map(value=>upgradeProductImageUrl(value,600));
   if(!urls.length)return null;
   const gallery=document.createElement('div');
   gallery.className='product-image-gallery';
