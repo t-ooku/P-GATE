@@ -1,0 +1,187 @@
+// 2026-09-22 大隆さん指示書「HOSHILU 検索結果UI統合改修」の画面側。
+//
+// 「ホシルからの提案」と「web検索から発見」を上下に分けず、**「見つかった商品」1本**で出す。
+// 並び順・重複排除・60件の上限はサーバー（src/unified-results.mjs）が決めている。
+// ここは決まった順番をそのまま描くだけで、並べ替えない（§28 位置が動くのを防ぐ）。
+//
+// カードは小さく（§10）。出すのは:
+//   ・商品画像 ・商品名（2行で切る）・ショップ名 ・ソースのバッジ
+//   ・HOSHILU商品だけ 価格 ・♡ ホシっとく
+// Web商品に価格は出さない。ページに書いてあった数字を読んだだけで、
+// HOSHILU が API で確認したものではないから（§7）。
+//
+// 12件ずつ出す（§11）。60枚の画像を最初から読み込ませない。
+const COPY = {
+  title: '見つかった商品',
+  found: (n) => `${n}件見つかりました`,
+  capped: (n) => `${n}件表示中`,
+  more: 'さらに見る',
+  narrow: '条件を絞ると、さらに近い商品を探せます。',
+  priceUnknown: '価格は商品ページで確認',
+  open: '商品を見る',
+  keep: '♡ ホシっとく',
+  kept: '♥ ホシっとく済み',
+  matched: (n) => `${n}条件一致`,
+  badge: { HOSHILU: 'HOSHILU', HOSHILU_SHOP: 'HOSHILU SHOP', WEB: 'Web' }
+};
+const PAGE = 12;
+
+const el = (tag, className, text) => {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
+
+let state = { items: [], shown: 0 };
+
+function keepButton(item) {
+  const button = el('button', 'unified-keep', COPY.keep);
+  button.type = 'button';
+  // ♡ の保存先は app.js が持っている（端末→会員）。ここでは呼ぶだけで、別の保存を作らない。
+  const keep = window.HoshiluKeep;
+  const candidate = {
+    asin: '', display_name: item.product_name, product_name: item.product_name,
+    image_url: item.image_url, product_url: item.url, marketplace: item.marketplace
+  };
+  const sync = () => {
+    const kept = Boolean(keep?.isKept?.(candidate));
+    button.classList.toggle('kept', kept);
+    button.textContent = kept ? COPY.kept : COPY.keep;
+  };
+  if (!keep?.toggle) return null;
+  sync();
+  button.addEventListener('click', () => { keep.toggle(candidate); sync(); });
+  document.addEventListener('hoshilu:kept-changed', sync);
+  return button;
+}
+
+function card(item) {
+  const article = el('article', `unified-card unified-card-${String(item.source || '').toLowerCase()}`);
+  article.setAttribute('role', 'listitem');
+  const link = el('a', 'unified-card-link');
+  link.href = item.url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.dataset.position = String(item.position || 0);
+  link.dataset.source = String(item.source || '');
+
+  const figure = el('div', 'unified-card-image');
+  if (item.image_url) {
+    const img = document.createElement('img');
+    img.src = item.image_url;
+    img.alt = '';
+    // 60件ぶんの画像を一度に取りに行かせない（§13）。
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.referrerPolicy = 'no-referrer';
+    // 画像が落ちても列全体を壊さない。枠だけ残して静かに畳む。
+    img.addEventListener('error', () => { img.remove(); figure.classList.add('is-empty'); }, { once: true });
+    figure.append(img);
+  } else {
+    figure.classList.add('is-empty');
+  }
+  link.append(figure);
+
+  const body = el('div', 'unified-card-body');
+  body.append(el('span', 'unified-card-name', item.product_name || ''));
+  const meta = el('div', 'unified-card-meta');
+  meta.append(el('span', `unified-badge unified-badge-${String(item.source || '').toLowerCase()}`,
+    COPY.badge[item.source] || COPY.badge.WEB));
+  if (item.shop_name) meta.append(el('span', 'unified-card-shop', item.shop_name));
+  body.append(meta);
+  // 価格は HOSHILU 商品だけ。Web は「商品ページで確認」とだけ書く（§7）。
+  if (Number(item.price_jpy) > 0) {
+    body.append(el('strong', 'unified-card-price', `¥${Number(item.price_jpy).toLocaleString('ja-JP')}`));
+  } else if (item.source === 'WEB') {
+    body.append(el('span', 'unified-card-price-unknown', COPY.priceUnknown));
+  }
+  // 一致条件は短く。全部並べてカードを大きくしない（§16）。
+  const matched = Array.isArray(item.matched) ? item.matched.filter(Boolean) : [];
+  if (matched.length) body.append(el('span', 'unified-card-matched', COPY.matched(matched.length)));
+  link.append(body);
+  article.append(link);
+
+  const keep = keepButton(item);
+  if (keep) article.append(keep);
+  return article;
+}
+
+// 「見つかった商品」は商品カードの並び（#resultCards）の直前に置く。
+// app.js を太らせないよう、枠はこのモジュールが作る。
+let host = null;
+function section() {
+  if (host && host.isConnected) return host;
+  const cards = document.querySelector('#resultCards');
+  if (!cards) return null;
+  host = document.createElement('section');
+  host.id = 'unifiedResults';
+  host.hidden = true;
+  host.setAttribute('aria-labelledby', 'unifiedResultsTitle');
+  cards.insertAdjacentElement('beforebegin', host);
+  return host;
+}
+
+// 1セクションにまとめるので、元の「ホシルからの提案」と「web検索から発見」は畳む（§1）。
+// レコメンド（関連商品）は別の話なので残す。
+function foldLegacySections(folded) {
+  for (const row of document.querySelectorAll('#resultCards .result-row-confirmed')) row.hidden = folded;
+  const google = document.querySelector('#googleMallResults');
+  if (google) google.classList.toggle('hidden', folded);
+}
+
+function renderMore(host, list) {
+  const remaining = state.items.length - state.shown;
+  host.querySelector('.unified-more')?.remove();
+  if (remaining <= 0) return;
+  const button = el('button', 'unified-more', COPY.more);
+  button.type = 'button';
+  button.addEventListener('click', () => {
+    const next = state.items.slice(state.shown, state.shown + PAGE);
+    list.append(...next.map(card));
+    state.shown += next.length;
+    renderMore(host, list);
+  });
+  host.append(button);
+}
+
+export function render(unified) {
+  const host = section();
+  if (!host) return;
+  const items = Array.isArray(unified?.items) ? unified.items : [];
+  state = { items, shown: 0 };
+  host.replaceChildren();
+  if (!items.length) { host.hidden = true; foldLegacySections(false); return; }
+  host.hidden = false;
+  foldLegacySections(true);
+
+  const head = el('div', 'unified-head');
+  const title = el('h2', 'unified-title', COPY.title);
+  title.id = 'unifiedResultsTitle';
+  head.append(title);
+  // 「全部で60件しかない」と誤解させない（§9）。上限で切ったときは「60件表示中」。
+  const count = unified.truncated ? COPY.capped(items.length) : COPY.found(items.length);
+  head.append(el('span', 'unified-count', count));
+  host.append(head);
+
+  const list = el('div', 'unified-list');
+  list.setAttribute('role', 'list');
+  const first = items.slice(0, PAGE);
+  list.append(...first.map(card));
+  state.shown = first.length;
+  host.append(list);
+  renderMore(host, list);
+
+  if (unified.truncated) host.append(el('p', 'unified-note', COPY.narrow));
+}
+
+document.addEventListener('hoshilu:results-rendered', (event) => {
+  const unified = event.detail?.unified_results;
+  if (!unified) {
+    const node = section();
+    if (node) { node.hidden = true; node.replaceChildren(); }
+    foldLegacySections(false);
+    return;
+  }
+  render(unified);
+});

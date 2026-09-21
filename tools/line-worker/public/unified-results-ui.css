@@ -1,0 +1,116 @@
+/* 2026-09-22 大隆さん指示書「検索結果UI統合改修」。
+   スマホは横スライド（1〜2商品＋次が少し見える）、PCは楽天市場のような複数列グリッド。
+   カードの高さをそろえ、商品名が長くてもレイアウトを崩さない（§2）。 */
+#unifiedResults{margin:14px 0 18px}
+#unifiedResults[hidden]{display:none}
+.unified-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.unified-title{margin:0;font-size:18px;line-height:1.3}
+.unified-count{color:var(--muted,#6d6b80);font-size:12px}
+.unified-note{margin:10px 0 0;color:var(--muted,#6d6b80);font-size:12px;line-height:1.6}
+
+.unified-card{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  border:1px solid var(--line,#e6e0f7);
+  border-radius:12px;
+  background:#fff;
+  overflow:hidden;
+}
+.unified-card-link{display:flex;flex-direction:column;gap:8px;padding:10px;color:inherit;text-decoration:none;flex:1 1 auto}
+.unified-card-image{
+  aspect-ratio:1/1;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:#fafafa;
+  overflow:hidden;
+}
+.unified-card-image img{width:100%;height:100%;object-fit:contain}
+.unified-card-image.is-empty{background:repeating-linear-gradient(135deg,#fafafa,#fafafa 8px,#f3f3f6 8px,#f3f3f6 16px)}
+.unified-card-body{display:grid;gap:4px;min-width:0}
+.unified-card-name{
+  font-size:12px;
+  line-height:1.4;
+  /* 商品名は2行で切る。長くてもカードの高さを揃える（§2） */
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  min-height:2.8em;
+}
+.unified-card-meta{display:flex;align-items:center;gap:6px;min-width:0}
+.unified-badge{
+  flex:0 0 auto;
+  padding:2px 7px;
+  border-radius:999px;
+  font-size:9.5px;
+  font-weight:800;
+  letter-spacing:.02em;
+}
+.unified-badge-hoshilu,.unified-badge-hoshilu_shop{background:#f3efff;color:#5140ba}
+.unified-badge-web{background:#f1f5f9;color:#475569}
+.unified-card-shop{
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:var(--muted,#6d6b80);
+  font-size:10.5px;
+}
+.unified-card-price{font-size:16px;line-height:1.2;color:#c90000}
+.unified-card-price-unknown{color:var(--muted,#6d6b80);font-size:10.5px}
+.unified-card-matched{color:#5140ba;font-size:10.5px;font-weight:700}
+.unified-keep{
+  margin:0 10px 10px;
+  padding:7px 8px;
+  border:1px solid #f7b7d2;
+  border-radius:8px;
+  background:#fff;
+  color:#d6337a;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+}
+.unified-keep.kept{background:#fdeef5;color:#c22a6b}
+.unified-more{
+  display:block;
+  margin:12px auto 0;
+  padding:10px 20px;
+  border:1px solid #ded7ff;
+  border-radius:8px;
+  background:#f7f4ff;
+  color:#5140ba;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* スマホ: 横スライド。2商品＋次が少し見える幅（§2・§9） */
+@media (max-width:760px){
+  .unified-list{
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    align-items:stretch;
+    gap:10px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain;
+    padding:2px 2px 8px;
+  }
+  .unified-card{flex:0 0 min(200px,43vw);width:min(200px,43vw);scroll-snap-align:start}
+}
+
+/* PC: 楽天市場のような複数列グリッド＋縦スクロール。横スクロールは使わない（§4） */
+@media (min-width:761px){
+  .unified-list{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (min-width:1000px){
+  .unified-list{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media (min-width:1360px){
+  .unified-list{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
