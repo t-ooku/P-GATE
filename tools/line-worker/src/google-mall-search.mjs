@@ -46,6 +46,21 @@ export const GOOGLE_MALL_HOSTS = Object.freeze([
 // §16: 商品詳細ページ以外は落とす。パス・クエリの型で判定（店ごとの細かい規則は追って足す）。
 const NON_PRODUCT_PATH = /(?:\/search|\/s\/?$|\/s\?|\/ranking|\/category|\/categories|\/brand\/?$|\/brands?\/|\/shop\/?$|\/help|\/guide|\/campaign|\/event|\/news|\/feature|\/tag\/|\/list\/?$|\/blog|\/magazine|\/article|\/faq|\/about|\/kids-category|\/women-category|\/men-category|[?&](?:k|q|keyword|p|s)=)/iu;
 
+// 2026-09-21 大隆さん報告（スクリーンショット「Amazon.co.jp: 燃焼系サプリメント - ダイエットサプリメント」）:
+// Amazon のカテゴリ（ブラウズノード）ページが商品として出ていた。Amazon は商品ページの形が
+// はっきりしている（/dp/ASIN か /gp/product/ASIN）ので、その形でなければ商品詳細とみなさない。
+// 形の分かるモールだけ、この厳しい判定を足す（推測はしない）。
+const STRICT_PRODUCT_PATH = Object.freeze({
+  AMAZON_JP: /\/(?:dp|gp\/product|gp\/aw\/d)\/[A-Z0-9]{10}(?:[/?#]|$)/iu
+});
+
+export function isGoogleMallProductPage(marketplace, pathAndSearch) {
+  const target = String(pathAndSearch || '');
+  const strict = STRICT_PRODUCT_PATH[String(marketplace || '')];
+  if (strict) return strict.test(target);
+  return !NON_PRODUCT_PATH.test(target);
+}
+
 export function googleMallSearchConfigured(env = {}) {
   return String(env.GOOGLE_AGENT_SEARCH_SA_JSON || '').trim().length >= 100
     && /^projects\/[0-9a-z-]+\/locations\/[a-z0-9-]+\/collections\/[a-z0-9_-]+\/engines\/[a-z0-9_-]+$/iu.test(String(env.GOOGLE_AGENT_SEARCH_ENGINE || '').trim())
@@ -78,17 +93,32 @@ function cleanText(value, limit) {
   return String(value || '').normalize('NFKC').replace(/<[^>]*>/gu, ' ').replace(/&nbsp;/gu, ' ').replace(/\s+/gu, ' ').trim().slice(0, limit);
 }
 
+// 2026-09-21 大隆さん報告「画像出てないよ」: Amazon・マツキヨのカードに商品写真ではなく
+// モールのロゴが出ていた。og:image はページが商品ページでもサイト共通のロゴを返すことが多く、
+// それを商品画像として出すと、その商品の見た目を偽って伝えることになる。
+// 商品として構造化された画像（product.image）を最優先し、ロゴ・既定 OGP 画像・アイコンと
+// 分かる URL は捨てる。捨てた結果 画像が無ければ、画面側はモール名のタイルへ落ちる。
+// ロゴを商品写真のふりをさせない。画像 URL の推測生成もしない。
+const NON_PRODUCT_IMAGE = /(?:social_share|[/_-]logo[/_.-]|logo\.(?:png|jpe?g|svg|webp)|ogp?[_-]?default|default[_-]ogp?|no[_-]?image|noimg|placeholder|apple-touch-icon|favicon|sprite)/iu;
+
+export function usableGoogleMallImage(value) {
+  const text = String(value || '').trim();
+  if (!/^https:\/\/[^\s"'<>]+$/iu.test(text) || text.length > 1000) return '';
+  return NON_PRODUCT_IMAGE.test(text) ? '' : text;
+}
+
 function firstImage(pagemap = {}) {
   const candidates = [
+    // 商品として構造化された画像が最も確からしい。og:image より先に見る。
+    pagemap?.product?.[0]?.image,
     pagemap?.cse_image?.[0]?.src,
     pagemap?.metatags?.[0]?.['og:image'],
     pagemap?.metatags?.[0]?.['twitter:image'],
-    pagemap?.product?.[0]?.image,
     pagemap?.cse_thumbnail?.[0]?.src
   ];
   for (const value of candidates) {
-    const text = String(value || '').trim();
-    if (/^https:\/\/[^\s"'<>]+$/iu.test(text) && text.length <= 1000) return text;
+    const usable = usableGoogleMallImage(value);
+    if (usable) return usable;
   }
   return '';
 }
@@ -166,7 +196,7 @@ export function parseGoogleMallItems(rows = []) {
       mall_label: mall.label,
       image_url: firstImage(item?.pagemap),
       listed_price_jpy: pageListedPrice(item?.pagemap),
-      product_page: !NON_PRODUCT_PATH.test(url.pathname + url.search)
+      product_page: isGoogleMallProductPage(mall.marketplace, url.pathname + url.search)
     };
     if (!entry.title) continue;
     (entry.product_page ? products : others).push(entry);
