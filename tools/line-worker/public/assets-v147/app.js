@@ -1248,6 +1248,8 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   const shopLink=shopLinkElement(candidate,elements.language.value);
   if(shopLink)card.append(shopLink);
   mediaActions.append(createKeepButton(candidate));
+  // 2026-09-21 指示書 §3「いつものにする」。ボタン本体は usual-hoshiru.mjs が足す（app.js を太らせない）。
+  document.dispatchEvent(new CustomEvent('hoshilu:product-card-actions',{detail:{candidate,container:mediaActions}}));
   const watch=createWatchOptions(candidate,t);
   card.append(watch.dialog);
   window.HoshiluPriceComparison?.attach(card,{...candidate,search_query:searchQuery||candidate.search_query||'',search_category:searchQuery||candidate.search_category||candidate.related_category||''});

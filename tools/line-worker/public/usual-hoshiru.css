@@ -1,0 +1,53 @@
+/* 2026-09-21 指示書 §2〜§11「いつものホシル」。値下がり待ちと同じ見た目の作法に揃える。 */
+.usual-hoshiru{margin-top:22px;padding-top:20px;border-top:1px solid var(--line,#e9e5f5)}
+.usual-heading{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.usual-heading h3{margin:0;font-size:16px}
+.usual-count{color:var(--muted,#6d6b80);font-size:13px;font-weight:700}
+#usualDescription{margin:6px 0 12px;color:#4a4860;font-size:13px;line-height:1.7}
+.usual-list{display:grid;gap:10px;min-width:0}
+.usual-list .empty{margin:0;color:#6b6880;font-size:13px}
+
+.usual-row{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;padding:12px;border:1px solid var(--line,#e9e5f5);border-radius:14px;background:rgba(115,87,255,.05)}
+.usual-row-media{width:64px;height:64px;border-radius:10px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center}
+.usual-row-media img{width:100%;height:100%;object-fit:contain}
+.usual-row-media-fallback{color:var(--muted,#6d6b80);font-size:15px;font-weight:800}
+.usual-row-body{display:grid;gap:4px;min-width:0}
+.usual-row-name{font-weight:800;color:#211b3b;font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.usual-row-state{font-weight:800;font-size:15px;color:#211b3b}
+.usual-state-plenty{color:#4a4860}
+.usual-state-soon{color:#8a6a00}
+.usual-state-nearly{color:#b4590a}
+.usual-state-buy_now{color:#1b7f4c}
+.usual-row-meta{color:var(--muted,#6d6b80);font-size:12px}
+.usual-row-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.usual-row-bought{border:0;border-radius:10px;background:var(--soft,#f4f0ff);color:#5140ba;padding:8px 14px;cursor:pointer;font-weight:800;font-size:13px}
+.usual-row-bought:disabled{opacity:.6}
+.usual-row-stop{border:1px solid var(--line,#e9e5f5);border-radius:10px;background:#fff;color:#6d6b80;padding:8px 11px;cursor:pointer;font-size:13px}
+
+/* §11 今週の補充 */
+.usual-week{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line,#e9e5f5)}
+.usual-week-title{margin:0 0 8px;font-size:14px;color:#211b3b}
+.usual-week-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.usual-week-list li{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.usual-week-name{color:#211b3b;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.usual-week-days{color:var(--muted,#6d6b80);flex:0 0 auto}
+
+/* 商品カードの「いつものにする」 */
+.usual-make-button{border:1px solid var(--line,#e9e5f5);border-radius:12px;background:#fff;color:#5140ba;padding:9px 12px;cursor:pointer;font-weight:800;font-size:13px}
+
+/* §4 補充周期を選ぶ */
+.usual-cycle-dialog{border:0;border-radius:18px;padding:0;max-width:min(420px,92vw);width:100%}
+.usual-cycle-dialog::backdrop{background:rgba(23,23,43,.45)}
+.usual-cycle-panel{position:relative;padding:20px;display:grid;gap:10px}
+.usual-cycle-close{position:absolute;top:10px;right:10px;border:0;background:none;font-size:18px;color:#6d6b80;cursor:pointer}
+.usual-cycle-title{font-size:17px;color:#211b3b}
+.usual-cycle-product{margin:0;color:#4a4860;font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.usual-cycle-choices{display:flex;flex-wrap:wrap;gap:8px}
+.usual-cycle-choice{border:1px solid var(--line,#e9e5f5);border-radius:999px;background:#fff;color:#4a4860;padding:9px 16px;cursor:pointer;font-weight:800;font-size:14px}
+.usual-cycle-choice.on{border-color:transparent;background:var(--soft,#f4f0ff);color:#5140ba}
+.usual-cycle-custom{display:flex;align-items:center;gap:8px;font-size:13px;color:#4a4860}
+.usual-cycle-custom input{width:90px;padding:8px 10px;border:1px solid var(--line,#e9e5f5);border-radius:10px;font-size:14px}
+.usual-cycle-note{margin:0;color:var(--muted,#6d6b80);font-size:12px;line-height:1.6}
+.usual-cycle-save{margin-top:4px;border:0;border-radius:12px;background:linear-gradient(90deg,#f2569b,#7357ff,#2fb6f3);color:#fff;padding:13px;cursor:pointer;font-weight:800;font-size:15px}
+.usual-cycle-save:disabled{opacity:.6}
+.usual-cycle-status{margin:0;color:#b4270a;font-size:13px;line-height:1.6}
