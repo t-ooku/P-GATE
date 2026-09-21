@@ -1,0 +1,168 @@
+/* 2026-09-21 大隆さん指示「見た目はInstagramに寄せて」。
+ *
+ * 方針: レイアウトは変えない。色・角丸・影・グラデーションだけを整える。
+ * 既存の CSS を20枚書き換えると壊すので、最後に1枚だけ重ねて上書きする。
+ * 外したくなったら index.html からこの1行を消せば元に戻る。
+ *
+ * Instagram の見た目の要点:
+ *   ・背景は白。グラデーションの地を敷かない
+ *   ・枠は 1px の薄いグレー。影は使わない
+ *   ・角丸は控えめ（カード 12px、ボタン 8px、丸ボタンだけ 999px）
+ *   ・文字は黒に近いグレー、補助はもっと薄いグレー
+ *   ・色は1色だけアクセントに使う（HOSHILU は紫のまま。ただしベタ塗りにする）
+ *   ・太字は見出しと操作だけ。本文は 400〜500
+ */
+:root{
+  --ig-bg:#fff;
+  --ig-ink:#262626;
+  --ig-muted:#8e8e8e;
+  --ig-line:#dbdbdb;
+  --ig-soft:#fafafa;
+  --ig-accent:#7357ff;
+  --ig-radius:12px;
+  --ig-radius-sm:8px;
+  /* 既存の変数もこの体系へ寄せる。参照している全CSSがまとめて落ち着く。 */
+  --ink:var(--ig-ink);
+  --muted:var(--ig-muted);
+  --line:var(--ig-line);
+  --soft:var(--ig-soft);
+  --paper:#fff;
+  --canvas:#fff;
+}
+
+/* 地のグラデーションをやめて白に */
+body{background:var(--ig-bg) !important;color:var(--ig-ink)}
+
+/* 影を全部落とす（Instagram は影を使わない） */
+body *{box-shadow:none !important}
+
+/* カード類: 白地・1px の線・控えめな角丸 */
+.insight-card,.kept-products,.product-card,.values article,.seller-panel,
+.auth-card,.form-shell,.google-mall-card,.usual-row,.entrusted-row,
+.shop-card,.buzz-card,.sale-card{
+  border:1px solid var(--ig-line) !important;
+  border-radius:var(--ig-radius) !important;
+  background:#fff !important;
+}
+
+/* 薄紫の塗りをやめて白に（値下がり待ち・いつものホシルの行） */
+.entrusted-row,.usual-row{background:#fff !important}
+
+/* ボタン: グラデーションをやめてベタ塗り。角丸は 8px */
+button,.primary,.submit,.auth-button,.ghost-button,a.primary{
+  border-radius:var(--ig-radius-sm) !important;
+  font-weight:600;
+}
+.watch-save-button,.usual-cycle-save,.submit,.primary,.auth-button,
+.continuous-search-button,.hero-watch-submit,#searchSubmit,button[type="submit"]{
+  background:var(--ig-accent) !important;
+  color:#fff !important;
+  border:0 !important;
+}
+.ghost-button,.secondary,.usual-row-bought,.entrusted-row-search{
+  background:var(--ig-soft) !important;
+  color:var(--ig-accent) !important;
+  border:1px solid var(--ig-line) !important;
+}
+.usual-row-stop,.entrusted-row-remove,.usual-make-button{
+  background:#fff !important;
+  color:var(--ig-ink) !important;
+  border:1px solid var(--ig-line) !important;
+}
+
+/* 丸い形が意味を持つものだけ 999px を残す */
+.shop-chip,.google-mall-card-mall,.google-mall-card-kind,.usual-cycle-choice,
+.checks label,.login-link,.hoshi-status a,.hoshi-status button{
+  border-radius:999px !important;
+}
+
+/* 見出しのグラデーション文字をやめる */
+.hero h1 span,h1 span,h2 span{
+  background:none !important;
+  -webkit-background-clip:initial !important;
+  color:var(--ig-ink) !important;
+}
+
+/* 区切りは 1px の線だけ */
+.entrusted-watches,.usual-hoshiru,.later-wishes,.mywatch-hub{
+  border-top:1px solid var(--ig-line) !important;
+}
+
+/* 画像は白地に収める（モールのロゴが浮かないように） */
+.usual-row-media,.entrusted-row-media,.google-mall-card-image{
+  background:#fff !important;
+  border:1px solid var(--ig-line) !important;
+  border-radius:var(--ig-radius-sm) !important;
+}
+
+/* 下タブ: 白地＋上に1px。選択中はアクセント色の文字だけで塗らない */
+.tab-bar,.tab-nav,.sticky-nav,nav[role="tablist"]{
+  background:#fff !important;
+  border-top:1px solid var(--ig-line) !important;
+}
+/* 選択中は塗らない。色のついた文字とアイコンだけで示す（Instagram の下タブと同じ）。 */
+.tab-bar-item.active,.tab-bar-item[aria-selected="true"],.tab-nav .on,nav[role="tablist"] .on{
+  background:transparent !important;
+  color:var(--ig-ink) !important;
+}
+
+/* 入力: 薄いグレーの地に 1px。フォーカスは線の色だけ変える */
+input,select,textarea{
+  border:1px solid var(--ig-line) !important;
+  border-radius:var(--ig-radius-sm) !important;
+  background:var(--ig-soft) !important;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--ig-ink) !important;
+  background:#fff !important;
+}
+
+/* ダイアログも同じ体系に */
+dialog{border:1px solid var(--ig-line) !important;border-radius:var(--ig-radius) !important}
+dialog::backdrop{background:rgba(0,0,0,.65)}
+
+/* 本文の太字を落とす。見出しと操作だけ太く残す */
+p,span,small,li{font-weight:400}
+h1,h2,h3,h4,strong,b,button,.usual-row-name,.entrusted-row-name{font-weight:600}
+h1,h2{letter-spacing:-.02em}
+
+/* §31 需要チェック（/for-sellers）。Instagram 寄せの体系で。 */
+.demand-check{margin:56px 0;padding:24px;border:1px solid var(--ig-line);border-radius:var(--ig-radius);background:#fff}
+.demand-check h2{margin:0 0 8px;font-size:clamp(22px,4vw,34px)}
+.demand-check>p{margin:0 0 18px;color:var(--ig-muted);line-height:1.8}
+#demandCheckForm{display:flex;gap:8px;flex-wrap:wrap}
+#demandCheckQuery{flex:1 1 220px;min-width:0}
+#demandCheckForm button{flex:0 0 auto;padding:13px 22px}
+.demand-check-query{margin:20px 0 10px;font-weight:600;color:var(--ig-ink)}
+.demand-check-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--ig-line);border:1px solid var(--ig-line);border-radius:var(--ig-radius-sm);overflow:hidden}
+.demand-check-stat{display:grid;gap:4px;padding:16px 12px;background:#fff;text-align:center}
+.demand-check-number{font-size:22px;font-weight:600;color:var(--ig-ink)}
+.demand-check-label{font-size:12px;color:var(--ig-muted)}
+.demand-check-note{margin:12px 0 0;color:var(--ig-muted);font-size:13px;line-height:1.8}
+.demand-check-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.demand-check-actions a{padding:13px 20px;text-decoration:none;text-align:center}
+.demand-check-actions .ghost{border:1px solid var(--ig-line);border-radius:var(--ig-radius-sm);color:var(--ig-ink);background:#fff}
+@media(max-width:640px){.demand-check-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* 画面に出さないラベル（読み上げ用）。for-sellers 側に定義が無かったので、ここで足す。 */
+.visually-hidden{position:absolute !important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Instagram は「1画面に塗りつぶしボタンは1つ」。副次の操作は白地＋線にする。
+   トップに紫のボタンが2つ並ぶと、どちらを押せばいいか分からなくなる。 */
+#submitButton,#rankingSearchButton,.hero-actions .ghost,.secondary,
+.direct-search-button,.ranking-search-button{
+  background:#fff !important;
+  color:var(--ig-ink) !important;
+  border:1px solid var(--ig-line) !important;
+}
+
+/* 例示のチップ: 薄紫の塗りをやめて白地＋線に */
+.chip,.quick-queries button,.example-chip,.suggest-chip,
+.wish-list button,.genre-chip{
+  background:#fff !important;
+  color:var(--ig-ink) !important;
+  border:1px solid var(--ig-line) !important;
+}
+
+/* 本文中の色つき強調をやめる（Instagram は本文に色を使わない） */
+p strong,li strong{color:inherit !important}

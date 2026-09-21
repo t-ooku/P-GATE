@@ -68,6 +68,7 @@ import { aiChatCandidatePreviews } from './ai-chat-preview.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { handleMemberUsualRoutes } from './member-usual.mjs';
+import { handleSellerDemandCheckRoute } from './seller-demand-check.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
 import { handleShopDemandRoutes, runShopDemandRematch } from './shop-demand.mjs';
@@ -3600,6 +3601,9 @@ export default {
     // /api/member/wishes/* より先に判定する必要はない（prefix が重ならない）。
     const usualResponse = await handleMemberUsualRoutes(request, env);
     if (usualResponse) return usualResponse;
+    // 2026-09-21 指示書 §31「需要チェック」。/for-sellers の検索窓から呼ぶ公開集計。
+    const demandCheckResponse = await handleSellerDemandCheckRoute(request, env);
+    if (demandCheckResponse) return demandCheckResponse;
     const saleResponse = await handleMarketplaceSaleRoutes(request, env);
     if (saleResponse) return saleResponse;
     const buzzNotificationResponse = await handleBuzzNotificationRoutes(request, env);
