@@ -117,3 +117,6 @@
 .demand-lane-item span{color:#696174;font-size:.78rem;line-height:1.6}
 .demand-lane-item .compact-button{justify-self:start;margin-top:4px;text-decoration:none}
 @media(max-width:900px){.three-demands{grid-template-columns:1fr}}
+/* §40 無料期間レポート。need-to-know だけ。数えられない項目は「計測不能」と出す。 */
+.demand-lane-value{margin:0;font-size:26px;font-weight:700;color:#262626;line-height:1.2}
+#free-period[hidden]{display:none}

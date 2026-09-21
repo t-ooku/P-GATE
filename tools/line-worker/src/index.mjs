@@ -70,6 +70,7 @@ import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { handleMemberUsualRoutes } from './member-usual.mjs';
 import { handleMemberTodayRoute } from './today-hoshilu.mjs';
 import { handleSellerDemandCheckRoute } from './seller-demand-check.mjs';
+import { handleSellerFreePeriodReportRoute } from './seller-free-period-report.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
 import { handleShopDemandRoutes, runShopDemandRematch } from './shop-demand.mjs';
@@ -3608,6 +3609,9 @@ export default {
     // 2026-09-21 指示書 §31「需要チェック」。/for-sellers の検索窓から呼ぶ公開集計。
     const demandCheckResponse = await handleSellerDemandCheckRoute(request, env);
     if (demandCheckResponse) return demandCheckResponse;
+    // 2026-09-21 指示書 §40「無料3か月終了時」。契約者本人の実数だけを返す（読み取り専用）。
+    const freePeriodResponse = await handleSellerFreePeriodReportRoute(request, env);
+    if (freePeriodResponse) return freePeriodResponse;
     const saleResponse = await handleMarketplaceSaleRoutes(request, env);
     if (saleResponse) return saleResponse;
     const buzzNotificationResponse = await handleBuzzNotificationRoutes(request, env);

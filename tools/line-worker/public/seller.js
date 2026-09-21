@@ -453,3 +453,43 @@ document.querySelector('#sellerDemandMatchBudgetForm')?.addEventListener('submit
   } catch (error) { showDemandMatchStatus(`保存できませんでした（${error.message}）`, true); }
 });
 loadDemandMatch();
+
+// 2026-09-21 指示書 §40「無料3か月終了時」。
+// この3か月で実際に何が起きたかを実数だけで出す。数えられなかった項目は 0 と書かず
+// 「計測不能」と出す。見込み売上・推定効果は出さない（クリックは売上ではない）。
+function renderFreePeriod(data) {
+  const host = document.querySelector('#sellerFreePeriod');
+  const section = document.querySelector('#free-period');
+  const note = document.querySelector('#sellerFreePeriodNote');
+  if (!host || !section) return;
+  if (!data || data.ok !== true || data.available !== true) { section.hidden = true; return; }
+  host.replaceChildren();
+  for (const metric of Array.isArray(data.metrics) ? data.metrics : []) {
+    const card = demandNode('article', 'demand-lane');
+    card.append(demandNode('span', 'demand-lane-title', metric.label || ''));
+    const value = demandNode('p', 'demand-lane-value');
+    value.textContent = metric.measurable === true ? Number(metric.value).toLocaleString('ja-JP') : '計測不能';
+    card.append(value);
+    card.append(demandNode('p', 'demand-lane-note', metric.measurable === true
+      ? (metric.note || '')
+      : 'この項目はまだ数えられていません。0件という意味ではありません。'));
+    host.append(card);
+  }
+  const period = data.window || {};
+  const day = (value) => {
+    const date = new Date(value);
+    return Number.isFinite(date.getTime())
+      ? new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeZone: 'Asia/Tokyo' }).format(date) : '';
+  };
+  if (note) {
+    const range = day(period.start_at) && day(period.end_at) ? `${day(period.start_at)}〜${day(period.end_at)}` : '';
+    const price = Number(data.monthly_price_jpy) > 0 ? `無料期間のあとは月額 ${Number(data.monthly_price_jpy).toLocaleString('ja-JP')}円（税込）です。` : '';
+    note.textContent = `${range ? `対象期間: ${range}。` : ''}${price}売上・注文・掲載順位は保証しません。`;
+  }
+  section.hidden = false;
+}
+(async () => {
+  if (!document.querySelector('#sellerFreePeriod')) return;
+  try { renderFreePeriod(await shopRequest('/api/seller/free-period-report')); }
+  catch { document.querySelector('#free-period')?.setAttribute('hidden', ''); }
+})();

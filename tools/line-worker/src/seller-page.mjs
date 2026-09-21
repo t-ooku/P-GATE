@@ -352,7 +352,7 @@ export async function sellerPageResponse(
   <p>契約プラン: <strong>${publicPlan}</strong> / 対象店舗: ${tenantSummary}</p>
   <p class="section-intro">商品情報、HOSHILUから各モールへの送客、優先出品の設定、確定した請求状況を確認する画面です。表示する件数は項目ごとに集計対象が異なるため、各数字の下にある説明もあわせて確認してください。</p>
   <nav class="seller-actions" aria-label="管理メニュー">
-  <a class="primary-button" href="#three-demands">今の需要</a><a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
+  <a class="primary-button" href="#three-demands">今の需要</a><a class="primary-button" href="#free-period">無料期間</a><a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
   <a class="primary-button" href="#catalog">商品管理</a><a class="primary-button" href="#offers">購入先管理</a><a class="primary-button" href="#demand">需要分析</a>
   <a class="primary-button" href="#integration">データ連携</a><a class="primary-button" href="#plan">契約プラン</a></nav></section>
 
@@ -377,6 +377,13 @@ export async function sellerPageResponse(
   <article class="seller-panel"><span>優先出品</span><strong>${priorityState}</strong><span>保存済みの対象指定 ${number(inclusionRules.length)}件</span><p class="metric-help">対象指定の件数であり、対象商品数や優先表示回数ではありません。残高未接続時は設定済みでも優先表示されません。</p></article>
   <article class="seller-panel"><span>過去30日の総送客クリック</span><strong>${number(referralClicks)}</strong><span>匿名セッション ${number(referralSessions)}件</span><p class="metric-help">HOSHILUから販売先の商品ページへ移動した回数です。売上件数や購入者数ではありません。</p></article>
   </section>
+
+  <!-- 2026-09-21 指示書 §40「無料3か月終了時」。この3か月で実際に何が起きたかを実数だけで出す。
+       数えられなかった項目は 0 と書かず「計測不能」と出す。見込み売上は出さない。 -->
+  <section class="auth-card" id="free-period" hidden><p class="eyebrow">FREE PERIOD</p><h2>無料期間のあいだに起きたこと</h2>
+  <p class="section-intro">続けるかどうかは、この実数を見てから決めてください。クリックは売上ではありません。売上・注文・掲載順位は保証しません。</p>
+  <div id="sellerFreePeriod" class="three-demands"></div>
+  <p id="sellerFreePeriodNote" class="metric-help"></p></section>
 
   <section class="auth-card" id="performance"><p class="eyebrow">PERFORMANCE &amp; BILLING</p><h2>送客成果と消化状況</h2>
   <p>自然検索からの送客は課金しません。消化額には、不正・重複を除外して請求台帳で確定した優先出品クリックだけを集計します。</p>
