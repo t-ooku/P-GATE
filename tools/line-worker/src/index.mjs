@@ -67,6 +67,7 @@ import { handleCreatorKpiRoutes } from './creator-kpi.mjs';
 import { aiChatCandidatePreviews } from './ai-chat-preview.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
+import { handleMemberUsualRoutes } from './member-usual.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
 import { handleShopDemandRoutes, runShopDemandRematch } from './shop-demand.mjs';
@@ -3595,6 +3596,10 @@ export default {
     if (spApiSellerResponse) return spApiSellerResponse;
     const wishResponse = await handleMemberWishRoutes(request, env);
     if (wishResponse) return wishResponse;
+    // 2026-09-21 指示書 §2〜§11「いつものホシル」。/api/member/usual/* は
+    // /api/member/wishes/* より先に判定する必要はない（prefix が重ならない）。
+    const usualResponse = await handleMemberUsualRoutes(request, env);
+    if (usualResponse) return usualResponse;
     const saleResponse = await handleMarketplaceSaleRoutes(request, env);
     if (saleResponse) return saleResponse;
     const buzzNotificationResponse = await handleBuzzNotificationRoutes(request, env);
