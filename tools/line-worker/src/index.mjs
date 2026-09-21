@@ -68,6 +68,7 @@ import { aiChatCandidatePreviews } from './ai-chat-preview.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { handleMemberUsualRoutes } from './member-usual.mjs';
+import { handleMemberTodayRoute } from './today-hoshilu.mjs';
 import { handleSellerDemandCheckRoute } from './seller-demand-check.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
@@ -3601,6 +3602,9 @@ export default {
     // /api/member/wishes/* より先に判定する必要はない（prefix が重ならない）。
     const usualResponse = await handleMemberUsualRoutes(request, env);
     if (usualResponse) return usualResponse;
+    // 2026-09-21 指示書 §37「今日のHOSHILU」。保存済みの事実をまとめて返すだけ（読み取り専用）。
+    const todayResponse = await handleMemberTodayRoute(request, env);
+    if (todayResponse) return todayResponse;
     // 2026-09-21 指示書 §31「需要チェック」。/for-sellers の検索窓から呼ぶ公開集計。
     const demandCheckResponse = await handleSellerDemandCheckRoute(request, env);
     if (demandCheckResponse) return demandCheckResponse;

@@ -24,6 +24,8 @@ const EXPECTED = Object.freeze({
   'buzz-home.mjs': '9',
   'google-mall-results.css': '5',
   'google-mall-results.mjs': '4',
+  'today-hoshilu.css': '1',
+  'today-hoshilu.mjs': '1',
   'usual-hoshiru.css': '2',
   'usual-hoshiru.mjs': '2',
   'instagram-look.css': '2'
