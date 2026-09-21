@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 // 2026-09-15 指示書 §8/§9「ホシってるもの」: 預けている「欲しい」を
 // 探しています／見つかりました／値下がり待ち／あとで見る の4状態に分ける。
@@ -50,7 +51,7 @@ test('希望価格到達(PRICE_DROP)の未読通知は「見つかりました�
 test('トップの保存ハブは「ホシってるもの」を見出しにし、4状態の枠を持つ',()=>{
   assert.match(html,/<h2 id="insightTitle">ホシってるもの<\/h2>/);
   assert.match(html,/<div id="hoshiStatus" class="hoshi-status"/);
-  assert.ok(html.includes('href="/mywatch.css?v=11"'));
-  assert.ok(html.includes('src="/assets-v147/app.js?v=186"'));
+  assert.ok(hasVersionedAsset(html, 'mywatch.css'));
+  assert.ok(hasVersionedAsset(html, 'assets-v147/app.js'));
   assert.equal(readFileSync(new URL('../public/app.js',import.meta.url),'utf8'),readFileSync(new URL('../public/assets-v147/app.js',import.meta.url),'utf8'));
 });

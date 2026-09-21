@@ -7,6 +7,7 @@ import { handleMemberRoutes } from '../src/member-auth.mjs';
 import { linkEmailDestination, requestEmailCode, verifyEmailCode } from '../src/member-email-auth.mjs';
 import { linkMemberNotificationIdentity, resolveMemberIdentityAlias, storeMemberRegistrationDestination } from '../src/member-notification-delivery.mjs';
 import { normalizeMemberRegistrationContext } from '../src/member-registration-telemetry.mjs';
+import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 globalThis.crypto ??= cryptoModule.webcrypto;
 globalThis.btoa ??= value => Buffer.from(value, 'binary').toString('base64');
@@ -464,7 +465,7 @@ test('member login page sends only anonymous growth context to both verified reg
   const client = readFileSync(new URL('../public/member-login.js', import.meta.url), 'utf8');
   const page = readFileSync(new URL('../public/login.html', import.meta.url), 'utf8');
   assert.match(page, /<script type="module" src="\/member-login\.js\?v=2"><\/script>/u);
-  assert.match(page, /growth-analytics\.mjs\?v=15/u);
+  assert.ok(hasVersionedAsset(page, 'growth-analytics.mjs'));
   assert.match(client, /growthVisitorId\(\)/u);
   assert.match(client, /growthSessionId\(\)/u);
   assert.match(client, /registration_context:registrationContext/u);

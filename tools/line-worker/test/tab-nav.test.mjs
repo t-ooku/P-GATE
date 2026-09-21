@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 // 2026-09-16 大隆さん指示: 下部固定メニュー（探す／ショップ／ホシる中／セール／マイアカウント）と上部のページ名帯
 const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url), 'utf8');
@@ -61,7 +62,7 @@ test('「いまの価格を見る」は「探す」タブを開いて検索を�
   assert.match(app, /function focusSearch\(\)\{window\.HoshiluTabs\?\.activate\('search',\{scroll:false\}\);/);
   assert.match(app, /function submitSearchNow\(\)\{window\.HoshiluTabs\?\.activate\('search',\{scroll:false\}\);/);
   assert.match(app, /again\.textContent='いまの価格を見る';\n\s*again\.addEventListener\('click',\(\)=>\{elements\.query\.value=name;elements\.clear\.classList\.remove\('hidden'\);submitSearchNow\(\);\}\);/);
-  assert.match(read('index.html'), /app\.js\?v=186/);
+  assert.ok(hasVersionedAsset(read('index.html'), 'assets-v147/app.js'));
 });
 
 // 2026-09-17: 検索欄の「ショップから探す」ボタンも、ショップ一覧が「ショップ」タブ内に隠れているので先にタブを開く。
@@ -82,7 +83,7 @@ test('「探す」ではページ名の帯を出さず、検索候補に種別�
   const app = read('app.js');
   assert.match(app, /resultCards\.push\(rows\[0\]\);\s*const quickStrip=marketplaceQuickStrip\(result\);\s*if\(quickStrip\)resultCards\.push\(quickStrip\);/);
   const html = read('index.html');
-  for (const asset of ['tab-nav.css?v=3', 'tab-nav.mjs?v=10', 'search-suggest.mjs?v=3', 'app.js?v=186']) assert.ok(html.includes(asset), asset);
+  for (const asset of ['tab-nav.css', 'tab-nav.mjs', 'search-suggest.mjs', 'assets-v147/app.js']) assert.ok(hasVersionedAsset(html, asset), asset);
 });
 
 // 2026-09-17 大隆さん指示: 検索枠の「検索方法」見出しを削除し、余白を上に詰める。
@@ -91,7 +92,7 @@ test('検索枠に「検索方法」の見出しが無く、フォームが枠�
   assert.doesNotMatch(html, /id="searchStep"/);
   assert.match(html, /<section id="hoshiluSearch" class="search-panel" aria-labelledby="searchTitle">\s*<!--[^>]*-->\s*<form id="knowledgeForm">/);
   assert.match(read('app.js'), /if\(elements\.searchStep\)elements\.searchStep\.textContent=modes\.step;/);
-  assert.ok(html.includes('app.js?v=186'));
+  assert.ok(hasVersionedAsset(html, 'assets-v147/app.js'));
 });
 
 // 2026-09-17 大隆さん指示: 主 CTA は「AIで探す」。検索欄の長方形枠は縦を縮めて上に寄せる。
@@ -114,7 +115,7 @@ test('商品画像はカード・拡大とも 600px を画像サーバーに要�
   assert.match(app, /window\.HoshiluImage=\{upgrade:upgradeProductImageUrl\};/);
   assert.match(read('buzz-home.mjs'), /window\.HoshiluImage\?\.upgrade\(text\(item\.image_url\), 300\)/);
   const html = read('index.html');
-  assert.ok(html.includes('app.js?v=186') && html.includes('buzz-home.mjs?v=9'));
+  for (const asset of ['assets-v147/app.js', 'buzz-home.mjs']) assert.ok(hasVersionedAsset(html, asset), asset);
 });
 
 // 2026-09-17 大隆さん報告: 「値下がり待ち」に削除ボタンがない。各行に「やめる」（会員 DB の wish を削除）を付ける。
@@ -124,7 +125,7 @@ test('「値下がり待ち」の各行に「やめる」があり、押すと w
   assert.match(app, /await deleteWish\(String\(item\.query_text\|\|name\)\);renderWishes\(\);/);
   assert.match(read('mywatch.css'), /\.entrusted-row-remove\{/);
   const html = read('index.html');
-  assert.ok(html.includes('app.js?v=186') && html.includes('mywatch.css?v=11'));
+  for (const asset of ['assets-v147/app.js', 'mywatch.css']) assert.ok(hasVersionedAsset(html, asset), asset);
 });
 
 
@@ -136,8 +137,7 @@ test('ホシる中のカードは余白を詰め、気になる商品の空状�
   assert.match(css, /#insight #keptProducts\.kept-in-insight\{[^}]*border:0;border-top:1px solid var\(--line\)/);
   assert.match(css, /#insight #keptProducts\.kept-in-insight \.step\{display:none\}/);
   const html = read('index.html');
-  assert.ok(html.includes('mywatch.css?v=11'));
-  assert.ok(html.includes('tab-nav.mjs?v=10'));
+  for (const asset of ['mywatch.css', 'tab-nav.mjs']) assert.ok(hasVersionedAsset(html, asset), asset);
 });
 
 

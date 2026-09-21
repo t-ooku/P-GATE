@@ -13,6 +13,10 @@ const EVENTS = new Set([
   'experience_posted',
   // 2026-09-04 ショップページ: 閲覧・フォロー・クーポン遷移（Worker が記録）
   'shop_viewed',
+  // 2026-09-21: shop_viewed は HTML 配信時にサーバーが記録するため visitor_id/session_id が空で、
+  // 人の閲覧とクローラを構造的に区別できない。ブラウザが実際に描画した閲覧だけをこの別イベントで
+  // 数え、KPI が「計測できた閲覧」と「計測不能」を分けられるようにする（shop_viewed は据え置き）。
+  'shop_view_confirmed',
   'shop_followed',
   'shop_unfollowed',
   'coupon_clicked',

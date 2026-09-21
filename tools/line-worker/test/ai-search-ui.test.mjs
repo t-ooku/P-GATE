@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 const read = (name) => readFile(new URL(`../public/${name}`, import.meta.url), 'utf8');
 
@@ -134,7 +135,8 @@ test('v4.2項目4: AI関連の表示文言はすべて「AIで探す」/「AIチ
 
 test('AIチャットのmodule scriptは直前のapp.jsタグに吸収されず、修正版URLで独立して読み込まれる', async () => {
   const html = await read('index.html');
-  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=186"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=16"><\/script>/);
+  // 版番号は test/asset-versions.test.mjs で pin する。ここは「2つのタグが隣接して独立している」ことだけを見る。
+  assert.match(html, /<script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script><script type="module" src="\/ai-search-ui\.mjs\?v=\d+"><\/script>/);
   assert.doesNotMatch(html, /src="\/app\.js\?v=100"<\/script>/);
 });
 

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 const publicRoot = new URL('../public/', import.meta.url);
 const read = (name) => readFile(new URL(name, publicRoot), 'utf8');
@@ -20,9 +21,7 @@ test('versioned UI assets are exact copies of their canonical files', async () =
 test('index loads the atomic versioned app and layout assets', async () => {
   const html = await read('index.html');
 
-  assert.ok(html.includes('href="/assets-v126/ai-search-layout-fix.css?v=133"'));
-  assert.ok(html.includes('src="/assets-v147/app.js?v=186"'));
-  assert.ok(html.includes('src="/site-i18n.js?v=9"'));
+  for (const asset of ['assets-v126/ai-search-layout-fix.css', 'assets-v147/app.js', 'site-i18n.js']) assert.ok(hasVersionedAsset(html, asset), asset);
   assert.equal(html.includes('href="/ai-search-layout-fix.css?v=133"'), false);
   assert.equal(html.includes('src="/app.js?v=151"'), false);
   assert.equal(html.includes('/assets-v146/app.js'), false);

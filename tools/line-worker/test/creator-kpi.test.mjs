@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { creatorKpiSummary, creatorTrackingUrl, handleCreatorKpiRoutes } from '../src/creator-kpi.mjs';
 import { classifyGrowthTraffic, creatorSafeId, handleGrowthEvent, normalizeGrowthEvent } from '../src/growth-events.mjs';
+import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 function d1(db) {
   return { prepare(sql) { const statement = db.prepare(sql); let values = [];
@@ -98,7 +99,7 @@ test('クライアントは creator パラメータを30日引き継ぎ、管理
   assert.match(analytics, /params\.get\('creator_id'\)/u);
   assert.match(analytics, /30 \* 24 \* 60 \* 60 \* 1000/u);
   for (const page of ['index.html', 'login.html', 'buzz.html']) {
-    assert.match(readFileSync(new URL(`../public/${page}`, import.meta.url), 'utf8'), /growth-analytics\.mjs\?v=15/u);
+    assert.ok(hasVersionedAsset(readFileSync(new URL(`../public/${page}`, import.meta.url), 'utf8'), 'growth-analytics.mjs'));
   }
   const adminPage = readFileSync(new URL('../src/admin-sp-api-page.mjs', import.meta.url), 'utf8');
   assert.match(adminPage, /export function adminCreatorsPageResponse/u);

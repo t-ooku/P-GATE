@@ -251,6 +251,15 @@ function collectMarketplaceImpressions(executionId) {
 
 send('landing_view');
 if (location.pathname === '/login.html') send('registration_login_viewed');
+// 2026-09-21: shop_viewed はショップページの HTML 配信時にサーバーが記録しているため、
+// visitor_id / session_id が常に空で、実際の閲覧者と JS を実行しないクローラを構造的に
+// 区別できない（UA 判定だけが頼り）。ブラウザが実際に描画した閲覧だけを別イベントとして
+// 数え、KPI 側が「計測できた閲覧」と「計測不能」を分けられるようにする。
+// 既存の shop_viewed の数え方は変えない（KPI 定義の変更は ChatGPT 側の判断）。
+{
+  const shopPath = /^\/shop\/([A-Za-z0-9_-]{1,40})(?:\/|$)/.exec(location.pathname);
+  if (shopPath) send('shop_view_confirmed', { content: shopPath[1] });
+}
 try {
   const visitKey = 'hoshilu_last_visit_at';
   const previous = Number(localStorage.getItem(visitKey) || 0);

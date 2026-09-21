@@ -9,6 +9,7 @@ import {
   buildBudgetShelves, buildGenreShelves, buildKoreanShelf, buildRisingShelf, buzzShelfResult, buzzThemeFor, buzzThemeStateFor, recordBuzzSnapshots
 } from '../src/buzz-shelf.mjs';
 import { RAKUTEN_RANKING_CATEGORIES } from '../src/marketplace-ranking.mjs';
+import { hasVersionedAsset } from './helpers/asset-version.mjs';
 
 const worker = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const env = { RAKUTEN_APPLICATION_ID: 'test-app-id', RAKUTEN_ACCESS_KEY: 'test-access-key', BUZZ_FETCH_GAP_MS: '0' };
@@ -33,7 +34,7 @@ test('BUZZは共有流入・共有開始・商品送客を匿名成長計測へ�
   const client = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   const homeClient = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
   const analytics = fs.readFileSync(path.join(worker, 'public', 'growth-analytics.mjs'), 'utf8');
-  assert.match(html, /growth-analytics\.mjs\?v=15/);
+  assert.ok(hasVersionedAsset(html, 'growth-analytics.mjs'));
   assert.match(html, /buzz\.mjs\?v=5/);
   assert.match(html, /share-button share-discovery-button/);
   assert.match(client, /utm_campaign: 'hoshilu_buzz'/);

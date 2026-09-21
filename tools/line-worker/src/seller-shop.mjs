@@ -93,14 +93,26 @@ function couponIsLive(coupon, today = jstToday()) {
 }
 function jstToday() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
 
+// 2026-09-21: これまで visitor_id / session_id を一切書いていなかったため、記録された
+// ショップイベントは実際の閲覧者とクローラを構造的に区別できなかった。識別子を持っている
+// 呼び出し元は渡せるようにする（無ければ空のまま＝計測不能。0 件と混同しない）。
+// 識別子は端末が発行する匿名 ID で、こちらで推測生成はしない。
 export async function recordShopEvent(env, eventType, slug, extra = {}) {
   if (!env?.PRODUCT_DB) return;
+  const values = [crypto.randomUUID(), eventType, clean(slug, 40), clean(extra.content, 80), clean(extra.marketplace, 20), new Date().toISOString()];
   try {
     await env.PRODUCT_DB.prepare(`INSERT INTO growth_events
-      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
-      VALUES(?1,?2,'JA','worker','shop',?3,?4,?5,?6,'UNATTRIBUTED')`)
-      .bind(crypto.randomUUID(), eventType, clean(slug, 40), clean(extra.content, 80), clean(extra.marketplace, 20), new Date().toISOString()).run();
-  } catch {}
+      (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class,visitor_id,session_id)
+      VALUES(?1,?2,'JA','worker','shop',?3,?4,?5,?6,'UNATTRIBUTED',?7,?8)`)
+      .bind(...values, clean(extra.visitor_id, 64), clean(extra.session_id, 64)).run();
+  } catch (error) {
+    if (!/(?:no column named|has no column named|no such column).*(?:visitor_id|session_id)/i.test(String(error?.message || ''))) return;
+    try {
+      await env.PRODUCT_DB.prepare(`INSERT INTO growth_events
+        (event_id,event_type,locale,source,medium,campaign,content,marketplace,occurred_at,traffic_class)
+        VALUES(?1,?2,'JA','worker','shop',?3,?4,?5,?6,'UNATTRIBUTED')`).bind(...values).run();
+    } catch {}
+  }
 }
 
 // ---- 検索結果へのショップ付与 -------------------------------------------------
@@ -644,7 +656,7 @@ ${pages > 1 ? `<nav class="shop-pager">${page > 1 ? `<a rel="nofollow" href="${e
   });
   document.querySelectorAll('.coupon-code').forEach(function(node){node.addEventListener('click',function(){navigator.clipboard&&navigator.clipboard.writeText(node.dataset.code).then(function(){node.textContent='コピーしました';setTimeout(function(){node.textContent=node.dataset.code;},1200);});});});
 })();
-</script><script type="module" src="/growth-analytics.mjs?v=15"></script></body></html>`;
+</script><script type="module" src="/growth-analytics.mjs?v=16"></script></body></html>`;
 }
 
 // ---- Seller 専用商品ページ（2026-09-19 大隆さん指示 §10〜§11） ------------------------------
@@ -698,7 +710,7 @@ ${demandHtml}
 </main>
 <script>
 (function(){document.querySelectorAll('a[data-track]').forEach(function(a){a.addEventListener('click',function(){var t=a.getAttribute('data-track');if(!t||t===a.getAttribute('href'))return;try{fetch(t,{mode:'no-cors',keepalive:true,redirect:'manual',credentials:'omit'}).catch(function(){});}catch(e){}});});})();
-</script><script type="module" src="/growth-analytics.mjs?v=15"></script></body></html>`;
+</script><script type="module" src="/growth-analytics.mjs?v=16"></script></body></html>`;
 }
 
 // ---- ルーティング ----------------------------------------------------------------
