@@ -15,7 +15,7 @@ const EXPECTED = Object.freeze({
   'assets-v147/app.js': '189',
   'assets-v126/ai-search-layout-fix.css': '133',
   'mywatch.css': '12',
-  'tab-nav.css': '3',
+  'tab-nav.css': '4',
   'tab-nav.mjs': '10',
   'site-i18n.js': '9',
   'growth-analytics.mjs': '16',

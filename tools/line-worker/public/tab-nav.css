@@ -36,3 +36,54 @@ body.has-tab-bar{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
 .account-session .account-logout{border:1px solid var(--line,#e9e5f5);border-radius:11px;background:#fff;color:var(--muted,#6d6b80);font-size:12px;font-weight:800;padding:8px 12px;cursor:pointer}
 .account-session .account-logout.hidden{display:none}
 .account-session small{flex-basis:100%;color:var(--muted,#6d6b80);font-size:12px;line-height:1.5}
+
+/* 2026-09-22 大隆さん指示「PC版ページメニューを上帯へ移動」。
+   PC では下の固定タブではなく、ロゴ帯（.topbar は sticky top:0 / 高さ60px）の
+   直下に1段で置く。スクロールしても上に残す。
+   ・高さを大きくしすぎない（商品を見る面積を奪わない §6）
+   ・現在位置は 太字＋下線だけ。派手にしない（§7）
+   ・メニュー名は現行のまま（探す / ホシる中 / ショップ / ホシルバズ / マイアカウント）。
+     勝手に変えない（追加指示§5）
+   スマホは今までどおり下の固定タブのまま（追加指示§9）。 */
+@media (min-width:761px){
+  .tab-bar{
+    position:fixed;
+    top:60px;
+    bottom:auto;
+    left:0;
+    right:0;
+    width:auto;
+    transform:none;
+    display:flex;
+    justify-content:center;
+    gap:2px;
+    padding:0 14px;
+    min-height:46px;
+    border:0;
+    border-bottom:1px solid #e6e1ff;
+    border-radius:0;
+  }
+  .tab-bar-item{
+    flex:0 0 auto;
+    flex-direction:row;
+    align-items:center;
+    gap:7px;
+    min-height:46px;
+    padding:0 14px;
+    border-radius:0;
+    /* 選ばれている時だけ下線。選ばれていない時も同じ太さの透明な線を持たせて、
+       切り替わるたびに文字が上下に動かないようにする。 */
+    border-bottom:2px solid transparent;
+    font-size:13px;
+  }
+  .tab-bar-item svg{width:18px;height:18px}
+  .tab-bar-item.active{
+    background:none;
+    color:#5140ba;
+    font-weight:900;
+    border-bottom-color:#5140ba;
+  }
+  /* 下に固定タブが無くなるので、下の余白は要らない。代わりに上帯のぶんだけ空ける。 */
+  body.has-tab-bar{padding-bottom:0}
+  body.has-tab-bar>main{margin-top:46px}
+}

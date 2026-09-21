@@ -8,7 +8,7 @@ const read = (name) => readFileSync(new URL(`../public/${name}`, import.meta.url
 
 test('トップは tab-nav を読み込み、5 タブと節の割り当てを持つ', () => {
   const html = read('index.html');
-  assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=3">/);
+  assert.match(html, /<link rel="stylesheet" href="\/tab-nav\.css\?v=4">/);
   assert.match(html, /<script type="module" src="\/tab-nav\.mjs\?v=10"><\/script><script type="module" src="\/assets-v147\/app\.js\?v=\d+"><\/script>/);
   assert.match(html, /<section id="accountPanel"/);
   assert.match(html, /<section id="shopCouponsNote"/);

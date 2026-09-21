@@ -87,3 +87,28 @@ test('index.html が読み、app.js が unified_results を渡している', () 
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.equal(app, read('assets-v147/app.js'));
 });
+
+// 2026-09-22 追加指示「PC版ページメニューを上帯へ移動」。
+// スマホは今までどおり下の固定タブ（追加指示§9）。
+test('PCではページメニューを上帯へ。名前は現行のまま、下線だけで現在位置を示す', () => {
+  const sheet = readFileSync(new URL('../public/tab-nav.css', import.meta.url), 'utf8');
+  const desktop = sheet.slice(sheet.indexOf('/* 2026-09-22 大隆さん指示「PC版ページメニューを上帯へ移動」'));
+  assert.ok(desktop, 'PC用の上帯の規則がある');
+  assert.match(desktop, /@media \(min-width:761px\)/u);
+  // ロゴ帯（sticky top:0 / 60px）の直下に固定する
+  assert.match(desktop, /\.tab-bar\{[^}]*position:fixed/u);
+  assert.match(desktop, /\.tab-bar\{[^}]*top:60px/u);
+  assert.match(desktop, /\.tab-bar\{[^}]*bottom:auto/u);
+  // 高さを大きくしすぎない（§6）
+  assert.match(desktop, /min-height:46px/u);
+  // 現在位置は下線だけ。塗らない（§7）
+  assert.match(desktop, /\.tab-bar-item\.active\{[^}]*border-bottom-color:#5140ba/u);
+  assert.match(desktop, /\.tab-bar-item\.active\{[^}]*background:none/u);
+  // 下の固定タブぶんの余白は要らなくなる
+  assert.match(desktop, /body\.has-tab-bar\{padding-bottom:0\}/u);
+  // メニュー名は勝手に変えない（追加指示§5）
+  const nav = readFileSync(new URL('../public/tab-nav.mjs', import.meta.url), 'utf8');
+  for (const label of ['探す', 'ホシる中', 'ショップ', 'ホシルバズ', 'マイアカウント']) {
+    assert.ok(nav.includes(`label: '${label}'`), label);
+  }
+});
