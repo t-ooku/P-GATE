@@ -1433,6 +1433,41 @@ export function summarizeMarketplaceSearchOutcomes(searches = [], outcomes = [],
 // returns some non-empty but entirely category-mismatched results for the
 // first (broadest) keyword candidate would stop the cascade there and never
 // try the cleaner, more specific candidates that follow.
+// 2026-09-21 大隆さん指示「検索時間を短くしてほしい。平均10秒掛かってる」:
+// モール検索レーンに実時間の締め切りを置く。Yahoo! は 1 リクエストあたり
+// YAHOO_REQUEST_INTERVAL_MS(2.1秒) で全体直列化されるため、キーワード候補を
+// 3 通り試すと最悪 4.2 秒、公式店レーンを足すと 6.3 秒がそのまま待ち時間になり、
+// Promise.allSettled がそれを待っていた。
+// 締め切りに間に合ったモールの結果だけで返し、間に合わなかったレーンは
+// waitUntil へ逃がして価格キャッシュにだけ反映する（結果は捨てるが、取得は捨てない）。
+// 締め切り超過は「そのモールが0件」ではなく「間に合わなかった」であり、
+// 0件と混同しない（主幹指示書: 計測不能と0を区別する）。
+export const MARKETPLACE_STAGE_BUDGET_MS = 4500;
+export function marketplaceStageBudgetMs(env = {}) {
+  const value = Number(env.MARKETPLACE_STAGE_BUDGET_MS);
+  return Number.isFinite(value) && value >= 1000 && value <= 20000
+    ? Math.floor(value) : MARKETPLACE_STAGE_BUDGET_MS;
+}
+const STAGE_TIMED_OUT = Symbol('MARKETPLACE_STAGE_TIMED_OUT');
+export function withMarketplaceStageBudget(run, budgetMs, { onLate } = {}) {
+  // race に負けた側の rejection を必ず受け止める（unhandled rejection を出さない）。
+  const settled = Promise.resolve(run).then(
+    (value) => ({ ok: true, value }),
+    (error) => ({ ok: false, error })
+  );
+  let timer = null;
+  const deadline = new Promise((resolve) => { timer = setTimeout(() => resolve(STAGE_TIMED_OUT), budgetMs); });
+  return Promise.race([settled, deadline]).then((outcome) => {
+    if (outcome !== STAGE_TIMED_OUT) {
+      if (timer) clearTimeout(timer);
+      if (outcome.ok) return outcome.value;
+      throw outcome.error;
+    }
+    if (typeof onLate === 'function') onLate(settled);
+    return [];
+  });
+}
+
 export async function searchMarketplaceApiWithFallback(
   searcher, keywordCandidates, query = '', fallbackQuery = '', options = {}
 ) {
@@ -2877,8 +2912,14 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
         )
       });
       if (yahooShoppingApiConfigured(env)) {
+        // 2026-09-21 検索時間短縮: Yahoo! は 1 リクエスト 2.1 秒の全体間隔で直列化される。
+        // キーワード候補を 3 通り試すと待ち時間だけで 4.2 秒かかり、締め切りに間に合わず
+        // 結局 Yahoo! の結果が出なくなる。2 通りに抑えて締め切り内に収める。
+        // 待ち行列の上限も既定の 8 秒ではなくこの段階の予算に合わせる。
         yahooCatalogRun = searchMarketplaceApiWithFallback(
-          (keywords) => searchYahooShopping(env, keywords),
+          (keywords) => searchYahooShopping(env, keywords, fetch, {
+            queueTimeoutMs: marketplaceStageBudgetMs(env)
+          }),
           // ensureApparelProductTypeTerm: buildMarketplaceSearchKeywords with
           // no marketplace code collapses "ブラウス" to the broad category
           // "トップス" alone, dropping the specific noun entirely (reported
@@ -2898,7 +2939,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
             expandedQuery.query
           ),
           input.query,
-          expandedQuery.query
+          expandedQuery.query,
+          { maxVariants: 2 }
         );
         marketplaceSearches.push({ key: 'yahoo_catalog_connected', run: yahooCatalogRun });
       }
@@ -2939,7 +2981,25 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
           });
         }
       }
-      const outcomes = await Promise.allSettled(marketplaceSearches.map((item) => item.run));
+      // 実時間の締め切り付きで待つ。間に合わなかったレーンは結果に入れず、
+      // 取得自体は waitUntil で走り切らせて価格キャッシュにだけ反映する。
+      const stageBudgetMs = marketplaceStageBudgetMs(env);
+      const stageStartedAt = Date.now();
+      const lateLanes = [];
+      const outcomes = await Promise.allSettled(marketplaceSearches.map((item) =>
+        withMarketplaceStageBudget(item.run, stageBudgetMs, {
+          onLate: (settled) => {
+            lateLanes.push(item.key);
+            if (!ctx?.waitUntil) return;
+            ctx.waitUntil(settled.then((late) => (late.ok && Array.isArray(late.value) && late.value.length
+              ? persistMarketplacePrices(env, late.value) : null)).catch(() => {}));
+          }
+        })));
+      // 検索文は載せない（プライバシー境界）。どのレーンが締め切りに間に合わなかったかだけ残す。
+      console.info('SEARCH_MARKETPLACE_STAGE_MS', {
+        request_id: requestId, elapsed_ms: Date.now() - stageStartedAt,
+        budget_ms: stageBudgetMs, lanes: marketplaceSearches.length, late_lanes: lateLanes
+      });
       const priceWrite = persistMarketplacePrices(env, outcomes.flatMap(outcome =>
         outcome.status === 'fulfilled' && Array.isArray(outcome.value) ? outcome.value : []));
       if (ctx?.waitUntil) ctx.waitUntil(priceWrite); else await priceWrite;
