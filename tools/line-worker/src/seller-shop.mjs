@@ -19,6 +19,7 @@ import { TREE as HOSHILU_GENRE_TREE } from '../public/genre-explorer.mjs';
 // 2026-09-17 SHOP強化 P0: Seller 向け「HOSHILUで今探されているもの」と「この需要に商品を登録」
 import { registerDemandOffer, sellerDemandOverview, demandConditions, judgeTitle } from './shop-demand.mjs';
 import { searchingDemandOverview } from './searching-demand.mjs';
+import { usualDemandForecast, targetPriceDemand } from './usual-demand.mjs';
 import { recordDemandMatchClick } from './seller-demand-match.mjs';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -92,6 +93,20 @@ function couponIsLive(coupon, today = jstToday()) {
   return true;
 }
 function jstToday() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
+
+// 2026-09-21 指示書 §21: 3 種類の需要をまとめて返す。1 つが計測不能でも他を止めない。
+async function threeDemands(env) {
+  const [searching, price, usual] = await Promise.all([
+    searchingDemandOverview(env).catch(() => null),
+    targetPriceDemand(env).catch(() => null),
+    usualDemandForecast(env).catch(() => null)
+  ]);
+  return {
+    searching,          // 新規需要: 探し中
+    price_watch: price, // 条件需要: 値下がり待ち（§24 どこまで下げれば届くか）
+    usual               // 継続需要: いつものホシル（§23 需要予報 7/14/30 日）
+  };
+}
 
 // 2026-09-21: これまで visitor_id / session_id を一切書いていなかったため、記録された
 // ショップイベントは実際の閲覧者とクローラを構造的に区別できなかった。識別子を持っている
@@ -944,12 +959,14 @@ async function handleShopManagement(request, env, sellerKey, { base, adminInput 
       return json({ ok: true, coupon_id: couponId, ...(await shopSummary(db, sellerKey)) });
     }
     if (request.method === 'GET' && rest === '/demand') {
-      // 2026-09-20 §6: HOSHILU 全体で「いま探し中」の需要（member_wishes の active だけ）を足す。
-      return json({ ok: true, ...(await sellerDemandOverview(env, sellerKey)), searching: await searchingDemandOverview(env) });
+      // 2026-09-21 指示書 §21: Seller に見せる需要は 3 種類。
+      //   新規需要 = 探し中 / 条件需要 = 値下がり待ち / 継続需要 = いつものホシル。
+      // どれも匿名集計（最低 5 人・内部会員除外）で、個人情報は含まない。
+      return json({ ok: true, ...(await sellerDemandOverview(env, sellerKey)), ...(await threeDemands(env)) });
     }
     if (request.method === 'POST' && rest === '/demand/offers') {
       const offer = await registerDemandOffer(env, sellerKey, body || {}, { now });
-      return json({ ok: true, offer, ...(await sellerDemandOverview(env, sellerKey)), searching: await searchingDemandOverview(env) });
+      return json({ ok: true, offer, ...(await sellerDemandOverview(env, sellerKey)), ...(await threeDemands(env)) });
     }
     const couponMatch = rest.match(/^\/coupons\/([A-Za-z0-9-]{1,64})$/);
     if (couponMatch && (request.method === 'DELETE' || request.method === 'POST')) {
