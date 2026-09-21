@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=133">
   <link rel="stylesheet" href="/ai-price-comparison-ui.css?v=84">
   <link rel="stylesheet" href="/wish-carousel.css?v=4">
-  <link rel="stylesheet" href="/mywatch.css?v=11">
+  <link rel="stylesheet" href="/mywatch.css?v=12">
   <link rel="stylesheet" href="/usual-barcode.css?v=1">
   <link rel="stylesheet" href="/today-hoshilu.css?v=1">
   <link rel="stylesheet" href="/usual-hoshiru.css?v=4">
@@ -54,7 +54,7 @@
   <link rel="stylesheet" href="/speech-input.css?v=2">
   <link rel="stylesheet" href="/install.css">
   <link rel="stylesheet" href="/layout-v3.css?v=91">
-  <link rel="stylesheet" href="/instagram-look.css?v=2">
+  <link rel="stylesheet" href="/instagram-look.css?v=3">
   <title>ホシル｜写真・スクショ・一言から商品を探す</title>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://hoshilu.app/#website","url":"https://hoshilu.app/","name":"ホシル｜HOSHILU","inLanguage":["ja","en","zh","ko"],"potentialAction":{"@type":"SearchAction","target":"https://hoshilu.app/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"WebApplication","@id":"https://hoshilu.app/#app","name":"ホシル","alternateName":"HOSHILU","url":"https://hoshilu.app/","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"ホシルは、写真・スクショ・公開SNS投稿URL・一言から商品を探し、最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つける無料サービスです。","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}},{"@type":"Organization","@id":"https://hoshilu.app/#organization","name":"HOSHILU","url":"https://hoshilu.app/","logo":{"@type":"ImageObject","url":"https://hoshilu.app/icons/hoshilu-v2-512.png"}},{"@type":"FAQPage","@id":"https://hoshilu.app/#faq","mainEntity":[{"@type":"Question","name":"ホシルでは何を検索できますか？","acceptedAnswer":{"@type":"Answer","text":"商品名が分からなくても、見た目・用途・見た場所などの手がかりから商品を探せます。まとめて検索2モールと個別検索11モールの最大13モールに対応しています。"}},{"@type":"Question","name":"ホシルは無料で使えますか？","acceptedAnswer":{"@type":"Answer","text":"商品検索はログインなしで無料で利用できます。検索履歴の保存や通知機能は無料会員向けに提供しています。"}},{"@type":"Question","name":"表示価格は実際の販売価格ですか？","acceptedAnswer":{"@type":"Answer","text":"接続済みモールで確認できた送料込み価格と、AIによる参考推定価格を区別して表示します。購入前に必ずリンク先モールで最新価格・送料・在庫を確認してください。"}},{"@type":"Question","name":"写真やSNS投稿URLから探せますか？","acceptedAnswer":{"@type":"Answer","text":"スマホで撮影するか、JPEG・PNG・WebP画像、Instagram・TikTok・X・Threads・Facebook・PinterestのHOSHILU対応形式の公開投稿単体URLを手がかりに検索できます。非公開・削除済みの投稿には一言や画像を追加してください。"}}]}]}</script>
 </head>
@@ -355,7 +355,7 @@
             <!-- 2026-09-20 大隆さん指示: ダッシュボード（状態の数）は普段は閉じ、「ホシってるもの」を押すと開く。
                  ホシる中を開いたら、気になる商品（#keptProducts、tab-nav が先頭に置く）→ 値下がり待ち → 追ってるキーワード の順にすぐ見える。 -->
             <details id="insightDashboard" class="insight-dashboard">
-              <summary id="insightDashboardSummary"><p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">ホシってるもの</h2><span class="insight-dashboard-toggle" aria-hidden="true">状態を見る ▾</span></summary>
+              <summary id="insightDashboardSummary"><p class="step">HOSHILU INSIGHT</p><h2 id="insightTitle">ホシってるもの</h2><span class="insight-dashboard-toggle" aria-hidden="true"><span class="insight-dashboard-open">状態を見る ▾</span><span class="insight-dashboard-close">閉じる ▴</span></span></summary>
             <p id="insightSummary">HOSHILUに預けている「欲しい」を、状態ごとに確認できます。</p>
             <!-- 2026-09-15 指示書 §8/§9: 登録後の中心画面は「ホシってるもの」。
                  探しています／見つかりました／値下がり待ち／あとで見る の4状態を先頭に出す。数字は会員の実データのみ。 -->

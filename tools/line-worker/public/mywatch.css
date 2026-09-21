@@ -107,8 +107,11 @@
 .insight-dashboard>summary .step{margin:0;width:100%}
 .insight-dashboard>summary h2{margin:0}
 .insight-dashboard-toggle{margin-left:auto;padding:6px 12px;border:1px solid #ded7ff;border-radius:999px;background:#fff;color:#5140ba;font-size:12px;font-weight:800}
-.insight-dashboard[open] .insight-dashboard-toggle::before{content:'閉じる '}
-.insight-dashboard:not([open]) .insight-dashboard-toggle{}
+/* 2026-09-21: ::before で '閉じる ' を足していたため、開くと
+   「閉じる 状態を見る ▾」と2つの文言が並んでいた。開閉で入れ替える。 */
+.insight-dashboard-close{display:none}
+.insight-dashboard[open] .insight-dashboard-open{display:none}
+.insight-dashboard[open] .insight-dashboard-close{display:inline}
 .insight-dashboard{margin:0 0 14px}
 .insight-dashboard>summary+#insightSummary{margin-top:10px}
 /* 2026-09-20 大隆さん指示: 値下がり待ちは商品画像＋短い商品名（楽天のように） */

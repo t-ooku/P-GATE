@@ -70,10 +70,16 @@ button,.primary,.submit,.auth-button,.ghost-button,a.primary{
   border:1px solid var(--ig-line) !important;
 }
 
-/* 丸い形が意味を持つものだけ 999px を残す */
+/* 丸い形が意味を持つ「小さなチップ」だけ 999px を残す。
+   2026-09-21: ホシってるものの4枚（.hoshi-status a / button）をここに入れていたため、
+   複数行のカードが楕円になり、左寄せの文字が丸みにぶつかって見た目がズレていた。
+   あれはチップではなくカードなので、カードの角丸（12px）に戻す。 */
 .shop-chip,.google-mall-card-mall,.google-mall-card-kind,.usual-cycle-choice,
-.checks label,.login-link,.hoshi-status a,.hoshi-status button{
+.checks label,.login-link{
   border-radius:999px !important;
+}
+.hoshi-status a,.hoshi-status button{
+  border-radius:12px !important;
 }
 
 /* 見出しのグラデーション文字をやめる */
@@ -85,9 +91,18 @@ button,.primary,.submit,.auth-button,.ghost-button,a.primary{
   color:inherit !important;
 }
 
-/* 区切りは 1px の線だけ */
+/* 区切りは 1px の線だけ。
+   2026-09-21: 線のすぐ下に見出しが貼り付いていたので、線と中身のあいだに余白を入れる。
+   あわせて、見出しの左端を「今日のホシル」（カードの padding 16px）に合わせる。
+   ここだけ 0 だったため、節の題だけが左へ突き出して見えていた。 */
+.entrusted-watches,.usual-hoshiru,.later-wishes,.mywatch-hub,.insight-dashboard,
+#insight #keptProducts.kept-in-insight,#mywish.insight-wishes{
+  padding-left:16px !important;
+  padding-right:16px !important;
+}
 .entrusted-watches,.usual-hoshiru,.later-wishes,.mywatch-hub{
   border-top:1px solid var(--ig-line) !important;
+  padding-top:14px !important;
 }
 
 /* 画像は白地に収める（モールのロゴが浮かないように） */

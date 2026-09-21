@@ -14,7 +14,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf
 const EXPECTED = Object.freeze({
   'assets-v147/app.js': '187',
   'assets-v126/ai-search-layout-fix.css': '133',
-  'mywatch.css': '11',
+  'mywatch.css': '12',
   'tab-nav.css': '3',
   'tab-nav.mjs': '10',
   'site-i18n.js': '9',
@@ -30,7 +30,7 @@ const EXPECTED = Object.freeze({
   'today-hoshilu.mjs': '1',
   'usual-hoshiru.css': '4',
   'usual-hoshiru.mjs': '4',
-  'instagram-look.css': '2'
+  'instagram-look.css': '3'
 });
 
 test('index.html のアセット版番号は pin したとおり', () => {
