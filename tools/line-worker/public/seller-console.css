@@ -104,3 +104,16 @@
 #billing .auto-recharge{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.5}
 #billing button[disabled]{opacity:.55;cursor:not-allowed}
 @media(max-width:480px){#billing .topup-row{flex-direction:column;align-items:stretch}#billing .topup-row button{width:100%}}
+/* 2026-09-21 指示書 ⑭: ダッシュボード先頭の「今あなたが応えられる需要」。
+   Instagram 寄せ（白地・1px の線・控えめな角丸・影なし）に合わせる。 */
+.three-demands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.demand-lane{display:grid;align-content:start;gap:8px;padding:16px;border:1px solid #dbdbdb;border-radius:12px;background:#fff}
+.demand-lane-title{color:#262626;font-size:.95rem;font-weight:700}
+.demand-lane-lead{margin:0;color:#8e8e8e;font-size:.78rem;line-height:1.7}
+.demand-lane-note{margin:0;color:#8e8e8e;font-size:.78rem;line-height:1.7}
+.demand-lane-list{display:grid;gap:8px;margin:4px 0 0;padding:0;list-style:none}
+.demand-lane-item{display:grid;gap:4px;padding:12px;border:1px solid #efefef;border-radius:8px}
+.demand-lane-item strong{color:#262626;font-size:.88rem;line-height:1.5;overflow-wrap:anywhere}
+.demand-lane-item span{color:#696174;font-size:.78rem;line-height:1.6}
+.demand-lane-item .compact-button{justify-self:start;margin-top:4px;text-decoration:none}
+@media(max-width:900px){.three-demands{grid-template-columns:1fr}}

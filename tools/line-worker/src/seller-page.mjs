@@ -352,9 +352,16 @@ export async function sellerPageResponse(
   <p>契約プラン: <strong>${publicPlan}</strong> / 対象店舗: ${tenantSummary}</p>
   <p class="section-intro">商品情報、HOSHILUから各モールへの送客、優先出品の設定、確定した請求状況を確認する画面です。表示する件数は項目ごとに集計対象が異なるため、各数字の下にある説明もあわせて確認してください。</p>
   <nav class="seller-actions" aria-label="管理メニュー">
-  <a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
+  <a class="primary-button" href="#three-demands">今の需要</a><a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
   <a class="primary-button" href="#catalog">商品管理</a><a class="primary-button" href="#offers">購入先管理</a><a class="primary-button" href="#demand">需要分析</a>
   <a class="primary-button" href="#integration">データ連携</a><a class="primary-button" href="#plan">契約プラン</a></nav></section>
+
+  <!-- 2026-09-21 指示書 ⑭: 商品一覧より先に「今あなたが応えられる需要」を出す。
+       3つの需要（探し中・値下がり待ち・いつものホシル）は /api/seller/shop/demand の実データだけを使う。
+       数えられないときは 0 と書かず「集計できていません」と出す（§30 架空件数は禁止）。 -->
+  <section class="auth-card" id="three-demands"><p class="eyebrow">DEMAND FIRST</p><h2>今あなたが応えられる需要</h2>
+  <p class="section-intro">HOSHILU に預けられた「欲しい」を3つに分けて表示します。商品を並べるより先に、ここから始めてください。</p>
+  <div id="sellerThreeDemands" class="three-demands"><p class="metric-help">読み込んでいます…</p></div></section>
 
   <section class="auth-card"><p class="eyebrow">AMAZON SP-API</p><h2>Amazon商品同期</h2>
   <p>3店舗の接続状態、最終同期、出品件数を確認し、全件同期を実行できます。</p>

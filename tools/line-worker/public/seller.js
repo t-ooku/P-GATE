@@ -254,9 +254,87 @@ function showDemandStatus(message, error = false) {
   if (!node) return;
   node.textContent = message; node.classList.toggle('error', error);
 }
+// 2026-09-21 指示書 ⑭⑱: ダッシュボードの一番上に3つの需要を出し、そのまま商品登録へ送る。
+// 数字は /api/seller/shop/demand の実データだけ。系統ごとに集計できていない場合は
+// 「0人」と書かず「集計できていません」と出す（§30 架空件数は禁止）。
+function demandNode(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+function jpy(value) { return '¥' + Number(value).toLocaleString('ja-JP'); }
+function demandLaneCard(title, lead, lane, renderItem) {
+  const card = demandNode('article', 'demand-lane');
+  card.append(demandNode('span', 'demand-lane-title', title));
+  card.append(demandNode('p', 'demand-lane-lead', lead));
+  if (!lane) {
+    card.append(demandNode('p', 'demand-lane-note', 'いまこの需要は集計できていません。数字が出せるようになったら表示します。'));
+    return card;
+  }
+  const items = Array.isArray(lane.items) ? lane.items : [];
+  const minPeople = Number(lane.min_people) || 5;
+  const below = lane.below_threshold || { groups: 0, people: 0 };
+  if (!items.length) {
+    card.append(demandNode('p', 'demand-lane-note', below.groups
+      ? `集計待ちです。同じ需要が ${minPeople}人以上集まると、ここに出ます（いま ${below.groups}件）。`
+      : `まだ公開できる需要がありません。${minPeople}人以上集まった需要だけを表示します。`));
+    return card;
+  }
+  const list = demandNode('ul', 'demand-lane-list');
+  for (const item of items.slice(0, 3)) list.append(renderItem(item));
+  card.append(list);
+  if (below.groups) card.append(demandNode('p', 'demand-lane-note', `ほかに ${below.groups}件が集計待ちです（${minPeople}人以上で表示）。`));
+  return card;
+}
+function demandLaneItem(name, detail, action) {
+  const row = demandNode('li', 'demand-lane-item');
+  row.append(demandNode('strong', null, name));
+  row.append(demandNode('span', null, detail));
+  if (action) row.append(action);
+  return row;
+}
+function demandOfferButton(demandKey) {
+  const button = demandNode('button', 'compact-button', 'この需要に商品を登録');
+  button.type = 'button';
+  button.addEventListener('click', () => {
+    const select = document.querySelector('#sellerDemandOfferForm select[name="demand_key"]');
+    if (!select) return;
+    select.value = demandKey;
+    select.closest('form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  return button;
+}
+function demandLinkButton(text, href) {
+  const link = demandNode('a', 'compact-button', text);
+  link.href = href;
+  return link;
+}
+function renderThreeDemands(data) {
+  const host = document.querySelector('#sellerThreeDemands');
+  if (!host) return;
+  host.replaceChildren();
+  // ①探し中: 自社で応えられるかを判定済みの需要（demand_key があるので、そのまま登録へ送れる）
+  const searchingLane = data.searching
+    ? { items: Array.isArray(data.items) ? data.items : [], min_people: data.min_people, below_threshold: data.below_threshold }
+    : null;
+  host.append(demandLaneCard('探し中', 'まだ見つかっていない「欲しい」です。条件に合う商品を登録すると、待っている人にお知らせが届きます。', searchingLane,
+    (item) => demandLaneItem(item.query, `${item.people}人が探しています`
+      + (item.own_exact === null ? '' : `／自社に一致 ${item.own_exact}・近い ${item.own_near}`),
+    demandOfferButton(item.demand_key))));
+  // ②値下がり待ち: どこまで下げれば届くか（§24）
+  host.append(demandLaneCard('値下がり待ち', '商品は決まっていて、価格だけを待っている人です。中央値まで下げると、待っている人の半数に届きます。', data.price_watch,
+    (item) => demandLaneItem(item.product_name, `${item.people}人が待機／中央値 ${jpy(item.median_target_jpy)}`,
+      demandLinkButton('価格を見直す', '#catalog'))));
+  // ③いつものホシル: 補充のタイミングが読める需要（§23 需要予報）
+  host.append(demandLaneCard('いつものホシル', 'なくなる前に買う人です。補充の時期が分かるので、在庫と掲載を先に合わせられます。', data.usual,
+    (item) => demandLaneItem(item.product_name, `${item.people}人が継続／30日以内に ${item.within_30_days}人・7日以内に ${item.within_7_days}人`,
+      demandLinkButton('在庫を確認', '#catalog'))));
+}
 function renderDemand(data) {
   const rows = document.querySelector('#sellerDemandRows');
   const select = document.querySelector('#sellerDemandOfferForm select[name="demand_key"]');
+  renderThreeDemands(data);
   if (!rows) return;
   const kpi = (name) => document.querySelector(`[data-demand-kpi="${name}"]`);
   kpi('searches').textContent = String(data.totals?.searches ?? 0);
@@ -293,9 +371,17 @@ function renderDemand(data) {
   }
 }
 async function loadDemand() {
-  if (!document.querySelector('#sellerDemandRows')) return;
+  if (!document.querySelector('#sellerDemandRows') && !document.querySelector('#sellerThreeDemands')) return;
   try { renderDemand(await shopRequest('/api/seller/shop/demand')); }
-  catch (error) { showDemandStatus(error.message === 'BUSINESS_PLAN_REQUIRED' ? '探し中需要は Business プランで確認できます。' : `需要を読み込めませんでした（${error.message}）`, true); }
+  catch (error) {
+    const message = error.message === 'BUSINESS_PLAN_REQUIRED'
+      ? '探し中需要は Business プランで確認できます。'
+      : `需要を読み込めませんでした（${error.message}）`;
+    showDemandStatus(message, true);
+    // 先頭の「今あなたが応えられる需要」も読み込めていない。0人と誤解させない。
+    const host = document.querySelector('#sellerThreeDemands');
+    if (host) host.replaceChildren(demandNode('p', 'metric-help', message));
+  }
 }
 document.querySelector('#sellerDemandOfferForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
