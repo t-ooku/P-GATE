@@ -120,3 +120,4 @@
 /* §40 無料期間レポート。need-to-know だけ。数えられない項目は「計測不能」と出す。 */
 .demand-lane-value{margin:0;font-size:26px;font-weight:700;color:#262626;line-height:1.2}
 #free-period[hidden]{display:none}
+#forecast[hidden]{display:none}

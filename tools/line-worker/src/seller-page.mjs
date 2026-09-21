@@ -352,7 +352,7 @@ export async function sellerPageResponse(
   <p>契約プラン: <strong>${publicPlan}</strong> / 対象店舗: ${tenantSummary}</p>
   <p class="section-intro">商品情報、HOSHILUから各モールへの送客、優先出品の設定、確定した請求状況を確認する画面です。表示する件数は項目ごとに集計対象が異なるため、各数字の下にある説明もあわせて確認してください。</p>
   <nav class="seller-actions" aria-label="管理メニュー">
-  <a class="primary-button" href="#three-demands">今の需要</a><a class="primary-button" href="#free-period">無料期間</a><a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
+  <a class="primary-button" href="#three-demands">今の需要</a><a class="primary-button" href="#forecast">需要予報</a><a class="primary-button" href="#free-period">無料期間</a><a class="primary-button" href="#performance">成果</a><a class="primary-button" href="#priority">優先出品</a>
   <a class="primary-button" href="#catalog">商品管理</a><a class="primary-button" href="#offers">購入先管理</a><a class="primary-button" href="#demand">需要分析</a>
   <a class="primary-button" href="#integration">データ連携</a><a class="primary-button" href="#plan">契約プラン</a></nav></section>
 
@@ -489,6 +489,13 @@ export async function sellerPageResponse(
   <!-- 2026-09-19 大隆さん指示「Seller収益化・需要マッチ改修」§3・§4・§14: Demand Match Click は
        「探していた人を HOSHILU が呼び戻して商品を開いた時だけ 50円」。有効クリック数・50円×件数・今月利用額・予算上限を
        目立つ位置に。数字は seller_demand_match_clicks / shop_demand_requests の実データのみ。 -->
+  <!-- 2026-09-21 指示書 §23「需要予報」。いつものホシルの補充周期から、7/14/30日以内に
+       必要になる人数を匿名集計で出す。5人以上集まった需要だけ。架空件数は出さない（§30）。 -->
+  <section class="auth-card" id="forecast" hidden><p class="eyebrow">FORECAST</p><h2>需要予報</h2>
+  <p class="section-intro">「いつものホシル」に登録された商品が、いつ必要になるかの予報です。在庫と掲載を先に合わせるために使ってください。人数は匿名集計で、5人以上集まった需要だけを出します。</p>
+  <div class="seller-table-wrap"><table><thead><tr><th>商品</th><th>継続して買う人</th><th>7日以内</th><th>14日以内</th><th>30日以内</th></tr></thead><tbody id="sellerForecastRows"></tbody></table></div>
+  <p id="sellerForecastNote" class="metric-help"></p></section>
+
   <section class="auth-card" id="demand-match"><p class="eyebrow">DEMAND MATCH</p><h2>Demand Match（今月）</h2>
   <p>探し中需要にあなたの商品が一致し、HOSHILU がその人へ通知し、<strong>その人が通知から商品ページを実際に開いた時だけ</strong> 1有効クリック 50円です。通常の検索・ショップからの商品クリックは月額に含まれ、課金されません。bot・Seller 本人・管理者・内部テスト・同じ日の同じ需要×商品の重複は有効クリックに数えません。判定結果は 1 件ずつ記録し、除外理由も残します。</p>
   <div id="sellerDemandMatchStatus" class="operation-status" role="status" aria-live="polite"></div>

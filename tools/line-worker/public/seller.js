@@ -331,10 +331,46 @@ function renderThreeDemands(data) {
     (item) => demandLaneItem(item.product_name, `${item.people}人が継続／30日以内に ${item.within_30_days}人・7日以内に ${item.within_7_days}人`,
       demandLinkButton('在庫を確認', '#catalog'))));
 }
+// 2026-09-21 指示書 §23「需要予報」。いつものホシルの補充周期から 7/14/30 日以内に
+// 必要になる人数を出す。数字は /api/seller/shop/demand の usual（匿名集計・5人以上）だけ。
+// 集計できていないときは 0 と書かず、表そのものを出さない。
+function renderForecast(usual) {
+  const rows = document.querySelector('#sellerForecastRows');
+  const section = document.querySelector('#forecast');
+  const note = document.querySelector('#sellerForecastNote');
+  if (!rows || !section) return;
+  const items = usual && usual.measurable !== false && Array.isArray(usual.items) ? usual.items : null;
+  if (!items || !items.length) { section.hidden = true; return; }
+  rows.replaceChildren();
+  for (const item of items.slice(0, 20)) {
+    const tr = document.createElement('tr');
+    for (const value of [
+      item.product_name,
+      `${item.people}人`,
+      `${item.within_7_days}人`,
+      `${item.within_14_days}人`,
+      `${item.within_30_days}人`
+    ]) {
+      const td = document.createElement('td');
+      td.textContent = String(value ?? '');
+      tr.append(td);
+    }
+    rows.append(tr);
+  }
+  const minPeople = Number(usual.min_people) || 5;
+  const below = usual.below_threshold || { groups: 0 };
+  if (note) {
+    note.textContent = below.groups
+      ? `ほかに ${below.groups}件が集計待ちです（同じ商品を ${minPeople}人以上が継続で買うと表示します）。予報は登録された補充周期からの見込みで、注文を保証するものではありません。`
+      : `同じ商品を ${minPeople}人以上が継続で買っている需要だけを表示します。予報は登録された補充周期からの見込みで、注文を保証するものではありません。`;
+  }
+  section.hidden = false;
+}
 function renderDemand(data) {
   const rows = document.querySelector('#sellerDemandRows');
   const select = document.querySelector('#sellerDemandOfferForm select[name="demand_key"]');
   renderThreeDemands(data);
+  renderForecast(data.usual);
   if (!rows) return;
   const kpi = (name) => document.querySelector(`[data-demand-kpi="${name}"]`);
   kpi('searches').textContent = String(data.totals?.searches ?? 0);
@@ -371,7 +407,9 @@ function renderDemand(data) {
   }
 }
 async function loadDemand() {
-  if (!document.querySelector('#sellerDemandRows') && !document.querySelector('#sellerThreeDemands')) return;
+  // 需要の枠はどれか1つでもあれば読み込む（画面の構成が変わっても取りこぼさない）。
+  const targets = ['#sellerDemandRows', '#sellerThreeDemands', '#sellerForecastRows'];
+  if (!targets.some((selector) => document.querySelector(selector))) return;
   try { renderDemand(await shopRequest('/api/seller/shop/demand')); }
   catch (error) {
     const message = error.message === 'BUSINESS_PLAN_REQUIRED'
