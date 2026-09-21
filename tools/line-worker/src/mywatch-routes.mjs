@@ -71,7 +71,34 @@ async function enqueue(request, env) {
 // は既に sale-center.mjs/#saleRail が marketplace_sale_events から独立して
 // 表示しているため、AIウォッチ通知パネル(このAPI)からは除外し、実際に商品を
 // 指す個別イベントだけを返す。
+// 2026-09-21 指示書 ⑲「再通知の経路確認」で見つかった穴。
+// 探し中需要が満たされたときの再通知（SHOP_DEMAND_MATCH）は WEB 通知としても届くが、
+// ここが INSIGHT_NEW_MATCH 以外のリンクを全部落としていたため、本人が商品へ進めなかった。
+// LINE・メールは本文に URL が入るので届いていたが、アプリ内の通知だけ行き止まりだった。
+// 許すのは HOSHILU 自身が組み立てた2つの形だけ:
+//   ・署名付きの Seller 商品ページ  /shop/<slug>/product/<ASIN>?dm=<token>
+//   ・横断検索の結果               /?shop_search=<query>#tab-shops
+// 外部 URL はここでは返さない（通知に任意の行き先を載せない）。
+export function safeDemandMatchResultUrl(value) {
+  let url;
+  try { url = new URL(String(value || '')); } catch { return ''; }
+  if (url.protocol !== 'https:' || url.hostname !== 'hoshilu.app' || url.username || url.password) return '';
+  const keys = [...url.searchParams.keys()];
+  if (keys.length !== 1) return '';
+  if (keys[0] === 'dm' && !url.hash
+    && /^\/shop\/[a-z0-9-]{1,40}\/product\/[A-Z0-9]{10}$/u.test(url.pathname)
+    && String(url.searchParams.get('dm')).length <= 400) {
+    return `${url.pathname}${url.search}`;
+  }
+  if (keys[0] === 'shop_search' && url.pathname === '/' && url.hash === '#tab-shops'
+    && String(url.searchParams.get('shop_search')).length <= 200) {
+    return `/${url.search}#tab-shops`;
+  }
+  return '';
+}
+
 function safeNotificationResultUrl(row) {
+  if (String(row?.event_type || '') === 'SHOP_DEMAND_MATCH') return safeDemandMatchResultUrl(row?.result_url);
   if (String(row?.event_type || '') !== 'INSIGHT_NEW_MATCH') return '';
   const wishId = String(row?.wish_id || '');
   if (!/^[A-Za-z0-9_-]{1,80}$/.test(wishId)) return '';
