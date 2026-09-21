@@ -1,0 +1,9 @@
+/* 2026-09-21 指示書 P2「バーコードから いつものにする」。
+   Instagram 寄せ（白地・1px の線・影なし）。読み取り中だけ出る。 */
+.barcode-overlay{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.65)}
+.barcode-box{width:min(420px,100%);display:grid;gap:10px;padding:16px;border:1px solid #dbdbdb;border-radius:12px;background:#fff}
+.barcode-title{margin:0;font-size:15px;font-weight:700;color:#262626}
+#barcodeVideo{width:100%;aspect-ratio:4/3;border:1px solid #dbdbdb;border-radius:8px;background:#000;object-fit:cover}
+.barcode-hint,.barcode-status{margin:0;color:#8e8e8e;font-size:12px;line-height:1.7}
+.barcode-status:empty{display:none}
+.barcode-cancel{justify-self:start;min-height:44px;padding:10px 16px;border:1px solid #dbdbdb;border-radius:8px;background:#fff;color:#262626;font:inherit;font-weight:600;cursor:pointer}
