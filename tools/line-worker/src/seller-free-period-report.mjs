@@ -33,7 +33,7 @@ export const REPORT_METRICS = Object.freeze([
   { key: 'searching_demand', label: 'あなたの商品に関わる探し中需要', note: '匿名集計。5人未満の需要は含みません' },
   { key: 'demand_offers', label: '需要への商品登録', note: 'HOSHILUが条件を再判定して一致したもの' },
   { key: 'demand_notifications', label: '探していた人への通知', note: '本人が許可した経路だけに送ったもの' },
-  { key: 'demand_match_clicks', label: 'Demand Match Click（有効）', note: '1件 50円。除外分は含みません' }
+  { key: 'demand_match_clicks', label: 'Demand Match（有効クリック）', note: '料金はかかりません。除外分は含みません' }
 ]);
 
 export function summarizeFreePeriod(counts = {}) {

@@ -117,7 +117,7 @@ export function adminSellerBillingPageResponse() {
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
   <p class="eyebrow">SELLER BILLING</p><h1>セラー請求（前払い）</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
   <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a class="active" href="/admin/seller-billing">セラー請求</a><a href="/admin/seller-candidates">Seller候補</a><a href="/admin/creators">Creator計測</a><a href="/admin/sp-api">認証監査</a></nav>
-  <p>HOSHILU Seller ¥4,980/月（3か月0円）。通常クリックは月額に含む（旧ジャンル課金は停止）。Demand Match Click 1有効クリック50円は計測・予算上限の実装後に開始。</p>
+  <p>HOSHILU Seller ¥4,980/月（3か月0円）。クリック課金はすべて停止（旧ジャンル課金・Demand Match Click 50円とも 2026-09-21 に廃止）。Demand Match のクリックは課金せず件数だけ記録する。</p>
   <div class="dashboard-actions"><p id="billingStatus" role="status"></p><button id="refreshBilling" class="ghost-button" type="button">最新状態に更新</button></div></section>
   <section class="auth-card"><div class="section-head"><div><p class="eyebrow">REGISTER</p><h2>請求アカウントを登録</h2></div></div>
   <form id="billingForm" class="auth-form">

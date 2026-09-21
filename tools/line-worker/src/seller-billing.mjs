@@ -529,7 +529,7 @@ export async function createBillingAccount(env, input = {}, { origin, now = new 
     plan === 'BUSINESS'
       ? `■ HOSHILU Seller 月額 4,980円（税込）: 登録後3か月は月額0円。通常の商品クリックは月額に含まれます。${links.subscription?.url ? `お支払い方法の登録: ${links.subscription.url}` : '請求書（振込先つき）を別途お送りします。'}`
       : '■ 無料プラン: 月額0円。通常の商品クリックに課金はありません。',
-    '■ Demand Match Click（探していた人を HOSHILU が呼び戻して商品を開いた時）: 1有効クリック50円。計測と予算上限が契約者画面に入るまでは0円です。',
+    '■ クリックによる追加料金はありません（Demand Match Click 50円は 2026-09-21 に廃止しました）。お支払いは月額だけです。',
     '', '料金表: https://hoshilu.app/for-sellers#pricing', 'HOSHILU'
   ].filter((line) => line !== '');
   const emailed = await sendBillingEmail(env, contactEmail, 'HOSHILU セラーアカウントとお支払いのご案内', emailLines.join('\n'));

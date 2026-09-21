@@ -386,7 +386,7 @@ export async function sellerPageResponse(
   <p id="sellerFreePeriodNote" class="metric-help"></p></section>
 
   <section class="auth-card" id="performance"><p class="eyebrow">PERFORMANCE &amp; BILLING</p><h2>送客成果と消化状況</h2>
-  <p>自然検索からの送客は課金しません。消化額には、不正・重複を除外して請求台帳で確定した優先出品クリックだけを集計します。</p>
+  <p><strong>クリックによる課金は 2026-09-21 にすべて廃止しました。</strong>料金は HOSHILU Seller 月額4,980円だけです。以下は送客の実数と、課金していた頃の台帳の残りです。消化額は過去の記録で、今は増えません。</p>
   <div class="term-guide" aria-label="成果指標の説明">
     <div><strong>クリック</strong><span>購入先ボタンから販売先ページへ移動した回数です。購入完了を意味しません。</span></div>
     <div><strong>匿名セッション</strong><span>同じ閲覧のまとまりを個人が分からない形で数えた値です。人数とは一致しません。</span></div>
@@ -486,32 +486,23 @@ export async function sellerPageResponse(
   </form>
   <p class="data-note">商品の追加・同期後は、15分ごとの再判定でも自動的に照合されます。「近い商品」は、保存時に商品が1件も無かった需要にだけお知らせします。</p></section>
 
-  <!-- 2026-09-19 大隆さん指示「Seller収益化・需要マッチ改修」§3・§4・§14: Demand Match Click は
-       「探していた人を HOSHILU が呼び戻して商品を開いた時だけ 50円」。有効クリック数・50円×件数・今月利用額・予算上限を
-       目立つ位置に。数字は seller_demand_match_clicks / shop_demand_requests の実データのみ。 -->
-  <!-- 2026-09-21 指示書 §23「需要予報」。いつものホシルの補充周期から、7/14/30日以内に
-       必要になる人数を匿名集計で出す。5人以上集まった需要だけ。架空件数は出さない（§30）。 -->
+  <!-- 2026-09-21 大隆さん決定「クリック課金をやめる。料金は月額だけ。計測は残す」:
+       Demand Match Click 50円は廃止した。画面から金額・予算上限・前払い残高の話を外し、
+       数えられた件数（通知した需要・有効クリック・除外）だけを出す。
+       数字は seller_demand_match_clicks / shop_demand_requests の実データのみ。 -->
   <section class="auth-card" id="forecast" hidden><p class="eyebrow">FORECAST</p><h2>需要予報</h2>
   <p class="section-intro">「いつものホシル」に登録された商品が、いつ必要になるかの予報です。在庫と掲載を先に合わせるために使ってください。人数は匿名集計で、5人以上集まった需要だけを出します。</p>
   <div class="seller-table-wrap"><table><thead><tr><th>商品</th><th>継続して買う人</th><th>7日以内</th><th>14日以内</th><th>30日以内</th></tr></thead><tbody id="sellerForecastRows"></tbody></table></div>
   <p id="sellerForecastNote" class="metric-help"></p></section>
 
   <section class="auth-card" id="demand-match"><p class="eyebrow">DEMAND MATCH</p><h2>Demand Match（今月）</h2>
-  <p>探し中需要にあなたの商品が一致し、HOSHILU がその人へ通知し、<strong>その人が通知から商品ページを実際に開いた時だけ</strong> 1有効クリック 50円です。通常の検索・ショップからの商品クリックは月額に含まれ、課金されません。bot・Seller 本人・管理者・内部テスト・同じ日の同じ需要×商品の重複は有効クリックに数えません。判定結果は 1 件ずつ記録し、除外理由も残します。</p>
+  <p>探し中需要にあなたの商品が一致し、HOSHILU がその人へ通知し、<strong>その人が通知から商品ページを実際に開いた</strong>件数です。<strong>このクリックに料金はかかりません。</strong>HOSHILU Seller は月額のみで、クリックによる追加料金はありません。bot・Seller 本人・管理者・内部テスト・同じ日の同じ需要×商品の重複は有効クリックに数えません。判定結果は 1 件ずつ記録し、除外理由も残します。</p>
   <div id="sellerDemandMatchStatus" class="operation-status" role="status" aria-live="polite"></div>
   <div class="seller-grid metric-grid">
     <article class="seller-panel"><span>通知した需要</span><strong data-dm-kpi="notified">…</strong><span>あなたの商品が一致して HOSHILU が本人へ通知した件数</span></article>
     <article class="seller-panel"><span>有効クリック</span><strong data-dm-kpi="valid">…</strong><span>通知から商品ページを開いた回数（除外 <span data-dm-kpi="excluded">…</span>）</span></article>
-    <article class="seller-panel"><span>今月の利用額</span><strong data-dm-kpi="amount">…</strong><span>50円 × 有効クリック数</span></article>
-    <article class="seller-panel"><span>予算上限（月）</span><strong data-dm-kpi="cap">…</strong><span data-dm-kpi="cap-note">上限に達すると追加課金は止まり、掲載・検索流入は止まりません</span></article>
   </div>
-  <form id="sellerDemandMatchBudgetForm" class="priority-form">
-    <p><strong>Demand Match 予算（月額上限）</strong> — 上限に達した月は、それ以上の有効クリックは課金せず「上限到達」として記録します。通常の商品掲載・検索流入・需要への商品登録は止まりません。</p>
-    <label>上限 <select name="cap_preset"><option value="0">0円（Demand Match を使わない）</option><option value="1000">1,000円</option><option value="3000" selected>3,000円（初期値）</option><option value="5000">5,000円</option><option value="10000">10,000円</option><option value="custom">任意の金額</option></select></label>
-    <label>任意の金額（円） <input name="cap_custom" type="number" min="0" max="300000" step="50" placeholder="例: 20000"></label>
-    <button type="submit" class="primary-button">予算上限を保存する</button>
-  </form>
-  <p class="data-note">有効クリックは前払い残高から 50円ずつ消化します。前払い残高が 50円未満の間は Demand Match を停止します（需要への商品登録・再照合・本人への通知を行いません）。チャージすると再開します。判定は 1 件ずつ記録し、除外理由も残します。</p></section>
+  <p class="data-note">クリックは売上ではありません。この件数は、将来の料金の形を数字で決めるために数えているものです。今の料金に影響しません。</p></section>
 
   <section class="auth-card" id="demand"><p class="eyebrow">DEMAND</p><h2>契約商品で満たせなかった需要</h2>
   <p>個人を特定しないカテゴリ集計です。QA・流入元なし・過去不明の記録を除外し、流入元付きの匿名セッションが5件以上あるカテゴリだけを表示します。セッション件数は人数を意味しません。</p>
@@ -579,7 +570,7 @@ export async function sellerPageResponse(
   <p class="data-note">無料プランではショップページは作れません。<a href="/for-sellers#pricing">HOSHILU Seller（月額4,980円・登録後3か月0円）</a></p></section>
 
   <section class="auth-card" id="billing"><p class="eyebrow">PREPAID BILLING</p><h2>前払い残高とお支払い</h2>
-  <p>料金はすべて前払いです。有効クリックはジャンル単価を無料枠→前払い残高の順に消化し、残高が0円になると優先出品は自動で止まります（請求は発生しません）。</p>
+  <p>月額のお支払い方法と領収書はここで扱います。<strong>クリックによる従量課金は 2026-09-21 に廃止しました。</strong>前払い残高は現在どの機能でも消化されません（残高があっても減りません）。</p>
   <div id="sellerBillingStatus" class="operation-status" role="status" aria-live="polite"></div>
   <div class="seller-grid metric-grid" id="sellerBillingSummary">
     <article class="seller-panel"><span>利用可能残高</span><strong data-billing="available">…</strong><span data-billing="wallet-note">読み込み中</span></article>
@@ -602,11 +593,11 @@ export async function sellerPageResponse(
   <section class="auth-card" id="plan"><p class="eyebrow">SELLER PLAN</p><h2>契約プラン</h2>
   <p>現在のプラン: <strong>${publicPlan}</strong>。有料契約によって商品そのものの検索順位は変わりません。</p>
   <div class="seller-grid">
-    <article class="seller-panel"><span>無料プラン</span><strong>月額0円</strong><span>自然検索への商品掲載と優先出品の対象指定。有効クリックはジャンル定価を前払い残高から消化します。ショップページはありません。</span></article>
-    <article class="seller-panel"><span>HOSHILU Seller</span><strong>月額4,980円</strong><span>登録後3か月は月額0円。通常の商品クリック・SHOP掲載・横断検索・需要への商品登録は月額に含まれます。Demand Match Click（探していた人をHOSHILUが呼び戻して商品を開いた時）だけ1有効クリック50円（計測と予算上限が入るまで0円）。1事業者アカウント単位、初期費用・解約金0円。</span></article>
+    <article class="seller-panel"><span>無料プラン</span><strong>月額0円</strong><span>自然検索への商品掲載。ショップページ・横断検索への露出・需要への商品登録はありません。</span></article>
+    <article class="seller-panel"><span>HOSHILU Seller</span><strong>月額4,980円</strong><span>登録後3か月は月額0円。<strong>追加料金はありません。</strong>SHOP掲載・横断検索・商品クリック・需要への商品登録・需要への再通知まで、すべて月額に含まれます。1事業者アカウント単位、初期費用・解約金0円。</span></article>
   </div>
-  <p class="data-note">自然検索は無料です。優先出品の請求対象は、請求条件を満たしたジャンル別単価の有効クリックだけです。<a href="/for-sellers#pricing">料金を確認</a></p></section>
-  </main><script type="module" src="/seller.js?v=4"></script></body></html>`;
+  <p class="data-note">2026-09-21 に Demand Match Click（1有効クリック50円）を廃止しました。料金は月額だけです。<a href="/for-sellers#pricing">料金を確認</a></p></section>
+  </main><script type="module" src="/seller.js?v=5"></script></body></html>`;
 
   return new Response(html, { headers: {
     'content-type': 'text/html; charset=UTF-8',

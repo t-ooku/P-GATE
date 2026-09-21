@@ -3,15 +3,18 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  DEMAND_MATCH_CLICK_JPY, demandMatchProductUrl, demandMatchSummary, handleSellerDemandMatchRoutes, recordDemandMatchClick,
-  demandMatchEligibility, setDemandMatchBudget, signDemandMatchToken, verifyDemandMatchToken
+  demandMatchProductUrl, demandMatchSummary, handleSellerDemandMatchRoutes, recordDemandMatchClick,
+  signDemandMatchToken, verifyDemandMatchToken
 } from '../src/seller-demand-match.mjs';
 import { registerDemandOffer, rematchDemand } from '../src/shop-demand.mjs';
 import { handleShopRoutes, resetShopCache } from '../src/seller-shop.mjs';
 
-// 2026-09-19 大隆さん指示「HOSHILU Seller収益化・需要マッチ改修」§2〜§4・§10〜§14:
-// 検索 → 0件 → ホシっとく → Seller が需要に商品登録 → 再照合 → HOSHILU が本人へ通知 →
-// 本人が通知から Seller 商品ページを開いた時だけ Demand Match Click 50円。bot/本人/管理者/重複/上限は除外し、理由を残す。
+// 2026-09-19 §2〜§4・§10〜§14 の経路はそのまま:
+//   検索 → 0件 → ホシっとく → Seller が需要に商品登録 → 再照合 → HOSHILU が本人へ通知 →
+//   本人が通知から Seller 商品ページを開く
+// 2026-09-21 大隆さん決定「クリック課金をやめる。料金は月額だけ。計測は残す」:
+//   この最後の一歩に **お金を動かさない**。件数だけ数える。bot/本人/管理者/重複は除外し、理由は残す。
+//   残高・予算で需要マッチを止めることもしない（課金しないなら止める理由が無い）。
 
 function d1(db) {
   const statementFor = (sql) => { const statement = db.prepare(sql); let values = [];
@@ -73,26 +76,30 @@ test('需要に商品を登録 → 通知のリンクは Seller 専用商品ペ�
   assert.deepEqual(demand, { status: 'MATCHED', matched_seller_key: SELLER_KEY });
 });
 
-async function matchedEnv(extra = {}, { fundJpy = 0 } = {}) {
+async function matchedEnv(extra = {}) {
   const made = makeEnv(extra);
-  if (fundJpy > 0) made.db.prepare(`INSERT INTO seller_billing_wallets(seller_key,balance_micros_jpy,status,updated_at) VALUES(?1,?2,'ACTIVE','2026-09-01T00:00:00Z')`).run(SELLER_KEY, fundJpy * 1000000);
   await registerDemandOffer(made.env, SELLER_KEY, { demand_key: '黒の本革で自立するa4トートバッグ', asin: 'B000000001' }, { now: NOW.toISOString() });
   const token = new URL(made.db.prepare(`SELECT result_url FROM mywatch_notifications WHERE member_id='m1' AND channel='WEB'`).get().result_url).searchParams.get('dm');
   return { ...made, token };
 }
 
-test('Demand Match Click: 本人が通知から開いた時だけ VALID 50円。同じ日の重複は DUPLICATE', async () => {
+test('有効クリック: 本人が通知から開いた時だけ VALID。金額は動かさない。同じ日の重複は DUPLICATE', async () => {
   const { db, env, token } = await matchedEnv();
   const click = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', productUrl: 'https://www.amazon.co.jp/dp/B000000001', now: NOW });
-  assert.equal(click.recorded, true); assert.equal(click.status, 'VALID'); assert.equal(click.amount_jpy, DEMAND_MATCH_CLICK_JPY);
-  assert.equal(click.settled, 'PENDING', '課金フラグが無い間は残高から引かない（判定と件数だけ記録）');
+  assert.equal(click.recorded, true); assert.equal(click.status, 'VALID');
+  assert.equal(click.charged, false, '課金しない');
+  assert.equal(click.amount_jpy, 0, '1円も動かさない');
   const again = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: NOW });
   assert.equal(again.recorded, false); assert.equal(again.reason, 'DUPLICATE');
   const rows = db.prepare(`SELECT status,reason,amount_jpy,jst_month,source_event_id FROM seller_demand_match_clicks`).all().map((row) => ({ ...row }));
-  assert.deepEqual(rows, [{ status: 'VALID', reason: '', amount_jpy: 50, jst_month: '2026-09', source_event_id: 'dm:sd-1:B000000001:2026-09-19' }]);
+  assert.deepEqual(rows, [{ status: 'VALID', reason: '', amount_jpy: 0, jst_month: '2026-09', source_event_id: 'dm:sd-1:B000000001:2026-09-19' }]);
+  // 請求台帳には何も足さない
+  assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM seller_billing_ledger`).get().c, 0);
   const summary = await demandMatchSummary(env, SELLER_KEY, NOW);
-  assert.equal(summary.notified, 1); assert.equal(summary.valid_clicks, 1); assert.equal(summary.amount_jpy, 50); assert.equal(summary.cap_jpy, 3000);
-  assert.equal(summary.charge_enabled, false); assert.equal(summary.cap_reached, false);
+  assert.equal(summary.notified, 1); assert.equal(summary.valid_clicks, 1);
+  assert.equal(summary.charged, false);
+  // 金額・予算の語を集計に残さない（画面が値段を書けないようにする）
+  for (const key of ['amount_jpy', 'cap_jpy', 'unit_jpy', 'eligibility']) assert.equal(key in summary, false, key);
 });
 
 test('除外: bot・未ログイン・別の会員・Seller 本人・管理者は EXCLUDED として理由付きで残り、0円', async () => {
@@ -108,34 +115,22 @@ test('除外: bot・未ログイン・別の会員・Seller 本人・管理者�
     const { db, env, token } = await matchedEnv();
     const click = await recordDemandMatchClick(env, { token, ...input, now: NOW });
     assert.equal(click.status, 'EXCLUDED', reason); assert.equal(click.reason, reason); assert.equal(click.amount_jpy, 0);
+    assert.equal(click.charged, false);
     assert.equal(db.prepare(`SELECT amount_jpy FROM seller_demand_match_clicks`).get().amount_jpy, 0);
     assert.equal((await demandMatchSummary(env, SELLER_KEY, NOW)).excluded_clicks, 1);
   }
 });
 
-test('予算上限: 上限に達したら BUDGET_CAP で記録し課金しない。0円は Demand Match を使わない設定', async () => {
-  const { db, env, token } = await matchedEnv();
-  await setDemandMatchBudget(env.PRODUCT_DB, SELLER_KEY, 50);
-  const first = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: NOW });
-  assert.equal(first.status, 'VALID');
-  const next = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: new Date('2026-09-20T03:00:00Z') });
-  assert.deepEqual([next.status, next.reason, next.amount_jpy], ['EXCLUDED', 'BUDGET_CAP', 0]);
-  assert.equal((await demandMatchSummary(env, SELLER_KEY, NOW)).cap_reached, true);
-  await setDemandMatchBudget(env.PRODUCT_DB, SELLER_KEY, 0);
-  const zero = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: new Date('2026-09-21T03:00:00Z') });
-  assert.equal(zero.reason, 'BUDGET_CAP');
-  assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM seller_demand_match_clicks WHERE status='VALID'`).get().c, 1);
-});
-
-test('課金フラグ true: VALID は前払い残高から 50円を引き、台帳に REFERRAL_CHARGE を残す。残高不足は PENDING', async () => {
-  const { db, env, token } = await matchedEnv({ DEMAND_MATCH_CHARGE_ENABLED: 'true' }, { fundJpy: 60 });
-  const click = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: NOW });
-  assert.equal(click.settled, 'WALLET');
-  assert.equal(db.prepare(`SELECT balance_micros_jpy FROM seller_billing_wallets WHERE seller_key=?1`).get(SELLER_KEY).balance_micros_jpy, 10 * 1000000);
-  const ledger = { ...db.prepare(`SELECT entry_type,amount_micros_jpy,source_event_id FROM seller_billing_ledger`).get() };
-  assert.deepEqual(ledger, { entry_type: 'REFERRAL_CHARGE', amount_micros_jpy: -50 * 1000000, source_event_id: 'dm:sd-1:B000000001:2026-09-19' });
-  const short = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: new Date('2026-09-20T03:00:00Z') });
-  assert.deepEqual([short.status, short.settled], ['VALID', 'PENDING'], '残高不足でも有効クリックは記録し、残高は負にしない');
+// 2026-09-21: 予算上限・前払い残高からの消化・課金フラグのテストは、その機能ごと無くなったので削除した。
+// 代わりに「もう課金の経路に触れていない」ことをソースで固定する。
+test('課金の経路にもう触れていない', () => {
+  const source = readFileSync(new URL('../src/seller-demand-match.mjs', import.meta.url), 'utf8');
+  for (const gone of ['chargeReferralFromWallet', 'getWallet', 'DEMAND_MATCH_CLICK_JPY', 'seller_demand_match_budgets', 'DEMAND_MATCH_CHARGE_ENABLED']) {
+    assert.ok(!source.includes(gone), gone);
+  }
+  assert.match(source, /charged: false/u);
+  const demand = readFileSync(new URL('../src/shop-demand.mjs', import.meta.url), 'utf8');
+  assert.ok(!demand.includes('demandMatchEligibility'), '残高・予算で需要マッチを止めない');
 });
 
 test('商品ページ /shop/<slug>/product/<asin>: 商品データの事実だけ。?dm= 付きで本人が開くと条件と一致項目を表示し、クリックを記録', async () => {
@@ -177,78 +172,42 @@ test('商品ページ /shop/<slug>/product/<asin>: 商品データの事実だ�
   assert.equal(missing.status, 404, '商品データに無い ASIN のページは作らない');
 });
 
-test('/api/seller/demand-match: 集計と予算上限（プリセット・任意額・上限外は拒否）', async () => {
+test('/api/seller/demand-match: 集計だけ。予算の設定経路は無くした', async () => {
   const { env } = await matchedEnv();
   const seller = { seller_key: SELLER_KEY };
   const unauthorized = await handleSellerDemandMatchRoutes(request('/api/seller/demand-match'), env, null);
   assert.equal(unauthorized.status, 401);
   const summary = await (await handleSellerDemandMatchRoutes(request('/api/seller/demand-match'), env, seller)).json();
-  assert.equal(summary.ok, true); assert.equal(summary.demand_match.unit_jpy, 50); assert.deepEqual(summary.demand_match.cap_presets_jpy, [0, 1000, 3000, 5000, 10000]);
-  const saved = await (await handleSellerDemandMatchRoutes(request('/api/seller/demand-match/budget', { method: 'PUT', body: { monthly_cap_jpy: 20000 } }), env, seller)).json();
-  assert.equal(saved.monthly_cap_jpy, 20000); assert.equal(saved.demand_match.cap_jpy, 20000);
-  const bad = await handleSellerDemandMatchRoutes(request('/api/seller/demand-match/budget', { method: 'PUT', body: { monthly_cap_jpy: -1 } }), env, seller);
-  assert.equal(bad.status, 400);
+  assert.equal(summary.ok, true);
+  assert.equal(summary.demand_match.charged, false);
+  // 予算を設定する経路は消えている（404）
+  const budget = await handleSellerDemandMatchRoutes(request('/api/seller/demand-match/budget', { method: 'PUT', body: { monthly_cap_jpy: 20000 } }), env, seller);
+  assert.equal(budget.status, 404);
   const page = readFileSync(new URL('../src/seller-page.mjs', import.meta.url), 'utf8');
-  for (const label of ['data-dm-kpi="notified"', 'data-dm-kpi="valid"', 'data-dm-kpi="amount"', 'data-dm-kpi="cap"', 'sellerDemandMatchBudgetForm', 'seller.js?v=4']) assert.ok(page.includes(label), label);
+  for (const label of ['data-dm-kpi="notified"', 'data-dm-kpi="valid"', 'data-dm-kpi="excluded"', 'seller.js?v=5']) assert.ok(page.includes(label), label);
+  for (const gone of ['data-dm-kpi="amount"', 'data-dm-kpi="cap"', 'sellerDemandMatchBudgetForm']) assert.ok(!page.includes(gone), gone);
   const js = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
-  assert.match(js, /\/api\/seller\/demand-match\/budget/u);
+  assert.ok(!js.includes('/api/seller/demand-match/budget'), '画面からも予算の保存を消す');
+  assert.ok(!js.includes('DEMAND_MATCH_BALANCE_REQUIRED'), '残高不足で断る文言を残さない');
   const auth = readFileSync(new URL('../src/seller-auth.mjs', import.meta.url), 'utf8');
   assert.match(auth, /handleSellerDemandMatchRoutes/u);
 });
 
-test('無料アカウント（ITG）: 有効クリックは記録するが 0円・残高から引かない（2026-09-19 大隆さん決定）', async () => {
-  const { db, env, token } = await matchedEnv({ DEMAND_MATCH_CHARGE_ENABLED: 'true', DEMAND_MATCH_FREE_SELLER_KEYS: `other-key, ${SELLER_KEY}` });
-  db.prepare(`INSERT INTO seller_billing_wallets(seller_key,balance_micros_jpy,status,updated_at) VALUES(?1,?2,'ACTIVE','2026-09-01T00:00:00Z')`).run(SELLER_KEY, 60 * 1000000);
-  const click = await recordDemandMatchClick(env, { token, request: request('/x'), memberId: 'm1', now: NOW });
-  assert.deepEqual([click.status, click.reason, click.amount_jpy, click.settled], ['VALID', 'FREE_ACCOUNT', 0, 'PENDING']);
-  assert.equal(db.prepare(`SELECT balance_micros_jpy FROM seller_billing_wallets WHERE seller_key=?1`).get(SELLER_KEY).balance_micros_jpy, 60 * 1000000);
-  assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM seller_billing_ledger`).get().c, 0);
-  const summary = await demandMatchSummary(env, SELLER_KEY, NOW);
-  assert.deepEqual([summary.free_account, summary.valid_clicks, summary.amount_jpy, summary.charge_enabled], [true, 1, 0, true]);
-  const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
-  assert.equal(wrangler.vars.DEMAND_MATCH_CHARGE_ENABLED, 'true');
-  assert.ok(wrangler.vars.DEMAND_MATCH_FREE_SELLER_KEYS.split(',').includes(SELLER_KEY), 'ITG GROUP は無料');
-});
-
-test('残高が無い Seller は課金できるまで Demand Match を止める: 商品登録は拒否、再照合は対象外＝通知しない（2026-09-19 大隆さん指示）', async () => {
-  const charging = { DEMAND_MATCH_CHARGE_ENABLED: 'true' };
+// 2026-09-21 大隆さん決定: 残高が無い Seller の需要マッチを止めるのをやめた。
+// 課金しないのだから、止める理由が無い。止めていた分だけ会員が商品に出会えなかった。
+test('残高が無くても需要マッチは止めない: 商品登録も再照合の通知も通る', async () => {
   {
-    const { db, env } = makeEnv(charging);
-    assert.deepEqual(await demandMatchEligibility(env, SELLER_KEY, NOW), { ok: false, reason: 'BALANCE_REQUIRED', available_jpy: 0 });
-    await assert.rejects(registerDemandOffer(env, SELLER_KEY, { demand_key: '黒の本革で自立するa4トートバッグ', asin: 'B000000001' }, { now: NOW.toISOString() }), /DEMAND_MATCH_BALANCE_REQUIRED/u);
-    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM shop_demand_offers`).get().c, 0, '登録も残さない');
-    const demand = db.prepare(`SELECT * FROM shop_demand_requests WHERE demand_id='sd-1'`).get();
-    const outcome = await rematchDemand(env, demand, { now: NOW.toISOString() });
-    assert.equal(outcome.matched, false, '残高の無い Seller の商品には一致させない');
-    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM mywatch_notifications`).get().c, 0, '通知を出さない');
-    assert.equal(db.prepare(`SELECT status FROM shop_demand_requests WHERE demand_id='sd-1'`).get().status, 'OPEN');
-    const summary = await demandMatchSummary(env, SELLER_KEY, NOW);
-    assert.equal(summary.eligibility.reason, 'BALANCE_REQUIRED');
+    const { db, env } = makeEnv();
+    const result = await registerDemandOffer(env, SELLER_KEY, { demand_key: '黒の本革で自立するa4トートバッグ', asin: 'B000000001' }, { now: NOW.toISOString() });
+    assert.equal(result.notified, 1, '残高ゼロでも本人に届く');
+    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM shop_demand_offers`).get().c, 1);
+    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM seller_billing_ledger`).get().c, 0, 'お金は動かない');
   }
   {
-    // チャージすると再開（残高 100円 → 登録・通知できる）
-    const { db, env } = makeEnv(charging);
-    db.prepare(`INSERT INTO seller_billing_wallets(seller_key,balance_micros_jpy,status,updated_at) VALUES(?1,?2,'ACTIVE','2026-09-01T00:00:00Z')`).run(SELLER_KEY, 100 * 1000000);
-    assert.deepEqual(await demandMatchEligibility(env, SELLER_KEY, NOW), { ok: true, reason: 'FUNDED', available_jpy: 100 });
+    const { db, env } = makeEnv();
     const demand = db.prepare(`SELECT * FROM shop_demand_requests WHERE demand_id='sd-1'`).get();
     const outcome = await rematchDemand(env, demand, { now: NOW.toISOString() });
     assert.equal(outcome.matched, true);
     assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM mywatch_notifications`).get().c, 1);
   }
-  {
-    // 無料アカウント（ITG）は残高が無くても止めない
-    const { db, env } = makeEnv({ ...charging, DEMAND_MATCH_FREE_SELLER_KEYS: SELLER_KEY });
-    assert.equal((await demandMatchEligibility(env, SELLER_KEY, NOW)).reason, 'FREE_ACCOUNT');
-    const result = await registerDemandOffer(env, SELLER_KEY, { demand_key: '黒の本革で自立するa4トートバッグ', asin: 'B000000001' }, { now: NOW.toISOString() });
-    assert.equal(result.notified, 1);
-    assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM mywatch_notifications`).get().c, 1);
-  }
-  {
-    // 予算 0 円＝Demand Match を使わない設定でも止める
-    const { env } = makeEnv(charging);
-    await setDemandMatchBudget(env.PRODUCT_DB, SELLER_KEY, 0);
-    assert.equal((await demandMatchEligibility(env, SELLER_KEY, NOW)).reason, 'BUDGET_OFF');
-  }
-  const js = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
-  assert.match(js, /DEMAND_MATCH_BALANCE_REQUIRED/u);
 });

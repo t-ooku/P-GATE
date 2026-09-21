@@ -12,7 +12,7 @@
 import { activeShops, publicShopRef, recordShopEvent, SHOP_GENRES, shopFilters } from './seller-shop.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
 import { readMemberSession } from './member-auth.mjs';
-import { demandMatchEligibility, demandMatchProductUrl, eligibleDemandMatchShops } from './seller-demand-match.mjs';
+import { demandMatchProductUrl } from './seller-demand-match.mjs';
 import { SHOP_COLOR_FILTERS, SHOP_MATERIAL_FILTERS, shopAttributeDefinition } from './shop-facets.mjs';
 import { targetPriceDemand, usualDemandForecast } from './usual-demand.mjs';
 
@@ -293,8 +293,9 @@ export async function notifyDemandMatch(env, demand, { shop, card, level, now = 
   const shopName = String(shop?.name || card?.shop?.name || 'ショップ');
   const title = '探していた商品が見つかりました';
   const body = `「${demand.query_text}」\n${shopName}に${level === 'EXACT' ? '条件に一致する' : '近い'}商品が追加されました。`;
-  // 2026-09-19 大隆さん指示 §2・§10・§11: 通知のリンク先は Seller 専用商品ページ（署名付き）。本人が通知から
-  // その商品を開いた時だけ Demand Match Click（50円）。ショップ・ASIN が無い時は従来の検索結果へ。
+  // 2026-09-19 §2・§10・§11: 通知のリンク先は Seller 専用商品ページ（署名付き）。
+  // 2026-09-21 大隆さん決定でこのクリックの課金はやめた。署名は「誰の通知から来たか」を
+  // 本人ハッシュで確かめて計測するためだけに残っている。ショップ・ASIN が無い時は従来の検索結果へ。
   let resultUrl = demandResultUrl(demand.query_text);
   const slug = String(shop?.slug || card?.shop?.slug || '');
   const asin = clean(card?.asin, 20).toUpperCase();
@@ -328,8 +329,9 @@ async function markMatched(db, demand, { shop, card, level, notificationId, now 
 // 1件の探し中需要を再判定する。EXACT はいつでも一致、NEAR は保存時に何も無かった需要だけ「近い商品が追加」として扱う。
 export async function rematchDemand(env, demand, { now = new Date().toISOString(), search = searchAcrossShops } = {}) {
   const db = env.PRODUCT_DB;
-  // 2026-09-19 大隆さん指示: 前払い残高が無い Seller（無料アカウント以外）のショップは再照合の対象から外す＝通知も出さない
-  const shops = await eligibleDemandMatchShops(env, await activeShops(env), new Date(now));
+  // 2026-09-21 大隆さん決定「クリック課金をやめる」: 残高や予算で再照合を止めない。
+  // 課金しない以上、止める理由が無い。契約中のショップはすべて対象にする。
+  const shops = await activeShops(env);
   const result = shops.length ? await search(env, demand.query_text, { shops }) : { exact: [], near: [] };
   const pick = result.exact[0] ? { card: result.exact[0], level: 'EXACT' }
     : (demand.result_state === 'NONE' && result.near[0] ? { card: result.near[0], level: 'NEAR' } : null);
@@ -621,9 +623,6 @@ export async function registerDemandOffer(env, sellerKey, input = {}, { now = ne
     }
   }
   if (!product) throw new Error('PRODUCT_NOT_IN_YOUR_SHOP');
-  // 2026-09-19 大隆さん指示: 残高が無い（または予算 0・上限到達の）Seller は、チャージするまで需要への商品登録と通知を止める
-  const eligibility = await demandMatchEligibility(env, sellerKey, new Date(now));
-  if (!eligibility.ok) throw new Error(`DEMAND_MATCH_${eligibility.reason}`);
   const conditions = demandConditions(queryText);
   const verdict = judgeTitle(product.product_name, conditions);
   const offerId = `so-${crypto.randomUUID()}`;

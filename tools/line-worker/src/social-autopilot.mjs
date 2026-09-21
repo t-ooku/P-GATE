@@ -249,7 +249,7 @@ const X_SELLER_POSTS = Object.freeze([
   },
   {
     id: 'seller-demand-insight',
-    caption: '追加料金は、探していた人をHOSHILUが呼び戻して商品ページを開いた時だけ50円。通常のクリックは月額に含まれ、予算の上限も自分で決められます。売上や掲載順位は保証しません。',
+    caption: '商品を出したら、探していた人へHOSHILUが届けます。料金は月額4,980円だけ。クリックによる追加料金はありません。最初の3か月は月額0円。売上や掲載順位は保証しません。',
     link_path: '/for-sellers'
   },
   {
@@ -643,7 +643,7 @@ const THREADS_SELLER_POSTS = Object.freeze([
   { id: 'seller-first-visible', caption: '欲しい人が、先に見える。\nHOSHILUで探して見つからなかった「欲しい」が、個人を特定できない匿名の需要としてお店に届きます。ネットショップ・メーカーの方へ。' },
   { id: 'seller-keep-your-mall', caption: '新しいECモールを増やす必要はありません。\nAmazon・楽天・Yahoo!など今ある販売先はそのまま。HOSHILUは受注や発送を移す場所ではなく、探している人と商品をつなぐ入口です。' },
   { id: 'seller-price-plain', caption: 'HOSHILU Sellerは月額4,980円、最初の3か月は月額0円。初期費用0円。\n通常の検索やショップからの商品クリックは月額に含まれます。相談フォーム送信だけでは課金されません。' },
-  { id: 'seller-demand-match-50', caption: '追加料金は1つだけ。\n探していた人にHOSHILUが通知して、その人が通知から商品ページを開いた時だけ50円。通常のクリックには課金しません。予算の上限も自分で決められます。' },
+  { id: 'seller-demand-match-50', caption: '商品の料金は月額4,980円だけ。\nクリックされるたびに請求が増える、ということはありません。最初の3か月は月額0円です。' },
   { id: 'seller-anonymous-5', caption: 'Sellerの画面に出るのは、同じ条件を5人以上が探している需要だけ。\n検索文そのものや、メール・LINE・電話番号は出しません。HOSHILUが間に入って、本人にだけ知らせます。' },
   { id: 'seller-register-judge', caption: '「この需要に商品を登録」を押すと、HOSHILUが商品名と条件を突き合わせて判定します。\n自己申告では一致になりません。一致した時だけ、探していた本人にお知らせします。' },
   { id: 'seller-real-numbers', caption: 'Sellerの契約者画面にあるのは、確認できた実数だけ。\n横断検索の回数、0件だった検索、近い商品しか無かった検索。推定売上や見込みは出しません。' },
