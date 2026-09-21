@@ -23,7 +23,14 @@ const COPY = {
   overdue: '予定を過ぎています',
   usualPrice: (value) => `いつもの価格 約${value.toLocaleString('ja-JP')}円`,
   cycleLearned: (days) => `平均補充周期 約${days}日`,
-  cycleChosen: (days) => `補充周期 ${days}日`
+  cycleChosen: (days) => `補充周期 ${days}日`,
+  // §8 の判断。見出しの文言はサーバーが返す（画面に複製しない）。
+  // 事実が揃わないときはサーバーが null を返すので、何も言い切らない。
+  cheaper: (value) => `いつもより${value.toLocaleString('ja-JP')}円安い`,
+  pricier: (value) => `いつもより${value.toLocaleString('ja-JP')}円高い`,
+  currentPrice: (value) => `今 ${value.toLocaleString('ja-JP')}円`,
+  soonDays: (value) => `あと${value}日`,
+  overdueShort: '予定を過ぎています'
 };
 const PRESETS = [7, 14, 30, 60];
 
@@ -72,7 +79,29 @@ function card(item) {
     meta.push(item.cycle_source === 'LEARNED' ? COPY.cycleLearned(item.cycle_days) : COPY.cycleChosen(item.cycle_days));
   }
   if (Number(item.usual_price_jpy) > 0) meta.push(COPY.usualPrice(Number(item.usual_price_jpy)));
+  if (Number(item.current_price_jpy) > 0) meta.push(COPY.currentPrice(Number(item.current_price_jpy)));
   if (meta.length) body.append(el('span', 'usual-row-meta', meta.join('・')));
+
+  // §8 判断。サーバーが出したときだけ出す。ここで作らない。
+  const advice = item.buy_advice;
+  // 状態が既に同じことを言っていて、価格の話も無いなら、同じ言葉を二度出さない。
+  const told = Number(advice?.price_difference_jpy);
+  const hasPriceReason = Number.isFinite(told) && told !== 0 && advice?.price_difference_jpy !== null;
+  const repeatsState = advice && advice.label === label && !hasPriceReason;
+  if (advice && !repeatsState && (advice.verdict === 'BUY_NOW' || advice.verdict === 'WAIT')) {
+    const buyNow = advice.verdict === 'BUY_NOW';
+    const box = el('span', `usual-row-advice usual-advice-${buyNow ? 'buy' : 'wait'}`);
+    box.append(el('strong', null, advice.label || ''));
+    const reasons = [];
+    const left = Number(advice.days_left);
+    if (Number.isFinite(left)) reasons.push(left < 0 ? COPY.overdueShort : COPY.soonDays(left));
+    const difference = Number(advice.price_difference_jpy);
+    if (Number.isFinite(difference) && difference !== 0) {
+      reasons.push(difference > 0 ? COPY.cheaper(difference) : COPY.pricier(Math.abs(difference)));
+    }
+    if (reasons.length) box.append(el('span', null, reasons.join('・')));
+    body.append(box);
+  }
 
   const actions = el('div', 'usual-row-actions');
   const bought = el('button', 'usual-row-bought', COPY.bought);

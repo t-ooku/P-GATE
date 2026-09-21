@@ -66,6 +66,9 @@ export const USUAL_STATES = Object.freeze(['PLENTY', 'SOON', 'NEARLY', 'BUY_NOW'
 export const USUAL_STATE_LABELS_JA = Object.freeze({
   PLENTY: 'まだ大丈夫', SOON: 'そろそろ', NEARLY: 'もうすぐ', BUY_NOW: '今ホシっとこ'
 });
+// §8 の判断の見出し。状態（4段階）とは別物なので、別の表で持つ。
+// 画面に同じ文言を置かないよう、判断のときも文言はここから返す。
+export const USUAL_ADVICE_LABELS_JA = Object.freeze({ BUY_NOW: '今ホシっとこ', WAIT: 'まだ待ってOK' });
 
 export function usualState(nextDue, cycleDays, now = Date.now()) {
   const days = usualCycleDays(cycleDays);
@@ -171,11 +174,51 @@ async function purchaseRows(env, memberId, usualId) {
   return result?.results || [];
 }
 
+// §8「今ホシっとこ / まだ待ってOK」に使う現在価格。
+// 推測も生成もしない。本人が同じ商品を値下がり待ちにしていて、実際に観測できた価格が
+// あるときだけ使う（target_price_observations＝取得済みの実測値）。
+// 無ければ null のまま返し、判断は補充の時期だけで出す（価格の話はしない）。
+export async function observedPriceByProductKey(env, memberId) {
+  const empty = new Map();
+  if (!env?.PRODUCT_DB?.prepare || !memberId) return empty;
+  try {
+    const result = await env.PRODUCT_DB.prepare(
+      `SELECT COALESCE(json_extract(w.condition_snapshot,'$.price_condition.target_product_key'),'') AS product_key,
+         o.price_jpy AS price_jpy, o.marketplace AS marketplace, o.observed_at AS observed_at
+       FROM member_wishes w
+       JOIN target_price_observations o ON o.wish_id=w.wish_id
+       WHERE w.member_id=?1 AND w.archived_at IS NULL AND o.price_jpy IS NOT NULL AND o.price_jpy>0
+       ORDER BY o.observed_at DESC
+       LIMIT 400`
+    ).bind(memberId).all();
+    const latest = new Map();
+    for (const row of result?.results || []) {
+      const key = String(row.product_key || '').trim();
+      if (!key || latest.has(key)) continue;
+      latest.set(key, {
+        current_price_jpy: Number(row.price_jpy) || null,
+        current_price_marketplace: String(row.marketplace || ''),
+        current_price_observed_at: String(row.observed_at || '')
+      });
+    }
+    return latest;
+  } catch { return empty; }
+}
+
+// 判断の見出しをサーバー側で付ける。画面に同じ日本語を置かないため。
+function labelledAdvice(advice) {
+  if (!advice) return null;
+  return { ...advice, label: USUAL_ADVICE_LABELS_JA[advice.verdict] || '' };
+}
+
+const NO_CURRENT_PRICE = Object.freeze({ current_price_jpy: null, current_price_marketplace: '', current_price_observed_at: '' });
+
 // 一覧の 1 行を、画面がそのまま出せる形にして返す。
 // 状態・残り日数・いつもの価格は、保存済みの事実からその場で出す（推測はしない）。
-function decorateUsualRow(row, purchases = [], now = Date.now()) {
+function decorateUsualRow(row, purchases = [], now = Date.now(), current = NO_CURRENT_PRICE) {
   const { state, days_left: daysLeft } = usualState(row.next_due_at, row.cycle_days, now);
   const usual = usualPriceJpy(purchases.map((item) => item.price_jpy));
+  const price = current || NO_CURRENT_PRICE;
   return {
     ...row,
     exact_only: Number(row.exact_only) === 1,
@@ -183,7 +226,12 @@ function decorateUsualRow(row, purchases = [], now = Date.now()) {
     state_label: USUAL_STATE_LABELS_JA[state] || '',
     days_left: daysLeft,
     usual_price_jpy: usual,
-    purchase_count: purchases.length
+    purchase_count: purchases.length,
+    ...price,
+    // 事実が揃わないときは null。画面は null のとき何も言い切らない。
+    buy_advice: labelledAdvice(usualBuyAdvice({
+      state, daysLeft, currentPriceJpy: price.current_price_jpy, usualPrice: usual
+    }))
   };
 }
 
@@ -204,9 +252,13 @@ export async function handleMemberUsualRoutes(request, env) {
       ).bind(member.id).all(),
       () => ({ results: [] })
     );
+    const observed = await observedPriceByProductKey(env, member.id);
     const items = [];
     for (const row of rows.results || []) {
-      items.push(decorateUsualRow(row, await purchaseRows(env, member.id, row.usual_id)));
+      items.push(decorateUsualRow(
+        row, await purchaseRows(env, member.id, row.usual_id), Date.now(),
+        observed.get(String(row.product_key || '').trim()) || NO_CURRENT_PRICE
+      ));
     }
     // 画面が「いつものホシル 12 / 30」を出せるよう、上限と使用数も返す（探し中・値下がり待ちと同じ）。
     return jsonResponse({

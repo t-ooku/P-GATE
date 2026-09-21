@@ -51,3 +51,10 @@
 .usual-cycle-save{margin-top:4px;border:0;border-radius:12px;background:linear-gradient(90deg,#f2569b,#7357ff,#2fb6f3);color:#fff;padding:13px;cursor:pointer;font-weight:800;font-size:15px}
 .usual-cycle-save:disabled{opacity:.6}
 .usual-cycle-status{margin:0;color:#b4270a;font-size:13px;line-height:1.6}
+/* §8「今ホシっとこ / まだ待ってOK」。判断が出せないときは要素ごと出さない（JS 側で出さない）。
+   Instagram 寄せに合わせて塗らず、1px の線と文字だけで示す。 */
+.usual-row-advice{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-top:6px;padding:8px 10px;border:1px solid #dbdbdb;border-radius:8px}
+.usual-row-advice strong{font-size:14px;font-weight:700}
+.usual-row-advice span{color:var(--muted,#6d6b80);font-size:12px}
+.usual-advice-buy strong{color:#262626}
+.usual-advice-wait strong{color:#8e8e8e}
