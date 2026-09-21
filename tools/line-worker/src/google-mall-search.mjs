@@ -93,18 +93,16 @@ function cleanText(value, limit) {
   return String(value || '').normalize('NFKC').replace(/<[^>]*>/gu, ' ').replace(/&nbsp;/gu, ' ').replace(/\s+/gu, ' ').trim().slice(0, limit);
 }
 
-// 2026-09-21 大隆さん報告「画像出てないよ」: Amazon・マツキヨのカードに商品写真ではなく
-// モールのロゴが出ていた。og:image はページが商品ページでもサイト共通のロゴを返すことが多く、
-// それを商品画像として出すと、その商品の見た目を偽って伝えることになる。
-// 商品として構造化された画像（product.image）を最優先し、ロゴ・既定 OGP 画像・アイコンと
-// 分かる URL は捨てる。捨てた結果 画像が無ければ、画面側はモール名のタイルへ落ちる。
-// ロゴを商品写真のふりをさせない。画像 URL の推測生成もしない。
-const NON_PRODUCT_IMAGE = /(?:social_share|[/_-]logo[/_.-]|logo\.(?:png|jpe?g|svg|webp)|ogp?[_-]?default|default[_-]ogp?|no[_-]?image|noimg|placeholder|apple-touch-icon|favicon|sprite)/iu;
-
+// 2026-09-21 大隆さん報告「画像出てないよ」への対応と、その差し戻し。
+// 一度はモールのロゴ（Amazon の social_share ロゴ等）を商品画像として弾いたが、
+// 大隆さん判断「無地になるならロゴでいいよ」により、弾くのをやめた。
+// ロゴはそのサイト自身が og:image として出している本物の値で、HOSHILU が作った
+// ものではない。無地のタイルより画面として成立する、という判断。
+// 残した改善は候補の順番だけ: 商品として構造化された product.image を og:image より
+// 先に見るので、商品写真が取れるページでは写真が出る。画像 URL の推測生成はしない。
 export function usableGoogleMallImage(value) {
   const text = String(value || '').trim();
-  if (!/^https:\/\/[^\s"'<>]+$/iu.test(text) || text.length > 1000) return '';
-  return NON_PRODUCT_IMAGE.test(text) ? '' : text;
+  return /^https:\/\/[^\s"'<>]+$/iu.test(text) && text.length <= 1000 ? text : '';
 }
 
 function firstImage(pagemap = {}) {
@@ -201,8 +199,11 @@ export function parseGoogleMallItems(rows = []) {
     if (!entry.title) continue;
     (entry.product_page ? products : others).push(entry);
   }
-  // §16: 商品詳細 URL 候補だけ残す。商品ページが 1 件も無い時だけ、案内として一覧ページを最大 2 件残す。
-  return (products.length ? products : others.slice(0, 2)).slice(0, RESULT_LIMIT);
+  // 2026-09-21 大隆さん指示「提示商品が減るのはダメ」: 商品ページでないもの（カテゴリ・一覧）も
+  // 捨てず、商品ページの後ろに並べて残す。ただし商品カードのふりはさせない
+  // （product_page=false は画面側で「一覧ページ」と明示し、ホシっとくも出さない）。
+  // 見せる件数を減らさないことと、タップした先が商品だと誤解させないことは両立できる。
+  return [...products, ...others].slice(0, RESULT_LIMIT);
 }
 
 export async function reserveGoogleMallSearchRequest(env = {}, now = new Date()) {

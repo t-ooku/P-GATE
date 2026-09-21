@@ -1,12 +1,14 @@
-// 2026-09-21 大隆さん報告「画像出てないよ」（Amazon・マツキヨココカラのカードにモールのロゴが出ていた）。
-// og:image はページが商品ページでもサイト共通のロゴを返すことが多い。それを商品画像として出すと
-// その商品の見た目を偽って伝えることになるので、ロゴ・既定OGP・アイコンは捨てて画像なしにする
-// （画面側はモール名のタイルへ落ちる）。画像URLの推測生成はしない。
-// あわせて、同スクリーンショットの「Amazon.co.jp: 燃焼系サプリメント - ダイエットサプリメント」は
-// Amazon のカテゴリページ。Amazon は商品ページの形が決まっているので厳しく判定する。
+// 2026-09-21 大隆さん報告「画像出てないよ」と、そのあとの判断「無地になるならロゴでいいよ」
+// 「提示商品が減るのはダメ」を固定する。
+// ・ロゴ（Amazon の social_share ロゴ等）は弾かない。サイト自身が og:image として出している
+//   本物の値であり、無地のタイルより画面として成立する、という大隆さん判断。
+// ・残した改善は候補の順番だけ: product.image を og:image より先に見る。
+// ・Amazon のカテゴリ（ブラウズノード）ページは商品ページとみなさない。ただし結果からは
+//   捨てず、商品ページの後ろに残す（画面側で「一覧ページ」と明示し、ホシっとくは出さない）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { usableGoogleMallImage, isGoogleMallProductPage } from '../src/google-mall-search.mjs';
+import { readFileSync } from 'node:fs';
+import { usableGoogleMallImage, isGoogleMallProductPage, parseGoogleMallItems } from '../src/google-mall-search.mjs';
 
 test('本物の商品画像は通す', () => {
   for (const url of [
@@ -16,20 +18,19 @@ test('本物の商品画像は通す', () => {
   ]) assert.equal(usableGoogleMallImage(url), url, url);
 });
 
-test('モールのロゴ・既定OGP・アイコンは商品画像として使わない', () => {
+// 大隆さん判断「無地になるならAmazonや他も同じくロゴでいいよ」: ロゴは弾かない。
+test('モールのロゴも画像として出す（無地のタイルにしない）', () => {
   for (const url of [
     'https://m.media-amazon.com/images/G/09/social_share/amazon_logo._CB633266945_.png',
     'https://www.matsukiyococokara-online.com/assets/images/logo.png',
-    'https://example.jp/img/site-logo-2x.png',
-    'https://example.jp/img/ogp_default.jpg',
-    'https://example.jp/img/default-og.png',
-    'https://example.jp/img/no_image.png',
-    'https://example.jp/img/noimage.gif',
-    'https://example.jp/img/placeholder.webp',
-    'https://example.jp/apple-touch-icon.png',
-    'https://example.jp/favicon.ico',
-    'https://example.jp/img/sprite.svg'
-  ]) assert.equal(usableGoogleMallImage(url), '', url);
+    'https://example.jp/img/ogp_default.jpg'
+  ]) assert.equal(usableGoogleMallImage(url), url, url);
+});
+
+test('商品として構造化された画像を og:image より先に見る', () => {
+  const source = readFileSync(new URL('../src/google-mall-search.mjs', import.meta.url), 'utf8');
+  const block = source.slice(source.indexOf('function firstImage'), source.indexOf('function firstImage') + 600);
+  assert.ok(block.indexOf("product?.[0]?.image") < block.indexOf("'og:image'"));
 });
 
 test('http・空・長すぎる URL は使わない', () => {
@@ -55,4 +56,27 @@ test('形が決まっていないモールは従来どおりの判定を使う',
   assert.equal(isGoogleMallProductPage('MATSUKIYO_JP', '/search?q=%E6%9F%94%E8%BB%9F%E5%89%A4'), false);
   assert.equal(isGoogleMallProductPage('ZOZOTOWN_JP', '/shop/nike/goods/12345/'), true);
   assert.equal(isGoogleMallProductPage('', '/category/bags'), false);
+});
+
+// 大隆さん指示「提示商品が減るのはダメ」: 商品ページでないものも捨てず、後ろに残す。
+test('一覧ページも結果から落とさず、商品ページの後ろに並べる', () => {
+  const rows = [
+    { title: 'Amazon.co.jp: 燃焼系サプリメント - ダイエットサプリメント', link: 'https://www.amazon.co.jp/b?node=123456' },
+    { title: 'レノア ハピネス 夢ふわタッチ 柔軟剤', link: 'https://www.amazon.co.jp/dp/B08XYZ1234' }
+  ];
+  const items = parseGoogleMallItems(rows);
+  assert.equal(items.length, 2, '件数を減らさない');
+  assert.equal(items[0].product_page, true, '商品ページが先');
+  assert.equal(items[1].product_page, false, '一覧ページは後ろ');
+});
+
+test('画面側は一覧ページを「商品を見る」と書かず、ホシっとくも出さない', () => {
+  const ui = readFileSync(new URL('../public/google-mall-results.mjs', import.meta.url), 'utf8');
+  assert.match(ui, /const isProduct = item\.product_page === true;/u);
+  assert.match(ui, /isProduct \? c\.open : c\.openListing/u);
+  assert.match(ui, /if \(!isProduct\) body\.append\(el\('span', 'google-mall-card-kind', c\.listing\)\);/u);
+  assert.match(ui, /if\(item\.product_page===true\)\{/u);
+  for (const key of ['openListing', 'listing']) {
+    assert.equal((ui.match(new RegExp(`${key}:`, 'gu')) || []).length, 4, `${key} は4言語ぶん`);
+  }
 });

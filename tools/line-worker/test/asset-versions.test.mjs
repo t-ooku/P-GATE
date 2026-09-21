@@ -21,7 +21,9 @@ const EXPECTED = Object.freeze({
   'growth-analytics.mjs': '16',
   'ai-search-ui.mjs': '16',
   'search-suggest.mjs': '3',
-  'buzz-home.mjs': '9'
+  'buzz-home.mjs': '9',
+  'google-mall-results.css': '5',
+  'google-mall-results.mjs': '4'
 });
 
 test('index.html のアセット版番号は pin したとおり', () => {

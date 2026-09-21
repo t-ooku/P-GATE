@@ -49,13 +49,18 @@ const SAMPLE = {
   ]
 };
 
-test('Agent Search の結果は 11 モールのホストだけ残し、商品詳細 URL だけを返し（検索一覧・カテゴリは除外）、重複と他ドメインを捨てる', () => {
+// 2026-09-21 大隆さん指示「提示商品が減るのはダメ」: 一覧・カテゴリページも捨てず、
+// 商品詳細ページの後ろに並べる（画面側で「一覧ページ」と明示し、ホシっとくは出さない）。
+test('Agent Search の結果は 11 モールのホストだけ残し、商品詳細を先に、一覧は後ろに並べ、重複と他ドメインを捨てる', () => {
   const items = parseGoogleMallItems(normalizeAgentSearchResponse(SAMPLE));
   assert.deepEqual(items.map((item) => item.url), [
     'https://zozo.jp/shop/example/goods/12345/',
     'https://jp.shein.com/kids-bottle-p-999.html',
-    'https://www.amazon.co.jp/dp/B0EXAMPLE1'
+    'https://www.amazon.co.jp/dp/B0EXAMPLE1',
+    'https://www.amazon.co.jp/s?k=%E6%B0%B4%E7%AD%92',
+    'https://zozo.jp/kids-category/tableware-kitchenware/water-bottles/'
   ]);
+  assert.deepEqual(items.map((item) => item.product_page), [true, true, true, false, false]);
   assert.equal(items[0].mall_label, 'ZOZOTOWN');
   assert.equal(items[0].listed_price_jpy, 2980);
   assert.equal(items[0].image_url, 'https://c.imgz.jp/123/12345.jpg');
@@ -63,12 +68,12 @@ test('Agent Search の結果は 11 モールのホストだけ残し、商品詳
   assert.equal(items[2].image_url, ''); // http 画像は捨てる
 });
 
-test('商品ページが 1 件も無い時だけ、一覧ページを最大 2 件残す', () => {
+test('商品ページが 1 件も無くても、一覧ページは捨てず全部残す（件数を減らさない）', () => {
   const items = parseGoogleMallItems(normalizeAgentSearchResponse({ results: [
     doc('A - Amazon', 'https://www.amazon.co.jp/s?k=a'), doc('B - ZOZO', 'https://zozo.jp/ranking/x.html'), doc('C - ロフト', 'https://www.loft.co.jp/search?q=c')
   ] }));
-  assert.equal(items.length, 2);
-  assert.equal(items[0].product_page, false);
+  assert.equal(items.length, 3);
+  assert.deepEqual(items.map((item) => item.product_page), [false, false, false]);
 });
 
 test('mallForHost はサブドメインも含めて 11 モールを判定し、それ以外は null', () => {
@@ -118,7 +123,9 @@ test('searchGoogleMalls はトークンを取ってから Discovery Engine に�
   const env = { ...baseEnv(), GOOGLE_MALL_SEARCH_DAILY_LIMIT: '1' };
   const live = await searchGoogleMalls(env, '  子ども　水筒 ', { fetch: fakeGoogle(calls), cache: null, excludeMarketplaces: ['AMAZON_JP'] });
   assert.equal(live.source, 'live');
-  assert.deepEqual(live.items.map((item) => item.marketplace), ['ZOZOTOWN_JP', 'SHEIN_JP']);
+  // 一覧ページ（ZOZO のカテゴリ）も捨てず後ろに残す。Amazon は excludeMarketplaces で除外。
+  assert.deepEqual(live.items.map((item) => item.marketplace), ['ZOZOTOWN_JP', 'SHEIN_JP', 'ZOZOTOWN_JP']);
+  assert.deepEqual(live.items.map((item) => item.product_page), [true, true, false]);
   assert.equal(calls.length, 2);
   assert.equal(calls[0].url, 'https://oauth2.googleapis.com/token');
   assert.equal(calls[1].url, `https://discoveryengine.googleapis.com/v1/${ENGINE}/servingConfigs/default_search:search`);
@@ -166,7 +173,7 @@ test('同じ検索語は Cache API を優先し、上限を消費しない', asy
   const second = await searchGoogleMalls(env, '水筒', { fetch: fakeGoogle(calls), cache });
   assert.equal(first.source, 'live');
   assert.equal(second.source, 'cache');
-  assert.equal(second.items.length, 3);
+  assert.equal(second.items.length, 5);
   assert.equal(calls.filter((call) => call.url.includes(':search')).length, 1);
   // 2026-09-20: キャッシュ鍵は v4。0 件の結果は 10 分だけ（24 時間ではない）。
   const keys = [...store.keys()];
@@ -220,8 +227,9 @@ test('Rakuten/Yahoo results never suppress Google; non-product offers do not fal
       { marketplace: 'AMAZON_JP', product_url: 'https://www.amazon.co.jp/s?k=bottle', price: 0 }
     ] }] }, new Request('https://hoshilu.app/api/pwa/recommend'), env, 'qa-session', '水筒');
     assert.equal(calls.filter((call) => call.url.includes(':search')).length, 1);
-    assert.deepEqual(result.google_mall_results.items.map((row) => row.marketplace), ['ZOZOTOWN_JP','SHEIN_JP','AMAZON_JP']);
-    assert.ok(result.google_mall_results.items.every((row) => row.product_page));
+    assert.deepEqual(result.google_mall_results.items.map((row) => row.marketplace), ['ZOZOTOWN_JP','SHEIN_JP','AMAZON_JP','AMAZON_JP','ZOZOTOWN_JP']);
+    // 商品詳細が先、一覧ページは後ろ。一覧は画面側で「一覧ページ」と明示され、ホシっとくは出ない。
+    assert.deepEqual(result.google_mall_results.items.map((row) => row.product_page), [true, true, true, false, false]);
   } finally { globalThis.fetch = previousFetch; }
 });
 
@@ -238,7 +246,7 @@ test('diagnostic summarizes raw counts without returning query text, documents o
     '韓国 頭皮ケア リリーブ', '韓国 頭皮ケア', 'リリーイブ 頭皮', 'lilyeve'
   ]);
   assert.deepEqual(result.cases.map((row) => row.result_count), [7, 7, 7, 7]);
-  assert.ok(result.cases.every((row) => row.corrected_query_present && row.total_size === 123 && row.accepted_count === 3));
+  assert.ok(result.cases.every((row) => row.corrected_query_present && row.total_size === 123 && row.accepted_count === 5));
   assert.doesNotMatch(JSON.stringify(result), /PRIVATE_|https:|リリーブ|lilyeve|document|attributionToken/u);
   assert.deepEqual(summarizeGoogleMallResponse({ totalSize: -1 }), { result_count: 0, corrected_query_present: false, total_size: null });
   const usage = await env.PRODUCT_DB.prepare('SELECT reserved_requests FROM google_mall_search_usage_daily').bind().first();
@@ -287,7 +295,7 @@ test('token acquisition obeys the search timeout and diagnostics callbacks canno
   resetGoogleAccessTokenCache();
   const result = await searchGoogleMalls(baseEnv(), '水筒', { cache: null, fetch: fakeGoogle([]), onResponse: () => { throw new Error('observer failed'); } });
   assert.equal(result.source, 'live');
-  assert.equal(result.items.length, 3);
+  assert.equal(result.items.length, 5);
 });
 
 test('0 件のときだけ 1 回、ブランド名らしい語を外して探し直す（要求は +1、予算も +1）。結果はブランド無しの検索語で出る', async () => {
