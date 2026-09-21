@@ -114,3 +114,40 @@ test('index.mjs が /api/member/usual を配線している', () => {
   assert.match(index, /import \{ handleMemberUsualRoutes \} from '\.\/member-usual\.mjs';/u);
   assert.match(index, /const usualResponse = await handleMemberUsualRoutes\(request, env\);/u);
 });
+
+// 2026-09-21 大隆さん決定「上限を設けよう」→ 30 件。
+// 上限は member-wish-v2 の WISH_LIMIT_DEFAULTS に集約し、画面に出す数と弾く数をずらさない。
+test('いつものホシルの無料上限は 30 件で、既存4種と同じ場所に定義する', async () => {
+  const { WISH_LIMIT_DEFAULTS, wishLimitsFor } = await import('../src/member-wish-v2.mjs');
+  assert.equal(WISH_LIMIT_DEFAULTS.usual, 30);
+  assert.deepEqual(wishLimitsFor({}), { saved: 100, searching: 10, price_watch: 10, external_price_watch: 5, usual: 30 });
+  assert.equal(wishLimitsFor({ WISH_LIMIT_USUAL: '12' }).usual, 12, 'env で上書きできる');
+  assert.equal(wishLimitsFor({ WISH_LIMIT_USUAL: '0' }).usual, 30, '不正値は既定へ戻す');
+});
+
+test('上限は共通定義を使い、別の数字を持たない', () => {
+  const text = source();
+  assert.match(text, /import \{ wishLimitsFor \} from '\.\/member-wish-v2\.mjs';/u);
+  assert.match(text, /const limit = wishLimitsFor\(env\)\.usual;/u);
+  assert.ok(!text.includes('USUAL_ITEM_GUARD'), '独自の上限値を残さない');
+});
+
+test('上限に達したら 409 で、やめ方を日本語で伝える', () => {
+  const text = source();
+  assert.match(text, /USUAL_LIMIT_REACHED/u);
+  assert.match(text, /limit_kind: 'usual'/u);
+  assert.match(text, /いつものホシルは \$\{limit\} 件までです。/u);
+  assert.match(text, /\}, 409\);/u);
+});
+
+test('既存商品の編集は上限に数えない（既存行を弾かない）', () => {
+  const text = source();
+  const block = text.slice(text.indexOf('if (!existing) {'), text.indexOf('const createdAt = existing?.created_at'));
+  assert.match(block, /wishLimitsFor\(env\)\.usual/u, '新規登録のときだけ上限を見る');
+});
+
+test('一覧は上限と使用数も返す（画面が 12 / 30 を出せる）', () => {
+  const text = source();
+  assert.match(text, /limit: wishLimitsFor\(env\)\.usual,/u);
+  assert.match(text, /usage: items\.filter\(\(item\) => item\.status === 'ACTIVE'\)\.length/u);
+});

@@ -140,7 +140,10 @@ const optInSchemaPending = () => new Error('INSIGHT_OPT_IN_SCHEMA_PENDING');
 // 2026-09-20 GPT 指示書（大隆さん承認）§P0: 「ホシっとく＝保存」と「探し中＝HOSHILU が継続処理する状態」を分け、
 // 無料の上限を置く。保存 100 件／同時「探し中」10 件／希望価格 Watch 10 件。11 件目は 409 で「あとで見る」へ促す
 // （既存行は触らない・削除しない。数は会員本人の実データだけ）。env で上書き可（WISH_LIMIT_SAVED 等）。
-export const WISH_LIMIT_DEFAULTS = Object.freeze({ saved: 100, searching: 10, price_watch: 10, external_price_watch: 5 });
+// 2026-09-21 大隆さん決定: 「いつものホシル」にも無料上限を置く（30 件）。一世帯の定期購入品は
+// だいたい 10〜30 品目なので、全部預けられて、かつ §38「通知を乱発しない」も守れる件数にした。
+// 上限は 1 箇所にまとめる（§13 が 4 種をまとめて定めているため）。
+export const WISH_LIMIT_DEFAULTS = Object.freeze({ saved: 100, searching: 10, price_watch: 10, external_price_watch: 5, usual: 30 });
 // 2026-09-20 GPT 指示書 §3/§7: 外部 URL（貼り付けた商品ページ）の価格 Watch は別枠 5 件。
 // 「外部 URL からの Watch かどうか」は本人の申告ではなく、送られてきた商品ページ URL が
 // HOSHILU が扱うモールの商品ページかをサーバーで判定して決める（別枠を悪用して枠を増やせないように）。
@@ -159,7 +162,8 @@ export function watchImageUrl(priceCondition = {}) {
 }
 export function wishLimitsFor(env = {}) {
   const pick = (key, fallback) => { const n = Number(env[key]); return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback; };
-  return { saved: pick('WISH_LIMIT_SAVED', WISH_LIMIT_DEFAULTS.saved), searching: pick('WISH_LIMIT_SEARCHING', WISH_LIMIT_DEFAULTS.searching), price_watch: pick('WISH_LIMIT_PRICE_WATCH', WISH_LIMIT_DEFAULTS.price_watch), external_price_watch: pick('WISH_LIMIT_EXTERNAL_PRICE_WATCH', WISH_LIMIT_DEFAULTS.external_price_watch) };
+  return { saved: pick('WISH_LIMIT_SAVED', WISH_LIMIT_DEFAULTS.saved), searching: pick('WISH_LIMIT_SEARCHING', WISH_LIMIT_DEFAULTS.searching), price_watch: pick('WISH_LIMIT_PRICE_WATCH', WISH_LIMIT_DEFAULTS.price_watch), external_price_watch: pick('WISH_LIMIT_EXTERNAL_PRICE_WATCH', WISH_LIMIT_DEFAULTS.external_price_watch),
+    usual: pick('WISH_LIMIT_USUAL', WISH_LIMIT_DEFAULTS.usual) };
 }
 export async function wishUsageFor(env, memberId) {
   // §5: archive（もう探さない）した条件は枠を消費しない。片付ければまた保存できる。

@@ -15,8 +15,9 @@ export const USUAL_CYCLE_MIN_DAYS = 3;
 export const USUAL_CYCLE_MAX_DAYS = 365;
 // 学習に使う直近の購入間隔の本数。古すぎる間隔に引きずられないようにする。
 export const USUAL_LEARNING_WINDOW = 6;
-// 商品数の上限ではなく、DB を守るための安全弁。§13 の無料上限とは別物。
-export const USUAL_ITEM_GUARD = 200;
+// 無料上限は member-wish-v2.mjs の WISH_LIMIT_DEFAULTS.usual（30 件）に集約する。
+// §13 が 4 種の上限をまとめて定めているので、「いつものホシル」もそこへ並べた。
+// ここに別の数字を置くと、画面に出す上限と実際に弾く上限がずれるため定義しない。
 
 const DAY_MS = 86_400_000;
 
@@ -134,6 +135,7 @@ export function dueWithinDays(items = [], days = 7, now = Date.now()) {
 // DELETE /api/member/usual/<id>         やめる
 import { readMemberSession } from './member-auth.mjs';
 import { marketplaceForProductUrl } from './marketplace-product-url-policy.mjs';
+import { wishLimitsFor } from './member-wish-v2.mjs';
 
 const clean = (value, limit) => String(value || '').normalize('NFKC')
   .replace(/[\u0000-\u001f\u007f]/gu, ' ').replace(/\s+/gu, ' ').trim().slice(0, limit);
@@ -206,7 +208,13 @@ export async function handleMemberUsualRoutes(request, env) {
     for (const row of rows.results || []) {
       items.push(decorateUsualRow(row, await purchaseRows(env, member.id, row.usual_id)));
     }
-    return jsonResponse({ ok: true, items, this_week: dueWithinDays(items, 7).map((item) => item.usual_id) });
+    // 画面が「いつものホシル 12 / 30」を出せるよう、上限と使用数も返す（探し中・値下がり待ちと同じ）。
+    return jsonResponse({
+      ok: true, items,
+      this_week: dueWithinDays(items, 7).map((item) => item.usual_id),
+      limit: wishLimitsFor(env).usual,
+      usage: items.filter((item) => item.status === 'ACTIVE').length
+    });
   }
 
   if (request.method === 'POST' && !rest) {
@@ -225,13 +233,20 @@ export async function handleMemberUsualRoutes(request, env) {
       () => env.PRODUCT_DB.prepare('SELECT usual_id,created_at,last_purchased_at FROM member_usual_items WHERE member_id=?1 AND usual_id=?2').bind(member.id, id).first(),
       () => null
     );
+    // §13 の無料上限。既に登録済みの商品を編集するときは数えない（既存行は弾かない）。
+    // 止めた（PAUSED）ものは枠を使う扱いにする。ARCHIVED（やめた）だけ枠を返す。
     if (!existing) {
+      const limit = wishLimitsFor(env).usual;
       const count = await withUsualSchema(
         () => env.PRODUCT_DB.prepare("SELECT COUNT(*) AS total FROM member_usual_items WHERE member_id=?1 AND status<>'ARCHIVED'").bind(member.id).first(),
         () => ({ total: 0 })
       );
-      if (Number(count?.total || 0) >= USUAL_ITEM_GUARD) {
-        return jsonResponse({ ok: false, error: 'USUAL_LIMIT_REACHED', limit: USUAL_ITEM_GUARD }, 409);
+      const usage = Number(count?.total || 0);
+      if (usage >= limit) {
+        return jsonResponse({
+          ok: false, error: 'USUAL_LIMIT_REACHED', limit_kind: 'usual', limit, usage,
+          message: `いつものホシルは ${limit} 件までです。もう買わなくなったものを「やめる」にしてから、もう一度お試しください。`
+        }, 409);
       }
     }
     const createdAt = existing?.created_at || now;

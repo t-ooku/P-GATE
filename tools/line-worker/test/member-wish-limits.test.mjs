@@ -81,10 +81,11 @@ async function requestFor(env, method, path, cookie, body) {
 // 2026-09-20 GPT 指示書（大隆さん承認）§P0: 保存 100／探し中 10／値下がり待ち 10。
 // 11 件目は 409 で「あとで見る」へ促す。既存行は触らない。数は本人の実データだけ。
 
-test('上限は既定で 保存100・探し中10・値下がり待ち10、env で上書きできる', () => {
-  assert.deepEqual(wishLimitsFor({}), { saved: 100, searching: 10, price_watch: 10, external_price_watch: 5 });
-  assert.deepEqual(WISH_LIMIT_DEFAULTS, { saved: 100, searching: 10, price_watch: 10, external_price_watch: 5 });
-  assert.deepEqual(wishLimitsFor({ WISH_LIMIT_SAVED: '3', WISH_LIMIT_SEARCHING: '2', WISH_LIMIT_PRICE_WATCH: 'x', WISH_LIMIT_EXTERNAL_PRICE_WATCH: '2' }), { saved: 3, searching: 2, price_watch: 10, external_price_watch: 2 });
+// 2026-09-21 大隆さん決定: 「いつものホシル」も無料上限 30 件。上限は 1 箇所にまとめる。
+test('上限は既定で 保存100・探し中10・値下がり待ち10・いつもの30、env で上書きできる', () => {
+  assert.deepEqual(wishLimitsFor({}), { saved: 100, searching: 10, price_watch: 10, external_price_watch: 5, usual: 30 });
+  assert.deepEqual(WISH_LIMIT_DEFAULTS, { saved: 100, searching: 10, price_watch: 10, external_price_watch: 5, usual: 30 });
+  assert.deepEqual(wishLimitsFor({ WISH_LIMIT_SAVED: '3', WISH_LIMIT_SEARCHING: '2', WISH_LIMIT_PRICE_WATCH: 'x', WISH_LIMIT_EXTERNAL_PRICE_WATCH: '2', WISH_LIMIT_USUAL: '5' }), { saved: 3, searching: 2, price_watch: 10, external_price_watch: 2, usual: 5 });
 });
 
 test('探し中 11 件目は 409 WISH_SEARCHING_LIMIT_REACHED（保存済みの条件は増えず、既存の探し中はそのまま）', async () => {
