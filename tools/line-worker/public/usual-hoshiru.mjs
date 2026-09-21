@@ -34,6 +34,13 @@ const COPY = {
   // P2 まとめ買い。節約額は言わない（送料が取れていないので数えられない）。
   together: (label, count) => `${label}で ${count}点 まとめて買えます`,
   togetherNote: '補充の時期が近いので、1回の買い物でまとめられます。',
+  // P2 同等品提案。「同じ商品」とは絶対に書かない。見出しと注意書きはサーバーの文言を使う。
+  alternatives: '近い商品を見る',
+  alternativesLoading: '探しています…',
+  alternativesNone: '近い商品は見つかりませんでした。',
+  alternativesUnmeasurable: 'いま探せませんでした。近い商品が無いという意味ではありません。',
+  matched: '一致',
+  unmatched: 'ちがい',
   marketplace: {
     AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング',
     QOO10_JP: 'Qoo10', SHEIN_JP: 'SHEIN'
@@ -68,6 +75,52 @@ async function api(path, options) {
   const response = await fetch(`/api/member/usual${path}`, { cache: 'no-store', ...options });
   const body = await response.json().catch(() => ({}));
   return { ok: response.ok, status: response.status, body };
+}
+
+// P2 同等品提案。サーバーが返した見出し・注意書き・一致/ちがいをそのまま出す。
+// 一致だけを出して「ちがい」を隠さない。探せなかったときは「無い」と言わない。
+function alternativeCard(entry) {
+  const link = el('a', 'usual-alt-item');
+  link.href = String(entry.url || '');
+  link.target = '_blank'; link.rel = 'noopener noreferrer';
+  if (entry.image_url) {
+    const img = document.createElement('img');
+    img.src = entry.image_url; img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer';
+    link.classList.add('usual-alt-has-image');
+    link.append(img);
+  }
+  const body = el('div', 'usual-alt-body');
+  body.append(el('span', 'usual-alt-name', entry.product_name || ''));
+  const matched = (entry.matched || []).filter(Boolean);
+  const unmatched = (entry.unmatched || []).filter(Boolean);
+  if (matched.length) body.append(el('span', 'usual-alt-matched', `${COPY.matched}: ${matched.join('・')}`));
+  if (unmatched.length) body.append(el('span', 'usual-alt-unmatched', `${COPY.unmatched}: ${unmatched.join('・')}`));
+  link.append(body);
+  return link;
+}
+
+function alternativesNode(data) {
+  const wrap = el('div', 'usual-alt-box');
+  if (!data || data.ok !== true) {
+    wrap.append(el('p', 'usual-alt-status', COPY.alternativesUnmeasurable));
+    return wrap;
+  }
+  if (data.measurable !== true) {
+    wrap.append(el('p', 'usual-alt-status', COPY.alternativesUnmeasurable));
+    return wrap;
+  }
+  const rows = Array.isArray(data.alternatives) ? data.alternatives : [];
+  if (data.title) wrap.append(el('strong', 'usual-alt-title', data.title));
+  if (!rows.length) {
+    wrap.append(el('p', 'usual-alt-status', COPY.alternativesNone));
+    return wrap;
+  }
+  // 注意書き（同じ商品とは限らない）は、候補より先に必ず出す。
+  if (data.note) wrap.append(el('p', 'usual-alt-note', data.note));
+  const list = el('div', 'usual-alt-list');
+  for (const entry of rows) list.append(alternativeCard(entry));
+  wrap.append(list);
+  return wrap;
 }
 
 function card(item) {
@@ -120,6 +173,20 @@ function card(item) {
     body.append(box);
   }
 
+  // P2 同等品提案。押したときだけ探す（一覧の表示を待たせない）。
+  const altBox = el('div', 'usual-alt');
+  altBox.hidden = true;
+  const altButton = el('button', 'usual-row-alt', COPY.alternatives);
+  altButton.type = 'button';
+  altButton.addEventListener('click', async () => {
+    altButton.disabled = true;
+    altBox.hidden = false;
+    altBox.replaceChildren(el('p', 'usual-alt-status', COPY.alternativesLoading));
+    const result = await api(`/${item.usual_id}/alternatives`);
+    altButton.disabled = false;
+    altBox.replaceChildren(alternativesNode(result.body));
+  });
+
   const actions = el('div', 'usual-row-actions');
   const bought = el('button', 'usual-row-bought', COPY.bought);
   bought.type = 'button';
@@ -139,8 +206,8 @@ function card(item) {
     const result = await api(`/${item.usual_id}`, { method: 'DELETE' });
     if (result.ok) await load(); else stop.disabled = false;
   });
-  actions.append(bought, stop);
-  body.append(actions);
+  actions.append(bought, stop, altButton);
+  body.append(actions, altBox);
   row.append(media, body);
   return row;
 }

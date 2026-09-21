@@ -68,6 +68,7 @@ import { aiChatCandidatePreviews } from './ai-chat-preview.mjs';
 import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs';
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { handleMemberUsualRoutes } from './member-usual.mjs';
+import { handleUsualAlternativesRoute } from './usual-alternatives.mjs';
 import { handleMemberTodayRoute } from './today-hoshilu.mjs';
 import { handleSellerDemandCheckRoute } from './seller-demand-check.mjs';
 import { handleSellerFreePeriodReportRoute } from './seller-free-period-report.mjs';
@@ -3604,6 +3605,10 @@ export default {
     if (wishResponse) return wishResponse;
     // 2026-09-21 指示書 §2〜§11「いつものホシル」。/api/member/usual/* は
     // /api/member/wishes/* より先に判定する必要はない（prefix が重ならない）。
+    // 2026-09-21 指示書 P2「同等品提案」。handleMemberUsualRoutes が
+    // /api/member/usual 配下をすべて引き受けるので、こちらを先に判定する。
+    const alternativesResponse = await handleUsualAlternativesRoute(request, env);
+    if (alternativesResponse) return alternativesResponse;
     const usualResponse = await handleMemberUsualRoutes(request, env);
     if (usualResponse) return usualResponse;
     // 2026-09-21 指示書 §37「今日のHOSHILU」。保存済みの事実をまとめて返すだけ（読み取り専用）。

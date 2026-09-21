@@ -28,8 +28,8 @@ const EXPECTED = Object.freeze({
   'usual-barcode.mjs': '1',
   'today-hoshilu.css': '1',
   'today-hoshilu.mjs': '1',
-  'usual-hoshiru.css': '3',
-  'usual-hoshiru.mjs': '3',
+  'usual-hoshiru.css': '4',
+  'usual-hoshiru.mjs': '4',
   'instagram-look.css': '2'
 });
 
