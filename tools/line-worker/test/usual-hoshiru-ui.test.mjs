@@ -74,3 +74,25 @@ test('CSS は4状態と今週の補充を持つ', () => {
     assert.ok(css.includes(name), name);
   }
 });
+
+// 2026-09-21 指示書 P2「写真からいつもの登録」。
+// 写真検索のためのコードは足していない。商品カードの描画が1本（productCard）で、
+// 写真もスクショも同じ検索フォームから出るので、同じ「いつものにする」が付く。
+// その前提が崩れたらここで気づけるようにしておく。
+test('P2 写真から出た商品カードにも「いつものにする」が付く（描画が1本であること）', () => {
+  const app = read('public/app.js');
+  // アクション枠を渡すイベントは productCard の中で1回だけ
+  assert.equal(app.split('hoshilu:product-card-actions').length - 1, 1, '描画の入口は1か所');
+  const start = app.indexOf('function productCard(');
+  const dispatch = app.indexOf('hoshilu:product-card-actions');
+  const next = app.indexOf('\nfunction ', start + 1);
+  assert.ok(start >= 0 && dispatch > start, 'イベントは productCard の中から出す');
+  assert.ok(next === -1 || dispatch < next, '別の関数に移っていない');
+
+  // 写真・スクショの入力は検索フォームの中にある＝結果は同じ描画を通る
+  const html = read('public/index.html');
+  const formStart = html.indexOf('<form id="knowledgeForm">');
+  const form = html.slice(formStart, html.indexOf('</form>', formStart));
+  assert.ok(form.includes('id="searchCamera"'), 'カメラ入力は検索フォームの中');
+  assert.ok(form.includes('id="searchScreenshot"'), '画像選択も検索フォームの中');
+});

@@ -7,6 +7,7 @@ import {
   rematchDemand, runShopDemandRematch, searchAcrossShops, sellerDemandOverview, SHOP_DEMAND_EVENT_TYPE
 } from '../src/shop-demand.mjs';
 import { handleSellerShopRoutes, resetShopCache } from '../src/seller-shop.mjs';
+import { safeDemandMatchResultUrl } from '../src/mywatch-routes.mjs';
 
 // 2026-09-17 大隆さん「HOSHILU SHOP全面強化」指示書 P0:
 // 横断検索 → 条件一致/近い/見つからない → 探し中需要 → Seller に匿名集計 → 商品登録で再判定 → 本人に通知
@@ -214,4 +215,34 @@ test('公開ルート /api/shops/demand/public は 5 人以上の需要だけを
   assert.deepEqual(payload.items, [{ conditions: '黒・本革・A4・トートバッグ', people: 5, zero_results: 4, near_only: 1 }]);
   assert.ok(!JSON.stringify(payload).includes('x@example.com') && !JSON.stringify(payload).includes('私のメール'));
   assert.equal(response.headers.get('cache-control'), 'public, max-age=300');
+});
+
+// 2026-09-21 指示書 ⑲「再通知の経路確認」で見つけた穴の回帰テスト。
+// アプリ内の通知パネルがリンクを落としていて、「探していた商品が見つかりました」を
+// 開いても商品へ進めなかった（issue #406 で修正）。
+// ここでは実際に連鎖を回し、書かれた通知がそのまま通知パネルを通ることを確かめる。
+test('⑲ 再通知の行き先が、通知パネルの検査を通る', async () => {
+  const { db, env } = makeEnv();
+  db.prepare(`INSERT INTO member_notification_destinations(member_id,channel,encrypted_destination,verified_at)
+    VALUES('m9','EMAIL','x','2026-09-01T00:00:00Z')`).run();
+  await handleShopDemandRoutes(
+    request('/api/shops/demand', 'POST', { query: 'ナイロン リュック ブラック', result_state: 'NONE' }),
+    env, { readMember: async () => ({ id: 'm9' }) }
+  );
+  assert.deepEqual(await runShopDemandRematch(env), { scanned: 1, matched: 1 });
+
+  const web = db.prepare(
+    `SELECT event_type,result_url FROM mywatch_notifications WHERE member_id='m9' AND channel='WEB'`
+  ).get();
+  assert.equal(web.event_type, SHOP_DEMAND_EVENT_TYPE);
+  assert.ok(web.result_url, '行き先が空のまま通知しない');
+  // 通知パネルはこの検査を通ったものだけをリンクにする（src/mywatch-routes.mjs）。
+  assert.notEqual(safeDemandMatchResultUrl(web.result_url), '', '本人が商品へ進める行き先であること');
+
+  // 本人が許可した外部経路には、本文に同じ行き先を入れて送る。
+  const email = db.prepare(
+    `SELECT body FROM mywatch_notifications WHERE member_id='m9' AND channel='EMAIL'`
+  ).get();
+  assert.ok(email, '許可済みのメール宛てにも積む');
+  assert.ok(email.body.includes(web.result_url), 'メール本文にも同じ行き先を入れる');
 });
