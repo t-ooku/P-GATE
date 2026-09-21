@@ -532,6 +532,20 @@ function keptImageFrom(candidate){
   for(const value of list){const text=String(value||'').trim();if(text.slice(0,8)==='https://')return text;}
   return '';
 }
+// 2026-09-21 大隆さん報告「お気に入りをタップしたら TRACK_TOKEN_SIGNATURE_INVALID の白画面」:
+// 署名付きの計測URL（/go?token=…）を端末に保存していたため、800字で切れて署名が壊れ、
+// 期限（7日）も切れる。保存するのはモールの商品URLだけにし、切れた長いURLは保存しない。
+function usableKeptUrl(value){
+  const text=String(value||'').trim();
+  if(text.slice(0,8)!=='https://'||text.length>800)return '';
+  if(text.indexOf('/go?token=')>=0)return '';
+  return text;
+}
+function keptProductUrl(offer,candidate){
+  const list=[offer&&offer.product_url,offer&&offer.url,candidate&&candidate.product_url,candidate&&candidate.url];
+  for(const value of list){const text=usableKeptUrl(value);if(text)return text;}
+  return '';
+}
 function toggleKeptProduct(candidate){
   const key=keptProductKey(candidate);if(!key)return false;
   const current=getKeptProducts();
@@ -540,7 +554,7 @@ function toggleKeptProduct(candidate){
   const next=exists?current.filter(item=>item.key!==key):[{
     key,name:String(candidate?.display_name||candidate?.product_name||'').slice(0,160),
     image:keptImageFrom(candidate).slice(0,500),
-    url:String(offer.product_url||offer.url||offer.tracking_url||candidate?.product_url||candidate?.url||candidate?.tracking_url||'').slice(0,800),
+    url:keptProductUrl(offer,candidate),
     marketplace:String(offer.marketplace||candidate?.marketplace||'').slice(0,40),
     price:Number(offer.total_cost||offer.price||0)||0,
     kept_at:new Date().toISOString()
@@ -565,8 +579,9 @@ function renderKeptProducts(){
     // 2026-09-20 大隆さん報告「気になる商品をタップしても検索トップに飛ぶだけ」: URL を保存できていない商品は
     // href="#" で画面の先頭へ飛ぶだけになっていた。URL が無いときは、その商品名で探し直す（値下がり待ちの
     // 「いまの価格を見る」と同じ動き）。商品 URL を推測で作ることはしない。
-    const link=document.createElement(item.url?'a':'button');link.className='kept-card-link';
-    if(item.url){link.href=item.url;link.target='_blank';link.rel='noopener sponsored';}
+    const openUrl=usableKeptUrl(item.url);
+    const link=document.createElement(openUrl?'a':'button');link.className='kept-card-link';
+    if(openUrl){link.href=openUrl;link.target='_blank';link.rel='noopener sponsored';}
     else{link.type='button';link.addEventListener('click',()=>{const name=String(item.name||'').trim();if(!name)return;elements.query.value=name;elements.clear.classList.remove('hidden');submitSearchNow();});}
     if(item.marketplace)link.dataset.marketplace=item.marketplace;
     const thumb=document.createElement('div');thumb.className='kept-card-thumb';

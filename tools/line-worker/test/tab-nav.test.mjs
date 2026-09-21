@@ -61,7 +61,7 @@ test('「いまの価格を見る」は「探す」タブを開いて検索を�
   assert.match(app, /function focusSearch\(\)\{window\.HoshiluTabs\?\.activate\('search',\{scroll:false\}\);/);
   assert.match(app, /function submitSearchNow\(\)\{window\.HoshiluTabs\?\.activate\('search',\{scroll:false\}\);/);
   assert.match(app, /again\.textContent='いまの価格を見る';\n\s*again\.addEventListener\('click',\(\)=>\{elements\.query\.value=name;elements\.clear\.classList\.remove\('hidden'\);submitSearchNow\(\);\}\);/);
-  assert.match(read('index.html'), /app\.js\?v=183/);
+  assert.match(read('index.html'), /app\.js\?v=184/);
 });
 
 // 2026-09-17: 検索欄の「ショップから探す」ボタンも、ショップ一覧が「ショップ」タブ内に隠れているので先にタブを開く。
@@ -82,7 +82,7 @@ test('「探す」ではページ名の帯を出さず、検索候補に種別�
   const app = read('app.js');
   assert.match(app, /resultCards\.push\(rows\[0\]\);\s*const quickStrip=marketplaceQuickStrip\(result\);\s*if\(quickStrip\)resultCards\.push\(quickStrip\);/);
   const html = read('index.html');
-  for (const asset of ['tab-nav.css?v=3', 'tab-nav.mjs?v=10', 'search-suggest.mjs?v=3', 'app.js?v=183']) assert.ok(html.includes(asset), asset);
+  for (const asset of ['tab-nav.css?v=3', 'tab-nav.mjs?v=10', 'search-suggest.mjs?v=3', 'app.js?v=184']) assert.ok(html.includes(asset), asset);
 });
 
 // 2026-09-17 大隆さん指示: 検索枠の「検索方法」見出しを削除し、余白を上に詰める。
@@ -91,7 +91,7 @@ test('検索枠に「検索方法」の見出しが無く、フォームが枠�
   assert.doesNotMatch(html, /id="searchStep"/);
   assert.match(html, /<section id="hoshiluSearch" class="search-panel" aria-labelledby="searchTitle">\s*<!--[^>]*-->\s*<form id="knowledgeForm">/);
   assert.match(read('app.js'), /if\(elements\.searchStep\)elements\.searchStep\.textContent=modes\.step;/);
-  assert.ok(html.includes('app.js?v=183'));
+  assert.ok(html.includes('app.js?v=184'));
 });
 
 // 2026-09-17 大隆さん指示: 主 CTA は「AIで探す」。検索欄の長方形枠は縦を縮めて上に寄せる。
@@ -114,7 +114,7 @@ test('商品画像はカード 300px・拡大 600px を画像サーバーに要�
   assert.match(app, /window\.HoshiluImage=\{upgrade:upgradeProductImageUrl\};/);
   assert.match(read('buzz-home.mjs'), /window\.HoshiluImage\?\.upgrade\(text\(item\.image_url\), 300\)/);
   const html = read('index.html');
-  assert.ok(html.includes('app.js?v=183') && html.includes('buzz-home.mjs?v=9'));
+  assert.ok(html.includes('app.js?v=184') && html.includes('buzz-home.mjs?v=9'));
 });
 
 // 2026-09-17 大隆さん報告: 「値下がり待ち」に削除ボタンがない。各行に「やめる」（会員 DB の wish を削除）を付ける。
@@ -124,7 +124,7 @@ test('「値下がり待ち」の各行に「やめる」があり、押すと w
   assert.match(app, /await deleteWish\(String\(item\.query_text\|\|name\)\);renderWishes\(\);/);
   assert.match(read('mywatch.css'), /\.entrusted-row-remove\{/);
   const html = read('index.html');
-  assert.ok(html.includes('app.js?v=183') && html.includes('mywatch.css?v=10'));
+  assert.ok(html.includes('app.js?v=184') && html.includes('mywatch.css?v=10'));
 });
 
 
