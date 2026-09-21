@@ -27,10 +27,13 @@
 /* §11 今週の補充 */
 .usual-week{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line,#e9e5f5)}
 .usual-week-title{margin:0 0 8px;font-size:14px;color:#211b3b}
-.usual-week-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+/* 暗黙の列が max-content になると行が枠からはみ出す。1列に固定して縮められるようにする。 */
+.usual-week-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
 .usual-week-list li{display:flex;justify-content:space-between;gap:10px;font-size:13px}
-.usual-week-name{color:#211b3b;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.usual-week-days{color:var(--muted,#6d6b80);flex:0 0 auto}
+/* min-width:0 が無いと、名前が縮まず「あと◯日」が枠の外に押し出される。
+   枠の細い まとめ買いの中で表面化したので、共通の行にも入れておく。 */
+.usual-week-name{min-width:0;color:#211b3b;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.usual-week-days{color:var(--muted,#6d6b80);flex:0 0 auto;white-space:nowrap}
 
 /* 商品カードの「いつものにする」 */
 .usual-make-button{border:1px solid var(--line,#e9e5f5);border-radius:12px;background:#fff;color:#5140ba;padding:9px 12px;cursor:pointer;font-weight:800;font-size:13px}
@@ -58,3 +61,7 @@
 .usual-row-advice span{color:var(--muted,#6d6b80);font-size:12px}
 .usual-advice-buy strong{color:#262626}
 .usual-advice-wait strong{color:#8e8e8e}
+/* P2 まとめ買い。まとめられることだけを言い、節約額は出さない。 */
+.usual-week-group{margin:0 0 10px;padding:10px 12px;border:1px solid #dbdbdb;border-radius:8px}
+.usual-week-group-title{display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:#262626}
+.usual-week-group-note{margin:6px 0 0;color:var(--muted,#6d6b80);font-size:12px;line-height:1.6}

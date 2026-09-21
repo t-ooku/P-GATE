@@ -30,7 +30,14 @@ const COPY = {
   pricier: (value) => `いつもより${value.toLocaleString('ja-JP')}円高い`,
   currentPrice: (value) => `今 ${value.toLocaleString('ja-JP')}円`,
   soonDays: (value) => `あと${value}日`,
-  overdueShort: '予定を過ぎています'
+  overdueShort: '予定を過ぎています',
+  // P2 まとめ買い。節約額は言わない（送料が取れていないので数えられない）。
+  together: (label, count) => `${label}で ${count}点 まとめて買えます`,
+  togetherNote: '補充の時期が近いので、1回の買い物でまとめられます。',
+  marketplace: {
+    AMAZON_JP: 'Amazon', RAKUTEN_JP: '楽天市場', YAHOO_JP: 'Yahoo!ショッピング',
+    QOO10_JP: 'Qoo10', SHEIN_JP: 'SHEIN'
+  }
 };
 const PRESETS = [7, 14, 30, 60];
 
@@ -46,6 +53,16 @@ const list = () => document.querySelector('#usualList');
 let items = [];
 let limit = 0;
 let usage = 0;
+// P2: サーバーが決めたまとめ方。画面でまとめ直さない。
+let buyTogether = [];
+
+function weekRow(item) {
+  const li = el('li');
+  li.append(el('span', 'usual-week-name', item.product_name || ''));
+  const days = Number(item.days_left);
+  li.append(el('span', 'usual-week-days', Number.isFinite(days) ? (days < 0 ? COPY.overdue : COPY.days(days)) : ''));
+  return li;
+}
 
 async function api(path, options) {
   const response = await fetch(`/api/member/usual${path}`, { cache: 'no-store', ...options });
@@ -148,15 +165,33 @@ function render() {
   if (!week.length) { weekBox.replaceChildren(); return; }
   const wrap = el('div', 'usual-week');
   wrap.append(el('h4', 'usual-week-title', COPY.thisWeek));
-  const ul = el('ul', 'usual-week-list');
-  for (const item of week) {
-    const li = el('li');
-    li.append(el('span', 'usual-week-name', item.product_name || ''));
-    const days = Number(item.days_left);
-    li.append(el('span', 'usual-week-days', Number.isFinite(days) ? (days < 0 ? COPY.overdue : COPY.days(days)) : ''));
-    ul.append(li);
+
+  // P2 まとめ買い: 同じモールでまとめられるものは1つにまとめて出す。
+  // どのモールで何点まとめられるか、だけを言う。いくら浮くかは言わない。
+  const byId = new Map(week.map((item) => [item.usual_id, item]));
+  const grouped = new Set();
+  for (const group of buyTogether) {
+    const members = (group.usual_ids || []).map((id) => byId.get(id)).filter(Boolean);
+    if (members.length < 2) continue;
+    const label = COPY.marketplace[group.marketplace] || group.marketplace;
+    const box = el('div', 'usual-week-group');
+    box.append(el('span', 'usual-week-group-title', COPY.together(label, members.length)));
+    const list = el('ul', 'usual-week-list');
+    for (const item of members) {
+      grouped.add(item.usual_id);
+      list.append(weekRow(item));
+    }
+    box.append(list);
+    box.append(el('p', 'usual-week-group-note', COPY.togetherNote));
+    wrap.append(box);
   }
-  wrap.append(ul);
+
+  const rest = week.filter((item) => !grouped.has(item.usual_id));
+  if (rest.length) {
+    const ul = el('ul', 'usual-week-list');
+    for (const item of rest) ul.append(weekRow(item));
+    wrap.append(ul);
+  }
   weekBox.replaceChildren(wrap);
 }
 
@@ -173,6 +208,7 @@ export async function load() {
   limit = Number(result.body?.limit) || 0;
   usage = Number(result.body?.usage) || 0;
   root.dataset.thisWeek = (result.body?.this_week || []).join(',');
+  buyTogether = Array.isArray(result.body?.buy_together?.together) ? result.body.buy_together.together : [];
   render();
 }
 

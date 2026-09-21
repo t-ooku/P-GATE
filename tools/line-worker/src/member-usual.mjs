@@ -130,6 +130,52 @@ export function dueWithinDays(items = [], days = 7, now = Date.now()) {
     .sort((a, b) => parsedTime(a.next_due_at) - parsedTime(b.next_due_at));
 }
 
+// 2026-09-21 指示書 P2「今週の補充最適化・まとめ買い最適化」。
+//
+// 同じモールで補充が近いものは、1回の買い物でまとめられる。それだけを言う。
+// **節約額は言わない**: 送料は取れていないことが多く、いくら浮くかは数えられない。
+// 数えられないものを金額で語ると、それは推定になる（主幹指示書で禁止）。
+//
+// モールが分からないもの（外部URL・手入力）は無理に寄せず、ひとまとめにしない。
+export const BUY_TOGETHER_MIN_ITEMS = 2;
+
+export function buyTogetherGroups(items = [], { days = 7, now = Date.now() } = {}) {
+  const due = dueWithinDays(items, days, now);
+  const groups = new Map();
+  const alone = [];
+  for (const item of due) {
+    const marketplace = String(item?.marketplace || '').trim();
+    // モールが分からないものは、どこでまとめられるか言えないので単独のまま。
+    if (!marketplace) { alone.push(item); continue; }
+    const group = groups.get(marketplace) || { marketplace, items: [] };
+    group.items.push(item);
+    groups.set(marketplace, group);
+  }
+  const together = [];
+  for (const group of groups.values()) {
+    if (group.items.length >= BUY_TOGETHER_MIN_ITEMS) {
+      together.push({
+        marketplace: group.marketplace,
+        usual_ids: group.items.map((item) => String(item.usual_id || '')),
+        count: group.items.length,
+        // 一番近いものに合わせる。まとめるなら、その日までに買う必要がある。
+        earliest_due_at: group.items[0]?.next_due_at || ''
+      });
+      continue;
+    }
+    alone.push(...group.items);
+  }
+  // 件数が多い順。同数なら期限が近い順。
+  together.sort((a, b) => b.count - a.count
+    || (String(a.earliest_due_at) < String(b.earliest_due_at) ? -1 : 1));
+  return {
+    together,
+    alone: alone
+      .sort((a, b) => parsedTime(a.next_due_at) - parsedTime(b.next_due_at))
+      .map((item) => String(item.usual_id || ''))
+  };
+}
+
 // ---- API ルート ------------------------------------------------------------
 // GET    /api/member/usual              いつものホシル一覧（状態・残り日数・いつもの価格つき）
 // POST   /api/member/usual              「いつものにする」（商品＋補充周期）
@@ -264,6 +310,8 @@ export async function handleMemberUsualRoutes(request, env) {
     return jsonResponse({
       ok: true, items,
       this_week: dueWithinDays(items, 7).map((item) => item.usual_id),
+      // P2: 同じモールでまとめて買えるものをまとめる。節約額は言わない。
+      buy_together: buyTogetherGroups(items, { days: 7 }),
       limit: wishLimitsFor(env).usual,
       usage: items.filter((item) => item.status === 'ACTIVE').length
     });

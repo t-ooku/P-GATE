@@ -26,8 +26,8 @@ const EXPECTED = Object.freeze({
   'google-mall-results.mjs': '4',
   'today-hoshilu.css': '1',
   'today-hoshilu.mjs': '1',
-  'usual-hoshiru.css': '2',
-  'usual-hoshiru.mjs': '2',
+  'usual-hoshiru.css': '3',
+  'usual-hoshiru.mjs': '3',
   'instagram-look.css': '2'
 });
 
