@@ -1,0 +1,205 @@
+// 2026-09-22 大隆さん指示書「HOSHILU 検索結果UI統合改修」。
+//
+// 「ホシルからの提案」と「web検索から発見」を上下に分けず、**1つの「見つかった商品」**に
+// まとめる。ユーザーにソースの違いを意識させすぎず、HOSHILU が Web 全体から
+// まとめて見つけてきた、という体験に統一する。
+//
+// ここ（サーバー）で統合する理由:
+//   ・検索の質は順番で決まる。順番を作る仕事は、材料が全部そろっている場所でやる
+//   ・同じ物差しを当てるには judgeTitle が要る。それはここにしかない
+//   ・ブラウザに配ってから並べ替えると、Web結果が遅れて届くたびに並びが動く（§28）
+//
+// 一致度の物差し（2026-09-22 大隆さん決定）:
+//   HOSHILU商品にも Web商品にも **同じ judgeTitle** を当てる。
+//   judgeTitle は「商品名に書かれている語だけ」で見る。どちらも商品名しか
+//   確かな材料が無いので、これが唯一公平な当て方になる。
+//   同点のときだけ、指示書§6 のとおり Seller商品 → HOSHILU商品 → Web商品 の順にする。
+//
+// 価格（§7）:
+//   HOSHILU商品だけ価格を出す。Web商品の価格は出さない。
+//   Web の価格はページに書いてあった数字を検索時点で読んだだけで、
+//   HOSHILU が API で確認したものではない。確認していない数字を、確認した数字と
+//   同じ顔で並べない。
+//
+// 60件（§3・§4）:
+//   HOSHILU＋Web の合計で最大60件。**60件を埋めるために条件に合わないものを混ぜない。**
+//   22件しか合わなければ22件。最大60件であり、必ず60件ではない。
+import { demandConditions, judgeTitle } from './shop-demand.mjs';
+
+export const UNIFIED_LIMIT = 60;
+export const UNIFIED_PAGE_SIZE = 12;
+
+const SOURCE_RANK = Object.freeze({ HOSHILU_SHOP: 0, HOSHILU: 1, WEB: 2 });
+
+const text = (value, max = 200) =>
+  String(value ?? '').normalize('NFKC').replace(/\p{Cc}/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+
+const httpsOnly = (value) => {
+  const url = text(value, 600);
+  return url.slice(0, 8) === 'https://' ? url : '';
+};
+
+// 同じ商品かどうかを見るための鍵。持っている材料の確かな順に使う（§14）。
+// JAN/GTIN・型番は Web検索の結果には基本入っていない。入っていないものを
+// 入っているふりで使わない。実際に効くのは ASIN と URL の正規化になる。
+export function canonicalProductUrl(value) {
+  let url;
+  try { url = new URL(String(value || '')); } catch { return ''; }
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return '';
+  const host = url.hostname.toLowerCase().replace(/^www\./u, '');
+  // 計測用のパラメータだけを落とす。商品を決めているパラメータ（item id など）は残す。
+  const drop = /^(utm_|gclid|fbclid|yclid|msclkid|ref|ref_|tag|_encoding|psc|th|linkCode|creative|creativeASIN|ascsubtag|scid|sc_e|rafcid|icm_|trflg)/iu;
+  const params = [...url.searchParams.entries()]
+    .filter(([key]) => !drop.test(key))
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  const search = params.length ? `?${params.map(([k, v]) => `${k}=${v}`).join('&')}` : '';
+  const path = url.pathname.replace(/\/+$/u, '') || '/';
+  return `${host}${path}${search}`;
+}
+
+export function dedupeKey(item) {
+  return dedupeKeys(item)[0] || '';
+}
+
+// 1つの商品が持ちうる鍵を全部出す。HOSHILU 側は ASIN を持ち、Web 側は URL しか
+// 持たないことが多いので、**どれか1つでも一致したら同じ商品**と見る。
+// Amazon の URL には ASIN が文字として入っているので、そこからは読み取ってよい
+// （推測ではなく、書いてあるものを読むだけ）。
+export function dedupeKeys(item) {
+  const keys = [];
+  const asin = text(item?.asin, 20).toUpperCase();
+  if (/^[A-Z0-9]{10}$/u.test(asin)) keys.push(`asin:${asin}`);
+  const jan = text(item?.jan || item?.gtin, 20).replace(/\D/gu, '');
+  if (jan.length === 8 || jan.length === 13) keys.push(`jan:${jan}`);
+  const canonical = canonicalProductUrl(item?.product_url || item?.url);
+  if (canonical) {
+    keys.push(`url:${canonical}`);
+    const fromUrl = canonical.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})(?:[/?]|$)/u);
+    if (fromUrl) keys.push(`asin:${fromUrl[1]}`);
+  }
+  if (keys.length) return keys;
+  const name = text(item?.product_name, 80).toLowerCase();
+  return name ? [`name:${name}`] : [];
+}
+
+// HOSHILU の候補（/api/search の candidates）を統合用の形にする。
+function fromCandidate(candidate, index) {
+  const offer = (Array.isArray(candidate?.offers) ? candidate.offers : [])
+    .find((item) => Number(item?.total_cost) > 0) || candidate?.selected_offer || null;
+  const price = Number(offer?.total_cost ?? offer?.price);
+  const url = httpsOnly(offer?.tracking_url || candidate?.product_url);
+  const images = Array.isArray(candidate?.image_urls) ? candidate.image_urls : [];
+  const image = httpsOnly(images.find(Boolean) || candidate?.image_url || candidate?.image);
+  // Seller のショップに載っている商品かどうかで、バッジと同点時の順番が変わる（§6・§8）。
+  const shop = candidate?.shop || null;
+  return {
+    source: shop ? 'HOSHILU_SHOP' : 'HOSHILU',
+    order: index,
+    product_name: text(candidate?.display_name || candidate?.product_name || candidate?.asin, 200),
+    image_url: image,
+    url,
+    product_url: httpsOnly(candidate?.product_url || offer?.product_url),
+    shop_name: text(shop?.name || shop?.shop_name || offer?.marketplace_label, 60),
+    marketplace: text(offer?.marketplace, 32),
+    asin: text(candidate?.asin, 20),
+    // HOSHILU 商品だけ価格を出す。確認できた金額が無ければ出さない（0 と書かない）。
+    price_jpy: Number.isFinite(price) && price > 0 ? Math.round(price) : null
+  };
+}
+
+// Google（web検索）の結果を統合用の形にする。価格は落とす（§7）。
+function fromGoogleItem(item, index, offset) {
+  return {
+    source: 'WEB',
+    order: offset + index,
+    product_name: text(item?.title, 200),
+    image_url: httpsOnly(item?.image_url),
+    url: httpsOnly(item?.tracking_url || item?.product_url),
+    product_url: httpsOnly(item?.product_url),
+    shop_name: text(item?.mall_label, 60),
+    marketplace: text(item?.marketplace, 32),
+    asin: '',
+    // Web の価格は「ページに書いてあった数字」でしかない。確認した価格と混ぜない。
+    price_jpy: null
+  };
+}
+
+// 一致度で並べる。conditions が作れない検索（写真だけ・語が短いなど）では
+// 判定しようがないので、**絞り込まずに元の順番を保つ**。
+// 判定できないものを「合わない」と決めつけない。
+export function rankUnified(rows, conditions) {
+  const judged = rows.map((row) => {
+    if (!conditions.length) return { ...row, matched: [], unmatched: [], level: 'UNKNOWN', score: 0 };
+    const verdict = judgeTitle(row.product_name, conditions);
+    return { ...row, matched: verdict.matched, unmatched: verdict.unmatched, level: verdict.level, score: verdict.matched.length };
+  });
+  // 条件があるときは、1つも一致しないものを出さない（§4 60件を埋めるために混ぜない）。
+  const kept = conditions.length ? judged.filter((row) => row.level !== 'NONE') : judged;
+  return kept.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
+    // ここまで同点のときだけ HOSHILU を先に（§6）。Seller だから常に上、にはしない。
+    const source = SOURCE_RANK[a.source] - SOURCE_RANK[b.source];
+    if (source !== 0) return source;
+    return a.order - b.order;
+  });
+}
+
+// 同じ商品が両方に出たら、HOSHILU 商品を残して1件にする（§14）。
+export function dedupe(rows) {
+  const byKey = new Map();
+  const out = [];
+  for (const row of rows) {
+    const keys = dedupeKeys(row);
+    if (!keys.length) { out.push(row); continue; }
+    const seen = keys.map((key) => byKey.get(key)).find(Boolean);
+    if (!seen) {
+      for (const key of keys) byKey.set(key, row);
+      out.push(row);
+      continue;
+    }
+    // すでに HOSHILU 側が入っているなら何もしない。Web が先に入っていたら入れ替える。
+    if (seen.source === 'WEB' && row.source !== 'WEB') {
+      const at = out.indexOf(seen);
+      if (at >= 0) out[at] = row;
+      for (const key of [...dedupeKeys(seen), ...keys]) byKey.set(key, row);
+    } else {
+      for (const key of keys) if (!byKey.has(key)) byKey.set(key, seen);
+    }
+  }
+  return out;
+}
+
+export function unifyResults({ candidates = [], googleItems = [], query = '', limit = UNIFIED_LIMIT } = {}) {
+  const hoshilu = (Array.isArray(candidates) ? candidates : []).map(fromCandidate).filter((row) => row.url && row.product_name);
+  const web = (Array.isArray(googleItems) ? googleItems : [])
+    .map((item, index) => fromGoogleItem(item, index, hoshilu.length))
+    .filter((row) => row.url && row.product_name);
+  const conditions = demandConditions(query);
+  const ranked = rankUnified(dedupe([...hoshilu, ...web]), conditions);
+  const items = ranked.slice(0, Math.max(0, limit)).map((row, index) => ({
+    position: index + 1,
+    source: row.source,
+    product_name: row.product_name,
+    image_url: row.image_url,
+    url: row.url,
+    shop_name: row.shop_name,
+    marketplace: row.marketplace,
+    price_jpy: row.price_jpy,
+    matched: row.matched,
+    unmatched: row.unmatched
+  }));
+  return {
+    items,
+    // 出した件数と、候補がもっとあったかどうか。「全部で60件しかない」と
+    // 誤解させないため、画面が「60件表示中」と書けるようにしておく（§9）。
+    shown: items.length,
+    total_candidates: ranked.length,
+    truncated: ranked.length > items.length,
+    hoshilu_count: items.filter((item) => item.source !== 'WEB').length,
+    web_count: items.filter((item) => item.source === 'WEB').length,
+    page_size: UNIFIED_PAGE_SIZE,
+    // 条件が作れなかった検索では一致度で並べていない。画面がそれを知れるようにする。
+    ranked_by_conditions: conditions.length > 0
+  };
+}

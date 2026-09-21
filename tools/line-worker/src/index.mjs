@@ -69,6 +69,7 @@ import { buildApparelMarketplaceDestinations } from './apparel-marketplaces.mjs'
 import { handleMemberWishRoutes } from './member-wish-v2.mjs';
 import { handleMemberUsualRoutes } from './member-usual.mjs';
 import { handleUsualAlternativesRoute } from './usual-alternatives.mjs';
+import { unifyResults } from './unified-results.mjs';
 import { handleMemberTodayRoute } from './today-hoshilu.mjs';
 import { handleSellerDemandCheckRoute } from './seller-demand-check.mjs';
 import { handleSellerFreePeriodReportRoute } from './seller-free-period-report.mjs';
@@ -1859,7 +1860,16 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     marketplace_search_links: marketplaceSearchLinks,
     refinement_chips: refinementChipsForQuery(query, language),
     ...(aiDiscovery ? { ai_discovery: aiDiscovery } : {}),
-    google_mall_results: googleMallResults
+    google_mall_results: googleMallResults,
+    // 2026-09-22 指示書「検索結果UI統合改修」: HOSHILU商品とWeb検索商品を
+    // 同じ物差し（judgeTitle）で並べ、重複を外し、最大60件にして1本で返す。
+    // 並べる仕事はここでやる。ブラウザで並べ直すと、Web結果が遅れて届くたびに
+    // カードの位置が動く（§28）。
+    unified_results: unifyResults({
+      candidates,
+      googleItems: googleMallResults?.items || [],
+      query
+    })
   };
 }
 
