@@ -193,3 +193,73 @@ p strong,li strong{color:inherit !important}
 .demand-total-label{font-size:12px;color:inherit}
 .demand-total-note{font-size:12px;line-height:1.6;opacity:.7}
 @media(max-width:640px){.demand-totals{grid-template-columns:1fr}.demand-total{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;gap:8px;text-align:left}.demand-total-note{flex:1 0 100%}}
+
+/* ------------------------------------------------------------------
+   2026-09-21 大隆さん指示「Instagramに寄せたのは分かったけど、色合い無さすぎ。
+   元の色合いをもう少し出して。」
+
+   骨格（白地・1pxの線・影なし・控えめな角丸）はそのまま。
+   色だけ HOSHILU のものに戻す。戻すのは次の4つだけにする:
+     ・線と面の薄い紫（グレー一色にしたせいで、全部が事務的に見えていた）
+     ・主ボタンのグラデーション（HOSHILU の顔。ここだけは塗る）
+     ・節の見出し（HOSHILU INSIGHT など）の紫
+     ・「気になる」のピンク
+   本文の文字色は黒のまま。色を情報の意味に使い、飾りには使わない。
+   ------------------------------------------------------------------ */
+:root{
+  --ig-line:#e6e0f7;
+  --ig-soft:#f3efff;
+  --line:#e6e0f7;
+  --soft:#f3efff;
+  --muted:#6d6b80;
+  --pink:#f2569b;
+  --violet:#7357ff;
+  --blue:#2fb6f3;
+}
+
+/* 主ボタンだけ、元のグラデーションに戻す */
+.watch-save-button,.usual-cycle-save,.submit,.primary,.auth-button,
+.continuous-search-button,.hero-watch-submit,#searchSubmit,button[type="submit"],
+.primary-button,a.primary{
+  background:linear-gradient(110deg,var(--pink),var(--violet)) !important;
+  color:#fff !important;
+  border:0 !important;
+}
+
+/* 副ボタンは白のままだが、線と文字に紫を戻す */
+.ghost-button,.secondary,.usual-row-bought,.entrusted-row-search,.usual-row-alt,
+.hoshi-status-tile,.insight-dashboard-toggle{
+  border-color:#ded7ff !important;
+}
+.ghost-button,.secondary,.usual-row-bought,.entrusted-row-search{
+  background:#f7f4ff !important;
+  color:#5140ba !important;
+}
+
+/* 節の見出し（HOSHILU INSIGHT / DEMAND MATCH …）は紫に戻す */
+.step,.eyebrow{color:#7357ff !important}
+
+/* 「気になる」はピンク。押した後は塗る */
+.keep-button,.product-card-action-keep button{
+  border:1px solid #f7b7d2 !important;
+  color:#d6337a !important;
+  background:#fff !important;
+}
+.keep-button.kept,.product-card-action-keep button.kept{
+  background:#fdeef5 !important;
+  color:#c22a6b !important;
+}
+
+/* 選ばれている状態は、薄紫の面で示す（グレーだと選択に見えない） */
+.hoshi-status-tile.active{background:#f3efff !important;border-color:#7357ff !important}
+
+/* 保存したことが一目で分かるように（押した直後に出して、すぐ閉じる） */
+.watch-save-status.watch-save-status-done{
+  margin:8px 0 0 !important;
+  padding:10px 12px !important;
+  border-radius:10px !important;
+  background:#f3efff !important;
+  color:#5140ba !important;
+  font-weight:800 !important;
+  text-align:center !important;
+}

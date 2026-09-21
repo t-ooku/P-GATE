@@ -36,8 +36,9 @@
 
 /* 2026-09-21 大隆さん指示: Google 枠のカードを「ホシルからの提案」と同じ幅に揃え、
    「商品を見る →」と「ホシっとく」の間の空きを詰める（リンクを伸ばさず、内容の直下にボタンを置く）。 */
-.google-mall-track>.google-mall-card{flex:0 0 min(300px,82vw);width:min(300px,82vw);max-width:none;min-width:0}
-@media (min-width:640px){.google-mall-track>.google-mall-card{flex-basis:300px;width:300px}}
+/* 2026-09-21 大隆さん指示: ホシルバズと同じく、スマホ1画面に2商品。 */
+.google-mall-track>.google-mall-card{flex:0 0 min(210px,46vw);width:min(210px,46vw);max-width:none;min-width:0}
+@media (min-width:640px){.google-mall-track>.google-mall-card{flex-basis:240px;width:240px}}
 .google-mall-card>.google-mall-card-link{flex:0 0 auto}
 .google-mall-card>.google-mall-card-save{padding:2px 10px 10px}
 .google-mall-card .google-mall-card-open{margin-bottom:2px}

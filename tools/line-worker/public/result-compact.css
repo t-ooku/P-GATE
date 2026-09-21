@@ -1,0 +1,127 @@
+/* 2026-09-21 大隆さん指示。ai-search-layout-fix.css へ直接足すと、
+   public/ と assets-v126/ の2枚へ同じ125行を書くことになるので、1枚に分ける。
+   外したくなったら index.html からこの1行を消せば元に戻る。 */
+/* 2026-09-21 大隆さん指示:
+   ・Google提示・ホシル提示・レコメンド提示は、ホシルバズと同じくスマホ1画面に2商品
+   ・提示欄の縦が長すぎるので詰める（価格は1行、説明と手がかりはここでは出さない）
+   ・カードの中は 写真 → 商品名（見切れてよい）→ 価格 → ボタン
+   ボタンは幅いっぱいの縦積みのまま。46vw に5つ横並びは潰れて押せなくなる。 */
+@media (max-width:760px){
+  .result-row-confirmed .result-track,
+  .result-row-unconfirmed .result-track,
+  .result-row-recommended .result-track{
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    align-items:stretch;
+    gap:10px;
+    max-height:none;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    overscroll-behavior-x:contain;
+    padding:2px 2px 8px;
+  }
+  .result-row-confirmed .result-track>.product-card,
+  .result-row-unconfirmed .result-track>.product-card,
+  .result-row-recommended .result-track>.product-card{
+    flex:0 0 min(210px,46vw);
+    width:min(210px,46vw);
+    min-width:0;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:6px;
+    padding:10px;
+    border-width:1px;
+    border-radius:14px;
+    scroll-snap-align:start;
+  }
+  .result-row-confirmed .result-track>.product-card>*,
+  .result-row-unconfirmed .result-track>.product-card>*,
+  .result-row-recommended .result-track>.product-card>*{
+    grid-column:auto;
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+  .result-row-confirmed .result-track>.product-card>.rank,
+  .result-row-unconfirmed .result-track>.product-card>.rank,
+  .result-row-recommended .result-track>.product-card>.rank{
+    position:static;
+    width:max-content;
+    box-shadow:none;
+  }
+  /* 説明文・一致した手がかりは、ここでは縦を食うだけなので出さない（商品ページと詳細に残る） */
+  .result-row-confirmed .result-track>.product-card>p,
+  .result-row-unconfirmed .result-track>.product-card>p,
+  .result-row-recommended .result-track>.product-card>p,
+  .result-row-confirmed .result-track>.product-card>.evidence,
+  .result-row-unconfirmed .result-track>.product-card>.evidence,
+  .result-row-recommended .result-track>.product-card>.evidence,
+  .result-track>.product-card .product-card-media-actions:empty{
+    display:none;
+  }
+  .result-row-confirmed .result-track>.product-card h3,
+  .result-row-unconfirmed .result-track>.product-card h3,
+  .result-row-recommended .result-track>.product-card h3{
+    min-height:0;
+    font-size:12px;
+    line-height:1.4;
+    -webkit-line-clamp:2;
+    line-clamp:2;
+  }
+  /* 価格は1行。「確認済み送料込み価格」「送料・商品ページへ」は畳む */
+  .result-row-confirmed .result-track>.product-card .single-price-offer,
+  .result-row-unconfirmed .result-track>.product-card .single-price-offer,
+  .result-row-recommended .result-track>.product-card .single-price-offer{
+    display:flex;
+    flex-direction:row;
+    align-items:baseline;
+    flex-wrap:nowrap;
+    gap:6px;
+    padding:6px 8px;
+    border-radius:10px;
+  }
+  .result-row-confirmed .result-track>.product-card .single-price-offer>.price-rank,
+  .result-row-unconfirmed .result-track>.product-card .single-price-offer>.price-rank,
+  .result-row-recommended .result-track>.product-card .single-price-offer>.price-rank,
+  .result-row-confirmed .result-track>.product-card .single-price-offer>small,
+  .result-row-unconfirmed .result-track>.product-card .single-price-offer>small,
+  .result-row-recommended .result-track>.product-card .single-price-offer>small{
+    display:none;
+  }
+  .result-row-confirmed .result-track>.product-card .single-price-offer>strong,
+  .result-row-unconfirmed .result-track>.product-card .single-price-offer>strong,
+  .result-row-recommended .result-track>.product-card .single-price-offer>strong{
+    flex:0 1 auto;
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    font-size:10px;
+  }
+  .result-row-confirmed .result-track>.product-card .single-price-offer>b,
+  .result-row-unconfirmed .result-track>.product-card .single-price-offer>b,
+  .result-row-recommended .result-track>.product-card .single-price-offer>b{
+    flex:0 0 auto;
+    margin-left:auto;
+    font-size:16px;
+    line-height:1.2;
+  }
+  /* ボタンは幅いっぱいの縦積み。高さを揃えて詰める */
+  .product-card-actions{display:grid;gap:5px}
+  .product-card-action:empty{display:none}
+  .result-row-confirmed .result-track>.product-card .product-card-actions button,
+  .result-row-unconfirmed .result-track>.product-card .product-card-actions button,
+  .result-row-recommended .result-track>.product-card .product-card-actions button,
+  .result-row-confirmed .result-track>.product-card .product-card-actions a,
+  .result-row-unconfirmed .result-track>.product-card .product-card-actions a,
+  .result-row-recommended .result-track>.product-card .product-card-actions a{
+    width:100%;
+    min-height:30px;
+    padding:6px 8px;
+    font-size:10.5px;
+    line-height:1.3;
+  }
+}

@@ -3,7 +3,7 @@
 // app.js が renderResults の先頭で投げる hoshilu:results-rendered の detail.google_mall_results を描くだけ。
 // 価格は「参考価格・検索時点」と明記し、API 確認価格とは区別する（§19）。
 const COPY = {
-  JA: { kicker: 'WEB検索から発見', title: 'Google検索から発見', note: 'Google 検索（Amazon・Qoo10・SHEIN・ZOZOTOWN など）の結果です。価格は各ページに書かれていた参考価格（検索時点）で、HOSHILU が API で確認した価格ではありません。', price: '参考価格・検索時点', open: '商品を見る', openListing: '一覧を見る', listing: '一覧ページ', prev: '前へ', next: '次へ' },
+  JA: { kicker: 'WEB検索から発見', title: 'web検索から発見', note: 'Google 検索（Amazon・Qoo10・SHEIN・ZOZOTOWN など）の結果です。価格は各ページに書かれていた参考価格（検索時点）で、HOSHILU が API で確認した価格ではありません。', price: '参考価格・検索時点', open: '商品を見る', openListing: '一覧を見る', listing: '一覧ページ', prev: '前へ', next: '次へ' },
   EN: { kicker: 'FOUND VIA WEB SEARCH', title: 'Found via Google Search', note: 'Google Search results (Amazon, Qoo10, SHEIN, ZOZOTOWN, etc.). Prices are as listed on each page at search time, not API-verified prices.', price: 'Listed price at search time', open: 'View', openListing: 'View listing', listing: 'Listing page', prev: 'Previous', next: 'Next' },
   ZH: { kicker: '网页搜索结果', title: 'Google 搜索结果', note: 'Google 搜索结果。价格为页面当时标注的参考价，不是 HOSHILU 通过 API 确认的价格。', price: '参考价・搜索时点', open: '查看', openListing: '查看列表', listing: '列表页', prev: '上一页', next: '下一页' },
   KO: { kicker: '웹 검색 결과', title: 'Google 검색 결과', note: 'Google 검색 결과입니다. 가격은 각 페이지에 표시된 참고 가격(검색 시점)이며 API 확인 가격이 아닙니다.', price: '참고 가격・검색 시점', open: '보기', openListing: '목록 보기', listing: '목록 페이지', prev: '이전', next: '다음' }
@@ -81,7 +81,8 @@ function render(payload) {
   const c = copy();
   root.replaceChildren();
   const heading = el('div', 'google-mall-results-heading');
-  // 2026-09-20 大隆さん指示: 見出しは「Google検索から発見」だけ（注記は各カードの「参考価格・検索時点」に集約）。
+  // 2026-09-20 大隆さん指示: 見出しは1行だけ（注記は各カードの「参考価格・検索時点」に集約）。
+  // 2026-09-21 大隆さん指示: 見出しは「web検索から発見」。
   const title = el('h2', '', c.title); title.id = 'googleMallResultsTitle';
   heading.append(title);
   // 横スライド（Google のショッピング枠と同じ）: スマホは指でスワイプ、PC は左右ボタン。scroll-snap で止まる。

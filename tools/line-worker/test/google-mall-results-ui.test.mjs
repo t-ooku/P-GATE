@@ -12,10 +12,10 @@ test('index.html は google-mall-results の css/mjs を読み、app.js は resu
 });
 
 // 2026-09-21 大隆さん指示: Google 枠のカードは「ホシルからの提案」と同じ幅。
-// 「商品を見る →」と「ホシっとく」の間の空きは詰める。
+// 同日ふたたび: ホシルバズに合わせ、スマホ1画面に2商品（46vw）。提案カードも同じ幅にした。
 test('Google 枠のカード幅は提案カードと同じで、保存ボタンは内容の直下に置く', () => {
   const css = readFileSync(new URL('../public/google-mall-results.css', import.meta.url), 'utf8');
-  assert.ok(css.includes('.google-mall-track>.google-mall-card{flex:0 0 min(300px,82vw);width:min(300px,82vw);max-width:none;min-width:0}'));
+  assert.ok(css.includes('.google-mall-track>.google-mall-card{flex:0 0 min(210px,46vw);width:min(210px,46vw);max-width:none;min-width:0}'));
   assert.ok(css.includes('.google-mall-card>.google-mall-card-link{flex:0 0 auto}'));
   assert.ok(css.includes('.google-mall-card>.google-mall-card-save{padding:2px 10px 10px}'));
 });
