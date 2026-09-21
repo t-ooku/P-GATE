@@ -743,6 +743,9 @@ function createWatchOptions(candidate,t){
   const status=textElement('p','watch-save-status','');
   save.addEventListener('click',()=>{
     const amount=Number(targetInput.value||0);if(!targetInput.value||amount<100||amount>100000000){targetInput.setCustomValidity(priceLabels.required);targetInput.reportValidity();return;}targetInput.setCustomValidity('');
+    // 2026-09-21 大隆さん指摘: 保存を押したらキーボードを閉じる。開いたままだと
+    // 「保存しました」も閉じる動きも見えず、他のボタンも押せない。
+    targetInput.blur?.();
     if(!memberSession){
       // 2026-09-06 大隆さん決定（指示書§24 登録障壁）: 会員登録ページへ飛ばさない。
       // 希望額は端末に残し、この場でメールアドレス（6桁コード）か LINE だけで完了させる。
@@ -762,9 +765,10 @@ function createWatchOptions(candidate,t){
     const wishQuery=productName;
     if(saveWish(wishQuery,[false,true,false,false],target)){
       status.textContent=t.watchSavedStatus;
+      status.classList.add('watch-save-status-done');
       bell.classList.add('watching');
       // §P0: 値下がり待ち 10 件の上限（サーバー 409）はここで見せる（端末には保存済み）。
-      Promise.resolve(typeof lastWishPersist==='undefined'?null:lastWishPersist).then(()=>{const notice=typeof takeWishLimitNotice==='function'?takeWishLimitNotice():null;if(notice){status.textContent=notice.message;status.classList.add('watch-save-status-limit');bell.classList.remove('watching');return;}setTimeout(()=>dialog.close(),1200);});
+      Promise.resolve(typeof lastWishPersist==='undefined'?null:lastWishPersist).then(()=>{const notice=typeof takeWishLimitNotice==='function'?takeWishLimitNotice():null;if(notice){status.textContent=notice.message;status.classList.remove('watch-save-status-done');status.classList.add('watch-save-status-limit');bell.classList.remove('watching');return;}setTimeout(()=>dialog.close(),900);});
     }
   });
   panel.append(modeWrap,targetWrap,targetNote,save,status);
@@ -1240,25 +1244,31 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   const title=textElement('h3','',candidate.display_name||candidate.product_name||candidate.asin);
   card.append(title);
   if(!confirmed&&candidate.recommendation_reason)title.after(textElement('div','recommendation-reason',`AI選定理由：${candidate.recommendation_reason}`));
+  // 2026-09-21 大隆さん指示: 写真 → 商品名（見切れてよい）→ 価格 → ボタン の順。
+  // ボタンは これ、今買う？ / この価格になったら教えて / いつものにする / 気になる / 口コミ。
+  // 順番を外の部品（いつものにする・AI最安比較・口コミ）に任せないよう、先に空の置き場を作る。
+  const options=renderOfferOptions(candidate,t,elements.language.value);
+  if(options)card.append(options);else card.append(allMarketplacesButton());
+  const actions=document.createElement('div');actions.className='product-card-actions';
+  const actionSlot=name=>{const slot=document.createElement('div');slot.className=`product-card-action product-card-action-${name}`;return slot;};
+  const buySlot=actionSlot('buy'),watchSlot=actionSlot('watch'),usualSlot=actionSlot('usual'),keepSlot=actionSlot('keep');
+  actions.append(buySlot,watchSlot,usualSlot,keepSlot);
+  card.append(actions);
   if(candidate.description)card.append(textElement('p','',candidate.description));
   const terms=candidate.evidence?.matched_terms||[];
   if(terms.length)card.append(textElement('div','evidence',`${window.HoshiluI18n?.t('search.evidence',elements.language.value)||'一致した手がかり：'}${terms.slice(0,4).join(' / ')}`));
-  const options=renderOfferOptions(candidate,t,elements.language.value);
-  if(options)card.append(options);else card.append(allMarketplacesButton());
   const shopLink=shopLinkElement(candidate,elements.language.value);
   if(shopLink)card.append(shopLink);
-  mediaActions.append(createKeepButton(candidate));
+  keepSlot.append(createKeepButton(candidate));
   // 2026-09-21 指示書 §3「いつものにする」。ボタン本体は usual-hoshiru.mjs が足す（app.js を太らせない）。
-  document.dispatchEvent(new CustomEvent('hoshilu:product-card-actions',{detail:{candidate,container:mediaActions}}));
+  document.dispatchEvent(new CustomEvent('hoshilu:product-card-actions',{detail:{candidate,container:usualSlot}}));
   const watch=createWatchOptions(candidate,t);
   card.append(watch.dialog);
   window.HoshiluPriceComparison?.attach(card,{...candidate,search_query:searchQuery||candidate.search_query||'',search_category:searchQuery||candidate.search_category||candidate.related_category||''});
   const priceComparisonButton=card.querySelector(':scope > .ai-price-compare-button');
-  // 2026-09-04 大隆さん指示: 画像の下は「ホシっとく」→「AI最安比較」。購入希望価格ウォッチは
-  // カード下部（口コミの上）に横一面で置く。
-  if(priceComparisonButton)mediaActions.append(priceComparisonButton);
+  if(priceComparisonButton)buySlot.append(priceComparisonButton);
   watch.bell.classList.add('watch-full-row');
-  card.append(watch.bell);
+  watchSlot.append(watch.bell);
   return card;
 }
 function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popularity'){

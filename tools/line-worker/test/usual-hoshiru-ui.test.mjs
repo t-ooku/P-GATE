@@ -31,7 +31,7 @@ test('index.html は usual-hoshiru の css/mjs を版つきで読む', () => {
 test('app.js は商品カードのアクション枠をイベントで渡すだけ（ボタン本体は持たない）', () => {
   const app = read('public/app.js');
   assert.match(app, /hoshilu:product-card-actions/u);
-  assert.match(app, /detail:\{candidate,container:mediaActions\}/u);
+  assert.match(app, /detail:\{candidate,container:usualSlot\}/u);
   // ボタン本体・文言・ダイアログは usual-hoshiru.mjs 側。app.js は枠を渡すだけ。
   assert.ok(!app.includes('usual-make-button'), 'ボタンを app.js で作らない');
   assert.ok(!app.includes('/api/member/usual'), 'いつものホシルの API を app.js から叩かない');

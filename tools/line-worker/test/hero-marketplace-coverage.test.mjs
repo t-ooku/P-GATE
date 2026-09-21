@@ -138,7 +138,9 @@ test('♡ 気になる は登録前に端末へ保存し、押した後だけ登
   assert.match(app, /JA:\{keep:'♡ 気になる',kept:'♥ 気になる'/);
   assert.match(app, /window\.HoshiluKeep=\{toggle:toggleKeptProduct,isKept:isKeptProduct,remove:removeKeptProduct,list:getKeptProducts\};/);
   assert.match(app, /document\.addEventListener\('hoshilu:kept-changed',renderKeptProducts\);/);
-  assert.match(app, /mediaActions\.append\(createKeepButton\(candidate\)\);/);
+  // 2026-09-21 大隆さん指示でボタンは写真の下の並びへ移した。置き場所は変わっても、
+  // 「♡ 気になる」を app.js が作ってカードに入れることは変わらない。
+  assert.match(app, /keepSlot\.append\(createKeepButton\(candidate\)\);/);
   assert.match(app, /new CustomEvent\('hoshilu:wish-saved',\{detail:\{source:'keep'\}\}\)/, 'ホシっとく は wish_saved として計測');
   assert.match(app, /localStorage\.setItem\('hoshilu_pending_watch'/);
   // 2026-09-06 大隆さん決定（指示書§24）: 会員登録ページへ飛ばさず、ダイアログ内でメール（6桁コード）か LINE だけで完了。

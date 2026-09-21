@@ -13,9 +13,20 @@ test('確認済み商品（最大30件）は縦の回転スクロール、レコ
   assert.match(css, /\.result-row-confirmed \.result-track\.result-track-vertical-ticker\{max-height:min\(82vh,760px\);overflow-y:auto/u);
 });
 
-test('カードは「ホシっとく」→「AI最安比較」、購入希望価格ウォッチは口コミの上に横一面、口コミの見出しは改行しない', () => {
+// 2026-09-21 大隆さん指示: 写真 → 商品名 → 価格 → ボタン。ボタンの順は
+// これ、今買う？ / この価格になったら教えて / いつものにする / 気になる / 口コミ。
+test('カードは 写真→商品名→価格→ボタン の順。ボタンの並びは指示どおり、口コミは最後', () => {
   const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
-  assert.match(app, /if\(priceComparisonButton\)mediaActions\.append\(priceComparisonButton\);\s*watch\.bell\.classList\.add\('watch-full-row'\);\s*card\.append\(watch\.bell\);/u);
+  const card = app.slice(app.indexOf('function productCard('), app.indexOf('function rankingCard('));
+  const at = (needle) => { const i = card.indexOf(needle); assert.ok(i > 0, needle); return i; };
+  assert.ok(at("card.append(title)") < at("actions.className='product-card-actions'"), '商品名はボタンより先');
+  assert.ok(at('const options=renderOfferOptions(') < at("actions.className='product-card-actions'"), '価格はボタンより先');
+  // 置き場所を先に作り、外の部品が足す順に結果が左右されないようにする
+  assert.match(card, /actions\.append\(buySlot,watchSlot,usualSlot,keepSlot\);/u);
+  assert.match(card, /if\(priceComparisonButton\)buySlot\.append\(priceComparisonButton\);/u);
+  assert.match(card, /watchSlot\.append\(watch\.bell\);/u);
+  assert.match(card, /container:usualSlot/u);
+  assert.match(card, /keepSlot\.append\(createKeepButton\(candidate\)\);/u);
   assert.doesNotMatch(app, /mediaActions\.append\(watch\.bell\)/u);
   const client = readFileSync(new URL('../public/experience-layer.mjs', import.meta.url), 'utf8');
   assert.match(client, /title: '口コミ'/u);
