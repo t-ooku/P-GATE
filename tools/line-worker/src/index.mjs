@@ -72,6 +72,7 @@ import { handleMemberTodayRoute } from './today-hoshilu.mjs';
 import { handleSellerDemandCheckRoute } from './seller-demand-check.mjs';
 import { handleSellerFreePeriodReportRoute } from './seller-free-period-report.mjs';
 import { handleDemandSocialCopyRoute } from './demand-social-copy.mjs';
+import { handleSellerCandidateRoutes } from './seller-candidates.mjs';
 import { deliverDueWebNotifications, handleMywatchRoutes } from './mywatch-routes.mjs';
 import { handleInsightRoutes, runInsightScan } from './insight-routes.mjs';
 import { handleShopDemandRoutes, runShopDemandRematch } from './shop-demand.mjs';
@@ -3616,6 +3617,9 @@ export default {
     // 2026-09-21 指示書 §32〜§34「実需要を素材にした販促」。下書きを返すだけで自動投稿はしない。
     const demandSocialCopyResponse = await handleDemandSocialCopyRoute(request, env);
     if (demandSocialCopyResponse) return demandSocialCopyResponse;
+    // 2026-09-21 指示書 §35・§36「需要起点の営業」「Seller候補管理」。行は消さず DECLINED を残す。
+    const sellerCandidateResponse = await handleSellerCandidateRoutes(request, env);
+    if (sellerCandidateResponse) return sellerCandidateResponse;
     const saleResponse = await handleMarketplaceSaleRoutes(request, env);
     if (saleResponse) return saleResponse;
     const buzzNotificationResponse = await handleBuzzNotificationRoutes(request, env);
