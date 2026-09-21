@@ -69,21 +69,25 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /property="og:url" content="https:\/\/hoshilu\.app\/for-sellers"/u);
   assert.match(html, /"@type":"FAQPage"/u);
   assert.match(html, /data-seller-cta="hero-inquiry"/u);
-  // 2026-09-19 大隆さん決定（Seller収益化・需要マッチ改修 §1・§15・§18）: 商品は 1 つ。HOSHILU Seller 4,980円/月、
-  // 最初の3か月 月額0円、Demand Match Click 1有効クリック50円。Growth 9,800円・ジャンル別クリック料金表は出さない。
+  // 2026-09-19 §1・§15・§18: 商品は 1 つ。HOSHILU Seller 4,980円/月、最初の3か月 月額0円。
+  // 2026-09-21 大隆さん決定: Demand Match Click 50円を廃止。値段は月額の1つだけになった。
   assert.match(html, /月額4,980円/u);
   assert.match(html, /最初の3か月 月額0円/u);
-  assert.match(html, /Demand Match Click <strong>1有効クリック 50円<\/strong>/u);
+  assert.match(html, /追加料金 <strong>なし<\/strong>/u);
   assert.match(html, /1法人単位ではなく、1事業者アカウント単位/u);
-  assert.match(html, /月額に含まれるもの: HOSHILU SHOP掲載、全ショップ横断検索への露出、通常検索からの商品クリック/u);
-  assert.match(html, /通常のクリックで課金されることはありません/u);
+  assert.match(html, /月額に含まれるもの: HOSHILU SHOP掲載、全ショップ横断検索への露出、商品クリック/u);
+  assert.match(html, /従量課金はありません/u);
+  // 値段として 50円 を掲げない（廃止の説明としてだけ出てよい）
+  assert.ok(!/1有効クリック 50円/u.test(html), '廃止した単価を値段として出さない');
   assert.match(html, /新しいECモールを増やす必要はありません/u);
-  assert.match(html, /<summary>50円はいつ発生しますか？<\/summary><p>通常のクリックでは発生しません/u);
+  assert.match(html, /<summary>クリックされると料金は増えますか？<\/summary><p>増えません。料金は月額4,980円だけです/u);
   assert.match(html, /<summary>ユーザーの個人情報は見られますか？<\/summary><p>見られません/u);
   assert.match(html, /<summary>費用が勝手に増えませんか？<\/summary>/u);
   // 2026-09-19 大隆さん決定で課金開始。予算上限は実装済みなので「準備中」と書かない（§33）
   assert.doesNotMatch(html, /準備中/u);
-  assert.match(html, /月額上限）は契約者画面で設定できます（初期値3,000円）/u);
+  // 2026-09-21: 予算上限は、上限を置く支出そのものが無くなったので説明ごと消した。
+  assert.match(html, /従量課金はありません。クリックされた回数で請求が増えることはありません/u);
+  assert.ok(!html.includes('Demand Match予算'), '無くした設定の説明を残さない');
   assert.match(html, /id="demandNow"/u);
   assert.doesNotMatch(html, /9,800/u);
   assert.doesNotMatch(html, /Growth/u);

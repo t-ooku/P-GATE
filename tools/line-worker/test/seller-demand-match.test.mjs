@@ -211,3 +211,12 @@ test('残高が無くても需要マッチは止めない: 商品登録も再照
     assert.equal(db.prepare(`SELECT COUNT(*) AS c FROM mywatch_notifications`).get().c, 1);
   }
 });
+test('公開している料金は月額だけ。クリックの値段を掲げない', () => {
+  const lp = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
+  assert.match(lp, /追加料金 <strong>なし<\/strong>/u);
+  assert.ok(!/1有効クリック 50円/u.test(lp), '値段として 50円 を出さない');
+  const outreach = readFileSync(new URL('../src/seller-outreach.mjs', import.meta.url), 'utf8');
+  assert.ok(!outreach.includes('1有効クリック50円'), '声かけの文面にも残さない');
+  const seo = readFileSync(new URL('../src/seo-pages-2026-09-06-seller.mjs', import.meta.url), 'utf8');
+  assert.ok(!seo.includes('1有効クリック50円'), 'FAQ にも残さない');
+});

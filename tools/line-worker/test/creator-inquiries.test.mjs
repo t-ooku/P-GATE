@@ -103,7 +103,9 @@ test('クリエイター募集: 最新素材（カルーセル 6 セット）・
   }
   assert.match(html, /#hoshilu #Qoo10 #SHEIN #値下がり待ち #ホシっとく #韓国コスメ #amazon #楽天/u);
   assert.match(html, /HOSHILU Seller 月額4,980円（税込）、最初の3か月は月額0円/u);
-  assert.match(html, /Demand Match Click 50円/u);
+  // 2026-09-21 大隆さん決定: クリック課金は廃止。クリエイターにも「月額だけ」と書いてもらう。
+  assert.match(html, /クリックによる追加料金はない/u);
+  assert.ok(!html.includes('Demand Match Click 50円'), '廃止した値段を素材に残さない');
   assert.match(html, /セラー向け（Instagram／X 共通・特にお願いしたい）/u);
   for (const line of ['※報酬あり', '※有償の提供はありません。', '※こちらは投稿報酬型となります。', '※投稿の際は、ホームページやSNSの画像をご利用ください。', '「完了報告承認前」にデータ送付', '「永久利用」となります']) assert.ok(html.includes(line), line);
   assert.match(html, /<tr><td>二次利用<\/td>/u);
