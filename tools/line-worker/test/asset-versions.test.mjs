@@ -26,7 +26,7 @@ const EXPECTED = Object.freeze({
   'google-mall-results.mjs': '4',
   'usual-hoshiru.css': '1',
   'usual-hoshiru.mjs': '1',
-  'instagram-look.css': '1'
+  'instagram-look.css': '2'
 });
 
 test('index.html のアセット版番号は pin したとおり', () => {

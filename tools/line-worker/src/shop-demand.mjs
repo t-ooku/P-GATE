@@ -14,6 +14,7 @@ import { searchProductsV2 } from './product-index-v2.mjs';
 import { readMemberSession } from './member-auth.mjs';
 import { demandMatchEligibility, demandMatchProductUrl, eligibleDemandMatchShops } from './seller-demand-match.mjs';
 import { SHOP_COLOR_FILTERS, SHOP_MATERIAL_FILTERS, shopAttributeDefinition } from './shop-facets.mjs';
+import { targetPriceDemand, usualDemandForecast } from './usual-demand.mjs';
 
 const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}]`, 'g');
 const clean = (value, max) => String(value ?? '').normalize('NFKC').replace(CONTROL_CHARS, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -359,6 +360,35 @@ export async function runShopDemandRematch(env, now = new Date().toISOString(), 
   return { scanned: (rows.results || []).length, matched };
 }
 
+// 2026-09-21 指示書 ⑯「Seller LP の『今の需要』実データ表示」。
+// LP は未ログインの誰でも見るので、返すのは "すでに公開できる（5人以上）需要の合計" だけ。
+// 商品名・条件・個人は返さない。数えられない系統は 0 と言わず measurable:false で返す（§30 架空件数は禁止）。
+export function summarizePublicThreeDemands({ searchingItems, priceWatch, usual } = {}) {
+  const sum = (items, key) => items.reduce((total, item) => total + (Number(item?.[key]) || 0), 0);
+  const searchingList = Array.isArray(searchingItems) ? searchingItems : null;
+  const priceList = priceWatch && priceWatch.measurable !== false && Array.isArray(priceWatch.items) ? priceWatch.items : null;
+  const usualList = usual && usual.measurable !== false && Array.isArray(usual.items) ? usual.items : null;
+  return {
+    searching: searchingList
+      ? { measurable: true, groups: searchingList.length, people: sum(searchingList, 'people') }
+      : { measurable: false },
+    price_watch: priceList
+      ? { measurable: true, groups: priceList.length, people: sum(priceList, 'people') }
+      : { measurable: false },
+    usual: usualList
+      ? { measurable: true, groups: usualList.length, people: sum(usualList, 'people'), within_30_days: sum(usualList, 'within_30_days') }
+      : { measurable: false }
+  };
+}
+
+async function publicThreeDemands(env, searchingItems) {
+  const [priceWatch, usual] = await Promise.all([
+    targetPriceDemand(env).catch(() => null),
+    usualDemandForecast(env).catch(() => null)
+  ]);
+  return summarizePublicThreeDemands({ searchingItems, priceWatch, usual });
+}
+
 // ---- 公開ルート -------------------------------------------------------------------
 // GET  /api/shops/search?q=…        横断検索（匿名ログを1行残す）
 // POST /api/shops/demand            探し中需要を保存 {query, seller_slug?, result_state?}
@@ -382,7 +412,7 @@ export async function handleShopDemandRoutes(request, env, { readMember = readMe
     await recordShopEvent(env, 'shop_search_completed', resultState(result), { content: `${result.exact.length}/${result.near.length}` });
     return json({ ok: true, ...result, state: resultState(result) });
   }
-  // 2026-09-19 大隆さん指示 §8: /for-sellers の「今、HOSHILUで探されています」。同じ条件を SELLER_DEMAND_MIN_PEOPLE（5）人以上が
+  // 2026-09-19 大隆さん指示 §8 / 2026-09-21 指示書 ⑯: /for-sellers の「今、HOSHILUで探されています」。同じ条件を SELLER_DEMAND_MIN_PEOPLE（5）人以上が
   // 探している需要だけを、検索文ではなく正規化した条件で返す（架空件数なし・個人情報なし）。件数未満は個別に出さない。
   if (request.method === 'GET' && url.pathname === '/api/shops/demand/public') {
     const minPeople = Number(env?.SHOP_DEMAND_SELLER_MIN_PEOPLE) || SELLER_DEMAND_MIN_PEOPLE;
@@ -403,7 +433,10 @@ export async function handleShopDemandRoutes(request, env, { readMember = readMe
           people: Number(row.people || 0), zero_results: Number(row.zero_results || 0), near_only: Number(row.near_only || 0)
         };
       }).filter((item) => item.conditions);
-      return Response.json({ ok: true, items, min_people: minPeople },
+      // 2026-09-21 指示書 ⑯: LP に3つの需要（探し中・値下がり待ち・いつものホシル）の実数を出す。
+      // 出すのは、すでに公開できる（5人以上）需要の合計だけ。数えられない系統は 0 と書かず measurable:false。
+      const threeDemands = await publicThreeDemands(env, items);
+      return Response.json({ ok: true, items, min_people: minPeople, three_demands: threeDemands },
         { headers: { 'cache-control': 'public, max-age=300', 'x-content-type-options': 'nosniff' } });
     } catch { return json({ ok: true, items: [], min_people: minPeople }); }
   }
