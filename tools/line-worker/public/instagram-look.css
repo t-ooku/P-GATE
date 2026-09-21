@@ -263,3 +263,14 @@ p strong,li strong{color:inherit !important}
   font-weight:800 !important;
   text-align:center !important;
 }
+
+/* 2026-09-22 大隆さん指示「すぐ検索にも色つけて」。
+   白のままだと押せるボタンに見えない。ただし塗りつぶしは「AIで探す」1つだけに
+   しておきたい（どちらを押すか迷わせない）ので、すぐ検索は薄紫の面＋紫の文字にする。
+   上の「副次の操作は白地」より後ろに置いて、こちらを勝たせている。 */
+#submitButton,.direct-search-button{
+  background:#efeaff !important;
+  color:#5140ba !important;
+  border:1px solid #cfc2ff !important;
+  font-weight:800 !important;
+}

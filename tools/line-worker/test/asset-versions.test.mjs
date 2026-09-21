@@ -33,7 +33,7 @@ const EXPECTED = Object.freeze({
   'result-compact.css': '1',
   'unified-results-ui.css': '1',
   'unified-results-ui.mjs': '1',
-  'instagram-look.css': '4'
+  'instagram-look.css': '5'
 });
 
 test('index.html のアセット版番号は pin したとおり', () => {
