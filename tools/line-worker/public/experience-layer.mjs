@@ -149,12 +149,13 @@ function mount(card) {
 }
 
 function scan(root = document) {
-  root.querySelectorAll?.('.product-card:not([data-experience-mounted])').forEach(mount);
+  // 2026-09-22: 統合した「ホシルからの提案」のカード（.unified-card-full）にも口コミを足す。
+  root.querySelectorAll?.('.product-card:not([data-experience-mounted]),.unified-card-full:not([data-experience-mounted])').forEach(mount);
 }
 const observer = new MutationObserver((mutations) => {
   for (const mutation of mutations) for (const node of mutation.addedNodes) {
     if (!(node instanceof Element)) continue;
-    if (node.matches?.('.product-card')) mount(node); else scan(node);
+    if (node.matches?.('.product-card,.unified-card-full')) mount(node); else scan(node);
   }
 });
 observer.observe(document.body, { childList: true, subtree: true });

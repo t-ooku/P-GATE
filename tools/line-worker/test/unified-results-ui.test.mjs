@@ -17,13 +17,35 @@ test('サーバーが決めた順番をそのまま描く（画面で並べ替�
   assert.match(source, /items\.slice\(0, PAGE\)/u);
 });
 
-test('1セクションにまとめ、元の「ホシルからの提案」と web検索の枠は畳む', () => {
+// 2026-09-22 大隆さん指示「MATCHESのタイトル残した状態で、ホシルの提案とweb検索を
+// 合体して、1列にして」「合体した列がMATCHESとする」。
+test('MATCHESの見出しはページのものを使い、合体した列をその真下に入れる', () => {
   const source = ui();
-  assert.match(source, /title: '見つかった商品'/u);
+  assert.ok(!source.includes("'見つかった商品'"), '自前の見出しは持たない');
+  assert.ok(!/el\('h2'/u.test(source), '見出しを二重に作らない');
+  assert.match(source, /#resultsSection > \.section-title/u);
+  assert.match(source, /insertAdjacentElement\('afterend', host\)/u);
+  // 元の2つの棚（価格確認済み・AI選定レコメンド）と web検索の枠は畳む
   assert.match(source, /result-row-confirmed/u);
+  assert.match(source, /result-row-unconfirmed/u);
   assert.match(source, /#googleMallResults/u);
   // レコメンド（関連商品）は別の話なので畳まない
   assert.ok(!source.includes('result-row-recommended'), 'レコメンドまで消さない');
+});
+
+// 2026-09-22 大隆さん指示「ホシル提示は、5個ボタン設置」。
+test('HOSHILU商品には商品カードと同じ5個のボタン。Web商品は♡だけ', () => {
+  const source = ui();
+  // 元の候補に戻る鍵はサーバーが付けた番号だけ。名前で推測しない。
+  assert.match(source, /candidate_index/u);
+  assert.match(source, /window\.HoshiluCardActions\?\.attach/u);
+  assert.match(source, /article\.classList\.add\('unified-card-full'\)/u);
+  // 候補が無い Web 商品は ♡ だけ
+  assert.match(source, /\} else \{\s*const keep = keepButton\(item\);/u);
+  // 口コミは商品名を h3 から読むので h3 で出す
+  assert.match(source, /el\('h3', 'unified-card-name'/u);
+  const app = read('app.js');
+  assert.match(app, /window\.HoshiluCardActions=\{/u);
 });
 
 test('12件ずつ。最初から60枚の画像を読ませない', () => {
@@ -79,13 +101,25 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
   assert.match(css(), /\.unified-card-name\{[^}]*min-height:2\.8em/u);
 });
 
-test('index.html が読み、app.js が unified_results を渡している', () => {
+test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=1/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=1/u);
+  assert.match(html, /unified-results-ui\.css\?v=2/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=2/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
+  assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
   assert.equal(app, read('assets-v147/app.js'));
+});
+
+// 2026-09-22: 棚を畳むには、棚が DOM に並んでからイベントを出す必要がある。
+// 先頭で出していたため「ホシルからの提案」が二重に出ていた。
+test('結果イベントは商品カードを並べ終えてから出す', () => {
+  const app = read('app.js');
+  const start = app.indexOf('function renderResults(');
+  const replace = app.indexOf('elements.cards.replaceChildren(', start);
+  const dispatch = app.indexOf("hoshilu:results-rendered", start);
+  assert.ok(start >= 0 && replace > start, '棚を並べる処理がある');
+  assert.ok(dispatch > replace, 'イベントは並べ終えてから');
 });
 
 // 2026-09-22 追加指示「PC版ページメニューを上帯へ移動」。

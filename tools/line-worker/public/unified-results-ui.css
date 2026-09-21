@@ -114,3 +114,21 @@
 @media (min-width:1360px){
   .unified-list{grid-template-columns:repeat(5,minmax(0,1fr))}
 }
+
+/* 2026-09-22 大隆さん指示「ホシル提示は、5個ボタン設置」。
+   HOSHILU 商品のカードには、商品カードと同じ5個のボタンが入る。
+   カードは小さいままにしたいので、ボタンは幅いっぱいの縦積みで詰める。 */
+.unified-card-full .product-card-actions{display:grid;gap:5px;margin:0 10px 10px}
+.unified-card-full .product-card-action:empty{display:none}
+.unified-card-full .product-card-actions button,
+.unified-card-full .product-card-actions a{
+  display:block;
+  width:100%;
+  min-height:30px;
+  padding:6px 8px;
+  font-size:10.5px;
+  line-height:1.3;
+  text-align:center;
+}
+.unified-card-full .experience-block{margin:0 10px 10px}
+.unified-card-name{margin:0;font-weight:700}

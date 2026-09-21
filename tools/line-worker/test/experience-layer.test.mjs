@@ -93,10 +93,12 @@ test('集計APIは最大12件をまとめて返し、投稿0件でも軸を返�
 
 test('トップページは experience-layer を読み込み、クライアントは .product-card を監視して差し込む', async () => {
   const html = readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
-  assert.match(html, /experience-layer\.mjs\?v=2/u);
+  assert.match(html, /experience-layer\.mjs\?v=3/u);
   assert.match(html, /experience-layer\.css\?v=16/u);
   const client = readFileSync(new URL('../public/experience-layer.mjs', import.meta.url), 'utf8');
   assert.match(client, /MutationObserver/u);
+  // 2026-09-22: 統合した「ホシルからの提案」のカードにも口コミを足す。
+  assert.match(client, /\.unified-card-full/u);
   assert.match(client, /\/api\/experience\/summaries/u);
   assert.match(client, /\/api\/experience\/report/u);
   assert.match(client, /login\.html\?next=/u);

@@ -1249,16 +1249,29 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   // 順番を外の部品（いつものにする・AI最安比較・口コミ）に任せないよう、先に空の置き場を作る。
   const options=renderOfferOptions(candidate,t,elements.language.value);
   if(options)card.append(options);else card.append(allMarketplacesButton());
-  const actions=document.createElement('div');actions.className='product-card-actions';
-  const actionSlot=name=>{const slot=document.createElement('div');slot.className=`product-card-action product-card-action-${name}`;return slot;};
-  const buySlot=actionSlot('buy'),watchSlot=actionSlot('watch'),usualSlot=actionSlot('usual'),keepSlot=actionSlot('keep');
-  actions.append(buySlot,watchSlot,usualSlot,keepSlot);
-  card.append(actions);
+  const slots=productCardActionSlots(card);
   if(candidate.description)card.append(textElement('p','',candidate.description));
   const terms=candidate.evidence?.matched_terms||[];
   if(terms.length)card.append(textElement('div','evidence',`${window.HoshiluI18n?.t('search.evidence',elements.language.value)||'一致した手がかり：'}${terms.slice(0,4).join(' / ')}`));
   const shopLink=shopLinkElement(candidate,elements.language.value);
   if(shopLink)card.append(shopLink);
+  fillProductCardActions(card,slots,candidate,t,searchQuery);
+  return card;
+}
+// 2026-09-22 大隆さん指示「ホシル提示は、5個ボタン設置」。
+// 統合した「ホシルからの提案」のカードにも、商品カードと同じ5個のボタンを出す。
+// 同じ作り方を2か所に書かないよう、置き場を作る所と中身を入れる所に分けて、
+// unified-results-ui.mjs からも同じ順番で呼べるようにした。
+function productCardActionSlots(card){
+  const actions=document.createElement('div');actions.className='product-card-actions';
+  const actionSlot=name=>{const slot=document.createElement('div');slot.className=`product-card-action product-card-action-${name}`;return slot;};
+  const buySlot=actionSlot('buy'),watchSlot=actionSlot('watch'),usualSlot=actionSlot('usual'),keepSlot=actionSlot('keep');
+  actions.append(buySlot,watchSlot,usualSlot,keepSlot);
+  card.append(actions);
+  return {actions,buySlot,watchSlot,usualSlot,keepSlot};
+}
+function fillProductCardActions(card,slots,candidate,t,searchQuery=''){
+  const {buySlot,watchSlot,usualSlot,keepSlot}=slots;
   keepSlot.append(createKeepButton(candidate));
   // 2026-09-21 指示書 §3「いつものにする」。ボタン本体は usual-hoshiru.mjs が足す（app.js を太らせない）。
   document.dispatchEvent(new CustomEvent('hoshilu:product-card-actions',{detail:{candidate,container:usualSlot}}));
@@ -1269,8 +1282,16 @@ function productCard(candidate,index,t,confirmed,searchQuery=''){
   if(priceComparisonButton)buySlot.append(priceComparisonButton);
   watch.bell.classList.add('watch-full-row');
   watchSlot.append(watch.bell);
-  return card;
+  return slots;
 }
+// 口コミ（experience-layer.mjs）は .product-card を見て後から足す。統合カードにも
+// 同じ札を付けて、5個目のボタンがそこに出るようにする。
+window.HoshiluCardActions={
+  attach(card,candidate,searchQuery=''){
+    const slots=productCardActionSlots(card);
+    return fillProductCardActions(card,slots,candidate,selectedCopy(),searchQuery);
+  }
+};
 function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popularity'){
   const card=productCard(candidate,index,selectedCopy(),true,searchQuery);
   card.classList.add('ranking-product-card');
@@ -1541,8 +1562,6 @@ function revealSearchResults(){
   },600);
 }
 function renderResults(result,requestId,shareQuery=elements.query.value,executionId=''){
-  // 2026-09-19: 描画した結果を他モジュール（google-mall-results.mjs 等）へ渡す。検索文・個人情報は含めない。
-  try{document.dispatchEvent(new CustomEvent('hoshilu:results-rendered',{detail:{executionId,google_mall_results:result?.google_mall_results||null,unified_results:result?.unified_results||null}}));}catch{}
   const preserveInstantPosition=Boolean(elements.instantMarketplace&&!elements.instantMarketplace.classList.contains('hidden'));
   // resultCarouselは検索ごとに新しいtrackを作るため、DOMから外す前に旧tickerの
   // interval・アニメーション・イベントを明示解除する。
@@ -1612,6 +1631,11 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
   const hasProductDestination=Boolean(elements.cards.querySelector('.product-primary-link[href],.offer-link[href],.price-offer[href]'));
   shareDiscoveryReady=shareDiscoveryReady&&hasProductDestination;
   if(shareDiscoveryReady)elements.cards.append(shareDiscoveryCard());
+  // 2026-09-19: 描画した結果を他モジュール（google-mall-results.mjs 等）へ渡す。検索文・個人情報は含めない。
+  // 2026-09-22: 商品カードを並べ**終わってから**送る。以前はこの行が renderResults の先頭に
+  // あったため、統合表示（unified-results-ui.mjs）が畳もうとした時点でまだ古い棚が
+  // DOM に無く、「ホシルからの提案」が二重に出ていた。
+  try{document.dispatchEvent(new CustomEvent('hoshilu:results-rendered',{detail:{executionId,google_mall_results:result?.google_mall_results||null,unified_results:result?.unified_results||null,candidates:Array.isArray(result?.candidates)?result.candidates:[]}}));}catch{}
   syncStickySearch();
   if(!preserveInstantPosition)elements.results.scrollIntoView({behavior:'smooth',block:'start'});
 }

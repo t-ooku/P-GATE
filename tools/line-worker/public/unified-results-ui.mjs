@@ -12,7 +12,6 @@
 //
 // 12件ずつ出す（§11）。60枚の画像を最初から読み込ませない。
 const COPY = {
-  title: '見つかった商品',
   found: (n) => `${n}件見つかりました`,
   capped: (n) => `${n}件表示中`,
   more: 'さらに見る',
@@ -33,7 +32,16 @@ const el = (tag, className, text) => {
   return node;
 };
 
-let state = { items: [], shown: 0 };
+let state = { items: [], shown: 0, candidates: [] };
+
+// 統合した行から、元の候補（/api/search の candidates）へ戻る。
+// 突き合わせはサーバーが付けた candidate_index だけで行う。名前で推測しない。
+function candidateFor(item) {
+  const at = Number(item?.candidate_index);
+  if (!Number.isInteger(at) || at < 0) return null;
+  const candidate = state.candidates[at];
+  return candidate && typeof candidate === 'object' ? candidate : null;
+}
 
 function keepButton(item) {
   const button = el('button', 'unified-keep', COPY.keep);
@@ -84,7 +92,8 @@ function card(item) {
   link.append(figure);
 
   const body = el('div', 'unified-card-body');
-  body.append(el('span', 'unified-card-name', item.product_name || ''));
+  // h3 にしておく。口コミ（experience-layer.mjs）は商品名を h3 から読む。
+  body.append(el('h3', 'unified-card-name', item.product_name || ''));
   const meta = el('div', 'unified-card-meta');
   meta.append(el('span', `unified-badge unified-badge-${String(item.source || '').toLowerCase()}`,
     COPY.badge[item.source] || COPY.badge.WEB));
@@ -102,30 +111,47 @@ function card(item) {
   link.append(body);
   article.append(link);
 
-  const keep = keepButton(item);
-  if (keep) article.append(keep);
+  // 2026-09-22 大隆さん指示「ホシル提示は、5個ボタン設置」。
+  // HOSHILU 商品は、元の候補が手元にあるので商品カードと同じ5個を出す。
+  // （これ、今買う？／この価格になったら教えて／いつものにする／気になる／口コミ）
+  // Web 商品は候補そのものが無い（価格も在庫も HOSHILU は確認していない）ので、
+  // 出せるのは ♡ ホシっとく だけ。無いものを有るふりで並べない。
+  const candidate = candidateFor(item);
+  if (candidate && window.HoshiluCardActions?.attach) {
+    // 口コミ（experience-layer.mjs）は .product-card を見て後から足すので、同じ札を付ける。
+    article.classList.add('unified-card-full');
+    window.HoshiluCardActions.attach(article, candidate);
+  } else {
+    const keep = keepButton(item);
+    if (keep) article.append(keep);
+  }
   return article;
 }
 
-// 「見つかった商品」は商品カードの並び（#resultCards）の直前に置く。
-// app.js を太らせないよう、枠はこのモジュールが作る。
+// 2026-09-22 大隆さん指示「MATCHESのタイトル残した状態で、ホシルの提案とweb検索を
+// 合体して、1列にして」「つまりホシル提示とweb検索提示を合体した列がMATCHESとする」。
+// だからこのモジュールは見出しを持たない。ページにもとからある
+// 「MATCHES / ホシルからの提案」の真下に、その中身として入る。
 let host = null;
 function section() {
   if (host && host.isConnected) return host;
+  const anchor = document.querySelector('#resultsSection > .section-title');
   const cards = document.querySelector('#resultCards');
-  if (!cards) return null;
+  if (!anchor && !cards) return null;
   host = document.createElement('section');
   host.id = 'unifiedResults';
   host.hidden = true;
-  host.setAttribute('aria-labelledby', 'unifiedResultsTitle');
-  cards.insertAdjacentElement('beforebegin', host);
+  if (anchor) anchor.insertAdjacentElement('afterend', host);
+  else cards.insertAdjacentElement('beforebegin', host);
   return host;
 }
 
-// 1セクションにまとめるので、元の「ホシルからの提案」と「web検索から発見」は畳む（§1）。
+// 1セクションにまとめるので、元の「ホシルからの提案」（価格まで確認できた棚と
+// AI選定レコメンドの棚）と「web検索から発見」は畳む（§1）。
 // レコメンド（関連商品）は別の話なので残す。
 function foldLegacySections(folded) {
-  for (const row of document.querySelectorAll('#resultCards .result-row-confirmed')) row.hidden = folded;
+  const rows = document.querySelectorAll('#resultCards .result-row-confirmed,#resultCards .result-row-unconfirmed');
+  for (const row of rows) row.hidden = folded;
   const google = document.querySelector('#googleMallResults');
   if (google) google.classList.toggle('hidden', folded);
 }
@@ -145,21 +171,19 @@ function renderMore(host, list) {
   host.append(button);
 }
 
-export function render(unified) {
+export function render(unified, candidates = []) {
   const host = section();
   if (!host) return;
   const items = Array.isArray(unified?.items) ? unified.items : [];
-  state = { items, shown: 0 };
+  state = { items, shown: 0, candidates: Array.isArray(candidates) ? candidates : [] };
   host.replaceChildren();
   if (!items.length) { host.hidden = true; foldLegacySections(false); return; }
   host.hidden = false;
   foldLegacySections(true);
 
-  const head = el('div', 'unified-head');
-  const title = el('h2', 'unified-title', COPY.title);
-  title.id = 'unifiedResultsTitle';
-  head.append(title);
+  // 見出しは作らない。ページの「MATCHES / ホシルからの提案」がこの列の見出し。
   // 「全部で60件しかない」と誤解させない（§9）。上限で切ったときは「60件表示中」。
+  const head = el('div', 'unified-head');
   const count = unified.truncated ? COPY.capped(items.length) : COPY.found(items.length);
   head.append(el('span', 'unified-count', count));
   host.append(head);
@@ -183,5 +207,5 @@ document.addEventListener('hoshilu:results-rendered', (event) => {
     foldLegacySections(false);
     return;
   }
-  render(unified);
+  render(unified, event.detail?.candidates || []);
 });

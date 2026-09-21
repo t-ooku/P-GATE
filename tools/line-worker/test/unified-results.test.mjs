@@ -170,3 +170,28 @@ test('サーバーが並べる（ブラウザで並べ直さない）', () => {
   assert.match(index, /import \{ unifyResults \} from '\.\/unified-results\.mjs';/u);
   assert.match(index, /unified_results: unifyResults\(/u);
 });
+
+// 2026-09-22 大隆さん指示「ホシル提示は、5個ボタン設置」。
+// 画面が元の候補へ戻れるよう、HOSHILU 行には候補の番号を付けて返す。
+// 名前で突き合わせると、同じ名前の別商品にボタンが付く。
+test('HOSHILU 行は元の候補の番号を持ち、Web 行は持たない', () => {
+  const result = unifyResults({
+    candidates: [candidate(1), candidate(2)],
+    googleItems: [web(1)],
+    query: QUERY
+  });
+  for (const item of result.items) {
+    if (item.source === 'WEB') assert.equal(item.candidate_index, null);
+    else assert.ok(Number.isInteger(item.candidate_index) && item.candidate_index >= 0, item.product_name);
+  }
+  const hoshilu = result.items.filter((item) => item.source !== 'WEB');
+  assert.deepEqual([...new Set(hoshilu.map((item) => item.candidate_index))].length, hoshilu.length, '番号が重ならない');
+});
+
+// 2026-09-22 大隆さん指示「Amazonが検索した商品も提示してね」。
+// Amazon は PA-API 未解放で HOSHILU 自身では商品を取れない。Google 側の検索を
+// 「候補があるモールは除く」規則から外し、常に探しにいく。
+test('Amazon だけは候補があっても web 検索から外さない', () => {
+  const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(index, /excludeMarketplaces: \[\.\.\.presentMarketplaces\]\.filter\(\(marketplace\) => marketplace !== 'AMAZON_JP'\)/u);
+});

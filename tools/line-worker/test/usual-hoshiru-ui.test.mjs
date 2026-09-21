@@ -83,11 +83,16 @@ test('P2 写真から出た商品カードにも「いつものにする」が�
   const app = read('public/app.js');
   // アクション枠を渡すイベントは productCard の中で1回だけ
   assert.equal(app.split('hoshilu:product-card-actions').length - 1, 1, '描画の入口は1か所');
-  const start = app.indexOf('function productCard(');
+  // 2026-09-22「ホシル提示は、5個ボタン設置」で、ボタンを入れる所を
+  // fillProductCardActions に切り出した。商品カードも統合カードもここを通る。
+  const start = app.indexOf('function fillProductCardActions(');
   const dispatch = app.indexOf('hoshilu:product-card-actions');
   const next = app.indexOf('\nfunction ', start + 1);
-  assert.ok(start >= 0 && dispatch > start, 'イベントは productCard の中から出す');
+  assert.ok(start >= 0 && dispatch > start, 'イベントは共通のボタン組み立てから出す');
   assert.ok(next === -1 || dispatch < next, '別の関数に移っていない');
+  // productCard もそこを通る（描画の入口が2本に割れていない）
+  assert.match(app, /function productCard\([^)]*\)\{[\s\S]*?fillProductCardActions\(card,slots,candidate,t,searchQuery\);/u);
+  assert.match(app, /window\.HoshiluCardActions=\{[\s\S]*?fillProductCardActions\(/u);
 
   // 写真・スクショの入力は検索フォームの中にある＝結果は同じ描画を通る
   const html = read('public/index.html');

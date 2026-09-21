@@ -1762,7 +1762,12 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     if (!offers.length && legacyAmazonProductLead(candidate)) presentMarketplaces.add('AMAZON_JP');
   }
   const googleMallPromise = googleMallSearchConfigured(env)
-    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '), { excludeMarketplaces: [...presentMarketplaces] })
+    // 2026-09-22 大隆さん指示「Amazonが検索した商品も提示してね」。
+    // Amazon は PA-API が未解放で、HOSHILU 自身では商品を取れない（3件の適格販売が先）。
+    // 唯一 Amazon の商品ページを出せるのが、この Google 側の検索。
+    // 「そのモールに候補があれば除く」規則から Amazon だけ外し、常に探しにいく。
+    // 重複は unifyResults が ASIN で1件にまとめる。
+    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '), { excludeMarketplaces: [...presentMarketplaces].filter((marketplace) => marketplace !== 'AMAZON_JP') })
       .catch(() => ({ items: [], source: 'error', reason: 'UNHANDLED' }))
     : Promise.resolve({ items: [], source: 'disabled', reason: 'NOT_CONFIGURED' });
   const candidates = [];

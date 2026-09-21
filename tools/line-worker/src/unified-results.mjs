@@ -95,6 +95,10 @@ function fromCandidate(candidate, index) {
   return {
     source: shop ? 'HOSHILU_SHOP' : 'HOSHILU',
     order: index,
+    // 画面側で「元の候補」に戻れるようにしておく。商品カードと同じ5個のボタン
+    // （これ、今買う？／この価格になったら教えて／いつものにする／気になる／口コミ）は
+    // 候補そのものを必要とするため（2026-09-22 大隆さん指示「ホシル提示は、5個ボタン設置」）。
+    candidate_index: index,
     product_name: text(candidate?.display_name || candidate?.product_name || candidate?.asin, 200),
     image_url: image,
     url,
@@ -112,6 +116,7 @@ function fromGoogleItem(item, index, offset) {
   return {
     source: 'WEB',
     order: offset + index,
+    candidate_index: null,
     product_name: text(item?.title, 200),
     image_url: httpsOnly(item?.image_url),
     url: httpsOnly(item?.tracking_url || item?.product_url),
@@ -186,6 +191,7 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
     shop_name: row.shop_name,
     marketplace: row.marketplace,
     price_jpy: row.price_jpy,
+    candidate_index: row.source === 'WEB' ? null : (Number.isInteger(row.candidate_index) ? row.candidate_index : null),
     matched: row.matched,
     unmatched: row.unmatched
   }));
