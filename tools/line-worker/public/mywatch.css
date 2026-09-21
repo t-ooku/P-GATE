@@ -61,6 +61,11 @@
 .entrusted-row-name{font-weight:800;color:#211b3b;font-size:14px;overflow-wrap:anywhere}
 .entrusted-row-price{color:#5140ba;font-weight:800;font-size:13px}
 .entrusted-row-note{color:#6b6880;font-size:12px}
+/* 2026-09-21 大隆さん指示「今の価格を常に提示してほしい」: 見比べて買えるよう、いまの価格を一番大きく出す */
+.entrusted-row-now{color:#211b3b;font-weight:800;font-size:15px}
+.entrusted-row-now-reached{color:#1b7f4c}
+.entrusted-row-now-unknown{color:#6b6880;font-weight:600;font-size:13px}
+.entrusted-row-gap{color:#6b6880;font-size:12px}
 .entrusted-row-search{justify-self:start;margin-top:4px;border:0;border-radius:10px;background:var(--soft);color:#5140ba;padding:8px 11px;cursor:pointer;font-weight:800;font-size:13px}
 .entrusted-row-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.entrusted-row-actions .entrusted-row-search{margin-top:0}
 .entrusted-row-remove{border:1px solid var(--line);border-radius:10px;background:#fff;color:#6d6b80;padding:8px 11px;cursor:pointer;font-size:13px}.entrusted-row-remove:disabled{opacity:.6}

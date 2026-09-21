@@ -149,6 +149,14 @@ export function externalWatchSourceUrl(priceCondition = {}) {
   if (!/^https:\/\/\S+$/iu.test(raw) || raw.length > 500) return '';
   return marketplaceForProductUrl(raw) ? raw : '';
 }
+// 2026-09-21 大隆さん報告「やはり画像表示できてない」: 端末の hoshilu_watch_preferences は
+// 画像を持たないため、ログイン時の同期 POST が price_condition を丸ごと上書きして
+// target_image_url を消していた。画像を送ってこない POST では前回保存した画像を残す。
+// URL は推測生成しない（https の実 URL が無ければ空のまま）。
+export function watchImageUrl(priceCondition = {}) {
+  const raw = String(priceCondition?.target_image_url || '').trim();
+  return /^https:\/\/\S+$/iu.test(raw) && raw.length <= 500 ? raw : '';
+}
 export function wishLimitsFor(env = {}) {
   const pick = (key, fallback) => { const n = Number(env[key]); return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback; };
   return { saved: pick('WISH_LIMIT_SAVED', WISH_LIMIT_DEFAULTS.saved), searching: pick('WISH_LIMIT_SEARCHING', WISH_LIMIT_DEFAULTS.searching), price_watch: pick('WISH_LIMIT_PRICE_WATCH', WISH_LIMIT_DEFAULTS.price_watch), external_price_watch: pick('WISH_LIMIT_EXTERNAL_PRICE_WATCH', WISH_LIMIT_DEFAULTS.external_price_watch) };
@@ -209,6 +217,33 @@ function decorateWishRow(row) {
     expires_at:String(price.expires_at||'') };
 }
 
+// 2026-09-21 大隆さん指示「今の価格を常に提示してほしい」: 希望額まで下がっていなくても
+// 見比べて買えるように、直近に API で確認できた価格をそのまま返す。AI 推定価格は使わない。
+// 一度も確認できていない行は 0 と断定せず空（＝計測不能）で返し、画面側で出し分ける。
+export async function latestObservedPrices(env, wishIds = []) {
+  const ids = [...new Set(wishIds.filter(Boolean).map(String))].slice(0, 100);
+  if (!ids.length) return new Map();
+  const placeholders = ids.map((_, index) => `?${index + 1}`).join(',');
+  try {
+    const result = await env.PRODUCT_DB.prepare(
+      `SELECT wish_id,observed_at,price_jpy,marketplace FROM target_price_observations
+       WHERE wish_id IN (${placeholders}) AND price_jpy IS NOT NULL AND price_jpy>0
+       ORDER BY observed_at DESC`
+    ).bind(...ids).all();
+    const latest = new Map();
+    for (const row of result?.results || []) {
+      if (latest.has(row.wish_id)) continue;
+      latest.set(String(row.wish_id), {
+        last_price_jpy: Number(row.price_jpy) || null,
+        last_price_marketplace: String(row.marketplace || ''),
+        last_price_observed_at: String(row.observed_at || '')
+      });
+    }
+    return latest;
+  } catch { return new Map(); }
+}
+const NO_OBSERVED_PRICE = Object.freeze({ last_price_jpy: null, last_price_marketplace: '', last_price_observed_at: '' });
+
 export async function handleMemberWishRoutes(request, env) {
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/api/member/wishes')) return null;
@@ -221,7 +256,10 @@ export async function handleMemberWishRoutes(request, env) {
     // §P0: 上限と使用数も返す（画面で「探し中 2/10」を出すため。数は本人の実データだけ）。
     const limits = wishLimitsFor(env);
     const usage = await wishUsageFor(env, member.id);
-    return Response.json({ ok: true, wishes: (result.results || []).map(decorateWishRow), limits, usage }, { headers: { 'cache-control': 'no-store' } });
+    const rows = (result.results || []).map(decorateWishRow);
+    const observed = await latestObservedPrices(env, rows.filter((row) => Number(row.target_price_jpy) > 0).map((row) => row.wish_id));
+    const wishes = rows.map((row) => ({ ...row, ...(observed.get(String(row.wish_id)) || NO_OBSERVED_PRICE) }));
+    return Response.json({ ok: true, wishes, limits, usage }, { headers: { 'cache-control': 'no-store' } });
   }
   if (request.method === 'POST' && url.pathname === '/api/member/wishes') {
     const payload = await request.json(), query = clean(payload.query), language = LANGUAGES.has(payload.language) ? payload.language : 'JA';
@@ -248,7 +286,10 @@ export async function handleMemberWishRoutes(request, env) {
     const externalUrl = targetPrice === null ? '' : (externalWatchSourceUrl(payload.price_condition) || (previousPrice.source === 'EXTERNAL_URL' ? String(previousPrice.source_url || '') : ''));
     // 外部 URL でないと判定したら、本人が送ってきた source/source_url は必ず捨てる（undefined は JSON 化で消える）。
     const externalCondition = externalUrl ? { source: 'EXTERNAL_URL', source_url: externalUrl } : { source: undefined, source_url: undefined };
-    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||query,...postPurchaseCondition,...externalCondition}};
+    // 画像は送られてこなければ前回の画像を残す（同期 POST で消さない）。
+    const retainedImage = targetPrice === null ? '' : (watchImageUrl(payload.price_condition) || watchImageUrl(previousPrice));
+    const imageCondition = retainedImage ? { target_image_url: retainedImage } : { target_image_url: undefined };
+    const targetPayload=targetPrice===null?payload:{...payload,price_condition:{...(payload.price_condition&&typeof payload.price_condition==='object'?payload.price_condition:{}),target_price_jpy:targetPrice,target_product_key:retainedProductKey(targetProductKey,targetProductName,previousPrice),target_product_name:targetProductName||previousPrice.target_product_name||query,...postPurchaseCondition,...externalCondition,...imageCondition}};
     const conditionSnapshot = conditionSnapshotFor(targetPayload, query);
     // 0044のnotify_new_match DEFAULT 1だけでは、本人が新着通知を明示的に
     // 有効化したか判別できない。新規の通常保存はOFFにし、明示ONかつMUTED

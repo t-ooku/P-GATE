@@ -286,7 +286,7 @@ function renderQuickExamples(language=elements.language.value||'JA'){
 function getWatchPreferences(){try{const value=JSON.parse(localStorage.getItem('hoshilu_watch_preferences')||'[]');return Array.isArray(value)?value:[];}catch{return[];}}
 function watchOptionsFor(query){const item=getWatchPreferences().find(saved=>saved.query===query);return Number(item?.target_price_jpy)>=100?[false,true,false,false]:[false,false,false,false];}
 function watchFrequencyFor(query){const item=getWatchPreferences().find(saved=>saved.query===query);return['INSTANT','DAILY','WEEKLY','MUTED'].includes(item?.frequency)?item.frequency:'INSTANT';}
-function storeWatchPreference(query,options,asin='',frequency=watchFrequencyFor(query),target={}){const current=getWatchPreferences();const item={asin:String(asin||''),query:String(query||'').trim(),options:options.map(Boolean),frequency,target_price_jpy:Number(target.target_price_jpy)||null,target_product_key:String(target.target_product_key||''),target_product_name:String(target.target_product_name||''),updatedAt:new Date().toISOString()};localStorage.setItem('hoshilu_watch_preferences',JSON.stringify([item,...current.filter(saved=>saved.query!==item.query)].slice(0,100)));}
+function storeWatchPreference(query,options,asin='',frequency=watchFrequencyFor(query),target={}){const current=getWatchPreferences();const item={asin:String(asin||''),query:String(query||'').trim(),options:options.map(Boolean),frequency,target_price_jpy:Number(target.target_price_jpy)||null,target_product_key:String(target.target_product_key||''),target_product_name:String(target.target_product_name||''),target_image_url:/^https:\/\//u.test(String(target.target_image_url||''))?String(target.target_image_url).slice(0,500):'',updatedAt:new Date().toISOString()};localStorage.setItem('hoshilu_watch_preferences',JSON.stringify([item,...current.filter(saved=>saved.query!==item.query)].slice(0,100)));}
 function removeLocalWish(query){setWishes(getWishes().filter(item=>item!==query));localStorage.setItem('hoshilu_watch_preferences',JSON.stringify(getWatchPreferences().filter(item=>item.query!==query)));}
 function recordFor(query){return memberWishRecords.find(item=>item.query_text===query);}
 // 2026-09-06 大隆さん指示（§27）: どこから来た人が希望価格を入れたのか数えられるよう、
@@ -438,7 +438,8 @@ function wishItem(value,t,actions){const details=document.createElement('details
 function wishCycle(wishes,t,actions){const cycle=document.createElement('div');cycle.className='wish-cycle';cycle.append(...wishes.map(value=>wishItem(value,t,actions)));return cycle;}
 // 2026-09-06 大隆さん指示（§25）: 会員が「いま HOSHILU に何を任せているか」を
 // 一覧で見られるようにする。希望価格を決めた商品だけを、決めた金額と一緒に出す。
-// 価格は保存時の希望額であって、いまの販売価格ではない（現在価格はここに出さない）。
+// 希望額に加えて、2026-09-21 大隆さん指示によりサーバーが返す「直近に API で確認できた価格」も出す。
+// ここに出す価格は必ず API 確認済みの実測値で、AI 推定価格や推測は出さない。
 function entrustedWatchRows(){
   return (memberWishRecords||[]).filter(item=>Number(item?.target_price_jpy)>0);
 }
@@ -464,6 +465,22 @@ function renderEntrustedWatches(){
     body.append(textElement('span','entrusted-row-price',postPurchase
       ?`買った値段（${yen(item.purchase_price_jpy||Number(item.target_price_jpy)+1)}）より安くなったら知らせます`
       :`${yen(item.target_price_jpy)}になったら知らせます`));
+    // 2026-09-21 大隆さん指示「今の価格を常に提示してほしい」: 希望額まで下がっていなくても
+    // 見比べて買えるように、直近に API で確認できた価格と、その確認時刻を出す。
+    // 推定価格は出さない。まだ確認できていない行は 0 円ではなく「まだ確認できていません」と書く。
+    const lastPrice=Number(item.last_price_jpy)||0;
+    const observedAt=String(item.last_price_observed_at||'');
+    if(lastPrice>0){
+      const when=observedAt?new Date(observedAt):null;
+      const whenText=when&&!Number.isNaN(when.getTime())?`${when.toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}時点`:'確認時刻不明';
+      const gap=lastPrice-Number(item.target_price_jpy);
+      const now=textElement('span','entrusted-row-now',`いまの価格 ${yen(lastPrice)}（${whenText}）`);
+      if(gap<=0)now.classList.add('entrusted-row-now-reached');
+      body.append(now);
+      if(gap>0)body.append(textElement('span','entrusted-row-gap',`希望額まで あと${yen(gap)}`));
+    }else{
+      body.append(textElement('span','entrusted-row-now entrusted-row-now-unknown','いまの価格はまだ確認できていません'));
+    }
     if(postPurchase&&item.expires_at){
       body.append(textElement('span','entrusted-row-note',`${new Date(item.expires_at).toLocaleDateString('ja-JP')}まで見張ります`));
     }
