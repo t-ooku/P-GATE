@@ -15,9 +15,9 @@ const DAY = 86_400_000;
 const NOW = Date.parse('2026-09-21T12:00:00Z');
 
 test('§38 即時に出すのは「今動かないと逃すこと」だけ', () => {
-  assert.deepEqual([...URGENT_EVENT_TYPES], ['TARGET_PRICE_REACHED', 'SHOP_DEMAND_MATCH']);
-  assert.equal(shouldSendImmediately('TARGET_PRICE_REACHED'), true);
-  assert.equal(shouldSendImmediately('SHOP_DEMAND_MATCH'), true);
+  // PRICE_OFFER_MATCH も「希望価格に届いた」と同じ意味なので即時（P2 匿名需要オファー）
+  assert.deepEqual([...URGENT_EVENT_TYPES], ['TARGET_PRICE_REACHED', 'SHOP_DEMAND_MATCH', 'PRICE_OFFER_MATCH']);
+  for (const type of URGENT_EVENT_TYPES) assert.equal(shouldSendImmediately(type), true, type);
   for (const type of DIGEST_EVENT_TYPES) {
     assert.equal(shouldSendImmediately(type), false, `${type} はまとめる`);
   }

@@ -51,7 +51,9 @@ test('長すぎるトークン・検索語は通さない', () => {
 
 test('通知パネルが SHOP_DEMAND_MATCH のリンクを返す', () => {
   const source = read('src/mywatch-routes.mjs');
-  assert.match(source, /=== 'SHOP_DEMAND_MATCH'\) return safeDemandMatchResultUrl\(row\?\.result_url\)/u);
+  // HOSHILU 自身が組み立てた行き先を持つ種類だけ、リンクにする
+  assert.match(source, /const HOSHILU_LINK_EVENT_TYPES = new Set\(\[([^\]]*)'SHOP_DEMAND_MATCH'/u);
+  assert.match(source, /HOSHILU_LINK_EVENT_TYPES\.has\(String\(row\?\.event_type \|\| ''\)\)\) return safeDemandMatchResultUrl\(row\?\.result_url\)/u);
   assert.equal(SHOP_DEMAND_EVENT_TYPE, 'SHOP_DEMAND_MATCH', '通知側と同じ文字列を使う');
 });
 

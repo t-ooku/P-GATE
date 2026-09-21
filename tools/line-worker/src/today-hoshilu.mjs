@@ -14,7 +14,8 @@ import { readMemberSession } from './member-auth.mjs';
 import { usualState, USUAL_STATE_LABELS_JA, observedPriceByProductKey } from './member-usual.mjs';
 
 // 即時に出してよい通知。ここに無いものは「今日のホシル」へまとめる。
-export const URGENT_EVENT_TYPES = Object.freeze(['TARGET_PRICE_REACHED', 'SHOP_DEMAND_MATCH']);
+// PRICE_OFFER_MATCH は「希望価格に届いた」と同じ意味なので、これも即時に出す。
+export const URGENT_EVENT_TYPES = Object.freeze(['TARGET_PRICE_REACHED', 'SHOP_DEMAND_MATCH', 'PRICE_OFFER_MATCH']);
 // まとめる側。存在は知っているが、単独で押し出さない。
 export const DIGEST_EVENT_TYPES = Object.freeze(['USUAL_DUE', 'PRICE_DROP', 'SALE_START', 'COUPON', 'RESTOCK', 'INSIGHT_NEW_MATCH']);
 

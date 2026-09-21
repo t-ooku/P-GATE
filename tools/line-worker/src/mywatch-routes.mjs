@@ -84,9 +84,12 @@ export function safeDemandMatchResultUrl(value) {
   try { url = new URL(String(value || '')); } catch { return ''; }
   if (url.protocol !== 'https:' || url.hostname !== 'hoshilu.app' || url.username || url.password) return '';
   const keys = [...url.searchParams.keys()];
+  const productPath = /^\/shop\/[a-z0-9-]{1,40}\/product\/[A-Z0-9]{10}$/u.test(url.pathname);
+  // 2026-09-21 P2「匿名需要オファー」: 課金しない経路は署名（dm）を付けない。
+  // Seller 商品ページそのものなので、クエリが無い形も通す。
+  if (productPath && keys.length === 0 && !url.hash) return url.pathname;
   if (keys.length !== 1) return '';
-  if (keys[0] === 'dm' && !url.hash
-    && /^\/shop\/[a-z0-9-]{1,40}\/product\/[A-Z0-9]{10}$/u.test(url.pathname)
+  if (keys[0] === 'dm' && !url.hash && productPath
     && String(url.searchParams.get('dm')).length <= 400) {
     return `${url.pathname}${url.search}`;
   }
@@ -97,8 +100,11 @@ export function safeDemandMatchResultUrl(value) {
   return '';
 }
 
+// HOSHILU 自身が組み立てた行き先を持つ通知。ここに無い種類はリンクを出さない。
+const HOSHILU_LINK_EVENT_TYPES = new Set(['SHOP_DEMAND_MATCH', 'PRICE_OFFER_MATCH']);
+
 function safeNotificationResultUrl(row) {
-  if (String(row?.event_type || '') === 'SHOP_DEMAND_MATCH') return safeDemandMatchResultUrl(row?.result_url);
+  if (HOSHILU_LINK_EVENT_TYPES.has(String(row?.event_type || ''))) return safeDemandMatchResultUrl(row?.result_url);
   if (String(row?.event_type || '') !== 'INSIGHT_NEW_MATCH') return '';
   const wishId = String(row?.wish_id || '');
   if (!/^[A-Za-z0-9_-]{1,80}$/.test(wishId)) return '';
