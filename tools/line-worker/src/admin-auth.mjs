@@ -1,5 +1,5 @@
 import {
-  adminCreatorsPageResponse, adminLoginPageResponse, adminPromotionPageResponse, adminReelsPageResponse, adminSellerBillingPageResponse, adminSpApiPageResponse
+  adminCreatorsPageResponse, adminLoginPageResponse, adminPromotionPageResponse, adminReelsPageResponse, adminSellerBillingPageResponse, adminSellerCandidatesPageResponse, adminSpApiPageResponse
 } from './admin-sp-api-page.mjs';
 import {
   adminLoginFingerprint, adminLoginLocked, recordAdminLoginFailure,
@@ -126,6 +126,10 @@ export async function handleAdminAuthRoutes(request, env) {
   if (request.method === 'GET' && url.pathname === '/admin/seller-billing') {
     if (!await readAdminSession(request, env)) return noStoreRedirect(`${url.origin}/admin-login`);
     return adminSellerBillingPageResponse();
+  }
+  if (request.method === 'GET' && url.pathname === '/admin/seller-candidates') {
+    if (!await readAdminSession(request, env)) return noStoreRedirect(`${url.origin}/admin-login`);
+    return adminSellerCandidatesPageResponse();
   }
   if (request.method === 'GET' && url.pathname === '/admin/creators') {
     if (!await readAdminSession(request, env)) return noStoreRedirect(`${url.origin}/admin-login`);

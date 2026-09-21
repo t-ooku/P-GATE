@@ -103,6 +103,9 @@ test('クライアントは creator パラメータを30日引き継ぎ、管理
   }
   const adminPage = readFileSync(new URL('../src/admin-sp-api-page.mjs', import.meta.url), 'utf8');
   assert.match(adminPage, /export function adminCreatorsPageResponse/u);
-  assert.equal((adminPage.match(/href="\/admin\/creators"/gu) || []).length, 5);
+  // 管理画面のどのページからも Creator計測 へ行ける（ページが増えても数を直さなくていいように数える）
+  const navs = (adminPage.match(/<nav class="admin-nav">/gu) || []).length;
+  assert.ok(navs >= 5, '管理ナビがある');
+  assert.equal((adminPage.match(/href="\/admin\/creators"/gu) || []).length, navs);
   assert.match(readFileSync(new URL('../public/admin-creators.js', import.meta.url), 'utf8'), /\/api\/admin\/creators\/summary/u);
 });
