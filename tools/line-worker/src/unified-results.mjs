@@ -90,9 +90,20 @@ export function dedupeKeys(item) {
 
 // HOSHILU の候補（/api/search の candidates）を統合用の形にする。
 function fromCandidate(candidate, index) {
-  const offer = (Array.isArray(candidate?.offers) ? candidate.offers : [])
-    .find((item) => Number(item?.total_cost) > 0) || candidate?.selected_offer || null;
-  const price = Number(offer?.total_cost ?? offer?.price);
+  // 2026-09-22 大隆さん報告「価格出てない」。
+  // 送料込みの合計（total_cost）が取れている商品は少なく、多くは商品価格（price）しか
+  // 持っていない。合計だけを見ていたため、価格のある商品まで無表示になっていた。
+  // 合計 → 商品価格 → selected_offer の順に、**実際に入っている数字**を拾う。
+  // どれも無ければ出さない（0 とは書かない）。
+  const offers = Array.isArray(candidate?.offers) ? candidate.offers : [];
+  const offer = offers.find((item) => Number(item?.total_cost) > 0)
+    || offers.find((item) => Number(item?.price) > 0)
+    || candidate?.selected_offer
+    || offers.find(Boolean)
+    || null;
+  const price = Number(offer?.total_cost) > 0
+    ? Number(offer.total_cost)
+    : Number(offer?.price ?? candidate?.price);
   const url = httpsOnly(offer?.tracking_url || candidate?.product_url);
   const images = Array.isArray(candidate?.image_urls) ? candidate.image_urls : [];
   const image = httpsOnly(images.find(Boolean) || candidate?.image_url || candidate?.image);

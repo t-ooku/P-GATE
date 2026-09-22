@@ -238,3 +238,28 @@ test('web検索の一覧ページ・カテゴリページは商品として並�
   assert.equal(result.items.length, 1, '一覧ページは落ちる');
   assert.ok(!result.items[0].product_name.includes('韓国コスメストア'));
 });
+
+// 2026-09-22 大隆さん報告「価格出てない」。
+// 送料込みの合計が取れている商品は少なく、多くは商品価格しか持っていない。
+// 合計だけを見ていたため、価格のある商品まで無表示になっていた。
+test('送料込みの合計が無くても、商品価格があれば出す', () => {
+  const result = unifyResults({
+    candidates: [candidate(1, {
+      offers: [{ marketplace: 'QOO10_JP', tracking_url: 'https://hoshilu.app/go?token=h1', price: 1210 }]
+    })],
+    googleItems: [],
+    query: QUERY
+  });
+  assert.equal(result.items[0].price_jpy, 1210);
+});
+
+test('価格がどこにも無ければ 0 と書かない', () => {
+  const result = unifyResults({
+    candidates: [candidate(1, {
+      offers: [{ marketplace: 'QOO10_JP', tracking_url: 'https://hoshilu.app/go?token=h1' }]
+    })],
+    googleItems: [],
+    query: QUERY
+  });
+  assert.equal(result.items[0].price_jpy, null);
+});

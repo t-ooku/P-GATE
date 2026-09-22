@@ -101,18 +101,13 @@
     overscroll-behavior-x:contain;
     padding:2px 2px 8px;
   }
-  /* 2026-09-22 大隆さん指示「スクショのAmazonみたいに、少し幅広げても2商品提示
-     写ってるのは、大枠の縁をギリギリまで広げているからだと思う」。
-     そのとおりで、この列は今までページの余白と白い枠の内側に入っていて、
-     左右で 50px 以上を枠に取られていた。列だけ画面の端まで出す（full bleed）。
-     余白は列の内側に 12px だけ持たせる。 */
-  #unifiedResults{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
-  .unified-head,.unified-note,.unified-more{margin-left:12px;margin-right:12px}
-  .unified-list{padding-left:12px;padding-right:12px}
-  /* 画面の幅から左右の余白と間隔を引いて、ちょうど2つ。Amazon と同じ見え方。 */
+  /* 2026-09-22 大隆さん報告「商品枠が左にずれすぎ」。
+     画面の端まで出す（full bleed）やり方は、この節の親が画面の中央に無いため
+     左へはみ出していた。はみ出させるのをやめ、**与えられた幅の中で**ちょうど
+     2つ並ぶ幅にする。ページの他の枠と左端がそろう。 */
   .unified-card{
-    flex:0 0 calc((100vw - 34px) / 2);
-    width:calc((100vw - 34px) / 2);
+    flex:0 0 calc((100% - 10px) / 2);
+    width:calc((100% - 10px) / 2);
     scroll-snap-align:start;
   }
 }
@@ -156,7 +151,26 @@
    ・ボタンは2列2行
    ・「価格比較」はこの4つに入らないので、価格の隣へ移す
    ・口コミの中身は「口コミ」を押したときだけ開く */
-.unified-card-full .product-card-actions{grid-template-columns:1fr 1fr;gap:5px}
+.unified-card-full .product-card-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-auto-rows:1fr;
+  gap:5px;
+  align-items:stretch;
+}
+/* 2026-09-22 大隆さん報告「ボタンの位置もガタガタ」。
+   4つのボタンは、囲みの大きさも中の文字の位置もそろえる。
+   囲み（.product-card-action）と、囲みの無い口コミボタンを同じ升目として扱い、
+   中のボタンは升目いっぱいに広げて中央ぞろえにする。 */
+.unified-card-full .product-card-actions>*{min-width:0;display:flex}
+.unified-card-full .product-card-actions button,
+.unified-card-full .product-card-actions a{
+  margin:0;
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 .unified-reviews-toggle{
   min-width:0;
   min-height:30px;

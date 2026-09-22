@@ -98,9 +98,9 @@ test('スマホは横スライド、PCは複数列グリッド＋縦スクロー
   const sheet = css();
   const mobile = sheet.slice(sheet.indexOf('@media (max-width:760px)'), sheet.indexOf('@media (min-width:761px)'));
   assert.match(mobile, /\.unified-list\{[^}]*overflow-x:auto/u);
-  // 2026-09-22: 列だけ画面の端まで出して、ちょうど2つ並べる（Amazon と同じ見え方）
-  assert.match(mobile, /#unifiedResults\{margin-left:calc\(50% - 50vw\)/u, '大枠の縁をギリギリまで広げる');
-  assert.match(mobile, /flex:0 0 calc\(\(100vw - 34px\) \/ 2\)/u, '画面の幅ちょうど2商品');
+  // 2026-09-22: 与えられた幅の中でちょうど2つ。はみ出させない（左にずれる）
+  assert.match(mobile, /flex:0 0 calc\(\(100% - 10px\) \/ 2\)/u, '幅ちょうど2商品');
+  assert.ok(!mobile.includes('50vw'), '画面の端まではみ出させない');
   const desktop = sheet.slice(sheet.indexOf('@media (min-width:761px)'));
   assert.match(desktop, /\.unified-list\{display:grid;gap:14px;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/u);
   assert.match(desktop, /@media \(min-width:1000px\)\{\s*\.unified-list\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/u);
@@ -115,7 +115,7 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=5/u);
+  assert.match(html, /unified-results-ui\.css\?v=6/u);
   assert.match(html, /unified-results-ui\.mjs\?v=5/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
@@ -171,7 +171,9 @@ test('カードは4つのボタンを2列2行に。条件一致の文字は出�
   // 口コミを押したら入力欄まで開く（口コミの作りを二重に持たない）
   assert.match(source, /article\.querySelector\('\.experience-post'\)\?\.click\(\)/u);
   const sheet = css();
-  assert.match(sheet, /\.unified-card-full \.product-card-actions\{grid-template-columns:1fr 1fr/u);
+  assert.match(sheet, /\.unified-card-full \.product-card-actions\{[^}]*grid-template-columns:1fr 1fr/u);
+  // ボタンの升目と中身をそろえる（ガタガタにしない）
+  assert.match(sheet, /grid-auto-rows:1fr/u);
   // 「価格比較」は4つに入らないので、価格の隣へ移す（2026-09-22）
   assert.match(source, /priceRow\.append\(slots\.buySlot\)/u);
   assert.match(sheet, /\.unified-card-price-row\{display:flex/u);
@@ -187,7 +189,7 @@ test('カードは4つのボタンを2列2行に。条件一致の文字は出�
   const compare = read('ai-price-comparison-ui.mjs');
   assert.match(compare, /button: '価格比較'/u);
   // 文字が2行に折れないよう、カードを少し広げてボタンは1行に収める
-  assert.match(sheet, /flex:0 0 calc\(\(100vw - 34px\) \/ 2\)/u);
+  assert.match(sheet, /flex:0 0 calc\(\(100% - 10px\) \/ 2\)/u);
   assert.match(sheet, /white-space:nowrap/u);
 });
 
