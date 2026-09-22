@@ -297,7 +297,7 @@ export async function operationalDiagnostics(db, internalIds = []) {
     read(`SELECT marketplace AS provider,campaign AS outcome,COUNT(*) AS count,MAX(occurred_at) AS last_observed_at
       FROM growth_events WHERE event_type='target_price_provider_result' AND traffic_class='QA'
       AND marketplace IN ('RAKUTEN_JP','YAHOO_JP','AMAZON_JP')
-      AND (campaign IN ('CANDIDATES','CACHE_HIT','EMPTY','TIMEOUT','COORDINATOR_UNAVAILABLE','PROVIDER_REQUEST_FAILED')
+      AND (campaign IN ('CANDIDATES','CACHE_HIT','EMPTY','TIMEOUT','COORDINATOR_UNAVAILABLE','QUEUE_BUSY','COORDINATOR_REJECTED','PROVIDER_REQUEST_FAILED')
         OR (campaign GLOB 'HTTP_[1-5][0-9][0-9]' AND length(campaign)=8))
       AND datetime(occurred_at)>=datetime('now','-24 hours') GROUP BY marketplace,campaign`),
     read(`SELECT status,

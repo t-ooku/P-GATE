@@ -74,6 +74,27 @@ function fixedTransportError(error, failureMessage) {
   return new TypeError(`${failureMessage}_NETWORK`);
 }
 
+// 2026-09-22: 本番の deep canary が 9/20 以降ずっと
+// CANARY_YAHOO_COORDINATOR_UNAVAILABLE を出し続けていた（9/22 は 137 回中 23 回）。
+// 調べると、Durable Object 側は「待ち行列の締め切り超過」「不正な依頼」「その他」を
+// すべて result='control' で返しており、呼び出し側はそれを1つのコード
+// （coordinator unavailable = 設定や結線の故障）に潰していた。
+// 混み合い（408）と、設定・依頼の誤り（400）と、本当に使えない状態（それ以外）は
+// 原因も打ち手も違う。HTTP の番号だけを見て分ける（本文・URL・認証情報は見ない）。
+function coordinatorControlError(status) {
+  if (status === 408) {
+    const error = new Error('YAHOO_REQUEST_QUEUE_BUSY');
+    error.status = 408;
+    return error;
+  }
+  if (status === 400) {
+    const error = new Error('YAHOO_REQUEST_COORDINATOR_REJECTED');
+    error.status = 400;
+    return error;
+  }
+  return coordinatorError();
+}
+
 function coordinatorOutcomeError(result) {
   if (result === 'provider_timeout') {
     const error = new Error('YAHOO_PROVIDER_TIMEOUT');
@@ -119,6 +140,7 @@ async function yahooProviderFetch(env, operation, fetcher, options, failureMessa
     }
     const result = String(response.headers.get(YAHOO_PROXY_RESULT_HEADER) || '');
     if (result === 'provider') return response;
+    if (result === 'control') throw coordinatorControlError(Number(response.status) || 0);
     throw coordinatorOutcomeError(result);
   }
   if (env?.YAHOO_REQUEST_COORDINATOR_REQUIRED === 'true') throw coordinatorError();

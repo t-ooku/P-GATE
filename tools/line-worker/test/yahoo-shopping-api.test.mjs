@@ -367,3 +367,26 @@ test('高評価トレンドランキングAPIへ既存Client IDと検索語を�
   assert.equal(url.searchParams.get('limit'), '30');
   assert.deepEqual(candidates, []);
 });
+
+// 2026-09-22: 本番の deep canary が 9/20 以降ずっと CANARY_YAHOO_COORDINATOR_UNAVAILABLE を出していた
+// （9/22 は 137 回中 23 回）。Durable Object は「待ち行列の締め切り超過(408)」「不正な依頼(400)」
+// 「その他」をすべて result='control' で返し、呼び出し側が1つのコードに潰していたため、
+// 混み合いなのか結線の故障なのか区別できなかった。HTTP の番号だけで分ける。
+test('coordinator の control 応答は、混み合い・依頼の誤り・使用不能を別のコードで返す', async () => {
+  const control = (status) => ({
+    YAHOO_SHOPPING_CLIENT_ID: 'test-client-id',
+    YAHOO_REQUEST_COORDINATOR: {
+      idFromName: () => 'fixed-object-id',
+      get: () => ({ fetch: async () => new Response(null, {
+        status, headers: { 'x-hoshilu-yahoo-proxy-result': 'control' }
+      }) })
+    }
+  });
+  const provider = async () => Response.json({ hits: [] });
+  await assert.rejects(searchYahooShopping(control(408), 'private query', provider),
+    (error) => error.message === 'YAHOO_REQUEST_QUEUE_BUSY' && error.status === 408);
+  await assert.rejects(searchYahooShopping(control(400), 'private query', provider),
+    (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_REJECTED' && error.status === 400);
+  await assert.rejects(searchYahooShopping(control(503), 'private query', provider),
+    (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_UNAVAILABLE');
+});

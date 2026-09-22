@@ -143,6 +143,13 @@ const failureCode = (error) => {
   if (error?.message === 'YAHOO_REQUEST_COORDINATOR_UNAVAILABLE') {
     return 'CANARY_YAHOO_COORDINATOR_UNAVAILABLE';
   }
+  // 2026-09-22: 待ち行列が混んで締め切りを過ぎただけの回と、結線・設定の故障を
+  // 同じコードで書いていた。混み合いは容量の話なので、別のコードにして
+  // 「今すぐ直す故障」と混ぜない（見えなくはしない。DEGRADED として残す）。
+  if (error?.message === 'YAHOO_REQUEST_QUEUE_BUSY') return 'CANARY_YAHOO_QUEUE_BUSY';
+  if (error?.message === 'YAHOO_REQUEST_COORDINATOR_REJECTED') {
+    return 'CANARY_YAHOO_COORDINATOR_REJECTED';
+  }
   if (['insufficient_quota', 'billing_hard_limit_reached', 'billing_not_active',
     'billing_disabled'].includes(providerCode)) return 'CANARY_PROVIDER_BILLING_UNAVAILABLE';
   if (providerCode === 'rate_limit_exceeded') return 'CANARY_PROVIDER_RATE_LIMITED';
@@ -377,7 +384,8 @@ export async function runDeepCanaryCycle(env, scheduledAt = new Date(), fetchImp
       return { component, status, code };
     } catch (error) {
       const code = failureCode(error);
-      const status = code === 'CANARY_MONTHLY_BUDGET_LIMIT' ? 'DEGRADED' : 'FAIL';
+      const status = ['CANARY_MONTHLY_BUDGET_LIMIT', 'CANARY_YAHOO_QUEUE_BUSY'].includes(code)
+        ? 'DEGRADED' : 'FAIL';
       await writeResult(env, runId, component, status, code, occurredAt);
       return { component, status, code };
     }

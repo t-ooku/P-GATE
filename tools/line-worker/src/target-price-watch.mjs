@@ -134,6 +134,9 @@ export function targetPriceProviderOutcome(outcome){
   const error=outcome.reason;
   if(error?.name==='TimeoutError'||error?.name==='AbortError')return 'TIMEOUT';
   if(error?.message==='YAHOO_REQUEST_COORDINATOR_UNAVAILABLE')return 'COORDINATOR_UNAVAILABLE';
+  // 2026-09-22: 混み合い（待ち行列の締め切り超過）と結線の故障を分けて数える。
+  if(error?.message==='YAHOO_REQUEST_QUEUE_BUSY')return 'QUEUE_BUSY';
+  if(error?.message==='YAHOO_REQUEST_COORDINATOR_REJECTED')return 'COORDINATOR_REJECTED';
   return safeProviderErrorCode('',error?.status,'PROVIDER_REQUEST_FAILED');
 }
 async function searchConnectedMarketplaces(env,query,fetcher,key=''){

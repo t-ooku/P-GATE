@@ -774,3 +774,13 @@ test('public growth endpoint cannot forge deep canary result or budget rows', ()
   assert.throws(() => normalizeGrowthEvent({ event_type: 'deep_canary_result' }), /GROWTH_EVENT_INVALID/u);
   assert.throws(() => normalizeGrowthEvent({ event_type: 'deep_canary_budget' }), /GROWTH_EVENT_INVALID/u);
 });
+
+// 2026-09-22: 待ち行列の混み合いを「結線の故障」と同じコードで書いていたため、
+// 9/20 から本番の監視が鳴りっぱなしだった。混み合いは容量の話として別に数える
+// （見えなくはしない。DEGRADED として残す）。
+test('Yahoo! の待ち行列の混み合いは、結線の故障と別のコードになる', () => {
+  const source = readFileSync(new URL('../src/deep-canary.mjs', import.meta.url), 'utf8');
+  assert.match(source, /'YAHOO_REQUEST_QUEUE_BUSY'\) return 'CANARY_YAHOO_QUEUE_BUSY'/u);
+  assert.match(source, /'YAHOO_REQUEST_COORDINATOR_REJECTED'/u);
+  assert.match(source, /\['CANARY_MONTHLY_BUDGET_LIMIT', 'CANARY_YAHOO_QUEUE_BUSY'\]\.includes\(code\)/u);
+});
