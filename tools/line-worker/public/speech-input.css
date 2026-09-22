@@ -1,11 +1,14 @@
+/* 2026-09-22: クリアは右下へ移したので、右上に空けるのは🎙の分だけでよい。
+   代わりに右下のボタン分だけ下に余白を取る。 */
 .query-field textarea {
-  padding-right: 116px;
+  padding-right: 68px;
+  padding-bottom: 52px;
 }
 
 .speech-input {
   position: absolute;
   top: 12px;
-  right: 76px;
+  right: 12px;
   width: 44px;
   height: 44px;
   padding: 0;

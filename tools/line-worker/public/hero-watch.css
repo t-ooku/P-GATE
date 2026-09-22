@@ -53,9 +53,11 @@
 
 .hero-watch-hint{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted,#6d6b80)}
 .hero-watch-hint strong{color:#b3005f}
-/* 2026-09-20 大隆さん指示: 🎙は右端へ（クリアはその左）。見出しの上に約3mm（12px）の余白。 */
+/* 2026-09-20 大隆さん指示: 🎙は右端へ。見出しの上に約3mm（12px）の余白。
+   2026-09-22 大隆さん指示「クリアボタンは右上から右下に移動」。
+   入力した文字に重ならないよう、クリアは枠の右下へ。🎙は右上のまま。 */
 .query-field .speech-input{right:12px}
-.query-field .clear-query{right:66px}
+.query-field .clear-query{top:auto;bottom:12px;right:12px}
 #heroTitle{margin-top:12px}
 
 /* 2026-09-22 大隆さん指示「届く通知の例もモール一覧の枠と同じデザインにして」。
