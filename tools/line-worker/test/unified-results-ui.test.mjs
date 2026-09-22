@@ -116,7 +116,7 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
   assert.match(html, /unified-results-ui\.css\?v=8/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=6/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=7/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);

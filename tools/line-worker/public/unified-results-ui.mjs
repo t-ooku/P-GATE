@@ -180,6 +180,10 @@ function card(item) {
 // 「下記文字の位置が修正できてない」）。棚が並ぶ場所そのものに入れれば、
 // 畳んだ古い棚とまったく同じ位置に出る。
 // app.js は結果を並べ終えてからイベントを出すので、ここで入れても消されない。
+function safeCard(item) {
+  try { return card(item); } catch { return null; }
+}
+
 let host = null;
 function section() {
   if (host && host.isConnected) return host;
@@ -215,7 +219,7 @@ function renderMore(host, list) {
   button.type = 'button';
   button.addEventListener('click', () => {
     const next = state.items.slice(state.shown, state.shown + PAGE);
-    list.append(...next.map(card));
+    list.append(...next.map(safeCard).filter(Boolean));
     state.shown += next.length;
     renderMore(host, list);
   });
@@ -242,7 +246,9 @@ export function render(unified, candidates = []) {
   const list = el('div', 'unified-list');
   list.setAttribute('role', 'list');
   const first = items.slice(0, PAGE);
-  list.append(...first.map(card));
+  // 2026-09-22: 1枚のカードでつまずいても、列ごと消えないようにする。
+  // （消えると元の2つの棚へ戻り、「1本にまとめた」約束が崩れる）
+  list.append(...first.map(safeCard).filter(Boolean));
   state.shown = first.length;
   host.append(list);
   renderMore(host, list);

@@ -289,3 +289,15 @@ test('価格のある offer にリンクが無くても、商品を落とさな�
   assert.equal(result.items[0].url, 'https://hoshilu.app/go?token=h1');
   assert.equal(result.items[0].price_jpy, 1210);
 });
+
+// 2026-09-22 大隆さん報告「なぜホシル提示とweb提示がいまだに2列に別れてるの…」。
+// 条件に1件も一致しないと統合した列が 0 件になり、画面は元の2つの棚へ戻っていた。
+// 1件も残らないときは、絞り込む前の並びをそのまま使う。
+test('条件に1件も一致しなくても、統合した列を空にしない', () => {
+  const result = unifyResults({
+    candidates: [candidate(1, { display_name: 'まったく関係のない品物' })],
+    googleItems: [web(1, { title: 'これも関係のない品物' })],
+    query: QUERY
+  });
+  assert.equal(result.items.length, 2, '空にしない（2つの棚へ戻さない）');
+});
