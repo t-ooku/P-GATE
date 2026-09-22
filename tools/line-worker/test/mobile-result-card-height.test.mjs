@@ -56,3 +56,19 @@ test('PC4列では画像と価格が同じ表示範囲に収まるようカー�
   assert.match(styles, /\.result-track>\.product-card p\{-webkit-line-clamp:1;line-clamp:1/);
   assert.match(styles, /\.result-track>\.product-card \.price-offer\{padding:7px 8px\}/);
 });
+
+// 2026-09-22 大隆さん指示「まだレコメンド欄のボタンがホシル提示欄と全く同じ配置に
+// なってないよ」。統合カードと同じ形（価格比較は価格の行、口コミはボタン1つ）にそろえる。
+test('レコメンドのボタンは統合カードと同じ配置（価格比較は価格の行、口コミは1ボタン）', async () => {
+  const [app, styles] = await Promise.all([read('app.js'), read('result-compact.css')]);
+  assert.match(app, /function compactCardActions\(card\)\{/u);
+  assert.match(app, /row\.className='product-card-price-row'/u);
+  assert.match(app, /reviews\.className='unified-reviews-toggle'/u);
+  assert.match(app, /card\.querySelector\('\.experience-post'\)\?\.click\(\)/u);
+  // レコメンドの3つの作り口（主結果・代替・関連API）はすべて同じカードを通す
+  assert.equal(app.split('=>recommendationCard(candidate,index,').length - 1, 3);
+  assert.doesNotMatch(app, /resultRow\(products\.map\(\(candidate,index\)=>productCard\(/u);
+  assert.match(styles, /\.result-row-recommended \.result-track>\.product-card>\.product-card-price-row\{[\s\S]*?display:flex;/u);
+  assert.match(styles, /\.result-row-recommended \.result-track>\.product-card \.experience-block\{display:none\}/u);
+  assert.match(styles, /\.result-row-recommended \.result-track>\.product-card\.reviews-open \.experience-block\{display:block\}/u);
+});

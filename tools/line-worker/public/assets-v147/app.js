@@ -1387,7 +1387,29 @@ const relatedCategoryShelfCopy={
   KO:{badge:'관련 상품 검색 후보',title:'함께 찾을 관련 상품',note:'관련 카테고리를 가로로 보고 최대 13개 쇼핑몰에서 실제 상품을 확인할 수 있습니다.',reason:'관련 후보 이유'}
 };
 function relatedCategoryCard(item){const language=elements.language.value||'JA';const labels=relatedCategoryShelfCopy[language]||relatedCategoryShelfCopy.JA;const card=document.createElement('article');card.className='product-card unverified-card related-category-card';card.append(textElement('span','unverified-badge',labels.badge),textElement('h3','',String(item?.query||'')),textElement('div','recommendation-reason',`${labels.reason}：${String(item?.reason||'検索内容と一緒に使えるカテゴリ')}`));const links=marketplaceLinks(item?.marketplace_search_links,true);if(links)card.append(links);return card;}
-function recommendationRowFor(result,t,query,fallbackProducts={candidates:[],confirmed:false},presented=[]){const products=excludePresentedCandidates(result?.related_recommendations,presented).slice(0,RESULT_ROW_LIMIT);const copy=resultRowCopyFor(elements.language.value);if(products.length){const row=resultRow(products.map((candidate,index)=>productCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const verifiedFallback=excludePresentedCandidates(fallbackProducts?.candidates,presented).slice(0,RESULT_ROW_LIMIT);if(verifiedFallback.length){const confirmed=Boolean(fallbackProducts.confirmed);const row=resultRow(verifiedFallback.map((candidate,index)=>productCard(candidate,index,t,confirmed,query)),confirmed?copy.verifiedRecommendationTitle:copy.unconfirmedTitle,confirmed?copy.verifiedRecommendationNote:copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}
+// 2026-09-22 大隆さん指示「まだレコメンド欄のボタンがホシル提示欄と全く同じ配置に
+// なってないよ」。統合カード（unified-results-ui.mjs）と同じ形にそろえる:
+//   ・「価格比較」は4つのボタンの外へ出して、価格と同じ行に置く
+//   ・口コミは「💬 口コミ」ボタン1つだけ。押したときに中身と入力欄が開く
+// 口コミの作りは experience-layer.mjs のものをそのまま使う（二重に持たない）。
+function compactCardActions(card){
+  const actions=card.querySelector(':scope > .product-card-actions');
+  if(!actions)return card;
+  const buy=actions.querySelector(':scope > .product-card-action-buy');
+  if(buy){const row=document.createElement('div');row.className='product-card-price-row';row.append(buy);actions.before(row);}
+  const reviews=document.createElement('button');
+  reviews.type='button';reviews.className='unified-reviews-toggle';reviews.textContent='💬 口コミ';
+  reviews.setAttribute('aria-expanded','false');
+  reviews.addEventListener('click',()=>{
+    const open=card.classList.toggle('reviews-open');
+    reviews.setAttribute('aria-expanded',open?'true':'false');
+    if(open)card.querySelector('.experience-post')?.click();
+  });
+  actions.append(reviews);
+  return card;
+}
+function recommendationCard(candidate,index,t,confirmed,query){return compactCardActions(productCard(candidate,index,t,confirmed,query));}
+function recommendationRowFor(result,t,query,fallbackProducts={candidates:[],confirmed:false},presented=[]){const products=excludePresentedCandidates(result?.related_recommendations,presented).slice(0,RESULT_ROW_LIMIT);const copy=resultRowCopyFor(elements.language.value);if(products.length){const row=resultRow(products.map((candidate,index)=>recommendationCard(candidate,index,t,false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const verifiedFallback=excludePresentedCandidates(fallbackProducts?.candidates,presented).slice(0,RESULT_ROW_LIMIT);if(verifiedFallback.length){const confirmed=Boolean(fallbackProducts.confirmed);const row=resultRow(verifiedFallback.map((candidate,index)=>recommendationCard(candidate,index,t,confirmed,query)),confirmed?copy.verifiedRecommendationTitle:copy.unconfirmedTitle,confirmed?copy.verifiedRecommendationNote:copy.unconfirmedNote,'recommended');if(row)row.dataset.recommendationProducts='true';return row;}const categories=(Array.isArray(result?.related_category_recommendations)?result.related_category_recommendations:[]).filter(item=>item?.query).slice(0,3);if(!categories.length)return null;const labels=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;return resultRow(categories.map(relatedCategoryCard),labels.title,labels.note,'recommended');}
 // 2026-09-03（方向転換指示書 §5/§19）: 主訴求は「まとめて探す」。モール導線は
 // 「他のモールでも」という付け足しではなく、検索直後にまず出す本体にする。
 const marketplaceQuickStripCopy={
@@ -1666,7 +1688,7 @@ async function loadRelatedRecommendations(query,sequence){
       if(!recommendations.length&&oldRow?.dataset.recommendationProducts==='true')return;
       const copy=resultRowCopyFor(elements.language.value);
       const categoryCopy=relatedCategoryShelfCopy[elements.language.value]||relatedCategoryShelfCopy.JA;
-      const row=recommendations.length?resultRow(recommendations.map((candidate,index)=>productCard(candidate,index,selectedCopy(),false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended'):resultRow(categories.map(relatedCategoryCard),categoryCopy.title,categoryCopy.note,'recommended');
+      const row=recommendations.length?resultRow(recommendations.map((candidate,index)=>recommendationCard(candidate,index,selectedCopy(),false,query)),copy.unconfirmedTitle,copy.unconfirmedNote,'recommended'):resultRow(categories.map(relatedCategoryCard),categoryCopy.title,categoryCopy.note,'recommended');
       if(recommendations.length&&row)row.dataset.recommendationProducts='true';
       if(!row)return;
       if(oldRow)oldRow.replaceWith(row);else{

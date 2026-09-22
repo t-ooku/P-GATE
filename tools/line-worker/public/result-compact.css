@@ -169,3 +169,31 @@
   .result-row-recommended .result-track>.product-card .experience-block{padding:7px 8px}
   .result-row-recommended .result-track>.product-card .experience-count{display:none}
 }
+
+/* 2026-09-22 大隆さん指示「まだレコメンド欄のボタンがホシル提示欄と全く同じ配置に
+   なってないよ」。価格比較は4つのボタンの外へ出して価格の行に置き、口コミは
+   「💬 口コミ」ボタン1つに畳む（押すと中身と入力欄が開く）。統合カードと同じ形。 */
+@media (max-width:760px){
+  .result-row-recommended .result-track>.product-card>.product-card-price-row{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    min-width:0;
+    margin:0;
+  }
+  .result-row-recommended .result-track>.product-card>.product-card-price-row .product-card-action-buy{
+    margin-left:auto;
+    flex:0 0 auto;
+    display:flex;
+  }
+  .result-row-recommended .result-track>.product-card>.product-card-price-row .product-card-action-buy button{
+    margin:0;
+    padding:4px 7px;
+    min-height:0;
+    border-radius:7px;
+    font-size:10px;
+    white-space:nowrap;
+  }
+  .result-row-recommended .result-track>.product-card .experience-block{display:none}
+  .result-row-recommended .result-track>.product-card.reviews-open .experience-block{display:block}
+}
