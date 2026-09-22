@@ -1619,10 +1619,9 @@ function renderResults(result,requestId,shareQuery=elements.query.value,executio
     const emptyCards=[];
     const clarification=clarificationCard(result);
     if(clarification)emptyCards.push(clarification);
-    const empty=document.createElement('article');
-    empty.className='empty-result';
-    empty.append(textElement('p','',elements.query.value));
-    emptyCards.push(empty);
+    // 2026-09-22 大隆さん指示「検索語だけの欄は不用。ホシッとく欄にもあるから」。
+    // すぐ下の「ホシっといて探し続けてもらう？」に同じ検索語が入っているので、
+    // 検索語だけの箱は出さない。
     const continuous=continuousSearchCard(elements.query.value,{found:false});
     if(continuous)emptyCards.push(continuous);
     const emptyRelatedKeywords=relatedKeywordCard(result);

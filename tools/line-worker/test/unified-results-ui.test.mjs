@@ -209,15 +209,24 @@ test('統合した列に web の商品が1件も無いときは、元のweb検�
 test('届く通知の例は畳んだ状態で、商品提示の下に置く', () => {
   const html = read('index.html');
   // 畳んで開ける形（details）。open は付けない＝最初は閉じている
-  assert.match(html, /<details class="hero-watch-example"/u);
-  assert.ok(!/<details class="hero-watch-example"[^>]*\sopen/u.test(html), '最初は閉じている');
-  assert.match(html, /<summary class="hero-watch-example-kicker">届く通知の例<\/summary>/u);
+  assert.match(html, /<details id="heroWatchExample" class="marketplace-coverage hero-marketplace-coverage"/u);
+  assert.ok(!/<details id="heroWatchExample"[^>]*\sopen/u.test(html), '最初は閉じている');
+  assert.match(html, /<summary class="step hero-marketplace-coverage-summary">届く通知の例<\/summary>/u);
   // 置き場所は結果（#resultsSection）の下
-  assert.ok(html.indexOf('<details class="hero-watch-example"') > html.indexOf('<div id="resultCards"'),
+  assert.ok(html.indexOf('<details id="heroWatchExample"') > html.indexOf('<div id="resultCards"'),
     '商品提示欄の下にある');
   const sheet = readFileSync(new URL('../public/hero-watch.css', import.meta.url), 'utf8');
-  assert.match(sheet, /details\.hero-watch-example>summary\{list-style:none;cursor:pointer\}/u);
+  // 枠と開閉の見た目はモール一覧と同じものを使い、独自の見た目は持たせない
+  assert.ok(!sheet.includes('details.hero-watch-example>summary'), '独自の開閉装飾を持たない');
   // 「ショッピングサイトで探す」と「ホシっといて探し続けてもらう？」の間に余白
   assert.match(sheet, /\.continuous-search-card\{margin-top:12px\}/u);
-  assert.match(html, /hero-watch\.css\?v=5/u);
+  assert.match(html, /hero-watch\.css\?v=6/u);
+});
+
+// 2026-09-22 大隆さん指示「検索語だけの欄は不用。ホシッとく欄にもあるから」。
+test('見つからなかったとき、検索語だけの箱は出さない', () => {
+  const app = read('app.js');
+  assert.ok(!app.includes("empty.className='empty-result'"), '検索語だけの箱は作らない');
+  // 検索語は「ホシっといて探し続けてもらう？」の中に残っている
+  assert.match(app, /continuousSearchCard\(elements\.query\.value,\{found:false\}\)/u);
 });
