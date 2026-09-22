@@ -30,7 +30,7 @@
   <script src="https://aml.valuecommerce.com/vcdal.js" async></script>
   <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=16">
   <link rel="stylesheet" href="/ai-search-ui.css?v=12">
-  <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=134">
+  <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=135">
   <link rel="stylesheet" href="/ai-price-comparison-ui.css?v=84">
   <link rel="stylesheet" href="/wish-carousel.css?v=4">
   <link rel="stylesheet" href="/mywatch.css?v=12">
@@ -56,7 +56,7 @@
   <link rel="stylesheet" href="/layout-v3.css?v=91">
   <link rel="stylesheet" href="/unified-results-ui.css?v=8">
   <link rel="stylesheet" href="/result-compact.css?v=3">
-  <link rel="stylesheet" href="/instagram-look.css?v=5">
+  <link rel="stylesheet" href="/instagram-look.css?v=6">
   <title>ホシル｜写真・スクショ・一言から商品を探す</title>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://hoshilu.app/#website","url":"https://hoshilu.app/","name":"ホシル｜HOSHILU","inLanguage":["ja","en","zh","ko"],"potentialAction":{"@type":"SearchAction","target":"https://hoshilu.app/?q={search_term_string}","query-input":"required name=search_term_string"}},{"@type":"WebApplication","@id":"https://hoshilu.app/#app","name":"ホシル","alternateName":"HOSHILU","url":"https://hoshilu.app/","applicationCategory":"ShoppingApplication","operatingSystem":"Web, iOS, Android","inLanguage":["ja","en","zh","ko"],"description":"ホシルは、写真・スクショ・公開SNS投稿URL・一言から商品を探し、最大13モールの検索、おすすめ理由、取得元を確認できる口コミ評価・件数、モール公式ランキングから候補を見つける無料サービスです。","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}},{"@type":"Organization","@id":"https://hoshilu.app/#organization","name":"HOSHILU","url":"https://hoshilu.app/","logo":{"@type":"ImageObject","url":"https://hoshilu.app/icons/hoshilu-v2-512.png"}},{"@type":"FAQPage","@id":"https://hoshilu.app/#faq","mainEntity":[{"@type":"Question","name":"ホシルでは何を検索できますか？","acceptedAnswer":{"@type":"Answer","text":"商品名が分からなくても、見た目・用途・見た場所などの手がかりから商品を探せます。まとめて検索2モールと個別検索11モールの最大13モールに対応しています。"}},{"@type":"Question","name":"ホシルは無料で使えますか？","acceptedAnswer":{"@type":"Answer","text":"商品検索はログインなしで無料で利用できます。検索履歴の保存や通知機能は無料会員向けに提供しています。"}},{"@type":"Question","name":"表示価格は実際の販売価格ですか？","acceptedAnswer":{"@type":"Answer","text":"接続済みモールで確認できた送料込み価格と、AIによる参考推定価格を区別して表示します。購入前に必ずリンク先モールで最新価格・送料・在庫を確認してください。"}},{"@type":"Question","name":"写真やSNS投稿URLから探せますか？","acceptedAnswer":{"@type":"Answer","text":"スマホで撮影するか、JPEG・PNG・WebP画像、Instagram・TikTok・X・Threads・Facebook・PinterestのHOSHILU対応形式の公開投稿単体URLを手がかりに検索できます。非公開・削除済みの投稿には一言や画像を追加してください。"}}]}]}</script>
 </head>
@@ -348,12 +348,12 @@
             <div id="saleRailMore"></div>
           </section>
 
-          <section id="popularGenres" class="insight-card popular-genres" aria-labelledby="popularGenresTitle">
-            <p class="step">HOSHILU POPULAR</p>
+          <details id="popularGenres" class="popular-genres marketplace-coverage hero-marketplace-coverage" aria-labelledby="popularGenresTitle">
+            <summary class="step hero-marketplace-coverage-summary">HOSHILU POPULAR</summary>
             <div class="section-title"><div><h2 id="popularGenresTitle">人気の小ジャンルから探す。</h2><p>よく探されている小ジャンル。タップでそのまま横断検索、ランキングでも選べます。</p></div></div>
             <div id="popularGenreChips" class="quick-queries" aria-live="polite"></div>
             <button id="popularRankingButton" class="ghost-button popular-ranking-button" type="button">小ジャンルのランキングで選ぶ</button>
-          </section>
+          </details>
 
           <section id="insight" class="insight-card saved-hub" aria-labelledby="insightTitle" data-nosnippet>
             <!-- 2026-09-20 大隆さん指示: ダッシュボード（状態の数）は普段は閉じ、「ホシってるもの」を押すと開く。
@@ -516,10 +516,6 @@
             <p class="shopping-guides-all"><a href="/ja/guides">目的別の買い物ガイドをすべて見る<span aria-hidden="true">→</span></a></p>
           </details>
 
-          <details class="lp-benefits marketplace-coverage hero-marketplace-coverage" aria-labelledby="benefitTitle">
-            <summary class="step hero-marketplace-coverage-summary">WHY HOSHILU</summary>
-            <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
-          </details>
           </details>
 
           <details id="faq" class="hoshilu-faq marketplace-coverage hero-marketplace-coverage" aria-labelledby="faqTitle">
@@ -532,6 +528,13 @@
               <details><summary data-i18n="faq.social.question">写真やSNS投稿URLから探せますか？</summary><p data-i18n="faq.social.answer">スマホで撮影するか、JPEG・PNG・WebP画像、Instagram・TikTok・X・Threads・Facebook・PinterestのHOSHILU対応形式の公開投稿単体URLを手がかりに検索できます。非公開・削除済みの投稿には一言や画像を追加してください。</p></details>
             </div>
           </details>
+
+          <!-- 2026-09-22 大隆さん指示「これは、FAQの下に移動して、元のデザインのように
+               開いた状態。最後のメッセージでしょ。」畳まない。締めの一言として最後に置く。 -->
+          <section class="lp-benefits" aria-labelledby="benefitTitle">
+            <p class="step">WHY HOSHILU</p>
+            <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
+          </section>
         </div>
       </div>
     </div></main>

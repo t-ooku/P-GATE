@@ -1302,3 +1302,5 @@ html:lang(ja) .hero-sub-sentence{white-space:nowrap}
 .hoshilu-primary>.marketplace-coverage>.journey-heading,
 .hoshilu-primary>.marketplace-coverage>.shopping-guides-heading{margin:0 0 12px}
 .hoshilu-primary>.marketplace-coverage>*:last-child{margin-bottom:0}
+/* 2026-09-22 大隆さん指示「小ジャンルも普段は閉じて」。HOSHILU POPULAR も同じ枠に。 */
+.hoshilu-primary>.marketplace-coverage>.quick-queries{margin:0 0 12px}

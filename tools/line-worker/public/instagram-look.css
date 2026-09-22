@@ -274,3 +274,36 @@ p strong,li strong{color:inherit !important}
   border:1px solid #cfc2ff !important;
   font-weight:800 !important;
 }
+
+/* 2026-09-22 大隆さん指示「スクショのように、色鮮は前回の方が良かった。文字の色や、背景など」。
+   Instagram 風に白くしすぎた分を、前の配色へ戻す。
+   ・背景は薄紫のにじみを戻す
+   ・チップ（検索例）は白地＋紫の線＋紫の文字
+   ・ランキング／ショップは白地＋紫の太めの線
+   ・すぐ検索は濃紺のベタ（AIで探す＝グラデーションとの役割の差は残す）
+   ・手がかりのボタン（カメラ・画像・投稿URL）は薄紫の面＋紫の文字 */
+body{background:radial-gradient(circle at 72% 0,#eee8ff 0,transparent 32%),#f8f7fc !important}
+.hero{background:linear-gradient(180deg,#f1ecff 0%,#faf8ff 100%)}
+.chip,.quick-queries button,.example-chip,.suggest-chip,
+.wish-list button,.genre-chip{
+  background:#fff !important;
+  color:#5140ba !important;
+  border:1px solid #cfc2ff !important;
+}
+.ranking-search-button{
+  background:#fff !important;
+  color:#5636c7 !important;
+  border:2px solid #6b45e8 !important;
+}
+#submitButton,.direct-search-button{
+  background:#2b1d6b !important;
+  color:#fff !important;
+  border:0 !important;
+  font-weight:850 !important;
+}
+.search-input-action{
+  background:#f8f6ff !important;
+  color:#4f36b5 !important;
+  border:1px solid #dcd4fa !important;
+}
+.step,.eyebrow{color:#7357ff !important}

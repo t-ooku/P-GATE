@@ -103,7 +103,7 @@ test('主 CTA は「AIで探す」、検索欄の枠は縦を詰めて上に寄�
     assert.match(text, /\.search-panel\{padding-top:14px\}/);
     assert.match(text, /#query\{min-height:92px;padding:12px 52px 12px 15px\}/);
   }
-  assert.ok(read('index.html').includes('ai-search-layout-fix.css?v=134'));
+  assert.ok(read('index.html').includes('ai-search-layout-fix.css?v=135'));
 });
 
 // 2026-09-17 大隆さん指摘: 提示商品を開いた時の画像が荒い。楽天 128px／Yahoo! 中サイズの URL を大きいサイズに書き換える。
