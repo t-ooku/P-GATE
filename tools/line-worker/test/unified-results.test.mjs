@@ -263,3 +263,23 @@ test('価格がどこにも無ければ 0 と書かない', () => {
   });
   assert.equal(result.items[0].price_jpy, null);
 });
+
+// 2026-09-22 大隆さん報告「ホシル提示でなくなったとや」。
+// 価格を持つ offer を1つ選んでリンクにも使っていたため、価格はあるがリンクの無い
+// offer が選ばれると商品ごと落ちていた。リンクと価格は別の offer から読む。
+test('価格のある offer にリンクが無くても、商品を落とさない', () => {
+  const result = unifyResults({
+    candidates: [candidate(1, {
+      product_url: '',
+      offers: [
+        { marketplace: 'QOO10_JP', price: 1210 },
+        { marketplace: 'RAKUTEN', tracking_url: 'https://hoshilu.app/go?token=h1' }
+      ]
+    })],
+    googleItems: [],
+    query: QUERY
+  });
+  assert.equal(result.items.length, 1, '商品が残る');
+  assert.equal(result.items[0].url, 'https://hoshilu.app/go?token=h1');
+  assert.equal(result.items[0].price_jpy, 1210);
+});

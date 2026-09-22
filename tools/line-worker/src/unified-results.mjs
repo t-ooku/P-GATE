@@ -95,15 +95,27 @@ function fromCandidate(candidate, index) {
   // 持っていない。合計だけを見ていたため、価格のある商品まで無表示になっていた。
   // 合計 → 商品価格 → selected_offer の順に、**実際に入っている数字**を拾う。
   // どれも無ければ出さない（0 とは書かない）。
+  //
+  // 2026-09-22 大隆さん報告「ホシル提示でなくなったとや」。
+  // 上の修正で「価格を持っている offer」を1つ選び、その offer のリンクを使っていた。
+  // 価格はあるがリンクの無い offer が選ばれると、リンクが空になり、その商品ごと
+  // 落ちていた（url の無い行は出さない決まりのため）。
+  // **リンクを選ぶ offer と、価格を読む offer は別物として扱う。**
   const offers = Array.isArray(candidate?.offers) ? candidate.offers : [];
-  const offer = offers.find((item) => Number(item?.total_cost) > 0)
-    || offers.find((item) => Number(item?.price) > 0)
+  const linkOffer = offers.find((item) => httpsOnly(item?.tracking_url))
+    || (httpsOnly(candidate?.selected_offer?.tracking_url) ? candidate.selected_offer : null)
     || candidate?.selected_offer
     || offers.find(Boolean)
     || null;
-  const price = Number(offer?.total_cost) > 0
-    ? Number(offer.total_cost)
-    : Number(offer?.price ?? candidate?.price);
+  const priceOffer = offers.find((item) => Number(item?.total_cost) > 0)
+    || offers.find((item) => Number(item?.price) > 0)
+    || candidate?.selected_offer
+    || linkOffer
+    || null;
+  const price = Number(priceOffer?.total_cost) > 0
+    ? Number(priceOffer.total_cost)
+    : Number(priceOffer?.price ?? candidate?.price);
+  const offer = linkOffer;
   const url = httpsOnly(offer?.tracking_url || candidate?.product_url);
   const images = Array.isArray(candidate?.image_urls) ? candidate.image_urls : [];
   const image = httpsOnly(images.find(Boolean) || candidate?.image_url || candidate?.image);
