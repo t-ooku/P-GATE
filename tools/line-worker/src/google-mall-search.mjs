@@ -15,7 +15,13 @@ import { rerankGoogleMallItems } from './google-mall-brand-ranking.mjs';
 
 const DEFAULT_DAILY_LIMIT = 300;
 const MAX_DAILY_LIMIT = 10000;
-const RESULT_LIMIT = 20;
+// 2026-09-22 大隆さん指示「Google検索をもっと大量にホシルに提示して」: 1 検索あたりの
+// リクエスト数は変えずに、1 回で受け取る件数と残す件数だけ増やす（枠の消費は同じ）。
+const PAGE_SIZE = 50;
+const RESULT_LIMIT = 50;
+// 商品が 3 件に満たないときも、ブランド名を外してもう一度だけ探して足す。
+// （1 回の検索で枠を 2 つ使うので、しきい値は低めに置く。既定 300/日）
+const BROADEN_MIN_ITEMS = 3;
 const CACHE_TTL_SECONDS = 86400;
 // 2026-09-20 大隆さん報告で確定: 0 件の結果まで 24 時間キャッシュしていたため、綴り補正を入れた後も
 // 同じ検索語は空のキャッシュに当たり続けた（本番ログ cache:RAW_0=4）。0 件は 10 分だけ。
@@ -368,7 +374,7 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
       // 検索語以外は送らない（userPseudoId 等は付けない）。
       // 2026-09-20 大隆さん報告「リリーブ」: 通常の Google は「リリーイブ」に自動補正して出す。Agent Search にも
       // 綴り補正（AUTO）と、結果が少ない時の検索語拡張（AUTO）を明示して同じ挙動に寄せる。
-      body: JSON.stringify({ query, pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
+      body: JSON.stringify({ query, pageSize: PAGE_SIZE, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
     });
     if (!response.ok) return await fail('error', `HTTP_${response.status}`);
     const payload = await response.json();
@@ -376,8 +382,9 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
     const normalized = normalizeAgentSearchResponse(payload);
     rawCount = Array.isArray(normalized) ? normalized.length : 0;
     let items = parseGoogleMallItems(normalized);
-    // 0 件なら 1 回だけ、ブランド名らしい語を外して探し直す（要求は最大 +1、予算枠を 1 つ余分に使う）。
-    const broadened = rawCount ? null : broadenGoogleMallQuery(query);
+    // 2026-09-22: 0 件のときだけでなく、商品が BROADEN_MIN_ITEMS 件に満たないときも 1 回だけ、
+    // ブランド名らしい語を外して探し直し、結果を「足す」（要求は最大 +1、予算枠を 1 つ余分に使う）。
+    const broadened = items.length >= BROADEN_MIN_ITEMS ? null : broadenGoogleMallQuery(query);
     if (broadened && options.broaden !== false) {
       const retryBudget = await reserveGoogleMallSearchRequest(env, now);
       if (retryBudget.allowed) {
@@ -388,21 +395,24 @@ export async function searchGoogleMalls(env = {}, rawQuery, options = {}) {
           method: 'POST',
           signal: retryController.signal,
           headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', accept: 'application/json' },
-          body: JSON.stringify({ query: broadened.query, pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
+          body: JSON.stringify({ query: broadened.query, pageSize: PAGE_SIZE, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } })
         });
         if (retry.ok) {
           const retryPayload = await retry.json();
           await observeResponse(options, retryPayload, 'broadened');
           const retryNormalized = normalizeAgentSearchResponse(retryPayload);
-          rawCount = Array.isArray(retryNormalized) ? retryNormalized.length : 0;
-          items = parseGoogleMallItems(retryNormalized);
-          const ranked = rerankGoogleMallItems(items, broadened.droppedTokens);
-          const visibleBefore = items.filter((item) => !exclude.has(item.marketplace));
+          const retryRaw = Array.isArray(retryNormalized) ? retryNormalized.length : 0;
+          rawCount += retryRaw;
+          const retryItems = parseGoogleMallItems(retryNormalized);
+          const ranked = rerankGoogleMallItems(retryItems, broadened.droppedTokens);
+          const visibleBefore = retryItems.filter((item) => !exclude.has(item.marketplace));
           const reordered = ranked.filter((item) => !exclude.has(item.marketplace))
             .some((item, index) => item !== visibleBefore[index]);
-          items = ranked;
+          // 先に出ていた分は消さずに残し、重複しない分だけ後ろへ足す。
+          const seenUrls = new Set(items.map((item) => item.url));
+          items = items.concat(ranked.filter((item) => !seenUrls.has(item.url))).slice(0, RESULT_LIMIT);
           if (options.recordOutcome !== false) {
-            await countGoogleMallOutcome(env, now, 'live', rawCount ? 'BROADENED' : 'BROADENED_0');
+            await countGoogleMallOutcome(env, now, 'live', retryRaw ? 'BROADENED' : 'BROADENED_0');
             if (reordered) await countGoogleMallOutcome(env, now, 'live', 'BROADENED_RERANKED');
           }
         }

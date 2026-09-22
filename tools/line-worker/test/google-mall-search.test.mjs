@@ -130,7 +130,7 @@ test('searchGoogleMalls はトークンを取ってから Discovery Engine に�
   assert.equal(calls[0].url, 'https://oauth2.googleapis.com/token');
   assert.equal(calls[1].url, `https://discoveryengine.googleapis.com/v1/${ENGINE}/servingConfigs/default_search:search`);
   const body = JSON.parse(calls[1].init.body);
-  assert.deepEqual(body, { query: '子ども 水筒', pageSize: 20, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } });
+  assert.deepEqual(body, { query: '子ども 水筒', pageSize: 50, languageCode: 'ja', safeSearch: true, spellCorrectionSpec: { mode: 'AUTO' }, queryExpansionSpec: { condition: 'AUTO' } });
   assert.equal(calls[1].init.headers.authorization, 'Bearer ya29.test');
   // プライバシー境界: 検索本文・検索単位のIDは書かない。残すのは 1 時間バケットの結果種別の件数だけ。
   const buckets = await env.PRODUCT_DB.prepare('SELECT bucket_at, source, reason, request_count FROM google_mall_search_log').bind().all();
@@ -322,4 +322,37 @@ test('0 件のときだけ 1 回、ブランド名らしい語を外して探し
   const plain = await searchGoogleMalls(env, '子ども 水筒', { fetch: fakeGoogle(plainCalls, { results: [] }), cache: null });
   assert.equal(plainCalls.filter((call) => call.url.includes(':search')).length, 1);
   assert.equal(plain.items.length, 0);
+});
+
+// 2026-09-22 大隆さん指示「Google検索をもっと大量にホシルに提示して」。
+// 商品が少ししか取れないときは、ブランド名を外した 1 回の探し直しで「足す」。先に出た分は消さない。
+test('商品が 3 件未満のときは広げて探し直し、先に出た分に足す（重複は足さない）', async () => {
+  resetGoogleAccessTokenCache();
+  const calls = [];
+  const env = baseEnv();
+  const narrow = { results: [doc('ダイソン 掃除機 V12', 'https://qoo10.jp/item/dyson-v12/1')] };
+  const broad = {
+    results: [
+      doc('ダイソン 掃除機 V12', 'https://qoo10.jp/item/dyson-v12/1'),
+      doc('コードレス掃除機 スタンド付き', 'https://qoo10.jp/item/stick-cleaner/2')
+    ]
+  };
+  const base = fakeGoogle(calls, narrow);
+  const fetch = (url, init) => (String(url).includes(':search') && JSON.parse(init.body).query === '掃除機'
+    ? (calls.push({ url, init }), Promise.resolve(Response.json(broad)))
+    : base(url, init));
+  const live = await searchGoogleMalls(env, 'ダイソン 掃除機', { fetch, cache: null });
+  assert.equal(calls.filter((call) => call.url.includes(':search')).length, 2);
+  assert.deepEqual(live.items.map((item) => item.url), [
+    'https://qoo10.jp/item/dyson-v12/1',
+    'https://qoo10.jp/item/stick-cleaner/2'
+  ]);
+});
+
+test('1 回で受け取る件数と残す件数は 50 件まで', () => {
+  const source = readFileSync(new URL('../src/google-mall-search.mjs', import.meta.url), 'utf8');
+  assert.match(source, /const PAGE_SIZE = 50;/u);
+  assert.match(source, /const RESULT_LIMIT = 50;/u);
+  const rows = Array.from({ length: 60 }, (_, index) => doc(`水筒 ${index}`, `https://qoo10.jp/item/bottle/${index}`));
+  assert.equal(parseGoogleMallItems(normalizeAgentSearchResponse({ results: rows })).length, 50);
 });
