@@ -1762,12 +1762,13 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     if (!offers.length && legacyAmazonProductLead(candidate)) presentMarketplaces.add('AMAZON_JP');
   }
   const googleMallPromise = googleMallSearchConfigured(env)
-    // 2026-09-22 大隆さん指示「Amazonが検索した商品も提示してね」。
-    // Amazon は PA-API が未解放で、HOSHILU 自身では商品を取れない（3件の適格販売が先）。
-    // 唯一 Amazon の商品ページを出せるのが、この Google 側の検索。
-    // 「そのモールに候補があれば除く」規則から Amazon だけ外し、常に探しにいく。
-    // 重複は unifyResults が ASIN で1件にまとめる。
-    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '), { excludeMarketplaces: [...presentMarketplaces].filter((marketplace) => marketplace !== 'AMAZON_JP') })
+    // 2026-09-22 大隆さん指示「検索したら、ホシルもGoogleの提示が必ずたくさん出ること」。
+    // これまでは「そのモールに HOSHILU の候補があれば、Google 側はそのモールを出さない」
+    // として結果を捨てていた。重複を避けるための規則だったが、重複は unifyResults が
+    // ASIN・JAN・URL で1件にまとめるので、ここで捨てる必要はない。捨てるほど提示が減る。
+    // Google への問い合わせは検索1回につき1回で、モールを増やしても上限は減らない。
+    // （Amazon は PA-API 未解放で HOSHILU 自身では商品を取れないため、特に重要）
+    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '), { excludeMarketplaces: [] })
       .catch(() => ({ items: [], source: 'error', reason: 'UNHANDLED' }))
     : Promise.resolve({ items: [], source: 'disabled', reason: 'NOT_CONFIGURED' });
   const candidates = [];

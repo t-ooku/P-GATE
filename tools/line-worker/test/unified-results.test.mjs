@@ -7,7 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  UNIFIED_LIMIT, UNIFIED_PAGE_SIZE, canonicalProductUrl, dedupeKey, dedupeKeys, unifyResults
+  UNIFIED_LIMIT, UNIFIED_PAGE_SIZE, canonicalProductUrl, dedupeKey, dedupeKeys, relevanceThreshold, unifyResults
 } from '../src/unified-results.mjs';
 
 const QUERY = '黒 本革 トートバッグ';
@@ -190,12 +190,14 @@ test('HOSHILU 行は元の候補の番号を持ち、Web 行は持たない', ()
   assert.deepEqual([...new Set(hoshilu.map((item) => item.candidate_index))].length, hoshilu.length, '番号が重ならない');
 });
 
-// 2026-09-22 大隆さん指示「Amazonが検索した商品も提示してね」。
-// Amazon は PA-API 未解放で HOSHILU 自身では商品を取れない。Google 側の検索を
-// 「候補があるモールは除く」規則から外し、常に探しにいく。
-test('Amazon だけは候補があっても web 検索から外さない', () => {
+// 2026-09-22 大隆さん指示「Amazonが検索した商品も提示してね」
+// →「検索したら、ホシルもGoogleの提示が必ずたくさん出ること」。
+// Amazon だけを外す形から、モール単位で捨てるのをやめる形へ広げた。
+// 重複は unifyResults が ASIN・JAN・URL でまとめる。
+test('web 検索の結果をモール単位で捨てない（Amazon を含む）', () => {
   const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
-  assert.match(index, /excludeMarketplaces: \[\.\.\.presentMarketplaces\]\.filter\(\(marketplace\) => marketplace !== 'AMAZON_JP'\)/u);
+  assert.match(index, /excludeMarketplaces: \[\]/u);
+  assert.ok(!index.includes("marketplace !== 'AMAZON_JP'"), 'Amazon だけの例外は要らなくなった');
 });
 
 // 2026-09-22 大隆さん報告「リンク先に飛ばない」（TRACK_TOKEN_FORMAT_INVALID）。
@@ -301,4 +303,48 @@ test('条件に合わない商品は、1件も残らなくても混ぜない', (
     query: QUERY
   });
   assert.equal(result.items.length, 0, '関係のない商品を出さない');
+});
+
+// 2026-09-22 大隆さん指示「検索したら、ホシルもGoogleの提示が必ずたくさん出ること。
+// 関係ないものは提示しないこと」。
+//
+// これまでは「1語でも当たれば出す」だった。「LILIB 韓国 頭皮ケア」に対して
+// LILIBETH の化粧水（LILIB だけ）や BUYMA の韓国ワンピース（韓国 だけ）が残っていた。
+// 条件の半分以上（切り上げ）当たったものだけを出す。
+test('語数が多い検索で、1語だけ当たった関係のない商品を出さない', () => {
+  const result = unifyResults({
+    candidates: [
+      candidate(1, { display_name: 'LILIBETH ローズディープ トナー 化粧水' }),
+      candidate(2, { display_name: 'LILIB 韓国 頭皮ケア スカルプブラシ' }),
+      candidate(3, { display_name: '韓国 頭皮ケア シャンプー' })
+    ],
+    googleItems: [web(1, { title: '韓国ファッション ネイビー系 ワンピース - BUYMA' })],
+    query: 'LILIB 韓国 頭皮ケア'
+  });
+  const names = result.items.map((item) => item.product_name);
+  assert.ok(names.some((name) => name.includes('スカルプブラシ')), '合うものは残す');
+  assert.ok(names.some((name) => name.includes('シャンプー')), '2語当たれば残す');
+  assert.ok(!names.some((name) => name.includes('化粧水')), 'LILIB だけの化粧水は出さない');
+  assert.ok(!names.some((name) => name.includes('ワンピース')), '韓国 だけのワンピースは出さない');
+});
+
+test('半分以上で1件も残らないときは、1語一致まで緩める（無言で0件にしない）', () => {
+  const result = unifyResults({
+    candidates: [candidate(1, { display_name: '韓国 コスメ ポーチ' })],
+    googleItems: [],
+    query: 'LILIB 韓国 頭皮ケア'
+  });
+  assert.equal(result.items.length, 1, '1語一致まで緩める');
+});
+
+test('しきい値: 1語→1, 2語→1, 3語→2, 4語→2, 5語→3', () => {
+  assert.deepEqual([1, 2, 3, 4, 5].map(relevanceThreshold), [1, 1, 2, 2, 3]);
+});
+
+// 2026-09-22 大隆さん指示「Googleの提示が必ずたくさん出ること」。
+// HOSHILU に候補があるモールを Google 側から捨てていたぶん、提示が減っていた。
+// 重複は unifyResults がまとめるので、捨てずに全部受け取る。
+test('Google 側の結果をモール単位で捨てない', () => {
+  const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
+  assert.match(index, /excludeMarketplaces: \[\]/u);
 });

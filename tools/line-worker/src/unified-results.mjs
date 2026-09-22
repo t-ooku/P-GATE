@@ -173,19 +173,36 @@ function fromGoogleItem(item, index, offset) {
 // 一致度で並べる。conditions が作れない検索（写真だけ・語が短いなど）では
 // 判定しようがないので、**絞り込まずに元の順番を保つ**。
 // 判定できないものを「合わない」と決めつけない。
+// 条件の半分以上（切り上げ）当たったものを残す。0 件なら 1語一致まで緩める。
+export function relevanceThreshold(conditionCount) {
+  return Math.max(1, Math.ceil(conditionCount / 2));
+}
+
+function relevant(judged, conditionCount) {
+  const strict = judged.filter((row) => row.score >= relevanceThreshold(conditionCount));
+  if (strict.length) return strict;
+  return judged.filter((row) => row.score >= 1);
+}
+
 export function rankUnified(rows, conditions) {
   const judged = rows.map((row) => {
     if (!conditions.length) return { ...row, matched: [], unmatched: [], level: 'UNKNOWN', score: 0 };
     const verdict = judgeTitle(row.product_name, conditions);
     return { ...row, matched: verdict.matched, unmatched: verdict.unmatched, level: verdict.level, score: verdict.matched.length };
   });
-  // 条件があるときは、1つも一致しないものを出さない（§4 60件を埋めるために混ぜない）。
-  // 2026-09-22 大隆さん報告「スカルプに何故この商品が提示されたの？」。
-  // 直前の版では「1件も残らないなら絞り込む前を出す」にしていたが、それは
-  // スカルプブラシの検索にリバティ生地を出すということだった。取り違えを直す方向が
-  // 逆だった。**関係のない商品は出さない。** 0 件なら 0 件のまま返す。
-  // 2つの棚に割れて見えていた件は、画面側（0 件でも元の棚を開かない）で直す。
-  const kept = conditions.length ? judged.filter((row) => row.level !== 'NONE') : judged;
+  // 2026-09-22 大隆さん指示「関係ないものは提示しないこと」。
+  //
+  // これまでは「1語でも当たれば出す」だった。それだと
+  // 「LILIB 韓国 頭皮ケア」に対して
+  //   ・LILIBETH の化粧水（LILIB だけ当たる）
+  //   ・BUYMA の韓国ワンピース（韓国 だけ当たる）
+  // が残ってしまう。語数が増えるほど、1語だけの一致は「関係ない」に近づく。
+  //
+  // そこで、条件の**半分以上**（切り上げ）当たったものだけを出す。
+  //   1語 → 1語一致、2語 → 1語、3語 → 2語、4語 → 2語、5語 → 3語
+  // それで 1件も残らないときだけ、1語一致まで緩める（無言で0件にしない）。
+  // どちらにしても、1語も当たらないものは出さない。
+  const kept = conditions.length ? relevant(judged, conditions.length) : judged;
   return kept.sort((a, b) => {
     // 一覧ページは、どれだけ言葉が合っていても商品より後ろ（2026-09-22）。
     const listing = (a.listing ? 1 : 0) - (b.listing ? 1 : 0);
