@@ -224,7 +224,7 @@ test('届く通知の例は畳んだ状態で、商品提示の下に置く', ()
   assert.ok(!sheet.includes('details.hero-watch-example>summary'), '独自の開閉装飾を持たない');
   // 「ショッピングサイトで探す」と「ホシっといて探し続けてもらう？」の間に余白
   assert.match(sheet, /\.continuous-search-card\{margin-top:12px\}/u);
-  assert.match(html, /hero-watch\.css\?v=7/u);
+  assert.match(html, /hero-watch\.css\?v=8/u);
 });
 
 // 2026-09-22 大隆さん指示「検索語だけの欄は不用。ホシッとく欄にもあるから」。

@@ -29,7 +29,19 @@
    自前の白い箱と ▾ をやめ、他の畳める欄と同じ枠・同じ開閉表示にそろえた
    （枠は .marketplace-coverage / .hero-marketplace-coverage が持つ）。
    長い日本語の見出しなので、字間だけ詰めて読みやすくする。 */
-.lp-more-details>summary{white-space:normal;letter-spacing:.02em;line-height:1.6}
+/* 2026-09-22 大隆さん報告「改行位置が変だよ」。
+   他の欄の見出しは短い英語なので、横に並べる置き方（inline-flex・幅いっぱい）で
+   「（開く）」が右端に付く。ここだけ長い日本語なので、その置き方だと本文と
+   「（開く）」が別々に折り返して読めなくなっていた。
+   ここは普通の文章として流し、「（開く）」は文の最後に続ける。 */
+.lp-more-details>summary{
+  display:block;
+  width:auto;
+  white-space:normal;
+  letter-spacing:.02em;
+  line-height:1.6;
+}
+.lp-more-details>summary::after{margin-left:6px;white-space:nowrap}
 /* 結果カードのウォッチボタンを光らせる（第一画面から来た時だけ） */
 .watch-intent-banner{margin:8px 0 12px;padding:10px 12px;border-radius:12px;background:#fff4fa;border:1px solid #ffc6de;color:#b3005f;font-size:14px;font-weight:600;line-height:1.5}
 @keyframes hoshiluWatchPulse{0%{box-shadow:0 0 0 0 rgba(255,79,154,.55)}70%{box-shadow:0 0 0 10px rgba(255,79,154,0)}100%{box-shadow:0 0 0 0 rgba(255,79,154,0)}}
