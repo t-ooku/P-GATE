@@ -63,8 +63,10 @@ test('レコメンドのボタンは統合カードと同じ配置（価格比�
   const [app, styles] = await Promise.all([read('app.js'), read('result-compact.css')]);
   assert.match(app, /function compactCardActions\(card\)\{/u);
   assert.match(app, /row\.className='product-card-price-row'/u);
-  assert.match(app, /reviews\.className='unified-reviews-toggle'/u);
-  assert.match(app, /card\.querySelector\('\.experience-post'\)\?\.click\(\)/u);
+  assert.match(app, /button\.className='unified-reviews-toggle'/u);
+  assert.match(app, /const post=card\.querySelector\('\.experience-post'\);/u);
+  // ♡ の升目は隣と同じ大きさ（2026-09-22 大隆さん報告「気になるボタンが統一されてない」）
+  assert.match(styles, /\.result-row-recommended \.result-track>\.product-card \.keep-product\{display:flex;flex-direction:column;gap:4px;width:100%\}/u);
   // レコメンドの3つの作り口（主結果・代替・関連API）はすべて同じカードを通す
   assert.equal(app.split('=>recommendationCard(candidate,index,').length - 1, 3);
   assert.doesNotMatch(app, /resultRow\(products\.map\(\(candidate,index\)=>productCard\(/u);

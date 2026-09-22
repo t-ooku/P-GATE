@@ -196,4 +196,19 @@
   }
   .result-row-recommended .result-track>.product-card .experience-block{display:none}
   .result-row-recommended .result-track>.product-card.reviews-open .experience-block{display:block}
+  /* 2026-09-22 大隆さん報告「レコメンドの気になるボタンが統一されてない」。
+     ♡ の中は display:grid の入れ物で、升目いっぱいに広がっていなかった（隣より細い・
+     背が高い）。統合カードと同じ作りにそろえる。押したあとに出る案内文も行を跨がせる。 */
+  .result-row-recommended .result-track>.product-card .product-card-action-keep{flex-direction:column;align-items:stretch}
+  .result-row-recommended .result-track>.product-card .keep-product{display:flex;flex-direction:column;gap:4px;width:100%}
+  .result-row-recommended .result-track>.product-card .keep-product-note{
+    order:2;
+    display:block;
+    width:100%;
+    font-size:9.5px;
+    line-height:1.4;
+    white-space:normal;
+    text-align:center;
+  }
+  .result-row-recommended .result-track>.product-card .keep-product-note.hidden{display:none}
 }

@@ -1295,7 +1295,9 @@ window.HoshiluCardActions={
   attach(card,candidate,searchQuery=''){
     const slots=productCardActionSlots(card);
     return fillProductCardActions(card,slots,candidate,selectedCopy(),searchQuery);
-  }
+  },
+  // 口コミの開け閉めは1か所だけ。レコメンドも統合カードも同じものを使う。
+  reviewsToggle(card){return createReviewsToggle(card);}
 };
 function rankingCard(candidate,index,rankingType,searchQuery,rankingKind='popularity'){
   const card=productCard(candidate,index,selectedCopy(),true,searchQuery);
@@ -1392,20 +1394,39 @@ function relatedCategoryCard(item){const language=elements.language.value||'JA';
 //   ・「価格比較」は4つのボタンの外へ出して、価格と同じ行に置く
 //   ・口コミは「💬 口コミ」ボタン1つだけ。押したときに中身と入力欄が開く
 // 口コミの作りは experience-layer.mjs のものをそのまま使う（二重に持たない）。
+//
+// 2026-09-22 大隆さん報告「口コミ開いた後に閉じたら、口コミだけ旧配置になる」。
+// 原因は2つ。投稿欄の「閉じる」は欄だけを消す作りで、口コミ欄そのものは開いたまま
+// 残っていた。もう一つは、押した時点でまだ口コミの中身が来ていないと、入力欄が開かず
+// 後から中身だけが出てくること。どちらもここで面倒をみる。統合カードも同じものを使う。
+function createReviewsToggle(card){
+  const button=document.createElement('button');
+  button.type='button';button.className='unified-reviews-toggle';button.textContent='💬 口コミ';
+  button.setAttribute('aria-expanded','false');
+  const setOpen=open=>{card.classList.toggle('reviews-open',open);button.setAttribute('aria-expanded',open?'true':'false');};
+  const openPost=()=>{
+    const post=card.querySelector('.experience-post');
+    if(post){post.click();return;}
+    // 口コミの中身は後から届く。出てきたら1回だけ開く（押しても何も起きない、を無くす）。
+    const observer=new MutationObserver(()=>{
+      const later=card.querySelector('.experience-post');
+      if(!later)return;
+      observer.disconnect();
+      if(card.classList.contains('reviews-open'))later.click();
+    });
+    observer.observe(card,{childList:true,subtree:true});
+    setTimeout(()=>observer.disconnect(),8000);
+  };
+  button.addEventListener('click',()=>{const open=!card.classList.contains('reviews-open');setOpen(open);if(open)openPost();});
+  card.addEventListener('click',event=>{if(event.target instanceof Element&&event.target.closest('.experience-cancel'))setOpen(false);});
+  return button;
+}
 function compactCardActions(card){
   const actions=card.querySelector(':scope > .product-card-actions');
   if(!actions)return card;
   const buy=actions.querySelector(':scope > .product-card-action-buy');
   if(buy){const row=document.createElement('div');row.className='product-card-price-row';row.append(buy);actions.before(row);}
-  const reviews=document.createElement('button');
-  reviews.type='button';reviews.className='unified-reviews-toggle';reviews.textContent='💬 口コミ';
-  reviews.setAttribute('aria-expanded','false');
-  reviews.addEventListener('click',()=>{
-    const open=card.classList.toggle('reviews-open');
-    reviews.setAttribute('aria-expanded',open?'true':'false');
-    if(open)card.querySelector('.experience-post')?.click();
-  });
-  actions.append(reviews);
+  actions.append(createReviewsToggle(card));
   return card;
 }
 function recommendationCard(candidate,index,t,confirmed,query){return compactCardActions(productCard(candidate,index,t,confirmed,query));}

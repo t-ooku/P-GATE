@@ -116,7 +116,7 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
   assert.match(html, /unified-results-ui\.css\?v=9/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=10/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=11/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -168,8 +168,11 @@ test('カードは4つのボタンを2列2行に。条件一致の文字は出�
   assert.ok(!/`\$\{n\}条件一致`/u.test(source), '一致の度合いは並び順に出ている');
   assert.ok(!source.includes('unified-card-matched'), '一致の行ごと消す');
   assert.match(source, /reviews: '💬 口コミ'/u);
-  // 口コミを押したら入力欄まで開く（口コミの作りを二重に持たない）
-  assert.match(source, /article\.querySelector\('\.experience-post'\)\?\.click\(\)/u);
+  // 口コミを押したら入力欄まで開く（開け閉ての作りは app.js に1つだけ）
+  assert.match(source, /window\.HoshiluCardActions\?\.reviewsToggle\?\.\(article\)/u);
+  assert.match(read('app.js'), /function createReviewsToggle\(card\)\{/u);
+  // 投稿欄の「閉じる」で口コミ欄ごと閉じる（古い形が残らない）
+  assert.match(read('app.js'), /closest\('\.experience-cancel'\)\)setOpen\(false\)/u);
   const sheet = css();
   assert.match(sheet, /\.unified-card-full \.product-card-actions\{[^}]*grid-template-columns:1fr 1fr/u);
   // ボタンの升目と中身をそろえる（ガタガタにしない）

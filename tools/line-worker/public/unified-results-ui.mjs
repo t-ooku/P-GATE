@@ -150,22 +150,13 @@ function card(item) {
     // 口コミ（experience-layer.mjs）は .product-card を見て後から足すので、同じ札を付ける。
     article.classList.add('unified-card-full');
     const slots = window.HoshiluCardActions.attach(article, candidate);
-    // 2026-09-22 大隆さん指示「口コミは、『口コミ』というボタンだけあれば良い」。
-    // 中身（まだ口コミがありません／投稿する）はカードの上で場所を取りすぎるので、
-    // 押したときだけ開く。口コミそのものは消していない。
-    const reviews = el('button', 'unified-reviews-toggle', COPY.reviews);
-    reviews.type = 'button';
-    reviews.setAttribute('aria-expanded', 'false');
-    reviews.addEventListener('click', () => {
-      const open = article.classList.toggle('reviews-open');
-      reviews.setAttribute('aria-expanded', open ? 'true' : 'false');
-      // 2026-09-22 大隆さん指示「口コミはタップしたら、入力欄が開く」。
-      // 入力欄を作るのは experience-layer。ここでは同じ入口（投稿ボタン）を押すだけで、
-      // 口コミの作りを二重に持たない。
-      if (open) article.querySelector('.experience-post')?.click();
-    });
+    // 2026-09-22 大隆さん指示「口コミは、『口コミ』というボタンだけあれば良い」
+    // 「口コミはタップしたら、入力欄が開く」。中身（まだ口コミがありません／投稿する）は
+    // カードの上で場所を取りすぎるので、押したときだけ開く。口コミそのものは消していない。
+    // 開け閉めの作りは app.js に1つだけ置いてある（レコメンドの棚と同じものを使う）。
+    const reviews = window.HoshiluCardActions?.reviewsToggle?.(article);
     // 並びは 価格通知 / いつもの / 気になる / 口コミ の4つ。2列2行に収まる。
-    slots?.actions?.append?.(reviews);
+    if (reviews) slots?.actions?.append?.(reviews);
     // 2026-09-22 大隆さん指示「『これ、今買う？』→『価格比較』に直して、価格の隣に設置」。
     // 4つのボタンの外に出して、価格と同じ行に置く。
     const priceRow = article.querySelector('.unified-card-price-row');
