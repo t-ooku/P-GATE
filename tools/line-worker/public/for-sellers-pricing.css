@@ -45,7 +45,7 @@
   .payment-note{margin-top:18px}
 }
 /* 2026-09-06 大隆さん指示（Seller獲得 マスター指示書 §23-§26）: 主コピー・3方向露出・買い時まで逃さない・価格を早い位置で */
-.hero-price{margin:0 0 22px;padding:10px 14px;border:1px solid #e3dafb;border-radius:999px;background:#fff;color:#3b2a9c;font-size:13px;font-weight:800}.hero-price strong{font-size:18px;letter-spacing:-.03em}
+.hero-price{margin:0 0 22px;padding:12px 16px;border:1px solid #e3dafb;border-radius:18px;background:#fff;color:#3b2a9c;font-size:13px;font-weight:800}.hero-price strong{font-size:18px;letter-spacing:-.03em}
 .hero-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.secondary{padding:15px 20px;border:1px solid var(--line);border-radius:14px;color:#5140ba;background:#fff;text-decoration:none;font-weight:850;font-size:13px}
 .expose,.watch-bridge,.kpi,.creator,.compare{margin:0 0 90px}.expose h2,.watch-bridge h2,.kpi h2,.creator h2,.compare h2,.shop-copy h2{margin:0 0 18px;font-size:clamp(32px,4.6vw,56px);line-height:1.08;letter-spacing:-.05em}.expose h2 span,.watch-bridge h2 span,.kpi h2 span,.creator h2 span,.shop-copy h2 span{background:linear-gradient(100deg,var(--pink),var(--violet),var(--cyan));-webkit-background-clip:text;color:transparent}
 .expose-grid,.watch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}.expose-grid article,.watch-grid article,.feature-cards article{padding:24px;border:1px solid var(--line);border-radius:22px;background:#fff}.expose-grid article>span,.feature-cards article>span{color:var(--violet);font-size:10px;font-weight:950;letter-spacing:.15em}.expose-grid h3,.watch-grid h3,.feature-cards h3{margin:8px 0;font-size:20px;letter-spacing:-.02em}.expose-grid p,.watch-grid p,.feature-cards p,.shop-copy>p{margin:0;color:var(--muted);line-height:1.75}
@@ -80,3 +80,8 @@
 /* 2026-09-19 大隆さん指摘（スマホ）: リード・導線・料金の途中折り返しを止め、読点や項目の切れ目でだけ改行する */
 .hero .nb{white-space:nowrap}
 @media(max-width:520px){.hero .lead{font-size:15px;line-height:1.75}.hero-chain{font-size:13px}}
+
+/* 2026-09-22 大隆さん報告「位置が左にズレてるよ」。
+   この欄は丸い錠剤の形（border-radius:999px）だった。1行なら収まるが、
+   スマホでは3行に折り返すため、上下の行が丸みに食い込み、左へずれて見えていた。
+   他の枠と同じ角丸（18px）にして、行が増えても文字の左端がそろうようにした。 */

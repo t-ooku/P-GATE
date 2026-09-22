@@ -258,3 +258,15 @@ test('/for-sellers の見出しは「欲しい人が見える。欲しい人に�
   assert.match(html, /自己申告で一致にはなりません/u);
   for (const banned of ['必ず売れ', '売上が上がり', '多数のユーザー', '業界No', '確実に']) assert.ok(!html.includes(banned), banned);
 });
+
+// 2026-09-22 大隆さん報告「位置が左にズレてるよ」（/for-sellers の料金欄）。
+// 丸い錠剤の形（999px）だと、スマホで3行に折り返したとき上下の行が丸みに
+// 食い込み、左へずれて見える。他の枠と同じ角丸にする。
+test('料金欄は角丸。折り返しても文字の左端がそろう', () => {
+  const css = readFileSync(new URL('../public/for-sellers-pricing.css', import.meta.url), 'utf8');
+  const rule = css.slice(css.indexOf('.hero-price{'), css.indexOf('}', css.indexOf('.hero-price{')));
+  assert.ok(!rule.includes('border-radius:999px'), '錠剤の形にしない');
+  assert.match(rule, /border-radius:18px/u);
+  const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
+  assert.match(html, /for-sellers-pricing\.css\?v=7/u);
+});
