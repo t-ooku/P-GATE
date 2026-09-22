@@ -71,3 +71,24 @@ test('visitor_id 列が無い環境でも従来の列だけで記録に退避す
   assert.equal(calls.length, 1);
   assert.ok(!calls[0].sql.includes('visitor_id'));
 });
+
+// 2026-09-22: shop_viewed が 9/19〜9/21 で 2,859 → 4,264 → 5,242 件に増え、中身はほぼ 1 ショップ
+// （find-fun）だった。同じ期間の shop_view_confirmed は 5 件で、人の閲覧ではないと分かった。
+// 名乗らないクローラ（User-Agent 無し・curl 等）を「人」として数えていたのが原因。
+test('ページとして読んだ形跡のない要求は shop_viewed に数えない', async () => {
+  const { isHumanPageRequest } = await import('../src/growth-events.mjs');
+  const request = (headers) => ({ headers: { get: (key) => headers[key] || '' } });
+  assert.equal(isHumanPageRequest(request({
+    'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
+    accept: 'text/html,application/xhtml+xml'
+  })), true);
+  // User-Agent を送らない相手（これが本番で残っていた分）
+  assert.equal(isHumanPageRequest(request({ accept: 'text/html' })), false);
+  assert.equal(isHumanPageRequest(request({ 'user-agent': 'curl/8.1.2', accept: '*/*' })), false);
+  assert.equal(isHumanPageRequest(request({ 'user-agent': 'python-requests/2.31.0', accept: '*/*' })), false);
+  assert.equal(isHumanPageRequest(request({ 'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)', accept: 'text/html' })), false);
+  // ページを読みに来ていない（画像やAPIの取得）
+  assert.equal(isHumanPageRequest(request({ 'user-agent': 'Mozilla/5.0', accept: '*/*' })), false);
+  const source = readFileSync(new URL('../src/seller-shop.mjs', import.meta.url), 'utf8');
+  assert.match(source, /if \(isHumanPageRequest\(request\)\) \{\n\s*await recordShopEvent\(env, 'shop_viewed'/u);
+});

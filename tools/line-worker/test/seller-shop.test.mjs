@@ -78,7 +78,9 @@ test('Business だけがショップを作れ、公開ページ・検索結果�
   assert.deepEqual(publicShopRef(shopForOffer(shops, { tenant: 'itg' })), { slug: 'with-care', name: 'with care', coupon: true });
   assert.equal(shopForOffer(shops, { tenant: 'mc2' }), null);
   // 公開ページ
-  const page = await handleShopRoutes(request('/shop/with-care'), e, { createTrackToken: fakeToken, readMember: async () => null, hashUser: async () => 'h' });
+  // 2026-09-22: shop_viewed は「ブラウザがページとして読んだ形跡」がある時だけ数える。
+  const browser = { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1', accept: 'text/html,application/xhtml+xml' };
+  const page = await handleShopRoutes(request('/shop/with-care', 'GET', null, browser), e, { createTrackToken: fakeToken, readMember: async () => null, hashUser: async () => 'h' });
   assert.equal(page.status, 200);
   const html = await page.text();
   assert.match(html, /with care/u);
@@ -110,7 +112,7 @@ test('Business だけがショップを作れ、公開ページ・検索結果�
   assert.deepEqual({ following: followed.following, followers: followed.followers }, { following: true, followers: 1 });
   const again = await (await handleShopRoutes(request('/api/member/shops/with-care/follow', 'POST', {}), e, member)).json();
   assert.equal(again.followers, 1);
-  const pageAsMember = await (await handleShopRoutes(request('/shop/with-care'), e, { createTrackToken: fakeToken, ...member, hashUser: async () => 'h' })).text();
+  const pageAsMember = await (await handleShopRoutes(request('/shop/with-care', 'GET', null, browser), e, { createTrackToken: fakeToken, ...member, hashUser: async () => 'h' })).text();
   assert.match(pageAsMember, /★ ホシってます/u);
   const unfollowed = await (await handleShopRoutes(request('/api/member/shops/with-care/follow', 'DELETE', {}), e, member)).json();
   assert.equal(unfollowed.followers, 0);
@@ -265,7 +267,7 @@ test('2026-09-14: クローラのショップ閲覧は記録せず、絞り込�
   const botHtml = await (await handleShopRoutes(bot, e, {})).text();
   assert.equal(count(), before, 'クローラの閲覧は shop_viewed に入れない');
   assert.match(botHtml, /<meta name="robots" content="noindex,nofollow">/u, '絞り込み URL は noindex,nofollow');
-  const human = new Request('https://hoshilu.app/shop/with-care?q=%E3%83%9E%E3%82%B9%E3%82%AF', { headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1' } });
+  const human = new Request('https://hoshilu.app/shop/with-care?q=%E3%83%9E%E3%82%B9%E3%82%AF', { headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1', accept: 'text/html,application/xhtml+xml' } });
   await handleShopRoutes(human, e, {});
   assert.equal(count(), before + 1, '人の閲覧は記録する');
   const base = await (await handleShopRoutes(request('/shop/with-care'), e, {})).text();

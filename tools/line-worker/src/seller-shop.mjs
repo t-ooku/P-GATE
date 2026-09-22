@@ -9,7 +9,7 @@
 // - growth_events: shop_viewed / shop_followed / shop_unfollowed / coupon_clicked（Worker 側で記録）。
 
 import { readMemberSession } from './member-auth.mjs';
-import { isCrawlerUserAgent } from './growth-events.mjs';
+import { isCrawlerUserAgent, isHumanPageRequest } from './growth-events.mjs';
 import { searchProductsV2 } from './product-index-v2.mjs';
 import {
   queryWords, shopAttributeDefinition, shopAttributeFacets, shopKeywordFacets,
@@ -859,7 +859,9 @@ export async function handleShopRoutes(request, env, { createTrackToken, readMem
   // 2026-09-14: shop_viewed が 9/8 以降 1日 48〜67万件（ほぼ全部 with-care / content='search'、約6件/秒）。
   // 絞り込みワード（商品名から作る）×ブランド×属性×ページのリンクを検索エンジンのクローラが総当たりで
   // たどっていた。人の閲覧ではないので記録しない（KPI と D1 容量の両方を守る）。
-  if (!isCrawlerUserAgent(request.headers.get('user-agent'))) {
+  // 2026-09-22: 名乗るクローラを弾くだけでは足りなかった（User-Agent なしの相手が残っていた）。
+  // ブラウザがページとして読んだ形跡のある要求だけを数える。
+  if (isHumanPageRequest(request)) {
     await recordShopEvent(env, 'shop_viewed', shop.slug, { content: query || filters.subgenre || filters.color || filters.size || filters.material ? 'search' : 'view' });
   }
   // 2026-09-06 大隆さん指摘への対応: いま出ている商品名から「絞り込みワード」を作る。

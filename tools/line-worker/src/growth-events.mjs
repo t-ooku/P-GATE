@@ -190,6 +190,23 @@ export function isCrawlerUserAgent(value) {
   return ua ? CRAWLER_USER_AGENT_PATTERN.test(ua) : false;
 }
 
+// 2026-09-22: shop_viewed が 9/19〜9/21 で 2,859 → 4,264 → 5,242 件に増え続けた。
+// 中身はほぼ全部 1ショップ（find-fun）で、同じ期間にブラウザが実際に描画した
+// shop_view_confirmed は 5 件しかない。つまり人の閲覧ではない。
+// isCrawlerUserAgent は「名乗っているクローラ」しか弾けず、User-Agent を送らない相手や
+// curl / python-requests のような相手はすり抜けていた（空文字は false を返す）。
+// ページとして読んだ形跡（ブラウザらしい UA と text/html を求める Accept）が無い要求は
+// 人の閲覧として数えない。数えられない分を実数に混ぜないための線引きで、
+// 0 件と「計測不能」を混同しないために shop_view_confirmed は別に残す。
+export function isHumanPageRequest(request) {
+  const ua = String(request?.headers?.get?.('user-agent') || '').slice(0, 512);
+  if (!ua) return false;
+  if (isCrawlerUserAgent(ua)) return false;
+  if (!/mozilla\//iu.test(ua)) return false;
+  const accept = String(request?.headers?.get?.('accept') || '').slice(0, 512).toLowerCase();
+  return accept.includes('text/html');
+}
+
 export function classifyGrowthTraffic(event = {}) {
   const source = clean(event.source).toLowerCase();
   const medium = clean(event.medium).toLowerCase();
