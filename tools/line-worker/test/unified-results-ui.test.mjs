@@ -116,7 +116,7 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
   assert.match(html, /unified-results-ui\.css\?v=8/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=8/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=9/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -197,14 +197,14 @@ test('カードは4つのボタンを2列2行に。条件一致の文字は出�
     'ボタンの中身を切らない');
 });
 
-// 2026-09-22 大隆さん報告「web検索が表示されてない」。
-// 統合した列には商品ページだけを入れているので、web検索が一覧ページしか返さなかった
-// 検索では web の結果が1件も出ない。その時だけ元の「web検索から発見」の枠を残す。
-test('統合した列に web の商品が1件も無いときは、元のweb検索の枠を残す', () => {
+// 2026-09-22 大隆さん報告（頭皮ケアの検索に韓国ワンピースが並んだ枠が出た）。
+// 「web の商品が0件のときだけ元の枠を残す」逃げ道は消した。あの枠は検索語の条件で
+// 絞っていないので、残すと条件に合わない商品の列がもう1本出てしまう。
+test('元の2つの棚は常に畳む。列は1本だけ', () => {
   const source = ui();
-  assert.match(source, /function foldLegacySections\(folded, hasWeb = false\)/u);
-  assert.match(source, /google\.classList\.toggle\('hidden', folded && hasWeb\)/u);
-  assert.match(source, /foldLegacySections\(true, items\.some\(\(item\) => item\.source === 'WEB'\)\)/u);
+  assert.match(source, /function foldLegacySections\(folded\)/u);
+  assert.match(source, /google\.classList\.toggle\('hidden', folded\)/u);
+  assert.ok(!source.includes('hasWeb'), '逃げ道を残さない');
 });
 
 // 2026-09-22 大隆さん指示「届く通知の例は、普段閉じておいて、タップしたら開く。
@@ -239,7 +239,7 @@ test('見つからなかったとき、検索語だけの箱は出さない', ()
 // 「スカルプに何故この商品が提示されたの？」。
 test('0件のときも元の2つの棚を開かず、この列の中で断る', () => {
   const source = ui();
-  assert.match(source, /if \(!items\.length\) \{\s*foldLegacySections\(true, true\);/u);
+  assert.match(source, /if \(!items\.length\) \{\s*foldLegacySections\(true\);/u);
   assert.match(source, /none: '検索語の条件に合う商品は見つかりませんでした。/u);
   // 0件でも節そのものは出す（元の棚へ戻さない）
   assert.ok(!/if \(!items\.length\) \{ host\.hidden = true;/u.test(source), '節ごと消さない');

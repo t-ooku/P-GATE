@@ -200,16 +200,16 @@ function section() {
 // 1セクションにまとめるので、元の「ホシルからの提案」（価格まで確認できた棚と
 // AI選定レコメンドの棚）と「web検索から発見」は畳む（§1）。
 // レコメンド（関連商品）は別の話なので残す。
-function foldLegacySections(folded, hasWeb = false) {
+function foldLegacySections(folded) {
   const rows = document.querySelectorAll('#resultCards .result-row-confirmed,#resultCards .result-row-unconfirmed');
   for (const row of rows) row.hidden = folded;
-  // 2026-09-22 大隆さん報告「web検索が表示されてない」。
-  // 統合した列には商品ページだけを入れている（一覧ページは商品ではない）。
-  // そのため web検索が一覧ページしか返さなかった検索では、web の結果が1件も出なくなる。
-  // その時だけ元の「web検索から発見」の枠を残す。あちらは一覧ページを
-  //「一覧ページ」と断って出せる作りになっている。
+  // 2026-09-22 大隆さん報告（スクリーンショット: 頭皮ケアの検索に韓国ワンピース）。
+  // 以前は「web検索の商品が1件も残らなかったときだけ元の枠を残す」という逃げ道を
+  // 入れていたが、あの枠は検索語の条件で絞っていない。残すと、条件に合わない商品が
+  // 並んだ枠がもう1列出ることになる。逃げ道は消す。
+  // **元の2つの棚は、統合した列を出すときは常に畳む。列は1本だけ。**
   const google = document.querySelector('#googleMallResults');
-  if (google) google.classList.toggle('hidden', folded && hasWeb);
+  if (google) google.classList.toggle('hidden', folded);
 }
 
 function renderMore(host, list) {
@@ -240,11 +240,11 @@ export function render(unified, candidates = []) {
   // 見つからなかったことは、この列の中で正直に1行書く。
   host.hidden = false;
   if (!items.length) {
-    foldLegacySections(true, true);
+    foldLegacySections(true);
     host.replaceChildren(el('p', 'unified-note', COPY.none));
     return;
   }
-  foldLegacySections(true, items.some((item) => item.source === 'WEB'));
+  foldLegacySections(true);
 
   // 見出しは作らない。ページの「MATCHES / ホシルからの提案」がこの列の見出し。
   // 「全部で60件しかない」と誤解させない（§9）。上限で切ったときは「60件表示中」。
