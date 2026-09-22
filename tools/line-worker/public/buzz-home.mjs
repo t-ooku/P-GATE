@@ -40,8 +40,12 @@ function itemCard(item) {
   // （価格が確認できている商品だけ。button は a の中に置けないので、カードを包む）。
   const wrap = el('div', 'buzz-home-item');
   wrap.append(card);
+  // 2026-09-22 大隆さん指示「ホシルバズも、『価格』『気になる』に修正して2列1行」。
+  // 縦に2段積むとカードが縦長になるので、横に2つ並べる。
+  const actions = el('div', 'buzz-home-actions');
+  wrap.append(actions);
   if (item.price_confirmed && item.price > 0) {
-    const watch = el('button', 'buzz-home-watch watch-settings-button', 'この価格になったら教えて☑');
+    const watch = el('button', 'buzz-home-watch watch-settings-button', '🔔 価格通知');
     watch.type = 'button';
     watch.addEventListener('click', (event) => {
       event.preventDefault();
@@ -51,7 +55,7 @@ function itemCard(item) {
         offers: [{ marketplace: text(item.marketplace), product_url: text(item.product_url), price: Number(item.price), total_cost: Number(item.price), currency: 'JPY' }]
       });
     });
-    wrap.append(watch);
+    actions.append(watch);
   }
   // 2026-09-16 大隆さん指示: BUZZ の商品にも「気になる」（ハート）。保存先は検索結果と同じ（HoshiluKeep）。
   const candidate = {
@@ -70,7 +74,7 @@ function itemCard(item) {
   heart.addEventListener('click', (event) => { event.preventDefault(); window.HoshiluKeep?.toggle(candidate); paint(); });
   document.addEventListener('hoshilu:kept-changed', paint);
   paint();
-  wrap.append(heart);
+  actions.append(heart);
   return wrap;
 }
 

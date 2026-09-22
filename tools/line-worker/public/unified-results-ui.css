@@ -137,3 +137,26 @@
    数字なので、確認済みの赤い価格とは別の見た目にして、すぐ下に断りを置く。 */
 .unified-card-price-listed{color:#3f3d56}
 .unified-card-price-note{display:block;color:var(--muted,#6d6b80);font-size:9.5px;line-height:1.3}
+
+/* 2026-09-22 大隆さん指示「『価格』『いつもの』『気になる』『口コミ』に変えて、
+   この4つのボタンは2行にしよう」「できるだけ正方形に近づけてたい」。
+   ・ボタンは2列2行
+   ・「これ、今買う？」（AI最安比較）はこの4つに入らないので、統合カードでは出さない
+   ・口コミの中身は「口コミ」を押したときだけ開く */
+.unified-card-full .product-card-actions{grid-template-columns:1fr 1fr;gap:5px}
+.unified-card-full .product-card-action-buy{display:none}
+.unified-reviews-toggle{
+  min-width:0;
+  min-height:30px;
+  padding:6px 8px;
+  border:1px solid #ded7ff;
+  border-radius:8px;
+  background:#fff;
+  color:#5140ba;
+  font-size:10.5px;
+  font-weight:700;
+  line-height:1.3;
+  cursor:pointer;
+}
+.unified-card-full .experience-block{display:none}
+.unified-card-full.reviews-open .experience-block{display:block}

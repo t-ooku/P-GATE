@@ -299,7 +299,7 @@ test('ホームのBUZZ棚は検索直下の一等地にあり、/buzzへの導�
   assert.match(html, /<a class="buzz-home-more" href="\/buzz">/u);
   assert.doesNotMatch(html, /※順位はモール公式ランキングがもと。/u);
   assert.match(html, /<link rel="stylesheet" href="\/buzz-home\.css\?v=\d+">/u);
-  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=9"><\/script>/u);
+  assert.match(html, /<script type="module" src="\/buzz-home\.mjs\?v=10"><\/script>/u);
   // 配置: MATCHES(結果)の後、SALE RADARの前。
   const buzz = html.indexOf('<p class="step">HOSHILU BUZZ');
   assert.ok(buzz > html.indexOf('<p class="step">MATCHES'));
@@ -606,7 +606,9 @@ test('BUZZ の各カードに「この価格になったら教えて☑」が付
   const home = fs.readFileSync(path.join(worker, 'public', 'buzz-home.mjs'), 'utf8');
   assert.match(home, /buzz-home-watch watch-settings-button/);
   assert.match(home, /window\.HoshiluWatch\?\.open\(/);
-  assert.match(home, /この価格になったら教えて☑/);
+  // 2026-09-22 大隆さん指示「ホシルバズも、『価格』『気になる』に修正して2列1行」。
+  assert.match(home, /'🔔 価格通知'/u);
+  assert.match(home, /buzz-home-actions/u);
   const app = fs.readFileSync(path.join(worker, 'public', 'app.js'), 'utf8');
   assert.match(app, /window\.HoshiluWatch=\{open\(candidate\)/);
   const shelf = fs.readFileSync(path.join(worker, 'src', 'buzz-shelf.mjs'), 'utf8');
@@ -615,5 +617,5 @@ test('BUZZ の各カードに「この価格になったら教えて☑」が付
   assert.match(ranking, /record_key: itemCode \? `RAKUTEN:\$\{itemCode\}` : ''/);
   const buzz = fs.readFileSync(path.join(worker, 'public', 'buzz.mjs'), 'utf8');
   assert.match(buzz, /ranking-watch-link/);
-  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=8/);
+  assert.match(fs.readFileSync(path.join(worker, 'public', 'index.html'), 'utf8'), /buzz-home\.css\?v=9/);
 });

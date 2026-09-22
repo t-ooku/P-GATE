@@ -448,7 +448,7 @@ function renderEntrustedWatches(){
   if(!list)return;
   const rows=entrustedWatchRows();
   if(!memberSession){list.replaceChildren(textElement('p','empty','無料会員でログインすると、値下がり待ちの商品を確認できます。'));return;}
-  if(!rows.length){list.replaceChildren(textElement('p','empty','まだありません。検索結果の「この価格になったら教えて」から、欲しい価格を入れてください。'));return;}
+  if(!rows.length){list.replaceChildren(textElement('p','empty','まだありません。検索結果の「価格通知」から、欲しい価格を入れてください。'));return;}
   const yen=value=>`${Number(value).toLocaleString('ja-JP')}円`;
   list.replaceChildren(...rows.map(item=>{
     const row=document.createElement('div');row.className='entrusted-row';
@@ -718,7 +718,9 @@ function createWatchOptions(candidate,t){
   close.addEventListener('click',()=>dialog.close());
   const bell=document.createElement('button');
   // 2026-09-04 大隆さん決定（主婦層25〜40代へ転換）: ボタンは機能名ではなく、利用者の言葉で。
-  const watchButtonCopy={JA:'この価格になったら教えて☑',EN:'Tell me at this price ✓',ZH:'到这个价格就提醒我☑',KO:'이 가격이 되면 알려줘☑'};
+  // 2026-09-22 大隆さん指示「『価格』『いつもの』『気になる』『口コミ』に変えて」。
+  // カードを正方形に近づけるため、ボタンの文字を短くする。押した先の説明は中の画面にある。
+  const watchButtonCopy={JA:'🔔 価格通知',EN:'🔔 Price alert',ZH:'🔔 价格提醒',KO:'🔔 가격 알림'};
   bell.type='button';bell.className='watch-bell watch-settings-button';bell.setAttribute('aria-label',t.watchTitle);bell.textContent=watchButtonCopy[elements.language.value]||watchButtonCopy.JA;
   bell.addEventListener('click',()=>dialog.showModal());
   // The live scanner supports one product-level condition: a member-supplied

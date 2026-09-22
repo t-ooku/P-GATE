@@ -19,9 +19,9 @@ const COPY = {
   priceUnknown: '価格は商品ページで確認',
   priceListedNote: '参考価格・検索時点',
   open: '商品を見る',
+  reviews: '💬 口コミ',
   keep: '♡ ホシっとく',
   kept: '♥ ホシっとく済み',
-  matched: (n) => `${n}条件一致`,
   badge: { HOSHILU: 'HOSHILU', HOSHILU_SHOP: 'HOSHILU SHOP', WEB: 'Web' }
 };
 const PAGE = 12;
@@ -117,9 +117,8 @@ function card(item) {
   } else if (item.source === 'WEB') {
     body.append(el('span', 'unified-card-price-unknown', COPY.priceUnknown));
   }
-  // 一致条件は短く。全部並べてカードを大きくしない（§16）。
-  const matched = Array.isArray(item.matched) ? item.matched.filter(Boolean) : [];
-  if (matched.length) body.append(el('span', 'unified-card-matched', COPY.matched(matched.length)));
+  // 2026-09-22 大隆さん指示「2条件一致という文字削除して上に詰めて。つまりできるだけ
+  // 正方形に近づけてたい」。一致の度合いは並び順にもう出ているので、文字では書かない。
   link.append(body);
   article.append(link);
 
@@ -132,7 +131,23 @@ function card(item) {
   if (candidate && window.HoshiluCardActions?.attach) {
     // 口コミ（experience-layer.mjs）は .product-card を見て後から足すので、同じ札を付ける。
     article.classList.add('unified-card-full');
-    window.HoshiluCardActions.attach(article, candidate);
+    const slots = window.HoshiluCardActions.attach(article, candidate);
+    // 2026-09-22 大隆さん指示「口コミは、『口コミ』というボタンだけあれば良い」。
+    // 中身（まだ口コミがありません／投稿する）はカードの上で場所を取りすぎるので、
+    // 押したときだけ開く。口コミそのものは消していない。
+    const reviews = el('button', 'unified-reviews-toggle', COPY.reviews);
+    reviews.type = 'button';
+    reviews.setAttribute('aria-expanded', 'false');
+    reviews.addEventListener('click', () => {
+      const open = article.classList.toggle('reviews-open');
+      reviews.setAttribute('aria-expanded', open ? 'true' : 'false');
+      // 2026-09-22 大隆さん指示「口コミはタップしたら、入力欄が開く」。
+      // 入力欄を作るのは experience-layer。ここでは同じ入口（投稿ボタン）を押すだけで、
+      // 口コミの作りを二重に持たない。
+      if (open) article.querySelector('.experience-post')?.click();
+    });
+    // 並びは 価格 / いつもの / 気になる / 口コミ の4つ。2列2行に収まる（§正方形に近づける）。
+    slots?.actions?.append?.(reviews);
   } else {
     const keep = keepButton(item);
     if (keep) article.append(keep);

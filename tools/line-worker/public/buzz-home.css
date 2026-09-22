@@ -173,3 +173,10 @@
   .buzz-home-heading h2 { font-size: clamp(18px, 5.9vw, 26px); letter-spacing: -.04em; }
   .buzz-home-more { justify-self: start; }
 }
+
+/* 2026-09-22 大隆さん指示「ホシルバズも、『価格』『気になる』に修正して2列1行」。
+   縦に2段積むとカードが縦長になるので、横に2つ並べる。片方しか無いときは幅いっぱい。 */
+.buzz-home-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.buzz-home-actions:empty{display:none}
+.buzz-home-actions>:only-child{grid-column:1 / -1}
+.buzz-home-actions>button{min-width:0;padding:7px 4px;text-align:center}

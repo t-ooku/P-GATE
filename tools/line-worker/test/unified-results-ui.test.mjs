@@ -113,8 +113,8 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=3/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=3/u);
+  assert.match(html, /unified-results-ui\.css\?v=4/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=4/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -155,4 +155,30 @@ test('PCではページメニューを上帯へ。名前は現行のまま、下
   for (const label of ['探す', 'ホシる中', 'ショップ', 'ホシルバズ', 'マイアカウント']) {
     assert.ok(nav.includes(`label: '${label}'`), label);
   }
+});
+
+// 2026-09-22 大隆さん指示「2条件一致という文字削除して上に詰めて。できるだけ正方形に」
+// 「『価格』『いつもの』『気になる』『口コミ』…この4つのボタンは2行に」
+// 「口コミはタップしたら、入力欄が開く」
+test('カードは4つのボタンを2列2行に。条件一致の文字は出さない', () => {
+  const source = ui();
+  // 画面に文字として出さない（コメントで理由は残してある）
+  assert.ok(!/`\$\{n\}条件一致`/u.test(source), '一致の度合いは並び順に出ている');
+  assert.ok(!source.includes('unified-card-matched'), '一致の行ごと消す');
+  assert.match(source, /reviews: '💬 口コミ'/u);
+  // 口コミを押したら入力欄まで開く（口コミの作りを二重に持たない）
+  assert.match(source, /article\.querySelector\('\.experience-post'\)\?\.click\(\)/u);
+  const sheet = css();
+  assert.match(sheet, /\.unified-card-full \.product-card-actions\{grid-template-columns:1fr 1fr/u);
+  // 「これ、今買う？」は4つに入らないので出さない
+  assert.match(sheet, /\.unified-card-full \.product-card-action-buy\{display:none\}/u);
+  // 口コミの中身は押したときだけ
+  assert.match(sheet, /\.unified-card-full \.experience-block\{display:none\}/u);
+  assert.match(sheet, /\.unified-card-full\.reviews-open \.experience-block\{display:block\}/u);
+  // ボタンの文字（🔔 価格通知 / ↻ いつもの / ♡ 気になる）は各モジュールが持つ
+  const app = read('app.js');
+  assert.match(app, /JA:'🔔 価格通知'/u);
+  assert.match(app, /JA:\{keep:'♡ 気になる',kept:'♥ 気になる'/u);
+  const usual = read('usual-hoshiru.mjs');
+  assert.match(usual, /makeUsual: '↻ いつもの'/u);
 });
