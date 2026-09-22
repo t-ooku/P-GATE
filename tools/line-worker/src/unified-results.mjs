@@ -34,8 +34,14 @@ const SOURCE_RANK = Object.freeze({ HOSHILU_SHOP: 0, HOSHILU: 1, WEB: 2 });
 const text = (value, max = 200) =>
   String(value ?? '').normalize('NFKC').replace(/\p{Cc}/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 
+// 2026-09-22 大隆さん報告「リンク先に飛ばない」（TRACK_TOKEN_FORMAT_INVALID）。
+// 送客リンクは /go?token=... で、token には行き先URLを含む署名付きの中身が入る。
+// Qoo10 のように長いURLだと token だけで600字を超え、ここで途中から切れていた。
+// 切れた token は署名の前で千切れるので、/go が形式不正として弾く。
+// URL は長くなるものとして扱う（ブラウザの実質上限まで許す）。
+const URL_MAX = 2000;
 const httpsOnly = (value) => {
-  const url = text(value, 600);
+  const url = text(value, URL_MAX);
   return url.slice(0, 8) === 'https://' ? url : '';
 };
 
@@ -107,7 +113,8 @@ function fromCandidate(candidate, index) {
     marketplace: text(offer?.marketplace, 32),
     asin: text(candidate?.asin, 20),
     // HOSHILU 商品だけ価格を出す。確認できた金額が無ければ出さない（0 と書かない）。
-    price_jpy: Number.isFinite(price) && price > 0 ? Math.round(price) : null
+    price_jpy: Number.isFinite(price) && price > 0 ? Math.round(price) : null,
+    listed_price_jpy: null
   };
 }
 
@@ -125,7 +132,11 @@ function fromGoogleItem(item, index, offset) {
     marketplace: text(item?.marketplace, 32),
     asin: '',
     // Web の価格は「ページに書いてあった数字」でしかない。確認した価格と混ぜない。
-    price_jpy: null
+    price_jpy: null,
+    // 2026-09-22 大隆さん報告「価格もでてない」。数字を隠すと何も分からない。
+    // 混ぜないという約束は守ったまま、別の欄に入れて画面で
+    //「参考価格・検索時点」と断って出す。HOSHILU が確認した価格ではない。
+    listed_price_jpy: Number(item?.listed_price_jpy) > 0 ? Math.round(Number(item.listed_price_jpy)) : null
   };
 }
 
@@ -191,6 +202,7 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
     shop_name: row.shop_name,
     marketplace: row.marketplace,
     price_jpy: row.price_jpy,
+    listed_price_jpy: row.listed_price_jpy ?? null,
     candidate_index: row.source === 'WEB' ? null : (Number.isInteger(row.candidate_index) ? row.candidate_index : null),
     matched: row.matched,
     unmatched: row.unmatched

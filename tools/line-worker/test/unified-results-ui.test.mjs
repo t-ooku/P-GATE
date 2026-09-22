@@ -23,8 +23,9 @@ test('MATCHESの見出しはページのものを使い、合体した列をそ�
   const source = ui();
   assert.ok(!source.includes("'見つかった商品'"), '自前の見出しは持たない');
   assert.ok(!/el\('h2'/u.test(source), '見出しを二重に作らない');
-  assert.match(source, /#resultsSection > \.section-title/u);
-  assert.match(source, /insertAdjacentElement\('afterend', host\)/u);
+  // 棚が並ぶ場所そのもの（#resultCards の先頭）に入れる。#resultsSection 直下だと
+  // CSS の並び順で見出しより上に出てしまっていた。
+  assert.match(source, /cards\.prepend\(host\)/u);
   // 元の2つの棚（価格確認済み・AI選定レコメンド）と web検索の枠は畳む
   assert.match(source, /result-row-confirmed/u);
   assert.match(source, /result-row-unconfirmed/u);
@@ -57,12 +58,21 @@ test('12件ずつ。最初から60枚の画像を読ませない', () => {
   assert.match(source, /img\.addEventListener\('error'/u);
 });
 
-test('HOSHILU商品だけ価格。Web商品は価格を書かない', () => {
+// 2026-09-22 大隆さん報告「価格もでてない」。隠すのでもなく、確認済みの価格と
+// 同じ顔で並べるのでもなく、別の見た目にして「参考価格・検索時点」と断る。
+test('確認済みの価格とweb検索の参考価格は、見た目と断り書きで分ける', () => {
   const source = ui();
   assert.match(source, /if \(Number\(item\.price_jpy\) > 0\)/u);
+  assert.match(source, /Number\(item\.listed_price_jpy\) > 0/u);
+  assert.match(source, /unified-card-price-listed/u);
+  assert.match(source, /priceListedNote: '参考価格・検索時点'/u);
   assert.match(source, /priceUnknown: '価格は商品ページで確認'/u);
-  // Web の価格（listed_price_jpy）をここで拾わない
-  assert.ok(!source.includes('listed_price_jpy'), 'ページに書いてあっただけの数字を出さない');
+  assert.match(css(), /\.unified-card-price-note\{/u);
+});
+
+// 2026-09-22 大隆さん報告「画質も荒い」。
+test('カードの画像は大きいサイズを要求する', () => {
+  assert.match(ui(), /window\.HoshiluImage\?\.upgrade\?\.\(item\.image_url, 600\)/u);
 });
 
 test('件数の書き方で「全部で60件しかない」と誤解させない（§9）', () => {
@@ -103,8 +113,8 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=2/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=2/u);
+  assert.match(html, /unified-results-ui\.css\?v=3/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=3/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);

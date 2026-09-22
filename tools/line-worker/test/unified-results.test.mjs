@@ -195,3 +195,28 @@ test('Amazon だけは候補があっても web 検索から外さない', () =>
   const index = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(index, /excludeMarketplaces: \[\.\.\.presentMarketplaces\]\.filter\(\(marketplace\) => marketplace !== 'AMAZON_JP'\)/u);
 });
+
+// 2026-09-22 大隆さん報告「リンク先に飛ばない」（TRACK_TOKEN_FORMAT_INVALID）。
+// 送客リンクは /go?token=... で、token には行き先URLごと署名した中身が入る。
+// 長い商品URLだと token だけで600字を超え、署名の前で千切れていた。
+test('長い送客リンクを途中で切らない', () => {
+  const long = `https://hoshilu.app/go?token=${'a'.repeat(900)}.${'b'.repeat(43)}`;
+  const result = unifyResults({
+    candidates: [],
+    googleItems: [web(1, { tracking_url: long })],
+    query: QUERY
+  });
+  assert.equal(result.items.length, 1);
+  assert.equal(result.items[0].url, long, 'トークンが欠けていない');
+});
+
+// 2026-09-22 大隆さん報告「価格もでてない」。
+test('web検索の価格は別の欄で返す（確認済みの価格とは混ぜない）', () => {
+  const result = unifyResults({
+    candidates: [],
+    googleItems: [web(1, { listed_price_jpy: 1980 })],
+    query: QUERY
+  });
+  assert.equal(result.items[0].price_jpy, null, 'API確認価格としては出さない');
+  assert.equal(result.items[0].listed_price_jpy, 1980);
+});

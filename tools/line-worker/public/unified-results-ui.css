@@ -132,3 +132,8 @@
 }
 .unified-card-full .experience-block{margin:0 10px 10px}
 .unified-card-name{margin:0;font-weight:700}
+
+/* 2026-09-22 大隆さん報告「価格もでてない」。web検索の価格はページに書いてあった
+   数字なので、確認済みの赤い価格とは別の見た目にして、すぐ下に断りを置く。 */
+.unified-card-price-listed{color:#3f3d56}
+.unified-card-price-note{display:block;color:var(--muted,#6d6b80);font-size:9.5px;line-height:1.3}

@@ -17,6 +17,7 @@ const COPY = {
   more: 'さらに見る',
   narrow: '条件を絞ると、さらに近い商品を探せます。',
   priceUnknown: '価格は商品ページで確認',
+  priceListedNote: '参考価格・検索時点',
   open: '商品を見る',
   keep: '♡ ホシっとく',
   kept: '♥ ホシっとく済み',
@@ -77,7 +78,11 @@ function card(item) {
   const figure = el('div', 'unified-card-image');
   if (item.image_url) {
     const img = document.createElement('img');
-    img.src = item.image_url;
+    // 2026-09-22 大隆さん報告「画質も荒い」。スマホは画素密度が2〜3倍あるので、
+    // カード幅ぶんの画像では拡大されてぼやける。同じ画像サーバーが大きいサイズを
+    // 返せるモールは、URL のサイズ指定だけを書き換えて 600px を要求する
+    // （画像の差し替えや再取得はしない）。
+    img.src = window.HoshiluImage?.upgrade?.(item.image_url, 600) || item.image_url;
     img.alt = '';
     // 60件ぶんの画像を一度に取りに行かせない（§13）。
     img.loading = 'lazy';
@@ -99,9 +104,16 @@ function card(item) {
     COPY.badge[item.source] || COPY.badge.WEB));
   if (item.shop_name) meta.append(el('span', 'unified-card-shop', item.shop_name));
   body.append(meta);
-  // 価格は HOSHILU 商品だけ。Web は「商品ページで確認」とだけ書く（§7）。
+  // HOSHILU が API で確認できた価格は、そのまま出す。
   if (Number(item.price_jpy) > 0) {
     body.append(el('strong', 'unified-card-price', `¥${Number(item.price_jpy).toLocaleString('ja-JP')}`));
+  } else if (Number(item.listed_price_jpy) > 0) {
+    // 2026-09-22 大隆さん報告「価格もでてない」。Web の数字はページに書いてあっただけの
+    // ものなので、確認済みの価格とは別の見た目にして「参考価格・検索時点」と断る。
+    // 隠すのでもなく、同じ顔で並べるのでもない。
+    body.append(el('strong', 'unified-card-price unified-card-price-listed',
+      `¥${Number(item.listed_price_jpy).toLocaleString('ja-JP')}`));
+    body.append(el('small', 'unified-card-price-note', COPY.priceListedNote));
   } else if (item.source === 'WEB') {
     body.append(el('span', 'unified-card-price-unknown', COPY.priceUnknown));
   }
@@ -131,18 +143,22 @@ function card(item) {
 // 2026-09-22 大隆さん指示「MATCHESのタイトル残した状態で、ホシルの提案とweb検索を
 // 合体して、1列にして」「つまりホシル提示とweb検索提示を合体した列がMATCHESとする」。
 // だからこのモジュールは見出しを持たない。ページにもとからある
-// 「MATCHES / ホシルからの提案」の真下に、その中身として入る。
+// 「MATCHES / ホシルからの提案」の中身として入る。
+//
+// 置き場所は #resultCards の先頭。#resultsSection の中に入れても、この節は
+// CSS で並び順を持っているため、見出しより上に出てしまっていた（大隆さん報告
+// 「下記文字の位置が修正できてない」）。棚が並ぶ場所そのものに入れれば、
+// 畳んだ古い棚とまったく同じ位置に出る。
+// app.js は結果を並べ終えてからイベントを出すので、ここで入れても消されない。
 let host = null;
 function section() {
   if (host && host.isConnected) return host;
-  const anchor = document.querySelector('#resultsSection > .section-title');
   const cards = document.querySelector('#resultCards');
-  if (!anchor && !cards) return null;
+  if (!cards) return null;
   host = document.createElement('section');
   host.id = 'unifiedResults';
   host.hidden = true;
-  if (anchor) anchor.insertAdjacentElement('afterend', host);
-  else cards.insertAdjacentElement('beforebegin', host);
+  cards.prepend(host);
   return host;
 }
 

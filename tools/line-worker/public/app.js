@@ -1136,6 +1136,9 @@ function upgradeProductImageUrl(url,size){
   if(!value)return value;
   if(/\.rakuten\.co\.jp\//i.test(value)&&/[?&]_ex=\d+x\d+/i.test(value))return value.replace(/([?&])_ex=\d+x\d+/i,`$1_ex=${size}x${size}`);
   if(/item-shopping\.c\.yimg\.jp\/i\/[a-z]\//i.test(value))return value.replace(/(item-shopping\.c\.yimg\.jp\/i\/)[a-z]\//i,size>=600?'$1l/':'$1g/');
+  // 2026-09-22 大隆さん報告「画質も荒い」: web検索から来る Amazon の画像は
+  // ファイル名にサイズ指定（._AC_UL320_. など）が書かれている。そこだけ書き換える。
+  if(/\/images\/I\//i.test(value))return value.replace(/\._[A-Za-z0-9_,]+_\.(jpg|jpeg|png|gif)$/i,`._SL${size}_.$1`);
   return value;
 }
 window.HoshiluImage={upgrade:upgradeProductImageUrl};
