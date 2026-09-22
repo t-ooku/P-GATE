@@ -41,7 +41,7 @@
   <link rel="stylesheet" href="/shop-search.css?v=3">
   <link rel="stylesheet" href="/continuous-search.css?v=4">
   <link rel="stylesheet" href="/hero-fixes.css?v=91">
-  <link rel="stylesheet" href="/hero-watch.css?v=4">
+  <link rel="stylesheet" href="/hero-watch.css?v=5">
   <link rel="stylesheet" href="/search-progress.css?v=1">
   <link rel="stylesheet" href="/google-mall-results.css?v=6"><link rel="stylesheet" href="/product-url-paste.css?v=1">
   <link rel="stylesheet" href="/hero-slides.css?v=82">
@@ -196,13 +196,6 @@
             <p id="status" class="status" role="status" aria-live="polite"></p>
           </section>
 
-          <aside class="hero-watch-example" aria-label="届く通知の例">
-            <p class="hero-watch-example-kicker">届く通知の例</p>
-            <p class="hero-watch-example-title">購入したい価格になりました</p>
-            <p class="hero-watch-example-body">子ども用ステンレス水筒 500ml：確認価格 ¥1,980（希望価格 ¥2,000以下）</p>
-            <p class="hero-watch-example-note">Amazon・楽天・Yahoo!のAPIで確認した価格だけを見に行きます。毎日見なくてOK。</p>
-          </aside>
-
           <dialog id="rankingDialog" class="ranking-dialog" aria-labelledby="rankingDialogTitle">
             <div class="ranking-dialog-card"><div class="ranking-dialog-fixed"><div class="ranking-dialog-fixed-top"><button id="rankingDialogClose" class="ranking-dialog-close" type="button" aria-label="ページを閉じる">✕</button></div><div id="rankingModeList" class="ranking-mode-list"></div></div><div class="ranking-dialog-scroll"><p class="step">RANKING DISCOVERY</p><h2 id="rankingDialogTitle">小ジャンルのランキングで選ぶ</h2><p id="rankingDialogLead">検索文から小ジャンルを1つずつ確認します。YESの後に人気・最安値ランキングを選べます。</p><p id="rankingStatus" class="status" role="status" aria-live="polite"></p><div id="rankingResults" class="ranking-results"></div></div></div>
           </dialog>
@@ -221,6 +214,15 @@
             <div id="resultCards" class="result-grid" aria-busy="false"></div>
             <!-- 2026-09-17 大隆さん指示: 結果直下の「希望価格になったら教えて」「クーポン・セールを見逃さない」の2リンクは削除（「ホシる中」タブがあるため）。 -->
           </section>
+
+          <!-- 2026-09-22 大隆さん指示「届く通知の例は、普段閉じておいて、タップしたら開く。
+               商品提示欄の下に移動して」。中身は変えず、details で畳んで結果の下へ移した。 -->
+          <details class="hero-watch-example" aria-label="届く通知の例">
+            <summary class="hero-watch-example-kicker">届く通知の例</summary>
+            <p class="hero-watch-example-title">購入したい価格になりました</p>
+            <p class="hero-watch-example-body">子ども用ステンレス水筒 500ml：確認価格 ¥1,980（希望価格 ¥2,000以下）</p>
+            <p class="hero-watch-example-note">Amazon・楽天・Yahoo!のAPIで確認した価格だけを見に行きます。毎日見なくてOK。</p>
+          </details>
 
           <details id="heroMarketplaceCoverage" class="marketplace-coverage hero-marketplace-coverage">
             <summary class="step hero-marketplace-coverage-summary">MARKETPLACE COVERAGE</summary>

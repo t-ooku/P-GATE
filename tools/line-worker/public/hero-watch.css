@@ -45,3 +45,18 @@
 .query-field .speech-input{right:12px}
 .query-field .clear-query{right:66px}
 #heroTitle{margin-top:12px}
+
+/* 2026-09-22 大隆さん指示「届く通知の例は、普段閉じておいて、タップしたら開く」。
+   見出しをそのまま開閉の取っ手にする。畳んでいる間は中身を出さない。 */
+details.hero-watch-example>summary{list-style:none;cursor:pointer}
+details.hero-watch-example>summary::-webkit-details-marker{display:none}
+details.hero-watch-example>summary::after{content:' ▾';font-weight:700}
+details.hero-watch-example[open]>summary::after{content:' ▴'}
+details.hero-watch-example>summary{margin:0}
+details.hero-watch-example[open]>summary{margin:0 0 4px}
+
+/* 2026-09-22 大隆さん指示「ショッピングサイトで探す欄と
+   『この条件、ホシっといて探し続けてもらう？』欄の間を数ミリ空けて」。 */
+.marketplace-quick-strip + .continuous-search-card,
+.marketplace-fallback + .continuous-search-card,
+.continuous-search-card{margin-top:12px}

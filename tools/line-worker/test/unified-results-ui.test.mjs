@@ -200,3 +200,22 @@ test('統合した列に web の商品が1件も無いときは、元のweb検�
   assert.match(source, /google\.classList\.toggle\('hidden', folded && hasWeb\)/u);
   assert.match(source, /foldLegacySections\(true, items\.some\(\(item\) => item\.source === 'WEB'\)\)/u);
 });
+
+// 2026-09-22 大隆さん指示「届く通知の例は、普段閉じておいて、タップしたら開く。
+// 商品提示欄の下に移動して」「ショッピングサイトで探す欄と『この条件、ホシっといて
+// 探し続けてもらう？』欄の間を数ミリ空けて」。
+test('届く通知の例は畳んだ状態で、商品提示の下に置く', () => {
+  const html = read('index.html');
+  // 畳んで開ける形（details）。open は付けない＝最初は閉じている
+  assert.match(html, /<details class="hero-watch-example"/u);
+  assert.ok(!/<details class="hero-watch-example"[^>]*\sopen/u.test(html), '最初は閉じている');
+  assert.match(html, /<summary class="hero-watch-example-kicker">届く通知の例<\/summary>/u);
+  // 置き場所は結果（#resultsSection）の下
+  assert.ok(html.indexOf('<details class="hero-watch-example"') > html.indexOf('<div id="resultCards"'),
+    '商品提示欄の下にある');
+  const sheet = readFileSync(new URL('../public/hero-watch.css', import.meta.url), 'utf8');
+  assert.match(sheet, /details\.hero-watch-example>summary\{list-style:none;cursor:pointer\}/u);
+  // 「ショッピングサイトで探す」と「ホシっといて探し続けてもらう？」の間に余白
+  assert.match(sheet, /\.continuous-search-card\{margin-top:12px\}/u);
+  assert.match(html, /hero-watch\.css\?v=5/u);
+});
