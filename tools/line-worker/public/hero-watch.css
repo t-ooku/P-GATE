@@ -25,11 +25,11 @@
 .search-clues-details[open]>summary::before{content:'－ '}
 .search-clues-details[open]>summary{margin-bottom:8px}
 /* 探し方の説明4節は折りたたみ */
-.lp-more-details{margin:18px 0}
-.lp-more-details>summary{cursor:pointer;list-style:none;padding:14px 16px;border:1px solid var(--line,#e9e5f5);border-radius:14px;background:#fff;font-size:15px;font-weight:700;color:var(--ink,#17172b)}
-.lp-more-details>summary::-webkit-details-marker{display:none}
-.lp-more-details>summary::after{content:' ▾';color:var(--violet,#7357ff)}
-.lp-more-details[open]>summary::after{content:' ▴'}
+/* 2026-09-22 大隆さん報告「これだけデザインが合ってない」。
+   自前の白い箱と ▾ をやめ、他の畳める欄と同じ枠・同じ開閉表示にそろえた
+   （枠は .marketplace-coverage / .hero-marketplace-coverage が持つ）。
+   長い日本語の見出しなので、字間だけ詰めて読みやすくする。 */
+.lp-more-details>summary{white-space:normal;letter-spacing:.02em;line-height:1.6}
 /* 結果カードのウォッチボタンを光らせる（第一画面から来た時だけ） */
 .watch-intent-banner{margin:8px 0 12px;padding:10px 12px;border-radius:12px;background:#fff4fa;border:1px solid #ffc6de;color:#b3005f;font-size:14px;font-weight:600;line-height:1.5}
 @keyframes hoshiluWatchPulse{0%{box-shadow:0 0 0 0 rgba(255,79,154,.55)}70%{box-shadow:0 0 0 10px rgba(255,79,154,0)}100%{box-shadow:0 0 0 0 rgba(255,79,154,0)}}

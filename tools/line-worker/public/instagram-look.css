@@ -307,3 +307,17 @@ body{background:radial-gradient(circle at 72% 0,#eee8ff 0,transparent 32%),#f8f7
   border:1px solid #dcd4fa !important;
 }
 .step,.eyebrow{color:#7357ff !important}
+
+/* 2026-09-22 大隆さん指示「トップの文字も前回の色合いに戻して。
+   『欲しい値段を、先に決めておく。』文章は変更しなくてよい。スクショの色合いね」。
+   見出しのグラデーション文字は全体ではやめたままにして、**トップの後半だけ**戻す。
+   （前半は濃い墨、後半がピンク→紫→水色。文言はそのまま） */
+#heroTitle .hero-title-accent{
+  background:linear-gradient(100deg,#ff4f9a,#7357ff,#23b8ff) !important;
+  -webkit-background-clip:text !important;
+  background-clip:text !important;
+  color:transparent !important;
+  -webkit-text-fill-color:transparent;
+}
+#heroTitle .hero-title-line:not(.hero-title-accent){color:#17172b !important}
+.hero>p:not(.eyebrow),#heroSub,.hero-sub{color:#6d6b80 !important}
