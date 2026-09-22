@@ -321,3 +321,17 @@ body{background:radial-gradient(circle at 72% 0,#eee8ff 0,transparent 32%),#f8f7
 }
 #heroTitle .hero-title-line:not(.hero-title-accent){color:#17172b !important}
 .hero>p:not(.eyebrow),#heroSub,.hero-sub{color:#6d6b80 !important}
+
+/* 2026-09-22 大隆さん指示「スクショのように、以前の字体に戻して」。
+   Instagram 風にするとき、文字の太さを一律に下げていた
+   （本文 400 / 見出し・強調・ボタン 600）。スクショの字面はもっと太い。
+   もとの太さの段階に戻す。書体（font-family）は元から変えていない。 */
+h1,h2,h3,h4{font-weight:800 !important}
+h1,h2{letter-spacing:-.045em !important}
+strong,b{font-weight:800 !important}
+button,.primary,.secondary,.ghost-button,.auth-button,
+.ranking-search-button,.buy-link,.wish-button{font-weight:850 !important}
+.step,.eyebrow{font-weight:900 !important;letter-spacing:.16em !important}
+.brand{font-weight:950 !important}
+.chip,.quick-queries button,.example-chip,.suggest-chip,
+.wish-list button,.genre-chip{font-weight:750 !important}
