@@ -122,6 +122,11 @@ function fromCandidate(candidate, index) {
 function fromGoogleItem(item, index, offset) {
   return {
     source: 'WEB',
+    // 2026-09-22 大隆さん報告「web検索、提示してるの商品じゃないやん」。
+    // Google 側は「Amazon.co.jp: ベースメイク: 韓国コスメストア」のような
+    // カテゴリ・ストアの一覧ページも返す。元の web検索の枠は一覧ページも
+    // 「一覧ページ」と断って残していたが、ここは商品を並べる列なので入れない。
+    product_page: item?.product_page === true,
     order: offset + index,
     candidate_index: null,
     product_name: text(item?.title, 200),
@@ -190,7 +195,8 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
   const hoshilu = (Array.isArray(candidates) ? candidates : []).map(fromCandidate).filter((row) => row.url && row.product_name);
   const web = (Array.isArray(googleItems) ? googleItems : [])
     .map((item, index) => fromGoogleItem(item, index, hoshilu.length))
-    .filter((row) => row.url && row.product_name);
+    // 商品ページだと分かっているものだけ。一覧ページ・カテゴリページは商品ではない。
+    .filter((row) => row.url && row.product_name && row.product_page);
   const conditions = demandConditions(query);
   const ranked = rankUnified(dedupe([...hoshilu, ...web]), conditions);
   const items = ranked.slice(0, Math.max(0, limit)).map((row, index) => ({

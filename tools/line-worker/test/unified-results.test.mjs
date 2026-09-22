@@ -25,6 +25,8 @@ const web = (n, over = {}) => ({
   product_url: `https://zozo.jp/shop/item/${n}/`,
   tracking_url: `https://hoshilu.app/go?token=w${n}`,
   mall_label: 'ZOZOTOWN', marketplace: 'ZOZO_JP', listed_price_jpy: 9800,
+  // Google 側は一覧・カテゴリページも返す。商品ページだけが商品として並ぶ。
+  product_page: true,
   ...over
 });
 const many = (make, count) => Array.from({ length: count }, (_, i) => make(i + 1));
@@ -219,4 +221,20 @@ test('web検索の価格は別の欄で返す（確認済みの価格とは混�
   });
   assert.equal(result.items[0].price_jpy, null, 'API確認価格としては出さない');
   assert.equal(result.items[0].listed_price_jpy, 1980);
+});
+
+// 2026-09-22 大隆さん報告「web検索、提示してるの商品じゃないやん」。
+// Google 側は「Amazon.co.jp: ベースメイク: 韓国コスメストア」のような
+// カテゴリ・ストアの一覧ページも返す。ここは商品を並べる列なので入れない。
+test('web検索の一覧ページ・カテゴリページは商品として並べない', () => {
+  const result = unifyResults({
+    candidates: [],
+    googleItems: [
+      web(1, { title: 'Amazon.co.jp: ベースメイク: 韓国コスメストア', product_page: false }),
+      web(2, { product_page: true })
+    ],
+    query: QUERY
+  });
+  assert.equal(result.items.length, 1, '一覧ページは落ちる');
+  assert.ok(!result.items[0].product_name.includes('韓国コスメストア'));
 });
