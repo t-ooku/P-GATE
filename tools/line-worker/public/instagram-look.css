@@ -335,3 +335,11 @@ button,.primary,.secondary,.ghost-button,.auth-button,
 .brand{font-weight:950 !important}
 .chip,.quick-queries button,.example-chip,.suggest-chip,
 .wish-list button,.genre-chip{font-weight:750 !important}
+
+/* 2026-09-22 大隆さん指摘「トップメッセージは、もう少し右にずらせない？左に寄りすぎてない？」。
+   この帯だけ左右の余白が 4px しかなく、下の検索パネルの文字よりも外へ出ていた。
+   パネルの中の文字と左端がそろう余白を持たせる。 */
+.hoshilu-primary>.hero{padding-left:20px;padding-right:20px}
+@media(min-width:761px){
+  .hoshilu-primary>.hero{padding-left:clamp(20px,5vw,42px);padding-right:clamp(20px,5vw,42px)}
+}
