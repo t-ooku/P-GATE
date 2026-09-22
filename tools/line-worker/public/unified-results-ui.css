@@ -221,3 +221,19 @@
 .unified-badge-listing{background:#fff4e5;color:#96591a}
 .unified-card-listing{border-style:dashed}
 .unified-card-listing .unified-card-image{opacity:.9}
+
+/* 2026-09-22 大隆さん報告「お気にいりボタンおしたら変になったよ」。
+   ♡ を押すと下に「無料登録で他の端末にも残す →」が出る。2列の升目の中に
+   収まらず、隣のボタンへかぶっていた。升目いっぱいに置き、行を跨がせる。 */
+.unified-card-full .product-card-action-keep{flex-direction:column;align-items:stretch}
+.unified-card-full .keep-product{display:flex;flex-direction:column;gap:4px;width:100%}
+.unified-card-full .keep-product-note{
+  order:2;
+  display:block;
+  width:100%;
+  font-size:9.5px;
+  line-height:1.4;
+  white-space:normal;
+  text-align:center;
+}
+.unified-card-full .keep-product-note.hidden{display:none}

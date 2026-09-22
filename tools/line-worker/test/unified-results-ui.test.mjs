@@ -115,8 +115,8 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=8/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=9/u);
+  assert.match(html, /unified-results-ui\.css\?v=9/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=10/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -243,4 +243,21 @@ test('0件のときも元の2つの棚を開かず、この列の中で断る', 
   assert.match(source, /none: '検索語の条件に合う商品は見つかりませんでした。/u);
   // 0件でも節そのものは出す（元の棚へ戻さない）
   assert.ok(!/if \(!items\.length\) \{ host\.hidden = true;/u.test(source), '節ごと消さない');
+});
+
+// 2026-09-22 大隆さん報告「お気に入り保存して、ホシル中ページのお気に入り欄を見たら
+// 違う商品が保存されてた」。
+// Web の行は candidate_index が null。Number(null) は 0 になり、0 は整数なので
+// 通ってしまい、どの Web 商品も1件目の HOSHILU 候補として扱われていた。
+test('Web の行を1件目の候補に取り違えない（お気に入りの保存先が変わらない）', () => {
+  const source = ui();
+  assert.match(source, /item\?\.candidate_index === null \|\| item\?\.candidate_index === undefined/u);
+  // Number() に渡す前に弾く
+  const body = source.slice(source.indexOf('function candidateFor'), source.indexOf('}', source.indexOf('const candidate = state.candidates')));
+  assert.ok(body.indexOf('=== null') < body.indexOf('Number(item.candidate_index)'), '先に弾く');
+});
+
+// 2026-09-22 大隆さん報告「お気にいりボタンおしたら変になったよ」。
+test('♡ を押したあとの案内が、隣のボタンへかぶらない', () => {
+  assert.match(css(), /\.unified-card-full \.keep-product-note\{[^}]*white-space:normal/u);
 });

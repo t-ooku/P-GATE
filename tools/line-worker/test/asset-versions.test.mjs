@@ -12,7 +12,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf
 
 // index.html が参照している版。UI を変えたらここを上げる。
 const EXPECTED = Object.freeze({
-  'assets-v147/app.js': '194',
+  'assets-v147/app.js': '195',
   'assets-v126/ai-search-layout-fix.css': '135',
   'mywatch.css': '12',
   'tab-nav.css': '4',
@@ -31,8 +31,8 @@ const EXPECTED = Object.freeze({
   'usual-hoshiru.css': '4',
   'usual-hoshiru.mjs': '5',
   'result-compact.css': '3',
-  'unified-results-ui.css': '8',
-  'unified-results-ui.mjs': '9',
+  'unified-results-ui.css': '9',
+  'unified-results-ui.mjs': '10',
   'instagram-look.css': '9'
 });
 

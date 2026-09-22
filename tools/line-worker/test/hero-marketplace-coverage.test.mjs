@@ -153,7 +153,7 @@ test('♡ 気になる は登録前に端末へ保存し、押した後だけ登
   // 2026-09-15 指示書§6/§7: 「無料でホシっとく」は結果内でメール6桁 or LINE の最短登録。条件は登録直後に INSIGHT として保存。
   assert.match(app, /localStorage\.setItem\('hoshilu_pending_insight'/);
   assert.match(app, /createWatchQuickJoin\(0,\(\)=>\{const active=Boolean\(memberSession\)&&insightEnabledFor\(value\);button\.textContent=active\?labels\.active:wishSaveFailedCopy\(\);button\.disabled=active;\},\{lead:labels\.lead,source:'hoshittoku'\}\)/);
-  assert.match(app, /titleNotFound:'今は見つかりませんでした。ホシっといて、HOSHILUに探し続けてもらいますか？'/);
+  assert.match(app, /titleNotFound:'ホシっといて、HOSHILUに探し続けてもらいますか？'/);
   assert.match(app, /localAction:'無料でホシっとく'/);
   assert.match(app, /continuousSearchCard\(elements\.query\.value,\{found:false\}\)/);
   const css = await read('ai-search-layout-fix.css');

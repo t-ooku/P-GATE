@@ -41,7 +41,13 @@ let state = { items: [], shown: 0, candidates: [] };
 // 統合した行から、元の候補（/api/search の candidates）へ戻る。
 // 突き合わせはサーバーが付けた candidate_index だけで行う。名前で推測しない。
 function candidateFor(item) {
-  const at = Number(item?.candidate_index);
+  // 2026-09-22 大隆さん報告「お気に入り保存して、ホシル中ページのお気に入り欄を見たら
+  // 違う商品が保存されてた」。原因はここ。Web の行は candidate_index が null で、
+  // Number(null) は 0 になる。0 は整数なので通ってしまい、**どの Web 商品も
+  // 1件目の HOSHILU 候補**として扱われていた。ボタンも♡の保存先もその候補のもの。
+  // null / undefined は、そもそも番号ではない。先に弾く。
+  if (item?.candidate_index === null || item?.candidate_index === undefined) return null;
+  const at = Number(item.candidate_index);
   if (!Number.isInteger(at) || at < 0) return null;
   const candidate = state.candidates[at];
   return candidate && typeof candidate === 'object' ? candidate : null;
