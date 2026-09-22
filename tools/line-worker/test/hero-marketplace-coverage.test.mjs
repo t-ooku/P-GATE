@@ -112,7 +112,8 @@ test('第一画面は「欲しい値段を、先に決めておく。」と補�
   }
   // 2026-09-17 大隆さん決定: 主 CTA の文言は「AIで探す」（「ホシっとく」から変更）。直下に「見つからなければ、そのまま探し続けます。」
   assert.match(html, /<button id="askAiButton" class="primary ask-ai-button" type="button">AIで探す<\/button>/);
-  assert.match(html, /<p id="hoshittokuHint" class="hoshittoku-hint">見つからなければ、そのまま探し続けます。<\/p>/);
+  // 2026-09-22 大隆さん指示で、検索ボタン下の2行（探し続けます／この価格になったら教えて）は削除した。
+  assert.ok(!html.includes('id="hoshittokuHint"'), '検索ボタン下の補足は出さない');
   assert.match(app, /identifySubmit:'AIで探す'/);
   // app.js 側は \n（言語切替時に textContent へ入れ、.hero-sub の pre-line で改行）
   assert.ok(app.includes(String.raw`hero:'欲しい値段を、|先に決めておく。'`));

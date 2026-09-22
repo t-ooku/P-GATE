@@ -79,7 +79,7 @@ test('トップ画面でまとめて検索2モール・個別に探す最大13�
     // 2026-09-05 大隆さん指示: ホシル公式アカウント(OFFICIAL)は「お知らせ」(NEWS)の上に置く。
     ['OFFICIAL', '<p class="step">HOSHILU OFFICIAL'],
     ['NEWS', '<p class="step">HOSHILU NEWS'],
-    ['SEARCH AGENT', '<p class="step">HOSHILU SEARCH AGENT'],
+    ['SEARCH AGENT', 'HOSHILU SEARCH AGENT'],
     // 2026-09-03 大隆さん指示: MARKETPLACE COVERAGE が第一画面(ヒーロー内の
     // 折りたたみ)とここの2か所にあり重複していたので、下側の節を削除した。
     // 残るのは #heroMarketplaceCoverage の1つだけ。

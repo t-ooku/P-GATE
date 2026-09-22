@@ -1288,3 +1288,17 @@ html:lang(ja) .hero-sub-sentence{white-space:nowrap}
 /* 2026-09-17 大隆さん指示: 検索欄の長方形枠は縦を縮めて、上に寄せる（見出し削除に合わせて枠の上余白も詰める）。 */
 .search-panel{padding-top:14px}
 #query{min-height:92px;padding:12px 52px 12px 15px}
+
+/* 2026-09-22 大隆さん指示「HOSHILU GENRES を含めた以下の各欄も、普段は閉じておいて、
+   タップしたらひらけるように。デザインはモール一覧と同じに統一」
+   「欄と欄の間とスペース幅など綺麗に統一してね」。
+   畳める欄はすべて同じ枠（.marketplace-coverage）を着せてある。ここでは
+   欄と欄の間隔と、中の余白だけをそろえる。 */
+.hoshilu-primary>.marketplace-coverage{margin:18px 0}
+.hoshilu-primary>.marketplace-coverage>summary{margin:0}
+.hoshilu-primary>.marketplace-coverage[open]>summary{margin:0 0 12px}
+.hoshilu-primary>.marketplace-coverage>h2,
+.hoshilu-primary>.marketplace-coverage>.section-title,
+.hoshilu-primary>.marketplace-coverage>.journey-heading,
+.hoshilu-primary>.marketplace-coverage>.shopping-guides-heading{margin:0 0 12px}
+.hoshilu-primary>.marketplace-coverage>*:last-child{margin-bottom:0}

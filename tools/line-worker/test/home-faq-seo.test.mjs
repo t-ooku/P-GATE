@@ -22,7 +22,7 @@ test('ホームFAQは利用者に見える回答とFAQPage構造化データを�
   assert.doesNotMatch(social.acceptedAnswer.text, /YouTube/u);
   // YouTube動画URLはURL Context非対応。一方、既存のYouTube検索リンクは別機能として維持する。
   assert.match(html, /Instagram・X・TikTok・YouTubeでも探せます/u);
-  assert.match(html, /class="hoshilu-faq"/);
+  assert.match(html, /class="hoshilu-faq /u);
 });
 
 test('ホームはcanonicalに一致する言語指定と全ガイドへの明確な導線を持つ', async () => {
@@ -75,8 +75,8 @@ test('UIクロームはdata-nosnippet、本文セクションはスニペット�
   const snippetable = [
     /<section class="hero"(?![^>]*data-nosnippet)[^>]*>/,
     /<section id="hoshiluSearch"(?![^>]*data-nosnippet)[^>]*>/,
-    /<section id="faq"(?![^>]*data-nosnippet)[^>]*>/,
-    /<section class="shopping-guides"(?![^>]*data-nosnippet)[^>]*>/
+    /<details id="faq"(?![^>]*data-nosnippet)[^>]*>/,
+    /<details class="shopping-guides(?![^>]*data-nosnippet)[^>]*>/
   ];
   for (const pattern of snippetable) assert.match(html, pattern);
   // metaタグでのnosnippet全面禁止はしない(ページ全体が対象外になるため)。

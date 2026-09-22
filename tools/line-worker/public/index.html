@@ -30,7 +30,7 @@
   <script src="https://aml.valuecommerce.com/vcdal.js" async></script>
   <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/experience-layer.css?v=16">
   <link rel="stylesheet" href="/ai-search-ui.css?v=12">
-  <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=133">
+  <link rel="stylesheet" href="/assets-v126/ai-search-layout-fix.css?v=134">
   <link rel="stylesheet" href="/ai-price-comparison-ui.css?v=84">
   <link rel="stylesheet" href="/wish-carousel.css?v=4">
   <link rel="stylesheet" href="/mywatch.css?v=12">
@@ -171,9 +171,7 @@
               <p id="searchInputNotice" class="search-input-notice">候補抽出にGoogleのAIを利用。顔や住所は写さないでください。</p>
               </details>
               <div class="search-mode-actions"><button id="askAiButton" class="primary ask-ai-button" type="button">AIで探す</button><button id="submitButton" class="primary direct-search-button" type="submit"><span id="submitText">すぐ検索</span><span aria-hidden="true">→</span></button><button id="rankingSearchButton" class="ranking-search-button" type="button">ランキングで探す</button><button id="shopSearchButton" class="ranking-search-button shop-search-button" type="button">ショップから探す</button></div>
-              <p id="hoshittokuHint" class="hoshittoku-hint">見つからなければ、そのまま探し続けます。</p>
               <!-- 2026-09-20 大隆さん指示: 検索窓を一番上に戻し、価格を追う専用の入力欄は廃止（入口は 1 つ）。値段は結果カードの「この価格になったら教えて☑」から。 -->
-              <p class="hero-watch-hint">気になる商品の「<strong>この価格になったら教えて☑</strong>」を押すだけ。あとはほっといて、値下がりしたらHOSHILUが通知。</p>
               <div id="searchHintsSection" class="search-hints">
                 <div id="searchHistorySection" class="search-history-section hidden">
                   <div class="search-history-toolbar"><h3 id="searchHistoryTitle">検索履歴</h3></div>
@@ -253,12 +251,12 @@
             <p id="heroMarketplaceCoverageNote" class="marketplace-coverage-note">出品を確認できた商品は商品ページへ、それ以外は各モールの検索結果へ案内します。</p>
           </details>
 
-          <section id="genreExplorer" class="insight-card genre-explorer" aria-labelledby="genreExplorerTitle">
-            <p class="step">HOSHILU GENRES</p>
+          <details id="genreExplorer" class="genre-explorer marketplace-coverage hero-marketplace-coverage" aria-labelledby="genreExplorerTitle">
+            <summary class="step hero-marketplace-coverage-summary">HOSHILU GENRES</summary>
             <div class="section-title"><div><h2 id="genreExplorerTitle">ジャンルから探す。</h2></div></div>
             <nav id="genreBreadcrumb" class="genre-breadcrumb" aria-label="選んだジャンル"></nav>
             <div id="genreChips" class="quick-queries genre-chips" aria-live="polite"></div>
-          </section>
+          </details>
 
           <!-- 2026-09-17 大隆さん「HOSHILU SHOP全面強化」指示書 P0: 全ショップ横断検索。ショップ一覧より上に置く。 -->
           <section id="shopSearch" class="shop-search" aria-labelledby="shopSearchTitle">
@@ -469,22 +467,19 @@
                中の id・文言・JS は変えていない（app.js の setLanguage がそのまま書き換える）。 -->
           <details class="lp-more-details" id="lpMoreDetails">
             <summary id="lpMoreSummary">HOSHILUの探し方をもっと見る（写真・SNS投稿・AI・買い物ガイド）</summary>
-          <section class="search-journey" aria-labelledby="journeyTitle">
+          <details class="search-journey marketplace-coverage hero-marketplace-coverage" aria-labelledby="journeyTitle">
+            <summary class="step hero-marketplace-coverage-summary">HOSHILU SEARCH AGENT</summary>
             <div class="journey-heading">
-              <p class="step">HOSHILU SEARCH AGENT</p>
-              <h2 id="journeyTitle"><span>2つの探し方から、</span><span>購入先・次の候補まで。</span></h2>
-              <p id="journeyLead"><span>AI確認とすぐ検索を選べ、</span><span>比較・レコメンド・通知まで続けられます。</span></p>
+              <h2 id="journeyTitle"><span>4つの探し方から、</span><span>購入先・価格通知まで。</span></h2>
+              <p id="journeyLead"><span>AIで探す・すぐ検索・ランキング・ショップから探す。</span><span>見つかった商品はweb検索とまとめて1列で出します。</span></p>
             </div>
-            <details class="journey-fold">
-              <summary>くわしい流れを見る</summary>
               <ol class="journey-steps">
               <li><span>1</span><div><strong id="journeyStep1Title">探し方を選ぶ</strong><p id="journeyStep1Body">商品名が曖昧なら「AIに確認」、分かるなら「すぐ検索」。</p></div></li>
               <li><span>2</span><div><strong id="journeyStep2Title">条件を検索語へ整理</strong><p id="journeyStep2Body">AIが見た目・用途・予算を整理し、必要なときだけ候補を確認。</p></div></li>
-              <li><span>3</span><div><strong id="journeyStep3Title">最大13モールと関連商品</strong><p id="journeyStep3Body">楽天・Yahoo!をまとめて確認し、11モールの検索先と横レコメンドを提示。</p></div></li>
-              <li><span>4</span><div><strong id="journeyStep4Title">比較・通知・SNSへつなぐ</strong><p id="journeyStep4Body">ランキング・AI最安比較・購入希望価格ウォッチを使い、見つからなければInstagram・X・TikTok・YouTubeでも探せます。</p></div></li>
+              <li><span>3</span><div><strong id="journeyStep3Title">HOSHILUとweb検索を1列で</strong><p id="journeyStep3Body">HOSHILUが2モールをまとめて比較し、その他11を含む合計最大13モールで探せます。web検索で見つけた商品も同じ列に並べます。</p></div></li>
+              <li><span>4</span><div><strong id="journeyStep4Title">比較・通知・SNSへつなぐ</strong><p id="journeyStep4Body">カードの「価格比較」で最安を確認し、「🔔 価格通知」で希望価格まで待てます。見つからなければInstagram・X・TikTok・YouTubeでも探せます。</p></div></li>
             </ol>
-            </details>
-          </section>
+          </details>
 
           <!-- 2026-09-03 大隆さん指示: 対応モール一覧が第一画面(ヒーロー内の折りたたみ
                #heroMarketplaceCoverage)とここの2か所にあり重複していたので、下側の
@@ -505,9 +500,9 @@
             </div>
           </section>
 
-          <section class="shopping-guides" aria-labelledby="shoppingGuidesTitle">
+          <details class="shopping-guides marketplace-coverage hero-marketplace-coverage" aria-labelledby="shoppingGuidesTitle">
+            <summary class="step hero-marketplace-coverage-summary">HOSHILU SHOPPING GUIDES</summary>
             <div class="shopping-guides-heading">
-              <p class="step">HOSHILU SHOPPING GUIDES</p>
               <h2 id="shoppingGuidesTitle">迷わず探すための買い物ガイド</h2>
               <p>AIに確認する探し方、すぐ検索、最大13モールの横断、同一商品の比較、通知まで、現在のHOSHILUに合わせて案内します。</p>
             </div>
@@ -519,16 +514,16 @@
               <a href="/ja/product-requests"><strong>見つからない条件を保存する</strong><span>保存後に新着通知を有効化でき、購入希望価格ウォッチとは別に設定できます</span></a>
             </div>
             <p class="shopping-guides-all"><a href="/ja/guides">目的別の買い物ガイドをすべて見る<span aria-hidden="true">→</span></a></p>
-          </section>
-
-          <section class="lp-benefits" aria-labelledby="benefitTitle">
-            <p class="step">WHY HOSHILU</p>
-            <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
-          </section>
           </details>
 
-          <section id="faq" class="hoshilu-faq" aria-labelledby="faqTitle">
-            <p class="step">HOSHILU FAQ</p>
+          <details class="lp-benefits marketplace-coverage hero-marketplace-coverage" aria-labelledby="benefitTitle">
+            <summary class="step hero-marketplace-coverage-summary">WHY HOSHILU</summary>
+            <h2 id="benefitTitle">探す時間を減らして、納得できる買い物へ。</h2>
+          </details>
+          </details>
+
+          <details id="faq" class="hoshilu-faq marketplace-coverage hero-marketplace-coverage" aria-labelledby="faqTitle">
+            <summary class="step hero-marketplace-coverage-summary">HOSHILU FAQ</summary>
             <h2 id="faqTitle" data-i18n="faq.title">よくある質問</h2>
             <div class="hoshilu-faq-list">
               <details><summary data-i18n="faq.search.question">ホシルでは何を検索できますか？</summary><p data-i18n="faq.search.answer">商品名が分からなくても、見た目・用途・見た場所などの手がかりから商品を探せます。まとめて検索2モールと個別検索11モールの最大13モールに対応しています。</p></details>
@@ -536,11 +531,11 @@
               <details><summary data-i18n="faq.price.question">表示価格は実際の販売価格ですか？</summary><p data-i18n="faq.price.answer">接続済みモールで確認できた送料込み価格と、AIによる参考推定価格を区別して表示します。購入前に必ずリンク先モールで最新価格・送料・在庫を確認してください。</p></details>
               <details><summary data-i18n="faq.social.question">写真やSNS投稿URLから探せますか？</summary><p data-i18n="faq.social.answer">スマホで撮影するか、JPEG・PNG・WebP画像、Instagram・TikTok・X・Threads・Facebook・PinterestのHOSHILU対応形式の公開投稿単体URLを手がかりに検索できます。非公開・削除済みの投稿には一言や画像を追加してください。</p></details>
             </div>
-          </section>
+          </details>
         </div>
       </div>
     </div></main>
   <footer data-nosnippet><span>© HOSHILU — 欲しいを、ちゃんと見つける。</span><span class="associate-disclosure" data-i18n="affiliate.footerDisclosure">Amazonのアソシエイトとして、HOSHILUは適格販売により収入を得ています。楽天アフィリエイト、およびバリューコマース（Qoo10・Yahoo!ショッピング・SHEIN等）のリンクからも収入を得る場合があります。</span><span><a href="/for-creators">クリエイター募集</a> ・ <a href="/for-sellers">出品者募集</a> ・ <a href="/privacy">プライバシー</a> ・ <a href="/terms">利用上の注意</a></span></footer>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=9"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=98"></script><script type="module" src="/buzz-home.mjs?v=10"></script><script type="module" src="/watch-demand.mjs?v=3"></script><script type="module" src="/shop-directory.mjs?v=3"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=16"></script><script type="module" src="/member-registration-nudge.mjs?v=2"></script><script type="module" src="/tab-nav.mjs?v=10"></script><script type="module" src="/assets-v147/app.js?v=193"></script><script type="module" src="/ai-search-ui.mjs?v=16"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=88"></script><script type="module" src="/experience-layer.mjs?v=3"></script><script type="module" src="/genre-explorer.mjs?v=3"></script><script type="module" src="/search-suggest.mjs?v=3"></script><script type="module" src="/shop-search.mjs?v=3"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script><script type="module" src="/search-progress.mjs?v=1"></script><script type="module" src="/google-mall-results.mjs?v=5"></script><script type="module" src="/unified-results-ui.mjs?v=6"></script><script type="module" src="/product-url-paste.mjs?v=1"></script><script type="module" src="/usual-hoshiru.mjs?v=5"></script><script type="module" src="/today-hoshilu.mjs?v=1"></script><script type="module" src="/usual-barcode.mjs?v=1"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script><script src="/site-i18n.js?v=9"></script><script type="module" src="/lp-layout.mjs?v=85"></script><script type="module" src="/marketplace-coverage.mjs"></script><script type="module" src="/hero-marketplace-coverage.mjs"></script><script type="module" src="/sale-center.mjs?v=98"></script><script type="module" src="/buzz-home.mjs?v=10"></script><script type="module" src="/watch-demand.mjs?v=3"></script><script type="module" src="/shop-directory.mjs?v=3"></script><script type="module" src="/announcements.mjs"></script><script type="module" src="/hero-slides.mjs?v=82"></script><script type="module" src="/hero-collage-overlay.mjs"></script><script type="module" src="/growth-analytics.mjs?v=16"></script><script type="module" src="/member-registration-nudge.mjs?v=2"></script><script type="module" src="/tab-nav.mjs?v=10"></script><script type="module" src="/assets-v147/app.js?v=194"></script><script type="module" src="/ai-search-ui.mjs?v=16"></script><script type="module" src="/ai-price-comparison-ui.mjs?v=88"></script><script type="module" src="/experience-layer.mjs?v=3"></script><script type="module" src="/genre-explorer.mjs?v=3"></script><script type="module" src="/search-suggest.mjs?v=3"></script><script type="module" src="/shop-search.mjs?v=3"></script><script type="module" src="/social-share-targets.js"></script><script src="/speech-input.js"></script><script type="module" src="/search-progress.mjs?v=1"></script><script type="module" src="/google-mall-results.mjs?v=5"></script><script type="module" src="/unified-results-ui.mjs?v=6"></script><script type="module" src="/product-url-paste.mjs?v=1"></script><script type="module" src="/usual-hoshiru.mjs?v=5"></script><script type="module" src="/today-hoshilu.mjs?v=1"></script><script type="module" src="/usual-barcode.mjs?v=1"></script>
 </body>
 </html>

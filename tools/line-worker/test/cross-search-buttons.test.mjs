@@ -101,15 +101,17 @@ test('SEARCH AGENT→DISCOVERY→OFFICIALの3セクションは順に隣接す�
   // SEARCH AGENT と DISCOVERY の間には何も挟まない。
   // 2026-09-05 大隆さん指示: OFFICIAL(公式アカウント)は NEWS(お知らせ)の上へ移動。
   // 並びは OFFICIAL -> NEWS -> SEARCH AGENT -> DISCOVERY。SEARCH AGENT と DISCOVERY は隣接のまま。
+  // 2026-09-22 大隆さん指示で、畳める欄は <summary class="step …"> に変わった。
+  // 節の目印は「step の文字」であって、その入れ物ではない。
   const order = ['HOSHILU OFFICIAL', 'HOSHILU NEWS', 'HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY'];
   const positions = order.map((label) => {
-    const index = html.indexOf(`<p class="step">${label}</p>`);
+    const index = html.search(new RegExp(`<(?:p|summary) class="step[^"]*">${label}<`, 'u'));
     assert.notEqual(index, -1, `missing section: ${label}`);
     return index;
   });
   assert.deepEqual(positions, [...positions].sort((a, b) => a - b));
   const between = html.slice(positions[2], positions[3] + 40);
-  const steps = [...between.matchAll(/<p class="step">([^<]+)<\/p>/g)].map((match) => match[1]);
+  const steps = [...between.matchAll(/<(?:p|summary) class="step[^"]*">([^<]+)</gu)].map((match) => match[1]);
   assert.deepEqual(steps, ['HOSHILU SEARCH AGENT', 'HOSHILU DISCOVERY']);
 });
 
