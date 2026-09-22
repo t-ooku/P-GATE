@@ -116,7 +116,7 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
   assert.match(html, /unified-results-ui\.css\?v=8/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=7/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=8/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -233,4 +233,14 @@ test('見つからなかったとき、検索語だけの箱は出さない', ()
   assert.ok(!app.includes("empty.className='empty-result'"), '検索語だけの箱は作らない');
   // 検索語は「ホシっといて探し続けてもらう？」の中に残っている
   assert.match(app, /continuousSearchCard\(elements\.query\.value,\{found:false\}\)/u);
+});
+
+// 2026-09-22 大隆さん報告「なぜホシル提示とweb提示がいまだに2列に別れてるの…」
+// 「スカルプに何故この商品が提示されたの？」。
+test('0件のときも元の2つの棚を開かず、この列の中で断る', () => {
+  const source = ui();
+  assert.match(source, /if \(!items\.length\) \{\s*foldLegacySections\(true, true\);/u);
+  assert.match(source, /none: '検索語の条件に合う商品は見つかりませんでした。/u);
+  // 0件でも節そのものは出す（元の棚へ戻さない）
+  assert.ok(!/if \(!items\.length\) \{ host\.hidden = true;/u.test(source), '節ごと消さない');
 });

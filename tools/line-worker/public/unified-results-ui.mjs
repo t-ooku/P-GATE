@@ -16,6 +16,7 @@ const COPY = {
   capped: (n) => `${n}件表示中`,
   more: 'さらに見る',
   narrow: '条件を絞ると、さらに近い商品を探せます。',
+  none: '検索語の条件に合う商品は見つかりませんでした。言葉を変えるか減らすと見つかることがあります。',
   priceUnknown: '価格は商品ページで確認',
   priceListedNote: '参考価格・検索時点',
   open: '商品を見る',
@@ -232,8 +233,17 @@ export function render(unified, candidates = []) {
   const items = Array.isArray(unified?.items) ? unified.items : [];
   state = { items, shown: 0, candidates: Array.isArray(candidates) ? candidates : [] };
   host.replaceChildren();
-  if (!items.length) { host.hidden = true; foldLegacySections(false); return; }
+  // 2026-09-22 大隆さん報告「なぜホシル提示とweb提示がいまだに2列に別れてるの…」
+  // 「スカルプに何故この商品が提示されたの？」。
+  // 0 件でも元の2つの棚は開かない。開くと1本にまとめた列が2つに割れて見えるうえ、
+  // あちらは条件で絞っていないので関係のない商品が並ぶ。
+  // 見つからなかったことは、この列の中で正直に1行書く。
   host.hidden = false;
+  if (!items.length) {
+    foldLegacySections(true, true);
+    host.replaceChildren(el('p', 'unified-note', COPY.none));
+    return;
+  }
   foldLegacySections(true, items.some((item) => item.source === 'WEB'));
 
   // 見出しは作らない。ページの「MATCHES / ホシルからの提案」がこの列の見出し。

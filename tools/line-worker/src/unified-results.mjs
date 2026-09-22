@@ -180,14 +180,12 @@ export function rankUnified(rows, conditions) {
     return { ...row, matched: verdict.matched, unmatched: verdict.unmatched, level: verdict.level, score: verdict.matched.length };
   });
   // 条件があるときは、1つも一致しないものを出さない（§4 60件を埋めるために混ぜない）。
-  const matched = conditions.length ? judged.filter((row) => row.level !== 'NONE') : judged;
-  // 2026-09-22 大隆さん報告「なぜホシル提示とweb提示がいまだに2列に別れてるの…」。
-  // 上の絞り込みで**全部**落ちると、統合した列が 0 件になり、画面は元の2つの棚へ
-  // 戻っていた（0 件のときだけ元の棚を残す作りのため）。結果として、
-  // 1本にまとめたはずの列が2つに割れて見えていた。
-  // 1件も残らないときは、絞り込む前の並びをそのまま使う。
-  // （「混ぜない」は 60件を埋めるための話であって、全部消すための決まりではない）
-  const kept = matched.length ? matched : judged;
+  // 2026-09-22 大隆さん報告「スカルプに何故この商品が提示されたの？」。
+  // 直前の版では「1件も残らないなら絞り込む前を出す」にしていたが、それは
+  // スカルプブラシの検索にリバティ生地を出すということだった。取り違えを直す方向が
+  // 逆だった。**関係のない商品は出さない。** 0 件なら 0 件のまま返す。
+  // 2つの棚に割れて見えていた件は、画面側（0 件でも元の棚を開かない）で直す。
+  const kept = conditions.length ? judged.filter((row) => row.level !== 'NONE') : judged;
   return kept.sort((a, b) => {
     // 一覧ページは、どれだけ言葉が合っていても商品より後ろ（2026-09-22）。
     const listing = (a.listing ? 1 : 0) - (b.listing ? 1 : 0);
