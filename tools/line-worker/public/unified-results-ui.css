@@ -101,7 +101,20 @@
     overscroll-behavior-x:contain;
     padding:2px 2px 8px;
   }
-  .unified-card{flex:0 0 min(200px,43vw);width:min(200px,43vw);scroll-snap-align:start}
+  /* 2026-09-22 大隆さん指示「スクショのAmazonみたいに、少し幅広げても2商品提示
+     写ってるのは、大枠の縁をギリギリまで広げているからだと思う」。
+     そのとおりで、この列は今までページの余白と白い枠の内側に入っていて、
+     左右で 50px 以上を枠に取られていた。列だけ画面の端まで出す（full bleed）。
+     余白は列の内側に 12px だけ持たせる。 */
+  #unifiedResults{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+  .unified-head,.unified-note,.unified-more{margin-left:12px;margin-right:12px}
+  .unified-list{padding-left:12px;padding-right:12px}
+  /* 画面の幅から左右の余白と間隔を引いて、ちょうど2つ。Amazon と同じ見え方。 */
+  .unified-card{
+    flex:0 0 calc((100vw - 34px) / 2);
+    width:calc((100vw - 34px) / 2);
+    scroll-snap-align:start;
+  }
 }
 
 /* PC: 楽天市場のような複数列グリッド＋縦スクロール。横スクロールは使わない（§4） */
@@ -141,10 +154,9 @@
 /* 2026-09-22 大隆さん指示「『価格』『いつもの』『気になる』『口コミ』に変えて、
    この4つのボタンは2行にしよう」「できるだけ正方形に近づけてたい」。
    ・ボタンは2列2行
-   ・「これ、今買う？」（AI最安比較）はこの4つに入らないので、統合カードでは出さない
+   ・「価格比較」はこの4つに入らないので、価格の隣へ移す
    ・口コミの中身は「口コミ」を押したときだけ開く */
 .unified-card-full .product-card-actions{grid-template-columns:1fr 1fr;gap:5px}
-.unified-card-full .product-card-action-buy{display:none}
 .unified-reviews-toggle{
   min-width:0;
   min-height:30px;
@@ -160,3 +172,27 @@
 }
 .unified-card-full .experience-block{display:none}
 .unified-card-full.reviews-open .experience-block{display:block}
+
+/* 2026-09-22 大隆さん指示「『これ、今買う？』→『価格比較』に直して、価格の隣に設置」。
+   価格と価格比較は同じ行。価格比較は右端に小さく置く。 */
+.unified-card-price-row{display:flex;align-items:baseline;gap:6px;min-width:0}
+.unified-card-price-row:empty{display:none}
+.unified-card-price-row .product-card-action-buy{margin-left:auto;flex:0 0 auto}
+.unified-card-price-row .product-card-action-buy button{
+  padding:4px 7px;
+  min-height:0;
+  border-radius:7px;
+  font-size:10px;
+  white-space:nowrap;
+}
+
+/* 2026-09-22 大隆さん報告「改行されちゃってる」。ボタンの文字は1行に収める。 */
+.unified-card-full .product-card-actions button,
+.unified-card-full .product-card-actions a,
+.unified-reviews-toggle{
+  padding-left:4px;
+  padding-right:4px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}

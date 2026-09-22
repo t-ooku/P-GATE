@@ -104,18 +104,21 @@ function card(item) {
     COPY.badge[item.source] || COPY.badge.WEB));
   if (item.shop_name) meta.append(el('span', 'unified-card-shop', item.shop_name));
   body.append(meta);
+  // 価格と「価格比較」を同じ行に置く（2026-09-22 大隆さん指示）。
+  const priceRow = el('div', 'unified-card-price-row');
+  body.append(priceRow);
   // HOSHILU が API で確認できた価格は、そのまま出す。
   if (Number(item.price_jpy) > 0) {
-    body.append(el('strong', 'unified-card-price', `¥${Number(item.price_jpy).toLocaleString('ja-JP')}`));
+    priceRow.append(el('strong', 'unified-card-price', `¥${Number(item.price_jpy).toLocaleString('ja-JP')}`));
   } else if (Number(item.listed_price_jpy) > 0) {
     // 2026-09-22 大隆さん報告「価格もでてない」。Web の数字はページに書いてあっただけの
     // ものなので、確認済みの価格とは別の見た目にして「参考価格・検索時点」と断る。
     // 隠すのでもなく、同じ顔で並べるのでもない。
-    body.append(el('strong', 'unified-card-price unified-card-price-listed',
+    priceRow.append(el('strong', 'unified-card-price unified-card-price-listed',
       `¥${Number(item.listed_price_jpy).toLocaleString('ja-JP')}`));
     body.append(el('small', 'unified-card-price-note', COPY.priceListedNote));
   } else if (item.source === 'WEB') {
-    body.append(el('span', 'unified-card-price-unknown', COPY.priceUnknown));
+    priceRow.append(el('span', 'unified-card-price-unknown', COPY.priceUnknown));
   }
   // 2026-09-22 大隆さん指示「2条件一致という文字削除して上に詰めて。つまりできるだけ
   // 正方形に近づけてたい」。一致の度合いは並び順にもう出ているので、文字では書かない。
@@ -146,8 +149,12 @@ function card(item) {
       // 口コミの作りを二重に持たない。
       if (open) article.querySelector('.experience-post')?.click();
     });
-    // 並びは 価格 / いつもの / 気になる / 口コミ の4つ。2列2行に収まる（§正方形に近づける）。
+    // 並びは 価格通知 / いつもの / 気になる / 口コミ の4つ。2列2行に収まる。
     slots?.actions?.append?.(reviews);
+    // 2026-09-22 大隆さん指示「『これ、今買う？』→『価格比較』に直して、価格の隣に設置」。
+    // 4つのボタンの外に出して、価格と同じ行に置く。
+    const priceRow = article.querySelector('.unified-card-price-row');
+    if (priceRow && slots?.buySlot) priceRow.append(slots.buySlot);
   } else {
     const keep = keepButton(item);
     if (keep) article.append(keep);
@@ -180,11 +187,16 @@ function section() {
 // 1セクションにまとめるので、元の「ホシルからの提案」（価格まで確認できた棚と
 // AI選定レコメンドの棚）と「web検索から発見」は畳む（§1）。
 // レコメンド（関連商品）は別の話なので残す。
-function foldLegacySections(folded) {
+function foldLegacySections(folded, hasWeb = false) {
   const rows = document.querySelectorAll('#resultCards .result-row-confirmed,#resultCards .result-row-unconfirmed');
   for (const row of rows) row.hidden = folded;
+  // 2026-09-22 大隆さん報告「web検索が表示されてない」。
+  // 統合した列には商品ページだけを入れている（一覧ページは商品ではない）。
+  // そのため web検索が一覧ページしか返さなかった検索では、web の結果が1件も出なくなる。
+  // その時だけ元の「web検索から発見」の枠を残す。あちらは一覧ページを
+  //「一覧ページ」と断って出せる作りになっている。
   const google = document.querySelector('#googleMallResults');
-  if (google) google.classList.toggle('hidden', folded);
+  if (google) google.classList.toggle('hidden', folded && hasWeb);
 }
 
 function renderMore(host, list) {
@@ -210,7 +222,7 @@ export function render(unified, candidates = []) {
   host.replaceChildren();
   if (!items.length) { host.hidden = true; foldLegacySections(false); return; }
   host.hidden = false;
-  foldLegacySections(true);
+  foldLegacySections(true, items.some((item) => item.source === 'WEB'));
 
   // 見出しは作らない。ページの「MATCHES / ホシルからの提案」がこの列の見出し。
   // 「全部で60件しかない」と誤解させない（§9）。上限で切ったときは「60件表示中」。

@@ -98,7 +98,9 @@ test('スマホは横スライド、PCは複数列グリッド＋縦スクロー
   const sheet = css();
   const mobile = sheet.slice(sheet.indexOf('@media (max-width:760px)'), sheet.indexOf('@media (min-width:761px)'));
   assert.match(mobile, /\.unified-list\{[^}]*overflow-x:auto/u);
-  assert.match(mobile, /\.unified-card\{flex:0 0 min\(200px,43vw\)/u, '2商品＋次が少し見える幅');
+  // 2026-09-22: 列だけ画面の端まで出して、ちょうど2つ並べる（Amazon と同じ見え方）
+  assert.match(mobile, /#unifiedResults\{margin-left:calc\(50% - 50vw\)/u, '大枠の縁をギリギリまで広げる');
+  assert.match(mobile, /flex:0 0 calc\(\(100vw - 34px\) \/ 2\)/u, '画面の幅ちょうど2商品');
   const desktop = sheet.slice(sheet.indexOf('@media (min-width:761px)'));
   assert.match(desktop, /\.unified-list\{display:grid;gap:14px;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/u);
   assert.match(desktop, /@media \(min-width:1000px\)\{\s*\.unified-list\{grid-template-columns:repeat\(4,minmax\(0,1fr\)\)\}/u);
@@ -113,8 +115,8 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=4/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=4/u);
+  assert.match(html, /unified-results-ui\.css\?v=5/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=5/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -170,8 +172,9 @@ test('カードは4つのボタンを2列2行に。条件一致の文字は出�
   assert.match(source, /article\.querySelector\('\.experience-post'\)\?\.click\(\)/u);
   const sheet = css();
   assert.match(sheet, /\.unified-card-full \.product-card-actions\{grid-template-columns:1fr 1fr/u);
-  // 「これ、今買う？」は4つに入らないので出さない
-  assert.match(sheet, /\.unified-card-full \.product-card-action-buy\{display:none\}/u);
+  // 「価格比較」は4つに入らないので、価格の隣へ移す（2026-09-22）
+  assert.match(source, /priceRow\.append\(slots\.buySlot\)/u);
+  assert.match(sheet, /\.unified-card-price-row\{display:flex/u);
   // 口コミの中身は押したときだけ
   assert.match(sheet, /\.unified-card-full \.experience-block\{display:none\}/u);
   assert.match(sheet, /\.unified-card-full\.reviews-open \.experience-block\{display:block\}/u);
@@ -181,4 +184,19 @@ test('カードは4つのボタンを2列2行に。条件一致の文字は出�
   assert.match(app, /JA:\{keep:'♡ 気になる',kept:'♥ 気になる'/u);
   const usual = read('usual-hoshiru.mjs');
   assert.match(usual, /makeUsual: '↻ いつもの'/u);
+  const compare = read('ai-price-comparison-ui.mjs');
+  assert.match(compare, /button: '価格比較'/u);
+  // 文字が2行に折れないよう、カードを少し広げてボタンは1行に収める
+  assert.match(sheet, /flex:0 0 calc\(\(100vw - 34px\) \/ 2\)/u);
+  assert.match(sheet, /white-space:nowrap/u);
+});
+
+// 2026-09-22 大隆さん報告「web検索が表示されてない」。
+// 統合した列には商品ページだけを入れているので、web検索が一覧ページしか返さなかった
+// 検索では web の結果が1件も出ない。その時だけ元の「web検索から発見」の枠を残す。
+test('統合した列に web の商品が1件も無いときは、元のweb検索の枠を残す', () => {
+  const source = ui();
+  assert.match(source, /function foldLegacySections\(folded, hasWeb = false\)/u);
+  assert.match(source, /google\.classList\.toggle\('hidden', folded && hasWeb\)/u);
+  assert.match(source, /foldLegacySections\(true, items\.some\(\(item\) => item\.source === 'WEB'\)\)/u);
 });
