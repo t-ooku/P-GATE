@@ -1,0 +1,1588 @@
+{
+  "schema_version": "1.0",
+  "label": "multilingual-expanded-baseline-20260801",
+  "generated_at": "2026-08-01T04:35:18.314Z",
+  "dataset": {
+    "targets": 30,
+    "cases": 33,
+    "tenant": "itg"
+  },
+  "overall": {
+    "cases": 33,
+    "top1": 0.42424242424242425,
+    "top3": 0.6363636363636364,
+    "top10": 0.6363636363636364,
+    "category_match": 0.6363636363636364,
+    "mrr": 0.5151515151515151,
+    "ndcg_at_3": 0.546173303463207,
+    "ndcg_at_10": 0.546173303463207,
+    "no_answer_rate": 0.3333333333333333,
+    "wrong_answer_rate": 0,
+    "clarification_rate": 0.8484848484848485,
+    "mywish_offer_rate": 0.3333333333333333,
+    "safe_response_rate": 1
+  },
+  "by_locale": {
+    "ja": {
+      "cases": 0,
+      "top1": 0,
+      "top3": 0,
+      "top10": 0,
+      "category_match": 0,
+      "mrr": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 0
+    },
+    "en": {
+      "cases": 11,
+      "top1": 0.45454545454545453,
+      "top3": 0.7272727272727273,
+      "top10": 0.7272727272727273,
+      "category_match": 0.7272727272727273,
+      "mrr": 0.5757575757575758,
+      "ndcg_at_3": 0.614714500649356,
+      "ndcg_at_10": 0.614714500649356,
+      "no_answer_rate": 0.18181818181818182,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8181818181818182,
+      "mywish_offer_rate": 0.18181818181818182,
+      "safe_response_rate": 1
+    },
+    "zh": {
+      "cases": 11,
+      "top1": 0.36363636363636365,
+      "top3": 0.5454545454545454,
+      "top10": 0.5454545454545454,
+      "category_match": 0.5454545454545454,
+      "mrr": 0.43939393939393945,
+      "ndcg_at_3": 0.4664481594155871,
+      "ndcg_at_10": 0.4664481594155871,
+      "no_answer_rate": 0.45454545454545453,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.9090909090909091,
+      "mywish_offer_rate": 0.45454545454545453,
+      "safe_response_rate": 1
+    },
+    "ko": {
+      "cases": 11,
+      "top1": 0.45454545454545453,
+      "top3": 0.6363636363636364,
+      "top10": 0.6363636363636364,
+      "category_match": 0.6363636363636364,
+      "mrr": 0.5303030303030303,
+      "ndcg_at_3": 0.557357250324678,
+      "ndcg_at_10": 0.557357250324678,
+      "no_answer_rate": 0.36363636363636365,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8181818181818182,
+      "mywish_offer_rate": 0.36363636363636365,
+      "safe_response_rate": 1
+    }
+  },
+  "by_information_level": {
+    "rich": {
+      "cases": 0,
+      "top1": 0,
+      "top3": 0,
+      "top10": 0,
+      "category_match": 0,
+      "mrr": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 0
+    },
+    "ambiguous": {
+      "cases": 33,
+      "top1": 0.42424242424242425,
+      "top3": 0.6363636363636364,
+      "top10": 0.6363636363636364,
+      "category_match": 0.6363636363636364,
+      "mrr": 0.5151515151515151,
+      "ndcg_at_3": 0.546173303463207,
+      "ndcg_at_10": 0.546173303463207,
+      "no_answer_rate": 0.3333333333333333,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8484848484848485,
+      "mywish_offer_rate": 0.3333333333333333,
+      "safe_response_rate": 1
+    },
+    "ultra_ambiguous": {
+      "cases": 0,
+      "top1": 0,
+      "top3": 0,
+      "top10": 0,
+      "category_match": 0,
+      "mrr": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 0
+    }
+  },
+  "by_query_type": {
+    "category_branch": {
+      "cases": 12,
+      "top1": 0.5833333333333334,
+      "top3": 0.5833333333333334,
+      "top10": 0.5833333333333334,
+      "category_match": 0.5833333333333334,
+      "mrr": 0.5833333333333334,
+      "ndcg_at_3": 0.5833333333333334,
+      "ndcg_at_10": 0.5833333333333334,
+      "no_answer_rate": 0.4166666666666667,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.9166666666666666,
+      "mywish_offer_rate": 0.4166666666666667,
+      "safe_response_rate": 1
+    },
+    "color_package": {
+      "cases": 6,
+      "top1": 0.5,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 0.6944444444444445,
+      "ndcg_at_3": 0.7718216255952429,
+      "ndcg_at_10": 0.7718216255952429,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "compatibility": {
+      "cases": 6,
+      "top1": 0,
+      "top3": 0.5,
+      "top10": 0.5,
+      "category_match": 0.5,
+      "mrr": 0.25,
+      "ndcg_at_3": 0.31546487678572877,
+      "ndcg_at_10": 0.31546487678572877,
+      "no_answer_rate": 0.3333333333333333,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0.3333333333333333,
+      "safe_response_rate": 1
+    },
+    "sensory": {
+      "cases": 3,
+      "top1": 1,
+      "top3": 1,
+      "top10": 1,
+      "category_match": 1,
+      "mrr": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "no_answer_rate": 0,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 1,
+      "mywish_offer_rate": 0,
+      "safe_response_rate": 1
+    },
+    "shape_function": {
+      "cases": 27,
+      "top1": 0.37037037037037035,
+      "top3": 0.6296296296296297,
+      "top10": 0.6296296296296297,
+      "category_match": 0.6296296296296297,
+      "mrr": 0.48148148148148145,
+      "ndcg_at_3": 0.5193970005291049,
+      "ndcg_at_10": 0.5193970005291049,
+      "no_answer_rate": 0.3333333333333333,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.8518518518518519,
+      "mywish_offer_rate": 0.3333333333333333,
+      "safe_response_rate": 1
+    },
+    "usage_scene": {
+      "cases": 12,
+      "top1": 0.4166666666666667,
+      "top3": 0.5,
+      "top10": 0.5,
+      "category_match": 0.5,
+      "mrr": 0.4444444444444444,
+      "ndcg_at_3": 0.4583333333333333,
+      "ndcg_at_10": 0.4583333333333333,
+      "no_answer_rate": 0.5,
+      "wrong_answer_rate": 0,
+      "clarification_rate": 0.5833333333333334,
+      "mywish_offer_rate": 0.5,
+      "safe_response_rate": 1
+    }
+  },
+  "evaluations": [
+    {
+      "case_id": "T03-en-1",
+      "target_id": "T03",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "a lavender scented soy candle in a glass jar",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T03-zh-1",
+      "target_id": "T03",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "玻璃罐装的薰衣草香味大豆蜡烛",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T03-ko-1",
+      "target_id": "T03",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "sensory",
+        "color_package"
+      ],
+      "query": "유리병에 담긴 라벤더 향 소이 캔들",
+      "expected_asins": [
+        "B01J4PDR1A"
+      ],
+      "fts_query": "\"candle\"* OR \"soy\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01J4PDR1A",
+          "product_name": "Mrs。Meyers Clean Day mrm-64558p2 MrsマイヤーズClean Day Soy Candle & # 44 ;ラベンダー& # 44 ; 7.2 Oz & # 44 ; 2パック",
+          "manufacturer": "Mrs. MEYERS",
+          "text_rank": -19.59366149800964
+        },
+        {
+          "asin": "B00MO2SUB8",
+          "product_name": "SoybuレディースフルZipパフォーマンスPeaceジャケット XS ブルー",
+          "manufacturer": "Soybu",
+          "text_rank": -18.195469674162617
+        },
+        {
+          "asin": "B0045FBQ7M",
+          "product_name": "Yankee Candle Large Jar Candle、ホワイトクリスマス",
+          "manufacturer": "Yankee Candle",
+          "text_rank": -15.649386987554704
+        }
+      ]
+    },
+    {
+      "case_id": "T04-en-1",
+      "target_id": "T04",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "small wired earbuds that fit inside the ear",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T04-en-2",
+      "target_id": "T04",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "wired earbuds, not wireless ones",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T04-zh-1",
+      "target_id": "T04",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "小巧的有线入耳式耳机",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T04-zh-2",
+      "target_id": "T04",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "想找有线耳机，不要无线的",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T04-ko-1",
+      "target_id": "T04",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "귀에 넣는 작은 유선 이어폰",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T04-ko-2",
+      "target_id": "T04",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "무선 말고 유선 이어폰을 찾아줘",
+      "expected_asins": [
+        "B001CLUL32"
+      ],
+      "fts_query": "\"earbud\"* OR \"ear\"* OR \"bud\"* OR \"headphone\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B001CLUL32",
+          "product_name": "HamiltonBuhl Ear Bud Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -35.503492651935034
+        },
+        {
+          "asin": "B075LLWYJ7",
+          "product_name": "GUMY EARBUDS BLUE",
+          "manufacturer": "JVC",
+          "text_rank": -27.940421575157632
+        },
+        {
+          "asin": "B002KBRJ9M",
+          "product_name": "HamiltonBuhl Economical On-Ear Headphone",
+          "manufacturer": "HamiltonBuhl",
+          "text_rank": -22.726601534511587
+        }
+      ]
+    },
+    {
+      "case_id": "T11-en-1",
+      "target_id": "T11",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "a very lightweight black wireless gaming mouse for a computer",
+      "expected_asins": [
+        "B08RMZKYTL"
+      ],
+      "fts_query": "(\"mouse\"* OR \"trackball\"*) AND (\"black\"*)",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01NAMG6CH",
+          "product_name": "KENSINGTON FOAM MOUSEPAD BLACK 62384",
+          "manufacturer": "Kensington",
+          "text_rank": -18.480257469355198
+        },
+        {
+          "asin": "B002NU5O74",
+          "product_name": "Targus Compact - Mouse - optical - wired - USB - gray black",
+          "manufacturer": "Targus",
+          "text_rank": -17.03976202037218
+        },
+        {
+          "asin": "B08RMZKYTL",
+          "product_name": "Logitech G PRO X Superlight Wireless Gaming Mouse - Black",
+          "manufacturer": "Logitech G",
+          "text_rank": -15.807594755273273
+        }
+      ]
+    },
+    {
+      "case_id": "T11-zh-1",
+      "target_id": "T11",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "电脑用的超轻黑色无线游戏鼠标",
+      "expected_asins": [
+        "B08RMZKYTL"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T11-ko-1",
+      "target_id": "T11",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "컴퓨터용 초경량 검정 무선 게이밍 마우스",
+      "expected_asins": [
+        "B08RMZKYTL"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T15-en-1",
+      "target_id": "T15",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "category_branch",
+        "usage_scene"
+      ],
+      "query": "men’s 3-in-1 shampoo conditioner and body wash, two large bottles",
+      "expected_asins": [
+        "B005LFO2DA"
+      ],
+      "fts_query": "(\"bottle\"*) AND (\"shampoo\"* OR \"hair wash\"*) AND (\"men\"* OR \"in-1\"* OR \"shampoo\"* OR \"conditioner\"* OR \"body\"* OR \"wash\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T15-zh-1",
+      "target_id": "T15",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "category_branch",
+        "usage_scene"
+      ],
+      "query": "男士三合一洗发水护发素沐浴露大瓶两件装",
+      "expected_asins": [
+        "B005LFO2DA"
+      ],
+      "fts_query": "(\"shampoo\"* OR \"hair wash\"*) AND (\"hair treatment\"* OR \"hair mask\"* OR \"hair oil\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T15-ko-1",
+      "target_id": "T15",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "category_branch",
+        "usage_scene"
+      ],
+      "query": "남성용 샴푸 컨디셔너 바디워시 3-in-1 대용량 두 병 세트",
+      "expected_asins": [
+        "B005LFO2DA"
+      ],
+      "fts_query": "(\"shampoo\"* OR \"hair wash\"*) AND (\"in-1\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B005LFO2DA",
+          "product_name": "Suave Men 3-in-1 Shampoo Conditioner & Body Wash 28 oz 2 pk by Suave [並行輸入品]",
+          "manufacturer": "Suave",
+          "text_rank": -19.49467115135778
+        }
+      ]
+    },
+    {
+      "case_id": "T19-en-1",
+      "target_id": "T19",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "a very slim jet black wallet that fits in a pocket",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "(\"wallet\"*) AND (\"black\"*)",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -21.296100681004138
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -21.271962789133404
+        },
+        {
+          "asin": "B07HYD338R",
+          "product_name": "[パックセーフ] 三つ折り財布 Z50 TRIFOLD WALLET BLACK",
+          "manufacturer": "Pacsafe",
+          "text_rank": -20.68896634759008
+        }
+      ]
+    },
+    {
+      "case_id": "T19-zh-1",
+      "target_id": "T19",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "能放进口袋的超薄黑色钱包",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "\"wallet\"*",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -16.926116955084655
+        },
+        {
+          "asin": "B07NYBD3WH",
+          "product_name": "Frye Melissa Wallet Carbon",
+          "manufacturer": "Frye",
+          "text_rank": -16.505081966426783
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -16.039983619213867
+        }
+      ]
+    },
+    {
+      "case_id": "T19-ko-1",
+      "target_id": "T19",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "color_package"
+      ],
+      "query": "주머니에 들어가는 아주 얇은 검정 지갑",
+      "expected_asins": [
+        "B001CZFXHM"
+      ],
+      "fts_query": "\"wallet\"*",
+      "rank": 3,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.3333333333333333,
+      "ndcg_at_3": 0.5,
+      "ndcg_at_10": 0.5,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "LOW_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000VBGR32",
+          "product_name": "Diabetic Wallet Insulin Cooler Travel Wallet - Double Pen Pouch - Black by Poucho",
+          "manufacturer": "Medicool",
+          "text_rank": -16.926116955084655
+        },
+        {
+          "asin": "B07NYBD3WH",
+          "product_name": "Frye Melissa Wallet Carbon",
+          "manufacturer": "Frye",
+          "text_rank": -16.505081966426783
+        },
+        {
+          "asin": "B001CZFXHM",
+          "product_name": "Super Slim Wallet Jet Black",
+          "manufacturer": "WAGNER",
+          "text_rank": -16.039983619213867
+        }
+      ]
+    },
+    {
+      "case_id": "T20-en-1",
+      "target_id": "T20",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "24 inch 14K gold filled Figaro chain necklace, 4 mm wide",
+      "expected_asins": [
+        "B0768NT3RW"
+      ],
+      "fts_query": "(\"led\"* OR \"light\"* OR \"glow\"* OR \"luminous\"*) AND (\"necklace\"* OR \"jewelry chain\"*) AND (\"gold\"*) AND (\"inch\"* OR \"gold\"* OR \"filled\"* OR \"figaro\"* OR \"chain\"* OR \"necklace\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T20-zh-1",
+      "target_id": "T20",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "24英寸宽4毫米的14K包金费加罗链项链",
+      "expected_asins": [
+        "B0768NT3RW"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T20-ko-1",
+      "target_id": "T20",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "category_branch"
+      ],
+      "query": "24인치 폭 4mm 14K 골드필드 피가로 체인 목걸이",
+      "expected_asins": [
+        "B0768NT3RW"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T22-en-1",
+      "target_id": "T22",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "six 52 mm colored round filters for a camera lens",
+      "expected_asins": [
+        "B00DH4EFW0"
+      ],
+      "fts_query": "(\"camera\"*) AND (\"six\"* OR \"colored\"* OR \"round\"* OR \"filters\"* OR \"camera\"* OR \"lens\"*)",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B01648LA96",
+          "product_name": "LensCoat LensSack Pro Black Camera Bean Bag Support 141［並行輸入］",
+          "manufacturer": "LENSCOAT",
+          "text_rank": -29.84357956076044
+        },
+        {
+          "asin": "B0787BL59Z",
+          "product_name": "PTZOptics 20X-NDI-GY 20x Lens NDI Camera Gray",
+          "manufacturer": "PTZOptics",
+          "text_rank": -27.495561377503236
+        },
+        {
+          "asin": "B0787FZDFF",
+          "product_name": "PTZOptics 12X-NDI-GY 12x Lens NDI Camera Gray",
+          "manufacturer": "PTZOptics",
+          "text_rank": -27.495561377503236
+        }
+      ]
+    },
+    {
+      "case_id": "T22-zh-1",
+      "target_id": "T22",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "相机镜头用的52毫米六片彩色圆形滤镜",
+      "expected_asins": [
+        "B00DH4EFW0"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T22-ko-1",
+      "target_id": "T22",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "카메라 렌즈용 52mm 원형 컬러 필터 6개 세트",
+      "expected_asins": [
+        "B00DH4EFW0"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T27-en-1",
+      "target_id": "T27",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "a folding lock-back knife for camping",
+      "expected_asins": [
+        "B000HSCOJA"
+      ],
+      "fts_query": "\"knife\"* OR \"folding\"*",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B000HSCOJA",
+          "product_name": "KNIFE FOLDING LOCK BACK",
+          "manufacturer": "IRWIN",
+          "text_rank": -28.66754166536419
+        },
+        {
+          "asin": "B0001Q2VPA",
+          "product_name": "UTILITY KNIFE CARBON BLADE (100/PKG)",
+          "manufacturer": "IRWIN",
+          "text_rank": -14.687888417161508
+        },
+        {
+          "asin": "B000ECO8V6",
+          "product_name": "COGHLANS 5 FUNCTION ARMY KNIFE (C9505)",
+          "manufacturer": "Coghlans",
+          "text_rank": -14.687888417161508
+        }
+      ]
+    },
+    {
+      "case_id": "T27-zh-1",
+      "target_id": "T27",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "露营用的折叠锁背刀",
+      "expected_asins": [
+        "B000HSCOJA"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T27-ko-1",
+      "target_id": "T27",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "캠핑용 접이식 락백 나이프",
+      "expected_asins": [
+        "B000HSCOJA"
+      ],
+      "fts_query": "",
+      "rank": 0,
+      "top1": false,
+      "top3": false,
+      "top10": false,
+      "reciprocal_rank": 0,
+      "ndcg_at_3": 0,
+      "ndcg_at_10": 0,
+      "category_match": false,
+      "no_answer": true,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": true,
+      "decision_reason": "NO_CANDIDATES",
+      "wrong_answer": false,
+      "results": []
+    },
+    {
+      "case_id": "T28-en-1",
+      "target_id": "T28",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "a clear narrow organizer bin for the refrigerator",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"organizer\"* OR \"storage\"* OR \"container\"*) AND (\"refrigerator\"* OR \"freezer\"* OR \"pantry\"*) AND (\"clear\"* OR \"transparent\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -59.76794025834866
+        }
+      ]
+    },
+    {
+      "case_id": "T28-zh-1",
+      "target_id": "T28",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "冰箱里用的透明细长收纳盒",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"organizer\"* OR \"storage\"* OR \"container\"*) AND (\"refrigerator\"* OR \"freezer\"* OR \"pantry\"*) AND (\"clear\"* OR \"transparent\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -59.76794025834866
+        }
+      ]
+    },
+    {
+      "case_id": "T28-ko-1",
+      "target_id": "T28",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "shape_function",
+        "usage_scene"
+      ],
+      "query": "냉장고에 쓰는 투명하고 긴 수납함",
+      "expected_asins": [
+        "B00CS8DT00"
+      ],
+      "fts_query": "(\"organizer\"* OR \"storage\"* OR \"container\"*) AND (\"refrigerator\"* OR \"freezer\"* OR \"pantry\"*) AND (\"clear\"* OR \"transparent\"*)",
+      "rank": 1,
+      "top1": true,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 1,
+      "ndcg_at_3": 1,
+      "ndcg_at_10": 1,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": true,
+      "clarification_required": false,
+      "mywish_suggested": false,
+      "decision_reason": "SUFFICIENT_INFORMATION",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B00CS8DT00",
+          "product_name": "InterDesign Home Kitchen Organizer Bin for Pantry Refrigerator Freezer & Storage Cabinet 10 x 5 x 6 Clear",
+          "manufacturer": "iDesign",
+          "text_rank": -59.76794025834866
+        }
+      ]
+    },
+    {
+      "case_id": "T29-en-1",
+      "target_id": "T29",
+      "locale": "en",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "a compact USB-C hub with multiple ports for a laptop",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    },
+    {
+      "case_id": "T29-zh-1",
+      "target_id": "T29",
+      "locale": "zh",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "笔记本电脑用的小型多接口USB-C转接器",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    },
+    {
+      "case_id": "T29-ko-1",
+      "target_id": "T29",
+      "locale": "ko",
+      "information_level": "ambiguous",
+      "query_types": [
+        "compatibility",
+        "shape_function"
+      ],
+      "query": "노트북에 연결하는 포트가 여러 개인 소형 USB-C 어댑터",
+      "expected_asins": [
+        "B01FI7PEH8"
+      ],
+      "fts_query": "\"adapter\"* OR \"usb\"*",
+      "rank": 2,
+      "top1": false,
+      "top3": true,
+      "top10": true,
+      "reciprocal_rank": 0.5,
+      "ndcg_at_3": 0.6309297535714575,
+      "ndcg_at_10": 0.6309297535714575,
+      "category_match": true,
+      "no_answer": false,
+      "asserted_answer": false,
+      "clarification_required": true,
+      "mywish_suggested": false,
+      "decision_reason": "EVIDENCE_MISMATCH",
+      "wrong_answer": false,
+      "results": [
+        {
+          "asin": "B017N54Z64",
+          "product_name": "USB 3.0 to Gigabit Adapter",
+          "manufacturer": "HP",
+          "text_rank": -17.391766693854343
+        },
+        {
+          "asin": "B01FI7PEH8",
+          "product_name": "USB Type-C Multi-Adapter JCA374 by j5create",
+          "manufacturer": "j5create",
+          "text_rank": -16.488000036785657
+        },
+        {
+          "asin": "B00007FYP6",
+          "product_name": "Digi Edgeport 1 - Serial adapter - USB - RS-232",
+          "manufacturer": "Digi",
+          "text_rank": -16.488000036785657
+        }
+      ]
+    }
+  ]
+}

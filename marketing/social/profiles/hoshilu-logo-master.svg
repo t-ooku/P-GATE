@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="2048" viewBox="0 0 2048 2048" role="img" aria-labelledby="title desc">
+  <title id="title">HOSHILU official mark</title>
+  <desc id="desc">H、星、ブックマークを組み合わせたHOSHILUの公式マーク</desc>
+  <defs>
+    <linearGradient id="brand" x1="180" y1="180" x2="1868" y2="1868" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F238B5"/><stop offset=".5" stop-color="#8A4CF4"/><stop offset="1" stop-color="#258CFF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="54" stdDeviation="58" flood-color="#4C2C9A" flood-opacity=".25"/>
+    </filter>
+  </defs>
+  <rect width="2048" height="2048" rx="470" fill="#FBFAFF"/>
+  <rect x="190" y="190" width="1668" height="1668" rx="400" fill="url(#brand)" filter="url(#shadow)"/>
+  <path d="M570 555 Q570 490 635 490 H760 Q825 490 825 555 V900 H1223 V555 Q1223 490 1288 490 H1413 Q1478 490 1478 555 V1502 Q1478 1575 1412 1538 L1350 1503 L1288 1538 Q1223 1575 1223 1502 V1150 H825 V1493 Q825 1558 760 1558 H635 Q570 1558 570 1493Z" fill="#FFFFFF"/>
+  <path d="M1518 345 C1534 429 1581 476 1665 492 C1581 508 1534 555 1518 639 C1502 555 1455 508 1371 492 C1455 476 1502 429 1518 345Z" fill="#FFFFFF"/>
+  <circle cx="1660" cy="710" r="34" fill="#FFFFFF" opacity=".78"/>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs><linearGradient id="g" x1="110" y1="120" x2="950" y2="1220"><stop stop-color="#f238b5"/><stop offset=".48" stop-color="#8a4cf4"/><stop offset="1" stop-color="#258cff"/></linearGradient></defs>
+  <rect width="1080" height="1350" fill="#111c4e"/>
+  <text x="90" y="120" font-family="Arial,'Noto Sans JP',sans-serif" font-size="28" font-weight="800" fill="#fff" opacity=".7">HOSHILU HABIT #01</text>
+  <text x="90" y="300" font-family="Arial,'Noto Sans JP',sans-serif" font-size="92" font-weight="900" fill="#fff">今は買わない。</text>
+  <text x="90" y="425" font-family="Arial,'Noto Sans JP',sans-serif" font-size="92" font-weight="900" fill="#fff">でも、忘れたくない。</text>
+  <rect x="90" y="560" width="900" height="500" rx="64" fill="#fff"/>
+  <text x="540" y="740" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="48" font-weight="800" fill="#111c4e">そんなときは</text>
+  <text x="540" y="875" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="104" font-weight="900" fill="url(#g)">ほしっとく。</text>
+  <text x="540" y="970" text-anchor="middle" font-family="Arial,'Noto Sans JP',sans-serif" font-size="30" font-weight="700" fill="#59617d">次に開いたとき、続きから探せる。</text>
+  <text x="90" y="1200" font-family="Arial,'Noto Sans JP',sans-serif" font-size="34" font-weight="800" fill="#fff">#ホシル　#ほしっとく</text>
+</svg>

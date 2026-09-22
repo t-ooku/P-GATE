@@ -68,7 +68,7 @@ node --test tools/line-worker/test/*.test.mjs
 node --test tools/chrome-extension/test/*.test.mjs
 ```
 
-現在版は`v1.14.0`です。導入開始点は[`docs/START_HERE_Project_GATE_v1.14.md`](docs/START_HERE_Project_GATE_v1.14.md)、複数EC仕様は[`docs/MULTI_EC_OFFER_SPEC_v1.14.md`](docs/MULTI_EC_OFFER_SPEC_v1.14.md)、匿名比較仕様は[`docs/ANONYMOUS_BENCHMARK_SPEC_v1.13.md`](docs/ANONYMOUS_BENCHMARK_SPEC_v1.13.md)、公開前診断は[`docs/PREFLIGHT_SPEC_v1.10.md`](docs/PREFLIGHT_SPEC_v1.10.md)を参照してください。
+現在版は`v1.15.0`です。導入開始点は[`docs/START_HERE_Project_GATE_v1.14.md`](docs/START_HERE_Project_GATE_v1.14.md)、複数EC仕様は[`docs/MULTI_EC_OFFER_SPEC_v1.14.md`](docs/MULTI_EC_OFFER_SPEC_v1.14.md)、匿名比較仕様は[`docs/ANONYMOUS_BENCHMARK_SPEC_v1.13.md`](docs/ANONYMOUS_BENCHMARK_SPEC_v1.13.md)、公開前診断は[`docs/PREFLIGHT_SPEC_v1.10.md`](docs/PREFLIGHT_SPEC_v1.10.md)を参照してください。
 
 PWAとChrome拡張は実装済み・未デプロイです。ネイティブiOS／Androidは[`docs/CHANNEL_EXPANSION_ROADMAP_v1.7.md`](docs/CHANNEL_EXPANSION_ROADMAP_v1.7.md)の判定条件を満たした後に追加します。
 

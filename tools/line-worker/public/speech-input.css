@@ -1,0 +1,30 @@
+.query-field textarea {
+  padding-right: 116px;
+}
+
+.speech-input {
+  position: absolute;
+  top: 12px;
+  right: 76px;
+  width: 36px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #ded7ff;
+  border-radius: 50%;
+  color: #5140ba;
+  background: #fff;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.speech-input.listening {
+  color: #fff;
+  border-color: var(--pink);
+  background: var(--pink);
+  box-shadow: 0 0 0 5px rgba(255, 79, 154, 0.14);
+}
+
+.speech-input:focus-visible {
+  outline: 3px solid rgba(115, 87, 255, 0.28);
+  outline-offset: 2px;
+}

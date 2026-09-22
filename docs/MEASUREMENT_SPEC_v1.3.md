@@ -9,6 +9,8 @@ P-GATEの価値を「便利そう」ではなく、顧客セラー／顧客メ�
 1. `IMPRESSION`: 推薦商品が表示された
 2. `CLICK`: 推薦商品が選択された
 3. `OUTBOUND`: Amazon等の購入先へ遷移した
+
+Amazon検索フォールバックは予約ASIN `SEARCHFALL` として記録し、契約商品の成果とは分離する。拡張属性は `destination_type=AMAZON_SEARCH_FALLBACK`、`contract_match=false`、`demand_status=UNMET` とし、HOSHILU INSIGHT / トレジャーMAPでは未充足需要として集計する。
 4. `PURCHASE`: 購入成果が確認された
 
 ## KPI
