@@ -3854,7 +3854,8 @@ const guideHubGroups = [
       'ec-shukyaku-without-ad-budget',
       'amazon-shukyaku-outside-amazon',
       'ec-coupon-strategy',
-      'ec-repeat-customers'
+      'ec-repeat-customers',
+      'oudan-kensaku-de-mitsukete-morau'
     ]
   },
   {
