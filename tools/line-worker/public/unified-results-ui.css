@@ -200,13 +200,17 @@
   white-space:nowrap;
 }
 
-/* 2026-09-22 大隆さん報告「改行されちゃってる」。ボタンの文字は1行に収める。 */
+/* 2026-09-22 大隆さん報告「改行されちゃってる」→ 文字は1行に収める。
+   2026-09-22 大隆さん報告「価格通知と気になるボタンが見切れてる」→
+   絵文字（🔔 ♡）は文字より背が高く、はみ出した分が overflow:hidden で
+   切られていた。切らずに、箱の高さと行の高さを絵文字に合わせる。 */
 .unified-card-full .product-card-actions button,
 .unified-card-full .product-card-actions a,
 .unified-reviews-toggle{
-  padding-left:4px;
-  padding-right:4px;
+  padding:6px 3px;
+  min-height:34px;
+  line-height:1.5;
+  font-size:10px;
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  overflow:visible;
 }

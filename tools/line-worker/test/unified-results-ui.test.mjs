@@ -115,7 +115,7 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=6/u);
+  assert.match(html, /unified-results-ui\.css\?v=7/u);
   assert.match(html, /unified-results-ui\.mjs\?v=5/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
@@ -191,6 +191,10 @@ test('カードは4つのボタンを2列2行に。条件一致の文字は出�
   // 文字が2行に折れないよう、カードを少し広げてボタンは1行に収める
   assert.match(sheet, /flex:0 0 calc\(\(100% - 10px\) \/ 2\)/u);
   assert.match(sheet, /white-space:nowrap/u);
+  // 絵文字（🔔 ♡）が切れないよう、箱を切らずに高さを合わせる
+  assert.match(sheet, /overflow:visible/u);
+  assert.ok(!/\.unified-card-full \.product-card-actions button,[\s\S]{0,240}overflow:hidden/u.test(sheet),
+    'ボタンの中身を切らない');
 });
 
 // 2026-09-22 大隆さん報告「web検索が表示されてない」。
