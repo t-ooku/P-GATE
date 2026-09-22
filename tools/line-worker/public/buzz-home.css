@@ -180,3 +180,15 @@
 .buzz-home-actions:empty{display:none}
 .buzz-home-actions>:only-child{grid-column:1 / -1}
 .buzz-home-actions>button{min-width:0;padding:7px 4px;text-align:center}
+
+/* 2026-09-22 大隆さん報告「ホシルバズの価格通知と気になるボタンが見切れてる」。
+   カードが 128px しかなく、横に2つ並べると1つ 53px ほどにしかならなかった。
+   カードを少し広げ、ボタンの文字を小さくして、切らずに収める。 */
+.buzz-home-item{flex:0 0 152px}
+.buzz-home-item .buzz-home-card{flex:0 0 auto;width:100%}
+.buzz-home-actions>button{
+  padding:6px 4px;
+  font-size:9.5px;
+  overflow:visible;
+  text-overflow:clip;
+}

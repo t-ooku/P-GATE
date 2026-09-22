@@ -226,17 +226,23 @@ test('web検索の価格は別の欄で返す（確認済みの価格とは混�
 // 2026-09-22 大隆さん報告「web検索、提示してるの商品じゃないやん」。
 // Google 側は「Amazon.co.jp: ベースメイク: 韓国コスメストア」のような
 // カテゴリ・ストアの一覧ページも返す。ここは商品を並べる列なので入れない。
-test('web検索の一覧ページ・カテゴリページは商品として並べない', () => {
+// 2026-09-22 大隆さん報告「web検索提示がない。どうにか出して。Googleの直検索なら出るよ」。
+// 広い言葉では Google が返すのは一覧ページばかりで、商品ページだけに絞ると0件になる。
+// 落とさずに出し、「一覧ページ」と断って商品の後ろに並べる。
+test('web検索の一覧ページは、商品の後ろに「一覧ページ」として並べる', () => {
   const result = unifyResults({
     candidates: [],
     googleItems: [
-      web(1, { title: 'Amazon.co.jp: ベースメイク: 韓国コスメストア', product_page: false }),
+      web(1, { product_page: false }),
       web(2, { product_page: true })
     ],
     query: QUERY
   });
-  assert.equal(result.items.length, 1, '一覧ページは落ちる');
-  assert.ok(!result.items[0].product_name.includes('韓国コスメストア'));
+  assert.equal(result.items.length, 2, '一覧ページも出す');
+  assert.equal(result.items[0].listing, false, '商品が先');
+  assert.equal(result.items[1].listing, true, '一覧は後ろ');
+  // 一覧ページに価格は出さない（商品の価格ではない）
+  assert.equal(result.items[1].listed_price_jpy, null);
 });
 
 // 2026-09-22 大隆さん報告「価格出てない」。

@@ -214,3 +214,10 @@
   white-space:nowrap;
   overflow:visible;
 }
+
+/* 2026-09-22 大隆さん報告「web検索提示がない。どうにか出して」。
+   一覧・カテゴリページも出す。ただし商品のふりはさせず、札で断り、
+   商品カードより控えめにする（並び順も商品の後ろ）。 */
+.unified-badge-listing{background:#fff4e5;color:#96591a}
+.unified-card-listing{border-style:dashed}
+.unified-card-listing .unified-card-image{opacity:.9}

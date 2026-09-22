@@ -22,6 +22,8 @@ const COPY = {
   reviews: '💬 口コミ',
   keep: '♡ ホシっとく',
   kept: '♥ ホシっとく済み',
+  listing: '一覧ページ',
+  openListing: 'このモールの一覧を見る',
   badge: { HOSHILU: 'HOSHILU', HOSHILU_SHOP: 'HOSHILU SHOP', WEB: 'Web' }
 };
 const PAGE = 12;
@@ -67,6 +69,7 @@ function keepButton(item) {
 
 function card(item) {
   const article = el('article', `unified-card unified-card-${String(item.source || '').toLowerCase()}`);
+  if (item.listing) article.classList.add('unified-card-listing');
   article.setAttribute('role', 'listitem');
   const link = el('a', 'unified-card-link');
   link.href = item.url;
@@ -103,6 +106,9 @@ function card(item) {
   meta.append(el('span', `unified-badge unified-badge-${String(item.source || '').toLowerCase()}`,
     COPY.badge[item.source] || COPY.badge.WEB));
   if (item.shop_name) meta.append(el('span', 'unified-card-shop', item.shop_name));
+  // 2026-09-22 大隆さん報告「web検索提示がない。どうにか出して」。
+  // 一覧・カテゴリページも出すが、商品のふりはさせない。ここでそう断る。
+  if (item.listing) meta.append(el('span', 'unified-badge unified-badge-listing', COPY.listing));
   body.append(meta);
   // 価格と「価格比較」を同じ行に置く（2026-09-22 大隆さん指示）。
   const priceRow = el('div', 'unified-card-price-row');
@@ -117,6 +123,8 @@ function card(item) {
     priceRow.append(el('strong', 'unified-card-price unified-card-price-listed',
       `¥${Number(item.listed_price_jpy).toLocaleString('ja-JP')}`));
     body.append(el('small', 'unified-card-price-note', COPY.priceListedNote));
+  } else if (item.listing) {
+    priceRow.append(el('span', 'unified-card-price-unknown', COPY.openListing));
   } else if (item.source === 'WEB') {
     priceRow.append(el('span', 'unified-card-price-unknown', COPY.priceUnknown));
   }
@@ -155,7 +163,7 @@ function card(item) {
     // 4つのボタンの外に出して、価格と同じ行に置く。
     const priceRow = article.querySelector('.unified-card-price-row');
     if (priceRow && slots?.buySlot) priceRow.append(slots.buySlot);
-  } else {
+  } else if (!item.listing) {
     const keep = keepButton(item);
     if (keep) article.append(keep);
   }

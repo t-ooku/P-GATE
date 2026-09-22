@@ -41,8 +41,8 @@ test('HOSHILU商品には商品カードと同じ5個のボタン。Web商品は
   assert.match(source, /candidate_index/u);
   assert.match(source, /window\.HoshiluCardActions\?\.attach/u);
   assert.match(source, /article\.classList\.add\('unified-card-full'\)/u);
-  // 候補が無い Web 商品は ♡ だけ
-  assert.match(source, /\} else \{\s*const keep = keepButton\(item\);/u);
+  // 候補が無い Web 商品は ♡ だけ（一覧ページは商品ではないので ♡ も出さない）
+  assert.match(source, /\} else if \(!item\.listing\) \{\s*const keep = keepButton\(item\);/u);
   // 口コミは商品名を h3 から読むので h3 で出す
   assert.match(source, /el\('h3', 'unified-card-name'/u);
   const app = read('app.js');
@@ -115,8 +115,8 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=7/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=5/u);
+  assert.match(html, /unified-results-ui\.css\?v=8/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=6/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);

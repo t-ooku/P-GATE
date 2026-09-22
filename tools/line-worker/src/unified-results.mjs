@@ -123,6 +123,7 @@ function fromCandidate(candidate, index) {
   const shop = candidate?.shop || null;
   return {
     source: shop ? 'HOSHILU_SHOP' : 'HOSHILU',
+    listing: false,
     order: index,
     // 画面側で「元の候補」に戻れるようにしておく。商品カードと同じ5個のボタン
     // （これ、今買う？／この価格になったら教えて／いつものにする／気になる／口コミ）は
@@ -149,7 +150,8 @@ function fromGoogleItem(item, index, offset) {
     // Google 側は「Amazon.co.jp: ベースメイク: 韓国コスメストア」のような
     // カテゴリ・ストアの一覧ページも返す。元の web検索の枠は一覧ページも
     // 「一覧ページ」と断って残していたが、ここは商品を並べる列なので入れない。
-    product_page: item?.product_page === true,
+    // 商品ページか、モールの一覧・カテゴリページか。一覧なら画面でそう断る。
+    listing: item?.product_page !== true,
     order: offset + index,
     candidate_index: null,
     product_name: text(item?.title, 200),
@@ -180,6 +182,9 @@ export function rankUnified(rows, conditions) {
   // 条件があるときは、1つも一致しないものを出さない（§4 60件を埋めるために混ぜない）。
   const kept = conditions.length ? judged.filter((row) => row.level !== 'NONE') : judged;
   return kept.sort((a, b) => {
+    // 一覧ページは、どれだけ言葉が合っていても商品より後ろ（2026-09-22）。
+    const listing = (a.listing ? 1 : 0) - (b.listing ? 1 : 0);
+    if (listing !== 0) return listing;
     if (b.score !== a.score) return b.score - a.score;
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
     // ここまで同点のときだけ HOSHILU を先に（§6）。Seller だから常に上、にはしない。
@@ -216,10 +221,14 @@ export function dedupe(rows) {
 
 export function unifyResults({ candidates = [], googleItems = [], query = '', limit = UNIFIED_LIMIT } = {}) {
   const hoshilu = (Array.isArray(candidates) ? candidates : []).map(fromCandidate).filter((row) => row.url && row.product_name);
+  // 2026-09-22 大隆さん報告「web検索提示がない。どうにか出して。Googleの直検索なら出るよ」。
+  // 「ダイエット サプリ 燃焼系」のような広い言葉では、Google が返すのはモールの
+  // カテゴリ・一覧ページばかりで、商品ページだけに絞ると1件も残らなかった。
+  // 落とすのをやめ、**一覧ページは一覧ページと断って、商品の後ろに並べる**。
+  // 商品のふりはさせない（§一覧ページにホシっとく等は出さない）。
   const web = (Array.isArray(googleItems) ? googleItems : [])
     .map((item, index) => fromGoogleItem(item, index, hoshilu.length))
-    // 商品ページだと分かっているものだけ。一覧ページ・カテゴリページは商品ではない。
-    .filter((row) => row.url && row.product_name && row.product_page);
+    .filter((row) => row.url && row.product_name);
   const conditions = demandConditions(query);
   const ranked = rankUnified(dedupe([...hoshilu, ...web]), conditions);
   const items = ranked.slice(0, Math.max(0, limit)).map((row, index) => ({
@@ -231,7 +240,8 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
     shop_name: row.shop_name,
     marketplace: row.marketplace,
     price_jpy: row.price_jpy,
-    listed_price_jpy: row.listed_price_jpy ?? null,
+    listed_price_jpy: row.listing ? null : (row.listed_price_jpy ?? null),
+    listing: row.listing === true,
     candidate_index: row.source === 'WEB' ? null : (Number.isInteger(row.candidate_index) ? row.candidate_index : null),
     matched: row.matched,
     unmatched: row.unmatched

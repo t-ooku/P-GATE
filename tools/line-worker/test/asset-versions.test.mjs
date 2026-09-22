@@ -30,9 +30,9 @@ const EXPECTED = Object.freeze({
   'today-hoshilu.mjs': '1',
   'usual-hoshiru.css': '4',
   'usual-hoshiru.mjs': '5',
-  'result-compact.css': '2',
-  'unified-results-ui.css': '7',
-  'unified-results-ui.mjs': '5',
+  'result-compact.css': '3',
+  'unified-results-ui.css': '8',
+  'unified-results-ui.mjs': '6',
   'instagram-look.css': '5'
 });
 
