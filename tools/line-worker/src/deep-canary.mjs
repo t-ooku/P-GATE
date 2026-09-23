@@ -147,6 +147,18 @@ const failureCode = (error) => {
   // 同じコードで書いていた。混み合いは容量の話なので、別のコードにして
   // 「今すぐ直す故障」と混ぜない（見えなくはしない。DEGRADED として残す）。
   if (error?.message === 'YAHOO_REQUEST_QUEUE_BUSY') return 'CANARY_YAHOO_QUEUE_BUSY';
+  // 2026-09-23: 9/22 の分割の結果、混み合いではないと分かった（QUEUE_BUSY は 0 件）。
+  // 残りの入口も名前で分けて、どこで落ちているかを見えるようにする。
+  if (error?.message === 'YAHOO_REQUEST_CALLER_ABORTED') return 'CANARY_YAHOO_CALLER_ABORTED';
+  if (error?.message === 'YAHOO_REQUEST_COORDINATOR_HOP_TIMEOUT') {
+    return 'CANARY_YAHOO_COORDINATOR_HOP_TIMEOUT';
+  }
+  if (error?.message === 'YAHOO_REQUEST_COORDINATOR_HOP_FAILED') {
+    return 'CANARY_YAHOO_COORDINATOR_HOP_FAILED';
+  }
+  if (error?.message === 'YAHOO_REQUEST_COORDINATOR_NO_RESULT') {
+    return 'CANARY_YAHOO_COORDINATOR_NO_RESULT';
+  }
   if (error?.message === 'YAHOO_REQUEST_COORDINATOR_REJECTED') {
     return 'CANARY_YAHOO_COORDINATOR_REJECTED';
   }

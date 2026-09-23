@@ -81,6 +81,17 @@ function fixedTransportError(error, failureMessage) {
 // （coordinator unavailable = 設定や結線の故障）に潰していた。
 // 混み合い（408）と、設定・依頼の誤り（400）と、本当に使えない状態（それ以外）は
 // 原因も打ち手も違う。HTTP の番号だけを見て分ける（本文・URL・認証情報は見ない）。
+// 2026-09-22 の分割で「混み合い(408)」は別コードにしたが、本番では 9/23 も
+// CANARY_YAHOO_COORDINATOR_UNAVAILABLE だけが出続け、QUEUE_BUSY は 1 件も出なかった。
+// つまり原因は待ち行列ではない。残りの入口（呼び出し側の打ち切り／Durable Object への
+// 往復が失敗・時間切れ／期待した見出しが無い応答）は、これまで全部同じ名前だったので
+// どれかも分からない。ここも分ける。名前を分けるだけで、失敗として数えるのは変えない。
+function namedCoordinatorError(message, status) {
+  const error = new Error(message);
+  if (status) error.status = status;
+  return error;
+}
+
 function coordinatorControlError(status) {
   if (status === 408) {
     const error = new Error('YAHOO_REQUEST_QUEUE_BUSY');
@@ -118,7 +129,7 @@ async function yahooProviderFetch(env, operation, fetcher, options, failureMessa
     Math.min(2500, Number(options.requestTimeoutMs) || 2500));
   const namespace = env?.YAHOO_REQUEST_COORDINATOR;
   if (namespace) {
-    if (options.signal?.aborted) throw coordinatorError();
+    if (options.signal?.aborted) throw namedCoordinatorError('YAHOO_REQUEST_CALLER_ABORTED', 408);
     const queueTimeoutMs = Math.max(500,
       Math.min(10000, Number(options.queueTimeoutMs) || 8000));
     let response;
@@ -135,12 +146,16 @@ async function yahooProviderFetch(env, operation, fetcher, options, failureMessa
         signal: boundedInternalSignal(options.signal,
           queueTimeoutMs + providerTimeoutMs + 500)
       });
-    } catch {
-      throw coordinatorError();
+    } catch (error) {
+      throw namedCoordinatorError(
+        error?.name === 'AbortError' || error?.name === 'TimeoutError'
+          ? 'YAHOO_REQUEST_COORDINATOR_HOP_TIMEOUT'
+          : 'YAHOO_REQUEST_COORDINATOR_HOP_FAILED', 503);
     }
     const result = String(response.headers.get(YAHOO_PROXY_RESULT_HEADER) || '');
     if (result === 'provider') return response;
     if (result === 'control') throw coordinatorControlError(Number(response.status) || 0);
+    if (!result) throw namedCoordinatorError('YAHOO_REQUEST_COORDINATOR_NO_RESULT', Number(response.status) || 502);
     throw coordinatorOutcomeError(result);
   }
   if (env?.YAHOO_REQUEST_COORDINATOR_REQUIRED === 'true') throw coordinatorError();

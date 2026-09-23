@@ -234,7 +234,8 @@ test('coordinator rejection stops the Yahoo provider request with a fixed safe c
       providerCalled = true;
       return Response.json({ hits: [] });
     }),
-    (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_UNAVAILABLE' && error.status === 400
+    // 2026-09-23: 見出しの無い応答は「どこで落ちたか分からない」ではなく、その旨を名前で残す。
+    (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_NO_RESULT' && error.status === 408
   );
   assert.equal(providerCalled, false);
 });
@@ -309,7 +310,7 @@ test('an expired caller signal never acquires a coordinator slot or contacts Yah
   }, 'private query', async () => {
     providerCalled = true;
     return Response.json({ hits: [] });
-  }, { signal: controller.signal }), /YAHOO_REQUEST_COORDINATOR_UNAVAILABLE/u);
+  }, { signal: controller.signal }), /YAHOO_REQUEST_CALLER_ABORTED/u);
   assert.equal(coordinatorCalled, false);
   assert.equal(providerCalled, false);
 });
@@ -389,4 +390,23 @@ test('coordinator の control 応答は、混み合い・依頼の誤り・使�
     (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_REJECTED' && error.status === 400);
   await assert.rejects(searchYahooShopping(control(503), 'private query', provider),
     (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_UNAVAILABLE');
+});
+
+// 2026-09-23: 9/22 の切り分けで「待ち行列の混み合い」ではないと分かった（本番で QUEUE_BUSY は 0 件、
+// COORDINATOR_UNAVAILABLE だけが 32 件）。残りの入口も名前で分けて、どこで落ちているかを見えるようにする。
+test('coordinator への往復の失敗は、時間切れ・往復失敗・見出し無しを別の名前で返す', async () => {
+  const namespace = (fetchImpl) => ({
+    YAHOO_SHOPPING_CLIENT_ID: 'test-client-id',
+    YAHOO_REQUEST_COORDINATOR: { idFromName: () => 'fixed-object-id', get: () => ({ fetch: fetchImpl }) }
+  });
+  const provider = async () => Response.json({ hits: [] });
+  const timeout = () => { const error = new Error('aborted'); error.name = 'TimeoutError'; throw error; };
+  await assert.rejects(searchYahooShopping(namespace(timeout), 'private query', provider),
+    (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_HOP_TIMEOUT');
+  const broken = () => { throw new TypeError('internal'); };
+  await assert.rejects(searchYahooShopping(namespace(broken), 'private query', provider),
+    (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_HOP_FAILED');
+  const headerless = async () => new Response(null, { status: 500 });
+  await assert.rejects(searchYahooShopping(namespace(headerless), 'private query', provider),
+    (error) => error.message === 'YAHOO_REQUEST_COORDINATOR_NO_RESULT' && error.status === 500);
 });
