@@ -224,3 +224,38 @@ test('2026-09-14 事故: 型の文が一字一句そのまま無い本文（誤�
   assert.equal(skipped.status, 'SKIPPED');
   assert.match(skipped.last_error, /^template_mismatch:突然のご連絡失礼いたします/u);
 });
+
+// 2026-09-23 大隆さん指示「営業メールを1日30社に増やして」。
+// 本番の上限は wrangler.jsonc の vars で持つ（コードの既定10は据え置き）。
+// 平日09:00〜18:00 JST・1サイクル3通のままなので、30通は10サイクルに分かれて出る。
+test('本番の1日の送信上限は30通（窓と1サイクルの本数は変えない）', () => {
+  const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
+  assert.equal(wrangler.vars.SELLER_OUTREACH_DAILY_LIMIT, '30');
+  assert.equal(OUTREACH_PER_CYCLE_LIMIT, 3);
+  // 09:00〜18:00 JST を15分ごとに回すと36サイクル。3通ずつなら30通は入りきる。
+  assert.ok(36 * OUTREACH_PER_CYCLE_LIMIT >= 30);
+  assert.equal(jstBusinessHours(new Date('2026-09-23T00:05:00Z')), true);
+  assert.equal(jstBusinessHours(new Date('2026-09-23T09:05:00Z')), false);
+});
+
+// 2026-09-23 大隆さん指示「RIZAPグループ株式会社のグループ企業や店舗には絶対送らない」。
+// 選定は人と AI の両方がやるので、送る直前にも機械で止める。
+test('送らないと決めた相手は、送信直前に止めて理由を残す', async () => {
+  const { findExcludedOrganization } = await import('../src/seller-outreach.mjs');
+  assert.equal(findExcludedOrganization('RIZAP株式会社', 'info@example.com'), 'RIZAP');
+  assert.equal(findExcludedOrganization('chocoZAP 出店', 'shop@chocozap.jp'), 'chocozap.jp');
+  assert.equal(findExcludedOrganization('夢展望株式会社', 'a@example.com'), '夢展望');
+  // 無関係の店を巻き込まない（ブランド名としての言及だけでは止めない）
+  assert.equal(findExcludedOrganization('帽子専門店 冠屋', 'info@kanmuriya.com'), '');
+  assert.equal(findExcludedOrganization('雑貨店', 'info@example.jp', 'BRUNO のホットプレートを扱っています'), '');
+
+  const { env: e, db } = databaseEnv();
+  await insertContact(db, { contact_id: 'rz1', shop_name: 'RIZAP株式会社', contact_email: 'rz1@example.com', unsubscribe_token: 'a'.repeat(32) });
+  const posts = [];
+  const okFetch = async (url, init) => { posts.push(JSON.parse(init.body)); return new Response('{}', { status: 200 }); };
+  await runSellerOutreachCycle(e, MONDAY_10AM_JST, okFetch);
+  assert.equal(posts.length, 0, '送らない');
+  const row = db.prepare('SELECT status,last_error FROM seller_outreach_contacts WHERE contact_id=?').get('rz1');
+  assert.equal(row.status, 'SKIPPED');
+  assert.match(row.last_error, /^excluded_organization:RIZAP$/u);
+});

@@ -46,6 +46,7 @@
     "MEMBER_EMAIL_FROM": "notification@auth.hoshilu.app",
     "SELLER_INQUIRY_NOTIFY_EMAIL": "t.ookutsu19850613@gmail.com",
     "SELLER_OUTREACH_FROM": "sellers@auth.hoshilu.app",
+    "SELLER_OUTREACH_DAILY_LIMIT": "30",
     "INTERNAL_MEMBER_IDS": "6vw0RVMxRXk89RKCpmkhSDhUPzNAhbKf77VLzXvKYfs,IEpqu7DILaYNEAh9-Nsmqow9eILwTW0jFQAdpi520Tk,VzrpNlfUCarsQdh_M3fn6LevsGBQNAjitlZ5bh4Hr0U",
     "GEMINI_IDENTIFY_GROUNDING": "true",
     "GOOGLE_VISUAL_SEARCH_ENABLED": "true",

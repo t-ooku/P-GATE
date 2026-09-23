@@ -49,6 +49,24 @@ export function jstDayRange(date) {
 // そのまま実送信された。本文は「型を固定し hook の1文だけを会社ごとに変える」約束なので、型の文を
 // 一字一句そのまま含まない行は送らず SKIPPED（template_mismatch）にする。AI が作ったものは
 // 指示ではなく機械検査でしか担保できない。型を変えるときは、この配列と投入側の文面を同時に変える。
+// 2026-09-23 大隆さん指示「RIZAPグループ株式会社のグループ企業や店舗には絶対送らない」。
+// 送り先の選定は人と AI の両方がやるので、選定の段階だけでなく**送る直前にも**機械で止める。
+// 社名・ブランド名・確実なドメインだけで判定する（似た一般語は入れない。誤って無関係の店を
+// 止めないため）。当たった行は送らず SKIPPED（excluded_organization）にして理由を残す。
+// グループ企業一覧: https://www.rizapgroup.com/about/group （2026-09-23 確認）
+export const OUTREACH_EXCLUDED_ORGANIZATIONS = [
+  'rizapgroup.com', 'rizap.jp', 'chocozap.jp',
+  'RIZAP', 'ライザップ', 'chocoZAP', 'チョコザップ',
+  'MRKホールディングス', 'ドクターシーラボ',
+  '健康メディカルサービス', '健康コミュニケーションズ', '健康コーポレーション',
+  'BRUNO株式会社', 'REXT Holdings', 'アンティローザ', '夢展望',
+  '五輪パッキング', 'サンケイリビング新聞社', 'SDエンターテイメント', '一新時計'
+];
+export function findExcludedOrganization(...values) {
+  const haystack = values.map((value) => String(value || '')).join('\n').toLowerCase();
+  return OUTREACH_EXCLUDED_ORGANIZATIONS.find((name) => haystack.includes(name.toLowerCase())) || '';
+}
+
 export const OUTREACH_REQUIRED_SENTENCES = [
   'ご担当者様',
   '突然のご連絡失礼いたします。買い物検索サービス HOSHILU を運営している大久津と申します。',
@@ -131,7 +149,7 @@ export async function runSellerOutreachCycle(env, now = new Date(), fetchImpl = 
   const sentToday = Number((await env.PRODUCT_DB.prepare(`SELECT COUNT(*) AS n FROM seller_outreach_contacts WHERE status IN ('SENT','SENDING') AND sent_at>=?1 AND sent_at<?2`).bind(day.from, day.to).all()).results?.[0]?.n || 0);
   const budget = Math.min(OUTREACH_PER_CYCLE_LIMIT, limit - sentToday);
   if (budget <= 0) return { action: 'skipped', reason: 'daily_limit', sent_today: sentToday };
-  const candidates = (await env.PRODUCT_DB.prepare(`SELECT c.contact_id,c.contact_email,c.email_hash,c.subject,c.body,c.unsubscribe_token FROM seller_outreach_contacts c
+  const candidates = (await env.PRODUCT_DB.prepare(`SELECT c.contact_id,c.contact_email,c.email_hash,c.subject,c.body,c.unsubscribe_token,c.shop_name FROM seller_outreach_contacts c
     WHERE c.status='QUEUED' AND c.scheduled_at<=?1
     AND NOT EXISTS (SELECT 1 FROM seller_outreach_suppressions s WHERE s.email_hash=c.email_hash)
     AND NOT EXISTS (SELECT 1 FROM seller_outreach_contacts p WHERE p.email_hash=c.email_hash AND p.contact_id<>c.contact_id AND p.status IN ('SENDING','SENT','REPLIED','OPTED_OUT'))
@@ -139,6 +157,14 @@ export async function runSellerOutreachCycle(env, now = new Date(), fetchImpl = 
   const results = [];
   for (const row of candidates) {
     const timestamp = new Date().toISOString();
+    // 送らないと決めた相手（2026-09-23 大隆さん指示）。選定の誤りをここで最後に止める。
+    const excluded = findExcludedOrganization(row.shop_name, row.contact_email, row.body);
+    if (excluded) {
+      await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SKIPPED',last_error=?2,updated_at=?3 WHERE contact_id=?1 AND status='QUEUED'`)
+        .bind(row.contact_id, clean(`excluded_organization:${excluded}`, 200), timestamp).run();
+      results.push({ contact_id: row.contact_id, status: 'SKIPPED', reason: 'excluded_organization' });
+      continue;
+    }
     const forbidden = findForbiddenPhrases(`${row.subject}\n${row.body}`);
     if (forbidden.length) {
       await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SKIPPED',last_error=?2,updated_at=?3 WHERE contact_id=?1 AND status='QUEUED'`)
