@@ -216,3 +216,24 @@ test('リール日の代替カルーセルは 19:30 JST 以降・リール未承
   assert.equal(missing.rows[0][7], '2026-09-18T11:15:00.000Z');
   assert.deepEqual(await seedReelFallbackQueue(makeEnv(0).env, new Date('2026-09-18T09:00:00.000Z')), { enabled: true, planned: 0, inserted: 0, reel_ready: false });
 });
+
+// 2026-09-23 大隆さん報告「インスタ投稿したの50円書いてたから削除したよ」。
+// 2026-09-21 に Demand Match Click（1クリック50円）を廃止したのに、カルーセルの
+// seller-demand-visible に残ったまま Instagram に出てしまった。画像は JSON から描かれるので、
+// JSON の側で廃止した課金の言い方を止める（build-social-carousels.py の PRICING_BAN と同じ規則）。
+test('カルーセルの文言に、廃止したクリック課金は残っていない', () => {
+  const doc = JSON.parse(readFileSync(new URL('../ops/social/carousels-v3.json', import.meta.url), 'utf8'));
+  const banned = /Demand Match Click|1クリック|クリック課金|クリック単価|50円|５０円/u;
+  for (const set of doc.sets) {
+    assert.doesNotMatch(JSON.stringify(set), banned, `${set.id} に廃止した課金の言い方が残っている`);
+  }
+  const seller = doc.sets.filter((set) => set.audience === 'seller');
+  assert.ok(seller.length >= 1);
+  const pricing = JSON.stringify(seller);
+  assert.match(pricing, /4,980円/u, 'セラー向けは月額だけを書く');
+  assert.match(pricing, /3か月は0円/u, '最初の3か月0円');
+  // 描画側も同じ規則を持っている（片方だけ直しても通らないようにする）
+  const builder = readFileSync(new URL('../scripts/build-social-carousels.py', import.meta.url), 'utf8');
+  assert.match(builder, /PRICING_BAN = re\.compile/u);
+  assert.match(builder, /ABOLISHED_PRICING/u);
+});
