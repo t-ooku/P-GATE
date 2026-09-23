@@ -49,22 +49,67 @@ export function jstDayRange(date) {
 // そのまま実送信された。本文は「型を固定し hook の1文だけを会社ごとに変える」約束なので、型の文を
 // 一字一句そのまま含まない行は送らず SKIPPED（template_mismatch）にする。AI が作ったものは
 // 指示ではなく機械検査でしか担保できない。型を変えるときは、この配列と投入側の文面を同時に変える。
-// 2026-09-23 大隆さん指示「RIZAPグループ株式会社のグループ企業や店舗には絶対送らない」。
+// 2026-09-23 大隆さん指示「RIZAPグループ株式会社のグループ企業や店舗には絶対送らない」
+// 「その孫会社とかもあるからそれも全てng」「とにかくRIZAPグループ株式会社の連結会社は全てng」。
 // 送り先の選定は人と AI の両方がやるので、選定の段階だけでなく**送る直前にも**機械で止める。
-// 社名・ブランド名・確実なドメインだけで判定する（似た一般語は入れない。誤って無関係の店を
-// 止めないため）。当たった行は送らず SKIPPED（excluded_organization）にして理由を残す。
-// グループ企業一覧: https://www.rizapgroup.com/about/group （2026-09-23 確認）
+// 判定は社名・ブランド名・自社ドメインだけで行う（似た一般語は入れない。無関係の店を巻き込まない
+// ため。「BRUNO のホットプレートを扱っています」という再販店は止めない）。当たった行は送らず
+// SKIPPED（excluded_organization）にして理由を残す。
+// 出典（いずれも 2026-09-23 確認）:
+//   全グループ会社 https://www.rizapgroup.com/privacy/corporategroup
+//   主なグループ企業 https://www.rizapgroup.com/about/group
+//   2026年3月期 決算短信 https://www.sse.or.jp/wp-content/uploads/2026/05/rizap2026.3.pdf
+//   孫会社: MRK https://www.mrkholdings.co.jp/group/ ／ REXT・SD・夢展望・BRUNO・アンティローザ各社サイト
+// 資本関係は変わる。増えたと分かった時点でここに足す（消すのは大隆さんの確認を取ってから）。
 export const OUTREACH_EXCLUDED_ORGANIZATIONS = [
-  'rizapgroup.com', 'rizap.jp', 'chocozap.jp',
+  // 自社ドメイン（末尾・前後の切れ目を見てから当てる。文中の URL でも効く）
+  'rizapgroup.com', 'rizap.co.jp', 'rizap.jp', 'chocozap.jp', 'kenkoucorp.com',
+  'kenkoums.com', 'kenkouc.com', 'rizap-tech.co.jp', 'rizap-build.co.jp',
+  'rizap-agency.co.jp', 'rizap-rbs.co.jp',
+  'mrkholdings.co.jp', 'maruko.com', 'misel.co.jp', 'altiqs.com', 'marukonet.cn',
+  'bruno-inc.com', 'bruno-onlineshop.com', 'idea-onlineshop.jp',
+  'rext.jp', 'wondergoo.com', 'wonderrex.jp', 'shinseido.co.jp',
+  'auntierosa.com', 'shop-arholiday.jp', 'dreamv.co.jp', 'dreamvs.jp',
+  'dmsupporter.jp', 'gorinpki.co.jp', 'sankeiliving.co.jp', 'sdentertainment.jp',
+  'isshin.com',
+  // 持株会社・中核会社（RIZAP / ライザップ で RIZAP◯◯株式会社は全部当たる）
   'RIZAP', 'ライザップ', 'chocoZAP', 'チョコザップ',
-  'MRKホールディングス', 'ドクターシーラボ',
-  '健康メディカルサービス', '健康コミュニケーションズ', '健康コーポレーション',
-  'BRUNO株式会社', 'REXT Holdings', 'アンティローザ', '夢展望',
-  '五輪パッキング', 'サンケイリビング新聞社', 'SDエンターテイメント', '一新時計'
+  '健康コーポレーション', '健康メディカルサービス', '健康コミュニケーションズ',
+  'ジャパンギャルズ',
+  // MRKホールディングス系（孫会社）
+  'MRKホールディングス', 'マルコ株式会社', 'MARUKO CO', 'MISEL株式会社',
+  '株式会社ALTIQS', '瑪露珂爾', 'ドクターシーラボ',
+  // REXT（旧ワンダーコーポレーション）系（孫会社・店舗名）
+  'REXT Holdings', 'REXT株式会社', 'WonderGOO', 'ワンダーグー', 'WonderREX',
+  'ワンダーレックス', '新星堂', 'ワンダーコーポレーション',
+  // BRUNO（旧イデアインターナショナル）系
+  'BRUNO株式会社', 'BRUNO,Inc', 'イデアインターナショナル', 'MILESTO', 'ミレスト',
+  // アパレル系（孫会社・ブランド名）
+  'アンティローザ', 'AuntieRosa', 'Auntie Rosa', 'アントマリーズ',
+  '夢展望', 'DearMyLove', 'ディアマイラブ',
+  // インベストメント事業・その他の連結会社
+  '五輪パッキング', 'サンケイリビング新聞社', 'SDエンターテイメント', 'SDフィットネス',
+  'エムシーツー株式会社', '株式会社フォーユー', '一新時計', '株式会社D&M', 'D&M株式会社',
+  // 直近まで連結にあった会社（資本が抜けたばかりの相手も送らない）
+  '堀田丸正', 'タツミマネジメント', '株式会社ビーアンドディー'
 ];
+
+// ドメインは前後の切れ目を見る（'isshin.com' が 'kisshin.com' に当たらないように）。
+function domainHit(haystack, needle) {
+  for (let index = haystack.indexOf(needle); index >= 0; index = haystack.indexOf(needle, index + 1)) {
+    const before = haystack[index - 1];
+    const after = haystack[index + needle.length];
+    if ((before && /[a-z0-9.-]/u.test(before)) || (after && /[a-z0-9-]/u.test(after))) continue;
+    return true;
+  }
+  return false;
+}
 export function findExcludedOrganization(...values) {
   const haystack = values.map((value) => String(value || '')).join('\n').toLowerCase();
-  return OUTREACH_EXCLUDED_ORGANIZATIONS.find((name) => haystack.includes(name.toLowerCase())) || '';
+  return OUTREACH_EXCLUDED_ORGANIZATIONS.find((name) => {
+    const needle = name.toLowerCase();
+    return needle.includes('.') ? domainHit(haystack, needle) : haystack.includes(needle);
+  }) || '';
 }
 
 export const OUTREACH_REQUIRED_SENTENCES = [

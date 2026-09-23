@@ -259,3 +259,30 @@ test('送らないと決めた相手は、送信直前に止めて理由を残�
   assert.equal(row.status, 'SKIPPED');
   assert.match(row.last_error, /^excluded_organization:RIZAP$/u);
 });
+
+// 2026-09-23 大隆さん追加指示「その孫会社とかもあるからそれも全てng」
+// 「とにかくRIZAPグループ株式会社の連結会社は全てng」。
+// 親会社の名前が出ない相手（孫会社・ブランド名・店舗名）が本題なので、そこを名指しで確かめる。
+test('RIZAPグループの孫会社・ブランド名・店舗名も送らない', async () => {
+  const { findExcludedOrganization } = await import('../src/seller-outreach.mjs');
+  // 孫会社（親会社の名前がどこにも出ない）
+  assert.equal(findExcludedOrganization('マルコ株式会社', 'info@example.com'), 'マルコ株式会社');
+  assert.equal(findExcludedOrganization('株式会社ALTIQS', 'a@example.com'), '株式会社ALTIQS');
+  assert.equal(findExcludedOrganization('新星堂WonderGOO楽天市場店', 'a@example.com'), 'WonderGOO');
+  assert.equal(findExcludedOrganization('エムシーツー株式会社', 'a@example.com'), 'エムシーツー株式会社');
+  // ブランド名・自社ドメインだけで分かる相手
+  assert.equal(findExcludedOrganization('雑貨店', 'info@bruno-onlineshop.com'), 'bruno-onlineshop.com');
+  assert.equal(findExcludedOrganization('通販', 'a@example.com', '出典 https://dreamvs.jp/shop/pages/brand.aspx'), 'dreamvs.jp');
+  assert.equal(findExcludedOrganization('MILESTO 公式', 'a@example.com'), 'MILESTO');
+  assert.equal(findExcludedOrganization('Auntie Rosa Holiday', 'a@shop-arholiday.jp'), 'shop-arholiday.jp');
+  // 資本が抜けたばかりの相手も送らない
+  assert.equal(findExcludedOrganization('堀田丸正株式会社', 'a@example.com'), '堀田丸正');
+
+  // ドメインは前後の切れ目を見る（似た綴りの無関係な店を巻き込まない）
+  assert.equal(findExcludedOrganization('時計店 きっしん', 'info@kisshin.com'), '');
+  assert.equal(findExcludedOrganization('一新時計', 'info@isshin.com'), 'isshin.com');
+  assert.equal(findExcludedOrganization('雑貨店', 'info@xdreamvs.jp'), '');
+  // 一般語は入れていない（無関係の店を止めない）
+  assert.equal(findExcludedOrganization('株式会社フォー', 'info@four-you.example.com'), '');
+  assert.equal(findExcludedOrganization('ミセル雑貨', 'info@misel-zakka.example.jp'), '');
+});
