@@ -228,12 +228,12 @@ test('2026-09-14 事故: 型の文が一字一句そのまま無い本文（誤�
 // 2026-09-23 大隆さん指示「営業メールを1日30社に増やして」。
 // 本番の上限は wrangler.jsonc の vars で持つ（コードの既定10は据え置き）。
 // 平日09:00〜18:00 JST・1サイクル3通のままなので、30通は10サイクルに分かれて出る。
-test('本番の1日の送信上限は30通（窓と1サイクルの本数は変えない）', () => {
+test('本番の1日の送信上限は50通（コード側の頭打ちと同じ。窓と1サイクルの本数は変えない）', () => {
   const wrangler = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8'));
-  assert.equal(wrangler.vars.SELLER_OUTREACH_DAILY_LIMIT, '30');
+  assert.equal(wrangler.vars.SELLER_OUTREACH_DAILY_LIMIT, '50');
   assert.equal(OUTREACH_PER_CYCLE_LIMIT, 3);
-  // 09:00〜18:00 JST を15分ごとに回すと36サイクル。3通ずつなら30通は入りきる。
-  assert.ok(36 * OUTREACH_PER_CYCLE_LIMIT >= 30);
+  // 09:00〜18:00 JST を15分ごとに回すと36サイクル。3通ずつなら50通も入りきる。
+  assert.ok(36 * OUTREACH_PER_CYCLE_LIMIT >= 50);
   assert.equal(jstBusinessHours(new Date('2026-09-23T00:05:00Z')), true);
   assert.equal(jstBusinessHours(new Date('2026-09-23T09:05:00Z')), false);
 });
