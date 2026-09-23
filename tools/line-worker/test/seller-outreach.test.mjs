@@ -8,24 +8,30 @@ import {
   outreachReadiness, runSellerOutreachCycle, unsubscribeUrl
 } from '../src/seller-outreach.mjs';
 
-// 本番で実際に送られている型（2026-09-10 投入分）。hook の1文だけを会社ごとに変える。
+// 本番で実際に送られている型（2026-09-23 改訂）。hook の1文だけを会社ごとに変える。
 const GOOD_BODY = (shop, hook) => `${shop} ご担当者様
 
 突然のご連絡失礼いたします。買い物検索サービス HOSHILU を運営している大久津と申します。楽天商品情報ページに記載の連絡先へお送りしています。
 
-HOSHILU は、Amazon・楽天・Qoo10 などを横断して商品を探すサービスです。${hook}
+HOSHILU は、Amazon・楽天・Qoo10 などを横断して商品を探すサービスです。買い手にはモールの違いではなく、写真・商品名・価格が先に見えます。モールを決めていない人にも見つけてもらう入口になります。
+${hook}
 
-HOSHILU でできること（すべて現在公開中の機能です）:
+掲載していただくと、次の4つが使えます（すべて現在公開中の機能です）:
 ・商品・ジャンル・ショップの3方向から、探している人に見つけてもらう
 ・「この価格になったら教えて」（希望価格ウォッチ）とセール通知で、今すぐ買わない人を買い時までつなぐ
 ・ショップページ、ショップ発行クーポン、「ショップをホシる」（フォロー）でリピーター候補を残す
+・ユーザーが探して見つからなかった「欲しい」が、個人を特定できない匿名の需要としてお店に届く（同じ条件を5人以上が探している項目のみ）。商品を登録すると、HOSHILU が条件を確かめて探していた本人にだけお知らせします
 
-料金は HOSHILU Seller 4,980円/月（税込）だけです。最初の3か月は月額0円。クリックによる追加料金はありません。初期費用・解約金もありません。
+掲載順を売る仕組みはありません。並び順は検索語との一致だけで決まります。
+
+始めるときの御社の手間はほとんどありません。ショップページの作成と商品の取り込みは、こちらで代行します。既存のモール出店はそのままで構いません。
+
+料金は HOSHILU Seller 4,980円/月（税込）だけです。最初の3か月は月額0円。クリックによる追加料金はありません。初期費用・解約金もありません。合わなければいつでも止められます。
+
 先行して掲載中のショップの例: https://hoshilu.app/shop/with-care
-
-ユーザー数はまだ多くありません。だからこそ、最初のセラー様とは「新しい集客チャネルを一緒に作る」つもりで、ショップページの作成や商品の取り込みはこちらで代行します。
 詳細: https://hoshilu.app/for-sellers
 
+ユーザー数はまだ多くありません。だからこそ、最初のセラー様とは「新しい集客チャネルを一緒に作る」つもりでやっています。
 ご興味があれば、このメールへの返信でお気軽にご相談ください。`;
 
 function databaseEnv(extra = {}) {
@@ -285,4 +291,33 @@ test('RIZAPグループの孫会社・ブランド名・店舗名も送らない
   // 一般語は入れていない（無関係の店を止めない）
   assert.equal(findExcludedOrganization('株式会社フォー', 'info@four-you.example.com'), '');
   assert.equal(findExcludedOrganization('ミセル雑貨', 'info@misel-zakka.example.jp'), '');
+});
+
+// 2026-09-23 大隆さん指示「ITグループ株式会社の関連企業もね」。
+// 主グループ企業は SDエンターテイメント・エムシーツー・株式会社フォーユー・合同会社TAISETSU
+// （https://it-group.jp/company/ 2026-09-23 確認）。施設名「リバイブ」は一般語なので入れず、
+// ドメインで当てる。
+test('ITグループ株式会社の関連企業も送らない', async () => {
+  const { findExcludedOrganization } = await import('../src/seller-outreach.mjs');
+  assert.equal(findExcludedOrganization('ITグループ株式会社', 'a@example.com'), 'ITグループ株式会社');
+  assert.equal(findExcludedOrganization('合同会社TAISETSU', 'a@example.com'), '合同会社TAISETSU');
+  assert.equal(findExcludedOrganization('カメリアキッズ', 'a@example.com'), 'カメリアキッズ');
+  assert.equal(findExcludedOrganization('就労支援事業所', 'info@revive-support.jp'), 'revive-support.jp');
+  assert.equal(findExcludedOrganization('保育園', 'a@example.com', '出典 https://it-group.jp/company/'), 'it-group.jp');
+  // 一般語は入れない（同名の無関係な店を止めない）
+  assert.equal(findExcludedOrganization('リバイブ 中古品店', 'info@revive-used.example.jp'), '');
+});
+
+// 2026-09-23 大隆さん指示「ちゃんと参入したくなる内容でよろしくね」。
+// 「何ができるか」だけでなく「始めるのに何を失うか」に先に答える型にした。
+// 成果の約束はしない（そこは禁止語の検査が別に見ている）。
+test('営業メールの型は、始める側の不安に先に答える', () => {
+  const text = OUTREACH_REQUIRED_SENTENCES.join('\n');
+  assert.match(text, /最初の3か月は月額0円/u, '試すのにお金がかからないこと');
+  assert.match(text, /初期費用・解約金もありません。合わなければいつでも止められます。/u, '抜けられること');
+  assert.match(text, /ショップページの作成と商品の取り込みは、こちらで代行します/u, '手間が要らないこと');
+  assert.match(text, /既存のモール出店はそのままで構いません/u, '今の出店と競合しないこと');
+  assert.match(text, /掲載順を売る仕組みはありません/u, '金で順位が決まらないこと');
+  assert.match(text, /クリックによる追加料金はありません/u, '2026-09-21 に廃止したクリック課金を書かない');
+  assert.deepEqual(findForbiddenPhrases(text), [], '成果を約束しない');
 });
