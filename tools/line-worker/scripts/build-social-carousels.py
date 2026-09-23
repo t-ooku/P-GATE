@@ -14,6 +14,9 @@
 - 同時に見た目を作り直した。表紙は濃色のグラデーションに大きな見出し、中面は影のついた白いカード、
   下に進行ドット。書体は Bold（見出し）と Regular（本文）を使い分ける。どちらも ubuntu の
   fonts-noto-cjk に入っているので、CI と手元で同じ絵が出る。
+- 画像を作り直すのは .github/workflows/build-social-carousels.yml。Issue パッチ経由の push は
+  Actions の GITHUB_TOKEN で行われ、後続のワークフローを起こさない（GitHub の仕様）。
+  このファイルか carousels-v3.json を外から push し直すと再生成が走る。
 
 使い方: python3 scripts/build-social-carousels.py [/path/to/NotoSansCJK-Bold.ttc]
 """
