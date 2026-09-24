@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-24T00:29:01.399Z",
+  "generated_at": "2026-09-24T23:52:07.071Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -34,9 +34,10 @@
     "2026-09-18-claude-batch-031.json",
     "2026-09-19-claude-batch-032.json",
     "2026-09-20-codex-batch-033.json",
-    "2026-09-23-claude-batch-034.json"
+    "2026-09-23-claude-batch-034.json",
+    "2026-09-24-claude-batch-035.json"
   ],
-  "entry_count": 1758,
+  "entry_count": 1823,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -23028,6 +23029,321 @@
       "source_file": "2026-09-05-claude-batch-019.json"
     },
     {
+      "content_hash": "217bb4aee75a0aa63ec0dddf06e8aa2db89d6f6eadb18588d9dae5901109cf8d",
+      "query_text": "尿石が落ちないトイレ用の洗剤がほしい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "descale-toilet-cleaner",
+      "ideal_answer": "尿石除去・黄ばみ落とし効果をうたう酸性タイプのトイレ用洗剤・クリーナー",
+      "search_terms": {
+        "ja": [
+          "尿石除去 トイレ洗剤",
+          "黄ばみ落とし トイレ洗剤",
+          "水垢除去 トイレクリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0ce67a15ec7a42850df8c5ce3886e9bf33695cb6d164523176117b42561c53f8",
+      "query_text": "黄ばみが取れないトイレをきれいにしたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "descale-toilet-cleaner",
+      "ideal_answer": "尿石除去・黄ばみ落とし効果をうたう酸性タイプのトイレ用洗剤・クリーナー",
+      "search_terms": {
+        "ja": [
+          "尿石除去 トイレ洗剤",
+          "黄ばみ落とし トイレ洗剤",
+          "水垢除去 トイレクリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "78cb6b50b5fd376913bb767d4510045b6f23e0fe1666c07e7d268e53899e1570",
+      "query_text": "何年も使っているせいか水垢が落ちない便器を掃除したい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "descale-toilet-cleaner",
+      "ideal_answer": "尿石除去・黄ばみ落とし効果をうたう酸性タイプのトイレ用洗剤・クリーナー",
+      "search_terms": {
+        "ja": [
+          "尿石除去 トイレ洗剤",
+          "黄ばみ落とし トイレ洗剤",
+          "水垢除去 トイレクリーナー"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "6370c5c55e7b565f09ad8debac8569698a971c0233c5880204fb0cd01079292e",
+      "query_text": "香水をつけても香りがすぐ消えてしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "long-lasting-perfume",
+      "ideal_answer": "賦香率の高いパルファン・オードパルファンなど香り持続時間の長い香水",
+      "search_terms": {
+        "ja": [
+          "香り持続 香水",
+          "ロングラスティング 香水",
+          "香り長持ち オーデコロン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0fdb849b3196b7a0d7615fc732f98dee89a76515d8aff6febb5db2fb4316ebe2",
+      "query_text": "つけた香水の香りが早く飛んでしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "long-lasting-perfume",
+      "ideal_answer": "賦香率の高いパルファン・オードパルファンなど香り持続時間の長い香水",
+      "search_terms": {
+        "ja": [
+          "香り持続 香水",
+          "ロングラスティング 香水",
+          "香り長持ち オーデコロン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8b2ec7bc87fa8c2d9f1fdd99d702ca89d2ff995e4b461df76c63f2dcd30d3abd",
+      "query_text": "オーデコロンの香りが持続しない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "long-lasting-perfume",
+      "ideal_answer": "賦香率の高いパルファン・オードパルファンなど香り持続時間の長い香水",
+      "search_terms": {
+        "ja": [
+          "香り持続 香水",
+          "ロングラスティング 香水",
+          "香り長持ち オーデコロン"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "586ff86f39cb40e7f4e6c558a99fd8d75c0a259c8a58111c3d3f2e5c02df25a7",
+      "query_text": "棚板の高さを変えられるカラーボックス",
+      "locale": "ja",
+      "persona": "general",
+      "category": "adjustable-shelf-bookcase",
+      "ideal_answer": "可動棚(棚板の高さ調整)機能付きのカラーボックス・本棚・シェルフ",
+      "search_terms": {
+        "ja": [
+          "可動棚 カラーボックス",
+          "棚板 高さ調整 本棚",
+          "可動棚 シェルフ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "868b3358dc12ab8c5b9e8b01930179247f1a9eaf09f1c67b497ff48e1f9065c7",
+      "query_text": "本の大きさに合わせて棚の高さを調整できる本棚",
+      "locale": "ja",
+      "persona": "general",
+      "category": "adjustable-shelf-bookcase",
+      "ideal_answer": "可動棚(棚板の高さ調整)機能付きのカラーボックス・本棚・シェルフ",
+      "search_terms": {
+        "ja": [
+          "可動棚 カラーボックス",
+          "棚板 高さ調整 本棚",
+          "可動棚 シェルフ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0679914e53b5d943cb9e1c864be3fb5a1d751b4f868262d848cfe4269b40b0da",
+      "query_text": "可動棚でレイアウトを自由に変えられるシェルフ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "adjustable-shelf-bookcase",
+      "ideal_answer": "可動棚(棚板の高さ調整)機能付きのカラーボックス・本棚・シェルフ",
+      "search_terms": {
+        "ja": [
+          "可動棚 カラーボックス",
+          "棚板 高さ調整 本棚",
+          "可動棚 シェルフ"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2c9af766afbd5e87e0598f376bef629a33d372a2102c69b5d7178559ee30e686",
+      "query_text": "タンクの水を捨てるのが面倒な除湿機",
+      "locale": "ja",
+      "persona": "general",
+      "category": "auto-drain-dehumidifier",
+      "ideal_answer": "自動排水(連続排水)機能付きの除湿機",
+      "search_terms": {
+        "ja": [
+          "自動排水 除湿機",
+          "連続排水 除湿機",
+          "水捨て不要 除湿機"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "0b0149ec674c68fc62f2d8d0cef79cc35acb58ff1c79ef65273d40b371c81180",
+      "query_text": "除湿機の水捨てが面倒なので自動で排水してほしい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "auto-drain-dehumidifier",
+      "ideal_answer": "自動排水(連続排水)機能付きの除湿機",
+      "search_terms": {
+        "ja": [
+          "自動排水 除湿機",
+          "連続排水 除湿機",
+          "水捨て不要 除湿機"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3b95a8893647e6469455225eb9d818f35af4c04502f63660fcc471e8a996aa22",
+      "query_text": "水を毎日捨てなくていい除湿機が欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "auto-drain-dehumidifier",
+      "ideal_answer": "自動排水(連続排水)機能付きの除湿機",
+      "search_terms": {
+        "ja": [
+          "自動排水 除湿機",
+          "連続排水 除湿機",
+          "水捨て不要 除湿機"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "74815588d406ce696d4cec2ffd5ac11fba23a440b5c20fd3df6b1e5877576e93",
+      "query_text": "穴を開けなくていいベビーゲート",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-drill-baby-gate",
+      "ideal_answer": "突っ張り式(置くだけ)で工事不要・賃貸でも使えるベビーゲート・セーフティゲート",
+      "search_terms": {
+        "ja": [
+          "突っ張り式 ベビーゲート",
+          "工事不要 ベビーゲート",
+          "賃貸OK セーフティゲート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b98ab57b362100236d8614be0d570637814b93639741e73afde1e0da2cc0debe",
+      "query_text": "賃貸でも使えるセーフティゲートが欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-drill-baby-gate",
+      "ideal_answer": "突っ張り式(置くだけ)で工事不要・賃貸でも使えるベビーゲート・セーフティゲート",
+      "search_terms": {
+        "ja": [
+          "突っ張り式 ベビーゲート",
+          "工事不要 ベビーゲート",
+          "賃貸OK セーフティゲート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "64d25cffff8e6b99970d6be0e0294e16cb7a27198a989bed88dba1948b17f70e",
+      "query_text": "壁を傷つけたくないので設置できるベビーゲートを探している",
+      "locale": "ja",
+      "persona": "general",
+      "category": "no-drill-baby-gate",
+      "ideal_answer": "突っ張り式(置くだけ)で工事不要・賃貸でも使えるベビーゲート・セーフティゲート",
+      "search_terms": {
+        "ja": [
+          "突っ張り式 ベビーゲート",
+          "工事不要 ベビーゲート",
+          "賃貸OK セーフティゲート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
       "content_hash": "31a7a0358998d668a04b4cef01f5b72519c45c1210b20d69015b3c692661cf74",
       "query_text": "洗濯物を干すときに使う伸びるやつ",
       "locale": "ja",
@@ -37893,6 +38209,1253 @@
       "excluded_conditions": [],
       "confidence": 0.55,
       "source_file": "2026-09-23-claude-batch-034.json"
+    },
+    {
+      "content_hash": "8fcd18776b5b7396e14a5c65f0d266510eacb8131711a384dfad1a3c069789ac",
+      "query_text": "汗を抑えてくれるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "antiperspirant",
+      "ideal_answer": "汗を抑える制汗剤・デオドラントスプレー/ロールオン",
+      "search_terms": {
+        "ja": [
+          "制汗剤",
+          "デオドラント スプレー"
+        ],
+        "en": [
+          "antiperspirant"
+        ],
+        "ko": [
+          "땀 억제제"
+        ],
+        "zh": [
+          "止汗剂"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "b01aa036f5f6b047de9c62bfb9e29da05cba964c5aefd0685308e3911db100c1",
+      "query_text": "虫歯を防ぐやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "dental-care",
+      "ideal_answer": "虫歯予防用の歯磨き粉・フッ素ケア用品",
+      "search_terms": {
+        "ja": [
+          "虫歯予防 歯磨き粉",
+          "フッ素 歯みがき"
+        ],
+        "en": [
+          "cavity prevention toothpaste"
+        ],
+        "ko": [
+          "충치 예방 치약"
+        ],
+        "zh": [
+          "防蛀牙牙膏"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "8fdf689a2c6f738715c7a7050c9008985852442276fc52874c6fe46cbdec1763",
+      "query_text": "猫の爪とぎでボロボロにならないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "furniture-protector",
+      "ideal_answer": "家具保護カバー・爪とぎ防止シート",
+      "search_terms": {
+        "ja": [
+          "爪とぎ防止シート",
+          "ソファ 保護カバー"
+        ],
+        "en": [
+          "cat scratch furniture protector"
+        ],
+        "ko": [
+          "고양이 스크래치 방지 커버"
+        ],
+        "zh": [
+          "猫抓防护垫"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "14fe554f390c57d994cf2d97a2040b66523ed9476fd0292c3ddd4d2a1b3a0f84",
+      "query_text": "車の中で充電できるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "car-charger",
+      "ideal_answer": "車載用USBカーチャージャー",
+      "search_terms": {
+        "ja": [
+          "カーチャージャー",
+          "車 充電器"
+        ],
+        "en": [
+          "car charger"
+        ],
+        "ko": [
+          "차량용 충전기"
+        ],
+        "zh": [
+          "车载充电器"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "8abf561aaa346790f6d1932ee0a3a99b7be606ba8f5095bee6477b8c138b0990",
+      "query_text": "雨の日でも髪がまとまるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hair-care",
+      "ideal_answer": "湿気対策のヘアオイル・アンチフリズムヘアケア用品",
+      "search_terms": {
+        "ja": [
+          "湿気 髪 まとまる",
+          "アンチフリズ ヘアオイル"
+        ],
+        "en": [
+          "anti frizz hair care"
+        ],
+        "ko": [
+          "곱슬 방지 헤어 오일"
+        ],
+        "zh": [
+          "防湿气护发"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "f4166f202990414d09807ac1b4d2fdfabf188885f056fa13b75d46481768fa02",
+      "query_text": "お風呂場のカビを防ぐやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "mold-prevention",
+      "ideal_answer": "浴室用防カビくん煙剤・防カビスプレー",
+      "search_terms": {
+        "ja": [
+          "防カビ くん煙剤",
+          "浴室 防カビ スプレー"
+        ],
+        "en": [
+          "bathroom mold prevention"
+        ],
+        "ko": [
+          "욕실 곰팡이 방지"
+        ],
+        "zh": [
+          "浴室防霉"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "7e1ef2d9d52dbfe47b3034ec04e86cf230012f41e77d5e0e971c8d6e1775b65e",
+      "query_text": "荷物を軽くしてくれるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "何を軽くしたいですか？スーツケースやバッグそのものを軽量なものに替えたいですか、それとも荷物を圧縮する収納グッズ（圧縮袋・パッキングキューブ）をお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "6539901b87b08c569a9ffae2fc3eecff65e01a4aa1a33e665e9a6eecbc5bcfcd",
+      "query_text": "目が疲れたときに使うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "eye-care",
+      "ideal_answer": "蒸気で温めるホットアイマスク・目元用マッサージャー",
+      "search_terms": {
+        "ja": [
+          "ホットアイマスク",
+          "目元 マッサージャー"
+        ],
+        "en": [
+          "eye mask for tired eyes"
+        ],
+        "ko": [
+          "온열 안대"
+        ],
+        "zh": [
+          "蒸汽眼罩"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "0b85c0c42921fac66abbcdd8a6f3d4e9042eecaa6f2db1b80647dd931d9d4e8a",
+      "query_text": "玄関で靴を脱ぐときに使うやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "靴を履きやすくする靴べらですか、それとも玄関に敷くマットや靴をしまう収納棚をお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "081b0077cdb5457e045cb5bc93a64d98ffde26d949e7f9e1b04fcefad78e3787",
+      "query_text": "寝るときに音を消してくれるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "周囲の音を遮る耳栓をお探しですか、それとも自然音などを流して気にならなくするホワイトノイズマシンをお探しですか？",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.35,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "11b1ad42bf6e775192d8a31656240545a45ade263438de88d49aee9fa37e1923",
+      "query_text": "手が冷たくならないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hand-warmer",
+      "ideal_answer": "防寒手袋・充電式ハンドウォーマー",
+      "search_terms": {
+        "ja": [
+          "ハンドウォーマー",
+          "防寒 手袋"
+        ],
+        "en": [
+          "hand warmer"
+        ],
+        "ko": [
+          "손난로"
+        ],
+        "zh": [
+          "暖手宝"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "8cb9104faeab13f72d7abc975abbd0c8c4a4100c1fd8b5b09448cc0805aadce2",
+      "query_text": "スマホを立てておけるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "phone-stand",
+      "ideal_answer": "卓上スマホスタンド",
+      "search_terms": {
+        "ja": [
+          "スマホスタンド",
+          "卓上 スマホ 立て"
+        ],
+        "en": [
+          "phone stand"
+        ],
+        "ko": [
+          "스마트폰 거치대"
+        ],
+        "zh": [
+          "手机支架"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "b10c34744f58b8b54577e0cb09a156bf65c16e03aa1a9b27d21b67595c005e54",
+      "query_text": "冷蔵庫の中の匂いを消すやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "fridge-deodorizer",
+      "ideal_answer": "冷蔵庫用脱臭剤",
+      "search_terms": {
+        "ja": [
+          "冷蔵庫 脱臭剤"
+        ],
+        "en": [
+          "fridge deodorizer"
+        ],
+        "ko": [
+          "냉장고 탈취제"
+        ],
+        "zh": [
+          "冰箱除臭剂"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "2523aa868061840c34dd301b544d5ad1de6289bf9452ff02d20e97c684cfa334",
+      "query_text": "洗濯物の生乾き臭を防ぐやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "laundry-care",
+      "ideal_answer": "部屋干し用の抗菌・防臭洗剤や柔軟剤",
+      "search_terms": {
+        "ja": [
+          "部屋干し 洗剤",
+          "抗菌 柔軟剤"
+        ],
+        "en": [
+          "anti odor laundry detergent"
+        ],
+        "ko": [
+          "실내건조 세제"
+        ],
+        "zh": [
+          "室内晾晒洗衣液"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "a04d898d853950ee388a72e071169ac066f51b33d69ecc7fdd0aab48acee19fb",
+      "query_text": "財布を忘れないようにするやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "item-tracker",
+      "ideal_answer": "紛失防止スマートタグ（財布等に取り付けるBluetoothトラッカー）",
+      "search_terms": {
+        "ja": [
+          "紛失防止タグ",
+          "財布 忘れ物防止"
+        ],
+        "en": [
+          "smart tracker tag"
+        ],
+        "ko": [
+          "분실 방지 태그"
+        ],
+        "zh": [
+          "防丢器"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "f728afd1e2a795f04799f2d2b5abf2ca5b5d8eb6a7d853190a4332c84f36cfef",
+      "query_text": "きらきらするえんぴつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "stationery",
+      "ideal_answer": "ラメ入り・ホログラム加工のかわいい鉛筆",
+      "search_terms": {
+        "ja": [
+          "ラメ 鉛筆",
+          "キラキラ 文房具"
+        ],
+        "en": [
+          "glitter pencil"
+        ],
+        "ko": [
+          "반짝이 연필"
+        ],
+        "zh": [
+          "闪亮铅笔"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "a3634a47935658b59cfebd4f90d4297addad3cc61302acc623741369d3f4437f",
+      "query_text": "絵が動いて見えるお弁当箱",
+      "locale": "ja",
+      "persona": "child",
+      "category": "lunch-box",
+      "ideal_answer": "絵柄が動いて見えるデザインのお弁当箱（キャラクター柄）",
+      "search_terms": {
+        "ja": [
+          "キャラクター 弁当箱",
+          "子供用 弁当箱"
+        ],
+        "en": [
+          "kids character lunch box"
+        ],
+        "ko": [
+          "캐릭터 도시락통"
+        ],
+        "zh": [
+          "卡通饭盒"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "bc91cea928586381af84d191cdaf32bc62dbcb35e8f75f7059301611e3701fd0",
+      "query_text": "ぴょんぴょんはねるボール",
+      "locale": "ja",
+      "persona": "child",
+      "category": "toy-ball",
+      "ideal_answer": "よく弾むバウンドボール・ホッピングボール",
+      "search_terms": {
+        "ja": [
+          "バウンドボール",
+          "よく跳ねる ボール"
+        ],
+        "en": [
+          "bouncy ball toy"
+        ],
+        "ko": [
+          "통통 튀는 공"
+        ],
+        "zh": [
+          "弹力球"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "1d4e13d13994bececef2f1cbbd4fe8d92d9798fb5e600742e731696b7f01b352",
+      "query_text": "おふろで遊べるおもちゃ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "bath-toy",
+      "ideal_answer": "お風呂用おもちゃ（浮くアヒル・水鉄砲・お風呂クレヨン等）",
+      "search_terms": {
+        "ja": [
+          "お風呂 おもちゃ",
+          "バスタイム トイ"
+        ],
+        "en": [
+          "bath toys for kids"
+        ],
+        "ko": [
+          "목욕 장난감"
+        ],
+        "zh": [
+          "洗澡玩具"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "e66a4e99223deec05f63ea48531f6011bec26c6168ccb769d6616acb9ac5d30d",
+      "query_text": "くつがひかるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "light-up-shoes",
+      "ideal_answer": "歩くたびに光る子供用シューズ",
+      "search_terms": {
+        "ja": [
+          "光る靴 子供",
+          "led シューズ キッズ"
+        ],
+        "en": [
+          "light up shoes kids"
+        ],
+        "ko": [
+          "불빛 신발 어린이"
+        ],
+        "zh": [
+          "儿童发光鞋"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "8496ffbba257f438f146da166841476b4d5f1335f64f8c973d1c180894baa6a4",
+      "query_text": "なわとびの回数をかぞえてくれるやつ",
+      "locale": "ja",
+      "persona": "child",
+      "category": "jump-rope",
+      "ideal_answer": "回数カウンター付き縄跳び",
+      "search_terms": {
+        "ja": [
+          "カウンター付き 縄跳び",
+          "回数計測 なわとび"
+        ],
+        "en": [
+          "jump rope with counter"
+        ],
+        "ko": [
+          "카운터 줄넘기"
+        ],
+        "zh": [
+          "计数跳绳"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "5df4a4281e0cf2df67706606f635fb5706c09f3e6feb145a8b84b338432121ef",
+      "query_text": "立ち上がるときに支えになるもの",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "mobility-aid",
+      "ideal_answer": "自立式立ち上がり補助手すり・サポートスタンド",
+      "search_terms": {
+        "ja": [
+          "立ち上がり 補助 手すり",
+          "介護 サポートスタンド"
+        ],
+        "en": [
+          "stand assist bar"
+        ],
+        "ko": [
+          "기립 보조 손잡이"
+        ],
+        "zh": [
+          "起身扶手"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "9c22ae12403b324626b42aeb23cacc455878c06d123a3409309ca45c5b02cb7a",
+      "query_text": "文字が大きく表示される時計",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "large-display-clock",
+      "ideal_answer": "文字盤の数字が大きい見やすい時計",
+      "search_terms": {
+        "ja": [
+          "文字が大きい 時計",
+          "見やすい 置き時計"
+        ],
+        "en": [
+          "large display clock"
+        ],
+        "ko": [
+          "큰 숫자 시계"
+        ],
+        "zh": [
+          "大字时钟"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "d8b0c37e255b03f1ea0bf717af36765491d8176685db788cf664335f79e3bab2",
+      "query_text": "膝に貼るあたたかいシート",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "heating-patch",
+      "ideal_answer": "膝用あたためシート（貼るタイプ温感パッド）",
+      "search_terms": {
+        "ja": [
+          "膝 あたためシート",
+          "貼るカイロ 膝"
+        ],
+        "en": [
+          "knee warming patch"
+        ],
+        "ko": [
+          "무릎 온열 패치"
+        ],
+        "zh": [
+          "膝盖暖贴"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "f0f862b8dd7021c4d368fb35b9c76c11024088412a720254f192dc591e97ecf2",
+      "query_text": "電話の声が聞き取りやすくなる機械",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "phone-amplifier",
+      "ideal_answer": "音量増幅機能付き電話機・後付け音声増幅アダプター",
+      "search_terms": {
+        "ja": [
+          "音量 大きい 電話機",
+          "音声増幅 電話"
+        ],
+        "en": [
+          "amplified telephone"
+        ],
+        "ko": [
+          "소리 증폭 전화기"
+        ],
+        "zh": [
+          "扩音电话"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.45,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "4f3afb6811850c93c2794b27d1b2483d76dab39b559b8736548d8fe3f48a91b2",
+      "query_text": "庭の水やりが楽になる道具",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "garden-watering",
+      "ideal_answer": "タイマー式自動散水機・軽量ホースリール",
+      "search_terms": {
+        "ja": [
+          "自動 散水機",
+          "タイマー 水やり"
+        ],
+        "en": [
+          "automatic garden watering timer"
+        ],
+        "ko": [
+          "자동 급수 타이머"
+        ],
+        "zh": [
+          "自动浇水器"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "30ee4928645f56c13d15d5b0f452d96f4625835cc8a5e7de812f34d84809726b",
+      "query_text": "薬を曜日ごとに分けておくケース",
+      "locale": "ja",
+      "persona": "elderly",
+      "category": "pill-organizer",
+      "ideal_answer": "曜日ごとに仕切られたピルケース・お薬カレンダー",
+      "search_terms": {
+        "ja": [
+          "ピルケース 曜日",
+          "お薬カレンダー"
+        ],
+        "en": [
+          "weekly pill organizer"
+        ],
+        "ko": [
+          "요일별 약통"
+        ],
+        "zh": [
+          "一周药盒"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "ca0683c3e2953042f1fedb4f2fa7319ad54b19beb033f48936f6393e4f938bf8",
+      "query_text": "발이 편안해지는 신발",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "comfortable-shoes",
+      "ideal_answer": "クッション性の高い、疲れにくいスニーカー・ウォーキングシューズ",
+      "search_terms": {
+        "ja": [
+          "疲れにくい 靴",
+          "クッション スニーカー"
+        ],
+        "en": [
+          "comfortable walking shoes"
+        ],
+        "ko": [
+          "편안한 신발",
+          "쿠션 운동화"
+        ],
+        "zh": [
+          "舒适鞋"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "4dd71f2d9fa0e8280e1c18e656a7e9192deb2f213c7d6f1d79c25301f209e994",
+      "query_text": "여름에 시원한 이불",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "cooling-blanket",
+      "ideal_answer": "接触冷感素材の夏用掛け布団・タオルケット",
+      "search_terms": {
+        "ja": [
+          "接触冷感 掛け布団",
+          "夏用 タオルケット"
+        ],
+        "en": [
+          "cooling summer blanket"
+        ],
+        "ko": [
+          "여름 이불",
+          "냉감 이불"
+        ],
+        "zh": [
+          "夏季凉感被"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "f91771d1a807506670097034a43b6783fd0f7d25a8ac2a580a921199476d603e",
+      "query_text": "适合敏感肌肤的洗面奶",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "facial-cleanser",
+      "ideal_answer": "敏感肌向け低刺激性洗顔料",
+      "search_terms": {
+        "ja": [
+          "敏感肌 洗顔料",
+          "低刺激 洗顔"
+        ],
+        "en": [
+          "gentle cleanser for sensitive skin"
+        ],
+        "ko": [
+          "민감성 피부 클렌저"
+        ],
+        "zh": [
+          "敏感肌洗面奶"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "6284f23661b17503b032050dbe1c387a68be7a82c8268c4f653a3e4f8a884fdd",
+      "query_text": "拍照用的自拍杆",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "selfie-stick",
+      "ideal_answer": "Bluetooth対応スマホ用自撮り棒",
+      "search_terms": {
+        "ja": [
+          "自撮り棒",
+          "スマホ 撮影 スティック"
+        ],
+        "en": [
+          "selfie stick"
+        ],
+        "ko": [
+          "셀카봉"
+        ],
+        "zh": [
+          "自拍杆"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.8,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "84623e3240476d45951de3f8d0199b427fa8fe90c83368bccdcb2077aeddbcc4",
+      "query_text": "portable fan for hot weather",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "portable-fan",
+      "ideal_answer": "USB充電式の携帯用ハンディファン",
+      "search_terms": {
+        "ja": [
+          "携帯扇風機",
+          "ハンディファン"
+        ],
+        "en": [
+          "portable handheld fan"
+        ],
+        "ko": [
+          "휴대용 선풍기"
+        ],
+        "zh": [
+          "便携风扇"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "bb00c63e18d296242348f2a6f7d088a5dba6ba62b6ea2320f271cea3a31616b9",
+      "query_text": "charger that works in japan",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "travel-adapter",
+      "ideal_answer": "海外対応の変換プラグ・トラベルアダプター",
+      "search_terms": {
+        "ja": [
+          "海外対応 変換プラグ",
+          "トラベルアダプター"
+        ],
+        "en": [
+          "travel adapter for japan"
+        ],
+        "ko": [
+          "여행용 변환 플러그"
+        ],
+        "zh": [
+          "日本旅行转换插头"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "39e8343cffb6a780ce808a6e49ab5c52a16445e4a61234d03457c590e894cde5",
+      "query_text": "nihongo benkyou notebook",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "notebook",
+      "ideal_answer": "日本語学習用ノート（ひらがな・漢字練習帳）",
+      "search_terms": {
+        "ja": [
+          "日本語 学習 ノート",
+          "漢字練習帳"
+        ],
+        "en": [
+          "japanese study notebook"
+        ],
+        "ko": [
+          "일본어 학습 노트"
+        ],
+        "zh": [
+          "日语学习笔记本"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "5a6cd5202c3f3378866f734623386476928321b6cfd27ca1d7804f6c01de1e94",
+      "query_text": "kawaii sutorappu tsuketai",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "phone-strap",
+      "ideal_answer": "かわいいデザインのスマホストラップ",
+      "search_terms": {
+        "ja": [
+          "かわいい スマホストラップ"
+        ],
+        "en": [
+          "cute phone strap"
+        ],
+        "ko": [
+          "귀여운 폰스트랩"
+        ],
+        "zh": [
+          "可爱手机挂绳"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "1bfe88ad2127d49ddec0427ffa12b8353cdf1d33f7b8a72a49b7b45fc24fbab7",
+      "query_text": "여행 갈 때 필요한 거",
+      "locale": "ko",
+      "persona": "foreign",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "どんなものをお探しですか？スーツケースや変換プラグ、洗面用具セットなど、旅行の準備で具体的に必要なものを教えてください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "f713205be521949a9a7a307f47f484366c9c08d474c4567e9c1aab536ddb52e4",
+      "query_text": "电脑用的降噪耳机",
+      "locale": "zh",
+      "persona": "foreign",
+      "category": "noise-cancelling-headphones",
+      "ideal_answer": "PC接続対応のノイズキャンセリングヘッドホン",
+      "search_terms": {
+        "ja": [
+          "ノイズキャンセリング ヘッドホン PC"
+        ],
+        "en": [
+          "noise cancelling headphones for pc"
+        ],
+        "ko": [
+          "노이즈 캔슬링 헤드폰"
+        ],
+        "zh": [
+          "降噪耳机"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "c65747e4c475b8c80e4e9a4b256f38c3813952ab68ba72a47014cb740da733f8",
+      "query_text": "something to keep drinks cold outside",
+      "locale": "en",
+      "persona": "foreign",
+      "category": "insulated-tumbler",
+      "ideal_answer": "保冷性の高いステンレスタンブラー・水筒",
+      "search_terms": {
+        "ja": [
+          "保冷 タンブラー",
+          "保冷 水筒"
+        ],
+        "en": [
+          "insulated tumbler"
+        ],
+        "ko": [
+          "보냉 텀블러"
+        ],
+        "zh": [
+          "保冷杯"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.7,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "9cf67d63b4bf4433158da84489643be1e4a12327662c3ae64f1db973e5d51db1",
+      "query_text": "masuku atarashii no hoshii",
+      "locale": "mixed",
+      "persona": "foreign",
+      "category": "face-mask",
+      "ideal_answer": "不織布マスク・繰り返し使えるマスク",
+      "search_terms": {
+        "ja": [
+          "不織布マスク",
+          "マスク 新しい"
+        ],
+        "en": [
+          "face mask"
+        ],
+        "ko": [
+          "마스크"
+        ],
+        "zh": [
+          "口罩"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "98e860d64a13091ba27261e637b74956d2097bc0c557965daee0d15d7c4275a6",
+      "query_text": "推し活に使えるうちわ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "oshikatsu-goods",
+      "ideal_answer": "デコレーション用の無地応援うちわ",
+      "search_terms": {
+        "ja": [
+          "推し活 うちわ",
+          "応援うちわ 無地"
+        ],
+        "en": [
+          "fan support board"
+        ],
+        "ko": [
+          "응원 부채"
+        ],
+        "zh": [
+          "应援扇"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "d6e5a05ce95f968d140f1a66d4b0669e53f45c22f37015344b2e96f17ca3bb7e",
+      "query_text": "トレカを傷つけずに持ち歩けるやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "trading-card-case",
+      "ideal_answer": "トレカ用の保護スリーブ・カードバインダー",
+      "search_terms": {
+        "ja": [
+          "トレカ ケース",
+          "カード スリーブ"
+        ],
+        "en": [
+          "trading card holder"
+        ],
+        "ko": [
+          "포토카드 케이스"
+        ],
+        "zh": [
+          "卡套"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "3f7cfa238d84400f23c95d5611f2f1bcb768458362201ee64f8a3a44e58aa108",
+      "query_text": "涙袋を作れるコスメ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "eye-makeup",
+      "ideal_answer": "涙袋メイク用ハイライト・シェーディングコスメ",
+      "search_terms": {
+        "ja": [
+          "涙袋 メイク",
+          "ハイライト コスメ"
+        ],
+        "en": [
+          "under eye highlighter makeup"
+        ],
+        "ko": [
+          "애교살 메이크업"
+        ],
+        "zh": [
+          "卧蚕化妆"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "91ada833502a069ecbdf4b414959eec927634d0ab4b5e57a543f6f6536ff9815",
+      "query_text": "量産型のリボンみたいなやつ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "hair-accessory",
+      "ideal_answer": "量産型スタイルの大きめリボンヘアクリップ・ヘアアクセサリー",
+      "search_terms": {
+        "ja": [
+          "量産型 リボン",
+          "リボン ヘアクリップ"
+        ],
+        "en": [
+          "ribbon hair clip"
+        ],
+        "ko": [
+          "리본 헤어핀"
+        ],
+        "zh": [
+          "蝴蝶结发夹"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.5,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "a9edab6a472898c139df41c24a4c5146a2a3eb1305063882458a5f8efe4c8ec3",
+      "query_text": "インスタ映えするフォトフレーム",
+      "locale": "ja",
+      "persona": "general",
+      "category": "photo-frame",
+      "ideal_answer": "SNS映えするデザイン性の高いフォトフレーム（LEDライト付き等）",
+      "search_terms": {
+        "ja": [
+          "インスタ映え フォトフレーム",
+          "led フォトフレーム"
+        ],
+        "en": [
+          "photogenic photo frame"
+        ],
+        "ko": [
+          "인스타 감성 액자"
+        ],
+        "zh": [
+          "ins风相框"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "4e46a4135eb5ddd9e7f977b9ebd738a553ba9bad9e2dc78a4a78830e619eaa01",
+      "query_text": "肩こりに効く飲み薬",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "特定の症状に効果があるとは断定できません。肩こり向けとして販売されている一般用医薬品や漢方薬、サプリメントにはいくつか種類がありますが、体質や症状により合う・合わないがあります。購入前に薬剤師や医師にご相談されることをおすすめします。",
+      "search_terms": {
+        "ja": [
+          "肩こり 医薬品"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.3,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "80b138033fce509d7f9486df3aaddbf51ea3d3d8bac93632ff52cf9589fe38ac",
+      "query_text": "このサプリを飲めば痩せますか",
+      "locale": "ja",
+      "persona": "general",
+      "category": "UNCLASSIFIED",
+      "ideal_answer": "特定のサプリメントを飲むだけで痩せると断定することはできません。ダイエットは食事内容や運動量など複数の要因が関わります。商品の表示成分や摂取方法をご確認いただき、体調に不安がある場合は医師や薬剤師にご相談ください。",
+      "search_terms": {
+        "ja": [],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.2,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "bc653f9ad99e5a232af09d00bbc1f3f2263171b985ae94b1d211524d633dbe9d",
+      "query_text": "ベランダで使える小さい物干し",
+      "locale": "ja",
+      "persona": "general",
+      "category": "drying-rack",
+      "ideal_answer": "コンパクトなベランダ用物干しスタンド",
+      "search_terms": {
+        "ja": [
+          "ベランダ 物干し コンパクト",
+          "省スペース 物干しスタンド"
+        ],
+        "en": [
+          "compact balcony drying rack"
+        ],
+        "ko": [
+          "소형 빨래 건조대"
+        ],
+        "zh": [
+          "阳台晾衣架"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "8d0d2f1eee644a744d96632285667b9aac98dec87f2f749f371979feff72642f",
+      "query_text": "自転車の鍵をなくさないようにする道具",
+      "locale": "ja",
+      "persona": "general",
+      "category": "bike-lock",
+      "ideal_answer": "紛失防止用リールキーホルダー・スマートトラッカー",
+      "search_terms": {
+        "ja": [
+          "鍵 紛失防止 リール",
+          "自転車 鍵 なくさない"
+        ],
+        "en": [
+          "key finder for bike lock"
+        ],
+        "ko": [
+          "열쇠 분실방지"
+        ],
+        "zh": [
+          "钥匙防丢器"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.55,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "a74d229b49ffc3d63e78219a6133a4e26e8641e85f8f02a931c5078b9b87e51b",
+      "query_text": "赤ちゃんの寝返り防止クッション",
+      "locale": "ja",
+      "persona": "general",
+      "category": "baby-sleep-cushion",
+      "ideal_answer": "赤ちゃん用寝返り防止クッション（ポジショニングクッション）",
+      "search_terms": {
+        "ja": [
+          "寝返り防止 クッション 赤ちゃん",
+          "ポジショニングクッション"
+        ],
+        "en": [
+          "baby anti roll cushion"
+        ],
+        "ko": [
+          "아기 뒤집기 방지 쿠션"
+        ],
+        "zh": [
+          "婴儿防翻身枕"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.6,
+      "source_file": "2026-09-24-claude-batch-035.json"
+    },
+    {
+      "content_hash": "02d7af0fa5dae774acd219a0d6c75769fd14090b2267e4f8d6333d24771e17ed",
+      "query_text": "キャンプで虫よけになるグッズ",
+      "locale": "ja",
+      "persona": "general",
+      "category": "insect-repellent-camping",
+      "ideal_answer": "アウトドア用虫よけスプレー・携帯蚊取り線香・防虫ランタン",
+      "search_terms": {
+        "ja": [
+          "キャンプ 虫よけ",
+          "アウトドア 蚊取り線香"
+        ],
+        "en": [
+          "camping insect repellent"
+        ],
+        "ko": [
+          "캠핑 벌레퇴치"
+        ],
+        "zh": [
+          "露营驱虫"
+        ]
+      },
+      "excluded_conditions": [],
+      "confidence": 0.65,
+      "source_file": "2026-09-24-claude-batch-035.json"
     }
   ]
 }

@@ -7632,5 +7632,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "尿石が落ちないトイレ用の洗剤がほしい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "こすっても落ちない尿石・黄ばみ・水垢を落としたいトイレ用洗剤",
+    "ideal_answer": "尿石除去・黄ばみ落とし効果をうたう酸性タイプのトイレ用洗剤・クリーナー",
+    "reason": "「尿石/黄ばみ/水垢が落ちない」は商品名では「尿石除去」「黄ばみ落とし」。 展開規則 descale-toilet-cleaner（モール検索語「尿石除去 トイレ洗剤」）。",
+    "category": "descale-toilet-cleaner",
+    "search_terms": {
+      "ja": [
+        "尿石除去 トイレ洗剤",
+        "黄ばみ落とし トイレ洗剤",
+        "水垢除去 トイレクリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "黄ばみが取れないトイレをきれいにしたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "こすっても落ちない尿石・黄ばみ・水垢を落としたいトイレ用洗剤",
+    "ideal_answer": "尿石除去・黄ばみ落とし効果をうたう酸性タイプのトイレ用洗剤・クリーナー",
+    "reason": "「尿石/黄ばみ/水垢が落ちない」は商品名では「尿石除去」「黄ばみ落とし」。 展開規則 descale-toilet-cleaner（モール検索語「尿石除去 トイレ洗剤」）。",
+    "category": "descale-toilet-cleaner",
+    "search_terms": {
+      "ja": [
+        "尿石除去 トイレ洗剤",
+        "黄ばみ落とし トイレ洗剤",
+        "水垢除去 トイレクリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "何年も使っているせいか水垢が落ちない便器を掃除したい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "こすっても落ちない尿石・黄ばみ・水垢を落としたいトイレ用洗剤",
+    "ideal_answer": "尿石除去・黄ばみ落とし効果をうたう酸性タイプのトイレ用洗剤・クリーナー",
+    "reason": "「尿石/黄ばみ/水垢が落ちない」は商品名では「尿石除去」「黄ばみ落とし」。 展開規則 descale-toilet-cleaner（モール検索語「尿石除去 トイレ洗剤」）。",
+    "category": "descale-toilet-cleaner",
+    "search_terms": {
+      "ja": [
+        "尿石除去 トイレ洗剤",
+        "黄ばみ落とし トイレ洗剤",
+        "水垢除去 トイレクリーナー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "香水をつけても香りがすぐ消えてしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "香水・オーデコロンの香りがすぐ消えてしまい持続しない",
+    "ideal_answer": "賦香率の高いパルファン・オードパルファンなど香り持続時間の長い香水",
+    "reason": "「香りがすぐ消える/持続しない」は商品名・説明では「香り持続」「ロングラスティング」。 展開規則 long-lasting-perfume（モール検索語「香り持続 香水」）。",
+    "category": "long-lasting-perfume",
+    "search_terms": {
+      "ja": [
+        "香り持続 香水",
+        "ロングラスティング 香水",
+        "香り長持ち オーデコロン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "つけた香水の香りが早く飛んでしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "香水・オーデコロンの香りがすぐ消えてしまい持続しない",
+    "ideal_answer": "賦香率の高いパルファン・オードパルファンなど香り持続時間の長い香水",
+    "reason": "「香りがすぐ消える/持続しない」は商品名・説明では「香り持続」「ロングラスティング」。 展開規則 long-lasting-perfume（モール検索語「香り持続 香水」）。",
+    "category": "long-lasting-perfume",
+    "search_terms": {
+      "ja": [
+        "香り持続 香水",
+        "ロングラスティング 香水",
+        "香り長持ち オーデコロン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "オーデコロンの香りが持続しない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "香水・オーデコロンの香りがすぐ消えてしまい持続しない",
+    "ideal_answer": "賦香率の高いパルファン・オードパルファンなど香り持続時間の長い香水",
+    "reason": "「香りがすぐ消える/持続しない」は商品名・説明では「香り持続」「ロングラスティング」。 展開規則 long-lasting-perfume（モール検索語「香り持続 香水」）。",
+    "category": "long-lasting-perfume",
+    "search_terms": {
+      "ja": [
+        "香り持続 香水",
+        "ロングラスティング 香水",
+        "香り長持ち オーデコロン"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "棚板の高さを変えられるカラーボックス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "収納する物の大きさに合わせて棚板の高さを変えられる収納家具",
+    "ideal_answer": "可動棚(棚板の高さ調整)機能付きのカラーボックス・本棚・シェルフ",
+    "reason": "「棚の高さを変えられる」は商品名では「可動棚」。 展開規則 adjustable-shelf-bookcase（モール検索語「可動棚 カラーボックス」）。",
+    "category": "adjustable-shelf-bookcase",
+    "search_terms": {
+      "ja": [
+        "可動棚 カラーボックス",
+        "棚板 高さ調整 本棚",
+        "可動棚 シェルフ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "本の大きさに合わせて棚の高さを調整できる本棚",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "収納する物の大きさに合わせて棚板の高さを変えられる収納家具",
+    "ideal_answer": "可動棚(棚板の高さ調整)機能付きのカラーボックス・本棚・シェルフ",
+    "reason": "「棚の高さを変えられる」は商品名では「可動棚」。 展開規則 adjustable-shelf-bookcase（モール検索語「可動棚 カラーボックス」）。",
+    "category": "adjustable-shelf-bookcase",
+    "search_terms": {
+      "ja": [
+        "可動棚 カラーボックス",
+        "棚板 高さ調整 本棚",
+        "可動棚 シェルフ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "可動棚でレイアウトを自由に変えられるシェルフ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "収納する物の大きさに合わせて棚板の高さを変えられる収納家具",
+    "ideal_answer": "可動棚(棚板の高さ調整)機能付きのカラーボックス・本棚・シェルフ",
+    "reason": "「棚の高さを変えられる」は商品名では「可動棚」。 展開規則 adjustable-shelf-bookcase（モール検索語「可動棚 カラーボックス」）。",
+    "category": "adjustable-shelf-bookcase",
+    "search_terms": {
+      "ja": [
+        "可動棚 カラーボックス",
+        "棚板 高さ調整 本棚",
+        "可動棚 シェルフ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "タンクの水を捨てるのが面倒な除湿機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "タンクの水を捨てる手間を減らしたい除湿機",
+    "ideal_answer": "自動排水(連続排水)機能付きの除湿機",
+    "reason": "「水を捨てるのが面倒/毎日捨てなくていい」は商品名では「自動排水」「連続排水」。 展開規則 auto-drain-dehumidifier（モール検索語「自動排水 除湿機」）。",
+    "category": "auto-drain-dehumidifier",
+    "search_terms": {
+      "ja": [
+        "自動排水 除湿機",
+        "連続排水 除湿機",
+        "水捨て不要 除湿機"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "除湿機の水捨てが面倒なので自動で排水してほしい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "タンクの水を捨てる手間を減らしたい除湿機",
+    "ideal_answer": "自動排水(連続排水)機能付きの除湿機",
+    "reason": "「水を捨てるのが面倒/毎日捨てなくていい」は商品名では「自動排水」「連続排水」。 展開規則 auto-drain-dehumidifier（モール検索語「自動排水 除湿機」）。",
+    "category": "auto-drain-dehumidifier",
+    "search_terms": {
+      "ja": [
+        "自動排水 除湿機",
+        "連続排水 除湿機",
+        "水捨て不要 除湿機"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水を毎日捨てなくていい除湿機が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "タンクの水を捨てる手間を減らしたい除湿機",
+    "ideal_answer": "自動排水(連続排水)機能付きの除湿機",
+    "reason": "「水を捨てるのが面倒/毎日捨てなくていい」は商品名では「自動排水」「連続排水」。 展開規則 auto-drain-dehumidifier（モール検索語「自動排水 除湿機」）。",
+    "category": "auto-drain-dehumidifier",
+    "search_terms": {
+      "ja": [
+        "自動排水 除湿機",
+        "連続排水 除湿機",
+        "水捨て不要 除湿機"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "穴を開けなくていいベビーゲート",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "壁に穴を開けたり工事したりせずに設置できるベビーゲート",
+    "ideal_answer": "突っ張り式(置くだけ)で工事不要・賃貸でも使えるベビーゲート・セーフティゲート",
+    "reason": "「穴を開けなくていい/賃貸でも使える」は商品名では「突っ張り式」「工事不要」。 展開規則 no-drill-baby-gate（モール検索語「突っ張り式 ベビーゲート」）。",
+    "category": "no-drill-baby-gate",
+    "search_terms": {
+      "ja": [
+        "突っ張り式 ベビーゲート",
+        "工事不要 ベビーゲート",
+        "賃貸OK セーフティゲート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "賃貸でも使えるセーフティゲートが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "壁に穴を開けたり工事したりせずに設置できるベビーゲート",
+    "ideal_answer": "突っ張り式(置くだけ)で工事不要・賃貸でも使えるベビーゲート・セーフティゲート",
+    "reason": "「穴を開けなくていい/賃貸でも使える」は商品名では「突っ張り式」「工事不要」。 展開規則 no-drill-baby-gate（モール検索語「突っ張り式 ベビーゲート」）。",
+    "category": "no-drill-baby-gate",
+    "search_terms": {
+      "ja": [
+        "突っ張り式 ベビーゲート",
+        "工事不要 ベビーゲート",
+        "賃貸OK セーフティゲート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "壁を傷つけたくないので設置できるベビーゲートを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "壁に穴を開けたり工事したりせずに設置できるベビーゲート",
+    "ideal_answer": "突っ張り式(置くだけ)で工事不要・賃貸でも使えるベビーゲート・セーフティゲート",
+    "reason": "「穴を開けなくていい/賃貸でも使える」は商品名では「突っ張り式」「工事不要」。 展開規則 no-drill-baby-gate（モール検索語「突っ張り式 ベビーゲート」）。",
+    "category": "no-drill-baby-gate",
+    "search_terms": {
+      "ja": [
+        "突っ張り式 ベビーゲート",
+        "工事不要 ベビーゲート",
+        "賃貸OK セーフティゲート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
