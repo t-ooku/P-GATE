@@ -11,8 +11,8 @@
 - 2026-09-21 に廃止した Demand Match Click（1クリック50円）が seller-demand-visible に残っていた。
   PRICING_BAN で「50円」「1クリック」「クリック課金」「Demand Match Click」を機械で止める。
   料金の言い方は「4,980円/月（税込）・最初の3か月0円・クリックによる追加料金なし」だけにする。
-- 同時に見た目を作り直した。表紙は濃色のグラデーションに大きな見出し、中面は影のついた白いカード、
-  下に進行ドット。書体は Bold（見出し）と Regular（本文）を使い分ける。どちらも ubuntu の
+- 同時に見た目を作り直した。中面は影のついた白いカード、下に進行ドット。
+  書体は Bold（見出し）と Regular（本文）を使い分ける。どちらも ubuntu の
   fonts-noto-cjk に入っているので、CI と手元で同じ絵が出る。
 - 画像を作り直すのは .github/workflows/build-social-carousels.yml。Issue パッチ経由の push は
   Actions の GITHUB_TOKEN で行われ、後続のワークフローを起こさない（GitHub の仕様）。
@@ -41,6 +41,9 @@ MUTED = (109, 107, 128)
 FAINT = (154, 151, 173)
 VIOLET = (115, 87, 255)
 PINK = (255, 79, 154)
+# 2026-09-24: HOSHILU の正本の色（public/styles.css の :root）。
+# ボタンや見出しは pink → violet → cyan のグラデーション。表紙の見出し帯もこれに合わせる。
+CYAN = (35, 184, 255)
 NAVY = (26, 22, 51)
 PAPER = (255, 255, 255)
 LINE = (235, 231, 247)
@@ -209,9 +212,9 @@ def result_panel(draw, xy, width, results, ink, muted, face, border, spot):
 
 
 # 2026-09-24 大隆さん「先程送ったインフルエンサーのサムネと君が作成した画像を見比べた？全然ダメ」。
-# 比べると、向こうは写真が画面いっぱいで、文字は白フチの太字で重ねてある。こちらは余白の多い
+# 比べると、向こうは写真が画面いっぱいで、文字はその上に重ねてある。こちらは余白の多い
 # 資料のような絵だった。表紙は HOSHILU が持っている自前の画像（public/social/ 等）を全面に敷き、
-# 白フチの大きな文字を重ねる形にする。他社のロゴ・商品写真は使わないまま、密度だけを上げる。
+# 大きな文字を重ねる形にする。他社のロゴ・商品写真は使わないまま、密度だけを上げる。
 def cover_art(path, size):
     art = Image.open(ROOT / 'public' / path).convert('RGB')
     width, height = size
@@ -225,7 +228,7 @@ def cover_art(path, size):
 
 def scrim(img, top_alpha=160, bottom_alpha=248):
     """文字を読ませるための暗い膜。上を少し、下半分をしっかり暗くする。
-    写真の上に白フチの文字を置くので、ここが薄いと見出しが沈む。"""
+    写真の上に見出しの帯と本文を置くので、ここが薄いと全体が没する。"""
     width, height = img.size
     layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(layer)
@@ -237,8 +240,22 @@ def scrim(img, top_alpha=160, bottom_alpha=248):
     return Image.alpha_composite(img.convert('RGBA'), layer).convert('RGB')
 
 
-def outlined(draw, xy, text, fnt, fill, stroke, width=10):
-    draw.text(xy, text, font=fnt, fill=fill, stroke_width=width, stroke_fill=stroke)
+# 2026-09-24 大隆さん「キャッチがもっとホシルのポートレートカラーで。文字の枠線があるのはダサい」。
+# 白フチをやめ、見出しは HOSHILU の色の帯（pink → violet → cyan）の上に白抜きで置く。
+# 帯は文字の幅ぴったりに作るので、行ごとに長さが変わって雑誌の見出しのように見える。
+def brand_band(img, box, radius=20, start=0.0, end=1.0):
+    x0, y0, x1, y1 = box
+    width, height = max(1, x1 - x0), max(1, y1 - y0)
+    band = Image.new('RGB', (width, height))
+    draw = ImageDraw.Draw(band)
+    for x in range(width):
+        t = start + (end - start) * (x / max(1, width - 1))
+        colour = mix(PINK, VIOLET, t / 0.62) if t <= 0.62 else mix(VIOLET, CYAN, (t - 0.62) / 0.38)
+        draw.line(((x, 0), (x, height)), fill=colour)
+    mask = Image.new('L', (width, height), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, width - 1, height - 1), radius=radius, fill=255)
+    img.paste(band, (x0, y0), mask)
+    return img
 
 
 def pill(draw, xy, text, fnt, face, ink, pad=26, height=62):
@@ -276,9 +293,15 @@ def render_art_cover(doc, item, slide, total):
     kicker = ' '.join(slide['kicker'])
     pill(draw, (60, y), kicker, font(24, 'light'), PINK if not seller else VIOLET, PAPER, 24, 56)
     y += 84
-    for line in head_lines:
-        outlined(draw, (60, y), line, head_font, PAPER, (18, 12, 40), 9)
-        y += int(head_font.size * 1.18)
+    # 見出しは1行ずつ、文字幅ぴったりの色帯に白抜きで置く。帯は左から右へ色が流れる。
+    spans = [int(draw.textlength(line, font=head_font)) for line in head_lines]
+    widest = max(spans) if spans else 1
+    for line, span in zip(head_lines, spans):
+        box = (52, y - 14, 52 + span + 52, y + int(head_font.size * 1.06) + 8)
+        img = brand_band(img, box, radius=22, start=0.0, end=min(1.0, span / max(1, widest)))
+        draw = ImageDraw.Draw(img)
+        draw.text((78, y), line, font=head_font, fill=PAPER)
+        y += int(head_font.size * 1.18) + 12
     y += 26
     for line in body_lines:
         draw.text((62, y), line, font=body_font, fill=(232, 228, 248))
