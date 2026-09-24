@@ -379,7 +379,8 @@ def cover_card(doc, item, slide, total):
     """写真は明るいまま見せて、文字は白いカードの中に入れる形。"""
     width, height = doc['size']
     seller = item['audience'] == 'seller'
-    img = scrim(cover_art(slide['art'], (width, height), bias=0.30), top_alpha=120, bottom_alpha=96)
+    img = scrim(cover_art(slide['art'], (width, height), bias=0.26, flip=True),
+                top_alpha=120, bottom_alpha=96)
     draw = ImageDraw.Draw(img)
     cover_logo(draw, (60, 56), seller)
 
@@ -741,11 +742,68 @@ def render_page(doc, item, slide, index, total):
     return img
 
 
+# 2026-09-24 大隆さん「良いけどパターンが同じすぎ」は中面にも当てはまる。2・3・4枚目が全部同じ
+# 白いカードだった。真ん中の1枚だけ濃い面にして、白→濃→白のリズムを作る。
+def render_dark_page(doc, item, slide, index, total):
+    width, height = doc['size']
+    seller = item['audience'] == 'seller'
+    top, bottom = (NAVY, (70, 48, 150)) if seller else ((44, 28, 116), (128, 62, 178))
+    img = gradient((width, height), top, bottom)
+    img = glow(img, (width - 80, 240), 420, PINK if not seller else VIOLET, 104)
+    img = glow(img, (60, height - 200), 360, VIOLET, 86)
+    draw = ImageDraw.Draw(img)
+    logo(draw, (72, 72), VIOLET if not seller else NAVY,
+         'ホシル' if not seller else 'ホシル｜ショップ・セラーの方へ', on_dark=True)
+
+    left = 96
+    text_width = width - left * 2
+    kicker = slide['kicker']
+    head_font, body_font = font(76), font(37, 'light')
+    head_lines = wrap(draw, slide['headline'], head_font, text_width)
+    body_lines = wrap(draw, slide['body'], body_font, text_width)
+    lead = 150 if kicker.isdigit() else 70
+    extra = (118 if slide.get('search') else 0) + (78 if slide.get('chips') else 0)
+    block = (lead + len(head_lines) * int(head_font.size * 1.24) + 44
+             + len(body_lines) * int(body_font.size * 1.56) + extra)
+    y = max(300, (height - block) // 2)
+
+    if kicker.isdigit():
+        draw.ellipse((left, y, left + 92, y + 92), outline=PAPER, width=5)
+        number = font(48)
+        draw.text((left + (92 - draw.textlength(kicker, font=number)) / 2, y + 18), kicker,
+                  font=number, fill=PAPER)
+    else:
+        draw.text((left, y + 6), ' '.join(kicker), font=font(26, 'light'), fill=(236, 231, 255))
+    y += lead
+
+    img, y = draw_headline(img, (left, y), head_lines, head_font, PAPER,
+                           slide.get('accent_line'), shadow=False)
+    draw = ImageDraw.Draw(img)
+    y += 44
+    for line in body_lines:
+        draw.text((left, y), line, font=body_font, fill=(223, 218, 245))
+        y += int(body_font.size * 1.56)
+    if slide.get('search'):
+        y = search_bar(draw, (left, y + 18), slide['search'], text_width, PAPER,
+                       (176, 166, 216), (52, 38, 108), (104, 88, 168))
+    if slide.get('chips'):
+        y = chips(draw, (left, y + 24), slide['chips'], text_width, PAPER, (128, 114, 186))
+
+    draw.text((72, height - 152), doc['footer'], font=font(29), fill=PAPER)
+    hint = '無料・メール6桁かLINEで登録' if not seller else '相談フォーム送信だけでは課金されません'
+    draw.text((72, height - 110), hint, font=font(24, 'light'), fill=(206, 200, 232))
+    dots(draw, width, height - 56, index, total, PAPER, (112, 98, 162))
+    return img
+
+
 def render_slide(doc, item, slide, index, total):
     if index == 1:
         if slide.get('art'):
             return render_art_cover(doc, item, slide, total)
         return render_cover(doc, item, slide, total)
+    # 真ん中の1枚だけ濃い面。白いカードが3枚続くのを避ける。
+    if index == 3 and total >= 4 and not slide.get('results'):
+        return render_dark_page(doc, item, slide, index, total)
     return render_page(doc, item, slide, index, total)
 
 
