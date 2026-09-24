@@ -170,6 +170,44 @@ def search_bar(draw, xy, text, width, ink, muted, face, border):
     return y + height
 
 
+# 2026-09-24 大隆さん「もっと画像とかロゴまたはモールのロゴに近しい感じで作成できない？」への答え。
+# 他社のロゴ・ロゴに似せた意匠・商品写真は使わない（商標の問題に加えて、楽天アフィリエイトは
+# 公式バナーでも「画像の上に文字を載せる／切り取る」ことを禁じており、スクショ利用も禁止）。
+# 代わりに HOSHILU 自身の画面を図形で描く。並ぶのは実在しない見本で、値段は数字を書かず棒で表す
+# （商品名・価格を作らない、という自分たちの決まりを守るため）。モール名だけは文字で入る。
+def result_panel(draw, xy, width, results, ink, muted, face, border, spot):
+    x, y = xy
+    rows = results.get('rows', [])
+    height = 150 + len(rows) * 150
+    draw.rounded_rectangle((x, y, x + width, y + height), radius=34, fill=PAPER, outline=border, width=3)
+    search_bar(draw, (x + 26, y + 26), results.get('query', ''), width - 52, ink, muted, face, border)
+    top = y + 146
+    for index, row in enumerate(rows):
+        tint = [(236, 232, 252), (252, 234, 243), (234, 244, 252)][index % 3]
+        mark = [(206, 197, 246), (247, 202, 224), (198, 224, 247)][index % 3]
+        draw.rounded_rectangle((x + 30, top, x + 30 + 118, top + 118), radius=22, fill=tint)
+        cx, cy = x + 30 + 59, top + 59
+        if index % 3 == 0:
+            draw.ellipse((cx - 34, cy - 34, cx + 34, cy + 34), fill=mark)
+        elif index % 3 == 1:
+            draw.rounded_rectangle((cx - 32, cy - 36, cx + 32, cy + 36), radius=14, fill=mark)
+        else:
+            draw.polygon([(cx, cy - 36), (cx + 36, cy + 30), (cx - 36, cy + 30)], fill=mark)
+        text_x = x + 176
+        text_w = width - (text_x - x) - 40
+        draw.rounded_rectangle((text_x, top + 10, text_x + text_w, top + 28), radius=9, fill=(233, 231, 242))
+        draw.rounded_rectangle((text_x, top + 40, text_x + int(text_w * 0.62), top + 58), radius=9, fill=(240, 238, 247))
+        draw.rounded_rectangle((text_x, top + 80, text_x + 112, top + 104), radius=12, fill=(214, 210, 232))
+        label = row.get('mall', '')
+        fnt = font(22, 'light')
+        label_w = int(draw.textlength(label, font=fnt)) + 30
+        draw.rounded_rectangle((text_x + text_w - label_w, top + 74, text_x + text_w, top + 110),
+                               radius=18, outline=spot, width=2)
+        draw.text((text_x + text_w - label_w + 15, top + 80), label, font=fnt, fill=spot)
+        top += 150
+    return y + height
+
+
 def render_cover(doc, item, slide, total):
     width, height = doc['size']
     seller = item['audience'] == 'seller'
@@ -225,6 +263,34 @@ def render_page(doc, item, slide, index, total):
     box = (72, 232, width - 72, height - 232)
     img = card_with_shadow(img, box)
     draw = ImageDraw.Draw(img)
+
+    # 画面の絵を載せる面は、文章を詰めると入らない。見出し1行と絵だけにする。
+    if slide.get('results'):
+        left = 128
+        panel_width = width - left * 2
+        panel_height = 150 + len(slide['results'].get('rows', [])) * 150
+        head_font = font(58)
+        head_lines = wrap(draw, slide['headline'].replace('\n', ' '), head_font, panel_width)
+        block = 116 + len(head_lines) * int(head_font.size * 1.24) + 30 + panel_height
+        y = box[1] + max(48, (box[3] - box[1] - block) // 2)
+        kicker = slide['kicker']
+        if kicker.isdigit():
+            draw.ellipse((left, y, left + 84, y + 84), fill=spot)
+            number = font(44)
+            draw.text((left + (84 - draw.textlength(kicker, font=number)) / 2, y + 16), kicker,
+                      font=number, fill=PAPER)
+        y += 116
+        for line in head_lines:
+            draw.text((left, y), line, font=head_font, fill=INK)
+            y += int(head_font.size * 1.24)
+        y += 30
+        result_panel(draw, (left, y), panel_width, slide['results'], INK, FAINT,
+                     (247, 245, 255), LINE, spot)
+        draw.text((72, height - 152), doc['footer'], font=font(29), fill=INK)
+        hint = '無料・メール6桁かLINEで登録' if not seller else '相談フォーム送信だけでは課金されません'
+        draw.text((72, height - 110), hint, font=font(24, 'light'), fill=FAINT)
+        dots(draw, width, height - 56, index, total, spot, LINE)
+        return img
 
     # カードの中で天地が偏らないように、先に高さを測ってから真ん中に置く。
     left = 128
