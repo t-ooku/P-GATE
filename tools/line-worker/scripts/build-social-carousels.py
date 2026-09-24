@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """2026-09-17 大隆さん決定: カルーセル画像フィード投稿（月・水・土）。
 
-- 入力: ops/social/carousels-v3.json（6 セット、ユーザー向け 3・セラー向け 3）
+- 入力: ops/social/carousels-v3.json（8 セット、ユーザー向け 4・セラー向け 4）
 - 出力: public/social/carousel/<set_id>/<n>.jpg（1080x1350、4 枚）と
         public/social/carousel/manifest.json（sha256・枚数・監査用）
 - 描画は Pillow だけ（AI 生成なし、実在商品・他社ロゴなし）。同じ入力から同じ画像が出る。
