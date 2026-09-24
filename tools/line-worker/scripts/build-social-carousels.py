@@ -243,19 +243,61 @@ def scrim(img, top_alpha=160, bottom_alpha=248):
 # 2026-09-24 大隆さん「キャッチがもっとホシルのポートレートカラーで。文字の枠線があるのはダサい」。
 # 白フチをやめ、見出しは HOSHILU の色の帯（pink → violet → cyan）の上に白抜きで置く。
 # 帯は文字の幅ぴったりに作るので、行ごとに長さが変わって雑誌の見出しのように見える。
-def brand_band(img, box, radius=20, start=0.0, end=1.0):
+def brand_colour(t):
+    t = min(1.0, max(0.0, t))
+    return mix(PINK, VIOLET, t / 0.62) if t <= 0.62 else mix(VIOLET, CYAN, (t - 0.62) / 0.38)
+
+
+def brand_band(img, box, radius=20, span=None):
+    """見出しの帯。色は帯の中の位置ではなく**画面の左端からの位置**で決める。
+    2026-09-24 大隆さん「キャッチコピーの背景の色がズレてるよ」: 行ごとに 0→1 で
+    引いていたため、短い行も長い行も左端がピンク・右端がシアンになり、上下の行で
+    同じ x なのに色が違っていた。1枚の大きなグラデーションから切り出す形に直す。"""
     x0, y0, x1, y1 = box
     width, height = max(1, x1 - x0), max(1, y1 - y0)
+    reference = max(1, span or img.size[0])
     band = Image.new('RGB', (width, height))
     draw = ImageDraw.Draw(band)
     for x in range(width):
-        t = start + (end - start) * (x / max(1, width - 1))
-        colour = mix(PINK, VIOLET, t / 0.62) if t <= 0.62 else mix(VIOLET, CYAN, (t - 0.62) / 0.38)
-        draw.line(((x, 0), (x, height)), fill=colour)
+        draw.line(((x, 0), (x, height)), fill=brand_colour((x0 + x) / reference))
     mask = Image.new('L', (width, height), 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, width - 1, height - 1), radius=radius, fill=255)
     img.paste(band, (x0, y0), mask)
     return img
+
+
+def gradient_text(img, xy, text, fnt, span, start_x=None):
+    """文字そのものを HOSHILU の色で塗る。帯で囲うより軽く、見出しが写真から浮く。
+    色は画面の左端からの位置で決めるので、行が変わっても同じ x は同じ色になる。"""
+    x, y = xy
+    mask = Image.new('L', img.size, 0)
+    ImageDraw.Draw(mask).text((x, y), text, font=fnt, fill=255)
+    paint = Image.new('RGB', img.size)
+    draw = ImageDraw.Draw(paint)
+    base = start_x if start_x is not None else 0
+    for column in range(img.size[0]):
+        draw.line(((column, 0), (column, img.size[1])), fill=brand_colour((column - base) / max(1, span)))
+    img.paste(paint, (0, 0), mask)
+    return img
+
+
+def text_shadow(img, lines, fnt, origin, line_step, blur=16, alpha=185):
+    """白い文字を写真の上で読ませるための、やわらかい影。枠線は使わない。"""
+    mask = Image.new('L', img.size, 0)
+    draw = ImageDraw.Draw(mask)
+    x, y = origin
+    for line in lines:
+        draw.text((x, y + 6), line, font=fnt, fill=alpha)
+        y += line_step
+    mask = mask.filter(ImageFilter.GaussianBlur(blur))
+    shade = Image.new('RGBA', img.size, (10, 6, 26, 0))
+    shade.putalpha(mask)
+    return Image.alpha_composite(img.convert('RGBA'), shade).convert('RGB')
+
+
+def marker(draw, box, colour=(255, 214, 64), radius=7):
+    """手で引いた線のような下線。参考にしたバナーの黄色い線と同じ役割。"""
+    draw.rounded_rectangle(box, radius=radius, fill=colour)
 
 
 def pill(draw, xy, text, fnt, face, ink, pad=26, height=62):
@@ -293,15 +335,28 @@ def render_art_cover(doc, item, slide, total):
     kicker = ' '.join(slide['kicker'])
     pill(draw, (60, y), kicker, font(24, 'light'), PINK if not seller else VIOLET, PAPER, 24, 56)
     y += 84
-    # 見出しは1行ずつ、文字幅ぴったりの色帯に白抜きで置く。帯は左から右へ色が流れる。
+    # 2026-09-24: 色帯をやめ、文字そのものを塗る。参考にもらったバナーと同じ考え方で、
+    # 一番言いたい行だけ HOSHILU の色にして、その下に黄色い線を引く。残りは白。
+    # 読ませるための黒は、枠線ではなくやわらかい影で作る。
     spans = [int(draw.textlength(line, font=head_font)) for line in head_lines]
-    widest = max(spans) if spans else 1
-    for line, span in zip(head_lines, spans):
-        box = (52, y - 14, 52 + span + 52, y + int(head_font.size * 1.06) + 8)
-        img = brand_band(img, box, radius=22, start=0.0, end=min(1.0, span / max(1, widest)))
-        draw = ImageDraw.Draw(img)
-        draw.text((78, y), line, font=head_font, fill=PAPER)
-        y += int(head_font.size * 1.18) + 12
+    reference = max(spans) if spans else 1
+    line_step = int(head_font.size * 1.16)
+    accent = slide.get('accent_line', len(head_lines) - 1)
+    # 影は2回かけて、明るい写真の上でも白と色が沈まないようにする。
+    img = text_shadow(img, head_lines, head_font, (60, y), line_step, blur=30, alpha=210)
+    img = text_shadow(img, head_lines, head_font, (60, y), line_step, blur=12, alpha=170)
+    draw = ImageDraw.Draw(img)
+    for index, (line, span) in enumerate(zip(head_lines, spans)):
+        if index == accent:
+            # 黄色い線は文字の下。先に引いて、その上に文字を置く。
+            base = y + int(head_font.size * 1.00)
+            marker(draw, (56, base, 60 + span + 14, base + 18))
+            img = gradient_text(img, (60, y), line, head_font, reference, start_x=60)
+            draw = ImageDraw.Draw(img)
+        else:
+            draw.text((60, y), line, font=head_font, fill=PAPER)
+        y += line_step
+    y += 14
     y += 26
     for line in body_lines:
         draw.text((62, y), line, font=body_font, fill=(232, 228, 248))
