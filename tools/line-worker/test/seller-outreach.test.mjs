@@ -3,36 +3,25 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import {
-  OUTREACH_PER_CYCLE_LIMIT, OUTREACH_REQUIRED_SENTENCES, composeOutreachText, emailHash, findForbiddenPhrases, findMissingTemplateSentences,
+  OUTREACH_PER_CYCLE_LIMIT, OUTREACH_REQUIRED_SENTENCES, OUTREACH_SUBJECT, composeOutreachText, emailHash, findForbiddenPhrases, findMissingTemplateSentences,
   handleSellerOutreachRoutes, jstBusinessHours, jstDayRange, newUnsubscribeToken,
   outreachReadiness, runSellerOutreachCycle, unsubscribeUrl
 } from '../src/seller-outreach.mjs';
 
-// 本番で実際に送られている型（2026-09-23 改訂）。hook の1文だけを会社ごとに変える。
+// 本番で実際に送られている型（2026-09-24 短い版）。hook の1文だけを会社ごとに変える。
 const GOOD_BODY = (shop, hook) => `${shop} ご担当者様
 
-突然のご連絡失礼いたします。買い物検索サービス HOSHILU を運営している大久津と申します。楽天商品情報ページに記載の連絡先へお送りしています。
+突然のご連絡失礼いたします。買い物検索サービス HOSHILU（ホシル）の大久津です。楽天商品情報ページに記載の連絡先へお送りしています。
 
-HOSHILU は、Amazon・楽天・Qoo10 などを横断して商品を探すサービスです。買い手にはモールの違いではなく、写真・商品名・価格が先に見えます。モールを決めていない人にも見つけてもらう入口になります。
 ${hook}
 
-掲載していただくと、次の4つが使えます（すべて現在公開中の機能です）:
-・商品・ジャンル・ショップの3方向から、探している人に見つけてもらう
-・「この価格になったら教えて」（希望価格ウォッチ）とセール通知で、今すぐ買わない人を買い時までつなぐ
-・ショップページ、ショップ発行クーポン、「ショップをホシる」（フォロー）でリピーター候補を残す
-・ユーザーが探して見つからなかった「欲しい」が、個人を特定できない匿名の需要としてお店に届く（同じ条件を5人以上が探している項目のみ）。商品を登録すると、HOSHILU が条件を確かめて探していた本人にだけお知らせします
+HOSHILU は Amazon・楽天・Yahoo!ショッピング・Qoo10 をまとめて探せるサービスです。御社の商品も、同じ検索結果に並べることができます。
 
-掲載順を売る仕組みはありません。並び順は検索語との一致だけで決まります。
+ショップページの作成と商品の登録はこちらで代行します。今のモール出店はそのままで構いません。
 
-始めるときの御社の手間はほとんどありません。ショップページの作成と商品の取り込みは、こちらで代行します。既存のモール出店はそのままで構いません。
+最初の3か月は無料です。その後も続ける場合のみ月額4,980円（税込）で、いつでも解約できます。
 
-料金は HOSHILU Seller 4,980円/月（税込）だけです。最初の3か月は月額0円。クリックによる追加料金はありません。初期費用・解約金もありません。合わなければいつでも止められます。
-
-先行して掲載中のショップの例: https://hoshilu.app/shop/with-care
-詳細: https://hoshilu.app/for-sellers
-
-ユーザー数はまだ多くありません。だからこそ、最初のセラー様とは「新しい集客チャネルを一緒に作る」つもりでやっています。
-ご興味があれば、このメールへの返信でお気軽にご相談ください。`;
+ご興味があれば、このメールに「興味あり」とひと言だけご返信ください。こちらから詳しくご案内いたします。`;
 
 function databaseEnv(extra = {}) {
   const db = new DatabaseSync(':memory:');
@@ -215,9 +204,12 @@ test('/health にセラー営業メールの送信可否を出す', () => {
 
 test('2026-09-14 事故: 型の文が一字一句そのまま無い本文（誤字・文字化け）は送らず SKIPPED', async () => {
   assert.deepEqual(findMissingTemplateSentences(GOOD_BODY('良い商店', '雑貨を取り扱っている貴店と相性が良いと思い、ご連絡しました。')), []);
-  assert.ok(OUTREACH_REQUIRED_SENTENCES.length >= 10);
-  const garbled = GOOD_BODY('誤字商店', 'x').replace('突然のご連絡失礼いたします', '弁然のご連絡失箰いたします').replace('リピーター', 'リピーグー');
-  assert.deepEqual(findMissingTemplateSentences(garbled).slice(0, 1), ['突然のご連絡失礼いたします。買い物検索サービス HOSHILU を運営している大久津と申します。']);
+  assert.ok(OUTREACH_REQUIRED_SENTENCES.length >= 7);
+  const garbled = GOOD_BODY('誤字商店', 'x').replace('突然のご連絡失礼いたします', '弁然のご連絡失箰いたします').replace('代行します', '代行しまず');
+  assert.deepEqual(findMissingTemplateSentences(garbled), [
+    '突然のご連絡失礼いたします。買い物検索サービス HOSHILU（ホシル）の大久津です。',
+    'ショップページの作成と商品の登録はこちらで代行します。今のモール出店はそのままで構いません。'
+  ]);
   const { db, env } = databaseEnv();
   await insertContact(db, { contact_id: 'g1', contact_email: 'g1@example.com', body: garbled, unsubscribe_token: 'g'.repeat(32) });
   await insertContact(db, { contact_id: 'g2', contact_email: 'g2@example.com', body: GOOD_BODY('良い商店', 'ok'), unsubscribe_token: 'h'.repeat(32) });
@@ -310,14 +302,21 @@ test('ITグループ株式会社の関連企業も送らない', async () => {
 
 // 2026-09-23 大隆さん指示「ちゃんと参入したくなる内容でよろしくね」。
 // 「何ができるか」だけでなく「始めるのに何を失うか」に先に答える型にした。
-// 成果の約束はしない（そこは禁止語の検査が別に見ている）。
-test('営業メールの型は、始める側の不安に先に答える', () => {
+// 2026-09-24 大隆さん「短い版で出し直す」。135通送って返信0だったので、950字から短くした。
+// 残すのは「手間が要らない」「今の出店と競合しない」「試すのにお金がかからない」「抜けられる」
+// 「どう返せばいいか」の5つだけ。機能の説明・掲載順の方針は、返信があってから伝える。
+test('営業メールの型は短く、始める側の不安に先に答え、返し方まで書く', () => {
   const text = OUTREACH_REQUIRED_SENTENCES.join('\n');
-  assert.match(text, /最初の3か月は月額0円/u, '試すのにお金がかからないこと');
-  assert.match(text, /初期費用・解約金もありません。合わなければいつでも止められます。/u, '抜けられること');
-  assert.match(text, /ショップページの作成と商品の取り込みは、こちらで代行します/u, '手間が要らないこと');
-  assert.match(text, /既存のモール出店はそのままで構いません/u, '今の出店と競合しないこと');
-  assert.match(text, /掲載順を売る仕組みはありません/u, '金で順位が決まらないこと');
-  assert.match(text, /クリックによる追加料金はありません/u, '2026-09-21 に廃止したクリック課金を書かない');
+  assert.match(text, /こちらで代行します/u, '手間が要らないこと');
+  assert.match(text, /今のモール出店はそのままで構いません/u, '今の出店と競合しないこと');
+  assert.match(text, /最初の3か月は無料です/u, '試すのにお金がかからないこと');
+  assert.match(text, /いつでも解約できます/u, '抜けられること');
+  assert.match(text, /「興味あり」とひと言だけご返信ください/u, '返信のハードルを下げる');
+  assert.doesNotMatch(text, /クリック/u, '2026-09-21 に廃止したクリック課金を書かない');
+  assert.doesNotMatch(text, /ユーザー数|人以上/u, '人数には触れない');
   assert.deepEqual(findForbiddenPhrases(text), [], '成果を約束しない');
+  // 短いこと。hook と連絡先の出典を入れても、フッター抜きで500字に収まる
+  const body = GOOD_BODY('株式会社サンプル商店（サンプルストア）', '日用品を「素材・サイズ・用途」で探している方に、条件が合った時にだけ見つけてもらえます。');
+  assert.ok(body.length < 500, `本文が長すぎる: ${body.length}字`);
+  assert.equal(OUTREACH_SUBJECT, '商品掲載のご相談｜HOSHILU（ホシル）');
 });
