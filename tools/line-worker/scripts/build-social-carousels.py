@@ -208,6 +208,98 @@ def result_panel(draw, xy, width, results, ink, muted, face, border, spot):
     return y + height
 
 
+# 2026-09-24 大隆さん「先程送ったインフルエンサーのサムネと君が作成した画像を見比べた？全然ダメ」。
+# 比べると、向こうは写真が画面いっぱいで、文字は白フチの太字で重ねてある。こちらは余白の多い
+# 資料のような絵だった。表紙は HOSHILU が持っている自前の画像（public/social/ 等）を全面に敷き、
+# 白フチの大きな文字を重ねる形にする。他社のロゴ・商品写真は使わないまま、密度だけを上げる。
+def cover_art(path, size):
+    art = Image.open(ROOT / 'public' / path).convert('RGB')
+    width, height = size
+    scale = max(width / art.width, height / art.height)
+    art = art.resize((max(width, int(art.width * scale)), max(height, int(art.height * scale))),
+                     Image.LANCZOS)
+    left = (art.width - width) // 2
+    top = int((art.height - height) * 0.42)
+    return art.crop((left, top, left + width, top + height))
+
+
+def scrim(img, top_alpha=160, bottom_alpha=248):
+    """文字を読ませるための暗い膜。上を少し、下半分をしっかり暗くする。
+    写真の上に白フチの文字を置くので、ここが薄いと見出しが沈む。"""
+    width, height = img.size
+    layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer)
+    for y in range(height):
+        t = y / max(1, height - 1)
+        top = top_alpha * max(0.0, 1 - t * 4.0)
+        bottom = bottom_alpha * max(0.0, (t - 0.22) / 0.78) ** 1.05
+        draw.line(((0, y), (width, y)), fill=(12, 8, 26, int(min(250, top + bottom))))
+    return Image.alpha_composite(img.convert('RGBA'), layer).convert('RGB')
+
+
+def outlined(draw, xy, text, fnt, fill, stroke, width=10):
+    draw.text(xy, text, font=fnt, fill=fill, stroke_width=width, stroke_fill=stroke)
+
+
+def pill(draw, xy, text, fnt, face, ink, pad=26, height=62):
+    x, y = xy
+    w = int(draw.textlength(text, font=fnt)) + pad * 2
+    draw.rounded_rectangle((x, y, x + w, y + height), radius=height // 2, fill=face)
+    draw.text((x + pad, y + (height - fnt.size) // 2 - 4), text, font=fnt, fill=ink)
+    return x + w
+
+
+def render_art_cover(doc, item, slide, total):
+    width, height = doc['size']
+    seller = item['audience'] == 'seller'
+    img = scrim(cover_art(slide['art'], (width, height)))
+    draw = ImageDraw.Draw(img)
+
+    # ロゴは小さく上に。主役は写真と見出し。
+    draw.rounded_rectangle((60, 56, 60 + 66, 56 + 66), radius=20, fill=PAPER)
+    draw.text((78, 64), 'H', font=font(40), fill=VIOLET if not seller else NAVY)
+    draw.text((142, 60), 'HOSHILU', font=font(34), fill=PAPER)
+    draw.text((144, 100), 'ホシル' if not seller else 'ホシル｜ショップ・セラーの方へ',
+              font=font(21, 'light'), fill=(226, 222, 245))
+
+    head_font = font(94)
+    head_lines = wrap(draw, slide['headline'], head_font, width - 120)
+    body_font = font(34, 'light')
+    body_lines = wrap(draw, slide['body'], body_font, width - 120)
+    chips_list = slide.get('chips') or []
+    chip_font = font(25, 'light')
+    block = 84 + len(head_lines) * int(head_font.size * 1.18) + 26 + len(body_lines) * int(body_font.size * 1.5)
+    if chips_list:
+        block += 96
+    y = height - 176 - block
+
+    kicker = ' '.join(slide['kicker'])
+    pill(draw, (60, y), kicker, font(24, 'light'), PINK if not seller else VIOLET, PAPER, 24, 56)
+    y += 84
+    for line in head_lines:
+        outlined(draw, (60, y), line, head_font, PAPER, (18, 12, 40), 9)
+        y += int(head_font.size * 1.18)
+    y += 26
+    for line in body_lines:
+        draw.text((62, y), line, font=body_font, fill=(232, 228, 248))
+        y += int(body_font.size * 1.5)
+    if chips_list:
+        y += 30
+        x = 60
+        for label in chips_list:
+            w = int(draw.textlength(label, font=chip_font)) + 48
+            if x + w > width - 60:
+                break
+            pill(draw, (x, y), label, chip_font, (255, 255, 255), (26, 22, 51), 24, 60)
+            x += w + 12
+
+    draw.text((60, height - 118), doc['footer'], font=font(28), fill=PAPER)
+    hint = '登録は無料' if not seller else '相談フォーム送信だけでは課金されません'
+    draw.text((60, height - 80), hint, font=font(23, 'light'), fill=(206, 200, 232))
+    dots(draw, width, height - 44, 1, total, PAPER, (120, 108, 164))
+    return img
+
+
 def render_cover(doc, item, slide, total):
     width, height = doc['size']
     seller = item['audience'] == 'seller'
@@ -346,6 +438,8 @@ def render_page(doc, item, slide, index, total):
 
 def render_slide(doc, item, slide, index, total):
     if index == 1:
+        if slide.get('art'):
+            return render_art_cover(doc, item, slide, total)
         return render_cover(doc, item, slide, total)
     return render_page(doc, item, slide, index, total)
 
