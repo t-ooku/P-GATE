@@ -170,7 +170,9 @@ test('実行は1日1回・QA記録のみ・Turnstile内部迂回のリクエス�
 test('公開の /api/knowledge は常にTurnstileを検証し、内部迂回は cron と管理者ルートだけ', () => {
   const source = readFileSync(new URL('../src/index.mjs', import.meta.url), 'utf8');
   assert.match(source, /url\.pathname === '\/api\/knowledge'\) return handleKnowledgeApi\(request, env, ctx\);/u);
-  assert.match(source, /if \(options\.internalQa !== true\) \{\s*await verifyTurnstile\(/u);
+  // 2026-09-24: トークンがあれば必ず検証、無ければ上限付きの admitTokenlessSearch を必ず通す。
+  assert.match(source, /if \(options\.internalQa !== true\) \{\s*if \(validatedInput\.turnstile_token\) \{\s*await verifyTurnstile\(/u);
+  assert.match(source, /\} else \{[\s\S]{0,200}await admitTokenlessSearch\(env, request\);/u);
   assert.equal((source.match(/\{ internalQa: true \}/g) || []).length, 3);
   assert.match(source, /url\.pathname === '\/api\/internal\/search\/qa-canary'\) \{\s*if \(!await authorizeAdminRequest\(request, env\)\)/u);
   assert.match(source, /if \(searchQaCanaryDue\(scheduledAt\)\)/u);

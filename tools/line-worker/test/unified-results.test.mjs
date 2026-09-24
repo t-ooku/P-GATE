@@ -101,7 +101,8 @@ test('一致度が高い方が上。HOSHILUだから上、にはしない', () =
   assert.equal(result.items[0].source, 'WEB', '明らかにWebの方が一致していればWebを上に');
 });
 
-test('同点のときだけ HOSHILU を先に（§6）。Seller はさらに先', () => {
+// 2026-09-24 大隆さん「ホシルもgoogle提示も平等なルールで順に表示すべき」「1本で平等に並べよう」。
+test('同点なら HOSHILU と Web を交互に並べる。HOSHILU の中では Seller が先', () => {
   const result = unifyResults({
     candidates: [
       candidate(1),
@@ -110,7 +111,50 @@ test('同点のときだけ HOSHILU を先に（§6）。Seller はさらに先'
     googleItems: [web(1, { title: '黒 本革 トートバッグ web 1' })],
     query: QUERY
   });
-  assert.deepEqual(result.items.map((item) => item.source), ['HOSHILU_SHOP', 'HOSHILU', 'WEB']);
+  assert.deepEqual(result.items.map((item) => item.source), ['HOSHILU_SHOP', 'WEB', 'HOSHILU']);
+});
+
+test('HOSHILU の候補が多くても、同点の Web は1ページ目に入る（最後尾に回さない）', () => {
+  const result = unifyResults({
+    candidates: many(candidate, 30),
+    googleItems: many(web, 5),
+    query: QUERY
+  });
+  const firstPage = result.items.slice(0, UNIFIED_PAGE_SIZE);
+  const sources = firstPage.map((item) => (item.source === 'WEB' ? 'W' : 'H')).join('');
+  assert.equal(firstPage.filter((item) => item.source === 'WEB').length, 5, `1ページ目: ${sources}`);
+  assert.match(sources, /^HWHWHWHWHW/u, '交互に並ぶ');
+  // Web 側の中の順番は、Google が返した順のまま
+  const webOrder = result.items.filter((item) => item.source === 'WEB').map((item) => Number(item.product_name.match(/\d+$/u)[0]));
+  assert.deepEqual(webOrder, [1, 2, 3, 4, 5]);
+});
+
+// レビューで見つかった取りこぼし: 「何番目か」を側全体で数えると、上の組や一覧ページで番号を
+// 使った側が、次の同点の組で後ろにまとめて回されていた。同点の組の中で数える。
+test('一致数の違う組があっても、同点の組の中では交互に並ぶ', () => {
+  const result = unifyResults({
+    candidates: [
+      ...many(candidate, 4),
+      ...[5, 6, 7, 8].map((n) => candidate(n, { display_name: `黒 トートバッグ ${n}` }))
+    ],
+    googleItems: many((n) => web(n, { title: `黒 トートバッグ web ${n}` }), 4),
+    query: QUERY
+  });
+  const sources = result.items.map((item) => (item.source === 'WEB' ? 'W' : 'H')).join('');
+  assert.equal(sources, 'HHHHHWHWHWHW', sources);
+});
+
+test('Web の一覧ページが多くても、Web の商品は HOSHILU と交互に並ぶ（一覧ページは最後）', () => {
+  const result = unifyResults({
+    candidates: many(candidate, 4),
+    googleItems: [
+      ...[1, 2, 3, 4].map((n) => web(n, { product_page: false })),
+      ...[5, 6, 7, 8].map((n) => web(n))
+    ],
+    query: QUERY
+  });
+  const kinds = result.items.map((item) => (item.source === 'WEB' ? (item.listing ? 'L' : 'W') : 'H')).join('');
+  assert.match(kinds, /^HWHWHWHW/u, kinds);
 });
 
 test('条件が作れない検索では、絞り込まず元の順番を保つ', () => {

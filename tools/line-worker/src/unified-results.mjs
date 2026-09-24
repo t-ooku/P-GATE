@@ -203,13 +203,44 @@ export function rankUnified(rows, conditions) {
   // それで 1件も残らないときだけ、1語一致まで緩める（無言で0件にしない）。
   // どちらにしても、1語も当たらないものは出さない。
   const kept = conditions.length ? relevant(judged, conditions.length) : judged;
+  // 2026-09-24 大隆さん「ホシル提案商品ばかりが先に提示されて、もっと見るタップして、一番最後に
+  // google検索提示がでるのはおかしい。ホシルもgoogle提示も平等なルールで順に表示すべき」
+  //「順位記載は不要だが1本で平等に並べよう」。
+  //
+  // それまでは一致度が同点のとき常に HOSHILU を先にしていた。一致度は「何語当たったか」なので
+  // 同点がとても多く、HOSHILU の候補が同点で何十件もあると Web は1ページ目（12件）に入れず、
+  //「もっと見る」の先の最後尾に回っていた。
+  //
+  // 同点のときは、それぞれの出どころの中での順番（自分の側で何番目か）で交互に並べる:
+  //   HOSHILU の1番目 → Web の1番目 → HOSHILU の2番目 → Web の2番目 …
+  // 出どころで上下を決めない。各側の中の順番は、それぞれの検索元が返した順を尊重する。
+  // HOSHILU 側の中だけは、同点なら Seller のショップ商品を先にする（従来どおり）。
+  const sideOf = (row) => (row.source === 'WEB' ? 'WEB' : 'HOSHILU');
+  const bySideOrder = (a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
+    const source = SOURCE_RANK[a.source] - SOURCE_RANK[b.source];
+    if (source !== 0) return source;
+    return a.order - b.order;
+  };
+  // 「何番目か」は同点の組（一覧かどうか・一致数・外れ数が同じもの）の中で数える。
+  // 側全体で数えると、上位の組や一覧ページで番号を使った側が、次の組で後ろに回されてしまう。
+  const sideRank = new Map();
+  const tieGroups = new Map();
+  for (const row of kept) {
+    const key = `${row.listing ? 1 : 0}|${row.score}|${row.unmatched.length}|${sideOf(row)}`;
+    if (!tieGroups.has(key)) tieGroups.set(key, []);
+    tieGroups.get(key).push(row);
+  }
+  for (const group of tieGroups.values()) group.sort(bySideOrder).forEach((row, index) => sideRank.set(row, index));
   return kept.sort((a, b) => {
-    // 一覧ページは、どれだけ言葉が合っていても商品より後ろ（2026-09-22）。
+    // 一覧ページは、どれだけ言葉が合っていても商品より後ろ（2026-09-22）。出どころに関係なく同じ規則。
     const listing = (a.listing ? 1 : 0) - (b.listing ? 1 : 0);
     if (listing !== 0) return listing;
     if (b.score !== a.score) return b.score - a.score;
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
-    // ここまで同点のときだけ HOSHILU を先に（§6）。Seller だから常に上、にはしない。
+    const turn = sideRank.get(a) - sideRank.get(b);
+    if (turn !== 0) return turn;
     const source = SOURCE_RANK[a.source] - SOURCE_RANK[b.source];
     if (source !== 0) return source;
     return a.order - b.order;

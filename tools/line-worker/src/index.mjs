@@ -1,3 +1,4 @@
+import { admitTokenlessSearch } from './tokenless-search.mjs';
 import { handleSellerRoutes, readSellerSession } from './seller-auth.mjs';
 import { targetPriceProductKey } from './target-price-product-key.mjs';
 import { handleSellerBusinessInquiryRoutes } from './seller-business-inquiries.mjs';
@@ -500,7 +501,9 @@ export function validateKnowledgeRequest(payload) {
     throw new Error('QUERY_LENGTH_INVALID');
   }
   if (!/^[A-Za-z0-9_-]{16,100}$/.test(sessionId)) throw new Error('SESSION_ID_INVALID');
-  if (!turnstileToken || turnstileToken.length > 2048) throw new Error('TURNSTILE_TOKEN_INVALID');
+  // 2026-09-24: 文字だけの検索に限り、トークン無しを受け付ける（上限付き。src/tokenless-search.mjs）。
+  // 写真・投稿URLは Vision を呼ぶので、これまでどおりトークン必須。
+  if (turnstileToken.length > 2048 || (!turnstileToken && (socialUrl || searchImage))) throw new Error('TURNSTILE_TOKEN_INVALID');
   const language = ['JA','EN','ZH','KO'].includes(payload.language) ? payload.language : 'JA';
   const searchAttempt = Number.isInteger(payload.search_attempt)
     ? Math.min(2, Math.max(1, payload.search_attempt)) : 1;
@@ -705,6 +708,8 @@ function boundedRequestSignal(signal, timeoutMs) {
 
 async function verifyTurnstile(token, env, remoteIp, signal) {
   if (!env.TURNSTILE_SECRET_KEY) throw new Error('TURNSTILE_NOT_CONFIGURED');
+  // 空のトークンは siteverify に送るまでもなく無効（2026-09-24 以降、文字検索の検証器は空を通すため）。
+  if (!String(token || '').trim()) throw new Error('TURNSTILE_TOKEN_INVALID');
   let response;
   try {
     response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
@@ -2726,12 +2731,21 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     // 検索品質カナリア(src/search-qa-canary.mjs)だけが options.internalQa で
     // Turnstile検証を省略できる。公開ルートは常に3引数で呼ばれ、到達不能。
     if (options.internalQa !== true) {
-      await verifyTurnstile(validatedInput.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+      if (validatedInput.turnstile_token) {
+        await verifyTurnstile(validatedInput.turnstile_token, env, request.headers.get('cf-connecting-ip'));
+      } else {
+        // 2026-09-24: アプリ内ブラウザでトークンが出ない人のため、上限付きで通す。
+        // 上限を超えたら TURNSTILE_TOKENLESS_* を返し、画面は従来の「セキュリティ確認を完了して」に戻る。
+        await admitTokenlessSearch(env, request);
+      }
     }
     const submittedQuery = validatedInput.query;
     // 2026-09-06 大隆さん指示: 一度当たった答えは D1 に残し、次の同じ質問に使う。
     // YES を押したときだけ（ai_candidate_fallback が付いているとき）記録する。
-    if (validatedInput.ai_candidate_fallback && validatedInput.identify_original_query) {
+    // 2026-09-24: 共有の答え置き場なので、ボット確認を通った依頼（またはカナリア）だけが書ける。
+    // トークン無しで通した検索からは書かない（誰でも答えを差し替えられないように）。
+    const verifiedHuman = options.internalQa === true || Boolean(validatedInput.turnstile_token);
+    if (verifiedHuman && validatedInput.ai_candidate_fallback && validatedInput.identify_original_query) {
       const remember = rememberIdentifyAnswer(env, {
         query: validatedInput.identify_original_query,
         language: validatedInput.language,
@@ -3229,7 +3243,9 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       'SEARCH_IMAGE_INVALID', 'SEARCH_IMAGE_TYPE_UNSUPPORTED', 'SEARCH_IMAGE_SIGNATURE_INVALID',
       'SEARCH_IMAGE_TOO_LARGE'
     ];
+    // 2026-09-24: トークン無しの上限超え・停止中は 429（押し直せば通る話ではないので再試行させない）。
     const status = clientErrors.includes(code) ? 400
+      : code.startsWith('TURNSTILE_TOKENLESS_') ? 429
       : code.startsWith('SEARCH_INPUT_ANALYSIS_') ? 503 : 500;
     // 切り分け用の固定語彙コード(入力断片なし)。利用者向けcodeは変えず、
     // 構造化ログと運用テレメトリだけ段階付きコードで残す。

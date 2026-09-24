@@ -588,7 +588,18 @@ test('PWA公開検索は文章・公開投稿URL・画像のいずれかと匿�
   assert.equal(validateKnowledgeRequest({ ...valid, query: '靴' }).query, '靴');
   assert.equal(validateKnowledgeRequest({ ...valid, query: '枕' }).query, '枕');
   assert.throws(() => validateKnowledgeRequest({ ...valid, session_id: 'email@example.com' }), /SESSION_ID_INVALID/);
-  assert.throws(() => validateKnowledgeRequest({ ...valid, turnstile_token: '' }), /TURNSTILE_TOKEN_INVALID/);
+  // 2026-09-24: 文字だけの検索はトークン無しを受ける（サーバー側で上限付きで通す）。
+  assert.equal(validateKnowledgeRequest({ ...valid, turnstile_token: '' }).turnstile_token, '');
+  // 写真・投稿URLは従来どおりトークン必須
+  assert.throws(() => validateKnowledgeRequest({
+    query: '', social_url: 'https://www.instagram.com/p/ABC123/', processing_notice_shown: true,
+    session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: ''
+  }), /TURNSTILE_TOKEN_INVALID/);
+  assert.throws(() => validateKnowledgeRequest({
+    query: '', image: { mime_type: 'image/jpeg', data: '/9j/4AAQ' }, processing_notice_shown: true,
+    session_id: 'abcdef0123456789abcdef0123456789', turnstile_token: ''
+  }), /TURNSTILE_TOKEN_INVALID/);
+  assert.throws(() => validateKnowledgeRequest({ ...valid, turnstile_token: 'x'.repeat(2049) }), /TURNSTILE_TOKEN_INVALID/);
 });
 
 test('PWAはインストール可能なmanifestとオフラインshellを持つ', () => {
