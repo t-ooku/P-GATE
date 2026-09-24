@@ -1,0 +1,1105 @@
+[
+  {
+    "query_text": "足のむくみを楽にするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "夕方の脚のだるさやむくみを軽減したい。就寝時や外出時に使う着圧タイプのケア用品を探している可能性が高い",
+    "ideal_answer": "脚全体を締め付けて着圧ケアする弾性ソックス・レッグウェア（効果には個人差があり、医療的な効能を保証するものではありません）",
+    "reason": "「むくみを楽にする」は着圧ソックスを指す可能性が高いが、マッサージ器の可能性も残るため確度は中程度に留める。",
+    "category": "compression-legwear",
+    "search_terms": {
+      "ja": [
+        "着圧ソックス",
+        "むくみ ケア レッグウェア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "首を支えてくれるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "デスクワークや長時間の在宅作業で首や肩の負担を軽減したい。日常使いのネックサポーターを探している可能性が高い",
+    "ideal_answer": "首に巻いて姿勢を支えるネックサポーター・ネックピロー（クッションタイプ）",
+    "reason": "「首を支える」は日常使いのネックサポーターを指す可能性が高いが、旅行用ネックピローの可能性も残るため確度は中程度。",
+    "category": "neck-support",
+    "search_terms": {
+      "ja": [
+        "ネックサポーター",
+        "首 支える クッション"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "羽虫が家の中に入ってこないようにするやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "網戸の隙間などから小さな羽虫が室内に侵入するのを防ぎたい。玄関や窓まわりに設置するタイプを探している可能性が高い",
+    "ideal_answer": "網戸や玄関に貼る虫除けシート・忌避剤",
+    "reason": "「家の中に入ってこないように」という表現から侵入防止用の設置型虫除けグッズを想定。屋外携帯用スプレーの可能性も残るため確度は中程度。",
+    "category": "insect-barrier",
+    "search_terms": {
+      "ja": [
+        "網戸 虫除け シート",
+        "玄関 虫よけ 置くだけ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "静電気を防ぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "冬場に衣類やドアノブなどで感じる静電気の不快感を軽減したい。携帯できる静電気除去グッズを探している可能性が高い",
+    "ideal_answer": "触れるだけで静電気を放電できるキーホルダー型の静電気除去グッズ",
+    "reason": "「静電気を防ぐ」は携帯用の静電気除去グッズを指す可能性が高いが、衣類用スプレーの可能性も残るため確度は中程度。",
+    "category": "anti-static-goods",
+    "search_terms": {
+      "ja": [
+        "静電気除去 キーホルダー",
+        "静電気防止 グッズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "音を遮断してくれるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "電車や飛行機など外出先の周囲の音を軽減したい。携帯して使える聴覚保護グッズを探している可能性が高い",
+    "ideal_answer": "周囲の音を軽減するノイズキャンセリングイヤホンまたは耳栓",
+    "reason": "「音を遮断する」は携帯機器を指す可能性が高いが、防音カーテンなど室内設備の可能性も残るため確度は中程度。",
+    "category": "noise-cancelling",
+    "search_terms": {
+      "ja": [
+        "ノイズキャンセリング イヤホン",
+        "耳栓 遮音"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "肌のつっぱりを抑えるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗顔後や乾燥する季節に肌がつっぱるのを抑えたい。保湿系スキンケアを探している可能性が高い",
+    "ideal_answer": "洗顔後すぐに使う化粧水・乳液タイプの保湿ケア用品",
+    "reason": "「肌のつっぱりを抑える」は保湿系スキンケアを指す可能性が高いが、クリームかシートマスクかまでは特定できないため確度は中程度。",
+    "category": "skincare-moisturizer",
+    "search_terms": {
+      "ja": [
+        "保湿 化粧水",
+        "乾燥肌 スキンケア"
+      ],
+      "en": [
+        "moisturizing skincare"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "夏に部屋を涼しく保つグッズ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。扇風機・エアコン・冷感マットのいずれも候補",
+    "ideal_answer": "エアコンのような設置型の冷房器具をお探しですか、それとも扇風機や冷感マットなど手軽に使えるものをお探しですか？予算や設置環境によって適した製品が大きく変わります。",
+    "reason": "「部屋を涼しく保つ」は工事を伴う設置型から手軽な小型家電まで幅が広いultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "肩を温めるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "肩まわりの冷えを和らげたい。繰り返し使える電気式の肩用ウォーマーを探している可能性が高い",
+    "ideal_answer": "電源を入れて繰り返し使える電気式の肩・首用ウォーマー",
+    "reason": "「肩を温める」は電気式ウォーマーを指す可能性が高いが、使い捨てカイロの可能性も残るため確度は中程度。医療効果は断定しない。",
+    "category": "heated-shoulder-warmer",
+    "search_terms": {
+      "ja": [
+        "電気 肩ウォーマー",
+        "首肩 温め グッズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "部屋の匂いを消すやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "部屋にこもった生活臭をすぐに軽減したい。置いておくだけで使える消臭グッズを探している可能性が高い",
+    "ideal_answer": "玄関やリビングに置くタイプの置き型消臭剤",
+    "reason": "「匂いを消す」は置き型消臭剤を指す可能性が高いが、空気清浄機の可能性も残るため確度は中程度。",
+    "category": "room-deodorizer",
+    "search_terms": {
+      "ja": [
+        "置き型 消臭剤",
+        "部屋 消臭 グッズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "目を休ませてくれるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "PCやスマホ作業の合間に目の疲れを和らげたい。就寝前にも使えるリラックスグッズを探している可能性が高い",
+    "ideal_answer": "電子レンジ不要で繰り返し使えるホットアイマスク",
+    "reason": "「目を休ませる」はホットアイマスクを指す可能性が高いが、ブルーライトカット眼鏡の可能性も残るため確度は中程度。",
+    "category": "hot-eye-mask",
+    "search_terms": {
+      "ja": [
+        "ホットアイマスク",
+        "目もと 温め グッズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "荷物をコンパクトにまとめるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "旅行や出張の際にスーツケース内の荷物を整理してコンパクトに収納したい",
+    "ideal_answer": "衣類を圧縮・仕分けできるトラベル用パッキングキューブ",
+    "reason": "「荷物をコンパクトにまとめる」は旅行用収納グッズを指す可能性が高く、他カテゴリとの混同が少ないため確度はやや高め。",
+    "category": "travel-organizer",
+    "search_terms": {
+      "ja": [
+        "パッキングキューブ",
+        "旅行 圧縮袋"
+      ],
+      "en": [
+        "packing cubes travel"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "手荒れを防ぐやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "水仕事や乾燥する季節に手荒れを防ぎたい。保湿系のハンドケア用品を探している可能性が高い",
+    "ideal_answer": "こまめに塗り直せる保湿力の高いハンドクリーム",
+    "reason": "「手荒れを防ぐ」は保湿ハンドクリームを指す可能性が高いが、家事用ゴム手袋の可能性も残るため確度は中程度。",
+    "category": "hand-cream",
+    "search_terms": {
+      "ja": [
+        "ハンドクリーム 保湿",
+        "手荒れ ケア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "紫外線から守ってくれるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "外出時の日焼け対策をしたい。肌に直接塗るタイプのUVケア用品を探している可能性が高い",
+    "ideal_answer": "肌に塗って紫外線をカットする日焼け止め（サンスクリーン）",
+    "reason": "「紫外線から守る」は日焼け止めを指す可能性が高いが、日傘やアームカバーの可能性も残るため確度は中程度。",
+    "category": "sunscreen",
+    "search_terms": {
+      "ja": [
+        "日焼け止め",
+        "UVケア"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "姿勢をよくしてくれるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "デスクワーク中の猫背が気になり、姿勢を意識できるサポート用品を探している可能性が高い",
+    "ideal_answer": "背中に装着して姿勢を意識させる姿勢矯正ベルト・サポーター（効果には個人差があり、矯正効果を保証するものではありません）",
+    "reason": "「姿勢をよくする」は姿勢矯正ベルトを指す可能性が高いが、クッション型サポートの可能性も残るため確度は中程度。効果は断定しない。",
+    "category": "posture-support-belt",
+    "search_terms": {
+      "ja": [
+        "姿勢矯正ベルト",
+        "猫背 サポーター"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "冷たい飲み物がずっと冷たいままのやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "外出先や職場で長時間冷たさを保てる飲み物用の容器を探している",
+    "ideal_answer": "真空断熱構造の保冷タンブラー・水筒",
+    "reason": "「冷たいままのやつ」は保冷タンブラーを指す可能性が高く、他カテゴリとの混同が少ないため確度は高め。",
+    "category": "insulated-tumbler",
+    "search_terms": {
+      "ja": [
+        "保冷タンブラー",
+        "真空断熱 水筒"
+      ],
+      "en": [
+        "insulated tumbler"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "こども用の歯ブラシで持ちやすいやつ",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "小さな子どもが自分で握りやすい、持ち手が太い・滑りにくい歯ブラシを探している",
+    "ideal_answer": "持ち手が太く滑りにくい子ども向けの仕上げ磨き・自分磨き用歯ブラシ",
+    "reason": "「持ちやすい」という表現から子どもの手に合わせたグリップ形状の歯ブラシを想定。年齢別のヘッドサイズにも注意が必要なため確度は中程度。",
+    "category": "kids-toothbrush",
+    "search_terms": {
+      "ja": [
+        "子供 歯ブラシ 持ちやすい",
+        "キッズ 歯ブラシ 握りやすい"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "小学生が自分で音読を録音するのに使えるマイク",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "宿題の音読練習を子どもが自分で録音・確認できる簡単操作のマイクや録音機を探している",
+    "ideal_answer": "ボタン操作がシンプルなキッズ向けボイスレコーダーまたはUSBマイク",
+    "reason": "「自分で録音」「小学生」という表現から操作が簡単な子ども向け録音機器を想定。",
+    "category": "kids-voice-recorder",
+    "search_terms": {
+      "ja": [
+        "ボイスレコーダー 子供 簡単操作",
+        "音読 録音 キッズ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "子どもが一人でお風呂の時間を計れる防水タイマー",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "子どもが自分でお風呂の時間を管理できるよう、浴室で使える防水仕様のタイマーを探している",
+    "ideal_answer": "吸盤付きで浴室に貼り付けられる防水キッズタイマー",
+    "reason": "「一人で」「お風呂」「時間を計れる」という条件から防水仕様のキッズ向けタイマーを想定。",
+    "category": "kids-bath-timer",
+    "search_terms": {
+      "ja": [
+        "防水タイマー 子供 お風呂",
+        "キッズタイマー 吸盤"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "幼稚園児でも開けやすい水筒",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "園児が自分でふたを開閉できる、握力の弱い子どもでも扱いやすい構造の水筒を探している",
+    "ideal_answer": "ワンプッシュ開閉や軽い力で回せるキャップの幼児向け水筒",
+    "reason": "「幼稚園児でも開けやすい」という表現から開閉が簡単な構造の幼児向け水筒を想定。",
+    "category": "kids-water-bottle",
+    "search_terms": {
+      "ja": [
+        "水筒 子供 開けやすい",
+        "幼児 水筒 ワンプッシュ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "子どもの矯正用マウスピースを収納するケース",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "歯科矯正中の子ども用マウスピース・リテーナーを衛生的に持ち運び・保管するためのケースを探している",
+    "ideal_answer": "通気穴付きで洗浄・持ち運びに適したリテーナーケース",
+    "reason": "「矯正用マウスピースを収納」という具体的用途から専用ケースを想定。医療的な適合可否には言及しない。",
+    "category": "orthodontic-case",
+    "search_terms": {
+      "ja": [
+        "リテーナーケース",
+        "マウスピース 収納 子供"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "小さい子でも噛みやすい歯固め",
+    "locale": "ja",
+    "persona": "child",
+    "user_intent": "乳幼児が歯が生え始める時期に、自分で持って噛める安全な歯固めおもちゃを探している",
+    "ideal_answer": "小さな手でも握りやすい形状で、口に入れても安全な素材の赤ちゃん用歯固め",
+    "reason": "「小さい子でも噛みやすい」という表現から乳幼児向け歯固めおもちゃを想定。安全性の断定的な効能表現は避ける。",
+    "category": "baby-teether",
+    "search_terms": {
+      "ja": [
+        "歯固め 赤ちゃん",
+        "ベビー 歯固めおもちゃ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "数字が大きく見える電卓",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "数字を見やすくしたい高齢者が、家計簿や買い物の計算に使いやすい大画面表示の電卓を探している",
+    "ideal_answer": "大型液晶表示で数字が見やすいシニア向け電卓",
+    "reason": "「数字が大きく見える」という条件から大画面液晶タイプの電卓を想定。",
+    "category": "large-display-calculator",
+    "search_terms": {
+      "ja": [
+        "電卓 大きい表示",
+        "シニア 電卓 見やすい"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "瓶のふたを開けやすくする道具",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "握力が弱くなり瓶や缶のふたを開けにくい高齢者が、開栓を補助する道具を探している",
+    "ideal_answer": "滑り止め付きで少ない力でも回せる瓶オープナー",
+    "reason": "「ふたを開けやすくする」という条件から瓶オープナー・栓抜き補助具を想定。",
+    "category": "jar-opener",
+    "search_terms": {
+      "ja": [
+        "瓶 ふた 開ける 道具",
+        "オープナー 握力"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "膝に負担をかけずに庭仕事できる道具",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "膝や腰に負担をかけたくない高齢者が、立ったまま作業できる園芸道具や膝当てを探している可能性がある",
+    "ideal_answer": "しゃがまずに使える長柄タイプの園芸道具か、膝をつく際に使う園芸用クッションのどちらをお探しですか？作業内容によって適したものが変わります。",
+    "reason": "「膝に負担をかけずに」は長柄道具と膝当てクッションのどちらも指しうるambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "補聴器の電池を大きな文字で確認できるケース",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "補聴器用の小さなボタン電池を種類や残量が分かりやすく管理できる、文字が見やすいケースを探している",
+    "ideal_answer": "電池のサイズ表示が大きく印字された補聴器電池用ケース",
+    "reason": "「大きな文字で確認できる」という条件から視認性の高い電池ケースを想定。",
+    "category": "hearing-aid-battery-case",
+    "search_terms": {
+      "ja": [
+        "補聴器 電池ケース 見やすい"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "杖を置くときに倒れないようにするスタンド",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "外出先や自宅で杖を立てかけた際に倒れて音が鳴ったり拾いにくくなったりするのを防ぎたい",
+    "ideal_answer": "杖を挟んで自立させるクリップ式の杖ホルダー・スタンド",
+    "reason": "「倒れないようにする」という条件から杖の自立を助ける専用スタンドを想定。",
+    "category": "cane-holder",
+    "search_terms": {
+      "ja": [
+        "杖 スタンド 倒れない",
+        "杖ホルダー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "リモコンの文字が見やすくなるカバー",
+    "locale": "ja",
+    "persona": "elderly",
+    "user_intent": "テレビやエアコンのリモコンのボタン表示が小さくて見えにくいため、見やすくする工夫を探している",
+    "ideal_answer": "ボタンの数字が大きく印字されたシニア向けリモコンカバー・シール",
+    "reason": "「文字が見やすくなる」という条件から大きな表示のリモコンカバーやシールを想定。",
+    "category": "remote-cover-large-print",
+    "search_terms": {
+      "ja": [
+        "リモコン カバー 見やすい",
+        "リモコン 文字 大きい シール"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "발이 편한 실내화 찾고 있어요",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "足が痛くならない、クッション性の高い屋内用スリッパを探している",
+    "ideal_answer": "衝撃を吸収するクッション底の室内履き・ルームシューズ",
+    "reason": "「발이 편한(足が楽な)」という表現からクッション性重視の室内履きを想定。",
+    "category": "indoor-slippers",
+    "search_terms": {
+      "ja": [
+        "ルームシューズ クッション"
+      ],
+      "en": [],
+      "ko": [
+        "편한 실내화",
+        "쿠션 슬리퍼"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "여행용 콘센트 변환기 필요해요",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "海外旅行先でコンセント形状が異なる電化製品を使うための変換プラグを探している",
+    "ideal_answer": "複数国のプラグ形状に対応した海外旅行用電源変換アダプター",
+    "reason": "「여행용 콘센트 변환기(旅行用コンセント変換器)」という直接的な表現から海外用プラグ変換アダプターと判断。",
+    "category": "travel-plug-adapter",
+    "search_terms": {
+      "ja": [
+        "海外 変換プラグ",
+        "旅行用 コンセント変換"
+      ],
+      "en": [],
+      "ko": [
+        "여행용 콘센트 변환기"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "找一个可以折叠的购物车",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "使わないときに折りたたんで収納できる買い物用のカートを探している",
+    "ideal_answer": "折りたたみ可能なキャスター付きショッピングカート",
+    "reason": "「可以折叠的购物车(折りたためる買い物カート)」という直接的な表現から折りたたみ式ショッピングカートと判断。",
+    "category": "folding-shopping-cart",
+    "search_terms": {
+      "ja": [
+        "折りたたみ ショッピングカート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "折叠购物车"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "婴儿用的防滑浴垫",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "赤ちゃんをお風呂で洗う際に滑って転倒しないよう、浴槽内に敷く滑り止めマットを探している",
+    "ideal_answer": "浴槽の底に貼る吸盤付きベビー用滑り止めバスマット",
+    "reason": "「婴儿用的防滑浴垫(赤ちゃん用の滑り止めバスマット)」という直接的な表現からベビー用バスマットと判断。",
+    "category": "baby-bath-mat",
+    "search_terms": {
+      "ja": [
+        "赤ちゃん 浴槽 滑り止めマット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "婴儿防滑浴垫"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "something that keeps my coffee hot for hours",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "外出先でコーヒーの温かさを長時間保ちたい。保温マグか保温フラスコのどちらかが候補",
+    "ideal_answer": "持ち手付きの保温マグをお探しですか、それとも密閉性の高い保温フラスコ（水筒タイプ）をお探しですか？飲み方や持ち運び方によって適した形状が変わります。",
+    "reason": "保温マグと保温フラスコのどちらも「コーヒーを長時間温かく保つ」目的に合致するためambiguous例とする。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [
+        "insulated coffee mug",
+        "thermal flask"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "lightweight rain jacket for hiking",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "登山やハイキング中の急な雨に備え、軽量で持ち運びやすいレインジャケットを探している",
+    "ideal_answer": "コンパクトに収納できる軽量ハイキング用レインジャケット",
+    "reason": "「lightweight」「hiking」という条件から携帯性を重視したアウトドア用レインウェアと判断。",
+    "category": "hiking-rain-jacket",
+    "search_terms": {
+      "ja": [],
+      "en": [
+        "lightweight rain jacket hiking",
+        "packable rain shell"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "スーツケース lock TSA 対応のやつ",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "海外旅行でTSAロック(米国運輸保安局対応)機能付きのスーツケース用南京錠を探している",
+    "ideal_answer": "TSAロック認証マーク付きのスーツケース用南京錠",
+    "reason": "「TSA 対応」という明確な条件からTSAロック認証の南京錠と判断。",
+    "category": "tsa-lock",
+    "search_terms": {
+      "ja": [
+        "TSAロック 南京錠"
+      ],
+      "en": [
+        "TSA approved luggage lock"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "韓国 cushion foundation 崩れにくい",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "崩れにくさを謳う韓国コスメのクッションファンデーションを探している",
+    "ideal_answer": "「崩れにくい」と紹介されているロングラスティングタイプのクッションファンデーション（効果には個人差があり、崩れにくさを断定するものではありません）",
+    "reason": "「崩れにくい」は商品説明上の宣伝表現であり効果を保証するものではないため、断定を避けた表現にする。",
+    "category": "cosmetics-cushion-foundation",
+    "search_terms": {
+      "ja": [
+        "クッションファンデ 崩れにくい"
+      ],
+      "en": [
+        "long lasting cushion foundation"
+      ],
+      "ko": [
+        "잘 안 무너지는 쿠션"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.5,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "겨울에 신을 수 있는 방한 부츠 있나요",
+    "locale": "ko",
+    "persona": "foreign",
+    "user_intent": "寒い冬でも足元を暖かく保てる防寒ブーツを探している",
+    "ideal_answer": "内側にボア素材などの保温性のある冬用防寒ブーツ",
+    "reason": "「방한 부츠(防寒ブーツ)」という直接的な表現から防寒性の高いブーツと判断。",
+    "category": "winter-boots",
+    "search_terms": {
+      "ja": [
+        "防寒ブーツ"
+      ],
+      "en": [],
+      "ko": [
+        "방한 부츠"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "适合送礼的日本文具套装",
+    "locale": "zh",
+    "persona": "foreign",
+    "user_intent": "訪日旅行や知人への贈り物として、日本らしいデザインの文房具セットを探している",
+    "ideal_answer": "和柄デザインやご当地モチーフを取り入れたギフト向け日本製文房具セット",
+    "reason": "「适合送礼(贈り物に適した)」「日本文具套装(日本の文房具セット)」という表現からギフト向け文具セットと判断。",
+    "category": "stationery-gift-set",
+    "search_terms": {
+      "ja": [
+        "文房具 ギフトセット 日本製"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": [
+        "日本文具礼盒"
+      ]
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "portable fan for stroller clip on",
+    "locale": "en",
+    "persona": "foreign",
+    "user_intent": "ベビーカーに取り付けて赤ちゃんに風を送れる、持ち運びできるクリップ式扇風機を探している",
+    "ideal_answer": "ベビーカーの手すりなどに挟んで固定できるクリップ式ポータブル扇風機",
+    "reason": "「clip on」「stroller」という条件からベビーカー取り付け用のクリップ式扇風機と判断。",
+    "category": "clip-on-stroller-fan",
+    "search_terms": {
+      "ja": [
+        "ベビーカー 扇風機 クリップ"
+      ],
+      "en": [
+        "clip on stroller fan",
+        "portable baby fan"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "空港で使える neck pillow 折りたたみ",
+    "locale": "mixed",
+    "persona": "foreign",
+    "user_intent": "長時間のフライトや空港での待ち時間に使う、コンパクトに折りたためるネックピローを探している",
+    "ideal_answer": "使わないときは小さく折りたためる携帯用トラベルネックピロー",
+    "reason": "「空港で使える」「折りたたみ」という条件から携帯性を重視したトラベル用ネックピローと判断。",
+    "category": "travel-neck-pillow",
+    "search_terms": {
+      "ja": [
+        "ネックピロー 折りたたみ 旅行用"
+      ],
+      "en": [
+        "inflatable travel neck pillow"
+      ],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "推し活で使えるうちわ用の透明シート",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ライブやイベントで使う自作うちわのデコレーションに使う透明なシート素材を探している",
+    "ideal_answer": "うちわ文字の装飾に使えるカラー透明シート・OPPシート",
+    "reason": "「推し活」「うちわ用」という文脈から自作応援うちわの装飾素材と判断。",
+    "category": "oshikatsu-goods",
+    "search_terms": {
+      "ja": [
+        "うちわ文字 シート 透明",
+        "推し活 うちわ 作り方"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "韓国コスメで話題のティント落ちにくいやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "食事や飲み物の後も色持ちしやすいとされる韓国コスメのリップティントを探している",
+    "ideal_answer": "「落ちにくい」と紹介されているロングラスティングタイプのリップティント（色持ちには個人差があり、必ず落ちないことを保証するものではありません）",
+    "reason": "「落ちにくい」は商品の宣伝表現であり効果の断定はできないため、確認的な表現にとどめる。",
+    "category": "cosmetics-lip-tint",
+    "search_terms": {
+      "ja": [
+        "リップティント 落ちにくい 韓国"
+      ],
+      "en": [],
+      "ko": [
+        "잘 안 지워지는 틴트"
+      ],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "SNSで見た推し活用のトレカスリーブ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "SNSで紹介されていた、推しのトレーディングカードを保護するための透明スリーブ・ホルダーを探している",
+    "ideal_answer": "トレーディングカードを保護する透明カードスリーブ・硬質ケース",
+    "reason": "「推し活用のトレカスリーブ」という具体的表現からカード保護用スリーブと判断。",
+    "category": "trading-card-sleeve",
+    "search_terms": {
+      "ja": [
+        "トレカ スリーブ",
+        "推し活 カードケース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.65,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "量産型メイクで使うと言われているパレット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "SNSで「量産型」と呼ばれる系統のメイクによく使われるとされるピンク・ブラウン系アイシャドウパレットを探している",
+    "ideal_answer": "ピンクやブラウンを中心とした、いわゆる量産型メイクの参考としてSNSで紹介されているアイシャドウパレット（特定の効果や仕上がりを保証するものではありません）",
+    "reason": "「量産型メイク」はSNS上の通称であり、対応するパレットも紹介ベースのため断定を避けた表現にする。",
+    "category": "cosmetics-eyeshadow-palette",
+    "search_terms": {
+      "ja": [
+        "量産型メイク パレット",
+        "ピンクブラウン アイシャドウ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.45,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "韓国で流行っているスキンケア道具 玉のようなやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。かっさプレートとフェイスローラー（玉状のマッサージ器具）のどちらも候補",
+    "ideal_answer": "顔の上を転がして使う球体タイプのフェイスローラーをお探しですか、それとも板状で肌を滑らせるかっさプレートをお探しですか？形状によって使い方が異なります。",
+    "reason": "「玉のようなやつ」はフェイスローラーとかっさプレートのどちらも指しうるambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.4,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "花粉症に効くと言われているやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。花粉用マスク・花粉カット眼鏡・鼻炎用スプレーなど、花粉対策グッズ全般が候補",
+    "ideal_answer": "マスクや眼鏡のように花粉の付着・侵入を物理的に防ぐタイプをお探しですか、それとも鼻炎対策のスプレーなどをお探しですか？症状や効果については医薬品・医薬部外品の表示を必ずご確認のうえ、必要に応じて医師や薬剤師にご相談ください。",
+    "reason": "「効くと言われている」は医薬品的な効能を断定できない表現のため、確認質問と受診案内を理想回答とするUNCLASSIFIED・低confidence例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.3,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "寝てる間に痩せると噂のやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。着圧サポーターや骨盤ベルトなど就寝時に着用するボディケア用品を指している可能性があるが、効果を保証する製品ではない",
+    "ideal_answer": "どのような製品を指しているか確認が必要です。就寝時に着用するボディケア用品（着圧サポーターなど）は体型を保証したり「痩せる」効果を約束するものではありません。体重管理については医師や専門家にご相談ください。",
+    "reason": "「寝てる間に痩せる」という表現は効果を断定できない典型例。医薬品・健康効果を断定しないというルールに基づき、確認質問と注意喚起を理想回答とする。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.2,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "部屋干しの洗濯物を早く乾かす道具",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "不明。衣類乾燥除湿機・サーキュレーター・部屋干し用ハンガーラックのいずれも候補",
+    "ideal_answer": "部屋の湿気自体を減らしたいですか、それとも洗濯物に直接風を当てて乾かしたいですか？前者は除湿機、後者はサーキュレーターや室内干しハンガーが候補です。",
+    "reason": "「部屋干しの洗濯物を早く乾かす」は除湿機・サーキュレーター・室内干しグッズのいずれも指しうるultra_ambiguous例。",
+    "category": "UNCLASSIFIED",
+    "search_terms": {
+      "ja": [],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.35,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "冷蔵庫の中の匂いを取るやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "冷蔵庫内にこもったニオイを軽減したい。設置して使う脱臭・消臭グッズを探している",
+    "ideal_answer": "冷蔵庫内に置くタイプの脱臭剤・消臭ケース",
+    "reason": "「冷蔵庫の中の匂いを取る」は冷蔵庫用脱臭剤を指す可能性が高く、他カテゴリとの混同が少ないため確度はやや高め。",
+    "category": "fridge-deodorizer",
+    "search_terms": {
+      "ja": [
+        "冷蔵庫 脱臭剤",
+        "冷蔵庫 消臭"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.6,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "車の中で使える芳香剤で香りが強すぎないやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "車内で使用する芳香剤について、香りが強すぎず控えめなタイプを探している",
+    "ideal_answer": "香りの強さを調整できる、または微香タイプの車載用芳香剤",
+    "reason": "「香りが強すぎない」という条件から微香・調整可能タイプの車用芳香剤と判断。",
+    "category": "car-air-freshener",
+    "search_terms": {
+      "ja": [
+        "車 芳香剤 微香",
+        "車用 芳香剤 香り控えめ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  },
+  {
+    "query_text": "スマホの画面が割れにくくなるやつ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "スマートフォンを落としてしまった際に画面が破損しにくくなるよう保護したい",
+    "ideal_answer": "耐衝撃性を高めるガラスフィルムまたは衝撃吸収タイプのスマホケース",
+    "reason": "「画面が割れにくくなる」という条件からガラスフィルムや耐衝撃ケースを想定。破損を完全に防ぐとは断定しない。",
+    "category": "phone-screen-protection",
+    "search_terms": {
+      "ja": [
+        "スマホ ガラスフィルム 耐衝撃",
+        "耐衝撃 スマホケース"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.55,
+    "authored_date": "2026-09-23",
+    "authored_updated_date": "2026-09-23"
+  }
+]
