@@ -2494,6 +2494,16 @@ const DOMAIN_FAMILIES = [
   {
     categories: new Set(['travel-packing']),
     marker: /(?:旅行|収納|圧縮|パッキング|トラベル|travel|packing|luggage|storage|compression|旅行袋|收纳|收納|压缩|壓縮|여행|수납|압축)/iu
+  },
+  // 2026-09-25 カナリア ig_mattress 3回連続FAIL対応(search-intelligence.mjs の
+  // RULES に 'mattress' カテゴリを追加したのに合わせて登録)。'mattress' は
+  // 'other' 扱いの候補が無条件で通過してしまう一般ドメイン(このコメント群の
+  // 上部参照)だったため、寝具に触れない候補(例:「ナイトミン 耳ほぐタイム」の
+  // ような耳・健康グッズ)がカテゴリ照合なしで本命化していた。marker
+  // (寝具・マットレス・ベッド・布団関連の語)に触れない「other」候補は除外する。
+  {
+    categories: new Set(['mattress']),
+    marker: /(?:マットレス|寝具|寝室|ベッド|敷き?布団|mattress|bed(?:room)?)/iu
   }
 ];
 

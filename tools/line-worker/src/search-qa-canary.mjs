@@ -56,7 +56,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-09-20 展開規則 easy-wrist-blood-pressure-monitor の代表クエリ(機能語「一人でも簡単に測れる」→ 売り手の語「手首式」)。
   { id: 'easy_wrist_blood_pressure_monitor', query: '一人でも簡単に測れる血圧計', expect: /血圧計|blood\s*pressure/iu, reject: /カフのみ|電池のみ|バッテリーのみ|交換用|ケースのみ|ポーチのみ/u },
   // 2026-09-23 展開規則 sleep-comfortable-earplugs の代表クエリ(機能語「つけたまま眠れる」→ 売り手の語「睡眠用」)。
-  { id: 'sleep_comfortable_earplugs', query: 'つけたまま眠れる耳栓', expect: /耳栓|ear\s*plug/iu, reject: /イヤホン|補聴器|耳かき|ケースのみ|コードのみ|交換用/u }
+  { id: 'sleep_comfortable_earplugs', query: 'つけたまま眠れる耳栓', expect: /耳栓|ear\s*plug/iu, reject: /イヤホン|補聴器|耳かき|ケースのみ|コードのみ|交換用/u },
+  // 2026-09-25 展開規則 auto-drain-dehumidifier の代表クエリ(機能語「タンクの水を捨てるのが面倒」→ 売り手の語「自動排水」)。
+  { id: 'auto_drain_dehumidifier', query: 'タンクの水を捨てるのが面倒な除湿機', expect: /除湿機|dehumidifier/iu, reject: /空気清浄機|加湿器|扇風機|フィルターのみ|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([

@@ -106,6 +106,15 @@ const RULES = [
   ['harmonica-c-minor',/(?:C|シー)[\s-]*(?:マイナー|minor)/iu,['c minor']],
   ['cable',/(ケーブル|USB.*線|つなぐ.*線|cable)/iu,['cable','usb']],
   ['pillow',/(クッション|枕|腰枕|pillow|ソファ.*ふわふわ)/iu,['pillow','cushion']],
+  // 2026-09-25 カナリア ig_mattress 3回連続FAIL(2026-09-14/09-19/09-24、いずれも
+  // 候補が少ない日に無関係な健康グッズ「ナイトミン 耳ほぐタイム」が本命化)の根本
+  // 原因: このRULESに「マットレス」を分類するカテゴリが一つも存在せず、
+  // semanticSearchGroups('マットレス') が空配列を返していた。requested.size===0
+  // になると filterCategoryMismatches はカテゴリ照合を一切行わず候補をそのまま
+  // 通す(下のDOMAIN_FAMILIESコメント参照の「otherは無条件通過」問題と同じ穴)。
+  // 「マットレス」カテゴリを追加し、DOMAIN_FAMILIES にも登録することで、
+  // 寝具に触れない候補(耳ほぐしグッズ等)を除外できるようにする。
+  ['mattress',/(マットレス|mattress)/iu,['mattress','bed']],
   ['seasonal-pillow',/(?=.*(?:ソファ|sofa|沙发|沙發|소파))(?=.*(?:冬|クリスマス|wint(?:er|ry)|christmas|冬季|圣诞|聖誕|겨울|크리스마스)).*/iu,['christmas','winter','decorative pillow']],
   ['knife',/(ナイフ|刃物|knife|折りたた.*刃|折叠.{0,8}刀|折疊.{0,8}刀|접이식.{0,8}나이프|락백.{0,8}나이프)/iu,['knife','folding']],
   ['organizer',/(収納ケース|整理ボックス|収納.*箱|\borganizer\b|storage container|收纳盒|收納盒|수납함)/iu,['organizer','storage','container']],
