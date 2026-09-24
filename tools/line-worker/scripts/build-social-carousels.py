@@ -214,14 +214,18 @@ def result_panel(draw, xy, width, results, ink, muted, face, border, spot):
 # 資料のような絵だった。表紙は HOSHILU が持っている自前の画像（public/social/ 等）を全面に敷き、
 # 大きな文字を重ねる形にする。他社のロゴ・商品写真は使わないまま、密度だけを上げる。
 # 敷けるのは「文字が焼き込まれていない画像」だけ。既製の告知画像は見出しが二重になる。
-def cover_art(path, size):
+def cover_art(path, size, bias=0.42, flip=False):
+    """写真を切り出す。bias は縦のどこを残すか、flip は左右を返すか。
+    同じ写真を2セットで使う時でも、切り方を変えると並んだ時に同じ絵に見えない。"""
     art = Image.open(ROOT / 'public' / path).convert('RGB')
+    if flip:
+        art = art.transpose(Image.FLIP_LEFT_RIGHT)
     width, height = size
     scale = max(width / art.width, height / art.height)
     art = art.resize((max(width, int(art.width * scale)), max(height, int(art.height * scale))),
                      Image.LANCZOS)
     left = (art.width - width) // 2
-    top = int((art.height - height) * 0.42)
+    top = int((art.height - height) * bias)
     return art.crop((left, top, left + width, top + height))
 
 
@@ -304,7 +308,232 @@ def pill(draw, xy, text, fnt, face, ink, pad=26, height=62):
     return x + w
 
 
+# 2026-09-24 大隆さん「良いけどパターンが同じすぎ」。表紙の型が1つしかなく、8セットが全部
+# 「写真の左下に見出し」で、フィードに並ぶと同じ絵に見えていた。型を4つに分ける。
+#   bottom … 写真全面＋左下に見出し（いままでの形）
+#   card   … 写真は明るいまま見せて、文字は白いカードの中に入れる
+#   split  … 上が写真・下が濃い面。継ぎ目に HOSHILU の色の線を1本引く
+#   quote  … 人の言葉として見せる。左に色の縦棒、見出しは天地の真ん中
+# 守っていること（自前の画像だけ・他社のロゴなし・モール名は文字だけ）は4つとも同じ。
+# 並び順で隣り合うセットが同じ型にならないように割り当てる。
+COVER_LAYOUTS = {
+    'user-hoshittoku-basics': 'card',
+    'seller-demand-visible': 'bottom',
+    'user-price-watch': 'quote',
+    'seller-shop-entrance': 'split',
+    # user-hoshittoku-basics と同じ写真なので、型を変えて同じ絵に見えないようにする。
+    'user-shop-search': 'split',
+    'seller-real-numbers': 'card',
+    'user-cross-mall-search': 'bottom',
+    'seller-found-by-condition': 'quote',
+}
+
+
+def cover_logo(draw, xy, seller, on_dark=True):
+    x, y = xy
+    accent = NAVY if seller else VIOLET
+    draw.rounded_rectangle((x, y, x + 66, y + 66), radius=20, fill=PAPER if on_dark else accent)
+    draw.text((x + 18, y + 8), 'H', font=font(40), fill=accent if on_dark else PAPER)
+    draw.text((x + 82, y + 4), 'HOSHILU', font=font(34), fill=PAPER if on_dark else INK)
+    draw.text((x + 84, y + 44), 'ホシル' if not seller else 'ホシル｜ショップ・セラーの方へ',
+              font=font(21, 'light'), fill=(226, 222, 245) if on_dark else MUTED)
+
+
+def cover_footer(draw, doc, size, seller, ink, sub, idle, total):
+    width, height = size
+    draw.text((60, height - 118), doc['footer'], font=font(28), fill=ink)
+    draw.text((60, height - 80), '登録は無料' if not seller else '相談フォーム送信だけでは課金されません',
+              font=font(23, 'light'), fill=sub)
+    dots(draw, width, height - 44, 1, total, ink, idle)
+
+
+def draw_headline(img, origin, lines, fnt, base_colour, accent=None, marker_on=True, shadow=True):
+    """見出しを引く。色を付けるのは一番言いたい1行だけで、色は画面の左端からの位置で決める。
+    黄色い線は、実際に描いた時の文字の下端（textbbox）から引く。目分量だと字形によって足に重なる。"""
+    x, y = origin
+    draw = ImageDraw.Draw(img)
+    spans = [int(draw.textlength(line, font=fnt)) for line in lines]
+    reference = max(spans) if spans else 1
+    line_step = int(fnt.size * 1.24)
+    if accent is None:
+        accent = len(lines) - 1
+    if shadow:
+        # 影は2回かけて、明るい写真の上でも白と色が沈まないようにする。
+        img = text_shadow(img, lines, fnt, (x, y), line_step, blur=30, alpha=210)
+        img = text_shadow(img, lines, fnt, (x, y), line_step, blur=12, alpha=170)
+        draw = ImageDraw.Draw(img)
+    for index, (line, span) in enumerate(zip(lines, spans)):
+        if index == accent:
+            if marker_on:
+                bottom = draw.textbbox((x, y), line, font=fnt)[3]
+                marker(draw, (x - 4, bottom + 8, x + span + 14, bottom + 24))
+            img = gradient_text(img, (x, y), line, fnt, reference, start_x=x)
+            draw = ImageDraw.Draw(img)
+        else:
+            draw.text((x, y), line, font=fnt, fill=base_colour)
+        y += line_step
+    return img, y
+
+
+def cover_card(doc, item, slide, total):
+    """写真は明るいまま見せて、文字は白いカードの中に入れる形。"""
+    width, height = doc['size']
+    seller = item['audience'] == 'seller'
+    img = scrim(cover_art(slide['art'], (width, height), bias=0.30), top_alpha=120, bottom_alpha=96)
+    draw = ImageDraw.Draw(img)
+    cover_logo(draw, (60, 56), seller)
+
+    pad = 48
+    x0, x1 = 52, width - 52
+    inner = x1 - x0 - pad * 2
+    head_font = font(66)
+    body_font = font(31, 'light')
+    head_lines = wrap(draw, slide['headline'], head_font, inner)
+    body_lines = wrap(draw, slide['body'], body_font, inner)
+    chips_list = slide.get('chips') or []
+    chip_font = font(24, 'light')
+    block = (74 + len(head_lines) * int(head_font.size * 1.24) + 36
+             + len(body_lines) * int(body_font.size * 1.52))
+    if chips_list:
+        block += 80
+    block += 128
+    y1 = height - 52
+    y0 = y1 - (block + pad * 2)
+    img = card_with_shadow(img, (x0, y0, x1, y1), radius=46)
+    draw = ImageDraw.Draw(img)
+
+    x = x0 + pad
+    y = y0 + pad
+    pill(draw, (x, y), ' '.join(slide['kicker']), font(23, 'light'),
+         PINK if not seller else VIOLET, PAPER, 22, 52)
+    y += 74
+    img, y = draw_headline(img, (x, y), head_lines, head_font, INK,
+                           slide.get('accent_line'), shadow=False)
+    draw = ImageDraw.Draw(img)
+    y += 36
+    for line in body_lines:
+        draw.text((x, y), line, font=body_font, fill=MUTED)
+        y += int(body_font.size * 1.52)
+    if chips_list:
+        y += 22
+        cx = x
+        for label in chips_list:
+            w = int(draw.textlength(label, font=chip_font)) + 44
+            if cx + w > x1 - pad:
+                break
+            draw.rounded_rectangle((cx, y, cx + w, y + 54), radius=27, outline=LINE, width=3)
+            draw.text((cx + 22, y + 12), label, font=chip_font, fill=MUTED)
+            cx += w + 12
+    draw.text((x, y1 - pad - 84), doc['footer'], font=font(27), fill=INK)
+    draw.text((x, y1 - pad - 46), '登録は無料' if not seller else '相談フォーム送信だけでは課金されません',
+              font=font(22, 'light'), fill=FAINT)
+    dots(draw, width, y1 - pad - 2, 1, total, PINK if not seller else VIOLET, LINE)
+    return img
+
+
+def cover_split(doc, item, slide, total):
+    """上が写真、下が濃い面。継ぎ目に HOSHILU の色の線を1本引く。"""
+    width, height = doc['size']
+    seller = item['audience'] == 'seller'
+    measure = ImageDraw.Draw(Image.new('RGB', (8, 8)))
+    head_font = font(78)
+    body_font = font(32, 'light')
+    head_lines = wrap(measure, slide['headline'], head_font, width - 120)
+    body_lines = wrap(measure, slide['body'], body_font, width - 120)
+    chips_list = slide.get('chips') or []
+    chip_font = font(24, 'light')
+    block = (80 + len(head_lines) * int(head_font.size * 1.24) + 38
+             + len(body_lines) * int(body_font.size * 1.5))
+    if chips_list:
+        block += 88
+    seam = max(int(height * 0.38), min(int(height * 0.56), height - 176 - block))
+
+    img = Image.new('RGB', (width, height), NAVY if seller else (40, 27, 96))
+    img.paste(scrim(cover_art(slide['art'], (width, seam), bias=0.52, flip=True),
+                    top_alpha=170, bottom_alpha=0), (0, 0))
+    draw = ImageDraw.Draw(img)
+    for column in range(width):
+        draw.line(((column, seam), (column, seam + 9)), fill=brand_colour(column / width))
+    cover_logo(draw, (60, 56), seller)
+
+    y = seam + 50
+    pill(draw, (60, y), ' '.join(slide['kicker']), font(24, 'light'),
+         PINK if not seller else VIOLET, PAPER, 24, 56)
+    y += 80
+    img, y = draw_headline(img, (60, y), head_lines, head_font, PAPER,
+                           slide.get('accent_line'), shadow=False)
+    draw = ImageDraw.Draw(img)
+    y += 38
+    for line in body_lines:
+        draw.text((62, y), line, font=body_font, fill=(216, 210, 242))
+        y += int(body_font.size * 1.5)
+    if chips_list:
+        y += 26
+        x = 60
+        for label in chips_list:
+            w = int(draw.textlength(label, font=chip_font)) + 44
+            if x + w > width - 60:
+                break
+            draw.rounded_rectangle((x, y, x + w, y + 54), radius=27, outline=(122, 110, 176), width=3)
+            draw.text((x + 22, y + 12), label, font=chip_font, fill=(222, 217, 246))
+            x += w + 12
+    cover_footer(draw, doc, (width, height), seller, PAPER, (206, 200, 232), (120, 108, 164), total)
+    return img
+
+
+def cover_quote(doc, item, slide, total):
+    """人の言葉として見せる形。左に色の縦棒を添えて、見出しは天地の真ん中に置く。"""
+    width, height = doc['size']
+    seller = item['audience'] == 'seller'
+    img = scrim(cover_art(slide['art'], (width, height), bias=0.38), top_alpha=170, bottom_alpha=210)
+    draw = ImageDraw.Draw(img)
+
+    head_font = font(84)
+    body_font = font(33, 'light')
+    head_lines = wrap(draw, slide['headline'], head_font, width - 220)
+    body_lines = wrap(draw, slide['body'], body_font, width - 220)
+    head_height = len(head_lines) * int(head_font.size * 1.24)
+    block = 82 + head_height + 40 + len(body_lines) * int(body_font.size * 1.52)
+    y = max(230, int((height - block) * 0.46))
+
+    # 写真が細かい面でも読めるように、文字の下に暗い面を1枚敷く。膜を濃くして写真ごと潰すより、
+    # 写真は写真として見せたまま、文字のところだけ落とせる。
+    panel = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    ImageDraw.Draw(panel).rounded_rectangle((36, y - 44, width - 36, y + block + 24),
+                                            radius=44, fill=(13, 8, 30, 148))
+    panel = panel.filter(ImageFilter.GaussianBlur(3))
+    img = Image.alpha_composite(img.convert('RGBA'), panel).convert('RGB')
+    draw = ImageDraw.Draw(img)
+    cover_logo(draw, (60, 56), seller)
+
+    pill(draw, (104, y), ' '.join(slide['kicker']), font(24, 'light'),
+         PINK if not seller else VIOLET, PAPER, 24, 56)
+    y += 82
+    bar = Image.new('RGB', (12, head_height))
+    bar_draw = ImageDraw.Draw(bar)
+    for row in range(head_height):
+        bar_draw.line(((0, row), (12, row)), fill=brand_colour(row / max(1, head_height - 1)))
+    bar_mask = Image.new('L', (12, head_height), 0)
+    ImageDraw.Draw(bar_mask).rounded_rectangle((0, 0, 11, head_height - 1), radius=6, fill=255)
+    img.paste(bar, (60, y), bar_mask)
+    img, y = draw_headline(img, (104, y), head_lines, head_font, PAPER,
+                           slide.get('accent_line'), marker_on=False)
+    draw = ImageDraw.Draw(img)
+    y += 40
+    for line in body_lines:
+        draw.text((106, y), line, font=body_font, fill=(230, 226, 248))
+        y += int(body_font.size * 1.52)
+    cover_footer(draw, doc, (width, height), seller, PAPER, (206, 200, 232), (120, 108, 164), total)
+    return img
+
+
 def render_art_cover(doc, item, slide, total):
+    layout = slide.get('layout') or COVER_LAYOUTS.get(item['id'], 'bottom')
+    renderer = {'card': cover_card, 'split': cover_split, 'quote': cover_quote}.get(layout)
+    return renderer(doc, item, slide, total) if renderer else cover_bottom(doc, item, slide, total)
+
+
+def cover_bottom(doc, item, slide, total):
     width, height = doc['size']
     seller = item['audience'] == 'seller'
     img = scrim(cover_art(slide['art'], (width, height)))
