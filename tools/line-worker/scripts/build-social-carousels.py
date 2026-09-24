@@ -140,6 +140,36 @@ def dots(draw, width, y, index, total, active, idle):
         x += (40 if on else 18) + 14
 
 
+# 2026-09-24 大隆さん指示「モール名なども出したり、より人間的なフィード投稿を」。
+# 扱うのは Amazon・楽天市場・Yahoo!ショッピング・Qoo10 の4つ。名前だけを文字で書く
+# （他社のロゴ・配色・商品写真は使わない）。
+def chips(draw, xy, labels, max_width, ink, border, fill=None):
+    x0, y = xy
+    x = x0
+    fnt = font(26, 'light')
+    height = 56
+    for label in labels:
+        w = int(draw.textlength(label, font=fnt)) + 44
+        if x > x0 and x + w > x0 + max_width:
+            x, y = x0, y + height + 14
+        draw.rounded_rectangle((x, y, x + w, y + height), radius=28, outline=border, width=3, fill=fill)
+        draw.text((x + 22, y + 12), label, font=fnt, fill=ink)
+        x += w + 14
+    return y + height
+
+
+def search_bar(draw, xy, text, width, ink, muted, face, border):
+    """検索欄の見た目。探し方そのものを見せるための飾りで、実在の商品名は入れない。"""
+    x, y = xy
+    height = 92
+    draw.rounded_rectangle((x, y, x + width, y + height), radius=30, fill=face, outline=border, width=3)
+    cx, cy = x + 46, y + height // 2
+    draw.ellipse((cx - 15, cy - 15, cx + 15, cy + 15), outline=muted, width=5)
+    draw.line((cx + 11, cy + 11, cx + 24, cy + 24), fill=muted, width=5)
+    draw.text((x + 88, y + 26), text, font=font(32, 'light'), fill=ink)
+    return y + height
+
+
 def render_cover(doc, item, slide, total):
     width, height = doc['size']
     seller = item['audience'] == 'seller'
@@ -151,14 +181,29 @@ def render_cover(doc, item, slide, total):
     logo(draw, (72, 72), VIOLET if not seller else NAVY,
          'ホシル' if not seller else 'ホシル｜ショップ・セラーの方へ', on_dark=True)
 
-    draw.text((76, 326), ' '.join(slide['kicker']), font=font(26, 'light'), fill=(236, 231, 255))
-    y = draw_multiline(draw, (72, 388), slide['headline'], font(86), PAPER,
-                       line_gap=1.26, max_width=width - 144)
-    y += 34
-    draw.rounded_rectangle((72, y, 72 + 132, y + 10), radius=5, fill=PINK)
-    y += 54
-    draw_multiline(draw, (72, y), slide['body'], font(37, 'light'), (223, 218, 245),
-                   line_gap=1.55, max_width=width - 144)
+    kicker_font = font(26, 'light')
+    kicker = ' '.join(slide['kicker'])
+    kicker_width = int(draw.textlength(kicker, font=kicker_font)) + 48
+    draw.rounded_rectangle((72, 312, 72 + kicker_width, 312 + 58), radius=29,
+                           fill=PINK if not seller else VIOLET)
+    draw.text((96, 324), kicker, font=kicker_font, fill=PAPER)
+
+    # 見出しの1行目にマーカーを引く。雑誌の見出しのように、最初のひと言を目に入れるため。
+    head_font = font(86)
+    head_lines = wrap(draw, slide['headline'], head_font, width - 144)
+    y = 406
+    for position, line in enumerate(head_lines):
+        if position == 0 and line:
+            mark = int(draw.textlength(line, font=head_font))
+            draw.rounded_rectangle((66, y + 58, 66 + mark + 16, y + 100), radius=8,
+                                   fill=(255, 79, 154, 255) if not seller else (115, 87, 255))
+        draw.text((72, y), line, font=head_font, fill=PAPER)
+        y += int(head_font.size * 1.26)
+    y += 30
+    y = draw_multiline(draw, (72, y), slide['body'], font(37, 'light'), (223, 218, 245),
+                       line_gap=1.55, max_width=width - 144)
+    if slide.get('chips'):
+        chips(draw, (72, y + 44), slide['chips'], width - 144, PAPER, (255, 255, 255))
 
     draw.text((72, height - 138), doc['footer'], font=font(29), fill=PAPER)
     hint = '登録は無料' if not seller else '相談フォーム送信だけでは課金されません'
@@ -191,7 +236,8 @@ def render_page(doc, item, slide, index, total):
     head_block = len(head_lines) * int(head_font.size * 1.26)
     body_block = len(body_lines) * int(body_font.size * 1.56)
     lead = 142 if kicker.isdigit() else 66
-    total_block = lead + head_block + 30 + 9 + 48 + body_block
+    extra = (106 if slide.get('search') else 0) + (70 if slide.get('chips') else 0)
+    total_block = lead + head_block + 30 + 9 + 48 + body_block + extra
     y = box[1] + max(56, (box[3] - box[1] - total_block) // 2)
 
     if kicker.isdigit():
@@ -212,6 +258,11 @@ def render_page(doc, item, slide, index, total):
     for line in body_lines:
         draw.text((left, y), line, font=body_font, fill=MUTED)
         y += int(body_font.size * 1.56)
+    if slide.get('search'):
+        y = search_bar(draw, (left, y + 14), slide['search'], text_width, INK, FAINT,
+                       (247, 245, 255), LINE) + 0
+    if slide.get('chips'):
+        y = chips(draw, (left, y + 20), slide['chips'], text_width, MUTED, LINE)
 
     draw.text((72, height - 152), doc['footer'], font=font(29), fill=INK)
     hint = '無料・メール6桁かLINEで登録' if not seller else '相談フォーム送信だけでは課金されません'

@@ -14,19 +14,32 @@ test('方針 v3: 曜日・時刻・半々の順送り・禁止表現なし・画
   assert.deepEqual([...SOCIAL_PLAN_V3.reel_weekdays], [2, 5]);
   assert.deepEqual([...SOCIAL_PLAN_V3.carousel_weekdays], [1, 3, 6]);
   const sets = loadCarouselSets();
-  assert.equal(sets.order.length, 6);
-  assert.equal(sets.order.filter((set) => set.audience === 'seller').length, 3);
-  assert.deepEqual(sets.order.map((set) => set.audience), ['user', 'seller', 'user', 'seller', 'user', 'seller']);
+  // 2026-09-24: モール名を出す「どこで買うのが正解？」とセラー向けの対を足して 8 セット。
+  // 半々の順送り（user, seller, user, seller…）は崩さないので、必ず偶数・同数で足すこと。
+  assert.equal(sets.order.length, 8);
+  assert.equal(sets.order.filter((set) => set.audience === 'seller').length, 4);
+  assert.deepEqual(sets.order.map((set) => set.audience),
+    ['user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller']);
   for (const set of sets.order) {
     assert.ok(set.slides.length >= 2 && set.slides.length <= 10, set.id);
     assert.doesNotMatch(JSON.stringify(set), FORBIDDEN, set.id);
     assert.ok(set.audience !== 'seller' || set.link_path === '/for-sellers', `${set.id} link`);
   }
-  // 画像の台帳（manifest）はセットと枚数が一致する。画像本体は build-social-carousels.yml が生成してコミットする
+  // 画像の台帳（manifest）はセットと枚数が一致する。画像本体と manifest は
+  // build-social-carousels.yml が生成してコミットするので、セットを足した直後の1コミットだけは
+  // 台帳が追いつかない（2026-09-24 にこれで CI が落ちた）。台帳に載っている分は必ず一致すること、
+  // 台帳に無いセットは「これから画像を作る」新しいセットだけであること、の2つを見る。
   const manifest = JSON.parse(readFileSync(new URL('../public/social/carousel/manifest.json', import.meta.url), 'utf8'));
+  const ids = new Set(sets.order.map((set) => set.id));
+  for (const id of Object.keys(manifest.sets)) {
+    assert.ok(ids.has(id), `${id} は台帳にあるがセットに無い`);
+  }
+  const missing = sets.order.filter((set) => !manifest.sets[set.id]);
+  assert.ok(missing.length <= 2, `画像の無いセットが多すぎる: ${missing.map((set) => set.id).join(',')}`);
   for (const set of sets.order) {
-    assert.equal(manifest.sets[set.id]?.slides, set.slides.length, set.id);
-    assert.equal(manifest.sets[set.id]?.audience, set.audience);
+    if (!manifest.sets[set.id]) continue;
+    assert.equal(manifest.sets[set.id].slides, set.slides.length, set.id);
+    assert.equal(manifest.sets[set.id].audience, set.audience);
   }
   assert.match(readFileSync(new URL('../scripts/build-social-carousels.py', import.meta.url), 'utf8'), /FORBIDDEN_CLAIM/u);
   assert.ok(existsSync(new URL('../../../.github/workflows/build-social-carousels.yml', import.meta.url)));
@@ -236,4 +249,26 @@ test('カルーセルの文言に、廃止したクリック課金は残って�
   const builder = readFileSync(new URL('../scripts/build-social-carousels.py', import.meta.url), 'utf8');
   assert.match(builder, /PRICING_BAN = re\.compile/u);
   assert.match(builder, /ABOLISHED_PRICING/u);
+});
+
+// 2026-09-24 大隆さん指示「モール名なども出したり、より人間的なフィード投稿を」。
+// 名前を書くのは HOSHILU が実際に横断している4モールだけ。画像は文字だけで描き、
+// 他社のロゴ・商品写真は使わない（build-social-carousels.py は Pillow で図形と文字しか描かない）。
+test('カルーセルに書くモール名は、実際に横断している4つだけ', () => {
+  const doc = JSON.parse(readFileSync(new URL('../ops/social/carousels-v3.json', import.meta.url), 'utf8'));
+  const malls = ['Amazon', '楽天市場', 'Yahoo!ショッピング', 'Qoo10'];
+  const named = doc.sets.filter((set) => malls.every((mall) => JSON.stringify(set).includes(mall)));
+  assert.ok(named.length >= 2, 'モール名を出すセットがユーザー向けとセラー向けに1つずつある');
+  assert.ok(named.some((set) => set.audience === 'user'));
+  assert.ok(named.some((set) => set.audience === 'seller'));
+  // 横断していないモールの名前は書かない（書くと嘘になる）
+  for (const set of doc.sets) {
+    for (const absent of ['メルカリ', 'ZOZOTOWN', 'au PAY', 'Temu', 'SHEIN']) {
+      assert.ok(!JSON.stringify(set).includes(absent), `${set.id} に ${absent} が入っている`);
+    }
+  }
+  // 検索欄の見た目に実在の商品名・型番を入れない（条件だけ）
+  const builder = readFileSync(new URL('../scripts/build-social-carousels.py', import.meta.url), 'utf8');
+  assert.match(builder, /def search_bar/u);
+  assert.match(builder, /def chips/u);
 });
