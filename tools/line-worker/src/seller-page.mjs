@@ -18,6 +18,14 @@ const tenantText = (tenant) => {
   const store = tenantDisplay(tenant);
   return `${store.name}（${store.code}）`;
 };
+// 需要は大きめのカテゴリでまとめて数える（5人の線を守ったまま、出せる項目を増やすため）。
+// ここに無いキーはそのまま表示する。
+export const DEMAND_CATEGORY_LABEL = {
+  fashion: 'ファッション',
+  electronics: '家電・ガジェット',
+  living: '暮らし・趣味'
+};
+
 const safeDate = (value) => {
   const date = new Date(value);
   return Number.isFinite(date.getTime())
@@ -74,13 +82,34 @@ export async function sellerPageResponse(
     } catch {}
     try {
       if (entitlements.advanced_demand_report) {
-        const result = await env.PRODUCT_DB.prepare(`SELECT category,
+        // 2026-09-24 大隆さん「1人でも欲しい人いたら、潜在層はたくさんいるのでは？」への答え。
+        // 5人の線は需要が本物かどうかの線ではなく、「お店に誰が探したか分かってしまわないか」の線
+        // なので下げない。代わりに、細かい品目のまま数えるのをやめて大きめのカテゴリでまとめる。
+        // 条件は168通りに対して人は14人しかおらず、細かいままだと永久に5人に届かなかった。
+        // あわせて2つ直した:
+        //  - traffic_class='ATTRIBUTED' だけを見ていたため、実際には6件しか対象が無く、
+        //    5人の線以前に表が空だった。QA（社内テスト・bot）以外は数える。
+        //  - user_hash が 64桁の16進数でない行（BUZZ_SHELF などの内部書き込み）は人ではないので外す。
+        // 画面の文言どおり過去60日で数える（これまで期間の条件が抜けていた）。
+        const result = await env.PRODUCT_DB.prepare(`SELECT coarse AS category,
           count(*) AS outbound_count,count(DISTINCT user_hash) AS unique_users,
           max(occurred_at) AS last_seen_at
-          FROM unmet_demand_events
-          WHERE demand_status='UNMET' AND contract_match=0
-            AND traffic_class='ATTRIBUTED'
-          GROUP BY category HAVING count(DISTINCT user_hash)>=5
+          FROM (SELECT user_hash,occurred_at,CASE
+              WHEN category IN ('tops','bottoms','onepiece','outer','shoes','bag',
+                'accessory','jewelry','watch','hat','fashion-use') THEN 'fashion'
+              WHEN category IN ('charger','camera','phone-case','earphones','electronics-use',
+                'japan-voltage','photo-printer','fan','speaker','headphones','pc','tablet',
+                'smartwatch') THEN 'electronics'
+              WHEN category IN ('bottle','softener','kitchen','furniture','bedding','storage',
+                'cleaning','home-use','beauty-use','cosmetics','skincare','haircare','hobby-use',
+                'buzz_shelf','game','toy','book','music','sports','outdoor') THEN 'living'
+              ELSE '' END AS coarse
+            FROM unmet_demand_events
+            WHERE demand_status='UNMET' AND contract_match=0
+              AND traffic_class<>'QA' AND length(user_hash)=64
+              AND occurred_at>=datetime('now','-60 days'))
+          WHERE coarse<>''
+          GROUP BY coarse HAVING count(DISTINCT user_hash)>=5
           ORDER BY outbound_count DESC,last_seen_at DESC LIMIT 10`).all();
         demands = result.results || [];
       }
@@ -214,10 +243,10 @@ export async function sellerPageResponse(
   const demandCards = !entitlements.advanced_demand_report
     ? '<article class="seller-panel"><span>契約機能</span><strong>詳細分析</strong><span>Businessで利用できます</span></article>'
     : demands.length
-      ? demands.map((row) => `<article class="seller-panel"><span>${esc(row.category || '未分類')}</span>
+      ? demands.map((row) => `<article class="seller-panel"><span>${esc(DEMAND_CATEGORY_LABEL[row.category] || row.category || '未分類')}</span>
         <strong>${number(row.outbound_count)}</strong>
-        <span>Amazon送客 / 匿名セッション ${number(row.unique_users)}件</span></article>`).join('')
-      : '<article class="seller-panel"><span>プライバシー保護</span><strong>集計待ち</strong><span>流入元付きの匿名セッション5件以上だけを表示します</span></article>';
+        <span>見つからなかった検索 / 探した人 ${number(row.unique_users)}人（過去60日・匿名）</span></article>`).join('')
+      : '<article class="seller-panel"><span>プライバシー保護</span><strong>集計待ち</strong><span>同じカテゴリを5人以上が探した分だけ表示します</span></article>';
 
   const restrictionCards = !entitlements.advanced_demand_report
     ? '<article class="seller-panel"><span>契約機能</span><strong>詳細分析</strong><span>Businessで利用できます</span></article>'

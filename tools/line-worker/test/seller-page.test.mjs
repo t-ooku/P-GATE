@@ -8,7 +8,7 @@ function testEnv(seenSql = []) {
     LINE_LOGIN_CHANNEL_SECRET: 'line-login-secret',
     PRODUCT_DB: { prepare(sql) { seenSql.push(String(sql)); return { all: async () => ({ results:
       String(sql).includes('unmet_demand_events') ? [
-        { category: 'kitchen-appliance', outbound_count: 18, unique_users: 9, last_seen_at: '2026-07-24' }
+        { category: 'electronics', outbound_count: 18, unique_users: 9, last_seen_at: '2026-07-24' }
       ] : String(sql).includes('import_restriction_knowledge') ? [
         { tenant: 'itg', restriction_class: 'LITHIUM_BATTERY', demand_count: 8, covered_count: 3 },
         { tenant: 'other', restriction_class: 'LIQUID', demand_count: 12, covered_count: 0 }
@@ -39,8 +39,8 @@ test('seller console shows readable scoped data and working action links', async
     assert.match(html, new RegExp(`href="#${id}"`));
     assert.match(html, new RegExp(`id="${id}"`));
   }
-  assert.match(html, /kitchen-appliance/);
-  assert.match(html, /匿名セッション 9件/);
+  assert.match(html, /家電・ガジェット/, '大きめのカテゴリは日本語で出す');
+  assert.match(html, /探した人 9人（過去60日・匿名）/);
   assert.match(html, /LITHIUM_BATTERY/);
   assert.match(html, /国内代替確認済み 3件/);
   assert.doesNotMatch(html, />LIQUID</);
@@ -58,19 +58,30 @@ test('seller console never exposes another tenant totals', async () => {
   assert.match(html, /130,386/);
   assert.doesNotMatch(html, /99,972/);
   assert.doesNotMatch(html, /96,125/);
-  assert.doesNotMatch(html, /kitchen-appliance/);
+  assert.doesNotMatch(html, /家電・ガジェット/);
   assert.match(html, /Businessで利用できます/);
   assert.match(html, /月額4,980円/); // 2026-09-19 大隆さん決定: HOSHILU Seller 4,980円の 1 プラン
   assert.match(html, /1事業者アカウント単位/);
 });
 
-test('seller demand report excludes QA, unattributed, and legacy traffic', async () => {
+// 2026-09-24 大隆さん「1人でも欲しい人いたら、潜在層はたくさんいるのでは？」。
+// 5人の線は「お店に誰が探したか分かってしまわないか」の線なので下げない。代わりに
+// 大きめのカテゴリでまとめ、数える対象を正した。QA（社内テスト・bot）だけを外し、
+// 人ではない書き込み（user_hash が64桁の16進数でない行）を外し、過去60日で数える。
+test('需要の集計は QA を外し、人でない書き込みを外し、大きめのカテゴリで5人以上だけ出す', async () => {
   const seenSql = [];
   await sellerPageResponse(testEnv(seenSql), {
     account: 'ITG GROUP', tenants: ['itg'], plan: 'PARTNER'
   });
   const demandSql = seenSql.find((sql) => sql.includes('unmet_demand_events')) || '';
-  assert.match(demandSql, /traffic_class='ATTRIBUTED'/);
+  assert.match(demandSql, /traffic_class<>'QA'/, 'QA だけを外す');
+  assert.doesNotMatch(demandSql, /traffic_class='ATTRIBUTED'/, '流入元が取れた分だけに絞らない');
+  assert.match(demandSql, /length\(user_hash\)=64/, '人でない書き込みを外す');
+  assert.match(demandSql, /datetime\('now','-60 days'\)/, '画面の文言どおり過去60日');
+  assert.match(demandSql, /HAVING count\(DISTINCT user_hash\)>=5/, '5人の線は下げない');
+  assert.match(demandSql, /THEN 'fashion'/, '大きめのカテゴリでまとめる');
+  assert.match(demandSql, /THEN 'electronics'/);
+  assert.match(demandSql, /THEN 'living'/);
 });
 
 test('サブスク加入セラーは自社出品外も含む匿名の購入希望価格を条件検索できる',async()=>{
