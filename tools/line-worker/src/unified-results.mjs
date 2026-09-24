@@ -13,7 +13,8 @@
 //   HOSHILU商品にも Web商品にも **同じ judgeTitle** を当てる。
 //   judgeTitle は「商品名に書かれている語だけ」で見る。どちらも商品名しか
 //   確かな材料が無いので、これが唯一公平な当て方になる。
-//   同点のときだけ、指示書§6 のとおり Seller商品 → HOSHILU商品 → Web商品 の順にする。
+//   2026-09-24 からは、同点を減らすための細かい点（detailScore）も足す。これも出どころは見ない。
+//   それでも同点のものだけ、HOSHILU と Web を交互に並べる（rankUnified の説明を参照）。
 //
 // 価格（§7）:
 //   HOSHILU商品だけ価格を出す。Web商品の価格は出さない。
@@ -24,7 +25,7 @@
 // 60件（§3・§4）:
 //   HOSHILU＋Web の合計で最大60件。**60件を埋めるために条件に合わないものを混ぜない。**
 //   22件しか合わなければ22件。最大60件であり、必ず60件ではない。
-import { demandConditions, judgeTitle } from './shop-demand.mjs';
+import { demandConditions, judgeTitle, normalizeForMatch } from './shop-demand.mjs';
 
 export const UNIFIED_LIMIT = 60;
 export const UNIFIED_PAGE_SIZE = 12;
@@ -166,7 +167,7 @@ function fromGoogleItem(item, index, offset) {
     // 2026-09-22 大隆さん報告「価格もでてない」。数字を隠すと何も分からない。
     // 混ぜないという約束は守ったまま、別の欄に入れて画面で
     //「参考価格・検索時点」と断って出す。HOSHILU が確認した価格ではない。
-    listed_price_jpy: Number(item?.listed_price_jpy) > 0 ? Math.round(Number(item.listed_price_jpy)) : null
+    listed_price_jpy: positiveFinite(item?.listed_price_jpy) ? Math.round(Number(item.listed_price_jpy)) : null
   };
 }
 
@@ -184,11 +185,55 @@ function relevant(judged, conditionCount) {
   return judged.filter((row) => row.score >= 1);
 }
 
-export function rankUnified(rows, conditions) {
+// 2026-09-24 大隆さん決定「1をベースに（点数を細かくする・出どころは一切見ない）」。
+//
+// 一致度（何語当たったか）だけだと同点がとても多い。同点を減らすため、HOSHILU にも Web にも
+// **同じように付いている情報だけ**で細かい点を足す。出どころ（source）はここでは一度も見ない。
+//   ・語の順番（+2）: 2語以上当たっていて、商品名の中でも検索した順番どおりに出てくる
+//   ・価格（+1）   : 価格が分かる（確認済みの価格でも、Web の参考価格でも同じ1点。一覧ページは数えない）
+//   ・写真（+1）   : 商品写真がある
+// 使わないもの: レビュー数・在庫・販売数など、Web 側に無い情報（使うと Web が必ず不利になる）。
+// 商品名の長さや「語が先頭の何字目にあるか」も使わない。Web の商品名はページの題名そのままで
+//「Amazon.co.jp: 」「【楽天市場】」のような前置きが付くため、位置で見ると同じ商品でも Web が負ける
+//（2026-09-24 レビューで判明。いったん入れた「先頭20字以内 +1」は外した）。
+// 大きさは「何語当たったか」の1語ぶんより小さい（並べ替えは一致数が先。ここは同点の中の順番）。
+const positiveFinite = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : null;
+};
+export function detailScore(row, conditions, query) {
+  if (!conditions.length) return 0;
+  const title = normalizeForMatch(row.product_name);
+  const asked = normalizeForMatch(query);
+  const firstAt = (haystack, condition) => {
+    let best = -1;
+    for (const alias of condition.aliases) {
+      const at = alias ? haystack.indexOf(normalizeForMatch(alias)) : -1;
+      if (at >= 0 && (best < 0 || at < best)) best = at;
+    }
+    return best;
+  };
+  const hits = conditions
+    .map((condition, index) => ({ inTitle: firstAt(title, condition), inQuery: firstAt(asked, condition), index }))
+    .filter((hit) => hit.inTitle >= 0);
+  let points = 0;
+  if (hits.length >= 2) {
+    const byQuery = [...hits].sort((a, b) => ((a.inQuery < 0 ? 1e9 : a.inQuery) - (b.inQuery < 0 ? 1e9 : b.inQuery)) || (a.index - b.index));
+    if (byQuery.every((hit, i) => i === 0 || byQuery[i - 1].inTitle < hit.inTitle)) points += 2;
+  }
+  if (!row.listing && (positiveFinite(row.price_jpy) || positiveFinite(row.listed_price_jpy))) points += 1;
+  if (row.image_url) points += 1;
+  return points;
+}
+
+export function rankUnified(rows, conditions, query = '') {
   const judged = rows.map((row) => {
-    if (!conditions.length) return { ...row, matched: [], unmatched: [], level: 'UNKNOWN', score: 0 };
+    if (!conditions.length) return { ...row, matched: [], unmatched: [], level: 'UNKNOWN', score: 0, detail: 0 };
     const verdict = judgeTitle(row.product_name, conditions);
-    return { ...row, matched: verdict.matched, unmatched: verdict.unmatched, level: verdict.level, score: verdict.matched.length };
+    return {
+      ...row, matched: verdict.matched, unmatched: verdict.unmatched, level: verdict.level,
+      score: verdict.matched.length, detail: detailScore(row, conditions, query)
+    };
   });
   // 2026-09-22 大隆さん指示「関係ないものは提示しないこと」。
   //
@@ -211,7 +256,8 @@ export function rankUnified(rows, conditions) {
   // 同点がとても多く、HOSHILU の候補が同点で何十件もあると Web は1ページ目（12件）に入れず、
   //「もっと見る」の先の最後尾に回っていた。
   //
-  // 同点のときは、それぞれの出どころの中での順番（自分の側で何番目か）で交互に並べる:
+  // （2026-09-24 からは、この前に detailScore で同点をできるだけ減らしている）
+  // それでも同点のときは、それぞれの出どころの中での順番（自分の側で何番目か）で交互に並べる:
   //   HOSHILU の1番目 → Web の1番目 → HOSHILU の2番目 → Web の2番目 …
   // 出どころで上下を決めない。各側の中の順番は、それぞれの検索元が返した順を尊重する。
   // HOSHILU 側の中だけは、同点なら Seller のショップ商品を先にする（従来どおり）。
@@ -219,16 +265,17 @@ export function rankUnified(rows, conditions) {
   const bySideOrder = (a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
+    if (b.detail !== a.detail) return b.detail - a.detail;
     const source = SOURCE_RANK[a.source] - SOURCE_RANK[b.source];
     if (source !== 0) return source;
     return a.order - b.order;
   };
-  // 「何番目か」は同点の組（一覧かどうか・一致数・外れ数が同じもの）の中で数える。
+  // 「何番目か」は同点の組（一覧かどうか・一致数・外れ数・細かい点が同じもの）の中で数える。
   // 側全体で数えると、上位の組や一覧ページで番号を使った側が、次の組で後ろに回されてしまう。
   const sideRank = new Map();
   const tieGroups = new Map();
   for (const row of kept) {
-    const key = `${row.listing ? 1 : 0}|${row.score}|${row.unmatched.length}|${sideOf(row)}`;
+    const key = `${row.listing ? 1 : 0}|${row.score}|${row.unmatched.length}|${row.detail}|${sideOf(row)}`;
     if (!tieGroups.has(key)) tieGroups.set(key, []);
     tieGroups.get(key).push(row);
   }
@@ -239,6 +286,7 @@ export function rankUnified(rows, conditions) {
     if (listing !== 0) return listing;
     if (b.score !== a.score) return b.score - a.score;
     if (a.unmatched.length !== b.unmatched.length) return a.unmatched.length - b.unmatched.length;
+    if (b.detail !== a.detail) return b.detail - a.detail;
     const turn = sideRank.get(a) - sideRank.get(b);
     if (turn !== 0) return turn;
     const source = SOURCE_RANK[a.source] - SOURCE_RANK[b.source];
@@ -272,6 +320,20 @@ export function dedupe(rows) {
   return out;
 }
 
+export function priceOrder(items) {
+  const priceOf = (item) => (item?.listing ? null : (positiveFinite(item?.price_jpy) ?? positiveFinite(item?.listed_price_jpy)));
+  return items
+    .map((item) => ({ position: item.position, price: priceOf(item) }))
+    .sort((a, b) => {
+      if (a.price === null || b.price === null) {
+        if (a.price === b.price) return a.position - b.position;
+        return a.price === null ? 1 : -1;
+      }
+      return (a.price - b.price) || (a.position - b.position);
+    })
+    .map((entry) => entry.position);
+}
+
 export function unifyResults({ candidates = [], googleItems = [], query = '', limit = UNIFIED_LIMIT } = {}) {
   const hoshilu = (Array.isArray(candidates) ? candidates : []).map(fromCandidate).filter((row) => row.url && row.product_name);
   // 2026-09-22 大隆さん報告「web検索提示がない。どうにか出して。Googleの直検索なら出るよ」。
@@ -283,7 +345,7 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
     .map((item, index) => fromGoogleItem(item, index, hoshilu.length))
     .filter((row) => row.url && row.product_name);
   const conditions = demandConditions(query);
-  const ranked = rankUnified(dedupe([...hoshilu, ...web]), conditions);
+  const ranked = rankUnified(dedupe([...hoshilu, ...web]), conditions, query);
   const items = ranked.slice(0, Math.max(0, limit)).map((row, index) => ({
     position: index + 1,
     source: row.source,
@@ -301,6 +363,11 @@ export function unifyResults({ candidates = [], googleItems = [], query = '', li
   }));
   return {
     items,
+    // 2026-09-24 大隆さん決定「２のように順もユーザーが変えられる」。
+    //「安い順」の並びもここで作って渡す（画面では並べ替えない §28）。position の並びで持つ。
+    // 価格は確認済みの価格でも Web の参考価格でも同じ物差しで比べる（どちらも画面ではそう断って出る）。
+    // 価格が分からないもの（一覧ページを含む）は、おすすめ順のまま最後に回す。同じ価格ならおすすめ順。
+    price_order: priceOrder(items),
     // 出した件数と、候補がもっとあったかどうか。「全部で60件しかない」と
     // 誤解させないため、画面が「60件表示中」と書けるようにしておく（§9）。
     shown: items.length,

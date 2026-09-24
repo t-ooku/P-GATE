@@ -6,6 +6,11 @@
 .unified-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 10px}
 .unified-title{margin:0;font-size:18px;line-height:1.3}
 .unified-count{color:var(--muted,#6d6b80);font-size:12px}
+/* 2026-09-24 並び順の切り替え（おすすめ順／安い順）。小さく、件数の右に置く。 */
+.unified-sort{display:inline-flex;margin-left:auto;border:1px solid var(--line,#e6e0f7);border-radius:999px;overflow:hidden;background:#fff}
+.unified-sort-button{appearance:none;border:0;background:transparent;color:var(--muted,#6d6b80);font:inherit;font-size:12px;line-height:1;padding:7px 12px;min-height:32px;cursor:pointer}
+.unified-sort-button[aria-pressed="true"]{background:var(--ink,#1f1d2b);color:#fff;font-weight:700}
+.unified-sort-button:focus-visible{outline:2px solid var(--violet,#7357ff);outline-offset:-2px}
 .unified-note{margin:10px 0 0;color:var(--muted,#6d6b80);font-size:12px;line-height:1.6}
 
 .unified-card{

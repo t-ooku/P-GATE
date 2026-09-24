@@ -3,6 +3,9 @@
 // 「ホシルからの提案」と「web検索から発見」を上下に分けず、**「見つかった商品」1本**で出す。
 // 並び順・重複排除・60件の上限はサーバー（src/unified-results.mjs）が決めている。
 // ここは決まった順番をそのまま描くだけで、並べ替えない（§28 位置が動くのを防ぐ）。
+// 2026-09-24 大隆さん決定「順もユーザーが変えられる」: 「おすすめ順／安い順」を切り替えられる。
+// 安い順の並びもサーバーが作って渡す（price_order）。ここは渡された2つの並びのどちらを描くか選ぶだけ。
+// 勝手には切り替わらない。押した人の画面だけが、押したときにだけ変わる。
 //
 // カードは小さく（§10）。出すのは:
 //   ・商品画像 ・商品名（2行で切る）・ショップ名 ・ソースのバッジ
@@ -25,7 +28,9 @@ const COPY = {
   kept: '♥ ホシっとく済み',
   listing: '一覧ページ',
   openListing: 'このモールの一覧を見る',
-  badge: { HOSHILU: 'HOSHILU', HOSHILU_SHOP: 'HOSHILU SHOP', WEB: 'Web' }
+  badge: { HOSHILU: 'HOSHILU', HOSHILU_SHOP: 'HOSHILU SHOP', WEB: 'Web' },
+  sortLabel: '並び順',
+  sort: { recommended: 'おすすめ順', cheap: '安い順' }
 };
 const PAGE = 12;
 
@@ -36,7 +41,10 @@ const el = (tag, className, text) => {
   return node;
 };
 
-let state = { items: [], shown: 0, candidates: [] };
+let state = { items: [], shown: 0, candidates: [], orders: null };
+// 選んだ並び順は、このページを開いている間だけ覚えておく（次の検索でも同じ順で出す）。端末には保存しない。
+let sortMode = 'recommended';
+let cardsAbort = new AbortController();
 
 // 統合した行から、元の候補（/api/search の candidates）へ戻る。
 // 突き合わせはサーバーが付けた candidate_index だけで行う。名前で推測しない。
@@ -70,7 +78,8 @@ function keepButton(item) {
   if (!keep?.toggle) return null;
   sync();
   button.addEventListener('click', () => { keep.toggle(candidate); sync(); });
-  document.addEventListener('hoshilu:kept-changed', sync);
+  // 描き直すたびに古いカードの見張りは外す（並び順の切り替えで溜まっていかないように）。
+  document.addEventListener('hoshilu:kept-changed', sync, { signal: cardsAbort.signal });
   return button;
 }
 
@@ -221,14 +230,61 @@ function renderMore(host, list) {
     state.shown += next.length;
     renderMore(host, list);
   });
-  host.append(button);
+  // 列のすぐ後ろに置く（並び順を変えて描き直しても、下の注意書きより前に来るように）。
+  list.after(button);
+}
+
+// サーバーの price_order（position の並び）を商品の並びに戻す。数が合わない・知らない番号が
+// 混じるなど、少しでもおかしければ安い順は出さない（おすすめ順だけにする）。
+export function cheapOrder(items, priceOrderList) {
+  if (!Array.isArray(priceOrderList) || priceOrderList.length !== items.length) return null;
+  const byPosition = new Map(items.map((item) => [item.position, item]));
+  const ordered = priceOrderList.map((position) => byPosition.get(position));
+  if (ordered.some((item) => !item) || new Set(ordered).size !== items.length) return null;
+  return ordered;
+}
+
+function paint(host, list) {
+  cardsAbort.abort();
+  cardsAbort = new AbortController();
+  const first = state.items.slice(0, PAGE);
+  list.replaceChildren(...first.map(safeCard).filter(Boolean));
+  state.shown = first.length;
+  renderMore(host, list);
+}
+
+function sortSwitch(host, list) {
+  const group = el('div', 'unified-sort');
+  group.setAttribute('role', 'group');
+  group.setAttribute('aria-label', COPY.sortLabel);
+  const buttons = ['recommended', 'cheap'].map((mode) => {
+    const button = el('button', 'unified-sort-button', COPY.sort[mode]);
+    button.type = 'button';
+    button.dataset.sort = mode;
+    button.addEventListener('click', () => {
+      if (sortMode === mode) return;
+      sortMode = mode;
+      state.items = state.orders[mode];
+      for (const other of buttons) other.setAttribute('aria-pressed', String(other.dataset.sort === mode));
+      paint(host, list);
+    });
+    button.setAttribute('aria-pressed', String(sortMode === mode));
+    return button;
+  });
+  group.append(...buttons);
+  return group;
 }
 
 export function render(unified, candidates = []) {
   const host = section();
   if (!host) return;
   const items = Array.isArray(unified?.items) ? unified.items : [];
-  state = { items, shown: 0, candidates: Array.isArray(candidates) ? candidates : [] };
+  const cheap = cheapOrder(items, unified?.price_order);
+  const orders = cheap ? { recommended: items, cheap } : null;
+  state = {
+    items: orders ? orders[sortMode] : items,
+    shown: 0, candidates: Array.isArray(candidates) ? candidates : [], orders
+  };
   host.replaceChildren();
   // 2026-09-22 大隆さん報告「なぜホシル提示とweb提示がいまだに2列に別れてるの…」
   // 「スカルプに何故この商品が提示されたの？」。
@@ -252,13 +308,15 @@ export function render(unified, candidates = []) {
 
   const list = el('div', 'unified-list');
   list.setAttribute('role', 'list');
-  const first = items.slice(0, PAGE);
-  // 2026-09-22: 1枚のカードでつまずいても、列ごと消えないようにする。
-  // （消えると元の2つの棚へ戻り、「1本にまとめた」約束が崩れる）
-  list.append(...first.map(safeCard).filter(Boolean));
-  state.shown = first.length;
+  // 価格の分かる商品が2件以上あって、安い順の並びがちゃんと届いたときだけ切り替えを出す
+  //（1件以下だと、押しても並びが変わらない）。
+  const priced = items.filter((item) => !item.listing && ([item.price_jpy, item.listed_price_jpy].some((value) => Number.isFinite(Number(value)) && Number(value) > 0))).length;
+  if (state.orders && priced >= 2) head.append(sortSwitch(host, list));
   host.append(list);
-  renderMore(host, list);
+  // 2026-09-22: 1枚のカードでつまずいても、列ごと消えないようにする（safeCard）。
+  // （消えると元の2つの棚へ戻り、「1本にまとめた」約束が崩れる）
+  // 最初は選ばれている並び順の先頭12件だけ描く。
+  paint(host, list);
 
   if (unified.truncated) host.append(el('p', 'unified-note', COPY.narrow));
 }

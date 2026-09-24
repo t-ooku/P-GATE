@@ -7,8 +7,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  UNIFIED_LIMIT, UNIFIED_PAGE_SIZE, canonicalProductUrl, dedupeKey, dedupeKeys, relevanceThreshold, unifyResults
+  UNIFIED_LIMIT, UNIFIED_PAGE_SIZE, canonicalProductUrl, dedupeKey, dedupeKeys, detailScore, priceOrder, relevanceThreshold, unifyResults
 } from '../src/unified-results.mjs';
+import { demandConditions } from '../src/shop-demand.mjs';
 
 const QUERY = '黒 本革 トートバッグ';
 const candidate = (n, over = {}) => ({
@@ -155,6 +156,84 @@ test('Web の一覧ページが多くても、Web の商品は HOSHILU と交互
   });
   const kinds = result.items.map((item) => (item.source === 'WEB' ? (item.listing ? 'L' : 'W') : 'H')).join('');
   assert.match(kinds, /^HWHWHWHW/u, kinds);
+});
+
+// 2026-09-24 大隆さん決定「1をベースに（点数を細かくする・出どころは一切見ない）、２のように順もユーザーが変えられる」。
+test('細かい点は出どころを見ない（同じ中身なら HOSHILU でも Web でも同じ点）', () => {
+  const conditions = demandConditions(QUERY);
+  const row = { product_name: '黒 本革 トートバッグ A4', image_url: 'https://img.example/a.jpg', price_jpy: null, listed_price_jpy: 9800 };
+  const points = ['HOSHILU_SHOP', 'HOSHILU', 'WEB'].map((source) => detailScore({ ...row, source }, conditions, QUERY));
+  assert.deepEqual(points, [points[0], points[0], points[0]]);
+  assert.equal(points[0], 4, '順番どおり+2・価格+1・写真+1');
+  // 一覧ページの数字は価格として数えない
+  assert.equal(detailScore({ ...row, listing: true }, conditions, QUERY), 3);
+  // 確認済みの価格でも参考価格でも同じ1点
+  assert.equal(detailScore({ ...row, price_jpy: 12800, listed_price_jpy: null }, conditions, QUERY), points[0]);
+  // 条件が作れない検索では付けない（元の順番を保つ）
+  assert.equal(detailScore(row, [], ''), 0);
+  const source = readFileSync(new URL('../src/unified-results.mjs', import.meta.url), 'utf8');
+  const body = source.slice(source.indexOf('export function detailScore('), source.indexOf('export function rankUnified('));
+  assert.ok(!/source|SOURCE_RANK|HOSHILU|WEB/u.test(body), '細かい点の計算で出どころを読まない');
+});
+
+test('語の順番・価格・写真で差が付けば、HOSHILU か Web かに関係なく上に来る', () => {
+  const result = unifyResults({
+    candidates: [
+      candidate(1, { display_name: 'A4 収納 大容量 通勤 トートバッグ 本革 黒' }),
+      candidate(2, { display_name: 'トートバッグ 本革 黒', image_urls: [] })
+    ],
+    googleItems: [web(1, { title: '黒 本革 トートバッグ 通勤' })],
+    query: QUERY
+  });
+  assert.deepEqual(result.items.map((item) => item.source), ['WEB', 'HOSHILU', 'HOSHILU']);
+  assert.deepEqual(result.items.slice(1).map((item) => item.product_name), ['A4 収納 大容量 通勤 トートバッグ 本革 黒', 'トートバッグ 本革 黒']);
+});
+
+// レビューで判明: Web の商品名はページの題名そのままで「Amazon.co.jp: 」などの前置きが付く。
+// 語の位置で点を付けると、同じ商品でも Web が負けていた。位置は使わない。
+test('「Amazon.co.jp: 」「【楽天市場】」の前置きが付いた Web 商品名でも、同じ中身なら同じ点', () => {
+  const conditions = demandConditions(QUERY);
+  const base = { image_url: 'https://img.example/a.jpg', price_jpy: 12800, listed_price_jpy: null };
+  const plain = detailScore({ ...base, product_name: 'レディース 通勤 A4 大容量 黒 本革 トートバッグ' }, conditions, QUERY);
+  for (const prefix of ['Amazon.co.jp: ', '【楽天市場】', '【Yahoo!ショッピング】ストア名 | ']) {
+    const webRow = { ...base, price_jpy: null, listed_price_jpy: 12800, product_name: `${prefix}レディース 通勤 A4 大容量 黒 本革 トートバッグ : バッグ` };
+    assert.equal(detailScore(webRow, conditions, QUERY), plain, prefix);
+  }
+});
+
+test('価格が分からない Web 商品は、同じ一致なら価格の分かる商品の後ろ（出どころでなく価格の有無で決まる）', () => {
+  const result = unifyResults({
+    candidates: [candidate(1)],
+    googleItems: [web(1, { listed_price_jpy: null }), web(2)],
+    query: QUERY
+  });
+  const names = result.items.map((item) => item.product_name);
+  assert.equal(names.at(-1), '黒 本革 トートバッグ web 1');
+});
+
+test('安い順の並びもサーバーが作る。参考価格も同じ物差し、価格なしと一覧ページは最後', () => {
+  const result = unifyResults({
+    candidates: [
+      candidate(1, { offers: [{ total_cost: 12800, marketplace: 'AMAZON_JP', tracking_url: 'https://hoshilu.app/go?token=h1' }] }),
+      candidate(2, { offers: [{ total_cost: 5980, marketplace: 'AMAZON_JP', tracking_url: 'https://hoshilu.app/go?token=h2' }] })
+    ],
+    googleItems: [
+      web(1, { listed_price_jpy: 9800 }),
+      web(2, { listed_price_jpy: null }),
+      web(3, { product_page: false, listed_price_jpy: 100 })
+    ],
+    query: QUERY
+  });
+  const byPosition = new Map(result.items.map((item) => [item.position, item]));
+  const cheapFirst = result.price_order.map((position) => byPosition.get(position));
+  assert.equal(result.price_order.length, result.items.length);
+  assert.deepEqual(cheapFirst.slice(0, 3).map((item) => item.price_jpy || item.listed_price_jpy), [5980, 9800, 12800]);
+  assert.ok(cheapFirst.slice(3).every((item) => !(item.price_jpy > 0) && !(item.listed_price_jpy > 0)), '価格なし・一覧は後ろ');
+  assert.equal(cheapFirst.at(-1).listing, true, '一覧ページの数字は価格として使わない');
+  // 同じ価格ならおすすめ順
+  assert.deepEqual(priceOrder([{ position: 2, price_jpy: 100 }, { position: 1, listed_price_jpy: 100 }, { position: 3 }]), [1, 2, 3]);
+  // 数字でないもの・無限大・一覧ページの数字は価格として扱わない
+  assert.deepEqual(priceOrder([{ position: 1, price_jpy: Infinity }, { position: 2, listed_price_jpy: 'abc' }, { position: 3, listing: true, listed_price_jpy: 1 }, { position: 4, price_jpy: 500 }]), [4, 1, 2, 3]);
 });
 
 test('条件が作れない検索では、絞り込まず元の順番を保つ', () => {

@@ -30,7 +30,7 @@ const KEYWORD_PATTERN = /[ァ-ヴー]{2,14}|[一-龥]{2,6}|[A-Za-z][A-Za-z0-9-]{
 const KEYWORD_STOP = new Set(['商品', 'もの', 'やつ', '欲しい', '探して', 'ください', '感じ', '限定', 'おしゃれ', 'かわいい', '人気', 'おすすめ', 'セット', 'タイプ', 'サイズ', 'カラー', 'ブランド', 'メーカー', 'the', 'and', 'for', 'with']);
 
 // ---- 条件の抽出と判定（純関数） ---------------------------------------------------
-function normalizeForMatch(value) {
+export function normalizeForMatch(value) {
   return String(value || '').normalize('NFKC').toLowerCase().replace(/\s+/gu, '');
 }
 

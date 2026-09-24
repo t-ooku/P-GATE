@@ -115,8 +115,8 @@ test('商品名は2行で切り、カードの高さをそろえる', () => {
 
 test('index.html が読み、app.js が unified_results と候補を渡している', () => {
   const html = read('index.html');
-  assert.match(html, /unified-results-ui\.css\?v=9/u);
-  assert.match(html, /unified-results-ui\.mjs\?v=11/u);
+  assert.match(html, /unified-results-ui\.css\?v=10/u);
+  assert.match(html, /unified-results-ui\.mjs\?v=12/u);
   const app = read('app.js');
   assert.match(app, /unified_results:result\?\.unified_results\|\|null/u);
   assert.match(app, /candidates:Array\.isArray\(result\?\.candidates\)\?result\.candidates:\[\]/u);
@@ -263,4 +263,34 @@ test('Web の行を1件目の候補に取り違えない（お気に入りの保
 // 2026-09-22 大隆さん報告「お気にいりボタンおしたら変になったよ」。
 test('♡ を押したあとの案内が、隣のボタンへかぶらない', () => {
   assert.match(css(), /\.unified-card-full \.keep-product-note\{[^}]*white-space:normal/u);
+});
+
+// 2026-09-24 大隆さん決定「1をベースに、２のように順もユーザーが変えられる」。
+test('並び順は「おすすめ順／安い順」を選べる。安い順の並びはサーバーが作ったものを使う', () => {
+  const source = ui();
+  assert.match(source, /sort: \{ recommended: 'おすすめ順', cheap: '安い順' \}/u);
+  assert.match(source, /const cheap = cheapOrder\(items, unified\?\.price_order\);/u);
+  assert.match(source, /button\.setAttribute\('aria-pressed'/u);
+  // 切り替えは押したときだけ。選んだ順は開いている間だけ覚える（端末に保存しない）
+  assert.match(source, /let sortMode = 'recommended';/u);
+  assert.ok(!source.includes('localStorage') && !source.includes('sessionStorage'));
+  // 「さらに見る」は列のすぐ後ろ（並びを変えて描き直しても注意書きより前）
+  assert.match(source, /list\.after\(button\);/u);
+  assert.match(css(), /\.unified-sort-button\[aria-pressed="true"\]\{/u);
+  // 描き直すたびに古いカードの見張りを外す（切り替えるたびに溜まらない）
+  assert.match(source, /document\.addEventListener\('hoshilu:kept-changed', sync, \{ signal: cardsAbort\.signal \}\);/u);
+  assert.match(source, /cardsAbort\.abort\(\);\s*cardsAbort = new AbortController\(\);/u);
+  // 価格の分かる商品が2件未満なら切り替えを出さない（押しても変わらない）
+  assert.match(source, /if \(state\.orders && priced >= 2\)/u);
+});
+
+test('安い順の並びが壊れていたら、切り替えは出さずおすすめ順だけにする', async () => {
+  globalThis.document ??= { addEventListener() {}, querySelector() { return null; } };
+  const { cheapOrder } = await import('../public/unified-results-ui.mjs');
+  const items = [{ position: 1 }, { position: 2 }, { position: 3 }];
+  assert.deepEqual(cheapOrder(items, [3, 1, 2]).map((item) => item.position), [3, 1, 2]);
+  assert.equal(cheapOrder(items, undefined), null, '古いサーバー（price_order なし）');
+  assert.equal(cheapOrder(items, [1, 2]), null, '数が合わない');
+  assert.equal(cheapOrder(items, [1, 2, 9]), null, '知らない番号');
+  assert.equal(cheapOrder(items, [1, 1, 2]), null, '同じ商品が2回');
 });

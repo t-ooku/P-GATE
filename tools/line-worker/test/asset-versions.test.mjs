@@ -31,8 +31,8 @@ const EXPECTED = Object.freeze({
   'usual-hoshiru.css': '4',
   'usual-hoshiru.mjs': '5',
   'result-compact.css': '5',
-  'unified-results-ui.css': '9',
-  'unified-results-ui.mjs': '11',
+  'unified-results-ui.css': '10',
+  'unified-results-ui.mjs': '12',
   'instagram-look.css': '9'
 });
 
