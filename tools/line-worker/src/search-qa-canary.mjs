@@ -54,7 +54,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-09-18 展開規則 oil-free-air-fryer の代表クエリ(機能語「油を使わずに揚げ物ができる」→ 売り手の語「ノンフライヤー」)。
   { id: 'oil_free_air_fryer', query: '油を使わずに唐揚げが作れる調理家電', expect: /ノンフライヤー|エアフライヤー|air\s*fryer/iu, reject: /フライパン|唐揚げ粉|唐揚げの素|揚げ物用油|天ぷら鍋/u },
   // 2026-09-20 展開規則 easy-wrist-blood-pressure-monitor の代表クエリ(機能語「一人でも簡単に測れる」→ 売り手の語「手首式」)。
-  { id: 'easy_wrist_blood_pressure_monitor', query: '一人でも簡単に測れる血圧計', expect: /血圧計|blood\s*pressure/iu, reject: /カフのみ|電池のみ|バッテリーのみ|交換用|ケースのみ|ポーチのみ/u }
+  { id: 'easy_wrist_blood_pressure_monitor', query: '一人でも簡単に測れる血圧計', expect: /血圧計|blood\s*pressure/iu, reject: /カフのみ|電池のみ|バッテリーのみ|交換用|ケースのみ|ポーチのみ/u },
+  // 2026-09-23 展開規則 sleep-comfortable-earplugs の代表クエリ(機能語「つけたまま眠れる」→ 売り手の語「睡眠用」)。
+  { id: 'sleep_comfortable_earplugs', query: 'つけたまま眠れる耳栓', expect: /耳栓|ear\s*plug/iu, reject: /イヤホン|補聴器|耳かき|ケースのみ|コードのみ|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
