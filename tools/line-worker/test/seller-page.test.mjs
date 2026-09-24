@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sellerPageResponse } from '../src/seller-page.mjs';
+import { INTERNAL_ACTOR_HASHES, sellerPageResponse } from '../src/seller-page.mjs';
 
 function testEnv(seenSql = []) {
   return {
@@ -77,6 +77,10 @@ test('需要の集計は QA を外し、人でない書き込みを外し、大�
   assert.match(demandSql, /traffic_class<>'QA'/, 'QA だけを外す');
   assert.doesNotMatch(demandSql, /traffic_class='ATTRIBUTED'/, '流入元が取れた分だけに絞らない');
   assert.match(demandSql, /length\(user_hash\)=64/, '人でない書き込みを外す');
+  for (const hash of INTERNAL_ACTOR_HASHES) {
+    assert.ok(demandSql.includes(`'${hash}'`), '内部の操作（社内テスト）を外す');
+    assert.match(hash, /^[0-9a-f]{64}$/u, '一方向ハッシュだけを持つ');
+  }
   assert.match(demandSql, /datetime\('now','-60 days'\)/, '画面の文言どおり過去60日');
   assert.match(demandSql, /HAVING count\(DISTINCT user_hash\)>=5/, '5人の線は下げない');
   assert.match(demandSql, /THEN 'fashion'/, '大きめのカテゴリでまとめる');

@@ -18,6 +18,20 @@ const tenantText = (tenant) => {
   const store = tenantDisplay(tenant);
   return `${store.name}（${store.code}）`;
 };
+// 2026-09-24 大隆さん「たぶん僕だ」。需要の198件中109件が1人の user_hash に偏っていて、
+// 本人に確認したら社内テストだった。内部の操作は経営KPI・セラー向け表示から外す決まりなので、
+// ここに並べて集計から外す。元の会員ID・セッションIDには戻せない一方向ハッシュだけを持つ。
+//
+// D1 の表にせずコードに置いているのは、migrations の適用が手動承認（apply-d1-migrations.yml で
+// 保留中のファイル名を全部申告する形）で、未適用のファイルが他にもあるため。表を先に参照すると
+// 適用前は集計が黙って空になる。ここなら git の履歴に「いつ・なぜ外したか」が残る。
+//
+// 足す時は、必ず本人に確認してから。推測で人を外すと数字が作り物になる。
+export const INTERNAL_ACTOR_HASHES = [
+  // 2026-09-24 本人確認済み。8/7〜9/22 の15日間で109件（ファッション枠でも最多の26件）。
+  '0a0769ebf390a258222b41cf530a755bc5c5e71a490c307e38ab6b6506bcf5ef'
+];
+
 // 需要は大きめのカテゴリでまとめて数える（5人の線を守ったまま、出せる項目を増やすため）。
 // ここに無いキーはそのまま表示する。
 export const DEMAND_CATEGORY_LABEL = {
@@ -90,6 +104,8 @@ export async function sellerPageResponse(
         //  - traffic_class='ATTRIBUTED' だけを見ていたため、実際には6件しか対象が無く、
         //    5人の線以前に表が空だった。QA（社内テスト・bot）以外は数える。
         //  - user_hash が 64桁の16進数でない行（BUZZ_SHELF などの内部書き込み）は人ではないので外す。
+        //  - 内部の操作（大隆さんの検索テストなど）は INTERNAL_ACTOR_HASHES に並べて外す。
+        //    2026-09-24 時点で1人ぶん。これを外さないと「ファッション7人」が実際には6人だった。
         // 画面の文言どおり過去60日で数える（これまで期間の条件が抜けていた）。
         const result = await env.PRODUCT_DB.prepare(`SELECT coarse AS category,
           count(*) AS outbound_count,count(DISTINCT user_hash) AS unique_users,
@@ -107,6 +123,7 @@ export async function sellerPageResponse(
             FROM unmet_demand_events
             WHERE demand_status='UNMET' AND contract_match=0
               AND traffic_class<>'QA' AND length(user_hash)=64
+              AND user_hash NOT IN (${INTERNAL_ACTOR_HASHES.map((hash) => `'${hash}'`).join(',')})
               AND occurred_at>=datetime('now','-60 days'))
           WHERE coarse<>''
           GROUP BY coarse HAVING count(DISTINCT user_hash)>=5
