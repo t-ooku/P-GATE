@@ -1404,7 +1404,7 @@ test('テキスト検索は外部検索先を即時かつ安定表示し確認�
   const appSource = fs.readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
   const html = fs.readFileSync(new URL('../public/index.html', import.meta.url), 'utf8');
   const provisionalIndex = appSource.indexOf('renderInstantMarketplaceHandoff(submittedQuery,hasSupplementalInput,executionId)');
-  const tokenIndex = appSource.indexOf('const token=await waitForTurnstileToken', provisionalIndex);
+  const tokenIndex = appSource.indexOf('const token=hasSupplementalInput?await waitForTurnstileToken', provisionalIndex);
   const finalIndex = appSource.indexOf('renderResults(result,lastRequestId,submittedQuery,executionId)', tokenIndex);
   assert.ok(provisionalIndex > -1 && provisionalIndex < tokenIndex, 'Turnstile待機前に検索先を表示');
   assert.ok(tokenIndex < finalIndex, '確認済み結果を後から追加');

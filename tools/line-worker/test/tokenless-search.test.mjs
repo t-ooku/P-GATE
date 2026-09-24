@@ -127,3 +127,17 @@ test('検索の入口: 文字だけならトークン無しを受け、写真・
   // トークン無しを受けるのは /api/knowledge だけ。他の入口の検証器は空を弾いたまま
   assert.equal((index.match(/if \(!turnstileToken \|\| turnstileToken\.length > 2048\) throw new Error\('TURNSTILE_TOKEN_INVALID'\);/gu) || []).length, 3);
 });
+
+test('画面: 文字だけの検索は短く待ってトークン無しで送る。上限超えは再試行せず従来の案内に戻す', () => {
+  const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
+  assert.equal(app, readFileSync(new URL('../public/assets-v147/app.js', import.meta.url), 'utf8'));
+  assert.match(app, /const TOKENLESS_FALLBACK_WAIT_MS=3500;/u);
+  // 時間切れのあとに来たトークンを捨てない・描き直さない（通常の取得を走らせっぱなしにしない）
+  const fn = app.slice(app.indexOf('function tokenOrTokenless('), app.indexOf('\n}\n', app.indexOf('function tokenOrTokenless(')));
+  assert.doesNotMatch(fn, /waitForTurnstileToken|recoverTurnstileWidget/u);
+  assert.match(fn, /if\(abandoned\|\|!token\|\|token===lastIssuedTurnstileToken\)return '';/u);
+  assert.match(app, /const token=hasSupplementalInput\?await waitForTurnstileToken\(tokenWaitBudget\):await tokenOrTokenless\(tokenWaitBudget\);/u);
+  assert.match(app, /if\(!token&&hasSupplementalInput\)throw new Error\('TURNSTILE_TOKEN_UNAVAILABLE'\);/u);
+  assert.match(app, /!\/\^TURNSTILE_TOKENLESS_\/u\.test\(value\)/u, 'TOKENLESS は再試行しない');
+  assert.match(app, /failureTelemetry\.error_code==='TURNSTILE_TOKEN_UNAVAILABLE'\|\|\/\^TURNSTILE_TOKENLESS_\/u\.test\(failureTelemetry\.error_code\)/u);
+});

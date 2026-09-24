@@ -1808,12 +1808,39 @@ async function acquireTurnstileToken(callbackTimeoutMs=15000){await ensureTurnst
 // 2026-09-11 #261 切り分け: 検索が「SNS着地の自動実行」か「手で押した」かを固定値で持つ。
 // 検索文や識別子は付けない。縮退イベントの次元にだけ使う。
 let searchTrigger='manual';
-function retryableOuterTurnstileFailure(code){const value=String(code||'');return /^TURNSTILE_/u.test(value)&&!['TURNSTILE_TOKEN_UNAVAILABLE','TURNSTILE_UNSUPPORTED'].includes(value);}
+// 2026-09-24: TURNSTILE_TOKENLESS_*（トークン無し検索の上限超え・停止）は押し直しても変わらないので再試行しない。
+function retryableOuterTurnstileFailure(code){const value=String(code||'');return /^TURNSTILE_/u.test(value)&&!/^TURNSTILE_TOKENLESS_/u.test(value)&&!['TURNSTILE_TOKEN_UNAVAILABLE','TURNSTILE_UNSUPPORTED'].includes(value);}
+// 2026-09-24 大隆さん決定: Threads / Instagram のアプリ内ブラウザでは Turnstile のトークンが出ず、
+// 14日で Threads から来た89人のうち検索に成功した人が0人だった（縮退は100% TURNSTILE_TOKEN_UNAVAILABLE）。
+// 文字だけの検索は、トークンを短く待って来なければトークン無しで送る。サーバーが上限付きで通す
+//（同じ接続元は1時間3回・全体で1日100回。src/tokenless-search.mjs）。写真・投稿URLは従来どおりトークン必須。
+const TOKENLESS_FALLBACK_WAIT_MS=3500;
 // Turnstile tokens are single-use. All AI chat/search/ranking callers share
 // one serialized issuer so reset/render cannot race against another request.
 // Tokens arrive through Turnstile's callback; getResponse polling is avoided.
 function waitForTurnstileToken(callbackTimeoutMs=15000){const request=turnstileRequestQueue.then(()=>acquireTurnstileToken(callbackTimeoutMs));turnstileRequestQueue=request.catch(()=>{});return request;}
 function takeReadyTurnstileToken(){const request=turnstileRequestQueue.then(()=>turnstileToken&&turnstileToken!==lastIssuedTurnstileToken?issueTurnstileToken(turnstileToken):'');turnstileRequestQueue=request.catch(()=>{});return request;}
+// 待つのは最大 TOKENLESS_FALLBACK_WAIT_MS だけ。通常の waitForTurnstileToken（15秒＋描き直し）を
+// 走らせっぱなしにすると、あとから来たトークンを誰も使わずに捨て、共有の順番待ちも塞ぐので、
+// ここは描き直しをしない短い取得にし、時間切れ後に来たトークンは次の人のために残す。
+function tokenOrTokenless(budget){
+  const waitMs=Math.max(0,Math.min(budget,TOKENLESS_FALLBACK_WAIT_MS));const deadline=Date.now()+waitMs;let abandoned=false;
+  const left=()=>Math.max(0,deadline-Date.now());
+  const request=turnstileRequestQueue.then(async()=>{
+    if(abandoned||!left())return '';
+    try{await Promise.race([ensureTurnstileWidget(),new Promise(resolve=>setTimeout(resolve,left()))]);}catch{return '';}
+    if(abandoned)return '';
+    if(turnstileToken&&turnstileToken!==lastIssuedTurnstileToken)return issueTurnstileToken(turnstileToken);
+    if(!left())return '';
+    if(lastIssuedTurnstileToken&&turnstileWidget!==null)await Promise.race([resetTurnstileWidget().catch(()=>{}),new Promise(resolve=>setTimeout(resolve,left()))]);
+    if(abandoned||!left())return '';
+    let token='';try{token=await waitForTurnstileCallback(left());}catch{token='';}
+    if(abandoned||!token||token===lastIssuedTurnstileToken)return '';
+    return issueTurnstileToken(token);
+  });
+  turnstileRequestQueue=request.catch(()=>{});
+  return Promise.race([request.catch(()=>''),new Promise(resolve=>setTimeout(()=>{abandoned=true;resolve('');},waitMs+100))]);
+}
 // Exposed for ai-search-ui.mjs (HOSHILU AI Chat), which needs the same
 // session_id and Turnstile token as the main search form. Uses a window
 // global rather than an ES module import so app.js is never evaluated a
@@ -1904,9 +1931,9 @@ async function runKnowledgeSearch(options={}){
         // visitor to complete the visible security check instead of silently
         // destroying it and waiting a second 15-second window.
         const tokenWaitBudget=Math.min(tokenCallbackTimeoutMs,Math.max(1000,remainingBeforeToken-1000));
-        const token=await waitForTurnstileToken(tokenWaitBudget);
+        const token=hasSupplementalInput?await waitForTurnstileToken(tokenWaitBudget):await tokenOrTokenless(tokenWaitBudget);
         if(!isCurrentRun())throw new Error('SEARCH_SUPERSEDED');
-        if(!token)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
+        if(!token&&hasSupplementalInput)throw new Error('TURNSTILE_TOKEN_UNAVAILABLE');
         const remainingBeforeFetch=searchDeadlineAt-Date.now();
         if(remainingBeforeFetch<1000)throw new Error('SEARCH_DEADLINE_EXCEEDED');
         if(attempt>0&&submittedImage){submittedImage=await shrinkPreparedSearchImage(submittedImage);if(!isCurrentRun())throw new Error('SEARCH_SUPERSEDED');}
@@ -1958,7 +1985,7 @@ async function runKnowledgeSearch(options={}){
     const failureTelemetry=clientSearchFailureTelemetry(error,lastRequestId);
     console.warn('HOSHILU_SEARCH_DEGRADED',{error:failureTelemetry.error_code,requestId:failureTelemetry.request_id});rememberMemberSearch(elements.query.value);
     if(failureTelemetry.error_code==='TURNSTILE_UNSUPPORTED'){elements.status.className='status error';elements.status.textContent={JA:'このブラウザ設定ではセキュリティ確認を表示できません。Safari／Chromeを最新版に更新し、コンテンツブロッカーを一時解除して再読み込みしてください。',EN:'This browser setup cannot display the security check. Update Safari or Chrome, temporarily disable content blockers, and reload.',ZH:'当前浏览器设置无法显示安全验证。请更新 Safari 或 Chrome，暂时停用内容拦截器并重新加载。',KO:'현재 브라우저 설정에서는 보안 확인을 표시할 수 없습니다. Safari 또는 Chrome을 업데이트하고 콘텐츠 차단기를 잠시 끈 뒤 새로고침해 주세요.'}[elements.language.value]||'This browser cannot display the security check. Update it, disable content blockers temporarily, and reload.';return{ok:false,error:failureTelemetry.error_code,requestId:failureTelemetry.request_id};}
-    if(failureTelemetry.error_code==='TURNSTILE_TOKEN_UNAVAILABLE'){elements.status.className='status error';elements.status.textContent={JA:'セキュリティ確認を完了して、もう一度「検索する」を押してください。',EN:'Complete the security check, then select Search again.',ZH:'请完成安全验证，然后再次点击“搜索”。',KO:'보안 확인을 완료한 뒤 다시 검색해 주세요.'}[elements.language.value]||'Complete the security check, then search again.';elements.turnstile?.scrollIntoView({behavior:'smooth',block:'center'});
+    if(failureTelemetry.error_code==='TURNSTILE_TOKEN_UNAVAILABLE'||/^TURNSTILE_TOKENLESS_/u.test(failureTelemetry.error_code)){elements.status.className='status error';elements.status.textContent={JA:'セキュリティ確認を完了して、もう一度「検索する」を押してください。',EN:'Complete the security check, then select Search again.',ZH:'请完成安全验证，然后再次点击“搜索”。',KO:'보안 확인을 완료한 뒤 다시 검색해 주세요.'}[elements.language.value]||'Complete the security check, then search again.';elements.turnstile?.scrollIntoView({behavior:'smooth',block:'center'});
     // 2026-09-08: #147 landing auto-search fires before Turnstile can issue a
     // token, so real traffic concentrates on TURNSTILE_TOKEN_UNAVAILABLE.
     // Unlike every other failure branch below, this one returned with only
@@ -2276,7 +2303,8 @@ const heroMarketplaceCoverageDetails=document.querySelector('#heroMarketplaceCov
 // 直し方: トークンが実際に届いてから submit する。短く待っても届かなければエラーにせず、
 // 検索語を入れたまま「確認が終わると、そのまま検索します」と案内し、届いた瞬間に自動で
 // 検索する（onTurnstileToken → runPendingInboundSearch）。人が押し直す必要をなくす。
-const INBOUND_TOKEN_WAIT_MS=8000;
+// 2026-09-24: 8秒 → 1.5秒。普通のブラウザならトークンは1〜2秒で届く。届かない端末はここで待っても届かない。
+const INBOUND_AUTORUN_WAIT_MS=1500;
 // 待ち続けてもトークンが来ない着地（アプリ内ブラウザ／プリフェッチ等）を数えるため、
 // さらにこの時間待っても始まらなければ固定イベントを1回だけ出す。
 const INBOUND_PENDING_REPORT_MS=30000;
@@ -2304,18 +2332,23 @@ function autoRunInboundSearch(query){
   if(!text||!isUsableProductQuery(text))return;
   if(hasSupplementalSearchInput())return;
   (async()=>{
-    // 2026-09-18: 初期化失敗で無音終了しない(#170/#249)。ensureTurnstileWidget が取り直す。取り直しも
-    // 失敗したら固定コード TURNSTILE_INIT_FAILED を autorun として記録し、検索語は残したまま待つ
-    // (人が押せば同じ取り直し経路に入る。トークンが後から届けば runPendingInboundSearch が動く)。
-    try{if(turnstileInitPromise&&typeof turnstileInitPromise.then==='function')await turnstileInitPromise;}catch{
-      try{await ensureTurnstileWidget();}catch{document.dispatchEvent(new CustomEvent('hoshilu:search-degraded',{detail:{executionId:'',errorCode:'TURNSTILE_INIT_FAILED',requestId:'',trigger:'autorun'}}));}
+    // 2026-09-24: Threads から来た89人のうち自動検索が始まったのは7人、成功は0人（14日）。
+    // それまでは Turnstile の初期化（最大15秒×2回）とトークン（8秒）を待ってから検索していたので、
+    // アプリ内ブラウザでは何も起きない画面のまま最大40秒近く待たせていた。
+    // いまは待つのは最大 INBOUND_AUTORUN_WAIT_MS だけ。トークンが来なくても、人が見ている画面なら
+    // そのまま検索を始める（検索側が短く待ち、来なければトークン無しの上限付きで送る）。
+    // 見ている人がいない画面（事前読み込み・リンクプレビューの bot）は、従来どおりトークンを待つ。
+    const settle=(ms)=>new Promise((resolve)=>setTimeout(resolve,ms));
+    const startedAt=Date.now();
+    // 初期化失敗を search-degraded として送らない: このあと検索はトークン無しで続くので、縮退と数えると KPI がずれる。
+    if(turnstileInitPromise&&typeof turnstileInitPromise.then==='function'){
+      await Promise.race([turnstileInitPromise.catch(()=>{}),settle(INBOUND_AUTORUN_WAIT_MS)]);
     }
-    if(turnstileToken){submitInboundSearch(text);return;}
-    let token='';
-    try{token=await waitForTurnstileCallback(INBOUND_TOKEN_WAIT_MS);}catch{token='';}
+    if(!turnstileToken){try{await waitForTurnstileCallback(Math.max(0,INBOUND_AUTORUN_WAIT_MS-(Date.now()-startedAt)));}catch{}}
     if(String(elements.query.value||'').trim()!==text)return;
-    if(token){submitInboundSearch(text);return;}
-    // 届かなかった。エラーにせず、届いた時に自動で検索する。
+    const watched=document.visibilityState==='visible'&&navigator.webdriver!==true;
+    if(turnstileToken||watched){submitInboundSearch(text);return;}
+    // 見ている人がいない。エラーにせず、トークンが届いた時に自動で検索する。
     pendingInboundSearch=text;
     elements.status.className='status inbound-waiting';
     elements.status.textContent=inboundSearchWaitingCopy();

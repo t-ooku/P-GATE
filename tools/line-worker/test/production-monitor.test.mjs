@@ -64,6 +64,8 @@ function mockFetch({
     if (['/api/ai-chat', '/api/knowledge'].includes(url.pathname)) {
       const requestId = `monitor-request-id-${url.pathname.slice(5)}`;
       const input = await request.json();
+      // 2026-09-24: 本番の /api/knowledge は空トークンだと検索を実行してしまう。監視は空で叩かないこと。
+      if (url.pathname === '/api/knowledge' && !input.turnstile_token) return Response.json({ ok: true, result: {} });
       const error = input.turnstile_token ? 'TURNSTILE_VERIFICATION_FAILED' : 'TURNSTILE_TOKEN_INVALID';
       return Response.json({ ok: false, error, request_id: requestId }, {
         status: 400, headers: { 'x-request-id': requestId }

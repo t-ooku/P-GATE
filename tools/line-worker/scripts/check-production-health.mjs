@@ -255,7 +255,9 @@ export async function inspectProduction({
   checks.push('13-mall registry and Yahoo! native ranking');
 
   await checkTraceableValidation(fetcher, origin, '/api/ai-chat', 'TURNSTILE_VERIFICATION_FAILED', checks, 'hoshilu-production-monitor-invalid-token', fetchTimeoutMs);
-  await checkTraceableValidation(fetcher, origin, '/api/knowledge', 'TURNSTILE_TOKEN_INVALID', checks, '', fetchTimeoutMs);
+  // 2026-09-24: /api/knowledge は文字だけならトークン無しでも上限付きで検索が走る（src/tokenless-search.mjs）。
+  // 空トークンで叩くと本物の検索が1回走り、その日の上限も1枠使うので、無効なトークンで検証の入口だけ確かめる。
+  await checkTraceableValidation(fetcher, origin, '/api/knowledge', 'TURNSTILE_VERIFICATION_FAILED', checks, 'hoshilu-production-monitor-invalid-token', fetchTimeoutMs);
   await checkAnonymousEventIngestion(fetcher, origin, checks, fetchTimeoutMs);
   return { ok: true, checked_at: new Date().toISOString(), checks, warnings, expected_assets: expectedAssets };
 }
