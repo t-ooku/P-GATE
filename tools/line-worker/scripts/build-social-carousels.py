@@ -4,16 +4,14 @@
 - 入力: ops/social/carousels-v3.json（8 セット、ユーザー向け 4・セラー向け 4）
 - 出力: public/social/carousel/<set_id>/<n>.jpg（1080x1350、4 枚）と
         public/social/carousel/manifest.json（sha256・枚数・監査用）
-- 描画は Pillow だけ（AI 生成なし、実在商品・他社ロゴなし）。同じ入力から同じ画像が出る。
+- 描画は Pillow だけ。同じ入力から同じ画像が出る。
+  表紙に敷くのは HOSHILU 自前の画像だけ（他社のロゴ・商品写真・スクショは使わない）。
 - 文言の機械検査: §33 の禁止表現、割引率・価格の断定を含む文は失敗させる。
 
 2026-09-23 大隆さん指示「インスタ投稿したの50円書いてたから削除したよ。違うのをオシャレに作って再投稿して」:
 - 2026-09-21 に廃止した Demand Match Click（1クリック50円）が seller-demand-visible に残っていた。
   PRICING_BAN で「50円」「1クリック」「クリック課金」「Demand Match Click」を機械で止める。
   料金の言い方は「4,980円/月（税込）・最初の3か月0円・クリックによる追加料金なし」だけにする。
-- 同時に見た目を作り直した。中面は影のついた白いカード、下に進行ドット。
-  書体は Bold（見出し）と Regular（本文）を使い分ける。どちらも ubuntu の
-  fonts-noto-cjk に入っているので、CI と手元で同じ絵が出る。
 - 画像を作り直すのは .github/workflows/build-social-carousels.yml。Issue パッチ経由の push は
   Actions の GITHUB_TOKEN で行われ、後続のワークフローを起こさない（GitHub の仕様）。
   このファイルか carousels-v3.json を外から push し直すと再生成が走る。
@@ -42,7 +40,7 @@ FAINT = (154, 151, 173)
 VIOLET = (115, 87, 255)
 PINK = (255, 79, 154)
 # 2026-09-24: HOSHILU の正本の色（public/styles.css の :root）。
-# ボタンや見出しは pink → violet → cyan のグラデーション。表紙の見出し帯もこれに合わせる。
+# ボタンや見出しは pink → violet → cyan のグラデーション。表紙の見出しもこれに合わせる。
 CYAN = (35, 184, 255)
 NAVY = (26, 22, 51)
 PAPER = (255, 255, 255)
@@ -215,6 +213,7 @@ def result_panel(draw, xy, width, results, ink, muted, face, border, spot):
 # 比べると、向こうは写真が画面いっぱいで、文字はその上に重ねてある。こちらは余白の多い
 # 資料のような絵だった。表紙は HOSHILU が持っている自前の画像（public/social/ 等）を全面に敷き、
 # 大きな文字を重ねる形にする。他社のロゴ・商品写真は使わないまま、密度だけを上げる。
+# 敷けるのは「文字が焼き込まれていない画像」だけ。既製の告知画像は見出しが二重になる。
 def cover_art(path, size):
     art = Image.open(ROOT / 'public' / path).convert('RGB')
     width, height = size
@@ -228,7 +227,7 @@ def cover_art(path, size):
 
 def scrim(img, top_alpha=160, bottom_alpha=248):
     """文字を読ませるための暗い膜。上を少し、下半分をしっかり暗くする。
-    写真の上に見出しの帯と本文を置くので、ここが薄いと全体が没する。"""
+    写真の上に見出しと本文を置くので、ここが薄いと全体が没する。"""
     width, height = img.size
     layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(layer)
@@ -241,18 +240,15 @@ def scrim(img, top_alpha=160, bottom_alpha=248):
 
 
 # 2026-09-24 大隆さん「キャッチがもっとホシルのポートレートカラーで。文字の枠線があるのはダサい」。
-# 白フチをやめ、見出しは HOSHILU の色の帯（pink → violet → cyan）の上に白抜きで置く。
-# 帯は文字の幅ぴったりに作るので、行ごとに長さが変わって雑誌の見出しのように見える。
+# 白フチをやめ、HOSHILU の色（pink → violet → cyan）を使う。色は画面の左端からの位置で
+# 決めるので、行が変わっても同じ x は同じ色になる（「背景の色がズレてる」への答え）。
 def brand_colour(t):
     t = min(1.0, max(0.0, t))
     return mix(PINK, VIOLET, t / 0.62) if t <= 0.62 else mix(VIOLET, CYAN, (t - 0.62) / 0.38)
 
 
 def brand_band(img, box, radius=20, span=None):
-    """見出しの帯。色は帯の中の位置ではなく**画面の左端からの位置**で決める。
-    2026-09-24 大隆さん「キャッチコピーの背景の色がズレてるよ」: 行ごとに 0→1 で
-    引いていたため、短い行も長い行も左端がピンク・右端がシアンになり、上下の行で
-    同じ x なのに色が違っていた。1枚の大きなグラデーションから切り出す形に直す。"""
+    """見出しの帯。色は帯の中の位置ではなく**画面の左端からの位置**で決める。"""
     x0, y0, x1, y1 = box
     width, height = max(1, x1 - x0), max(1, y1 - y0)
     reference = max(1, span or img.size[0])
@@ -327,7 +323,7 @@ def render_art_cover(doc, item, slide, total):
     body_lines = wrap(draw, slide['body'], body_font, width - 120)
     chips_list = slide.get('chips') or []
     chip_font = font(25, 'light')
-    block = 84 + len(head_lines) * int(head_font.size * 1.18) + 26 + len(body_lines) * int(body_font.size * 1.5)
+    block = 84 + len(head_lines) * int(head_font.size * 1.24) + 26 + len(body_lines) * int(body_font.size * 1.5)
     if chips_list:
         block += 96
     y = height - 176 - block
@@ -340,7 +336,7 @@ def render_art_cover(doc, item, slide, total):
     # 読ませるための黒は、枠線ではなくやわらかい影で作る。
     spans = [int(draw.textlength(line, font=head_font)) for line in head_lines]
     reference = max(spans) if spans else 1
-    line_step = int(head_font.size * 1.16)
+    line_step = int(head_font.size * 1.24)
     accent = slide.get('accent_line', len(head_lines) - 1)
     # 影は2回かけて、明るい写真の上でも白と色が沈まないようにする。
     img = text_shadow(img, head_lines, head_font, (60, y), line_step, blur=30, alpha=210)
@@ -348,9 +344,11 @@ def render_art_cover(doc, item, slide, total):
     draw = ImageDraw.Draw(img)
     for index, (line, span) in enumerate(zip(head_lines, spans)):
         if index == accent:
-            # 黄色い線は文字の下。先に引いて、その上に文字を置く。
-            base = y + int(head_font.size * 1.00)
-            marker(draw, (56, base, 60 + span + 14, base + 18))
+            # 黄色い線は文字の「下」に完全に出す。2026-09-24 大隆さん「黄色線がキャッチコピーの
+            # 上になっていて変」: 文字の足に重なって取り消し線のように見えていた。
+            # 目分量で置くと字形によってずれるので、実際に描いた時の下端（textbbox）から引く。
+            bottom = draw.textbbox((60, y), line, font=head_font)[3]
+            marker(draw, (56, bottom + 8, 60 + span + 14, bottom + 24))
             img = gradient_text(img, (60, y), line, head_font, reference, start_x=60)
             draw = ImageDraw.Draw(img)
         else:
