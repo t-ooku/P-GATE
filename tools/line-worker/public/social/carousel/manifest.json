@@ -11,8 +11,8 @@
       "files": [
         {
           "file": "user-hoshittoku-basics/1.jpg",
-          "sha256": "37feb036983ac5a62d29650d2a0d2a8737140219e8735a3df9a0ef0f8277136b",
-          "bytes": 83790
+          "sha256": "7d26a67ad4134b605f4b4c597ea3b0cad5c842772fc6010d6328f905c84e853d",
+          "bytes": 166271
         },
         {
           "file": "user-hoshittoku-basics/2.jpg",
@@ -37,8 +37,8 @@
       "files": [
         {
           "file": "seller-demand-visible/1.jpg",
-          "sha256": "9ab10cb16f6cba167e600304b722ad0b5405fe882cee417ed7b4aa0f52ced61f",
-          "bytes": 110302
+          "sha256": "2ddfc5e4b0bdcc0ae1751e34d1124eb47f9a0bac8f8742b57965dba3fc9cddd5",
+          "bytes": 253618
         },
         {
           "file": "seller-demand-visible/2.jpg",
@@ -63,8 +63,8 @@
       "files": [
         {
           "file": "user-price-watch/1.jpg",
-          "sha256": "e76ee5d5be16a5439e957ebdca99594e5c9e72accb6b071643e68b363673bec1",
-          "bytes": 77985
+          "sha256": "bc75fc30baebf028cd5b4b82c2965a0eb60eba49ab9d5973c9ec49953e904bc9",
+          "bytes": 159058
         },
         {
           "file": "user-price-watch/2.jpg",
@@ -89,8 +89,8 @@
       "files": [
         {
           "file": "seller-shop-entrance/1.jpg",
-          "sha256": "be0170d8eda1c344c734417d9b90d7d38cf6fdd6217932cd89eecc2700beb743",
-          "bytes": 87935
+          "sha256": "cd9cd962b3a65d68edebb8b696ed34ba6dc48d4b474bcbe34a3ad0886c9620f6",
+          "bytes": 176690
         },
         {
           "file": "seller-shop-entrance/2.jpg",
@@ -115,8 +115,8 @@
       "files": [
         {
           "file": "user-shop-search/1.jpg",
-          "sha256": "0785dbe034a272e08f195eb1cc8ee3a52252daf3a80be32c791545bb1da7ca49",
-          "bytes": 86046
+          "sha256": "59547b65cd07de8fb6fd711a8ec6699946ce8b3fa312ca3f17df9f854fecb5bd",
+          "bytes": 202227
         },
         {
           "file": "user-shop-search/2.jpg",
@@ -141,8 +141,8 @@
       "files": [
         {
           "file": "seller-real-numbers/1.jpg",
-          "sha256": "4df82610e6cdc8815653ff5c213df90e886aeacc6edbc55379b28cf28bfb8b92",
-          "bytes": 89189
+          "sha256": "3d12bd5fa573e995cd027cabb944d1a76c0b3921d9e3744ef014d735316d4771",
+          "bytes": 168063
         },
         {
           "file": "seller-real-numbers/2.jpg",
@@ -167,13 +167,13 @@
       "files": [
         {
           "file": "user-cross-mall-search/1.jpg",
-          "sha256": "3b979c754d40537239b6cf2bd2d67af3c4d71e884ed194606afc39fa710e2f4c",
-          "bytes": 101199
+          "sha256": "27a7f9b71d3e9dd2f2a3317ef8eaacc26205ced61edd49084550fc6897271764",
+          "bytes": 191802
         },
         {
           "file": "user-cross-mall-search/2.jpg",
-          "sha256": "977699fb6b05f5af26c74161c25ca3f7ccf8227a167f00f21c8e1156288b1f9e",
-          "bytes": 84705
+          "sha256": "e561b3f3b760f66a19129a06d7019017e8b4bc363f9b3b62d4b59c819f052826",
+          "bytes": 84380
         },
         {
           "file": "user-cross-mall-search/3.jpg",
@@ -193,13 +193,13 @@
       "files": [
         {
           "file": "seller-found-by-condition/1.jpg",
-          "sha256": "4b8438b251d54f379d2a7fee924ca1d092ca5ac24d99241ac162cba6283408ec",
-          "bytes": 111863
+          "sha256": "26072709740247e08e5ee02bcaae15d90017aa7ae8ed8b32060467f47fe7756b",
+          "bytes": 206425
         },
         {
           "file": "seller-found-by-condition/2.jpg",
-          "sha256": "898a2e23f935343639a38fbb55d88caacc35d6fbfabf1d043968efdfecf83968",
-          "bytes": 86304
+          "sha256": "61a18e0c048391f5b2a9244954008109b2b88f3cc54fb1b90c8bd7a1497e15bf",
+          "bytes": 90692
         },
         {
           "file": "seller-found-by-condition/3.jpg",
