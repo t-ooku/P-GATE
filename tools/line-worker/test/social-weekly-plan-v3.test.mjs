@@ -15,11 +15,12 @@ test('方針 v3: 曜日・時刻・半々の順送り・禁止表現なし・画
   assert.deepEqual([...SOCIAL_PLAN_V3.carousel_weekdays], [1, 3, 6]);
   const sets = loadCarouselSets();
   // 2026-09-24: モール名を出す「どこで買うのが正解？」とセラー向けの対を足して 8 セット。
+  // さらに同日、需要の話をする対（user-wish-left-behind / seller-wanted-now）を足して 10 セット。
   // 半々の順送り（user, seller, user, seller…）は崩さないので、必ず偶数・同数で足すこと。
-  assert.equal(sets.order.length, 8);
-  assert.equal(sets.order.filter((set) => set.audience === 'seller').length, 4);
+  assert.equal(sets.order.length, 10);
+  assert.equal(sets.order.filter((set) => set.audience === 'seller').length, 5);
   assert.deepEqual(sets.order.map((set) => set.audience),
-    ['user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller']);
+    ['user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller']);
   for (const set of sets.order) {
     assert.ok(set.slides.length >= 2 && set.slides.length <= 10, set.id);
     assert.doesNotMatch(JSON.stringify(set), FORBIDDEN, set.id);
@@ -230,7 +231,6 @@ test('リール日の代替カルーセルは 19:30 JST 以降・リール未承
   assert.deepEqual(await seedReelFallbackQueue(makeEnv(0).env, new Date('2026-09-18T09:00:00.000Z')), { enabled: true, planned: 0, inserted: 0, reel_ready: false });
 });
 
-// 2026-09-23 大隆さん報告「インスタ投稿したの50円書いてたから削除したよ」。
 // 2026-09-21 に Demand Match Click（1クリック50円）を廃止したのに、カルーセルの
 // seller-demand-visible に残ったまま Instagram に出てしまった。画像は JSON から描かれるので、
 // JSON の側で廃止した課金の言い方を止める（build-social-carousels.py の PRICING_BAN と同じ規則）。
