@@ -6597,5 +6597,1040 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "家族分の麦茶をたくさん作れる大きいポット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家族分をまとめて作れる大容量の麦茶・水出し茶用ポット",
+    "ideal_answer": "大容量タイプの麦茶ポット・水出しピッチャー(耐熱ガラス製など)",
+    "reason": "「たくさん作れる/大量に作れる」は商品名では「大容量」。 展開規則 large-capacity-tea-pot（モール検索語「大容量 麦茶ポット」）。",
+    "category": "large-capacity-tea-pot",
+    "search_terms": {
+      "ja": [
+        "大容量 麦茶ポット",
+        "大容量 水出しポット",
+        "麦茶 ピッチャー 大きい"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水出し茶が大量に作れるピッチャー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家族分をまとめて作れる大容量の麦茶・水出し茶用ポット",
+    "ideal_answer": "大容量タイプの麦茶ポット・水出しピッチャー(耐熱ガラス製など)",
+    "reason": "「たくさん作れる/大量に作れる」は商品名では「大容量」。 展開規則 large-capacity-tea-pot（モール検索語「大容量 麦茶ポット」）。",
+    "category": "large-capacity-tea-pot",
+    "search_terms": {
+      "ja": [
+        "大容量 麦茶ポット",
+        "大容量 水出しポット",
+        "麦茶 ピッチャー 大きい"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "一度にたくさん麦茶を入れられる大きなポット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "家族分をまとめて作れる大容量の麦茶・水出し茶用ポット",
+    "ideal_answer": "大容量タイプの麦茶ポット・水出しピッチャー(耐熱ガラス製など)",
+    "reason": "「たくさん作れる/大量に作れる」は商品名では「大容量」。 展開規則 large-capacity-tea-pot（モール検索語「大容量 麦茶ポット」）。",
+    "category": "large-capacity-tea-pot",
+    "search_terms": {
+      "ja": [
+        "大容量 麦茶ポット",
+        "大容量 水出しポット",
+        "麦茶 ピッチャー 大きい"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "マチが広くて体操服や上履きをまとめて入れられる手提げバッグ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "体操服・上履き・着替えなどをまとめて入れられるマチの広い通学用手提げバッグ",
+    "ideal_answer": "マチが広い(大容量)通学用手提げバッグ・サブバッグ",
+    "reason": "「マチが広い/たくさん入る」は商品名では「マチ広」。 展開規則 wide-gusset-lesson-tote（モール検索語「マチ広 手提げバッグ 通学」）。",
+    "category": "wide-gusset-lesson-tote",
+    "search_terms": {
+      "ja": [
+        "マチ広 手提げバッグ 通学",
+        "大きめ 体操着袋 手提げ",
+        "たっぷり入る 通学サブバッグ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "着替えもたくさん入る大きめの通学サブバッグ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "体操服・上履き・着替えなどをまとめて入れられるマチの広い通学用手提げバッグ",
+    "ideal_answer": "マチが広い(大容量)通学用手提げバッグ・サブバッグ",
+    "reason": "「マチが広い/たくさん入る」は商品名では「マチ広」。 展開規則 wide-gusset-lesson-tote（モール検索語「マチ広 手提げバッグ 通学」）。",
+    "category": "wide-gusset-lesson-tote",
+    "search_terms": {
+      "ja": [
+        "マチ広 手提げバッグ 通学",
+        "大きめ 体操着袋 手提げ",
+        "たっぷり入る 通学サブバッグ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "体操着と上履きを一緒に持てる手提げバッグ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "体操服・上履き・着替えなどをまとめて入れられるマチの広い通学用手提げバッグ",
+    "ideal_answer": "マチが広い(大容量)通学用手提げバッグ・サブバッグ",
+    "reason": "「マチが広い/たくさん入る」は商品名では「マチ広」。 展開規則 wide-gusset-lesson-tote（モール検索語「マチ広 手提げバッグ 通学」）。",
+    "category": "wide-gusset-lesson-tote",
+    "search_terms": {
+      "ja": [
+        "マチ広 手提げバッグ 通学",
+        "大きめ 体操着袋 手提げ",
+        "たっぷり入る 通学サブバッグ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "白いTシャツだけど透けないのが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "白など薄い色でも透けにくいTシャツ・カットソー・ブラウス",
+    "ideal_answer": "透け防止・裏地付き(二重仕立て)のTシャツ・カットソー・ブラウス",
+    "reason": "「透けない」は商品名でも同じ言葉で書かれるが、生地の厚み・裏地を訴求する商品名と組み合わせて検索精度を上げる。 展開規則 sheer-proof-tops（モール検索語「透けない 白Tシャツ」）。",
+    "category": "sheer-proof-tops",
+    "search_terms": {
+      "ja": [
+        "透けない 白Tシャツ",
+        "透けにくい カットソー",
+        "裏地付き ブラウス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "下着が見えない白カットソーが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "白など薄い色でも透けにくいTシャツ・カットソー・ブラウス",
+    "ideal_answer": "透け防止・裏地付き(二重仕立て)のTシャツ・カットソー・ブラウス",
+    "reason": "「透けない」は商品名でも同じ言葉で書かれるが、生地の厚み・裏地を訴求する商品名と組み合わせて検索精度を上げる。 展開規則 sheer-proof-tops（モール検索語「透けない 白Tシャツ」）。",
+    "category": "sheer-proof-tops",
+    "search_terms": {
+      "ja": [
+        "透けない 白Tシャツ",
+        "透けにくい カットソー",
+        "裏地付き ブラウス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "重ね着しなくても透けにくいブラウス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "白など薄い色でも透けにくいTシャツ・カットソー・ブラウス",
+    "ideal_answer": "透け防止・裏地付き(二重仕立て)のTシャツ・カットソー・ブラウス",
+    "reason": "「透けない」は商品名でも同じ言葉で書かれるが、生地の厚み・裏地を訴求する商品名と組み合わせて検索精度を上げる。 展開規則 sheer-proof-tops（モール検索語「透けない 白Tシャツ」）。",
+    "category": "sheer-proof-tops",
+    "search_terms": {
+      "ja": [
+        "透けない 白Tシャツ",
+        "透けにくい カットソー",
+        "裏地付き ブラウス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "犬が滑らないようにする床用マット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "犬・猫がフローリングで滑らないようにする床用マット・カーペット",
+    "ideal_answer": "ペット用の滑り止めマット・ジョイントカーペット(足腰への負担を抑えるタイプ)",
+    "reason": "「滑らない/足腰に負担がかからない」は商品名では「滑り止めマット」「ジョイントマット」。効果は断定しない。 展開規則 nonslip-pet-floor-mat（モール検索語「ペット用 滑り止めマット」）。",
+    "category": "nonslip-pet-floor-mat",
+    "search_terms": {
+      "ja": [
+        "ペット用 滑り止めマット",
+        "犬 滑らない マット",
+        "猫 足腰 ジョイントマット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "猫の足腰に負担がかからないジョイントマット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "犬・猫がフローリングで滑らないようにする床用マット・カーペット",
+    "ideal_answer": "ペット用の滑り止めマット・ジョイントカーペット(足腰への負担を抑えるタイプ)",
+    "reason": "「滑らない/足腰に負担がかからない」は商品名では「滑り止めマット」「ジョイントマット」。効果は断定しない。 展開規則 nonslip-pet-floor-mat（モール検索語「ペット用 滑り止めマット」）。",
+    "category": "nonslip-pet-floor-mat",
+    "search_terms": {
+      "ja": [
+        "ペット用 滑り止めマット",
+        "犬 滑らない マット",
+        "猫 足腰 ジョイントマット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "フローリングで滑りにくいペット用カーペット",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "犬・猫がフローリングで滑らないようにする床用マット・カーペット",
+    "ideal_answer": "ペット用の滑り止めマット・ジョイントカーペット(足腰への負担を抑えるタイプ)",
+    "reason": "「滑らない/足腰に負担がかからない」は商品名では「滑り止めマット」「ジョイントマット」。効果は断定しない。 展開規則 nonslip-pet-floor-mat（モール検索語「ペット用 滑り止めマット」）。",
+    "category": "nonslip-pet-floor-mat",
+    "search_terms": {
+      "ja": [
+        "ペット用 滑り止めマット",
+        "犬 滑らない マット",
+        "猫 足腰 ジョイントマット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "一人でも簡単に測れる血圧計",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "一人でも簡単に装着・測定できる血圧計",
+    "ideal_answer": "手首式など装着が簡単な血圧計",
+    "reason": "「一人でも簡単に測れる」は商品名では「手首式」「簡単操作」。効果・診断は断定しない。 展開規則 easy-wrist-blood-pressure-monitor（モール検索語「手首式 血圧計」）。",
+    "category": "easy-wrist-blood-pressure-monitor",
+    "search_terms": {
+      "ja": [
+        "手首式 血圧計",
+        "簡単 血圧計 手首式",
+        "一人で測れる 血圧計"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "腕に巻きやすい血圧計が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "一人でも簡単に装着・測定できる血圧計",
+    "ideal_answer": "手首式など装着が簡単な血圧計",
+    "reason": "「一人でも簡単に測れる」は商品名では「手首式」「簡単操作」。効果・診断は断定しない。 展開規則 easy-wrist-blood-pressure-monitor（モール検索語「手首式 血圧計」）。",
+    "category": "easy-wrist-blood-pressure-monitor",
+    "search_terms": {
+      "ja": [
+        "手首式 血圧計",
+        "簡単 血圧計 手首式",
+        "一人で測れる 血圧計"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "簡単に測定できる血圧計",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "一人でも簡単に装着・測定できる血圧計",
+    "ideal_answer": "手首式など装着が簡単な血圧計",
+    "reason": "「一人でも簡単に測れる」は商品名では「手首式」「簡単操作」。効果・診断は断定しない。 展開規則 easy-wrist-blood-pressure-monitor（モール検索語「手首式 血圧計」）。",
+    "category": "easy-wrist-blood-pressure-monitor",
+    "search_terms": {
+      "ja": [
+        "手首式 血圧計",
+        "簡単 血圧計 手首式",
+        "一人で測れる 血圧計"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "授乳のときに腕が疲れないクッション",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "授乳中の腕・肩・首の負担を軽くしたい",
+    "ideal_answer": "授乳姿勢を支えて腕への負担を減らす授乳クッション・授乳まくら",
+    "reason": "「授乳のときに腕が疲れない」は商品名では「授乳クッション」。 展開規則 nursing-pillow-arm-relief（モール検索語「授乳クッション」）。",
+    "category": "nursing-pillow-arm-relief",
+    "search_terms": {
+      "ja": [
+        "授乳クッション",
+        "授乳らくちんクッション",
+        "腕が疲れない 授乳まくら"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "授乳中に肩が痛くなるので楽になるまくらが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "授乳中の腕・肩・首の負担を軽くしたい",
+    "ideal_answer": "授乳姿勢を支えて腕への負担を減らす授乳クッション・授乳まくら",
+    "reason": "「授乳のときに腕が疲れない」は商品名では「授乳クッション」。 展開規則 nursing-pillow-arm-relief（モール検索語「授乳クッション」）。",
+    "category": "nursing-pillow-arm-relief",
+    "search_terms": {
+      "ja": [
+        "授乳クッション",
+        "授乳らくちんクッション",
+        "腕が疲れない 授乳まくら"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "長時間の授乳でも腕が疲れないクッション",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "授乳中の腕・肩・首の負担を軽くしたい",
+    "ideal_answer": "授乳姿勢を支えて腕への負担を減らす授乳クッション・授乳まくら",
+    "reason": "「授乳のときに腕が疲れない」は商品名では「授乳クッション」。 展開規則 nursing-pillow-arm-relief（モール検索語「授乳クッション」）。",
+    "category": "nursing-pillow-arm-relief",
+    "search_terms": {
+      "ja": [
+        "授乳クッション",
+        "授乳らくちんクッション",
+        "腕が疲れない 授乳まくら"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水拭き不要のフローリングワイパー",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "床掃除の後に水拭き・二度拭きの手間をかけたくない",
+    "ideal_answer": "水拭き不要・拭き跡が残らないタイプのフローリングワイパー用シート",
+    "reason": "「水拭き不要」「二度拭きしなくていい」は商品名でも同じ言葉で書かれるが、対象カテゴリ語と組み合わせて検索精度を上げる。 展開規則 no-rinse-floor-wiper-sheet（モール検索語「水拭き不要 フローリングシート」）。",
+    "category": "no-rinse-floor-wiper-sheet",
+    "search_terms": {
+      "ja": [
+        "水拭き不要 フローリングシート",
+        "二度拭き不要 フロアワイパーシート",
+        "拭き跡が残らない フローリングワイパー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "二度拭きしなくていいクイックルワイパーが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "床掃除の後に水拭き・二度拭きの手間をかけたくない",
+    "ideal_answer": "水拭き不要・拭き跡が残らないタイプのフローリングワイパー用シート",
+    "reason": "「水拭き不要」「二度拭きしなくていい」は商品名でも同じ言葉で書かれるが、対象カテゴリ語と組み合わせて検索精度を上げる。 展開規則 no-rinse-floor-wiper-sheet（モール検索語「水拭き不要 フローリングシート」）。",
+    "category": "no-rinse-floor-wiper-sheet",
+    "search_terms": {
+      "ja": [
+        "水拭き不要 フローリングシート",
+        "二度拭き不要 フロアワイパーシート",
+        "拭き跡が残らない フローリングワイパー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "拭き跡が残らないフロアワイパーのシート",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "床掃除の後に水拭き・二度拭きの手間をかけたくない",
+    "ideal_answer": "水拭き不要・拭き跡が残らないタイプのフローリングワイパー用シート",
+    "reason": "「水拭き不要」「二度拭きしなくていい」は商品名でも同じ言葉で書かれるが、対象カテゴリ語と組み合わせて検索精度を上げる。 展開規則 no-rinse-floor-wiper-sheet（モール検索語「水拭き不要 フローリングシート」）。",
+    "category": "no-rinse-floor-wiper-sheet",
+    "search_terms": {
+      "ja": [
+        "水拭き不要 フローリングシート",
+        "二度拭き不要 フロアワイパーシート",
+        "拭き跡が残らない フローリングワイパー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "まぶたの皮脂でよれないアイシャドウ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "まぶたの皮脂や汗でよれにくいアイシャドウ",
+    "ideal_answer": "よれ・崩れに強いアイシャドウ(皮脂くずれ防止タイプ)",
+    "reason": "「よれない」は商品名では「よれない」「崩れにくい」とそのまま書かれることが多いが、カテゴリ語と組み合わせることで検索精度を上げる。 展開規則 crease-proof-eyeshadow（モール検索語「よれない アイシャドウ」）。",
+    "category": "crease-proof-eyeshadow",
+    "search_terms": {
+      "ja": [
+        "よれない アイシャドウ",
+        "崩れにくい アイシャドウ",
+        "皮脂に強い アイシャドー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "時間が経っても崩れないアイシャドウが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "まぶたの皮脂や汗でよれにくいアイシャドウ",
+    "ideal_answer": "よれ・崩れに強いアイシャドウ(皮脂くずれ防止タイプ)",
+    "reason": "「よれない」は商品名では「よれない」「崩れにくい」とそのまま書かれることが多いが、カテゴリ語と組み合わせることで検索精度を上げる。 展開規則 crease-proof-eyeshadow（モール検索語「よれない アイシャドウ」）。",
+    "category": "crease-proof-eyeshadow",
+    "search_terms": {
+      "ja": [
+        "よれない アイシャドウ",
+        "崩れにくい アイシャドウ",
+        "皮脂に強い アイシャドー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "汗をかいても消えにくいアイシャドウ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "まぶたの皮脂や汗でよれにくいアイシャドウ",
+    "ideal_answer": "よれ・崩れに強いアイシャドウ(皮脂くずれ防止タイプ)",
+    "reason": "「よれない」は商品名では「よれない」「崩れにくい」とそのまま書かれることが多いが、カテゴリ語と組み合わせることで検索精度を上げる。 展開規則 crease-proof-eyeshadow（モール検索語「よれない アイシャドウ」）。",
+    "category": "crease-proof-eyeshadow",
+    "search_terms": {
+      "ja": [
+        "よれない アイシャドウ",
+        "崩れにくい アイシャドウ",
+        "皮脂に強い アイシャドー"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "生活感が出ない扉付きの収納棚",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "生活感のある中身を隠せる扉付きの収納家具",
+    "ideal_answer": "扉付きで中身が見えない(目隠しできる)収納棚・収納キャビネット・収納ボックス",
+    "reason": "「生活感が出ない/目隠しできる」は商品名では「扉付き」。 展開規則 hidden-clutter-storage-cabinet（モール検索語「扉付き 収納棚」）。",
+    "category": "hidden-clutter-storage-cabinet",
+    "search_terms": {
+      "ja": [
+        "扉付き 収納棚",
+        "目隠しできる 収納キャビネット",
+        "生活感を隠せる 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "中身が見えない目隠しできる収納キャビネットが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "生活感のある中身を隠せる扉付きの収納家具",
+    "ideal_answer": "扉付きで中身が見えない(目隠しできる)収納棚・収納キャビネット・収納ボックス",
+    "reason": "「生活感が出ない/目隠しできる」は商品名では「扉付き」。 展開規則 hidden-clutter-storage-cabinet（モール検索語「扉付き 収納棚」）。",
+    "category": "hidden-clutter-storage-cabinet",
+    "search_terms": {
+      "ja": [
+        "扉付き 収納棚",
+        "目隠しできる 収納キャビネット",
+        "生活感を隠せる 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "来客時に扉を閉めれば隠せる収納ボックス",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "生活感のある中身を隠せる扉付きの収納家具",
+    "ideal_answer": "扉付きで中身が見えない(目隠しできる)収納棚・収納キャビネット・収納ボックス",
+    "reason": "「生活感が出ない/目隠しできる」は商品名では「扉付き」。 展開規則 hidden-clutter-storage-cabinet（モール検索語「扉付き 収納棚」）。",
+    "category": "hidden-clutter-storage-cabinet",
+    "search_terms": {
+      "ja": [
+        "扉付き 収納棚",
+        "目隠しできる 収納キャビネット",
+        "生活感を隠せる 収納ボックス"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ダニが心配な布団乾燥機",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布団のダニが心配で退治・駆除したい",
+    "ideal_answer": "ダニ退治(ダニ対策)機能をうたう布団乾燥機",
+    "reason": "「ダニが心配/退治したい」は商品名では「ダニ退治」「ダニ対策」。 展開規則 mite-treatment-futon-dryer（モール検索語「ダニ退治 布団乾燥機」）。",
+    "category": "mite-treatment-futon-dryer",
+    "search_terms": {
+      "ja": [
+        "ダニ退治 布団乾燥機",
+        "ダニ対策 ふとん乾燥機",
+        "ダニ駆除 布団乾燥機"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "布団乾燥機でダニも退治したい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布団のダニが心配で退治・駆除したい",
+    "ideal_answer": "ダニ退治(ダニ対策)機能をうたう布団乾燥機",
+    "reason": "「ダニが心配/退治したい」は商品名では「ダニ退治」「ダニ対策」。 展開規則 mite-treatment-futon-dryer（モール検索語「ダニ退治 布団乾燥機」）。",
+    "category": "mite-treatment-futon-dryer",
+    "search_terms": {
+      "ja": [
+        "ダニ退治 布団乾燥機",
+        "ダニ対策 ふとん乾燥機",
+        "ダニ駆除 布団乾燥機"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ダニの繁殖が気になるのでふとん乾燥機を使いたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "布団のダニが心配で退治・駆除したい",
+    "ideal_answer": "ダニ退治(ダニ対策)機能をうたう布団乾燥機",
+    "reason": "「ダニが心配/退治したい」は商品名では「ダニ退治」「ダニ対策」。 展開規則 mite-treatment-futon-dryer（モール検索語「ダニ退治 布団乾燥機」）。",
+    "category": "mite-treatment-futon-dryer",
+    "search_terms": {
+      "ja": [
+        "ダニ退治 布団乾燥機",
+        "ダニ対策 ふとん乾燥機",
+        "ダニ駆除 布団乾燥機"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "液だれしない醤油差し",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "注いだ後に容器の口から液だれしない醤油差し・調味料入れ",
+    "ideal_answer": "液だれ防止構造の醤油差し・ソース入れ",
+    "reason": "「液だれしない/たれない」は商品名では「液だれ防止」。 展開規則 no-drip-soy-sauce-dispenser（モール検索語「液だれ防止 醤油差し」）。",
+    "category": "no-drip-soy-sauce-dispenser",
+    "search_terms": {
+      "ja": [
+        "液だれ防止 醤油差し",
+        "垂れない しょうゆ差し",
+        "液だれしない ソース入れ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "たれない醤油差しが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "注いだ後に容器の口から液だれしない醤油差し・調味料入れ",
+    "ideal_answer": "液だれ防止構造の醤油差し・ソース入れ",
+    "reason": "「液だれしない/たれない」は商品名では「液だれ防止」。 展開規則 no-drip-soy-sauce-dispenser（モール検索語「液だれ防止 醤油差し」）。",
+    "category": "no-drip-soy-sauce-dispenser",
+    "search_terms": {
+      "ja": [
+        "液だれ防止 醤油差し",
+        "垂れない しょうゆ差し",
+        "液だれしない ソース入れ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "注ぐときにこぼれないしょうゆ差し",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "注いだ後に容器の口から液だれしない醤油差し・調味料入れ",
+    "ideal_answer": "液だれ防止構造の醤油差し・ソース入れ",
+    "reason": "「液だれしない/たれない」は商品名では「液だれ防止」。 展開規則 no-drip-soy-sauce-dispenser（モール検索語「液だれ防止 醤油差し」）。",
+    "category": "no-drip-soy-sauce-dispenser",
+    "search_terms": {
+      "ja": [
+        "液だれ防止 醤油差し",
+        "垂れない しょうゆ差し",
+        "液だれしない ソース入れ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "噛んでもすぐ壊れない犬のおもちゃ",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "犬が噛んでもすぐに壊れない丈夫なおもちゃ",
+    "ideal_answer": "耐久性の高い(タフタイプの)犬用おもちゃ・ドッグトイ",
+    "reason": "「噛んでも壊れない/丈夫」は商品名では「耐久」「タフ」。効果は断定しない。 展開規則 chew-resistant-dog-toy（モール検索語「耐久 犬用おもちゃ」）。",
+    "category": "chew-resistant-dog-toy",
+    "search_terms": {
+      "ja": [
+        "耐久 犬用おもちゃ",
+        "丈夫な ドッグトイ",
+        "壊れにくい 犬のおもちゃ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "丈夫な犬用おもちゃが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "犬が噛んでもすぐに壊れない丈夫なおもちゃ",
+    "ideal_answer": "耐久性の高い(タフタイプの)犬用おもちゃ・ドッグトイ",
+    "reason": "「噛んでも壊れない/丈夫」は商品名では「耐久」「タフ」。効果は断定しない。 展開規則 chew-resistant-dog-toy（モール検索語「耐久 犬用おもちゃ」）。",
+    "category": "chew-resistant-dog-toy",
+    "search_terms": {
+      "ja": [
+        "耐久 犬用おもちゃ",
+        "丈夫な ドッグトイ",
+        "壊れにくい 犬のおもちゃ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "耐久性が高いドッグトイを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "犬が噛んでもすぐに壊れない丈夫なおもちゃ",
+    "ideal_answer": "耐久性の高い(タフタイプの)犬用おもちゃ・ドッグトイ",
+    "reason": "「噛んでも壊れない/丈夫」は商品名では「耐久」「タフ」。効果は断定しない。 展開規則 chew-resistant-dog-toy（モール検索語「耐久 犬用おもちゃ」）。",
+    "category": "chew-resistant-dog-toy",
+    "search_terms": {
+      "ja": [
+        "耐久 犬用おもちゃ",
+        "丈夫な ドッグトイ",
+        "壊れにくい 犬のおもちゃ"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "濡れても中身が濡れない上履き袋",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "雨の日でも中身が濡れない上履き袋・体操着袋",
+    "ideal_answer": "防水(撥水)加工の上履き袋・体操着袋",
+    "reason": "「濡れても中身が濡れない/雨でも安心」は商品名では「防水」。 展開規則 waterproof-indoor-shoe-bag（モール検索語「防水 上履き袋」）。",
+    "category": "waterproof-indoor-shoe-bag",
+    "search_terms": {
+      "ja": [
+        "防水 上履き袋",
+        "濡れても安心 体操着袋",
+        "防水加工 上履き袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "雨の日でも安心な体操着袋が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "雨の日でも中身が濡れない上履き袋・体操着袋",
+    "ideal_answer": "防水(撥水)加工の上履き袋・体操着袋",
+    "reason": "「濡れても中身が濡れない/雨でも安心」は商品名では「防水」。 展開規則 waterproof-indoor-shoe-bag（モール検索語「防水 上履き袋」）。",
+    "category": "waterproof-indoor-shoe-bag",
+    "search_terms": {
+      "ja": [
+        "防水 上履き袋",
+        "濡れても安心 体操着袋",
+        "防水加工 上履き袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "防水加工の上履き袋を探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "雨の日でも中身が濡れない上履き袋・体操着袋",
+    "ideal_answer": "防水(撥水)加工の上履き袋・体操着袋",
+    "reason": "「濡れても中身が濡れない/雨でも安心」は商品名では「防水」。 展開規則 waterproof-indoor-shoe-bag（モール検索語「防水 上履き袋」）。",
+    "category": "waterproof-indoor-shoe-bag",
+    "search_terms": {
+      "ja": [
+        "防水 上履き袋",
+        "濡れても安心 体操着袋",
+        "防水加工 上履き袋"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "静電気でまとわりつかないスカート",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "歩くときに静電気で足にまとわりつかないスカート",
+    "ideal_answer": "静電気防止(帯電防止)加工のスカート",
+    "reason": "「静電気でまとわりつかない」は商品名では「静電気防止」「帯電防止」。 展開規則 static-free-skirt（モール検索語「静電気防止 スカート」）。",
+    "category": "static-free-skirt",
+    "search_terms": {
+      "ja": [
+        "静電気防止 スカート",
+        "静電気しない スカート",
+        "静電気対策 スカート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "静電気でパチパチしないスカートが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "歩くときに静電気で足にまとわりつかないスカート",
+    "ideal_answer": "静電気防止(帯電防止)加工のスカート",
+    "reason": "「静電気でまとわりつかない」は商品名では「静電気防止」「帯電防止」。 展開規則 static-free-skirt（モール検索語「静電気防止 スカート」）。",
+    "category": "static-free-skirt",
+    "search_terms": {
+      "ja": [
+        "静電気防止 スカート",
+        "静電気しない スカート",
+        "静電気対策 スカート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "静電気が気にならないスカートを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "歩くときに静電気で足にまとわりつかないスカート",
+    "ideal_answer": "静電気防止(帯電防止)加工のスカート",
+    "reason": "「静電気でまとわりつかない」は商品名では「静電気防止」「帯電防止」。 展開規則 static-free-skirt（モール検索語「静電気防止 スカート」）。",
+    "category": "static-free-skirt",
+    "search_terms": {
+      "ja": [
+        "静電気防止 スカート",
+        "静電気しない スカート",
+        "静電気対策 スカート"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "つけたまま眠れる耳栓",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけたまま横になっても痛くならず眠れる耳栓",
+    "ideal_answer": "低反発など就寝時の圧迫を抑えた睡眠用耳栓",
+    "reason": "「つけたまま眠れる/寝苦しくない」は商品名では「睡眠用」。効果は断定しない。 展開規則 sleep-comfortable-earplugs（モール検索語「睡眠用 耳栓」）。",
+    "category": "sleep-comfortable-earplugs",
+    "search_terms": {
+      "ja": [
+        "睡眠用 耳栓",
+        "寝るとき用 耳栓",
+        "横向きでも痛くない 耳栓"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "寝苦しくない耳栓が欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけたまま横になっても痛くならず眠れる耳栓",
+    "ideal_answer": "低反発など就寝時の圧迫を抑えた睡眠用耳栓",
+    "reason": "「つけたまま眠れる/寝苦しくない」は商品名では「睡眠用」。効果は断定しない。 展開規則 sleep-comfortable-earplugs（モール検索語「睡眠用 耳栓」）。",
+    "category": "sleep-comfortable-earplugs",
+    "search_terms": {
+      "ja": [
+        "睡眠用 耳栓",
+        "寝るとき用 耳栓",
+        "横向きでも痛くない 耳栓"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "寝返りを打っても痛くない耳栓を探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "つけたまま横になっても痛くならず眠れる耳栓",
+    "ideal_answer": "低反発など就寝時の圧迫を抑えた睡眠用耳栓",
+    "reason": "「つけたまま眠れる/寝苦しくない」は商品名では「睡眠用」。効果は断定しない。 展開規則 sleep-comfortable-earplugs（モール検索語「睡眠用 耳栓」）。",
+    "category": "sleep-comfortable-earplugs",
+    "search_terms": {
+      "ja": [
+        "睡眠用 耳栓",
+        "寝るとき用 耳栓",
+        "横向きでも痛くない 耳栓"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]
