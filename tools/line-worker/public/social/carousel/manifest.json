@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-23",
+  "version": "2026-09-24",
   "size": [
     1080,
     1350
@@ -11,8 +11,8 @@
       "files": [
         {
           "file": "user-hoshittoku-basics/1.jpg",
-          "sha256": "3f551a3bcc9616b86246ecd32827adad782ab0edd7d5987063ab841c8d60237c",
-          "bytes": 82955
+          "sha256": "37feb036983ac5a62d29650d2a0d2a8737140219e8735a3df9a0ef0f8277136b",
+          "bytes": 83790
         },
         {
           "file": "user-hoshittoku-basics/2.jpg",
@@ -37,8 +37,8 @@
       "files": [
         {
           "file": "seller-demand-visible/1.jpg",
-          "sha256": "30342bd72c5df5e83e7f4b0e288e28cec3d73e572ad43e992c74cc0af149fa37",
-          "bytes": 109171
+          "sha256": "9ab10cb16f6cba167e600304b722ad0b5405fe882cee417ed7b4aa0f52ced61f",
+          "bytes": 110302
         },
         {
           "file": "seller-demand-visible/2.jpg",
@@ -63,8 +63,8 @@
       "files": [
         {
           "file": "user-price-watch/1.jpg",
-          "sha256": "42b35e59fdb270cf7bf5c4548fc27844e17811ee83bbd8edd5eb40466fa1a59f",
-          "bytes": 77578
+          "sha256": "e76ee5d5be16a5439e957ebdca99594e5c9e72accb6b071643e68b363673bec1",
+          "bytes": 77985
         },
         {
           "file": "user-price-watch/2.jpg",
@@ -89,8 +89,8 @@
       "files": [
         {
           "file": "seller-shop-entrance/1.jpg",
-          "sha256": "f98e8fc368f4e760fc0fc69a91e114fc3d27f488dc087bcfecd74324d86ac746",
-          "bytes": 86192
+          "sha256": "be0170d8eda1c344c734417d9b90d7d38cf6fdd6217932cd89eecc2700beb743",
+          "bytes": 87935
         },
         {
           "file": "seller-shop-entrance/2.jpg",
@@ -115,8 +115,8 @@
       "files": [
         {
           "file": "user-shop-search/1.jpg",
-          "sha256": "3f38733417d8d0555030c33ac97786856670edb6ccb5212d2e11316f67b431ef",
-          "bytes": 84928
+          "sha256": "0785dbe034a272e08f195eb1cc8ee3a52252daf3a80be32c791545bb1da7ca49",
+          "bytes": 86046
         },
         {
           "file": "user-shop-search/2.jpg",
@@ -141,8 +141,8 @@
       "files": [
         {
           "file": "seller-real-numbers/1.jpg",
-          "sha256": "9d0481092eaabbebb811f7455c7ccdc740aa928668f0743f8c5f15a572a4d6fa",
-          "bytes": 88245
+          "sha256": "4df82610e6cdc8815653ff5c213df90e886aeacc6edbc55379b28cf28bfb8b92",
+          "bytes": 89189
         },
         {
           "file": "seller-real-numbers/2.jpg",
@@ -158,6 +158,58 @@
           "file": "seller-real-numbers/4.jpg",
           "sha256": "d26959ec58ba589618b3760c8e9cf553d14b53405a0fc10899b3e6c0f0300bc1",
           "bytes": 80709
+        }
+      ]
+    },
+    "user-cross-mall-search": {
+      "audience": "user",
+      "slides": 4,
+      "files": [
+        {
+          "file": "user-cross-mall-search/1.jpg",
+          "sha256": "3b979c754d40537239b6cf2bd2d67af3c4d71e884ed194606afc39fa710e2f4c",
+          "bytes": 101199
+        },
+        {
+          "file": "user-cross-mall-search/2.jpg",
+          "sha256": "977699fb6b05f5af26c74161c25ca3f7ccf8227a167f00f21c8e1156288b1f9e",
+          "bytes": 84705
+        },
+        {
+          "file": "user-cross-mall-search/3.jpg",
+          "sha256": "7204b12516313553125706a8bb3fefdea57733ab3b388bcf73904c5105c85f50",
+          "bytes": 81041
+        },
+        {
+          "file": "user-cross-mall-search/4.jpg",
+          "sha256": "ebced74766bcc91fecbc0c0fd36f129f856828a2fedc2046c2ac6eacf0e69d98",
+          "bytes": 94247
+        }
+      ]
+    },
+    "seller-found-by-condition": {
+      "audience": "seller",
+      "slides": 4,
+      "files": [
+        {
+          "file": "seller-found-by-condition/1.jpg",
+          "sha256": "4b8438b251d54f379d2a7fee924ca1d092ca5ac24d99241ac162cba6283408ec",
+          "bytes": 111863
+        },
+        {
+          "file": "seller-found-by-condition/2.jpg",
+          "sha256": "898a2e23f935343639a38fbb55d88caacc35d6fbfabf1d043968efdfecf83968",
+          "bytes": 86304
+        },
+        {
+          "file": "seller-found-by-condition/3.jpg",
+          "sha256": "19a897a4d6bff466112761764131cc2d801ccb51b7e2065fe4fea51dea9e427c",
+          "bytes": 81692
+        },
+        {
+          "file": "seller-found-by-condition/4.jpg",
+          "sha256": "330e5acc2ab6a134a1c70c6e8dfc2d7429e5cdd0958fdc15c5308d108ed3bd0e",
+          "bytes": 89997
         }
       ]
     }
