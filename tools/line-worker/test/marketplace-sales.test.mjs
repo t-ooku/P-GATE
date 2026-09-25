@@ -15,8 +15,9 @@ test('セール通知は現行の掲載13モールだけを対象にする', () 
 });
 
 test('セールだけが初期ONで他の情報ジャンルは明示選択式', () => {
+  // 2026-09-25: MAJOR_SALE（プライム感謝祭・メガ割などの大型セール）を追加。SALE を受け取る人には届く。
   assert.deepEqual(MARKETPLACE_INFO_TYPES, [
-    'SALE', 'COUPON', 'NEW_ARRIVAL', 'LIMITED', 'RESTOCK', 'EDITORIAL'
+    'SALE', 'MAJOR_SALE', 'COUPON', 'NEW_ARRIVAL', 'LIMITED', 'RESTOCK', 'EDITORIAL'
   ]);
 });
 

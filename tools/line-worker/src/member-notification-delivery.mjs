@@ -165,6 +165,7 @@ export function safeMemberNotificationCopy(title,body){
 }
 async function sendLine(to,title,body,env){if(!String(env.LINE_CHANNEL_ACCESS_TOKEN||''))throw new Error('LINE_NOT_CONFIGURED');const response=await fetch('https://api.line.me/v2/bot/message/push',{method:'POST',headers:{authorization:`Bearer ${env.LINE_CHANNEL_ACCESS_TOKEN}`,'content-type':'application/json'},body:JSON.stringify({to,messages:[{type:'text',text:`${title}\n${body}`.slice(0,5000)}]}),redirect:'manual'});if(!response.ok)throw new Error('LINE_DELIVERY_FAILED');}
 async function sendEmail(to,title,body,env){if(!String(env.RESEND_API_KEY||'').startsWith('re_')||!String(env.MEMBER_EMAIL_FROM||''))throw new Error('EMAIL_NOT_CONFIGURED');const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{authorization:`Bearer ${env.RESEND_API_KEY}`,'content-type':'application/json'},body:JSON.stringify({from:`HOSHILU <${env.MEMBER_EMAIL_FROM}>`,to:[to],subject:title,text:`${body}\n\nHOSHILU: https://hoshilu.app/`}),redirect:'manual'});if(!response.ok)throw new Error('EMAIL_DELIVERY_FAILED');}
+export const MEMBER_DELIVERY_MAX_ATTEMPTS = 6;
 export async function deliverDueMemberNotifications(env,_scheduledTime=new Date(),wallClock=()=>new Date()){
   if(!env.PRODUCT_DB)return{delivered:0,failed:0};
   // controller.scheduledTime is a logical schedule timestamp and may be many
@@ -247,7 +248,9 @@ export async function deliverDueMemberNotifications(env,_scheduledTime=new Date(
       delivered+=1;
     }catch(error){
       result='FAILED';errorCode=String(error?.message||'DELIVERY_FAILED').slice(0,60);
-      await env.PRODUCT_DB.prepare(`UPDATE mywatch_notifications SET status='PENDING',attempts=attempts+1,last_error_code=?2,next_attempt_at=?3,updated_at=?4 WHERE notification_id=?1 AND status='DELIVERING'`).bind(row.notification_id,errorCode,new Date(wallNow.getTime()+3600000).toISOString(),at).run();
+      // 2026-09-25: 1時間ごとの再送は最大 MEMBER_DELIVERY_MAX_ATTEMPTS 回まで。LINE の月間上限（無料枠）や
+      // 連携解除で届かない宛先に、毎時いつまでも送り直さない。
+      await env.PRODUCT_DB.prepare(`UPDATE mywatch_notifications SET status=CASE WHEN attempts+1>=?5 THEN 'FAILED' ELSE 'PENDING' END,attempts=attempts+1,last_error_code=?2,next_attempt_at=?3,updated_at=?4 WHERE notification_id=?1 AND status='DELIVERING'`).bind(row.notification_id,errorCode,new Date(wallNow.getTime()+3600000).toISOString(),at,MEMBER_DELIVERY_MAX_ATTEMPTS).run();
       failed+=1;
     }
     await env.PRODUCT_DB.prepare(`INSERT INTO mywatch_delivery_audit(audit_id,notification_id,action,channel,result,error_code,occurred_at) VALUES(?1,?2,'DELIVER',?3,?4,?5,?6)`).bind(crypto.randomUUID(),row.notification_id,row.channel,result,errorCode,at).run();

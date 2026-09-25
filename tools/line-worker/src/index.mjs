@@ -1,3 +1,4 @@
+import { queueUsualDueNotifications } from './usual-reminders.mjs';
 import { admitTokenlessSearch } from './tokenless-search.mjs';
 import { handleSellerRoutes, readSellerSession } from './seller-auth.mjs';
 import { targetPriceProductKey } from './target-price-product-key.mjs';
@@ -3847,6 +3848,8 @@ export default {
         runRunwayGenerationCycle(env, scheduledAt),
         // Delivery runs one and three minutes later in isolated invocations.
         queueBuzzThemeNotifications(env, scheduledAt),
+        // 2026-09-25: 「いつものホシル」がもうすぐなくなる頃に、1周期1回だけ知らせる（JST 9〜20時）。
+        queueUsualDueNotifications(env, scheduledAt),
         runMarketplaceContentCycle(env, scheduledAt),
         runSpApiScheduledSync(env, scheduledAt),
         purgeAdminAuthRecords(env, scheduledAt),
