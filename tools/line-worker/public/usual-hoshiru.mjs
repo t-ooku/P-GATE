@@ -10,6 +10,8 @@ const COPY = {
   lead: 'なくなる前に、ホシっとく。',
   empty: 'まだありません。商品の「いつもの」を押すと、ここに並びます。',
   login: '無料会員でログインすると、いつものホシルを使えます。',
+  joinLead: 'なくなる頃に、どこに知らせる？',
+  joinDone: '登録しました。なくなる頃に知らせます。',
   thisWeek: '今週の補充',
   makeUsual: '↻ いつもの',
   bought: '買った！',
@@ -279,6 +281,40 @@ export async function load() {
   render();
 }
 
+// 2026-09-25: 未ログインで「いつもの」を押した人の選択を、登録が終わるまで端末に預ける（24時間まで）。
+// 預けるのは商品の識別情報と周期だけ。検索文は入れない。
+const PENDING_KEY = 'hoshilu_pending_usual';
+const PENDING_TTL_MS = 24 * 60 * 60 * 1000;
+function rememberPendingUsual(payload) {
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify({ ...payload, saved_at: Date.now() })); } catch {}
+}
+function readPendingUsual() {
+  let pending = null;
+  try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch {}
+  if (!pending || !String(pending.product_name || '').trim() || Date.now() - Number(pending.saved_at || 0) > PENDING_TTL_MS) {
+    try { localStorage.removeItem(PENDING_KEY); } catch {}
+    return null;
+  }
+  return pending;
+}
+let applyingPending = null;
+export async function applyPendingUsual() {
+  if (applyingPending) return applyingPending;
+  applyingPending = (async () => {
+    const pending = readPendingUsual();
+    if (!pending) return false;
+    const { saved_at: _savedAt, ...payload } = pending;
+    const result = await api('', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+    // 401 はまだ未ログイン、5xx は一時的な失敗。どちらも預けたまま次の機会に回す。
+    // 保存できた・上限などで受け付けられなかった（4xx）ときは預かりを消す。
+    if (result.status === 401 || result.status >= 500) return false;
+    try { localStorage.removeItem(PENDING_KEY); } catch {}
+    await load();
+    return result.ok;
+  })();
+  try { return await applyingPending; } finally { applyingPending = null; }
+}
+
 // §4 登録時の補充周期。難しい在庫入力は求めない。
 function cycleDialog(candidate) {
   const dialog = document.createElement('dialog');
@@ -329,9 +365,27 @@ function cycleDialog(candidate) {
     });
     save.disabled = false;
     if (result.ok) { await load(); dialog.close(); return; }
-    // 上限や未ログインは、サーバーが返した日本語をそのまま出す（こちらで文言を作らない）。
-    status.textContent = result.body?.message
-      || (result.status === 401 ? COPY.login : 'いま登録できませんでした。しばらくしてからお試しください。');
+    // 2026-09-25: 未ログインでも、ここで止めない。選んだ商品と周期を端末に預け、
+    // その場で最短登録（LINE 1タップ／メール6桁）を出す。登録が終わったらそのまま保存する。
+    if (result.status === 401) {
+      rememberPendingUsual({ ...candidate, cycle_days: chosen });
+      status.textContent = '';
+      if (!panel.querySelector('.watch-quick-join')) {
+        const join = window.HoshiluQuickJoin?.create?.({
+          lead: COPY.joinLead, done: COPY.joinDone, source: 'usual', campaign: 'usual-hoshiru', next: '/#usualHoshiru',
+          onDone: async () => { await applyPendingUsual(); setTimeout(() => dialog.close(), 1200); }
+        });
+        if (join) panel.append(join);
+        else {
+          const login = el('a', 'usual-login-link', COPY.login);
+          login.href = '/login.html?next=%2F%23usualHoshiru';
+          panel.append(login);
+        }
+      }
+      return;
+    }
+    // 上限などは、サーバーが返した日本語をそのまま出す（こちらで文言を作らない）。
+    status.textContent = result.body?.message || 'いま登録できませんでした。しばらくしてからお試しください。';
   });
   panel.append(choices, customLabel, note, save, status);
   dialog.append(panel);
@@ -364,5 +418,10 @@ function attachMakeUsual(detail) {
 }
 
 document.addEventListener('hoshilu:product-card-actions', (event) => attachMakeUsual(event.detail));
-document.addEventListener('hoshilu:member-session-changed', () => { load(); });
-load();
+// 会員状態が分かったとき: 預かり分があれば保存し、無ければ一覧がまだログイン前の表示のときだけ読み直す。
+document.addEventListener('hoshilu:member-session-changed', () => {
+  if (readPendingUsual()) { applyPendingUsual().then((saved) => { if (!saved) load(); }); return; }
+  if (!items.length) load();
+});
+// LINE で登録して戻ってきたときは、ここで預かり分を保存する（未ログインなら何もせず残す）。
+if (readPendingUsual()) applyPendingUsual().then((saved) => { if (!saved) load(); }); else load();

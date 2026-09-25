@@ -535,10 +535,10 @@ function allMarketplacesButton(){const labels={JA:'全部のモールで探す',
 // 残す」「値下がり/新商品を知らせる」で無料登録へ誘う。保存先は商品単位。
 const KEPT_PRODUCTS_KEY='hoshilu_kept_products';
 const keepCopy={
-  JA:{keep:'♡ 気になる',kept:'♥ 気になる',keptStatus:'「ホシる中」に入れました。',guestCta:'無料登録で他の端末にも残す →',memberCta:'ホシる中で見る →',bellGuest:'🔔 値下がり・新商品を知らせる（無料登録 30秒）→'},
-  EN:{keep:'♡ Keep',kept:'♥ Kept',keptStatus:'Kept on this device.',guestCta:'Sign up free to keep it on every device →',memberCta:'Open my page →',bellGuest:'🔔 Alert me on price drops (free, 30 sec) →'},
-  ZH:{keep:'♡ 先收着',kept:'♥ 已收藏',keptStatus:'已保存到此设备。',guestCta:'免费注册后在其他设备也能看到 →',memberCta:'查看我的页面 →',bellGuest:'🔔 降价·新品通知（免费注册 30 秒）→'},
-  KO:{keep:'♡ 찜해두기',kept:'♥ 찜함',keptStatus:'이 기기에 저장했어요.',guestCta:'무료 가입하면 다른 기기에서도 볼 수 있어요 →',memberCta:'마이페이지 보기 →',bellGuest:'🔔 가격 인하·신상품 알림 (무료 가입 30초) →'}
+  JA:{keep:'♡ 気になる',kept:'♥ 気になる',keptStatus:'「ホシる中」に入れました。',guestCta:'無料登録で、値下がりやセールも知らせる →',memberCta:'ホシる中で見る →',bellGuest:'🔔 値下がり・新商品を知らせる（無料登録 30秒）→'},
+  EN:{keep:'♡ Keep',kept:'♥ Kept',keptStatus:'Kept on this device.',guestCta:'Sign up free for price-drop and sale alerts →',memberCta:'Open my page →',bellGuest:'🔔 Alert me on price drops (free, 30 sec) →'},
+  ZH:{keep:'♡ 先收着',kept:'♥ 已收藏',keptStatus:'已保存到此设备。',guestCta:'免费注册，接收降价和促销通知 →',memberCta:'查看我的页面 →',bellGuest:'🔔 降价·新品通知（免费注册 30 秒）→'},
+  KO:{keep:'♡ 찜해두기',kept:'♥ 찜함',keptStatus:'이 기기에 저장했어요.',guestCta:'무료 가입하고 가격 인하·세일 알림 받기 →',memberCta:'마이페이지 보기 →',bellGuest:'🔔 가격 인하·신상품 알림 (무료 가입 30초) →'}
 };
 function getKeptProducts(){try{const value=JSON.parse(localStorage.getItem(KEPT_PRODUCTS_KEY)||'[]');return Array.isArray(value)?value:[];}catch{return[];}}
 function keptProductKey(candidate){return String(candidate?.record_key||candidate?.asin||candidate?.display_name||candidate?.product_name||'').slice(0,200);}
@@ -637,7 +637,10 @@ async function applyPendingInsight(){
 }
 // 会員セッションの同期後に、登録前の希望額を反映する(既存の同期処理は触らない)。
 const baseSyncMemberWishes=syncMemberWishes;
-syncMemberWishes=async function(){await baseSyncMemberWishes();applyPendingWatch();await applyPendingInsight();};
+// 2026-09-25: 会員状態が分かったことを他のモジュール（いつものホシル・セール通知）へ知らせる。
+// 以前はこのイベントを出す所が無く、登録直後に「いつもの」やセール設定が反映されなかった。
+syncMemberWishes=async function(){await baseSyncMemberWishes();applyPendingWatch();await applyPendingInsight();if(memberSession)document.dispatchEvent(new CustomEvent('hoshilu:member-session-changed'));};
+window.HoshiluQuickJoin={create:(options={})=>createWatchQuickJoin(0,options.onDone,options)};
 function memberLoginHref(){return `/login.html?next=${encodeURIComponent('/#wishTitle')}`;}
 function createKeepButton(candidate){
   const copy=keepCopy[elements.language.value]||keepCopy.JA;
@@ -657,10 +660,10 @@ function createKeepButton(candidate){
 // ダイアログ内で「通知先のメール（6桁コード）」か「LINE」だけを受け、既存の
 // /api/member/email/request → /verify（セッション発行）を使って、その場で保存まで終える。
 // 保存された希望額は hoshilu_pending_watch → applyPendingWatch で会員に紐づく。
-function watchQuickJoinContext(source){
+function watchQuickJoinContext(source,campaign){
   let stored={};try{const value=JSON.parse(sessionStorage.getItem('hoshilu_growth_attribution')||'null');if(value&&Date.now()-Number(value.created_at||0)<30*60*1000)stored=value;}catch{}
   const params=new URLSearchParams(location.search);
-  return{locale:String(document.documentElement.lang||'ja').split('-')[0].toUpperCase(),source:params.get('utm_source')||stored.source||source||'',medium:params.get('utm_medium')||stored.medium||'watch',campaign:params.get('utm_campaign')||stored.campaign||'price-watch',content:params.get('utm_content')||stored.content||''};
+  return{locale:String(document.documentElement.lang||'ja').split('-')[0].toUpperCase(),source:params.get('utm_source')||stored.source||source||'',medium:params.get('utm_medium')||stored.medium||'watch',campaign:params.get('utm_campaign')||stored.campaign||campaign||'price-watch',content:params.get('utm_content')||stored.content||''};
 }
 function createWatchQuickJoin(amount,onDone,options={}){
   const copy={JA:{lead:`¥${Number(amount).toLocaleString('ja-JP')}になったら、どこに知らせる？`,email:'メールアドレス',send:'コードを送る',code:'届いた6桁コード',verify:'これで完了',line:'LINEで受け取る',sent:'6桁コードをメールに送りました（10分有効）。',wrong:'コードが違うか、期限切れです。',retry:'1分後にもう一度送れます。',fail:'送れませんでした。メールアドレスを確認してください。',done:'これで毎日見なくてOK。この価格になったら知らせます。',note:'登録はこれだけ。パスワードは要りません。'},
@@ -668,7 +671,10 @@ function createWatchQuickJoin(amount,onDone,options={}){
   const c=copy||{lead:`¥${Number(amount).toLocaleString('ja-JP')}`,email:'Email',send:'Send',code:'Code',verify:'Done',line:'LINE',sent:'',wrong:'',retry:'',fail:'',done:'',note:''};
   // 2026-09-15 指示書§6: 「無料でホシっとく」も同じ最短登録（メール6桁 or LINE）を使う。lead と流入元だけ差し替える。
   if(options.lead)c.lead=options.lead;
+  // 2026-09-25: 「いつものホシル」「大型セールのお知らせ」も同じ最短登録を使う。完了文・戻り先・キャンペーン名だけ差し替える。
+  if(options.done)c.done=options.done;
   const joinSource=options.source||'watch';
+  const joinNext=['/#wishTitle','/#usualHoshiru','/#saleCenterTitle'].includes(options.next)?options.next:'/#wishTitle';
   const wrap=document.createElement('div');wrap.className='watch-quick-join';
   wrap.append(textElement('strong','watch-quick-lead',c.lead));
   const emailRow=document.createElement('div');emailRow.className='watch-quick-row';
@@ -681,7 +687,7 @@ function createWatchQuickJoin(amount,onDone,options={}){
   codeRow.append(code,verify);
   const message=textElement('p','watch-quick-status','');
   const line=document.createElement('a');line.className='watch-quick-line';line.textContent=c.line;
-  line.href=`/api/member/line/start?${new URLSearchParams({next:'/#wishTitle',...watchQuickJoinContext(joinSource)})}`;
+  line.href=`/api/member/line/start?${new URLSearchParams({next:joinNext,...watchQuickJoinContext(joinSource,options.campaign)})}`;
   // 2026-09-19 大隆さん決定: 登録は LINE 1タップを第一候補に（メール6桁は第二）。並びと文言だけ変え、処理は同じ。
   if(elements.language.value==='JA')line.textContent='LINEで受け取る（1タップ）';line.classList.add('watch-quick-line-primary');
   wrap.append(line,textElement('p','watch-quick-or',elements.language.value==='JA'?'LINEを使わない方はメールで':''),emailRow,codeRow,message,textElement('small','watch-quick-note',c.note));
@@ -698,7 +704,7 @@ function createWatchQuickJoin(amount,onDone,options={}){
   verify.addEventListener('click',async()=>{
     const value=email.value.trim(),digits=code.value.trim();if(!/^\d{6}$/.test(digits)){code.reportValidity();return;}
     verify.disabled=true;message.textContent='…';
-    try{const response=await fetch('/api/member/email/verify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:value,code:digits,registration_context:watchQuickJoinContext(joinSource)})});
+    try{const response=await fetch('/api/member/email/verify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:value,code:digits,registration_context:watchQuickJoinContext(joinSource,options.campaign)})});
       if(!response.ok){message.textContent=c.wrong;verify.disabled=false;return;}
       // セッションが発行された。会員状態を同期すると pending の希望額がそのまま保存される。
       await syncMemberWishes();

@@ -13,6 +13,7 @@ const marketplaces=[
   ['COSME_JP','@cosme'],['ABCMART_JP','ABC-MART'],['BUYMA','BUYMA'],['SNKRDUNK','SNKRDUNK']
 ];
 const infoTypes=[
+  ['MAJOR_SALE','大型セール','プライム感謝祭・メガ割など、年に数回の大型セールだけ'],
   ['SALE','セール','割引セール・大型セール'],
   ['COUPON','クーポン','公式クーポン・ポイント施策'],
   ['NEW_ARRIVAL','新着商品','新商品・新規取扱い'],
@@ -21,9 +22,9 @@ const infoTypes=[
   ['EDITORIAL','モール最新情報','特集・ランキング・注目情報']
 ];
 const infoTypesLocalized={
-  EN:[['SALE','Sales','Major and seasonal sales'],['COUPON','Coupons','Official coupons and points'],['NEW_ARRIVAL','New arrivals','New products and listings'],['LIMITED','Limited & collaborations','Limited editions and collaborations'],['RESTOCK','Restocks','Back-in-stock updates'],['EDITORIAL','Marketplace updates','Features, rankings and trends']],
-  ZH:[['SALE','促销','大型及季节促销'],['COUPON','优惠券','官方优惠券及积分活动'],['NEW_ARRIVAL','新品','新品及新上架'],['LIMITED','限定与联名','期间限定及联名'],['RESTOCK','补货','缺货商品重新上架'],['EDITORIAL','商城最新信息','专题、榜单及趋势']],
-  KO:[['SALE','세일','대형·시즌 세일'],['COUPON','쿠폰','공식 쿠폰·포인트'],['NEW_ARRIVAL','신상품','신상품·신규 입점'],['LIMITED','한정·콜라보','기간 한정·콜라보'],['RESTOCK','재입고','품절 상품 재입고'],['EDITORIAL','쇼핑몰 최신 정보','기획전·랭킹·트렌드']]
+  EN:[['MAJOR_SALE','Big sales only','A few major sales a year'],['SALE','Sales','Major and seasonal sales'],['COUPON','Coupons','Official coupons and points'],['NEW_ARRIVAL','New arrivals','New products and listings'],['LIMITED','Limited & collaborations','Limited editions and collaborations'],['RESTOCK','Restocks','Back-in-stock updates'],['EDITORIAL','Marketplace updates','Features, rankings and trends']],
+  ZH:[['MAJOR_SALE','仅大型促销','每年几次的大型促销'],['SALE','促销','大型及季节促销'],['COUPON','优惠券','官方优惠券及积分活动'],['NEW_ARRIVAL','新品','新品及新上架'],['LIMITED','限定与联名','期间限定及联名'],['RESTOCK','补货','缺货商品重新上架'],['EDITORIAL','商城最新信息','专题、榜单及趋势']],
+  KO:[['MAJOR_SALE','대형 세일만','1년에 몇 번 있는 대형 세일'],['SALE','세일','대형·시즌 세일'],['COUPON','쿠폰','공식 쿠폰·포인트'],['NEW_ARRIVAL','신상품','신상품·신규 입점'],['LIMITED','한정·콜라보','기간 한정·콜라보'],['RESTOCK','재입고','품절 상품 재입고'],['EDITORIAL','쇼핑몰 최신 정보','기획전·랭킹·트렌드']]
 };
 const deliveryChannels={
   JA:[['APP','HOSHILUアプリ','アプリ内・端末のお知らせ'],['LINE','LINE','連携済みの公式LINE'],['EMAIL','メール','登録・確認済みメール']],
@@ -88,7 +89,122 @@ function sortedByNewest(items){
   });
 }
 
+// 2026-09-25 大隆さん指示「メガ割・プライムデーなどをホシル登録して見逃さない」。
+// 人が公式発表を確かめて登録した大型セール（MAJOR_SALE）だけを「これからの大型セール」として上に出し、
+//「始まる前に知らせて」を1タップで受け取れるようにする。日程はサーバーが返したものだけを出す（推測しない）。
+const majorCopy={
+  JA:{heading:'これからの大型セール',cta:'始まる前に知らせて（無料）',ready:'登録済み：始まる前にお知らせします',live:'開催中',lead:'大型セールが始まる前に、どこに知らせる？',done:'登録しました。始まる前にお知らせします。',failed:'いま登録できませんでした。少しあとでもう一度お試しください。'},
+  EN:{heading:'Upcoming big sales',cta:'Tell me before it starts (free)',ready:'You will be notified before it starts',live:'On now',lead:'Where should we tell you before big sales start?',done:'Done. We will tell you before it starts.',failed:'Could not save right now. Please try again shortly.'}
+};
+const majorText=()=>majorCopy[language()]||majorCopy.JA;
+const MAJOR_PENDING_KEY='hoshilu_pending_sale_alert';
+const MAJOR_PENDING_TTL_MS=24*60*60*1000;
+function jstRange(startsAt,endsAt){
+  const format=new Intl.DateTimeFormat(language()==='JA'?'ja-JP':'en-US',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',weekday:'short'});
+  return `${format.format(new Date(startsAt))}〜${format.format(new Date(endsAt))}`;
+}
+export function upcomingMajorSales(items=[],now=Date.now()){
+  return items.filter((sale)=>sale.info_type==='MAJOR_SALE'&&Date.parse(sale.ends_at)>=now)
+    .sort((a,b)=>Date.parse(a.starts_at)-Date.parse(b.starts_at));
+}
+export function majorAlertReady(preference){
+  if(!preference||Number(preference.enabled)!==1||!Number(preference.advance_notice))return false;
+  const types=String(preference.info_types||'').split(',');
+  return types.includes('SALE')||types.includes('MAJOR_SALE');
+}
+// 大型セールを受け取る設定にする。新しく作った設定なら「大型セールだけ」（毎日のタイムセールは送らない）。
+// もともと設定があった人は、今の設定に大型セールを足すだけ（勝手に減らさない）。
+export function majorAlertPayload(preference,availableChannels=['APP'],created=false){
+  const current=preference&&Number(preference.enabled)===1?String(preference.info_types||'').split(',').filter(Boolean):[];
+  const types=created?['MAJOR_SALE']:[...new Set([...current,'MAJOR_SALE'])];
+  const channels=[...new Set([...(created?[]:String(preference?.delivery_channels||'').split(',').filter(Boolean)),...availableChannels])];
+  return{
+    enabled:true,advance_notice:true,info_types:types,
+    marketplaces:created||!preference||preference.marketplaces==='ALL'?[]:String(preference.marketplaces||'').split(',').filter(Boolean),
+    delivery_channels:channels,frequency:preference?.frequency||'INSTANT',language:preference?.language||language(),
+    quiet_start:preference?.quiet_start||'21:00',quiet_end:preference?.quiet_end||'08:00'
+  };
+}
+function readMajorPending(){
+  let pending=null;try{pending=JSON.parse(localStorage.getItem(MAJOR_PENDING_KEY)||'null');}catch{}
+  if(!pending||Date.now()-Number(pending.saved_at||0)>MAJOR_PENDING_TTL_MS){try{localStorage.removeItem(MAJOR_PENDING_KEY);}catch{}return null;}
+  return pending;
+}
+async function saveMajorAlert(preference,channels,created){
+  const payload=majorAlertPayload(preference,channels,created);
+  // marketplaces が空配列ならサーバーは ALL として保存する（全モール）。
+  const response=await fetch('/api/member/sale-preferences',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  if(!response.ok)return false;
+  const data=await response.json();memberPreference=data.preference;availableDeliveryChannels=data.available_delivery_channels||availableDeliveryChannels;
+  return true;
+}
+// 「いま初めて作った設定か」は、どの GET が先に当たっても取りこぼさないように、一度 true になったら覚えておく。
+let preferenceCreated=false;
+async function fetchPreference(){
+  const response=await fetch('/api/member/sale-preferences',{cache:'no-store'});
+  if(!response.ok)return null;
+  const data=await response.json();
+  preferenceCreated=preferenceCreated||data.preference_created===true;
+  memberPreference=data.preference||defaultPreference();availableDeliveryChannels=data.available_delivery_channels||['APP'];
+  return data;
+}
+let applyingMajor=null;
+async function applyPendingMajorAlert(known=null){
+  if(applyingMajor)return applyingMajor;
+  applyingMajor=(async()=>{
+    if(!readMajorPending())return false;
+    const data=known||await fetchPreference();
+    if(!data)return false;
+    const saved=await saveMajorAlert(data.preference,data.available_delivery_channels||['APP'],preferenceCreated);
+    if(saved){try{localStorage.removeItem(MAJOR_PENDING_KEY);}catch{}preferenceCreated=false;renderMajor(sales);}
+    return saved;
+  })();
+  try{return await applyingMajor;}finally{applyingMajor=null;}
+}
+function renderMajor(items=[]){
+  const rail=document.querySelector('#saleRail');if(!rail)return;
+  const upcoming=upcomingMajorSales(items);
+  let band=document.querySelector('#saleMajorUpcoming');
+  if(!upcoming.length){band?.remove();return;}
+  if(!band){band=document.createElement('div');band.id='saleMajorUpcoming';band.className='sale-major';rail.before(band);}
+  const t=majorText();
+  const heading=document.createElement('strong');heading.className='sale-major-heading';heading.textContent=t.heading;
+  const list=document.createElement('ul');list.className='sale-major-list';
+  for(const sale of upcoming.slice(0,4)){
+    const li=document.createElement('li');
+    const when=document.createElement('span');when.className='sale-major-when';
+    when.textContent=Date.parse(sale.starts_at)<=Date.now()?t.live:jstRange(sale.starts_at,sale.ends_at);
+    const mall=document.createElement('span');mall.className='sale-major-mall';mall.textContent=sale.marketplace_label||'';
+    const name=document.createElement('a');name.className='sale-major-name';name.textContent=sale.title||'';
+    name.href=sale.source_url;name.target='_blank';name.rel='noopener noreferrer';
+    li.append(when,mall,name);list.append(li);
+  }
+  const action=document.createElement('div');action.className='sale-major-action';
+  const note=document.createElement('p');note.className='sale-major-status';note.setAttribute('role','status');
+  if(majorAlertReady(memberPreference)){note.textContent=t.ready;action.append(note);}
+  else{
+    const button=document.createElement('button');button.type='button';button.className='sale-major-cta';button.textContent=t.cta;
+    button.addEventListener('click',async()=>{
+      try{localStorage.setItem(MAJOR_PENDING_KEY,JSON.stringify({saved_at:Date.now()}));}catch{}
+      // ログイン済みなら（他の機能でこのページのまま登録した人も含む）その場で保存する。
+      // 未ログイン（401）のときだけ最短登録を出す。
+      button.disabled=true;
+      const saved=await applyPendingMajorAlert(memberPreference?{preference:memberPreference,available_delivery_channels:availableDeliveryChannels}:null);
+      button.disabled=false;
+      if(saved)return;
+      if(memberPreference){note.textContent=t.failed;return;}
+      if(action.querySelector('.watch-quick-join'))return;
+      const join=window.HoshiluQuickJoin?.create?.({lead:t.lead,done:t.done,source:'sale_alert',campaign:'sale-alert',next:'/#saleCenterTitle',onDone:()=>applyPendingMajorAlert()});
+      if(join)action.append(join);
+      else{const login=document.createElement('a');login.href='/login.html?next=%2F%23saleCenterTitle';login.textContent=t.cta;action.append(login);}
+    });
+    action.append(button,note);
+  }
+  band.replaceChildren(heading,list,action);
+}
+
 function render(sales=[]){
+  renderMajor(sales);
   const rail=document.querySelector('#saleRail'); if(!rail)return;
   const t=copy[language()]||copy.JA;
   const officialText=officialCopy[language()]||officialCopy.JA;
@@ -104,10 +220,10 @@ function render(sales=[]){
     if(sale.official)row.classList.add('official-update');
     const label=document.createElement('span');
     label.className=`info-row-label info-row-label-${(sale.info_type||'SALE').toLowerCase()}`;
-    label.textContent=sale.info_type||'SALE';
+    label.textContent=sale.info_type==='MAJOR_SALE'?'BIG SALE':(sale.info_type||'SALE');
     const dateEl=document.createElement('time');
     dateEl.className='info-row-date';
-    dateEl.textContent=sale.official?officialText.status:date(sale.updated_at||sale.starts_at||Date.now());
+    dateEl.textContent=sale.official?officialText.status:sale.info_type==='MAJOR_SALE'?date(sale.starts_at):date(sale.updated_at||sale.starts_at||Date.now());
     const mall=document.createElement('span');
     mall.className='info-row-mall';
     mall.textContent=sale.marketplace_label;
@@ -203,9 +319,11 @@ renderCopy();
 fetch('/api/sales').then(r=>r.ok?r.json():{sales:[]}).then(data=>{sales=data.sales||[];render(sales);}).catch(()=>render([]));
 window.addEventListener('hoshilu:languagechange',()=>{renderCopy();render(sales);});
 document.querySelector('[data-language-select]')?.addEventListener('change',()=>{renderCopy();render(sales);});
-fetch('/api/member/sale-preferences',{cache:'no-store'}).then(async response=>{
-  if(response.status===401){if(toggle)toggle.disabled=true;document.querySelector('#settingsSave').disabled=true;return;}
-  const data=await response.json();memberPreference=data.preference||defaultPreference();availableDeliveryChannels=data.available_delivery_channels||['APP'];
+fetchPreference().then(async data=>{
+  if(!data){if(toggle)toggle.disabled=true;document.querySelector('#settingsSave').disabled=true;return;}
+  // LINE で登録して戻ってきたとき: 「始まる前に知らせて」を押していたら、ここで保存する。
+  if(readMajorPending())await applyPendingMajorAlert(data);
+  renderMajor(sales);
   if(toggle)toggle.checked=Boolean(memberPreference.enabled)&&String(memberPreference.info_types||'SALE').split(',').includes('SALE');
   fillSettings(memberPreference,availableDeliveryChannels);
 }).catch(()=>{if(toggle)toggle.disabled=true;});
@@ -221,6 +339,14 @@ function openSaleSettings(marketplace){
   settingsStatus.textContent=memberPreference?'':(settingsCopy[language()]||settingsCopy.JA).login;
   settingsDialog.showModal();
 }
+// 同じページのまま登録が終わったとき（メール6桁）: 設定を読み直し、預かり分があれば保存する。
+document.addEventListener('hoshilu:member-session-changed',async()=>{
+  if(memberPreference&&!readMajorPending())return;
+  const data=await fetchPreference();
+  if(data&&readMajorPending())await applyPendingMajorAlert(data);
+  if(data){if(toggle)toggle.disabled=false;const save=document.querySelector('#settingsSave');if(save)save.disabled=false;fillSettings(memberPreference,availableDeliveryChannels);}
+  renderMajor(sales);
+});
 document.querySelectorAll('[data-sale-open]').forEach(button=>button.addEventListener('click',()=>openSaleSettings(button.dataset.marketplace||'')));
 document.querySelector('#notificationSettingsClose')?.addEventListener('click',()=>settingsDialog.close());
 document.querySelector('#settingsReset')?.addEventListener('click',()=>fillSettings(defaultPreference(),availableDeliveryChannels));
