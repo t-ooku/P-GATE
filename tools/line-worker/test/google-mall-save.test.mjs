@@ -6,13 +6,16 @@ import vm from 'node:vm';
 const app = readFileSync(new URL('../public/app.js', import.meta.url), 'utf8');
 const moduleCode = readFileSync(new URL('../public/google-mall-results.mjs', import.meta.url), 'utf8');
 class Element {
-  children = []; dataset = {}; listeners = {}; className = ''; textContent = '';
+  children = []; dataset = {}; listeners = {}; style = {}; className = ''; textContent = '';
   classList = { add() {}, remove() {} };
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this.children = children; }
   setAttribute() {}
   addEventListener(name, fn) { this.listeners[name] = fn; }
   insertAdjacentElement() {}
+  // 2026-09-25: 未登録の保存後はカード内の登録欄へ scrollIntoView する（モーダルは出さない）。
+  querySelector(selector) { const cls = selector.replace(/^\./u, ''); for (const child of this.children) { if (child.className === cls) return child; const found = child.querySelector?.(selector); if (found) return found; } return null; }
+  scrollIntoView(options) { this.scrolledInto = options; }
 }
 function context(member = true) {
   const handlers = {}, saved = [], feedback = [], storage = new Map();
@@ -24,13 +27,13 @@ function context(member = true) {
   };
   const labels = { action: 'ホシっとく', localAction: 'ホシっとく', active: '探し中', local: '端末に保存', login: 'ログイン' };
   const ctx = vm.createContext({
-    document, CustomEvent: class { constructor(type, init) { this.type = type; this.detail = init.detail; } },
+    document, window: { matchMedia: () => ({ matches: false }), setTimeout() {}, innerHeight: 800 }, CustomEvent: class { constructor(type, init) { this.type = type; this.detail = init.detail; } },
     requestAnimationFrame() {}, elements: { language: { value: 'JA' } },
     continuousSearchCopy: { JA: labels }, memberSession: member ? {} : null,
     textElement: () => new Element(), getWishes: () => [], insightEnabledFor: () => false,
     saveInsightWatch: async (query) => { saved.push(query); return true; },
     wishSaveFailedCopy: () => '保存失敗', showWishSaveFeedback: (value) => feedback.push(value),
-    createWatchQuickJoin: (_amount, onDone) => { const node = new Element(); node.onDone = onDone; return node; },
+    createWatchQuickJoin: (_amount, onDone) => { const node = new Element(); node.className = 'watch-quick-join'; node.onDone = onDone; return node; },
     localStorage: { getItem: (key) => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value), removeItem: (key) => storage.delete(key) }
   });
   vm.runInContext(app.slice(app.indexOf('function continuousSearchCard('), app.indexOf('// 検索完了時、結果セクションが画面外')), ctx);
@@ -72,6 +75,9 @@ test('guest preserves the chosen title for registration and does not claim activ
   const actions = container.children[0].children[0], button = actions.children[0];
   await button.listeners.click();
   assert.equal(JSON.parse(state.storage.get('hoshilu_pending_insight')).query, '商品タイトル');
+  // 2026-09-25: 未登録では「保存しました」モーダルを出さず、登録欄へ視線を移す
+  assert.equal(state.feedback.length, 0);
+  assert.ok(actions.children[2].scrolledInto);
   state.ctx.memberSession = {};
   actions.children[2].onDone();
   assert.equal(button.textContent, '保存失敗');

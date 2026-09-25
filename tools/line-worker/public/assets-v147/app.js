@@ -1577,6 +1577,20 @@ function continuousSearchCard(query,options={}){
       try{localStorage.setItem('hoshilu_pending_insight',JSON.stringify({query:value,saved_at:Date.now()}));}catch{}
       if(!card.dataset.quickJoin){card.dataset.quickJoin='shown';actions.append(createWatchQuickJoin(0,()=>{const active=Boolean(memberSession)&&insightEnabledFor(value);button.textContent=active?labels.active:wishSaveFailedCopy();button.disabled=active;},{lead:labels.lead,source:'hoshittoku'}));}
       button.disabled=true;
+      // 2026-09-25 D1 実測: 9/16〜9/24 に未登録の人が「無料でホシっとく」を6回押したのに、その後の
+      // 登録操作（LINE開始・メールコード要求）は0回だった。押した直後に「保存しました／OK」の
+      // モーダルが LINE 1タップ・メールの登録欄の上に被さり、OK で終わった気になる導線だったため、
+      // 未登録のときはモーダルを出さず、カード内の登録欄へそのまま視線を移す（登録欄は上で足してある）。
+      // 上に固定される検索バー（#stickySearch 約108px）に隠れないよう scroll-margin を取る。保存直後に
+      // 上の要素が描き直されて高さが変わる（実測 −310px）ので、少し待ってから位置を確かめてやり直す。
+      const join=card.querySelector('.watch-quick-join');
+      if(join){
+        join.style.scrollMarginTop='124px';
+        const reduced=Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+        join.scrollIntoView({block:'start',behavior:reduced?'auto':'smooth'});
+        window.setTimeout(()=>{const rect=join.getBoundingClientRect();if(rect.top<116||rect.top>window.innerHeight*0.6)join.scrollIntoView({block:'start',behavior:'auto'});},450);
+      }
+      return;
     }
     showWishSaveFeedback({saved:true,member:memberPersistenceRequired,query:value});
   });
