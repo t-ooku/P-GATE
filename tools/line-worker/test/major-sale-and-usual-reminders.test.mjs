@@ -205,3 +205,20 @@ test('会員が増えても1回の cron で積むのは25組まで。残りは�
   assert.equal(db.prepare('SELECT COUNT(*) n FROM mywatch_notifications').get().n, 30);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM member_sale_notifications').get().n, 30);
 });
+
+// 2026-09-25: 販促投稿の札。プライム感謝祭は Amazon だけの話なので #Qoo10 #SHEIN を付けない（横断していないモール名は書かない）。
+test('大型セール・いつものホシルの投稿には、内容に合う札だけを付ける（Amazon の話に #Qoo10 #SHEIN を付けない）', async () => {
+  const { normalizeSocialPost } = await import('../src/social-publisher.mjs');
+  const base = { campaign_id: 'hoshilu-big-sale-v1', scheduled_at: '2026-10-01T09:30:00.000Z', link: 'https://hoshilu.app/?utm_source=x', status: 'APPROVED' };
+  const prime = normalizeSocialPost({ ...base, platform: 'X', content_id: 'prime-announce', caption: 'プライム感謝祭は10/16〜19。HOSHILUで「始まる前に知らせて」。', affiliate: true });
+  assert.match(prime.caption, /#プライム感謝祭 #HOSHILU(\n※|$)/u);
+  assert.doesNotMatch(prime.caption, /#Qoo10|#SHEIN/u);
+  const mega = normalizeSocialPost({ ...base, platform: 'X', content_id: 'mega-next-unannounced', caption: '次のメガ割はまだ発表されていません。', affiliate: false });
+  assert.match(mega.caption, /#メガ割 #Qoo10(\n※|$)/u);
+  assert.doesNotMatch(mega.caption, /#SHEIN/u);
+  const usual = normalizeSocialPost({ ...base, platform: 'THREADS', content_id: 'usual-detergent', caption: '洗剤が切れる前に、いつものホシル。', affiliate: true });
+  assert.doesNotMatch(usual.caption, /#Qoo10|#SHEIN/u);
+  // 従来の投稿は従来どおり
+  const other = normalizeSocialPost({ ...base, platform: 'X', content_id: 'cross-market-gift', caption: 'プレゼント選び。', affiliate: false });
+  assert.match(other.caption, /#Qoo10 #SHEIN(\n※|$)/u);
+});

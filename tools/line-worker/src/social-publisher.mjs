@@ -91,6 +91,13 @@ function youthSearchHashtags(value, platform, contentId = '') {
       ? ['#HOSHILU', '#商品検索', '#見つかるまで探す']
       : ['#HOSHILU', '#画像検索', '#商品検索'];
   }
+  // 2026-09-25 大隆さん指示（大型セール・いつものホシルの販促）。既定の #Qoo10 #SHEIN を付けると
+  // 「横断していないモール名は書かない」決まりに反する（プライム感謝祭は Amazon だけの話）。
+  // 内容ごとに合う札だけを付ける。メガ割は Qoo10 のセールなので #Qoo10 は正しい。
+  const promoId = String(contentId || '');
+  if (/^prime-/u.test(promoId)) return platform === 'X' ? ['#プライム感謝祭', '#HOSHILU'] : ['#HOSHILU', '#プライム感謝祭', '#Amazonセール', '#セール情報'];
+  if (/^mega-/u.test(promoId)) return platform === 'X' ? ['#メガ割', '#Qoo10'] : ['#HOSHILU', '#メガ割', '#Qoo10', '#韓国コスメ'];
+  if (/^usual-/u.test(promoId)) return platform === 'X' ? ['#いつものホシル', '#HOSHILU'] : ['#HOSHILU', '#いつものホシル', '#日用品', '#買い忘れ防止'];
   const qoo10Focused = /Qoo\s*10で|Qoo\s*10の商品|#Qoo10購入品/iu.test(source);
   const sheinFocused = /SHEINで|SHIENで|SHEINの商品|SHIENの商品|#SHEIN購入品/iu.test(source);
   const qoo10Mentioned = /Qoo\s*10|キューテン/iu.test(source);
