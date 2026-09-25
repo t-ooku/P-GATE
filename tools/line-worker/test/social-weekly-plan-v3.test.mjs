@@ -16,11 +16,12 @@ test('方針 v3: 曜日・時刻・半々の順送り・禁止表現なし・画
   const sets = loadCarouselSets();
   // 2026-09-24: モール名を出す「どこで買うのが正解？」とセラー向けの対を足して 8 セット。
   // さらに同日、需要の話をする対（user-wish-left-behind / seller-wanted-now）を足して 10 セット。
+  // 2026-09-25: 大型セールの事前通知と、いつものホシルの継続需要の対を足して 12 セット。
   // 半々の順送り（user, seller, user, seller…）は崩さないので、必ず偶数・同数で足すこと。
-  assert.equal(sets.order.length, 10);
-  assert.equal(sets.order.filter((set) => set.audience === 'seller').length, 5);
+  assert.equal(sets.order.length, 12);
+  assert.equal(sets.order.filter((set) => set.audience === 'seller').length, 6);
   assert.deepEqual(sets.order.map((set) => set.audience),
-    ['user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller']);
+    ['user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller', 'user', 'seller']);
   for (const set of sets.order) {
     assert.ok(set.slides.length >= 2 && set.slides.length <= 10, set.id);
     assert.doesNotMatch(JSON.stringify(set), FORBIDDEN, set.id);
