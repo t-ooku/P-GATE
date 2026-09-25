@@ -4007,6 +4007,9 @@ const guideHubGroups = [
       'coupon-conditions-to-check',
       'sale-notification-only-for-malls-you-use',
       'prime-day-vs-rakuten-super-sale-vs-mega-wari',
+      'amazon-prime-appreciation-sale-2026-how-to-prepare',
+      'qoo10-mega-sale-next-round-alert',
+      'usual-hoshilu-never-run-out-of-daily-essentials',
       'avoid-fake-discount-displays',
       'budget-shopping-for-families-with-price-alerts'
     ]
