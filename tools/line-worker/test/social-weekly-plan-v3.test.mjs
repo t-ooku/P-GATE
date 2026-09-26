@@ -245,7 +245,8 @@ test('カルーセルの文言に、廃止したクリック課金は残って�
   assert.ok(seller.length >= 1);
   const pricing = JSON.stringify(seller);
   assert.match(pricing, /4,980円/u, 'セラー向けは月額だけを書く');
-  assert.match(pricing, /3か月は0円/u, '最初の3か月0円');
+  assert.match(pricing, /30日間無料/u, '新規は商品公開から30日');
+  assert.doesNotMatch(pricing, /3か月/u);
   // 描画側も同じ規則を持っている（片方だけ直しても通らないようにする）
   const builder = readFileSync(new URL('../scripts/build-social-carousels.py', import.meta.url), 'utf8');
   assert.match(builder, /PRICING_BAN = re\.compile/u);

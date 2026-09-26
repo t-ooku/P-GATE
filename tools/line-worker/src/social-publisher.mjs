@@ -1,3 +1,4 @@
+import { assertSellerMarketingCurrent } from './seller-marketing-guard.mjs';
 import {
   getInstagramPublishCredentials, instagramOAuthReadiness
 } from './instagram-oauth.mjs';
@@ -888,6 +889,7 @@ async function publishThreads(post, env, fetchImpl, hooks = {}) {
 }
 
 export async function publishSocialPost(post, env, fetchImpl = fetch, hooks = {}) {
+  assertSellerMarketingCurrent(post, env);
   const normalized = normalizeSocialPost(post);
   if (normalized.status !== 'APPROVED') throw new Error('SOCIAL_POST_NOT_APPROVED');
   await assertDailyAiActressPolicy(normalized, env);
@@ -1059,10 +1061,10 @@ export async function runDueSocialPosts(env, now = new Date(), fetchImpl = fetch
       const message = clean(error?.message || error, 300);
       const previous = previousSocialRetry(row.last_error);
       const attempts = previous.count + 1;
-      if (message.includes(DAILY_AI_ACTRESS_POLICY_ERROR)) {
+      if (message.includes(DAILY_AI_ACTRESS_POLICY_ERROR) || message.startsWith('SELLER_MARKETING_REVIEW_REQUIRED:')) {
         await env.PRODUCT_DB.prepare(`UPDATE social_post_queue SET status='REVIEW_REQUIRED',last_error=?2,
           updated_at=?3 WHERE post_id=?1 AND status IN ('APPROVED','PUBLISHING')`)
-          .bind(row.post_id, DAILY_AI_ACTRESS_POLICY_ERROR, now.toISOString()).run();
+          .bind(row.post_id, message.startsWith('SELLER_MARKETING_REVIEW_REQUIRED:') ? message : DAILY_AI_ACTRESS_POLICY_ERROR, now.toISOString()).run();
       } else if (isTransientSocialPublishError(message) && attempts < SOCIAL_PUBLISH_MAX_ATTEMPTS) {
         // A Meta container that is still processing on the following cron has
         // already had at least five minutes plus two bounded polling windows.

@@ -1,3 +1,4 @@
+import { TRIAL_SOCIAL_PENDING_COPY } from '../public/seller-trial-policy.mjs';
 import {
   normalizeSocialPost,
   runDueSocialPosts,
@@ -249,12 +250,12 @@ const X_SELLER_POSTS = Object.freeze([
   },
   {
     id: 'seller-demand-insight',
-    caption: '商品を出したら、探していた人へHOSHILUが届けます。料金は月額4,980円だけ。クリックによる追加料金はありません。最初の3か月は月額0円。売上や掲載順位は保証しません。',
+    caption: '商品を出したら、探していた人へHOSHILUが届けます。料金は月額4,980円だけ。クリックによる追加料金はありません。新規は商品公開から30日無料へ変更。体験開始は準備中で、掲載見本を相談できます。売上や掲載順位は保証しません。',
     link_path: '/for-sellers'
   },
   {
     id: 'seller-business-simple',
-    caption: 'HOSHILU Sellerは月額4,980円、最初の3か月は月額0円。探している人が先に見えて、商品を出したらHOSHILUがその人に届けます。今ある販売先はそのまま。',
+    caption: 'HOSHILU Sellerは月額4,980円、新規は商品公開から30日無料へ変更。体験開始は準備中で、掲載見本を相談できます。探している人が先に見えて、商品を出したらHOSHILUがその人に届けます。今ある販売先はそのまま。',
     link_path: '/for-sellers'
   }
 ]);
@@ -642,14 +643,14 @@ const THREADS_SELLER_CAMPAIGN_ID = 'hoshilu-threads-seller-v1';
 const THREADS_SELLER_POSTS = Object.freeze([
   { id: 'seller-first-visible', caption: '欲しい人が、先に見える。\nHOSHILUで探して見つからなかった「欲しい」が、個人を特定できない匿名の需要としてお店に届きます。ネットショップ・メーカーの方へ。' },
   { id: 'seller-keep-your-mall', caption: '新しいECモールを増やす必要はありません。\nAmazon・楽天・Yahoo!など今ある販売先はそのまま。HOSHILUは受注や発送を移す場所ではなく、探している人と商品をつなぐ入口です。' },
-  { id: 'seller-price-plain', caption: 'HOSHILU Sellerは月額4,980円、最初の3か月は月額0円。初期費用0円。\n通常の検索やショップからの商品クリックは月額に含まれます。相談フォーム送信だけでは課金されません。' },
-  { id: 'seller-demand-match-50', caption: '商品の料金は月額4,980円だけ。\nクリックされるたびに請求が増える、ということはありません。最初の3か月は月額0円です。' },
+  { id: 'seller-price-plain', caption: 'HOSHILU Sellerは月額4,980円、新規は商品公開から30日無料へ変更。体験開始は準備中で、掲載見本を相談できます。初期費用0円。\n通常の検索やショップからの商品クリックは月額に含まれます。相談フォーム送信だけでは課金されません。' },
+  { id: 'seller-demand-match-50', caption: '商品の料金は月額4,980円だけ。\nクリックされるたびに請求が増える、ということはありません。新規は商品公開から30日無料へ変更。体験開始は準備中です。' },
   { id: 'seller-anonymous-5', caption: 'Sellerの画面に出るのは、同じ条件を5人以上が探している需要だけ。\n検索文そのものや、メール・LINE・電話番号は出しません。HOSHILUが間に入って、本人にだけ知らせます。' },
   { id: 'seller-register-judge', caption: '「この需要に商品を登録」を押すと、HOSHILUが商品名と条件を突き合わせて判定します。\n自己申告では一致になりません。一致した時だけ、探していた本人にお知らせします。' },
   { id: 'seller-real-numbers', caption: 'Sellerの契約者画面にあるのは、確認できた実数だけ。\n横断検索の回数、0件だった検索、近い商品しか無かった検索。推定売上や見込みは出しません。' },
   { id: 'seller-shop-page', caption: 'お店の入口を、モールの外にも。\nロゴ・紹介文・商品一覧・ショップ内検索・クーポン。HOSHILUのショップページは契約者画面から自分で編集できます。購入先は今の販売先のままです。' },
   { id: 'seller-no-guarantee', caption: 'HOSHILUは売上や掲載順位を保証しません。\nできるのは、探している人の条件と商品を突き合わせて、一致した時にその人へ届けること。数字は実数だけをお見せします。' },
-  { id: 'seller-start-flow', caption: '始め方は、相談フォーム → 掲載対象の確認 → 支払い方法の登録の3つ。\nパスワードやAPIキーは最初の相談では求めません。最初の3か月は月額0円です。' }
+  { id: 'seller-start-flow', caption: '始め方は、掲載見本の相談 → 使用許諾 → 見本の確認・承認 → 商品公開。開始時の支払い登録は不要です。\nパスワードやAPIキーは最初の相談では求めません。新規は商品公開から30日無料へ変更。体験開始は準備中です。' }
 ]);
 
 const pad = value => String(value).padStart(2, '0');
@@ -815,7 +816,7 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
           content_id: content.id,
           platform: 'THREADS',
           campaign_id: THREADS_SELLER_CAMPAIGN_ID,
-          caption: content.caption,
+          caption: /^seller-/u.test(content.id) ? `${TRIAL_SOCIAL_PENDING_COPY}\n${content.caption}` : content.caption,
           link: `https://hoshilu.app/for-sellers?${params}`,
           affiliate: false,
           scheduled_at: scheduledAt(parts, slot.hour, slot.minute),
@@ -834,7 +835,7 @@ export function buildThreadsAmazonBoostPosts(now = new Date(), days = 14) {
         content_id: content.id,
         platform: 'THREADS',
         campaign_id: THREADS_AMAZON_CAMPAIGN_ID,
-        caption: content.caption,
+        caption: /^seller-/u.test(content.id) ? `${TRIAL_SOCIAL_PENDING_COPY}\n${content.caption}` : content.caption,
         link,
         affiliate: Boolean(link),
         scheduled_at: scheduledAt(parts, slot.hour, slot.minute),
@@ -883,7 +884,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         content_id: content.id,
         platform: 'X',
         campaign_id: campaignIdForContent(content.id),
-        caption: content.caption,
+        caption: /^seller-/u.test(content.id) ? `${TRIAL_SOCIAL_PENDING_COPY}\n${content.caption}` : content.caption,
         link: campaignLink('X', key, content.id, content.query, content.link_path || '/'),
         scheduled_at: scheduledAt(parts, 20, 0),
         status: 'APPROVED'
@@ -907,7 +908,7 @@ export function buildSocialAutopilotPosts(now = new Date(), days = 14) {
         content_id: content.id,
         platform: 'INSTAGRAM',
         campaign_id: campaignIdForContent(content.id),
-        caption: content.caption,
+        caption: /^seller-/u.test(content.id) ? `${TRIAL_SOCIAL_PENDING_COPY}\n${content.caption}` : content.caption,
         link: campaignLink('INSTAGRAM', key, content.id, content.query, content.link_path || '/'),
         media_url: content.media_url,
         scheduled_at: scheduledAt(parts, 20, 0),

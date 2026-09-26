@@ -25,3 +25,7 @@
 - Fetched HEAD remains ec23353e at start; working tree clean. Health ok with no missing/weak settings, OAuth/Runway connected. #369 still contains the older Yahoo report; resolution is unverified.
 - No newer Claude handoff. User's revised seller acquisition task supersedes the new calendar-three-month offer proposal only; existing promises remain protected.
 - No migration, production SQL write, social publication or test charge performed.
+
+## Seller marketing 30-day decision (04:47 JST)
+- Current health ok, missing/weak empty, X/Instagram/Runway ready, database flags unchanged. #369 remains open with the previously observed Yahoo timeout; not claimed resolved. No newer Claude handoff than September 20.
+- User explicitly approved updating SNS/LP/web recruitment wording to 30 days. Old individual promises stay intact. Production offer remains disabled pending prior migration/expiry approval and verification, so public copy announces the decision and says preparation is in progress.
