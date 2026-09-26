@@ -42,13 +42,13 @@ test('continuous search copy promises only the implemented new-match behavior', 
   assert.doesNotMatch(app, /必ず見つか/u);
 });
 
-test('seller inquiry removes the blocking consent checkbox without dropping consent recording', async () => {
+test('seller consultation separates required response consent and optional marketing', async () => {
   const [html, script] = await Promise.all([
     read('public/for-sellers.html'), read('public/for-sellers.js')
   ]);
-  assert.doesNotMatch(html, /name="privacy_consent"/u);
-  assert.match(html, /送信すると/u);
-  assert.match(script, /privacy_consent: true/u);
+  assert.match(html, /name="privacy_consent" required/u);
+  assert.match(html, /name="marketing_consent">/u);
+  assert.match(script, /privacy_consent: data.get\('privacy_consent'\) === 'on'/u);
 });
 
 test('approved launch promotion is queued for connected text channels', async () => {

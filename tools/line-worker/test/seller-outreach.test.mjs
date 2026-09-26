@@ -11,17 +11,17 @@ import {
 // 本番で実際に送られている型（2026-09-24 短い版）。hook の1文だけを会社ごとに変える。
 const GOOD_BODY = (shop, hook) => `${shop} ご担当者様
 
-突然のご連絡失礼いたします。買い物検索サービス HOSHILU（ホシル）の大久津です。楽天商品情報ページに記載の連絡先へお送りしています。
+セラー向けのご案内に同意いただき、ありがとうございます。HOSHILUの大久津です。ご希望いただいた掲載のご案内です。
 
 ${hook}
 
-HOSHILU は Amazon・楽天・Yahoo!ショッピング・Qoo10 をまとめて探せるサービスです。御社の商品も、同じ検索結果に並べることができます。
+まずは、御社の商品3点について非公開の掲載見本をご相談できます。
 
-ショップページの作成と商品の登録はこちらで代行します。今のモール出店はそのままで構いません。
+許諾いただいた商品情報で見本作成をこちらで代行します。今のモール出店はそのままで構いません。
 
-最初の3か月は無料です。その後も続ける場合のみ月額4,980円（税込）で、いつでも解約できます。
+通常料金は月額4,980円（税込）です。公開・契約は内容と適用条件をご確認いただいた後です。
 
-ご興味があれば、このメールに「興味あり」とひと言だけご返信ください。こちらから詳しくご案内いたします。`;
+ご希望の場合は「見本を相談」とご返信ください。使用してよい商品情報・写真・販売先URLを確認いたします。`;
 
 function databaseEnv(extra = {}) {
   const db = new DatabaseSync(':memory:');
@@ -207,10 +207,10 @@ test('/health にセラー営業メールの送信可否を出す', () => {
 test('2026-09-14 事故: 型の文が一字一句そのまま無い本文（誤字・文字化け）は送らず SKIPPED', async () => {
   assert.deepEqual(findMissingTemplateSentences(GOOD_BODY('良い商店', '雑貨を取り扱っている貴店と相性が良いと思い、ご連絡しました。')), []);
   assert.ok(OUTREACH_REQUIRED_SENTENCES.length >= 7);
-  const garbled = GOOD_BODY('誤字商店', 'x').replace('突然のご連絡失礼いたします', '弁然のご連絡失箰いたします').replace('代行します', '代行しまず');
+  const garbled = GOOD_BODY('誤字商店', 'x').replace('セラー向けのご案内に同意いただき', 'セラー向けのご案内に同異いただき').replace('代行します', '代行しまず');
   assert.deepEqual(findMissingTemplateSentences(garbled), [
-    '突然のご連絡失礼いたします。買い物検索サービス HOSHILU（ホシル）の大久津です。',
-    'ショップページの作成と商品の登録はこちらで代行します。今のモール出店はそのままで構いません。'
+    'セラー向けのご案内に同意いただき、ありがとうございます。HOSHILUの大久津です。',
+    '許諾いただいた商品情報で見本作成をこちらで代行します。今のモール出店はそのままで構いません。'
   ]);
   const { db, env } = databaseEnv();
   await insertContact(db, { contact_id: 'g1', contact_email: 'g1@example.com', body: garbled, unsubscribe_token: 'g'.repeat(32) });
@@ -222,7 +222,7 @@ test('2026-09-14 事故: 型の文が一字一句そのまま無い本文（誤�
   assert.equal(sent[0].to[0], 'g2@example.com');
   const skipped = db.prepare(`SELECT status,last_error FROM seller_outreach_contacts WHERE contact_id='g1'`).get();
   assert.equal(skipped.status, 'SKIPPED');
-  assert.match(skipped.last_error, /^template_mismatch:突然のご連絡失礼いたします/u);
+  assert.match(skipped.last_error, /^template_mismatch:セラー向けのご案内に同意いただき/u);
 });
 
 // 2026-09-23 大隆さん指示「営業メールを1日30社に増やして」。
@@ -311,9 +311,9 @@ test('営業メールの型は短く、始める側の不安に先に答え、�
   const text = OUTREACH_REQUIRED_SENTENCES.join('\n');
   assert.match(text, /こちらで代行します/u, '手間が要らないこと');
   assert.match(text, /今のモール出店はそのままで構いません/u, '今の出店と競合しないこと');
-  assert.match(text, /最初の3か月は無料です/u, '試すのにお金がかからないこと');
-  assert.match(text, /いつでも解約できます/u, '抜けられること');
-  assert.match(text, /「興味あり」とひと言だけご返信ください/u, '返信のハードルを下げる');
+  assert.match(text, /非公開の掲載見本/u);
+  assert.match(text, /公開・契約は内容と適用条件をご確認いただいた後/u);
+  assert.match(text, /「見本を相談」とご返信ください/u);
   assert.doesNotMatch(text, /クリック/u, '2026-09-21 に廃止したクリック課金を書かない');
   assert.doesNotMatch(text, /ユーザー数|人以上/u, '人数には触れない');
   assert.deepEqual(findForbiddenPhrases(text), [], '成果を約束しない');

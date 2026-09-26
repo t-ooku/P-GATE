@@ -117,6 +117,7 @@ async function initializeTurnstile() {
 
 initializeTurnstile().catch(error => showTurnstileFailure(error.message));
 
+let inquiryRequestId = crypto.randomUUID();
 form?.addEventListener('submit', async event => {
   event.preventDefault();
   if (!form.reportValidity()) return;
@@ -136,7 +137,8 @@ form?.addEventListener('submit', async event => {
     marketplaces: data.getAll('marketplaces'), monthly_order_range: data.get('monthly_order_range'),
     plan_interest: data.get('plan_interest'), payment_preference: data.get('payment_preference'),
     message: data.get('message'), company_website: data.get('company_website'),
-    privacy_consent: true, turnstile_token: turnstileToken
+    request_id: inquiryRequestId, privacy_consent: data.get('privacy_consent') === 'on',
+    marketing_consent: data.get('marketing_consent') === 'on', turnstile_token: turnstileToken
   };
   button.disabled = true;
   status.textContent = '送信しています…';
@@ -146,11 +148,12 @@ form?.addEventListener('submit', async event => {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.ok) throw new Error('送信できませんでした。入力内容をご確認ください。');
+    inquiryRequestId = crypto.randomUUID();
     form.reset();
     turnstileToken = '';
     if (turnstileWidget !== null) window.turnstile?.reset(turnstileWidget);
     status.className = 'status success';
-    status.textContent = '受付しました。内容を確認後、担当者からご連絡します。';
+    status.textContent = `受付しました。受付番号：${result.inquiry_id || '確認待ち'}。内容を確認後、担当者からご連絡します。`;
   } catch (error) {
     status.className = 'status error';
     status.textContent = error.message || '送信できませんでした。時間をおいてお試しください。';

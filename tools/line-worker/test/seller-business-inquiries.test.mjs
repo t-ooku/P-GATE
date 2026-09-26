@@ -9,7 +9,7 @@ function databaseEnv() {
   const db = new DatabaseSync(':memory:');
   db.exec(readFileSync(new URL('../migrations/0058_seller_business_inquiries.sql', import.meta.url), 'utf8'));
   return { db, env: { TURNSTILE_VERIFY: async token => token === 'test-token', PRODUCT_DB: { prepare(sql) { const statement = db.prepare(sql); let values = [];
-    return { bind(...next) { values = next; return this; }, async run() { statement.run(...values); return { success: true }; },
+    return { bind(...next) { values = next; return this; }, async run() { const info=statement.run(...values); return { success: true, meta:{changes:Number(info.changes)} }; },
       async all() { return { results: statement.all(...values) }; } }; } } } };
 }
 
@@ -59,9 +59,9 @@ test('公開問い合わせAPIは同一Originだけを受け付ける', async ()
 
 test('公開LPは相談・登録・支払い準備を明示し機密情報を要求しない', () => {
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
-  assert.match(html, /相談・登録申請/u);
-  assert.match(html, /金額の相談は受け付けていません/u);
-  assert.match(html, /カード・銀行振込・請求書払い/u);
+  assert.match(html, /自店の掲載見本を相談する/u);
+  assert.match(html, /name="privacy_consent" required/u);
+  assert.match(html, /name="marketing_consent">/u);
   assert.match(html, /フォーム送信だけで課金されることはありません/u);
   assert.doesNotMatch(html, /ITグループ|ITG以外/u);
   assert.match(html, /売上、注文、掲載順位は保証しません/u);
@@ -133,7 +133,7 @@ test('セラー問い合わせは届いた時点で通知メールを送る', as
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
     sent.push({ url: String(url), body: JSON.parse(init.body) });
-    return new Response('{}', { status: 200 });
+    return new Response('{"id":"test-receipt"}', { status: 200 });
   };
   try {
     const result = await createSellerBusinessInquiry({
@@ -224,7 +224,7 @@ test('確認欄が通らなくても公開APIは受け付け、通知の件名�
   const { env } = databaseEnv();
   const sent = [];
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (url, init) => { sent.push(JSON.parse(init.body)); return new Response('{}', { status: 200 }); };
+  globalThis.fetch = async (url, init) => { sent.push(JSON.parse(init.body)); return new Response('{"id":"test-receipt"}', { status: 200 }); };
   try {
     const response = await handleSellerBusinessInquiryRoutes(new Request('https://hoshilu.app/api/seller-business/inquiries', {
       method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hoshilu.app' },
@@ -244,17 +244,14 @@ test('確認欄が通らなくても公開APIは受け付け、通知の件名�
 });
 
 // 2026-09-17 SHOP指示書 §30〜31: /for-sellers の中心メッセージは「欲しい人が見える。欲しい人に商品を届けられる。」。成果保証の語は使わない。
-test('/for-sellers の見出しは「欲しい人が見える。欲しい人に商品を届けられる。」で、需要の説明は匿名 5 人以上・条件のみ', () => {
+test('掲載見本の相談を主導線にし、未承認の体験条件・保証を訴求しない', () => {
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
-  // 2026-09-19 大隆さん指示 §5: ファーストビューは「欲しい人が、先に見える。」。title は据え置き。
-  assert.match(html, /<h1>欲しい人が、<br class="hero-br"><span>先に見える。<\/span><\/h1>/u, 'PC は 1 行、スマホだけ改行（9/19 大隆さん指摘）');
-  assert.match(html, /商品を出したら、<\/span><span class="nb">探していた人へHOSHILUが届けます。<\/span><br><span class="nb">Amazon・楽天・Yahoo!など、<\/span><span class="nb">今ある販売先はそのまま。/u, '読点・項目の切れ目だけで改行（9/19 大隆さん指摘）');
-  assert.match(html, /検索 → 探し中需要 →<\/span> <span class="nb">商品マッチ → 再通知 → 送客/u);
-  assert.match(html, /data-seller-cta="hero-inquiry">3か月無料で始める</u);
-  assert.match(html, /data-seller-cta="hero-demand">今HOSHILUで探されているものを見る</u);
-  assert.match(html, /<title>ECセラーの方へ｜欲しい人が見える。欲しい人に商品を届けられる。｜HOSHILU<\/title>/u);
+  assert.match(html, /今のショップを変えずに、/u);
+  assert.match(html, /data-seller-cta="hero-inquiry">自店の掲載見本を相談する</u);
+  assert.match(html, /非公開の見本/u);
+  assert.match(html, /店舗様ご本人/u);
+  assert.doesNotMatch(html, /クリック50円|今月の利用額|予算上限の設定|自動課金なし|支払い登録不要の3か月/u);
   assert.match(html, /同じ条件を5人以上が探している項目だけを、検索文ではなく正規化した条件/u);
-  assert.match(html, /自己申告で一致にはなりません/u);
   for (const banned of ['必ず売れ', '売上が上がり', '多数のユーザー', '業界No', '確実に']) assert.ok(!html.includes(banned), banned);
 });
 
@@ -267,5 +264,52 @@ test('料金欄は角丸。折り返しても文字の左端がそろう', () =>
   assert.ok(!rule.includes('border-radius:999px'), '錠剤の形にしない');
   assert.match(rule, /border-radius:18px/u);
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
-  assert.match(html, /for-sellers-pricing\.css\?v=7/u);
+  assert.match(html, /for-sellers-pricing\.css\?v=8/u);
+});
+
+
+test('同じ受付キーの再試行は同じ受付番号で1件だけ保存する', async () => {
+  const { db, env } = databaseEnv();
+  const input = {...valid, request_id:'consultation-test-key-0001'};
+  const first = await createSellerBusinessInquiry(env, input);
+  const second = await createSellerBusinessInquiry(env, input);
+  assert.equal(first.inquiry_id,second.inquiry_id);
+  assert.equal(second.duplicate,true);
+  assert.equal(db.prepare('SELECT count(*) n FROM seller_business_inquiries').get().n,1);
+});
+
+test('相談回答の同意と継続案内の希望を分けて保存し、自動で送信許諾にしない', async () => {
+  const { db, env } = databaseEnv();
+  const result = await createSellerBusinessInquiry(env,{...valid,inquiry_type:'CONSULTATION',contact_name:'',marketing_consent:true});
+  assert.equal(result.accepted,true);
+  assert.match(db.prepare('SELECT message FROM seller_business_inquiries').get().message,/yes_pending_verification/);
+  assert.equal(result.notification_tracking,false);
+});
+
+test('通知の失敗を保存して申込みを残す（0088適用後）', async () => {
+  const { db, env } = databaseEnv();
+  db.exec(readFileSync(new URL('../migrations/0088_seller_inquiry_notifications.sql',import.meta.url),'utf8'));
+  const result=await createSellerBusinessInquiry(env,valid);
+  assert.equal(result.accepted,true);
+  assert.equal(result.notification_tracking,true);
+  assert.equal(db.prepare('SELECT state FROM seller_inquiry_notifications').get().state,'FAILED');
+});
+
+test('保存できなければ成功表示用のレスポンスを返さない', async () => {
+  const {env}=databaseEnv();
+  env.PRODUCT_DB.prepare=()=>{throw new Error('DB_UNAVAILABLE')};
+  const response=await handleSellerBusinessInquiryRoutes(new Request('https://hoshilu.app/api/seller-business/inquiries',{
+    method:'POST',headers:{origin:'https://hoshilu.app'},body:JSON.stringify({...valid,turnstile_token:'test-token'})
+  }),env);
+  assert.equal(response.status,503);
+  assert.equal((await response.json()).error,'INQUIRY_SAVE_FAILED');
+});
+
+
+test('同時に再送されても申込みと通知は1件', async () => {
+  const {db,env}=databaseEnv();const input={...valid,request_id:'concurrent-test-00001'};
+  const results=await Promise.all([createSellerBusinessInquiry(env,input),createSellerBusinessInquiry(env,input)]);
+  assert.equal(results[0].inquiry_id,results[1].inquiry_id);
+  assert.equal(results.filter(r=>r.duplicate).length,1);
+  assert.equal(db.prepare('SELECT count(*) n FROM seller_business_inquiries').get().n,1);
 });

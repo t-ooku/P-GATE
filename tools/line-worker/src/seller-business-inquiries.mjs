@@ -1,4 +1,5 @@
 import { authorizeAdminRequest } from './admin-auth.mjs';
+import { readBoundedJson } from './bounded-json.mjs';
 
 const TYPES = new Set(['CONSULTATION', 'ACCOUNT_APPLICATION']);
 const ORGANIZATION_TYPES = new Set(['MAKER', 'SELLER', 'BOTH', 'OTHER']);
@@ -43,7 +44,7 @@ async function verifyTurnstile(request, env, token) {
 function httpsUrl(value) {
   const raw = clean(value, 500);
   if (!raw) return '';
-  try { const url = new URL(raw); return url.protocol === 'https:' ? url.toString() : ''; }
+  try { const url = new URL(raw); return url.protocol === 'https:' && !url.username && !url.password ? url.toString() : ''; }
   catch { return ''; }
 }
 
@@ -67,13 +68,14 @@ export function normalizeSellerBusinessInquiry(input = {}) {
     payment_preference: PAYMENT_PREFERENCES.has(input.payment_preference) ? input.payment_preference : '',
     message: clean(input.message, 2000),
     privacy_consent: input.privacy_consent === true,
+    marketing_consent: input.marketing_consent === true,
     company_website: clean(input.company_website, 200)
   };
   const errors = [];
   if (!result.inquiry_type) errors.push('INQUIRY_TYPE_REQUIRED');
   if (!result.organization_type) errors.push('ORGANIZATION_TYPE_REQUIRED');
   if (!result.organization_name) errors.push('ORGANIZATION_NAME_REQUIRED');
-  if (!result.contact_name) errors.push('CONTACT_NAME_REQUIRED');
+  if (result.inquiry_type === 'ACCOUNT_APPLICATION' && !result.contact_name) errors.push('CONTACT_NAME_REQUIRED');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(result.contact_email)) errors.push('CONTACT_EMAIL_INVALID');
   if (rawStorefront && !result.storefront_url) errors.push('STOREFRONT_URL_INVALID');
   if (!result.privacy_consent) errors.push('PRIVACY_CONSENT_REQUIRED');
@@ -98,7 +100,8 @@ export function sellerInquiryNotificationText(id, value, timestamp, verified = t
     ['出品モール', value.marketplaces.length ? value.marketplaces.join(', ') : '(未入力)'],
     ['月間注文数', value.monthly_order_range || '(未入力)'],
     ['関心プラン', value.plan_interest || '(未入力)'],
-    ['支払い希望', value.payment_preference || '(未入力)']
+    ['支払い希望', value.payment_preference || '(未入力)'],
+    ['継続案内の希望', value.marketing_consent ? '希望あり（メール本人・許諾証跡の確認前は営業送信不可）' : '希望なし']
   ];
   return [
     'HOSHILUのセラー相談フォームに新しい問い合わせが届きました。',
@@ -118,7 +121,7 @@ async function notifySellerInquiry(env, id, value, timestamp, verified = true) {
   if (!to || !from || !String(env.RESEND_API_KEY || '').startsWith('re_')) return false;
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json', 'idempotency-key': `seller-inquiry-${id}` },
     body: JSON.stringify({
       from: `HOSHILU <${from}>`,
       to: [to],
@@ -127,9 +130,24 @@ async function notifySellerInquiry(env, id, value, timestamp, verified = true) {
       subject: `${verified ? '【HOSHILU】' : '【HOSHILU・要確認】'}セラー問い合わせ: ${value.organization_name}`,
       text: sellerInquiryNotificationText(id, value, timestamp, verified)
     }),
-    redirect: 'manual'
+    redirect: 'manual', signal: AbortSignal.timeout(8000)
   });
-  return response.ok;
+  const result = await response.json().catch(() => ({}));
+  return response.ok && Boolean(result.id);
+}
+
+async function digest(value) {
+  return [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)))].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+// Additive migration 0088 is optional during rollout. Never lose the original inquiry.
+async function notificationState(env, id, state) {
+  try {
+    await env.PRODUCT_DB.prepare(`INSERT INTO seller_inquiry_notifications(inquiry_id,state,updated_at)
+      VALUES(?1,?2,?3) ON CONFLICT(inquiry_id) DO UPDATE SET state=excluded.state,updated_at=excluded.updated_at`)
+      .bind(id, state, new Date().toISOString()).run();
+    return true;
+  } catch { return false; }
 }
 
 // 2026-09-03: 実機(iOS Safari)でTurnstileが読み込めず、フォームを一切送信でき
@@ -162,20 +180,32 @@ export async function createSellerBusinessInquiry(env, input, now = new Date(), 
   if (errors.length) return { accepted: false, errors };
   const verified = options.verified !== false;
   const source = verified ? 'FOR_SELLERS' : FALLBACK_SOURCE;
-  const id = `SBI_${crypto.randomUUID()}`;
+  const key = clean(input.request_id, 64);
+  if (key && !/^[a-zA-Z0-9_-]{16,64}$/u.test(key)) return { accepted: false, errors: ['REQUEST_ID_INVALID'] };
+  // The random browser key AND normalized contents bind a retry to the same receipt.
+  // Guessing someone else's key does not disclose their receipt or data.
+  const id = `SBI_${key ? await digest(`${key}:${JSON.stringify(value)}`) : crypto.randomUUID()}`;
   const timestamp = now.toISOString();
-  await env.PRODUCT_DB.prepare(`INSERT INTO seller_business_inquiries
+  const existing = (await env.PRODUCT_DB.prepare('SELECT inquiry_id FROM seller_business_inquiries WHERE inquiry_id=?1').bind(id).all()).results?.[0];
+  if (existing) return { accepted: true, inquiry_id: id, duplicate: true, verified };
+  const message = `${value.message}\n\n[相談回答への同意: accepted; 継続案内希望: ${value.marketing_consent ? 'yes_pending_verification' : 'no'}; version: seller-consultation-v1]`;
+  const inserted = await env.PRODUCT_DB.prepare(`INSERT INTO seller_business_inquiries
     (inquiry_id,inquiry_type,organization_type,organization_name,contact_name,contact_email,
      storefront_url,marketplaces,monthly_order_range,plan_interest,payment_preference,message,
      status,source,created_at,updated_at)
-    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,'NEW',?14,?13,?13)`)
+    VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,'NEW',?14,?13,?13)
+    ON CONFLICT(inquiry_id) DO NOTHING`)
     .bind(id, value.inquiry_type, value.organization_type, value.organization_name,
       value.contact_name, value.contact_email, value.storefront_url, JSON.stringify(value.marketplaces),
-      value.monthly_order_range, value.plan_interest, value.payment_preference, value.message,
+      value.monthly_order_range, value.plan_interest, value.payment_preference, message,
       timestamp, source).run();
+  if (inserted?.success === false) throw new Error('SAVE_FAILED');
+  if (inserted?.meta?.changes === 0) return { accepted: true, inquiry_id: id, duplicate: true, verified };
+  await notificationState(env, id, 'PENDING');
   let notified = false;
   try { notified = await notifySellerInquiry(env, id, value, timestamp, verified); } catch { notified = false; }
-  return { accepted: true, inquiry_id: id, notified, verified };
+  const tracked = await notificationState(env, id, notified ? 'API_ACCEPTED' : 'FAILED');
+  return { accepted: true, inquiry_id: id, notified, notification_tracking: tracked, verified };
 }
 
 export async function handleSellerBusinessInquiryRoutes(request, env) {
@@ -185,17 +215,34 @@ export async function handleSellerBusinessInquiryRoutes(request, env) {
     if (!env.PRODUCT_DB) return json({ ok: false, error: 'INQUIRY_STORE_UNAVAILABLE' }, 503);
     const size = Number(request.headers.get('content-length') || 0);
     if (size > 16_384) return json({ ok: false, error: 'REQUEST_TOO_LARGE' }, 413);
-    let input;
-    try { input = await request.json(); } catch { return json({ ok: false, error: 'INVALID_JSON' }, 400); }
+    const parsed = await readBoundedJson(request, 16_384);
+    if (!parsed.ok) return json({ ok: false, error: parsed.error }, parsed.error === 'REQUEST_TOO_LARGE' ? 413 : 400);
+    const input = parsed.value;
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return json({ ok: false, error: 'INVALID_JSON' }, 400);
     // 確認欄が動かない環境からの送信も、件数を絞ったうえで受け付ける。
     // 問い合わせ口が完全に塞がる方が、事業上の損失が大きい。
     let verified = await verifyTurnstile(request, env, input.turnstile_token);
     if (!verified && !await fallbackInquiryAllowed(env)) {
       return json({ ok: false, error: 'TURNSTILE_FAILED' }, 403);
     }
-    const result = await createSellerBusinessInquiry(env, input, new Date(), { verified });
+    let result;
+    try { result = await createSellerBusinessInquiry(env, input, new Date(), { verified }); }
+    catch { return json({ ok: false, error: 'INQUIRY_SAVE_FAILED' }, 503); }
     if (!result.accepted) return json({ ok: false, error: 'VALIDATION_FAILED', fields: result.errors }, 400);
     return json({ ok: true, inquiry_id: result.inquiry_id, status: 'RECEIVED', verified }, 201);
+  }
+  const retry = url.pathname.match(/^\/api\/admin\/seller-business\/inquiries\/(SBI_[a-zA-Z0-9-]+)\/notify$/u);
+  if (request.method === 'POST' && retry) {
+    if (!sameOrigin(request) || !await authorizeAdminRequest(request, env)) return json({ ok: false, error: 'UNAUTHORIZED' }, 403);
+    const row = (await env.PRODUCT_DB.prepare('SELECT * FROM seller_business_inquiries WHERE inquiry_id=?1').bind(retry[1]).all()).results?.[0];
+    if (!row) return json({ ok: false, error: 'NOT_FOUND' }, 404);
+    row.marketplaces = JSON.parse(row.marketplaces || '[]');
+    row.marketing_consent = row.message.includes('yes_pending_verification');
+    row.message = row.message.split('\n\n[相談回答への同意:')[0];
+    let notified = false;
+    try { notified = await notifySellerInquiry(env, row.inquiry_id, row, row.created_at, row.source !== FALLBACK_SOURCE); } catch {}
+    await notificationState(env, row.inquiry_id, notified ? 'API_ACCEPTED' : 'FAILED');
+    return json({ ok: notified, state: notified ? 'API_ACCEPTED' : 'FAILED' }, notified ? 200 : 502);
   }
   if (request.method === 'GET' && url.pathname === '/api/admin/seller-business/inquiries') {
     if (!await authorizeAdminRequest(request, env)) return json({ ok: false, error: 'UNAUTHORIZED' }, 401);
@@ -204,7 +251,9 @@ export async function handleSellerBusinessInquiryRoutes(request, env) {
       organization_name,contact_name,contact_email,storefront_url,marketplaces,monthly_order_range,
       plan_interest,payment_preference,message,status,created_at,updated_at
       FROM seller_business_inquiries ORDER BY created_at DESC LIMIT 100`).all();
-    return json({ ok: true, inquiries: result.results || [] });
+    let states = null;
+    try { states = (await env.PRODUCT_DB.prepare('SELECT inquiry_id,state,updated_at FROM seller_inquiry_notifications ORDER BY updated_at DESC LIMIT 100').all()).results; } catch {}
+    return json({ ok: true, inquiries: result.results || [], notification_states: states, notification_tracking: states ? 'AVAILABLE' : 'UNAVAILABLE' });
   }
   return null;
 }
