@@ -84,7 +84,7 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /<summary>ユーザーの個人情報は見られますか？<\/summary><p>見られません/u);
   assert.match(html, /<summary>費用が勝手に増えませんか？<\/summary>/u);
   // The approved 30-day policy is announced without claiming activation before QA.
-  assert.match(html, /商品公開から30日間無料へ変更/);
+  assert.match(html, /新規Sellerは商品公開から30日間無料。/);
   assert.match(html, /体験開始の準備中/);
   assert.doesNotMatch(html, /予算上限.{0,20}準備中/u);
   // 2026-09-21: 予算上限は、上限を置く支出そのものが無くなったので説明ごと消した。

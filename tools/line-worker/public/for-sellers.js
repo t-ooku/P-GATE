@@ -1,4 +1,4 @@
-import { PILOT_OFFER, TRIAL_COPY, TRIAL_PENDING_COPY } from './seller-trial-policy.mjs?v=2';
+import { PILOT_OFFER, TRIAL_COPY, TRIAL_PENDING_COPY } from './seller-trial-policy.mjs?v=3';
 import { growthSessionId, growthVisitorId } from './growth-identity.mjs';
 
 const form = document.querySelector('#sellerBusinessForm');

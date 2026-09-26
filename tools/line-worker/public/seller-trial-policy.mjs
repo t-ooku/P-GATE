@@ -31,9 +31,9 @@ export function followupTasks(doc, now = new Date()) {
 }
 
 // Public decision notice until the matching production offer is verified.
-export const TRIAL_PENDING_COPY = '新規Sellerは商品公開から30日間無料へ変更します。開始時の支払い登録は不要で、有料継続は月額4,980円（税込）の本人申込み制です。自動で有料に切り替わりません。現在は体験開始の準備中です。掲載見本の相談を受け付けています。';
+export const TRIAL_PENDING_COPY = '新規Sellerは商品公開から30日間無料。開始時の支払い登録は不要で、有料継続は月額4,980円（税込）の本人申込み制です。自動で有料に切り替わりません。現在は体験開始の準備中です。掲載見本の相談を受け付けています。';
 export function recruitmentVerified(env = {}) {
   return env.SELLER_MANUAL_PILOT_ENABLED === 'true' && env.SELLER_PILOT_OFFER_VERSION === PILOT_OFFER && env.SELLER_PILOT_RECRUITMENT_VERIFIED === PILOT_OFFER;
 }
 
-export const TRIAL_SOCIAL_PENDING_COPY = '新規は商品公開から30日無料へ変更（体験開始は準備中）。支払い登録不要・自動有料化なし。継続は本人申込みで月額4,980円（税込）。自店の掲載見本を相談する。';
+export const TRIAL_SOCIAL_PENDING_COPY = '新規Sellerは商品公開から30日間無料。（体験開始は準備中）支払い登録不要・自動有料化なし。継続は本人申込みで月額4,980円（税込）。自店の掲載見本を相談する。';
