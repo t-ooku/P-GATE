@@ -1,3 +1,4 @@
+import { PILOT_OFFER, TRIAL_COPY } from './seller-trial-policy.mjs';
 import { growthSessionId, growthVisitorId } from './growth-identity.mjs';
 
 const form = document.querySelector('#sellerBusinessForm');
@@ -203,3 +204,8 @@ form?.addEventListener('submit', async event => {
     notice('需要データを読み込めませんでした', '時間をおいて再度お試しください。取得できなかったため、件数は表示していません。');
   }
 })();
+
+// Fail closed: do not advertise unverified/off trial conditions.
+fetch('/api/seller-pilot/offer',{cache:'no-store'}).then(async r=>r.ok?r.json():null).then(data=>{
+  if(data?.enabled&&data.offer_version===PILOT_OFFER) document.querySelectorAll('[data-seller-trial-copy]').forEach(el=>{el.textContent=TRIAL_COPY;});
+}).catch(()=>{});

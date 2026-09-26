@@ -376,6 +376,13 @@ export async function operationalDiagnostics(db, internalIds = []) {
     consultation_sources: await read('SELECT source,status,COUNT(*) AS count FROM seller_business_inquiries GROUP BY source,status'),
     marketing_permissions: await read("SELECT CASE WHEN revoked_at='' THEN 'RECORDED' ELSE 'REVOKED' END AS state,COUNT(*) AS count FROM seller_contact_permissions GROUP BY state"),
     notification_states: await read('SELECT state,COUNT(*) AS count FROM seller_inquiry_notifications GROUP BY state'),
+    manual_pilot_stages: await read(`SELECT json_extract(document_json,'$.offer_version') AS offer_version,
+      json_extract(document_json,'$.status') AS status,COUNT(*) AS count,
+      SUM(CASE WHEN json_extract(document_json,'$.starts_at') IS NOT NULL THEN 1 ELSE 0 END) AS started,
+      SUM(CASE WHEN json_extract(document_json,'$.owner_confirmed_at') IS NOT NULL THEN 1 ELSE 0 END) AS owner_confirmed,
+      SUM(CASE WHEN json_array_length(document_json,'$.products')>=3 AND json_extract(document_json,'$.approved_at') IS NOT NULL AND json_extract(document_json,'$.owner_confirmed_at') IS NOT NULL AND json_extract(document_json,'$.starts_at') IS NOT NULL THEN 1 ELSE 0 END) AS acquisition_evidence_complete
+      FROM seller_listing_pilots WHERE json_extract(document_json,'$.test')=0 AND json_extract(document_json,'$.external_verified')=1
+      GROUP BY offer_version,status`),
     actual_inbox_replies: {status:'UNVERIFIED',reason:'CORRECT_MAILBOX_NOT_CONNECTED'},
     definition: 'A candidate or API-accepted email is not consent, delivery, dialogue or an acquired external seller.'
   };

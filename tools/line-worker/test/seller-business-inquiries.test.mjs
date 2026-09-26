@@ -71,7 +71,8 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   // 2026-09-19 §1・§15・§18: 商品は 1 つ。HOSHILU Seller 4,980円/月、最初の3か月 月額0円。
   // 2026-09-21 大隆さん決定: Demand Match Click 50円を廃止。値段は月額の1つだけになった。
   assert.match(html, /月額4,980円/u);
-  assert.match(html, /最初の3か月 月額0円/u);
+  assert.doesNotMatch(html, /最初の3か月|登録後3か月/u);
+  assert.match(html, /data-seller-trial-copy/u);
   assert.match(html, /追加料金 <strong>なし<\/strong>/u);
   assert.match(html, /1法人単位ではなく、1事業者アカウント単位/u);
   assert.match(html, /月額に含まれるもの: HOSHILU SHOP掲載、全ショップ横断検索への露出、商品クリック/u);

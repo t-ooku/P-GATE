@@ -1,3 +1,5 @@
+import { publicPilotOffer } from './seller-listing-pilot.mjs';
+import { PILOT_OFFER, TRIAL_COPY } from '../public/seller-trial-policy.mjs';
 import { authorizeAdminRequest } from './admin-auth.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 
@@ -108,6 +110,7 @@ export function sellerInquiryNotificationText(id, value, timestamp, verified = t
     '',
     ...labels.map(([key, text]) => `${key}: ${text}`),
     '',
+    ...(value.offer_version===PILOT_OFFER?[`相談時の新規条件: ${TRIAL_COPY}`, '相談では期間開始・有料契約・公開は行いません。既存の個別案内条件は確認してください。']:[]),
     '本文:',
     value.message || '(本文なし)',
     '',
@@ -188,7 +191,8 @@ export async function createSellerBusinessInquiry(env, input, now = new Date(), 
   const timestamp = now.toISOString();
   const existing = (await env.PRODUCT_DB.prepare('SELECT inquiry_id FROM seller_business_inquiries WHERE inquiry_id=?1').bind(id).all()).results?.[0];
   if (existing) return { accepted: true, inquiry_id: id, duplicate: true, verified };
-  const message = `${value.message}\n\n[相談回答への同意: accepted; 継続案内希望: ${value.marketing_consent ? 'yes_pending_verification' : 'no'}; version: seller-consultation-v1]`;
+  value.offer_version=publicPilotOffer(env).offer_version;
+  const message = `${value.message}\n\n[相談回答への同意: accepted; 継続案内希望: ${value.marketing_consent ? 'yes_pending_verification' : 'no'}; version: seller-consultation-v1${value.offer_version?`; offer: ${value.offer_version}`:''}]`;
   const inserted = await env.PRODUCT_DB.prepare(`INSERT INTO seller_business_inquiries
     (inquiry_id,inquiry_type,organization_type,organization_name,contact_name,contact_email,
      storefront_url,marketplaces,monthly_order_range,plan_interest,payment_preference,message,
@@ -238,6 +242,7 @@ export async function handleSellerBusinessInquiryRoutes(request, env) {
     if (!row) return json({ ok: false, error: 'NOT_FOUND' }, 404);
     row.marketplaces = JSON.parse(row.marketplaces || '[]');
     row.marketing_consent = row.message.includes('yes_pending_verification');
+    row.offer_version=row.message.includes(`; offer: ${PILOT_OFFER}]`)?PILOT_OFFER:null;
     row.message = row.message.split('\n\n[相談回答への同意:')[0];
     let notified = false;
     try { notified = await notifySellerInquiry(env, row.inquiry_id, row, row.created_at, row.source !== FALLBACK_SOURCE); } catch {}

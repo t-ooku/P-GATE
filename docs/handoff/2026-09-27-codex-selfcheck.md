@@ -20,3 +20,8 @@
 - Hide lanes without publishable counts; label positive counts as public-scope counts. Empty-state copy explains the publication threshold without claiming overall demand is zero. Fetch failures have a separate message.
 - Preserve underlying counts and privacy thresholds. No production D1 write, pricing change, or social publication.
 - Focused tests: 25 passed, covering empty, mixed, escaped conditions and failed API responses.
+
+## Seller 30-day follow-up (04:10 JST onwards)
+- Fetched HEAD remains ec23353e at start; working tree clean. Health ok with no missing/weak settings, OAuth/Runway connected. #369 still contains the older Yahoo report; resolution is unverified.
+- No newer Claude handoff. User's revised seller acquisition task supersedes the new calendar-three-month offer proposal only; existing promises remain protected.
+- No migration, production SQL write, social publication or test charge performed.
