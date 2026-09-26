@@ -1,3 +1,4 @@
+import { processPilotStripeEvent } from './seller-pilot-payment.mjs';
 // 2026-09-04 大隆さん指示「請求・決済の自動化して」「全部前払いね」。
 //
 // 料金（2026-09-03 決定・/for-sellers と同じ表）:
@@ -590,6 +591,8 @@ async function accountForObject(db, object) {
 
 export async function processStripeEvent(env, event, now = new Date().toISOString()) {
   const db = env.PRODUCT_DB;
+  const pilotResult = await processPilotStripeEvent(env, event);
+  if (pilotResult !== null) return pilotResult;
   const object = event?.data?.object || {};
   const type = String(event?.type || '');
   switch (type) {

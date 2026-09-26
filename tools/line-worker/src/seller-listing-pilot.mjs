@@ -2,9 +2,10 @@
 import { authorizeAdminRequest } from './admin-auth.mjs';
 import { readMemberSession } from './member-auth.mjs';
 import { resolveMemberIdentityAlias } from './member-notification-delivery.mjs';
+import { paidRequest, pilotPaymentsReady, pilotCheckout, verifiedPilotPayment, cancelPilotSubscription, PAID_TERMS } from './seller-pilot-payment.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
-export const PILOT_OFFER = 'external-seller-calendar3-v1';
-const MONTHLY_JPY = 4980;
+import { PILOT_OFFER, LEGACY_PILOT_OFFER, MONTHLY_JPY, TRIAL_TERMS, knownOffer, trialEnd, followupTasks } from '../public/seller-trial-policy.mjs';
+export { PILOT_OFFER, LEGACY_PILOT_OFFER, calendarTrialEnd } from '../public/seller-trial-policy.mjs';
 const json = (body, status = 200) => Response.json(body, {status,headers:{'cache-control':'no-store','x-robots-tag':'noindex','referrer-policy':'no-referrer'}});
 const text = (value, max=200) => String(value || '').trim().slice(0,max);
 const esc = value => String(value ?? '').replace(/[&<>"']/gu,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12,24 +13,23 @@ const originOK = request => request.headers.get('origin') === new URL(request.ur
 function https(value) {
   try { const url=new URL(value); return url.protocol==='https:' && !url.username && !url.password ? url.href : ''; } catch {return '';}
 }
-export function calendarTrialEnd(start) {
-  const time=new Date(start).getTime();
-  if (!Number.isFinite(time)) throw new Error('INVALID_DATE');
-  const jst=new Date(time+9*3600_000);
-  const year=jst.getUTCFullYear(),month=jst.getUTCMonth()+3;
-  const day=Math.min(jst.getUTCDate(),new Date(Date.UTC(year,month+1,0)).getUTCDate());
-  return new Date(Date.UTC(year,month,day,jst.getUTCHours(),jst.getUTCMinutes(),jst.getUTCSeconds(),jst.getUTCMilliseconds())-9*3600_000).toISOString();
-}
 export function pilotEntitlement(doc, now=new Date()) {
-  const active=doc.status==='PUBLISHED' && doc.offer_version===PILOT_OFFER && Date.parse(doc.ends_at)>now.getTime();
-  return {active,expired:doc.status==='PUBLISHED'&&!active,billing_status:'NO_PAID_CONTRACT',automatic_charge:false,monthly_jpy:MONTHLY_JPY,currency:'JPY'};
+  const started=Date.parse(doc.starts_at),ends=Date.parse(doc.ends_at);
+  const paid=Boolean(doc.paid_opt_in_at&&doc.payment?.status==='ACTIVE'&&Date.parse(doc.payment.current_period_end_at)>now.getTime());
+  const active=doc.status==='PUBLISHED' && knownOffer(doc.offer_version) && ((started<=now.getTime() && now.getTime()<ends)||paid);
+  return {active,paid,expired:Number.isFinite(ends)&&now.getTime()>=ends,trial_status:!Number.isFinite(started)?'NOT_STARTED':now.getTime()>=ends?'EXPIRED':'ACTIVE',billing_status:paid?'PAID_CONFIRMED':'NO_PAID_CONTRACT',automatic_charge:false,monthly_jpy:MONTHLY_JPY,currency:'JPY'};
+}
+export function publicPilotOffer(env) {
+  // Recruitment wording is enabled only after staged production verification.
+  const enabled=env.SELLER_MANUAL_PILOT_ENABLED==='true' && env.SELLER_PILOT_OFFER_VERSION===PILOT_OFFER && env.SELLER_PILOT_RECRUITMENT_VERIFIED===PILOT_OFFER;
+  return {enabled,offer_version:enabled?PILOT_OFFER:null,monthly_jpy:MONTHLY_JPY};
 }
 export function normalizePilotDraft(input) {
   const doc={status:'DRAFT',shop_name:text(input.shop_name),business_name:text(input.business_name),registered_address:text(input.registered_address,500),
     business_evidence_ref:text(input.business_evidence_ref,500),external_evidence_ref:text(input.external_evidence_ref,500),
     external_verified:input.external_verified===true,test:input.test===true,products:[]};
   if(!doc.shop_name||!doc.business_name||!doc.registered_address||!doc.business_evidence_ref||!doc.external_evidence_ref||!doc.external_verified) throw new Error('BUSINESS_VERIFICATION_REQUIRED');
-  if(!Array.isArray(input.products)||input.products.length<3||input.products.length>20) throw new Error('THREE_PRODUCTS_REQUIRED');
+  if(!Array.isArray(input.products)||input.products.length<1||input.products.length>20) throw new Error('PRODUCTS_REQUIRED');
   doc.products=input.products.map((p,index)=>{
     const item={id:String(index+1),title:text(p.title,300),image_url:https(p.image_url),destination_url:https(p.destination_url),marketplace:text(p.marketplace,40),
       permission_ref:text(p.permission_ref,500),price_jpy:p.price_jpy===null||p.price_jpy===undefined?null:Number(p.price_jpy),price_verified_at:text(p.price_verified_at,40),asin:text(p.asin,10),jan:text(p.jan,13)};
@@ -44,23 +44,41 @@ export function normalizePilotDraft(input) {
     if(item.price_jpy!==null&&(!Number.isSafeInteger(item.price_jpy)||item.price_jpy<0||!Number.isFinite(Date.parse(item.price_verified_at)))) throw new Error('PRICE_EVIDENCE_REQUIRED');
     return item;
   });
-  if(new Set(doc.products.map(p=>p.destination_url)).size<3) throw new Error('THREE_DISTINCT_PRODUCTS_REQUIRED');
+  if(new Set(doc.products.map(p=>p.destination_url)).size!==doc.products.length) throw new Error('DISTINCT_PRODUCTS_REQUIRED');
   return doc;
 }
 export function transitionPilot(doc, action, input, {actor,offerEnabled,now=new Date()}={}) {
   const next=structuredClone(doc),at=now.toISOString();
+  const offer=doc.offer_version;
   if(action==='APPROVE'&&actor==='OWNER') {
     if(doc.status==='APPROVED') return doc;
-    if(doc.status!=='DRAFT'||input.publication_consent!==true||input.offer_version!==PILOT_OFFER||!offerEnabled) throw new Error('APPROVAL_CONDITIONS_REQUIRED');
-    next.status='APPROVED';next.approved_at=at;next.offer_version=PILOT_OFFER;
+    if(doc.status!=='DRAFT'||input.publication_consent!==true||input.offer_version!==offer||!knownOffer(offer)||!offerEnabled) throw new Error('APPROVAL_CONDITIONS_REQUIRED');
+    next.status='APPROVED';next.approved_at=at;next.terms_version=offer===LEGACY_PILOT_OFFER?'seller-manual-calendar3-v1':TRIAL_TERMS;next.terms_accepted_at=at;
   } else if(action==='PUBLISH'&&actor==='ADMIN') {
     if(doc.status==='PUBLISHED') return doc;
-    if(doc.status!=='APPROVED'||!doc.approved_at||!offerEnabled) throw new Error('OWNER_APPROVAL_REQUIRED');
-    next.status='PUBLISHED';next.starts_at=at;next.ends_at=calendarTrialEnd(at);
+    if(!['APPROVED','UNPUBLISHED'].includes(doc.status)||!doc.approved_at||!knownOffer(offer)||!doc.products?.length||!offerEnabled) throw new Error('OWNER_APPROVAL_REQUIRED');
+    if(doc.starts_at && now.getTime()>=Date.parse(doc.ends_at)&&!pilotEntitlement(doc,now).paid) throw new Error('TRIAL_EXPIRED');
+    next.status='PUBLISHED';
+    // Public reads and trial start use this same atomic document commit. Failed DB writes roll both back.
+    if(!doc.starts_at) {next.starts_at=at;next.ends_at=trialEnd(at,offer);}
+  } else if(action==='UNPUBLISH'&&['OWNER','ADMIN'].includes(actor)) {
+    if(doc.status==='UNPUBLISHED') return doc;
+    if(doc.status!=='PUBLISHED') throw new Error('ACTIVE_LISTING_REQUIRED');
+    next.status='UNPUBLISHED';
   } else if(action==='CONFIRM'&&actor==='OWNER') {
     if(!pilotEntitlement(doc,now).active) throw new Error('ACTIVE_LISTING_REQUIRED');
     if(doc.owner_confirmed_at) return doc;
     next.owner_confirmed_at=at;
+  } else if(action==='CONTINUE_INTEREST'&&actor==='OWNER') {
+    if(!doc.starts_at||input.continuation_interest!==true) throw new Error('CONTINUATION_CONFIRMATION_REQUIRED');
+    if(doc.continuation_interest_at) return doc;
+    next.continuation_interest_at=at; // Interest only, never a contract or a payment trigger.
+  } else if(action==='FOLLOWUP'&&actor==='ADMIN') {
+    const task=followupTasks(doc,now).find(t=>t.day===Number(input.day));
+    if(!task||task.status==='UPCOMING') throw new Error('FOLLOWUP_NOT_DUE');
+    if(task.status==='DONE') return doc;
+    if(!text(input.evidence_ref,500)||!text(input.operator,100)||!['MEASURED','UNAVAILABLE'].includes(input.measurement_status)) throw new Error('FOLLOWUP_EVIDENCE_REQUIRED');
+    next.followups={...doc.followups,[task.day]:{completed_at:at,operator:text(input.operator,100),evidence_ref:text(input.evidence_ref,500),measurement_status:input.measurement_status,minutes:Math.max(0,Math.min(10000,Number(input.minutes)||0)),additional_cost_jpy:Math.max(0,Math.min(1000000,Number(input.additional_cost_jpy)||0))}};
   } else throw new Error('ACTION_NOT_ALLOWED');
   return next;
 }
@@ -68,7 +86,7 @@ export function acquisitionComplete(doc,now=new Date()) {
   return Boolean(doc.external_verified&&!doc.test&&doc.approved_at&&doc.owner_confirmed_at&&doc.products?.length>=3&&pilotEntitlement(doc,now).active);
 }
 export async function activePilotListings(env,now=new Date()) {
-  if(env.SELLER_MANUAL_PILOT_ENABLED!=='true'||env.SELLER_PILOT_OFFER_VERSION!==PILOT_OFFER||!env.PRODUCT_DB) return [];
+  if(env.SELLER_MANUAL_PILOT_ENABLED!=='true'||!knownOffer(env.SELLER_PILOT_OFFER_VERSION)||!env.PRODUCT_DB) return [];
   try {
     const rows=(await env.PRODUCT_DB.prepare("SELECT pilot_id,document_json FROM seller_listing_pilots WHERE json_extract(document_json,'$.status')='PUBLISHED' ORDER BY created_at LIMIT 50").all()).results||[];
     return rows.map(row=>({pilot_id:row.pilot_id,...JSON.parse(row.document_json)})).filter(doc=>!doc.test&&pilotEntitlement(doc,now).active);
@@ -99,6 +117,7 @@ const page = (title,body,status=200) => new Response(`<!doctype html><html lang=
 export async function handleSellerListingPilotRoutes(request,env,deps={}) {
   const path=new URL(request.url).pathname;
   if(!/^\/(?:api\/(?:admin\/)?seller-pilot(?:\/|$)|seller-pilot(?:\/|$)|admin\/seller-pilot$)/u.test(path)) return null;
+  if(path==='/api/seller-pilot/offer'&&request.method==='GET') return json({ok:true,...publicPilotOffer(env)});
   if(env.SELLER_MANUAL_PILOT_ENABLED!=='true') return json({ok:false,error:'PILOT_NOT_ENABLED'},404);
   const adminPath=path.startsWith('/api/admin/')||path==='/admin/seller-pilot';
   const publicId=path.match(/^\/seller-pilot\/shops\/(SPL_[a-zA-Z0-9-]+)$/u)?.[1];
@@ -107,10 +126,10 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
   const savePath=path.match(/^\/api\/seller-pilot\/(SPL_[a-zA-Z0-9-]+)\/save$/u);
   const member=!adminPath&&!publicId?await (deps.member||readMemberSession)(request,env):null;
   if(!publicId&&!admin&&!member) return json({ok:false,error:'AUTH_REQUIRED',login:'/login.html'},401);
-  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>通常料金：月額4,980円（税込）。公開の承認と有料契約は別です。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js"></script>`);
+  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>通常料金：月額4,980円（税込）。公開の承認と有料契約は別です。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=2"></script>`);
   const db=env.PRODUCT_DB;if(!db) return json({ok:false,error:'STORE_UNAVAILABLE'},503);
   const select=async(id)=> (await db.prepare('SELECT * FROM seller_listing_pilots WHERE pilot_id=?1').bind(id).all()).results?.[0];
-  const offerEnabled=env.SELLER_PILOT_OFFER_VERSION===PILOT_OFFER;
+  const offerEnabled=knownOffer(env.SELLER_PILOT_OFFER_VERSION);
   try {
     if(publicId&&request.method==='GET') {
       const row=await select(publicId),doc=row&&JSON.parse(row.document_json);
@@ -134,7 +153,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     }
     if(request.method==='GET') {
       const result=admin?await db.prepare('SELECT * FROM seller_listing_pilots ORDER BY created_at DESC LIMIT 50').all():await db.prepare('SELECT * FROM seller_listing_pilots WHERE owner_member_id=?1 ORDER BY created_at DESC LIMIT 50').bind(member.id).all();
-      return json({ok:true,measurement_excluded:admin||String(env.INTERNAL_MEMBER_IDS||'').split(',').includes(member?.id),offer_enabled:offerEnabled,offer_version:PILOT_OFFER,items:await Promise.all(result.results.map(async row=>{const doc=JSON.parse(row.document_json);return {pilot_id:row.pilot_id,revision:row.revision,...doc,entitlement:pilotEntitlement(doc),kpi:await pilotKpi(env,row,doc)};}))});
+      return json({ok:true,measurement_excluded:admin||String(env.INTERNAL_MEMBER_IDS||'').split(',').includes(member?.id),payments_enabled:pilotPaymentsReady(env),paid_terms_version:PAID_TERMS,offer_enabled:offerEnabled,offer_version:env.SELLER_PILOT_OFFER_VERSION,items:await Promise.all(result.results.map(async row=>{const doc=JSON.parse(row.document_json);return {pilot_id:row.pilot_id,revision:row.revision,...doc,followup_tasks:followupTasks(doc),entitlement:pilotEntitlement(doc),kpi:await pilotKpi(env,row,doc)};}))});
     }
     if(request.method!=='POST') return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
     const parsed=await readBoundedJson(request,40_000);
@@ -142,6 +161,14 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     const input=parsed.value;
     if(admin&&path==='/api/admin/seller-pilot'&&input.action==='CREATE') {
       const doc=normalizePilotDraft(input);
+      if(!offerEnabled) return json({ok:false,error:'OFFER_NOT_ENABLED'},400);
+      doc.offer_version=env.SELLER_PILOT_OFFER_VERSION;
+      if(input.legacy_promise_ref) {
+        doc.offer_version=LEGACY_PILOT_OFFER;doc.legacy_promise_ref=text(input.legacy_promise_ref,500);
+      }
+      if(doc.offer_version===LEGACY_PILOT_OFFER&&!doc.legacy_promise_ref) return json({ok:false,error:'LEGACY_PROMISE_EVIDENCE_REQUIRED'},400);
+      if(input.prior_terms_reviewed!==true) return json({ok:false,error:'PRIOR_TERMS_REVIEW_REQUIRED'},400);
+      doc.prior_terms_reviewed_at=new Date().toISOString();
       const inquiry=(await db.prepare('SELECT contact_email FROM seller_business_inquiries WHERE inquiry_id=?1').bind(text(input.inquiry_id,100)).all()).results?.[0];
       if(!inquiry) return json({ok:false,error:'INQUIRY_REQUIRED'},400);
       const owner=await (deps.ownerForEmail||ownerForEmail)(env,inquiry.contact_email),id=`SPL_${crypto.randomUUID()}`,at=new Date().toISOString();
@@ -156,10 +183,27 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     if(!row||(!admin&&row.owner_member_id!==member.id)) return json({ok:false,error:'NOT_FOUND'},404);
     if(Number(input.revision)!==row.revision) return json({ok:false,error:'REVISION_CONFLICT'},409);
     const doc=JSON.parse(row.document_json);
-    let next;
-    if(admin && input.action==='REVISE') {
+    let next,checkoutUrl;
+    if(!admin&&input.action==='PAID_OPT_IN') {
+      if(!pilotPaymentsReady(env))return json({ok:false,error:'PILOT_PAYMENTS_NOT_ENABLED'},409);
+      next=paidRequest(doc,input);
+    } else if(!admin&&input.action==='CHECKOUT') {
+      const session=await pilotCheckout(env,row,doc);
+      next={...doc,payment:{...doc.payment,session_id:session.id,status:'PENDING'}};checkoutUrl=session.url;
+    } else if(!admin&&input.action==='SYNC_PAYMENT') {
+      next={...doc,payment:await verifiedPilotPayment(env,row,doc)};
+    } else if(!admin&&input.action==='CANCEL_PAID') {
+      next={...doc,payment:await cancelPilotSubscription(env,row,doc)};
+    } else if(admin&&input.action==='REVIEW_TERMS') {
+      if(doc.status!=='DRAFT'||doc.offer_version||doc.approved_at||doc.starts_at||input.prior_terms_reviewed!==true) return json({ok:false,error:'TERMS_REVIEW_NOT_ALLOWED'},409);
+      next={...doc,offer_version:input.legacy_promise_ref?LEGACY_PILOT_OFFER:env.SELLER_PILOT_OFFER_VERSION,prior_terms_reviewed_at:new Date().toISOString(),...(input.legacy_promise_ref?{legacy_promise_ref:text(input.legacy_promise_ref,500)}:{})};
+      if(!knownOffer(next.offer_version)) return json({ok:false,error:'OFFER_NOT_ENABLED'},409);
+    } else if(admin && input.action==='REVISE') {
       if(doc.status==='PUBLISHED') return json({ok:false,error:'PUBLISHED_REVISION_REQUIRES_REVIEW'},409);
-      next=normalizePilotDraft(input);
+      if(!knownOffer(doc.offer_version)) return json({ok:false,error:'LEGACY_TERMS_REVIEW_REQUIRED'},409);
+      next={...doc,...normalizePilotDraft({...input,test:doc.test})};delete next.approved_at;
+      // Preserve agreed offer and first publication timestamps on edits/republication.
+      delete next.terms_accepted_at;delete next.owner_confirmed_at;
     } else next=transitionPilot(doc,input.action,input,{actor:admin?'ADMIN':'OWNER',offerEnabled});
     if(next===doc) return json({ok:true,revision:row.revision});
     const at=new Date().toISOString(),revision=row.revision+1;
@@ -169,7 +213,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
         SELECT ?1,?2,?3,?4,?5,?6 WHERE changes()=1`).bind(crypto.randomUUID(),id,revision,admin?'ADMIN':'OWNER',input.action,at)
     ]);
     if(results[0]?.meta?.changes!==1) return json({ok:false,error:'REVISION_CONFLICT'},409);
-    return json({ok:true,revision});
+    return json({ok:true,revision,...(checkoutUrl?{checkout_url:checkoutUrl}:{})});
   } catch(error) {
     const reason=String(error?.message||'');
     return json({ok:false,error:/^[A-Z_]+$/u.test(reason)?reason:'PILOT_STORE_UNAVAILABLE'},/^[A-Z_]+$/u.test(reason)?400:503);
