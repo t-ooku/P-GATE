@@ -36,24 +36,24 @@
       "slides": 4,
       "files": [
         {
-          "file": "seller-demand-visible/1.jpg",
+          "file": "seller30-20260927/seller-demand-visible/1.jpg",
           "sha256": "88ea85203568541d11c50a5beb817befc85cb25279c28478e07e8a07275e4d79",
           "bytes": 267756
         },
         {
-          "file": "seller-demand-visible/2.jpg",
+          "file": "seller30-20260927/seller-demand-visible/2.jpg",
           "sha256": "42aec84ffa1b4c8659012bbb69cea8a75b27a54f9c8e05e502981e70f6d2fd7f",
           "bytes": 88414
         },
         {
-          "file": "seller-demand-visible/3.jpg",
+          "file": "seller30-20260927/seller-demand-visible/3.jpg",
           "sha256": "df0bc067b68072a89e5f64afe71b10955dc2e24155664fa482d155906032f242",
           "bytes": 86131
         },
         {
-          "file": "seller-demand-visible/4.jpg",
-          "sha256": "75a7edad251966b3e20bc269d7a5386590cbc8cc5c5150fb4210cadfcd7f9714",
-          "bytes": 84598
+          "file": "seller30-20260927/seller-demand-visible/4.jpg",
+          "sha256": "c5b611900375f2036abfc962af8125da1f5f5060aa07507fccbd83d59bf69e12",
+          "bytes": 94943
         }
       ]
     },
@@ -88,24 +88,24 @@
       "slides": 4,
       "files": [
         {
-          "file": "seller-shop-entrance/1.jpg",
+          "file": "seller30-20260927/seller-shop-entrance/1.jpg",
           "sha256": "15f756b28da3426f024bec09f021eebb7420838be7c6674346b8e6111db7bc41",
           "bytes": 195595
         },
         {
-          "file": "seller-shop-entrance/2.jpg",
+          "file": "seller30-20260927/seller-shop-entrance/2.jpg",
           "sha256": "e73e005f53a7755bc155c6f333d20a4b8d52c27246d637c2c03888d9b170d57c",
           "bytes": 82948
         },
         {
-          "file": "seller-shop-entrance/3.jpg",
+          "file": "seller30-20260927/seller-shop-entrance/3.jpg",
           "sha256": "7ec99e6f87e35f9aa1830740ba5fd704ff020e3fcaef0371a294438075a3639b",
           "bytes": 82734
         },
         {
-          "file": "seller-shop-entrance/4.jpg",
-          "sha256": "5dec5baf235da603311c6fd5e2397b85ed63e2b4a1e1e327b484170862a1fe67",
-          "bytes": 99585
+          "file": "seller30-20260927/seller-shop-entrance/4.jpg",
+          "sha256": "f1f62a453b6570c394e7b396ffb32eca804b54f9f1940a4e32e7f26fb12f0e43",
+          "bytes": 110300
         }
       ]
     },
@@ -140,22 +140,22 @@
       "slides": 4,
       "files": [
         {
-          "file": "seller-real-numbers/1.jpg",
+          "file": "seller30-20260927/seller-real-numbers/1.jpg",
           "sha256": "21891d9b9838f8e1b1872feb774102bf9a405d2b4d97d0ba7077973264ca2670",
           "bytes": 225239
         },
         {
-          "file": "seller-real-numbers/2.jpg",
+          "file": "seller30-20260927/seller-real-numbers/2.jpg",
           "sha256": "9061cd2011e480f736f879fe353ccc381627e3c52d4cad61f8b339b428b8db31",
           "bytes": 75195
         },
         {
-          "file": "seller-real-numbers/3.jpg",
+          "file": "seller30-20260927/seller-real-numbers/3.jpg",
           "sha256": "ae15da5c8806e79980a9a13ea5d5c0764f57b5d95cb08dc1687220091d0f13d3",
           "bytes": 79341
         },
         {
-          "file": "seller-real-numbers/4.jpg",
+          "file": "seller30-20260927/seller-real-numbers/4.jpg",
           "sha256": "d26959ec58ba589618b3760c8e9cf553d14b53405a0fc10899b3e6c0f0300bc1",
           "bytes": 80709
         }
@@ -192,24 +192,24 @@
       "slides": 4,
       "files": [
         {
-          "file": "seller-found-by-condition/1.jpg",
+          "file": "seller30-20260927/seller-found-by-condition/1.jpg",
           "sha256": "912a92c61edfff691d9bcaccf688396b73141403668be97cb04946cecf3234f8",
           "bytes": 182718
         },
         {
-          "file": "seller-found-by-condition/2.jpg",
+          "file": "seller30-20260927/seller-found-by-condition/2.jpg",
           "sha256": "61a18e0c048391f5b2a9244954008109b2b88f3cc54fb1b90c8bd7a1497e15bf",
           "bytes": 90692
         },
         {
-          "file": "seller-found-by-condition/3.jpg",
+          "file": "seller30-20260927/seller-found-by-condition/3.jpg",
           "sha256": "a3af673baf7908f527c0de3cbde483dc1a55219ea5471e2d5e85fef12d2438d4",
           "bytes": 83184
         },
         {
-          "file": "seller-found-by-condition/4.jpg",
-          "sha256": "330e5acc2ab6a134a1c70c6e8dfc2d7429e5cdd0958fdc15c5308d108ed3bd0e",
-          "bytes": 89997
+          "file": "seller30-20260927/seller-found-by-condition/4.jpg",
+          "sha256": "11b62f5dc844800c7651b17d1403db7d238e278fc1965ac2f22c936623633fc8",
+          "bytes": 100097
         }
       ]
     },
@@ -244,24 +244,24 @@
       "slides": 4,
       "files": [
         {
-          "file": "seller-wanted-now/1.jpg",
+          "file": "seller30-20260927/seller-wanted-now/1.jpg",
           "sha256": "a1e05f44f137ab479ddd6a809ca7517a1f861b7af43b5a6be53bc69f69482bb1",
           "bytes": 139455
         },
         {
-          "file": "seller-wanted-now/2.jpg",
+          "file": "seller30-20260927/seller-wanted-now/2.jpg",
           "sha256": "bb31ff2efe5cf5551a2a1019fd8ed093c6dca8cca369df0b263b364f4b940305",
           "bytes": 85699
         },
         {
-          "file": "seller-wanted-now/3.jpg",
+          "file": "seller30-20260927/seller-wanted-now/3.jpg",
           "sha256": "dea38ede210bc7bf21b6e06a75947808b45f1694d39ca32ef617c61fd46ebca2",
           "bytes": 86769
         },
         {
-          "file": "seller-wanted-now/4.jpg",
-          "sha256": "9047757dd0297ebc91ebc3ad8106064cbde164b52cad3835b437584574292f96",
-          "bytes": 102252
+          "file": "seller30-20260927/seller-wanted-now/4.jpg",
+          "sha256": "f422579096a1354c62f21aa8a88a2bad8927a3130ed2de898e74766784213fef",
+          "bytes": 110502
         }
       ]
     },
@@ -296,24 +296,24 @@
       "slides": 4,
       "files": [
         {
-          "file": "seller-usual-repeat-demand/1.jpg",
+          "file": "seller30-20260927/seller-usual-repeat-demand/1.jpg",
           "sha256": "b958437d80bb49e857e523d2da1bb220ca17bab1eb195747ee4f05bc4329ebb2",
           "bytes": 125055
         },
         {
-          "file": "seller-usual-repeat-demand/2.jpg",
-          "sha256": "937ccb49efbd4adecacf02c1f340818d102553311f588f291731d1f19b6d3163",
-          "bytes": 90690
+          "file": "seller30-20260927/seller-usual-repeat-demand/2.jpg",
+          "sha256": "c72b79e8334134b020237ed662a82af43f772aa4b5af00520632f2d4220b0707",
+          "bytes": 105109
         },
         {
-          "file": "seller-usual-repeat-demand/3.jpg",
+          "file": "seller30-20260927/seller-usual-repeat-demand/3.jpg",
           "sha256": "5bed170120575dba2f77bbe121acd58e279d04578e6871bcd825140cb78c50da",
           "bytes": 83122
         },
         {
-          "file": "seller-usual-repeat-demand/4.jpg",
-          "sha256": "7fd17a77b4194f95a85185c9ee5138c18647d6ca9577266dfd650fa49547e17f",
-          "bytes": 87489
+          "file": "seller30-20260927/seller-usual-repeat-demand/4.jpg",
+          "sha256": "ee14bddbc22e36be0acd8e2c7f8a1d4f53c288e6ca62e1cf83b5b4e180cfdb23",
+          "bytes": 96657
         }
       ]
     }
