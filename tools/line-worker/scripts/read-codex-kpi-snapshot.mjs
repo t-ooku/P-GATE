@@ -371,7 +371,15 @@ export async function operationalDiagnostics(db, internalIds = []) {
     eligible_now: { status: 'AVAILABLE', count: Number(outreachRow.eligible_now || 0) },
     next_scheduled_at: outreachRow.next_scheduled_at || null
   } : { status: 'UNAVAILABLE' };
-  return { inventory, migrations, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
+  const acquisitionSafety = {
+    applied_migrations: await read('SELECT substr(name,1,4) AS version,applied_at FROM d1_migrations ORDER BY id'),
+    consultation_sources: await read('SELECT source,status,COUNT(*) AS count FROM seller_business_inquiries GROUP BY source,status'),
+    marketing_permissions: await read("SELECT CASE WHEN revoked_at='' THEN 'RECORDED' ELSE 'REVOKED' END AS state,COUNT(*) AS count FROM seller_contact_permissions GROUP BY state"),
+    notification_states: await read('SELECT state,COUNT(*) AS count FROM seller_inquiry_notifications GROUP BY state'),
+    actual_inbox_replies: {status:'UNVERIFIED',reason:'CORRECT_MAILBOX_NOT_CONNECTED'},
+    definition: 'A candidate or API-accepted email is not consent, delivery, dialogue or an acquired external seller.'
+  };
+  return { inventory, migrations, acquisition_safety: acquisitionSafety, outreach, outreach_lifecycle: outreachLifecycle, social, funnel,
     seller_acquisition: sellerAcquisition.status === 'AVAILABLE' ? {
       ...sellerAcquisition,
       exclusions: 'ITG_SELLER_SHOP_SLUGS_AND_QA_TRAFFIC',

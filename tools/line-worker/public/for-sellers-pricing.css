@@ -85,3 +85,8 @@
    この欄は丸い錠剤の形（border-radius:999px）だった。1行なら収まるが、
    スマホでは3行に折り返すため、上下の行が丸みに食い込み、左へずれて見えていた。
    他の枠と同じ角丸（18px）にして、行が増えても文字の左端がそろうようにした。 */
+
+/* Consultation headline: fit small screens without forced horizontal overflow. */
+.hero h1,.hero h1 span{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:520px){.hero h1{font-size:clamp(25px,6.6vw,34px);line-height:1.45}.flow h2{white-space:normal}}
+.consent-note{display:block;margin:16px 0;line-height:1.7}.consent-note input{width:auto;min-height:auto;margin-right:8px}
