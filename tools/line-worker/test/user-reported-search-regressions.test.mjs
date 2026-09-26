@@ -48,6 +48,24 @@ test('本革トートバッグはショルダーバッグ単体と財布を除�
   assert.deepEqual(results.map((item) => item.asin), ['TOTE']);
 });
 
+test('バッグ 白ではバッグインボックスの白ワインを除外し、本物の白いバッグだけを残す', () => {
+  const results = filterCategoryMismatches('バッグ 白', [
+    candidate('WINE_CASE', 'ムレダ オーガニック メリベア ブランコ 白ワイン バッグインボックス 3L 4本'),
+    candidate('WINE_BOX', '宝酒造 加工業務用ワイン（白） バッグインボックス 20L'),
+    candidate('WHITE_BAG', 'レディース 白 ショルダーバッグ 2WAY'),
+    candidate('WINE_RED_BAG', 'ワインレッド 本革 ハンドバッグ')
+  ]);
+  assert.deepEqual(results.map((item) => item.asin), ['WHITE_BAG', 'WINE_RED_BAG']);
+});
+
+test('ワインボトルを運ぶバッグを明示して探した場合は除外しない', () => {
+  const results = filterCategoryMismatches('ワインボトル バッグ 白', [
+    candidate('CARRIER', '白 ワインボトル 保冷 バッグ 2本用'),
+    candidate('DRINK', '白ワイン バッグインボックス 3L')
+  ]);
+  assert.deepEqual(results.map((item) => item.asin), ['CARRIER']);
+});
+
 test('商品棚の表示順位は候補の旧rankではなく必ずNO.1から振り直す', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /const safeRank=index\+1/);

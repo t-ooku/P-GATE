@@ -2574,6 +2574,18 @@ function passesExplicitSearchEvidenceGate(query, candidate) {
   const candidateText = `${candidate?.product_name || ''} ${candidate?.display_name || ''} ${candidate?.description || ''} ${candidate?.manufacturer || ''}`
     .normalize('NFKC').toLowerCase();
 
+  // 「バッグインボックス」はワインの容器方式であり、身につけるバッグではない。
+  // 「バッグ 白」のような短い検索では バッグ + 白 の両方が一致するため、
+  // カテゴリと色の満点候補として白ワインが本物のバッグより上に出ていた。
+  // ワインレッド色のバッグや、ワインボトルを運ぶ明示的なバッグは残す。
+  const bagIntent = /(?:バッグ|かばん|鞄|handbags?|tote\s*bags?|shoulder\s*bags?|backpacks?)/iu.test(queryText);
+  if (bagIntent) {
+    const boxedWine = /(?:バッグ\s*イン\s*ボックス|bag\s*[- ]?in\s*[- ]?box|boxed\s*wine)/iu.test(candidateText);
+    const alcoholicDrink = /(?:白\s*ワイン|赤\s*ワイン|ロゼ\s*ワイン|果実酒|酒造|ワイン\s*[（(]?(?:白|赤|ロゼ)|wine\s*[（(]?(?:white|red|rose)|alcohol\s*\d+(?:\.\d+)?\s*%)/iu.test(candidateText);
+    const explicitBottleCarrier = /(?:ワインボトル|ボトル収納|ボトル持ち運び|保冷).{0,16}(?:バッグ|ケース|キャリー)|(?:wine\s*bottle|bottle).{0,16}(?:bag|case|carrier)/iu.test(candidateText);
+    if (boxedWine || (alcoholicDrink && !explicitBottleCarrier)) return false;
+  }
+
   // Product nouns are hard constraints. A shared material such as smoky
   // quartz must not let earrings replace the ring the user requested.
   const ringNoun = /(?:指輪|\bring\b|(?:^|[\s・「」『』【】()（）])リング(?:$|[\s・「」『』【】()（）]))/iu;
