@@ -12,3 +12,11 @@
 - Google mall search previously started inside final response decoration, after live marketplace search. Start it once after the effective query is finalized and reuse that promise during decoration. Preserve query, provider budgets, result filtering and ranking.
 - Seller priority and active shop lookups are independent and now run concurrently.
 - Add a public API regression that holds the marketplace response until Google starts, verifies overlap, retained Google results, and no duplicate Google call.
+
+## Seller recruitment page follow-up
+
+- User requested removal of the IT Group FAQ; removed it from visible FAQ and FAQPage structured data.
+- Public demand API returned all three public lanes with groups/people zero. These totals cover only privacy-qualified groups (at least five people), not all demand on HOSHILU.
+- Hide lanes without publishable counts; label positive counts as public-scope counts. Empty-state copy explains the publication threshold without claiming overall demand is zero. Fetch failures have a separate message.
+- Preserve underlying counts and privacy thresholds. No production D1 write, pricing change, or social publication.
+- Focused tests: 25 passed, covering empty, mixed, escaped conditions and failed API responses.

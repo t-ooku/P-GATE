@@ -169,9 +169,9 @@ form?.addEventListener('submit', async event => {
   const box = document.querySelector('#demandNow');
   if (!box) return;
   const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-  const empty = (text) => { box.innerHTML = `<article><h3>まだ公開できる需要がありません</h3><p>${escapeHtml(text)}</p></article>`; };
+  const notice = (title, text) => { box.innerHTML = `<article><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></article>`; };
   // 2026-09-21 指示書 ⑯: 3つの需要（探し中・値下がり待ち・いつものホシル）の実数を LP の先頭に出す。
-  // 出すのは公開できる需要（5人以上）の合計だけ。集計できない系統は「0人」と書かず、そう書く（§30）。
+  // 公開対象がある系統だけ表示する。公開対象ゼロ・集計不能を需要全体のゼロとして見せない。
   const renderTotals = (three) => {
     const strip = document.querySelector('#demandTotals');
     if (!strip) return;
@@ -180,21 +180,23 @@ form?.addEventListener('submit', async event => {
       ['値下がり待ち', three?.price_watch, (lane) => `${lane.people}人が待っています`],
       ['いつものホシル', three?.usual, (lane) => `${lane.people}人が継続・30日以内に ${lane.within_30_days}人`]
     ];
-    strip.innerHTML = lanes.map(([label, lane, detail]) => `<div class="demand-total">
-      <strong>${lane?.measurable === true ? escapeHtml(String(lane.groups)) + '件' : '—'}</strong>
-      <span class="demand-total-label">${escapeHtml(label)}</span>
-      <span class="demand-total-note">${lane?.measurable === true ? escapeHtml(detail(lane)) : 'いまは集計できていません'}</span>
+    strip.innerHTML = lanes.filter(([, lane]) => lane?.measurable === true && Number(lane.groups) > 0 && Number(lane.people) > 0).map(([label, lane, detail]) => `<div class="demand-total">
+      <strong>${escapeHtml(String(lane.groups))}件</strong>
+      <span class="demand-total-label">${escapeHtml(label)}（公開対象）</span>
+      <span class="demand-total-note">${escapeHtml(detail(lane))}</span>
     </div>`).join('');
   };
   try {
     const response = await fetch('/api/shops/demand/public', { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP_${response.status}`);
     const data = await response.json();
+    if (data?.ok === false) throw new Error('DEMAND_UNAVAILABLE');
     renderTotals(data?.three_demands);
     const items = Array.isArray(data?.items) ? data.items.slice(0, 6) : [];
-    if (!items.length) { empty(`同じ条件を${Number(data?.min_people || 5)}人以上が探している需要が集まると、ここに条件と人数を表示します。契約者画面ではそれ未満の需要も件数だけ確認できます。`); return; }
+    if (!items.length) { notice('公開基準を満たした需要を掲載します', `個人を特定できないよう、同じ条件に${Number(data?.min_people || 5)}人以上が集まった項目だけを表示します。ここに項目がない場合も、HOSHILU全体の需要がゼロという意味ではありません。`); return; }
     box.innerHTML = items.map((item) => `<article><h3>${escapeHtml(item.conditions)}</h3><span class="people">${Number(item.people || 0)}人が探し中</span><span class="state">${item.zero_results > 0 ? `一致商品 0件（${Number(item.zero_results)}回）` : ''}${item.zero_results > 0 && item.near_only > 0 ? '・' : ''}${item.near_only > 0 ? `近い商品だけ（${Number(item.near_only)}回）` : ''}</span></article>`).join('');
   } catch {
-    empty('今探されているものを読み込めませんでした。時間をおいて再度お試しください。');
+    renderTotals(null);
+    notice('需要データを読み込めませんでした', '時間をおいて再度お試しください。取得できなかったため、件数は表示していません。');
   }
 })();

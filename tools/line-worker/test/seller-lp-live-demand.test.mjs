@@ -57,11 +57,48 @@ test('LP に差し込み先があり、HTML に数字を焼き込んでいない
   assert.ok(!/\d+人|\d+件/u.test(strip), 'HTML に人数・件数を書かない');
 });
 
-test('LP の JS が3系統を描き、集計不能をそう書く', () => {
+async function renderDemand(payload, ok = true) {
+  const { runInNewContext } = await import('node:vm');
+  const box = { innerHTML: '' };
+  const strip = { innerHTML: '' };
   const script = read('public/for-sellers.js');
-  for (const label of ['探し中', '値下がり待ち', 'いつものホシル']) assert.ok(script.includes(`'${label}'`), label);
-  assert.match(script, /lane\?\.measurable === true \? escapeHtml\(String\(lane\.groups\)\) \+ '件' : '—'/u);
-  assert.ok(script.includes('いまは集計できていません'), '0人と断定しない');
+  await runInNewContext(script.slice(script.lastIndexOf('(async () => {')), {
+    document: { querySelector: (selector) => selector === '#demandNow' ? box : strip },
+    fetch: async () => ({ ok, status: ok ? 200 : 503, json: async () => payload })
+  });
+  return { box: box.innerHTML, strip: strip.innerHTML };
+}
+
+test('公開対象ゼロは数字カードを隠し、需要全体のゼロと区別する', async () => {
+  const three_demands = summarizePublicThreeDemands({ searchingItems: [], priceWatch: { items: [] }, usual: { items: [] } });
+  const rendered = await renderDemand({ ok: true, items: [], min_people: 5, three_demands });
+  assert.equal(rendered.strip, '');
+  assert.match(rendered.box, /公開基準を満たした需要を掲載します/u);
+  assert.match(rendered.box, /5人以上/u);
+  assert.match(rendered.box, /全体の需要がゼロという意味ではありません/u);
+  assert.doesNotMatch(rendered.box, /0件|0人/u);
+});
+
+test('公開対象がある系統だけ実数と集計範囲を示し、条件をエスケープする', async () => {
+  const rendered = await renderDemand({ ok: true, items: [{ conditions: '<img src=x>', people: 9 }], three_demands: {
+    searching: { measurable: true, groups: 1, people: 9 },
+    price_watch: { measurable: true, groups: 0, people: 0 },
+    usual: { measurable: false }
+  } });
+  assert.match(rendered.strip, /1件/u);
+  assert.match(rendered.strip, /9人が待っています/u);
+  assert.match(rendered.strip, /探し中（公開対象）/u);
+  assert.doesNotMatch(rendered.strip, /値下がり待ち|いつものホシル|0人/u);
+  assert.match(rendered.box, /&lt;img src=x&gt;/u);
+});
+
+test('API失敗は公開対象ゼロと混同しない', async () => {
+  for (const [payload, ok] of [[{}, false], [{ ok: false }, true]]) {
+    const rendered = await renderDemand(payload, ok);
+    assert.equal(rendered.strip, '');
+    assert.match(rendered.box, /需要データを読み込めませんでした/u);
+    assert.doesNotMatch(rendered.box, /公開基準を満たした需要を掲載します|0件|0人/u);
+  }
 });
 
 test('スタイルがある（Instagram 寄せ）', () => {

@@ -63,8 +63,7 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /金額の相談は受け付けていません/u);
   assert.match(html, /カード・銀行振込・請求書払い/u);
   assert.match(html, /フォーム送信だけで課金されることはありません/u);
-  assert.match(html, /HOSHILUはITグループ株式会社のサービスではありません/u);
-  assert.match(html, /ITG以外のメーカー、ブランド、モール出店者、自社EC、D2C事業者/u);
+  assert.doesNotMatch(html, /ITグループ|ITG以外/u);
   assert.match(html, /売上、注文、掲載順位は保証しません/u);
   assert.match(html, /property="og:url" content="https:\/\/hoshilu\.app\/for-sellers"/u);
   assert.match(html, /"@type":"FAQPage"/u);
