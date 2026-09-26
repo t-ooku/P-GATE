@@ -1,3 +1,4 @@
+import { activePilotListings } from './seller-listing-pilot.mjs';
 // 2026-09-17 大隆さん「HOSHILU SHOP全面強化」指示書 P0（docs/handoff/2026-09-17-shop-directive.md）
 //
 //   全ショップ横断検索 → 条件一致 / 近い商品 / 見つからない の3段階
@@ -219,6 +220,19 @@ export async function searchAcrossShops(env, query, { limitPerTenant = 40, shops
         seen.add(card.url);
         (verdict.level === 'EXACT' ? result.exact : result.near).push(card);
       }
+    }
+  }
+  // Same title-condition judge and caps as existing shops; no preferred ranking for pilots.
+  if (!shops) for (const pilot of await activePilotListings(env)) {
+    result.shops_searched += 1;
+    for (const product of pilot.products) {
+      const verdict=asin ? {level:product.asin===asin?'EXACT':'NONE',matched:[asin],unmatched:[]} : judgeTitle(product.title,conditions);
+      if(verdict.level==='NONE'||seen.has(product.destination_url)) continue;
+      seen.add(product.destination_url);
+      const card={name:product.title,image:product.image_url,url:product.destination_url,price:product.price_jpy||0,
+        asin:product.asin,record_key:`${pilot.pilot_id}:${product.id}`,marketplace:product.marketplace,
+        shop:{name:pilot.shop_name,slug:pilot.pilot_id,url:`/seller-pilot/shops/${pilot.pilot_id}`},...verdict};
+      (verdict.level==='EXACT'?result.exact:result.near).push(card);
     }
   }
   const byMatches = (a, b) => b.matched.length - a.matched.length || a.unmatched.length - b.unmatched.length;
