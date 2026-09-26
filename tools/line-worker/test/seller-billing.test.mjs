@@ -201,7 +201,7 @@ test('セラーAPIは未ログイン401・未登録404・Stripe未接続503を�
   assert.equal(summary.wallet.available_jpy, 0);
   assert.equal((await get('/api/seller/billing/topup', { method: 'POST', body: '{"amount_jpy":10000}' })).status, 404);
   await registerAccount(env);
-  assert.equal((await get('/api/seller/billing/topup', { method: 'POST', body: '{"amount_jpy":10000}' })).status, 503);
+  assert.equal((await get('/api/seller/billing/topup', { method: 'POST', body: '{"amount_jpy":10000}' })).status, 410);
   const after = await (await get('/api/seller/billing')).json();
   assert.equal(after.account.plan, 'BUSINESS');
   assert.equal(after.allowance.granted_jpy, 5000);
@@ -232,9 +232,8 @@ test('Stripe へ渡す Checkout / Subscription の中身（カードは自動引
   assert.match(subscriptionCall.body, /subscription_data%5Btrial_end%5D=\d+/u);
   assert.match(subscriptionCall.body, /payment_method_collection=always/u);
   const topupCall = calls.find((call) => call.url.endsWith('/checkout/sessions') && call.body.includes('mode=payment'));
-  assert.match(topupCall.body, /unit_amount%5D=10000/u);
-  assert.match(topupCall.body, /setup_future_usage%5D=off_session/u);
-  assert.match(topupCall.body, /purpose%5D=TOPUP/u);
+  assert.equal(topupCall, undefined, '廃止済み前払いのCheckoutを新規作成しない');
+  assert.equal(card.links.topup, null);
   const priceCall = calls.find((call) => call.url.endsWith('/v1/prices') && call.body);
   assert.match(priceCall.body, /unit_amount=4980/u);
   assert.match(priceCall.body, /tax_behavior=inclusive/u);
@@ -249,7 +248,7 @@ test('Stripe へ渡す Checkout / Subscription の中身（カードは自動引
   assert.match(bankSub.body, /bank_transfer%5D%5Btype%5D=jp_bank_transfer/u);
   assert.equal(bank.account.status, 'ACTIVE'); // trialing
   const bankTopup = calls.filter((call) => call.body.includes('mode=payment')).at(-1);
-  assert.match(bankTopup.body, /payment_method_types%5B0%5D=customer_balance/u);
+  assert.equal(bankTopup,undefined,'銀行振込の前払いCheckoutも作らない');
   // 秘密鍵をログや本文へ出さない
   assert.equal(calls.some((call) => call.body.includes('sk_test')), false);
 });

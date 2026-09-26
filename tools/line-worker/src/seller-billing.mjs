@@ -516,7 +516,7 @@ export async function createBillingAccount(env, input = {}, { origin, now = new 
   if (stripeConfigured(env)) {
     try {
       if (plan === 'BUSINESS') links.subscription = await startBusinessSubscription(env, account, { origin, now });
-      links.topup = await createTopupCheckout(env, account, { amountJpy: TOPUP_PRESETS_JPY[1], origin, now });
+      // Monthly-only model: do not create a new prepaid checkout.
     } catch (error) {
       warnings.push(`STRIPE:${String(error?.code || error?.message || error).slice(0, 80)}`);
     }
@@ -529,7 +529,7 @@ export async function createBillingAccount(env, input = {}, { origin, now = new 
     plan === 'BUSINESS'
       ? `■ HOSHILU Seller 月額 4,980円（税込）: 登録後3か月は月額0円。通常の商品クリックは月額に含まれます。${links.subscription?.url ? `お支払い方法の登録: ${links.subscription.url}` : '請求書（振込先つき）を別途お送りします。'}`
       : '■ 無料プラン: 月額0円。通常の商品クリックに課金はありません。',
-    '■ クリックによる追加料金はありません（Demand Match Click 50円は 2026-09-21 に廃止しました）。お支払いは月額だけです。',
+    '■ クリックによる追加料金はありません。お支払いは月額だけです。',
     '', '料金表: https://hoshilu.app/for-sellers#pricing', 'HOSHILU'
   ].filter((line) => line !== '');
   const emailed = await sendBillingEmail(env, contactEmail, 'HOSHILU セラーアカウントとお支払いのご案内', emailLines.join('\n'));
@@ -725,25 +725,13 @@ export async function handleSellerBillingRoutes(request, env, seller) {
       return json({ ok: true, entries: (rows.results || []).map((row) => ({ ...row, amount_jpy: microsToYen(row.amount_micros_jpy), balance_after_jpy: microsToYen(row.balance_after_micros_jpy) })) });
     }
     if (!account) return json({ ok: false, error: 'BILLING_ACCOUNT_NOT_REGISTERED', seller_key: seller.seller_key }, 404);
+    if (request.method === 'POST' && ['/api/seller/billing/topup','/api/seller/billing/auto-recharge'].includes(url.pathname)) return json({ok:false,error:'PREPAID_CHARGING_RETIRED'},410);
     if (!stripeConfigured(env)) return json({ ok: false, error: 'STRIPE_NOT_CONFIGURED' }, 503);
-    if (request.method === 'POST' && url.pathname === '/api/seller/billing/topup') {
-      const body = await request.json().catch(() => ({}));
-      return json({ ok: true, ...(await createTopupCheckout(env, account, { amountJpy: body.amount_jpy, origin })) });
-    }
     if (request.method === 'POST' && url.pathname === '/api/seller/billing/subscribe') {
       return json({ ok: true, ...(await startBusinessSubscription(env, account, { origin })) });
     }
     if (request.method === 'POST' && url.pathname === '/api/seller/billing/portal') {
       return json({ ok: true, ...(await createPortalSession(env, account, { origin })) });
-    }
-    if (request.method === 'POST' && url.pathname === '/api/seller/billing/auto-recharge') {
-      const body = await request.json().catch(() => ({}));
-      const enabled = body.enabled === true || body.enabled === 1 || body.enabled === '1' ? 1 : 0;
-      const amount = enabled ? validTopupAmount(body.amount_jpy ?? account.auto_recharge_amount_jpy) : account.auto_recharge_amount_jpy;
-      const threshold = Math.max(0, Math.min(TOPUP_MAX_JPY, yen(body.threshold_jpy ?? account.auto_recharge_threshold_jpy)));
-      if (enabled && account.payment_preference !== 'CARD') return json({ ok: false, error: 'AUTO_RECHARGE_CARD_ONLY' }, 400);
-      await updateAccount(env.PRODUCT_DB, account.seller_key, { auto_recharge_enabled: enabled, auto_recharge_amount_jpy: amount, auto_recharge_threshold_jpy: threshold }, new Date().toISOString());
-      return json({ ok: true, auto_recharge_enabled: enabled === 1, auto_recharge_amount_jpy: amount, auto_recharge_threshold_jpy: threshold });
     }
     return json({ ok: false, error: 'NOT_FOUND' }, 404);
   } catch (error) {
