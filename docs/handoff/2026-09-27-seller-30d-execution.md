@@ -25,3 +25,5 @@
 - https://resend.com/docs/webhooks/event-types : sent/API受付とdelivered/相手メールサーバー到達を分離。
 - https://resend.com/docs/webhooks/verify-webhooks-requests : raw body/署名/時刻検証。
 - https://docs.stripe.com/api/checkout/sessions/create / https://docs.stripe.com/api/idempotent_requests / https://docs.stripe.com/billing/subscriptions/webhooks : 同意後Checkout・有限の冪等保存期間・最新契約照合。
+
+- 追加監査：30日経路の有効化後は、旧adminアカウント作成から登録日起算3か月Stripe契約を新設する入口を拒否。既存アカウントの更新・契約・履歴は維持。旧個別案内の開始条件が不明なら公開前に確認し、30日へ置換しない。
