@@ -9,8 +9,9 @@ test('old saved seller copy and old media never reach a provider, even with an a
   for(const post of [
     {caption:'HOSHILU Seller 最初の3か月は月額0円です'},
     {caption:'Seller 3ヶ月無料'},
+    {caption:'Seller 最初の３か月\n０円'},
     {caption:'Seller 商品公開から30日間無料',media_urls:JSON.stringify(['https://hoshilu.app/social/carousel/seller-demand-visible/4.jpg'])},
-    {caption:'Seller 掲載見本を相談する',media_url:'https://hoshilu.app/social/old-reel.mp4'}
+    {caption:'Seller 新規30日無料は準備中',media_url:'https://hoshilu.app/social/old-reel.mp4'}
   ]) await assert.rejects(publishSocialPost({...post,platform:'X',status:'APPROVED'},active,()=>{assert.fail('provider must not be called');}),/SELLER_MARKETING_REVIEW_REQUIRED/);
 });
 test('new offer cannot be advertised as available before production verification',()=>{
@@ -18,6 +19,7 @@ test('new offer cannot be advertised as available before production verification
   assert.throws(()=>assertSellerMarketingCurrent(post),/TRIAL_NOT_ACTIVE/);
   assert.doesNotThrow(()=>assertSellerMarketingCurrent(post,active));
   assert.doesNotThrow(()=>assertSellerMarketingCurrent({...post,caption:post.caption+'体験開始は準備中。'}));
+  assert.doesNotThrow(()=>assertSellerMarketingCurrent({content_id:'runway-seller-shop',caption:'お店の掲載見本をご相談ください',media_url:'https://hoshilu.app/neutral-seller-reel.mp4'}));
   assert.doesNotThrow(()=>assertSellerMarketingCurrent({content_id:'buyer-usual',caption:'3か月ごとに洗剤を買う',media_url:'https://hoshilu.app/buyer.jpg'}));
 });
 test('versioned seller media is allowed and mixed old/new images are rejected',()=>{
