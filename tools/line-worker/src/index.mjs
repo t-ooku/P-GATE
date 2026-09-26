@@ -3769,7 +3769,7 @@ export default {
     if (request.method === 'GET' && url.pathname === '/health') return handleHealth(env);
     if (request.method === 'GET' && url.pathname === '/go') return handleRedirect(request, env, ctx);
     if (request.method === 'GET' || request.method === 'HEAD') {
-      const seoPage = renderSeoPage(url.pathname);
+      const seoPage = renderSeoPage(url.pathname, env);
       if (seoPage) return new Response(request.method === 'HEAD' ? null : seoPage, {
         headers: {
           'content-type': 'text/html; charset=utf-8',

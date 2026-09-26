@@ -78,7 +78,7 @@ function utmLink(platform, set, key) {
 }
 
 export function carouselMediaUrls(set) {
-  return set.slides.map((_, index) => `https://hoshilu.app/social/carousel/${set.id}/${index + 1}.jpg`);
+  return set.slides.map((_, index) => `https://hoshilu.app/social/carousel/${set.asset_version ? `${set.asset_version}/` : ''}${set.id}/${index + 1}.jpg`);
 }
 
 // 月・水・土 20:00 JST の Instagram＋X カルーセル投稿（今日から days 日分、投稿時刻が未来のものだけ）

@@ -4,7 +4,7 @@ import { readMemberSession } from './member-auth.mjs';
 import { resolveMemberIdentityAlias } from './member-notification-delivery.mjs';
 import { paidRequest, pilotPaymentsReady, pilotCheckout, verifiedPilotPayment, cancelPilotSubscription, PAID_TERMS } from './seller-pilot-payment.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
-import { PILOT_OFFER, LEGACY_PILOT_OFFER, MONTHLY_JPY, TRIAL_TERMS, knownOffer, trialEnd, followupTasks } from '../public/seller-trial-policy.mjs';
+import { PILOT_OFFER, LEGACY_PILOT_OFFER, MONTHLY_JPY, TRIAL_TERMS, knownOffer, trialEnd, followupTasks, recruitmentVerified } from '../public/seller-trial-policy.mjs';
 export { PILOT_OFFER, LEGACY_PILOT_OFFER, calendarTrialEnd } from '../public/seller-trial-policy.mjs';
 const json = (body, status = 200) => Response.json(body, {status,headers:{'cache-control':'no-store','x-robots-tag':'noindex','referrer-policy':'no-referrer'}});
 const text = (value, max=200) => String(value || '').trim().slice(0,max);
@@ -21,7 +21,7 @@ export function pilotEntitlement(doc, now=new Date()) {
 }
 export function publicPilotOffer(env) {
   // Recruitment wording is enabled only after staged production verification.
-  const enabled=env.SELLER_MANUAL_PILOT_ENABLED==='true' && env.SELLER_PILOT_OFFER_VERSION===PILOT_OFFER && env.SELLER_PILOT_RECRUITMENT_VERIFIED===PILOT_OFFER;
+  const enabled=recruitmentVerified(env);
   return {enabled,offer_version:enabled?PILOT_OFFER:null,monthly_jpy:MONTHLY_JPY};
 }
 export function normalizePilotDraft(input) {

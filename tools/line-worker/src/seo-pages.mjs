@@ -1,3 +1,4 @@
+import { TRIAL_PENDING_COPY, TRIAL_COPY, recruitmentVerified } from '../public/seller-trial-policy.mjs';
 // 2026-09-05 大隆さん指示: クリエイター募集6本＋値下げ・クーポン10本を別ファイルから取り込む。
 import { creatorGuideInputs, creatorGuideProfiles, dealGuideInputs, dealGuideProfiles } from './seo-pages-2026-09-05.mjs';
 import { sellerGuideInputs, sellerGuideProfiles } from './seo-pages-2026-09-06-seller.mjs';
@@ -4216,12 +4217,13 @@ export function evaluateSeoPageQuality(pathname) {
   return { total: Object.values(breakdown).reduce((sum, value) => sum + value, 0), breakdown };
 }
 
-export function renderSeoPage(pathname) {
+export function renderSeoPage(pathname, env = {}) {
   if (/^\/ja\/guides\/?$/.test(pathname)) return renderGuideHub();
   const match = /^\/(ja|en)\/([a-z0-9-]+)\/?$/.exec(pathname);
   if (!match) return null;
   const [, locale, slug] = match;
-  const page = pages[slug]?.[locale];
+  const original = pages[slug]?.[locale];
+  const page = original && recruitmentVerified(env) ? JSON.parse(JSON.stringify(original).replaceAll(TRIAL_PENDING_COPY, TRIAL_COPY)) : original;
   const profile = visualProfiles[locale]?.[slug];
   if (!page || !profile) return null;
   const canonical = `${ORIGIN}${pathFor(locale, slug)}`;

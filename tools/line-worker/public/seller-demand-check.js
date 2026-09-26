@@ -56,7 +56,7 @@
     var apply = el('a', 'primary', 'この需要に商品を届ける');
     apply.href = '#businessForm';
     apply.setAttribute('data-seller-cta', 'demand-check-apply');
-    var free = el('a', 'ghost', '3か月無料で始める');
+    var free = el('a', 'ghost', '自店の掲載見本を相談する');
     free.href = '#businessForm';
     free.setAttribute('data-seller-cta', 'demand-check-free');
     actions.append(apply, free);
