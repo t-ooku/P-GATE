@@ -409,6 +409,20 @@ test('Yahoo coordinator failures remain immediate and distinct from provider rej
     /DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:YAHOO:CANARY_YAHOO_COORDINATOR_UNAVAILABLE/u);
 });
 
+test('Yahoo coordinator hop timeout requires a consecutive failed probe', () => {
+  const now = Date.now();
+  const latest = healthyCanaryRows(now).map((row) => row.component === 'yahoo'
+    ? { ...row, status:'FAIL', code:'CANARY_YAHOO_COORDINATOR_HOP_TIMEOUT' } : row);
+  assert.doesNotThrow(() => evaluateDeepCanary(latest, { now }));
+  latest.push({
+    component:'yahoo', status:'FAIL', code:'CANARY_YAHOO_COORDINATOR_HOP_TIMEOUT',
+    occurred_at:new Date(now - 15 * 60000).toISOString(),
+    event_id:`deep-canary:${now - 15 * 60000}:yahoo`
+  });
+  assert.throws(() => evaluateDeepCanary(latest, { now }),
+    /DEEP_CANARY_CONSECUTIVE_FAILURE:YAHOO:CANARY_YAHOO_COORDINATOR_HOP_TIMEOUT/u);
+});
+
 test('deep canary confirms transient query structurer failures before alerting', () => {
   const now = Date.now();
   const latest = healthyCanaryRows(now).map((row) => row.component === 'query_structurer'

@@ -139,6 +139,14 @@ const CANARY_PRIMARY_TRANSIENT_CODES = new Set([
   'OPENAI_CHAT_INTENT_INVALID_JSON',
   'CANARY_AI_RESPONSE_INVALID'
 ]);
+// The Yahoo coordinator hop can time out while a healthy singleton Durable
+// Object is serializing other Yahoo requests. This is a transient capacity
+// signal, not proof that the binding or provider contract is broken. Require a
+// second consecutive failed probe before opening a production incident; true
+// coordinator configuration/rejection failures remain immediate below.
+const CANARY_MARKETPLACE_TRANSIENT_CODES = new Set([
+  'CANARY_YAHOO_COORDINATOR_HOP_TIMEOUT'
+]);
 const CANARY_IMMEDIATE_CODE_PATTERN = /(?:^|_)(?:NOT_CONFIGURED|CONFIG(?:URATION)?|SETTINGS?|AUTH(?:ENTICATION|ORIZATION)?|UNAUTHORIZED|FORBIDDEN|API_KEY|HTTP_(?:401|403)|MODEL|PROVIDER_INVALID|REQUEST_REJECTED|COORDINATOR|PRICING|BILLING|BUDGET|USAGE|COST|RESERVATION|PROMPT|OUTPUT_LIMIT)(?:_|$)/u;
 const RELIABILITY_HEARTBEAT_COMPONENTS = new Set(['cloudflare_regular', 'cloudflare_deep']);
 const RELIABILITY_HEARTBEAT_MAX_AGE_MS = 25 * 60000;
@@ -413,6 +421,7 @@ export function evaluateDeepCanary(rows = [], { now = Date.now(), reservationRow
       throw new Error(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:${component.toUpperCase()}:${latest.code}`);
     }
     if (latest.status === 'FAIL' && CANARY_IMMEDIATE_CODE_PATTERN.test(latest.code)
+      && !CANARY_MARKETPLACE_TRANSIENT_CODES.has(latest.code)
       && !(['query_structurer', 'ai_chat_primary'].includes(component)
         && CANARY_PRIMARY_TRANSIENT_CODES.has(latest.code))) {
       throw new Error(`DEEP_CANARY_NON_TRANSIENT_IMMEDIATE:${component.toUpperCase()}:${latest.code}`);
