@@ -202,3 +202,26 @@ document.querySelector('#adminLogout')?.addEventListener('click', async () => {
 
 load();
 renderDemands();
+
+// Operator recovery view. Never equate API_ACCEPTED with mailbox delivery.
+(async()=>{
+  const section=el('section','auth-card');section.append(el('h2',null,'掲載見本の相談受付'));
+  document.querySelector('main')?.prepend(section);
+  try{
+    const response=await fetch('/api/admin/seller-business/inquiries',{cache:'no-store'});
+    if(!response.ok)throw new Error('相談一覧を取得できません。管理者ログインを確認してください。');
+    const data=await response.json();
+    section.append(el('p',null,data.notification_tracking==='AVAILABLE'?'通知状態はAPI受付までの記録です。配達・実返信は受信先で確認してください。':'通知状態は未計測です。受付内容は保存されています。0088適用前の履歴を配達済みと扱いません。'));
+    for(const row of data.inquiries||[]){
+      const detail=el('details');detail.append(el('summary',null,`${row.organization_name} / ${row.inquiry_id} / ${row.status}`));
+      for(const value of [row.created_at,row.contact_name,row.contact_email,row.storefront_url,row.message])detail.append(el('p',null,value));
+      const state=data.notification_states?.find(s=>s.inquiry_id===row.inquiry_id)?.state||'未確認';detail.append(el('p',null,`担当者通知：${state}`));
+      const retry=el('button',null,'担当者通知を再試行');retry.type='button';
+      retry.addEventListener('click',async()=>{
+        retry.disabled=true;const note=el('p',null,'通知しています…');detail.append(note);
+        try{const sent=await fetch(`/api/admin/seller-business/inquiries/${encodeURIComponent(row.inquiry_id)}/notify`,{method:'POST'});note.textContent=sent.ok?'通知APIが受け付けました。受信先で確認してください。':'通知できませんでした。受付内容は保持されています。';}catch{note.textContent='通信に失敗しました。受付内容は保持されています。';}finally{retry.disabled=false;}
+      });detail.append(retry);section.append(detail);
+    }
+    if(!data.inquiries?.length)section.append(el('p',null,'保存された相談はありません。'));
+  }catch(error){section.append(el('p',null,error.message));}
+})();

@@ -1,3 +1,4 @@
+import { handleSellerListingPilotRoutes } from './seller-listing-pilot.mjs';
 import { queueUsualDueNotifications } from './usual-reminders.mjs';
 import { admitTokenlessSearch } from './tokenless-search.mjs';
 import { handleSellerRoutes, readSellerSession } from './seller-auth.mjs';
@@ -3635,6 +3636,13 @@ export default {
     if (socialResponse) return socialResponse;
     const promotionDashboardResponse = await handlePromotionDashboardRoutes(request, env);
     if (promotionDashboardResponse) return promotionDashboardResponse;
+    // Specialized admin handlers enforce their own auth before the generic /api/admin 404.
+    const sellerCandidateResponse = await handleSellerCandidateRoutes(request, env);
+    if (sellerCandidateResponse) return sellerCandidateResponse;
+    const sellerPilotResponse = await handleSellerListingPilotRoutes(request, env);
+    if (sellerPilotResponse) return sellerPilotResponse;
+    const sellerBusinessInquiryResponse = await handleSellerBusinessInquiryRoutes(request, env);
+    if (sellerBusinessInquiryResponse) return sellerBusinessInquiryResponse;
     const adminAuthResponse = await handleAdminAuthRoutes(request, env);
     if (adminAuthResponse) return adminAuthResponse;
     const spApiAdminResponse = await handleSpApiAdminRoutes(request, env);
@@ -3664,8 +3672,6 @@ export default {
     const demandSocialCopyResponse = await handleDemandSocialCopyRoute(request, env);
     if (demandSocialCopyResponse) return demandSocialCopyResponse;
     // 2026-09-21 指示書 §35・§36「需要起点の営業」「Seller候補管理」。行は消さず DECLINED を残す。
-    const sellerCandidateResponse = await handleSellerCandidateRoutes(request, env);
-    if (sellerCandidateResponse) return sellerCandidateResponse;
     // 2026-09-21 P2「匿名需要オファー」。値下がり待ちに手を挙げる。この経路は課金しない。
     const priceOfferResponse = await handleSellerPriceOfferRoute(request, env);
     if (priceOfferResponse) return priceOfferResponse;
@@ -3681,8 +3687,6 @@ export default {
     if (memberResponse) return memberResponse;
     const sellerResponse = await handleSellerRoutes(request, env);
     if (sellerResponse) return sellerResponse;
-    const sellerBusinessInquiryResponse = await handleSellerBusinessInquiryRoutes(request, env);
-    if (sellerBusinessInquiryResponse) return sellerBusinessInquiryResponse;
     // 2026-09-05 大隆さん指示: クリエイター（インフルエンサー）直接募集の応募・報告フォーム。
     // 2026-09-05 夜: 値下がり待ちリスト（5人以上の匿名集計）を公開。
     const priceWatchDemandResponse = await handlePriceWatchDemandRoute(request, env);
