@@ -2583,7 +2583,10 @@ function passesExplicitSearchEvidenceGate(query, candidate) {
     const boxedWine = /(?:バッグ\s*イン\s*ボックス|bag\s*[- ]?in\s*[- ]?box|boxed\s*wine)/iu.test(candidateText);
     const alcoholicDrink = /(?:白\s*ワイン|赤\s*ワイン|ロゼ\s*ワイン|果実酒|酒造|ワイン\s*[（(]?(?:白|赤|ロゼ)|wine\s*[（(]?(?:white|red|rose)|alcohol\s*\d+(?:\.\d+)?\s*%)/iu.test(candidateText);
     const explicitBottleCarrier = /(?:ワインボトル|ボトル収納|ボトル持ち運び|保冷).{0,16}(?:バッグ|ケース|キャリー)|(?:wine\s*bottle|bottle).{0,16}(?:bag|case|carrier)/iu.test(candidateText);
-    if (boxedWine || (alcoholicDrink && !explicitBottleCarrier)) return false;
+    const clothingBackZip = /(?:バッグ|バック)\s*(?:ジップ|ファスナー)/iu.test(candidateText)
+      && /(?:スカート|ワンピース|ドレス|パンツ|ボトムス|トップス|ジャケット|コート)/iu.test(candidateText);
+    const explicitBagProduct = /(?:トートバッグ|ショルダーバッグ|ハンドバッグ|クラッチバッグ|ボディバッグ|ウエストバッグ|バックパック|リュック|かばん|鞄|handbags?|tote\s*bags?|shoulder\s*bags?|backpacks?)/iu.test(candidateText);
+    if (boxedWine || (alcoholicDrink && !explicitBottleCarrier) || (clothingBackZip && !explicitBagProduct)) return false;
   }
 
   // Product nouns are hard constraints. A shared material such as smoky

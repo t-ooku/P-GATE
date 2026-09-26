@@ -66,6 +66,15 @@ test('ワインボトルを運ぶバッグを明示して探した場合は除�
   assert.deepEqual(results.map((item) => item.asin), ['CARRIER']);
 });
 
+test('バッグ検索では衣類のバッグジップをバッグ商品と誤認しない', () => {
+  const results = filterCategoryMismatches('アニエスベー バッグ 白', [
+    candidate('SKIRT', 'To b by agnes b. チェック スカート ミニ丈 バッグジップ ボトムス 白'),
+    candidate('HANDBAG', 'アニエスベー 白 ハンドバッグ レザー'),
+    candidate('ZIP_BAG', 'アニエスベー 白 ハンドバッグ ファスナー開閉')
+  ]);
+  assert.deepEqual(results.map((item) => item.asin), ['HANDBAG', 'ZIP_BAG']);
+});
+
 test('商品棚の表示順位は候補の旧rankではなく必ずNO.1から振り直す', async () => {
   const app = await readFile(new URL('../public/app.js', import.meta.url), 'utf8');
   assert.match(app, /const safeRank=index\+1/);
