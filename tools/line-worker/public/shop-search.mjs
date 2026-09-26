@@ -1,3 +1,4 @@
+import { sellerShopLink } from './seller-shop-link.mjs';
 // 2026-09-17 大隆さん「HOSHILU SHOP全面強化」指示書 P0: 全ショップ横断検索。
 // 「ショップ」タブの最上部に総合検索窓。結果は 条件一致 / 近い商品 / 見つからない の3段階で、
 // 近い商品には何が一致して何が違うかを出す（一致率の推測値は出さない）。
@@ -51,7 +52,7 @@ function card(item) {
   if (Number(item.price) > 0) body.append(el('p', 'shop-search-card-price', yen(item.price)));
   if (item.shop?.name) {
     const shop = el('a', 'shop-search-card-shop');
-    shop.href = `/shop/${encodeURIComponent(text(item.shop.slug))}`;
+    shop.href = sellerShopLink(item.shop);
     shop.append(el('span', 'shop-search-card-shop-icon', String.fromCodePoint(0x1F3EA)), document.createTextNode(text(item.shop.name)));
     if (item.shop.coupon) shop.append(el('em', 'shop-search-card-coupon', 'HOSHILU限定クーポン'));
     body.append(shop);
@@ -62,7 +63,7 @@ function card(item) {
   if (conditions.childElementCount) body.append(conditions);
   const actions = el('div', 'shop-search-card-actions');
   const open = el('a', 'shop-search-card-open', 'ショップで見る');
-  open.href = `/shop/${encodeURIComponent(text(item.shop?.slug || ''))}?q=${encodeURIComponent(text(item.name).slice(0, 60))}`;
+  open.href = `${sellerShopLink(item.shop)}?q=${encodeURIComponent(text(item.name).slice(0, 60))}`;
   actions.append(open);
   const keep = el('button', 'shop-search-card-keep');
   keep.type = 'button';

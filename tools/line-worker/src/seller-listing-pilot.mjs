@@ -85,7 +85,7 @@ async function pilotKpi(env,row,doc) {
       WHERE pilot_id=?1 AND member_id NOT IN (${internal.map((_,i)=>`?${i+2}`).join(',')})`).bind(row.pilot_id,...internal).all()).results?.[0]?.count;
     return {status:'MEASURED',since:doc.starts_at,views:Number(events.find(e=>e.event_type==='shop_view_confirmed')?.count||0),
       outbound_clicks:Number(events.find(e=>e.event_type==='marketplace_click')?.count||0),saves:Number(saves||0),sales:null,
-      caveat:'ブラウザで計測できた回数。計測拒否・未ログインの運営者操作は識別できません。購入・売上は未計測。'};
+      caveat:'掲載ページのブラウザで計測できた回数（横断検索からの直接遷移は含まない）。計測拒否・未ログインの運営者操作は識別できません。購入・売上は未計測。'};
   } catch {return {status:'UNAVAILABLE'};}
 }
 async function ownerForEmail(env,email) {

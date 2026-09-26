@@ -10,7 +10,7 @@ test('トップの「ショップ」タブは横断検索が一覧より上に�
   assert.match(html, /<form id="shopSearchForm" class="shop-search-form" role="search">/);
   assert.match(html, /<button type="submit" class="shop-search-submit">全ショップから探す<\/button>/);
   assert.match(html, /<link rel="stylesheet" href="\/shop-search\.css\?v=3">/);
-  assert.match(html, /<script type="module" src="\/shop-search\.mjs\?v=3"><\/script>/);
+  assert.match(html, /<script type="module" src="\/shop-search\.mjs\?v=4"><\/script>/);
   assert.match(readFileSync(new URL('../public/tab-nav.mjs', import.meta.url), 'utf8'), /\['#shopSearch', 'shops'\]/);
   assert.match(readFileSync(new URL('../public/app.js', import.meta.url), 'utf8'), /\['INSIGHT_NEW_MATCH','PRICE_DROP','SHOP_DEMAND_MATCH'\]/);
   assert.match(readFileSync(new URL('../public/service-worker.js', import.meta.url), 'utf8'), /'\/shop-search\.css', '\/shop-search\.mjs'/);
@@ -63,4 +63,13 @@ test('会員は「ホシってるもの」でショップ需要を見て「や�
   const events = readFileSync(new URL('../src/growth-events.mjs', import.meta.url), 'utf8');
   for (const name of ['shop_search_completed', 'shop_demand_saved', 'shop_demand_matched']) assert.ok(events.includes(`'${name}'`), name);
   assert.match(readFileSync(new URL('../src/shop-demand.mjs', import.meta.url), 'utf8'), /export const SELLER_DEMAND_MIN_PEOPLE = 5;/);
+});
+
+
+test('手動掲載のショップ導線は正しい同一サイトの公開ページへ進む', async () => {
+ const {sellerShopLink}=await import('../public/seller-shop-link.mjs');
+ assert.equal(sellerShopLink({slug:'with-care'}),'/shop/with-care');
+ assert.equal(sellerShopLink({slug:'SPL_test',url:'/seller-pilot/shops/SPL_test'}),'/seller-pilot/shops/SPL_test');
+ assert.equal(sellerShopLink({slug:'safe',url:'https://evil.example'}),'/shop/safe');
+ assert.equal(sellerShopLink({slug:'safe',url:'//evil.example'}),'/shop/safe');
 });
