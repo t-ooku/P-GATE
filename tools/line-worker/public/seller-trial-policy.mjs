@@ -4,7 +4,7 @@ export const LEGACY_PILOT_OFFER = 'external-seller-calendar3-v1';
 export const MONTHLY_JPY = 4980;
 export const DAY_MS = 24 * 60 * 60 * 1000;
 export const TRIAL_TERMS = 'seller-manual-trial-20260927-v2';
-export const TRIAL_COPY = '商品公開から30日間無料。無料体験の開始時に、支払い方法の登録は不要です。続ける場合のみ、月額4,980円（税込）でお申し込みください。自動で有料プランに切り替わることはありません。';
+export const TRIAL_COPY = '新規Sellerは商品公開から30日間無料。無料体験の開始時に、支払い方法の登録は不要です。続ける場合のみ、月額4,980円（税込）でお申し込みください。自動で有料プランに切り替わることはありません。';
 export const knownOffer = offer => [PILOT_OFFER, LEGACY_PILOT_OFFER].includes(offer);
 export function calendarTrialEnd(start) {
   const time = Date.parse(start);
