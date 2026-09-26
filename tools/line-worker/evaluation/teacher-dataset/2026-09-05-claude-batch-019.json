@@ -7977,5 +7977,350 @@
     "confidence": 0.75,
     "authored_date": "2026-09-05",
     "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水切りかごの水はけが悪くてなかなか乾かない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗った食器の水切れが悪くなかなか乾かない水切りかご・ラック",
+    "ideal_answer": "水切れ・速乾性をうたう水切りかご・水切りラック・水切りバスケット",
+    "reason": "「水はけが悪い/なかなか乾かない」は商品名では「速乾」「水切れがいい」。 展開規則 quick-dry-dish-rack（モール検索語「速乾 水切りラック」）。",
+    "category": "quick-dry-dish-rack",
+    "search_terms": {
+      "ja": [
+        "速乾 水切りラック",
+        "水切れがいい 水切りかご",
+        "速乾 水切りバスケット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "水切りラックに水が溜まってしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗った食器の水切れが悪くなかなか乾かない水切りかご・ラック",
+    "ideal_answer": "水切れ・速乾性をうたう水切りかご・水切りラック・水切りバスケット",
+    "reason": "「水はけが悪い/なかなか乾かない」は商品名では「速乾」「水切れがいい」。 展開規則 quick-dry-dish-rack（モール検索語「速乾 水切りラック」）。",
+    "category": "quick-dry-dish-rack",
+    "search_terms": {
+      "ja": [
+        "速乾 水切りラック",
+        "水切れがいい 水切りかご",
+        "速乾 水切りバスケット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗った後の食器がなかなか乾かない水切りかごを買い替えたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "洗った食器の水切れが悪くなかなか乾かない水切りかご・ラック",
+    "ideal_answer": "水切れ・速乾性をうたう水切りかご・水切りラック・水切りバスケット",
+    "reason": "「水はけが悪い/なかなか乾かない」は商品名では「速乾」「水切れがいい」。 展開規則 quick-dry-dish-rack（モール検索語「速乾 水切りラック」）。",
+    "category": "quick-dry-dish-rack",
+    "search_terms": {
+      "ja": [
+        "速乾 水切りラック",
+        "水切れがいい 水切りかご",
+        "速乾 水切りバスケット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "鼻水吸引器の音が大きくて赤ちゃんが泣いてしまう",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "動作音が大きいと赤ちゃんが怖がって嫌がる鼻水吸引器",
+    "ideal_answer": "静音設計をうたう電動鼻水吸引器・鼻吸い器",
+    "reason": "「音が大きい/怖がる」は商品名では「静音」。効果は断定しない。 展開規則 quiet-nasal-aspirator（モール検索語「静音 鼻水吸引器」）。",
+    "category": "quiet-nasal-aspirator",
+    "search_terms": {
+      "ja": [
+        "静音 鼻水吸引器",
+        "音が静か 鼻吸い器",
+        "静音設計 電動鼻水吸引器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "鼻吸い器の音を怖がって嫌がる",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "動作音が大きいと赤ちゃんが怖がって嫌がる鼻水吸引器",
+    "ideal_answer": "静音設計をうたう電動鼻水吸引器・鼻吸い器",
+    "reason": "「音が大きい/怖がる」は商品名では「静音」。効果は断定しない。 展開規則 quiet-nasal-aspirator（モール検索語「静音 鼻水吸引器」）。",
+    "category": "quiet-nasal-aspirator",
+    "search_terms": {
+      "ja": [
+        "静音 鼻水吸引器",
+        "音が静か 鼻吸い器",
+        "静音設計 電動鼻水吸引器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "音を怖がって使えない鼻水吸引器がある",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "動作音が大きいと赤ちゃんが怖がって嫌がる鼻水吸引器",
+    "ideal_answer": "静音設計をうたう電動鼻水吸引器・鼻吸い器",
+    "reason": "「音が大きい/怖がる」は商品名では「静音」。効果は断定しない。 展開規則 quiet-nasal-aspirator（モール検索語「静音 鼻水吸引器」）。",
+    "category": "quiet-nasal-aspirator",
+    "search_terms": {
+      "ja": [
+        "静音 鼻水吸引器",
+        "音が静か 鼻吸い器",
+        "静音設計 電動鼻水吸引器"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "バスマットがなかなか乾かず生乾きの臭いがする",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "なかなか乾かず生乾き臭がしてしまうバスマット",
+    "ideal_answer": "珪藻土など速乾性をうたうバスマット・足拭きマット",
+    "reason": "「なかなか乾かない/生乾き臭」は商品名では「速乾」。 展開規則 quick-dry-bath-mat（モール検索語「速乾 バスマット」）。",
+    "category": "quick-dry-bath-mat",
+    "search_terms": {
+      "ja": [
+        "速乾 バスマット",
+        "珪藻土 バスマット 速乾",
+        "速乾タイプ 足拭きマット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "珪藻土マットではないバスマットの乾きが遅い",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "なかなか乾かず生乾き臭がしてしまうバスマット",
+    "ideal_answer": "珪藻土など速乾性をうたうバスマット・足拭きマット",
+    "reason": "「なかなか乾かない/生乾き臭」は商品名では「速乾」。 展開規則 quick-dry-bath-mat（モール検索語「速乾 バスマット」）。",
+    "category": "quick-dry-bath-mat",
+    "search_terms": {
+      "ja": [
+        "速乾 バスマット",
+        "珪藻土 バスマット 速乾",
+        "速乾タイプ 足拭きマット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "洗ったあとも乾きにくい足拭きマットを買い替えたい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "なかなか乾かず生乾き臭がしてしまうバスマット",
+    "ideal_answer": "珪藻土など速乾性をうたうバスマット・足拭きマット",
+    "reason": "「なかなか乾かない/生乾き臭」は商品名では「速乾」。 展開規則 quick-dry-bath-mat（モール検索語「速乾 バスマット」）。",
+    "category": "quick-dry-bath-mat",
+    "search_terms": {
+      "ja": [
+        "速乾 バスマット",
+        "珪藻土 バスマット 速乾",
+        "速乾タイプ 足拭きマット"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "マニキュアが乾くまで時間がかかって困る",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "塗った後に乾くまで時間がかかるマニキュア・ネイルポリッシュ",
+    "ideal_answer": "速乾(クイックドライ)タイプのマニキュア・ネイルポリッシュ・トップコート",
+    "reason": "「乾くまで時間がかかる/なかなか乾かない」は商品名では「速乾」。 展開規則 quick-dry-nail-polish（モール検索語「速乾 マニキュア」）。",
+    "category": "quick-dry-nail-polish",
+    "search_terms": {
+      "ja": [
+        "速乾 マニキュア",
+        "速乾タイプ ネイルポリッシュ",
+        "クイックドライ ジェルネイル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "塗ったネイルポリッシュがなかなか乾かない",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "塗った後に乾くまで時間がかかるマニキュア・ネイルポリッシュ",
+    "ideal_answer": "速乾(クイックドライ)タイプのマニキュア・ネイルポリッシュ・トップコート",
+    "reason": "「乾くまで時間がかかる/なかなか乾かない」は商品名では「速乾」。 展開規則 quick-dry-nail-polish（モール検索語「速乾 マニキュア」）。",
+    "category": "quick-dry-nail-polish",
+    "search_terms": {
+      "ja": [
+        "速乾 マニキュア",
+        "速乾タイプ ネイルポリッシュ",
+        "クイックドライ ジェルネイル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "すぐ乾いてほしいので速乾タイプのマニキュアを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "塗った後に乾くまで時間がかかるマニキュア・ネイルポリッシュ",
+    "ideal_answer": "速乾(クイックドライ)タイプのマニキュア・ネイルポリッシュ・トップコート",
+    "reason": "「乾くまで時間がかかる/なかなか乾かない」は商品名では「速乾」。 展開規則 quick-dry-nail-polish（モール検索語「速乾 マニキュア」）。",
+    "category": "quick-dry-nail-polish",
+    "search_terms": {
+      "ja": [
+        "速乾 マニキュア",
+        "速乾タイプ ネイルポリッシュ",
+        "クイックドライ ジェルネイル"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ベッド下の隙間に入る薄型の収納ケースが欲しい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベッド下の隙間に収まる薄型・ロータイプの収納ケース",
+    "ideal_answer": "高さが低くベッド下に入る薄型の収納ケース・収納ボックス・衣装ケース",
+    "reason": "「ベッド下に入る/しまえる」は商品名では「薄型」「ロータイプ」「ベッド下収納」。 展開規則 slim-under-bed-storage（モール検索語「薄型 ベッド下収納ケース」）。",
+    "category": "slim-under-bed-storage",
+    "search_terms": {
+      "ja": [
+        "薄型 ベッド下収納ケース",
+        "ベッド下 収納ボックス 薄型",
+        "ロータイプ ベッド下収納"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "高さが低くてベッドの下にしまえる収納ボックスを探している",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベッド下の隙間に収まる薄型・ロータイプの収納ケース",
+    "ideal_answer": "高さが低くベッド下に入る薄型の収納ケース・収納ボックス・衣装ケース",
+    "reason": "「ベッド下に入る/しまえる」は商品名では「薄型」「ロータイプ」「ベッド下収納」。 展開規則 slim-under-bed-storage（モール検索語「薄型 ベッド下収納ケース」）。",
+    "category": "slim-under-bed-storage",
+    "search_terms": {
+      "ja": [
+        "薄型 ベッド下収納ケース",
+        "ベッド下 収納ボックス 薄型",
+        "ロータイプ ベッド下収納"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
+  },
+  {
+    "query_text": "ロータイプでベッド下に入る衣類の収納ケースがほしい",
+    "locale": "ja",
+    "persona": "general",
+    "user_intent": "ベッド下の隙間に収まる薄型・ロータイプの収納ケース",
+    "ideal_answer": "高さが低くベッド下に入る薄型の収納ケース・収納ボックス・衣装ケース",
+    "reason": "「ベッド下に入る/しまえる」は商品名では「薄型」「ロータイプ」「ベッド下収納」。 展開規則 slim-under-bed-storage（モール検索語「薄型 ベッド下収納ケース」）。",
+    "category": "slim-under-bed-storage",
+    "search_terms": {
+      "ja": [
+        "薄型 ベッド下収納ケース",
+        "ベッド下 収納ボックス 薄型",
+        "ロータイプ ベッド下収納"
+      ],
+      "en": [],
+      "ko": [],
+      "zh": []
+    },
+    "excluded_conditions": [],
+    "confidence": 0.75,
+    "authored_date": "2026-09-05",
+    "authored_updated_date": "2026-09-05"
   }
 ]

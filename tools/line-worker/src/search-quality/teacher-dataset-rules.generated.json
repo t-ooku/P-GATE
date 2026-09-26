@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-24T23:52:07.071Z",
+  "generated_at": "2026-09-26T19:30:57.559Z",
   "source_batches": [
     "2026-08-06-day1-batch-001.json",
     "2026-08-07-batch-002.json",
@@ -35,9 +35,10 @@
     "2026-09-19-claude-batch-032.json",
     "2026-09-20-codex-batch-033.json",
     "2026-09-23-claude-batch-034.json",
-    "2026-09-24-claude-batch-035.json"
+    "2026-09-24-claude-batch-035.json",
+    "2026-09-25-claude-batch-036.json"
   ],
-  "entry_count": 1823,
+  "entry_count": 1838,
   "entries": [
     {
       "content_hash": "9944d1f844d39d899d1755aaa9e2eace4ed4c9085447212f65bb3069ac10dd98",
@@ -23334,6 +23335,321 @@
           "突っ張り式 ベビーゲート",
           "工事不要 ベビーゲート",
           "賃貸OK セーフティゲート"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "f4a4e1d0d9a7bbf28cdaa3ac5663671d783404c1b35dafb7b727c508ab0489ba",
+      "query_text": "水切りかごの水はけが悪くてなかなか乾かない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-dish-rack",
+      "ideal_answer": "水切れ・速乾性をうたう水切りかご・水切りラック・水切りバスケット",
+      "search_terms": {
+        "ja": [
+          "速乾 水切りラック",
+          "水切れがいい 水切りかご",
+          "速乾 水切りバスケット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "5ed9c6a8d7bd4571d62dff484bdda70a8e75ee9becce5e5d4ee1d0bc3d32dd14",
+      "query_text": "水切りラックに水が溜まってしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-dish-rack",
+      "ideal_answer": "水切れ・速乾性をうたう水切りかご・水切りラック・水切りバスケット",
+      "search_terms": {
+        "ja": [
+          "速乾 水切りラック",
+          "水切れがいい 水切りかご",
+          "速乾 水切りバスケット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "17b166df622676d192d88d8775baf3838962d3fac5e7bf8b418114445a8d9320",
+      "query_text": "洗った後の食器がなかなか乾かない水切りかごを買い替えたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-dish-rack",
+      "ideal_answer": "水切れ・速乾性をうたう水切りかご・水切りラック・水切りバスケット",
+      "search_terms": {
+        "ja": [
+          "速乾 水切りラック",
+          "水切れがいい 水切りかご",
+          "速乾 水切りバスケット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "8a41f180ff3dab3441ab8592152bb3c8b37e54e649d4afdefae5e3b094136bc6",
+      "query_text": "鼻水吸引器の音が大きくて赤ちゃんが泣いてしまう",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-nasal-aspirator",
+      "ideal_answer": "静音設計をうたう電動鼻水吸引器・鼻吸い器",
+      "search_terms": {
+        "ja": [
+          "静音 鼻水吸引器",
+          "音が静か 鼻吸い器",
+          "静音設計 電動鼻水吸引器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "3b1f5ff8233b2de1f59ad3e97b777825b1b3ba5bb31a5c21f9c58e3acea135d8",
+      "query_text": "鼻吸い器の音を怖がって嫌がる",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-nasal-aspirator",
+      "ideal_answer": "静音設計をうたう電動鼻水吸引器・鼻吸い器",
+      "search_terms": {
+        "ja": [
+          "静音 鼻水吸引器",
+          "音が静か 鼻吸い器",
+          "静音設計 電動鼻水吸引器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "213159e8416b6bcc3a93882358b06b22027d10ece3b45d18c6e861da6faf1f52",
+      "query_text": "音を怖がって使えない鼻水吸引器がある",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quiet-nasal-aspirator",
+      "ideal_answer": "静音設計をうたう電動鼻水吸引器・鼻吸い器",
+      "search_terms": {
+        "ja": [
+          "静音 鼻水吸引器",
+          "音が静か 鼻吸い器",
+          "静音設計 電動鼻水吸引器"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "aae360349accf2f1607fc2b24be7a736661123edb628fb75023f8ee6dff8e68f",
+      "query_text": "バスマットがなかなか乾かず生乾きの臭いがする",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-bath-mat",
+      "ideal_answer": "珪藻土など速乾性をうたうバスマット・足拭きマット",
+      "search_terms": {
+        "ja": [
+          "速乾 バスマット",
+          "珪藻土 バスマット 速乾",
+          "速乾タイプ 足拭きマット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "b088690aace5855e9f933c712aa7e5058b7b7866e5406191ecb9f01094a68a4b",
+      "query_text": "珪藻土マットではないバスマットの乾きが遅い",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-bath-mat",
+      "ideal_answer": "珪藻土など速乾性をうたうバスマット・足拭きマット",
+      "search_terms": {
+        "ja": [
+          "速乾 バスマット",
+          "珪藻土 バスマット 速乾",
+          "速乾タイプ 足拭きマット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "2303005eb4d0d46f6de506ea2d11ab0096949286db3a9fd51f132523ff7c4bcb",
+      "query_text": "洗ったあとも乾きにくい足拭きマットを買い替えたい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-bath-mat",
+      "ideal_answer": "珪藻土など速乾性をうたうバスマット・足拭きマット",
+      "search_terms": {
+        "ja": [
+          "速乾 バスマット",
+          "珪藻土 バスマット 速乾",
+          "速乾タイプ 足拭きマット"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "860b738bb17347be28f89b25f1664745dd43cfb468bc4124161775ac44f1c2ed",
+      "query_text": "マニキュアが乾くまで時間がかかって困る",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-nail-polish",
+      "ideal_answer": "速乾(クイックドライ)タイプのマニキュア・ネイルポリッシュ・トップコート",
+      "search_terms": {
+        "ja": [
+          "速乾 マニキュア",
+          "速乾タイプ ネイルポリッシュ",
+          "クイックドライ ジェルネイル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "16b7022422eacc0e0ded440ab02ccc83633b02a5373f9655d386ce92e990c3b7",
+      "query_text": "塗ったネイルポリッシュがなかなか乾かない",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-nail-polish",
+      "ideal_answer": "速乾(クイックドライ)タイプのマニキュア・ネイルポリッシュ・トップコート",
+      "search_terms": {
+        "ja": [
+          "速乾 マニキュア",
+          "速乾タイプ ネイルポリッシュ",
+          "クイックドライ ジェルネイル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "9f8603c75f7410c2f079e0de6565730de6bd104a350bf0ac43412dd5e9baeb05",
+      "query_text": "すぐ乾いてほしいので速乾タイプのマニキュアを探している",
+      "locale": "ja",
+      "persona": "general",
+      "category": "quick-dry-nail-polish",
+      "ideal_answer": "速乾(クイックドライ)タイプのマニキュア・ネイルポリッシュ・トップコート",
+      "search_terms": {
+        "ja": [
+          "速乾 マニキュア",
+          "速乾タイプ ネイルポリッシュ",
+          "クイックドライ ジェルネイル"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "abd5be4464910bd99575845db4efdffd1c54f08cba85c833b65b71ef3c6196d1",
+      "query_text": "ベッド下の隙間に入る薄型の収納ケースが欲しい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "slim-under-bed-storage",
+      "ideal_answer": "高さが低くベッド下に入る薄型の収納ケース・収納ボックス・衣装ケース",
+      "search_terms": {
+        "ja": [
+          "薄型 ベッド下収納ケース",
+          "ベッド下 収納ボックス 薄型",
+          "ロータイプ ベッド下収納"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "12a3ba7676ce76213bef6997014f72936655d3b6620c035c00f6a7d9c4dfbc74",
+      "query_text": "高さが低くてベッドの下にしまえる収納ボックスを探している",
+      "locale": "ja",
+      "persona": "general",
+      "category": "slim-under-bed-storage",
+      "ideal_answer": "高さが低くベッド下に入る薄型の収納ケース・収納ボックス・衣装ケース",
+      "search_terms": {
+        "ja": [
+          "薄型 ベッド下収納ケース",
+          "ベッド下 収納ボックス 薄型",
+          "ロータイプ ベッド下収納"
+        ],
+        "en": [],
+        "ko": [],
+        "zh": []
+      },
+      "excluded_conditions": [],
+      "confidence": 0.75,
+      "source_file": "2026-09-05-claude-batch-019.json"
+    },
+    {
+      "content_hash": "ac14ff6963664e4f56f0a2ef65156f03b963e76a58dace7a9dafa542df18adea",
+      "query_text": "ロータイプでベッド下に入る衣類の収納ケースがほしい",
+      "locale": "ja",
+      "persona": "general",
+      "category": "slim-under-bed-storage",
+      "ideal_answer": "高さが低くベッド下に入る薄型の収納ケース・収納ボックス・衣装ケース",
+      "search_terms": {
+        "ja": [
+          "薄型 ベッド下収納ケース",
+          "ベッド下 収納ボックス 薄型",
+          "ロータイプ ベッド下収納"
         ],
         "en": [],
         "ko": [],
