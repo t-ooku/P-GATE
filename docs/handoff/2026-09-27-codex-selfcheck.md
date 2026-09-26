@@ -29,3 +29,7 @@
 ## Seller marketing 30-day decision (04:47 JST)
 - Current health ok, missing/weak empty, X/Instagram/Runway ready, database flags unchanged. #369 remains open with the previously observed Yahoo timeout; not claimed resolved. No newer Claude handoff than September 20.
 - User explicitly approved updating SNS/LP/web recruitment wording to 30 days. Old individual promises stay intact. Production offer remains disabled pending prior migration/expiry approval and verification, so public copy announces the decision and says preparation is in progress.
+
+## Seller copy correction (05:13 JST)
+- User requested the plain sentence: 新規Sellerは商品公開から30日間無料。 Remove change-announcement phrasing from LP/FAQ/shared copy/SEO/social sources and generated Seller assets. Preserve activation status and existing promises.
+- Health remains ok; incident #369 has no newer update than the previously observed Yahoo timeout. No new Claude handoff.

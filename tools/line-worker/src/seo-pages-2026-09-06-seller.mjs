@@ -9,7 +9,7 @@ import { TRIAL_PENDING_COPY } from '../public/seller-trial-policy.mjs';
 // 料金は /for-sellers と同じ数字だけ（HOSHILU Seller 4,980円/月・税込、新規は初回公開から30日無料（本番体験開始は準備中）。クリック課金は 2026-09-21 に廃止）。
 
 const SELLERS_PATH = '/for-sellers';
-const SELLERS_LABEL = '自店の掲載見本を相談する（新規30日無料への変更案内）';
+const SELLERS_LABEL = '自店の掲載見本を相談する（新規Sellerは商品公開から30日間無料）';
 const UPDATED = '2026-09-27';
 
 const sellerEvidence = [

@@ -23,7 +23,7 @@ test('new offer cannot be advertised as available before production verification
   assert.doesNotThrow(()=>assertSellerMarketingCurrent({content_id:'buyer-usual',caption:'3か月ごとに洗剤を買う',media_url:'https://hoshilu.app/buyer.jpg'}));
 });
 test('versioned seller media is allowed and mixed old/new images are rejected',()=>{
-  const post={content_id:'carousel-seller-shop',caption:'新規30日無料は準備中。自店の掲載見本を相談する',media_urls:JSON.stringify(['https://hoshilu.app/social/carousel/seller30-20260927/seller-shop/1.jpg'])};
+  const post={content_id:'carousel-seller-shop',caption:'新規30日無料は準備中。自店の掲載見本を相談する',media_urls:JSON.stringify(['https://hoshilu.app/social/carousel/seller30-20260927-r2/seller-shop/1.jpg'])};
   assert.doesNotThrow(()=>assertSellerMarketingCurrent(post));
   assert.throws(()=>assertSellerMarketingCurrent({...post,media_url:'https://hoshilu.app/old.jpg'}),/MEDIA_OFFER_UNVERIFIED/);
 });
