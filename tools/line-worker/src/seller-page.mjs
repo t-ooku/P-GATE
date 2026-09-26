@@ -615,26 +615,20 @@ export async function sellerPageResponse(
   </form>
   <p class="data-note">無料プランではショップページは作れません。<a href="/for-sellers#pricing">HOSHILU Seller（月額4,980円・登録後3か月0円）</a></p></section>
 
-  <section class="auth-card" id="billing"><p class="eyebrow">PREPAID BILLING</p><h2>前払い残高とお支払い</h2>
+  <section class="auth-card" id="billing"><p class="eyebrow">MONTHLY BILLING</p><h2>月額のお支払い</h2>
   <p>月額のお支払い方法と領収書はここで扱います。<strong>クリックによる従量課金は 2026-09-21 に廃止しました。</strong>前払い残高は現在どの機能でも消化されません（残高があっても減りません）。</p>
   <div id="sellerBillingStatus" class="operation-status" role="status" aria-live="polite"></div>
   <div class="seller-grid metric-grid" id="sellerBillingSummary">
-    <article class="seller-panel"><span>利用可能残高</span><strong data-billing="available">…</strong><span data-billing="wallet-note">読み込み中</span></article>
-    <article class="seller-panel"><span>今月の無料枠（Business）</span><strong data-billing="allowance">…</strong><span data-billing="allowance-note">Businessは毎月5,000円分まで0円</span></article>
+    <article class="seller-panel"><span>旧制度の残高履歴（新規チャージ終了）</span><strong data-billing="available">…</strong><span data-billing="wallet-note">読み込み中</span></article>
+    <article class="seller-panel"><span>旧制度の付与枠履歴</span><strong data-billing="allowance">…</strong><span data-billing="allowance-note">過去の会計記録です。新しい料金ではありません。</span></article>
     <article class="seller-panel"><span>月額プラン</span><strong data-billing="plan">…</strong><span data-billing="plan-note"></span></article>
   </div>
   <div class="priority-actions" id="sellerBillingActions">
-    <div class="topup-row">
-      <label>チャージ額 <select id="sellerTopupAmount">
-        <option value="5000">5,000円</option><option value="10000" selected>10,000円</option>
-        <option value="30000">30,000円</option><option value="50000">50,000円</option></select></label>
-      <button type="button" class="primary-button" data-billing-action="topup">前払いチャージへ進む</button>
-    </div>
-    <button type="button" class="ghost-button" data-billing-action="subscribe" hidden>Business 月額のお支払い方法を登録</button>
+    <button type="button" class="ghost-button" data-billing-action="subscribe" hidden>HOSHILU Seller 月額のお支払い方法を登録</button>
     <button type="button" class="ghost-button" data-billing-action="portal">お支払い方法・領収書・請求書</button>
-    <label class="auto-recharge"><input type="checkbox" id="sellerAutoRecharge"> 残高が <span data-billing="threshold">2,000</span>円を下回ったら保存済みカードへ自動チャージ（<span data-billing="auto-amount">10,000</span>円）</label>
+
   </div>
-  <p class="data-note">チャージはカードまたは銀行振込（Stripe が専用の振込先を発行し、入金を自動で照合します）。残高の増減は<a href="/api/seller/billing/ledger">台帳</a>で確認できます。</p></section>
+  <p class="data-note">新規チャージは終了しました。過去の残高の増減は<a href="/api/seller/billing/ledger">台帳</a>で確認できます。</p></section>
 
   <section class="auth-card" id="plan"><p class="eyebrow">SELLER PLAN</p><h2>契約プラン</h2>
   <p>現在のプラン: <strong>${publicPlan}</strong>。有料契約によって商品そのものの検索順位は変わりません。</p>
