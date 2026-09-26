@@ -1,17 +1,5 @@
-// 2026-09-06 大隆さん決定（Seller獲得マスター指示書 §31-§33・§49）: セラー向け営業メール。
-// 大隆さんの Gmail からの送信は安全システムに止まるため、HOSHILU 側の Resend（専用アドレス）から送る。
-//
-// 流れ: Claude の日次セッションが D1 seller_outreach_contacts に「宛先・件名・本文（1社ごとに個別化）」を
-// QUEUED で入れる → 本モジュールの cron が 平日 09:00〜18:00 JST に 1サイクル最大3通・1日最大10通を送る →
-// 送信結果を行に残す。1メールアドレスには生涯1回だけ。配信停止リンク（トークン）を踏むと OPTED_OUT、
-// 以後そのアドレスには送らない（suppressions）。
-//
-// 守ること（§33・§49・特定電子メール法）: 公開されている事業者向け連絡先にだけ送る（登録は人＝Claudeが判断）、
-// 送信者表示（HOSHILU・運営者・住所代わりの問い合わせ先）と配信停止手段を本文に必ず入れる、
-// 同じ文面の大量送信をしない（本文は行ごとに個別化して投入する）、成果保証・ユーザー数の誇張を書かない
-// （投入前に禁止表現を機械チェックし、含む行は SKIPPED にする）。
-// Cloudflare Workers には node:crypto が無い（nodejs_compat を付けていない）。
-// Web Crypto（Workers・Node 22 の両方でグローバル）だけを使う。
+// Seller marketing only. Explicit opt-in evidence is required; public contact details are not consent.
+// Transactional authentication and requested inquiry responses use separate paths.
 export const OUTREACH_DAILY_LIMIT_DEFAULT = 10;
 export const OUTREACH_PER_CYCLE_LIMIT = 3;
 export const OUTREACH_FORBIDDEN_PHRASES = ['必ず売れ', '売上が上がり', '多数のユーザー', '多くのユーザー', '成果保証', '業界No.1', '業界ナンバー', '必ず儲か', '確実に'];
@@ -162,7 +150,7 @@ export function composeOutreachText(body, token, env = {}) {
     'HOSHILU セラー向け案内: https://hoshilu.app/for-sellers?utm_source=seller_outreach&utm_medium=email&utm_campaign=initial_outreach',
     contact ? `ご返信・お問い合わせ: ${contact}（このメールに返信いただいても届きます）` : 'ご返信はこのメールにそのままお願いします。',
     `今後のご案内が不要な場合は、こちらから配信停止できます（ワンクリック）: ${unsubscribeUrl(token)}`,
-    'このメールは、公開されている事業者向けの連絡先に、1回だけお送りしています。'
+    'このメールは、HOSHILUからのセラー向け案内に同意いただいた方へお送りしています。'
   ];
   return lines.join('\n');
 }
@@ -170,7 +158,9 @@ export function composeOutreachText(body, token, env = {}) {
 export function outreachReadiness(env) {
   const apiKey = String(env.RESEND_API_KEY || '');
   const from = clean(env.SELLER_OUTREACH_FROM || '', 320);
-  return { ok: apiKey.startsWith('re_') && Boolean(from) && Boolean(env.PRODUCT_DB), from };
+  const replyTo = clean(env.SELLER_OUTREACH_REPLY_TO || env.SELLER_INQUIRY_NOTIFY_EMAIL || '', 320);
+  const email = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/u;
+  return { ok: apiKey.startsWith('re_') && email.test(from) && email.test(replyTo) && Boolean(env.PRODUCT_DB), from, reply_to_configured: email.test(replyTo) };
 }
 
 async function sendViaResend(env, { to, subject, text, token, replyTo }, fetchImpl = fetch) {
@@ -190,6 +180,17 @@ async function sendViaResend(env, { to, subject, text, token, replyTo }, fetchIm
   let id = '';
   try { id = clean((await response.json())?.id, 120); } catch { id = ''; }
   return { ok: response.ok, status: response.status, id };
+}
+
+// Missing schema/evidence fails closed for marketing only. Never infer consent from a reply count or URL.
+export async function outreachConsent(db, hash, now = new Date()) {
+  try {
+    const row = (await db.prepare(`SELECT opted_in_at,evidence_ref,confirmed_by,revoked_at
+      FROM seller_contact_permissions WHERE email_hash=?1 AND purpose='SELLER_MARKETING'`)
+      .bind(hash).all()).results?.[0];
+    return Boolean(row && !row.revoked_at && row.evidence_ref?.trim() && row.confirmed_by?.trim()
+      && Number.isFinite(Date.parse(row.opted_in_at)) && Date.parse(row.opted_in_at) <= now.getTime());
+  } catch { return false; }
 }
 
 // 15分 cron から呼ぶ。送れなかった理由は行に残す。例外は投げない（他ジョブを止めない）。
@@ -218,6 +219,12 @@ export async function runSellerOutreachCycle(env, now = new Date(), fetchImpl = 
       results.push({ contact_id: row.contact_id, status: 'SKIPPED', reason: 'excluded_organization' });
       continue;
     }
+    if (!await outreachConsent(env.PRODUCT_DB, row.email_hash, now)) {
+      await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SKIPPED',last_error='consent_unverified',updated_at=?2 WHERE contact_id=?1 AND status='QUEUED'`)
+        .bind(row.contact_id, timestamp).run();
+      results.push({ contact_id: row.contact_id, status: 'SKIPPED', reason: 'consent_unverified' });
+      continue;
+    }
     const forbidden = findForbiddenPhrases(`${row.subject}\n${row.body}`);
     if (forbidden.length) {
       await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SKIPPED',last_error=?2,updated_at=?3 WHERE contact_id=?1 AND status='QUEUED'`)
@@ -234,15 +241,19 @@ export async function runSellerOutreachCycle(env, now = new Date(), fetchImpl = 
     }
     // claim（cron が重なっても二重送信しない）
     const claim = await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SENDING',sent_at=?2,updated_at=?2 WHERE contact_id=?1 AND status='QUEUED'`).bind(row.contact_id, timestamp).run();
-    const changes = Number(claim?.meta?.changes ?? claim?.changes ?? 1);
+    const changes = Number(claim?.meta?.changes ?? claim?.changes ?? 0);
     if (changes !== 1) continue;
     try {
+      if (!await outreachConsent(env.PRODUCT_DB, row.email_hash, now)) {
+        await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SKIPPED',last_error='consent_revoked',updated_at=?2 WHERE contact_id=?1 AND status='SENDING'`).bind(row.contact_id, timestamp).run();
+        continue;
+      }
       const sent = await sendViaResend(env, {
         to: row.contact_email, subject: row.subject,
         text: composeOutreachText(row.body, row.unsubscribe_token, env), token: row.unsubscribe_token,
         replyTo: clean(env.SELLER_OUTREACH_REPLY_TO || env.SELLER_INQUIRY_NOTIFY_EMAIL || '', 320)
       }, fetchImpl);
-      if (sent.ok) {
+      if (sent.ok && sent.id) {
         await env.PRODUCT_DB.prepare(`UPDATE seller_outreach_contacts SET status='SENT',resend_id=?2,last_error='',updated_at=?3 WHERE contact_id=?1 AND status='SENDING'`).bind(row.contact_id, sent.id, new Date().toISOString()).run();
         results.push({ contact_id: row.contact_id, status: 'SENT' });
       } else {

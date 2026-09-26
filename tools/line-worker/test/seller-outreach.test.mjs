@@ -26,6 +26,7 @@ HOSHILU は Amazon・楽天・Yahoo!ショッピング・Qoo10 をまとめて�
 function databaseEnv(extra = {}) {
   const db = new DatabaseSync(':memory:');
   db.exec(readFileSync(new URL('../migrations/0072_seller_outreach.sql', import.meta.url), 'utf8'));
+  db.exec(readFileSync(new URL('../migrations/0087_seller_contact_permissions.sql', import.meta.url), 'utf8'));
   const env = {
     RESEND_API_KEY: 're_test_key', SELLER_OUTREACH_FROM: 'sellers@auth.hoshilu.app',
     SELLER_OUTREACH_REPLY_TO: 'owner@example.com', ...extra,
@@ -47,6 +48,7 @@ async function insertContact(db, overrides = {}) {
   db.prepare(`INSERT INTO seller_outreach_contacts (contact_id,shop_name,contact_email,email_hash,subject,body,status,scheduled_at,sent_at,unsubscribe_token,created_at,updated_at)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).run(row.contact_id, row.shop_name, row.contact_email, row.email_hash,
     row.subject, row.body, row.status, row.scheduled_at, row.sent_at, row.unsubscribe_token, row.created_at, row.updated_at);
+  if (overrides.consent !== false) db.prepare(`INSERT OR IGNORE INTO seller_contact_permissions VALUES (?,'SELLER_MARKETING','2026-09-01T00:00:00Z','fixture:explicit-opt-in','test-operator','')`).run(row.email_hash);
   return row;
 }
 
@@ -70,7 +72,7 @@ test('本文には必ず送信者表示と配信停止リンクが付く（特�
   assert.match(text, /https:\/\/hoshilu\.app\/for-sellers\?utm_source=seller_outreach&utm_medium=email&utm_campaign=initial_outreach/u);
   assert.match(text, /owner@example\.com/u);
   assert.ok(text.includes(unsubscribeUrl(token)), '配信停止リンク');
-  assert.match(text, /公開されている事業者向けの連絡先に、1回だけお送りしています/u);
+  assert.match(text, /セラー向け案内に同意いただいた方へお送りしています/u);
   assert.match(newUnsubscribeToken(), /^[0-9a-f]{32}$/u);
 });
 
@@ -319,4 +321,26 @@ test('営業メールの型は短く、始める側の不安に先に答え、�
   const body = GOOD_BODY('株式会社サンプル商店（サンプルストア）', '日用品を「素材・サイズ・用途」で探している方に、条件が合った時にだけ見つけてもらえます。');
   assert.ok(body.length < 500, `本文が長すぎる: ${body.length}字`);
   assert.equal(OUTREACH_SUBJECT, '商品掲載のご相談｜HOSHILU（ホシル）');
+});
+
+
+test('許諾証跡がない営業だけSKIPPEDにして残し、Resendを呼ばない', async () => {
+  const {db,env}=databaseEnv();
+  await insertContact(db,{consent:false});
+  await runSellerOutreachCycle(env,MONDAY_10AM_JST,()=>{throw new Error('must not send');});
+  assert.deepEqual({...db.prepare('SELECT status,last_error FROM seller_outreach_contacts').get()}, {status:'SKIPPED',last_error:'consent_unverified'});
+});
+test('許諾テーブル未適用・撤回済みは送信しない', async () => {
+  for (const drop of [true,false]) {
+    const {db,env}=databaseEnv(); await insertContact(db);
+    if(drop) db.exec('DROP TABLE seller_contact_permissions');
+    else db.exec("UPDATE seller_contact_permissions SET revoked_at='2026-09-06T00:00:00Z'");
+    let sent=0; await runSellerOutreachCycle(env,MONDAY_10AM_JST,()=>{sent++;throw Error();});
+    assert.equal(sent,0);
+    assert.equal(db.prepare('SELECT status FROM seller_outreach_contacts').get().status,'SKIPPED');
+  }
+});
+test('返信先が未設定・不正なら営業送信経路は起動しない', () => {
+  const {env}=databaseEnv({SELLER_OUTREACH_REPLY_TO:''});
+  assert.equal(outreachReadiness(env).ok,false);
 });
