@@ -317,3 +317,10 @@ test('同じ入金の加算が並行して走っても残高は1回分しか増�
   assert.equal(ledger.length, 1);
   assert.equal(ledger[0].balance_after_micros_jpy, 10000 * 1_000_000);
 });
+
+test('30日経路の有効化後は旧登録時3か月経路で新規アカウントを作らない',async()=>{
+  let accessed=false;
+  const env={SELLER_MANUAL_PILOT_ENABLED:'true',SELLER_PILOT_OFFER_VERSION:'external-seller-30d-v1',PRODUCT_DB:{prepare(){accessed=true;throw new Error('unexpected DB write');}}};
+  await assert.rejects(()=>createBillingAccount(env,{account_name:'検証',contact_email:'fixture@example.com',plan:'BUSINESS'}),/NEW_SELLER_USE_PUBLICATION_TRIAL/);
+  assert.equal(accessed,false);
+});

@@ -483,6 +483,11 @@ async function sendBillingEmail(env, to, subject, text) {
 }
 
 export async function createBillingAccount(env, input = {}, { origin, now = new Date() } = {}) {
+  // Once the new offer is enabled, do not enroll new stores through the legacy registration-triggered Stripe trial.
+  // Existing accounts/subscriptions and their agreed schedules are serviced by the unchanged paths below.
+  if (env.SELLER_MANUAL_PILOT_ENABLED === 'true' && env.SELLER_PILOT_OFFER_VERSION === 'external-seller-30d-v1') {
+    throw new Error('NEW_SELLER_USE_PUBLICATION_TRIAL');
+  }
   const db = env.PRODUCT_DB;
   if (!db) throw new Error('NO_DB');
   const nowIso = now.toISOString();

@@ -102,7 +102,8 @@ test('クリエイター募集: 最新素材（カルーセル 6 セット）・
     for (const n of [1, 2, 3, 4]) assert.ok(html.includes(`/social/carousel/${set}/${n}.jpg`), `${set}/${n}`);
   }
   assert.match(html, /#hoshilu #Qoo10 #SHEIN #値下がり待ち #ホシっとく #韓国コスメ #amazon #楽天/u);
-  assert.match(html, /HOSHILU Seller 月額4,980円（税込）、最初の3か月は月額0円/u);
+  assert.match(html, /HOSHILU Seller 月額4,980円（税込）/u);
+  assert.doesNotMatch(html, /最初の3か月は月額0円/u);
   // 2026-09-21 大隆さん決定: クリック課金は廃止。クリエイターにも「月額だけ」と書いてもらう。
   assert.match(html, /クリックによる追加料金はない/u);
   assert.ok(!html.includes('Demand Match Click 50円'), '廃止した値段を素材に残さない');
