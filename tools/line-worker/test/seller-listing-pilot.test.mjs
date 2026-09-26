@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {PILOT_OFFER,calendarTrialEnd,normalizePilotDraft,transitionPilot,pilotEntitlement,acquisitionComplete,handleSellerListingPilotRoutes} from '../src/seller-listing-pilot.mjs';
-const sample=()=>({shop_name:'テスト店舗',business_name:'テスト法人',registered_address:'検証専用住所',business_evidence_ref:'fixture-business',external_verified:true,external_evidence_ref:'fixture-external',test:true,
+const sample=()=>({shop_name:'テスト店舗',business_name:'テスト法人',registered_address:'検証専用住所',business_evidence_ref:'fixture-business',external_verified:true,external_evidence_ref:'fixture-external',test:true,prior_terms_reviewed:true,
  products:[1,2,3].map(n=>({title:`検証商品${n}`,image_url:'https://example.com/image.png',destination_url:`https://example.com/products/${n}`,marketplace:'OWN_STORE',price_jpy:null,permission_ref:'test-owned-fixture'}))});
 function fixture(){
  const db=new DatabaseSync(':memory:');
@@ -22,13 +22,14 @@ test('3か月はJST暦月・末日へ丸め、90日ではない',()=>{
 });
 test('許諾・3つの異なる商品・正しい販売先を必須とし価格を推測しない',()=>{
  const input=sample();assert.equal(normalizePilotDraft(input).products[0].price_jpy,null);
- assert.throws(()=>normalizePilotDraft({...input,products:input.products.slice(0,2)}),/THREE/);
+ assert.equal(normalizePilotDraft({...input,products:input.products.slice(0,1)}).products.length,1);
+ assert.throws(()=>normalizePilotDraft({...input,products:[]}),/PRODUCTS/);
  input.products[0].permission_ref='';assert.throws(()=>normalizePilotDraft(input),/PERMISSION/);
  input.products[0].permission_ref='test';input.products[0].marketplace='AMAZON';assert.throws(()=>normalizePilotDraft(input),/MISMATCH/);
  input.products[0].destination_url='https://amazon.co.jp/dp/B000000000';assert.throws(()=>normalizePilotDraft(input),/SELLER_DESTINATION/);
 });
 test('期限・重複イベントでも課金せず、社内テストは獲得に数えない',()=>{
- const draft=normalizePilotDraft(sample());const now=new Date('2026-01-31T03:30:00Z');
+ const draft={...normalizePilotDraft(sample()),offer_version:PILOT_OFFER};const now=new Date('2026-01-31T03:30:00Z');
  assert.throws(()=>transitionPilot(draft,'PUBLISH',{}, {actor:'ADMIN',offerEnabled:true,now}),/OWNER_APPROVAL/);
  assert.throws(()=>transitionPilot(draft,'APPROVE',{publication_consent:true,offer_version:PILOT_OFFER},{actor:'OWNER',offerEnabled:false,now}),/CONDITIONS/);
  const approved=transitionPilot(draft,'APPROVE',{publication_consent:true,offer_version:PILOT_OFFER},{actor:'OWNER',offerEnabled:true,now});
@@ -98,4 +99,56 @@ test('実Workerのルーティングで相談管理・手動掲載APIに到達�
  assert.equal((await call('/api/admin/seller-business/inquiries',false)).status,401);
  assert.equal((await call('/api/admin/seller-pilot',true)).status,200);
  assert.equal((await call('/api/admin/seller-pilot',false)).status,401);
+});
+
+test('publication DB failure cannot consume trial; edit and republication retain timestamps',async()=>{
+ const {db,env,call}=fixture();
+ const {pilot_id:id}=await(await call('/api/admin/seller-pilot',{...sample(),action:'CREATE',inquiry_id:'SBI_test'})).json();
+ await call(`/api/seller-pilot/${id}`,{action:'APPROVE',revision:1,publication_consent:true,offer_version:PILOT_OFFER});
+ const batch=env.PRODUCT_DB.batch;env.PRODUCT_DB.batch=async()=>{throw new Error('simulated database unavailable');};
+ assert.equal((await call(`/api/admin/seller-pilot/${id}`,{action:'PUBLISH',revision:2})).status,503);
+ let doc=JSON.parse(db.prepare('SELECT document_json FROM seller_listing_pilots').get().document_json);assert.equal(doc.starts_at,undefined);assert.equal(doc.status,'APPROVED');
+ env.PRODUCT_DB.batch=batch;await call(`/api/admin/seller-pilot/${id}`,{action:'PUBLISH',revision:2});
+ doc=JSON.parse(db.prepare('SELECT document_json FROM seller_listing_pilots').get().document_json);
+ await call(`/api/seller-pilot/${id}`,{action:'UNPUBLISH',revision:3});
+ await call(`/api/admin/seller-pilot/${id}`,{...sample(),test:false,action:'REVISE',revision:4});
+ await call(`/api/seller-pilot/${id}`,{action:'APPROVE',revision:5,publication_consent:true,offer_version:PILOT_OFFER});
+ await call(`/api/admin/seller-pilot/${id}`,{action:'PUBLISH',revision:6});
+ const next=JSON.parse(db.prepare('SELECT document_json FROM seller_listing_pilots').get().document_json);assert.equal(next.starts_at,doc.starts_at);assert.equal(next.ends_at,doc.ends_at);assert.equal(next.test,true);
+});
+test('3-month individual promise needs evidence and cannot be overwritten by draft edits',async()=>{
+ const {db,call}=fixture();const {LEGACY_PILOT_OFFER}=await import('../public/seller-trial-policy.mjs');
+ const {pilot_id:id}=await(await call('/api/admin/seller-pilot',{...sample(),action:'CREATE',inquiry_id:'SBI_test',legacy_promise_ref:'restricted-previous-promise'})).json();
+ await call(`/api/admin/seller-pilot/${id}`,{...sample(),action:'REVISE',revision:1,offer_version:PILOT_OFFER});
+ const doc=JSON.parse(db.prepare('SELECT document_json FROM seller_listing_pilots').get().document_json);assert.equal(doc.offer_version,LEGACY_PILOT_OFFER);assert.equal(doc.legacy_promise_ref,'restricted-previous-promise');
+ assert.equal((await call(`/api/seller-pilot/${id}`,{action:'APPROVE',revision:2,publication_consent:true,offer_version:PILOT_OFFER})).status,400);
+});
+
+test('signed Stripe events deduplicate and read latest provider state when old events arrive',async()=>{
+ const {db,env,call}=fixture();
+ const {computeStripeSignature}=await import('../src/stripe-client.mjs');
+ const {handleStripeWebhook}=await import('../src/seller-billing.mjs');
+ const {PAID_TERMS}=await import('../src/seller-pilot-payment.mjs');
+ const {pilot_id:id}=await(await call('/api/admin/seller-pilot',{...sample(),action:'CREATE',inquiry_id:'SBI_test'})).json();
+ let doc=JSON.parse(db.prepare('SELECT document_json FROM seller_listing_pilots').get().document_json);
+ doc={...doc,status:'PUBLISHED',approved_at:'2026-01-01',starts_at:'2026-01-01',ends_at:'2026-01-31',paid_opt_in_at:new Date().toISOString(),paid_terms_version:PAID_TERMS,payment:{session_id:'cs_test_fixture'}};
+ db.prepare('UPDATE seller_listing_pilots SET document_json=?').run(JSON.stringify(doc));
+ db.exec('CREATE TABLE stripe_webhook_events(event_id TEXT PRIMARY KEY,event_type TEXT,processed_at TEXT,result TEXT)');
+ const prepare=env.PRODUCT_DB.prepare;
+ env.PRODUCT_DB.prepare=sql=>{const q=prepare(sql);q.first=async()=> (await q.all()).results?.[0];return q;};
+ const metadata={purpose:'SELLER_PILOT',pilot_id:id,paid_opt_in_at:doc.paid_opt_in_at};
+ const price={id:'price_test',currency:'jpy',unit_amount:4980,active:true,livemode:false,tax_behavior:'inclusive',recurring:{interval:'month',interval_count:1}};
+ const session={id:'cs_test_fixture',livemode:false,metadata,mode:'subscription',status:'complete',payment_status:'paid',subscription:'sub_fixture'};
+ const sub={id:'sub_fixture',livemode:false,metadata,status:'active',currency:'jpy',items:{data:[{quantity:1,price}]},current_period_end:Math.floor(Date.now()/1000)+3600,latest_invoice:{status:'paid',currency:'jpy',amount_paid:4980}};
+ Object.assign(env,{SELLER_PILOT_PAYMENTS_ENABLED:'true',SELLER_PILOT_PAYMENT_MODE:'test',SELLER_PILOT_PRICE_ID:'price_test',STRIPE_SECRET_KEY:'sk_test_'+'x'.repeat(32),STRIPE_WEBHOOK_SECRET:'whsec_'+'x'.repeat(32),STRIPE_FETCH:async url=>Response.json(url.includes('/subscriptions/')?sub:session)});
+ const send=async(eventId,signed=true)=>{
+   const raw=JSON.stringify({id:eventId,type:'customer.subscription.updated',data:{object:{id:sub.id,metadata,status:'active'}}});
+   const timestamp=Math.floor(Date.now()/1000),signature=await computeStripeSignature(env.STRIPE_WEBHOOK_SECRET,timestamp,raw);
+   return handleStripeWebhook(new Request('https://hoshilu.app/api/stripe/webhook',{method:'POST',headers:{'stripe-signature':signed?`t=${timestamp},v1=${signature}`:'invalid'},body:raw}),env);
+ };
+ assert.equal((await send('evt_bad',false)).status,400);assert.equal(db.prepare('SELECT count(*) n FROM stripe_webhook_events').get().n,0);
+ assert.equal((await send('evt_new')).status,200);
+ assert.equal((await(await send('evt_new')).json()).duplicate,true);
+ sub.status='canceled';assert.equal((await send('evt_old_payload')).status,200);
+ const after=JSON.parse(db.prepare('SELECT document_json FROM seller_listing_pilots').get().document_json);assert.equal(after.payment.status,'INACTIVE');assert.equal(after.ends_at,doc.ends_at);
 });
