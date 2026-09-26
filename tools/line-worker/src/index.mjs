@@ -1748,7 +1748,14 @@ export function trackingEventsForPayload(payload, occurredAt) {
   }));
 }
 
-export async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA', originHint = {}) {
+function startGoogleMallSearch(env, query) {
+  return googleMallSearchConfigured(env)
+    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '), { excludeMarketplaces: [] })
+      .catch(() => ({ items: [], source: 'error', reason: 'UNHANDLED' }))
+    : Promise.resolve({ items: [], source: 'disabled', reason: 'NOT_CONFIGURED' });
+}
+
+export async function decoratePwaResult(result, request, env, sessionHash, query = '', language = 'JA', originHint = {}, pendingGoogleMallSearch = null) {
   const origin = new URL(request.url).origin;
   const seed = result.query_id || crypto.randomUUID();
   // 2026-09-20 GPT 指示書 §12〜§13（大隆さん承認）: 楽天・Yahoo! は API 検索のまま。その他のモールは、
@@ -1767,20 +1774,14 @@ export async function decoratePwaResult(result, request, env, sessionHash, query
     }
     if (!offers.length && legacyAmazonProductLead(candidate)) presentMarketplaces.add('AMAZON_JP');
   }
-  const googleMallPromise = googleMallSearchConfigured(env)
-    // 2026-09-22 大隆さん指示「検索したら、ホシルもGoogleの提示が必ずたくさん出ること」。
-    // これまでは「そのモールに HOSHILU の候補があれば、Google 側はそのモールを出さない」
-    // として結果を捨てていた。重複を避けるための規則だったが、重複は unifyResults が
-    // ASIN・JAN・URL で1件にまとめるので、ここで捨てる必要はない。捨てるほど提示が減る。
-    // Google への問い合わせは検索1回につき1回で、モールを増やしても上限は減らない。
-    // （Amazon は PA-API 未解放で HOSHILU 自身では商品を取れないため、特に重要）
-    ? searchGoogleMalls(env, buildAmazonSearchKeywords(query).replace(/\bB[A-Z0-9]{9}\b/giu, ' '), { excludeMarketplaces: [] })
-      .catch(() => ({ items: [], source: 'error', reason: 'UNHANDLED' }))
-    : Promise.resolve({ items: [], source: 'disabled', reason: 'NOT_CONFIGURED' });
+  // 2026-09-22: Google結果はモール単位で捨てず、unifyResultsで重複排除する。
+  // 本検索からは先行実行したPromiseを受け取り、他の経路ではここで開始する。
+  const googleMallPromise = pendingGoogleMallSearch || startGoogleMallSearch(env, query);
   const candidates = [];
-  const priorityContext = await sellerPriorityContext(env, displayCandidates);
   // 2026-09-04 ショップページ（Business）: 商品カードに「この商品を扱うショップ」を出す。
-  const shops = await activeShops(env);
+  const [priorityContext, shops] = await Promise.all([
+    sellerPriorityContext(env, displayCandidates), activeShops(env)
+  ]);
   const demandCategory = semanticSearchGroups(query)
     .map((group) => group.category)
     .find((category) => category && category !== 'color') || 'unclassified';
@@ -2860,6 +2861,11 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
     // 2026-09-04 大隆さん実機報告: 検索窓に「そこまで洗えるボトル 水筒 底が外せる 水筒 洗いやすい」の
     // ように同じ語が重複して出ていた（展開の正式名詞＋AI変換語の連結）。重複語は落として渡す。
     input = { ...input, query: dedupeQueryTokens(queryWasAiRefined ? aiExpandedQuery.query : expandedQuery.query) };
+    // The effective query is now final. Overlap Google's existing single search
+    // with D1 enrichment and live marketplaces instead of starting it after them.
+    // Reuse the promise in decoration so quotas, candidates and ranking stay intact.
+    const googleMallPromise = startGoogleMallSearch(env, input.query);
+    if (ctx?.waitUntil) ctx.waitUntil(googleMallPromise);
     const gasResult = gasOutcome.status === 'fulfilled' ? gasOutcome.value : { candidates: [], message: '' };
     let result = indexedOutcome.status === 'fulfilled' ? indexedOutcome.value : gasResult;
     if (indexedOutcome.status === 'fulfilled' && (gasResult?.candidates || []).length) {
@@ -3200,7 +3206,8 @@ async function handleKnowledgeApi(request, env, ctx, options = {}) {
       sessionHash,
       input.query,
       input.language,
-      { origin: searchOrigin.origin, korean: searchOrigin.korean }
+      { origin: searchOrigin.origin, korean: searchOrigin.korean },
+      googleMallPromise
     );
     // A verified-product recommendation request needs a fresh Turnstile token
     // and marketplace call. Put the safe rule-based category shelf in the main

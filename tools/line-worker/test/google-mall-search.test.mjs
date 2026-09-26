@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { generateKeyPairSync } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { runGoogleMallDiagnostic, handleGoogleMallDiagnosticRoute } from '../src/google-mall-diagnostic.mjs';
-import { decoratePwaResult } from '../src/index.mjs';
+import worker, { decoratePwaResult } from '../src/index.mjs';
 import {
   parseGoogleMallItems, normalizeAgentSearchResponse, searchGoogleMalls, googleMallSearchConfigured,
   googleBillingDayKey, reserveGoogleMallSearchRequest, mallForHost, googleAccessToken, resetGoogleAccessTokenCache, broadenGoogleMallQuery, summarizeGoogleMallResponse
@@ -35,6 +35,55 @@ const SA_JSON = JSON.stringify({
 });
 const ENGINE = 'projects/1053599249807/locations/global/collections/default_collection/engines/hoshilu-malls_1789846201676';
 const baseEnv = () => ({ PRODUCT_DB: d1(), GOOGLE_AGENT_SEARCH_SA_JSON: SA_JSON, GOOGLE_AGENT_SEARCH_ENGINE: ENGINE });
+
+test('public search starts Google before a slow marketplace finishes and reuses its result once', async () => {
+  const previousFetch = globalThis.fetch;
+  resetGoogleAccessTokenCache();
+  let releaseMarketplace;
+  const marketplaceGate = new Promise(resolve => { releaseMarketplace = resolve; });
+  const watchdog = setTimeout(() => releaseMarketplace(), 1500);
+  let googleCalls = 0;
+  let marketplaceFinished = false;
+  const background = [];
+  try {
+    globalThis.fetch = async (url, init = {}) => {
+      const target = String(url);
+      if (target.includes('siteverify')) return Response.json({ success: true });
+      if (target.includes('script.google.com')) return Response.json({ ok: true, result: { candidates: [] } });
+      if (target.includes('oauth2.googleapis.com')) return Response.json({ access_token: 'qa-token', expires_in: 3600 });
+      if (target.includes('discoveryengine.googleapis.com')) {
+        googleCalls++;
+        assert.equal(marketplaceFinished, false, 'Google must overlap the marketplace request');
+        releaseMarketplace();
+        return Response.json(SAMPLE);
+      }
+      if (target.includes('rakuten.co.jp')) {
+        await marketplaceGate;
+        marketplaceFinished = true;
+        return Response.json({ Items: [] });
+      }
+      throw new Error('Unexpected test endpoint');
+    };
+    const env = { ...baseEnv(), TURNSTILE_SECRET_KEY: 'test-secret',
+      GAS_BACKEND_URL: 'https://script.google.com/macros/s/test/exec', GAS_BRIDGE_SECRET: 'g'.repeat(32),
+      LINK_SIGNING_SECRET: 'l'.repeat(32), RAKUTEN_APPLICATION_ID: 'app', RAKUTEN_ACCESS_KEY: 'key',
+      OFFICIAL_STORE_SEARCH_ENABLED: 'false' };
+    const response = await worker.fetch(new Request('https://hoshilu.app/api/knowledge', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: '水筒', language: 'JA', processing_notice_shown: true,
+        session_id: 'qa_google_parallel_12345', turnstile_token: 'test-token' })
+    }), env, { waitUntil(task) { background.push(task); } });
+    const payload = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(payload));
+    assert.equal(googleCalls, 1, 'decoration must not launch Google again');
+    assert.ok(payload.result.google_mall_results.items.length > 0);
+  } finally {
+    clearTimeout(watchdog);
+    releaseMarketplace();
+    await Promise.allSettled(background);
+    globalThis.fetch = previousFetch;
+  }
+});
 
 const doc = (title, link, extra = {}) => ({ document: { derivedStructData: { title, link, snippets: [{ snippet: extra.snippet || '' }], pagemap: extra.pagemap || {} } } });
 const SAMPLE = {
