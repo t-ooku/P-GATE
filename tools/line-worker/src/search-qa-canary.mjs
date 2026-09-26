@@ -58,7 +58,9 @@ export const SEARCH_QA_CANARY_QUERIES = Object.freeze([
   // 2026-09-23 展開規則 sleep-comfortable-earplugs の代表クエリ(機能語「つけたまま眠れる」→ 売り手の語「睡眠用」)。
   { id: 'sleep_comfortable_earplugs', query: 'つけたまま眠れる耳栓', expect: /耳栓|ear\s*plug/iu, reject: /イヤホン|補聴器|耳かき|ケースのみ|コードのみ|交換用/u },
   // 2026-09-25 展開規則 auto-drain-dehumidifier の代表クエリ(機能語「タンクの水を捨てるのが面倒」→ 売り手の語「自動排水」)。
-  { id: 'auto_drain_dehumidifier', query: 'タンクの水を捨てるのが面倒な除湿機', expect: /除湿機|dehumidifier/iu, reject: /空気清浄機|加湿器|扇風機|フィルターのみ|交換用/u }
+  { id: 'auto_drain_dehumidifier', query: 'タンクの水を捨てるのが面倒な除湿機', expect: /除湿機|dehumidifier/iu, reject: /空気清浄機|加湿器|扇風機|フィルターのみ|交換用/u },
+  // 2026-09-27 展開規則 washable-electric-blanket の代表クエリ(機能語「洗えない/丸洗いしたい」→ 売り手の語「丸洗い」)。
+  { id: 'washable_electric_blanket', query: '丸洗いできる電気毛布が欲しい', expect: /電気毛布|電気敷き毛布|電気ブランケット/iu, reject: /コントローラーのみ|コードのみ|カバーのみ|敷きパッドのみ|交換用/u }
 ]);
 
 export const PRIORITY_SEARCH_QA_QUERIES = Object.freeze([
