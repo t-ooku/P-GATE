@@ -5,6 +5,8 @@ name: Build social carousels (Pillow) and deploy
 # ops/social/carousels-v3.json が push されると、このワークフローが ubuntu の Pillow + Noto CJK で
 # JPEG を再生成し、feature/ui-search-v2 にコミットして Worker をデプロイする
 # （assets として hoshilu.app/social/carousel/ から配信）。AI 生成・課金は発生しない。
+# Issue パッチ（apply-patch.yml）経由の push ではこのワークフローは起動しない。定義だけ先に入れた時は、
+# このファイルか carousels-v3.json を外から push して起動する（2026-09-27: 14 セット化で使用）。
 
 on:
   push:
