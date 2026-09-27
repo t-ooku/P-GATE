@@ -393,7 +393,7 @@ test('Amazon優先Threadsローテーションは1日4本、別々の時刻に�
   for (const post of sellerPosts) {
     for (const banned of ['必ず', '売上が上が', '多数の', '業界No', '確実に', '最安']) assert.ok(!post.caption.includes(banned), `${post.content_id}: ${banned}`);
   }
-  assert.ok(sellerPosts.some(post => /4,980円/u.test(post.caption)), '料金は隠さない（§49）');
+  assert.ok(sellerPosts.some(post => /1,980円/u.test(post.caption)), '料金は隠さない（§49）');
   assert.equal(userPosts.every(post => post.campaign_id === 'hoshilu-threads-amazon-boost-v1'), true);
   assert.equal(userPosts.every(post => !/[¥$]\s?\d|\d+\s?円/.test(post.caption)), true, '本文に価格を直書きしない');
 

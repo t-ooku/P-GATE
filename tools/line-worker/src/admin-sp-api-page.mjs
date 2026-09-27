@@ -115,12 +115,12 @@ export function adminSellerBillingPageResponse() {
   <link rel="stylesheet" href="/auth.css"><link rel="stylesheet" href="/admin-sp-api.css">
   <link rel="stylesheet" href="/admin-promotion.css"><title>セラー請求 | HOSHILU</title></head><body>
   <main class="admin-shell promotion-shell"><section class="auth-card"><div class="admin-head"><div>
-  <p class="eyebrow">SELLER BILLING</p><h1>セラー請求（前払い）</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
+  <p class="eyebrow">SELLER BILLING</p><h1>既存セラーの請求管理</h1></div><button id="adminLogout" class="ghost-button" type="button">ログアウト</button></div>
   <nav class="admin-nav"><a href="/admin/promotion">経営KPI</a><a href="/admin/reels">AIリール管理</a><a class="active" href="/admin/seller-billing">セラー請求</a><a href="/admin/seller-candidates">Seller候補</a><a href="/admin/creators">Creator計測</a><a href="/admin/sp-api">認証監査</a></nav>
-  <p>新規Sellerは初回公開から30日無料・本人申込みで月額4,980円（税込）へ移行。手動掲載の管理画面で条件を確認してください。この旧契約管理欄は既存契約用です。クリック課金はすべて停止（旧ジャンル課金・Demand Match Click 50円とも 2026-09-21 に廃止）。Demand Match のクリックは課金せず件数だけ記録する。</p>
+  <p>新規Sellerは初回公開成功から30日無料。開始前のカード登録と明示同意が必須。期限までに解約しなければ31日目から月額1,980円（税込）で毎月自動更新。手動掲載の管理画面で条件を確認してください。この旧契約管理欄は既存契約用です。クリック課金はすべて停止（旧ジャンル課金・Demand Match Click 50円とも 2026-09-21 に廃止）。Demand Match のクリックは課金せず件数だけ記録する。</p>
   <div class="dashboard-actions"><p id="billingStatus" role="status"></p><button id="refreshBilling" class="ghost-button" type="button">最新状態に更新</button></div></section>
-  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">REGISTER</p><h2>請求アカウントを登録</h2></div></div>
-  <form id="billingForm" class="auth-form">
+  <section class="auth-card"><div class="section-head"><div><p class="eyebrow">REGISTER</p><h2>新規Seller</h2><p>新規の掲載見本は<a href="/admin/seller-pilot">掲載管理画面</a>で確認します。旧料金の申込みリンクは新規発行しません。</p></div></div>
+  <form id="billingForm" class="auth-form" hidden>
     <label>事業者名 <input name="account_name" required maxlength="100" placeholder="例: ITG GROUP"></label>
     <label>担当者メール <input name="contact_email" type="email" required placeholder="seller@example.com"></label>
     <label>プラン <select name="plan"><option value="BUSINESS">既存契約管理（¥4,980/月・合意済み条件を維持）</option><option value="SELLER">旧契約管理（新規募集対象外）</option></select></label>

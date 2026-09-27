@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
-import {PILOT_OFFER,calendarTrialEnd,normalizePilotDraft,transitionPilot,pilotEntitlement,acquisitionComplete,handleSellerListingPilotRoutes} from '../src/seller-listing-pilot.mjs';
-const sample=()=>({shop_name:'テスト店舗',business_name:'テスト法人',registered_address:'検証専用住所',business_evidence_ref:'fixture-business',external_verified:true,external_evidence_ref:'fixture-external',test:true,prior_terms_reviewed:true,
+import {LEGACY_PILOT_OFFER as PILOT_OFFER,calendarTrialEnd,normalizePilotDraft,transitionPilot,pilotEntitlement,acquisitionComplete,handleSellerListingPilotRoutes} from '../src/seller-listing-pilot.mjs';
+const sample=()=>({legacy_promise_ref:'fixture-existing-agreement',shop_name:'テスト店舗',business_name:'テスト法人',registered_address:'検証専用住所',business_evidence_ref:'fixture-business',external_verified:true,external_evidence_ref:'fixture-external',test:true,prior_terms_reviewed:true,
  products:[1,2,3].map(n=>({title:`検証商品${n}`,image_url:'https://example.com/image.png',destination_url:`https://example.com/products/${n}`,marketplace:'OWN_STORE',price_jpy:null,permission_ref:'test-owned-fixture'}))});
 function fixture(){
  const db=new DatabaseSync(':memory:');
@@ -121,7 +121,7 @@ test('3-month individual promise needs evidence and cannot be overwritten by dra
  const {pilot_id:id}=await(await call('/api/admin/seller-pilot',{...sample(),action:'CREATE',inquiry_id:'SBI_test',legacy_promise_ref:'restricted-previous-promise'})).json();
  await call(`/api/admin/seller-pilot/${id}`,{...sample(),action:'REVISE',revision:1,offer_version:PILOT_OFFER});
  const doc=JSON.parse(db.prepare('SELECT document_json FROM seller_listing_pilots').get().document_json);assert.equal(doc.offer_version,LEGACY_PILOT_OFFER);assert.equal(doc.legacy_promise_ref,'restricted-previous-promise');
- assert.equal((await call(`/api/seller-pilot/${id}`,{action:'APPROVE',revision:2,publication_consent:true,offer_version:PILOT_OFFER})).status,400);
+ assert.equal((await call(`/api/seller-pilot/${id}`,{action:'APPROVE',revision:2,publication_consent:true,offer_version:'external-seller-30d-v1'})).status,400);
 });
 
 test('signed Stripe events deduplicate and read latest provider state when old events arrive',async()=>{

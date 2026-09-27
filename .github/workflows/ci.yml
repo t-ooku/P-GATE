@@ -449,6 +449,21 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node scripts/read-codex-kpi-snapshot.mjs --output codex-kpi-snapshot.json
+      - name: Read Seller pricing production evidence
+        if: contains(github.event.head_commit.message, '[seller-1980-audit]')
+        working-directory: tools/line-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/audit-seller-1980-production.mjs
+      - name: Preserve Seller pricing production evidence
+        if: contains(github.event.head_commit.message, '[seller-1980-audit]')
+        uses: actions/upload-artifact@v4
+        with:
+          name: hoshilu-seller-1980-${{ github.run_id }}
+          path: tools/line-worker/seller-1980-production-audit.json
+          if-no-files-found: error
+          retention-days: 30
       - name: Preserve aggregate-only Codex KPI snapshot
         uses: actions/upload-artifact@v4
         with:

@@ -184,7 +184,7 @@ test('/api/seller/demand-match: 集計だけ。予算の設定経路は無くし
   const budget = await handleSellerDemandMatchRoutes(request('/api/seller/demand-match/budget', { method: 'PUT', body: { monthly_cap_jpy: 20000 } }), env, seller);
   assert.equal(budget.status, 404);
   const page = readFileSync(new URL('../src/seller-page.mjs', import.meta.url), 'utf8');
-  for (const label of ['data-dm-kpi="notified"', 'data-dm-kpi="valid"', 'data-dm-kpi="excluded"', 'seller.js?v=5']) assert.ok(page.includes(label), label);
+  for (const label of ['data-dm-kpi="notified"', 'data-dm-kpi="valid"', 'data-dm-kpi="excluded"', 'seller.js?v=1980-1']) assert.ok(page.includes(label), label);
   for (const gone of ['data-dm-kpi="amount"', 'data-dm-kpi="cap"', 'sellerDemandMatchBudgetForm']) assert.ok(!page.includes(gone), gone);
   const js = readFileSync(new URL('../public/seller.js', import.meta.url), 'utf8');
   assert.ok(!js.includes('/api/seller/demand-match/budget'), '画面からも予算の保存を消す');

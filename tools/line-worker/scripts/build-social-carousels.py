@@ -11,7 +11,7 @@
 2026-09-23 大隆さん指示「インスタ投稿したの50円書いてたから削除したよ。違うのをオシャレに作って再投稿して」:
 - 2026-09-21 に廃止した Demand Match Click（1クリック50円）が seller-demand-visible に残っていた。
   PRICING_BAN で「50円」「1クリック」「クリック課金」「Demand Match Click」を機械で止める。
-  料金の言い方は「4,980円/月（税込）・商品公開から30日無料への変更（体験開始準備中）・クリックによる追加料金なし」だけにする。
+  料金の言い方は「1,980円/月（税込）・商品公開から30日無料・開始前カード登録と明示同意必須・31日目から毎月自動更新（体験開始準備中）・クリックによる追加料金なし」だけにする。
 - 画像を作り直すのは .github/workflows/build-social-carousels.yml。Issue パッチ経由の push は
   Actions の GITHUB_TOKEN で行われ、後続のワークフローを起こさない（GitHub の仕様）。
   このファイルか carousels-v3.json を外から push し直すと再生成が走る。
@@ -32,7 +32,7 @@ OUT = ROOT / 'public' / 'social' / 'carousel'
 FONT = Path(sys.argv[1] if len(sys.argv) > 1 else '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc')
 FORBIDDEN = re.compile(r'必ず|売上が上が|多数のユーザー|業界No|確実に|100%|最安|\d+%OFF|\d+%off|保証します')
 # 2026-09-23: 廃止した課金の言い方を二度と載せない。数字ではなく言い方ごと止める。
-PRICING_BAN = re.compile(r'Demand Match Click|1クリック|クリック課金|クリック単価|50円|５０円|[3３](?:か|ヶ|カ)月.{0,10}(?:無料|0円)|無料.{0,10}[3３](?:か|ヶ|カ)月')
+PRICING_BAN = re.compile(r'4,?980円|9,?800円|支払い登録不要|自動有料化なし|本人申込み時のみ|値下げしました|永久1,?980|Demand Match Click|1クリック|クリック課金|クリック単価|50円|５０円|[3３](?:か|ヶ|カ)月.{0,10}(?:無料|0円)|無料.{0,10}[3３](?:か|ヶ|カ)月')
 
 INK = (23, 23, 43)
 MUTED = (109, 107, 128)

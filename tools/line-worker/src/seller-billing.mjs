@@ -1,3 +1,4 @@
+import {legacyBillingDisplay} from './seller-legacy-billing-display.mjs';
 import { processPilotStripeEvent } from './seller-pilot-payment.mjs';
 import { processAutoRenewStripeEvent } from './seller-pilot-autorenew.mjs';
 // 2026-09-04 大隆さん指示「請求・決済の自動化して」「全部前払いね」。
@@ -34,7 +35,9 @@ import { REFERRAL_CATEGORY_LABELS } from './seller-referral-category.mjs';
 
 export const MICROS = 1_000_000;
 // 2026-09-19 大隆さん決定: HOSHILU Seller は月額 4,980 円の 1 プラン（Growth 9,800 円は表示しない・内部バックログのみ）。
-export const BUSINESS_MONTHLY_FEE_JPY = 4980;
+// Legacy billing accounts keep the amount/Price they agreed to. New enrollment uses seller-trial-policy.
+export const LEGACY_BUSINESS_MONTHLY_FEE_JPY = 4980;
+export const BUSINESS_MONTHLY_FEE_JPY = LEGACY_BUSINESS_MONTHLY_FEE_JPY;
 export const BUSINESS_TRIAL_MONTHS = 3;
 export const TOPUP_PRESETS_JPY = Object.freeze([5000, 10000, 30000, 50000]);
 export const TOPUP_MIN_JPY = 3000;
@@ -486,7 +489,7 @@ async function sendBillingEmail(env, to, subject, text) {
 export async function createBillingAccount(env, input = {}, { origin, now = new Date() } = {}) {
   // Once the new offer is enabled, do not enroll new stores through the legacy registration-triggered Stripe trial.
   // Existing accounts/subscriptions and their agreed schedules are serviced by the unchanged paths below.
-  if (env.SELLER_MANUAL_PILOT_ENABLED === 'true' && ['external-seller-30d-v1','external-seller-30d-autorenew-v1'].includes(env.SELLER_PILOT_OFFER_VERSION)) {
+  if (env.SELLER_MANUAL_PILOT_ENABLED === 'true' && ['external-seller-30d-v1','external-seller-30d-autorenew-v1','external-seller-1980-30d-autorenew-v1'].includes(env.SELLER_PILOT_OFFER_VERSION)) {
     throw new Error('NEW_SELLER_USE_PUBLICATION_TRIAL');
   }
   const db = env.PRODUCT_DB;
@@ -702,6 +705,7 @@ export async function sellerBillingSummary(env, seller, now = new Date()) {
     seller_key: seller.seller_key,
     stripe: sellerBillingReadiness(env),
     account: account ? {
+      ...(await legacyBillingDisplay(env,account)),
       plan: account.plan, status: account.status, payment_preference: account.payment_preference,
       subscription_status: account.subscription_status, trial_end_at: account.trial_end_at,
       current_period_end_at: account.current_period_end_at, contact_email: account.contact_email,
@@ -739,7 +743,7 @@ export async function handleSellerBillingRoutes(request, env, seller) {
     if (request.method === 'POST' && ['/api/seller/billing/topup','/api/seller/billing/auto-recharge'].includes(url.pathname)) return json({ok:false,error:'PREPAID_CHARGING_RETIRED'},410);
     if (!stripeConfigured(env)) return json({ ok: false, error: 'STRIPE_NOT_CONFIGURED' }, 503);
     if (request.method === 'POST' && url.pathname === '/api/seller/billing/subscribe') {
-      return json({ ok: true, ...(await startBusinessSubscription(env, account, { origin })) });
+      return json({ok:false,error:'LEGACY_CHECKOUT_REQUIRES_CONTRACT_REVIEW'},409);
     }
     if (request.method === 'POST' && url.pathname === '/api/seller/billing/portal') {
       return json({ ok: true, ...(await createPortalSession(env, account, { origin })) });
@@ -766,9 +770,7 @@ export async function handleSellerBillingAdminRoutes(request, env, authorize) {
       return json({ ok: true, stripe: sellerBillingReadiness(env), accounts: await listBillingAccounts(db) });
     }
     if (request.method === 'POST' && url.pathname === '/api/admin/seller-billing/accounts') {
-      const body = await request.json().catch(() => ({}));
-      const result = await createBillingAccount(env, body, { origin: url.origin });
-      return json({ ok: true, ...result }, 201);
+      return json({ok:false,error:'NEW_SELLER_USE_PUBLICATION_TRIAL'},409);
     }
     const match = url.pathname.match(/^\/api\/admin\/seller-billing\/accounts\/([A-Za-z0-9_-]{20,120})\/(ledger|adjust|subscribe)$/u);
     if (match) {
@@ -786,7 +788,7 @@ export async function handleSellerBillingAdminRoutes(request, env, authorize) {
         return json({ ok: true, ...(await adjustBalance(db, { sellerKey, amountJpy: body.amount_jpy, note: body.note || '管理者調整' })) });
       }
       if (request.method === 'POST' && match[2] === 'subscribe') {
-        return json({ ok: true, ...(await startBusinessSubscription(env, account, { origin: url.origin })) });
+        return json({ok:false,error:'LEGACY_CHECKOUT_REQUIRES_CONTRACT_REVIEW'},409);
       }
     }
     return json({ ok: false, error: 'NOT_FOUND' }, 404);

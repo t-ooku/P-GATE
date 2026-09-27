@@ -1,3 +1,4 @@
+import { recruitmentVerified, TRIAL_PENDING_COPY, TRIAL_COPY } from '../public/seller-trial-policy.mjs';
 import { handleSellerListingPilotRoutes } from './seller-listing-pilot.mjs';
 import { queueUsualDueNotifications } from './usual-reminders.mjs';
 import { admitTokenlessSearch } from './tokenless-search.mjs';
@@ -3782,7 +3783,15 @@ export default {
       status: 404,
       headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
     });
-    if (env.ASSETS) return env.ASSETS.fetch(request);
+    if (env.ASSETS) {
+      const asset=await env.ASSETS.fetch(request);
+      if(request.method==='GET'&&['/terms','/for-sellers','/for-creators'].includes(url.pathname)&&asset.ok&&recruitmentVerified(env)) {
+        const html=(await asset.text()).replaceAll(TRIAL_PENDING_COPY,TRIAL_COPY).replace('<span data-seller-enrollment-pending>現在、この条件での体験開始は準備中です。</span>','');
+        const headers=new Headers(asset.headers);headers.delete('content-length');headers.delete('etag');headers.set('cache-control','no-store');
+        return new Response(html,{status:asset.status,headers});
+      }
+      return asset;
+    }
     return new Response('not found', { status: 404, headers: DOCUMENT_SECURITY_HEADERS });
   },
   async scheduled(controller, env, ctx) {

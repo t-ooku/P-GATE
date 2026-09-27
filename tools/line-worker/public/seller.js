@@ -112,14 +112,14 @@ async function loadBilling() {
       billingField('allowance').textContent = '対象外';
       billingField('allowance-note').textContent = '無料プランには無料枠はありません';
     }
-    const plan = data.account?.plan === 'BUSINESS' ? 'HOSHILU Seller 4,980円/月' : '無料プラン 0円/月';
+    const plan = data.account?.plan === 'BUSINESS' ? (data.account.billing_verified ? `HOSHILU Seller ${yenText(data.account.monthly_jpy)}/月（契約料金）` : 'HOSHILU Seller（適用料金は請求書をご確認ください）') : '旧無料プラン';
     billingField('plan').textContent = data.account ? plan : '未登録';
     const trial = data.account?.trial_end_at ? `トライアル終了 ${data.account.trial_end_at.slice(0, 10)}` : '';
     billingField('plan-note').textContent = data.account
-      ? `${data.account.status} / ${data.account.payment_preference === 'BANK_TRANSFER' ? '銀行振込' : 'カード'}${data.account.subscription_status && data.account.subscription_status !== 'NONE' ? ` / ${data.account.subscription_status}` : ''}${trial ? ` / ${trial}` : ''}`
+      ? `${data.account.next_invoice_jpy!==null&&data.account.next_invoice_jpy!==undefined?`次回請求 ${yenText(data.account.next_invoice_jpy)} / `:''}${data.account.cancel_at_period_end?'次回更新停止済み / ':''}${data.account.status} / ${data.account.payment_preference === 'BANK_TRANSFER' ? '銀行振込' : 'カード'}${data.account.subscription_status && data.account.subscription_status !== 'NONE' ? ` / ${data.account.subscription_status}` : ''}${trial ? ` / ${trial}` : ''}`
       : '';
     const subscribeButton = document.querySelector('[data-billing-action="subscribe"]');
-    if (subscribeButton) subscribeButton.hidden = !(data.account?.plan === 'BUSINESS' && !data.account?.has_subscription);
+    if (subscribeButton) subscribeButton.hidden = true;
     const auto = document.querySelector('#sellerAutoRecharge');
     if (auto) {
       auto.checked = Boolean(data.account?.auto_recharge_enabled);

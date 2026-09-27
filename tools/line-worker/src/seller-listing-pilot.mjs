@@ -3,8 +3,8 @@ import { authorizeAdminRequest } from './admin-auth.mjs';
 import { readMemberSession } from './member-auth.mjs';
 import { resolveMemberIdentityAlias } from './member-notification-delivery.mjs';
 import { paidRequest, pilotPaymentsReady, pilotCheckout, verifiedPilotPayment, cancelPilotSubscription, PAID_TERMS } from './seller-pilot-payment.mjs';
-import { autoRenewReady, autoRenewConsent, setupAutoRenewCard, verifyAutoRenewCard, reconcileAutoRenew } from './seller-pilot-autorenew.mjs';
-import { AUTO_RENEW_OFFER, AUTO_RENEW_TERMS } from '../public/seller-trial-policy.mjs';
+import { autoRenewReady, autoRenewConsent, setupAutoRenewCard, verifyAutoRenewCard, verifyNewAutoRenewPrice, reconcileAutoRenew } from './seller-pilot-autorenew.mjs';
+import { AUTO_RENEW_OFFER, AUTO_RENEW_TERMS, isAutoRenewOffer, autoRenewPolicy, contractMonthlyJpy } from '../public/seller-trial-policy.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import { PILOT_OFFER, LEGACY_PILOT_OFFER, MONTHLY_JPY, TRIAL_TERMS, knownOffer, trialEnd, followupTasks, recruitmentVerified } from '../public/seller-trial-policy.mjs';
 export { PILOT_OFFER, LEGACY_PILOT_OFFER, calendarTrialEnd } from '../public/seller-trial-policy.mjs';
@@ -17,15 +17,15 @@ function https(value) {
 }
 export function pilotEntitlement(doc, now=new Date()) {
   const started=Date.parse(doc.starts_at),ends=Date.parse(doc.ends_at);
-  const automatic=doc.offer_version===AUTO_RENEW_OFFER;
+  const automatic=isAutoRenewOffer(doc.offer_version);
   const paid=automatic?Boolean(doc.autorenew?.paid&&Date.parse(doc.autorenew.period_end_at)>now.getTime()):Boolean(doc.paid_opt_in_at&&doc.payment?.status==='ACTIVE'&&Date.parse(doc.payment.current_period_end_at)>now.getTime());
   const active=doc.status==='PUBLISHED' && knownOffer(doc.offer_version) && ((started<=now.getTime() && now.getTime()<ends)||paid);
-  return {active,paid,expired:Number.isFinite(ends)&&now.getTime()>=ends,trial_status:!Number.isFinite(started)?'NOT_STARTED':now.getTime()>=ends?'EXPIRED':'ACTIVE',billing_status:paid?'PAID_CONFIRMED':automatic&&doc.autorenew?.subscription_id?'TRIAL_SUBSCRIPTION':'NO_PAID_CONTRACT',automatic_charge:automatic&&Boolean(doc.autorenew?.subscription_id)&&!doc.autorenew.cancel_requested_at,monthly_jpy:MONTHLY_JPY,currency:'JPY'};
+  return {active,paid,expired:Number.isFinite(ends)&&now.getTime()>=ends,trial_status:!Number.isFinite(started)?'NOT_STARTED':now.getTime()>=ends?'EXPIRED':'ACTIVE',billing_status:paid?'PAID_CONFIRMED':automatic&&doc.autorenew?.subscription_id?'TRIAL_SUBSCRIPTION':'NO_PAID_CONTRACT',automatic_charge:automatic&&Boolean(doc.autorenew?.subscription_id)&&!doc.autorenew.cancel_requested_at,monthly_jpy:contractMonthlyJpy(doc),currency:'JPY'};
 }
 export function publicPilotOffer(env) {
   // Recruitment wording is enabled only after staged production verification.
   const enabled=recruitmentVerified(env);
-  return {enabled,offer_version:enabled?env.SELLER_PILOT_OFFER_VERSION:null,monthly_jpy:MONTHLY_JPY};
+  return {enabled,offer_version:enabled?env.SELLER_PILOT_OFFER_VERSION:null,monthly_jpy:MONTHLY_JPY,terms_version:AUTO_RENEW_TERMS,currency:'jpy',tax_inclusive:true,trial_days:30};
 }
 export function normalizePilotDraft(input) {
   const doc={status:'DRAFT',shop_name:text(input.shop_name),business_name:text(input.business_name),registered_address:text(input.registered_address,500),
@@ -56,13 +56,13 @@ export function transitionPilot(doc, action, input, {actor,offerEnabled,now=new 
   if(action==='APPROVE'&&actor==='OWNER') {
     if(doc.status==='APPROVED') return doc;
     if(doc.status!=='DRAFT'||input.publication_consent!==true||input.offer_version!==offer||!knownOffer(offer)||!offerEnabled) throw new Error('APPROVAL_CONDITIONS_REQUIRED');
-    if(offer===AUTO_RENEW_OFFER&&(!doc.autorenew?.card_verified_at||doc.autorenew.terms!==AUTO_RENEW_TERMS||doc.autorenew.cancel_requested_at))throw new Error('CARD_REGISTRATION_REQUIRED');
+    if(isAutoRenewOffer(offer)&&(!doc.autorenew?.card_verified_at||doc.autorenew.terms!==autoRenewPolicy(offer).terms||doc.autorenew.cancel_requested_at))throw new Error('CARD_REGISTRATION_REQUIRED');
     next.status='APPROVED';next.approved_at=at;next.terms_version=offer===LEGACY_PILOT_OFFER?'seller-manual-calendar3-v1':TRIAL_TERMS;next.terms_accepted_at=at;
-    if(offer===AUTO_RENEW_OFFER)next.terms_version=AUTO_RENEW_TERMS;
+    if(isAutoRenewOffer(offer))next.terms_version=autoRenewPolicy(offer).terms;
   } else if(action==='PUBLISH'&&actor==='ADMIN') {
     if(doc.status==='PUBLISHED') return doc;
     if(!['APPROVED','UNPUBLISHED'].includes(doc.status)||!doc.approved_at||!knownOffer(offer)||!doc.products?.length||!offerEnabled) throw new Error('OWNER_APPROVAL_REQUIRED');
-    if(offer===AUTO_RENEW_OFFER&&(!doc.autorenew?.card_verified_at||doc.autorenew.cancel_requested_at))throw new Error('CARD_REGISTRATION_REQUIRED');
+    if(isAutoRenewOffer(offer)&&(!doc.autorenew?.card_verified_at||doc.autorenew.cancel_requested_at))throw new Error('CARD_REGISTRATION_REQUIRED');
     if(doc.starts_at && now.getTime()>=Date.parse(doc.ends_at)&&!pilotEntitlement(doc,now).paid) throw new Error('TRIAL_EXPIRED');
     next.status='PUBLISHED';
     // Public reads and trial start use this same atomic document commit. Failed DB writes roll both back.
@@ -132,7 +132,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
   const savePath=path.match(/^\/api\/seller-pilot\/(SPL_[a-zA-Z0-9-]+)\/save$/u);
   const member=!adminPath&&!publicId?await (deps.member||readMemberSession)(request,env):null;
   if(!publicId&&!admin&&!member) return json({ok:false,error:'AUTH_REQUIRED',login:'/login.html'},401);
-  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>通常料金：月額4,980円（税込）。店舗ごとの適用条件をご確認ください。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=3"></script>`);
+  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>新規料金：月額1,980円（税込）。店舗ごとの適用条件をご確認ください。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=1980-1"></script>`);
   const db=env.PRODUCT_DB;if(!db) return json({ok:false,error:'STORE_UNAVAILABLE'},503);
   const select=async(id)=> (await db.prepare('SELECT * FROM seller_listing_pilots WHERE pilot_id=?1').bind(id).all()).results?.[0];
   const offerEnabled=knownOffer(env.SELLER_PILOT_OFFER_VERSION);
@@ -167,7 +167,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     const input=parsed.value;
     if(admin&&path==='/api/admin/seller-pilot'&&input.action==='CREATE') {
       const doc=normalizePilotDraft(input);
-      if(!offerEnabled) return json({ok:false,error:'OFFER_NOT_ENABLED'},400);
+      if(env.SELLER_PILOT_OFFER_VERSION!==AUTO_RENEW_OFFER&&!input.legacy_promise_ref) return json({ok:false,error:'NEW_OFFER_NOT_ENABLED'},400);
       doc.offer_version=env.SELLER_PILOT_OFFER_VERSION;
       if(input.legacy_promise_ref) {
         doc.offer_version=LEGACY_PILOT_OFFER;doc.legacy_promise_ref=text(input.legacy_promise_ref,500);
@@ -187,18 +187,19 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     const id=path.match(/\/(SPL_[a-zA-Z0-9-]+)$/u)?.[1];
     const row=id&&await select(id);
     if(!row||(!admin&&row.owner_member_id!==member.id)) return json({ok:false,error:'NOT_FOUND'},404);
-    if(Number(input.revision)!==row.revision) return json({ok:false,error:'REVISION_CONFLICT'},409);
+    if(input.action!=='AUTO_CANCEL'&&Number(input.revision)!==row.revision) return json({ok:false,error:'REVISION_CONFLICT'},409);
     const doc=JSON.parse(row.document_json);
-    if(Date.parse(doc.autorenew?.lease_until)>Date.now())return json({ok:false,error:'PAYMENT_UPDATE_IN_PROGRESS'},409);
-    if(doc.offer_version===AUTO_RENEW_OFFER&&['PAID_OPT_IN','CHECKOUT','SYNC_PAYMENT','CANCEL_PAID','CONTINUE_INTEREST'].includes(input.action))return json({ok:false,error:'USE_AUTORENEW_ACTION'},400);
+    if(input.action!=='AUTO_CANCEL'&&Date.parse(doc.autorenew?.lease_until)>Date.now())return json({ok:false,error:'PAYMENT_UPDATE_IN_PROGRESS'},409);
+    if(isAutoRenewOffer(doc.offer_version)&&['PAID_OPT_IN','CHECKOUT','SYNC_PAYMENT','CANCEL_PAID','CONTINUE_INTEREST'].includes(input.action))return json({ok:false,error:'USE_AUTORENEW_ACTION'},400);
     if(!admin&&['AUTO_SYNC','AUTO_CANCEL'].includes(input.action)) {
       const result=await reconcileAutoRenew(env,id,{cancel:input.action==='AUTO_CANCEL',revision:row.revision,actor:'OWNER'});
-      return json({ok:!result.error,revision:result.row.revision,...(result.error?{error:result.error}:{})},result.error?409:200);
+      const accepted=input.action==='AUTO_CANCEL';
+      return json({ok:accepted||!result.error,revision:result.row.revision,cancellation_pending:result.pending===true||Boolean(result.error),...(result.error?{error:result.error}:{})},!accepted&&result.error?409:200);
     }
     let next,checkoutUrl;
     if(!admin&&input.action==='AUTO_CONSENT') {
       if(!autoRenewReady(env))throw new Error('AUTORENEW_NOT_ENABLED');
-      next=autoRenewConsent(doc,input);
+      next=autoRenewConsent(doc,input,new Date(),env);
     } else if(!admin&&input.action==='AUTO_SETUP') {
       const session=await setupAutoRenewCard(env,row,doc);
       next={...doc,autorenew:{...doc.autorenew,setup_session_id:session.id}};checkoutUrl=session.url;
@@ -218,7 +219,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     } else if(admin&&input.action==='REVIEW_TERMS') {
       if(doc.status!=='DRAFT'||doc.offer_version||doc.approved_at||doc.starts_at||input.prior_terms_reviewed!==true) return json({ok:false,error:'TERMS_REVIEW_NOT_ALLOWED'},409);
       next={...doc,offer_version:input.legacy_promise_ref?LEGACY_PILOT_OFFER:env.SELLER_PILOT_OFFER_VERSION,prior_terms_reviewed_at:new Date().toISOString(),...(input.legacy_promise_ref?{legacy_promise_ref:text(input.legacy_promise_ref,500)}:{})};
-      if(!knownOffer(next.offer_version)) return json({ok:false,error:'OFFER_NOT_ENABLED'},409);
+      if(!input.legacy_promise_ref&&next.offer_version!==AUTO_RENEW_OFFER) return json({ok:false,error:'NEW_OFFER_NOT_ENABLED'},409);
     } else if(admin && input.action==='REVISE') {
       if(doc.status==='PUBLISHED') return json({ok:false,error:'PUBLISHED_REVISION_REQUIRES_REVIEW'},409);
       if(!knownOffer(doc.offer_version)) return json({ok:false,error:'LEGACY_TERMS_REVIEW_REQUIRED'},409);
@@ -226,10 +227,10 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
       // Preserve agreed offer and first publication timestamps on edits/republication.
       delete next.terms_accepted_at;delete next.owner_confirmed_at;
     } else {
-      if(doc.offer_version===AUTO_RENEW_OFFER&&input.action==='PUBLISH') {
-        if(!autoRenewReady(env))throw new Error('AUTORENEW_NOT_ENABLED');
+      if(isAutoRenewOffer(doc.offer_version)&&input.action==='PUBLISH') {
+        if(!doc.starts_at&&!autoRenewReady(env))throw new Error('AUTORENEW_NOT_ENABLED');
         // Recheck the registered card through Stripe before the first publication.
-        if(!doc.starts_at)await verifyAutoRenewCard(env,row,doc);
+        if(!doc.starts_at){await verifyNewAutoRenewPrice(env,doc);await verifyAutoRenewCard(env,row,doc);}
       }
       next=transitionPilot(doc,input.action,input,{actor:admin?'ADMIN':'OWNER',offerEnabled});
     }
@@ -241,7 +242,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
         SELECT ?1,?2,?3,?4,?5,?6 WHERE changes()=1`).bind(crypto.randomUUID(),id,revision,admin?'ADMIN':'OWNER',input.action,at)
     ]);
     if(results[0]?.meta?.changes!==1) return json({ok:false,error:'REVISION_CONFLICT'},409);
-    if(next.offer_version===AUTO_RENEW_OFFER&&input.action==='PUBLISH') {
+    if(isAutoRenewOffer(next.offer_version)&&input.action==='PUBLISH') {
       const result=await reconcileAutoRenew(env,id);
       return json({ok:true,revision:result.row.revision,billing_pending:Boolean(result.error)});
     }

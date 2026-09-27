@@ -1,4 +1,4 @@
-import { AUTO_RENEW_OFFER, TRIAL_COPY, TRIAL_PENDING_COPY } from './seller-trial-policy.mjs?v=4';
+import { AUTO_RENEW_OFFER, TRIAL_COPY, TRIAL_PENDING_COPY } from './seller-trial-policy.mjs?v=1980-1';
 import { growthSessionId, growthVisitorId } from './growth-identity.mjs';
 
 const form = document.querySelector('#sellerBusinessForm');

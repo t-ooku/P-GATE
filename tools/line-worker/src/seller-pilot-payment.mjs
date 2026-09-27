@@ -1,6 +1,6 @@
 // Explicit owner opt-in only. No timer, trial-expiry or GET creates Stripe objects.
 import {stripeRequest,stripeMode} from './stripe-client.mjs';
-import {MONTHLY_JPY} from '../public/seller-trial-policy.mjs';
+import {LEGACY_MONTHLY_JPY as MONTHLY_JPY} from '../public/seller-trial-policy.mjs';
 export const PAID_TERMS='seller-monthly-4980-20260927-v1';
 export function paidRequest(doc,input,now=new Date()) {
   if(!doc.approved_at||!doc.starts_at||!Number.isFinite(Date.parse(doc.ends_at))||now.getTime()<Date.parse(doc.ends_at)) throw new Error('TRIAL_MUST_FINISH_FIRST');
@@ -11,17 +11,18 @@ export function paidRequest(doc,input,now=new Date()) {
 export function pilotPaymentsReady(env) {
   return env.SELLER_PILOT_PAYMENTS_ENABLED==='true' && ['live','test'].includes(stripeMode(env)) && env.SELLER_PILOT_PAYMENT_MODE===stripeMode(env) && /^price_[A-Za-z0-9]+$/u.test(env.SELLER_PILOT_PRICE_ID||'');
 }
-function requireMode(env,doc) {
-  if(!pilotPaymentsReady(env))throw new Error('PILOT_PAYMENTS_NOT_ENABLED');
+function requireMode(env,doc,{creating=false}={}) {
+  if(creating&&!pilotPaymentsReady(env))throw new Error('PILOT_PAYMENTS_NOT_ENABLED');
+  if(!['test','live'].includes(stripeMode(env))||env.SELLER_PILOT_PAYMENT_MODE!==stripeMode(env))throw new Error('PAYMENT_MODE_MISMATCH');
   if(doc.test && stripeMode(env)!=='test') throw new Error('QA_LIVE_PAYMENT_FORBIDDEN');
   if(!doc.test && stripeMode(env)==='test') throw new Error('EXTERNAL_TEST_PAYMENT_FORBIDDEN');
   if(!doc.paid_opt_in_at||doc.paid_terms_version!==PAID_TERMS)throw new Error('PAID_CONSENT_REQUIRED');
 }
 const idOf=o=>typeof o==='string'?o:o?.id;
 function metadataOK(o,id){return o?.metadata?.purpose==='SELLER_PILOT'&&o.metadata.pilot_id===id;}
-function priceOK(price,env){return price?.id===env.SELLER_PILOT_PRICE_ID&&price.active!==false&&price.currency==='jpy'&&price.unit_amount===MONTHLY_JPY&&price.recurring?.interval==='month'&&(price.recurring.interval_count||1)===1&&price.tax_behavior==='inclusive'&&price.livemode===(stripeMode(env)==='live');}
+function priceOK(price,env,{creating=false}={}){return price?.id===env.SELLER_PILOT_PRICE_ID&&(!creating||price.active===true)&&price.currency==='jpy'&&price.unit_amount===MONTHLY_JPY&&price.recurring?.interval==='month'&&(price.recurring.interval_count||1)===1&&price.tax_behavior==='inclusive'&&price.livemode===(stripeMode(env)==='live');}
 export async function pilotCheckout(env,row,doc,now=new Date()) {
-  requireMode(env,doc);
+  requireMode(env,doc,{creating:true});
   if(now.getTime()<Date.parse(doc.ends_at))throw new Error('TRIAL_MUST_FINISH_FIRST');
   if(doc.payment?.session_id) {
     const existing=await stripeRequest(env,'GET',`/checkout/sessions/${doc.payment.session_id}`);
@@ -33,7 +34,7 @@ export async function pilotCheckout(env,row,doc,now=new Date()) {
   // Stripe idempotency retention is finite: unknown outcomes older than 23h require reconciliation.
   if(now.getTime()-Date.parse(doc.paid_opt_in_at)>23*3600000)throw new Error('PAYMENT_RECONCILIATION_REQUIRED');
   const price=await stripeRequest(env,'GET',`/prices/${env.SELLER_PILOT_PRICE_ID}`);
-  if(!priceOK(price,env))throw new Error('PRICE_OR_ENVIRONMENT_MISMATCH');
+  if(!priceOK(price,env,{creating:true}))throw new Error('PRICE_OR_ENVIRONMENT_MISMATCH');
   const metadata={purpose:'SELLER_PILOT',pilot_id:row.pilot_id,paid_terms_version:PAID_TERMS,paid_opt_in_at:doc.paid_opt_in_at};
   const session=await stripeRequest(env,'POST','/checkout/sessions',{
     mode:'subscription',locale:'ja',payment_method_types:['card'],line_items:[{price:price.id,quantity:1}],
@@ -67,7 +68,8 @@ export async function cancelPilotSubscription(env,row,doc) {
 }
 // Caller must already have verified the raw Stripe webhook signature and timestamp.
 export async function processPilotStripeEvent(env,event) {
-  if(env.SELLER_PILOT_PAYMENTS_ENABLED!=='true'||!['checkout.session.completed','checkout.session.async_payment_succeeded','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','invoice.paid','invoice.payment_failed'].includes(event?.type))return null;
+  if(!env.PRODUCT_DB)return null;
+  if(!['checkout.session.completed','checkout.session.async_payment_succeeded','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','invoice.paid','invoice.payment_failed'].includes(event?.type))return null;
   const object=event?.data?.object||{};
   let row;
   try {

@@ -68,9 +68,9 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   assert.match(html, /property="og:url" content="https:\/\/hoshilu\.app\/for-sellers"/u);
   assert.match(html, /"@type":"FAQPage"/u);
   assert.match(html, /data-seller-cta="hero-inquiry"/u);
-  // 2026-09-19 §1・§15・§18: 商品は 1 つ。HOSHILU Seller 4,980円/月、最初の3か月 月額0円。
+  // 2026-09-19 §1・§15・§18: 商品は 1 つ。HOSHILU Seller 1,980円/月、最初の3か月 月額0円。
   // 2026-09-21 大隆さん決定: Demand Match Click 50円を廃止。値段は月額の1つだけになった。
-  assert.match(html, /月額4,980円/u);
+  assert.match(html, /月額1,980円/u);
   assert.doesNotMatch(html, /最初の3か月|登録後3か月/u);
   assert.match(html, /data-seller-trial-copy/u);
   assert.match(html, /追加料金 <strong>なし<\/strong>/u);
@@ -80,7 +80,7 @@ test('公開LPは相談・登録・支払い準備を明示し機密情報を要
   // 値段として 50円 を掲げない（廃止の説明としてだけ出てよい）
   assert.ok(!/1有効クリック 50円/u.test(html), '廃止した単価を値段として出さない');
   assert.match(html, /新しいECモールを増やす必要はありません/u);
-  assert.match(html, /<summary>クリックされると料金は増えますか？<\/summary><p>増えません。料金は月額4,980円だけです/u);
+  assert.match(html, /<summary>クリックされると料金は増えますか？<\/summary><p>増えません。料金は月額1,980円だけです/u);
   assert.match(html, /<summary>ユーザーの個人情報は見られますか？<\/summary><p>見られません/u);
   assert.match(html, /<summary>費用が勝手に増えませんか？<\/summary>/u);
   // The approved 30-day policy is announced without claiming activation before QA.

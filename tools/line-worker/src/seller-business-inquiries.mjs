@@ -1,5 +1,5 @@
 import { publicPilotOffer } from './seller-listing-pilot.mjs';
-import { PILOT_OFFER, AUTO_RENEW_OFFER, TRIAL_COPY, LEGACY_30D_COPY } from '../public/seller-trial-policy.mjs';
+import { PILOT_OFFER, AUTO_RENEW_OFFER, LEGACY_AUTO_RENEW_OFFER, isAutoRenewOffer, autoRenewPolicy, TRIAL_COPY, LEGACY_30D_COPY } from '../public/seller-trial-policy.mjs';
 import { authorizeAdminRequest } from './admin-auth.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 
@@ -110,7 +110,7 @@ export function sellerInquiryNotificationText(id, value, timestamp, verified = t
     '',
     ...labels.map(([key, text]) => `${key}: ${text}`),
     '',
-    ...([PILOT_OFFER,AUTO_RENEW_OFFER].includes(value.offer_version)?[`相談時の新規条件: ${value.offer_version===AUTO_RENEW_OFFER?TRIAL_COPY:LEGACY_30D_COPY}`, '相談では期間開始・有料契約・公開は行いません。既存の個別案内条件は確認してください。']:[]),
+    ...((value.offer_version===PILOT_OFFER||isAutoRenewOffer(value.offer_version))?[`相談時の新規条件: ${isAutoRenewOffer(value.offer_version)?autoRenewPolicy(value.offer_version).copy:LEGACY_30D_COPY}`, '相談では期間開始・有料契約・公開は行いません。既存の個別案内条件は確認してください。']:[]),
     '本文:',
     value.message || '(本文なし)',
     '',
@@ -242,7 +242,7 @@ export async function handleSellerBusinessInquiryRoutes(request, env) {
     if (!row) return json({ ok: false, error: 'NOT_FOUND' }, 404);
     row.marketplaces = JSON.parse(row.marketplaces || '[]');
     row.marketing_consent = row.message.includes('yes_pending_verification');
-    row.offer_version=[AUTO_RENEW_OFFER,PILOT_OFFER].find(offer=>row.message.includes(`; offer: ${offer}]`))||null;
+    row.offer_version=[AUTO_RENEW_OFFER,LEGACY_AUTO_RENEW_OFFER,PILOT_OFFER].find(offer=>row.message.includes(`; offer: ${offer}]`))||null;
     row.message = row.message.split('\n\n[相談回答への同意:')[0];
     let notified = false;
     try { notified = await notifySellerInquiry(env, row.inquiry_id, row, row.created_at, row.source !== FALLBACK_SOURCE); } catch {}

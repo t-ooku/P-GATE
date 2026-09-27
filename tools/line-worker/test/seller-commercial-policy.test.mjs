@@ -6,29 +6,15 @@ import {
   sellerLifecycleMonth,
 } from "../src/seller-commercial-policy.mjs";
 
-test("有料サブスクは1事業者アカウント月額9,800円のBusinessだけにする", () => {
-  assert.equal(recommendedSellerPlan({ subscription: true }), "BUSINESS");
-  assert.deepEqual(
-    commercialTerms("BUSINESS"),
-    {
-      name: "BUSINESS",
-      monthlyFeeJpy: 9_800,
-      promotionalFreeMonths: 3,
-      initialFeeJpy: 0,
-      cancellationFeeJpy: 0,
-      qualifiedReferralMultiplier: 1,
-      insightDepth: "ADVANCED_DEMAND",
-      searchApiMonthlyRequests: 10_000,
-      searchApiOverageJpy: 4,
-      billingUnit: "BUSINESS_ACCOUNT",
-    },
-  );
-});
-
-test("無料掲載と成果課金だけならSellerを使う", () => {
-  assert.equal(recommendedSellerPlan({ subscription: false }), "SELLER");
-  assert.equal(commercialTerms("SELLER").monthlyFeeJpy, 0);
-  assert.equal(commercialTerms("SELLER").qualifiedReferralMultiplier, 1.5);
+test("Seller is one inclusive 1980 subscription with demand analysis and no click fees", () => {
+  const terms=commercialTerms('SELLER');
+  assert.equal(recommendedSellerPlan(), 'SELLER');
+  assert.equal(terms.monthlyFeeJpy,1980);assert.equal(terms.taxInclusive,true);
+  assert.equal(terms.trialDays,30);assert.equal(terms.trialStart,'FIRST_PUBLICATION_SUCCESS');
+  assert.equal(terms.cardRequired,true);assert.equal(terms.automaticRenewal,true);
+  assert.equal(terms.insightDepth,'ADVANCED_DEMAND');assert.equal(terms.qualifiedReferralMultiplier,0);
+  assert.equal(terms.searchApiOverageJpy,undefined);
+  assert.throws(()=>commercialTerms('GROWTH'),/unknown/);
 });
 
 test("契約開始日から導入月を判定する", () => {

@@ -46,3 +46,9 @@
 - #369 still has the older Yahoo report. Read-only aggregate recovery cannot be queried here without Cloudflare credentials; no repair or resolution claimed. No new Claude handoff beyond September 20.
 - User explicitly approved mandatory card setup before trial. Implemented a new versioned flow; previous offers/contracts remain unchanged. New enrollment stays OFF until real Stripe test-mode and D1 verification. No real charge, migration, social send, or production SQL executed.
 - See 2026-09-27-seller-30d-autorenew-approval-request.md for implementation, tests, and concrete rollout gaps.
+
+## Seller 1,980円変更指示への着手
+- 作業開始のbranch HEAD: 62b61436458ed28b0959494544711f07677600fc / feature/ui-search-v2。以前の作業treeの未コミットを上書きせず、別のclean worktreeで開始。開いているPR #262/#102/#2との課金変更の重複は確認されなかった。
+- /healthを取得: ok=true、missing/weakなし、Stripe live構成あり、X/Instagram接続・Runway ready。実Stripe請求確認を意味しない。
+- #369は古いYahoo coordinator timeoutの記録を含み未解決扱い。heartbeatだけを除外。最新のYahoo証跡は読み取り専用CIで確認する。新しいClaude引継ぎはSeptember20以降なし。
+- 1,980円・カード必須・自動更新・全表示反映の明示承認を受領。承認範囲は2026-09-27-seller-1980-approval-request.mdへ記録。新規受付は実Stripe/D1検証まで保護する。

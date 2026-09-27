@@ -48,5 +48,5 @@ test('LP offer stays hidden until same version is enabled and verified',()=>{
  assert.equal(publicPilotOffer(env).enabled,false);
  assert.equal(publicPilotOffer({...env,SELLER_PILOT_RECRUITMENT_VERIFIED:LEGACY_PILOT_OFFER}).enabled,false);
  assert.equal(publicPilotOffer({...env,SELLER_PILOT_RECRUITMENT_VERIFIED:PILOT_OFFER}).enabled,false);
- assert.equal(publicPilotOffer({...env,SELLER_PILOT_OFFER_VERSION:AUTO_RENEW_OFFER,SELLER_PILOT_RECRUITMENT_VERIFIED:AUTO_RENEW_OFFER,SELLER_PILOT_AUTORENEW_ENABLED:'true',SELLER_PILOT_PAYMENTS_ENABLED:'true'}).enabled,true);
+ assert.equal(publicPilotOffer({...env,SELLER_PILOT_OFFER_VERSION:AUTO_RENEW_OFFER,SELLER_PILOT_RECRUITMENT_VERIFIED:AUTO_RENEW_OFFER,SELLER_PILOT_AUTORENEW_ENABLED:'true',SELLER_PILOT_PAYMENTS_ENABLED:'true',SELLER_PILOT_PAYMENT_MODE:'live',SELLER_PILOT_1980_LIVE_PRICE_ID:'price_fixture',SELLER_PILOT_1980_LIVE_PRODUCT_ID:'prod_fixture'}).enabled,true);
 });

@@ -244,7 +244,7 @@ test('カルーセルの文言に、廃止したクリック課金は残って�
   const seller = doc.sets.filter((set) => set.audience === 'seller');
   assert.ok(seller.length >= 1);
   const pricing = JSON.stringify(seller);
-  assert.match(pricing, /4,980円/u, 'セラー向けは月額だけを書く');
+  assert.match(pricing, /1,980円/u, 'セラー向けは月額だけを書く');
   assert.match(pricing, /30日間無料/u, '新規は商品公開から30日');
   assert.doesNotMatch(pricing, /3か月/u);
   // 描画側も同じ規則を持っている（片方だけ直しても通らないようにする）

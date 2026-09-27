@@ -250,12 +250,12 @@ const X_SELLER_POSTS = Object.freeze([
   },
   {
     id: 'seller-demand-insight',
-    caption: '商品を出したら、探していた人へHOSHILUが届けます。料金は月額4,980円だけ。クリックによる追加料金はありません。新規Sellerは商品公開から30日間無料。体験開始は準備中で、掲載見本を相談できます。売上や掲載順位は保証しません。',
+    caption: '商品を出したら、探していた人へHOSHILUが届けます。料金は月額1,980円だけ。クリックによる追加料金はありません。新規Sellerは商品公開から30日間無料。体験開始は準備中で、掲載見本を相談できます。売上や掲載順位は保証しません。',
     link_path: '/for-sellers'
   },
   {
     id: 'seller-business-simple',
-    caption: 'HOSHILU Sellerは月額4,980円、新規Sellerは商品公開から30日間無料。体験開始は準備中で、掲載見本を相談できます。探している人が先に見えて、商品を出したらHOSHILUがその人に届けます。今ある販売先はそのまま。',
+    caption: 'HOSHILU Sellerは月額1,980円、新規Sellerは商品公開から30日間無料。体験開始は準備中で、掲載見本を相談できます。探している人が先に見えて、商品を出したらHOSHILUがその人に届けます。今ある販売先はそのまま。',
     link_path: '/for-sellers'
   }
 ]);
@@ -637,14 +637,14 @@ const THREADS_AMAZON_SLOTS = Object.freeze([
 ]);
 
 // 2026-09-19 大隆さん指示: Threads の 1 日 4 枠のうち夜枠を毎日セラー募集に充てる（週 7 本）。
-// 文面は実装済みの事実だけ（4,980円/月・最初の 3 か月 0 円・呼び戻せた時だけ 50 円・匿名需要は 5 人以上）。
+// 文面は実装済みの事実だけ（1,980円/月・最初の 3 か月 0 円・呼び戻せた時だけ 50 円・匿名需要は 5 人以上）。
 // 成果保証・「多数のセラー」・実績の水増しは書かない（§33・§49）。10 本を日替わりで回すので 10 日以内に同じ文面は出ない。
 const THREADS_SELLER_CAMPAIGN_ID = 'hoshilu-threads-seller-v1';
 const THREADS_SELLER_POSTS = Object.freeze([
   { id: 'seller-first-visible', caption: '欲しい人が、先に見える。\nHOSHILUで探して見つからなかった「欲しい」が、個人を特定できない匿名の需要としてお店に届きます。ネットショップ・メーカーの方へ。' },
   { id: 'seller-keep-your-mall', caption: '新しいECモールを増やす必要はありません。\nAmazon・楽天・Yahoo!など今ある販売先はそのまま。HOSHILUは受注や発送を移す場所ではなく、探している人と商品をつなぐ入口です。' },
-  { id: 'seller-price-plain', caption: 'HOSHILU Sellerは月額4,980円、新規Sellerは商品公開から30日間無料。体験開始は準備中で、掲載見本を相談できます。初期費用0円。\n通常の検索やショップからの商品クリックは月額に含まれます。相談フォーム送信だけでは課金されません。' },
-  { id: 'seller-demand-match-50', caption: '商品の料金は月額4,980円だけ。\nクリックされるたびに請求が増える、ということはありません。新規Sellerは商品公開から30日間無料。体験開始は準備中です。' },
+  { id: 'seller-price-plain', caption: 'HOSHILU Sellerは月額1,980円、新規Sellerは商品公開から30日間無料。体験開始は準備中で、掲載見本を相談できます。初期費用0円。\n通常の検索やショップからの商品クリックは月額に含まれます。相談フォーム送信だけでは課金されません。' },
+  { id: 'seller-demand-match-50', caption: '商品の料金は月額1,980円だけ。\nクリックされるたびに請求が増える、ということはありません。新規Sellerは商品公開から30日間無料。体験開始は準備中です。' },
   { id: 'seller-anonymous-5', caption: 'Sellerの画面に出るのは、同じ条件を5人以上が探している需要だけ。\n検索文そのものや、メール・LINE・電話番号は出しません。HOSHILUが間に入って、本人にだけ知らせます。' },
   { id: 'seller-register-judge', caption: '「この需要に商品を登録」を押すと、HOSHILUが商品名と条件を突き合わせて判定します。\n自己申告では一致になりません。一致した時だけ、探していた本人にお知らせします。' },
   { id: 'seller-real-numbers', caption: 'Sellerの契約者画面にあるのは、確認できた実数だけ。\n横断検索の回数、0件だった検索、近い商品しか無かった検索。推定売上や見込みは出しません。' },

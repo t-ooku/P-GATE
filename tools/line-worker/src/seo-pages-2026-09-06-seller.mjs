@@ -6,7 +6,7 @@ import { TRIAL_PENDING_COPY } from '../public/seller-trial-policy.mjs';
 // 書いてはいけないこと（§33）: 必ず売れます／売上が上がります／多数のユーザーがいます／
 // 成果保証／業界No.1。HOSHILU の利用者数はまだ多くないので、数を盛らず、
 // 「今できること」と「まだ準備中のこと」を分けて書く。
-// 料金は /for-sellers と同じ数字だけ（HOSHILU Seller 4,980円/月・税込、新規は初回公開から30日無料（本番体験開始は準備中）。クリック課金は 2026-09-21 に廃止）。
+// 料金は /for-sellers と同じ数字だけ（HOSHILU Seller 1,980円/月・税込、新規は初回公開から30日無料（本番体験開始は準備中）。クリック課金は 2026-09-21 に廃止）。
 
 const SELLERS_PATH = '/for-sellers';
 const SELLERS_LABEL = '自店の掲載見本を相談する（新規Sellerは商品公開から30日間無料）';

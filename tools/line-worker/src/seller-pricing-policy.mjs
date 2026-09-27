@@ -175,11 +175,11 @@ export function rankEligibleSellerProducts(
 }
 
 export const sellerPricingPrinciples = Object.freeze({
-  catalog_registration: 'FREE',
-  basic_insight: 'FREE',
-  outbound_attribution: 'PERFORMANCE_BASED',
-  advanced_demand_analytics: 'SUBSCRIPTION_OPTION',
-  scheduled_reports: 'SUBSCRIPTION_OPTION',
+  catalog_registration: 'INCLUDED_IN_SUBSCRIPTION',
+  basic_insight: 'INCLUDED_IN_SUBSCRIPTION',
+  outbound_attribution: 'MEASUREMENT_ONLY_NO_CLICK_FEE',
+  advanced_demand_analytics: 'INCLUDED_IN_SUBSCRIPTION',
+  scheduled_reports: 'INCLUDED_IN_SUBSCRIPTION',
   paid_search_ranking: 'CONTRACTED_DIRECT_LINKS_AFTER_RELEVANCE_GATE',
   same_product_offer_priority:
     'BUSINESS_SELLER_UNCONTRACTED_WITH_LEGACY_PLAN_COMPATIBILITY',

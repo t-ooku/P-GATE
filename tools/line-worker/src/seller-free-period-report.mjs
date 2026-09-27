@@ -1,3 +1,4 @@
+import {legacyBillingDisplay} from './seller-legacy-billing-display.mjs';
 // 2026-09-21 指示書 §40「無料3か月終了時」。
 //
 // 無料期間が終わる前に、その3か月で実際に何が起きたかを返す。
@@ -123,7 +124,7 @@ export async function handleSellerFreePeriodReportRoute(request, env) {
   let account = null;
   try {
     account = await db.prepare(
-      'SELECT trial_end_at,plan,subscription_status,tenants FROM seller_billing_accounts WHERE seller_key=?1'
+      'SELECT trial_end_at,plan,subscription_status,tenants,stripe_subscription_id,stripe_customer_id FROM seller_billing_accounts WHERE seller_key=?1'
     ).bind(seller.seller_key).first();
   } catch { account = null; }
 
@@ -157,7 +158,7 @@ export async function handleSellerFreePeriodReportRoute(request, env) {
     ok: true,
     available: true,
     window,
-    monthly_price_jpy: 4980,
+    monthly_price_jpy: (await legacyBillingDisplay(env,account)).monthly_jpy,
     ...summarizeFreePeriod(counts)
   });
 }

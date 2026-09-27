@@ -1,24 +1,6 @@
-export const SELLER_COMMERCIAL_PLANS = Object.freeze({
-  SELLER: Object.freeze({
-    monthlyFeeJpy: 0,
-    qualifiedReferralMultiplier: 1.5,
-    insightDepth: "BASIC",
-    searchApiMonthlyRequests: 0,
-    searchApiOverageJpy: null,
-  }),
-  BUSINESS: Object.freeze({
-    monthlyFeeJpy: 9_800,
-    promotionalFreeMonths: 3,
-    initialFeeJpy: 0,
-    cancellationFeeJpy: 0,
-    qualifiedReferralMultiplier: 1,
-    insightDepth: "ADVANCED_DEMAND",
-    searchApiMonthlyRequests: 10_000,
-    searchApiOverageJpy: 4,
-    billingUnit: "BUSINESS_ACCOUNT",
-  }),
-});
-
+import {MONTHLY_JPY,AUTO_RENEW_OFFER,AUTO_RENEW_TERMS} from '../public/seller-trial-policy.mjs';
+const current=Object.freeze({monthlyFeeJpy:MONTHLY_JPY,currency:'jpy',taxInclusive:true,trialDays:30,trialStart:'FIRST_PUBLICATION_SUCCESS',cardRequired:true,automaticRenewal:true,offerVersion:AUTO_RENEW_OFFER,termsVersion:AUTO_RENEW_TERMS,initialFeeJpy:0,cancellationFeeJpy:0,qualifiedReferralMultiplier:0,insightDepth:'ADVANCED_DEMAND',billingUnit:'BUSINESS_ACCOUNT'});
+export const SELLER_COMMERCIAL_PLANS=Object.freeze({SELLER:current});
 export function sellerLifecycleMonth(startedAt, now = new Date()) {
   const start = new Date(startedAt);
   const current = new Date(now);
@@ -36,11 +18,7 @@ export function sellerLifecycleMonth(startedAt, now = new Date()) {
   );
 }
 
-export function recommendedSellerPlan({
-  subscription = true,
-} = {}) {
-  return subscription ? "BUSINESS" : "SELLER";
-}
+export function recommendedSellerPlan() { return 'SELLER'; }
 
 export function commercialTerms(planName) {
   const name = String(planName || "").toUpperCase();
