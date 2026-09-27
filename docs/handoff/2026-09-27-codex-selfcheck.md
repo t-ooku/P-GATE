@@ -33,3 +33,10 @@
 ## Seller copy correction (05:13 JST)
 - User requested the plain sentence: 新規Sellerは商品公開から30日間無料。 Remove change-announcement phrasing from LP/FAQ/shared copy/SEO/social sources and generated Seller assets. Preserve activation status and existing promises.
 - Health remains ok; incident #369 has no newer update than the previously observed Yahoo timeout. No new Claude handoff.
+
+## Seller automatic renewal decision follow-up (14:50 JST user correction)
+- GitHub branch read: 51e56b6831127938a6ab2d759a0bc378b426f6a3. Current /health fetch unavailable through this session's web retrieval; current health is UNVERIFIED, not inferred from earlier checks.
+- #369 remains open with Yahoo coordinator timeout and excluded heartbeat self-reference. Yahoo recovery is UNVERIFIED; no incident repair or closure claimed.
+- Latest Claude handoff is September 20; read its final correction (no further index investigation). Existing reranking/P1 items require status reconciliation before reimplementation.
+- User changed future new-Seller policy to 30 days free from first approved product publication, then JPY 4,980/month automatically unless canceled by the trial deadline. Recorded in 2026-09-27-seller-30d-autorenew-approval-request.md. Existing commitments are not changed.
+- Stop before policy publication or billing activation pending confirmation of mandatory payment-method registration at free-trial start, which conflicts with the previous no-payment-method decision. No runtime code, D1, Stripe, SNS, or deployed terms changed in this follow-up.
