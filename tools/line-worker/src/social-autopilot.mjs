@@ -650,7 +650,7 @@ const THREADS_SELLER_POSTS = Object.freeze([
   { id: 'seller-real-numbers', caption: 'Sellerの契約者画面にあるのは、確認できた実数だけ。\n横断検索の回数、0件だった検索、近い商品しか無かった検索。推定売上や見込みは出しません。' },
   { id: 'seller-shop-page', caption: 'お店の入口を、モールの外にも。\nロゴ・紹介文・商品一覧・ショップ内検索・クーポン。HOSHILUのショップページは契約者画面から自分で編集できます。購入先は今の販売先のままです。' },
   { id: 'seller-no-guarantee', caption: 'HOSHILUは売上や掲載順位を保証しません。\nできるのは、探している人の条件と商品を突き合わせて、一致した時にその人へ届けること。数字は実数だけをお見せします。' },
-  { id: 'seller-start-flow', caption: '始め方は、掲載見本の相談 → 使用許諾 → 見本の確認・承認 → 商品公開。開始時の支払い登録は不要です。\nパスワードやAPIキーは最初の相談では求めません。新規Sellerは商品公開から30日間無料。体験開始は準備中です。' }
+  { id: 'seller-start-flow', caption: '始め方は、掲載見本の相談 → 使用許諾 → 見本の確認・承認 → カード登録と自動更新への同意 → 商品公開。\nパスワードやAPIキーは最初の相談では求めません。相談や見本の段階では無料期間は始まりません。体験開始は準備中です。' }
 ]);
 
 const pad = value => String(value).padStart(2, '0');
