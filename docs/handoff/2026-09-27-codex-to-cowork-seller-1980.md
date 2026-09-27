@@ -51,7 +51,7 @@
 - 証跡artifact: https://github.com/t-ooku/P-GATE/actions/runs/36302229791/artifacts/10926495003
 - Yahoo canary抽出は対象行なし。#369の復旧証明にはならず、解決扱いにしない。
 
-## 最終確認（2026-09-27 16:21 JST）
+## 公開確認（2026-09-27 16:21 JST）
 - 本番source commit: `9f3753c46f8132f26014b792ff75cc5397bc0788`。通常CI: https://github.com/t-ooku/P-GATE/actions/runs/36302612501 。test/deploy/healthすべて成功。CI全回帰はWorker 2,872件、release 6件、拡張6件、失敗0。GAS・検索品質ゲートも通過。
 - 2026-09-27 16:19:22 JST、Cloudflare読み取りAPIの本番Worker本文と、このcommitから再生成したbundleが一致（matches_built_bundle=true）。Worker Version ID: `3fc6336c-b5e4-44cc-a8e1-5fbbf553cb12`。
 - Built bundle SHA256: `8dca091d6f2b47379658c2a5a07802005b1ba9b4f87c7ea046ae5df245e79b06`。取得本文SHA256: `de11f745c4f719d235782d695c6f2812a164189f059c1191de87babdf82e61f9`。新offer/termsと旧offerを確認。
@@ -67,3 +67,25 @@
 **新条件での有料契約申込み受付は開始不可。掲載見本の相談受付と価格に依存しない販促は可能。** 公開文面は「新規Sellerは商品公開から30日間無料。その後は月額1,980円（税込）」と必要な自動更新条件を提示し、現在は準備中であることを保持する。料金変更の告知、旧条件の新規募集、未確認の店舗獲得数は使わない。
 
 開始を止めているのは、Stripe接続と実決済テスト・旧リンク棚卸し、AGENTS.mdに基づく0087/0088/0089の本番適用承認、事業者・法定表示の照合。ソース実装や公開表示の未反映を理由に止めているわけではない。承認待ち中も相談受付は継続する。
+
+
+## 確定した最終source（2026-09-27 16:24 JST）
+前節の追加販促文修正を保持し、通常CIで全回帰→デプロイ→本番source照合→healthを完了した。
+
+|項目|証跡|
+|---|---|
+|本番source commit|`09e18b289af56a4382c256fec52aaec2cc9b2aac`|
+|通常CI|https://github.com/t-ooku/P-GATE/actions/runs/36302887701 （全ジョブ成功）|
+|テスト|Worker 2,873件、release 6件、拡張6件、失敗0。GAS・検索品質ゲート通過|
+|Worker Version ID|`50b55943-4a91-4c44-a738-079a22e30427`|
+|本番照合時刻|2026-09-27 16:24:15 JST|
+|本番本文と再生成bundle|`matches_built_bundle=true`|
+|bundle SHA256|`902f245446bb7f2f29fcfc47c943a2e1327241990c6c7763a0a20afc4449b1ca`|
+|本番取得本文SHA256|`c6abfa24835d0511128006b488930d765e89565a91a2d66979726f54d1e169b1`|
+|監査artifact|https://github.com/t-ooku/P-GATE/actions/runs/36302887701/artifacts/10925684388|
+|本番health|ok、7 critical integrations通過|
+|D1/設定の再確認|0087/0088/0089未適用、FREE_OF_CHARGE 3件、pilot集計未確認、新規受付設定OFFを維持|
+
+この確定記録だけを追加した後続commitは文書のみ（CI skip）。デプロイされたコードのsourceは上記commitであり、文書commitを本番sourceと混同しない。申込み受付の開始判断は引き続き不可。Stripe実テストと本番設定、具体的なD1適用承認が残る。Codexから共有場所への引継ぎ記録保存は完了し、Coworkによる閲覧・独立確認はまだ確認していない。
+
+16:25:16 JST、デプロイ後の対象URLを再確認。/health、/for-sellers、/api/seller-pilot/offerはいずれもHTTP200。health正常、1,980円・カード登録・自動更新・準備中、旧4,980円なし、offer.enabled=falseを確認した。既定のPython UAで一度403となったためQA識別UAで再取得し成功。ブラウザ確認と決済E2Eの実施範囲は前節のとおり。

@@ -52,3 +52,13 @@
 - /healthを取得: ok=true、missing/weakなし、Stripe live構成あり、X/Instagram接続・Runway ready。実Stripe請求確認を意味しない。
 - #369は古いYahoo coordinator timeoutの記録を含み未解決扱い。heartbeatだけを除外。最新のYahoo証跡は読み取り専用CIで確認する。新しいClaude引継ぎはSeptember20以降なし。
 - 1,980円・カード必須・自動更新・全表示反映の明示承認を受領。承認範囲は2026-09-27-seller-1980-approval-request.mdへ記録。新規受付は実Stripe/D1検証まで保護する。
+
+
+## Seller 1,980円・最終公開確認（2026-09-27 16:24 JST）
+- source 09e18b289af56a4382c256fec52aaec2cc9b2aac、通常CI 36302887701 成功。Worker全回帰2,873件。Cloudflare取得の本番bundleと再生成bundleが一致、health正常。
+- 別担当のf77bd7e（残存したカード不要の販促文修正）を保持して公開。ソースやStripeの並行改修を依頼していない。
+- 0087/0088/0089は未適用。AGENTS.mdの明示承認境界に従い適用せず、追加DDLの対象と復旧確認手順を承認依頼ファイルに記録。
+- D1でFREE_OF_CHARGE、Subscriptionなしの3件を実測。無料条件を変更せず、これを外部有料店舗数と数えない。pilot集計は取得不可で0件とは判断しない。
+- Stripe実環境、旧未完了Checkout/Payment Link棚卸し、請求プレビュー、実テスト環境E2Eは未確認。新規契約受付OFF、相談受付のみ可。料金変更を店舗獲得成果に計上しない。
+- Yahoo canary抽出は対象行なしで#369の復旧証拠なし。health正常とYahoo障害の解消を混同しない。
+- 詳細は2026-09-27-codex-to-cowork-seller-1980.md。実顧客への試験課金、既存契約移行、D1書込み、SNS送信なし。
