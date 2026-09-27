@@ -1,7 +1,7 @@
 # Codex → Cowork：Seller 1,980円・30日無料
 
 ## 状態
-実装済み未公開（この段落はCI・本番検証後に追記で確定する）。新条件での契約受付開始はまだ不可。掲載見本の相談受付と価格に依存しない販促は継続可能。旧4,980円/3か月/カード不要/自動課金なしの新規勧誘を再開しない。
+公開表示・実装は本番確認済み。Stripe決済設定と申込み全体の本番確認は未完了。新条件での契約受付開始はまだ不可。掲載見本の相談受付と価格に依存しない販促は継続可能。旧4,980円/3か月/カード不要/自動課金なしの新規勧誘を再開しない。
 
 ## 表示条件
 新規Sellerは商品公開から30日間無料。その後は月額1,980円（税込）。開始前のカード登録と自動更新への明示同意が必須。表示期限までに解約しなければ31日目から自動課金、以後毎月更新。解約は掲載管理画面。起算点は初回公開成功、30×24時間。相談・登録・カード登録・公開失敗では時計を開始しない。
@@ -17,7 +17,7 @@
 
 ## 公開URL
 - https://hoshilu.app/for-sellers
-- https://hoshilu.app/terms#seller-subscription
+- https://hoshilu.app/terms
 - https://hoshilu.app/api/seller-pilot/offer
 - https://hoshilu.app/seller-pilot （契約本人のログイン/有効化が必要）
 - https://hoshilu.app/for-creators
@@ -28,7 +28,7 @@
 
 新旧offer/terms、旧Priceのアーカイブ、新規Price設定の変更後も保存契約で照合、誤額/税/通貨/Product/interval/mode/quantity、未同意/未登録、DB失敗、再公開、30×24時間/UTC/JST/月末、重複・古いWebhook、決済失敗、処理中解約受付、無料終了、匿名化/QA除外を検証。
 
-本番source・CI・確認時刻・契約集計・migrationは公開後に追記する。GitHubへ連絡先、カード情報、Secret、個別契約文は掲載しない。
+本番source・CI・確認時刻・契約集計・migrationは以下の確認記録を参照。GitHubへ連絡先、カード情報、Secret、個別契約文は掲載しない。
 
 ## 残件・運用境界
 - Stripe接続後に、新1,980円Price/Productのテスト/本番照合、実テスト環境でカード登録/30日経過/終了前解約/自動更新/請求明細/失敗・遅延のE2E。実顧客へ試験課金しない。
@@ -50,3 +50,20 @@
 - 実Stripeの新Price・既存未完了Checkout/Payment Link・請求プレビュー・Test Clockは未確認。
 - 証跡artifact: https://github.com/t-ooku/P-GATE/actions/runs/36302229791/artifacts/10926495003
 - Yahoo canary抽出は対象行なし。#369の復旧証明にはならず、解決扱いにしない。
+
+## 最終確認（2026-09-27 16:21 JST）
+- 本番source commit: `9f3753c46f8132f26014b792ff75cc5397bc0788`。通常CI: https://github.com/t-ooku/P-GATE/actions/runs/36302612501 。test/deploy/healthすべて成功。CI全回帰はWorker 2,872件、release 6件、拡張6件、失敗0。GAS・検索品質ゲートも通過。
+- 2026-09-27 16:19:22 JST、Cloudflare読み取りAPIの本番Worker本文と、このcommitから再生成したbundleが一致（matches_built_bundle=true）。Worker Version ID: `3fc6336c-b5e4-44cc-a8e1-5fbbf553cb12`。
+- Built bundle SHA256: `8dca091d6f2b47379658c2a5a07802005b1ba9b4f87c7ea046ae5df245e79b06`。取得本文SHA256: `de11f745c4f719d235782d695c6f2812a164189f059c1191de87babdf82e61f9`。新offer/termsと旧offerを確認。
+- 最終監査artifact: https://github.com/t-ooku/P-GATE/actions/runs/36302612501/artifacts/10926027176 。未適用migration3本、無料扱い3件、pilot集計取得不可、受付設定未設定は初回確認と同じ。
+- 16:21 JSTの公開確認: /health、/for-sellers、/terms、/api/seller-pilot/offer、/for-creators、SEO記事すべてHTTP200。health ok=true、missing/weak=[]。公開4ページの1,980円・カード登録・自動更新・準備中を確認し、旧4,980円や値下げ告知なし。
+- 公開offer API: monthly_jpy=1980、currency=jpy、tax_inclusive=true、trial_days=30、新terms。enabled=false（契約受付は不可）。
+- ブラウザでLPの料金・無料条件、相談フォームの初期未選択チェック、FAQのモール手数料の区別、規約への遷移と本文を確認。QA識別URLを使用。フォーム送信・実カード登録・実課金はしていない。
+- Creatorの画像リンクは新版。Seller画像24枚を生成済み。公開画像 `/social/carousel/seller1980-30d-autorenew-20260927/seller-demand-visible/4.jpg` はリポジトリの画像とバイト一致。SHA256: `41eeceebc8fcee87eb96ec41efa41b686f9e8fd6ed1cc2de7d39c1cc4b8423a1`。販促時はカード登録・自動更新・解約条件を含む全文キャプションを使う。
+- 旧FREE_OF_CHARGEかつSubscriptionなしのアカウントは保存済み免除条件から0円と表示し、不要なStripe照会を行わない。3件への課金・契約変更はなし。
+- 別担当の追加commit `f77bd7e5e9d03b1aa5b9c2a0bee68ff06406027b`（Threads文面に残ったカード不要説明の修正と回帰テスト）を検出。料金正本・Stripe設定を変更していないため保持し、この記録の更新と合わせて通常CI・公開を確認する。最終sourceの追記を確認するまで、この追加commitの本番反映は未確認。
+
+### Coworkの運用判断
+**新条件での有料契約申込み受付は開始不可。掲載見本の相談受付と価格に依存しない販促は可能。** 公開文面は「新規Sellerは商品公開から30日間無料。その後は月額1,980円（税込）」と必要な自動更新条件を提示し、現在は準備中であることを保持する。料金変更の告知、旧条件の新規募集、未確認の店舗獲得数は使わない。
+
+開始を止めているのは、Stripe接続と実決済テスト・旧リンク棚卸し、AGENTS.mdに基づく0087/0088/0089の本番適用承認、事業者・法定表示の照合。ソース実装や公開表示の未反映を理由に止めているわけではない。承認待ち中も相談受付は継続する。
