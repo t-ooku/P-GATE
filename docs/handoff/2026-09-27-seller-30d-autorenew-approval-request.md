@@ -57,3 +57,10 @@ https://www.caa.go.jp/policies/policy/consumer_research/international_affairs/ic
 - 自動更新素材の保管先はsocial/carousel/seller30-autorenew-20260927/。旧no-auto-charge画像をここへコピーして検証済みと扱わない。
 
 公式技術資料: https://docs.stripe.com/api/subscriptions/create 、https://docs.stripe.com/api/setup_intents 、https://docs.stripe.com/api/checkout/sessions/create
+
+## 本番反映の確認
+- 実装commit: 8c5746fd440e707e98153eb03b830ba4bfaf6ad0。
+- CI https://github.com/t-ooku/P-GATE/actions/runs/36299857328 : test/deploy success。
+- https://hoshilu.app/terms を直接取得し、カード登録・31日目・4,980円・自動更新・準備中の記載を確認。
+- /health: ok=true、missing/weak空。/api/seller-pilot/offer: enabled=false。公開規約とコード反映は完了、自動課金の本番有効化は未実施。
+- Stripeプラグインは利用可能だが、このセッションでは未接続。ユーザーに追加・接続を案内。接続後は対象事業のテスト環境と権限を確認し、利用可能なAPIで決済検証を続ける。接続だけで全検証が完了すると約束しない。
