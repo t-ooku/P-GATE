@@ -38,3 +38,15 @@
 - 上記完了まで準備中を維持。完了後に同じofferの受付・検証フラグを段階有効化し、LP/規約/申込みを再確認してこの記録を「本番確認済み・申込み可能」へ更新する。既存解約を止める全体フラグOFFは使わない。
 
 担当はCodex継続。Coworkは同じソース/設定/Stripeを並行改修しない。独立表示確認と、許可されている相談受付の販促運用を担当する。料金変更を店舗獲得と数えない。外部店舗数/有料数は別途実測し、D1件数とStripe契約数も区別する。
+
+## 初回公開・本番集計（2026-09-27 16:12 JST）
+- コードcommit: d8948098c304611a9b7ab920a430e6dfaf11fa7e。PRを介さず既存のfeature/ui-search-v2 push→通常CIの経路。
+- 通常CI: https://github.com/t-ooku/P-GATE/actions/runs/36302229791 （test/deploy/health成功）。
+- 素材生成: https://github.com/t-ooku/P-GATE/actions/runs/36302229801 （全回帰/画像生成/deploy/health成功）。生成commit: 2b7954961d778e7eece26e791beab9672d378a89。
+- 本番Worker sourceをCloudflareの読み取りAPIから取得。新offer/termsと旧offerを確認。取得本文SHA256: 1d343bcb4f62378c74fa231f1d435617441e04f0a05d3166a8673d524f212678。最終公開は下の追記を正とする（素材生成と通常CIの公開順差分を統合する）。
+- 本番の新規Seller設定は未設定。したがって申込み受付はOFF。未適用migrationは0087_seller_contact_permissions.sql、0088_seller_inquiry_notifications.sql、0089_seller_listing_pilot.sqlの3本。他の未適用はない。
+- D1の旧請求アカウント: BUSINESS / ACTIVE / FREE_OF_CHARGE / Stripe subscription紐付けなし が3件。有料移行対象とはみなさず、この特別な無料条件を維持。Stripe側全体の契約数や、外部有料店舗数はこの結果から断定しない。
+- pilot契約集計は取得不可（D1 HTTP400、0089未適用）。0件と報告しない。
+- 実Stripeの新Price・既存未完了Checkout/Payment Link・請求プレビュー・Test Clockは未確認。
+- 証跡artifact: https://github.com/t-ooku/P-GATE/actions/runs/36302229791/artifacts/10926495003
+- Yahoo canary抽出は対象行なし。#369の復旧証明にはならず、解決扱いにしない。

@@ -455,7 +455,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node scripts/audit-seller-1980-production.mjs
+          SELLER_VERIFY_BUNDLE_PATH: /tmp/hoshilu-seller-release/index.js
+        run: |
+          npx --yes wrangler@4.121.0 deploy --dry-run --outdir /tmp/hoshilu-seller-release > /dev/null
+          node scripts/audit-seller-1980-production.mjs
       - name: Preserve Seller pricing production evidence
         if: contains(github.event.head_commit.message, '[seller-1980-audit]')
         uses: actions/upload-artifact@v4

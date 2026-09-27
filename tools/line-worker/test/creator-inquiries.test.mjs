@@ -99,7 +99,7 @@ test('クリエイター募集: 最新素材（カルーセル 6 セット）・
   const html = readFileSync(new URL('../public/for-creators.html', import.meta.url), 'utf8');
   const terms = readFileSync(new URL('../public/creator-terms.html', import.meta.url), 'utf8');
   for (const set of ['user-hoshittoku-basics', 'user-price-watch', 'user-shop-search', 'seller-demand-visible', 'seller-shop-entrance', 'seller-real-numbers']) {
-    for (const n of [1, 2, 3, 4]) assert.ok(html.includes(`/social/carousel/${set}/${n}.jpg`), `${set}/${n}`);
+    for (const n of [1, 2, 3, 4]) assert.ok(html.includes(`/social/carousel/${set.startsWith('seller-')?'seller1980-30d-autorenew-20260927/':''}${set}/${n}.jpg`), `${set}/${n}`);
   }
   assert.match(html, /#hoshilu #Qoo10 #SHEIN #値下がり待ち #ホシっとく #韓国コスメ #amazon #楽天/u);
   assert.match(html, /HOSHILU Seller 月額1,980円（税込）/u);

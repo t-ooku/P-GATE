@@ -1,6 +1,6 @@
 // Read-only, aggregate-only release evidence. Never exports customer IDs, contacts,
 // payment methods, consent bodies, Worker secrets, or entire Worker settings/source.
-import {readdir,writeFile} from 'node:fs/promises';
+import {readdir,readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {createCloudflareReadOnlyD1} from './read-codex-kpi-snapshot.mjs';
 import {AUTO_RENEW_OFFER,AUTO_RENEW_TERMS} from '../public/seller-trial-policy.mjs';
@@ -30,7 +30,9 @@ try{
 }catch(error){result.seller_configuration_verified=false;}
 try {
  const source=await workerGet('',true);
- result.production_source={verified:true,sha256:createHash('sha256').update(source).digest('hex'),contains_new_offer:source.includes(AUTO_RENEW_OFFER),contains_new_terms:source.includes(AUTO_RENEW_TERMS),preserves_old_offer:source.includes('external-seller-30d-autorenew-v1')};
+ const expected=process.env.SELLER_VERIFY_BUNDLE_PATH?await readFile(process.env.SELLER_VERIFY_BUNDLE_PATH,'utf8'):null;
+ result.production_source={verified:true,matches_built_bundle:expected?source.includes(expected.trim()):null,built_bundle_sha256:expected?createHash('sha256').update(expected).digest('hex'):null,sha256:createHash('sha256').update(source).digest('hex'),contains_new_offer:source.includes(AUTO_RENEW_OFFER),contains_new_terms:source.includes(AUTO_RENEW_TERMS),preserves_old_offer:source.includes('external-seller-30d-autorenew-v1')};
 }catch(error){result.production_source={verified:false};}
 await writeFile('seller-1980-production-audit.json',JSON.stringify(result,null,2)+'\n',{mode:0o600});
 console.log(JSON.stringify(result,null,2));
+if(process.env.SELLER_VERIFY_BUNDLE_PATH&&result.production_source.matches_built_bundle!==true)process.exitCode=1;

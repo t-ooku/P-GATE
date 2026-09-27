@@ -36,3 +36,6 @@ Stripe一次資料（確認済み）:
 - https://docs.stripe.com/billing/subscriptions/change-price
 - https://docs.stripe.com/api/subscriptions/update
 - https://docs.stripe.com/api/invoices/upcoming?api-version=2024-06-20
+
+## 本番D1読み取り後の具体的な残承認
+2026-09-27 16:12 JST、未適用は0087（営業許諾）、0088（相談通知）、0089（手動掲載/契約JSON/監査/保存）の3本と確認した。既存のAGENTS.mdに従い、本番D1書込みはこの3本の個別承認と復旧点の記録後に限る。料金・同意文の承認とは区別する。今回この3本を適用していない。3件のFREE_OF_CHARGE既存アカウントに課金・移行は行わない。
