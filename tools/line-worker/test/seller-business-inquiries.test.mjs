@@ -249,7 +249,11 @@ test('確認欄が通らなくても公開APIは受け付け、通知の件名�
 // 2026-09-17 SHOP指示書 §30〜31: /for-sellers の中心メッセージは「欲しい人が見える。欲しい人に商品を届けられる。」。成果保証の語は使わない。
 test('掲載見本の相談を主導線にし、未承認の体験条件・保証を訴求しない', () => {
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
-  assert.match(html, /今のショップを変えずに、/u);
+  // 2026-09-27 大隆さん「モールの月額に1,980円足すだけで HOSHILU を通して需要が分かる、と謳って」。
+  // 見えるのは HOSHILU 内の匿名集計なので「世の需要」「市場全体」とは書かない。
+  assert.match(html, /<h1>モールの出店は、そのまま。<br><span>探されている需要が見える。<\/span><\/h1>/u);
+  assert.match(html, /HOSHILUで何が探されていて、何が見つからなかったか/u);
+  assert.doesNotMatch(html, /世の需要|世の中の需要|市場全体の需要/u);
   assert.match(html, /data-seller-cta="hero-inquiry">自店の掲載見本を相談する</u);
   assert.match(html, /非公開の見本/u);
   assert.match(html, /店舗様ご本人/u);
@@ -267,7 +271,7 @@ test('料金欄は角丸。折り返しても文字の左端がそろう', () =>
   assert.ok(!rule.includes('border-radius:999px'), '錠剤の形にしない');
   assert.match(rule, /border-radius:18px/u);
   const html = readFileSync(new URL('../public/for-sellers.html', import.meta.url), 'utf8');
-  assert.match(html, /for-sellers-pricing\.css\?v=8/u);
+  assert.match(html, /for-sellers-pricing\.css\?v=9/u);
 });
 
 

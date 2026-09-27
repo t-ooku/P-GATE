@@ -90,3 +90,7 @@
 .hero h1,.hero h1 span{white-space:normal;overflow-wrap:anywhere}
 @media(max-width:520px){.hero h1{font-size:clamp(25px,6.6vw,34px);line-height:1.45}.flow h2{white-space:normal}}
 .consent-note{display:block;margin:16px 0;line-height:1.7}.consent-note input{width:auto;min-height:auto;margin-right:8px}
+
+/* 2026-09-27 320px幅で「仕入れのヒントに。」が折り返せず横にはみ出していた。 */
+.demand-value>*{min-width:0}
+@media(max-width:340px){.demand-copy h2 span{white-space:normal}}
