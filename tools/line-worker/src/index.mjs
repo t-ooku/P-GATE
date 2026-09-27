@@ -3551,7 +3551,7 @@ export function canonicalRequestRedirect(requestUrl) {
   }
   const cleanLegacyPaths = new Map([
     ['/index.html', '/'], ['/privacy.html', '/privacy'], ['/terms.html', '/terms'],
-    ['/for-sellers.html', '/for-sellers'], ['/for-creators.html', '/for-creators'], ['/creator-terms.html', '/creator-terms']
+    ['/for-sellers.html', '/for-sellers'], ['/for-creators.html', '/for-creators'], ['/creator-terms.html', '/creator-terms'], ['/legal.html', '/legal']
   ]);
   if (cleanLegacyPaths.has(target.pathname)) {
     target.pathname = cleanLegacyPaths.get(target.pathname);
@@ -3786,7 +3786,7 @@ export default {
     });
     if (env.ASSETS) {
       const asset=await env.ASSETS.fetch(request);
-      if(request.method==='GET'&&['/terms','/for-sellers','/for-creators'].includes(url.pathname)&&asset.ok&&recruitmentVerified(env)) {
+      if(request.method==='GET'&&['/terms','/for-sellers','/for-creators','/legal'].includes(url.pathname)&&asset.ok&&recruitmentVerified(env)) {
         const html=(await asset.text()).replaceAll(TRIAL_PENDING_COPY,TRIAL_COPY).replace('<span data-seller-enrollment-pending>現在、この条件での体験開始は準備中です。</span>','');
         const headers=new Headers(asset.headers);headers.delete('content-length');headers.delete('etag');headers.set('cache-control','no-store');
         return new Response(html,{status:asset.status,headers});
