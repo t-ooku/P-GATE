@@ -62,3 +62,13 @@
 - Stripe実環境、旧未完了Checkout/Payment Link棚卸し、請求プレビュー、実テスト環境E2Eは未確認。新規契約受付OFF、相談受付のみ可。料金変更を店舗獲得成果に計上しない。
 - Yahoo canary抽出は対象行なしで#369の復旧証拠なし。health正常とYahoo障害の解消を混同しない。
 - 詳細は2026-09-27-codex-to-cowork-seller-1980.md。実顧客への試験課金、既存契約移行、D1書込み、SNS送信なし。
+
+
+## Stripe認証復旧待ちの継続作業（2026-09-27 17時台 JST）
+- 開始HEAD 8ed19a53955a23ecff31fed9569a51bd648dde50。別担当のSeller SNS対象者/短文化修正を保持し、同じファイルには手を入れない。最新Claude引継ぎはSeptember20、再調査不要の訂正を尊重。
+- /health取得成功: ok、missing/weakなし、X/Instagram接続・Runway ready、database flags正常。#369は旧Yahoo timeoutを含みopen。
+- 追加で最新の取得可能な監視run 36297885148を確認。14:40 JSTのreal-user SLI PASS、Yahoo canaryは14:37:50 JSTにCANARY_OK。現在時刻の回復やIssue解決とは断定しない。
+- 前回Seller監査のYahoo抽出がmarketplace列を参照していたが、実際のcanaryはmedium列に小文字のyahooを保存していた。読み取りSQLを修正。前回の空結果はYahooの観測が存在しないことを意味しない。再公開の監査で最新値を取得する。
+- 再利用営業資料に旧料金/旧無料条件を発見。旧版を保管し、現行版を新規1,980円条件・相談受付中の運用へ更新。旧合意文を改変しない。
+- 相談フォームの通信待ちに20秒の上限を設け、入力・受付キーを保持して再送できるよう修正。送信中の二重要求を抑止し、未確認を受付成功と案内しない。
+- Stripe認証リセット待ち（ユーザーの受付メールを確認）。外部メール送信・SNS投稿・本番D1書込み・実課金は行わない。

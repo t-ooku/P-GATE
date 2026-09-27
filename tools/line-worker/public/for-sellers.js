@@ -119,9 +119,10 @@ async function initializeTurnstile() {
 initializeTurnstile().catch(error => showTurnstileFailure(error.message));
 
 let inquiryRequestId = crypto.randomUUID();
+let inquirySubmitting = false;
 form?.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!form.reportValidity()) return;
+  if (inquirySubmitting || !form.reportValidity()) return;
   status.className = 'status';
   // 確認欄が読み込めていない環境では、トークン無しのまま送る。サーバ側で
   // 件数を絞って受け付けるので、問い合わせ口が完全に塞がることはない。
@@ -141,14 +142,27 @@ form?.addEventListener('submit', async event => {
     request_id: inquiryRequestId, privacy_consent: data.get('privacy_consent') === 'on',
     marketing_consent: data.get('marketing_consent') === 'on', turnstile_token: turnstileToken
   };
+  inquirySubmitting = true;
   button.disabled = true;
   status.textContent = '送信しています…';
+  // A lost response can follow a successful save. Keep the request ID and inputs
+  // until an acknowledged receipt, so retry cannot create a second inquiry.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
   try {
     const response = await fetch('/api/seller-business/inquiries', {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload)
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload), signal: controller.signal
     });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok || !result.ok) throw new Error('送信できませんでした。入力内容をご確認ください。');
+    if (!response.ok || !result.ok) {
+      let message = '受付結果を確認できませんでした。入力内容を残しています。同じ画面でもう一度送信してください。';
+      if (result.error === 'TURNSTILE_FAILED') message = '不正送信防止の確認をやり直して、もう一度送信してください。入力内容は残っています。';
+      else if (result.error === 'VALIDATION_FAILED') message = '入力内容と必須の同意欄をご確認ください。入力内容は残っています。';
+      else if (response.status === 429) message = '送信が混み合っています。時間をおいて同じ画面でもう一度送信してください。入力内容は残っています。';
+      status.className = 'status error';
+      status.textContent = message;
+      return;
+    }
     inquiryRequestId = crypto.randomUUID();
     form.reset();
     turnstileToken = '';
@@ -157,8 +171,10 @@ form?.addEventListener('submit', async event => {
     status.textContent = `受付しました。受付番号：${result.inquiry_id || '確認待ち'}。内容を確認後、担当者からご連絡します。`;
   } catch (error) {
     status.className = 'status error';
-    status.textContent = error.message || '送信できませんでした。時間をおいてお試しください。';
+    status.textContent = '受付結果を確認できませんでした。入力内容を残しています。通信環境を確認し、同じ画面でもう一度送信してください。';
   } finally {
+    clearTimeout(timeout);
+    inquirySubmitting = false;
     button.disabled = false;
     if (!status.classList.contains('success')) {
       turnstileToken = '';

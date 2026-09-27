@@ -1,9 +1,10 @@
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { publishSocialPost } from '../src/social-publisher.mjs';
 import { renderSeoPage } from '../src/seo-pages.mjs';
-import { AUTO_RENEW_OFFER } from '../public/seller-trial-policy.mjs';
+import { AUTO_RENEW_OFFER, AUTO_RENEW_COPY } from '../public/seller-trial-policy.mjs';
 const active = { SELLER_MANUAL_PILOT_ENABLED:'true', SELLER_PILOT_OFFER_VERSION:AUTO_RENEW_OFFER, SELLER_PILOT_RECRUITMENT_VERIFIED:AUTO_RENEW_OFFER, SELLER_PILOT_AUTORENEW_ENABLED:'true', SELLER_PILOT_PAYMENTS_ENABLED:'true',SELLER_PILOT_PAYMENT_MODE:'live',SELLER_PILOT_1980_LIVE_PRICE_ID:'price_fixture',SELLER_PILOT_1980_LIVE_PRODUCT_ID:'prod_fixture' };
 test('old saved seller copy and old media never reach a provider, even with an active offer', async()=>{
   for(const post of [
@@ -35,4 +36,13 @@ test('SEO visible copy and JSON-LD agree on preparation vs verified active trial
   assert.match(pending,/30日間無料/);assert.match(pending,/準備中/);assert.doesNotMatch(pending,/最初の3か月/);
   const live=renderSeoPage('/ja/ec-shukyaku-without-ad-budget',active);
   assert.match(live,/商品公開から30日間無料/);assert.doesNotMatch(live,/体験開始の準備中/);
+});
+
+test('reusable acquisition kit uses current offer and its recruitment drafts pass the publishing guard',()=>{
+  const kit=readFileSync(new URL('../../../docs/seller-acquisition/2026-09-27-kit.md',import.meta.url),'utf8');
+  assert.ok(kit.includes(AUTO_RENEW_COPY), 'the shared fee answer must include the canonical consent conditions');
+  assert.doesNotMatch(kit,/4,980|支払い方法の登録は不要|本人のお申込みなしに課金|自動で有料プランに切り替わることはありません/);
+  const drafts=kit.split(/^## /mu).filter(section=>/^(募集投稿|料金を聞かれた場合|紹介用メッセージ)/u.test(section));
+  assert.equal(drafts.length,4);
+  for(const caption of drafts)assert.doesNotThrow(()=>assertSellerMarketingCurrent({content_id:'seller-acquisition-kit',caption},{}));
 });
