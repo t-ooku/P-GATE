@@ -316,6 +316,58 @@
           "bytes": 98718
         }
       ]
+    },
+    "user-usual-refill": {
+      "audience": "user",
+      "slides": 4,
+      "files": [
+        {
+          "file": "user-usual-refill/1.jpg",
+          "sha256": "ef7f1e4af31d281eb7656b0ec0a937161d1b0eb63fa7dd78d24795ae2b4b3506",
+          "bytes": 125298
+        },
+        {
+          "file": "user-usual-refill/2.jpg",
+          "sha256": "85c5fd8a2986e5e3d884d2aada85a81a15338156f12a0a77dc0bea81d9794577",
+          "bytes": 74782
+        },
+        {
+          "file": "user-usual-refill/3.jpg",
+          "sha256": "4df9ac60f510206cd7bfff6043a4d3c76b96564b4219dda6b1df913cb7eb4f1c",
+          "bytes": 71472
+        },
+        {
+          "file": "user-usual-refill/4.jpg",
+          "sha256": "2a3791984a3cc09f25fbf6c2b1068b117570bb22ef645cd3e8e682caf6c0f1cf",
+          "bytes": 89684
+        }
+      ]
+    },
+    "seller-keep-mall-see-demand": {
+      "audience": "seller",
+      "slides": 4,
+      "files": [
+        {
+          "file": "seller1980-30d-autorenew-20260927/seller-keep-mall-see-demand/1.jpg",
+          "sha256": "de2af5e272268d3e9233a1e7a7a8abd1380f80a90a1471657239afc679337f56",
+          "bytes": 127465
+        },
+        {
+          "file": "seller1980-30d-autorenew-20260927/seller-keep-mall-see-demand/2.jpg",
+          "sha256": "1eba6246aca538bb278ab2a27b9c8d0dc650effe3f62b940dec9440ab0d6e575",
+          "bytes": 94110
+        },
+        {
+          "file": "seller1980-30d-autorenew-20260927/seller-keep-mall-see-demand/3.jpg",
+          "sha256": "900514b4f36d9787e9728ee80aa681a9136e2469a66de511d516b4fcdab511d5",
+          "bytes": 99261
+        },
+        {
+          "file": "seller1980-30d-autorenew-20260927/seller-keep-mall-see-demand/4.jpg",
+          "sha256": "ec9516dcc9becbed145945ac7afce4efeca26b24d4c0d7f659a3a5876ae5643a",
+          "bytes": 109948
+        }
+      ]
     }
   }
 }
