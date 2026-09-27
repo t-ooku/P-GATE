@@ -21,3 +21,22 @@ test('Threads のセラー募集（日替わり全文面）は公開時の料金
   // 旧文面は検査で止まる（検査側が効いていることの確認）
   assert.throws(() => assertSellerMarketingCurrent({ content_id: 'seller-start-flow', caption: '始め方は、掲載見本の相談 → 商品公開。開始時の支払い登録は不要です。' }, {}), /SUPERSEDED_AUTORENEW_COPY/u);
 });
+
+// 2026-09-27: Seller 募集のカルーセルに買い物客向けの「気になった商品をコメントで」「#購入品紹介」「#Qoo10 #SHEIN」が
+// 付いていた。X では料金条件のあとの本文が途中で切れていた。
+test('Seller 募集のカルーセルは Seller 向けの札だけを付け、X は見出し＋料金条件を切らずに出す', async () => {
+  const { buildCarouselPosts } = await import('../src/social-weekly-plan-v3.mjs');
+  const posts = buildCarouselPosts(new Date('2026-09-27T00:00:00Z'), 60).filter((post) => /carousel-seller-/u.test(post.content_id));
+  assert.ok(posts.some((post) => post.platform === 'X') && posts.some((post) => post.platform === 'INSTAGRAM'));
+  for (const post of posts) {
+    assert.doesNotThrow(() => assertSellerMarketingCurrent(post, {}), post.post_id);
+    assert.doesNotMatch(post.caption, /購入品|コメントで教えて|#Qoo10\b|#SHEIN\b/u, post.post_id);
+    assert.match(post.caption, /#ネットショップ/u, post.post_id);
+    assert.match(post.caption, /1,980円/u);
+    assert.match(post.caption, /カード登録/u);
+    if (post.platform === 'X') assert.match(post.caption, /自店の掲載見本を相談する。 #/u, `${post.post_id}: 条件の文が最後まで入る`);
+  }
+  // 買い物客向けは従来どおり
+  const user = buildCarouselPosts(new Date('2026-09-27T00:00:00Z'), 60).find((post) => post.platform === 'INSTAGRAM' && /carousel-user-/u.test(post.content_id));
+  assert.match(user.caption, /コメントで教えて/u);
+});

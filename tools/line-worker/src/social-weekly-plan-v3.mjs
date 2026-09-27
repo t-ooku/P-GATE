@@ -77,6 +77,13 @@ function utmLink(platform, set, key) {
   return url.toString();
 }
 
+// 2026-09-27: X は本文が全角換算 280 に切られる。Seller 募集は料金条件（30日無料・カード登録・31日目から自動課金・毎月更新）が
+// 1 行目にあり、そのあとの本文は途中で切れて「HOSHILUのショップ」のように尻切れになっていた。X だけ「見出し＋条件の1行」にする。
+export function carouselCaption(set, platform) {
+  if (platform === 'X' && set.audience === 'seller') return `${set.title}\n${String(set.caption || '').split('\n')[0]}`;
+  return set.caption;
+}
+
 export function carouselMediaUrls(set) {
   return set.slides.map((_, index) => `https://hoshilu.app/social/carousel/${set.asset_version ? `${set.asset_version}/` : ''}${set.id}/${index + 1}.jpg`);
 }
@@ -100,7 +107,7 @@ export function buildCarouselPosts(now = new Date(), days = 14, { plan = SOCIAL_
         content_id: `carousel-${set.id}`,
         campaign_id: plan.campaign_id,
         platform,
-        caption: set.caption,
+        caption: carouselCaption(set, platform),
         link: utmLink(platform, set, key),
         media_url: '',
         media_urls: carouselMediaUrls(set),
@@ -137,7 +144,7 @@ export function buildReelFallbackPosts(now = new Date(), { plan = SOCIAL_PLAN_V3
     content_id: `carousel-${set.id}`,
     campaign_id: plan.campaign_id,
     platform,
-    caption: set.caption,
+    caption: carouselCaption(set, platform),
     link: utmLink(platform, set, key),
     media_url: '',
     media_urls: carouselMediaUrls(set),

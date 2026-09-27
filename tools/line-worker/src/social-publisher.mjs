@@ -99,6 +99,8 @@ function youthSearchHashtags(value, platform, contentId = '') {
   if (/^prime-/u.test(promoId)) return platform === 'X' ? ['#プライム感謝祭', '#HOSHILU'] : ['#HOSHILU', '#プライム感謝祭', '#Amazonセール', '#セール情報'];
   if (/^mega-/u.test(promoId)) return platform === 'X' ? ['#メガ割', '#Qoo10'] : ['#HOSHILU', '#メガ割', '#Qoo10', '#韓国コスメ'];
   if (/^usual-/u.test(promoId)) return platform === 'X' ? ['#いつものホシル', '#HOSHILU'] : ['#HOSHILU', '#いつものホシル', '#日用品', '#買い忘れ防止'];
+  // 2026-09-27: Seller 募集（1,980円・30日無料の案内）に買い物客向けの #購入品紹介 や #Qoo10 #SHEIN を付けない。
+  if (/^(?:carousel-)?seller-/u.test(promoId)) return platform === 'X' ? ['#EC運営', '#ネットショップ'] : ['#HOSHILU', '#ECセラー', '#ネットショップ', '#EC運営'];
   const qoo10Focused = /Qoo\s*10で|Qoo\s*10の商品|#Qoo10購入品/iu.test(source);
   const sheinFocused = /SHEINで|SHIENで|SHEINの商品|SHIENの商品|#SHEIN購入品/iu.test(source);
   const qoo10Mentioned = /Qoo\s*10|キューテン/iu.test(source);
@@ -199,8 +201,10 @@ export function normalizeSocialPost(input = {}) {
   }
   if (platform === 'INSTAGRAM') {
     const parts = captionAndHashtags(caption);
-    if (!/コメント/.test(parts.caption)) parts.caption += ' 気になった商品をコメントで教えてね。';
-    const hashtags = uniqueHashtags(youthSearchHashtags(caption, platform, input.content_id), parts.hashtags);
+    const sellerPost = /^(?:carousel-)?seller-/u.test(String(input.content_id || ''));
+    // Seller 募集は買い物客向けの「気になった商品をコメントで」を付けず、買い物客向けの札も引き継がない。
+    if (!sellerPost && !/コメント/.test(parts.caption)) parts.caption += ' 気になった商品をコメントで教えてね。';
+    const hashtags = uniqueHashtags(youthSearchHashtags(caption, platform, input.content_id), sellerPost ? parts.hashtags.filter((tag) => !/購入品|^#Qoo10$|^#SHEIN$/u.test(tag)) : parts.hashtags);
     caption = [parts.caption, hashtags.join(' ')].filter(Boolean).join(' ');
   }
   if (caption.length < 5) throw new Error('SOCIAL_CAPTION_INVALID');
