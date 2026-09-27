@@ -30,3 +30,12 @@
 4. **§11 P1 設計**：1商品・1課題の改善案件（根拠→改善→公開確認→希望者通知→結果）を、現行 schema に合わせた最小設計として handoff に提示。
 
 Cowork は並行して、T01/T27 の表示の独立 QA、テンプレート・品質基準の案、外部1店舗の候補台帳（許諾・接触可否つき）を進める。
+
+## 追記 2026-09-28 01:45 JST：Cowork が代替実装を担当（明示移管）
+大隆さん「コーデックスはクレジット切れだから君が進めて」。正本 §3「代替実装の範囲は明示して移管」に当たるため、Codex が戻るまで Cowork が実装も行う。Codex が戻ったら、下の範囲を引き継いでから着手してください（同じファイルを二重に直さない）。
+
+- **T09（相談導線）確認済み・コード変更なし**：保存 → 受付番号（画面に `受付番号：SBI_…` を表示）→ Resend 通知（`SELLER_INQUIRY_NOTIFY_EMAIL`、reply_to は相談者）→ 大隆さんの Gmail に実際に届いていることを、過去3件（9/3・9/7・9/19、いずれもテスト）の通知メールで確認。保存失敗は 503 `INQUIRY_SAVE_FAILED`、通知失敗は保存を残して `seller_inquiry_notifications` に FAILED、管理 API で再送できる。
+  - 観察：3件とも source が `FOR_SELLERS_FALLBACK`（Turnstile を通らず件数制限つきの受付）。Turnstile が本番で通っていない可能性あり。フォールバックは1時間3件・1日10件まで受け付けるので、今の流入では相談が止まることはない。未調査。
+- **#516（本番反映済み）[R2]**：`searchingDemandOverview` に `measurable`／`reason`／`partial` を追加。`/api/seller/demand-check` は探し中も `measurable===true` で判定、契約者画面は計測不能時「集計できていません」。
+- **§16 オプション下準備（ルート未接続・本番影響なし）**：`src/seller-options.mjs`。3候補を定義し、既定はすべて販売 OFF。承認・提供確認・金額・Stripe Price ID・全体スイッチ `SELLER_OPTIONS_SALES_ENABLED` がそろった時だけ販売可。金額は公開リポジトリに書かず env で渡す。基本同意の流用は無効。
+  - 設計判断：`seller-pilot-autorenew.mjs:87` と `seller-pilot-payment.mjs:57` が `items.length!==1` を基本契約の完全性チェックにしているため、**オプションは基本の subscription に明細を足さず、別 subscription（月額）／payment Checkout（単発）で扱う**。これで基本契約の検証を緩めずに済む。
