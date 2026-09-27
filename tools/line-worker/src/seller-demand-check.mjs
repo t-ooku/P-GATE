@@ -52,7 +52,8 @@ export function buildDemandCheck({ query, searching, priceWatch, usual, minPeopl
     query,
     min_people: minPeople,
     // 3 系統とも数えられて初めて measurable。1 つでも落ちていれば「計測不能」を明示する。
-    measurable: Boolean(searching) && priceWatch?.measurable === true && usual?.measurable === true,
+    // 2026-09-28 [R2]: 探し中も measurable で判定する（失敗時の空オブジェクトを「計測できた 0」にしない）。
+    measurable: searching?.measurable === true && priceWatch?.measurable === true && usual?.measurable === true,
     searching: { people: searchingPeople, groups: searchingItems.length },
     price_watch: {
       people: pricePeople,

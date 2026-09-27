@@ -24,7 +24,7 @@ test('語がすべて含まれていれば一致（順番は問わない）', ()
   assert.equal(matchesDemandQuery('トート', ''), false, '空の検索語で全件一致にしない');
 });
 
-const searching = { items: [{ query: 'A4 本革 トート 黒', people: 7 }, { query: '水筒 子供', people: 9 }], min_people: 5 };
+const searching = { measurable: true, items: [{ query: 'A4 本革 トート 黒', people: 7 }, { query: '水筒 子供', people: 9 }], min_people: 5 };
 const priceWatch = {
   measurable: true, min_people: 5,
   items: [{ product_name: '○○商品 トート 黒', people: 18, median_target_jpy: 1200, steps: [{ price_jpy: 1200, people: 18 }] }]
@@ -62,6 +62,9 @@ test('1系統でも数えられなければ measurable:false', () => {
   assert.equal(noUsual.measurable, false);
   const noSearching = buildDemandCheck({ query: 'トート 黒', searching: null, priceWatch, usual, minPeople: 5 });
   assert.equal(noSearching.measurable, false);
+  // 2026-09-28 [R2]: 探し中の集計が失敗して空オブジェクトが返っても「計測できた」にしない。
+  const failedSearching = buildDemandCheck({ query: 'トート 黒', searching: { measurable: false, items: [] }, priceWatch, usual, minPeople: 5 });
+  assert.equal(failedSearching.measurable, false);
 });
 
 test('個人情報を返さない', () => {

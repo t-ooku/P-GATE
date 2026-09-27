@@ -315,7 +315,8 @@ function renderThreeDemands(data) {
   if (!host) return;
   host.replaceChildren();
   // ①探し中: 自社で応えられるかを判定済みの需要（demand_key があるので、そのまま登録へ送れる）
-  const searchingLane = data.searching
+  // 2026-09-28 [R2]: 探し中が計測できなかった時は「0件」ではなく「集計できていません」を出す。
+  const searchingLane = data.searching && data.searching.measurable !== false
     ? { items: Array.isArray(data.items) ? data.items : [], min_people: data.min_people, below_threshold: data.below_threshold }
     : null;
   host.append(demandLaneCard('探し中', 'まだ見つかっていない「欲しい」です。条件に合う商品を登録すると、待っている人にお知らせが届きます。', searchingLane,

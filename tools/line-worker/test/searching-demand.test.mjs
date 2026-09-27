@@ -91,6 +91,25 @@ test('DB が無い・クエリが失敗しても空を返し、数字を作ら�
   const broken = await searchingDemandOverview({ PRODUCT_DB: { prepare() { throw new Error('D1_DOWN'); } } });
   assert.deepEqual(broken.items, []);
   assert.equal(broken.active_total, 0);
+  // 2026-09-28 [R2]: 失敗は「計測不能」として返す。実際の 0 と区別できること。
+  assert.equal(none.measurable, false);
+  assert.equal(none.reason, 'DB_UNAVAILABLE');
+  assert.equal(broken.measurable, false);
+  assert.equal(broken.reason, 'QUERY_FAILED');
+  const failedResult = await searchingDemandOverview({ PRODUCT_DB: { prepare() { return { all: async () => ({ success: false }) }; } } });
+  assert.equal(failedResult.measurable, false);
+  const zero = await searchingDemandOverview({ PRODUCT_DB: db([]) });
+  assert.equal(zero.measurable, true);
+  assert.equal(zero.active_total, 0);
+  assert.equal(zero.partial, false);
+});
+
+test('[R2] 取得上限に当たった集計は partial（全件と扱わない）', async () => {
+  const rows = [];
+  for (let i = 0; i < 2000; i += 1) rows.push({ member_id: `m${i}`, query_text: '黒 ステンレス 水筒' });
+  const result = await searchingDemandOverview({ PRODUCT_DB: db(rows) });
+  assert.equal(result.measurable, true);
+  assert.equal(result.partial, true);
 });
 
 test('人数の多い需要が先に並ぶ', async () => {

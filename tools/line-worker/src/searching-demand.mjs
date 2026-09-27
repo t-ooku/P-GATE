@@ -13,6 +13,9 @@
 //   （色・素材・サイズ・名詞）と人数だけ（§9）。
 // - 5 人以上集まった需要だけ見せる。5 人未満は「件数」だけ（既存 Seller ページと同じ基準）。
 // - 人数は「条件を保存した会員の実数」。推測で増やさない。0 なら 0 を返す（KPI を作らない）。
+// - 2026-09-28 統合指示書 付録A[R2]: DB 未接続・クエリ失敗のときも 0 を並べた空を返していたため、
+//   呼び出し側が「実際の 0」と「計測不能」を区別できなかった（demand-check は Boolean(searching) で
+//   計測できたと判定していた）。measurable を返し、失敗時は false にする。取得上限に当たった時は partial。
 import { demandConditions, SELLER_DEMAND_MIN_PEOPLE } from './shop-demand.mjs';
 import { internalMemberIds } from './growth-events.mjs';
 
@@ -35,24 +38,26 @@ const ACTIVE_WISH_SQL = `SELECT member_id, query_text, created_at, updated_at
   ORDER BY updated_at DESC
   LIMIT ${FETCH_LIMIT}`;
 
-// 戻り値: { items, min_people, below_threshold, active_total, active_members }
+// 戻り値: { measurable, partial, items, min_people, below_threshold, active_total, active_members }
 // items[] = { conditions, query（条件を並べた表示用文字列）, people, last_at }
 export async function searchingDemandOverview(env = {}, options = {}) {
   const minPeople = Number(options.minPeople) > 0
     ? Number(options.minPeople)
     : Number(env?.SHOP_DEMAND_SELLER_MIN_PEOPLE) || SELLER_DEMAND_MIN_PEOPLE;
-  const empty = {
+  const unmeasured = (reason) => ({
+    measurable: false, reason, partial: false,
     items: [], min_people: minPeople,
     below_threshold: { groups: 0, people: 0 },
     active_total: 0, active_members: 0
-  };
-  if (!env?.PRODUCT_DB?.prepare) return empty;
+  });
+  if (!env?.PRODUCT_DB?.prepare) return unmeasured('DB_UNAVAILABLE');
   let rows = [];
   try {
     const result = await env.PRODUCT_DB.prepare(ACTIVE_WISH_SQL).all();
-    rows = result?.results || [];
+    if (result?.success === false || !Array.isArray(result?.results)) return unmeasured('QUERY_FAILED');
+    rows = result.results;
   } catch {
-    return empty;
+    return unmeasured('QUERY_FAILED');
   }
   const internal = internalMemberIds(env);
   const groups = new Map();
@@ -82,6 +87,9 @@ export async function searchingDemandOverview(env = {}, options = {}) {
   const visible = ranked.filter((group) => group.people >= minPeople).slice(0, GROUP_LIMIT);
   const below = ranked.filter((group) => group.people < minPeople);
   return {
+    measurable: true,
+    // 取得上限に当たった＝全件ではない。人数は下限値として扱う（「全件」と表示しない）。
+    partial: rows.length >= FETCH_LIMIT,
     items: visible.map((group) => ({ ...group, query: group.conditions.join('・') })),
     min_people: minPeople,
     below_threshold: { groups: below.length, people: below.reduce((sum, group) => sum + group.people, 0) },
