@@ -9,3 +9,8 @@ test('legacy billing displays actual price and invoice without changing the subs
  sub.cancel_at_period_end=true;assert.equal((await legacyBillingDisplay(env,account)).next_billing_at,null);
  env.STRIPE_FETCH=async()=>{throw new Error('offline')};const unknown=await legacyBillingDisplay(env,account);assert.equal(unknown.monthly_jpy,null);assert.equal(unknown.billing_verified,false);
 });
+
+test('saved free-of-charge accounts remain zero without creating or reading Stripe subscriptions',async()=>{
+ const display=await legacyBillingDisplay({STRIPE_FETCH:()=>{assert.fail('no provider request');}},{subscription_status:'FREE_OF_CHARGE',stripe_subscription_id:''});
+ assert.equal(display.monthly_jpy,0);assert.equal(display.billing_verified,true);assert.equal(display.next_billing_at,null);assert.equal(display.next_invoice_jpy,null);
+});

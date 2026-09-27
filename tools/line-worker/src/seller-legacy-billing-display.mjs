@@ -2,6 +2,7 @@
 import {stripeRequest,stripeMode} from './stripe-client.mjs';
 export async function legacyBillingDisplay(env,account) {
  const unknown={monthly_jpy:null,next_invoice_jpy:null,price_id:null,billing_verified:false};
+ if(account?.subscription_status==='FREE_OF_CHARGE'&&!account.stripe_subscription_id)return {...unknown,monthly_jpy:0,billing_verified:true,billing_source:'SAVED_FREE_OF_CHARGE',next_billing_at:null};
  if(!/^sub_[A-Za-z0-9_]+$/u.test(account?.stripe_subscription_id||''))return unknown;
  try {
   const sub=await stripeRequest(env,'GET',`/subscriptions/${account.stripe_subscription_id}`);
