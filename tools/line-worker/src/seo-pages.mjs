@@ -3856,7 +3856,8 @@ const guideHubGroups = [
       'amazon-shukyaku-outside-amazon',
       'ec-coupon-strategy',
       'ec-repeat-customers',
-      'oudan-kensaku-de-mitsukete-morau'
+      'oudan-kensaku-de-mitsukete-morau',
+      'mall-seller-see-demand-outside-the-mall'
     ]
   },
   {
