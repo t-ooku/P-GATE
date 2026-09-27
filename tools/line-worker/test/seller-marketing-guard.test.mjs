@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { assertSellerMarketingCurrent } from '../src/seller-marketing-guard.mjs';
 import { publishSocialPost } from '../src/social-publisher.mjs';
 import { renderSeoPage } from '../src/seo-pages.mjs';
-import { PILOT_OFFER } from '../public/seller-trial-policy.mjs';
-const active = { SELLER_MANUAL_PILOT_ENABLED:'true', SELLER_PILOT_OFFER_VERSION:PILOT_OFFER, SELLER_PILOT_RECRUITMENT_VERIFIED:PILOT_OFFER };
+import { AUTO_RENEW_OFFER } from '../public/seller-trial-policy.mjs';
+const active = { SELLER_MANUAL_PILOT_ENABLED:'true', SELLER_PILOT_OFFER_VERSION:AUTO_RENEW_OFFER, SELLER_PILOT_RECRUITMENT_VERIFIED:AUTO_RENEW_OFFER, SELLER_PILOT_AUTORENEW_ENABLED:'true', SELLER_PILOT_PAYMENTS_ENABLED:'true' };
 test('old saved seller copy and old media never reach a provider, even with an active offer', async()=>{
   for(const post of [
     {caption:'HOSHILU Seller 最初の3か月は月額0円です'},
@@ -15,7 +15,7 @@ test('old saved seller copy and old media never reach a provider, even with an a
   ]) await assert.rejects(publishSocialPost({...post,platform:'X',status:'APPROVED'},active,()=>{assert.fail('provider must not be called');}),/SELLER_MARKETING_REVIEW_REQUIRED/);
 });
 test('new offer cannot be advertised as available before production verification',()=>{
-  const post={content_id:'seller-price',caption:'商品公開から30日間無料。支払い登録不要。'};
+  const post={content_id:'seller-price',caption:'商品公開から30日間無料。開始前カード登録必須。31日目から月額4,980円で毎月自動更新。'};
   assert.throws(()=>assertSellerMarketingCurrent(post),/TRIAL_NOT_ACTIVE/);
   assert.doesNotThrow(()=>assertSellerMarketingCurrent(post,active));
   assert.doesNotThrow(()=>assertSellerMarketingCurrent({...post,caption:post.caption+'体験開始は準備中。'}));
@@ -23,7 +23,7 @@ test('new offer cannot be advertised as available before production verification
   assert.doesNotThrow(()=>assertSellerMarketingCurrent({content_id:'buyer-usual',caption:'3か月ごとに洗剤を買う',media_url:'https://hoshilu.app/buyer.jpg'}));
 });
 test('versioned seller media is allowed and mixed old/new images are rejected',()=>{
-  const post={content_id:'carousel-seller-shop',caption:'新規30日無料は準備中。自店の掲載見本を相談する',media_urls:JSON.stringify(['https://hoshilu.app/social/carousel/seller30-20260927-r2/seller-shop/1.jpg'])};
+  const post={content_id:'carousel-seller-shop',caption:'新規30日無料は準備中。自店の掲載見本を相談する',media_urls:JSON.stringify(['https://hoshilu.app/social/carousel/seller30-autorenew-20260927/seller-shop/1.jpg'])};
   assert.doesNotThrow(()=>assertSellerMarketingCurrent(post));
   assert.throws(()=>assertSellerMarketingCurrent({...post,media_url:'https://hoshilu.app/old.jpg'}),/MEDIA_OFFER_UNVERIFIED/);
 });

@@ -3853,6 +3853,7 @@ export default {
           console.error('MARKETPLACE_CANARY_CATCHUP_FAILED');
         }
         return Promise.allSettled([
+        runAutoRenewReconciliation(env),
         // Runway is isolated from publishing: a successful generation is persisted
         // to R2 and stops at REVIEW_REQUIRED. It never bypasses the existing APPROVED
         // publication gate, and a failure cannot block either Instagram or X.
@@ -3893,3 +3894,4 @@ export default {
     ));
   }
 };
+import { runAutoRenewReconciliation } from './seller-pilot-autorenew.mjs';

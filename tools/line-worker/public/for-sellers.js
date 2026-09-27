@@ -1,4 +1,4 @@
-import { PILOT_OFFER, TRIAL_COPY, TRIAL_PENDING_COPY } from './seller-trial-policy.mjs?v=3';
+import { AUTO_RENEW_OFFER, TRIAL_COPY, TRIAL_PENDING_COPY } from './seller-trial-policy.mjs?v=4';
 import { growthSessionId, growthVisitorId } from './growth-identity.mjs';
 
 const form = document.querySelector('#sellerBusinessForm');
@@ -207,7 +207,7 @@ form?.addEventListener('submit', async event => {
 
 // Fail closed: do not advertise unverified/off trial conditions.
 fetch('/api/seller-pilot/offer',{cache:'no-store'}).then(async r=>r.ok?r.json():null).then(data=>{
-  if(data?.enabled&&data.offer_version===PILOT_OFFER) {
+  if(data?.enabled&&data.offer_version===AUTO_RENEW_OFFER) {
     document.querySelectorAll('[data-seller-trial-copy]').forEach(el=>{el.textContent=TRIAL_COPY;});
     document.querySelectorAll('script[type="application/ld+json"]').forEach(el=>{el.textContent=el.textContent.replaceAll(TRIAL_PENDING_COPY,TRIAL_COPY);});
   }

@@ -3,6 +3,8 @@ import { authorizeAdminRequest } from './admin-auth.mjs';
 import { readMemberSession } from './member-auth.mjs';
 import { resolveMemberIdentityAlias } from './member-notification-delivery.mjs';
 import { paidRequest, pilotPaymentsReady, pilotCheckout, verifiedPilotPayment, cancelPilotSubscription, PAID_TERMS } from './seller-pilot-payment.mjs';
+import { autoRenewReady, autoRenewConsent, setupAutoRenewCard, verifyAutoRenewCard, reconcileAutoRenew } from './seller-pilot-autorenew.mjs';
+import { AUTO_RENEW_OFFER, AUTO_RENEW_TERMS } from '../public/seller-trial-policy.mjs';
 import { readBoundedJson } from './bounded-json.mjs';
 import { PILOT_OFFER, LEGACY_PILOT_OFFER, MONTHLY_JPY, TRIAL_TERMS, knownOffer, trialEnd, followupTasks, recruitmentVerified } from '../public/seller-trial-policy.mjs';
 export { PILOT_OFFER, LEGACY_PILOT_OFFER, calendarTrialEnd } from '../public/seller-trial-policy.mjs';
@@ -15,14 +17,15 @@ function https(value) {
 }
 export function pilotEntitlement(doc, now=new Date()) {
   const started=Date.parse(doc.starts_at),ends=Date.parse(doc.ends_at);
-  const paid=Boolean(doc.paid_opt_in_at&&doc.payment?.status==='ACTIVE'&&Date.parse(doc.payment.current_period_end_at)>now.getTime());
+  const automatic=doc.offer_version===AUTO_RENEW_OFFER;
+  const paid=automatic?Boolean(doc.autorenew?.paid&&Date.parse(doc.autorenew.period_end_at)>now.getTime()):Boolean(doc.paid_opt_in_at&&doc.payment?.status==='ACTIVE'&&Date.parse(doc.payment.current_period_end_at)>now.getTime());
   const active=doc.status==='PUBLISHED' && knownOffer(doc.offer_version) && ((started<=now.getTime() && now.getTime()<ends)||paid);
-  return {active,paid,expired:Number.isFinite(ends)&&now.getTime()>=ends,trial_status:!Number.isFinite(started)?'NOT_STARTED':now.getTime()>=ends?'EXPIRED':'ACTIVE',billing_status:paid?'PAID_CONFIRMED':'NO_PAID_CONTRACT',automatic_charge:false,monthly_jpy:MONTHLY_JPY,currency:'JPY'};
+  return {active,paid,expired:Number.isFinite(ends)&&now.getTime()>=ends,trial_status:!Number.isFinite(started)?'NOT_STARTED':now.getTime()>=ends?'EXPIRED':'ACTIVE',billing_status:paid?'PAID_CONFIRMED':automatic&&doc.autorenew?.subscription_id?'TRIAL_SUBSCRIPTION':'NO_PAID_CONTRACT',automatic_charge:automatic&&Boolean(doc.autorenew?.subscription_id)&&!doc.autorenew.cancel_requested_at,monthly_jpy:MONTHLY_JPY,currency:'JPY'};
 }
 export function publicPilotOffer(env) {
   // Recruitment wording is enabled only after staged production verification.
   const enabled=recruitmentVerified(env);
-  return {enabled,offer_version:enabled?PILOT_OFFER:null,monthly_jpy:MONTHLY_JPY};
+  return {enabled,offer_version:enabled?env.SELLER_PILOT_OFFER_VERSION:null,monthly_jpy:MONTHLY_JPY};
 }
 export function normalizePilotDraft(input) {
   const doc={status:'DRAFT',shop_name:text(input.shop_name),business_name:text(input.business_name),registered_address:text(input.registered_address,500),
@@ -53,10 +56,13 @@ export function transitionPilot(doc, action, input, {actor,offerEnabled,now=new 
   if(action==='APPROVE'&&actor==='OWNER') {
     if(doc.status==='APPROVED') return doc;
     if(doc.status!=='DRAFT'||input.publication_consent!==true||input.offer_version!==offer||!knownOffer(offer)||!offerEnabled) throw new Error('APPROVAL_CONDITIONS_REQUIRED');
+    if(offer===AUTO_RENEW_OFFER&&(!doc.autorenew?.card_verified_at||doc.autorenew.terms!==AUTO_RENEW_TERMS||doc.autorenew.cancel_requested_at))throw new Error('CARD_REGISTRATION_REQUIRED');
     next.status='APPROVED';next.approved_at=at;next.terms_version=offer===LEGACY_PILOT_OFFER?'seller-manual-calendar3-v1':TRIAL_TERMS;next.terms_accepted_at=at;
+    if(offer===AUTO_RENEW_OFFER)next.terms_version=AUTO_RENEW_TERMS;
   } else if(action==='PUBLISH'&&actor==='ADMIN') {
     if(doc.status==='PUBLISHED') return doc;
     if(!['APPROVED','UNPUBLISHED'].includes(doc.status)||!doc.approved_at||!knownOffer(offer)||!doc.products?.length||!offerEnabled) throw new Error('OWNER_APPROVAL_REQUIRED');
+    if(offer===AUTO_RENEW_OFFER&&(!doc.autorenew?.card_verified_at||doc.autorenew.cancel_requested_at))throw new Error('CARD_REGISTRATION_REQUIRED');
     if(doc.starts_at && now.getTime()>=Date.parse(doc.ends_at)&&!pilotEntitlement(doc,now).paid) throw new Error('TRIAL_EXPIRED');
     next.status='PUBLISHED';
     // Public reads and trial start use this same atomic document commit. Failed DB writes roll both back.
@@ -126,7 +132,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
   const savePath=path.match(/^\/api\/seller-pilot\/(SPL_[a-zA-Z0-9-]+)\/save$/u);
   const member=!adminPath&&!publicId?await (deps.member||readMemberSession)(request,env):null;
   if(!publicId&&!admin&&!member) return json({ok:false,error:'AUTH_REQUIRED',login:'/login.html'},401);
-  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>通常料金：月額4,980円（税込）。公開の承認と有料契約は別です。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=2"></script>`);
+  if(request.method==='GET'&&(path==='/seller-pilot'||path==='/admin/seller-pilot')) return page('掲載見本と掲載確認',`<p>通常料金：月額4,980円（税込）。店舗ごとの適用条件をご確認ください。</p><div id="pilotApp" data-admin="${admin?'true':'false'}"></div><p id="pilotStatus" role="status"></p><script type="module" src="/seller-pilot.js?v=3"></script>`);
   const db=env.PRODUCT_DB;if(!db) return json({ok:false,error:'STORE_UNAVAILABLE'},503);
   const select=async(id)=> (await db.prepare('SELECT * FROM seller_listing_pilots WHERE pilot_id=?1').bind(id).all()).results?.[0];
   const offerEnabled=knownOffer(env.SELLER_PILOT_OFFER_VERSION);
@@ -153,7 +159,7 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     }
     if(request.method==='GET') {
       const result=admin?await db.prepare('SELECT * FROM seller_listing_pilots ORDER BY created_at DESC LIMIT 50').all():await db.prepare('SELECT * FROM seller_listing_pilots WHERE owner_member_id=?1 ORDER BY created_at DESC LIMIT 50').bind(member.id).all();
-      return json({ok:true,measurement_excluded:admin||String(env.INTERNAL_MEMBER_IDS||'').split(',').includes(member?.id),payments_enabled:pilotPaymentsReady(env),paid_terms_version:PAID_TERMS,offer_enabled:offerEnabled,offer_version:env.SELLER_PILOT_OFFER_VERSION,items:await Promise.all(result.results.map(async row=>{const doc=JSON.parse(row.document_json);return {pilot_id:row.pilot_id,revision:row.revision,...doc,followup_tasks:followupTasks(doc),entitlement:pilotEntitlement(doc),kpi:await pilotKpi(env,row,doc)};}))});
+      return json({ok:true,measurement_excluded:admin||String(env.INTERNAL_MEMBER_IDS||'').split(',').includes(member?.id),payments_enabled:pilotPaymentsReady(env),autorenew_enabled:autoRenewReady(env),paid_terms_version:PAID_TERMS,offer_enabled:offerEnabled,offer_version:env.SELLER_PILOT_OFFER_VERSION,items:await Promise.all(result.results.map(async row=>{const doc=JSON.parse(row.document_json);return {pilot_id:row.pilot_id,revision:row.revision,...doc,followup_tasks:followupTasks(doc),entitlement:pilotEntitlement(doc),kpi:await pilotKpi(env,row,doc)};}))});
     }
     if(request.method!=='POST') return json({ok:false,error:'METHOD_NOT_ALLOWED'},405);
     const parsed=await readBoundedJson(request,40_000);
@@ -183,8 +189,23 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
     if(!row||(!admin&&row.owner_member_id!==member.id)) return json({ok:false,error:'NOT_FOUND'},404);
     if(Number(input.revision)!==row.revision) return json({ok:false,error:'REVISION_CONFLICT'},409);
     const doc=JSON.parse(row.document_json);
+    if(Date.parse(doc.autorenew?.lease_until)>Date.now())return json({ok:false,error:'PAYMENT_UPDATE_IN_PROGRESS'},409);
+    if(doc.offer_version===AUTO_RENEW_OFFER&&['PAID_OPT_IN','CHECKOUT','SYNC_PAYMENT','CANCEL_PAID','CONTINUE_INTEREST'].includes(input.action))return json({ok:false,error:'USE_AUTORENEW_ACTION'},400);
+    if(!admin&&['AUTO_SYNC','AUTO_CANCEL'].includes(input.action)) {
+      const result=await reconcileAutoRenew(env,id,{cancel:input.action==='AUTO_CANCEL',revision:row.revision,actor:'OWNER'});
+      return json({ok:!result.error,revision:result.row.revision,...(result.error?{error:result.error}:{})},result.error?409:200);
+    }
     let next,checkoutUrl;
-    if(!admin&&input.action==='PAID_OPT_IN') {
+    if(!admin&&input.action==='AUTO_CONSENT') {
+      if(!autoRenewReady(env))throw new Error('AUTORENEW_NOT_ENABLED');
+      next=autoRenewConsent(doc,input);
+    } else if(!admin&&input.action==='AUTO_SETUP') {
+      const session=await setupAutoRenewCard(env,row,doc);
+      next={...doc,autorenew:{...doc.autorenew,setup_session_id:session.id}};checkoutUrl=session.url;
+    } else if(!admin&&input.action==='AUTO_VERIFY_CARD') {
+      if(doc.autorenew?.cancel_requested_at)throw new Error('CARD_SETUP_NOT_ALLOWED');
+      next={...doc,autorenew:await verifyAutoRenewCard(env,row,doc)};
+    } else if(!admin&&input.action==='PAID_OPT_IN') {
       if(!pilotPaymentsReady(env))return json({ok:false,error:'PILOT_PAYMENTS_NOT_ENABLED'},409);
       next=paidRequest(doc,input);
     } else if(!admin&&input.action==='CHECKOUT') {
@@ -204,7 +225,14 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
       next={...doc,...normalizePilotDraft({...input,test:doc.test})};delete next.approved_at;
       // Preserve agreed offer and first publication timestamps on edits/republication.
       delete next.terms_accepted_at;delete next.owner_confirmed_at;
-    } else next=transitionPilot(doc,input.action,input,{actor:admin?'ADMIN':'OWNER',offerEnabled});
+    } else {
+      if(doc.offer_version===AUTO_RENEW_OFFER&&input.action==='PUBLISH') {
+        if(!autoRenewReady(env))throw new Error('AUTORENEW_NOT_ENABLED');
+        // Recheck the registered card through Stripe before the first publication.
+        if(!doc.starts_at)await verifyAutoRenewCard(env,row,doc);
+      }
+      next=transitionPilot(doc,input.action,input,{actor:admin?'ADMIN':'OWNER',offerEnabled});
+    }
     if(next===doc) return json({ok:true,revision:row.revision});
     const at=new Date().toISOString(),revision=row.revision+1;
     const results=await db.batch([
@@ -213,6 +241,10 @@ export async function handleSellerListingPilotRoutes(request,env,deps={}) {
         SELECT ?1,?2,?3,?4,?5,?6 WHERE changes()=1`).bind(crypto.randomUUID(),id,revision,admin?'ADMIN':'OWNER',input.action,at)
     ]);
     if(results[0]?.meta?.changes!==1) return json({ok:false,error:'REVISION_CONFLICT'},409);
+    if(next.offer_version===AUTO_RENEW_OFFER&&input.action==='PUBLISH') {
+      const result=await reconcileAutoRenew(env,id);
+      return json({ok:true,revision:result.row.revision,billing_pending:Boolean(result.error)});
+    }
     return json({ok:true,revision,...(checkoutUrl?{checkout_url:checkoutUrl}:{})});
   } catch(error) {
     const reason=String(error?.message||'');

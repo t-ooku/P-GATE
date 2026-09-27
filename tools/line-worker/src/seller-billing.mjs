@@ -1,4 +1,5 @@
 import { processPilotStripeEvent } from './seller-pilot-payment.mjs';
+import { processAutoRenewStripeEvent } from './seller-pilot-autorenew.mjs';
 // 2026-09-04 大隆さん指示「請求・決済の自動化して」「全部前払いね」。
 //
 // 料金（2026-09-03 決定・/for-sellers と同じ表）:
@@ -485,7 +486,7 @@ async function sendBillingEmail(env, to, subject, text) {
 export async function createBillingAccount(env, input = {}, { origin, now = new Date() } = {}) {
   // Once the new offer is enabled, do not enroll new stores through the legacy registration-triggered Stripe trial.
   // Existing accounts/subscriptions and their agreed schedules are serviced by the unchanged paths below.
-  if (env.SELLER_MANUAL_PILOT_ENABLED === 'true' && env.SELLER_PILOT_OFFER_VERSION === 'external-seller-30d-v1') {
+  if (env.SELLER_MANUAL_PILOT_ENABLED === 'true' && ['external-seller-30d-v1','external-seller-30d-autorenew-v1'].includes(env.SELLER_PILOT_OFFER_VERSION)) {
     throw new Error('NEW_SELLER_USE_PUBLICATION_TRIAL');
   }
   const db = env.PRODUCT_DB;
@@ -596,6 +597,8 @@ async function accountForObject(db, object) {
 
 export async function processStripeEvent(env, event, now = new Date().toISOString()) {
   const db = env.PRODUCT_DB;
+  const autoRenewResult = await processAutoRenewStripeEvent(env, event);
+  if (autoRenewResult !== null) return autoRenewResult;
   const pilotResult = await processPilotStripeEvent(env, event);
   if (pilotResult !== null) return pilotResult;
   const object = event?.data?.object || {};

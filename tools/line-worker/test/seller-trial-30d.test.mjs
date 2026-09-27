@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {trialEnd,PILOT_OFFER,LEGACY_PILOT_OFFER,DAY_MS,jstDateTime,followupTasks} from '../public/seller-trial-policy.mjs';
+import {trialEnd,AUTO_RENEW_OFFER,PILOT_OFFER,LEGACY_PILOT_OFFER,DAY_MS,jstDateTime,followupTasks} from '../public/seller-trial-policy.mjs';
 import {transitionPilot,pilotEntitlement,acquisitionComplete,publicPilotOffer} from '../src/seller-listing-pilot.mjs';
 const draft=()=>({status:'DRAFT',offer_version:PILOT_OFFER,products:[{id:'1'}]});
 const approve=doc=>transitionPilot(doc,'APPROVE',{offer_version:doc.offer_version,publication_consent:true},{actor:'OWNER',offerEnabled:true,now:new Date('2026-01-31T15:00:00Z')});
@@ -47,5 +47,6 @@ test('LP offer stays hidden until same version is enabled and verified',()=>{
  const env={SELLER_MANUAL_PILOT_ENABLED:'true',SELLER_PILOT_OFFER_VERSION:PILOT_OFFER};
  assert.equal(publicPilotOffer(env).enabled,false);
  assert.equal(publicPilotOffer({...env,SELLER_PILOT_RECRUITMENT_VERIFIED:LEGACY_PILOT_OFFER}).enabled,false);
- assert.equal(publicPilotOffer({...env,SELLER_PILOT_RECRUITMENT_VERIFIED:PILOT_OFFER}).enabled,true);
+ assert.equal(publicPilotOffer({...env,SELLER_PILOT_RECRUITMENT_VERIFIED:PILOT_OFFER}).enabled,false);
+ assert.equal(publicPilotOffer({...env,SELLER_PILOT_OFFER_VERSION:AUTO_RENEW_OFFER,SELLER_PILOT_RECRUITMENT_VERIFIED:AUTO_RENEW_OFFER,SELLER_PILOT_AUTORENEW_ENABLED:'true',SELLER_PILOT_PAYMENTS_ENABLED:'true'}).enabled,true);
 });

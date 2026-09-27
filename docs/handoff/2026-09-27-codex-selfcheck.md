@@ -40,3 +40,9 @@
 - Latest Claude handoff is September 20; read its final correction (no further index investigation). Existing reranking/P1 items require status reconciliation before reimplementation.
 - User changed future new-Seller policy to 30 days free from first approved product publication, then JPY 4,980/month automatically unless canceled by the trial deadline. Recorded in 2026-09-27-seller-30d-autorenew-approval-request.md. Existing commitments are not changed.
 - Stop before policy publication or billing activation pending confirmation of mandatory payment-method registration at free-trial start, which conflicts with the previous no-payment-method decision. No runtime code, D1, Stripe, SNS, or deployed terms changed in this follow-up.
+
+## Card-required auto-renew implementation (15:11 JST approval)
+- Recovered source through public GitHub clone. /health now fetched successfully: ok=true, missing/weak empty, X/Instagram connected, Runway ready, database feature flags true. Prior unverified fetch is superseded for health only.
+- #369 still has the older Yahoo report. Read-only aggregate recovery cannot be queried here without Cloudflare credentials; no repair or resolution claimed. No new Claude handoff beyond September 20.
+- User explicitly approved mandatory card setup before trial. Implemented a new versioned flow; previous offers/contracts remain unchanged. New enrollment stays OFF until real Stripe test-mode and D1 verification. No real charge, migration, social send, or production SQL executed.
+- See 2026-09-27-seller-30d-autorenew-approval-request.md for implementation, tests, and concrete rollout gaps.
