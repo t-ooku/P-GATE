@@ -1,6 +1,7 @@
 import { recruitmentVerified, TRIAL_PENDING_COPY, TRIAL_COPY } from '../public/seller-trial-policy.mjs';
 import { handleSellerListingPilotRoutes } from './seller-listing-pilot.mjs';
 import { queueUsualDueNotifications } from './usual-reminders.mjs';
+import { runIndexNowSubmission } from './indexnow.mjs';
 import { admitTokenlessSearch } from './tokenless-search.mjs';
 import { handleSellerRoutes, readSellerSession } from './seller-auth.mjs';
 import { targetPriceProductKey } from './target-price-product-key.mjs';
@@ -3871,6 +3872,8 @@ export default {
         queueBuzzThemeNotifications(env, scheduledAt),
         // 2026-09-25: 「いつものホシル」がもうすぐなくなる頃に、1周期1回だけ知らせる（JST 9〜20時）。
         queueUsualDueNotifications(env, scheduledAt),
+        // 2026-09-27: 1日1回（JST 4時台）、新しい・更新したページを IndexNow（Bing ほか）へ知らせる。
+        runIndexNowSubmission(env, scheduledAt),
         runMarketplaceContentCycle(env, scheduledAt),
         runSpApiScheduledSync(env, scheduledAt),
         purgeAdminAuthRecords(env, scheduledAt),
