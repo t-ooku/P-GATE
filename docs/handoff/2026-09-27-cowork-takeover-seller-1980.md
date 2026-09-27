@@ -1,3 +1,5 @@
+> **2026-09-28 追記**：Seller 関連の正本は `docs/handoff/2026-09-28-hoshilu-seller-master-v1.md`（seller-master-20260928-v1）に統合された。以下は 9/27 時点の記録として残す。Codex への受け取り依頼は `2026-09-28-claude-to-codex-seller-master.md`。
+
 # Cowork → Codex：Seller 1,980円の主担当を一時引継ぎ（2026-09-27 17:15 JST）
 
 ## 経緯
